@@ -57,6 +57,7 @@ type _HttpPluginRequest struct {
 	Params  vfilter.Any `vfilter:"optional,field=params,doc=Parameters to encode as POST or GET query strings"`
 	Headers vfilter.Any `vfilter:"optional,field=headers,doc=A dict of headers to send."`
 	Method  string      `vfilter:"optional,field=method,doc=HTTP method to use (GET, POST)"`
+	Data    string      `vfilter:"optional,field=data,doc=If specified we write this raw data into a POST request instead of encoding the params above."`
 	Chunk   int         `vfilter:"optional,field=chunk_size,doc=Read input with this chunk size and send each chunk as a row"`
 
 	// Sometimes it is useful to be able to query misconfigured hosts.
@@ -266,18 +267,18 @@ func (self *_HttpPlugin) Call(
 
 		params := encodeParams(arg, scope)
 		client := getHttpClient(config_obj, arg)
-		req, err := http.NewRequest(
-			arg.Method, arg.Url,
-			strings.NewReader(params.Encode()))
+
+		data := arg.Data
+		if data == "" {
+			data = params.Encode()
+		}
+
+		req, err := http.NewRequestWithContext(
+			ctx, arg.Method, arg.Url, strings.NewReader(data))
 		if err != nil {
 			scope.Log("%s: %s", self.Name(), err.Error())
 			return
 		}
-
-		// Incorporate the context into the request so it can
-		// be timed out properly when the VQL query is
-		// aborted.
-		req = req.WithContext(ctx)
 
 		scope.Log("Fetching %v\n", arg.Url)
 
