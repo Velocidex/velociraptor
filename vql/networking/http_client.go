@@ -285,8 +285,8 @@ func (self *_HttpPlugin) Call(
 
 		// Set various headers
 		if arg.Headers != nil {
-			for _, member := range scope.GetMembers(arg.Params) {
-				value, pres := scope.Associative(arg.Params, member)
+			for _, member := range scope.GetMembers(arg.Headers) {
+				value, pres := scope.Associative(arg.Headers, member)
 				if pres {
 					lazy_v, ok := value.(vfilter.LazyExpr)
 					if ok {
