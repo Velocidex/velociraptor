@@ -16,7 +16,7 @@ required_permissions:
   - EXECVE
 
 parameters:
-  - name: DisaplayNameRegex
+  - name: DisplayNameRegex
     default: Velociraptor
     description: A regex that will match the package to uninstall.
 
@@ -29,7 +29,7 @@ sources:
 
     query:  |
       LET packages = SELECT Name, DisplayName FROM Artifact.Windows.Sys.Programs()
-      WHERE DisplayName =~ 'Velociraptor' AND
+      WHERE DisplayName =~ DisplayNameRegex AND
         log(message="Will uninstall " + DisplayName)
 
       LET uninstall(Name) = SELECT * FROM execve(argv=['msiexec', '/quiet', '/x', Name])
