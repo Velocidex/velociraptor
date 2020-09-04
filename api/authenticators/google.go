@@ -335,7 +335,7 @@ to log in again:
 		// binary data in metadata.
 		serialized, _ := json.Marshal(user_info)
 		ctx := context.WithValue(
-			r.Context(), "USER", string(serialized))
+			r.Context(), constants.GRPC_USER_CONTEXT, string(serialized))
 
 		// Need to call logging after auth so it can access
 		// the contextKeyUser value in the context.

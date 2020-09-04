@@ -21,10 +21,10 @@ import (
 	"context"
 
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -49,33 +49,20 @@ func GetGRPCUserInfo(
 			// user name which it may pass in the call
 			// context.
 			if v == config_obj.API.PinnedGwName {
-				userinfo, ok := ctx.Value(constants.GRPC_USER_CONTEXT).(string)
+				md, ok := metadata.FromIncomingContext(ctx)
 				if ok {
-					data := []byte(userinfo)
-					err := json.Unmarshal(data, result)
-					if err != nil {
-						logging.GetLogger(config_obj, &logging.GUIComponent).Error(
-							"Unable to Unmarshal USER Token")
-						result.Name = ""
-					}
-				}
-
-				/*
-					md, ok := metadata.FromIncomingContext(ctx)
-					if ok {
-						userinfo := md.Get(constants.GRPC_USER_CONTEXT)
-						if len(userinfo) > 0 {
-							data := []byte(userinfo[0])
-							err := json.Unmarshal(data, result)
-							if err != nil {
-								logger := logging.GetLogger(config_obj,
-									&logging.FrontendComponent)
-								logger.Error("GetGRPCUserInfo: %v", err)
-								result.Name = ""
-							}
+					userinfo := md.Get("USER")
+					if len(userinfo) > 0 {
+						data := []byte(userinfo[0])
+						err := json.Unmarshal(data, result)
+						if err != nil {
+							logger := logging.GetLogger(config_obj,
+								&logging.FrontendComponent)
+							logger.Error("GetGRPCUserInfo: %v", err)
+							result.Name = ""
 						}
 					}
-				*/
+				}
 			}
 
 			// Other callers will return the name on their
