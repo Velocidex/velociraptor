@@ -46,6 +46,7 @@ const NewArtifactCollectionController = function(
     this.tools = {};
     this.checking_tools = [];
     this.current_checking_tool = "";
+    this.current_error = "";
 
     // The names of the artifacts to collect.
     this.names = [];
@@ -105,21 +106,22 @@ NewArtifactCollectionController.prototype.reject = function() {
   }
 };
 
-NewArtifactCollectionController.prototype.checkTools = function() {
+NewArtifactCollectionController.prototype.checkTools = function(tools_dict) {
     var self = this;
-    var tools = Object.keys(self.tools);
+    var tools = Object.assign({}, tools_dict);
+    var tool_names = Object.keys(tools);
 
     // If no tools left just make the final request.
-    if (tools.length == 0) {
+    if (tool_names.length == 0) {
         self.startClientFlow();
         return;
     }
 
     // Recursively call this function with the first tool.
-    var first_tool = tools[0];
+    var first_tool = tool_names[0];
 
     // Clear it.
-    delete self.tools[first_tool];
+    delete tools[first_tool];
 
     // Inform the user we are checking this tool.
     self.current_checking_tool = first_tool;
@@ -132,8 +134,25 @@ NewArtifactCollectionController.prototype.checkTools = function() {
     };
     self.grrApiService_.get("v1/GetToolInfo", params).then(function(response) {
         // Check the next tool
-        self.checkTools();
+        self.checkTools(tools);
+    }, function(response) {
+        self.current_error = response;
     });
+};
+
+NewArtifactCollectionController.prototype.ackToolError = function(tool) {
+    var self = this;
+
+    self.current_checking_tool = "";
+    self.checking_tools = [];
+};
+
+NewArtifactCollectionController.prototype.getToolState = function(tool) {
+    if (tool == this.current_checking_tool) {
+        return "alert-primary";
+    }
+
+    return "alert-success";
 };
 
 NewArtifactCollectionController.prototype.startClientFlow = function() {
