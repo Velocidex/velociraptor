@@ -12,12 +12,21 @@
     <div class="well well-large">
       <div ng-repeat="tool in controller.checking_tools track by $index">
         <div class="alert text-center"
-             ng-class="{'alert-primary': tool == controller.current_checking_tool, 'alert-success': tool != controller.current_checking_tool}">
+             ng-if="!controller.current_error"
+             ng-class="controller.getToolState(tool)">
           Checking {$ tool $}
           <span role="status" class="spinner-border"
                 ng-if="tool == controller.current_checking_tool">
             <span class="sr-only">Loading...</span>
           </span>
+        </div>
+        <div class="alert alert-danger text-center"
+             ng-if="controller.current_error">
+          Error {$ tool $}: {$ controller.current_error $}
+          <button class="btn btn-danger float-right"
+                  ng-click="controller.ackToolError()">
+            Retry
+          </button>
         </div>
       </div>
     </div>
@@ -78,7 +87,7 @@
 
       <button class="btn btn-primary Next"
               ng-disabled="controller.names.length==0"
-              ng-click="controller.checkTools()">
+              ng-click="controller.checkTools(controller.tools)">
         Launch collection
       </button>
     </div>

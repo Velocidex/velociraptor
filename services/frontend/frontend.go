@@ -281,7 +281,7 @@ func getURL(fe_config *config_proto.FrontendConfig) string {
 }
 
 // Install a frontend manager.
-func StartFrontendService(ctx context.Context,
+func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config, node string) error {
 	if config_obj.Frontend == nil {
 		return errors.New("Frontend not configured")
@@ -362,7 +362,10 @@ func StartFrontendService(ctx context.Context,
 	}
 
 	// Start the update loop
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
+
 		for {
 			select {
 			case <-ctx.Done():

@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
@@ -45,6 +46,7 @@ type ArtifactRepositoryPlugin struct {
 	prefix     []string
 	leaf       *artifacts_proto.Artifact
 	mock       []vfilter.Row
+	wg         *sync.WaitGroup
 }
 
 func (self *ArtifactRepositoryPlugin) SetMock(mock []vfilter.Row) {
@@ -70,7 +72,9 @@ func (self *ArtifactRepositoryPlugin) Call(
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
+	self.wg.Add(1)
 	go func() {
+		defer self.wg.Done()
 		defer close(output_chan)
 
 		config_obj, ok := artifacts.GetServerConfig(scope)
@@ -315,6 +319,7 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) Associative(
 }
 
 func NewArtifactRepositoryPlugin(
+	wg *sync.WaitGroup,
 	repository *Repository) vfilter.PluginGeneratorInterface {
 	repository.mu.Lock()
 	defer repository.mu.Unlock()
@@ -326,18 +331,21 @@ func NewArtifactRepositoryPlugin(
 	name_listing := repository.list()
 
 	// Cache it for next time and return it.
-	repository.artifact_plugin = _NewArtifactRepositoryPlugin(repository, name_listing, nil)
+	repository.artifact_plugin = _NewArtifactRepositoryPlugin(
+		repository, wg, name_listing, nil)
 
 	return repository.artifact_plugin
 }
 
 func _NewArtifactRepositoryPlugin(
 	repository *Repository,
+	wg *sync.WaitGroup,
 	name_listing []string,
 	prefix []string) vfilter.PluginGeneratorInterface {
 
 	result := &ArtifactRepositoryPlugin{
 		repository: repository,
+		wg:         wg,
 		children:   make(map[string]vfilter.PluginGeneratorInterface),
 		prefix:     prefix,
 	}
@@ -361,7 +369,7 @@ func _NewArtifactRepositoryPlugin(
 		_, pres := result.children[components[0]]
 		if !pres {
 			result.children[components[0]] = _NewArtifactRepositoryPlugin(
-				repository, name_listing, append(prefix, components[0]))
+				repository, wg, name_listing, append(prefix, components[0]))
 		}
 	}
 
