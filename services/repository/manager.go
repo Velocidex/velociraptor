@@ -20,6 +20,7 @@ import (
 type RepositoryManager struct {
 	mu                sync.Mutex
 	global_repository *Repository
+	wg                *sync.WaitGroup
 }
 
 func (self *RepositoryManager) NewRepository() services.Repository {
@@ -131,6 +132,7 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 
 	// Load all the artifacts in the repository and compile them in the background.
 	self := &RepositoryManager{
+		wg: wg,
 		global_repository: &Repository{
 			Data: make(map[string]*artifacts_proto.Artifact),
 		},

@@ -107,6 +107,7 @@ type ServerArtifactsRunner struct {
 	config_obj       *config_proto.Config
 	timeout          time.Duration
 	mu               sync.Mutex
+	wg               *sync.WaitGroup
 	cancellationPool map[string]func()
 }
 
@@ -186,7 +187,9 @@ func (self *ServerArtifactsRunner) processTask(
 	// Kick off processing in the background and go back to
 	// listening for new tasks. We can then cancel this task
 	// later.
+	self.wg.Add(1)
 	go func() {
+		defer self.wg.Done()
 		err := self.runQuery(ctx, task, collection_context)
 		if err != nil {
 			return
@@ -361,6 +364,7 @@ func StartServerArtifactService(
 	self := &ServerArtifactsRunner{
 		config_obj:       config_obj,
 		timeout:          time.Second * time.Duration(600),
+		wg:               wg,
 		cancellationPool: make(map[string]func()),
 	}
 

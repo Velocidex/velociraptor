@@ -94,7 +94,7 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 	err = sm.Start(func(ctx context.Context, wg *sync.WaitGroup,
 		config_obj *config_proto.Config) error {
 		return frontend.StartFrontendService(
-			ctx, config_obj, *frontend_node)
+			ctx, wg, config_obj, *frontend_node)
 	})
 	if err != nil {
 		return nil, err
