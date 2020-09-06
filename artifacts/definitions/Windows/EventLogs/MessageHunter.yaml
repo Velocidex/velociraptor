@@ -13,7 +13,7 @@ description: |
     - dateAfter enables search for events after this date.  
     - dateBefore enables search for events before this date.   
     - IocRegex enables regex search over the message field.  
-    - WhitelistRegex enables a regex whitelist for scriptblock text field. 
+    - WhitelistRegex enables a regex whitelist for Message text field. 
     
     Note: this artifact can potentially be heavy on the endpoint. 
     Please use with caution.
@@ -66,7 +66,7 @@ sources:
                     })
                 })
 
-     # Parse all target files, order by source and add dedupe string
+     # Parse all target files, order by source and dedup VSS events
       - LET hits =  SELECT *
             FROM foreach(
                 row=files,
@@ -85,12 +85,8 @@ sources:
                     EventTime > DateAfterTime 
                     AND format(format='%v',args=Message) =~ IocRegex
             })
+            GROUP BY EventID,Channel
             ORDER BY Source
-
-      # Group results for deduplication
-      - LET grouped = SELECT *
-          FROM hits
-          GROUP BY _Group
 
       # Output results
       - SELECT 
@@ -101,4 +97,4 @@ sources:
             EventRecordID,
             Message,
             Source
-        FROM grouped	
+        FROM hits 
