@@ -206,7 +206,8 @@ func checkForServerUpgrade(
 							Upgrade: true,
 						})
 					if err != nil {
-						return err
+						// Errors are not fatal during upgrade.
+						logger.Error("Error upgrading tool: %v", err)
 					}
 				}
 			}

@@ -158,8 +158,8 @@ func (self ArtifactsPlugin) Call(
 				Artifacts: arg.Names,
 			})
 		if err != nil {
-			scope.Log("artifact_definitions: %v", err)
-			return
+			scope.Log("artifact_definitions: While compiling %v: %v",
+				arg.Names, err)
 		}
 
 		for _, artifact := range request.Artifacts {
