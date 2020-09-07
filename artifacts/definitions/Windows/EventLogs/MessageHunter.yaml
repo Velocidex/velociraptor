@@ -1,4 +1,4 @@
-name: Custom.Windows.EventLogs.MessageHunter
+name: Windows.EventLogs.MessageHunter
 
 description: |
   This Artifact will hunt the Event Log message field for a regex value.
