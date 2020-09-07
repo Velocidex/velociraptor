@@ -24,6 +24,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime/pprof"
 	"strings"
 	"time"
 
@@ -83,6 +84,32 @@ func runTest(fixture *testFixture,
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 
+	// Set an alarm for hard exit in 2 minutes. If we hit it then
+	// the code is deadlocked and we want to know what is
+	// happening.
+	go func() {
+		select {
+		case <-ctx.Done():
+			return
+
+			// If we get here we are deadlocked! Print all
+			// the goroutines and mutex and hard exit.
+		case <-time.After(time.Second * 120):
+			p := pprof.Lookup("goroutines")
+			if p != nil {
+				p.WriteTo(os.Stderr, 1)
+			}
+
+			p = pprof.Lookup("mutex")
+			if p != nil {
+				p.WriteTo(os.Stderr, 1)
+			}
+
+			// Hard exit with an error.
+			os.Exit(-1)
+		}
+	}()
+
 	//Force a clean slate for each test.
 	startup.Reset()
 
@@ -97,6 +124,7 @@ func runTest(fixture *testFixture,
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer os.Remove(tmpfile.Name())
 
 	container, err := reporting.NewContainer(tmpfile.Name())
 	kingpin.FatalIfError(err, "Can not create output container")

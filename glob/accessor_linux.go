@@ -24,6 +24,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"syscall"
 	"time"
 
@@ -65,10 +66,17 @@ func (self *OSFileInfo) Sys() interface{} {
 }
 
 func (self *OSFileInfo) Data() interface{} {
-	if self._data == nil {
-		return ordereddict.NewDict()
+	if self.IsLink() {
+		path := strings.TrimRight(
+			strings.TrimLeft(self.FullPath(), "\\"), "\\")
+		target, err := os.Readlink(path)
+		if err == nil {
+			return ordereddict.NewDict().
+				Set("Link", target)
+		}
 	}
-	return self._data
+
+	return ordereddict.NewDict()
 }
 
 func (self *OSFileInfo) FullPath() string {

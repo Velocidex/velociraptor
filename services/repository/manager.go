@@ -168,13 +168,13 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 		}
 	}
 
+	grepository, _ := self.GetGlobalRepository(config_obj)
+
 	// Compile the artifacts in the background so they are ready
 	// to go when the GUI searches for them.
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
-		grepository, _ := self.GetGlobalRepository(config_obj)
 
 		for _, name := range grepository.List() {
 			select {
