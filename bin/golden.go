@@ -97,12 +97,12 @@ func runTest(fixture *testFixture,
 		case <-time.After(time.Second * 120):
 			p := pprof.Lookup("goroutines")
 			if p != nil {
-				p.WriteTo(os.StdError, 1)
+				p.WriteTo(os.Stderr, 1)
 			}
 
 			p = pprof.Lookup("mutex")
 			if p != nil {
-				p.WriteTo(os.StdError, 1)
+				p.WriteTo(os.Stderr, 1)
 			}
 
 			// Hard exit with an error.
