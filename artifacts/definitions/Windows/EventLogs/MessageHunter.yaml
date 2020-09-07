@@ -13,7 +13,7 @@ description: |
     - dateAfter enables search for events after this date.  
     - dateBefore enables search for events before this date.   
     - IocRegex enables regex search over the message field.  
-    - WhitelistRegex enables a regex whitelist for scriptblock text field. 
+    - WhitelistRegex enables a regex whitelist for the Message field. 
     
     Note: this artifact can potentially be heavy on the endpoint. 
     Please use with caution.
