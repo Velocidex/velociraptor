@@ -57,6 +57,25 @@ SearchBoxController.prototype.submitQuery = function(e) {
     return false;
 };
 
+
+/**
+ * Updates GRR UI with wildcard query result (using legacy API).
+ *
+ * @export
+ */
+SearchBoxController.prototype.submitEmptyQuery = function(e) {
+    if (this.scope_["navigate"]) {
+        this.grrRoutingService_.go('search', {q: '*'});
+        return;
+    }
+
+    this.scope_["query"] = this.query;
+
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+};
+
 SearchBoxController.prototype.predict = function(viewValue) {
     var url = 'v1/SearchClients';
     var params = {
