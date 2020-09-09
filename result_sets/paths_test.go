@@ -10,7 +10,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
@@ -19,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -51,71 +54,95 @@ var path_tests = []path_tests_t{
 		"/clients/C.123/monitoring/Windows.Events.ProcessCreation/2020-04-25.json"},
 }
 
+type PathManageTestSuite struct {
+	suite.Suite
+	config_obj *config_proto.Config
+	sm         *services.Service
+}
+
+func (self *PathManageTestSuite) SetupTest() {
+	var err error
+	self.config_obj, err = new(config.Loader).WithFileLoader(
+		"../http_comms/test_data/server.config.yaml").
+		WithRequiredFrontend().WithWriteback().
+		LoadAndValidate()
+	require.NoError(self.T(), err)
+
+	dir, err := ioutil.TempDir("", "path_manager_test")
+	assert.NoError(self.T(), err)
+
+	defer os.RemoveAll(dir) // clean up
+
+	self.config_obj.Datastore.Implementation = "FileBaseDataStore"
+	self.config_obj.Datastore.FilestoreDirectory = dir
+	self.config_obj.Datastore.Location = dir
+
+	// Start essential services.
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
+	self.sm = services.NewServiceManager(ctx, self.config_obj)
+	assert.NotNil(self.T(), self.sm)
+
+	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
+	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
+	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
+	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
+}
+
+func (self *PathManageTestSuite) TearDownTest() {
+	self.sm.Close()
+}
+
 // The path manager maps artifacts, clients, flows etc into a file
 // store path. For event artifacts, the path manager splits the files
 // by day to ensure they are not too large and can be easily archived.
-func TestPathManager(t *testing.T) {
-	config_obj := config.GetDefaultConfig()
+func (self *PathManageTestSuite) TestPathManager() {
 	ts := int64(1587800823)
-
-	sm := services.NewServiceManager(context.Background(), config_obj)
-	defer sm.Close()
-
-	require.NoError(t, sm.Start(journal.StartJournalService))
-	require.NoError(t, sm.Start(notifications.StartNotificationService))
-	require.NoError(t, sm.Start(inventory.StartInventoryService))
-	require.NoError(t, sm.Start(repository.StartRepositoryManager))
 
 	for _, testcase := range path_tests {
 		path_manager := result_sets.NewArtifactPathManager(
-			config_obj,
+			self.config_obj,
 			testcase.client_id,
 			testcase.flow_id,
 			testcase.full_artifact_name)
 		path_manager.Clock = utils.MockClock{MockNow: time.Unix(ts, 0)}
 		path, err := path_manager.GetPathForWriting()
-		assert.NoError(t, err)
-		assert.Equal(t, path, testcase.expected)
+		assert.NoError(self.T(), err)
+		assert.Equal(self.T(), path, testcase.expected)
 
 		file_store := memory.Test_memory_file_store
 		file_store.Clear()
 
-		qm := memory.NewMemoryQueueManager(config_obj, file_store).(*memory.MemoryQueueManager)
+		qm := memory.NewMemoryQueueManager(
+			self.config_obj, file_store).(*memory.MemoryQueueManager)
 		qm.Clock = path_manager.Clock
 
 		qm.PushEventRows(path_manager,
 			[]*ordereddict.Dict{ordereddict.NewDict()})
 
 		data, ok := file_store.Get(testcase.expected)
-		assert.Equal(t, ok, true)
-		assert.Equal(t, string(data), "{\"_ts\":1587800823}\n")
+		assert.Equal(self.T(), ok, true)
+		assert.Equal(self.T(), string(data), "{\"_ts\":1587800823}\n")
 	}
 }
 
 // Test the path manager with DirectoryFileStore
-func TestPathManagerDailyRotations(t *testing.T) {
-	dir, err := ioutil.TempDir("", "path_manager_test")
-	assert.NoError(t, err)
+func (self *PathManageTestSuite) TestPathManagerDailyRotations() {
+	t := self.T()
 
-	defer os.RemoveAll(dir) // clean up
-
-	config_obj := config.GetDefaultConfig()
-	config_obj.Datastore.Implementation = "FileBaseDataStore"
-	config_obj.Datastore.FilestoreDirectory = dir
-	config_obj.Datastore.Location = dir
-
-	file_store_factory := file_store.GetFileStore(config_obj)
+	file_store_factory := file_store.GetFileStore(self.config_obj)
 	clock := &utils.MockClock{}
 
 	path_manager := result_sets.NewArtifactPathManager(
-		config_obj,
+		self.config_obj,
 		"C.123",
 		"F.123",
 		"Windows.Events.ProcessCreation")
 	path_manager.Clock = clock
 
 	qm := directory.NewDirectoryQueueManager(
-		config_obj, file_store_factory).(*directory.DirectoryQueueManager)
+		self.config_obj,
+		file_store_factory).(*directory.DirectoryQueueManager)
 	qm.Clock = clock
 
 	// Write 3 different events in different days
@@ -143,7 +170,7 @@ func TestPathManagerDailyRotations(t *testing.T) {
 	// Test GetTimeRange - no time range specified should return
 	// all items.
 	times := []int64{}
-	row_chan, err := file_store.GetTimeRange(ctx, config_obj,
+	row_chan, err := file_store.GetTimeRange(ctx, self.config_obj,
 		path_manager, 0, 0)
 	assert.NoError(t, err)
 	for row := range row_chan {
@@ -154,7 +181,7 @@ func TestPathManagerDailyRotations(t *testing.T) {
 
 	// Cover a small time range - no end time
 	times = nil
-	row_chan, err = file_store.GetTimeRange(ctx, config_obj,
+	row_chan, err = file_store.GetTimeRange(ctx, self.config_obj,
 		path_manager, 1587300822, 0)
 	assert.NoError(t, err)
 	for row := range row_chan {
@@ -165,7 +192,7 @@ func TestPathManagerDailyRotations(t *testing.T) {
 
 	// Cover a small time range - no start time
 	times = nil
-	row_chan, err = file_store.GetTimeRange(ctx, config_obj,
+	row_chan, err = file_store.GetTimeRange(ctx, self.config_obj,
 		path_manager, 0, 1587300824)
 	assert.NoError(t, err)
 	for row := range row_chan {
@@ -173,4 +200,8 @@ func TestPathManagerDailyRotations(t *testing.T) {
 		times = append(times, ts.(int64))
 	}
 	assert.Equal(t, times, timestamps[:2])
+}
+
+func TestPathTest(t *testing.T) {
+	suite.Run(t, &PathManageTestSuite{})
 }

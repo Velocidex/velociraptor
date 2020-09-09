@@ -82,6 +82,7 @@ func (self *ServerTestSuite) SetupTest() {
 	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
 	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
 	require.NoError(self.T(), self.sm.Start(labels.StartLabelService))
+	require.NoError(self.T(), self.sm.Start(client_monitoring.StartClientMonitoringService))
 	require.NoError(self.T(), self.sm.Start(interrogation.StartInterrogationService))
 
 	// Load all the standard artifacts.

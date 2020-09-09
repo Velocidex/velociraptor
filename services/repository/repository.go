@@ -353,6 +353,10 @@ func compileArtifact(
 
 	// Make sure tools are all defined.
 	inventory := services.GetInventory()
+	if inventory == nil {
+		return nil
+	}
+
 	for _, tool := range artifact.Tools {
 		err := inventory.AddTool(
 			config_obj, tool,
