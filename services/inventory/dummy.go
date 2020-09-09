@@ -339,6 +339,7 @@ func StartInventoryDummyService(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer services.RegisterInventory(nil)
 		defer inventory_service.Close(config_obj)
 
 		<-ctx.Done()

@@ -245,6 +245,15 @@ func StartServerMonitoringService(
 	manager := &EventTable{
 		Done: make(chan bool),
 	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer services.RegisterServerEventManager(nil)
+
+		<-ctx.Done()
+	}()
+
 	services.RegisterServerEventManager(manager)
 
 	return manager.Update(config_obj, &artifacts)

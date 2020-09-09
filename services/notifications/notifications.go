@@ -61,7 +61,7 @@ func StartNotificationService(
 	go func() {
 		defer cancel()
 		defer wg.Done()
-
+		defer services.RegisterNotifier(nil)
 		defer func() {
 			self.pool_mu.Lock()
 			defer self.pool_mu.Unlock()

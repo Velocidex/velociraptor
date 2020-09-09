@@ -226,6 +226,7 @@ func StartHuntDispatcher(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer services.RegisterHuntDispatcher(nil)
 
 		// On the client we register a dummy dispatcher since
 		// there is nothing to sync from.

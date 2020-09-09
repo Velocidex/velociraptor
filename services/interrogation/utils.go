@@ -26,6 +26,7 @@ func watchForFlowCompletion(
 		scope *vfilter.Scope, row *ordereddict.Dict)) error {
 
 	events, cancel := services.GetJournal().Watch("System.Flow.Completion")
+	manager := services.GetRepositoryManager()
 
 	wg.Add(1)
 	go func() {
@@ -41,7 +42,7 @@ func watchForFlowCompletion(
 				&logging.FrontendComponent),
 		}
 
-		scope := services.GetRepositoryManager().BuildScope(builder)
+		scope := manager.BuildScope(builder)
 		defer scope.Close()
 
 		// Allow the artifact we are following to be over-ridden by

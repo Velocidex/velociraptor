@@ -3,6 +3,8 @@
 package startup
 
 import (
+	"fmt"
+
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
@@ -181,6 +183,37 @@ func StartupFrontendServices(sm *services.Service) error {
 }
 
 func Reset() {
+	// This function should not find any active services. Services
+	// are responsible for unregistering themselves and holding
+	// the service manager for the duration of their lifetime.
+	if services.GetJournal() != nil {
+		fmt.Printf("Journal not reset.\n")
+	}
+
+	if services.GetNotifier() != nil {
+		fmt.Printf("Notifier not reset.\n")
+	}
+
+	if services.GetInventory() != nil {
+		fmt.Printf("Inventory not reset.\n")
+	}
+
+	if services.GetRepositoryManager() != nil {
+		fmt.Printf("Repository Manager not reset.\n")
+	}
+
+	if services.GetLauncher() != nil {
+		fmt.Printf("Launcher not reset.\n")
+	}
+
+	if services.GetLabeler() != nil {
+		fmt.Printf("Labeler not reset.\n")
+	}
+
+	if services.GetHuntDispatcher() != nil {
+		fmt.Printf("HuntDispatcher not reset.\n")
+	}
+
 	services.RegisterJournal(nil)
 	services.RegisterNotifier(nil)
 	services.RegisterInventory(nil)

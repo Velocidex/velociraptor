@@ -356,8 +356,6 @@ func StartClientMonitoringService(
 		id:         uuid.New().String(),
 	}
 
-	services.RegisterClientEventManager(event_table)
-
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Client Monitoring Service")
 
@@ -367,6 +365,7 @@ func StartClientMonitoringService(
 	go func() {
 		defer wg.Done()
 		defer cancel()
+		defer services.RegisterClientEventManager(nil)
 
 		for {
 			select {
@@ -382,6 +381,8 @@ func StartClientMonitoringService(
 			}
 		}
 	}()
+
+	services.RegisterClientEventManager(event_table)
 
 	return event_table.LoadFromFile(ctx, config_obj)
 }
