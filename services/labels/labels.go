@@ -361,21 +361,16 @@ func (self *Labeler) Start(ctx context.Context,
 
 	self.lru = cache.NewLRUCache(expected_clients)
 
-	// Wait in this func until we are ready to monitor.
-	local_wg := &sync.WaitGroup{}
-	local_wg.Add(1)
+	events, cancel := services.GetJournal().Watch("Server.Internal.Label")
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer cancel()
+		defer services.RegisterLabeler(nil)
 
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> Label service.")
-
-		events, cancel := services.GetJournal().Watch("Server.Internal.Label")
-		defer cancel()
-
-		local_wg.Done()
 
 		for {
 			select {
@@ -393,8 +388,6 @@ func (self *Labeler) Start(ctx context.Context,
 			}
 		}
 	}()
-
-	local_wg.Wait()
 
 	return nil
 }

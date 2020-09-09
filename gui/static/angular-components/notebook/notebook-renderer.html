@@ -9,6 +9,6 @@
       cell-id="cell.cell_id"></grr-notebook-cell-renderer>
   </div>
 </div>
-<div ng-if="!state.notebook || state.notebook.hidden" class="no-content">
+<div ng-if="!state.notebook.cell_metadata || state.notebook.hidden" class="no-content">
   Please select a notebook to view.
 </div>

@@ -27,8 +27,8 @@ const HuntsViewController = function(
   /** @type {string} */
   this.tab;
 
-  this.scope_.$watchGroup(['controller.selectedHuntId', 'controller.tab'],
-      this.onSelectionChange_.bind(this));
+    this.scope_.$watchGroup(['controller.selectedHuntId', 'controller.tab'],
+                            this.onSelectionChange_.bind(this));
 
   this.grrRoutingService_.uiOnParamsChanged(this.scope_, ['huntId', 'tab'],
       this.onParamsChange_.bind(this));

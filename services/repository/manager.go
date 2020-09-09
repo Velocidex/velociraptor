@@ -191,6 +191,14 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 		logger.Info("Compiled all artifacts.")
 	}()
 
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer services.RegisterRepositoryManager(nil)
+
+		<-ctx.Done()
+	}()
+
 	logger.Info("Loaded %d built in artifacts in %v", count, time.Since(now))
 	services.RegisterRepositoryManager(self)
 

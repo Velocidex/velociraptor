@@ -39,9 +39,11 @@ const PAGE_SIZE = 100;
  * @ngInject
  */
 const FlowsListController = function(
-    $scope, $element, grrApiService) {
+    $scope, $element, grrApiService, grrRoutingService) {
   /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    this.scope_ = $scope;
+
+    this.grrRoutingService_ = grrRoutingService;
 
   /** @private {!angular.jQuery} */
   this.element_ = $element;
@@ -73,9 +75,25 @@ const FlowsListController = function(
 
   // Propagate our triggerUpdate implementation to the scope so that users of
   // this directive can use it.
-  this.scope_['triggerUpdate'] = this.triggerUpdate.bind(this);
+    this.scope_['triggerUpdate'] = this.triggerUpdate.bind(this);
+
+    this.grrRoutingService_.uiOnParamsChanged(
+        this.scope_, ['clientId', 'flowId'],
+        this.onRoutingParamsChange_.bind(this));
 };
 
+
+FlowsListController.prototype.onRoutingParamsChange_ = function(
+    unused_newValues, opt_stateParams) {
+    if (opt_stateParams["clientId"]) {
+        this.clientId = opt_stateParams["clientId"];
+    }
+
+    if (opt_stateParams['flowId']) {
+        this.selectedFlowId = opt_stateParams['flowId'];
+        this.tab = opt_stateParams['tab'];
+    }
+};
 
 /**
  * Transforms items fetched by API items provider. The

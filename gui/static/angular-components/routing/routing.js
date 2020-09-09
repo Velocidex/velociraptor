@@ -96,8 +96,12 @@ exports.routingModule
           title: "Server Events",
       })
       .state('server_artifacts', {
-        url: '/server_artifacts',
-        template: '<grr-server-artifacts />',
+        url: '/server_artifacts/:flowId/:tab',
+          template: '<grr-server-artifacts />',
+          params: {
+              flowId: {value: null, squash: true},
+              tab: {value: null, squash: true}
+          },
         title: "Server Artifacts",
       })
       .state('alerts', {
@@ -150,9 +154,12 @@ exports.routingModule
         title: 'Welcome to Velociraptor'
       })
       .state('notebook', {
-        url: '/notebook',
-        template: '<grr-notebook />',
-        title: "Notebook",
+          url: '/notebook/:notebookId',
+          template: '<grr-notebook />',
+          params: {
+              notebookId: {value: null, squash: true}
+          },
+          title: "Notebook",
       })
       .state('client.events', {
         url: '/client_events',
@@ -167,7 +174,7 @@ exports.routingModule
     var updateTitle = function() {
       var breadcrumbs = [];
       var curState = $state['$current'];
-      while (angular.isDefined(curState)) {
+      while (angular.isObject(curState)) {
         if (angular.isString(curState.title)) {
           breadcrumbs.splice(0, 0, curState.title);
         } else if (angular.isFunction(curState.title)) {
@@ -213,7 +220,8 @@ exports.routingModule
         $location.url(rewrittenUrl);
       }
 
-      $urlRouter.sync();
+        $urlRouter.sync();
+
       // We need to update the title not only when the state changes
       // (see $stateChangeSuccess), but also when individual state's
       // parameters get updated.

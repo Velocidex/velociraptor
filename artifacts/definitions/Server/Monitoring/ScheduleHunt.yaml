@@ -1,0 +1,22 @@
+name: Server.Monitoring.ClientCount
+description: |
+     Run client interrogation periodically
+
+type: SERVER_EVENT
+parameters:
+  - name: ScheduleDayRegex
+    default: Tuesday
+  - name: ScheduleTimeRegex
+    default: "01:28:"
+  - name: HuntDescription
+    default:
+
+sources:
+  - query: |
+      LET schedule = SELECT UTC.String AS Now,
+      Weekday.String AS Today
+      FROM clock(period=60)
+      WHERE Now =~ TimeRegex AND Today =~ DayRegex
+
+      SELECT hunt(artifacts=["Generic.Client.Info"],
+      description="Periodic info hunt") FROM schedule

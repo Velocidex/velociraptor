@@ -67,7 +67,8 @@ sources:
                Mtime.Sec AS Modified,
                timestamp(epoch=Atime.Sec) AS ATime,
                timestamp(epoch=Mtime.Sec) AS MTime,
-               timestamp(epoch=Ctime.Sec) AS CTime, IsDir
+               timestamp(epoch=Ctime.Sec) AS CTime,
+               IsDir, Mode
         FROM glob(globs=SearchFilesGlob,
                   accessor="file")
 
@@ -91,6 +92,7 @@ sources:
           SELECT * FROM foreach(
             row={
                SELECT * FROM modified_before
+               WHERE Mode.IsRegular
             },
             query={
                SELECT FullPath, Inode, Mode,
@@ -106,10 +108,10 @@ sources:
 
     - SELECT FullPath, Inode, Mode, Size, Modified, ATime,
              MTime, CTime, Keywords,
-               if(condition=(Upload_File = "Y" and NOT IsDir ),
+               if(condition=(Upload_File = "Y" and Mode.IsRegular ),
                   then=upload(file=FullPath,
                               accessor="file")) AS Upload,
-               if(condition=(Calculate_Hash = "Y" and NOT IsDir ),
+               if(condition=(Calculate_Hash = "Y" and Mode.IsRegular),
                   then=hash(path=FullPath,
                             accessor="file")) AS Hash
       FROM keyword_search

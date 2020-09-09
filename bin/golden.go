@@ -88,8 +88,10 @@ func runTest(fixture *testFixture,
 	// the code is deadlocked and we want to know what is
 	// happening.
 	go func() {
+		fmt.Printf("Setting deadline to %v\n", time.Now().Add(time.Second*120))
 		select {
 		case <-ctx.Done():
+			fmt.Printf("Disarming alarm\n")
 			return
 
 			// If we get here we are deadlocked! Print all

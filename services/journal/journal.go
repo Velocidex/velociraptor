@@ -79,6 +79,14 @@ func StartJournalService(
 		service.qm = qm
 	}
 
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer services.RegisterJournal(nil)
+
+		<-ctx.Done()
+	}()
+
 	services.RegisterJournal(service)
 
 	return service.Start(config_obj)
