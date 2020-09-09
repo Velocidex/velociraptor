@@ -9,6 +9,7 @@ const NotebookRendererController = function($scope, grrRoutingService, grrApiSer
     this.scope_ = $scope;
     this.grrRoutingService_ = grrRoutingService;
     this.grrApiService_ = grrApiService;
+
     this.grrRoutingService_.uiOnParamsChanged(
         this.scope_, ['notebookId'],
         this.onRoutingParamsChange_.bind(this));

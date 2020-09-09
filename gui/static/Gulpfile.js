@@ -23,7 +23,6 @@ var closureCompiler = gulpClosureCompiler.gulp();
 
 const closureCompilerFlags = {
     compilation_level: 'WHITESPACE_ONLY',
-  dependency_mode: 'STRICT',
   jscomp_off: [
     'checkTypes',
     'checkVars',
