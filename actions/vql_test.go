@@ -61,28 +61,28 @@ func (self *ClientVQLTestSuite) TestDependentArtifacts() {
 			Query: []*actions_proto.VQLRequest{
 				{
 					Name: "Query",
-					VQL:  "SELECT * FROM Artifact.A()",
+					VQL:  "SELECT * FROM Artifact.Custom.Foo.Bar.Baz.A()",
 				},
 			},
 			Artifacts: []*artifacts_proto.Artifact{
 				{
-					Name: "A",
+					Name: "Custom.Foo.Bar.Baz.A",
 					Sources: []*artifacts_proto.ArtifactSource{
 						{
-							Query: "SELECT * FROM Artifact.B()",
+							Query: "SELECT * FROM Artifact.Custom.Foo.Bar.Baz.B()",
 						},
 					},
 				},
 				{
-					Name: "B",
+					Name: "Custom.Foo.Bar.Baz.B",
 					Sources: []*artifacts_proto.ArtifactSource{
 						{
-							Query: "SELECT * FROM Artifact.C()",
+							Query: "SELECT * FROM Artifact.Custom.Foo.Bar.Baz.C()",
 						},
 					},
 				},
 				{
-					Name: "C",
+					Name: "Custom.Foo.Bar.Baz.C",
 					Sources: []*artifacts_proto.ArtifactSource{
 						{
 							Query: "SELECT 1 AS X FROM scope()",
@@ -92,7 +92,7 @@ func (self *ClientVQLTestSuite) TestDependentArtifacts() {
 			},
 		})
 
-	assert.Equal(self.T(), "{\"X\":1,\"_Source\":\"A\"}\n", getVQLResponse(resp))
+	assert.Equal(self.T(), "{\"X\":1,\"_Source\":\"Custom.Foo.Bar.Baz.A\"}\n", getVQLResponse(resp))
 }
 
 func getVQLResponse(resp *responder.Responder) string {
