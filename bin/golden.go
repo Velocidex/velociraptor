@@ -30,8 +30,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/shirou/gopsutil/process"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -99,14 +99,12 @@ func makeCtxWithTimeout(duration int) (context.Context, func()) {
 				// the goroutines and mutex and hard exit.
 			case <-time.After(time.Second):
 				if time.Now().Before(deadline) {
-					gathering, _ := prometheus.DefaultGatherer.Gather()
-					for _, metric := range gathering {
-						total_time := (int64)(*metric.Metric[0].Counter.Value * 1e9)
-						memory := (int64)(*metric.Metric[0].Gauge.Value)
+					proc, _ := process.NewProcess(int32(os.Getpid()))
+					total_time, _ := proc.Percent(0)
+					memory, _ := proc.MemoryInfo()
 
-						fmt.Printf("Not time to fire yet %v %v %v\n",
-							time.Now(), total_time, memory)
-					}
+					fmt.Printf("Not time to fire yet %v %v %v\n",
+						time.Now(), total_time, memory)
 					continue
 				}
 
