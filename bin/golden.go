@@ -81,31 +81,40 @@ func vqlCollectorArgsFromFixture(
 func makeCtxWithTimeout() (context.Context, func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 
+	deadline := time.Now().Add(time.Second * 120)
+	fmt.Printf("Setting deadline to %v\n", deadline)
+
 	// Set an alarm for hard exit in 2 minutes. If we hit it then
 	// the code is deadlocked and we want to know what is
 	// happening.
 	go func() {
-		fmt.Printf("Setting deadline to %v\n", time.Now().Add(time.Second*120))
-		select {
-		case <-ctx.Done():
-			fmt.Printf("Disarming alarm\n")
-			return
+		for {
+			select {
+			case <-ctx.Done():
+				fmt.Printf("Disarming alarm\n")
+				return
 
-			// If we get here we are deadlocked! Print all
-			// the goroutines and mutex and hard exit.
-		case <-time.After(time.Second * 120):
-			p := pprof.Lookup("goroutines")
-			if p != nil {
-				p.WriteTo(os.Stderr, 1)
+				// If we get here we are deadlocked! Print all
+				// the goroutines and mutex and hard exit.
+			case <-time.After(time.Second):
+				if time.Now().Before(deadline) {
+					fmt.Printf("Not time to fire yet %v\n", time.Now())
+					continue
+				}
+
+				p := pprof.Lookup("goroutines")
+				if p != nil {
+					p.WriteTo(os.Stderr, 1)
+				}
+
+				p = pprof.Lookup("mutex")
+				if p != nil {
+					p.WriteTo(os.Stderr, 1)
+				}
+
+				// Hard exit with an error.
+				os.Exit(-1)
 			}
-
-			p = pprof.Lookup("mutex")
-			if p != nil {
-				p.WriteTo(os.Stderr, 1)
-			}
-
-			// Hard exit with an error.
-			os.Exit(-1)
 		}
 	}()
 

@@ -69,12 +69,12 @@ func (self *PathManageTestSuite) SetupTest() {
 		LoadAndValidate()
 	require.NoError(self.T(), err)
 
-	self.dirname, err := ioutil.TempDir("", "path_manager_test")
+	self.dirname, err = ioutil.TempDir("", "path_manager_test")
 	assert.NoError(self.T(), err)
 
 	self.config_obj.Datastore.Implementation = "FileBaseDataStore"
-	self.config_obj.Datastore.FilestoreDirectory = dir
-	self.config_obj.Datastore.Location = dir
+	self.config_obj.Datastore.FilestoreDirectory = self.dirname
+	self.config_obj.Datastore.Location = self.dirname
 
 	// Start essential services.
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
