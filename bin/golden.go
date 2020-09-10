@@ -78,10 +78,10 @@ func vqlCollectorArgsFromFixture(
 	return vql_collector_args
 }
 
-func makeCtxWithTimeout() (context.Context, func()) {
+func makeCtxWithTimeout(duration int) (context.Context, func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 
-	deadline := time.Now().Add(time.Second * 120)
+	deadline := time.Now().Add(time.Second * time.Duration(duration))
 	fmt.Printf("Setting deadline to %v\n", deadline)
 
 	// Set an alarm for hard exit in 2 minutes. If we hit it then
@@ -124,7 +124,7 @@ func makeCtxWithTimeout() (context.Context, func()) {
 func runTest(fixture *testFixture,
 	config_obj *config_proto.Config) (string, error) {
 
-	ctx, cancel := makeCtxWithTimeout()
+	ctx, cancel := makeCtxWithTimeout(60)
 	defer cancel()
 
 	//Force a clean slate for each test.
@@ -202,7 +202,7 @@ func runTest(fixture *testFixture,
 }
 
 func doGolden() {
-	_, cancel := makeCtxWithTimeout()
+	_, cancel := makeCtxWithTimeout(120)
 	defer cancel()
 
 	config_obj, err := DefaultConfigLoader.LoadAndValidate()
