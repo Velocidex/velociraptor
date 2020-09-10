@@ -60,7 +60,8 @@
     "gulp-less": "^4.0.1",
     "gulp-newer": "^1.4.0",
     "gulp-plumber": "^1.2.1",
-    "gulp-sourcemaps": "^2.6.5"
+    "gulp-sourcemaps": "^2.6.5",
+    "yargs-parser": ">=13.1.2"
   },
   "repository": {
     "type": "git",

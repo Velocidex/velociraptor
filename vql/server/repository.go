@@ -90,7 +90,7 @@ func (self ArtifactSetFunction) Info(
 	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "artifact_set",
-		Doc:     "Sets and artifact into the global repository.",
+		Doc:     "Sets an artifact into the global repository.",
 		ArgType: type_map.AddType(scope, &ArtifactSetFunctionArgs{}),
 	}
 }
