@@ -78,11 +78,8 @@ func vqlCollectorArgsFromFixture(
 	return vql_collector_args
 }
 
-func runTest(fixture *testFixture,
-	config_obj *config_proto.Config) (string, error) {
-
+func makeCtxWithTimeout() (context.Context, func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
-	defer cancel()
 
 	// Set an alarm for hard exit in 2 minutes. If we hit it then
 	// the code is deadlocked and we want to know what is
@@ -111,6 +108,15 @@ func runTest(fixture *testFixture,
 			os.Exit(-1)
 		}
 	}()
+
+	return ctx, cancel
+}
+
+func runTest(fixture *testFixture,
+	config_obj *config_proto.Config) (string, error) {
+
+	ctx, cancel := makeCtxWithTimeout()
+	defer cancel()
 
 	//Force a clean slate for each test.
 	startup.Reset()
@@ -187,6 +193,9 @@ func runTest(fixture *testFixture,
 }
 
 func doGolden() {
+	_, cancel := makeCtxWithTimeout()
+	defer cancel()
+
 	config_obj, err := DefaultConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Can not load configuration.")
 

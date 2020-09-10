@@ -52,9 +52,10 @@ parameters:
     description: Tickbox to remove policy.
 
 sources:
-    - query: >-
+    - query: |
+
         // If a MessageBox configured truncate to 256 character limit
-        LET MessageBox <=  parse_string_with_regex(
+        LET MessageBox <= parse_string_with_regex(
                   regex='^(?P<Message>.{0,255}).*',
                   string=MessageBox).Message
 
