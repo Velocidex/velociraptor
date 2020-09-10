@@ -30,6 +30,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -98,7 +99,14 @@ func makeCtxWithTimeout(duration int) (context.Context, func()) {
 				// the goroutines and mutex and hard exit.
 			case <-time.After(time.Second):
 				if time.Now().Before(deadline) {
-					fmt.Printf("Not time to fire yet %v\n", time.Now())
+					gathering, _ := prometheus.DefaultGatherer.Gather()
+					for _, metric := range gathering {
+						total_time := (int64)(*metric.Metric[0].Counter.Value * 1e9)
+						memory := (int64)(*metric.Metric[0].Gauge.Value)
+
+						fmt.Printf("Not time to fire yet %v %v %v\n",
+							time.Now(), total_time, memory)
+					}
 					continue
 				}
 
@@ -124,7 +132,7 @@ func makeCtxWithTimeout(duration int) (context.Context, func()) {
 func runTest(fixture *testFixture,
 	config_obj *config_proto.Config) (string, error) {
 
-	ctx, cancel := makeCtxWithTimeout(60)
+	ctx, cancel := makeCtxWithTimeout(30)
 	defer cancel()
 
 	//Force a clean slate for each test.

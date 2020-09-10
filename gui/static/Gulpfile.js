@@ -67,6 +67,7 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/angular-resource/angular-resource.js',
                    config.nodeModulesDir + '/flot/dist/es5/jquery.flot.js',
                    config.nodeModulesDir + '/flot/source/jquery.flot.selection.js',
+                   config.nodeModulesDir + '/flot/source/jquery.canvaswrapper.js',
                    config.nodeModulesDir + '/vis/dist/vis.min.js',
                    config.nodeModulesDir + '/moment/moment.js',
                    config.nodeModulesDir + '/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
