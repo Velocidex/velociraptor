@@ -27,7 +27,6 @@
     "jquery": "^3.5.1",
     "jquery-csv": "^1.0.11",
     "jquery-migrate": "^3.3.1",
-    "jquery-ui-dist": "^1.12.1",
     "jstree": "^3.3.10",
     "jstree-bootstrap-theme": "^1.0.1",
     "kind-of": "^6.0.3",

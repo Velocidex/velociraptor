@@ -19,7 +19,7 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) *
 	if self.Repository == nil {
 		manager := services.GetRepositoryManager()
 		if manager == nil {
-			return vfilter.MakeScope()
+			return vfilter.NewScope()
 		}
 		self.Repository, _ = manager.GetGlobalRepository(self.Config)
 	}
