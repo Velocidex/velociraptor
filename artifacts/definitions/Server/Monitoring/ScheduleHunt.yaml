@@ -1,4 +1,4 @@
-name: Server.Monitoring.ClientCount
+name: Server.Monitoring.ScheduleHunt
 description: |
      Run client interrogation periodically
 

@@ -299,7 +299,7 @@ func StartFrontendHttps(
 
 		atomic.StoreInt32(&server_obj.Healthy, 1)
 
-		err = server.ListenAndServeTLS("", "")
+		err := server.ListenAndServeTLS("", "")
 		if err != nil && err != http.ErrServerClosed {
 			server_obj.Error("Frontend server error", err)
 		}
@@ -318,12 +318,8 @@ func StartFrontendHttps(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		err := services.GetNotifier().NotifyAllListeners(config_obj)
-		if err != nil {
-			server_obj.Error("Frontend server error", err)
-		}
 
-		err = server.Shutdown(time_ctx)
+		err := server.Shutdown(time_ctx)
 		if err != nil {
 			server_obj.Error("Frontend server error", err)
 		}

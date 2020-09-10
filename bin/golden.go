@@ -31,6 +31,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
 	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/shirou/gopsutil/process"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -78,39 +79,59 @@ func vqlCollectorArgsFromFixture(
 	return vql_collector_args
 }
 
-func runTest(fixture *testFixture,
-	config_obj *config_proto.Config) (string, error) {
-
+func makeCtxWithTimeout(duration int) (context.Context, func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
-	defer cancel()
+
+	deadline := time.Now().Add(time.Second * time.Duration(duration))
+	fmt.Printf("Setting deadline to %v\n", deadline)
 
 	// Set an alarm for hard exit in 2 minutes. If we hit it then
 	// the code is deadlocked and we want to know what is
 	// happening.
 	go func() {
-		fmt.Printf("Setting deadline to %v\n", time.Now().Add(time.Second*120))
-		select {
-		case <-ctx.Done():
-			fmt.Printf("Disarming alarm\n")
-			return
+		for {
+			select {
+			case <-ctx.Done():
+				fmt.Printf("Disarming alarm\n")
+				return
 
-			// If we get here we are deadlocked! Print all
-			// the goroutines and mutex and hard exit.
-		case <-time.After(time.Second * 120):
-			p := pprof.Lookup("goroutines")
-			if p != nil {
-				p.WriteTo(os.Stderr, 1)
+				// If we get here we are deadlocked! Print all
+				// the goroutines and mutex and hard exit.
+			case <-time.After(time.Second):
+				if time.Now().Before(deadline) {
+					proc, _ := process.NewProcess(int32(os.Getpid()))
+					total_time, _ := proc.Percent(0)
+					memory, _ := proc.MemoryInfo()
+
+					fmt.Printf("Not time to fire yet %v %v %v\n",
+						time.Now(), total_time, memory)
+					continue
+				}
+
+				p := pprof.Lookup("goroutines")
+				if p != nil {
+					p.WriteTo(os.Stderr, 1)
+				}
+
+				p = pprof.Lookup("mutex")
+				if p != nil {
+					p.WriteTo(os.Stderr, 1)
+				}
+
+				// Hard exit with an error.
+				os.Exit(-1)
 			}
-
-			p = pprof.Lookup("mutex")
-			if p != nil {
-				p.WriteTo(os.Stderr, 1)
-			}
-
-			// Hard exit with an error.
-			os.Exit(-1)
 		}
 	}()
+
+	return ctx, cancel
+}
+
+func runTest(fixture *testFixture,
+	config_obj *config_proto.Config) (string, error) {
+
+	ctx, cancel := makeCtxWithTimeout(30)
+	defer cancel()
 
 	//Force a clean slate for each test.
 	startup.Reset()
@@ -187,6 +208,9 @@ func runTest(fixture *testFixture,
 }
 
 func doGolden() {
+	_, cancel := makeCtxWithTimeout(120)
+	defer cancel()
+
 	config_obj, err := DefaultConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Can not load configuration.")
 

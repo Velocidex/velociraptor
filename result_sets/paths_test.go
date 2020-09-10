@@ -58,6 +58,7 @@ type PathManageTestSuite struct {
 	suite.Suite
 	config_obj *config_proto.Config
 	sm         *services.Service
+	dirname    string
 }
 
 func (self *PathManageTestSuite) SetupTest() {
@@ -68,14 +69,12 @@ func (self *PathManageTestSuite) SetupTest() {
 		LoadAndValidate()
 	require.NoError(self.T(), err)
 
-	dir, err := ioutil.TempDir("", "path_manager_test")
+	self.dirname, err = ioutil.TempDir("", "path_manager_test")
 	assert.NoError(self.T(), err)
 
-	defer os.RemoveAll(dir) // clean up
-
 	self.config_obj.Datastore.Implementation = "FileBaseDataStore"
-	self.config_obj.Datastore.FilestoreDirectory = dir
-	self.config_obj.Datastore.Location = dir
+	self.config_obj.Datastore.FilestoreDirectory = self.dirname
+	self.config_obj.Datastore.Location = self.dirname
 
 	// Start essential services.
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
@@ -91,6 +90,7 @@ func (self *PathManageTestSuite) SetupTest() {
 
 func (self *PathManageTestSuite) TearDownTest() {
 	self.sm.Close()
+	os.RemoveAll(self.dirname) // clean up
 }
 
 // The path manager maps artifacts, clients, flows etc into a file
