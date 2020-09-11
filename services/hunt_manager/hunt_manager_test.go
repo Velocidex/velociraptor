@@ -90,7 +90,10 @@ func (self *HuntTestSuite) TestHuntManager() {
 	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
-	services.GetJournal().PushRowsToArtifact(self.config_obj,
+	journal, err := services.GetJournal()
+	assert.NoError(t, err)
+
+	journal.PushRowsToArtifact(self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -149,7 +152,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	services.GetJournal().PushRows(self.config_obj, path_manager,
+	journal, err := services.GetJournal()
+	assert.NoError(t, err)
+
+	journal.PushRows(self.config_obj, path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -207,7 +213,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	services.GetJournal().PushRows(self.config_obj, path_manager,
+	journal, err := services.GetJournal()
+	assert.NoError(t, err)
+
+	journal.PushRows(self.config_obj, path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -257,7 +266,10 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	services.GetJournal().PushRows(self.config_obj, path_manager,
+	journal, err := services.GetJournal()
+	assert.NoError(t, err)
+
+	journal.PushRows(self.config_obj, path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -320,7 +332,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	services.GetJournal().PushRows(self.config_obj, path_manager,
+	journal, err := services.GetJournal()
+	assert.NoError(t, err)
+
+	journal.PushRows(self.config_obj, path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -391,7 +406,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	services.GetJournal().PushRows(self.config_obj, path_manager,
+	journal, err := services.GetJournal()
+	assert.NoError(t, err)
+
+	journal.PushRows(self.config_obj, path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).

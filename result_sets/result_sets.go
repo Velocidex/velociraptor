@@ -16,6 +16,7 @@
 package result_sets
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Velocidex/json"
@@ -29,7 +30,11 @@ import (
 )
 
 func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int, error) {
-	repository, _ := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager := services.GetRepositoryManager()
+	if manager == nil {
+		return 0, errors.New("No Repository Manager")
+	}
+	repository, _ := manager.GetGlobalRepository(config_obj)
 
 	artifact, pres := repository.Get(config_obj, artifact_name)
 	if !pres {

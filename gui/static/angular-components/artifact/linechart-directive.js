@@ -76,7 +76,7 @@ exports.LineChartDirective = function() {
           elem = $(elem);
 
           var plot = null;
-          var placeholder = $("<div>").appendTo(elem);
+          var placeholder = $("<div id='plot'>").appendTo(elem);
           placeholder.bind("plotselected", function (event, ranges) {
               $.each(plot.getXAxes(), function(_, axis) {
                   var opts = axis.options;

@@ -813,7 +813,12 @@ func (self *ApiServer) WriteEvent(
 
 		// Only return the first row
 		if true {
-			err := services.GetJournal().PushRowsToArtifact(self.config,
+			journal, err := services.GetJournal()
+			if err != nil {
+				return nil, err
+			}
+
+			err = journal.PushRowsToArtifact(self.config,
 				rows, in.Query.Name, peer_name, "")
 			return &empty.Empty{}, err
 		}

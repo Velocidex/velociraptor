@@ -193,7 +193,12 @@ func (self *FrontendManager) syncActiveFrontends() error {
 	self.mu.Unlock()
 
 	if self.sample%2 == 0 {
-		err = services.GetJournal().PushRowsToArtifact(self.config_obj,
+		journal, err := services.GetJournal()
+		if err != nil {
+			return err
+		}
+
+		err = journal.PushRowsToArtifact(self.config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("CPUPercent", total_metrics.CpuLoadPercent).
 				Set("MemoryUse", total_metrics.ProcessResidentMemoryBytes).

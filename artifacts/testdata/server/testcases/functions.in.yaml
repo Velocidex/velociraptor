@@ -15,3 +15,11 @@ Queries:
            WHERE _value = 3
        })
     }) AS Filtered FROM scope()
+
+  # Test cache functions (first 2 should be same value due to caching)
+  - LET Foo(X) = if(condition=log(message=format(format="I Ran with %v", args=X)),
+                    then=X + 5)
+  - SELECT cache(func=Foo(X=5), key=5),
+           cache(func=Foo(X=10), key=5),
+           cache(func=Foo(X=10), key=10)
+    FROM scope()

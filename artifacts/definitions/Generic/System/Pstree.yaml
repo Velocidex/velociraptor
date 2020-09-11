@@ -24,8 +24,23 @@ sources:
       // through it many times.
       LET processes <= SELECT Name, Pid, Ppid FROM pslist()
 
-      // Recursive function to find process parent.
-      LET pstree(LookupPid) = SELECT * FROM foreach(
+      LET m <= memoize(query={ SELECT Name, Pid, Ppid FROM pslist()}, key="Pid", period=1)
+
+      // Recursive function to find process parent (clients > 0.4.9).
+      LET pstree_memoized(LookupPid) = SELECT * FROM foreach(
+      row=get(item=m, field=LookupPid),
+        query={
+           SELECT * FROM chain(
+           a={
+             SELECT Name, Pid, Ppid FROM scope()
+           },
+           b={
+             SELECT Name, Pid, Ppid FROM pstree(LookupPid=Ppid)
+           })
+        })
+
+      // Recursive function to find process parent (clients < 0.4.9).
+      LET pstree_legacy(LookupPid) = SELECT * FROM foreach(
          row={
            SELECT Name, Pid, Ppid FROM processes
            WHERE Pid = LookupPid
@@ -39,6 +54,12 @@ sources:
              SELECT Name, Pid, Ppid FROM scope()
            })
       })
+
+      // Select which version we should use
+      LET pstree(LookupPid) = SELECT * FROM if(
+        condition=version(function="memoize") >= 0,
+        then=pstree_memoized,
+        else=pstree_legacy)
 
       SELECT Name, Pid, Ppid,
              join(array=pstree(LookupPid=Pid).Name, sep=CallChainSep) AS CallChain

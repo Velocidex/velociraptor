@@ -104,7 +104,11 @@ func (self *HuntManager) StartParticipation(
 			Config: config_obj,
 			Logger: logging.NewPlainLogger(config_obj, &logging.GenericComponent),
 		})
-	qm_chan, cancel := services.GetJournal().Watch("System.Hunt.Participation")
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+	qm_chan, cancel := journal.Watch("System.Hunt.Participation")
 
 	wg.Add(1)
 	go func() {
@@ -135,7 +139,12 @@ func (self *HuntManager) StartFlowCompletion(
 	wg *sync.WaitGroup) error {
 
 	scope := vfilter.NewScope()
-	qm_chan, cancel := services.GetJournal().Watch("System.Flow.Completion")
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	qm_chan, cancel := journal.Watch("System.Flow.Completion")
 
 	wg.Add(1)
 	go func() {
@@ -182,7 +191,12 @@ func (self *HuntManager) ProcessFlowCompletion(
 	}
 
 	path_manager := paths.NewHuntPathManager(hunt_id)
-	err = services.GetJournal().PushRows(config_obj, path_manager.ClientErrors(),
+	journal, err := services.GetJournal()
+	if err != nil {
+		return
+	}
+
+	err = journal.PushRows(config_obj, path_manager.ClientErrors(),
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", flow.ClientId).
 			Set("FlowId", flow.SessionId).
@@ -312,9 +326,14 @@ func (self *HuntManager) ProcessRow(
 
 	row.Set("FlowId", flow_id)
 	row.Set("Timestamp", time.Now().Unix())
+	journal, err := services.GetJournal()
+	if err != nil {
+		scope.Log("hunt manager: %v", err)
+		return
+	}
 
 	path_manager := paths.NewHuntPathManager(participation_row.HuntId)
-	err = services.GetJournal().PushRows(config_obj,
+	err = journal.PushRows(config_obj,
 		path_manager.Clients(), []*ordereddict.Dict{row})
 	if err != nil {
 		scope.Log("hunt manager: %v", err)

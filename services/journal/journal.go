@@ -69,8 +69,8 @@ func StartJournalService(
 	// 1. Watchers will never be notified.
 	// 2. PushRows() will fail with an error.
 	service := &JournalService{}
-	old_service := services.GetJournal()
-	if old_service != nil {
+	old_service, err := services.GetJournal()
+	if err == nil {
 		service.qm = old_service.(*JournalService).qm
 	}
 

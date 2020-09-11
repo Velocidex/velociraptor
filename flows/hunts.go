@@ -272,7 +272,12 @@ func ModifyHunt(
 					Set("Hunt", hunt).
 					Set("User", user)
 
-				err := services.GetJournal().PushRowsToArtifact(config_obj,
+				journal, err := services.GetJournal()
+				if err != nil {
+					return err
+				}
+
+				err = journal.PushRowsToArtifact(config_obj,
 					[]*ordereddict.Dict{row}, "System.Hunt.Archive",
 					"server", hunt_modification.HuntId)
 				if err != nil {

@@ -266,9 +266,14 @@ func ArchiveFlow(
 		Set("Timestamp", time.Now().UTC().Unix()).
 		Set("Flow", collection_context)
 
+	journal, err := services.GetJournal()
+	if err != nil {
+		return nil, err
+	}
+
 	return &api_proto.StartFlowResponse{
 			FlowId: flow_id,
-		}, services.GetJournal().PushRowsToArtifact(config_obj,
+		}, journal.PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{row},
 			"System.Flow.Archive", client_id, flow_id)
 }

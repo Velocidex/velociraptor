@@ -99,8 +99,13 @@ func ForemanProcessMessage(
 			return nil
 		}
 
+		journal, err := services.GetJournal()
+		if err != nil {
+			return err
+		}
+
 		// Notify the hunt manager that we need to hunt this client.
-		err := services.GetJournal().PushRowsToArtifact(config_obj,
+		err = journal.PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("HuntId", hunt.HuntId).
 				Set("ClientId", client_id).

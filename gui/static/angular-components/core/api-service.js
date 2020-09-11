@@ -288,7 +288,10 @@ ApiService.prototype.poll = function(apiPath, intervalMs, opt_params,
       if (cancelled) {
         return;
       }
-      result.reject(response);
+        // Do not cancel the polling if there is a server
+        // error. Polling normally updates the display and
+        // intermittant failures will cause the display to break.
+        // result.reject(response);
     }.bind(this)).finally(function() {
       if (cancelled) {
         return;

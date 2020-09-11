@@ -44,7 +44,12 @@ func (self *EnrollmentService) Start(
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 
-	events, cancel := services.GetJournal().Watch("Server.Internal.Enrollment")
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	events, cancel := journal.Watch("Server.Internal.Enrollment")
 
 	wg.Add(1)
 	go func() {
