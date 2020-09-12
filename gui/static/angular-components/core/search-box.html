@@ -1,5 +1,5 @@
 <abbr title="Type label: to open a list of possible labels completions.">
-  <form class="pull-right client-search-box">
+  <form class="pull-left client-search-box">
     <div class="form-group">
       <div class="input-group">
         <input id="client_query" autocomplete="off"
@@ -19,4 +19,13 @@
       </div>
     </div>
   </form>
+  <div class="pull-right" style="padding-left: 2em">
+    
+      <button id="show-hosts-btn"
+              type="button"
+              class="btn btn-default"
+              ng-click="controller.submitEmptyQuery()">
+              <span class="fa fa-server navicon ng-scope"></span> show all 
+        </button>
+      </div>
 </abbr>
