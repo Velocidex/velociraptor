@@ -153,7 +153,13 @@ func (self CollectPlugin) Call(
 
 			}
 
-			err = services.GetLauncher().EnsureToolsDeclared(
+			launcher, err := services.GetLauncher()
+			if err != nil {
+				scope.Log("collect: %v", err)
+				return
+			}
+
+			err = launcher.EnsureToolsDeclared(
 				ctx, config_obj, artifact)
 			if err != nil {
 				scope.Log("collect: %v %v", name, err)
@@ -166,7 +172,7 @@ func (self CollectPlugin) Call(
 				acl_manager = vql_subsystem.NullACLManager{}
 			}
 
-			request, err := services.GetLauncher().CompileCollectorArgs(
+			request, err := launcher.CompileCollectorArgs(
 				ctx, config_obj, acl_manager, repository,
 				&flows_proto.ArtifactCollectorArgs{
 					Artifacts: []string{artifact.Name},

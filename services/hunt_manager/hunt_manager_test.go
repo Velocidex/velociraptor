@@ -69,7 +69,10 @@ func (self *HuntTestSuite) TearDownTest() {
 func (self *HuntTestSuite) TestHuntManager() {
 	t := self.T()
 
-	services.GetLauncher().SetFlowIdForTests("F.1234")
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
+
+	launcher.SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -122,7 +125,10 @@ func (self *HuntTestSuite) TestHuntManager() {
 func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	t := self.T()
 
-	services.GetLauncher().SetFlowIdForTests("F.1234")
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
+
+	launcher.SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -177,8 +183,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	t := self.T()
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
 
-	services.GetLauncher().SetFlowIdForTests("F.1234")
+	launcher.SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -243,7 +251,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 func (self *HuntTestSuite) TestHuntWithOverride() {
 	t := self.T()
 
-	services.GetLauncher().SetFlowIdForTests("F.1234")
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
+
+	launcher.SetFlowIdForTests("F.1234")
 
 	// Hunt is paused so normally will not receive any clients.
 	hunt_obj := &api_proto.Hunt{
@@ -298,7 +309,10 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	t := self.T()
 
-	services.GetLauncher().SetFlowIdForTests("F.1234")
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
+
+	launcher.SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -364,7 +378,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	t := self.T()
 
-	services.GetLauncher().SetFlowIdForTests("F.1234")
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
+
+	launcher.SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{

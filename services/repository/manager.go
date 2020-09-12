@@ -194,6 +194,7 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 			}
 		}
 		logger.Info("Compiled all artifacts.")
+		grepository.Del("")
 	}()
 
 	wg.Add(1)

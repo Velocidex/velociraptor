@@ -317,7 +317,12 @@ func (self *HuntManager) ProcessRow(
 		return
 	}
 
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return
+	}
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, config_obj, vql_subsystem.NullACLManager{}, repository, request)
 	if err != nil {
 		scope.Log("hunt manager: %v", err)

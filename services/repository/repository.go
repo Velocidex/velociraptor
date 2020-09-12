@@ -287,6 +287,7 @@ func (self *Repository) Del(name string) {
 	defer self.mu.Unlock()
 
 	delete(self.Data, name)
+	self.artifact_plugin = nil
 }
 
 func (self *Repository) List() []string {

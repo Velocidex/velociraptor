@@ -183,7 +183,10 @@ tools:
 
 	// Launch the artifact - this will result in the tool being
 	// downloaded and the hash calculated on demand.
-	response, err := services.GetLauncher().CompileCollectorArgs(
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	response, err := launcher.CompileCollectorArgs(
 		ctx, self.config_obj, vql_subsystem.NullACLManager{}, repository,
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
@@ -269,8 +272,10 @@ tools:
 	assert.NoError(self.T(), err)
 
 	self.installGitHubMock()
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
 
-	response, err := services.GetLauncher().CompileCollectorArgs(
+	response, err := launcher.CompileCollectorArgs(
 		ctx, self.config_obj, vql_subsystem.NullACLManager{}, repository,
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},

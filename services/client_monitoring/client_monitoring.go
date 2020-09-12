@@ -108,13 +108,16 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 	config_obj *config_proto.Config,
 	artifact *flows_proto.ArtifactCollectorArgs) (
 	[]*actions_proto.VQLCollectorArgs, error) {
-	// Make a local copy.
 
 	result := []*actions_proto.VQLCollectorArgs{}
-	launcher := services.GetLauncher()
-
-	// Compile each artifact separately into its own VQLCollectorArgs so they can be run in parallel.
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return nil, err
+	}
+	// Compile each artifact separately into its own
+	// VQLCollectorArgs so they can be run in parallel.
 	for _, name := range artifact.Artifacts {
+		// Make a local copy.
 		temp := *artifact
 		temp.Artifacts = []string{name}
 		compiled, err := launcher.CompileCollectorArgs(

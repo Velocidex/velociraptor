@@ -152,7 +152,13 @@ func (self ArtifactsPlugin) Call(
 
 		acl_manager := vql_subsystem.NullACLManager{}
 
-		request, err := services.GetLauncher().CompileCollectorArgs(
+		launcher, err := services.GetLauncher()
+		if err != nil {
+			scope.Log("artifact_definitions: %v", err)
+			return
+		}
+
+		request, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, acl_manager,
 			repository, &flows_proto.ArtifactCollectorArgs{
 				Artifacts: arg.Names,

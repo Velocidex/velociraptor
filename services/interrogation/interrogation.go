@@ -116,7 +116,12 @@ func (self *EnrollmentService) ProcessRow(
 	}
 
 	// Issue the flow on the client.
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return err
+	}
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, config_obj, vql_subsystem.NullACLManager{},
 		repository,
 		&flows_proto.ArtifactCollectorArgs{

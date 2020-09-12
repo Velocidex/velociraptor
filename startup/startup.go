@@ -85,7 +85,8 @@ func StartupEssentialServices(sm *services.Service) error {
 		}
 	}
 
-	if services.GetLauncher() == nil {
+	launcher_obj, _ := services.GetLauncher()
+	if launcher_obj == nil {
 		err := sm.Start(launcher.StartLauncherService)
 		if err != nil {
 			return err
@@ -205,7 +206,8 @@ func Reset() {
 		fmt.Printf("Repository Manager not reset.\n")
 	}
 
-	if services.GetLauncher() != nil {
+	launcher, _ := services.GetLauncher()
+	if launcher != nil {
 		fmt.Printf("Launcher not reset.\n")
 	}
 
