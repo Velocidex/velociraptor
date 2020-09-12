@@ -484,7 +484,10 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
 	require.NoError(t, err)
 
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		context.Background(),
 		self.config_obj,
 		vql_subsystem.NullACLManager{},
@@ -515,7 +518,10 @@ func (self *ServerTestSuite) createArtifactCollection() (string, error) {
 	require.NoError(self.T(), err)
 
 	// Schedule a flow in the database.
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		context.Background(),
 		self.config_obj,
 		vql_subsystem.NullACLManager{},

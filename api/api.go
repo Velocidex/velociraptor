@@ -189,8 +189,12 @@ func (self *ApiServer) CollectArtifact(
 	if err != nil {
 		return nil, err
 	}
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return nil, err
+	}
 
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, self.config, acl_manager, repository, in)
 	if err != nil {
 		return nil, err
@@ -813,7 +817,12 @@ func (self *ApiServer) WriteEvent(
 
 		// Only return the first row
 		if true {
-			err := services.GetJournal().PushRowsToArtifact(self.config,
+			journal, err := services.GetJournal()
+			if err != nil {
+				return nil, err
+			}
+
+			err = journal.PushRowsToArtifact(self.config,
 				rows, in.Query.Name, peer_name, "")
 			return &empty.Empty{}, err
 		}

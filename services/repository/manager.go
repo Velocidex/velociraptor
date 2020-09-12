@@ -97,7 +97,12 @@ func (self *RepositoryManager) SetArtifactFile(
 		return nil, err
 	}
 
-	err = services.GetJournal().PushRowsToArtifact(config_obj,
+	journal, err := services.GetJournal()
+	if err != nil {
+		return nil, err
+	}
+
+	err = journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().Set("artifact", artifact.Name).
 				Set("op", "set"),
@@ -189,6 +194,7 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 			}
 		}
 		logger.Info("Compiled all artifacts.")
+		grepository.Del("")
 	}()
 
 	wg.Add(1)

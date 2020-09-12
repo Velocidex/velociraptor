@@ -43,7 +43,12 @@ func (self *ServerUploader) Upload(
 	result, err := self.FileStoreUploader.Upload(ctx, scope, filename,
 		accessor, store_as_name, expected_size, reader)
 	if err == nil {
-		err = services.GetJournal().PushRows(self.config_obj,
+		journal, err := services.GetJournal()
+		if err != nil {
+			return nil, err
+		}
+
+		err = journal.PushRows(self.config_obj,
 			self.path_manager.UploadMetadata(),
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().Unix()).

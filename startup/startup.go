@@ -56,7 +56,8 @@ func getServerServices(config_obj *config_proto.Config) *config_proto.ServerServ
 }
 
 func StartupEssentialServices(sm *services.Service) error {
-	if services.GetJournal() == nil {
+	j, _ := services.GetJournal()
+	if j == nil {
 		err := sm.Start(journal.StartJournalService)
 		if err != nil {
 			return err
@@ -84,7 +85,8 @@ func StartupEssentialServices(sm *services.Service) error {
 		}
 	}
 
-	if services.GetLauncher() == nil {
+	launcher_obj, _ := services.GetLauncher()
+	if launcher_obj == nil {
 		err := sm.Start(launcher.StartLauncherService)
 		if err != nil {
 			return err
@@ -186,7 +188,9 @@ func Reset() {
 	// This function should not find any active services. Services
 	// are responsible for unregistering themselves and holding
 	// the service manager for the duration of their lifetime.
-	if services.GetJournal() != nil {
+
+	journal, _ := services.GetJournal()
+	if journal != nil {
 		fmt.Printf("Journal not reset.\n")
 	}
 
@@ -202,7 +206,8 @@ func Reset() {
 		fmt.Printf("Repository Manager not reset.\n")
 	}
 
-	if services.GetLauncher() != nil {
+	launcher, _ := services.GetLauncher()
+	if launcher != nil {
 		fmt.Printf("Launcher not reset.\n")
 	}
 

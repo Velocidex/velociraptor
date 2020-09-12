@@ -43,6 +43,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -57,11 +58,15 @@ var (
 	g_launcher  Launcher = nil
 )
 
-func GetLauncher() Launcher {
+func GetLauncher() (Launcher, error) {
 	launcher_mu.Lock()
 	defer launcher_mu.Unlock()
 
-	return g_launcher
+	if g_launcher == nil {
+		return nil, errors.New("Launcher not ready")
+	}
+
+	return g_launcher, nil
 }
 
 func RegisterLauncher(l Launcher) {

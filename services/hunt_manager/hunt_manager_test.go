@@ -69,7 +69,10 @@ func (self *HuntTestSuite) TearDownTest() {
 func (self *HuntTestSuite) TestHuntManager() {
 	t := self.T()
 
-	services.GetLauncher().SetFlowIdForTests("F.1234")
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
+
+	launcher.SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -90,7 +93,10 @@ func (self *HuntTestSuite) TestHuntManager() {
 	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
-	services.GetJournal().PushRowsToArtifact(self.config_obj,
+	journal, err := services.GetJournal()
+	assert.NoError(t, err)
+
+	journal.PushRowsToArtifact(self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -119,7 +125,10 @@ func (self *HuntTestSuite) TestHuntManager() {
 func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	t := self.T()
 
-	services.GetLauncher().SetFlowIdForTests("F.1234")
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
+
+	launcher.SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -149,7 +158,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	services.GetJournal().PushRows(self.config_obj, path_manager,
+	journal, err := services.GetJournal()
+	assert.NoError(t, err)
+
+	journal.PushRows(self.config_obj, path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -171,8 +183,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	t := self.T()
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
 
-	services.GetLauncher().SetFlowIdForTests("F.1234")
+	launcher.SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -207,7 +221,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	services.GetJournal().PushRows(self.config_obj, path_manager,
+	journal, err := services.GetJournal()
+	assert.NoError(t, err)
+
+	journal.PushRows(self.config_obj, path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -234,7 +251,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 func (self *HuntTestSuite) TestHuntWithOverride() {
 	t := self.T()
 
-	services.GetLauncher().SetFlowIdForTests("F.1234")
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
+
+	launcher.SetFlowIdForTests("F.1234")
 
 	// Hunt is paused so normally will not receive any clients.
 	hunt_obj := &api_proto.Hunt{
@@ -257,7 +277,10 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	services.GetJournal().PushRows(self.config_obj, path_manager,
+	journal, err := services.GetJournal()
+	assert.NoError(t, err)
+
+	journal.PushRows(self.config_obj, path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -286,7 +309,10 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	t := self.T()
 
-	services.GetLauncher().SetFlowIdForTests("F.1234")
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
+
+	launcher.SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -320,7 +346,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	services.GetJournal().PushRows(self.config_obj, path_manager,
+	journal, err := services.GetJournal()
+	assert.NoError(t, err)
+
+	journal.PushRows(self.config_obj, path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -349,7 +378,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	t := self.T()
 
-	services.GetLauncher().SetFlowIdForTests("F.1234")
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
+
+	launcher.SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -391,7 +423,10 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	services.GetJournal().PushRows(self.config_obj, path_manager,
+	journal, err := services.GetJournal()
+	assert.NoError(t, err)
+
+	journal.PushRows(self.config_obj, path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).

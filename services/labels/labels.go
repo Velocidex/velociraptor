@@ -190,7 +190,12 @@ func (self *Labeler) notifyClient(
 	config_obj *config_proto.Config,
 	client_id, new_label, operation string) error {
 	// Notify other frontends about this change.
-	return services.GetJournal().PushRowsToArtifact(config_obj,
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	return journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("client_id", client_id).
@@ -360,8 +365,12 @@ func (self *Labeler) Start(ctx context.Context,
 	}
 
 	self.lru = cache.NewLRUCache(expected_clients)
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
 
-	events, cancel := services.GetJournal().Watch("Server.Internal.Label")
+	events, cancel := journal.Watch("Server.Internal.Label")
 
 	wg.Add(1)
 	go func() {

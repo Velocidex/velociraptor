@@ -242,7 +242,10 @@ func doArtifactList() {
 			continue
 		}
 
-		request, err := services.GetLauncher().CompileCollectorArgs(
+		launcher, err := services.GetLauncher()
+		kingpin.FatalIfError(err, "GetLauncher")
+
+		request, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, vql_subsystem.NullACLManager{}, repository,
 			&flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{artifact.Name},

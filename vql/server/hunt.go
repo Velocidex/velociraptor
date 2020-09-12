@@ -149,7 +149,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	journal := services.GetJournal()
+	journal, _ := services.GetJournal()
 	if journal == nil {
 		return vfilter.Null{}
 	}

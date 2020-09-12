@@ -133,7 +133,12 @@ func (self *ArtifactRepositoryPlugin) Call(
 			acl_manager = vql_subsystem.NullACLManager{}
 		}
 
-		request, err := services.GetLauncher().CompileCollectorArgs(
+		launcher, err := services.GetLauncher()
+		if err != nil {
+			return
+		}
+
+		request, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, acl_manager, self.repository,
 			&flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{artifact_name},
@@ -308,6 +313,7 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) GetMembers(
 
 func (self _ArtifactRepositoryPluginAssociativeProtocol) Associative(
 	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
+
 	value := _getArtifactRepositoryPlugin(a)
 	if value == nil {
 		return nil, false

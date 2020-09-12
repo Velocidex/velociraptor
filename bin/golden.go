@@ -110,13 +110,15 @@ func makeCtxWithTimeout(duration int) (context.Context, func()) {
 
 				p := pprof.Lookup("goroutines")
 				if p != nil {
-					p.WriteTo(os.Stderr, 1)
+					p.WriteTo(os.Stdout, 1)
 				}
 
 				p = pprof.Lookup("mutex")
 				if p != nil {
-					p.WriteTo(os.Stderr, 1)
+					p.WriteTo(os.Stdout, 1)
 				}
+
+				os.Stdout.Close()
 
 				// Hard exit with an error.
 				os.Exit(-1)

@@ -19,6 +19,7 @@ package repository
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -27,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Load all built in artifacts and make sure they validate syntax.
@@ -54,4 +56,42 @@ func TestArtifactsSyntax(t *testing.T) {
 		_, err = new_repository.LoadProto(artifact, true /* validate */)
 		assert.NoError(t, err, "Error compiling "+artifact_name)
 	}
+}
+
+var (
+	artifact_definitions = []string{`
+name: Test1
+sources:
+- query: SELECT * FROM Artifact.Test1.Foobar()
+`, `
+name: Test1.Foobar
+sources:
+- query: SELECT * FROM info()
+`}
+)
+
+func TestArtifactPlugin(t *testing.T) {
+	config_obj := config.GetDefaultConfig()
+
+	sm := services.NewServiceManager(context.Background(), config_obj)
+	defer sm.Close()
+
+	assert.NoError(t, sm.Start(journal.StartJournalService))
+	assert.NoError(t, sm.Start(notifications.StartNotificationService))
+	assert.NoError(t, sm.Start(inventory.StartInventoryService))
+	assert.NoError(t, sm.Start(StartRepositoryManager))
+
+	manager := services.GetRepositoryManager()
+	repository := manager.NewRepository()
+
+	for _, definition := range artifact_definitions {
+		artifact_definition, err := repository.LoadYaml(definition, false)
+		assert.NoError(t, err)
+
+		utils.Debug(artifact_definition)
+	}
+
+	wg := &sync.WaitGroup{}
+	p := NewArtifactRepositoryPlugin(wg, repository.(*Repository)).(*ArtifactRepositoryPlugin)
+	p.Print()
 }

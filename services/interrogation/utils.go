@@ -25,7 +25,12 @@ func watchForFlowCompletion(
 	handler func(ctx context.Context,
 		scope *vfilter.Scope, row *ordereddict.Dict)) error {
 
-	events, cancel := services.GetJournal().Watch("System.Flow.Completion")
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	events, cancel := journal.Watch("System.Flow.Completion")
 	manager := services.GetRepositoryManager()
 
 	wg.Add(1)
