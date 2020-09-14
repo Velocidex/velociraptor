@@ -149,7 +149,12 @@ func (self *ApiServer) GetReport(
 
 	acl_manager := vql_subsystem.NewServerACLManager(self.config, user_name)
 
-	global_repo, err := services.GetRepositoryManager().GetGlobalRepository(self.config)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+
+	global_repo, err := manager.GetGlobalRepository(self.config)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +190,12 @@ func (self *ApiServer) CollectArtifact(
 		}
 	}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+
+	repository, err := manager.GetGlobalRepository(self.config)
 	if err != nil {
 		return nil, err
 	}
@@ -667,7 +677,12 @@ func (self *ApiServer) GetArtifacts(
 
 	if len(in.Names) > 0 {
 		result := &artifacts_proto.ArtifactDescriptors{}
-		repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config)
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			return nil, err
+		}
+
+		repository, err := manager.GetGlobalRepository(self.config)
 		if err != nil {
 			return nil, err
 		}
@@ -725,7 +740,12 @@ func (self *ApiServer) SetArtifactFile(
 	permissions := acls.ARTIFACT_WRITER
 
 	// First ensure that the artifact is correct.
-	tmp_repository := services.GetRepositoryManager().NewRepository()
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+
+	tmp_repository := manager.NewRepository()
 	artifact_definition, err := tmp_repository.LoadYaml(
 		in.Artifact, true /* validate */)
 	if err != nil {
@@ -1008,7 +1028,12 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 
 	}
 
-	scope := services.GetRepositoryManager().BuildScope(
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+
+	scope := manager.BuildScope(
 		services.ScopeBuilder{
 			Config:     self.config,
 			Env:        env,

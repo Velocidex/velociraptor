@@ -137,6 +137,7 @@ func main() {
 	}
 
 	doBanner()
+	defer doPrompt()
 
 	// Most commands load a config in the following order
 	DefaultConfigLoader = new(config.Loader).WithVerbose(*verbose_flag).

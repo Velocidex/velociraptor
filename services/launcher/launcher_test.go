@@ -131,7 +131,10 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	}))
 	defer ts.Close()
 
-	repository := services.GetRepositoryManager().NewRepository()
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
 	artifact, err := repository.LoadYaml(testArtifactWithTools, true)
 	assert.NoError(self.T(), err)
 
@@ -225,8 +228,11 @@ func getEnvValue(env []*actions_proto.VQLEnv, key string) string {
 }
 
 func (self *LauncherTestSuite) TestCompiling() {
-	repository := services.GetRepositoryManager().NewRepository()
-	_, err := repository.LoadYaml(testArtifact1, true)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifact1, true)
 	assert.NoError(self.T(), err)
 
 	// The artifact compiler converts artifacts into a VQL request
@@ -272,8 +278,11 @@ func (self *LauncherTestSuite) TestCompiling() {
 }
 
 func (self *LauncherTestSuite) TestCompilingObfuscation() {
-	repository := services.GetRepositoryManager().NewRepository()
-	_, err := repository.LoadYaml(testArtifact1, true)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifact1, true)
 	assert.NoError(self.T(), err)
 
 	self.config_obj.Frontend.DoNotCompressArtifacts = true
@@ -311,8 +320,11 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 }
 
 func (self *LauncherTestSuite) TestCompilingPermissions() {
-	repository := services.GetRepositoryManager().NewRepository()
-	_, err := repository.LoadYaml(testArtifactWithPermissions, true)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifactWithPermissions, true)
 	assert.NoError(self.T(), err)
 
 	// The artifact compiler converts artifacts into a VQL request

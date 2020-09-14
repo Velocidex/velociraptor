@@ -83,7 +83,10 @@ func (self *TestSuite) TearDownTest() {
 }
 
 func (self *TestSuite) TestRetransmission() {
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(
 		self.config_obj)
 	assert.NoError(self.T(), err)
 
@@ -142,7 +145,9 @@ func (self *TestSuite) TestRetransmission() {
 }
 
 func (self *TestSuite) TestResourceLimits() {
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+	repository, err := manager.GetGlobalRepository(
 		self.config_obj)
 	assert.NoError(self.T(), err)
 

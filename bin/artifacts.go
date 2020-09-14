@@ -69,6 +69,9 @@ var (
 		"report", "When specified we create a report html file.").
 		Default("").String()
 
+	artificat_command_collect_admin_flag = artifact_command_collect.Flag(
+		"require_admin", "Ensure the user is an admin").Bool()
+
 	artifact_command_collect_output_password = artifact_command_collect.Flag(
 		"password", "When specified we encrypt zip file with this password.").
 		Default("").String()
@@ -89,7 +92,11 @@ func listArtifactsHint() []string {
 	config_obj := config.GetDefaultConfig()
 	result := []string{}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return result
 	}
@@ -116,6 +123,8 @@ func getRepository(config_obj *config_proto.Config) (services.Repository, error)
 }
 
 func doArtifactCollect() {
+	checkAdmin()
+
 	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
@@ -135,7 +144,10 @@ func doArtifactCollect() {
 		}
 	}
 
-	scope := services.GetRepositoryManager().BuildScope(services.ScopeBuilder{
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+
+	scope := manager.BuildScope(services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
 		Logger:     log.New(&LogWriter{config_obj}, " ", 0),

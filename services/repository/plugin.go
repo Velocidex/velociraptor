@@ -237,14 +237,16 @@ func (self *ArtifactRepositoryPlugin) copyScope(
 	if !pres {
 		env.Set(constants.SCOPE_STACK, []string{my_name})
 	} else {
-		// Make a copy of the stack.
-		stack := append(
-			[]string{my_name}, stack_any.([]string)...)
-		if len(stack) > MAX_STACK_DEPTH {
-			return nil, errors.New("Stack overflow: " +
-				strings.Join(stack, ", "))
+		child_stack, ok := stack_any.([]string)
+		if ok {
+			// Make a copy of the stack.
+			stack := append([]string{my_name}, child_stack...)
+			if len(stack) > MAX_STACK_DEPTH {
+				return nil, errors.New("Stack overflow: " +
+					strings.Join(stack, ", "))
+			}
+			env.Set(constants.SCOPE_STACK, stack)
 		}
-		env.Set(constants.SCOPE_STACK, stack)
 	}
 
 	result := scope.Copy()

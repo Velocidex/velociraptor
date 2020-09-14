@@ -142,7 +142,9 @@ func doLS(path, accessor string) {
 			Set("path", path),
 	}
 
-	scope := services.GetRepositoryManager().BuildScope(builder)
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	query := "SELECT Name, Size, Mode.String AS Mode, Mtime, Data " +
@@ -190,7 +192,9 @@ func doRM(path, accessor string) {
 			Set("accessor", accessor).
 			Set("path", path),
 	}
-	scope := services.GetRepositoryManager().BuildScope(builder)
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	query := "SELECT FullPath, Size, Mode.String AS Mode, Mtime, " +
@@ -257,7 +261,9 @@ func doCp(path, accessor string, dump_dir string) {
 		kingpin.Fatalf("Can not write to accessor %v\n", output_accessor)
 	}
 
-	scope := services.GetRepositoryManager().BuildScope(builder)
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	scope.Log("Copy from %v (%v) to %v (%v)",

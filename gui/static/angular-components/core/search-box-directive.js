@@ -19,6 +19,7 @@ var ERROR_EVENT_NAME = 'ServerError';
  */
 const SearchBoxController = function(
     $scope, $element, grrApiService, grrRoutingService) {
+    var self = this;
 
     /** @private {!angular.Scope} */
     this.scope_ = $scope;
@@ -32,6 +33,12 @@ const SearchBoxController = function(
     /** @private {!grrUi.routing.routingService.RoutingService} */
     this.grrRoutingService_ = grrRoutingService;
 
+
+    this.grrRoutingService_.uiOnParamsChanged(
+        this.scope_, ['q'], function(unused_newValues, opt_stateParams) {
+            self.query =  opt_stateParams["q"];
+        });
+
     /** @export {string} */
     this.query = '';
 
@@ -40,32 +47,13 @@ const SearchBoxController = function(
 };
 
 /**
- * Updates GRR UI with current query value (using legacy API).
+ * Updates UI with current query value.
  *
  * @export
  */
 SearchBoxController.prototype.submitQuery = function(e) {
     if (this.scope_["navigate"]) {
         this.grrRoutingService_.go('search', {q: this.query});
-        return;
-    }
-
-    this.scope_["query"] = this.query;
-
-    e.preventDefault();
-    e.stopPropagation();
-    return false;
-};
-
-
-/**
- * Updates GRR UI with wildcard query result (using legacy API).
- *
- * @export
- */
-SearchBoxController.prototype.submitEmptyQuery = function(e) {
-    if (this.scope_["navigate"]) {
-        this.grrRoutingService_.go('search', {q: '*'});
         return;
     }
 

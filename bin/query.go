@@ -256,7 +256,9 @@ func doQuery() {
 		}
 	}
 
-	scope := services.GetRepositoryManager().BuildScope(builder)
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	// Install throttler into the scope.

@@ -347,7 +347,13 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 			break
 		}
 		logger.Info("Waiting for frontend slot to become available.")
-		time.Sleep(10 * time.Second)
+		select {
+		case <-ctx.Done():
+			return nil
+
+		case <-time.After(10 * time.Second):
+			continue
+		}
 	}
 	if err != nil {
 		return err

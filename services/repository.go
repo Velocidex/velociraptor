@@ -26,6 +26,7 @@
 package services
 
 import (
+	"errors"
 	"log"
 	"sync"
 
@@ -43,11 +44,15 @@ var (
 	grepository   RepositoryManager
 )
 
-func GetRepositoryManager() RepositoryManager {
+func GetRepositoryManager() (RepositoryManager, error) {
 	repository_mu.Lock()
 	defer repository_mu.Unlock()
 
-	return grepository
+	if grepository == nil {
+		return nil, errors.New("Repository Manager not ready")
+	}
+
+	return grepository, nil
 }
 
 func RegisterRepositoryManager(repository RepositoryManager) {

@@ -16,7 +16,12 @@ import (
 // Loads the global repository with artifacts from the frontend path
 // and the file store.
 func GetGlobalRepository(config_obj *config_proto.Config) (services.Repository, error) {
-	global_repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+
+	global_repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}

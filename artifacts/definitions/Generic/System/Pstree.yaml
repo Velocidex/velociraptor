@@ -12,6 +12,10 @@ parameters:
   - name: ProcessNameRegex
     default: .
 
+  - name: PidFilter
+    description: Filter pids by this regex
+    default: .
+
   - name: CallChainFilter
     default: .
 
@@ -64,4 +68,6 @@ sources:
       SELECT Name, Pid, Ppid,
              join(array=pstree(LookupPid=Pid).Name, sep=CallChainSep) AS CallChain
       FROM processes
-      WHERE Name =~ ProcessNameRegex AND CallChain =~ CallChainFilter
+      WHERE Name =~ ProcessNameRegex
+        AND CallChain =~ CallChainFilter
+        AND str(str=Pid) =~ str(str=PidFilter)

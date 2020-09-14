@@ -43,7 +43,9 @@ func TestArtifactsSyntax(t *testing.T) {
 	assert.NoError(t, sm.Start(inventory.StartInventoryService))
 	assert.NoError(t, sm.Start(StartRepositoryManager))
 
-	manager := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(t, err)
+
 	repository, err := manager.GetGlobalRepository(config_obj)
 	assert.NoError(t, err)
 
@@ -81,7 +83,7 @@ func TestArtifactPlugin(t *testing.T) {
 	assert.NoError(t, sm.Start(inventory.StartInventoryService))
 	assert.NoError(t, sm.Start(StartRepositoryManager))
 
-	manager := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager()
 	repository := manager.NewRepository()
 
 	for _, definition := range artifact_definitions {

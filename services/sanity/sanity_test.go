@@ -48,7 +48,7 @@ func (self *ServicesTestSuite) SetupTest() {
 	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
 	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
 
-	manager := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager()
 	manager.SetGlobalRepositoryForTests(manager.NewRepository())
 }
 
@@ -60,7 +60,10 @@ func (self *ServicesTestSuite) TearDownTest() {
 
 // Check tool upgrade.
 func (self *ServicesTestSuite) TestUpgradeTools() {
-	repository, _ := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository, _ := manager.GetGlobalRepository(self.config_obj)
 
 	// An an artifact with two tools.
 	repository.LoadYaml(`
@@ -81,7 +84,7 @@ tools:
 		Name: "Tool1",
 		Url:  "https://www.company.com",
 	}
-	err := inventory.AddTool(self.config_obj, tool_definition,
+	err = inventory.AddTool(self.config_obj, tool_definition,
 		services.ToolOptions{
 			// This flag signifies that an admin explicitly set
 			// this tool. We never overwrite an admin's setting.

@@ -108,7 +108,7 @@ func makeCtxWithTimeout(duration int) (context.Context, func()) {
 					continue
 				}
 
-				p := pprof.Lookup("goroutines")
+				p := pprof.Lookup("goroutine")
 				if p != nil {
 					p.WriteTo(os.Stdout, 1)
 				}
@@ -176,7 +176,9 @@ func runTest(fixture *testFixture,
 	}
 
 	// Cleanup after the query.
-	scope := services.GetRepositoryManager().BuildScopeFromScratch(builder)
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+	scope := manager.BuildScopeFromScratch(builder)
 	defer scope.Close()
 
 	scope.AddDestructor(func() {

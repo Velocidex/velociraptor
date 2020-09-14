@@ -99,7 +99,12 @@ func (self *HuntManager) StartParticipation(
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 
-	scope := services.GetRepositoryManager().BuildScope(
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	scope := manager.BuildScope(
 		services.ScopeBuilder{
 			Config: config_obj,
 			Logger: logging.NewPlainLogger(config_obj, &logging.GenericComponent),
@@ -311,7 +316,13 @@ func (self *HuntManager) ProcessRow(
 		return
 	}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		scope.Log("hunt_manager: %v", err)
+		return
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		scope.Log("hunt manager: GetGlobalRepository: %v", err)
 		return

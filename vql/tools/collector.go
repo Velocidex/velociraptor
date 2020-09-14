@@ -203,7 +203,13 @@ func (self CollectPlugin) Call(
 
 			// Make a new scope for each artifact.
 			// Any uploads go into the container.
-			subscope := services.GetRepositoryManager().BuildScope(builder)
+			manager, err := services.GetRepositoryManager()
+			if err != nil {
+				scope.Log("collect: %v %v", name, err)
+				return
+			}
+
+			subscope := manager.BuildScope(builder)
 			defer subscope.Close()
 
 			for _, query := range request.Query {
@@ -253,7 +259,11 @@ func (self CollectPlugin) Call(
 func getRepository(
 	config_obj *config_proto.Config,
 	extra_artifacts vfilter.Any) (services.Repository, error) {
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}

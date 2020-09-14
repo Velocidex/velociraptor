@@ -353,7 +353,12 @@ func StartClientMonitoringService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}

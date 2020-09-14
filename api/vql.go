@@ -38,7 +38,11 @@ func RunVQL(
 
 	result := &api_proto.GetTableResponse{}
 
-	scope := services.GetRepositoryManager().BuildScope(services.ScopeBuilder{
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+	scope := manager.BuildScope(services.ScopeBuilder{
 		Config:     config_obj,
 		Env:        env,
 		ACLManager: vql_subsystem.NewServerACLManager(config_obj, principal),

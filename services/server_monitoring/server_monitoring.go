@@ -85,7 +85,12 @@ func (self *EventTable) Update(
 		cancel()
 	}()
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
@@ -98,7 +103,7 @@ func (self *EventTable) Update(
 
 		// Server monitoring artifacts run with full admin
 		// permissions.
-		scope := services.GetRepositoryManager().BuildScope(
+		scope := manager.BuildScope(
 			services.ScopeBuilder{
 				Config:     config_obj,
 				ACLManager: vql_subsystem.NewRoleACLManager("administrator"),

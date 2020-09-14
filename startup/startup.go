@@ -78,7 +78,8 @@ func StartupEssentialServices(sm *services.Service) error {
 		}
 	}
 
-	if services.GetRepositoryManager() == nil {
+	manager, _ := services.GetRepositoryManager()
+	if manager == nil {
 		err := sm.Start(repository.StartRepositoryManager)
 		if err != nil {
 			return err
@@ -202,7 +203,8 @@ func Reset() {
 		fmt.Printf("Inventory not reset.\n")
 	}
 
-	if services.GetRepositoryManager() != nil {
+	manager, _ := services.GetRepositoryManager()
+	if manager != nil {
 		fmt.Printf("Repository Manager not reset.\n")
 	}
 

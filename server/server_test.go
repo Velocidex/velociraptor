@@ -86,7 +86,10 @@ func (self *ServerTestSuite) SetupTest() {
 	require.NoError(self.T(), self.sm.Start(interrogation.StartInterrogationService))
 
 	// Load all the standard artifacts.
-	services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	manager.GetGlobalRepository(self.config_obj)
 
 	self.server, err = server.NewServer(self.config_obj)
 	require.NoError(self.T(), err)
@@ -481,7 +484,10 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 		Artifacts: []string{"Generic.Client.Info"},
 	}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.config_obj)
 	require.NoError(t, err)
 
 	launcher, err := services.GetLauncher()
@@ -514,7 +520,10 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 
 // Schedule a flow in the database and return its flow id
 func (self *ServerTestSuite) createArtifactCollection() (string, error) {
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.config_obj)
 	require.NoError(self.T(), err)
 
 	// Schedule a flow in the database.

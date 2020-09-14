@@ -71,7 +71,7 @@ func (self *ClientMonitoringTestSuite) TearDownTest() {
 func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
-	repository_manager := services.GetRepositoryManager()
+	repository_manager, _ := services.GetRepositoryManager()
 	repository_manager.SetArtifactFile(self.config_obj, `
 name: TestArtifact
 sources:
@@ -111,7 +111,7 @@ sources:
 func (self *ClientMonitoringTestSuite) TestUpdatingClientTable() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
-	repository_manager := services.GetRepositoryManager()
+	repository_manager, _ := services.GetRepositoryManager()
 	repository_manager.SetArtifactFile(self.config_obj, `
 name: TestArtifact
 sources:
@@ -154,7 +154,7 @@ sources:
 func (self *ClientMonitoringTestSuite) TestUpdatingClientTableMultiFrontend() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
-	repository_manager := services.GetRepositoryManager()
+	repository_manager, _ := services.GetRepositoryManager()
 	repository_manager.SetArtifactFile(self.config_obj, `
 name: TestArtifact
 sources:

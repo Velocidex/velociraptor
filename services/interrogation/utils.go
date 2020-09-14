@@ -31,7 +31,10 @@ func watchForFlowCompletion(
 	}
 
 	events, cancel := journal.Watch("System.Flow.Completion")
-	manager := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
 
 	wg.Add(1)
 	go func() {
