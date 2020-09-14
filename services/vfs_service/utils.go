@@ -47,7 +47,12 @@ func watchForFlowCompletion(
 				&logging.FrontendComponent),
 		}
 
-		scope := services.GetRepositoryManager().BuildScope(builder)
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			return
+		}
+
+		scope := manager.BuildScope(builder)
 		defer scope.Close()
 
 		// Allow the artifact we are following to be over-ridden by

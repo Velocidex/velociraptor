@@ -104,7 +104,10 @@ func (self *ArtifactTestSuite) SetupTest() {
 	assert.NoError(t, self.sm.Start(StartLauncherService))
 	require.NoError(t, self.sm.Start(repository.StartRepositoryManager))
 
-	self.repository = services.GetRepositoryManager().NewRepository()
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	self.repository = manager.NewRepository()
 	for _, definition := range test_artifact_definitions {
 		self.repository.LoadYaml(definition, false)
 	}

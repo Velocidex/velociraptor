@@ -55,8 +55,11 @@ func (self *HuntTestSuite) TearDownTest() {
 }
 
 func (self *HuntTestSuite) TestCompilation() {
-	repository := services.GetRepositoryManager().NewRepository()
-	services.GetRepositoryManager().SetGlobalRepositoryForTests(repository)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	manager.SetGlobalRepositoryForTests(repository)
 	repository.LoadYaml(`
 name: TestArtifact
 parameters:

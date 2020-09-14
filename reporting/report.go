@@ -148,7 +148,12 @@ func GenerateArtifactDescriptionReport(
 	string, error) {
 	artifact := template_engine.GetArtifact()
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return "", err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -323,7 +328,12 @@ func newBaseTemplateEngine(
 	// SetEnv() can update it later.
 	env := ordereddict.NewDict()
 	if scope == nil {
-		scope = services.GetRepositoryManager().BuildScope(
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			return nil, err
+		}
+
+		scope = manager.BuildScope(
 			services.ScopeBuilder{
 				Config:     config_obj,
 				ACLManager: acl_manager,

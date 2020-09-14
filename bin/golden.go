@@ -176,7 +176,9 @@ func runTest(fixture *testFixture,
 	}
 
 	// Cleanup after the query.
-	scope := services.GetRepositoryManager().BuildScopeFromScratch(builder)
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+	scope := manager.BuildScopeFromScratch(builder)
 	defer scope.Close()
 
 	scope.AddDestructor(func() {

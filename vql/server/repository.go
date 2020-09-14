@@ -43,7 +43,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	manager := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager()
 	if manager == nil {
 		scope.Log("artifact_set: Command can only run on the server")
 		return vfilter.Null{}
@@ -130,8 +130,12 @@ func (self ArtifactsPlugin) Call(
 			return
 		}
 
-		repository, err := services.GetRepositoryManager().
-			GetGlobalRepository(config_obj)
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			scope.Log("Command can only run on the server")
+			return
+		}
+		repository, err := manager.GetGlobalRepository(config_obj)
 		if err != nil {
 			scope.Log("artifact_definitions: %v", err)
 			return

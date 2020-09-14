@@ -50,7 +50,10 @@ func doReportArchive() {
 		Logger:     log.New(&LogWriter{config_obj}, " ", 0),
 		Env:        ordereddict.NewDict(),
 	}
-	scope := services.GetRepositoryManager().BuildScopeFromScratch(builder)
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+
+	scope := manager.BuildScopeFromScratch(builder)
 	defer scope.Close()
 
 	archive, err := reporting.NewArchiveReader(*report_command_archive_file)
@@ -69,7 +72,7 @@ func doReportArchive() {
 	kingpin.FatalIfError(err, "Unable to load report %v", template)
 
 	for _, name := range archive.ListArtifacts() {
-		scope := services.GetRepositoryManager().BuildScopeFromScratch(builder)
+		scope := manager.BuildScopeFromScratch(builder)
 		defer scope.Close()
 
 		// Reports can query the container directly.

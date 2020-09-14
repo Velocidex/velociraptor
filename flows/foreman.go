@@ -79,6 +79,9 @@ func ForemanProcessMessage(
 
 	// Process any needed hunts.
 	dispatcher := services.GetHuntDispatcher()
+	if dispatcher == nil {
+		return nil
+	}
 	client_last_timestamp := foreman_checkin.LastHuntTimestamp
 
 	// Can we get away without a lock?

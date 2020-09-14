@@ -73,7 +73,11 @@ func streamQuery(
 	scope_logger := MakeLogger(response_channel)
 
 	// Add extra artifacts to the query from the global repository.
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
@@ -91,7 +95,7 @@ func streamQuery(
 	}
 
 	// Now execute the query.
-	scope := services.GetRepositoryManager().BuildScope(builder)
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	// Throttle the query if required.

@@ -74,7 +74,11 @@ func (self *ApiServer) GetKeywordCompletions(
 		})
 	}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+	repository, err := manager.GetGlobalRepository(self.config)
 	if err != nil {
 		return nil, err
 	}

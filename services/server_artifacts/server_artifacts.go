@@ -254,7 +254,12 @@ func (self *ServerArtifactsRunner) runQuery(
 
 	// Server artifacts run with full access. In order to collect
 	// them in the first place we need COLLECT_SERVER permissions.
-	scope := services.GetRepositoryManager().BuildScope(services.ScopeBuilder{
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	scope := manager.BuildScope(services.ScopeBuilder{
 		Config: self.config_obj,
 
 		// For server artifacts, upload() ends up writing in

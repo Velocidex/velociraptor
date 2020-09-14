@@ -110,7 +110,12 @@ func (self *EnrollmentService) ProcessRow(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Debug("Interrogating %v", client_id)
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}

@@ -71,6 +71,26 @@ parameters:
     type: json
     default: "{}"
 
+  - name: opt_verbose
+    default: Y
+    type: bool
+    description: Show verbose progress.
+
+  - name: opt_banner
+    default: Y
+    type: bool
+    description: Show Velociraptor banner.
+
+  - name: opt_prompt
+    default: Y
+    type: bool
+    description: Wait for a prompt before closing.
+
+  - name: opt_admin
+    default: Y
+    type: bool
+    description: Require administrator privilege when running.
+
   - name: StandardCollection
     type: hidden
     default: |
@@ -300,11 +320,18 @@ sources:
             ) AS sources FROM scope()  }
       )
 
+      LET optional_cmdline = SELECT * FROM chain(
+        a={ SELECT "-v" AS Opt FROM scope() WHERE opt_verbose = "Y"},
+        b={ SELECT "--nobanner" AS Opt FROM scope() WHERE opt_banner != "Y"},
+        c={ SELECT "--require_admin" AS Opt FROM scope() WHERE opt_admin = "Y"},
+        d={ SELECT "--prompt" AS Opt FROM scope() WHERE opt_prompt = "Y"}
+      )
+
       // Build the autoexec config file depending on the user's
       // collection type choices.
       LET autoexec <= dict(autoexec=dict(
-          argv=["artifacts", "collect", "-v", "Collector",
-                "--logfile", CollectorName + ".log"],
+          argv=("artifacts", "collect", "Collector",
+                "--logfile", CollectorName + ".log") + optional_cmdline.Opt,
           artifact_definitions=definitions)
       )
 

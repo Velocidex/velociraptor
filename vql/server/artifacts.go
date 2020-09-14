@@ -106,7 +106,11 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		acl_manager = vql_subsystem.NullACLManager{}
 	}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}

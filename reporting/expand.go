@@ -93,7 +93,12 @@ func FormatDescription(
 }
 
 func (self *Expansions) DocFrom(artifact string) string {
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return ""
+	}
+
+	repository, err := manager.GetGlobalRepository(self.config_obj)
 	if err != nil {
 		return ""
 	}

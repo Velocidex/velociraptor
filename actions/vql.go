@@ -95,7 +95,13 @@ func (self VQLClientAction) StartQuery(
 
 	// Clients do not have a copy of artifacts so they need to be
 	// sent all artifacts from the server.
-	repository := services.GetRepositoryManager().NewRepository()
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		responder.RaiseError(fmt.Sprintf("%v", err))
+		return
+	}
+
+	repository := manager.NewRepository()
 	for _, artifact := range arg.Artifacts {
 		_, err := repository.LoadProto(artifact, false /* validate */)
 		if err != nil {
@@ -123,7 +129,7 @@ func (self VQLClientAction) StartQuery(
 		builder.Env.Set(env_spec.Key, env_spec.Value)
 	}
 
-	scope := services.GetRepositoryManager().BuildScope(builder)
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	scope.Log("Starting query execution.")

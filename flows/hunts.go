@@ -75,7 +75,12 @@ func GetArtifactSources(
 	config_obj *config_proto.Config,
 	artifact string) []string {
 	result := []string{}
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err == nil {
 		artifact_obj, pres := repository.Get(config_obj, artifact)
 		if pres {
@@ -115,7 +120,12 @@ func CreateHunt(
 			UTC().UnixNano() / 1000)
 	}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return "", err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return "", err
 	}
