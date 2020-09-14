@@ -108,7 +108,7 @@ func makeCtxWithTimeout(duration int) (context.Context, func()) {
 					continue
 				}
 
-				p := pprof.Lookup("goroutines")
+				p := pprof.Lookup("goroutine")
 				if p != nil {
 					p.WriteTo(os.Stdout, 1)
 				}
