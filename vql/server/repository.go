@@ -167,9 +167,10 @@ func (self ArtifactsPlugin) Call(
 			repository, &flows_proto.ArtifactCollectorArgs{
 				Artifacts: arg.Names,
 			})
-		if err != nil {
+		if request == nil || err != nil {
 			scope.Log("artifact_definitions: While compiling %v: %v",
 				arg.Names, err)
+			return
 		}
 
 		for _, artifact := range request.Artifacts {
