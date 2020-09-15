@@ -167,9 +167,10 @@ func (self ArtifactsPlugin) Call(
 			repository, &flows_proto.ArtifactCollectorArgs{
 				Artifacts: arg.Names,
 			})
-		if err != nil {
+		if request == nil || err != nil {
 			scope.Log("artifact_definitions: While compiling %v: %v",
 				arg.Names, err)
+			return
 		}
 
 		for _, artifact := range request.Artifacts {
@@ -177,7 +178,11 @@ func (self ArtifactsPlugin) Call(
 		}
 
 		for _, artifact := range seen {
-			output_chan <- json.ConvertProtoToOrderedDict(artifact)
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- json.ConvertProtoToOrderedDict(artifact):
+			}
 		}
 	}()
 

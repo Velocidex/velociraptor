@@ -152,7 +152,7 @@ func upload_rows(
 	next_send_time := time.After(wait_time)
 
 	// Flush any remaining rows
-	defer send_to_elastic(scope, output_chan, client, &buf)
+	defer send_to_elastic(ctx, scope, output_chan, client, &buf)
 
 	// Batch sending to elastic: Either
 	// when we get to chuncksize or wait
@@ -174,14 +174,14 @@ func upload_rows(
 			}
 
 			if id > next_send_id {
-				send_to_elastic(scope, output_chan,
+				send_to_elastic(ctx, scope, output_chan,
 					client, &buf)
 				next_send_id = id + arg.ChunkSize
 				next_send_time = time.After(wait_time)
 			}
 
 		case <-next_send_time:
-			send_to_elastic(scope, output_chan,
+			send_to_elastic(ctx, scope, output_chan,
 				client, &buf)
 			next_send_id = id + arg.ChunkSize
 			next_send_time = time.After(wait_time)
@@ -223,7 +223,9 @@ func append_row_to_buffer(
 	return nil
 }
 
-func send_to_elastic(scope *vfilter.Scope,
+func send_to_elastic(
+	ctx context.Context,
+	scope *vfilter.Scope,
 	output_chan chan vfilter.Row,
 	client *elasticsearch.Client, buf *bytes.Buffer) {
 	b := buf.Bytes()
@@ -243,9 +245,13 @@ func send_to_elastic(scope *vfilter.Scope,
 		_ = json.Unmarshal(b1, &response)
 	}
 
-	output_chan <- ordereddict.NewDict().
+	select {
+	case <-ctx.Done():
+		return
+	case output_chan <- ordereddict.NewDict().
 		Set("StatusCode", res.StatusCode).
-		Set("Response", response)
+		Set("Response", response):
+	}
 
 	buf.Reset()
 

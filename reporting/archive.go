@@ -64,8 +64,11 @@ func (self *Archive) ReadArtifactResults(
 				if err != nil {
 					return
 				}
-
-				output_chan <- item
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- item:
+				}
 			}
 		}
 

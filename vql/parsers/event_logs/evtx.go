@@ -105,12 +105,22 @@ func (self _ParseEvtxPlugin) Call(
 						}
 
 						if database != nil {
-							output_chan <- database.Enrich(
-								event.(*ordereddict.Dict))
+							select {
+							case <-ctx.Done():
+								return
+
+							case output_chan <- database.Enrich(
+								event.(*ordereddict.Dict)):
+							}
 
 						} else {
-							output_chan <- maybeEnrichEvent(
-								event.(*ordereddict.Dict))
+							select {
+							case <-ctx.Done():
+								return
+
+							case output_chan <- maybeEnrichEvent(
+								event.(*ordereddict.Dict)):
+							}
 						}
 					}
 				}
@@ -174,13 +184,12 @@ func (self _WatchEvtxPlugin) Call(
 		}
 
 		// Wait until the query is complete.
-		for {
+		for event := range event_channel {
 			select {
 			case <-ctx.Done():
 				return
 
-			case event := <-event_channel:
-				output_chan <- event
+			case output_chan <- event:
 			}
 		}
 	}()

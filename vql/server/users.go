@@ -46,7 +46,11 @@ func (self UsersPlugin) Call(
 			if err == nil {
 				user_details.Permissions = policy
 			}
-			output_chan <- json.ConvertProtoToOrderedDict(user_details)
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- json.ConvertProtoToOrderedDict(user_details):
+			}
 		}
 
 	}()

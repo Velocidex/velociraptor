@@ -155,8 +155,13 @@ func (self _OLEVBAPlugin) Call(
 			}
 
 			for _, macro_info := range macros {
-				output_chan <- vfilter.RowToDict(ctx, scope, macro_info).Set(
-					"filename", filename)
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- vfilter.RowToDict(ctx, scope, macro_info).Set(
+					"filename", filename):
+				}
 			}
 		}
 	}()

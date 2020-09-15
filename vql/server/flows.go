@@ -67,7 +67,12 @@ func (self FlowsPlugin) Call(
 				return
 			}
 
-			output_chan <- json.ConvertProtoToOrderedDict(collection_context)
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- json.ConvertProtoToOrderedDict(collection_context):
+			}
+
 		}
 
 		if arg.FlowId != "" {
@@ -176,9 +181,13 @@ func (self EnumerateFlowPlugin) Call(
 		}
 
 		emit := func(item_type, target string) {
-			output_chan <- ordereddict.NewDict().
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- ordereddict.NewDict().
 				Set("Type", item_type).
-				Set("VFSPath", target)
+				Set("VFSPath", target):
+			}
 		}
 
 		collection_context, err := flows.LoadCollectionContext(

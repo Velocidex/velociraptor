@@ -200,7 +200,12 @@ func (self InventoryPlugin) Call(
 		defer close(output_chan)
 
 		for _, item := range services.GetInventory().Get().Tools {
-			output_chan <- json.ConvertProtoToOrderedDict(item)
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- json.ConvertProtoToOrderedDict(item):
+			}
 		}
 
 	}()

@@ -81,7 +81,11 @@ func (self ClientsPlugin) Call(
 			api_client, err := api.GetApiClient(
 				config_obj, nil, arg.ClientId, false)
 			if err == nil {
-				output_chan <- json.ConvertProtoToOrderedDict(api_client)
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- json.ConvertProtoToOrderedDict(api_client):
+				}
 			}
 			return
 		}
@@ -97,8 +101,12 @@ func (self ClientsPlugin) Call(
 			api_client, err := api.GetApiClient(
 				config_obj, nil, client_id, false)
 			if err == nil {
-				output_chan <- json.ConvertProtoToOrderedDict(
-					api_client)
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- json.ConvertProtoToOrderedDict(
+					api_client):
+				}
 			}
 			vfilter.ChargeOp(scope)
 		}

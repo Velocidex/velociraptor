@@ -31,7 +31,12 @@ func (self AppCompatCache) Call(
 		}
 
 		for _, item := range appcompatcache.ParseValueData([]byte(arg.Value)) {
-			output_chan <- item
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- item:
+			}
 		}
 
 	}()

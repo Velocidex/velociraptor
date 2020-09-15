@@ -299,7 +299,12 @@ func (self *HTMLTemplateEngine) Query(queries ...string) interface{} {
 
 			for _, vql := range multi_vql {
 				for row := range vql.Eval(ctx, self.Scope) {
-					output_chan <- vfilter.RowToDict(ctx, self.Scope, row)
+					select {
+					case <-ctx.Done():
+						return
+					case output_chan <- vfilter.RowToDict(
+						ctx, self.Scope, row):
+					}
 				}
 			}
 		}

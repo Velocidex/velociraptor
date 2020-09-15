@@ -124,7 +124,7 @@ func (self YaraScanPlugin) Call(
 				}
 			}
 
-			scanFileByAccessor(filename, arg.Accessor,
+			scanFileByAccessor(ctx, filename, arg.Accessor,
 				arg.Blocksize, arg.Start, arg.End,
 				arg.Context, arg.NumberOfHits,
 				rules, output_chan, scope)
@@ -164,6 +164,7 @@ func getYaraRules(key, rules string,
 }
 
 func scanFileByAccessor(
+	ctx context.Context,
 	filename, accessor_name string,
 	blocksize int64,
 	start, end uint64,
@@ -208,6 +209,7 @@ func scanFileByAccessor(
 		file_info:      stat,
 		filename:       filename,
 		base_offset:    start,
+		ctx:            ctx,
 	}
 
 	for {
@@ -292,6 +294,7 @@ type scanReporter struct {
 	base_offset    uint64
 	end            uint64
 	reader         io.ReaderAt
+	ctx            context.Context
 }
 
 func (self *scanReporter) RuleMatching(rule *yara.Rule) (bool, error) {
@@ -306,7 +309,12 @@ func (self *scanReporter) RuleMatching(rule *yara.Rule) (bool, error) {
 			File:     self.file_info,
 			FileName: self.filename,
 		}
-		self.output_chan <- res
+		select {
+		case <-self.ctx.Done():
+			return false, nil
+
+		case self.output_chan <- res:
+		}
 		self.number_of_hits--
 		if self.number_of_hits <= 0 {
 			return false, nil
@@ -447,7 +455,12 @@ func (self YaraProcPlugin) Call(
 		}
 
 		for _, match := range matches {
-			output_chan <- match
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- match:
+			}
 		}
 
 		vfilter.ChargeOp(scope)

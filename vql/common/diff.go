@@ -187,7 +187,12 @@ func (self _DiffPlugin) Call(ctx context.Context,
 
 			case <-time.After(time.Duration(arg.Period) * time.Second):
 				for _, row := range diff_cache.Eval(ctx, scope) {
-					output_chan <- row
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- row:
+					}
 				}
 			}
 		}

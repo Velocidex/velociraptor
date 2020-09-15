@@ -133,7 +133,11 @@ func GetObjects(ctx context.Context,
 			Type: item.TypeName.String(),
 		}
 		descObject(scope, info)
-		output_chan <- info
+		select {
+		case <-ctx.Done():
+			return
+		case output_chan <- info:
+		}
 
 		if item.TypeName.String() == "Directory" {
 			GetObjects(ctx, scope,

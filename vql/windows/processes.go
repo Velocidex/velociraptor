@@ -223,8 +223,11 @@ func (self PslistPlugin) Call(
 					// Close the handle now.
 					syscall.Close(proc_handle)
 				}
-
-				output_chan <- info
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- info:
+				}
 			}
 			err = windows.Process32Next(handle, &entry)
 			if err == syscall.ERROR_NO_MORE_FILES {

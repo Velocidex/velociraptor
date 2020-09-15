@@ -200,7 +200,12 @@ func (self _FIFOPlugin) Call(ctx context.Context,
 
 		snapshot := fifo_cache.(*_FIFOCache).Snapshot()
 		for _, row := range snapshot {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- row:
+			}
 		}
 	}()
 

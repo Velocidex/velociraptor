@@ -84,16 +84,13 @@ func (self *ArtifactRepositoryPlugin) Call(
 		}
 
 		// If the ctx is done do nothing.
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			break
-		}
-
 		if self.mock != nil {
 			for _, row := range self.mock {
-				output_chan <- row
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- row:
+				}
 			}
 
 			return
@@ -201,8 +198,11 @@ func (self *ArtifactRepositoryPlugin) Call(
 				if query.Name != "" {
 					dict_row.Set("_Source", query.Name)
 				}
-
-				output_chan <- dict_row
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- dict_row:
+				}
 			}
 		}
 

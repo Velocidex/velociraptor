@@ -18,6 +18,7 @@
 package csv
 
 import (
+	"context"
 	"io"
 	"sync"
 	"time"
@@ -43,7 +44,7 @@ func (self *CSVWriter) Close() {
 
 type CSVReader chan *ordereddict.Dict
 
-func GetCSVReader(fd api.FileReader) CSVReader {
+func GetCSVReader(ctx context.Context, fd api.FileReader) CSVReader {
 	output_chan := make(CSVReader)
 
 	go func() {
@@ -70,7 +71,11 @@ func GetCSVReader(fd api.FileReader) CSVReader {
 				row.Set(headers[idx], row_item)
 			}
 
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 

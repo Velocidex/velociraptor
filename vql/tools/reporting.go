@@ -166,7 +166,11 @@ func (self *ContainerSourcePlugin) Call(
 		}
 
 		for row := range self.Container.ReadArtifactResults(ctx, scope, arg.Artifact) {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 
@@ -207,7 +211,11 @@ func (self *ArchiveSourcePlugin) Call(
 		}
 
 		for row := range self.Archive.ReadArtifactResults(ctx, scope, arg.Artifact) {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 

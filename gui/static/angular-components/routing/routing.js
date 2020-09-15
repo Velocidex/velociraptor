@@ -54,7 +54,7 @@ exports.routingModule
         title: 'Home',
       })
       .state('home', {
-        url: '',
+        url: '/',
         template: '<grr-user-dashboard />',
         title: 'Home',
       })
