@@ -90,7 +90,12 @@ func (self _PrefetchPlugin) Call(
 					return
 				}
 
-				output_chan <- prefetch_info
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- prefetch_info:
+				}
 			}()
 		}
 	}()

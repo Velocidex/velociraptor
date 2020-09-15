@@ -102,7 +102,11 @@ func (self HuntsPlugin) Call(
 				hunt_obj.Stats = hunt_stats
 			}
 
-			output_chan <- hunt_obj
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- hunt_obj:
+			}
 		}
 	}()
 
@@ -256,8 +260,11 @@ func (self HuntResultsPlugin) Call(
 					if api_client.OsInfo != nil {
 						row.Set("Fqdn", api_client.OsInfo.Fqdn)
 					}
-
-					output_chan <- row
+					select {
+					case <-ctx.Done():
+						return
+					case output_chan <- row:
+					}
 				}
 			}
 		}
@@ -336,8 +343,11 @@ func (self HuntFlowsPlugin) Call(
 				result.Set("Flow",
 					json.ConvertProtoToOrderedDict(collection_context))
 			}
-
-			output_chan <- result
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- result:
+			}
 		}
 	}()
 

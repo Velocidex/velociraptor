@@ -124,7 +124,12 @@ func (self _SQLitePlugin) Call(
 				row.Set(item, value)
 			}
 
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- row:
+			}
 		}
 
 	}()

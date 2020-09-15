@@ -128,9 +128,13 @@ func (self CollectPlugin) Call(
 						scope.Log("Error creating report: %v", err)
 					}
 				}
-				output_chan <- ordereddict.NewDict().
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- ordereddict.NewDict().
 					Set("Container", arg.Output).
-					Set("Report", arg.Report)
+					Set("Report", arg.Report):
+				}
 			}()
 
 			// Should we encrypt it?
@@ -233,7 +237,11 @@ func (self CollectPlugin) Call(
 				// channel.
 				if container == nil {
 					for row := range vql.Eval(ctx, subscope) {
-						output_chan <- row
+						select {
+						case <-ctx.Done():
+							return
+						case output_chan <- row:
+						}
 					}
 					continue
 				}

@@ -37,7 +37,12 @@ func (self _SamplerPlugin) Call(ctx context.Context,
 		count := 0
 		for row := range arg.Query.Eval(ctx, scope) {
 			if count%int(arg.N) == 0 {
-				output_chan <- row
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- row:
+				}
 			}
 			count += 1
 		}

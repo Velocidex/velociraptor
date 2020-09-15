@@ -69,7 +69,11 @@ func (self ModulesPlugin) Call(
 		}
 
 		for _, mod := range modules {
-			output_chan <- mod
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- mod:
+			}
 		}
 
 	}()
@@ -114,7 +118,11 @@ func (self VADPlugin) Call(
 		}
 
 		for _, vad := range vads {
-			output_chan <- vad
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- vad:
+			}
 		}
 	}()
 

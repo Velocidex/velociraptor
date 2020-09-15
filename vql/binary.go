@@ -200,7 +200,12 @@ func (self _BinaryParserPlugin) Call(
 					break
 				}
 
-				output_chan <- value
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- value:
+				}
 			}
 		}
 	}()

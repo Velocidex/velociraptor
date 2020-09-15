@@ -110,9 +110,14 @@ func (self ShellPlugin) Call(
 		err = command.Start()
 		if err != nil {
 			scope.Log("shell: %v", err)
-			output_chan <- &ShellResult{
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- &ShellResult{
 				ReturnCode: 1,
 				Stderr:     fmt.Sprintf("%v", err),
+			}:
 			}
 			return
 
@@ -197,13 +202,23 @@ func (self ShellPlugin) Call(
 
 			if arg.Sep != "" {
 				response.Stdout = line
-				output_chan <- response
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- response:
+				}
 			} else {
 				data := response.Stdout + line
 				for len(data) > length {
 					response.Stdout = data[:length]
-					output_chan <- &ShellResult{
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- &ShellResult{
 						Stdout: response.Stdout,
+					}:
 					}
 					data = data[length:]
 				}
@@ -216,13 +231,23 @@ func (self ShellPlugin) Call(
 
 			if arg.Sep != "" {
 				response.Stderr = line
-				output_chan <- response
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- response:
+				}
 			} else {
 				data := response.Stderr + line
 				for len(data) > length {
 					response.Stderr = data[:length]
-					output_chan <- &ShellResult{
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- &ShellResult{
 						Stderr: response.Stderr,
+					}:
 					}
 					data = data[length:]
 				}
@@ -253,7 +278,13 @@ func (self ShellPlugin) Call(
 			}
 		}
 		response.Complete = true
-		output_chan <- response
+
+		select {
+		case <-ctx.Done():
+			return
+
+		case output_chan <- response:
+		}
 	}()
 
 	return output_chan

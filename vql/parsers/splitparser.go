@@ -120,7 +120,12 @@ func processFile(
 					result.Set(column, vfilter.Null{})
 				}
 			}
-			output_chan <- result
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- result:
+			}
 		}
 	}
 }

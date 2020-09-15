@@ -178,7 +178,11 @@ func (self ArtifactsPlugin) Call(
 		}
 
 		for _, artifact := range seen {
-			output_chan <- json.ConvertProtoToOrderedDict(artifact)
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- json.ConvertProtoToOrderedDict(artifact):
+			}
 		}
 	}()
 

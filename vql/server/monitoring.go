@@ -74,7 +74,11 @@ func (self MonitoringPlugin) Call(
 		}
 
 		for row := range row_chan {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 
@@ -155,16 +159,12 @@ func (self WatchMonitoringPlugin) Call(
 		qm_chan, cancel := journal.Watch(arg.Artifact)
 		defer cancel()
 
-		for {
+		for row := range qm_chan {
 			select {
 			case <-ctx.Done():
 				return
 
-			case row, ok := <-qm_chan:
-				if !ok {
-					return
-				}
-				output_chan <- row
+			case output_chan <- row:
 			}
 		}
 	}()

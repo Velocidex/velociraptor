@@ -310,11 +310,13 @@ func (self *_HttpPlugin) Call(
 		if err != nil {
 			scope.Log("http_client: Error %v while fetching %v",
 				err, arg.Url)
-
-			output_chan <- &_HttpPluginResponse{
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- &_HttpPluginResponse{
 				Url:      arg.Url,
 				Response: 500,
-				Content:  err.Error(),
+				Content:  err.Error()}:
 			}
 			return
 		}
@@ -360,7 +362,11 @@ func (self *_HttpPlugin) Call(
 			// emit it to the VQL engine.
 			tmpfile.Close()
 
-			output_chan <- response
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- response:
+			}
 
 			return
 		}
@@ -370,7 +376,11 @@ func (self *_HttpPlugin) Call(
 			n, err := io.ReadFull(http_resp.Body, buf)
 			if n > 0 {
 				response.Content = string(buf[:n])
-				output_chan <- response
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- response:
+				}
 			}
 
 			if err == io.EOF {

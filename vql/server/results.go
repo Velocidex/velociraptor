@@ -79,7 +79,11 @@ func (self UploadsPlugins) Call(
 		}
 
 		for row := range row_chan {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 
@@ -155,7 +159,11 @@ func (self SourcePlugin) Call(
 			// Just delegate to the hunt_results() plugin.
 			plugin := &HuntResultsPlugin{}
 			for row := range plugin.Call(ctx, scope, args) {
-				output_chan <- row
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- row:
+				}
 			}
 			return
 		}
@@ -176,7 +184,11 @@ func (self SourcePlugin) Call(
 		}
 
 		for row := range row_chan {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 
@@ -300,7 +312,11 @@ func (self FlowResultsPlugin) Call(
 		}
 
 		for row := range row_chan {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 

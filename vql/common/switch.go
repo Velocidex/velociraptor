@@ -45,7 +45,12 @@ func (self _SwitchPlugin) Call(ctx context.Context,
 			new_scope := scope.Copy()
 			for item := range query.Eval(ctx, new_scope) {
 				found = true
-				output_chan <- item
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- item:
+				}
 			}
 
 			if found {

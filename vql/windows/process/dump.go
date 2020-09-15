@@ -95,9 +95,14 @@ func (self ProcDumpPlugin) Call(
 			return
 		}
 
-		output_chan <- ordereddict.NewDict().
+		select {
+		case <-ctx.Done():
+			return
+
+		case output_chan <- ordereddict.NewDict().
 			Set("FullPath", filename).
-			Set("Pid", arg.Pid)
+			Set("Pid", arg.Pid):
+		}
 	}()
 
 	return output_chan
