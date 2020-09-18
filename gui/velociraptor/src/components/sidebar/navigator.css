@@ -1,0 +1,95 @@
+.navbar {
+  margin-bottom: 0; /* Bootstrap tweaks */
+  padding: 0px;
+}
+
+.navbar  .space-right {
+    margin-right: 10px;
+}
+
+.navbar.navbar-static-top {
+  min-width: 1024px;
+}
+
+.navbar.navbar-fixed-bottom {
+  min-width: 1024px;
+}
+
+.navbar-brand {
+  font-size: 20px;
+  padding-left: 50px;
+  height: 50px;
+}
+
+img.velo-logo {
+    height: 36px;
+    width: 29px;
+    margin: 5px;
+}
+
+section.navigator a {
+  color: var(--sidebar-icon-color);
+}
+
+.navigator.nav-pills.nav:hover li {
+   color: var(--sidebar-icon-color-hover);
+}
+
+.navigator.nav-pills.nav li.disabled {
+    color: var(--sidebar-icon-color-disabled);
+}
+
+.navigator.nav-pills.nav {
+    width: 200px;
+}
+
+a.active ul.navigator {
+    background-color: var(--sidebar-icon-color);
+    color: var(--color-dashboard-background);
+}
+
+button a.nav-link {
+    padding: 0px;
+    color: black;
+}
+
+.navicon {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+
+/* sidebar navbar */
+#navigator {
+    height: 100%;
+    position: fixed;
+    z-index: 2000; /* Must be above everything else; */
+    top: 51px;
+    left: 0;
+    overflow-x: hidden;
+    transition: 0.5s;
+    border-right: gray;
+    border-width: 3px;
+    border-right-style: solid;
+    background-color: var(--color-sidebar-background);
+}
+
+div#navigator {
+    width: 200px;
+    overflow-x: hidden;
+}
+
+
+div#navigator.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+#navigator.uncollapsed {
+    width: 200px;
+}
+
+span.hamburger {
+    float: left;
+    font-size: 30px;
+    cursor: pointer;
+}

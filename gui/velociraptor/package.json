@@ -1,0 +1,60 @@
+{
+    "name": "velociraptor",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+        "@fortawesome/fontawesome-svg-core": "^1.2.30",
+        "@fortawesome/free-regular-svg-icons": "^5.14.0",
+        "@fortawesome/free-solid-svg-icons": "^5.14.0",
+        "@fortawesome/react-fontawesome": "^0.1.11",
+        "@testing-library/jest-dom": "^4.2.4",
+        "@testing-library/react": "^9.3.2",
+        "@testing-library/user-event": "^7.1.2",
+        "axios": "^0.20.0",
+        "bootstrap": "^4.5.2",
+        "classnames": "^2.2.6",
+        "dotenv": "^8.2.0",
+        "env-cmd": "^10.1.0",
+        "material-dashboard": "^2.1.0",
+        "node-sass": "^4.14.1",
+        "npm-watch": "^0.7.0",
+        "react": "^16.13.1",
+        "react-bootstrap": "^1.3.0",
+        "react-bootstrap-typeahead": "^5.1.1",
+        "react-dom": "^16.13.1",
+        "react-router-dom": "^5.2.0",
+        "react-scripts": "3.4.3"
+    },
+    "proxy": "https://localhost:8889",
+    "scripts": {
+        "start": "react-scripts start",
+        "build": "react-scripts build",
+        "build-dev": "env-cmd -f .env.staging react-scripts build",
+        "test": "react-scripts test",
+        "watch": "npm-watch build-dev",
+        "eject": "react-scripts eject"
+    },
+    "watch": {
+        "build": {
+            "patterns": [
+                "src"
+            ],
+            "extensions": "js,jsx"
+        }
+    },
+    "eslintConfig": {
+        "extends": "react-app"
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    }
+}
