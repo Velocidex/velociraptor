@@ -10,21 +10,25 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
+import {HashRouter} from "react-router-dom";
 
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
-         faSearch,
-         faFolderOpen , faHistory, faBinoculars } from '@fortawesome/free-solid-svg-icons';
+         faSearch, faSpinner,  faSearchPlus, faFolderOpen, faHistory,
+         faTasks, faTerminal,
+         faBinoculars } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
-            faSearch,
+            faSearch, faSpinner, faSearchPlus, faTasks, faTerminal,
             faFolderOpen , faHistory, faBinoculars);
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
+    <HashRouter>
+        <React.StrictMode>
+        <App />
+        </React.StrictMode>
+    </HashRouter>,
+    document.getElementById('root')
 );
 
 // If you want your app to work offline and load faster, you can change

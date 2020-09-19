@@ -1,25 +1,22 @@
-import React, { Component } from 'react';
 import "./navigator.css";
 
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import classNames from "classnames";
-import {
-    HashRouter as Router,
-    Switch,
-    Route,
-    NavLink
-} from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 
 class VeloNavigator extends Component {
+    static propTypes = {
+        client: PropTypes.object.isRequired,
+    }
+
     constructor(props) {
         super(props);
         this.state = {
             // Is the nav open or closed?
             collapsed: true,
-
-            // client_id we are currently viewing
-            client_id: props.client_id,
         };
 
         this.toggle = this.toggle.bind(this);
@@ -39,8 +36,13 @@ class VeloNavigator extends Component {
     };
 
     render() {
+        let disabled = !this.props.client || !this.props.client.client_id;
+        if (disabled) {
+            disabled = "disabled";
+        };
+
         return (
-            <Router>
+            <>
               <div className="float-left navigator">
                 <span className="hamburger toolbar-buttons"
                       onClick={this.toggle}>&#9776;</span>
@@ -56,7 +58,7 @@ class VeloNavigator extends Component {
                     <section className="navigator">
                       <NavLink exact={true} to="/">
                         <ul className="nav nav-pills navigator">
-                          <li grr-nav-link className="nav-link" state="userDashboard">
+                          <li className="nav-link" state="userDashboard">
                             <i className="navicon"><FontAwesomeIcon icon="home"/></i>
                             Home
                           </li>
@@ -65,7 +67,7 @@ class VeloNavigator extends Component {
 
                       <NavLink exact={true}  to="/hunts">
                         <ul className="nav nav-pills navigator">
-                          <li grr-nav-link className="nav-link" state="hunts" >
+                          <li className="nav-link" state="hunts" >
                             <i className="navicon"><FontAwesomeIcon icon="crosshairs"/></i>
                             Hunt Manager
                           </li>
@@ -74,7 +76,7 @@ class VeloNavigator extends Component {
 
                       <NavLink exact={true} to="/artifacts">
                         <ul className="nav nav-pills navigator">
-                          <li grr-nav-link className="nav-link" state="view_artifacts" >
+                          <li className="nav-link" state="view_artifacts" >
                             <i className="navicon"><FontAwesomeIcon icon="wrench"/></i>
                             View Artifacts
                           </li>
@@ -83,7 +85,7 @@ class VeloNavigator extends Component {
 
                       <NavLink exact={true}  to="/server_events">
                         <ul className="nav nav-pills  navigator">
-                          <li grr-nav-link className="nav-link" state="server_events" >
+                          <li className="nav-link" state="server_events" >
                             <i className="navicon"><FontAwesomeIcon icon="eye"/></i>
                             Server Events
                           </li>
@@ -92,7 +94,7 @@ class VeloNavigator extends Component {
 
                       <NavLink exact={true}  to="/server_artifacts">
                         <ul className="nav nav-pills  navigator">
-                          <li grr-nav-link className="nav-link" state="server_artifacts" >
+                          <li className="nav-link" state="server_artifacts" >
                             <i className="navicon"><FontAwesomeIcon icon="server"/></i>
                             Server Artifacts
                           </li>
@@ -101,51 +103,54 @@ class VeloNavigator extends Component {
 
                       <NavLink exact={true}  to="/notebooks">
                         <ul className="nav nav-pills navigator">
-                          <li grr-nav-link className="nav-link" state="notebook" >
+                          <li className="nav-link" state="notebook" >
                             <i className="navicon"><FontAwesomeIcon icon="book"/></i>
                             Notebooks
                           </li>
                         </ul>
                       </NavLink>
 
-                      <NavLink exact={true}  to="/host">
+                      <NavLink exact={true} className={disabled}
+                               to={"/host/" + this.props.client.client_id}>
                         <ul className="nav nav-pills navigator">
                           <li className={classNames({
                               "nav-link": true,
-                              disabled: !this.state.client_id})}>
+                              disabled: disabled})}>
                             <i className="navicon"><FontAwesomeIcon icon="laptop"/> </i>
                             Host Information
                           </li>
                         </ul>
                       </NavLink>
 
-                      <NavLink exact={true}  to="/vfs">
+                      <NavLink exact={true} className={disabled}
+                               to={"/vfs/" + this.props.client.client_id }>
                         <ul className="nav nav-pills navigator">
                           <li className={classNames({
                               "nav-link": true,
-                              disabled: !this.state.client_id})}>
+                              disabled: disabled})}>
                             <i className="navicon"><FontAwesomeIcon icon="folder-open"/> </i>
                             Virtual Filesystem
                           </li>
                         </ul>
                       </NavLink>
 
-                      <NavLink exact={true}  to="/collected">
+                      <NavLink exact={true} className={disabled}
+                               to={"/collected/" + this.props.client.client_id}>
                         <ul className="nav nav-pills navigator">
                           <li className={classNames({
                               "nav-link": true,
-                              disabled: !this.state.client_id})}>
+                              disabled: disabled})}>
                             <i className="navicon"><FontAwesomeIcon icon="history"/></i>
                             Collected Artifacts
                           </li>
                         </ul>
                       </NavLink>
 
-                      <NavLink exact={true}  to="/client_events">
+                      <NavLink exact={true} className={disabled} to="/client_events">
                         <ul className="nav nav-pills navigator">
                           <li className={classNames({
                               "nav-link": true,
-                              disabled: !this.state.client_id})}>
+                              disabled: disabled})}>
                             <i className="navicon"><FontAwesomeIcon icon="binoculars"/></i>
                             Client Events
                           </li>
@@ -155,9 +160,8 @@ class VeloNavigator extends Component {
                     </section>
                   </div>
                 </div>
-
               </div>
-            </Router>
+            </>
         );
     }
 }

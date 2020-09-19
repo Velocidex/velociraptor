@@ -93,3 +93,7 @@ span.hamburger {
     font-size: 30px;
     cursor: pointer;
 }
+
+a.disabled {
+    pointer-events: none;
+}

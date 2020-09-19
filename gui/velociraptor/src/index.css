@@ -18,3 +18,16 @@ code {
     vertical-align: middle;
     padding: 5px;
 }
+
+
+#content {
+  position: absolute;
+  left: 0;
+  top: 51px;
+  bottom: 40px;
+  right: 0;
+  min-width: 1024px;
+  min-height: 400px;
+  background-color: var(--color-dashboard-background);
+  margin-left: var(--sidebar-collapsed-width);
+}

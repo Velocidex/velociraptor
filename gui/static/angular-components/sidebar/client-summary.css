@@ -1,23 +1,22 @@
-grr-client-summary {
+.client-summary {
     padding: 5px 10px;
     float: left;
 }
-grr-client-summary  .client-name {
+.client-name {
     color: var(--color-infoline-success);
     display: inline;
 }
 
-grr-client-summary .client-name .nav-link {
+.client-name .nav-link {
     display: inline;
     color: var(--color-infoline-success);
 }
 
-grr-client-summary  grr-client-status-icons > div {
+client-status-icons > div {
     text-align: left;
     display: inline;
 }
 
-grr-client-summary  .client-status,
-grr-client-summary  .client-ip-info {
+.client-status, .client-ip-info {
     color: var(--color-infoline-color);
 }
