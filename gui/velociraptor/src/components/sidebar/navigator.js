@@ -36,8 +36,8 @@ class VeloNavigator extends Component {
     };
 
     render() {
-        let disabled = !this.props.client || !this.props.client.client_id;
-        if (disabled) {
+        let disabled = "";
+        if (!this.props.client || !this.props.client.client_id) {
             disabled = "disabled";
         };
 

@@ -1,0 +1,65 @@
+
+div.client-info {
+    margin: 0px;
+    width: 100%;
+    padding: 10px;
+    background: var(--color-proto-background);
+    height: auto !important;
+}
+
+div.client-info .btn-group {
+    float: right;
+    padding-bottom: 10px;
+}
+
+div.client-info .btn-group label {
+    margin-top: 2px;
+}
+
+.client-info table td, .client-info table th {
+    vertical-align: top !important;
+}
+
+.client-info  table td.mac-address {
+    font-family: var(--font-monospace);
+}
+
+.client-details {
+    padding: 0 20px;
+}
+
+.client-info  h2 {
+    font-size: 18px;
+    margin: -10px -20px 0 -20px;
+    padding: 10px 20px;
+    background: var(--color-proto-background);
+}
+
+.client-info  h2 i {
+    margin-top: 0;
+    margin-right: 5px;
+}
+
+.client-infoi  h2 dd {
+    margin-bottom: 10px;
+    word-break: break-all;
+}
+
+
+.card.panel {
+    color: #666666;
+    background-color: #ffffff;
+    border-radius: 5px;
+    position: relative;
+    margin: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 5px 5px 0 rgba(0, 0, 0, 0.25);
+    border: #f0f0f0;
+    border-top-width: 2px;
+    border-top-style: solid;
+    overflow-x: auto;
+}
+
+.panel .card-header {
+    font-size: 13px;
+}

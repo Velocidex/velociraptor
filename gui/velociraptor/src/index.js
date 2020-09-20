@@ -15,18 +15,19 @@ import {HashRouter} from "react-router-dom";
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
          faSearch, faSpinner,  faSearchPlus, faFolderOpen, faHistory,
-         faTasks, faTerminal,
+         faTasks, faTerminal, faCompress, faExpand, faEyeSlash, faStop, faExclamation,
+         faColumns, faDownload,
          faBinoculars } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
             faSearch, faSpinner, faSearchPlus, faTasks, faTerminal,
+            faCompress, faExpand, faEyeSlash, faStop, faExclamation,
+            faColumns, faDownload,
             faFolderOpen , faHistory, faBinoculars);
 
 ReactDOM.render(
     <HashRouter>
-        <React.StrictMode>
         <App />
-        </React.StrictMode>
     </HashRouter>,
     document.getElementById('root')
 );

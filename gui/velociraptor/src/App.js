@@ -82,7 +82,7 @@ class App extends Component {
                                     setClient={this.setClient}
                     />
                   </Route>
-                  <Route path="/host/:client_id">
+                  <Route path="/host/:client_id/:action?">
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
                     <VeloHostInfo client={this.state.client}  />
                   </Route>

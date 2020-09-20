@@ -1,0 +1,22 @@
+.client-summary {
+    padding: 5px 10px;
+    float: left;
+}
+.client-name {
+    color: var(--color-infoline-success);
+    display: inline;
+}
+
+.client-name .nav-link {
+    display: inline;
+    color: var(--color-infoline-success);
+}
+
+client-status-icons > div {
+    text-align: left;
+    display: inline;
+}
+
+.client-status, .client-ip-info {
+    color: var(--color-infoline-color);
+}

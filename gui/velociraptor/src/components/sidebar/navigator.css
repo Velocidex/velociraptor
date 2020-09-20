@@ -63,7 +63,7 @@ button a.nav-link {
 #navigator {
     height: 100%;
     position: fixed;
-    z-index: 2000; /* Must be above everything else; */
+    z-index: 1000; /* Must be above everything else and below the modal shadow @ 1050; */
     top: 51px;
     left: 0;
     overflow-x: hidden;
