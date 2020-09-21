@@ -72,6 +72,13 @@ func (self *AccessorContext) GetNTFSContext() *ntfs.NTFSContext {
 	return self.ntfs_ctx
 }
 
+func (self *AccessorContext) IsClosed() bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.is_closed
+}
+
 func (self *AccessorContext) IncRef() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -225,7 +232,7 @@ func (self *NTFSFileSystemAccessor) getNTFSContext(device string) (
 	// We cache the paged reader as well as the original file
 	// handle so we can safely close it when the query is done.
 	cached_ctx, pres := self.fd_cache[device]
-	if !pres || cached_ctx.is_closed ||
+	if !pres || cached_ctx.IsClosed() ||
 		time.Now().After(self.timestamp.Add(10*time.Minute)) {
 		// Try to open the device and list its path.
 		raw_fd, err := os.OpenFile(device, os.O_RDONLY, os.FileMode(0666))
