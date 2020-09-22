@@ -253,7 +253,8 @@ func GetAPIHandler(
 		return nil, err
 	}
 
-	if gw_cert.Subject.CommonName != config_obj.API.PinnedGwName {
+	gw_name := crypto.GetSubjectName(gw_cert)
+	if gw_name != config_obj.API.PinnedGwName {
 		return nil, errors.New("GUI gRPC proxy Certificate is not correct")
 	}
 
