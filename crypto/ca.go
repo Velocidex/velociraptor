@@ -134,6 +134,7 @@ func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBund
 	template := x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
+			CommonName:   name,
 			Organization: []string{"Velociraptor"},
 		},
 		NotBefore: start_time,
