@@ -98,7 +98,13 @@ func (self *EventTable) Update(
 	for _, name := range arg.Artifacts {
 		artifact, pres := repository.Get(config_obj, name)
 		if !pres {
-			return errors.New("Unknown artifact " + name)
+			// If the artifact is custom and was removed
+			// then this is not a fatal error. We should
+			// issue a warning and move on.
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Warn("<red>Server Artifact Manager</>: Unknown artifact " +
+				name + " please remove it from the server monitoring tables.")
+			continue
 		}
 
 		// Server monitoring artifacts run with full admin

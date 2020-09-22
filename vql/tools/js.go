@@ -1,5 +1,3 @@
-//+build extras,disable
-
 package tools
 
 import (

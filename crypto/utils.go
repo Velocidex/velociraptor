@@ -177,3 +177,19 @@ func VerifyConfig(config_obj *config_proto.Config) error {
 
 	return nil
 }
+
+func GetSubjectName(cert *x509.Certificate) string {
+	if cert.Subject.CommonName != "" {
+		return cert.Subject.CommonName
+	}
+
+	if len(cert.DNSNames) > 0 {
+		return cert.DNSNames[0]
+	}
+
+	if len(cert.IPAddresses) > 0 {
+		return cert.IPAddresses[0].String()
+	}
+
+	return ""
+}

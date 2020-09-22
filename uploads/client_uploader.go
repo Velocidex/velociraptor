@@ -63,7 +63,7 @@ func (self *VelociraptorUploader) Upload(
 		// iteration to prevent overwriting in flight buffers.
 		buffer := make([]byte, BUFF_SIZE)
 		read_bytes, err := reader.Read(buffer)
-		if err != nil {
+		if err != nil && err != io.EOF {
 			return nil, err
 		}
 
