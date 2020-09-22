@@ -99,6 +99,8 @@ class VeloFileTree extends Component {
         client: PropTypes.object,
         vfs_path: PropTypes.array,
         updateVFSPath: PropTypes.func,
+        updateCurrentNode: PropTypes.func,
+        selectedRow: PropTypes.object,
     }
 
     componentDidMount() {
@@ -120,17 +122,31 @@ class VeloFileTree extends Component {
     updateTree = () => {
         let components = this.props.vfs_path;
         let root_node = this.state;
-        this.updateComponent(root_node, [], components);
+        this.updateComponent(
+            root_node, [], components,
+            function(node, was_loaded){
+                if (was_loaded) {
+                    node.toggled = true;
+                }
+            });
     }
 
-    updateComponent = (node, prev_components, next_components) => {
+    refreshNode = (node) => {
+
+    }
+
+    updateComponent = (node, prev_components, next_components, completion_cb) => {
         if (!this.props.client || !this.props.client.client_id) {
             return;
         }
 
+        if (!completion_cb) {
+            completion_cb = function(node, was_loaded){};
+        }
+
         // This node already has valid data, consume the next
         // component and populate if needed.
-        if (node.known) {
+        if (node.known || node.inflight) {
 
             // We need to go deeper.
             if (next_components && next_components.length > 0) {
@@ -143,57 +159,69 @@ class VeloFileTree extends Component {
                 for (var i=0; i<children.length; i++) {
                     let next_node = children[i];
                     if (next_node.name === next) {
-                        this.updateComponent(next_node, prev_components, next_components);
+                        this.updateComponent(next_node, prev_components,
+                                             next_components, completion_cb);
                     }
                 }
             }
+
+            completion_cb(node, false);
+            return;
 
             // This component is not known, we need to refresh from
             // the server.
         } else {
             let client_id = this.props.client.client_id;
             node.loading = true;
+            node.inflight = true;
+            this.props.setSelectedRow({_Loading: true});
+
             api.get("api/v1/VFSListDirectory/" + client_id, {
                 vfs_path: Join(prev_components),
             }).then(function(response) {
                 node.loading = false;
-
-                if (!response || !response.data || !response.data.Response) {
-                    return;
-                }
-
-                // Hold on to the raw data.
-                node.raw_data = JSON.parse(response.data.Response);
-
-                // Extract the directory children from the raw_data
                 let children = [];
-                for (var i=0; i<node.raw_data.length; i++) {
-                    let file_info = node.raw_data[i];
 
-                    // Only show directories
-                    if(file_info.Mode[0] === 'd') {
-                        // Each node will contain a list of all its previous
-                        // nodes in the path.
-                        let path_components = [...prev_components];
-                        path_components.push(file_info.Name);
-                        children.push({
-                            name: file_info.Name,
-                            path: path_components,
-                            children: [],
-                        });
+                if (response && response.data && response.data.Response) {
+                    // Hold on to the raw data.
+                    node.raw_data = JSON.parse(response.data.Response);
+
+                    // Extract the directory children from the raw_data
+                    for (var i=0; i<node.raw_data.length; i++) {
+                        let file_info = node.raw_data[i];
+
+                        // Only show directories
+                        if(file_info.Mode[0] === 'd') {
+                            // Each node will contain a list of all its previous
+                            // nodes in the path.
+                            let path_components = [...prev_components];
+                            path_components.push(file_info.Name);
+                            children.push({
+                                name: file_info.Name,
+                                path: path_components,
+                                children: [],
+                            });
+                        }
                     }
                 }
+
                 node.known = true;
                 node.children = children;
-                node.toggled = true;
+                node.inflight = false;
 
-                this.updateComponent(node, prev_components, next_components);
+                // Give our caller a chance to modify the node.
+                completion_cb(node, true);
+
+                this.props.updateCurrentNode(node);
+                this.updateComponent(node, prev_components, next_components, completion_cb);
                 this.setState(this.state);
-            }.bind(this), function(response) {
+
+            }.bind(this) , function(response) {
                 node.loading = false;
+                completion_cb(node, false);
             });
         };
-    }
+    };
 
     state = {
         name: '',
@@ -205,14 +233,15 @@ class VeloFileTree extends Component {
     };
 
     onToggle = (node, toggled) => {
+        // Deactive the current node we are on.
         const {cursor, data} = this.state;
         if (cursor) {
             cursor.active = false;
         }
+
         node.active = !node.active;
-        if (node.children) {
-            node.toggled = toggled;
-        }
+        node.toggled = toggled;
+
         this.setState(() => ({cursor: node, data: Object.assign({}, data)}));
 
         // Update the new vfs path
@@ -221,6 +250,9 @@ class VeloFileTree extends Component {
         let path = Join(node.path || '');
         let client_id = this.props.client.client_id || '';
         this.props.history.push("/vfs/" + client_id + path);
+
+        node.known = false;
+        this.updateComponent(node, node.path, []);
     }
 
     render() {

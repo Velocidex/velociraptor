@@ -7,8 +7,13 @@ import VeloClientList from './components/clients/clients-list.js';
 import VeloHostInfo from './components/clients/host-info.js';
 import ClientSetterFromRoute from './components/clients/client_info.js';
 import VeloClientSummary from './components/clients/client-summary.js';
-
+import VFSViewer from './components/vfs/browse-vfs.js';
+import VFSSetterFromRoute from './components/vfs/vfs-setter.js';
+import VeloLiveClock from './components/utils/clock.js';
 import { Switch, Route } from "react-router-dom";
+
+import Navbar from 'react-bootstrap/Navbar';
+import Nav from 'react-bootstrap/Nav';
 
 
 /* This is the main App page.
@@ -31,28 +36,43 @@ import { Switch, Route } from "react-router-dom";
 class App extends Component {
     state = {
         client: {},
+
+        // Current path components to the VFS directory.
+        vfs_path: [],
+
+        // The file listing in the current directory.
+        current_node: {},
+
+        // The current row within the current node that is selected.
+        selected_row: {},
+
         query: "",
     }
 
-    constructor() {
-        super();
-
-        this.setClient = this.setClient.bind(this);
-        this.setClientSearch = this.setClientSearch.bind(this);
-    }
-
     // Called to update the client id.
-    setClient(client) {
+    setClient = (client) => {
         let new_state  = Object.assign({}, this.state);
         new_state.client = client;
         this.setState(new_state);
     };
 
-    setClientSearch(query) {
+    setClientSearch = (query) => {
         let new_state  = Object.assign({}, this.state);
         new_state.query = query;
         this.setState(new_state);
     };
+
+    setSelectedRow = (row) => {
+        this.setState({selected_row: row});
+    };
+
+    updateVFSPath = (vfs_path) => {
+        this.setState({vfs_path: vfs_path});
+    };
+
+    updateCurrentNode = (node) => {
+        this.setState({current_node: node});
+    }
 
     render() {
         return (
@@ -86,29 +106,30 @@ class App extends Component {
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
                     <VeloHostInfo client={this.state.client}  />
                   </Route>
-                  <Route path="/vfs/:client_id">
+                  <Route path="/vfs/:client_id/:vfs_path*">
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
+                    <VFSSetterFromRoute vfs_path={this.state.vfs_path}
+                                        updateVFSPath={this.updateVFSPath} />
+                    <VFSViewer client={this.state.client}
+                               selectedRow={this.state.selected_row}
+                               setSelectedRow={this.setSelectedRow}
+                               updateVFSPath={this.updateVFSPath}
+                               updateCurrentNode={this.updateCurrentNode}
+                               node={this.state.current_node}
+                               vfs_path={this.state.vfs_path} />
                   </Route>
                   <Route path="/collected/:client_id">
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
                   </Route>
                 </Switch>
               </div>
-              <div className="navbar navbar-default navbar-fixed-bottom" id="footer">
-                <div className="navbar-inner">
-                  <a className="brand"></a>
-                  <ul className="nav navbar-nav float-left">
-                    <li>
-                      <grr-server-error-preview></grr-server-error-preview>
-                    </li>
-                  </ul>
-                  <ul className="nav navbar-nav float-right">
-                    <li >
-                      <grr-live-clock className="hidden-xs"></grr-live-clock>
-                    </li>
-                  </ul>
-                </div>
-              </div>
+              <Navbar fixed="bottom">
+                <Nav className="col-9">
+                </Nav>
+                <Nav>
+                  <VeloLiveClock className="col-3 float-right" />
+                </Nav>
+              </Navbar>
 
             </>
         );

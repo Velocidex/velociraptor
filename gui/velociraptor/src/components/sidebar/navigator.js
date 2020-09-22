@@ -65,7 +65,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink exact={true}  to="/hunts">
+                      <NavLink to="/hunts">
                         <ul className="nav nav-pills navigator">
                           <li className="nav-link" state="hunts" >
                             <i className="navicon"><FontAwesomeIcon icon="crosshairs"/></i>
@@ -74,7 +74,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink exact={true} to="/artifacts">
+                      <NavLink to="/artifacts">
                         <ul className="nav nav-pills navigator">
                           <li className="nav-link" state="view_artifacts" >
                             <i className="navicon"><FontAwesomeIcon icon="wrench"/></i>
@@ -83,7 +83,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink exact={true}  to="/server_events">
+                      <NavLink to="/server_events">
                         <ul className="nav nav-pills  navigator">
                           <li className="nav-link" state="server_events" >
                             <i className="navicon"><FontAwesomeIcon icon="eye"/></i>
@@ -92,7 +92,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink exact={true}  to="/server_artifacts">
+                      <NavLink to="/server_artifacts">
                         <ul className="nav nav-pills  navigator">
                           <li className="nav-link" state="server_artifacts" >
                             <i className="navicon"><FontAwesomeIcon icon="server"/></i>
@@ -101,7 +101,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink exact={true}  to="/notebooks">
+                      <NavLink to="/notebooks">
                         <ul className="nav nav-pills navigator">
                           <li className="nav-link" state="notebook" >
                             <i className="navicon"><FontAwesomeIcon icon="book"/></i>
@@ -110,7 +110,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink exact={true} className={disabled}
+                      <NavLink className={disabled}
                                to={"/host/" + this.props.client.client_id}>
                         <ul className="nav nav-pills navigator">
                           <li className={classNames({
@@ -122,7 +122,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink exact={true} className={disabled}
+                      <NavLink className={disabled}
                                to={"/vfs/" + this.props.client.client_id }>
                         <ul className="nav nav-pills navigator">
                           <li className={classNames({
@@ -134,7 +134,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink exact={true} className={disabled}
+                      <NavLink className={disabled}
                                to={"/collected/" + this.props.client.client_id}>
                         <ul className="nav nav-pills navigator">
                           <li className={classNames({
@@ -146,7 +146,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink exact={true} className={disabled} to="/client_events">
+                      <NavLink className={disabled} to="/client_events">
                         <ul className="nav nav-pills navigator">
                           <li className={classNames({
                               "nav-link": true,
