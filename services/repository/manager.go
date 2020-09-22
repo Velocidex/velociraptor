@@ -175,6 +175,9 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 
 	grepository, err := InitializeGlobalRepositoryFromFilestore(
 		config_obj, self.global_repository)
+	if err != nil {
+		return err
+	}
 
 	// Compile the artifacts in the background so they are ready
 	// to go when the GUI searches for them.
