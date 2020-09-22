@@ -14,11 +14,12 @@ import (
 
 // Returned as the result of the query.
 type UploadResponse struct {
-	Path   string `json:"Path"`
-	Size   uint64 `json:"Size"`
-	Error  string `json:"Error,omitempty"`
-	Sha256 string `json:"sha256,omitempty"`
-	Md5    string `json:"md5,omitempty"`
+	Path       string `json:"Path"`
+	Size       uint64 `json:"Size"`
+	StoredSize uint64 `json:"StoredSize,omitempty"`
+	Error      string `json:"Error,omitempty"`
+	Sha256     string `json:"sha256,omitempty"`
+	Md5        string `json:"md5,omitempty"`
 }
 
 // Provide an uploader capable of uploading any reader object.
@@ -90,8 +91,8 @@ loop:
 				return nil, err
 			}
 
-			md5_sum.Write(data)
-			sha_sum.Write(data)
+			_, _ = md5_sum.Write(data)
+			_, _ = sha_sum.Write(data)
 
 			offset += int64(n)
 		}

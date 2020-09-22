@@ -6,17 +6,22 @@ import (
 	"os"
 	"strings"
 
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 // Loads the global repository with artifacts from the frontend path
 // and the file store.
-func GetGlobalRepository(config_obj *config_proto.Config) (*artifacts.Repository, error) {
-	global_repository, err := artifacts.GetGlobalRepository(config_obj)
+func GetGlobalRepository(config_obj *config_proto.Config) (services.Repository, error) {
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+
+	global_repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +40,7 @@ func GetGlobalRepository(config_obj *config_proto.Config) (*artifacts.Repository
 				strings.HasSuffix(path, ".yml")) {
 				fd, err := file_store_factory.ReadFile(path)
 				if err != nil {
-					logger.Error(err)
+					logger.Error("GetGlobalRepository: %v", err)
 					return nil
 				}
 				defer fd.Close()
@@ -43,7 +48,7 @@ func GetGlobalRepository(config_obj *config_proto.Config) (*artifacts.Repository
 				data, err := ioutil.ReadAll(
 					io.LimitReader(fd, constants.MAX_MEMORY))
 				if err != nil {
-					logger.Error(err)
+					logger.Error("GetGlobalRepository: %v", err)
 					return nil
 				}
 

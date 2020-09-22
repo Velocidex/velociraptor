@@ -20,7 +20,7 @@ sources:
            FROM pslist(pid=getpid())
          })
 
-  - precondition: SELECT OS From info() where OS = 'linux'
+  - precondition: SELECT OS From info() where OS != 'windows'
     queries:
       - SELECT * from foreach(
          row={
@@ -57,7 +57,7 @@ reports:
 
       {{ $client_info := Query "SELECT * FROM clients(client_id=ClientId) LIMIT 1" }}
 
-      # Client Footprint for {{ Get $client_info "0.OsInfo.Fqdn" }}
+      # Client Footprint for {{ Get $client_info "0.os_info.fqdn" }}
 
       The client has a client ID of {{ Get $client_info "0.client_id" }}.
       Clients report the Velociraptor process footprint to the

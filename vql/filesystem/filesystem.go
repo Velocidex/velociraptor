@@ -86,27 +86,31 @@ func (self GlobPlugin) Call(
 					continue
 				}
 				root = item_root
-				globber.Add(item_path, accessor.PathSplit)
+				err = globber.Add(item_path, accessor.PathSplit)
+				if err != nil {
+					scope.Log("glob: %v", err)
+					return
+				}
 			}
 
 		} else {
 			for _, item := range arg.Globs {
-				globber.Add(item, accessor.PathSplit)
+				err = globber.Add(item, accessor.PathSplit)
+				if err != nil {
+					scope.Log("glob: %v", err)
+					return
+				}
 			}
 		}
 
 		file_chan := globber.ExpandWithContext(
 			ctx, config_obj, root, accessor)
-		for {
+		for f := range file_chan {
 			select {
 			case <-ctx.Done():
 				return
 
-			case f, ok := <-file_chan:
-				if !ok {
-					return
-				}
-				output_chan <- f
+			case output_chan <- f:
 			}
 		}
 	}()
@@ -155,30 +159,31 @@ func (self ReadFilePlugin) processFile(
 
 	buf := make([]byte, arg.Chunk)
 	for {
+		n, err := io.ReadAtLeast(fd, buf, arg.Chunk)
+		if err != nil &&
+			errors.Cause(err) != io.ErrUnexpectedEOF &&
+			errors.Cause(err) != io.EOF {
+			scope.Log("read_file: %v", err)
+			return
+		}
+
+		if n == 0 {
+			return
+		}
+		response := &ReadFileResponse{
+			Data:     string(buf[:n]),
+			Offset:   total_len,
+			Filename: file,
+		}
+
 		select {
 		case <-ctx.Done():
 			return
-
-		default:
-			n, err := io.ReadAtLeast(fd, buf, arg.Chunk)
-			if err != nil &&
-				errors.Cause(err) != io.ErrUnexpectedEOF &&
-				errors.Cause(err) != io.EOF {
-				scope.Log("read_file: %v", err)
-				return
-			}
-
-			if n == 0 {
-				return
-			}
-			response := &ReadFileResponse{
-				Data:     string(buf[:n]),
-				Offset:   total_len,
-				Filename: file,
-			}
-			output_chan <- response
-			total_len += int64(n)
+		case output_chan <- response:
 		}
+
+		total_len += int64(n)
+
 		if arg.MaxLength > 0 &&
 			total_len > int64(arg.MaxLength) {
 			break
@@ -334,7 +339,12 @@ func (self *StatPlugin) Call(
 		for _, filename := range arg.Filename {
 			f, err := accessor.Lstat(filename)
 			if err == nil {
-				output_chan <- f
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- f:
+				}
 			}
 		}
 	}()

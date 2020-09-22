@@ -79,7 +79,11 @@ func (self UploadsPlugins) Call(
 		}
 
 		for row := range row_chan {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 
@@ -155,7 +159,11 @@ func (self SourcePlugin) Call(
 			// Just delegate to the hunt_results() plugin.
 			plugin := &HuntResultsPlugin{}
 			for row := range plugin.Call(ctx, scope, args) {
-				output_chan <- row
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- row:
+				}
 			}
 			return
 		}
@@ -176,7 +184,11 @@ func (self SourcePlugin) Call(
 		}
 
 		for row := range row_chan {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 
@@ -275,12 +287,14 @@ func (self FlowResultsPlugin) Call(
 				return
 			}
 
-			requested_artifacts := flow.Context.Request.Artifacts
-			if len(requested_artifacts) == 0 {
-				scope.Log("flow_results: no artifacts in hunt")
-				return
+			if flow.Context != nil && flow.Context.Request != nil {
+				requested_artifacts := flow.Context.Request.Artifacts
+				if len(requested_artifacts) == 0 {
+					scope.Log("flow_results: no artifacts in hunt")
+					return
+				}
+				arg.Artifact = requested_artifacts[0]
 			}
-			arg.Artifact = requested_artifacts[0]
 		}
 
 		if arg.Source != "" {
@@ -298,7 +312,11 @@ func (self FlowResultsPlugin) Call(
 		}
 
 		for row := range row_chan {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 

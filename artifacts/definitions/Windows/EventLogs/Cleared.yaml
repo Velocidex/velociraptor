@@ -1,7 +1,7 @@
 name: Windows.EventLogs.Cleared
 
 description: |
-  Extract Event Logs related to EventLog clearing
+  Extract Event Logs related to EventLog clearing 
   - Security Log  - EventID 1102
   - System Log - EventID 104
 
@@ -18,15 +18,15 @@ parameters:
         Glob
         %SystemRoot%\System32\Winevt\Logs\Security.evtx
         %SystemRoot%\System32\Winevt\Logs\System.evtx
-  - name: SearchVSS
-    description: "Add VSS into query."
-    type: bool
   - name: DateAfter
     type: timestamp
     description: "search for events after this date. YYYY-MM-DDTmm:hh:ssZ"
   - name: DateBefore
     type: timestamp
     description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
+  - name: SearchVSS
+    description: "Add VSS into query."
+    type: bool
 
 sources:
   - queries:
@@ -49,7 +49,7 @@ sources:
                         FROM Artifact.Windows.Search.VSS(SearchFilesGlob=EvtxGlob)
                     },
                     else= {
-                        SELECT *, "" AS Source
+                        SELECT *, FullPath as Source
                         FROM glob(globs=EvtxGlob)
                     })
                 })
@@ -72,19 +72,19 @@ sources:
                                 UserData.LogFileCleared.SubjectUserName,
                             else= UserData.LogFileCleared.SubjectDomainName + '\\' +
                                 UserData.LogFileCleared.SubjectUserName) as UserName,
-                        if(condition= System.EventID.Value = 1102,
+                        if(condition= System.EventID.Value = 1102, 
                             then= UserData.LogFileCleared.SubjectUserSid,
                             else= System.Security.UserID) as SecurityID,
                         Message,
-                        if(condition=Source, then=Source, else=FullPath) as Source,
+                        Source,
                         format(format="%v-%v-%v",args=[System.EventID.Value,System.EventRecordID,
                             timestamp(epoch=int(int=System.TimeCreated.SystemTime))]) as _Group
                 FROM parse_evtx(filename=FullPath)
                 WHERE
                     EventTime < DateBeforeTime AND
                     EventTime > DateAfterTime AND
-                    ( EventID = 1102 AND Channel = 'Security' ) OR
-                    ( EventID = 104 AND Message =~ 'Log clear' )
+                    ( EventID = 1102 AND Channel = 'Security' AND Message =~ 'cleared')
+                    OR ( EventID = 104 AND Message =~ 'Log clear' )
             })
             ORDER BY Source DESC
 

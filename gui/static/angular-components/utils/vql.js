@@ -101,7 +101,7 @@ exports.VQLDirective = function() {
       selectedRow: '=?',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/utils/vql.html',
+    templateUrl: window.base_path+'/static/angular-components/utils/vql.html',
     controller: vqlController,
     controllerAs: 'controller'
   };

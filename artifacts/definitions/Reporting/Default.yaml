@@ -20,134 +20,372 @@ description: |
      need the SERVER_ARTIFACT_WRITER permission.
 
 reports:
+  - name: Templates
+    type: TEMPLATES
+    template: |
+       {{ define "fold_start" }}
+       <div role="button" class="btn btn-primary btn-block row collapsible">View Details</div>
+       <div class="collapse row"><div class="card card-body overflow-auto">
+       {{end}}
+       {{ define "fold_end" }}
+       </div></div>
+       {{ end }}
+
+       {{ define "hidden_paragraph_start" }}
+       {{- if .description -}}
+       <div><a href="#" class="collapsible">{{ .description }} ...</a>
+       {{- else -}}
+       <div><a href="#" class="collapsible">More ...</a>
+       {{- end -}}
+       <div class="collapse">
+       {{end}}
+
+       {{ define "hidden_paragraph_end" }}
+       </div></div>
+       {{ end }}
+
+
   - type: HTML
     template: |
-          <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-              <title>Velociraptor Report</title>
+      {{ import "Reporting.Default" "Templates" }}
 
-              <!-- Bootstrap core CSS -->
-              <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-              <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-              <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-              <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+      <!doctype html>
+       <html lang="en-US">
+         <head>
+         {{ $hostinfo := Query "SELECT timestamp(epoch=now()).UTC.String AS Time, \
+             OS, Fqdn FROM info()" | Expand }}
 
-              <style>
-          pre {
-              display: block;
-              padding: 8px;
-              margin: 0 0 8.5px;
-              font-size: 12px;
-              line-height: 1.31;
-              word-break: break-all;
-              word-wrap: break-word;
-              color: #333333;
-              background-color: #f5f5f5;
-              border: 1px solid #ccc;
-              border-radius: 4px;
-          }
+           <meta charset="utf-8">
+           <meta http-equiv="X-UA-Compatible" content="IE=edge">
+           <meta name="viewport" content="width=device-width, initial-scale=1">
 
-          .notebook-cell {
-              border-color: transparent;
-              display: flex;
-              flex-direction: column;
-              align-items: stretch;
-              border-radius: 20px;
-              border-width: 3px;
-              border-style: none;
-              border-color: #ababab;
-              padding: 20px;
-              margin: 0px;
-              position: relative;
-              overflow: auto;
-          }
+           <!-- Name of the scan -->
+           <title>{{ Get $hostinfo "0.Fqdn" }} Artifact Collection</title>
+           <style>
+             @charset "UTF-8";
+           body {
+             padding-top: 57px;
+           }
+           .btn-primary.btn {
+              color: #00aa00;
+              background-color: #fff;
+              border-color: #fff;
+           }
+           .btn-primary.btn:hover {
+              color: #fff;
+              background-color: #00911e;
+              border-color: #00911e;
+           }
+           .btn.btn-primary:not(:disabled):not(.disabled):active, .btn.btn-primary:not(:disabled):not(.disabled).active {
+              color: #fff;
+              background-color: #008773;
+              border-color: #008773;
+           }
+           .btn.btn-primary:focus, .btn.btn-primary.focus {
+             color: #fff;
+              background-color: #00911e;
+              border-color: #00911e;
+             box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
+           }
+           .header {
+               background-color: black;
+               border-bottom: 1px solid #00aa00;
+           }
+           .collapse {
+             display: none;
+           }
+           .anchor {
+             display: block;
+             position: relative;
+             top: -57px;
+             visibility: hidden;
+           }
+           .logo {
+             margin-top: -17px;
+             margin-bottom: -10px;
+             margin-left: 20px;
+             height: 40px;
+           }
 
-          /* Error */  .chromaerr { color: #a61717; background-color: #e3d2d2 }
-          /* LineTableTD */  .chromalntd { vertical-align: top; padding: 0; margin: 0; border: 0; }
-          /* LineTable */  .chromalntable { border-spacing: 0; padding: 0; margin: 0; border: 0; width: auto; overflow: auto; display: block; }
-          /* LineHighlight */  .chromahl { display: block; width: 100%%; }
-          /* LineNumbersTable */  .chromalnt { margin-right: 0.4em; padding: 0 0.4em 0 0.4em; }
-          /* LineNumbers */  .chromaln { margin-right: 0.4em; padding: 0 0.4em 0 0.4em; }
-          /* Keyword */  .chromak { color: #000000; font-weight: bold }
-          /* KeywordConstant */  .chromakc { color: #000000; font-weight: bold }
-          /* KeywordDeclaration */  .chromakd { color: #000000; font-weight: bold }
-          /* KeywordNamespace */  .chromakn { color: #000000; font-weight: bold }
-          /* KeywordPseudo */  .chromakp { color: #000000; font-weight: bold }
-          /* KeywordReserved */  .chromakr { color: #000000; font-weight: bold }
-          /* KeywordType */  .chromakt { color: #445588; font-weight: bold }
-          /* NameAttribute */  .chromana { color: #008080 }
-          /* NameBuiltin */  .chromanb { color: #0086b3 }
-          /* NameBuiltinPseudo */  .chromabp { color: #999999 }
-          /* NameClass */  .chromanc { color: #445588; font-weight: bold }
-          /* NameConstant */  .chromano { color: #008080 }
-          /* NameDecorator */  .chromand { color: #3c5d5d; font-weight: bold }
-          /* NameEntity */  .chromani { color: #800080 }
-          /* NameException */  .chromane { color: #990000; font-weight: bold }
-          /* NameFunction */  .chromanf { color: #990000; font-weight: bold }
-          /* NameLabel */  .chromanl { color: #990000; font-weight: bold }
-          /* NameNamespace */  .chromann { color: #555555 }
-          /* NameTag */  .chromant { color: #000080 }
-          /* NameVariable */  .chromanv { color: #008080 }
-          /* NameVariableClass */  .chromavc { color: #008080 }
-          /* NameVariableGlobal */  .chromavg { color: #008080 }
-          /* NameVariableInstance */  .chromavi { color: #008080 }
-          /* LiteralString */  .chromas { color: #dd1144 }
-          /* LiteralStringAffix */  .chromasa { color: #dd1144 }
-          /* LiteralStringBacktick */  .chromasb { color: #dd1144 }
-          /* LiteralStringChar */  .chromasc { color: #dd1144 }
-          /* LiteralStringDelimiter */  .chromadl { color: #dd1144 }
-          /* LiteralStringDoc */  .chromasd { color: #dd1144 }
-          /* LiteralStringDouble */  .chromas2 { color: #dd1144 }
-          /* LiteralStringEscape */  .chromase { color: #dd1144 }
-          /* LiteralStringHeredoc */  .chromash { color: #dd1144 }
-          /* LiteralStringInterpol */  .chromasi { color: #dd1144 }
-          /* LiteralStringOther */  .chromasx { color: #dd1144 }
-          /* LiteralStringRegex */  .chromasr { color: #009926 }
-          /* LiteralStringSingle */  .chromas1 { color: #dd1144 }
-          /* LiteralStringSymbol */  .chromass { color: #990073 }
-          /* LiteralNumber */  .chromam { color: #009999 }
-          /* LiteralNumberBin */  .chromamb { color: #009999 }
-          /* LiteralNumberFloat */  .chromamf { color: #009999 }
-          /* LiteralNumberHex */  .chromamh { color: #009999 }
-          /* LiteralNumberInteger */  .chromami { color: #009999 }
-          /* LiteralNumberIntegerLong */  .chromail { color: #009999 }
-          /* LiteralNumberOct */  .chromamo { color: #009999 }
-          /* Operator */  .chromao { color: #000000; font-weight: bold }
-          /* OperatorWord */  .chromaow { color: #000000; font-weight: bold }
-          /* Comment */  .chromac { color: #999988; font-style: italic }
-          /* CommentHashbang */  .chromach { color: #999988; font-style: italic }
-          /* CommentMultiline */  .chromacm { color: #999988; font-style: italic }
-          /* CommentSingle */  .chromac1 { color: #999988; font-style: italic }
-          /* CommentSpecial */  .chromacs { color: #999999; font-weight: bold; font-style: italic }
-          /* CommentPreproc */  .chromacp { color: #999999; font-weight: bold; font-style: italic }
-          /* CommentPreprocFile */  .chromacpf { color: #999999; font-weight: bold; font-style: italic }
-          /* GenericDeleted */  .chromagd { color: #000000; background-color: #ffdddd }
-          /* GenericEmph */  .chromage { color: #000000; font-style: italic }
-          /* GenericError */  .chromagr { color: #aa0000 }
-          /* GenericHeading */  .chromagh { color: #999999 }
-          /* GenericInserted */  .chromagi { color: #000000; background-color: #ddffdd }
-          /* GenericOutput */  .chromago { color: #888888 }
-          /* GenericPrompt */  .chromagp { color: #555555 }
-          /* GenericStrong */  .chromags { font-weight: bold }
-          /* GenericSubheading */  .chromagu { color: #aaaaaa }
-          /* GenericTraceback */  .chromagt { color: #aa0000 }
-          /* TextWhitespace */  .chromaw { color: #bbbbbb }
-          </style>
-            </head>
-            <body>
-              <main role="main" class="container">
+           .section {
+               color: #FFFFFF;
+               font-size: 24px;
+               background-color: #00aa00;
+               font-family: Gotham, "Helvetica Neue", Helvetica, Arial, sans-serif;
+               font-variant: normal;
+               padding-top: 15px;
+               padding-bottom: 15px;
+               text-align: center;
+           }
+           .top-section {
+               border-bottom-left-radius: 40px;
+               border-bottom-right-radius: 40px;
+           }
 
-              <h1> Collection report. </h1>
+           /* Error */  .chromaerr { color: #a61717; background-color: #e3d2d2 }
+           /* LineTableTD */  .chromalntd { vertical-align: top; padding: 0; margin: 0; border: 0; }
+           /* LineTable */  .chromalntable { border-spacing: 0; padding: 0; margin: 0; border: 0; width: auto; overflow: auto; display: block; }
+           /* LineHighlight */  .chromahl { display: block; width: 100%; }
+           /* LineNumbersTable */  .chromalnt { margin-right: 0.4em; padding: 0 0.4em 0 0.4em; }
+           /* LineNumbers */  .chromaln { display: none; margin-right: 0.4em; padding: 0 0.4em 0 0.4em; }
+           /* Keyword */  .chromak { color: #000000; font-weight: bold }
+           /* KeywordConstant */  .chromakc { color: #000000; font-weight: bold }
+           /* KeywordDeclaration */  .chromakd { color: #000000; font-weight: bold }
+           /* KeywordNamespace */  .chromakn { color: #000000; font-weight: bold }
+           /* KeywordPseudo */  .chromakp { color: #000000; font-weight: bold }
+           /* KeywordReserved */  .chromakr { color: #000000; font-weight: bold }
+           /* KeywordType */  .chromakt { color: #445588; font-weight: bold }
+           /* NameAttribute */  .chromana { color: #008080 }
+           /* NameBuiltin */  .chromanb { color: #0086b3 }
+           /* NameBuiltinPseudo */  .chromabp { color: #999999 }
+           /* NameClass */  .chromanc { color: #445588; font-weight: bold }
+           /* NameConstant */  .chromano { color: #008080 }
+           /* NameDecorator */  .chromand { color: #3c5d5d; font-weight: bold }
+           /* NameEntity */  .chromani { color: #800080 }
+           /* NameException */  .chromane { color: #990000; font-weight: bold }
+           /* NameFunction */  .chromanf { color: #990000; font-weight: bold }
+           /* NameLabel */  .chromanl { color: #990000; font-weight: bold }
+           /* NameNamespace */  .chromann { color: #555555 }
+           /* NameTag */  .chromant { color: #000080 }
+           /* NameVariable */  .chromanv { color: #008080 }
+           /* NameVariableClass */  .chromavc { color: #008080 }
+           /* NameVariableGlobal */  .chromavg { color: #008080 }
+           /* NameVariableInstance */  .chromavi { color: #008080 }
+           /* LiteralString */  .chromas { color: #dd1144 }
+           /* LiteralStringAffix */  .chromasa { color: #dd1144 }
+           /* LiteralStringBacktick */  .chromasb { color: #dd1144 }
+           /* LiteralStringChar */  .chromasc { color: #dd1144 }
+           /* LiteralStringDelimiter */  .chromadl { color: #dd1144 }
+           /* LiteralStringDoc */  .chromasd { color: #dd1144 }
+           /* LiteralStringDouble */  .chromas2 { color: #dd1144 }
+           /* LiteralStringEscape */  .chromase { color: #dd1144 }
+           /* LiteralStringHeredoc */  .chromash { color: #dd1144 }
+           /* LiteralStringInterpol */  .chromasi { color: #dd1144 }
+           /* LiteralStringOther */  .chromasx { color: #dd1144 }
+           /* LiteralStringRegex */  .chromasr { color: #009926 }
+           /* LiteralStringSingle */  .chromas1 { color: #dd1144 }
+           /* LiteralStringSymbol */  .chromass { color: #990073 }
+           /* LiteralNumber */  .chromam { color: #009999 }
+           /* LiteralNumberBin */  .chromamb { color: #009999 }
+           /* LiteralNumberFloat */  .chromamf { color: #009999 }
+           /* LiteralNumberHex */  .chromamh { color: #009999 }
+           /* LiteralNumberInteger */  .chromami { color: #009999 }
+           /* LiteralNumberIntegerLong */  .chromail { color: #009999 }
+           /* LiteralNumberOct */  .chromamo { color: #009999 }
+           /* Operator */  .chromao { color: #000000; font-weight: bold }
+           /* OperatorWord */  .chromaow { color: #000000; font-weight: bold }
+           /* Comment */  .chromac { color: #999988; font-style: italic }
+           /* CommentHashbang */  .chromach { color: #999988; font-style: italic }
+           /* CommentMultiline */  .chromacm { color: #999988; font-style: italic }
+           /* CommentSingle */  .chromac1 { color: #999988; font-style: italic }
+           /* CommentSpecial */  .chromacs { color: #999999; font-weight: bold; font-style: italic }
+           /* CommentPreproc */  .chromacp { color: #999999; font-weight: bold; font-style: italic }
+           /* CommentPreprocFile */  .chromacpf { color: #999999; font-weight: bold; font-style: italic }
+           /* GenericDeleted */  .chromagd { color: #000000; background-color: #ffdddd }
+           /* GenericEmph */  .chromage { color: #000000; font-style: italic }
+           /* GenericError */  .chromagr { color: #aa0000 }
+           /* GenericHeading */  .chromagh { color: #999999 }
+           /* GenericInserted */  .chromagi { color: #000000; background-color: #ddffdd }
+           /* GenericOutput */  .chromago { color: #888888 }
+           /* GenericPrompt */  .chromagp { color: #555555 }
+           /* GenericStrong */  .chromags { font-weight: bold }
+           /* GenericSubheading */  .chromagu { color: #aaaaaa }
+           /* GenericTraceback */  .chromagt { color: #aa0000 }
+           /* TextWhitespace */  .chromaw { color: #bbbbbb }
 
-              {{ $data := Query "SELECT timestamp(epoch=now()).String AS Time, \
-                     OS, Fqdn \
-                 FROM info()" | Expand }}
-              This report was generated at {{ Get $data "0.Time" }} on host {{ Get $data "0.Fqdn" }}.
+           </style>
+           <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-              {{ .main }}
+           <!-- Bootstrap core CSS -->
+           <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+           <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" >
 
-              </main>
-             </body>
-          </html>
+           <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+           <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+           <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+         </head>
+         <body>
+           <nav class="header navbar navbar-expand-lg navbar-dark fixed-top">
+             <a class="navbar-brand" href="#" aria-label="CyberCX">
+               <img src="https://www.velocidex.com/images/logos/velo_word_on_side.svg" class="logo"/>
+             </a>
+             <button class="navbar-toggler" type="button"
+                     data-toggle="collapse"
+                     data-target="#navbarSupportedContent"
+                     aria-controls="navbarSupportedContent"
+                     aria-expanded="false" aria-label="Toggle navigation">
+               <span class="navbar-toggler-icon"></span>
+             </button>
+             <div class="collapse navbar-collapse" id="navbarSupportedContent">
+               <ul class="navbar-nav mr-auto">
+                 <li class="nav-item active">
+                   <a class="nav-link" href="#">Top <span class="sr-only">(top)</span></a>
+                 </li>
+                 <li class="nav-item">
+                   <a class="nav-link" href="https://github.com/Velocidex/velociraptor">GitHub</a>
+                 </li>
+                 <li class="nav-item">
+                   <a class="nav-link" href="#" id="print-button">Print</a>
+                 </li>
+
+                 <li class="nav-item dropdown">
+                   <a class="nav-link dropdown-toggle" href="#"
+                   id="navbarDropdown" role="button"
+                   data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                     Artifacts Collected
+                   </a>
+                   <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                     {{ range .parts }}
+                     <a class="dropdown-item" href="#{{- .Artifact.Name -}}">
+                         {{ .Artifact.Name }}
+                     </a>
+                     {{ end }}
+                   </div>
+                 </li>
+               </ul>
+             </div>
+           </nav>
+
+           <main role="main" class="container">
+             <div class="row section top-section">
+               <div class="col">
+                 {{ $data := Query "SELECT timestamp(epoch=now()).UTC.String AS Time, OS, Fqdn FROM info()" | Expand }}
+                 {{ Get $hostinfo "0.Fqdn" }} Artifact Collection
+               </div>
+               <div class="col">{{- Get $data "0.Time" -}}</div>
+             </div>
+
+             {{ range .parts }}
+
+             <div class="">
+               <a class="anchor" name="{{- .Artifact.Name -}}"></a>
+               <!-- If the artifact has its own report, just include it as is -->
+               {{ if .HTML }}
+                 {{ .HTML }}
+               {{ else }}
+                 <!-- Default report in case the artifact does not have one -->
+                 <h1>{{ .Artifact.Name }}
+                     <div class="btn btn-primary-outline float-right">{{ .Artifact.Author }}
+                     </div>
+                 </h1>
+
+                 {{ $name := .Artifact.Name }}
+
+                 {{ template "hidden_paragraph_start" dict "description" "View Artifact Description" }}
+                   {{ Markdown .Artifact.Description }}
+
+                   {{ if .Artifact.Reference }}
+                     <h3>References</h3>
+                     <ul>
+                       {{ range .Artifact.Reference }}
+                       <li><a href="{{ . }}">{{ . }}</a></li>
+                       {{ end }}
+                     </ul>
+                   {{ end }}
+                 {{ template "hidden_paragraph_end" }}
+
+                 {{ range .Artifact.Sources }}
+                    {{ $source := print "source(\n  source='" .Name "', artifact='" $name "')" }}
+                    {{ $query := print "SELECT * FROM " $source " \nLIMIT 100" }}
+
+                    <!-- There could be a huge number of rows just to get the count, so we cap at 10000 -->
+                    {{ $count := Get ( Query (print "LET X = SELECT * FROM " $source \
+                       " LIMIT 10000 SELECT 1 AS ALL, count() AS Count FROM X Group BY ALL") | Expand ) \
+                       "0.Count" }}
+
+                    {{ if $count }}
+                      {{ if .Name }}
+                        <h3>Source {{ $name }}/{{ .Name }}</h3>
+                        {{ Markdown .Description }}
+                      {{ end }}
+
+                      <!-- Show the artifact source if required. -->
+                      {{ template "hidden_paragraph_start" dict "description" "Source" }}
+                      <div class="row card card-body noprint">
+                        {{ if .Query }}
+                          {{ Markdown ( print "```vql\n" .Query  "```\n") }}
+                        {{ else }}
+                          {{ range .Queries }}
+                            {{ Markdown ( print "```vql\n" .  "```\n") }}
+                          {{ end }}
+                        {{ end }}
+                      </div>
+                      {{ template "hidden_paragraph_end" }}
+
+                      <!-- If this is a flow show the parameters. -->
+                      {{ $flow := Query "LET X = SELECT Request.Parameters.env AS Env FROM flows(client_id=ClientId, flow_id=FlowId)" \
+                      "SELECT * FROM foreach(row=X[0].Env, query={ SELECT Key, Value FROM scope()})" | Expand }}
+                      {{ if $flow }}
+                        {{ template "hidden_paragraph_start" dict "description" "Parameters" }}
+                        <div class="row card card-body noprint">
+                          <h3> Parameters </h3>
+
+                          <table class="table"><thead><th>Key</th><th>Value</th></thead>
+                            <tbody>
+                              {{ range $flow }}
+                                <tr><td>{{ Get . "Key" }}</td><td>{{ Get . "Value" }}</td></tr>
+                              {{ end }}
+                            </tbody>
+                          </table>
+                        </div>
+                        {{ template "hidden_paragraph_end" }}
+                      {{ end }}
+
+                      {{ if gt $count 9999 }}
+                        <p>The source produced more than {{ $count }} rows.</p>
+                      {{ else }}
+                        <p>The source retrieved a total of {{ $count }} rows.</p>
+                      {{ end }}
+
+                      {{ template "fold_start" }}
+                      <div class="noprint">
+                        <p> Below you will find a table of the first 100 rows, obtained by the VQL query:
+                        </p>
+                        {{ Markdown (print "```vql\n" $query "\n```\n" ) }}
+                      </div>
+                      {{ Query $query | Table }}
+                      {{ template "fold_end" }}
+
+                    {{ else }}
+                      <p>No rows returned</p>
+                    {{ end }}
+                 {{ end }}
+               {{ end }}
+             </div>
+
+           {{ end }}
+           </main>
+           <script>
+             $(".collapsible").click(function() {
+               $(this).next().toggle("slow");
+               try {
+                 $("table.table-striped").DataTable().columns.adjust();
+               } catch(e) {
+
+               };
+             });
+
+             $("#print-button").click(function() {
+                $(".collapse").removeClass("collapse");
+                $('table.table-striped').DataTable().destroy();
+                $(".collapsible").hide();
+                $(".noprint").hide();
+                setTimeout(function() {
+                   window.print();
+                   location.reload();
+                }, 1000);
+             });
+
+             $(document).ready( function () {
+                try {
+                   $('table.table-striped').DataTable({
+                      "scrollY": 400,
+                      "scrollX": true,
+                      "autoWidth": false,
+                   });
+                } catch(e) {};
+             });
+           </script>
+        </body>
+       </html>

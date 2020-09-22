@@ -22,10 +22,11 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/pkg/errors"
 
 	grpcpool "github.com/processout/grpc-go-pool"
 	"github.com/prometheus/client_golang/prometheus"
@@ -116,6 +117,9 @@ func (self GRPCAPIClient) GetAPIClient(
 	config_obj *config_proto.Config) (
 	api_proto.APIClient, func() error, error) {
 	channel, err := getChannel(ctx, config_obj)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	grpcCallCounter.Inc()
 
@@ -157,8 +161,8 @@ func getChannel(
 
 		pool, err = grpcpool.New(factory, 1, max_size, time.Duration(max_wait)*time.Second)
 		if err != nil {
-			return nil, errors.New(
-				fmt.Sprintf("Unable to connect to gRPC server: %v: %v", address, err))
+			return nil, errors.Errorf(
+				"Unable to connect to gRPC server: %v: %v", address, err)
 		}
 	}
 
@@ -168,6 +172,10 @@ func getChannel(
 func GetAPIConnectionString(config_obj *config_proto.Config) string {
 	if config_obj.ApiConfig != nil && config_obj.ApiConfig.ApiConnectionString != "" {
 		return config_obj.ApiConfig.ApiConnectionString
+	}
+
+	if config_obj.API == nil {
+		return ""
 	}
 
 	switch config_obj.API.BindScheme {

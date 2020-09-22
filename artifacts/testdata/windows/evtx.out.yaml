@@ -80,31 +80,68 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "IpPort": "52564",
   "_Source": "Windows.EventLogs.Kerbroasting/Kerbroasting"
  }
-]SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(eventLog=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")[
+]SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(EventLog=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")[
  {
   "EventTime": "2019-12-02T11:39:33.719111919Z",
+  "EventID": 4104,
   "Computer": "DESKTOP-687T2NR",
   "SecurityID": "S-1-5-21-2201333269-445358460-1233016754-1000",
   "Path": "",
   "ScriptBlockId": "1029eba6-72bd-4b59-886d-4aea789bb6aa",
   "ScriptBlockText": "C:\\Users\\yolo\\Desktop\\Test.ps1",
+  "Message": "Creating Scriptblock text (\u0001 of \u0001):\nC:\\Users\\yolo\\Desktop\\Test.ps1\n\nScriptBlock ID: 1029eba6-72bd-4b59-886d-4aea789bb6aa\nPath: \r\n",
   "EventRecordID": 4090,
   "Level": 5,
   "Opcode": 15,
   "Task": 2,
-  "_Source": "Windows.EventLogs.PowershellScriptblock/PowershellScriptBlock"
+  "Source": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
+  "_Source": "Windows.EventLogs.PowershellScriptblock"
  },
  {
   "EventTime": "2019-12-02T11:39:35.74373126Z",
+  "EventID": 4104,
   "Computer": "DESKTOP-687T2NR",
   "SecurityID": "S-1-5-21-2201333269-445358460-1233016754-1000",
   "Path": "",
   "ScriptBlockId": "c434040f-afc8-4754-8d7e-b041dd6ad509",
   "ScriptBlockText": "Get-Service | select *",
+  "Message": "Creating Scriptblock text (\u0001 of \u0001):\nGet-Service | select *\n\nScriptBlock ID: c434040f-afc8-4754-8d7e-b041dd6ad509\nPath: \r\n",
   "EventRecordID": 4092,
   "Level": 5,
   "Opcode": 15,
   "Task": 2,
-  "_Source": "Windows.EventLogs.PowershellScriptblock/PowershellScriptBlock"
+  "Source": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
+  "_Source": "Windows.EventLogs.PowershellScriptblock"
+ }
+]SELECT * FROM Artifact.Windows.EventLogs.PowershellModule(EventLog=srcDir + "/artifacts/testdata/files/EID4103_PowershellModule.evtx" )[
+ {
+  "EventTime": "2020-08-10T14:16:36.953182458Z",
+  "EventID": 4103,
+  "Computer": "PATSY",
+  "SecurityID": "S-1-5-21-179428126-3238654188-147346945-1001",
+  "ContextInfo": "        Severity = Informational\r\n        Host Name = ConsoleHost\r\n        Host Version = 5.1.18362.752\r\n        Host ID = e949fd50-55e5-48b9-a8cf-6b55de57080f\r\n        Host Application = C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\r\n        Engine Version = 5.1.18362.752\r\n        Runspace ID = 415ee7c0-d2e5-4666-9d75-ed80786eab97\r\n        Pipeline ID = 20\r\n        Command Name = Add-Type\r\n        Command Type = Cmdlet\r\n        Script Name = \r\n        Command Path = \r\n        Sequence Number = 62\r\n        User = PATSY\\yolo\r\n        Connected User = \r\n        Shell ID = Microsoft.PowerShell\r\n",
+  "Payload": "CommandInvocation(Add-Type): \"Add-Type\"\r\nParameterBinding(Add-Type): name=\"TypeDefinition\"; value=\"yolo\"\r\nNonTerminatingError(Add-Type): \"c:\\Users\\yolo\\AppData\\Local\\Temp\\12wh1o30\\12wh1o30.0.cs(1) : A namespace cannot directly contain members such as fields or methods\n\nc:\\Users\\yolo\\AppData\\Local\\Temp\\12wh1o30\\12wh1o30.0.cs(1) : \u003e\u003e\u003e yolo\n\"\r\nTerminatingError(Add-Type): \"Cannot add type. Compilation errors occurred.\"\r\n",
+  "Message": "CommandInvocation(Add-Type): \"Add-Type\"\r\nParameterBinding(Add-Type): name=\"TypeDefinition\"; value=\"yolo\"\r\nNonTerminatingError(Add-Type): \"c:\\Users\\yolo\\AppData\\Local\\Temp\\12wh1o30\\12wh1o30.0.cs(1) : A namespace cannot directly contain members such as fields or methods\n\nc:\\Users\\yolo\\AppData\\Local\\Temp\\12wh1o30\\12wh1o30.0.cs(1) : \u003e\u003e\u003e yolo\n\"\r\nTerminatingError(Add-Type): \"Cannot add type. Compilation errors occurred.\"\r\n\n\nContext:\n        Severity = Informational\r\n        Host Name = ConsoleHost\r\n        Host Version = 5.1.18362.752\r\n        Host ID = e949fd50-55e5-48b9-a8cf-6b55de57080f\r\n        Host Application = C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\r\n        Engine Version = 5.1.18362.752\r\n        Runspace ID = 415ee7c0-d2e5-4666-9d75-ed80786eab97\r\n        Pipeline ID = 20\r\n        Command Name = Add-Type\r\n        Command Type = Cmdlet\r\n        Script Name = \r\n        Command Path = \r\n        Sequence Number = 62\r\n        User = PATSY\\yolo\r\n        Connected User = \r\n        Shell ID = Microsoft.PowerShell\r\n\n\nUser Data:\n\n\r\n",
+  "EventRecordID": 43,
+  "Level": 4,
+  "Opcode": 20,
+  "Task": 106,
+  "Source": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\EID4103_PowershellModule.evtx",
+  "_Source": "Windows.EventLogs.PowershellModule"
+ }
+]SELECT Message FROM parse_evtx( filename=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx") LIMIT 1[
+ {
+  "Message": "Creating Scriptblock text (\u0001 of \u0001):\nC:\\Users\\yolo\\Desktop\\Test.ps1\n\nScriptBlock ID: 1029eba6-72bd-4b59-886d-4aea789bb6aa\nPath: \r\n"
+ }
+]SELECT * FROM Artifact.Windows.EventLogs.MessageHunter( EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx",IocRegex="Get-Service" )[
+ {
+  "EventTime": "2019-12-02T11:39:35Z",
+  "Computer": "DESKTOP-687T2NR",
+  "Channel": "Microsoft-Windows-PowerShell/Operational",
+  "EventID": 4104,
+  "EventRecordID": 4092,
+  "Message": "Creating Scriptblock text (\u0001 of \u0001):\nGet-Service | select *\n\nScriptBlock ID: c434040f-afc8-4754-8d7e-b041dd6ad509\nPath: \r\n",
+  "Source": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
+  "_Source": "Windows.EventLogs.MessageHunter"
  }
 ]

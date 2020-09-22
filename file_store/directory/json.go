@@ -38,10 +38,20 @@ func ReadRowsJSON(
 				if err != nil {
 					return
 				}
+
+				// We have reached the end.
+				if len(row_data) == 0 {
+					return
+				}
+
 				item := ordereddict.NewDict()
+
+				// We failed to unmarshal one line of
+				// JSON - it may be corrupted, go to
+				// the next one.
 				err = item.UnmarshalJSON(row_data)
 				if err != nil {
-					return
+					continue
 				}
 
 				ts, pres := item.Get("_ts")

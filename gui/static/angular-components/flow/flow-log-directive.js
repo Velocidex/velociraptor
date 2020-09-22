@@ -49,7 +49,7 @@ exports.FlowLogDirective = function() {
           clientId: '=',
       },
       restrict: 'E',
-      templateUrl: '/static/angular-components/flow/flow-log.html',
+      templateUrl: window.base_path+'/static/angular-components/flow/flow-log.html',
       controller: FlowLogController,
       controllerAs: 'controller'
   };

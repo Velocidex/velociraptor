@@ -5,20 +5,18 @@
         <button
           type="button"
           class="btn btn-default"
-          title="Download Results"
-          ng-click="controller.downloadResults()"
-          >
-          <i class="fa fa-download"></i>
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-default"
           title="Update client monitoring table"
           ng-disabled="!controller.uiTraits.Permissions.collect_server"
           ng-click="controller.updateClientMonitoringTable()"
           >
           <i class="fa fa-edit"></i>
+        </button>
+
+        <button class="btn btn-default "
+                tabindex="0" type="button" title="Show client monitoring tables"
+                ng-click="controller.showClientMonitoringTables()"
+                >
+          <span><i class="fa fa-binoculars"></i></span>
         </button>
 
         <div class="btn-group" uib-dropdown is-open="status.isopen">
@@ -33,7 +31,7 @@
               ng-model="artifact"
               role="menu" aria-labelledby="single-button">
             <li role="menuitem"
-                ng-repeat="artifact in controller.artifacts.logs track by $index"
+                ng-repeat="artifact in controller.artifacts track by $index"
                 >
               <a href ng-click="controller.selectArtifact(artifact)">
                 {{ artifact.artifact }}

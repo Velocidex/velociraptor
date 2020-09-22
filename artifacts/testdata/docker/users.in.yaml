@@ -1,3 +1,0 @@
-Name: Docker Linux.Sys.Users
-Queries:
-  - Select * from Artifact.Linux.Sys.Users() WHERE User = "root"

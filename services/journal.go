@@ -1,86 +1,65 @@
-// The journal service receives events from various sources and writes
-// them to storage. Velociraptor uses the artifact name and source as
-// the name of the queue that will be written.
-
-// The service will also allow for registration of interested events.
-
-// We use the underlying file store's queue manager to actually manage
-// the notifications and watching and write the events to storage.
-
 package services
 
+// Velociraptor is powered by VQL which is a query language. At its
+// heart, queries simply return rows. Velociraptor organizes the
+// results of queries by the artifact name - that is to say, that
+// artifacts return rows when collected, which are stored in the
+// datastore under the artifact name.
+
+// The journal service organizes the rows returned from collecting an
+// artifact by allowing callers to push them into the datastore (using
+// a path manager to figure out exactly where).
+
+// Similarly callers can watch for new rows to appear in any
+// artifact. This allows Velociraptor server queries to receive rows
+// in real time from client event artifacts.
+
 import (
+	"errors"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 var (
 	journal_mu sync.Mutex
 
 	// Service is only available in the frontend.
-	GJournal *JournalService = nil
+	GJournal JournalService
 )
 
-type JournalService struct {
-	qm api.QueueManager
-
-	logger     *logging.LogContext
-	config_obj *config_proto.Config
-}
-
-func (self *JournalService) Watch(queue_name string) (
-	output <-chan *ordereddict.Dict, cancel func()) {
-
-	if self == nil || self.qm == nil {
-		// Readers block on nil channel.
-		return nil, func() {}
-	}
-
-	return self.qm.Watch(queue_name)
-}
-
-func (self *JournalService) PushRows(
-	path_manager api.PathManager, rows []*ordereddict.Dict) error {
-	if self != nil && self.qm != nil {
-		return self.qm.PushEventRows(path_manager, rows)
-	}
-	return errors.New("Filestore not initialized")
-}
-
-func (self *JournalService) Start() error {
-	self.logger.Info("Starting Journal service.")
+func GetJournal() (JournalService, error) {
 	journal_mu.Lock()
 	defer journal_mu.Unlock()
 
-	GJournal = self
+	if GJournal == nil {
+		return nil, errors.New("Journal service not ready")
+	}
 
-	return nil
+	return GJournal, nil
 }
 
-func GetJournal() *JournalService {
+func RegisterJournal(journal JournalService) {
 	journal_mu.Lock()
 	defer journal_mu.Unlock()
 
-	return GJournal
+	GJournal = journal
 }
 
-func StartJournalService(config_obj *config_proto.Config) error {
-	qm, err := file_store.GetQueueManager(config_obj)
-	if err != nil {
-		return err
-	}
+type JournalService interface {
+	// Watch the artifact named by queue_name for new rows. This
+	// only makes sense for artifacts of type CLIENT_EVENT and
+	// SERVER_EVENT
+	Watch(queue_name string) (output <-chan *ordereddict.Dict, cancel func())
 
-	service := &JournalService{
-		config_obj: config_obj,
-		logger:     logging.GetLogger(config_obj, &logging.FrontendComponent),
-		qm:         qm,
-	}
+	// Push the rows into the datastore in the location give by
+	// the path manager.
+	PushRows(config_obj *config_proto.Config,
+		path_manager api.PathManager, rows []*ordereddict.Dict) error
 
-	return service.Start()
+	// Push the rows to the event artifact queue
+	PushRowsToArtifact(config_obj *config_proto.Config,
+		rows []*ordereddict.Dict, name, client_id, flows_id string) error
 }

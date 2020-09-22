@@ -1,7 +1,6 @@
 package vql
 
 import (
-	"fmt"
 	"sync"
 
 	"www.velocidex.com/golang/vfilter"
@@ -10,9 +9,7 @@ import (
 type _destructors struct {
 	mu sync.Mutex
 
-	fn           []func()
-	is_destroyed bool
-	wg           sync.WaitGroup
+	fn []func()
 }
 
 func AddGlobalDestructor(scope *vfilter.Scope, fn func()) {
@@ -36,7 +33,6 @@ func CallGlobalDestructors(scope *vfilter.Scope) {
 		destructors.mu.Lock()
 		defer destructors.mu.Unlock()
 
-		fmt.Printf("Calling global destructors %v\n", destructors.fn)
 		for _, fn := range destructors.fn {
 			fn()
 		}

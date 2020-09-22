@@ -24,7 +24,7 @@ func csrfProtect(config_obj *config_proto.Config,
 
 	// Derive a CSRF key from the hash of the server's public key.
 	hasher := sha256.New()
-	hasher.Write([]byte(config_obj.Frontend.PrivateKey))
+	_, _ = hasher.Write([]byte(config_obj.Frontend.PrivateKey))
 	token := hasher.Sum(nil)
 
 	protectionFn := csrf.Protect(token, csrf.Path("/"))

@@ -56,14 +56,14 @@ sources:
                Device, strip(string=FullPath, prefix=Device) AS Path,
                Data.mft AS MFT, Data.name_type AS NameType
         FROM glob(globs=specs.Glob, accessor=Accessor)
-        WHERE NOT IsDir
+        WHERE Mode.IsRegular
 
       # Get all volume shadows on this system.
       - LET volume_shadows = SELECT Data.InstallDate AS InstallDate,
                Data.DeviceObject + "\\" AS Device
         FROM glob(globs='/*', accessor=Accessor)
         WHERE Device =~ 'VolumeShadowCopy' AND
-              Data.OriginatingMachine = originating_machine.System[0] AND
+              Data.OriginatingMachine =~ originating_machine.System[0] AND
               InstallDate =~ VSSDateRegex
 
       # The target devices are the root device and all the VSS

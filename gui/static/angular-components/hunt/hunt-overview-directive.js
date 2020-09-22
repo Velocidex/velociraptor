@@ -31,6 +31,13 @@ const HuntOverviewController = function($scope, grrApiService) {
     }.bind(this));
 };
 
+HuntOverviewController.prototype.huntState = function(item) {
+    if (item.stats.stopped) {
+        return "STOPPED";
+    }
+
+    return item.state;
+};
 
 
 /**
@@ -47,6 +54,12 @@ HuntOverviewController.prototype.prepareDownload = function(download_type) {
 
     if (download_type == 'summary') {
         params.only_combined_hunt = true;
+    } else if(download_type == 'summary-json') {
+        params.only_combined_hunt = true;
+        params.json_format = true;
+    } else if(download_type == 'summary-csv') {
+        params.only_combined_hunt = true;
+        params.csv_format = true;
     }
 
     this.grrApiService_.post(url, params).then(
@@ -67,7 +80,7 @@ exports.HuntOverviewDirective = function() {
       hunt: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/hunt-overview.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/hunt-overview.html',
     controller: HuntOverviewController,
     controllerAs: 'controller'
   };

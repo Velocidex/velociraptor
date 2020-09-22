@@ -122,9 +122,20 @@ func (self *FileBasedUploader) Upload(
 		}
 		data := buf[:n]
 
-		file.Write(data)
-		md5_sum.Write(data)
-		sha_sum.Write(data)
+		_, err = file.Write(data)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = md5_sum.Write(data)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = sha_sum.Write(data)
+		if err != nil {
+			return nil, err
+		}
 
 		offset += int64(n)
 	}
@@ -182,7 +193,10 @@ func (self *FileBasedUploader) maybeCollectSparseFile(
 			continue
 		}
 
-		range_reader.Seek(rng.Offset, os.SEEK_SET)
+		_, err := range_reader.Seek(rng.Offset, io.SeekStart)
+		if err != nil {
+			return nil, err
+		}
 
 		n, err := utils.CopyN(ctx, utils.NewTee(writer, sha_sum, md5_sum),
 			range_reader, rng.Length)
@@ -208,7 +222,11 @@ func (self *FileBasedUploader) maybeCollectSparseFile(
 				Error: err.Error(),
 			}, err
 		}
-		writer.Write(serialized)
+		_, err = writer.Write(serialized)
+		if err != nil {
+			return nil, err
+		}
+
 	}
 
 	return &api.UploadResponse{

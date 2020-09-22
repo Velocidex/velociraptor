@@ -45,7 +45,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -62,10 +61,17 @@ func ForemanProcessMessage(
 	}
 
 	// Update the client's event tables.
-	if foreman_checkin.LastEventTableVersion < services.GetClientEventsVersion(client_id) {
+	client_event_manager := services.ClientEventManager()
+	if client_event_manager == nil {
+		return errors.New("No ClientEventManager")
+	}
+
+	if client_event_manager.CheckClientEventsVersion(
+		config_obj, client_id, foreman_checkin.LastEventTableVersion) {
 		err := QueueMessageForClient(
 			config_obj, client_id,
-			services.GetClientUpdateEventTableMessage())
+			client_event_manager.GetClientUpdateEventTableMessage(
+				config_obj, client_id))
 		if err != nil {
 			return err
 		}
@@ -73,6 +79,9 @@ func ForemanProcessMessage(
 
 	// Process any needed hunts.
 	dispatcher := services.GetHuntDispatcher()
+	if dispatcher == nil {
+		return nil
+	}
 	client_last_timestamp := foreman_checkin.LastHuntTimestamp
 
 	// Can we get away without a lock?
@@ -93,16 +102,18 @@ func ForemanProcessMessage(
 			return nil
 		}
 
-		// Notify the hunt manager that we need to hunt this client.
-		path_manager := result_sets.NewArtifactPathManager(config_obj,
-			client_id, "", "System.Hunt.Participation")
+		journal, err := services.GetJournal()
+		if err != nil {
+			return err
+		}
 
-		err := services.GetJournal().PushRows(path_manager,
+		// Notify the hunt manager that we need to hunt this client.
+		err = journal.PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("HuntId", hunt.HuntId).
 				Set("ClientId", client_id).
 				Set("Participate", true),
-			})
+			}, "System.Hunt.Participation", client_id, "")
 		if err != nil {
 			return err
 		}
@@ -121,6 +132,6 @@ func ForemanProcessMessage(
 			return err
 		}
 
-		return services.NotifyListener(config_obj, client_id)
+		return services.GetNotifier().NotifyListener(config_obj, client_id)
 	})
 }

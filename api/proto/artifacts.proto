@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "proto/semantic.proto";
 import "artifacts/proto/artifact.proto";
+import "flows/proto/artifact_collector.proto";
 
 package proto;
 
@@ -142,4 +143,22 @@ message AvailableEvent {
 
 message ListAvailableEventResultsResponse {
     repeated AvailableEvent logs = 1;
+}
+
+message GetMonitoringStateRequest {
+    // Client monitoring states are controlled by labels.
+    string label = 1;
+}
+
+message GetMonitoringStateResponse {
+    // List all the labels matching the request
+    repeated SetMonitoringStateRequest requests = 1;
+}
+
+message SetMonitoringStateRequest {
+    // Sets the monitoring table for a subset of clients specified by
+    // label.
+    string label = 1;
+
+    ArtifactCollectorArgs request = 2;
 }

@@ -1,10 +1,10 @@
 <abbr title="Type label: to open a list of possible labels completions.">
-  <form class="pull-right client-search-box">
+  <form class="pull-left client-search-box">
     <div class="form-group">
       <div class="input-group">
         <input id="client_query" autocomplete="off"
                type="text" name="q" class="form-control search-query"
-               placeholder="Search Box" ng-model="controller.query"
+               placeholder="Search for clients" ng-model="controller.query"
                ng-keypress="$event.which == 13 && controller.submitQuery()"
                uib-typeahead="label for label in controller.predict() | filter:$viewValue "
                typeahead-min-length="0" typeahead-focus-first="false"></input>
@@ -13,7 +13,13 @@
                   type="button"
                   class="btn btn-default search-query"
                   ng-click="controller.submitQuery($event)">
-            <span class="glyphicon glyphicon-search"></span>
+            <span class="fa fa-search"></span>
+          </button>
+          <button id="show-hosts-btn"
+                  type="button"
+                  class="btn btn-default"
+                  ng-click="controller.query='all'; controller.submitQuery($event)">
+            <span class="fa fa-server"></span> show all
           </button>
         </span>
       </div>

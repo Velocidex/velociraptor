@@ -12,10 +12,9 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/alecthomas/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 )
@@ -70,7 +69,7 @@ autoexec:
 
 func (self *MainTestSuite) TestAutoexec() {
 	// Create a tempfile for the repacked binary.
-	exe, err := tempfile.TempFile("", "exe", self.extension)
+	exe, err := ioutil.TempFile("", "exe*"+self.extension)
 	assert.NoError(self.T(), err)
 
 	defer os.Remove(exe.Name())
@@ -108,6 +107,74 @@ func (self *MainTestSuite) TestAutoexec() {
 
 	// Config artifacts override built in artifacts.
 	require.Contains(self.T(), string(out), "MySpecialInterface")
+}
+
+func (self *MainTestSuite) TestBuildDeb() {
+	// A temp file for the generated config.
+	config_file, err := ioutil.TempFile("", "config")
+	assert.NoError(self.T(), err)
+	defer os.Remove(config_file.Name())
+
+	cmd := exec.Command(
+		self.binary, "config", "generate", "--merge",
+		`{"Client": {"nonce": "Foo", "writeback_linux": "some_location"}}`)
+	out, err := cmd.Output()
+	require.NoError(self.T(), err)
+
+	// Write the config to the tmp file
+	config_file.Write(out)
+	config_file.Close()
+
+	// Create a tempfile for the binary executable.
+	binary_file, err := ioutil.TempFile("", "binary")
+	assert.NoError(self.T(), err)
+
+	defer os.Remove(binary_file.Name())
+	binary_file.Write([]byte("\x7f\x45\x4c\x46XXXXXXXXXX"))
+	binary_file.Close()
+
+	output_file, err := ioutil.TempFile("", "output*.deb")
+	assert.NoError(self.T(), err)
+	output_file.Close()
+	defer os.Remove(output_file.Name())
+
+	cmd = exec.Command(
+		self.binary, "--config", config_file.Name(),
+		"debian", "client", "--binary", binary_file.Name(),
+		"--output", output_file.Name())
+	_, err = cmd.Output()
+	require.NoError(self.T(), err)
+
+	// Make sure the file is written
+	fd, err := os.Open(output_file.Name())
+	assert.NoError(self.T(), err)
+
+	stat, err := fd.Stat()
+	assert.NoError(self.T(), err)
+
+	assert.Greater(self.T(), stat.Size(), int64(0))
+
+	// Now the server deb
+	output_file, err = ioutil.TempFile("", "output*.deb")
+	assert.NoError(self.T(), err)
+	output_file.Close()
+	defer os.Remove(output_file.Name())
+
+	cmd = exec.Command(
+		self.binary, "--config", config_file.Name(),
+		"debian", "server", "--binary", binary_file.Name(),
+		"--output", output_file.Name())
+	_, err = cmd.Output()
+	require.NoError(self.T(), err)
+
+	// Make sure the file is written
+	fd, err = os.Open(output_file.Name())
+	assert.NoError(self.T(), err)
+
+	stat, err = fd.Stat()
+	assert.NoError(self.T(), err)
+
+	assert.Greater(self.T(), stat.Size(), int64(0))
 }
 
 func (self *MainTestSuite) TestGenerateConfigWithMerge() {
@@ -174,7 +241,7 @@ func (self *MainTestSuite) TestGenerateConfigWithMerge() {
 	require.Error(self.T(), err)
 
 	// Create a tempfile for the repacked binary.
-	exe, err := tempfile.TempFile("", "exe", self.extension)
+	exe, err := ioutil.TempFile("", "exe*"+self.extension)
 	assert.NoError(self.T(), err)
 
 	defer os.Remove(exe.Name())

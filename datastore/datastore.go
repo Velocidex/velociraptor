@@ -26,10 +26,6 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
-var (
-	implementations map[string]DataStore
-)
-
 type WalkFunc func(urn string) error
 
 type DataStore interface {
@@ -115,6 +111,9 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 		return NewMySQLDataStore(config_obj)
 
 	case "Test":
+		mu.Lock()
+		defer mu.Unlock()
+
 		return gTestDatastore, nil
 
 	default:

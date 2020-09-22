@@ -1,0 +1,25 @@
+Queries:
+  - SELECT inventory_add(tool='Autorun_amd64',
+           url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe',
+           hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153',
+           filename='autorunsc_x64.exe')
+    FROM scope()
+
+  - SELECT inventory_get(tool='Autorun_amd64')
+    FROM scope()
+
+  - SELECT inventory_add(tool='Autorun_amd64',
+           serve_locally=TRUE,
+           url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe',
+           hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153',
+           filename='autorunsc_x64.exe')
+    FROM scope()
+
+  - SELECT inventory_get(tool='Autorun_amd64')
+    FROM scope()
+
+  ## Upload a local file
+  - SELECT inventory_add(tool="FooBar", file=srcDir+"/artifacts/testdata/files/yara_test.txt")
+    FROM scope()
+
+  - SELECT inventory_get(tool="FooBar") FROM scope()

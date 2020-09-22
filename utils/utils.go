@@ -42,7 +42,7 @@ func InString(hay []string, needle string) bool {
 }
 
 func IsNil(a interface{}) bool {
-	defer func() { recover() }()
+	defer func() { _ = recover() }()
 	return a == nil || reflect.ValueOf(a).IsNil()
 }
 

@@ -33,6 +33,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -42,7 +43,11 @@ import (
 
 // A Mux for the reverse proxy feature.
 func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
-	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
+	if config_obj.GUI == nil {
+		return errors.New("GUI not configured")
+	}
+
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 
 	for _, reverse_proxy_config := range config_obj.GUI.ReverseProxy {
 		target, err := url.Parse(reverse_proxy_config.Url)
@@ -94,8 +99,13 @@ func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 }
 
 // Prepares a mux for the GUI by adding handlers required by the GUI.
-func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Handler, error) {
-	ctx := context.Background()
+func PrepareGUIMux(
+	ctx context.Context,
+	config_obj *config_proto.Config, mux *http.ServeMux) (http.Handler, error) {
+	if config_obj.GUI == nil {
+		return nil, errors.New("GUI not configured")
+	}
+
 	h, err := GetAPIHandler(ctx, config_obj)
 	if err != nil {
 		return nil, err
@@ -116,19 +126,25 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 		return nil, err
 	}
 
-	mux.Handle("/api/", csrfProtect(config_obj,
+	base := config_obj.GUI.BasePath
+
+	mux.Handle(base+"/api/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(config_obj, h)))
 
-	mux.Handle("/api/v1/DownloadVFSFile", csrfProtect(config_obj,
+	mux.Handle(base+"/api/v1/DownloadVFSFile", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, vfsFileDownloadHandler(config_obj))))
 
-	mux.Handle("/api/v1/DownloadVFSFolder", csrfProtect(config_obj,
+	mux.Handle(base+"/api/v1/DownloadVFSFolder", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, vfsFolderDownloadHandler(config_obj))))
 
+	mux.Handle(base+"/api/v1/UploadTool", csrfProtect(config_obj,
+		auther.AuthenticateUserHandler(
+			config_obj, toolUploadHandler(config_obj))))
+
 	// Serve prepared zip files.
-	mux.Handle("/downloads/", csrfProtect(config_obj,
+	mux.Handle(base+"/downloads/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, http.FileServer(
 				api.NewFileSystem(
@@ -137,7 +153,7 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 					"/downloads/")))))
 
 	// Serve notebook items
-	mux.Handle("/notebooks/", csrfProtect(config_obj,
+	mux.Handle(base+"/notebooks/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, http.FileServer(
 				api.NewFileSystem(
@@ -158,7 +174,7 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 	if err != nil {
 		return nil, err
 	}
-	mux.Handle("/app.html", csrfProtect(config_obj,
+	mux.Handle(base+"/app.html", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(config_obj, h)))
 
 	h, err = GetTemplateHandler(config_obj, "/static/templates/index.html")
@@ -167,7 +183,7 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 	}
 
 	// No Auth on / which is a redirect to app.html anyway.
-	mux.Handle("/", h)
+	mux.Handle(base+"/", h)
 	return mux, nil
 }
 
@@ -178,6 +194,7 @@ type _templateArgs struct {
 	Report_url string
 	Version    string
 	CsrfToken  string
+	BasePath   string
 }
 
 // An api handler which connects to the gRPC service (i.e. it is a
@@ -185,6 +202,12 @@ type _templateArgs struct {
 func GetAPIHandler(
 	ctx context.Context,
 	config_obj *config_proto.Config) (http.Handler, error) {
+
+	if config_obj.Client == nil ||
+		config_obj.GUI == nil ||
+		config_obj.API == nil {
+		return nil, errors.New("Client not configured")
+	}
 
 	// We need to tell when someone uses HEAD method on our grpc
 	// proxy so we need to pass this information from the request
@@ -196,7 +219,7 @@ func GetAPIHandler(
 					"METHOD": req.Method,
 				}
 				username, ok := req.Context().Value(
-					contextKeyUser).(string)
+					constants.GRPC_USER_CONTEXT).(string)
 				if ok {
 					md["USER"] = username
 				}
@@ -251,8 +274,11 @@ func GetAPIHandler(
 		return nil, err
 	}
 
+	base := config_obj.GUI.BasePath
+
 	reverse_proxy_mux := http.NewServeMux()
-	reverse_proxy_mux.Handle("/api/v1/", grpc_proxy_mux)
+	reverse_proxy_mux.Handle(base+"/api/v1/",
+		http.StripPrefix(base, grpc_proxy_mux))
 
 	return reverse_proxy_mux, nil
 }

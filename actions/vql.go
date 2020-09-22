@@ -28,11 +28,11 @@ import (
 	"github.com/Velocidex/ordereddict"
 	humanize "github.com/dustin/go-humanize"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -95,7 +95,13 @@ func (self VQLClientAction) StartQuery(
 
 	// Clients do not have a copy of artifacts so they need to be
 	// sent all artifacts from the server.
-	repository := artifacts.NewRepository()
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		responder.RaiseError(fmt.Sprintf("%v", err))
+		return
+	}
+
+	repository := manager.NewRepository()
 	for _, artifact := range arg.Artifacts {
 		_, err := repository.LoadProto(artifact, false /* validate */)
 		if err != nil {
@@ -109,7 +115,7 @@ func (self VQLClientAction) StartQuery(
 		Responder: responder,
 	}
 
-	builder := artifacts.ScopeBuilder{
+	builder := services.ScopeBuilder{
 		Config: config_obj,
 		// Disable ACLs on the client.
 		ACLManager: vql_subsystem.NullACLManager{},
@@ -123,7 +129,7 @@ func (self VQLClientAction) StartQuery(
 		builder.Env.Set(env_spec.Key, env_spec.Value)
 	}
 
-	scope := builder.Build()
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	scope.Log("Starting query execution.")
@@ -153,7 +159,7 @@ func (self VQLClientAction) StartQuery(
 
 		result_chan := vfilter.GetResponseChannel(
 			vql, sub_ctx, scope,
-			vql_subsystem.MarshalJson(scope),
+			vql_subsystem.MarshalJsonl(scope),
 			int(max_row),
 			int(max_wait))
 	run_query:
@@ -187,11 +193,12 @@ func (self VQLClientAction) StartQuery(
 					continue
 				}
 				response := &actions_proto.VQLResponse{
-					Query:     query,
-					QueryId:   uint64(query_idx),
-					Part:      uint64(result.Part),
-					Response:  string(result.Payload),
-					Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
+					Query:         query,
+					QueryId:       uint64(query_idx),
+					Part:          uint64(result.Part),
+					JSONLResponse: string(result.Payload),
+					TotalRows:     uint64(result.TotalRows),
+					Timestamp:     uint64(time.Now().UTC().UnixNano() / 1000),
 				}
 				// Don't log empty VQL statements.
 				if query.Name != "" {

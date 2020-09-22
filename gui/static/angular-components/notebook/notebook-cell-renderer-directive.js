@@ -292,7 +292,7 @@ NotebookCellRendererController.prototype.addCellFromHunt = function(event) {
     var modalScope = this.scope_.$new();
 
     var modalInstance = this.uibModal_.open({
-        templateUrl: '/static/angular-components/notebook/new_cell_from_hunt_modal.html',
+        templateUrl: window.base_path+'/static/angular-components/notebook/new_cell_from_hunt_modal.html',
         scope: modalScope,
         windowClass: 'wide-modal high-modal',
         size: 'lg'
@@ -351,7 +351,7 @@ NotebookCellRendererController.prototype.addCellFromArtifact = function(event) {
     modalScope["type"] = "SERVER";
 
     var modalInstance = this.uibModal_.open({
-        templateUrl: '/static/angular-components/notebook/new_cell_from_artifact_modal.html',
+        templateUrl: window.base_path+'/static/angular-components/notebook/new_cell_from_artifact_modal.html',
         scope: modalScope,
         windowClass: 'wide-modal high-modal',
         size: 'lg'
@@ -568,7 +568,7 @@ exports.NotebookCellRendererDirective = function() {
             "timestamp": '=',
         },
         restrict: 'E',
-        templateUrl: '/static/angular-components/notebook/notebook-cell-renderer.html',
+        templateUrl: window.base_path+'/static/angular-components/notebook/notebook-cell-renderer.html',
         controller: NotebookCellRendererController,
         controllerAs: 'controller',
     };

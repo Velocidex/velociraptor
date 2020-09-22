@@ -29,7 +29,7 @@ const ClientLabelFormController = function($scope, grrApiService) {
         type: 1,
     };
     this.grrApiService_.get('v1/SearchClients', params).then(function(response) {
-        this.labelsList = [];
+        this.labelsList = ["All"];
         var data = response['data']['names'];
         for (var i=0; i<data.length; i++) {
             this.labelsList.push(data[i].replace(/^label:/, ""));
@@ -64,7 +64,7 @@ exports.ClientLabelFormDirective = function() {
           value: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/utils/client-label-form.html',
+    templateUrl: window.base_path+'/static/angular-components/utils/client-label-form.html',
     controller: ClientLabelFormController,
     controllerAs: 'controller'
   };

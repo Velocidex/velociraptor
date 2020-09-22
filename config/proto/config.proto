@@ -52,7 +52,10 @@ message Writeback {
     VQLEventTable event_queries = 1;
 }
 
-// Configuration for the windows installer.
+// Configuration for the windows installer. NOTE: This is not used
+// much - it is only used when running `velociraptor service
+// install`. We typically use an MSI to deploy (see the docs/wix/
+// directory).
 message WindowsInstallerConfig {
     string service_name = 1 [(sem_type) = {
             description: "The name of the service to create."
@@ -130,6 +133,15 @@ message ClientConfig {
     string writeback_windows = 10 [(sem_type) = {
             description: "A path where windows clients will write local state."
         }];
+
+    // A path to set the temp directory. If not set we use the system
+    // default. The path may be relative to the current directory
+    // (usually the location of the executable). If the path does not
+    // exist we fall back to the system temp directory.
+    string tempdir_linux = 1;
+    string tempdir_windows = 2;
+    string tempdir_darwin = 3;
+
 
     uint64 max_poll = 15 [(sem_type) = {
             description: "The maximum number of seconds between server polls."
@@ -284,6 +296,9 @@ message GUIConfig {
     // cookie is set to secure only.
     bool use_plain_http = 20;
 
+    // Serve the GUI from this base path instead of "/"
+    string base_path = 21;
+
     string gw_certificate = 10 [(sem_type) = {
             description: "The GUI exposes a HTTP interface to the gRPC end point."
             "This is the certificate and private key that will be used to "
@@ -382,6 +397,9 @@ message FrontendConfig {
     uint32 bind_port = 2 [(sem_type) = {
             description: "Port to bind to."
         }];
+
+    // Serve the GUI from this base path instead of "/"
+    string base_path = 25;
 
     // This allows the frontends to listen on plain HTTP - It is
     // useful if you have SSL offloading (e.g. ngix). This is not

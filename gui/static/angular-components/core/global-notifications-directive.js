@@ -95,7 +95,7 @@ exports.GlobalNotificationsDirective = function() {
   return {
     scope: true,
     restrict: 'E',
-    templateUrl: '/static/angular-components/core/global-notifications.html',
+    templateUrl: window.base_path+'/static/angular-components/core/global-notifications.html',
     controller: GlobalNotificationsController,
     controllerAs: 'controller'
   };

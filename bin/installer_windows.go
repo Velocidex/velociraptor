@@ -42,6 +42,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -357,6 +358,8 @@ func loadClientConfig() (*config_proto.Config, error) {
 		return nil, err
 	}
 
+	executor.SetTempfile(config_obj)
+
 	// Make sure the config is ok.
 	err = crypto.VerifyConfig(config_obj)
 	if err != nil {
@@ -520,8 +523,12 @@ func runOnce(result *VelociraptorService, elog debug.Log) {
 
 	// Wait for all services to properly start
 	// before we begin the comms.
-	executor.StartServices(config_obj, manager.ClientId, exe)
-
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
+	err = executor.StartServices(sm, manager.ClientId, exe)
+	if err != nil {
+		return
+	}
 	comm.Run(ctx)
 }
 
@@ -536,6 +543,7 @@ func NewVelociraptorService(name string) (*VelociraptorService, error) {
 	go func() {
 		for {
 			runOnce(result, elog)
+			time.Sleep(10 * time.Second)
 		}
 	}()
 

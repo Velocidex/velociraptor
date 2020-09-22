@@ -85,7 +85,7 @@ exports.ShellCellDirective = function() {
           'flow': '=',
       },
       restrict: 'E',
-      templateUrl: '/static/angular-components/client/shell-cell.html',
+      templateUrl: window.base_path+'/static/angular-components/client/shell-cell.html',
       controller: ShellCellController,
       controllerAs: 'controller'
   };

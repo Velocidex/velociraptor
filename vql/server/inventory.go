@@ -2,12 +2,21 @@ package server
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"io"
+	"path"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -17,7 +26,10 @@ type InventoryAddFunctionArgs struct {
 	ServeLocally bool   `vfilter:"optional,field=serve_locally"`
 	URL          string `vfilter:"optional,field=url"`
 	Hash         string `vfilter:"optional,field=hash"`
-	Filename     string `vfilter:"optional,field=filename"`
+	Filename     string `vfilter:"optional,field=filename,doc=The name of the file on the endpoint"`
+
+	File     string `vfilter:"optional,field=file,doc=An optional file to upload"`
+	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use to read the file."`
 }
 
 type InventoryAddFunction struct{}
@@ -45,7 +57,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	request := &artifacts_proto.Tool{
+	tool := &artifacts_proto.Tool{
 		Name:         arg.Tool,
 		ServeLocally: arg.ServeLocally,
 		Url:          arg.URL,
@@ -53,13 +65,60 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		Hash:         arg.Hash,
 	}
 
-	err = services.Inventory.AddTool(config_obj, request)
+	if arg.File != "" {
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+
+		reader, err := accessor.Open(arg.File)
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+
+		path_manager := paths.NewInventoryPathManager(config_obj, tool)
+		file_store_factory := file_store.GetFileStore(config_obj)
+		writer, err := file_store_factory.WriteFile(path_manager.Path())
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+		defer writer.Close()
+
+		_ = writer.Truncate()
+
+		sha_sum := sha256.New()
+
+		_, err = utils.Copy(ctx, writer, io.TeeReader(reader, sha_sum))
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+
+		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
+		tool.ServeLocally = true
+
+		if tool.Filename == "" {
+			tool.Filename = path.Base(arg.File)
+		}
+	}
+
+	err = services.GetInventory().AddTool(
+		config_obj, tool, services.ToolOptions{
+			AdminOverride: true,
+		})
 	if err != nil {
 		scope.Log("inventory_add: %s", err.Error())
 		return vfilter.Null{}
 	}
 
-	return arg
+	// Do not read the tool back - reading the tool back will
+	// force it to be materialized (downloaded). It should be
+	// possible to add tools without having this immediately
+	// downloaded.
+	return json.ConvertProtoToOrderedDict(tool)
 }
 
 func (self *InventoryAddFunction) Info(
@@ -100,16 +159,21 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	tool, err := services.Inventory.GetToolInfo(ctx, config_obj, arg.Tool)
+	tool, err := services.GetInventory().GetToolInfo(ctx, config_obj, arg.Tool)
 	if err != nil {
 		scope.Log("inventory_get: %s", err.Error())
 		return vfilter.Null{}
 	}
 
+	url := tool.ServeUrl
+	if url == "" {
+		url = tool.Url
+	}
+
 	result := ordereddict.NewDict().
 		Set("Tool_"+arg.Tool+"_HASH", tool.Hash).
 		Set("Tool_"+arg.Tool+"_FILENAME", tool.Filename).
-		Set("Tool_"+arg.Tool+"_URL", tool.Url)
+		Set("Tool_"+arg.Tool+"_URL", url)
 	return result
 }
 
@@ -135,8 +199,13 @@ func (self InventoryPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		for _, item := range services.Inventory.Get().Tools {
-			output_chan <- item
+		for _, item := range services.GetInventory().Get().Tools {
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- json.ConvertProtoToOrderedDict(item):
+			}
 		}
 
 	}()
@@ -146,7 +215,7 @@ func (self InventoryPlugin) Call(
 func (self InventoryPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "inventory",
-		Doc:     "Retrieve the ThirdParty inventory.",
+		Doc:     "Retrieve the tools inventory.",
 		ArgType: type_map.AddType(scope, &InventoryPluginArgs{}),
 	}
 }

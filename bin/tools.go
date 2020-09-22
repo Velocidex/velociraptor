@@ -1,15 +1,13 @@
 package main
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
-	"sync"
 
 	"github.com/Velocidex/yaml/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -20,8 +18,10 @@ import (
 )
 
 var (
-	third_party         = app.Command("tools", "Manipulate third party binaries and tools")
-	third_party_show    = third_party.Command("show", "Upload a third party binary")
+	third_party           = app.Command("tools", "Manipulate third party binaries and tools")
+	third_party_show      = third_party.Command("show", "Upload a third party binary")
+	third_party_show_file = third_party_show.Arg("file", "Upload a third party binary").
+				String()
 	third_party_rm      = third_party.Command("rm", "Remove a third party binary")
 	third_party_rm_name = third_party_rm.Arg("name", "The name to remove").
 				Required().String()
@@ -31,6 +31,14 @@ var (
 	third_party_upload_filename = third_party_upload.
 					Flag("filename", "Name of the tool executable on the endpoint").
 					String()
+
+	third_party_upload_github_project = third_party_upload.
+						Flag("github_project",
+			"Fetch the tool for github releases").String()
+	third_party_upload_github_asset_regex = third_party_upload.
+						Flag("github_asset",
+			"A regular expression to match the release asset").String()
+
 	third_party_upload_serve_remote = third_party_upload.Flag(
 		"serve_remote", "If set serve the file from the original URL").Bool()
 
@@ -49,13 +57,23 @@ func doThirdPartyShow() {
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	wg := &sync.WaitGroup{}
-	err = services.StartInventoryService(context.Background(), wg, config_obj)
-	kingpin.FatalIfError(err, "Load Config ")
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
-	serialized, err := yaml.Marshal(services.Inventory.Get())
-	kingpin.FatalIfError(err, "Serialized ")
-	fmt.Println(string(serialized))
+	if *third_party_show_file == "" {
+		inventory := services.GetInventory().Get()
+		serialized, err := yaml.Marshal(inventory)
+		kingpin.FatalIfError(err, "Serialized ")
+		fmt.Println(string(serialized))
+	} else {
+		tool, err := services.GetInventory().ProbeToolInfo(*third_party_show_file)
+		kingpin.FatalIfError(err, "Tool not found ")
+
+		serialized, err := yaml.Marshal(tool)
+		kingpin.FatalIfError(err, "Serialized ")
+		fmt.Println(string(serialized))
+	}
 }
 
 func doThirdPartyRm() {
@@ -63,11 +81,11 @@ func doThirdPartyRm() {
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	wg := &sync.WaitGroup{}
-	err = services.StartInventoryService(context.Background(), wg, config_obj)
-	kingpin.FatalIfError(err, "Load Config ")
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
-	err = services.Inventory.RemoveTool(config_obj, *third_party_rm_name)
+	err = services.GetInventory().RemoveTool(config_obj, *third_party_rm_name)
 	kingpin.FatalIfError(err, "Removing tool ")
 }
 
@@ -76,13 +94,13 @@ func doThirdPartyUpload() {
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	wg, ctx, cancel := startEssentialServices(config_obj)
-	defer wg.Wait()
-	defer cancel()
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	filename := *third_party_upload_filename
 	if filename == "" {
-		filename = path.Base(*third_party_upload_binary_path)
+		filename = filepath.Base(*third_party_upload_binary_path)
 	}
 
 	tool := &artifacts_proto.Tool{
@@ -91,9 +109,14 @@ func doThirdPartyUpload() {
 		ServeLocally: !*third_party_upload_serve_remote,
 	}
 
-	// If the user wants to upload a URL we just write it in the
-	// filestore to be downloaded on demand by the client themselves.
-	if url_regexp.FindString(*third_party_upload_binary_path) != "" {
+	// Does the user want to scrape releases from github?
+	if *third_party_upload_github_project != "" {
+		tool.GithubProject = *third_party_upload_github_project
+		tool.GithubAssetRegex = *third_party_upload_github_asset_regex
+
+		// If the user wants to upload a URL we just write it in the
+		// filestore to be downloaded on demand by the client themselves.
+	} else if url_regexp.FindString(*third_party_upload_binary_path) != "" {
 		tool.Url = *third_party_upload_binary_path
 
 	} else {
@@ -104,7 +127,8 @@ func doThirdPartyUpload() {
 		kingpin.FatalIfError(err, "Unable to write to filestore ")
 		defer writer.Close()
 
-		writer.Truncate()
+		err = writer.Truncate()
+		kingpin.FatalIfError(err, "Unable to write to filestore ")
 
 		sha_sum := sha256.New()
 
@@ -118,12 +142,18 @@ func doThirdPartyUpload() {
 		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 	}
 
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
 	// Now add the tool to the inventory with the correct hash.
-	err = services.Inventory.AddTool(config_obj, tool)
-	kingpin.FatalIfError(err, "Adding tool ")
+	err = services.GetInventory().AddTool(
+		config_obj, tool, services.ToolOptions{
+			AdminOverride: true,
+		})
+	kingpin.FatalIfError(err, "Adding tool "+tool.Name)
 
 	if *third_party_upload_download {
-		tool, err = services.Inventory.GetToolInfo(ctx, config_obj, tool.Name)
+		tool, err = services.GetInventory().GetToolInfo(ctx, config_obj, tool.Name)
 		kingpin.FatalIfError(err, "Fetching file ")
 	}
 

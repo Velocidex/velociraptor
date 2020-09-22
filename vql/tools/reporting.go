@@ -9,10 +9,10 @@ import (
 	"io"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/server"
 	"www.velocidex.com/golang/vfilter"
@@ -23,8 +23,10 @@ type ReportPart struct {
 	HTML     string
 }
 
-func getHTMLTemplate(name string, repository *artifacts.Repository) (string, error) {
-	template_artifact, ok := repository.Get(name)
+func getHTMLTemplate(
+	config_obj *config_proto.Config,
+	name string, repository services.Repository) (string, error) {
+	template_artifact, ok := repository.Get(config_obj, name)
 	if !ok || len(template_artifact.Reports) == 0 {
 		return "", errors.New("Not found")
 	}
@@ -42,25 +44,30 @@ func produceReport(
 	config_obj *config_proto.Config,
 	container *reporting.Container,
 	template string,
-	repository *artifacts.Repository,
+	repository services.Repository,
 	writer io.Writer,
 	definitions []*artifacts_proto.Artifact,
 	scope *vfilter.Scope,
 	arg *CollectPluginArgs) error {
 
-	builder := artifacts.ScopeBuilderFromScope(scope)
+	builder := services.ScopeBuilderFromScope(scope)
+	builder.Repository = repository
 	builder.Uploader = nil
 
 	// Build scope from scratch and replace the source()
 	// plugin. We hook the source plugin to read results from the
 	// collection container.
-	subscope := builder.BuildFromScratch()
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+	subscope := manager.BuildScopeFromScratch(builder)
 	defer subscope.Close()
 
 	// Reports can query the container directly.
 	subscope.AppendPlugins(&ContainerSourcePlugin{Container: container})
 
-	html_template_string, err := getHTMLTemplate(template, repository)
+	html_template_string, err := getHTMLTemplate(config_obj, template, repository)
 	if err != nil {
 		return err
 	}
@@ -159,7 +166,56 @@ func (self *ContainerSourcePlugin) Call(
 		}
 
 		for row := range self.Container.ReadArtifactResults(ctx, scope, arg.Artifact) {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
+		}
+	}()
+
+	return output_chan
+}
+
+type ArchiveSourcePlugin struct {
+	server.SourcePlugin
+	Archive *reporting.Archive
+}
+
+func (self *ArchiveSourcePlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+
+		// This plugin will take parameters from environment
+		// parameters. This allows its use to be more concise in
+		// reports etc where many parameters can be inferred from
+		// context.
+		arg := &server.SourcePluginArgs{}
+		server.ParseSourceArgsFromScope(arg, scope)
+
+		// Allow the plugin args to override the environment scope.
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("source: %v", err)
+			return
+		}
+
+		if arg.Source != "" {
+			arg.Artifact = arg.Artifact + "/" + arg.Source
+			arg.Source = ""
+		}
+
+		for row := range self.Archive.ReadArtifactResults(ctx, scope, arg.Artifact) {
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 

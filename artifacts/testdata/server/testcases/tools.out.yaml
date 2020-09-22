@@ -1,0 +1,76 @@
+SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe', hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153', filename='autorunsc_x64.exe') FROM scope()[
+ {
+  "inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe', hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153', filename='autorunsc_x64.exe')": {
+   "name": "Autorun_amd64",
+   "url": "https://storage.googleapis.com/go.velocidex.com/autorunsc.exe",
+   "github_project": "",
+   "github_asset_regex": "",
+   "serve_locally": false,
+   "admin_override": true,
+   "serve_url": "",
+   "serve_path": "",
+   "filestore_path": "",
+   "filename": "autorunsc_x64.exe",
+   "hash": "083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153",
+   "materialize": false
+  }
+ }
+]SELECT inventory_get(tool='Autorun_amd64') FROM scope()[
+ {
+  "inventory_get(tool='Autorun_amd64')": {
+   "Tool_Autorun_amd64_HASH": "083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153",
+   "Tool_Autorun_amd64_FILENAME": "autorunsc_x64.exe",
+   "Tool_Autorun_amd64_URL": "https://storage.googleapis.com/go.velocidex.com/autorunsc.exe"
+  }
+ }
+]SELECT inventory_add(tool='Autorun_amd64', serve_locally=TRUE, url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe', hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153', filename='autorunsc_x64.exe') FROM scope()[
+ {
+  "inventory_add(tool='Autorun_amd64', serve_locally=TRUE, url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe', hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153', filename='autorunsc_x64.exe')": {
+   "name": "Autorun_amd64",
+   "url": "https://storage.googleapis.com/go.velocidex.com/autorunsc.exe",
+   "github_project": "",
+   "github_asset_regex": "",
+   "serve_locally": true,
+   "admin_override": true,
+   "serve_url": "",
+   "serve_path": "",
+   "filestore_path": "",
+   "filename": "autorunsc_x64.exe",
+   "hash": "083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153",
+   "materialize": false
+  }
+ }
+]SELECT inventory_get(tool='Autorun_amd64') FROM scope()[
+ {
+  "inventory_get(tool='Autorun_amd64')": {
+   "Tool_Autorun_amd64_HASH": "083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153",
+   "Tool_Autorun_amd64_FILENAME": "autorunsc_x64.exe",
+   "Tool_Autorun_amd64_URL": "https://127.0.0.1:8/public/affbb298885d99a7569ef9ec463bbfbf9db112a11cec65cf78ec8657ab78950a"
+  }
+ }
+]SELECT inventory_add(tool="FooBar", file=srcDir+"/artifacts/testdata/files/yara_test.txt") FROM scope()[
+ {
+  "inventory_add(tool=\"FooBar\", file=srcDir + \"/artifacts/testdata/files/yara_test.txt\")": {
+   "name": "FooBar",
+   "url": "",
+   "github_project": "",
+   "github_asset_regex": "",
+   "serve_locally": true,
+   "admin_override": true,
+   "serve_url": "",
+   "serve_path": "",
+   "filestore_path": "1c21ee4d8609f81482dc0a78c641e4586488a9fd562ee28eec25e448a9d0b2e1",
+   "filename": "yara_test.txt",
+   "hash": "f03278c10a41adcc97f24a612a680e7aa43efb461b337fef3d2a3d47b51e77bb",
+   "materialize": false
+  }
+ }
+]SELECT inventory_get(tool="FooBar") FROM scope()[
+ {
+  "inventory_get(tool=\"FooBar\")": {
+   "Tool_FooBar_HASH": "f03278c10a41adcc97f24a612a680e7aa43efb461b337fef3d2a3d47b51e77bb",
+   "Tool_FooBar_FILENAME": "yara_test.txt",
+   "Tool_FooBar_URL": "https://127.0.0.1:8/public/1c21ee4d8609f81482dc0a78c641e4586488a9fd562ee28eec25e448a9d0b2e1"
+  }
+ }
+]

@@ -21,12 +21,24 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+)
+
+const BUFF_SIZE = 40960
+
+var (
+	pool = sync.Pool{
+		New: func() interface{} {
+			buffer := make([]byte, BUFF_SIZE)
+			return &buffer
+		},
+	}
 )
 
 type _ParseFileWithRegexArgs struct {
@@ -65,7 +77,11 @@ func _ParseFile(
 	}
 	defer file.Close()
 
-	buffer := make([]byte, 40960)
+	cached_buffer := pool.Get().(*[]byte)
+	defer pool.Put(cached_buffer)
+
+	buffer := *cached_buffer
+
 	for {
 		n, _ := file.Read(buffer)
 		if n == 0 {
@@ -96,7 +112,12 @@ func _ParseFile(
 
 						row.Set(key, string(submatch))
 					}
-					output_chan <- row
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- row:
+					}
 				}
 			}
 		}

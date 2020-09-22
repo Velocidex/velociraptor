@@ -168,3 +168,30 @@
     </div>
   </div>
 </div>
+<div id="tools">
+  <div class="card">
+    <div id="headingTools">
+      <button class="btn btn-default btn-block"
+              data-toggle="collapse"
+              data-target="#collapseTools"
+              aria-expanded="true"
+              aria-controls="collapseTools">
+        Tools Used
+      </button>
+    </div>
+
+    <div id="collapseTools"
+         class="collapse show"
+         aria-labelledby="headingTools"
+         data-parent="#tools">
+      <div class="card-body">
+        <dl class="dl-horizontal dl-flow"
+            ng-repeat="(tool, definition) in tools track by tool"
+            >
+          <dt></dt>
+          <dd><grr-tool-viewer name="{$ tool $}"></grr-tool-viewer></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>

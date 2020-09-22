@@ -116,7 +116,7 @@ exports.ShellViewerDirective = function() {
           'clientId': '=',
       },
     restrict: 'E',
-    templateUrl: '/static/angular-components/client/shell-viewer.html',
+    templateUrl: window.base_path+'/static/angular-components/client/shell-viewer.html',
     controller: ShellViewerController,
     controllerAs: 'controller'
   };

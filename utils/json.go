@@ -95,8 +95,11 @@ func ReadJsonFromFile(ctx context.Context, fd io.Reader) chan *ordereddict.Dict 
 				if err != nil {
 					continue
 				}
-
-				output_chan <- item
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- item:
+				}
 			}
 		}
 	}()

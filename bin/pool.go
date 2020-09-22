@@ -47,8 +47,15 @@ var (
 )
 
 func doPoolClient() {
-	client_config, err := DefaultConfigLoader.WithRequiredClient().LoadAndValidate()
+	client_config, err := DefaultConfigLoader.
+		WithRequiredClient().
+		WithVerbose(true).
+		LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
+
+	sm, err := startEssentialServices(client_config)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	server.IncreaseLimits(client_config)
 
@@ -61,9 +68,6 @@ func doPoolClient() {
 	}
 
 	for i := 0; i < number_of_clients; i++ {
-		client_config, err := DefaultConfigLoader.LoadAndValidate()
-		kingpin.FatalIfError(err, "Unable to load config file")
-
 		client_config.Client.WritebackLinux = path.Join(
 			*pool_client_writeback_dir,
 			fmt.Sprintf("pool_client.yaml.%d", i))
@@ -71,7 +75,10 @@ func doPoolClient() {
 		client_config.Client.WritebackWindows = client_config.Client.WritebackLinux
 
 		existing_writeback := &config_proto.Writeback{}
-		data, err := ioutil.ReadFile(config.WritebackLocation(client_config))
+		writeback, err := config.WritebackLocation(client_config)
+		kingpin.FatalIfError(err, "Unable to load writeback file")
+
+		data, err := ioutil.ReadFile(writeback)
 
 		// Failing to read the file is not an error - the file may not
 		// exist yet.

@@ -43,10 +43,17 @@ const NewArtifactCollectionController = function(
     // Configured parameters to collect the artifacts with.
     this.params = {};
 
+    this.tools = {};
+    this.checking_tools = [];
+    this.current_checking_tool = "";
+    this.current_error = "";
+
     // The names of the artifacts to collect.
     this.names = [];
     this.ops_per_second = 0;
     this.timeout = 600;
+    this.max_rows = 1000000;
+    this.max_bytes = 1000; // 1 GB
 
     this.flow_details = {};
 
@@ -59,19 +66,26 @@ NewArtifactCollectionController.prototype.onClientIdChange_ = function() {
     var url = 'v1/GetFlowDetails';
     var param = {flow_id: this.scope_["flowId"],
                  client_id: this.scope_["clientId"]};
+    var self = this;
 
     this.grrApiService_.get(url, param).then(
         function success(response) {
-            this.flow_details = response.data["context"];
-            this.names = this.flow_details.request.artifacts;
-            this.params = {};
+            self.flow_details = response.data["context"];
+            self.names = self.flow_details.request.artifacts;
+            self.params = {};
 
-            var env = this.flow_details.request.parameters.env;
+            var request = self.flow_details.request || {};
+
+            self.max_rows = request.max_rows || 1000000;
+            self.timeout = request.timeout || 600;
+            self.max_bytes = (request.max_upload_bytes || 0) / 1024 / 1024;
+
+            var env = self.flow_details.request.parameters.env;
             for (var i=0; i<env.length;i++) {
                 var key = env[i]["key"];
                 var value = env[i]["value"];
                 if (angular.isString(key)) {
-                    this.params[key] = value;
+                    self.params[key] = value;
                 }
             }
         }.bind(this));
@@ -92,12 +106,55 @@ NewArtifactCollectionController.prototype.reject = function() {
   }
 };
 
+NewArtifactCollectionController.prototype.checkTools = function(tools_dict) {
+    var self = this;
+    var tools = Object.assign({}, tools_dict);
+    var tool_names = Object.keys(tools);
 
-/**
- * Sends API request to start a client flow.
- *
- * @export
- */
+    // If no tools left just make the final request.
+    if (tool_names.length == 0) {
+        self.startClientFlow();
+        return;
+    }
+
+    // Recursively call this function with the first tool.
+    var first_tool = tool_names[0];
+
+    // Clear it.
+    delete tools[first_tool];
+
+    // Inform the user we are checking this tool.
+    self.current_checking_tool = first_tool;
+    self.checking_tools.push(first_tool);
+
+    var url = 'v1/GetToolInfo';
+    var params = {
+        name: first_tool,
+        materialize: true,
+    };
+    self.grrApiService_.get("v1/GetToolInfo", params).then(function(response) {
+        // Check the next tool
+        self.checkTools(tools);
+    }, function(response) {
+        self.current_error = response;
+    });
+};
+
+NewArtifactCollectionController.prototype.ackToolError = function(tool) {
+    var self = this;
+
+    self.current_checking_tool = "";
+    self.checking_tools = [];
+};
+
+NewArtifactCollectionController.prototype.getToolState = function(tool) {
+    if (tool == this.current_checking_tool) {
+        return "alert-primary";
+    }
+
+    return "alert-success";
+};
+
 NewArtifactCollectionController.prototype.startClientFlow = function() {
     var self = this;
     var clientId = this.scope_['clientId'];
@@ -115,7 +172,9 @@ NewArtifactCollectionController.prototype.startClientFlow = function() {
             env: env
         },
         ops_per_second: this.ops_per_second,
-        timeout: this.timeout
+        timeout: this.timeout,
+        max_rows: this.max_rows,
+        max_upload_bytes: this.max_bytes * 1024 * 1024,
     };
 
     this.grrApiService_.post(
@@ -145,7 +204,7 @@ exports.NewArtifactCollectionDirective = function() {
         onReject: '&'
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/flow/new_artifact_collection.html',
+    templateUrl: window.base_path+'/static/angular-components/flow/new_artifact_collection.html',
     controller: NewArtifactCollectionController,
     controllerAs: 'controller'
   };

@@ -24,21 +24,22 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime/pprof"
 	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
 	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/shirou/gopsutil/process"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/startup"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -50,6 +51,9 @@ var (
 
 	golden_command_prefix = golden_command.Arg(
 		"prefix", "Golden file prefix").Required().String()
+
+	golden_env_map = golden_command.Flag("env", "Environment for the query.").
+			StringMap()
 
 	testonly = golden_command.Flag("testonly", "Do not update the fixture.").Bool()
 )
@@ -65,42 +69,92 @@ type testFixture struct {
 func vqlCollectorArgsFromFixture(
 	config_obj *config_proto.Config,
 	fixture *testFixture) *actions_proto.VQLCollectorArgs {
-	artifact_collector_args := &flows_proto.ArtifactCollectorArgs{
-		Parameters: &flows_proto.ArtifactParameters{},
-	}
 
+	vql_collector_args := &actions_proto.VQLCollectorArgs{}
 	for k, v := range fixture.Parameters {
-		artifact_collector_args.Parameters.Env = append(
-			artifact_collector_args.Parameters.Env,
+		vql_collector_args.Env = append(vql_collector_args.Env,
 			&actions_proto.VQLEnv{Key: k, Value: v})
 	}
 
-	vql_collector_args := &actions_proto.VQLCollectorArgs{}
-	err := services.AddArtifactCollectorArgs(
-		config_obj,
-		vql_collector_args,
-		artifact_collector_args)
-	kingpin.FatalIfError(err, "vqlCollectorArgsFromFixture")
-
 	return vql_collector_args
+}
+
+func makeCtxWithTimeout(duration int) (context.Context, func()) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+
+	deadline := time.Now().Add(time.Second * time.Duration(duration))
+	fmt.Printf("Setting deadline to %v\n", deadline)
+
+	// Set an alarm for hard exit in 2 minutes. If we hit it then
+	// the code is deadlocked and we want to know what is
+	// happening.
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				fmt.Printf("Disarming alarm\n")
+				return
+
+				// If we get here we are deadlocked! Print all
+				// the goroutines and mutex and hard exit.
+			case <-time.After(time.Second):
+				if time.Now().Before(deadline) {
+					proc, _ := process.NewProcess(int32(os.Getpid()))
+					total_time, _ := proc.Percent(0)
+					memory, _ := proc.MemoryInfo()
+
+					fmt.Printf("Not time to fire yet %v %v %v\n",
+						time.Now(), total_time, memory)
+					continue
+				}
+
+				p := pprof.Lookup("goroutine")
+				if p != nil {
+					p.WriteTo(os.Stdout, 1)
+				}
+
+				p = pprof.Lookup("mutex")
+				if p != nil {
+					p.WriteTo(os.Stdout, 1)
+				}
+
+				os.Stdout.Close()
+
+				// Hard exit with an error.
+				os.Exit(-1)
+			}
+		}
+	}()
+
+	return ctx, cancel
 }
 
 func runTest(fixture *testFixture,
 	config_obj *config_proto.Config) (string, error) {
 
-	err := services.StartJournalService(config_obj)
-	kingpin.FatalIfError(err, "Unable to start services")
+	ctx, cancel := makeCtxWithTimeout(30)
+	defer cancel()
+
+	//Force a clean slate for each test.
+	startup.Reset()
+
+	sm, err := startEssentialServices(config_obj)
+	if err != nil {
+		return "", err
+	}
+	defer sm.Close()
 
 	// Create an output container.
 	tmpfile, err := ioutil.TempFile("", "golden")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer os.Remove(tmpfile.Name())
 
 	container, err := reporting.NewContainer(tmpfile.Name())
 	kingpin.FatalIfError(err, "Can not create output container")
 
-	builder := artifacts.ScopeBuilder{
+	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
 		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
@@ -110,8 +164,8 @@ func runTest(fixture *testFixture,
 			Set(constants.SCOPE_MOCK, &tools.MockingScopeContext{}),
 	}
 
-	if env_map != nil {
-		for k, v := range *env_map {
+	if golden_env_map != nil {
+		for k, v := range *golden_env_map {
 			builder.Env.Set(k, v)
 		}
 	}
@@ -122,7 +176,9 @@ func runTest(fixture *testFixture,
 	}
 
 	// Cleanup after the query.
-	scope := builder.BuildFromScratch()
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+	scope := manager.BuildScopeFromScratch(builder)
 	defer scope.Close()
 
 	scope.AddDestructor(func() {
@@ -138,10 +194,6 @@ func runTest(fixture *testFixture,
 		if err != nil {
 			return "", err
 		}
-
-		ctx, cancel := context.WithTimeout(
-			context.Background(), 60*time.Second)
-		defer cancel()
 
 		result_chan := vfilter.GetResponseChannel(
 			vql, ctx, scope,
@@ -160,6 +212,9 @@ func runTest(fixture *testFixture,
 }
 
 func doGolden() {
+	_, cancel := makeCtxWithTimeout(120)
+	defer cancel()
+
 	config_obj, err := DefaultConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Can not load configuration.")
 

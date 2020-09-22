@@ -106,7 +106,7 @@ FileTableController.prototype.setMode_ = function() {
 FileTableController.prototype.showHelp = function() {
     var self = this;
     self.modalInstance = self.uibModal_.open({
-        templateUrl: '/static/angular-components/client/virtual-file-system/help.html',
+        templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/help.html',
         scope: self.scope_,
         size: "lg",
     });
@@ -187,10 +187,10 @@ FileTableController.prototype.startVfsRefreshOperation = function() {
         return pollPromise;
       }.bind(this))
     .then(
-      function success() {
-        this.rootScope_.$broadcast(
-          REFRESH_FOLDER_EVENT, selectedDirPath);
-      }.bind(this));
+        function success() {
+            this.rootScope_.$broadcast(
+                REFRESH_FOLDER_EVENT, selectedDirPath);
+        }.bind(this));
 };
 
 /**
@@ -202,7 +202,7 @@ exports.FileTableDirective = function() {
     restrict: 'E',
     scope: {},
     require: '^grrFileContext',
-    templateUrl: '/static/angular-components/client/virtual-file-system/file-table.html',
+    templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/file-table.html',
     controller: FileTableController,
     controllerAs: 'controller',
     link: function(scope, element, attrs, fileContextController) {

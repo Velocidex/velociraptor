@@ -2,7 +2,7 @@ LET X <= SELECT file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939-s
  {
   "create_hunt_download(hunt_id='H.49ba8939', wait=TRUE)": "/downloads/hunts/H.49ba8939/H.49ba8939.zip"
  }
-]SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url( path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/H.49ba8939.zip', scheme='file', fragment='**').String, accessor='zip') WHERE NOT IsDir ORDER BY FullPath[
+]SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url( path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/H.49ba8939.zip', scheme='file', fragment='**').String, accessor='zip') WHERE NOT IsDir AND FullPath =~ "NetstatEnriched" ORDER BY FullPath[
  {
   "FullPath": "All Windows.Network.NetstatEnriched/Netstat.csv",
   "Size": 52120
@@ -10,10 +10,6 @@ LET X <= SELECT file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939-s
  {
   "FullPath": "All Windows.Network.NetstatEnriched/Netstat.json",
   "Size": 58743
- },
- {
-  "FullPath": "HuntDetails",
-  "Size": 7942
  },
  {
   "FullPath": "clients/DESKTOP-BP4S7TF/artifacts/Windows.Network.NetstatEnriched/F.BSJMEJIPT6P9I/Netstat.csv",
@@ -22,16 +18,12 @@ LET X <= SELECT file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939-s
  {
   "FullPath": "clients/DESKTOP-BP4S7TF/artifacts/Windows.Network.NetstatEnriched/F.BSJMEJIPT6P9I/Netstat.json",
   "Size": 53955
- },
- {
-  "FullPath": "clients/DESKTOP-BP4S7TF/collections/F.BSJMEJIPT6P9I/logs",
-  "Size": 293
  }
 ]SELECT create_hunt_download(hunt_id='H.49ba8939', wait=TRUE, only_combined=TRUE) FROM scope()[
  {
   "create_hunt_download(hunt_id='H.49ba8939', wait=TRUE, only_combined=TRUE)": "/downloads/hunts/H.49ba8939/H.49ba8939-summary.zip"
  }
-]SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url( path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/H.49ba8939-summary.zip', scheme='file', fragment='**').String, accessor='zip') WHERE NOT IsDir ORDER BY FullPath[
+]SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url( path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/H.49ba8939-summary.zip', scheme='file', fragment='**').String, accessor='zip') WHERE NOT IsDir AND FullPath =~ "NetstatEnriched" ORDER BY FullPath[
  {
   "FullPath": "All Windows.Network.NetstatEnriched/Netstat.csv",
   "Size": 52120
@@ -39,9 +31,23 @@ LET X <= SELECT file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939-s
  {
   "FullPath": "All Windows.Network.NetstatEnriched/Netstat.json",
   "Size": 58743
- },
+ }
+]SELECT create_hunt_download(hunt_id='H.49ba8939', format="json", base="json-", wait=TRUE, only_combined=TRUE) FROM scope()[
  {
-  "FullPath": "HuntDetails",
-  "Size": 8142
+  "create_hunt_download(hunt_id='H.49ba8939', format=\"json\", base=\"json-\", wait=TRUE, only_combined=TRUE)": "/downloads/hunts/H.49ba8939/json-H.49ba8939-summary.zip"
+ }
+]SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url( path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/json-H.49ba8939-summary.zip', scheme='file', fragment='**').String, accessor='zip') WHERE NOT IsDir AND FullPath =~ "NetstatEnriched" ORDER BY FullPath[
+ {
+  "FullPath": "All Windows.Network.NetstatEnriched/Netstat.json",
+  "Size": 58743
+ }
+]SELECT create_hunt_download(hunt_id='H.49ba8939', format="csv", base="csv-", wait=TRUE, only_combined=TRUE) FROM scope()[
+ {
+  "create_hunt_download(hunt_id='H.49ba8939', format=\"csv\", base=\"csv-\", wait=TRUE, only_combined=TRUE)": "/downloads/hunts/H.49ba8939/csv-H.49ba8939-summary.zip"
+ }
+]SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url( path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/csv-H.49ba8939-summary.zip', scheme='file', fragment='**').String, accessor='zip') WHERE NOT IsDir AND FullPath =~ "NetstatEnriched" ORDER BY FullPath[
+ {
+  "FullPath": "All Windows.Network.NetstatEnriched/Netstat.csv",
+  "Size": 52120
  }
 ]

@@ -1,3 +1,4 @@
 config
 public
 server_artifacts
+*.json.db

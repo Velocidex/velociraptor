@@ -70,6 +70,13 @@ const HostInfoController = function(
     this.report_params = {};
 
     this.mode = "brief";
+
+    this.metadata;
+
+    this.server_metadata;
+
+    // When the metadata changes just save it.
+    this.scope_.$watch('controller.metadata', this.saveClientMetadata_.bind(this));
 };
 
 
@@ -81,11 +88,69 @@ const HostInfoController = function(
  * @private
  */
 HostInfoController.prototype.onClientIdChange_ = function(clientId) {
-  if (angular.isDefined(clientId)) {
-    this.clientId = clientId;
-    this.fetchClientDetails_();
-  }
+    if (angular.isDefined(clientId)) {
+        this.clientId = clientId;
+        this.fetchClientDetails_();
+        this.fetchClientMetadata_();
+    }
 };
+
+HostInfoController.prototype.saveClientMetadata_ = function() {
+    if (angular.isUndefined(this.metadata) ||
+        this.metadata == this.server_metadata) {
+        return;
+    };
+
+    var items = [];
+    var self = this;
+
+    try {
+        var lines = $.csv.parsers.splitLines(self.metadata);
+        for (var i=0; i<lines.length; i++) {
+            if (i==0) {
+            } else {
+                var row = $.csv.toArray(lines[i]);
+                var key = row[0] || "";
+                var value = row[1] || "";
+                items.push({key: key, value: value});
+            }
+        }
+
+        var url = '/v1/SetClientMetadata';
+        var params = {client_id: this.clientId, items: items};
+
+        this.grrApiService_.post(url, params).then(function() {
+            self.fetchClientMetadata_();
+        });
+
+    } catch(e) {};
+};
+
+HostInfoController.prototype.fetchClientMetadata_ = function() {
+    var url = '/v1/GetClientMetadata/' + this.clientId;
+    var params = {};
+    var self = this;
+
+    this.grrApiService_.get(url, params).then(function success(response) {
+        self.metadata = "Key,Value\n";
+        var rows = 0;
+        var items = response.data["items"] || [];
+        for (var i=0; i<items.length; i++) {
+            var key = items[i]["key"] || "";
+            var value = items[i]["value"] || "";
+            if (angular.isDefined(key)) {
+                self.metadata += key + "," + value + "\n";
+                rows += 1;
+            }
+        };
+
+        if (rows == 0) {
+            self.metadata = "Key,Value\n,\n";
+        };
+        self.server_metadata = self.metadata;
+    }.bind(this));
+};
+
 
 /**
  * Fetches the client details.
@@ -195,7 +260,7 @@ exports.HostInfoDirective = function() {
       'clientId': '='
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/client/host-info.html',
+    templateUrl: window.base_path+'/static/angular-components/client/host-info.html',
     controller: HostInfoController,
     controllerAs: 'controller'
   };

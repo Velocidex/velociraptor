@@ -3,7 +3,7 @@ package utils
 import (
 	"testing"
 
-	"github.com/alecthomas/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 type splitTest struct {

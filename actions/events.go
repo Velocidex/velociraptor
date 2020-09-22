@@ -72,6 +72,11 @@ func update(
 	mu.Lock()
 	defer mu.Unlock()
 
+	// Only update the event table if we need to.
+	if table.Version <= GlobalEventTable.version {
+		return GlobalEventTable, nil
+	}
+
 	// Close the old table.
 	if GlobalEventTable.Done != nil {
 		GlobalEventTable.Close()
@@ -135,11 +140,14 @@ func (self UpdateEventTable) Run(
 				}
 			}
 
-			logger.Info("Starting %s", name)
+			if name != "" {
+				logger.Info("<green>Starting</> monitoring query %s", name)
+			}
 			action_obj.StartQuery(
 				config_obj, new_ctx, responder, event)
-
-			logger.Info("Finished %s", name)
+			if name != "" {
+				logger.Info("Finished monitoring query %s", name)
+			}
 		}(event)
 	}
 

@@ -2,7 +2,7 @@
   <div class="well well-large">
     <div class="form-group">
       <label class="control-label" title="The condition to match hosts for this hunt.">
-        HuntCondition
+        Include Condition
       </label>
       <div class="controls">
         <select class="form-control" ng-model="clientRuleSet['condition']">
@@ -31,4 +31,25 @@
       </div>
     </div>
   </div>
+
+  <div class="well well-large">
+    <div class="form-group">
+      <label class="control-label" title="The condition to match hosts for this hunt.">
+        Exclude Condition
+      </label>
+      <div class="controls">
+        <select class="form-control" ng-model="clientRuleSet['exclude_condition']">
+          <option label="Run everywhere" value="" selected="selected"></option>
+          <option label="Match by label" value="labels">Match by label</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <grr-form-client-label
+        ng-if="clientRuleSet.exclude_condition=='labels'"
+        value="clientRuleSet.excluded"></grr-form-client-label>
+    </div>
+  </div>
+
 </div>

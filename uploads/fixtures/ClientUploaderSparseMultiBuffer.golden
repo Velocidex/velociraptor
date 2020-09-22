@@ -6,7 +6,9 @@
     "path": "foo",
     "accessor": "ntfs"
    },
-   "size": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
    "data": "SGU="
   }
  },
@@ -19,7 +21,9 @@
     "accessor": "ntfs"
    },
    "offset": 2,
-   "size": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
    "data": "bGw="
   }
  },
@@ -32,7 +36,9 @@
     "accessor": "ntfs"
    },
    "offset": 4,
-   "size": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
    "data": "byA="
   }
  },
@@ -45,7 +51,9 @@
     "accessor": "ntfs"
    },
    "offset": 6,
-   "size": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
    "data": "aGU="
   }
  },
@@ -58,7 +66,9 @@
     "accessor": "ntfs"
    },
    "offset": 8,
-   "size": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
    "data": "bGw="
   }
  },
@@ -71,9 +81,10 @@
     "accessor": "ntfs"
    },
    "offset": 10,
-   "size": 12,
-   "data": "byA=",
-   "eof": true
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
+   "data": "byA="
   }
  },
  {
@@ -81,12 +92,33 @@
   "response_id": 6,
   "FileBuffer": {
    "pathspec": {
-    "path": "foo.idx",
+    "path": "foo",
     "accessor": "ntfs"
    },
-   "size": 196,
-   "data": "eyJmaWxlX29mZnNldCI6MCwib3JpZ2luYWxfb2Zmc2V0IjowLCJmaWxlX2xlbmd0aCI6NiwibGVuZ3RoIjo2fQp7ImZpbGVfb2Zmc2V0Ijo2LCJvcmlnaW5hbF9vZmZzZXQiOjYsImZpbGVfbGVuZ3RoIjowLCJsZW5ndGgiOjZ9CnsiZmlsZV9vZmZzZXQiOjYsIm9yaWdpbmFsX29mZnNldCI6MTIsImZpbGVfbGVuZ3RoIjo2LCJsZW5ndGgiOjZ9Cg==",
-   "eof": true
+   "offset": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
+   "eof": true,
+   "index": {
+    "ranges": [
+     {
+      "file_length": 6,
+      "length": 6
+     },
+     {
+      "file_offset": 6,
+      "original_offset": 6,
+      "length": 6
+     },
+     {
+      "file_offset": 6,
+      "original_offset": 12,
+      "file_length": 6,
+      "length": 6
+     }
+    ]
+   }
   }
  }
 ]

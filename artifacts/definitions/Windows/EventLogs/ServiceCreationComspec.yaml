@@ -15,6 +15,8 @@ author: Matt Green - @mgreen27
 parameters:
   - name: EventLog
     default: C:\Windows\system32\winevt\logs\System.evtx
+  - name: ComspecRegex
+    default: "(COMSPEC|cmd.exe)"
   - name: SearchVSS
     description: "Add VSS into query."
     type: bool
@@ -30,7 +32,7 @@ sources:
                     FROM Artifact.Windows.Search.VSS(SearchFilesGlob=EventLog)
                 },
                 else= {
-                    SELECT *
+                    SELECT *, FullPath as Source
                     FROM glob(globs=EventLog,accessor='ntfs')
                 })
 
@@ -52,10 +54,10 @@ sources:
                   System.Level as Level,
                   System.Opcode as Opcode,
                   System.Task as Task,
-                  if(condition=Source, then=Source, else=FullPath) as Source
+                  Source
                 FROM parse_evtx(filename=FullPath, accessor='ntfs')
                 WHERE System.EventID.Value = 7045 and
-                  EventData.ImagePath =~ "(?i)COMSPEC"
+                  EventData.ImagePath =~ ComspecRegex
             })
             ORDER BY Source DESC
 

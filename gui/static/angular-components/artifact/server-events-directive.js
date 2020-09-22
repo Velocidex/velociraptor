@@ -92,12 +92,26 @@ ServerEventsController.prototype.onDateChange = function() {
 };
 
 ServerEventsController.prototype.GetArtifactList = function() {
-  var url = 'v1/ListAvailableEventResults';
-  var params = {};
-  return this.grrApiService_.post(url, params).then(
-    function(response) {
-      this.artifacts = response.data;
-    }.bind(this));
+    var url = 'v1/ListAvailableEventResults';
+    var params = {};
+    return this.grrApiService_.post(url, params).then(
+        function(response) {
+            // Hide internal events.
+            var filter = new RegExp("Server.Internal");
+            var available_result = [];
+            for (var i=0; i<response.data.logs.length; i++) {
+                var artifact = response.data.logs[i];
+                if (!angular.isObject(artifact)) {
+                    continue;
+                }
+                var name = artifact.artifact;
+                if (angular.isString(name) && !name.match(filter)) {
+                    available_result.push(artifact);
+                }
+            }
+
+            this.artifacts = available_result;
+      }.bind(this));
 };
 
 
@@ -120,7 +134,7 @@ ServerEventsController.prototype.selectArtifact = function(artifact) {
 ServerEventsController.prototype.showHelp = function() {
     var self = this;
     self.modalInstance = self.uibModal_.open({
-        templateUrl: '/static/angular-components/client/virtual-file-system/help.html',
+        templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/help.html',
         scope: self.scope_,
         size: "lg",
     });
@@ -138,14 +152,14 @@ ServerEventsController.prototype.updateServerMonitoringTable = function() {
         if (angular.isObject(self.flowArguments.artifacts)) {
             self.names = self.flowArguments.artifacts || [];
             self.params = {};
-            var parameters = self.flowArguments.parameters.env || {};
+            var parameters = self.flowArguments.parameters.env || [];
             for (var i=0; i<parameters.length;i++) {
                 var p = parameters[i];
                 self.params[p["key"]] = p["value"];
             }
         }
         self.modalInstance = self.uibModal_.open({
-            templateUrl: '/static/angular-components/artifact/add_server_monitoring.html',
+            templateUrl: window.base_path+'/static/angular-components/artifact/add_server_monitoring.html',
             scope: self.scope_,
             size: "lg",
         });
@@ -196,7 +210,7 @@ exports.ServerEventsDirective = function() {
       "artifact": '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/artifact/server-events.html',
+    templateUrl: window.base_path+'/static/angular-components/artifact/server-events.html',
     controller: ServerEventsController,
     controllerAs: 'controller'
   };

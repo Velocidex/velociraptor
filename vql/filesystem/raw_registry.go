@@ -314,7 +314,7 @@ func (self *RawRegFileSystemAccessor) ReadDir(key_path string) ([]glob.FileInfo,
 	return result, nil
 }
 
-func (self RawRegFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
+func (self *RawRegFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
 	return nil, errors.New("Not implemented")
 }
 
@@ -408,7 +408,11 @@ func (self ReadKeyValues) Call(
 				continue
 			}
 			root = item_root
-			globber.Add(item_path, accessor.PathSplit)
+			err = globber.Add(item_path, accessor.PathSplit)
+			if err != nil {
+				scope.Log("glob: %v", err)
+				return
+			}
 		}
 
 		file_chan := globber.ExpandWithContext(
@@ -444,7 +448,13 @@ func (self ReadKeyValues) Call(
 							}
 						}
 					}
-					output_chan <- res
+
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- res:
+					}
 				}
 			}
 		}

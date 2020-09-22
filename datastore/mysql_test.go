@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/alecthomas/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
 )
@@ -37,6 +37,12 @@ func (self *MysqlTestSuite) SetupTest() {
 
 	self.datastore, err = NewMySQLDataStore(self.config_obj)
 	assert.NoError(self.T(), err)
+}
+
+func (self *MysqlTestSuite) TearDownTest() {
+	if self.datastore != nil {
+		self.datastore.Close()
+	}
 }
 
 func TestMysqlDatabase(t *testing.T) {

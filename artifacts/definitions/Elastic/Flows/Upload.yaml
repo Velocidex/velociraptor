@@ -16,6 +16,9 @@ parameters:
     description: Only upload these artifacts to elastic
   - name: elasticAddresses
     default: http://127.0.0.1:9200/
+  - name: Username
+  - name: Password
+  - name: APIKey
 
 sources:
   - queries:
@@ -44,4 +47,7 @@ sources:
             query=documents,
             addresses=split(string=elasticAddresses, sep=","),
             index="velociraptor",
+            password=Password,
+            username=Username,
+            api_key=APIKey,
             type="artifact")

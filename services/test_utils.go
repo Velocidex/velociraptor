@@ -24,7 +24,11 @@ func GetPublishedEvents(
 	go func() {
 		defer wg.Done()
 
-		events, cancel := GetJournal().Watch(artifact)
+		journal, err := GetJournal()
+		if err != nil {
+			return
+		}
+		events, cancel := journal.Watch(artifact)
 		defer cancel()
 
 		// Wait here until we are set up.

@@ -231,7 +231,7 @@ exports.ClientFlowsListDirective = function() {
       triggerUpdate: '=?',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/flow/client-flows-list.html',
+    templateUrl: window.base_path+'/static/angular-components/flow/client-flows-list.html',
     controller: ClientFlowsListController,
     controllerAs: 'controller'
   };

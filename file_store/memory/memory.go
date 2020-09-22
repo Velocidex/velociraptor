@@ -107,6 +107,9 @@ func (self *MemoryFileStore) WriteFile(filename string) (api.FileWriter, error) 
 }
 
 func (self *MemoryFileStore) StatFile(filename string) (os.FileInfo, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	_, pres := self.Data[filename]
 	if !pres {
 		return nil, os.ErrNotExist

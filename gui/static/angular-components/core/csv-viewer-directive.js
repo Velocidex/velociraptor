@@ -37,6 +37,7 @@ const CsvViewerDirective = function(
     this.pageData;
 
     this.loading = false;
+    this.renderers = [];
 
     /** @type {object} */
     var buttons = [{
@@ -141,6 +142,36 @@ CsvViewerDirective.prototype.showJSON_ = function() {
         windowClass: 'wide-modal high-modal',
         size: 'lg'
     });
+};
+
+CsvViewerDirective.prototype.downloadFile = function(filePath, e) {
+    var clientId = this.scope_['clientId'];
+
+    var url = 'v1/DownloadVFSFile';
+    var params = {
+        vfs_path: filePath,
+        client_id: clientId,
+    };
+    this.grrApiService_.downloadFile(url, params).then(
+        function success() {}.bind(this),
+    );
+
+    e.stopPropagation();
+    e.preventDefault();
+    return false;
+};
+
+CsvViewerDirective.prototype.getCellType = function(item, index) {
+    var self = this;
+
+    if (angular.isObject(item)) {
+        return "object";
+    }
+
+    var pageData = self.pageData || {};
+    var column = pageData.columns[index];
+    var renderers = self.scope_["renderers"] || {};
+    return renderers[column];
 };
 
 CsvViewerDirective.prototype.onContextChange_ = function(newValues, oldValues) {
@@ -261,10 +292,12 @@ exports.CsvViewerDirective = function() {
           baseUrl: '=',
           params: '=',
           value: '=',
+          renderers: "<",
+          clientId: "<",
           vqlHelpPlugin: '@',
       },
       restrict: 'E',
-      templateUrl: '/static/angular-components/core/csv-viewer.html',
+      templateUrl: window.base_path+'/static/angular-components/core/csv-viewer.html',
       controller: CsvViewerDirective,
       controllerAs: 'controller',
   };

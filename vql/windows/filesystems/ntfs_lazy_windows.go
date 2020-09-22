@@ -41,7 +41,7 @@ func ExtractI30List(accessor_ctx *AccessorContext,
 	mft_entry *ntfs.MFT_ENTRY, path string) []glob.FileInfo {
 
 	result := []glob.FileInfo{}
-	ntfs_ctx := accessor_ctx.ntfs_ctx
+	ntfs_ctx := accessor_ctx.GetNTFSContext()
 
 	var lru_map map[string]*cacheMFT
 	value, pres := accessor_ctx.path_listing.Get(path)

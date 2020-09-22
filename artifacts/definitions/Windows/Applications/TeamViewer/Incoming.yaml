@@ -1,0 +1,106 @@
+name: Windows.Applications.TeamViewer.Incoming
+description: |
+   Parses the TeamViewer Connections_incoming.txt log file.
+
+   When inbound logging enabled, this file will show all inbound TeamViewer
+   connections.
+
+author: Matt Green - @mgreen27
+
+reference:
+  - https://attack.mitre.org/techniques/T1219/
+  - https://www.systoolsgroup.com/forensics/teamviewer/
+
+
+type: CLIENT
+parameters:
+  - name: FileGlob
+    default: C:\Program Files (x86)\TeamViewer\Connections_incoming.txt
+  - name: DateAfter
+    description: "search for events after this date. YYYY-MM-DDTmm:hh:ss Z"
+    type: timestamp
+  - name: DateBefore
+    description: "search for events before this date. YYYY-MM-DDTmm:hh:ss Z"
+    type: timestamp
+  - name: TeamViewerIDRegex
+    description: "Regex of TeamViewer ID"
+    default: .
+  - name: SourceHostRegex
+    description: "Regex of source host"
+    default: .
+  - name: UserRegex
+    description: "Regex of user"
+    default: .
+  - name: SearchVSS
+    description: "Add VSS into query."
+    type: bool
+
+sources:
+  - query: |
+        -- Target hostname
+        LET hostname <= SELECT Fqdn FROM info()
+
+        -- Build time bounds
+        LET DateAfterTime <= if(condition=DateAfter,
+            then=timestamp(epoch=DateAfter), else=timestamp(epoch="1600-01-01"))
+        LET DateBeforeTime <= if(condition=DateBefore,
+            then=timestamp(epoch=DateBefore), else=timestamp(epoch="2200-01-01"))
+
+        -- Determine target files
+        LET files = SELECT *,
+                if(condition=Source,
+                    then=Source,
+                    else=FullPath
+                        ) as Source
+          FROM if(condition=SearchVSS,
+            then= {
+              SELECT *
+              FROM Artifact.Windows.Search.VSS(SearchFilesGlob=FileGlob)
+              WHERE not IsDir and Size > 0
+            },
+            else= {
+              SELECT *, FullPath AS Source
+              FROM glob(globs=FileGlob) WHERE not IsDir and Size > 0
+            })
+        LET Items = SELECT * FROM foreach(
+                row=files,
+                query={
+                    SELECT parse_string_with_regex(
+                        string=Line,
+                        regex=[
+                            "^(?P<TeamViewerID>[^\\s]+)\\s+"+
+                            "(?P<SourceHost>[^\\s]+)\\s+"+
+                            "(?P<StartTime>[^\\s]+\\s[^\\s]+)\\s+"+
+                            "(?P<EndTime>[^\\s]+\\s[^\\s]+)\\s+"+
+                            "(?P<User>[^\\s]+)\\s+"+
+                            "(?P<ConnectionType>[^\\s]+)\\s+"+
+                            "(?P<ConnectionID>.+)$"
+                        ]) as Record,
+                        Source
+                    FROM parse_lines(filename=FullPath)
+                    WHERE Line
+                })
+                ORDER BY Source DESC
+
+        -- Group and filter results for deduplication
+        LET grouped = SELECT
+                timestamp(string=Record.StartTime) as StartTime,
+                timestamp(string=Record.EndTime) as EndTime,
+                Record.TeamViewerID as TeamViewerID,
+                hostname.Fqdn[0] as TargetHost,
+                Record.SourceHost as SourceHost,
+                Record.User as User,
+                Record.ConnectionType as ConnectionType,
+                Record.ConnectionID as ConnectionID,
+                Source
+            FROM Items
+            GROUP BY ConnectionID
+
+        -- Output results
+        SELECT * FROM grouped
+        WHERE
+            (( StartTime < DateBeforeTime AND StartTime > DateAfterTime ) OR
+                    ( EndTime < DateBeforeTime AND EndTime > DateAfterTime ))
+            AND TeamViewerID =~ TeamViewerIDRegex
+            AND SourceHost =~ SourceHostRegex
+            AND User =~ UserRegex

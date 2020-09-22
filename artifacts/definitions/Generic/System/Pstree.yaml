@@ -1,0 +1,73 @@
+name: Generic.System.Pstree
+description: |
+  This artifact displays the call chain for every process on the
+  system by traversing the process's parent ID.
+
+  It is useful for establishing where a process came from - for
+  example, if a powershell process is spawned from Winword (event via
+  a number of intemediary processes) it could mean word was
+  compromised.
+
+parameters:
+  - name: ProcessNameRegex
+    default: .
+
+  - name: PidFilter
+    description: Filter pids by this regex
+    default: .
+
+  - name: CallChainFilter
+    default: .
+
+  - name: CallChainSep
+    default: " <- "
+
+sources:
+  - query: |
+      // Cache the process listing in memory as we will be going
+      // through it many times.
+      LET processes <= SELECT Name, Pid, Ppid FROM pslist()
+
+      LET m <= memoize(query={ SELECT Name, Pid, Ppid FROM pslist()}, key="Pid", period=1)
+
+      // Recursive function to find process parent (clients > 0.4.9).
+      LET pstree_memoized(LookupPid) = SELECT * FROM foreach(
+      row=get(item=m, field=LookupPid),
+        query={
+           SELECT * FROM chain(
+           a={
+             SELECT Name, Pid, Ppid FROM scope()
+           },
+           b={
+             SELECT Name, Pid, Ppid FROM pstree(LookupPid=Ppid)
+           })
+        })
+
+      // Recursive function to find process parent (clients < 0.4.9).
+      LET pstree_legacy(LookupPid) = SELECT * FROM foreach(
+         row={
+           SELECT Name, Pid, Ppid FROM processes
+           WHERE Pid = LookupPid
+         },
+         query={
+           SELECT * FROM chain(
+           b={
+             SELECT Name, Pid, Ppid FROM pstree(LookupPid=Ppid)
+           },
+           a={
+             SELECT Name, Pid, Ppid FROM scope()
+           })
+      })
+
+      // Select which version we should use
+      LET pstree(LookupPid) = SELECT * FROM if(
+        condition=version(function="memoize") >= 0,
+        then=pstree_memoized,
+        else=pstree_legacy)
+
+      SELECT Name, Pid, Ppid,
+             join(array=pstree(LookupPid=Pid).Name, sep=CallChainSep) AS CallChain
+      FROM processes
+      WHERE Name =~ ProcessNameRegex
+        AND CallChain =~ CallChainFilter
+        AND str(str=Pid) =~ str(str=PidFilter)

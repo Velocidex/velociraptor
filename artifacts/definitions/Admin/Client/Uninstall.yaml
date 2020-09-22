@@ -1,0 +1,39 @@
+name: Admin.Client.Uninstall
+description: |
+  Uninstall Velociraptor from the endpoint.
+
+  This artifact uninstalls a Velociraptor client (or any other MSI
+  package) from the endpoint.
+
+  Typically the client will be hard terminated during the uninstall
+  process, so on the server it would appear that the collection is not
+  completed. This is normal.
+
+  NOTE: Be careful with the DisplayNameRegex to ensure you do not
+  uninstall another package accidentally.
+
+required_permissions:
+  - EXECVE
+
+parameters:
+  - name: DisplayNameRegex
+    default: Velociraptor
+    description: A regex that will match the package to uninstall.
+
+  - name: ReallyDoIt
+    type: bool
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query:  |
+      LET packages = SELECT Name, DisplayName FROM Artifact.Windows.Sys.Programs()
+      WHERE DisplayName =~ DisplayNameRegex AND
+        log(message="Will uninstall " + DisplayName)
+
+      LET uninstall(Name) = SELECT * FROM execve(argv=['msiexec', '/quiet', '/x', Name])
+
+      SELECT Name, DisplayName,
+          if(condition= ReallyDoIt="Y", then=uninstall(Name=Name).Stdout) AS UninstallLog
+      FROM packages

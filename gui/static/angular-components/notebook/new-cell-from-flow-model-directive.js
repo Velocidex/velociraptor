@@ -52,7 +52,7 @@ exports.NewCellFromFlowModelDirective = function() {
             onReject: "&",
         },
         restrict: 'E',
-        templateUrl: '/static/angular-components/notebook/new_cell_from_flow_modal.html',
+        templateUrl: window.base_path+'/static/angular-components/notebook/new_cell_from_flow_modal.html',
         controller: NewCellFromFlowModelController,
         controllerAs: 'controller',
     };

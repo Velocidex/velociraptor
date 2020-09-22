@@ -177,7 +177,12 @@ func (self ParseJsonlPlugin) Call(
 					return
 				}
 
-				output_chan <- item
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- item:
+				}
 			}
 		}
 	}()
@@ -209,7 +214,12 @@ func (self ParseJsonArrayPlugin) Call(
 		result_type := result_value.Type()
 		if result_type.Kind() == reflect.Slice {
 			for i := 0; i < result_value.Len(); i++ {
-				output_chan <- result_value.Index(i).Interface()
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- result_value.Index(i).Interface():
+				}
 			}
 		}
 

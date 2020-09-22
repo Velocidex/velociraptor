@@ -13,6 +13,12 @@ message CreateDownloadRequest {
     // When set we only create combined hunt output and not individual
     // flow breakdowns.
     bool only_combined_hunt = 4;
+
+    bool json_format = 5;
+    bool csv_format = 6;
+
+    // Can be "report" for html report or "" for just files.
+    string download_type = 7;
 }
 
 message CreateDownloadResponse {

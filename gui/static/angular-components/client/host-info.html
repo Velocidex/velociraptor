@@ -40,7 +40,8 @@
   <div class="clearfix"></div>
 
   <!-- Client Details -->
-  <div ng-if="controller.mode == 'brief'">
+  <div class="dashboard"
+    ng-if="controller.mode == 'brief'">
     <div class="card panel">
       <h5 class="card-header">{$ controller.client.os_info.fqdn $}</h5>
       <div class="card-body">
@@ -94,12 +95,22 @@
         </div>
       </div>
     </div>
+
+    <div class="card panel">
+      <h5 class="card-header">Metadata</h5>
+      <div class="card-body">
+        <div class="client-details">
+          <grr-csv-form field="'metadata'"
+                        value="controller">
+          </grr-csv-form>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Shows Generic.Client.Info report -->
   <div class="client-details dashboard"
        ng-if="controller.mode == 'detailed'"
-       class="dashboard"
        grr-force-refresh
        refresh-trigger="controller.client.last_interrogate_flow_id">
 
@@ -111,7 +122,7 @@
   <!-- Shell view -->
   <div class="client-details dashboard"
        ng-if="controller.mode == 'shell'"
-       class="dashboard">
+       >
     <grr-shell-viewer
       client="controller.client"
       client-id="controller.clientId"></grr-shell-viewer>

@@ -2,36 +2,25 @@ name: Admin.Client.Upgrade
 description: |
   Remotely push new client updates.
 
-  NOTE: The updates can be pulled from any web server. You need to
-  ensure they are properly secured with SSL and at least a random
-  nonce in their path. You may configure the Velociraptor server to
-  serve these through the public directory. Simply place the MSI in
-  the public directory within the data store and set the URL below.
+  NOTE: This artifact requires that you supply a client MSI using the
+  tools interface. Simply click on the tool in the GUI and upload a
+  pre-packaged MSI.
 
-required_permissions:
-  - EXECVE
+  While typically the MSI will contain the Velociraptor windows
+  client, you can install any other MSI as well by customizing this
+  artifact or uploading a different msi file.
 
-parameters:
-  - name: clientURL
-    description: The URL to fetch the MSI package.
-    default: http://127.0.0.1:8000/public/velociraptor.msi
+tools:
+  - name: WindowsClient
 
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
-    queries:
-      # Wait a random amount of time so this can be run in a
-      # hunt. Otherwise all clients will attempt to download the same
-      # file at the same time probably overloading the server.
-      - LET _ <= SELECT sleep(time=rand(range=600)) FROM scope()
 
-      - SELECT * from foreach(
-         row={
-            SELECT Content AS Binary
-            FROM http_client(url=clientURL, tempfile_extension=".msi")
-         },
-         query={
-            SELECT * from execve(
-               argv=["msiexec.exe", "/i", Binary]
-            )
-         })
+    query:  |
+      LET bin <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
+         ToolName="WindowsClient")
+
+      // Call the binary and return all its output in a single row.
+      SELECT * FROM execve(
+           argv=["msiexec.exe", "/i", bin[0].FullPath], length=10000000)

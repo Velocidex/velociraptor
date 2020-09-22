@@ -1,19 +1,26 @@
+// +build server_vql
+
 package main
 
 import (
-	"context"
-	"fmt"
+	"log"
+	"os"
 
+	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	"www.velocidex.com/golang/velociraptor/flows"
-	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/server/downloads"
 )
 
 var (
 	report_command = app.Command("report", "Generate a report.")
 
 	report_command_flow = report_command.Command("flow", "Report on a collection")
+
+	report_command_flow_report = report_command_flow.Flag(
+		"artifact", "An artifact that contains a report to generate (default Reporting.Default).").
+		Default("Reporting.Default").String()
 
 	report_command_flow_client = report_command_flow.Arg(
 		"client_id", "The client id to generate the report for.").
@@ -22,53 +29,57 @@ var (
 	report_command_flow_flow_id = report_command_flow.Arg(
 		"flow_id", "The flow id to generate the report for.").
 		Required().String()
+
+	report_command_flow_output = report_command_flow.Arg(
+		"output", "A path to an output file to write on.").
+		String()
 )
 
-func doHTMLReport() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+func doFlowReport() {
+	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
+	builder := services.ScopeBuilder{
+		Config: config_obj,
+		Logger: log.New(&LogWriter{config_obj}, "", 0),
+		Env: ordereddict.NewDict().
+			Set("ClientId", *report_command_flow_client).
+			Set("FlowId", *report_command_flow_flow_id),
+		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+	}
+
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	writer := os.Stdout
+	if *report_command_flow_output != "" {
+		writer, err = os.OpenFile(
+			*report_command_flow_output,
+			os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+		kingpin.FatalIfError(err, "Unable to open output file")
+		defer writer.Close()
+	}
 
 	repository, err := getRepository(config_obj)
-	kingpin.FatalIfError(err, "Unable to load artifacts")
+	kingpin.FatalIfError(err, "Repository")
 
-	result, err := flows.GetFlowDetails(config_obj, *report_command_flow_client,
-		*report_command_flow_flow_id)
-	kingpin.FatalIfError(err, "Unable to load flow")
-
-	if result.Context == nil {
-		kingpin.Fatalf("Unable to open flow %v", *report_command_flow_flow_id)
-	}
-
-	fmt.Println(reporting.HtmlPreable)
-	defer fmt.Println(reporting.HtmlPostscript)
-
-	for _, artifact_name := range result.Context.Request.Artifacts {
-		template_engine, err := reporting.NewHTMLTemplateEngine(
-			config_obj, context.Background(), nil, /* default scope */
-			vql_subsystem.NullACLManager{}, repository, artifact_name,
-			false /* sanitize_html */)
-		kingpin.FatalIfError(err, "Generating report")
-
-		template_engine.SetEnv("ClientId", *report_command_flow_client)
-		template_engine.SetEnv("FlowId", *report_command_flow_flow_id)
-
-		for k, v := range *env_map {
-			template_engine.SetEnv(k, v)
-		}
-
-		res, err := reporting.GenerateClientReport(
-			template_engine,
-			*report_command_flow_client, *report_command_flow_flow_id, nil)
-		kingpin.FatalIfError(err, "Generating report")
-		fmt.Println(res)
-	}
+	err = downloads.WriteFlowReport(config_obj, scope, repository,
+		writer, *report_command_flow_flow_id,
+		*report_command_flow_client, *report_command_flow_report)
+	kingpin.FatalIfError(err, "Generating report")
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case report_command_flow.FullCommand():
-			doHTMLReport()
+			doFlowReport()
 
 		default:
 			return false

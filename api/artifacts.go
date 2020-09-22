@@ -26,6 +26,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -35,7 +36,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -44,6 +44,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -78,12 +79,17 @@ func getArtifactFile(
 	config_obj *config_proto.Config,
 	name string) (string, error) {
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
 	if err != nil {
 		return "", err
 	}
 
-	artifact, pres := repository.Get(name)
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return "", err
+	}
+
+	artifact, pres := repository.Get(config_obj, name)
 	if !pres {
 		return default_artifact, nil
 	}
@@ -115,60 +121,34 @@ func setArtifactFile(config_obj *config_proto.Config,
 	required_prefix string) (
 	*artifacts_proto.Artifact, error) {
 
-	// First ensure that the artifact is correct.
-	tmp_repository := artifacts.NewRepository()
-	artifact_definition, err := tmp_repository.LoadYaml(
-		in.Artifact, true /* validate */)
-	if err != nil {
-		return nil, err
-	}
-
-	if !strings.HasPrefix(artifact_definition.Name, required_prefix) {
-		return nil, errors.New(
-			"Modified or custom artifacts must start with '" +
-				required_prefix + "'")
-	}
-
-	file_store_factory := file_store.GetFileStore(config_obj)
-	vfs_path := paths.GetArtifactDefintionPath(artifact_definition.Name)
-
-	// Load the new artifact into the global repo so it is
-	// immediately available.
-	global_repository, err := artifacts.GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
 	if err != nil {
 		return nil, err
 	}
 
 	switch in.Op {
-
 	case api_proto.SetArtifactRequest_DELETE:
-		global_repository.Del(artifact_definition.Name)
-		err = file_store_factory.Delete(vfs_path)
-		return artifact_definition, err
+
+		// First ensure that the artifact is correct.
+		tmp_repository := manager.NewRepository()
+		artifact_definition, err := tmp_repository.LoadYaml(
+			in.Artifact, true /* validate */)
+		if err != nil {
+			return nil, err
+		}
+
+		if !strings.HasPrefix(artifact_definition.Name, required_prefix) {
+			return nil, errors.New(
+				"Modified or custom artifacts must start with '" +
+					required_prefix + "'")
+		}
+
+		return artifact_definition, manager.DeleteArtifactFile(config_obj,
+			artifact_definition.Name)
 
 	case api_proto.SetArtifactRequest_SET:
-		// Now write it into the filestore.
-		fd, err := file_store_factory.WriteFile(vfs_path)
-		if err != nil {
-			return nil, err
-		}
-		defer fd.Close()
-
-		// We want to completely replace the content of the file.
-		err = fd.Truncate()
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = fd.Write([]byte(in.Artifact))
-		if err != nil {
-			return nil, err
-		}
-
-		// Load the artifact into the currently running repository.
-		// Artifact is already valid - no need to revalidate it again.
-		_, err = global_repository.LoadYaml(in.Artifact, false /* validate */)
-		return artifact_definition, err
+		return manager.SetArtifactFile(
+			config_obj, in.Artifact, required_prefix)
 	}
 
 	return nil, errors.New("Unknown op")
@@ -184,14 +164,18 @@ func getReportArtifacts(
 		number_of_results = 100
 	}
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	result := &artifacts_proto.ArtifactDescriptors{}
 	for _, name := range repository.List() {
-		artifact, pres := repository.Get(name)
+		artifact, pres := repository.Get(config_obj, name)
 		if pres {
 			for _, report := range artifact.Reports {
 				if report.Type == report_type {
@@ -215,6 +199,10 @@ func searchArtifact(
 	artifact_type string,
 	number_of_results uint64) (
 	*artifacts_proto.ArtifactDescriptors, error) {
+
+	if config_obj.GUI == nil {
+		return nil, errors.New("GUI not configured")
+	}
 
 	name_filter_regexp := config_obj.GUI.ArtifactSearchFilter
 	if name_filter_regexp == "" {
@@ -254,7 +242,11 @@ func searchArtifact(
 		return true
 	}
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +256,7 @@ func searchArtifact(
 			continue
 		}
 
-		artifact, pres := repository.Get(name)
+		artifact, pres := repository.Get(config_obj, name)
 		if pres {
 			// Skip non matching types
 			if artifact_type != "" &&
@@ -327,12 +319,11 @@ func (self *ApiServer) LoadArtifactPack(
 				continue
 			}
 
-			artifact_definition := string(data)
-
 			// Make sure the artifact is written into the
 			// Packs part to prevent clashes with built in
 			// names.
-			artifact_definition = ensureArtifactPrefix(string(data), prefix)
+			artifact_definition := ensureArtifactPrefix(
+				string(data), prefix)
 
 			request := &api_proto.SetArtifactRequest{
 				Op:       api_proto.SetArtifactRequest_SET,
@@ -416,6 +407,10 @@ func (self *ApiServer) ListAvailableEventResults(
 	for _, item := range seen {
 		result.Logs = append(result.Logs, item)
 	}
+
+	sort.Slice(result.Logs, func(i, j int) bool {
+		return result.Logs[i].Artifact < result.Logs[j].Artifact
+	})
 
 	return result, nil
 }

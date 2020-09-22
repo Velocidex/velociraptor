@@ -21,6 +21,10 @@ func doExportNotebook() {
 	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
 	ctx := context.Background()
 	writer := &bytes.Buffer{}
 	err = reporting.ExportNotebookToHTML(

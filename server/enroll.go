@@ -19,17 +19,17 @@ package server
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Velocidex/ordereddict"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
 func enroll(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	server *Server,
 	csr *crypto_proto.Certificate) error {
 
@@ -40,13 +40,17 @@ func enroll(
 	client_id, err := server.manager.AddCertificateRequest(csr.Pem)
 	if err != nil {
 		logger := logging.GetLogger(server.config, &logging.FrontendComponent)
-		logger.Error(fmt.Sprintf("While enrolling %v: %v", client_id, err))
+		logger.Error("While enrolling %v: %v", client_id, err)
 		return err
 	}
 
-	path_manager := result_sets.NewArtifactPathManager(
-		server.config, "server" /* client_id */, "", "Server.Internal.Enrollment")
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
 
-	return services.GetJournal().PushRows(path_manager,
-		[]*ordereddict.Dict{ordereddict.NewDict().Set("ClientId", client_id)})
+	return journal.PushRowsToArtifact(config_obj,
+		[]*ordereddict.Dict{ordereddict.NewDict().Set("ClientId", client_id)},
+		"Server.Internal.Enrollment", "server" /* client_id */, "",
+	)
 }

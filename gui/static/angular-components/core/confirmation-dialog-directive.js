@@ -105,7 +105,7 @@ exports.ConfirmationDialogDirective = function() {
     },
     restrict: 'E',
     transclude: true,
-    templateUrl: '/static/angular-components/core/confirmation-dialog.html',
+    templateUrl: window.base_path+'/static/angular-components/core/confirmation-dialog.html',
     controller: ConfirmationDialogController,
     controllerAs: 'controller'
   };

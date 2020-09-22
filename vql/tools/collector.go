@@ -8,11 +8,11 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -89,7 +89,7 @@ func (self CollectPlugin) Call(
 		artifact_definitions := []*artifacts_proto.Artifact{}
 		definitions := []*artifacts_proto.Artifact{}
 		for _, name := range arg.Artifacts {
-			artifact, pres := repository.Get(name)
+			artifact, pres := repository.Get(config_obj, name)
 			if !pres {
 				scope.Log("Artifact %v not known.", name)
 				return
@@ -128,9 +128,13 @@ func (self CollectPlugin) Call(
 						scope.Log("Error creating report: %v", err)
 					}
 				}
-				output_chan <- ordereddict.NewDict().
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- ordereddict.NewDict().
 					Set("Container", arg.Output).
-					Set("Report", arg.Report)
+					Set("Report", arg.Report):
+				}
 			}()
 
 			// Should we encrypt it?
@@ -140,29 +144,43 @@ func (self CollectPlugin) Call(
 			}
 		}
 
-		builder := artifacts.ScopeBuilderFromScope(scope)
+		builder := services.ScopeBuilderFromScope(scope)
 		if container != nil {
 			builder.Uploader = container
 		}
 
 		for _, name := range arg.Artifacts {
-			artifact, pres := repository.Get(name)
+			artifact, pres := repository.Get(config_obj, name)
 			if !pres {
 				scope.Log("collect: Unknown artifact %v", name)
 				continue
 
 			}
 
-			err = services.EnsureToolsDeclared(ctx, config_obj, artifact)
+			launcher, err := services.GetLauncher()
 			if err != nil {
-				scope.Log("collect: ", name)
+				scope.Log("collect: %v", err)
+				return
+			}
+
+			err = launcher.EnsureToolsDeclared(
+				ctx, config_obj, artifact)
+			if err != nil {
+				scope.Log("collect: %v %v", name, err)
 				continue
 			}
 
 			artifact_definitions = append(artifact_definitions, artifact)
+			acl_manager, ok := artifacts.GetACLManager(scope)
+			if !ok {
+				acl_manager = vql_subsystem.NullACLManager{}
+			}
 
-			request := &actions_proto.VQLCollectorArgs{}
-			err := repository.Compile(artifact, request)
+			request, err := launcher.CompileCollectorArgs(
+				ctx, config_obj, acl_manager, repository,
+				&flows_proto.ArtifactCollectorArgs{
+					Artifacts: []string{artifact.Name},
+				})
 			if err != nil {
 				scope.Log("collect: Invalid artifact %v: %v",
 					name, err)
@@ -189,7 +207,13 @@ func (self CollectPlugin) Call(
 
 			// Make a new scope for each artifact.
 			// Any uploads go into the container.
-			subscope := builder.Build()
+			manager, err := services.GetRepositoryManager()
+			if err != nil {
+				scope.Log("collect: %v %v", name, err)
+				return
+			}
+
+			subscope := manager.BuildScope(builder)
 			defer subscope.Close()
 
 			for _, query := range request.Query {
@@ -201,9 +225,11 @@ func (self CollectPlugin) Call(
 
 				// Dont store un-named queries but run them anyway.
 				if query.Name == "" {
-					for _ = range vql.Eval(ctx, subscope) {
+					for range vql.Eval(ctx, subscope) {
 					}
 					continue
+				} else {
+					subscope.Log("Starting collection of %s", query.Name)
 				}
 
 				// If no container is specified, just
@@ -211,7 +237,11 @@ func (self CollectPlugin) Call(
 				// channel.
 				if container == nil {
 					for row := range vql.Eval(ctx, subscope) {
-						output_chan <- row
+						select {
+						case <-ctx.Done():
+							return
+						case output_chan <- row:
+						}
 					}
 					continue
 				}
@@ -236,8 +266,12 @@ func (self CollectPlugin) Call(
 
 func getRepository(
 	config_obj *config_proto.Config,
-	extra_artifacts vfilter.Any) (*artifacts.Repository, error) {
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	extra_artifacts vfilter.Any) (services.Repository, error) {
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}

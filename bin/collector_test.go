@@ -15,7 +15,7 @@ import (
 	"testing"
 
 	"github.com/Velocidex/yaml/v2"
-	"github.com/alecthomas/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -69,6 +69,7 @@ func (self *CollectorTestSuite) SetupTest() {
 	self.config_obj.Datastore.Implementation = "FileBaseDataStore"
 	self.config_obj.Datastore.Location = self.tmpdir
 	self.config_obj.Datastore.FilestoreDirectory = self.tmpdir
+	self.config_obj.Frontend.DoNotCompressArtifacts = true
 
 	// Start a web server that serves the filesystem
 	self.test_server = httptest.NewServer(
@@ -96,6 +97,8 @@ func (self *CollectorTestSuite) TestCollector() {
 	OS_TYPE := "Linux"
 	if runtime.GOOS == "windows" {
 		OS_TYPE = "Windows"
+	} else if runtime.GOOS == "darwin" {
+		OS_TYPE = "Darwin"
 	}
 
 	// Change into the tmpdir
@@ -106,11 +109,11 @@ func (self *CollectorTestSuite) TestCollector() {
 
 	// Create a new artifact..
 	file_store_factory := file_store.GetFileStore(self.config_obj)
-	fd, err := file_store_factory.WriteFile("/artifact_definitions/Custom/TestArtifact.yaml")
+	fd, err := file_store_factory.WriteFile("/artifact_definitions/Custom/TestArtifactDependent.yaml")
 	assert.NoError(self.T(), err)
 
 	fd.Truncate()
-	fd.Write([]byte(`name: Custom.TestArtifact
+	fd.Write([]byte(`name: Custom.TestArtifactDependent
 tools:
   - name: MyTool
 
@@ -121,6 +124,17 @@ sources:
               ToolName="MyTool", SleepDuration='0')
      SELECT "Foobar", Stdout, binary[0].Name
      FROM execve(argv=[binary[0].FullPath, "artifacts", "list"])
+`))
+	fd.Close()
+
+	fd, err = file_store_factory.WriteFile("/artifact_definitions/Custom/TestArtifact.yaml")
+	assert.NoError(self.T(), err)
+
+	fd.Truncate()
+	fd.Write([]byte(`name: Custom.TestArtifact
+sources:
+ - query: |
+     SELECT * FROM Artifact.Custom.TestArtifactDependent()
 
 reports:
  - type: HTML
@@ -147,15 +161,34 @@ reports:
      {{ end }}
 `))
 	fd.Close()
-
 	cmd := exec.Command(self.binary, "--config", self.config_file,
 		"artifacts", "show", "Custom.TestArtifact")
 	out, err := cmd.CombinedOutput()
 	fmt.Println(string(out))
 	require.NoError(self.T(), err)
 
+	var os_name string
+	for _, os_name = range []string{"Windows", "Windows_x86", "Linux", "Darwin"} {
+		cmd = exec.Command(self.binary, "--config", self.config_file,
+			"tools", "upload", "--name", "Velociraptor"+os_name,
+			self.config_file,
+			"--serve_remote")
+		out, err = cmd.CombinedOutput()
+		fmt.Println(string(out))
+		require.NoError(self.T(), err)
+	}
+
+	switch runtime.GOOS {
+	case "windows":
+		os_name = "Windows"
+	case "linux":
+		os_name = "Linux"
+	case "darwin":
+		os_name = "Darwin"
+	}
+
 	cmd = exec.Command(self.binary, "--config", self.config_file,
-		"tools", "upload", "--name", "Velociraptor"+OS_TYPE,
+		"tools", "upload", "--name", "Velociraptor"+os_name,
 		self.test_server.URL+"/"+filepath.Base(self.binary),
 		"--serve_remote")
 	out, err = cmd.CombinedOutput()
@@ -187,6 +220,8 @@ reports:
 		"--args", "OS=" + OS_TYPE,
 		"--args", "artifacts=[\"Custom.TestArtifact\"]",
 		"--args", "target=ZIP",
+		"--args", "opt_admin=N",
+		"--args", "opt_prompt=N",
 		"--args", "template=Custom.TestArtifact",
 		"--output", output_zip,
 	}

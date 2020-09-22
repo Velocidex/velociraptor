@@ -84,7 +84,7 @@ exports.LoadingIndicatorDirective = function() {
     scope: true,
     restrict: 'E',
     template: '<div id="ajax_spinner" class="ajax_spinner" ng-hide="controller.queueIsEmpty">' +
-              '    <img src="/static/images/ajax-loader.gif">' +
+              '    <img src="{{$root.globals.base_path}}/static/images/ajax-loader.gif">' +
               '</div>',
     controller: LoadingIndicatorController,
     controllerAs: 'controller'
@@ -117,4 +117,3 @@ LoadingIndicatorDirective.loading_started_event_name = LOADING_STARTED_EVENT_NAM
  * @export
  */
 LoadingIndicatorDirective.loading_finished_event_name = LOADING_FINISHED_EVENT_NAME;
-

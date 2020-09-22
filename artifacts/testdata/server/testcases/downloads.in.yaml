@@ -10,7 +10,7 @@ Queries:
   - SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url(
       path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/H.49ba8939.zip',
       scheme='file', fragment='**').String, accessor='zip')
-    WHERE NOT IsDir
+    WHERE NOT IsDir AND FullPath =~ "NetstatEnriched"
     ORDER BY FullPath
 
   - SELECT create_hunt_download(hunt_id='H.49ba8939',
@@ -21,5 +21,25 @@ Queries:
   - SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url(
       path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/H.49ba8939-summary.zip',
       scheme='file', fragment='**').String, accessor='zip')
-    WHERE NOT IsDir
+    WHERE NOT IsDir AND FullPath =~ "NetstatEnriched"
+    ORDER BY FullPath
+
+  # Only store json files.
+  - SELECT create_hunt_download(hunt_id='H.49ba8939', format="json", base="json-",
+        wait=TRUE, only_combined=TRUE) FROM scope()
+
+  - SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url(
+      path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/json-H.49ba8939-summary.zip',
+      scheme='file', fragment='**').String, accessor='zip')
+    WHERE NOT IsDir AND FullPath =~ "NetstatEnriched"
+    ORDER BY FullPath
+
+  # Only store csv files.
+  - SELECT create_hunt_download(hunt_id='H.49ba8939', format="csv", base="csv-",
+        wait=TRUE, only_combined=TRUE) FROM scope()
+
+  - SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url(
+      path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/csv-H.49ba8939-summary.zip',
+      scheme='file', fragment='**').String, accessor='zip')
+    WHERE NOT IsDir AND FullPath =~ "NetstatEnriched"
     ORDER BY FullPath

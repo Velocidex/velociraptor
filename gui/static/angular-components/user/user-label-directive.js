@@ -52,7 +52,7 @@ exports.UserLabelDirective = function() {
   return {
     scope: true,
     restrict: 'E',
-    templateUrl: '/static/angular-components/user/user-label.html',
+    templateUrl: window.base_path+'/static/angular-components/user/user-label.html',
     controller: UserLabelController,
     controllerAs: 'controller'
   };

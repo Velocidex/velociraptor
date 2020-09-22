@@ -13,4 +13,8 @@ SELECT FullPath FROM glob(globs="/*", accessor="file") WHERE Name =~ "C"[
  {
   "FullPath": "C:\\WindowsAzure"
  }
-]
+]SELECT FullPath FROM glob(globs="c:\\Users\\*link\\notepad.exe", accessor="file_links")[
+ {
+  "FullPath": "C:\\Users\\link\\notepad.exe"
+ }
+]SELECT FullPath FROM glob(globs="c:\\Users\\*link\\notepad.exe")[]

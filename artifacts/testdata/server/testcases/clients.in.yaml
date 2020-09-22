@@ -1,16 +1,25 @@
 Queries:
+  # Clear the labels from all clients.
+  - LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id
+    FROM clients(search='label:*') ORDER BY client_id
+
   # Just get a list of all clients and their hostnames.
-  - SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen
+  - SELECT os_info.fqdn as Hostname, client_id, last_seen_at / 1000000  as LastSeen
     FROM clients() order by Hostname
 
   # Check that the clients plugin allows searching by indexes.
-  - SELECT OsInfo.fqdn as Hostname, OsInfo.system as System, ClientId
+  - SELECT os_info.fqdn as Hostname, os_info.system as System, client_id
     FROM clients(search='host:testcomputer') order by client_id
 
   - SELECT * from clients() order by client_id
 
-  - SELECT client_id, context.create_time as CreateTime,
-           runner_args.args.artifacts.names as Artifacts,
-           runner_args.flow_name as Flow
-    FROM flows(client_id='C.11a3013cca8f826e')
-    ORDER BY client_id
+  - SELECT client_id, timestamp(epoch=create_time/1000000) as CreateTime,
+           request.artifacts as Artifacts,
+           session_id as Flow
+    FROM flows(client_id='C.4f5e52adf0a337a9')
+    WHERE Artifacts =~ "Netstat"
+
+  # Test metadata setting and getting - only string metadata is acceptable.
+  - SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9',
+      Foo='Bar', Bar='Baz', Invalid=5) FROM scope()
+  - SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()

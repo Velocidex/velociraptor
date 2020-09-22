@@ -84,6 +84,11 @@ func (self MailPlugin) Call(
 			return
 		}
 
+		if config_obj.Mail == nil {
+			scope.Log("mail: not configured")
+			return
+		}
+
 		from := config_obj.Mail.From
 		if from == "" {
 			from = config_obj.Mail.AuthUsername
@@ -103,7 +108,7 @@ func (self MailPlugin) Call(
 			port = 587
 		}
 
-		d := gomail.NewPlainDialer(
+		d := gomail.NewDialer(
 			config_obj.Mail.Server,
 			int(port),
 			config_obj.Mail.AuthUsername,
@@ -118,7 +123,12 @@ func (self MailPlugin) Call(
 			// artifact CSV file.
 		}
 
-		output_chan <- arg
+		select {
+		case <-ctx.Done():
+			return
+
+		case output_chan <- arg:
+		}
 	}()
 
 	return output_chan

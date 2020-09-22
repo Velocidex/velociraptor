@@ -30,7 +30,7 @@ const FormController = function($scope, grrApiService, grrAceService) {
 
     this.createHuntArgsJson = "";
 
-    this.hunt_conditions = {};
+    this.hunt_conditions = {"excluded": {}};
     if (angular.isUndefined(this.scope_['createHuntArgs'])) {
         this.scope_['createHuntArgs'] = {
             start_request: {},
@@ -82,6 +82,10 @@ FormController.prototype.onValueChange_ = function(page_index) {
         createHuntArgs.condition = {"labels": {"label": [self.hunt_conditions.label]}};
     } else if(self.hunt_conditions.condition == "os") {
         createHuntArgs.condition = {"os": {"os": self.hunt_conditions.os}};
+    }
+
+    if (self.hunt_conditions.exclude_condition == "labels") {
+        createHuntArgs.condition.excluded_labels = [self.hunt_conditions.excluded.label];
     }
 
     this.createHuntArgsJson = JSON.stringify(createHuntArgs, null, 2);
@@ -140,7 +144,7 @@ exports.FormDirective = function() {
       onReject: '&'
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/new-hunt-wizard/form.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/new-hunt-wizard/form.html',
     controller: FormController,
     controllerAs: 'controller'
   };

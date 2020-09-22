@@ -37,7 +37,7 @@ exports.HuntReportDirective = function() {
       huntId: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/hunt-report.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/hunt-report.html',
     controller: HuntReportController,
     controllerAs: 'controller'
   };

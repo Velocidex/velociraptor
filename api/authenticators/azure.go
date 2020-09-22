@@ -256,11 +256,16 @@ func oauthAzurePicture(config_obj *config_proto.Config) http.Handler {
 		response, err := azureOauthConfig.Client(r.Context(), oauth_token).Get(
 			"https://graph.microsoft.com/v1.0/me/photos/48x48/$value")
 		if err != nil {
-			reject(fmt.Errorf("failed getting photo: %s", err.Error()))
+			reject(fmt.Errorf("failed getting photo: %v", err))
 			return
 		}
 		defer response.Body.Close()
 
-		io.Copy(w, response.Body)
+		_, err = io.Copy(w, response.Body)
+		if err != nil {
+			reject(fmt.Errorf("failed getting photo: %v", err))
+			return
+		}
+
 	})
 }

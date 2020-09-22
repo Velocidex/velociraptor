@@ -23,12 +23,10 @@ import (
 	"io"
 	"log"
 	"os"
-	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -36,6 +34,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -56,14 +55,11 @@ var (
 	dump_dir = query.Flag("dump_dir", "Directory to dump output files.").
 			Default("").String()
 
-	env_map = app.Flag("env", "Environment for the query.").
+	env_map = query.Flag("env", "Environment for the query.").
 		StringMap()
 
 	max_wait = app.Flag("max_wait", "Maximum time to queue results.").
 			Default("10").Int()
-
-	explain        = app.Command("explain", "Explain the output from a plugin")
-	explain_plugin = explain.Arg("plugin", "Plugin to explain").Required().String()
 )
 
 func outputJSON(ctx context.Context,
@@ -74,7 +70,8 @@ func outputJSON(ctx context.Context,
 		vql, ctx, scope,
 		vql_subsystem.MarshalJsonIndent(scope),
 		10, *max_wait) {
-		out.Write(result.Payload)
+		_, err := out.Write(result.Payload)
+		kingpin.FatalIfError(err, "outputJSON")
 	}
 }
 
@@ -86,7 +83,8 @@ func outputJSONL(ctx context.Context,
 		vql, ctx, scope,
 		vql_subsystem.MarshalJsonl(scope),
 		10, *max_wait) {
-		out.Write(result.Payload)
+		_, err := out.Write(result.Payload)
+		kingpin.FatalIfError(err, "outputCSV")
 	}
 }
 
@@ -128,7 +126,7 @@ func doRemoteQuery(
 	ctx := context.Background()
 	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
 	kingpin.FatalIfError(err, "GetAPIClient")
-	defer closer()
+	defer func() { _ = closer() }()
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
@@ -166,7 +164,12 @@ func doRemoteQuery(
 			continue
 		}
 
-		rows, err := utils.ParseJsonToDicts([]byte(response.Response))
+		json_response := response.Response
+		if json_response == "" {
+			json_response = response.JSONLResponse
+		}
+
+		rows, err := utils.ParseJsonToDicts([]byte(json_response))
 		kingpin.FatalIfError(err, "GetAPIClient")
 
 		switch format {
@@ -191,22 +194,27 @@ func doRemoteQuery(
 }
 
 func startEssentialServices(config_obj *config_proto.Config) (
-	wg *sync.WaitGroup, ctx context.Context, cancel func()) {
+	*services.Service, error) {
 
-	wg = &sync.WaitGroup{}
-	ctx, cancel = context.WithCancel(context.Background())
-
-	if config_obj.Datastore != nil {
-		_ = services.StartJournalService(config_obj)
-		_ = services.StartNotificationService(ctx, wg, config_obj)
-		_ = services.StartInventoryService(ctx, wg, config_obj)
+	sm := services.NewServiceManager(context.Background(), config_obj)
+	err := startup.StartupEssentialServices(sm)
+	if err != nil {
+		return nil, err
 	}
-	return wg, ctx, cancel
+
+	// Load any artifacts defined in the config file after all the
+	// services are up.
+	err = load_config_artifacts(config_obj)
+	return sm, err
 }
 
 func doQuery() {
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config")
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	env := ordereddict.NewDict()
 	for k, v := range *env_map {
@@ -220,21 +228,14 @@ func doQuery() {
 		return
 	}
 
-	wg, ctx, cancel := startEssentialServices(config_obj)
-	defer wg.Wait()
-	defer cancel()
-
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	// Initialize the repository in case the artifacts use it
+	_, err = getRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 
-	if *artifact_definitions_dir != "" {
-		repository.LoadDirectory(*artifact_definitions_dir)
-	}
-
-	builder := artifacts.ScopeBuilder{
+	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
+		Logger:     log.New(&LogWriter{config_obj}, "", 0),
 		Env:        ordereddict.NewDict(),
 	}
 
@@ -255,13 +256,15 @@ func doQuery() {
 		}
 	}
 
-	scope := builder.Build()
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	// Install throttler into the scope.
 	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(*rate)))
 
-	ctx = InstallSignalHandler(scope)
+	ctx := InstallSignalHandler(scope)
 
 	if *trace_vql_flag {
 		scope.Tracer = log.New(os.Stderr, "VQL Trace: ", 0)
@@ -288,30 +291,9 @@ func doQuery() {
 	}
 }
 
-func doExplain(plugin string) {
-	result := ordereddict.NewDict()
-	type_map := vfilter.NewTypeMap()
-	scope := vql_subsystem.MakeScope()
-	defer scope.Close()
-
-	pslist_info, pres := scope.Info(type_map, plugin)
-	if pres {
-		result.Set(plugin+"_info", pslist_info)
-		result.Set("type_map", type_map)
-	}
-
-	s, err := json.MarshalIndent(result)
-	if err == nil {
-		os.Stdout.Write(s)
-	}
-}
-
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
-		case explain.FullCommand():
-			doExplain(*explain_plugin)
-
 		case query.FullCommand():
 			doQuery()
 

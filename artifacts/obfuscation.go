@@ -19,14 +19,14 @@ var (
 func Obfuscate(
 	config_obj *config_proto.Config,
 	result *actions_proto.VQLCollectorArgs) error {
-	scope := vql_subsystem.MakeScope()
 	var err error
 
 	// Do not do anything if we do not compress artifacts.
-	if config_obj.Frontend.DoNotCompressArtifacts {
+	if config_obj.Frontend == nil || config_obj.Frontend.DoNotCompressArtifacts {
 		return nil
 	}
 
+	scope := vql_subsystem.MakeScope()
 	for _, query := range result.Query {
 		if query.Name != "" {
 			query.Name, err = obfuscator.Encrypt(config_obj, query.Name)

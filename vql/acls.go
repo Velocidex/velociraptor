@@ -1,7 +1,6 @@
 package vql
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -37,6 +36,7 @@ type ServerACLManager struct {
 	Token     *acl_proto.ApiClientACL
 }
 
+// Token must have *ALL* the specified permissions.
 func (self *ServerACLManager) CheckAccess(
 	permissions ...acls.ACL_PERMISSION) (bool, error) {
 	for _, permission := range permissions {
@@ -54,7 +54,10 @@ func (self *ServerACLManager) CheckAccess(
 // internally.
 func NewRoleACLManager(role string) ACLManager {
 	policy := &acl_proto.ApiClientACL{}
-	acls.GetRolePermissions(nil, []string{role}, policy)
+
+	// If we fail just return an empty policy
+	_ = acls.GetRolePermissions(nil, []string{role}, policy)
+
 	return &ServerACLManager{Token: policy}
 }
 
@@ -83,17 +86,17 @@ func NewServerACLManager(
 func CheckAccess(scope *vfilter.Scope, permissions ...acls.ACL_PERMISSION) error {
 	manager_any, pres := scope.Resolve(ACL_MANAGER_VAR)
 	if !pres {
-		return errors.New(fmt.Sprintf("Permission denied: %v", permissions))
+		return fmt.Errorf("Permission denied: %v", permissions)
 	}
 
 	manager, ok := manager_any.(ACLManager)
 	if !ok {
-		return errors.New(fmt.Sprintf("Permission denied: %v", permissions))
+		return fmt.Errorf("Permission denied: %v", permissions)
 	}
 
 	perm, err := manager.CheckAccess(permissions...)
 	if !perm || err != nil {
-		return errors.New(fmt.Sprintf("Permission denied: %v", permissions))
+		return fmt.Errorf("Permission denied: %v", permissions)
 	}
 
 	return nil

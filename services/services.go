@@ -24,125 +24,42 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-// A manager responsible for starting and shutting down all the
-// services in an orderly fashion.
-type ServicesManager struct{}
+var (
+	service_mu     sync.Mutex
+	ServiceManager *Service
+)
 
-// Some services run on all frontends. These must all run without
-// exception so they can not be selectively started.
-func StartFrontendServices(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+func NewServiceManager(ctx context.Context,
+	config_obj *config_proto.Config) *Service {
+	service_mu.Lock()
+	defer service_mu.Unlock()
 
-	// Allow for low latency scheduling by notifying clients of
-	// new events for them.
-	err := StartNotificationService(ctx, wg, config_obj)
-	if err != nil {
-		return err
+	self := &Service{
+		Config: config_obj,
+		Wg:     &sync.WaitGroup{},
 	}
+	self.Ctx, self.cancel = context.WithCancel(ctx)
 
-	// Hunt dispatcher manages client's hunt membership.
-	_, err = StartHuntDispatcher(ctx, wg, config_obj)
-	if err != nil {
-		return err
-	}
-
-	// Maintans the client's event monitoring table. All frontends
-	// need to follow this so they can propagate changes to
-	// clients.
-	err = StartClientMonitoringService(ctx, wg, config_obj)
-	if err != nil {
-		return err
-	}
-
-	err = StartInventoryService(ctx, wg, config_obj)
-	if err != nil {
-		return err
-	}
-
-	// Updates DynDNS records if needed. Frontends need to maintain their IP addresses.
-	err = startDynDNSService(ctx, wg, config_obj)
-	if err != nil {
-		return err
-	}
-
-	// Check everything is ok before we can start.
-	err = startSanityCheckService(ctx, wg, config_obj)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	ServiceManager = self
+	return self
 }
 
-// Start all the server services.
-func StartServices(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+type Service struct {
+	Ctx    context.Context
+	cancel func()
+	Wg     *sync.WaitGroup
+	Config *config_proto.Config
+}
 
-	if config_obj.Frontend.ServerServices.HuntManager {
-		_, err := startHuntManager(ctx, wg, config_obj)
-		if err != nil {
-			return err
-		}
-	}
+func (self *Service) Close() {
+	self.cancel()
 
-	/* Not really implemented - do we really need it any more?
+	// Wait for services to exit.
+	self.Wg.Wait()
+}
 
-	if config_obj.ServerServices.UserManager {
-		err := users.StartUserNotificationManager(
-			ctx, wg, config_obj)
-		if err != nil {
-			return err
-		}
-	}
-	*/
+type StarterFunc func(ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) error
 
-	// The stats collector runs periodically and reports 1, 7 and
-	// 30 day active clients.
-	if config_obj.Frontend.ServerServices.StatsCollector {
-		err := startStatsCollector(
-			ctx, wg, config_obj)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Runs server event queries. Should only run on one frontend.
-	if config_obj.Frontend.ServerServices.ServerMonitoring {
-		err := startServerMonitoringService(
-			ctx, wg, config_obj)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Run any server arttifacts the user asks for.
-	if config_obj.Frontend.ServerServices.ServerArtifacts {
-		err := startServerArtifactService(
-			ctx, wg, config_obj)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Interrogation service populates indexes etc for new
-	// clients.
-	if config_obj.Frontend.ServerServices.Interrogation {
-		startInterrogationService(ctx, wg, config_obj)
-	}
-
-	// VFS service maintains the VFS GUI structures by parsing the
-	// output of VFS artifacts collected.
-	if config_obj.Frontend.ServerServices.VfsService {
-		err := startVFSService(
-			ctx, wg, config_obj)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+func (self *Service) Start(starter StarterFunc) error {
+	return starter(self.Ctx, self.Wg, self.Config)
 }

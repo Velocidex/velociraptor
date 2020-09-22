@@ -7,8 +7,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -35,6 +35,10 @@ func doUnzip() {
 	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config")
 
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
 	filename, err := filepath.Abs(*unzip_cmd_file)
 	kingpin.FatalIfError(err, "File does not exist")
 
@@ -43,7 +47,7 @@ func doUnzip() {
 		kingpin.FatalIfError(err, "File does not exist")
 	}
 
-	builder := artifacts.ScopeBuilder{
+	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
 		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
@@ -105,7 +109,10 @@ func doUnzip() {
 		}
 	}
 
-	scope := builder.Build()
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	vql, err := vfilter.Parse(query)

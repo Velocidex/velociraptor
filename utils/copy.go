@@ -3,19 +3,31 @@ package utils
 import (
 	"context"
 	"io"
+	"sync"
+)
+
+var (
+	pool = sync.Pool{
+		New: func() interface{} {
+			buffer := make([]byte, 32*1024)
+			return &buffer
+		},
+	}
 )
 
 // An io.Copy() that respects context cancellations.
 func Copy(ctx context.Context, dst io.Writer, src io.Reader) (n int, err error) {
 	offset := 0
-	buff := make([]byte, 32*1024)
+	buff := pool.Get().(*[]byte)
+	defer pool.Put(buff)
+
 	for {
 		select {
 		case <-ctx.Done():
 			return n, nil
 
 		default:
-			n, err = src.Read(buff)
+			n, err = src.Read(*buff)
 			if err != nil && err != io.EOF {
 				return offset, err
 			}
@@ -24,7 +36,7 @@ func Copy(ctx context.Context, dst io.Writer, src io.Reader) (n int, err error) 
 				return offset, nil
 			}
 
-			_, err = dst.Write(buff[:n])
+			_, err = dst.Write((*buff)[:n])
 			if err != nil {
 				return offset, err
 			}
@@ -36,14 +48,16 @@ func Copy(ctx context.Context, dst io.Writer, src io.Reader) (n int, err error) 
 func CopyN(ctx context.Context, dst io.Writer, src io.Reader, count int64) (
 	n int, err error) {
 	offset := 0
-	buff := make([]byte, 32*1024)
+	buff := pool.Get().(*[]byte)
+	defer pool.Put(buff)
+
 	for count > 0 {
 		select {
 		case <-ctx.Done():
 			return n, nil
 
 		default:
-			read_buff := buff
+			read_buff := *buff
 			if count < int64(len(read_buff)) {
 				read_buff = read_buff[:count]
 			}
@@ -57,7 +71,7 @@ func CopyN(ctx context.Context, dst io.Writer, src io.Reader, count int64) (
 				return offset, nil
 			}
 
-			_, err = dst.Write(buff[:n])
+			_, err = dst.Write(read_buff[:n])
 			if err != nil {
 				return offset, err
 			}

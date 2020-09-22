@@ -17,6 +17,15 @@ reports:
 
       {{ $artifact.Description }}
 
+      {{ if $artifact.Tools }}
+      ### Tools
+
+      {{ range $artifact.Tools -}}
+      * <grr-tool-viewer name="{{.Name}}"></grr-tool-viewer>
+      {{ end }}
+
+      {{ end }}
+
       {{ if $artifact.Parameters }}
 
       ### Parameters
@@ -30,15 +39,15 @@ reports:
          </tr>
       </thead>
       <tbody>
-      {{ range $item := $artifact.Parameters }}
-         {{ if not (eq $item.Type "hidden") }}
+      {{- range $item := $artifact.Parameters -}}
+         {{- if not (eq $item.Type "hidden") -}}
            <tr>
                <td> {{ $item.Name }}</td>
                <td>{{ $item.Type }}</td>
                <td><pre>{{ $item.Default }}</pre></td>
            </tr>
-         {{ end }}
-      {{ end }}
+         {{- end -}}
+      {{- end -}}
       </tbody></table>
 
       {{ end }}

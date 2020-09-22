@@ -22,14 +22,26 @@
             <dt>Creator</dt>
             <dd>{{ ::flow.context.request.creator }}</dd>
 
-            <dt>Start Time</dt>
+            <dt>Create Time</dt>
             <dd>
               <grr-timestamp value="flow.context.create_time">
               </grr-timestamp>
             </dd>
 
+            <dt>Start Time</dt>
+            <dd>
+              <grr-timestamp value="flow.context.start_time">
+              </grr-timestamp>
+            </dd>
+
             <dt>Last Active</dt>
-            <dd><grr-timestamp value="flow.context.kill_timestamp"></grr-timestamp></dd>
+            <dd><grr-timestamp value="flow.context.active_time"></grr-timestamp></dd>
+
+            <dt>Duration</dt>
+            <dd>{{::flow.context.execution_duration/1000000000 | number:2 }}
+              <span ng-if="flow.context.execution_duration">Seconds</span>
+              <span ng-if="!flow.context.execution_duration">Running....</span>
+            </dd>
 
             <dt>State</dt>
             <dd>{{::flow.context.state}}</dd>
@@ -41,6 +53,13 @@
 
             <dt>Ops/Sec</dt>
             <dd>{{::flow.context.request.ops_per_second || 'Unlimited' }}</dd>
+            <dt>Timeout</dt>
+            <dd>{{::flow.context.request.timeout || 'Unlimited' }}</dd>
+            <dt>Max Rows</dt>
+            <dd>{{::flow.context.request.max_rows || 'Unlimited' }}</dd>
+            <dt>Max Mb</dt>
+            <dd>{{ ( (flow.context.request.max_upload_bytes || 0) / 1024 / 1024) || 'Unlimited' }}</dd>
+
             <br>
           </dl>
 
@@ -60,7 +79,14 @@
           <dl class="dl-horizontal dl-flow">
             <dt>Artifacts with Results</dt>
             <dd>
-              {{ flow.context.artifacts_with_results || "-" }}
+              <div ng-repeat="item in flow.context.artifacts_with_results || []">
+                {{ item }}
+              </div>
+            </dd>
+
+            <dt>Total Rows</dt>
+            <dd>
+              {{ flow.context.total_collected_rows || 0 }}
             </dd>
 
             <dt>Uploaded Bytes</dt>
@@ -73,11 +99,27 @@
 
             <dt>Download Results</dt>
             <dd>
-              <button class="btn btn-default"
-                      ng-disabled="!controller.uiTraits.Permissions.prepare_results"
-                      ng-click="controller.prepareDownload()">
-                Prepare Download
-              </button>
+              <div class="input-group-prepend">
+                <button class="btn btn-default dropdown-toggle"
+                        type="button"
+                        data-toggle="dropdown" aria-expanded="false"
+                        ng-disabled="!controller.uiTraits.Permissions.prepare_results"
+                        >
+                  <i class="fa fa-archive"></i>
+                </button>
+                <div class="dropdown-menu">
+                  <button class="dropdown-item"
+                          ng-disabled="!controller.uiTraits.Permissions.prepare_results"
+                          ng-click="controller.prepareDownload()">
+                    Prepare Download
+                  </button>
+                  <button class="dropdown-item"
+                          ng-disabled="!controller.uiTraits.Permissions.prepare_results"
+                          ng-click="controller.prepareDownload('report')">
+                    Prepare Collection Report
+                  </button>
+                </div>
+              </div>
             </dd>
 
             <dt>Available Downloads</dt>
@@ -86,9 +128,12 @@
                 <tbody>
                   <tr ng-repeat="item in flow.available_downloads.files">
                     <td>
-                      <a href="{{item.path}}" ng-if="item.complete">{{item.name}}</a>
+                      <a href="{{item.path}}"
+                         target="_blank"
+                         ng-if="item.complete">{{item.name}}</a>
                       <div ng-if="!item.complete">{{item.name}}</div>
-                    </td><td>{{item.size}} Bytes</td>
+                    </td>
+                    <td>{{item.size}} Bytes</td>
                     <td>{{item.date}}</td>
                   </tr>
                 </tbody>

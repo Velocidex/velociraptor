@@ -75,7 +75,7 @@ func shell_executor(config_obj *config_proto.Config,
 		fmt.Printf("ERROR: %v\n", err)
 		return
 	}
-	defer closer()
+	defer func() { _ = closer() }()
 
 	response, err := client.CollectArtifact(ctx,
 		api.MakeCollectorRequest(client_id, artifact_name, "Command", t))
@@ -99,7 +99,7 @@ func shell_executor(config_obj *config_proto.Config,
 			return
 		}
 
-		if response.Context.State == flows_proto.ArtifactCollectorContext_TERMINATED {
+		if response.Context.State == flows_proto.ArtifactCollectorContext_FINISHED {
 			request := &api_proto.GetTableRequest{
 				FlowId:   flow_id,
 				Artifact: artifact_name,
@@ -123,7 +123,7 @@ func shell_executor(config_obj *config_proto.Config,
 			return
 		}
 
-		time.Sleep(1)
+		time.Sleep(500 * time.Millisecond)
 	}
 }
 
@@ -136,7 +136,7 @@ func getClientInfo(config_obj *config_proto.Config, ctx context.Context) (*api_p
 	if err != nil {
 		return nil, err
 	}
-	defer closer()
+	defer func() { _ = closer() }()
 
 	return client.GetClient(ctx, &api_proto.GetClientRequest{
 		ClientId: *shell_client,
@@ -151,6 +151,10 @@ func doShell() {
 		config_obj.ApiConfig.Name == "" {
 		kingpin.Fatalf("Shell requires a valid api config. Generate one with `velociraptor config api_config my_config.yaml --name myName --role administrator`")
 	}
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	scope := vql_subsystem.MakeScope()
 	ctx := InstallSignalHandler(scope)

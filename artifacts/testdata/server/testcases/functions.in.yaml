@@ -1,6 +1,25 @@
 Queries:
   - LET rows <= SELECT * FROM scope()
+
   # Test the len function.
   - SELECT len(list=["a", "b"]), len(list="hello"), len(list=dict(foo=1, bar=2, baz=3)),
            len(list=rows)
+    FROM scope()
+
+  # Test dict filtering: should filter all keys except Z=3 and build up
+  # again into a new dict
+  - SELECT to_dict(item={
+       SELECT * FROM foreach(row=items(item=dict(X=1, Y=2, Z=3)),
+       query={
+           SELECT _key, _value from scope()
+           WHERE _value = 3
+       })
+    }) AS Filtered FROM scope()
+
+  # Test cache functions (first 2 should be same value due to caching)
+  - LET Foo(X) = if(condition=log(message=format(format="I Ran with %v", args=X)),
+                    then=X + 5)
+  - SELECT cache(func=Foo(X=5), key=5),
+           cache(func=Foo(X=10), key=5),
+           cache(func=Foo(X=10), key=10)
     FROM scope()

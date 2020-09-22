@@ -102,7 +102,7 @@ exports.NavLinkDirective = function() {
     },
     restrict: 'A',
     transclude: true,
-    templateUrl: '/static/angular-components/sidebar/nav-link.html',
+    templateUrl: window.base_path+'/static/angular-components/sidebar/nav-link.html',
     controller: NavLinkController,
     controllerAs: 'controller',
     link: function(scope, elem, attr, navDropdownController) {

@@ -166,8 +166,11 @@ func (self _UsersPlugin) Call(
 			if !value.IsValid() {
 				break
 			}
-
-			output_chan <- value
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- value:
+			}
 		}
 	}()
 

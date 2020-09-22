@@ -1,6 +1,9 @@
 package utils
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type Clock interface {
 	Now() time.Time
@@ -37,4 +40,26 @@ func (self MockClock) After(d time.Duration) <-chan time.Time {
 
 func (self MockClock) Sleep(d time.Duration) {
 	time.Sleep(self.duration)
+}
+
+// A clock that increments each time someone calls Now()
+type IncClock struct {
+	mu      sync.Mutex
+	NowTime int64
+}
+
+func (self *IncClock) Now() time.Time {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.NowTime++
+	return time.Unix(self.NowTime, 0)
+}
+
+func (self IncClock) After(d time.Duration) <-chan time.Time {
+	return time.After(0)
+}
+
+func (self IncClock) Sleep(d time.Duration) {
+	time.Sleep(0)
 }

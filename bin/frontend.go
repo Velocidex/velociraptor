@@ -24,13 +24,13 @@ import (
 	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
-	"www.velocidex.com/golang/velociraptor/frontend"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/assets"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
-
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/services/frontend"
+	"www.velocidex.com/golang/velociraptor/startup"
 )
 
 var (
@@ -49,41 +49,34 @@ func doFrontend() {
 		WithRequiredLogging().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
-	// Use both context and WaitGroup to control life time of
-	// services.
-	wg := &sync.WaitGroup{}
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	server, err := startFrontend(ctx, wg, config_obj)
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
+
+	server, err := startFrontend(sm)
 	kingpin.FatalIfError(err, "startFrontend")
 	defer server.Close()
 
-	// Wait here until everything is done.
-	wg.Wait()
+	sm.Wg.Wait()
 }
 
 // Start the frontend service.
-func startFrontend(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) (*api.Builder, error) {
+func startFrontend(sm *services.Service) (*api.Builder, error) {
+	config_obj := sm.Config
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.WithFields(logrus.Fields{
 		"version":    config_obj.Version.Version,
 		"build_time": config_obj.Version.BuildTime,
 		"commit":     config_obj.Version.Commit,
-	}).Info("Starting Frontend.")
+	}).Info("<green>Starting</> Frontend.")
 
 	if *compression_flag {
 		logger.Info("Disabling artifact compression.")
 		config_obj.Frontend.DoNotCompressArtifacts = true
 	}
-
-	// Parse the artifacts database to detect errors early.
-	_, err := getRepository(config_obj)
-	kingpin.FatalIfError(err, "Loading extra artifacts")
 
 	// Load the assets into memory.
 	assets.Init()
@@ -91,30 +84,31 @@ func startFrontend(
 	// Increase resource limits.
 	server.IncreaseLimits(config_obj)
 
-	// Start critical services first.
-	err = services.StartJournalService(config_obj)
+	// These services must start on all frontends
+	err := startup.StartupEssentialServices(sm)
 	if err != nil {
 		return nil, err
 	}
 
 	// Start the frontend service if needed.
-	err = frontend.StartFrontendService(ctx, config_obj, *frontend_node)
+	err = sm.Start(func(ctx context.Context, wg *sync.WaitGroup,
+		config_obj *config_proto.Config) error {
+		return frontend.StartFrontendService(
+			ctx, wg, config_obj, *frontend_node)
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	// These services must start on all frontends
-	err = services.StartFrontendServices(ctx, wg, config_obj)
+	// These services must start only on the frontends.
+	err = startup.StartupFrontendServices(sm)
 	if err != nil {
-		logger.Error("Failed starting services: ", err)
 		return nil, err
 	}
 
-	// Start all services that are supposed to run on this
-	// frontend.
-	err = services.StartServices(ctx, wg, config_obj)
+	// Parse the artifacts database to detect errors early.
+	_, err = getRepository(config_obj)
 	if err != nil {
-		logger.Error("Failed starting services: ", err)
 		return nil, err
 	}
 
@@ -125,13 +119,13 @@ func startFrontend(
 
 	// Start the gRPC API server.
 	if config_obj.Frontend.ServerServices.ApiServer {
-		err = server_builder.WithAPIServer(ctx, wg)
+		err = server_builder.WithAPIServer(sm.Ctx, sm.Wg)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return server_builder, server_builder.StartServer(ctx, wg)
+	return server_builder, server_builder.StartServer(sm.Ctx, sm.Wg)
 }
 
 func init() {

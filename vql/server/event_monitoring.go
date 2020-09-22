@@ -4,12 +4,14 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/golang/protobuf/ptypes/empty"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -36,26 +38,13 @@ func (self GetClientMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	config_obj, ok := artifacts.GetServerConfig(scope)
+	_, ok := artifacts.GetServerConfig(scope)
 	if !ok {
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}
 	}
 
-	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
-	if err != nil {
-		scope.Log("get_client_monitoring: %s", err.Error())
-		return vfilter.Null{}
-	}
-	defer closer()
-
-	response, err := client.GetClientMonitoringState(ctx, &empty.Empty{})
-	if err != nil {
-		scope.Log("get_client_monitoring: %s", err.Error())
-		return vfilter.Null{}
-	}
-
-	return response
+	return services.ClientEventManager().GetClientMonitoringState()
 }
 
 func (self GetClientMonitoring) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -112,27 +101,21 @@ func (self SetClientMonitoring) Call(
 	}
 
 	// This should also validate the json.
-	value := &flows_proto.ArtifactCollectorArgs{}
+	value := &flows_proto.ClientEventTable{}
 	err = json.Unmarshal([]byte(value_json), value)
 	if err != nil {
 		scope.Log("set_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
-	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
-	if err != nil {
-		scope.Log("set_client_monitoring: %s", err.Error())
-		return vfilter.Null{}
-	}
-	defer closer()
-
-	response, err := client.SetClientMonitoringState(ctx, value)
+	err = services.ClientEventManager().SetClientMonitoringState(
+		ctx, config_obj, value)
 	if err != nil {
 		scope.Log("set_client_monitoring: %s", err.Error())
 		return vfilter.Null{}
 	}
 
-	return response
+	return value
 }
 
 func (self SetClientMonitoring) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -171,20 +154,23 @@ func (self GetServerMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		scope.Log("get_server_monitoring: %s", err.Error())
-		return vfilter.Null{}
-	}
-	defer closer()
-
-	response, err := client.GetServerMonitoringState(ctx, &empty.Empty{})
-	if err != nil {
-		scope.Log("get_server_monitoring: %s", err.Error())
+		scope.Log("get_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
-	return response
+	result := &flows_proto.ArtifactCollectorArgs{}
+	err = db.GetSubject(config_obj,
+		constants.ServerMonitoringFlowURN,
+		result)
+
+	if err != nil {
+		scope.Log("get_server_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+
+	return result
 }
 
 func (self GetServerMonitoring) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -253,7 +239,7 @@ func (self SetServerMonitoring) Call(
 		scope.Log("set_server_monitoring: %s", err.Error())
 		return vfilter.Null{}
 	}
-	defer closer()
+	defer func() { _ = closer() }()
 
 	response, err := client.SetServerMonitoringState(ctx, value)
 	if err != nil {

@@ -32,9 +32,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/flows"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -100,7 +102,11 @@ func (self HuntsPlugin) Call(
 				hunt_obj.Stats = hunt_stats
 			}
 
-			output_chan <- hunt_obj
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- hunt_obj:
+			}
 		}
 	}()
 
@@ -185,9 +191,14 @@ func (self HuntResultsPlugin) Call(
 			// first named source from the artifact
 			// definition.
 			if arg.Source == "" {
-				repo, err := artifacts.GetGlobalRepository(config_obj)
+				manager, err := services.GetRepositoryManager()
+				if err != nil {
+					scope.Log("hunt_results: %v", err)
+					return
+				}
+				repo, err := manager.GetGlobalRepository(config_obj)
 				if err == nil {
-					artifact_def, ok := repo.Get(arg.Artifact)
+					artifact_def, ok := repo.Get(config_obj, arg.Artifact)
 					if ok {
 						for _, source := range artifact_def.Sources {
 							if source.Name != "" {
@@ -214,7 +225,7 @@ func (self HuntResultsPlugin) Call(
 		// Read each file and emit it with some extra columns
 		// for context.
 		for row := range row_chan {
-			participation_row := &services.ParticipationRecord{}
+			participation_row := &hunt_manager.ParticipationRecord{}
 			err := vfilter.ExtractArgs(scope, row, participation_row)
 			if err != nil {
 				continue
@@ -243,11 +254,17 @@ func (self HuntResultsPlugin) Call(
 				// with some extra columns for
 				// context.
 				for row := range row_chan {
-					value := row.Set("FlowId", participation_row.FlowId).
-						Set("ClientId", participation_row.ClientId).
-						Set("Fqdn", api_client.OsInfo.Fqdn)
+					row.Set("FlowId", participation_row.FlowId).
+						Set("ClientId", participation_row.ClientId)
 
-					output_chan <- value
+					if api_client.OsInfo != nil {
+						row.Set("Fqdn", api_client.OsInfo.Fqdn)
+					}
+					select {
+					case <-ctx.Done():
+						return
+					case output_chan <- row:
+					}
 				}
 			}
 		}
@@ -308,7 +325,7 @@ func (self HuntFlowsPlugin) Call(
 		// Read each CSV file and emit it with some extra
 		// columns for context.
 		for row := range row_chan {
-			participation_row := &services.ParticipationRecord{}
+			participation_row := &hunt_manager.ParticipationRecord{}
 			err := vfilter.ExtractArgs(scope, row, participation_row)
 			if err != nil {
 				return
@@ -323,10 +340,14 @@ func (self HuntFlowsPlugin) Call(
 				config_obj, participation_row.ClientId,
 				participation_row.FlowId)
 			if err == nil {
-				result.Set("Flow", collection_context)
+				result.Set("Flow",
+					json.ConvertProtoToOrderedDict(collection_context))
 			}
-
-			output_chan <- result
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- result:
+			}
 		}
 	}()
 

@@ -49,8 +49,10 @@ func NewUserRecord(name string) (*api_proto.VelociraptorUser, error) {
 
 func SetPassword(user_record *api_proto.VelociraptorUser, password string) {
 	salt := make([]byte, 32)
-	rand.Read(salt)
-
+	_, err := rand.Read(salt)
+	if err != nil {
+		return
+	}
 	hash := sha256.Sum256(append(salt, []byte(password)...))
 	user_record.PasswordSalt = salt[:]
 	user_record.PasswordHash = hash[:]
@@ -72,7 +74,7 @@ func SetUser(config_obj *config_proto.Config, user_record *api_proto.Velocirapto
 	}
 
 	return db.SetSubject(config_obj,
-		paths.UserPathManager{user_record.Name}.Path(),
+		paths.UserPathManager{Name: user_record.Name}.Path(),
 		user_record)
 }
 
@@ -128,7 +130,7 @@ func GetUserWithHashes(config_obj *config_proto.Config, username string) (
 
 	user_record := &api_proto.VelociraptorUser{}
 	err = db.GetSubject(config_obj,
-		paths.UserPathManager{username}.Path(), user_record)
+		paths.UserPathManager{Name: username}.Path(), user_record)
 
 	if user_record.Name == "" {
 		return nil, errors.New("User not found")
@@ -203,10 +205,16 @@ func GetUserNotifications(config_obj *config_proto.Config, username string, clea
 
 	if len(to_clear) > 0 {
 		for urn, item := range to_clear {
-			db.DeleteSubject(config_obj, urn)
+			err = db.DeleteSubject(config_obj, urn)
+			if err != nil {
+				return nil, err
+			}
 			new_urn := strings.Replace(urn, "pending", "read", -1)
 			item.State = api_proto.UserNotification_STATE_NOT_PENDING
-			db.SetSubject(config_obj, new_urn, item)
+			err = db.SetSubject(config_obj, new_urn, item)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 	}
@@ -229,7 +237,7 @@ func SetUserOptions(config_obj *config_proto.Config,
 	username string,
 	options *api_proto.SetGUIOptionsRequest) error {
 
-	path_manager := paths.UserPathManager{username}
+	path_manager := paths.UserPathManager{Name: username}
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
@@ -241,7 +249,7 @@ func SetUserOptions(config_obj *config_proto.Config,
 func GetUserOptions(config_obj *config_proto.Config, username string) (
 	*api_proto.SetGUIOptionsRequest, error) {
 
-	path_manager := paths.UserPathManager{username}
+	path_manager := paths.UserPathManager{Name: username}
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err

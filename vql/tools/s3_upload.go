@@ -108,7 +108,13 @@ func upload_S3(ctx context.Context, scope *vfilter.Scope,
 	}
 
 	conf := aws.NewConfig().WithRegion(region).WithCredentials(creds)
-	sess := session.New(conf)
+	sess, err := session.NewSession(conf)
+	if err != nil {
+		return &api.UploadResponse{
+			Error: err.Error(),
+		}, err
+	}
+
 	uploader := s3manager.NewUploader(sess)
 
 	result, err := uploader.UploadWithContext(

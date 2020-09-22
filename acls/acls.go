@@ -49,12 +49,12 @@ Tips:
 
 import (
 	"fmt"
-	"path"
 	"strings"
 
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/paths"
 )
 
 type ACL_PERMISSION int
@@ -74,7 +74,7 @@ const (
 	// Read results from already run hunts, flows or notebooks.
 	READ_RESULTS
 
-	// Can manipulate client labels.
+	// Can manipulate client labels and metadata.
 	LABEL_CLIENT
 
 	// Schedule or cancel new collections on clients.
@@ -207,8 +207,8 @@ func GetPolicy(
 	}
 
 	acl_obj := &acl_proto.ApiClientACL{}
-	err = db.GetSubject(config_obj,
-		path.Join("acl", principal+".json"), acl_obj)
+	user_path_manager := paths.UserPathManager{Name: principal}
+	err = db.GetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -228,8 +228,8 @@ func GetEffectivePolicy(
 	}
 
 	acl_obj := &acl_proto.ApiClientACL{}
-	err = db.GetSubject(config_obj,
-		path.Join("acl", principal+".json"), acl_obj)
+	user_path_manager := paths.UserPathManager{Name: principal}
+	err = db.GetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -251,8 +251,8 @@ func SetPolicy(
 		return err
 	}
 
-	return db.SetSubject(config_obj,
-		path.Join("acl", principal+".json"), acl_obj)
+	user_path_manager := paths.UserPathManager{Name: principal}
+	return db.SetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 }
 
 func CheckAccess(
@@ -261,7 +261,7 @@ func CheckAccess(
 	permissions ...ACL_PERMISSION) (bool, error) {
 
 	// Internal calls from the server are allowed to do anything.
-	if principal == config_obj.Client.PinnedServerName {
+	if config_obj.Client != nil && principal == config_obj.Client.PinnedServerName {
 		return true, nil
 	}
 

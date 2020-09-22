@@ -162,8 +162,11 @@ func (self *TestSuite) TestEncryption() {
 	config_obj := config.GetDefaultConfig()
 	initial_c := testutil.ToFloat64(rsaDecryptCounter)
 	for i := 0; i < 100; i++ {
+		compressed, err := utils.Compress(plain_text)
+		assert.NoError(t, err)
+
 		cipher_text, err := self.client_manager.Encrypt(
-			[][]byte{utils.Compress(plain_text)},
+			[][]byte{compressed},
 			crypto_proto.PackedMessageList_ZCOMPRESSION,
 			config_obj.Client.PinnedServerName)
 		assert.NoError(t, err)
@@ -173,8 +176,8 @@ func (self *TestSuite) TestEncryption() {
 
 		assert.Equal(t, self.client_id, result.Source)
 		assert.Equal(t, result.Authenticated, true)
-		assert.Equal(t, result.RawCompressed[0],
-			utils.Compress(plain_text))
+
+		assert.Equal(t, result.RawCompressed[0], compressed)
 	}
 
 	// We should encrypt this only once since we cache the cipher in the output LRU.

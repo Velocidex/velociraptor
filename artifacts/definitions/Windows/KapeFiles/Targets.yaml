@@ -1083,3 +1083,57 @@ sources:
       - SELECT * FROM all_results WHERE _Source =~ "Uploads"
 
 
+reports:
+  - type: CLIENT
+    template: |
+      {{ import "Reporting.Default" "Templates" }}
+
+      <!-- Default report in case the artifact does not have one -->
+      ## {{ .Name }}
+
+      {{ $name := .Name }}
+
+      {{ template "hidden_paragraph_start" dict "description" "View Artifact Description" }}
+
+      {{ Markdown .Description }}
+
+      ### References</h3>
+
+      {{ range .Reference }}
+      * [{{ . }}]({{.}})
+      {{- end }}
+
+      {{ template "hidden_paragraph_end" }}
+
+      {{ $query := print "SELECT SourceFile, Size, Modified, LastAccessed, Created \
+          FROM source(source='All File Metadata')" }}
+
+      <!-- There could be a huge number of rows just to get the count, so we cap at 10000 -->
+      {{ $count := Get ( Query (print "LET X = " $query " LIMIT 10000 " \
+         " SELECT 1 AS ALL, count() AS Count FROM X Group BY ALL") | Expand ) \
+         "0.Count" }}
+
+      <!-- If this is a flow show the parameters. -->
+      {{ $flow := Query "LET X = SELECT Request.Parameters.env AS \
+         Env FROM flows(client_id=ClientId, flow_id=FlowId)" \
+         "SELECT * FROM foreach(row=X[0].Env, query={ \
+             SELECT Key, Value FROM scope()})" | Expand }}
+
+      {{ if $flow }}
+
+      ### Selected Targets
+
+      {{- range $flow -}}{{- if eq (Get . "Value") "Y" }}
+      * {{ Get . "Key" }}
+      {{- end -}}{{- end }}
+      {{ end }}
+
+      ## Files collected
+
+      {{ if gt $count 9999 }}
+      Collected more than {{ $count }} files.
+      {{ else }}
+      Collected a total of {{ $count }} files.
+      {{ end }}
+
+      {{ Query $query | Table }}

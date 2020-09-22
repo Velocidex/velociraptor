@@ -103,15 +103,7 @@ HuntsListController.prototype.wrapApiPromise_ = function(promise, successMessage
           return successMessage;
         }.bind(this),
         function failure(response) {
-          var message = response['data']['message'];
-
-          if (response['status'] === 403) {
-            var subject = response['data']['subject'];
-            var huntId = stripAff4Prefix(subject).split('/')[1];
-
-              //this.grrAclDialogService_.openRequestHuntApprovalDialog(
-              //  huntId, message);
-          }
+          var message = response['data'];
           return this.q_.reject(message);
         }.bind(this));
 };
@@ -129,11 +121,13 @@ HuntsListController.prototype.selectItem = function(item) {
 };
 
 HuntsListController.prototype.huntState = function(item) {
-    if (item.stats.stopped) {
-        return "STOPPED";
-    }
+    if (angular.isObject(item)){
+        if (item.stats.stopped) {
+            return "STOPPED";
+        }
 
-    return item.state;
+        return item.state;
+    }
 };
 
 
@@ -283,15 +277,11 @@ HuntsListController.prototype.deleteHunt = function() {
       this.scope_['selectedHuntId'] = "";
 
       var promise = this.grrApiService_.post(
-        'v1/ModifyHunt', {state: 'ARCHIVED', hunt_id: selectedHuntId});
-
+          'v1/ModifyHunt', {state: 'ARCHIVED', hunt_id: selectedHuntId});
 
       return this.wrapApiPromise_(promise, 'Hunt archived successfully!');
     }.bind(this));
 
-  // TODO(user): there's no need to trigger update on dismiss.
-  // Doing so only to maintain compatibility with legacy GRR code.
-  // Remove as soon as legacy GRR code is removed.
   modalPromise.then(function resolve() {
     this.triggerUpdate();
   }.bind(this), function dismiss() {
@@ -311,7 +301,7 @@ exports.HuntsListDirective = function() {
       selectedHuntId: '=?',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/hunts-list.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/hunts-list.html',
     controller: HuntsListController,
     controllerAs: 'controller'
   };

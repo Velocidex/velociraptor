@@ -25,10 +25,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
-	"github.com/alecthomas/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -166,9 +167,13 @@ func (self *CommsTestSuite) TearDownTest() {
 // Check that unexpected closing of the executor calls the abort
 // function.
 func (self *CommsTestSuite) TestAbort() {
+	var mu sync.Mutex
+
 	func_called := false
 	on_error := func() {
+		mu.Lock()
 		func_called = true
+		mu.Unlock()
 	}
 
 	urls := []string{self.frontend1.URL}
@@ -200,6 +205,9 @@ func (self *CommsTestSuite) TestAbort() {
 	close(exec.Outbound)
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
 		return func_called
 	})
 

@@ -109,8 +109,11 @@ HuntInspectorController.prototype.startPolling_ = function() {
             undefined,
             function notify(response) {
                 self.hunt = response['data'];
-                self.serializedRequests = JSON.stringify(
-                    self.hunt.start_request.compiled_collector_args, null, 4);
+                if (angular.isObject(self.hunt.start_request) &&
+                    angular.isObject(self.hunt.start_request.compiled_collector_args)) {
+                    self.serializedRequests = JSON.stringify(
+                        self.hunt.start_request.compiled_collector_args, null, 4);
+                }
             });
     }
 };
@@ -152,7 +155,7 @@ exports.HuntInspectorDirective = function() {
       activeTab: '=?'
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/hunt-inspector.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/hunt-inspector.html',
     controller: HuntInspectorController,
     controllerAs: 'controller'
   };

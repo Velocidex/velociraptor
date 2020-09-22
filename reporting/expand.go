@@ -14,8 +14,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/olekukonko/tablewriter"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -86,7 +86,6 @@ func FormatDescription(
 
 	err = tmpl.Execute(buffer, expansion)
 	if err != nil {
-		utils.Debug(err)
 		return description
 	}
 
@@ -94,12 +93,17 @@ func FormatDescription(
 }
 
 func (self *Expansions) DocFrom(artifact string) string {
-	repository, err := artifacts.GetGlobalRepository(self.config_obj)
+	manager, err := services.GetRepositoryManager()
 	if err != nil {
 		return ""
 	}
 
-	artifact_definition, pres := repository.Get(artifact)
+	repository, err := manager.GetGlobalRepository(self.config_obj)
+	if err != nil {
+		return ""
+	}
+
+	artifact_definition, pres := repository.Get(self.config_obj, artifact)
 	if !pres {
 		return ""
 	}

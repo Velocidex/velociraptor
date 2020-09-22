@@ -36,7 +36,7 @@ func (self AuditdPlugin) Call(
 		defer close(output_chan)
 
 		reassembler, err := libaudit.NewReassembler(5, 2*time.Second,
-			&streamHandler{scope, output_chan})
+			&streamHandler{scope: scope, ctx: ctx, output_chan: output_chan})
 		if err != nil {
 			scope.Log("parse_auditd: %v", err)
 			return
@@ -79,23 +79,30 @@ func (self AuditdPlugin) Call(
 
 type streamHandler struct {
 	scope       *vfilter.Scope
+	ctx         context.Context
 	output_chan chan vfilter.Row
 }
 
 func (self *streamHandler) ReassemblyComplete(msgs []*auparse.AuditMessage) {
-	self.outputMultipleMessages(msgs)
+	self.outputMultipleMessages(self.ctx, msgs)
 }
 
 func (self *streamHandler) EventsLost(count int) {
 	self.scope.Log("Detected the loss of %v sequences.", count)
 }
 
-func (self *streamHandler) outputMultipleMessages(msgs []*auparse.AuditMessage) {
+func (self *streamHandler) outputMultipleMessages(
+	ctx context.Context, msgs []*auparse.AuditMessage) {
 	event, err := aucoalesce.CoalesceMessages(msgs)
 	if err != nil {
 		return
 	}
-	self.output_chan <- event
+	select {
+	case <-ctx.Done():
+		return
+
+	case self.output_chan <- event:
+	}
 }
 
 type WatchAuditdPlugin struct{}
@@ -117,7 +124,7 @@ func (self WatchAuditdPlugin) Call(
 		defer close(output_chan)
 
 		reassembler, err := libaudit.NewReassembler(5, 2*time.Second,
-			&streamHandler{scope, output_chan})
+			&streamHandler{scope: scope, ctx: ctx, output_chan: output_chan})
 		if err != nil {
 			scope.Log("watch_auditd: %v", err)
 			return

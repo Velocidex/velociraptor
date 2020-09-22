@@ -22,7 +22,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -79,18 +78,12 @@ var (
 	//  short-lived function. Instead, pass the sql.DB into that
 	//  short-lived function as an argument.
 	db *sql.DB
-
-	set_subject_dir_cache *cache.LRUCache
 )
 
 const (
 	// Allow a bit of overheads for snappy compression.
 	MAX_BLOB_SIZE = 1<<16 - 1024
 )
-
-type _cache_item struct{}
-
-func (self _cache_item) Size() int { return 1 }
 
 type MysqlFileStoreFileInfo struct {
 	path      string
@@ -221,7 +214,7 @@ func (self *SqlReader) Seek(offset int64, whence int) (int64, error) {
 		return self.offset, nil
 	}
 
-	if whence != os.SEEK_SET {
+	if whence != io.SeekStart {
 		panic(fmt.Sprintf("Unsupported seek on %v (%v %v)!",
 			self.filename, offset, whence))
 	}
@@ -357,7 +350,7 @@ func (self *SqlWriter) Write(buff []byte) (int, error) {
 	return self.write_row("", buff)
 }
 
-func (self *SqlWriter) write_row(channel string, buff []byte) (int, error) {
+func (self *SqlWriter) write_row(channel string, buff []byte) (n int, err error) {
 	if len(buff) == 0 {
 		return 0, nil
 	}
@@ -369,7 +362,15 @@ func (self *SqlWriter) write_row(channel string, buff []byte) (int, error) {
 		return 0, err
 	}
 
-	defer tx.Rollback()
+	// Commit or rollback depending on error.
+	defer func() {
+		if err != nil {
+			// Keep the original error
+			_ = tx.Rollback()
+			return
+		}
+		err = tx.Commit()
+	}()
 
 	insert, err := tx.Prepare(`
 INSERT INTO filestore (id, part, start_offset, end_offset, data, channel)
@@ -427,22 +428,25 @@ UPDATE filestore_metadata SET timestamp=now(), size=size + ? WHERE id = ?`)
 		return 0, err
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		return 0, err
-	}
-
 	return int(total_length), nil
 }
 
-func (self SqlWriter) Truncate() error {
+func (self SqlWriter) Truncate() (err error) {
 	// TODO - retry transaction.
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	// Commit or rollback depending on error.
+	defer func() {
+		if err != nil {
+			// Keep the original error
+			_ = tx.Rollback()
+			return
+		}
+		err = tx.Commit()
+	}()
 
 	// Essentially delete all the filestore rows for this file id.
 	_, err = tx.Exec("DELETE FROM filestore WHERE id = ? AND part != 0", self.file_id)
@@ -457,14 +461,9 @@ func (self SqlWriter) Truncate() error {
 		return err
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-
 	self.size = 0
 
-	return err
+	return nil
 }
 
 func hash(path string) string {
@@ -522,7 +521,7 @@ INSERT IGNORE INTO filestore_metadata (path, path_hash, name, is_dir) values(?, 
 	return nil
 }
 
-func (self *SqlFileStore) WriteFile(filename string) (api.FileWriter, error) {
+func (self *SqlFileStore) WriteFile(filename string) (r api.FileWriter, err error) {
 	last_id := int64(0)
 	size := int64(0)
 
@@ -536,7 +535,16 @@ func (self *SqlFileStore) WriteFile(filename string) (api.FileWriter, error) {
 		if err != nil {
 			return nil, err
 		}
-		defer tx.Rollback()
+
+		// Commit or rollback depending on error.
+		defer func() {
+			if err != nil {
+				// Keep the original error
+				_ = tx.Rollback()
+				return
+			}
+			// We explicitely commit below.
+		}()
 
 		err = tx.QueryRow(`
 SELECT id, size FROM filestore_metadata
@@ -608,7 +616,10 @@ WHERE path_hash = ? AND path = ? AND name = ?`, hash(dir_name),
 			return nil, err
 		}
 
-		return row, nil
+		// Only return the first row
+		if true {
+			return row, nil
+		}
 	}
 
 	return nil, os.ErrNotExist
@@ -664,7 +675,7 @@ func (self *SqlFileStore) Walk(root string, walkFn filepath.WalkFunc) error {
 	return nil
 }
 
-func (self *SqlFileStore) Delete(filename string) error {
+func (self *SqlFileStore) Delete(filename string) (err error) {
 	components := utils.SplitComponents(filename)
 	if len(components) > 0 {
 		dir_path := utils.JoinComponents(components[:len(components)-1], "/")
@@ -675,7 +686,15 @@ func (self *SqlFileStore) Delete(filename string) error {
 		if err != nil {
 			return err
 		}
-		defer tx.Rollback()
+		// Commit or rollback depending on error.
+		defer func() {
+			if err != nil {
+				// Keep the original error
+				_ = tx.Rollback()
+				return
+			}
+			err = tx.Commit()
+		}()
 
 		id := 0
 		err = tx.QueryRow(`
@@ -697,8 +716,6 @@ SELECT id FROM filestore_metadata WHERE path_hash =? and name = ?`,
 		if err != nil {
 			return err
 		}
-
-		return tx.Commit()
 	}
 
 	return nil
@@ -838,7 +855,7 @@ func (self *SqlFileStoreAccessor) Open(path string) (glob.ReadSeekCloser, error)
 	if err != nil {
 		return nil, err
 	}
-	return &api.FileReaderAdapter{fd}, nil
+	return &api.FileReaderAdapter{FileReader: fd}, nil
 }
 
 var SqlFileStoreAccessor_re = regexp.MustCompile("/")
@@ -853,8 +870,4 @@ func (self SqlFileStoreAccessor) PathJoin(root, stem string) string {
 
 func (self *SqlFileStoreAccessor) GetRoot(path string) (string, string, error) {
 	return "/", path, nil
-}
-
-func init() {
-	set_subject_dir_cache = cache.NewLRUCache(1000000)
 }

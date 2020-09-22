@@ -27,8 +27,8 @@ const HuntsViewController = function(
   /** @type {string} */
   this.tab;
 
-  this.scope_.$watchGroup(['controller.selectedHuntId', 'controller.tab'],
-      this.onSelectionChange_.bind(this));
+    this.scope_.$watchGroup(['controller.selectedHuntId', 'controller.tab'],
+                            this.onSelectionChange_.bind(this));
 
   this.grrRoutingService_.uiOnParamsChanged(this.scope_, ['huntId', 'tab'],
       this.onParamsChange_.bind(this));
@@ -69,7 +69,7 @@ exports.HuntsViewDirective = function() {
   return {
     restrict: 'E',
     scope: {},
-    templateUrl: '/static/angular-components/hunt/hunts-view.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/hunts-view.html',
     controller: HuntsViewController,
     controllerAs: 'controller'
   };

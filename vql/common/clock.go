@@ -19,7 +19,6 @@ package common
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -67,12 +66,11 @@ func (self ClockPlugin) Call(
 			}
 
 			// Wait for start condition.
-			fmt.Printf("Starting at %v\n", start)
 			select {
 			case <-ctx.Done():
 				return
 
-			case <-time.After(start.Sub(time.Now())):
+			case <-time.After(time.Until(start)):
 				output_chan <- time.Now()
 			}
 		}

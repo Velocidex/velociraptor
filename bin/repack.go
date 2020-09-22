@@ -31,9 +31,9 @@ import (
 	"github.com/Velocidex/yaml/v2"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 var (
@@ -61,7 +61,11 @@ var (
 // Validate any embedded artifacts to make sure they compile properly.
 func validate_config(config_obj *config_proto.Config) error {
 	if config_obj.Autoexec != nil {
-		repository := artifacts.NewRepository()
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			return err
+		}
+		repository := manager.NewRepository()
 
 		for _, definition := range config_obj.Autoexec.ArtifactDefinitions {
 			serialized, err := yaml.Marshal(definition)
@@ -82,9 +86,16 @@ func validate_config(config_obj *config_proto.Config) error {
 }
 
 func doRepack() {
-	_, err := new(config.Loader).WithFileLoader(*repack_command_config).
-		WithCustomValidator(validate_config).LoadAndValidate()
+	config_obj, err := new(config.Loader).WithFileLoader(*repack_command_config).
+		LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to open config file")
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
+	err = validate_config(config_obj)
+	kingpin.FatalIfError(err, "Validating config.")
 
 	config_fd, err := os.Open(*repack_command_config)
 	kingpin.FatalIfError(err, "Unable to open config file")
@@ -95,7 +106,8 @@ func doRepack() {
 	// Compress the string.
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	w.Write(config_data)
+	_, err = w.Write(config_data)
+	kingpin.FatalIfError(err, "Unable to write")
 	w.Close()
 
 	if b.Len() > len(config.FileConfigDefaultYaml)-40 {

@@ -3,6 +3,7 @@ package authenticators
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
@@ -18,20 +19,22 @@ type Authenticator interface {
 }
 
 func NewAuthenticator(config_obj *config_proto.Config) (Authenticator, error) {
-	if config_obj.GUI == nil || config_obj.GUI.Authenticator == nil {
+	if config_obj.GUI == nil ||
+		config_obj.GUI.Authenticator == nil ||
+		config_obj.Frontend == nil {
 		return nil, errors.New("GUI not configured")
 	}
 
-	switch config_obj.GUI.Authenticator.Type {
-	case "Azure":
+	switch strings.ToLower(config_obj.GUI.Authenticator.Type) {
+	case "azure":
 		return &AzureAuthenticator{}, nil
-	case "Github":
+	case "github":
 		return &GitHubAuthenticator{}, nil
-	case "Google":
+	case "google":
 		return &GoogleAuthenticator{}, nil
-	case "SAML":
+	case "saml":
 		return &SamlAuthenticator{}, nil
-	case "Basic":
+	case "basic":
 		return &BasicAuthenticator{}, nil
 	}
 	return nil, errors.New("No valid authenticator found")

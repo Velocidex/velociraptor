@@ -69,3 +69,7 @@ func ReadDir(dirname string) ([]os.FileInfo, error) {
 func CheckDirWritable(dirname string) error {
 	return unix.Access(dirname, unix.W_OK)
 }
+
+func ExpandEnv(path string) string {
+	return os.ExpandEnv(path)
+}
