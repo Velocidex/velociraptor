@@ -147,8 +147,26 @@ func (self *MemoryFileStore) ListDirectory(dirname string) ([]os.FileInfo, error
 	return result, nil
 }
 
-func (self *MemoryFileStore) Walk(root string, cb filepath.WalkFunc) error {
-	return errors.New("Not implemented")
+func (self *MemoryFileStore) Walk(root string, walkFn filepath.WalkFunc) error {
+	children, err := self.ListDirectory(root)
+	if err != nil {
+		return err
+	}
+
+	for _, child_info := range children {
+		full_path := path.Join(root, child_info.Name())
+		err1 := walkFn(full_path, child_info, err)
+		if err1 == filepath.SkipDir {
+			continue
+		}
+
+		err1 = self.Walk(full_path, walkFn)
+		if err1 != nil {
+			return err1
+		}
+	}
+
+	return nil
 }
 
 func (self *MemoryFileStore) Delete(filename string) error {

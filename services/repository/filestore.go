@@ -1,4 +1,4 @@
-package server
+package repository
 
 import (
 	"io"
@@ -10,31 +10,21 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/services"
 )
 
 // Loads the global repository with artifacts from the frontend path
 // and the file store.
-func GetGlobalRepository(config_obj *config_proto.Config) (services.Repository, error) {
-	manager, err := services.GetRepositoryManager()
-	if err != nil {
-		return nil, err
-	}
-
-	global_repository, err := manager.GetGlobalRepository(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
+func InitializeGlobalRepositoryFromFilestore(
+	config_obj *config_proto.Config, global_repository *Repository) (*Repository, error) {
 	if config_obj.Frontend == nil {
-		return global_repository, err
+		return global_repository, nil
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	// Load artifacts from the custom file store.
 	file_store_factory := file_store.GetFileStore(config_obj)
-	err = file_store_factory.Walk(constants.ARTIFACT_DEFINITION_PREFIX,
+	err := file_store_factory.Walk(constants.ARTIFACT_DEFINITION_PREFIX,
 		func(path string, info os.FileInfo, err error) error {
 			if err == nil && (strings.HasSuffix(path, ".yaml") ||
 				strings.HasSuffix(path, ".yml")) {

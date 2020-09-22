@@ -199,4 +199,5 @@ func (self ArtifactsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap
 
 func init() {
 	vql_subsystem.RegisterPlugin(&ArtifactsPlugin{})
+	vql_subsystem.RegisterFunction(&ArtifactSetFunction{})
 }
