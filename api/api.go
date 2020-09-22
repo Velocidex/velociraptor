@@ -45,6 +45,7 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -812,7 +813,7 @@ func (self *ApiServer) WriteEvent(
 			return nil, status.Error(codes.InvalidArgument, "no chains verified")
 		}
 
-		peer_name := peer_cert.Subject.CommonName
+		peer_name := crypto.GetSubjectName(peer_cert)
 
 		token, err := acls.GetEffectivePolicy(self.config, peer_name)
 		if err != nil {
@@ -879,7 +880,7 @@ func (self *ApiServer) Query(
 			return status.Error(codes.InvalidArgument, "no chains verified")
 		}
 
-		peer_name := peer_cert.Subject.CommonName
+		peer_name := crypto.GetSubjectName(peer_cert)
 
 		// Check that the principal is allowed to issue queries.
 		permissions := acls.ANY_QUERY
