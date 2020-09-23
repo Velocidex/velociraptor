@@ -156,7 +156,7 @@ func (self ArtifactDeleteFunction) Info(
 	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "artifact_delete",
-		Doc:     "Sets an artifact into the global repository.",
+		Doc:     "Deletes an artifact from the global repository.",
 		ArgType: type_map.AddType(scope, &ArtifactDeleteFunctionArgs{}),
 	}
 }
