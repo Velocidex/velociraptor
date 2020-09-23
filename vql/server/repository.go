@@ -132,7 +132,7 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 
 	definition, pres := global_repository.Get(config_obj, arg.Name)
 	if !pres {
-		scope.Log("artifact_delete: Artifact %v not found %v", arg.Name, err)
+		scope.Log("artifact_delete: Artifact %v not found", arg.Name)
 		return vfilter.Null{}
 	}
 
