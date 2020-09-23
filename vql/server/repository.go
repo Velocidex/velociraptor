@@ -145,7 +145,7 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 
 	err = manager.DeleteArtifactFile(config_obj, arg.Name)
 	if err != nil {
-		scope.Log("artifact_set: %s", err)
+		scope.Log("artifact_delete: %s", err)
 		return vfilter.Null{}
 	}
 
