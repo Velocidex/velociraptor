@@ -143,6 +143,22 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	var permission acls.ACL_PERMISSION
+	def_type := strings.ToLower(definition.Type)
+
+	switch def_type {
+	case "client", "client_event", "":
+		permission = acls.ARTIFACT_WRITER
+	case "server", "server_event":
+		permission = acls.SERVER_ARTIFACT_WRITER
+	}
+
+	err = vql_subsystem.CheckAccess(scope, permission)
+	if err != nil {
+		scope.Log("artifact_set: %s", err)
+		return vfilter.Null{}
+	}
+
 	err = manager.DeleteArtifactFile(config_obj, arg.Name)
 	if err != nil {
 		scope.Log("artifact_delete: %s", err)
