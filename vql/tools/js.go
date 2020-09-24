@@ -195,13 +195,13 @@ func (self JSSet) Info(scope *vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "js_set",
-		Doc:     "Compile and run javascript code.",
+		Doc:     "Set a variables value in the JS VM.",
 		ArgType: type_map.AddType(scope, &JSSetArgs{}),
 	}
 }
 
 type JSGetArgs struct {
-	Var string `vfilter:"required,field=var,doc=The variable to set inside the JS VM."`
+	Var string `vfilter:"required,field=var,doc=The variable to get from the JS VM."`
 	Key string `vfilter:"optional,field=key,doc=If set use this key to cache the JS VM."`
 }
 
@@ -239,7 +239,7 @@ func (self JSGet) Info(scope *vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "js_get",
-		Doc:     "Compile and run javascript code.",
+		Doc:     "Get a variable's value from the JS VM.",
 		ArgType: type_map.AddType(scope, &JSGetArgs{}),
 	}
 }
