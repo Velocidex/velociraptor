@@ -108,10 +108,12 @@ func (self *JSCall) Call(ctx context.Context,
 	defer logIfPanic(scope)
 
 	var call_args []interface{}
+
 	slice := reflect.ValueOf(arg.Args)
 
-	// A slice of strings.
-	if slice.Type().Kind() != reflect.Slice {
+	if arg.Args == nil {
+		call_args = nil
+	} else if slice.Type().Kind() != reflect.Slice {
 		call_args = append(call_args, arg.Args)
 	} else {
 		for i := 0; i < slice.Len(); i++ {
