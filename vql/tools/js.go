@@ -89,7 +89,7 @@ func (self JSCompile) Info(scope *vfilter.Scope,
 
 type JSCallArgs struct {
 	Func string      `vfilter:"required,field=func,doc=JS function to call."`
-	Args vfilter.Any `vfilter:"required,field=args,doc=Positional args for the function."`
+	Args vfilter.Any `vfilter:"optional,field=args,doc=Positional args for the function."`
 	Key  string      `vfilter:"optional,field=key,doc=If set use this key to cache the JS VM."`
 }
 
@@ -108,10 +108,12 @@ func (self *JSCall) Call(ctx context.Context,
 	defer logIfPanic(scope)
 
 	var call_args []interface{}
+
 	slice := reflect.ValueOf(arg.Args)
 
-	// A slice of strings.
-	if slice.Type().Kind() != reflect.Slice {
+	if arg.Args == nil {
+		call_args = nil
+	} else if slice.Type().Kind() != reflect.Slice {
 		call_args = append(call_args, arg.Args)
 	} else {
 		for i := 0; i < slice.Len(); i++ {
@@ -143,7 +145,108 @@ func (self JSCall) Info(scope *vfilter.Scope,
 	}
 }
 
+type JSSetArgs struct {
+	Var   string      `vfilter:"required,field=var,doc=The variable to set inside the JS VM."`
+	Value vfilter.Any `vfilter:"required,field=value,doc=The value to set inside the VM."`
+	Key   string      `vfilter:"optional,field=key,doc=If set use this key to cache the JS VM."`
+}
+
+type JSSet struct{}
+
+func (self *JSSet) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	arg := &JSSetArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("js_set: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	defer logIfPanic(scope)
+
+	vm := getVM(ctx, scope, arg.Key)
+
+	reflected := reflect.ValueOf(arg.Value)
+
+	// If this isn't a slice, feed the data as is.
+	if reflected.Type().Kind() != reflect.Slice {
+		err = vm.Set(arg.Var, reflected.Interface())
+	} else {
+		// If it is a slice convert to array of interfaces and push
+		var var_val []interface{}
+		for i := 0; i < reflected.Len(); i++ {
+			value := reflected.Index(i).Interface()
+			var_val = append(var_val, value)
+		}
+		err = vm.Set(arg.Var, var_val)
+
+	}
+
+	if err != nil {
+		scope.Log("js_set: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	return vfilter.Null{}
+}
+
+func (self JSSet) Info(scope *vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "js_set",
+		Doc:     "Set a variables value in the JS VM.",
+		ArgType: type_map.AddType(scope, &JSSetArgs{}),
+	}
+}
+
+type JSGetArgs struct {
+	Var string `vfilter:"required,field=var,doc=The variable to get from the JS VM."`
+	Key string `vfilter:"optional,field=key,doc=If set use this key to cache the JS VM."`
+}
+
+type JSGet struct{}
+
+func (self *JSGet) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	arg := &JSGetArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("js_get: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	defer logIfPanic(scope)
+
+	vm := getVM(ctx, scope, arg.Key)
+
+	otto_val, err := vm.Get(arg.Var)
+	if err != nil {
+		scope.Log("js_get: %s", err.Error())
+		return vfilter.Null{}
+	}
+	value, err := otto_val.Export()
+	if err != nil {
+		scope.Log("js_get: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	return value
+}
+
+func (self JSGet) Info(scope *vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "js_get",
+		Doc:     "Get a variable's value from the JS VM.",
+		ArgType: type_map.AddType(scope, &JSGetArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&JSCall{})
 	vql_subsystem.RegisterFunction(&JSCompile{})
+	vql_subsystem.RegisterFunction(&JSSet{})
+	vql_subsystem.RegisterFunction(&JSGet{})
 }
