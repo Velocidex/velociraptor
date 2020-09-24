@@ -95,6 +95,88 @@ func (self ArtifactSetFunction) Info(
 	}
 }
 
+type ArtifactDeleteFunctionArgs struct {
+	Name string `vfilter:"optional,field=name,doc=The Artifact to delete"`
+}
+
+type ArtifactDeleteFunction struct{}
+
+func (self *ArtifactDeleteFunction) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &ArtifactDeleteFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("artifact_delete: %v", err)
+		return vfilter.Null{}
+	}
+
+	config_obj, ok := artifacts.GetServerConfig(scope)
+	if !ok {
+		scope.Log("artifact_delete: Command can only run on the server")
+		return vfilter.Null{}
+	}
+
+	manager, _ := services.GetRepositoryManager()
+	if manager == nil {
+		scope.Log("artifact_delete: Command can only run on the server")
+		return vfilter.Null{}
+	}
+
+	global_repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		scope.Log("artifact_delete: %v", err)
+		return vfilter.Null{}
+	}
+
+	definition, pres := global_repository.Get(config_obj, arg.Name)
+	if !pres {
+		scope.Log("artifact_delete: Artifact %v not found", arg.Name)
+		return vfilter.Null{}
+	}
+
+	// Same criteria as
+	// https://github.com/Velocidex/velociraptor/blob/3eddb529a0059a05c0a6c2c7057446f36c4e9a6a/gui/static/angular-components/artifact/artifact-viewer-directive.js#L62
+	if !strings.HasPrefix(definition.Name, "Custom.") {
+		scope.Log("artifact_delete: Can only delete custom artifacts.")
+		return vfilter.Null{}
+	}
+
+	var permission acls.ACL_PERMISSION
+	def_type := strings.ToLower(definition.Type)
+
+	switch def_type {
+	case "client", "client_event", "":
+		permission = acls.ARTIFACT_WRITER
+	case "server", "server_event":
+		permission = acls.SERVER_ARTIFACT_WRITER
+	}
+
+	err = vql_subsystem.CheckAccess(scope, permission)
+	if err != nil {
+		scope.Log("artifact_set: %s", err)
+		return vfilter.Null{}
+	}
+
+	err = manager.DeleteArtifactFile(config_obj, arg.Name)
+	if err != nil {
+		scope.Log("artifact_delete: %s", err)
+		return vfilter.Null{}
+	}
+
+	return arg.Name
+}
+
+func (self ArtifactDeleteFunction) Info(
+	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "artifact_delete",
+		Doc:     "Deletes an artifact from the global repository.",
+		ArgType: type_map.AddType(scope, &ArtifactDeleteFunctionArgs{}),
+	}
+}
+
 type ArtifactsPluginArgs struct {
 	Names               []string `vfilter:"optional,field=names,doc=Artifact definitions to dump"`
 	IncludeDependencies bool     `vfilter:"optional,field=deps,doc=If true includes all dependencies as well."`
@@ -200,4 +282,5 @@ func (self ArtifactsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap
 func init() {
 	vql_subsystem.RegisterPlugin(&ArtifactsPlugin{})
 	vql_subsystem.RegisterFunction(&ArtifactSetFunction{})
+	vql_subsystem.RegisterFunction(&ArtifactDeleteFunction{})
 }
