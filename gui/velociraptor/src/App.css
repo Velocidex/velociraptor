@@ -1,0 +1,5 @@
+nav.fixed-bottom {
+    height: 40px;
+    z-index: auto;
+    background: var(--color-nav-header-color);
+}

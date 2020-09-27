@@ -1,0 +1,17 @@
+.velo-table .react-bootstrap-table {
+    overflow-x: auto;
+}
+
+a.btn.btn-default.active {
+    color: #808080;
+}
+
+
+.modal-90w {
+    width: 90%;
+    max-width: none!important;
+}
+
+.row.react-bootstrap-table-pagination {
+    width: 100%;
+}

@@ -97,7 +97,7 @@ gulp.task('compile-third-party-js', function() {
                   ])
         .pipe(gulpNewer(config.distDir + '/third-party.bundle.js'))
         .pipe(gulpConcat('third-party.bundle.js'))
-        .pipe(uglify())
+        //.pipe(uglify())
         .pipe(gulp.dest(config.distDir));
 });
 
