@@ -56,7 +56,6 @@ class VeloClientList extends Component {
             return;
         }
 
-        console.log("Searching for clients " + JSON.stringify(query));
         api.get('/api/v1/SearchClients', {
             query: query,
             count: 50,

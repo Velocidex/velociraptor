@@ -190,6 +190,10 @@ class VeloFileTree extends Component {
                     for (var i=0; i<node.raw_data.length; i++) {
                         let file_info = node.raw_data[i];
 
+                        // Add a unique id to each row to make react
+                        // happy.
+                        node.raw_data[i]["_id"] = i;
+
                         // Only show directories
                         if(file_info.Mode[0] === 'd') {
                             // Each node will contain a list of all its previous

@@ -124,7 +124,7 @@ class VeloFileList extends Component {
                 <BootstrapTable
                   hover
                   condensed
-                  keyField="_FullPath"
+                  keyField="_id"
                   bootstrap4
                   headerClasses="alert alert-secondary"
                   bodyClasses="fixed-table-body"
@@ -132,8 +132,6 @@ class VeloFileList extends Component {
                   columns={columns}
                   filter={ filterFactory() }
                   selectRow={ selectRow }
-                  rowStyle={(e) => console.log(e)}
-                  onClick={(e) => console.log(e)}
                 />
               </div>
             </>

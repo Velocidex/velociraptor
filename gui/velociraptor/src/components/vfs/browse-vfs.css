@@ -1,7 +1,7 @@
 .Resizer {
     background: #000;
     opacity: .2;
-    z-index: 1;
+    z-index: 1000;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
@@ -22,11 +22,19 @@
     border-bottom: 5px solid rgba(255, 255, 255, 0);
     cursor: row-resize;
     width: 100%;
+    border-left: solid 1px #a7a7a7;
+    border-right: solid 1px #a7a7a7;
+    text-align: left;
+    line-height: 0px;
+    font-size: 0px;
+    border-top: solid 1px #9cbdff;
+    border-bottom: solid 1px #9cbdff;
+    background: #101010 80% 0%;
 }
 
 .Resizer.horizontal:hover {
-    border-top: 5px solid rgba(0, 0, 0, 0.5);
-    border-bottom: 5px solid rgba(0, 0, 0, 0.5);
+    border-top: 5px solid rgba(0, 200, 200, 0.5);
+    border-bottom: 5px solid rgba(0, 200, 200, 0.5);
 }
 
 .Resizer.vertical {

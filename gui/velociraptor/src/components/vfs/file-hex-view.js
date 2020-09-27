@@ -21,6 +21,19 @@ export default class FileHexView extends React.Component {
         offset: 0,
     }
 
+    componentDidMount = () => {
+        this.fetchText_();
+    }
+
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        let selectedRow = this.props.selectedRow && this.props.selectedRow._id;
+        let old_row = prevProps.selectedRow && prevProps.selectedRow._id;
+
+        if (selectedRow != old_row) {
+            this.fetchText_();
+        };
+    }
+
     fetchText_ = () => {
         let client_id = this.props.client && this.props.client.client_id;
         if (!client_id) {

@@ -16,9 +16,6 @@ import Modal from 'react-bootstrap/Modal';
 import VeloNotImplemented from '../core/notimplemented.js';
 import VeloAce from '../core/ace.js';
 
-const { ToggleList } = ColumnToggle;
-
-
 // Shows the InspectRawJson modal dialog UI.
 class InspectRawJson extends Component {
     static propTypes = {
