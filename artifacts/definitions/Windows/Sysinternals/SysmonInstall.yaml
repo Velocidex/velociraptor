@@ -30,7 +30,7 @@ sources:
     LET sysmon_config <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
        ToolName="SysmonConfig", IsExecutable=FALSE)
 
-    SELECT * FROM chain(
+    LET doit = SELECT * FROM chain(
     a={
        // First force an uninstall to clear the config
        SELECT * FROM execve(argv= [ bin[0].FullPath, "-accepteula", "-u"], length=10000000)
@@ -38,3 +38,5 @@ sources:
        SELECT * FROM execve(argv= [ bin[0].FullPath,
            "-accepteula", "-i", sysmon_config[0].FullPath ], length=10000000)
     })
+
+    SELECT * FROM if(condition=bin AND sysmon_config, then=doit)

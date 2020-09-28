@@ -13,7 +13,7 @@ output/
 node_modules/
 package-lock.json
 __debug_bin
-./bin/rsrc.syso
+bin/rsrc.syso
 
 artifacts/assets/ab0x.go
 gui/assets/ab0x.go
