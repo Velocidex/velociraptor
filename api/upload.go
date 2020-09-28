@@ -16,7 +16,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func toolUploadHandler(
@@ -26,8 +25,6 @@ func toolUploadHandler(
 
 		// Check for acls
 		userinfo := GetUserInfo(r.Context(), config_obj)
-		utils.Debug(userinfo)
-
 		permissions := acls.ARTIFACT_WRITER
 		perm, err := acls.CheckAccess(config_obj, userinfo.Name, permissions)
 		if !perm || err != nil {

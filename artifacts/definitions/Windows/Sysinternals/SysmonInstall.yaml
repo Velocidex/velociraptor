@@ -4,14 +4,39 @@ description: |
   Sysinternals. While we are not able to distribute Sysmon ourselves,
   Velociraptor can help you manage its deployment and installation.
 
-  In order to deploy sysmon on the endpoint, you need to:
+  NOTE: By default we install the sysmon config from SwiftOnSecurity -
+  we recommend you review the config file and override it in the GUI
+  with one that better suits your needs.
 
-  1. Ensure the server contains the latest Sysmon binaries. You will
-     need to download them yourself by running the
-     `Server.Utils.DownloadBinaries` server artifact.
+tools:
+  - name: SysmonBinary
+    url: https://live.sysinternals.com/tools/sysmon64.exe
+    serve_locally: true
 
-  2. Ensure the sysmon configration is appropriate for your
-     deployment. If you edit the file in your public directory
-     (`<file store>/public/sysmon_config.xml`) you will need to run the
-     `Windows.Utils.UpdatePublicHashes` server artifact to update the
-     inventory file.
+  - name: SysmonConfig
+    url: https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml
+    serve_locally: true
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+required_permissions:
+- EXECVE
+
+sources:
+- query: |
+    LET bin <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
+       ToolName="SysmonBinary")
+
+    LET sysmon_config <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
+       ToolName="SysmonConfig", IsExecutable=FALSE)
+
+    LET doit = SELECT * FROM chain(
+    a={
+       // First force an uninstall to clear the config
+       SELECT * FROM execve(argv= [ bin[0].FullPath, "-accepteula", "-u"], length=10000000)
+    }, b={
+       SELECT * FROM execve(argv= [ bin[0].FullPath,
+           "-accepteula", "-i", sysmon_config[0].FullPath ], length=10000000)
+    })
+
+    SELECT * FROM if(condition=bin AND sysmon_config, then=doit)
