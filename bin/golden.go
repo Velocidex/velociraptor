@@ -144,6 +144,9 @@ func runTest(fixture *testFixture,
 	}
 	defer sm.Close()
 
+	_, err = getRepository(config_obj)
+	kingpin.FatalIfError(err, "Loading extra artifacts")
+
 	// Create an output container.
 	tmpfile, err := ioutil.TempFile("", "golden")
 	if err != nil {
@@ -221,17 +224,22 @@ func doGolden() {
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	logger.Info("Starting golden file test.")
 
-	globs, err := filepath.Glob(fmt.Sprintf(
-		"%s*.in.yaml", *golden_command_prefix))
+	globs, err := filepath.Glob(fmt.Sprintf("%s/**/*.in.yaml", *golden_command_prefix))
+	logger.Info("Found the following golden files: %s", globs)
 	kingpin.FatalIfError(err, "Glob")
 
 	failures := []string{}
 
-	for _, filename := range globs {
+	err = filepath.Walk(*golden_command_prefix, func(file_path string, info os.FileInfo, err error) error {
+
+		if !strings.HasSuffix(file_path, ".in.yaml") {
+			return nil
+		}
+
 		logger := log.New(os.Stderr, "golden: ", 0)
 
-		logger.Printf("Openning %v", filename)
-		data, err := ioutil.ReadFile(filename)
+		logger.Printf("Opening %v", file_path)
+		data, err := ioutil.ReadFile(file_path)
 		kingpin.FatalIfError(err, "Reading file")
 
 		fixture := testFixture{}
@@ -241,23 +249,23 @@ func doGolden() {
 		result, err := runTest(&fixture, config_obj)
 		kingpin.FatalIfError(err, "Running test")
 
-		outfile := strings.Replace(filename, ".in.", ".out.", -1)
+		outfile := strings.Replace(file_path, ".in.", ".out.", -1)
 		old_data, err := ioutil.ReadFile(outfile)
 		if err == nil {
 			if strings.TrimSpace(string(old_data)) != strings.TrimSpace(result) {
 				dmp := diffmatchpatch.New()
 				diffs := dmp.DiffMain(
 					string(old_data), result, false)
-				fmt.Printf("Failed %v:\n", filename)
+				fmt.Printf("Failed %v:\n", file_path)
 				fmt.Println(dmp.DiffPrettyText(diffs))
 
-				failures = append(failures, filename)
+				failures = append(failures, file_path)
 			}
 		} else {
-			fmt.Printf("New file for  %v:\n", filename)
+			fmt.Printf("New file for  %v:\n", file_path)
 			fmt.Println(result)
 
-			failures = append(failures, filename)
+			failures = append(failures, file_path)
 		}
 
 		if !*testonly {
@@ -266,6 +274,11 @@ func doGolden() {
 				[]byte(result), 0666)
 			kingpin.FatalIfError(err, "Unable to write golden file")
 		}
+		return nil
+	})
+
+	if err != nil {
+		kingpin.Fatalf("golden error: %s", err)
 	}
 
 	if len(failures) > 0 {
