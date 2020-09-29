@@ -5,7 +5,7 @@ import _ from 'lodash';
 
 import {Treebeard} from 'react-treebeard';
 
-import {Join, SplitPathComponents} from '../utils/paths.js';
+import { Join } from '../utils/paths.js';
 
 import api from '../core/api-service.js';
 import { withRouter }  from "react-router-dom";
@@ -113,7 +113,7 @@ class VeloFileTree extends Component {
         let prev_vfs_path = prevProps.vfs_path;
 
         if (!_.isEqual(prev_vfs_path, this.props.vfs_path) ||
-            prevClient != currentClient ) {
+            prevClient !== currentClient ) {
             this.updateTree();
         }
     };

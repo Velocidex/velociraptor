@@ -383,14 +383,12 @@ func StartFrontendPlainHttp(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		notifier := services.GetNotifier()
-		if notifier != nil {
-			err := notifier.NotifyAllListeners(config_obj)
-			if err != nil {
-				server_obj.Error("Frontend server error", err)
-			}
+		err := services.GetNotifier().NotifyAllListeners(config_obj)
+		if err != nil {
+			server_obj.Error("Frontend server error", err)
 		}
-		err := server.Shutdown(time_ctx)
+
+		err = server.Shutdown(time_ctx)
 		if err != nil {
 			server_obj.Error("Frontend server error", err)
 		}

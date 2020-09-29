@@ -47,7 +47,7 @@ class VeloNavigator extends Component {
                 <span className="hamburger toolbar-buttons"
                       onClick={this.toggle}>&#9776;</span>
                 <a href="#welcome">
-                  <img src="/static/images/velo.svg" className="velo-logo"/>
+                  <img src="/static/images/velo.svg" className="velo-logo" alt="velo logo"/>
                 </a>
                 <div className={classNames({
                     'collapsed': this.state.collapsed,

@@ -29,7 +29,7 @@ export default class FileHexView extends React.Component {
         let selectedRow = this.props.selectedRow && this.props.selectedRow._id;
         let old_row = prevProps.selectedRow && prevProps.selectedRow._id;
 
-        if (selectedRow != old_row) {
+        if (selectedRow !== old_row) {
             this.fetchText_();
         };
     }
@@ -46,9 +46,9 @@ export default class FileHexView extends React.Component {
         }
 
         var filePath = download.vfs_path;
-        var total_size = this.props.selectedRow.Size || 0;
+        //var total_size = this.props.selectedRow.Size || 0;
         var chunkSize = this.state.rows * this.state.columns;
-        let pageCount = Math.ceil(total_size / chunkSize);
+        //let pageCount = Math.ceil(total_size / chunkSize);
         var url = 'api/v1/DownloadVFSFile';
         var params = {
             offset: this.state.offset,

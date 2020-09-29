@@ -87,6 +87,12 @@ type Launcher interface {
 		config_obj *config_proto.Config,
 		artifact *artifacts_proto.Artifact) error
 
+	// Calculates the dependent artifacts
+	GetDependentArtifacts(
+		config_obj *config_proto.Config,
+		repository Repository,
+		names []string) ([]string, error)
+
 	// Compiles an ArtifactCollectorArgs (for example as passed
 	// into CreateHunt() or CollectArtifact() API into a list of
 	// VQLCollectorArgs - the messages sent to the client to
@@ -94,7 +100,7 @@ type Launcher interface {
 	// VQLCollectorArgs is collected serially in a single
 	// goroutine. This means all the artifacts in the
 	// ArtifactCollectorArgs will be collected one after the other
-	// in turn. If called want to collect artifacts in parallel
+	// in turn. If callers want to collect artifacts in parallel
 	// then they need to perpare several VQLCollectorArgs and
 	// launch them as separate messages.
 

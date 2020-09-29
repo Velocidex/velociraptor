@@ -4,12 +4,10 @@ import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
-import InputGroup from 'react-bootstrap/InputGroup';
 import FormGroup from 'react-bootstrap/FormGroup';
 import Form from 'react-bootstrap/Form';
 import { AsyncTypeahead } from 'react-bootstrap-typeahead';
 import { withRouter }  from "react-router-dom";
-import * as QueryString from "query-string";
 
 import api from '../core/api-service.js';
 
