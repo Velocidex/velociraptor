@@ -47,15 +47,15 @@ SELECT Authors, FullPath, License, Name, Summary, Version FROM source( client_id
    "compiled_collector_args": []
   }
  }
-]SELECT name FROM artifact_definitions(names='Windows.KapeFiles.Targets')[
+]SELECT name FROM artifact_definitions(names='Windows.KapeFiles.Targets') ORDER BY name[
  {
-  "name": "Windows.KapeFiles.Targets"
+  "name": "Windows.Collectors.File"
  },
  {
   "name": "Windows.Collectors.VSS"
  },
  {
-  "name": "Windows.Collectors.File"
+  "name": "Windows.KapeFiles.Targets"
  }
 ]SELECT name FROM artifact_definitions() WHERE name =~ 'Windows.KapeFiles.Targets'[
  {
