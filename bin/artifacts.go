@@ -109,11 +109,12 @@ func getRepository(config_obj *config_proto.Config) (services.Repository, error)
 
 	repository, err := manager.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
+
 	if *artifact_definitions_dir != "" {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
 			Info("Loading artifacts from %s",
 				*artifact_definitions_dir)
-		_, err := repository.LoadDirectory(*artifact_definitions_dir)
+		_, err := repository.LoadDirectory(config_obj, *artifact_definitions_dir)
 		if err != nil {
 			logging.GetLogger(config_obj, &logging.ToolComponent).
 				Error("Artifact LoadDirectory: %v ", err)
