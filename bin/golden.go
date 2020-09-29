@@ -224,10 +224,6 @@ func doGolden() {
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	logger.Info("Starting golden file test.")
 
-	globs, err := filepath.Glob(fmt.Sprintf("%s/**/*.in.yaml", *golden_command_prefix))
-	logger.Info("Found the following golden files: %s", globs)
-	kingpin.FatalIfError(err, "Glob")
-
 	failures := []string{}
 
 	err = filepath.Walk(*golden_command_prefix, func(file_path string, info os.FileInfo, err error) error {
