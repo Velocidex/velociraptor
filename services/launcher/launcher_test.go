@@ -27,6 +27,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -70,6 +71,14 @@ description: This is a test artifact dependency
 sources:
 - query: |
     SELECT * FROM Artifact.Test.Artifact()
+`
+
+	testArtifactWithDeps2 = `
+name: Test.Artifact.Deps2
+description: This is a test artifact dependency
+sources:
+- query: |
+    SELECT * FROM Artifact.Test.Artifact.Deps()
 `
 )
 
@@ -216,6 +225,30 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	assert.Equal(self.T(), getEnvValue(compiled.Env, "Tool_Tool1_FILENAME"), "mytool.exe")
 	assert.Equal(self.T(), getEnvValue(compiled.Env, "Tool_Tool1_URL"),
 		"https://localhost:8000/public/"+filename)
+}
+
+func (self *LauncherTestSuite) TestGetDependentArtifacts() {
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifact1, true)
+	assert.NoError(self.T(), err)
+
+	_, err = repository.LoadYaml(testArtifactWithDeps, true)
+	assert.NoError(self.T(), err)
+
+	_, err = repository.LoadYaml(testArtifactWithDeps2, true)
+	assert.NoError(self.T(), err)
+
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	res, err := launcher.GetDependentArtifacts(self.config_obj,
+		repository, []string{"Test.Artifact.Deps2"})
+	assert.NoError(self.T(), err)
+
+	utils.Debug(res)
 }
 
 func getEnvValue(env []*actions_proto.VQLEnv, key string) string {

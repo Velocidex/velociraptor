@@ -1,7 +1,7 @@
 import "./table.css";
 
 import 'react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css';
-import ToolkitProvider, { ColumnToggle } from 'react-bootstrap-table2-toolkit';
+import ToolkitProvider from 'react-bootstrap-table2-toolkit';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';

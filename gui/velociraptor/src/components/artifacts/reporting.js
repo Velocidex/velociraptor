@@ -49,7 +49,7 @@ export default class VeloReportViewer extends Component {
             prev_client_id = prevProps.client.client_id;
         }
 
-        if (new_client_id != prev_client_id) {
+        if (new_client_id !== prev_client_id) {
             this.updateReport();
         }
     }

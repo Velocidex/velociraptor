@@ -1,10 +1,9 @@
 import './browse-vfs.css';
 
-import React, { Component, useState } from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import SplitPane from 'react-split-pane';
-import Pane from 'react-split-pane';
 
 import VeloFileTree from './file-tree.js';
 import VeloFileList from './file-list.js';

@@ -40,8 +40,6 @@ export default class VeloFileDetails extends React.Component {
             _Data: {},
         }, this.props.selectedRow);
 
-        let client_id = this.props.client && this.props.client.client_id;
-
         return (
             <div className="padded">
               <grr-breadcrumbs path="controller.fileContext.selectedFilePath">
@@ -51,27 +49,27 @@ export default class VeloFileDetails extends React.Component {
                 <Tab eventKey="stats" title="Stats">
                   <VeloFileStats
                     client={this.props.client}
-                    selectedRow={this.props.selectedRow} />
+                    selectedRow={selectedRow} />
                 </Tab>
                 <Tab eventKey="text" title="Textview">
                   <VeloFileStats
                     client={this.props.client}
-                    selectedRow={this.props.selectedRow} />
+                    selectedRow={selectedRow} />
                 </Tab>
                 <Tab eventKey="hex" title="HexView">
                   <FileHexView
                     client={this.props.client}
-                    selectedRow={this.props.selectedRow} />
+                    selectedRow={selectedRow} />
                 </Tab>
                 <Tab eventKey="table" title="TableView">
                   <VeloFileStats
                     client={this.props.client}
-                    selectedRow={this.props.selectedRow} />
+                    selectedRow={selectedRow} />
                 </Tab>
                 <Tab eventKey="reports" title="Reports">
                   <VeloFileStats
                     client={this.props.client}
-                    selectedRow={this.props.selectedRow} />
+                    selectedRow={selectedRow} />
                 </Tab>
               </Tabs>
             </div>

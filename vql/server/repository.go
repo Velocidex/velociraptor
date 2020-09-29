@@ -8,7 +8,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -236,30 +235,26 @@ func (self ArtifactsPlugin) Call(
 			}
 		}
 
-		acl_manager := vql_subsystem.NullACLManager{}
-
 		launcher, err := services.GetLauncher()
 		if err != nil {
 			scope.Log("artifact_definitions: %v", err)
 			return
 		}
 
-		request, err := launcher.CompileCollectorArgs(
-			ctx, config_obj, acl_manager,
-			repository, &flows_proto.ArtifactCollectorArgs{
-				Artifacts: arg.Names,
-			})
-		if request == nil || err != nil {
-			scope.Log("artifact_definitions: While compiling %v: %v",
-				arg.Names, err)
+		deps, err := launcher.GetDependentArtifacts(
+			config_obj, repository, arg.Names)
+		if err != nil {
+			scope.Log("artifact_definitions: %v", err)
 			return
 		}
 
-		for _, artifact := range request.Artifacts {
-			seen[artifact.Name] = artifact
-		}
+		for _, name := range deps {
+			artifact, pres := repository.Get(config_obj, name)
+			if !pres {
+				scope.Log("artifact_definitions: artifact %v not known", name)
+				continue
+			}
 
-		for _, artifact := range seen {
 			select {
 			case <-ctx.Done():
 				return

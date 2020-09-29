@@ -74,10 +74,10 @@ const ConsumeComponent = function(path) {
         return {next_path: "", component: result};
 
     } else {
-        for (var i = 0; i < path.length; i++) {
-            if (path[i] === '/' || path[i] === '\\') {
-                return {next_path: path.substr(i, path.length),
-                        component: path.substr(0, i)};
+        for (var j = 0; j < path.length; j++) {
+            if (path[j] === '/' || path[i] === '\\') {
+                return {next_path: path.substr(j, path.length),
+                        component: path.substr(0, j)};
             }
         }
     }
@@ -90,9 +90,9 @@ const ConsumeComponent = function(path) {
 export const SplitPathComponents = function(path) {
     var components = [];
 
-    while (path != "") {
+    while (path !== "") {
         var item = ConsumeComponent(path);
-        if (item.component != "") {
+        if (item.component !== "") {
             components.push(item.component);
         }
         path = item.next_path;

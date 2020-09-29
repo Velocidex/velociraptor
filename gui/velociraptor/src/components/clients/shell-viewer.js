@@ -5,7 +5,6 @@ import PropTypes from 'prop-types';
 import classNames from "classnames";
 
 import InputGroup from 'react-bootstrap/InputGroup';
-import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
 
@@ -47,7 +46,7 @@ class VeloShellCell extends Component {
         // Figure out the command we requested.
         var parameters = this.props.flow.request.parameters.env;
         for(var i=0; i<parameters.length; i++) {
-            if (parameters[i].key == 'Command') {
+            if (parameters[i].key === 'Command') {
                 return parameters[i].value;
             };
         }
@@ -146,7 +145,7 @@ class VeloShellCell extends Component {
         }
 
         // If the flow is currently running we may be able to stop it.
-        if (this.props.flow.state  == 'RUNNING') {
+        if (this.props.flow.state  === 'RUNNING') {
             buttons.push(
                 <button className="btn btn-default" key={5}
                         title="Stop"
@@ -157,7 +156,7 @@ class VeloShellCell extends Component {
         }
 
         let flow_status;
-        if (this.props.flow.state  == 'RUNNING') {
+        if (this.props.flow.state  === 'RUNNING') {
             flow_status = (
                 <button className="btn btn-outline-info"
                         disabled>
@@ -166,7 +165,7 @@ class VeloShellCell extends Component {
                 by {this.props.flow.request.creator}
                 </button>
             );
-        } else if (this.props.flow.state  == 'FINISHED') {
+        } else if (this.props.flow.state  === 'FINISHED') {
             flow_status = (
                 <button className="btn btn-outline-info"
                         disabled>
@@ -175,7 +174,7 @@ class VeloShellCell extends Component {
                 </button>
             );
 
-        } else if (this.props.flow.state  == 'ERROR') {
+        } else if (this.props.flow.state  === 'ERROR') {
             flow_status = (
                 <button className="btn btn-outline-info"
                         disabled>
@@ -317,11 +316,11 @@ class ShellViewer extends Component {
         }
 
         var artifact = "";
-        if (this.state.shell_type == "Powershell") {
+        if (this.state.shell_type === "Powershell") {
             artifact = "Windows.System.PowerShell";
-        } else if(this.state.shell_type == "Cmd") {
+        } else if(this.state.shell_type === "Cmd") {
             artifact = "Windows.System.CmdShell";
-        } else if(this.state.shell_type == "Bash") {
+        } else if(this.state.shell_type === "Bash") {
             artifact = "Linux.Sys.BashShell";
         } else {
             return;

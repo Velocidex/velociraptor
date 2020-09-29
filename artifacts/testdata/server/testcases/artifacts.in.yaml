@@ -13,3 +13,9 @@ Queries:
         artifacts='Windows.KapeFiles.Targets',
         env=dict(Device ='C:', VSSAnalysis='Y', KapeTriage='Y')).request AS Flow
     FROM scope()
+
+  # Check that artifact_definitions work
+  - SELECT name FROM artifact_definitions(names='Windows.KapeFiles.Targets') ORDER BY name
+
+  # Make sure we can return all names
+  - SELECT name FROM artifact_definitions() WHERE name =~ 'Windows.KapeFiles.Targets'

@@ -3,7 +3,6 @@ import "./clients-list.css";
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { withRouter }  from "react-router-dom";
-import * as QueryString from "query-string";
 
 import api from '../core/api-service.js';
 import VeloClientStatusIcon from "./client-status.js";
@@ -46,8 +45,10 @@ class VeloClientList extends Component {
     }
 
     addToLabels(index, client_id)  {
-        this.state.idx2labels[index] = client_id;
-        this.state.labels2idex[client_id] = index;
+        /*
+          this.state.idx2labels[index] = client_id;
+          this.state.labels2idex[client_id] = index;
+        */
     }
 
     searchClients() {

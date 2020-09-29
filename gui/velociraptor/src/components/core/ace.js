@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
-import { render } from "react-dom";
-
 import AceEditor from "react-ace";
 
 import 'ace-builds/webpack-resolver.js';
@@ -73,10 +71,6 @@ import  'ace-builds/src-min-noconflict/mode-yaml.js';
 import  'ace-builds/src-min-noconflict/mode-json.js';
 import  'ace-builds/src-min-noconflict/mode-markdown.js';
 import  'ace-builds/src-min-noconflict/mode-sql.js';
-
-function onChange(newValue) {
-  console.log("change", newValue);
-}
 
 export default class VeloAce extends Component {
     static propTypes = {
