@@ -76,7 +76,7 @@ type ScopeBuilder struct {
 // An artifact repository holds definitions for artifacts.
 type Repository interface {
 	// Load an entire directory recursively.
-	LoadDirectory(dirname string) (int, error)
+	LoadDirectory(config_obj *config_proto.Config, dirname string) (int, error)
 
 	// Make a copy of this repository.
 	Copy() Repository
