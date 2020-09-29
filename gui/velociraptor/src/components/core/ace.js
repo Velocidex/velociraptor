@@ -86,6 +86,10 @@ export default class VeloAce extends Component {
               theme="github"
               value={this.props.text || ''}
               onChange={this.props.onChange}
+              style={
+                  {width: "100%"}
+              }
+
               editorProps={{
                   $blockScrolling: true,
               }}

@@ -16,13 +16,13 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
          faSearch, faSpinner,  faSearchPlus, faFolderOpen, faHistory,
          faTasks, faTerminal, faCompress, faExpand, faEyeSlash, faStop, faExclamation,
-         faColumns, faDownload,
+         faColumns, faDownload, faSync, faCheck, faHourglass,
          faBinoculars } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
             faSearch, faSpinner, faSearchPlus, faTasks, faTerminal,
             faCompress, faExpand, faEyeSlash, faStop, faExclamation,
-            faColumns, faDownload,
+            faColumns, faDownload, faSync, faCheck, faHourglass,
             faFolderOpen , faHistory, faBinoculars);
 
 ReactDOM.render(

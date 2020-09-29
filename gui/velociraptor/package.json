@@ -3,6 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "dependencies": {
+        "@fortawesome/fontawesome-free": "^5.15.0",
         "@fortawesome/fontawesome-svg-core": "^1.2.30",
         "@fortawesome/free-regular-svg-icons": "^5.14.0",
         "@fortawesome/free-solid-svg-icons": "^5.14.0",
@@ -27,6 +28,7 @@
         "react": "^16.13.1",
         "react-ace": "^9.1.3",
         "react-bootstrap": "^1.3.0",
+        "react-bootstrap-4-pagination": "^1.0.3",
         "react-bootstrap-table-next": "^4.0.3",
         "react-bootstrap-table2-filter": "^1.3.3",
         "react-bootstrap-table2-toolkit": "^2.1.3",

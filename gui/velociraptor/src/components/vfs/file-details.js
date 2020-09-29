@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 import VeloFileStats from './file-stats.js';
 import FileHexView from './file-hex-view.js';
+import FileTextView from './file-text-view.js';
 
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
@@ -52,7 +53,7 @@ export default class VeloFileDetails extends React.Component {
                     selectedRow={selectedRow} />
                 </Tab>
                 <Tab eventKey="text" title="Textview">
-                  <VeloFileStats
+                  <FileTextView
                     client={this.props.client}
                     selectedRow={selectedRow} />
                 </Tab>

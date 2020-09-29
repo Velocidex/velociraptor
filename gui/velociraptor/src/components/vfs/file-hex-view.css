@@ -1,0 +1,41 @@
+.monospace {
+  font-family: var(--font-monospace);
+  font-size: 13px;
+  color: var(--color-monospace-color);
+  padding: 0;
+  margin: 0;
+}
+
+.hexdump {
+    margin: 0px;
+}
+
+.file-hex-view .pagination {
+    margin: 5px 0;
+}
+
+.file-hex-view nav {
+    margin: 20px;
+}
+
+.file-hex-view  table  .offset {
+    font-weight: bold;
+    color: var(--color-table-row-offset);
+    padding-right: 1ex;
+}
+
+.file-hex-view  table  td {
+    vertical-align: top !important;
+}
+
+.file-hex-view  table  .data {
+    padding-left: 2ex;
+    white-space: nowrap;
+}
+
+.file-hex-view  .no-content {
+    text-align: center;
+    margin-top: 50px;
+    font-size: 2.0em;
+    color: var(--color-no-content-color);
+}

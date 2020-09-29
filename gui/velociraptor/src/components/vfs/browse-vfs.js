@@ -59,6 +59,7 @@ class VFSViewer extends Component {
                   setSelectedRow={this.props.setSelectedRow}
                   node={this.props.node} />
                 <VeloFileDetails
+                  client={this.props.client}
                   selectedRow={this.props.selectedRow} />
               </SplitPane>
             </SplitPane>

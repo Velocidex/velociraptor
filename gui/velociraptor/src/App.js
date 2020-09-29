@@ -10,6 +10,7 @@ import VeloClientSummary from './components/clients/client-summary.js';
 import VFSViewer from './components/vfs/browse-vfs.js';
 import VFSSetterFromRoute from './components/vfs/vfs-setter.js';
 import VeloLiveClock from './components/utils/clock.js';
+import ClientFlowsView from './components/flows/client-flows-view.js';
 import { Switch, Route } from "react-router-dom";
 
 import Navbar from 'react-bootstrap/Navbar';
@@ -120,6 +121,9 @@ class App extends Component {
                   </Route>
                   <Route path="/collected/:client_id">
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
+                    <ClientFlowsView
+                      client={this.state.client}
+                    />
                   </Route>
                 </Switch>
               </div>
