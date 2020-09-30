@@ -107,7 +107,6 @@ Pagination.defaultProps = {
     nextText: '⟩',
     circle: false,
     shadow: false,
-    center: true
 }
 
 const shadowStyle = (showShadow, isCircle) => {

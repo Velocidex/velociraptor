@@ -14,7 +14,7 @@ export default class FlowUploads extends React.Component {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         let prev_flow_id = prevProps.flow && prevProps.flow.session_id;
-        if (this.props.flow.session_id != prev_flow_id) {
+        if (this.props.flow.session_id !== prev_flow_id) {
             this.fetchRows();
         }
     }

@@ -8,7 +8,6 @@ import VeloHostInfo from './components/clients/host-info.js';
 import ClientSetterFromRoute from './components/clients/client_info.js';
 import VeloClientSummary from './components/clients/client-summary.js';
 import VFSViewer from './components/vfs/browse-vfs.js';
-import VFSSetterFromRoute from './components/vfs/vfs-setter.js';
 import VeloLiveClock from './components/utils/clock.js';
 import ClientFlowsView from './components/flows/client-flows-view.js';
 import { Switch, Route } from "react-router-dom";
@@ -21,13 +20,13 @@ import Nav from 'react-bootstrap/Nav';
 
   We maintain internal state:
 
-  * client - the currently selected client the user will interact
-  * with. We hold the entire client info object in the top level
-  * state.
+  client - the currently selected client the user will interact
+     with. We hold the entire client info object in the top level
+     state.
 
-  * query - the current search query typed into the top toolbar - this
-  *    is always exposed and only changed by the user. It allows us to
-  *    re-search for the same term quickly.
+  query - the current search query typed into the top toolbar - this
+     is always exposed and only changed by the user. It allows us to
+     re-search for the same term quickly.
 
   The client information is populated via the setClient() callback by:
   1. VeloClientList component receiving a click on a table row.
@@ -52,28 +51,12 @@ class App extends Component {
 
     // Called to update the client id.
     setClient = (client) => {
-        let new_state  = Object.assign({}, this.state);
-        new_state.client = client;
-        this.setState(new_state);
+        this.setState({client: client});
     };
 
     setClientSearch = (query) => {
-        let new_state  = Object.assign({}, this.state);
-        new_state.query = query;
-        this.setState(new_state);
+        this.setState({query: query});
     };
-
-    setSelectedRow = (row) => {
-        this.setState({selected_row: row});
-    };
-
-    updateVFSPath = (vfs_path) => {
-        this.setState({vfs_path: vfs_path});
-    };
-
-    updateCurrentNode = (node) => {
-        this.setState({current_node: node});
-    }
 
     render() {
         return (
@@ -107,10 +90,8 @@ class App extends Component {
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
                     <VeloHostInfo client={this.state.client}  />
                   </Route>
-                  <Route path="/vfs/:client_id/:vfs_path*">
+                  <Route path="/vfs/:client_id/:vfs_path(.*)">
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
-                    <VFSSetterFromRoute vfs_path={this.state.vfs_path}
-                                        updateVFSPath={this.updateVFSPath} />
                     <VFSViewer client={this.state.client}
                                selectedRow={this.state.selected_row}
                                setSelectedRow={this.setSelectedRow}
@@ -119,7 +100,7 @@ class App extends Component {
                                node={this.state.current_node}
                                vfs_path={this.state.vfs_path} />
                   </Route>
-                  <Route path="/collected/:client_id">
+                  <Route path="/collected/:client_id/:flow_id?/:tab?">
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
                     <ClientFlowsView
                       client={this.state.client}

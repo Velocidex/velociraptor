@@ -87,8 +87,6 @@ export default class VeloAce extends Component {
     }
 
     render() {
-        console.log(this.props);
-
         return (
             <>
               <div className="row col-12">

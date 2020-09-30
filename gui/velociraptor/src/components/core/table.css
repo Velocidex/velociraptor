@@ -1,5 +1,9 @@
 .velo-table .react-bootstrap-table {
-    overflow-x: auto;
+    width: 100%;
+}
+
+.velo-table {
+    margin-top: 10px;
 }
 
 a.btn.btn-default.active {

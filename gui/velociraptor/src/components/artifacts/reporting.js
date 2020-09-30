@@ -86,7 +86,7 @@ export default class VeloReportViewer extends Component {
 
     render() {
         let template = parse(this.state.template, {
-            replace: function(domNode) {
+            replace: (domNode) => {
                 if (domNode.name === "grr-csv-viewer") {
                     // Figure out where the data is: attribs.value is something like data['table2']
                     let re = /'([^']+)'/;
@@ -98,7 +98,7 @@ export default class VeloReportViewer extends Component {
                         <VeloTable rows={rows} columns={data.Columns} />
                     );
                 };
-            }.bind(this),
+            }
         });
 
         return (

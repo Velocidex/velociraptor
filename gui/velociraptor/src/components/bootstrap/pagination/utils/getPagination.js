@@ -1,5 +1,3 @@
-'use strict'
-
 const getPagination = (props) => {
 
     let arr = [];

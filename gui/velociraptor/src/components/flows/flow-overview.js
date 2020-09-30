@@ -3,8 +3,6 @@ import PropTypes from 'prop-types';
 import VeloTimestamp from "../utils/time.js";
 import VeloValueRenderer from "../utils/value.js";
 
-import Button from 'react-bootstrap/Button';
-
 import Dropdown from 'react-bootstrap/Dropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -37,7 +35,7 @@ export default class FlowOverview extends React.Component {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         let prev_flow_id = prevProps.flow && prevProps.flow.session_id;
-        if (this.props.flow.session_id != prev_flow_id) {
+        if (this.props.flow.session_id !== prev_flow_id) {
             this.setState({detailed_flow: {context: this.props.flow}});
             this.fetchDetailedFlow();
         };
@@ -135,7 +133,7 @@ export default class FlowOverview extends React.Component {
                       <dt className="col-4">State</dt>
                       <dd className="col-8">{ flow.state }</dd>
 
-                      { flow.state == "ERROR" &&
+                      { flow.state === "ERROR" &&
                         <div>
                           <dt className="col-4">Error</dt>
                           <dd className="col-8">{flow.status }</dd>

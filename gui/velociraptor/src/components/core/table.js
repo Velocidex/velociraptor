@@ -13,7 +13,9 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import Dropdown from 'react-bootstrap/Dropdown';
 import Button from 'react-bootstrap/Button';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Modal from 'react-bootstrap/Modal';
+import Navbar from 'react-bootstrap/Navbar';
 
 import VeloNotImplemented from '../core/notimplemented.js';
 import VeloAce from '../core/ace.js';
@@ -26,10 +28,6 @@ class InspectRawJson extends Component {
 
     state = {
         show: false,
-    }
-
-    update(value) {
-        console.log(value);
     }
 
     render() {
@@ -57,8 +55,7 @@ class InspectRawJson extends Component {
                 </Modal.Header>
 
                 <Modal.Body>
-                  <VeloAce text={serialized}
-                    onChange={(value) => this.update(value) }
+                  <VeloAce text={serialized} options={{readOnly: true}}
                   />
                 </Modal.Body>
 
@@ -202,16 +199,16 @@ class VeloTable extends Component {
                         resolve={() => this.set("download", false)}
                       />
 
-                      <div className="row col-12">
-                        <div className="btn-group float-left" data-toggle="buttons">
+                      <Navbar className="toolbar">
+                        <ButtonGroup>
                           <ColumnToggleList { ...props.columnToggleProps } />
                           <InspectRawJson rows={this.props.rows} />
                           <Button variant="default"
                                   onClick={() => this.set("download", true)} >
                             <FontAwesomeIcon icon="download"/>
                           </Button>
-                        </div>
-                      </div>
+                        </ButtonGroup>
+                      </Navbar>
                       <div className="row col-12">
                         <BootstrapTable
                                      { ...props.baseProps }
@@ -250,11 +247,11 @@ export function PrepareData(value) {
             var column = columns[j];
 
             // A bit of a hack for now, this represents an object.
-            if (cell[0] == "{" || cell[0] == "[") {
+            if (cell[0] === "{" || cell[0] === "[") {
                 cell = JSON.parse(cell);
             } else if(cell.match(int_regex)) {
                 cell = parseInt(cell);
-            } else if(cell[0] == " ") {
+            } else if(cell[0] === " ") {
                 cell = cell.substr(1);
             }
 

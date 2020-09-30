@@ -5,12 +5,14 @@ import SplitPane from 'react-split-pane';
 
 import FlowsList from './flows-list.js';
 import FlowInspector from "./flows-inspector.js";
+import { withRouter }  from "react-router-dom";
 
 import api from '../core/api-service.js';
 
-export default class ClientFlowsView extends React.Component {
+class ClientFlowsView extends React.Component {
     static propTypes = {
         client: PropTypes.object,
+        flow_id: PropTypes.string,
     };
 
     state = {
@@ -26,7 +28,7 @@ export default class ClientFlowsView extends React.Component {
         let old_client_id = prevProps.client && prevProps.client.client_id;
         let new_client_id = this.props.client.client_id;
 
-        if (old_client_id != new_client_id) {
+        if (old_client_id !== new_client_id) {
             this.fetchFlows();
         }
     }
@@ -37,16 +39,35 @@ export default class ClientFlowsView extends React.Component {
             return;
         }
 
+        let selected_flow_id = this.props.match && this.props.match.params &&
+            this.props.match.params.flow_id;
+
         api.get("api/v1/GetClientFlows/" + client_id, {
             count: 100,
             offset: 0,
         }).then(function(response) {
-            this.setState({flows: response.data.items});
+            let flows = response.data.items;
+            let selected_flow = {};
+
+            // If the router specifies a selected flow id, we select it.
+            for(var i=0;i<flows.length;i++) {
+                let flow=flows[i];
+                if (flow.session_id === selected_flow_id) {
+                    selected_flow = flow;
+                    break;
+                }
+            };
+
+            this.setState({flows: flows, currentFlow: selected_flow});
         }.bind(this));
     }
 
     setSelectedFlow = (flow) => {
         this.setState({currentFlow: flow});
+
+        // Update the route.
+        this.props.history.push(
+            "/collected/" + this.props.client.client_id + "/" + flow.session_id);
     }
 
     render() {
@@ -54,6 +75,7 @@ export default class ClientFlowsView extends React.Component {
             <>
               <SplitPane split="horizontal" defaultSize="30%">
                 <FlowsList
+                  selected_flow={this.state.currentFlow}
                   flows={this.state.flows}
                   setSelectedFlow={this.setSelectedFlow}
                   client={this.props.client}/>
@@ -65,3 +87,6 @@ export default class ClientFlowsView extends React.Component {
         );
     }
 };
+
+
+export default withRouter(ClientFlowsView);

@@ -21,8 +21,8 @@ export default class FlowResults extends React.Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         let prev_flow_id = prevProps.flow && prevProps.flow.session_id;
         let flow_id = this.props.flow && this.props.flow.session_id;
-        if (flow_id != prev_flow_id ||
-            prevState.selectedArtifact != this.state.selectedArtifact) {
+        if (flow_id !== prev_flow_id ||
+            prevState.selectedArtifact !== this.state.selectedArtifact) {
             this.fetchRows();
         }
     }
@@ -41,8 +41,7 @@ export default class FlowResults extends React.Component {
             return;
         }
         let selectedArtifact = this.state.selectedArtifact;
-
-        if (!selectedArtifact) {
+        if (!selectedArtifact || !artifacts_with_results.includes(selectedArtifact)) {
             this.setState({selectedArtifact: artifacts_with_results[0]});
             selectedArtifact = artifacts_with_results[0];
         }
@@ -81,8 +80,8 @@ export default class FlowResults extends React.Component {
                            onChange={() => {this.setState({
                                selectedArtifact: this.element.value,
                            });}}>
-                {_.map(artifacts_with_results, function(item) {
-                    return <option> {item} </option>;
+                {_.map(artifacts_with_results, function(item, idx) {
+                    return <option key={idx}> {item} </option>;
                 })}
               </FormControl>
 

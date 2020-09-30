@@ -4,28 +4,51 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import BootstrapTable from 'react-bootstrap-table-next';
-import filterFactory, { textFilter } from 'react-bootstrap-table2-filter'
+
+import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
 
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
+
+import { Join } from '../utils/paths.js';
+
+import { withRouter }  from "react-router-dom";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 class VeloFileList extends Component {
     static propTypes = {
         node: PropTypes.object,
-        setSelectedRow: PropTypes.func,
+        client: PropTypes.object,
+        updateCurrentNode: PropTypes.func,
     }
-//{ JSON.stringify(this.props.node.raw_data)}
+
+    updateCurrentFile = (row) => {
+        // We store the currently selected row in the node. When the
+        // user updates the row, we change the node's internal
+        // references.
+        let node = this.props.node;
+        node.selected = row;
+        this.props.updateCurrentNode(node);
+
+
+        // Update the router with the new path.
+        let vfs_path = [...this.props.node.path];
+        vfs_path.push(row.Name);
+        this.props.history.push("/vfs/" + this.props.client.client_id +
+                                Join(vfs_path));
+    }
 
     render() {
+        // The node keeps track of which row is selected.
+        let selected = this.props.node && this.props.node.selected && this.props.node.selected.Name;
+
         const selectRow = {
             mode: "radio",
             clickToSelect: true,
             classes: "row-selected",
-            onSelect: function(row) {
-                this.props.setSelectedRow(row);
-            }.bind(this),
+            onSelect: this.updateCurrentFile,
+            selected: [selected],
         };
 
         let toolbar = (
@@ -91,7 +114,6 @@ class VeloFileList extends Component {
             </Navbar>
         );
 
-
         if (!this.props.node || !this.props.node.raw_data) {
             return (
                 <>
@@ -124,7 +146,7 @@ class VeloFileList extends Component {
                 <BootstrapTable
                   hover
                   condensed
-                  keyField="_id"
+                  keyField="Name"
                   bootstrap4
                   headerClasses="alert alert-secondary"
                   bodyClasses="fixed-table-body"
@@ -139,4 +161,4 @@ class VeloFileList extends Component {
     }
 }
 
-export default VeloFileList;
+export default withRouter(VeloFileList);

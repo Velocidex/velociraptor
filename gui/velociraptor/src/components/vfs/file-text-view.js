@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import _ from 'lodash';
+
 import api from '../core/api-service.js';
 import Pagination from '../bootstrap/pagination/index.js';
 
@@ -48,6 +48,10 @@ export default class FileTextView extends React.Component {
         }
 
         var filePath = download.vfs_path;
+        if (!filePath) {
+            return;
+        }
+
         var url = 'api/v1/DownloadVFSFile';
 
         var params = {
@@ -60,24 +64,20 @@ export default class FileTextView extends React.Component {
         this.setState({loading: true});
 
         api.get(url, params).then(function(response) {
-            this.parseFileContentToTextRepresentation_(response.data, page);
+            this.parseFileContentToTextRepresentation_(response.data || "", page);
         }.bind(this), function() {
             this.setState({hexDataRows: [], loading: false});
         }.bind(this));
     };
 
     parseFileContentToTextRepresentation_ = (fileContent, page) => {
-        if (!fileContent) {
-            return;
-        }
-
         let rawdata = fileContent.replace(/[^\x20-\x7f\r\n]/g, '.');
         this.setState({rawdata: rawdata, loading: false});
     };
 
 
     render() {
-        if (!this.state.rawdata) {
+        if (this.state.loading) {
             return <div className="panel hexdump">
                      Loading...
                    </div>;
@@ -106,7 +106,6 @@ export default class FileTextView extends React.Component {
             <div>
               <div className="file-hex-view">
                 { pageCount && <Pagination {...paginationConfig}/> }
-
                 <VeloAce
                   text={this.state.rawdata}
                   mode="text"
