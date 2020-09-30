@@ -1,169 +1,247 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import VeloTimestamp from "../utils/time.js";
+import VeloValueRenderer from "../utils/value.js";
+
+import Button from 'react-bootstrap/Button';
+
+import Dropdown from 'react-bootstrap/Dropdown';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import _ from 'lodash';
+
+import api from '../core/api-service.js';
+
+import axios from 'axios';
+
+const POLL_TIME = 5000;
+
 
 export default class FlowOverview extends React.Component {
     static propTypes = {
+        // This is the abbreviated flow details. When the component
+        // mounts we start polling for the detailed flow details and
+        // replace it.
         flow: PropTypes.object,
     };
 
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+        this.interval = setInterval(this.fetchDetailedFlow, POLL_TIME);
+
+        // Set the abbreviated flow in the meantime while we fetch the
+        // full detailed to provide a smoother UX.
+        this.setState({detailed_flow: {context: this.props.flow}});
+        this.fetchDetailedFlow();
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        let prev_flow_id = prevProps.flow && prevProps.flow.session_id;
+        if (this.props.flow.session_id != prev_flow_id) {
+            this.setState({detailed_flow: {context: this.props.flow}});
+            this.fetchDetailedFlow();
+        };
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+        clearInterval(this.interval);
+    }
+
+    fetchDetailedFlow = () => {
+        if (!this.props.flow || !this.props.flow.client_id) {
+            return;
+        };
+
+        api.get("api/v1/GetFlowDetails", {
+            flow_id: this.props.flow.session_id,
+            client_id: this.props.flow.client_id,
+        }).then((response) => {
+            this.setState({detailed_flow: response.data});
+        });
+    }
+
+    prepareDownload = () => {
+
+    };
+
+    prepareReport = () => {
+
+    };
+
+    state = {
+        detailed_flow: {},
+    }
+
     render() {
-        if (!this.props.flow || !this.props.flow.session_id) {
-            return <div>Loading ...</div>;
+        let flow = this.state.detailed_flow && this.state.detailed_flow.context;
+        let artifacts = flow && flow.request && flow.request.artifacts;
+
+        if (!flow || !flow.session_id || !artifacts)  {
+            return <div>Please click a collection in the above table</div>;
         }
 
+        let parameters = flow.request &&
+            flow.request.parameters && flow.request.parameters.env;
+        parameters = parameters || [];
+
+        let artifacts_with_results = flow.artifacts_with_results || [];
+        let uploaded_files = flow.uploaded_files || [];
+        let available_downloads = this.state.detailed_flow &&
+            this.state.detailed_flow.available_downloads &&
+            this.state.detailed_flow.available_downloads.files;
+        available_downloads = available_downloads || [];
+
         return (
-            <>
-              <div>
-                <grr-force-refresh refresh-trigger="flow">
-                  <div className="card-deck">
-                    <div className="card panel">
-                      <h5 className="card-header">Overview</h5>
-                      <div className="card-body">
-                        <dl className="dl-horizontal dl-flow">
-                          <dt>Artifact Names</dt>
-                          <dd>
-                            <div ng-repeat="item in flow.context.request.artifacts || []">
-                              item
-                            </div>
-                          </dd>
+            <div>
+              <div className="card-deck">
+                <div className="card panel">
+                  <h5 className="card-header">Overview</h5>
+                  <div className="card-body">
+                    <dl className="row">
+                      <dt className="col-4">Artifact Names</dt>
+                      <dd className="col-8">
+                        { _.map(artifacts, function(v, idx) {
+                            return <div key={idx}>{v}</div>;
+                        })}
+                      </dd>
 
-                          <dt>Flow ID</dt>
-                          <dd>  flow.context.session_id </dd>
+                      <dt className="col-4">Flow ID</dt>
+                      <dd className="col-8">  { flow.session_id } </dd>
 
-                          <dt>Creator</dt>
-                          <dd> flow.context.request.creator </dd>
+                      <dt className="col-4">Creator</dt>
+                      <dd className="col-8"> { flow.request.creator } </dd>
 
-                          <dt>Create Time</dt>
-                          <dd>
-                            <grr-timestamp value="flow.context.create_time">
-                            </grr-timestamp>
-                          </dd>
+                      <dt className="col-4">Create Time</dt>
+                      <dd className="col-8">
+                        <VeloTimestamp usec={flow.create_time / 1000}/>
+                      </dd>
 
-                          <dt>Start Time</dt>
-                          <dd>
-                            <grr-timestamp value="flow.context.start_time">
-                            </grr-timestamp>
-                          </dd>
+                      <dt className="col-4">Start Time</dt>
+                      <dd className="col-8">
+                        <VeloTimestamp usec={flow.start_time / 1000}/>
+                      </dd>
 
-                          <dt>Last Active</dt>
-                          <dd><grr-timestamp value="flow.context.active_time"></grr-timestamp></dd>
+                      <dt className="col-4">Last Active</dt>
+                      <dd className="col-8">
+                        <VeloTimestamp usec={flow.active_time / 1000}/>
+                      </dd>
 
-                          <dt>Duration</dt>
-                          <dd>flow.context.execution_duration/1000000000 | number:2
-                            <span ng-if="flow.context.execution_duration">Seconds</span>
-                            <span ng-if="!flow.context.execution_duration">Running....</span>
-                          </dd>
+                      <dt className="col-4">Duration</dt>
+                      <dd className="col-8"> { (flow.execution_duration/1000000000).toFixed(2) || "" }
+                        { flow.execution_duration ? " Seconds" : " Running..."}
+                      </dd>
 
-                          <dt>State</dt>
-                          <dd>flow.context.state</dd>
+                      <dt className="col-4">State</dt>
+                      <dd className="col-8">{ flow.state }</dd>
 
-                          <div ng-if="::flow.context.state == 'ERROR'">
-                            <dt>Error</dt>
-                            <dd>flow.context.status</dd>
-                          </div>
+                      { flow.state == "ERROR" &&
+                        <div>
+                          <dt className="col-4">Error</dt>
+                          <dd className="col-8">{flow.status }</dd>
+                        </div>
+                      }
 
-                          <dt>Ops/Sec</dt>
-                          <dd>::flow.context.request.ops_per_second || 'Unlimited' </dd>
-                          <dt>Timeout</dt>
-                          <dd>::flow.context.request.timeout || 'Unlimited' </dd>
-                          <dt>Max Rows</dt>
-                          <dd>::flow.context.request.max_rows || 'Unlimited' </dd>
-                          <dt>Max Mb</dt>
-                          <dd> ( (flow.context.request.max_upload_bytes || 0) / 1024 / 1024) || 'Unlimited' </dd>
+                      <dt className="col-4">Ops/Sec</dt>
+                      <dd className="col-8"> {flow.request.ops_per_second || 'Unlimited'} </dd>
+                      <dt className="col-4">Timeout</dt>
+                      <dd className="col-8"> {flow.request.timeout || 'Unlimited' } </dd>
+                      <dt className="col-4">Max Rows</dt>
+                      <dd className="col-8"> {flow.request.max_rows || 'Unlimited'} </dd>
+                      <dt className="col-4">Max Mb</dt>
+                      <dd className="col-8"> { ((flow.request.max_upload_bytes || 0)
+                                                / 1024 / 1024).toFixed(2) || 'Unlimited' }</dd>
+                      <br />
+                    </dl>
 
-                          <br />
-                        </dl>
-
-                        <h5> Parameters </h5>
-                        <dl className="dl-horizontal dl-flow">
-                          <div ng-repeat="item in ::flow.context.request.parameters.env">
-                            <dt>item.key</dt>
-                            <dd>item.value</dd>
-                          </div>
-                        </dl>
-
-                      </div>
-                    </div>
-                    <div className="card panel">
-                      <h5 className="card-header">Results</h5>
-                      <div className="card-body">
-                        <dl className="dl-horizontal dl-flow">
-                          <dt>Artifacts with Results</dt>
-                          <dd>
-                            <div ng-repeat="item in flow.context.artifacts_with_results || []">
-                              item
-                            </div>
-                          </dd>
-
-                          <dt>Total Rows</dt>
-                          <dd>
-                            flow.context.total_collected_rows || 0
-                          </dd>
-
-                          <dt>Uploaded Bytes</dt>
-                          <dd>
-                            flow.context.total_uploaded_bytes || 0  /  flow.context.total_expected_uploaded_bytes || 0
-                          </dd>
-
-                          <dt>Files uploaded</dt>
-                          <dd>  flow.context.uploaded_files.length || flow.context.total_uploaded_files || 0 }} </dd>
-
-                          <dt>Download Results</dt>
-                          <dd>
-                            <div className="input-group-prepend">
-                              <button className="btn btn-default dropdown-toggle"
-                                      type="button"
-                                      data-toggle="dropdown" aria-expanded="false"
-                                      ng-disabled="!controller.uiTraits.Permissions.prepare_results"
-                              >
-                                <i className="fa fa-archive"></i>
-                              </button>
-                              <div className="dropdown-menu">
-                                <button className="dropdown-item"
-                                        ng-disabled="!controller.uiTraits.Permissions.prepare_results"
-                                        ng-click="controller.prepareDownload()">
-                                  Prepare Download
-                                </button>
-                                <button className="dropdown-item"
-                                        ng-disabled="!controller.uiTraits.Permissions.prepare_results"
-                                        ng-click="controller.prepareDownload('report')">
-                                  Prepare Collection Report
-                                </button>
-                              </div>
-                            </div>
-                          </dd>
-
-                          <dt>Available Downloads</dt>
-                          <dd>
-                            <table className="table table-stiped table-condensed table-hover table-bordered">
-                              <tbody>
-                                <tr ng-repeat="item in flow.available_downloads.files">
-                                  <td>
-                                    <a href="item.path}}"
-                                       target="_blank"
-                                       ng-if="item.complete">item.name}}</a>
-                                    <div ng-if="!item.complete">item.name}}</div>
-                                  </td>
-                                  <td>item.size}} Bytes</td>
-                                  <td>item.date}}</td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </dd>
-                        </dl>
-                      </div>
-                    </div>
+                    <h5> Parameters </h5>
+                    <dl className="row">
+                      { _.map(parameters, function(item, idx) {
+                          if (item) {
+                              return <React.Fragment key={idx}>
+                                <dt className="col-4">{item.key}</dt>
+                                           <dd className="col-8">
+                                             <VeloValueRenderer value={item.value}/>
+                                           </dd>
+                                         </React.Fragment>;
+                          };
+                          return <>{JSON.stringify(item)}</>;
+                      })}
+                    </dl>
                   </div>
-                  <div ng-if="::flow.internal_error">
-                    <br/>
-                    <dt className="alert-danger danger">Error while Opening</dt>
-                    <dd> ::flow.internal_error </dd>
-                  </div>
+                </div>
+                <div className="card panel">
+                  <h5 className="card-header">Results</h5>
+                  <div className="card-body">
+                    <dl className="row">
+                      <dt className="col-4">Artifacts with Results</dt>
+                      <dd className="col-8">
+                        { _.map(artifacts_with_results, function(item, idx) {
+                            return <VeloValueRenderer value={item} key={idx}/>;
+                        })}
+                      </dd>
 
-                </grr-force-refresh>
+                      <dt className="col-4">Total Rows</dt>
+                      <dd className="col-8">
+                        { flow.total_collected_rows || 0 }
+                      </dd>
+
+                      <dt className="col-4">Uploaded Bytes</dt>
+                      <dd className="col-8">
+                        { (flow.total_uploaded_bytes || 0)  /
+                          (flow.total_expected_uploaded_bytes || 1) }
+                      </dd>
+
+                      <dt className="col-4">Files uploaded</dt>
+                      <dd className="col-8">
+                        {uploaded_files.length || flow.total_uploaded_files || 0 }
+                      </dd>
+
+                      <dt className="col-4">Download Results</dt>
+                      <dd className="col-8">
+                        <Dropdown>
+                          <Dropdown.Toggle variant="default">
+                            <FontAwesomeIcon icon="archive"/>
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu>
+                            <Dropdown.Item
+                              onClick={this.prepareDownload}>
+                              Prepare Download
+                            </Dropdown.Item>
+                            <Dropdown.Item
+                              onClick={this.prepareReport}>
+                              Prepare Collection Report
+                            </Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      </dd>
+
+                      <dt className="col-4">Available Downloads</dt>
+                      <dd className="col-8">
+                        <table className="table table-stiped table-condensed table-hover table-bordered">
+                          <tbody>
+                            { _.map(available_downloads, function(item, idx) {
+                                return <tr key={idx}>
+                                         <td>
+                                           { item.complete ?
+                                             <a href={item.path}
+                                                rel="noopener noreferrer"
+                                                target="_blank">{item.name}</a> :
+                                             <div>{item.name}</div>
+                                           }
+                                         </td>
+                                         <td>{item.size} Bytes</td>
+                                         <td>{item.date}</td>
+                                       </tr>;
+                            })}
+                          </tbody>
+                        </table>
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
               </div>
-
-            </>
+            </div>
         );
     }
 };

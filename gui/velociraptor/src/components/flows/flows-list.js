@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import _ from 'lodash';
 import BootstrapTable from 'react-bootstrap-table-next';
 import VeloTimestamp from "../utils/time.js";
 
@@ -27,7 +28,12 @@ export default class FlowsList extends React.Component {
              }
             },
             {dataField: "session_id", text: "FlowId"},
-            {dataField: "request.artifacts", text: "Artifacts"},
+            {dataField: "request.artifacts", text: "Artifacts",
+            formatter: (cell, row) => {
+                return _.map(cell, function(item) {
+                    return <div>{item}</div>;
+                });
+            }},
             {dataField: "create_time", text: "Created",
              formatter: (cell, row) => {
                  return <VeloTimestamp usec={cell / 1000}/>;

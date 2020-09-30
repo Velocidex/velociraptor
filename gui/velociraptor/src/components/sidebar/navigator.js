@@ -1,4 +1,5 @@
 import "./navigator.css";
+import logo from  "./velo.svg";
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -47,7 +48,7 @@ class VeloNavigator extends Component {
                 <span className="hamburger toolbar-buttons"
                       onClick={this.toggle}>&#9776;</span>
                 <a href="#welcome">
-                  <img src="/static/images/velo.svg" className="velo-logo" alt="velo logo"/>
+                  <img src={logo} className="velo-logo" alt="velo logo"/>
                 </a>
                 <div className={classNames({
                     'collapsed': this.state.collapsed,

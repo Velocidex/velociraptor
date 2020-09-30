@@ -18,6 +18,7 @@
         "dotenv": "^8.2.0",
         "env-cmd": "^10.1.0",
         "html-react-parser": "^0.14.0",
+        "http-proxy-middleware": "^1.0.5",
         "lodash": "^4.17.20",
         "material-dashboard": "^2.1.0",
         "moment": "^2.28.0",
@@ -42,7 +43,6 @@
         "recharts": "^1.8.5",
         "styled-components": "^5.2.0"
     },
-    "proxy": "https://localhost:8889",
     "scripts": {
         "start": "react-scripts start",
         "build": "react-scripts build",

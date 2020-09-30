@@ -1,5 +1,7 @@
 import "./table.css";
 
+import _ from 'lodash';
+
 import 'react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css';
 import ToolkitProvider from 'react-bootstrap-table2-toolkit';
 
@@ -136,6 +138,9 @@ class VeloTable extends Component {
     static propTypes = {
         rows: PropTypes.array,
         columns: PropTypes.array,
+
+        // A dict containing renderers for each column.
+        renderers: PropTypes.object,
     }
 
     state = {
@@ -148,6 +153,13 @@ class VeloTable extends Component {
         this.setState(new_state);
     }
 
+    defaultFormatter = (cell, row, rowIndex) => {
+        if (_.isString(cell)) {
+            return cell;
+        }
+        return JSON.stringify(cell);
+    }
+
     render() {
         if (!this.props.rows || !this.props.columns) {
             return <div></div>;
@@ -158,7 +170,14 @@ class VeloTable extends Component {
         let columns = [{dataField: '_id', hidden: true}];
         for(var i=0;i<this.props.columns.length;i++) {
             var name = this.props.columns[i];
-            columns.push({ dataField: name, text: name});
+            let definition ={ dataField: name, text: name};
+            if (this.props.renderers && this.props.renderers[name]) {
+                definition.formatter = this.props.renderers[name];
+            } else {
+                definition.formatter = this.defaultFormatter;
+            }
+
+            columns.push(definition);
         }
 
         // Add an id field for react ordering.
@@ -177,13 +196,13 @@ class VeloTable extends Component {
             >
             {
                 props => (
-                    <div>
+                    <div className="col-12">
                       <VeloNotImplemented
                         show={this.state.download}
                         resolve={() => this.set("download", false)}
                       />
 
-                      <div className="row">
+                      <div className="row col-12">
                         <div className="btn-group float-left" data-toggle="buttons">
                           <ColumnToggleList { ...props.columnToggleProps } />
                           <InspectRawJson rows={this.props.rows} />
@@ -193,7 +212,7 @@ class VeloTable extends Component {
                           </Button>
                         </div>
                       </div>
-                      <div className="row">
+                      <div className="row col-12">
                         <BootstrapTable
                                      { ...props.baseProps }
                           hover
@@ -217,3 +236,32 @@ class VeloTable extends Component {
 };
 
 export default VeloTable;
+
+const int_regex = /^[-0-9]+$/;
+
+export function PrepareData(value) {
+    var rows = [];
+    let columns = value.columns;
+    for (var i=0; i<value.rows.length; i++) {
+        var row = value.rows[i].cell;
+        var new_row = {};
+        for (var j=0; j<columns.length; j++) {
+            var cell = j > row.length ? "" : row[j];
+            var column = columns[j];
+
+            // A bit of a hack for now, this represents an object.
+            if (cell[0] == "{" || cell[0] == "[") {
+                cell = JSON.parse(cell);
+            } else if(cell.match(int_regex)) {
+                cell = parseInt(cell);
+            } else if(cell[0] == " ") {
+                cell = cell.substr(1);
+            }
+
+            new_row[column] = cell;
+        }
+        rows.push(new_row);
+    }
+
+    return {columns: value.columns, rows: rows};
+};

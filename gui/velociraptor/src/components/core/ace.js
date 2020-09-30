@@ -72,28 +72,51 @@ import  'ace-builds/src-min-noconflict/mode-json.js';
 import  'ace-builds/src-min-noconflict/mode-markdown.js';
 import  'ace-builds/src-min-noconflict/mode-sql.js';
 
+import Button from 'react-bootstrap/Button';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 export default class VeloAce extends Component {
     static propTypes = {
         text: PropTypes.string,
         mode: PropTypes.string,
         onChange: PropTypes.func,
+        options: PropTypes.object,
+
+        // Extra toolbar buttons to go in the editor toolbar.
+        toolbar: PropTypes.array,
     }
 
     render() {
-        return (
-            <AceEditor
-              mode={this.props.mode || 'sql'}
-              theme="github"
-              value={this.props.text || ''}
-              onChange={this.props.onChange}
-              style={
-                  {width: "100%"}
-              }
+        console.log(this.props);
 
-              editorProps={{
-                  $blockScrolling: true,
-              }}
-            />
+        return (
+            <>
+              <div className="row col-12">
+                <div className="btn-group float-left" data-toggle="buttons">
+                  <Button variant="default"
+                          onClick={() => this.refs.ace.editor.execCommand("showSettingsMenu")} >
+                    <FontAwesomeIcon icon="wrench"/>
+                  </Button>
+                  { this.props.toolbar }
+                </div>
+              </div>
+              <div className="row col-12">
+                <AceEditor
+                  ref="ace"
+                  mode={this.props.mode || 'sql'}
+                  theme="github"
+                  value={this.props.text || ''}
+                  onChange={this.props.onChange}
+                  style={
+                      {width: "100%"}
+                  }
+                  setOptions={this.props.options || {}}
+                  editorProps={{
+                      $blockScrolling: true,
+                  }}
+                />
+              </div>
+            </>
         );
     }
 }
