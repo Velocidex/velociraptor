@@ -10,7 +10,10 @@ import VeloClientSummary from './components/clients/client-summary.js';
 import VFSViewer from './components/vfs/browse-vfs.js';
 import VeloLiveClock from './components/utils/clock.js';
 import ClientFlowsView from './components/flows/client-flows-view.js';
+import Notebook from './components/notebooks/notebook.js';
+
 import { Switch, Route } from "react-router-dom";
+import { Join } from './components/utils/paths.js';
 
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
@@ -37,9 +40,6 @@ class App extends Component {
     state = {
         client: {},
 
-        // Current path components to the VFS directory.
-        vfs_path: [],
-
         // The file listing in the current directory.
         current_node: {},
 
@@ -58,13 +58,34 @@ class App extends Component {
         this.setState({query: query});
     };
 
+    updateCurrentNode = (node) => {
+        this.setState({current_node: node});
+    }
+
     render() {
+        // We need to prepare a vfs_path for the navigator to link
+        // to. Depending on the current node, we make a link with or
+        // without a final "/".
+        let vfs_path = "/";
+        if (this.state.current_node && this.state.current_node.path) {
+            let path = [...this.state.current_node.path];
+            let name = this.state.current_node.selected && this.state.current_node.selected.Name;
+            if (name) {
+                path.push(name);
+                vfs_path = Join(path);
+            } else {
+                vfs_path = Join(path) + "/";
+            }
+        }
+
         return (
             <>
               <div className="navbar navbar-default navbar-static-top" id="header">
                 <div className="navbar-inner">
                   <div className="">
-                    <VeloNavigator client={this.state.client} />
+                    <VeloNavigator
+                      vfs_path={vfs_path}
+                      client={this.state.client} />
                     <div className="float-left navbar-form toolbar-buttons">
                       <VeloClientSearch
                         setSearch={this.setClientSearch}
@@ -105,6 +126,9 @@ class App extends Component {
                     <ClientFlowsView
                       client={this.state.client}
                     />
+                  </Route>
+                  <Route path="/notebooks/:notebook_id?">
+                    <Notebook />
                   </Route>
                 </Switch>
               </div>

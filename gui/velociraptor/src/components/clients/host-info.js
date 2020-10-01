@@ -170,7 +170,7 @@ class VeloHostInfo extends Component {
                       { this.renderInterrogate() }
                       Interrogate
                     </button>
-                    <Link to={"/vfs/" + this.props.client.client_id}
+                    <Link to={"/vfs/" + this.props.client.client_id + "/"}
                       role="button" className="btn btn-default" >
                       <i><FontAwesomeIcon icon="folder-open"/></i>
                       VFS

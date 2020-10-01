@@ -40,6 +40,7 @@ class VFSViewer extends Component {
 
     updateCurrentNode = (node) => {
         this.setState({current_node: node});
+        this.props.updateCurrentNode(node);
     }
 
     render() {

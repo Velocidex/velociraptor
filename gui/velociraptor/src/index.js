@@ -17,12 +17,16 @@ import { faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
          faSearch, faSpinner,  faSearchPlus, faFolderOpen, faHistory,
          faTasks, faTerminal, faCompress, faExpand, faEyeSlash, faStop, faExclamation,
          faColumns, faDownload, faSync, faCheck, faHourglass, faArchive,
+         faSort, faSortUp, faSortDown,
+         faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
          faBinoculars } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
             faSearch, faSpinner, faSearchPlus, faTasks, faTerminal,
             faCompress, faExpand, faEyeSlash, faStop, faExclamation,
             faColumns, faDownload, faSync, faCheck, faHourglass, faArchive,
+            faSort, faSortUp, faSortDown,
+            faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
             faFolderOpen , faHistory, faBinoculars);
 
 ReactDOM.render(

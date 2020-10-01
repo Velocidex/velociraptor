@@ -8,5 +8,6 @@ module.exports = function(app) {
     });
 
     app.use('/api', mw);
+    app.use('/notebooks/', mw);
     app.use('/downloads', mw);
 };

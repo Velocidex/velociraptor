@@ -23,9 +23,10 @@
 
 
 .toolbar {
-  height: 48px;
-  box-sizing: content-box;
-  overflow: visible;
+    display: block;
+    box-sizing: content-box;
+    overflow: visible;
+    margin-bottom: 5px;
 }
 
 table  tr.row_selected td,

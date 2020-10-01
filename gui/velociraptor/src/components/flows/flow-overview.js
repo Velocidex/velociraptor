@@ -14,7 +14,6 @@ import axios from 'axios';
 
 const POLL_TIME = 5000;
 
-
 export default class FlowOverview extends React.Component {
     static propTypes = {
         // This is the abbreviated flow details. When the component

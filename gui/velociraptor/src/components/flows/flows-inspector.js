@@ -8,6 +8,7 @@ import FlowOverview from './flow-overview.js';
 import FlowUploads from './flow-uploads.js';
 import FlowRequests from './flow-requests.js';
 import FlowResults from './flow-results.js';
+import FlowLogs from './flow-logs.js';
 
 import { withRouter }  from "react-router-dom";
 
@@ -44,9 +45,9 @@ class FlowInspector extends React.Component {
                   <FlowResults flow={this.props.flow} />
                 </Tab>
                 <Tab eventKey="logs" title="Log">
+                  <FlowLogs flow={this.props.flow} />
                 </Tab>
               </Tabs>
-              { JSON.stringify(this.props.flow)}
             </div>
         );
     }

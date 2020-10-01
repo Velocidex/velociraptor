@@ -83,20 +83,23 @@ export default class VeloAce extends Component {
         options: PropTypes.object,
 
         // Extra toolbar buttons to go in the editor toolbar.
-        toolbar: PropTypes.array,
+        toolbar: PropTypes.any,
+
+        aceConfig: PropTypes.func,
     }
 
     render() {
+        console.log(this.props.mode);
+
         return (
             <>
-              <div className="row col-12">
-                <div className="btn-group float-left" data-toggle="buttons">
-                  <Button variant="default"
-                          onClick={() => this.refs.ace.editor.execCommand("showSettingsMenu")} >
-                    <FontAwesomeIcon icon="wrench"/>
-                  </Button>
-                  { this.props.toolbar }
-                </div>
+              <div className="row col-12 toolbar">
+                <Button variant="default"
+                        className="float-left"
+                        onClick={() => this.refs.ace.editor.execCommand("showSettingsMenu")} >
+                  <FontAwesomeIcon icon="wrench"/>
+                </Button>
+                { this.props.toolbar }
               </div>
               <div className="row col-12">
                 <AceEditor
@@ -112,6 +115,7 @@ export default class VeloAce extends Component {
                   editorProps={{
                       $blockScrolling: true,
                   }}
+                  onLoad={this.props.aceConfig}
                 />
               </div>
             </>
