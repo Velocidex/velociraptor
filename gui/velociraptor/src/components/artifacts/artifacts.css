@@ -1,0 +1,14 @@
+.artifact-search-table  {
+    overflow-y: auto;
+    height: 100%;
+    padding-right: 0;
+    margin-right: 15px;
+}
+
+.content-panel {
+    position: fixed;
+    width: 100%;
+    overflow-x: auto;
+    height: -webkit-fill-available;
+    padding-bottom: 150px;  /* header + footer + toolbar */
+}

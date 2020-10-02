@@ -8,6 +8,10 @@ import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BootstrapTable from 'react-bootstrap-table-next';
 
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import Button from 'react-bootstrap/Button';
+import Navbar from 'react-bootstrap/Navbar';
+
 
 export default class NotebooksList extends React.Component {
     static propTypes = {
@@ -76,20 +80,20 @@ export default class NotebooksList extends React.Component {
             {dataField: "modified_time", text: "Modified Time",
              sort: true, sortCaret: sortCaret,
              headerFormatter: headerFormatter,
-            formatter: (cell, row) => {
-                return <VeloTimestamp usec={cell * 1000}/>
-            }},
+             formatter: (cell, row) => {
+                 return <VeloTimestamp usec={cell * 1000}/>
+             }},
             {dataField: "creator", text: "Creator",
              headerFormatter: headerFormatter,
             },
             {dataField: "collaborators", text: "Collaborators",
              sort: true, sortCaret: sortCaret,
              headerFormatter: headerFormatter,
-            formatter: (cell, row) => {
-                return _.map(cell, function(item, idx) {
-                    return <div key={idx}>{item}</div>;
-                });
-            }},
+             formatter: (cell, row) => {
+                 return _.map(cell, function(item, idx) {
+                     return <div key={idx}>{item}</div>;
+                 });
+             }},
         ];
 
 
@@ -106,20 +110,48 @@ export default class NotebooksList extends React.Component {
         };
 
         return (
-            <div className="fill-parent no-margins toolbar-margin">
-              <BootstrapTable
-                hover
-                condensed
-                keyField="notebook_id"
-                bootstrap4
-                headerClasses="alert alert-secondary"
-                bodyClasses="fixed-table-body"
-                data={this.props.notebooks}
-                columns={columns}
-                selectRow={ selectRow }
-                filter={ filterFactory() }
-              />
-            </div>
+            <>
+              <Navbar className="toolbar">
+                <ButtonGroup>
+                  <Button title="NewNotebook"
+                          onClick={this.newNotebook}
+                          variant="default">
+                    <FontAwesomeIcon icon="plus"/>
+                  </Button>
+
+                  <Button title="Delete Notebook"
+                          onClick={this.deleteNotebook}
+                          variant="default">
+                    <FontAwesomeIcon icon="trash"/>
+                  </Button>
+
+                  <Button title="Edit Notebook"
+                          onClick={this.editNotebook}
+                          variant="default">
+                    <FontAwesomeIcon icon="wrench"/>
+                  </Button>
+                  <Button title="ExportNotebook"
+                          onClick={this.exportNotebook}
+                          variant="default">
+                    <FontAwesomeIcon icon="download"/>
+                  </Button>
+                </ButtonGroup>
+              </Navbar>
+              <div className="fill-parent no-margins toolbar-margin">
+                <BootstrapTable
+                  hover
+                  condensed
+                  keyField="notebook_id"
+                  bootstrap4
+                  headerClasses="alert alert-secondary"
+                  bodyClasses="fixed-table-body"
+                  data={this.props.notebooks}
+                  columns={columns}
+                  selectRow={ selectRow }
+                  filter={ filterFactory() }
+                />
+              </div>
+            </>
         );
     }
 };

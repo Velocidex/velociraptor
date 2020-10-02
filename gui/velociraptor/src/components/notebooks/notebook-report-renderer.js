@@ -13,13 +13,12 @@ export default class NotebookReportRenderer extends React.Component {
     render() {
         let output = this.props.cell && this.props.cell.output;
         if (!output) {
-            return <></>;
+            return <hr/>;
         }
 
         let template = parse(this.props.cell.output, {
             replace: (domNode) => {
                 if (domNode.name === "grr-csv-viewer") {
-                    let baseUrl = domNode.attribs["base-url"];
                     let params = JSON.parse(domNode.attribs.params);
 
                     return (

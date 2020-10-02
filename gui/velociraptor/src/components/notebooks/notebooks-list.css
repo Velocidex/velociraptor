@@ -9,3 +9,9 @@
 .notebook-filter td.sort-element {
     vertical-align: middle;
 }
+
+
+div.error-message {
+    font-size: 12pt;
+    color: #f11818 !important;
+}

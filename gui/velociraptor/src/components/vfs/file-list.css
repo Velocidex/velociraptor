@@ -26,6 +26,7 @@
     display: block;
     box-sizing: content-box;
     overflow: visible;
+    margin: 5px;
     margin-bottom: 5px;
 }
 

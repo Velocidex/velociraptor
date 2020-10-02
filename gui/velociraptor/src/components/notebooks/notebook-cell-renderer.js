@@ -25,6 +25,11 @@ export default class NotebookCellRenderer extends React.Component {
         notebook_id: PropTypes.string,
         selected_cell_id: PropTypes.string,
         setSelectedCellId: PropTypes.func,
+
+        upCell: PropTypes.func,
+        downCell: PropTypes.func,
+        deleteCell: PropTypes.func,
+        addCell: PropTypes.func,
     };
 
     state = {
@@ -82,13 +87,13 @@ export default class NotebookCellRenderer extends React.Component {
     };
 
     ace_type = (type) => {
-        if (type == "VQL") {
+        if (type === "VQL") {
             return "sql";
         }
-        if (type == "Markdown") {
+        if (type === "Markdown") {
             return "markdown";
         }
-        if (type == "Artifact") {
+        if (type === "Artifact") {
             return "yaml";
         }
 
@@ -100,16 +105,53 @@ export default class NotebookCellRenderer extends React.Component {
         cell.input = this.state.ace.getValue();
         cell.output = "Loading";
         cell.timestamp = 0;
-        this.setState({cell, cell});
+        this.setState({cell: cell});
 
         api.post('/api/v1/UpdateNotebookCell', {
             notebook_id: this.props.notebook_id,
             cell_id: this.state.cell.cell_id,
             type: this.state.cell.type || "Markdown",
             currently_editing: false,
-            input: this.state.cell.input}).then( (response) => {
-                this.setState({cell: response.data, currently_editing: false});
-            });
+            input: this.state.cell.input,
+        }).then( (response) => {
+            this.setState({cell: response.data, currently_editing: false});
+        });
+    };
+
+    deleteCell = () => {
+        this.props.deleteCell(this.state.cell.cell_id);
+        this.setState({currently_editing: false});
+    }
+
+    pasteEvent = (e) => {
+        let items = e && e.clipboardData && e.clipboardData.items;
+        if (!items) {return;}
+
+        for (var i = 0; i < items.length; i++) {
+            let item = items[i];
+
+            if (item.kind === 'file') {
+                let blob = item.getAsFile();
+                let reader = new FileReader();
+                reader.onload = (event) => {
+                    let request = {
+                        data: reader.result.split(",")[1],
+                        notebook_id: this.props.notebook_id,
+                        filename: blob.name,
+                        size: blob.size,
+                    };
+
+                    api.post(
+                        'api/v1/UploadNotebookAttachment', request
+                    ).then((response) => {
+                        this.state.ace.insert("\n!["+blob.name+"]("+response.data.url+")\n");
+                    }, function failure(response) {
+                        console.log("Error " + response.data);
+                    });
+                };
+                reader.readAsDataURL(blob);
+            }
+        }
     };
 
     render() {
@@ -156,13 +198,17 @@ export default class NotebookCellRenderer extends React.Component {
                   </Button>
 
                   <Button title="Up Cell"
-                          onClick={this.upCell}
+                          onClick={() => {
+                              this.props.upCell(this.state.cell.cell_id);
+                          }}
                           variant="default">
                     <FontAwesomeIcon icon="arrow-up"/>
                   </Button>
 
                   <Button title="Down Cell"
-                          onClick={this.downCell}
+                          onClick={() => {
+                              this.props.downCell(this.state.cell.cell_id);
+                          }}
                           variant="default">
                     <FontAwesomeIcon icon="arrow-down"/>
                   </Button>
@@ -174,19 +220,26 @@ export default class NotebookCellRenderer extends React.Component {
                     <Dropdown.Menu>
                       <Dropdown.Item
                         title="Markdown"
-                        onClick={() => { this.addCell("Markdown"); }}>
+                        onClick={() => {
+                            this.props.addCell(this.state.cell.cell_id, "Markdown");
+                        }}>
                         Markdown
                       </Dropdown.Item>
                       <Dropdown.Item
                         title="VQL"
-                        onClick={() => { this.addCell("VQL"); }}>
+                        onClick={() => {
+                            this.props.addCell(this.state.cell.cell_id, "VQL");
+                        }}>
                         VQL
                       </Dropdown.Item>
                       <Dropdown.Item
                         title="Artifact"
-                        onClick={() => { this.addCell("Artifact"); }}>
+                        onClick={() => {
+                            this.props.addCell(this.state.cell.cell_id, "Artifact");
+                        }}>
                         Artifact
                       </Dropdown.Item>
+                      <hr/>
                       <Dropdown.Item
                         title="Add Cell From Hunt"
                         onClick={this.addCellFromHunt}>
@@ -262,7 +315,7 @@ export default class NotebookCellRenderer extends React.Component {
                 <div className='notebook-input'>
                   {toolbar}
                   { this.state.currently_editing && selected &&
-                    <div className="notebook-editor">
+                    <div className="notebook-editor" onPaste={this.pasteEvent}>
                       <form>
                         <VeloAce
                           toolbar={ace_toolbar}

@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import NotebooksList from './notebooks-list.js';
 import NotebookRenderer from './notebook-renderer.js';
@@ -17,10 +16,6 @@ const PAGE_SIZE = 100;
 
 
 class Notebooks extends React.Component {
-    static propTypes = {
-
-    };
-
     state = {
         notebooks: [],
         selected_notebook: {},
@@ -50,7 +45,7 @@ class Notebooks extends React.Component {
                 this.props.match.params.notebook_id;
             if (notebook_id) {
                 for(var i = 0; i < notebooks.length; i++){
-                    if (notebooks[i].notebook_id == notebook_id) {
+                    if (notebooks[i].notebook_id === notebook_id) {
                         selected_notebook = notebooks[i];
                         break;
                     }
@@ -76,6 +71,7 @@ class Notebooks extends React.Component {
                 notebooks={this.state.notebooks}
               />
               <NotebookRenderer
+                fetchNotebooks={this.fetchNotebooks}
                 notebook={this.state.selected_notebook}
               />
             </SplitPane>

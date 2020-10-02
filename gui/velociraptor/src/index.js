@@ -19,7 +19,8 @@ import { faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
          faColumns, faDownload, faSync, faCheck, faHourglass, faArchive,
          faSort, faSortUp, faSortDown,
          faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
-         faBinoculars } from '@fortawesome/free-solid-svg-icons';
+         faBinoculars, faUpload,
+       } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
             faSearch, faSpinner, faSearchPlus, faTasks, faTerminal,
@@ -27,7 +28,8 @@ library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
             faColumns, faDownload, faSync, faCheck, faHourglass, faArchive,
             faSort, faSortUp, faSortDown,
             faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
-            faFolderOpen , faHistory, faBinoculars);
+            faFolderOpen , faHistory, faBinoculars, faUpload,
+           );
 
 ReactDOM.render(
     <HashRouter>
