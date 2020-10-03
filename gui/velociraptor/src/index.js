@@ -19,14 +19,14 @@ import { faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
          faColumns, faDownload, faSync, faCheck, faHourglass, faArchive,
          faSort, faSortUp, faSortDown,
          faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
-         faBinoculars, faUpload,
+         faBinoculars, faUpload, faPause,
        } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
             faSearch, faSpinner, faSearchPlus, faTasks, faTerminal,
             faCompress, faExpand, faEyeSlash, faStop, faExclamation,
             faColumns, faDownload, faSync, faCheck, faHourglass, faArchive,
-            faSort, faSortUp, faSortDown,
+            faSort, faSortUp, faSortDown, faPause,
             faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
             faFolderOpen , faHistory, faBinoculars, faUpload,
            );

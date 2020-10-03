@@ -12,6 +12,7 @@ import VeloLiveClock from './components/utils/clock.js';
 import ClientFlowsView from './components/flows/client-flows-view.js';
 import Notebook from './components/notebooks/notebook.js';
 import ArtifactInspector from './components/artifacts/artifacts.js';
+import VeloHunts from './components/hunts/hunts.js';
 
 import { Switch, Route } from "react-router-dom";
 import { Join } from './components/utils/paths.js';
@@ -110,6 +111,9 @@ class App extends Component {
                   </Route>
                   <Route path="/artifacts/:artifact?">
                     <ArtifactInspector/>
+                  </Route>
+                  <Route path="/hunts/:hunt_id?">
+                    <VeloHunts/>
                   </Route>
 
                   <Route path="/host/:client_id/:action?">

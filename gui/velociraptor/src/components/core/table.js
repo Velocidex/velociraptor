@@ -8,6 +8,7 @@ import ToolkitProvider from 'react-bootstrap-table2-toolkit';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { textFilter } from 'react-bootstrap-table2-filter';
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
@@ -86,7 +87,9 @@ const ColumnToggleList = (e) => {
               className={ `btn btn-default ${column.toggle ? 'active' : ''}` }
               data-toggle="button"
               aria-pressed={ column.toggle ? 'true' : 'false' }
-              onClick={ () => onColumnToggle(column.dataField) }
+              onClick={ () => {
+                  onColumnToggle(column.dataField);
+              } }
             >
               { column.text }
             </Dropdown.Item>
@@ -144,12 +147,6 @@ class VeloTable extends Component {
         download: false,
     }
 
-    set = (k, v, e) => {
-        let new_state  = Object.assign({}, this.state);
-        new_state[k] = v;
-        this.setState(new_state);
-    }
-
     defaultFormatter = (cell, row, rowIndex) => {
         if (_.isString(cell)) {
             return cell;
@@ -196,7 +193,7 @@ class VeloTable extends Component {
                     <div className="col-12">
                       <VeloNotImplemented
                         show={this.state.download}
-                        resolve={() => this.set("download", false)}
+                        resolve={() => this.setState({download: false})}
                       />
 
                       <Navbar className="toolbar">
@@ -204,7 +201,7 @@ class VeloTable extends Component {
                           <ColumnToggleList { ...props.columnToggleProps } />
                           <InspectRawJson rows={this.props.rows} />
                           <Button variant="default"
-                                  onClick={() => this.set("download", true)} >
+                                  onClick={() => this.setState({download: true})} >
                             <FontAwesomeIcon icon="download"/>
                           </Button>
                         </ButtonGroup>
@@ -262,3 +259,49 @@ export function PrepareData(value) {
 
     return {columns: value.columns, rows: rows};
 };
+
+export function headerFormatter(column, colIndex, { sortElement, filterElement }) {
+    return (
+        // Not a real table but I cant figure out the css
+        // right now so we do it old school.
+        <table className="notebook-filter">
+          <tbody>
+            <tr>
+              { column.filter && <td>{ filterElement }</td> }
+              { !column.filter && <td>{ column.text }</td> }
+              <td className="sort-element">{ sortElement }</td>
+            </tr>
+          </tbody>
+        </table>
+    );
+}
+
+export function sortCaret(order, column) {
+    if (!order) return <FontAwesomeIcon icon="sort"/>;
+    else if (order === 'asc') return (
+        <FontAwesomeIcon icon="sort-up"/>
+    );
+    else if (order === 'desc') return (
+        <FontAwesomeIcon icon="sort-down"/>
+    );
+
+    return null;
+}
+
+export function formatColumns(columns) {
+    _.each(columns, (x) => {
+        x.headerFormatter=headerFormatter;
+        if (x.sort) {
+            x.sortCaret = sortCaret;
+        }
+        if (x.filtered) {
+            x.filter = textFilter({
+                placeholder: x.text,
+                caseSensitive: false,
+                delay: 10,
+            });
+        }
+    });
+
+    return columns;
+}

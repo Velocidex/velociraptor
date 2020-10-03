@@ -9,12 +9,15 @@ import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
 
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 import { Join } from '../utils/paths.js';
 
 import { withRouter }  from "react-router-dom";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import { formatColumns } from "../core/table.js";
 
 class VeloFileList extends Component {
     static propTypes = {
@@ -28,12 +31,17 @@ class VeloFileList extends Component {
         // user updates the row, we change the node's internal
         // references.
         let node = this.props.node;
+        if (!node) {
+            return;
+        }
+
         node.selected = row;
         this.props.updateCurrentNode(node);
 
 
+        let path = this.props.node.path || [];
         // Update the router with the new path.
-        let vfs_path = [...this.props.node.path];
+        let vfs_path = [...path];
         vfs_path.push(row.Name);
         this.props.history.push("/vfs/" + this.props.client.client_id +
                                 Join(vfs_path));
@@ -52,65 +60,20 @@ class VeloFileList extends Component {
         };
 
         let toolbar = (
-            <div className="navbar navbar-default toolbar"  >
-              <div className="navbar-inner">
-                <div className="navbar-form pull-left">
-                  <div className="btn-group" role="group">
-                    <button id="refresh-dir"
-                            type="button"
-                            ng-if="controller.mode == 'vfs_files'"
-                            className="btn btn-default btn-rounded"
-                            title="Refresh this directory (sync its listing with the client)"
-                            ng-disabled="!controller.uiTraits.Permissions.collect_client ||
-                            controller.lastRefreshOperationId"
-                            ng-click="controller.startVfsRefreshOperation()">
-                      <i className="fa fa-folder-open"></i>
-                    </button>
-                    <grr-recursive-list-button
-                      client-id="controller.fileContext.clientId"
-                      ng-if="controller.mode == 'vfs_files'"
-                      ng-className="{'disabled': !controller.fileContext.clientId }"
-                      file-path="controller.fileContext.selectedDirPath"
-                      className="toolbar_icon">
-                    </grr-recursive-list-button>
-
-                    <grr-add-item-button
-                      client-id="controller.fileContext.clientId"
-                      file-path="controller.fileContext.selectedFilePath"
-                      dir-path="controller.fileContext.selectedDirPath"
-                      mode="controller.mode"
-                    >
-                    </grr-add-item-button>
-                  </div>
-                  <grr-vfs-files-archive-button
-                    client-id="controller.fileContext.clientId"
-                    file-path="controller.fileContext.selectedDirPath"
-                    ng-if="controller.mode == 'vfs_files'"
-                  >
-                  </grr-vfs-files-archive-button>
-                </div>
-
-                <div className="navbar-form pull-right">
-                  <div className="btn-group" role="group">
-                    <button className="btn btn-default btn-rounded"
-                            type="button"
-                            ng-click="controller.showHelp()"
-                            title="Help!">
-                      <i className="fa fa-life-ring"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-        );
-
-        toolbar = (
             <Navbar className="toolbar">
-              <Button variant="default"
-                className="btn-rounded"
-                title="Refresh this directory (sync its listing with the client)">
-                <FontAwesomeIcon icon="folder-open"/>
-              </Button>
+              <ButtonGroup>
+                <Button title="Refresh this directory (sync its listing with the client)"
+                        onClick={this.startVfsRefreshOperation}
+                        variant="default">
+                  <FontAwesomeIcon icon="folder-open"/>
+                </Button>
+                <Button title="Recursively refresh this directory (sync its listing with the client)"
+                        onClick={this.startRecursiveVfsRefreshOperation}
+                        variant="default">
+                  <FontAwesomeIcon icon="folder-open"/>
+                  <span className="recursive-list-button">R</span>
+                </Button>
+              </ButtonGroup>
             </Navbar>
         );
 
@@ -125,19 +88,19 @@ class VeloFileList extends Component {
             );
         }
 
-        let columns = [
-            {dataField: "Name", text: "",
-             sort: true,
-             filter: textFilter({
-                 placeholder: "File names",
-                 caseSensitive: false,
-                 delay: 10,
-             })},
+        let columns = formatColumns([
+            {dataField: "Download", text: "", formatter: (cell, row) => {
+                if (cell) {
+                    return <FontAwesomeIcon icon="save"/>;
+                }
+            }, sort: true},
+            {dataField: "Name", text: "Name", sort: true, filtered: true},
             {dataField: "Size", text: "Size", sort: true},
             {dataField: "Mode", text: "Mode", sort: true},
             {dataField: "mtime", text: "mtime", sort: true},
             {dataField: "atime", text: "atime", sort: true},
-            {dataField: "ctime", text: "ctime", sort: true}];
+            {dataField: "ctime", text: "ctime", sort: true}
+        ]);
 
         return (
             <>

@@ -84,8 +84,24 @@ export default class VeloReportViewer extends Component {
         }.bind(this));
     }
 
+    cleanupHTML = (html) => {
+        // React expect no whitespace between table elements
+        html = html.replace(/>\s*<thead/g, "><thead");
+        html = html.replace(/>\s*<tbody/g, "><tbody");
+        html = html.replace(/>\s*<tr/g, "><tr");
+        html = html.replace(/>\s*<th/g, "><th");
+        html = html.replace(/>\s*<td/g, "><td");
+
+        html = html.replace(/>\s*<\/thead/g, "></thead");
+        html = html.replace(/>\s*<\/tbody/g, "></tbody");
+        html = html.replace(/>\s*<\/tr/g, "></tr");
+        html = html.replace(/>\s*<\/th/g, "></th");
+        html = html.replace(/>\s*<\/td/g, "></td");
+        return html;
+    }
+
     render() {
-        let template = parse(this.state.template, {
+        let template = parse(this.cleanupHTML(this.state.template), {
             replace: (domNode) => {
                 if (domNode.name === "grr-csv-viewer") {
                     // Figure out where the data is: attribs.value is something like data['table2']

@@ -1,3 +1,5 @@
+import './ace.css';
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
@@ -91,7 +93,7 @@ export default class VeloAce extends Component {
     render() {
         return (
             <>
-              <div className="row col-12 toolbar">
+              <div className="row col-12 ace-toolbar">
                 <Button variant="default"
                         className="float-left"
                         onClick={() => this.refs.ace.editor.execCommand("showSettingsMenu")} >

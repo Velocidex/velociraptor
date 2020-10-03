@@ -19,6 +19,12 @@ import BootstrapTable from 'react-bootstrap-table-next';
 
 import { withRouter }  from "react-router-dom";
 
+import SplitPane from 'react-split-pane';
+
+const resizerStyle = {
+//    width: "25px",
+};
+
 class ArtifactInspector extends React.Component {
     static propTypes = {
 
@@ -114,9 +120,12 @@ class ArtifactInspector extends React.Component {
 
                   </ButtonGroup>
                 </Navbar>
-
-                <div className="row content-panel">
-                  <div className="col-3 artifact-search-table">
+              <div className="artifact-search-panel">
+                <SplitPane
+                  split="vertical"
+                  defaultSize="30%"
+                  resizerStyle={resizerStyle}>
+                  <div className="artifact-search-table">
                     <BootstrapTable
                       remote={ { filter: true } }
                       filter={ filterFactory() }
@@ -127,18 +136,17 @@ class ArtifactInspector extends React.Component {
                       onTableChange={ this.updateSearch }
                       />
                   </div>
-                  <div name="ArtifactInfo" className="col-7 artifact-search-table">
-                    <div className="row">
-                      { this.state.selectedDescriptor &&
-                        <VeloReportViewer
-                                       artifact={this.state.selectedDescriptor.name}
-                          type="ARTIFACT_DESCRIPTION"
-                          client={{client_id: this.state.selectedDescriptor.name}}
-                        />
-                      }
-                    </div>
+                  <div name="ArtifactInfo" className="artifact-search-report">
+                    { this.state.selectedDescriptor &&
+                      <VeloReportViewer
+                        artifact={this.state.selectedDescriptor.name}
+                        type="ARTIFACT_DESCRIPTION"
+                        client={{client_id: this.state.selectedDescriptor.name}}
+                      />
+                    }
                   </div>
-                </div>
+                </SplitPane>
+              </div>
             </div>
         );
     }

@@ -5,10 +5,21 @@
     margin-right: 15px;
 }
 
-.content-panel {
+.artifact-search-report {
+    margin-left: 20px;
+    overflow: auto;
+    height: 100%;
+    padding-right: 0;
+    position: fixed;
+}
+
+.artifact-search-report .report-viewer {
+    margin-bottom: 150px;
+}
+
+.artifact-search-panel {
     position: fixed;
     width: 100%;
     overflow-x: auto;
     height: -webkit-fill-available;
-    padding-bottom: 150px;  /* header + footer + toolbar */
 }

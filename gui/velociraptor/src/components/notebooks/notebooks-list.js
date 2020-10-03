@@ -12,6 +12,8 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import Navbar from 'react-bootstrap/Navbar';
 
+import { formatColumns } from "../core/table.js";
+
 
 export default class NotebooksList extends React.Component {
     static propTypes = {
@@ -25,77 +27,28 @@ export default class NotebooksList extends React.Component {
             return <div>No Data available</div>;
         }
 
-        function headerFormatter(column, colIndex, { sortElement, filterElement }) {
-            return (
-                // Not a real table but I cant figure out the css
-                // right now so we do it old school.
-                <table className="notebook-filter">
-                  <tbody>
-                    <tr>
-                      { column.filter && <td>{ filterElement }</td> }
-                      { !column.filter && <td>{ column.text }</td> }
-                      <td className="sort-element">{ sortElement }</td>
-                    </tr>
-                  </tbody>
-                </table>
-            );
-        }
-
-        function sortCaret(order, column) {
-            if (!order) return <FontAwesomeIcon icon="sort"/>;
-            else if (order === 'asc') return (
-                <FontAwesomeIcon icon="sort-up"/>
-            );
-            else if (order === 'desc') return (
-                <FontAwesomeIcon icon="sort-down"/>
-            );
-
-            return null;
-        }
-
-        let columns = [
+        let columns = formatColumns([
             {dataField: "notebook_id", text: "NotebookId"},
             {dataField: "name", text: "Name",
-             sort: true, sortCaret: sortCaret,
-             headerFormatter: headerFormatter,
-             filter: textFilter({
-                 placeholder: "Name",
-                 caseSensitive: false,
-                 delay: 10,
-             })},
+             sort: true, filtered: true },
             {dataField: "description", text: "Description",
-             sort: true,sortCaret: sortCaret,
-             headerFormatter: headerFormatter,
-             filter: textFilter({
-                 placeholder: "Description",
-                 caseSensitive: false,
-                 delay: 10,
-             })},
+             sort: true, filtered: true },
             {dataField: "created_time", text: "Creation Time",
-             sort: true, sortCaret: sortCaret,
-             headerFormatter: headerFormatter,
-            formatter: (cell, row) => {
-                return <VeloTimestamp usec={cell * 1000}/>
+             sort: true, formatter: (cell, row) => {
+                return <VeloTimestamp usec={cell * 1000}/>;
             }},
             {dataField: "modified_time", text: "Modified Time",
-             sort: true, sortCaret: sortCaret,
-             headerFormatter: headerFormatter,
-             formatter: (cell, row) => {
-                 return <VeloTimestamp usec={cell * 1000}/>
+             sort: true, formatter: (cell, row) => {
+                 return <VeloTimestamp usec={cell * 1000}/>;
              }},
-            {dataField: "creator", text: "Creator",
-             headerFormatter: headerFormatter,
-            },
+            {dataField: "creator", text: "Creator"},
             {dataField: "collaborators", text: "Collaborators",
-             sort: true, sortCaret: sortCaret,
-             headerFormatter: headerFormatter,
-             formatter: (cell, row) => {
+             sort: true, formatter: (cell, row) => {
                  return _.map(cell, function(item, idx) {
                      return <div key={idx}>{item}</div>;
                  });
              }},
-        ];
-
+        ]);
 
         let selected_notebook = this.props.selected_notebook &&
             this.props.selected_notebook.notebook_id;

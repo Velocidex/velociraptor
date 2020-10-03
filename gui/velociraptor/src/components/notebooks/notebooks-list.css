@@ -15,3 +15,8 @@ div.error-message {
     font-size: 12pt;
     color: #f11818 !important;
 }
+
+
+.notebook-cell {
+    overflow-x: auto;
+}

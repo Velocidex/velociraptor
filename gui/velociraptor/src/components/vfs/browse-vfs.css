@@ -1,7 +1,6 @@
 .Resizer {
-    background: #000;
-    opacity: .2;
-    z-index: 1000;
+    background: #e5e5e5;
+    z-index: 950;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
@@ -16,38 +15,33 @@
 }
 
 .Resizer.horizontal {
-    height: 20px;
-    margin: -5px 0;
-    border-top: 5px solid rgba(255, 255, 255, 0);
-    border-bottom: 5px solid rgba(255, 255, 255, 0);
+    height: 8px;
     cursor: row-resize;
     width: 100%;
     border-left: solid 1px #a7a7a7;
     border-right: solid 1px #a7a7a7;
-    text-align: left;
-    line-height: 0px;
-    font-size: 0px;
     border-top: solid 1px #9cbdff;
     border-bottom: solid 1px #9cbdff;
-    background: #101010 80% 0%;
 }
 
 .Resizer.horizontal:hover {
-    border-top: 5px solid rgba(0, 200, 200, 0.5);
-    border-bottom: 5px solid rgba(0, 200, 200, 0.5);
+    height: 12px;
 }
 
 .Resizer.vertical {
-    width: 20px;
+    width: 8px;
+    height: 100%;
     margin: 0 -5px;
-    border-left: 5px solid rgba(255, 255, 255, 0);
-    border-right: 5px solid rgba(255, 255, 255, 0);
+    border-left: 1px solid #9cbdff;
+    border-right: 1px solid #9cbdff;
     cursor: col-resize;
+    z-index: 970;
+    margin-left: 0px;
+    margin-right: 0px;
 }
 
 .Resizer.vertical:hover {
-    border-left: 5px solid rgba(0, 0, 0, 0.5);
-    border-right: 5px solid rgba(0, 0, 0, 0.5);
+    width: 12px;
 }
 .Resizer.disabled {
     cursor: not-allowed;

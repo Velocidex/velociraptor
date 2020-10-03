@@ -1,0 +1,6 @@
+.ace-toolbar {
+    display: block;
+    box-sizing: content-box;
+    overflow: visible;
+    margin-bottom: 5px;
+}
