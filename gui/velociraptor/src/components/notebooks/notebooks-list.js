@@ -55,6 +55,7 @@ export default class NotebooksList extends React.Component {
         const selectRow = {
             mode: "radio",
             clickToSelect: true,
+            hideSelectColumn: true,
             classes: "row-selected",
             onSelect: function(row) {
                 this.props.setSelectedNotebook(row);

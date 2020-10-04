@@ -5,6 +5,14 @@ import _ from 'lodash';
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import VeloTimestamp from "../utils/time.js";
+import HuntWizardStep1 from "./hunt-wizard-search.js";
+
+import Navbar from 'react-bootstrap/Navbar';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
+import StepWizard from 'react-step-wizard';
+
 
 import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
 
@@ -20,7 +28,31 @@ export default class HuntList extends React.Component {
         setSelectedHunt: PropTypes.func,
     };
 
+    state = {
+        showWizard: false,
+    }
+
+    renderNewHuntWizard = () => {
+        return <Modal show={this.state.showWizard}
+                      dialogClassName="modal-90w"
+                      enforceFocus={false}
+                      onHide={(e) => this.setState({showWizard: false})}>
+                 <Modal.Header closeButton>
+                   <Modal.Title>New hunt</Modal.Title>
+                 </Modal.Header>
+                 <Modal.Body>
+                   <StepWizard>
+                     <HuntWizardStep1 />
+                   </StepWizard>
+                 </Modal.Body>
+               </Modal>;
+    }
+
     render() {
+        if (this.state.showWizard) {
+            return this.renderNewHuntWizard();
+        }
+
         let ts_formatter = (cell, row) => {return <VeloTimestamp usec={cell / 1000}/>;};
 
         let columns = formatColumns([
@@ -58,6 +90,7 @@ export default class HuntList extends React.Component {
         const selectRow = {
             mode: "radio",
             clickToSelect: true,
+            hideSelectColumn: true,
             classes: "row-selected",
             onSelect: (row) => {
                 this.props.setSelectedHunt(row);
@@ -66,20 +99,47 @@ export default class HuntList extends React.Component {
         };
 
         return (
-            <div className="fill-parent no-margins toolbar-margin">
-              <BootstrapTable
-                hover
-                condensed
-                keyField="hunt_id"
-                bootstrap4
-                headerClasses="alert alert-secondary"
-                bodyClasses="fixed-table-body"
-                data={this.props.hunts}
-                columns={columns}
-                filter={ filterFactory() }
-                selectRow={ selectRow }
-              />
-            </div>
+            <>
+              <Navbar className="toolbar">
+                <ButtonGroup>
+                  <Button title="New Hunt"
+                          onClick={() => this.setState({showWizard: true})}
+                          variant="default">
+                    <FontAwesomeIcon icon="plus"/>
+                  </Button>
+
+                  <Button title="Run Hunt"
+                          onClick={this.runHunt}
+                          variant="default">
+                    <FontAwesomeIcon icon="play"/>
+                  </Button>
+                  <Button title="Stop Hunt"
+                          onClick={this.stopHunt}
+                          variant="default">
+                    <FontAwesomeIcon icon="stop"/>
+                  </Button>
+                  <Button title="Delete Hunt"
+                          onClick={this.deleteHunt}
+                          variant="default">
+                    <FontAwesomeIcon icon="trash"/>
+                  </Button>
+                </ButtonGroup>
+              </Navbar>
+              <div className="fill-parent no-margins toolbar-margin">
+                <BootstrapTable
+                  hover
+                  condensed
+                  keyField="hunt_id"
+                  bootstrap4
+                  headerClasses="alert alert-secondary"
+                  bodyClasses="fixed-table-body"
+                  data={this.props.hunts}
+                  columns={columns}
+                  filter={ filterFactory() }
+                  selectRow={ selectRow }
+                />
+              </div>
+            </>
         );
     }
 };

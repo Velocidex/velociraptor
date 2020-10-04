@@ -14,6 +14,8 @@ import _ from 'lodash';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
+import Spinner from 'react-bootstrap/Spinner';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BootstrapTable from 'react-bootstrap-table-next';
 
@@ -40,6 +42,8 @@ class ArtifactInspector extends React.Component {
         descriptors: {},
 
         timeout: 0,
+
+        loading: false,
     }
 
     componentDidMount = () => {
@@ -59,6 +63,7 @@ class ArtifactInspector extends React.Component {
             return;
         }
 
+        this.setState({loading: true});
         api.get("api/v1/GetArtifacts", {search_term: value}).then((response) => {
             let matchingDescriptors = [];
             let descriptors = this.state.descriptors;
@@ -71,6 +76,7 @@ class ArtifactInspector extends React.Component {
             };
 
             this.setState({matchingDescriptors: matchingDescriptors,
+                           loading: false,
                            descriptors: descriptors});
         });
     }
@@ -84,8 +90,13 @@ class ArtifactInspector extends React.Component {
         let columns = [{dataField: "name", text: "", filter: textFilter({
             placeholder: "Search for name...",
         })}];
+
+        let selected = this.state.selectedDescriptor && this.state.selectedDescriptor.name;
         let selectRow = {mode: "radio",
                          clickToSelect: true,
+                         hideSelectColumn: true,
+                         classes: "row-selected",
+                         selected: [selected],
                          onSelect: this.onSelect};
 
         return (
@@ -137,7 +148,11 @@ class ArtifactInspector extends React.Component {
                       />
                   </div>
                   <div name="ArtifactInfo" className="artifact-search-report">
-                    { this.state.selectedDescriptor &&
+                    { this.loading ? <Spinner animation="border" role="status">
+                      <span className="sr-only">Loading...</span>
+                      </Spinner> :
+
+                      this.state.selectedDescriptor &&
                       <VeloReportViewer
                         artifact={this.state.selectedDescriptor.name}
                         type="ARTIFACT_DESCRIPTION"

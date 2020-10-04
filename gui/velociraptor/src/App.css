@@ -3,3 +3,30 @@ nav.fixed-bottom {
     z-index: auto;
     background: var(--color-nav-header-color);
 }
+
+body {
+    font-size: 1rem;
+}
+
+h1 {
+    font-size: 2rem;
+}
+
+
+h2 {
+    font-size: 1.5rem;
+}
+
+
+h3 {
+    font-size: 1.4rem;
+}
+
+h4 {
+    font-size: 1.1rem;
+}
+
+.modal-body {
+    height: calc(100vh - 200px);
+    overflow-y: auto;
+}

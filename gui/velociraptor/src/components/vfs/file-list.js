@@ -54,6 +54,7 @@ class VeloFileList extends Component {
         const selectRow = {
             mode: "radio",
             clickToSelect: true,
+            hideSelectColumn: true,
             classes: "row-selected",
             onSelect: this.updateCurrentFile,
             selected: [selected],

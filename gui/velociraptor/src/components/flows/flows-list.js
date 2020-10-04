@@ -5,6 +5,14 @@ import _ from 'lodash';
 import BootstrapTable from 'react-bootstrap-table-next';
 import VeloTimestamp from "../utils/time.js";
 
+import Navbar from 'react-bootstrap/Navbar';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import Button from 'react-bootstrap/Button';
+
+import NewCollectionWizard from './new-collection.js';
+
+import StepWizard from 'react-step-wizard';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 class FlowsList extends React.Component {
@@ -15,7 +23,22 @@ class FlowsList extends React.Component {
         selected_flow: PropTypes.object,
     };
 
+    state = {
+        showWizard: false,
+    }
+
+    setCollectionRequest = (request) => {
+        console.log(request);
+        this.setState({showWizard: false});
+    }
+
     render() {
+        if (this.state.showWizard) {
+            return <NewCollectionWizard
+                     onCancel={(e) => this.setState({showWizard: false})}
+                     onResolve={(e) => this.setState({showWizard: false})} />;
+        }
+
         let columns = [
             {dataField: "state", text: "State",
              formatter: (cell, row) => {
@@ -52,6 +75,7 @@ class FlowsList extends React.Component {
         const selectRow = {
             mode: "radio",
             clickToSelect: true,
+            hideSelectColumn: true,
             classes: "row-selected",
             onSelect: function(row) {
                 this.props.setSelectedFlow(row);
@@ -60,19 +84,47 @@ class FlowsList extends React.Component {
         };
 
         return (
-            <div className="fill-parent no-margins toolbar-margin">
-              <BootstrapTable
-                hover
-                condensed
-                keyField="session_id"
-                bootstrap4
-                headerClasses="alert alert-secondary"
-                bodyClasses="fixed-table-body"
-                data={this.props.flows}
-                columns={columns}
-                selectRow={ selectRow }
-              />
-            </div>
+            <>
+              <Navbar className="toolbar">
+                <ButtonGroup>
+                  <Button title="New Collection"
+                          onClick={() => this.setState({showWizard: true})}
+                          variant="default">
+                    <FontAwesomeIcon icon="plus"/>
+                  </Button>
+
+                  <Button title="Delete Artifact Collection"
+                          onClick={this.deleteButtonClicked}
+                          variant="default">
+                    <FontAwesomeIcon icon="trash"/>
+                  </Button>
+                  <Button title="Cancel Artifact Collection"
+                          onClick={this.cancelButtonClicked}
+                          variant="default">
+                    <FontAwesomeIcon icon="stop"/>
+                  </Button>
+                  <Button title="Copy Collection"
+                          onClick={this.copyCollection}
+                          variant="default">
+                    <FontAwesomeIcon icon="copy"/>
+                  </Button>
+                </ButtonGroup>
+              </Navbar>
+
+              <div className="fill-parent no-margins toolbar-margin">
+                <BootstrapTable
+                  hover
+                  condensed
+                  keyField="session_id"
+                  bootstrap4
+                  headerClasses="alert alert-secondary"
+                  bodyClasses="fixed-table-body"
+                  data={this.props.flows}
+                  columns={columns}
+                  selectRow={ selectRow }
+                />
+              </div>
+            </>
         );
     }
 };

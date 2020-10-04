@@ -36,6 +36,7 @@ class VeloHunts extends React.Component {
 
     setSelectedHunt = (hunt) => {
         this.setState({current_hunt: hunt});
+        this.props.history.push("/hunts/" + hunt.hunt_id);
     }
 
     fetchHunts = () => {

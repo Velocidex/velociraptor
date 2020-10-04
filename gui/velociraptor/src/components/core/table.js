@@ -22,7 +22,7 @@ import VeloNotImplemented from '../core/notimplemented.js';
 import VeloAce from '../core/ace.js';
 
 // Shows the InspectRawJson modal dialog UI.
-class InspectRawJson extends Component {
+export class InspectRawJson extends Component {
     static propTypes = {
         rows: PropTypes.array,
     }
@@ -49,6 +49,7 @@ class InspectRawJson extends Component {
                 <FontAwesomeIcon icon="binoculars"/>
               </Button>
               <Modal show={this.state.show}
+                     enforceFocus={false}
                      dialogClassName="modal-90w"
                      onHide={(e) => this.setState({show: false})}>
                 <Modal.Header closeButton>
@@ -67,7 +68,7 @@ class InspectRawJson extends Component {
                   </Button>
                 </Modal.Footer>
               </Modal>
-</>
+            </>
         );
     };
 }

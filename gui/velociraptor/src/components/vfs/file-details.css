@@ -1,0 +1,8 @@
+.padded {
+    padding: 20px;
+    background-color: var(--color-dashboard-background);
+}
+
+.tab-content {
+    background-color: var(--color-default-background);
+}
