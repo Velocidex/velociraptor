@@ -9,6 +9,12 @@ import FormControl from 'react-bootstrap/FormControl';
 
 const MAX_ROWS_PER_TABLE = 500;
 
+function getFlowState(flow) {
+    return {flow_id: flow.session_id,
+            total_collected_rows: flow.total_collected_rows};
+}
+
+
 export default class FlowResults extends React.Component {
     static propTypes = {
         flow: PropTypes.object,
@@ -18,28 +24,48 @@ export default class FlowResults extends React.Component {
         this.fetchRows();
     }
 
+    // We try really hard to not render the table too often. Tables
+    // maintain their own state for e.g. hidden columns and each time
+    // we render the table it resets its state.
+
+    // The table needs to render when:
+    // 1. the flow id has changed.
+    // 2. The flow gained new rows
+    // 3. The user selected to view a different artifact result.
     componentDidUpdate(prevProps, prevState, snapshot) {
-        let prev_flow_id = prevProps.flow && prevProps.flow.session_id;
-        let flow_id = this.props.flow && this.props.flow.session_id;
-        if (flow_id !== prev_flow_id ||
-            prevState.selectedArtifact !== this.state.selectedArtifact) {
+        if (!_.isEqual(getFlowState(prevProps.flow), getFlowState(this.props.flow)) ||
+           prevState.selectedArtifact != this.state.selectedArtifact) {
             this.fetchRows();
         }
+    }
+
+    shouldComponentUpdate(nextProps, nextState) {
+        return !_.isEqual(getFlowState(this.props.flow), getFlowState(nextProps.flow)) ||
+            !_.isEqual(this.state.pageData, nextState.pageData) ||
+            this.state.selectedArtifact != nextState.selectedArtifact;
     }
 
     state = {
         selectedArtifact: "",
         loading: true,
         pageData: {},
+        total_collected_rows: 0,
     }
 
     fetchRows = () => {
         let client_id = this.props.flow && this.props.flow.client_id;
         let flow_id = this.props.flow && this.props.flow.session_id;
         let artifacts_with_results = this.props.flow && this.props.flow.artifacts_with_results;
+        let total_collected_rows = this.props.flow.total_collected_rows || 0;
+
         if (!client_id || !artifacts_with_results || !flow_id) {
+            this.setState({selectedArtifact: "", pageData: {},
+                           loading: true,
+                           total_collected_rows: 0,
+                          });
             return;
         }
+
         let selectedArtifact = this.state.selectedArtifact;
         if (!selectedArtifact || !artifacts_with_results.includes(selectedArtifact)) {
             this.setState({selectedArtifact: artifacts_with_results[0]});
@@ -54,9 +80,12 @@ export default class FlowResults extends React.Component {
             rows: MAX_ROWS_PER_TABLE,
         };
 
-        this.setState({loading: true});
+        this.setState({loading: true,
+                       total_collected_rows: this.props.flow.total_collected_rows});
+
         api.get("api/v1/GetTable", params).then((response) => {
-            this.setState({loading: false, pageData: PrepareData(response.data)});
+            this.setState({loading: false,
+                           pageData: PrepareData(response.data)});
         }).catch(() => {
             this.setState({loading: false, pageData: {}});
         });
@@ -68,9 +97,9 @@ export default class FlowResults extends React.Component {
 
         if (this.state.pageData && this.state.pageData.columns) {
             body = <VeloTable
-                         className="col-12"
-                         rows={this.state.pageData.rows}
-                         columns={this.state.pageData.columns} />;
+                     className="col-12"
+                     rows={this.state.pageData.rows}
+                     columns={this.state.pageData.columns} />;
         }
 
         return (

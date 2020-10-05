@@ -54,6 +54,10 @@ export default class VeloReportViewer extends Component {
         }
     }
 
+    shouldComponentUpdate(nextProps, nextState) {
+        return this.state.template != nextState.template;
+    }
+
     updateReport() {
         if (!this.props.client || !this.props.client.client_id) {
             return;
@@ -114,6 +118,7 @@ export default class VeloReportViewer extends Component {
                         <VeloTable rows={rows} columns={data.Columns} />
                     );
                 };
+                return domNode;
             }
         });
 

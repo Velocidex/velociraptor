@@ -6,6 +6,12 @@
     margin-top: 10px;
 }
 
+/* Collapse empty rows as much as possible */
+.velo-table td:empty {
+    padding: 0px;
+    -webkit-border-vertical-spacing: 0px;
+}
+
 a.btn.btn-default.active {
     color: #808080;
 }

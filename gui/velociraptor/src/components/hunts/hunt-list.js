@@ -13,13 +13,13 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import StepWizard from 'react-step-wizard';
 
-
 import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { formatColumns } from "../core/table.js";
 
+import NewHuntWizard from './new-hunt.js';
 
 export default class HuntList extends React.Component {
     static propTypes = {
@@ -32,20 +32,16 @@ export default class HuntList extends React.Component {
         showWizard: false,
     }
 
+    setCollectionRequest = (request) => {
+        console.log(request);
+        this.setState({showWizard: false});
+    }
+
     renderNewHuntWizard = () => {
-        return <Modal show={this.state.showWizard}
-                      dialogClassName="modal-90w"
-                      enforceFocus={false}
-                      onHide={(e) => this.setState({showWizard: false})}>
-                 <Modal.Header closeButton>
-                   <Modal.Title>New hunt</Modal.Title>
-                 </Modal.Header>
-                 <Modal.Body>
-                   <StepWizard>
-                     <HuntWizardStep1 />
-                   </StepWizard>
-                 </Modal.Body>
-               </Modal>;
+        return <NewHuntWizard
+                 onCancel={(e) => this.setState({showWizard: false})}
+                 onResolve={this.setCollectionRequest}
+               />;
     }
 
     render() {

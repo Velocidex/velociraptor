@@ -1,68 +1,37 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Velociraptor GUI development
 
-## Available Scripts
+This directory contains the source code for the Velociraptor GUI.
 
-In the project directory, you can run:
+## Setting up a dev platform.
 
-### `yarn start`
+To build the web app you need to first install dependencies using npm:
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```
+npm i
+```
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+Then start the Velociraptor server. NOTE: By default Velociraptor
+listens on SSL and node does not. Therefore the CSRF cookies (which
+are marked secure) are not properly set. For testing and development
+you can switch CSRF protection off
 
-### `yarn test`
+```
+export VELOCIRAPTOR_DISABLE_CSRF=1
+velociraptor --config server.config.yaml frontend -v
+```
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Now you can start the node server:
+```
+npm run start
+```
 
-### `yarn build`
+The development setup starts a node server listening on port 3000, and
+proxies the API requests to the Velociraptor server (which should be
+listening on port 8889).
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+The node server will rebuild the application and automatically refresh
+it each time the JavaScript file is edited.
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `yarn eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
-
-### Analyzing the Bundle Size
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
-
-### Making a Progressive Web App
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
-
-### Advanced Configuration
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
-
-### Deployment
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `yarn build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+NOTE: The first time the code is built, the build will take a
+considerable time... dont worry it will get there in the end. Sadly
+this is a limitation in webpack being very slow.

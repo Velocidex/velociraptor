@@ -8,6 +8,9 @@ import FlowInspector from "./flows-inspector.js";
 import { withRouter }  from "react-router-dom";
 
 import api from '../core/api-service.js';
+import axios from 'axios';
+
+const POLL_TIME = 5000;
 
 class ClientFlowsView extends React.Component {
     static propTypes = {
@@ -21,7 +24,14 @@ class ClientFlowsView extends React.Component {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+        this.interval = setInterval(this.fetchFlows, POLL_TIME);
         this.fetchFlows();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+        clearInterval(this.interval);
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -77,6 +87,7 @@ class ClientFlowsView extends React.Component {
                 <FlowsList
                   selected_flow={this.state.currentFlow}
                   flows={this.state.flows}
+                  fetchFlows={this.fetchFlows}
                   setSelectedFlow={this.setSelectedFlow}
                   client={this.props.client}/>
                 <FlowInspector

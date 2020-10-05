@@ -9,6 +9,8 @@ import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 
+import api from '../core/api-service.js';
+
 import NewCollectionWizard from './new-collection.js';
 
 import StepWizard from 'react-step-wizard';
@@ -21,22 +23,39 @@ class FlowsList extends React.Component {
         flows: PropTypes.array,
         setSelectedFlow: PropTypes.func,
         selected_flow: PropTypes.object,
+        fetchFlows: PropTypes.func,
     };
 
     state = {
         showWizard: false,
+        showCopyWizard: false,
     }
 
     setCollectionRequest = (request) => {
-        console.log(request);
-        this.setState({showWizard: false});
+        // Make a request to the start the flow on this client.
+        request.client_id = this.props.client.client_id;
+        api.post("api/v1/CollectArtifact", request).then((response) => {
+            // When the request is done force our parent to refresh.
+            this.props.fetchFlows();
+        });
+
+        this.setState({showWizard: false, showCopyWizard: false});
     }
 
     render() {
+        // Make new flow.
         if (this.state.showWizard) {
             return <NewCollectionWizard
                      onCancel={(e) => this.setState({showWizard: false})}
-                     onResolve={(e) => this.setState({showWizard: false})} />;
+                     onResolve={this.setCollectionRequest} />;
+        }
+
+        // Copy existing flow.
+        if (this.state.showCopyWizard) {
+            return <NewCollectionWizard
+                     baseFlow={this.props.selected_flow}
+                     onCancel={(e) => this.setState({showCopyWizard: false})}
+                     onResolve={this.setCollectionRequest} />;
         }
 
         let columns = [
@@ -104,7 +123,7 @@ class FlowsList extends React.Component {
                     <FontAwesomeIcon icon="stop"/>
                   </Button>
                   <Button title="Copy Collection"
-                          onClick={this.copyCollection}
+                          onClick={() => this.setState({showCopyWizard: true})}
                           variant="default">
                     <FontAwesomeIcon icon="copy"/>
                   </Button>
