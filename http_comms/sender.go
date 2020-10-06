@@ -57,7 +57,7 @@ type Sender struct {
 	clock utils.Clock
 }
 
-// Persistant loop to pump messages from the executor to the ring
+// Persistent loop to pump messages from the executor to the ring
 // buffer. This function should never exit in a real client.
 func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 	// We should never exit from this.

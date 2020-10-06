@@ -76,7 +76,7 @@ func normalize_path(path string) string {
 		return ""
 	}
 
-	// When we encode the URL Go needs it to be preceeded with a /
+	// When we encode the URL Go needs it to be preceded with a /
 	// otherwise it gets it wrong.
 	return "/" + path
 }

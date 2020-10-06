@@ -40,7 +40,7 @@ RoutingService.prototype.href = function(targetState, opt_params) {
 };
 
 /**
- * Performes a state transition to a target state.
+ * Performs a state transition to a target state.
  *
  * Remarks: This method uses the notify option to control whether state change
  * events should be fired. If notify is set to false, no events will be fired

@@ -286,7 +286,7 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 			}
 		}
 
-		// No we didnt know about it - add it to the end.
+		// No we did not know about it - add it to the end.
 		if !found {
 			self.urls = append(self.urls, dest[0])
 			self.current_url_idx = len(self.urls) - 1

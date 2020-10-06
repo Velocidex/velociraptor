@@ -7,7 +7,7 @@ description: |
 
   You can use this to build queries which consider historical events
   together with current events at the same time. In this example, we
-  check for a successful logon preceeded by a number of failed logon
+  check for a successful logon preceded by a number of failed logon
   attempts.
 
   In this example, we use the clock() plugin to simulate events. We
@@ -25,7 +25,7 @@ description: |
   If we receive more than 3 events, we emit the row.
 
   This now represents a high value signal! It will only occur when a
-  successful logon event is preceeded by at least 3 failed logon
+  successful logon event is preceded by at least 3 failed logon
   events in the last hour. It is now possible to escalate this on the
   server via email or other alerts.
 
