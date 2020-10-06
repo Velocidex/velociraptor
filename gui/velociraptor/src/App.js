@@ -112,7 +112,7 @@ class App extends Component {
                   <Route path="/artifacts/:artifact?">
                     <ArtifactInspector/>
                   </Route>
-                  <Route path="/hunts/:hunt_id?">
+                  <Route path="/hunts/:hunt_id?/:tab?">
                     <VeloHunts/>
                   </Route>
 

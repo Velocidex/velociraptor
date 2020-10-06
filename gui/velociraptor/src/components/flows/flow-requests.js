@@ -2,6 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import VeloAce from '../core/ace.js';
+import CardDeck from 'react-bootstrap/CardDeck';
+import Card from 'react-bootstrap/Card';
 
 import api from '../core/api-service.js';
 
@@ -43,14 +45,15 @@ export default class FlowRequests extends React.Component {
         };
 
         return (
-            <div className="card panel" >
-              <h5 className="card-header">Request sent to client</h5>
-              <div className="card-body">
-                <VeloAce text={serialized}
-                         options={options} />
-              </div>
-            </div>
-
+            <CardDeck>
+              <Card>
+                <Card.Header>Request sent to client</Card.Header>
+                <Card.Body>
+                  <VeloAce text={serialized}
+                           options={options} />
+                </Card.Body>
+              </Card>
+            </CardDeck>
         );
     }
 };

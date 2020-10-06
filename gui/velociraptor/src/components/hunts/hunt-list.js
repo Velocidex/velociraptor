@@ -21,32 +21,41 @@ import { formatColumns } from "../core/table.js";
 
 import NewHuntWizard from './new-hunt.js';
 
+import api from '../core/api-service.js';
+
 export default class HuntList extends React.Component {
     static propTypes = {
         selected_hunt: PropTypes.object,
+
+        // Contain a list of hunt metadata objects - each summary of
+        // the hunt.
         hunts: PropTypes.array,
         setSelectedHunt: PropTypes.func,
+        updateHunts: PropTypes.func,
     };
 
     state = {
         showWizard: false,
     }
 
+    // Launch the hunt.
     setCollectionRequest = (request) => {
-        console.log(request);
-        this.setState({showWizard: false});
-    }
+        api.post('api/v1/CreateHunt', request).then((response) => {
+            // Keep the wizard up until the server confirms the
+            // creation worked.
+            this.setState({showWizard: false});
 
-    renderNewHuntWizard = () => {
-        return <NewHuntWizard
-                 onCancel={(e) => this.setState({showWizard: false})}
-                 onResolve={this.setCollectionRequest}
-               />;
+            // Refresh the hunts list when the creation is done.
+            this.props.updateHunts();
+        });
     }
 
     render() {
         if (this.state.showWizard) {
-            return this.renderNewHuntWizard();
+            return <NewHuntWizard
+                     onCancel={(e) => this.setState({showWizard: false})}
+                     onResolve={this.setCollectionRequest}
+                   />;
         }
 
         let ts_formatter = (cell, row) => {return <VeloTimestamp usec={cell / 1000}/>;};

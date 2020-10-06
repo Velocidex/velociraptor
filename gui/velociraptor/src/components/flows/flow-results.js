@@ -7,6 +7,8 @@ import _ from 'lodash';
 
 import FormControl from 'react-bootstrap/FormControl';
 
+import Spinner from '../utils/spinner.js';
+
 const MAX_ROWS_PER_TABLE = 500;
 
 function getFlowState(flow) {
@@ -104,6 +106,7 @@ export default class FlowResults extends React.Component {
 
         return (
             <>
+              <Spinner loading={this.state.loading} />
               <FormControl as="select" size="sm"
                            ref={ (el) => this.element=el }
                            onChange={() => {this.setState({

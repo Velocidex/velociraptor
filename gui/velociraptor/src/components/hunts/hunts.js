@@ -19,7 +19,14 @@ class VeloHunts extends React.Component {
     };
 
     state = {
-        current_hunt: {},
+        // The currently selected hunt summary.
+        selected_hunt: {},
+
+        // The full detail of the current selected hunt.
+        full_selected_hunt: {},
+
+        // A list of hunt summary objects - contains just enough info
+        // to render tables.
         hunts: [],
     }
 
@@ -35,8 +42,18 @@ class VeloHunts extends React.Component {
     }
 
     setSelectedHunt = (hunt) => {
-        this.setState({current_hunt: hunt});
+        if (!hunt || !hunt.hunt_id) {
+            return;
+        }
+
+        this.setState({selected_hunt: hunt});
         this.props.history.push("/hunts/" + hunt.hunt_id);
+
+        api.get("api/v1/GetHunt", {
+            hunt_id: hunt.hunt_id,
+        }).then((response) => {
+            this.setState({full_selected_hunt: response.data});
+        });
     }
 
     fetchHunts = () => {
@@ -59,20 +76,30 @@ class VeloHunts extends React.Component {
                 }
             };
 
-            this.setState({hunts: hunts, current_hunt: selected_hunt});
+            this.setState({hunts: hunts, selected_hunt: selected_hunt});
         });
 
+        // Get the full hunt information from the server based on the hunt
+        // metadata
+        if (selected_hunt_id) {
+            api.get("api/v1/GetHunt", {
+                hunt_id: selected_hunt_id,
+            }).then((response) => {
+                this.setState({full_selected_hunt: response.data});
+            });
+        }
     }
 
     render() {
         return (
             <SplitPane split="horizontal" defaultSize="30%">
               <HuntsList
-                selected_hunt={this.state.current_hunt}
+                updateHunts={this.fetchHunts}
+                selected_hunt={this.state.selected_hunt}
                 hunts={this.state.hunts}
                 setSelectedHunt={this.setSelectedHunt} />
               <HuntInspector
-                hunt={this.state.current_hunt} />
+                hunt={this.state.full_selected_hunt} />
             </SplitPane>
 
         );

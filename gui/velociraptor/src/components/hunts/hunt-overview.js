@@ -10,9 +10,10 @@ import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
 import Dropdown from 'react-bootstrap/Dropdown';
 
+import BootstrapTable from 'react-bootstrap-table-next';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+import { formatColumns } from "../core/table.js";
 
 export default class HuntOverview extends React.Component {
     static propTypes = {
@@ -50,6 +51,14 @@ export default class HuntOverview extends React.Component {
         parameters = parameters || {};
 
         let stats = hunt.stats || {};
+
+        let files = stats.available_downloads && stats.available_downloads.files;
+        files = files || [];
+
+        let file_renderer = (cell, row) => {
+            return <a href={row.path}>{cell}</a>;
+        };
+
 
         return (
             <CardDeck>
@@ -149,22 +158,24 @@ export default class HuntOverview extends React.Component {
                         </Dropdown.Menu>
                       </Dropdown>
                     </dd>
-
-                    <dt className="col-4">Available Downloads</dt>
+                  </dl>
+                  <dl>
+                    <dt>Available Downloads</dt>
                     <dd>
-                      <table className="table table-stiped table-condensed table-hover table-bordered">
-                        <tbody>
-                          { _.map(stats.available_downloads || [], (item, idx) => {
-                              return <tr>
-                              <td>
-                              { item.complete ? <a href={item.path}>{item.name}</a> :
-                                <div>{item.name}</div> }
-                              </td><td>{item.size} Bytes</td>
-                              <td>{item.date}</td>
-                              </tr>;
-                          })}
-                        </tbody>
-                      </table>
+                      <BootstrapTable
+                        keyField="name"
+                        condensed
+                        bootstrap4
+                        hover
+                        headerClasses="alert alert-secondary"
+                        bodyClasses="fixed-table-body"
+                        data={files}
+                        columns={formatColumns(
+                            [{dataField: "name", text: "name", sort: true,
+                              formatter: file_renderer },
+                             {dataField: "size", text: "size", sort: true},
+                             {dataField: "date", text: "date"}])}
+                      />
                     </dd>
                   </dl>
                 </Card.Body>

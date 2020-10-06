@@ -152,7 +152,6 @@ class NewHuntConfigureHunt extends React.Component {
                   }
 
                 </Form>
-                { JSON.stringify(this.state)}
               </Modal.Body>
               <Modal.Footer>
                 { this.props.paginator.makePaginator({
@@ -259,14 +258,13 @@ export default class NewHuntWizard extends React.Component {
         }
 
         if (hunt_parameters.description) {
-            result.description = hunt_parameters.description;
+            result.hunt_description = hunt_parameters.description;
         }
 
         return result;
     }
 
     render() {
-        console.log(this.prepareRequest());
         return (
             <Modal show={true}
                    dialogClassName="modal-90w"
@@ -276,14 +274,29 @@ export default class NewHuntWizard extends React.Component {
 
               <StepWizard>
                 <NewHuntConfigureHunt
-                  paginator={new HuntPaginator("Configure Hunt",
-                                               "Create Hunt: Configure hunt")}
+                  paginator={new HuntPaginator(
+                      "Configure Hunt",
+                      "Create Hunt: Configure hunt",
+                      (isFocused, step) => {
+                          // Focus on this tab when no artifacts are
+                          // selected. Only allow artifact selection
+                          // pane to be on.  Note that we are ok with
+                          // an empty hunt description.
+                          return _.isEmpty(this.state.artifacts) && step !== "Select Artifacts";
+                      })}
                   setHuntParameters={x => this.setState({hunt_parameters: x})}
                 />
 
                 <NewCollectionSelectArtifacts
-                  paginator={new HuntPaginator("Select Artifacts",
-                                               "Create Hunt: Select artifacts to collect")}
+                  paginator={new HuntPaginator(
+                      "Select Artifacts",
+                      "Create Hunt: Select artifacts to collect",
+                      (isFocused, step) => {
+                          // Focus on this step if the component wants
+                          // focus, but still allow the configure
+                          // wizard step to be visible.
+                          return isFocused && step !== "Configure Hunt";
+                      })}
                   artifacts={this.state.artifacts}
                   setArtifacts={this.setArtifacts}/>
 

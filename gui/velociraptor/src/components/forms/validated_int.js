@@ -35,11 +35,10 @@ export default class ValidatedInteger extends React.Component {
     state = {
         initialized_from_parent: false,
         invalid: false,
-        value: "",
     }
 
     render() {
-        let value = this.state.value;
+        let value = this.props.value;
         return (
             <>
               <Form.Control placeholder={this.props.placeholder || ""}
@@ -47,7 +46,6 @@ export default class ValidatedInteger extends React.Component {
                             value={ value }
                             onChange={ (event) => {
                                 const newValue = event.target.value;
-                                console.log(newValue);
                                 let invalid = true;
                                 if (regexp.test(newValue)) {
                                     this.props.setValue(parseInt(newValue));

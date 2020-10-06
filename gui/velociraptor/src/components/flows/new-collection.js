@@ -32,13 +32,18 @@ class PaginationBuilder {
     PaginationSteps = ["Select Artifacts", "Configure Parameters",
                        "Specify Resorces", "Review", "Launch"];
 
-    constructor(name, title) {
+    constructor(name, title, shouldFocused) {
         this.title = title;
         this.name = name;
+        if (shouldFocused) {
+            this.shouldFocused = shouldFocused;
+        }
     }
 
     title = ""
     name = ""
+
+    shouldFocused = (isFocused, step) => isFocused;
 
     // A common function to create the modal paginator between wizard
     // pages.
@@ -61,7 +66,7 @@ class PaginationBuilder {
                                     if (onBlur) {onBlur();};
                                     props.goToStep(idx + 1);
                                 }}
-                                disabled={isFocused}
+                                disabled={this.shouldFocused(isFocused, step)}
                                 key={idx}>
                                 {step}
                               </Pagination.Item>;
