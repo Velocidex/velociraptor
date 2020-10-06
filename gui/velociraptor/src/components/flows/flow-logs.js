@@ -5,6 +5,10 @@ import api from '../core/api-service.js';
 import VeloTable, { PrepareData } from '../core/table.js';
 import VeloTimestamp from "../utils/time.js";
 
+import Spinner from '../utils/spinner.js';
+import CardDeck from 'react-bootstrap/CardDeck';
+import Card from 'react-bootstrap/Card';
+
 const MAX_ROWS_PER_TABLE = 500;
 
 export default class FlowLogs extends React.Component {
@@ -70,16 +74,19 @@ export default class FlowLogs extends React.Component {
 
 
         return (
-            <div className="card panel" >
-              <h5 className="card-header">Files uploaded</h5>
-              <div className="card-body">
-                <VeloTable
-                  className="col-12"
-                  renderers={renderers}
-                  rows={this.state.pageData.rows}
-                  columns={this.state.pageData.columns} />
-              </div>
-            </div>
+            <CardDeck>
+              <Card>
+                <Card.Header>Client logs</Card.Header>
+                <Card.Body>
+                  <Spinner loading={this.state.loading}/>
+                  <VeloTable
+                    className="col-12"
+                    renderers={renderers}
+                    rows={this.state.pageData.rows}
+                    columns={this.state.pageData.columns} />
+                </Card.Body>
+              </Card>
+            </CardDeck>
         );
     }
 }

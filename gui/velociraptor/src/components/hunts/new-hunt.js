@@ -267,6 +267,7 @@ export default class NewHuntWizard extends React.Component {
     render() {
         return (
             <Modal show={true}
+                   className="full-height"
                    dialogClassName="modal-90w"
                    enforceFocus={false}
                    scrollable={true}

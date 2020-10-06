@@ -592,6 +592,7 @@ class NewCollectionWizard extends React.Component {
 
         return (
             <Modal show={true}
+                   className="full-height"
                    dialogClassName="modal-90w"
                    enforceFocus={false}
                    scrollable={true}

@@ -66,6 +66,7 @@ class Notebooks extends React.Component {
         return (
             <SplitPane split="horizontal" defaultSize="30%">
               <NotebooksList
+                fetchNotebooks={this.fetchNotebooks}
                 selected_notebook={this.state.selected_notebook}
                 setSelectedNotebook={this.setSelectedNotebook}
                 notebooks={this.state.notebooks}

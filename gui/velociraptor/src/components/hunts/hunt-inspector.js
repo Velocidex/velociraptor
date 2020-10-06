@@ -23,6 +23,10 @@ class HuntInspector extends React.Component {
     }
 
     render() {
+        if (!this.props.hunt || !this.props.hunt.hunt_id) {
+            return <div>Please select a hunt above</div>;
+        }
+
         // Default tab comes from the router
         let default_tab = this.props.match && this.props.match.params &&
             this.props.match.params.tab;

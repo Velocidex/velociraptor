@@ -3,6 +3,10 @@ import PropTypes from 'prop-types';
 
 import VeloTable, { PrepareData } from '../core/table.js';
 
+import Spinner from '../utils/spinner.js';
+import CardDeck from 'react-bootstrap/CardDeck';
+import Card from 'react-bootstrap/Card';
+
 import api from '../core/api-service.js';
 
 const MAX_ROWS_PER_TABLE = 500;
@@ -49,12 +53,15 @@ export default class FlowUploads extends React.Component {
     render() {
         if (!this.state.pageData || !this.state.pageData.columns) {
             return (
-                <div className="card panel" >
-                  <h5 className="card-header">Files uploaded</h5>
-                  <div className="card-body">
-                    <div>No data available</div>
-                  </div>
-                </div>
+                <CardDeck>
+                  <Card>
+                    <Card.Header>Uploaded Files</Card.Header>
+                    <Card.Body>
+                      <Spinner loading={this.state.loading}/>
+                      <div>No data available</div>
+                    </Card.Body>
+                  </Card>
+                </CardDeck>
             );
         }
 
@@ -73,16 +80,19 @@ export default class FlowUploads extends React.Component {
         };
 
         return (
-            <div className="card panel" >
-              <h5 className="card-header">Files uploaded</h5>
-              <div className="card-body">
+            <CardDeck>
+              <Card>
+                <Card.Header>Uploaded Files</Card.Header>
+                <Card.Body>
+                  <Spinner loading={this.state.loading}/>
                 <VeloTable
                   className="col-12"
                   renderers={renderers}
                   rows={this.state.pageData.rows}
                   columns={this.state.pageData.columns} />
-              </div>
-            </div>
+                </Card.Body>
+              </Card>
+            </CardDeck>
         );
     }
 };

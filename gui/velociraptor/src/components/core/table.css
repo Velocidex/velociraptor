@@ -25,3 +25,7 @@ a.btn.btn-default.active {
 .row.react-bootstrap-table-pagination {
     width: 100%;
 }
+
+.selectable {
+    cursor: pointer;
+}

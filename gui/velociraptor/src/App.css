@@ -26,7 +26,7 @@ h4 {
     font-size: 1.1rem;
 }
 
-.modal-body {
+.full-height .modal-body {
     height: calc(100vh - 200px);
     overflow-y: auto;
 }
