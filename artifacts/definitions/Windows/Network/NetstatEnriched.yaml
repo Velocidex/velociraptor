@@ -1,6 +1,6 @@
 name: Windows.Network.NetstatEnriched
 description: |
-  NetstatEnhanced adds addtional data points to the Netstat artifact and
+  NetstatEnhanced adds additional data points to the Netstat artifact and
   enables verbose search options.
 
   Examples include: Process name and path, authenticode information or

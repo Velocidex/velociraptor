@@ -15,7 +15,7 @@
   The global repository is used to store all artifacts we known about
   at runtime.
 
-  Clients do not have persistant repositories but they do create
+  Clients do not have persistent repositories but they do create
   temporary repositories in which to run incoming queries. This allows
   VQLCollectorArgs protobufs to include dependent artifacts and have
   the client run those as well.

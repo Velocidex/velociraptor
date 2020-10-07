@@ -9,7 +9,7 @@ reference:
   - https://osquery.io/
   - https://github.com/osquery/osquery
 
-# I am not actually sure if OSQuery allows arbitrary command exection via SQL?
+# I am not actually sure if OSQuery allows arbitrary command execution via SQL?
 required_permissions:
   - EXECVE
 

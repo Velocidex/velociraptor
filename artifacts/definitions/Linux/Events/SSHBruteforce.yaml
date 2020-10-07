@@ -1,7 +1,7 @@
 name: Linux.Events.SSHBruteforce
 description: |
   This is a monitoring artifact which detects a successful SSH login
-  preceeded by some failed attempts within the last hour.
+  preceded by some failed attempts within the last hour.
 
   This is particularly important in the case of ssh brute forcers. If
   one of the brute force password attempts succeeded the password
