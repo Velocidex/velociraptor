@@ -34,8 +34,7 @@ import (
 
 // Load all built in artifacts and make sure they validate syntax.
 func TestArtifactsSyntax(t *testing.T) {
-	var err error
-	config_obj, err = new(config.Loader).WithFileLoader(
+	config_obj, err := new(config.Loader).WithFileLoader(
 		"../../http_comms/test_data/server.config.yaml").
 		WithRequiredFrontend().WithWriteback().
 		LoadAndValidate()
