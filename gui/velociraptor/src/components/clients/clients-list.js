@@ -1,12 +1,98 @@
 import "./clients-list.css";
 
+import _ from 'lodash';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { withRouter }  from "react-router-dom";
 
 import api from '../core/api-service.js';
 import VeloClientStatusIcon from "./client-status.js";
+import { formatColumns } from "../core/table.js";
+import filterFactory from 'react-bootstrap-table2-filter';
+import BootstrapTable from 'react-bootstrap-table-next';
+import ClientLink from './client-link.js';
+import Spinner from '../utils/spinner.js';
+import Navbar from 'react-bootstrap/Navbar';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
+import Form from 'react-bootstrap/Form';
+import Col from 'react-bootstrap/Col';
+import LabelForm from '../utils/labels.js';
+import Row from 'react-bootstrap/Row';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+
+class LabelClients extends Component {
+    static propTypes = {
+        affectedClients: PropTypes.array,
+        onResolve: PropTypes.func.isRequired,
+    }
+
+    labelClients = () => {
+        this.props.onResolve();
+    }
+
+    state = {
+        labels: [],
+    }
+
+
+    render() {
+        let clients = this.props.affectedClients || [];
+        let columns = formatColumns([
+            {dataField: "last_seen_at", text: "Online", sort: true,
+             formatter: (cell, row) => {
+                 return <VeloClientStatusIcon client={row}/>;
+             }},
+            {dataField: "client_id", text: "Client ID"},
+            {dataField: "os_info.fqdn", text: "Hostname", sort: true},
+        ]);
+
+        return (
+            <Modal show={true}
+                   onHide={this.props.onResolve} >
+              <Modal.Header closeButton>
+                <Modal.Title>Label Clients</Modal.Title>
+              </Modal.Header>
+
+              <Modal.Body>
+                <Form.Group as={Row}>
+                  <Form.Label column sm="3">Collaborators</Form.Label>
+                  <Col sm="8">
+                    <LabelForm
+                      value={this.state.labels}
+                      onChange={(value) => this.setState({labels: value})}/>
+                  </Col>
+                </Form.Group>
+                <BootstrapTable
+                    hover
+                    condensed
+                    keyField="client_id"
+                    bootstrap4
+                    headerClasses="alert alert-secondary"
+                    bodyClasses="fixed-table-body"
+                    data={clients}
+                    columns={columns}
+                />
+              </Modal.Body>
+
+              <Modal.Footer>
+                <Button variant="secondary"
+                        onClick={this.props.onResolve}>
+                  Close
+                </Button>
+                <Button variant="primary"
+                        onClick={this.labelClients}>
+                  Run it!
+                </Button>
+              </Modal.Footer>
+            </Modal>
+
+        );
+    }
+}
 
 class VeloClientList extends Component {
     static propTypes = {
@@ -16,135 +102,160 @@ class VeloClientList extends Component {
 
     state = {
         clients: [],
-        idx2labels: {},
-        labels2idex: {},
+        selected: [],
+        loading: false,
+        showLabelDialog: false,
     };
 
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            clients: [],
-            idx2labels: {},
-            labels2idex: {},
-        };
-
-        this.searchClients = this.searchClients.bind(this);
-        this.addToLabels = this.addToLabels.bind(this);
-        this.openClientInfo = this.openClientInfo.bind(this);
-    }
-
-    componentDidMount() {
+    componentDidMount = () => {
         this.searchClients();
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
         if (this.props.query !== prevProps.query) {
             this.searchClients();
         }
     }
 
-    addToLabels(index, client_id)  {
-        /*
-          this.state.idx2labels[index] = client_id;
-          this.state.labels2idex[client_id] = index;
-        */
-    }
-
-    searchClients() {
+    searchClients = () => {
         var query = this.props.query;
         if (!query) {
             return;
         }
 
+        this.setState({loading: true});
         api.get('/api/v1/SearchClients', {
             query: query,
-            count: 50,
+            count: 500,
 
         }).then(resp => {
             if (resp.data && resp.data.items) {
                 this.setState({
-                    isLoading: false,
+                    loading: false,
                     clients: resp.data.items,
-                    idx2labels: {},
-                    labels2idex: {},
                 });
             }
             return true;
         });
     }
 
-    openClientInfo(e, client) {
-        e.preventDefault();
+    openClientInfo = (client) => {
         this.props.setClient(client);
 
         // Navigate to the host_info page.
         this.props.history.push('/host/' + client.client_id);
     }
 
-    renderTableRows(rows) {
-        return rows.map((item, index) => {
-            return (
-                <tr ng-click="controller.onClientClick(item)"
-                    key={item.client_id}
-                    onClick={(e)=>this.openClientInfo(e, item)}
-                >
-                  <td>
-                    <input type="checkbox" className="client-checkbox"
-                           onChange={() => this.addToLabels(item.client_id, index)}
-                    ></input>
-                  </td>
-                  <td><VeloClientStatusIcon client={item}/></td>
-                  <td>
-                    <span type="subject">{item.client_id}</span>
-                  </td>
+    handleOnSelect = (row, isSelect) => {
+        if (isSelect) {
+            this.setState(() => ({
+                selected: [...this.state.selected, row.client_id]
+            }));
+        } else {
+            this.setState(() => ({
+                selected: this.state.selected.filter(x => x !== row.client_id)
+            }));
+        }
+    }
 
-                  <td>
-                    {item.os_info.fqdn}
-                  </td>
+    handleOnSelectAll = (isSelect, rows) => {
+        const ids = rows.map(r => r.client_id);
+        if (isSelect) {
+            this.setState(() => ({
+                selected: ids
+            }));
+        } else {
+            this.setState(() => ({
+                selected: []
+            }));
+        }
+    }
 
-                  <td>
-                    {item.os_info.release}
-                  </td>
+    getAffectedClients = () => {
+        let result = [];
 
-                  <td>
-                    {item.labels}
-                  </td>
-                </tr>
-            );
+        _.each(this.state.selected, (client_id) => {
+            _.each(this.state.clients, (client) => {
+                if(client.client_id === client_id) {
+                    result.push(client);
+                };
+            });
         });
+
+        return result;
     }
 
     render() {
+        let columns = formatColumns([
+            {dataField: "last_seen_at", text: "Online", sort: true,
+             formatter: (cell, row) => {
+                 return <VeloClientStatusIcon client={row}/>;
+             }},
+            {dataField: "client_id", text: "Client ID",
+             formatter: (cell, row) => {
+                 return <ClientLink client_id={cell}/>;
+             }},
+            {dataField: "os_info.fqdn", text: "Hostname",
+             sort: true, filtered: true},
+            {dataField: "os_info.release", text: "OS Version"},
+            {dataField: "labels", text: "Labels",
+             sort:true, filtered: true,
+             formatter: (cell, row) => {
+                 return _.map(cell, (label, idx) => {
+                     return <Button size="sm" key={idx}
+                                    onClick={() => {
+                                        row.labels = row.labels.filter(x=>x !== label);
+                                        this.setState({showLabelDialog: false});
+                                    }}
+                                    variant="default">
+                              {label}
+                            </Button>;
+                 });
+            }},
+        ]);
+
+
+        const selectRow = {
+            mode: "checkbox",
+            clickToSelect: true,
+            classes: "row-selected",
+            selected: this.state.selected,
+            onSelect: this.handleOnSelect,
+            onSelectAll: this.handleOnSelectAll
+        };
+
         return (
             <>
-              Search for { this.props.query }
-              <div className="search-table">
-                <table className="table table-striped table-condensed table-hover table-bordered full-width">
-                  <colgroup>
-                    <col style={{width: "40px"}} />
-                    <col style={{width: "40px"}} />
-                    <col style={{width: "13em"}} />
-                    <col style={{width: "13em"}} />
-                    <col style={{width: "15%"}} />
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      <th><input type="checkbox" className="client-checkbox select-all"
-                    ng-model="controller.allClientsSelected"
-                    ng-change="controller.selectAll()"></input>
-                      </th>
-                      <th>Online</th>
-                      <th>ClientID</th>
-                      <th>Host</th>
-                      <th>OS Version</th>
-                      <th>Labels</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    { this.renderTableRows(this.state.clients) }
-                  </tbody>
-                </table>
+              { this.state.showLabelDialog &&
+                <LabelClients
+                  affectedClients={this.getAffectedClients()}
+                  onResolve={() => {
+                      this.setState({showLabelDialog: false});
+                      this.searchClients();
+                  }}/>}
+              <Spinner loading={this.state.loading}/>
+              <Navbar className="toolbar">
+                <ButtonGroup>
+                  <Button title="Label Clients"
+                          onClick={() => this.setState({showLabelDialog: true})}
+                          variant="default">
+                    <FontAwesomeIcon icon="tags"/>
+                  </Button>
+                </ButtonGroup>
+              </Navbar>
+              <div className="fill-parent no-margins toolbar-margin selectable">
+                <BootstrapTable
+                  hover
+                  condensed
+                  keyField="client_id"
+                  bootstrap4
+                  headerClasses="alert alert-secondary"
+                  bodyClasses="fixed-table-body"
+                  data={this.state.clients}
+                  columns={columns}
+                  selectRow={ selectRow }
+                  filter={ filterFactory() }
+                />
               </div>
             </>
         );

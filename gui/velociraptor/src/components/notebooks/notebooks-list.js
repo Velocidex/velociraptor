@@ -78,8 +78,6 @@ class NewNotebook extends React.Component {
                       onChange={(value) => this.setState({collaborators: value})}/>
                   </Col>
                 </Form.Group>
-
-                {JSON.stringify(this.state)}
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary"

@@ -16,6 +16,8 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import Spinner from 'react-bootstrap/Spinner';
 
+import NewArtifactDialog from './new-artifact.js';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BootstrapTable from 'react-bootstrap-table-next';
 
@@ -33,17 +35,18 @@ class ArtifactInspector extends React.Component {
     };
 
     state = {
-        selectedDescriptor: "",
+        selectedDescriptor: undefined,
 
         // A list of descriptors that match the search term.
         matchingDescriptors: [],
 
-        // A cache of all known descriptors.
-        descriptors: {},
-
         timeout: 0,
 
         loading: false,
+
+        showNewArtifactDialog: false,
+        showEditedArtifactDialog: false,
+        current_filter: "",
     }
 
     componentDidMount = () => {
@@ -63,21 +66,24 @@ class ArtifactInspector extends React.Component {
             return;
         }
 
-        this.setState({loading: true});
-        api.get("api/v1/GetArtifacts", {search_term: value}).then((response) => {
+        this.setState({loading: true, current_filter: value});
+        this.fetchRows(value);
+    }
+
+    fetchRows = (search_term) => {
+        api.get("api/v1/GetArtifacts", {search_term: search_term}).then((response) => {
             let matchingDescriptors = [];
-            let descriptors = this.state.descriptors;
             let items = response.data.items || [];
 
             for(let i=0; i<items.length; i++) {
                 var desc = items[i];
-                descriptors[desc.name] = desc;
                 matchingDescriptors.push(desc);
             };
 
-            this.setState({matchingDescriptors: matchingDescriptors,
-                           loading: false,
-                           descriptors: descriptors});
+            this.setState({
+                matchingDescriptors: matchingDescriptors,
+                loading: false,
+            });
         });
     }
 
@@ -101,17 +107,40 @@ class ArtifactInspector extends React.Component {
 
         return (
             <div className="full-width-height">
+              { this.state.showNewArtifactDialog &&
+                <NewArtifactDialog
+                  onClose={() => {
+                      // Re-apply the search in case the user updated
+                      // an artifact that should show up.
+                      this.fetchRows(this.state.current_filter);
+                      this.setState({showNewArtifactDialog: false});
+                  }}
+                />
+              }
+
+              { this.state.showEditedArtifactDialog &&
+                <NewArtifactDialog
+                  name={selected}
+                  onClose={() => {
+                      // Re-apply the search in case the user updated
+                      // an artifact that should show up.
+                      this.fetchRows(this.state.current_filter);
+                      this.setState({showEditedArtifactDialog: false});
+                  }}
+                />
+              }
+
               <Navbar className="toolbar  row">
                   <ButtonGroup>
                     <Button title="Add an Artifact"
-                            onClick={this.updateArtifactDefinitions}
+                            onClick={() => this.setState({showNewArtifactDialog: true})}
                             variant="default">
                       <FontAwesomeIcon icon="plus"/>
                     </Button>
 
                     <Button title="Edit an Artifact"
                             onClick={() => {
-                                this.updateArtifactDefinitions(this.state.selectedDescriptor);
+                                this.setState({showEditedArtifactDialog: true});
                             }}
                             variant="default">
                       <FontAwesomeIcon icon="pencil-alt"/>

@@ -1,3 +1,5 @@
+import "./search.css";
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
@@ -17,44 +19,26 @@ class VeloClientSearch extends Component {
         setSearch: PropTypes.func.isRequired,
     };
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            // query used to update suggestions
-            query: [],
-        };
-
-        this.submitForm = this.submitForm.bind(this);
-        this.showAll = this.showAll.bind(this);
-        this.showSuggestions = this.showSuggestions.bind(this);
-        this.setQuery = this.setQuery.bind(this);
+    state = {
+        // query used to update suggestions.
+        query: "",
+        options: [],
     }
 
-    submitForm (e) {
-        e.preventDefault();
-        let query = this.state.query[0];
-        this.props.setSearch(query);
-        this.props.history.push('/search?query=' + (query || "all"));
-    }
-
-    showAll(e) {
-        e.preventDefault();
-        this.setState({query:["all"]});
+    showAll = () => {
+        this.setState({query: "all"});
         this.props.setSearch("all");
         this.props.history.push('/search?query=all');
     }
 
-
-    setQuery(query) {
-        if (this.state.query[0] !== query[0]) {
-            this.setState({query: query[0]});
-            this.props.setSearch(query[0]);
-            this.props.history.push('/search?query=' + (query[0] || "all"));
-        }
+    setQuery = (query) => {
+        this.setState({query: query});
+        this.props.setSearch(query);
+        this.props.history.push('/search?query=' + (query || "all"));
     }
 
-    async showSuggestions(query) {
-        this.setState({isLoading: true, query: query});
+    showSuggestions = (query) => {
+        this.setState({query: query});
         api.get('/api/v1/SearchClients', {
             query: query + "*",
             count: 10,
@@ -63,8 +47,7 @@ class VeloClientSearch extends Component {
         }).then(resp => {
             if (resp.data && resp.data.names) {
                 this.setState({
-                    isLoading: false,
-                    query: [query],
+                    query: query,
                     options: resp.data.names,
                 });
             }
@@ -74,28 +57,33 @@ class VeloClientSearch extends Component {
 
     render() {
         return (
-            <Form onSubmit={this.submitForm}>
+            <Form>
               <FormGroup>
                 <ButtonGroup>
                   <AsyncTypeahead
                     autoFocus={true}
-                    defaultInputValue={this.state.query ? this.state.query[0] : ""}
+                    defaultInputValue={this.state.query || ""}
                     placeholder="Search clients"
                     id="searchbox"
                     isLoading={false}
                     options={this.state.options || []}
-                    onChange={this.setQuery}
+                    onChange={(x) => {
+                        if (x.length > 0) {
+                            this.setQuery(x[0]);
+                        }
+                    }}
                     onSearch={this.showSuggestions}
                   />
                   <Button id="client_query_submit"
-                          onClick={this.submitForm}
+                          onClick={(e) => this.setQuery(e.currentTarget.value)}
                           variant="default" type="submit">
                     <FontAwesomeIcon icon="search"/>
                   </Button>
                   <Button id="show-hosts-btn"
-                          onClick={this.showAll}
+                          onClick={(e) => this.setQuery("all")}
                           variant="default" type="button">
                     <FontAwesomeIcon icon="server"/>
+                    <span className="button-label">Show All</span>
                   </Button>
                 </ButtonGroup>
               </FormGroup>

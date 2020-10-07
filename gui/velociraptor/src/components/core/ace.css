@@ -4,3 +4,11 @@
     overflow: visible;
     margin-bottom: 5px;
 }
+
+/* Used in new artifact ace editor popout */
+.velo-ace-editor {
+    border-width: 4px;
+    border-style: inset;
+    height: 100%;
+    overflow-y: auto;
+}

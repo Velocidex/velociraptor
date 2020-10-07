@@ -14,6 +14,8 @@ import Notebook from './components/notebooks/notebook.js';
 import ArtifactInspector from './components/artifacts/artifacts.js';
 import VeloHunts from './components/hunts/hunts.js';
 
+import { UserSettings } from './components/core/user.js';
+
 import { Switch, Route } from "react-router-dom";
 import { Join } from './components/utils/paths.js';
 
@@ -57,6 +59,7 @@ class App extends Component {
     };
 
     setClientSearch = (query) => {
+        console.log(query);
         this.setState({query: query});
     };
 
@@ -81,7 +84,7 @@ class App extends Component {
         }
 
         return (
-            <>
+            <UserSettings>
               <div className="navbar navbar-default navbar-static-top" id="header">
                 <div className="navbar-inner">
                   <div className="">
@@ -148,8 +151,7 @@ class App extends Component {
                   <VeloLiveClock className="col-3 float-right" />
                 </Nav>
               </Navbar>
-
-            </>
+            </UserSettings>
         );
     };
 }

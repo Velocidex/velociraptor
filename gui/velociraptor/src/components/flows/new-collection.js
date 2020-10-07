@@ -212,7 +212,6 @@ class NewCollectionSelectArtifacts extends React.Component {
                       <VeloReportViewer
                         artifact={this.state.selectedDescriptor.name}
                         type="ARTIFACT_DESCRIPTION"
-                        client={{client_id: this.state.selectedDescriptor.name}}
                       />
                     }
                   </div>

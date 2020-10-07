@@ -56,7 +56,7 @@ class ClientFlowsView extends React.Component {
             count: 100,
             offset: 0,
         }).then(function(response) {
-            let flows = response.data.items;
+            let flows = response.data.items || [];
             let selected_flow = {};
 
             // If the router specifies a selected flow id, we select it.

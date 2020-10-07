@@ -28,45 +28,27 @@ export default class VeloReportViewer extends Component {
         messages: [],
     }
 
-    set = (k, v) => {
-        let new_state  = Object.assign({}, this.state);
-        new_state[k] = v;
-        this.setState(new_state);
-    }
-
     componentDidMount() {
         this.updateReport();
     }
 
     componentDidUpdate(prevProps) {
-        if (!this.props.client || !this.props.client.client_id) {
-            return;
-        };
+        let client_id = this.props.client && this.props.client.client_id;
+        let artifact = this.props.artifact;
 
-        let new_client_id = this.props.client.client_id;
-        let prev_client_id = null;
-        if (prevProps.client && prevProps.client.client_id) {
-            prev_client_id = prevProps.client.client_id;
-        }
+        let prev_client_id = prevProps.client && prevProps.client.client_id;
 
-        if (new_client_id !== prev_client_id) {
+        if (client_id !== prev_client_id || artifact !== prevProps.artifact) {
             this.updateReport();
         }
     }
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return this.state.template != nextState.template;
-    }
-
     updateReport() {
-        if (!this.props.client || !this.props.client.client_id) {
-            return;
-        };
-
+        let client_id = this.props.client && this.props.client.client_id;
         let params = {
             artifact: this.props.artifact,
             type: this.props.type,
-            client_id: this.props.client.client_id,
+            client_id: client_id,
             flow_id: this.props.flow_id,
         };
 
@@ -82,9 +64,9 @@ export default class VeloReportViewer extends Component {
             }
             this.setState(new_state);
         }.bind(this), function(err) {
-            this.set("template", "Error " + err.data.message);
+            this.setState({"template": "Error " + err.data.message});
         }.bind(this)).catch(function(err) {
-            this.set("template", "Error " + err.message);
+            this.setState({"template": "Error " + err.message});
         }.bind(this));
     }
 
