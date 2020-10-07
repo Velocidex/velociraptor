@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
@@ -33,7 +34,11 @@ import (
 
 // Load all built in artifacts and make sure they validate syntax.
 func TestArtifactsSyntax(t *testing.T) {
-	config_obj := config.GetDefaultConfig()
+	config_obj, err := new(config.Loader).WithFileLoader(
+		"../../http_comms/test_data/server.config.yaml").
+		WithRequiredFrontend().WithWriteback().
+		LoadAndValidate()
+	require.NoError(t, err)
 
 	sm := services.NewServiceManager(context.Background(), config_obj)
 	defer sm.Close()
@@ -55,8 +60,10 @@ func TestArtifactsSyntax(t *testing.T) {
 		artifact, pres := repository.Get(config_obj, artifact_name)
 		assert.True(t, pres)
 
-		_, err = new_repository.LoadProto(artifact, true /* validate */)
-		assert.NoError(t, err, "Error compiling "+artifact_name)
+		if artifact != nil {
+			_, err = new_repository.LoadProto(artifact, true /* validate */)
+			assert.NoError(t, err, "Error compiling "+artifact_name)
+		}
 	}
 }
 
