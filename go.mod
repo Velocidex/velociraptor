@@ -11,6 +11,7 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
+	github.com/Velocidex/fileb0x v1.1.2-0.20200125141948-d54f40400160 // indirect
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.10-0.20200414034554-457848df11f9
 	github.com/Velocidex/json v0.0.0-20200724131328-8f5c7b0a25ec
