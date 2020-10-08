@@ -9,6 +9,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { textFilter } from 'react-bootstrap-table2-filter';
+import { SettingsButton } from '../core/ace.js';
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
@@ -29,7 +30,22 @@ export class InspectRawJson extends Component {
 
     state = {
         show: false,
+        ace: {},
     }
+
+    aceConfig = (ace) => {
+        ace.setOptions({
+            wrap: true,
+            autoScrollEditorIntoView: true,
+            minLines: 10,
+            maxLines: 1000,
+        });
+
+        ace.resize();
+
+        // Hold a reference to the ace editor.
+        this.setState({ace: ace});
+    };
 
     render() {
         let rows = [];
@@ -49,7 +65,9 @@ export class InspectRawJson extends Component {
                 <FontAwesomeIcon icon="binoculars"/>
               </Button>
               <Modal show={this.state.show}
+                     className="full-height"
                      enforceFocus={false}
+                     scrollable={true}
                      dialogClassName="modal-90w"
                      onHide={(e) => this.setState({show: false})}>
                 <Modal.Header closeButton>
@@ -57,15 +75,22 @@ export class InspectRawJson extends Component {
                 </Modal.Header>
 
                 <Modal.Body>
-                  <VeloAce text={serialized} options={{readOnly: true}}
-                  />
+                  <VeloAce text={serialized} aceConfig={this.aceConfig} />
                 </Modal.Body>
 
                 <Modal.Footer>
-                  <Button variant="secondary"
-                          onClick={() => this.setState({show: false})} >
-                    Close
-                  </Button>
+                  <Navbar className="w-100 justify-content-between">
+                    <ButtonGroup className="float-left">
+                      <SettingsButton ace={this.state.ace}/>
+                    </ButtonGroup>
+
+                    <ButtonGroup className="float-right">
+                      <Button variant="secondary"
+                              onClick={() => this.setState({show: false})} >
+                        Close
+                      </Button>
+                    </ButtonGroup>
+                  </Navbar>
                 </Modal.Footer>
               </Modal>
             </>

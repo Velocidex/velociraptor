@@ -51,6 +51,7 @@ class App extends Component {
         selected_row: {},
 
         query: "",
+        query_version: "",
     }
 
     // Called to update the client id.
@@ -59,8 +60,8 @@ class App extends Component {
     };
 
     setClientSearch = (query) => {
-        console.log(query);
-        this.setState({query: query});
+        let now = new Date();
+        this.setState({query: query, query_version: now.getTime()});
     };
 
     updateCurrentNode = (node) => {
@@ -107,9 +108,12 @@ class App extends Component {
               </div>
               <div id="content">
                 <Switch>
-                  <Route path="/search">
-                    <VeloClientList query={this.state.query}
-                                    setClient={this.setClient}
+                  <Route path="/search/:query?">
+                    <VeloClientList
+                      setSearch={this.setClientSearch}
+                      version={this.state.query_version}
+                      query={this.state.query}
+                      setClient={this.setClient}
                     />
                   </Route>
                   <Route path="/artifacts/:artifact?">

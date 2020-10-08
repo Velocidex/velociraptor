@@ -171,7 +171,7 @@ export default class VeloAce extends Component {
 
         return (
             <>
-              <div className="row col-12 velo-ace-editor">
+              <div className="col-12 velo-ace-editor">
                 <AceEditor
                   ref="ace"
                   className="full-height"

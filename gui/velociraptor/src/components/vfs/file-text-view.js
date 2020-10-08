@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 import api from '../core/api-service.js';
 import Pagination from '../bootstrap/pagination/index.js';
+import Spinner from '../utils/spinner.js';
 
 import VeloAce from '../core/ace.js';
 
@@ -20,7 +21,7 @@ export default class FileTextView extends React.Component {
     state = {
         page: 0,
         rawdata: "",
-        loading: true,
+        loading: false,
     }
 
     componentDidMount = () => {
@@ -31,7 +32,7 @@ export default class FileTextView extends React.Component {
         let selectedRow = this.props.selectedRow && this.props.selectedRow._id;
         let old_row = prevProps.selectedRow && prevProps.selectedRow._id;
 
-        if (selectedRow !== old_row) {
+        if (selectedRow !== old_row || prevState.page !== this.state.page) {
             this.fetchText_(this.state.page);
         };
     }
@@ -62,27 +63,25 @@ export default class FileTextView extends React.Component {
         };
 
         this.setState({loading: true});
-
         api.get(url, params).then(function(response) {
             this.parseFileContentToTextRepresentation_(response.data || "", page);
         }.bind(this), function() {
-            this.setState({hexDataRows: [], loading: false});
+            this.setState({hexDataRows: [], loading: false, page: page});
         }.bind(this));
     };
 
     parseFileContentToTextRepresentation_ = (fileContent, page) => {
         let rawdata = fileContent.replace(/[^\x20-\x7f\r\n]/g, '.');
-        this.setState({rawdata: rawdata, loading: false});
+        this.setState({rawdata: rawdata, loading: false, page: page});
     };
 
 
     render() {
-        if (this.state.loading) {
-            return <div className="panel hexdump">
-                     Loading...
-                   </div>;
+        let mtime = this.props.selectedRow && this.props.selectedRow.Download &&
+            this.props.selectedRow.Download.mtime;
+        if (!mtime) {
+            return <div>File has no data, please collect file first.</div>;
         }
-
         var total_size = this.props.selectedRow.Size || 0;
         let pageCount = Math.ceil(total_size / pagesize);
         let paginationConfig = {
@@ -96,16 +95,14 @@ export default class FileTextView extends React.Component {
             shadow: true,
             onClick: (page, e) => {
                 this.setState({page: page - 1});
-                this.fetchText_(page - 1);
-                e.preventDefault();
-                e.stopPropagation();
             },
         };
 
         return (
             <div>
+              <Spinner loading={this.state.loading}/>
               <div className="file-hex-view">
-                { pageCount && <Pagination {...paginationConfig}/> }
+                <Pagination {...paginationConfig} />
                 <VeloAce
                   text={this.state.rawdata}
                   mode="text"

@@ -6,6 +6,8 @@ import _ from 'lodash';
 
 import Button from 'react-bootstrap/Button';
 import VeloTimestamp from "../utils/time.js";
+import CardDeck from 'react-bootstrap/CardDeck';
+import Card from 'react-bootstrap/Card';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -49,13 +51,10 @@ class VeloFileStats extends Component {
         let client_id = this.props.client && this.props.client.client_id;
 
         return (
-            <div className="card-deck">
-              <div className="card panel">
-                <h5 className="card-header">
-                  {selectedRow._FullPath || selectedRow.Name}
-                </h5>
-                <div className="card-body">
-                  <div>
+            <CardDeck>
+              <Card>
+                <Card.Header>{selectedRow._FullPath || selectedRow.Name}</Card.Header>
+                <Card.Body>
                     <dl className="row">
                       <dt className="col-4">Size</dt>
                       <dd className="col-8">
@@ -101,13 +100,11 @@ class VeloFileStats extends Component {
                           </dd>
                         </> }
                     </dl>
-                  </div>
-                </div>
-              </div>
-
-              <div className="card panel">
-                <h5 className="card-header">Properties </h5>
-                <div className="card-body">
+                </Card.Body>
+              </Card>
+              <Card>
+                <Card.Header>Properties</Card.Header>
+                <Card.Body>
                   { _.map(selectedRow._Data, function(v, k) {
                       return <div className="row" key={k}>
                                <dt className="col-4">{k}</dt>
@@ -118,9 +115,9 @@ class VeloFileStats extends Component {
                     <div className="row">
                       <dt>Sparse</dt>
                     </div> }
-                </div>
-              </div>
-            </div>
+                </Card.Body>
+              </Card>
+            </CardDeck>
         );
     };
 }

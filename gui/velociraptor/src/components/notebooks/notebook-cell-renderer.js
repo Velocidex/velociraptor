@@ -6,12 +6,12 @@ import _ from 'lodash';
 import classNames from "classnames";
 import VeloAce from '../core/ace.js';
 import NotebookReportRenderer from './notebook-report-renderer.js';
-
+import { SettingsButton } from '../core/ace.js';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import Dropdown from 'react-bootstrap/Dropdown';
 import FormControl from 'react-bootstrap/FormControl';
-
+import Navbar from 'react-bootstrap/Navbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import api from '../core/api-service.js';
@@ -161,106 +161,100 @@ export default class NotebookCellRenderer extends React.Component {
         // 1. The cell is selected but not being edited: Show the cell manipulation toolbar.
         // 2. The cell is being edited: Show the editing toolbar
         // 3. The cell is not selected or edited - no decorations.
+        let non_editing_toolbar = (
+            <ButtonGroup>
+              <Button title="Cancel"
+                      onClick={() => {this.props.setSelectedCellId("");}}
+                      variant="default">
+                <FontAwesomeIcon icon="window-close"/>
+              </Button>
+              <Button title="Stop Calculating"
+                      onClick={this.stopCalculating}
+                      variant="default">
+                <FontAwesomeIcon icon="stop"/>
+              </Button>
+              { !this.state.collapsed &&
+                <Button title="Collapse"
+                        onClick={() => this.setState({collapsed: true})}
+                        variant="default">
+                  <FontAwesomeIcon icon="compress"/>
+                </Button>
+              }
+              { this.state.collapsed &&
+                <Button title="Expand"
+                        onClick={() => this.setState({collapsed: false})}
+                        variant="default">
+                  <FontAwesomeIcon icon="expand"/>
+                </Button>
+              }
+              <Button title="Edit Cell"
+                      onClick={() => { this.setEditing(true); }}
+                      variant="default">
+                <FontAwesomeIcon icon="pencil-alt"/>
+              </Button>
 
-        let toolbar = <></>;
+              <Button title="Up Cell"
+                      onClick={() => {
+                          this.props.upCell(this.state.cell.cell_id);
+                      }}
+                      variant="default">
+                <FontAwesomeIcon icon="arrow-up"/>
+              </Button>
 
-        if (selected && !this.state.currently_editing) {
-            toolbar = (
-                <ButtonGroup>
-                  <Button title="Cancel"
-                          onClick={() => {this.props.setSelectedCellId("");}}
-                          variant="default">
-                    <FontAwesomeIcon icon="window-close"/>
-                  </Button>
-                  <Button title="Stop Calculating"
-                          onClick={this.stopCalculating}
-                          variant="default">
-                    <FontAwesomeIcon icon="stop"/>
-                  </Button>
-                  { !this.state.collapsed &&
-                    <Button title="Collapse"
-                            onClick={() => this.setState({collapsed: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="compress"/>
-                    </Button>
-                  }
-                  { this.state.collapsed &&
-                    <Button title="Expand"
-                            onClick={() => this.setState({collapsed: false})}
-                            variant="default">
-                      <FontAwesomeIcon icon="expand"/>
-                    </Button>
-                  }
-                  <Button title="Edit Cell"
-                          onClick={() => { this.setEditing(true); }}
-                          variant="default">
-                    <FontAwesomeIcon icon="pencil-alt"/>
-                  </Button>
+              <Button title="Down Cell"
+                      onClick={() => {
+                          this.props.downCell(this.state.cell.cell_id);
+                      }}
+                      variant="default">
+                <FontAwesomeIcon icon="arrow-down"/>
+              </Button>
 
-                  <Button title="Up Cell"
-                          onClick={() => {
-                              this.props.upCell(this.state.cell.cell_id);
-                          }}
-                          variant="default">
-                    <FontAwesomeIcon icon="arrow-up"/>
-                  </Button>
-
-                  <Button title="Down Cell"
-                          onClick={() => {
-                              this.props.downCell(this.state.cell.cell_id);
-                          }}
-                          variant="default">
-                    <FontAwesomeIcon icon="arrow-down"/>
-                  </Button>
-
-                  <Dropdown title="Add Cell" variant="default">
-                    <Dropdown.Toggle variant="default">
-                      <FontAwesomeIcon icon="plus"/>
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu>
-                      <Dropdown.Item
-                        title="Markdown"
-                        onClick={() => {
-                            this.props.addCell(this.state.cell.cell_id, "Markdown");
-                        }}>
-                        Markdown
-                      </Dropdown.Item>
-                      <Dropdown.Item
-                        title="VQL"
-                        onClick={() => {
-                            this.props.addCell(this.state.cell.cell_id, "VQL");
-                        }}>
-                        VQL
-                      </Dropdown.Item>
-                      <Dropdown.Item
-                        title="Artifact"
-                        onClick={() => {
-                            this.props.addCell(this.state.cell.cell_id, "Artifact");
-                        }}>
-                        Artifact
-                      </Dropdown.Item>
-                      <hr/>
-                      <Dropdown.Item
-                        title="Add Cell From Hunt"
-                        onClick={this.addCellFromHunt}>
-                        Add Cell From Hunt
-                      </Dropdown.Item>
-                      <Dropdown.Item
-                        title="Add Cell From Flow"
-                        onClick={this.addCellFromFlow}>
-                        Add Cell From Flow
-                      </Dropdown.Item>
-                      <Dropdown.Item
-                        title="Add Cell From Artifact"
-                        onClick={this.addCellFromArtifact}>
-                        Add Cell From Artifact
-                      </Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </ButtonGroup>
-            );
-        }
-
+              <Dropdown title="Add Cell" variant="default">
+                <Dropdown.Toggle variant="default">
+                  <FontAwesomeIcon icon="plus"/>
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  <Dropdown.Item
+                    title="Markdown"
+                    onClick={() => {
+                        this.props.addCell(this.state.cell.cell_id, "Markdown");
+                    }}>
+                    Markdown
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    title="VQL"
+                    onClick={() => {
+                        this.props.addCell(this.state.cell.cell_id, "VQL");
+                    }}>
+                    VQL
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    title="Artifact"
+                    onClick={() => {
+                        this.props.addCell(this.state.cell.cell_id, "Artifact");
+                    }}>
+                    Artifact
+                  </Dropdown.Item>
+                  <hr/>
+                  <Dropdown.Item
+                    title="Add Cell From Hunt"
+                    onClick={this.addCellFromHunt}>
+                    Add Cell From Hunt
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    title="Add Cell From Flow"
+                    onClick={this.addCellFromFlow}>
+                    Add Cell From Flow
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    title="Add Cell From Artifact"
+                    onClick={this.addCellFromArtifact}>
+                    Add Cell From Artifact
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            </ButtonGroup>
+        );
 
         let ace_toolbar = (
             <>
@@ -270,6 +264,8 @@ export default class NotebookCellRenderer extends React.Component {
                         variant="default">
                   <FontAwesomeIcon icon="window-close"/>
                 </Button>
+
+                <SettingsButton ace={this.state.ace}/>
 
                 <Button title="Stop Calculating"
                         onClick={this.stopCalculating}
@@ -313,19 +309,24 @@ export default class NotebookCellRenderer extends React.Component {
             <>
               <div className={classNames({selected: selected, "notebook-cell": true})} >
                 <div className='notebook-input'>
-                  {toolbar}
                   { this.state.currently_editing && selected &&
-                    <div className="notebook-editor" onPaste={this.pasteEvent}>
-                      <form>
-                        <VeloAce
-                          toolbar={ace_toolbar}
-                          mode={this.ace_type(this.state.cell.type)}
-                          aceConfig={this.aceConfig}
-                          text={this.state.input}
-                          onChange={(value) => {this.setState({input: value});}}
-                        />
-                      </form>
-                    </div>
+                        <>
+                          <Navbar className="toolbar">{ ace_toolbar }</Navbar>
+                          <div className="notebook-editor" onPaste={this.pasteEvent}>
+                            <form>
+                              <VeloAce
+                                toolbar={ace_toolbar}
+                                mode={this.ace_type(this.state.cell.type)}
+                                aceConfig={this.aceConfig}
+                                text={this.state.input}
+                                onChange={(value) => {this.setState({input: value});}}
+                              />
+                            </form>
+                          </div>
+                        </>
+                  }
+                  { selected && !this.state.currently_editing &&
+                    <Navbar className="toolbar">{non_editing_toolbar}</Navbar>
                   }
                 </div>
 

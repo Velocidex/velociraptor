@@ -31,11 +31,26 @@ class LabelClients extends Component {
     }
 
     labelClients = () => {
-        this.props.onResolve();
+        let labels = this.state.labels;
+        if (this.state.new_label) {
+            labels.push(this.state.new_label);
+        }
+
+        let client_ids = _.map(this.props.affectedClients,
+                               client => client.client_id);
+
+        api.post("api/v1/LabelClients", {
+            client_ids: client_ids,
+            operation: "set",
+            labels: labels,
+        }).then((response) => {
+            this.props.onResolve();
+        });
     }
 
     state = {
         labels: [],
+        new_label: "",
     }
 
 
@@ -52,6 +67,7 @@ class LabelClients extends Component {
 
         return (
             <Modal show={true}
+                   size="lg"
                    onHide={this.props.onResolve} >
               <Modal.Header closeButton>
                 <Modal.Title>Label Clients</Modal.Title>
@@ -59,11 +75,21 @@ class LabelClients extends Component {
 
               <Modal.Body>
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">Collaborators</Form.Label>
+                  <Form.Label column sm="3">Existings</Form.Label>
                   <Col sm="8">
                     <LabelForm
                       value={this.state.labels}
                       onChange={(value) => this.setState({labels: value})}/>
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row}>
+                  <Form.Label column sm="3">A new label</Form.Label>
+                  <Col sm="8">
+                    <Form.Control as="textarea"
+                      rows={1}
+                      value={this.state.new_label}
+                      onChange={(e) => this.setState({new_label: e.currentTarget.value})}
+                    />
                   </Col>
                 </Form.Group>
                 <BootstrapTable
@@ -97,7 +123,9 @@ class LabelClients extends Component {
 class VeloClientList extends Component {
     static propTypes = {
         query: PropTypes.string.isRequired,
+        version: PropTypes.any,
         setClient: PropTypes.func.isRequired,
+        setSearch: PropTypes.func.isRequired,
     }
 
     state = {
@@ -108,11 +136,17 @@ class VeloClientList extends Component {
     };
 
     componentDidMount = () => {
+        let query = this.props.match && this.props.match.params &&
+            this.props.match.params.query;
+        if (query && query != this.state.query) {
+            this.props.setSearch(query);
+        };
         this.searchClients();
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        if (this.props.query !== prevProps.query) {
+        if (this.props.query !== prevProps.query ||
+            this.props.version !== prevProps.version) {
             this.searchClients();
         }
     }
@@ -127,15 +161,10 @@ class VeloClientList extends Component {
         api.get('/api/v1/SearchClients', {
             query: query,
             count: 500,
-
         }).then(resp => {
-            if (resp.data && resp.data.items) {
-                this.setState({
-                    loading: false,
-                    clients: resp.data.items,
-                });
-            }
-            return true;
+            let items = resp.data && resp.data.items;
+            items = items || [];
+            this.setState({loading: false, clients: items});
         });
     }
 
@@ -185,6 +214,20 @@ class VeloClientList extends Component {
         return result;
     }
 
+    // Do not refresh the entire client table because it will reorder
+    // the clients, just carefully remove the label from the existing
+    // records for smoother ui.
+    removeLabel = (label, client) => {
+        api.post("api/v1/LabelClients", {
+            client_ids: [client.client_id],
+            operation: "remove",
+            labels: [label],
+        }).then((response) => {
+            client.labels = client.labels.filter(x=>x !== label);
+            this.setState({showLabelDialog: false});
+        });
+    }
+
     render() {
         let columns = formatColumns([
             {dataField: "last_seen_at", text: "Online", sort: true,
@@ -203,10 +246,7 @@ class VeloClientList extends Component {
              formatter: (cell, row) => {
                  return _.map(cell, (label, idx) => {
                      return <Button size="sm" key={idx}
-                                    onClick={() => {
-                                        row.labels = row.labels.filter(x=>x !== label);
-                                        this.setState({showLabelDialog: false});
-                                    }}
+                                    onClick={() => this.removeLabel(label, row)}
                                     variant="default">
                               {label}
                             </Button>;
@@ -237,6 +277,7 @@ class VeloClientList extends Component {
               <Navbar className="toolbar">
                 <ButtonGroup>
                   <Button title="Label Clients"
+                          disabled={_.isEmpty(this.state.selected)}
                           onClick={() => this.setState({showLabelDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="tags"/>
