@@ -33,7 +33,7 @@ func RangeSize(runs []Range) int64 {
 }
 
 // Get the ranges of a reader if possible. If the reader can not
-// provide this information we just make a psuedo range.
+// provide this information we just make a pseudo range.
 func GetRanges(
 	ctx context.Context,
 	reader io.Reader,

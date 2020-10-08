@@ -96,7 +96,7 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 			return
 		}
 
-		// Checking is successfull - user authorized. Here we
+		// Checking is successful - user authorized. Here we
 		// build a token to pass to the underlying GRPC
 		// service with metadata about the user.
 		user_info := &api_proto.VelociraptorUser{

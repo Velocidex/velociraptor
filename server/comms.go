@@ -88,7 +88,7 @@ func PrepareFrontendMux(
 	router.Handle(base+"/control", control(server_obj))
 	router.Handle(base+"/reader", reader(config_obj, server_obj))
 
-	// Publically accessible part of the filestore. NOTE: this
+	// Publicly accessible part of the filestore. NOTE: this
 	// does not have to be a physical directory - it is served
 	// from the filestore.
 	router.Handle(base+"/public/", GetLoggingHandler(config_obj, "/public")(
