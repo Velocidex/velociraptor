@@ -142,13 +142,17 @@ parameters:
           name=filename + ".zip",
           credentialskey=TargetArgs.credentialsKey,
           credentialssecret=TargetArgs.credentialsSecret,
-          region=TargetArgs.region) AS Upload,
+          region=TargetArgs.region,
+          endpoint=TargetArgs.endpoint,
+          noverifycert=TargetArgs.noverifycert) AS Upload,
        upload_s3(file=Report,
           bucket=TargetArgs.bucket,
           name=filename + ".html",
           credentialskey=TargetArgs.credentialsKey,
           credentialssecret=TargetArgs.credentialsSecret,
-          region=TargetArgs.region) AS ReportUpload
+          region=TargetArgs.region,
+          endpoint=TargetArgs.endpoint,
+          noverifycert=TargetArgs.noverifycert) AS ReportUpload
       FROM collect(artifacts=Artifacts, report=tempfile(extension=".html"),
           args=Parameters, output=tempfile(extension=".zip"), template=Template,
           password=Password)
