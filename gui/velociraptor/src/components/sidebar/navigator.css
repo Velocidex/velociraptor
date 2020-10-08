@@ -28,11 +28,16 @@ img.velo-logo {
 }
 
 section.navigator a {
+ text-decoration: none;
   color: var(--sidebar-icon-color);
 }
 
 .navigator.nav-pills.nav:hover li {
    color: var(--sidebar-icon-color-hover);
+}
+
+a.active .navigator.nav-pills.nav:hover li {
+   color: var(--color-dashboard-background);
 }
 
 .navigator.nav-pills.nav li.disabled {

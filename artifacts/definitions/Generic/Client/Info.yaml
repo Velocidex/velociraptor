@@ -19,7 +19,14 @@ sources:
                config.Version.BuildTime as BuildTime,
                config.Labels AS Labels,
                Hostname, OS, Architecture,
-               Platform, PlatformVersion, KernelVersion, Fqdn
+               Platform, PlatformVersion, KernelVersion, Fqdn,
+               {
+                  SELECT * FROM if(
+                     condition=version(plugin='wmi') != NULL,
+                     then={
+                         SELECT Domain FROM wmi(query='SELECT Domain FROM win32_computersystem')
+                     })
+               } AS ADDomain
         FROM info()
 
   - name: Users

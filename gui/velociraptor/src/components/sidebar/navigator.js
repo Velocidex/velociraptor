@@ -1,4 +1,5 @@
 import "./navigator.css";
+import logo from  "./velo.svg";
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -6,10 +7,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import classNames from "classnames";
 import { NavLink } from "react-router-dom";
 
-
 class VeloNavigator extends Component {
     static propTypes = {
         client: PropTypes.object.isRequired,
+        vfs_path: PropTypes.string,
     }
 
     constructor(props) {
@@ -41,13 +42,18 @@ class VeloNavigator extends Component {
             disabled = "disabled";
         };
 
+        let vfs_path = "";
+        if (this.props.vfs_path.length) {
+            vfs_path = this.props.vfs_path;
+        }
+
         return (
             <>
               <div className="float-left navigator">
                 <span className="hamburger toolbar-buttons"
                       onClick={this.toggle}>&#9776;</span>
                 <a href="#welcome">
-                  <img src="/static/images/velo.svg" className="velo-logo" alt="velo logo"/>
+                  <img src={logo} className="velo-logo" alt="velo logo"/>
                 </a>
                 <div className={classNames({
                     'collapsed': this.state.collapsed,
@@ -123,7 +129,7 @@ class VeloNavigator extends Component {
                       </NavLink>
 
                       <NavLink className={disabled}
-                               to={"/vfs/" + this.props.client.client_id }>
+                               to={"/vfs/" + this.props.client.client_id + vfs_path }>
                         <ul className="nav nav-pills navigator">
                           <li className={classNames({
                               "nav-link": true,

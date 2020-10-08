@@ -5,7 +5,7 @@ import _ from 'lodash';
 
 import {Treebeard} from 'react-treebeard';
 
-import { Join } from '../utils/paths.js';
+import { SplitPathComponents, Join } from '../utils/paths.js';
 
 import api from '../core/api-service.js';
 import { withRouter }  from "react-router-dom";
@@ -104,29 +104,74 @@ class VeloFileTree extends Component {
     }
 
     componentDidMount() {
-        this.updateTree();
+        this.updateTree(this.props.vfs_path);
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
         let prevClient = prevProps.client && prevProps.client.client_id;
         let currentClient = this.props.client && this.props.client.client_id;
         let prev_vfs_path = prevProps.vfs_path;
+        let selected_filename = "";
 
-        if (!_.isEqual(prev_vfs_path, this.props.vfs_path) ||
+        // If our caller did not specify a vfs path we get it from the
+        // router.
+        let vfs_path = this.props.vfs_path;
+        if (vfs_path.length === 0) {
+            // Try to extract the vfs path from the router.
+            let router_vfs_path = this.props.match && this.props.match.params &&
+                this.props.match.params.vfs_path;
+            if (router_vfs_path) {
+                vfs_path = SplitPathComponents(router_vfs_path);
+
+                // We need to distinguish between navigating to the
+                // tree directory generally and navigating to
+                // selecting a file inside the tree.  In the first
+                // case the URL ends with / in the second case it does
+                // not.
+                // So there is a difference between /file/a/b/ and /file/a/b
+                // The first form navigates the tree to the b
+                // directory and leaves the file selector unset. The
+                // second form navigates the tree to a directory and
+                // selects the b directory.
+                if (router_vfs_path.charAt(router_vfs_path.length-1) !== "/") {
+                    selected_filename = vfs_path.pop();
+                }
+            }
+        }
+
+        if (!_.isEqual(prev_vfs_path, vfs_path) ||
             prevClient !== currentClient ) {
-            this.updateTree();
+            this.updateTree(vfs_path, function(node) {
+
+                if(node.inflight) {
+                    return;
+                }
+
+                // If we need to select a filename, search the node
+                // for the file and select it.
+                if(_.isEqual(node.path, vfs_path) && selected_filename) {
+                    for(var i = 0; i < node.raw_data.length; i++){
+                        let row = node.raw_data[i];
+                        if (row.Name === selected_filename) {
+                            node.selected = row;
+                        };
+                    }
+                };
+            });
         }
     };
 
     // Update all the known data in the tree model.
-    updateTree = () => {
-        let components = this.props.vfs_path;
+    updateTree = (components, node_cb) => {
         let root_node = this.state;
         this.updateComponent(
             root_node, [], components,
             function(node, was_loaded){
                 if (was_loaded) {
                     node.toggled = true;
+                }
+                if (node_cb) {
+                    node_cb(node);
                 }
             });
     }
@@ -151,6 +196,7 @@ class VeloFileTree extends Component {
             // We need to go deeper.
             if (next_components && next_components.length > 0) {
                 let next = next_components[0];
+
                 next_components = next_components.slice(1);
                 prev_components.push(next);
 
@@ -174,7 +220,6 @@ class VeloFileTree extends Component {
             let client_id = this.props.client.client_id;
             node.loading = true;
             node.inflight = true;
-            this.props.setSelectedRow({_Loading: true});
 
             api.get("api/v1/VFSListDirectory/" + client_id, {
                 vfs_path: Join(prev_components),
@@ -189,10 +234,6 @@ class VeloFileTree extends Component {
                     // Extract the directory children from the raw_data
                     for (var i=0; i<node.raw_data.length; i++) {
                         let file_info = node.raw_data[i];
-
-                        // Add a unique id to each row to make react
-                        // happy.
-                        node.raw_data[i]["_id"] = i;
 
                         // Only show directories
                         if(file_info.Mode[0] === 'd') {
@@ -249,11 +290,16 @@ class VeloFileTree extends Component {
         this.setState(() => ({cursor: node, data: Object.assign({}, data)}));
 
         // Update the new vfs path
-        this.props.updateVFSPath(node.path);
+        if (node.path) {
+            this.props.updateVFSPath(node.path);
+        }
 
         let path = Join(node.path || '');
         let client_id = this.props.client.client_id || '';
-        this.props.history.push("/vfs/" + client_id + path);
+
+        // When clicking the tree the user navigates to the directory
+        // - file pane is unselected.
+        this.props.history.push("/vfs/" + client_id + path + "/");
 
         node.known = false;
         this.updateComponent(node, node.path, []);

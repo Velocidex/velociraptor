@@ -23,14 +23,12 @@
 
 
 .toolbar {
-  border-bottom: 1px solid var(--color-proto-border);
-  height: 48px;
-  box-sizing: content-box;
-  overflow: visible;
-/*  z-index: 1025; /* Toolbar should be below the modal background (1050) but above everything else. */
+    display: block;
+    box-sizing: content-box;
+    overflow: visible;
+    margin: 5px;
+    margin-bottom: 5px;
 }
-
-
 
 table  tr.row_selected td,
 table  tr.row-selected td {
@@ -40,3 +38,11 @@ table  tr.row-selected td {
 table  tr.highlighted td {
     background-color: var(--color-table-row-highlighted);
   }
+
+.recursive-list-button {
+    position: absolute;
+    left: 23px; top: 5px; font-weight: bold;
+    font-size: 18px;
+    -webkit-text-stroke: 1px #000;
+    color: #fff;
+}

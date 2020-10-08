@@ -73,6 +73,9 @@ func (self *ClientEventTable) CheckClientEventsVersion(
 	defer self.mu.Unlock()
 
 	labeler := services.GetLabeler()
+	if labeler == nil {
+		return false
+	}
 	if client_version < self.state.Version {
 		return true
 	}

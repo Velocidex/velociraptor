@@ -1,8 +1,11 @@
+import './file-details.css';
+
 import React from 'react';
 import PropTypes from 'prop-types';
 
 import VeloFileStats from './file-stats.js';
 import FileHexView from './file-hex-view.js';
+import FileTextView from './file-text-view.js';
 
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
@@ -10,11 +13,13 @@ import Tab from 'react-bootstrap/Tab';
 export default class VeloFileDetails extends React.Component {
     static propTypes = {
         client: PropTypes.object,
-        selectedRow: PropTypes.object,
+        node: PropTypes.object,
     };
 
     render() {
-        if (!this.props.selectedRow || !this.props.selectedRow.Name) {
+        let selectedRow = this.props.node && this.props.node.selected;
+
+        if (!selectedRow || !selectedRow.Name) {
             return (
                 <div className="card">
                   <h5 className="card-header">
@@ -24,7 +29,7 @@ export default class VeloFileDetails extends React.Component {
             );
         }
 
-        let selectedRow = Object.assign({
+        selectedRow = Object.assign({
             _FullPath: "",
             Name: "",
             mtime: "",
@@ -38,7 +43,7 @@ export default class VeloFileDetails extends React.Component {
                 sparse: false,
             },
             _Data: {},
-        }, this.props.selectedRow);
+        }, selectedRow);
 
         return (
             <div className="padded">
@@ -52,7 +57,7 @@ export default class VeloFileDetails extends React.Component {
                     selectedRow={selectedRow} />
                 </Tab>
                 <Tab eventKey="text" title="Textview">
-                  <VeloFileStats
+                  <FileTextView
                     client={this.props.client}
                     selectedRow={selectedRow} />
                 </Tab>

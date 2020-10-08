@@ -4,6 +4,11 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 
+import Button from 'react-bootstrap/Button';
+import VeloTimestamp from "../utils/time.js";
+import CardDeck from 'react-bootstrap/CardDeck';
+import Card from 'react-bootstrap/Card';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 class VeloFileStats extends Component {
@@ -46,13 +51,10 @@ class VeloFileStats extends Component {
         let client_id = this.props.client && this.props.client.client_id;
 
         return (
-            <div className="card-deck">
-              <div className="card panel">
-                <h5 className="card-header">
-                  {selectedRow._FullPath || selectedRow.Name}
-                </h5>
-                <div className="card-body">
-                  <div>
+            <CardDeck>
+              <Card>
+                <Card.Header>{selectedRow._FullPath || selectedRow.Name}</Card.Header>
+                <Card.Body>
                     <dl className="row">
                       <dt className="col-4">Size</dt>
                       <dd className="col-8">
@@ -71,56 +73,51 @@ class VeloFileStats extends Component {
                       <dt className="col-4">Ctime</dt>
                       <dd className="col-8"> {selectedRow.ctime} </dd>
                       { selectedRow.Download.mtime &&
-                        <div>
+                        <>
                           <dt className="col-4">
                             Last Collected
                           </dt>
                           <dd className="col-8">
-                            <grr-timestamp value="controller.fileContext.selectedRow.Download.mtime">
-                            </grr-timestamp>
-                            <button ng-click="controller.downloadFile()"  >
-                              <i className="fa fa-download"></i>Download
-                            </button>
+                            <VeloTimestamp usec={ selectedRow.Download.mtime / 1000 } />
+                            <Button variant="outline-default" ng-click="controller.downloadFile()"  >
+                              <FontAwesomeIcon icon="download"/>Download
+                            </Button>
                           </dd>
-                        </div>
+                        </>
                       }
 
                       { selectedRow.Mode[0] === '-' && client_id &&
-                        <div>
+                        <>
                           <dt className="col-4">Fetch from Client</dt>
                           <dd className="col-8">
-                            <button className="btn btn-default"
+                            <Button variant="default"
                                     ng-disabled="!controller.uiTraits.Permissions.collect_client"
                                     ng-click="controller.updateFile()"
                             >
-                              <FontAwesomeIcon icon="refresh" spin={this.state.updateInProgress}/>
+                              <FontAwesomeIcon icon="sync" spin={this.state.updateInProgress} />
                               {selectedRow.Download.vfs_path ? 'Re-Collect' : 'Collect'} from the client
-                            </button>
+                            </Button>
                           </dd>
-                        </div> }
+                        </> }
                     </dl>
-                  </div>
-                </div>
-              </div>
-
-              <div className="card panel">
-                <h5 className="card-header">Properties </h5>
-                <div className="card-body">
-                  <dl className="row">
-                    { _.map(selectedRow._Data, function(k, v) {
-                        return <>
-                                 <dt className="col-4">{k}</dt>
-                                 <dd className="col-8">{v}</dd>
-                               </>;
-                    }) }
-                    { selectedRow.Download.sparse &&
-                      <div>
-                        <dt>Sparse</dt>
-                      </div> }
-                  </dl>
-                </div>
-              </div>
-            </div>
+                </Card.Body>
+              </Card>
+              <Card>
+                <Card.Header>Properties</Card.Header>
+                <Card.Body>
+                  { _.map(selectedRow._Data, function(v, k) {
+                      return <div className="row" key={k}>
+                               <dt className="col-4">{k}</dt>
+                               <dd className="col-8">{v}</dd>
+                             </div>;
+                  }) }
+                  { selectedRow.Download.sparse &&
+                    <div className="row">
+                      <dt>Sparse</dt>
+                    </div> }
+                </Card.Body>
+              </Card>
+            </CardDeck>
         );
     };
 }

@@ -16,17 +16,14 @@ const resizerStyle = {
 class VFSViewer extends Component {
     static propTypes = {
         client: PropTypes.object,
-        vfs_path: PropTypes.array,
-        selectedRow: PropTypes.object,
-        node: PropTypes.object,
-        setSelectedRow: PropTypes.func,
-        updateCurrentNode: PropTypes.func,
-        updateVFSPath: PropTypes.func,
     }
 
     state = {
         topPaneSize: undefined,
         collapsed: false,
+        vfs_path: [],
+        selected_row: {},
+        current_node: {},
     }
 
     collapse = () => {
@@ -37,6 +34,15 @@ class VFSViewer extends Component {
         }
     }
 
+    updateVFSPath = (vfs_path) => {
+        this.setState({vfs_path: vfs_path});
+    };
+
+    updateCurrentNode = (node) => {
+        this.setState({current_node: node});
+        this.props.updateCurrentNode(node);
+    }
+
     render() {
         return (
             <>
@@ -45,10 +51,9 @@ class VFSViewer extends Component {
                        resizerStyle={resizerStyle}>
               <VeloFileTree client={this.props.client}
                             className="file-tree"
-                            setSelectedRow={this.props.setSelectedRow}
-                            updateVFSPath={this.props.updateVFSPath}
-                            updateCurrentNode={this.props.updateCurrentNode}
-                            vfs_path={this.props.vfs_path} />
+                            updateVFSPath={this.updateVFSPath}
+                            updateCurrentNode={this.updateCurrentNode}
+                            vfs_path={this.state.vfs_path} />
               <SplitPane split="horizontal"
                          defaultSize="50%"
                          size={this.state.topPaneSize}
@@ -56,10 +61,11 @@ class VFSViewer extends Component {
                          resizerStyle={resizerStyle}>
                 <VeloFileList
                   client={this.props.client}
-                  setSelectedRow={this.props.setSelectedRow}
-                  node={this.props.node} />
+                  updateCurrentNode={this.updateCurrentNode}
+                  node={this.state.current_node} />
                 <VeloFileDetails
-                  selectedRow={this.props.selectedRow} />
+                  client={this.props.client}
+                   node={this.state.current_node} />
               </SplitPane>
             </SplitPane>
             </>

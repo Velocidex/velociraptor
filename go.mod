@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/semver v1.4.2 // indirect
 	github.com/Masterminds/sprig v2.20.0+incompatible
 	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
-	github.com/Showmax/go-fqdn v0.0.0-20180501083314-6f60894d629f
+	github.com/Showmax/go-fqdn v1.0.0
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2

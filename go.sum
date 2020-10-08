@@ -54,6 +54,8 @@ github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 h1:l2RCK7mjLhjfZ
 github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667/go.mod h1:oX5x61PbNXchhh0oikYAH+4Pcfw5LKv21+Jnpr6r6Pc=
 github.com/Showmax/go-fqdn v0.0.0-20180501083314-6f60894d629f h1:JqQetNUOVIen9o9K9c+BHgYePFGXQmedq/A6F58Xu+w=
 github.com/Showmax/go-fqdn v0.0.0-20180501083314-6f60894d629f/go.mod h1:nxfWvpOWKx1oAU7G3U8UYWL/iY6EKdjjv1w/S8HDsvg=
+github.com/Showmax/go-fqdn v1.0.0 h1:0rG5IbmVliNT5O19Mfuvna9LL7zlHyRfsSvBPZmF9tM=
+github.com/Showmax/go-fqdn v1.0.0/go.mod h1:SfrFBzmDCtCGrnHhoDjuvFnKsWjEQX/Q9ARZvOrJAko=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 h1:fLjPD/aNc3UIOA6tDi6QXUemppXK3P9BI7mr2hd6gx8=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
 github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee h1:b8PGgJhYSRNo1z6SW2d53PtTahpuXxZvAIGyfU+wfOk=

@@ -26,20 +26,22 @@ sources:
   - query: |
       // Cache the process listing in memory as we will be going
       // through it many times.
-      LET processes <= SELECT Name, Pid, Ppid FROM pslist()
+      LET processes <= SELECT Name, Pid, Ppid FROM pslist() WHERE Pid > 0
 
       LET m <= memoize(query={ SELECT Name, Pid, Ppid FROM pslist()}, key="Pid", period=1)
 
       // Recursive function to find process parent (clients > 0.4.9).
-      LET pstree_memoized(LookupPid) = SELECT * FROM foreach(
-      row=get(item=m, field=LookupPid),
+      // Catch recursion loops by limiting the depth of traversal to 10 deep.
+      LET pstree_memoized(LookupPid, Depth) = SELECT * FROM foreach(
+      row=if(condition=Depth < 10, then=get(item=m, field=LookupPid)),
         query={
            SELECT * FROM chain(
            a={
              SELECT Name, Pid, Ppid FROM scope()
            },
            b={
-             SELECT Name, Pid, Ppid FROM pstree(LookupPid=Ppid)
+             SELECT Name, Pid, Ppid FROM pstree_memoized(
+                    LookupPid=Ppid, Depth=Depth + 1)
            })
         })
 
@@ -62,7 +64,7 @@ sources:
       // Select which version we should use
       LET pstree(LookupPid) = SELECT * FROM if(
         condition=version(function="memoize") >= 0,
-        then=pstree_memoized,
+        then={ SELECT * FROM pstree_memoized(LookupPid=LookupPid, Depth=0) },
         else=pstree_legacy)
 
       SELECT Name, Pid, Ppid,

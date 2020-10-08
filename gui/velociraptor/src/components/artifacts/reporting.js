@@ -28,41 +28,27 @@ export default class VeloReportViewer extends Component {
         messages: [],
     }
 
-    set = (k, v) => {
-        let new_state  = Object.assign({}, this.state);
-        new_state[k] = v;
-        this.setState(new_state);
-    }
-
     componentDidMount() {
         this.updateReport();
     }
 
     componentDidUpdate(prevProps) {
-        if (!this.props.client || !this.props.client.client_id) {
-            return;
-        };
+        let client_id = this.props.client && this.props.client.client_id;
+        let artifact = this.props.artifact;
 
-        let new_client_id = this.props.client.client_id;
-        let prev_client_id = null;
-        if (prevProps.client && prevProps.client.client_id) {
-            prev_client_id = prevProps.client.client_id;
-        }
+        let prev_client_id = prevProps.client && prevProps.client.client_id;
 
-        if (new_client_id !== prev_client_id) {
+        if (client_id !== prev_client_id || artifact !== prevProps.artifact) {
             this.updateReport();
         }
     }
 
     updateReport() {
-        if (!this.props.client || !this.props.client.client_id) {
-            return;
-        };
-
+        let client_id = this.props.client && this.props.client.client_id;
         let params = {
             artifact: this.props.artifact,
             type: this.props.type,
-            client_id: this.props.client.client_id,
+            client_id: client_id,
             flow_id: this.props.flow_id,
         };
 
@@ -78,15 +64,31 @@ export default class VeloReportViewer extends Component {
             }
             this.setState(new_state);
         }.bind(this), function(err) {
-            this.set("template", "Error " + err.data.message);
+            this.setState({"template": "Error " + err.data.message});
         }.bind(this)).catch(function(err) {
-            this.set("template", "Error " + err.message);
+            this.setState({"template": "Error " + err.message});
         }.bind(this));
     }
 
+    cleanupHTML = (html) => {
+        // React expect no whitespace between table elements
+        html = html.replace(/>\s*<thead/g, "><thead");
+        html = html.replace(/>\s*<tbody/g, "><tbody");
+        html = html.replace(/>\s*<tr/g, "><tr");
+        html = html.replace(/>\s*<th/g, "><th");
+        html = html.replace(/>\s*<td/g, "><td");
+
+        html = html.replace(/>\s*<\/thead/g, "></thead");
+        html = html.replace(/>\s*<\/tbody/g, "></tbody");
+        html = html.replace(/>\s*<\/tr/g, "></tr");
+        html = html.replace(/>\s*<\/th/g, "></th");
+        html = html.replace(/>\s*<\/td/g, "></td");
+        return html;
+    }
+
     render() {
-        let template = parse(this.state.template, {
-            replace: function(domNode) {
+        let template = parse(this.cleanupHTML(this.state.template), {
+            replace: (domNode) => {
                 if (domNode.name === "grr-csv-viewer") {
                     // Figure out where the data is: attribs.value is something like data['table2']
                     let re = /'([^']+)'/;
@@ -98,7 +100,8 @@ export default class VeloReportViewer extends Component {
                         <VeloTable rows={rows} columns={data.Columns} />
                     );
                 };
-            }.bind(this),
+                return domNode;
+            }
         });
 
         return (

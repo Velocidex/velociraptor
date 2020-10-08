@@ -16,14 +16,21 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
          faSearch, faSpinner,  faSearchPlus, faFolderOpen, faHistory,
          faTasks, faTerminal, faCompress, faExpand, faEyeSlash, faStop, faExclamation,
-         faColumns, faDownload,
-         faBinoculars } from '@fortawesome/free-solid-svg-icons';
+         faColumns, faDownload, faSync, faCheck, faHourglass, faArchive,
+         faSort, faSortUp, faSortDown, faPause, faPlay, faCopy,
+         faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
+         faBinoculars, faUpload, faExternalLinkAlt, faTags,
+       } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
             faSearch, faSpinner, faSearchPlus, faTasks, faTerminal,
             faCompress, faExpand, faEyeSlash, faStop, faExclamation,
-            faColumns, faDownload,
-            faFolderOpen , faHistory, faBinoculars);
+            faColumns, faDownload, faSync, faCheck, faHourglass, faArchive,
+            faSort, faSortUp, faSortDown, faPause, faPlay, faCopy,
+            faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
+            faFolderOpen , faHistory, faBinoculars, faUpload, faExternalLinkAlt,
+            faTags,
+           );
 
 ReactDOM.render(
     <HashRouter>

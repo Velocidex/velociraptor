@@ -2,6 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 import api from '../core/api-service.js';
+import Pagination from '../bootstrap/pagination/index.js';
+
+import "./file-hex-view.css";
 
 export default class FileHexView extends React.Component {
     static propTypes = {
@@ -10,19 +13,15 @@ export default class FileHexView extends React.Component {
     };
 
     state = {
-        page: 1,
-        pageCount: 1,
+        page: 0,
         rows: 25,
         columns: 0x14,
         hexDataRows: [],
-        chunkSize: 1024,
-
-        // Offset into the file.
-        offset: 0,
+        loading: true,
     }
 
     componentDidMount = () => {
-        this.fetchText_();
+        this.fetchText_(0);
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -30,11 +29,11 @@ export default class FileHexView extends React.Component {
         let old_row = prevProps.selectedRow && prevProps.selectedRow._id;
 
         if (selectedRow !== old_row) {
-            this.fetchText_();
+            this.fetchText_(this.state.page);
         };
     }
 
-    fetchText_ = () => {
+    fetchText_ = (page) => {
         let client_id = this.props.client && this.props.client.client_id;
         if (!client_id) {
             return;
@@ -46,32 +45,39 @@ export default class FileHexView extends React.Component {
         }
 
         var filePath = download.vfs_path;
-        //var total_size = this.props.selectedRow.Size || 0;
+        if (!filePath) {
+            return;
+        }
+
         var chunkSize = this.state.rows * this.state.columns;
-        //let pageCount = Math.ceil(total_size / chunkSize);
         var url = 'api/v1/DownloadVFSFile';
+
         var params = {
-            offset: this.state.offset,
+            offset: page * chunkSize,
             length: chunkSize,
             vfs_path: filePath,
             client_id: client_id,
         };
 
+        this.setState({loading: true});
+
         api.get(url, params).then(function(response) {
-            this.parseFileContentToHexRepresentation_(response.data);
+            this.parseFileContentToHexRepresentation_(response.data, page);
         }.bind(this), function() {
-            this.setState({hexDataRows: []});
+            this.setState({hexDataRows: [], loading: false});
         }.bind(this));
     };
 
-    parseFileContentToHexRepresentation_ = (fileContent) => {
+    parseFileContentToHexRepresentation_ = (fileContent, page) => {
         if (!fileContent) {
             return;
         }
         let hexDataRows = [];
+        var chunkSize = this.state.rows * this.state.columns;
 
         for(var i = 0; i < this.state.rows; i++){
-            var rowOffset = this.offset_ + (i * this.state.columns);
+            let offset = page * chunkSize;
+            var rowOffset = offset + (i * this.state.columns);
             var data = fileContent.substr(i * this.state.columns, this.state.columns);
             var data_row = [];
             for (var j = 0; j < data.length; j++) {
@@ -87,71 +93,98 @@ export default class FileHexView extends React.Component {
             });
         }
 
-        this.setState({hexDataRows: hexDataRows});
+        this.setState({hexDataRows: hexDataRows, loading: false});
     };
 
 
     render() {
-        if (this.state.hexDataRows) {
+        if (!this.state.hexDataRows) {
             return <div className="panel hexdump">
                      Loading...
                    </div>;
         }
 
+        var total_size = this.props.selectedRow.Size || 0;
+        var chunkSize = this.state.rows * this.state.columns;
+        let pageCount = Math.ceil(total_size / chunkSize);
+        let paginationConfig = {
+            totalPages: pageCount,
+            currentPage: this.state.page + 1,
+            showMax: 5,
+            size: "sm",
+            threeDots: true,
+            center: true,
+            prevNext: true,
+            shadow: true,
+            onClick: (page, e) => {
+                this.setState({page: page - 1});
+                this.fetchText_(page - 1);
+                e.preventDefault();
+                e.stopPropagation();
+            },
+        };
+
+        let hexArea = this.state.loading ? "Loading" :
+            <table className="hex-area">
+              <tbody>
+                { _.map(this.state.hexDataRows, function(row, idx) {
+                    return <tr key={idx}>
+                             <td>
+                               { _.map(row.data_row, function(x, idx) {
+                                   return <span key={idx}>{ x }&nbsp;</span>;
+                               })}
+                             </td>
+                           </tr>; })
+                }
+              </tbody>
+            </table>;
+
+        let contextArea = this.state.loading ? "" :
+            <table className="content-area">
+              <tbody>
+                { _.map(this.state.hexDataRows, function(row, idx) {
+                    return <tr key={idx}><td className="data">{ row.safe_data }</td></tr>;
+                })}
+              </tbody>
+            </table>;
+
         return (
             <div>
-              <div>
-                <ul uib-pagination
-                    total-items="controller.pageCount" items-per-page="1"
-                    rotate="false" boundary-links="true" max_size="10"
-                    ng-model="controller.page">
-                </ul>
+              <div className="file-hex-view">
+                { pageCount && <Pagination {...paginationConfig}/> }
 
                 <div className="panel hexdump">
                   <div className="monospace">
                     <table>
-                      <tr>
-                        <th>Offset</th>
-                        <th>00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13</th>
-                        <th></th>
-                      </tr>
-                      <tr>
-                        <td>
-                          <table className="offset-area">
-                            { _.map(this.state.hexDataRows, function(row, idx) {
-                                return <tr ng-repeat="row in controller.hexDataRows">
-                                  <td className="offset">
-                                    { row.offset }
-                                  </td>
-                                </tr>; })}
-                          </table>
-                        </td>
-                        <td>
-                          <table className="hex-area">
-                            { _.map(this.state.hexDataRows, function(row, idx) {
-                                return <tr ng-repeat="row in controller.hexDataRows">
-                                  <td>
-                                    { _.map(row.data_row, function(x, idx) {
-                                        return <span ng-repeat="x in row.data_row track by $index">
-                                        { x }
-                                        </span>;
-                                    })}
-                                  </td>
-                                </tr>; })}
-                          </table>
-                        </td>
-                        <td>
-                          <table className="content-area">
-                            { _.map(this.state.hexDataRows, function(row, idx) {
-                                return <tr ng-repeat="row in controller.hexDataRows">
-                                  <td className="data">
-                                    { row.safe_data }
-                                  </td>
-                                </tr>;
-                            })}
-                          </table>
-                        </td>
-                      </tr>
+                      <thead>
+                        <tr>
+                          <th>Offset</th>
+                          <th>00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <table className="offset-area">
+                              <tbody>
+                                { _.map(this.state.hexDataRows, function(row, idx) {
+                                    return <tr key={idx}>
+                                             <td className="offset">
+                                               { row.offset }
+                                             </td>
+                                           </tr>; })}
+                              </tbody>
+                            </table>
+                          </td>
+                          <td>
+                            { hexArea }
+                          </td>
+                          <td>
+                            { contextArea }
+                          </td>
+                        </tr>
+                      </tbody>
                     </table>
                   </div>
                 </div>

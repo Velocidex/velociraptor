@@ -1,5 +1,15 @@
 .velo-table .react-bootstrap-table {
-    overflow-x: auto;
+    width: 100%;
+}
+
+.velo-table {
+    margin-top: 10px;
+}
+
+/* Collapse empty rows as much as possible */
+.velo-table td:empty {
+    padding: 0px;
+    -webkit-border-vertical-spacing: 0px;
 }
 
 a.btn.btn-default.active {
@@ -14,4 +24,8 @@ a.btn.btn-default.active {
 
 .row.react-bootstrap-table-pagination {
     width: 100%;
+}
+
+.selectable {
+    cursor: pointer;
 }

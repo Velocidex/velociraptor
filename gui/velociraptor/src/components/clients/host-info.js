@@ -20,23 +20,16 @@ class VeloHostInfo extends Component {
         client: PropTypes.object,
     }
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            // Current inflight interrogate.
-            interrogateOperationId: null,
+    state = {
+        // Current inflight interrogate.
+        interrogateOperationId: null,
 
-            // The mode of the host info tab set.
-            mode: this.props.match.params.action || 'brief',
-        };
-
-        this.renderInterrogate = this.renderInterrogate.bind(this);
-        this.setMode = this.setMode.bind(this);
-        this.getClientInfo = this.getClientInfo.bind(this);
+        // The mode of the host info tab set.
+        mode: this.props.match.params.action || 'brief',
     }
 
     // Get the client info object to return something sensible.
-    getClientInfo() {
+    getClientInfo = () => {
         let client_info = this.props.client || {};
         client_info.agent_information = client_info.agent_information || {};
         client_info.os_info = client_info.os_info || {};
@@ -44,7 +37,7 @@ class VeloHostInfo extends Component {
         return client_info;
     }
 
-    setMode(mode) {
+    setMode = (mode) => {
         if (mode !== this.state.mode) {
             let new_state  = Object.assign({}, this.state);
             new_state.mode = mode;
@@ -59,14 +52,7 @@ class VeloHostInfo extends Component {
         }
     }
 
-    renderInterrogate() {
-        if (this.state.interrogateOperationId) {
-            return  <FontAwesomeIcon icon="spin" spin/>;
-        }
-        return <FontAwesomeIcon icon="search-plus" />;
-    }
-
-    renderContent() {
+    renderContent = () => {
         if (this.state.mode === 'brief') {
             return (
                 <div className="dashboard">
@@ -167,18 +153,20 @@ class VeloHostInfo extends Component {
                     <button className="btn btn-default"
                             ng-click="controller.interrogate()"
                             ng-disabled="controller.interrogateOperationId">
-                      { this.renderInterrogate() }
-                      Interrogate
+                      { this.state.interrogateOperationId ?
+                        <FontAwesomeIcon icon="spin" spin/>:
+                        <FontAwesomeIcon icon="search-plus" /> }
+                      <span className="button-label">Interrogate</span>
                     </button>
-                    <Link to={"/vfs/" + this.props.client.client_id}
+                    <Link to={"/vfs/" + this.props.client.client_id + "/"}
                       role="button" className="btn btn-default" >
                       <i><FontAwesomeIcon icon="folder-open"/></i>
-                      VFS
+                      <span className="button-label">VFS</span>
                     </Link>
                     <Link to={"/collected/" + this.props.client.client_id}
                           role="button" className="btn btn-default">
                       <i><FontAwesomeIcon icon="history"/></i>
-                      Collected
+                      <span className="button-label">Collected</span>
                     </Link>
                   </div>
 
@@ -189,18 +177,18 @@ class VeloHostInfo extends Component {
                                      className="mb-2">
                     <ToggleButton variant="default"
                                   value='brief'>
-                      Overview
-                      <i><FontAwesomeIcon icon="laptop"/></i>
+                      <FontAwesomeIcon icon="laptop"/>
+                      <span className="button-label">Overview</span>
                     </ToggleButton>
                     <ToggleButton variant="default"
                                   value='detailed'>
-                      VQL Drilldown
-                      <i><FontAwesomeIcon icon="tasks"/></i>
+                      <FontAwesomeIcon icon="tasks"/>
+                      <span className="button-label">VQL Drilldown</span>
                     </ToggleButton>
                     <ToggleButton variant="default"
                                   value='shell'>
-                      Shell
-                      <i><FontAwesomeIcon icon="terminal"/></i>
+                      <FontAwesomeIcon icon="terminal"/>
+                      <span className="button-label">Shell</span>
                     </ToggleButton>
                   </ToggleButtonGroup>
                 </div>

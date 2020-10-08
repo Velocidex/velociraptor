@@ -63,3 +63,8 @@ div.client-info .btn-group label {
 .panel .card-header {
     font-size: 13px;
 }
+
+.full-width-height {
+    overflow-x: auto;
+    height: 100%;
+}

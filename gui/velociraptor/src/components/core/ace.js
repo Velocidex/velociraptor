@@ -1,6 +1,12 @@
+import './ace.css';
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
+import _ from 'lodash';
+
+import 'ace-builds';
+import 'ace-builds/webpack-resolver';
 import AceEditor from "react-ace";
 
 import 'ace-builds/webpack-resolver.js';
@@ -67,29 +73,138 @@ import 'ace-builds/src-min-noconflict/keybinding-emacs.js';
 import 'ace-builds/src-min-noconflict/keybinding-sublime.js';
 import 'ace-builds/src-min-noconflict/keybinding-vim.js';
 import 'ace-builds/src-min-noconflict/keybinding-vscode.js';
-import  'ace-builds/src-min-noconflict/mode-yaml.js';
-import  'ace-builds/src-min-noconflict/mode-json.js';
-import  'ace-builds/src-min-noconflict/mode-markdown.js';
-import  'ace-builds/src-min-noconflict/mode-sql.js';
+import 'ace-builds/src-min-noconflict/mode-yaml.js';
+import 'ace-builds/src-min-noconflict/mode-json.js';
+import 'ace-builds/src-min-noconflict/mode-markdown.js';
+import 'ace-builds/src-min-noconflict/mode-sql.js';
 
-export default class VeloAce extends Component {
+import Button from 'react-bootstrap/Button';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import UserConfig from './user.js';
+
+import api from '../core/api-service.js';
+
+export class SettingsButton extends Component {
     static propTypes = {
-        text: PropTypes.string,
-        mode: PropTypes.string,
-        onChange: PropTypes.func,
+        ace: PropTypes.object,
     }
 
     render() {
         return (
-            <AceEditor
-              mode={this.props.mode || 'sql'}
-              theme="github"
-              value={this.props.text || ''}
-              onChange={this.props.onChange}
-              editorProps={{
-                  $blockScrolling: true,
-              }}
-            />
+            <>
+              <Button variant="default"
+                      className="float-left"
+                      onClick={() => this.props.ace.execCommand("showSettingsMenu")} >
+                <FontAwesomeIcon icon="wrench"/>
+              </Button>
+            </>
+        );
+    }
+};
+
+export default class VeloAce extends Component {
+    static contextType = UserConfig;
+    static propTypes = {
+        text: PropTypes.string,
+        mode: PropTypes.string,
+        onChange: PropTypes.func,
+        options: PropTypes.object,
+
+        // Extra toolbar buttons to go in the editor toolbar.
+        toolbar: PropTypes.any,
+
+        // Will be called with the underlying editor object when first
+        // mounted for configuration.
+        aceConfig: PropTypes.func,
+
+        // If this is defined, we call it with the editor settings
+        // button. Our caller can then place it where they want.
+        settingButtonRenderer: PropTypes.func,
+    }
+
+    // Remove options which are not settable by the user since they
+    // are used by the components.
+    normalizeOptions = (options) => {
+        _.each(options, (v, k) => {
+            switch(k) {
+            case "mode":
+            case "readOnly":
+            case "minLines":
+            case "maxLines":
+            case "autoScrollEditorIntoView":
+                delete options[k];
+            };
+        });
+
+        return options;
+    }
+
+    getUserOptions = () => {
+        let user_options = this.normalizeOptions(
+            JSON.parse(this.context.traits.ui_settings || "{}"));
+        return Object.assign(user_options, this.props.options || {});
+    }
+
+    updatePreferences = (e, editor) => {
+        let new_options = this.normalizeOptions(editor.getOptions());
+
+        // If options have changed we need to update them to the
+        // server.
+        if (!_.isEqual(new_options, this.getUserOptions())) {
+            api.post("api/v1/SetGUIOptions",
+                     {options: JSON.stringify(new_options)}).then((response) => {
+                         this.context.updateTraits();
+                     });
+        }
+    }
+
+    state = {
+        // The raw ace editor.
+        ace: {},
+    }
+
+    render() {
+        // Merge the user's options into the options the component
+        // specified.
+        let options = this.getUserOptions();
+
+        return (
+            <>
+              <div className="col-12 velo-ace-editor">
+                <AceEditor
+                  ref="ace"
+                  className="full-height"
+                  showGutter={true}
+                  focus={true}
+                  mode={this.props.mode || 'sql'}
+                  theme="github"
+                  value={this.props.text || ''}
+                  onChange={this.props.onChange}
+                  style={
+                      {width: "100%"}
+                  }
+                  commands={[{
+                      name: 'saveAndExit',
+                      bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
+                      exec: (editor) => {
+                          this.saveArtifact();
+                      },
+                  }]}
+                  setOptions={options}
+                  editorProps={{
+                      $blockScrolling: true,
+                  }}
+                  onBlur={this.updatePreferences}
+                  onLoad={(ace) => {
+                      this.setState({ace: ace});
+                      if (this.props.aceConfig) {
+                          this.props.aceConfig(ace);
+                      }
+                  }}
+                />
+              </div>
+            </>
         );
     }
 }
