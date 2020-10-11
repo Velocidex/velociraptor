@@ -29,9 +29,8 @@ export default class FileTextView extends React.Component {
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        let selectedRow = this.props.selectedRow && this.props.selectedRow._id;
-        let old_row = prevProps.selectedRow && prevProps.selectedRow._id;
-
+        let selectedRow = this.props.selectedRow && this.props.selectedRow.Name;
+        let old_row = prevProps.selectedRow && prevProps.selectedRow.Name;
         if (selectedRow !== old_row || prevState.page !== this.state.page) {
             this.fetchText_(this.state.page);
         };
@@ -42,7 +41,6 @@ export default class FileTextView extends React.Component {
         if (!client_id) {
             return;
         }
-
         var download = this.props.selectedRow.Download;
         if (!download) {
             return;
@@ -52,9 +50,7 @@ export default class FileTextView extends React.Component {
         if (!filePath) {
             return;
         }
-
         var url = 'api/v1/DownloadVFSFile';
-
         var params = {
             offset: page * pagesize,
             length: pagesize,
@@ -63,8 +59,8 @@ export default class FileTextView extends React.Component {
         };
 
         this.setState({loading: true});
-        api.get(url, params).then(function(response) {
-            this.parseFileContentToTextRepresentation_(response.data || "", page);
+        api.get_blob(url, params).then(function(response) {
+            this.parseFileContentToTextRepresentation_(response || "", page);
         }.bind(this), function() {
             this.setState({hexDataRows: [], loading: false, page: page});
         }.bind(this));
@@ -106,6 +102,7 @@ export default class FileTextView extends React.Component {
                 <VeloAce
                   text={this.state.rawdata}
                   mode="text"
+                  options={{readOnly: true}}
                 />
               </div>
             </div>

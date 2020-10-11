@@ -22,7 +22,8 @@ class VeloFileStats extends Component {
     }
 
     render() {
-        if (!this.props.selectedRow || !this.props.selectedRow.Name) {
+        let selectedRow = this.props.selectedRow;
+        if (!selectedRow || !selectedRow.Name) {
             return (
                 <div className="card">
                   <h5 className="card-header">
@@ -31,22 +32,6 @@ class VeloFileStats extends Component {
                 </div>
             );
         }
-
-        let selectedRow = Object.assign({
-            _FullPath: "",
-            Name: "",
-            mtime: "",
-            atime: "",
-            ctime: "",
-            Mode: "",
-            Size: 0,
-            Download: {
-                mtime: "",
-                vfs_path: "",
-                sparse: false,
-            },
-            _Data: {},
-        }, this.props.selectedRow);
 
         let client_id = this.props.client && this.props.client.client_id;
 
@@ -72,7 +57,7 @@ class VeloFileStats extends Component {
 
                       <dt className="col-4">Ctime</dt>
                       <dd className="col-8"> {selectedRow.ctime} </dd>
-                      { selectedRow.Download.mtime &&
+                      { selectedRow.Download && selectedRow.Download.mtime &&
                         <>
                           <dt className="col-4">
                             Last Collected
@@ -111,7 +96,7 @@ class VeloFileStats extends Component {
                                <dd className="col-8">{v}</dd>
                              </div>;
                   }) }
-                  { selectedRow.Download.sparse &&
+                  { selectedRow.Download && selectedRow.Download.sparse &&
                     <div className="row">
                       <dt>Sparse</dt>
                     </div> }

@@ -81,10 +81,10 @@ class VeloFileList extends Component {
         if (!this.props.node || !this.props.node.raw_data) {
             return (
                 <>
-                { toolbar }
-                <div className="fill-parent no-margins toolbar-margin">
-                  No data available
-                </div>;
+                  { toolbar }
+                  <div className="fill-parent no-margins toolbar-margin">
+                    No data available
+                  </div>
                 </>
             );
         }
@@ -106,7 +106,7 @@ class VeloFileList extends Component {
         return (
             <>
               { toolbar }
-              <div className="fill-parent no-margins toolbar-margin">
+              <div className="fill-parent no-margins toolbar-margin selectable">
                 <BootstrapTable
                   hover
                   condensed

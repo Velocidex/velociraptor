@@ -43,8 +43,7 @@ reports:
 
       ## Server status
 
-      The following are total across all frontends.
-
+      <p>The following are total across all frontends.</p>
       <span class="container">
         <span class="row">
           <span class="col-sm panel">

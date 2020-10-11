@@ -16,12 +16,12 @@ export default class VeloClientStatusIcon extends Component {
     render() {
         let item = this.props.client;
         let date = new Date();
-        let now = date.getTime();
-
-        if ((now - item.last_seen_at/1000) < 60 * 15) {
+        let now_ms = date.getTime();
+        let last_seen_ms = item.last_seen_at/1000;
+        if ((now_ms - last_seen_ms) < (60 * 15 * 1000)) {
             return  <img className="icon-small" src={online} alt="online" />;
         }
-        if ((now - item.last_seen_at/1000) < 60 * 60 * 24) {
+        if ((now_ms - last_seen_ms) < (60 * 60 * 24 * 1000)) {
             return  <img className="icon-small" src={online1d} alt="online1d" />;
         }
         return  <img className="icon-small" src={offline} alt="offline" />;

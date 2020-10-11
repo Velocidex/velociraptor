@@ -13,6 +13,7 @@ import ClientFlowsView from './components/flows/client-flows-view.js';
 import Notebook from './components/notebooks/notebook.js';
 import ArtifactInspector from './components/artifacts/artifacts.js';
 import VeloHunts from './components/hunts/hunts.js';
+import UserDashboard from './components/sidebar/user-dashboard.js';
 
 import { UserSettings } from './components/core/user.js';
 
@@ -54,7 +55,7 @@ class App extends Component {
         query_version: "",
     }
 
-    // Called to update the client id.
+    // Called to update the current client.
     setClient = (client) => {
         this.setState({client: client});
     };
@@ -97,7 +98,9 @@ class App extends Component {
                         setSearch={this.setClientSearch}
                       />
                     </div>
-                    <VeloClientSummary client={this.state.client}/>
+                    <VeloClientSummary
+                      setClient={this.setClient}
+                      client={this.state.client}/>
                     <div className="nav float-right">
                       <grr-user-label className="navbar-text"></grr-user-label>
                     </div>
@@ -108,6 +111,9 @@ class App extends Component {
               </div>
               <div id="content">
                 <Switch>
+                  <Route path="/dashboard">
+                    <UserDashboard />
+                  </Route>
                   <Route path="/search/:query?">
                     <VeloClientList
                       setSearch={this.setClientSearch}

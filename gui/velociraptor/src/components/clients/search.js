@@ -22,7 +22,6 @@ class VeloClientSearch extends Component {
     componentDidMount = () => {
         let query = this.props.match && this.props.match.params &&
             this.props.match.params.query;
-        console.log(this.props);
         if (query && query != this.state.query) {
             this.this.setState({query: query});
 

@@ -1,0 +1,7 @@
+.dashboard {
+    margin-bottom: 50px;
+}
+
+#content {
+    overflow-y: auto;
+}

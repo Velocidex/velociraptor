@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import api from '../core/api-service.js';
 import Pagination from '../bootstrap/pagination/index.js';
+import Spinner from '../utils/spinner.js';
 
 import "./file-hex-view.css";
 
@@ -25,8 +26,8 @@ export default class FileHexView extends React.Component {
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        let selectedRow = this.props.selectedRow && this.props.selectedRow._id;
-        let old_row = prevProps.selectedRow && prevProps.selectedRow._id;
+        let selectedRow = this.props.selectedRow && this.props.selectedRow.Name;
+        let old_row = prevProps.selectedRow && prevProps.selectedRow.Name;
 
         if (selectedRow !== old_row) {
             this.fetchText_(this.state.page);
@@ -61,8 +62,8 @@ export default class FileHexView extends React.Component {
 
         this.setState({loading: true});
 
-        api.get(url, params).then(function(response) {
-            this.parseFileContentToHexRepresentation_(response.data, page);
+        api.get_blob(url, params).then(function(response) {
+            this.parseFileContentToHexRepresentation_(response, page);
         }.bind(this), function() {
             this.setState({hexDataRows: [], loading: false});
         }.bind(this));
@@ -98,10 +99,10 @@ export default class FileHexView extends React.Component {
 
 
     render() {
-        if (!this.state.hexDataRows) {
-            return <div className="panel hexdump">
-                     Loading...
-                   </div>;
+        let mtime = this.props.selectedRow && this.props.selectedRow.Download &&
+            this.props.selectedRow.Download.mtime;
+        if (!mtime) {
+            return <div>File has no data, please collect file first.</div>;
         }
 
         var total_size = this.props.selectedRow.Size || 0;
@@ -150,6 +151,7 @@ export default class FileHexView extends React.Component {
 
         return (
             <div>
+              <Spinner loading={this.state.loading}/>
               <div className="file-hex-view">
                 { pageCount && <Pagination {...paginationConfig}/> }
 
