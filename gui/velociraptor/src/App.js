@@ -14,6 +14,10 @@ import Notebook from './components/notebooks/notebook.js';
 import ArtifactInspector from './components/artifacts/artifacts.js';
 import VeloHunts from './components/hunts/hunts.js';
 import UserDashboard from './components/sidebar/user-dashboard.js';
+import Form from 'react-bootstrap/Form';
+import FormControl from 'react-bootstrap/FormControl';
+import Button from 'react-bootstrap/Button';
+import UserLabel from './components/users/user-label.js';
 
 import { UserSettings } from './components/core/user.js';
 
@@ -87,28 +91,21 @@ class App extends Component {
 
         return (
             <UserSettings>
-              <div className="navbar navbar-default navbar-static-top" id="header">
-                <div className="navbar-inner">
-                  <div className="">
-                    <VeloNavigator
-                      vfs_path={vfs_path}
-                      client={this.state.client} />
-                    <div className="float-left navbar-form toolbar-buttons">
-                      <VeloClientSearch
-                        setSearch={this.setClientSearch}
-                      />
-                    </div>
-                    <VeloClientSummary
-                      setClient={this.setClient}
-                      client={this.state.client}/>
-                    <div className="nav float-right">
-                      <grr-user-label className="navbar-text"></grr-user-label>
-                    </div>
-                    <div className="nav float-right toolbar-buttons">
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <Navbar fixed="top" className="main-navbar justify-content-between">
+                <Form inline>
+                  <VeloNavigator
+                    vfs_path={vfs_path}
+                    client={this.state.client} />
+
+                  <VeloClientSearch
+                    setSearch={this.setClientSearch}
+                  />
+                </Form>
+                <VeloClientSummary
+                  setClient={this.setClient}
+                  client={this.state.client}/>
+                <UserLabel className="navbar-text"/>
+              </Navbar>
               <div id="content">
                 <Switch>
                   <Route path="/dashboard">
@@ -137,8 +134,6 @@ class App extends Component {
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
                     <VFSViewer client={this.state.client}
                                selectedRow={this.state.selected_row}
-                               setSelectedRow={this.setSelectedRow}
-                               updateVFSPath={this.updateVFSPath}
                                updateCurrentNode={this.updateCurrentNode}
                                node={this.state.current_node}
                                vfs_path={this.state.vfs_path} />

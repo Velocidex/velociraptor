@@ -8,21 +8,84 @@ import Button from 'react-bootstrap/Button';
 import VeloTimestamp from "../utils/time.js";
 import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
-
+import api from '../core/api-service.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import utils from './utils.js';
+import axios from 'axios';
+
+const POLL_TIME = 2000;
 
 class VeloFileStats extends Component {
     static propTypes = {
         client: PropTypes.object,
-        selectedRow: PropTypes.object,
+        node: PropTypes.object,
+        version: PropTypes.string,
+        updateCurrentNode: PropTypes.func,
     }
 
     state = {
-        updateInProgress: false,
+        updateOperation: false,
+    }
+
+    updateFile = () => {
+        if (this.state.updateInProgress) {
+            this.componentWillUnmount();
+        }
+
+        let selectedRow = utils.getSelectedRow(this.props.node);
+        if (!selectedRow || !selectedRow._FullPath || !selectedRow._Accessor) {
+            return;
+        }
+
+        let current_mtime = selectedRow && selectedRow.Download &&
+            selectedRow.Download.mtime;
+        api.post("api/v1/CollectArtifact", {
+            client_id: this.props.client.client_id,
+            artifacts: ["System.VFS.DownloadFile"],
+            parameters: {
+                env: [{key: "Path", value: selectedRow._FullPath},
+                      {key: "Accessor", value: selectedRow._Accessor}],
+            }
+        }).then(response => {
+            let flow_id = response.data.flow_id;
+            this.setState({updateOperation: true});
+
+            // Keep polling until the mtime changes.
+            this.source = axios.CancelToken.source();
+            this.interval = setInterval(() => {
+                api.get("api/v1/GetFlowDetails", {
+                    client_id: this.props.client.client_id,
+                    flow_id: flow_id,
+                }).then((response) => {
+                    if (response.data.context.state === "FINISHED") {
+                        this.source.cancel("unmounted");
+                        clearInterval(this.interval);
+                        this.source = undefined;
+                        this.interval = undefined;
+
+                        // Force a tree refresh since this flow is done.
+                        let node = this.props.node;
+                        node.known = false;
+                        node.version = flow_id;
+                        this.props.updateCurrentNode(this.props.node);
+                        this.setState({updateOperation: false});
+                    }
+                });
+            }, POLL_TIME);
+        });
+    }
+
+    componentWillUnmount() {
+        if (this.source) {
+            this.source.cancel("unmounted");
+        }
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
     }
 
     render() {
-        let selectedRow = this.props.selectedRow;
+        let selectedRow = utils.getSelectedRow(this.props.node);
         if (!selectedRow || !selectedRow.Name) {
             return (
                 <div className="card">
@@ -64,7 +127,8 @@ class VeloFileStats extends Component {
                           </dt>
                           <dd className="col-8">
                             <VeloTimestamp usec={ selectedRow.Download.mtime / 1000 } />
-                            <Button variant="outline-default" ng-click="controller.downloadFile()"  >
+                            <Button variant="outline-default"
+                                    ng-click="controller.downloadFile()"  >
                               <FontAwesomeIcon icon="download"/>Download
                             </Button>
                           </dd>
@@ -77,10 +141,13 @@ class VeloFileStats extends Component {
                           <dd className="col-8">
                             <Button variant="default"
                                     ng-disabled="!controller.uiTraits.Permissions.collect_client"
-                                    ng-click="controller.updateFile()"
+                                    onClick={this.updateFile}
                             >
-                              <FontAwesomeIcon icon="sync" spin={this.state.updateInProgress} />
-                              {selectedRow.Download.vfs_path ? 'Re-Collect' : 'Collect'} from the client
+                              <FontAwesomeIcon icon="sync" spin={this.state.updateOperation} />
+                              <span className="button-label">
+                                {selectedRow.Download && selectedRow.Download.vfs_path ?
+                                 'Re-Collect' : 'Collect'} from the client
+                              </span>
                             </Button>
                           </dd>
                         </> }

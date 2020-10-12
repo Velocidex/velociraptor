@@ -5,10 +5,13 @@ import PropTypes from 'prop-types';
 
 import _ from 'lodash';
 import Navbar from 'react-bootstrap/Navbar';
+import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import VeloReportViewer from "../artifacts/reporting.js";
+
+import { withRouter }  from "react-router-dom";
 
 const ranges = [
     {desc: "Last Day", sec: 60*60*24, sample: 4},
@@ -17,7 +20,7 @@ const ranges = [
   ];
 
 
-export default class UserDashboard extends React.Component {
+class UserDashboard extends React.Component {
     static propTypes = {
 
     };
@@ -28,14 +31,25 @@ export default class UserDashboard extends React.Component {
         let now = parseInt((new Date()).getTime() / 1000);
         this.state = {
             start_time: now - ranges[0].sec,
-            sample: 4
+            sample: 4,
+            desc: ranges[0].desc,
         };
+    }
+
+
+
+    shouldComponentUpdate = (nextProps, nextState) => {
+        // Do not keep updating the dashboard - it is quite expensive
+        // and should be done sparingly.
+        return false;
     }
 
     setRange = (desc) => {
         // Current time in seconds.
         let now = parseInt((new Date()).getTime() / 1000);
-        this.setState({start_time: now - desc.sec, sample: desc.sample});
+        this.setState({start_time: now - desc.sec,
+                       desc: desc.desc,
+                       sample: desc.sample});
     }
 
     render() {
@@ -43,9 +57,21 @@ export default class UserDashboard extends React.Component {
             <>
               <Navbar className="toolbar">
                 <ButtonGroup>
+                  <Button variant="default" onClick={() => this.setState({})} >
+                    <FontAwesomeIcon icon="sync"/>
+                  </Button>
+
+                  <Button variant="default" onClick={() => {
+                      this.props.history.push("/artifacts/Server.Monitor.Health");
+                  }} >
+                    <FontAwesomeIcon icon="pencil-alt"/>
+                  </Button>
+                </ButtonGroup>
+                <ButtonGroup className="float-right">
                   <Dropdown>
                     <Dropdown.Toggle variant="default">
                       <FontAwesomeIcon icon="book" />
+                      <span className="button-label">{this.state.desc}</span>
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
                       { _.map(ranges, (x, idx) => {
@@ -70,3 +96,5 @@ export default class UserDashboard extends React.Component {
         );
     }
 };
+
+export default withRouter(UserDashboard);

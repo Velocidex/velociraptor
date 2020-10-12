@@ -64,7 +64,6 @@ class VeloClientSearch extends Component {
 
     render() {
         return (
-            <Form>
               <FormGroup>
                 <ButtonGroup>
                   <Autosuggest
@@ -96,7 +95,6 @@ class VeloClientSearch extends Component {
                   </Button>
                 </ButtonGroup>
               </FormGroup>
-            </Form>
         );
     }
 };

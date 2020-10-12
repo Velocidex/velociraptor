@@ -126,9 +126,9 @@ class VeloFileTree extends Component {
     static propTypes = {
         client: PropTypes.object,
         vfs_path: PropTypes.array,
+        version: PropTypes.string,
         updateVFSPath: PropTypes.func,
         updateCurrentNode: PropTypes.func,
-        selectedRow: PropTypes.object,
     }
 
     componentDidMount() {
@@ -167,8 +167,19 @@ class VeloFileTree extends Component {
             }
         }
 
+        // If node needs to be refreshed we reset the local cache to
+        // force reloading from the server.
+        if (prevProps.version != this.props.version) {
+            let node = this.state.cursor;
+            node.active = true;
+            node.toggled = true;
+            node.inflight = false;
+            node.known = false;
+        }
+
         if (!_.isEqual(prev_vfs_path, vfs_path) ||
-            prevClient !== currentClient ) {
+            prevClient !== currentClient ||
+            prevProps.version != this.props.version) {
             this.updateTree(vfs_path, function(node) {
 
                 if(node.inflight) {
@@ -181,7 +192,7 @@ class VeloFileTree extends Component {
                     for(var i = 0; i < node.raw_data.length; i++){
                         let row = node.raw_data[i];
                         if (row.Name === selected_filename) {
-                            node.selected = row;
+                            node.selected = row.Name;
                         };
                     }
                 };

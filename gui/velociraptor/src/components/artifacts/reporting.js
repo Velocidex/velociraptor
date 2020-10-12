@@ -9,7 +9,7 @@ import parse from 'html-react-parser';
 import api from '../core/api-service.js';
 import VeloTable from '../core/table.js';
 import VeloLineChart from './line-charts.js';
-
+import Spinner from '../utils/spinner.js';
 import ToolViewer from "../tools/tool-viewer.js";
 
 // Renders a report in the DOM.
@@ -31,6 +31,7 @@ export default class VeloReportViewer extends Component {
         template: "",
         data: {},
         messages: [],
+        loading: false,
     }
 
     componentDidMount() {
@@ -61,22 +62,22 @@ export default class VeloReportViewer extends Component {
         params.client_id = client_id;
         params.flow_id = this.props.flow_id;
 
-        api.post("api/v1/GetReport", params).then(function(response) {
+        this.setState({loading: true});
+        api.post("api/v1/GetReport", params).then((response) => {
             let new_state  = {
                 template: response.data.template || "No Reports",
                 messages: response.data.messages || [],
                 data: JSON.parse(response.data.data),
+                loading: false,
             };
 
             for (var i=0; i<new_state.messages.length; i++) {
                 console.log("While generating report: " + new_state.messages[i]);
             }
             this.setState(new_state);
-        }.bind(this), function(err) {
-            this.setState({"template": "Error " + err.data.message});
-        }.bind(this)).catch(function(err) {
-            this.setState({"template": "Error " + err.message});
-        }.bind(this));
+        }).catch((err) => {
+            this.setState({"template": "Error " + err.data.message, loading: false});
+        });
     }
 
     cleanupHTML = (html) => {
@@ -135,7 +136,10 @@ export default class VeloReportViewer extends Component {
         });
 
         return (
-            <div className="report-viewer">{template}</div>
+            <div className="report-viewer">
+              <Spinner loading={this.state.loading} />
+              {template}
+            </div>
         );
     }
 }
