@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -18,6 +17,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/repository"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 type HuntTestSuite struct {
@@ -40,9 +42,10 @@ func (self *HuntTestSuite) SetupTest() {
 	self.sm = services.NewServiceManager(self.ctx, self.config_obj)
 
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(services.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
 	require.NoError(self.T(), self.sm.Start(hunt_dispatcher.StartHuntDispatcher))
+	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
 }
 
 func (self *HuntTestSuite) TearDownTest() {
@@ -52,8 +55,11 @@ func (self *HuntTestSuite) TearDownTest() {
 }
 
 func (self *HuntTestSuite) TestCompilation() {
-	repository := artifacts.NewRepository()
-	artifacts.SetGlobalRepositoryForTests(repository)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	manager.SetGlobalRepositoryForTests(repository)
 	repository.LoadYaml(`
 name: TestArtifact
 parameters:
@@ -82,7 +88,8 @@ sources:
 		},
 	}
 
-	hunt_id, err := CreateHunt(self.ctx, self.config_obj, "User1", request)
+	acl_manager := vql_subsystem.NullACLManager{}
+	hunt_id, err := CreateHunt(self.ctx, self.config_obj, acl_manager, request)
 
 	assert.NoError(self.T(), err)
 

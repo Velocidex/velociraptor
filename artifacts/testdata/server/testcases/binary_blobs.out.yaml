@@ -5,25 +5,33 @@ SELECT * FROM switch( b={SELECT Complete FROM execve(argv=["rm", "-f", "/tmp/aut
 ]SELECT inventory_add(tool="WinPmem", url="https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe", filename="winpmem_v3.3.rc3.exe") FROM scope()[
  {
   "inventory_add(tool=\"WinPmem\", url=\"https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe\", filename=\"winpmem_v3.3.rc3.exe\")": {
-   "Tool": "WinPmem",
-   "ServeLocally": false,
-   "URL": "https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe",
-   "Hash": "",
-   "Filename": "winpmem_v3.3.rc3.exe"
+   "name": "WinPmem",
+   "url": "https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe",
+   "github_project": "",
+   "github_asset_regex": "",
+   "serve_locally": false,
+   "admin_override": true,
+   "serve_url": "",
+   "serve_path": "",
+   "filestore_path": "",
+   "filename": "winpmem_v3.3.rc3.exe",
+   "hash": "",
+   "materialize": false
   }
  }
 ]SELECT * FROM inventory() WHERE name =~ "WinPmem"[
  {
   "name": "WinPmem",
   "url": "https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe",
-  "serve_url": "",
   "github_project": "",
   "github_asset_regex": "",
   "serve_locally": false,
+  "admin_override": true,
+  "serve_url": "",
+  "serve_path": "",
   "filestore_path": "351b4f6d59a4266cc7a2eab9cedf959eb6a4c924746044e6edeabdd1a477643e",
   "filename": "winpmem_v3.3.rc3.exe",
   "hash": "",
-  "admin_override": false,
   "materialize": false
  }
 ]LET ToolInfo <= dict( Tool_WinPmem_URL="https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc3/winpmem_v3.3.rc3.exe", Tool_WinPmem_FILENAME="winpmem_v3.3.rc3.exe", Tool_WinPmem_HASH="319f6c714d682505157cf72aa928c94ada3c839fb8eb0e503d8770624e897318")[]SELECT DownloadStatus, Hash FROM Artifact.Generic.Utils.FetchBinary( ToolName="WinPmem", SleepDuration=0, ToolInfo=ToolInfo)[

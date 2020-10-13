@@ -112,6 +112,11 @@ func (self NTFSFunction) Call(
 		return &vfilter.Null{}
 	}
 
+	if ntfs_ctx == nil || ntfs_ctx.Boot == nil {
+		scope.Log("parse_ntfs: invalid context")
+		return &vfilter.Null{}
+	}
+
 	if arg.MFTOffset > 0 {
 		arg.MFT = arg.MFTOffset / ntfs_ctx.Boot.ClusterSize()
 	}
@@ -175,7 +180,7 @@ func (self MFTScanPlugin) Call(
 		defer fd.Close()
 
 		reader, err := ntfs.NewPagedReader(
-			utils.ReaderAtter{fd}, 1024, 10000)
+			utils.ReaderAtter{Reader: fd}, 1024, 10000)
 		if err != nil {
 			scope.Log("parse_mft: Unable to open file %s: %v",
 				arg.Filename, err)
@@ -191,7 +196,12 @@ func (self MFTScanPlugin) Call(
 
 		for item := range ntfs.ParseMFTFile(
 			ctx, reader, st.Size(), 0x1000, 0x400) {
-			output_chan <- item
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- item:
+			}
 		}
 	}()
 
@@ -257,7 +267,12 @@ func (self NTFSI30ScanPlugin) Call(
 		}
 
 		for _, fileinfo := range ntfs.ExtractI30List(ntfs_ctx, mft_entry) {
-			output_chan <- fileinfo
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- fileinfo:
+			}
 		}
 	}()
 
@@ -335,7 +350,12 @@ func (self NTFSRangesPlugin) Call(
 		}
 
 		for _, rng := range reader.Ranges() {
-			output_chan <- rng
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- rng:
+			}
 		}
 	}()
 

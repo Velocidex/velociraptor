@@ -31,6 +31,13 @@ const HuntOverviewController = function($scope, grrApiService) {
     }.bind(this));
 };
 
+HuntOverviewController.prototype.huntState = function(item) {
+    if (item.stats.stopped) {
+        return "STOPPED";
+    }
+
+    return item.state;
+};
 
 
 /**
@@ -73,7 +80,7 @@ exports.HuntOverviewDirective = function() {
       hunt: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/hunt-overview.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/hunt-overview.html',
     controller: HuntOverviewController,
     controllerAs: 'controller'
   };

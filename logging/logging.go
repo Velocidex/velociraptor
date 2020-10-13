@@ -113,7 +113,7 @@ func (self *LogContext) Warn(format string, v ...interface{}) {
 	self.Logger.Warn(fmt.Sprintf(format, v...))
 }
 
-func (self *LogContext) Err(format string, v ...interface{}) {
+func (self *LogContext) Error(format string, v ...interface{}) {
 	self.Logger.Error(fmt.Sprintf(format, v...))
 }
 
@@ -129,7 +129,8 @@ func (self *LogManager) GetLogger(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if config_obj != nil && config_obj.Logging != nil &&
+	if config_obj != nil &&
+		config_obj.Logging != nil &&
 		!config_obj.Logging.SeparateLogsPerComponent {
 		component = &GenericComponent
 	}
@@ -241,6 +242,30 @@ func (self *LogManager) makeNewComponent(
 	}
 
 	return &LogContext{Log}, nil
+}
+
+func AddLogFile(filename string) error {
+	fd, err := os.OpenFile(filename,
+		os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+
+	writer_map := lfshook.WriterMap{
+		logrus.ErrorLevel: fd,
+		logrus.DebugLevel: fd,
+		logrus.InfoLevel:  fd,
+		logrus.WarnLevel:  fd,
+	}
+
+	for _, log := range Manager.contexts {
+		log.Hooks.Add(lfshook.NewHook(
+			writer_map, &logrus.JSONFormatter{
+				DisableHTMLEscape: true,
+			},
+		))
+	}
+	return nil
 }
 
 type logWriter struct {

@@ -59,8 +59,13 @@ func (self ScannerPlugin) Call(
 
 				scanner := bufio.NewScanner(fd)
 				for scanner.Scan() {
-					output_chan <- ordereddict.NewDict().
-						Set("Line", scanner.Text())
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- ordereddict.NewDict().
+						Set("Line", scanner.Text()):
+					}
 
 				}
 				err = scanner.Err()
@@ -118,7 +123,12 @@ func (self _WatchSyslogPlugin) Call(
 				return
 
 			case event := <-event_channel:
-				output_chan <- event
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- event:
+				}
 			}
 		}
 	}()

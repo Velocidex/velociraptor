@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"sort"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -52,33 +53,37 @@ func (self BaseTestSuite) TestListChildren() {
 	err := self.datastore.SetSubject(self.config_obj, urn+"/1", message)
 	assert.NoError(self.T(), err)
 
+	time.Sleep(10 * time.Millisecond)
+
 	err = self.datastore.SetSubject(self.config_obj, urn+"/2", message)
 	assert.NoError(self.T(), err)
 
+	time.Sleep(10 * time.Millisecond)
+
 	err = self.datastore.SetSubject(self.config_obj, urn+"/3", message)
 	assert.NoError(self.T(), err)
+
+	time.Sleep(10 * time.Millisecond)
 
 	children, err := self.datastore.ListChildren(self.config_obj, urn, 0, 100)
 	assert.NoError(self.T(), err)
 
 	// ListChildren gives the full path to all children
 	sort.Strings(children)
-	assert.Equal(self.T(), children, []string{
+	assert.Equal(self.T(), []string{
 		"/a/b/c/1",
 		"/a/b/c/2",
-		"/a/b/c/3"})
+		"/a/b/c/3"}, children)
 
 	children, err = self.datastore.ListChildren(self.config_obj, urn, 0, 2)
 	assert.NoError(self.T(), err)
 
-	assert.Equal(self.T(), children, []string{
-		"/a/b/c/1", "/a/b/c/2"})
+	assert.Equal(self.T(), []string{"/a/b/c/1", "/a/b/c/2"}, children)
 
 	children, err = self.datastore.ListChildren(self.config_obj, urn, 1, 2)
 	assert.NoError(self.T(), err)
 
-	assert.Equal(self.T(), children, []string{
-		"/a/b/c/2", "/a/b/c/3"})
+	assert.Equal(self.T(), []string{"/a/b/c/2", "/a/b/c/3"}, children)
 
 	visited := []string{}
 	self.datastore.Walk(self.config_obj, "/\"a\"/b",
@@ -87,8 +92,7 @@ func (self BaseTestSuite) TestListChildren() {
 			return nil
 		})
 
-	assert.Equal(self.T(), visited, []string{
-		"/a/b/c/1", "/a/b/c/2", "/a/b/c/3"})
+	assert.Equal(self.T(), []string{"/a/b/c/1", "/a/b/c/2", "/a/b/c/3"}, visited)
 }
 
 func (self BaseTestSuite) TestIndexes() {

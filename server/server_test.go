@@ -17,7 +17,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/api"
 	api_mock "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -34,8 +33,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
+	"www.velocidex.com/golang/velociraptor/services/interrogation"
+	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/repository"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 type ServerTestSuite struct {
@@ -71,12 +76,20 @@ func (self *ServerTestSuite) SetupTest() {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
 
-	// Start the journaling service manually for tests.
-	self.sm.Start(journal.StartJournalService)
-	self.sm.Start(services.StartNotificationService)
-	self.sm.Start(launcher.StartLauncherService)
+	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
+	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
+	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
+	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
+	require.NoError(self.T(), self.sm.Start(labels.StartLabelService))
+	require.NoError(self.T(), self.sm.Start(client_monitoring.StartClientMonitoringService))
+	require.NoError(self.T(), self.sm.Start(interrogation.StartInterrogationService))
 
-	artifacts.GetGlobalRepository(self.config_obj)
+	// Load all the standard artifacts.
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	manager.GetGlobalRepository(self.config_obj)
 
 	self.server, err = server.NewServer(self.config_obj)
 	require.NoError(self.T(), err)
@@ -159,11 +172,13 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	defer runner.Close()
 
 	// Set a new event monitoring table
-	err := services.ClientEventManager().SetClientMonitoringState(&flows_proto.ClientEventTable{
-		Artifacts: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: []string{"Generic.Client.Stats"},
-		},
-	})
+	err := services.ClientEventManager().SetClientMonitoringState(
+		context.Background(), self.config_obj,
+		&flows_proto.ClientEventTable{
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{"Generic.Client.Stats"},
+			},
+		})
 	require.NoError(t, err)
 
 	// The version of the currently installed table.
@@ -215,7 +230,7 @@ func (self *ServerTestSuite) TestForeman() {
 
 	hunt_id, err := flows.CreateHunt(
 		context.Background(), self.config_obj,
-		self.config_obj.Client.PinnedServerName,
+		vql_subsystem.NullACLManager{},
 		&api_proto.Hunt{
 			State:        api_proto.Hunt_RUNNING,
 			StartRequest: expected,
@@ -469,13 +484,19 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 		Artifacts: []string{"Generic.Client.Info"},
 	}
 
-	repository, err := artifacts.GetGlobalRepository(self.config_obj)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.config_obj)
 	require.NoError(t, err)
 
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		context.Background(),
 		self.config_obj,
-		self.config_obj.Client.PinnedServerName,
+		vql_subsystem.NullACLManager{},
 		repository,
 		request)
 
@@ -499,14 +520,20 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 
 // Schedule a flow in the database and return its flow id
 func (self *ServerTestSuite) createArtifactCollection() (string, error) {
-	repository, err := artifacts.GetGlobalRepository(self.config_obj)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.config_obj)
 	require.NoError(self.T(), err)
 
 	// Schedule a flow in the database.
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		context.Background(),
 		self.config_obj,
-		self.config_obj.Client.PinnedServerName,
+		vql_subsystem.NullACLManager{},
 		repository,
 		&flows_proto.ArtifactCollectorArgs{
 			ClientId:  self.client_id,
@@ -659,7 +686,7 @@ func (self *ServerTestSuite) TestCompletions() {
 	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
 	require.NoError(t, err)
 
-	require.Equal(self.T(), flows_proto.ArtifactCollectorContext_TERMINATED,
+	require.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED,
 		collection_context.State)
 }
 
@@ -691,8 +718,8 @@ func (self *ServerTestSuite) TestCancellation() {
 		context.Background(),
 		self.config_obj, self.client_id, flow_id, "username",
 		MockAPIClientFactory{mock})
-	require.Equal(t, response.FlowId, flow_id)
 	require.NoError(t, err)
+	require.Equal(t, response.FlowId, flow_id)
 
 	// Cancelling a flow simply schedules a cancel message for the
 	// client. The tasks are still queued for the client, but the
@@ -790,8 +817,8 @@ func (self *ServerTestSuite) TestFlowArchives() {
 		context.Background(),
 		self.config_obj, self.client_id, flow_id, "username",
 		MockAPIClientFactory{mock})
-	require.Equal(t, response.FlowId, flow_id)
 	require.NoError(t, err)
+	require.Equal(t, response.FlowId, flow_id)
 
 	// Now archive the flow - should work because the flow is terminated.
 	res, err := flows.ArchiveFlow(

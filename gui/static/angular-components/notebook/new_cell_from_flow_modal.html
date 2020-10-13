@@ -38,15 +38,15 @@
             <!-- Online status -->
             <td>
               <img class="grr-icon-small" name="clientStatusIcon"
-                   ng-src="/static/images/online.png"
+                   src="{{$root.globals.base_url}}/static/images/online.png"
                    ng-if="(controller.now - item.last_seen_at/1000000) < (60 * 15)" />
 
               <img class="grr-icon-small" name="clientStatusIcon"
-                   ng-src="/static/images/online-1d.png"
+                   src="{{$root.globals.base_path}}/static/images/online-1d.png"
                    ng-if="(controller.now - item.last_seen_at/1000000)  > (60 * 15) && (controller.now - item.last_seen_at/1000000)  < (60 * 60 * 24) "/>
 
               <img class="grr-icon-small" name="clientStatusIcon"
-                   ng-src="/static/images/offline.png"
+                   src="{{$root.globals.base_path}}/static/images/offline.png"
                    ng-if="(controller.now - item.last_seen_at/1000000)  > (60 * 60 * 24)" />
             </td>
 

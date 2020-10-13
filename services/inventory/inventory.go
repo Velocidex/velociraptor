@@ -3,6 +3,31 @@
   Velociraptor maintains third party files in an inventory. This
   service manages this inventory.
 
+  Tool definitions can be added using AddTool() - this only writes the
+  definition to the internal datastore without materializing the tool.
+
+  The tool definition is divided into user accessible and system
+  accessible parts. The user specifies fields like:
+
+  - name
+  - url (upstream url)
+  - github_project
+
+  The system takes these and generates tracking information such as
+
+  - hash - the expected hash of the file - required!
+  - serve_url  - where we get users to download the file from.
+
+  Tools may be added to the inventory service without being tracked -
+  in that case they will not have a valid hash, serve_url etc. When we
+  attempt to use the tool with GetToolInfo() they will be materialized
+  and tracked automatically.
+
+  If AddTool() specifies the hash and serve_url then we assume the
+  tool is tracked and use that. This allows the admin to force a
+  specific tool to be used, by e.g. uploading it to the public
+  directory manually and adding the expected hash, but not providing a
+  URL. This is what the `velociraptor tools upload` command and the
 */
 
 package inventory
@@ -13,11 +38,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"path"
-	"regexp"
 	"sync"
 	"time"
 
@@ -28,7 +51,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -55,6 +77,8 @@ type InventoryService struct {
 	db       datastore.DataStore
 	Clock    utils.Clock
 }
+
+func (self *InventoryService) Close() {}
 
 func (self *InventoryService) Get() *artifacts_proto.ThirdParty {
 	self.mu.Lock()
@@ -87,9 +111,13 @@ func (self *InventoryService) GetToolInfo(
 
 	for _, item := range self.binaries.Tools {
 		if item.Name == tool {
+			// Currently we require to know all tool's
+			// hashes. If the hash is missing then the
+			// tool is not tracked. We have to materialize
+			// it in order to track it.
 			if item.Hash == "" {
 				// Try to download the item.
-				err := self.downloadTool(ctx, config_obj, item)
+				err := self.materializeTool(ctx, config_obj, item)
 				if err != nil {
 					return nil, err
 				}
@@ -100,16 +128,49 @@ func (self *InventoryService) GetToolInfo(
 	return nil, errors.New(fmt.Sprintf("Tool %v not declared in inventory.", tool))
 }
 
-func (self *InventoryService) downloadTool(
+// Actually download and resolve the tool and make sure it is
+// available. If successful this function updates the tool's datastore
+// representation to track it (in particular the hash). Subsequent
+// calls to this function will just retrieve those fields directly.
+func (self *InventoryService) materializeTool(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	tool *artifacts_proto.Tool) error {
+
+	if self.Client == nil {
+		return errors.New("Client not configured")
+	}
+
+	// If we are downloading from github we have to resolve and
+	// verify the binary URL now.
+	if tool.GithubProject != "" {
+		var err error
+		tool.Url, err = getGithubRelease(ctx, self.Client, config_obj, tool)
+		if err != nil {
+			return errors.Wrap(
+				err, "While resolving github release "+tool.GithubProject)
+		}
+
+		// Set the filename to something sensible so it is always valid.
+		if tool.Filename == "" {
+			if tool.Url != "" {
+				tool.Filename = path.Base(tool.Url)
+			} else {
+				tool.Filename = path.Base(tool.ServeUrl)
+			}
+		}
+	}
+
+	// We have no idea where the file is.
 	if tool.Url == "" {
-		return errors.New(fmt.Sprintf(
-			"Tool %v has no url defined - upload it manually.", tool.Name))
+		return fmt.Errorf("Tool %v has no url defined - upload it manually.",
+			tool.Name)
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
+	if file_store_factory == nil {
+		return errors.New("No filestore configured")
+	}
 
 	path_manager := paths.NewInventoryPathManager(config_obj, tool)
 	fd, err := file_store_factory.WriteFile(path_manager.Path())
@@ -118,12 +179,18 @@ func (self *InventoryService) downloadTool(
 	}
 	defer fd.Close()
 
-	fd.Truncate()
+	err = fd.Truncate()
+	if err != nil {
+		return err
+	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Downloading tool <green>%v</> FROM <red>%v</>", tool.Name,
 		tool.Url)
 	request, err := http.NewRequestWithContext(ctx, "GET", tool.Url, nil)
+	if err != nil {
+		return err
+	}
 	res, err := self.Client.Do(request)
 	if err != nil {
 		return err
@@ -132,7 +199,8 @@ func (self *InventoryService) downloadTool(
 
 	// If the download failed, we can not store this tool.
 	if res.StatusCode != 200 {
-		return errors.New("Unable to download file")
+		return errors.New(fmt.Sprintf("Unable to download file from %v: %v",
+			tool.Url, res.Status))
 	}
 	sha_sum := sha256.New()
 
@@ -141,60 +209,17 @@ func (self *InventoryService) downloadTool(
 		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 	}
 
-	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
-}
-
-func (self *InventoryService) getGithubRelease(ctx context.Context,
-	config_obj *config_proto.Config,
-	tool *artifacts_proto.Tool) (string, error) {
-
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-
-	url := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest",
-		tool.GithubProject)
-	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
-		return "", err
-	}
-
-	logger.Info("Resolving latest Github release for <green>%v</>", tool.Name)
-	res, err := self.Client.Do(request)
-	if err != nil {
-		return "", err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != 200 {
-		return "", errors.New(fmt.Sprintf("Error: %v", res.Status))
-	}
-
-	response, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return "", errors.Wrap(err,
-			"While make Github API call to "+url)
-	}
-
-	api_obj := &githubReleasesAPI{}
-	err = json.Unmarshal(response, &api_obj)
-	if err != nil {
-		return "", errors.Wrap(err,
-			"While make Github API call to "+url)
-	}
-
-	release_re, err := regexp.Compile(tool.GithubAssetRegex)
-	if err != nil {
-		return "", err
-	}
-
-	for _, asset := range api_obj.Assets {
-		if release_re.MatchString(asset.Name) {
-			logger.Info("Tool <green>%v</> can be found at <cyan>%v</>",
-				tool.Name, asset.BrowserDownloadUrl)
-			return asset.BrowserDownloadUrl, nil
+	if tool.ServeLocally {
+		if config_obj.Client == nil || len(config_obj.Client.ServerUrls) == 0 {
+			return errors.New("No server URLs configured!")
 		}
+		tool.ServeUrl = config_obj.Client.ServerUrls[0] + "public/" + tool.FilestorePath
+
+	} else {
+		tool.ServeUrl = tool.Url
 	}
 
-	return "", errors.New("Release not found from github API " + url)
+	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
 }
 
 func (self *InventoryService) RemoveTool(
@@ -218,49 +243,50 @@ func (self *InventoryService) RemoveTool(
 	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
 }
 
-func (self *InventoryService) AddTool(ctx context.Context,
-	config_obj *config_proto.Config, tool_request *artifacts_proto.Tool) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	// Make a copy to work on.
-	tool := *tool_request
-
-	// If we are downloading from github we have to resolve and
-	// verify the binary URL now.
-	if tool.GithubProject != "" {
-		var err error
-		tool.Url, err = self.getGithubRelease(ctx, config_obj, &tool)
-		if err != nil {
-			return errors.Wrap(
-				err, "While resolving github release "+tool.GithubProject)
+func (self *InventoryService) AddTool(config_obj *config_proto.Config,
+	tool_request *artifacts_proto.Tool, opts services.ToolOptions) error {
+	if opts.Upgrade {
+		existing_tool, err := self.ProbeToolInfo(tool_request.Name)
+		if err == nil {
+			// Ignore the request if the existing
+			// definition is better than the new one.
+			if isDefinitionBetter(existing_tool, tool_request) {
+				return nil
+			}
 		}
 	}
+
+	if opts.AdminOverride {
+		tool_request.AdminOverride = true
+	}
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	if self.binaries == nil {
 		self.binaries = &artifacts_proto.ThirdParty{}
 	}
 
 	// Obfuscate the public directory path.
+	// Make a copy to work on.
+	tool := *tool_request
 	tool.FilestorePath = paths.ObfuscateName(config_obj, tool.Name)
 
+	if tool.ServeLocally && config_obj.Client == nil {
+		tool.ServeLocally = false
+	}
+
 	if tool.ServeLocally {
-		if len(config_obj.Client.ServerUrls) == 0 {
+		if config_obj.Client == nil || len(config_obj.Client.ServerUrls) == 0 {
 			return errors.New("No server URLs configured!")
 		}
 		tool.ServeUrl = config_obj.Client.ServerUrls[0] + "public/" + tool.FilestorePath
-	}
-
-	if tool.Url == "" && tool.ServeUrl == "" {
-		return errors.New("No tool URL defined and I will not be serving it locally!")
 	}
 
 	// Set the filename to something sensible so it is always valid.
 	if tool.Filename == "" {
 		if tool.Url != "" {
 			tool.Filename = path.Base(tool.Url)
-		} else {
-			tool.Filename = path.Base(tool.ServeUrl)
 		}
 	}
 
@@ -299,11 +325,19 @@ func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) erro
 	return nil
 }
 
-func NewDummy() *InventoryService {
-	return &InventoryService{
+func StartInventoryService(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
+
+	if config_obj.Datastore == nil {
+		return StartInventoryDummyService(ctx, wg, config_obj)
+	}
+
+	inventory_service := &InventoryService{
 		Clock:    utils.RealClock{},
-		db:       datastore.NewTestDataStore(),
 		binaries: &artifacts_proto.ThirdParty{},
+		db:       datastore.NewTestDataStore(),
 		Client: &http.Client{
 			Transport: &http.Transport{
 				DialContext: (&net.Dialer{
@@ -319,19 +353,6 @@ func NewDummy() *InventoryService {
 			},
 		},
 	}
-}
-
-func StartInventoryService(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
-
-	inventory_service := NewDummy()
-
-	if config_obj.Datastore == nil {
-		services.RegisterInventory(inventory_service)
-		return nil
-	}
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -341,13 +362,15 @@ func StartInventoryService(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
-	notification, cancel := services.ListenForNotification(
+	notification, cancel := services.GetNotifier().ListenForNotification(
 		constants.ThirdPartyInventory)
 	defer cancel()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer services.RegisterInventory(nil)
+		defer inventory_service.Close()
 
 		for {
 			select {
@@ -357,18 +380,22 @@ func StartInventoryService(
 			case <-notification:
 				err := inventory_service.LoadFromFile(config_obj)
 				if err != nil {
-					logger.Error("StartInventoryService: ", err)
+					logger.Error("StartInventoryService: %v", err)
 				}
 
 			case <-time.After(time.Second):
-				inventory_service.LoadFromFile(config_obj)
+				err = inventory_service.LoadFromFile(config_obj)
 				if err != nil {
-					logger.Error("StartInventoryService: ", err)
+					logger.Error("StartInventoryService: %v", err)
 				}
 			}
 
 			cancel()
-			notification, cancel = services.ListenForNotification(
+			notifier := services.GetNotifier()
+			if notifier == nil {
+				return
+			}
+			notification, cancel = notifier.ListenForNotification(
 				constants.ThirdPartyInventory)
 		}
 	}()
@@ -376,9 +403,29 @@ func StartInventoryService(
 	logger.Info("<green>Starting</> Inventory Service")
 
 	services.RegisterInventory(inventory_service)
-	return inventory_service.LoadFromFile(config_obj)
+	_ = inventory_service.LoadFromFile(config_obj)
+
+	return nil
 }
 
-func init() {
-	services.RegisterInventory(NewDummy())
+func isDefinitionBetter(old, new *artifacts_proto.Tool) bool {
+	// Admin wants to set the tool, always honor it.
+	if new.AdminOverride {
+		return false
+	}
+
+	// The admin is always right - never override a tool set by
+	// the admin.
+	if old.AdminOverride {
+		return true
+	}
+
+	// We really do not know where to fetch the old tool from
+	// anyway - the new tool must be better.
+	if old.Url == "" && old.GithubProject == "" && old.ServeUrl == "" {
+		return false
+	}
+
+	// We prefer to keep the old tool.
+	return true
 }

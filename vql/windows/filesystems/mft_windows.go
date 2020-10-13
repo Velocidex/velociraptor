@@ -67,7 +67,7 @@ func (self *MFTFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error
 		return nil, err
 	}
 
-	ntfs_ctx := accessor_ctx.ntfs_ctx
+	ntfs_ctx := accessor_ctx.GetNTFSContext()
 
 	mft_entry, err := ntfs_ctx.GetMFT(mft_idx)
 	if err != nil {
@@ -125,7 +125,7 @@ func (self *MFTFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
 		return nil, err
 	}
 
-	ntfs_ctx := accessor_ctx.ntfs_ctx
+	ntfs_ctx := accessor_ctx.GetNTFSContext()
 	mft_entry, err := ntfs_ctx.GetMFT(mft_idx)
 	if err != nil {
 		return nil, err

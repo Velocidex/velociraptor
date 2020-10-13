@@ -121,7 +121,7 @@ exports.WizardFormDirective = function() {
     },
     restrict: 'E',
     transclude: true,
-    templateUrl: '/static/angular-components/core/wizard-form.html',
+    templateUrl: window.base_path+'/static/angular-components/core/wizard-form.html',
     controller: WizardFormController,
     controllerAs: 'controller'
   };

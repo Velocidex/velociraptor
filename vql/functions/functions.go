@@ -324,7 +324,7 @@ func (self _Scope) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilte
 type _GetFunctionArgs struct {
 	Item    vfilter.Any `vfilter:"optional,field=item"`
 	Member  string      `vfilter:"optional,field=member"`
-	Field   string      `vfilter:"optional,field=field"`
+	Field   vfilter.Any `vfilter:"optional,field=field"`
 	Default vfilter.Any `vfilter:"optional,field=default"`
 }
 
@@ -360,12 +360,12 @@ func (self _GetFunction) Call(
 
 	var pres bool
 
-	if arg.Field == "" && arg.Member == "" {
+	if arg.Field == nil && arg.Member == "" {
 		scope.Log("get: either Field or Member should be specified.")
 		return vfilter.Null{}
 	}
 
-	if arg.Field != "" {
+	if arg.Field != nil {
 		result, pres = scope.Associative(result, arg.Field)
 		if !pres {
 			return arg.Default

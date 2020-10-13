@@ -15,9 +15,11 @@ package services
 // in real time from client event artifacts.
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
@@ -28,11 +30,15 @@ var (
 	GJournal JournalService
 )
 
-func GetJournal() JournalService {
+func GetJournal() (JournalService, error) {
 	journal_mu.Lock()
 	defer journal_mu.Unlock()
 
-	return GJournal
+	if GJournal == nil {
+		return nil, errors.New("Journal service not ready")
+	}
+
+	return GJournal, nil
 }
 
 func RegisterJournal(journal JournalService) {
@@ -50,5 +56,10 @@ type JournalService interface {
 
 	// Push the rows into the datastore in the location give by
 	// the path manager.
-	PushRows(path_manager api.PathManager, rows []*ordereddict.Dict) error
+	PushRows(config_obj *config_proto.Config,
+		path_manager api.PathManager, rows []*ordereddict.Dict) error
+
+	// Push the rows to the event artifact queue
+	PushRowsToArtifact(config_obj *config_proto.Config,
+		rows []*ordereddict.Dict, name, client_id, flows_id string) error
 }

@@ -15,7 +15,7 @@ func deprecated(config_obj *config_proto.Config, name string) {
 
 // Migrate from pre 0.4.2 config files.
 func migrate_0_4_2(config_obj *config_proto.Config) {
-	if config_obj.AutocertDomain != "" {
+	if config_obj.Frontend != nil && config_obj.AutocertDomain != "" {
 		deprecated(config_obj, "autocert_domain")
 		config_obj.Frontend.Hostname = config_obj.AutocertDomain
 		config_obj.AutocertDomain = ""
@@ -64,7 +64,7 @@ func migrate_0_4_2(config_obj *config_proto.Config) {
 		}
 		if config_obj.ObfuscationNonce == "" {
 			sha_sum := sha256.New()
-			sha_sum.Write([]byte(config_obj.Frontend.PrivateKey))
+			_, _ = sha_sum.Write([]byte(config_obj.Frontend.PrivateKey))
 			config_obj.ObfuscationNonce = hex.EncodeToString(sha_sum.Sum(nil))
 		}
 	}

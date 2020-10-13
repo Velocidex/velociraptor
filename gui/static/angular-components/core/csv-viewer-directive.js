@@ -297,7 +297,7 @@ exports.CsvViewerDirective = function() {
           vqlHelpPlugin: '@',
       },
       restrict: 'E',
-      templateUrl: '/static/angular-components/core/csv-viewer.html',
+      templateUrl: window.base_path+'/static/angular-components/core/csv-viewer.html',
       controller: CsvViewerDirective,
       controllerAs: 'controller',
   };

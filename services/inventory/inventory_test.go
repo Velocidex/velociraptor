@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -24,10 +23,15 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/repository"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 type MockClient struct {
 	responses map[string]string
+
+	count int
 }
 
 func (self MockClient) Do(req *http.Request) (*http.Response, error) {
@@ -35,6 +39,8 @@ func (self MockClient) Do(req *http.Request) (*http.Response, error) {
 
 	response := self.responses[url]
 	delete(self.responses, url)
+
+	self.count++
 
 	return &http.Response{
 		StatusCode: 200,
@@ -64,8 +70,9 @@ func (self *ServicesTestSuite) SetupTest() {
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
 
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(services.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
+	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
 	require.NoError(self.T(), self.sm.Start(StartInventoryService))
 
 	self.client_id = "C.12312"
@@ -87,21 +94,22 @@ func (self *ServicesTestSuite) TestGihubTools() {
 
 	// Add a new tool from github.
 	inventory := services.GetInventory()
-	err := inventory.AddTool(ctx,
+	err := inventory.AddTool(
 		self.config_obj, &artifacts_proto.Tool{
 			Name:             tool_name,
 			GithubProject:    "Velocidex/velociraptor",
 			GithubAssetRegex: "windows-amd64.exe",
-		})
+		}, services.ToolOptions{})
 	assert.NoError(self.T(), err)
 
 	// Adding the tool simply fetches the github url but not the
 	// actual file (the URL is still pending).
-	assert.Contains(self.T(), self.mock.responses, "htttp://www.example.com/file.exe")
-	assert.Equal(self.T(), len(self.mock.responses), 1)
+	assert.Equal(self.T(), self.mock.count, 0)
 
 	tool, err := inventory.GetToolInfo(ctx, self.config_obj, tool_name)
 	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), len(self.mock.responses), 0)
 
 	// Both HTTP requests were made - Getting the tool info
 	// downloads the file from the server.
@@ -118,7 +126,10 @@ func (self *ServicesTestSuite) TestGihubTools() {
 	assert.NoError(self.T(), err)
 
 	golden.Set("VQLCollectorArgs", request)
-	goldie.Assert(self.T(), "TestGihubTools", json.MustMarshalIndent(golden))
+
+	serialized, err := json.MarshalIndentNormalized(golden)
+	assert.NoError(self.T(), err)
+	goldie.Assert(self.T(), "TestGihubTools", serialized)
 }
 
 // Install a mock on the HTTP client to check the Github API for
@@ -127,7 +138,7 @@ func (self *ServicesTestSuite) installGitHubMock() {
 	api_reply := `{"assets":[{"name":"Velociraptor-Vx.x.x-windows-amd64.exe","browser_download_url":"htttp://www.example.com/file.exe"}]}`
 
 	self.mock = &MockClient{
-		map[string]string{
+		responses: map[string]string{
 			"htttp://www.example.com/file.exe":                                    "File Content",
 			"https://api.github.com/repos/Velocidex/velociraptor/releases/latest": api_reply,
 		},
@@ -142,7 +153,7 @@ func (self *ServicesTestSuite) installGitHubMockVersion2() {
 	api_reply := `{"assets":[{"name":"Velociraptor-V2.x.x-windows-amd64.exe","browser_download_url":"htttp://www.example.com/file_v2.exe"}]}`
 
 	self.mock = &MockClient{
-		map[string]string{
+		responses: map[string]string{
 			"htttp://www.example.com/file.exe":                                    "File Content V2",
 			"https://api.github.com/repos/Velocidex/velociraptor/releases/latest": api_reply,
 		},
@@ -164,16 +175,22 @@ tools:
   github_project: Velocidex/velociraptor
   github_asset_regex: windows-amd64.exe
 `
-	repository := artifacts.NewRepository()
-	_, err := repository.LoadYaml(test_artifact, true /* validate */)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(test_artifact, true /* validate */)
 	assert.NoError(self.T(), err)
 
 	self.installGitHubMock()
 
 	// Launch the artifact - this will result in the tool being
 	// downloaded and the hash calculated on demand.
-	response, err := services.GetLauncher().CompileCollectorArgs(
-		ctx, self.config_obj, "Tester", repository,
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	response, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, vql_subsystem.NullACLManager{}, repository,
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
 		})
@@ -194,8 +211,10 @@ tools:
 	assert.Equal(self.T(), response.Env[0].Value,
 		"3c03cf5341a1e078c438f31852e1587a70cc9f91ee02eda315dd231aba0a0ab1")
 
-	goldie.Assert(self.T(), "TestGihubToolsUninitialized", json.MustMarshalIndent(
-		ordereddict.NewDict().Set("Tool", tool).Set("Request", response)))
+	golden := ordereddict.NewDict().Set("Tool", tool).Set("Request", response)
+	serialized, err := json.MarshalIndentNormalized(golden)
+	assert.NoError(self.T(), err)
+	goldie.Assert(self.T(), "TestGihubToolsUninitialized", serialized)
 }
 
 // Test that a tool can be upgraded.
@@ -213,7 +232,7 @@ func (self *ServicesTestSuite) TestUpgrade() {
 	}
 
 	inventory := services.GetInventory()
-	err := inventory.AddTool(ctx, self.config_obj, tool_definition)
+	err := inventory.AddTool(self.config_obj, tool_definition, services.ToolOptions{})
 	assert.NoError(self.T(), err)
 
 	tool, err := inventory.GetToolInfo(ctx, self.config_obj, tool_name)
@@ -226,7 +245,7 @@ func (self *ServicesTestSuite) TestUpgrade() {
 	// Now force the tool to update by re-adding it but this time it is a new version.
 	self.installGitHubMockVersion2()
 
-	err = inventory.AddTool(ctx, self.config_obj, tool_definition)
+	err = inventory.AddTool(self.config_obj, tool_definition, services.ToolOptions{})
 	assert.NoError(self.T(), err)
 
 	// Check the tool information.
@@ -251,14 +270,19 @@ tools:
   github_asset_regex: windows-amd64.exe
   serve_locally: true
 `
-	repository := artifacts.NewRepository()
-	_, err := repository.LoadYaml(test_artifact, true /* validate */)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(test_artifact, true /* validate */)
 	assert.NoError(self.T(), err)
 
 	self.installGitHubMock()
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
 
-	response, err := services.GetLauncher().CompileCollectorArgs(
-		ctx, self.config_obj, "Tester", repository,
+	response, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, vql_subsystem.NullACLManager{}, repository,
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
 		})
@@ -272,8 +296,155 @@ tools:
 		ctx, self.config_obj, "SampleTool")
 	assert.NoError(self.T(), err)
 
-	goldie.Assert(self.T(), "TestGihubToolServedLocally", json.MustMarshalIndent(
-		ordereddict.NewDict().Set("Tool", tool).Set("Request", response)))
+	golden := ordereddict.NewDict().Set("Tool", tool).Set("Request", response)
+	serialized, err := json.MarshalIndentNormalized(golden)
+	assert.NoError(self.T(), err)
+	goldie.Assert(self.T(), "TestGihubToolServedLocally", serialized)
+}
+
+// When artifacts are parsed, they add their tool definition to the
+// inventory automatically if they are not already present. This test
+// makes sure that tools are added to the inventory **only** if they
+// do not already exist **or** their new definition is more detailed
+// than the old one.
+func (self *ServicesTestSuite) TestUpgradePriority() {
+	// Define a new artifact that requires a new tool
+	test_artifact := `
+name: TestArtifact
+tools:
+- name: SampleTool
+  url: http://www.example.com/
+`
+	test_artifact2 := `
+name: TestArtifact2
+tools:
+- name: SampleTool
+`
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(test_artifact, true /* validate */)
+	assert.NoError(self.T(), err)
+
+	_, pres := repository.Get(self.config_obj, "TestArtifact")
+	assert.True(self.T(), pres)
+
+	_, err = repository.LoadYaml(test_artifact2, true /* validate */)
+	assert.NoError(self.T(), err)
+
+	_, pres = repository.Get(self.config_obj, "TestArtifact2")
+	assert.True(self.T(), pres)
+
+	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
+	assert.NoError(self.T(), err)
+
+	// The tool definition retains the original URL
+	assert.Equal(self.T(), tool.Url, "http://www.example.com/")
+}
+
+// Make sure that loading an artifact does not upgrade an admin
+// override.
+func (self *ServicesTestSuite) TestUpgradeAdminOverride() {
+	// Define a new artifact that requires a new tool
+	test_artifact := `
+name: TestArtifact
+tools:
+- name: SampleTool
+  url: http://www.example.com/
+  serve_locally: true
+`
+
+	// The admin sets a very minimal tool definition.
+	err := services.GetInventory().AddTool(self.config_obj,
+		&artifacts_proto.Tool{
+			Name: "SampleTool",
+			Hash: "XXXXX",
+		}, services.ToolOptions{AdminOverride: true})
+	assert.NoError(self.T(), err)
+
+	// Parsing the artifact does not update the tool - admins can
+	// pin the tool definition.
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(test_artifact, true /* validate */)
+	assert.NoError(self.T(), err)
+
+	_, pres := repository.Get(self.config_obj, "TestArtifact")
+	assert.True(self.T(), pres)
+
+	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), tool.Url, "")
+	assert.Equal(self.T(), tool.Hash, "XXXXX")
+	assert.False(self.T(), tool.ServeLocally)
+}
+
+// If an admin overrides an automatically inserted tool definition,
+// they should be able to.
+func (self *ServicesTestSuite) TestAdminOverrideUpgrade() {
+	// Define a new artifact that requires a new tool
+	test_artifact := `
+name: TestArtifact
+tools:
+- name: SampleTool
+  url: http://www.example.com/
+  serve_locally: true
+`
+	// Parsing the artifact should insert the tool.
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(test_artifact, true /* validate */)
+	assert.NoError(self.T(), err)
+
+	_, pres := repository.Get(self.config_obj, "TestArtifact")
+	assert.True(self.T(), pres)
+
+	// The admin sets a very minimal tool definition which would
+	// normally be less than the existing tool - but they should
+	// prevail.
+	err = services.GetInventory().AddTool(self.config_obj,
+		&artifacts_proto.Tool{
+			Name: "SampleTool",
+			Hash: "XXXXX",
+		}, services.ToolOptions{AdminOverride: true})
+	assert.NoError(self.T(), err)
+
+	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), tool.Url, "")
+	assert.Equal(self.T(), tool.Hash, "XXXXX")
+	assert.False(self.T(), tool.ServeLocally)
+}
+
+// If the admin set the tool previously, they should be able to upgrade it.
+func (self *ServicesTestSuite) TestAdminOverrideAdminSet() {
+	err := services.GetInventory().AddTool(self.config_obj,
+		&artifacts_proto.Tool{
+			Name: "SampleTool",
+			Hash: "XXXXX",
+		}, services.ToolOptions{AdminOverride: true})
+	assert.NoError(self.T(), err)
+
+	err = services.GetInventory().AddTool(self.config_obj,
+		&artifacts_proto.Tool{
+			Name: "SampleTool",
+			Hash: "YYYYY",
+		}, services.ToolOptions{AdminOverride: true})
+	assert.NoError(self.T(), err)
+
+	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), tool.Url, "")
+	assert.Equal(self.T(), tool.Hash, "YYYYY")
+	assert.False(self.T(), tool.ServeLocally)
 }
 
 func TestInventoryService(t *testing.T) {

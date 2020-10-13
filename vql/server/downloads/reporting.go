@@ -9,13 +9,14 @@ import (
 
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/api"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/flows"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -25,8 +26,10 @@ type ReportPart struct {
 	HTML     string
 }
 
-func getHTMLTemplate(name string, repository *artifacts.Repository) (string, error) {
-	template_artifact, ok := repository.Get(name)
+func getHTMLTemplate(
+	config_obj *config_proto.Config,
+	name string, repository services.Repository) (string, error) {
+	template_artifact, ok := repository.Get(config_obj, name)
 	if !ok || len(template_artifact.Reports) == 0 {
 		return "", errors.New("Not found")
 	}
@@ -42,10 +45,10 @@ func getHTMLTemplate(name string, repository *artifacts.Repository) (string, err
 func WriteFlowReport(
 	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
-	repository *artifacts.Repository,
+	repository services.Repository,
 	writer io.Writer,
 	flow_id, client_id, template string) error {
-	html_template_string, err := getHTMLTemplate(template, repository)
+	html_template_string, err := getHTMLTemplate(config_obj, template, repository)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Artifact %v not found %v\n", template, err))
 	}
@@ -64,7 +67,7 @@ func WriteFlowReport(
 	}
 
 	for _, name := range flow_details.Context.Request.Artifacts {
-		definition, pres := repository.Get(name)
+		definition, pres := repository.Get(config_obj, name)
 		if !pres {
 			scope.Log("Artifact %v not found %v\n", name, err)
 			continue
@@ -155,15 +158,19 @@ func CreateFlowReport(
 	}
 	lock_file.Close()
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return "", err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return "", err
 	}
 
-	builder := artifacts.ScopeBuilderFromScope(scope)
+	builder := services.ScopeBuilderFromScope(scope)
 	builder.Uploader = nil
 
-	subscope := builder.Build()
+	subscope := manager.BuildScope(builder)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -172,7 +179,15 @@ func CreateFlowReport(
 		defer wg.Done()
 		defer writer.Close()
 		defer subscope.Close()
-		defer file_store_factory.Delete(download_file + ".lock")
+		defer func() {
+			err := file_store_factory.Delete(download_file + ".lock")
+			if err != nil {
+				logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+				logger.Error("Failed to bind to remove lock file for %v: %v",
+					download_file, err)
+			}
+
+		}()
 
 		err := WriteFlowReport(config_obj, subscope, repository,
 			writer, flow_id, client_id, template)

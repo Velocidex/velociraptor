@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -24,17 +23,22 @@ func watchForFlowCompletion(
 	config_obj *config_proto.Config,
 	artifact_name string,
 	handler func(ctx context.Context,
+		config_obj *config_proto.Config,
 		scope *vfilter.Scope, row *ordereddict.Dict)) error {
 
-	local_wg := &sync.WaitGroup{}
-	local_wg.Add(1)
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	events, cancel := journal.Watch("System.Flow.Completion")
 
 	wg.Add(1)
-
 	go func() {
 		defer wg.Done()
+		defer cancel()
 
-		builder := artifacts.ScopeBuilder{
+		builder := services.ScopeBuilder{
 			Config:     config_obj,
 			ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
 			Env: ordereddict.NewDict().
@@ -43,17 +47,17 @@ func watchForFlowCompletion(
 				&logging.FrontendComponent),
 		}
 
-		scope := builder.Build()
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			return
+		}
+
+		scope := manager.BuildScope(builder)
 		defer scope.Close()
 
 		// Allow the artifact we are following to be over-ridden by
 		// the user.
 		custom_artifact_name := constants.ARTIFACT_CUSTOM_NAME_PREFIX + artifact_name
-
-		events, cancel := services.GetJournal().Watch("System.Flow.Completion")
-		defer cancel()
-
-		local_wg.Done()
 
 		for {
 			select {
@@ -74,13 +78,11 @@ func watchForFlowCompletion(
 
 				if utils.InString(flow.ArtifactsWithResults, artifact_name) ||
 					utils.InString(flow.ArtifactsWithResults, custom_artifact_name) {
-					handler(ctx, scope, event)
+					handler(ctx, config_obj, scope, event)
 				}
 			}
 		}
 	}()
-
-	local_wg.Wait()
 
 	return nil
 }

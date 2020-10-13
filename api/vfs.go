@@ -89,7 +89,7 @@ type FileInfoRow struct {
 	Data      interface{}                  `json:"_Data"`
 }
 
-// Render the root level psuedo directory. This provides anchor points
+// Render the root level pseudo directory. This provides anchor points
 // for the other drivers in the navigation.
 func renderRootVFS(client_id string) *flows_proto.VFSListResponse {
 	return &flows_proto.VFSListResponse{
@@ -137,7 +137,8 @@ func renderDBVFS(
 
 	// Empty responses mean the directory is empty - no need to
 	// worry about downloads.
-	if result.Response == "" {
+	json_response := result.Response
+	if json_response == "" {
 		return result, nil
 	}
 
@@ -152,7 +153,7 @@ func renderDBVFS(
 		}
 
 		var rows []map[string]interface{}
-		err := json.Unmarshal([]byte(result.Response), &rows)
+		err := json.Unmarshal([]byte(json_response), &rows)
 		if err != nil {
 			return nil, err
 		}
@@ -305,7 +306,7 @@ func vfsStatDirectory(
 	// not exist yet then it will have no flow id associated with
 	// it. This allows the gui to watch for the VFS directory to
 	// appear for the first time.
-	db.GetSubject(config_obj, vfs_urn, result)
+	_ = db.GetSubject(config_obj, vfs_urn, result)
 
 	// Remove the actual response which might be large.
 	result.Response = ""
@@ -361,7 +362,7 @@ func GetClientPath(vfs_path string) (client_path string, accessor string) {
 
 	case "ntfs":
 		// With the ntfs accessor, first component is a device
-		// and should not be preceeded with /
+		// and should not be preceded with /
 		return strings.Join(components[1:], "\\"), components[0]
 
 	default:

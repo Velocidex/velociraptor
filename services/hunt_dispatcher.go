@@ -26,6 +26,7 @@ import (
 	"sync"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 var (
@@ -43,7 +44,8 @@ type IHuntDispatcher interface {
 	// As an optimization callers may get the latest hunt's
 	// timestamp. If the client's last hunt id is earlier than
 	// this then we need to find out exactly which hunt is missing
-	// from the client.
+	// from the client. Most of the time, clients will be up to
+	// date on the latest hunt version and this will be a noop.
 	GetLastTimestamp() uint64
 
 	// Modify a hunt under lock. The hunt will be synchronized to
@@ -52,20 +54,17 @@ type IHuntDispatcher interface {
 
 	// Re-read the hunts from the data store. This happens
 	// periodically and can also be triggered when a change is
-	// written to the data store.
-	Refresh() error
+	// written to the datastore (e.g. new hunt scheduled) to pick
+	// up the latest hunts.
+	Refresh(config_obj *config_proto.Config) error
 
-	// Clean up and close the hunt dispatcher.
-	Close()
+	// Clean up and close the hunt dispatcher. Only used in tests.
+	Close(config_obj *config_proto.Config)
 }
 
 func RegisterHuntDispatcher(dispatcher IHuntDispatcher) {
 	mu.Lock()
 	defer mu.Unlock()
-
-	if global_hunt_dispatcher != nil {
-		global_hunt_dispatcher.Close()
-	}
 
 	global_hunt_dispatcher = dispatcher
 }

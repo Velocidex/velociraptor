@@ -56,9 +56,17 @@ func (self *Container) writeToContainer(
 		return err
 	}
 
-	tmpfile.Seek(0, 0)
+	_, err = tmpfile.Seek(0, 0)
+	if err != nil {
+		closer()
+		return err
+	}
 
 	_, err = utils.Copy(ctx, writer, tmpfile)
+	if err != nil {
+		closer()
+		return err
+	}
 	closer()
 
 	switch format {
@@ -67,18 +75,19 @@ func (self *Container) writeToContainer(
 		if err != nil {
 			return err
 		}
+		defer closer()
 
 		csv_writer := csv.GetCSVAppender(
 			scope, writer, true /* write_headers */)
 		defer csv_writer.Close()
 
 		// Convert from the json to csv.
-		tmpfile.Seek(0, 0)
-
-		for item := range utils.ReadJsonFromFile(ctx, tmpfile) {
-			csv_writer.Write(item)
+		_, err = tmpfile.Seek(0, 0)
+		if err == nil {
+			for item := range utils.ReadJsonFromFile(ctx, tmpfile) {
+				csv_writer.Write(item)
+			}
 		}
-		closer()
 	}
 	return nil
 }
@@ -95,7 +104,7 @@ func (self *Container) StoreArtifact(
 
 	// Dont store un-named queries but run them anyway.
 	if artifact_name == "" {
-		for _ = range vql.Eval(ctx, scope) {
+		for range vql.Eval(ctx, scope) {
 		}
 		return nil
 	}
@@ -125,7 +134,10 @@ func (self *Container) StoreArtifact(
 		}
 
 		// Separate lines with \n
-		tmpfile.Write([]byte("\n"))
+		_, err = tmpfile.Write([]byte("\n"))
+		if err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	return self.writeToContainer(
@@ -201,9 +213,14 @@ func (self *Container) DumpRowsIntoContainer(
 
 	serialized, err := vql_subsystem.MarshalJsonl(scope)(output_rows)
 	if err != nil {
+		closer()
 		return err
 	}
-	writer.Write(serialized)
+	_, err = writer.Write(serialized)
+	if err != nil {
+		closer()
+		return err
+	}
 	closer()
 
 	// Format the description.
@@ -212,12 +229,11 @@ func (self *Container) DumpRowsIntoContainer(
 	if err != nil {
 		return err
 	}
+	defer closer()
 
-	fmt.Fprintf(writer, "# %s\n\n%s", query.Name,
+	_, err = fmt.Fprintf(writer, "# %s\n\n%s", query.Name,
 		FormatDescription(config_obj, query.Description, output_rows))
-	closer()
-
-	return nil
+	return err
 }
 
 func sanitize(component string) string {
@@ -240,7 +256,7 @@ func (self *Container) ReadArtifactResults(
 		return output_chan
 	}
 
-	fd.Seek(0, 0)
+	_, _ = fd.Seek(0, 0)
 	return utils.ReadJsonFromFile(ctx, fd)
 }
 
@@ -351,7 +367,12 @@ func (self *Container) maybeCollectSparseFile(
 			continue
 		}
 
-		range_reader.Seek(rng.Offset, os.SEEK_SET)
+		_, err = range_reader.Seek(rng.Offset, io.SeekStart)
+		if err != nil {
+			return &api.UploadResponse{
+				Error: err.Error(),
+			}, err
+		}
 
 		n, err := utils.CopyN(ctx, utils.NewTee(writer, sha_sum, md5_sum),
 			range_reader, rng.Length)
@@ -378,7 +399,14 @@ func (self *Container) maybeCollectSparseFile(
 				Error: err.Error(),
 			}, err
 		}
-		writer.Write(serialized)
+
+		_, err = writer.Write(serialized)
+		if err != nil {
+			closer()
+			return &api.UploadResponse{
+				Error: err.Error(),
+			}, err
+		}
 		closer()
 	}
 
@@ -391,6 +419,9 @@ func (self *Container) maybeCollectSparseFile(
 }
 
 func (self *Container) Close() error {
+	self.Lock()
+	defer self.Unlock()
+
 	if self.current_writers != 0 {
 		for _, i := range self.backtraces {
 			fmt.Println(i)

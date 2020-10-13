@@ -18,6 +18,9 @@
 package main
 
 import (
+	"context"
+	"sync"
+
 	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
@@ -26,6 +29,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/frontend"
+	"www.velocidex.com/golang/velociraptor/startup"
 )
 
 var (
@@ -50,7 +55,7 @@ func doFrontend() {
 	sm := services.NewServiceManager(ctx, config_obj)
 	defer sm.Close()
 
-	server, err := startFrontend(sm, config_obj)
+	server, err := startFrontend(sm)
 	kingpin.FatalIfError(err, "startFrontend")
 	defer server.Close()
 
@@ -58,8 +63,8 @@ func doFrontend() {
 }
 
 // Start the frontend service.
-func startFrontend(sm *services.Service,
-	config_obj *config_proto.Config) (*api.Builder, error) {
+func startFrontend(sm *services.Service) (*api.Builder, error) {
+	config_obj := sm.Config
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.WithFields(logrus.Fields{
@@ -73,10 +78,6 @@ func startFrontend(sm *services.Service,
 		config_obj.Frontend.DoNotCompressArtifacts = true
 	}
 
-	// Parse the artifacts database to detect errors early.
-	_, err := getRepository(config_obj)
-	kingpin.FatalIfError(err, "Loading extra artifacts")
-
 	// Load the assets into memory.
 	assets.Init()
 
@@ -84,9 +85,30 @@ func startFrontend(sm *services.Service,
 	server.IncreaseLimits(config_obj)
 
 	// These services must start on all frontends
-	err = server.StartFrontendServices(config_obj, sm, *frontend_node)
+	err := startup.StartupEssentialServices(sm)
 	if err != nil {
-		logger.Error("Failed starting services: ", err)
+		return nil, err
+	}
+
+	// Start the frontend service if needed.
+	err = sm.Start(func(ctx context.Context, wg *sync.WaitGroup,
+		config_obj *config_proto.Config) error {
+		return frontend.StartFrontendService(
+			ctx, wg, config_obj, *frontend_node)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// These services must start only on the frontends.
+	err = startup.StartupFrontendServices(sm)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse the artifacts database to detect errors early.
+	_, err = getRepository(config_obj)
+	if err != nil {
 		return nil, err
 	}
 

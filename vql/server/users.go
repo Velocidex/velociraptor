@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -45,7 +46,11 @@ func (self UsersPlugin) Call(
 			if err == nil {
 				user_details.Permissions = policy
 			}
-			output_chan <- user_details
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- json.ConvertProtoToOrderedDict(user_details):
+			}
 		}
 
 	}()

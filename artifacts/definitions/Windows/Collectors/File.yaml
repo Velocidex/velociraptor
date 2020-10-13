@@ -53,7 +53,7 @@ sources:
                upload(file=SourceFile, accessor=Accessor, name=SourceFile) AS Upload
         FROM all_results
 
-      # Seperate the hashes into their own column.
+      # Separate the hashes into their own column.
       - SELECT now() AS CopiedOnTimestamp, SourceFile, Upload.Path AS DestinationFile,
                Size AS FileSize, Upload.sha256 AS SourceFileSha256,
                Created, Modified, LastAccessed

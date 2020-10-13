@@ -3,7 +3,9 @@
 package tools
 
 import (
+	"crypto/tls"
 	"io"
+	"net/http"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/aws/aws-sdk-go/aws"
@@ -25,6 +27,8 @@ type S3UploadArgs struct {
 	Region            string `vfilter:"required,field=region,doc=The region the bucket is in"`
 	CredentialsKey    string `vfilter:"required,field=credentialskey,doc=The AWS key credentials to use"`
 	CredentialsSecret string `vfilter:"required,field=credentialssecret,doc=The AWS secret credentials to use"`
+	Endpoint          string `vfilter:"optional,field=endpoint,doc=The Endpoint to use"`
+	NoVerifyCert      bool   `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification"`
 }
 
 type S3UploadFunction struct{}
@@ -79,7 +83,7 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 		upload_response, err := upload_S3(
 			sub_ctx, scope, file,
 			arg.Bucket,
-			arg.Name, arg.CredentialsKey, arg.CredentialsSecret, arg.Region)
+			arg.Name, arg.CredentialsKey, arg.CredentialsSecret, arg.Region, arg.Endpoint, arg.NoVerifyCert)
 		if err != nil {
 			scope.Log("upload_S3: %v", err)
 			return vfilter.Null{}
@@ -93,7 +97,7 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 func upload_S3(ctx context.Context, scope *vfilter.Scope,
 	reader io.Reader,
 	bucket, name string,
-	credentialsKey string, credentialsSecret string, region string) (
+	credentialsKey string, credentialsSecret string, region string, endpoint string, NoVerifyCert bool) (
 	*api.UploadResponse, error) {
 
 	scope.Log("upload_S3: Uploading %v to %v", name, bucket)
@@ -108,7 +112,26 @@ func upload_S3(ctx context.Context, scope *vfilter.Scope,
 	}
 
 	conf := aws.NewConfig().WithRegion(region).WithCredentials(creds)
-	sess := session.New(conf)
+	if endpoint != "" {
+		conf = conf.WithEndpoint(endpoint).WithS3ForcePathStyle(true)
+		if NoVerifyCert {
+			tr := &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+
+			client := &http.Client{Transport: tr}
+
+			conf = conf.WithHTTPClient(client)
+		} 
+
+	}
+	sess, err := session.NewSession(conf)
+	if err != nil {
+		return &api.UploadResponse{
+			Error: err.Error(),
+		}, err
+	}
+
 	uploader := s3manager.NewUploader(sess)
 
 	result, err := uploader.UploadWithContext(

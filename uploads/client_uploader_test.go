@@ -3,6 +3,8 @@ package uploads
 import (
 	"bytes"
 	"context"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/sebdah/goldie"
@@ -71,8 +73,7 @@ func TestClientUploaderSparse(t *testing.T) {
 	assert.Equal(t, responses[0].FileBuffer.Size, uint64(18))
 
 	assert.Equal(t, CombineOutput("foo", responses), "Hello hello ")
-	goldie.Assert(t, "ClientUploaderSparse", json.MustMarshalIndent(
-		responses))
+	goldie.Assert(t, "ClientUploaderSparse", json.MustMarshalIndent(responses))
 }
 
 // Test what happens when the underlying reader is shorter than the
@@ -108,6 +109,38 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 	assert.Equal(t, responses[0].FileBuffer.StoredSize, uint64(12))
 	assert.Equal(t, responses[0].FileBuffer.Size, uint64(18))
 	assert.Equal(t, CombineOutput("foo", responses), "Hello hi")
+}
+
+func TestClientUploader(t *testing.T) {
+	responder_obj := responder.TestResponder()
+	uploader := &VelociraptorUploader{
+		Responder: responder_obj,
+	}
+
+	BUFF_SIZE = 10
+
+	tmpfile, err := ioutil.TempFile("", "tmp*")
+	assert.NoError(t, err)
+	defer os.Remove(tmpfile.Name())
+
+	_, err = tmpfile.Write([]byte("Hello world"))
+	assert.NoError(t, err)
+
+	name := tmpfile.Name()
+	tmpfile.Close()
+
+	fd, err := os.Open(name)
+	assert.NoError(t, err)
+
+	ctx := context.Background()
+	scope := vql_subsystem.MakeScope()
+
+	resp, err := uploader.Upload(ctx, scope, name, "file", "", 1000, fd)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.Path, name)
+	assert.Equal(t, resp.Size, uint64(11))
+	assert.Equal(t, resp.StoredSize, uint64(11))
+	assert.Equal(t, resp.Error, "")
 }
 
 // Trying to upload a completely sparse file with no data but real

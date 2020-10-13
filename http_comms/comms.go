@@ -95,6 +95,9 @@ func (self *Enroller) MaybeEnrol() {
 // last hunt timestamp the client provides to the server's last hunt
 // timestamp) so it is ok to send a foreman message in every receiver.
 func (self *Enroller) GetMessageList() *crypto_proto.MessageList {
+	if self.config_obj.Writeback == nil {
+		return &crypto_proto.MessageList{}
+	}
 	return &crypto_proto.MessageList{
 		Job: []*crypto_proto.GrrMessage{{
 			SessionId: constants.FOREMAN_WELL_KNOWN_FLOW,
@@ -150,7 +153,11 @@ func NewHTTPConnector(
 	manager crypto.ICryptoManager,
 	logger *logging.LogContext,
 	urls []string,
-	clock utils.Clock) *HTTPConnector {
+	clock utils.Clock) (*HTTPConnector, error) {
+
+	if config_obj.Client == nil {
+		return nil, errors.New("Client not configured")
+	}
 
 	max_poll := config_obj.Client.MaxPoll
 	if max_poll == 0 {
@@ -214,7 +221,7 @@ func NewHTTPConnector(
 		},
 	}
 
-	return self
+	return self, nil
 
 }
 
@@ -279,7 +286,7 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 			}
 		}
 
-		// No we didnt know about it - add it to the end.
+		// No we did not know about it - add it to the end.
 		if !found {
 			self.urls = append(self.urls, dest[0])
 			self.current_url_idx = len(self.urls) - 1
@@ -421,7 +428,7 @@ func (self *HTTPConnector) rekeyNextServer() error {
 	// the manager.
 	server_name, err := self.manager.AddCertificate(pem)
 	if err != nil {
-		self.logger.Error(err)
+		self.logger.Error("AddCertificate: %v", err)
 		self.server_name = ""
 		return err
 	}
@@ -649,10 +656,11 @@ func (self *NotificationReader) Start(ctx context.Context) {
 			message_list := self.GetMessageList()
 			serialized_message_list, err := proto.Marshal(message_list)
 			if err == nil {
-				self.sendMessageList(
-					ctx, [][]byte{
-						utils.Compress(serialized_message_list)},
-					false)
+				compressed, err := utils.Compress(serialized_message_list)
+				if err == nil {
+					self.sendMessageList(
+						ctx, [][]byte{compressed}, false)
+				}
 			}
 
 			select {
@@ -735,7 +743,10 @@ func NewHTTPCommunicator(
 		logger:     logger,
 		clock:      clock,
 	}
-	connector := NewHTTPConnector(config_obj, manager, logger, urls, clock)
+	connector, err := NewHTTPConnector(config_obj, manager, logger, urls, clock)
+	if err != nil {
+		return nil, err
+	}
 
 	rb := NewLocalBuffer(config_obj)
 
@@ -754,6 +765,13 @@ func NewHTTPCommunicator(
 		}
 	}
 
+	sender, err := NewSender(
+		config_obj, connector, manager, executor, rb, enroller,
+		logger, "Sender", "control", child_on_exit, clock)
+	if err != nil {
+		return nil, err
+	}
+
 	result := &HTTPCommunicator{
 		config_obj: config_obj,
 		logger:     logger,
@@ -764,9 +782,7 @@ func NewHTTPCommunicator(
 			logger:     logger,
 		},
 		on_exit: on_exit,
-		sender: NewSender(
-			config_obj, connector, manager, executor, rb, enroller,
-			logger, "Sender", "control", child_on_exit, clock),
+		sender:  sender,
 		receiver: NewNotificationReader(
 			config_obj, connector, manager, executor, enroller,
 			logger, "Receiver", "reader", child_on_exit, clock),

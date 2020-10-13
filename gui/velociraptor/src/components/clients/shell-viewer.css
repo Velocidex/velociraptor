@@ -1,0 +1,104 @@
+.notebook-cell {
+    border-color: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 2px;
+    border-width: 3px;
+    border-style: solid;
+    width: 100%;
+    padding: 5px;
+    margin: 0px;
+    outline: none;
+    position: relative;
+    overflow: visible;
+}
+
+.notebook-cell.selected {
+    border-color: #ababab;
+}
+
+.notebook-input {
+    border-radius: 2px;
+    background: #f7f7f7;
+    line-height: 1.21429em;
+}
+
+.cell-toolbar.not_selected {
+    display: none;
+}
+
+.notebook-output.collapsed {
+    max-height: 24em;
+    width: 100%;
+    overflow: auto;
+    border-radius: 2px;
+    -webkit-box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+    display: block;
+}
+
+.notebook-output.expanded {
+    max-height: 200em;
+}
+
+div.dt-buttons {
+    margin-bottom: 6px;
+}
+
+.shell-cell {
+    display: flex;
+    border-color: #ababab;
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 2px;
+    border-width: 1px;
+    border-style: solid;
+    width: 100%;
+    padding: 0px;
+    margin: 0px;
+    outline: none;
+    position: relative;
+    overflow: auto;
+}
+
+
+.shell-cell.collapsed {
+    max-height: 24em;
+    width: 100%;
+    overflow: auto;
+    border-radius: 2px;
+    -webkit-box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+    display: block;
+}
+
+.shell-cell.expanded {
+    max-height: 200em;
+}
+
+.shell-command {
+    padding: 5px;
+}
+
+.shell-command textarea {
+    min-height: 30px;
+}
+
+.shell-hidden {
+    display: hidden;
+}
+
+.notebook-output pre, .notebook-input pre {
+    display: block;
+    padding: 8px;
+    margin: 0 0 8.5px;
+    font-size: 12px;
+    line-height: 1.31;
+    word-break: break-all;
+    word-wrap: break-word;
+    color: #333333;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}

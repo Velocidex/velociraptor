@@ -8,7 +8,6 @@ package vfs_service
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -26,31 +25,37 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-type VFSService struct {
-	mu sync.Mutex
-
-	config_obj *config_proto.Config
-	logger     *logging.LogContext
-}
+type VFSService struct{}
 
 func (self *VFSService) Start(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
-	self.logger.Info("<green>Starting</> VFS writing service.")
 
-	watchForFlowCompletion(
-		ctx, wg, self.config_obj, "System.VFS.ListDirectory",
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("<green>Starting</> VFS writing service.")
+
+	err := watchForFlowCompletion(
+		ctx, wg, config_obj, "System.VFS.ListDirectory",
 		self.ProcessListDirectory)
+	if err != nil {
+		return err
+	}
 
-	watchForFlowCompletion(
-		ctx, wg, self.config_obj, "System.VFS.DownloadFile",
+	err = watchForFlowCompletion(
+		ctx, wg, config_obj, "System.VFS.DownloadFile",
 		self.ProcessDownloadFile)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func (self *VFSService) ProcessDownloadFile(
-	ctx context.Context, scope *vfilter.Scope, row *ordereddict.Dict) {
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope *vfilter.Scope, row *ordereddict.Dict) {
 
 	defer utils.CheckForPanic("ProcessDownloadFile")
 
@@ -58,14 +63,15 @@ func (self *VFSService) ProcessDownloadFile(
 	flow_id, _ := row.GetString("FlowId")
 	ts, _ := row.GetInt64("_ts")
 
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 
-	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+	path_manager := result_sets.NewArtifactPathManager(config_obj,
 		client_id, flow_id, "System.VFS.DownloadFile")
 	row_chan, err := file_store.GetTimeRange(
-		ctx, self.config_obj, path_manager, 0, 0)
+		ctx, config_obj, path_manager, 0, 0)
 	if err != nil {
-		self.logger.Error("Unable to read artifact: %v", err)
+		logger.Error("Unable to read artifact: %v", err)
 		return
 	}
 
@@ -77,12 +83,12 @@ func (self *VFSService) ProcessDownloadFile(
 		vfs_path_manager := flow_path_manager.GetUploadsFile(Accessor, Path)
 
 		// Check to make sure the file actually exists.
-		file_store_factory := file_store.GetFileStore(self.config_obj)
+		file_store_factory := file_store.GetFileStore(config_obj)
 		_, err := file_store_factory.StatFile(vfs_path_manager.Path())
 		if err != nil {
-			self.logger.Error(fmt.Sprintf(
+			logger.Error(
 				"Unable to save flow %v: %v",
-				vfs_path_manager.Path(), err))
+				vfs_path_manager.Path(), err)
 			continue
 		}
 
@@ -90,8 +96,8 @@ func (self *VFSService) ProcessDownloadFile(
 
 		// We store a place holder in the VFS pointing at the
 		// read vfs_path of the download.
-		db, _ := datastore.GetDB(self.config_obj)
-		err = db.SetSubject(self.config_obj,
+		db, _ := datastore.GetDB(config_obj)
+		err = db.SetSubject(config_obj,
 			flow_path_manager.GetVFSDownloadInfoPath(Accessor, Path).Path(),
 			&flows_proto.VFSDownloadInfo{
 				VfsPath: vfs_path_manager.Path(),
@@ -100,27 +106,30 @@ func (self *VFSService) ProcessDownloadFile(
 				Size:    vql_subsystem.GetIntFromRow(scope, row, "Size"),
 			})
 		if err != nil {
-			self.logger.Error(fmt.Sprintf(
+			logger.Error(
 				"Unable to save flow %v: %v",
-				vfs_path_manager.Path(), err))
+				vfs_path_manager.Path(), err)
 		}
 	}
 }
 
 func (self *VFSService) ProcessListDirectory(
-	ctx context.Context, scope *vfilter.Scope, row *ordereddict.Dict) {
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope *vfilter.Scope, row *ordereddict.Dict) {
 
 	client_id, _ := row.GetString("ClientId")
 	flow_id, _ := row.GetString("FlowId")
 	ts, _ := row.GetInt64("_ts")
 
-	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	path_manager := result_sets.NewArtifactPathManager(config_obj,
 		client_id, flow_id, "System.VFS.ListDirectory")
 
 	row_chan, err := file_store.GetTimeRange(
-		ctx, self.config_obj, path_manager, 0, 0)
+		ctx, config_obj, path_manager, 0, 0)
 	if err != nil {
-		self.logger.Error("Unable to read artifact: %v", err)
+		logger.Error("Unable to read artifact: %v", err)
 		return
 	}
 
@@ -157,7 +166,7 @@ func (self *VFSService) ProcessListDirectory(
 			// the first collection before the first row
 			// is processed.
 			if current_vfs_components != nil {
-				err := self.flush_state(uint64(ts), client_id,
+				err := self.flush_state(config_obj, uint64(ts), client_id,
 					flow_id, current_vfs_components, rows)
 				if err != nil {
 					return
@@ -169,16 +178,17 @@ func (self *VFSService) ProcessListDirectory(
 		rows = append(rows, row)
 	}
 
-	err = self.flush_state(uint64(ts), client_id, flow_id,
+	err = self.flush_state(config_obj, uint64(ts), client_id, flow_id,
 		current_vfs_components, rows)
 	if err != nil {
-		self.logger.Error("Unable to save directory: %v", err)
+		logger.Error("Unable to save directory: %v", err)
 		return
 	}
 }
 
 // Flush the current state into the database and clear it for the next directory.
-func (self *VFSService) flush_state(timestamp uint64, client_id, flow_id string,
+func (self *VFSService) flush_state(
+	config_obj *config_proto.Config, timestamp uint64, client_id, flow_id string,
 	vfs_components []string, rows []*ordereddict.Dict) error {
 	if len(rows) == 0 {
 		return nil
@@ -189,12 +199,12 @@ func (self *VFSService) flush_state(timestamp uint64, client_id, flow_id string,
 		return errors.WithStack(err)
 	}
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 	client_path_manager := paths.NewClientPathManager(client_id)
-	return db.SetSubject(self.config_obj,
+	return db.SetSubject(config_obj,
 		client_path_manager.VFSPath(vfs_components),
 		&flows_proto.VFSListResponse{
 			Columns:   rows[0].Keys(),
@@ -233,10 +243,7 @@ func StartVFSService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	vfs_service := &VFSService{
-		config_obj: config_obj,
-		logger:     logging.GetLogger(config_obj, &logging.FrontendComponent),
-	}
+	vfs_service := &VFSService{}
 
-	return vfs_service.Start(ctx, wg)
+	return vfs_service.Start(ctx, config_obj, wg)
 }

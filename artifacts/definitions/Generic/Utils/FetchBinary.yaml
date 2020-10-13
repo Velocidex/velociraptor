@@ -19,6 +19,11 @@ parameters:
   - name: ToolName
     default: Autorun_amd64
 
+  - name: IsExecutable
+    type: bool
+    default: Y
+    description: Set to Y if the file needs to be executable (on windows it will have .exe extension)
+
   - name: SleepDuration
     default: "20"
     description: A time to sleep before fetching the binary.
@@ -34,19 +39,21 @@ sources:
       -- clients at least back to 0.3.9
 
       LET info_cache <= SELECT * FROM info()
-      LET inventory_item <= SELECT inventory_get(tool=ToolName) AS Item FROM scope()
+      LET inventory_item = SELECT inventory_get(tool=ToolName) AS Item FROM scope()
 
       LET args <= SELECT * FROM switch(
         // Try to get info from the ToolInfo parameter.
         a={SELECT get(field="Tool_" + ToolName + "_HASH", item=ToolInfo) AS ToolHash,
                   get(field="Tool_" + ToolName + "_FILENAME", item=ToolInfo) AS ToolFilename,
-                  get(field="Tool_" + ToolName + "_URL", item=ToolInfo) AS ToolURL
+                  get(field="Tool_" + ToolName + "_URL", item=ToolInfo) AS ToolURL,
+                  get(field="Tool_" + ToolName + "_PATH", item=ToolInfo) AS ToolPath
            FROM scope()  WHERE ToolFilename},
 
         // Failing this - get it from the scope()
         b={SELECT get(field="Tool_" + ToolName + "_HASH", item=scope()) AS ToolHash,
                   get(field="Tool_" + ToolName + "_FILENAME", item=scope()) AS ToolFilename,
-                  get(field="Tool_" + ToolName + "_URL", item=scope()) AS ToolURL
+                  get(field="Tool_" + ToolName + "_URL", item=scope()) AS ToolURL,
+                  get(field="Tool_" + ToolName + "_PATH", item=ToolInfo) AS ToolPath
            FROM scope()  WHERE ToolFilename},
 
         // Failing this - try to get it from the inventory service directly.
@@ -64,7 +71,18 @@ sources:
         )
 
       // Where we should save the file.
-      LET ToolPath <= SELECT path_join(components=[(binpath[0]).Path, (args[0]).ToolFilename]) AS Path FROM scope()
+      LET ToolPath <= SELECT path_join(components=[
+           (binpath[0]).Path, (args[0]).ToolFilename]) AS Path FROM scope()
+
+      // Support tools locally served from disk
+      LET local_file =
+          SELECT hash(path=(args[0]).ToolPath) as Hash,
+                 (args[0]).ToolFilename AS Name,
+                 "Downloaded" AS DownloadStatus,
+                 (args[0]).ToolPath AS FullPath
+          FROM scope()
+          WHERE (args[0]).ToolPath AND
+                log(message="File served from " + (args[0]).ToolPath)
 
       // Download the file from the binary URL and store in the local
       // binary cache.
@@ -76,7 +94,8 @@ sources:
           SELECT hash(path=Content) as Hash,
               (args[0]).ToolFilename AS Name,
               "Downloaded" AS DownloadStatus,
-              copy(filename=Content, dest=(ToolPath[0]).Path) AS FullPath
+              copy(filename=Content, dest=(ToolPath[0]).Path,
+                   permissions=if(condition=IsExecutable="Y", then="x")) AS FullPath
           FROM http_client(url=(args[0]).ToolURL, tempfile_extension=".exe")
           WHERE log(message=format(format="downloaded hash of %v: %v, expected %v", args=[
                     Content, Hash.SHA256, (args[0]).ToolHash]))
@@ -92,21 +111,22 @@ sources:
       LET existing = SELECT FullPath, hash(path=FullPath) AS Hash, Name,
                     "Cached" AS DownloadStatus
         FROM stat(filename=(ToolPath[0]).Path)
-        WHERE Hash.SHA256 = (args[0]).ToolHash AND log(
-            message=format(format="hash of %v: %v, expected %v", args=[
+        WHERE log(message=format(format="Local hash of %v: %v, expected %v", args=[
             FullPath, Hash.SHA256, (args[0]).ToolHash]))
+        AND Hash.SHA256 = (args[0]).ToolHash
 
       // Find the required_tool either in the local cache or
       // download it (and put it in the cache for next time). If we
       // have to download the file we sleep for a random time to
       // stagger server bandwidth load.
       SELECT * FROM switch(
-        a=existing,
-        b={
+        a=local_file,
+        b=existing,
+        c={
            SELECT rand(range=atoi(string=SleepDuration)) AS timeout
            FROM scope()
            WHERE args AND (args[0]).ToolURL AND
               log(message=format(format='Sleeping %v Seconds',
                  args=[timeout])) AND sleep(time=timeout) AND FALSE
         },
-        c=download)
+        d=download)

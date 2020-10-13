@@ -308,6 +308,8 @@ const (
 	STATUS_DEVICE_OFF_LINE = 0x80000010
 	// {Device Busy} The device is currently busy.
 	STATUS_DEVICE_BUSY = 0x80000011
+
+	STATUS_INFO_LENGTH_MISMATCH = 0xC0000004
 	// {N/ The specified encrypted parameters are invalid.
 	STATUS_GRAPHICS_OPM_INVALID_ENCRYPTED_PARAMETERS = 0xC01E0503
 	// An array passed to a function cannot hold all of the data that the function wants to put in it.

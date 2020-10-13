@@ -2,14 +2,179 @@ package server
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
+
+type ArtifactSetFunctionArgs struct {
+	Definition string `vfilter:"optional,field=definition,doc=Artifact definition in YAML"`
+	Prefix     string `vfilter:"optional,field=prefix,doc=Required name prefix"`
+}
+
+type ArtifactSetFunction struct{}
+
+func (self *ArtifactSetFunction) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &ArtifactSetFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("artifact_set: %v", err)
+		return vfilter.Null{}
+	}
+
+	if arg.Prefix == "" {
+		arg.Prefix = "Packs."
+	}
+
+	config_obj, ok := artifacts.GetServerConfig(scope)
+	if !ok {
+		scope.Log("artifact_set: Command can only run on the server")
+		return vfilter.Null{}
+	}
+
+	manager, _ := services.GetRepositoryManager()
+	if manager == nil {
+		scope.Log("artifact_set: Command can only run on the server")
+		return vfilter.Null{}
+	}
+
+	tmp_repository := manager.NewRepository()
+	definition, err := tmp_repository.LoadYaml(arg.Definition, true /* validate */)
+	if err != nil {
+		scope.Log("artifact_set: %v", err)
+		return vfilter.Null{}
+	}
+
+	// Determine the permission required based on the type of the artifact.
+	var permission acls.ACL_PERMISSION
+
+	def_type := strings.ToLower(definition.Type)
+
+	switch def_type {
+	case "client", "client_event", "":
+		permission = acls.ARTIFACT_WRITER
+	case "server", "server_event":
+		permission = acls.SERVER_ARTIFACT_WRITER
+	default:
+		scope.Log("artifact_set: artifact type invalid")
+		return vfilter.Null{}
+	}
+
+	err = vql_subsystem.CheckAccess(scope, permission)
+	if err != nil {
+		scope.Log("artifact_set: %s", err)
+		return vfilter.Null{}
+	}
+
+	definition, err = manager.SetArtifactFile(config_obj, arg.Definition, arg.Prefix)
+	if err != nil {
+		scope.Log("artifact_set: %s", err)
+		return vfilter.Null{}
+	}
+
+	return json.ConvertProtoToOrderedDict(definition)
+}
+
+func (self ArtifactSetFunction) Info(
+	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "artifact_set",
+		Doc:     "Sets an artifact into the global repository.",
+		ArgType: type_map.AddType(scope, &ArtifactSetFunctionArgs{}),
+	}
+}
+
+type ArtifactDeleteFunctionArgs struct {
+	Name string `vfilter:"optional,field=name,doc=The Artifact to delete"`
+}
+
+type ArtifactDeleteFunction struct{}
+
+func (self *ArtifactDeleteFunction) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &ArtifactDeleteFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("artifact_delete: %v", err)
+		return vfilter.Null{}
+	}
+
+	config_obj, ok := artifacts.GetServerConfig(scope)
+	if !ok {
+		scope.Log("artifact_delete: Command can only run on the server")
+		return vfilter.Null{}
+	}
+
+	manager, _ := services.GetRepositoryManager()
+	if manager == nil {
+		scope.Log("artifact_delete: Command can only run on the server")
+		return vfilter.Null{}
+	}
+
+	global_repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		scope.Log("artifact_delete: %v", err)
+		return vfilter.Null{}
+	}
+
+	definition, pres := global_repository.Get(config_obj, arg.Name)
+	if !pres {
+		scope.Log("artifact_delete: Artifact %v not found", arg.Name)
+		return vfilter.Null{}
+	}
+
+	// Same criteria as
+	// https://github.com/Velocidex/velociraptor/blob/3eddb529a0059a05c0a6c2c7057446f36c4e9a6a/gui/static/angular-components/artifact/artifact-viewer-directive.js#L62
+	if !strings.HasPrefix(definition.Name, "Custom.") {
+		scope.Log("artifact_delete: Can only delete custom artifacts.")
+		return vfilter.Null{}
+	}
+
+	var permission acls.ACL_PERMISSION
+	def_type := strings.ToLower(definition.Type)
+
+	switch def_type {
+	case "client", "client_event", "":
+		permission = acls.ARTIFACT_WRITER
+	case "server", "server_event":
+		permission = acls.SERVER_ARTIFACT_WRITER
+	}
+
+	err = vql_subsystem.CheckAccess(scope, permission)
+	if err != nil {
+		scope.Log("artifact_set: %s", err)
+		return vfilter.Null{}
+	}
+
+	err = manager.DeleteArtifactFile(config_obj, arg.Name)
+	if err != nil {
+		scope.Log("artifact_delete: %s", err)
+		return vfilter.Null{}
+	}
+
+	return arg.Name
+}
+
+func (self ArtifactDeleteFunction) Info(
+	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "artifact_delete",
+		Doc:     "Deletes an artifact from the global repository.",
+		ArgType: type_map.AddType(scope, &ArtifactDeleteFunctionArgs{}),
+	}
+}
 
 type ArtifactsPluginArgs struct {
 	Names               []string `vfilter:"optional,field=names,doc=Artifact definitions to dump"`
@@ -46,7 +211,12 @@ func (self ArtifactsPlugin) Call(
 			return
 		}
 
-		repository, err := artifacts.GetGlobalRepository(config_obj)
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			scope.Log("Command can only run on the server")
+			return
+		}
+		repository, err := manager.GetGlobalRepository(config_obj)
 		if err != nil {
 			scope.Log("artifact_definitions: %v", err)
 			return
@@ -57,53 +227,40 @@ func (self ArtifactsPlugin) Call(
 			arg.Names = repository.List()
 		}
 
-		dependencies := make(map[string]int)
+		seen := make(map[string]*artifacts_proto.Artifact)
 		for _, name := range arg.Names {
-			dependencies[name] = 1
-
-			get_deps := func() map[string]int {
-				dependencies := make(map[string]int)
-
-				artifact, pres := repository.Get(name)
-				if !pres {
-					scope.Log("Artifact %s not know", name)
-					return dependencies
-				}
-
-				for _, source := range artifact.Sources {
-					err := repository.GetQueryDependencies(
-						source.Query, 0, dependencies)
-					if err != nil {
-						scope.Log("artifact_definitions: %v", err)
-						return dependencies
-					}
-				}
-
-				return dependencies
-			}
-
-			for name := range get_deps() {
-				dependencies[name] = 1
-			}
-		}
-
-		for k := range dependencies {
-			artifact, pres := repository.Get(k)
+			artifact, pres := repository.Get(config_obj, name)
 			if pres {
-				// Ensure we know about all the tools.
-				for _, tool := range artifact.Tools {
-					_, err := services.GetInventory().GetToolInfo(
-						ctx, config_obj, tool.Name)
-					if err != nil {
-						services.GetInventory().AddTool(
-							ctx, config_obj, tool)
-					}
-				}
-
-				output_chan <- vfilter.RowToDict(ctx, scope, artifact)
+				seen[artifact.Name] = artifact
 			}
 		}
 
+		launcher, err := services.GetLauncher()
+		if err != nil {
+			scope.Log("artifact_definitions: %v", err)
+			return
+		}
+
+		deps, err := launcher.GetDependentArtifacts(
+			config_obj, repository, arg.Names)
+		if err != nil {
+			scope.Log("artifact_definitions: %v", err)
+			return
+		}
+
+		for _, name := range deps {
+			artifact, pres := repository.Get(config_obj, name)
+			if !pres {
+				scope.Log("artifact_definitions: artifact %v not known", name)
+				continue
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- json.ConvertProtoToOrderedDict(artifact):
+			}
+		}
 	}()
 
 	return output_chan
@@ -119,4 +276,6 @@ func (self ArtifactsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap
 
 func init() {
 	vql_subsystem.RegisterPlugin(&ArtifactsPlugin{})
+	vql_subsystem.RegisterFunction(&ArtifactSetFunction{})
+	vql_subsystem.RegisterFunction(&ArtifactDeleteFunction{})
 }

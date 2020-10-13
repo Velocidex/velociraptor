@@ -43,7 +43,12 @@ func (self ForPlugin) Call(
 				arg.Var, item))
 
 			for item := range arg.Query.Eval(ctx, new_scope) {
-				output_chan <- item
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- item:
+				}
 			}
 		}
 

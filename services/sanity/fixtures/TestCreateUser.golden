@@ -1,12 +1,12 @@
 {
- "/users/User1": {
-  "name": "User1",
-  "password_hash": "DX3EdpodhRYoAnA6GFW3bjtlK9o+BYKrMkM/Y9xqBzY=",
-  "password_salt": "D2GtD9Y5FRMCEkLvuax4AkXMIVJ/o/nF5VLUciPjg6I="
- },
  "/acl/User1.json": {
   "roles": [
    "administrator"
   ]
+ },
+ "/users/User1": {
+  "name": "User1",
+  "password_hash": "DX3EdpodhRYoAnA6GFW3bjtlK9o+BYKrMkM/Y9xqBzY=",
+  "password_salt": "D2GtD9Y5FRMCEkLvuax4AkXMIVJ/o/nF5VLUciPjg6I="
  }
 }

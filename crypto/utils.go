@@ -153,8 +153,12 @@ func PemToPublicKey(pem_str []byte) (*rsa.PublicKey, error) {
 
 // Verify the configuration, possibly updating default settings.
 func VerifyConfig(config_obj *config_proto.Config) error {
-	if len(config_obj.Client.ServerUrls) == 0 {
+	if config_obj.Client == nil || len(config_obj.Client.ServerUrls) == 0 {
 		return errors.New("No server URLs configured!")
+	}
+
+	if config_obj.Writeback == nil {
+		config_obj.Writeback = &config_proto.Writeback{}
 	}
 
 	if config_obj.Writeback.PrivateKey == "" {
@@ -172,4 +176,20 @@ func VerifyConfig(config_obj *config_proto.Config) error {
 	}
 
 	return nil
+}
+
+func GetSubjectName(cert *x509.Certificate) string {
+	if cert.Subject.CommonName != "" {
+		return cert.Subject.CommonName
+	}
+
+	if len(cert.DNSNames) > 0 {
+		return cert.DNSNames[0]
+	}
+
+	if len(cert.IPAddresses) > 0 {
+		return cert.IPAddresses[0].String()
+	}
+
+	return ""
 }

@@ -122,6 +122,10 @@ func GetObjects(ctx context.Context,
 	size_of_info := uint32(unsafe.Sizeof(ntdll.ObjectDirectoryInformationT{}))
 	for i := uint32(0); i < index; i++ {
 		item := (*ntdll.ObjectDirectoryInformationT)(unsafe.Pointer(&buffer[i*size_of_info]))
+		if item == nil {
+			continue
+		}
+
 		object_directory_infos = append(object_directory_infos, item)
 
 		info := &WinObjDesc{
@@ -129,7 +133,11 @@ func GetObjects(ctx context.Context,
 			Type: item.TypeName.String(),
 		}
 		descObject(scope, info)
-		output_chan <- info
+		select {
+		case <-ctx.Done():
+			return
+		case output_chan <- info:
+		}
 
 		if item.TypeName.String() == "Directory" {
 			GetObjects(ctx, scope,

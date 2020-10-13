@@ -90,6 +90,7 @@ func MarshalJsonl(scope *vfilter.Scope) vfilter.RowEncoder {
 				return nil, err
 			}
 			out.Write(serialized)
+			out.Write([]byte("\n"))
 		}
 		return out.Bytes(), nil
 	}

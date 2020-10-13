@@ -41,7 +41,6 @@ func (self *_RateFunction) Call(
 		return vfilter.Null{}
 	}
 
-	state := &rateState{}
 	previous_value_any := scope.GetContext(vfilter.GetID(self))
 	if previous_value_any == nil {
 		scope.SetContext(
@@ -49,7 +48,7 @@ func (self *_RateFunction) Call(
 		return vfilter.Null{}
 	}
 
-	state = previous_value_any.(*rateState)
+	state := previous_value_any.(*rateState)
 	value := (arg.X - state.x) / (arg.Y - state.y)
 	scope.SetContext(
 		vfilter.GetID(self), &rateState{x: arg.X, y: arg.Y})

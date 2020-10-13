@@ -59,23 +59,28 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 		}
 
 		if arg.ReallyDoIt {
-			// Remove any labels
 			client_info, err := api.GetApiClient(config_obj, nil, arg.ClientId, false)
 			if err != nil {
 				scope.Log("client_delete: %s", err.Error())
 				return
 			}
 
+			// Remove any labels
 			labeler := services.GetLabeler()
-			for _, label := range labeler.GetClientLabels(arg.ClientId) {
-				labeler.RemoveClientLabel(arg.ClientId, label)
+			for _, label := range labeler.GetClientLabels(config_obj, arg.ClientId) {
+				err := labeler.RemoveClientLabel(config_obj, arg.ClientId, label)
+				if err != nil {
+					scope.Log("client_delete: %s", err.Error())
+					return
+				}
 			}
 
 			// Sync up with the indexes created by the interrogation service.
-			keywords := []string{
-				"all", client_info.ClientId,
-				client_info.OsInfo.Fqdn,
-				"host:" + client_info.OsInfo.Fqdn}
+			keywords := []string{"all", client_info.ClientId}
+			if client_info.OsInfo != nil && client_info.OsInfo.Fqdn != "" {
+				keywords = append(keywords, client_info.OsInfo.Fqdn)
+				keywords = append(keywords, "host:"+client_info.OsInfo.Fqdn)
+			}
 			err = db.UnsetIndex(config_obj, constants.CLIENT_INDEX_URN,
 				arg.ClientId, keywords)
 			if err != nil {
@@ -89,36 +94,66 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 		client_path_manager := paths.NewClientPathManager(arg.ClientId)
 
 		// Indiscriminately delete all the client's datastore files.
-		db.Walk(config_obj, client_path_manager.Path(), func(filename string) error {
-			output_chan <- ordereddict.NewDict().
+		err = db.Walk(config_obj, client_path_manager.Path(), func(filename string) error {
+			select {
+			case <-ctx.Done():
+				return nil
+
+			case output_chan <- ordereddict.NewDict().
 				Set("client_id", arg.ClientId).
 				Set("type", "Datastore").
 				Set("vfs_path", filename).
-				Set("really_do_it", arg.ReallyDoIt)
+				Set("really_do_it", arg.ReallyDoIt):
+			}
 
 			if arg.ReallyDoIt {
-				db.DeleteSubject(config_obj, filename)
+				err = db.DeleteSubject(config_obj, filename)
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		})
+		if err != nil {
+			scope.Log("client_delete: %s", err.Error())
+			return
+		}
+
+		// Delete the actual client record.
+		if arg.ReallyDoIt {
+			err = db.DeleteSubject(config_obj, client_path_manager.Path())
+			if err != nil {
+				scope.Log("client_delete: %s", err.Error())
+				return
+			}
+		}
 
 		// Delete the filestore files.
-		file_store_factory.Walk(client_path_manager.Path(),
+		err = file_store_factory.Walk(client_path_manager.Path(),
 			func(filename string, info os.FileInfo, err error) error {
-				output_chan <- ordereddict.NewDict().
+				select {
+				case <-ctx.Done():
+					return nil
+
+				case output_chan <- ordereddict.NewDict().
 					Set("client_id", arg.ClientId).
 					Set("type", "Filestore").
 					Set("vfs_path", filename).
-					Set("really_do_it", arg.ReallyDoIt)
+					Set("really_do_it", arg.ReallyDoIt):
+				}
 
 				if arg.ReallyDoIt {
-					err = file_store_factory.Delete(filename)
+					err := file_store_factory.Delete(filename)
 					if err != nil {
 						scope.Log("client_delete: %s", err.Error())
 					}
 				}
 				return nil
 			})
+		if err != nil {
+			scope.Log("client_delete: %s", err.Error())
+			return
+		}
 
 	}()
 

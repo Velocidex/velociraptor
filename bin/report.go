@@ -8,7 +8,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/server/downloads"
 )
@@ -39,7 +39,11 @@ func doFlowReport() {
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	builder := artifacts.ScopeBuilder{
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
+	builder := services.ScopeBuilder{
 		Config: config_obj,
 		Logger: log.New(&LogWriter{config_obj}, "", 0),
 		Env: ordereddict.NewDict().
@@ -48,7 +52,9 @@ func doFlowReport() {
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
 	}
 
-	scope := builder.Build()
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	writer := os.Stdout

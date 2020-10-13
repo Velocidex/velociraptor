@@ -7,9 +7,36 @@
   </button>
 </div>
 <div class="modal-body">
-  <div class="container-fluid">
+  <div class="padded"
+       ng-if="controller.current_checking_tool">
+    <div class="well well-large">
+      <div ng-repeat="tool in controller.checking_tools track by $index">
+        <div class="alert text-center"
+             ng-if="!controller.current_error"
+             ng-class="controller.getToolState(tool)">
+          Checking {$ tool $}
+          <span role="status" class="spinner-border"
+                ng-if="tool == controller.current_checking_tool">
+            <span class="sr-only">Loading...</span>
+          </span>
+        </div>
+        <div class="alert alert-danger text-center"
+             ng-if="controller.current_error">
+          Error {$ tool $}: {$ controller.current_error $}
+          <button class="btn btn-danger float-right"
+                  ng-click="controller.ackToolError()">
+            Retry
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid"
+       ng-if="!controller.current_checking_tool">
     <grr-search-artifact names="controller.names"
                          params="controller.params"
+                         tools="controller.tools"
                          type="controller.artifactType">
     </grr-search-artifact>
 
@@ -33,8 +60,13 @@
             <dl class="dl-horizontal dl-flow">
               <dt>Ops/Sec</dt>
               <dd><input ng-model="controller.ops_per_second" type="text"></input></dd>
-              <dt>Maximum Time</dt>
+              <dt>Max Time</dt>
               <dd><input ng-model="controller.timeout" type="text"></input></dd>
+              <dt>Max Rows</dt>
+              <dd><input ng-model="controller.max_rows" type="text"></input></dd>
+              <dt>Max MBytes</dt>
+              <dd><input ng-model="controller.max_bytes" type="text"></input></dd>
+
             </dl>
           </div>
         </div>
@@ -55,7 +87,7 @@
 
       <button class="btn btn-primary Next"
               ng-disabled="controller.names.length==0"
-              ng-click="controller.startClientFlow()">
+              ng-click="controller.checkTools(controller.tools)">
         Launch collection
       </button>
     </div>

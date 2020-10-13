@@ -71,11 +71,31 @@ parameters:
     type: json
     default: "{}"
 
+  - name: opt_verbose
+    default: Y
+    type: bool
+    description: Show verbose progress.
+
+  - name: opt_banner
+    default: Y
+    type: bool
+    description: Show Velociraptor banner.
+
+  - name: opt_prompt
+    default: Y
+    type: bool
+    description: Wait for a prompt before closing.
+
+  - name: opt_admin
+    default: Y
+    type: bool
+    description: Require administrator privilege when running.
+
   - name: StandardCollection
     type: hidden
     default: |
       // Add all the tools we are going to use to the inventory.
-      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash, url="dummy")
+      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash)
       FROM parse_csv(filename="/inventory.csv", accessor="me")
       WHERE log(message="Adding tool " + ToolName)
 
@@ -99,7 +119,7 @@ parameters:
     type: hidden
     default: |
       // Add all the tools we are going to use to the inventory.
-      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash, url="dummy")
+      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash)
       FROM parse_csv(filename="/inventory.csv", accessor="me")
       WHERE log(message="Adding tool " + ToolName)
 
@@ -122,13 +142,17 @@ parameters:
           name=filename + ".zip",
           credentialskey=TargetArgs.credentialsKey,
           credentialssecret=TargetArgs.credentialsSecret,
-          region=TargetArgs.region) AS Upload,
+          region=TargetArgs.region,
+          endpoint=TargetArgs.endpoint,
+          noverifycert=TargetArgs.noverifycert) AS Upload,
        upload_s3(file=Report,
           bucket=TargetArgs.bucket,
           name=filename + ".html",
           credentialskey=TargetArgs.credentialsKey,
           credentialssecret=TargetArgs.credentialsSecret,
-          region=TargetArgs.region) AS ReportUpload
+          region=TargetArgs.region,
+          endpoint=TargetArgs.endpoint,
+          noverifycert=TargetArgs.noverifycert) AS ReportUpload
       FROM collect(artifacts=Artifacts, report=tempfile(extension=".html"),
           args=Parameters, output=tempfile(extension=".zip"), template=Template,
           password=Password)
@@ -137,7 +161,7 @@ parameters:
     type: hidden
     default: |
       // Add all the tools we are going to use to the inventory.
-      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash, url="dummy")
+      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash)
       FROM parse_csv(filename="/inventory.csv", accessor="me")
       WHERE log(message="Adding tool " + ToolName)
 
@@ -224,7 +248,6 @@ sources:
   - query: |
       LET Payload <= tempfile(extension=".zip")
       LET Artifacts <= parse_json_array(data=artifacts)
-
       LET Binaries <= SELECT * FROM foreach(
           row={
              SELECT tools FROM artifact_definitions(names=Artifacts)
@@ -234,6 +257,32 @@ sources:
               SELECT name AS Binary FROM scope()
              })
           }) GROUP BY Binary
+
+      // Get some tempfiles to work with.
+      LET Config <= tempfile()
+      LET Destination <= tempfile()
+
+      // Choose the right target binary depending on the target OS
+      LET tool_name = SELECT * FROM switch(
+       a={ SELECT "VelociraptorWindows" AS Type FROM scope() WHERE OS = "Windows"},
+       b={ SELECT "VelociraptorWindows_x86" AS Type FROM scope() WHERE OS = "Windows_x86"},
+       c={ SELECT "VelociraptorLinux" AS Type FROM scope() WHERE OS = "Linux"},
+       d={ SELECT "VelociraptorDarwin" AS Type FROM scope() WHERE OS = "MacOS"},
+       e={ SELECT "" AS Type FROM scope()
+           WHERE NOT log(message="Unknown target type " + OS) }
+      )
+
+      // Repack this binary.
+      LET target_binary <= SELECT FullPath, Name
+         FROM Artifact.Generic.Utils.FetchBinary(
+            ToolName=tool_name[0].Type, SleepDuration="0",
+            ToolInfo=inventory_get(tool=tool_name[0].Type))
+         WHERE log(message="Target binary " + Name + " is at " + FullPath)
+
+      // This is what we will call it.
+      LET CollectorName <= format(
+          format='Collector_%v',
+          args=[target_binary[0].Name, ])
 
       // Create a zip file with the binaries in it.
       LET _ <= SELECT * FROM collect(artifacts="PackageToolsArtifact",
@@ -275,33 +324,20 @@ sources:
             ) AS sources FROM scope()  }
       )
 
+      LET optional_cmdline = SELECT * FROM chain(
+        a={ SELECT "-v" AS Opt FROM scope() WHERE opt_verbose = "Y"},
+        b={ SELECT "--nobanner" AS Opt FROM scope() WHERE opt_banner != "Y"},
+        c={ SELECT "--require_admin" AS Opt FROM scope() WHERE opt_admin = "Y"},
+        d={ SELECT "--prompt" AS Opt FROM scope() WHERE opt_prompt = "Y"}
+      )
+
       // Build the autoexec config file depending on the user's
       // collection type choices.
       LET autoexec <= dict(autoexec=dict(
-          argv=["artifacts", "collect", "-v", "Collector"],
+          argv=("artifacts", "collect", "Collector",
+                "--logfile", CollectorName + ".log") + optional_cmdline.Opt,
           artifact_definitions=definitions)
       )
-
-      // Get some tempfiles to work with.
-      LET Config <= tempfile()
-      LET Destination <= tempfile()
-
-      // Choose the right target binary depending on the target OS
-      LET tool_name = SELECT * FROM switch(
-       a={ SELECT "VelociraptorWindows" AS Type FROM scope() WHERE OS = "Windows"},
-       b={ SELECT "VelociraptorWindows_x86" AS Type FROM scope() WHERE OS = "Windows_x86"},
-       c={ SELECT "VelociraptorLinux" AS Type FROM scope() WHERE OS = "Linux"},
-       d={ SELECT "VelociraptorDarwin" AS Type FROM scope() WHERE OS = "MacOS"},
-       e={ SELECT "" AS Type FROM scope()
-           WHERE NOT log(message="Unknown target type " + OS) }
-      )
-
-      // Repack this binary.
-      LET target_binary <= SELECT FullPath, Name
-         FROM Artifact.Generic.Utils.FetchBinary(
-            ToolName=tool_name[0].Type, SleepDuration="0",
-            ToolInfo=inventory_get(tool=tool_name[0].Type))
-         WHERE log(message="Target binary " + Name + " is at " + FullPath)
 
       LET me <= SELECT Exe FROM info()
 
@@ -310,7 +346,7 @@ sources:
       LET repack_step = SELECT upload(
            file=Destination,
            accessor="file",
-           name=format(format='Collector_%v', args=[target_binary[0].Name, ])) AS Binary,
+           name=CollectorName) AS Binary,
            timestamp(epoch=now()) As CreationTime
       FROM execve(argv=[
         me[0].Exe, "config", "repack",

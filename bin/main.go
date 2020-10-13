@@ -54,7 +54,7 @@ var (
 	no_color_flag = app.Flag("nocolor", "Disable color output").Bool()
 
 	verbose_flag = app.Flag(
-		"verbose", "Enabled verbose logging for client.").Short('v').
+		"verbose", "Enabled verbose logging.").Short('v').
 		Default("false").Bool()
 
 	profile_flag = app.Flag(
@@ -64,6 +64,9 @@ var (
 		"trace", "Write trace information to this file.").String()
 
 	trace_vql_flag = app.Flag("trace_vql", "Enable VQL tracing.").Bool()
+
+	logging_flag = app.Flag(
+		"logfile", "Write to this file as well").String()
 
 	command_handlers []CommandHandler
 )
@@ -134,14 +137,16 @@ func main() {
 	}
 
 	doBanner()
+	defer doPrompt()
 
 	// Most commands load a config in the following order
 	DefaultConfigLoader = new(config.Loader).WithVerbose(*verbose_flag).
 		WithFileLoader(*config_path).
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
-		WithCustomValidator(load_config_artifacts).
-		WithCustomValidator(initFilestoreAccessor)
+		WithCustomValidator(initFilestoreAccessor).
+		WithCustomValidator(initDebugServer).
+		WithLogFile(*logging_flag)
 
 	// Commands that potentially take an API config can load both
 	// - first try the API config, then try a config.
@@ -152,13 +157,15 @@ func main() {
 		WithFileLoader(*config_path).
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
-		WithCustomValidator(load_config_artifacts).
-		WithCustomValidator(initFilestoreAccessor)
+		WithCustomValidator(initFilestoreAccessor).
+		WithCustomValidator(initDebugServer).
+		WithLogFile(*logging_flag)
 
 	if *trace_flag != "" {
 		f, err := os.Create(*trace_flag)
 		kingpin.FatalIfError(err, "trace file.")
-		trace.Start(f)
+		err = trace.Start(f)
+		kingpin.FatalIfError(err, "trace file.")
 		defer trace.Stop()
 	}
 
@@ -166,7 +173,8 @@ func main() {
 		f2, err := os.Create(*profile_flag)
 		kingpin.FatalIfError(err, "Profile file.")
 
-		pprof.StartCPUProfile(f2)
+		err = pprof.StartCPUProfile(f2)
+		kingpin.FatalIfError(err, "Profile file.")
 		defer pprof.StopCPUProfile()
 
 	}

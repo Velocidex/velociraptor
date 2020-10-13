@@ -103,13 +103,26 @@ func (self *FileBasedRingBuffer) Enqueue(item []byte) {
 	defer self.mu.Unlock()
 
 	binary.LittleEndian.PutUint64(self.write_buf, uint64(len(item)))
-	self.fd.WriteAt(self.write_buf, int64(self.header.WritePointer))
-	n, _ := self.fd.WriteAt(item, int64(self.header.WritePointer+8))
+	_, err := self.fd.WriteAt(self.write_buf, int64(self.header.WritePointer))
+	if err != nil {
+		self.Reset()
+		return
+	}
+	n, err := self.fd.WriteAt(item, int64(self.header.WritePointer+8))
+	if err != nil {
+		self.Reset()
+		return
+	}
+
 	self.header.WritePointer += 8 + int64(n)
 	self.header.AvailableBytes += int64(n)
 
 	serialized, _ := self.header.MarshalBinary()
-	self.fd.WriteAt(serialized, 0)
+	_, err = self.fd.WriteAt(serialized, 0)
+	if err != nil {
+		self.Reset()
+		return
+	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
 	logger.WithFields(logrus.Fields{
@@ -150,7 +163,13 @@ func LeaseAndCompress(self IRingBuffer, size uint64) [][]byte {
 			break
 		}
 
-		compressed_message_list := utils.Compress(next_message_list)
+		compressed_message_list, err := utils.Compress(next_message_list)
+		if err != nil || len(compressed_message_list) == 0 {
+			// Something terrible happened! The file is
+			// corrupted and it is better to start again.
+			self.Reset()
+			break
+		}
 		result = append(result, compressed_message_list)
 		total_len += uint64(len(compressed_message_list))
 	}
@@ -166,7 +185,10 @@ func (self *FileBasedRingBuffer) IsItemBlackListed(item []byte) bool {
 	if err != nil || len(message_list.Job) == 0 {
 		return false
 	}
-	return executor.Canceller.IsCancelled(message_list.Job[0].SessionId)
+	if executor.Canceller != nil {
+		return executor.Canceller.IsCancelled(message_list.Job[0].SessionId)
+	}
+	return false
 }
 
 func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
@@ -219,7 +241,7 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 // _Truncate returns the file to a virgin state. Assumes
 // FileBasedRingBuffer is already under lock.
 func (self *FileBasedRingBuffer) _Truncate() {
-	self.fd.Truncate(0)
+	_ = self.fd.Truncate(0)
 	self.header.ReadPointer = FirstRecordOffset
 	self.header.WritePointer = FirstRecordOffset
 	self.header.AvailableBytes = 0
@@ -227,7 +249,7 @@ func (self *FileBasedRingBuffer) _Truncate() {
 
 	self.leased_pointer = FirstRecordOffset
 	serialized, _ := self.header.MarshalBinary()
-	self.fd.WriteAt(serialized, 0)
+	_, _ = self.fd.WriteAt(serialized, 0)
 	self.c.Broadcast()
 }
 
@@ -258,7 +280,7 @@ func (self *FileBasedRingBuffer) Commit() {
 	self.header.LeasedBytes = 0
 
 	serialized, _ := self.header.MarshalBinary()
-	self.fd.WriteAt(serialized, 0)
+	_, _ = self.fd.WriteAt(serialized, 0)
 
 	logger.WithFields(logrus.Fields{
 		"header": self.header,
@@ -268,6 +290,10 @@ func (self *FileBasedRingBuffer) Commit() {
 func NewFileBasedRingBuffer(
 	config_obj *config_proto.Config,
 	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
+
+	if config_obj.Client == nil || config_obj.Client.LocalBuffer == nil {
+		return nil, errors.New("Local buffer not configured")
+	}
 
 	filename := getLocalBufferName(config_obj)
 	if filename == "" {

@@ -16,25 +16,29 @@
 package result_sets
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int, error) {
-	repository, _ := artifacts.GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return 0, err
+	}
 
-	artifact, pres := repository.Get(artifact_name)
+	repository, _ := manager.GetGlobalRepository(config_obj)
+
+	artifact, pres := repository.Get(config_obj, artifact_name)
 	if !pres {
-		return 0, errors.New(fmt.Sprintf("Artifact %s not known", artifact_name))
+		return 0, fmt.Errorf("Artifact %s not known", artifact_name)
 	}
 
 	return paths.ModeNameToMode(artifact.Type), nil
@@ -46,6 +50,10 @@ type ResultSetWriter struct {
 	fd   api.FileWriter
 }
 
+func (self *ResultSetWriter) WriteJSONL(serialized []byte) {
+	_, _ = self.fd.Write(serialized)
+}
+
 func (self *ResultSetWriter) Write(row *ordereddict.Dict) {
 	self.rows = append(self.rows, row)
 	if len(self.rows) > 10000 {
@@ -55,9 +63,8 @@ func (self *ResultSetWriter) Write(row *ordereddict.Dict) {
 
 func (self *ResultSetWriter) Flush() {
 	serialized, err := utils.DictsToJson(self.rows, self.opts)
-
 	if err == nil {
-		self.fd.Write(serialized)
+		_, _ = self.fd.Write(serialized)
 	}
 	self.rows = nil
 }
@@ -84,7 +91,11 @@ func NewResultSetWriter(
 	}
 
 	if truncate {
-		fd.Truncate()
+		err = fd.Truncate()
+		if err != nil {
+			fd.Close()
+			return nil, err
+		}
 	}
 
 	return &ResultSetWriter{fd: fd, opts: opts}, nil

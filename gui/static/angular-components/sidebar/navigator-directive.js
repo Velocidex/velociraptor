@@ -87,7 +87,7 @@ exports.NavigatorDirective = function() {
   return {
     scope: {},
     restrict: 'E',
-    templateUrl: '/static/angular-components/sidebar/navigator.html',
+    templateUrl: window.base_path+'/static/angular-components/sidebar/navigator.html',
     controller: NavigatorController,
     controllerAs: 'controller'
   };

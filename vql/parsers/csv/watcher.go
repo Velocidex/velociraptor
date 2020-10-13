@@ -194,8 +194,6 @@ func (self *CSVWatcherService) monitorOnce(
 		self.registrations[key] = new_handles
 		handles = new_handles
 	}
-
-	return last_event, false
 }
 
 // A handle is given for each interested party. We write the event on

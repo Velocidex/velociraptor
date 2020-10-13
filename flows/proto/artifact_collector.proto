@@ -39,11 +39,18 @@ message ArtifactCollectorArgs {
             default: "1000000",
         }];
 
+    // Resource limits on this collection.
     uint64 timeout = 7 [(sem_type) = {
             description: "Number of seconds to run before cancelling the query.",
             friendly_name: "Timeout",
             default: "600",
         }];
+
+    // Total number of rows we allow to collect.
+    uint64 max_rows = 22;
+
+    // Total bytes allowed to upload
+    uint64 max_upload_bytes = 23;
 
     bool allow_custom_overrides = 8 [(sem_type) = {
             description: "If true we will use a custom artifact if present instead of the named artifact.",
@@ -74,38 +81,43 @@ message ArtifactUploadedFileInfo {
 
 // This context is serialized into the data store.
 message ArtifactCollectorContext {
-    // Where we are stored in the data store.
-    //    string urn = 5;
-
     string client_id = 27;
     string session_id = 13;
     ArtifactCollectorArgs request = 11;
 
     // If an error occurs this is the backtrace.
     string backtrace = 1;
-    uint64 create_time = 3;
-    uint64 active_time = 17;
-    uint64 kill_timestamp = 4;
 
-    // Uploads are now permanently stored in a csv file. This field is
-    // never serialized - it is just a place holder during processing.
-    repeated ArtifactUploadedFileInfo uploaded_files = 24;
+    // When the collection was created.
+    uint64 create_time = 3;
+    uint64 start_time = 18;
+
+    // Last time this collection was active (receiving data).
+    uint64 active_time = 17;
 
     // A total count of files uploaded by this query.
     uint64 total_uploaded_files = 23;
     uint64 total_expected_uploaded_bytes = 25;
     uint64 total_uploaded_bytes = 26;
+    uint64 total_collected_rows = 28;
 
-    // Logs are stored in their own CSV file. This is just a
-    // placeholder during processing.
-    repeated LogMessage logs = 20;
+    // We expect the next response from the client to have this id.
+    uint64 next_response_id = 30;
+
+    // Total time the query took to run on the client (reported by the
+    // client).
+    int64 execution_duration = 29;
 
     enum State {
         UNSET = 0;
-        RUNNING = 1;
-        TERMINATED = 2;
+        RUNNING = 1;  // Flow is scheduled and active. If the client
+                      // is not online, it will receive the collection
+                      // later.
+
+        FINISHED = 2; // Flow completed normally.
         ERROR = 3;   // Flows which raise are marked as having an error.
         ARCHIVED = 4;  // Archived flows do not show up in the UI
+        CANCELLED = 5; // Cancelled collection were actively cancelled.
     };
 
     State state = 14;
@@ -121,6 +133,16 @@ message ArtifactCollectorContext {
             description: "The full path to the artifacts with their results. "
             "This takes the form artifact name/source name."
         }];
+
+    // The below are not serialized but are used during execution.
+
+    // Uploads are now permanently stored in a json file. This field is
+    // never serialized - it is just a place holder during processing.
+    repeated ArtifactUploadedFileInfo uploaded_files = 24;
+
+    // Logs are stored in their own CSV file. This is just a
+    // placeholder during processing.
+    repeated LogMessage logs = 20;
 
     bool dirty = 2;
 }
@@ -146,73 +168,4 @@ message UploadedFileInfo {
     string name = 1;
     string vfs_path = 2;
     uint64 size = 3;
-}
-
-// The flow context.
-// Next field: 19
-message FlowContext {
-    string backtrace = 1;
-    uint64 create_time = 3 [(sem_type) = {
-            type: "RDFDatetime",
-        }];
-    uint64 kill_timestamp = 6 [(sem_type) = {
-            type: "RDFDatetime",
-        }];
-    uint64 network_bytes_sent = 7;
-
-    // Uploads are now permanently stored in a csv file. This field is
-    // never serialized - it is just a place holder during processing.
-    repeated UploadedFileInfo uploaded_files = 24 [(sem_type) = {
-            description: "A list of files uploaded as part of the flow."
-        }];
-
-    uint64 total_uploaded_files = 23 [(sem_type) = {
-            description: "Total number of uploaded files."
-        }];
-
-    uint64 total_expected_uploaded_bytes = 25 [(sem_type) = {
-            description: "How many bytes we expect to receive."
-        }];
-
-    uint64 total_uploaded_bytes = 26 [(sem_type) = {
-            description: "How many bytes we received so far."
-        }];
-
-    // Logs are stored in their own CSV file. This is just a
-    // placeholder during processing.
-    repeated LogMessage logs = 20 [(sem_type) = {
-            description: "List of logs.",
-            label: HIDDEN,
-        }];
-
-        string session_id = 13;
-        enum State {
-        UNSET = 0;
-        RUNNING = 1;
-        TERMINATED = 2;
-        ERROR = 3;   // Flows which raise are marked as having an error.
-        ARCHIVED = 4;  // Archived flows do not show up in the UI
-    };
-
-    State state = 14;
-
-    string status = 15 [(sem_type) = {
-            description: "Contents of an error status sent by the client."
-        }];
-
-    bool user_notified = 16;
-
-    uint64 active_time = 17 [(sem_type) = {
-            type: "RDFDatetime",
-        }];
-
-    repeated string artifacts = 21 [(sem_type) = {
-            description: "If the flow returns a set of artifacts "
-            "this field will list them."
-        }];
-
-    repeated string artifacts_with_results = 22 [(sem_type) = {
-            description: "The full path to the artifacts with their results. "
-            "This takes the form artifact name/source name."
-        }];
 }

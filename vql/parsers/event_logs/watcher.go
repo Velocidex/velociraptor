@@ -121,6 +121,10 @@ func (self *EventLogWatcherService) findLastEvent(
 	}
 
 	for _, c := range chunks {
+		if c == nil {
+			continue
+		}
+
 		if int(c.Header.LastEventRecID) <= last_event {
 			continue
 		}

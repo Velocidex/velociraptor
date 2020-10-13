@@ -99,7 +99,12 @@ func (self ParseCSVPlugin) Call(
 						row.Set(headers[idx], row_item)
 					}
 
-					output_chan <- row
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- row:
+					}
 				}
 			}()
 		}
@@ -151,13 +156,12 @@ func (self _WatchCSVPlugin) Call(
 		}
 
 		// Wait until the query is complete.
-		for {
+		for event := range event_channel {
 			select {
 			case <-ctx.Done():
 				return
 
-			case event := <-event_channel:
-				output_chan <- event
+			case output_chan <- event:
 			}
 		}
 	}()
@@ -241,7 +245,12 @@ func (self WriteCSVPlugin) Call(
 			}
 			defer file.Close()
 
-			file.Truncate()
+			err = file.Truncate()
+			if err != nil {
+				scope.Log("write_csv: Unable to truncate file %s: %v",
+					arg.Filename, err)
+				return
+			}
 
 			writer = csv.GetCSVAppender(scope, file, true)
 			defer writer.Close()
@@ -253,7 +262,12 @@ func (self WriteCSVPlugin) Call(
 
 		for row := range arg.Query.Eval(ctx, scope) {
 			writer.Write(row)
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- row:
+			}
 		}
 	}()
 

@@ -24,7 +24,7 @@ exports.ConfigureRulesPageDirective = function() {
             clientRuleSet: '=',
         },
         restrict: 'E',
-        templateUrl: '/static/angular-components/hunt/new-hunt-wizard/' +
+        templateUrl: window.base_path+'/static/angular-components/hunt/new-hunt-wizard/' +
             'configure-rules-page.html',
         controller: ConfigureRulesPageController,
         controllerAs: 'controller',

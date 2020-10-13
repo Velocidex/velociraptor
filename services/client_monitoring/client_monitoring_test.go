@@ -16,9 +16,11 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -48,7 +50,8 @@ func (self *ClientMonitoringTestSuite) SetupTest() {
 
 	// Start the journaling service manually for tests.
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(services.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
 	require.NoError(self.T(), self.sm.Start(labels.StartLabelService))
 	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
 	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
@@ -68,8 +71,8 @@ func (self *ClientMonitoringTestSuite) TearDownTest() {
 func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
-	repository_manager := services.GetRepositoryManager()
-	repository_manager.SetArtifactFile(`
+	repository_manager, _ := services.GetRepositoryManager()
+	repository_manager.SetArtifactFile(self.config_obj, `
 name: TestArtifact
 sources:
 - query:
@@ -79,18 +82,19 @@ sources:
 	manager := services.ClientEventManager().(*ClientEventTable)
 	manager.clock = current_clock
 
-	err := manager.SetClientMonitoringState(&flows_proto.ClientEventTable{
-		Artifacts: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: []string{"TestArtifact"},
-		},
-	})
+	err := manager.SetClientMonitoringState(context.Background(), self.config_obj,
+		&flows_proto.ClientEventTable{
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{"TestArtifact"},
+			},
+		})
 	assert.NoError(self.T(), err)
 
-	old_table := manager.GetClientUpdateEventTableMessage(self.client_id)
+	old_table := manager.GetClientUpdateEventTableMessage(self.config_obj, self.client_id)
 	assert.NotContains(self.T(), json.StringIndent(old_table), "Crib")
 
 	// Now update the artifact.
-	repository_manager.SetArtifactFile(`
+	repository_manager.SetArtifactFile(self.config_obj, `
 name: TestArtifact
 sources:
 - query:
@@ -99,7 +103,7 @@ sources:
 
 	// The table should magically be updated!
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		table := manager.GetClientUpdateEventTableMessage(self.client_id)
+		table := manager.GetClientUpdateEventTableMessage(self.config_obj, self.client_id)
 		return strings.Contains(json.StringIndent(table), "Crib")
 	})
 }
@@ -107,8 +111,8 @@ sources:
 func (self *ClientMonitoringTestSuite) TestUpdatingClientTable() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
-	repository_manager := services.GetRepositoryManager()
-	repository_manager.SetArtifactFile(`
+	repository_manager, _ := services.GetRepositoryManager()
+	repository_manager.SetArtifactFile(self.config_obj, `
 name: TestArtifact
 sources:
 - query:
@@ -119,26 +123,28 @@ sources:
 	manager.clock = current_clock
 
 	// Set the initial table.
-	err := manager.SetClientMonitoringState(&flows_proto.ClientEventTable{
-		Artifacts: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: []string{"TestArtifact"},
-		},
-	})
+	err := manager.SetClientMonitoringState(context.Background(), self.config_obj,
+		&flows_proto.ClientEventTable{
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{"TestArtifact"},
+			},
+		})
 	assert.NoError(self.T(), err)
 
 	// Get the client's event table
-	old_table := manager.GetClientUpdateEventTableMessage(self.client_id)
+	old_table := manager.GetClientUpdateEventTableMessage(self.config_obj, self.client_id)
 
 	// Now update the monitoring state
-	err = manager.SetClientMonitoringState(&flows_proto.ClientEventTable{
-		Artifacts: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: []string{"TestArtifact"},
-		},
-	})
+	err = manager.SetClientMonitoringState(context.Background(), self.config_obj,
+		&flows_proto.ClientEventTable{
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{"TestArtifact"},
+			},
+		})
 	assert.NoError(self.T(), err)
 
 	// Get the client event table again
-	table := manager.GetClientUpdateEventTableMessage(self.client_id)
+	table := manager.GetClientUpdateEventTableMessage(self.config_obj, self.client_id)
 
 	// Make sure the client event table version is updated.
 	assert.True(self.T(),
@@ -148,8 +154,8 @@ sources:
 func (self *ClientMonitoringTestSuite) TestUpdatingClientTableMultiFrontend() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
-	repository_manager := services.GetRepositoryManager()
-	repository_manager.SetArtifactFile(`
+	repository_manager, _ := services.GetRepositoryManager()
+	repository_manager.SetArtifactFile(self.config_obj, `
 name: TestArtifact
 sources:
 - query:
@@ -160,15 +166,16 @@ sources:
 	manager1.clock = current_clock
 
 	// Set the initial table.
-	err := manager1.SetClientMonitoringState(&flows_proto.ClientEventTable{
-		Artifacts: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: []string{"TestArtifact"},
-		},
-	})
+	err := manager1.SetClientMonitoringState(context.Background(),
+		self.config_obj, &flows_proto.ClientEventTable{
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{"TestArtifact"},
+			},
+		})
 	assert.NoError(self.T(), err)
 
 	// Get the client's event table
-	old_table := manager1.GetClientUpdateEventTableMessage(self.client_id)
+	old_table := manager1.GetClientUpdateEventTableMessage(self.config_obj, self.client_id)
 
 	// Now another frontend sets the client monitoring state
 	require.NoError(self.T(), self.sm.Start(StartClientMonitoringService))
@@ -176,7 +183,7 @@ sources:
 	manager2.clock = current_clock
 
 	// Now update the monitoring state
-	err = manager2.SetClientMonitoringState(&flows_proto.ClientEventTable{
+	err = manager2.SetClientMonitoringState(context.Background(), self.config_obj, &flows_proto.ClientEventTable{
 		Artifacts: &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
 		},
@@ -184,7 +191,7 @@ sources:
 	assert.NoError(self.T(), err)
 
 	// Get the client event table again
-	table := manager2.GetClientUpdateEventTableMessage(self.client_id)
+	table := manager2.GetClientUpdateEventTableMessage(self.config_obj, self.client_id)
 
 	// Make sure the client event table version is updated.
 	assert.True(self.T(),
@@ -204,13 +211,14 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	manager.clock = current_clock
 
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
-	manager.SetClientMonitoringState(&flows_proto.ClientEventTable{
-		Artifacts: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: []string{"Windows.Events.ServiceCreation"},
-		},
-	})
+	manager.SetClientMonitoringState(context.Background(),
+		self.config_obj, &flows_proto.ClientEventTable{
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{"Windows.Events.ServiceCreation"},
+			},
+		})
 
-	table := manager.GetClientUpdateEventTableMessage(self.client_id)
+	table := manager.GetClientUpdateEventTableMessage(self.config_obj, self.client_id)
 
 	// There should be one event table sent.
 	assert.Equal(self.T(), len(table.UpdateEventTable.Event), 1)
@@ -219,16 +227,19 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	assert.True(self.T(), version > 0)
 
 	// Now the client upgraded its table, do we need to update it again?
-	assert.False(self.T(), manager.CheckClientEventsVersion(self.client_id, version))
+	assert.False(self.T(), manager.CheckClientEventsVersion(self.config_obj,
+		self.client_id, version))
 
 	// Add a label to the client
-	require.NoError(self.T(), labeler.SetClientLabel(self.client_id, "Label1"))
+	require.NoError(self.T(), labeler.SetClientLabel(self.config_obj,
+		self.client_id, "Label1"))
 
 	// Since the client's label changed it might need to be updated.
-	assert.True(self.T(), manager.CheckClientEventsVersion(self.client_id, version))
+	assert.True(self.T(), manager.CheckClientEventsVersion(self.config_obj,
+		self.client_id, version))
 
 	// But the event table does not include a rule for this label anyway.
-	table = manager.GetClientUpdateEventTableMessage(self.client_id)
+	table = manager.GetClientUpdateEventTableMessage(self.config_obj, self.client_id)
 	assert.Equal(self.T(), len(table.UpdateEventTable.Event), 1)
 
 	// New table is still updated though.
@@ -236,29 +247,31 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	version = table.UpdateEventTable.Version
 
 	// Now lets install a new label rule for this label and another label.
-	manager.SetClientMonitoringState(&flows_proto.ClientEventTable{
-		// All clients should have ServiceCreation
-		Artifacts: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: []string{"Windows.Events.ServiceCreation"},
-		},
-		LabelEvents: []*flows_proto.LabelEvents{
-			// DNS Queries for Label1
-			{Label: "Label1", Artifacts: &flows_proto.ArtifactCollectorArgs{
-				Artifacts: []string{"Windows.Events.DNSQueries"},
-			}},
+	manager.SetClientMonitoringState(context.Background(),
+		self.config_obj, &flows_proto.ClientEventTable{
+			// All clients should have ServiceCreation
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{"Windows.Events.ServiceCreation"},
+			},
+			LabelEvents: []*flows_proto.LabelEvents{
+				// DNS Queries for Label1
+				{Label: "Label1", Artifacts: &flows_proto.ArtifactCollectorArgs{
+					Artifacts: []string{"Windows.Events.DNSQueries"},
+				}},
 
-			// ProcessCreation for Label2
-			{Label: "Label2", Artifacts: &flows_proto.ArtifactCollectorArgs{
-				Artifacts: []string{"Windows.Events.ProcessCreation"},
-			}},
-		},
-	})
+				// ProcessCreation for Label2
+				{Label: "Label2", Artifacts: &flows_proto.ArtifactCollectorArgs{
+					Artifacts: []string{"Windows.Events.ProcessCreation"},
+				}},
+			},
+		})
 
 	// A new table is installed, this client must update.
-	assert.True(self.T(), manager.CheckClientEventsVersion(self.client_id, version))
+	assert.True(self.T(), manager.CheckClientEventsVersion(self.config_obj,
+		self.client_id, version))
 
 	// The new table includes 2 rules - the default and for Label1
-	table = manager.GetClientUpdateEventTableMessage(self.client_id)
+	table = manager.GetClientUpdateEventTableMessage(self.config_obj, self.client_id)
 	assert.Equal(self.T(), len(table.UpdateEventTable.Event), 2)
 
 	// New table has a later version.
@@ -270,13 +283,14 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 		[]string{"Windows.Events.ServiceCreation", "Windows.Events.DNSQueries"})
 
 	// Lets add Label2 to this client.
-	labeler.SetClientLabel(self.client_id, "Label2")
+	labeler.SetClientLabel(self.config_obj, self.client_id, "Label2")
 
 	// A new table is installed, this client must update.
-	assert.True(self.T(), manager.CheckClientEventsVersion(self.client_id, version))
+	assert.True(self.T(), manager.CheckClientEventsVersion(self.config_obj,
+		self.client_id, version))
 
 	// The new table includes 3 rules - the default and for Label1 and Label2
-	table = manager.GetClientUpdateEventTableMessage(self.client_id)
+	table = manager.GetClientUpdateEventTableMessage(self.config_obj, self.client_id)
 	assert.Equal(self.T(), len(table.UpdateEventTable.Event), 3)
 
 	// New table has a later version.
@@ -290,7 +304,8 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 			"Windows.Events.ProcessCreation"})
 
 	// We are done now... no need to update anymore.
-	assert.False(self.T(), manager.CheckClientEventsVersion(self.client_id, version))
+	assert.False(self.T(), manager.CheckClientEventsVersion(self.config_obj,
+		self.client_id, version))
 }
 
 // Event queries are asyncronous and blocking so when collecting
@@ -311,15 +326,16 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompilingMultipleArti
 	manager.clock = current_clock
 
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
-	manager.SetClientMonitoringState(&flows_proto.ClientEventTable{
-		Artifacts: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: []string{
-				"Windows.Events.ServiceCreation",
-				"Windows.Events.ProcessCreation",
+	manager.SetClientMonitoringState(context.Background(),
+		self.config_obj, &flows_proto.ClientEventTable{
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{
+					"Windows.Events.ServiceCreation",
+					"Windows.Events.ProcessCreation",
+				},
 			},
-		},
-	})
-	table := manager.GetClientUpdateEventTableMessage(self.client_id)
+		})
+	table := manager.GetClientUpdateEventTableMessage(self.config_obj, self.client_id)
 
 	// Count how many SELECT statements exist in each event table.
 	for _, event := range table.UpdateEventTable.Event {
@@ -359,7 +375,7 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoring() {
 	manager.clock = current_clock
 
 	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
-	assert.NoError(self.T(), manager.LoadFromFile())
+	assert.NoError(self.T(), manager.LoadFromFile(context.Background(), self.config_obj))
 
 	table := manager.GetClientMonitoringState()
 
@@ -369,20 +385,20 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoring() {
 
 	// If a client presents an earlier version table they will
 	// need to update.
-	assert.True(self.T(), manager.CheckClientEventsVersion(
+	assert.True(self.T(), manager.CheckClientEventsVersion(self.config_obj,
 		self.client_id, 50))
 
 	// If a client presents the same table version they dont need to do anything.
-	assert.False(self.T(), manager.CheckClientEventsVersion(
+	assert.False(self.T(), manager.CheckClientEventsVersion(self.config_obj,
 		self.client_id, uint64(10000000000)))
 
 	// Some time later we label the client.
 	current_clock.MockNow = time.Unix(20, 0)
-	labeler.SetClientLabel(self.client_id, "Foobar")
+	labeler.SetClientLabel(self.config_obj, self.client_id, "Foobar")
 
 	// Client will now be required to update its event table to
 	// make sure the new label does not apply.
-	assert.True(self.T(), manager.CheckClientEventsVersion(
+	assert.True(self.T(), manager.CheckClientEventsVersion(self.config_obj,
 		self.client_id, uint64(10000000000)))
 
 }

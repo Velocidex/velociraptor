@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"sync"
 	"time"
 )
 
@@ -43,10 +44,14 @@ func (self MockClock) Sleep(d time.Duration) {
 
 // A clock that increments each time someone calls Now()
 type IncClock struct {
+	mu      sync.Mutex
 	NowTime int64
 }
 
 func (self *IncClock) Now() time.Time {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.NowTime++
 	return time.Unix(self.NowTime, 0)
 }

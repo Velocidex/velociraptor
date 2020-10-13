@@ -85,31 +85,6 @@ var (
 		"Generate a new config file with a rotates server key.")
 )
 
-func verify_frontend_config(config_obj *config_proto.Config) error {
-	server_cert, err := crypto.ParseX509CertFromPemStr(
-		[]byte(config_obj.Frontend.Certificate))
-	if err != nil {
-		return err
-	}
-
-	if server_cert.PublicKeyAlgorithm != x509.RSA {
-		return errors.New("Not RSA algorithm")
-	}
-
-	roots := x509.NewCertPool()
-	ok := roots.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
-	if !ok {
-		return errors.New("failed to parse CA certificate")
-	}
-
-	// Verify that the certificate is signed by the CA.
-	opts := x509.VerifyOptions{
-		Roots: roots,
-	}
-	_, err = server_cert.Verify(opts)
-	return err
-}
-
 func doShowConfig() {
 	config_obj, err := DefaultConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
@@ -183,7 +158,7 @@ func doGenerateConfigNonInteractive() {
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	if err != nil {
-		logger.Error("Unable to create config", err)
+		logger.Error("Unable to create config: %v", err)
 		return
 	}
 
@@ -197,20 +172,20 @@ func doGenerateConfigNonInteractive() {
 		patched, err := jsonpatch.MergePatch(
 			serialized, []byte(merge_patch))
 		if err != nil {
-			logger.Error("Invalid merge patch:", err)
+			logger.Error("Invalid merge patch: %v", err)
 			return
 		}
 
 		err = json.Unmarshal(patched, &config_obj)
 		if err != nil {
-			logger.Error("Patched object produces an invalid config: ", err)
+			logger.Error("Patched object produces an invalid config: %v", err)
 			return
 		}
 	}
 
 	res, err := yaml.Marshal(config_obj)
 	if err != nil {
-		logger.Error("Unable to create config", err)
+		logger.Error("Unable to create config: %v", err)
 		return
 	}
 	fmt.Printf("%v", string(res))
@@ -226,7 +201,7 @@ func doRotateKeyConfig() {
 	frontend_cert, err := crypto.GenerateServerCert(
 		config_obj, config_obj.Client.PinnedServerName)
 	if err != nil {
-		logger.Error("Unable to create Frontend cert", err)
+		logger.Error("Unable to create Frontend cert: %v", err)
 		return
 	}
 
@@ -274,7 +249,9 @@ func doDumpClientConfig() {
 }
 
 func doDumpApiClientConfig() {
-	config_obj, err := DefaultConfigLoader.WithRequiredCA().LoadAndValidate()
+	config_obj, err := DefaultConfigLoader.WithRequiredCA().
+		WithRequiredUser().
+		LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
 
 	if *config_api_client_common_name == config_obj.Client.PinnedServerName {
@@ -297,6 +274,7 @@ func doDumpApiClientConfig() {
 		pem_block, _ := pem.Decode([]byte(bundle.PrivateKey))
 		if pem_block == nil {
 			kingpin.Fatalf("Unable to decode private key.")
+			return
 		}
 
 		block, err := x509.EncryptPEMBlock(
@@ -333,7 +311,8 @@ func doDumpApiClientConfig() {
 	fd, err := os.OpenFile(*config_api_client_output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	kingpin.FatalIfError(err, "Unable to open output file: ")
 
-	fd.Write(res)
+	_, err = fd.Write(res)
+	kingpin.FatalIfError(err, "Unable to write output file: ")
 	fd.Close()
 
 	fmt.Printf("Creating API client file on %v.\n", *config_api_client_output)

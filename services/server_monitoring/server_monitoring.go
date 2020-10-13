@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -86,25 +85,37 @@ func (self *EventTable) Update(
 		cancel()
 	}()
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
 
 	for _, name := range arg.Artifacts {
-		artifact, pres := repository.Get(name)
+		artifact, pres := repository.Get(config_obj, name)
 		if !pres {
-			return errors.New("Unknown artifact " + name)
+			// If the artifact is custom and was removed
+			// then this is not a fatal error. We should
+			// issue a warning and move on.
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Warn("<red>Server Artifact Manager</>: Unknown artifact " +
+				name + " please remove it from the server monitoring tables.")
+			continue
 		}
 
 		// Server monitoring artifacts run with full admin
 		// permissions.
-		scope := artifacts.ScopeBuilder{
-			Config:     config_obj,
-			ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
-			Logger: logging.NewPlainLogger(config_obj,
-				&logging.FrontendComponent),
-		}.Build()
+		scope := manager.BuildScope(
+			services.ScopeBuilder{
+				Config:     config_obj,
+				ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+				Logger: logging.NewPlainLogger(config_obj,
+					&logging.FrontendComponent),
+			})
 
 		// Closing the scope is deferred to table close.
 
@@ -117,8 +128,10 @@ func (self *EventTable) Update(
 		}
 
 		// Then override with the request environment.
-		for _, env_spec := range arg.Parameters.Env {
-			env.Set(env_spec.Key, env_spec.Value)
+		if arg.Parameters != nil {
+			for _, env_spec := range arg.Parameters.Env {
+				env.Set(env_spec.Key, env_spec.Value)
+			}
 		}
 
 		// A new scope for each artifact - but shared scope
@@ -190,7 +203,7 @@ func (self *EventTable) RunQuery(
 		rs_writer, err := result_sets.NewResultSetWriter(
 			config_obj, path_manager, opts, false /* truncate */)
 		if err != nil {
-			logger.Error("NewResultSetWriter", err)
+			logger.Error("NewResultSetWriter: %v", err)
 			return
 		}
 		defer rs_writer.Close()
@@ -243,6 +256,15 @@ func StartServerMonitoringService(
 	manager := &EventTable{
 		Done: make(chan bool),
 	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer services.RegisterServerEventManager(nil)
+
+		<-ctx.Done()
+	}()
+
 	services.RegisterServerEventManager(manager)
 
 	return manager.Update(config_obj, &artifacts)

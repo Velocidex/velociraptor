@@ -11,9 +11,10 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 )
@@ -35,8 +36,25 @@ var (
 )
 
 func doReportArchive() {
-	config_obj, err := DefaultConfigLoader.LoadAndValidate()
+	config_obj, err := DefaultConfigLoader.
+		WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
+	builder := services.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NullACLManager{},
+		Logger:     log.New(&LogWriter{config_obj}, " ", 0),
+		Env:        ordereddict.NewDict(),
+	}
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+
+	scope := manager.BuildScopeFromScratch(builder)
+	defer scope.Close()
 
 	archive, err := reporting.NewArchiveReader(*report_command_archive_file)
 
@@ -45,30 +63,23 @@ func doReportArchive() {
 	repository, err := getRepository(config_obj)
 	kingpin.FatalIfError(err, "Unable to load artifacts")
 
-	builder := artifacts.ScopeBuilder{
-		Config:     config_obj,
-		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, " ", 0),
-		Env:        ordereddict.NewDict(),
-	}
-
 	parts := []*ReportPart{}
 	main := ""
 
 	template := *report_command_archive_report
-	html_template_string, err := getHTMLTemplate(template,
+	html_template_string, err := getHTMLTemplate(config_obj, template,
 		repository)
 	kingpin.FatalIfError(err, "Unable to load report %v", template)
 
 	for _, name := range archive.ListArtifacts() {
-		scope := builder.BuildFromScratch()
+		scope := manager.BuildScopeFromScratch(builder)
 		defer scope.Close()
 
 		// Reports can query the container directly.
 		scope.AppendPlugins(&tools.ArchiveSourcePlugin{
 			Archive: archive})
 
-		definition, pres := repository.Get(name)
+		definition, pres := repository.Get(config_obj, name)
 		if !pres {
 			scope.Log("Artifact %v not found %v\n", name, err)
 			continue
@@ -106,9 +117,6 @@ func doReportArchive() {
 		main += content_writer.String()
 	}
 
-	scope := builder.BuildFromScratch()
-	defer scope.Close()
-
 	// Reports can query the container directly.
 	scope.AppendPlugins(&tools.ArchiveSourcePlugin{
 		Archive: archive})
@@ -135,7 +143,8 @@ func doReportArchive() {
 		defer writer.Close()
 	}
 
-	writer.Write([]byte(result))
+	_, err = writer.Write([]byte(result))
+	kingpin.FatalIfError(err, "Unable to write")
 }
 
 type ReportPart struct {
@@ -143,8 +152,10 @@ type ReportPart struct {
 	HTML     string
 }
 
-func getHTMLTemplate(name string, repository *artifacts.Repository) (string, error) {
-	template_artifact, ok := repository.Get(name)
+func getHTMLTemplate(
+	config_obj *config_proto.Config,
+	name string, repository services.Repository) (string, error) {
+	template_artifact, ok := repository.Get(config_obj, name)
 	if !ok || len(template_artifact.Reports) == 0 {
 		return "", errors.New("Not found")
 	}

@@ -221,7 +221,7 @@ func (self DNSEventPlugin) Call(
 			defer close(event_context.output)
 		}()
 
-		for {
+		for item := range event_context.output {
 			select {
 			case <-sub_ctx.Done():
 				return
@@ -229,11 +229,8 @@ func (self DNSEventPlugin) Call(
 				// Read the next item from the event
 				// queue and send it to the VQL
 				// subsystem.
-			case item, ok := <-event_context.output:
-				if !ok {
-					return
-				}
-				output_chan <- item
+
+			case output_chan <- item:
 			}
 		}
 	}()

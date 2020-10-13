@@ -34,7 +34,10 @@ func NewServiceManager(ctx context.Context,
 	service_mu.Lock()
 	defer service_mu.Unlock()
 
-	self := &Service{config_obj: config_obj, Wg: &sync.WaitGroup{}}
+	self := &Service{
+		Config: config_obj,
+		Wg:     &sync.WaitGroup{},
+	}
 	self.Ctx, self.cancel = context.WithCancel(ctx)
 
 	ServiceManager = self
@@ -42,20 +45,21 @@ func NewServiceManager(ctx context.Context,
 }
 
 type Service struct {
-	Ctx        context.Context
-	cancel     func()
-	Wg         *sync.WaitGroup
-	config_obj *config_proto.Config
+	Ctx    context.Context
+	cancel func()
+	Wg     *sync.WaitGroup
+	Config *config_proto.Config
 }
 
 func (self *Service) Close() {
 	self.cancel()
 
+	// Wait for services to exit.
 	self.Wg.Wait()
 }
 
 type StarterFunc func(ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) error
 
 func (self *Service) Start(starter StarterFunc) error {
-	return starter(self.Ctx, self.Wg, self.config_obj)
+	return starter(self.Ctx, self.Wg, self.Config)
 }

@@ -53,9 +53,7 @@ type HuntDispatcher struct {
 	// https://github.com/golang/go/issues/13868
 	last_timestamp uint64
 
-	mu         sync.Mutex
-	config_obj *config_proto.Config
-
+	mu    sync.Mutex
 	hunts map[string]*api_proto.Hunt
 	dirty bool
 }
@@ -109,24 +107,24 @@ func (self *HuntDispatcher) ModifyHunt(
 
 // Write the hunt stats to the data store. This is only called by the
 // hunt manager and so should be concurrently safe.
-func (self *HuntDispatcher) _flush_stats() error {
+func (self *HuntDispatcher) _flush_stats(config_obj *config_proto.Config) error {
 	// Only do something if we are dirty.
 	if !self.dirty {
 		return nil
 	}
 
 	// Already locked.
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
 	for _, hunt_obj := range self.hunts {
 		hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
-		err = db.SetSubject(self.config_obj,
+		err = db.SetSubject(config_obj,
 			hunt_path_manager.Stats().Path(), hunt_obj.Stats)
 		if err != nil {
-			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 			logger.Error("Flushing %s to disk: %v", hunt_obj.HuntId, err)
 			continue
 		}
@@ -137,21 +135,22 @@ func (self *HuntDispatcher) _flush_stats() error {
 	return nil
 }
 
-func (self *HuntDispatcher) Close() {
+func (self *HuntDispatcher) Close(config_obj *config_proto.Config) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	atomic.SwapUint64(&self.last_timestamp, 0)
 
-	self._flush_stats()
+	_ = self._flush_stats(config_obj)
 }
 
 // Check for new hunts from the db. This could take a while and be
 // under lock. However, while we do this we do not block the foreman
 // checks.
-func (self *HuntDispatcher) Refresh() error {
+func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 	// The foreman will now skip all hunts without blocking. This
 	// is OK because we will get those clients on the next foreman
-	// update.
+	// update - the important thing is that foreman checks are not
+	// blocked by this.
 	atomic.StoreUint64(&self.last_timestamp, 0)
 
 	var last_timestamp uint64
@@ -163,19 +162,19 @@ func (self *HuntDispatcher) Refresh() error {
 	defer self.mu.Unlock()
 
 	// First flush all the stats to the data store.
-	err := self._flush_stats()
+	err := self._flush_stats(config_obj)
 	if err != nil {
 		return err
 	}
 
 	// Now read all the data again.
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
 	hunt_path_manager := paths.NewHuntPathManager("")
-	hunts, err := db.ListChildren(self.config_obj,
+	hunts, err := db.ListChildren(config_obj,
 		hunt_path_manager.HuntDirectory().Path(), 0, 1000)
 	if err != nil {
 		return err
@@ -190,14 +189,14 @@ func (self *HuntDispatcher) Refresh() error {
 		hunt_obj := &api_proto.Hunt{}
 		hunt_path_manager := paths.NewHuntPathManager(hunt_id)
 		err = db.GetSubject(
-			self.config_obj, hunt_path_manager.Path(), hunt_obj)
+			config_obj, hunt_path_manager.Path(), hunt_obj)
 		if err != nil {
 			continue
 		}
 
 		// Re-read the stats into the hunt object.
 		hunt_stats := &api_proto.HuntStats{}
-		err := db.GetSubject(self.config_obj,
+		err := db.GetSubject(config_obj,
 			hunt_path_manager.Stats().Path(), hunt_stats)
 		if err == nil {
 			hunt_obj.Stats = hunt_stats
@@ -219,31 +218,45 @@ func StartHuntDispatcher(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> Hunt Dispatcher Service.")
-
 	result := &HuntDispatcher{
-		config_obj: config_obj,
-		hunts:      make(map[string]*api_proto.Hunt),
+		hunts: make(map[string]*api_proto.Hunt),
 	}
 
 	// flush the hunts every 10 seconds.
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer services.RegisterHuntDispatcher(nil)
+
+		// On the client we register a dummy dispatcher since
+		// there is nothing to sync from.
+		if config_obj.Datastore == nil {
+			return
+		}
+
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Info("<green>Starting</> Hunt Dispatcher Service.")
 
 		for {
 			select {
 			case <-ctx.Done():
-				result.Close()
+				result.Close(config_obj)
 				return
 
 			case <-time.After(10 * time.Second):
-				result.Refresh()
+				err := result.Refresh(config_obj)
+				if err != nil {
+					logger.Error("Unable to flush hunts: %v", err)
+				}
 			}
 		}
 	}()
 
 	services.RegisterHuntDispatcher(result)
-	return result.Refresh()
+
+	// Try to refresh the hunts table the first time. If we cant
+	// we will just keep trying anyway later.
+	_ = result.Refresh(config_obj)
+
+	return nil
 }

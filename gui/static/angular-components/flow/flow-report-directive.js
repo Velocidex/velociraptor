@@ -67,7 +67,7 @@ exports.FlowReportDirective = function() {
         clientId: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/flow/flow-report.html',
+    templateUrl: window.base_path+'/static/angular-components/flow/flow-report.html',
     controller: FlowReportController,
     controllerAs: 'controller'
   };

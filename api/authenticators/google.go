@@ -95,7 +95,7 @@ func generateStateOauthCookie(w http.ResponseWriter) *http.Cookie {
 	var expiration = time.Now().Add(365 * 24 * time.Hour)
 
 	b := make([]byte, 16)
-	rand.Read(b)
+	_, _ = rand.Read(b)
 	state := base64.URLEncoding.EncodeToString(b)
 	cookie := http.Cookie{Name: "oauthstate", Value: state, Expires: expiration}
 	http.SetCookie(w, &cookie)
@@ -208,7 +208,8 @@ func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
 		params := r.URL.Query()
 		old_username, ok := params["username"]
 		if ok && len(old_username) == 1 {
-			fmt.Sprintf("Logging off %v", old_username[0])
+			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger.Info("Logging off %v", old_username[0])
 		}
 		http.SetCookie(w, &http.Cookie{
 			Name:    "VelociraptorAuth",
@@ -322,7 +323,7 @@ to log in again:
 			return
 		}
 
-		// Checking is successfull - user authorized. Here we
+		// Checking is successful - user authorized. Here we
 		// build a token to pass to the underlying GRPC
 		// service with metadata about the user.
 		user_info := &api_proto.VelociraptorUser{
@@ -334,7 +335,7 @@ to log in again:
 		// binary data in metadata.
 		serialized, _ := json.Marshal(user_info)
 		ctx := context.WithValue(
-			r.Context(), "USER", string(serialized))
+			r.Context(), constants.GRPC_USER_CONTEXT, string(serialized))
 
 		// Need to call logging after auth so it can access
 		// the contextKeyUser value in the context.

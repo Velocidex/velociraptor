@@ -30,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -80,7 +81,11 @@ func (self ClientsPlugin) Call(
 			api_client, err := api.GetApiClient(
 				config_obj, nil, arg.ClientId, false)
 			if err == nil {
-				output_chan <- api_client
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- json.ConvertProtoToOrderedDict(api_client):
+				}
 			}
 			return
 		}
@@ -96,7 +101,12 @@ func (self ClientsPlugin) Call(
 			api_client, err := api.GetApiClient(
 				config_obj, nil, client_id, false)
 			if err == nil {
-				output_chan <- api_client
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- json.ConvertProtoToOrderedDict(
+					api_client):
+				}
 			}
 			vfilter.ChargeOp(scope)
 		}
@@ -147,7 +157,7 @@ func (self *ClientInfoFunction) Call(ctx context.Context,
 		scope.Log("client_info: %s", err.Error())
 		return vfilter.Null{}
 	}
-	return api_client
+	return json.ConvertProtoToOrderedDict(api_client)
 }
 
 func (self ClientInfoFunction) Info(

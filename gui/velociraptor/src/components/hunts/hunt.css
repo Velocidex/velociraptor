@@ -1,0 +1,12 @@
+.overlay {
+    position: absolute;
+    width: 100%;
+    z-index: 1000;
+    opacity: 20%;
+}
+
+.overlay .fa-spinner  {
+    height: 500px;
+    margin: auto;
+    width: 500px;
+}

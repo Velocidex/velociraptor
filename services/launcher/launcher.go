@@ -26,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 type Launcher struct{}
@@ -33,8 +34,8 @@ type Launcher struct{}
 func (self *Launcher) CompileCollectorArgs(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	principal string,
-	repository *artifacts.Repository,
+	acl_manager vql_subsystem.ACLManager,
+	repository services.Repository,
 	collector_request *flows_proto.ArtifactCollectorArgs) (
 	*actions_proto.VQLCollectorArgs, error) {
 
@@ -50,23 +51,23 @@ func (self *Launcher) CompileCollectorArgs(
 	for _, name := range collector_request.Artifacts {
 		var artifact *artifacts_proto.Artifact = nil
 		if collector_request.AllowCustomOverrides {
-			artifact, _ = repository.Get("Custom." + name)
+			artifact, _ = repository.Get(config_obj, "Custom."+name)
 		}
 
 		if artifact == nil {
-			artifact, _ = repository.Get(name)
+			artifact, _ = repository.Get(config_obj, name)
 		}
 
 		if artifact == nil {
 			return nil, errors.New("Unknown artifact " + name)
 		}
 
-		err := repository.CheckAccess(config_obj, artifact, principal)
+		err := CheckAccess(config_obj, artifact, acl_manager)
 		if err != nil {
 			return nil, err
 		}
 
-		err = repository.Compile(artifact, vql_collector_args)
+		err = Compile(config_obj, repository, artifact, vql_collector_args)
 		if err != nil {
 			return nil, err
 		}
@@ -78,13 +79,14 @@ func (self *Launcher) CompileCollectorArgs(
 	}
 
 	// Add any artifact dependencies.
-	err := repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
+	err := PopulateArtifactsVQLCollectorArgs(
+		config_obj, repository, vql_collector_args)
 	if err != nil {
 		return nil, err
 	}
 
 	err = self.AddArtifactCollectorArgs(
-		config_obj, vql_collector_args, collector_request)
+		vql_collector_args, collector_request)
 	if err != nil {
 		return nil, err
 	}
@@ -98,27 +100,12 @@ func (self *Launcher) CompileCollectorArgs(
 	return vql_collector_args, err
 }
 
-func getDependentTools(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	vql_collector_args *actions_proto.VQLCollectorArgs) error {
-
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	for _, tool := range vql_collector_args.Tools {
-		err := AddToolDependency(ctx, config_obj, tool, vql_collector_args)
-		if err != nil {
-			logger.Error("While Adding dependencies: ", err)
-			return err
-		}
-	}
-
-	return nil
-}
-
 // Make sure we know about tools the artifact itself defines.
 func (self *Launcher) EnsureToolsDeclared(
-	ctx context.Context, config_obj *config_proto.Config,
+	ctx context.Context,
+	config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact) error {
+
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	for _, tool := range artifact.Tools {
 		_, err := services.GetInventory().GetToolInfo(ctx, config_obj, tool.Name)
@@ -129,7 +116,11 @@ func (self *Launcher) EnsureToolsDeclared(
 			// itself.
 			logger.Info("Adding tool %v from artifact %v",
 				tool.Name, artifact.Name)
-			err = services.GetInventory().AddTool(ctx, config_obj, tool)
+			err = services.GetInventory().AddTool(
+				config_obj, tool,
+				services.ToolOptions{
+					Upgrade: true,
+				})
 			if err != nil {
 				return err
 			}
@@ -157,30 +148,41 @@ func AddToolDependency(
 		Value: tool_info.Filename,
 	})
 
-	if len(config_obj.Client.ServerUrls) == 0 {
-		return errors.New("No server URLs configured!")
-	}
+	// Support local filesystem access for local tools.
+	if tool_info.ServePath != "" {
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
+			Key:   fmt.Sprintf("Tool_%v_PATH", tool_info.Name),
+			Value: tool_info.ServePath,
+		})
+	} else if tool_info.ServeUrl != "" {
+		// Where to download the binary from.
+		url := ""
 
-	// Where to download the binary from.
-	url := config_obj.Client.ServerUrls[0] + "public/" + tool_info.FilestorePath
+		// If we dont want to serve the binary locally, just
+		// tell the client where to get it from.
+		if tool_info.ServeUrl != "" {
+			url = tool_info.ServeUrl
 
-	// If we dont want to serve the binary locally, just
-	// tell the client where to get it from.
-	if !tool_info.ServeLocally && tool_info.Url != "" {
-		url = tool_info.Url
+		} else if tool_info.Url != "" {
+			url = tool_info.Url
+
+		} else if config_obj.Client != nil {
+			url = config_obj.Client.ServerUrls[0] + "public/" + tool_info.FilestorePath
+		}
+
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
+			Key:   fmt.Sprintf("Tool_%v_URL", tool_info.Name),
+			Value: url,
+		})
 	}
-	vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
-		Key:   fmt.Sprintf("Tool_%v_URL", tool_info.Name),
-		Value: url,
-	})
 	return nil
 }
 
 func (self *Launcher) ScheduleArtifactCollection(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	principal string,
-	repository *artifacts.Repository,
+	acl_manager vql_subsystem.ACLManager,
+	repository services.Repository,
 	collector_request *flows_proto.ArtifactCollectorArgs) (string, error) {
 
 	args := collector_request.CompiledCollectorArgs
@@ -191,7 +193,7 @@ func (self *Launcher) ScheduleArtifactCollection(
 		// NOTE: We assume that compiling the artifact is a
 		// pure function so caching is appropriate.
 		compiled, err := self.CompileCollectorArgs(
-			ctx, config_obj, principal, repository, collector_request)
+			ctx, config_obj, acl_manager, repository, collector_request)
 		if err != nil {
 			return "", err
 		}
@@ -271,7 +273,6 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 // Adds any parameters set in the ArtifactCollectorArgs into the
 // VQLCollectorArgs.
 func (self *Launcher) AddArtifactCollectorArgs(
-	config_obj *config_proto.Config,
 	vql_collector_args *actions_proto.VQLCollectorArgs,
 	collector_request *flows_proto.ArtifactCollectorArgs) error {
 
@@ -281,8 +282,11 @@ func (self *Launcher) AddArtifactCollectorArgs(
 	}
 
 	// We can only specify a parameter which is defined already
-	for _, item := range collector_request.Parameters.Env {
-		addOrReplaceParameter(item, vql_collector_args.Env)
+	if collector_request.Parameters != nil {
+		for _, item := range collector_request.Parameters.Env {
+			vql_collector_args.Env = addOrReplaceParameter(
+				item, vql_collector_args.Env)
+		}
 	}
 
 	return nil
@@ -290,16 +294,17 @@ func (self *Launcher) AddArtifactCollectorArgs(
 
 // We do not expect too many parameters so linear search is appropriate.
 func addOrReplaceParameter(
-	param *actions_proto.VQLEnv, env []*actions_proto.VQLEnv) {
+	param *actions_proto.VQLEnv, env []*actions_proto.VQLEnv) []*actions_proto.VQLEnv {
+	result := append([]*actions_proto.VQLEnv(nil), env...)
 
 	// Try to replace it if it is already there.
-	for _, item := range env {
+	for _, item := range result {
 		if item.Key == param.Key {
 			item.Value = param.Value
-			return
+			return result
 		}
 	}
-	env = append(env, param)
+	return append(result, param)
 }
 
 func (self *Launcher) SetFlowIdForTests(id string) {
@@ -318,7 +323,7 @@ func NewFlowId(client_id string) string {
 	}
 
 	buf := make([]byte, 8)
-	rand.Read(buf)
+	_, _ = rand.Read(buf)
 
 	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
@@ -330,6 +335,14 @@ func StartLauncherService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer services.RegisterLauncher(nil)
+
+		<-ctx.Done()
+	}()
 
 	services.RegisterLauncher(&Launcher{})
 	return nil

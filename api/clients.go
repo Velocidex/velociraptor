@@ -63,6 +63,10 @@ func GetApiClient(
 	client_id string, detailed bool) (
 	*api_proto.ApiClient, error) {
 
+	if config_obj.GUI == nil {
+		return nil, errors.New("GUI not configured")
+	}
+
 	result := &api_proto.ApiClient{
 		ClientId: client_id,
 	}
@@ -82,7 +86,7 @@ func GetApiClient(
 		return nil, err
 	}
 
-	result.Labels = services.GetLabeler().GetClientLabels(client_id)
+	result.Labels = services.GetLabeler().GetClientLabels(config_obj, client_id)
 
 	client_info := &actions_proto.ClientInfo{}
 	err = db.GetSubject(config_obj,
@@ -125,7 +129,7 @@ func GetApiClient(
 	// Update the time to now if the client is currently actually
 	// connected.
 	if server_obj != nil &&
-		services.IsClientConnected(client_id) {
+		services.GetNotifier().IsClientConnected(client_id) {
 		result.LastSeenAt = uint64(time.Now().UnixNano() / 1000)
 	}
 

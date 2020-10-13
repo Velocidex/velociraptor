@@ -20,6 +20,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -75,8 +76,11 @@ func (self *Server) Close() {
 	self.db.Close()
 }
 
-func NewServer(
-	config_obj *config_proto.Config) (*Server, error) {
+func NewServer(config_obj *config_proto.Config) (*Server, error) {
+	if config_obj.Frontend == nil {
+		return nil, errors.New("Frontend not configured")
+	}
+
 	manager, err := crypto.NewServerCryptoManager(config_obj)
 	if err != nil {
 		return nil, err
@@ -122,7 +126,7 @@ func (self *Server) ProcessSingleUnauthenticatedMessage(
 	ctx context.Context,
 	message *crypto_proto.GrrMessage) {
 	if message.CSR != nil {
-		err := enroll(ctx, self, message.CSR)
+		err := enroll(ctx, self.config, self, message.CSR)
 		if err != nil {
 			self.logger.Error(fmt.Sprintf("Enrol Error: %s", err))
 		}

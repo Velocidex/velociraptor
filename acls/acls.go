@@ -207,7 +207,7 @@ func GetPolicy(
 	}
 
 	acl_obj := &acl_proto.ApiClientACL{}
-	user_path_manager := paths.UserPathManager{principal}
+	user_path_manager := paths.UserPathManager{Name: principal}
 	err = db.GetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 	if err != nil {
 		return nil, err
@@ -228,7 +228,7 @@ func GetEffectivePolicy(
 	}
 
 	acl_obj := &acl_proto.ApiClientACL{}
-	user_path_manager := paths.UserPathManager{principal}
+	user_path_manager := paths.UserPathManager{Name: principal}
 	err = db.GetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 	if err != nil {
 		return nil, err
@@ -251,7 +251,7 @@ func SetPolicy(
 		return err
 	}
 
-	user_path_manager := paths.UserPathManager{principal}
+	user_path_manager := paths.UserPathManager{Name: principal}
 	return db.SetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 }
 
@@ -261,7 +261,7 @@ func CheckAccess(
 	permissions ...ACL_PERMISSION) (bool, error) {
 
 	// Internal calls from the server are allowed to do anything.
-	if principal == config_obj.Client.PinnedServerName {
+	if config_obj.Client != nil && principal == config_obj.Client.PinnedServerName {
 		return true, nil
 	}
 

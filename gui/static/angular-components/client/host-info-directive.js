@@ -260,7 +260,7 @@ exports.HostInfoDirective = function() {
       'clientId': '='
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/client/host-info.html',
+    templateUrl: window.base_path+'/static/angular-components/client/host-info.html',
     controller: HostInfoController,
     controllerAs: 'controller'
   };

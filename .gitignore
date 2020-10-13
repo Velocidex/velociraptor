@@ -1,6 +1,6 @@
 vendor/
 *~
-velociraptor
+./velociraptor
 emacs.desktop
 /debian/debhelper-build-stamp
 /debian/files
@@ -10,7 +10,6 @@ ab0x.go
 output/
 .velociraptor_history.json
 .idea/
-xml
 node_modules/
 package-lock.json
 __debug_bin

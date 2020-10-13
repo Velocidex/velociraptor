@@ -12,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -21,23 +20,33 @@ import (
 // When not running on the frontend we set a dummy labeler.
 type Dummy struct{}
 
-func (self Dummy) LastLabelTimestamp(client_id string) uint64 {
+func (self Dummy) LastLabelTimestamp(
+	config_obj *config_proto.Config,
+	client_id string) uint64 {
 	return 0
 }
 
-func (self Dummy) IsLabelSet(client_id string, label string) bool {
+func (self Dummy) IsLabelSet(
+	config_obj *config_proto.Config,
+	client_id string, label string) bool {
 	return false
 }
 
-func (self Dummy) SetClientLabel(client_id, label string) error {
+func (self Dummy) SetClientLabel(
+	config_obj *config_proto.Config,
+	client_id, label string) error {
 	return nil
 }
 
-func (self Dummy) RemoveClientLabel(client_id, label string) error {
+func (self Dummy) RemoveClientLabel(
+	config_obj *config_proto.Config,
+	client_id, label string) error {
 	return nil
 }
 
-func (self Dummy) GetClientLabels(client_id string) []string {
+func (self Dummy) GetClientLabels(
+	config_obj *config_proto.Config,
+	client_id string) []string {
 	return nil
 }
 
@@ -52,16 +61,16 @@ func (self CachedLabels) Size() int {
 }
 
 type Labeler struct {
-	mu         sync.Mutex
-	config_obj *config_proto.Config
-	lru        *cache.LRUCache
+	mu  sync.Mutex
+	lru *cache.LRUCache
 
 	Clock utils.Clock
 }
 
 // If an explicit record does not exist, we retrieve it from searching the index.
-func (self *Labeler) getRecordFromIndex(client_id string) (*CachedLabels, error) {
-	db, err := datastore.GetDB(self.config_obj)
+func (self *Labeler) getRecordFromIndex(
+	config_obj *config_proto.Config, client_id string) (*CachedLabels, error) {
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +85,7 @@ func (self *Labeler) getRecordFromIndex(client_id string) (*CachedLabels, error)
 	}
 
 	for _, label := range db.SearchClients(
-		self.config_obj, constants.CLIENT_INDEX_URN,
+		config_obj, constants.CLIENT_INDEX_URN,
 		client_id, "", 0, 1000) {
 		if strings.HasPrefix(label, "label:") {
 			result.record.Label = append(result.record.Label,
@@ -86,7 +95,7 @@ func (self *Labeler) getRecordFromIndex(client_id string) (*CachedLabels, error)
 
 	// Set the record for next time.
 	client_path_manager := paths.NewClientPathManager(client_id)
-	err = db.SetSubject(self.config_obj,
+	err = db.SetSubject(config_obj,
 		client_path_manager.Labels(), result.record)
 	if err != nil {
 		return nil, err
@@ -95,26 +104,27 @@ func (self *Labeler) getRecordFromIndex(client_id string) (*CachedLabels, error)
 	return result, nil
 }
 
-func (self *Labeler) getRecord(client_id string) (*CachedLabels, error) {
+func (self *Labeler) getRecord(
+	config_obj *config_proto.Config, client_id string) (*CachedLabels, error) {
 	cached_any, ok := self.lru.Get(client_id)
 	if ok {
 		return cached_any.(*CachedLabels), nil
 	}
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	cached := &CachedLabels{record: &api_proto.ClientLabels{}}
 	client_path_manager := paths.NewClientPathManager(client_id)
-	err = db.GetSubject(self.config_obj,
+	err = db.GetSubject(config_obj,
 		client_path_manager.Labels(), cached.record)
 
 	// If there is no record, calculate a new record from the
 	// client index.
 	if err != nil || cached.record.Timestamp == 0 {
-		cached, err = self.getRecordFromIndex(client_id)
+		cached, err = self.getRecordFromIndex(config_obj, client_id)
 		if err != nil {
 			return nil, err
 		}
@@ -135,11 +145,12 @@ func (self *Labeler) preCalculatedLowCase(cached *CachedLabels) {
 	}
 }
 
-func (self *Labeler) LastLabelTimestamp(client_id string) uint64 {
+func (self *Labeler) LastLabelTimestamp(
+	config_obj *config_proto.Config, client_id string) uint64 {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	cached, err := self.getRecord(client_id)
+	cached, err := self.getRecord(config_obj, client_id)
 	if err != nil {
 		return 0
 	}
@@ -147,7 +158,9 @@ func (self *Labeler) LastLabelTimestamp(client_id string) uint64 {
 	return cached.record.Timestamp
 }
 
-func (self *Labeler) IsLabelSet(client_id string, checked_label string) bool {
+func (self *Labeler) IsLabelSet(
+	config_obj *config_proto.Config,
+	client_id string, checked_label string) bool {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -159,7 +172,7 @@ func (self *Labeler) IsLabelSet(client_id string, checked_label string) bool {
 		return true
 	}
 
-	cached, err := self.getRecord(client_id)
+	cached, err := self.getRecord(config_obj, client_id)
 	if err != nil {
 		return false
 	}
@@ -173,40 +186,52 @@ func (self *Labeler) IsLabelSet(client_id string, checked_label string) bool {
 	return false
 }
 
-func (self *Labeler) notifyClient(client_id, new_label, operation string) error {
+func (self *Labeler) notifyClient(
+	config_obj *config_proto.Config,
+	client_id, new_label, operation string) error {
 	// Notify other frontends about this change.
-	artifact_path_manager := result_sets.NewArtifactPathManager(
-		self.config_obj, client_id, "", "Server.Internal.Label")
-	return services.GetJournal().PushRows(artifact_path_manager, []*ordereddict.Dict{
-		ordereddict.NewDict().
-			Set("client_id", client_id).
-			Set("Operation", operation).
-			Set("Label", new_label),
-	})
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	return journal.PushRowsToArtifact(config_obj,
+		[]*ordereddict.Dict{
+			ordereddict.NewDict().
+				Set("client_id", client_id).
+				Set("Operation", operation).
+				Set("Label", new_label),
+		}, "Server.Internal.Label", client_id, "")
 }
 
-func (self *Labeler) SetClientLabel(client_id, new_label string) error {
+func (self *Labeler) SetClientLabel(
+	config_obj *config_proto.Config,
+	client_id, new_label string) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	checked_label := strings.ToLower(new_label)
-	cached, err := self.getRecord(client_id)
+	cached, err := self.getRecord(config_obj, client_id)
 	if err != nil {
 		return err
 	}
 
 	// Store the label in the datastore.
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
 	cached.record.Timestamp = uint64(self.Clock.Now().UnixNano())
-	cached.record.Label = append(cached.record.Label, new_label)
-	cached.lower_labels = append(cached.lower_labels, checked_label)
+
+	// O(n) but n should be small.
+	if !utils.InString(cached.lower_labels, checked_label) {
+		cached.record.Label = append(cached.record.Label, new_label)
+		cached.lower_labels = append(cached.lower_labels, checked_label)
+	}
 
 	client_path_manager := paths.NewClientPathManager(client_id)
-	err = db.SetSubject(self.config_obj,
+	err = db.SetSubject(config_obj,
 		client_path_manager.Labels(), cached.record)
 	if err != nil {
 		return err
@@ -215,18 +240,23 @@ func (self *Labeler) SetClientLabel(client_id, new_label string) error {
 	// Cache the new record.
 	self.lru.Set(client_id, cached)
 
-	self.notifyClient(client_id, new_label, "Add")
+	err = self.notifyClient(config_obj, client_id, new_label, "Add")
+	if err != nil {
+		return err
+	}
 
 	// Also adjust the index so client searches work.
-	return self.adjustIndex(client_id, new_label, db.SetIndex)
+	return self.adjustIndex(config_obj, client_id, new_label, db.SetIndex)
 }
 
-func (self *Labeler) RemoveClientLabel(client_id, new_label string) error {
+func (self *Labeler) RemoveClientLabel(
+	config_obj *config_proto.Config,
+	client_id, new_label string) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	checked_label := strings.ToLower(new_label)
-	cached, err := self.getRecord(client_id)
+	cached, err := self.getRecord(config_obj, client_id)
 	if err != nil {
 		return err
 	}
@@ -244,13 +274,13 @@ func (self *Labeler) RemoveClientLabel(client_id, new_label string) error {
 	self.preCalculatedLowCase(cached)
 
 	// Store the label in the datastore.
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
 	client_path_manager := paths.NewClientPathManager(client_id)
-	err = db.SetSubject(self.config_obj,
+	err = db.SetSubject(config_obj,
 		client_path_manager.Labels(), cached.record)
 	if err != nil {
 		return err
@@ -259,30 +289,34 @@ func (self *Labeler) RemoveClientLabel(client_id, new_label string) error {
 	// Cache the new record.
 	self.lru.Set(client_id, cached)
 
-	self.notifyClient(client_id, new_label, "Remove")
+	err = self.notifyClient(config_obj, client_id, new_label, "Remove")
+	if err != nil {
+		return err
+	}
 
 	// Also adjust the index.
-	return self.adjustIndex(client_id, new_label, db.UnsetIndex)
+	return self.adjustIndex(config_obj, client_id, new_label, db.UnsetIndex)
 }
 
 type indexManipulator func(config_obj *config_proto.Config,
 	index_urn string, entity string, keywords []string) error
 
 func (self *Labeler) adjustIndex(
+	config_obj *config_proto.Config,
 	client_id, label string,
 	index_func indexManipulator) error {
 	if !strings.HasPrefix(label, "label:") {
 		label = "label:" + label
 	}
 	err := index_func(
-		self.config_obj,
+		config_obj,
 		constants.CLIENT_INDEX_URN,
 		client_id, []string{label})
 	if err != nil {
 		return err
 	}
 	err = index_func(
-		self.config_obj,
+		config_obj,
 		constants.CLIENT_INDEX_URN,
 		label, []string{client_id})
 	if err != nil {
@@ -291,11 +325,13 @@ func (self *Labeler) adjustIndex(
 	return nil
 }
 
-func (self *Labeler) GetClientLabels(client_id string) []string {
+func (self *Labeler) GetClientLabels(
+	config_obj *config_proto.Config,
+	client_id string) []string {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	cached, err := self.getRecord(client_id)
+	cached, err := self.getRecord(config_obj, client_id)
 	if err != nil {
 		return nil
 	}
@@ -320,24 +356,30 @@ func (self *Labeler) ProcessRow(
 	return nil
 }
 
-func (self *Labeler) Start(ctx context.Context, wg *sync.WaitGroup) error {
-	self.lru = cache.NewLRUCache(self.config_obj.Frontend.ExpectedClients)
+func (self *Labeler) Start(ctx context.Context,
+	config_obj *config_proto.Config, wg *sync.WaitGroup) error {
 
-	// Wait in this func until we are ready to monitor.
-	local_wg := &sync.WaitGroup{}
-	local_wg.Add(1)
+	expected_clients := int64(100)
+	if config_obj.Frontend != nil {
+		expected_clients = config_obj.Frontend.ExpectedClients
+	}
+
+	self.lru = cache.NewLRUCache(expected_clients)
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	events, cancel := journal.Watch("Server.Internal.Label")
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
-		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-		logger.Info("<green>Starting</> Label service.")
-
-		events, cancel := services.GetJournal().Watch("Server.Internal.Label")
 		defer cancel()
+		defer services.RegisterLabeler(nil)
 
-		local_wg.Done()
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Info("<green>Starting</> Label service.")
 
 		for {
 			select {
@@ -356,8 +398,6 @@ func (self *Labeler) Start(ctx context.Context, wg *sync.WaitGroup) error {
 		}
 	}()
 
-	local_wg.Wait()
-
 	return nil
 }
 
@@ -367,14 +407,14 @@ func StartLabelService(
 	config_obj *config_proto.Config) error {
 
 	if config_obj.Frontend == nil {
+		services.RegisterLabeler(Dummy{})
 		return nil
 	}
 
 	labeler := &Labeler{
-		config_obj: config_obj,
-		Clock:      &utils.RealClock{},
+		Clock: &utils.RealClock{},
 	}
-	err := labeler.Start(ctx, wg)
+	err := labeler.Start(ctx, config_obj, wg)
 	if err != nil {
 		return err
 	}
@@ -382,8 +422,4 @@ func StartLabelService(
 	services.RegisterLabeler(labeler)
 
 	return nil
-}
-
-func init() {
-	services.RegisterLabeler(Dummy{})
 }

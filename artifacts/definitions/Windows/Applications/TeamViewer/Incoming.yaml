@@ -1,4 +1,4 @@
-name: Windows.Application.TeamViewer.Incoming
+name: Windows.Applications.TeamViewer.Incoming
 description: |
    Parses the TeamViewer Connections_incoming.txt log file.
 

@@ -25,6 +25,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"math/big"
+	"net"
 	"time"
 
 	errors "github.com/pkg/errors"
@@ -101,6 +102,9 @@ func GenerateCACert(rsaBits int) (*CertBundle, error) {
 }
 
 func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBundle, error) {
+	if config_obj.CA == nil {
+		return nil, errors.New("No CA configured.")
+	}
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, err
@@ -143,6 +147,19 @@ func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBund
 			x509.ExtKeyUsageClientAuth,
 		},
 		BasicConstraintsValid: true,
+	}
+
+	// Encode the common name in the DNSNames field. Note that by
+	// default Velociraptor pins the server name to
+	// VelociraptorServer - it is not a DNS name at all. But since
+	// golang 1.15 has deprecated the CommonName we need to use
+	// this field or it will refuse to connect.
+	// See https://github.com/golang/go/issues/39568#issuecomment-671424481
+	ip := net.ParseIP(name)
+	if ip != nil {
+		template.IPAddresses = append(template.IPAddresses, ip)
+	} else {
+		template.DNSNames = append(template.DNSNames, name)
 	}
 
 	derBytes, err := x509.CreateCertificate(

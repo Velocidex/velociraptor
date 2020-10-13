@@ -312,25 +312,29 @@ func (self Globber) ExpandWithContext(
 				result[j].FullPath())
 		})
 		for _, f := range result {
-			output_chan <- f
-		}
-
-		for next_path, nexts := range children {
 			select {
 			case <-ctx.Done():
 				return
 
-			default:
-				for _, next := range nexts {
-					// There is no point expanding this
-					// node if it is just a sentinal -
-					// special case it for efficiency.
-					if is_sentinal(next) {
-						continue
-					}
-					for f := range next.ExpandWithContext(
-						ctx, config_obj, next_path, accessor) {
-						output_chan <- f
+			case output_chan <- f:
+			}
+		}
+
+		for next_path, nexts := range children {
+			for _, next := range nexts {
+				// There is no point expanding this
+				// node if it is just a sentinal -
+				// special case it for efficiency.
+				if is_sentinal(next) {
+					continue
+				}
+				for f := range next.ExpandWithContext(
+					ctx, config_obj, next_path, accessor) {
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- f:
 					}
 				}
 			}
@@ -400,9 +404,7 @@ func (self Globber) _expand_path_components(filter []_PathFilterer, depth int) e
 
 	// If we get here the new_filter should be clean and
 	// need no expansions.
-	self._add_filter(new_filter)
-
-	return nil
+	return self._add_filter(new_filter)
 }
 
 var (

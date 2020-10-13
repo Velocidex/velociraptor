@@ -24,6 +24,10 @@ var (
 type DynDNSService struct{}
 
 func (self *DynDNSService) updateIP(config_obj *config_proto.Config) {
+	if config_obj.Frontend == nil || config_obj.Frontend.DynDns == nil {
+		return
+	}
+
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Checking DNS")
 
@@ -72,6 +76,10 @@ func (self *DynDNSService) Start(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) {
 
+	if config_obj.Frontend == nil || config_obj.Frontend.DynDns == nil {
+		return
+	}
+
 	// Start is called in a go routine.
 	defer wg.Done()
 
@@ -107,7 +115,8 @@ func StartDynDNSService(
 	config_obj *config_proto.Config) error {
 	result := &DynDNSService{}
 
-	if config_obj.Frontend.DynDns == nil ||
+	if config_obj.Frontend == nil ||
+		config_obj.Frontend.DynDns == nil ||
 		config_obj.Frontend.DynDns.DdnsUsername == "" ||
 		config_obj.Frontend.Hostname == "" {
 		return nil

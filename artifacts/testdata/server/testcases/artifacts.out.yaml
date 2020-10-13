@@ -17,7 +17,9 @@ SELECT Authors, FullPath, License, Name, Summary, Version FROM source( client_id
 ]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', env=dict(Device ='C:', VSSAnalysis='Y', KapeTriage='Y')).request AS Flow FROM scope()[
  {
   "Flow": {
+   "creator": "",
    "client_id": "C.11a3013ccaXXXXX",
+   "urgent": false,
    "artifacts": [
     "Windows.KapeFiles.Targets"
    ],
@@ -36,7 +38,27 @@ SELECT Authors, FullPath, License, Name, Summary, Version FROM source( client_id
       "value": "Y"
      }
     ]
-   }
+   },
+   "ops_per_second": 0,
+   "timeout": 0,
+   "max_rows": 0,
+   "max_upload_bytes": 0,
+   "allow_custom_overrides": false,
+   "compiled_collector_args": []
   }
+ }
+]SELECT name FROM artifact_definitions(names='Windows.KapeFiles.Targets') ORDER BY name[
+ {
+  "name": "Windows.Collectors.File"
+ },
+ {
+  "name": "Windows.Collectors.VSS"
+ },
+ {
+  "name": "Windows.KapeFiles.Targets"
+ }
+]SELECT name FROM artifact_definitions() WHERE name =~ 'Windows.KapeFiles.Targets'[
+ {
+  "name": "Windows.KapeFiles.Targets"
  }
 ]

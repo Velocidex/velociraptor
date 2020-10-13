@@ -24,7 +24,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -73,7 +74,11 @@ func (self *ApiServer) GetKeywordCompletions(
 		})
 	}
 
-	repository, err := artifacts.GetGlobalRepository(self.config)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+	repository, err := manager.GetGlobalRepository(self.config)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +86,8 @@ func (self *ApiServer) GetKeywordCompletions(
 		result.Items = append(result.Items, &api_proto.Completion{
 			Name: "Artifact." + name,
 			Type: "Artifact",
-			Args: getArtifactParamDescriptors(name, type_map, repository),
+			Args: getArtifactParamDescriptors(
+				self.config, name, type_map, repository),
 		})
 	}
 
@@ -92,7 +98,7 @@ func getArgDescriptors(arg_type string, type_map *vfilter.TypeMap,
 	scope *vfilter.Scope) []*api_proto.ArgDescriptor {
 	args := []*api_proto.ArgDescriptor{}
 	arg_desc, pres := type_map.Get(scope, arg_type)
-	if pres {
+	if pres && arg_desc != nil && arg_desc.Fields != nil {
 		for _, k := range arg_desc.Fields.Keys() {
 			v_any, _ := arg_desc.Fields.Get(k)
 			v, ok := v_any.(*vfilter.TypeReference)
@@ -124,10 +130,12 @@ func getArgDescriptors(arg_type string, type_map *vfilter.TypeMap,
 	return args
 }
 
-func getArtifactParamDescriptors(name string, type_map *vfilter.TypeMap,
-	repository *artifacts.Repository) []*api_proto.ArgDescriptor {
+func getArtifactParamDescriptors(
+	config_obj *config_proto.Config,
+	name string, type_map *vfilter.TypeMap,
+	repository services.Repository) []*api_proto.ArgDescriptor {
 	args := []*api_proto.ArgDescriptor{}
-	artifact, pres := repository.Get(name)
+	artifact, pres := repository.Get(config_obj, name)
 	if !pres {
 		return args
 	}

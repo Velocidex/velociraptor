@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 
@@ -164,11 +165,15 @@ exit $RETVAL
 func doClientRPM() {
 	// Disable logging when creating a deb - we may not create the
 	// deb on the same system where the logs should go.
-	config.ValidateClientConfig(&config_proto.Config{})
+	_ = config.ValidateClientConfig(&config_proto.Config{})
 
 	config_obj, err := DefaultConfigLoader.
 		WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	config_file_yaml, err := yaml.Marshal(getClientConfig(config_obj))
 	kingpin.FatalIfError(err, "marshal")
@@ -185,14 +190,17 @@ func doClientRPM() {
 	defer fd.Close()
 
 	header := make([]byte, 4)
-	fd.Read(header)
+	_, err = fd.Read(header)
+	kingpin.FatalIfError(err, "Unable to read executable")
+
 	if binary.LittleEndian.Uint32(header) != 0x464c457f {
 		kingpin.Fatalf("Binary does not appear to be an " +
 			"ELF binary. Please specify the linux binary " +
 			"using the --binary flag.")
 	}
 
-	fd.Seek(0, os.SEEK_SET)
+	_, err = fd.Seek(0, io.SeekStart)
+	kingpin.FatalIfError(err, "Unable to read executable")
 
 	binary_text, err := ioutil.ReadAll(fd)
 	kingpin.FatalIfError(err, "Unable to open executable")
@@ -259,11 +267,15 @@ func doClientRPM() {
 func doClientSysVRPM() {
 	// Disable logging when creating a deb - we may not create the
 	// deb on the same system where the logs should go.
-	config.ValidateClientConfig(&config_proto.Config{})
+	_ = config.ValidateClientConfig(&config_proto.Config{})
 
 	config_obj, err := DefaultConfigLoader.
 		WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	config_file_yaml, err := yaml.Marshal(getClientConfig(config_obj))
 	kingpin.FatalIfError(err, "marshal")
@@ -280,14 +292,17 @@ func doClientSysVRPM() {
 	defer fd.Close()
 
 	header := make([]byte, 4)
-	fd.Read(header)
+	_, err = fd.Read(header)
+	kingpin.FatalIfError(err, "Unable to open executable")
+
 	if binary.LittleEndian.Uint32(header) != 0x464c457f {
 		kingpin.Fatalf("Binary does not appear to be an " +
 			"ELF binary. Please specify the linux binary " +
 			"using the --binary flag.")
 	}
 
-	fd.Seek(0, os.SEEK_SET)
+	_, err = fd.Seek(0, io.SeekStart)
+	kingpin.FatalIfError(err, "Unable to read executable")
 
 	binary_text, err := ioutil.ReadAll(fd)
 	kingpin.FatalIfError(err, "Unable to open executable")

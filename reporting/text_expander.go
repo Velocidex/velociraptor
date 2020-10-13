@@ -6,8 +6,8 @@ import (
 	"text/template"
 
 	"github.com/olekukonko/tablewriter"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -27,7 +27,6 @@ func (self *TextTemplateEngine) Execute(template_string string) (string, error) 
 	buffer := &bytes.Buffer{}
 	err = tmpl.Execute(buffer, nil)
 	if err != nil {
-		utils.Debug(err)
 		return "", err
 	}
 
@@ -43,8 +42,11 @@ func (self *TextTemplateEngine) Query(queries ...string) []vfilter.Row {
 			buf := &bytes.Buffer{}
 			err := t.Execute(buf, nil)
 			if err != nil {
-				self.logger.Err("Template Error (%s): %v",
-					self.Artifact.Name, err)
+				if self.Artifact != nil {
+					self.logger.Error(
+						"Template Error (%s): %v",
+						self.Artifact.Name, err)
+				}
 				return []vfilter.Row{}
 			}
 			query = buf.String()
@@ -52,7 +54,7 @@ func (self *TextTemplateEngine) Query(queries ...string) []vfilter.Row {
 
 		vql, err := vfilter.Parse(query)
 		if err != nil {
-			self.logger.Err("VQL Error while reporting %s: %v",
+			self.logger.Error("VQL Error while reporting %s: %v",
 				self.Artifact.Name, err)
 			return result
 		}
@@ -117,7 +119,7 @@ func NewTextTemplateEngine(
 	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
-	repository *artifacts.Repository,
+	repository services.Repository,
 	artifact_name string) (*TextTemplateEngine, error) {
 	base_engine, err := newBaseTemplateEngine(
 		config_obj, scope, acl_manager, repository, artifact_name)

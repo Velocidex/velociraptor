@@ -34,7 +34,7 @@ exports.ServerErrorDialogDirective = function() {
       traceBack: '='
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/core/server-error-dialog.html',
+    templateUrl: window.base_path+'/static/angular-components/core/server-error-dialog.html',
     controller: ServerErrorDialogController,
     controllerAs: 'controller'
   };

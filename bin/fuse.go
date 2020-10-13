@@ -153,8 +153,7 @@ func (self *VFSFs) GetAttr(name string, fcontext *fuse.Context) (*fuse.Attr, fus
 	if err != nil {
 		rows, err = self.fetchDir(fcontext, dirname)
 		if err != nil {
-			self.logger.Error(
-				fmt.Sprintf("Failed to fetch %s: %v", dirname, err))
+			self.logger.Error("Failed to fetch %s: %v", dirname, err)
 			return nil, fuse.ENOENT
 		}
 	}
@@ -322,7 +321,7 @@ func (self *VFSFileReader) Read(dest []byte, off int64) (
 			Length:   uint32(len(dest)),
 		})
 	if err != nil {
-		self.logger.Error("VFSFileReader ", self.VfsPath, err)
+		self.logger.Error("VFSFileReader: %v %v ", self.VfsPath, err)
 		return nil, fuse.ENOENT
 	}
 

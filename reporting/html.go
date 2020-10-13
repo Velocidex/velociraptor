@@ -18,10 +18,10 @@ import (
 	chroma_html "github.com/alecthomas/chroma/formatters/html"
 	blackfriday "github.com/russross/blackfriday/v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -218,7 +218,8 @@ func (self *HTMLTemplateEngine) getMultiLineQuery(query string) (string, error) 
 }
 
 func (self *HTMLTemplateEngine) Import(artifact, name string) interface{} {
-	definition, pres := self.BaseTemplateEngine.Repository.Get(artifact)
+	definition, pres := self.BaseTemplateEngine.Repository.Get(
+		self.config_obj, artifact)
 	if !pres {
 		self.Error("Unknown artifact %v", artifact)
 		return ""
@@ -298,7 +299,12 @@ func (self *HTMLTemplateEngine) Query(queries ...string) interface{} {
 
 			for _, vql := range multi_vql {
 				for row := range vql.Eval(ctx, self.Scope) {
-					output_chan <- vfilter.RowToDict(ctx, self.Scope, row)
+					select {
+					case <-ctx.Done():
+						return
+					case output_chan <- vfilter.RowToDict(
+						ctx, self.Scope, row):
+					}
 				}
 			}
 		}
@@ -321,7 +327,7 @@ func NewHTMLTemplateEngine(
 	ctx context.Context,
 	scope *vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
-	repository *artifacts.Repository,
+	repository services.Repository,
 	artifact_name string,
 	sanitize_html bool) (
 	*HTMLTemplateEngine, error) {

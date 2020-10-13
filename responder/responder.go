@@ -35,9 +35,10 @@ type Responder struct {
 	output chan *crypto_proto.GrrMessage
 
 	sync.Mutex
-	request *crypto_proto.GrrMessage
-	next_id uint64
-	logger  *logging.LogContext
+	request    *crypto_proto.GrrMessage
+	next_id    uint64
+	logger     *logging.LogContext
+	start_time int64
 }
 
 // NewResponder returns a new Responder.
@@ -46,10 +47,11 @@ func NewResponder(
 	request *crypto_proto.GrrMessage,
 	output chan *crypto_proto.GrrMessage) *Responder {
 	result := &Responder{
-		request: request,
-		next_id: 0,
-		output:  output,
-		logger:  logging.GetLogger(config_obj, &logging.ClientComponent),
+		request:    request,
+		next_id:    0,
+		output:     output,
+		logger:     logging.GetLogger(config_obj, &logging.ClientComponent),
+		start_time: time.Now().UnixNano(),
 	}
 	return result
 }
@@ -78,13 +80,15 @@ func (self *Responder) RaiseError(message string) {
 			Backtrace:    string(debug.Stack()),
 			ErrorMessage: message,
 			Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
+			Duration:     time.Now().UnixNano() - self.start_time,
 		}})
 }
 
 func (self *Responder) Return() {
 	self.AddResponse(&crypto_proto.GrrMessage{
 		Status: &crypto_proto.GrrStatus{
-			Status: crypto_proto.GrrStatus_OK,
+			Status:   crypto_proto.GrrStatus_OK,
+			Duration: time.Now().UnixNano() - self.start_time,
 		}})
 }
 
@@ -92,6 +96,7 @@ func (self *Responder) Return() {
 func (self *Responder) Log(format string, v ...interface{}) {
 	self.AddResponse(&crypto_proto.GrrMessage{
 		RequestId: constants.LOG_SINK,
+		Urgent:    true,
 		LogMessage: &crypto_proto.LogMessage{
 			Message:   fmt.Sprintf(format, v...),
 			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),

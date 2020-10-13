@@ -7,6 +7,11 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 
+var (
+	nobanner_flag = app.Flag(
+		"nobanner", "Suppress the Velociraptor banner").Bool()
+)
+
 var banner = `
 <green> _    __     __           _                  __
 <green>| |  / /__  / /___  _____(_)________ _____  / /_____  _____
@@ -18,6 +23,9 @@ var banner = `
 `
 
 func doBanner() {
+	if *nobanner_flag {
+		return
+	}
 	for _, line := range strings.Split(banner, "\n") {
 		if len(line) > 0 {
 			logging.Prelog(line)

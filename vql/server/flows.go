@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -66,7 +67,12 @@ func (self FlowsPlugin) Call(
 				return
 			}
 
-			output_chan <- collection_context
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- json.ConvertProtoToOrderedDict(collection_context):
+			}
+
 		}
 
 		if arg.FlowId != "" {
@@ -133,7 +139,7 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return res
+	return json.ConvertProtoToOrderedDict(res)
 }
 
 func (self CancelFlowFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -175,9 +181,13 @@ func (self EnumerateFlowPlugin) Call(
 		}
 
 		emit := func(item_type, target string) {
-			output_chan <- ordereddict.NewDict().
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- ordereddict.NewDict().
 				Set("Type", item_type).
-				Set("VFSPath", target)
+				Set("VFSPath", target):
+			}
 		}
 
 		collection_context, err := flows.LoadCollectionContext(

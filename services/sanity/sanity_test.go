@@ -10,7 +10,6 @@ import (
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -19,6 +18,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -42,12 +43,13 @@ func (self *ServicesTestSuite) SetupTest() {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
 
-	repository := artifacts.NewRepository()
-	artifacts.SetGlobalRepositoryForTests(repository)
-
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(services.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
+	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
+
+	manager, _ := services.GetRepositoryManager()
+	manager.SetGlobalRepositoryForTests(manager.NewRepository())
 }
 
 func (self *ServicesTestSuite) TearDownTest() {
@@ -58,7 +60,10 @@ func (self *ServicesTestSuite) TearDownTest() {
 
 // Check tool upgrade.
 func (self *ServicesTestSuite) TestUpgradeTools() {
-	repository, _ := artifacts.GetGlobalRepository(self.config_obj)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository, _ := manager.GetGlobalRepository(self.config_obj)
 
 	// An an artifact with two tools.
 	repository.LoadYaml(`
@@ -78,13 +83,13 @@ tools:
 	tool_definition := &artifacts_proto.Tool{
 		Name: "Tool1",
 		Url:  "https://www.company.com",
-
-		// This flag signifies that an admin explicitly set
-		// this tool. We never overwrite an admin's setting.
-		AdminOverride: true,
 	}
-	ctx := context.Background()
-	err := inventory.AddTool(ctx, self.config_obj, tool_definition)
+	err = inventory.AddTool(self.config_obj, tool_definition,
+		services.ToolOptions{
+			// This flag signifies that an admin explicitly set
+			// this tool. We never overwrite an admin's setting.
+			AdminOverride: true,
+		})
 	assert.NoError(self.T(), err)
 
 	require.NoError(self.T(), self.sm.Start(StartSanityCheckService))
@@ -93,12 +98,16 @@ tools:
 	golden := ordereddict.NewDict().
 		Set("/config/inventory.json", db.Subjects["/config/inventory.json"])
 
-	goldie.Assert(self.T(), "TestUpgradeTools", json.MustMarshalIndent(golden))
+	serialized, err := json.MarshalIndentNormalized(golden)
+	assert.NoError(self.T(), err)
+
+	goldie.Assert(self.T(), "TestUpgradeTools", serialized)
 	// test_utils.GetMemoryDataStore(self.T(), self.config_obj).Debug()
 }
 
 // Make sure initial user is created.
 func (self *ServicesTestSuite) TestCreateUser() {
+	self.config_obj.GUI.Authenticator = &config_proto.Authenticator{Type: "Basic"}
 	self.config_obj.GUI.InitialUsers = []*config_proto.GUIUser{
 		{
 			Name:         "User1",
@@ -113,7 +122,10 @@ func (self *ServicesTestSuite) TestCreateUser() {
 		Set("/users/User1", db.Subjects["/users/User1"]).
 		Set("/acl/User1.json", db.Subjects["/acl/User1.json"])
 
-	goldie.Assert(self.T(), "TestCreateUser", json.MustMarshalIndent(golden))
+	serialized, err := json.MarshalIndentNormalized(golden)
+	assert.NoError(self.T(), err)
+
+	goldie.Assert(self.T(), "TestCreateUser", serialized)
 	// test_utils.GetMemoryDataStore(self.T(), self.config_obj).Debug()
 }
 

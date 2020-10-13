@@ -29,7 +29,7 @@ exports.NotebookDirective = function() {
       'notebookId': '='
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/notebook/notebook.html',
+    templateUrl: window.base_path+'/static/angular-components/notebook/notebook.html',
     controller: NotebookController,
     controllerAs: 'controller'
   };

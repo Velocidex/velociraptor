@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"math/rand"
 	"sync"
 	"time"
@@ -19,7 +20,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	frontend_proto "www.velocidex.com/golang/velociraptor/services/frontend/proto"
 )
@@ -159,13 +159,16 @@ func (self *FrontendManager) syncActiveFrontends() error {
 	now := time.Now().UnixNano()
 	children, err := db.ListChildren(self.config_obj,
 		self.path_manager.Path(), 0, 1000)
+	if err != nil {
+		return err
+	}
 
 	total_metrics := &frontend_proto.Metrics{}
 	urls := make([]string, 0, len(children))
 	for _, child := range children {
 		state := &frontend_proto.FrontendState{}
 		err = db.GetSubject(self.config_obj, child, state)
-		if err != nil {
+		if err != nil && err != io.EOF {
 			return err
 		}
 
@@ -183,10 +186,6 @@ func (self *FrontendManager) syncActiveFrontends() error {
 		total_metrics.ProcessResidentMemoryBytes += state.Metrics.ProcessResidentMemoryBytes
 	}
 
-	path_manager := result_sets.NewArtifactPathManager(
-		self.config_obj, "server" /* client_id */, "",
-		"Server.Monitor.Health/Prometheus")
-
 	// Keep the lock to a minimum.
 	self.mu.Lock()
 	self.active_frontends = active_frontends
@@ -194,12 +193,21 @@ func (self *FrontendManager) syncActiveFrontends() error {
 	self.mu.Unlock()
 
 	if self.sample%2 == 0 {
-		services.GetJournal().PushRows(path_manager,
+		journal, err := services.GetJournal()
+		if err != nil {
+			return err
+		}
+
+		err = journal.PushRowsToArtifact(self.config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("CPUPercent", total_metrics.CpuLoadPercent).
 				Set("MemoryUse", total_metrics.ProcessResidentMemoryBytes).
 				Set("client_comms_current_connections",
-					total_metrics.ClientCommsCurrentConnections)})
+					total_metrics.ClientCommsCurrentConnections)},
+			"Server.Monitor.Health/Prometheus", "server", "")
+		if err != nil {
+			return err
+		}
 	}
 	self.sample++
 
@@ -278,8 +286,12 @@ func getURL(fe_config *config_proto.FrontendConfig) string {
 }
 
 // Install a frontend manager.
-func StartFrontendService(ctx context.Context,
+func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config, node string) error {
+	if config_obj.Frontend == nil {
+		return errors.New("Frontend not configured")
+	}
+
 	var err error
 
 	fe_manager := &FrontendManager{
@@ -335,7 +347,13 @@ func StartFrontendService(ctx context.Context,
 			break
 		}
 		logger.Info("Waiting for frontend slot to become available.")
-		time.Sleep(10 * time.Second)
+		select {
+		case <-ctx.Done():
+			return nil
+
+		case <-time.After(10 * time.Second):
+			continue
+		}
 	}
 	if err != nil {
 		return err
@@ -355,22 +373,28 @@ func StartFrontendService(ctx context.Context,
 	}
 
 	// Start the update loop
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
+
 		for {
 			select {
 			case <-ctx.Done():
 				// Not a guaranteed removal but if we
 				// exit cleanly we can free up the
 				// frontend slot.
-				fe_manager.clearMyState()
+				err = fe_manager.clearMyState()
+				if err != nil {
+					logger.Error("Unable to remove frontend: %v", err)
+				}
 				return
 
 			case <-time.After(10 * time.Second):
-				fe_manager.setMyState()
-				fe_manager.syncActiveFrontends()
+				_ = fe_manager.setMyState()
+				_ = fe_manager.syncActiveFrontends()
 			}
 		}
 	}()
 
-	return services.NotifyListener(config_obj, "Frontend")
+	return services.GetNotifier().NotifyListener(config_obj, "Frontend")
 }

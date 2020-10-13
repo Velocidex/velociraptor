@@ -19,7 +19,6 @@ import (
 	"google.golang.org/grpc/status"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -76,7 +75,7 @@ func (self *ApiServer) GetNotebooks(
 		if err != nil {
 			logging.GetLogger(
 				self.config, &logging.FrontendComponent).
-				Error("Unable to open notebook", err)
+				Error("Unable to open notebook: %v", err)
 			return nil, err
 		}
 
@@ -113,7 +112,7 @@ func (self *ApiServer) GetNotebooks(
 
 func NewNotebookId() string {
 	buf := make([]byte, 8)
-	rand.Read(buf)
+	_, _ = rand.Read(buf)
 
 	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
@@ -123,7 +122,7 @@ func NewNotebookId() string {
 
 func NewNotebookAttachmentId() string {
 	buf := make([]byte, 8)
-	rand.Read(buf)
+	_, _ = rand.Read(buf)
 
 	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
@@ -133,7 +132,7 @@ func NewNotebookAttachmentId() string {
 
 func NewNotebookCellId() string {
 	buf := make([]byte, 8)
-	rand.Read(buf)
+	_, _ = rand.Read(buf)
 
 	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
@@ -177,6 +176,9 @@ func (self *ApiServer) NewNotebook(
 
 	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
 	err = db.SetSubject(self.config, notebook_path_manager.Path(), in)
+	if err != nil {
+		return nil, err
+	}
 
 	// Add a new single cell to the notebook.
 	new_cell_request := &api_proto.NotebookCellRequest{
@@ -484,7 +486,11 @@ func (self *ApiServer) UpdateNotebookCell(
 
 	acl_manager := vql_subsystem.NewServerACLManager(self.config, user_name)
 
-	global_repo, err := artifacts.GetGlobalRepository(self.config)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+	global_repo, err := manager.GetGlobalRepository(self.config)
 	if err != nil {
 		return nil, err
 	}
@@ -515,9 +521,10 @@ func (self *ApiServer) UpdateNotebookCell(
 		}
 
 		// Update the artifact plugin in the template.
+		/* FIXME
 		artifact_plugin := artifacts.NewArtifactRepositoryPlugin(repository)
 		tmpl.Env.Set("Artifact", artifact_plugin)
-
+		*/
 		input = fmt.Sprintf(`{{ Query "SELECT * FROM Artifact.%v()" | Table}}`,
 			artifact_obj.Name)
 	}
@@ -537,7 +544,8 @@ func (self *ApiServer) UpdateNotebookCell(
 	go func() {
 		defer query_cancel()
 
-		cancel_notify, remove_notification := services.ListenForNotification(in.CellId)
+		cancel_notify, remove_notification := services.GetNotifier().
+			ListenForNotification(in.CellId)
 		defer remove_notification()
 
 		select {
@@ -546,11 +554,11 @@ func (self *ApiServer) UpdateNotebookCell(
 
 		// Active cancellation from the GUI.
 		case <-cancel_notify:
-			tmpl.Scope.Log("Cancelled after %v !", time.Now().Sub(start_time))
+			tmpl.Scope.Log("Cancelled after %v !", time.Since(start_time))
 
 			// Set a timeout.
 		case <-time.After(10 * time.Minute):
-			tmpl.Scope.Log("Query timed out after %v !", time.Now().Sub(start_time))
+			tmpl.Scope.Log("Query timed out after %v !", time.Since(start_time))
 		}
 
 	}()
@@ -572,7 +580,7 @@ func (self *ApiServer) UpdateNotebookCell(
 		if err != nil {
 			main_err = err
 			logger := logging.GetLogger(self.config, &logging.GUIComponent)
-			logger.Error("Rendering error", err)
+			logger.Error("Rendering error: %v", err)
 		}
 
 		// Update the response if we can.
@@ -583,9 +591,7 @@ func (self *ApiServer) UpdateNotebookCell(
 	// the response takes too long, just give up and return a
 	// continuation. The GUI will continue polling for notebook
 	// state and will pick up the changes by itself.
-	select {
-	case <-sub_ctx.Done():
-	}
+	<-sub_ctx.Done()
 
 	return notebook_cell, main_err
 }
@@ -615,7 +621,7 @@ func (self *ApiServer) CancelNotebookCell(
 			"User is not allowed to edit notebooks.")
 	}
 
-	return &empty.Empty{}, services.NotifyListener(self.config, in.CellId)
+	return &empty.Empty{}, services.GetNotifier().NotifyListener(self.config, in.CellId)
 }
 
 func (self *ApiServer) UploadNotebookAttachment(
@@ -720,7 +726,10 @@ func exportZipNotebook(
 	sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 
 	go func() {
-		defer file_store_factory.Delete(filename + ".lock")
+		defer func() {
+			_ = file_store_factory.Delete(filename + ".lock")
+		}()
+
 		defer cancel()
 
 		err := reporting.ExportNotebookToZip(
@@ -775,7 +784,7 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 	sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 
 	go func() {
-		defer file_store_factory.Delete(filename + ".lock")
+		defer func() { _ = file_store_factory.Delete(filename + ".lock") }()
 		defer writer.Close()
 		defer cancel()
 

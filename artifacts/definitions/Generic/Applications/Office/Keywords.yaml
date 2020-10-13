@@ -58,7 +58,8 @@ sources:
                OfficeMtime,
                OfficeSize,
                File.ModTime as InternalMtime,
-               String.HexData as HexContext
+               String.HexData as HexContext,
+               File.FullPath AS FullPath
         FROM foreach(
            row=office_docs,
            query={

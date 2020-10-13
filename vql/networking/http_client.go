@@ -55,8 +55,9 @@ var (
 type _HttpPluginRequest struct {
 	Url     string      `vfilter:"required,field=url,doc=The URL to fetch"`
 	Params  vfilter.Any `vfilter:"optional,field=params,doc=Parameters to encode as POST or GET query strings"`
-	Headers vfilter.Any `vfilter:"optional,field=headers.doc=A dict of headers to send."`
+	Headers vfilter.Any `vfilter:"optional,field=headers,doc=A dict of headers to send."`
 	Method  string      `vfilter:"optional,field=method,doc=HTTP method to use (GET, POST)"`
+	Data    string      `vfilter:"optional,field=data,doc=If specified we write this raw data into a POST request instead of encoding the params above."`
 	Chunk   int         `vfilter:"optional,field=chunk_size,doc=Read input with this chunk size and send each chunk as a row"`
 
 	// Sometimes it is useful to be able to query misconfigured hosts.
@@ -266,22 +267,40 @@ func (self *_HttpPlugin) Call(
 
 		params := encodeParams(arg, scope)
 		client := getHttpClient(config_obj, arg)
-		req, err := http.NewRequest(
-			arg.Method, arg.Url,
-			strings.NewReader(params.Encode()))
+
+		data := arg.Data
+		if data == "" {
+			data = params.Encode()
+		}
+
+		req, err := http.NewRequestWithContext(
+			ctx, arg.Method, arg.Url, strings.NewReader(data))
 		if err != nil {
 			scope.Log("%s: %s", self.Name(), err.Error())
 			return
 		}
 
-		// Incorporate the context into the request so it can
-		// be timed out properly when the VQL query is
-		// aborted.
-		req = req.WithContext(ctx)
-
 		scope.Log("Fetching %v\n", arg.Url)
 
 		req.Header.Set("User-Agent", constants.USER_AGENT)
+
+		// Set various headers
+		if arg.Headers != nil {
+			for _, member := range scope.GetMembers(arg.Headers) {
+				value, pres := scope.Associative(arg.Headers, member)
+				if pres {
+					lazy_v, ok := value.(vfilter.LazyExpr)
+					if ok {
+						value = lazy_v.Reduce()
+					}
+
+					str_value, ok := value.(string)
+					if ok {
+						req.Header.Set(member, str_value)
+					}
+				}
+			}
+		}
 
 		http_resp, err := client.Do(req)
 		if http_resp != nil {
@@ -291,11 +310,13 @@ func (self *_HttpPlugin) Call(
 		if err != nil {
 			scope.Log("http_client: Error %v while fetching %v",
 				err, arg.Url)
-
-			output_chan <- &_HttpPluginResponse{
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- &_HttpPluginResponse{
 				Url:      arg.Url,
 				Response: 500,
-				Content:  err.Error(),
+				Content:  err.Error()}:
 			}
 			return
 		}
@@ -341,7 +362,11 @@ func (self *_HttpPlugin) Call(
 			// emit it to the VQL engine.
 			tmpfile.Close()
 
-			output_chan <- response
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- response:
+			}
 
 			return
 		}
@@ -351,7 +376,11 @@ func (self *_HttpPlugin) Call(
 			n, err := io.ReadFull(http_resp.Body, buf)
 			if n > 0 {
 				response.Content = string(buf[:n])
-				output_chan <- response
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- response:
+				}
 			}
 
 			if err == io.EOF {

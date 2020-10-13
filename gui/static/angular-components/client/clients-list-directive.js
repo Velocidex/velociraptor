@@ -198,7 +198,7 @@ exports.ClientsListDirective = function() {
     return {
         scope: {},
         restrict: 'E',
-        templateUrl: '/static/angular-components/client/clients-list.html',
+        templateUrl: window.base_path+'/static/angular-components/client/clients-list.html',
         controller: ClientsListController,
         controllerAs: 'controller',
     };

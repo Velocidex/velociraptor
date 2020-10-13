@@ -15,7 +15,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -26,6 +25,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 const (
@@ -69,6 +72,14 @@ sources:
 - query: |
     SELECT * FROM Artifact.Test.Artifact()
 `
+
+	testArtifactWithDeps2 = `
+name: Test.Artifact.Deps2
+description: This is a test artifact dependency
+sources:
+- query: |
+    SELECT * FROM Artifact.Test.Artifact.Deps()
+`
 )
 
 type LauncherTestSuite struct {
@@ -91,9 +102,10 @@ func (self *LauncherTestSuite) SetupTest() {
 
 	t := self.T()
 	assert.NoError(t, self.sm.Start(journal.StartJournalService))
-	assert.NoError(t, self.sm.Start(services.StartNotificationService))
+	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
 	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
 	assert.NoError(t, self.sm.Start(StartLauncherService))
+	assert.NoError(t, self.sm.Start(repository.StartRepositoryManager))
 }
 
 func (self *LauncherTestSuite) TearDownTest() {
@@ -128,7 +140,10 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	}))
 	defer ts.Close()
 
-	repository := artifacts.NewRepository()
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
 	artifact, err := repository.LoadYaml(testArtifactWithTools, true)
 	assert.NoError(self.T(), err)
 
@@ -146,29 +161,33 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 		Timeout:      73,
 	}
 	ctx := context.Background()
+	acl_manager := vql_subsystem.NullACLManager{}
 
 	// Simulate an error downloading the tool on demand - this
 	// prevents the VQL from being compiled, and therefore
 	// collection can not be scheduled. The server needs to
 	// download the file in order to calculate its hash - even
 	// though it is not serving it to clients.
-	compiled, err := services.GetLauncher().CompileCollectorArgs(ctx, self.config_obj,
-		"UserX", repository, request)
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(ctx, self.config_obj,
+		acl_manager, repository, request)
 	assert.Error(self.T(), err)
 
 	// Now make the tool download succeed. Compiling should work
 	// and we should calculate the hash.
 	status = 200
-	compiled, err = services.GetLauncher().CompileCollectorArgs(
-		ctx, self.config_obj, "UserX", repository, request)
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 
 	// Now that we already know the hash, we dont care about
 	// downloading the file ourselves - further compiles will work
 	// automatically.
 	status = 404
-	compiled, err = services.GetLauncher().CompileCollectorArgs(
-		ctx, self.config_obj, "UserX", repository, request)
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 
 	// Check the compiler produced the correct environment
@@ -183,7 +202,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	// Now serve the tool from Velociraptor's public directory
 	// instead.
 	err = services.GetInventory().AddTool(
-		ctx, self.config_obj, &artifacts_proto.Tool{
+		self.config_obj, &artifacts_proto.Tool{
 			Name: "Tool1",
 			// This will force Velociraptor to generate a stable
 			// public directory URL from where to serve the
@@ -191,12 +210,13 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 			// actual tool there.
 			ServeLocally: true,
 			Filename:     "mytool.exe",
-			Hash:         sha_value,
-		})
+			Url:          tool_url,
+		}, services.ToolOptions{AdminOverride: true})
 	assert.NoError(self.T(), err)
 
-	compiled, err = services.GetLauncher().CompileCollectorArgs(
-		ctx, self.config_obj, "UserX", repository, request)
+	status = 200
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 
 	filename := paths.ObfuscateName(self.config_obj, "Tool1")
@@ -205,6 +225,30 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	assert.Equal(self.T(), getEnvValue(compiled.Env, "Tool_Tool1_FILENAME"), "mytool.exe")
 	assert.Equal(self.T(), getEnvValue(compiled.Env, "Tool_Tool1_URL"),
 		"https://localhost:8000/public/"+filename)
+}
+
+func (self *LauncherTestSuite) TestGetDependentArtifacts() {
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifact1, true)
+	assert.NoError(self.T(), err)
+
+	_, err = repository.LoadYaml(testArtifactWithDeps, true)
+	assert.NoError(self.T(), err)
+
+	_, err = repository.LoadYaml(testArtifactWithDeps2, true)
+	assert.NoError(self.T(), err)
+
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	res, err := launcher.GetDependentArtifacts(self.config_obj,
+		repository, []string{"Test.Artifact.Deps2"})
+	assert.NoError(self.T(), err)
+
+	utils.Debug(res)
 }
 
 func getEnvValue(env []*actions_proto.VQLEnv, key string) string {
@@ -217,8 +261,11 @@ func getEnvValue(env []*actions_proto.VQLEnv, key string) string {
 }
 
 func (self *LauncherTestSuite) TestCompiling() {
-	repository := artifacts.NewRepository()
-	_, err := repository.LoadYaml(testArtifact1, true)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifact1, true)
 	assert.NoError(self.T(), err)
 
 	// The artifact compiler converts artifacts into a VQL request
@@ -236,9 +283,13 @@ func (self *LauncherTestSuite) TestCompiling() {
 		Timeout:      73,
 	}
 	ctx := context.Background()
+	acl_manager := vql_subsystem.NullACLManager{}
 
-	compiled, err := services.GetLauncher().CompileCollectorArgs(
-		ctx, self.config_obj, "UserX", repository, request)
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), 1, len(compiled.Env))
@@ -260,8 +311,11 @@ func (self *LauncherTestSuite) TestCompiling() {
 }
 
 func (self *LauncherTestSuite) TestCompilingObfuscation() {
-	repository := artifacts.NewRepository()
-	_, err := repository.LoadYaml(testArtifact1, true)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifact1, true)
 	assert.NoError(self.T(), err)
 
 	self.config_obj.Frontend.DoNotCompressArtifacts = true
@@ -275,9 +329,13 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 		Parameters: &flows_proto.ArtifactParameters{},
 	}
 	ctx := context.Background()
+	acl_manager := vql_subsystem.NullACLManager{}
 
-	compiled, err := services.GetLauncher().CompileCollectorArgs(
-		ctx, self.config_obj, "UserX", repository, request)
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 
 	// When we do not obfuscate, artifact descriptions are carried
@@ -286,8 +344,8 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 
 	// However when we obfuscate we remove descriptions.
 	self.config_obj.Frontend.DoNotCompressArtifacts = false
-	compiled, err = services.GetLauncher().CompileCollectorArgs(
-		ctx, self.config_obj, "UserX", repository, request)
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), compiled.Query[1].Description, "")
@@ -295,8 +353,11 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 }
 
 func (self *LauncherTestSuite) TestCompilingPermissions() {
-	repository := artifacts.NewRepository()
-	_, err := repository.LoadYaml(testArtifactWithPermissions, true)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifactWithPermissions, true)
 	assert.NoError(self.T(), err)
 
 	// The artifact compiler converts artifacts into a VQL request
@@ -310,9 +371,14 @@ func (self *LauncherTestSuite) TestCompilingPermissions() {
 	}
 	ctx := context.Background()
 
+	acl_manager := vql_subsystem.NewServerACLManager(self.config_obj, "UserX")
+
 	// Permission denied - the principal is not allowed to compile this artifact.
-	compiled, err := services.GetLauncher().CompileCollectorArgs(
-		ctx, self.config_obj, "UserX", repository, request)
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), "EXECVE")
 
@@ -322,8 +388,9 @@ func (self *LauncherTestSuite) TestCompilingPermissions() {
 	assert.NoError(self.T(), err)
 
 	// Should be fine now.
-	compiled, err = services.GetLauncher().CompileCollectorArgs(
-		ctx, self.config_obj, "UserX", repository, request)
+	acl_manager = vql_subsystem.NewServerACLManager(self.config_obj, "UserX")
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(compiled.Query), 2)
 }

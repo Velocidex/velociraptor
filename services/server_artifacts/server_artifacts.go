@@ -1,3 +1,13 @@
+/*
+
+   This service provides a runner to execute artifacts on the server.
+   Server artifacts run with high privilege and so only users with the
+   COLLECT_SERVER permission can run those.
+
+   Server artifacts are used for administration or information purposes.
+
+*/
+
 package server_artifacts
 
 import (
@@ -22,10 +32,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
-)
-
-var (
-	mu sync.Mutex
 )
 
 type contextManager struct {
@@ -60,15 +66,18 @@ func NewCollectionContext(
 }
 
 func (self *contextManager) Modify(cb func(context *flows_proto.ArtifactCollectorContext)) {
-	mu.Lock()
-	defer mu.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	cb(self.context)
 }
 
 func (self *contextManager) Save() error {
-	mu.Lock()
-	defer mu.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.context.ExecutionDuration = time.Now().UnixNano() - int64(self.context.StartTime)
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -85,65 +94,31 @@ type serverLogger struct {
 // need to be available immediately.
 func (self *serverLogger) Write(b []byte) (int, error) {
 	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
-	services.GetJournal().PushRows(self.path_manager, []*ordereddict.Dict{
-		ordereddict.NewDict().
-			Set("Timestamp", time.Now().UTC().UnixNano()/1000).
-			Set("time", time.Now().UTC().String()).
-			Set("message", msg)})
-	return len(b), nil
+	journal, err := services.GetJournal()
+	if err != nil {
+		return 0, err
+	}
+
+	err = journal.PushRows(self.config_obj,
+		self.path_manager, []*ordereddict.Dict{
+			ordereddict.NewDict().
+				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
+				Set("time", time.Now().UTC().String()).
+				Set("message", msg)})
+	return len(b), err
 }
 
 type ServerArtifactsRunner struct {
 	config_obj       *config_proto.Config
 	timeout          time.Duration
 	mu               sync.Mutex
+	wg               *sync.WaitGroup
 	cancellationPool map[string]func()
-}
-
-func (self *ServerArtifactsRunner) Start(
-	ctx context.Context,
-	wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	logger := logging.GetLogger(
-		self.config_obj, &logging.FrontendComponent)
-
-	// Listen for notifications from the server.
-	notification, cancel := services.ListenForNotification("server")
-	defer cancel()
-
-	self.process(ctx, wg)
-
-	for {
-		select {
-		// Check the queues anyway every minute in case we miss the
-		// notification.
-		case <-time.After(time.Duration(60) * time.Second):
-			self.process(ctx, wg)
-
-		case <-ctx.Done():
-			return
-
-		case quit := <-notification:
-			if quit {
-				logger.Info("ServerArtifactsRunner: quit.")
-				return
-			}
-			err := self.process(ctx, wg)
-			if err != nil {
-				logger.Error("ServerArtifactsRunner: %v", err)
-				return
-			}
-
-			// Listen again.
-			cancel()
-			notification, cancel = services.ListenForNotification("server")
-		}
-	}
 }
 
 func (self *ServerArtifactsRunner) process(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 
 	logger := logging.GetLogger(
@@ -164,7 +139,7 @@ func (self *ServerArtifactsRunner) process(
 		defer wg.Done()
 
 		for _, task := range tasks {
-			err := self.processTask(ctx, task)
+			err := self.processTask(ctx, config_obj, task)
 			if err != nil {
 				logger.Error("ServerArtifactsRunner: %v", err)
 			}
@@ -187,6 +162,7 @@ func (self *ServerArtifactsRunner) cancel(flow_id string) {
 
 func (self *ServerArtifactsRunner) processTask(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	task *crypto_proto.GrrMessage) error {
 
 	collection_context, err := NewCollectionContext(
@@ -196,32 +172,44 @@ func (self *ServerArtifactsRunner) processTask(
 	}
 
 	db, _ := datastore.GetDB(self.config_obj)
-	db.UnQueueMessageForClient(self.config_obj, "server", task)
+	err = db.UnQueueMessageForClient(self.config_obj, "server", task)
+	if err != nil {
+		return err
+	}
 
 	if task.Cancel != nil {
 		path_manager := paths.NewFlowPathManager("server", task.SessionId).Log()
-		services.GetJournal().PushRows(path_manager, []*ordereddict.Dict{
+		journal, err := services.GetJournal()
+		if err != nil {
+			return err
+		}
+
+		err = journal.PushRows(config_obj, path_manager, []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
 				Set("time", time.Now().UTC().String()).
 				Set("message", "Cancelling Query")})
 
 		self.cancel(task.SessionId)
-		return nil
+		return err
 	}
 
 	// Kick off processing in the background and go back to
 	// listening for new tasks. We can then cancel this task
 	// later.
+	self.wg.Add(1)
 	go func() {
-		self.runQuery(ctx, task, collection_context)
+		defer self.wg.Done()
+		err := self.runQuery(ctx, task, collection_context)
+		if err != nil {
+			return
+		}
 
 		collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
-			context.State = flows_proto.ArtifactCollectorContext_TERMINATED
+			context.State = flows_proto.ArtifactCollectorContext_FINISHED
 			context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
-			context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
 		})
-		collection_context.Save()
+		_ = collection_context.Save()
 	}()
 
 	return nil
@@ -246,7 +234,11 @@ func (self *ServerArtifactsRunner) runQuery(
 
 	// Cancel the query after this deadline
 	deadline := time.After(self.timeout)
-	started := time.Now().Unix()
+	collection_context.Modify(
+		func(context *flows_proto.ArtifactCollectorContext) {
+			context.StartTime = uint64(time.Now().UnixNano())
+		})
+	started := time.Now()
 	sub_ctx, cancel := context.WithCancel(ctx)
 
 	self.mu.Lock()
@@ -262,7 +254,12 @@ func (self *ServerArtifactsRunner) runQuery(
 
 	// Server artifacts run with full access. In order to collect
 	// them in the first place we need COLLECT_SERVER permissions.
-	scope := artifacts.ScopeBuilder{
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	scope := manager.BuildScope(services.ScopeBuilder{
 		Config: self.config_obj,
 
 		// For server artifacts, upload() ends up writing in
@@ -276,7 +273,7 @@ func (self *ServerArtifactsRunner) runQuery(
 			self.config_obj,
 			path_manager.Log(),
 		}, "", 0),
-	}.Build()
+	})
 	defer scope.Close()
 
 	env := ordereddict.NewDict()
@@ -313,8 +310,13 @@ func (self *ServerArtifactsRunner) runQuery(
 			opts := vql_subsystem.EncOptsFromScope(scope)
 			path_manager := result_sets.NewArtifactPathManager(
 				self.config_obj, "server", task.SessionId, name)
+
 			rs_writer, err = result_sets.NewResultSetWriter(
 				self.config_obj, path_manager, opts, false /* truncate */)
+			if err != nil {
+				return err
+			}
+
 			defer rs_writer.Close()
 
 			// Update the artifacts with results in the
@@ -336,7 +338,7 @@ func (self *ServerArtifactsRunner) runQuery(
 			select {
 			case <-deadline:
 				msg := fmt.Sprintf("Query timed out after %v seconds",
-					time.Now().Unix()-started)
+					time.Now().Unix()-started.Unix())
 				scope.Log(msg)
 
 				// Cancel the sub ctx but do not exit
@@ -374,9 +376,10 @@ func StartServerArtifactService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	result := &ServerArtifactsRunner{
+	self := &ServerArtifactsRunner{
 		config_obj:       config_obj,
 		timeout:          time.Second * time.Duration(600),
+		wg:               wg,
 		cancellationPool: make(map[string]func()),
 	}
 
@@ -384,8 +387,58 @@ func StartServerArtifactService(
 		config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Server Artifact Runner Service")
 
+	notifier := services.GetNotifier()
+	if notifier == nil {
+		return errors.New("Notifier not configured")
+	}
+
 	wg.Add(1)
-	go result.Start(ctx, wg)
+	go func() {
+		defer wg.Done()
+
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
+		// Listen for notifications from the server.
+		notification, cancel := notifier.ListenForNotification("server")
+		defer cancel()
+
+		err := self.process(ctx, config_obj, wg)
+		if err != nil {
+			logger.Error("ServerArtifactsRunner: %v", err)
+			return
+		}
+
+		for {
+			select {
+			// Check the queues anyway every minute in case we miss the
+			// notification.
+			case <-time.After(time.Duration(60) * time.Second):
+				err = self.process(ctx, config_obj, wg)
+				if err != nil {
+					logger.Error("ServerArtifactsRunner: %v", err)
+					continue
+				}
+
+			case <-ctx.Done():
+				return
+
+			case quit := <-notification:
+				if quit {
+					logger.Info("ServerArtifactsRunner: quit.")
+					return
+				}
+				err := self.process(ctx, config_obj, wg)
+				if err != nil {
+					logger.Error("ServerArtifactsRunner: %v", err)
+					continue
+				}
+
+				// Listen again.
+				cancel()
+				notification, cancel = notifier.ListenForNotification("server")
+			}
+		}
+	}()
 
 	return nil
 }

@@ -36,9 +36,6 @@ const FileTreeController = function(
   /** @private {!grrUi.core.apiService.ApiService} */
   this.grrApiService_ = grrApiService;
 
-  /** @private {!grrUi.routing.routingService.RoutingService} */
-  this.grrRoutingService_ = grrRoutingService;
-
   /** @type {!grrUi.client.virtualFileSystem.fileContextDirective.FileContextController} */
   this.fileContext;
 
@@ -261,7 +258,7 @@ FileTreeController.prototype.expandToFilePath_ = function(
       if (parts[i + 1]) {
         // There are more nodes to go, proceed recursively.
         element.jstree('open_node', node, function() { cb(i + 1, node); },
-            'no_hash');
+                       'no_hash');
       } else {
         // Target node: select it.
         element.jstree(true)['deselect_all'](true);
@@ -287,7 +284,7 @@ exports.FileTreeDirective = function() {
     restrict: 'E',
     scope: {},
     require: '^grrFileContext',
-    templateUrl: '/static/angular-components/client/virtual-file-system/file-tree.html',
+    templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/file-tree.html',
     controller: FileTreeController,
     controllerAs: 'controller',
     link: function(scope, element, attrs, fileContextController) {

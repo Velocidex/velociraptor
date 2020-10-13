@@ -20,7 +20,7 @@ package constants
 import "regexp"
 
 const (
-	VERSION                    = "0.4.8"
+	VERSION                    = "0.5.0"
 	ENROLLMENT_WELL_KNOWN_FLOW = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 
@@ -76,7 +76,12 @@ const (
 	// Artifact names from packs should start with this
 	ARTIFACT_PACK_NAME_PREFIX   = "Packs."
 	ARTIFACT_CUSTOM_NAME_PREFIX = "Custom."
+
+	// USER record encoded in grpc context
+	GRPC_USER_CONTEXT key = iota
 )
+
+type key int
 
 var (
 	HuntIdRegex = regexp.MustCompile(`^H\.[^.]+$`)

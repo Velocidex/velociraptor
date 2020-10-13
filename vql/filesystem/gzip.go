@@ -279,7 +279,7 @@ func GetGzipFile(file_path string, scope *vfilter.Scope) (*SeekableGzip, error) 
 	zr, err := gzip.NewReader(fd)
 	if err != nil {
 		// Try to seek the file back
-		_, err = fd.Seek(0, os.SEEK_SET)
+		_, err = fd.Seek(0, io.SeekStart)
 		if err != nil {
 			// If it does not work - reopen the file.
 			fd.Close()

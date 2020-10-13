@@ -33,20 +33,19 @@ import (
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 func GetNewHuntId() string {
 	result := make([]byte, 8)
 	buf := make([]byte, 4)
 
-	rand.Read(buf)
+	_, _ = rand.Read(buf)
 	hex.Encode(result, buf)
 
 	return constants.HUNT_PREFIX + string(result)
@@ -63,7 +62,7 @@ func FindCollectedArtifacts(
 	hunt.Artifacts = hunt.StartRequest.Artifacts
 	hunt.ArtifactSources = []string{}
 	for _, artifact := range hunt.StartRequest.Artifacts {
-		for _, source := range artifacts.GetArtifactSources(
+		for _, source := range GetArtifactSources(
 			config_obj, artifact) {
 			hunt.ArtifactSources = append(
 				hunt.ArtifactSources,
@@ -72,10 +71,31 @@ func FindCollectedArtifacts(
 	}
 }
 
+func GetArtifactSources(
+	config_obj *config_proto.Config,
+	artifact string) []string {
+	result := []string{}
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err == nil {
+		artifact_obj, pres := repository.Get(config_obj, artifact)
+		if pres {
+			for _, source := range artifact_obj.Sources {
+				result = append(result, source.Name)
+			}
+		}
+	}
+	return result
+}
+
 func CreateHunt(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	principal string,
+	acl_manager vql_subsystem.ACLManager,
 	hunt *api_proto.Hunt) (string, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -100,7 +120,12 @@ func CreateHunt(
 			UTC().UnixNano() / 1000)
 	}
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return "", err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -111,9 +136,13 @@ func CreateHunt(
 	// time. This ensures that if the artifact definition is
 	// changed after this point, the hunt will continue to
 	// schedule consistent VQL on the clients.
-	compiled, err := services.GetLauncher().
-		CompileCollectorArgs(ctx, config_obj, principal,
-			repository, hunt.StartRequest)
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return "", err
+	}
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, config_obj, acl_manager, repository, hunt.StartRequest)
 	if err != nil {
 		return "", err
 	}
@@ -129,7 +158,10 @@ func CreateHunt(
 		// set it started.
 	} else if hunt.State == api_proto.Hunt_RUNNING {
 		hunt.StartTime = hunt.CreateTime
-		services.NotifyAllListeners(config_obj)
+		err = services.GetNotifier().NotifyAllListeners(config_obj)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
@@ -141,16 +173,16 @@ func CreateHunt(
 	// Trigger a refresh of the hunt dispatcher. This guarantees
 	// that fresh data will be read in subsequent ListHunt()
 	// calls.
-	services.GetHuntDispatcher().Refresh()
+	err = services.GetHuntDispatcher().Refresh(config_obj)
 
-	return hunt.HuntId, nil
+	return hunt.HuntId, err
 }
 
 func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) (
 	*api_proto.ListHuntsResponse, error) {
 
 	result := &api_proto.ListHuntsResponse{}
-	services.GetHuntDispatcher().ApplyFuncOnHunts(
+	err := services.GetHuntDispatcher().ApplyFuncOnHunts(
 		func(hunt *api_proto.Hunt) error {
 			if uint64(len(result.Items)) < in.Offset {
 				return nil
@@ -174,7 +206,7 @@ func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) 
 		return result.Items[i].CreateTime > result.Items[j].CreateTime
 	})
 
-	return result, nil
+	return result, err
 }
 
 func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
@@ -182,7 +214,7 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 
 	var result *api_proto.Hunt
 
-	services.GetHuntDispatcher().ModifyHunt(
+	err = services.GetHuntDispatcher().ModifyHunt(
 		in.HuntId,
 		func(hunt_obj *api_proto.Hunt) error {
 			// HACK: Velociraptor only knows how to
@@ -200,13 +232,13 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 			return nil
 		})
 
-	if result == nil {
+	if result == nil || result.Stats == nil {
 		return result, errors.New("Not found")
 	}
 
 	result.Stats.AvailableDownloads, _ = availableHuntDownloadFiles(config_obj, in.HuntId)
 
-	return result, nil
+	return result, err
 }
 
 // availableHuntDownloadFiles returns the prepared zip downloads available to
@@ -241,6 +273,10 @@ func ModifyHunt(
 	err := dispatcher.ModifyHunt(
 		hunt_modification.HuntId,
 		func(hunt *api_proto.Hunt) error {
+			if hunt.Stats == nil {
+				return errors.New("Invalid hunt")
+			}
+
 			// Archive the hunt.
 			if hunt_modification.State == api_proto.Hunt_ARCHIVED {
 				hunt.State = api_proto.Hunt_ARCHIVED
@@ -250,11 +286,17 @@ func ModifyHunt(
 					Set("Hunt", hunt).
 					Set("User", user)
 
-				path_manager := result_sets.NewArtifactPathManager(config_obj,
-					"server", hunt_modification.HuntId, "System.Hunt.Archive")
+				journal, err := services.GetJournal()
+				if err != nil {
+					return err
+				}
 
-				services.GetJournal().PushRows(
-					path_manager, []*ordereddict.Dict{row})
+				err = journal.PushRowsToArtifact(config_obj,
+					[]*ordereddict.Dict{row}, "System.Hunt.Archive",
+					"server", hunt_modification.HuntId)
+				if err != nil {
+					return err
+				}
 
 				// We are trying to start the hunt.
 			} else if hunt_modification.State == api_proto.Hunt_RUNNING {
@@ -295,5 +337,5 @@ func ModifyHunt(
 	// Notify all the clients about the new hunt. New hunts are
 	// not that common so notifying all the clients at once is
 	// probably ok.
-	return services.NotifyAllListeners(config_obj)
+	return services.GetNotifier().NotifyAllListeners(config_obj)
 }

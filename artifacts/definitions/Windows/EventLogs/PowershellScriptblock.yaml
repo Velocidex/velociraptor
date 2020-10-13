@@ -3,11 +3,11 @@ description: |
   This Artifact will search and extract ScriptBlock events (Event ID 4104) from
   Powershell-Operational Event Logs.
 
-  Powershell is commonly used by attackers accross all stages of the attack
+  Powershell is commonly used by attackers across all stages of the attack
   lifecycle. A valuable hunt is to search Scriptblock logs for signs of
   malicious content.
 
-  There are several parameter's availible for search leveraging regex.
+  There are several parameter's available for search leveraging regex.
     - DateAfter enables search for events after this date.
     - DateBefore enables search for events before this date.
     - SearchStrings enables regex search over scriptblock text field.
@@ -40,7 +40,11 @@ parameters:
     description: "Regex of string to witelist"
   - name: PathWhitelist
     description: "Regex of path to whitelist."
-
+    
+  - name: FileAccessor
+    description: "File Accessor"
+    default: file
+    
   - name: LogLevel
     description: "Log level. Warning is Powershell default bad keyword list."
     type: choices
@@ -82,7 +86,7 @@ sources:
             },
             else= {
               SELECT *, FullPath AS Source
-              FROM glob(globs=EventLog)
+              FROM glob(globs=EventLog, accessor=FileAccessor)
             })
 
         -- Main query
@@ -103,7 +107,7 @@ sources:
                 System.Opcode as Opcode,
                 System.Task as Task,
                 Source
-              FROM parse_evtx(filename=FullPath)
+              FROM parse_evtx(filename=FullPath, accessor=FileAccessor)
               WHERE System.EventID.Value = 4104
                 AND EventTime < DateBeforeTime
                 AND EventTime > DateAfterTime

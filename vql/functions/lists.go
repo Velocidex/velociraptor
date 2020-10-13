@@ -131,7 +131,7 @@ func (self JoinFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *
 }
 
 type FilterFunctionArgs struct {
-	List  []string `vfilter:"required,field=list,doc=A list of items too filter"`
+	List  []string `vfilter:"required,field=list,doc=A list of items to filter"`
 	Regex []string `vfilter:"required,field=regex,doc=A regex to test each item"`
 }
 type FilterFunction struct{}

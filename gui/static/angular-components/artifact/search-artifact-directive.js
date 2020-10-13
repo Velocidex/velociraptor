@@ -29,6 +29,7 @@ const SearchArtifactController = function(
 
     this.reportParams = {};
 
+    this.tools = {};
     this.param_types = {};
     this.param_info = {};
     this.param_descriptions = {};
@@ -106,26 +107,34 @@ SearchArtifactController.prototype.add = function(name, e) {
             return ;
         }
     }
-  if (index == -1) {
-    self.scope_.names.push(name);
+    if (index == -1) {
+        self.scope_.names.push(name);
 
-    for (var i=0; i<self.scope_.names.length; i++) {
-      var name = self.scope_.names[i];
-      var params = self.descriptors[name].parameters;
-      if (angular.isObject(params)) {
-        for (var j=0; j<params.length; j++) {
-          var param = params[j];
+        for (var i=0; i<self.scope_.names.length; i++) {
+            var artifact_name = self.scope_.names[i];
+            var params = self.descriptors[artifact_name].parameters;
+            if (angular.isObject(params)) {
+                for (var j=0; j<params.length; j++) {
+                    var param = params[j];
 
-            if (!angular.isDefined(self.scope_.params[param.name])) {
-                self.scope_.params[param.name]= param.default || "";
-                self.param_types[param.name] = param.type;
-                self.param_info[param.name] = param;
-                self.param_descriptions[param.name] = param.description;
+                    if (!angular.isDefined(self.scope_.params[param.name])) {
+                        self.scope_.params[param.name]= param.default || "";
+                        self.param_types[param.name] = param.type;
+                        self.param_info[param.name] = param;
+                        self.param_descriptions[param.name] = param.description;
+                    }
+                }
+            }
+
+            if (angular.isObject(self.scope_.tools)) {
+                var tools = self.descriptors[artifact_name].tools || [];
+                for (var j=0; j<tools.length; j++) {
+                    var tool = tools[j];
+                    self.scope_.tools[tool.name] = tool;
+                }
             }
         }
-      }
     }
-  }
 };
 
 /**
@@ -164,6 +173,27 @@ SearchArtifactController.prototype.remove = function(name) {
         for (var k in self.scope_.params) {
             if (self.scope_.params.hasOwnProperty(k) && !is_key_defined(k)) {
                 delete self.scope_.params[k];
+            }
+        }
+
+        var is_tool_defined = function(key) {
+            for (var i = 0; i < self.scope_.names.length; ++i) {
+                var name = self.scope_.names[i];
+                var tools = self.descriptors[name].tools || [];
+                for (var j=0; j<tools.length; j++) {
+                    if (tools[j].name == key) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
+
+        if (angular.isObject(self.scope_.tools)) {
+            for (var k in self.scope_.tools) {
+                if (self.scope_.tools.hasOwnProperty(k) && !is_tool_defined(k)) {
+                    delete self.scope_.tools[k];
+                }
             }
         }
     }
@@ -225,9 +255,10 @@ exports.SearchArtifactDirective = function() {
       scope: {
           names: '=',
           params: '=',
+          tools: '=',
           type: "=",
       },
-      templateUrl: '/static/angular-components/artifact/' +
+      templateUrl: window.base_path+'/static/angular-components/artifact/' +
           'search-artifact.html',
       controller: SearchArtifactController,
       controllerAs: 'controller'

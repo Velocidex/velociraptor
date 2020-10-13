@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -9,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"time"
 
 	"github.com/Velocidex/yaml/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -59,12 +57,9 @@ func doThirdPartyShow() {
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	sm := services.NewServiceManager(ctx, config_obj)
-	defer sm.Close()
-
-	err = startEssentialServices(config_obj, sm)
+	sm, err := startEssentialServices(config_obj)
 	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	if *third_party_show_file == "" {
 		inventory := services.GetInventory().Get()
@@ -86,12 +81,9 @@ func doThirdPartyRm() {
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	sm := services.NewServiceManager(ctx, config_obj)
-	defer sm.Close()
-
-	err = startEssentialServices(config_obj, sm)
+	sm, err := startEssentialServices(config_obj)
 	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	err = services.GetInventory().RemoveTool(config_obj, *third_party_rm_name)
 	kingpin.FatalIfError(err, "Removing tool ")
@@ -102,14 +94,9 @@ func doThirdPartyUpload() {
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	ctx, cancel := install_sig_handler()
-	defer cancel()
-
-	sm := services.NewServiceManager(ctx, config_obj)
-	defer sm.Close()
-
-	err = startEssentialServices(config_obj, sm)
+	sm, err := startEssentialServices(config_obj)
 	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	filename := *third_party_upload_filename
 	if filename == "" {
@@ -117,10 +104,9 @@ func doThirdPartyUpload() {
 	}
 
 	tool := &artifacts_proto.Tool{
-		Name:          *third_party_upload_tool_name,
-		Filename:      filename,
-		ServeLocally:  !*third_party_upload_serve_remote,
-		AdminOverride: true,
+		Name:         *third_party_upload_tool_name,
+		Filename:     filename,
+		ServeLocally: !*third_party_upload_serve_remote,
 	}
 
 	// Does the user want to scrape releases from github?
@@ -141,7 +127,8 @@ func doThirdPartyUpload() {
 		kingpin.FatalIfError(err, "Unable to write to filestore ")
 		defer writer.Close()
 
-		writer.Truncate()
+		err = writer.Truncate()
+		kingpin.FatalIfError(err, "Unable to write to filestore ")
 
 		sha_sum := sha256.New()
 
@@ -155,8 +142,14 @@ func doThirdPartyUpload() {
 		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 	}
 
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
 	// Now add the tool to the inventory with the correct hash.
-	err = services.GetInventory().AddTool(ctx, config_obj, tool)
+	err = services.GetInventory().AddTool(
+		config_obj, tool, services.ToolOptions{
+			AdminOverride: true,
+		})
 	kingpin.FatalIfError(err, "Adding tool "+tool.Name)
 
 	if *third_party_upload_download {

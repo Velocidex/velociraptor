@@ -39,6 +39,18 @@ type Loader struct {
 	logger *logging.LogContext
 }
 
+func (self *Loader) WithLogFile(filename string) *Loader {
+	if filename == "" {
+		return self
+	}
+
+	self = self.Copy()
+	self.validators = append(self.validators, func(config_obj *config_proto.Config) error {
+		return logging.AddLogFile(filename)
+	})
+	return self
+}
+
 func (self *Loader) WithRequiredFrontend() *Loader {
 	self = self.Copy()
 	self.validators = append(self.validators, func(config_obj *config_proto.Config) error {
@@ -251,7 +263,9 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 			return err
 		}
 	} else {
-		logging.InitLogging(&config_proto.Config{})
+		// Logging is not required so if it fails we dont
+		// care.
+		_ = logging.InitLogging(&config_proto.Config{})
 	}
 
 	for _, validator := range self.validators {
@@ -285,7 +299,10 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 
 	if config_obj.Client != nil {
 		if self.use_writeback {
-			self.loadWriteback(config_obj)
+			err := self.loadWriteback(config_obj)
+			if err != nil {
+				return err
+			}
 		}
 		err := ValidateClientConfig(config_obj)
 		if err != nil {
@@ -296,14 +313,18 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 	return nil
 }
 
-func (self *Loader) loadWriteback(config_obj *config_proto.Config) {
+func (self *Loader) loadWriteback(config_obj *config_proto.Config) error {
+	// Writeback already loaded - just reuse it.
 	if config_obj.Writeback != nil {
-		return
+		return nil
 	}
 
 	existing_writeback := &config_proto.Writeback{}
 
-	filename := WritebackLocation(config_obj)
+	filename, err := WritebackLocation(config_obj)
+	if err != nil {
+		return err
+	}
 	if !filepath.IsAbs(filename) && self.write_back_path != "" {
 		filename = filepath.Join(self.write_back_path, filename)
 	}
@@ -325,6 +346,7 @@ func (self *Loader) loadWriteback(config_obj *config_proto.Config) {
 
 	// Merge the writeback with the config.
 	config_obj.Writeback = existing_writeback
+	return nil
 }
 
 func (self *Loader) LoadAndValidate() (*config_proto.Config, error) {
@@ -357,7 +379,10 @@ func read_embedded_config() (*config_proto.Config, error) {
 	}
 
 	b := &bytes.Buffer{}
-	io.Copy(b, r)
+	_, err = io.Copy(b, r)
+	if err != nil {
+		return nil, err
+	}
 	r.Close()
 
 	result := &config_proto.Config{}

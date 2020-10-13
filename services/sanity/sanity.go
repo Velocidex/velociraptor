@@ -5,15 +5,14 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"io"
+	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
-	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -30,7 +29,8 @@ type SanityChecks struct{}
 
 func (self *SanityChecks) Check(
 	ctx context.Context, config_obj *config_proto.Config) error {
-	if config_obj.Logging.OutputDirectory != "" {
+	if config_obj.Logging != nil &&
+		config_obj.Logging.OutputDirectory != "" {
 		err := utils.CheckDirWritable(config_obj.Logging.OutputDirectory)
 		if err != nil {
 			return errors.Wrap(
@@ -43,45 +43,58 @@ func (self *SanityChecks) Check(
 
 	// Make sure the initial user accounts are created with the
 	// administrator roles.
-	for _, user := range config_obj.GUI.InitialUsers {
-		user_record, err := users.GetUser(config_obj, user.Name)
-		if err != nil || user_record.Name != user.Name {
-			logger.Info("Initial user %v not present, creating", user.Name)
-			new_user, err := users.NewUserRecord(user.Name)
-			if err != nil {
-				return err
-			}
+	if config_obj.GUI != nil && config_obj.GUI.Authenticator != nil {
+		for _, user := range config_obj.GUI.InitialUsers {
+			user_record, err := users.GetUser(config_obj, user.Name)
+			if err != nil || user_record.Name != user.Name {
+				logger.Info("Initial user %v not present, creating", user.Name)
+				new_user, err := users.NewUserRecord(user.Name)
+				if err != nil {
+					return err
+				}
 
-			if config.GoogleAuthEnabled(config_obj) ||
-				config.SAMLEnabled(config_obj) {
-				password := make([]byte, 100)
-				rand.Read(password)
-				users.SetPassword(new_user, string(password))
+				// Basic auth requires setting hashed
+				// password and salt
+				switch strings.ToLower(config_obj.GUI.Authenticator.Type) {
+				case "basic":
+					new_user.PasswordHash, _ = hex.DecodeString(user.PasswordHash)
+					new_user.PasswordSalt, _ = hex.DecodeString(user.PasswordSalt)
 
-			} else {
-				new_user.PasswordHash, _ = hex.DecodeString(user.PasswordHash)
-				new_user.PasswordSalt, _ = hex.DecodeString(user.PasswordSalt)
-			}
-			err = users.SetUser(config_obj, new_user)
-			if err != nil {
-				return err
-			}
+					// All other auth methods do
+					// not need a password set, so
+					// generate a random one
+				default:
+					password := make([]byte, 100)
+					_, _ = rand.Read(password)
+					users.SetPassword(new_user, string(password))
+				}
 
-			// Give them the administrator roles
-			err = acls.GrantRoles(config_obj, user.Name, []string{"administrator"})
-			if err != nil {
-				return err
+				// Create the new user.
+				err = users.SetUser(config_obj, new_user)
+				if err != nil {
+					return err
+				}
+
+				// Give them the administrator roles
+				err = acls.GrantRoles(config_obj, user.Name, []string{"administrator"})
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
 
-	if config_obj.Frontend.ExpectedClients == 0 {
-		config_obj.Frontend.ExpectedClients = 10000
-	}
+	if config_obj.Frontend != nil {
+		if config_obj.Frontend.ExpectedClients == 0 {
+			config_obj.Frontend.ExpectedClients = 10000
+		}
 
-	// DynDns.Hostname is deprecated, moved to Frontend.Hostname
-	if config_obj.Frontend.Hostname == "" && config_obj.Frontend.Hostname != "" {
-		config_obj.Frontend.Hostname = config_obj.Frontend.Hostname
+		// DynDns.Hostname is deprecated, moved to Frontend.Hostname
+		if config_obj.Frontend.Hostname == "" &&
+			config_obj.Frontend.DynDns != nil &&
+			config_obj.Frontend.DynDns.Hostname != "" {
+			config_obj.Frontend.Hostname = config_obj.Frontend.DynDns.Hostname
+		}
 	}
 
 	if config_obj.AutocertCertCache != "" {
@@ -118,7 +131,14 @@ func checkForServerUpgrade(
 	}
 	state := &api_proto.ServerState{}
 	state_path_manager := &paths.ServerStatePathManager{}
-	db.GetSubject(config_obj, state_path_manager.Path(), state)
+	err = db.GetSubject(config_obj, state_path_manager.Path(), state)
+	if err != nil && err != io.EOF {
+		return err
+	}
+
+	if config_obj.Version == nil {
+		return errors.New("config_obj.Version not configured")
+	}
 
 	if utils.CompareVersions(state.Version, config_obj.Version.Version) < 0 {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -133,29 +153,22 @@ func checkForServerUpgrade(
 
 		// Go through all the artifacts and update their tool
 		// definitions.
-		repository, err := artifacts.GetGlobalRepository(config_obj)
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			return err
+		}
+
+		repository, err := manager.GetGlobalRepository(config_obj)
 		if err != nil {
 			return err
 		}
 
 		inventory := services.GetInventory()
 
-		// We look at the raw tool record here instead of
-		// calling inventory.GetToolInfo() because that will
-		// populate the hash and trigger a tool download.
-		get_tool_info := func(name string) *artifacts_proto.Tool {
-			for _, tool := range inventory.Get().Tools {
-				if tool.Name == name {
-					return tool
-				}
-			}
-			return nil
-		}
-
 		seen := make(map[string]bool)
 
 		for _, name := range repository.List() {
-			artifact, pres := repository.Get(name)
+			artifact, pres := repository.Get(config_obj, name)
 			if !pres {
 				continue
 			}
@@ -175,8 +188,8 @@ func checkForServerUpgrade(
 					// definition was overridden
 					// by the admin do not alter
 					// it.
-					tool := get_tool_info(tool_definition.Name)
-					if tool != nil && tool.AdminOverride {
+					tool, err := inventory.ProbeToolInfo(tool_definition.Name)
+					if err == nil && tool.AdminOverride {
 						logger.Info("<red>Skipping update</> of tool <green>%v</> because an admin manually overrode its definition.",
 							tool_definition.Name)
 						continue
@@ -190,10 +203,16 @@ func checkForServerUpgrade(
 					// Re-add the tool to force
 					// hashes to be taken when the
 					// tool is used next.
+					tool_definition.Hash = ""
+
 					err = inventory.AddTool(
-						ctx, config_obj, tool_definition)
+						config_obj, tool_definition,
+						services.ToolOptions{
+							Upgrade: true,
+						})
 					if err != nil {
-						return err
+						// Errors are not fatal during upgrade.
+						logger.Error("Error upgrading tool: %v", err)
 					}
 				}
 			}

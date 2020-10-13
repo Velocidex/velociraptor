@@ -16,7 +16,7 @@ exports.HuntStatusIconDirective = function() {
   return {
     scope: {state: '='},
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/hunt-status-icon.html'
+    templateUrl: window.base_path+'/static/angular-components/hunt/hunt-status-icon.html'
   };
 };
 

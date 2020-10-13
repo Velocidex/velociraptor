@@ -106,7 +106,7 @@ ToolViewerController.prototype.toolDialog = function(e) {
     };
 
     var modalInstance = self.uibModal_.open({
-        templateUrl: '/static/angular-components/artifact/tool-viewer-dialog.html',
+        templateUrl: window.base_path+'/static/angular-components/artifact/tool-viewer-dialog.html',
         scope: modalScope,
         windowClass: 'wide-modal high-modal',
         size: "lg",
@@ -123,7 +123,7 @@ exports.ToolViewerDirective = function() {
           name: "@",
       },
       restrict: 'E',
-      templateUrl: '/static/angular-components/artifact/tool-viewer.html',
+      templateUrl: window.base_path+'/static/angular-components/artifact/tool-viewer.html',
       controller: ToolViewerController,
       controllerAs: 'controller'
   };

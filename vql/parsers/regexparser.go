@@ -35,7 +35,8 @@ const BUFF_SIZE = 40960
 var (
 	pool = sync.Pool{
 		New: func() interface{} {
-			return make([]byte, BUFF_SIZE)
+			buffer := make([]byte, BUFF_SIZE)
+			return &buffer
 		},
 	}
 )
@@ -76,8 +77,10 @@ func _ParseFile(
 	}
 	defer file.Close()
 
-	buffer := pool.Get().([]byte)
-	defer pool.Put(buffer)
+	cached_buffer := pool.Get().(*[]byte)
+	defer pool.Put(cached_buffer)
+
+	buffer := *cached_buffer
 
 	for {
 		n, _ := file.Read(buffer)
@@ -109,7 +112,12 @@ func _ParseFile(
 
 						row.Set(key, string(submatch))
 					}
-					output_chan <- row
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- row:
+					}
 				}
 			}
 		}

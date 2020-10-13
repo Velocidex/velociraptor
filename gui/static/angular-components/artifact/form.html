@@ -44,18 +44,20 @@
      </span>
   </div>
   <div ng-switch-default>
-    <div class="input-group" style="display: flex">
-      <textarea class="form-control"
+    <div class="input-group">
+      <textarea class="form-control col-11"
                 ng-model="value[field]"
                 ng-attr-rows="{$ controller.text_size $}"
                 ></textarea>
-      <button class="btn btn-light"
-              ng-click="controller.resizeTextArea($event)"
-              >
-        <i class="fa fa-chevron-down"
-           ng-if="controller.text_size==1"></i>
-        <i class="fa fa-chevron-up"
-           ng-if="controller.text_size!=1"></i>
-      </button>
+      <div class="input-group-append">
+        <button class="btn btn-outline-default"
+                ng-click="controller.resizeTextArea($event)"
+                >
+          <i class="fa fa-chevron-down"
+             ng-if="controller.text_size==1"></i>
+          <i class="fa fa-chevron-up"
+             ng-if="controller.text_size!=1"></i>
+        </button>
+      </div>
     </div>
 </div>

@@ -3,10 +3,10 @@ description: |
   This Artifact will search and extract Module events (Event ID 4103) from 
   Powershell-Operational Event Logs.
   
-  Powershell is commonly used by attackers accross all stages of the attack 
+  Powershell is commonly used by attackers across all stages of the attack 
   lifecycle. Although quite noisy Module logging can provide valuable insight.
   
-  There are several parameter's availible for search leveraging regex. 
+  There are several parameter's available for search leveraging regex. 
     - DateAfter enables search for events after this date.  
     - DateBefore enables search for events before this date.   
     - ContextRegex enables regex search over ContextInfo text field.  
@@ -53,7 +53,7 @@ sources:
               FROM Artifact.Windows.Search.VSS(SearchFilesGlob=EventLog)
             },
             else= {
-              SELECT *
+              SELECT *, FullPath as Source
               FROM glob(globs=EventLog)
             })
 
@@ -74,7 +74,7 @@ sources:
                 System.Level as Level,
                 System.Opcode as Opcode,
                 System.Task as Task,
-                if(condition=Source, then=Source, else=FullPath) as Source
+                Source
               FROM parse_evtx(filename=FullPath)
               WHERE EventID = 4103
                 AND EventTime > DateAfterTime

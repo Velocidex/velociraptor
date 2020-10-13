@@ -61,7 +61,7 @@ exports.FlowOverviewDirective = function() {
           clientId: '='
       },
       restrict: 'E',
-      templateUrl: '/static/angular-components/flow/flow-overview.html',
+      templateUrl: window.base_path+'/static/angular-components/flow/flow-overview.html',
       controller: FlowOverviewController,
       controllerAs: 'controller'
   };

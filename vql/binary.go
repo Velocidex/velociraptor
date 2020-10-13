@@ -182,7 +182,8 @@ func (self _BinaryParserPlugin) Call(
 		}
 
 		target, err := profile.Create(
-			arg.Target, arg.Offset, utils.ReaderAtter{reader}, options)
+			arg.Target, arg.Offset,
+			utils.ReaderAtter{Reader: reader}, options)
 		if err != nil {
 			scope.Log("%s: %s", self.Name(), err.Error())
 			return
@@ -199,7 +200,12 @@ func (self _BinaryParserPlugin) Call(
 					break
 				}
 
-				output_chan <- value
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- value:
+				}
 			}
 		}
 	}()

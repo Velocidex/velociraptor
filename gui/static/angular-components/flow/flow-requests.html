@@ -10,7 +10,7 @@
 <div ng-if="controller.serializedRequests">
   <div ui-ace="{
                showGutter: true,
-               workerPath: '/static/dist/',
+               workerPath: window.base_path+'/static/dist/',
                theme:'clouds',
                onLoad: aceConfig,
                mode: 'json',

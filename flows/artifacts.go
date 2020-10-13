@@ -56,11 +56,29 @@ var (
 	})
 )
 
+// closeContext is called after all messages from the clients are
+// processed in this group. Client messages are sent in groups inside
+// the same POST request. Most of the time they belong to the same
+// collection context. Therefore it makes sense to keep information in
+// memory between processing individual messages. At the end of the
+// processing we can close the context and flush data to disk.
 func closeContext(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext) error {
+
+	// Context is not dirty - nothing to do.
 	if !collection_context.Dirty || collection_context.ClientId == "" {
 		return nil
+	}
+
+	// Decide if this collection exceeded its quota.
+	err := checkContextResourceLimits(config_obj, collection_context)
+	if err != nil {
+		return err
+	}
+
+	if collection_context.StartTime == 0 {
+		collection_context.StartTime = uint64(time.Now().UnixNano() / 1000)
 	}
 
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
@@ -107,12 +125,16 @@ func closeContext(
 			Set("FlowId", collection_context.SessionId).
 			Set("ClientId", collection_context.ClientId)
 
-		path_manager := result_sets.NewArtifactPathManager(config_obj,
-			collection_context.ClientId, collection_context.SessionId,
-			"System.Flow.Completion")
+		journal, err := services.GetJournal()
+		if err != nil {
+			return err
+		}
 
-		return services.GetJournal().PushRows(path_manager,
-			[]*ordereddict.Dict{row})
+		return journal.PushRowsToArtifact(config_obj,
+			[]*ordereddict.Dict{row},
+			"System.Flow.Completion", collection_context.ClientId,
+			collection_context.SessionId,
+		)
 	}
 
 	return nil
@@ -165,7 +187,7 @@ func flushContextUploadedFiles(
 
 	for _, row := range collection_context.UploadedFiles {
 		rs_writer.Write(ordereddict.NewDict().
-			Set("Timestamp", fmt.Sprintf("%v", time.Now().UTC().Unix())).
+			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("started", time.Now().UTC().String()).
 			Set("vfs_path", row.Name).
 			Set("file_size", row.Size).
@@ -222,6 +244,14 @@ func ArtifactCollectorProcessOneMessage(
 		return err
 	}
 
+	// Check that this is not a retransmission - if it is we drop
+	// it on the floor.
+	if message.ResponseId < collection_context.NextResponseId {
+		return nil
+	}
+	collection_context.NextResponseId = message.ResponseId + 1
+	collection_context.Dirty = true
+
 	// Handle the response depending on the RequestId
 	switch message.RequestId {
 	case constants.TransferWellKnownFlowId:
@@ -239,10 +269,13 @@ func ArtifactCollectorProcessOneMessage(
 			return nil
 		}
 
-		// Restore strings from flow state.
 		response := message.VQLResponse
-		if response == nil {
+		if response == nil || response.Query == nil {
 			return errors.New("Expected args of type VQLResponse")
+		}
+
+		if collection_context == nil || collection_context.Request == nil {
+			return errors.New("Invalid collection context")
 		}
 
 		err = artifacts.Deobfuscate(config_obj, response)
@@ -250,7 +283,7 @@ func ArtifactCollectorProcessOneMessage(
 			return err
 		}
 
-		// Store the event log in the client's VFS.
+		rows_written := uint64(0)
 		if response.Query.Name != "" {
 			path_manager := result_sets.NewArtifactPathManager(config_obj,
 				collection_context.Request.ClientId,
@@ -259,30 +292,47 @@ func ArtifactCollectorProcessOneMessage(
 
 			rs_writer, err := result_sets.NewResultSetWriter(
 				config_obj, path_manager, nil, false /* truncate */)
-			if err != nil {
-				fmt.Printf("Error: %v\n", err)
-				return err
-			}
-			defer rs_writer.Close()
 
-			rows, err := utils.ParseJsonToDicts([]byte(response.Response))
-			if err != nil {
-				fmt.Printf("Error: %v\n", err)
-				return err
-			}
+			// Support the old clients which send JSON
+			// array responses. We need to decode the JSON
+			// response, then re-encode it into JSONL for
+			// log files.
+			if len(response.Response) > 0 {
+				if err != nil {
+					return err
+				}
+				defer rs_writer.Close()
 
-			for _, row := range rows {
-				rs_writer.Write(row)
+				rows, err := utils.ParseJsonToDicts([]byte(
+					response.Response))
+				if err != nil {
+					return err
+				}
+
+				for _, row := range rows {
+					rows_written++
+					rs_writer.Write(row)
+				}
+
+				// New clients already encode the JSON
+				// as line delimited, so we only need
+				// to append to end of the log file -
+				// much faster!
+			} else if len(response.JSONLResponse) > 0 {
+				rs_writer.WriteJSONL([]byte(response.JSONLResponse))
+				rows_written = response.TotalRows
 			}
 
 			// Update the artifacts with results in the
 			// context.
-			if len(rows) > 0 && !utils.InString(
-				collection_context.ArtifactsWithResults,
-				response.Query.Name) {
-				collection_context.ArtifactsWithResults = append(
-					collection_context.ArtifactsWithResults,
-					response.Query.Name)
+			if rows_written > 0 {
+				if !utils.InString(collection_context.ArtifactsWithResults,
+					response.Query.Name) {
+					collection_context.ArtifactsWithResults = append(
+						collection_context.ArtifactsWithResults,
+						response.Query.Name)
+				}
+				collection_context.TotalCollectedRows += rows_written
 				collection_context.Dirty = true
 			}
 		}
@@ -296,28 +346,39 @@ func IsRequestComplete(
 	collection_context *flows_proto.ArtifactCollectorContext,
 	message *crypto_proto.GrrMessage) (bool, error) {
 
+	// Nope request is not complete.
 	if message.Status == nil {
 		return false, nil
 	}
 
-	if constants.HuntIdRegex.MatchString(collection_context.Request.Creator) {
-		err := services.GetHuntDispatcher().ModifyHunt(
-			collection_context.Request.Creator,
-			func(hunt *api_proto.Hunt) error {
-				hunt.Stats.TotalClientsWithResults++
-				return nil
-			})
-		if err != nil {
-			return true, err
-		}
+	// Complete the collection
+	if collection_context == nil || collection_context.Request == nil {
+		return false, errors.New("Invalid collection context")
 	}
 
 	// Only terminate a running flow.
 	if collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
-		collection_context.State = flows_proto.ArtifactCollectorContext_TERMINATED
-		collection_context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
+
+		// Update any hunts if needed.
+		if constants.HuntIdRegex.MatchString(collection_context.Request.Creator) {
+			err := services.GetHuntDispatcher().ModifyHunt(
+				collection_context.Request.Creator,
+				func(hunt *api_proto.Hunt) error {
+					if hunt != nil && hunt.Stats != nil {
+						hunt.Stats.TotalClientsWithResults++
+					}
+					return nil
+				})
+			if err != nil {
+				return true, err
+			}
+		}
+
+		collection_context.ExecutionDuration = message.Status.Duration
+		collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED
 		collection_context.Dirty = true
 	}
+
 	return true, nil
 }
 
@@ -336,25 +397,35 @@ func FailIfError(
 		return nil
 	}
 
+	if collection_context == nil || collection_context.Request == nil {
+		return errors.New("Invalid collection context")
+	}
+
 	// Only terminate a running flows.
 	if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
 		return errors.New(message.Status.ErrorMessage)
 	}
 
 	collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
-	collection_context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
+	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
 	collection_context.Status = message.Status.ErrorMessage
 	collection_context.Backtrace = message.Status.Backtrace
+	collection_context.ExecutionDuration = message.Status.Duration
 	collection_context.Dirty = true
 
 	// Update the hunt stats if this is a hunt.
 	if constants.HuntIdRegex.MatchString(collection_context.Request.Creator) {
-		services.GetHuntDispatcher().ModifyHunt(
+		err := services.GetHuntDispatcher().ModifyHunt(
 			collection_context.Request.Creator,
 			func(hunt *api_proto.Hunt) error {
-				hunt.Stats.TotalClientsWithErrors++
+				if hunt != nil && hunt.Stats != nil {
+					hunt.Stats.TotalClientsWithErrors++
+				}
 				return nil
 			})
+		if err != nil {
+			return err
+		}
 	}
 
 	return errors.New(message.Status.ErrorMessage)
@@ -366,7 +437,7 @@ func appendUploadDataToFile(
 	message *crypto_proto.GrrMessage) error {
 
 	file_buffer := message.FileBuffer
-	if file_buffer == nil {
+	if file_buffer == nil || file_buffer.Pathspec == nil {
 		return errors.New("Expected args of type FileBuffer")
 	}
 
@@ -438,7 +509,11 @@ func appendUploadDataToFile(
 			return err
 		}
 		defer fd.Close()
-		fd.Truncate()
+
+		err = fd.Truncate()
+		if err != nil {
+			return err
+		}
 
 		data := json.MustMarshalIndent(file_buffer.Index)
 		_, err = fd.Write(data)
@@ -470,12 +545,15 @@ func appendUploadDataToFile(
 			Set("Size", file_buffer.Size).
 			Set("UploadedSize", file_buffer.StoredSize)
 
-		path_manager := result_sets.NewArtifactPathManager(config_obj,
-			message.Source, collection_context.SessionId,
-			"System.Upload.Completion")
+		journal, err := services.GetJournal()
+		if err != nil {
+			return err
+		}
 
-		return services.GetJournal().PushRows(path_manager,
-			[]*ordereddict.Dict{row})
+		return journal.PushRowsToArtifact(config_obj,
+			[]*ordereddict.Dict{row},
+			"System.Upload.Completion", message.Source, collection_context.SessionId,
+		)
 	}
 
 	return nil
@@ -507,7 +585,12 @@ func NewFlowRunner(config_obj *config_proto.Config) *FlowRunner {
 
 func (self *FlowRunner) Close() {
 	for _, collection_context := range self.context_map {
-		closeContext(self.config_obj, collection_context)
+		err := closeContext(self.config_obj, collection_context)
+		if err != nil {
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Error("While closing flow %v for client %v: %v",
+				collection_context.SessionId, collection_context.ClientId, err)
+		}
 	}
 }
 
@@ -517,9 +600,13 @@ func (self *FlowRunner) ProcessSingleMessage(
 
 	// Foreman messages are related to hunts.
 	if job.ForemanCheckin != nil {
-		ForemanProcessMessage(
+		err := ForemanProcessMessage(
 			ctx, self.config_obj,
 			job.Source, job.ForemanCheckin)
+		if err != nil {
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Error("ForemanCheckin for client %v: %v", job.Source, err)
+		}
 		return
 	}
 
@@ -531,23 +618,13 @@ func (self *FlowRunner) ProcessSingleMessage(
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-
-	if false && job.Status != nil &&
-		job.Status.Status == crypto_proto.GrrStatus_GENERIC_ERROR {
-		logger.Error(fmt.Sprintf(
-			"Client Error %v: %v",
-			job.Source, job.Status.ErrorMessage))
-		return
-	}
-
 	collection_context, pres := self.context_map[job.SessionId]
 	if !pres {
 		var err error
 
 		// Only process real flows.
 		if !strings.HasPrefix(job.SessionId, "F.") {
-			logger.Error(fmt.Sprintf(
-				"Invalid job SessionId %v", job.SessionId))
+			logger.Error("Invalid job SessionId %v", job.SessionId)
 			return
 		}
 
@@ -565,11 +642,15 @@ func (self *FlowRunner) ProcessSingleMessage(
 
 			db, err := datastore.GetDB(self.config_obj)
 			if err == nil {
-				db.QueueMessageForClient(self.config_obj, job.Source,
+				err := db.QueueMessageForClient(self.config_obj, job.Source,
 					&crypto_proto.GrrMessage{
 						Cancel:    &crypto_proto.Cancel{},
 						SessionId: job.SessionId,
 					})
+				if err != nil {
+					logger.Error("Queueing for client %v: %v",
+						job.Source, err)
+				}
 			}
 			return
 		}

@@ -74,9 +74,16 @@ message VQLTypeMap {
 }
 
 message VQLResponse {
+    // Response is encoded in a json array of rows.
     string Response = 1 [(sem_type) = {
             description: "JSON encoded response.",
         }];
+
+    // Response is encoded as line delimited JSON.
+    string JSONLResponse = 10 [(sem_type) = {
+            description: "JSON encoded response.",
+        }];
+
     repeated string Columns = 2 [(sem_type) = {
             description: "A list of column headings produced by the query.",
         }];

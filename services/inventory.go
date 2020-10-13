@@ -34,6 +34,14 @@ func RegisterInventory(inventory Inventory) {
 	ginventory = inventory
 }
 
+type ToolOptions struct {
+	// Tool is being upgraded.
+	Upgrade bool
+
+	// Admin is overriding tool in inventory.
+	AdminOverride bool
+}
+
 type Inventory interface {
 	// Get a list of the entire tools database with all known tools.
 	Get() *artifacts_proto.ThirdParty
@@ -43,16 +51,22 @@ type Inventory interface {
 
 	// Get information about a specific tool. If the tool is set
 	// to serve locally, the tool will be fetched from its
-	// designated URL.
+	// designated URL. This call will materialize the tool and
+	// update the state fields  (e.g. serve_url, filestore_path,
+	// filename, hash)
 	GetToolInfo(ctx context.Context, config_obj *config_proto.Config,
 		tool string) (*artifacts_proto.Tool, error)
 
 	// Add a new tool to the inventory. Adding the tool does not
 	// force it to be downloaded - it simply adds it to the
-	// database. A subsequent GetToolInfo() will download the tool
-	// from the designated URL if the hash is not already known.
-	AddTool(ctx context.Context, config_obj *config_proto.Config,
-		tool *artifacts_proto.Tool) error
+	// database and does not block. A subsequent GetToolInfo()
+	// will download the tool from the designated URL if the hash
+	// is not already known. If callers need to ensure the tool is
+	// actually valid and available, they need to call
+	// GetToolInfo() after this to force the tool to be
+	// materialized.
+	AddTool(config_obj *config_proto.Config,
+		tool *artifacts_proto.Tool, opts ToolOptions) error
 
 	// Remove the tool from the inventory.
 	RemoveTool(config_obj *config_proto.Config, tool_name string) error

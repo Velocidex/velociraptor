@@ -49,7 +49,7 @@ func GetSharedNotebooks(
 		if err != nil {
 			logging.GetLogger(
 				config_obj, &logging.FrontendComponent).
-				Error("Unable to open notebook", err)
+				Error("Unable to open notebook: %v", err)
 			continue
 		}
 

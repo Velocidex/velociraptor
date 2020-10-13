@@ -143,7 +143,7 @@ exports.UserNotificationItemDirective = function() {
       close: '&'
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/user/user-notification-item.html',
+    templateUrl: window.base_path+'/static/angular-components/user/user-notification-item.html',
     controller: UserNotificationItemController,
     controllerAs: 'controller'
   };

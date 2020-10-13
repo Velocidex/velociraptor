@@ -9,6 +9,7 @@ const NotebookRendererController = function($scope, grrRoutingService, grrApiSer
     this.scope_ = $scope;
     this.grrRoutingService_ = grrRoutingService;
     this.grrApiService_ = grrApiService;
+
     this.grrRoutingService_.uiOnParamsChanged(
         this.scope_, ['notebookId'],
         this.onRoutingParamsChange_.bind(this));
@@ -49,7 +50,7 @@ exports.NotebookRendererDirective = function() {
         'state': '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/notebook/notebook-renderer.html',
+    templateUrl: window.base_path+'/static/angular-components/notebook/notebook-renderer.html',
     controller: NotebookRendererController,
     controllerAs: 'controller'
   };

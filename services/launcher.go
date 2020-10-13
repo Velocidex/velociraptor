@@ -5,18 +5,52 @@ package services
 // collections is extracted into a service so it can be accessible
 // from many components.
 
+// Velociraptor treats all input as artifacts - users can launch new
+// artifact collection on endpoints by naming the artifact and
+// providing parameters. However the endpoint itself is not directly
+// running the artifacts - it simply runs VQL statements. We do this
+// so that artifacts can be edited and customized on the server
+// without needing to deploy new clients.
+
+// On the server, collections are created using ArtifactCollectorArgs
+// On the client, VQL is executing from VQLCollectorArgs
+
+// Ultimately the launcher is responsible for compiling the requested
+// ArtifactCollectorArgs collection into the VQLCollectorArgs protobuf
+// that will be sent to the client. Compiling the artifact means:
+
+// 1. Converting the artifact definition into a sequence of VQL
+
+// 2. Populating the query environment from the artifact definition
+//    defaults and merging the user's parameters into the initial
+//    query environment.
+
+// 3. Include any dependent artifacts in the VQLCollectorArgs. On the
+//    client, these additional artifacts will be compiled into a
+//    temporary artifact repository for execution (i.e. the client
+//    never uses its built in artifacts).
+
+// 4. Adding any required tools by the artifact and filling in their
+//    tool details (required hash, and download location).
+
 // Most callers will only need to call ScheduleArtifactCollection()
 // which does all the required steps and launches the collection.
 
+// It is possible for callers to pre-compile the artifact and cache
+// the VQLCollectorArgs for later use to avoid the cost of compiling
+// the artifact. This is useful e.g. in hunts to be able to scale the
+// launching of similar collections on many hosts at the same time.
+
 import (
 	"context"
+	"errors"
 	"sync"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 var (
@@ -24,11 +58,15 @@ var (
 	g_launcher  Launcher = nil
 )
 
-func GetLauncher() Launcher {
+func GetLauncher() (Launcher, error) {
 	launcher_mu.Lock()
 	defer launcher_mu.Unlock()
 
-	return g_launcher
+	if g_launcher == nil {
+		return nil, errors.New("Launcher not ready")
+	}
+
+	return g_launcher, nil
 }
 
 func RegisterLauncher(l Launcher) {
@@ -39,13 +77,21 @@ func RegisterLauncher(l Launcher) {
 }
 
 type Launcher interface {
+	// Only used for tests to force a predictable flow id.
 	SetFlowIdForTests(flow_id string)
 
 	// Check any declared tools exist and are available - possibly
 	// by downloading them.
 	EnsureToolsDeclared(
-		ctx context.Context, config_obj *config_proto.Config,
+		ctx context.Context,
+		config_obj *config_proto.Config,
 		artifact *artifacts_proto.Artifact) error
+
+	// Calculates the dependent artifacts
+	GetDependentArtifacts(
+		config_obj *config_proto.Config,
+		repository Repository,
+		names []string) ([]string, error)
 
 	// Compiles an ArtifactCollectorArgs (for example as passed
 	// into CreateHunt() or CollectArtifact() API into a list of
@@ -54,7 +100,7 @@ type Launcher interface {
 	// VQLCollectorArgs is collected serially in a single
 	// goroutine. This means all the artifacts in the
 	// ArtifactCollectorArgs will be collected one after the other
-	// in turn. If called want to collect artifacts in parallel
+	// in turn. If callers want to collect artifacts in parallel
 	// then they need to perpare several VQLCollectorArgs and
 	// launch them as separate messages.
 
@@ -64,8 +110,8 @@ type Launcher interface {
 	CompileCollectorArgs(
 		ctx context.Context,
 		config_obj *config_proto.Config,
-		principal string,
-		repository *artifacts.Repository,
+		acl_manager vql_subsystem.ACLManager,
+		repository Repository,
 		collector_request *flows_proto.ArtifactCollectorArgs) (
 		*actions_proto.VQLCollectorArgs, error)
 
@@ -73,7 +119,7 @@ type Launcher interface {
 	ScheduleArtifactCollection(
 		ctx context.Context,
 		config_obj *config_proto.Config,
-		principal string,
-		repository *artifacts.Repository,
+		acl_manager vql_subsystem.ACLManager,
+		repository Repository,
 		collector_request *flows_proto.ArtifactCollectorArgs) (string, error)
 }

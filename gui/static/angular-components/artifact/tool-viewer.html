@@ -2,4 +2,10 @@
    ng-click="controller.toolDialog($event)"
    >
   {{ name }}
+  <span ng-if="controller.tool.hash">
+    <i class="fa fa-check"></i>
+  </span>
+  <span ng-if="!controller.tool.hash">
+    <i class="fa fa-download"></i>
+  </span>
 </a>

@@ -2,8 +2,8 @@
 package uploads
 
 import (
+	"context"
 	"io"
-	"os"
 )
 
 // A generic interface for reporting file ranges. Implementations will
@@ -33,8 +33,11 @@ func RangeSize(runs []Range) int64 {
 }
 
 // Get the ranges of a reader if possible. If the reader can not
-// provide this information we just make a psuedo range.
-func GetRanges(reader io.Reader, expected_size int64) (<-chan io.Reader, []Range) {
+// provide this information we just make a pseudo range.
+func GetRanges(
+	ctx context.Context,
+	reader io.Reader,
+	expected_size int64) (<-chan io.Reader, []Range) {
 	output_chan := make(chan io.Reader)
 
 	ranges := []Range{{Length: expected_size}}
@@ -50,13 +53,23 @@ func GetRanges(reader io.Reader, expected_size int64) (<-chan io.Reader, []Range
 
 		range_reader, ok := reader.(RangeReader)
 		if !ok {
-			output_chan <- reader
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- reader:
+			}
 			return
 		}
 
 		for _, rng := range ranges {
-			range_reader.Seek(rng.Offset, os.SEEK_SET)
-			output_chan <- io.LimitReader(range_reader, rng.Length)
+			_, err := range_reader.Seek(rng.Offset, io.SeekStart)
+			if err == nil {
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- io.LimitReader(range_reader, rng.Length):
+				}
+			}
 		}
 
 	}()

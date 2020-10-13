@@ -7,22 +7,22 @@ package client_monitoring
 
 import (
 	"context"
+	"errors"
 	"math/rand"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/google/uuid"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 type ClientEventTable struct {
@@ -58,9 +58,7 @@ type ClientEventTable struct {
 	// protobufs in memory.
 	state *flows_proto.ClientEventTable
 
-	ctx        context.Context
-	config_obj *config_proto.Config
-	repository *artifacts.Repository
+	repository services.Repository
 
 	clock utils.Clock
 
@@ -69,18 +67,22 @@ type ClientEventTable struct {
 
 // Checks to see if we need to update the client event table.
 func (self *ClientEventTable) CheckClientEventsVersion(
+	config_obj *config_proto.Config,
 	client_id string, client_version uint64) bool {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	labeler := services.GetLabeler()
+	if labeler == nil {
+		return false
+	}
 	if client_version < self.state.Version {
 		return true
 	}
 
 	// If the client's labels have changed after their table
 	// timestamp, then they will need to update as well.
-	if client_version < labeler.LastLabelTimestamp(client_id) {
+	if client_version < labeler.LastLabelTimestamp(config_obj, client_id) {
 		return true
 	}
 
@@ -95,28 +97,34 @@ func (self *ClientEventTable) GetClientMonitoringState() *flows_proto.ClientEven
 }
 
 func (self *ClientEventTable) SetClientMonitoringState(
+	ctx context.Context,
+	config_obj *config_proto.Config,
 	state *flows_proto.ClientEventTable) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.setClientMonitoringState(state)
+	return self.setClientMonitoringState(ctx, config_obj, state)
 }
 
 func (self *ClientEventTable) compileArtifactCollectorArgs(
+	ctx context.Context,
+	config_obj *config_proto.Config,
 	artifact *flows_proto.ArtifactCollectorArgs) (
 	[]*actions_proto.VQLCollectorArgs, error) {
-	// Make a local copy.
 
 	result := []*actions_proto.VQLCollectorArgs{}
-	launcher := services.GetLauncher()
-
-	// Compile each artifact separately into its own VQLCollectorArgs so they can be run in parallel.
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return nil, err
+	}
+	// Compile each artifact separately into its own
+	// VQLCollectorArgs so they can be run in parallel.
 	for _, name := range artifact.Artifacts {
+		// Make a local copy.
 		temp := *artifact
 		temp.Artifacts = []string{name}
 		compiled, err := launcher.CompileCollectorArgs(
-			self.ctx, self.config_obj,
-			self.config_obj.Client.PinnedServerName, // Principal
+			ctx, config_obj, vql_subsystem.NullACLManager{},
 			self.repository, &temp)
 		if err != nil {
 			return nil, err
@@ -127,9 +135,17 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 	return result, nil
 }
 
-func (self *ClientEventTable) compileState(state *flows_proto.ClientEventTable) (err error) {
+func (self *ClientEventTable) compileState(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	state *flows_proto.ClientEventTable) (err error) {
+	if state.Artifacts == nil {
+		state.Artifacts = &flows_proto.ArtifactCollectorArgs{}
+	}
+
 	// Compile all the artifacts now for faster dispensing.
-	compiled, err := self.compileArtifactCollectorArgs(state.Artifacts)
+	compiled, err := self.compileArtifactCollectorArgs(
+		ctx, config_obj, state.Artifacts)
 	if err != nil {
 		return err
 	}
@@ -137,7 +153,8 @@ func (self *ClientEventTable) compileState(state *flows_proto.ClientEventTable) 
 
 	// Now compile the label specific events
 	for _, table := range state.LabelEvents {
-		compiled, err := self.compileArtifactCollectorArgs(table.Artifacts)
+		compiled, err := self.compileArtifactCollectorArgs(
+			ctx, config_obj, table.Artifacts)
 		if err != nil {
 			return err
 		}
@@ -148,23 +165,29 @@ func (self *ClientEventTable) compileState(state *flows_proto.ClientEventTable) 
 }
 
 func (self *ClientEventTable) setClientMonitoringState(
+	ctx context.Context,
+	config_obj *config_proto.Config,
 	state *flows_proto.ClientEventTable) error {
+
+	if state.Artifacts == nil {
+		state.Artifacts = &flows_proto.ArtifactCollectorArgs{}
+	}
 
 	self.state = state
 	state.Version = uint64(self.clock.Now().UnixNano())
 
 	// Store the new table in the data store.
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
-	err = self.compileState(self.state)
+	err = self.compileState(ctx, config_obj, self.state)
 	if err != nil {
 		return err
 	}
 
-	err = db.SetSubject(self.config_obj, constants.ClientMonitoringFlowURN,
+	err = db.SetSubject(config_obj, constants.ClientMonitoringFlowURN,
 		self.state)
 	if err != nil {
 		return err
@@ -172,17 +195,22 @@ func (self *ClientEventTable) setClientMonitoringState(
 
 	// Notify all the client monitoring tables that we got
 	// updated. This should cause all frontends to refresh.
-	artifact_path_manager := result_sets.NewArtifactPathManager(
-		self.config_obj, "", "", "Server.Internal.ArtifactModification")
-	return services.GetJournal().PushRows(artifact_path_manager, []*ordereddict.Dict{
-		ordereddict.NewDict().
-			Set("setter", self.id).
-			Set("artifact", "ClientEventTable").
-			Set("op", "set"),
-	})
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	return journal.PushRowsToArtifact(config_obj,
+		[]*ordereddict.Dict{
+			ordereddict.NewDict().
+				Set("setter", self.id).
+				Set("artifact", "ClientEventTable").
+				Set("op", "set"),
+		}, "Server.Internal.ArtifactModification", "", "")
 }
 
 func (self *ClientEventTable) GetClientUpdateEventTableMessage(
+	config_obj *config_proto.Config,
 	client_id string) *crypto_proto.GrrMessage {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -191,17 +219,19 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 		Version: uint64(self.clock.Now().UnixNano()),
 	}
 
-	for _, compiled := range self.state.Artifacts.CompiledCollectorArgs {
-		result.Event = append(result.Event, compiled)
+	if self.state.Artifacts == nil {
+		self.state.Artifacts = &flows_proto.ArtifactCollectorArgs{}
 	}
+
+	result.Event = append(result.Event,
+		self.state.Artifacts.CompiledCollectorArgs...)
 
 	// Now apply any event queries that belong to this client based on labels.
 	labeler := services.GetLabeler()
 	for _, table := range self.state.LabelEvents {
-		if labeler.IsLabelSet(client_id, table.Label) {
-			for _, compiled := range table.Artifacts.CompiledCollectorArgs {
-				result.Event = append(result.Event, compiled)
-			}
+		if labeler.IsLabelSet(config_obj, client_id, table.Label) {
+			result.Event = append(
+				result.Event, table.Artifacts.CompiledCollectorArgs...)
 		}
 	}
 
@@ -218,7 +248,9 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	}
 }
 
-func (self *ClientEventTable) ProcessArtifactModificationEvent(event *ordereddict.Dict) {
+func (self *ClientEventTable) ProcessArtifactModificationEvent(
+	ctx context.Context,
+	config_obj *config_proto.Config, event *ordereddict.Dict) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -245,8 +277,10 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(event *ordereddic
 		}
 
 		for _, label_event := range self.state.LabelEvents {
-			if utils.InString(label_event.Artifacts.Artifacts, modified_name) {
-				return true
+			if label_event.Artifacts != nil {
+				if utils.InString(label_event.Artifacts.Artifacts, modified_name) {
+					return true
+				}
 			}
 		}
 		return false
@@ -257,50 +291,63 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(event *ordereddic
 		self.state.Version = uint64(self.clock.Now().UnixNano())
 
 		clear_caches(self.state)
-		self.compileState(self.state)
+		err := self.compileState(ctx, config_obj, self.state)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("compileState: %v", err)
+		}
 	}
 }
 
 // Clear all the pre-compiled VQLCollectorArgs - next time we sent the
 // artifact it will be rebuilt.
 func clear_caches(state *flows_proto.ClientEventTable) {
+	if state.Artifacts == nil {
+		state.Artifacts = &flows_proto.ArtifactCollectorArgs{}
+	}
+
 	state.Artifacts.CompiledCollectorArgs = nil
 	for _, event := range state.LabelEvents {
 		event.Artifacts.CompiledCollectorArgs = nil
 	}
 }
 
-func (self *ClientEventTable) LoadFromFile() error {
+func (self *ClientEventTable) LoadFromFile(
+	ctx context.Context, config_obj *config_proto.Config) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	db, err := datastore.GetDB(self.config_obj)
+	if config_obj.Frontend == nil {
+		return errors.New("Frontend not configured")
+	}
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
 	self.state = &flows_proto.ClientEventTable{}
-	err = db.GetSubject(self.config_obj,
+	err = db.GetSubject(config_obj,
 		constants.ClientMonitoringFlowURN, self.state)
 	if err != nil || self.state.Version == 0 {
 		// No client monitoring rules found, install some
 		// defaults.
 		self.state.Artifacts = &flows_proto.ArtifactCollectorArgs{
-			Artifacts: self.config_obj.Frontend.DefaultClientMonitoringArtifacts,
+			Artifacts: config_obj.Frontend.DefaultClientMonitoringArtifacts,
 		}
 		logger.Info("Creating default Client Monitoring Service")
 
-		err = self.compileState(self.state)
+		err = self.compileState(ctx, config_obj, self.state)
 		if err != nil {
 			return err
 		}
 
-		return self.setClientMonitoringState(self.state)
+		return self.setClientMonitoringState(ctx, config_obj, self.state)
 	}
 
 	clear_caches(self.state)
-	return self.compileState(self.state)
+	return self.compileState(ctx, config_obj, self.state)
 }
 
 // Runs at frontend start to initialize the client monitoring table.
@@ -309,36 +356,36 @@ func StartClientMonitoringService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
 
 	event_table := &ClientEventTable{
-		config_obj: config_obj,
-		ctx:        ctx,
 		repository: repository,
 		clock:      &utils.RealClock{},
 		id:         uuid.New().String(),
 	}
 
-	services.RegisterClientEventManager(event_table)
-
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Client Monitoring Service")
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
 
-	// Wait here until we are ready to watch the journal.
-	local_wg := &sync.WaitGroup{}
+	events, cancel := journal.Watch("Server.Internal.ArtifactModification")
 
-	local_wg.Add(1)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
-		events, cancel := services.GetJournal().Watch("Server.Internal.ArtifactModification")
 		defer cancel()
-
-		local_wg.Done()
+		defer services.RegisterClientEventManager(nil)
 
 		for {
 			select {
@@ -349,12 +396,13 @@ func StartClientMonitoringService(
 				if !ok {
 					return
 				}
-				event_table.ProcessArtifactModificationEvent(event)
+				event_table.ProcessArtifactModificationEvent(
+					ctx, config_obj, event)
 			}
 		}
 	}()
 
-	local_wg.Wait()
+	services.RegisterClientEventManager(event_table)
 
-	return event_table.LoadFromFile()
+	return event_table.LoadFromFile(ctx, config_obj)
 }

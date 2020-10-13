@@ -273,7 +273,7 @@ function splitterImpl(splitter, args) {
 
       Bt.show();
 
-      if (!$.browser.msie) {
+      if (true || !$.browser.msie) {
         mychilds.trigger('resize');
         if (slave) slave.trigger('resize');
       }

@@ -65,7 +65,7 @@ exports.VfsFilesArchiveButtonDirective = function() {
       filePath: '='
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/client/virtual-file-system/' +
+    templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/' +
         'vfs-files-archive-button.html',
     controller: VfsFilesArchiveButtonController,
     controllerAs: 'controller'

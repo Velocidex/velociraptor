@@ -26,6 +26,7 @@
 package api
 
 import (
+	"errors"
 	"html/template"
 	"net/http"
 	"time"
@@ -35,14 +36,30 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
-func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) {
+func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) error {
+	if config_obj.GUI == nil {
+		return errors.New("GUI not configured")
+	}
+
+	base := config_obj.GUI.BasePath
 	logging.GetLogger(config_obj, &logging.FrontendComponent).
 		Info("GUI will serve files from directory gui/static")
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(
+	mux.Handle(base+"/static/", http.StripPrefix(base+"/static/", http.FileServer(
 		http.Dir("gui/static"))))
-	mux.Handle("/favicon.ico",
-		http.RedirectHandler("/static/images/favicon.ico",
+
+	if base != "" {
+		// Useful for debugging as it allows the browser to
+		// set breakpoints and matches the sourcemaps. the
+		// static handlers again.
+		mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(
+			http.Dir("gui/static"))))
+	}
+
+	mux.Handle(base+"/favicon.ico",
+		http.RedirectHandler(base+"/static/images/favicon.ico",
 			http.StatusMovedPermanently))
+
+	return nil
 }
 
 func GetTemplateHandler(config_obj *config_proto.Config,
@@ -52,10 +69,13 @@ func GetTemplateHandler(config_obj *config_proto.Config,
 		return nil, err
 	}
 
+	base := config_obj.GUI.BasePath
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		args := _templateArgs{
 			Timestamp: time.Now().UTC().UnixNano() / 1000,
 			CsrfToken: csrf.Token(r),
+			BasePath:  base,
 			Heading:   "Heading",
 		}
 		err := tmpl.Execute(w, args)

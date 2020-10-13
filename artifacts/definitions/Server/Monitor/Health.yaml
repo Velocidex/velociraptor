@@ -61,7 +61,19 @@ reports:
 
       ## Users
 
-      {{ Query "SELECT Name, Permissions FROM gui_users()" | Table }}
+      {{ define "UserPermissions" }}
+        LET cleanup(permission) = to_dict(item={
+            SELECT * FROM foreach(row=items(item=permission), query={
+               SELECT _key, _value FROM scope()
+               WHERE _value
+            })
+        })
+
+        SELECT name, cleanup(permission=Permissions) AS Permissions
+        FROM gui_users()
+      {{ end }}
+
+      {{ Query "UserPermissions" | Table }}
 
       ## Server version
 

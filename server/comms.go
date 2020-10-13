@@ -18,6 +18,7 @@
 package server
 
 import (
+	"errors"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -75,20 +76,27 @@ var (
 func PrepareFrontendMux(
 	config_obj *config_proto.Config,
 	server_obj *Server,
-	router *http.ServeMux) {
-	router.Handle("/healthz", healthz(server_obj))
-	router.Handle("/server.pem", server_pem(config_obj))
-	router.Handle("/control", control(server_obj))
-	router.Handle("/reader", reader(config_obj, server_obj))
+	router *http.ServeMux) error {
 
-	// Publically accessible part of the filestore. NOTE: this
+	if config_obj.Frontend == nil {
+		return errors.New("Frontend not configured")
+	}
+
+	base := config_obj.Frontend.BasePath
+	router.Handle(base+"/healthz", healthz(server_obj))
+	router.Handle(base+"/server.pem", server_pem(config_obj))
+	router.Handle(base+"/control", control(server_obj))
+	router.Handle(base+"/reader", reader(config_obj, server_obj))
+
+	// Publicly accessible part of the filestore. NOTE: this
 	// does not have to be a physical directory - it is served
 	// from the filestore.
-	router.Handle("/public/", GetLoggingHandler(config_obj, "/public")(
-		http.FileServer(
-			api.NewFileSystem(config_obj,
-				file_store.GetFileStore(config_obj),
-				"/public/"))))
+	router.Handle(base+"/public/", GetLoggingHandler(config_obj, "/public")(
+		http.StripPrefix(base, http.FileServer(api.NewFileSystem(config_obj,
+			file_store.GetFileStore(config_obj),
+			"/public/")))))
+
+	return nil
 }
 
 func healthz(server_obj *Server) http.Handler {
@@ -108,7 +116,7 @@ func server_pem(config_obj *config_proto.Config) http.Handler {
 		flusher, _ := w.(http.Flusher)
 		flusher.Flush()
 
-		w.Write([]byte(config_obj.Frontend.Certificate))
+		_, _ = w.Write([]byte(config_obj.Frontend.Certificate))
 	})
 }
 
@@ -266,11 +274,11 @@ func control(server_obj *Server) http.Handler {
 		for {
 			select {
 			case response := <-sync:
-				w.Write(response)
+				_, _ = w.Write(response)
 				return
 
 			case <-time.After(3 * time.Second):
-				w.Write(serialized_pad)
+				_, _ = w.Write(serialized_pad)
 				flusher.Flush()
 			}
 		}
@@ -334,7 +342,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		// Must be before the Process() call to prevent race.
 		source := message_info.Source
 
-		if services.IsClientConnected(source) {
+		if services.GetNotifier().IsClientConnected(source) {
 			http.Error(w, "Another Client connection exists. "+
 				"Only a single instance of the client is "+
 				"allowed to connect at the same time.",
@@ -342,7 +350,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			return
 		}
 
-		notification, cancel := services.ListenForNotification(source)
+		notification, cancel := services.GetNotifier().ListenForNotification(source)
 		defer cancel()
 
 		// Deadlines are designed to ensure that connections

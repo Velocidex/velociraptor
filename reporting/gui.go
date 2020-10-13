@@ -17,16 +17,17 @@ import (
 	"github.com/Masterminds/sprig"
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
+	"github.com/pkg/errors"
 
 	chroma_html "github.com/alecthomas/chroma/formatters/html"
 	"github.com/microcosm-cc/bluemonday"
 	blackfriday "github.com/russross/blackfriday/v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -122,7 +123,8 @@ func (self *GuiTemplateEngine) Expand(values ...interface{}) interface{} {
 }
 
 func (self *GuiTemplateEngine) Import(artifact, name string) interface{} {
-	definition, pres := self.BaseTemplateEngine.Repository.Get(artifact)
+	definition, pres := self.BaseTemplateEngine.Repository.Get(
+		self.config_obj, artifact)
 	if !pres {
 		self.Error("Unknown artifact %v", artifact)
 		return ""
@@ -286,12 +288,18 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 }
 
 func (self *GuiTemplateEngine) Execute(report *artifacts_proto.Report) (string, error) {
+	if self.Scope == nil {
+		return "", errors.New("Scope not configured")
+	}
+
 	template_string := report.Template
 
 	// Hard limit for report generation can be specified in the
 	// definition.
 	if report.Timeout > 0 {
-		self.ctx, _ = context.WithTimeout(self.ctx, time.Second*time.Duration(report.Timeout))
+		ctx, cancel := context.WithTimeout(self.ctx, time.Second*time.Duration(report.Timeout))
+		defer cancel()
+		self.ctx = ctx
 	}
 
 	tmpl, err := self.tmpl.Parse(SanitizeGoTemplates(template_string))
@@ -477,7 +485,7 @@ func NewGuiTemplateEngine(
 	ctx context.Context,
 	scope *vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
-	repository *artifacts.Repository,
+	repository services.Repository,
 	notebook_cell_path_manager *NotebookCellPathManager,
 	artifact_name string) (
 	*GuiTemplateEngine, error) {
