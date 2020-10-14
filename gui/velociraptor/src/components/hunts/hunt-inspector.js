@@ -17,7 +17,12 @@ class HuntInspector extends React.Component {
         hunt: PropTypes.object,
     };
 
+    state = {
+        tab: "overview",
+    }
+
     setDefaultTab = (tab) => {
+        this.setState({tab: tab});
         this.props.history.push(
             "/hunts/" + this.props.hunt.hunt_id + "/" + tab);
     }
@@ -36,19 +41,24 @@ class HuntInspector extends React.Component {
             <div className="padded">
               <Tabs defaultActiveKey={default_tab} onSelect={this.setDefaultTab}>
                 <Tab eventKey="overview" title="Overview">
-                  <HuntOverview hunt={this.props.hunt}/>
+                  { this.state.tab === "overview" &&
+                    <HuntOverview hunt={this.props.hunt}/> }
                 </Tab>
                 <Tab eventKey="requests" title="Requests">
-                  <HuntRequest hunt={this.props.hunt}/>
+                  { this.state.tab === "requests" &&
+                    <HuntRequest hunt={this.props.hunt}/> }
                 </Tab>
                 <Tab eventKey="results" title="Results">
-                  <HuntResults hunt={this.props.hunt} />
+                  { this.state.tab === "results" &&
+                    <HuntResults hunt={this.props.hunt} />}
                 </Tab>
                 <Tab eventKey="clients" title="Clients">
-                  <HuntClients hunt={this.props.hunt} />
+                  { this.state.tab === "clients" &&
+                    <HuntClients hunt={this.props.hunt} />}
                 </Tab>
                 <Tab eventKey="status" title="Status">
-                  <HuntStatus hunt={this.props.hunt} />
+                  { this.state.tab === "status" &&
+                    <HuntStatus hunt={this.props.hunt} />}
                 </Tab>
               </Tabs>
             </div>

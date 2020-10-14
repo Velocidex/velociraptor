@@ -14,6 +14,8 @@ import FormControl from 'react-bootstrap/FormControl';
 import Navbar from 'react-bootstrap/Navbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import Completer from '../artifacts/syntax.js';
+
 import api from '../core/api-service.js';
 
 const cell_types = ["Markdown", "VQL", "Artifact"];
@@ -78,6 +80,10 @@ export default class NotebookCellRenderer extends React.Component {
     };
 
     aceConfig = (ace) => {
+        // Attach a completer to ACE.
+        let completer = new Completer();
+        completer.initializeAceEditor(ace, {});
+
         ace.setOptions({
             autoScrollEditorIntoView: true,
             maxLines: 25
@@ -320,6 +326,13 @@ export default class NotebookCellRenderer extends React.Component {
                                 aceConfig={this.aceConfig}
                                 text={this.state.input}
                                 onChange={(value) => {this.setState({input: value});}}
+                                commands={[{
+                                    name: 'saveAndExit',
+                                    bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
+                                    exec: (editor) => {
+                                        this.saveCell();
+                                    },
+                                }]}
                               />
                             </form>
                           </div>

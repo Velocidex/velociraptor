@@ -1,18 +1,46 @@
+import './file-tree.css';
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import _ from 'lodash';
 
-import {Treebeard} from 'react-treebeard';
+import {Treebeard, decorators} from 'react-treebeard';
 
 import { SplitPathComponents, Join } from '../utils/paths.js';
 
 import api from '../core/api-service.js';
 import { withRouter }  from "react-router-dom";
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 const text_color = "#8f8f8f";
 const background_color = '#f5f5f5';
 const active_background_color = "#dee0ff";
+
+
+
+const Header = ({onSelect, style, customStyles, node}) => {
+    return (
+        <div style={style.base} onClick={onSelect}>
+          <div className="tree-folder">
+            {node.toggled ? <FontAwesomeIcon icon="folder-open" /> : <FontAwesomeIcon icon="folder" /> }
+            {node.name}
+          </div>
+        </div>
+    );
+};
+
+Header.propTypes = {
+    onSelect: PropTypes.func,
+    node: PropTypes.object,
+    style: PropTypes.object,
+    customStyles: PropTypes.object
+};
+
+Header.defaultProps = {
+    customStyles: {}
+};
 
 let theme = {
   tree: {
@@ -43,7 +71,7 @@ let theme = {
       toggle: {
         base: {
           position: 'relative',
-          display: 'inline-block',
+          display: 'none',
           verticalAlign: 'top',
           marginLeft: '-5px',
           height: '24px',
@@ -51,13 +79,13 @@ let theme = {
         },
         wrapper: {
           position: 'absolute',
-          top: '50%',
+          top: '20%',
           left: '50%',
           margin: '-7px 0 0 -7px',
-          height: '14px'
+          height: '9px'
         },
-        height: 14,
-        width: 14,
+        height: 9,
+        width: 9,
         arrow: {
           fill: text_color,
           strokeWidth: 0
@@ -98,9 +126,9 @@ class VeloFileTree extends Component {
     static propTypes = {
         client: PropTypes.object,
         vfs_path: PropTypes.array,
+        version: PropTypes.string,
         updateVFSPath: PropTypes.func,
         updateCurrentNode: PropTypes.func,
-        selectedRow: PropTypes.object,
     }
 
     componentDidMount() {
@@ -139,8 +167,19 @@ class VeloFileTree extends Component {
             }
         }
 
+        // If node needs to be refreshed we reset the local cache to
+        // force reloading from the server.
+        if (prevProps.version != this.props.version) {
+            let node = this.state.cursor;
+            node.active = true;
+            node.toggled = true;
+            node.inflight = false;
+            node.known = false;
+        }
+
         if (!_.isEqual(prev_vfs_path, vfs_path) ||
-            prevClient !== currentClient ) {
+            prevClient !== currentClient ||
+            prevProps.version != this.props.version) {
             this.updateTree(vfs_path, function(node) {
 
                 if(node.inflight) {
@@ -153,7 +192,7 @@ class VeloFileTree extends Component {
                     for(var i = 0; i < node.raw_data.length; i++){
                         let row = node.raw_data[i];
                         if (row.Name === selected_filename) {
-                            node.selected = row;
+                            node.selected = row.Name;
                         };
                     }
                 };
@@ -312,6 +351,7 @@ class VeloFileTree extends Component {
                 data={this.state}
                 style={theme}
                 onToggle={this.onToggle}
+                decorators={{...decorators, Header}}
               />
             </div>
         );

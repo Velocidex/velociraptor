@@ -10,9 +10,15 @@ import VeloClientSummary from './components/clients/client-summary.js';
 import VFSViewer from './components/vfs/browse-vfs.js';
 import VeloLiveClock from './components/utils/clock.js';
 import ClientFlowsView from './components/flows/client-flows-view.js';
+import ServerFlowsView from './components/flows/server-flows-view.js';
 import Notebook from './components/notebooks/notebook.js';
 import ArtifactInspector from './components/artifacts/artifacts.js';
 import VeloHunts from './components/hunts/hunts.js';
+import UserDashboard from './components/sidebar/user-dashboard.js';
+import Form from 'react-bootstrap/Form';
+import FormControl from 'react-bootstrap/FormControl';
+import Button from 'react-bootstrap/Button';
+import UserLabel from './components/users/user-label.js';
 
 import { UserSettings } from './components/core/user.js';
 
@@ -54,7 +60,7 @@ class App extends Component {
         query_version: "",
     }
 
-    // Called to update the client id.
+    // Called to update the current client.
     setClient = (client) => {
         this.setState({client: client});
     };
@@ -86,28 +92,26 @@ class App extends Component {
 
         return (
             <UserSettings>
-              <div className="navbar navbar-default navbar-static-top" id="header">
-                <div className="navbar-inner">
-                  <div className="">
-                    <VeloNavigator
-                      vfs_path={vfs_path}
-                      client={this.state.client} />
-                    <div className="float-left navbar-form toolbar-buttons">
-                      <VeloClientSearch
-                        setSearch={this.setClientSearch}
-                      />
-                    </div>
-                    <VeloClientSummary client={this.state.client}/>
-                    <div className="nav float-right">
-                      <grr-user-label className="navbar-text"></grr-user-label>
-                    </div>
-                    <div className="nav float-right toolbar-buttons">
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <Navbar fixed="top" className="main-navbar justify-content-between">
+                <Form inline>
+                  <VeloNavigator
+                    vfs_path={vfs_path}
+                    client={this.state.client} />
+
+                  <VeloClientSearch
+                    setSearch={this.setClientSearch}
+                  />
+                </Form>
+                <VeloClientSummary
+                  setClient={this.setClient}
+                  client={this.state.client}/>
+                <UserLabel className="navbar-text"/>
+              </Navbar>
               <div id="content">
                 <Switch>
+                  <Route path="/dashboard">
+                    <UserDashboard />
+                  </Route>
                   <Route path="/search/:query?">
                     <VeloClientList
                       setSearch={this.setClientSearch}
@@ -131,17 +135,20 @@ class App extends Component {
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
                     <VFSViewer client={this.state.client}
                                selectedRow={this.state.selected_row}
-                               setSelectedRow={this.setSelectedRow}
-                               updateVFSPath={this.updateVFSPath}
                                updateCurrentNode={this.updateCurrentNode}
                                node={this.state.current_node}
                                vfs_path={this.state.vfs_path} />
                   </Route>
-                  <Route path="/collected/:client_id/:flow_id?/:tab?">
+                  {/* ClientFlowsView will only be invoked when the
+                    * client is starts with C - the ServerFlowsView is
+                    * invoked when client_id == "server"
+                    */}
+                  <Route path="/collected/:client_id(C[^/]+)/:flow_id?/:tab?">
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
-                    <ClientFlowsView
-                      client={this.state.client}
-                    />
+                    <ClientFlowsView client={this.state.client} />
+                  </Route>
+                  <Route path="/collected/server/:flow_id?/:tab?">
+                    <ServerFlowsView />
                   </Route>
                   <Route path="/notebooks/:notebook_id?">
                     <Notebook />

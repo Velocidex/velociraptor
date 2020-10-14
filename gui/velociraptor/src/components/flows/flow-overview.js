@@ -77,7 +77,7 @@ export default class FlowOverview extends React.Component {
         let artifacts = flow && flow.request && flow.request.artifacts;
 
         if (!flow || !flow.session_id || !artifacts)  {
-            return <div>Please click a collection in the above table</div>;
+            return <h5 className="no-content">Please click a collection in the above table</h5>;
         }
 
         let parameters = flow.request &&

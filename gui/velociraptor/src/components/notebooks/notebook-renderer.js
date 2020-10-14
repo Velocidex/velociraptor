@@ -130,6 +130,10 @@ export default class NotebookRenderer extends React.Component {
     }
 
     render() {
+        if (!this.props.notebook || _.isEmpty(this.props.notebook.cell_metadata)) {
+            return <h5 className="no-content">Select a notebook from the list above.</h5>
+        }
+
         return (
             <>
               { _.map(this.props.notebook.cell_metadata, (cell_md, idx) => {

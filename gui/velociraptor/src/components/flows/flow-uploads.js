@@ -16,6 +16,10 @@ export default class FlowUploads extends React.Component {
         flow: PropTypes.object,
     };
 
+    componentDidMount = () => {
+        this.fetchRows();
+    }
+
     componentDidUpdate(prevProps, prevState, snapshot) {
         let prev_flow_id = prevProps.flow && prevProps.flow.session_id;
         if (this.props.flow.session_id !== prev_flow_id) {
@@ -24,15 +28,17 @@ export default class FlowUploads extends React.Component {
     }
 
     state = {
-        loading: true,
+        loading: false,
         pageData: {},
     }
 
     fetchRows = () => {
+        console.log("Fetching rows");
         let params = {
             client_id: this.props.flow.client_id,
             flow_id: this.props.flow.session_id,
             type: "uploads",
+            rows: 500,
             start_row: 0,
             rows: MAX_ROWS_PER_TABLE,
         };

@@ -12,6 +12,8 @@ import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 import { Join } from '../utils/paths.js';
+import api from '../core/api-service.js';
+import axios from 'axios';
 
 import { withRouter }  from "react-router-dom";
 
@@ -19,12 +21,29 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { formatColumns } from "../core/table.js";
 
+const POLL_TIME = 2000;
+
 class VeloFileList extends Component {
     static propTypes = {
         node: PropTypes.object,
+        version: PropTypes.string,
         client: PropTypes.object,
         updateCurrentNode: PropTypes.func,
     }
+
+    state = {
+        lastRefreshOperationId: null,
+    }
+
+    componentWillUnmount() {
+        if (this.source) {
+            this.source.cancel("unmounted");
+        }
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
+    }
+
 
     updateCurrentFile = (row) => {
         // We store the currently selected row in the node. When the
@@ -35,9 +54,9 @@ class VeloFileList extends Component {
             return;
         }
 
-        node.selected = row;
+        // Store the name of the selected row.
+        node.selected = row.Name;
         this.props.updateCurrentNode(node);
-
 
         let path = this.props.node.path || [];
         // Update the router with the new path.
@@ -47,9 +66,52 @@ class VeloFileList extends Component {
                                 Join(vfs_path));
     }
 
+    startVfsRefreshOperation = () => {
+        // Only allow one refresh at the time.
+        if (this.state.lastRefreshOperationId) {
+            return;
+        }
+
+        let path = this.props.node.path || [];
+        api.post("api/v1/VFSRefreshDirectory", {
+            client_id: this.props.client.client_id,
+            vfs_path: Join(path),
+            depth: 0
+        }).then((response) => {
+            this.setState({lastRefreshOperationId: response.data.flow_id});
+
+            // Start polling for flow completion.
+            this.source = axios.CancelToken.source();
+            this.interval = setInterval(() => {
+                api.get("api/v1/VFSStatDirectory", {
+                    client_id: this.props.client.client_id,
+                    vfs_path: Join(path),
+                    flow_id: this.state.lastRefreshOperationId,
+                }).then((response) => {
+                    // The node is refreshed with the correct flow id, we can stop polling.
+                    if (response.data.flow_id == this.state.lastRefreshOperationId) {
+                        this.source.cancel("unmounted");
+                        clearInterval(this.interval);
+                        this.source = undefined;
+                        this.interval = undefined;
+
+                        // Force a tree refresh since this flow is done.
+                        let node = this.props.node;
+                        node.version = this.state.lastRefreshOperationId;
+                        console.log(node);
+
+                        this.props.updateCurrentNode(this.props.node);
+                        this.setState({lastRefreshOperationId: null});
+                    }
+                });
+            }, POLL_TIME);
+
+        });
+    }
+
     render() {
         // The node keeps track of which row is selected.
-        let selected = this.props.node && this.props.node.selected && this.props.node.selected.Name;
+        let selected_name = this.props.node && this.props.node.selected;
 
         const selectRow = {
             mode: "radio",
@@ -57,7 +119,7 @@ class VeloFileList extends Component {
             hideSelectColumn: true,
             classes: "row-selected",
             onSelect: this.updateCurrentFile,
-            selected: [selected],
+            selected: [selected_name],
         };
 
         let toolbar = (
@@ -81,10 +143,10 @@ class VeloFileList extends Component {
         if (!this.props.node || !this.props.node.raw_data) {
             return (
                 <>
-                { toolbar }
-                <div className="fill-parent no-margins toolbar-margin">
-                  No data available
-                </div>;
+                  { toolbar }
+                  <div className="fill-parent no-margins toolbar-margin">
+                    <h5 className="no-content">No data available. Refresh directory from client by clicking above.</h5>
+                  </div>
                 </>
             );
         }
@@ -106,7 +168,7 @@ class VeloFileList extends Component {
         return (
             <>
               { toolbar }
-              <div className="fill-parent no-margins toolbar-margin">
+              <div className="fill-parent no-margins toolbar-margin selectable">
                 <BootstrapTable
                   hover
                   condensed

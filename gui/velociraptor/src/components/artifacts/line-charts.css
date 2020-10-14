@@ -1,0 +1,15 @@
+.velo-line-chart svg {
+    user-select: none;
+    border-radius: 2px;
+    border-width: 3px;
+    border-style: solid;
+}
+
+.custom-tooltip {
+    margin: 0;
+    padding: 10px;
+    background-color: white;
+    border: 1px solid #ccc;
+    white-space: nowrap;
+    display: block;
+}

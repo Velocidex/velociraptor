@@ -12,9 +12,8 @@ import axios from 'axios';
 
 const POLL_TIME = 5000;
 
-class ClientFlowsView extends React.Component {
+class ServerFlowsView extends React.Component {
     static propTypes = {
-        client: PropTypes.object,
     };
 
     state = {
@@ -33,28 +32,11 @@ class ClientFlowsView extends React.Component {
         clearInterval(this.interval);
     }
 
-    componentDidUpdate = (prevProps, prevState, rootNode) => {
-        let old_client_id = prevProps.client && prevProps.client.client_id;
-        let new_client_id = this.props.client.client_id;
-
-        if (old_client_id !== new_client_id) {
-            this.fetchFlows();
-        }
-    }
-
     fetchFlows = () => {
-        console.log(this.props.match.params);
-
-
-        let client_id = this.props.client && this.props.client.client_id;
-        if (!client_id) {
-            return;
-        }
-
         let selected_flow_id = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
 
-        api.get("api/v1/GetClientFlows/" + client_id, {
+        api.get("api/v1/GetClientFlows/server", {
             count: 100,
             offset: 0,
         }).then(function(response) {
@@ -79,7 +61,7 @@ class ClientFlowsView extends React.Component {
 
         // Update the route.
         this.props.history.push(
-            "/collected/" + this.props.client.client_id + "/" + flow.session_id);
+            "/collected/server/" + flow.session_id);
     }
 
     render() {
@@ -91,15 +73,14 @@ class ClientFlowsView extends React.Component {
                   flows={this.state.flows}
                   fetchFlows={this.fetchFlows}
                   setSelectedFlow={this.setSelectedFlow}
-                  client={this.props.client}/>
+                  client={{client_id: "server"}}/>
                 <FlowInspector
                   flow={this.state.currentFlow}
-                  client={this.props.client}/>
+                  client={{client_id: "server"}}/>
               </SplitPane>
             </>
         );
     }
 };
 
-
-export default withRouter(ClientFlowsView);
+export default withRouter(ServerFlowsView);

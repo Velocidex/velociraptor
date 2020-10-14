@@ -184,7 +184,7 @@ export default class NotebooksList extends React.Component {
                   </Button>
                 </ButtonGroup>
               </Navbar>
-              <div className="fill-parent no-margins toolbar-margin">
+              <div className="fill-parent no-margins toolbar-margin selectable">
                 <BootstrapTable
                   hover
                   condensed
