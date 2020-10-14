@@ -18,16 +18,18 @@ export default class VeloFileDetails extends React.Component {
         updateCurrentNode: PropTypes.func,
     };
 
+    state = {
+        tab: "stats",
+    }
+
     render() {
         let selected_name = this.props.node && this.props.node.selected;
 
         if (!selected_name) {
             return (
-                <div className="card">
-                  <h5 className="card-header">
+                  <h5 className="no-content">
                     Please select a file or a folder to see its details here.
                   </h5>
-                </div>
             );
         }
 
@@ -39,7 +41,7 @@ export default class VeloFileDetails extends React.Component {
               <grr-breadcrumbs path="controller.fileContext.selectedFilePath">
               </grr-breadcrumbs>
 
-              <Tabs defaultActiveKey="stats">
+              <Tabs defaultActiveKey="stats" onSelect={(tab) => this.setState({tab: tab})}>
                 <Tab eventKey="stats" title="Stats">
                   <VeloFileStats
                     client={this.props.client}
@@ -50,17 +52,19 @@ export default class VeloFileDetails extends React.Component {
                 <Tab eventKey="text"
                      disabled={!has_download}
                      title="Textview">
-                  <FileTextView
-                    client={this.props.client}
-                    node={this.props.node} />
+                  { this.state.tab === "text" &&
+                    <FileTextView
+                      client={this.props.client}
+                      node={this.props.node} />}
                 </Tab>
                 <Tab eventKey="hex"
                      disabled={!has_download}
                      title="HexView">
-                  <FileHexView
-                    node={this.props.node}
-                    client={this.props.client}
-                  />
+                  { this.state.tab === "hex" &&
+                    <FileHexView
+                      node={this.props.node}
+                      client={this.props.client}
+                    />}
                 </Tab>
               </Tabs>
             </div>

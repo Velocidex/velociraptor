@@ -121,6 +121,8 @@ export default class VeloAce extends Component {
         // If this is defined, we call it with the editor settings
         // button. Our caller can then place it where they want.
         settingButtonRenderer: PropTypes.func,
+
+        commands: PropTypes.array,
     }
 
     // Remove options which are not settable by the user since they
@@ -184,13 +186,7 @@ export default class VeloAce extends Component {
                   style={
                       {width: "100%"}
                   }
-                  commands={[{
-                      name: 'saveAndExit',
-                      bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
-                      exec: (editor) => {
-                          this.saveArtifact();
-                      },
-                  }]}
+                  commands={this.props.commands}
                   setOptions={options}
                   editorProps={{
                       $blockScrolling: true,

@@ -189,7 +189,7 @@ class NewCollectionSelectArtifacts extends React.Component {
 
               <Modal.Body>
                 <div className="row new-artifact-page">
-                  <div className="col-4 new-artifact-search-table">
+                  <div className="col-4 new-artifact-search-table selectable">
                     {
                       <BootstrapTable
                         remote={ { filter: true } }
@@ -306,7 +306,7 @@ class NewCollectionConfigParameters extends React.Component {
                 <Modal.Title>New Collection - Configure artifact parameters</Modal.Title>
               </Modal.Header>
 
-              <Modal.Body className="new-collection-parameter-page">
+              <Modal.Body className="new-collection-parameter-page selectable">
                 { !_.isEmpty(this.props.artifacts) &&
                   <BootstrapTable
                     keyField="name"

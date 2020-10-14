@@ -10,6 +10,7 @@ import VeloClientSummary from './components/clients/client-summary.js';
 import VFSViewer from './components/vfs/browse-vfs.js';
 import VeloLiveClock from './components/utils/clock.js';
 import ClientFlowsView from './components/flows/client-flows-view.js';
+import ServerFlowsView from './components/flows/server-flows-view.js';
 import Notebook from './components/notebooks/notebook.js';
 import ArtifactInspector from './components/artifacts/artifacts.js';
 import VeloHunts from './components/hunts/hunts.js';
@@ -138,11 +139,16 @@ class App extends Component {
                                node={this.state.current_node}
                                vfs_path={this.state.vfs_path} />
                   </Route>
-                  <Route path="/collected/:client_id/:flow_id?/:tab?">
+                  {/* ClientFlowsView will only be invoked when the
+                    * client is starts with C - the ServerFlowsView is
+                    * invoked when client_id == "server"
+                    */}
+                  <Route path="/collected/:client_id(C[^/]+)/:flow_id?/:tab?">
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
-                    <ClientFlowsView
-                      client={this.state.client}
-                    />
+                    <ClientFlowsView client={this.state.client} />
+                  </Route>
+                  <Route path="/collected/server/:flow_id?/:tab?">
+                    <ServerFlowsView />
                   </Route>
                   <Route path="/notebooks/:notebook_id?">
                     <Notebook />

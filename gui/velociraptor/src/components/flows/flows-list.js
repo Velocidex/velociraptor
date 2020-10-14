@@ -14,6 +14,7 @@ import api from '../core/api-service.js';
 import { formatColumns } from "../core/table.js";
 
 import NewCollectionWizard from './new-collection.js';
+import OfflineCollectorWizard from './offline-collector.js';
 
 import StepWizard from 'react-step-wizard';
 
@@ -31,6 +32,7 @@ class FlowsList extends React.Component {
     state = {
         showWizard: false,
         showCopyWizard: false,
+        showOfflineWizard: false,
     }
 
     setCollectionRequest = (request) => {
@@ -68,6 +70,10 @@ class FlowsList extends React.Component {
                 this.props.fetchFlows();
             });
         }
+    }
+
+    launchOfflineCollector = () => {
+        this.setState({showOfflineWizard: false});
     }
 
     render() {
@@ -117,6 +123,11 @@ class FlowsList extends React.Component {
             selected: [selected_flow],
         };
 
+        // When running on the server we have some special GUI.
+        let client_id = this.props.client && this.props.client.client_id;
+        let isServer = client_id == "server";
+
+
         return (
             <>
               { this.state.showWizard &&
@@ -130,6 +141,12 @@ class FlowsList extends React.Component {
                   baseFlow={this.props.selected_flow}
                   onCancel={(e) => this.setState({showCopyWizard: false})}
                   onResolve={this.setCollectionRequest} />
+              }
+
+              { this.state.showOfflineWizard &&
+                <OfflineCollectorWizard
+                  onCancel={(e) => this.setState({showOfflineWizard: false})}
+                  onResolve={this.launchOfflineCollector} />
               }
 
               <Navbar className="toolbar">
@@ -155,6 +172,15 @@ class FlowsList extends React.Component {
                           variant="default">
                     <FontAwesomeIcon icon="copy"/>
                   </Button>
+
+                  { isServer &&
+                    <Button title="Build offline collector"
+                            onClick={() => this.setState({showOfflineWizard: true})}
+                            variant="default">
+                      <FontAwesomeIcon icon="paper-plane"/>
+                    </Button>
+                  }
+
                 </ButtonGroup>
               </Navbar>
 

@@ -145,7 +145,7 @@ class VeloFileList extends Component {
                 <>
                   { toolbar }
                   <div className="fill-parent no-margins toolbar-margin">
-                    No data available
+                    <h5 className="no-content">No data available. Refresh directory from client by clicking above.</h5>
                   </div>
                 </>
             );

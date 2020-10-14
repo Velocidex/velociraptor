@@ -98,7 +98,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink to="/server_artifacts">
+                      <NavLink to="/collected/server">
                         <ul className="nav nav-pills  navigator">
                           <li className="nav-link" state="server_artifacts" >
                             <i className="navicon"><FontAwesomeIcon icon="server"/></i>

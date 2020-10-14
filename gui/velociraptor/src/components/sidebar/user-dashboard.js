@@ -33,22 +33,27 @@ class UserDashboard extends React.Component {
             start_time: now - ranges[0].sec,
             sample: 4,
             desc: ranges[0].desc,
+            version: 0,
         };
     }
 
-
-
     shouldComponentUpdate = (nextProps, nextState) => {
         // Do not keep updating the dashboard - it is quite expensive
-        // and should be done sparingly.
+        // and should be done sparingly unless the version is actually
+        // changed. The version is changed by pressing the "Refresh"
+        // Button or selecting a new range.
+        if (this.state.version != nextState.version) {
+            return true;
+        }
         return false;
-    }
+    };
 
     setRange = (desc) => {
         // Current time in seconds.
         let now = parseInt((new Date()).getTime() / 1000);
         this.setState({start_time: now - desc.sec,
                        desc: desc.desc,
+                       version: this.state.version + 1,
                        sample: desc.sample});
     }
 
@@ -57,7 +62,9 @@ class UserDashboard extends React.Component {
             <>
               <Navbar className="toolbar">
                 <ButtonGroup>
-                  <Button variant="default" onClick={() => this.setState({})} >
+                  <Button variant="default" onClick={() => this.setState({
+                      version: this.state.version + 1,
+                  })} >
                     <FontAwesomeIcon icon="sync"/>
                   </Button>
 

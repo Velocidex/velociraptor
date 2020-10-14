@@ -107,7 +107,7 @@ export default class FileHexView extends React.Component {
         let selectedRow = utils.getSelectedRow(this.props.node);
         let mtime = selectedRow && selectedRow.Download && selectedRow.Download.mtime;
         if (!mtime) {
-            return <div>File has no data, please collect file first.</div>;
+            return <h5 className="no-content">File has no data, please collect file first.</h5>;
         }
 
         var total_size = selectedRow.Size || 0;
