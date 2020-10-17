@@ -277,9 +277,7 @@ class ShellViewer extends Component {
             return;
         }
 
-        var url = '/api/v1/GetClientFlows/' + this.props.client.client_id;
-
-        api.get(url, {
+        api.get('v1/GetClientFlows/'+ this.props.client.client_id, {
             count: 100, offset: 0},
                 this.source.token // CancelToken
                ).then(

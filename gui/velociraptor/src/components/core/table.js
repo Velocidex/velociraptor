@@ -18,7 +18,6 @@ import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Modal from 'react-bootstrap/Modal';
 import Navbar from 'react-bootstrap/Navbar';
-import Table  from 'react-bootstrap/Table';
 
 import VeloNotImplemented from '../core/notimplemented.js';
 import VeloAce from '../core/ace.js';
@@ -264,7 +263,7 @@ const int_regex = /^[-0-9]+$/;
 
 export function PrepareData(value) {
     var rows = [];
-    let columns = value.columns;
+    let columns = value.columns || [];
     for (var i=0; i<value.rows.length; i++) {
         var row = value.rows[i].cell;
         var new_row = {};
@@ -293,7 +292,7 @@ export function headerFormatter(column, colIndex, { sortElement, filterElement }
     let result = (
         // Not a real table but I cant figure out the css
         // right now so we do it old school.
-        <Table className="notebook-filter">
+        <table className="notebook-filter">
           <tbody>
             <tr>
               { column.filter ?
@@ -302,7 +301,7 @@ export function headerFormatter(column, colIndex, { sortElement, filterElement }
               <td className="sort-element">{ sortElement }</td>
             </tr>
           </tbody>
-        </Table>
+        </table>
     );
     return result;
 }

@@ -104,7 +104,7 @@ class NewCollectionSelectArtifacts extends React.Component {
         paginator: PropTypes.object,
 
         // Artifact type CLIENT, SERVER, CLIENT_EVENT, SERVER_EVENT
-        type: PropTypes.string,
+        artifactType: PropTypes.string,
     };
 
     state = {
@@ -151,7 +151,7 @@ class NewCollectionSelectArtifacts extends React.Component {
     doSearch = (value) => {
         this.setState({loading: true});
         api.get("v1/GetArtifacts", {
-            type: this.props.type,
+            type: this.props.artifactType,
             search_term: value}).then((response) => {
             let items = response.data.items || [];
             this.setState({matchingDescriptors: items, loading: false});
@@ -570,6 +570,11 @@ class NewCollectionWizard extends React.Component {
 
     render() {
         let request = this.state.original_flow && this.state.original_flow.request;
+        let client_id = this.props.client && this.props.client.client_id;
+        let type = "CLIENT";
+        if (!client_id || client_id==="server") {
+            type="SERVER";
+        }
 
         return (
             <Modal show={true}
@@ -581,6 +586,7 @@ class NewCollectionWizard extends React.Component {
               <StepWizard>
                 <NewCollectionSelectArtifacts
                   artifacts={this.state.artifacts}
+                  artifactType={type}
                   paginator={new PaginationBuilder("Select Artifacts",
                                                    "New Collection: Select Artifacts to collect")}
                   setArtifacts={this.setArtifacts}/>

@@ -148,6 +148,7 @@ export default class VeloLineChart extends React.Component {
         // columns.
         let first_value = refData[0][this.props.columns[1]];
         let [bottom, top] = [first_value, first_value];
+        /* eslint no-loop-func: "off" */
         for (let i = 1; i<this.props.columns.length; i++) {
             let column = this.props.columns[i];
             refData.forEach((d) => {

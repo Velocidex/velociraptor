@@ -204,9 +204,11 @@ export default class OfflineCollectorWizard extends React.Component {
                           return isFocused;
                       })}
                   artifacts={this.state.artifacts}
+                  artifactType="CLIENT"
                   setArtifacts={this.setArtifacts}/>
 
                 <NewCollectionConfigParameters
+                  parameters={this.state.parameters}
                   setParameters={this.setParameters}
                   artifacts={this.state.artifacts}
                   setArtifacts={this.setArtifacts}

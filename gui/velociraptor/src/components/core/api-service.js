@@ -4,13 +4,28 @@ import _ from 'lodash';
 
 const api_handlers = "/api/";
 
+
+const handle_error = err=>{
+    let data = err.response && err.response.data;
+    data = data || "Generic Error";
+
+    if(data.message) {
+        data = data.message;
+    };
+
+    // Call all the registered hooks.
+    _.each(hooks, h=>h("Error: " + data));
+    throw err;
+};
+
+
 const get = function(url, params, cancel_token) {
     return axios({
         method: 'get',
         url: api_handlers + url,
         params: params,
         cancelToken: cancel_token,
-    });
+    }).catch(handle_error);
 };
 
 const get_blob = function(url, params, cancel_token) {
@@ -22,7 +37,7 @@ const get_blob = function(url, params, cancel_token) {
         cancelToken: cancel_token,
     }).then((blob) => {
         return blob.data.text();
-    });
+    }).catch(handle_error);
 };
 
 const post = function(url, params, cancel_token) {
@@ -41,7 +56,7 @@ const post = function(url, params, cancel_token) {
             window.CsrfToken = token;
         }
         return response;
-    });
+    }).catch(handle_error);
 };
 
 const upload = function(url, files, params) {
@@ -59,13 +74,15 @@ const upload = function(url, files, params) {
         headers: {
             "X-CSRF-Token": window.CsrfToken,
         }
-    });
+    }).catch(handle_error);
 };
 
+var hooks = [];
 
 export default {
     get: get,
     get_blob: get_blob,
     post: post,
     upload: upload,
+    hooks: hooks,
 };

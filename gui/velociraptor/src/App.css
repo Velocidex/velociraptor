@@ -46,3 +46,11 @@ h4 {
     font-size: 2.0em;
     color: #bcbbbb;
 }
+
+nav.app-footer.fixed-bottom {
+    background-color: var(--color-footer-background);
+}
+
+.Snackbar {
+    z-index: 1200;
+}
