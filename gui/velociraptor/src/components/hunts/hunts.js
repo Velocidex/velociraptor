@@ -1,6 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-
 import SplitPane from 'react-split-pane';
 import HuntsList from './hunt-list.js';
 import HuntInspector from './hunt-inspector.js';
@@ -49,7 +47,7 @@ class VeloHunts extends React.Component {
         this.setState({selected_hunt: hunt});
         this.props.history.push("/hunts/" + hunt.hunt_id);
 
-        api.get("api/v1/GetHunt", {
+        api.get("v1/GetHunt", {
             hunt_id: hunt.hunt_id,
         }).then((response) => {
             this.setState({full_selected_hunt: response.data});
@@ -60,7 +58,7 @@ class VeloHunts extends React.Component {
         let selected_hunt_id = this.props.match && this.props.match.params &&
             this.props.match.params.hunt_id;
 
-        api.get("api/v1/ListHunts", {
+        api.get("v1/ListHunts", {
             count: 100,
             offset: 0,
         }).then((response) => {
@@ -82,7 +80,7 @@ class VeloHunts extends React.Component {
         // Get the full hunt information from the server based on the hunt
         // metadata
         if (selected_hunt_id) {
-            api.get("api/v1/GetHunt", {
+            api.get("v1/GetHunt", {
                 hunt_id: selected_hunt_id,
             }).then((response) => {
                 this.setState({full_selected_hunt: response.data});

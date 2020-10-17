@@ -18,6 +18,7 @@ import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Modal from 'react-bootstrap/Modal';
 import Navbar from 'react-bootstrap/Navbar';
+import Table  from 'react-bootstrap/Table';
 
 import VeloNotImplemented from '../core/notimplemented.js';
 import VeloAce from '../core/ace.js';
@@ -289,19 +290,21 @@ export function PrepareData(value) {
 };
 
 export function headerFormatter(column, colIndex, { sortElement, filterElement }) {
-    return (
+    let result = (
         // Not a real table but I cant figure out the css
         // right now so we do it old school.
-        <table className="notebook-filter">
+        <Table className="notebook-filter">
           <tbody>
             <tr>
-              { column.filter && <td>{ filterElement }</td> }
-              { !column.filter && <td>{ column.text }</td> }
+              { column.filter ?
+                <td>{ filterElement }</td> :
+                <td>{ column.text }</td> }
               <td className="sort-element">{ sortElement }</td>
             </tr>
           </tbody>
-        </table>
+        </Table>
     );
+    return result;
 }
 
 export function sortCaret(order, column) {

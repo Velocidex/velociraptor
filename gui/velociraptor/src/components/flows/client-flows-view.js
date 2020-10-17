@@ -51,7 +51,7 @@ class ClientFlowsView extends React.Component {
         let selected_flow_id = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
 
-        api.get("api/v1/GetClientFlows/" + client_id, {
+        api.get("v1/GetClientFlows/" + client_id, {
             count: 100,
             offset: 0,
         }).then(function(response) {

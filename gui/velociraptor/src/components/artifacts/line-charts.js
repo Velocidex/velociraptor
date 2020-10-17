@@ -3,7 +3,7 @@ import './line-charts.css';
 import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
-import { Legend, ReferenceArea, ResponsiveContainer, LineChart,
+import { ReferenceArea, ResponsiveContainer, LineChart,
          Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 
 const strokes = [
@@ -141,7 +141,7 @@ export default class VeloLineChart extends React.Component {
         // last x_column value.
         let refData = _.filter(this.props.data, x => x[x_column] >= from && x[x_column] <= to);
         if (_.isEmpty(refData)) {
-            return 0, 0, 0, 0;
+            return [0, 0, 0, 0];
         }
 
         // Find the top or bottom value that is largest of all
@@ -164,8 +164,6 @@ export default class VeloLineChart extends React.Component {
 
     zoom = () => {
         let { refAreaLeft, refAreaRight } = this.state;
-        let data = this.props.data;
-
         if (refAreaLeft === refAreaRight || !refAreaRight) {
             this.setState(() => ({
                 refAreaLeft: '',
@@ -208,8 +206,6 @@ export default class VeloLineChart extends React.Component {
         }
 
         let x_column = columns[0];
-        let y_column = columns[1];
-
         let tick_renderer = <DefaultTickRenderer />;
         let xaxis_mode = this.props.params && this.props.params.xaxis_mode;
         if (xaxis_mode === "time") {
@@ -251,7 +247,7 @@ export default class VeloLineChart extends React.Component {
                   onMouseMove={e => {
                       let refAreaRight = e && e.activeLabel;
                       if (this.state.refAreaLeft && refAreaRight) {
-                          this.setState({refAreaRight, refAreaRight});
+                          this.setState({refAreaRight: refAreaRight});
                       }
                   }}
                   onMouseUp={this.zoom}

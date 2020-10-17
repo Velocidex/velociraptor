@@ -10,7 +10,6 @@ import Col from 'react-bootstrap/Col';
 import {
     NewCollectionSelectArtifacts,
     NewCollectionConfigParameters,
-    NewCollectionResources,
     NewCollectionRequest,
     NewCollectionLaunch,
     PaginationBuilder
@@ -87,7 +86,7 @@ class OfflineCollectorParameters  extends React.Component {
                     </Col>
                   </Form.Group>
 
-                  { this.props.parameters.target == "GCS" && <>
+                  { this.props.parameters.target === "GCS" && <>
                     <Form.Group as={Row}>
                       <Form.Label column sm="3">GCS Bucket</Form.Label>
                       <Col sm="8">

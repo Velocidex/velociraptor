@@ -16,8 +16,6 @@ import { formatColumns } from "../core/table.js";
 import NewCollectionWizard from './new-collection.js';
 import OfflineCollectorWizard from './offline-collector.js';
 
-import StepWizard from 'react-step-wizard';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 class FlowsList extends React.Component {
@@ -38,7 +36,7 @@ class FlowsList extends React.Component {
     setCollectionRequest = (request) => {
         // Make a request to the start the flow on this client.
         request.client_id = this.props.client.client_id;
-        api.post("api/v1/CollectArtifact", request).then((response) => {
+        api.post("v1/CollectArtifact", request).then((response) => {
             // When the request is done force our parent to refresh.
             this.props.fetchFlows();
         });
@@ -128,7 +126,7 @@ class FlowsList extends React.Component {
 
         // When running on the server we have some special GUI.
         let client_id = this.props.client && this.props.client.client_id;
-        let isServer = client_id == "server";
+        let isServer = client_id === "server";
 
 
         return (

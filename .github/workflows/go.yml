@@ -35,9 +35,9 @@ jobs:
 
     - name: npm install gui
       run: |
-            cd gui/static/
+            cd gui/velociraptor/
             npm install
-            node node_modules/gulp/bin/gulp.js compile
+            npm run build
             cd ../../
 
     - name: Build All Architectures

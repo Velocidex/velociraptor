@@ -53,6 +53,7 @@
         "recharts": "^1.8.5",
         "styled-components": "^5.2.0"
     },
+    "homepage": ".",
     "scripts": {
         "start": "react-scripts start",
         "build": "react-scripts build",

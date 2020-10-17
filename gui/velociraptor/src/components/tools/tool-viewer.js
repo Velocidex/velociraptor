@@ -33,7 +33,7 @@ export default class ToolViewer extends React.Component {
     }
 
     fetchToolInfo = () => {
-        api.get("api/v1/GetToolInfo",
+        api.get("v1/GetToolInfo",
                 {name: this.props.name}).then((response) => {
             this.setState({tool: response.data, initialized_from_parent: true});
         });
@@ -51,7 +51,7 @@ export default class ToolViewer extends React.Component {
             return;
         }
         this.setState({loading: true});
-        api.upload("api/v1/UploadTool",
+        api.upload("v1/UploadTool",
                    {file: this.state.tool_file}, this.state.tool).then(response => {
             this.setState({loading:false, tool: response.data});
         });
@@ -60,7 +60,7 @@ export default class ToolViewer extends React.Component {
 
     setToolInfo = (tool) => {
         this.setState({inflight: true});
-        api.post("api/v1/SetToolInfo", tool).then((response) => {
+        api.post("v1/SetToolInfo", tool).then((response) => {
             this.setState({tool: response.data});
         }).finally(() => {
             this.setState({inflight: false});

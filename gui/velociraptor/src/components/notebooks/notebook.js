@@ -33,7 +33,7 @@ class Notebooks extends React.Component {
     }
 
     fetchNotebooks = () => {
-        api.get("api/v1/GetNotebooks", {
+        api.get("v1/GetNotebooks", {
             count: PAGE_SIZE,
             offset: 0,
         }).then(function(response) {

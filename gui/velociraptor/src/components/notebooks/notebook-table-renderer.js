@@ -31,7 +31,7 @@ export default class NotebookTableRenderer extends React.Component {
 
     getData = () => {
         this.setState({loading: true});
-        api.get("api/v1/GetTable", this.props.params).then((response) => {
+        api.get("v1/GetTable", this.props.params).then((response) => {
             this.setState({loading: false, pageData: PrepareData(response.data)});
         });
     }

@@ -45,7 +45,7 @@ export default class FlowLogs extends React.Component {
         };
 
         this.setState({loading: true});
-        api.get("api/v1/GetTable", params).then((response) => {
+        api.get("v1/GetTable", params).then((response) => {
             this.setState({loading: false, pageData: PrepareData(response.data)});
         }).catch(() => {
             this.setState({loading: false, pageData: {}});

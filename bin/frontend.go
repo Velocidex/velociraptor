@@ -25,7 +25,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/gui/assets"
+	assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"

@@ -7,7 +7,6 @@ import _ from 'lodash';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
-import SplitPane from 'react-split-pane';
 import BootstrapTable from 'react-bootstrap-table-next';
 import Pagination from 'react-bootstrap/Pagination';
 import Form from 'react-bootstrap/Form';
@@ -82,7 +81,7 @@ class PaginationBuilder {
 // Add an artifact to the list of artifacts.
 const add_artifact = (artifacts, new_artifact) => {
     // Remove it from the list if it exists already
-    let result = _.filter(artifacts, (x) => x.name != new_artifact.name);
+    let result = _.filter(artifacts, (x) => x.name !== new_artifact.name);
 
     // Push the new artifact to the end of the list.
     result.push(new_artifact);
@@ -91,8 +90,8 @@ const add_artifact = (artifacts, new_artifact) => {
 
 // Remove the named artifact from the list of artifacts
 const remove_artifact = (artifacts, name) => {
-    return _.filter(artifacts, (x) => x.name != name);
-}
+    return _.filter(artifacts, (x) => x.name !== name);
+};
 
 
 class NewCollectionSelectArtifacts extends React.Component {
@@ -151,7 +150,7 @@ class NewCollectionSelectArtifacts extends React.Component {
 
     doSearch = (value) => {
         this.setState({loading: true});
-        api.get("api/v1/GetArtifacts", {
+        api.get("v1/GetArtifacts", {
             type: this.props.type,
             search_term: value}).then((response) => {
             let items = response.data.items || [];
@@ -164,7 +163,6 @@ class NewCollectionSelectArtifacts extends React.Component {
             placeholder: "Search for artifacts...",
         })}];
 
-        let selected = this.state.selectedDescriptor && this.state.selectedDescriptor.name;
         let selectRow = {mode: "checkbox",
                          clickToSelect: true,
                          classes: "row-selected",
@@ -492,8 +490,7 @@ class NewCollectionWizard extends React.Component {
         });
 
         // Resolve the artifacts from the request into a list of descriptors.
-        api.get("api/v1/GetArtifacts", {names: request.artifacts}).
-            then((response) => {
+        api.get("v1/GetArtifacts", {names: request.artifacts}).then(response=>{
                 if (response && response.data &&
                     response.data.items && response.data.items.length) {
 
@@ -572,7 +569,6 @@ class NewCollectionWizard extends React.Component {
     }
 
     render() {
-        let paginator = new PaginationBuilder();
         let request = this.state.original_flow && this.state.original_flow.request;
 
         return (

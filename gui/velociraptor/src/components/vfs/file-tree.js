@@ -169,7 +169,7 @@ class VeloFileTree extends Component {
 
         // If node needs to be refreshed we reset the local cache to
         // force reloading from the server.
-        if (prevProps.version != this.props.version) {
+        if (prevProps.version !== this.props.version) {
             let node = this.state.cursor;
             node.active = true;
             node.toggled = true;
@@ -179,7 +179,7 @@ class VeloFileTree extends Component {
 
         if (!_.isEqual(prev_vfs_path, vfs_path) ||
             prevClient !== currentClient ||
-            prevProps.version != this.props.version) {
+            prevProps.version !== this.props.version) {
             this.updateTree(vfs_path, function(node) {
 
                 if(node.inflight) {
@@ -260,7 +260,7 @@ class VeloFileTree extends Component {
             node.loading = true;
             node.inflight = true;
 
-            api.get("api/v1/VFSListDirectory/" + client_id, {
+            api.get("v1/VFSListDirectory/" + client_id, {
                 vfs_path: Join(prev_components),
             }).then(function(response) {
                 node.loading = false;

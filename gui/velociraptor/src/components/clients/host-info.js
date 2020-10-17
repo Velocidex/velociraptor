@@ -18,9 +18,7 @@ import Card from 'react-bootstrap/Card';
 import { Link } from  "react-router-dom";
 import api from '../core/api-service.js';
 import axios from 'axios';
-import { parseCSV, serializeCSV } from '../utils/csv.js';
-import Spinner from '../utils/spinner.js';
-
+import { parseCSV } from '../utils/csv.js';
 import "./host-info.css";
 
 const POLL_TIME = 5000;
@@ -66,8 +64,7 @@ class VeloHostInfo extends Component {
 
     fetchMetadata = () => {
         this.setState({loading: true});
-        api.get("api/v1/GetClientMetadata/" + this.props.client.client_id).
-            then(response => {
+        api.get("v1/GetClientMetadata/" + this.props.client.client_id).then(response=>{
                 let metadata = "Key,Value\n";
                 var rows = 0;
                 var items = response.data["items"] || [];
@@ -79,7 +76,7 @@ class VeloHostInfo extends Component {
                         rows += 1;
                     }
                 };
-                if (rows == 0) {
+                if (rows === 0) {
                     metadata = "Key,Value\n,\n";
                 };
                 this.setState({metadata: metadata, loading: false});
@@ -93,7 +90,7 @@ class VeloHostInfo extends Component {
         });
 
         var params = {client_id: this.props.client.client_id, items: items};
-        api.post("api/v1/SetClientMetadata", params).then(() => {
+        api.post("v1/SetClientMetadata", params).then(() => {
             this.fetchMetadata();
         });
     }

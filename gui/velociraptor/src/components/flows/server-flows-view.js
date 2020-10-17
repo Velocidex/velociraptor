@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import SplitPane from 'react-split-pane';
 
@@ -36,7 +35,7 @@ class ServerFlowsView extends React.Component {
         let selected_flow_id = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
 
-        api.get("api/v1/GetClientFlows/server", {
+        api.get("v1/GetClientFlows/server", {
             count: 100,
             offset: 0,
         }).then(function(response) {

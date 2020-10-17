@@ -7,7 +7,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import FormGroup from 'react-bootstrap/FormGroup';
-import Form from 'react-bootstrap/Form';
 import { withRouter }  from "react-router-dom";
 import Autosuggest from 'react-autosuggest';
 
@@ -22,9 +21,8 @@ class VeloClientSearch extends Component {
     componentDidMount = () => {
         let query = this.props.match && this.props.match.params &&
             this.props.match.params.query;
-        if (query && query != this.state.query) {
+        if (query && query !== this.state.query) {
             this.this.setState({query: query});
-
         };
     };
 
@@ -47,7 +45,7 @@ class VeloClientSearch extends Component {
     }
 
     showSuggestions = (query) => {
-        api.get('/api/v1/SearchClients', {
+        api.get('v1/SearchClients', {
             query: query + "*",
             count: 10,
             type:1,

@@ -8,7 +8,6 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Dropdown from 'react-bootstrap/Dropdown';
-import Calendar from 'react-calendar';
 import DatePicker  from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -44,7 +43,7 @@ class InspectRawJson extends React.PureComponent {
     }
 
     fetchEventTable = () => {
-        api.get("api/v1/GetClientMonitoringState").then(resp => {
+        api.get("v1/GetClientMonitoringState").then(resp => {
             let table = resp.data;
             delete table.artifacts["compiled_collector_args"];
             _.each(table.label_events, x=> {
@@ -136,7 +135,7 @@ class EventMonitoring extends React.Component {
     componentDidUpdate = (prevProps, prevState, rootNode) => {
         let client_id = this.props.client && this.props.client.client_id;
         let prev_client_id = prevProps.client && prevProps.client.client_id;
-        if (client_id != prev_client_id) {
+        if (client_id !== prev_client_id) {
             this.fetchEventResults();
         }
     }
@@ -161,7 +160,7 @@ class EventMonitoring extends React.Component {
     }
 
     fetchEventResults = () => {
-        api.post("api/v1/ListAvailableEventResults", {
+        api.post("v1/ListAvailableEventResults", {
             client_id: this.props.client.client_id,
         }).then(resp => {
             let router_artifact = this.props.match && this.props.match.params &&
@@ -170,7 +169,7 @@ class EventMonitoring extends React.Component {
                 let logs = resp.data.logs || [];
                 for(let i=0; i<logs.length;i++) {
                     let log=logs[i];
-                    if (log.artifact == router_artifact &&
+                    if (log.artifact === router_artifact &&
                         log.timestamps.length > 0) {
                         let last_time = new Date(
                             log.timestamps[log.timestamps.length-1]*1000);
@@ -225,13 +224,13 @@ class EventMonitoring extends React.Component {
     }
 
     setEventTable = (request) => {
-        api.post("api/v1/SetClientMonitoringState", request).then(resp=>{
+        api.post("v1/SetClientMonitoringState", request).then(resp=>{
             this.setState({showEventTableWizard: false});
         });
     }
 
     setServerEventTable = (request) => {
-        api.post("api/v1/SetServerMonitoringState", request).then(resp=>{
+        api.post("v1/SetServerMonitoringState", request).then(resp=>{
             this.setState({showServerEventTableWizard: false});
         });
     }
@@ -295,7 +294,7 @@ class EventMonitoring extends React.Component {
                           return <Dropdown.Item
                                    key={idx}
                                    title={x.artifact}
-                                   active={x.artifact == active_artifact}
+                                   active={x.artifact === active_artifact}
                                    onClick={() => {
                                        this.setArtifact(x);
                                    }}>

@@ -1,0 +1,22 @@
+pkg: velociraptor
+
+# We assume we are run from the toplevel directory:
+# fileb0x gui/velociraptor/b0x.yaml
+dest: "gui/velociraptor/"
+
+fmt: false
+tags: "release"
+compression:
+    compress: true
+
+output: "ab0x.go"
+custom:
+  # All the JS code is compiled into a bundle in the build directory already.
+  - files:
+      - "gui/velociraptor/build/**"
+    base: "gui/velociraptor/build/"
+    exclude:
+      - "**/*~"
+      - "**/*.map"
+
+init: Init

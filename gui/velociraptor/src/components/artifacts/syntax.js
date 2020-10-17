@@ -29,7 +29,7 @@ export default class Completer {
         // expressions.
         for(var i=0; i<30;i++) {
             var distilled = this.distill(previous);
-            if (distilled == previous) {
+            if (distilled === previous) {
                 break;
             };
             previous = distilled;
@@ -51,7 +51,7 @@ export default class Completer {
         }
 
         // Plugin args - pos is the opening bracket.
-        match = /(FROM +([a-z0-9A-Z_.]+))\([^\(\)]*?$/gi.exec(previous);
+        match = /(FROM +([a-z0-9A-Z_.]+))\([^()]*?$/gi.exec(previous);
         if (match) {
             results.push({context: "plugin_args", pos: match.index + match[1].length,
                           name: match[2]});
@@ -64,7 +64,7 @@ export default class Completer {
         }
 
         // Function args - pos is the opening bracket.
-        match = /([a-z0-9A-Z_.]+)\([^\(\)]*?$/i.exec(previous);
+        match = /([a-z0-9A-Z_.]+)\([^()]*?$/i.exec(previous);
         if (match) {
             results.push({context: "function_args", pos: match.index + match[1].length,
                           name: match[1]});
@@ -83,13 +83,13 @@ export default class Completer {
         }
 
         // Subquery
-        match = /\{[^\}]*?$/.exec(previous);
+        match = /\{[^}]*?$/.exec(previous);
         if (match) {
             results.push({context: "subquery", pos: match.index});
         }
 
         var result = {pos:0};
-        for (var i=0; i<results.length; i++) {
+        for (let i=0; i<results.length; i++) {
             if (results[i].pos > result.pos) {
                 result = results[i];
             };
@@ -102,7 +102,7 @@ export default class Completer {
         var completions = [];
         for (var i =0; i<this.state.completions.length; i++) {
             var item = this.state.completions[i];
-            if (item.type == "Keyword") {
+            if (item.type === "Keyword") {
                 completions.push({
                     caption: item.name,
                     description: item.description,
@@ -120,9 +120,9 @@ export default class Completer {
         var completions = [];
         for (var i =0; i<this.state.completions.length; i++) {
             var item = this.state.completions[i];
-            if (item.type == "Plugin") {
+            if (item.type === "Plugin") {
                 var item_name = item.name;
-                if (prefix == "?") {
+                if (prefix === "?") {
                     item_name = prefix + item_name;
                 } else if (!item_name.startsWith(prefix)) {
                     continue;
@@ -147,7 +147,7 @@ export default class Completer {
         var completions = [];
         for (var i =0; i<this.state.completions.length; i++) {
             var item = this.state.completions[i];
-            if (item.type == "Artifact") {
+            if (item.type === "Artifact") {
                 var item_name = item.name;
                 if (!item_name.startsWith(prefix)) {
                     continue;
@@ -157,10 +157,9 @@ export default class Completer {
 
                 var components = item_name.split(".");
                 var prefix_components = prefix.split(".");
-                var current_component = components[prefix_components.length-1];
                 var replacement = components.slice(0, prefix_components.length).join(".");
 
-                if (components.length == prefix_components.length) {
+                if (components.length === prefix_components.length) {
                     replacement += "(";
 
                     if (item.description) {
@@ -188,20 +187,20 @@ export default class Completer {
         var completions = [];
         for (var i =0; i<this.state.completions.length; i++) {
             var item = this.state.completions[i];
-            if ((item.type == "Plugin" || item.type == "Artifact") && item.name == name) {
+            if ((item.type === "Plugin" || item.type === "Artifact") && item.name === name) {
                 var arg_desc = item.args || [];
 
                 for (var j =0; j <arg_desc.length; j++) {
                     var arg = item.args[j];
                     var arg_name = arg.name;
-                    if (prefix == "?") {
+                    if (prefix === "?") {
                         arg_name = prefix + arg_name;
                     } else if (!arg_name.startsWith(prefix)) {
                         continue;
                     }
 
                     var meta =  "plugin arg (" + arg.type + ")";
-                    if (item.type == "Artifact") {
+                    if (item.type === "Artifact") {
                         meta = arg.type;
                     };
 
@@ -226,9 +225,9 @@ export default class Completer {
         var completions = [];
         for (var i =0; i<this.state.completions.length; i++) {
             var item = this.state.completions[i];
-            if (item.type == "Function") {
+            if (item.type === "Function") {
                 var item_name = item.name;
-                if (prefix == "?") {
+                if (prefix === "?") {
                     item_name = prefix + item_name;
                 } else if (!item_name.startsWith(prefix)) {
                     continue;
@@ -258,13 +257,13 @@ export default class Completer {
         var completions = [];
         for (var i =0; i<this.state.completions.length; i++) {
             var item = this.state.completions[i];
-            if (item.type == "Function" && item.name == name) {
+            if (item.type === "Function" && item.name === name) {
                 var arg_desc = item.args || [];
 
                 for (var j =0; j <arg_desc.length; j++) {
                     var arg = item.args[j];
                     var arg_name = arg.name;
-                    if (prefix == "?") {
+                    if (prefix === "?") {
                         arg_name = prefix + arg_name;
                     } else if (!arg_name.startsWith(prefix)) {
                         continue;
@@ -288,13 +287,13 @@ export default class Completer {
 
 
     initializeAceEditor = (ace, options) => {
-        api.get('api/v1/GetKeywordCompletions').then((response) => {
+        api.get('v1/GetKeywordCompletions').then((response) => {
             this.state.completions = response.data['items'];
         });
 
         // create a completer object with a required callback function:
         var vqlCompleter = {
-            identifierRegexps: [/[a-zA-Z_0-9.?\$\-\u00A2-\uFFFF]/],
+            identifierRegexps: [/[a-zA-Z_0-9.?$\-\u00A2-\uFFFF]/],
 
             getCompletions: (editor, session, pos, prefix, callback) => {
                 var previous_rows = session.doc.getAllLines().slice(0, pos.row+1);
@@ -306,18 +305,18 @@ export default class Completer {
                 var context = this.guessContext(previous, prefix);
 
                 // Do not complete inside a string.
-                if (context.context == "string") {
+                if (context.context === "string") {
                     callback(null, []);
 
-                } else if (context.context == "plugin") {
+                } else if (context.context === "plugin") {
                     callback(null, this.getPluginCompletions(prefix).concat(
                         this.getArtifactCompletions(prefix)));
 
-                } else if (context.context == "plugin_args") {
+                } else if (context.context === "plugin_args") {
                     callback(null, this.getPluginArgsCompletions(context.name, prefix).concat(
                         this.getFunctionCompletions(prefix)));
 
-                } else if (context.context == "function_args") {
+                } else if (context.context === "function_args") {
                     callback(null, this.getFunctionArgsCompletions(context.name, prefix).concat(
                         this.getFunctionCompletions(prefix)));
 

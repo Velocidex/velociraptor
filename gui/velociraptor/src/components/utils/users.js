@@ -1,8 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import _ from 'lodash';
-
 import api from '../core/api-service.js';
 import MultiSelect from "@khanacademy/react-multi-select";
 
@@ -31,14 +29,14 @@ export default class UserForm extends React.Component {
     }
 
     loadUsers = () => {
-        api.get("api/v1/GetUsers").then((response) => {
+        api.get("v1/GetUsers").then((response) => {
             let names = [];
             for(var i = 0; i<response.data.users.length; i++) {
                 var name = response.data.users[i].name;
 
                 // Only add other users than the currently logged in
                 // user.
-                if (name != username) {
+                if (name !== username) {
                     names.push({value: name, label: name});
                 };
             }
