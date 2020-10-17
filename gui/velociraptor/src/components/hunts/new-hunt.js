@@ -45,7 +45,7 @@ class NewHuntConfigureHunt extends React.Component {
 
             include_condition: "",
             include_labels: [],
-            include_os: "",
+            include_os: "WINDOWS", // Default selector
             exclude_condition: "",
             excluded_labels: [],
         };
@@ -177,7 +177,7 @@ export default class NewHuntWizard extends React.Component {
         artifacts: [],
 
         // A key/value mapping of edited parameters by the user.
-        parameters: {env: []},
+        parameters: {},
 
         resources: {},
 
@@ -189,13 +189,7 @@ export default class NewHuntWizard extends React.Component {
     }
 
     setParameters = (params) => {
-        let new_parameters = {env: []};
-        for (var k in params) {
-            if (params.hasOwnProperty(k)) {
-                new_parameters.env.push({key: k, value: params[k]});
-            }
-        }
-        this.setState({parameters: new_parameters});
+        this.setState({parameters: params});
     }
 
     setResources = (resources) => {
@@ -213,9 +207,15 @@ export default class NewHuntWizard extends React.Component {
             artifacts.push(item.name);
         });
 
+        // Convert the params into protobuf
+        let parameters = {env: []};
+        _.each(this.state.parameters, (v, k) => {
+            parameters.env.push({key: k, value: v});
+        });
+
         let request = {
             artifacts: artifacts,
-            parameters: this.state.parameters,
+            parameters: parameters,
         };
 
         if (this.state.resources.ops_per_second) {
@@ -252,7 +252,7 @@ export default class NewHuntWizard extends React.Component {
         }
 
         if (hunt_parameters.exclude_condition === "labels") {
-            result.condition.excluded_labels = hunt_parameters.excluded_labels;
+            result.condition.excluded_labels = {label: hunt_parameters.excluded_labels};
         }
 
         if (hunt_parameters.description) {
@@ -297,9 +297,11 @@ export default class NewHuntWizard extends React.Component {
                           return isFocused && step !== "Configure Hunt";
                       })}
                   artifacts={this.state.artifacts}
+                  artifactType="CLIENT"
                   setArtifacts={this.setArtifacts}/>
 
                 <NewCollectionConfigParameters
+                  parameters={this.state.parameters}
                   setParameters={this.setParameters}
                   artifacts={this.state.artifacts}
                   setArtifacts={this.setArtifacts}

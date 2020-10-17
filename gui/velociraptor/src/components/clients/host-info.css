@@ -65,6 +65,9 @@ div.client-info .btn-group label {
 }
 
 .full-width-height {
-    overflow-x: auto;
     height: 100%;
+}
+
+div.client-details-dashboard {
+    max-height: calc(100vh - 165px);
 }

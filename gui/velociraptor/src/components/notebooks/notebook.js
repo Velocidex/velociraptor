@@ -7,7 +7,7 @@ import SplitPane from 'react-split-pane';
 
 import axios from 'axios';
 import api from '../core/api-service.js';
-
+import Spinner from '../utils/spinner.js';
 import { withRouter }  from "react-router-dom";
 
 // Poll for new notebooks list.
@@ -19,6 +19,7 @@ class Notebooks extends React.Component {
     state = {
         notebooks: [],
         selected_notebook: {},
+        loading: false,
     }
 
     componentDidMount = () => {
@@ -33,6 +34,7 @@ class Notebooks extends React.Component {
     }
 
     fetchNotebooks = () => {
+        this.setState({loading: true});
         api.get("v1/GetNotebooks", {
             count: PAGE_SIZE,
             offset: 0,
@@ -53,6 +55,7 @@ class Notebooks extends React.Component {
             }
 
             this.setState({notebooks: notebooks,
+                           loading: false,
                            selected_notebook: selected_notebook});
         }.bind(this));
     }
@@ -64,18 +67,21 @@ class Notebooks extends React.Component {
 
     render() {
         return (
-            <SplitPane split="horizontal" defaultSize="30%">
-              <NotebooksList
-                fetchNotebooks={this.fetchNotebooks}
-                selected_notebook={this.state.selected_notebook}
-                setSelectedNotebook={this.setSelectedNotebook}
-                notebooks={this.state.notebooks}
-              />
-              <NotebookRenderer
-                fetchNotebooks={this.fetchNotebooks}
-                notebook={this.state.selected_notebook}
-              />
-            </SplitPane>
+            <>
+              <Spinner loading={this.state.loading} />
+              <SplitPane split="horizontal" defaultSize="30%">
+                <NotebooksList
+                  fetchNotebooks={this.fetchNotebooks}
+                  selected_notebook={this.state.selected_notebook}
+                  setSelectedNotebook={this.setSelectedNotebook}
+                  notebooks={this.state.notebooks}
+                />
+                <NotebookRenderer
+                  fetchNotebooks={this.fetchNotebooks}
+                  notebook={this.state.selected_notebook}
+                />
+              </SplitPane>
+            </>
         );
     }
 };

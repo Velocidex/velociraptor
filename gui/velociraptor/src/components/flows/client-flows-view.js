@@ -9,6 +9,7 @@ import { withRouter }  from "react-router-dom";
 
 import api from '../core/api-service.js';
 import axios from 'axios';
+import Spinner from '../utils/spinner.js';
 
 const POLL_TIME = 5000;
 
@@ -20,6 +21,7 @@ class ClientFlowsView extends React.Component {
     state = {
         flows: [],
         currentFlow: {},
+        loading: false,
     }
 
     componentDidMount = () => {
@@ -51,6 +53,7 @@ class ClientFlowsView extends React.Component {
         let selected_flow_id = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
 
+        this.setState({loading: true});
         api.get("v1/GetClientFlows/" + client_id, {
             count: 100,
             offset: 0,
@@ -67,7 +70,9 @@ class ClientFlowsView extends React.Component {
                 }
             };
 
-            this.setState({flows: flows, currentFlow: selected_flow});
+            this.setState({flows: flows,
+                           loading: false,
+                           currentFlow: selected_flow});
         }.bind(this));
     }
 
@@ -82,6 +87,7 @@ class ClientFlowsView extends React.Component {
     render() {
         return (
             <>
+              <Spinner loading={this.state.loading} />
               <SplitPane split="horizontal" defaultSize="30%">
                 <FlowsList
                   selected_flow={this.state.currentFlow}

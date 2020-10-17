@@ -52,7 +52,7 @@ class FlowsList extends React.Component {
         let flow_id = this.props.selected_flow && this.props.selected_flow.session_id;
 
         if (client_id && flow_id) {
-            api.post("api//v1/ArchiveFlow", {
+            api.post("v1/ArchiveFlow", {
                 client_id: client_id, flow_id: flow_id
             }).then((response) => {
                 this.props.fetchFlows();
@@ -65,7 +65,7 @@ class FlowsList extends React.Component {
         let flow_id = this.props.selected_flow && this.props.selected_flow.session_id;
 
         if (client_id && flow_id) {
-            api.post("api//v1/CancelFlow", {
+            api.post("v1/CancelFlow", {
                 client_id: client_id, flow_id: flow_id
             }).then((response) => {
                 this.props.fetchFlows();
@@ -133,12 +133,14 @@ class FlowsList extends React.Component {
             <>
               { this.state.showWizard &&
                 <NewCollectionWizard
+                  client={this.props.client}
                   onCancel={(e) => this.setState({showWizard: false})}
                   onResolve={this.setCollectionRequest} />
               }
 
               { this.state.showCopyWizard &&
                 <NewCollectionWizard
+                  client={this.props.client}
                   baseFlow={this.props.selected_flow}
                   onCancel={(e) => this.setState({showCopyWizard: false})}
                   onResolve={this.setCollectionRequest} />

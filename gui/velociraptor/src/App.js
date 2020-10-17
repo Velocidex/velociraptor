@@ -18,6 +18,8 @@ import UserDashboard from './components/sidebar/user-dashboard.js';
 import Form from 'react-bootstrap/Form';
 import UserLabel from './components/users/user-label.js';
 import EventMonitoring from './components/events/events.js';
+import SnackbarProvider from 'react-simple-snackbar';
+import Snackbar from './components/core/snackbar.js';
 
 import { UserSettings } from './components/core/user.js';
 
@@ -90,7 +92,7 @@ class App extends Component {
         }
 
         return (
-            <UserSettings>
+            <UserSettings><SnackbarProvider>
               <Navbar fixed="top" className="main-navbar justify-content-between">
                 <Form inline>
                   <VeloNavigator
@@ -162,14 +164,14 @@ class App extends Component {
 
                 </Switch>
               </div>
-              <Navbar fixed="bottom">
-                <Nav className="col-9">
-                </Nav>
+              <Navbar fixed="bottom" className="app-footer justify-content-between ">
+                <Nav></Nav>
                 <Nav>
-                  <VeloLiveClock className="col-3 float-right" />
+                  <VeloLiveClock className="float-right" />
+                  <Snackbar />
                 </Nav>
               </Navbar>
-            </UserSettings>
+            </SnackbarProvider></UserSettings>
         );
     };
 }

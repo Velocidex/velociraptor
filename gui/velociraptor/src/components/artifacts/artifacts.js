@@ -232,10 +232,11 @@ class ArtifactInspector extends React.Component {
                         { _.map(this.state.matchingDescriptors, (item, idx) => {
                             return <tr key={idx} className={
                                 this.state.selectedDescriptor &&
-                                    item.name === this.state.selectedDescriptor.name &&
-                                    "row-selected"
+                                    item.name === this.state.selectedDescriptor.name ?
+                                    "row-selected" : undefined
                             }>
                                      <td onClick={(e) => this.onSelect(item, e)}>
+                                       {/* eslint jsx-a11y/anchor-is-valid: "off" */}
                                        <a href="#"
                                           onClick={(e) => this.onSelect(item, e)}>
                                          {item.name}
