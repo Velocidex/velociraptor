@@ -43,9 +43,8 @@ jobs:
         CC: x86_64-w64-mingw32-gcc
       shell: bash
       run: |
-        mkdir gui/static/dist/
-        echo > gui/static/dist/third-party.bundle.js
-        echo > gui/static/dist/grr-ui.bundle.js
+        mkdir gui/velociraptor/build/
+        echo > gui/velociraptor/build/index.html
         go run make.go -v WindowsTest
 
     - name: Prepare second stage
