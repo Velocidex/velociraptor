@@ -28,8 +28,7 @@ function proto2tables(table, cb) {
     });
 
     // Now lookup all the artifacts for their definitions.
-    api.get("api/v1/GetArtifacts", {names: all_artifacts}).
-        then((response) => {
+    api.get("v1/GetArtifacts", {names: all_artifacts}).then(response=>{
             if (response && response.data && response.data.items) {
                 _.each(response.data.items, x=>{definitions[x.name]=x;});
 

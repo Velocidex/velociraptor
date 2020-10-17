@@ -28,7 +28,7 @@ export default class LabelForm extends React.Component {
     }
 
     loadLabels = () => {
-        api.get("api/v1/SearchClients", {
+        api.get("v1/SearchClients", {
             query: "label:*",
             limit: 100,
             type: 1,

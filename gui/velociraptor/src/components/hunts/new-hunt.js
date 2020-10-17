@@ -2,8 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import _ from 'lodash';
-import api from '../core/api-service.js';
-
 import Modal from 'react-bootstrap/Modal';
 
 import StepWizard from 'react-step-wizard';
@@ -96,7 +94,7 @@ class NewHuntConfigureHunt extends React.Component {
                     </Col>
                   </Form.Group>
 
-                  { this.state.include_condition == "os" &&
+                  { this.state.include_condition === "os" &&
                     <Form.Group as={Row}>
                       <Form.Label column sm="3">Operating System Included</Form.Label>
                       <Col sm="8">
@@ -113,7 +111,7 @@ class NewHuntConfigureHunt extends React.Component {
                     </Form.Group>
                   }
 
-                  { this.state.include_condition == "labels" &&
+                  { this.state.include_condition === "labels" &&
                     <Form.Group as={Row}>
                       <Form.Label column sm="3">Include Labels</Form.Label>
                       <Col sm="8">
@@ -139,7 +137,7 @@ class NewHuntConfigureHunt extends React.Component {
                     </Col>
                   </Form.Group>
 
-                  { this.state.exclude_condition == "labels" &&
+                  { this.state.exclude_condition === "labels" &&
                     <Form.Group as={Row}>
                       <Form.Label column sm="3">Exclude Labels</Form.Label>
                       <Col sm="8">

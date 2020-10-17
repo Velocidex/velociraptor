@@ -10,8 +10,6 @@ import VeloTable, { PrepareData } from '../core/table.js';
 import FormControl from 'react-bootstrap/FormControl';
 import Spinner from '../utils/spinner.js';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
 const MAX_ROWS_PER_TABLE = 500;
 
 export default class HuntResults extends React.Component {
@@ -32,15 +30,15 @@ export default class HuntResults extends React.Component {
     // 2. The flow gained new rows
     // 3. The user selected to view a different artifact result.
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (prevProps.hunt.hunt_id != this.props.hunt.hunt_id ||
-           prevState.selectedArtifact != this.state.selectedArtifact) {
+        if (prevProps.hunt.hunt_id !== this.props.hunt.hunt_id ||
+           prevState.selectedArtifact !== this.state.selectedArtifact) {
             this.fetchRows();
         }
     }
 
     XXshouldComponentUpdate(nextProps, nextState) {
-        return this.props.hunt.hunt_id != nextProps.hunt.hunt_is ||
-            this.state.selectedArtifact != nextState.selectedArtifact;
+        return this.props.hunt.hunt_id !== nextProps.hunt.hunt_is ||
+            this.state.selectedArtifact !== nextState.selectedArtifact;
     }
 
     state = {
@@ -75,7 +73,7 @@ export default class HuntResults extends React.Component {
         };
 
         this.setState({loading: true});
-        api.get("api/v1/GetHuntResults", params).then((response) => {
+        api.get("v1/GetHuntResults", params).then((response) => {
             this.setState({loading: false,
                            pageData: PrepareData(response.data)});
         }).catch(() => {

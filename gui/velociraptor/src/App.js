@@ -16,8 +16,6 @@ import ArtifactInspector from './components/artifacts/artifacts.js';
 import VeloHunts from './components/hunts/hunts.js';
 import UserDashboard from './components/sidebar/user-dashboard.js';
 import Form from 'react-bootstrap/Form';
-import FormControl from 'react-bootstrap/FormControl';
-import Button from 'react-bootstrap/Button';
 import UserLabel from './components/users/user-label.js';
 import EventMonitoring from './components/events/events.js';
 

@@ -36,9 +36,9 @@ import (
 
 var (
 	assets = map[string]string{
-		"artifacts/b0x.yaml": "artifacts/assets/ab0x.go",
-		"config/b0x.yaml":    "config/ab0x.go",
-		"gui/b0x.yaml":       "gui/assets/ab0x.go",
+		"artifacts/b0x.yaml":        "artifacts/assets/ab0x.go",
+		"config/b0x.yaml":           "config/ab0x.go",
+		"gui/velociraptor/b0x.yaml": "gui/velociraptor/ab0x.go",
 	}
 
 	// apt-get install gcc-mingw-w64-x86-64
@@ -331,7 +331,7 @@ func build_gui_files() error {
 	}
 	defer os.Chdir(cwd)
 
-	err = os.Chdir("gui/static")
+	err = os.Chdir("gui/velociraptor")
 	if err != nil {
 		return err
 	}
@@ -341,7 +341,7 @@ func build_gui_files() error {
 		return err
 	}
 
-	return sh.RunV("node", "node_modules/gulp/bin/gulp.js", "compile")
+	return sh.RunV("npm", "run", "build")
 }
 
 func flags() string {

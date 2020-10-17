@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 
 import BootstrapTable from 'react-bootstrap-table-next';
 
-import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
+import filterFactory from 'react-bootstrap-table2-filter';
 
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
@@ -73,7 +73,7 @@ class VeloFileList extends Component {
         }
 
         let path = this.props.node.path || [];
-        api.post("api/v1/VFSRefreshDirectory", {
+        api.post("v1/VFSRefreshDirectory", {
             client_id: this.props.client.client_id,
             vfs_path: Join(path),
             depth: 0
@@ -83,13 +83,13 @@ class VeloFileList extends Component {
             // Start polling for flow completion.
             this.source = axios.CancelToken.source();
             this.interval = setInterval(() => {
-                api.get("api/v1/VFSStatDirectory", {
+                api.get("v1/VFSStatDirectory", {
                     client_id: this.props.client.client_id,
                     vfs_path: Join(path),
                     flow_id: this.state.lastRefreshOperationId,
                 }).then((response) => {
                     // The node is refreshed with the correct flow id, we can stop polling.
-                    if (response.data.flow_id == this.state.lastRefreshOperationId) {
+                    if (response.data.flow_id === this.state.lastRefreshOperationId) {
                         this.source.cancel("unmounted");
                         clearInterval(this.interval);
                         this.source = undefined;

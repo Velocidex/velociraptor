@@ -32,8 +32,8 @@ export default class VeloClientSummary extends Component {
     getClientInfo = () => {
         let client_id = this.props.client && this.props.client.client_id;
         if (client_id) {
-            api.get("api/v1/GetClient/" + client_id).
-                then(response => this.props.setClient(response.data));
+            api.get("v1/GetClient/" + client_id).then(
+                response=>this.props.setClient(response.data));
         }
     }
 

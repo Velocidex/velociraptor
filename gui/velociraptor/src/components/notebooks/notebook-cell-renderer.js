@@ -66,7 +66,7 @@ export default class NotebookCellRenderer extends React.Component {
     };
 
     fetchCellContents = () => {
-        api.get("api/v1/GetNotebookCell", {
+        api.get("v1/GetNotebookCell", {
             notebook_id: this.props.notebook_id,
             cell_id: this.props.cell_metadata.cell_id,
         }).then((response) => {
@@ -113,7 +113,7 @@ export default class NotebookCellRenderer extends React.Component {
         cell.timestamp = 0;
         this.setState({cell: cell});
 
-        api.post('/api/v1/UpdateNotebookCell', {
+        api.post('v1/UpdateNotebookCell', {
             notebook_id: this.props.notebook_id,
             cell_id: this.state.cell.cell_id,
             type: this.state.cell.type || "Markdown",
@@ -148,7 +148,7 @@ export default class NotebookCellRenderer extends React.Component {
                     };
 
                     api.post(
-                        'api/v1/UploadNotebookAttachment', request
+                        'v1/UploadNotebookAttachment', request
                     ).then((response) => {
                         this.state.ace.insert("\n!["+blob.name+"]("+response.data.url+")\n");
                     }, function failure(response) {

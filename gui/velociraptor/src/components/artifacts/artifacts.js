@@ -1,10 +1,6 @@
 import './artifacts.css';
-import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
-
 import React from 'react';
 import PropTypes from 'prop-types';
-
-import classNames from "classnames";
 import api from '../core/api-service.js';
 
 import VeloReportViewer from "../artifacts/reporting.js";
@@ -21,18 +17,11 @@ import FormControl from 'react-bootstrap/FormControl';
 import Table  from 'react-bootstrap/Table';
 import NewArtifactDialog from './new-artifact.js';
 import Container from  'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import BootstrapTable from 'react-bootstrap-table-next';
-
 import { withRouter }  from "react-router-dom";
 
 import SplitPane from 'react-split-pane';
-
-import { formatColumns } from "../core/table.js";
-
 
 class DeleteOKDialog extends React.Component {
     static propTypes = {
@@ -104,7 +93,7 @@ class ArtifactInspector extends React.Component {
 
     fetchRows = (search_term) => {
         this.setState({loading: true});
-        api.get("api/v1/GetArtifacts", {search_term: search_term || "..."}).then((response) => {
+        api.get("v1/GetArtifacts", {search_term: search_term || "..."}).then((response) => {
             let matchingDescriptors = [];
             let items = response.data.items || [];
 
@@ -129,7 +118,7 @@ class ArtifactInspector extends React.Component {
     }
 
     deleteArtifact = (selected) => {
-        api.post('api/v1/SetArtifactFile', {
+        api.post('v1/SetArtifactFile', {
             artifact: "name: "+selected,
             op: "DELETE",
         }).then(resp => {
@@ -140,13 +129,6 @@ class ArtifactInspector extends React.Component {
 
     render() {
         let selected = this.state.selectedDescriptor && this.state.selectedDescriptor.name;
-        let selectRow = {mode: "radio",
-                         clickToSelect: true,
-                         hideSelectColumn: true,
-                         classes: "row-selected",
-                         selected: [selected],
-                         onSelect: this.onSelect};
-
         let deletable = selected && selected.match(/^Custom/);
 
         return (
@@ -250,7 +232,7 @@ class ArtifactInspector extends React.Component {
                         { _.map(this.state.matchingDescriptors, (item, idx) => {
                             return <tr key={idx} className={
                                 this.state.selectedDescriptor &&
-                                    item.name == this.state.selectedDescriptor.name &&
+                                    item.name === this.state.selectedDescriptor.name &&
                                     "row-selected"
                             }>
                                      <td onClick={(e) => this.onSelect(item, e)}>

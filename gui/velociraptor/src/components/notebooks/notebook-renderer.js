@@ -40,7 +40,7 @@ export default class NotebookRenderer extends React.Component {
 
         if (changed) {
             this.props.notebook.cell_metadata = new_cells;
-            api.post('api/v1/UpdateNotebook', this.props.notebook).then((response) => {
+            api.post('v1/UpdateNotebook', this.props.notebook).then((response) => {
                     this.props.fetchNotebooks();
 
                 }, (response) => {
@@ -70,7 +70,7 @@ export default class NotebookRenderer extends React.Component {
         if (changed) {
             this.props.notebook.cell_metadata = new_cells;
 
-            api.post('api/v1/UpdateNotebook', this.props.notebook).then((response) => {
+            api.post('v1/UpdateNotebook', this.props.notebook).then((response) => {
                     this.props.fetchNotebooks();
 
                 }, function failure(response) {
@@ -99,7 +99,7 @@ export default class NotebookRenderer extends React.Component {
         if (changed) {
             this.props.notebook.cell_metadata = new_cells;
 
-            api.post('api/v1/UpdateNotebook', this.props.notebook).then((response) => {
+            api.post('v1/UpdateNotebook', this.props.notebook).then((response) => {
                     this.props.fetchNotebooks();
 
                 }, function failure(response) {
@@ -123,7 +123,7 @@ export default class NotebookRenderer extends React.Component {
             return;
         }
 
-        api.post('api/v1/NewNotebookCell', request).then((response) => {
+        api.post('v1/NewNotebookCell', request).then((response) => {
             this.props.fetchNotebooks();
             this.setState({selected_cell_id: response.data.latest_cell_id});
         });

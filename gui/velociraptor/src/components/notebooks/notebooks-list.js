@@ -4,7 +4,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 import VeloTimestamp from "../utils/time.js";
-import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
+import filterFactory from 'react-bootstrap-table2-filter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BootstrapTable from 'react-bootstrap-table-next';
 
@@ -19,9 +19,6 @@ import Col from 'react-bootstrap/Col';
 import UserForm from '../utils/users.js';
 
 import { formatColumns } from "../core/table.js";
-import api from '../core/api-service.js';
-
-const username = "";
 
 class NewNotebook extends React.Component {
      static propTypes = {

@@ -37,9 +37,7 @@ class VeloFileStats extends Component {
             return;
         }
 
-        let current_mtime = selectedRow && selectedRow.Download &&
-            selectedRow.Download.mtime;
-        api.post("api/v1/CollectArtifact", {
+        api.post("v1/CollectArtifact", {
             client_id: this.props.client.client_id,
             artifacts: ["System.VFS.DownloadFile"],
             parameters: {
@@ -53,7 +51,7 @@ class VeloFileStats extends Component {
             // Keep polling until the mtime changes.
             this.source = axios.CancelToken.source();
             this.interval = setInterval(() => {
-                api.get("api/v1/GetFlowDetails", {
+                api.get("v1/GetFlowDetails", {
                     client_id: this.props.client.client_id,
                     flow_id: flow_id,
                 }).then((response) => {

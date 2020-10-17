@@ -1,7 +1,6 @@
 import "./user-dashboard.css";
 
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import _ from 'lodash';
 import Navbar from 'react-bootstrap/Navbar';
@@ -42,7 +41,7 @@ class UserDashboard extends React.Component {
         // and should be done sparingly unless the version is actually
         // changed. The version is changed by pressing the "Refresh"
         // Button or selecting a new range.
-        if (this.state.version != nextState.version) {
+        if (this.state.version !== nextState.version) {
             return true;
         }
         return false;

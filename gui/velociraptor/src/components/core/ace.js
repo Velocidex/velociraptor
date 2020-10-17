@@ -136,6 +136,9 @@ export default class VeloAce extends Component {
             case "maxLines":
             case "autoScrollEditorIntoView":
                 delete options[k];
+                break;
+            default:
+                break;
             };
         });
 
@@ -154,7 +157,7 @@ export default class VeloAce extends Component {
         // If options have changed we need to update them to the
         // server.
         if (!_.isEqual(new_options, this.getUserOptions())) {
-            api.post("api/v1/SetGUIOptions",
+            api.post("v1/SetGUIOptions",
                      {options: JSON.stringify(new_options)}).then((response) => {
                          this.context.updateTraits();
                      });

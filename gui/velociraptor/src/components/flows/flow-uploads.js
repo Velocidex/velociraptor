@@ -38,13 +38,12 @@ export default class FlowUploads extends React.Component {
             client_id: this.props.flow.client_id,
             flow_id: this.props.flow.session_id,
             type: "uploads",
-            rows: 500,
             start_row: 0,
             rows: MAX_ROWS_PER_TABLE,
         };
 
         this.setState({loading: true});
-        api.get("api/v1/GetTable", params).then((response) => {
+        api.get("v1/GetTable", params).then((response) => {
             this.setState({loading: false, pageData: PrepareData(response.data)});
         }).catch(() => {
             this.setState({loading: false, pageData: {}});
@@ -76,7 +75,7 @@ export default class FlowUploads extends React.Component {
             // make a zip file.
             vfs_path: (cell, row, rowIndex) => {
                 return (
-                    <a href={"api/v1/DownloadVFSFile?client_id=" +
+                    <a href={"/api/v1/DownloadVFSFile?client_id=" +
                              this.props.flow.client_id +
                              "&vfs_path=" + encodeURIComponent(cell) }>
                       {cell}

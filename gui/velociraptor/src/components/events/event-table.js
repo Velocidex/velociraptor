@@ -8,7 +8,6 @@ import StepWizard from 'react-step-wizard';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import LabelForm from '../utils/labels.js';
 import Card from 'react-bootstrap/Card';
 import Table  from 'react-bootstrap/Table';
 import utils from './utils.js';
@@ -19,7 +18,6 @@ import "react-bootstrap-typeahead/css/Typeahead.css";
 import {
     NewCollectionSelectArtifacts,
     NewCollectionConfigParameters,
-    NewCollectionResources,
     NewCollectionRequest,
     NewCollectionLaunch,
     PaginationBuilder
@@ -50,7 +48,7 @@ class EventTableLabelGroup extends React.Component {
     }
 
     loadLabels = () => {
-        api.get("api/v1/SearchClients", {
+        api.get("v1/SearchClients", {
             query: "label:*",
             limit: 100,
             type: 1,
@@ -212,7 +210,7 @@ export class EventTableWizard extends React.Component {
     }
 
     fetchEventTable = () => {
-        api.get("api/v1/GetClientMonitoringState").then(resp => {
+        api.get("v1/GetClientMonitoringState").then(resp => {
             // For historical reasons the client monitoring state
             // protobuf is more complex than it needs to be. We
             // convert it to more sensible internal representation. It
@@ -359,7 +357,7 @@ export class ServerEventTableWizard extends React.Component {
     }
 
     fetchEventTable = () => {
-        api.get("api/v1/GetServerMonitoringState").then(resp => {
+        api.get("v1/GetServerMonitoringState").then(resp => {
             // Pretend this is the same as the client event
             // table. Since the server events do not do labels, just
             // make them all go under the "All" label.

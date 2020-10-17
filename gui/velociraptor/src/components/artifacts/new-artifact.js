@@ -37,8 +37,7 @@ export default class NewArtifactDialog extends React.Component {
         if (!this.state.initialized_from_parent) {
             this.setState({loading: true, initialized_from_parent: true});
 
-            api.get("api/v1/GetArtifactFile", {name: this.props.name}).
-                then((response) => {
+            api.get("v1/GetArtifactFile", {name: this.props.name}).then(response=>{
                     this.setState({
                         text: response.data.artifact,
                         loading: false,
@@ -49,7 +48,7 @@ export default class NewArtifactDialog extends React.Component {
     }
 
     saveArtifact = () => {
-        api.post("api/v1/SetArtifactFile", {artifact: this.state.text}).then(
+        api.post("v1/SetArtifactFile", {artifact: this.state.text}).then(
             (response) => {
                 this.props.onClose();
             });

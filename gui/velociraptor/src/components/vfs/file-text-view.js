@@ -56,7 +56,7 @@ export default class FileTextView extends React.Component {
         if (!filePath) {
             return;
         }
-        var url = 'api/v1/DownloadVFSFile';
+        var url = 'v1/DownloadVFSFile';
         var params = {
             offset: page * pagesize,
             length: pagesize,

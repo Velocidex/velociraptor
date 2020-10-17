@@ -52,7 +52,7 @@ export default class FlowOverview extends React.Component {
             return;
         };
 
-        api.get("api/v1/GetFlowDetails", {
+        api.get("v1/GetFlowDetails", {
             flow_id: this.props.flow.session_id,
             client_id: this.props.flow.client_id,
         }).then((response) => {

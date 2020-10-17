@@ -156,7 +156,7 @@ export default class VeloForm extends React.Component {
                               this.props.setValue(undefined);
                           }
                       }}
-                      checked={this.props.value == "Y"}
+                      checked={this.props.value === "Y"}
                       value={this.props.value} />
                   </Col>
                 </Form.Group>

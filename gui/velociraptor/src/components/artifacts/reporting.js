@@ -1,7 +1,7 @@
 import "./reporting.css";
 import _ from 'lodash';
 
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import parse from 'html-react-parser';
@@ -70,7 +70,7 @@ export default class VeloReportViewer extends React.Component {
         params.flow_id = this.props.flow_id;
 
         this.setState({loading: true});
-        api.post("api/v1/GetReport", params).then((response) => {
+        api.post("v1/GetReport", params).then((response) => {
             let new_state  = {
                 template: response.data.template || "No Reports",
                 messages: response.data.messages || [],

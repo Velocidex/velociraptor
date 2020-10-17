@@ -64,7 +64,7 @@ class VeloShellCell extends Component {
 
         let artifact = this.props.flow.request.artifacts[0];
 
-        api.get("api/v1/GetTable", {
+        api.get("v1/GetTable", {
             artifact: artifact,
             client_id: this.props.flow.client_id,
             flow_id: this.props.flow.session_id,
@@ -93,7 +93,7 @@ class VeloShellCell extends Component {
             return;
         }
 
-        api.post('api/v1/CancelFlow', {
+        api.post('v1/CancelFlow', {
             client_id: this.props.flow.client_id,
             flow_id: this.props.flow.session_id,
         }).then(function() {
@@ -277,7 +277,7 @@ class ShellViewer extends Component {
             return;
         }
 
-        var url = 'api/v1/GetClientFlows/' + this.props.client.client_id;
+        var url = '/api/v1/GetClientFlows/' + this.props.client.client_id;
 
         api.get(url, {
             count: 100, offset: 0},
@@ -334,7 +334,7 @@ class ShellViewer extends Component {
             },
         };
 
-        api.post('api/v1/CollectArtifact', params).then(
+        api.post('v1/CollectArtifact', params).then(
             function success(response) {
                 // Refresh the artifacts immediately.
                 this.fetchLastShellCollections();
