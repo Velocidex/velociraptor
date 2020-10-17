@@ -47,6 +47,7 @@ export default class LabelForm extends React.Component {
               <MultiSelect
                 options={this.state.options}
                 selected={this.props.value}
+                placeholder="Select a label"
                 onSelectedChanged={selected => this.props.onChange(selected)}
               />
             </>

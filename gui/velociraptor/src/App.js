@@ -19,6 +19,7 @@ import Form from 'react-bootstrap/Form';
 import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
 import UserLabel from './components/users/user-label.js';
+import EventMonitoring from './components/events/events.js';
 
 import { UserSettings } from './components/core/user.js';
 
@@ -153,6 +154,14 @@ class App extends Component {
                   <Route path="/notebooks/:notebook_id?">
                     <Notebook />
                   </Route>
+                  <Route path="/events/:client_id(C[^/]+)/:artifact?/:time?">
+                    <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
+                    <EventMonitoring client={this.state.client}/>
+                  </Route>
+                  <Route path="/events/server/:artifact?/:time?">
+                    <EventMonitoring client={{client_id: ""}}/>
+                  </Route>
+
                 </Switch>
               </div>
               <Navbar fixed="bottom">

@@ -13,6 +13,7 @@ import Pagination from 'react-bootstrap/Pagination';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import VeloReportViewer from "../artifacts/reporting.js";
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 import Spinner from 'react-bootstrap/Spinner';
 import Col from 'react-bootstrap/Col';
@@ -48,7 +49,9 @@ class PaginationBuilder {
     // A common function to create the modal paginator between wizard
     // pages.
     // onBlur is a function that will be called when we leave the current page.
-    // If isFocused is true, the current page is focused and all over navigators are disabled.
+
+    // If isFocused is true, the current page is focused and all other
+    // navigators are disabled.
     makePaginator = (spec) => {
         let {props, onBlur, isFocused} = spec;
         return <Col md="12">
@@ -76,36 +79,34 @@ class PaginationBuilder {
     }
 }
 
+// Add an artifact to the list of artifacts.
+const add_artifact = (artifacts, new_artifact) => {
+    // Remove it from the list if it exists already
+    let result = _.filter(artifacts, (x) => x.name != new_artifact.name);
+
+    // Push the new artifact to the end of the list.
+    result.push(new_artifact);
+    return result;
+};
+
+// Remove the named artifact from the list of artifacts
+const remove_artifact = (artifacts, name) => {
+    return _.filter(artifacts, (x) => x.name != name);
+}
+
+
 class NewCollectionSelectArtifacts extends React.Component {
     static propTypes = {
-        // A list of artifact descriptors that are pre-selected.
+        // A list of artifact descriptors that are selected.
         artifacts: PropTypes.array,
+
+        // Update the wizard's artifacts list.
         setArtifacts: PropTypes.func,
         paginator: PropTypes.object,
+
+        // Artifact type CLIENT, SERVER, CLIENT_EVENT, SERVER_EVENT
+        type: PropTypes.string,
     };
-
-    componentDidMount = () => {
-         this.initFromParent();
-    }
-
-    componentDidUpdate = (prevProps, prevState, rootNode) => {
-        if (!_.isEmpty(this.props.artifacts) && !this.state.initialized_from_parent) {
-            this.initFromParent();
-        }
-    }
-
-
-    // Fetch descriptors for artifacts that are initialized from props.
-    initFromParent = () => {
-        let init_artifacts = this.props.artifacts;
-        if (!_.isEmpty(init_artifacts)) {
-            this.setState({
-                initialized_from_parent: true,
-                matchingDescriptors: [...init_artifacts],
-                selected_artifacts: [...init_artifacts],
-                selectedDescriptor: init_artifacts[0]});
-        }
-    }
 
     state = {
         selectedDescriptor: "",
@@ -115,55 +116,44 @@ class NewCollectionSelectArtifacts extends React.Component {
 
         loading: false,
 
-        selected_artifacts: {},
-
         initialized_from_parent: false,
     }
 
+    componentDidMount = () => {
+        this.doSearch("...");
+    }
+
     onSelect = (row, isSelect) => {
+        let new_artifacts = [];
+        if (isSelect) {
+            new_artifacts = add_artifact(this.props.artifacts, row);
+        } else {
+            new_artifacts = remove_artifact(this.props.artifacts, row.name);
+        }
+        this.props.setArtifacts(new_artifacts);
         this.setState({selectedDescriptor: row});
 
-        let selected_artifacts = Object.assign({}, this.state.selected_artifacts);
-        if (isSelect) {
-            selected_artifacts[row.name] = row;
-        } else {
-            delete selected_artifacts[row.name];
-        }
-        this.setState({selected_artifacts: selected_artifacts});
     }
 
     onSelectAll = (isSelect, rows) => {
-        let selected_artifacts = Object.assign({}, this.state.selected_artifacts);
-        if (isSelect) {
-            _.each(rows, (row) => {
-                selected_artifacts[row.name] = row;
-            });
-        } else {
-            _.each(rows, (row) => {
-                delete selected_artifacts[row.name];
-            });
-        }
-        this.setState({selected_artifacts: selected_artifacts});
-    }
-
-    setArtifacts = () => {
-        let artifacts = [];
-        _.each(this.state.selected_artifacts, (x) => {
-            artifacts.push(x);
-        });
-
-        this.props.setArtifacts(artifacts);
+        _.each(rows, (row) => this.onSelect(row, isSelect));
     }
 
     updateSearch = (type, filters) => {
         let value = filters && filters.filters && filters.filters.name &&
             filters.filters.name.filterVal;
         if (!value) {
+            this.doSearch("...");
             return;
         }
+        this.doSearch(value);
+    }
 
+    doSearch = (value) => {
         this.setState({loading: true});
-        api.get("api/v1/GetArtifacts", {search_term: value}).then((response) => {
+        api.get("api/v1/GetArtifacts", {
+            type: this.props.type,
+            search_term: value}).then((response) => {
             let items = response.data.items || [];
             this.setState({matchingDescriptors: items, loading: false});
         });
@@ -171,13 +161,14 @@ class NewCollectionSelectArtifacts extends React.Component {
 
     render() {
         let columns = [{dataField: "name", text: "", filter: textFilter({
-            placeholder: "Search for name...",
+            placeholder: "Search for artifacts...",
         })}];
 
         let selected = this.state.selectedDescriptor && this.state.selectedDescriptor.name;
         let selectRow = {mode: "checkbox",
                          clickToSelect: true,
                          classes: "row-selected",
+                         selected: _.map(this.props.artifacts, x=>x.name),
                          onSelect: this.onSelect,
                          onSelectAll: this.onSelectAll,
                         };
@@ -221,8 +212,7 @@ class NewCollectionSelectArtifacts extends React.Component {
               <Modal.Footer>
                 { this.props.paginator.makePaginator({
                     props: this.props,
-                    onBlur: this.setArtifacts,
-                    isFocused: _.isEmpty(this.state.selected_artifacts),
+                    isFocused: _.isEmpty(this.props.artifacts),
                 }) }
               </Modal.Footer>
             </>
@@ -234,38 +224,20 @@ class NewCollectionConfigParameters extends React.Component {
     static propTypes = {
         request: PropTypes.object,
         artifacts: PropTypes.array,
+        setArtifacts: PropTypes.func.isRequired,
+        parameters: PropTypes.object,
         setParameters: PropTypes.func.isRequired,
         paginator: PropTypes.object,
     };
 
-    componentDidUpdate = (prevProps, prevState, rootNode) => {
-        let request = this.props.request;
-        if (request && !this.state.initialized_from_parent) {
-            let params = request.parameters && request.parameters.env;
-            let params_obj = {};
-            _.each(params, (item) => {
-                params_obj[item.key] = item.value;
-            });
-            this.setState({parameters: params_obj,
-                           initialized_from_parent: true});
-        }
-    }
-
-    state = {
-        // A K/V mapping that is maintained by the component.
-        parameters: {},
-        initialized_from_parent: false,
-    }
-
     setValue = (name, value) => {
-        let parameters = this.state.parameters;
-        if (_.isUndefined(value)) {
-            delete parameters[name];
-        } else {
-            parameters[name] = value;
-        }
+        let parameters = this.props.parameters;
+        parameters[name] = value;
+        this.props.setParameters(parameters);
+    }
 
-        this.setState({parameters, parameters});
+    removeArtifact = (name) => {
+        this.props.setArtifacts(remove_artifact(this.props.artifacts, name));
     }
 
     render() {
@@ -276,20 +248,26 @@ class NewCollectionConfigParameters extends React.Component {
                 }
                 return <b>+</b>;
             },
-            expandColumnRenderer: ({ expanded }) => {
+            expandColumnRenderer: ({ expanded, rowKey }) => {
                 if (expanded) {
                     return (
                         <b>-</b>
                     );
                 }
-                return (
-                    <b><FontAwesomeIcon icon="wrench"/></b>
+                return (<ButtonGroup>
+                          <Button variant="outline-default"><FontAwesomeIcon icon="wrench"/></Button>
+                          <Button variant="outline-default" onClick={
+                              () => this.props.setArtifacts(remove_artifact(
+                                  this.props.artifacts, rowKey))} >
+                            <FontAwesomeIcon icon="trash"/>
+                          </Button>
+                        </ButtonGroup>
                 );
             },
             showExpandColumn: true,
             renderer: artifact => {
                 return _.map(artifact.parameters || [], (param, idx) => {
-                    let value = this.state.parameters[param.name] || param.default || "";
+                    let value = this.props.parameters[param.name] || param.default || "";
 
                     return (
                         <VeloForm param={param} key={idx}
@@ -303,7 +281,7 @@ class NewCollectionConfigParameters extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-                <Modal.Title>New Collection - Configure artifact parameters</Modal.Title>
+                <Modal.Title>{ this.props.paginator.title }</Modal.Title>
               </Modal.Header>
 
               <Modal.Body className="new-collection-parameter-page selectable">
@@ -315,11 +293,15 @@ class NewCollectionConfigParameters extends React.Component {
                               {dataField: "parameter", text: "", hidden: true}]}
                     data={this.props.artifacts} />
                 }
+                {_.isEmpty(this.props.artifacts) &&
+                 <div className="no-content">
+                   No artifacts configured. Please add some artifacts to collect
+                 </div>
+                }
               </Modal.Body>
               <Modal.Footer>
                 { this.props.paginator.makePaginator({
                     props: this.props,
-                    onBlur: () => this.props.setParameters(this.state.parameters),
                 }) }
               </Modal.Footer>
             </>
@@ -372,7 +354,7 @@ class NewCollectionResources extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-                <Modal.Title>New Collection - Configure resources</Modal.Title>
+                <Modal.Title>{ this.props.paginator.title }</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form>
@@ -444,10 +426,14 @@ class NewCollectionRequest extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-                <Modal.Title>New Collection - Examine request</Modal.Title>
+                <Modal.Title>{ this.props.paginator.title }</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <VeloAce text={serialized} options={{readOnly: true}} />
+                <VeloAce text={serialized}
+                         options={{readOnly: true,
+                                   autoScrollEditorIntoView: true,
+                                   wrap: true,
+                                   maxLines: 1000}} />
               </Modal.Body>
               <Modal.Footer>
                 { this.props.paginator.makePaginator({
@@ -525,7 +511,7 @@ class NewCollectionWizard extends React.Component {
         artifacts: [],
 
         // A key/value mapping of edited parameters by the user.
-        parameters: {env: []},
+        parameters: {},
 
         resources: {},
 
@@ -537,13 +523,7 @@ class NewCollectionWizard extends React.Component {
     }
 
     setParameters = (params) => {
-        let new_parameters = {env: []};
-        for (var k in params) {
-            if (params.hasOwnProperty(k)) {
-                new_parameters.env.push({key: k, value: params[k]});
-            }
-        }
-        this.setState({parameters: new_parameters});
+        this.setState({parameters: params});
     }
 
     setResources = (resources) => {
@@ -561,9 +541,15 @@ class NewCollectionWizard extends React.Component {
             artifacts.push(item.name);
         });
 
+        // Convert the params into protobuf
+        let parameters = {env: []};
+        _.each(this.state.parameters, (v, k) => {
+            parameters.env.push({key: k, value: v});
+        });
+
         let result = {
             artifacts: artifacts,
-            parameters: this.state.parameters,
+            parameters: parameters,
         };
 
         if (this.state.resources.ops_per_second) {
@@ -604,8 +590,10 @@ class NewCollectionWizard extends React.Component {
                   setArtifacts={this.setArtifacts}/>
 
                 <NewCollectionConfigParameters
+                  parameters={this.state.parameter_dict}
                   setParameters={this.setParameters}
                   artifacts={this.state.artifacts}
+                  setArtifacts={this.setArtifacts}
                   paginator={new PaginationBuilder("Configure Parameters",
                                                    "New Collection: Configure Parameters")}
                   request={request}/>

@@ -6,7 +6,6 @@ import StepWizard from 'react-step-wizard';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import LabelForm from '../utils/labels.js';
 
 import {
     NewCollectionSelectArtifacts,
@@ -29,12 +28,8 @@ class OfflinePaginator extends PaginationBuilder {
 
 class OfflineCollectorParameters  extends React.Component {
     static propTypes = {
+        parameters: PropTypes.object,
         setParameters: PropTypes.func.isRequired,
-    }
-
-    state = {
-        target_os: "Windows",
-        target: "ZIP",
     }
 
     render() {
@@ -49,9 +44,11 @@ class OfflineCollectorParameters  extends React.Component {
                       <Form.Label column sm="3">Target Operating System</Form.Label>
                       <Col sm="8">
                         <Form.Control as="select"
-                                      value={this.state.target_os}
-                                      onChange={(e) => this.setState({
-                                          target_os: e.currentTarget.value})}
+                                      value={this.props.parameters.target_os}
+                                      onChange={(e) => {
+                                          this.props.parameters.target_os = e.currentTarget.value;
+                                          this.props.setParameters(this.props.parameters);
+                                      }}
                         >
                           <option value="Windows">Windows</option>
                           <option value="Linux">Linux</option>
@@ -65,7 +62,11 @@ class OfflineCollectorParameters  extends React.Component {
                     <Col sm="8">
                       <Form.Control as="textarea" rows={3}
                                     placeholder="Password"
-                                    onChange={e => this.setState({password: e.target.value})} />
+                                    value={this.props.parameters.password}
+                                    onChange={e => {
+                                        this.props.parameters.password = e.target.value;
+                                        this.props.setParameters(this.props.parameters);
+                                    }} />
                     </Col>
                   </Form.Group>
 
@@ -73,9 +74,11 @@ class OfflineCollectorParameters  extends React.Component {
                     <Form.Label column sm="3">Collection Type</Form.Label>
                     <Col sm="8">
                       <Form.Control as="select"
-                                    value={this.state.target}
-                                    onChange={(e) => this.setState({
-                                        target: e.currentTarget.value})}
+                                    value={this.props.parameters.target}
+                                    onChange={(e) => {
+                                        this.props.parameters.target = e.currentTarget.value;
+                                        this.props.setParameters(this.props.parameters);
+                                    }}
                       >
                         <option value="ZIP">Zip Archive</option>
                         <option value="GCS">Google Cloud Bucket</option>
@@ -84,13 +87,18 @@ class OfflineCollectorParameters  extends React.Component {
                     </Col>
                   </Form.Group>
 
-                  { this.state.target == "GCS" && <>
+                  { this.props.parameters.target == "GCS" && <>
                     <Form.Group as={Row}>
                       <Form.Label column sm="3">GCS Bucket</Form.Label>
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
                                       placeholder="Bucket name"
-                                      onChange={e => this.setState({bucket: e.target.value})} />
+                                      value={this.props.parameters.target_args.gcs_bucket}
+                                      onChange={e => {
+                                          this.props.parameters.target_args.gcs_bucket = e.target.value;
+                                          this.props.setParameters(this.props.parameters);
+                                      }}
+                        />
                       </Col>
                     </Form.Group>
 
@@ -99,7 +107,12 @@ class OfflineCollectorParameters  extends React.Component {
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
                                       placeholder="GCS Blob"
-                                      onChange={e => this.setState({gcs_blob: e.target.value})} />
+                                      value={this.props.parameters.target_args.gcs_key_blob}
+                                      onChange={e => {
+                                          this.props.parameters.target_args.gcs_key_blob = e.target.value;
+                                          this.props.setParameters(this.props.parameters);
+                                      }}
+                        />
                       </Col>
                     </Form.Group> </>
 
@@ -110,16 +123,12 @@ class OfflineCollectorParameters  extends React.Component {
                 { this.props.paginator.makePaginator({
                     props: this.props,
                     step_name: "Offline Collector",
-                    onBlur: () => this.props.setParameters(this.state),
                 }) }
               </Modal.Footer>
             </>
         );
     }
-
-
 }
-
 
 
 export default class OfflineCollectorWizard extends React.Component {
@@ -131,6 +140,16 @@ export default class OfflineCollectorWizard extends React.Component {
     state = {
         artifacts: [],
         parameters: {},
+        collector_parameters: {
+            target_os: "Windows",
+            target: "ZIP",
+            target_args: {
+                gcs_bucket: "",
+                gcs_key_blob: "",
+            },
+            template: "Reporting.Default",
+            password: "",
+        },
     }
 
     setArtifacts = (artifacts) => {
@@ -141,18 +160,31 @@ export default class OfflineCollectorWizard extends React.Component {
         this.setState({parameters: params});
     }
 
+    // Build a request to the Server.Utils.CreateCollector artifact.
     prepareRequest = () => {
-        let artifacts = [];
-        _.each(this.state.artifacts, (item) => {
-            artifacts.push(item.name);
-        });
-
+        let env = [];
         let request = {
-            artifacts: artifacts,
-            parameters: this.state.parameters,
-        };
+            artifacts: ["Server.Utils.CreateCollector"],
+            parameters: {env: env}};
+
+        env.push({key: "OS",
+                  value: this.state.collector_parameters.target_os});
+        env.push({key: "artifacts", value: JSON.stringify(
+            _.map(this.state.artifacts, (item) => item.name))});
+        env.push({key: "parameters", value: JSON.stringify(this.state.parameters)});
+        env.push({key: "target", value: this.state.collector_parameters.target});
+        env.push({key: "target_args", value: JSON.stringify(
+            this.state.collector_parameters.target_args)});
+        env.push({key: "opt_verbose", value: "Y"});
+        env.push({key: "opt_banner", value: "Y"});
+        env.push({key: "opt_prompt", value: "Y"});
+        env.push({key: "opt_admin", value: "Y"});
 
         return request;
+    }
+
+    launch = () => {
+        this.props.onResolve(this.prepareRequest());
     }
 
     render() {
@@ -178,6 +210,7 @@ export default class OfflineCollectorWizard extends React.Component {
                 <NewCollectionConfigParameters
                   setParameters={this.setParameters}
                   artifacts={this.state.artifacts}
+                  setArtifacts={this.setArtifacts}
                   paginator={new OfflinePaginator(
                       "Configure Parameters",
                       "Create Offline Collector: Configure artifact parameters")}
@@ -185,6 +218,7 @@ export default class OfflineCollectorWizard extends React.Component {
 
                 <OfflineCollectorParameters
                   setParameters={(x) => this.setState({collector_parameters: x})}
+                  parameters={this.state.collector_parameters}
                   paginator={new OfflinePaginator(
                       "Configure Collection",
                       "Create Offline Collector: Configure collector")}

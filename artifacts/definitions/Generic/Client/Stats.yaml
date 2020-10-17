@@ -72,7 +72,9 @@ reports:
       idle, but if a heavy hunt is running this might climb
       substantially.
 
-      {{ Query "resources" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 }}
+        <div>
+        {{ Query "resources" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 }}
+        </div>
 
       ## VQL Query
 

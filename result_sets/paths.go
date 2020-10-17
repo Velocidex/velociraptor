@@ -262,7 +262,7 @@ func (self MonitoringArtifactPathManager) Path() string {
 func NewMonitoringArtifactPathManager(client_id string) *MonitoringArtifactPathManager {
 	result := &MonitoringArtifactPathManager{}
 
-	if client_id != "" {
+	if client_id != "" || client_id == "server" {
 		result.path = path.Join("/clients", client_id, "monitoring")
 	} else {
 		result.path = "/server_artifacts"

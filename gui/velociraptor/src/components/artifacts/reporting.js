@@ -18,7 +18,7 @@ import ToolViewer from "../tools/tool-viewer.js";
 // sanitization. We therefore trust the output and are allowed to
 // insert it into the DOM.
 
-export default class VeloReportViewer extends Component {
+export default class VeloReportViewer extends React.Component {
     static propTypes = {
         artifact: PropTypes.string,
         type: PropTypes.string,
@@ -44,19 +44,26 @@ export default class VeloReportViewer extends Component {
 
         let prev_client_id = prevProps.client && prevProps.client.client_id;
 
-        if (client_id !== prev_client_id || artifact !== prevProps.artifact) {
-            this.updateReport();
+        if (client_id !== prev_client_id || artifact !== prevProps.artifact ||
+            !_.isEqual(prevProps.params, this.props.params)) {
+                this.updateReport();
         }
+    }
 
-        if (!_.isEqual(prevProps.params, this.props.params)) {
-            this.updateReport();
-        }
+    // Reports are generally pure.
+    shouldComponentUpdate = (nextProps, nextState) => {
+        let client_id = this.props.client && this.props.client.client_id;
+        let next_client_id = nextProps.client && nextProps.client.client_id;
 
+        return !_.isEqual(this.state, nextState) ||
+            !_.isEqual(this.props.params, nextProps.params) ||
+            !_.isEqual(client_id, next_client_id) ||
+            !_.isEqual(this.props.artifact, nextProps.artifact);
     }
 
     updateReport() {
         let client_id = this.props.client && this.props.client.client_id;
-        let params = this.props.params || {};
+        let params = Object.assign({}, this.props.params || {});
         params.artifact = this.props.artifact;
         params.type = this.props.type;
         params.client_id = client_id;
@@ -76,7 +83,13 @@ export default class VeloReportViewer extends Component {
             }
             this.setState(new_state);
         }).catch((err) => {
-            this.setState({"template": "Error " + err.data.message, loading: false});
+            let response = err.response && err.response.data;
+            if (response) {
+                let templ = "<div class='no-content'>" + response.message + "</div>";
+                this.setState({"template": templ,loading: false});
+            } else {
+                this.setState({"template": "Error " + err.message, loading: false});
+            }
         });
     }
 

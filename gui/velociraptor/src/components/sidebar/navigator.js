@@ -89,7 +89,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink to="/server_events">
+                      <NavLink to="/events/server">
                         <ul className="nav nav-pills  navigator">
                           <li className="nav-link" state="server_events" >
                             <i className="navicon"><FontAwesomeIcon icon="eye"/></i>
@@ -152,7 +152,8 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink className={disabled} to="/client_events">
+                      <NavLink className={disabled}
+                               to={"/events/" + this.props.client.client_id}>
                         <ul className="nav nav-pills navigator">
                           <li className={classNames({
                               "nav-link": true,

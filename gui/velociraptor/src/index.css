@@ -17,6 +17,6 @@ code {
   right: 0;
   min-width: 1024px;
   min-height: 400px;
-  background-color: var(--color-dashboard-background);
+  background-color: var(--color-default-background);
   margin-left: var(--sidebar-collapsed-width);
 }

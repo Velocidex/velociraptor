@@ -189,8 +189,8 @@ export default class FlowOverview extends React.Component {
 
                     <dt className="col-4">Uploaded Bytes</dt>
                     <dd className="col-8">
-                      { (flow.total_uploaded_bytes || 0)  /
-                        (flow.total_expected_uploaded_bytes || 1) }
+                      { (flow.total_uploaded_bytes || 0) } / {
+                        (flow.total_expected_uploaded_bytes || 0) }
                     </dd>
 
                     <dt className="col-4">Files uploaded</dt>
