@@ -304,6 +304,7 @@ export default class NewHuntWizard extends React.Component {
                 <NewCollectionConfigParameters
                   setParameters={this.setParameters}
                   artifacts={this.state.artifacts}
+                  setArtifacts={this.setArtifacts}
                   paginator={new HuntPaginator("Configure Parameters",
                                                "Create Hunt: Configure artifact parameters")}
                 />

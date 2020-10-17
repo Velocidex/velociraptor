@@ -75,7 +75,9 @@ export class InspectRawJson extends Component {
                 </Modal.Header>
 
                 <Modal.Body>
-                  <VeloAce text={serialized} aceConfig={this.aceConfig} />
+                  <VeloAce text={serialized}
+                           mode="json"
+                           aceConfig={this.aceConfig} />
                 </Modal.Body>
 
                 <Modal.Footer>

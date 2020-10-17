@@ -148,7 +148,7 @@ export default class ToolViewer extends React.Component {
                       { tool.url && <Button
                                       disabled={this.state.inflight}
                                       onClick={this.serve_locally}>
-                                      Serve from upstream</Button> }
+                                      Serve Locally</Button> }
 
                   </Card.Body>
                 </Card> );
@@ -282,7 +282,7 @@ export default class ToolViewer extends React.Component {
               <Modal show={this.state.showDialog}
                      className="full-height"
                      dialogClassName="modal-90w"
-                     enforceFocus={false}
+                     enforceFocus={true}
                      scrollable={true}
                      onHide={() => this.setState({showDialog: false})}>
                 <Modal.Header closeButton>

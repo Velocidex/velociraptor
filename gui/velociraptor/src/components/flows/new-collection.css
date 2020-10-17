@@ -25,3 +25,13 @@
 .form-check {
     padding-top: 7px;
 }
+
+.expand-cell {
+    width: 20px;
+}
+
+
+.new-artifact-page th label.filter-label {
+    width: 100%;
+    margin-bottom: 0;
+}

@@ -43,7 +43,10 @@ class FlowsList extends React.Component {
             this.props.fetchFlows();
         });
 
-        this.setState({showWizard: false, showCopyWizard: false});
+        // Just disable all wizards.
+        this.setState({showWizard: false,
+                       showOfflineWizard: false,
+                       showCopyWizard: false});
     }
 
     deleteButtonClicked = () => {
@@ -146,7 +149,7 @@ class FlowsList extends React.Component {
               { this.state.showOfflineWizard &&
                 <OfflineCollectorWizard
                   onCancel={(e) => this.setState({showOfflineWizard: false})}
-                  onResolve={this.launchOfflineCollector} />
+                  onResolve={this.setCollectionRequest} />
               }
 
               <Navbar className="toolbar">
