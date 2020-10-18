@@ -1,3 +1,5 @@
+import './snackbar.css';
+
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -15,7 +17,9 @@ class Snackbar extends React.Component {
     }
 
     warn = (message) => {
-        this.props.openSnackbar(message);
+        this.props.openSnackbar(
+            <div>{message}</div>,
+            50000);
     };
 
     render() {
@@ -30,4 +34,5 @@ class Snackbar extends React.Component {
 export default withSnackbar(Snackbar, {
     position: 'bottom-right',
     style: {
+
     }});

@@ -95,6 +95,7 @@ class UserDashboard extends React.Component {
                   artifact="Custom.Server.Monitor.Health"
                   type="SERVER_EVENT"
                   params={{start_time: this.state.start_time,
+                           version: this.state.version,
                            sample: this.state.sample}}
                 />
               </div>

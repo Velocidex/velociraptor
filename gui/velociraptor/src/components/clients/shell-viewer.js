@@ -332,14 +332,10 @@ class ShellViewer extends Component {
             },
         };
 
-        api.post('v1/CollectArtifact', params).then(
-            function success(response) {
-                // Refresh the artifacts immediately.
-                this.fetchLastShellCollections();
-            }.bind(this),
-            function failure(response) {
-                this.responseError = response['data']['error'] || 'Unknown error';
-            }.bind(this));
+        api.post('v1/CollectArtifact', params).then(response=>{
+            // Refresh the artifacts immediately.
+            this.fetchLastShellCollections();
+        });
     };
 
     renderCells(flows) {

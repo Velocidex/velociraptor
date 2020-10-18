@@ -24,6 +24,7 @@ import ValidatedInteger from "../forms/validated_int.js";
 
 import VeloAce from '../core/ace.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { HotKeys, ObserveKeys } from "react-hotkeys";
 
 import api from '../core/api-service.js';
 
@@ -42,7 +43,6 @@ class PaginationBuilder {
 
     title = ""
     name = ""
-
     shouldFocused = (isFocused, step) => isFocused;
 
     // A common function to create the modal paginator between wizard
@@ -120,6 +120,10 @@ class NewCollectionSelectArtifacts extends React.Component {
 
     componentDidMount = () => {
         this.doSearch("...");
+        const el = document.getElementById("text-filter-column-name-search-for-artifact-input");
+        if (el) {
+            setTimeout(()=>el.focus(), 1000);
+        };
     }
 
     onSelect = (row, isSelect) => {
@@ -158,16 +162,36 @@ class NewCollectionSelectArtifacts extends React.Component {
         });
     }
 
+    toggleSelection = (row, e) => {
+        for(let i=0; i<this.props.artifacts.length; i++) {
+            let selected_artifact = this.props.artifacts[i];
+            if (selected_artifact.name === row.name) {
+                this.onSelect(row, false);
+                return;
+            }
+        }
+        this.onSelect(row, true);
+        e.stopPropagation();
+    }
+
     render() {
-        let columns = [{dataField: "name", text: "", filter: textFilter({
-            placeholder: "Search for artifacts...",
-        })}];
+        let columns = [{dataField: "name", text: "",
+                        formatter: (cell, row) => {
+                            return <Button tabIndex={0} variant="link"
+                                           onClick={(e)=>this.toggleSelection(row, e)}
+                                   >{cell}</Button>;
+                        },
+                        filter: textFilter({
+                            id: "search-for-artifact-input",
+                            placeholder: "Search for artifacts...",
+                        })}];
 
         let selectRow = {mode: "checkbox",
                          clickToSelect: true,
                          classes: "row-selected",
                          selected: _.map(this.props.artifacts, x=>x.name),
                          onSelect: this.onSelect,
+                         hideSelectColumn: true,
                          onSelectAll: this.onSelectAll,
                         };
         return (
@@ -178,20 +202,23 @@ class NewCollectionSelectArtifacts extends React.Component {
 
               <Modal.Body>
                 <div className="row new-artifact-page">
-                  <div className="col-4 new-artifact-search-table selectable">
+                  <div className="col-6 new-artifact-search-table selectable">
                     {
-                      <BootstrapTable
-                        remote={ { filter: true } }
-                        filter={ filterFactory() }
-                        keyField="name"
-                        data={this.state.matchingDescriptors}
-                        columns={columns}
-                        selectRow={ selectRow }
-                        onTableChange={ this.updateSearch }
-                      />
+                        <BootstrapTable
+                          hover
+                          condensed
+                          bootstrap4
+                          remote={ { filter: true } }
+                          filter={ filterFactory() }
+                          keyField="name"
+                          data={this.state.matchingDescriptors}
+                          columns={columns}
+                          selectRow={ selectRow }
+                          onTableChange={ this.updateSearch }
+                        />
                     }
                   </div>
-                  <div name="ArtifactInfo" className="col-8 new-artifact-description">
+                  <div name="ArtifactInfo" className="col-6 new-artifact-description">
                     { this.loading ? <Spinner
                                        animation="border" role="status">
                                        <span className="sr-only">Loading...</span>
@@ -275,7 +302,6 @@ class NewCollectionConfigParameters extends React.Component {
                 });
             }
         };
-
         return (
             <>
               <Modal.Header closeButton>
@@ -283,15 +309,13 @@ class NewCollectionConfigParameters extends React.Component {
               </Modal.Header>
 
               <Modal.Body className="new-collection-parameter-page selectable">
-                { !_.isEmpty(this.props.artifacts) &&
+                { !_.isEmpty(this.props.artifacts) ?
                   <BootstrapTable
                     keyField="name"
                     expandRow={ expandRow }
                     columns={[{dataField: "name", text: "Artifact"},
                               {dataField: "parameter", text: "", hidden: true}]}
-                    data={this.props.artifacts} />
-                }
-                {_.isEmpty(this.props.artifacts) &&
+                    data={this.props.artifacts} /> :
                  <div className="no-content">
                    No artifacts configured. Please add some artifacts to collect
                  </div>
@@ -402,7 +426,7 @@ class NewCollectionResources extends React.Component {
                 </Form>
               </Modal.Body>
               <Modal.Footer>
-                { this.props.paginator.makePaginator({
+            { this.props.paginator.makePaginator({
                     props: this.props,
                     onBlur: () => this.props.setResources(this.state),
                     isFocused: this.isInvalid(),
@@ -453,6 +477,8 @@ class NewCollectionLaunch extends React.Component {
     componentDidUpdate = (prevProps, prevState, rootNode) => {
         if (this.props.isActive && !prevProps.isActive) {
             this.props.launch();
+            // Go back to the start in case the collection failed.
+            this.props.goToStep(1);
         }
     }
 
@@ -568,6 +594,27 @@ class NewCollectionWizard extends React.Component {
         return result;
     }
 
+    gotoStep = (step) => {
+        return e=>{
+            this.step.goToStep(step);
+            e.preventDefault();
+        };
+    };
+
+    gotoNextStep = () => {
+        return e=>{
+            this.step.nextStep();
+            e.preventDefault();
+        };
+    }
+
+    gotoPrevStep = () => {
+        return e=>{
+            this.step.previousStep();
+            e.preventDefault();
+        };
+    }
+
     render() {
         let request = this.state.original_flow && this.state.original_flow.request;
         let client_id = this.props.client && this.props.client.client_id;
@@ -576,45 +623,68 @@ class NewCollectionWizard extends React.Component {
             type="SERVER";
         }
 
+        let keymap = {
+            GOTO_ARTIFACTS: "alt+a",
+            GOTO_PARAMETERS: "alt+p",
+            GOTO_PREVIEW: "alt+v",
+            GOTO_RESOURCES: "alt+r",
+            GOTO_LAUNCH: "ctrl+l",
+            NEXT_STEP: "ctrl+right",
+            PREV_STEP: "ctrl+left",
+        };
+        let handlers={
+            GOTO_ARTIFACTS: this.gotoStep(1),
+            GOTO_PARAMETERS: this.gotoStep(2),
+            GOTO_RESOURCES: this.gotoStep(3),
+            GOTO_PREVIEW: this.gotoStep(4),
+            GOTO_LAUNCH: this.gotoStep(5),
+            NEXT_STEP: this.gotoNextStep(),
+            PREV_STEP: this.gotoPrevStep(),
+        };
         return (
             <Modal show={true}
                    className="full-height"
                    dialogClassName="modal-90w"
-                   enforceFocus={false}
                    scrollable={true}
                    onHide={this.props.onCancel}>
-              <StepWizard>
-                <NewCollectionSelectArtifacts
-                  artifacts={this.state.artifacts}
-                  artifactType={type}
-                  paginator={new PaginationBuilder("Select Artifacts",
-                                                   "New Collection: Select Artifacts to collect")}
-                  setArtifacts={this.setArtifacts}/>
+              <HotKeys keyMap={keymap} handlers={handlers}>
+                <ObserveKeys>
+                  <StepWizard ref={n=>this.step=n}>
+                  <NewCollectionSelectArtifacts
+                    artifacts={this.state.artifacts}
+                    artifactType={type}
+                    paginator={new PaginationBuilder(
+                        "Select Artifacts",
+                        "New Collection: Select Artifacts to collect")}
+                    setArtifacts={this.setArtifacts}/>
 
-                <NewCollectionConfigParameters
-                  parameters={this.state.parameter_dict}
-                  setParameters={this.setParameters}
-                  artifacts={this.state.artifacts}
-                  setArtifacts={this.setArtifacts}
-                  paginator={new PaginationBuilder("Configure Parameters",
-                                                   "New Collection: Configure Parameters")}
-                  request={request}/>
+                  <NewCollectionConfigParameters
+                    parameters={this.state.parameters}
+                    setParameters={this.setParameters}
+                    artifacts={this.state.artifacts}
+                    setArtifacts={this.setArtifacts}
+                    paginator={new PaginationBuilder(
+                        "Configure Parameters",
+                        "New Collection: Configure Parameters")}
+                    request={request}/>
 
-                <NewCollectionResources
-                  request={request}
-                  paginator={new PaginationBuilder("Specify Resorces",
-                                                   "New Collection: Specify Resources")}
-                  setResources={this.setResources} />
+                  <NewCollectionResources
+                    request={request}
+                    paginator={new PaginationBuilder(
+                        "Specify Resorces",
+                        "New Collection: Specify Resources")}
+                    setResources={this.setResources} />
 
-                <NewCollectionRequest
-                  paginator={new PaginationBuilder("Review",
-                                                   "New Collection: Review request")}
-                  request={this.prepareRequest()} />
+                  <NewCollectionRequest
+                    paginator={new PaginationBuilder(
+                        "Review",
+                        "New Collection: Review request")}
+                    request={this.prepareRequest()} />
 
-                <NewCollectionLaunch
-                  launch={this.launch} />
-
-              </StepWizard>
+                  <NewCollectionLaunch
+                    launch={this.launch} />
+                </StepWizard>
+                </ObserveKeys></HotKeys>
             </Modal>
         );
     }

@@ -29,6 +29,7 @@ import { Join } from './components/utils/paths.js';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 
+import SidebarKeyNavigator from './components/sidebar/hotkeys.js';
 
 /* This is the main App page.
 
@@ -92,7 +93,7 @@ class App extends Component {
         }
 
         return (
-            <UserSettings><SnackbarProvider>
+            <UserSettings><SnackbarProvider><SidebarKeyNavigator client={this.state.client}/>
               <Navbar fixed="top" className="main-navbar justify-content-between">
                 <Form inline>
                   <VeloNavigator
@@ -161,7 +162,6 @@ class App extends Component {
                   <Route path="/events/server/:artifact?/:time?">
                     <EventMonitoring client={{client_id: ""}}/>
                   </Route>
-
                 </Switch>
               </div>
               <Navbar fixed="bottom" className="app-footer justify-content-between ">

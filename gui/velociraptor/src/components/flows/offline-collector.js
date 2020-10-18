@@ -6,6 +6,7 @@ import StepWizard from 'react-step-wizard';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import { HotKeys, ObserveKeys } from "react-hotkeys";
 
 import {
     NewCollectionSelectArtifacts,
@@ -185,8 +186,39 @@ export default class OfflineCollectorWizard extends React.Component {
     launch = () => {
         this.props.onResolve(this.prepareRequest());
     }
+    gotoStep = (step) => {
+        return e=>{
+            this.step.goToStep(step);
+            e.preventDefault();
+        };
+    };
+
+    gotoNextStep = () => {
+        return e=>{
+            this.step.nextStep();
+            e.preventDefault();
+        };
+    }
+
+    gotoPrevStep = () => {
+        return e=>{
+            this.step.previousStep();
+            e.preventDefault();
+        };
+    }
 
     render() {
+        let keymap = {
+            GOTO_LAUNCH: "ctrl+l",
+            NEXT_STEP: "ctrl+right",
+            PREV_STEP: "ctrl+left",
+        };
+        let handlers={
+            GOTO_LAUNCH: this.gotoStep(5),
+            NEXT_STEP: this.gotoNextStep(),
+            PREV_STEP: this.gotoPrevStep(),
+        };
+
         return (
             <Modal show={true}
                    className="full-height"
@@ -194,8 +226,8 @@ export default class OfflineCollectorWizard extends React.Component {
                    enforceFocus={false}
                    scrollable={true}
                    onHide={this.props.onCancel}>
-
-              <StepWizard>
+              <HotKeys keyMap={keymap} handlers={handlers}><ObserveKeys>
+              <StepWizard ref={n=>this.step=n}>
                 <NewCollectionSelectArtifacts
                   paginator={new OfflinePaginator(
                       "Select Artifacts",
@@ -235,6 +267,7 @@ export default class OfflineCollectorWizard extends React.Component {
                   launch={this.launch} />
 
               </StepWizard>
+              </ObserveKeys></HotKeys>
             </Modal>
         );
     }

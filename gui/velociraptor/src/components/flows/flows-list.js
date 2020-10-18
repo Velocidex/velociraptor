@@ -16,7 +16,11 @@ import { formatColumns } from "../core/table.js";
 import NewCollectionWizard from './new-collection.js';
 import OfflineCollectorWizard from './offline-collector.js';
 
+import { NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { HotKeys } from "react-hotkeys";
+import { withRouter } from "react-router-dom";
+
 
 class FlowsList extends React.Component {
     static propTypes = {
@@ -31,6 +35,19 @@ class FlowsList extends React.Component {
         showWizard: false,
         showCopyWizard: false,
         showOfflineWizard: false,
+        initialized_from_parent: false,
+    }
+
+    // Set the table in focus when the component mounts for the first time.
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        let selected_flow = this.props.selected_flow && this.props.selected_flow.session_id;
+        if (!this.state.initialized_from_parent && selected_flow) {
+            const el = document.getElementById(selected_flow);
+            if (el) {
+                this.setState({initialized_from_parent: true});
+                el.focus();
+            }
+        }
     }
 
     setCollectionRequest = (request) => {
@@ -39,12 +56,12 @@ class FlowsList extends React.Component {
         api.post("v1/CollectArtifact", request).then((response) => {
             // When the request is done force our parent to refresh.
             this.props.fetchFlows();
-        });
 
-        // Just disable all wizards.
-        this.setState({showWizard: false,
-                       showOfflineWizard: false,
-                       showCopyWizard: false});
+            // Only disable wizards if the request was successful.
+            this.setState({showWizard: false,
+                           showOfflineWizard: false,
+                           showCopyWizard: false});
+        });
     }
 
     deleteButtonClicked = () => {
@@ -77,7 +94,60 @@ class FlowsList extends React.Component {
         this.setState({showOfflineWizard: false});
     }
 
+    // Navigates to the next row to the one that is highlighted
+    gotoNextRow = () => {
+        let selected_flow = this.props.selected_flow && this.props.selected_flow.session_id;
+        for(let i=0; i<this.node.table.props.data.length; i++) {
+            let row = this.node.table.props.data[i];
+            if (row.session_id === selected_flow) {
+                // Last row
+                if (i+1 >= this.node.table.props.data.length) {
+                    return;
+                }
+                let next_row = this.node.table.props.data[i+1];
+                this.props.setSelectedFlow(next_row);
+
+                // Scroll the new row into view.
+                const el = document.getElementById(next_row.session_id);
+                if (el) {
+                    el.scrollIntoView();
+                    el.focus();
+                }
+            }
+        };
+    }
+    gotoPrevRow = () => {
+        let selected_flow = this.props.selected_flow && this.props.selected_flow.session_id;
+        for(let i=0; i<this.node.table.props.data.length; i++) {
+            let row = this.node.table.props.data[i];
+            if (row.session_id === selected_flow) {
+                // First row
+                if(i===0){
+                    return;
+                }
+                let prev_row = this.node.table.props.data[i-1];
+                this.props.setSelectedFlow(prev_row);
+
+                // Scroll the new row into view.
+                const el = document.getElementById(prev_row.session_id);
+                if (el) {
+                    el.scrollIntoView();
+                    el.focus();
+                }
+            }
+        };
+    }
+
+    gotoTab = (tab) => {
+        let client_id = this.props.selected_flow && this.props.selected_flow.client_id;
+        let selected_flow = this.props.selected_flow && this.props.selected_flow.session_id;
+        this.props.history.push(
+            "/collected/" + client_id + "/" + selected_flow + "/" + tab);
+    }
+
     render() {
+        let client_id = this.props.client && this.props.client.client_id;
+
         let columns = formatColumns([
             {dataField: "state", text: "State", sort: true,
              formatter: (cell, row) => {
@@ -90,7 +160,14 @@ class FlowsList extends React.Component {
                  return <FontAwesomeIcon icon="exclamation"/>;
              }
             },
-            {dataField: "session_id", text: "FlowId"},
+            {dataField: "session_id", text: "FlowId",
+             formatter: (cell, row) => {
+                 return <NavLink
+                          tabIndex="0"
+                          id={cell}
+                          to={"/collected/" + client_id + "/" + cell}>{cell}
+                        </NavLink>;
+             }},
             {dataField: "request.artifacts", text: "Artifacts",
              sort: true, filtered: true,
              formatter: (cell, row) => {
@@ -118,16 +195,34 @@ class FlowsList extends React.Component {
             clickToSelect: true,
             hideSelectColumn: true,
             classes: "row-selected",
-            onSelect: function(row) {
-                this.props.setSelectedFlow(row);
-            }.bind(this),
+            onSelect: row=>this.props.setSelectedFlow(row),
             selected: [selected_flow],
         };
 
         // When running on the server we have some special GUI.
-        let client_id = this.props.client && this.props.client.client_id;
         let isServer = client_id === "server";
+        let KeyMap = {
+            GOTO_RESULTS: {
+                name: "Display server dashboard",
+                sequence: "r",
+            },
+            GOTO_LOGS: "l",
+            GOTO_OVERVIEW: "o",
+            GOTO_UPLOADS: "u",
+            NEXT: "n",
+            PREVIOUS: "p",
+            COLLECT: "c",
+        };
 
+        let keyHandlers={
+            GOTO_RESULTS: (e)=>this.gotoTab("results"),
+            GOTO_LOGS: (e)=>this.gotoTab("logs"),
+            GOTO_UPLOADS: (e)=>this.gotoTab("uploads"),
+            GOTO_OVERVIEW: (e)=>this.gotoTab("overview"),
+            NEXT: this.gotoNextRow,
+            PREVIOUS: this.gotoPrevRow,
+            COLLECT: ()=>this.setState({showWizard: true}),
+        };
 
         return (
             <>
@@ -188,22 +283,25 @@ class FlowsList extends React.Component {
               </Navbar>
 
               <div className="fill-parent no-margins toolbar-margin selectable">
-                <BootstrapTable
-                  hover
-                  condensed
-                  keyField="session_id"
-                  bootstrap4
-                  headerClasses="alert alert-secondary"
-                  bodyClasses="fixed-table-body"
-                  data={this.props.flows}
-                  columns={columns}
-                  selectRow={ selectRow }
-                  filter={ filterFactory() }
-                />
+                <HotKeys keyMap={KeyMap} handlers={keyHandlers}>
+                  <BootstrapTable
+                    hover
+                    condensed
+                    ref={ n => this.node = n }
+                    keyField="session_id"
+                    bootstrap4
+                    headerClasses="alert alert-secondary"
+                    bodyClasses="fixed-table-body"
+                    data={this.props.flows}
+                    columns={columns}
+                    selectRow={ selectRow }
+                    filter={ filterFactory() }
+                  />
+                </HotKeys>
               </div>
             </>
         );
     }
 };
 
-export default FlowsList;
+export default withRouter(FlowsList);
