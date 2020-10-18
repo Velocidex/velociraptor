@@ -143,6 +143,10 @@ func (self UpdateEventTable) Run(
 			if name != "" {
 				logger.Info("<green>Starting</> monitoring query %s", name)
 			}
+			// Event tables never time out
+			if event.Timeout == 0 {
+				event.Timeout = 99999999
+			}
 			action_obj.StartQuery(
 				config_obj, new_ctx, responder, event)
 			if name != "" {

@@ -647,8 +647,7 @@ class NewCollectionWizard extends React.Component {
                    dialogClassName="modal-90w"
                    scrollable={true}
                    onHide={this.props.onCancel}>
-              <HotKeys keyMap={keymap} handlers={handlers}>
-                <ObserveKeys>
+              <HotKeys keyMap={keymap} handlers={handlers}><ObserveKeys>
                   <StepWizard ref={n=>this.step=n}>
                   <NewCollectionSelectArtifacts
                     artifacts={this.state.artifacts}
