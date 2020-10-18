@@ -19,7 +19,10 @@ class Notebooks extends React.Component {
     state = {
         notebooks: [],
         selected_notebook: {},
-        loading: false,
+
+        // Only show the spinner the first time the component is
+        // mounted.
+        loading: true,
     }
 
     componentDidMount = () => {
@@ -34,7 +37,6 @@ class Notebooks extends React.Component {
     }
 
     fetchNotebooks = () => {
-        this.setState({loading: true});
         api.get("v1/GetNotebooks", {
             count: PAGE_SIZE,
             offset: 0,

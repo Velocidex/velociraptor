@@ -1,0 +1,3 @@
+div[class^="Snackbar_snackbar-wrapper"] {
+    z-index: 3000;
+}

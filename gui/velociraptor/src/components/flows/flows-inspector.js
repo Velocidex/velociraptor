@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
+import _ from 'lodash';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
 
@@ -21,6 +21,15 @@ class FlowInspector extends React.Component {
         tab: "overview",
     }
 
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        let tab = this.props.match && this.props.match.params && this.props.match.params.tab;
+        if (tab && tab !== this.state.tab) {
+            this.setState({tab: tab});
+            return true;
+        }
+        return !_.isEqual(this.state, prevState) || !_.isEqual(this.props, prevProps);
+    }
+
     setDefaultTab = (tab) => {
         this.setState({tab: tab});
         this.props.history.push(
@@ -36,14 +45,10 @@ class FlowInspector extends React.Component {
             return <h5 className="no-content">Please click a collection in the above table</h5>;
         }
 
-        // Default tab comes from the router
-        let default_tab = this.props.match && this.props.match.params &&
-            this.props.match.params.tab;
-        default_tab = default_tab || "overview";
-
         return (
             <div className="padded">
-              <Tabs defaultActiveKey={default_tab} onSelect={this.setDefaultTab}>
+              <Tabs activeKey={this.state.tab}
+                    onSelect={this.setDefaultTab}>
                 <Tab eventKey="overview" title="Artifact Collection">
                   { this.state.tab === "overview" &&
                     <FlowOverview flow={this.props.flow}/>}
