@@ -99,7 +99,7 @@ class FlowsList extends React.Component {
         let selected_flow = this.props.selected_flow && this.props.selected_flow.session_id;
         for(let i=0; i<this.node.table.props.data.length; i++) {
             let row = this.node.table.props.data[i];
-            if (row.session_id == selected_flow) {
+            if (row.session_id === selected_flow) {
                 // Last row
                 if (i+1 >= this.node.table.props.data.length) {
                     return;
@@ -120,7 +120,7 @@ class FlowsList extends React.Component {
         let selected_flow = this.props.selected_flow && this.props.selected_flow.session_id;
         for(let i=0; i<this.node.table.props.data.length; i++) {
             let row = this.node.table.props.data[i];
-            if (row.session_id == selected_flow) {
+            if (row.session_id === selected_flow) {
                 // First row
                 if(i===0){
                     return;
