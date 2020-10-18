@@ -73,7 +73,7 @@ function table2protobuf(table) {
     let result = {artifacts: _event_table2proto(table.All)};
     _.each(table, (v, k) => {
         if (k !== "All" && !_.isEmpty(v.artifacts)) {
-            result.label_events.push({
+            label_events.push({
                 label: k,
                 artifacts: _event_table2proto(v)});
         }

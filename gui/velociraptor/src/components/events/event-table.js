@@ -11,7 +11,7 @@ import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
 import Table  from 'react-bootstrap/Table';
 import utils from './utils.js';
-
+import { HotKeys, ObserveKeys } from "react-hotkeys";
 import { Typeahead, Token } from 'react-bootstrap-typeahead';
 import "react-bootstrap-typeahead/css/Typeahead.css";
 
@@ -267,8 +267,39 @@ export class EventTableWizard extends React.Component {
         return utils.table2protobuf(this.state.tables);
     }
 
+    gotoStep = (step) => {
+        return e=>{
+            this.step.goToStep(step);
+            e.preventDefault();
+        };
+    };
+
+    gotoNextStep = () => {
+        return e=>{
+            this.step.nextStep();
+            e.preventDefault();
+        };
+    }
+
+    gotoPrevStep = () => {
+        return e=>{
+            this.step.previousStep();
+            e.preventDefault();
+        };
+    }
+
     render() {
         let label = this.state.current_label.label;
+        let keymap = {
+            GOTO_LAUNCH: "ctrl+l",
+            NEXT_STEP: "ctrl+right",
+            PREV_STEP: "ctrl+left",
+        };
+        let handlers={
+            GOTO_LAUNCH: this.gotoStep(5),
+            NEXT_STEP: this.gotoNextStep(),
+            PREV_STEP: this.gotoPrevStep(),
+        };
 
         return (
             <Modal show={true}
@@ -277,8 +308,8 @@ export class EventTableWizard extends React.Component {
                    enforceFocus={false}
                    scrollable={true}
                    onHide={this.props.onCancel}>
-
-              <StepWizard>
+              <HotKeys keyMap={keymap} handlers={handlers}><ObserveKeys>
+              <StepWizard ref={n=>this.step=n}>
                 <EventTableLabelGroup
                   label={this.state.current_label}
                   setLabel={this.setLabel}
@@ -317,6 +348,7 @@ export class EventTableWizard extends React.Component {
                   launch={this.launch} />
 
               </StepWizard>
+              </ObserveKeys></HotKeys>
             </Modal>
         );
     }
@@ -391,7 +423,39 @@ export class ServerEventTableWizard extends React.Component {
         return utils.table2protobuf(this.state.tables);
     }
 
+    gotoStep = (step) => {
+        return e=>{
+            this.step.goToStep(step);
+            e.preventDefault();
+        };
+    };
+
+    gotoNextStep = () => {
+        return e=>{
+            this.step.nextStep();
+            e.preventDefault();
+        };
+    }
+
+    gotoPrevStep = () => {
+        return e=>{
+            this.step.previousStep();
+            e.preventDefault();
+        };
+    }
+
     render() {
+        let keymap = {
+            GOTO_LAUNCH: "ctrl+l",
+            NEXT_STEP: "ctrl+right",
+            PREV_STEP: "ctrl+left",
+        };
+        let handlers={
+            GOTO_LAUNCH: this.gotoStep(4),
+            NEXT_STEP: this.gotoNextStep(),
+            PREV_STEP: this.gotoPrevStep(),
+        };
+
         return (
             <Modal show={true}
                    className="full-height"
@@ -399,8 +463,8 @@ export class ServerEventTableWizard extends React.Component {
                    enforceFocus={false}
                    scrollable={true}
                    onHide={this.props.onCancel}>
-
-              <StepWizard>
+              <HotKeys keyMap={keymap} handlers={handlers}><ObserveKeys>
+              <StepWizard ref={n=>this.step=n}>
                 <NewCollectionSelectArtifacts
                   paginator={new ServerEventTablePaginator(
                       "Select Artifacts",
@@ -430,6 +494,7 @@ export class ServerEventTableWizard extends React.Component {
                   launch={this.launch} />
 
               </StepWizard>
+              </ObserveKeys></HotKeys>
             </Modal>
         );
     }

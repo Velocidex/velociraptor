@@ -43,6 +43,15 @@ class InspectRawJson extends React.PureComponent {
     }
 
     fetchEventTable = () => {
+        let client_id = this.props.client && this.props.client.client_id;
+        if (!client_id || client_id === "server") {
+            api.get("v1/GetServerMonitoringState").then(resp => {
+                let table = resp.data;
+                delete table["compiled_collector_args"];
+                this.setState({raw_json: JSON.stringify(table, null, 2)});
+            });
+            return;
+        }
         api.get("v1/GetClientMonitoringState").then(resp => {
             let table = resp.data;
             delete table.artifacts["compiled_collector_args"];
@@ -50,7 +59,7 @@ class InspectRawJson extends React.PureComponent {
                 delete x.artifacts["compiled_collector_args"];
             });
 
-            this.setState({raw_json: JSON.stringify(resp.data, null, 2)});
+            this.setState({raw_json: JSON.stringify(table, null, 2)});
         });
     }
 
@@ -60,6 +69,7 @@ class InspectRawJson extends React.PureComponent {
     };
 
     render() {
+        let client_id = this.props.client && this.props.client.client_id;
         return (
             <>
               <Modal show={true}
@@ -69,9 +79,11 @@ class InspectRawJson extends React.PureComponent {
                      dialogClassName="modal-90w"
                      onHide={this.props.onClose}>
                 <Modal.Header closeButton>
-                  <Modal.Title>Raw Monitoring Table JSON</Modal.Title>
+                  <Modal.Title>
+                    Raw { client_id && client_id !== "server" ? "Client " : "Server "}
+                    Monitoring Table JSON
+                  </Modal.Title>
                 </Modal.Header>
-
                 <Modal.Body>
                   <VeloAce text={this.state.raw_json}
                            mode="json"
@@ -245,7 +257,7 @@ class EventMonitoring extends React.Component {
         return (
             <>
               {this.state.showEventMonitoringPopup &&
-               <InspectRawJson client={this.state.client}
+               <InspectRawJson client={this.props.client}
                                onClose={()=>this.setState({showEventMonitoringPopup: false})}
                /> }
               {this.state.showEventTableWizard &&
@@ -262,23 +274,32 @@ class EventMonitoring extends React.Component {
               <Navbar className="artifact-toolbar justify-content-between">
                 <ButtonGroup>
                   { client_id === "server" || client_id === "" ?
-                    <Button title="Update server monitoring table"
-                            onClick={() => this.setState({showServerEventTableWizard: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="edit"/>
-                    </Button>   :
+                    <>
+                      <Button title="Update server monitoring table"
+                              onClick={() => this.setState({showServerEventTableWizard: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="edit"/>
+                      </Button>
+                      <Button title="Show server monitoring tables"
+                              onClick={() => this.setState({showEventMonitoringPopup: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="binoculars"/>
+                      </Button>
 
-                    <Button title="Update client monitoring table"
-                            onClick={() => this.setState({showEventTableWizard: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="edit"/>
-                    </Button> }
-                  <Button title="Show client monitoring tables"
-                          onClick={() => this.setState({showEventMonitoringPopup: true})}
-                          variant="default">
-                    <FontAwesomeIcon icon="binoculars"/>
-                  </Button>
-
+                    </>:
+                    <>
+                      <Button title="Update client monitoring table"
+                              onClick={() => this.setState({showEventTableWizard: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="edit"/>
+                      </Button>
+                      <Button title="Show client monitoring tables"
+                              onClick={() => this.setState({showEventMonitoringPopup: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="binoculars"/>
+                      </Button>
+                    </>
+                  }
                   <Dropdown title={this.state.artifact.artifact ||
                                    "Select artifact"} variant="default">
                     <Dropdown.Toggle variant="default">

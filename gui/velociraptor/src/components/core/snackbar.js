@@ -18,8 +18,7 @@ class Snackbar extends React.Component {
 
     warn = (message) => {
         this.props.openSnackbar(
-            <div>{message}</div>,
-            50000);
+            <div>{message}</div>, 5000);
     };
 
     render() {
