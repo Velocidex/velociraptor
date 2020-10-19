@@ -84,9 +84,7 @@ func (self *ApiServer) CancelFlow(
 	}
 
 	result, err := flows.CancelFlow(
-		ctx,
-		self.config, in.ClientId, in.FlowId, user_name,
-		self.api_client_factory)
+		ctx, self.config, in.ClientId, in.FlowId, user_name)
 	if err != nil {
 		return nil, err
 	}

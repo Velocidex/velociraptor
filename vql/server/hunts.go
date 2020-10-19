@@ -334,6 +334,7 @@ func (self HuntFlowsPlugin) Call(
 			result := ordereddict.NewDict().
 				Set("HuntId", participation_row.HuntId).
 				Set("ClientId", participation_row.ClientId).
+				Set("FlowId", participation_row.FlowId).
 				Set("Flow", vfilter.Null{})
 
 			collection_context, err := flows.LoadCollectionContext(
@@ -343,6 +344,7 @@ func (self HuntFlowsPlugin) Call(
 				result.Set("Flow",
 					json.ConvertProtoToOrderedDict(collection_context))
 			}
+
 			select {
 			case <-ctx.Done():
 				return

@@ -29,7 +29,7 @@ class HuntInspector extends React.Component {
 
     render() {
         if (!this.props.hunt || !this.props.hunt.hunt_id) {
-            return <div>Please select a hunt above</div>;
+            return <div className="no-content">Please select a hunt above</div>;
         }
 
         // Default tab comes from the router

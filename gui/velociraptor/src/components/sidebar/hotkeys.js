@@ -56,6 +56,5 @@ export const SidebarKeyMap = {
     GOTO_COLLECTIONS: {
         name: "Goto collected artifact",
         sequence: "ctrl+c",
-    }
-
+    },
 };

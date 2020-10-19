@@ -62,7 +62,7 @@ class VeloHunts extends React.Component {
             count: 100,
             offset: 0,
         }).then((response) => {
-            let hunts = response.data.items;
+            let hunts = response.data.items || [];
             let selected_hunt = {};
 
             // If the router specifies a selected flow id, we select it.

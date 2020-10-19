@@ -14,11 +14,17 @@ import BootstrapTable from 'react-bootstrap-table-next';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { formatColumns } from "../core/table.js";
+import api from '../core/api-service.js';
+
 
 export default class HuntOverview extends React.Component {
     static propTypes = {
         hunt: PropTypes.object,
     };
+
+    state = {
+        preparing: false,
+    }
 
     huntState = () => {
         let hunt = this.props.hunt;
@@ -34,6 +40,41 @@ export default class HuntOverview extends React.Component {
             return "PAUSED";
         }
         return "ERROR";
+    }
+
+    prepareDownload = (download_type) => {
+        var params = {
+            hunt_id: this.props.hunt.hunt_id,
+        };
+
+        switch(download_type) {
+        case "all":
+            params.json_format = true;
+            params.csv_format = true;
+            break;
+
+        case 'summary':
+            params.only_combined_hunt = true;
+            break;
+
+        case 'summary-json':
+            params.only_combined_hunt = true;
+            params.json_format = true;
+            break;
+
+        case 'summary-csv':
+            params.only_combined_hunt = true;
+            params.csv_format = true;
+            break;
+
+        default:
+            return;
+        }
+
+        this.setState({preparing: true});
+        api.post("v1/CreateDownload", params).then(resp=>{
+            this.setState({preparing: false});
+        });
     }
 
     render() {
@@ -135,24 +176,26 @@ export default class HuntOverview extends React.Component {
                     <dt className="col-4">Download Results</dt>
                     <dd className="col-8">
                       <Dropdown>
-                        <Dropdown.Toggle variant="default">
+                        <Dropdown.Toggle
+                          disabled={this.state.preparing}
+                          variant="default">
                           <FontAwesomeIcon icon="archive"/>
                         </Dropdown.Toggle>
                         <Dropdown.Menu>
                           <Dropdown.Item
-                            onClick={() => this.prepareDownload()}>
+                            onClick={() => this.prepareDownload("all")}>
                             Full Download
                           </Dropdown.Item>
                           <Dropdown.Item
-                            onClick={() => this.prepareReport('summary')}>
+                            onClick={() => this.prepareDownload('summary')}>
                             Summary Download
                           </Dropdown.Item>
                           <Dropdown.Item
-                            onClick={() => this.prepareReport('summary-csv')}>
+                            onClick={() => this.prepareDownload('summary-csv')}>
                             Summary (CSV Only)
                           </Dropdown.Item>
                           <Dropdown.Item
-                            onClick={() => this.prepareReport('summary-json')}>
+                            onClick={() => this.prepareDownload('summary-json')}>
                             Summary (JSON Only)
                           </Dropdown.Item>
                         </Dropdown.Menu>

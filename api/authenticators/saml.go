@@ -28,23 +28,24 @@ func (self *SamlAuthenticator) IsPasswordLess() bool {
 }
 
 func (self *SamlAuthenticator) AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
+	auther := config_obj.GUI.Authenticator
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
-	key, err := crypto.ParseRsaPrivateKeyFromPemStr([]byte(config_obj.GUI.SamlPrivateKey))
+	key, err := crypto.ParseRsaPrivateKeyFromPemStr([]byte(auther.SamlPrivateKey))
 	if err != nil {
 		return err
 	}
 
-	cert, err := crypto.ParseX509CertFromPemStr([]byte(config_obj.GUI.SamlCertificate))
+	cert, err := crypto.ParseX509CertFromPemStr([]byte(auther.SamlCertificate))
 	if err != nil {
 		return err
 	}
 
-	idpMetadataURL, err := url.Parse(config_obj.GUI.SamlIdpMetadataUrl)
+	idpMetadataURL, err := url.Parse(auther.SamlIdpMetadataUrl)
 	if err != nil {
 		return err
 	}
 
-	rootURL, err := url.Parse(config_obj.GUI.SamlRootUrl)
+	rootURL, err := url.Parse(auther.SamlRootUrl)
 	if err != nil {
 		return err
 	}
@@ -114,8 +115,9 @@ Contact your system administrator to get an account, then try again.
 }
 
 func userAttr(config_obj *config_proto.Config) string {
-	if config_obj.GUI.SamlUserAttribute == "" {
+	auther := config_obj.GUI.Authenticator
+	if auther.SamlUserAttribute == "" {
 		return "name"
 	}
-	return config_obj.GUI.SamlUserAttribute
+	return auther.SamlUserAttribute
 }

@@ -264,8 +264,9 @@ const int_regex = /^[-0-9]+$/;
 export function PrepareData(value) {
     var rows = [];
     let columns = value.columns || [];
-    for (var i=0; i<value.rows.length; i++) {
-        var row = value.rows[i].cell;
+    let value_rows = value.rows || [];
+    for (var i=0; i < value_rows.length; i++) {
+        var row = value_rows[i].cell;
         var new_row = {};
         for (var j=0; j<columns.length; j++) {
             var cell = j > row.length ? "" : row[j];

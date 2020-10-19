@@ -49,7 +49,7 @@ export default class FlowResults extends React.Component {
 
     state = {
         selectedArtifact: "",
-        loading: true,
+        loading: false,
         pageData: {},
         total_collected_rows: 0,
     }
@@ -61,7 +61,7 @@ export default class FlowResults extends React.Component {
 
         if (!client_id || !artifacts_with_results || !flow_id) {
             this.setState({selectedArtifact: "", pageData: {},
-                           loading: true,
+                           loading: false,
                            total_collected_rows: 0,
                           });
             return;
@@ -83,7 +83,6 @@ export default class FlowResults extends React.Component {
 
         this.setState({loading: true,
                        total_collected_rows: this.props.flow.total_collected_rows});
-
         api.get("v1/GetTable", params).then((response) => {
             this.setState({loading: false,
                            pageData: PrepareData(response.data)});
