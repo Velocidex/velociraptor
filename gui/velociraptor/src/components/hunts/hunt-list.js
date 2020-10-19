@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
+import _ from 'lodash';
 import BootstrapTable from 'react-bootstrap-table-next';
 import VeloTimestamp from "../utils/time.js";
 import Navbar from 'react-bootstrap/Navbar';
@@ -31,6 +31,7 @@ export default class HuntList extends React.Component {
     state = {
         showWizard: false,
         showRunHuntDialog: false,
+        showArchiveHuntDialog: false,
         showDeleteHuntDialog: false,
     }
 
@@ -72,10 +73,20 @@ export default class HuntList extends React.Component {
             hunt_id: hunt_id,
         }).then((response) => {
             this.props.updateHunts();
+
+            // Start Cancelling all in flight collections in the
+            // background.
+            api.post("v1/CollectArtifact", {
+                client_id: "server",
+                artifacts: ["Server.Utils.CancelHunt"],
+                parameters: {env: [
+                    {key: "HuntId", value: hunt_id},
+                ]},
+            });
         });
     }
 
-    deleteHunt = () => {
+    archiveHunt = () => {
         let hunt_id = this.props.selected_hunt &&
             this.props.selected_hunt.hunt_id;
 
@@ -86,7 +97,51 @@ export default class HuntList extends React.Component {
             hunt_id: hunt_id,
         }).then((response) => {
             this.props.updateHunts();
+            this.setState({showArchiveHuntDialog: false});
+        });
+    }
+
+    deleteHunt = () => {
+        let hunt_id = this.props.selected_hunt &&
+            this.props.selected_hunt.hunt_id;
+
+        if (!hunt_id) {return;};
+
+        // First stop the hunt then delete all the files.
+        api.post("v1/ModifyHunt", {
+            state: "ARCHIVED",
+            hunt_id: hunt_id,
+        }).then((response) => {
+            this.props.updateHunts();
             this.setState({showDeleteHuntDialog: false});
+
+            // Start delete collections in the background. It may take
+            // a while.
+            api.post("v1/CollectArtifact", {
+                client_id: "server",
+                artifacts: ["Server.Hunts.CancelAndDelete"],
+                parameters: {env: [
+                    {key: "HuntId", value: hunt_id},
+                    {key: "DeleteAllFiles", value: "Y"},
+                ]},
+            });
+        });
+    }
+
+
+
+    archiveHunt = () => {
+        let hunt_id = this.props.selected_hunt &&
+            this.props.selected_hunt.hunt_id;
+
+        if (!hunt_id) {return;};
+
+        api.post("v1/ModifyHunt", {
+            state: "ARCHIVED",
+            hunt_id: hunt_id,
+        }).then((response) => {
+            this.props.updateHunts();
+            this.setState({showArchiveHuntDialog: false});
         });
     }
 
@@ -150,41 +205,69 @@ export default class HuntList extends React.Component {
                 />
               }
 
-              <Modal show={this.state.showRunHuntDialog}
-                     onHide={() => this.setState({showRunHuntDialog: false})} >
+              {this.state.showRunHuntDialog &&
+               <Modal show={this.state.showRunHuntDialog}
+                      onHide={() => this.setState({showRunHuntDialog: false})} >
+                 <Modal.Header closeButton>
+                   <Modal.Title>Run this hunt?</Modal.Title>
+                 </Modal.Header>
+
+                 <Modal.Body>
+                   <p>Are you sure you want to run this hunt?</p>
+                 </Modal.Body>
+
+                 <Modal.Footer>
+                   <Button variant="secondary"
+                           onClick={() => this.setState({showRunHuntDialog: false})}>
+                     Close
+                   </Button>
+                   <Button variant="primary"
+                           onClick={this.startHunt}>
+                     Run it!
+                   </Button>
+                 </Modal.Footer>
+               </Modal>
+              }
+              { this.state.showArchiveHuntDialog &&
+                <Modal show={this.state.showArchiveHuntDialog}
+                       onHide={() => this.setState({showArchiveHuntDialog: false})} >
                   <Modal.Header closeButton>
-                    <Modal.Title>Run this hunt?</Modal.Title>
+                    <Modal.Title>Archive this hunt?</Modal.Title>
                   </Modal.Header>
 
                   <Modal.Body>
-                    <p>Are you sure you want to run this hunt?</p>
+                    <p>Archiving a hunt simply hides it from the GUI.</p>
+                    <p>Are you sure you want to archive this hunt? You can still access its data providing you know it's hunt ID and from VQL queries.</p>
                   </Modal.Body>
 
                   <Modal.Footer>
                     <Button variant="secondary"
-                      onClick={() => this.setState({showRunHuntDialog: false})}>
+                            onClick={() => this.setState({showArchiveHuntDialog: false})}>
                       Close
                     </Button>
                     <Button variant="primary"
-                            onClick={this.startHunt}>
-                      Run it!
+                            onClick={this.archiveHunt}>
+                      Kill it!
                     </Button>
                   </Modal.Footer>
-              </Modal>
+                </Modal>
+              }
 
-              <Modal show={this.state.showDeleteHuntDialog}
-                     onHide={() => this.setState({showDeleteHuntDialog: false})} >
+              { this.state.showDeleteHuntDialog &&
+                <Modal show={true}
+                       onHide={() => this.setState({showDeleteHuntDialog: false})} >
                   <Modal.Header closeButton>
-                    <Modal.Title>Delete this hunt?</Modal.Title>
+                    <Modal.Title>Permanently delete this hunt?</Modal.Title>
                   </Modal.Header>
 
                   <Modal.Body>
-                    <p>Are you sure you want to delete this hunt?</p>
+                    <p>You are about to permanently stop and delete all data from this hunt.</p>
+                    <p>Are you sure you want to cancel this hunt and delete the collected data?</p>
                   </Modal.Body>
 
                   <Modal.Footer>
                     <Button variant="secondary"
-                      onClick={() => this.setState({showDeleteHuntDialog: false})}>
+                            onClick={() => this.setState({showDeleteHuntDialog: false})}>
                       Close
                     </Button>
                     <Button variant="primary"
@@ -192,7 +275,8 @@ export default class HuntList extends React.Component {
                       Kill it!
                     </Button>
                   </Modal.Footer>
-              </Modal>
+                </Modal>
+              }
 
               <Navbar className="toolbar">
                 <ButtonGroup>
@@ -213,12 +297,19 @@ export default class HuntList extends React.Component {
                           variant="default">
                     <FontAwesomeIcon icon="stop"/>
                   </Button>
+                  <Button title="Archive Hunt"
+                          disabled={state === 'RUNNING'}
+                          onClick={() => this.setState({showArchiveHuntDialog: true})}
+                          variant="default">
+                    <FontAwesomeIcon icon="archive"/>
+                  </Button>
                   <Button title="Delete Hunt"
                           disabled={state === 'RUNNING'}
                           onClick={() => this.setState({showDeleteHuntDialog: true})}
                           variant="default">
-                    <FontAwesomeIcon icon="trash"/>
+                    <FontAwesomeIcon icon="eraser"/>
                   </Button>
+
                 </ButtonGroup>
               </Navbar>
               <div className="fill-parent no-margins toolbar-margin selectable">
@@ -234,6 +325,8 @@ export default class HuntList extends React.Component {
                   filter={ filterFactory() }
                   selectRow={ selectRow }
                 />
+            { _.isEmpty(this.props.hunts) &&
+              <div className="no-content">No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.</div>}
               </div>
             </>
         );

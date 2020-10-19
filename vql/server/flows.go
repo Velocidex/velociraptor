@@ -10,7 +10,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/flows"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -112,16 +111,21 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
+	arg := &FlowsPluginArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("flows: %s", err)
+		scope.Log("cancel_flow: %s", err.Error())
 		return vfilter.Null{}
 	}
 
-	arg := &FlowsPluginArgs{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	permissions := acls.COLLECT_CLIENT
+	if arg.ClientId == "server" {
+		permissions = acls.COLLECT_SERVER
+	}
+
+	err = vql_subsystem.CheckAccess(scope, permissions)
 	if err != nil {
-		scope.Log("cancel_flow: %s", err.Error())
+		scope.Log("cancel_flow: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -132,10 +136,9 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 	}
 
 	res, err := flows.CancelFlow(ctx, config_obj,
-		arg.ClientId, arg.FlowId, "VQL query",
-		grpc_client.GRPCAPIClient{})
+		arg.ClientId, arg.FlowId, "VQL query")
 	if err != nil {
-		scope.Log("cancel_flow: %s", err.Error())
+		scope.Log("cancel_flow: %v", err.Error())
 		return vfilter.Null{}
 	}
 
