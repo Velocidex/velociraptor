@@ -170,20 +170,17 @@ func PrepareGUIMux(
 		return nil, err
 	}
 
-	h, err = GetTemplateHandler(config_obj, "/static/templates/app.html")
+	h, err = GetTemplateHandler(config_obj, "/index.html")
 	if err != nil {
 		return nil, err
 	}
-	mux.Handle(base+"/app.html", csrfProtect(config_obj,
+	mux.Handle(base+"/app/index.html", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(config_obj, h)))
 
-	h, err = GetTemplateHandler(config_obj, "/static/templates/index.html")
-	if err != nil {
-		return nil, err
-	}
+	mux.Handle(base+"/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, base+"/app/index.html", 302)
+	}))
 
-	// No Auth on / which is a redirect to app.html anyway.
-	mux.Handle(base+"/", h)
 	return mux, nil
 }
 

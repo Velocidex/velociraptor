@@ -24,13 +24,13 @@ export default class FlowRequests extends React.Component {
         let flow_id = this.props.flow && this.props.flow.session_id;
         let prev_flow_id = prevProps.flow && prevProps.flow.session_id;
 
-        if (flow_id != prev_flow_id) {
+        if (flow_id !== prev_flow_id) {
             this.fetchRequests();
         }
     }
 
     fetchRequests = () => {
-        api.get("api/v1/GetFlowRequests", {
+        api.get("v1/GetFlowRequests", {
             flow_id: this.props.flow.session_id,
             client_id: this.props.flow.client_id,
         }).then((response) => {

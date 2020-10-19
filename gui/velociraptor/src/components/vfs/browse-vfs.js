@@ -16,13 +16,15 @@ const resizerStyle = {
 class VFSViewer extends Component {
     static propTypes = {
         client: PropTypes.object,
+        updateCurrentNode: PropTypes.func.isRequired,
+        node: PropTypes.object,
+        vfs_path: PropTypes.array,
     }
 
     state = {
         topPaneSize: undefined,
         collapsed: false,
         vfs_path: [],
-        selected_row: {},
         current_node: {},
     }
 
@@ -50,6 +52,7 @@ class VFSViewer extends Component {
                        defaultSize="20%"
                        resizerStyle={resizerStyle}>
               <VeloFileTree client={this.props.client}
+                            version={this.props.node && this.props.node.version}
                             className="file-tree"
                             updateVFSPath={this.updateVFSPath}
                             updateCurrentNode={this.updateCurrentNode}
@@ -62,10 +65,13 @@ class VFSViewer extends Component {
                 <VeloFileList
                   client={this.props.client}
                   updateCurrentNode={this.updateCurrentNode}
+                  version={this.props.node && this.props.node.version}
                   node={this.state.current_node} />
                 <VeloFileDetails
                   client={this.props.client}
-                   node={this.state.current_node} />
+                  version={this.props.node && this.props.node.version}
+                  updateCurrentNode={this.updateCurrentNode}
+                  node={this.state.current_node} />
               </SplitPane>
             </SplitPane>
             </>

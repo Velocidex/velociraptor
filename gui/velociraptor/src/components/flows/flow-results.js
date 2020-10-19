@@ -36,7 +36,7 @@ export default class FlowResults extends React.Component {
     // 3. The user selected to view a different artifact result.
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (!_.isEqual(getFlowState(prevProps.flow), getFlowState(this.props.flow)) ||
-           prevState.selectedArtifact != this.state.selectedArtifact) {
+           prevState.selectedArtifact !== this.state.selectedArtifact) {
             this.fetchRows();
         }
     }
@@ -44,7 +44,7 @@ export default class FlowResults extends React.Component {
     shouldComponentUpdate(nextProps, nextState) {
         return !_.isEqual(getFlowState(this.props.flow), getFlowState(nextProps.flow)) ||
             !_.isEqual(this.state.pageData, nextState.pageData) ||
-            this.state.selectedArtifact != nextState.selectedArtifact;
+            this.state.selectedArtifact !== nextState.selectedArtifact;
     }
 
     state = {
@@ -58,7 +58,6 @@ export default class FlowResults extends React.Component {
         let client_id = this.props.flow && this.props.flow.client_id;
         let flow_id = this.props.flow && this.props.flow.session_id;
         let artifacts_with_results = this.props.flow && this.props.flow.artifacts_with_results;
-        let total_collected_rows = this.props.flow.total_collected_rows || 0;
 
         if (!client_id || !artifacts_with_results || !flow_id) {
             this.setState({selectedArtifact: "", pageData: {},
@@ -85,7 +84,7 @@ export default class FlowResults extends React.Component {
         this.setState({loading: true,
                        total_collected_rows: this.props.flow.total_collected_rows});
 
-        api.get("api/v1/GetTable", params).then((response) => {
+        api.get("v1/GetTable", params).then((response) => {
             this.setState({loading: false,
                            pageData: PrepareData(response.data)});
         }).catch(() => {

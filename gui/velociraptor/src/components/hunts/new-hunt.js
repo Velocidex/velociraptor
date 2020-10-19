@@ -2,8 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import _ from 'lodash';
-import api from '../core/api-service.js';
-
 import Modal from 'react-bootstrap/Modal';
 
 import StepWizard from 'react-step-wizard';
@@ -11,7 +9,7 @@ import StepWizard from 'react-step-wizard';
 import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
-
+import { HotKeys, ObserveKeys } from "react-hotkeys";
 import DateTimePicker from 'react-datetime-picker';
 
 import LabelForm from '../utils/labels.js';
@@ -47,7 +45,7 @@ class NewHuntConfigureHunt extends React.Component {
 
             include_condition: "",
             include_labels: [],
-            include_os: "",
+            include_os: "WINDOWS", // Default selector
             exclude_condition: "",
             excluded_labels: [],
         };
@@ -96,7 +94,7 @@ class NewHuntConfigureHunt extends React.Component {
                     </Col>
                   </Form.Group>
 
-                  { this.state.include_condition == "os" &&
+                  { this.state.include_condition === "os" &&
                     <Form.Group as={Row}>
                       <Form.Label column sm="3">Operating System Included</Form.Label>
                       <Col sm="8">
@@ -113,7 +111,7 @@ class NewHuntConfigureHunt extends React.Component {
                     </Form.Group>
                   }
 
-                  { this.state.include_condition == "labels" &&
+                  { this.state.include_condition === "labels" &&
                     <Form.Group as={Row}>
                       <Form.Label column sm="3">Include Labels</Form.Label>
                       <Col sm="8">
@@ -139,7 +137,7 @@ class NewHuntConfigureHunt extends React.Component {
                     </Col>
                   </Form.Group>
 
-                  { this.state.exclude_condition == "labels" &&
+                  { this.state.exclude_condition === "labels" &&
                     <Form.Group as={Row}>
                       <Form.Label column sm="3">Exclude Labels</Form.Label>
                       <Col sm="8">
@@ -179,7 +177,7 @@ export default class NewHuntWizard extends React.Component {
         artifacts: [],
 
         // A key/value mapping of edited parameters by the user.
-        parameters: {env: []},
+        parameters: {},
 
         resources: {},
 
@@ -191,13 +189,7 @@ export default class NewHuntWizard extends React.Component {
     }
 
     setParameters = (params) => {
-        let new_parameters = {env: []};
-        for (var k in params) {
-            if (params.hasOwnProperty(k)) {
-                new_parameters.env.push({key: k, value: params[k]});
-            }
-        }
-        this.setState({parameters: new_parameters});
+        this.setState({parameters: params});
     }
 
     setResources = (resources) => {
@@ -215,9 +207,15 @@ export default class NewHuntWizard extends React.Component {
             artifacts.push(item.name);
         });
 
+        // Convert the params into protobuf
+        let parameters = {env: []};
+        _.each(this.state.parameters, (v, k) => {
+            parameters.env.push({key: k, value: v});
+        });
+
         let request = {
             artifacts: artifacts,
-            parameters: this.state.parameters,
+            parameters: parameters,
         };
 
         if (this.state.resources.ops_per_second) {
@@ -254,7 +252,7 @@ export default class NewHuntWizard extends React.Component {
         }
 
         if (hunt_parameters.exclude_condition === "labels") {
-            result.condition.excluded_labels = hunt_parameters.excluded_labels;
+            result.condition.excluded_labels = {label: hunt_parameters.excluded_labels};
         }
 
         if (hunt_parameters.description) {
@@ -264,7 +262,38 @@ export default class NewHuntWizard extends React.Component {
         return result;
     }
 
+    gotoStep = (step) => {
+        return e=>{
+            this.step.goToStep(step);
+            e.preventDefault();
+        };
+    };
+
+    gotoNextStep = () => {
+        return e=>{
+            this.step.nextStep();
+            e.preventDefault();
+        };
+    }
+
+    gotoPrevStep = () => {
+        return e=>{
+            this.step.previousStep();
+            e.preventDefault();
+        };
+    }
+
     render() {
+        let keymap = {
+            GOTO_LAUNCH: "ctrl+l",
+            NEXT_STEP: "ctrl+right",
+            PREV_STEP: "ctrl+left",
+        };
+        let handlers={
+            GOTO_LAUNCH: this.gotoStep(5),
+            NEXT_STEP: this.gotoNextStep(),
+            PREV_STEP: this.gotoPrevStep(),
+        };
         return (
             <Modal show={true}
                    className="full-height"
@@ -272,8 +301,8 @@ export default class NewHuntWizard extends React.Component {
                    enforceFocus={false}
                    scrollable={true}
                    onHide={this.props.onCancel}>
-
-              <StepWizard>
+              <HotKeys keyMap={keymap} handlers={handlers}><ObserveKeys>
+              <StepWizard ref={n=>this.step=n}>
                 <NewHuntConfigureHunt
                   paginator={new HuntPaginator(
                       "Configure Hunt",
@@ -299,11 +328,14 @@ export default class NewHuntWizard extends React.Component {
                           return isFocused && step !== "Configure Hunt";
                       })}
                   artifacts={this.state.artifacts}
+                  artifactType="CLIENT"
                   setArtifacts={this.setArtifacts}/>
 
                 <NewCollectionConfigParameters
+                  parameters={this.state.parameters}
                   setParameters={this.setParameters}
                   artifacts={this.state.artifacts}
+                  setArtifacts={this.setArtifacts}
                   paginator={new HuntPaginator("Configure Parameters",
                                                "Create Hunt: Configure artifact parameters")}
                 />
@@ -323,6 +355,7 @@ export default class NewHuntWizard extends React.Component {
                   launch={this.launch} />
 
               </StepWizard>
+              </ObserveKeys></HotKeys>
             </Modal>
         );
     }

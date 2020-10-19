@@ -240,6 +240,9 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	// server.
 	for _, event := range result.Event {
 		event.MaxWait += uint64(rand.Intn(20))
+
+		// Event queries never time out
+		event.Timeout = 99999999
 	}
 
 	return &crypto_proto.GrrMessage{

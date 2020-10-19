@@ -3,14 +3,8 @@ import PropTypes from 'prop-types';
 
 import Spinner from '../utils/spinner.js';
 
-import _ from 'lodash';
-
 import api from '../core/api-service.js';
 import VeloTable, { PrepareData } from '../core/table.js';
-import FormControl from 'react-bootstrap/FormControl';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
 const MAX_ROWS_PER_TABLE = 500;
 
 
@@ -24,7 +18,7 @@ export default class HuntStatus extends React.Component {
     }
 
     componentDidUpdate = (prevProps, prevState, snapshot) => {
-        if (prevProps.hunt.hunt_id != this.props.hunt.hunt_id) {
+        if (prevProps.hunt.hunt_id !== this.props.hunt.hunt_id) {
             this.fetchRows();
         }
     };
@@ -50,7 +44,7 @@ export default class HuntStatus extends React.Component {
         };
 
         this.setState({loading: true});
-        api.get("api/v1/GetTable", params).then((response) => {
+        api.get("v1/GetTable", params).then((response) => {
             this.setState({loading: false,
                            pageData: PrepareData(response.data)});
         }).catch(() => {

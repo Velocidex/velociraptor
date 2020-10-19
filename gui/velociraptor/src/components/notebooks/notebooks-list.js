@@ -4,7 +4,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 import VeloTimestamp from "../utils/time.js";
-import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
+import filterFactory from 'react-bootstrap-table2-filter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BootstrapTable from 'react-bootstrap-table-next';
 
@@ -17,20 +17,39 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 
 import UserForm from '../utils/users.js';
-
-import { formatColumns } from "../core/table.js";
 import api from '../core/api-service.js';
 
-const username = "";
+import { formatColumns } from "../core/table.js";
 
 class NewNotebook extends React.Component {
-     static propTypes = {
-         closeDialog: PropTypes.func.isRequired,
-         updateNotebooks: PropTypes.func.isRequired,
-     }
+    static propTypes = {
+        notebook: PropTypes.object,
+        closeDialog: PropTypes.func.isRequired,
+        updateNotebooks: PropTypes.func.isRequired,
+    }
+
+    componentDidMount = () => {
+        if(!_.isEmpty(this.props.notebook)) {
+            this.setState({
+                name: this.props.notebook.name,
+                description: this.props.notebook.description,
+                collaborators: this.props.notebook.collaborators || [],
+            });
+        }
+    }
 
     newNotebook = () => {
-        this.props.updateNotebooks();
+        let api_url = "v1/NewNotebook";
+        if (!_.isEmpty(this.props.notebook)) {
+            api_url = "v1/UpdateNotebook";
+        }
+
+        api.post(api_url, {
+            name: this.state.name,
+            description: this.state.description,
+            collaborators: this.state.collaborators,
+            notebook_id: this.state.notebook_id,
+        }).then(this.props.updateNotebooks);
     }
 
     state = {
@@ -38,6 +57,7 @@ class NewNotebook extends React.Component {
         description: "",
         collaborators: [],
         users: [],
+        notebook_id: undefined,
     }
 
     render() {
@@ -55,6 +75,7 @@ class NewNotebook extends React.Component {
                   <Col sm="8">
                     <Form.Control as="textarea"
                                   rows={1}
+                                  value={this.state.name}
                                   onChange={(e) => this.setState(
                                       {name: e.currentTarget.value})} />
                   </Col>
@@ -65,6 +86,7 @@ class NewNotebook extends React.Component {
                   <Col sm="8">
                     <Form.Control as="textarea"
                                   rows={1}
+                                  value={this.state.description}
                                   onChange={(e) => this.setState(
                                       {description: e.currentTarget.value})} />
                   </Col>
@@ -106,6 +128,7 @@ export default class NotebooksList extends React.Component {
 
     state = {
         showNewNotebookDialog: false,
+        showEditNotebookDialog: false,
     }
 
     render() {
@@ -153,15 +176,28 @@ export default class NotebooksList extends React.Component {
             <>
               { this.state.showNewNotebookDialog &&
                 <NewNotebook
-                  updateNotebooks={this.props.fetchNotebooks}
+                  updateNotebooks={()=>{
+                      this.props.fetchNotebooks();
+                      this.setState({showNewNotebookDialog: false});
+                  }}
                   closeDialog={() => this.setState({showNewNotebookDialog: false})}
+                />
+              }
+              { this.state.showEditNotebookDialog &&
+                <NewNotebook
+                  notebook={this.props.selected_notebook}
+                  updateNotebooks={()=>{
+                      this.props.fetchNotebooks();
+                      this.setState({showEditNotebookDialog: false});
+                  }}
+                  closeDialog={() => this.setState({showEditNotebookDialog: false})}
                 />
               }
 
               <Navbar className="toolbar">
                 <ButtonGroup>
                   <Button title="NewNotebook"
-                          onClick={() => this.setState({showNewNotebookDialog: true})}
+                          onClick={()=>this.setState({showNewNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
                   </Button>
@@ -173,7 +209,7 @@ export default class NotebooksList extends React.Component {
                   </Button>
 
                   <Button title="Edit Notebook"
-                          onClick={this.editNotebook}
+                          onClick={()=>this.setState({showEditNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="wrench"/>
                   </Button>
@@ -184,7 +220,7 @@ export default class NotebooksList extends React.Component {
                   </Button>
                 </ButtonGroup>
               </Navbar>
-              <div className="fill-parent no-margins toolbar-margin">
+              <div className="fill-parent no-margins toolbar-margin selectable">
                 <BootstrapTable
                   hover
                   condensed

@@ -75,7 +75,9 @@ export class InspectRawJson extends Component {
                 </Modal.Header>
 
                 <Modal.Body>
-                  <VeloAce text={serialized} aceConfig={this.aceConfig} />
+                  <VeloAce text={serialized}
+                           mode="json"
+                           aceConfig={this.aceConfig} />
                 </Modal.Body>
 
                 <Modal.Footer>
@@ -261,7 +263,7 @@ const int_regex = /^[-0-9]+$/;
 
 export function PrepareData(value) {
     var rows = [];
-    let columns = value.columns;
+    let columns = value.columns || [];
     for (var i=0; i<value.rows.length; i++) {
         var row = value.rows[i].cell;
         var new_row = {};
@@ -287,19 +289,21 @@ export function PrepareData(value) {
 };
 
 export function headerFormatter(column, colIndex, { sortElement, filterElement }) {
-    return (
+    let result = (
         // Not a real table but I cant figure out the css
         // right now so we do it old school.
         <table className="notebook-filter">
           <tbody>
             <tr>
-              { column.filter && <td>{ filterElement }</td> }
-              { !column.filter && <td>{ column.text }</td> }
+              { column.filter ?
+                <td>{ filterElement }</td> :
+                <td>{ column.text }</td> }
               <td className="sort-element">{ sortElement }</td>
             </tr>
           </tbody>
         </table>
     );
+    return result;
 }
 
 export function sortCaret(order, column) {
@@ -327,6 +331,15 @@ export function formatColumns(columns) {
                 delay: 10,
             });
         }
+        if (x.sortNumeric) {
+            x.sortFunc= (a, b, order, dataField) => {
+                if (order === 'asc') {
+                    return b - a;
+                }
+                return a - b; // desc
+            };
+        }
+
     });
 
     return columns;

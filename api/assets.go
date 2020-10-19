@@ -28,7 +28,8 @@ import (
 
 	"github.com/gorilla/csrf"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/gui/assets"
+	assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) {
@@ -36,8 +37,8 @@ func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) 
 	if config_obj.GUI != nil {
 		base = config_obj.GUI.BasePath
 	}
-	dir := base + "/static/"
-	mux.Handle(dir, http.StripPrefix(base, http.FileServer(assets.HTTP)))
+	dir := base + "/app/"
+	mux.Handle(dir, http.StripPrefix(dir, http.FileServer(assets.HTTP)))
 	mux.Handle("/favicon.png",
 		http.RedirectHandler(base+"/static/images/favicon.ico",
 			http.StatusMovedPermanently))
@@ -47,6 +48,7 @@ func GetTemplateHandler(
 	config_obj *config_proto.Config, template_name string) (http.Handler, error) {
 	data, err := assets.ReadFile(template_name)
 	if err != nil {
+		utils.Debug(err)
 		return nil, err
 	}
 

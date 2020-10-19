@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import _ from 'lodash';
 
 import SplitPane from 'react-split-pane';
 
@@ -9,18 +10,21 @@ import { withRouter }  from "react-router-dom";
 
 import api from '../core/api-service.js';
 import axios from 'axios';
+import Spinner from '../utils/spinner.js';
 
 const POLL_TIME = 5000;
 
 class ClientFlowsView extends React.Component {
     static propTypes = {
         client: PropTypes.object,
-        flow_id: PropTypes.string,
     };
 
     state = {
         flows: [],
         currentFlow: {},
+
+        // Only show the spinner when the component is first mounted.
+        loading: true,
     }
 
     componentDidMount = () => {
@@ -52,10 +56,10 @@ class ClientFlowsView extends React.Component {
         let selected_flow_id = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
 
-        api.get("api/v1/GetClientFlows/" + client_id, {
+        api.get("v1/GetClientFlows/" + client_id, {
             count: 100,
             offset: 0,
-        }).then(function(response) {
+        }).then(response=>{
             let flows = response.data.items || [];
             let selected_flow = {};
 
@@ -67,9 +71,15 @@ class ClientFlowsView extends React.Component {
                     break;
                 }
             };
+            if (_.isEmpty(selected_flow) && !_.isEmpty(flows)){
+                selected_flow = flows[0];
+                this.setSelectedFlow(selected_flow);
+            }
 
-            this.setState({flows: flows, currentFlow: selected_flow});
-        }.bind(this));
+            this.setState({flows: flows,
+                           loading: false,
+                           currentFlow: selected_flow});
+        });
     }
 
     setSelectedFlow = (flow) => {
@@ -83,6 +93,7 @@ class ClientFlowsView extends React.Component {
     render() {
         return (
             <>
+              <Spinner loading={this.state.loading} />
               <SplitPane split="horizontal" defaultSize="30%">
                 <FlowsList
                   selected_flow={this.state.currentFlow}

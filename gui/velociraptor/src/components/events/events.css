@@ -1,0 +1,16 @@
+.time-selector {
+    height: 38px;
+}
+
+.event-report-viewer {
+    margin-top: 10px;
+    margin-left: 0;
+    margin-right: 0;
+    max-height: calc(100vh - 143px);
+    max-width: calc(100vw - 45px);
+    overflow-y: auto;
+}
+
+body {
+    overflow-y: hidden;
+}

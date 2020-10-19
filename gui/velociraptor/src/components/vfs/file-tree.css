@@ -1,0 +1,7 @@
+.tree-folder {
+    white-space: nowrap;
+}
+
+.tree-folder svg {
+    margin-right: 5px;
+}

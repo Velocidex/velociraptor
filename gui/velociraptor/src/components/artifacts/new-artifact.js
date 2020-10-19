@@ -6,8 +6,11 @@ import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Navbar from 'react-bootstrap/Navbar';
 import VeloAce, { SettingsButton } from '../core/ace.js';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import api from '../core/api-service.js';
+
+import Completer from './syntax.js';
 
 export default class NewArtifactDialog extends React.Component {
     static propTypes = {
@@ -31,11 +34,10 @@ export default class NewArtifactDialog extends React.Component {
     }
 
     fetchArtifact = () => {
-        if (!this.state.initialized_from_parent && this.props.name) {
+        if (!this.state.initialized_from_parent) {
             this.setState({loading: true, initialized_from_parent: true});
 
-            api.get("api/v1/GetArtifactFile", {name: this.props.name}).
-                then((response) => {
+            api.get("v1/GetArtifactFile", {name: this.props.name}).then(response=>{
                     this.setState({
                         text: response.data.artifact,
                         loading: false,
@@ -46,13 +48,17 @@ export default class NewArtifactDialog extends React.Component {
     }
 
     saveArtifact = () => {
-        api.post("api/v1/SetArtifactFile", {artifact: this.state.text}).then(
+        api.post("v1/SetArtifactFile", {artifact: this.state.text}).then(
             (response) => {
                 this.props.onClose();
             });
     }
 
     aceConfig = (ace) => {
+        // Attach a completer to ACE.
+        let completer = new Completer();
+        completer.initializeAceEditor(ace, {});
+
         ace.setOptions({
             wrap: true,
             autoScrollEditorIntoView: true,
@@ -75,13 +81,23 @@ export default class NewArtifactDialog extends React.Component {
                    scrollable={true}
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>New Hunt - Configure Hunt</Modal.Title>
+                <Modal.Title>{ this.props.name ?
+                               "Edit " + this.props.name :
+                               "Create a new artifact"}
+                </Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <VeloAce text={this.state.text}
-                  mode="yaml"
-                  aceConfig={this.aceConfig}
-                  onChange={(x) => this.setState({text: x})}
+                         mode="yaml"
+                         aceConfig={this.aceConfig}
+                         onChange={(x) => this.setState({text: x})}
+                         commands={[{
+                             name: 'saveAndExit',
+                             bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
+                             exec: (editor) => {
+                                 this.saveArtifact();
+                             },
+                         }]}
                 />
               </Modal.Body>
               <Modal.Footer>
@@ -93,11 +109,13 @@ export default class NewArtifactDialog extends React.Component {
                 <ButtonGroup className="float-right">
                   <Button variant="default"
                           onClick={this.props.onClose}>
-                    Close
+                    <FontAwesomeIcon icon="window-close"/>
+                    <span className="button-label">Close</span>
                   </Button>
                   <Button variant="primary"
                           onClick={this.saveArtifact}>
-                    Save
+                    <FontAwesomeIcon icon="save"/>
+                    <span className="button-label">Save</span>
                   </Button>
                 </ButtonGroup>
                 </Navbar>

@@ -121,6 +121,8 @@ export default class VeloAce extends Component {
         // If this is defined, we call it with the editor settings
         // button. Our caller can then place it where they want.
         settingButtonRenderer: PropTypes.func,
+
+        commands: PropTypes.array,
     }
 
     // Remove options which are not settable by the user since they
@@ -134,6 +136,9 @@ export default class VeloAce extends Component {
             case "maxLines":
             case "autoScrollEditorIntoView":
                 delete options[k];
+                break;
+            default:
+                break;
             };
         });
 
@@ -152,7 +157,7 @@ export default class VeloAce extends Component {
         // If options have changed we need to update them to the
         // server.
         if (!_.isEqual(new_options, this.getUserOptions())) {
-            api.post("api/v1/SetGUIOptions",
+            api.post("v1/SetGUIOptions",
                      {options: JSON.stringify(new_options)}).then((response) => {
                          this.context.updateTraits();
                      });
@@ -184,13 +189,7 @@ export default class VeloAce extends Component {
                   style={
                       {width: "100%"}
                   }
-                  commands={[{
-                      name: 'saveAndExit',
-                      bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
-                      exec: (editor) => {
-                          this.saveArtifact();
-                      },
-                  }]}
+                  commands={this.props.commands}
                   setOptions={options}
                   editorProps={{
                       $blockScrolling: true,

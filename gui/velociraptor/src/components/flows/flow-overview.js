@@ -52,7 +52,7 @@ export default class FlowOverview extends React.Component {
             return;
         };
 
-        api.get("api/v1/GetFlowDetails", {
+        api.get("v1/GetFlowDetails", {
             flow_id: this.props.flow.session_id,
             client_id: this.props.flow.client_id,
         }).then((response) => {
@@ -77,7 +77,7 @@ export default class FlowOverview extends React.Component {
         let artifacts = flow && flow.request && flow.request.artifacts;
 
         if (!flow || !flow.session_id || !artifacts)  {
-            return <div>Please click a collection in the above table</div>;
+            return <h5 className="no-content">Please click a collection in the above table</h5>;
         }
 
         let parameters = flow.request &&
@@ -126,11 +126,10 @@ export default class FlowOverview extends React.Component {
                     </dd>
 
                     <dt className="col-4">Duration</dt>
-                    <dd className="col-8"> {
-                        flow.execution_duration ?
-                            ((flow.execution_duration)/1000000000).toFixed(2) : ""
-                    }
-                      { flow.execution_duration ? " Seconds" : " Running..."}
+                    <dd className="col-8">
+                      { flow.execution_duration ?
+                        ((flow.execution_duration)/1000000000).toFixed(2) + " Seconds" :
+                        flow.state === "RUNNING" && " Running..."}
                     </dd>
 
                     <dt className="col-4">State</dt>
@@ -189,8 +188,8 @@ export default class FlowOverview extends React.Component {
 
                     <dt className="col-4">Uploaded Bytes</dt>
                     <dd className="col-8">
-                      { (flow.total_uploaded_bytes || 0)  /
-                        (flow.total_expected_uploaded_bytes || 1) }
+                      { (flow.total_uploaded_bytes || 0) } / {
+                        (flow.total_expected_uploaded_bytes || 0) }
                     </dd>
 
                     <dt className="col-4">Files uploaded</dt>

@@ -62,7 +62,7 @@ class VeloNavigator extends Component {
                      onClick={this.collapse}>
                   <div>
                     <section className="navigator">
-                      <NavLink exact={true} to="/">
+                      <NavLink exact={true} to="/dashboard">
                         <ul className="nav nav-pills navigator">
                           <li className="nav-link" state="userDashboard">
                             <i className="navicon"><FontAwesomeIcon icon="home"/></i>
@@ -89,7 +89,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink to="/server_events">
+                      <NavLink to="/events/server">
                         <ul className="nav nav-pills  navigator">
                           <li className="nav-link" state="server_events" >
                             <i className="navicon"><FontAwesomeIcon icon="eye"/></i>
@@ -98,7 +98,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink to="/server_artifacts">
+                      <NavLink to="/collected/server">
                         <ul className="nav nav-pills  navigator">
                           <li className="nav-link" state="server_artifacts" >
                             <i className="navicon"><FontAwesomeIcon icon="server"/></i>
@@ -152,7 +152,8 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink className={disabled} to="/client_events">
+                      <NavLink className={disabled}
+                               to={"/events/" + this.props.client.client_id}>
                         <ul className="nav nav-pills navigator">
                           <li className={classNames({
                               "nav-link": true,

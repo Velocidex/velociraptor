@@ -16,6 +16,10 @@ export default class FlowUploads extends React.Component {
         flow: PropTypes.object,
     };
 
+    componentDidMount = () => {
+        this.fetchRows();
+    }
+
     componentDidUpdate(prevProps, prevState, snapshot) {
         let prev_flow_id = prevProps.flow && prevProps.flow.session_id;
         if (this.props.flow.session_id !== prev_flow_id) {
@@ -24,11 +28,12 @@ export default class FlowUploads extends React.Component {
     }
 
     state = {
-        loading: true,
+        loading: false,
         pageData: {},
     }
 
     fetchRows = () => {
+        console.log("Fetching rows");
         let params = {
             client_id: this.props.flow.client_id,
             flow_id: this.props.flow.session_id,
@@ -38,7 +43,7 @@ export default class FlowUploads extends React.Component {
         };
 
         this.setState({loading: true});
-        api.get("api/v1/GetTable", params).then((response) => {
+        api.get("v1/GetTable", params).then((response) => {
             this.setState({loading: false, pageData: PrepareData(response.data)});
         }).catch(() => {
             this.setState({loading: false, pageData: {}});
@@ -70,7 +75,7 @@ export default class FlowUploads extends React.Component {
             // make a zip file.
             vfs_path: (cell, row, rowIndex) => {
                 return (
-                    <a href={"api/v1/DownloadVFSFile?client_id=" +
+                    <a href={"/api/v1/DownloadVFSFile?client_id=" +
                              this.props.flow.client_id +
                              "&vfs_path=" + encodeURIComponent(cell) }>
                       {cell}

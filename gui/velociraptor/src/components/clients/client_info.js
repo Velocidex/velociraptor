@@ -28,7 +28,12 @@ class ClientSetterFromRoute extends Component {
         };
 
         if (!this.props.client || client_id !== this.props.client.client_id) {
-            api.get('/api/v1/SearchClients', {
+            if (client_id === "server") {
+                this.props.setClient({client_id: "server"});
+                return;
+            }
+
+            api.get('/v1/SearchClients', {
                 query: client_id,
                 count: 1,
 

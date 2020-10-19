@@ -1,17 +1,27 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+
+import _ from 'lodash';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter }  from "react-router-dom";
 import VeloTimestamp from "../utils/time.js";
 import ShellViewer from "./shell-viewer.js";
 import VeloReportViewer from "../artifacts/reporting.js";
+import VeloForm from '../forms/form.js';
 
 import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
 import ToggleButton from 'react-bootstrap/ToggleButton';
+import CardDeck from 'react-bootstrap/CardDeck';
+import Card from 'react-bootstrap/Card';
 
 import { Link } from  "react-router-dom";
-
+import api from '../core/api-service.js';
+import axios from 'axios';
+import { parseCSV } from '../utils/csv.js';
 import "./host-info.css";
+
+const POLL_TIME = 5000;
 
 
 class VeloHostInfo extends Component {
@@ -26,6 +36,21 @@ class VeloHostInfo extends Component {
 
         // The mode of the host info tab set.
         mode: this.props.match.params.action || 'brief',
+
+        metadata: "Key,Value\n,\n",
+
+        loading: false,
+    }
+
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+        this.interval = setInterval(this.fetchMetadata, POLL_TIME);
+        this.fetchMetadata();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+        clearInterval(this.interval);
     }
 
     // Get the client info object to return something sensible.
@@ -35,6 +60,39 @@ class VeloHostInfo extends Component {
         client_info.os_info = client_info.os_info || {};
 
         return client_info;
+    }
+
+    fetchMetadata = () => {
+        this.setState({loading: true});
+        api.get("v1/GetClientMetadata/" + this.props.client.client_id).then(response=>{
+                let metadata = "Key,Value\n";
+                var rows = 0;
+                var items = response.data["items"] || [];
+                for (var i=0; i<items.length; i++) {
+                    var key = items[i]["key"] || "";
+                    var value = items[i]["value"] || "";
+                    if (!_.isUndefined(key)) {
+                        metadata += key + "," + value + "\n";
+                        rows += 1;
+                    }
+                };
+                if (rows === 0) {
+                    metadata = "Key,Value\n,\n";
+                };
+                this.setState({metadata: metadata, loading: false});
+            });
+    }
+
+    setMetadata = (value) => {
+        var data = parseCSV(value);
+        let items = _.map(data.data, (x) => {
+            return {key: x.Key, value: x.Value};
+        });
+
+        var params = {client_id: this.props.client.client_id, items: items};
+        api.post("v1/SetClientMetadata", params).then(() => {
+            this.fetchMetadata();
+        });
     }
 
     setMode = (mode) => {
@@ -55,71 +113,64 @@ class VeloHostInfo extends Component {
     renderContent = () => {
         if (this.state.mode === 'brief') {
             return (
-                <div className="dashboard">
-                  <div className="card panel">
-                    <h5 className="card-header">{ this.getClientInfo().os_info.fqdn }</h5>
-                    <div className="card-body">
-                      <div className="client-details container">
-                        <dl className="row">
-                          <dt className="col-sm-3">Client ID</dt>
-                          <dd className="col-sm-9">
-                            { this.getClientInfo().client_id }
-                          </dd>
+                <CardDeck className="dashboard">
+                  <Card>
+                    <Card.Header>{ this.getClientInfo().os_info.fqdn }</Card.Header>
+                    <Card.Body>
+                      <dl className="row">
+                        <dt className="col-sm-3">Client ID</dt>
+                        <dd className="col-sm-9">
+                          { this.getClientInfo().client_id }
+                        </dd>
 
-                          <dt className="col-sm-3">Agent Version</dt>
-                          <dd className="col-sm-9">
-                            { this.getClientInfo().agent_information.version } </dd>
+                        <dt className="col-sm-3">Agent Version</dt>
+                        <dd className="col-sm-9">
+                          { this.getClientInfo().agent_information.version } </dd>
 
-                          <dt className="col-sm-3">Agent Name</dt>
-                          <dd className="col-sm-9">
-                            { this.getClientInfo().agent_information.name } </dd>
+                        <dt className="col-sm-3">Agent Name</dt>
+                        <dd className="col-sm-9">
+                          { this.getClientInfo().agent_information.name } </dd>
 
-                          <dt className="col-sm-3">Last Seen At</dt>
-                          <dd className="col-sm-9">
-                            <VeloTimestamp usec={this.getClientInfo().last_seen_at / 1000} />
-                          </dd>
+                        <dt className="col-sm-3">Last Seen At</dt>
+                        <dd className="col-sm-9">
+                          <VeloTimestamp usec={this.getClientInfo().last_seen_at / 1000} />
+                        </dd>
 
-                          <dt className="col-sm-3">Last Seen IP</dt>
-                          <dd className="col-sm-9">
-                            { this.getClientInfo().last_ip } </dd>
-                        </dl>
-                        <hr />
-                        <dl className="row">
-                          <dt className="col-sm-3">Operating System</dt>
-                          <dd className="col-sm-9">
-                            { this.getClientInfo().os_info.system }
-                          </dd>
+                        <dt className="col-sm-3">Last Seen IP</dt>
+                        <dd className="col-sm-9">
+                          { this.getClientInfo().last_ip } </dd>
+                      </dl>
+                      <hr />
+                      <dl className="row">
+                        <dt className="col-sm-3">Operating System</dt>
+                        <dd className="col-sm-9">
+                          { this.getClientInfo().os_info.system }
+                        </dd>
 
-                          <dt className="col-sm-3">Hostname</dt>
-                          <dd className="col-sm-9">
-                            { this.getClientInfo().os_info.fqdn }
-                          </dd>
+                        <dt className="col-sm-3">Hostname</dt>
+                        <dd className="col-sm-9">
+                          { this.getClientInfo().os_info.fqdn }
+                        </dd>
 
-                          <dt className="col-sm-3">Release</dt>
-                          <dd className="col-sm-9">
-                            { this.getClientInfo().os_info.release }
-                          </dd>
+                        <dt className="col-sm-3">Release</dt>
+                        <dd className="col-sm-9">
+                          { this.getClientInfo().os_info.release }
+                        </dd>
 
-                          <dt className="col-sm-3">Architecture</dt>
-                          <dd className="col-sm-9">
-                            { this.getClientInfo().os_info.machine }
-                          </dd>
-                        </dl>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="card panel">
-                    <h5 className="card-header">Metadata</h5>
-                    <div className="card-body">
-                      <div className="client-details">
-                        <grr-csv-form field="'metadata'"
-                                      value="controller">
-                        </grr-csv-form>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                        <dt className="col-sm-3">Architecture</dt>
+                        <dd className="col-sm-9">
+                          { this.getClientInfo().os_info.machine }
+                        </dd>
+                      </dl>
+                      <hr />
+                      <VeloForm
+                        param={{type: "csv", name: "Client Metadata"}}
+                        value={this.state.metadata}
+                        setValue={this.setMetadata}
+                      />
+                    </Card.Body>
+                  </Card>
+                </CardDeck>
             );
         };
 

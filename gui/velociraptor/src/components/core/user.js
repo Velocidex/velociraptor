@@ -1,6 +1,4 @@
 import React from 'react';
-import _ from 'lodash';
-
 import api from '../core/api-service.js';
 import axios from 'axios';
 
@@ -14,8 +12,10 @@ const POLL_TIME = 5000;
 // A component which maintains the user settings
 export class UserSettings extends React.Component {
     updateTraits = () => {
-        api.get("api/v1/GetUserUITraits").then((response) => {
-            this.setState({traits: response.data.interface_traits});
+        api.get("v1/GetUserUITraits").then((response) => {
+            let traits = response.data.interface_traits;
+            traits.username = response.data.username;
+            this.setState({traits: traits});
         });
     }
 

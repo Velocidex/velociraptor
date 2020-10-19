@@ -3,13 +3,38 @@ import "./client-summary.css";
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
+import axios from 'axios';
+import api from '../core/api-service.js';
+
 import { Link } from  "react-router-dom";
 
 import VeloClientStatusIcon from "./client-status.js";
 
+const POLL_TIME = 5000;
+
 export default class VeloClientSummary extends Component {
     static propTypes = {
         client: PropTypes.object,
+        setClient: PropTypes.func.isRequired,
+    }
+
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+        this.interval = setInterval(this.getClientInfo, POLL_TIME);
+        this.getClientInfo();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+        clearInterval(this.interval);
+    }
+
+    getClientInfo = () => {
+        let client_id = this.props.client && this.props.client.client_id;
+        if (client_id) {
+            api.get("v1/GetClient/" + client_id).then(
+                response=>this.props.setClient(response.data));
+        }
     }
 
     timeDifference(last_seen_at) {

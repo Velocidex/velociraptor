@@ -1,20 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import _ from 'lodash';
-
 import BootstrapTable from 'react-bootstrap-table-next';
 import VeloTimestamp from "../utils/time.js";
-import HuntWizardStep1 from "./hunt-wizard-search.js";
-
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import ModalDialog from 'react-bootstrap/ModalDialog';
-import StepWizard from 'react-step-wizard';
-
-import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
+import filterFactory from 'react-bootstrap-table2-filter';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -43,7 +36,7 @@ export default class HuntList extends React.Component {
 
     // Launch the hunt.
     setCollectionRequest = (request) => {
-        api.post('api/v1/CreateHunt', request).then((response) => {
+        api.post('v1/CreateHunt', request).then((response) => {
             // Keep the wizard up until the server confirms the
             // creation worked.
             this.setState({showWizard: false});
@@ -59,7 +52,7 @@ export default class HuntList extends React.Component {
 
         if (!hunt_id) {return;};
 
-        api.post("api/v1/ModifyHunt", {
+        api.post("v1/ModifyHunt", {
             state: "RUNNING",
             hunt_id: hunt_id,
         }).then((response) => {
@@ -74,7 +67,7 @@ export default class HuntList extends React.Component {
 
         if (!hunt_id) {return;};
 
-        api.post("api/v1/ModifyHunt", {
+        api.post("v1/ModifyHunt", {
             state: "PAUSED",
             hunt_id: hunt_id,
         }).then((response) => {
@@ -88,7 +81,7 @@ export default class HuntList extends React.Component {
 
         if (!hunt_id) {return;};
 
-        api.post("api/v1/ModifyHunt", {
+        api.post("v1/ModifyHunt", {
             state: "ARCHIVED",
             hunt_id: hunt_id,
         }).then((response) => {

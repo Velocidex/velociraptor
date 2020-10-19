@@ -39,7 +39,7 @@ class LabelClients extends Component {
         let client_ids = _.map(this.props.affectedClients,
                                client => client.client_id);
 
-        api.post("api/v1/LabelClients", {
+        api.post("v1/LabelClients", {
             client_ids: client_ids,
             operation: "set",
             labels: labels,
@@ -138,7 +138,7 @@ class VeloClientList extends Component {
     componentDidMount = () => {
         let query = this.props.match && this.props.match.params &&
             this.props.match.params.query;
-        if (query && query != this.state.query) {
+        if (query && query !== this.state.query) {
             this.props.setSearch(query);
         };
         this.searchClients();
@@ -158,7 +158,7 @@ class VeloClientList extends Component {
         }
 
         this.setState({loading: true});
-        api.get('/api/v1/SearchClients', {
+        api.get('/v1/SearchClients', {
             query: query,
             count: 500,
         }).then(resp => {
@@ -218,7 +218,7 @@ class VeloClientList extends Component {
     // the clients, just carefully remove the label from the existing
     // records for smoother ui.
     removeLabel = (label, client) => {
-        api.post("api/v1/LabelClients", {
+        api.post("v1/LabelClients", {
             client_ids: [client.client_id],
             operation: "remove",
             labels: [label],

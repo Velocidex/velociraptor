@@ -14,6 +14,8 @@ import FormControl from 'react-bootstrap/FormControl';
 import Navbar from 'react-bootstrap/Navbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import Completer from '../artifacts/syntax.js';
+
 import api from '../core/api-service.js';
 
 const cell_types = ["Markdown", "VQL", "Artifact"];
@@ -64,7 +66,7 @@ export default class NotebookCellRenderer extends React.Component {
     };
 
     fetchCellContents = () => {
-        api.get("api/v1/GetNotebookCell", {
+        api.get("v1/GetNotebookCell", {
             notebook_id: this.props.notebook_id,
             cell_id: this.props.cell_metadata.cell_id,
         }).then((response) => {
@@ -78,6 +80,10 @@ export default class NotebookCellRenderer extends React.Component {
     };
 
     aceConfig = (ace) => {
+        // Attach a completer to ACE.
+        let completer = new Completer();
+        completer.initializeAceEditor(ace, {});
+
         ace.setOptions({
             autoScrollEditorIntoView: true,
             maxLines: 25
@@ -107,7 +113,7 @@ export default class NotebookCellRenderer extends React.Component {
         cell.timestamp = 0;
         this.setState({cell: cell});
 
-        api.post('/api/v1/UpdateNotebookCell', {
+        api.post('v1/UpdateNotebookCell', {
             notebook_id: this.props.notebook_id,
             cell_id: this.state.cell.cell_id,
             type: this.state.cell.type || "Markdown",
@@ -142,7 +148,7 @@ export default class NotebookCellRenderer extends React.Component {
                     };
 
                     api.post(
-                        'api/v1/UploadNotebookAttachment', request
+                        'v1/UploadNotebookAttachment', request
                     ).then((response) => {
                         this.state.ace.insert("\n!["+blob.name+"]("+response.data.url+")\n");
                     }, function failure(response) {
@@ -320,6 +326,13 @@ export default class NotebookCellRenderer extends React.Component {
                                 aceConfig={this.aceConfig}
                                 text={this.state.input}
                                 onChange={(value) => {this.setState({input: value});}}
+                                commands={[{
+                                    name: 'saveAndExit',
+                                    bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
+                                    exec: (editor) => {
+                                        this.saveCell();
+                                    },
+                                }]}
                               />
                             </form>
                           </div>

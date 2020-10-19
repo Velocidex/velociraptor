@@ -18,7 +18,10 @@
     --color-table-row-offset: #0096ff;
     --color-table-row-highlighted: #e3fbde;
 
+    --color-tab-active-background: #f0f0f0;
+    --color-tab-non-active-background: #e2e3e5;
     --color-sidebar-background: #f5f5f5;
+    --color-footer-background: #eaeaea;
     --color-proto-background: #f0f0f0;
     --color-proto-border: #ddd;
     --color-proto-table-border: #c9c9c9;

@@ -3,12 +3,14 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import api from '../core/api-service.js';
 import Pagination from '../bootstrap/pagination/index.js';
+import Spinner from '../utils/spinner.js';
+import utils from './utils.js';
 
 import "./file-hex-view.css";
 
 export default class FileHexView extends React.Component {
     static propTypes = {
-        selectedRow: PropTypes.object,
+        node: PropTypes.object,
         client: PropTypes.object,
     };
 
@@ -25,21 +27,25 @@ export default class FileHexView extends React.Component {
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        let selectedRow = this.props.selectedRow && this.props.selectedRow._id;
-        let old_row = prevProps.selectedRow && prevProps.selectedRow._id;
-
-        if (selectedRow !== old_row) {
+        // Update the view when
+        // 1. Selected node changes (file list was selected).
+        // 2. VFS path changes (tree navigated away).
+        // 3. node version changes (file was refreshed).
+        if (prevProps.node.selected !== this.props.node.selected ||
+            !_.isEqual(prevProps.node.path, this.props.node.path) ||
+            prevProps.node.version !== this.props.node.version) {
             this.fetchText_(this.state.page);
         };
     }
 
     fetchText_ = (page) => {
+        let selectedRow = utils.getSelectedRow(this.props.node);
         let client_id = this.props.client && this.props.client.client_id;
         if (!client_id) {
             return;
         }
 
-        var download = this.props.selectedRow.Download;
+        var download = selectedRow && selectedRow.Download;
         if (!download) {
             return;
         }
@@ -50,7 +56,7 @@ export default class FileHexView extends React.Component {
         }
 
         var chunkSize = this.state.rows * this.state.columns;
-        var url = 'api/v1/DownloadVFSFile';
+        var url = 'v1/DownloadVFSFile';
 
         var params = {
             offset: page * chunkSize,
@@ -60,17 +66,14 @@ export default class FileHexView extends React.Component {
         };
 
         this.setState({loading: true});
-
-        api.get(url, params).then(function(response) {
-            this.parseFileContentToHexRepresentation_(response.data, page);
-        }.bind(this), function() {
-            this.setState({hexDataRows: [], loading: false});
-        }.bind(this));
+        api.get_blob(url, params).then((response) => {
+            this.parseFileContentToHexRepresentation_(response, page);
+        });
     };
 
     parseFileContentToHexRepresentation_ = (fileContent, page) => {
         if (!fileContent) {
-            return;
+            fileContent = "";
         }
         let hexDataRows = [];
         var chunkSize = this.state.rows * this.state.columns;
@@ -98,13 +101,13 @@ export default class FileHexView extends React.Component {
 
 
     render() {
-        if (!this.state.hexDataRows) {
-            return <div className="panel hexdump">
-                     Loading...
-                   </div>;
+        let selectedRow = utils.getSelectedRow(this.props.node);
+        let mtime = selectedRow && selectedRow.Download && selectedRow.Download.mtime;
+        if (!mtime) {
+            return <h5 className="no-content">File has no data, please collect file first.</h5>;
         }
 
-        var total_size = this.props.selectedRow.Size || 0;
+        var total_size = selectedRow.Size || 0;
         var chunkSize = this.state.rows * this.state.columns;
         let pageCount = Math.ceil(total_size / chunkSize);
         let paginationConfig = {
@@ -150,6 +153,7 @@ export default class FileHexView extends React.Component {
 
         return (
             <div>
+              <Spinner loading={this.state.loading}/>
               <div className="file-hex-view">
                 { pageCount && <Pagination {...paginationConfig}/> }
 

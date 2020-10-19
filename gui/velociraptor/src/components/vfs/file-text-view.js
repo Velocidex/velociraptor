@@ -1,10 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import _ from 'lodash';
 import api from '../core/api-service.js';
 import Pagination from '../bootstrap/pagination/index.js';
 import Spinner from '../utils/spinner.js';
-
+import utils from './utils.js';
 import VeloAce from '../core/ace.js';
 
 import "./file-hex-view.css";
@@ -14,7 +15,7 @@ const pagesize = 100 * 1024;
 
 export default class FileTextView extends React.Component {
     static propTypes = {
-        selectedRow: PropTypes.object,
+        node: PropTypes.object,
         client: PropTypes.object,
     };
 
@@ -29,21 +30,24 @@ export default class FileTextView extends React.Component {
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        let selectedRow = this.props.selectedRow && this.props.selectedRow._id;
-        let old_row = prevProps.selectedRow && prevProps.selectedRow._id;
-
-        if (selectedRow !== old_row || prevState.page !== this.state.page) {
+        // Update the view when
+        // 1. Selected node changes (file list was selected).
+        // 2. VFS path changes (tree navigated away).
+        // 3. node version changes (file was refreshed).
+        if (prevProps.node.selected !== this.props.node.selected ||
+            !_.isEqual(prevProps.node.path, this.props.node.path) ||
+            prevProps.node.version !== this.props.node.version) {
             this.fetchText_(this.state.page);
         };
     }
 
     fetchText_ = (page) => {
+        let selectedRow = utils.getSelectedRow(this.props.node);
         let client_id = this.props.client && this.props.client.client_id;
         if (!client_id) {
             return;
         }
-
-        var download = this.props.selectedRow.Download;
+        var download = selectedRow && selectedRow.Download;
         if (!download) {
             return;
         }
@@ -52,9 +56,7 @@ export default class FileTextView extends React.Component {
         if (!filePath) {
             return;
         }
-
-        var url = 'api/v1/DownloadVFSFile';
-
+        var url = 'v1/DownloadVFSFile';
         var params = {
             offset: page * pagesize,
             length: pagesize,
@@ -63,8 +65,8 @@ export default class FileTextView extends React.Component {
         };
 
         this.setState({loading: true});
-        api.get(url, params).then(function(response) {
-            this.parseFileContentToTextRepresentation_(response.data || "", page);
+        api.get_blob(url, params).then(function(response) {
+            this.parseFileContentToTextRepresentation_(response || "", page);
         }.bind(this), function() {
             this.setState({hexDataRows: [], loading: false, page: page});
         }.bind(this));
@@ -77,12 +79,12 @@ export default class FileTextView extends React.Component {
 
 
     render() {
-        let mtime = this.props.selectedRow && this.props.selectedRow.Download &&
-            this.props.selectedRow.Download.mtime;
+        let selectedRow = utils.getSelectedRow(this.props.node);
+        let mtime = selectedRow && selectedRow.Download && selectedRow.Download.mtime;
         if (!mtime) {
-            return <div>File has no data, please collect file first.</div>;
+            return <h5 className="no-content">File has no data, please collect file first.</h5>;
         }
-        var total_size = this.props.selectedRow.Size || 0;
+        var total_size = selectedRow.Size || 0;
         let pageCount = Math.ceil(total_size / pagesize);
         let paginationConfig = {
             totalPages: pageCount,
@@ -95,6 +97,8 @@ export default class FileTextView extends React.Component {
             shadow: true,
             onClick: (page, e) => {
                 this.setState({page: page - 1});
+                e.preventDefault();
+                e.stopPropagation();
             },
         };
 
@@ -106,6 +110,7 @@ export default class FileTextView extends React.Component {
                 <VeloAce
                   text={this.state.rawdata}
                   mode="text"
+                  options={{readOnly: true}}
                 />
               </div>
             </div>

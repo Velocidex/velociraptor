@@ -1,12 +1,16 @@
-import "./reporting.css"
+import "./reporting.css";
+import _ from 'lodash';
 
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import parse from 'html-react-parser';
 
 import api from '../core/api-service.js';
 import VeloTable from '../core/table.js';
+import VeloLineChart from './line-charts.js';
+import Spinner from '../utils/spinner.js';
+import ToolViewer from "../tools/tool-viewer.js";
 
 // Renders a report in the DOM.
 
@@ -14,10 +18,11 @@ import VeloTable from '../core/table.js';
 // sanitization. We therefore trust the output and are allowed to
 // insert it into the DOM.
 
-export default class VeloReportViewer extends Component {
+export default class VeloReportViewer extends React.Component {
     static propTypes = {
         artifact: PropTypes.string,
         type: PropTypes.string,
+        params: PropTypes.object,
         client: PropTypes.object,
         flow_id: PropTypes.string,
     }
@@ -26,6 +31,7 @@ export default class VeloReportViewer extends Component {
         template: "",
         data: {},
         messages: [],
+        loading: false,
     }
 
     componentDidMount() {
@@ -38,36 +44,53 @@ export default class VeloReportViewer extends Component {
 
         let prev_client_id = prevProps.client && prevProps.client.client_id;
 
-        if (client_id !== prev_client_id || artifact !== prevProps.artifact) {
-            this.updateReport();
+        if (client_id !== prev_client_id || artifact !== prevProps.artifact ||
+            !_.isEqual(prevProps.params, this.props.params)) {
+                this.updateReport();
         }
+    }
+
+    // Reports are generally pure.
+    shouldComponentUpdate = (nextProps, nextState) => {
+        let client_id = this.props.client && this.props.client.client_id;
+        let next_client_id = nextProps.client && nextProps.client.client_id;
+
+        return !_.isEqual(this.state, nextState) ||
+            !_.isEqual(this.props.params, nextProps.params) ||
+            !_.isEqual(client_id, next_client_id) ||
+            !_.isEqual(this.props.artifact, nextProps.artifact);
     }
 
     updateReport() {
         let client_id = this.props.client && this.props.client.client_id;
-        let params = {
-            artifact: this.props.artifact,
-            type: this.props.type,
-            client_id: client_id,
-            flow_id: this.props.flow_id,
-        };
+        let params = Object.assign({}, this.props.params || {});
+        params.artifact = this.props.artifact;
+        params.type = this.props.type;
+        params.client_id = client_id;
+        params.flow_id = this.props.flow_id;
 
-        api.post("api/v1/GetReport", params).then(function(response) {
+        this.setState({loading: true});
+        api.post("v1/GetReport", params).then((response) => {
             let new_state  = {
                 template: response.data.template || "No Reports",
                 messages: response.data.messages || [],
                 data: JSON.parse(response.data.data),
+                loading: false,
             };
 
             for (var i=0; i<new_state.messages.length; i++) {
                 console.log("While generating report: " + new_state.messages[i]);
             }
             this.setState(new_state);
-        }.bind(this), function(err) {
-            this.setState({"template": "Error " + err.data.message});
-        }.bind(this)).catch(function(err) {
-            this.setState({"template": "Error " + err.message});
-        }.bind(this));
+        }).catch((err) => {
+            let response = err.response && err.response.data;
+            if (response) {
+                let templ = "<div class='no-content'>" + response.message + "</div>";
+                this.setState({"template": templ,loading: false});
+            } else {
+                this.setState({"template": "Error " + err.message, loading: false});
+            }
+        });
     }
 
     cleanupHTML = (html) => {
@@ -100,12 +123,36 @@ export default class VeloReportViewer extends Component {
                         <VeloTable rows={rows} columns={data.Columns} />
                     );
                 };
+                if (domNode.name === "grr-tool-viewer") {
+                    return (
+                        <ToolViewer name={domNode.attribs.name}/>
+                    );
+                };
+                if (domNode.name === "grr-line-chart") {
+                    // Figure out where the data is: attribs.value is
+                    // something like data['table2']
+                    let re = /'([^']+)'/;
+                    let match = re.exec(domNode.attribs.value);
+                    let data = this.state.data[match[1]];
+                    let rows = JSON.parse(data.Response);
+                    let params = JSON.parse(domNode.attribs.params);
+
+                    return (
+                        <VeloLineChart data={rows}
+                                       columns={data.Columns}
+                                       params={params} />
+                    );
+                };
+
                 return domNode;
             }
         });
 
         return (
-            <div className="report-viewer">{template}</div>
+            <div className="report-viewer">
+              <Spinner loading={this.state.loading} />
+              {template}
+            </div>
         );
     }
 }

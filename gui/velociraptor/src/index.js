@@ -1,7 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.css';
 import './css/bootstrap-theme.css';
-import 'react-bootstrap-typeahead/css/Typeahead.css';
-
 import './_variables.css';
 
 import React from 'react';
@@ -19,7 +17,9 @@ import { faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
          faColumns, faDownload, faSync, faCheck, faHourglass, faArchive,
          faSort, faSortUp, faSortDown, faPause, faPlay, faCopy,
          faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
-         faBinoculars, faUpload, faExternalLinkAlt, faTags,
+         faBinoculars, faUpload, faExternalLinkAlt, faTags, faTimes, faFolder,
+         faSignOutAlt, faBroom, faPaperPlane, faEdit, faChevronDown, faFileDownload,
+         faEraser
        } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
@@ -29,7 +29,8 @@ library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
             faSort, faSortUp, faSortDown, faPause, faPlay, faCopy,
             faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
             faFolderOpen , faHistory, faBinoculars, faUpload, faExternalLinkAlt,
-            faTags,
+            faTags, faTimes, faFolder, faSignOutAlt, faBroom, faPaperPlane, faEdit,
+            faChevronDown, faFileDownload, faEraser
            );
 
 ReactDOM.render(
