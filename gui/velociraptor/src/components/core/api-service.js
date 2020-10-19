@@ -9,7 +9,9 @@ const handle_error = err=>{
     let data = err.response && err.response.data;
     data = data || "Generic Error";
 
-    if(data.message) {
+    if (data instanceof Blob) {
+        return data.text();
+    } else if(data.message) {
         data = data.message;
     };
 
@@ -37,7 +39,11 @@ const get_blob = function(url, params, cancel_token) {
         cancelToken: cancel_token,
     }).then((blob) => {
         return blob.data.text();
-    }).catch(handle_error);
+    }).catch(err=>{
+        let data = err.response && err.response.data;
+        data.text().then((message)=>_.each(hooks, h=>h("Error: " + message)));
+        return "";
+    });
 };
 
 const post = function(url, params, cancel_token) {

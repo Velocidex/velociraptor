@@ -66,17 +66,14 @@ export default class FileHexView extends React.Component {
         };
 
         this.setState({loading: true});
-
-        api.get_blob(url, params).then(function(response) {
+        api.get_blob(url, params).then((response) => {
             this.parseFileContentToHexRepresentation_(response, page);
-        }.bind(this), function() {
-            this.setState({hexDataRows: [], loading: false});
-        }.bind(this));
+        });
     };
 
     parseFileContentToHexRepresentation_ = (fileContent, page) => {
         if (!fileContent) {
-            return;
+            fileContent = "";
         }
         let hexDataRows = [];
         var chunkSize = this.state.rows * this.state.columns;

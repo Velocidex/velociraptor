@@ -126,11 +126,10 @@ export default class FlowOverview extends React.Component {
                     </dd>
 
                     <dt className="col-4">Duration</dt>
-                    <dd className="col-8"> {
-                        flow.execution_duration ?
-                            ((flow.execution_duration)/1000000000).toFixed(2) : ""
-                    }
-                      { flow.execution_duration ? " Seconds" : " Running..."}
+                    <dd className="col-8">
+                      { flow.execution_duration ?
+                        ((flow.execution_duration)/1000000000).toFixed(2) + " Seconds" :
+                        flow.state === "RUNNING" && " Running..."}
                     </dd>
 
                     <dt className="col-4">State</dt>

@@ -331,6 +331,15 @@ export function formatColumns(columns) {
                 delay: 10,
             });
         }
+        if (x.sortNumeric) {
+            x.sortFunc= (a, b, order, dataField) => {
+                if (order === 'asc') {
+                    return b - a;
+                }
+                return a - b; // desc
+            };
+        }
+
     });
 
     return columns;

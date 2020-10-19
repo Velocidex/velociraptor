@@ -20,6 +20,7 @@ import UserLabel from './components/users/user-label.js';
 import EventMonitoring from './components/events/events.js';
 import SnackbarProvider from 'react-simple-snackbar';
 import Snackbar from './components/core/snackbar.js';
+import Welcome from './components/welcome/welcome.js';
 
 import { UserSettings } from './components/core/user.js';
 
@@ -114,6 +115,8 @@ class App extends Component {
                   <Route path="/dashboard">
                     <UserDashboard />
                   </Route>
+                  <Route exact path="/" component={Welcome}/>
+                  <Route exact path="/welcome" component={Welcome}/>
                   <Route path="/search/:query?">
                     <VeloClientList
                       setSearch={this.setClientSearch}
