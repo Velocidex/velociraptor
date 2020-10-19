@@ -21,7 +21,7 @@ import EventMonitoring from './components/events/events.js';
 import SnackbarProvider from 'react-simple-snackbar';
 import Snackbar from './components/core/snackbar.js';
 import Welcome from './components/welcome/welcome.js';
-
+import KeyboardHelp from './components/core/keyboard-help.js';
 import { UserSettings } from './components/core/user.js';
 
 import { Switch, Route } from "react-router-dom";
@@ -173,7 +173,7 @@ class App extends Component {
                   <VeloLiveClock className="float-right" />
                   <Snackbar />
                 </Nav>
-              </Navbar>
+              </Navbar><KeyboardHelp />
             </SnackbarProvider></UserSettings>
         );
     };
