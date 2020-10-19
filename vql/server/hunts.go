@@ -32,6 +32,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/flows"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -333,7 +334,16 @@ func (self HuntFlowsPlugin) Call(
 			result := ordereddict.NewDict().
 				Set("HuntId", participation_row.HuntId).
 				Set("ClientId", participation_row.ClientId).
-				Set("FlowId", participation_row.FlowId)
+				Set("FlowId", participation_row.FlowId).
+				Set("Flow", vfilter.Null{})
+
+			collection_context, err := flows.LoadCollectionContext(
+				config_obj, participation_row.ClientId,
+				participation_row.FlowId)
+			if err == nil {
+				result.Set("Flow",
+					json.ConvertProtoToOrderedDict(collection_context))
+			}
 
 			select {
 			case <-ctx.Done():
