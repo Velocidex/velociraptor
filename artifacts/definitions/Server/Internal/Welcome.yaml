@@ -1,4 +1,15 @@
 name: Server.Internal.Welcome
+description: |
+  This is the welcome screen in the Velociraptor GUI. You can
+  customize this screen by editing this artifact.
+
+  When editing the artifact in the main `View Artifacts` screen you
+  will see some markdown in the reports section of the YAML
+  file. Simply edit this markdown and your server will display your
+  customized report.
+
+  You can use this to add important information to your specific
+  deployment.
 
 reports:
   - type: CLIENT
@@ -12,6 +23,15 @@ reports:
 
       ## Common tasks:
 
-      * <a href="/app.html#/server_artifacts">Building an Offline Collector</a>
+      * <a href="#/dashboard">Inspect the server's state</a>
+      * <a href="#/collected/server">Building an Offline Collector</a>
+      * <a href="#/notebooks">Write VQL notebooks</a>
+      * <a href="#/artifacts/Server.Internal.Welcome">Customize this welcome screen</a>
+
+      Or simply search for a client in the search bar above.
+
+      You can always get back to this welcome screen by clicking the
+      little green reptile above!
+
 
       </div></div></div>

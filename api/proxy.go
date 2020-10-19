@@ -177,6 +177,10 @@ func PrepareGUIMux(
 	mux.Handle(base+"/app/index.html", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(config_obj, h)))
 
+	mux.Handle(base+"/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, base+"/app/index.html", 302)
+	}))
+
 	return mux, nil
 }
 
