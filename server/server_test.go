@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
-	api_mock "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -711,13 +710,11 @@ func (self *ServerTestSuite) TestCancellation() {
 	assert.Equal(t, len(tasks), 1)
 
 	// Cancelling the flow will notify the client immediately.
-	mock := api_mock.NewMockAPIClient(ctrl)
 
 	// Now cancel the same flow.
 	response, err := flows.CancelFlow(
 		context.Background(),
-		self.config_obj, self.client_id, flow_id, "username",
-		MockAPIClientFactory{mock})
+		self.config_obj, self.client_id, flow_id, "username")
 	require.NoError(t, err)
 	require.Equal(t, response.FlowId, flow_id)
 
@@ -792,9 +789,6 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 
 // Test flow archiving
 func (self *ServerTestSuite) TestFlowArchives() {
-	ctrl := gomock.NewController(self.T())
-	defer ctrl.Finish()
-
 	t := self.T()
 
 	db, err := datastore.GetDB(self.config_obj)
@@ -810,13 +804,11 @@ func (self *ServerTestSuite) TestFlowArchives() {
 	require.Error(t, err)
 
 	// Cancelling the flow will notify the client immediately.
-	mock := api_mock.NewMockAPIClient(ctrl)
 
 	// Now cancel the same flow.
 	response, err := flows.CancelFlow(
 		context.Background(),
-		self.config_obj, self.client_id, flow_id, "username",
-		MockAPIClientFactory{mock})
+		self.config_obj, self.client_id, flow_id, "username")
 	require.NoError(t, err)
 	require.Equal(t, response.FlowId, flow_id)
 
