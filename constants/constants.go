@@ -17,7 +17,10 @@
 */
 package constants
 
-import "regexp"
+import (
+	"errors"
+	"regexp"
+)
 
 const (
 	VERSION                    = "0.5.0"
@@ -84,5 +87,6 @@ const (
 type key int
 
 var (
-	HuntIdRegex = regexp.MustCompile(`^H\.[^.]+$`)
+	HuntIdRegex    = regexp.MustCompile(`^H\.[^.]+$`)
+	STOP_ITERATION = errors.New("Stop Iteration")
 )

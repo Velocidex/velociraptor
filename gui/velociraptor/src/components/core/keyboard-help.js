@@ -36,6 +36,9 @@ const helpTextCol2 = [
         ["l", "View selected collection logs"],
         ["u", "View selected collection uploaded files"],
     ]],
+    ["Editor shortcuts", [
+        ["ctrl+,", "Popup the editor configuration dialog"],
+    ]],
 ];
 
 export default class KeyboardHelp extends React.PureComponent {

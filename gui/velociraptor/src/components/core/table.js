@@ -102,35 +102,66 @@ export class InspectRawJson extends Component {
 
 // Toggle columns on or off - helps when the table is very wide.
 const ColumnToggleList = (e) => {
+    const [open, setOpen] = React.useState(false);
+    const onToggle = (isOpen, ev, metadata) => {
+        if (metadata.source === "select") {
+            setOpen(true);
+            return;
+        }
+        setOpen(isOpen);
+    };
+
     const { columns, onColumnToggle, toggles } = e;
-    let buttons = columns.map(column => ({
-        ...column,
-        toggle: toggles[column.dataField]
-    }))
-        .map((column, index) => (
-            <Dropdown.Item
-              eventKey={index}
-              type="button"
-              key={ column.dataField }
-              className={ `btn btn-default ${column.toggle ? 'active' : ''}` }
-              data-toggle="button"
-              aria-pressed={ column.toggle ? 'true' : 'false' }
-              onClick={ () => {
-                  onColumnToggle(column.dataField);
-              } }
-            >
-              { column.text }
-            </Dropdown.Item>
-        ));
+    let enabled_columns = [];
+
+    let buttons = columns.map((column, idx) => {
+        if (!column.text) {
+            return <React.Fragment key={idx}></React.Fragment>;
+        }
+        let hidden = toggles[column.dataField];
+        if (!hidden) {
+            enabled_columns.push(column);
+        }
+        return <Dropdown.Item
+                 key={ column.dataField }
+                 eventKey={column.dataField}
+                 active={!hidden}
+                 onSelect={c=>onColumnToggle(c)}
+               >
+                 { column.text }
+               </Dropdown.Item>;
+    });
 
     return (
         <>
-          <Dropdown>
+          <Dropdown show={open} onToggle={onToggle}>
             <Dropdown.Toggle variant="default" id="dropdown-basic">
               <FontAwesomeIcon icon="columns"/>
             </Dropdown.Toggle>
 
             <Dropdown.Menu>
+              { _.isEmpty(enabled_columns) ?
+                <Dropdown.Item
+                  onSelect={()=>{
+                      _.each(columns, c=>{
+                          if(toggles[c.dataField]){
+                              onColumnToggle(c.dataField);
+                          }
+                      });
+                  }}>
+                  Set All
+                </Dropdown.Item> :
+                <Dropdown.Item
+                  onSelect={()=>{
+                      _.each(columns, c=>{
+                          if(!toggles[c.dataField]){
+                              onColumnToggle(c.dataField);
+                          }
+                      });
+                  }}>
+                  Clear All
+                </Dropdown.Item> }
+              <Dropdown.Divider />
               { buttons }
             </Dropdown.Menu>
           </Dropdown>
@@ -169,10 +200,26 @@ class VeloTable extends Component {
 
         // A dict containing renderers for each column.
         renderers: PropTypes.object,
+
+        // A unique name we use to identify this table. We use this
+        // name to save column preferences in the application user
+        // context.
+        name: PropTypes.string,
     }
 
     state = {
         download: false,
+        toggles: {},
+    }
+
+    componentDidMount = () => {
+        let toggles = {};
+        // Hide columns that start with _
+        _.each(this.props.columns, c=>{
+            toggles[c] = c[0] === '_';
+        });
+
+        this.setState({toggles: toggles});
     }
 
     defaultFormatter = (cell, row, rowIndex) => {
@@ -199,6 +246,10 @@ class VeloTable extends Component {
                 definition.formatter = this.defaultFormatter;
             }
 
+            if (this.state.toggles[name]) {
+                definition["hidden"] = true;
+            }
+
             columns.push(definition);
         }
 
@@ -206,7 +257,6 @@ class VeloTable extends Component {
         for (var j=0; j<rows.length; j++) {
             rows[j]["_id"] = j;
         }
-
         return (
             <div className="velo-table">
               <ToolkitProvider
@@ -214,6 +264,7 @@ class VeloTable extends Component {
                 keyField="_id"
                 data={ rows }
                 columns={ columns }
+                toggles={this.state.toggles}
                 columnToggle
             >
             {
@@ -223,10 +274,15 @@ class VeloTable extends Component {
                         show={this.state.download}
                         resolve={() => this.setState({download: false})}
                       />
-
                       <Navbar className="toolbar">
                         <ButtonGroup>
-                          <ColumnToggleList { ...props.columnToggleProps } />
+                          <ColumnToggleList { ...props.columnToggleProps }
+                                            onColumnToggle={(c)=>{
+                                                let toggles = this.state.toggles;
+                                                toggles[c] = !toggles[c];
+                                                this.setState({toggles: toggles});
+                                            }}
+                                            toggles={this.state.toggles} />
                           <InspectRawJson rows={this.props.rows} />
                           <Button variant="default"
                                   onClick={() => this.setState({download: true})} >
@@ -236,12 +292,13 @@ class VeloTable extends Component {
                       </Navbar>
                       <div className="row col-12">
                         <BootstrapTable
-                                     { ...props.baseProps }
+                          { ...props.baseProps }
                           hover
                           condensed
                           keyField="_id"
                           headerClasses="alert alert-secondary"
                           bodyClasses="fixed-table-body"
+                          toggles={this.state.toggles}
                           pagination={ paginationFactory({
                               showTotal: true,
                               sizePerPageRenderer

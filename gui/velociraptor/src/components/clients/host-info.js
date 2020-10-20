@@ -186,7 +186,7 @@ class VeloHostInfo extends Component {
 
         if (this.state.mode === 'shell') {
             return (
-                <div className="client-details dashboard">
+                <div className="client-details shell">
                   <ShellViewer client={this.props.client} />
                 </div>
             );

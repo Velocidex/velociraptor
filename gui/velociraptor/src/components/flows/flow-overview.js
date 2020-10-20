@@ -145,12 +145,12 @@ export default class FlowOverview extends React.Component {
                     <dt className="col-4">Ops/Sec</dt>
                     <dd className="col-8"> {flow.request.ops_per_second || 'Unlimited'} </dd>
                     <dt className="col-4">Timeout</dt>
-                    <dd className="col-8"> {flow.request.timeout || 'Unlimited' } </dd>
+                    <dd className="col-8"> {flow.request.timeout || '600' } seconds</dd>
                     <dt className="col-4">Max Rows</dt>
-                    <dd className="col-8"> {flow.request.max_rows || 'Unlimited'} </dd>
+                    <dd className="col-8"> {flow.request.max_rows || '1m'} rows</dd>
                     <dt className="col-4">Max Mb</dt>
                     <dd className="col-8"> { ((flow.request.max_upload_bytes || 0)
-                                              / 1024 / 1024).toFixed(2) || 'Unlimited' }</dd>
+                                              / 1024 / 1024).toFixed(2) || '1000' } Mb</dd>
                     <br />
                   </dl>
 

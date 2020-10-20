@@ -140,6 +140,10 @@ export default class VeloAce extends Component {
             default:
                 break;
             };
+
+            if (!v) {
+                delete options[k];
+            }
         });
 
         return options;
