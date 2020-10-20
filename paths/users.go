@@ -23,5 +23,5 @@ func (self UserPathManager) ACL() string {
 }
 
 func (self UserPathManager) GUIOptions() string {
-	return constants.USER_URN + "/gui/" + self.Name
+	return constants.USER_URN + "/gui/" + self.Name + ".json"
 }
