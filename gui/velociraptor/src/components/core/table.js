@@ -278,8 +278,9 @@ class VeloTable extends Component {
                         <ButtonGroup>
                           <ColumnToggleList { ...props.columnToggleProps }
                                             onColumnToggle={(c)=>{
-                                                this.state.toggles[c] = !this.state.toggles[c];
-                                                this.setState({toggles: this.state.toggles});
+                                                let toggles = this.state.toggles;
+                                                toggles[c] = !toggles[c];
+                                                this.setState({toggles: toggles});
                                             }}
                                             toggles={this.state.toggles} />
                           <InspectRawJson rows={this.props.rows} />
