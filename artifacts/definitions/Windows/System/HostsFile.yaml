@@ -1,0 +1,43 @@
+name: Windows.System.HostsFile
+description: |
+   Parses the Windows hosts file.
+
+author: Matt Green - @mgreen27
+
+
+type: CLIENT
+parameters:
+  - name: HostFile
+    default: C:\Windows\System32\drivers\etc\hosts
+  - name: HostnameRegex
+    description: "Hostname target Regex in Hostsfile"
+    default: .
+  - name: ResolutionRegex
+    description: "Resolution target Regex in Hostsfile"
+    default: .
+
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows' OR OS = 'linux' OR OS = 'darwin'
+
+    query: |
+      -- Parse hosts file
+      LET results = SELECT parse_string_with_regex(
+            string=Line,
+            regex=[
+                "^\\s+(?P<Resolution>[^\\s]+)\\s+" +
+                "(?P<Hostname>[^\\s]+)\\s*\\S*$"
+            ]) as Record,
+            Line
+        FROM parse_lines(filename=HostFile)
+        WHERE 
+            Line 
+            AND NOT Line =~ '^#'
+            AND Record.Hostname =~ HostnameRegex
+            AND Record.Resolution =~ ResolutionRegex
+
+      SELECT
+        Record.Hostname as Hostname,
+        Record.Resolution as Resolution
+      FROM results
