@@ -417,7 +417,8 @@ export function formatColumns(columns) {
         case "download":
             x.formatter= (cell, row) =>{
                 if (row.complete) {
-                    return <a href={row.path}  target="_blank">{cell}</a>;
+                    return <a href={row.path}  target="_blank"
+                              rel="noopener noreferrer">{cell}</a>;
                 };
                 return <>
                          <FontAwesomeIcon icon="spinner" spin/>

@@ -4,9 +4,7 @@ import PropTypes from 'prop-types';
 import api from '../core/api-service.js';
 import Modal from 'react-bootstrap/Modal';
 import BootstrapTable from 'react-bootstrap-table-next';
-import { getHuntColumns } from '../hunts/hunt-list.js';
 import filterFactory from 'react-bootstrap-table2-filter';
-import _ from 'lodash';
 import Button from 'react-bootstrap/Button';
 import VeloClientSearch from '../clients/search.js';
 
@@ -134,16 +132,6 @@ export default class AddCellFromFlowDialog extends React.Component {
     }
 
     render() {
-        const selectRow = {
-            mode: "radio",
-            clickToSelect: true,
-            hideSelectColumn: true,
-            classes: "row-selected",
-            onSelect: (row) => {
-                this.addCellFromHunt(row);
-            },
-        };
-
         return (
             <Modal show={true}
                    size="lg"
