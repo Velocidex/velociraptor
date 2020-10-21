@@ -15,6 +15,7 @@ const helpTextCol1 = [
         ["alt+n", "Goto notebooks"],
         ["ctrl+c", "Collected artifacts"],
         ["ctrl+/", "Show/Hide keyboard hotkeys help"],
+        ["ctrl+?", "Focus client search box"],
     ]],
 
     ["New Artifact Collection Wizard", [

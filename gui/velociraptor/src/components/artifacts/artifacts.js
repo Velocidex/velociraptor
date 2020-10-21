@@ -17,6 +17,7 @@ import FormControl from 'react-bootstrap/FormControl';
 import Table  from 'react-bootstrap/Table';
 import NewArtifactDialog from './new-artifact.js';
 import Container from  'react-bootstrap/Container';
+import ArtifactsUpload from './artifacts-upload.js';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter }  from "react-router-dom";
@@ -68,7 +69,7 @@ class ArtifactInspector extends React.Component {
         showNewArtifactDialog: false,
         showEditedArtifactDialog: false,
         showDeleteArtifactDialog: false,
-
+        showArtifactsUploadDialog: false,
         current_filter: "",
     }
 
@@ -163,6 +164,16 @@ class ArtifactInspector extends React.Component {
                   onAccept={()=>this.deleteArtifact(selected)}
                 />
               }
+              { this.state.showArtifactsUploadDialog &&
+                <ArtifactsUpload
+                  onClose={() => {
+                      // Re-apply the search in case the user updated
+                      // an artifact that should show up.
+                      this.fetchRows(this.state.current_filter);
+                      this.setState({showArtifactsUploadDialog: false});
+                  }}
+                />
+              }
               <Navbar className="artifact-toolbar justify-content-between">
                 <ButtonGroup>
                   <Button title="Add an Artifact"
@@ -188,7 +199,7 @@ class ArtifactInspector extends React.Component {
                   </Button>
 
                   <Button title="Upload Artifact Pack"
-                          onClick={this.uploadArtifacts}
+                          onClick={()=>this.setState({showArtifactsUploadDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="upload"/>
                   </Button>

@@ -146,39 +146,7 @@ export default class HuntList extends React.Component {
     }
 
     render() {
-        let ts_formatter = (cell, row) => {return <VeloTimestamp usec={cell / 1000}/>;};
-
-        let columns = formatColumns([
-            {dataField: "state", text: "State",
-             formatter: (cell, row) => {
-                 let stopped = row.stats && row.stats.stopped;
-
-                 if (stopped || cell === "STOPPED") {
-                     return <FontAwesomeIcon icon="stop"/>;
-                 }
-                 if (cell === "RUNNING") {
-                     return <FontAwesomeIcon icon="hourglass"/>;
-                 }
-                 if (cell === "PAUSED") {
-                     return <FontAwesomeIcon icon="pause"/>;
-                 }
-                 return <FontAwesomeIcon icon="exclamation"/>;
-             }
-            },
-            {dataField: "hunt_id", text: "Hunt ID"},
-            {dataField: "hunt_description", text: "Description",
-             sort: true, filtered: true},
-            {dataField: "create_time", text: "Created",
-             formatter: ts_formatter},
-            {dataField: "start_time", text: "Started",
-             formatter: ts_formatter, sort: true },
-            {dataField: "expires", text: "Expires",
-             formatter: ts_formatter},
-            {dataField: "client_limit", text: "Limit"},
-            {dataField: "stats.total_clients_scheduled", text: "Scheduled"},
-            {dataField: "creator", text: "Creator"},
-        ]);
-
+        let columns = getHuntColumns();
         let selected_hunt = this.props.selected_hunt && this.props.selected_hunt.hunt_id;
         const selectRow = {
             mode: "radio",
@@ -332,3 +300,35 @@ export default class HuntList extends React.Component {
         );
     }
 };
+
+
+export function getHuntColumns() {
+    return formatColumns([
+        {dataField: "state", text: "State",
+         formatter: (cell, row) => {
+             let stopped = row.stats && row.stats.stopped;
+
+             if (stopped || cell === "STOPPED") {
+                 return <FontAwesomeIcon icon="stop"/>;
+             }
+             if (cell === "RUNNING") {
+                 return <FontAwesomeIcon icon="hourglass"/>;
+             }
+             if (cell === "PAUSED") {
+                 return <FontAwesomeIcon icon="pause"/>;
+             }
+             return <FontAwesomeIcon icon="exclamation"/>;
+         }
+        },
+        {dataField: "hunt_id", text: "Hunt ID"},
+        {dataField: "hunt_description", text: "Description",
+         sort: true, filtered: true},
+        {dataField: "create_time", text: "Created", type: "timestamp"},
+        {dataField: "start_time", text: "Started",
+         type: "timestamp", sort: true },
+        {dataField: "expires", text: "Expires", type: "timestamp"},
+        {dataField: "client_limit", text: "Limit"},
+        {dataField: "stats.total_clients_scheduled", text: "Scheduled"},
+        {dataField: "creator", text: "Creator"},
+    ]);
+}

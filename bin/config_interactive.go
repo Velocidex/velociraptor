@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"reflect"
+	"regexp"
 	"runtime"
 
 	"github.com/Velocidex/survey"
@@ -30,14 +32,6 @@ const (
 
 var (
 	deployment_type = &survey.Select{
-		Message: `
-Welcome to the Velociraptor configuration generator
----------------------------------------------------
-
-I will be creating a new deployment configuration for you. I will
-begin by identifying what type of deployment you need.
-
-`,
 		Options: []string{self_signed, autocert, oauth_sso},
 	}
 
@@ -48,7 +42,16 @@ begin by identifying what type of deployment you need.
 	}
 
 	server_type_question = &survey.Select{
-		Message: "What OS will the server be deployed on?",
+		Message: `
+Welcome to the Velociraptor configuration generator
+---------------------------------------------------
+
+I will be creating a new deployment configuration for you. I will
+begin by identifying what type of deployment you need.
+
+
+What OS will the server be deployed on?
+`,
 		Default: runtime.GOOS,
 		Options: []string{"linux", "windows", "darwin"},
 	}
@@ -61,10 +64,12 @@ begin by identifying what type of deployment you need.
 		Default: "localhost",
 	}
 
+	url_validator = regexValidator("^[a-z0-9.-]+$")
 	port_question = &survey.Input{
 		Message: "Enter the frontend port to listen on.",
 		Default: "8000",
 	}
+	port_validator = regexValidator("^[0-9]+$")
 
 	gui_port_question = &survey.Input{
 		Message: "Enter the port for the GUI to listen on.",
@@ -145,6 +150,23 @@ begin by identifying what type of deployment you need.
 	}
 )
 
+func regexValidator(re string) survey.Validator {
+	compiled_re := regexp.MustCompile(re)
+
+	return func(val interface{}) error {
+		s, ok := val.(string)
+		if !ok {
+			return fmt.Errorf("cannot regex on type %v", reflect.TypeOf(val).Name())
+		}
+
+		match := compiled_re.MatchString(s)
+		if !match {
+			return fmt.Errorf("Invalid format")
+		}
+		return nil
+	}
+}
+
 func doGenerateConfigInteractive() {
 	config_obj := config.GetDefaultConfig()
 
@@ -201,12 +223,24 @@ func doGenerateConfigInteractive() {
 	switch install_type {
 	case self_signed:
 		kingpin.FatalIfError(survey.Ask([]*survey.Question{
-			{Name: "BindPort", Prompt: port_question},
-			{Name: "Hostname", Prompt: url_question},
+			{
+				Name:     "Hostname",
+				Prompt:   url_question,
+				Validate: url_validator,
+			},
+			{
+				Name:     "BindPort",
+				Prompt:   port_question,
+				Validate: port_validator,
+			},
 		}, config_obj.Frontend), "")
 
 		kingpin.FatalIfError(survey.Ask([]*survey.Question{
-			{Name: "BindPort", Prompt: gui_port_question},
+			{
+				Name:     "BindPort",
+				Validate: port_validator,
+				Prompt:   gui_port_question,
+			},
 		}, config_obj.GUI), "")
 
 		config_obj.Client.UseSelfSignedSsl = true

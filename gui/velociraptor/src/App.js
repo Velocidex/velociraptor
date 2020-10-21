@@ -26,6 +26,7 @@ import { UserSettings } from './components/core/user.js';
 
 import { Switch, Route } from "react-router-dom";
 import { Join } from './components/utils/paths.js';
+import { withRouter }  from "react-router-dom";
 
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
@@ -71,6 +72,7 @@ class App extends Component {
     setClientSearch = (query) => {
         let now = new Date();
         this.setState({query: query, query_version: now.getTime()});
+        this.props.history.push('/search/' + (query || "all"));
     };
 
     updateCurrentNode = (node) => {
@@ -179,4 +181,4 @@ class App extends Component {
     };
 }
 
-export default App;
+export default withRouter(App);

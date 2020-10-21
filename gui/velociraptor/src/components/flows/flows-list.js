@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 
 import _ from 'lodash';
 import BootstrapTable from 'react-bootstrap-table-next';
-import VeloTimestamp from "../utils/time.js";
 import filterFactory from 'react-bootstrap-table2-filter';
 
 import Navbar from 'react-bootstrap/Navbar';
@@ -217,60 +216,7 @@ class FlowsList extends React.Component {
 
     render() {
         let client_id = this.props.client && this.props.client.client_id;
-
-        let columns = formatColumns([
-            {dataField: "state", text: "State", sort: true,
-             formatter: (cell, row) => {
-                 if (cell === "FINISHED") {
-                     return <FontAwesomeIcon icon="check"/>;
-                 }
-                 if (cell === "RUNNING") {
-                     return <FontAwesomeIcon icon="hourglass"/>;
-                 }
-                 return <FontAwesomeIcon icon="exclamation"/>;
-             }
-            },
-            {dataField: "session_id", text: "FlowId",
-             formatter: (cell, row) => {
-                 return <NavLink
-                          tabIndex="0"
-                          id={cell}
-                          to={"/collected/" + client_id + "/" + cell}>{cell}
-                        </NavLink>;
-             }},
-            {dataField: "request.artifacts", text: "Artifacts",
-             sort: true, filtered: true,
-             formatter: (cell, row) => {
-                return _.map(cell, function(item, idx) {
-                    return <div key={idx}>{item}</div>;
-                });
-            }},
-            {dataField: "create_time", text: "Created", sort: true,
-             formatter: (cell, row) => {
-                 return <VeloTimestamp usec={cell / 1000}/>;
-             }
-            },
-            {dataField: "active_time", text: "Last Active", sort: true,
-             formatter: (cell, row) => {
-                 return <VeloTimestamp usec={cell / 1000}/>;
-             }
-            },
-            {dataField: "request.creator", text: "Creator",
-             sort: true, filtered: true},
-            {dataField: "total_uploaded_bytes", text: "Uploaded Mb",
-             align: (column, colIndex) => 'right',
-             sort: true, sortNumeric: true,
-             formatter: (cell, row) => {
-                 if (cell) {
-                     return (cell /1024/1024).toFixed(0);
-                 }
-                 return <></>;
-             }},
-            {dataField: "total_collected_rows", text: "Rows",
-             sort: true, sortNumeric: true,
-             align: (column, colIndex) => 'right'}
-        ]);
-
+        let columns = getFlowColumns(client_id);
         let selected_flow = this.props.selected_flow && this.props.selected_flow.session_id;
         const selectRow = {
             mode: "radio",
@@ -402,3 +348,44 @@ class FlowsList extends React.Component {
 };
 
 export default withRouter(FlowsList);
+
+export function getFlowColumns(client_id) {
+    return formatColumns([
+        {dataField: "state", text: "State", sort: true,
+         formatter: (cell, row) => {
+             if (cell === "FINISHED") {
+                 return <FontAwesomeIcon icon="check"/>;
+             }
+             if (cell === "RUNNING") {
+                 return <FontAwesomeIcon icon="hourglass"/>;
+             }
+             return <FontAwesomeIcon icon="exclamation"/>;
+         }
+        },
+        {dataField: "session_id", text: "FlowId",
+         formatter: (cell, row) => {
+             return <NavLink
+                      tabIndex="0"
+                      id={cell}
+                      to={"/collected/" + client_id + "/" + cell}>{cell}
+        </NavLink>;
+         }},
+        {dataField: "request.artifacts", text: "Artifacts",
+         sort: true, filtered: true,
+         formatter: (cell, row) => {
+             return _.map(cell, function(item, idx) {
+                 return <div key={idx}>{item}</div>;
+             });
+         }},
+        {dataField: "create_time", text: "Created", sort: true,
+         type: "timestamp"},
+        {dataField: "active_time", text: "Last Active", sort: true,
+         type: "timestamp"},
+        {dataField: "request.creator", text: "Creator",
+         sort: true, filtered: true},
+        {dataField: "total_uploaded_bytes", text: "Uploaded Mb",
+         align: 'right', sort: true, sortNumeric: true, type: "mb"},
+        {dataField: "total_collected_rows", text: "Rows",
+         sort: true, sortNumeric: true, align: 'right'}
+    ]);
+}

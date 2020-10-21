@@ -7,6 +7,7 @@ import VeloTimestamp from "../utils/time.js";
 import filterFactory from 'react-bootstrap-table2-filter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BootstrapTable from 'react-bootstrap-table-next';
+import ExportNotebook from './export-notebook.js';
 
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
@@ -129,6 +130,7 @@ export default class NotebooksList extends React.Component {
     state = {
         showNewNotebookDialog: false,
         showEditNotebookDialog: false,
+        showExportNotebookDialog: false,
     }
 
     render() {
@@ -193,6 +195,12 @@ export default class NotebooksList extends React.Component {
                   closeDialog={() => this.setState({showEditNotebookDialog: false})}
                 />
               }
+              { this.state.showExportNotebookDialog &&
+                <ExportNotebook
+                  notebook={this.props.selected_notebook}
+                  onClose={() => this.setState({showExportNotebookDialog: false})}
+                />
+              }
 
               <Navbar className="toolbar">
                 <ButtonGroup>
@@ -214,7 +222,8 @@ export default class NotebooksList extends React.Component {
                     <FontAwesomeIcon icon="wrench"/>
                   </Button>
                   <Button title="ExportNotebook"
-                          onClick={this.exportNotebook}
+                          disabled={_.isEmpty(this.props.selected_notebook)}
+                          onClick={()=>this.setState({showExportNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="download"/>
                   </Button>

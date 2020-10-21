@@ -133,6 +133,7 @@ class VeloClientList extends Component {
         selected: [],
         loading: false,
         showLabelDialog: false,
+        focusedClient: null,
     };
 
     componentDidMount = () => {
@@ -229,31 +230,19 @@ class VeloClientList extends Component {
     }
 
     render() {
-        let columns = formatColumns([
-            {dataField: "last_seen_at", text: "Online", sort: true,
-             formatter: (cell, row) => {
-                 return <VeloClientStatusIcon client={row}/>;
-             }},
-            {dataField: "client_id", text: "Client ID",
-             formatter: (cell, row) => {
-                 return <ClientLink client_id={cell}/>;
-             }},
-            {dataField: "os_info.fqdn", text: "Hostname",
-             sort: true, filtered: true},
-            {dataField: "os_info.release", text: "OS Version"},
-            {dataField: "labels", text: "Labels",
-             sort:true, filtered: true,
-             formatter: (cell, row) => {
-                 return _.map(cell, (label, idx) => {
-                     return <Button size="sm" key={idx}
-                                    onClick={() => this.removeLabel(label, row)}
-                                    variant="default">
-                              {label}
-                            </Button>;
-                 });
-            }},
-        ]);
-
+        let columns = getClientColumns();
+        columns.push({
+            dataField: "labels", text: "Labels",
+            sort:true, filtered: true,
+            formatter: (cell, row) => {
+                return _.map(cell, (label, idx) => {
+                    return <Button size="sm" key={idx}
+                                   onClick={() => this.removeLabel(label, row)}
+                                   variant="default">
+                             {label}
+                           </Button>;
+                });
+            }});
 
         const selectRow = {
             mode: "checkbox",
@@ -305,3 +294,19 @@ class VeloClientList extends Component {
 
 
 export default withRouter(VeloClientList);
+
+export function getClientColumns() {
+    return formatColumns([
+        {dataField: "last_seen_at", text: "Online", sort: true,
+         formatter: (cell, row) => {
+             return <VeloClientStatusIcon client={row}/>;
+         }},
+        {dataField: "client_id", text: "Client ID",
+         formatter: (cell, row) => {
+             return <ClientLink client_id={cell}/>;
+         }},
+        {dataField: "os_info.fqdn", text: "Hostname",
+         sort: true, filtered: true},
+        {dataField: "os_info.release", text: "OS Version"},
+    ]);
+}

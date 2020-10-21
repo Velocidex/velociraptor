@@ -108,7 +108,7 @@ export default class NotebookRenderer extends React.Component {
         }
     };
 
-    addCell = (cell_id, cell_type) => {
+    addCell = (cell_id, cell_type, content) => {
         let request = {};
         switch(cell_type) {
         case "VQL":
@@ -118,6 +118,7 @@ export default class NotebookRenderer extends React.Component {
                 notebook_id: this.props.notebook.notebook_id,
                 type: cell_type,
                 cell_id: cell_id,
+                input: content,
             }; break;
         default:
             return;
@@ -131,7 +132,7 @@ export default class NotebookRenderer extends React.Component {
 
     render() {
         if (!this.props.notebook || _.isEmpty(this.props.notebook.cell_metadata)) {
-            return <h5 className="no-content">Select a notebook from the list above.</h5>
+            return <h5 className="no-content">Select a notebook from the list above.</h5>;
         }
 
         return (

@@ -96,11 +96,6 @@ export default class HuntOverview extends React.Component {
         let files = stats.available_downloads && stats.available_downloads.files;
         files = files || [];
 
-        let file_renderer = (cell, row) => {
-            return <a href={row.path}>{cell}</a>;
-        };
-
-
         return (
             <CardDeck>
               <Card>
@@ -215,7 +210,7 @@ export default class HuntOverview extends React.Component {
                         data={files}
                         columns={formatColumns(
                             [{dataField: "name", text: "name", sort: true,
-                              formatter: file_renderer },
+                              type: "download"},
                              {dataField: "size", text: "size", sort: true},
                              {dataField: "date", text: "date"}])}
                       />
