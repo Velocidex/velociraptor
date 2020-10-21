@@ -49,10 +49,10 @@ func (self *ServicesTestSuite) SetupTest() {
 
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
 	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
 	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
 	require.NoError(self.T(), self.sm.Start(labels.StartLabelService))
 	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
 	require.NoError(self.T(), self.sm.Start(StartInterrogationService))
 
 	self.client_id = "C.12312"
@@ -71,11 +71,14 @@ func (self *ServicesTestSuite) EmulateCollection(
 	// Emulate a Generic.Client.Info collection: First write the
 	// result set, then write the collection context.
 	// Write a result set for this artifact.
-	services.GetJournal().PushRowsToArtifact(self.config_obj,
+	journal, err := services.GetJournal()
+	assert.NoError(self.T(), err)
+
+	journal.PushRowsToArtifact(self.config_obj,
 		rows, artifact, self.client_id, self.flow_id)
 
 	// Emulate a flow completion message coming from the flow processor.
-	services.GetJournal().PushRowsToArtifact(self.config_obj,
+	journal.PushRowsToArtifact(self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).
@@ -144,7 +147,10 @@ func (self *ServicesTestSuite) TestEnrollService() {
 	path_manager := result_sets.NewArtifactPathManager(
 		self.config_obj, "server" /* client_id */, "", "Server.Internal.Enrollment")
 
-	err = services.GetJournal().PushRows(self.config_obj,
+	journal, err := services.GetJournal()
+	assert.NoError(self.T(), err)
+
+	err = journal.PushRows(self.config_obj,
 		path_manager, []*ordereddict.Dict{
 			enroll_message, enroll_message, enroll_message, enroll_message})
 	assert.NoError(self.T(), err)

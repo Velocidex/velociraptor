@@ -75,7 +75,12 @@ func GetArtifactSources(
 	config_obj *config_proto.Config,
 	artifact string) []string {
 	result := []string{}
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err == nil {
 		artifact_obj, pres := repository.Get(config_obj, artifact)
 		if pres {
@@ -115,7 +120,12 @@ func CreateHunt(
 			UTC().UnixNano() / 1000)
 	}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return "", err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -126,9 +136,13 @@ func CreateHunt(
 	// time. This ensures that if the artifact definition is
 	// changed after this point, the hunt will continue to
 	// schedule consistent VQL on the clients.
-	compiled, err := services.GetLauncher().
-		CompileCollectorArgs(
-			ctx, config_obj, acl_manager, repository, hunt.StartRequest)
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return "", err
+	}
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, config_obj, acl_manager, repository, hunt.StartRequest)
 	if err != nil {
 		return "", err
 	}
@@ -168,6 +182,7 @@ func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) 
 	*api_proto.ListHuntsResponse, error) {
 
 	result := &api_proto.ListHuntsResponse{}
+
 	err := services.GetHuntDispatcher().ApplyFuncOnHunts(
 		func(hunt *api_proto.Hunt) error {
 			if uint64(len(result.Items)) < in.Offset {
@@ -175,7 +190,7 @@ func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) 
 			}
 
 			if uint64(len(result.Items)) >= in.Offset+in.Count {
-				return errors.New("Stop Iteration")
+				return constants.STOP_ITERATION
 			}
 
 			if in.IncludeArchived || hunt.State != api_proto.Hunt_ARCHIVED {
@@ -187,6 +202,10 @@ func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) 
 			}
 			return nil
 		})
+
+	if err == constants.STOP_ITERATION {
+		err = nil
+	}
 
 	sort.Slice(result.Items, func(i, j int) bool {
 		return result.Items[i].CreateTime > result.Items[j].CreateTime
@@ -272,7 +291,12 @@ func ModifyHunt(
 					Set("Hunt", hunt).
 					Set("User", user)
 
-				err := services.GetJournal().PushRowsToArtifact(config_obj,
+				journal, err := services.GetJournal()
+				if err != nil {
+					return err
+				}
+
+				err = journal.PushRowsToArtifact(config_obj,
 					[]*ordereddict.Dict{row}, "System.Hunt.Archive",
 					"server", hunt_modification.HuntId)
 				if err != nil {

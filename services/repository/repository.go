@@ -63,7 +63,7 @@ func (self *Repository) Copy() services.Repository {
 	return result
 }
 
-func (self *Repository) LoadDirectory(dirname string) (int, error) {
+func (self *Repository) LoadDirectory(config_obj *config_proto.Config, dirname string) (int, error) {
 	self.mu.Lock()
 
 	count := 0
@@ -75,6 +75,7 @@ func (self *Repository) LoadDirectory(dirname string) (int, error) {
 
 	self.mu.Unlock()
 
+	logger := logging.GetLogger(config_obj, &logging.GenericComponent)
 	err := filepath.Walk(dirname,
 		func(file_path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -85,13 +86,15 @@ func (self *Repository) LoadDirectory(dirname string) (int, error) {
 				strings.HasSuffix(info.Name(), ".yml")) {
 				data, err := ioutil.ReadFile(file_path)
 				if err != nil {
-					return errors.Wrap(err, "While reading "+info.Name())
+					logger.Error("Could not load %s: %s", info.Name(), err)
+					return nil
 				}
 				_, err = self.LoadYaml(string(data), false)
 				if err != nil {
-					return errors.Wrap(err, "While reading "+info.Name())
+					logger.Error("Could not load %s: %s", info.Name(), err)
+					return nil
 				}
-
+				logger.Info("Loaded %s", file_path)
 				count += 1
 			}
 			return nil
@@ -287,6 +290,7 @@ func (self *Repository) Del(name string) {
 	defer self.mu.Unlock()
 
 	delete(self.Data, name)
+	self.artifact_plugin = nil
 }
 
 func (self *Repository) List() []string {
@@ -353,6 +357,10 @@ func compileArtifact(
 
 	// Make sure tools are all defined.
 	inventory := services.GetInventory()
+	if inventory == nil {
+		return nil
+	}
+
 	for _, tool := range artifact.Tools {
 		err := inventory.AddTool(
 			config_obj, tool,

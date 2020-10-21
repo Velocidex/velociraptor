@@ -61,7 +61,11 @@ var (
 // Validate any embedded artifacts to make sure they compile properly.
 func validate_config(config_obj *config_proto.Config) error {
 	if config_obj.Autoexec != nil {
-		repository := services.GetRepositoryManager().NewRepository()
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			return err
+		}
+		repository := manager.NewRepository()
 
 		for _, definition := range config_obj.Autoexec.ArtifactDefinitions {
 			serialized, err := yaml.Marshal(definition)

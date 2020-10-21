@@ -123,7 +123,12 @@ func (self MailPlugin) Call(
 			// artifact CSV file.
 		}
 
-		output_chan <- arg
+		select {
+		case <-ctx.Done():
+			return
+
+		case output_chan <- arg:
+		}
 	}()
 
 	return output_chan

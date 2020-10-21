@@ -85,7 +85,12 @@ func (self *EventTable) Update(
 		cancel()
 	}()
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
@@ -93,12 +98,18 @@ func (self *EventTable) Update(
 	for _, name := range arg.Artifacts {
 		artifact, pres := repository.Get(config_obj, name)
 		if !pres {
-			return errors.New("Unknown artifact " + name)
+			// If the artifact is custom and was removed
+			// then this is not a fatal error. We should
+			// issue a warning and move on.
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Warn("<red>Server Artifact Manager</>: Unknown artifact " +
+				name + " please remove it from the server monitoring tables.")
+			continue
 		}
 
 		// Server monitoring artifacts run with full admin
 		// permissions.
-		scope := services.GetRepositoryManager().BuildScope(
+		scope := manager.BuildScope(
 			services.ScopeBuilder{
 				Config:     config_obj,
 				ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
@@ -245,6 +256,15 @@ func StartServerMonitoringService(
 	manager := &EventTable{
 		Done: make(chan bool),
 	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer services.RegisterServerEventManager(nil)
+
+		<-ctx.Done()
+	}()
+
 	services.RegisterServerEventManager(manager)
 
 	return manager.Update(config_obj, &artifacts)

@@ -30,7 +30,7 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
-// Information about Velociraptor. This is a psuedo config item - it
+// Information about Velociraptor. This is a pseudo config item - it
 // will never be read from config files, but can be used in VQL
 // queries. It will be written to config files as metadata about the
 // version that produced the config file.
@@ -620,7 +620,7 @@ type APIConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Publically accessible hostname.
+	// Publicly accessible hostname.
 	Hostname     string `protobuf:"bytes,5,opt,name=hostname,proto3" json:"hostname,omitempty"`
 	BindAddress  string `protobuf:"bytes,1,opt,name=bind_address,json=bindAddress,proto3" json:"bind_address,omitempty"`
 	BindPort     uint32 `protobuf:"varint,2,opt,name=bind_port,json=bindPort,proto3" json:"bind_port,omitempty"`

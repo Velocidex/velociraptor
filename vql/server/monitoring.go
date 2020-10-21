@@ -74,7 +74,11 @@ func (self MonitoringPlugin) Call(
 		}
 
 		for row := range row_chan {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 
@@ -113,7 +117,12 @@ func (self WatchMonitoringPlugin) Call(
 			return
 		}
 
-		if services.GetJournal() == nil {
+		journal, _ := services.GetJournal()
+		if err != nil {
+			return
+		}
+
+		if journal == nil {
 			scope.Log("watch_monitoring: can only run on the server via the API")
 			return
 		}
@@ -147,19 +156,15 @@ func (self WatchMonitoringPlugin) Call(
 		}
 
 		// Ask the journal service to watch the event queue for us.
-		qm_chan, cancel := services.GetJournal().Watch(arg.Artifact)
+		qm_chan, cancel := journal.Watch(arg.Artifact)
 		defer cancel()
 
-		for {
+		for row := range qm_chan {
 			select {
 			case <-ctx.Done():
 				return
 
-			case row, ok := <-qm_chan:
-				if !ok {
-					return
-				}
-				output_chan <- row
+			case output_chan <- row:
 			}
 		}
 	}()

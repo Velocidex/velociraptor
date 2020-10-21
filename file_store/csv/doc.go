@@ -87,7 +87,7 @@
 // ensure that the last line is rejected since it has no line
 // separator (and our writer always writes one).
 
-// Additionally each successully read line will update the reader's
+// Additionally each successfully read line will update the reader's
 // ByteOffset member to point at the start of the next row to read. If
 // a read failed (due to the record being incomplete), the ByteOffset
 // member is not updated. It is therefore possible to Seek() the csv

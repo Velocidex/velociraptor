@@ -15,7 +15,7 @@
   The global repository is used to store all artifacts we known about
   at runtime.
 
-  Clients do not have persistant repositories but they do create
+  Clients do not have persistent repositories but they do create
   temporary repositories in which to run incoming queries. This allows
   VQLCollectorArgs protobufs to include dependent artifacts and have
   the client run those as well.
@@ -26,6 +26,7 @@
 package services
 
 import (
+	"errors"
 	"log"
 	"sync"
 
@@ -43,11 +44,15 @@ var (
 	grepository   RepositoryManager
 )
 
-func GetRepositoryManager() RepositoryManager {
+func GetRepositoryManager() (RepositoryManager, error) {
 	repository_mu.Lock()
 	defer repository_mu.Unlock()
 
-	return grepository
+	if grepository == nil {
+		return nil, errors.New("Repository Manager not ready")
+	}
+
+	return grepository, nil
 }
 
 func RegisterRepositoryManager(repository RepositoryManager) {
@@ -71,7 +76,7 @@ type ScopeBuilder struct {
 // An artifact repository holds definitions for artifacts.
 type Repository interface {
 	// Load an entire directory recursively.
-	LoadDirectory(dirname string) (int, error)
+	LoadDirectory(config_obj *config_proto.Config, dirname string) (int, error)
 
 	// Make a copy of this repository.
 	Copy() Repository

@@ -84,11 +84,19 @@ func (self MockerPlugin) Call(ctx context.Context,
 		if a_type.Kind() == reflect.Slice {
 			for i := 0; i < a_value.Len(); i++ {
 				element := a_value.Index(i).Interface()
-				output_chan <- element
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- element:
+				}
 			}
 
 		} else {
-			output_chan <- result
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- result:
+			}
 		}
 	}()
 	return output_chan

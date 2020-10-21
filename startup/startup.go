@@ -3,6 +3,8 @@
 package startup
 
 import (
+	"fmt"
+
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
@@ -54,7 +56,8 @@ func getServerServices(config_obj *config_proto.Config) *config_proto.ServerServ
 }
 
 func StartupEssentialServices(sm *services.Service) error {
-	if services.GetJournal() == nil {
+	j, _ := services.GetJournal()
+	if j == nil {
 		err := sm.Start(journal.StartJournalService)
 		if err != nil {
 			return err
@@ -75,14 +78,16 @@ func StartupEssentialServices(sm *services.Service) error {
 		}
 	}
 
-	if services.GetRepositoryManager() == nil {
+	manager, _ := services.GetRepositoryManager()
+	if manager == nil {
 		err := sm.Start(repository.StartRepositoryManager)
 		if err != nil {
 			return err
 		}
 	}
 
-	if services.GetLauncher() == nil {
+	launcher_obj, _ := services.GetLauncher()
+	if launcher_obj == nil {
 		err := sm.Start(launcher.StartLauncherService)
 		if err != nil {
 			return err
@@ -181,6 +186,41 @@ func StartupFrontendServices(sm *services.Service) error {
 }
 
 func Reset() {
+	// This function should not find any active services. Services
+	// are responsible for unregistering themselves and holding
+	// the service manager for the duration of their lifetime.
+
+	journal, _ := services.GetJournal()
+	if journal != nil {
+		fmt.Printf("Journal not reset.\n")
+	}
+
+	if services.GetNotifier() != nil {
+		fmt.Printf("Notifier not reset.\n")
+	}
+
+	if services.GetInventory() != nil {
+		fmt.Printf("Inventory not reset.\n")
+	}
+
+	manager, _ := services.GetRepositoryManager()
+	if manager != nil {
+		fmt.Printf("Repository Manager not reset.\n")
+	}
+
+	launcher, _ := services.GetLauncher()
+	if launcher != nil {
+		fmt.Printf("Launcher not reset.\n")
+	}
+
+	if services.GetLabeler() != nil {
+		fmt.Printf("Labeler not reset.\n")
+	}
+
+	if services.GetHuntDispatcher() != nil {
+		fmt.Printf("HuntDispatcher not reset.\n")
+	}
+
 	services.RegisterJournal(nil)
 	services.RegisterNotifier(nil)
 	services.RegisterInventory(nil)

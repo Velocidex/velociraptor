@@ -124,7 +124,12 @@ func (self _SQLitePlugin) Call(
 				row.Set(item, value)
 			}
 
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- row:
+			}
 		}
 
 	}()
@@ -149,7 +154,7 @@ func (self _SQLitePlugin) GetHandle(
 		if arg.Accessor == "file" {
 			handle, err = sqlx.Connect("sqlite3", filename)
 			if err != nil {
-				// An error occured maybe the database
+				// An error occurred maybe the database
 				// is locked, we try to copy it to
 				// temp file and try again.
 				if arg.Accessor != "data" {

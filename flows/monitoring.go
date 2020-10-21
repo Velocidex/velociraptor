@@ -54,7 +54,12 @@ func MonitoringProcessMessage(
 		for _, row := range rows {
 			row.Set("ClientId", message.Source)
 		}
-		return services.GetJournal().PushRowsToArtifact(
+		journal, err := services.GetJournal()
+		if err != nil {
+			return err
+		}
+
+		return journal.PushRowsToArtifact(
 			config_obj, rows, response.Query.Name,
 			message.Source, message.SessionId)
 

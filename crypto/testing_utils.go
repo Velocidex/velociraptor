@@ -20,7 +20,7 @@ func (self *NullCryptoManager) AddCertificate(certificate_pem []byte) (
 		return "", err
 	}
 
-	return server_cert.Subject.CommonName, nil
+	return GetSubjectName(server_cert), nil
 }
 
 func (self *NullCryptoManager) EncryptMessageList(

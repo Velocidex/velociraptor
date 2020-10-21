@@ -79,7 +79,12 @@ func getArtifactFile(
 	config_obj *config_proto.Config,
 	name string) (string, error) {
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return "", err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -116,13 +121,16 @@ func setArtifactFile(config_obj *config_proto.Config,
 	required_prefix string) (
 	*artifacts_proto.Artifact, error) {
 
-	repository_manager := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
 
 	switch in.Op {
 	case api_proto.SetArtifactRequest_DELETE:
 
 		// First ensure that the artifact is correct.
-		tmp_repository := services.GetRepositoryManager().NewRepository()
+		tmp_repository := manager.NewRepository()
 		artifact_definition, err := tmp_repository.LoadYaml(
 			in.Artifact, true /* validate */)
 		if err != nil {
@@ -135,11 +143,11 @@ func setArtifactFile(config_obj *config_proto.Config,
 					required_prefix + "'")
 		}
 
-		return artifact_definition, repository_manager.DeleteArtifactFile(config_obj,
+		return artifact_definition, manager.DeleteArtifactFile(config_obj,
 			artifact_definition.Name)
 
 	case api_proto.SetArtifactRequest_SET:
-		return repository_manager.SetArtifactFile(
+		return manager.SetArtifactFile(
 			config_obj, in.Artifact, required_prefix)
 	}
 
@@ -156,7 +164,11 @@ func getReportArtifacts(
 		number_of_results = 100
 	}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +242,11 @@ func searchArtifact(
 		return true
 	}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}

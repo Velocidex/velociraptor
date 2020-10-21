@@ -11,4 +11,10 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
    "Z": 3
   }
  }
+]LET Foo(X) = if(condition=log(message=format(format="I Ran with %v", args=X)), then=X + 5)[]SELECT cache(func=Foo(X=5), key=5), cache(func=Foo(X=10), key=5), cache(func=Foo(X=10), key=10) FROM scope()[
+ {
+  "cache(func=Foo(X=5), key=5)": 10,
+  "cache(func=Foo(X=10), key=5)": 10,
+  "cache(func=Foo(X=10), key=10)": 15
+ }
 ]

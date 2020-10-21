@@ -106,13 +106,22 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		acl_manager = vql_subsystem.NullACLManager{}
 	}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}
 	}
 
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return vfilter.Null{}
+	}
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, config_obj, acl_manager, repository, request)
 	if err != nil {
 		scope.Log("collect_client: %v", err)

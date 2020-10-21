@@ -21,3 +21,10 @@ parameters:
 
   - name: StartDate
     type: timestamp
+
+  - name: CSVData
+    type: csv
+    default: |
+      Column1,Column2
+      A,B
+      C,D

@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
-	api_mock "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -82,10 +81,14 @@ func (self *ServerTestSuite) SetupTest() {
 	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
 	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
 	require.NoError(self.T(), self.sm.Start(labels.StartLabelService))
+	require.NoError(self.T(), self.sm.Start(client_monitoring.StartClientMonitoringService))
 	require.NoError(self.T(), self.sm.Start(interrogation.StartInterrogationService))
 
 	// Load all the standard artifacts.
-	services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	manager.GetGlobalRepository(self.config_obj)
 
 	self.server, err = server.NewServer(self.config_obj)
 	require.NoError(self.T(), err)
@@ -480,10 +483,16 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 		Artifacts: []string{"Generic.Client.Info"},
 	}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.config_obj)
 	require.NoError(t, err)
 
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		context.Background(),
 		self.config_obj,
 		vql_subsystem.NullACLManager{},
@@ -510,11 +519,17 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 
 // Schedule a flow in the database and return its flow id
 func (self *ServerTestSuite) createArtifactCollection() (string, error) {
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.config_obj)
 	require.NoError(self.T(), err)
 
 	// Schedule a flow in the database.
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		context.Background(),
 		self.config_obj,
 		vql_subsystem.NullACLManager{},
@@ -695,13 +710,11 @@ func (self *ServerTestSuite) TestCancellation() {
 	assert.Equal(t, len(tasks), 1)
 
 	// Cancelling the flow will notify the client immediately.
-	mock := api_mock.NewMockAPIClient(ctrl)
 
 	// Now cancel the same flow.
 	response, err := flows.CancelFlow(
 		context.Background(),
-		self.config_obj, self.client_id, flow_id, "username",
-		MockAPIClientFactory{mock})
+		self.config_obj, self.client_id, flow_id, "username")
 	require.NoError(t, err)
 	require.Equal(t, response.FlowId, flow_id)
 
@@ -776,9 +789,6 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 
 // Test flow archiving
 func (self *ServerTestSuite) TestFlowArchives() {
-	ctrl := gomock.NewController(self.T())
-	defer ctrl.Finish()
-
 	t := self.T()
 
 	db, err := datastore.GetDB(self.config_obj)
@@ -794,13 +804,11 @@ func (self *ServerTestSuite) TestFlowArchives() {
 	require.Error(t, err)
 
 	// Cancelling the flow will notify the client immediately.
-	mock := api_mock.NewMockAPIClient(ctrl)
 
 	// Now cancel the same flow.
 	response, err := flows.CancelFlow(
 		context.Background(),
-		self.config_obj, self.client_id, flow_id, "username",
-		MockAPIClientFactory{mock})
+		self.config_obj, self.client_id, flow_id, "username")
 	require.NoError(t, err)
 	require.Equal(t, response.FlowId, flow_id)
 

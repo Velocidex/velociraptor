@@ -15,6 +15,7 @@ package services
 // in real time from client event artifacts.
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -29,11 +30,15 @@ var (
 	GJournal JournalService
 )
 
-func GetJournal() JournalService {
+func GetJournal() (JournalService, error) {
 	journal_mu.Lock()
 	defer journal_mu.Unlock()
 
-	return GJournal
+	if GJournal == nil {
+		return nil, errors.New("Journal service not ready")
+	}
+
+	return GJournal, nil
 }
 
 func RegisterJournal(journal JournalService) {

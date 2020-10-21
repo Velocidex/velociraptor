@@ -132,10 +132,6 @@ func doServerDeb() {
 	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
-	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
-	defer sm.Close()
-
 	// Debian packages always use the "velociraptor" user.
 	config_obj.Frontend.RunAsUser = "velociraptor"
 	config_obj.ServerType = "linux"
@@ -232,10 +228,6 @@ func doClientDeb() {
 	config_obj, err := DefaultConfigLoader.
 		WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
-
-	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
-	defer sm.Close()
 
 	res, err := yaml.Marshal(getClientConfig(config_obj))
 	kingpin.FatalIfError(err, "marshal")

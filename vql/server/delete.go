@@ -95,11 +95,16 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 
 		// Indiscriminately delete all the client's datastore files.
 		err = db.Walk(config_obj, client_path_manager.Path(), func(filename string) error {
-			output_chan <- ordereddict.NewDict().
+			select {
+			case <-ctx.Done():
+				return nil
+
+			case output_chan <- ordereddict.NewDict().
 				Set("client_id", arg.ClientId).
 				Set("type", "Datastore").
 				Set("vfs_path", filename).
-				Set("really_do_it", arg.ReallyDoIt)
+				Set("really_do_it", arg.ReallyDoIt):
+			}
 
 			if arg.ReallyDoIt {
 				err = db.DeleteSubject(config_obj, filename)
@@ -126,11 +131,16 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 		// Delete the filestore files.
 		err = file_store_factory.Walk(client_path_manager.Path(),
 			func(filename string, info os.FileInfo, err error) error {
-				output_chan <- ordereddict.NewDict().
+				select {
+				case <-ctx.Done():
+					return nil
+
+				case output_chan <- ordereddict.NewDict().
 					Set("client_id", arg.ClientId).
 					Set("type", "Filestore").
 					Set("vfs_path", filename).
-					Set("really_do_it", arg.ReallyDoIt)
+					Set("really_do_it", arg.ReallyDoIt):
+				}
 
 				if arg.ReallyDoIt {
 					err := file_store_factory.Delete(filename)

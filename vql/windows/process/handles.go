@@ -7,6 +7,7 @@ package process
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -124,26 +125,48 @@ func is_type_chosen(types []string, objtype string) bool {
 	return false
 }
 
+// A sane version which allocates the right size buffer.
+func SaneNtQuerySystemInformation(class uint32) ([]byte, error) {
+	// Start off with something reasonable.
+	buffer_size := 1024 * 1024 * 4
+	var length uint32
+
+	// A hard upper limit on the buffer.
+	for buffer_size < 32*1024*1024 {
+		buffer := make([]byte, buffer_size)
+
+		status := windows.NtQuerySystemInformation(class,
+			&buffer[0], uint32(len(buffer)), &length)
+		if status == windows.STATUS_SUCCESS {
+			return buffer[:length], nil
+		}
+
+		// Buffer needs to grow
+		if status == windows.STATUS_INFO_LENGTH_MISMATCH {
+			buffer_size += 1024 * 1024 * 4
+			continue
+		}
+
+		return nil, errors.New("NtQuerySystemInformation status " +
+			windows.NTStatus_String(status))
+	}
+	return nil, errors.New("Too much memory needed")
+}
+
 func GetHandles(scope *vfilter.Scope, arg *HandlesPluginArgs, out chan<- vfilter.Row) {
 	// This should be large enough to fit all the handles.
-	buffer := make([]byte, 1024*1024*4)
+	buffer, err := SaneNtQuerySystemInformation(windows.SystemHandleInformation)
+	if err != nil {
+		scope.Log("GetHandles %v", err)
+		return
+	}
 
 	// Group all handles by pid
 	pid_map := make(map[int][]*windows.SYSTEM_HANDLE_TABLE_ENTRY_INFO64)
 
-	var length uint32
-
-	status := windows.NtQuerySystemInformation(windows.SystemHandleInformation,
-		&buffer[0], uint32(len(buffer)), &length)
-	if status != windows.STATUS_SUCCESS {
-		scope.Log("NtQuerySystemInformation status " +
-			windows.NTStatus_String(status))
-		return
-	}
-
 	// First pass, group all handles by pid.
 	size := int(unsafe.Sizeof(windows.SYSTEM_HANDLE_TABLE_ENTRY_INFO64{}))
-	for i := 8; i < int(length); i += size {
+	for i := 8; i < len(buffer); i += size {
 		handle_info := (*windows.SYSTEM_HANDLE_TABLE_ENTRY_INFO64)(unsafe.Pointer(
 			uintptr(unsafe.Pointer(&buffer[0])) + uintptr(i)))
 

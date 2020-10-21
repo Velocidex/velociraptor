@@ -24,12 +24,14 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime/pprof"
 	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
 	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/shirou/gopsutil/process"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -77,10 +79,60 @@ func vqlCollectorArgsFromFixture(
 	return vql_collector_args
 }
 
+func makeCtxWithTimeout(duration int) (context.Context, func()) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+
+	deadline := time.Now().Add(time.Second * time.Duration(duration))
+	fmt.Printf("Setting deadline to %v\n", deadline)
+
+	// Set an alarm for hard exit in 2 minutes. If we hit it then
+	// the code is deadlocked and we want to know what is
+	// happening.
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				fmt.Printf("Disarming alarm\n")
+				return
+
+				// If we get here we are deadlocked! Print all
+				// the goroutines and mutex and hard exit.
+			case <-time.After(time.Second):
+				if time.Now().Before(deadline) {
+					proc, _ := process.NewProcess(int32(os.Getpid()))
+					total_time, _ := proc.Percent(0)
+					memory, _ := proc.MemoryInfo()
+
+					fmt.Printf("Not time to fire yet %v %v %v\n",
+						time.Now(), total_time, memory)
+					continue
+				}
+
+				p := pprof.Lookup("goroutine")
+				if p != nil {
+					p.WriteTo(os.Stdout, 1)
+				}
+
+				p = pprof.Lookup("mutex")
+				if p != nil {
+					p.WriteTo(os.Stdout, 1)
+				}
+
+				os.Stdout.Close()
+
+				// Hard exit with an error.
+				os.Exit(-1)
+			}
+		}
+	}()
+
+	return ctx, cancel
+}
+
 func runTest(fixture *testFixture,
 	config_obj *config_proto.Config) (string, error) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	ctx, cancel := makeCtxWithTimeout(30)
 	defer cancel()
 
 	//Force a clean slate for each test.
@@ -92,11 +144,15 @@ func runTest(fixture *testFixture,
 	}
 	defer sm.Close()
 
+	_, err = getRepository(config_obj)
+	kingpin.FatalIfError(err, "Loading extra artifacts")
+
 	// Create an output container.
 	tmpfile, err := ioutil.TempFile("", "golden")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer os.Remove(tmpfile.Name())
 
 	container, err := reporting.NewContainer(tmpfile.Name())
 	kingpin.FatalIfError(err, "Can not create output container")
@@ -123,7 +179,9 @@ func runTest(fixture *testFixture,
 	}
 
 	// Cleanup after the query.
-	scope := services.GetRepositoryManager().BuildScopeFromScratch(builder)
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+	scope := manager.BuildScopeFromScratch(builder)
 	defer scope.Close()
 
 	scope.AddDestructor(func() {
@@ -157,23 +215,27 @@ func runTest(fixture *testFixture,
 }
 
 func doGolden() {
+	_, cancel := makeCtxWithTimeout(120)
+	defer cancel()
+
 	config_obj, err := DefaultConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Can not load configuration.")
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	logger.Info("Starting golden file test.")
 
-	globs, err := filepath.Glob(fmt.Sprintf(
-		"%s*.in.yaml", *golden_command_prefix))
-	kingpin.FatalIfError(err, "Glob")
-
 	failures := []string{}
 
-	for _, filename := range globs {
+	err = filepath.Walk(*golden_command_prefix, func(file_path string, info os.FileInfo, err error) error {
+
+		if !strings.HasSuffix(file_path, ".in.yaml") {
+			return nil
+		}
+
 		logger := log.New(os.Stderr, "golden: ", 0)
 
-		logger.Printf("Openning %v", filename)
-		data, err := ioutil.ReadFile(filename)
+		logger.Printf("Opening %v", file_path)
+		data, err := ioutil.ReadFile(file_path)
 		kingpin.FatalIfError(err, "Reading file")
 
 		fixture := testFixture{}
@@ -183,23 +245,23 @@ func doGolden() {
 		result, err := runTest(&fixture, config_obj)
 		kingpin.FatalIfError(err, "Running test")
 
-		outfile := strings.Replace(filename, ".in.", ".out.", -1)
+		outfile := strings.Replace(file_path, ".in.", ".out.", -1)
 		old_data, err := ioutil.ReadFile(outfile)
 		if err == nil {
 			if strings.TrimSpace(string(old_data)) != strings.TrimSpace(result) {
 				dmp := diffmatchpatch.New()
 				diffs := dmp.DiffMain(
 					string(old_data), result, false)
-				fmt.Printf("Failed %v:\n", filename)
+				fmt.Printf("Failed %v:\n", file_path)
 				fmt.Println(dmp.DiffPrettyText(diffs))
 
-				failures = append(failures, filename)
+				failures = append(failures, file_path)
 			}
 		} else {
-			fmt.Printf("New file for  %v:\n", filename)
+			fmt.Printf("New file for  %v:\n", file_path)
 			fmt.Println(result)
 
-			failures = append(failures, filename)
+			failures = append(failures, file_path)
 		}
 
 		if !*testonly {
@@ -208,6 +270,11 @@ func doGolden() {
 				[]byte(result), 0666)
 			kingpin.FatalIfError(err, "Unable to write golden file")
 		}
+		return nil
+	})
+
+	if err != nil {
+		kingpin.Fatalf("golden error: %s", err)
 	}
 
 	if len(failures) > 0 {

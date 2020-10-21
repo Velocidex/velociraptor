@@ -44,7 +44,12 @@ func (self *EnrollmentService) Start(
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 
-	events, cancel := services.GetJournal().Watch("Server.Internal.Enrollment")
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	events, cancel := journal.Watch("Server.Internal.Enrollment")
 
 	wg.Add(1)
 	go func() {
@@ -105,13 +110,23 @@ func (self *EnrollmentService) ProcessRow(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Debug("Interrogating %v", client_id)
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
 
 	// Issue the flow on the client.
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return err
+	}
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, config_obj, vql_subsystem.NullACLManager{},
 		repository,
 		&flows_proto.ArtifactCollectorArgs{

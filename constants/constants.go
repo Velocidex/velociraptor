@@ -17,10 +17,13 @@
 */
 package constants
 
-import "regexp"
+import (
+	"errors"
+	"regexp"
+)
 
 const (
-	VERSION                    = "0.4.9"
+	VERSION                    = "0.5.0"
 	ENROLLMENT_WELL_KNOWN_FLOW = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 
@@ -84,5 +87,6 @@ const (
 type key int
 
 var (
-	HuntIdRegex = regexp.MustCompile(`^H\.[^.]+$`)
+	HuntIdRegex    = regexp.MustCompile(`^H\.[^.]+$`)
+	STOP_ITERATION = errors.New("Stop Iteration")
 )

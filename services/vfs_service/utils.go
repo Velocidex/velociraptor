@@ -26,7 +26,12 @@ func watchForFlowCompletion(
 		config_obj *config_proto.Config,
 		scope *vfilter.Scope, row *ordereddict.Dict)) error {
 
-	events, cancel := services.GetJournal().Watch("System.Flow.Completion")
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	events, cancel := journal.Watch("System.Flow.Completion")
 
 	wg.Add(1)
 	go func() {
@@ -42,7 +47,12 @@ func watchForFlowCompletion(
 				&logging.FrontendComponent),
 		}
 
-		scope := services.GetRepositoryManager().BuildScope(builder)
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			return
+		}
+
+		scope := manager.BuildScope(builder)
 		defer scope.Close()
 
 		// Allow the artifact we are following to be over-ridden by

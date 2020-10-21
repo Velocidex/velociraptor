@@ -75,7 +75,7 @@ message LoadArtifactPackResponse {
 
 message APIResponse {
     bool error = 1 [(sem_type) = {
-            description: "An error occured setting the artifact.",
+            description: "An error occurred setting the artifact.",
         }];
 
     string error_message = 2;

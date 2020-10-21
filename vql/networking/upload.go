@@ -183,7 +183,11 @@ func (self *UploadPlugin) Call(
 						filename, err.Error())
 					continue
 				}
-				output_chan <- upload_response
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- upload_response:
+				}
 			}
 		}
 	}()

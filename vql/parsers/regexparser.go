@@ -112,7 +112,12 @@ func _ParseFile(
 
 						row.Set(key, string(submatch))
 					}
-					output_chan <- row
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- row:
+					}
 				}
 			}
 		}

@@ -175,15 +175,21 @@ tools:
   github_project: Velocidex/velociraptor
   github_asset_regex: windows-amd64.exe
 `
-	repository := services.GetRepositoryManager().NewRepository()
-	_, err := repository.LoadYaml(test_artifact, true /* validate */)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(test_artifact, true /* validate */)
 	assert.NoError(self.T(), err)
 
 	self.installGitHubMock()
 
 	// Launch the artifact - this will result in the tool being
 	// downloaded and the hash calculated on demand.
-	response, err := services.GetLauncher().CompileCollectorArgs(
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	response, err := launcher.CompileCollectorArgs(
 		ctx, self.config_obj, vql_subsystem.NullACLManager{}, repository,
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
@@ -264,13 +270,18 @@ tools:
   github_asset_regex: windows-amd64.exe
   serve_locally: true
 `
-	repository := services.GetRepositoryManager().NewRepository()
-	_, err := repository.LoadYaml(test_artifact, true /* validate */)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(test_artifact, true /* validate */)
 	assert.NoError(self.T(), err)
 
 	self.installGitHubMock()
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
 
-	response, err := services.GetLauncher().CompileCollectorArgs(
+	response, err := launcher.CompileCollectorArgs(
 		ctx, self.config_obj, vql_subsystem.NullACLManager{}, repository,
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
@@ -309,8 +320,11 @@ name: TestArtifact2
 tools:
 - name: SampleTool
 `
-	repository := services.GetRepositoryManager().NewRepository()
-	_, err := repository.LoadYaml(test_artifact, true /* validate */)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(test_artifact, true /* validate */)
 	assert.NoError(self.T(), err)
 
 	_, pres := repository.Get(self.config_obj, "TestArtifact")
@@ -351,7 +365,10 @@ tools:
 
 	// Parsing the artifact does not update the tool - admins can
 	// pin the tool definition.
-	repository := services.GetRepositoryManager().NewRepository()
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
 	_, err = repository.LoadYaml(test_artifact, true /* validate */)
 	assert.NoError(self.T(), err)
 
@@ -378,8 +395,11 @@ tools:
   serve_locally: true
 `
 	// Parsing the artifact should insert the tool.
-	repository := services.GetRepositoryManager().NewRepository()
-	_, err := repository.LoadYaml(test_artifact, true /* validate */)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(test_artifact, true /* validate */)
 	assert.NoError(self.T(), err)
 
 	_, pres := repository.Get(self.config_obj, "TestArtifact")

@@ -158,7 +158,11 @@ func CreateFlowReport(
 	}
 	lock_file.Close()
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return "", err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -166,7 +170,7 @@ func CreateFlowReport(
 	builder := services.ScopeBuilderFromScope(scope)
 	builder.Uploader = nil
 
-	subscope := services.GetRepositoryManager().BuildScope(builder)
+	subscope := manager.BuildScope(builder)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)

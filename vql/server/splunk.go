@@ -136,7 +136,7 @@ func _upload_rows(
 	next_send_time := time.After(wait_time)
 
 	// Flush any remaining rows
-	defer send_to_splunk(scope, output_chan, client, &buf, arg)
+	defer send_to_splunk(ctx, scope, output_chan, client, &buf, arg)
 
 	// Batch sending to splunk: Either
 	// when we get to chuncksize or wait
@@ -153,7 +153,7 @@ func _upload_rows(
 
 		case <-next_send_time:
 
-			send_to_splunk(scope, output_chan,
+			send_to_splunk(ctx, scope, output_chan,
 				client, &buf, arg)
 
 			next_send_time = time.After(wait_time)
@@ -161,7 +161,9 @@ func _upload_rows(
 	}
 }
 
-func send_to_splunk(scope *vfilter.Scope,
+func send_to_splunk(
+	ctx context.Context,
+	scope *vfilter.Scope,
 	output_chan chan vfilter.Row,
 	client *splunk.Client, buf *[]vfilter.Row, arg *_SplunkPluginArgs) {
 
@@ -188,11 +190,19 @@ func send_to_splunk(scope *vfilter.Scope,
 	err := client.LogEvents(events)
 
 	if err != nil {
-		output_chan <- ordereddict.NewDict().
-			Set("Response", err)
+		select {
+		case <-ctx.Done():
+			return
+		case output_chan <- ordereddict.NewDict().
+			Set("Response", err):
+		}
 	} else {
-		output_chan <- ordereddict.NewDict().
-			Set("Response", len(_buf))
+		select {
+		case <-ctx.Done():
+			return
+		case output_chan <- ordereddict.NewDict().
+			Set("Response", len(_buf)):
+		}
 	}
 
 	// clear the slice

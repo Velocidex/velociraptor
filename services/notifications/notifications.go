@@ -55,13 +55,17 @@ func StartNotificationService(
 	logger.Info("<green>Starting</> the notification service.")
 
 	// Watch the journal.
-	events, cancel := services.GetJournal().Watch("Server.Internal.Notifications")
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+	events, cancel := journal.Watch("Server.Internal.Notifications")
 
 	wg.Add(1)
 	go func() {
 		defer cancel()
 		defer wg.Done()
-
+		defer services.RegisterNotifier(nil)
 		defer func() {
 			self.pool_mu.Lock()
 			defer self.pool_mu.Unlock()
@@ -113,14 +117,24 @@ func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()
 }
 
 func (self *Notifier) NotifyAllListeners(config_obj *config_proto.Config) error {
-	return services.GetJournal().PushRowsToArtifact(config_obj,
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	return journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", "All")},
 		"Server.Internal.Notifications", "server", "",
 	)
 }
 
 func (self *Notifier) NotifyListener(config_obj *config_proto.Config, id string) error {
-	return services.GetJournal().PushRowsToArtifact(config_obj,
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	return journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", id)},
 		"Server.Internal.Notifications", "server", "",
 	)

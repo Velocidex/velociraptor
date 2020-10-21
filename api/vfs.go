@@ -89,7 +89,7 @@ type FileInfoRow struct {
 	Data      interface{}                  `json:"_Data"`
 }
 
-// Render the root level psuedo directory. This provides anchor points
+// Render the root level pseudo directory. This provides anchor points
 // for the other drivers in the navigation.
 func renderRootVFS(client_id string) *flows_proto.VFSListResponse {
 	return &flows_proto.VFSListResponse{
@@ -362,7 +362,7 @@ func GetClientPath(vfs_path string) (client_path string, accessor string) {
 
 	case "ntfs":
 		// With the ntfs accessor, first component is a device
-		// and should not be preceeded with /
+		// and should not be preceded with /
 		return strings.Join(components[1:], "\\"), components[0]
 
 	default:

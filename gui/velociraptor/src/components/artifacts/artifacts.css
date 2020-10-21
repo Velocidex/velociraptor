@@ -1,0 +1,46 @@
+.artifact-search-table  {
+    padding-right: 0;
+    padding-left: 0;
+    margin-right: 15px;
+    max-height: calc(100vh - 150px);
+    overflow-y: auto;
+    position: fixed;
+    overflow-x: hidden;
+    direction: rtl;
+}
+
+.artifact-search-table a {
+    color: black;
+}
+
+.artifact-search-table thead {
+    display: none;
+}
+
+.artifact-search-report {
+    padding-left: 20px;
+    padding-right: 20px;
+    height: calc(100vh - 150px);
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.artifact-search-report .report-viewer {
+    margin-bottom: 150px;
+    overflow: none;
+}
+
+.artifact-search-panel {
+    position: fixed;
+    width: 100%;
+    overflow-x: auto;
+    height: -webkit-fill-available;
+}
+
+.artifact-toolbar {
+    margin: 5px;
+}
+
+pre {
+    white-space: pre-wrap;
+}

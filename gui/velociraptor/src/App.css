@@ -1,0 +1,56 @@
+nav.fixed-bottom {
+    height: 40px;
+    z-index: auto;
+    background: var(--color-nav-header-color);
+}
+
+body {
+    font-size: 1rem;
+}
+
+h1 {
+    font-size: 2rem;
+}
+
+
+h2 {
+    font-size: 1.5rem;
+}
+
+
+h3 {
+    font-size: 1.4rem;
+}
+
+h4 {
+    font-size: 1.1rem;
+}
+
+.full-height .modal-body {
+    height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+
+.main-navbar {
+    border-top: 0px;
+    border-style: solid;
+    border-left: 0;
+    border-right: 0;
+    border-color: #e5e5e5;
+}
+
+.no-content {
+    text-align: center;
+    margin-top: 50px;
+    font-size: 2.0em;
+    color: #bcbbbb;
+}
+
+nav.app-footer.fixed-bottom {
+    background-color: var(--color-footer-background);
+}
+
+.Snackbar {
+    z-index: 1200;
+}

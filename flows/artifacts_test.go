@@ -83,7 +83,10 @@ func (self *TestSuite) TearDownTest() {
 }
 
 func (self *TestSuite) TestRetransmission() {
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(
 		self.config_obj)
 	assert.NoError(self.T(), err)
 
@@ -94,7 +97,10 @@ func (self *TestSuite) TestRetransmission() {
 
 	// Schedule a new flow.
 	ctx := context.Background()
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, self.config_obj,
 		vql_subsystem.NullACLManager{},
 		repository, request)
@@ -139,7 +145,9 @@ func (self *TestSuite) TestRetransmission() {
 }
 
 func (self *TestSuite) TestResourceLimits() {
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+	repository, err := manager.GetGlobalRepository(
 		self.config_obj)
 	assert.NoError(self.T(), err)
 
@@ -153,7 +161,10 @@ func (self *TestSuite) TestResourceLimits() {
 
 	// Schedule a new flow.
 	ctx := context.Background()
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx,
 		self.config_obj,
 		vql_subsystem.NullACLManager{},

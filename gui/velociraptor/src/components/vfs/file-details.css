@@ -1,0 +1,19 @@
+.padded {
+    padding: 20px;
+    background-color: var(--color-default-background);
+}
+
+.tab-content {
+    background-color: var(--color-default-background);
+}
+
+
+.nav-tabs .nav-item {
+    border-color: #dee2e6 #dee2e6 #fff;
+    background-color: var(--color-tab-non-active-background);
+    color: var(--color-default-font);
+}
+
+.nav-tabs .nav-item.active {
+    background-color: var(--color-tab-active-background);
+}

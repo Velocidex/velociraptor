@@ -73,6 +73,9 @@ func (self *ClientEventTable) CheckClientEventsVersion(
 	defer self.mu.Unlock()
 
 	labeler := services.GetLabeler()
+	if labeler == nil {
+		return false
+	}
 	if client_version < self.state.Version {
 		return true
 	}
@@ -108,13 +111,16 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 	config_obj *config_proto.Config,
 	artifact *flows_proto.ArtifactCollectorArgs) (
 	[]*actions_proto.VQLCollectorArgs, error) {
-	// Make a local copy.
 
 	result := []*actions_proto.VQLCollectorArgs{}
-	launcher := services.GetLauncher()
-
-	// Compile each artifact separately into its own VQLCollectorArgs so they can be run in parallel.
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return nil, err
+	}
+	// Compile each artifact separately into its own
+	// VQLCollectorArgs so they can be run in parallel.
 	for _, name := range artifact.Artifacts {
+		// Make a local copy.
 		temp := *artifact
 		temp.Artifacts = []string{name}
 		compiled, err := launcher.CompileCollectorArgs(
@@ -189,7 +195,12 @@ func (self *ClientEventTable) setClientMonitoringState(
 
 	// Notify all the client monitoring tables that we got
 	// updated. This should cause all frontends to refresh.
-	return services.GetJournal().PushRowsToArtifact(config_obj,
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	return journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("setter", self.id).
@@ -229,6 +240,9 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	// server.
 	for _, event := range result.Event {
 		event.MaxWait += uint64(rand.Intn(20))
+
+		// Event queries never time out
+		event.Timeout = 99999999
 	}
 
 	return &crypto_proto.GrrMessage{
@@ -345,7 +359,12 @@ func StartClientMonitoringService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
@@ -356,17 +375,20 @@ func StartClientMonitoringService(
 		id:         uuid.New().String(),
 	}
 
-	services.RegisterClientEventManager(event_table)
-
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Client Monitoring Service")
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
 
-	events, cancel := services.GetJournal().Watch("Server.Internal.ArtifactModification")
+	events, cancel := journal.Watch("Server.Internal.ArtifactModification")
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer cancel()
+		defer services.RegisterClientEventManager(nil)
 
 		for {
 			select {
@@ -382,6 +404,8 @@ func StartClientMonitoringService(
 			}
 		}
 	}()
+
+	services.RegisterClientEventManager(event_table)
 
 	return event_table.LoadFromFile(ctx, config_obj)
 }

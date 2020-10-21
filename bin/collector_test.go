@@ -220,6 +220,8 @@ reports:
 		"--args", "OS=" + OS_TYPE,
 		"--args", "artifacts=[\"Custom.TestArtifact\"]",
 		"--args", "target=ZIP",
+		"--args", "opt_admin=N",
+		"--args", "opt_prompt=N",
 		"--args", "template=Custom.TestArtifact",
 		"--output", output_zip,
 	}

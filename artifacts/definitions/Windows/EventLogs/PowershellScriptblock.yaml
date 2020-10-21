@@ -3,11 +3,11 @@ description: |
   This Artifact will search and extract ScriptBlock events (Event ID 4104) from
   Powershell-Operational Event Logs.
 
-  Powershell is commonly used by attackers accross all stages of the attack
+  Powershell is commonly used by attackers across all stages of the attack
   lifecycle. A valuable hunt is to search Scriptblock logs for signs of
   malicious content.
 
-  There are several parameter's availible for search leveraging regex.
+  There are several parameter's available for search leveraging regex.
     - DateAfter enables search for events after this date.
     - DateBefore enables search for events before this date.
     - SearchStrings enables regex search over scriptblock text field.

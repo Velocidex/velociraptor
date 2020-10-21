@@ -245,8 +245,7 @@ func (self _ESEPlugin) Call(
 			select {
 			case <-ctx.Done():
 				return errors.New("Query is cancelled")
-			default:
-				output_chan <- row
+			case output_chan <- row:
 			}
 			return nil
 		})

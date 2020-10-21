@@ -42,9 +42,14 @@ func (self ItemsPlugin) Call(
 		if a_type.Kind() == reflect.Slice {
 			for i := 0; i < a_value.Len(); i++ {
 				element := a_value.Index(i).Interface()
-				output_chan <- ordereddict.NewDict().
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- ordereddict.NewDict().
 					Set("_key", i).
-					Set("_value", element)
+					Set("_value", element):
+				}
 			}
 			return
 		}
@@ -54,9 +59,14 @@ func (self ItemsPlugin) Call(
 			for _, key := range members {
 				value, pres := scope.Associative(arg.Item, key)
 				if pres {
-					output_chan <- ordereddict.NewDict().
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- ordereddict.NewDict().
 						Set("_key", key).
-						Set("_value", value)
+						Set("_value", value):
+					}
 				}
 			}
 		}

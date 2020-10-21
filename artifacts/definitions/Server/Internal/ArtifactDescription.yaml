@@ -42,9 +42,9 @@ reports:
       {{- range $item := $artifact.Parameters -}}
          {{- if not (eq $item.Type "hidden") -}}
            <tr>
-               <td> {{ $item.Name }}</td>
-               <td>{{ $item.Type }}</td>
-               <td><pre>{{ $item.Default }}</pre></td>
+             <td>{{ $item.Name }}</td>
+             <td>{{ $item.Type }}</td>
+             <td><pre>{{ $item.Default }}</pre></td>
            </tr>
          {{- end -}}
       {{- end -}}

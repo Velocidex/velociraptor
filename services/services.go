@@ -54,6 +54,7 @@ type Service struct {
 func (self *Service) Close() {
 	self.cancel()
 
+	// Wait for services to exit.
 	self.Wg.Wait()
 }
 

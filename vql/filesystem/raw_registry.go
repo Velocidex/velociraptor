@@ -448,7 +448,13 @@ func (self ReadKeyValues) Call(
 							}
 						}
 					}
-					output_chan <- res
+
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- res:
+					}
 				}
 			}
 		}

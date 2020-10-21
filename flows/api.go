@@ -32,7 +32,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -160,8 +159,7 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 func CancelFlow(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	client_id, flow_id, username string,
-	api_client_factory grpc_client.APIClientFactory) (
+	client_id, flow_id, username string) (
 	res *api_proto.StartFlowResponse, err error) {
 	if flow_id == "" || client_id == "" {
 		return &api_proto.StartFlowResponse{}, nil
@@ -266,9 +264,14 @@ func ArchiveFlow(
 		Set("Timestamp", time.Now().UTC().Unix()).
 		Set("Flow", collection_context)
 
+	journal, err := services.GetJournal()
+	if err != nil {
+		return nil, err
+	}
+
 	return &api_proto.StartFlowResponse{
 			FlowId: flow_id,
-		}, services.GetJournal().PushRowsToArtifact(config_obj,
+		}, journal.PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{row},
 			"System.Flow.Archive", client_id, flow_id)
 }

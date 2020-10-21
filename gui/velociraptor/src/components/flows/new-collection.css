@@ -1,0 +1,37 @@
+.new-artifact-search-table {
+    height: calc(100vh - 232px);
+    overflow: auto;
+}
+
+.new-artifact-description .report-viewer {
+    height: calc(100vh - 232px);
+    overflow: auto;
+}
+
+.new-artifact-description .report-viewer pre {
+    overflow: unset;
+}
+
+
+.new-artifact-page {
+}
+
+
+.new-collection-parameter-page label.form-label {
+    text-align: right;
+    font-weight: bold;
+}
+
+.form-check {
+    padding-top: 7px;
+}
+
+.expand-cell {
+    width: 20px;
+}
+
+
+.new-artifact-page th label.filter-label {
+    width: 100%;
+    margin-bottom: 0;
+}

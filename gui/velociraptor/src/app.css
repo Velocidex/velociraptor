@@ -1,0 +1,13 @@
+grr-navigator .nav-pills li.active .nav-link:hover {
+    background-color: var(--sidebar-icon-color);
+}
+
+grr-navigator .nav-pills li.active .nav-link {
+    width: 200px;
+    background-color: var(--sidebar-icon-color);
+}
+
+button a.nav-link {
+    padding: 0px;
+    color: black;
+}

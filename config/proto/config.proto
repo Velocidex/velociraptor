@@ -9,7 +9,7 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/config/proto";
 
-// Information about Velociraptor. This is a psuedo config item - it
+// Information about Velociraptor. This is a pseudo config item - it
 // will never be read from config files, but can be used in VQL
 // queries. It will be written to config files as metadata about the
 // version that produced the config file.
@@ -107,7 +107,7 @@ message RingBufferConfig {
 
 message ClientConfig {
     repeated string labels = 6 [(sem_type) = {
-            description: "A list of labels the client has. This allows selected groups of clients to be targetted in hunts."
+            description: "A list of labels the client has. This allows selected groups of clients to be targeted in hunts."
         }];
 
     repeated string server_urls = 8 [(sem_type) = {
@@ -195,7 +195,7 @@ message ClientConfig {
 }
 
 message APIConfig {
-    // Publically accessible hostname.
+    // Publicly accessible hostname.
     string hostname = 5;
 
     string bind_address = 1 [(sem_type) = {

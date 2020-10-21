@@ -45,6 +45,7 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -83,9 +84,7 @@ func (self *ApiServer) CancelFlow(
 	}
 
 	result, err := flows.CancelFlow(
-		ctx,
-		self.config, in.ClientId, in.FlowId, user_name,
-		self.api_client_factory)
+		ctx, self.config, in.ClientId, in.FlowId, user_name)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +148,12 @@ func (self *ApiServer) GetReport(
 
 	acl_manager := vql_subsystem.NewServerACLManager(self.config, user_name)
 
-	global_repo, err := services.GetRepositoryManager().GetGlobalRepository(self.config)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+
+	global_repo, err := manager.GetGlobalRepository(self.config)
 	if err != nil {
 		return nil, err
 	}
@@ -185,12 +189,21 @@ func (self *ApiServer) CollectArtifact(
 		}
 	}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config)
+	manager, err := services.GetRepositoryManager()
 	if err != nil {
 		return nil, err
 	}
 
-	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+	repository, err := manager.GetGlobalRepository(self.config)
+	if err != nil {
+		return nil, err
+	}
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return nil, err
+	}
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, self.config, acl_manager, repository, in)
 	if err != nil {
 		return nil, err
@@ -663,7 +676,12 @@ func (self *ApiServer) GetArtifacts(
 
 	if len(in.Names) > 0 {
 		result := &artifacts_proto.ArtifactDescriptors{}
-		repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config)
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			return nil, err
+		}
+
+		repository, err := manager.GetGlobalRepository(self.config)
 		if err != nil {
 			return nil, err
 		}
@@ -721,7 +739,12 @@ func (self *ApiServer) SetArtifactFile(
 	permissions := acls.ARTIFACT_WRITER
 
 	// First ensure that the artifact is correct.
-	tmp_repository := services.GetRepositoryManager().NewRepository()
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+
+	tmp_repository := manager.NewRepository()
 	artifact_definition, err := tmp_repository.LoadYaml(
 		in.Artifact, true /* validate */)
 	if err != nil {
@@ -788,7 +811,7 @@ func (self *ApiServer) WriteEvent(
 			return nil, status.Error(codes.InvalidArgument, "no chains verified")
 		}
 
-		peer_name := peer_cert.Subject.CommonName
+		peer_name := crypto.GetSubjectName(peer_cert)
 
 		token, err := acls.GetEffectivePolicy(self.config, peer_name)
 		if err != nil {
@@ -813,7 +836,12 @@ func (self *ApiServer) WriteEvent(
 
 		// Only return the first row
 		if true {
-			err := services.GetJournal().PushRowsToArtifact(self.config,
+			journal, err := services.GetJournal()
+			if err != nil {
+				return nil, err
+			}
+
+			err = journal.PushRowsToArtifact(self.config,
 				rows, in.Query.Name, peer_name, "")
 			return &empty.Empty{}, err
 		}
@@ -850,7 +878,7 @@ func (self *ApiServer) Query(
 			return status.Error(codes.InvalidArgument, "no chains verified")
 		}
 
-		peer_name := peer_cert.Subject.CommonName
+		peer_name := crypto.GetSubjectName(peer_cert)
 
 		// Check that the principal is allowed to issue queries.
 		permissions := acls.ANY_QUERY
@@ -999,7 +1027,12 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 
 	}
 
-	scope := services.GetRepositoryManager().BuildScope(
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+
+	scope := manager.BuildScope(
 		services.ScopeBuilder{
 			Config:     self.config,
 			Env:        env,

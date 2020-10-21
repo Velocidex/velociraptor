@@ -128,9 +128,13 @@ func (self CollectPlugin) Call(
 						scope.Log("Error creating report: %v", err)
 					}
 				}
-				output_chan <- ordereddict.NewDict().
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- ordereddict.NewDict().
 					Set("Container", arg.Output).
-					Set("Report", arg.Report)
+					Set("Report", arg.Report):
+				}
 			}()
 
 			// Should we encrypt it?
@@ -153,7 +157,13 @@ func (self CollectPlugin) Call(
 
 			}
 
-			err = services.GetLauncher().EnsureToolsDeclared(
+			launcher, err := services.GetLauncher()
+			if err != nil {
+				scope.Log("collect: %v", err)
+				return
+			}
+
+			err = launcher.EnsureToolsDeclared(
 				ctx, config_obj, artifact)
 			if err != nil {
 				scope.Log("collect: %v %v", name, err)
@@ -166,7 +176,7 @@ func (self CollectPlugin) Call(
 				acl_manager = vql_subsystem.NullACLManager{}
 			}
 
-			request, err := services.GetLauncher().CompileCollectorArgs(
+			request, err := launcher.CompileCollectorArgs(
 				ctx, config_obj, acl_manager, repository,
 				&flows_proto.ArtifactCollectorArgs{
 					Artifacts: []string{artifact.Name},
@@ -197,7 +207,13 @@ func (self CollectPlugin) Call(
 
 			// Make a new scope for each artifact.
 			// Any uploads go into the container.
-			subscope := services.GetRepositoryManager().BuildScope(builder)
+			manager, err := services.GetRepositoryManager()
+			if err != nil {
+				scope.Log("collect: %v %v", name, err)
+				return
+			}
+
+			subscope := manager.BuildScope(builder)
 			defer subscope.Close()
 
 			for _, query := range request.Query {
@@ -221,7 +237,11 @@ func (self CollectPlugin) Call(
 				// channel.
 				if container == nil {
 					for row := range vql.Eval(ctx, subscope) {
-						output_chan <- row
+						select {
+						case <-ctx.Done():
+							return
+						case output_chan <- row:
+						}
 					}
 					continue
 				}
@@ -247,7 +267,11 @@ func (self CollectPlugin) Call(
 func getRepository(
 	config_obj *config_proto.Config,
 	extra_artifacts vfilter.Any) (services.Repository, error) {
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}

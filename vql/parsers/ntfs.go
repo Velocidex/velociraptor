@@ -196,7 +196,12 @@ func (self MFTScanPlugin) Call(
 
 		for item := range ntfs.ParseMFTFile(
 			ctx, reader, st.Size(), 0x1000, 0x400) {
-			output_chan <- item
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- item:
+			}
 		}
 	}()
 
@@ -262,7 +267,12 @@ func (self NTFSI30ScanPlugin) Call(
 		}
 
 		for _, fileinfo := range ntfs.ExtractI30List(ntfs_ctx, mft_entry) {
-			output_chan <- fileinfo
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- fileinfo:
+			}
 		}
 	}()
 
@@ -340,7 +350,12 @@ func (self NTFSRangesPlugin) Call(
 		}
 
 		for _, rng := range reader.Ranges() {
-			output_chan <- rng
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- rng:
+			}
 		}
 	}()
 

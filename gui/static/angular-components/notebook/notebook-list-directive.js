@@ -27,9 +27,11 @@ exports.setAutoRefreshInterval = function(millis) {
 const PAGE_SIZE = 100;
 
 const NotebookListController = function(
-    $scope, $element, grrApiService, $uibModal) {
+    $scope, $element, grrApiService, $uibModal, grrRoutingService) {
     /** @private {!angular.Scope} */
     this.scope_ = $scope;
+
+    this.grrRoutingService_ = grrRoutingService;
 
     this.uibModal_ = $uibModal;
 
@@ -59,7 +61,8 @@ const NotebookListController = function(
         // Only propagate real changes, don't propagate initial undefined
         // value.
         if (angular.isDefined(newValue)) {
-            this.scope_['selectedNotebookId'] = newValue;
+            this.grrRoutingService_.go(
+                'notebook', {notebookId: newValue});
         }
     }.bind(this));
 
@@ -87,8 +90,18 @@ const NotebookListController = function(
             this.error = error['statusText'] || ('Error');
         }
     }.bind(this));
+
+  this.grrRoutingService_.uiOnParamsChanged(
+    this.scope_, ['notebookId'],
+      this.onRoutingParamsChange_.bind(this));
 };
 
+
+NotebookListController.prototype.onRoutingParamsChange_ = function(
+    unused_newValues, opt_stateParams) {
+    // Select the notebook.
+    this.selectItem({notebook_id: opt_stateParams['notebookId']});
+};
 
 /**
  * Transforms items fetched by API items provider. The
@@ -214,7 +227,9 @@ NotebookListController.prototype.selectItem = function(item) {
             undefined,
             undefined,
             function notify(response) {
-                if (response['data']) {
+                if (response['data'] &&
+                    angular.isArray(response['data']["items"]) &&
+                    response['data']["items"].length > 0) {
                     self.scope_["state"]["notebook"] = response['data']["items"][0];
                 }
             });

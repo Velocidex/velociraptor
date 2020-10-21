@@ -23,7 +23,6 @@ var closureCompiler = gulpClosureCompiler.gulp();
 
 const closureCompilerFlags = {
     compilation_level: 'WHITESPACE_ONLY',
-  dependency_mode: 'STRICT',
   jscomp_off: [
     'checkTypes',
     'checkVars',
@@ -59,7 +58,7 @@ const closureCompilerFlags = {
 gulp.task('compile-third-party-js', function() {
   return gulp.src([config.nodeModulesDir + '/jquery/dist/jquery.js',
                    config.nodeModulesDir + '/popper.js/dist/umd/popper.min.js',
-                   config.nodeModulesDir + '/jquery-migrate/dist/jquery-migrate.js',
+                   // config.nodeModulesDir + '/jquery-migrate/dist/jquery-migrate.js',
                    config.nodeModulesDir + '/google-closure-library/closure/goog/base.js',
                    config.nodeModulesDir + '/bootstrap/dist/js/bootstrap.js',
                    config.nodeModulesDir + '/angular/angular.js',
@@ -67,7 +66,6 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/angular-cookies/angular-cookies.js',
                    config.nodeModulesDir + '/angular-resource/angular-resource.js',
                    config.nodeModulesDir + '/flot/dist/es5/jquery.flot.js',
-                   config.nodeModulesDir + '/flot/source/jquery.flot.selection.js',
                    config.nodeModulesDir + '/vis/dist/vis.min.js',
                    config.nodeModulesDir + '/moment/moment.js',
                    config.nodeModulesDir + '/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
@@ -92,7 +90,6 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/ace-builds/src-min-noconflict/mode-sql.js',
                    config.nodeModulesDir + '/ace-builds/src-min-noconflict/keybinding-emacs.js',
                    config.nodeModulesDir + '/jquery-csv/src/jquery.csv.min.js',
-                   config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.js',
                    config.nodeModulesDir + '/jstree/dist/jstree.js',
                    config.nodeModulesDir + '/moment/moment.js',
                    'third-party/jquery.splitter.js',
@@ -100,7 +97,7 @@ gulp.task('compile-third-party-js', function() {
                   ])
         .pipe(gulpNewer(config.distDir + '/third-party.bundle.js'))
         .pipe(gulpConcat('third-party.bundle.js'))
-        .pipe(uglify())
+        //.pipe(uglify())
         .pipe(gulp.dest(config.distDir));
 });
 
@@ -155,11 +152,9 @@ gulp.task('compile-third-party-css', function() {
                      config.nodeModulesDir + '/angular-ui-bootstrap/dist/ui-bootstrap-csp.css',
                      config.nodeModulesDir + '/ui-select/dist/select.min.css',
                      config.nodeModulesDir + '/font-awesome/css/font-awesome.css',
-                     config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.css',
                      config.nodeModulesDir + '/angular-datatables/dist/css/angular-datatables.css',
                      config.nodeModulesDir + '/datatables/media/css/jquery.dataTables.css',
                      config.nodeModulesDir + '/vis/dist/vis.min.css',
-                     config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.theme.css',
                      config.tempDir + '/grr-bootstrap.css',
                      'third-party/splitter.css'])
         .pipe(gulpNewer(config.distDir + '/third-party.bundle.css'))
@@ -182,8 +177,6 @@ gulp.task('compile-css', function() {
       'angular-components/client/virtual-file-system/file-table.css',
       'angular-components/core/global-notifications.css',
       'angular-components/core/wizard-form.css',
-//      'angular-components/forms/semantic-proto-form.css',
-//      'angular-components/forms/semantic-proto-union-form.css',
       'angular-components/sidebar/client-summary.css',
       'angular-components/user/user-notification-item.css',
       'angular-components/notebook/notebook.css',
@@ -265,7 +258,6 @@ gulp.task('compile-third-party',
                       'compile-third-party-css',
                       'copy-third-party-resources',
                       'copy-jstree-theme',
-                      'copy-jquery-ui-images',
                       'copy-fontawesome-fonts',
                       'compile-third-party-bootstrap-css',
                       'compile-third-party-bootstrap-css'));

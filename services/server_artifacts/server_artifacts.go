@@ -94,7 +94,12 @@ type serverLogger struct {
 // need to be available immediately.
 func (self *serverLogger) Write(b []byte) (int, error) {
 	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
-	err := services.GetJournal().PushRows(self.config_obj,
+	journal, err := services.GetJournal()
+	if err != nil {
+		return 0, err
+	}
+
+	err = journal.PushRows(self.config_obj,
 		self.path_manager, []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
@@ -174,7 +179,12 @@ func (self *ServerArtifactsRunner) processTask(
 
 	if task.Cancel != nil {
 		path_manager := paths.NewFlowPathManager("server", task.SessionId).Log()
-		err = services.GetJournal().PushRows(config_obj, path_manager, []*ordereddict.Dict{
+		journal, err := services.GetJournal()
+		if err != nil {
+			return err
+		}
+
+		err = journal.PushRows(config_obj, path_manager, []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
 				Set("time", time.Now().UTC().String()).
@@ -244,7 +254,12 @@ func (self *ServerArtifactsRunner) runQuery(
 
 	// Server artifacts run with full access. In order to collect
 	// them in the first place we need COLLECT_SERVER permissions.
-	scope := services.GetRepositoryManager().BuildScope(services.ScopeBuilder{
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	scope := manager.BuildScope(services.ScopeBuilder{
 		Config: self.config_obj,
 
 		// For server artifacts, upload() ends up writing in

@@ -97,7 +97,12 @@ func (self *RepositoryManager) SetArtifactFile(
 		return nil, err
 	}
 
-	err = services.GetJournal().PushRowsToArtifact(config_obj,
+	journal, err := services.GetJournal()
+	if err != nil {
+		return nil, err
+	}
+
+	err = journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().Set("artifact", artifact.Name).
 				Set("op", "set"),
@@ -168,13 +173,17 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 		}
 	}
 
+	grepository, err := InitializeGlobalRepositoryFromFilestore(
+		config_obj, self.global_repository)
+	if err != nil {
+		return err
+	}
+
 	// Compile the artifacts in the background so they are ready
 	// to go when the GUI searches for them.
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
-		grepository, _ := self.GetGlobalRepository(config_obj)
 
 		for _, name := range grepository.List() {
 			select {
@@ -189,6 +198,15 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 			}
 		}
 		logger.Info("Compiled all artifacts.")
+		grepository.Del("")
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer services.RegisterRepositoryManager(nil)
+
+		<-ctx.Done()
 	}()
 
 	logger.Info("Loaded %d built in artifacts in %v", count, time.Since(now))

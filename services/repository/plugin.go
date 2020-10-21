@@ -84,16 +84,13 @@ func (self *ArtifactRepositoryPlugin) Call(
 		}
 
 		// If the ctx is done do nothing.
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			break
-		}
-
 		if self.mock != nil {
 			for _, row := range self.mock {
-				output_chan <- row
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- row:
+				}
 			}
 
 			return
@@ -133,7 +130,12 @@ func (self *ArtifactRepositoryPlugin) Call(
 			acl_manager = vql_subsystem.NullACLManager{}
 		}
 
-		request, err := services.GetLauncher().CompileCollectorArgs(
+		launcher, err := services.GetLauncher()
+		if err != nil {
+			return
+		}
+
+		request, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, acl_manager, self.repository,
 			&flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{artifact_name},
@@ -196,8 +198,11 @@ func (self *ArtifactRepositoryPlugin) Call(
 				if query.Name != "" {
 					dict_row.Set("_Source", query.Name)
 				}
-
-				output_chan <- dict_row
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- dict_row:
+				}
 			}
 		}
 
@@ -232,14 +237,16 @@ func (self *ArtifactRepositoryPlugin) copyScope(
 	if !pres {
 		env.Set(constants.SCOPE_STACK, []string{my_name})
 	} else {
-		// Make a copy of the stack.
-		stack := append(
-			[]string{my_name}, stack_any.([]string)...)
-		if len(stack) > MAX_STACK_DEPTH {
-			return nil, errors.New("Stack overflow: " +
-				strings.Join(stack, ", "))
+		child_stack, ok := stack_any.([]string)
+		if ok {
+			// Make a copy of the stack.
+			stack := append([]string{my_name}, child_stack...)
+			if len(stack) > MAX_STACK_DEPTH {
+				return nil, errors.New("Stack overflow: " +
+					strings.Join(stack, ", "))
+			}
+			env.Set(constants.SCOPE_STACK, stack)
 		}
-		env.Set(constants.SCOPE_STACK, stack)
 	}
 
 	result := scope.Copy()
@@ -308,6 +315,7 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) GetMembers(
 
 func (self _ArtifactRepositoryPluginAssociativeProtocol) Associative(
 	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
+
 	value := _getArtifactRepositoryPlugin(a)
 	if value == nil {
 		return nil, false

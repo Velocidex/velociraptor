@@ -52,7 +52,9 @@ func doFlowReport() {
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
 	}
 
-	scope := services.GetRepositoryManager().BuildScope(builder)
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	writer := os.Stdout

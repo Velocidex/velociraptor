@@ -44,7 +44,12 @@ func enroll(
 		return err
 	}
 
-	return services.GetJournal().PushRowsToArtifact(config_obj,
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	return journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().Set("ClientId", client_id)},
 		"Server.Internal.Enrollment", "server" /* client_id */, "",
 	)

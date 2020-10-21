@@ -102,7 +102,11 @@ func (self HuntsPlugin) Call(
 				hunt_obj.Stats = hunt_stats
 			}
 
-			output_chan <- hunt_obj
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- hunt_obj:
+			}
 		}
 	}()
 
@@ -187,8 +191,12 @@ func (self HuntResultsPlugin) Call(
 			// first named source from the artifact
 			// definition.
 			if arg.Source == "" {
-				repo, err := services.GetRepositoryManager().
-					GetGlobalRepository(config_obj)
+				manager, err := services.GetRepositoryManager()
+				if err != nil {
+					scope.Log("hunt_results: %v", err)
+					return
+				}
+				repo, err := manager.GetGlobalRepository(config_obj)
 				if err == nil {
 					artifact_def, ok := repo.Get(config_obj, arg.Artifact)
 					if ok {
@@ -252,8 +260,11 @@ func (self HuntResultsPlugin) Call(
 					if api_client.OsInfo != nil {
 						row.Set("Fqdn", api_client.OsInfo.Fqdn)
 					}
-
-					output_chan <- row
+					select {
+					case <-ctx.Done():
+						return
+					case output_chan <- row:
+					}
 				}
 			}
 		}
@@ -323,6 +334,7 @@ func (self HuntFlowsPlugin) Call(
 			result := ordereddict.NewDict().
 				Set("HuntId", participation_row.HuntId).
 				Set("ClientId", participation_row.ClientId).
+				Set("FlowId", participation_row.FlowId).
 				Set("Flow", vfilter.Null{})
 
 			collection_context, err := flows.LoadCollectionContext(
@@ -333,7 +345,11 @@ func (self HuntFlowsPlugin) Call(
 					json.ConvertProtoToOrderedDict(collection_context))
 			}
 
-			output_chan <- result
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- result:
+			}
 		}
 	}()
 

@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -44,6 +45,7 @@ func (self *HuntTestSuite) SetupTest() {
 	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
 	require.NoError(self.T(), self.sm.Start(hunt_dispatcher.StartHuntDispatcher))
+	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
 }
 
 func (self *HuntTestSuite) TearDownTest() {
@@ -53,8 +55,11 @@ func (self *HuntTestSuite) TearDownTest() {
 }
 
 func (self *HuntTestSuite) TestCompilation() {
-	repository := services.GetRepositoryManager().NewRepository()
-	services.GetRepositoryManager().SetGlobalRepositoryForTests(repository)
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	manager.SetGlobalRepositoryForTests(repository)
 	repository.LoadYaml(`
 name: TestArtifact
 parameters:

@@ -57,7 +57,11 @@ func produceReport(
 	// Build scope from scratch and replace the source()
 	// plugin. We hook the source plugin to read results from the
 	// collection container.
-	subscope := services.GetRepositoryManager().BuildScopeFromScratch(builder)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+	subscope := manager.BuildScopeFromScratch(builder)
 	defer subscope.Close()
 
 	// Reports can query the container directly.
@@ -162,7 +166,11 @@ func (self *ContainerSourcePlugin) Call(
 		}
 
 		for row := range self.Container.ReadArtifactResults(ctx, scope, arg.Artifact) {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 
@@ -203,7 +211,11 @@ func (self *ArchiveSourcePlugin) Call(
 		}
 
 		for row := range self.Archive.ReadArtifactResults(ctx, scope, arg.Artifact) {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
 		}
 	}()
 

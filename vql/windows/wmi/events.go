@@ -160,7 +160,7 @@ func (self WmiEventPlugin) Call(
 			return
 		}
 
-		for {
+		for item := range event_context.output {
 			select {
 			case <-sub_ctx.Done():
 				// Destroy the C context - we are done here.
@@ -170,11 +170,7 @@ func (self WmiEventPlugin) Call(
 				// Read the next item from the event
 				// queue and send it to the VQL
 				// subsystem.
-			case item, ok := <-event_context.output:
-				if !ok {
-					return
-				}
-				output_chan <- item
+			case output_chan <- item:
 			}
 		}
 	}()

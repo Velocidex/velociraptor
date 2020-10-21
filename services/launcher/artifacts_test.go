@@ -104,7 +104,10 @@ func (self *ArtifactTestSuite) SetupTest() {
 	assert.NoError(t, self.sm.Start(StartLauncherService))
 	require.NoError(t, self.sm.Start(repository.StartRepositoryManager))
 
-	self.repository = services.GetRepositoryManager().NewRepository()
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	self.repository = manager.NewRepository()
 	for _, definition := range test_artifact_definitions {
 		self.repository.LoadYaml(definition, false)
 	}
@@ -122,8 +125,10 @@ func (self *ArtifactTestSuite) TestUnknownArtifact() {
 		Artifacts: []string{"Artifact5"},
 	}
 
-	launcher := services.GetLauncher()
-	_, err := launcher.CompileCollectorArgs(context.Background(), self.config_obj,
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	_, err = launcher.CompileCollectorArgs(context.Background(), self.config_obj,
 		vql_subsystem.NullACLManager{},
 		self.repository, request)
 	assert.Error(self.T(), err)
@@ -138,7 +143,8 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 	}
 
 	// It should compile ok but overflow at runtime.
-	launcher := services.GetLauncher()
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
 	vql_request, err := launcher.CompileCollectorArgs(context.Background(),
 		self.config_obj, vql_subsystem.NullACLManager{},
 		self.repository, request)
@@ -162,8 +168,9 @@ func (self *ArtifactTestSuite) TestArtifactDependencies() {
 	request := &flows_proto.ArtifactCollectorArgs{
 		Artifacts: []string{"Artifact6"},
 	}
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
 
-	launcher := services.GetLauncher()
 	vql_request, err := launcher.CompileCollectorArgs(context.Background(),
 		self.config_obj, vql_subsystem.NullACLManager{},
 		self.repository, request)

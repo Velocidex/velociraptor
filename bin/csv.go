@@ -38,7 +38,10 @@ func doCSV() {
 			Set("Files", *csv_cmd_files),
 	}
 
-	scope := services.GetRepositoryManager().BuildScope(builder)
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	query := "SELECT * FROM parse_csv(filename=Files)"

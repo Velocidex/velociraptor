@@ -31,7 +31,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -69,6 +68,9 @@ var (
 		"report", "When specified we create a report html file.").
 		Default("").String()
 
+	artificat_command_collect_admin_flag = artifact_command_collect.Flag(
+		"require_admin", "Ensure the user is an admin").Bool()
+
 	artifact_command_collect_output_password = artifact_command_collect.Flag(
 		"password", "When specified we encrypt zip file with this password.").
 		Default("").String()
@@ -89,7 +91,11 @@ func listArtifactsHint() []string {
 	config_obj := config.GetDefaultConfig()
 	result := []string{}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return result
 	}
@@ -98,13 +104,17 @@ func listArtifactsHint() []string {
 }
 
 func getRepository(config_obj *config_proto.Config) (services.Repository, error) {
-	repository, err := server.GetGlobalRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
+
 	if *artifact_definitions_dir != "" {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
 			Info("Loading artifacts from %s",
 				*artifact_definitions_dir)
-		_, err := repository.LoadDirectory(*artifact_definitions_dir)
+		_, err := repository.LoadDirectory(config_obj, *artifact_definitions_dir)
 		if err != nil {
 			logging.GetLogger(config_obj, &logging.ToolComponent).
 				Error("Artifact LoadDirectory: %v ", err)
@@ -116,6 +126,8 @@ func getRepository(config_obj *config_proto.Config) (services.Repository, error)
 }
 
 func doArtifactCollect() {
+	checkAdmin()
+
 	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
@@ -135,7 +147,10 @@ func doArtifactCollect() {
 		}
 	}
 
-	scope := services.GetRepositoryManager().BuildScope(services.ScopeBuilder{
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
+
+	scope := manager.BuildScope(services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
 		Logger:     log.New(&LogWriter{config_obj}, " ", 0),
@@ -242,7 +257,10 @@ func doArtifactList() {
 			continue
 		}
 
-		request, err := services.GetLauncher().CompileCollectorArgs(
+		launcher, err := services.GetLauncher()
+		kingpin.FatalIfError(err, "GetLauncher")
+
+		request, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, vql_subsystem.NullACLManager{}, repository,
 			&flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{artifact.Name},

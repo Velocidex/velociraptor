@@ -7,7 +7,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/services"
 )
 
 type Dummy struct{}
@@ -33,8 +32,4 @@ func (self Dummy) SetClientMonitoringState(
 	config_obj *config_proto.Config,
 	state *flows_proto.ClientEventTable) error {
 	return errors.New("No valie client monitoring service running")
-}
-
-func init() {
-	services.RegisterClientEventManager(Dummy{})
 }

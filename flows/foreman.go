@@ -62,6 +62,10 @@ func ForemanProcessMessage(
 
 	// Update the client's event tables.
 	client_event_manager := services.ClientEventManager()
+	if client_event_manager == nil {
+		return errors.New("No ClientEventManager")
+	}
+
 	if client_event_manager.CheckClientEventsVersion(
 		config_obj, client_id, foreman_checkin.LastEventTableVersion) {
 		err := QueueMessageForClient(
@@ -75,6 +79,9 @@ func ForemanProcessMessage(
 
 	// Process any needed hunts.
 	dispatcher := services.GetHuntDispatcher()
+	if dispatcher == nil {
+		return nil
+	}
 	client_last_timestamp := foreman_checkin.LastHuntTimestamp
 
 	// Can we get away without a lock?
@@ -95,8 +102,13 @@ func ForemanProcessMessage(
 			return nil
 		}
 
+		journal, err := services.GetJournal()
+		if err != nil {
+			return err
+		}
+
 		// Notify the hunt manager that we need to hunt this client.
-		err := services.GetJournal().PushRowsToArtifact(config_obj,
+		err = journal.PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("HuntId", hunt.HuntId).
 				Set("ClientId", client_id).

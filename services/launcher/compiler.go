@@ -309,3 +309,36 @@ func getDependentTools(
 
 	return nil
 }
+
+func (self *Launcher) GetDependentArtifacts(
+	config_obj *config_proto.Config,
+	repository services.Repository,
+	names []string) ([]string, error) {
+
+	dependency := make(map[string]int)
+
+	for _, name := range names {
+		_, pres := dependency[name]
+		if pres {
+			continue
+		}
+
+		_, pres = repository.Get(config_obj, name)
+		if !pres {
+			return nil, errors.New("Artifact not found")
+		}
+
+		err := GetQueryDependencies(config_obj, repository,
+			fmt.Sprintf("SELECT * FROM Artifact.%s()", name), 0, dependency)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	result := make([]string, 0, len(dependency))
+	for k := range dependency {
+		result = append(result, k)
+	}
+
+	return result, nil
+}
