@@ -35,13 +35,11 @@ class VeloClientSearch extends Component {
     showAll = () => {
         this.setState({query: "all"});
         this.props.setSearch("all");
-        this.props.history.push('/search/all');
     }
 
     setQuery = (query) => {
         this.setState({query: query});
         this.props.setSearch(query);
-        this.props.history.push('/search/' + (query || "all"));
     }
 
     showSuggestions = (query) => {
@@ -73,6 +71,7 @@ class VeloClientSearch extends Component {
                     renderSuggestion={(x) => <div className="search-suggestions">{x}</div>}
                     inputProps={{
                         placeholder: "Search clients",
+                        id: this.props.id || "client-search-bar",
                         value: this.state.query,
                         onChange: (e) => {
                             this.setState({query: e.currentTarget.value});

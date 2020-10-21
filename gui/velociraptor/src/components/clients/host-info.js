@@ -14,6 +14,7 @@ import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
 import ToggleButton from 'react-bootstrap/ToggleButton';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
+import Button from 'react-bootstrap/Button';
 
 import { Link } from  "react-router-dom";
 import api from '../core/api-service.js';
@@ -22,7 +23,7 @@ import { parseCSV } from '../utils/csv.js';
 import "./host-info.css";
 
 const POLL_TIME = 5000;
-
+const INTERROGATE_POLL_TIME = 2000;
 
 class VeloHostInfo extends Component {
     static propTypes = {
@@ -51,6 +52,9 @@ class VeloHostInfo extends Component {
     componentWillUnmount() {
         this.source.cancel("unmounted");
         clearInterval(this.interval);
+        if (this.interrogate_interval) {
+            clearInterval(this.interrogate_interval);
+        }
     }
 
     // Get the client info object to return something sensible.
@@ -195,20 +199,52 @@ class VeloHostInfo extends Component {
         return <div>Unknown mode</div>;
     }
 
+    startInterrogate = () => {
+        if (this.state.interrogateOperationId) {
+            return;
+        }
+
+        api.post("v1/CollectArtifact", {
+            client_id: this.props.client.client_id,
+            artifacts: ["Generic.Client.Info"],
+        }).then((response) => {
+            this.setState({interrogateOperationId: response.data.flow_id});
+
+            // Start polling for flow completion.
+            this.interrogate_interval = setInterval(() => {
+                api.get("v1/GetFlowDetails", {
+                    client_id: this.props.client.client_id,
+                    flow_id: this.state.interrogateOperationId,
+                }).then((response) => {
+                    let context = response.data.context;
+                    if (context.state === "RUNNING") {
+                        return;
+                    }
+
+                    // The node is refreshed with the correct flow id, we can stop polling.
+                    clearInterval(this.interrogate_interval);
+                    this.interrogate_interval = undefined;
+
+                    this.setState({interrogateOperationId: null});
+                });
+            }, INTERROGATE_POLL_TIME);
+        });
+    }
+
     render() {
         return (
             <>
               <div className="full-width-height">
                 <div className="client-info">
                   <div className="btn-group float-left" data-toggle="buttons">
-                    <button className="btn btn-default"
-                            ng-click="controller.interrogate()"
-                            ng-disabled="controller.interrogateOperationId">
+                    <Button variant="default"
+                            onClick={this.startInterrogate}
+                            disabled={this.state.interrogateOperationId}>
                       { this.state.interrogateOperationId ?
-                        <FontAwesomeIcon icon="spin" spin/>:
+                        <FontAwesomeIcon icon="spinner" spin/>:
                         <FontAwesomeIcon icon="search-plus" /> }
                       <span className="button-label">Interrogate</span>
-                    </button>
+                    </Button>
                     <Link to={"/vfs/" + this.props.client.client_id + "/"}
                       role="button" className="btn btn-default" >
                       <i><FontAwesomeIcon icon="folder-open"/></i>

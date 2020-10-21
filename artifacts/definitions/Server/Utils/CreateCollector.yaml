@@ -82,7 +82,7 @@ parameters:
     description: Show Velociraptor banner.
 
   - name: opt_prompt
-    default: Y
+    default: N
     type: bool
     description: Wait for a prompt before closing.
 

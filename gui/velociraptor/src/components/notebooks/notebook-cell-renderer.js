@@ -1,3 +1,5 @@
+import './notebook-cell-renderer.css';
+
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -13,12 +15,105 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import FormControl from 'react-bootstrap/FormControl';
 import Navbar from 'react-bootstrap/Navbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+import Modal from 'react-bootstrap/Modal';
+import BootstrapTable from 'react-bootstrap-table-next';
+import filterFactory from 'react-bootstrap-table2-filter';
+import CreateArtifactFromCell from './create-artifact-from-cell.js';
+import AddCellFromFlowDialog from './add-cell-from-flow.js';
 import Completer from '../artifacts/syntax.js';
+import { getHuntColumns } from '../hunts/hunt-list.js';
 
 import api from '../core/api-service.js';
 
-const cell_types = ["Markdown", "VQL", "Artifact"];
+const cell_types = ["Markdown", "VQL"];
+
+class AddCellFromHunt extends React.PureComponent {
+    static propTypes = {
+        closeDialog: PropTypes.func.isRequired,
+        addCell: PropTypes.func,
+    }
+
+    addCellFromHunt = (hunt) => {
+        var hunt_id = hunt["hunt_id"];
+        var query = "SELECT * \nFROM hunt_results(\n";
+        var sources = hunt["artifact_sources"] || hunt["start_request"]["artifacts"];
+        query += "    artifact='" + sources[0] + "',\n";
+        for (var i=1; i<sources.length; i++) {
+            query += "    // artifact='" + sources[i] + "',\n";
+        }
+        query += "    hunt_id='" + hunt_id + "')\nLIMIT 50\n";
+
+        this.props.addCell(query, "VQL");
+        this.props.closeDialog();
+    }
+
+    state = {
+        hunts: [],
+    }
+
+    componentDidMount = () => {
+        api.get("v1/ListHunts", {
+            count: 100,
+            offset: 0,
+        }).then((response) => {
+            let hunts = response.data.items || [];
+            this.setState({hunts: hunts});
+        });
+    }
+
+    render() {
+        const selectRow = {
+            mode: "radio",
+            clickToSelect: true,
+            hideSelectColumn: true,
+            classes: "row-selected",
+            onSelect: (row) => {
+                this.addCellFromHunt(row);
+            },
+        };
+
+        return (
+            <Modal show={true}
+                   size="lg"
+                   className="full-height"
+                   dialogClassName="modal-90w"
+                   onHide={this.props.closeDialog} >
+              <Modal.Header closeButton>
+                <Modal.Title>Add cell from Hunt</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <div className="no-margins selectable">
+                  <BootstrapTable
+                    hover
+                    condensed
+                    keyField="hunt_id"
+                    bootstrap4
+                    headerClasses="alert alert-secondary"
+                    bodyClasses="fixed-table-body"
+                    data={this.state.hunts}
+                    columns={getHuntColumns()}
+                    filter={ filterFactory() }
+                    selectRow={ selectRow }
+                  />
+                  { _.isEmpty(this.state.hunts) &&
+                    <div className="no-content">No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.</div>}
+                </div>
+
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary"
+                        onClick={this.props.closeDialog}>
+                  Cancel
+                </Button>
+                <Button variant="primary"
+                        onClick={this.addCellFromHunt}>
+                  Submit
+                </Button>
+              </Modal.Footer>
+            </Modal>
+        );
+    }
+}
 
 
 export default class NotebookCellRenderer extends React.Component {
@@ -45,6 +140,10 @@ export default class NotebookCellRenderer extends React.Component {
 
         currently_editing: false,
         input: "",
+
+        showAddCellFromHunt: false,
+        showAddCellFromFlow: false,
+        showCreateArtifactFromCell: false,
     }
 
     componentDidMount() {
@@ -234,29 +333,23 @@ export default class NotebookCellRenderer extends React.Component {
                     }}>
                     VQL
                   </Dropdown.Item>
-                  <Dropdown.Item
-                    title="Artifact"
-                    onClick={() => {
-                        this.props.addCell(this.state.cell.cell_id, "Artifact");
-                    }}>
-                    Artifact
-                  </Dropdown.Item>
                   <hr/>
                   <Dropdown.Item
                     title="Add Cell From Hunt"
-                    onClick={this.addCellFromHunt}>
+                    onClick={()=>this.setState({showAddCellFromHunt: true})}>
                     Add Cell From Hunt
                   </Dropdown.Item>
                   <Dropdown.Item
                     title="Add Cell From Flow"
-                    onClick={this.addCellFromFlow}>
+                    onClick={()=>this.setState({showAddCellFromFlow: true})}>
                     Add Cell From Flow
                   </Dropdown.Item>
-                  <Dropdown.Item
-                    title="Add Cell From Artifact"
-                    onClick={this.addCellFromArtifact}>
-                    Add Cell From Artifact
-                  </Dropdown.Item>
+                  {this.state.cell && this.state.cell.type === "VQL" &&
+                   <Dropdown.Item
+                     title="Create Artifact from VQL"
+                     onClick={()=>this.setState({showCreateArtifactFromCell: true})}>
+                     Create Artifact from VQL
+                   </Dropdown.Item>}
                 </Dropdown.Menu>
               </Dropdown>
             </ButtonGroup>
@@ -312,7 +405,26 @@ export default class NotebookCellRenderer extends React.Component {
         );
 
         return (
-            <>
+            <>{ this.state.showAddCellFromHunt &&
+                <AddCellFromHunt
+                  addCell={(text, type)=>{
+                      this.props.addCell(this.state.cell.cell_id, type, text);
+                  }}
+                  closeDialog={()=>this.setState({showAddCellFromHunt: false})} />
+              }
+              { this.state.showAddCellFromFlow &&
+                <AddCellFromFlowDialog
+                  addCell={(text, type)=>{
+                      this.props.addCell(this.state.cell.cell_id, type, text);
+                  }}
+                  closeDialog={()=>this.setState({showAddCellFromFlow: false})} />
+              }
+              { this.state.showCreateArtifactFromCell &&
+                <CreateArtifactFromCell
+                  vql={this.state.input}
+                  onClose={()=>this.setState({showCreateArtifactFromCell: false})} />
+              }
+
               <div className={classNames({selected: selected, "notebook-cell": true})} >
                 <div className='notebook-input'>
                   { this.state.currently_editing && selected &&

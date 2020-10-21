@@ -20,8 +20,9 @@ class ClientLink extends React.Component {
         return (
             <>
               <Button size="sm" className="client-link"
-                onClick={this.link}
-                variant="outline-info">
+                      id={this.props.client_id}
+                      onClick={this.link}
+                      variant="outline-info">
                 <FontAwesomeIcon icon="external-link-alt"/>
                 <span className="button-label">{ this.props.client_id }</span>
               </Button>

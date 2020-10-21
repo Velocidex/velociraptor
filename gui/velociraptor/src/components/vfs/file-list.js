@@ -137,7 +137,6 @@ class VeloFileList extends Component {
                     client_id: this.props.client.client_id,
                     flow_id: this.state.lastRecursiveRefreshOperationId,
                 }).then((response) => {
-                    console.log(response);
                     let context = response.data.context;
                     if (context.state === "RUNNING") {
                         this.setState({lastRecursiveRefreshData: context});
@@ -204,7 +203,6 @@ class VeloFileList extends Component {
                     client_id: this.props.client.client_id,
                     flow_id: this.state.lastRecursiveDownloadOperationId,
                 }).then((response) => {
-                    console.log(response);
                     let context = response.data.context;
                     if (context.state === "RUNNING") {
                         this.setState({lastRecursiveDownloadData: context});

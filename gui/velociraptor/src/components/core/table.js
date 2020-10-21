@@ -18,7 +18,7 @@ import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Modal from 'react-bootstrap/Modal';
 import Navbar from 'react-bootstrap/Navbar';
-
+import VeloTimestamp from "../utils/time.js";
 import VeloNotImplemented from '../core/notimplemented.js';
 import VeloAce from '../core/ace.js';
 
@@ -397,7 +397,38 @@ export function formatColumns(columns) {
                 return a - b; // desc
             };
         }
+        switch(x.type) {
+        case "mb":
+            x.formatter=(cell, row) => {
+                if (cell) {
+                    return (cell /1024/1024).toFixed(0);
+                }
+                return <></>;
+            };
+            x.type = null;
+            break;
+        case "timestamp":
+            x.formatter= (cell, row) => {
+                return <VeloTimestamp usec={cell / 1000}/>;
+            };
+            x.type = null;
+            break;
 
+        case "download":
+            x.formatter= (cell, row) =>{
+                if (row.complete) {
+                    return <a href={row.path}  target="_blank"
+                              rel="noopener noreferrer">{cell}</a>;
+                };
+                return <>
+                         <FontAwesomeIcon icon="spinner" spin/>
+                         <span className="button-label">{cell}</span>
+                       </>;
+            };
+            x.type = null;
+            break;
+        default: break;
+        };
     });
 
     return columns;
