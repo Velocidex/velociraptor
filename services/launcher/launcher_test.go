@@ -172,14 +172,14 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(ctx, self.config_obj,
-		acl_manager, repository, request)
+		acl_manager, repository, false, request)
 	assert.Error(self.T(), err)
 
 	// Now make the tool download succeed. Compiling should work
 	// and we should calculate the hash.
 	status = 200
 	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, false, request)
 	assert.NoError(self.T(), err)
 
 	// Now that we already know the hash, we dont care about
@@ -187,7 +187,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	// automatically.
 	status = 404
 	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, false, request)
 	assert.NoError(self.T(), err)
 
 	// Check the compiler produced the correct environment
@@ -216,7 +216,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 
 	status = 200
 	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, false, request)
 	assert.NoError(self.T(), err)
 
 	filename := paths.ObfuscateName(self.config_obj, "Tool1")
@@ -289,7 +289,7 @@ func (self *LauncherTestSuite) TestCompiling() {
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, false, request)
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), 1, len(compiled.Env))
@@ -335,7 +335,7 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, false, request)
 	assert.NoError(self.T(), err)
 
 	// When we do not obfuscate, artifact descriptions are carried
@@ -345,7 +345,9 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 	// However when we obfuscate we remove descriptions.
 	self.config_obj.Frontend.DoNotCompressArtifacts = false
 	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository,
+		true, /* should_obfuscate */
+		request)
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), compiled.Query[1].Description, "")
@@ -378,7 +380,7 @@ func (self *LauncherTestSuite) TestCompilingPermissions() {
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, false, request)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), "EXECVE")
 
@@ -390,7 +392,7 @@ func (self *LauncherTestSuite) TestCompilingPermissions() {
 	// Should be fine now.
 	acl_manager = vql_subsystem.NewServerACLManager(self.config_obj, "UserX")
 	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, false, request)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(compiled.Query), 2)
 }
