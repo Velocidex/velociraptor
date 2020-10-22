@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
+import ReactJson from 'react-json-view';
+
 
 export default class VeloValueRenderer extends React.Component {
     static propTypes = {
@@ -13,10 +15,17 @@ export default class VeloValueRenderer extends React.Component {
         if (_.isString(v)) {
             return <>{v}</>;
         }
+        if (_.isNumber(v)) {
+            return JSON.stringify(v);
+        }
+
         return (
-            <>
-              {JSON.stringify(v)}
-            </>
+            <ReactJson name={false}
+                       collapsed={1}
+                       collapseStringsAfterLength={100}
+                       displayObjectSize={false}
+                       displayDataTypes={false}
+                       src={v} />
         );
     }
 };

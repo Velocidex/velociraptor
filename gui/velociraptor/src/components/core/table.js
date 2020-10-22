@@ -21,6 +21,8 @@ import Navbar from 'react-bootstrap/Navbar';
 import VeloTimestamp from "../utils/time.js";
 import VeloNotImplemented from '../core/notimplemented.js';
 import VeloAce from '../core/ace.js';
+import VeloValueRenderer from '../utils/value.js';
+
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
@@ -38,7 +40,7 @@ export class InspectRawJson extends Component {
             wrap: true,
             autoScrollEditorIntoView: true,
             minLines: 10,
-            maxLines: 1000,
+            maxLines: 100000,
         });
 
         ace.resize();
@@ -49,8 +51,12 @@ export class InspectRawJson extends Component {
 
     render() {
         let rows = [];
+        let max_rows = this.props.rows.length;
+        if (max_rows > 100) {
+            max_rows = 100;
+        }
 
-        for(var i=0;i<this.props.rows.length;i++) {
+        for(var i=0;i<max_rows;i++) {
             let copy = Object.assign({}, this.props.rows[i]);
             delete copy["_id"];
             rows.push(copy);
@@ -223,10 +229,7 @@ class VeloTable extends Component {
     }
 
     defaultFormatter = (cell, row, rowIndex) => {
-        if (_.isString(cell)) {
-            return cell;
-        }
-        return JSON.stringify(cell);
+        return <VeloValueRenderer value={cell}/>;
     }
 
     render() {
