@@ -17,6 +17,6 @@ div.error-message {
 }
 
 
-.notebook-cell {
+.notebook-output {
     overflow-x: auto;
 }

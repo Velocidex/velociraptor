@@ -2,12 +2,18 @@ import axios from 'axios';
 
 import _ from 'lodash';
 
-const api_handlers = "/api/";
+
+let api_handlers = window.base_path + "/api/";
+
+// In development we only support running from /
+if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+    api_handlers = "/api/";
+}
 
 
 const handle_error = err=>{
     let data = err.response && err.response.data;
-    data = data || "Generic Error";
+    data = data || err.message;
 
     if (data instanceof Blob) {
         return data.text();

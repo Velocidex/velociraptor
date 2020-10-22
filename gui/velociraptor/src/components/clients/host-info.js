@@ -15,6 +15,7 @@ import ToggleButton from 'react-bootstrap/ToggleButton';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
+import Spinner from '../utils/spinner.js';
 
 import { Link } from  "react-router-dom";
 import api from '../core/api-service.js';
@@ -180,6 +181,7 @@ class VeloHostInfo extends Component {
 
         if (this.state.mode === 'detailed') {
             return <div className="client-details dashboard">
+                     <Spinner loading={this.state.loading} />
                      <VeloReportViewer
                        artifact="Custom.Generic.Client.Info"
                        client={this.props.client}

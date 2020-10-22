@@ -134,10 +134,6 @@ export default class NotebooksList extends React.Component {
     }
 
     render() {
-        if (!this.props.notebooks || !this.props.notebooks.length) {
-            return <div>No Data available</div>;
-        }
-
         let columns = formatColumns([
             {dataField: "notebook_id", text: "NotebookId"},
             {dataField: "name", text: "Name",
@@ -230,18 +226,20 @@ export default class NotebooksList extends React.Component {
                 </ButtonGroup>
               </Navbar>
               <div className="fill-parent no-margins toolbar-margin selectable">
-                <BootstrapTable
-                  hover
-                  condensed
-                  keyField="notebook_id"
-                  bootstrap4
-                  headerClasses="alert alert-secondary"
-                  bodyClasses="fixed-table-body"
-                  data={this.props.notebooks}
-                  columns={columns}
-                  selectRow={ selectRow }
-                  filter={ filterFactory() }
-                />
+                {_.isEmpty(this.props.notebooks) ?
+                 <div className="no-content">No notebooks available - create one first</div> :
+                 <BootstrapTable
+                   hover
+                   condensed
+                   keyField="notebook_id"
+                   bootstrap4
+                   headerClasses="alert alert-secondary"
+                   bodyClasses="fixed-table-body"
+                   data={this.props.notebooks}
+                   columns={columns}
+                   selectRow={ selectRow }
+                   filter={ filterFactory() }
+                 />}
               </div>
             </>
         );

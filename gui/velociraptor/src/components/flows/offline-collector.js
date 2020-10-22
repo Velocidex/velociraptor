@@ -219,6 +219,13 @@ export default class OfflineCollectorWizard extends React.Component {
             PREV_STEP: this.gotoPrevStep(),
         };
 
+        let extra_tools = [
+            "VelociraptorWindows",
+            "VelociraptorLinux",
+            "VelociraptorWindows_x86",
+            "VelociraptorDarwin",
+        ];
+
         return (
             <Modal show={true}
                    className="full-height"
@@ -264,6 +271,11 @@ export default class OfflineCollectorWizard extends React.Component {
                   request={this.prepareRequest()} />
 
                 <NewCollectionLaunch
+                  artifacts={this.state.artifacts}
+                  tools={extra_tools}
+                  paginator={new OfflinePaginator(
+                      "Launch",
+                      "Create Offline Collector: Create collector")}
                   launch={this.launch} />
 
               </StepWizard>

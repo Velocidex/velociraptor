@@ -142,7 +142,9 @@ func CreateHunt(
 	}
 
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, config_obj, acl_manager, repository, hunt.StartRequest)
+		ctx, config_obj, acl_manager, repository,
+		true, /* should_obfuscate */
+		hunt.StartRequest)
 	if err != nil {
 		return "", err
 	}

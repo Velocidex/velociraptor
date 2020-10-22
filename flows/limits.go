@@ -50,7 +50,7 @@ func checkContextResourceLimits(config_obj *config_proto.Config,
 	if collection_context.Request.MaxUploadBytes > 0 &&
 		collection_context.TotalUploadedBytes > collection_context.Request.MaxUploadBytes {
 		collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
-		collection_context.Status = "Collected exceeded upload limits"
+		collection_context.Status = "Collection exceeded upload limits"
 		err = cancelCollection(config_obj, collection_context.ClientId,
 			collection_context.SessionId)
 	}

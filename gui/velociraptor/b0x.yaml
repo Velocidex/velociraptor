@@ -15,6 +15,7 @@ custom:
   - files:
       - "gui/velociraptor/build/static/**"
       - "gui/velociraptor/build/index.html"
+      - "gui/velociraptor/build/favicon.ico"
     base: "gui/velociraptor/build/"
     exclude:
       - "**/*~"

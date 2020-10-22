@@ -36,6 +36,7 @@ func (self *Launcher) CompileCollectorArgs(
 	config_obj *config_proto.Config,
 	acl_manager vql_subsystem.ACLManager,
 	repository services.Repository,
+	should_obfuscate bool,
 	collector_request *flows_proto.ArtifactCollectorArgs) (
 	*actions_proto.VQLCollectorArgs, error) {
 
@@ -96,7 +97,9 @@ func (self *Launcher) CompileCollectorArgs(
 		return nil, err
 	}
 
-	err = artifacts.Obfuscate(config_obj, vql_collector_args)
+	if should_obfuscate {
+		err = artifacts.Obfuscate(config_obj, vql_collector_args)
+	}
 	return vql_collector_args, err
 }
 
@@ -193,7 +196,9 @@ func (self *Launcher) ScheduleArtifactCollection(
 		// NOTE: We assume that compiling the artifact is a
 		// pure function so caching is appropriate.
 		compiled, err := self.CompileCollectorArgs(
-			ctx, config_obj, acl_manager, repository, collector_request)
+			ctx, config_obj, acl_manager, repository,
+			true, /* should_obfuscate */
+			collector_request)
 		if err != nil {
 			return "", err
 		}
