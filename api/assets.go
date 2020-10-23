@@ -1,5 +1,3 @@
-// +build release
-
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -28,7 +26,7 @@ import (
 
 	"github.com/gorilla/csrf"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
+	gui_assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -38,7 +36,7 @@ func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) 
 		base = config_obj.GUI.BasePath
 	}
 	dir := base + "/app/"
-	mux.Handle(dir, http.StripPrefix(dir, http.FileServer(assets.HTTP)))
+	mux.Handle(dir, http.StripPrefix(dir, http.FileServer(gui_assets.HTTP)))
 	mux.Handle("/favicon.png",
 		http.RedirectHandler(base+"/static/images/favicon.ico",
 			http.StatusMovedPermanently))
@@ -46,7 +44,7 @@ func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) 
 
 func GetTemplateHandler(
 	config_obj *config_proto.Config, template_name string) (http.Handler, error) {
-	data, err := assets.ReadFile(template_name)
+	data, err := gui_assets.ReadFile(template_name)
 	if err != nil {
 		utils.Debug(err)
 		return nil, err

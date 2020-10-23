@@ -343,6 +343,16 @@ func (self *ApiServer) UpdateNotebook(
 	in.CreatedTime = old_notebook.CreatedTime
 	in.NotebookId = old_notebook.NotebookId
 
+	// Filter out any empty cells.
+	cell_metadata := make([]*api_proto.NotebookCell, 0, len(in.CellMetadata))
+	for i := 0; i < len(in.CellMetadata); i++ {
+		cell := in.CellMetadata[i]
+		if cell.CellId != "" {
+			cell_metadata = append(cell_metadata, cell)
+		}
+	}
+	in.CellMetadata = cell_metadata
+
 	err = db.SetSubject(self.config, notebook_path_manager.Path(), in)
 	if err != nil {
 		return nil, err

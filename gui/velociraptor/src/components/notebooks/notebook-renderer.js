@@ -87,10 +87,12 @@ export default class NotebookRenderer extends React.Component {
         for (var i=0; i<cell_metadata.length; i++) {
             if (cell_metadata[i].cell_id === cell_id && cell_metadata.length > i) {
                 var next_cell = cell_metadata[i+1];
-                new_cells.push(next_cell);
-                new_cells.push(cell_metadata[i]);
-                i += 1;
-                changed = true;
+                if (!_.isEmpty(next_cell)) {
+                    new_cells.push(next_cell);
+                    new_cells.push(cell_metadata[i]);
+                    i += 1;
+                    changed = true;
+                }
             } else {
                 new_cells.push(cell_metadata[i]);
             }

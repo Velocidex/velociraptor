@@ -236,7 +236,7 @@ class VeloHostInfo extends Component {
             <>
               <div className="full-width-height">
                 <div className="client-info">
-                  <div className="btn-group float-left" data-toggle="buttons">
+                  <div className="btn-group float-left toolbar" data-toggle="buttons">
                     <Button variant="default"
                             onClick={this.startInterrogate}
                             disabled={this.state.interrogateOperationId}>

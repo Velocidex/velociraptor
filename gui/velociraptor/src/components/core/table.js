@@ -40,6 +40,7 @@ export class InspectRawJson extends Component {
             wrap: true,
             autoScrollEditorIntoView: true,
             minLines: 10,
+            readOnly: true,
             maxLines: 100000,
         });
 

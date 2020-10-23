@@ -5,7 +5,6 @@ pkg: velociraptor
 dest: "gui/velociraptor/"
 
 fmt: false
-tags: "release"
 compression:
     compress: true
 
