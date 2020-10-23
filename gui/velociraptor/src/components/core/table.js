@@ -22,7 +22,7 @@ import VeloTimestamp from "../utils/time.js";
 import VeloNotImplemented from '../core/notimplemented.js';
 import VeloAce from '../core/ace.js';
 import VeloValueRenderer from '../utils/value.js';
-
+import api from '../core/api-service.js';
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
@@ -420,7 +420,7 @@ export function formatColumns(columns) {
         case "download":
             x.formatter= (cell, row) =>{
                 if (row.complete) {
-                    return <a href={row.path}  target="_blank"
+                    return <a href={api.base_path + row.path}  target="_blank"
                               rel="noopener noreferrer">{cell}</a>;
                 };
                 return <>

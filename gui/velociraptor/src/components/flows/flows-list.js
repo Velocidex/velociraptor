@@ -383,7 +383,7 @@ export function getFlowColumns(client_id) {
          type: "timestamp"},
         {dataField: "request.creator", text: "Creator",
          sort: true, filtered: true},
-        {dataField: "total_uploaded_bytes", text: "Uploaded Mb",
+        {dataField: "total_uploaded_bytes", text: "Mb",
          align: 'right', sort: true, sortNumeric: true, type: "mb"},
         {dataField: "total_collected_rows", text: "Rows",
          sort: true, sortNumeric: true, align: 'right'}

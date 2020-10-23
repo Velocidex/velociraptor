@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"regexp"
 	"strings"
 	"sync"
 	"text/template"
@@ -42,6 +43,8 @@ import (
 // input to mess up the page but hopefully not to XSS.
 var (
 	bm_policy = NewBlueMondayPolicy()
+
+	whitespace_regexp = regexp.MustCompile("(?sm)^\\s*$")
 )
 
 type GuiTemplateEngine struct {
@@ -373,6 +376,12 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 		query, err := self.getMultiLineQuery(query)
 		if err != nil {
 			self.Error("VQL Error: %v", err)
+			return nil
+		}
+
+		// Specifically trap the empty string.
+		if whitespace_regexp.MatchString(query) {
+			self.Error("Please specify a query to run")
 			return nil
 		}
 

@@ -63,7 +63,7 @@ export default class FlowUploads extends React.Component {
                     <Card.Header>Uploaded Files</Card.Header>
                     <Card.Body>
                       <Spinner loading={this.state.loading}/>
-                      <div>No data available</div>
+                      <div className="no-content">Collection did not upload files</div>
                     </Card.Body>
                   </Card>
                 </CardDeck>
@@ -75,7 +75,7 @@ export default class FlowUploads extends React.Component {
             // make a zip file.
             vfs_path: (cell, row, rowIndex) => {
                 return (
-                    <a href={"/api/v1/DownloadVFSFile?client_id=" +
+                    <a href={api.base_path + "/api/v1/DownloadVFSFile?client_id=" +
                              this.props.flow.client_id +
                              "&vfs_path=" + encodeURIComponent(cell) }>
                       {cell}

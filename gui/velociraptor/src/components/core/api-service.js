@@ -3,13 +3,14 @@ import axios from 'axios';
 import _ from 'lodash';
 
 
-let api_handlers = window.base_path + "/api/";
+let base_path = window.base_path || "";
 
 // In development we only support running from /
 if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
-    api_handlers = "/api/";
+    base_path = "";
 }
 
+let api_handlers = base_path + "/api/";
 
 const handle_error = err=>{
     let data = err.response && err.response.data;
@@ -97,4 +98,5 @@ export default {
     post: post,
     upload: upload,
     hooks: hooks,
+    base_path: base_path,
 };
