@@ -26,5 +26,5 @@ sources:
 
       - |
         SELECT upload(file=expand(path=HomeDir) + "\\ntuser.dat",
-                      accessor="ntfs") as Upload
+                      accessor="file") as Upload
         FROM users

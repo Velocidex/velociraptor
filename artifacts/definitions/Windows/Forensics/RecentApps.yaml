@@ -38,7 +38,7 @@ sources:
                       string=Key.FullPath,
                       regex="/Users/(?P<User>[^/]+)/ntuser.dat").User AS User
             FROM read_reg_key(
-               globs=url(scheme="ntfs",
+               globs=url(scheme="file",
                   path=FullPath,
                   fragment=RecentAppsKey).String,
                accessor="raw_reg")

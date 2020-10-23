@@ -33,7 +33,7 @@ sources:
                 },
                 else= {
                     SELECT *, FullPath as Source
-                    FROM glob(globs=EventLog,accessor='ntfs')
+                    FROM glob(globs=EventLog, accessor='file')
                 })
 
       # Parse all target files, order by source and add dedupe string
@@ -55,7 +55,7 @@ sources:
                   System.Opcode as Opcode,
                   System.Task as Task,
                   Source
-                FROM parse_evtx(filename=FullPath, accessor='ntfs')
+                FROM parse_evtx(filename=FullPath, accessor='file')
                 WHERE System.EventID.Value = 7045 and
                   EventData.ImagePath =~ ComspecRegex
             })

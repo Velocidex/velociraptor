@@ -2,18 +2,18 @@ name: Windows.System.Powershell.PSReadline
 description: |
   This Artifact will search and extract lines from PSReadline history file.
 
-  Powershell is commonly used by attackers across all stages of the attack 
-  lifecycle. The PSReadline module is responsible for command history and from 
-  Powershell 5 on Windows 10 default configuration saves a copy of the console 
+  Powershell is commonly used by attackers across all stages of the attack
+  lifecycle. The PSReadline module is responsible for command history and from
+  Powershell 5 on Windows 10 default configuration saves a copy of the console
   history to disk.
-  
+
   There are several parameter's available for search leveraging regex.
   - SearchStrings enables regex search over a PSReadline line.
   - StringWhiteList enables a regex whitelist for results.
   - UserRegex enables a regex search on Username
   - UploadFiles enables upload ConsoleHost_history.txt in scope
-    
-    
+
+
 author: Matt Green - @mgreen27
 
 reference:
@@ -34,7 +34,7 @@ parameters:
   - name: UploadFiles
     description: "Upload ConsoleHost_history.txt files in scope"
     type: bool
-     
+
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
@@ -45,19 +45,19 @@ sources:
             expand(path=Directory) + ConsoleHostHistory as FullPath
         FROM Artifact.Windows.Sys.Users()
         WHERE Directory and Username =~ UserRegex
-        
+
         -- Extract targets PSReadline entries
         LET items = SELECT * FROM foreach(
             row=targets,
             query={
-                SELECT 
+                SELECT
                     Line,
                     Username,
                     FullPath
                 FROM parse_lines(filename=FullPath)
-                WHERE Line =~ SearchStrings 
-                    AND NOT if(condition=StringWhiteList, 
-                            then=Line =~ StringWhiteList, 
+                WHERE Line =~ SearchStrings
+                    AND NOT if(condition=StringWhiteList,
+                            then=Line =~ StringWhiteList,
                             else=FALSE)
             })
 
@@ -69,9 +69,9 @@ sources:
         -- if configured upload ConsoleHost_history.txt in results
         SELECT * FROM if(condition=UploadFiles,
             then={
-                SELECT 
+                SELECT
                     Username,
-                    upload(file=FullPath,accessor='ntfs') as ConsoleHost_history
+                    upload(file=FullPath) as ConsoleHost_history
                 FROM items
                 GROUP BY FullPath
             })

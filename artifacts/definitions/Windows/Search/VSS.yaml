@@ -38,7 +38,7 @@ sources:
       LET globvss(SearchGlob) = SELECT *,
             extract_path(FullPath=FullPath).Path AS Path,
             basename(path=extract_vss(FullPath=FullPath).Device) AS Source,
-            hash(path=FullPath,accessor='ntfs').SHA1 as SHA1
+            hash(path=FullPath, accessor='ntfs').SHA1 as SHA1
          FROM glob(globs=SearchGlob, accessor='ntfs')
          WHERE NOT IsDIr
 

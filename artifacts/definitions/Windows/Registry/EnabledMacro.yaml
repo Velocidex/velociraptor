@@ -37,7 +37,7 @@ sources:
               dirname(path=url(parse=FullPath).fragment) as Key,
               timestamp(epoch=Mtime.Sec) AS LastModified
             FROM glob(
-              globs=url(scheme="ntfs",
+              globs=url(scheme="file",
                 path=NTUser,
                 fragment=KeyGlob).String,
               accessor="raw_reg")
