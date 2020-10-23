@@ -36,6 +36,8 @@ func NewAuthenticator(config_obj *config_proto.Config) (Authenticator, error) {
 		return &SamlAuthenticator{}, nil
 	case "basic":
 		return &BasicAuthenticator{}, nil
+	case "oidc":
+		return &OidcAuthenticator{}, nil
 	}
 	return nil, errors.New("No valid authenticator found")
 }

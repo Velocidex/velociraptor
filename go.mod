@@ -25,6 +25,7 @@ require (
 	github.com/aws/aws-sdk-go v1.26.7
 	github.com/c-bata/go-prompt v0.2.3
 	github.com/clbanning/mxj v1.8.4
+	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/creack/pty v1.1.11 // indirect
 	github.com/crewjam/saml v0.3.1
 	github.com/davecgh/go-spew v1.1.1
@@ -75,6 +76,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect
+	github.com/pquerna/cachecontrol v0.0.0-20200921180117-858c6e7e6b7e // indirect
 	github.com/processout/grpc-go-pool v1.2.1
 	github.com/prometheus/client_golang v1.2.1
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
@@ -106,6 +108,7 @@ require (
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
+	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
