@@ -59,7 +59,9 @@ reports:
            WHERE CPUPercent >= 0
       {{ end }}
 
+      <div>
       {{ Query "resources" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 }}
+      </div>
 
       # Active Users
 
