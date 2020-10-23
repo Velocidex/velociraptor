@@ -16,6 +16,7 @@ import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import Alert from 'react-bootstrap/Alert';
 
 import UserForm from '../utils/users.js';
 import api from '../core/api-service.js';
@@ -33,7 +34,10 @@ class NewNotebook extends React.Component {
         if(!_.isEmpty(this.props.notebook)) {
             this.setState({
                 name: this.props.notebook.name,
+                notebook_id: this.props.notebook.notebook_id,
                 description: this.props.notebook.description,
+                modified_time: this.props.notebook.modified_time,
+                cell_metadata: this.props.notebook.cell_metadata,
                 collaborators: this.props.notebook.collaborators || [],
             });
         }
@@ -49,7 +53,9 @@ class NewNotebook extends React.Component {
             name: this.state.name,
             description: this.state.description,
             collaborators: this.state.collaborators,
+            modified_time: this.state.modified_time,
             notebook_id: this.state.notebook_id,
+            cell_metadata: this.state.cell_metadata,
         }).then(this.props.updateNotebooks);
     }
 
@@ -59,6 +65,7 @@ class NewNotebook extends React.Component {
         collaborators: [],
         users: [],
         notebook_id: undefined,
+        modified_time: undefined,
     }
 
     render() {
@@ -67,7 +74,11 @@ class NewNotebook extends React.Component {
                    size="lg"
                    onHide={this.props.closeDialog} >
               <Modal.Header closeButton>
-                <Modal.Title>Create a new Notebook</Modal.Title>
+                <Modal.Title>
+                  {_.isEmpty(this.props.notebook) ?
+                   "Create a new Notebook" :
+                   "Edit notebook " + this.props.notebook.notebook_id}
+                </Modal.Title>
               </Modal.Header>
 
               <Modal.Body>
@@ -118,6 +129,53 @@ class NewNotebook extends React.Component {
 }
 
 
+class DeleteNotebook extends React.Component {
+    static propTypes = {
+        notebook: PropTypes.object.isRequired,
+        closeDialog: PropTypes.func.isRequired,
+        updateNotebooks: PropTypes.func.isRequired,
+    }
+
+    deleteNotebook = () => {
+        let notebook = Object.assign({}, this.props.notebook);
+        notebook.hidden = true;
+        api.post("v1/UpdateNotebook", notebook).then(
+            this.props.updateNotebooks);
+    }
+
+    render() {
+        return (
+            <Modal show={true}
+                   size="lg"
+                   onHide={this.props.closeDialog} >
+              <Modal.Header closeButton>
+                <Modal.Title>
+                  Archive notebook {this.props.notebook.notebook_id}
+                </Modal.Title>
+              </Modal.Header>
+
+              <Modal.Body>
+                <Alert variant="danger" className="text-center">
+                  You are about to archive notebook {this.props.notebook.notebook_id}!
+                  You can always recover this notebook from the filestore later.
+                </Alert>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary"
+                        onClick={this.props.closeDialog}>
+                  Cancel
+                </Button>
+                <Button variant="primary"
+                        onClick={this.deleteNotebook}>
+                  Do It!!!
+                </Button>
+              </Modal.Footer>
+            </Modal>
+        );
+    }
+}
+
+
 
 export default class NotebooksList extends React.Component {
     static propTypes = {
@@ -129,15 +187,12 @@ export default class NotebooksList extends React.Component {
 
     state = {
         showNewNotebookDialog: false,
+        showDeleteNotebookDialog: false,
         showEditNotebookDialog: false,
         showExportNotebookDialog: false,
     }
 
     render() {
-        if (!this.props.notebooks || !this.props.notebooks.length) {
-            return <div>No Data available</div>;
-        }
-
         let columns = formatColumns([
             {dataField: "notebook_id", text: "NotebookId"},
             {dataField: "name", text: "Name",
@@ -176,6 +231,16 @@ export default class NotebooksList extends React.Component {
 
         return (
             <>
+              { this.state.showDeleteNotebookDialog &&
+                <DeleteNotebook
+                  notebook={this.props.selected_notebook}
+                  updateNotebooks={()=>{
+                      this.props.fetchNotebooks();
+                      this.setState({showDeleteNotebookDialog: false});
+                  }}
+                  closeDialog={() => this.setState({showDeleteNotebookDialog: false})}
+                />
+              }
               { this.state.showNewNotebookDialog &&
                 <NewNotebook
                   updateNotebooks={()=>{
@@ -211,7 +276,7 @@ export default class NotebooksList extends React.Component {
                   </Button>
 
                   <Button title="Delete Notebook"
-                          onClick={this.deleteNotebook}
+                          onClick={()=>this.setState({showDeleteNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="trash"/>
                   </Button>
@@ -230,18 +295,20 @@ export default class NotebooksList extends React.Component {
                 </ButtonGroup>
               </Navbar>
               <div className="fill-parent no-margins toolbar-margin selectable">
-                <BootstrapTable
-                  hover
-                  condensed
-                  keyField="notebook_id"
-                  bootstrap4
-                  headerClasses="alert alert-secondary"
-                  bodyClasses="fixed-table-body"
-                  data={this.props.notebooks}
-                  columns={columns}
-                  selectRow={ selectRow }
-                  filter={ filterFactory() }
-                />
+                {_.isEmpty(this.props.notebooks) ?
+                 <div className="no-content">No notebooks available - create one first</div> :
+                 <BootstrapTable
+                   hover
+                   condensed
+                   keyField="notebook_id"
+                   bootstrap4
+                   headerClasses="alert alert-secondary"
+                   bodyClasses="fixed-table-body"
+                   data={this.props.notebooks}
+                   columns={columns}
+                   selectRow={ selectRow }
+                   filter={ filterFactory() }
+                 />}
               </div>
             </>
         );

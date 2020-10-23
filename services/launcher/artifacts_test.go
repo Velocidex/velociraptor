@@ -130,7 +130,7 @@ func (self *ArtifactTestSuite) TestUnknownArtifact() {
 
 	_, err = launcher.CompileCollectorArgs(context.Background(), self.config_obj,
 		vql_subsystem.NullACLManager{},
-		self.repository, request)
+		self.repository, false, request)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), "Unknown artifact reference")
 }
@@ -147,7 +147,7 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 	assert.NoError(self.T(), err)
 	vql_request, err := launcher.CompileCollectorArgs(context.Background(),
 		self.config_obj, vql_subsystem.NullACLManager{},
-		self.repository, request)
+		self.repository, false, request)
 	assert.NoError(self.T(), err)
 
 	// If we fail this test make sure we take a resonable time.
@@ -173,7 +173,7 @@ func (self *ArtifactTestSuite) TestArtifactDependencies() {
 
 	vql_request, err := launcher.CompileCollectorArgs(context.Background(),
 		self.config_obj, vql_subsystem.NullACLManager{},
-		self.repository, request)
+		self.repository, false, request)
 	assert.NoError(self.T(), err)
 
 	// If we fail make sure we take a resonable time.

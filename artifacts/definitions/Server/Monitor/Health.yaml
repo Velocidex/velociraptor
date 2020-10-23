@@ -3,6 +3,11 @@ description: |
   This is the main server health dashboard. It is shown on the
   homescreen and enabled by default on all new installs.
 
+  You may edit this artifact to customize your server dashboard.
+
+  Alternativly, edit the Welcome screen at the
+  `Server.Internal.Welcome` artifact.
+
 type: SERVER_EVENT
 
 sources:

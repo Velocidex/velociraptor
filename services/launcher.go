@@ -112,6 +112,7 @@ type Launcher interface {
 		config_obj *config_proto.Config,
 		acl_manager vql_subsystem.ACLManager,
 		repository Repository,
+		should_obfuscate bool,
 		collector_request *flows_proto.ArtifactCollectorArgs) (
 		*actions_proto.VQLCollectorArgs, error)
 

@@ -57,7 +57,7 @@ sources:
             query={
                 SELECT FullPath, Data, Mtime.Sec AS Mtime, Username, Description, Uid, Gid, UUID, Directory
                 FROM glob(
-                    globs=url(scheme="ntfs",
+                    globs=url(scheme="file",
                     path=FullPath,
                     fragment=KeyGlob).String,
                     accessor="raw_reg")

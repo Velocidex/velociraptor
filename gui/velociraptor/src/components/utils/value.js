@@ -15,8 +15,13 @@ export default class VeloValueRenderer extends React.Component {
         if (_.isString(v)) {
             return <>{v}</>;
         }
+
         if (_.isNumber(v)) {
             return JSON.stringify(v);
+        }
+
+        if (_.isNull(v)) {
+            return "";
         }
 
         return (

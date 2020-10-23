@@ -126,7 +126,6 @@ export default class ToolViewer extends React.Component {
                 </Card>
             );
         }
-
         if (!tool.serve_locally && !this.state.hide_2) {
             cards.push(
                 <Card key={2}>
@@ -141,7 +140,7 @@ export default class ToolViewer extends React.Component {
                   <Card.Body>
                     <Card.Text>
                         Clients will fetch the tool directly from
-                        <a href={tool.url}>{tool.url}</a> if
+                        <a href={api.base_path + tool.url}>{tool.url}</a> if
                         needed. Note that if the hash does not match the
                         expected hash the clients will reject the file.
                     </Card.Text>

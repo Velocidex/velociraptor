@@ -345,6 +345,10 @@ export class EventTableWizard extends React.Component {
                   request={this.prepareRequest()} />
 
                 <NewCollectionLaunch
+                  artifacts={this.state.current_table.artifacts}
+                  paginator={new PaginationBuilder(
+                      "Launch",
+                      "New Collection: Launch collection")}
                   launch={this.launch} />
 
               </StepWizard>
@@ -491,6 +495,10 @@ export class ServerEventTableWizard extends React.Component {
                   request={this.prepareRequest().artifacts} />
 
                 <NewCollectionLaunch
+                  artifacts={this.state.current_table.artifacts}
+                  paginator={new PaginationBuilder(
+                      "Launch",
+                      "New Collection: Launch collection")}
                   launch={this.launch} />
 
               </StepWizard>

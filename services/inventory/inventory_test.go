@@ -191,6 +191,7 @@ tools:
 
 	response, err := launcher.CompileCollectorArgs(
 		ctx, self.config_obj, vql_subsystem.NullACLManager{}, repository,
+		false, /* should_obfuscate */
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
 		})
@@ -283,6 +284,7 @@ tools:
 
 	response, err := launcher.CompileCollectorArgs(
 		ctx, self.config_obj, vql_subsystem.NullACLManager{}, repository,
+		false, /* should_obfuscate */
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
 		})

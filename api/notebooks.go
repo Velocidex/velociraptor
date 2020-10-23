@@ -336,7 +336,12 @@ func (self *ApiServer) UpdateNotebook(
 		return nil, errors.New("Edit clash detected.")
 	}
 
+	// When updating an existing notebook only certain fields may
+	// be changed by the user - definitely not the creator, created time or notebookId.
 	in.ModifiedTime = time.Now().Unix()
+	in.Creator = old_notebook.Creator
+	in.CreatedTime = old_notebook.CreatedTime
+	in.NotebookId = old_notebook.NotebookId
 
 	err = db.SetSubject(self.config, notebook_path_manager.Path(), in)
 	if err != nil {

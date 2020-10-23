@@ -76,7 +76,7 @@ export default class FlowLogs extends React.Component {
         return (
             <CardDeck>
               <Card>
-                <Card.Header>Client logs</Card.Header>
+                <Card.Header>Query logs</Card.Header>
                 <Card.Body>
                   <Spinner loading={this.state.loading}/>
                   <VeloTable

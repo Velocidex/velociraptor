@@ -40,7 +40,7 @@ sources:
                 EnableUnsafeClientMailRules,
                 OutlookSecureTempFolder
               FROM read_reg_key(
-                 globs=url(scheme="ntfs",
+                 globs=url(scheme="file",
                     path=FullPath,
                     fragment=KeyGlob).String,
                  accessor="raw_reg")

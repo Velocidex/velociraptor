@@ -137,6 +137,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		request, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, acl_manager, self.repository,
+			false, /* should_obfuscate */
 			&flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{artifact_name},
 			})

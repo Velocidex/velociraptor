@@ -352,6 +352,10 @@ export default class NewHuntWizard extends React.Component {
                   request={this.prepareRequest()} />
 
                 <NewCollectionLaunch
+                  artifacts={this.state.artifacts}
+                  paginator={new PaginationBuilder(
+                      "Launch",
+                      "Create Hunt: Launch hunt")}
                   launch={this.launch} />
 
               </StepWizard>

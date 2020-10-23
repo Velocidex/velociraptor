@@ -4,6 +4,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 
+import Alert from 'react-bootstrap/Alert';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
@@ -333,39 +334,12 @@ class NewCollectionConfigParameters extends React.Component {
 
 class NewCollectionResources extends React.Component {
     static propTypes = {
-        request: PropTypes.object,
+        resources: PropTypes.object,
         setResources: PropTypes.func,
         paginator: PropTypes.object,
     }
 
-    state = {
-        initialized_from_parent: false,
-        ops_per_second: null,
-        timeout: null,
-        max_rows: null,
-        max_mbytes: null,
-    }
-
-    componentDidMount = () => {
-        this.initFromParent();
-    }
-
-    componentDidUpdate = (prevProps, prevState, rootNode) => {
-        this.initFromParent();
-    }
-
-    initFromParent = () => {
-        let request = this.props.request;
-        if (request && !this.state.initialized_from_parent) {
-            this.setState({
-                initialized_from_parent: true,
-                ops_per_second: request.ops_per_second,
-                timeout: parseInt(request.timeout),
-                max_rows: request.max_rows,
-                max_mbytes: (request.max_upload_bytes || 0) / 1024 / 1024,
-            });
-        }
-    }
+    state = {}
 
     isInvalid = () => {
         return this.state.invalid_1 || this.state.invalid_2 ||
@@ -373,6 +347,7 @@ class NewCollectionResources extends React.Component {
     }
 
     render() {
+        let resources = this.props.resources || {};
         return (
             <>
               <Modal.Header closeButton>
@@ -385,9 +360,9 @@ class NewCollectionResources extends React.Component {
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder="Unlimited"
-                        defaultValue={this.state.ops_per_second}
+                        value={resources.ops_per_second}
                         setInvalid={value => this.setState({invalid_1: value})}
-                        setValue={value => this.setState({ops_per_second: value})} />
+                        setValue={value => this.props.setResources({ops_per_second: value})} />
                     </Col>
                   </Form.Group>
 
@@ -396,9 +371,9 @@ class NewCollectionResources extends React.Component {
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder="600"
-                        defaultValue={this.state.timeout}
+                        value={resources.timeout}
                         setInvalid={value => this.setState({invalid_2: value})}
-                        setValue={value => this.setState({timeout: value})} />
+                        setValue={value => this.props.setResources({timeout: value})} />
                     </Col>
                   </Form.Group>
 
@@ -407,9 +382,9 @@ class NewCollectionResources extends React.Component {
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder="Unlimited"
-                        defaultValue={this.state.max_rows}
+                        value={resources.max_rows}
                         setInvalid={value => this.setState({invalid_3: value})}
-                        setValue={value => this.setState({max_rows: value})} />
+                        setValue={value => this.props.setResources({max_rows: value})} />
                     </Col>
                   </Form.Group>
 
@@ -418,9 +393,9 @@ class NewCollectionResources extends React.Component {
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder="Unlimited"
-                        defaultValue={this.state.max_mbytes}
+                        value={resources.max_mbytes}
                         setInvalid={value => this.setState({invalid_4: value})}
-                        setValue={value => this.setState({max_mbytes: value})} />
+                        setValue={value => this.props.setResources({max_mbytes: value})} />
                     </Col>
                   </Form.Group>
                 </Form>
@@ -428,7 +403,6 @@ class NewCollectionResources extends React.Component {
               <Modal.Footer>
             { this.props.paginator.makePaginator({
                     props: this.props,
-                    onBlur: () => this.props.setResources(this.state),
                     isFocused: this.isInvalid(),
                 }) }
               </Modal.Footer>
@@ -470,20 +444,113 @@ class NewCollectionRequest extends React.Component {
 
 class NewCollectionLaunch extends React.Component {
     static propTypes = {
+        artifacts: PropTypes.array,
         launch: PropTypes.func,
         isActive: PropTypes.bool,
+        paginator: PropTypes.object,
+        tools: PropTypes.array,
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
         if (this.props.isActive && !prevProps.isActive) {
-            this.props.launch();
-            // Go back to the start in case the collection failed.
-            this.props.goToStep(1);
+            this.processTools();
         }
     }
 
+    state = {
+        tools: {},
+        current_tool: "",
+        current_error: "",
+        checking_tools: [],
+    }
+
+    processTools = () => {
+        // Extract all the tool names from the artifacts we collect.
+        let tools = {};
+        _.each(this.props.tools, t=>{
+            tools[t] = true;
+        });
+
+        _.each(this.props.artifacts, a=>{
+            _.each(a.tools, t=>{
+                tools[t.name] = t;
+            });
+        });
+
+        this.setState({
+            tools: {},
+            current_tool: "",
+            current_error: "",
+            checking_tools: [],
+        });
+        this.checkTools(tools);
+    }
+
+    checkTools = tools_dict => {
+        let tools = Object.assign({}, tools_dict);
+        let tool_names = Object.keys(tools);
+
+        if (_.isEmpty(tool_names)) {
+            this.props.launch();
+            return;
+        }
+
+        // Recursively call this function with the first tool.
+        var first_tool = tool_names[0];
+
+        // Clear it.
+        delete tools[first_tool];
+
+        // Inform the user we are checking this tool.
+        let checking_tools = this.state.checking_tools;
+        checking_tools.push(first_tool);
+        this.setState({current_tool: first_tool, checking_tools: checking_tools});
+
+        api.get('v1/GetToolInfo', {
+            name: first_tool,
+            materialize: true,
+        }).then(response=>{
+            this.checkTools(tools);
+        }).catch(err=>{
+            let data = err.response && err.response.data;
+            this.setState({current_error: data});
+        });
+    }
+
     render() {
-        return <></>;
+        return <>
+                 <Modal.Header closeButton>
+                   <Modal.Title>{ this.props.paginator.title }</Modal.Title>
+                 </Modal.Header>
+                 <Modal.Body>
+                   {_.map(this.state.checking_tools, (name, idx)=>{
+                       let variant = "success";
+                       if (name === this.state.current_tool) {
+                           variant = "primary";
+
+                           if (this.state.current_error) {
+                               return (
+                                   <Alert key={idx} variant="danger" className="text-center">
+                                     Checking { name }: {this.state.current_error}
+                                   </Alert>
+                               );
+                           }
+                       }
+
+                       return (
+                           <Alert key={idx} variant={variant} className="text-center">
+                              Checking { name }
+                           </Alert>
+                       );
+                   })}
+                 </Modal.Body>
+                 <Modal.Footer>
+                   { this.props.paginator.makePaginator({
+                       props: this.props,
+                       onBlur: ()=>this.setState({checking_tools: []}),
+                   }) }
+                 </Modal.Footer>
+               </>;
     }
 }
 
@@ -510,8 +577,16 @@ class NewCollectionWizard extends React.Component {
             return;
         }
 
+        let resources = {
+            ops_per_second: request.ops_per_second,
+            timeout: request.timeout,
+            max_rows: request.max_rows,
+            max_mbytes: (request.max_upload_bytes || 0) / 1024 / 1024,
+        };
+
         this.setState({
             original_flow: this.props.baseFlow,
+            resources: resources,
             initialized_from_parent: true,
         });
 
@@ -520,9 +595,14 @@ class NewCollectionWizard extends React.Component {
                 if (response && response.data &&
                     response.data.items && response.data.items.length) {
 
+                    let parameters = {};
+                    _.each(request.parameters.env, param=>{
+                        parameters[param.key] = param.value;
+                    });
+
                     this.setState({
                         artifacts: [...response.data.items],
-                        parameters: request.parameters,
+                        parameters: parameters,
                     });
                 }});
     }
@@ -550,7 +630,8 @@ class NewCollectionWizard extends React.Component {
     }
 
     setResources = (resources) => {
-        this.setState({resources: resources});
+        let new_resources = Object.assign(this.state.resources, resources);
+        this.setState({resources: new_resources});
     }
 
     // Let our caller know the artifact request we created.
@@ -668,7 +749,7 @@ class NewCollectionWizard extends React.Component {
                     request={request}/>
 
                   <NewCollectionResources
-                    request={request}
+                    resources={this.state.resources}
                     paginator={new PaginationBuilder(
                         "Specify Resorces",
                         "New Collection: Specify Resources")}
@@ -680,8 +761,12 @@ class NewCollectionWizard extends React.Component {
                         "New Collection: Review request")}
                     request={this.prepareRequest()} />
 
-                  <NewCollectionLaunch
-                    launch={this.launch} />
+                    <NewCollectionLaunch
+                      artifacts={this.state.artifacts}
+                      paginator={new PaginationBuilder(
+                          "Launch",
+                          "New Collection: Launch collection")}
+                      launch={this.launch} />
                 </StepWizard>
                 </ObserveKeys></HotKeys>
             </Modal>
