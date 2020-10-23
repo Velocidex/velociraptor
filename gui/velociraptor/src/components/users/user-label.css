@@ -1,0 +1,9 @@
+.user-label {
+    max-height: 38px;
+}
+
+.user-label img {
+    max-height: 24px;
+    padding: 0;
+    margin-left: 5px;
+}

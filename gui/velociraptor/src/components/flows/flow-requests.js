@@ -50,6 +50,7 @@ export default class FlowRequests extends React.Component {
                 <Card.Header>Request sent to client</Card.Header>
                 <Card.Body>
                   <VeloAce text={serialized}
+                           mode="json"
                            options={options} />
                 </Card.Body>
               </Card>

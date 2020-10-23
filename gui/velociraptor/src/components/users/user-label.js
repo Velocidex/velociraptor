@@ -1,3 +1,5 @@
+import './user-label.css';
+
 import React from 'react';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
@@ -14,7 +16,7 @@ export default class UserLabel extends React.Component {
     render() {
         return (
             <>
-              <ButtonGroup>
+              <ButtonGroup className="user-label">
                 <Button href={"/logoff?username="+ this.context.traits.username }>
                   <FontAwesomeIcon icon="sign-out-alt" />
                 </Button>

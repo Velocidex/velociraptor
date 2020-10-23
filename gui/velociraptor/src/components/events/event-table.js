@@ -325,7 +325,7 @@ export class EventTableWizard extends React.Component {
                       "Event Monitoring: Select artifacts to collect from label group " + label,
                       ()=>false)}
                   artifacts={this.state.current_table.artifacts}
-                  type="CLIENT_EVENT"
+                  artifactType="CLIENT_EVENT"
                   setArtifacts={this.setArtifacts}/>
 
                 <NewCollectionConfigParameters
@@ -475,7 +475,7 @@ export class ServerEventTableWizard extends React.Component {
                       "Server Event Monitoring: Select artifacts to collect on the server",
                       ()=>false)}
                   artifacts={this.state.current_table.artifacts}
-                  type="SERVER_EVENT"
+                  artifactType="SERVER_EVENT"
                   setArtifacts={this.setArtifacts}/>
 
                 <NewCollectionConfigParameters

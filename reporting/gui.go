@@ -44,7 +44,7 @@ import (
 var (
 	bm_policy = NewBlueMondayPolicy()
 
-	whitespace_regexp = regexp.MustCompile("(?sm)^\\s*$")
+	whitespace_regexp = regexp.MustCompile("^\\s*$")
 )
 
 type GuiTemplateEngine struct {
