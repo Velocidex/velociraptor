@@ -15,7 +15,7 @@ import Row from 'react-bootstrap/Row';
 import VeloReportViewer from "../artifacts/reporting.js";
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
-import Spinner from 'react-bootstrap/Spinner';
+import Spinner from '../utils/spinner.js';
 import Col from 'react-bootstrap/Col';
 
 import StepWizard from 'react-step-wizard';
@@ -204,28 +204,23 @@ class NewCollectionSelectArtifacts extends React.Component {
               <Modal.Body>
                 <div className="row new-artifact-page">
                   <div className="col-6 new-artifact-search-table selectable">
-                    {
-                        <BootstrapTable
-                          hover
-                          condensed
-                          bootstrap4
-                          remote={ { filter: true } }
-                          filter={ filterFactory() }
-                          keyField="name"
-                          data={this.state.matchingDescriptors}
-                          columns={columns}
-                          selectRow={ selectRow }
-                          onTableChange={ this.updateSearch }
-                        />
-                    }
+                    { this.state.loading && <Spinner loading={this.state.loading}/> }
+                    <BootstrapTable
+                      hover
+                      condensed
+                      bootstrap4
+                      remote={ { filter: true } }
+                      filter={ filterFactory() }
+                      keyField="name"
+                      data={this.state.matchingDescriptors}
+                      columns={columns}
+                      selectRow={ selectRow }
+                      onTableChange={ this.updateSearch }
+                    />
+
                   </div>
                   <div name="ArtifactInfo" className="col-6 new-artifact-description">
-                    { this.loading ? <Spinner
-                                       animation="border" role="status">
-                                       <span className="sr-only">Loading...</span>
-                                     </Spinner> :
-
-                      this.state.selectedDescriptor &&
+                    { this.state.selectedDescriptor &&
                       <VeloReportViewer
                         artifact={this.state.selectedDescriptor.name}
                         type="ARTIFACT_DESCRIPTION"
@@ -293,7 +288,13 @@ class NewCollectionConfigParameters extends React.Component {
             showExpandColumn: true,
             renderer: artifact => {
                 return _.map(artifact.parameters || [], (param, idx) => {
-                    let value = this.props.parameters[param.name] || param.default || "";
+                    let value = this.props.parameters[param.name];
+                    // Only set default value if the parameter is not
+                    // defined. If it is an empty string then so be
+                    // it.
+                    if (_.isUndefined(value)) {
+                        value = param.default || "";
+                    }
 
                     return (
                         <VeloForm param={param} key={idx}
