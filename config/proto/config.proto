@@ -252,7 +252,10 @@ message GUILink {
 message Authenticator {
     string type = 1;
 
-    // OAuth2 Authenticator (Google, Github, Azure etc).
+    // OIDC/OAuth2 Authenticator (Google, Github, Azure etc).
+    string oidc_issuer = 4 [(sem_type) = {
+            description: "URL to OIDC Configuration Document. The configuration should be available in the 'oidc_issuer + /.well-known/openid-configuration' endpoint. ",
+        }];
     string oauth_client_id = 5 [(sem_type) = {
             description: "If set we use oauth authentication flow.",
         }];
