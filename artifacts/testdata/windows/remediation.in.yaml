@@ -7,4 +7,3 @@ Queries:
   # Test rolling back sinkhole - output none
   - SELECT * FROM Artifact.Windows.Remediation.Sinkhole(RestoreBackup="True")
   - SELECT hash(filename=FullPath) FROM stat(filename='C:\Windows\System32\drivers\etc\hosts')
-      hash(filename=HostsFileBackup)
