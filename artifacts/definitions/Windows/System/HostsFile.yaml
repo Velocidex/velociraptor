@@ -1,6 +1,6 @@
 name: Windows.System.HostsFile
 description: |
-   Parses the Windows hosts file.
+   Parses the Windows Hostsfile.
 
 author: Matt Green - @mgreen27
 
@@ -27,7 +27,8 @@ sources:
             string=Line,
             regex=[
                 "^\\s+(?P<Resolution>[^\\s]+)\\s+" +
-                "(?P<Hostname>[^\\s]+)\\s*\\S*$"
+                "(?P<Hostname>[^\\s]+)\\s*" +
+                "(?P<Comment>#*.*)$"
             ]) as Record,
             Line
         FROM parse_lines(filename=HostFile)
@@ -39,5 +40,6 @@ sources:
 
       SELECT
         Record.Hostname as Hostname,
-        Record.Resolution as Resolution
+        Record.Resolution as Resolution,
+        Record.Comment as Comment
       FROM results
