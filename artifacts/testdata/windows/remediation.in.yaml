@@ -1,9 +1,7 @@
 Queries:
+  # Test Sinkhole remediation - output should be only default artifact entry\
+  - SELECT * FROM Artifact.Windows.Remediation.Sinkhole()
 
-  # Test Sinkhole remediation - output should be only default artifact entry
-  - SELECT hash(path=FullPath) FROM stat(filename='C:\\Windows\\\System32\\drivers\\etc\\hosts')
-  - SELECT *, hash(path=HostsFileBackup) FROM Artifact.Windows.Remediation.Sinkhole()
-
-  # Test rolling back sinkhole - output none
+  # Test rolling back sinkhole - output none and check hash of hosts file at end.
   - SELECT * FROM Artifact.Windows.Remediation.Sinkhole(RestoreBackup="True")
   - SELECT hash(path=FullPath) FROM stat(filename='C:\\Windows\\System32\\drivers\\etc\\hosts')
