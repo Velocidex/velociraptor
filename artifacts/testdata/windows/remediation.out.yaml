@@ -1,0 +1,8 @@
+SELECT * FROM Artifact.Windows.Remediation.Sinkhole()[
+ {
+  "Hostname": "mega.co.nz",
+  "Resolution": "127.0.0.1",
+  "Comment": "# Velociraptor sinkhole: MEGASync file sharing",
+  "_Source": "Windows.Remediation.Sinkhole"
+ }
+]SELECT * FROM Artifact.Windows.Remediation.Sinkhole(RestoreBackup="True")[]

@@ -1,6 +1,6 @@
 Queries:
-  # Test Sinkhole remediation
+  # Test Sinkhole remediation - output should be only default artifact entry
   - SELECT * FROM Artifact.Windows.Remediation.Sinkhole()
 
-  # Test rolling back sinkhole
+  # Test rolling back sinkhole - output none
   - SELECT * FROM Artifact.Windows.Remediation.Sinkhole(RestoreBackup="True")
