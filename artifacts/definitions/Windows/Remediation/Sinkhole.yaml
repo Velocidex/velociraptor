@@ -1,23 +1,19 @@
 name: Windows.Remediation.Sinkhole
 description: |
    **Apply a Sinkhole via Windows hosts file modification**  
-   This content will apply modifications to the Windows hosts file by a 
-   configurable lookup table.  
-   During application, the configuration is backed up and used as the base for 
-   subsequent changes.  
-   
-   Parameters:  
-   HostsFile - path to hosts file
-   HostsFileBackup - name to backup original hosts file. If reapplying policy.  
-   this is the configuration used as base.  
-   CommentPrefix -  prefix to add to description in hosts file comments.  
-   RestoreBackup - checkbox to enable restoration of backup hosts file.  
-   SinkholeTable - table of Domains to add to or modify in hosts file.
+   This content will modify the Windows hosts file by a configurable 
+   lookup table.  
+
+   On application, the original configuration is backed up.  
+   When reapplying a sinkhole, the original configuration is restored then 
+   changes applied to maintain integrity of the restore process.  
+   If RestoreBackup is selected the artifact will restore the backup 
+   configuration, then delete the backup with no further processing.
    
    NOTE:
    Modifying the hosts file may cause network communication issues. I have 
-   disabled any sinkhole settings on the Velociraptor configuration but there 
-   are no rail guards on other domains. Use with caution.
+   disabled any sinkhole settings on the Velociraptor agent configuration 
+   but there are no rail guards on other domains. Use with caution.
 
 author: Matt Green - @mgreen27
 
@@ -28,19 +24,23 @@ type: CLIENT
 
 parameters:
   - name: HostsFile
+    description: Path to hosts file
     default: C:\Windows\System32\drivers\etc\hosts
   - name: HostsFileBackup
+    description: Name to backup original hosts file. If reapplying the artifact this file is used as the base.
     default: C:\Windows\System32\drivers\etc\hosts.velociraptor.backup
   - name: CommentPrefix
+    description: Prefix to add to description in hosts file comments.
     default: "Velociraptor sinkhole"
   - name: RestoreBackup
     description: "Restore hosts file backup"
     type: bool
   - name: SinkholeTable
+    description: Table of Domains to add to or modify in hosts file.
     type: csv
     default: |
         Domain,Sinkhole,Description
-        mega.co.nz,127.0.0.1,MEGASync file sharing
+        evil.com,127.0.0.1,Evilcorp C2 domain
 
 
 sources:
@@ -49,7 +49,7 @@ sources:
 
     query: |
       -- Extract sink hole requirements from table
-      LET changes = SELECT 
+      LET changes <= SELECT 
                 Domain,
                 Sinkhole,
                 if(condition=Description,
