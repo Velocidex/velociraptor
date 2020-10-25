@@ -1,0 +1,6 @@
+Queries:
+  # Test Sinkhole remediation
+  - SELECT * FROM Artifact.Windows.Remediation.Sinkhole()
+
+  # Test rolling back sinkhole
+  - SELECT * FROM Artifact.Windows.Remediation.Sinkhole(RestoreBackup="True")
