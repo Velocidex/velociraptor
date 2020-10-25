@@ -12,7 +12,7 @@ description: |
    this is the configuration used as base.  
    CommentPrefix -  prefix to add to description in hosts file comments.  
    RestoreBackup - checkbox to enable restoration of backup hosts file.  
-   SinkHoleTable - table of Domains to add to hosts file.
+   SinkholeTable - table of Domains to add to or modify in hosts file.
    
    NOTE:
    Modifying the hosts file may cause network communication issues. I have 
@@ -36,12 +36,11 @@ parameters:
   - name: RestoreBackup
     description: "Restore hosts file backup"
     type: bool
-  - name: SinkHoleTable
+  - name: SinkholeTable
     type: csv
     default: |
         Domain,Sinkhole,Description
         mega.co.nz,127.0.0.1,MEGASync file sharing
-        test.com,127.0.0.1,google test
 
 
 sources:
@@ -56,7 +55,7 @@ sources:
                 if(condition=Description,
                   then= CommentPrefix + ': ' + Description,
                   else= CommentPrefix) as Description
-            FROM parse_csv(filename=SinkHoleTable, accessor='data') 
+            FROM parse_csv(filename=SinkholeTable, accessor='data') 
 
       -- Check for backup to determine if sinkhole applied
       LET check_backup = SELECT FullPath FROM stat(filename=HostsFileBackup)

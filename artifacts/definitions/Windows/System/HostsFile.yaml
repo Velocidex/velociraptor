@@ -4,10 +4,10 @@ description: |
 
 author: Matt Green - @mgreen27
 
-
 type: CLIENT
+
 parameters:
-  - name: HostFile
+  - name: HostsFile
     default: C:\Windows\System32\drivers\etc\hosts
   - name: HostnameRegex
     description: "Hostname target Regex in Hostsfile"
@@ -19,7 +19,7 @@ parameters:
 
 sources:
   - precondition:
-      SELECT OS From info() where OS = 'windows' OR OS = 'linux' OR OS = 'darwin'
+      SELECT OS From info() where OS = 'windows'
 
     query: |
       -- Parse hosts file
@@ -31,7 +31,7 @@ sources:
                 "(?P<Comment>#*.*)$"
             ]) as Record,
             Line
-        FROM parse_lines(filename=HostFile)
+        FROM parse_lines(filename=HostsFile)
         WHERE 
             Line 
             AND NOT Line =~ '^#'
