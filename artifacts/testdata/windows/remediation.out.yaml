@@ -1,4 +1,12 @@
-SELECT *, hash(path=HostsFileBackup) FROM Artifact.Windows.Remediation.Sinkhole()[
+SELECT hash(path=FullPath) FROM stat(filename='C:\\Windows\\System32\\drivers\\etc\\hosts')[
+ {
+  "hash(path=FullPath)": {
+   "MD5": "2c19c773846accf43dbe7a5fafc52b6a",
+   "SHA1": "39995337d79ad8163cca6222a2fac8bb1e35a93a",
+   "SHA256": "5b4121185c52895f75af01e3d9f1e59d48327c25492f273dd1250689f5d682e7"
+  }
+ }
+]SELECT * FROM Artifact.Windows.Remediation.Sinkhole()[
  {
   "Hostname": "evil.com",
   "Resolution": "127.0.0.1",
