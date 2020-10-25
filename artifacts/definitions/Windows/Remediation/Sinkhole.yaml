@@ -147,7 +147,6 @@ sources:
             WHERE 
                 NOT Domain in find_modline.Domain
                 AND NOT Domain in find_newline.Domain
-                AND NOT Domain in extracted_config.Domain
 
       -- Add all lines to staging object
       LET build_lines = SELECT Line FROM chain(
