@@ -341,7 +341,7 @@ export default class NewHuntWizard extends React.Component {
                 />
 
                 <NewCollectionResources
-                  paginator={new HuntPaginator("Specify Resorces",
+                  paginator={new HuntPaginator("Specify Resources",
                                                "Create Hunt: Specify resource limits")}
 
                   setResources={this.setResources} />

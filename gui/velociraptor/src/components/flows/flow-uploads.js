@@ -33,7 +33,6 @@ export default class FlowUploads extends React.Component {
     }
 
     fetchRows = () => {
-        console.log("Fetching rows");
         let params = {
             client_id: this.props.flow.client_id,
             flow_id: this.props.flow.session_id,

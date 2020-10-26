@@ -50,11 +50,11 @@ export default withRouter(SidebarKeyNavigator);
 export const SidebarKeyMap = {
     GOTO_DASHBOARD: {
         name: "Display server dashboard",
-        sequence: "ctrl+d",
+        sequence: "alt+d",
     },
     GOTO_ARTIFACTS: {
         name: "Goto artifact view",
-        sequence: "ctrl+a",
+        sequence: "alt+a",
     },
     GOTO_NOTEBOOKS: {
         name: "Goto notebooks",
@@ -62,7 +62,7 @@ export const SidebarKeyMap = {
     },
     GOTO_COLLECTIONS: {
         name: "Goto collected artifact",
-        sequence: "ctrl+c",
+        sequence: "alt+shift+c",
     },
     GOTO_SEARCH: "ctrl+shift+/",
 };
