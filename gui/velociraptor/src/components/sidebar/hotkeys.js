@@ -62,7 +62,7 @@ export const SidebarKeyMap = {
     },
     GOTO_COLLECTIONS: {
         name: "Goto collected artifact",
-        sequence: "alt+shift+c",
+        sequence: "alt+c",
     },
     GOTO_SEARCH: "ctrl+shift+/",
 };

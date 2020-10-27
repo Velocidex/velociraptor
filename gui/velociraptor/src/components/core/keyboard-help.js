@@ -11,9 +11,9 @@ const KeyMap = {
 
 const helpTextCol1 = [
     ["Global hotkeys", [
-        ["ctrl+d", "Goto dashboard"],
+        ["alt+d", "Goto dashboard"],
         ["alt+n", "Goto notebooks"],
-        ["ctrl+c", "Collected artifacts"],
+        ["alt+c", "Collected artifacts"],
         ["ctrl+/", "Show/Hide keyboard hotkeys help"],
         ["ctrl+?", "Focus client search box"],
     ]],
@@ -49,17 +49,26 @@ export default class KeyboardHelp extends React.PureComponent {
 
     renderKey = (key) => {
         let parts = key.split("+");
-        switch (parts[0]) {
-        case "alt":
-        case "ctrl":
-            return <>
-                     <span className="highlight ctrl">&lt;{parts[0]}&gt;</span>
-                     <span className=""> + </span>
-                     <span className="highlight">{parts[1]}</span>
-                   </>;
-        default:
-            return <span className="highlight">{key}</span>;
-        };
+        let results = [];
+
+        for(let i=0; i<parts.length; i++) {
+            let part = parts[i];
+            switch (part) {
+            case "alt":
+            case "shift":
+            case "ctrl":
+                results.push(
+                    <span className="highlight ctrl">&lt;{part}&gt;</span>
+                );
+                break;
+            default:
+                results.push(<span className="highlight">{part}</span>);
+            };
+            if (i !== parts.length -1) {
+                results.push(<span className=""> + </span>);
+            };
+        }
+        return results;
     }
 
     makeColumn = (specs) => {
