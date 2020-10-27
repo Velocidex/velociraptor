@@ -1,13 +1,24 @@
 Parameters:
   HostFile: C:\Windows\System32\drivers\etc\hosts
+  SinkHoleTable: |
+        Domain,Sinkhole,Description
+        evil.com,127.0.0.1,Evilcorp C2 domain
 
 Queries:
-  # Test Sinkhole remediation - output should be only default artifact entry
-  - SELECT read_file(filename=HostFile) FROM scope()
-  - SELECT * FROM Artifact.Windows.Remediation.Sinkhole()
+  # Test Sinkhole remediation - output should not have evil.com in it (but may have other stuff)
+  - SELECT Line from parse_lines(filename=HostFile)
+    WHERE Line =~ "evil.com"
 
-  - SELECT read_file(filename=HostFile) FROM scope()
+  # Now install the sinkhole
+  - SELECT * FROM Artifact.Windows.Remediation.Sinkhole(SinkholeTable=SinkHoleTable)
+
+  # Now it should have evil.com in it as well.
+  - SELECT Line from parse_lines(filename=HostFile)
+    WHERE Line =~ "evil.com"
 
   # Test rolling back sinkhole - output none and check hosts file at end.
   - SELECT * FROM Artifact.Windows.Remediation.Sinkhole(RestoreBackup="True")
-  - SELECT read_file(filename=HostFile) FROM scope()
+
+  # Should not have evil.com in it any more.
+  - SELECT Line from parse_lines(filename=HostFile)
+    WHERE Line =~ "evil.com"
