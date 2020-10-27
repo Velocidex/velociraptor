@@ -1,8 +1,13 @@
+Parameters:
+  HostFile: C:\Windows\System32\drivers\etc\hosts
+
 Queries:
   # Test Sinkhole remediation - output should be only default artifact entry
-  - SELECT hash(path=FullPath) FROM stat(filename='C:\\Windows\\System32\\drivers\\etc\\hosts')
+  - SELECT read_file(filename=HostFile) FROM scope()
   - SELECT * FROM Artifact.Windows.Remediation.Sinkhole()
 
-  # Test rolling back sinkhole - output none and check hash of hosts file at end.
+  - SELECT read_file(filename=HostFile) FROM scope()
+
+  # Test rolling back sinkhole - output none and check hosts file at end.
   - SELECT * FROM Artifact.Windows.Remediation.Sinkhole(RestoreBackup="True")
-  - SELECT hash(path=FullPath) FROM stat(filename='C:\\Windows\\System32\\drivers\\etc\\hosts')
+  - SELECT read_file(filename=HostFile) FROM scope()
