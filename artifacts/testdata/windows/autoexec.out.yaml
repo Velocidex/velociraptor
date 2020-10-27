@@ -17,7 +17,7 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
  }
 ]SELECT * FROM  Artifact.Windows.Sysinternals.Autoruns( AutorunArgs='-nobanner -accepteula -a b -c *', ToolInfo=inventory_get(tool='Autorun_amd64')) WHERE Company =~ 'Microsoft'[
  {
-  "﻿Time": "5/22/1991 7:17 AM",
+  "﻿Time": "10/16/2027 9:09 AM",
   "Entry Location": "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\BootExecute",
   "Entry": "autocheck autochk /q /v *",
   "Enabled": "enabled",
@@ -26,7 +26,7 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
   "Description": "Auto Check Utility",
   "Company": "Microsoft Corporation",
   "Image Path": "c:\\windows\\system32\\autochk.exe",
-  "Version": "10.0.17763.1",
+  "Version": "10.0.17763.1490",
   "Launch String": "autocheck autochk /q /v *",
   "_Source": "Windows.Sysinternals.Autoruns"
  }
