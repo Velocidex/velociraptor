@@ -11,12 +11,6 @@ jobs:
         go-version: 1.14
       id: go
 
-    - name: setup env
-      run: |
-        echo "::set-env name=GOPATH::$(dirname $GITHUB_WORKSPACE)"
-        echo "::add-path::$(dirname $GITHUB_WORKSPACE)/bin"
-      shell: bash
-
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
 

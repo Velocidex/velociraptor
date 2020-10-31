@@ -125,9 +125,11 @@ class VeloFileStats extends Component {
                           </dt>
                           <dd className="col-8">
                             <VeloTimestamp usec={ selectedRow.Download.mtime / 1000 } />
-                            <Button variant="outline-default"
-                                    ng-click="controller.downloadFile()"  >
-                              <FontAwesomeIcon icon="download"/>Download
+                            <Button variant="outline-default" title="Download"
+                                    href={api.base_path + "/api/v1/DownloadVFSFile?client_id=" +
+                                          client_id + "&vfs_path=" + encodeURIComponent(
+                                              selectedRow.Download.vfs_path) }>
+                              <FontAwesomeIcon icon="download"/>
                             </Button>
                           </dd>
                         </>

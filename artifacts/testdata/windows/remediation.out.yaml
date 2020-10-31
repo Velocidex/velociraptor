@@ -1,0 +1,12 @@
+SELECT Line from parse_lines(filename=HostFile) WHERE Line =~ "evil.com"[]SELECT * FROM Artifact.Windows.Remediation.Sinkhole(SinkholeTable=SinkHoleTable)[
+ {
+  "Hostname": "evil.com",
+  "Resolution": "127.0.0.1",
+  "Comment": "# Velociraptor sinkhole: Evilcorp C2 domain",
+  "_Source": "Windows.Remediation.Sinkhole"
+ }
+]SELECT Line from parse_lines(filename=HostFile) WHERE Line =~ "evil.com"[
+ {
+  "Line": "\t127.0.0.1\t\tevil.com\t\t# Velociraptor sinkhole: Evilcorp C2 domain"
+ }
+]SELECT * FROM Artifact.Windows.Remediation.Sinkhole(RestoreBackup="True")[]SELECT Line from parse_lines(filename=HostFile) WHERE Line =~ "evil.com"[]

@@ -38,7 +38,7 @@ var (
 	sso_type = &survey.Select{
 		Message: "Select the SSO Authentication Provider",
 		Default: "Google",
-		Options: []string{"Google", "GitHub", "Azure"},
+		Options: []string{"Google", "GitHub", "Azure", "OIDC"},
 	}
 
 	server_type_question = &survey.Select{
@@ -329,6 +329,8 @@ func configureSSO(config_obj *config_proto.Config) {
 		redirect = config_obj.GUI.PublicUrl + "auth/github/callback"
 	case "Azure":
 		redirect = config_obj.GUI.PublicUrl + "auth/azure/callback"
+	case "OIDC":
+		redirect = config_obj.GUI.PublicUrl + "auth/oidc/callback"
 	}
 	fmt.Printf("\nSetting %v configuration will use redirect URL %v\n",
 		config_obj.GUI.Authenticator.Type, redirect)
@@ -345,6 +347,26 @@ func configureSSO(config_obj *config_proto.Config) {
 			Name: "Tenant",
 			Prompt: &survey.Input{
 				Message: "Enter the Tenant Domain name or ID?",
+			},
+		})
+
+		kingpin.FatalIfError(survey.Ask(google_oauth,
+			config_obj.GUI.Authenticator,
+			survey.WithValidator(survey.Required)), "")
+	case "OIDC":
+		// OIDC require Issuer URL
+		google_oauth = append(google_oauth, &survey.Question{
+			Name: "OidcIssuer",
+			Prompt: &survey.Input{
+				Message: "Enter valid OIDC Issuer URL",
+				Help:    "e.g. https://accounts.google.com or https://your-org-name.okta.com are valid Issuer URLs, check that URL has /.well-known/openid-configuration endpoint",
+			},
+			Validate: func(val interface{}) error {
+				// A check to avoid double slashes
+				if str, ok := val.(string); !ok || str[len(str)-1:] == "/" {
+					return fmt.Errorf("Issuer URL should not have / (slash) sign as the last symbol")
+				}
+				return nil
 			},
 		})
 
