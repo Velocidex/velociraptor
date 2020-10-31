@@ -5,7 +5,9 @@ Queries:
            filename='autorunsc_x64.exe')
     FROM scope()
 
-  - SELECT * FROM  Artifact.Windows.Sysinternals.Autoruns(
+  - SELECT Company FROM  Artifact.Windows.Sysinternals.Autoruns(
          AutorunArgs='-nobanner -accepteula -a b -c *',
          ToolInfo=inventory_get(tool='Autorun_amd64'))
     WHERE Company =~ 'Microsoft'
+    LIMIT 1
+    
