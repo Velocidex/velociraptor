@@ -4,22 +4,16 @@ SELECT basename(path=FullPath) AS Name, Size, Hash FROM Artifact.Windows.Forensi
   "Size": 69632,
   "Hash": "39985be74b8bb4ee716ab55b5f6dfbd4"
  }
-]SELECT * FROM Artifact.Windows.Forensics.LocalHashes.Query( CommaDelimitedHashes="39985be74b8bb4ee716ab55b5f6dfbd4")[
+]SELECT Path, MD5, Size FROM Artifact.Windows.Forensics.LocalHashes.Query( CommaDelimitedHashes="39985be74b8bb4ee716ab55b5f6dfbd4")[
  {
-  "HashDBPath": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\hashdb.sqlite",
   "Path": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\Security_1_record.evtx",
   "MD5": "39985be74b8bb4ee716ab55b5f6dfbd4",
-  "Size": 69632,
-  "Timestamp": "2020-11-02T11:32:51Z",
-  "_Source": "Windows.Forensics.LocalHashes.Query"
+  "Size": 69632
  }
-]SELECT * FROM Artifact.Windows.Forensics.LocalHashes.Query( Hashes="Hash\n39985be74b8bb4ee716ab55b5f6dfbd4")[
+]SELECT Path, MD5, Size FROM Artifact.Windows.Forensics.LocalHashes.Query( Hashes="Hash\n39985be74b8bb4ee716ab55b5f6dfbd4")[
  {
-  "HashDBPath": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\hashdb.sqlite",
   "Path": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\Security_1_record.evtx",
   "MD5": "39985be74b8bb4ee716ab55b5f6dfbd4",
-  "Size": 69632,
-  "Timestamp": "2020-11-02T11:32:51Z",
-  "_Source": "Windows.Forensics.LocalHashes.Query"
+  "Size": 69632
  }
 ]
