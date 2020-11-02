@@ -228,6 +228,13 @@ export default class NotebookCellRenderer extends React.Component {
         this.setState({currently_editing: false});
     }
 
+    stopCalculating = () => {
+        api.post("v1/CancelNotebookCell", {
+            notebook_id: this.props.notebook_id,
+            cell_id: this.state.cell.cell_id,
+        });
+    }
+
     pasteEvent = (e) => {
         let items = e && e.clipboardData && e.clipboardData.items;
         if (!items) {return;}

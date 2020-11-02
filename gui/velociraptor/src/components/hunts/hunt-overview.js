@@ -119,7 +119,7 @@ export default class HuntOverview extends React.Component {
                     <dd className="col-8"><VeloTimestamp usec={hunt.create_time / 1000}/></dd>
 
                     <dt className="col-4">Expiry Time</dt>
-                    <dd className="col-8"><VeloTimestamp usec={hunt.expires / 1000}/></dd>
+                    <dd className="col-8"><VeloTimestamp usec={hunt.expires / 1000000}/></dd>
 
                     <dt className="col-4">State</dt>
                     <dd className="col-8">{this.huntState(hunt)}</dd>
@@ -127,10 +127,10 @@ export default class HuntOverview extends React.Component {
                     <dt className="col-4">Ops/Sec</dt>
                     <dd className="col-8">{start_request.ops_per_second || 'Unlimited'}</dd>
                     { labels && <>
-                                  <dt>Labels</dt>
-                                  <dd>
+                                  <dt className="col-4">Include Labels</dt>
+                                  <dd className="col-8">
                                     {_.map(labels, (v, idx) => {
-                                        return <div>{v}</div>;
+                                        return <div key={idx}>{v}</div>;
                                     })}
                                   </dd>
                       </>
@@ -138,9 +138,19 @@ export default class HuntOverview extends React.Component {
 
                     { hunt.condition && hunt.condition.os &&
                       <>
-                        <dt>OS Condition</dt>
+                        <dt className="col-4">Include OS</dt>
                         <dd className="col-8">{hunt.condition.os.os}</dd>
                       </>}
+                    { hunt.condition && hunt.condition.excluded_labels &&
+                      <>
+                        <dt className="col-4">Excluded Labels</dt>
+                        <dd className="col-8">
+                          {_.map(hunt.condition.excluded_labels.label, (v, idx) => {
+                              return <div key={idx}>{v}</div>;
+                          })}
+                        </dd>
+                      </>}
+
                     <br/>
                   </dl>
 
