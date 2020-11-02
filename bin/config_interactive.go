@@ -64,7 +64,8 @@ What OS will the server be deployed on?
 		Default: "localhost",
 	}
 
-	url_validator = regexValidator("^[a-z0-9.-]+$")
+	// https://docs.microsoft.com/en-us/troubleshoot/windows-server/identity/naming-conventions-for-computer-domain-site-ou#dns-host-names
+	url_validator = regexValidator("^[a-z0-9.-A-Z]+$")
 	port_question = &survey.Input{
 		Message: "Enter the frontend port to listen on.",
 		Default: "8000",

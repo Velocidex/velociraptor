@@ -38,9 +38,6 @@ export default class VeloFileDetails extends React.Component {
 
         return (
             <div className="padded">
-              <grr-breadcrumbs path="controller.fileContext.selectedFilePath">
-              </grr-breadcrumbs>
-
               <Tabs defaultActiveKey="stats" onSelect={(tab) => this.setState({tab: tab})}>
                 <Tab eventKey="stats" title="Stats">
                   <VeloFileStats

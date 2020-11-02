@@ -1,0 +1,29 @@
+name: Windows.Detection.Usn
+description: |
+  NTFS is a journal filesystem. This means that it maintains a journal
+  file where intended filesystem changes are written first, then the
+  filesystem is changed. This journal is called the USN journal in NTFS.
+
+  Velociraptor can watch the USN journal for new filesystem
+  events. This allows Velociraptor to detect when new files are
+  created or modified.
+
+  A common use case is to determine when a new prefetch file is
+  modified (this indicates a binary was executed). Note: It seems
+  prefetch files are not updated immediately - there could be a small
+  delay between the execution and the prefetch being modified.
+
+parameters:
+  - name: PathRegex
+    description: A regex to match the entire path (you can watch a directory or a file type).
+    default: \.pf$
+  - name: Device
+    description: The NTFS drive to watch
+    default: C:\\
+
+precondition: SELECT OS from info() where OS = "windows"
+
+sources:
+  - query: |
+      SELECT * FROM watch_usn(device=Device)
+      WHERE FullPath =~ PathRegex

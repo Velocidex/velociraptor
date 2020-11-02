@@ -24,11 +24,18 @@ class VeloFileStats extends Component {
     }
 
     state = {
-        updateOperation: false,
+        updateOperationFlowId: false,
+    }
+
+    cancelDownload = () => {
+        api.post("v1/CancelFlow", {
+            client_id: this.props.client.client_id,
+            flow_id: this.state.updateOperationFlowId,
+        });
     }
 
     updateFile = () => {
-        if (this.state.updateInProgress) {
+        if (this.state.updateOperationFlowId) {
             this.componentWillUnmount();
         }
 
@@ -46,7 +53,7 @@ class VeloFileStats extends Component {
             }
         }).then(response => {
             let flow_id = response.data.flow_id;
-            this.setState({updateOperation: true});
+            this.setState({updateOperationFlowId: flow_id});
 
             // Keep polling until the mtime changes.
             this.source = axios.CancelToken.source();
@@ -55,7 +62,7 @@ class VeloFileStats extends Component {
                     client_id: this.props.client.client_id,
                     flow_id: flow_id,
                 }).then((response) => {
-                    if (response.data.context.state === "FINISHED") {
+                    if (response.data.context.state !== "RUNNING") {
                         this.source.cancel("unmounted");
                         clearInterval(this.interval);
                         this.source = undefined;
@@ -66,7 +73,13 @@ class VeloFileStats extends Component {
                         node.known = false;
                         node.version = flow_id;
                         this.props.updateCurrentNode(this.props.node);
-                        this.setState({updateOperation: false});
+                        this.setState({
+                            updateOperationFlowId: undefined,
+                            current_upload_bytes: undefined});
+                    } else {
+                        let uploaded = response.data.context.total_uploaded_bytes || 0;
+                        this.setState({
+                            current_upload_bytes: uploaded / 1024 / 1024});
                     }
                 });
             }, POLL_TIME);
@@ -139,16 +152,24 @@ class VeloFileStats extends Component {
                         <>
                           <dt className="col-4">Fetch from Client</dt>
                           <dd className="col-8">
-                            <Button variant="default"
-                                    ng-disabled="!controller.uiTraits.Permissions.collect_client"
-                                    onClick={this.updateFile}
-                            >
-                              <FontAwesomeIcon icon="sync" spin={this.state.updateOperation} />
-                              <span className="button-label">
-                                {selectedRow.Download && selectedRow.Download.vfs_path ?
-                                 'Re-Collect' : 'Collect'} from the client
-                              </span>
-                            </Button>
+                        { this.state.updateOperationFlowId ?
+                          <Button title="Currently refreshing from the client"
+                                  onClick={this.cancelDownload}
+                                  variant="default">
+                            <FontAwesomeIcon icon="sync" spin/>
+                            <span className="button-label">Downloaded {(
+                                this.state.current_upload_bytes || 0) + " Mbytes"}
+                            </span>
+                            <span className="button-label"><FontAwesomeIcon icon="stop"/></span>
+                          </Button> :
+                          <Button variant="default"
+                                  onClick={this.updateFile}>
+                            <FontAwesomeIcon icon="sync" />
+                            <span className="button-label">
+                              {selectedRow.Download && selectedRow.Download.vfs_path ?
+                               'Re-Collect' : 'Collect'} from the client
+                            </span>
+                          </Button> }
                           </dd>
                         </> }
                     </dl>
