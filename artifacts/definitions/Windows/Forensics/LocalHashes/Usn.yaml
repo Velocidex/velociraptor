@@ -42,7 +42,7 @@ sources:
       -- Stat each file that was changed to get its size and hash
       LET files = SELECT * FROM foreach(row=file_overwrites,
       query={
-         SELECT FullPath, Size, hash(path=FullPath).MD5 AS Hash
+         SELECT FullPath, Size, hash(path=FullPath).MD5 AS Hash, now() AS Time
          FROM stat(filename=FullPath)
          WHERE Mode.IsRegular
       })
@@ -51,12 +51,12 @@ sources:
       LET insertion = SELECT FullPath, Hash, Size, {
          SELECT * FROM sqlite(file=path,
             query="INSERT into hashes (path, md5, timestamp, size) values (?,?,?,?)",
-            args=[FullPath, Hash, now(), Size])
+            args=[FullPath, Hash, Time, Size])
       } AS Insert
       FROM files
       WHERE Insert OR TRUE
 
       // If output is suppressed do not emit a row, but still update the local database.
-      SELECT FullPath, Hash, Size
+      SELECT FullPath, Hash, Size, Time
       FROM insertion
       WHERE SuppressOutput != "Y"
