@@ -1,0 +1,62 @@
+name: Windows.Forensics.LocalHashes.Usn
+description: |
+  This artifact maintains a local (client side) database of file
+  hashes. It is then possible to query this database using the
+  Windows.Forensics.LocalHashes.Query artifact
+
+type: CLIENT_EVENT
+
+parameters:
+  - name: PathRegex
+    description: A regex to match the entire path (you can watch a directory or a file type).
+    default: .exe$
+
+  - name: Device
+    description: The NTFS drive to watch
+    default: C:\\
+
+  - name: HashDb
+    description: Name of the local hash database
+    default: hashdb.sqlite
+
+  - name: SuppressOutput
+    description: If this is set, the artifact does not return any rows to the server but will still update the local database.
+    type: bool
+
+
+precondition: SELECT OS from info() where OS = "windows"
+
+sources:
+  - query: |
+      LET hash_db <= SELECT HashDBPath
+      FROM Artifact.Windows.Forensics.LocalHashes.Query(HashDb=HashDb)
+
+      LET path <= hash_db[0].HashDBPath
+
+      LET _ <= log(message="Will use local hash database " + path)
+
+      LET file_overwrites = SELECT Device + FullPath AS FullPath
+      FROM watch_usn(device=Device)
+      WHERE FullPath =~ PathRegex AND "DATA_OVERWRITE" IN Reason
+
+      -- Stat each file that was changed to get its size and hash
+      LET files = SELECT * FROM foreach(row=file_overwrites,
+      query={
+         SELECT FullPath, Size, hash(path=FullPath).MD5 AS Hash
+         FROM stat(filename=FullPath)
+         WHERE Mode.IsRegular
+      })
+
+      -- For each file hashed, insert to the local database
+      LET insertion = SELECT FullPath, Hash, Size, {
+         SELECT * FROM sqlite(file=path,
+            query="INSERT into hashes (path, md5, timestamp, size) values (?,?,?,?)",
+            args=[FullPath, Hash, now(), Size])
+      } AS Insert
+      FROM files
+      WHERE Insert OR TRUE
+
+      // If output is suppressed do not emit a row, but still update the local database.
+      SELECT FullPath, Hash, Size
+      FROM insertion
+      WHERE SuppressOutput != "Y"
