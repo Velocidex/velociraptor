@@ -1,0 +1,13 @@
+Queries:
+  # Populate the hash database
+  - SELECT basename(path=FullPath) AS Name,
+           Size, Hash FROM Artifact.Windows.Forensics.LocalHashes.Glob(
+           HashGlob=srcDir + '/artifacts/testdata/files/Security_1_record.evtx')
+
+  # Query the hash database
+  - SELECT Path, MD5, Size FROM Artifact.Windows.Forensics.LocalHashes.Query(
+      CommaDelimitedHashes="39985be74b8bb4ee716ab55b5f6dfbd4")
+
+  # Query the hash database using a CSV input
+  - SELECT Path, MD5, Size FROM Artifact.Windows.Forensics.LocalHashes.Query(
+      Hashes="Hash\n39985be74b8bb4ee716ab55b5f6dfbd4")

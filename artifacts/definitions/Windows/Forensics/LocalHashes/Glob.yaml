@@ -1,0 +1,59 @@
+name: Windows.Forensics.LocalHashes.Glob
+description: |
+  This artifact maintains a local (client side) database of file
+  hashes. It is then possible to query this database using the
+  Windows.Forensics.LocalHashes.Query artifact
+
+  Maintaining hashes client side allows Velociraptor to answer the
+  query - which machine has this hash on our network extremely
+  quickly. Velociraptor only needs to lookup the each client's local
+  database of file hashes.
+
+  Maintaining this database case be done using this artifact or using
+  the Windows.Forensics.LocalHashes.Usn artifact.
+
+  This artifact simply crawls the filesystem hashing files as
+  specified by the glob expression, and adds them to the local hash
+  database. You can rate limit this artifact using the ops/sec setting
+  to perform a slow update of the local file hash database.
+
+parameters:
+  - name: HashGlob
+    description: Search for files according to this glob and hash them.
+    default: C:/Users/**/*.exe
+
+  - name: HashDb
+    description: Name of the local hash database
+    default: hashdb.sqlite
+
+  - name: SuppressOutput
+    description: If this is set, the artifact does not return any rows to the server but will still update the local database.
+    type: bool
+
+precondition: SELECT OS from info() where OS = "windows"
+
+sources:
+  - query: |
+      LET hash_db <= SELECT HashDBPath
+      FROM Artifact.Windows.Forensics.LocalHashes.Query(HashDb=HashDb)
+
+      LET path <= hash_db[0].HashDBPath
+
+      LET _ <= log(message="Will use local hash database " + path)
+
+      // Crawl the files and calculate their hashes
+      LET files = SELECT FullPath, Size, hash(path=FullPath).MD5 AS Hash
+      FROM glob(globs=HashGlob)
+      WHERE Mode.IsRegular
+
+      LET insertion = SELECT FullPath, Hash, Size, {
+         SELECT * FROM sqlite(file=path,
+            query="INSERT into hashes (path, md5, timestamp, size) values (?,?,?,?)",
+            args=[FullPath, Hash, now(), Size])
+      } AS Insert
+      FROM files
+      WHERE Insert OR TRUE
+
+      SELECT FullPath, Hash, Size
+      FROM insertion
+      WHERE SuppressOutput != "Y"

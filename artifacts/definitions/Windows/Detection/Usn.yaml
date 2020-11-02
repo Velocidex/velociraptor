@@ -13,6 +13,8 @@ description: |
   prefetch files are not updated immediately - there could be a small
   delay between the execution and the prefetch being modified.
 
+type: CLIENT_EVENT
+
 parameters:
   - name: PathRegex
     description: A regex to match the entire path (you can watch a directory or a file type).

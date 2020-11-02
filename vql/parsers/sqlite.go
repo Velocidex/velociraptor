@@ -34,6 +34,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -148,8 +149,7 @@ func (self _SQLitePlugin) GetHandle(
 	filename := VFSPathToFilesystemPath(arg.Filename)
 
 	key := "sqlite_" + filename + arg.Accessor
-	handle, ok := vql_subsystem.CacheGet(
-		scope, key).(*sqlx.DB)
+	handle, ok := vql_subsystem.CacheGet(scope, key).(*sqlx.DB)
 	if !ok {
 		if arg.Accessor == "file" {
 			handle, err = sqlx.Connect("sqlite3", filename)
@@ -166,11 +166,15 @@ func (self _SQLitePlugin) GetHandle(
 				if !strings.Contains(err.Error(), "locked") {
 					return nil, err
 				}
+				scope.Log("Sqlite file %v is locked with %v, creating a local copy",
+					filename, err)
 				filename, err = self._MakeTempfile(ctx, arg, filename, scope)
 				if err != nil {
 					scope.Log("Unable to create temp file: %v", err)
 					return nil, err
 				}
+				scope.Log("Using local copy %v", filename)
+
 			}
 		} else {
 			filename, err = self._MakeTempfile(ctx, arg, filename, scope)
@@ -186,9 +190,18 @@ func (self _SQLitePlugin) GetHandle(
 		}
 
 		vql_subsystem.CacheSet(scope, key, handle)
-		scope.AddDestructor(func() {
-			handle.Close()
-		})
+
+		// Add the destructor to the root scope to ensure we
+		// dont get closed too early.
+		root_any, pres := scope.Resolve(constants.SCOPE_ROOT)
+		if pres {
+			root, ok := root_any.(*vfilter.Scope)
+			if ok {
+				root.AddDestructor(func() {
+					handle.Close()
+				})
+			}
+		}
 	}
 	return handle, nil
 }
