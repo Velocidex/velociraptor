@@ -32,6 +32,7 @@ export default class HuntList extends React.Component {
         showRunHuntDialog: false,
         showArchiveHuntDialog: false,
         showDeleteHuntDialog: false,
+        showCopyWizard: false,
     }
 
     // Launch the hunt.
@@ -39,7 +40,8 @@ export default class HuntList extends React.Component {
         api.post('v1/CreateHunt', request).then((response) => {
             // Keep the wizard up until the server confirms the
             // creation worked.
-            this.setState({showWizard: false});
+            this.setState({showWizard: false,
+                           showCopyWizard: false});
 
             // Refresh the hunts list when the creation is done.
             this.props.updateHunts();
@@ -127,23 +129,6 @@ export default class HuntList extends React.Component {
         });
     }
 
-
-
-    archiveHunt = () => {
-        let hunt_id = this.props.selected_hunt &&
-            this.props.selected_hunt.hunt_id;
-
-        if (!hunt_id) {return;};
-
-        api.post("v1/ModifyHunt", {
-            state: "ARCHIVED",
-            hunt_id: hunt_id,
-        }).then((response) => {
-            this.props.updateHunts();
-            this.setState({showArchiveHuntDialog: false});
-        });
-    }
-
     render() {
         let columns = getHuntColumns();
         let selected_hunt = this.props.selected_hunt && this.props.selected_hunt.hunt_id;
@@ -168,6 +153,13 @@ export default class HuntList extends React.Component {
               { this.state.showWizard &&
                 <NewHuntWizard
                   onCancel={(e) => this.setState({showWizard: false})}
+                  onResolve={this.setCollectionRequest}
+                />
+              }
+              { this.state.showCopyWizard &&
+                <NewHuntWizard
+                  baseHunt={this.props.selected_hunt}
+                  onCancel={(e) => this.setState({showCopyWizard: false})}
                   onResolve={this.setCollectionRequest}
                 />
               }
@@ -276,7 +268,12 @@ export default class HuntList extends React.Component {
                           variant="default">
                     <FontAwesomeIcon icon="eraser"/>
                   </Button>
-
+                  <Button title="Copy Hunt"
+                          disabled={!selected_hunt}
+                          onClick={() => this.setState({showCopyWizard: true})}
+                          variant="default">
+                    <FontAwesomeIcon icon="copy"/>
+                  </Button>
                 </ButtonGroup>
               </Navbar>
               <div className="fill-parent no-margins toolbar-margin selectable">

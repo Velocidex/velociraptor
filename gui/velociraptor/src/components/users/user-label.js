@@ -7,6 +7,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import UserConfig from '../core/user.js';
 
+import api from '../core/api-service.js';
+
 export default class UserLabel extends React.Component {
     static contextType = UserConfig;
     static propTypes = {

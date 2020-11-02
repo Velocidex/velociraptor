@@ -272,7 +272,7 @@ class NewCollectionConfigParameters extends React.Component {
             expandColumnRenderer: ({ expanded, rowKey }) => {
                 if (expanded) {
                     return (
-                        <b>-</b>
+                        <b key={rowKey}>-</b>
                     );
                 }
                 return (<ButtonGroup>

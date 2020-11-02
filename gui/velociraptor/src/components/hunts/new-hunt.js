@@ -13,6 +13,7 @@ import { HotKeys, ObserveKeys } from "react-hotkeys";
 import DateTimePicker from 'react-datetime-picker';
 
 import LabelForm from '../utils/labels.js';
+import api from '../core/api-service.js';
 
 import {
     NewCollectionSelectArtifacts,
@@ -33,26 +34,15 @@ class HuntPaginator extends PaginationBuilder {
 
 class NewHuntConfigureHunt extends React.Component {
     static propTypes = {
-        setHuntParameters: PropTypes.func,
+        parameters: PropTypes.object,
         paginator: PropTypes.object,
+        setHuntParameters: PropTypes.func.isRequired,
     }
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            // By default a week in the future.
-            expires: new Date(),
-
-            include_condition: "",
-            include_labels: [],
-            include_os: "WINDOWS", // Default selector
-            exclude_condition: "",
-            excluded_labels: [],
-        };
-
-        let now = new Date();
-        this.state.expires.setTime(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    };
+    setParam = (k,v) => {
+        this.props.parameters[k] = v;
+        this.props.setHuntParameters(this.props.parameters);
+    }
 
     render() {
         return (
@@ -67,14 +57,16 @@ class NewHuntConfigureHunt extends React.Component {
                     <Col sm="8">
                       <Form.Control as="textarea" rows={3}
                                     placeholder="Hunt description"
-                                    onChange={e => this.setState({description: e.target.value})} />
+                                    value={this.props.parameters.description}
+                                    onChange={e => this.setParam("description", e.target.value)}
+                      />
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">Expiry</Form.Label>
                     <Col sm="8">
-                      <DateTimePicker value={this.state.expires}
-                        onChange={(value) => this.setState({expires: value})}
+                      <DateTimePicker value={this.props.parameters.expires}
+                                      onChange={(value) => this.setParam("expires", value)}
                       />
                     </Col>
                   </Form.Group>
@@ -83,9 +75,9 @@ class NewHuntConfigureHunt extends React.Component {
                     <Form.Label column sm="3">Include Condition</Form.Label>
                     <Col sm="8">
                         <Form.Control as="select"
-                          value={this.state.include_condition}
-                          onChange={(e) => this.setState({
-                              include_condition: e.currentTarget.value})}
+                          value={this.props.parameters.include_condition}
+                          onChange={(e) => this.setParam(
+                              "include_condition", e.currentTarget.value)}
                           >
                           <option label="Run everywhere" value="">Run everywhere</option>
                           <option label="Match by label" value="labels">Match by label</option>
@@ -94,14 +86,14 @@ class NewHuntConfigureHunt extends React.Component {
                     </Col>
                   </Form.Group>
 
-                  { this.state.include_condition === "os" &&
+                  { this.props.parameters.include_condition === "os" &&
                     <Form.Group as={Row}>
                       <Form.Label column sm="3">Operating System Included</Form.Label>
                       <Col sm="8">
                         <Form.Control as="select"
-                                      value={this.state.include_os}
-                                      onChange={(e) => this.setState({
-                                          include_os: e.currentTarget.value})}
+                                      value={this.props.parameters.include_os}
+                                      onChange={(e) => this.setParam(
+                                          "include_os", e.currentTarget.value)}
                         >
                           <option label="Windows" value="WINDOWS">Windows</option>
                           <option label="Linux" value="LINUX">LINUX</option>
@@ -111,13 +103,13 @@ class NewHuntConfigureHunt extends React.Component {
                     </Form.Group>
                   }
 
-                  { this.state.include_condition === "labels" &&
+                  { this.props.parameters.include_condition === "labels" &&
                     <Form.Group as={Row}>
                       <Form.Label column sm="3">Include Labels</Form.Label>
                       <Col sm="8">
                         <LabelForm
-                          value={this.state.include_labels}
-                          onChange={(value) => this.setState({include_labels: value})}
+                          value={this.props.parameters.include_labels}
+                          onChange={(value) => this.setParam("include_labels", value)}
                         />
                       </Col>
                     </Form.Group>
@@ -127,9 +119,9 @@ class NewHuntConfigureHunt extends React.Component {
                     <Form.Label column sm="3">Exclude Condition</Form.Label>
                     <Col sm="8">
                         <Form.Control as="select"
-                          value={this.state.exclude_condition}
-                          onChange={(e) => this.setState({
-                              exclude_condition: e.currentTarget.value})}
+                          value={this.props.parameters.exclude_condition}
+                          onChange={(e) => this.setParam(
+                              "exclude_condition", e.currentTarget.value)}
                           >
                           <option label="Run everywhere" value="">Run everywhere</option>
                           <option label="Match by label" value="labels">Match by label</option>
@@ -137,13 +129,13 @@ class NewHuntConfigureHunt extends React.Component {
                     </Col>
                   </Form.Group>
 
-                  { this.state.exclude_condition === "labels" &&
+                  { this.props.parameters.exclude_condition === "labels" &&
                     <Form.Group as={Row}>
                       <Form.Label column sm="3">Exclude Labels</Form.Label>
                       <Col sm="8">
                         <LabelForm
-                          value={this.state.excluded_labels}
-                          onChange={(value) => this.setState({excluded_labels: value})}
+                          value={this.props.parameters.excluded_labels}
+                          onChange={(value) => this.setParam("excluded_labels", value)}
                         />
                       </Col>
                     </Form.Group>
@@ -155,7 +147,6 @@ class NewHuntConfigureHunt extends React.Component {
                 { this.props.paginator.makePaginator({
                     props: this.props,
                     step_name: "Configure Hunt",
-                    onBlur: () => this.props.setHuntParameters(this.state),
                 }) }
               </Modal.Footer>
             </>
@@ -167,7 +158,7 @@ class NewHuntConfigureHunt extends React.Component {
 export default class NewHuntWizard extends React.Component {
 
     static propTypes = {
-        baseFlow: PropTypes.object,
+        baseHunt: PropTypes.object,
         onResolve: PropTypes.func,
         onCancel: PropTypes.func,
     }
@@ -181,7 +172,18 @@ export default class NewHuntWizard extends React.Component {
 
         resources: {},
 
-        hunt_parameters: {},
+        hunt_parameters: {
+            include_condition: "",
+            include_labels: [],
+            include_os: "WINDOWS", // Default selector
+            exclude_condition: "",
+            excluded_labels: [],
+        },
+    }
+
+    componentDidMount = () => {
+        let state = this.setStateFromBase(this.props.baseHunt || {});
+        this.setState(state);
     }
 
     setArtifacts = (artifacts) => {
@@ -193,12 +195,78 @@ export default class NewHuntWizard extends React.Component {
     }
 
     setResources = (resources) => {
-        this.setState({resources: resources});
+        let new_resources = Object.assign(this.state.resources, resources);
+        this.setState({resources: new_resources});
     }
 
     // Let our caller know the artifact request we created.
     launch = () => {
         this.props.onResolve(this.prepareRequest());
+    }
+
+    setStateFromBase = (hunt) => {
+        let request = hunt && hunt.start_request;
+        let expiry = new Date();
+        expiry.setTime(expiry.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        if (request) {
+            let state = {
+                artifacts: [],
+                parameters: {},
+                resources: {
+                    max_rows: request.max_rows,
+                    max_mbytes: request.max_upload_bytes / 1024/1024,
+                    timeout: request.timeout,
+                    ops_per_second: request.ops_per_second,
+                },
+                hunt_parameters: this.state.hunt_parameters,
+            };
+
+            let labels = hunt.condition && hunt.condition.labels &&
+                hunt.condition.labels.label;
+            if (!_.isEmpty(labels)) {
+                state.hunt_parameters.include_labels = labels;
+                state.hunt_parameters.include_condition = "labels";
+            }
+
+            let os = hunt.condition && hunt.condition.os &&
+                hunt.condition.os.os;
+            if (!_.isEmpty(os)) {
+                state.hunt_parameters.include_os = os;
+                state.hunt_parameters.include_condition = "os";
+            }
+
+            let excluded = hunt.condition && hunt.condition.excluded_labels &&
+                hunt.condition.excluded_labels.labels;
+            if (!_.isEmpty(excluded)) {
+                state.hunt_parameters.excluded_labels = excluded;
+            }
+            state.hunt_parameters.description = hunt.hunt_description;
+            state.hunt_parameters.expires = expiry;
+
+            // Resolve the artifacts from the request into a list of descriptors.
+            api.get("v1/GetArtifacts", {names: request.artifacts}).then(response=>{
+                if (response && response.data &&
+                    response.data.items && response.data.items.length) {
+
+                    let parameters = {};
+                    _.each(request.parameters.env, param=>{
+                        parameters[param.key] = param.value;
+                    });
+
+                    this.setState({
+                        artifacts: [...response.data.items],
+                        parameters: parameters,
+                    });
+                }});
+
+
+            return state;
+        };
+
+        let state = this.state;
+        state.hunt_parameters.expires = expiry;
+        return state;
     }
 
     prepareRequest = () => {
@@ -304,6 +372,7 @@ export default class NewHuntWizard extends React.Component {
               <HotKeys keyMap={keymap} handlers={handlers}><ObserveKeys>
               <StepWizard ref={n=>this.step=n}>
                 <NewHuntConfigureHunt
+                  parameters={this.state.hunt_parameters}
                   paginator={new HuntPaginator(
                       "Configure Hunt",
                       "Create Hunt: Configure hunt",
@@ -341,6 +410,7 @@ export default class NewHuntWizard extends React.Component {
                 />
 
                 <NewCollectionResources
+                  resources={this.state.resources}
                   paginator={new HuntPaginator("Specify Resources",
                                                "Create Hunt: Specify resource limits")}
 
