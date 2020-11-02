@@ -45,7 +45,6 @@ class NewHuntConfigureHunt extends React.Component {
     }
 
     render() {
-        console.log(this.props.parameters);
         return (
             <>
               <Modal.Header closeButton>
@@ -185,8 +184,6 @@ export default class NewHuntWizard extends React.Component {
     componentDidMount = () => {
         let state = this.setStateFromBase(this.props.baseHunt || {});
         this.setState(state);
-
-        console.log(state);
     }
 
     setArtifacts = (artifacts) => {
@@ -211,8 +208,6 @@ export default class NewHuntWizard extends React.Component {
         let request = hunt && hunt.start_request;
         let expiry = new Date();
         expiry.setTime(expiry.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-        console.log(hunt);
 
         if (request) {
             let state = {
