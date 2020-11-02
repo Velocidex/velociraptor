@@ -15,19 +15,8 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
    "materialize": false
   }
  }
-]SELECT * FROM  Artifact.Windows.Sysinternals.Autoruns( AutorunArgs='-nobanner -accepteula -a b -c *', ToolInfo=inventory_get(tool='Autorun_amd64')) WHERE Company =~ 'Microsoft'[
+]SELECT Company FROM  Artifact.Windows.Sysinternals.Autoruns( AutorunArgs='-nobanner -accepteula -a b -c *', ToolInfo=inventory_get(tool='Autorun_amd64')) WHERE Company =~ 'Microsoft' LIMIT 1[
  {
-  "﻿Time": "10/16/2027 9:09 AM",
-  "Entry Location": "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\BootExecute",
-  "Entry": "autocheck autochk /q /v *",
-  "Enabled": "enabled",
-  "Category": "Boot Execute",
-  "Profile": "System-wide",
-  "Description": "Auto Check Utility",
-  "Company": "Microsoft Corporation",
-  "Image Path": "c:\\windows\\system32\\autochk.exe",
-  "Version": "10.0.17763.1490",
-  "Launch String": "autocheck autochk /q /v *",
-  "_Source": "Windows.Sysinternals.Autoruns"
+  "Company": "Microsoft Corporation"
  }
 ]
