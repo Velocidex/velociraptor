@@ -17,7 +17,7 @@ export default class UserLabel extends React.Component {
         return (
             <>
               <ButtonGroup className="user-label">
-                <Button href={"/logoff?username="+ this.context.traits.username }>
+                <Button href={api.base_path + "/logoff?username="+ this.context.traits.username }>
                   <FontAwesomeIcon icon="sign-out-alt" />
                 </Button>
                 <Button variant="default">
