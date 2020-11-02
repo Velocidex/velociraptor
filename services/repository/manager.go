@@ -62,30 +62,31 @@ func (self *RepositoryManager) SetArtifactFile(
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
+	if file_store_factory != nil {
+		vfs_path := paths.GetArtifactDefintionPath(artifact_definition.Name)
+
+		// Now write it into the filestore.
+		fd, err := file_store_factory.WriteFile(vfs_path)
+		if err != nil {
+			return nil, err
+		}
+		defer fd.Close()
+
+		// We want to completely replace the content of the file.
+		err = fd.Truncate()
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = fd.Write([]byte(data))
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// Load the new artifact into the global repo so it is
 	// immediately available.
 	global_repository, err := self.GetGlobalRepository(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	vfs_path := paths.GetArtifactDefintionPath(artifact_definition.Name)
-
-	// Now write it into the filestore.
-	fd, err := file_store_factory.WriteFile(vfs_path)
-	if err != nil {
-		return nil, err
-	}
-	defer fd.Close()
-
-	// We want to completely replace the content of the file.
-	err = fd.Truncate()
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = fd.Write([]byte(data))
 	if err != nil {
 		return nil, err
 	}

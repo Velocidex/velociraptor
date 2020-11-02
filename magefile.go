@@ -93,11 +93,17 @@ func (self *Builder) Env() map[string]string {
 	}
 
 	// If we are cross compiling, set the right compiler.
-	if runtime.GOOS == "linux" && self.goos == "windows" {
+	if (runtime.GOOS == "linux" || runtime.GOOS == "darwin") &&
+		self.goos == "windows" {
+
 		if self.arch == "amd64" {
-			env["CC"] = mingw_xcompiler
+			if mingwxcompiler_exists() {
+				env["CC"] = mingw_xcompiler
+			}
 		} else {
-			env["CC"] = mingw_xcompiler_32
+			if mingwxcompiler32_exists() {
+				env["CC"] = mingw_xcompiler_32
+			}
 		}
 	}
 
@@ -390,6 +396,11 @@ func ensure_assets() error {
 
 func mingwxcompiler_exists() bool {
 	err := sh.Run(mingw_xcompiler, "--version")
+	return err == nil
+}
+
+func mingwxcompiler32_exists() bool {
+	err := sh.Run(mingw_xcompiler_32, "--version")
 	return err == nil
 }
 

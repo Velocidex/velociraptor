@@ -1,0 +1,29 @@
+name: Windows.Forensics.Usn
+description: |
+  NTFS is a journal filesystem. This means that it maintains a journal
+  file where intended filesystem changes are written first, then the
+  filesystem is changed. This journal is called the USN journal in NTFS.
+
+  Velociraptor can parse the USN journal from the filesystem. This
+  provides an indication of recent file changes. Typically the system
+  maintains the journal of around 30mb and depending on system
+  activity this can go back quite some time.
+
+  Use this artifact to determine the times when a file was
+  modified/added from the journal. This will be present even if the
+  file was later removed.
+
+parameters:
+  - name: PathRegex
+    description: A regex to match the entire path (you can watch a directory or a file type).
+    default: .
+  - name: Device
+    description: The NTFS drive to watch
+    default: C:\\
+
+precondition: SELECT OS from info() where OS = "windows"
+
+sources:
+  - query: |
+      SELECT * FROM parse_usn(device=Device)
+      WHERE FullPath =~ PathRegex
