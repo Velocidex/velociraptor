@@ -27,11 +27,11 @@ for i in  $CWD/api/proto/ ; do
     echo Building protos in $i
     echo protoc -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
            -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-           -I$CWD $i/*.proto --go_out=paths=source_relative,plugins=grpc:$i
+           -I$CWD $i/*.proto --go-grpc_out=paths=source_relative:$i --go_out=paths=source_relative:$i
 
     protoc -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
            -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-           -I$CWD $i/*.proto --go_out=paths=source_relative,plugins=grpc:$i
+           -I$CWD $i/*.proto --go-grpc_out=paths=source_relative:$i --go_out=paths=source_relative:$i
 
     echo protoc -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
            -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \

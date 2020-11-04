@@ -48,7 +48,7 @@ sources:
       })
 
       -- For each file hashed, insert to the local database
-      LET insertion = SELECT FullPath, Hash, Size, {
+      LET insertion = SELECT FullPath, Hash, Size, Time, {
          SELECT * FROM sqlite(file=path,
             query="INSERT into hashes (path, md5, timestamp, size) values (?,?,?,?)",
             args=[FullPath, Hash, Time, Size])

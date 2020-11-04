@@ -10,11 +10,12 @@ import (
 type MockFileInfo struct {
 	Name_     string
 	FullPath_ string
+	Size_     int64
 }
 
 func (self MockFileInfo) Data() interface{}        { return nil }
 func (self MockFileInfo) Name() string             { return self.Name_ }
-func (self MockFileInfo) Size() int64              { return 0 }
+func (self MockFileInfo) Size() int64              { return self.Size_ }
 func (self MockFileInfo) Mode() os.FileMode        { return os.ModePerm }
 func (self MockFileInfo) ModTime() time.Time       { return time.Time{} }
 func (self MockFileInfo) IsDir() bool              { return true }

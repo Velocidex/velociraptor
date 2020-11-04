@@ -21,6 +21,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"runtime"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -131,6 +133,13 @@ func (self VQLClientAction) StartQuery(
 
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
+
+	if runtime.GOARCH == "386" &&
+		os.Getenv("PROCESSOR_ARCHITECTURE") == "AMD64" {
+		scope.Log("You are running a 32 bit built binary on Windows x64. " +
+			"This configuration is not supported and may result in " +
+			"incorrect or missed results or even crashes.")
+	}
 
 	scope.Log("Starting query execution.")
 
