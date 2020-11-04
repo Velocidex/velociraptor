@@ -29,3 +29,8 @@ a.btn.btn-default.active {
 .selectable {
     cursor: pointer;
 }
+
+.pagination-form {
+    height: 37.6px;
+    width: 8em;
+}

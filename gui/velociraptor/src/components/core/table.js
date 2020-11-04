@@ -108,7 +108,7 @@ export class InspectRawJson extends Component {
 }
 
 // Toggle columns on or off - helps when the table is very wide.
-const ColumnToggleList = (e) => {
+export const ColumnToggleList = (e) => {
     const [open, setOpen] = React.useState(false);
     const onToggle = (isOpen, ev, metadata) => {
         if (metadata.source === "select") {
@@ -176,7 +176,7 @@ const ColumnToggleList = (e) => {
     );
 };
 
-const sizePerPageRenderer = ({
+export const sizePerPageRenderer = ({
   options,
   currSizePerPage,
   onSizePerPageChange

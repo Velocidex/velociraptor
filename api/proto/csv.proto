@@ -44,4 +44,6 @@ message GetTableResponse {
         }];
 
     repeated Row rows = 2;
+
+    int64 total_rows = 3;
 }

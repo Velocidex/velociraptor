@@ -41,6 +41,7 @@ import (
 	"google.golang.org/grpc/status"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/api/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -60,6 +61,7 @@ import (
 )
 
 type ApiServer struct {
+	proto.UnimplementedAPIServer
 	config     *config_proto.Config
 	server_obj *server.Server
 	ca_pool    *x509.CertPool

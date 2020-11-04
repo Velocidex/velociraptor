@@ -319,7 +319,8 @@ func ArtifactCollectorProcessOneMessage(
 				// to append to end of the log file -
 				// much faster!
 			} else if len(response.JSONLResponse) > 0 {
-				rs_writer.WriteJSONL([]byte(response.JSONLResponse))
+				rs_writer.WriteJSONL(
+					[]byte(response.JSONLResponse), response.TotalRows)
 				rows_written = response.TotalRows
 			}
 

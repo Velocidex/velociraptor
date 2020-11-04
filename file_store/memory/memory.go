@@ -24,6 +24,7 @@ var (
 
 type MemoryReader struct {
 	*bytes.Reader
+	filename string
 }
 
 func (self MemoryReader) Close() error {
@@ -31,7 +32,11 @@ func (self MemoryReader) Close() error {
 }
 
 func (self MemoryReader) Stat() (glob.FileInfo, error) {
-	return nil, errors.New("Not Implemented")
+	return vtesting.MockFileInfo{
+		Name_:     self.filename,
+		FullPath_: self.filename,
+		Size_:     int64(self.Reader.Len()),
+	}, nil
 }
 
 type MemoryWriter struct {
@@ -83,7 +88,10 @@ func (self *MemoryFileStore) ReadFile(filename string) (api.FileReader, error) {
 
 	data, pres := self.Data[filename]
 	if pres {
-		return MemoryReader{bytes.NewReader(data)}, nil
+		return MemoryReader{
+			Reader:   bytes.NewReader(data),
+			filename: filename,
+		}, nil
 	}
 
 	return nil, errors.New("Not found")

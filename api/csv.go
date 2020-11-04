@@ -19,7 +19,6 @@ package api
 
 import (
 	context "golang.org/x/net/context"
-	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -70,13 +69,33 @@ func getTable(
 	result := &api_proto.GetTableResponse{}
 
 	if path_manager != nil {
-		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
-			path_manager, 0, 0)
+		rs_reader, err := result_sets.NewResultSetReader(config_obj, path_manager)
+		if err != nil {
+			return nil, err
+		}
+		defer rs_reader.Close()
+
+		// Let the browser know how many rows we have in total.
+		result.TotalRows = rs_reader.TotalRows
+
+		// FIXME: Backwards compatibility: Just give a few
+		// rows if the result set does not have an index. This
+		// is the same as the previous behavior but for new
+		// collections, an index is created and we respect the
+		// number of rows the callers asked for. Eventually
+		// this will not be needed.
+		if result.TotalRows < 0 {
+			in.Rows = 100
+		}
+
+		// Seek to the row we need.
+		err = rs_reader.SeekToRow(int64(in.StartRow))
 		if err != nil {
 			return nil, err
 		}
 
-		for row := range row_chan {
+		// Unpack the rows into the output protobuf
+		for row := range rs_reader.Rows(ctx) {
 			if result.Columns == nil {
 				result.Columns = row.Keys()
 			}
