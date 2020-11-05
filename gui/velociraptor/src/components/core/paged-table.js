@@ -8,7 +8,7 @@ import ToolkitProvider from 'react-bootstrap-table2-toolkit';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+import qs from 'qs';
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import Button from 'react-bootstrap/Button';
@@ -28,11 +28,19 @@ import { InspectRawJson, ColumnToggleList, sizePerPageRenderer, PrepareData } fr
 const pageListRenderer = ({
     pages,
     currentPage,
-    totalPages,
+    totalRows,
+    pageSize,
     onPageChange
 }) => {
     // just exclude <, <<, >>, >
     const pageWithoutIndication = pages.filter(p => typeof p.page !== 'string');
+    let totalPages = parseInt(totalRows / pageSize);
+
+    // Only allow changing to a page if there are any rows in that
+    // page.
+    if (totalPages * pageSize + 1 > totalRows) {
+        totalPages--;
+    }
     return (
         <Pagination>
           <Pagination.First onClick={()=>onPageChange(0)}/>
@@ -128,7 +136,7 @@ class VeloPagedTable extends Component {
 
         let params = Object.assign({}, this.props.params);
         params.start_row = this.state.start_row;
-        params.rows = this.state.page_size - 1;
+        params.rows = this.state.page_size;
 
         this.setState({loading: true});
         api.get("v1/GetTable", params).then((response) => {
@@ -189,7 +197,7 @@ class VeloPagedTable extends Component {
 
 
         let total_size = this.state.total_size;
-        if (total_size<0 && !_.isEmpty(this.state.rows)) {
+        if (total_size < 0 && !_.isEmpty(this.state.rows)) {
             total_size = this.state.rows.length + this.state.start_row;
             if (total_size > 500) {
                 total_size = 500;
@@ -209,10 +217,6 @@ class VeloPagedTable extends Component {
             {
                 props => (
                     <div className="col-12">
-                      <VeloNotImplemented
-                        show={this.state.download}
-                        resolve={() => this.setState({download: false})}
-                      />
                       <Navbar className="toolbar">
                         <ButtonGroup>
                           <ColumnToggleList { ...props.columnToggleProps }
@@ -224,8 +228,18 @@ class VeloPagedTable extends Component {
                                             toggles={this.state.toggles} />
                           <InspectRawJson rows={this.state.rows} />
                           <Button variant="default"
-                                  onClick={() => this.setState({download: true})} >
+                                  target="_blank" rel="noopener noreferrer"
+                                  title="Download JSON"
+                                  href={api.base_path + "/api/v1/DownloadTable?"+
+                                        qs.stringify(this.props.params) } >
                             <FontAwesomeIcon icon="download"/>
+                          </Button>
+                          <Button variant="default"
+                                  target="_blank" rel="noopener noreferrer"
+                                  title="Download CSV"
+                                  href={api.base_path + "/api/v1/DownloadTable?download_format=csv&"+
+                                        qs.stringify(this.props.params) } >
+                            <FontAwesomeIcon icon="file-csv"/>
                           </Button>
                         </ButtonGroup>
                       </Navbar>
@@ -235,6 +249,7 @@ class VeloPagedTable extends Component {
                           hover
                           remote
                           condensed
+                          noDataIndication="Table is Empty"
                           keyField="_id"
                           headerClasses="alert alert-secondary"
                           bodyClasses="fixed-table-body"
@@ -252,7 +267,8 @@ class VeloPagedTable extends Component {
                               },
                               pageStartIndex: 0,
                               pageListRenderer: ({pages, onPageChange})=>pageListRenderer({
-                                  totalPages: total_size / this.state.page_size,
+                                  totalRows: total_size,
+                                  pageSize: this.state.page_size,
                                   pages: pages,
                                   currentPage: this.state.start_row / this.state.page_size,
                                   onPageChange: onPageChange}),

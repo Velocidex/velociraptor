@@ -32,6 +32,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -43,11 +44,14 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 var (
@@ -147,6 +151,108 @@ func vfsFileDownloadHandler(
 	})
 }
 
+// Download the table as specified by the v1/GetTable API.
+func downloadTable(config_obj *config_proto.Config) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		request := &api_proto.GetTableRequest{}
+		decoder := schema.NewDecoder()
+		decoder.SetAliasTag("json")
+		err := decoder.Decode(request, r.URL.Query())
+		if err != nil {
+			returnError(w, 404, err.Error())
+			return
+		}
+
+		path_manager := getPathManager(config_obj, request)
+		if path_manager == nil {
+			returnError(w, 400, "Invalid request")
+			return
+		}
+
+		// Log an audit event.
+		userinfo := GetUserInfo(r.Context(), config_obj)
+
+		// This should never happen!
+		if userinfo.Name == "" {
+			returnError(w, 500, "Unauthenticated access.")
+			return
+		}
+
+		log_path, err := path_manager.GetPathForWriting()
+		if err != nil {
+			returnError(w, 400, "Invalid request")
+			return
+		}
+
+		switch request.DownloadFormat {
+		case "csv":
+			download_name := strings.Replace(filepath.Base(log_path), "\"", "", -1)
+			download_name = strings.TrimSuffix(download_name, ".json")
+			download_name += ".csv"
+
+			rs_reader, err := result_sets.NewResultSetReader(
+				config_obj, path_manager)
+			if err != nil {
+				returnError(w, 400, err.Error())
+				return
+			}
+			defer rs_reader.Close()
+
+			// From here on we already sent the headers and we can
+			// not really report an error to the client.
+			w.Header().Set("Content-Disposition", "attachment; filename="+
+				url.PathEscape(download_name))
+			w.Header().Set("Content-Type", "binary/octet-stream")
+			w.WriteHeader(200)
+
+			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger.WithFields(logrus.Fields{
+				"user":    userinfo.Name,
+				"request": request,
+				"remote":  r.RemoteAddr,
+			}).Info("DownloadTable")
+
+			scope := vql_subsystem.MakeScope()
+			csv_writer := csv.GetCSVAppender(scope, w, true /* write_headers */)
+			for row := range rs_reader.Rows(r.Context()) {
+				csv_writer.Write(row)
+			}
+			csv_writer.Close()
+
+			// Output in jsonl by default.
+		default:
+			file_store_factory := file_store.GetFileStore(config_obj)
+			fd, err := file_store_factory.ReadFile(log_path)
+			if err != nil {
+				returnError(w, 400, err.Error())
+				return
+			}
+			defer fd.Close()
+
+			download_name := strings.Replace(filepath.Base(log_path), "\"", "", -1)
+			if !strings.HasSuffix(download_name, ".json") {
+				download_name += ".json"
+			}
+
+			// From here on we already sent the headers and we can
+			// not really report an error to the client.
+			w.Header().Set("Content-Disposition", "attachment; filename="+
+				url.PathEscape(download_name))
+			w.Header().Set("Content-Type", "binary/octet-stream")
+			w.WriteHeader(200)
+
+			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger.WithFields(logrus.Fields{
+				"user":    userinfo.Name,
+				"request": request,
+				"remote":  r.RemoteAddr,
+			}).Info("DownloadTable")
+
+			utils.Copy(r.Context(), w, fd)
+		}
+	})
+}
+
 // URL format: /api/v1/DownloadVFSFolder
 func vfsFolderDownloadHandler(
 	config_obj *config_proto.Config) http.Handler {
@@ -164,6 +270,15 @@ func vfsFolderDownloadHandler(
 			return
 		}
 
+		// Log an audit event.
+		userinfo := GetUserInfo(r.Context(), config_obj)
+
+		// This should never happen!
+		if userinfo.Name == "" {
+			returnError(w, 500, "Unauthenticated access.")
+			return
+		}
+
 		// From here on we already sent the headers and we can
 		// not really report an error to the client.
 		filename := strings.Replace(request.VfsPath, "\"", "", -1)
@@ -171,14 +286,6 @@ func vfsFolderDownloadHandler(
 			url.PathEscape(filename+".zip"))
 		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
-
-		// Log an audit event.
-		userinfo := GetUserInfo(r.Context(), config_obj)
-
-		// This should never happen!
-		if userinfo.Name == "" {
-			panic("Unauthenticated access.")
-		}
 
 		logger := logging.GetLogger(config_obj, &logging.Audit)
 		logger.WithFields(logrus.Fields{

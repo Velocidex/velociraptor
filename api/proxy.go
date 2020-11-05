@@ -131,6 +131,10 @@ func PrepareGUIMux(
 	mux.Handle(base+"/api/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(config_obj, h)))
 
+	mux.Handle(base+"/api/v1/DownloadTable", csrfProtect(config_obj,
+		auther.AuthenticateUserHandler(
+			config_obj, downloadTable(config_obj))))
+
 	mux.Handle(base+"/api/v1/DownloadVFSFile", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, vfsFileDownloadHandler(config_obj))))

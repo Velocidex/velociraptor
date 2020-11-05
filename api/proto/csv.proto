@@ -32,6 +32,8 @@ message GetTableRequest {
     string notebook_id = 9;
     string cell_id = 10;
     int64 table_id = 11;
+
+    string download_format = 12;
 }
 
 message Row {

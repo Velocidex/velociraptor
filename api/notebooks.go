@@ -17,6 +17,7 @@ import (
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -488,7 +489,6 @@ func (self *ApiServer) UpdateNotebookCell(
 	}
 
 	// And store it for next time.
-
 	err = db.SetSubject(self.config,
 		notebook_path_manager.Cell(in.CellId).Path(),
 		notebook_cell)
@@ -516,6 +516,15 @@ func (self *ApiServer) UpdateNotebookCell(
 		"Server.Internal.ArtifactDescription")
 	if err != nil {
 		return nil, err
+	}
+
+	// Register a progress reporter so we can monitor how the
+	// template rendering is going.
+	tmpl.Progress = &progressReporter{
+		config_obj:    self.config,
+		notebook_cell: notebook_cell,
+		notebook_id:   in.NotebookId,
+		start:         time.Now(),
 	}
 
 	input := in.Input
@@ -891,11 +900,6 @@ func updateCellContents(
 		return nil, errors.New("Unsupported cell type")
 	}
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
 	encoded_data, err := json.Marshal(tmpl.Data)
 	if err != nil {
 		return nil, err
@@ -912,26 +916,41 @@ func updateCellContents(
 		CurrentlyEditing: currently_editing,
 	}
 
+	return notebook_cell, setCell(config_obj, notebook_id, notebook_cell)
+}
+
+func setCell(
+	config_obj *config_proto.Config,
+	notebook_id string,
+	notebook_cell *api_proto.NotebookCell) error {
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
 	// And store it for next time.
 	notebook_path_manager := reporting.NewNotebookPathManager(notebook_id)
 	err = db.SetSubject(config_obj,
-		notebook_path_manager.Cell(cell_id).Path(),
+		notebook_path_manager.Cell(notebook_cell.CellId).Path(),
 		notebook_cell)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
+	// Open the notebook and update the cell's timestamp.
 	notebook := &api_proto.NotebookMetadata{}
 	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
+	// Update the cell's timestamp so the gui will refresh it.
 	new_cell_md := []*api_proto.NotebookCell{}
 	for _, cell_md := range notebook.CellMetadata {
-		if cell_md.CellId == cell_id {
+		if cell_md.CellId == notebook_cell.CellId {
 			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
-				CellId:    cell_id,
+				CellId:    notebook_cell.CellId,
 				Timestamp: time.Now().Unix(),
 			})
 			continue
@@ -940,6 +959,30 @@ func updateCellContents(
 	}
 	notebook.CellMetadata = new_cell_md
 
-	err = db.SetSubject(config_obj, notebook_path_manager.Path(), notebook)
-	return notebook_cell, err
+	return db.SetSubject(config_obj, notebook_path_manager.Path(), notebook)
+}
+
+type progressReporter struct {
+	config_obj    *config_proto.Config
+	notebook_cell *api_proto.NotebookCell
+	notebook_id   string
+	last, start   time.Time
+}
+
+func (self *progressReporter) Report(message string) {
+	now := time.Now()
+	if now.Before(self.last.Add(4 * time.Second)) {
+		return
+	}
+
+	self.last = now
+	notebook_cell := proto.Clone(self.notebook_cell).(*api_proto.NotebookCell)
+	notebook_cell.Output = fmt.Sprintf(
+		`<div class="padded"><i class="fa fa-spinner fa-spin fa-fw"></i>`+
+			`Calculating...  (%v after %v)</div>`,
+		message, time.Now().Sub(self.start).Round(time.Second))
+	notebook_cell.Timestamp = now.Unix()
+
+	// Cant do anything if we can not set the notebook times
+	_ = setCell(self.config_obj, self.notebook_id, notebook_cell)
 }

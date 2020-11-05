@@ -27,8 +27,10 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -54,6 +56,7 @@ type GuiTemplateEngine struct {
 	log_writer   *logWriter
 	path_manager *NotebookCellPathManager
 	Data         map[string]*actions_proto.VQLResponse
+	Progress     utils.ProgressReporter
 }
 
 // Go templates can call functions which take args. The pipeline is
@@ -391,32 +394,42 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 			return nil
 		}
 
-		ctx, cancel := context.WithCancel(self.ctx)
-		defer cancel()
-
 		for _, vql := range multi_vql {
-			written := false
-
 			// Replace the previously calculated json file.
 			opts := vql_subsystem.EncOptsFromScope(self.Scope)
 			path_manager := self.path_manager.NewQueryStorage()
 
-			rs_writer, err := result_sets.NewResultSetWriter(
-				self.config_obj, path_manager, opts, true /* truncate */)
-			if err != nil {
-				self.Error("Error: %v\n", err)
-				return ""
-			}
-			defer rs_writer.Close()
-
-			for row := range vql.Eval(ctx, self.Scope) {
-				rs_writer.Write(vfilter.RowToDict(ctx, self.Scope, row))
-				written = true
+			// Ignore LET queries but still run them.
+			if vql.Let != "" {
+				for _ = range vql.Eval(self.ctx, self.Scope) {
+				}
+				continue
 			}
 
-			if written {
-				result = append(result, path_manager)
-			}
+			result = append(result, path_manager)
+
+			// Write the query in the background so we can
+			// return the table immediately
+			func(vql *vfilter.VQL, path_manager api.PathManager) {
+				rs_writer, err := result_sets.NewResultSetWriter(
+					self.config_obj, path_manager, opts, true /* truncate */)
+				if err != nil {
+					self.Error("Error: %v\n", err)
+					return
+				}
+				defer rs_writer.Close()
+
+				row_idx := 0
+				for row := range vql.Eval(self.ctx, self.Scope) {
+					row_idx++
+					rs_writer.Write(vfilter.RowToDict(self.ctx, self.Scope, row))
+
+					if row_idx%100 == 0 && self.Progress != nil {
+						self.Progress.Report(fmt.Sprintf(
+							"Total Rows %v", row_idx))
+					}
+				}
+			}(vql, path_manager)
 		}
 	}
 	return result
