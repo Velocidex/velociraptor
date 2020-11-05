@@ -68,6 +68,7 @@ export class InspectRawJson extends Component {
         return (
             <>
               <Button variant="default"
+                      title="Inspect Raw JSON"
                       onClick={() => this.setState({show: true})} >
                 <FontAwesomeIcon icon="binoculars"/>
               </Button>
@@ -134,6 +135,7 @@ export const ColumnToggleList = (e) => {
                  eventKey={column.dataField}
                  active={!hidden}
                  onSelect={c=>onColumnToggle(c)}
+                 title="Show/Hide Columns"
                >
                  { column.text }
                </Dropdown.Item>;
@@ -288,10 +290,6 @@ class VeloTable extends Component {
                                             }}
                                             toggles={this.state.toggles} />
                           <InspectRawJson rows={this.props.rows} />
-                          <Button variant="default"
-                                  onClick={() => this.setState({download: true})} >
-                            <FontAwesomeIcon icon="download"/>
-                          </Button>
                         </ButtonGroup>
                       </Navbar>
                       <div className="row col-12">

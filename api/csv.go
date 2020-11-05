@@ -40,34 +40,9 @@ func getTable(
 		in.Rows = 500
 	}
 
-	var path_manager api.PathManager
-
-	if in.FlowId != "" && in.Artifact != "" {
-		path_manager = result_sets.NewArtifactPathManager(
-			config_obj, in.ClientId, in.FlowId, in.Artifact)
-
-	} else if in.FlowId != "" && in.Type != "" {
-		flow_path_manager := paths.NewFlowPathManager(
-			in.ClientId, in.FlowId)
-		switch in.Type {
-		case "log":
-			path_manager = flow_path_manager.Log()
-		case "uploads":
-			path_manager = flow_path_manager.UploadMetadata()
-		}
-	} else if in.HuntId != "" && in.Type == "clients" {
-		path_manager = paths.NewHuntPathManager(in.HuntId).Clients()
-
-	} else if in.HuntId != "" && in.Type == "hunt_status" {
-		path_manager = paths.NewHuntPathManager(in.HuntId).ClientErrors()
-
-	} else if in.NotebookId != "" && in.CellId != "" {
-		path_manager = reporting.NewNotebookPathManager(in.NotebookId).Cell(
-			in.CellId).QueryStorage(in.TableId)
-	}
-
 	result := &api_proto.GetTableResponse{}
 
+	path_manager := getPathManager(config_obj, in)
 	if path_manager != nil {
 		rs_reader, err := result_sets.NewResultSetReader(config_obj, path_manager)
 		if err != nil {
@@ -117,4 +92,34 @@ func getTable(
 	}
 
 	return result, nil
+}
+
+func getPathManager(
+	config_obj *config_proto.Config,
+	in *api_proto.GetTableRequest) api.PathManager {
+	if in.FlowId != "" && in.Artifact != "" {
+		return result_sets.NewArtifactPathManager(
+			config_obj, in.ClientId, in.FlowId, in.Artifact)
+
+	} else if in.FlowId != "" && in.Type != "" {
+		flow_path_manager := paths.NewFlowPathManager(
+			in.ClientId, in.FlowId)
+		switch in.Type {
+		case "log":
+			return flow_path_manager.Log()
+		case "uploads":
+			return flow_path_manager.UploadMetadata()
+		}
+	} else if in.HuntId != "" && in.Type == "clients" {
+		return paths.NewHuntPathManager(in.HuntId).Clients()
+
+	} else if in.HuntId != "" && in.Type == "hunt_status" {
+		return paths.NewHuntPathManager(in.HuntId).ClientErrors()
+
+	} else if in.NotebookId != "" && in.CellId != "" {
+		return reporting.NewNotebookPathManager(in.NotebookId).Cell(
+			in.CellId).QueryStorage(in.TableId)
+	}
+
+	return nil
 }
