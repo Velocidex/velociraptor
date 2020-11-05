@@ -16,7 +16,6 @@ import Pagination from 'react-bootstrap/Pagination';
 import Form from 'react-bootstrap/Form';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Navbar from 'react-bootstrap/Navbar';
-import VeloNotImplemented from '../core/notimplemented.js';
 import VeloValueRenderer from '../utils/value.js';
 import Spinner from '../utils/spinner.js';
 import api from '../core/api-service.js';
