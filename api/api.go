@@ -429,6 +429,7 @@ func (self *ApiServer) ListClients(
 
 			// Skip clients that are offline
 			if in.Filter == api_proto.SearchClientsRequest_ONLINE &&
+				now > api_client.LastSeenAt &&
 				now-api_client.LastSeenAt > 1000000*60*15 {
 				continue
 			}
