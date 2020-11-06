@@ -32,7 +32,7 @@ import api from '../core/api-service.js';
 
 class PaginationBuilder {
     PaginationSteps = ["Select Artifacts", "Configure Parameters",
-                       "Specify Resorces", "Review", "Launch"];
+                       "Specify Resources", "Review", "Launch"];
 
     constructor(name, title, shouldFocused) {
         this.title = title;
@@ -752,7 +752,7 @@ class NewCollectionWizard extends React.Component {
                   <NewCollectionResources
                     resources={this.state.resources}
                     paginator={new PaginationBuilder(
-                        "Specify Resorces",
+                        "Specify Resources",
                         "New Collection: Specify Resources")}
                     setResources={this.setResources} />
 
