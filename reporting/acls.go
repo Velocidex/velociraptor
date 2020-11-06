@@ -34,7 +34,8 @@ func GetSharedNotebooks(
 	// Return all the notebooks from the index that potentially
 	// could be shared with the user.
 	for idx, notebook_id := range db.SearchClients(
-		config_obj, constants.NOTEBOOK_INDEX, user, "", offset, count) {
+		config_obj, constants.NOTEBOOK_INDEX, user, "",
+		offset, count, datastore.SORT_UP) {
 		if uint64(idx) < offset {
 			continue
 		}

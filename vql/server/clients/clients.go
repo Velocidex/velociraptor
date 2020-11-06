@@ -37,6 +37,8 @@ import (
 
 type ClientsPluginArgs struct {
 	Search   string `vfilter:"optional,field=search,doc=Client search string. Can have the following prefixes: 'lable:', 'host:'"`
+	Start    uint64 `vfilter:"optional,field=start,doc=First client to fetch (0)'"`
+	Limit    uint64 `vfilter:"optional,field=limit,doc=First client to fetch (1000)'"`
 	ClientId string `vfilter:"optional,field=client_id"`
 }
 
@@ -95,9 +97,14 @@ func (self ClientsPlugin) Call(
 			search = "all"
 		}
 
+		limit := arg.Limit
+		if limit == 0 {
+			limit = 1000
+		}
+
 		for _, client_id := range db.SearchClients(
 			config_obj, constants.CLIENT_INDEX_URN,
-			search, "", 0, 1000000) {
+			search, "", arg.Start, limit, datastore.UNSORTED) {
 			api_client, err := api.GetApiClient(
 				config_obj, nil, client_id, false)
 			if err == nil {

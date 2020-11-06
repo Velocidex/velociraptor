@@ -86,7 +86,7 @@ func (self *Labeler) getRecordFromIndex(
 
 	for _, label := range db.SearchClients(
 		config_obj, constants.CLIENT_INDEX_URN,
-		client_id, "", 0, 1000) {
+		client_id, "", 0, 1000, datastore.UNSORTED) {
 		if strings.HasPrefix(label, "label:") {
 			result.record.Label = append(result.record.Label,
 				strings.TrimPrefix(label, "label:"))

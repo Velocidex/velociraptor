@@ -1,5 +1,8 @@
 import "./clients-list.css";
 
+import online from './img/online.png';
+import any from './img/any.png';
+
 import _ from 'lodash';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -20,9 +23,19 @@ import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import LabelForm from '../utils/labels.js';
 import Row from 'react-bootstrap/Row';
+import Pagination from 'react-bootstrap/Pagination';
+import paginationFactory from 'react-bootstrap-table2-paginator';
 
+import { sizePerPageRenderer } from '../core/table.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+
+const UNSORTED = 0;
+const SORT_UP = 1;
+const SORT_DOWN = 2;
+
+const UNFILTERED = 0;
+const ONLINE = 1;
 
 class LabelClients extends Component {
     static propTypes = {
@@ -120,6 +133,55 @@ class LabelClients extends Component {
     }
 }
 
+
+const pageListRenderer = ({
+    pages,
+    currentPage,
+    totalRows,
+    pageSize,
+    onPageChange
+}) => {
+    // just exclude <, <<, >>, >
+    const pageWithoutIndication = pages.filter(p => typeof p.page !== 'string');
+    let totalPages = parseInt(totalRows / pageSize);
+
+    // Only allow changing to a page if there are any rows in that
+    // page.
+    if (totalPages * pageSize + 1 > totalRows) {
+        totalPages--;
+    }
+
+    return (
+        <Pagination>
+          <Pagination.First onClick={()=>onPageChange(0)}/>
+          {
+              pageWithoutIndication.map((p, idx)=>(
+                <Pagination.Item
+                  key={idx}
+                  active={p.active}
+                  onClick={ () => onPageChange(p.page) } >
+                  { p.page }
+                </Pagination.Item>
+            ))
+          }
+          <Pagination.Next onClick={()=>onPageChange(pageWithoutIndication.length)}/>
+          <Form.Control
+            as="input"
+            className="pagination-form"
+            placeholder="Goto Page"
+            value={currentPage || ""}
+            onChange={e=> {
+                let page = parseInt(e.currentTarget.value || 0);
+                if (page >= 0) {
+                    onPageChange(page);
+                }
+            }}/>
+
+        </Pagination>
+    );
+};
+
+
 class VeloClientList extends Component {
     static propTypes = {
         query: PropTypes.string.isRequired,
@@ -134,6 +196,11 @@ class VeloClientList extends Component {
         loading: false,
         showLabelDialog: false,
         focusedClient: null,
+
+        start_row: 0,
+        page_size: 10,
+        sort: UNSORTED,
+        filter: UNFILTERED,
     };
 
     componentDidMount = () => {
@@ -147,7 +214,11 @@ class VeloClientList extends Component {
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
         if (this.props.query !== prevProps.query ||
-            this.props.version !== prevProps.version) {
+            this.props.version !== prevProps.version ||
+            this.state.page_size !== prevState.page_size ||
+            this.state.sort !== prevState.sort ||
+            this.state.filter !== prevState.filter ||
+            this.state.start_row !== prevState.start_row) {
             this.searchClients();
         }
     }
@@ -161,7 +232,10 @@ class VeloClientList extends Component {
         this.setState({loading: true});
         api.get('/v1/SearchClients', {
             query: query,
-            count: 500,
+            limit: this.state.page_size,
+            offset: this.state.start_row,
+            sort: this.state.sort,
+            filter: this.state.filter,
         }).then(resp => {
             let items = resp.data && resp.data.items;
             items = items || [];
@@ -231,6 +305,35 @@ class VeloClientList extends Component {
 
     render() {
         let columns = getClientColumns();
+        let total_size = this.state.clients.length + this.state.page_size + this.state.start_row;
+
+        columns[0].headerFormatter = (column, colIndex, { sortElement, filterElement }) => {
+            return (
+                <Button variant="outline-default"
+                        onClick={()=>{
+                            let filter = this.state.filter === ONLINE ? UNFILTERED : ONLINE;
+                            this.setState({filter: filter});
+                        }}
+                  >
+                  <span className="button-label">
+                    { this.state.filter === ONLINE ?
+                      <img className="icon-small" src={online} alt="online" />  :
+                      <img className="icon-small" src={any} alt="any state" />
+                    }
+                  </span>
+                </Button>
+            );
+        };
+
+        columns[2].onSort = (field, order) => {
+            this.props.setSearch("host:*");
+            if (order === "asc") {
+                this.setState({sort: SORT_UP});
+            } else if (order === "desc") {
+                this.setState({sort: SORT_DOWN});
+            };
+        };
+
         columns.push({
             dataField: "labels", text: "Labels",
             sort:true, filtered: true,
@@ -239,7 +342,10 @@ class VeloClientList extends Component {
                     return <Button size="sm" key={idx}
                                    onClick={() => this.removeLabel(label, row)}
                                    variant="default">
-                             {label}
+                             <span className="button-label">{label}</span>
+                             <span className="button-label">
+                               <FontAwesomeIcon icon="window-close"/>
+                             </span>
                            </Button>;
                 });
             }});
@@ -276,7 +382,9 @@ class VeloClientList extends Component {
               <div className="fill-parent no-margins toolbar-margin selectable">
                 <BootstrapTable
                   hover
+                  remote
                   condensed
+                  noDataIndication="Table is Empty"
                   keyField="client_id"
                   bootstrap4
                   headerClasses="alert alert-secondary"
@@ -285,6 +393,26 @@ class VeloClientList extends Component {
                   columns={columns}
                   selectRow={ selectRow }
                   filter={ filterFactory() }
+                  onTableChange={(type, { page, sizePerPage }) => {
+                      this.setState({start_row: page * sizePerPage});
+                  }}
+
+                  pagination={ paginationFactory({
+                      sizePerPage: this.state.page_size,
+                      totalSize: total_size,
+                      currSizePerPage: this.state.page_size,
+                      onSizePerPageChange: value=>{
+                          this.setState({page_size: value});
+                      },
+                      pageStartIndex: 0,
+                      pageListRenderer: ({pages, onPageChange})=>pageListRenderer({
+                          pageSize: this.state.page_size,
+                          pages: pages,
+                          currentPage: this.state.start_row / this.state.page_size,
+                          onPageChange: onPageChange}),
+                      sizePerPageRenderer
+                  }) }
+
                 />
               </div>
             </>
@@ -297,7 +425,7 @@ export default withRouter(VeloClientList);
 
 export function getClientColumns() {
     return formatColumns([
-        {dataField: "last_seen_at", text: "Online", sort: true,
+        {dataField: "last_seen_at", text: "Online",
          formatter: (cell, row) => {
              return <VeloClientStatusIcon client={row}/>;
          }},
@@ -306,7 +434,7 @@ export function getClientColumns() {
              return <ClientLink client_id={cell}/>;
          }},
         {dataField: "os_info.fqdn", text: "Hostname",
-         sort: true, filtered: true},
+         sort: true},
         {dataField: "os_info.release", text: "OS Version"},
     ]);
 }
