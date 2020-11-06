@@ -352,9 +352,6 @@ func (self *FileBaseDataStore) SearchClients(
 	query string, query_type string,
 	offset uint64, limit uint64, sort_direction SortingSense) []string {
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Debug("Search for %v from %v to %v (%v)\n", query, offset, limit, sort_direction)
-
 	seen := make(map[string]bool)
 
 	var result []string

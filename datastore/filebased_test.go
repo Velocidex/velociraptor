@@ -113,6 +113,68 @@ func benchmarkSearchClientCount(b *testing.B, count int, sort_direction SortingS
 	}
 }
 
+/*
+goos: linux
+goarch: amd64
+pkg: www.velocidex.com/golang/velociraptor/datastore
+BenchmarkSearchClient
+Creating 1000 clients on /tmp/datastore_test496793479 (Sorting 0)
+BenchmarkSearchClient/All
+BenchmarkSearchClient/All-16                 225           6403265 ns/op
+BenchmarkSearchClient/By_Lables
+BenchmarkSearchClient/By_Lables-16           180           5744585 ns/op
+BenchmarkSearchClient/By_All_Lables
+BenchmarkSearchClient/By_All_Lables-16                51          22922778 ns/op
+BenchmarkSearchClient/By_hostname
+BenchmarkSearchClient/By_hostname-16               23781             52901 ns/op
+BenchmarkSearchClient/By_client_id
+BenchmarkSearchClient/By_client_id-16              21888             55661 ns/op
+BenchmarkSearchClient/By_All_hostnames
+BenchmarkSearchClient/By_All_hostnames-16             49          23497222 ns/op
+Creating 10000 clients on /tmp/datastore_test241135930 (Sorting 0)
+BenchmarkSearchClient/All#01
+BenchmarkSearchClient/All#01-16                       19          60842851 ns/op
+BenchmarkSearchClient/By_Lables#01
+BenchmarkSearchClient/By_Lables#01-16                 20          57002530 ns/op
+BenchmarkSearchClient/By_All_Lables#01
+BenchmarkSearchClient/By_All_Lables#01-16              4         263212968 ns/op
+BenchmarkSearchClient/By_hostname#01
+BenchmarkSearchClient/By_hostname#01-16            20967             53810 ns/op
+BenchmarkSearchClient/By_client_id#01
+BenchmarkSearchClient/By_client_id#01-16           24430             47961 ns/op
+BenchmarkSearchClient/By_All_hostnames#01
+BenchmarkSearchClient/By_All_hostnames#01-16           5         292543554 ns/op
+Creating 1000 clients on /tmp/datastore_test427608913 (Sorting 1)
+BenchmarkSearchClient/All#02
+BenchmarkSearchClient/All#02-16                      132           8818529 ns/op
+BenchmarkSearchClient/By_Lables#02
+BenchmarkSearchClient/By_Lables#02-16                100          10459059 ns/op
+BenchmarkSearchClient/By_All_Lables#02
+BenchmarkSearchClient/By_All_Lables#02-16             12         107499717 ns/op
+BenchmarkSearchClient/By_hostname#02
+BenchmarkSearchClient/By_hostname#02-16            19784             55603 ns/op
+BenchmarkSearchClient/By_client_id#02
+BenchmarkSearchClient/By_client_id#02-16           23761             50316 ns/op
+BenchmarkSearchClient/By_All_hostnames#02
+BenchmarkSearchClient/By_All_hostnames#02-16          13          97149201 ns/op
+Creating 10000 clients on /tmp/datastore_test299055740 (Sorting 1)
+BenchmarkSearchClient/All#03
+BenchmarkSearchClient/All#03-16                       13          81121369 ns/op
+BenchmarkSearchClient/By_Lables#03
+BenchmarkSearchClient/By_Lables#03-16                 13          84094550 ns/op
+BenchmarkSearchClient/By_All_Lables#03
+BenchmarkSearchClient/By_All_Lables#03-16              1        1362633032 ns/op
+BenchmarkSearchClient/By_All_Lables#03
+BenchmarkSearchClient/By_All_Lables#03-16              1        1362633032 ns/op
+BenchmarkSearchClient/By_hostname#03
+BenchmarkSearchClient/By_hostname#03-16            20892             53779 ns/op
+BenchmarkSearchClient/By_client_id#03
+BenchmarkSearchClient/By_client_id#03-16           24312             49224 ns/op
+BenchmarkSearchClient/By_All_hostnames#03
+BenchmarkSearchClient/By_All_hostnames#03-16           2        1010917148 ns/op
+PASS
+*/
+
 func BenchmarkSearchClient(b *testing.B) {
 	for _, count := range []int{1000, 10000} {
 		benchmarkSearchClientCount(b, count, UNSORTED)
