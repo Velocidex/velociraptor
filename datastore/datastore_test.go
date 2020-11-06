@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"sort"
+	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -106,11 +107,17 @@ func (self BaseTestSuite) TestIndexes() {
 	assert.NoError(self.T(), err)
 
 	hits := self.datastore.SearchClients(self.config_obj, constants.CLIENT_INDEX_URN,
-		"all", "", 0, 100)
+		"all", "", 0, 100, SORT_UP)
 	sort.Strings(hits)
 	assert.Equal(self.T(), []string{client_id, client_id_2}, hits)
 
 	hits = self.datastore.SearchClients(self.config_obj, constants.CLIENT_INDEX_URN,
-		"*foo", "", 0, 100)
+		"*foo", "", 0, 100, SORT_UP)
 	assert.Equal(self.T(), []string{client_id}, hits)
+}
+
+func benchmarkSearchClient(b *testing.B,
+	data_store DataStore,
+	config_obj *config_proto.Config) {
+
 }

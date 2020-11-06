@@ -26,6 +26,14 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
+type SortingSense int
+
+const (
+	UNSORTED  = SortingSense(0)
+	SORT_UP   = SortingSense(1)
+	SORT_DOWN = SortingSense(2)
+)
+
 type WalkFunc func(urn string) error
 
 type DataStore interface {
@@ -92,7 +100,7 @@ type DataStore interface {
 		config_obj *config_proto.Config,
 		index_urn string,
 		query string, query_type string,
-		offset uint64, limit uint64) []string
+		offset uint64, limit uint64, sort SortingSense) []string
 
 	// Called to close all db handles etc. Not thread safe.
 	Close()

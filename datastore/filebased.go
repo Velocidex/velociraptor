@@ -252,7 +252,7 @@ func listChildren(config_obj *config_proto.Config,
 		return nil, err
 	}
 	dirname := strings.TrimSuffix(filename, ".db")
-	children, err := utils.ReadDir(dirname)
+	children, err := utils.ReadDirUnsorted(dirname)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return []os.FileInfo{}, nil
@@ -267,16 +267,16 @@ func (self *FileBaseDataStore) ListChildren(
 	config_obj *config_proto.Config,
 	urn string,
 	offset uint64, length uint64) ([]string, error) {
-	result := []string{}
-
 	children, err := listChildren(config_obj, urn)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
+
 	sort.Slice(children, func(i, j int) bool {
 		return children[i].ModTime().Unix() > children[j].ModTime().Unix()
 	})
 
+	result := make([]string, 0, len(children))
 	urn = strings.TrimSuffix(urn, "/")
 	for i := offset; i < offset+length; i++ {
 		if i >= uint64(len(children)) {
@@ -350,13 +350,31 @@ func (self *FileBaseDataStore) SearchClients(
 	config_obj *config_proto.Config,
 	index_urn string,
 	query string, query_type string,
-	offset uint64, limit uint64) []string {
+	offset uint64, limit uint64, sort_direction SortingSense) []string {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Debug("Search for %v from %v to %v (%v)\n", query, offset, limit, sort_direction)
+
 	seen := make(map[string]bool)
-	result := []string{}
+
+	var result []string
+
+	if sort_direction == UNSORTED {
+		result = make([]string, 0, offset+limit)
+	}
 
 	query = strings.ToLower(query)
 	if query == "." || query == "" {
 		query = "all"
+	}
+
+	// If the result set is not sorted we can quit as soon as we
+	// have enough results. When sorting the results we are forced
+	// to enumerate all the clients, sort them and then chop them
+	// up into pages.
+	can_quit_early := func() bool {
+		return sort_direction == UNSORTED &&
+			uint64(len(result)) > offset+limit
 	}
 
 	add_func := func(key string) {
@@ -370,9 +388,13 @@ func (self *FileBaseDataStore) SearchClients(
 			name := UnsanitizeComponent(child_urn.Name())
 			name = strings.TrimSuffix(name, ".gz")
 			name = strings.TrimSuffix(name, ".db")
-			seen[name] = true
+			_, pres := seen[name]
+			if !pres {
+				seen[name] = true
+				result = append(result, name)
+			}
 
-			if uint64(len(seen)) > offset+limit {
+			if can_quit_early() {
 				break
 			}
 		}
@@ -386,6 +408,11 @@ func (self *FileBaseDataStore) SearchClients(
 		if err != nil {
 			return result
 		}
+
+		if sort_direction != UNSORTED {
+			result = make([]string, 0, len(sets))
+		}
+
 		for _, set := range sets {
 			name := UnsanitizeComponent(set.Name())
 			name = strings.TrimSuffix(name, ".gz")
@@ -397,13 +424,17 @@ func (self *FileBaseDataStore) SearchClients(
 			}
 			if matched {
 				if query_type == "key" {
-					seen[name] = true
+					_, pres := seen[name]
+					if !pres {
+						seen[name] = true
+						result = append(result, name)
+					}
 				} else {
 					add_func(name)
 				}
 			}
 
-			if uint64(len(seen)) > offset+limit {
+			if can_quit_early() {
 				break
 			}
 		}
@@ -411,14 +442,24 @@ func (self *FileBaseDataStore) SearchClients(
 		add_func(query)
 	}
 
-	for k := range seen {
-		result = append(result, k)
-	}
-
+	// No results within the range.
 	if uint64(len(result)) < offset {
 		return []string{}
 	}
 
+	// Sort the search results for stable pagination output.
+	switch sort_direction {
+	case SORT_DOWN:
+		sort.Slice(result, func(i, j int) bool {
+			return result[i] > result[j]
+		})
+	case SORT_UP:
+		sort.Slice(result, func(i, j int) bool {
+			return result[i] < result[j]
+		})
+	}
+
+	// Clamp the limit to the end of the results we have.
 	if uint64(len(result))-offset < limit {
 		limit = uint64(len(result)) - offset
 	}

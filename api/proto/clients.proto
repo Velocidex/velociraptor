@@ -75,6 +75,21 @@ message SearchClientsRequest {
         KEY = 1;   // Returns all keys that match query.
     }
     QueryType type = 5;
+
+    enum SortingSense {
+        UNSORTED = 0;
+        SORT_UP = 1;
+        SORT_DOWN = 2;
+    }
+    SortingSense sort = 6;
+
+    // Post filter results to only see clients that are currently
+    // online
+    enum Filters {
+        UNFILTERED = 0;
+        ONLINE = 1;
+    }
+    Filters filter = 7;
 }
 
 message SearchClientsResponse {

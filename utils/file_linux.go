@@ -66,6 +66,17 @@ func ReadDir(dirname string) ([]os.FileInfo, error) {
 	return list, err
 }
 
+func ReadDirUnsorted(dirname string) ([]os.FileInfo, error) {
+	f, err := os.Open(dirname)
+	if err != nil {
+		return nil, err
+	}
+	list, err := readdir(f, -1)
+	f.Close()
+
+	return list, err
+}
+
 func CheckDirWritable(dirname string) error {
 	return unix.Access(dirname, unix.W_OK)
 }

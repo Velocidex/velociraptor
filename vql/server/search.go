@@ -114,7 +114,7 @@ func (self SearchPlugin) Call(
 
 		for _, item := range db.SearchClients(
 			config_obj, constants.CLIENT_INDEX_URN,
-			arg.Query, arg.Type, arg.Offset, arg.Limit) {
+			arg.Query, arg.Type, arg.Offset, arg.Limit, datastore.UNSORTED) {
 			select {
 			case <-ctx.Done():
 				return

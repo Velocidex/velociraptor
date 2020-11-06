@@ -13,6 +13,10 @@ func ReadDir(dirname string) ([]os.FileInfo, error) {
 	return ioutil.ReadDir(dirname)
 }
 
+func ReadDirUnsorted(dirname string) ([]os.FileInfo, error) {
+	return ioutil.ReadDir(dirname)
+}
+
 func ExpandEnv(path string) string {
 	path = os.ExpandEnv(path)
 	expanded_path, err := registry.ExpandString(path)

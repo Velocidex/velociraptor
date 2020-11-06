@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"sort"
 	"strings"
 	"sync"
 
@@ -235,7 +236,7 @@ func (self *TestDataStore) SearchClients(
 	config_obj *config_proto.Config,
 	index_urn string,
 	query string, query_type string,
-	offset uint64, limit uint64) []string {
+	offset uint64, limit uint64, sort_direction SortingSense) []string {
 	seen := make(map[string]bool)
 	result := []string{}
 
@@ -305,6 +306,18 @@ func (self *TestDataStore) SearchClients(
 
 	if uint64(len(result))-offset < limit {
 		limit = uint64(len(result)) - offset
+	}
+
+	// Sort the search results for stable pagination output.
+	switch sort_direction {
+	case SORT_DOWN:
+		sort.Slice(result, func(i, j int) bool {
+			return result[i] > result[j]
+		})
+	case SORT_UP:
+		sort.Slice(result, func(i, j int) bool {
+			return result[i] < result[j]
+		})
 	}
 
 	return result[offset : offset+limit]
