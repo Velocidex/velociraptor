@@ -29,7 +29,7 @@ import {
 class HuntPaginator extends PaginationBuilder {
     PaginationSteps = ["Configure Hunt",
                        "Select Artifacts", "Configure Parameters",
-                       "Specify Resorces", "Review", "Launch"];
+                       "Specify Resources", "Review", "Launch"];
 }
 
 class NewHuntConfigureHunt extends React.Component {

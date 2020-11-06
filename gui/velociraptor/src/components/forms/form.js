@@ -16,6 +16,28 @@ import cellEditFactory, { Type } from 'react-bootstrap-table2-editor';
 
 import { parseCSV, serializeCSV } from '../utils/csv.js';
 
+const numberRegex = RegExp("^[0-9]+$");
+
+
+function convertToDate(x) {
+    // Allow the value to be specified in a number of ways.
+    if (_.isNumber(x) || numberRegex.test(x)) {
+        try {
+            return new Date(parseInt(x) * 1000);
+        } catch(e) {};
+    }
+
+    try {
+        let res = Date.parse(x);
+        if (!_.isNaN(res)) {
+            return new Date(res);
+        }
+    } catch (e) {};
+
+    return null;
+}
+
+
 export default class VeloForm extends React.Component {
     static propTypes = {
         param: PropTypes.object,
@@ -99,23 +121,17 @@ export default class VeloForm extends React.Component {
             );
 
         case "timestamp":
-            let date = null;
-            if (this.props.value) {
-                try {
-                    date = new Date(parseInt(this.props.value) * 1000);
-                } catch(e) {};
-            }
-
+            let date = convertToDate(this.props.value);
             return (
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">{param.name}</Form.Label>
                   <Col sm="8">
                     <DateTimePicker
                       onChange={(value) => {
-                          if (!value) {
+                          if (!_.isDate(value)) {
                               this.props.setValue(undefined);
                           } else {
-                              this.props.setValue(parseInt(value.getTime() / 1000).toString());
+                              this.props.setValue(value.toISOString());
                           }
                       }}
                       value={date}
