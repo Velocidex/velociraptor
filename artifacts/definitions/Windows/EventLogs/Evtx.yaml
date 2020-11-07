@@ -56,37 +56,43 @@ parameters:
 
 sources:
   - queries:
-      - LET evtxglobs <= SELECT FullPath FROM glob(globs=expand(path=EvtxGlob))
-
-      - LET files = 
+      # expand provided glob into a list of paths on the file system (fs)
+      - LET fspaths <= 
+          SELECT FullPath FROM glob(globs=expand(path=EvtxGlob))
+          WHERE FullPath =~ PathRegex
+      
+      # function returning list of VSS paths corresponding to path
+      - LET vsspaths(path) = 
+          SELECT FullPath FROM Artifact.Windows.Search.VSS(SearchFilesGlob=path)
+          WHERE FullPath =~ PathRegex
+      
+      # function returning parsed evtx from list of paths
+      - LET evtxsearch(pathList) = 
           SELECT * FROM foreach(
-            row=evtxglobs,
+            row=pathList,
             query={
-              SELECT * 
-              FROM if(condition=SearchVSS,
-                      then={SELECT * FROM Artifact.Windows.Search.VSS(SearchFilesGlob=FullPath)},
-                      else={SELECT * FROM glob(globs=FullPath)})
+              SELECT *,
+                timestamp(epoch=int(int=System.TimeCreated.SystemTime)) AS TimeCreated,
+                System.Channel as Channel,
+                System.EventRecordID as EventRecordID,
+                System.EventID.Value as EventID,
+                FullPath
+              FROM parse_evtx(filename=FullPath)
+              WHERE
+                if(condition=StartDate, then=TimeCreated >= timestamp(string=StartDate), else=true)
+                AND if(condition=EndDate, then=TimeCreated <= timestamp(string=EndDate), else=true)
+                AND Channel =~ ChannelRegex
+                AND str(str=EventID) =~ IDRegex
             }
           )
-          WHERE FullPath =~ PathRegex
-          ORDER BY FullPath DESC
-
-      # Parse all target files and de-duplicate with GROUP BY
-      - SELECT * FROM foreach(
-          row=files,
-          query={
-            SELECT *,
-              timestamp(epoch=int(int=System.TimeCreated.SystemTime)) AS TimeCreated,
-              System.Channel as Channel,
-              System.EventRecordID as EventRecordID,
-              System.EventID.Value as EventID,
-              FullPath
-            FROM parse_evtx(filename=FullPath)
-            WHERE
-              if(condition=StartDate, then=TimeCreated >= timestamp(string=StartDate), else=true)
-              AND if(condition=EndDate, then=TimeCreated <= timestamp(string=EndDate), else=true)
-              AND Channel =~ ChannelRegex
-              AND str(str=EventID) =~ IDRegex
-          }
-        )
-        GROUP BY EventRecordID,Channel
+        
+      # only de-duplicate using GROUP BY when searching VSS
+      # de-duplicate file-by-file to reduce memory impact
+      - SELECT * FROM if(condition=SearchVSS, then={
+          SELECT * FROM foreach(row=fspaths, query={
+            SELECT * FROM evtxsearch(pathList={SELECT FullPath FROM vsspaths(path=FullPath)})
+            GROUP BY EventRecordID,Channel
+          })
+        }, else={
+          SELECT * FROM evtxsearch(pathList={select FullPath FROM fspaths})
+        })
