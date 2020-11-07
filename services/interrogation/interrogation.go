@@ -141,8 +141,17 @@ func (self *EnrollmentService) ProcessRow(
 	client_info.ClientId = client_id
 	client_info.LastInterrogateFlowId = flow_id
 	err = db.SetSubject(config_obj, client_path_manager.Path(), client_info)
+	if err != nil {
+		return err
+	}
 
-	return err
+	// Notify the client
+	notifier := services.GetNotifier()
+	if notifier != nil {
+		err = services.GetNotifier().NotifyListener(config_obj, client_id)
+		return err
+	}
+	return nil
 }
 
 // Watch the system's flow completion log for interrogate artifacts.

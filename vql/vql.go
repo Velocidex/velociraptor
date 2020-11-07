@@ -45,6 +45,11 @@ var (
 	})
 )
 
+func OverridePlugin(plugin vfilter.PluginGeneratorInterface) {
+	name := plugin.Info(nil, nil).Name
+	exportedPlugins[name] = plugin
+}
+
 func RegisterPlugin(plugin vfilter.PluginGeneratorInterface) {
 	name := plugin.Info(nil, nil).Name
 	_, pres := exportedPlugins[name]

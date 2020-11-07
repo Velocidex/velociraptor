@@ -436,7 +436,7 @@ func (self *ApiServer) ListClients(
 
 			result.Items = append(result.Items, api_client)
 
-			if uint64(len(result.Items)) > limit {
+			if uint64(len(result.Items)) >= in.Limit {
 				break
 			}
 		}

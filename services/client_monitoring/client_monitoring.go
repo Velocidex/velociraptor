@@ -13,6 +13,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -225,15 +226,18 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 		self.state.Artifacts = &flows_proto.ArtifactCollectorArgs{}
 	}
 
-	result.Event = append(result.Event,
-		self.state.Artifacts.CompiledCollectorArgs...)
+	for _, event := range self.state.Artifacts.CompiledCollectorArgs {
+		result.Event = append(result.Event, proto.Clone(event).(*actions_proto.VQLCollectorArgs))
+	}
 
 	// Now apply any event queries that belong to this client based on labels.
 	labeler := services.GetLabeler()
 	for _, table := range self.state.LabelEvents {
 		if labeler.IsLabelSet(config_obj, client_id, table.Label) {
-			result.Event = append(
-				result.Event, table.Artifacts.CompiledCollectorArgs...)
+			for _, event := range table.Artifacts.CompiledCollectorArgs {
+				result.Event = append(result.Event,
+					proto.Clone(event).(*actions_proto.VQLCollectorArgs))
+			}
 		}
 	}
 

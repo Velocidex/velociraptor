@@ -19,6 +19,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -342,15 +343,17 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		// Must be before the Process() call to prevent race.
 		source := message_info.Source
 
-		if services.GetNotifier().IsClientConnected(source) {
+		notifier := services.GetNotifier()
+		if notifier != nil && notifier.IsClientConnected(source) {
 			http.Error(w, "Another Client connection exists. "+
 				"Only a single instance of the client is "+
 				"allowed to connect at the same time.",
 				http.StatusConflict)
+			fmt.Printf("Source %v Conflict\n", source)
 			return
 		}
 
-		notification, cancel := services.GetNotifier().ListenForNotification(source)
+		notification, cancel := notifier.ListenForNotification(source)
 		defer cancel()
 
 		// Deadlines are designed to ensure that connections
