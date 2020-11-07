@@ -28,7 +28,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -141,7 +140,7 @@ func (self WatchMonitoringPlugin) Call(
 			return
 		}
 
-		mode, err := result_sets.GetArtifactMode(config_obj, arg.Artifact)
+		mode, err := artifact_paths.GetArtifactMode(config_obj, arg.Artifact)
 		if err != nil {
 			scope.Log("Artifact %s not known", arg.Artifact)
 			return

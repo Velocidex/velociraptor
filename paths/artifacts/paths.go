@@ -7,6 +7,7 @@ import (
 	"path"
 	"regexp"
 	"sort"
+	"strings"
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -124,10 +125,13 @@ func (self *ArtifactPathManager) get_event_files() ([]*api.ResultSetFileProperti
 	if err != nil {
 		return nil, err
 	}
-
 	result := make([]*api.ResultSetFileProperties, 0, len(children))
 	for _, child := range children {
 		full_path := path.Join(dir_name, child.Name())
+		if !strings.HasSuffix(full_path, ".json") {
+			continue
+		}
+
 		timestamp := DayNameToTimestamp(full_path)
 		result = append(result, &api.ResultSetFileProperties{
 			Path:      full_path,
@@ -139,7 +143,6 @@ func (self *ArtifactPathManager) get_event_files() ([]*api.ResultSetFileProperti
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].StartTime < result[j].StartTime
 	})
-
 	return result, nil
 }
 

@@ -318,7 +318,9 @@ func (self HuntFlowsPlugin) Call(
 		}
 
 		hunt_path_manager := paths.NewHuntPathManager(arg.HuntId).Clients()
-		rs_reader, err := result_sets.NewResultSetReader(config_obj, hunt_path_manager)
+		file_store_factory := file_store.GetFileStore(config_obj)
+		rs_reader, err := result_sets.NewResultSetReader(
+			file_store_factory, hunt_path_manager)
 		if err != nil {
 			scope.Log("Error %v: %v\n", err, hunt_path_manager.Path())
 			return

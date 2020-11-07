@@ -150,8 +150,9 @@ func flushContextLogs(
 		collection_context.SessionId).Log()
 
 	// Append logs to messages from previous packets.
+	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
-		config_obj, flow_path_manager, nil, false /* truncate */)
+		file_store_factory, flow_path_manager, nil, false /* truncate */)
 	if err != nil {
 		return err
 	}
@@ -179,8 +180,9 @@ func flushContextUploadedFiles(
 		collection_context.ClientId,
 		collection_context.SessionId).UploadMetadata()
 
+	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
-		config_obj, flow_path_manager, nil, false /* truncate */)
+		file_store_factory, flow_path_manager, nil, false /* truncate */)
 	if err != nil {
 		return err
 	}
@@ -291,8 +293,9 @@ func ArtifactCollectorProcessOneMessage(
 				collection_context.SessionId,
 				response.Query.Name)
 
+			file_store_factory := file_store.GetFileStore(config_obj)
 			rs_writer, err := result_sets.NewResultSetWriter(
-				config_obj, path_manager, nil, false /* truncate */)
+				file_store_factory, path_manager, nil, false /* truncate */)
 
 			// Support the old clients which send JSON
 			// array responses. We need to decode the JSON

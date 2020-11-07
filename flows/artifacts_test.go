@@ -19,10 +19,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/responder"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -137,7 +136,7 @@ func (self *TestSuite) TestRetransmission() {
 		self.client_id, flow_id)
 	assert.NoError(self.T(), err)
 
-	json.Dump(collection_context)
+	// json.Dump(collection_context)
 
 	// The flow should have only a single row though.
 	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(1))
@@ -342,7 +341,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 	assert.Equal(self.T(), uploaded_size, int64(12))
 
 	// Check the System.Upload.Completion event.
-	artifact_path_manager := result_sets.NewArtifactPathManager(
+	artifact_path_manager := artifacts.NewArtifactPathManager(
 		self.config_obj, self.client_id, self.flow_id,
 		"System.Upload.Completion")
 
@@ -450,7 +449,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 		flow_path_manager.GetUploadsFile("ntfs", "sparse").IndexPath())
 
 	// Check the System.Upload.Completion event.
-	artifact_path_manager := result_sets.NewArtifactPathManager(
+	artifact_path_manager := artifacts.NewArtifactPathManager(
 		self.config_obj, self.client_id, self.flow_id,
 		"System.Upload.Completion")
 
@@ -564,7 +563,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 		flow_path_manager.GetUploadsFile("ntfs", "sparse").IndexPath())
 
 	// Check the System.Upload.Completion event.
-	artifact_path_manager := result_sets.NewArtifactPathManager(
+	artifact_path_manager := artifacts.NewArtifactPathManager(
 		self.config_obj, self.client_id, self.flow_id,
 		"System.Upload.Completion")
 

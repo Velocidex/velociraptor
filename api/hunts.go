@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc/status"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -26,7 +27,9 @@ func (self *ApiServer) GetHuntFlows(
 	}
 
 	hunt_path_manager := paths.NewHuntPathManager(in.HuntId).Clients()
-	rs_reader, err := result_sets.NewResultSetReader(self.config, hunt_path_manager)
+	file_store_factory := file_store.GetFileStore(self.config)
+	rs_reader, err := result_sets.NewResultSetReader(
+		file_store_factory, hunt_path_manager)
 	if err != nil {
 		return nil, err
 	}

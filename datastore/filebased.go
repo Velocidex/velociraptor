@@ -273,7 +273,7 @@ func (self *FileBaseDataStore) ListChildren(
 	}
 
 	sort.Slice(children, func(i, j int) bool {
-		return children[i].ModTime().Unix() > children[j].ModTime().Unix()
+		return children[i].ModTime().UnixNano() < children[j].ModTime().UnixNano()
 	})
 
 	result := make([]string, 0, len(children))

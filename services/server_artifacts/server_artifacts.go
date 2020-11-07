@@ -24,6 +24,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -312,8 +313,9 @@ func (self *ServerArtifactsRunner) runQuery(
 			path_manager := artifact_paths.NewArtifactPathManager(
 				self.config_obj, "server", task.SessionId, name)
 
+			file_store_factory := file_store.GetFileStore(self.config_obj)
 			rs_writer, err = result_sets.NewResultSetWriter(
-				self.config_obj, path_manager, opts, false /* truncate */)
+				file_store_factory, path_manager, opts, false /* truncate */)
 			if err != nil {
 				return err
 			}

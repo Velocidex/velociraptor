@@ -15,6 +15,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -201,8 +202,9 @@ func (self *EventTable) RunQuery(
 
 		// Append events to previous ones.
 		opts := vql_subsystem.EncOptsFromScope(scope)
+		file_store_factory := file_store.GetFileStore(config_obj)
 		rs_writer, err := result_sets.NewResultSetWriter(
-			config_obj, path_manager, opts, false /* truncate */)
+			file_store_factory, path_manager, opts, false /* truncate */)
 		if err != nil {
 			logger.Error("NewResultSetWriter: %v", err)
 			return

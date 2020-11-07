@@ -19,6 +19,7 @@ package api
 
 import (
 	context "golang.org/x/net/context"
+	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
@@ -48,7 +49,9 @@ func getTable(
 		return result, nil
 	}
 
-	rs_reader, err := result_sets.NewResultSetReader(config_obj, path_manager)
+	file_store_factory := file_store.GetFileStore(config_obj)
+	rs_reader, err := result_sets.NewResultSetReader(
+		file_store_factory, path_manager)
 	if err != nil {
 		return nil, err
 	}

@@ -190,8 +190,9 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 			download_name = strings.TrimSuffix(download_name, ".json")
 			download_name += ".csv"
 
+			file_store_factory := file_store.GetFileStore(config_obj)
 			rs_reader, err := result_sets.NewResultSetReader(
-				config_obj, path_manager)
+				file_store_factory, path_manager)
 			if err != nil {
 				returnError(w, 400, err.Error())
 				return

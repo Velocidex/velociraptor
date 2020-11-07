@@ -16,7 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -144,7 +144,7 @@ func (self *ServicesTestSuite) TestEnrollService() {
 	// enrollment messages are being written before the client is
 	// able to be enrolled. We should always generate only a
 	// single interrogate flow if the client is not known.
-	path_manager := result_sets.NewArtifactPathManager(
+	path_manager := artifacts.NewArtifactPathManager(
 		self.config_obj, "server" /* client_id */, "", "Server.Internal.Enrollment")
 
 	journal, err := services.GetJournal()

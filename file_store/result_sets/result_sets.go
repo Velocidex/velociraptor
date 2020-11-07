@@ -6,7 +6,6 @@ import (
 
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
@@ -18,14 +17,14 @@ type ResultSetWriter interface {
 }
 
 func NewResultSetWriter(
-	config_obj *config_proto.Config,
+	file_store api.FileStore,
 	path_manager api.PathManager,
 	opts *json.EncOpts,
 	truncate bool) (ResultSetWriter, error) {
 	if factory == nil {
 		return nil, errors.New("ResultSet factory not initialized")
 	}
-	return factory.NewResultSetWriter(config_obj, path_manager, opts, truncate)
+	return factory.NewResultSetWriter(file_store, path_manager, opts, truncate)
 }
 
 type ResultSetReader interface {
@@ -36,10 +35,10 @@ type ResultSetReader interface {
 }
 
 func NewResultSetReader(
-	config_obj *config_proto.Config,
+	file_store api.FileStore,
 	path_manager api.PathManager) (ResultSetReader, error) {
 	if factory == nil {
 		return nil, errors.New("ResultSet factory not initialized")
 	}
-	return factory.NewResultSetReader(config_obj, path_manager)
+	return factory.NewResultSetReader(file_store, path_manager)
 }
