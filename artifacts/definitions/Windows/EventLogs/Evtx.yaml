@@ -22,6 +22,9 @@ description: |
   
   - Parsing and aggregating may use high amounts of CPU on the client. Consider
   reducing the ops/second or narrowing the glob/path regex if necessary.
+  - Parsing may use significant memory and time when searching VSS volumes and
+  deduplicating events. This is proportional to the evtx file size and number
+  of VSS copies. Consider whether the extra events are worth the resources.
   - Parsing many event logs may take longer than the default timeout.  When
   parsing all log files and searching VSS, consider doubling the default or 
   more (especially with reduced ops/second, or if targets have high-volume 
@@ -94,5 +97,5 @@ sources:
             GROUP BY EventRecordID,Channel
           })
         }, else={
-          SELECT * FROM evtxsearch(pathList={select FullPath FROM fspaths})
+          SELECT * FROM evtxsearch(pathList={SELECT FullPath FROM fspaths})
         })
