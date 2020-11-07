@@ -224,6 +224,9 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 	err = services.GetHuntDispatcher().ModifyHunt(
 		in.HuntId,
 		func(hunt_obj *api_proto.Hunt) error {
+			// Make a copy
+			result = proto.Clone(hunt_obj).(*api_proto.Hunt)
+
 			// HACK: Velociraptor only knows how to
 			// collect artifacts now. Eventually the whole
 			// concept of a flow will go away but for now
@@ -231,10 +234,7 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 			// are actually collecting - there are not
 			// many possibilities since we have reduced
 			// the number of possible flows significantly.
-			FindCollectedArtifacts(config_obj, hunt_obj)
-
-			// Make a copy
-			result = proto.Clone(hunt_obj).(*api_proto.Hunt)
+			FindCollectedArtifacts(config_obj, result)
 
 			return nil
 		})

@@ -357,10 +357,13 @@ func (self *HuntManager) ProcessRow(
 	}
 
 	// Notify the client
-	err = services.GetNotifier().NotifyListener(
-		config_obj, participation_row.ClientId)
-	if err != nil {
-		scope.Log("hunt manager: %v", err)
+	notifier := services.GetNotifier()
+	if notifier != nil {
+		err = services.GetNotifier().NotifyListener(
+			config_obj, participation_row.ClientId)
+		if err != nil {
+			scope.Log("hunt manager: %v", err)
+		}
 	}
 }
 

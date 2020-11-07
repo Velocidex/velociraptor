@@ -395,6 +395,10 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 			}
 		}
 	}()
+	notifier := services.GetNotifier()
+	if notifier == nil {
+		return errors.New("Notifier not ready")
+	}
 
 	return services.GetNotifier().NotifyListener(config_obj, "Frontend")
 }

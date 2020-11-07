@@ -597,10 +597,11 @@ class NewCollectionWizard extends React.Component {
                     response.data.items && response.data.items.length) {
 
                     let parameters = {};
-                    _.each(request.parameters.env, param=>{
-                        parameters[param.key] = param.value;
-                    });
-
+                    if (request.parameters) {
+                        _.each(request.parameters.env, param=>{
+                            parameters[param.key] = param.value;
+                        });
+                    }
                     this.setState({
                         artifacts: [...response.data.items],
                         parameters: parameters,

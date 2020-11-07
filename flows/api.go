@@ -20,6 +20,7 @@ package flows
 import (
 	"context"
 	"path"
+	"sort"
 	"strings"
 	"time"
 
@@ -54,6 +55,12 @@ func GetFlows(
 	if err != nil {
 		return nil, err
 	}
+
+	// Flow IDs represent timestamp so they are sortable. The UI
+	// relies on more recent flows being at the top.
+	sort.Slice(flow_urns, func(i, j int) bool {
+		return flow_urns[i] > flow_urns[j]
+	})
 
 	for _, urn := range flow_urns {
 		// Hide the monitoring flow since it is not a real flow.
