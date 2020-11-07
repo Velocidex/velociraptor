@@ -17,4 +17,4 @@ Queries:
       filename=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx")
     LIMIT 1
 
-  - SELECT * FROM Artifact.Windows.EventLogs.MessageHunter( EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx",IocRegex="Get-Service" )
+  - SELECT * FROM Artifact.Windows.EventLogs.EvtxHunter( EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx",IocRegex="Get-Service" )
