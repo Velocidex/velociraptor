@@ -18,7 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
@@ -156,7 +156,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
-	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
 	journal, err := services.GetJournal()
 	assert.NoError(t, err)
@@ -219,7 +219,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
-	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
 	journal, err := services.GetJournal()
 	assert.NoError(t, err)
@@ -275,7 +275,7 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
-	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
 	journal, err := services.GetJournal()
 	assert.NoError(t, err)
@@ -344,7 +344,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
-	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
 	journal, err := services.GetJournal()
 	assert.NoError(t, err)
@@ -421,7 +421,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
-	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
 	journal, err := services.GetJournal()
 	assert.NoError(t, err)

@@ -48,45 +48,25 @@ To build from source, make sure you have a recent Golang installed
 from https://golang.org/dl/ (Currently at least Go 1.14):
 
 ```bash
-
     $ git clone https://github.com/Velocidex/velociraptor.git
     $ cd velociraptor
 
     # This will build the GUI elements. You will need to have node
-    # installed first. For example on Windows get it from
-    # https://nodejs.org/en/download/ . You also need to have JAVA
-    # installed from https://www.java.com because the js compiler
-    # needs it.
-    $ cd gui/static/
+    # installed first. For example get it from
+    # https://nodejs.org/en/download/.
+    $ cd gui/velociraptor/
     $ npm install
 
-    # If gulp is not on your path you need to run it using node:
-    # node node_modules\gulp\bin\gulp.js compile
-    $ gulp compile
-    $ cd -
+    # This will build the webpack bundle
+    $ make build
 
-    # This builds a release (i.e. it will embed the GUI files in the
-    # binary). If you dont care about the GUI a simple "make" will
-    # build a bare debug binary.
-    $ go run make.go -v release
-    $ go run make.go -v windows
-```
+    # To build a dev binary just run make.
+    # NOTE: Make sure ~/go/bin is on your path - this is required to find the Golang tools we need.
+    $ make
 
-If you want to rebuild the protobuf you will need to install protobuf
-compiler (This is only necessary when editing any `*.proto` file):
-
-```bash
-
-   $ wget https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protoc-3.13.0-linux-x86_64.zip
-   $ unzip protoc-3.13.0-linux-x86_64.zip
-   $ sudo mv include/google/ /usr/local/include/
-   $ sudo mv bin/protoc /usr/local/bin/
-   $ go get -u github.com/golang/protobuf/protoc-gen-go/
-   $ go install github.com/golang/protobuf/protoc-gen-go/
-   $ go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-   $ go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-   $ ./make_proto.sh
-
+    # To build production binaries
+    $ make linux
+    $ make windows
 ```
 
 ## Getting the latest version

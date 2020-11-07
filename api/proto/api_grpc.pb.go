@@ -26,6 +26,7 @@ type APIClient interface {
 	ListHunts(ctx context.Context, in *ListHuntsRequest, opts ...grpc.CallOption) (*ListHuntsResponse, error)
 	GetHunt(ctx context.Context, in *GetHuntRequest, opts ...grpc.CallOption) (*Hunt, error)
 	ModifyHunt(ctx context.Context, in *Hunt, opts ...grpc.CallOption) (*empty.Empty, error)
+	GetHuntFlows(ctx context.Context, in *GetTableRequest, opts ...grpc.CallOption) (*GetTableResponse, error)
 	GetHuntResults(ctx context.Context, in *GetHuntResultsRequest, opts ...grpc.CallOption) (*GetTableResponse, error)
 	// Clients.
 	NotifyClients(ctx context.Context, in *NotificationRequest, opts ...grpc.CallOption) (*empty.Empty, error)
@@ -137,6 +138,15 @@ func (c *aPIClient) GetHunt(ctx context.Context, in *GetHuntRequest, opts ...grp
 func (c *aPIClient) ModifyHunt(ctx context.Context, in *Hunt, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/ModifyHunt", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) GetHuntFlows(ctx context.Context, in *GetTableRequest, opts ...grpc.CallOption) (*GetTableResponse, error) {
+	out := new(GetTableResponse)
+	err := c.cc.Invoke(ctx, "/proto.API/GetHuntFlows", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -625,6 +635,7 @@ type APIServer interface {
 	ListHunts(context.Context, *ListHuntsRequest) (*ListHuntsResponse, error)
 	GetHunt(context.Context, *GetHuntRequest) (*Hunt, error)
 	ModifyHunt(context.Context, *Hunt) (*empty.Empty, error)
+	GetHuntFlows(context.Context, *GetTableRequest) (*GetTableResponse, error)
 	GetHuntResults(context.Context, *GetHuntResultsRequest) (*GetTableResponse, error)
 	// Clients.
 	NotifyClients(context.Context, *NotificationRequest) (*empty.Empty, error)
@@ -714,6 +725,9 @@ func (UnimplementedAPIServer) GetHunt(context.Context, *GetHuntRequest) (*Hunt, 
 }
 func (UnimplementedAPIServer) ModifyHunt(context.Context, *Hunt) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ModifyHunt not implemented")
+}
+func (UnimplementedAPIServer) GetHuntFlows(context.Context, *GetTableRequest) (*GetTableResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHuntFlows not implemented")
 }
 func (UnimplementedAPIServer) GetHuntResults(context.Context, *GetHuntResultsRequest) (*GetTableResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHuntResults not implemented")
@@ -946,6 +960,24 @@ func _API_ModifyHunt_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(APIServer).ModifyHunt(ctx, req.(*Hunt))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_GetHuntFlows_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTableRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).GetHuntFlows(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/GetHuntFlows",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).GetHuntFlows(ctx, req.(*GetTableRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1872,6 +1904,10 @@ var _API_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ModifyHunt",
 			Handler:    _API_ModifyHunt_Handler,
+		},
+		{
+			MethodName: "GetHuntFlows",
+			Handler:    _API_GetHuntFlows_Handler,
 		},
 		{
 			MethodName: "GetHuntResults",

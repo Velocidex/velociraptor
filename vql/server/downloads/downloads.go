@@ -25,7 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -308,7 +308,7 @@ func downloadFlowToZip(
 	// Copy result sets
 	for _, artifact_with_results := range flow_details.Context.ArtifactsWithResults {
 		// Paths inside the zip file should be friendlier.
-		path_manager := result_sets.NewArtifactPathManager(config_obj,
+		path_manager := artifact_paths.NewArtifactPathManager(config_obj,
 			client_id, flow_details.Context.SessionId, artifact_with_results)
 		rs_path, err := path_manager.GetPathForWriting()
 		if err == nil {

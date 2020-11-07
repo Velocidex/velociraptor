@@ -173,6 +173,8 @@ func (SearchClientsRequest_SortingSense) EnumDescriptor() ([]byte, []int) {
 	return file_clients_proto_rawDescGZIP(), []int{2, 1}
 }
 
+// Post filter results to only see clients that are currently
+// online
 type SearchClientsRequest_Filters int32
 
 const (

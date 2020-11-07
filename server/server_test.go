@@ -27,7 +27,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
@@ -278,7 +278,7 @@ func (self *ServerTestSuite) TestForeman() {
 	assert.Equal(t, tasks[0].UpdateForeman.LastHuntTimestamp, services.GetHuntDispatcher().
 		GetLastTimestamp())
 
-	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
 
 	rows := []*ordereddict.Dict{}
@@ -324,7 +324,7 @@ func (self *ServerTestSuite) TestMonitoring() {
 		})
 	runner.Close()
 
-	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
 		self.client_id, constants.MONITORING_WELL_KNOWN_FLOW, "System.Hunt.Participation")
 
 	self.RequiredFilestoreContains(path_manager.Path(), self.client_id)
@@ -607,7 +607,7 @@ func (self *ServerTestSuite) TestVQLResponse() {
 		})
 	runner.Close()
 
-	flow_path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+	flow_path_manager := artifacts.NewArtifactPathManager(self.config_obj,
 		self.client_id, flow_id, "Generic.Client.Info")
 	self.RequiredFilestoreContains(flow_path_manager.Path(), self.client_id)
 }

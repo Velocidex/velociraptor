@@ -15,9 +15,11 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -195,13 +197,14 @@ func (self *EventTable) RunQuery(
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("Collecting Server Event Artifact: %s", artifact_name)
 
-		path_manager := result_sets.NewArtifactPathManager(
+		path_manager := artifacts.NewArtifactPathManager(
 			config_obj, "", "", artifact_name)
 
 		// Append events to previous ones.
 		opts := vql_subsystem.EncOptsFromScope(scope)
+		file_store_factory := file_store.GetFileStore(config_obj)
 		rs_writer, err := result_sets.NewResultSetWriter(
-			config_obj, path_manager, opts, false /* truncate */)
+			file_store_factory, path_manager, opts, false /* truncate */)
 		if err != nil {
 			logger.Error("NewResultSetWriter: %v", err)
 			return

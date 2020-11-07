@@ -1,4 +1,4 @@
-package result_sets_test
+package artifacts_test
 
 import (
 	"context"
@@ -17,7 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -58,13 +58,14 @@ type PathManageTestSuite struct {
 	suite.Suite
 	config_obj *config_proto.Config
 	sm         *services.Service
+	ctx        context.Context
 	dirname    string
 }
 
 func (self *PathManageTestSuite) SetupTest() {
 	var err error
 	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../http_comms/test_data/server.config.yaml").
+		"../../http_comms/test_data/server.config.yaml").
 		WithRequiredFrontend().WithWriteback().
 		LoadAndValidate()
 	require.NoError(self.T(), err)
@@ -77,8 +78,8 @@ func (self *PathManageTestSuite) SetupTest() {
 	self.config_obj.Datastore.Location = self.dirname
 
 	// Start essential services.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
+	self.ctx, _ = context.WithTimeout(context.Background(), time.Second*60)
+	self.sm = services.NewServiceManager(self.ctx, self.config_obj)
 	assert.NotNil(self.T(), self.sm)
 
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
@@ -100,7 +101,7 @@ func (self *PathManageTestSuite) TestPathManager() {
 	ts := int64(1587800823)
 
 	for _, testcase := range path_tests {
-		path_manager := result_sets.NewArtifactPathManager(
+		path_manager := artifacts.NewArtifactPathManager(
 			self.config_obj,
 			testcase.client_id,
 			testcase.flow_id,
@@ -117,8 +118,9 @@ func (self *PathManageTestSuite) TestPathManager() {
 			self.config_obj, file_store).(*memory.MemoryQueueManager)
 		qm.Clock = path_manager.Clock
 
-		qm.PushEventRows(path_manager,
+		err = qm.PushEventRows(path_manager,
 			[]*ordereddict.Dict{ordereddict.NewDict()})
+		assert.NoError(self.T(), err)
 
 		data, ok := file_store.Get(testcase.expected)
 		assert.Equal(self.T(), ok, true)
@@ -133,7 +135,7 @@ func (self *PathManageTestSuite) TestPathManagerDailyRotations() {
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	clock := &utils.MockClock{}
 
-	path_manager := result_sets.NewArtifactPathManager(
+	path_manager := artifacts.NewArtifactPathManager(
 		self.config_obj,
 		"C.123",
 		"F.123",
@@ -149,8 +151,9 @@ func (self *PathManageTestSuite) TestPathManagerDailyRotations() {
 	timestamps := []int64{1587200823, 1587300823, 1587400823}
 	for _, ts := range timestamps {
 		clock.MockNow = time.Unix(ts, 0)
-		qm.PushEventRows(path_manager,
+		err := qm.PushEventRows(path_manager,
 			[]*ordereddict.Dict{ordereddict.NewDict()})
+		assert.NoError(self.T(), err)
 	}
 
 	ctx := context.Background()

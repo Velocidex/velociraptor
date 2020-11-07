@@ -19,7 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -66,7 +66,7 @@ func (self *VFSService) ProcessDownloadFile(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 
-	path_manager := result_sets.NewArtifactPathManager(config_obj,
+	path_manager := artifacts.NewArtifactPathManager(config_obj,
 		client_id, flow_id, "System.VFS.DownloadFile")
 	row_chan, err := file_store.GetTimeRange(
 		ctx, config_obj, path_manager, 0, 0)
@@ -123,7 +123,7 @@ func (self *VFSService) ProcessListDirectory(
 	ts, _ := row.GetInt64("_ts")
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	path_manager := result_sets.NewArtifactPathManager(config_obj,
+	path_manager := artifacts.NewArtifactPathManager(config_obj,
 		client_id, flow_id, "System.VFS.ListDirectory")
 
 	row_chan, err := file_store.GetTimeRange(

@@ -28,7 +28,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -411,8 +411,10 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 			// Write the query in the background so we can
 			// return the table immediately
 			func(vql *vfilter.VQL, path_manager api.PathManager) {
+				file_store_factory := file_store.GetFileStore(self.config_obj)
+
 				rs_writer, err := result_sets.NewResultSetWriter(
-					self.config_obj, path_manager, opts, true /* truncate */)
+					file_store_factory, path_manager, opts, true /* truncate */)
 				if err != nil {
 					self.Error("Error: %v\n", err)
 					return

@@ -1,4 +1,4 @@
-package result_sets
+package artifacts
 
 import (
 	"context"
@@ -7,12 +7,14 @@ import (
 	"path"
 	"regexp"
 	"sort"
+	"strings"
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -123,10 +125,13 @@ func (self *ArtifactPathManager) get_event_files() ([]*api.ResultSetFileProperti
 	if err != nil {
 		return nil, err
 	}
-
 	result := make([]*api.ResultSetFileProperties, 0, len(children))
 	for _, child := range children {
 		full_path := path.Join(dir_name, child.Name())
+		if !strings.HasSuffix(full_path, ".json") {
+			continue
+		}
+
 		timestamp := DayNameToTimestamp(full_path)
 		result = append(result, &api.ResultSetFileProperties{
 			Path:      full_path,
@@ -138,7 +143,6 @@ func (self *ArtifactPathManager) get_event_files() ([]*api.ResultSetFileProperti
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].StartTime < result[j].StartTime
 	})
-
 	return result, nil
 }
 
@@ -269,4 +273,20 @@ func NewMonitoringArtifactPathManager(client_id string) *MonitoringArtifactPathM
 	}
 
 	return result
+}
+
+func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int, error) {
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return 0, err
+	}
+
+	repository, _ := manager.GetGlobalRepository(config_obj)
+
+	artifact, pres := repository.Get(config_obj, artifact_name)
+	if !pres {
+		return 0, fmt.Errorf("Artifact %s not known", artifact_name)
+	}
+
+	return paths.ModeNameToMode(artifact.Type), nil
 }

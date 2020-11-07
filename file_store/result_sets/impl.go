@@ -30,40 +30,19 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
-	"fmt"
 	"io"
 
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	vjson "www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/services"
 )
 
 const (
 	offset_mask = 1<<40 - 1
 )
 
-func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int, error) {
-	manager, err := services.GetRepositoryManager()
-	if err != nil {
-		return 0, err
-	}
-
-	repository, _ := manager.GetGlobalRepository(config_obj)
-
-	artifact, pres := repository.Get(config_obj, artifact_name)
-	if !pres {
-		return 0, fmt.Errorf("Artifact %s not known", artifact_name)
-	}
-
-	return paths.ModeNameToMode(artifact.Type), nil
-}
-
-type ResultSetWriter struct {
+type ResultSetWriterImpl struct {
 	rows     []*ordereddict.Dict
 	opts     *json.EncOpts
 	fd       api.FileWriter
@@ -80,7 +59,7 @@ type ResultSetWriter struct {
 // The reader will find the correct row by loading the JSONL file at
 // the indicated offset then reading lines off it until they reach the
 // desired row index.
-func (self *ResultSetWriter) WriteJSONL(serialized []byte, total_rows uint64) {
+func (self *ResultSetWriterImpl) WriteJSONL(serialized []byte, total_rows uint64) {
 	// Sync the index with the current buffers.
 	self.Flush()
 
@@ -104,7 +83,7 @@ func (self *ResultSetWriter) WriteJSONL(serialized []byte, total_rows uint64) {
 	_, _ = self.index_fd.Write(offsets.Bytes())
 }
 
-func (self *ResultSetWriter) Write(row *ordereddict.Dict) {
+func (self *ResultSetWriterImpl) Write(row *ordereddict.Dict) {
 	self.rows = append(self.rows, row)
 	if len(self.rows) > 10000 {
 		self.Flush()
@@ -113,7 +92,7 @@ func (self *ResultSetWriter) Write(row *ordereddict.Dict) {
 
 // Do not actually write the data until Close() or Flush() are called,
 // or until 10k rows are queued in memory.
-func (self *ResultSetWriter) Flush() {
+func (self *ResultSetWriterImpl) Flush() {
 	// Nothing to do...
 	if len(self.rows) == 0 {
 		return
@@ -149,18 +128,19 @@ func (self *ResultSetWriter) Flush() {
 	self.rows = nil
 }
 
-func (self *ResultSetWriter) Close() {
+func (self *ResultSetWriterImpl) Close() {
 	self.Flush()
 	self.fd.Close()
 	self.index_fd.Close()
 }
 
-func NewResultSetWriter(
-	config_obj *config_proto.Config,
+type ResultSetFactory struct{}
+
+func (self ResultSetFactory) NewResultSetWriter(
+	file_store_factory api.FileStore,
 	path_manager api.PathManager,
 	opts *json.EncOpts,
-	truncate bool) (*ResultSetWriter, error) {
-	file_store_factory := file_store.GetFileStore(config_obj)
+	truncate bool) (ResultSetWriter, error) {
 	log_path, err := path_manager.GetPathForWriting()
 	if err != nil {
 		return nil, err
@@ -194,21 +174,24 @@ func NewResultSetWriter(
 
 	}
 
-	return &ResultSetWriter{fd: fd, opts: opts, index_fd: idx_fd}, nil
+	return &ResultSetWriterImpl{fd: fd, opts: opts, index_fd: idx_fd}, nil
 }
 
 // A ResultSetReader can produce rows from a result set.
-type ResultSetReader struct {
-	TotalRows  int64
+type ResultSetReaderImpl struct {
+	total_rows int64
 	fd         api.FileReader
 	idx_fd     api.FileReader
 	log_path   string
-	config_obj *config_proto.Config
+}
+
+func (self *ResultSetReaderImpl) TotalRows() int64 {
+	return self.total_rows
 }
 
 // Seeks the fd to the starting location. If successful then fd is
 // ready to be read from row at a time.
-func (self *ResultSetReader) SeekToRow(start int64) error {
+func (self *ResultSetReaderImpl) SeekToRow(start int64) error {
 	// Nothing to do.
 	if start == 0 {
 		return nil
@@ -270,7 +253,7 @@ func (self *ResultSetReader) SeekToRow(start int64) error {
 }
 
 // Start generating rows from the result set.
-func (self *ResultSetReader) Rows(ctx context.Context) <-chan *ordereddict.Dict {
+func (self *ResultSetReaderImpl) Rows(ctx context.Context) <-chan *ordereddict.Dict {
 	output := make(chan *ordereddict.Dict)
 
 	go func() {
@@ -311,7 +294,7 @@ func (self *ResultSetReader) Rows(ctx context.Context) <-chan *ordereddict.Dict 
 }
 
 // Only used in tests - not safe for generate use.
-func (self *ResultSetReader) GetAllResults() []*ordereddict.Dict {
+func (self *ResultSetReaderImpl) GetAllResults() []*ordereddict.Dict {
 	result := []*ordereddict.Dict{}
 	for row := range self.Rows(context.Background()) {
 		result = append(result, row)
@@ -319,18 +302,17 @@ func (self *ResultSetReader) GetAllResults() []*ordereddict.Dict {
 	return result
 }
 
-func (self *ResultSetReader) Close() {
+func (self *ResultSetReaderImpl) Close() {
 	self.fd.Close()
 	if self.idx_fd != nil {
 		self.idx_fd.Close()
 	}
 }
 
-func NewResultSetReader(
-	config_obj *config_proto.Config,
-	path_manager api.PathManager) (*ResultSetReader, error) {
+func (self ResultSetFactory) NewResultSetReader(
+	file_store_factory api.FileStore,
+	path_manager api.PathManager) (ResultSetReader, error) {
 
-	file_store_factory := file_store.GetFileStore(config_obj)
 	log_path, err := path_manager.GetPathForWriting()
 	if err != nil {
 		return nil, err
@@ -351,11 +333,14 @@ func NewResultSetReader(
 		}
 	}
 
-	return &ResultSetReader{
-		TotalRows:  total_rows,
+	return &ResultSetReaderImpl{
+		total_rows: total_rows,
 		fd:         fd,
 		idx_fd:     idx_fd,
 		log_path:   log_path,
-		config_obj: config_obj,
 	}, nil
+}
+
+func init() {
+	Register(ResultSetFactory{})
 }

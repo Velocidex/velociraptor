@@ -68,9 +68,9 @@ func doPoolClient() {
 	}
 
 	for i := 0; i < number_of_clients; i++ {
+		filename := fmt.Sprintf("pool_client.yaml.%d", i)
 		client_config.Client.WritebackLinux = path.Join(
-			*pool_client_writeback_dir,
-			fmt.Sprintf("pool_client.yaml.%d", i))
+			*pool_client_writeback_dir, filename)
 
 		client_config.Client.WritebackWindows = client_config.Client.WritebackLinux
 
@@ -84,7 +84,7 @@ func doPoolClient() {
 		// exist yet.
 		if err == nil {
 			err = yaml.Unmarshal(data, existing_writeback)
-			kingpin.FatalIfError(err, "Unable to load config file")
+			kingpin.FatalIfError(err, "Unable to load config file "+filename)
 		}
 
 		// Merge the writeback with the config.

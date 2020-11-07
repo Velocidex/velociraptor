@@ -43,9 +43,12 @@ class VeloHunts extends React.Component {
         if (!hunt || !hunt.hunt_id) {
             return;
         }
-
-        this.setState({selected_hunt: hunt});
         this.props.history.push("/hunts/" + hunt.hunt_id);
+        this.loadFullHunt(hunt);
+    }
+
+    loadFullHunt = (hunt) => {
+        this.setState({selected_hunt: hunt});
 
         api.get("v1/GetHunt", {
             hunt_id: hunt.hunt_id,
@@ -63,18 +66,16 @@ class VeloHunts extends React.Component {
             offset: 0,
         }).then((response) => {
             let hunts = response.data.items || [];
-            let selected_hunt = {};
-
             // If the router specifies a selected flow id, we select it.
             for(var i=0;i<hunts.length;i++) {
                 let hunt=hunts[i];
                 if (hunt.hunt_id === selected_hunt_id) {
-                    selected_hunt = hunt;
+                    this.loadFullHunt(hunt);
                     break;
                 }
             };
 
-            this.setState({hunts: hunts, selected_hunt: selected_hunt});
+            this.setState({hunts: hunts});
         });
 
         // Get the full hunt information from the server based on the hunt

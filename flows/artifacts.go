@@ -35,11 +35,12 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 )
@@ -149,8 +150,9 @@ func flushContextLogs(
 		collection_context.SessionId).Log()
 
 	// Append logs to messages from previous packets.
+	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
-		config_obj, flow_path_manager, nil, false /* truncate */)
+		file_store_factory, flow_path_manager, nil, false /* truncate */)
 	if err != nil {
 		return err
 	}
@@ -178,8 +180,9 @@ func flushContextUploadedFiles(
 		collection_context.ClientId,
 		collection_context.SessionId).UploadMetadata()
 
+	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
-		config_obj, flow_path_manager, nil, false /* truncate */)
+		file_store_factory, flow_path_manager, nil, false /* truncate */)
 	if err != nil {
 		return err
 	}
@@ -285,13 +288,14 @@ func ArtifactCollectorProcessOneMessage(
 
 		rows_written := uint64(0)
 		if response.Query.Name != "" {
-			path_manager := result_sets.NewArtifactPathManager(config_obj,
+			path_manager := artifact_paths.NewArtifactPathManager(config_obj,
 				collection_context.Request.ClientId,
 				collection_context.SessionId,
 				response.Query.Name)
 
+			file_store_factory := file_store.GetFileStore(config_obj)
 			rs_writer, err := result_sets.NewResultSetWriter(
-				config_obj, path_manager, nil, false /* truncate */)
+				file_store_factory, path_manager, nil, false /* truncate */)
 
 			// Support the old clients which send JSON
 			// array responses. We need to decode the JSON
