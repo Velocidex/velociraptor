@@ -43,7 +43,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -372,7 +372,7 @@ func (self *ApiServer) ListAvailableEventResults(
 			"User is not allowed to view results.")
 	}
 
-	path_manager := result_sets.NewMonitoringArtifactPathManager(in.ClientId)
+	path_manager := artifacts.NewMonitoringArtifactPathManager(in.ClientId)
 	file_store_factory := file_store.GetFileStore(self.config)
 
 	seen := make(map[string]*api_proto.AvailableEvent)

@@ -12,7 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -223,7 +223,7 @@ func (self EnumerateFlowPlugin) Call(
 		}
 
 		for _, artifact_name := range collection_context.ArtifactsWithResults {
-			result_path, err := result_sets.NewArtifactPathManager(
+			result_path, err := artifact_paths.NewArtifactPathManager(
 				config_obj, arg.ClientId, arg.FlowId, artifact_name).
 				GetPathForWriting()
 			if err != nil {

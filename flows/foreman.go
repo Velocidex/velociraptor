@@ -63,7 +63,9 @@ func ForemanProcessMessage(
 	// Update the client's event tables.
 	client_event_manager := services.ClientEventManager()
 	if client_event_manager == nil {
-		return errors.New("No ClientEventManager")
+		// Not really an error - this happens when the server
+		// shuts down.1
+		return nil
 	}
 
 	if client_event_manager.CheckClientEventsVersion(

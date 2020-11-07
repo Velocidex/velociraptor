@@ -31,7 +31,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -177,7 +177,7 @@ func (self *InterrogationService) ProcessRow(
 
 	flow_id, _ := row.GetString("FlowId")
 
-	path_manager := result_sets.NewArtifactPathManager(config_obj,
+	path_manager := artifacts.NewArtifactPathManager(config_obj,
 		client_id, flow_id, "Generic.Client.Info/BasicInformation")
 	row_chan, err := file_store.GetTimeRange(
 		ctx, config_obj, path_manager, 0, 0)

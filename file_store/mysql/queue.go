@@ -231,6 +231,7 @@ func (self *MysqlQueueManager) PushEventRows(
 		return nil
 	}
 
+	// FIXME: Support indexes on result sets for indexed reading/writing.
 	fd, err := self.file_store.WriteFile(log_path)
 	if err != nil {
 		return err

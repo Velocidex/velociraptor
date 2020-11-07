@@ -21,9 +21,10 @@ import (
 	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -43,51 +44,53 @@ func getTable(
 	result := &api_proto.GetTableResponse{}
 
 	path_manager := getPathManager(config_obj, in)
-	if path_manager != nil {
-		rs_reader, err := result_sets.NewResultSetReader(config_obj, path_manager)
-		if err != nil {
-			return nil, err
+	if path_manager == nil {
+		return result, nil
+	}
+
+	rs_reader, err := result_sets.NewResultSetReader(config_obj, path_manager)
+	if err != nil {
+		return nil, err
+	}
+	defer rs_reader.Close()
+
+	// Let the browser know how many rows we have in total.
+	result.TotalRows = rs_reader.TotalRows()
+
+	// FIXME: Backwards compatibility: Just give a few
+	// rows if the result set does not have an index. This
+	// is the same as the previous behavior but for new
+	// collections, an index is created and we respect the
+	// number of rows the callers asked for. Eventually
+	// this will not be needed.
+	if result.TotalRows < 0 {
+		in.Rows = 100
+	}
+
+	// Seek to the row we need.
+	err = rs_reader.SeekToRow(int64(in.StartRow))
+	if err != nil {
+		return nil, err
+	}
+
+	// Unpack the rows into the output protobuf
+	for row := range rs_reader.Rows(ctx) {
+		if result.Columns == nil {
+			result.Columns = row.Keys()
 		}
-		defer rs_reader.Close()
 
-		// Let the browser know how many rows we have in total.
-		result.TotalRows = rs_reader.TotalRows
-
-		// FIXME: Backwards compatibility: Just give a few
-		// rows if the result set does not have an index. This
-		// is the same as the previous behavior but for new
-		// collections, an index is created and we respect the
-		// number of rows the callers asked for. Eventually
-		// this will not be needed.
-		if result.TotalRows < 0 {
-			in.Rows = 100
+		row_data := make([]string, 0, len(result.Columns))
+		for _, key := range result.Columns {
+			value, _ := row.Get(key)
+			row_data = append(row_data, csv.AnyToString(value))
 		}
+		result.Rows = append(result.Rows, &api_proto.Row{
+			Cell: row_data,
+		})
 
-		// Seek to the row we need.
-		err = rs_reader.SeekToRow(int64(in.StartRow))
-		if err != nil {
-			return nil, err
-		}
-
-		// Unpack the rows into the output protobuf
-		for row := range rs_reader.Rows(ctx) {
-			if result.Columns == nil {
-				result.Columns = row.Keys()
-			}
-
-			row_data := make([]string, 0, len(result.Columns))
-			for _, key := range result.Columns {
-				value, _ := row.Get(key)
-				row_data = append(row_data, csv.AnyToString(value))
-			}
-			result.Rows = append(result.Rows, &api_proto.Row{
-				Cell: row_data,
-			})
-
-			rows += 1
-			if rows > in.Rows {
-				break
-			}
+		rows += 1
+		if rows > in.Rows {
+			break
 		}
 	}
 
@@ -98,7 +101,7 @@ func getPathManager(
 	config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) api.PathManager {
 	if in.FlowId != "" && in.Artifact != "" {
-		return result_sets.NewArtifactPathManager(
+		return artifacts.NewArtifactPathManager(
 			config_obj, in.ClientId, in.FlowId, in.Artifact)
 
 	} else if in.FlowId != "" && in.Type != "" {

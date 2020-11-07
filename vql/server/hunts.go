@@ -31,10 +31,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -239,7 +240,7 @@ func (self HuntResultsPlugin) Call(
 				}
 
 				// Read individual flow's results.
-				path_manager := result_sets.NewArtifactPathManager(
+				path_manager := artifact_paths.NewArtifactPathManager(
 					config_obj,
 					participation_row.ClientId,
 					participation_row.FlowId,
@@ -282,7 +283,9 @@ func (self HuntResultsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeM
 }
 
 type HuntFlowsPluginArgs struct {
-	HuntId string `vfilter:"required,field=hunt_id,doc=The hunt id to inspect."`
+	HuntId   string `vfilter:"required,field=hunt_id,doc=The hunt id to inspect."`
+	StartRow int64  `vfilter:"optional,field=start_row,doc=The first row to show (used for paging)."`
+	Limit    int64  `vfilter:"optional,field=limit,doc=Number of rows to show (used for paging)."`
 }
 
 type HuntFlowsPlugin struct{}
@@ -315,16 +318,21 @@ func (self HuntFlowsPlugin) Call(
 		}
 
 		hunt_path_manager := paths.NewHuntPathManager(arg.HuntId).Clients()
-		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
-			hunt_path_manager, 0, 0)
+		rs_reader, err := result_sets.NewResultSetReader(config_obj, hunt_path_manager)
+		if err != nil {
+			scope.Log("Error %v: %v\n", err, hunt_path_manager.Path())
+			return
+		}
+		defer rs_reader.Close()
+
+		// Seek to the row we need.
+		err = rs_reader.SeekToRow(int64(arg.StartRow))
 		if err != nil {
 			scope.Log("Error %v: %v\n", err, hunt_path_manager.Path())
 			return
 		}
 
-		// Read each CSV file and emit it with some extra
-		// columns for context.
-		for row := range row_chan {
+		for row := range rs_reader.Rows(ctx) {
 			participation_row := &hunt_manager.ParticipationRecord{}
 			err := vfilter.ExtractArgs(scope, row, participation_row)
 			if err != nil {

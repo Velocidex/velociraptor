@@ -24,10 +24,11 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -302,13 +303,13 @@ func (self *ServerArtifactsRunner) runQuery(
 		}
 
 		read_chan := vql.Eval(sub_ctx, scope)
-		var rs_writer *result_sets.ResultSetWriter
+		var rs_writer result_sets.ResultSetWriter
 		if query.Name != "" {
 			name := artifacts.DeobfuscateString(
 				self.config_obj, query.Name)
 
 			opts := vql_subsystem.EncOptsFromScope(scope)
-			path_manager := result_sets.NewArtifactPathManager(
+			path_manager := artifact_paths.NewArtifactPathManager(
 				self.config_obj, "server", task.SessionId, name)
 
 			rs_writer, err = result_sets.NewResultSetWriter(

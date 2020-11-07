@@ -83,6 +83,10 @@ class VeloPagedTable extends Component {
         // name to save column preferences in the application user
         // context.
         name: PropTypes.string,
+
+        // The URL Handler to fetch the table content. Defaults to
+        // "v1/GetTable".
+        url: PropTypes.string,
     }
 
     state = {
@@ -137,8 +141,10 @@ class VeloPagedTable extends Component {
         params.start_row = this.state.start_row;
         params.rows = this.state.page_size;
 
+        let url = this.props.url || "v1/GetTable";
+
         this.setState({loading: true});
-        api.get("v1/GetTable", params).then((response) => {
+        api.get(url, params).then((response) => {
             let pageData = PrepareData(response.data);
 
             let columns = pageData.columns;
@@ -204,7 +210,7 @@ class VeloPagedTable extends Component {
         }
 
         return (
-            <div className="velo-table"> <Spinner loading={this.state.loading} />
+            <div className="velo-table full-height"> <Spinner loading={this.state.loading} />
               <ToolkitProvider
                 bootstrap4
                 keyField="_id"

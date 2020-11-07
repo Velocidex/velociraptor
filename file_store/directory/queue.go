@@ -1,12 +1,11 @@
 package directory
 
 import (
-	"fmt"
-
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
+	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -16,9 +15,10 @@ var (
 )
 
 type DirectoryQueueManager struct {
-	FileStore api.FileStore
-	scope     *vfilter.Scope
-	Clock     utils.Clock
+	config_obj *config_proto.Config
+	FileStore  api.FileStore
+	scope      *vfilter.Scope
+	Clock      utils.Clock
 }
 
 func (self *DirectoryQueueManager) PushEventRows(
@@ -29,30 +29,19 @@ func (self *DirectoryQueueManager) PushEventRows(
 			row.Set("_ts", int(self.Clock.Now().Unix())))
 	}
 
-	log_path, err := path_manager.GetPathForWriting()
+	rs_writer, err := result_sets.NewResultSetWriter(
+		self.config_obj, path_manager, nil, false /* truncate */)
 	if err != nil {
 		return err
 	}
-
-	fd, err := self.FileStore.WriteFile(log_path)
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-		return err
-	}
-	defer fd.Close()
+	defer rs_writer.Close()
 
 	for _, row := range dict_rows {
 		// Set a timestamp per event for easier querying.
 		row.Set("_ts", int(self.Clock.Now().Unix()))
+		rs_writer.Write(row)
 	}
-
-	serialized, err := utils.DictsToJson(dict_rows, nil)
-	if err != nil {
-		return err
-	}
-
-	_, err = fd.Write(serialized)
-	return err
+	return nil
 }
 
 func (self *DirectoryQueueManager) Watch(
@@ -63,8 +52,9 @@ func (self *DirectoryQueueManager) Watch(
 func NewDirectoryQueueManager(config_obj *config_proto.Config,
 	file_store api.FileStore) api.QueueManager {
 	return &DirectoryQueueManager{
-		FileStore: file_store,
-		scope:     vfilter.NewScope(),
-		Clock:     utils.RealClock{},
+		config_obj: config_obj,
+		FileStore:  file_store,
+		scope:      vfilter.NewScope(),
+		Clock:      utils.RealClock{},
 	}
 }

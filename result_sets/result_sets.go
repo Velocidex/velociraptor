@@ -38,6 +38,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -155,11 +156,13 @@ func (self *ResultSetWriter) Close() {
 	self.index_fd.Close()
 }
 
-func NewResultSetWriter(
+type ResultSetFactory struct{}
+
+func (self ResultSetFactory) NewResultSetWriter(
 	config_obj *config_proto.Config,
 	path_manager api.PathManager,
 	opts *json.EncOpts,
-	truncate bool) (*ResultSetWriter, error) {
+	truncate bool) (result_sets.ResultSetWriter, error) {
 	file_store_factory := file_store.GetFileStore(config_obj)
 	log_path, err := path_manager.GetPathForWriting()
 	if err != nil {
@@ -199,11 +202,15 @@ func NewResultSetWriter(
 
 // A ResultSetReader can produce rows from a result set.
 type ResultSetReader struct {
-	TotalRows  int64
+	total_rows int64
 	fd         api.FileReader
 	idx_fd     api.FileReader
 	log_path   string
 	config_obj *config_proto.Config
+}
+
+func (self *ResultSetReader) TotalRows() int64 {
+	return self.total_rows
 }
 
 // Seeks the fd to the starting location. If successful then fd is
@@ -326,9 +333,9 @@ func (self *ResultSetReader) Close() {
 	}
 }
 
-func NewResultSetReader(
+func (self ResultSetFactory) NewResultSetReader(
 	config_obj *config_proto.Config,
-	path_manager api.PathManager) (*ResultSetReader, error) {
+	path_manager api.PathManager) (result_sets.ResultSetReader, error) {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	log_path, err := path_manager.GetPathForWriting()
@@ -352,10 +359,14 @@ func NewResultSetReader(
 	}
 
 	return &ResultSetReader{
-		TotalRows:  total_rows,
+		total_rows: total_rows,
 		fd:         fd,
 		idx_fd:     idx_fd,
 		log_path:   log_path,
 		config_obj: config_obj,
 	}, nil
+}
+
+func init() {
+	result_sets.Register(ResultSetFactory{})
 }

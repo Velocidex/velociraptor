@@ -85,9 +85,11 @@ func (self *eventQueryContext) Log(message string) {
 
 //export process_event
 func process_event(ctx *C.int, bstring **C.ushort) {
-	go_ctx := pointer.Restore(unsafe.Pointer(ctx)).(*eventQueryContext)
-	text := ole.BstrToString(*(**uint16)(unsafe.Pointer(bstring)))
-	go_ctx.ProcessEvent(text)
+	go_ctx, ok := pointer.Restore(unsafe.Pointer(ctx)).(*eventQueryContext)
+	if ok {
+		text := ole.BstrToString(*(**uint16)(unsafe.Pointer(bstring)))
+		go_ctx.ProcessEvent(text)
+	}
 }
 
 //export log_error

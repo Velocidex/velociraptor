@@ -1,4 +1,4 @@
-package result_sets
+package artifacts
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -269,4 +270,20 @@ func NewMonitoringArtifactPathManager(client_id string) *MonitoringArtifactPathM
 	}
 
 	return result
+}
+
+func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int, error) {
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return 0, err
+	}
+
+	repository, _ := manager.GetGlobalRepository(config_obj)
+
+	artifact, pres := repository.Get(config_obj, artifact_name)
+	if !pres {
+		return 0, fmt.Errorf("Artifact %s not known", artifact_name)
+	}
+
+	return paths.ModeNameToMode(artifact.Type), nil
 }
