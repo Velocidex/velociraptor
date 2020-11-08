@@ -118,46 +118,27 @@ parameters:
   - name: S3Collection
     type: hidden
     default: |
-      // Add all the tools we are going to use to the inventory.
-      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash)
-      FROM parse_csv(filename="/inventory.csv", accessor="me")
-      WHERE log(message="Adding tool " + ToolName)
-
-      LET Artifacts <= parse_json_array(data=Artifacts)
-      LET Parameters <= parse_json(data=Parameters)
-      LET baseline <= SELECT Fqdn FROM info()
-      LET TargetArgs <= parse_json(data=target_args)
-
-      // Make the filename safe on windows.
-      LET filename <= regex_replace(
-          source=format(format="Collection-%s-%s",
-                        args=[baseline[0].Fqdn, timestamp(epoch=now())]),
-          re="[^0-9A-Za-z\\-.]", replace="_")
-
-      LET _ <= log(message="Will collect package " + filename +
-         " and upload to s3 bucket " + TargetArgs.bucket)
-
-      SELECT upload_s3(file=Container,
+      // A utility function to upload the file.
+      LET upload_file(filename) = upload_s3(file=filename,
           bucket=TargetArgs.bucket,
-          name=filename + ".zip",
+          name=filename,
           credentialskey=TargetArgs.credentialsKey,
           credentialssecret=TargetArgs.credentialsSecret,
           region=TargetArgs.region,
           endpoint=TargetArgs.endpoint,
-          noverifycert=TargetArgs.noverifycert) AS Upload,
-       upload_s3(file=Report,
-          bucket=TargetArgs.bucket,
-          name=filename + ".html",
-          credentialskey=TargetArgs.credentialsKey,
-          credentialssecret=TargetArgs.credentialsSecret,
-          region=TargetArgs.region,
-          endpoint=TargetArgs.endpoint,
-          noverifycert=TargetArgs.noverifycert) AS ReportUpload
-      FROM collect(artifacts=Artifacts, report=tempfile(extension=".html"),
-          args=Parameters, output=tempfile(extension=".zip"), template=Template,
-          password=Password)
+          noverifycert=TargetArgs.noverifycert)
 
   - name: GCSCollection
+    type: hidden
+    default: |
+      // A utility function to upload the file.
+      LET upload_file(filename) = upload_gcs(file=filename,
+          bucket=TargetArgs.bucket,
+          project=GCSBlob.project_id,
+          name=filename,
+          credentials=TargetArgs.GCSKey)
+
+  - name: CloudCollection
     type: hidden
     default: |
       // Add all the tools we are going to use to the inventory.
@@ -167,9 +148,14 @@ parameters:
 
       LET Artifacts <= parse_json_array(data=Artifacts)
       LET Parameters <= parse_json(data=Parameters)
-      LET baseline <= SELECT Fqdn FROM info()
+      LET baseline <= SELECT Fqdn, basename(path=Exe) AS Exe FROM info()
       LET TargetArgs <= parse_json(data=target_args)
-      LET GCSBlob <= parse_json(data=TargetArgs.GCSKey)
+
+
+      // Try to upload the log file now to see if we are even able to
+      // upload at all - we do this to avoid having to collect all the
+      // data and then failing the upload step.
+      LET upload_test <= upload_file(filename=baseline[0].Exe + ".log")
 
       // Make the filename safe on windows.
       LET filename <= regex_replace(
@@ -178,23 +164,21 @@ parameters:
           re="[^0-9A-Za-z\\-.]", replace="_")
 
       LET _ <= log(message="Will collect package " + filename +
-         " and upload to GCS bucket " + TargetArgs.bucket)
+         " and upload to cloud bucket " + TargetArgs.bucket)
 
-      SELECT upload_gcs(file=Container,
-          bucket=TargetArgs.bucket,
-          project=GCSBlob.project_id,
-          name=filename + ".zip",
-          credentials=TargetArgs.GCSKey
-      ) AS Upload,
-      upload_gcs(file=Report,
-          bucket=TargetArgs.bucket,
-          project=GCSBlob.project_id,
-          name=filename + ".html",
-          credentials=TargetArgs.GCSKey
-      ) AS ReportUpload
-      FROM collect(artifacts=Artifacts, report=tempfile(extension=".html"),
-          args=Parameters, output=tempfile(extension=".zip"), template=Template,
+      LET collect_and_upload = SELECT upload_file(filename=Container) AS Upload,
+          upload_file(filename=Report) AS ReportUpload,
+          upload_file(filename=baseline[0].Exe + ".log") AS LogUpload
+      FROM collect(artifacts=Artifacts,
+          report=tempfile(extension=".html"),
+          args=Parameters,
+          output=tempfile(extension=".zip"),
+          template=Template,
           password=Password)
+
+      SELECT * FROM if(condition=upload_test.Path,
+          then=collect_and_upload,
+          else={SELECT log(message="Aborting collection: Failed to upload to cloud bucket!") FROM scope()})
 
   - name: PackageToolsArtifact
     description: Collects and uploads third party binaries.
@@ -226,6 +210,7 @@ parameters:
           SELECT upload(file=temp, name="inventory.csv") FROM scope()
 
   - name: FetchBinaryOverride
+    type: hidden
     description: |
        A replacement for Generic.Utils.FetchBinary which
        grabs files from the local archive.
@@ -291,8 +276,8 @@ sources:
 
       LET CollectionArtifact <= SELECT Value FROM switch(
         a = { SELECT StandardCollection AS Value FROM scope() WHERE target = "ZIP" },
-        b = { SELECT S3Collection AS Value  FROM scope() WHERE target = "S3" },
-        c = { SELECT GCSCollection AS Value  FROM scope() WHERE target = "GCS" },
+        b = { SELECT S3Collection + CloudCollection AS Value  FROM scope() WHERE target = "S3" },
+        c = { SELECT GCSCollection + CloudCollection AS Value  FROM scope() WHERE target = "GCS" },
         d = { SELECT "" AS Value  FROM scope() WHERE log(message="Unknown collection type " + target) }
       )
 
