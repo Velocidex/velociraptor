@@ -1,0 +1,6 @@
+Module: recyclebin
+Profile: RecycleBinIndex
+Filename: vtype_profile.json
+GenerateDebugString: false
+Structs:
+   - Metadata
