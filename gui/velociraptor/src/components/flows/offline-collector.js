@@ -93,9 +93,9 @@ class OfflineCollectorParameters  extends React.Component {
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
                                       placeholder="Bucket name"
-                                      value={this.props.parameters.target_args.gcs_bucket}
+                                      value={this.props.parameters.target_args.bucket}
                                       onChange={e => {
-                                          this.props.parameters.target_args.gcs_bucket = e.target.value;
+                                          this.props.parameters.target_args.bucket = e.target.value;
                                           this.props.setParameters(this.props.parameters);
                                       }}
                         />
@@ -107,9 +107,9 @@ class OfflineCollectorParameters  extends React.Component {
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
                                       placeholder="GCS Blob"
-                                      value={this.props.parameters.target_args.gcs_key_blob}
+                                      value={this.props.parameters.target_args.GCSKey}
                                       onChange={e => {
-                                          this.props.parameters.target_args.gcs_key_blob = e.target.value;
+                                          this.props.parameters.target_args.GCSKey = e.target.value;
                                           this.props.setParameters(this.props.parameters);
                                       }}
                         />
@@ -117,6 +117,77 @@ class OfflineCollectorParameters  extends React.Component {
                     </Form.Group> </>
 
                   }
+                  { this.props.parameters.target === "S3" && <>
+                    <Form.Group as={Row}>
+                      <Form.Label column sm="3">S3 Bucket </Form.Label>
+                      <Col sm="8">
+                        <Form.Control as="textarea" rows={3}
+                                      placeholder="Bucket name"
+                                      value={this.props.parameters.target_args.bucket}
+                                      onChange={e => {
+                                          this.props.parameters.target_args.bucket = e.target.value;
+                                          this.props.setParameters(this.props.parameters);
+                                      }}
+                        />
+                      </Col>
+                    </Form.Group>
+
+                    <Form.Group as={Row}>
+                      <Form.Label column sm="3">Credentials Key</Form.Label>
+                      <Col sm="8">
+                        <Form.Control as="textarea" rows={3}
+                                      placeholder="Credentials Key"
+                                      value={this.props.parameters.target_args.credentialsKey}
+                                      onChange={e => {
+                                          this.props.parameters.target_args.credentialsKey = e.target.value;
+                                          this.props.setParameters(this.props.parameters);
+                                      }}
+                        />
+                      </Col>
+                    </Form.Group>
+
+                    <Form.Group as={Row}>
+                      <Form.Label column sm="3">Credentials Secret</Form.Label>
+                      <Col sm="8">
+                        <Form.Control as="textarea" rows={3}
+                                      placeholder="Credentials Secret"
+                                      value={this.props.parameters.target_args.credentialsSecret}
+                                      onChange={e => {
+                                          this.props.parameters.target_args.credentialsSecret = e.target.value;
+                                          this.props.setParameters(this.props.parameters);
+                                      }}
+                        />
+                      </Col>
+                    </Form.Group>
+                    <Form.Group as={Row}>
+                      <Form.Label column sm="3">Region</Form.Label>
+                      <Col sm="8">
+                        <Form.Control as="textarea" rows={3}
+                                      placeholder="Region"
+                                      value={this.props.parameters.target_args.region}
+                                      onChange={e => {
+                                          this.props.parameters.target_args.region = e.target.value;
+                                          this.props.setParameters(this.props.parameters);
+                                      }}
+                        />
+                      </Col>
+                    </Form.Group>
+                    <Form.Group as={Row}>
+                      <Form.Label column sm="3">Endpoint</Form.Label>
+                      <Col sm="8">
+                        <Form.Control as="textarea" rows={3}
+                                      placeholder="Endpoint (blank for AWS)"
+                                      value={this.props.parameters.target_args.endpoint}
+                                      onChange={e => {
+                                          this.props.parameters.target_args.endpoint = e.target.value;
+                                          this.props.setParameters(this.props.parameters);
+                                      }}
+                        />
+                      </Col>
+                    </Form.Group>
+                    </>
+                  }
+
                 </Form>
               </Modal.Body>
               <Modal.Footer>
@@ -144,8 +215,17 @@ export default class OfflineCollectorWizard extends React.Component {
             target_os: "Windows",
             target: "ZIP",
             target_args: {
-                gcs_bucket: "",
-                gcs_key_blob: "",
+                // Common
+                bucket: "",
+
+                // For GCS Buckets
+                GCSKey: "",
+
+                // For S3 buckets.
+                credentialsKey: "",
+                credentialsSecret: "",
+                region: "",
+                endpoint: "",
             },
             template: "Reporting.Default",
             password: "",
@@ -177,7 +257,7 @@ export default class OfflineCollectorWizard extends React.Component {
             this.state.collector_parameters.target_args)});
         env.push({key: "opt_verbose", value: "Y"});
         env.push({key: "opt_banner", value: "Y"});
-        env.push({key: "opt_prompt", value: "Y"});
+        env.push({key: "opt_prompt", value: "N"});
         env.push({key: "opt_admin", value: "Y"});
 
         return request;

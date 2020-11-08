@@ -4,7 +4,6 @@ package tools
 
 import (
 	"crypto/tls"
-	"io"
 	"net/http"
 
 	"github.com/Velocidex/ordereddict"
@@ -86,7 +85,8 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 			arg.Name, arg.CredentialsKey, arg.CredentialsSecret, arg.Region, arg.Endpoint, arg.NoVerifyCert)
 		if err != nil {
 			scope.Log("upload_S3: %v", err)
-			return vfilter.Null{}
+			// Relay the error in the UploadResponse
+			return upload_response
 		}
 		return upload_response
 	}
@@ -95,7 +95,7 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 }
 
 func upload_S3(ctx context.Context, scope *vfilter.Scope,
-	reader io.Reader,
+	reader glob.ReadSeekCloser,
 	bucket, name string,
 	credentialsKey string, credentialsSecret string, region string, endpoint string, NoVerifyCert bool) (
 	*api.UploadResponse, error) {
@@ -122,7 +122,7 @@ func upload_S3(ctx context.Context, scope *vfilter.Scope,
 			client := &http.Client{Transport: tr}
 
 			conf = conf.WithHTTPClient(client)
-		} 
+		}
 
 	}
 	sess, err := session.NewSession(conf)
@@ -146,9 +146,17 @@ func upload_S3(ctx context.Context, scope *vfilter.Scope,
 		}, err
 	}
 
-	return &api.UploadResponse{
+	// All good! report the outcome.
+	response := &api.UploadResponse{
 		Path: result.Location,
-	}, nil
+	}
+
+	stat, err := reader.Stat()
+	if err == nil {
+		response.Size = uint64(stat.Size())
+	}
+
+	return response, nil
 }
 
 func (self S3UploadFunction) Info(
