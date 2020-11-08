@@ -119,9 +119,9 @@ parameters:
     type: hidden
     default: |
       // A utility function to upload the file.
-      LET upload_file(filename) = upload_s3(file=filename,
+      LET upload_file(filename, name) = upload_s3(file=filename,
           bucket=TargetArgs.bucket,
-          name=filename,
+          name=name,
           credentialskey=TargetArgs.credentialsKey,
           credentialssecret=TargetArgs.credentialsSecret,
           region=TargetArgs.region,
@@ -132,10 +132,10 @@ parameters:
     type: hidden
     default: |
       // A utility function to upload the file.
-      LET upload_file(filename) = upload_gcs(file=filename,
+      LET upload_file(filename, name) = upload_gcs(file=filename,
           bucket=TargetArgs.bucket,
           project=GCSBlob.project_id,
-          name=filename,
+          name=name,
           credentials=TargetArgs.GCSKey)
 
   - name: CloudCollection
@@ -151,24 +151,26 @@ parameters:
       LET baseline <= SELECT Fqdn, basename(path=Exe) AS Exe FROM info()
       LET TargetArgs <= parse_json(data=target_args)
 
-
-      // Try to upload the log file now to see if we are even able to
-      // upload at all - we do this to avoid having to collect all the
-      // data and then failing the upload step.
-      LET upload_test <= upload_file(filename=baseline[0].Exe + ".log")
-
       // Make the filename safe on windows.
       LET filename <= regex_replace(
           source=format(format="Collection-%s-%s",
                         args=[baseline[0].Fqdn, timestamp(epoch=now())]),
           re="[^0-9A-Za-z\\-.]", replace="_")
 
+      // Try to upload the log file now to see if we are even able to
+      // upload at all - we do this to avoid having to collect all the
+      // data and then failing the upload step.
+      LET _ <= log(message="Uploading to " + filename + ".log")
+      LET upload_test <= upload_file(filename=baseline[0].Exe + ".log",
+          name=filename + ".log")
+
       LET _ <= log(message="Will collect package " + filename +
          " and upload to cloud bucket " + TargetArgs.bucket)
 
-      LET collect_and_upload = SELECT upload_file(filename=Container) AS Upload,
-          upload_file(filename=Report) AS ReportUpload,
-          upload_file(filename=baseline[0].Exe + ".log") AS LogUpload
+      LET collect_and_upload = SELECT
+          upload_file(filename=Container, name=filename+".zip") AS Upload,
+          upload_file(filename=Report, name=filename+".html") AS ReportUpload,
+          upload_file(filename=baseline[0].Exe + ".log", name=filename+".log") AS LogUpload
       FROM collect(artifacts=Artifacts,
           report=tempfile(extension=".html"),
           args=Parameters,
@@ -178,7 +180,8 @@ parameters:
 
       SELECT * FROM if(condition=upload_test.Path,
           then=collect_and_upload,
-          else={SELECT log(message="Aborting collection: Failed to upload to cloud bucket!") FROM scope()})
+          else={SELECT log(message="Aborting collection: Failed to upload to cloud bucket!")
+                FROM scope()})
 
   - name: PackageToolsArtifact
     description: Collects and uploads third party binaries.
