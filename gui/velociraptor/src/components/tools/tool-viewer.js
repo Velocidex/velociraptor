@@ -350,8 +350,8 @@ export default class ToolViewer extends React.Component {
                               <InputGroup.Text
                                 className={classNames({"disabled": !this.state.tool_file})}
                                 onClick={this.uploadFile}>
-                                { this.state.inflight ?
-                                  <FontAwesomeIcon icon="spinner" spin/> :
+                                { this.state.loading ?
+                                  <FontAwesomeIcon icon="spinner" spin /> :
                                   "Upload" }
                               </InputGroup.Text>
                             </InputGroup.Prepend>
