@@ -27,6 +27,7 @@ export default class VeloValueRenderer extends React.Component {
         return (
             <ReactJson name={false}
                        collapsed={1}
+                       enableClipboard={false}
                        collapseStringsAfterLength={100}
                        displayObjectSize={false}
                        displayDataTypes={false}

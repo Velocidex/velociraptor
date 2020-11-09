@@ -7,7 +7,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -16,7 +15,6 @@ var (
 
 type DirectoryQueueManager struct {
 	FileStore api.FileStore
-	scope     *vfilter.Scope
 	Clock     utils.Clock
 }
 
@@ -48,7 +46,6 @@ func NewDirectoryQueueManager(config_obj *config_proto.Config,
 	file_store api.FileStore) api.QueueManager {
 	return &DirectoryQueueManager{
 		FileStore: file_store,
-		scope:     vfilter.NewScope(),
 		Clock:     utils.RealClock{},
 	}
 }

@@ -18,10 +18,16 @@ import VeloReportViewer from "../artifacts/reporting.js";
 import Modal from 'react-bootstrap/Modal';
 import VeloAce from '../core/ace.js';
 import { SettingsButton } from '../core/ace.js';
+import VeloPagedTable from '../core/paged-table.js';
+import VeloTimestamp from "../utils/time.js";
 
 import { withRouter }  from "react-router-dom";
 
 import api from '../core/api-service.js';
+
+
+const mode_raw_data = "Raw Data";
+const mode_report = "Report";
 
 
 class InspectRawJson extends React.PureComponent {
@@ -129,10 +135,13 @@ function format_day(date) {
 function get_day_range(date) {
     let utc = format_day(date);
 
-    return {
+    let result = {
         start_ts: (new Date(utc + "T00:00:00Z")).getTime()/1000,
-        end_ts: (new Date(utc + "T23:59:59Z")).getTime()/1000
     };
+
+    // Each log file is one day long.
+    result.end_ts = result.start_ts + 60 * 60 * 24;
+    return result;
 };
 
 class EventMonitoring extends React.Component {
@@ -165,10 +174,12 @@ class EventMonitoring extends React.Component {
         showDateSelector: false,
         showEventTableWizard: false,
 
-
         // Refreshed from the server
         event_monitoring_table: {},
         showEventMonitoringPopup: false,
+
+        // Are we viewing the report or the raw data?
+        mode: mode_raw_data,
     }
 
     fetchEventResults = () => {
@@ -252,6 +263,14 @@ class EventMonitoring extends React.Component {
 
         // Check if there are any results in the current_time range
         let is_date_covered = this.isDateCovered(this.state.current_time);
+
+        let renderers = {
+            "_ts": (cell, row, rowIndex) => {
+                return (
+                    <VeloTimestamp usec={cell * 1000}/>
+                );
+            },
+        };
 
         let client_id = this.props.client && this.props.client.client_id;
         return (
@@ -338,7 +357,43 @@ class EventMonitoring extends React.Component {
                     }
                   />
                 </ButtonGroup>
+                <ButtonGroup className="float-right">
+                  <Dropdown title="mode" variant="default">
+                    <Dropdown.Toggle variant="default">
+                      <FontAwesomeIcon icon="book"/>
+                      <span className="button-label">{this.state.mode}</span>
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      <Dropdown.Item
+                        title={mode_raw_data}
+                        active={this.state.mode === mode_raw_data}
+                        onClick={() => this.setState({mode: mode_raw_data})}>
+                        {mode_raw_data}
+                      </Dropdown.Item>
+                      <Dropdown.Item
+                        title={mode_report}
+                        active={this.state.mode === mode_report}
+                        onClick={() => this.setState({mode: mode_report})}>
+                        {mode_report}
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </ButtonGroup>
               </Navbar>
+            { this.state.mode === mode_raw_data ?
+              <Container className="event-report-viewer">
+                <VeloPagedTable
+                  params={{
+                      artifact: this.state.artifact.artifact,
+                      type: "CLIENT_EVENT",
+                      start_time: start_ts,
+                      end_time: end_ts,
+                      client_id: this.props.client.client_id,
+                  }}
+                  renderers={renderers}
+                 />
+
+              </Container> :
               <Container className="event-report-viewer">
                 { (this.state.artifact.artifact && is_date_covered) ?
                   <VeloReportViewer
@@ -353,6 +408,7 @@ class EventMonitoring extends React.Component {
                   <div className="no-content">Please select an artifact to view above.</div>
                 }
               </Container>
+            }
             </>
         );
     }

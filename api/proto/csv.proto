@@ -7,32 +7,38 @@ package proto;
 option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
 message GetTableRequest {
-    // Deprecated!
-    string path = 1 [(sem_type) = {
-            description: "The path within the client's VFS "
-            "that contains CSV file to read."
-        }];
+    // Paging parameters.
+    uint64 rows = 2;         // Number of rows to fetch
+    uint64 start_row = 3;    // First row to fetch.
 
-    uint64 rows = 2 [(sem_type) = {
-            description: "How many rows to fetch."
-        }];
+    // The following are used to create the path manager used to fetch
+    // the correct JSONL files. See getPathManager() in csv.go
 
-    uint64 start_row = 3 [(sem_type) = {
-            description: "First row to fetch."
-        }];
+    // For event artifacts we can get events after this time. Event
+    // artifacts should specify the artifact name with client_id being
+    // either "server" for server events or the client id for the
+    // client events. Number of seconds since epoch.
+    uint64 start_time = 13;
+    uint64 end_time = 14;
 
+    // For collected artifacts tables.
     string client_id = 4;
     string flow_id = 5;
     string artifact = 6;
 
+    // Can be log, uploads for collection additional tables.
     string type = 7;
 
+    // For collected hunts. With hunts, type can be clients, hunt_status.
     string hunt_id = 8;
 
+    // For notebook tables.
     string notebook_id = 9;
     string cell_id = 10;
     int64 table_id = 11;
 
+    // For download handler when creating an export file - control
+    // output format. Can be "csv", "jsonl"
     string download_format = 12;
 }
 

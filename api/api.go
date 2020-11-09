@@ -687,11 +687,11 @@ func (self *ApiServer) GetTable(
 			"User is not allowed to view results.")
 	}
 
-	result, err := getTable(ctx, self.config, in)
-	if err != nil {
-		return &api_proto.GetTableResponse{}, nil
+	// We want an event table.
+	if in.Type == "CLIENT_EVENT" || in.Type == "SERVER_EVENT" {
+		return getEventTable(ctx, self.config, in)
 	}
-	return result, nil
+	return getTable(ctx, self.config, in)
 }
 
 func (self *ApiServer) GetArtifacts(

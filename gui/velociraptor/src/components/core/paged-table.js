@@ -110,6 +110,10 @@ class VeloPagedTable extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        if (!_.isEqual(prevProps.params, this.props.params)) {
+            this.setState({start_row: 0});
+        };
+
         if (!_.isEqual(prevProps.params, this.props.params) ||
             prevState.start_row !== this.state.start_row ||
             prevState.page_size !== this.state.page_size) {

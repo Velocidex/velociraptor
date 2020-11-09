@@ -135,7 +135,7 @@ func (self VQLClientAction) StartQuery(
 	defer scope.Close()
 
 	if runtime.GOARCH == "386" &&
-		os.Getenv("PROCESSOR_ARCHITECTURE") == "AMD64" {
+		os.Getenv("PROCESSOR_ARCHITEW6432") == "AMD64" {
 		scope.Log("You are running a 32 bit built binary on Windows x64. " +
 			"This configuration is not supported and may result in " +
 			"incorrect or missed results or even crashes.")
