@@ -1,0 +1,9 @@
+{
+    "Metadata": [0, {
+        "Header": [0, ["unsigned long long"]],
+        "FileSize": [8, ["unsigned long long"]],
+        "DeletedTime": [16, ["unsigned long long"]],
+        "FileNameLength": [24, ["unsigned long"]],
+		"FilePath": [28, ["UnicodeString"]]
+    }]
+}

@@ -1,0 +1,50 @@
+name: Windows.Forensics.RecycleBin
+description: |
+  This artefact will parse the `$I` files found in the `$Recycle.Bin` folder to
+  obtain the time of deletion and the original path and file name.
+
+  Supports Recycle Bin format found in Vista onwards. This will not parse INFO2 
+  files found in the "Recycler" folder from XP and below.
+  
+  The layout of the Recycle Bin folder is in the in the form:
+  ```
+    C:\$Recycle.Bin\%SID%\
+  ```
+  Each folder contains the following files:
+  ```
+  $R###### files; the original data
+  $I###### files; the "Recycled" file's metadata
+  ```
+  The first file begins with the value `$R` followed by a random string 
+  – this file contains the actual contents of the recycled file. 
+  The second file begins with `$I` and ends in the same string as the 
+  `$R` file – this file contains the metadata for that specific file
+ 
+author: "Zach Stanford - @svch0st"
+
+reference:
+  - https://forensicswiki.xyz/wiki/index.php?title=Windows#Recycle_Bin
+  - https://www.magnetforensics.com/blog/artifact-profile-recycle-bin/
+
+
+parameters:
+    - name: RecycleBinGlobs
+      default: C:\$Recycle.Bin\**\$I*
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - query: |
+        SELECT * FROM foreach(
+              row={
+                 SELECT * FROM glob(globs=RecycleBinGlobs)
+              },
+              query={
+                SELECT
+                    timestamp(winfiletime=DeletedTime) as DeletedTimestamp,
+                    Name,
+                    FilePath as OriginalFilePath,
+                    FileSize,
+                    FullPath   
+                 FROM parse_recyclebin(filename=FullPath)
+              })
