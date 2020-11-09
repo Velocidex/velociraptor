@@ -15,7 +15,7 @@ description: |
     - WhitelistRegex enables a regex whitelist for the Message field.  
     - PathRegex enables filtering on evtx path for specific log targetting.   
     - ChannelRegex allows specific EVTX Channel targets.  
-    - IdRegex enables a regex query to select specific event Ids.
+    - IdRegex enables a regex query to select specific event Ids.  
     - SearchVSS enables searching over VSS
     
     Note: this artifact can potentially be heavy on the endpoint. 
