@@ -39,7 +39,7 @@ Velociraptor is also useful as a local triage tool. You can create a self contai
 
 2. Select the `Server Artifacts` sidebar menu, then `Build Collector`.
 
-3. Select and configure the artifacts you want to collect tnen select
+3. Select and configure the artifacts you want to collect, then select
    the `Uploaded Files` tab and download your customized collector.
 
 ## Building from source
