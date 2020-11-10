@@ -118,7 +118,7 @@ func (self *MemoryFileStore) StatFile(filename string) (os.FileInfo, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	_, pres := self.Data[filename]
+	buff, pres := self.Data[filename]
 	if !pres {
 		return nil, os.ErrNotExist
 	}
@@ -126,6 +126,7 @@ func (self *MemoryFileStore) StatFile(filename string) (os.FileInfo, error) {
 	return &vtesting.MockFileInfo{
 		Name_:     path.Base(filename),
 		FullPath_: filename,
+		Size_:     int64(len(buff)),
 	}, nil
 }
 

@@ -45,7 +45,7 @@ func (self *ExecutorTestSuite) TestCancellation() {
 
 	// Send cancel message
 	flow_id := "F.XXX"
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 100; i++ {
 		executor.Inbound <- &crypto_proto.GrrMessage{
 			AuthState: crypto_proto.GrrMessage_AUTHENTICATED,
 			SessionId: flow_id,

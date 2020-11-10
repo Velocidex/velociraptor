@@ -64,7 +64,7 @@ func ForemanProcessMessage(
 	client_event_manager := services.ClientEventManager()
 	if client_event_manager == nil {
 		// Not really an error - this happens when the server
-		// shuts down.1
+		// shuts down.
 		return nil
 	}
 

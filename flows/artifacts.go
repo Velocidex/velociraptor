@@ -671,6 +671,8 @@ func (self *FlowRunner) ProcessSingleMessage(
 		return
 	}
 
+	json.Dump(job)
+
 	if job.SessionId == constants.MONITORING_WELL_KNOWN_FLOW {
 		err := MonitoringProcessMessage(self.config_obj, collection_context, job)
 		if err != nil {

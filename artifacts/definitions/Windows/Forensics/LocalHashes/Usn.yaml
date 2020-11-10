@@ -9,7 +9,7 @@ type: CLIENT_EVENT
 parameters:
   - name: PathRegex
     description: A regex to match the entire path (you can watch a directory or a file type).
-    default: .exe$
+    default: .
 
   - name: Device
     description: The NTFS drive to watch
@@ -23,6 +23,9 @@ parameters:
     description: If this is set, the artifact does not return any rows to the server but will still update the local database.
     type: bool
 
+  - name: UsnCheckPeriod
+    description: Dedup all file operations that occur within this period
+    default: "10"
 
 precondition: SELECT OS from info() where OS = "windows"
 
@@ -35,12 +38,29 @@ sources:
 
       LET _ <= log(message="Will use local hash database " + path)
 
-      LET file_overwrites = SELECT Device + FullPath AS FullPath
+      LET file_modifications = SELECT Device + FullPath AS FullPath
       FROM watch_usn(device=Device)
-      WHERE FullPath =~ PathRegex AND "DATA_OVERWRITE" IN Reason
+      WHERE FullPath =~ PathRegex
+
+      -- The USN journal may contain multiple entries for the same
+      -- file modification (e.g. TRUNCATE followed by APPEND and
+      -- CLOSE). We therefore dedup all entries that happen within the
+      -- period as a single modification.
+      LET deduped = SELECT * FROM foreach(row={
+         SELECT * FROM clock(period=atoi(string=UsnCheckPeriod), start=0)
+      },
+      query={
+         -- Each time the fifo is accessed we pull all the rows and
+         -- dedup the path, then clear the cache.
+         SELECT * FROM fifo(
+             query=file_modifications,
+             max_rows=5000,
+             max_age=6000, flush=TRUE)
+         GROUP BY FullPath
+      })
 
       -- Stat each file that was changed to get its size and hash
-      LET files = SELECT * FROM foreach(row=file_overwrites,
+      LET files = SELECT * FROM foreach(row=deduped,
       query={
          SELECT FullPath, Size, hash(path=FullPath).MD5 AS Hash, now() AS Time
          FROM stat(filename=FullPath)

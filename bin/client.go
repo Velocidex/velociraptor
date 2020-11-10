@@ -68,11 +68,21 @@ func RunClient(
 		kingpin.FatalIfError(err, "Unable to parse config file")
 	}
 
+	// Start all the services
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
+
 	exe, err := executor.NewClientExecutor(ctx, config_obj)
 	if err != nil {
 		kingpin.FatalIfError(err, "Can not create executor.")
 	}
 
+	err = executor.StartServices(sm, manager.ClientId, exe)
+	if err != nil {
+		kingpin.FatalIfError(err, "Can not start services.")
+	}
+
+	// Now start the communicator so we can talk with the server.
 	comm, err := http_comms.NewHTTPCommunicator(
 		config_obj,
 		manager,
@@ -98,17 +108,6 @@ func RunClient(
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 		logger.Info("<cyan>Interrupted!</> Shutting down\n")
 	}()
-
-	// Wait for the comms to properly start before we begin the
-	// services. If services need to communicate with the server
-	// they will deadlock otherwise.
-	sm := services.NewServiceManager(ctx, config_obj)
-	defer sm.Close()
-
-	err = executor.StartServices(sm, manager.ClientId, exe)
-	if err != nil {
-		return
-	}
 
 	wg.Wait()
 }

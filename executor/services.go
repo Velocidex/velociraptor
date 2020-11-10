@@ -49,7 +49,8 @@ func StartEventTableService(
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-	logger.Info("<green>Starting</> event query service.")
+	logger.Info("<green>Starting</> event query service with version %v.",
+		actions.GlobalEventTableVersion())
 
 	responder := responder.NewResponder(
 		config_obj, &crypto_proto.GrrMessage{
@@ -59,5 +60,9 @@ func StartEventTableService(
 		actions.UpdateEventTable{}.Run(config_obj, ctx,
 			responder, config_obj.Writeback.EventQueries)
 	}
+
+	logger.Info("<green>Starting</> event query service with version %v.",
+		actions.GlobalEventTableVersion())
+
 	return nil
 }

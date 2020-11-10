@@ -42,3 +42,18 @@ func NewResultSetReader(
 	}
 	return factory.NewResultSetReader(file_store, path_manager)
 }
+
+// Some result sets store events (rows with a timestamp) over periods
+// of time. This factory function builds a result set reader over the
+// sub result set bounded by the start and end time.
+func NewTimedResultSetReader(
+	ctx context.Context,
+	file_store api.FileStore,
+	path_manager api.PathManager,
+	start_time, end_time uint64) (ResultSetReader, error) {
+	if factory == nil {
+		return nil, errors.New("ResultSet factory not initialized")
+	}
+	return factory.NewTimedResultSetReader(
+		ctx, file_store, path_manager, start_time, end_time)
+}

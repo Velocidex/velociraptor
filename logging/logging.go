@@ -102,19 +102,27 @@ type LogContext struct {
 }
 
 func (self *LogContext) Debug(format string, v ...interface{}) {
-	self.Logger.Debug(fmt.Sprintf(format, v...))
+	if self.Logger != nil {
+		self.Logger.Debug(fmt.Sprintf(format, v...))
+	}
 }
 
 func (self *LogContext) Info(format string, v ...interface{}) {
-	self.Logger.Info(fmt.Sprintf(format, v...))
+	if self.Logger != nil {
+		self.Logger.Info(fmt.Sprintf(format, v...))
+	}
 }
 
 func (self *LogContext) Warn(format string, v ...interface{}) {
-	self.Logger.Warn(fmt.Sprintf(format, v...))
+	if self.Logger != nil {
+		self.Logger.Warn(fmt.Sprintf(format, v...))
+	}
 }
 
 func (self *LogContext) Error(format string, v ...interface{}) {
-	self.Logger.Error(fmt.Sprintf(format, v...))
+	if self.Logger != nil {
+		self.Logger.Error(fmt.Sprintf(format, v...))
+	}
 }
 
 type LogManager struct {
@@ -126,6 +134,10 @@ type LogManager struct {
 func (self *LogManager) GetLogger(
 	config_obj *config_proto.Config,
 	component *string) *LogContext {
+	if config_obj == nil {
+		return nil
+	}
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
