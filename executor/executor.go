@@ -269,8 +269,8 @@ func NewClientExecutor(
 	ctx context.Context,
 	config_obj *config_proto.Config) (*ClientExecutor, error) {
 	result := &ClientExecutor{
-		Inbound:    make(chan *crypto_proto.GrrMessage),
-		Outbound:   make(chan *crypto_proto.GrrMessage),
+		Inbound:    make(chan *crypto_proto.GrrMessage, 10),
+		Outbound:   make(chan *crypto_proto.GrrMessage, 10),
 		in_flight:  make(map[string][]*_FlowContext),
 		config_obj: config_obj,
 	}

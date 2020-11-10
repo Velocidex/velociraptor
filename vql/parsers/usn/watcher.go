@@ -3,8 +3,11 @@ package usn
 import (
 	"context"
 	"sync"
+	"time"
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/parsers"
@@ -24,6 +27,9 @@ var (
 type USNWatcherService struct {
 	mu sync.Mutex
 
+	// Handlers get an incrementing id.
+	idx int
+
 	// Registrations for each device
 	registrations map[string][]*Handle
 }
@@ -37,6 +43,7 @@ func NewUSNWatcherService() *USNWatcherService {
 func (self *USNWatcherService) Register(
 	device string,
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	output_chan chan vfilter.Row) func() {
 
@@ -57,59 +64,106 @@ func (self *USNWatcherService) Register(
 
 	subctx, cancel := context.WithCancel(ctx)
 
+	// Make a new handle for this caller.
+	self.idx++
 	handle := &Handle{
+		id:          self.idx,
 		ctx:         subctx,
 		output_chan: output_chan,
 		scope:       scope}
 
+	// Get existing registrations and append the new one to them.
 	registration, pres := self.registrations[device]
 	if !pres {
 		registration = []*Handle{}
 		self.registrations[device] = registration
 
-		go self.StartMonitoring(device, ntfs_ctx)
+		// There were no earlier registrations so launch the
+		// watcher on a new handle.
+		go self.StartMonitoring(config_obj, device, ntfs_ctx)
 	}
 
 	registration = append(registration, handle)
 	self.registrations[device] = registration
 
-	scope.Log("Registering USN log watcher for %v", device)
+	scope.Log("Registering USN log watcher for %v with handle %v",
+		device, handle.id)
 
-	return cancel
+	// De-queue the handle from the registration map when the
+	// caller is done with it.
+	return func() {
+		self.mu.Lock()
+		defer self.mu.Unlock()
+
+		handles, pres := self.registrations[device]
+		if pres {
+			scope.Log("Unregistering USN log watcher for %v with handle %v",
+				device, handle.id)
+			new_handles := make([]*Handle, 0, len(handles))
+			for _, old_handle := range handles {
+				if old_handle.id != handle.id {
+					new_handles = append(new_handles, old_handle)
+				}
+			}
+			self.registrations[device] = new_handles
+		}
+		cancel()
+	}
 }
 
 // Monitor the filename for new events and emit them to all interested
-// listeners. If no listeners exist we terminate.
-func (self *USNWatcherService) StartMonitoring(device string, ntfs_ctx *ntfs.NTFSContext) {
+// listeners. If no listeners exist we terminate the registration.
+func (self *USNWatcherService) StartMonitoring(
+	config_obj *config_proto.Config,
+	device string, ntfs_ctx *ntfs.NTFSContext) {
 	defer utils.CheckForPanic("StartMonitoring")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	for event := range ntfs.WatchUSN(ctx, ntfs_ctx, FREQUENCY) {
-		handlers, pres := self.registrations[device]
+	usn_chan := ntfs.WatchUSN(ctx, ntfs_ctx, FREQUENCY)
 
-		// No more registrations, we dont care any more.
-		if !pres || len(handlers) == 0 {
-			delete(self.registrations, device)
-			return
-		}
+	for {
+		select {
 
-		enriched_event := makeUSNRecord(event)
-		new_handles := make([]*Handle, 0, len(handlers))
-		for _, handler := range handlers {
-			select {
-			case <-handler.ctx.Done():
-				// This handler is done -drop the event.
-			case handler.output_chan <- enriched_event:
-				new_handles = append(new_handles, handler)
+		// Check every second if there are registrations. This
+		// allows us to de-register with go-ntfs ASAP
+		case <-time.After(time.Second):
+			self.mu.Lock()
+			handlers, pres := self.registrations[device]
+
+			// No more registrations, we dont care any more.
+			if !pres || len(handlers) == 0 {
+				delete(self.registrations, device)
+				logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+				logger.Info("Unregistering USN log watcher for %v", device)
+
+				self.mu.Unlock()
+				return
 			}
+			self.mu.Unlock()
+
+		case event, ok := <-usn_chan:
+			if !ok {
+				return
+			}
+
+			self.mu.Lock()
+
+			handlers, pres := self.registrations[device]
+			if pres {
+				// Distribute to all listeners
+				enriched_event := makeUSNRecord(event)
+				for _, handler := range handlers {
+					select {
+					// This handler is done -drop the event for this handler.
+					case <-handler.ctx.Done():
+					case handler.output_chan <- enriched_event:
+					}
+				}
+			}
+			self.mu.Unlock()
 		}
-
-		// Update the registrations - possibly omitting
-		// finished listeners.
-		self.registrations[device] = new_handles
-
 	}
 
 }
@@ -122,4 +176,5 @@ type Handle struct {
 	ctx         context.Context
 	output_chan chan vfilter.Row
 	scope       *vfilter.Scope
+	id          int
 }

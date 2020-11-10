@@ -5,6 +5,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/paths"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -87,12 +88,32 @@ func (self WatchUSNPlugin) Call(
 			return
 		}
 
+		config_obj, ok := artifacts.GetServerConfig(scope)
+		if !ok {
+			scope.Log("watch_usn: %v", err)
+			return
+		}
+
+		event_channel := make(chan vfilter.Row)
+
 		// Register our interest in the log.
-		cancel := GlobalEventLogService.Register(arg.Device, ctx, scope, output_chan)
+		cancel := GlobalEventLogService.Register(
+			arg.Device, ctx, config_obj, scope, event_channel)
 		defer cancel()
 
-		// Wait here until the query is cancelled.
-		<-ctx.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				scope.Log("Finished watch_usn() on drive %v", arg.Device)
+				return
+
+			case event, ok := <-event_channel:
+				if !ok {
+					return
+				}
+				output_chan <- event
+			}
+		}
 	}()
 
 	return output_chan

@@ -59,7 +59,7 @@ type _FIFOCache struct {
 	max_rows int64
 }
 
-func (self *_FIFOCache) Snapshot() []vfilter.Row {
+func (self *_FIFOCache) Snapshot(flush bool) []vfilter.Row {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -68,6 +68,13 @@ func (self *_FIFOCache) Snapshot() []vfilter.Row {
 		entry := idx.Value.(*_FIFOCacheEntry)
 		result = append(result, entry.row)
 	}
+
+	// Flush the cache while we still have a lock on it.
+	if flush {
+		self.rows = list.New()
+		self.count = 0
+	}
+
 	return result
 }
 
@@ -152,6 +159,7 @@ type _FIFOPluginArgs struct {
 	Query   vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for cached rows."`
 	MaxAge  int64               `vfilter:"optional,field=max_age,doc=Maximum number of seconds to hold rows in the fifo."`
 	MaxRows int64               `vfilter:"optional,field=max_rows,doc=Maximum number of rows to hold in the fifo."`
+	Flush   bool                `vfilter:"optional,field=flush,doc=If specified we flush all rows from cache after the call."`
 }
 
 type _FIFOPlugin struct{}
@@ -198,7 +206,7 @@ func (self _FIFOPlugin) Call(ctx context.Context,
 
 		wg.Done()
 
-		snapshot := fifo_cache.(*_FIFOCache).Snapshot()
+		snapshot := fifo_cache.(*_FIFOCache).Snapshot(arg.Flush)
 		for _, row := range snapshot {
 			select {
 			case <-ctx.Done():
