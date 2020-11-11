@@ -25,6 +25,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -104,7 +105,6 @@ func (self YaraScanPlugin) Call(
 
 		rules, err := getYaraRules(arg.Key, arg.Rules, scope)
 		if err != nil {
-			scope.Log("Failed to initialize YARA compiler: %s", err)
 			return
 		}
 
@@ -140,7 +140,6 @@ func (self YaraScanPlugin) Call(
 // the hash of the rules string if not provided.
 func getYaraRules(key, rules string,
 	scope *vfilter.Scope) (*yara.Rules, error) {
-	var err error
 
 	// Try to get the compiled yara expression from the
 	// scope cache.
@@ -149,18 +148,29 @@ func getYaraRules(key, rules string,
 		rule_hash := md5.Sum([]byte(rules))
 		key = string(rule_hash[:])
 	}
-	result, ok := vql_subsystem.CacheGet(scope, key).(*yara.Rules)
-	if !ok {
+	result := vql_subsystem.CacheGet(scope, key)
+	if result == nil {
 		variables := make(map[string]interface{})
 		generated_rules := RuleGenerator(scope, rules)
-		result, err = yara.Compile(generated_rules, variables)
+		result, err := yara.Compile(generated_rules, variables)
 		if err != nil {
+			// Cache the compile failure so only one log is emitted.
+			scope.Log("Failed to initialize YARA compiler: %s", err)
+			vql_subsystem.CacheSet(scope, key, err)
 			return nil, err
 		}
 		vql_subsystem.CacheSet(scope, key, result)
+		return result, nil
 	}
 
-	return result, nil
+	switch t := result.(type) {
+	case error:
+		return nil, t
+	case *yara.Rules:
+		return t, nil
+	default:
+		return nil, errors.New("Error")
+	}
 }
 
 func scanFileByAccessor(
