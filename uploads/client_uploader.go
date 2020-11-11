@@ -44,12 +44,13 @@ func (self *VelociraptorUploader) Upload(
 		return result, nil
 	}
 
-	result = &api.UploadResponse{
-		Path: filename,
-	}
-
 	if store_as_name == "" {
 		store_as_name = filename
+	}
+
+	result = &api.UploadResponse{
+		Path:       filename,
+		StoredName: store_as_name,
 	}
 
 	offset := uint64(0)

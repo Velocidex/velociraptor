@@ -7,6 +7,9 @@ import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
+
+import Tooltip from 'react-bootstrap/Tooltip';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -37,6 +40,11 @@ function convertToDate(x) {
     return null;
 }
 
+const renderToolTip = (props, params) => (
+    <Tooltip show={params.description} {...props}>
+       {params.description}
+     </Tooltip>
+);
 
 export default class VeloForm extends React.Component {
     static propTypes = {
@@ -98,8 +106,17 @@ export default class VeloForm extends React.Component {
 
             return (
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">{param.name}
+                  <Form.Label column sm="3">
+                    <OverlayTrigger
+                      placement="right"
+                      delay={{show: 250, hide: 400}}
+                      overlay={(props)=>renderToolTip(props, param)}>
+                      <div>
+                        {param.name}
+                      </div>
+                    </OverlayTrigger>
                   </Form.Label>
+
                   <Col sm="8">
                     <BootstrapTable
                       hover condensed bootstrap4
@@ -124,7 +141,16 @@ export default class VeloForm extends React.Component {
             let date = convertToDate(this.props.value);
             return (
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">{param.name}</Form.Label>
+                  <Form.Label column sm="3">
+                    <OverlayTrigger
+                      placement="right"
+                      delay={{show: 250, hide: 400}}
+                      overlay={(props)=>renderToolTip(props, param)}>
+                      <div>
+                        {param.name}
+                      </div>
+                    </OverlayTrigger>
+                  </Form.Label>
                   <Col sm="8">
                     <DateTimePicker
                       onChange={(value) => {
@@ -143,7 +169,16 @@ export default class VeloForm extends React.Component {
         case "choices":
             return (
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">{param.name}</Form.Label>
+                  <Form.Label column sm="3">
+                    <OverlayTrigger
+                      placement="right"
+                      delay={{show: 250, hide: 400}}
+                      overlay={(props)=>renderToolTip(props, param)}>
+                      <div>
+                        {param.name}
+                      </div>
+                    </OverlayTrigger>
+                  </Form.Label>
                   <Col sm="8">
                     <Form.Control as="select"
                                   onChange={(e) => {
@@ -160,7 +195,16 @@ export default class VeloForm extends React.Component {
         case "bool":
             return (
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">{param.name}</Form.Label>
+                  <Form.Label column sm="3">
+                    <OverlayTrigger
+                      placement="right"
+                      delay={{show: 250, hide: 400}}
+                      overlay={(props)=>renderToolTip(props, param)}>
+                      <div>
+                        {param.name}
+                      </div>
+                    </OverlayTrigger>
+                  </Form.Label>
                   <Col sm="8">
                     <Form.Check
                       type="checkbox"
@@ -180,8 +224,17 @@ export default class VeloForm extends React.Component {
 
         default:
             return (
-                <Form.Group as={Row}>
-                  <Form.Label column sm="3">{param.name}</Form.Label>
+                  <Form.Group as={Row}>
+                  <Form.Label column sm="3">
+                    <OverlayTrigger
+                      placement="right"
+                      delay={{show: 250, hide: 400}}
+                      overlay={(props)=>renderToolTip(props, param)}>
+                      <div>
+                        {param.name}
+                      </div>
+                    </OverlayTrigger>
+                  </Form.Label>
                   <Col sm="8">
                     <Form.Control as="textarea"
                                   rows={1}

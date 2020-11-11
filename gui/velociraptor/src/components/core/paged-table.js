@@ -102,7 +102,7 @@ class VeloPagedTable extends Component {
         // rows in the table. If it is -1 then we dont know the total
         // number.
         total_size: 0,
-        loading: false,
+        loading: true,
     }
 
     componentDidMount = () => {
@@ -162,12 +162,21 @@ class VeloPagedTable extends Component {
     }
 
     render() {
-        if (_.isEmpty(this.props.params) || _.isEmpty(this.state.columns)) {
-            return <div className="no-content">
+        if (this.state.loading) {
+            return <>
                      <Spinner loading={this.state.loading} />
-                     No data available
+                     <div className="no-content">
+                        Loading....
+                     </div>
+                   </>;
+        }
+
+        if (_.isEmpty(this.state.columns)) {
+            return <div className="no-content">
+                     No Data Available.
                    </div>;
         }
+
 
         let rows = this.state.rows;
 

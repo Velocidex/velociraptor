@@ -36,6 +36,7 @@ reports:
            <th>Name</th>
            <th>Type</th>
            <th>Default</th>
+           <th>Description</th>
          </tr>
       </thead>
       <tbody>
@@ -45,6 +46,7 @@ reports:
              <td>{{ $item.Name }}</td>
              <td>{{ $item.Type }}</td>
              <td><pre>{{ $item.Default }}</pre></td>
+             <td>{{ $item.Description }}</td>
            </tr>
          {{- end -}}
       {{- end -}}
