@@ -86,3 +86,10 @@ reports:
 
       > To learn about managing end point performance with Velociraptor see
         the [blog post](https://docs.velociraptor.velocidex.com/blog/html/2019/02/10/velociraptor_performance.html).
+
+column_types:
+  - name: Timestamp
+    type: timestamp
+
+  - name: ClientId
+    type: client_id

@@ -138,6 +138,7 @@ message ListAvailableEventResultsRequest {
 
 message AvailableEvent {
     string artifact = 1;
+    Artifact definition = 3;
     repeated int32 timestamps = 2;
 }
 

@@ -416,6 +416,13 @@ export function formatColumns(columns) {
             x.type = null;
             break;
 
+        case "nano_timestamp":
+            x.formatter= (cell, row) => {
+                return <VeloTimestamp usec={cell / 1000000}/>;
+            };
+            x.type = null;
+            break;
+
         case "download":
             x.formatter= (cell, row) =>{
                 if (row.complete) {

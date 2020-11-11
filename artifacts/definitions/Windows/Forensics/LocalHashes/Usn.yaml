@@ -80,3 +80,13 @@ sources:
       SELECT FullPath, Hash, Size, Time
       FROM insertion
       WHERE SuppressOutput != "Y"
+
+column_types:
+  - name: Time
+    type: timestamp
+
+  - name: Hash
+    type: hash
+
+  - name: ClientId
+    type: client_id

@@ -19,6 +19,8 @@ import Navbar from 'react-bootstrap/Navbar';
 import VeloValueRenderer from '../utils/value.js';
 import Spinner from '../utils/spinner.js';
 import api from '../core/api-service.js';
+import VeloTimestamp from "../utils/time.js";
+import ClientLink from '../clients/client-link.js';
 
 import { InspectRawJson, ColumnToggleList, sizePerPageRenderer, PrepareData } from './table.js';
 
@@ -87,6 +89,8 @@ class VeloPagedTable extends Component {
         // The URL Handler to fetch the table content. Defaults to
         // "v1/GetTable".
         url: PropTypes.string,
+
+        column_types: PropTypes.array,
     }
 
     state = {
@@ -123,6 +127,29 @@ class VeloPagedTable extends Component {
 
     defaultFormatter = (cell, row, rowIndex) => {
         return <VeloValueRenderer value={cell}/>;
+    }
+
+    getColumnRenderer = (column, column_types) => {
+        if (!_.isArray(column_types)) {
+            return this.defaultFormatter;
+        }
+
+        for (let i=0; i<column_types.length; i++) {
+            if (column === column_types[i].name) {
+                let type = column_types[i].type;
+                switch (type) {
+                case "timestamp":
+                    return (cell, row, rowIndex)=><VeloTimestamp usec={cell * 1000}/>;
+
+                case "client_id":
+                    return (cell, row, rowIndex)=><ClientLink client_id={cell}/>;
+
+                default:
+                    return this.defaultFormatter;
+                }
+            }
+        }
+        return this.defaultFormatter;
     }
 
 
@@ -179,7 +206,6 @@ class VeloPagedTable extends Component {
 
 
         let rows = this.state.rows;
-
         let column_names = [];
         let columns = [{dataField: '_id', hidden: true}];
         for(var i=0;i<this.state.columns.length;i++) {
@@ -188,7 +214,8 @@ class VeloPagedTable extends Component {
             if (this.props.renderers && this.props.renderers[name]) {
                 definition.formatter = this.props.renderers[name];
             } else {
-                definition.formatter = this.defaultFormatter;
+                definition.formatter = this.getColumnRenderer(
+                    name, this.props.column_types);
             }
 
             if (this.state.toggles[name]) {

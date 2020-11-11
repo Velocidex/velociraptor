@@ -372,6 +372,16 @@ func (self *ApiServer) ListAvailableEventResults(
 			"User is not allowed to view results.")
 	}
 
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+
+	repository, err := manager.GetGlobalRepository(self.config)
+	if err != nil {
+		return nil, err
+	}
+
 	path_manager := artifacts.NewMonitoringArtifactPathManager(in.ClientId)
 	file_store_factory := file_store.GetFileStore(self.config)
 
@@ -390,8 +400,13 @@ func (self *ApiServer) ListAvailableEventResults(
 						event = &api_proto.AvailableEvent{
 							Artifact: artifact_name,
 						}
-					}
 
+						artifact, pres := repository.Get(
+							self.config, artifact_name)
+						if pres {
+							event.Definition = artifact
+						}
+					}
 					event.Timestamps = append(event.Timestamps,
 						int32(timestamp))
 					seen[artifact_name] = event
