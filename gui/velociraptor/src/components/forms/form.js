@@ -108,7 +108,6 @@ export default class VeloForm extends React.Component {
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
                     <OverlayTrigger
-                      placement="right"
                       delay={{show: 250, hide: 400}}
                       overlay={(props)=>renderToolTip(props, param)}>
                       <div>
@@ -143,7 +142,6 @@ export default class VeloForm extends React.Component {
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
                     <OverlayTrigger
-                      placement="right"
                       delay={{show: 250, hide: 400}}
                       overlay={(props)=>renderToolTip(props, param)}>
                       <div>
@@ -171,7 +169,6 @@ export default class VeloForm extends React.Component {
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
                     <OverlayTrigger
-                      placement="right"
                       delay={{show: 250, hide: 400}}
                       overlay={(props)=>renderToolTip(props, param)}>
                       <div>
@@ -197,7 +194,6 @@ export default class VeloForm extends React.Component {
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
                     <OverlayTrigger
-                      placement="right"
                       delay={{show: 250, hide: 400}}
                       overlay={(props)=>renderToolTip(props, param)}>
                       <div>
@@ -227,7 +223,6 @@ export default class VeloForm extends React.Component {
                   <Form.Group as={Row}>
                   <Form.Label column sm="3">
                     <OverlayTrigger
-                      placement="right"
                       delay={{show: 250, hide: 400}}
                       overlay={(props)=>renderToolTip(props, param)}>
                       <div>

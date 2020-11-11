@@ -121,27 +121,24 @@ class InspectRawJson extends React.PureComponent {
             </>
         );
     };
-
 }
 
 
-function format_day(date) {
-    return date.getFullYear().toString().padStart(4, "0") + "-" +
-        (date.getMonth()+1).toString().padStart(2, "0") + "-" +
-        date.getDate().toString().padStart(2, "0");
+// Returns a date object in local timestamp which represents the UTC
+// date.
+function localDayFromUTCDate(date) {
+    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
+function utcEpochFromLocalDate(date) {
+    return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 1000;
 }
 
 // Convert from date in local time to a utc range covering that day.
 function get_day_range(date) {
-    let utc = format_day(date);
-
-    let result = {
-        start_ts: (new Date(utc + "T00:00:00Z")).getTime()/1000,
-    };
-
-    // Each log file is one day long.
-    result.end_ts = result.start_ts + 60 * 60 * 24;
-    return result;
+    let start_ts = utcEpochFromLocalDate(date);
+    let end_ts = start_ts + 60 * 60 * 24;
+    return {start_ts: start_ts, end_ts: end_ts};
 };
 
 class EventMonitoring extends React.Component {
@@ -197,9 +194,11 @@ class EventMonitoring extends React.Component {
                         let last_time = new Date(
                             log.timestamps[log.timestamps.length-1]*1000);
 
+                        let local_timestamp = localDayFromUTCDate(last_time);
+
                         this.setState({artifact: log,
-                                       activeStartDate: last_time,
-                                       current_time: last_time});
+                                       activeStartDate: local_timestamp,
+                                       current_time: local_timestamp});
                     }
                 }
             }
@@ -210,10 +209,12 @@ class EventMonitoring extends React.Component {
 
     dateDisabled = ({activeStartDate, date, view }) => !this.isDateCovered(date);
 
-    setDay = (value) => {
-        this.setState({current_time: value});
+    setDay = (date) => {
+        this.setState({current_time: date});
     }
 
+    // Given a date in local time, determine if there is any log that
+    // has data in that range.
     isDateCovered = (date) => {
         if (!this.state.artifact || !this.state.artifact.timestamps) {
             return false;
@@ -240,7 +241,14 @@ class EventMonitoring extends React.Component {
             current_time = new Date(artifact.timestamps[artifact.timestamps.length-1] * 1000);
         }
 
-        this.setState({artifact: artifact, current_time: current_time});
+        // Unfortunately the date selector operates in local time so
+        // we need to cheat it by setting a date which is the same in
+        // local time as the date is in utc. This way when the user
+        // selects the date in local time, they will actually end up
+        // selecting the utc date.
+        let local_time = localDayFromUTCDate(current_time);
+
+        this.setState({artifact: artifact, current_time: local_time});
         let client_id = this.props.client && this.props.client.client_id;
         client_id = client_id || "server";
         this.props.history.push('/events/' + client_id + '/' + artifact.artifact);
@@ -259,6 +267,8 @@ class EventMonitoring extends React.Component {
     }
 
     render() {
+        // this.state.current_time is the date in current timezone but
+        // we want it in utc times.
         const {start_ts, end_ts} = get_day_range(this.state.current_time);
 
         // Check if there are any results in the current_time range
@@ -271,6 +281,8 @@ class EventMonitoring extends React.Component {
                 );
             },
         };
+        let column_types = this.state.artifact && this.state.artifact.definition &&
+            this.state.artifact.definition.column_types;
 
         let client_id = this.props.client && this.props.client.client_id;
         return (
@@ -391,6 +403,7 @@ class EventMonitoring extends React.Component {
                       client_id: this.props.client.client_id,
                   }}
                   renderers={renderers}
+                  column_types={column_types}
                  />
 
               </Container> :

@@ -19,6 +19,8 @@ import Navbar from 'react-bootstrap/Navbar';
 import VeloValueRenderer from '../utils/value.js';
 import Spinner from '../utils/spinner.js';
 import api from '../core/api-service.js';
+import VeloTimestamp from "../utils/time.js";
+import ClientLink from '../clients/client-link.js';
 
 import { InspectRawJson, ColumnToggleList, sizePerPageRenderer, PrepareData } from './table.js';
 
@@ -125,6 +127,29 @@ class VeloPagedTable extends Component {
         return <VeloValueRenderer value={cell}/>;
     }
 
+    getColumnRenderer = (column, column_types) => {
+        if (!_.isArray(column_types)) {
+            return this.defaultFormatter;
+        }
+
+        for (let i=0; i<column_types.length; i++) {
+            if (column === column_types[i].name) {
+                let type = column_types[i].type;
+                switch (type) {
+                case "timestamp":
+                    return (cell, row, rowIndex)=><VeloTimestamp usec={cell * 1000} iso={cell}/>;
+
+                case "client_id":
+                    return (cell, row, rowIndex)=><ClientLink client_id={cell}/>;
+
+                default:
+                    return this.defaultFormatter;
+                }
+            }
+        }
+        return this.defaultFormatter;
+    }
+
 
     fetchRows = () => {
         if (_.isEmpty(this.props.params)) {
@@ -155,6 +180,7 @@ class VeloPagedTable extends Component {
             this.setState({loading: false,
                            total_size: parseInt(response.data.total_rows || 0),
                            rows: pageData.rows,
+                           column_types: response.data.column_types,
                            columns: columns });
         }).catch(() => {
             this.setState({loading: false, rows: [], columns: []});
@@ -162,7 +188,7 @@ class VeloPagedTable extends Component {
     }
 
     render() {
-        if (this.state.loading) {
+        if (_.isEmpty(this.state.columns) && this.state.loading) {
             return <>
                      <Spinner loading={this.state.loading} />
                      <div className="no-content">
@@ -179,7 +205,6 @@ class VeloPagedTable extends Component {
 
 
         let rows = this.state.rows;
-
         let column_names = [];
         let columns = [{dataField: '_id', hidden: true}];
         for(var i=0;i<this.state.columns.length;i++) {
@@ -188,7 +213,8 @@ class VeloPagedTable extends Component {
             if (this.props.renderers && this.props.renderers[name]) {
                 definition.formatter = this.props.renderers[name];
             } else {
-                definition.formatter = this.defaultFormatter;
+                definition.formatter = this.getColumnRenderer(
+                    name, this.state.column_types);
             }
 
             if (this.state.toggles[name]) {
@@ -206,7 +232,7 @@ class VeloPagedTable extends Component {
         }
 
 
-        let total_size = this.state.total_size;
+        let total_size = this.state.total_size || 0;
         if (total_size < 0 && !_.isEmpty(this.state.rows)) {
             total_size = this.state.rows.length + this.state.start_row;
             if (total_size > 500) {
@@ -214,9 +240,7 @@ class VeloPagedTable extends Component {
             }
         }
 
-        let downloads = Object.assign({
-            columns: column_names,
-        }, this.props.params);
+        let downloads = Object.assign({columns: column_names}, this.props.params);
 
         return (
             <div className="velo-table full-height"> <Spinner loading={this.state.loading} />

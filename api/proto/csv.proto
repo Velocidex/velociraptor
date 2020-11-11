@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "proto/semantic.proto";
+import "artifacts/proto/artifact.proto";
 
 package proto;
 
@@ -57,4 +58,6 @@ message GetTableResponse {
     repeated Row rows = 2;
 
     int64 total_rows = 3;
+
+    repeated ColumnType column_types = 4;
 }

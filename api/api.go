@@ -687,11 +687,36 @@ func (self *ApiServer) GetTable(
 			"User is not allowed to view results.")
 	}
 
+	var result *api_proto.GetTableResponse
+
 	// We want an event table.
 	if in.Type == "CLIENT_EVENT" || in.Type == "SERVER_EVENT" {
-		return getEventTable(ctx, self.config, in)
+		result, err = getEventTable(ctx, self.config, in)
+	} else {
+		result, err = getTable(ctx, self.config, in)
 	}
-	return getTable(ctx, self.config, in)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if in.Artifact != "" {
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			return nil, err
+		}
+
+		repository, err := manager.GetGlobalRepository(self.config)
+		if err != nil {
+			return nil, err
+		}
+
+		artifact, pres := repository.Get(self.config, in.Artifact)
+		if pres {
+			result.ColumnTypes = artifact.ColumnTypes
+		}
+	}
+	return result, nil
 }
 
 func (self *ApiServer) GetArtifacts(

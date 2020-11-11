@@ -66,3 +66,10 @@ reports:
       # Active Users
 
       {{ Query "SELECT * FROM source(source='Users')" | Table }}
+
+
+column_types:
+  - name: BuildTime
+    type: timestamp
+  - name: LastLogin
+    type: timestamp

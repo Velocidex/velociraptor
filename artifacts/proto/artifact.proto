@@ -6,54 +6,10 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/artifacts/proto";
 
-// Artifact reflection apis - Allows the GUI to introspect artifact definitions.
-
-message FieldDescriptor {
-    string friendly_name = 1;
-    string name = 2;
-    bool repeated = 3;
-    string type = 4;
-    string doc = 5;
-    repeated string labels = 6;
-    string default = 7;
-
-    // Same as doc field.
-    string description = 8;
+message ColumnType {
+    string name = 1;
+    string type = 2;
 }
-
-message EnumValue {
-    int32 value = 1;
-    string name = 2;
-}
-
-
-message TypeDescriptor {
-    string doc = 1;
-    // Same as doc field.
-    string description = 9;
-
-    repeated FieldDescriptor fields = 2;
-    string name = 3;
-    string friendly_name = 7;
-    string kind = 4;
-
-    // The fields are all part of a single one of structure. NOTE:
-    // Currently we only support an all or nothing approach to oneof -
-    // there can be at most a single oneof group within the proto and
-    // it implies that all the fields belong to it.
-    bool oneof = 5;
-
-    string default = 6 [(sem_type) = {
-            description: "The json encoded default value for this type."
-        }];
-
-    repeated EnumValue allowed_values = 8;
-}
-
-message Types {
-    repeated TypeDescriptor items = 1;
-}
-
 
 // Artifact definitions - users are able to write YAML files with
 // these defintiions.
@@ -197,6 +153,10 @@ message Artifact {
     repeated Report reports = 11 [(sem_type) = {
             description: "A list of reports to potentially post process this artifact.",
         }];
+
+    // A list of column type description. These provide the GUI a hint
+    // of how to render the columns.
+    repeated ColumnType column_types = 16;
 
     /* Internal use only */
     string raw = 7 [(sem_type) = {
