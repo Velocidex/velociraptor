@@ -31,10 +31,10 @@ precondition: SELECT OS from info() where OS = "windows"
 
 sources:
   - query: |
-      LET hash_db <= SELECT HashDBPath
-      FROM Artifact.Windows.Forensics.LocalHashes.Query(HashDb=HashDb)
+      LET hash_db <= SELECT FullPath
+      FROM Artifact.Windows.Forensics.LocalHashes.Init(HashDb=HashDb)
 
-      LET path <= hash_db[0].HashDBPath
+      LET path <= hash_db[0].FullPath
 
       LET _ <= log(message="Will use local hash database " + path)
 

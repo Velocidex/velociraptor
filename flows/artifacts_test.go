@@ -136,8 +136,6 @@ func (self *TestSuite) TestRetransmission() {
 		self.client_id, flow_id)
 	assert.NoError(self.T(), err)
 
-	// json.Dump(collection_context)
-
 	// The flow should have only a single row though.
 	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(1))
 

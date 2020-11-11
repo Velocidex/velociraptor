@@ -53,7 +53,7 @@ func getTable(
 	rs_reader, err := result_sets.NewResultSetReader(
 		file_store_factory, path_manager)
 	if err != nil {
-		return nil, err
+		return result, nil
 	}
 	defer rs_reader.Close()
 

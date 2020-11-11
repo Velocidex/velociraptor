@@ -37,7 +37,6 @@
 package datastore
 
 import (
-	"compress/gzip"
 	"io"
 	"io/ioutil"
 	"os"
@@ -177,12 +176,10 @@ func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,
 			}
 
 			// We are only interested in filenames that end with .db
-			basename := strings.TrimSuffix(info.Name(), ".gz")
+			basename := info.Name()
 			if !strings.HasSuffix(basename, ".db") {
 				return nil
 			}
-
-			path = strings.TrimSuffix(path, ".gz")
 
 			urn, err := FilenameToURN(config_obj, path)
 			if err != nil {
@@ -225,14 +222,6 @@ func (self *FileBaseDataStore) DeleteSubject(
 	if err != nil {
 		return err
 	}
-	err = os.Remove(filename)
-
-	// It is ok to remove a file that does not exist.
-	if err != nil && os.IsExist(err) {
-		return errors.WithStack(err)
-	}
-
-	filename += ".gz"
 	err = os.Remove(filename)
 
 	// It is ok to remove a file that does not exist.
@@ -284,7 +273,6 @@ func (self *FileBaseDataStore) ListChildren(
 		}
 
 		name := UnsanitizeComponent(children[i].Name())
-		name = strings.TrimSuffix(name, ".gz")
 		if !strings.HasSuffix(name, ".db") {
 			continue
 		}
@@ -383,7 +371,6 @@ func (self *FileBaseDataStore) SearchClients(
 
 		for _, child_urn := range children {
 			name := UnsanitizeComponent(child_urn.Name())
-			name = strings.TrimSuffix(name, ".gz")
 			name = strings.TrimSuffix(name, ".db")
 			_, pres := seen[name]
 			if !pres {
@@ -412,7 +399,6 @@ func (self *FileBaseDataStore) SearchClients(
 
 		for _, set := range sets {
 			name := UnsanitizeComponent(set.Name())
-			name = strings.TrimSuffix(name, ".gz")
 			name = strings.TrimSuffix(name, ".db")
 			matched, err := path.Match(query, name)
 			if err != nil {
@@ -631,20 +617,6 @@ func readContentFromFile(
 		return result, errors.WithStack(err)
 	}
 
-	// File does not exist - try the gzip version
-	if os.IsNotExist(err) {
-		file, err = os.Open(filename + ".gz")
-		if err == nil {
-			zr, err := gzip.NewReader(file)
-			if err != nil {
-				return nil, errors.WithStack(err)
-			}
-			result, err := ioutil.ReadAll(
-				io.LimitReader(zr, constants.MAX_MEMORY))
-			return result, errors.WithStack(err)
-		}
-	}
-
 	// Its ok if the file does not exist - no error.
 	if !must_exist && os.IsNotExist(err) {
 		return []byte{}, nil
@@ -665,7 +637,6 @@ func FilenameToURN(config_obj *config_proto.Config, filename string) (string, er
 	for _, component := range strings.Split(
 		filename,
 		string(os.PathSeparator)) {
-		component = strings.TrimSuffix(component, ".gz")
 		component = strings.TrimSuffix(component, ".db")
 		components = append(components,
 			string(UnsanitizeComponent(component)))

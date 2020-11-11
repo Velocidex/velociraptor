@@ -29,7 +29,6 @@ package directory
 */
 
 import (
-	"compress/gzip"
 	"os"
 	"path"
 	"path/filepath"
@@ -118,32 +117,10 @@ func (self *DirectoryFileStore) ListDirectory(dirname string) (
 	return result, nil
 }
 
-func getCompressed(filename string) (api.FileReader, error) {
-	fd, err := os.Open(filename)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	zr, err := gzip.NewReader(fd)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	return &GzipReader{zr, fd, filename}, nil
-}
-
 func (self *DirectoryFileStore) ReadFile(filename string) (api.FileReader, error) {
 	file_path := self.FilenameToFileStorePath(filename)
-	if strings.HasSuffix(".gz", file_path) {
-		return getCompressed(file_path)
-	}
-
 	openCounter.Inc()
 	file, err := os.Open(file_path)
-	if os.IsNotExist(err) {
-		return getCompressed(file_path + ".gz")
-	}
-
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
