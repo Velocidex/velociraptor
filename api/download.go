@@ -36,9 +36,11 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/gorilla/schema"
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	context "golang.org/x/net/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -50,6 +52,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -151,6 +154,42 @@ func vfsFileDownloadHandler(
 	})
 }
 
+func getRSReader(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	request *api_proto.GetTableRequest) (result_sets.ResultSetReader, string, error) {
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	// We want an event table.
+	if request.Type == "CLIENT_EVENT" || request.Type == "SERVER_EVENT" {
+		path_manager := artifacts.NewArtifactPathManager(
+			config_obj, request.ClientId, request.FlowId,
+			request.Artifact)
+
+		log_path, err := path_manager.GetPathForWriting()
+		if err != nil {
+			return nil, "", err
+		}
+
+		rs_reader, err := result_sets.NewResultSetReader(
+			file_store_factory, path_manager)
+
+		return rs_reader, log_path, err
+	} else {
+		path_manager := getPathManager(config_obj, request)
+		log_path, err := path_manager.GetPathForWriting()
+		if err != nil {
+			return nil, "", err
+		}
+
+		rs_reader, err := result_sets.NewTimedResultSetReader(
+			ctx, file_store_factory, path_manager,
+			request.StartTime, request.EndTime)
+
+		return rs_reader, log_path, err
+	}
+}
+
 // Download the table as specified by the v1/GetTable API.
 func downloadTable(config_obj *config_proto.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -163,11 +202,15 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 			return
 		}
 
-		path_manager := getPathManager(config_obj, request)
-		if path_manager == nil {
+		rs_reader, log_path, err := getRSReader(r.Context(),
+			config_obj, request)
+		if err != nil {
 			returnError(w, 400, "Invalid request")
 			return
 		}
+		defer rs_reader.Close()
+
+		download_name := strings.Replace(filepath.Base(log_path), "\"", "", -1)
 
 		// Log an audit event.
 		userinfo := GetUserInfo(r.Context(), config_obj)
@@ -178,26 +221,10 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 			return
 		}
 
-		log_path, err := path_manager.GetPathForWriting()
-		if err != nil {
-			returnError(w, 400, "Invalid request")
-			return
-		}
-
 		switch request.DownloadFormat {
 		case "csv":
-			download_name := strings.Replace(filepath.Base(log_path), "\"", "", -1)
 			download_name = strings.TrimSuffix(download_name, ".json")
 			download_name += ".csv"
-
-			file_store_factory := file_store.GetFileStore(config_obj)
-			rs_reader, err := result_sets.NewResultSetReader(
-				file_store_factory, path_manager)
-			if err != nil {
-				returnError(w, 400, err.Error())
-				return
-			}
-			defer rs_reader.Close()
 
 			// From here on we already sent the headers and we can
 			// not really report an error to the client.
@@ -216,21 +243,13 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 			scope := vql_subsystem.MakeScope()
 			csv_writer := csv.GetCSVAppender(scope, w, true /* write_headers */)
 			for row := range rs_reader.Rows(r.Context()) {
-				csv_writer.Write(row)
+				csv_writer.Write(
+					filterColumns(request.Columns, row))
 			}
 			csv_writer.Close()
 
 			// Output in jsonl by default.
 		default:
-			file_store_factory := file_store.GetFileStore(config_obj)
-			fd, err := file_store_factory.ReadFile(log_path)
-			if err != nil {
-				returnError(w, 400, err.Error())
-				return
-			}
-			defer fd.Close()
-
-			download_name := strings.Replace(filepath.Base(log_path), "\"", "", -1)
 			if !strings.HasSuffix(download_name, ".json") {
 				download_name += ".json"
 			}
@@ -249,7 +268,17 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 				"remote":  r.RemoteAddr,
 			}).Info("DownloadTable")
 
-			utils.Copy(r.Context(), w, fd)
+			for row := range rs_reader.Rows(r.Context()) {
+				serialized, err := json.Marshal(
+					filterColumns(request.Columns, row))
+				if err != nil {
+					return
+				}
+
+				// Write line delimited JSON
+				w.Write(serialized)
+				w.Write([]byte{'\n'})
+			}
 		}
 	})
 }
@@ -399,4 +428,17 @@ func getIndex(config_obj *config_proto.Config,
 	}
 
 	return index, nil
+}
+
+func filterColumns(columns []string, row *ordereddict.Dict) *ordereddict.Dict {
+	if len(columns) == 0 {
+		return row
+	}
+
+	new_row := ordereddict.NewDict()
+	for _, column := range columns {
+		value, _ := row.Get(column)
+		new_row.Set(column, value)
+	}
+	return new_row
 }

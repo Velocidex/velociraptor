@@ -40,6 +40,9 @@ message GetTableRequest {
     // For download handler when creating an export file - control
     // output format. Can be "csv", "jsonl"
     string download_format = 12;
+
+    // If specified only emit these columns.
+    repeated string columns = 15;
 }
 
 message Row {
