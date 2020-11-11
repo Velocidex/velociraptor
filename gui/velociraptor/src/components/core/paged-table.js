@@ -36,7 +36,7 @@ const pageListRenderer = ({
     // just exclude <, <<, >>, >
     const pageWithoutIndication = pages.filter(p => typeof p.page !== 'string');
     let totalPages = parseInt(totalRows / pageSize);
-    console.log(pages);
+
     // Only allow changing to a page if there are any rows in that
     // page.
     if (totalPages * pageSize + 1 > totalRows) {
@@ -112,7 +112,6 @@ class VeloPagedTable extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        console.log(this.state);
         if (!_.isEqual(prevProps.params, this.props.params)) {
             this.setState({start_row: 0});
         };
@@ -189,7 +188,7 @@ class VeloPagedTable extends Component {
     }
 
     render() {
-        if (this.state.loading) {
+        if (_.isEmpty(this.state.columns) && this.state.loading) {
             return <>
                      <Spinner loading={this.state.loading} />
                      <div className="no-content">
@@ -242,9 +241,7 @@ class VeloPagedTable extends Component {
         }
 
         let downloads = Object.assign({columns: column_names}, this.props.params);
-        console.log(total_size);
-        console.log(this.state.page_size);
-        console.log(this.state.start_row);
+
         return (
             <div className="velo-table full-height"> <Spinner loading={this.state.loading} />
               <ToolkitProvider

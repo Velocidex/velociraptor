@@ -22,14 +22,33 @@ class VeloTimestamp extends Component {
     }
 
     render() {
-        let ts = new Date(this.props.usec || 0);
-
+        var ts;
+        // Maybe the timestamp is specified as an iso
         if (_.isString(this.props.iso)) {
-            ts = new Date(this.props.iso);
+            let parsed = new Date(this.props.iso);
+            if (parsed.getTime() === parsed.getTime()) {
+                ts = parsed;
+            }
+
         }
 
+        // If the timestamp is a number then it might be in usec
+        if (!ts && _.isNumber(this.props.usec) && this.props.usec>0) {
+            let parsed = new Date(this.props.usec);
+            if (parsed.getTime() === parsed.getTime()) {
+                ts = parsed;
+            } else {
+                // Or maybe in seconds since epoch.
+                let parsed = new Date(this.props.usec * 1000);
+                if (parsed.getTime() === parsed.getTime()) {
+                    ts = parsed;
+                }
+            }
+        }
+
+        // Could not parse it - just return what we got.
         if (!ts) {
-            return <></>;
+            return JSON.stringify(this.props.iso);
         }
 
         var when = moment(ts);
