@@ -36,7 +36,7 @@ const pageListRenderer = ({
     // just exclude <, <<, >>, >
     const pageWithoutIndication = pages.filter(p => typeof p.page !== 'string');
     let totalPages = parseInt(totalRows / pageSize);
-
+    console.log(pages);
     // Only allow changing to a page if there are any rows in that
     // page.
     if (totalPages * pageSize + 1 > totalRows) {
@@ -89,8 +89,6 @@ class VeloPagedTable extends Component {
         // The URL Handler to fetch the table content. Defaults to
         // "v1/GetTable".
         url: PropTypes.string,
-
-        column_types: PropTypes.array,
     }
 
     state = {
@@ -114,6 +112,7 @@ class VeloPagedTable extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        console.log(this.state);
         if (!_.isEqual(prevProps.params, this.props.params)) {
             this.setState({start_row: 0});
         };
@@ -139,7 +138,7 @@ class VeloPagedTable extends Component {
                 let type = column_types[i].type;
                 switch (type) {
                 case "timestamp":
-                    return (cell, row, rowIndex)=><VeloTimestamp usec={cell * 1000}/>;
+                    return (cell, row, rowIndex)=><VeloTimestamp usec={cell * 1000} iso={cell}/>;
 
                 case "client_id":
                     return (cell, row, rowIndex)=><ClientLink client_id={cell}/>;
@@ -182,6 +181,7 @@ class VeloPagedTable extends Component {
             this.setState({loading: false,
                            total_size: parseInt(response.data.total_rows || 0),
                            rows: pageData.rows,
+                           column_types: response.data.column_types,
                            columns: columns });
         }).catch(() => {
             this.setState({loading: false, rows: [], columns: []});
@@ -215,7 +215,7 @@ class VeloPagedTable extends Component {
                 definition.formatter = this.props.renderers[name];
             } else {
                 definition.formatter = this.getColumnRenderer(
-                    name, this.props.column_types);
+                    name, this.state.column_types);
             }
 
             if (this.state.toggles[name]) {
@@ -233,7 +233,7 @@ class VeloPagedTable extends Component {
         }
 
 
-        let total_size = this.state.total_size;
+        let total_size = this.state.total_size || 0;
         if (total_size < 0 && !_.isEmpty(this.state.rows)) {
             total_size = this.state.rows.length + this.state.start_row;
             if (total_size > 500) {
@@ -241,10 +241,10 @@ class VeloPagedTable extends Component {
             }
         }
 
-        let downloads = Object.assign({
-            columns: column_names,
-        }, this.props.params);
-
+        let downloads = Object.assign({columns: column_names}, this.props.params);
+        console.log(total_size);
+        console.log(this.state.page_size);
+        console.log(this.state.start_row);
         return (
             <div className="velo-table full-height"> <Spinner loading={this.state.loading} />
               <ToolkitProvider
