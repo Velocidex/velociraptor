@@ -121,16 +121,6 @@ class VeloPagedTable extends Component {
         }
     }
 
-    XXXcomponentDidMount = () => {
-        let toggles = {};
-        // Hide columns that start with _
-        _.each(this.props.columns, c=>{
-            toggles[c] = c[0] === '_';
-        });
-
-        this.setState({toggles: toggles});
-    }
-
     defaultFormatter = (cell, row, rowIndex) => {
         return <VeloValueRenderer value={cell}/>;
     }
@@ -152,14 +142,13 @@ class VeloPagedTable extends Component {
             let pageData = PrepareData(response.data);
 
             let columns = pageData.columns;
-            if (_.isUndefined(this.state.toggles)) {
+            if (_.isUndefined(this.state.toggles) && !_.isUndefined(columns)) {
                 let toggles = {};
 
                 // Hide columns that start with _
-                _.each(this.props.columns, c=>{
+                _.each(columns, c=>{
                     toggles[c] = c[0] === '_';
                 });
-
                 this.setState({toggles: toggles});
             }
 
@@ -182,6 +171,7 @@ class VeloPagedTable extends Component {
 
         let rows = this.state.rows;
 
+        let column_names = [];
         let columns = [{dataField: '_id', hidden: true}];
         for(var i=0;i<this.state.columns.length;i++) {
             var name = this.state.columns[i];
@@ -194,6 +184,8 @@ class VeloPagedTable extends Component {
 
             if (this.state.toggles[name]) {
                 definition["hidden"] = true;
+            } else {
+                column_names.push(name);
             }
 
             columns.push(definition);
@@ -212,6 +204,10 @@ class VeloPagedTable extends Component {
                 total_size = 500;
             }
         }
+
+        let downloads = Object.assign({
+            columns: column_names,
+        }, this.props.params);
 
         return (
             <div className="velo-table full-height"> <Spinner loading={this.state.loading} />
@@ -240,14 +236,14 @@ class VeloPagedTable extends Component {
                                   target="_blank" rel="noopener noreferrer"
                                   title="Download JSON"
                                   href={api.base_path + "/api/v1/DownloadTable?"+
-                                        qs.stringify(this.props.params) } >
+                                        qs.stringify(downloads,  {indices: false}) } >
                             <FontAwesomeIcon icon="download"/>
                           </Button>
                           <Button variant="default"
                                   target="_blank" rel="noopener noreferrer"
                                   title="Download CSV"
                                   href={api.base_path + "/api/v1/DownloadTable?download_format=csv&"+
-                                        qs.stringify(this.props.params) } >
+                                        qs.stringify(downloads,  {indices: false}) } >
                             <FontAwesomeIcon icon="file-csv"/>
                           </Button>
                         </ButtonGroup>
