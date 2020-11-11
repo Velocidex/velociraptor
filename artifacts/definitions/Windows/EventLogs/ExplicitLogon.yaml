@@ -1,0 +1,123 @@
+name: Windows.EventLogs.ExplicitLogon
+description: |
+    This artifact enables querying for explicit logon events.  i.e Event ID 4648: 
+    A logon was attempted using explicit credentials.
+    
+    If logging is enabled, these events are generated on the source machine when
+    an authentication attempt occurs under a different user context. Examples 
+    include a user authenticating to another machine using wmic or mapping a 
+    drive using different credentials, or using the RunAs option locally.  
+    
+    This artifact by default filters all events with localhost as the server and 
+    MACHINE$ as target user. A recommended hunt for lateral movement would be 
+    activity to other machines from commonly abused lolbins or explicit logon 
+    events from unusual processes.
+
+
+author: Matt Green - @mgreen27
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: EvtxGlob
+    default: '%SystemRoot%\System32\Winevt\Logs\Security.evtx'
+  - name: UsernameRegex
+    description: "Target username Regex"
+    default: .
+  - name: UsernameWhitelist
+    description: "Target username witelist Regex"
+    default: '\\$$'
+  - name: ServerRegex
+    description: "Target server regex"
+    default: .
+  - name: ServerWhitelist
+    description: "Target server whitelist regex"
+    default: 'localhost'
+  - name: ProcessNameRegex
+    description: "Target process Regex"
+    default: .
+  - name: ProcessNameWhitelist
+    description: "Target process whitelist Regex"
+  - name: SearchVSS
+    description: "Add VSS into query."
+    type: bool
+  - name: DateAfter
+    type: timestamp
+    description: "search for events after this date. YYYY-MM-DDTmm:hh:ssZ"
+  - name: DateBefore
+    type: timestamp
+    description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
+
+
+sources:
+  - query: |
+      -- firstly set timebounds for performance
+      LET DateAfterTime <= if(condition=DateAfter, 
+        then=timestamp(epoch=DateAfter), else=timestamp(epoch="1600-01-01"))
+      LET DateBeforeTime <= if(condition=DateBefore, 
+        then=timestamp(epoch=DateBefore), else=timestamp(epoch="2200-01-01"))
+
+      -- expand provided glob into a list of paths on the file system (fs)
+      LET fspaths <= SELECT FullPath 
+        FROM glob(globs=expand(path=EvtxGlob))
+      
+      -- function returning list of VSS paths corresponding to path
+      LET vsspaths(path) = SELECT FullPath 
+        FROM Artifact.Windows.Search.VSS(SearchFilesGlob=path)
+          
+      -- function returning IOC hits
+      LET evtxsearch(PathList) = SELECT * FROM foreach(
+            row=PathList,
+            query={
+                SELECT 
+                    timestamp(epoch=int(int=System.TimeCreated.SystemTime)) AS EventTime,
+                    System.Computer as Computer,
+                    System.EventID.Value as EventID,
+                    System.EventRecordID as EventRecordID,
+                    EventData.SubjectUserName as SubjectUserName,
+                    EventData.SubjectDomainName as SubjectDomainName,
+                    EventData.TargetUserName as TargetUserName,
+                    EventData.TargetDomainName as TargetDomainName,
+                    EventData.TargetServerName as TargetServerName,
+                    EventData.ProcessName as ProcessName,
+                    EventData,
+                    Message,
+                    FullPath
+                FROM parse_evtx(filename=FullPath)
+                WHERE 
+                    EventID = 4648
+                    AND EventTime < DateBeforeTime
+                    AND EventTime > DateAfterTime
+                    AND TargetUserName =~ UsernameRegex
+                    AND NOT if(condition=UsernameWhitelist,
+                        then= TargetUserName =~ UsernameWhitelist,
+                        else= FALSE)
+                    AND TargetServerName =~ ServerRegex
+                    AND NOT if(condition=ServerWhitelist,
+                        then= TargetServerName =~ ServerWhitelist,
+                        else= FALSE)
+                    AND ProcessName =~ ProcessNameRegex
+                    AND NOT if(condition=ProcessNameWhitelist,
+                        then= ProcessName =~ ProcessNameWhitelist,
+                        else= FALSE)
+            }
+          )
+
+      -- include VSS in calculation and deduplicate with GROUP BY by file
+      LET include_vss = SELECT * FROM foreach(row=fspaths, 
+            query={
+                SELECT *
+                FROM evtxsearch(PathList={
+                        SELECT FullPath FROM vsspaths(path=FullPath)
+                    })
+                GROUP BY EventRecordID
+              })
+
+      -- exclude VSS in EvtxHunt`
+      LET exclude_vss = SELECT * 
+        FROM evtxsearch(PathList={SELECT FullPath FROM fspaths})
+      
+      -- return rows
+      SELECT * FROM if(condition=SearchVSS, 
+        then=include_vss,
+        else=exclude_vss)
