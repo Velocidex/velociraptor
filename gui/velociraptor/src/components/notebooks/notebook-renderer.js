@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import NotebookCellRenderer from './notebook-cell-renderer.js';
-
+import Spinner from '../utils/spinner.js';
 import _ from 'lodash';
 
 import api from '../core/api-service.js';
@@ -15,6 +15,7 @@ export default class NotebookRenderer extends React.Component {
 
     state = {
         selected_cell_id: "",
+        loading: false,
     }
 
     setSelectedCellId = (cell_id) => {
@@ -40,12 +41,13 @@ export default class NotebookRenderer extends React.Component {
 
         if (changed) {
             this.props.notebook.cell_metadata = new_cells;
-            api.post('v1/UpdateNotebook', this.props.notebook).then((response) => {
-                    this.props.fetchNotebooks();
-
-                }, (response) => {
-                    console.log("Error " + response.data);
-                });
+            this.setState({loading: true});
+            api.post('v1/UpdateNotebook', this.props.notebook).then(response=>{
+                this.props.fetchNotebooks();
+                this.setState({loading: false});
+            }, (response) => {
+                console.log("Error " + response.data);
+            });
         }
     };
 
@@ -69,13 +71,13 @@ export default class NotebookRenderer extends React.Component {
 
         if (changed) {
             this.props.notebook.cell_metadata = new_cells;
-
-            api.post('v1/UpdateNotebook', this.props.notebook).then((response) => {
-                    this.props.fetchNotebooks();
-
-                }, function failure(response) {
-                    console.log("Error " + response.data);
-                });
+            this.setState({loading: true});
+            api.post('v1/UpdateNotebook', this.props.notebook).then(response=>{
+                this.props.fetchNotebooks();
+                this.setState({loading: false});
+            }, function failure(response) {
+                console.log("Error " + response.data);
+            });
         }
     };
 
@@ -100,13 +102,13 @@ export default class NotebookRenderer extends React.Component {
 
         if (changed) {
             this.props.notebook.cell_metadata = new_cells;
-
-            api.post('v1/UpdateNotebook', this.props.notebook).then((response) => {
-                    this.props.fetchNotebooks();
-
-                }, function failure(response) {
-                    console.log("Error " + response.data);
-                });
+            this.setState({loading: true});
+            api.post('v1/UpdateNotebook', this.props.notebook).then(response=>{
+                this.props.fetchNotebooks();
+                this.setState({loading: false});
+            }, function failure(response) {
+                console.log("Error " + response.data);
+            });
         }
     };
 
@@ -126,9 +128,11 @@ export default class NotebookRenderer extends React.Component {
             return;
         }
 
+        this.setState({loading: true});
         api.post('v1/NewNotebookCell', request).then((response) => {
             this.props.fetchNotebooks();
-            this.setState({selected_cell_id: response.data.latest_cell_id});
+            this.setState({selected_cell_id: response.data.latest_cell_id,
+                           loading: false});
         });
     }
 
@@ -139,6 +143,7 @@ export default class NotebookRenderer extends React.Component {
 
         return (
             <>
+              <Spinner loading={this.state.loading} />
               { _.map(this.props.notebook.cell_metadata, (cell_md, idx) => {
                   return <NotebookCellRenderer
                            selected_cell_id={this.state.selected_cell_id}

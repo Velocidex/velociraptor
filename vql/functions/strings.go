@@ -28,7 +28,7 @@ import (
 
 type StripArgs struct {
 	String string `vfilter:"required,field=string,doc=The string to strip"`
-	Prefix string `vfilter:"required,field=prefix,doc=The prefix to strip"`
+	Prefix string `vfilter:"optional,field=prefix,doc=The prefix to strip"`
 }
 
 type StripFunction struct{}
@@ -41,6 +41,9 @@ func (self *StripFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("strip: %s", err.Error())
 		return false
+	}
+	if arg.Prefix == "" {
+		return strings.TrimSpace(arg.String)
 	}
 	return strings.TrimPrefix(arg.String, arg.Prefix)
 }

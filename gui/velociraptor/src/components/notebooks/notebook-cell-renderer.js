@@ -153,12 +153,16 @@ export default class NotebookCellRenderer extends React.Component {
     componentDidUpdate = (prevProps, prevState, rootNode) => {
         // Do not update the editor if we are currently editing it -
         // otherwise it will wipe the text.
-        if (this.state.currently_editing) {
+        let selected = this.state.cell.cell_id === this.props.selected_cell_id;
+        if (!selected && this.state.currently_editing) {
+            // We are not currently editing if this cell is not selected.
+            this.setState({currently_editing: false});
             return;
         }
 
         let this_timestamp = this.props.cell_metadata && this.props.cell_metadata.timestamp;
         if (this_timestamp !== this.state.cell_timestamp) {
+            // Prevent further updates to this cell.
             this.setState({cell_timestamp: this_timestamp});
             this.fetchCellContents();
         }

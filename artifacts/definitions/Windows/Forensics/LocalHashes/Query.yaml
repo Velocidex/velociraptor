@@ -32,47 +32,26 @@ parameters:
 
 sources:
   - query: |
-      LET hash_db <= path_join(components=[dirname(path=tempfile()), HashDb])
-
-      LET _ <= log(message="Will use local hash database " + hash_db)
-
-      // SQL to create the initial database.
-      LET _ <= SELECT * FROM sqlite(file=hash_db,
-         query="CREATE table if not exists hashes(path text, md5 varchar(16), size bigint, timestamp bigint)")
-
-      LET _ <= SELECT * FROM sqlite(file=hash_db,
-         query="create index if not exists hashidx on hashes(md5)")
-
-      LET _ <= SELECT * FROM sqlite(file=hash_db,
-         query="create index if not exists pathidx on hashes(path)")
-
-      LET _ <= SELECT * FROM sqlite(file=hash_db,
-         query="create unique index if not exists uniqueidx on hashes(path, md5)")
-
-      LET lookup(Hash) = SELECT hash_db AS HashDBPath, path AS Path, md5 AS MD5, size AS Size,
-             timestamp(epoch=time) AS Timestamp
-      FROM sqlite(file=hash_db,
-         query="SELECT path, md5, size, timestamp AS time FROM hashes WHERE md5 = ?",
-         args=Hash)
+      LET hash_db <= SELECT FullPath
+      FROM Artifact.Windows.Forensics.LocalHashes.Init(HashDb=HashDb)
 
       -- Check hashes from the CSV or comma delimited input
       LET hashes = SELECT Hash FROM chain(
       a={
-        SELECT Hash FROM parse_csv(filename=Hashes, accessor="data")
+        SELECT strip(string=Hash) AS Hash
+        FROM parse_csv(filename=Hashes, accessor="data")
       }, b={
         SELECT * FROM foreach(row=split(string=CommaDelimitedHashes, sep=","),
         query={
-           SELECT _value AS Hash FROM scope()
+           SELECT strip(string=_value) AS Hash FROM scope()
         })
       })
 
-      SELECT * FROM switch(
-      a={
-          SELECT * FROM foreach(row=hashes,
-          query={
-              SELECT * FROM lookup(Hash=Hash)
-          })
-      },
-      b={
-         SELECT hash_db AS HashDBPath FROM scope()
+      SELECT * FROM foreach(row=hashes,
+      query={
+         SELECT path AS Path, md5 AS MD5, size AS Size,
+                timestamp(epoch=time) AS Timestamp
+         FROM sqlite(file=hash_db[0].FullPath,
+                     query="SELECT path, md5, size, timestamp AS time FROM hashes WHERE md5 = ?",
+                     args=Hash)
       })

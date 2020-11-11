@@ -95,7 +95,11 @@ func (self _SQLitePlugin) Call(
 			}
 		}
 
-		rows, err := handle.Queryx(arg.Query, query_parameters...)
+		query := strings.TrimSpace(arg.Query)
+		if query == "" {
+			return
+		}
+		rows, err := handle.Queryx(query, query_parameters...)
 		if err != nil {
 			scope.Log("sqlite: %v", err)
 			return
