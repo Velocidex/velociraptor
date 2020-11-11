@@ -150,8 +150,8 @@ export default class FlowOverview extends React.Component {
                     <dt className="col-4">Max Rows</dt>
                     <dd className="col-8"> {flow.request.max_rows || '1m'} rows</dd>
                     <dt className="col-4">Max Mb</dt>
-                    <dd className="col-8"> { ((flow.request.max_upload_bytes || 0)
-                                              / 1024 / 1024).toFixed(2) || '1000' } Mb</dd>
+                    <dd className="col-8"> { ((flow.request.max_upload_bytes || 1048576000)
+                                              / 1024 / 1024).toFixed(2) } Mb</dd>
                     <br />
                   </dl>
 

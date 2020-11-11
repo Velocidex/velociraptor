@@ -68,6 +68,11 @@ export default class FlowResults extends React.Component {
 
     render() {
         let artifacts_with_results = this.props.flow.artifacts_with_results;
+        if (_.isEmpty(artifacts_with_results)) {
+            return <div className="no-content">
+                     No Data Available.
+                   </div>;
+        }
 
         return (
             <>
