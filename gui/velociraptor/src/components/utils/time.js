@@ -26,7 +26,7 @@ class VeloTimestamp extends Component {
         // Maybe the timestamp is specified as an iso
         if (_.isString(this.props.iso)) {
             let parsed = new Date(this.props.iso);
-            if (parsed.getTime() === parsed.getTime()) {
+            if (!_.isNaN(parsed.getTime())) {
                 ts = parsed;
             }
 
