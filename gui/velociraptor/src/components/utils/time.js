@@ -26,7 +26,7 @@ class VeloTimestamp extends Component {
         // Maybe the timestamp is specified as an iso
         if (_.isString(this.props.iso)) {
             let parsed = new Date(this.props.iso);
-            if (parsed.getTime() === parsed.getTime()) {
+            if (!_.isNaN(parsed.getTime())) {
                 ts = parsed;
             }
 
@@ -35,12 +35,12 @@ class VeloTimestamp extends Component {
         // If the timestamp is a number then it might be in usec
         if (!ts && _.isNumber(this.props.usec) && this.props.usec>0) {
             let parsed = new Date(this.props.usec);
-            if (parsed.getTime() === parsed.getTime()) {
+            if (!_.isNaN(parsed.getTime())) {
                 ts = parsed;
             } else {
                 // Or maybe in seconds since epoch.
                 let parsed = new Date(this.props.usec * 1000);
-                if (parsed.getTime() === parsed.getTime()) {
+                if (!_.isNaN(parsed.getTime())) {
                     ts = parsed;
                 }
             }
@@ -48,7 +48,7 @@ class VeloTimestamp extends Component {
 
         // Could not parse it - just return what we got.
         if (!ts) {
-            return JSON.stringify(this.props.iso);
+            return <div>{this.props.iso && JSON.stringify(this.props.iso)}</div>;
         }
 
         var when = moment(ts);
