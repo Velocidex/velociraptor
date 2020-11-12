@@ -239,6 +239,28 @@ func startSelfSignedFrontend(
 		config_obj, server_obj, mux)
 }
 
+func getCertificates(config_obj *config_proto.Config) ([]tls.Certificate, error) {
+	// If we need to read TLS certs from a file then do it now.
+	if config_obj.Frontend.TlsCertificateFilename != "" {
+		cert, err := tls.LoadX509KeyPair(
+			config_obj.Frontend.TlsCertificateFilename,
+			config_obj.Frontend.TlsPrivateKeyFilename)
+		if err != nil {
+			return nil, err
+		}
+		return []tls.Certificate{cert}, nil
+	}
+
+	cert, err := tls.X509KeyPair(
+		[]byte(config_obj.Frontend.Certificate),
+		[]byte(config_obj.Frontend.PrivateKey))
+	if err != nil {
+		return nil, err
+	}
+
+	return []tls.Certificate{cert}, nil
+}
+
 // Starts the frontend over HTTPS.
 func StartFrontendHttps(
 	ctx context.Context,
@@ -251,9 +273,7 @@ func StartFrontendHttps(
 		return errors.New("Frontend server not configured")
 	}
 
-	cert, err := tls.X509KeyPair(
-		[]byte(config_obj.Frontend.Certificate),
-		[]byte(config_obj.Frontend.PrivateKey))
+	certs, err := getCertificates(config_obj)
 	if err != nil {
 		return err
 	}
@@ -274,7 +294,7 @@ func StartFrontendHttps(
 		IdleTimeout:  150 * time.Second,
 		TLSConfig: &tls.Config{
 			MinVersion:   tls.VersionTLS12,
-			Certificates: []tls.Certificate{cert},
+			Certificates: certs,
 			CurvePreferences: []tls.CurveID{tls.CurveP521,
 				tls.CurveP384, tls.CurveP256},
 
@@ -550,9 +570,7 @@ func StartSelfSignedGUI(
 		return errors.New("GUI server not configured")
 	}
 
-	cert, err := tls.X509KeyPair(
-		[]byte(config_obj.Frontend.Certificate),
-		[]byte(config_obj.Frontend.PrivateKey))
+	certs, err := getCertificates(config_obj)
 	if err != nil {
 		return err
 	}
@@ -571,9 +589,10 @@ func StartSelfSignedGUI(
 		WriteTimeout: 900 * time.Second,
 		IdleTimeout:  15 * time.Second,
 		TLSConfig: &tls.Config{
-			MinVersion:               tls.VersionTLS12,
-			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
-			Certificates:             []tls.Certificate{cert},
+			MinVersion: tls.VersionTLS12,
+			CurvePreferences: []tls.CurveID{tls.CurveP521,
+				tls.CurveP384, tls.CurveP256},
+			Certificates:             certs,
 			PreferServerCipherSuites: true,
 			CipherSuites: []uint16{
 				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,

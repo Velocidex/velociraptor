@@ -411,6 +411,11 @@ message FrontendConfig {
     bool use_plain_http = 24;
 
 
+    // These are used to secure the client/server communications -
+    // Even when using external TLS certificates! This certificate
+    // must be signed by the Velociraptor rooot CA in all cases. If
+    // using an external TLS configuration this layer of encryption
+    // happens **in addition** to the external TLS certificates.
     string certificate = 3 [(sem_type) = {
             description: "X509 Certificate of frontend server."
         }];
@@ -418,6 +423,18 @@ message FrontendConfig {
     string private_key = 4 [(sem_type) = {
             description: "The private key of the frontend server encoded in PEM format."
         }];
+
+    // If you want to use your own certificates for TLS as an
+    // alternative to Autocert, then you can set those here. These
+    // certificates will be used for TLS on both the frontend and
+    // GUI. NOTE: We expect these to be proper certificates - i.e. NOT
+    // self signed. Velociraptor only supports self signed
+    // certificates issued by the Velociraptor CA embedded in the
+    // client's config file.
+
+    // Be sure to set Client.use_self_signed_ssl=false when you set this.
+    string tls_certificate_filename = 28;
+    string tls_private_key_filename = 29;
 
     string dns_name = 6 [(sem_type) = {
             description: "The DNS name of the frontend."
