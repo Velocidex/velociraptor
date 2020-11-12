@@ -1,6 +1,6 @@
 name: Windows.Detection.ProcessMemory.CobaltStrike
 description: |
-  This artifact scans processes for a Coblat Strike yara signiture and enables 
+  This artifact scans processes for a Coblat Strike yara signature and enables 
   fast upload of processes with hits for analysis
   
   Commonly abused by attackers for its high feature / low cost return on 
