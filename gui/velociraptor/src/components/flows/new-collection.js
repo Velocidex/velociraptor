@@ -513,7 +513,7 @@ class NewCollectionLaunch extends React.Component {
         }).then(response=>{
             this.checkTools(tools);
         }).catch(err=>{
-            let data = err.response && err.response.data;
+            let data = err.response && err.response.data && err.response.data.message;
             this.setState({current_error: data});
         });
     }

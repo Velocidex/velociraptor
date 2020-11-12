@@ -3,25 +3,27 @@ description: |
   Acquires a full memory image. We download winpmem and use it to
   acquire a full memory image.
 
-  NOTE: This artifact usually takes a long time. You should increase
-  the default timeout to allow it to complete.
+  NOTE: This artifact usually transfers a lot of data. You should
+  increase the default timeout to allow it to complete.
 
 tools:
-  - name: WinPmem
-    url: https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc3/winpmem_v3.3.rc3.exe
+  - name: WinPmem64
+    github_project: Velocidex/WinPmem
+    github_asset_regex: winpmem_mini_x64.+exe
+    serve_locally: true
+
+precondition: SELECT OS From info() where OS = 'windows' AND Architecture = "amd64"
 
 sources:
   - queries:
       - SELECT * FROM foreach(
           row={
-            SELECT FullPath, tempfile(data="X", extension=".aff4") AS Tempfile
-            FROM Artifact.Generic.Utils.FetchBinary(ToolName="WinPmem")
+            SELECT FullPath, tempfile(extension=".raw") AS Tempfile
+            FROM Artifact.Generic.Utils.FetchBinary(ToolName="WinPmem64")
           },
           query={
             SELECT Stdout, Stderr,
                    if(condition=Complete,
-                      then=upload(file=Tempfile, name="PhysicalMemory.aff4")) As Upload
-            FROM execve(
-               argv=[FullPath, "-dd", "-o", Tempfile, "-t", "-c", "snappy"],
-               sep="\r\n")
+                      then=upload(file=Tempfile, name="PhysicalMemory.raw")) As Upload
+            FROM execve(argv=[FullPath, Tempfile], sep="\r\n")
         })

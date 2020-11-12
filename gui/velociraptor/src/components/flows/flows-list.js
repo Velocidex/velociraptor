@@ -53,6 +53,7 @@ class DeleteFlowDialog extends React.PureComponent {
         let collected_artifacts = this.props.flow.artifacts_with_results || [];
         let artifacts = collected_artifacts.join(",");
         let total_bytes = this.props.flow.total_uploaded_bytes/1024/1024 || 0;
+        let total_rows = this.props.flow.total_collected_rows || 0;
         return (
             <Modal show={true} onHide={this.props.onClose}>
               <Modal.Header closeButton>
@@ -65,7 +66,8 @@ class DeleteFlowDialog extends React.PureComponent {
                 This collection was the artifacts <b>{artifacts}</b>
                 <br/><br/>
 
-                We expect to free up { total_bytes.toFixed(0) } Mb.
+                We expect to free up { total_bytes.toFixed(0) } Mb of bulk
+                data and { total_rows } rows.
                 </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={this.props.onClose}>

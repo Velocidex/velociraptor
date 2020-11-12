@@ -61,7 +61,9 @@ from https://golang.org/dl/ (Currently at least Go 1.14):
     $ make build
 
     # To build a dev binary just run make.
-    # NOTE: Make sure ~/go/bin is on your path - this is required to find the Golang tools we need.
+    # NOTE: Make sure ~/go/bin is on your path -
+    # this is required to find the Golang tools we need.
+    $ cd ../..
     $ make
 
     # To build production binaries

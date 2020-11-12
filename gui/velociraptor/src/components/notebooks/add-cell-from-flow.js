@@ -26,7 +26,7 @@ export default class AddCellFromFlowDialog extends React.Component {
     setSearch = (query) => {
         api.get('/v1/SearchClients', {
             query: query,
-            count: 50,
+            limit: 50,
         }).then(resp => {
             let items = resp.data && resp.data.items;
             items = items || [];
@@ -139,7 +139,7 @@ export default class AddCellFromFlowDialog extends React.Component {
                    dialogClassName="modal-90w"
                    onHide={this.props.closeDialog} >
               <Modal.Header closeButton>
-                <Modal.Title>Add cell from Hunt</Modal.Title>
+                <Modal.Title>Add cell from Flow</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 {!this.state.selectedClient ?
