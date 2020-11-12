@@ -11,7 +11,7 @@ Queries:
         url="https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe",
         filename="winpmem_v3.3.rc3.exe") FROM scope()
 
-  - SELECT * FROM inventory() WHERE name =~ "WinPmem"
+  - SELECT * FROM inventory() WHERE name = "WinPmem"
 
   # Normally the artifact launch service will populate these
   # parameters - for this test we override them.
