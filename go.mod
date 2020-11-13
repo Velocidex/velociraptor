@@ -24,6 +24,7 @@ require (
 	github.com/alecthomas/repr v0.0.0-20201006074542-804e374aceb1 // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/aws/aws-sdk-go v1.26.7
+	github.com/bi-zone/etw v0.0.0-20200916105032-b215904fae4f
 	github.com/c-bata/go-prompt v0.2.3
 	github.com/clbanning/mxj v1.8.4
 	github.com/coreos/go-oidc v2.2.1+incompatible

@@ -21,6 +21,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/windows"
 	_ "www.velocidex.com/golang/velociraptor/vql/windows/authenticode"
 	_ "www.velocidex.com/golang/velociraptor/vql/windows/dns"
+	_ "www.velocidex.com/golang/velociraptor/vql/windows/etw"
 	_ "www.velocidex.com/golang/velociraptor/vql/windows/filesystems"
 	_ "www.velocidex.com/golang/velociraptor/vql/windows/process"
 	_ "www.velocidex.com/golang/velociraptor/vql/windows/wmi"
