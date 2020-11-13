@@ -1,4 +1,4 @@
-name: Custom.Windows.EventLogs.Telerik
+name: Windows.EventLogs.Telerik
 description: |
   This Artifact will hunt for evidence of Telerik exploitation in the Application 
   Event Log.  
