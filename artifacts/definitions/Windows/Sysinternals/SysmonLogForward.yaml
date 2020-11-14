@@ -1,0 +1,19 @@
+name: Windows.Sysinternals.SysmonLogForward
+description: |
+  A client side event forwarder to forward sysmon events to the server.
+
+type: CLIENT_EVENT
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+- query: |
+    // First ensure that sysmon is actually installed.
+    LET _ <= SELECT * FROM Artifact.Windows.Sysinternals.SysmonInstall()
+
+    // Just parse and forward events. Use ETW rather than watch_evtx()
+    // because it is a little bit faster.
+    SELECT System.ID AS ID,
+           System.TimeStamp AS Timestamp,
+           EventData
+    FROM watch_etw(guid='{5770385f-c22a-43e0-bf4c-06f5698ffbd9}')

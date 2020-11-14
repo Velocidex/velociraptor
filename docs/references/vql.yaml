@@ -41,7 +41,32 @@
     type: bool
     repeated: false
     required: false
-  category: server
+  category: ""
+- name: artifact_delete
+  description: Deletes an artifact from the global repository.
+  type: Function
+  args:
+  - name: name
+    description: The Artifact to delete
+    type: string
+    repeated: false
+    required: false
+  category: ""
+- name: artifact_set
+  description: Sets an artifact into the global repository.
+  type: Function
+  args:
+  - name: definition
+    description: Artifact definition in YAML
+    type: string
+    repeated: false
+    required: false
+  - name: prefix
+    description: Required name prefix
+    type: string
+    repeated: false
+    required: false
+  category: ""
 - name: atoi
   description: Convert a string to an int.
   type: Function
@@ -193,6 +218,31 @@
     repeated: false
     required: false
   category: parsers
+- name: cache
+  description: Creates a cache object
+  type: Function
+  args:
+  - name: func
+    description: A function to evaluate
+    type: vfilter.LazyExpr
+    repeated: false
+    required: true
+  - name: name
+    description: The global name of this cache (needed when more than one)
+    type: string
+    repeated: false
+    required: false
+  - name: key
+    description: Cache key to use.
+    type: string
+    repeated: false
+    required: true
+  - name: period
+    description: The latest age of the cache.
+    type: int64
+    repeated: false
+    required: false
+  category: ""
 - name: cancel_flow
   description: Cancels the flow.
   type: Function
@@ -245,7 +295,7 @@
     type: bool
     repeated: false
     required: false
-  category: server
+  category: ""
 - name: client_info
   description: Returns client info (like the fqdn) from the datastore.
   type: Function
@@ -255,7 +305,29 @@
     type: string
     repeated: false
     required: true
-  category: server
+  category: ""
+- name: client_metadata
+  description: Returns client metadata from the datastore. Client metadata is a set
+    of free form key/value data
+  type: Function
+  args:
+  - name: client_id
+    description: ""
+    type: string
+    repeated: false
+    required: true
+  category: ""
+- name: client_set_metadata
+  description: Sets client metadata. Client metadata is a set of free form key/value
+    data
+  type: Function
+  args:
+  - name: client_id
+    description: ""
+    type: string
+    repeated: false
+    required: true
+  category: ""
 - name: clients
   description: Retrieve the list of clients.
   type: Plugin
@@ -264,6 +336,16 @@
     description: 'Client search string. Can have the following prefixes: ''lable:'',
       ''host:'''
     type: string
+    repeated: false
+    required: false
+  - name: start
+    description: First client to fetch (0)'
+    type: uint64
+    repeated: false
+    required: false
+  - name: limit
+    description: First client to fetch (1000)'
+    type: uint64
     repeated: false
     required: false
   - name: client_id
@@ -452,7 +534,17 @@
     type: bool
     repeated: false
     required: false
-  category: server
+  - name: type
+    description: Type of download to create (e.g. 'report') default a full zip file.
+    type: string
+    repeated: false
+    required: false
+  - name: template
+    description: Report template to use (defaults to Reporting.Default).
+    type: string
+    repeated: false
+    required: false
+  category: ""
 - name: create_hunt_download
   description: Creates a download pack for a hunt.
   type: Function
@@ -472,7 +564,17 @@
     type: bool
     repeated: false
     required: false
-  category: server
+  - name: format
+    description: Format to export (csv,json) defaults to both.
+    type: string
+    repeated: false
+    required: false
+  - name: base
+    description: Base filename to write to.
+    type: string
+    repeated: false
+    required: false
+  category: ""
 - name: dict
   description: Construct a dict from arbitrary keyword args.
   type: Function
@@ -818,6 +920,11 @@
     type: int64
     repeated: false
     required: false
+  - name: flush
+    description: If specified we flush all rows from cache after the call.
+    type: bool
+    repeated: false
+    required: false
   category: event
 - name: file_store
   description: |
@@ -869,7 +976,7 @@
   type: Function
   args:
   - name: list
-    description: A list of items too filter
+    description: A list of items to filter
     type: string
     repeated: true
     required: true
@@ -914,7 +1021,7 @@
     type: string
     repeated: false
     required: true
-  category: server
+  category: ""
 - name: flows
   description: Retrieve the flows launched on each client.
   type: Plugin
@@ -963,10 +1070,15 @@
     description: Run this query for each row.
     type: vfilter.StoredQuery
     repeated: false
-    required: true
+    required: false
   - name: async
     description: If set we run all queries asyncronously.
     type: bool
+    repeated: false
+    required: false
+  - name: column
+    description: If set we only extract the column from row.
+    type: string
     repeated: false
     required: false
   category: plugin
@@ -1016,7 +1128,7 @@
     required: false
   - name: field
     description: ""
-    type: string
+    type: vfilter.Any
     repeated: false
     required: false
   - name: default
@@ -1029,12 +1141,12 @@
   description: Retrieve the current client monitoring state.
   type: Function
   args: []
-  category: server
+  category: ""
 - name: get_server_monitoring
   description: Retrieve the current client monitoring state.
   type: Function
   args: []
-  category: server
+  category: ""
 - name: getpid
   description: Returns the current pid of the process.
   type: Function
@@ -1259,6 +1371,12 @@
     type: string
     repeated: false
     required: false
+  - name: data
+    description: If specified we write this raw data into a POST request instead of
+      encoding the params above.
+    type: string
+    repeated: false
+    required: false
   - name: chunk_size
     description: Read input with this chunk size and send each chunk as a row
     type: int
@@ -1314,6 +1432,21 @@
     repeated: false
     required: false
   category: server
+- name: hunt_add
+  description: Assign a client to a hunt.
+  type: Function
+  args:
+  - name: ClientId
+    description: ""
+    type: string
+    repeated: false
+    required: true
+  - name: HuntId
+    description: ""
+    type: string
+    repeated: false
+    required: true
+  category: ""
 - name: hunt_flows
   description: Retrieve the flows launched by a hunt.
   type: Plugin
@@ -1323,6 +1456,16 @@
     type: string
     repeated: false
     required: true
+  - name: start_row
+    description: The first row to show (used for paging).
+    type: int64
+    repeated: false
+    required: false
+  - name: limit
+    description: Number of rows to show (used for paging).
+    type: int64
+    repeated: false
+    required: false
   category: server
 - name: hunt_results
   description: Retrieve the results of a hunt.
@@ -1445,7 +1588,7 @@
   description: Retrieve the tools inventory.
   type: Plugin
   args: []
-  category: server
+  category: ""
 - name: inventory_add
   description: Add tool to ThirdParty inventory.
   type: Function
@@ -1471,11 +1614,21 @@
     repeated: false
     required: false
   - name: filename
-    description: ""
+    description: The name of the file on the endpoint
     type: string
     repeated: false
     required: false
-  category: server
+  - name: file
+    description: An optional file to upload
+    type: string
+    repeated: false
+    required: false
+  - name: accessor
+    description: The accessor to use to read the file.
+    type: string
+    repeated: false
+    required: false
+  category: ""
 - name: inventory_get
   description: Get tool info from inventory service.
   type: Function
@@ -1485,7 +1638,7 @@
     type: string
     repeated: false
     required: true
-  category: server
+  category: ""
 - name: ip
   description: |
     Format an IP address.
@@ -1515,6 +1668,16 @@
     required: false
   category: plugin
 - name: items
+  description: Iterate over dict members producing _key and _value columns
+  type: Function
+  args:
+  - name: item
+    description: ""
+    type: vfilter.Any
+    repeated: false
+    required: false
+  category: ""
+- name: items
   description: Enumerate all members of the item (similar to Pythons items() method.
   type: Plugin
   args:
@@ -1523,7 +1686,7 @@
     type: vfilter.Any
     repeated: false
     required: false
-  category: basic
+  category: ""
 - name: join
   description: |
     Join all the args on a separator.
@@ -1542,6 +1705,76 @@
     repeated: false
     required: false
   category: basic
+- name: js
+  description: Compile and run javascript code.
+  type: Function
+  args:
+  - name: js
+    description: The body of the javascript code.
+    type: string
+    repeated: false
+    required: true
+  - name: key
+    description: If set use this key to cache the JS VM.
+    type: string
+    repeated: false
+    required: false
+  category: experimental
+- name: js_call
+  description: Compile and run javascript code.
+  type: Function
+  args:
+  - name: func
+    description: JS function to call.
+    type: string
+    repeated: false
+    required: true
+  - name: args
+    description: Positional args for the function.
+    type: vfilter.Any
+    repeated: false
+    required: false
+  - name: key
+    description: If set use this key to cache the JS VM.
+    type: string
+    repeated: false
+    required: false
+  category: experimental
+- name: js_get
+  description: Get a variable's value from the JS VM.
+  type: Function
+  args:
+  - name: var
+    description: The variable to get from the JS VM.
+    type: string
+    repeated: false
+    required: true
+  - name: key
+    description: If set use this key to cache the JS VM.
+    type: string
+    repeated: false
+    required: false
+  category: ""
+- name: js_set
+  description: Set a variables value in the JS VM.
+  type: Function
+  args:
+  - name: var
+    description: The variable to set inside the JS VM.
+    type: string
+    repeated: false
+    required: true
+  - name: value
+    description: The value to set inside the VM.
+    type: vfilter.Any
+    repeated: false
+    required: true
+  - name: key
+    description: If set use this key to cache the JS VM.
+    type: string
+    repeated: false
+    required: false
+  category: ""
 - name: killkillkill
   description: Kills the client and forces a restart - this is very aggresive!
   type: Function
@@ -1551,7 +1784,7 @@
     type: string
     repeated: false
     required: true
-  category: client
+  category: ""
 - name: label
   description: |
     Add the labels to the client. If op is 'remove' then remove these labels.
@@ -1666,6 +1899,26 @@
     repeated: false
     required: false
   category: basic
+- name: memoize
+  description: Memoize a query into memory.
+  type: Function
+  args:
+  - name: query
+    description: Query to expand into memory
+    type: vfilter.LazyExpr
+    repeated: false
+    required: true
+  - name: key
+    description: The name of the column to use as a key.
+    type: string
+    repeated: false
+    required: true
+  - name: period
+    description: The latest age of the cache.
+    type: int64
+    repeated: false
+    required: false
+  category: ""
 - name: min
   description: |
     Finds the smallest item in the aggregate.
@@ -1983,7 +2236,7 @@
     type: string
     repeated: false
     required: false
-  category: parsers
+  category: ""
 - name: parse_lines
   description: Parse a file separated into lines.
   type: Plugin
@@ -2091,7 +2344,7 @@
     type: int64
     repeated: false
     required: false
-  category: parsers
+  category: ""
 - name: parse_pe
   description: Parse a PE file.
   type: Function
@@ -2197,6 +2450,21 @@
     repeated: false
     required: false
   category: parsers
+- name: parse_recyclebin
+  description: Parses a $I file found in the $Recycle.Bin
+  type: Plugin
+  args:
+  - name: filename
+    description: Files to be parsed.
+    type: string
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: string
+    repeated: false
+    required: false
+  category: ""
 - name: parse_string_with_regex
   description: Parse a string with a set of regex and extract fields. Returns a dict
     with fields populated from all regex capture variables.
@@ -2213,6 +2481,21 @@
     repeated: true
     required: true
   category: parsers
+- name: parse_usn
+  description: Parse the USN journal from a device.
+  type: Plugin
+  args:
+  - name: device
+    description: The device file to open.
+    type: string
+    repeated: false
+    required: true
+  - name: start_offset
+    description: The starting offset of the first USN record to parse.
+    type: int64
+    repeated: false
+    required: false
+  category: ""
 - name: parse_xml
   description: |
     Parse an XML document into a dict like object.
@@ -2295,7 +2578,7 @@
     type: vfilter.Any
     repeated: false
     required: false
-  category: parsers
+  category: ""
 - name: path_join
   description: Build a path by joining all components.
   type: Function
@@ -2462,7 +2745,7 @@
     type: int64
     repeated: false
     required: false
-  category: client
+  category: ""
 - name: pslist
   description: |
     Enumerate running processes.
@@ -2716,7 +2999,7 @@
     type: vfilter.Any
     repeated: false
     required: true
-  category: server
+  category: ""
 - name: set_server_monitoring
   description: Sets the current server monitoring state.
   type: Function
@@ -2726,7 +3009,7 @@
     type: vfilter.Any
     repeated: false
     required: true
-  category: server
+  category: ""
 - name: sleep
   description: Sleep for the specified number of seconds. Always returns true.
   type: Function
@@ -2902,7 +3185,7 @@
     type: int64
     repeated: false
     required: false
-  category: server
+  category: ""
 - name: sqlite
   description: Opens an SQLite file and run a query against it.
   type: Plugin
@@ -2986,7 +3269,7 @@
     description: The prefix to strip
     type: string
     repeated: false
-    required: true
+    required: false
   category: basic
 - name: switch
   description: Executes each query. The first query to return any rows will be emitted.
@@ -2998,27 +3281,12 @@
     query ends.
   type: Function
   args:
-  - name: data
-    description: Data to write in the tempfile.
-    type: string
-    repeated: true
-    required: false
-  - name: extension
-    description: An extension to place in the tempfile.
-    type: string
-    repeated: false
-    required: false
-  - name: permissions
-    description: Required permissions (e.g. 'x').
-    type: string
-    repeated: false
-    required: false
   - name: remove_last
     description: If set we delay removal as much as possible.
     type: bool
     repeated: false
     required: false
-  category: basic
+  category: ""
 - name: tempfile
   description: |
     Create a temporary file and write some data into it.
@@ -3075,8 +3343,13 @@
 - name: to_dict
   description: Construct a dict from another object.
   type: Function
-  args: []
-  category: basic
+  args:
+  - name: item
+    description: ""
+    type: vfilter.Any
+    repeated: false
+    required: false
+  category: ""
 - name: token
   description: Extract process token.
   type: Function
@@ -3219,6 +3492,16 @@
     type: string
     repeated: false
     required: true
+  - name: endpoint
+    description: The Endpoint to use
+    type: string
+    repeated: false
+    required: false
+  - name: noverifycert
+    description: Skip TLS Verification
+    type: bool
+    repeated: false
+    required: false
   category: plugin
 - name: upload_webdav
   description: Upload files to a WebDAV server.
@@ -3254,7 +3537,7 @@
     type: string
     repeated: false
     required: false
-  category: client
+  category: ""
 - name: uploads
   description: Retrieve information about a flow's uploads.
   type: Plugin
@@ -3352,7 +3635,7 @@
   description: Generate a UUID.
   type: Function
   args: []
-  category: basic
+  category: ""
 - name: vad
   description: Enumerate process memory regions.
   type: Plugin
@@ -3383,8 +3666,18 @@
       else=LegacyQuery)
     ```
   type: Function
-  args: []
-  category: basic
+  args:
+  - name: function
+    description: ""
+    type: string
+    repeated: false
+    required: false
+  - name: plugin
+    description: ""
+    type: string
+    repeated: false
+    required: false
+  category: ""
 - name: watch_auditd
   description: Watch log files generated by auditd.
   type: Plugin
@@ -3480,6 +3773,16 @@
     repeated: false
     required: false
   category: event
+- name: watch_usn
+  description: Watch the USN journal from a device.
+  type: Plugin
+  args:
+  - name: device
+    description: The device file to open.
+    type: string
+    repeated: false
+    required: true
+  category: ""
 - name: winobj
   description: Enumerate The Windows Object Manager namespace.
   type: Plugin
@@ -3652,3 +3955,4 @@
     repeated: false
     required: false
   category: plugin
+
