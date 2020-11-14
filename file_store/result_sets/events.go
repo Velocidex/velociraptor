@@ -65,7 +65,7 @@ func getNumberOfRowsInFile(
 	// no index.
 	count := uint64(0)
 	rs_reader := &ResultSetReaderImpl{fd: fd}
-	for _ = range rs_reader.Rows(ctx) {
+	for range rs_reader.Rows(ctx) {
 		count++
 	}
 

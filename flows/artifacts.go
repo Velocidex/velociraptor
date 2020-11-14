@@ -296,17 +296,16 @@ func ArtifactCollectorProcessOneMessage(
 			file_store_factory := file_store.GetFileStore(config_obj)
 			rs_writer, err := result_sets.NewResultSetWriter(
 				file_store_factory, path_manager, nil, false /* truncate */)
+			if err != nil {
+				return err
+			}
+			defer rs_writer.Close()
 
 			// Support the old clients which send JSON
 			// array responses. We need to decode the JSON
 			// response, then re-encode it into JSONL for
 			// log files.
 			if len(response.Response) > 0 {
-				if err != nil {
-					return err
-				}
-				defer rs_writer.Close()
-
 				rows, err := utils.ParseJsonToDicts([]byte(
 					response.Response))
 				if err != nil {
@@ -316,6 +315,7 @@ func ArtifactCollectorProcessOneMessage(
 				for _, row := range rows {
 					rows_written++
 					rs_writer.Write(row)
+					rowCounter.Inc()
 				}
 
 				// New clients already encode the JSON
@@ -326,6 +326,7 @@ func ArtifactCollectorProcessOneMessage(
 				rs_writer.WriteJSONL(
 					[]byte(response.JSONLResponse), response.TotalRows)
 				rows_written = response.TotalRows
+				rowCounter.Add(float64(response.TotalRows))
 			}
 
 			// Update the artifacts with results in the

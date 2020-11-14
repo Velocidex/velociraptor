@@ -56,10 +56,10 @@ func (self *IncClock) Now() time.Time {
 	return time.Unix(self.NowTime, 0)
 }
 
-func (self IncClock) After(d time.Duration) <-chan time.Time {
+func (self *IncClock) After(d time.Duration) <-chan time.Time {
 	return time.After(0)
 }
 
-func (self IncClock) Sleep(d time.Duration) {
+func (self *IncClock) Sleep(d time.Duration) {
 	time.Sleep(0)
 }

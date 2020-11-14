@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"google.golang.org/protobuf/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -234,19 +235,20 @@ func StartServerMonitoringService(
 		return err
 	}
 
-	artifacts := flows_proto.ArtifactCollectorArgs{
+	artifacts := &flows_proto.ArtifactCollectorArgs{
 		Artifacts:  []string{},
 		Parameters: &flows_proto.ArtifactParameters{},
 	}
 	err = db.GetSubject(
 		config_obj,
 		constants.ServerMonitoringFlowURN,
-		&artifacts)
+		artifacts)
 	if err != nil {
 		// No monitoring rules found, set defaults.
-		artifacts = DefaultServerMonitoringTable
+		artifacts = proto.Clone(
+			&DefaultServerMonitoringTable).(*flows_proto.ArtifactCollectorArgs)
 		err = db.SetSubject(
-			config_obj, constants.ServerMonitoringFlowURN, &artifacts)
+			config_obj, constants.ServerMonitoringFlowURN, artifacts)
 		if err != nil {
 			return err
 		}
@@ -270,5 +272,5 @@ func StartServerMonitoringService(
 
 	services.RegisterServerEventManager(manager)
 
-	return manager.Update(config_obj, &artifacts)
+	return manager.Update(config_obj, artifacts)
 }
