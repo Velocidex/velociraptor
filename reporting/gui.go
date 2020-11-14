@@ -46,7 +46,7 @@ import (
 var (
 	bm_policy = NewBlueMondayPolicy()
 
-	whitespace_regexp = regexp.MustCompile("^\\s*$")
+	whitespace_regexp = regexp.MustCompile(`^\s*$`)
 )
 
 type GuiTemplateEngine struct {
@@ -401,7 +401,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 
 			// Ignore LET queries but still run them.
 			if vql.Let != "" {
-				for _ = range vql.Eval(self.ctx, self.Scope) {
+				for range vql.Eval(self.ctx, self.Scope) {
 				}
 				continue
 			}

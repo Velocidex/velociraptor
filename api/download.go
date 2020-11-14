@@ -276,8 +276,8 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 				}
 
 				// Write line delimited JSON
-				w.Write(serialized)
-				w.Write([]byte{'\n'})
+				_, _ = w.Write(serialized)
+				_, _ = w.Write([]byte{'\n'})
 			}
 		}
 	})

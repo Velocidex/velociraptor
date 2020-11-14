@@ -271,19 +271,19 @@ func (self *Dummy) AddTool(config_obj *config_proto.Config,
 
 	// Obfuscate the public directory path.
 	// Make a copy to work on.
-	tool := *tool_request
+	tool := proto.Clone(tool_request).(*artifacts_proto.Tool)
 	// Replace the tool in the inventory.
 	found := false
 	for i, item := range self.binaries.Tools {
 		if item.Name == tool.Name {
 			found = true
-			self.binaries.Tools[i] = &tool
+			self.binaries.Tools[i] = tool
 			break
 		}
 	}
 
 	if !found {
-		self.binaries.Tools = append(self.binaries.Tools, &tool)
+		self.binaries.Tools = append(self.binaries.Tools, tool)
 	}
 
 	self.binaries.Version = uint64(self.Clock.Now().UnixNano())

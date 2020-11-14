@@ -54,7 +54,10 @@ func (self WatchETWPlugin) Call(
 				event.Set("EventData", data)
 			}
 
-			output_chan <- event
+			select {
+			case <-ctx.Done():
+			case output_chan <- event:
+			}
 		}
 
 		sub_ctx, cancel := context.WithCancel(ctx)

@@ -122,13 +122,13 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 	// VQLCollectorArgs so they can be run in parallel.
 	for _, name := range artifact.Artifacts {
 		// Make a local copy.
-		temp := *artifact
+		temp := proto.Clone(artifact).(*flows_proto.ArtifactCollectorArgs)
 		temp.Artifacts = []string{name}
 		compiled, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, vql_subsystem.NullACLManager{},
 			self.repository,
 			true, /* should_obfuscate */
-			&temp)
+			temp)
 		if err != nil {
 			return nil, err
 		}

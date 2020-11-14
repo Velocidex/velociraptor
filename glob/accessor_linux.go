@@ -69,7 +69,6 @@ func (self *AccessorContext) WasLinkVisited(dev, inode uint64) bool {
 type OSFileInfo struct {
 	_FileInfo     os.FileInfo
 	_full_path    string
-	_data         interface{}
 	_accessor_ctx *AccessorContext
 }
 

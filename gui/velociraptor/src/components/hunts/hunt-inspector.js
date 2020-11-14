@@ -7,6 +7,8 @@ import Tab from 'react-bootstrap/Tab';
 import HuntOverview from './hunt-overview.js';
 import HuntRequest from './hunt-request.js';
 import HuntClients from './hunt-clients.js';
+import HuntNotebook from './hunt-notebook.js';
+
 
 import { withRouter }  from "react-router-dom";
 
@@ -50,6 +52,11 @@ class HuntInspector extends React.Component {
                   { tab === "clients" &&
                     <HuntClients hunt={this.props.hunt} />}
                 </Tab>
+                <Tab eventKey="notebook" title="Notebook">
+                  { tab === "notebook" &&
+                    <HuntNotebook hunt={this.props.hunt} />}
+                </Tab>
+
               </Tabs>
             </div>
         );

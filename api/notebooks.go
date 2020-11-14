@@ -980,7 +980,7 @@ func (self *progressReporter) Report(message string) {
 	notebook_cell.Output = fmt.Sprintf(
 		`<div class="padded"><i class="fa fa-spinner fa-spin fa-fw"></i>`+
 			`Calculating...  (%v after %v)</div>`,
-		message, time.Now().Sub(self.start).Round(time.Second))
+		message, time.Since(self.start).Round(time.Second))
 	notebook_cell.Timestamp = now.Unix()
 
 	// Cant do anything if we can not set the notebook times

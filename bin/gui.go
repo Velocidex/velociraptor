@@ -91,7 +91,9 @@ func doGUI() {
 
 		// Make the client use the datastore_directory for tempfiles as well.
 		tmpdir := filepath.Join(datastore_directory, "temp")
-		os.MkdirAll(tmpdir, 0700)
+		err = os.MkdirAll(tmpdir, 0700)
+		kingpin.FatalIfError(err, "Unable to create temp directory.")
+
 		config_obj.Client.TempdirLinux = tmpdir
 		config_obj.Client.TempdirWindows = tmpdir
 		config_obj.Client.TempdirDarwin = tmpdir
