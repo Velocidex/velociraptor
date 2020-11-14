@@ -13,6 +13,7 @@ import (
 
 type NotebookPathManager struct {
 	notebook_id string
+	root        string
 }
 
 func NotebookDir() string {
@@ -20,45 +21,61 @@ func NotebookDir() string {
 }
 
 func (self *NotebookPathManager) Path() string {
-	return path.Join("notebooks", self.notebook_id+".json")
+	return path.Join(self.root, self.notebook_id+".json")
 }
 
 func (self *NotebookPathManager) Cell(cell_id string) *NotebookCellPathManager {
-	return &NotebookCellPathManager{notebook_id: self.notebook_id,
-		cell_id: cell_id}
+	return &NotebookCellPathManager{
+		notebook_id: self.notebook_id,
+		cell_id:     cell_id,
+		root:        self.root,
+	}
 }
 
 func (self *NotebookPathManager) CellDirectory(cell_id string) string {
-	return path.Join("notebooks", self.notebook_id, cell_id)
+	return path.Join(self.root, self.notebook_id, cell_id)
 }
 
 func (self *NotebookPathManager) HtmlExport() string {
-	return path.Join("/downloads/notebooks", self.notebook_id,
+	return path.Join("/downloads/", self.root, self.notebook_id,
 		fmt.Sprintf("%s-%s.html", self.notebook_id,
 			time.Now().Format("20060102150405Z")))
 }
 
 func (self *NotebookPathManager) ZipExport() string {
-	return path.Join("/downloads/notebooks", self.notebook_id,
+	return path.Join("/downloads/", self.root, self.notebook_id,
 		fmt.Sprintf("%s-%s.zip", self.notebook_id,
 			time.Now().Format("20060102150405Z")))
 }
 
 func NewNotebookPathManager(notebook_id string) *NotebookPathManager {
-	return &NotebookPathManager{notebook_id: notebook_id}
+	if strings.HasPrefix(notebook_id, "N.H.") {
+		// For hunt notebooks store them in the hunt itself.
+		return &NotebookPathManager{
+			notebook_id: notebook_id,
+			root: path.Join("/hunts",
+				strings.TrimPrefix(notebook_id, "N."), "notebook"),
+		}
+	}
+
+	return &NotebookPathManager{
+		notebook_id: notebook_id,
+		root:        "notebooks",
+	}
 }
 
 type NotebookCellPathManager struct {
 	notebook_id, cell_id string
 	table_id             int64
+	root                 string
 }
 
 func (self *NotebookCellPathManager) Path() string {
-	return path.Join("notebooks", self.notebook_id, self.cell_id+".json")
+	return path.Join(self.root, self.notebook_id, self.cell_id+".json")
 }
 
 func (self *NotebookCellPathManager) Item(name string) string {
-	return path.Join("notebooks", self.notebook_id, self.cell_id, name)
+	return path.Join(self.root, self.notebook_id, self.cell_id, name)
 }
 
 func (self *NotebookCellPathManager) NewQueryStorage() *NotebookCellQuery {
@@ -67,6 +84,7 @@ func (self *NotebookCellPathManager) NewQueryStorage() *NotebookCellQuery {
 		notebook_id: self.notebook_id,
 		cell_id:     self.cell_id,
 		id:          self.table_id,
+		root:        self.root,
 	}
 }
 
@@ -75,16 +93,18 @@ func (self *NotebookCellPathManager) QueryStorage(id int64) api.PathManager {
 		notebook_id: self.notebook_id,
 		cell_id:     self.cell_id,
 		id:          id,
+		root:        self.root,
 	}
 }
 
 type NotebookCellQuery struct {
 	notebook_id, cell_id string
 	id                   int64
+	root                 string
 }
 
 func (self *NotebookCellQuery) Path() string {
-	return fmt.Sprintf("/notebooks/%s/%s/query_%d.json",
+	return fmt.Sprintf("/%s/%s/%s/query_%d.json", self.root,
 		self.notebook_id, self.cell_id, self.id)
 }
 

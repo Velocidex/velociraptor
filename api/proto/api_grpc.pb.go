@@ -83,7 +83,7 @@ type APIClient interface {
 	CreateDownloadFile(ctx context.Context, in *CreateDownloadRequest, opts ...grpc.CallOption) (*CreateDownloadResponse, error)
 	// Notebook management
 	GetNotebooks(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*Notebooks, error)
-	NewNotebook(ctx context.Context, in *NotebookMetadata, opts ...grpc.CallOption) (*empty.Empty, error)
+	NewNotebook(ctx context.Context, in *NotebookMetadata, opts ...grpc.CallOption) (*NotebookMetadata, error)
 	UpdateNotebook(ctx context.Context, in *NotebookMetadata, opts ...grpc.CallOption) (*NotebookMetadata, error)
 	NewNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookMetadata, error)
 	GetNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookCell, error)
@@ -495,8 +495,8 @@ func (c *aPIClient) GetNotebooks(ctx context.Context, in *NotebookCellRequest, o
 	return out, nil
 }
 
-func (c *aPIClient) NewNotebook(ctx context.Context, in *NotebookMetadata, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) NewNotebook(ctx context.Context, in *NotebookMetadata, opts ...grpc.CallOption) (*NotebookMetadata, error) {
+	out := new(NotebookMetadata)
 	err := c.cc.Invoke(ctx, "/proto.API/NewNotebook", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -692,7 +692,7 @@ type APIServer interface {
 	CreateDownloadFile(context.Context, *CreateDownloadRequest) (*CreateDownloadResponse, error)
 	// Notebook management
 	GetNotebooks(context.Context, *NotebookCellRequest) (*Notebooks, error)
-	NewNotebook(context.Context, *NotebookMetadata) (*empty.Empty, error)
+	NewNotebook(context.Context, *NotebookMetadata) (*NotebookMetadata, error)
 	UpdateNotebook(context.Context, *NotebookMetadata) (*NotebookMetadata, error)
 	NewNotebookCell(context.Context, *NotebookCellRequest) (*NotebookMetadata, error)
 	GetNotebookCell(context.Context, *NotebookCellRequest) (*NotebookCell, error)
@@ -843,7 +843,7 @@ func (UnimplementedAPIServer) CreateDownloadFile(context.Context, *CreateDownloa
 func (UnimplementedAPIServer) GetNotebooks(context.Context, *NotebookCellRequest) (*Notebooks, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNotebooks not implemented")
 }
-func (UnimplementedAPIServer) NewNotebook(context.Context, *NotebookMetadata) (*empty.Empty, error) {
+func (UnimplementedAPIServer) NewNotebook(context.Context, *NotebookMetadata) (*NotebookMetadata, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewNotebook not implemented")
 }
 func (UnimplementedAPIServer) UpdateNotebook(context.Context, *NotebookMetadata) (*NotebookMetadata, error) {
