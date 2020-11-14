@@ -86,7 +86,8 @@ func (self *ApiServer) GetNotebooks(
 		result.Items = append(result.Items, notebook)
 
 		// Document not owned or collaborated with.
-		if !reporting.CheckNotebookAccess(notebook, user_record.Name) {
+		if !notebook.Public &&
+			!reporting.CheckNotebookAccess(notebook, user_record.Name) {
 			logging.GetLogger(
 				self.config, &logging.Audit).WithFields(
 				logrus.Fields{
@@ -143,7 +144,7 @@ func NewNotebookCellId() string {
 
 func (self *ApiServer) NewNotebook(
 	ctx context.Context,
-	in *api_proto.NotebookMetadata) (*empty.Empty, error) {
+	in *api_proto.NotebookMetadata) (*api_proto.NotebookMetadata, error) {
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	user_record, err := users.GetUser(self.config, user_name)
@@ -161,7 +162,11 @@ func (self *ApiServer) NewNotebook(
 	in.Creator = user_name
 	in.CreatedTime = time.Now().Unix()
 	in.ModifiedTime = in.CreatedTime
-	in.NotebookId = NewNotebookId()
+
+	// Allow hunt notebooks to be created with specified hunt ID.
+	if !strings.HasPrefix(in.NotebookId, "N.H.") {
+		in.NotebookId = NewNotebookId()
+	}
 
 	new_cell_id := NewNotebookCellId()
 
@@ -197,7 +202,13 @@ func (self *ApiServer) NewNotebook(
 	}
 
 	_, err = self.UpdateNotebookCell(ctx, new_cell_request)
-	return &empty.Empty{}, err
+	if err != nil {
+		return nil, err
+	}
+
+	notebook := &api_proto.NotebookMetadata{}
+	err = db.GetSubject(self.config, notebook_path_manager.Path(), notebook)
+	return notebook, err
 }
 
 func (self *ApiServer) NewNotebookCell(

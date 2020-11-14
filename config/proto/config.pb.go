@@ -1453,14 +1453,15 @@ type FrontendConfig struct {
 	// useful if you have SSL offloading (e.g. ngix). This is not
 	// configured by the wizard - you will need to manually configure
 	// it. You better know what you are doing here!
-	UsePlainHttp bool   `protobuf:"varint,24,opt,name=use_plain_http,json=usePlainHttp,proto3" json:"use_plain_http,omitempty"`
-	Certificate  string `protobuf:"bytes,3,opt,name=certificate,proto3" json:"certificate,omitempty"`
-	PrivateKey   string `protobuf:"bytes,4,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitempty"`
-	// If you want to use your own certificates for TLS as an
-	// alternative to Autocert, then you can set those here. These
-	// certificates will be used for TLS on both the frontend and
-	// GUI. NOTE: We expect these to be proper certificates - i.e. NOT
-	// self signed. Be sure to set Client.use_self_signed_ssl = false
+	UsePlainHttp bool `protobuf:"varint,24,opt,name=use_plain_http,json=usePlainHttp,proto3" json:"use_plain_http,omitempty"`
+	// These are used to secure the client/server communications -
+	// Even when using external TLS certificates! This certificate
+	// must be signed by the Velociraptor rooot CA in all cases. If
+	// using an external TLS configuration this layer of encryption
+	// happens **in addition** to the external TLS certificates.
+	Certificate string `protobuf:"bytes,3,opt,name=certificate,proto3" json:"certificate,omitempty"`
+	PrivateKey  string `protobuf:"bytes,4,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitempty"`
+	// Be sure to set Client.use_self_signed_ssl=false when you set this.
 	TlsCertificateFilename           string        `protobuf:"bytes,28,opt,name=tls_certificate_filename,json=tlsCertificateFilename,proto3" json:"tls_certificate_filename,omitempty"`
 	TlsPrivateKeyFilename            string        `protobuf:"bytes,29,opt,name=tls_private_key_filename,json=tlsPrivateKeyFilename,proto3" json:"tls_private_key_filename,omitempty"`
 	DnsName                          string        `protobuf:"bytes,6,opt,name=dns_name,json=dnsName,proto3" json:"dns_name,omitempty"`

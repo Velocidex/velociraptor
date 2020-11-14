@@ -31,6 +31,9 @@ message NotebookMetadata {
     // A list of usernames that have access to this notebook.
     repeated string collaborators = 12;
 
+    // If this is set, the notebook is public.
+    bool public = 13;
+
     int64 created_time = 4;
     int64 modified_time = 5;
 

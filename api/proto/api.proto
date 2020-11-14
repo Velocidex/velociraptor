@@ -375,7 +375,7 @@ service API {
         };
     }
 
-   rpc NewNotebook(NotebookMetadata) returns (google.protobuf.Empty) {
+   rpc NewNotebook(NotebookMetadata) returns (NotebookMetadata) {
         option (google.api.http) = {
             post: "/api/v1/NewNotebook",
             body: "*",
