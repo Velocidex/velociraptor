@@ -31,7 +31,7 @@
 }
 
 .artifact-search-panel {
-    position: fixed;
+    position: static;
     width: 100%;
     overflow-x: auto;
     height: -webkit-fill-available;
