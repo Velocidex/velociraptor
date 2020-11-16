@@ -217,7 +217,11 @@ func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
 			Value:   "",
 			Expires: time.Unix(0, 0),
 		})
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		fmt.Fprintf(w, `
+			<html><body>
+			You have successfully logged off!
+			</body></html>
+		`)
 	}))
 }
 
@@ -232,6 +236,7 @@ func authenticateUserHandle(config_obj *config_proto.Config,
 			logger := logging.GetLogger(config_obj, &logging.Audit)
 			logger.WithFields(logrus.Fields{
 				"remote": r.RemoteAddr,
+				"error":  err.Error(),
 			}).Error("OAuth2 Redirect")
 
 			// Not authorized - redirect to logon screen.
