@@ -102,3 +102,9 @@ div.dt-buttons {
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
+.shell-results {
+    /* Toolbar - padding - host toolbar - shell command controls - footer */
+    max-height: calc(100vh - 50px - 20px - 47px -  66px - 40px);
+    overflow-y: auto;
+}
