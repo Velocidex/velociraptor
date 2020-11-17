@@ -87,6 +87,13 @@ func (self *InventoryService) Get() *artifacts_proto.ThirdParty {
 	return proto.Clone(self.binaries).(*artifacts_proto.ThirdParty)
 }
 
+func (self *InventoryService) ClearForTests() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.binaries = &artifacts_proto.ThirdParty{}
+}
+
 func (self *InventoryService) ProbeToolInfo(name string) (*artifacts_proto.Tool, error) {
 	for _, tool := range self.Get().Tools {
 		if tool.Name == name {
