@@ -265,6 +265,7 @@ func availableHuntDownloadFiles(config_obj *config_proto.Config,
 // 1. A hunt in the paused state can go to the running state. This
 //    will update the StartTime.
 // 2. A hunt in the running state can go to the Stop state
+// 3. A hunt's description can be modified.
 
 // It is not possible to restart a stopped hunt. This is because the
 // hunt manager watches the hunt participation events for all hunts at
@@ -284,8 +285,12 @@ func ModifyHunt(
 				return errors.New("Invalid hunt")
 			}
 
-			// Archive the hunt.
-			if hunt_modification.State == api_proto.Hunt_ARCHIVED {
+			// Is the description changed?
+			if hunt_modification.HuntDescription != "" {
+				hunt.HuntDescription = hunt_modification.HuntDescription
+
+				// Archive the hunt.
+			} else if hunt_modification.State == api_proto.Hunt_ARCHIVED {
 				hunt.State = api_proto.Hunt_ARCHIVED
 
 				row := ordereddict.NewDict().

@@ -7,6 +7,7 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import filterFactory from 'react-bootstrap-table2-filter';
+import cellEditFactory from 'react-bootstrap-table2-editor';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -102,6 +103,20 @@ export default class HuntList extends React.Component {
         });
     }
 
+    updateHunt = (row) => {
+        let hunt_id = this.props.selected_hunt &&
+            this.props.selected_hunt.hunt_id;
+
+        if (!hunt_id) {return;};
+
+        api.post("v1/ModifyHunt", {
+            hunt_description: row.hunt_description,
+            hunt_id: hunt_id,
+        }).then((response) => {
+            this.props.updateHunts();
+        });
+    }
+
     deleteHunt = () => {
         let hunt_id = this.props.selected_hunt &&
             this.props.selected_hunt.hunt_id;
@@ -135,6 +150,7 @@ export default class HuntList extends React.Component {
         const selectRow = {
             mode: "radio",
             clickToSelect: true,
+            clickToEdit: true,
             hideSelectColumn: true,
             classes: "row-selected",
             onSelect: (row) => {
@@ -288,6 +304,13 @@ export default class HuntList extends React.Component {
                   columns={columns}
                   filter={ filterFactory() }
                   selectRow={ selectRow }
+                  cellEdit={ cellEditFactory({
+                      mode: 'dbclick',
+                      afterSaveCell: (oldValue, newValue, row, column) => {
+                          this.updateHunt(row);
+                      },
+                      blurToSave: true,
+                  }) }
                 />
             { _.isEmpty(this.props.hunts) &&
               <div className="no-content">No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.</div>}
@@ -318,7 +341,7 @@ export function getHuntColumns() {
         },
         {dataField: "hunt_id", text: "Hunt ID"},
         {dataField: "hunt_description", text: "Description",
-         sort: true, filtered: true},
+         sort: true, filtered: true, editable: true},
         {dataField: "create_time", text: "Created", type: "timestamp"},
         {dataField: "start_time", text: "Started",
          type: "timestamp", sort: true },

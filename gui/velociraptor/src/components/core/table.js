@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { textFilter } from 'react-bootstrap-table2-filter';
 import { SettingsButton } from '../core/ace.js';
-
+import { Type } from 'react-bootstrap-table2-editor';
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import Dropdown from 'react-bootstrap/Dropdown';
@@ -383,6 +383,13 @@ export function formatColumns(columns) {
         x.headerFormatter=headerFormatter;
         if (x.sort) {
             x.sortCaret = sortCaret;
+        }
+        if (!x.editable) {
+            x.editable = false;
+        } else {
+            x.editor = {
+             type: Type.TEXTAREA,
+            };
         }
         if (x.filtered) {
             x.filter = textFilter({
