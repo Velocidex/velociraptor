@@ -25,6 +25,7 @@ import LabelForm from '../utils/labels.js';
 import Row from 'react-bootstrap/Row';
 import Pagination from 'react-bootstrap/Pagination';
 import paginationFactory from 'react-bootstrap-table2-paginator';
+import Alert from 'react-bootstrap/Alert';
 
 import { sizePerPageRenderer } from '../core/table.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -134,6 +135,111 @@ class LabelClients extends Component {
 }
 
 
+const POLL_TIME = 2000;
+
+class DeleteClients extends Component {
+    static propTypes = {
+        affectedClients: PropTypes.array,
+        onResolve: PropTypes.func.isRequired,
+    }
+
+    state = {
+        flow_id: null,
+    }
+
+    deleteClients = () => {
+        let client_ids = _.map(this.props.affectedClients,
+                               client => client.client_id);
+
+        api.post("v1/CollectArtifact", {
+            client_id: "server",
+            artifacts: ["Server.Utils.DeleteClient"],
+            parameters: {"env": [
+                { "key": "ClientIdList", "value": client_ids.join(",")},
+                { "key": "ReallyDoIt", "value": "Y"},
+            ]},
+        }).then((response) => {
+            // Hold onto the flow id.
+            this.setState({flow_id: response.data.flow_id});
+
+            // Start polling for flow completion.
+            this.recursive_download_interval = setInterval(() => {
+                api.get("v1/GetFlowDetails", {
+                    client_id: "server",
+                    flow_id: this.state.flow_id,
+                }).then((response) => {
+                    let context = response.data.context;
+                    if (context.state === "RUNNING") {
+                        this.setState({flow_context: context});
+                        return;
+                    }
+
+                    // The node is refreshed with the correct flow id, we can stop polling.
+                    clearInterval(this.recursive_download_interval);
+                    this.recursive_download_interval = undefined;
+
+                    this.props.onResolve();
+                });
+            }, POLL_TIME);
+        });
+    }
+
+    render() {
+        let clients = this.props.affectedClients || [];
+        let columns = formatColumns([
+            {dataField: "last_seen_at", text: "Online", sort: true,
+             formatter: (cell, row) => {
+                 return <VeloClientStatusIcon client={row}/>;
+             }},
+            {dataField: "client_id", text: "Client ID"},
+            {dataField: "os_info.fqdn", text: "Hostname", sort: true},
+        ]);
+
+        return (
+            <Modal show={true}
+                   size="lg"
+                   onHide={this.props.onResolve} >
+              <Modal.Header closeButton>
+                <Modal.Title>Delete Clients</Modal.Title>
+              </Modal.Header>
+
+              <Modal.Body>
+                <Alert variant="danger">
+                  You are about to permanentsly delete the following clients
+                </Alert>
+                <div className="deleted-client-list">
+                <BootstrapTable
+                    hover
+                    condensed
+                    keyField="client_id"
+                    bootstrap4
+                    headerClasses="alert alert-secondary"
+                    bodyClasses="fixed-table-body"
+                    data={clients}
+                    columns={columns}
+                />
+                  </div>
+              </Modal.Body>
+
+              <Modal.Footer>
+                <Button variant="secondary"
+                        onClick={this.props.onResolve}>
+                  Close
+                </Button>
+                <Button variant="primary"
+                        disabled={this.state.flow_id}
+                        onClick={this.deleteClients}>
+                  {this.state.flow_id && <FontAwesomeIcon icon="spinner" spin/>}
+                  Yeah do it!
+                </Button>
+              </Modal.Footer>
+            </Modal>
+
+        );
+    }
+}
+
+
 const pageListRenderer = ({
     pages,
     currentPage,
@@ -195,6 +301,7 @@ class VeloClientList extends Component {
         selected: [],
         loading: false,
         showLabelDialog: false,
+        showDeleteDialog: false,
         focusedClient: null,
 
         start_row: 0,
@@ -359,11 +466,20 @@ class VeloClientList extends Component {
             onSelectAll: this.handleOnSelectAll
         };
 
+        let affected_clients = this.getAffectedClients();
+
         return (
             <>
+              { this.state.showDeleteDialog &&
+                <DeleteClients
+                  affectedClients={affected_clients}
+                  onResolve={() => {
+                      this.setState({showDeleteDialog: false});
+                      this.searchClients();
+                  }}/>}
               { this.state.showLabelDialog &&
                 <LabelClients
-                  affectedClients={this.getAffectedClients()}
+                  affectedClients={affected_clients}
                   onResolve={() => {
                       this.setState({showLabelDialog: false});
                       this.searchClients();
@@ -377,6 +493,13 @@ class VeloClientList extends Component {
                           variant="default">
                     <FontAwesomeIcon icon="tags"/>
                   </Button>
+                  <Button title="Delete Clients"
+                          disabled={_.isEmpty(this.state.selected)}
+                          onClick={() => this.setState({showDeleteDialog: true})}
+                          variant="default">
+                    <FontAwesomeIcon icon="trash"/>
+                  </Button>
+
                 </ButtonGroup>
               </Navbar>
               <div className="fill-parent no-margins toolbar-margin selectable">
