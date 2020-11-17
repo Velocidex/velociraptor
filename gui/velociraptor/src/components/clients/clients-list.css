@@ -3,3 +3,8 @@
   margin-top: 5px;
   margin-bottom: 5px;
 }
+
+.deleted-client-list {
+    overflow-y: auto;
+    max-height: 400px;
+}
