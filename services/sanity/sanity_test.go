@@ -49,7 +49,7 @@ func (self *ServicesTestSuite) SetupTest() {
 	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
 
 	manager, _ := services.GetRepositoryManager()
-	manager.SetGlobalRepositoryForTests(manager.NewRepository())
+	manager.SetGlobalRepositoryForTests(self.config_obj, manager.NewRepository())
 }
 
 func (self *ServicesTestSuite) TearDownTest() {
@@ -80,6 +80,8 @@ tools:
 	// Admin forces Tool1 to non-default
 	inventory := services.GetInventory().(*inventory.InventoryService)
 	inventory.Clock = utils.MockClock{MockNow: time.Unix(100, 0)}
+	inventory.ClearForTests()
+
 	tool_definition := &artifacts_proto.Tool{
 		Name: "Tool1",
 		Url:  "https://www.company.com",

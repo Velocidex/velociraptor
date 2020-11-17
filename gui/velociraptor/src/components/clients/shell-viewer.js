@@ -376,8 +376,9 @@ class ShellViewer extends Component {
                   </InputGroup.Append>
                 </InputGroup>
               </div>
-
-              { this.renderCells(this.state.flows) }
+              <div className="shell-results">
+                { this.renderCells(this.state.flows) }
+              </div>
             </>
         );
     };

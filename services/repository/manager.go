@@ -36,9 +36,16 @@ func (self *RepositoryManager) GetGlobalRepository(
 	return self.global_repository, nil
 }
 
-func (self *RepositoryManager) SetGlobalRepositoryForTests(repository services.Repository) {
+func (self *RepositoryManager) SetGlobalRepositoryForTests(
+	config_obj *config_proto.Config, repository services.Repository) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	// Wait until the compile cycle is finished so we can remove
+	// the current repository.
+	for _, name := range self.global_repository.List() {
+		_, _ = self.global_repository.Get(config_obj, name)
+	}
 
 	self.global_repository = repository.(*Repository)
 }
