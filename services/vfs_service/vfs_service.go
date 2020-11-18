@@ -78,6 +78,8 @@ func (self *VFSService) ProcessDownloadFile(
 	for row := range row_chan {
 		Accessor, _ := row.GetString("Accessor")
 		Path, _ := row.GetString("Path")
+		MD5, _ := row.GetString("Md5")
+		SHA256, _ := row.GetString("Sha256")
 
 		// Figure out where the file was uploaded to.
 		vfs_path_manager := flow_path_manager.GetUploadsFile(Accessor, Path)
@@ -104,6 +106,8 @@ func (self *VFSService) ProcessDownloadFile(
 				Mtime:   uint64(ts) * 1000000,
 				Sparse:  err == nil, // If index file exists we have an index.
 				Size:    vql_subsystem.GetIntFromRow(scope, row, "Size"),
+				MD5:     MD5,
+				SHA256:  SHA256,
 			})
 		if err != nil {
 			logger.Error(

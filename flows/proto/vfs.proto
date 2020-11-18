@@ -12,6 +12,8 @@ message VFSDownloadInfo {
     uint64 size = 2;
     uint64 mtime = 3;
     bool sparse = 4;
+    string MD5 = 5;
+    string SHA256 = 6;
 }
 
 message VFSListResponse {
