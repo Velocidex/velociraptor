@@ -177,7 +177,7 @@ class VeloPagedTable extends Component {
 
                 // If all the columns are hidden, then just show them
                 // all beause we need to show something.
-                if (hidden == columns.length) {
+                if (hidden === columns.length) {
                     toggles = {};
                 }
 
