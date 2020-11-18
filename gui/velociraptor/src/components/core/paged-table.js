@@ -165,21 +165,27 @@ class VeloPagedTable extends Component {
         this.setState({loading: true});
         api.get(url, params).then((response) => {
             let pageData = PrepareData(response.data);
-
+            let toggles = {};
             let columns = pageData.columns;
             if (_.isUndefined(this.state.toggles) && !_.isUndefined(columns)) {
-                let toggles = {};
-
+                let hidden = 0;
                 // Hide columns that start with _
                 _.each(columns, c=>{
                     toggles[c] = c[0] === '_';
+                    hidden++;
                 });
-                this.setState({toggles: toggles});
-            }
 
+                // If all the columns are hidden, then just show them
+                // all beause we need to show something.
+                if (hidden == columns.length) {
+                    toggles = {};
+                }
+
+            }
             this.setState({loading: false,
                            total_size: parseInt(response.data.total_rows || 0),
                            rows: pageData.rows,
+                           toggles: toggles,
                            column_types: response.data.column_types,
                            columns: columns });
         }).catch(() => {

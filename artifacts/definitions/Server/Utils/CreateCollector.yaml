@@ -119,7 +119,9 @@ parameters:
     type: hidden
     default: |
       // A utility function to upload the file.
-      LET upload_file(filename, name) = upload_s3(file=filename,
+      LET upload_file(filename, name, accessor) = upload_s3(
+          file=filename,
+          accessor=accessor,
           bucket=TargetArgs.bucket,
           name=name,
           credentialskey=TargetArgs.credentialsKey,
@@ -132,7 +134,9 @@ parameters:
     type: hidden
     default: |
       // A utility function to upload the file.
-      LET upload_file(filename, name) = upload_gcs(file=filename,
+      LET upload_file(filename, name, accessor) = upload_gcs(
+          file=filename,
+          accessor=accessor,
           bucket=TargetArgs.bucket,
           project=GCSBlob.project_id,
           name=name,
@@ -161,16 +165,24 @@ parameters:
       // upload at all - we do this to avoid having to collect all the
       // data and then failing the upload step.
       LET _ <= log(message="Uploading to " + filename + ".log")
-      LET upload_test <= upload_file(filename=baseline[0].Exe + ".log",
+      LET upload_test <= upload_file(
+          filename="Test upload from " + baseline[0].Exe,
+          accessor="data",
           name=filename + ".log")
 
       LET _ <= log(message="Will collect package " + filename +
          " and upload to cloud bucket " + TargetArgs.bucket)
 
       LET collect_and_upload = SELECT
-          upload_file(filename=Container, name=filename+".zip") AS Upload,
-          upload_file(filename=Report, name=filename+".html") AS ReportUpload,
-          upload_file(filename=baseline[0].Exe + ".log", name=filename+".log") AS LogUpload
+          upload_file(filename=Container,
+                      name=filename+".zip",
+                      accessor="file") AS Upload,
+          upload_file(filename=Report,
+                      name=filename+".html",
+                      accessor="file") AS ReportUpload,
+          upload_file(filename=baseline[0].Exe + ".log",
+                      name=filename+".log",
+                      accessor="file") AS LogUpload
       FROM collect(artifacts=Artifacts,
           report=tempfile(extension=".html"),
           args=Parameters,

@@ -33,6 +33,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -97,6 +98,8 @@ func doRepack() {
 	err = validate_config(config_obj)
 	kingpin.FatalIfError(err, "Validating config.")
 
+	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
+
 	config_fd, err := os.Open(*repack_command_config)
 	kingpin.FatalIfError(err, "Unable to open config file")
 
@@ -138,6 +141,8 @@ func doRepack() {
 	data, err := ioutil.ReadAll(fd)
 	kingpin.FatalIfError(err, "Unable to read executable")
 
+	logger.Info("Read complete binary at %v bytes\n", len(data))
+
 	if *repack_command_append != nil {
 		// A PE file - adjust the size of the .rsrc section to
 		// cover the entire binary.
@@ -175,12 +180,15 @@ func doRepack() {
 
 	end := match[1]
 
+	logger.Info("Write %v\n", len(data[:end]))
 	_, err = outfd.Write(data[:end])
 	kingpin.FatalIfError(err, "Writing")
 
+	logger.Info("Write %v\n", len(config_data))
 	_, err = outfd.Write(config_data)
 	kingpin.FatalIfError(err, "Writing")
 
+	logger.Info("Write %v\n", len(data[end+len(config_data):]))
 	_, err = outfd.Write(data[end+len(config_data):])
 	kingpin.FatalIfError(err, "Writing")
 
