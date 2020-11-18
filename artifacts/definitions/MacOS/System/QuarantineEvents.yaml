@@ -4,7 +4,7 @@ on when a file was downloaded from the internet."
 
 type: CLIENT
 
-author: Wes Lambert - @weslambert
+author: Wes Lambert - @therealwlambert
 
 parameters:
 - name: QuarantineGlob

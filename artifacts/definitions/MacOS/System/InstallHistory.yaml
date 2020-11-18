@@ -4,7 +4,7 @@ description: |
 
 type: CLIENT
 
-author: Wes Lambert - @weslambert
+author: Wes Lambert - @therealwlambert
 
 precondition: SELECT OS FROM info() WHERE OS =~ 'darwin'
 
