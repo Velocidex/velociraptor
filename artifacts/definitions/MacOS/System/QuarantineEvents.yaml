@@ -32,4 +32,4 @@ sources:
                  FROM scope()
               }
           )
-     - SELECT *, FROM foreach(row=QList, query=QEventsDetails)
+     - SELECT * FROM foreach(row=QList, query=QEventsDetails)
