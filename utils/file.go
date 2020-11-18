@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	errors "github.com/pkg/errors"
 )
@@ -105,6 +106,7 @@ func copyFileContents(ctx context.Context,
 
 type DataReadSeekCloser struct {
 	io.ReadSeeker
+	Data string
 }
 
 func (self DataReadSeekCloser) Close() error {
@@ -112,5 +114,64 @@ func (self DataReadSeekCloser) Close() error {
 }
 
 func (self DataReadSeekCloser) Stat() (os.FileInfo, error) {
-	return nil, errors.New("Not implemented")
+	return &DataFileInfo{[]byte(self.Data)}, nil
+}
+
+func NewDataFileInfo(data string) *DataFileInfo {
+	return &DataFileInfo{[]byte(data)}
+}
+
+type DataFileInfo struct {
+	data []byte
+}
+
+func (self *DataFileInfo) IsDir() bool {
+	return false
+}
+
+func (self *DataFileInfo) Size() int64 {
+	return int64(len(self.data))
+}
+
+func (self *DataFileInfo) Data() interface{} {
+	return nil
+}
+
+func (self *DataFileInfo) Name() string {
+	return string(self.data)
+}
+
+func (self *DataFileInfo) Sys() interface{} {
+	return nil
+}
+
+func (self *DataFileInfo) Mode() os.FileMode {
+	return 0755
+}
+
+func (self *DataFileInfo) ModTime() time.Time {
+	return time.Time{}
+}
+
+func (self *DataFileInfo) FullPath() string {
+	return string(self.data)
+}
+func (self *DataFileInfo) Mtime() TimeVal {
+	return TimeVal{}
+}
+
+func (self *DataFileInfo) Ctime() TimeVal {
+	return self.Mtime()
+}
+
+func (self *DataFileInfo) Atime() TimeVal {
+	return self.Mtime()
+}
+
+func (self *DataFileInfo) IsLink() bool {
+	return false
+}
+
+func (self *DataFileInfo) GetLink() (string, error) {
+	return "", errors.New("Not implemented")
 }
