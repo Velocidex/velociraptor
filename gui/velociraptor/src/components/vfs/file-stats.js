@@ -188,6 +188,16 @@ class VeloFileStats extends Component {
                     <div className="row">
                       <dt>Sparse</dt>
                     </div> }
+                  { selectedRow.Download && selectedRow.Download.SHA256 &&
+                    <div className="row">
+                      <dt className="col-4">SHA256</dt>
+                      <dd className="col-8">{selectedRow.Download.SHA256}</dd>
+                    </div>}
+                  { selectedRow.Download && selectedRow.Download.MD5 &&
+                    <div className="row">
+                      <dt className="col-4">MD5</dt>
+                      <dd className="col-8">{selectedRow.Download.MD5}</dd>
+                    </div>}
                 </Card.Body>
               </Card>
             </CardDeck>

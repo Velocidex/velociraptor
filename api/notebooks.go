@@ -195,10 +195,14 @@ func (self *ApiServer) NewNotebook(
 		CurrentlyEditing: true,
 	}
 
-	// Add the new notebook to the index so it can be seen.
-	err = reporting.UpdateShareIndex(self.config, in)
-	if err != nil {
-		return nil, err
+	// Add the new notebook to the index so it can be seen. Only
+	// non-hunt notebooks are searchable in the index since the
+	// hunt notebooks are always found in the hunt results.
+	if !strings.HasPrefix(in.NotebookId, "N.H.") {
+		err = reporting.UpdateShareIndex(self.config, in)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	_, err = self.UpdateNotebookCell(ctx, new_cell_request)
@@ -974,13 +978,14 @@ func setCell(
 }
 
 type progressReporter struct {
-	config_obj    *config_proto.Config
-	notebook_cell *api_proto.NotebookCell
-	notebook_id   string
-	last, start   time.Time
+	config_obj            *config_proto.Config
+	notebook_cell         *api_proto.NotebookCell
+	notebook_id, table_id string
+	last, start           time.Time
 }
 
 func (self *progressReporter) Report(message string) {
+	fmt.Printf("Message %v\n", message)
 	now := time.Now()
 	if now.Before(self.last.Add(4 * time.Second)) {
 		return
@@ -988,10 +993,17 @@ func (self *progressReporter) Report(message string) {
 
 	self.last = now
 	notebook_cell := proto.Clone(self.notebook_cell).(*api_proto.NotebookCell)
-	notebook_cell.Output = fmt.Sprintf(
-		`<div class="padded"><i class="fa fa-spinner fa-spin fa-fw"></i>`+
-			`Calculating...  (%v after %v)</div>`,
-		message, time.Since(self.start).Round(time.Second))
+	notebook_cell.Output = fmt.Sprintf(`
+<div class="padded"><i class="fa fa-spinner fa-spin fa-fw"></i>
+   Calculating...  (%v after %v)
+</div>
+<div class="panel">
+   <grr-csv-viewer base-url="'v1/GetTable'"
+                   params='{"notebook_id":"%s","cell_id":"%s","table_id":1,"message": "%s"}' />
+</div>
+`,
+		message, time.Since(self.start).Round(time.Second),
+		self.notebook_id, self.notebook_cell.CellId, message)
 	notebook_cell.Timestamp = now.Unix()
 
 	// Cant do anything if we can not set the notebook times

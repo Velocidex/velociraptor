@@ -113,9 +113,11 @@ func (self *SanityChecks) Check(
 	}
 
 	for _, notebook := range notebooks {
-		err = reporting.UpdateShareIndex(config_obj, notebook)
-		if err != nil {
-			return err
+		if !strings.HasPrefix(notebook.NotebookId, "N.H.") {
+			err = reporting.UpdateShareIndex(config_obj, notebook)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

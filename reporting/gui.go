@@ -408,8 +408,6 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 
 			result = append(result, path_manager)
 
-			// Write the query in the background so we can
-			// return the table immediately
 			func(vql *vfilter.VQL, path_manager api.PathManager) {
 				file_store_factory := file_store.GetFileStore(self.config_obj)
 
@@ -422,13 +420,17 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 				defer rs_writer.Close()
 
 				row_idx := 0
+				next_progress := time.Now().Add(4 * time.Second)
 				for row := range vql.Eval(self.ctx, self.Scope) {
 					row_idx++
 					rs_writer.Write(vfilter.RowToDict(self.ctx, self.Scope, row))
 
-					if row_idx%100 == 0 && self.Progress != nil {
+					if self.Progress != nil && (row_idx%100 == 0 ||
+						time.Now().After(next_progress)) {
+						rs_writer.Flush()
 						self.Progress.Report(fmt.Sprintf(
 							"Total Rows %v", row_idx))
+						next_progress = time.Now().Add(4 * time.Second)
 					}
 				}
 			}(vql, path_manager)

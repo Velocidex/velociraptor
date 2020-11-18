@@ -27,6 +27,7 @@ export default class NotebookReportRenderer extends React.Component {
                         />
                     );
                 };
+                return domNode;
             }
         });
         return (
