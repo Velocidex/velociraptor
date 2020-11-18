@@ -1,21 +1,112 @@
 name: Windows.NTFS.MFT
 description: |
-  This artifact scans the $MFT file on the host showing all files
-  within the MFT.  This is useful in order to try and recover deleted
-  files. Take the MFT ID of a file of interest and provide it to the
-  Windows.NTFS.Recover artifact.
+  This artifact parses $MFT files and returns rows of each in scope  MFT record. 
+  This artifact can be used as the basis for other artifacts where the MFT needs 
+  to be queried or for deleted file recovery.
+  
+  For deleted file recovery: Take the MFT ID of a file of interest and provide 
+  it to the Windows.NTFS.Recover artifact.  
+  
+  To query all attached ntfs drives: check the AllDrives switch.  
+
+  I have added several filters to uplift search capabilities from the original 
+  MFT artifact. Due to the multi-drive features, the MFTPath will output the MFT 
+  path of the entry.  
+
+  Available filters include:  
+  - FullPath regex  
+  - FileName regex  
+  - Time bounds to select files with a timestamp within time ranges   
+  - FileSize bounds 
+
+author: "Matt Green - @mgreen27"
 
 parameters:
   - name: MFTFilename
     default: "C:/$MFT"
-
   - name: Accessor
     default: ntfs
+  - name: PathRegex
+    description: "Regex search over FullPath."
+    default: "."
+  - name: FileRegex
+    description: "Regex search over File Name"
+    default: "."
+  - name: DateAfter
+    type: timestamp
+    description: "search for events after this date. YYYY-MM-DDTmm:hh:ssZ"
+  - name: DateBefore
+    type: timestamp
+    description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
+  - name: SizeMax
+    type: int64
+    description: "Entries in the MFT over this size in bytes."
+  - name: SizeMin
+    type: int64
+    description: "Entries in the MFT under this size in bytes."
+  - name: AllDrives
+    type: bool
+    description: "Select MFT search on all attached ntfs drives."
 
-  - name: FilenameRegex
-    default: .
 
 sources:
-  - queries:
-      - SELECT * FROM parse_mft(filename=MFTFilename, accessor=Accessor)
-        WHERE FileName =~ FilenameRegex
+  - query: |
+      -- firstly set timebounds for performance
+      LET DateAfterTime <= if(condition=DateAfter, 
+            then=DateAfter, else="1600-01-01")
+      LET DateBeforeTime <= if(condition=DateBefore, 
+            then=DateBefore, else="2200-01-01")
+
+
+      -- find all ntfs drives
+      LET ntfs_drives = SELECT FullPath + '/$MFT'as Path
+        FROM glob(globs="/*", accessor="ntfs")
+
+
+      -- function returning MFT entries
+      LET mftsearch(MFTPath) = SELECT EntryNumber,InUse,ParentEntryNumber,
+            MFTPath,FullPath,FileName,FileSize,ReferenceCount,IsDir,
+            Created0x10,Created0x30,LastModified0x10,LastModified0x30,
+            LastRecordChange0x10,LastRecordChange0x30,LastAccess0x10,LastAccess0x30
+        FROM parse_mft(filename=MFTPath, accessor=Accessor)
+        WHERE FullPath =~ PathRegex
+            AND FileName =~ FileRegex
+            AND Created0x10 < DateBeforeTime 
+            AND Created0x10 > DateAfterTime 
+            AND Created0x30 < DateBeforeTime 
+            AND Created0x30 > DateAfterTime 
+            AND LastModified0x10 < DateBeforeTime  
+            AND LastModified0x10 > DateAfterTime 
+            AND LastModified0x30 < DateBeforeTime  
+            AND LastModified0x30 > DateAfterTime 
+            AND LastRecordChange0x10 < DateBeforeTime  
+            AND LastRecordChange0x10 > DateAfterTime 
+            AND LastRecordChange0x30 < DateBeforeTime  
+            AND LastRecordChange0x30 > DateAfterTime 
+            AND LastAccess0x10 < DateBeforeTime  
+            AND LastAccess0x10 > DateAfterTime 
+            AND LastAccess0x30 < DateBeforeTime  
+            AND LastAccess0x30 > DateAfterTime
+            AND if(condition=SizeMax, 
+                then=FileSize < atoi(string=SizeMax),
+                else=TRUE)
+            AND if(condition=SizeMin, 
+                then=FileSize > atoi(string=SizeMin),
+                else=TRUE)
+      
+      
+      -- include all attached drives
+      LET all_drives = SELECT * FROM foreach(row=ntfs_drives, 
+            query={
+                SELECT *
+                FROM mftsearch(MFTPath=Path)
+                WHERE log(message="Processing " + Path)
+              })
+
+
+      -- return rows
+      SELECT * FROM if(condition=AllDrives, 
+        then= all_drives,
+        else= mftsearch(MFTPath=MFTFilename)
+        )
+            
