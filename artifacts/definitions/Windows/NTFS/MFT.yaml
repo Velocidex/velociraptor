@@ -40,10 +40,10 @@ parameters:
     description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
   - name: SizeMax
     type: int64
-    description: "Entries in the MFT over this size in bytes."
+    description: "Entries in the MFT under this size in bytes."
   - name: SizeMin
     type: int64
-    description: "Entries in the MFT under this size in bytes."
+    description: "Entries in the MFT over this size in bytes."
   - name: AllDrives
     type: bool
     description: "Select MFT search on all attached ntfs drives."
