@@ -2,6 +2,8 @@ name: MacOS.Detection.InstallHistory
 description: |
   This artifact collects entries from the InstallHistory .plist file
 
+type: CLIENT
+
 author: Wes Lambert - @weslambert
 
 precondition: SELECT OS FROM info() WHERE OS =~ 'darwin'

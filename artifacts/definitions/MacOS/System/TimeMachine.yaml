@@ -2,6 +2,8 @@ name: MacOS.System.TimeMachine
 description: |
   This artifact collects information about MacOS Time Machine backups.
 
+type: CLIENT
+
 author: Wes Lambert - @weslambert
 
 parameters:

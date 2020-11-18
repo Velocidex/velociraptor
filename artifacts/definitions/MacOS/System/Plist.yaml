@@ -5,6 +5,8 @@ description: |
   returned for quick review.  If more advanced parsing is desired, the artifact can be copied
   and modified.
 
+type: CLIENT
+
 author: Wes Lambert - @therealwlambert
 
 precondition: SELECT OS FROM info() WHERE OS =~ 'darwin'
