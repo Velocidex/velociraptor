@@ -256,15 +256,27 @@ func (self *FileBaseDataStore) ListChildren(
 	config_obj *config_proto.Config,
 	urn string,
 	offset uint64, length uint64) ([]string, error) {
-	children, err := listChildren(config_obj, urn)
+	all_children, err := listChildren(config_obj, urn)
 	if err != nil {
 		return nil, err
 	}
 
+	// In the same directory we may have files and directories -
+	// in here we only care about the files which have a .db
+	// extension so filter the directory listing.
+	children := make([]os.FileInfo, 0, len(all_children))
+	for _, child := range all_children {
+		if strings.HasSuffix(child.Name(), ".db") {
+			children = append(children, child)
+		}
+	}
+
+	// Sort entries by modified time.
 	sort.Slice(children, func(i, j int) bool {
 		return children[i].ModTime().UnixNano() < children[j].ModTime().UnixNano()
 	})
 
+	// Slice the result according to the required offset and count.
 	result := make([]string, 0, len(children))
 	urn = strings.TrimSuffix(urn, "/")
 	for i := offset; i < offset+length; i++ {
@@ -273,12 +285,10 @@ func (self *FileBaseDataStore) ListChildren(
 		}
 
 		name := UnsanitizeComponent(children[i].Name())
-		if !strings.HasSuffix(name, ".db") {
-			continue
-		}
 		name = strings.TrimSuffix(name, ".db")
 		result = append(result, utils.PathJoin(urn, name, "/"))
 	}
+
 	return result, nil
 }
 

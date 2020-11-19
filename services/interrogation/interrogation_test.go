@@ -174,7 +174,8 @@ func (self *ServicesTestSuite) TestEnrollService() {
 		self.config_obj, flow_path_manager.ContainerPath(), 0, 100)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), children,
-		[]string{client_info.LastInterrogateFlowId})
+		[]string{flow_path_manager.ContainerPath() +
+			"/" + client_info.LastInterrogateFlowId})
 }
 
 func TestInterrogationService(t *testing.T) {

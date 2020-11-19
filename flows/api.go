@@ -38,9 +38,15 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
+var (
+	get_flows_sub_query_count = 1000
+)
+
+// Filter will be applied on flows to remove those we dont care about.
 func GetFlows(
 	config_obj *config_proto.Config,
 	client_id string, include_archived bool,
+	flow_filter func(flow *flows_proto.ArtifactCollectorContext) bool,
 	offset uint64, length uint64) (*api_proto.ApiFlowResponse, error) {
 
 	result := &api_proto.ApiFlowResponse{}
@@ -49,41 +55,84 @@ func GetFlows(
 		return nil, err
 	}
 
-	flow_path_manager := paths.NewFlowPathManager(client_id, "")
-	flow_urns, err := db.ListChildren(config_obj, flow_path_manager.ContainerPath(),
-		offset, length)
-	if err != nil {
-		return nil, err
-	}
-
-	// Flow IDs represent timestamp so they are sortable. The UI
-	// relies on more recent flows being at the top.
-	sort.Slice(flow_urns, func(i, j int) bool {
-		return flow_urns[i] > flow_urns[j]
-	})
-
-	for _, urn := range flow_urns {
-		// Hide the monitoring flow since it is not a real flow.
-		if strings.HasSuffix(urn, constants.MONITORING_WELL_KNOWN_FLOW) {
-			continue
-		}
-
-		collection_context := &flows_proto.ArtifactCollectorContext{}
-		err := db.GetSubject(config_obj, urn, collection_context)
+	// Call db.ListChildren() repeatadly until we satify our
+	// required set.
+	db_count := uint64(get_flows_sub_query_count)
+	row_count := uint64(0)
+	for db_offset := uint64(0); ; db_offset += db_count {
+		flow_path_manager := paths.NewFlowPathManager(client_id, "")
+		flow_urns, err := db.ListChildren(config_obj, flow_path_manager.ContainerPath(),
+			db_offset, db_count)
 		if err != nil {
-			logging.GetLogger(
-				config_obj, &logging.FrontendComponent).
-				Error("Unable to open collection: %v", err)
-			continue
+			return nil, err
 		}
 
-		if !include_archived &&
-			collection_context.State ==
-				flows_proto.ArtifactCollectorContext_ARCHIVED {
-			continue
+		// No flows were returned.
+		if len(flow_urns) == 0 {
+			return result, nil
 		}
 
-		result.Items = append(result.Items, collection_context)
+		// Flow IDs represent timestamp so they are sortable. The UI
+		// relies on more recent flows being at the top.
+		sort.Slice(flow_urns, func(i, j int) bool {
+			return flow_urns[i] > flow_urns[j]
+		})
+
+		// Collect the items that match from this backend read
+		// into an array
+		items := []*flows_proto.ArtifactCollectorContext{}
+
+		for _, urn := range flow_urns {
+			// Hide the monitoring flow since it is not a real flow.
+			if strings.HasSuffix(urn, constants.MONITORING_WELL_KNOWN_FLOW) {
+				continue
+			}
+
+			collection_context := &flows_proto.ArtifactCollectorContext{}
+			err := db.GetSubject(config_obj, urn, collection_context)
+			if err != nil {
+				logging.GetLogger(
+					config_obj, &logging.FrontendComponent).
+					Error("Unable to open collection: %v", err)
+				continue
+			}
+
+			if !include_archived &&
+				collection_context.State ==
+					flows_proto.ArtifactCollectorContext_ARCHIVED {
+				continue
+			}
+
+			if !flow_filter(collection_context) {
+				continue
+			}
+
+			// This is a valid row - count it and maybe
+			// include in the result set.
+			row_count++
+			if row_count <= offset {
+				continue
+			}
+
+			items = append(items, collection_context)
+
+			// We have enough items - just return it
+			if uint64(len(items)+len(result.Items)) >= length {
+				break
+			}
+		}
+
+		// Prepend the items: Since backend reads are returned
+		// in increasing order the next read will come before
+		// the previous backend read. Note this is still not
+		// correct as paging will break it.
+		result.Items = append(items, result.Items...)
+
+		// The ListChildren returned less than the full set,
+		// so there are no more results.
+		if uint64(len(flow_urns)) < db_count {
+			break
+		}
 	}
 	return result, nil
 }

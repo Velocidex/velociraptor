@@ -21,6 +21,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"regexp"
 	"strings"
 	"time"
 
@@ -35,6 +36,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -246,6 +248,30 @@ func (self *ApiServer) GetClientFlows(
 			"User is not allowed to view flows.")
 	}
 
+	filter := func(flow *flows_proto.ArtifactCollectorContext) bool {
+		return true
+	}
+
+	if in.Artifact != "" {
+		regex, err := regexp.Compile(in.Artifact)
+		if err != nil {
+			return nil, err
+		}
+
+		filter = func(flow *flows_proto.ArtifactCollectorContext) bool {
+			if flow.Request == nil {
+				return false
+			}
+
+			for _, name := range flow.Request.Artifacts {
+				if regex.MatchString(name) {
+					return true
+				}
+			}
+			return false
+		}
+	}
+
 	return flows.GetFlows(self.config, in.ClientId,
-		in.IncludeArchived, in.Offset, in.Count)
+		in.IncludeArchived, filter, in.Offset, in.Count)
 }

@@ -158,7 +158,22 @@ func (self *TestDataStore) ListChildren(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.listChildren(config_obj, urn, offset, length)
+	result := []string{}
+	names, err := self.listChildren(config_obj, urn, offset, length)
+	if err != nil {
+		return nil, err
+	}
+	for _, name := range names {
+		result = append(result, urn+"/"+name)
+	}
+	end := offset + length
+	if end > uint64(len(result)) {
+		end = uint64(len(result))
+	}
+
+	sort.Strings(result)
+
+	return result[offset:end], nil
 }
 
 func (self *TestDataStore) listChildren(
