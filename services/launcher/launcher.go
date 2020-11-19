@@ -136,7 +136,12 @@ func AddToolDependency(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	tool string, vql_collector_args *actions_proto.VQLCollectorArgs) error {
-	tool_info, err := services.GetInventory().GetToolInfo(ctx, config_obj, tool)
+	inventory := services.GetInventory()
+	if inventory == nil {
+		return errors.New("Inventory server not configured")
+	}
+
+	tool_info, err := inventory.GetToolInfo(ctx, config_obj, tool)
 	if err != nil {
 		return err
 	}

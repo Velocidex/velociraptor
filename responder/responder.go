@@ -70,7 +70,9 @@ func (self *Responder) AddResponse(message *crypto_proto.GrrMessage) {
 	message.TaskId = self.request.TaskId
 
 	if self.output != nil {
-		self.output <- message
+		select {
+		case self.output <- message:
+		}
 	}
 }
 

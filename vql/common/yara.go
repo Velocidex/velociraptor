@@ -418,7 +418,7 @@ func (self YaraProcPlugin) Info(
 	return &vfilter.PluginInfo{
 		Name:    "proc_yara",
 		Doc:     "Scan processes using yara rules.",
-		ArgType: type_map.AddType(scope, &YaraScanPluginArgs{}),
+		ArgType: type_map.AddType(scope, &YaraProcPluginArgs{}),
 	}
 }
 

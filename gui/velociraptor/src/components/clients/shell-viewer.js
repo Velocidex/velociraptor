@@ -278,7 +278,9 @@ class ShellViewer extends Component {
         }
 
         api.get('v1/GetClientFlows/'+ this.props.client.client_id, {
-            count: 100, offset: 0},
+            count: 100, offset: 0,
+            artifact: "(Windows.System.PowerShell|Windows.System.CmdShell|Linux.Sys.BashShell)"
+        },
                 this.source.token // CancelToken
                ).then(
                    function(response) {

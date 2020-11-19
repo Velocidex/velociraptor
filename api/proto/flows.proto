@@ -46,6 +46,9 @@ message ApiFlowRequest {
     uint64 offset = 3;
     uint64 count = 4;
     bool include_archived = 5;
+
+    // If specified we only return flows that collected this artifact.
+    string artifact = 6;
 }
 
 message ApiFlowResponse {

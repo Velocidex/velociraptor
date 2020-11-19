@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -79,6 +80,111 @@ func (self *TestSuite) TearDownTest() {
 	self.sm.Close()
 	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
 	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+}
+
+func (self *TestSuite) TestGetFlow() {
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(
+		self.config_obj)
+	assert.NoError(self.T(), err)
+
+	request1 := &flows_proto.ArtifactCollectorArgs{
+		ClientId:  self.client_id,
+		Artifacts: []string{"Generic.Client.Info"},
+	}
+
+	request2 := &flows_proto.ArtifactCollectorArgs{
+		ClientId:  self.client_id,
+		Artifacts: []string{"Generic.Client.Profile"},
+	}
+
+	// Schedule a new flow.
+	ctx := context.Background()
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	flow_ids := []string{}
+
+	// Create 40 flows with 2 types.
+	for i := 0; i < 20; i++ {
+		flow_id, err := launcher.ScheduleArtifactCollection(
+			ctx, self.config_obj,
+			vql_subsystem.NullACLManager{},
+			repository, request1)
+		assert.NoError(self.T(), err)
+
+		flow_ids = append(flow_ids, flow_id)
+
+		flow_id, err = launcher.ScheduleArtifactCollection(
+			ctx, self.config_obj,
+			vql_subsystem.NullACLManager{},
+			repository, request2)
+		assert.NoError(self.T(), err)
+
+		flow_ids = append(flow_ids, flow_id)
+	}
+
+	// Get all the responses - ask for 100 results if available
+	// but only 40 are there.
+	api_response, err := GetFlows(self.config_obj,
+		self.client_id, true,
+		func(flow *flows_proto.ArtifactCollectorContext) bool {
+			return true
+		}, 0, 100)
+	assert.NoError(self.T(), err)
+
+	// There should be 40 flows (2 sets of each)
+	assert.Equal(self.T(), 40, len(api_response.Items))
+
+	// Now only get Generic.Client.Info flows by applying a filter.
+	api_response, err = GetFlows(self.config_obj,
+		self.client_id, true,
+		func(flow *flows_proto.ArtifactCollectorContext) bool {
+			return flow.Request.Artifacts[0] == "Generic.Client.Info"
+		}, 0, 100)
+	assert.NoError(self.T(), err)
+
+	// There should be 20 flows of type Generic.Client.Info
+	assert.Equal(self.T(), 20, len(api_response.Items))
+	for _, item := range api_response.Items {
+		assert.Equal(self.T(), "Generic.Client.Info", item.Request.Artifacts[0])
+	}
+
+	// Page the response now - only ask for first 10 flows.
+	api_response_subset, err := GetFlows(self.config_obj,
+		self.client_id, true,
+		func(flow *flows_proto.ArtifactCollectorContext) bool {
+			return flow.Request.Artifacts[0] == "Generic.Client.Info"
+		}, 0, 10)
+	assert.NoError(self.T(), err)
+
+	// These should be the same order as the entire result
+	assert.Equal(self.T(), api_response.Items[:10], api_response_subset.Items)
+
+	// Next page
+	api_response_subset, err = GetFlows(self.config_obj,
+		self.client_id, true,
+		func(flow *flows_proto.ArtifactCollectorContext) bool {
+			return flow.Request.Artifacts[0] == "Generic.Client.Info"
+		}, 10, 10)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), api_response.Items[10:20], api_response_subset.Items)
+
+	// Now test GetFlows's ability to stitch results from multiple
+	// calls to datastore ListChildren(). Set
+	// get_flows_sub_query_count to a small value.
+	get_flows_sub_query_count = 5
+
+	api_response_small_backend, err := GetFlows(self.config_obj,
+		self.client_id, true,
+		func(flow *flows_proto.ArtifactCollectorContext) bool {
+			return flow.Request.Artifacts[0] == "Generic.Client.Info"
+		}, 0, 100)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), json.StringIndent(api_response.Items),
+		json.StringIndent(api_response_small_backend.Items))
 }
 
 func (self *TestSuite) TestRetransmission() {
