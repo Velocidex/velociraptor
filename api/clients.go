@@ -40,7 +40,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func GetHostname(config_obj *config_proto.Config, client_id string) string {
@@ -248,8 +247,6 @@ func (self *ApiServer) GetClientFlows(
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view flows.")
 	}
-
-	utils.Debug(in)
 
 	filter := func(flow *flows_proto.ArtifactCollectorContext) bool {
 		return true

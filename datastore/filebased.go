@@ -261,7 +261,7 @@ func (self *FileBaseDataStore) ListChildren(
 		return nil, err
 	}
 
-	// In the same directory we make have files and directories -
+	// In the same directory we may have files and directories -
 	// in here we only care about the files which have a .db
 	// extension so filter the directory listing.
 	children := make([]os.FileInfo, 0, len(all_children))
