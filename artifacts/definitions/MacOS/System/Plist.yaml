@@ -1,0 +1,37 @@
+name: MacOS.System.Plist
+description: |
+  This artifact collects and/or parses MacOS .plist files.  While simple,
+  this artifact allows users to specify a .plist glob, and have those plist files
+  returned for quick review.  If more advanced parsing is desired, the artifact can be copied
+  and modified.
+
+type: CLIENT
+
+author: Wes Lambert - @therealwlambert
+
+precondition: SELECT OS FROM info() WHERE OS =~ 'darwin'
+
+parameters:
+  - name: PlistGlob
+    default: /Library/Preferences/*.plist
+  
+  - name: Upload_File
+    default: N
+    type: bool
+
+sources:
+  - queries:
+      - LET Plists = SELECT FullPath FROM glob(globs=PlistGlob)
+      - LET PlistDetails = 
+            SELECT * FROM foreach(
+                row=plist(file=FullPath),
+                query={ SELECT
+                    FullPath AS FullPath,
+                    timestamp(epoch=Mtime.Sec) AS Mtime,
+                    plist(file=FullPath) AS Content,
+                    if(condition=(Upload_File = "Y"),
+                      then=upload(file=FullPath)) AS Upload
+                    FROM scope()
+                }
+            )
+      - SELECT * FROM foreach(row=Plists, query=PlistDetails)
