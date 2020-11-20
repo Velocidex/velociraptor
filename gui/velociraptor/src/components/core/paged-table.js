@@ -96,7 +96,7 @@ class VeloPagedTable extends Component {
         columns: [],
 
         download: false,
-        toggles: undefined,
+        toggles: {},
         start_row: 0,
         page_size: 10,
 
@@ -113,7 +113,7 @@ class VeloPagedTable extends Component {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (!_.isEqual(prevProps.params, this.props.params)) {
-            this.setState({start_row: 0});
+            this.setState({start_row: 0, toggles: {}, columns: []});
         };
 
         if (!_.isEqual(prevProps.params, this.props.params) ||
@@ -167,7 +167,7 @@ class VeloPagedTable extends Component {
             let pageData = PrepareData(response.data);
             let toggles = Object.assign({}, this.state.toggles);
             let columns = pageData.columns;
-            if (_.isUndefined(this.state.toggles) && !_.isUndefined(columns)) {
+            if (_.isEmpty(this.state.toggles) && !_.isUndefined(columns)) {
                 let hidden = 0;
 
                 // Hide columns that start with _
