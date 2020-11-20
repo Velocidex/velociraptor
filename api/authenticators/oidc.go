@@ -95,8 +95,7 @@ func oauthOidcCallback(config_obj *config_proto.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Read oauthState from Cookie
 		oauthState, _ := r.Cookie("oauthstate")
-
-		if r.FormValue("state") != oauthState.Value {
+		if oauthState == nil || r.FormValue("state") != oauthState.Value {
 			logging.GetLogger(config_obj, &logging.GUIComponent).
 				Error("invalid oauth state of OIDC")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)

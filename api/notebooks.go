@@ -5,7 +5,6 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
 	"path"
@@ -13,6 +12,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -73,6 +73,12 @@ func (self *ApiServer) GetNotebooks(
 		notebook := &api_proto.NotebookMetadata{}
 		err := db.GetSubject(self.config, notebook_path_manager.Path(),
 			notebook)
+
+		// Handle the EOF especially: it means there is no such
+		// notebook and return an empty result set.
+		if errors.Cause(err) == io.EOF {
+			return result, nil
+		}
 		if err != nil {
 			logging.GetLogger(
 				self.config, &logging.FrontendComponent).
@@ -164,7 +170,8 @@ func (self *ApiServer) NewNotebook(
 	in.ModifiedTime = in.CreatedTime
 
 	// Allow hunt notebooks to be created with specified hunt ID.
-	if !strings.HasPrefix(in.NotebookId, "N.H.") {
+	if !strings.HasPrefix(in.NotebookId, "N.H.") &&
+		!strings.HasPrefix(in.NotebookId, "N.F.") {
 		in.NotebookId = NewNotebookId()
 	}
 
@@ -198,7 +205,8 @@ func (self *ApiServer) NewNotebook(
 	// Add the new notebook to the index so it can be seen. Only
 	// non-hunt notebooks are searchable in the index since the
 	// hunt notebooks are always found in the hunt results.
-	if !strings.HasPrefix(in.NotebookId, "N.H.") {
+	if !strings.HasPrefix(in.NotebookId, "N.H.") &&
+		!strings.HasPrefix(in.NotebookId, "N.F.") {
 		err = reporting.UpdateShareIndex(self.config, in)
 		if err != nil {
 			return nil, err

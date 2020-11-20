@@ -165,14 +165,17 @@ class VeloPagedTable extends Component {
         this.setState({loading: true});
         api.get(url, params).then((response) => {
             let pageData = PrepareData(response.data);
-            let toggles = {};
+            let toggles = Object.assign({}, this.state.toggles);
             let columns = pageData.columns;
             if (_.isUndefined(this.state.toggles) && !_.isUndefined(columns)) {
                 let hidden = 0;
+
                 // Hide columns that start with _
                 _.each(columns, c=>{
-                    toggles[c] = c[0] === '_';
-                    hidden++;
+                    if (c[0] === '_') {
+                        toggles[c] = true;
+                        hidden++;
+                    }
                 });
 
                 // If all the columns are hidden, then just show them
@@ -224,7 +227,7 @@ class VeloPagedTable extends Component {
             }
 
             if (this.state.toggles[name]) {
-                definition["hidden"] = true;
+                definition.hidden = true;
             } else {
                 column_names.push(name);
             }
@@ -247,7 +250,6 @@ class VeloPagedTable extends Component {
         }
 
         let downloads = Object.assign({columns: column_names}, this.props.params);
-
         return (
             <div className="velo-table full-height"> <Spinner loading={this.state.loading} />
               <ToolkitProvider
@@ -265,7 +267,7 @@ class VeloPagedTable extends Component {
                         <ButtonGroup>
                           <ColumnToggleList { ...props.columnToggleProps }
                                             onColumnToggle={(c)=>{
-                                                let toggles = this.state.toggles;
+                                                let toggles = Object.assign({}, this.state.toggles);
                                                 toggles[c] = !toggles[c];
                                                 this.setState({toggles: toggles});
                                             }}

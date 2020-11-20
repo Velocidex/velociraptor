@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"regexp"
 	"strings"
 	"time"
 
@@ -48,6 +49,8 @@ func (self *NotebookPathManager) ZipExport() string {
 			time.Now().Format("20060102150405Z")))
 }
 
+var notebook_regex = regexp.MustCompile(`N\.(F\.[^-]+?)-(C\..+)`)
+
 func NewNotebookPathManager(notebook_id string) *NotebookPathManager {
 	if strings.HasPrefix(notebook_id, "N.H.") {
 		// For hunt notebooks store them in the hunt itself.
@@ -55,6 +58,16 @@ func NewNotebookPathManager(notebook_id string) *NotebookPathManager {
 			notebook_id: notebook_id,
 			root: path.Join("/hunts",
 				strings.TrimPrefix(notebook_id, "N."), "notebook"),
+		}
+	}
+
+	matches := notebook_regex.FindStringSubmatch(notebook_id)
+	if len(matches) == 3 {
+		// For hunt notebooks store them in the hunt itself.
+		return &NotebookPathManager{
+			notebook_id: notebook_id,
+			root: path.Join("/clients/", matches[2],
+				"collections", matches[1], "notebook"),
 		}
 	}
 

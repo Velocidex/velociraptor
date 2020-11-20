@@ -9,7 +9,7 @@ import FlowUploads from './flow-uploads.js';
 import FlowRequests from './flow-requests.js';
 import FlowResults from './flow-results.js';
 import FlowLogs from './flow-logs.js';
-
+import FlowNotebook from './flow-notebook.js';
 import { withRouter }  from "react-router-dom";
 
 class FlowInspector extends React.Component {
@@ -68,6 +68,10 @@ class FlowInspector extends React.Component {
                 <Tab eventKey="logs" title="Log">
                   { this.state.tab === "logs" &&
                     <FlowLogs flow={this.props.flow} />}
+                </Tab>
+                <Tab eventKey="notebook" title="Notebook">
+                  { this.state.tab === "notebook" &&
+                    <FlowNotebook flow={this.props.flow} />}
                 </Tab>
               </Tabs>
             </div>
