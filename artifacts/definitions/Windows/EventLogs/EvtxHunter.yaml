@@ -2,28 +2,28 @@ name: Windows.EventLogs.EvtxHunter
 description: |
   This Artifact will hunt the Event Log message field for a regex value.
   For example and IP, username or string.
-  
+
   Searching EventLog files is helpful for triage and scoping an incident.
-  The idea is a user can search for any IOC or other string of interest and 
-  return all results across the Event Log ecosystem.  
-  
-  There are several parameter's available for search leveraging regex.   
+  The idea is a user can search for any IOC or other string of interest and
+  return all results across the Event Log ecosystem.
+
+  There are several parameter's available for search leveraging regex.
     - EvtxGlob glob of EventLogs to target. Default to all but can be targeted.
-    - dateAfter enables search for events after this date.  
-    - dateBefore enables search for events before this date.   
-    - IocRegex enables regex search over the message field.  
-    - WhitelistRegex enables a regex whitelist for the Message field.  
-    - PathRegex enables filtering on evtx path for specific log targetting.   
-    - ChannelRegex allows specific EVTX Channel targets.  
-    - IdRegex enables a regex query to select specific event Ids.  
+    - dateAfter enables search for events after this date.
+    - dateBefore enables search for events before this date.
+    - IocRegex enables regex search over the message field.
+    - WhitelistRegex enables a regex whitelist for the Message field.
+    - PathRegex enables filtering on evtx path for specific log targetting.
+    - ChannelRegex allows specific EVTX Channel targets.
+    - IdRegex enables a regex query to select specific event Ids.
     - SearchVSS enables searching over VSS
-    
-    Note: this artifact can potentially be heavy on the endpoint. 
-    Please use with caution. 
-    EventIds with an EventData field regex will be aplied and requires double 
-    escape for backslash due to serialisation of this field. 
+
+    Note: this artifact can potentially be heavy on the endpoint.
+    Please use with caution.
+    EventIds with an EventData field regex will be aplied and requires double
+    escape for backslash due to serialisation of this field.
     E.g C:\\\\FOLDER\\\\binary\\.exe
-    For EventIds with no EventData the Message field is queried and requires 
+    For EventIds with no EventData the Message field is queried and requires
     standard velociraptor escape. E.g C:\\FOLDER\\binary\\.exe
 
 author: Matt Green - @mgreen27
@@ -59,33 +59,34 @@ parameters:
 sources:
   - query: |
       -- firstly set timebounds for performance
-      LET DateAfterTime <= if(condition=DateAfter, 
+      LET DateAfterTime <= if(condition=DateAfter,
         then=timestamp(epoch=DateAfter), else=timestamp(epoch="1600-01-01"))
-      LET DateBeforeTime <= if(condition=DateBefore, 
+      LET DateBeforeTime <= if(condition=DateBefore,
         then=timestamp(epoch=DateBefore), else=timestamp(epoch="2200-01-01"))
 
       -- expand provided glob into a list of paths on the file system (fs)
-      LET fspaths <= SELECT FullPath 
+      LET fspaths <= SELECT FullPath
         FROM glob(globs=expand(path=EvtxGlob))
         WHERE FullPath =~ PathRegex
-      
+
       -- function returning list of VSS paths corresponding to path
-      LET vsspaths(path) = SELECT FullPath 
+      LET vsspaths(path) = SELECT FullPath
         FROM Artifact.Windows.Search.VSS(SearchFilesGlob=path)
         WHERE FullPath =~ PathRegex
-          
+
       -- function returning IOC hits
       LET evtxsearch(PathList) = SELECT * FROM foreach(
             row=PathList,
             query={
-                SELECT 
+                SELECT
                     timestamp(epoch=int(int=System.TimeCreated.SystemTime)) AS EventTime,
-                    System.Computer as Computer, 
+                    System.Computer as Computer,
                     System.Channel as Channel,
                     System.EventID.Value as EventID,
                     System.EventRecordID as EventRecordID,
-                    if(condition=EventData,then= EventData) as EventData,
-                    if(condition=Message,then= Message) as Message,
+                    get(field="EventData") as EventData,
+                    get(field="UserData") as UserData,
+                    get(field="Message") as Message,
                     FullPath
                 FROM parse_evtx(filename=FullPath)
                 WHERE ( EventData OR Message )
@@ -93,15 +94,13 @@ sources:
                     AND EventTime > DateAfterTime
                     AND Channel =~ ChannelRegex
                     AND str(str=EventID) =~ IdRegex
-                    AND if(condition=EventData,
-                        then= str(str=EventData) =~ IocRegex,
-                        else= if(condition=Message,
-                            then= Message=~IocRegex))
+                    AND format(format='%v %v %v', args=[
+                               EventData, UserData, Message]) =~ IocRegex
             }
           )
 
       -- include VSS in calculation and deduplicate with GROUP BY by file
-      LET include_vss = SELECT * FROM foreach(row=fspaths, 
+      LET include_vss = SELECT * FROM foreach(row=fspaths,
             query={
                 SELECT *
                 FROM evtxsearch(PathList={
@@ -111,10 +110,10 @@ sources:
               })
 
       -- exclude VSS in EvtxHunt`
-      LET exclude_vss = SELECT * 
+      LET exclude_vss = SELECT *
         FROM evtxsearch(PathList={SELECT FullPath FROM fspaths})
-      
+
       -- return rows
-      SELECT * FROM if(condition=SearchVSS, 
+      SELECT * FROM if(condition=SearchVSS,
         then=include_vss,
         else=exclude_vss)

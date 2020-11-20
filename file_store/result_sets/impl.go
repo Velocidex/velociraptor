@@ -31,10 +31,13 @@ import (
 	"context"
 	"encoding/binary"
 	"io"
+	"os"
 
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
+	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/glob"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 )
 
@@ -309,6 +312,18 @@ func (self *ResultSetReaderImpl) Close() {
 	}
 }
 
+type NullReader struct {
+	*bytes.Reader
+}
+
+func (self NullReader) Close() error {
+	return nil
+}
+
+func (self NullReader) Stat() (glob.FileInfo, error) {
+	return nil, errors.New("Not found")
+}
+
 func (self ResultSetFactory) NewResultSetReader(
 	file_store_factory api.FileStore,
 	path_manager api.PathManager) (ResultSetReader, error) {
@@ -319,7 +334,9 @@ func (self ResultSetFactory) NewResultSetReader(
 	}
 
 	fd, err := file_store_factory.ReadFile(log_path)
-	if err != nil {
+	if err == io.EOF || os.IsNotExist(errors.Cause(err)) {
+		fd = &NullReader{bytes.NewReader([]byte{})}
+	} else if err != nil {
 		return nil, err
 	}
 
@@ -331,6 +348,10 @@ func (self ResultSetFactory) NewResultSetReader(
 		if err == nil {
 			total_rows = stat.Size() / 8
 		}
+	}
+
+	if os.IsNotExist(err) {
+		idx_fd = &NullReader{bytes.NewReader([]byte{})}
 	}
 
 	return &ResultSetReaderImpl{
