@@ -8,9 +8,9 @@ import _ from 'lodash';
 const POLL_TIME = 5000;
 
 
-export default class HuntNotebook extends React.Component {
+export default class FlowNotebook extends React.Component {
     static propTypes = {
-        hunt: PropTypes.object,
+        flow: PropTypes.object,
     };
 
     state = {
@@ -25,10 +25,9 @@ export default class HuntNotebook extends React.Component {
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        let prev_hunt_id = prevProps.hunt && prevProps.hunt.hunt_id;
-        let current_hunt_id = this.props.hunt && this.props.hunt.hunt_id;
-        if (prev_hunt_id !== current_hunt_id) {
-            // Re-render the table if the hunt id changes.
+        let prev_flow_id = prevProps.flow && prevProps.flow.session_id;
+        let current_flow_id = this.props.flow && this.props.flow.session_id;
+        if (prev_flow_id !== current_flow_id) {
             this.fetchNotebooks();
         };
         return false;
@@ -39,27 +38,30 @@ export default class HuntNotebook extends React.Component {
         clearInterval(this.interval);
     }
 
-    getCellVQL = (hunt) => {
-        var hunt_id = hunt["hunt_id"];
-        var query = "SELECT * \nFROM hunt_results(\n";
-        var sources = hunt["artifact_sources"] || hunt["start_request"]["artifacts"];
+    getCellVQL = (flow) => {
+        let client_id = flow.client_id;
+        var flow_id = flow.session_id;
+        var query = "SELECT * \nFROM source(\n";
+        var sources = flow["artifacts_with_results"] || flow["request"]["artifacts"];
         query += "    artifact='" + sources[0] + "',\n";
         for (var i=1; i<sources.length; i++) {
-            query += "    // artifact='" + sources[i] + "',\n";
+            query += "    -- artifact='" + sources[i] + "',\n";
         }
-        query += "    hunt_id='" + hunt_id + "')\nLIMIT 50\n";
+        query += "    client_id='" + client_id + "', flow_id='" +
+            flow_id + "')\nLIMIT 50\n";
 
         return query;
     }
 
-
     fetchNotebooks = () => {
-        let hunt_id = this.props.hunt && this.props.hunt.hunt_id;
-        if (!hunt_id) {
+        let client_id = this.props.flow && this.props.flow.client_id;
+        let flow_id = this.props.flow && this.props.flow.session_id;
+        if (!flow_id || !client_id) {
             return;
         }
 
-        let notebook_id = "N." + hunt_id;
+
+        let notebook_id = "N." + flow_id + "-" + client_id;
         this.setState({loading: true});
         api.get("v1/GetNotebooks", {
             notebook_id: notebook_id,
@@ -71,10 +73,9 @@ export default class HuntNotebook extends React.Component {
                 return;
             }
 
+            // If no notebook was found, try to create one.
             let request = {
-                name: "Notebook for Hunt " + hunt_id,
-                description: this.props.hunt.description ||
-                    "This is a notebook for processing a hunt.",
+                name: "Notebook for Collection " + flow_id,
                 notebook_id: notebook_id,
                 // Hunt notebooks are all public.
                 public: true,
@@ -90,7 +91,7 @@ export default class HuntNotebook extends React.Component {
                     notebook_id: notebook_id,
                     type: "VQL",
                     cell_id: cell_metadata[0].cell_id,
-                    input: this.getCellVQL(this.props.hunt),
+                    input: this.getCellVQL(this.props.flow),
                 }).then((response) => {
                     this.fetchNotebooks();
                 });

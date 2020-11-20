@@ -284,6 +284,13 @@ class VeloTable extends Component {
                         <ButtonGroup>
                           <ColumnToggleList { ...props.columnToggleProps }
                                             onColumnToggle={(c)=>{
+                                                // Do not make a copy
+                                                // here because set
+                                                // state is not
+                                                // immediately visible
+                                                // and this will be
+                                                // called for each
+                                                // column.
                                                 let toggles = this.state.toggles;
                                                 toggles[c] = !toggles[c];
                                                 this.setState({toggles: toggles});
@@ -433,7 +440,7 @@ export function formatColumns(columns) {
         case "download":
             x.formatter= (cell, row) =>{
                 if (row.complete) {
-                    return <a href={api.base_path + row.path}  target="_blank"
+                    return <a href={api.base_path + row.path}  target="_blank" download
                               rel="noopener noreferrer">{cell}</a>;
                 };
                 return <>

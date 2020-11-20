@@ -500,7 +500,10 @@ func StartFrontendWithAutocert(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		_ = services.GetNotifier().NotifyAllListeners(config_obj)
+		notifier := services.GetNotifier()
+		if notifier != nil {
+			_ = notifier.NotifyAllListeners(config_obj)
+		}
 		err := server.Shutdown(timeout_ctx)
 		if err != nil {
 			logger.Error("Frontend shutdown error: %v", err)
