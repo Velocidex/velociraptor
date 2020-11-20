@@ -284,6 +284,13 @@ class VeloTable extends Component {
                         <ButtonGroup>
                           <ColumnToggleList { ...props.columnToggleProps }
                                             onColumnToggle={(c)=>{
+                                                // Do not make a copy
+                                                // here because set
+                                                // state is not
+                                                // immediately visible
+                                                // and this will be
+                                                // called for each
+                                                // column.
                                                 let toggles = this.state.toggles;
                                                 toggles[c] = !toggles[c];
                                                 this.setState({toggles: toggles});
