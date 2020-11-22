@@ -187,7 +187,6 @@ func ExportNotebookToZip(
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(serialized))
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	fd, err := file_store_factory.WriteFile(notebook_path_manager.ZipExport())

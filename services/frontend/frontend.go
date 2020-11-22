@@ -132,7 +132,7 @@ func (self *FrontendManager) setMyState() error {
 		return err
 	}
 	self.my_state.Heartbeat = now
-
+	self.my_state.DoNotRedirect = self.config_obj.Frontend.DoNotRedirect
 	return db.SetSubject(self.config_obj, path_manager, self.my_state)
 }
 
@@ -179,7 +179,9 @@ func (self *FrontendManager) syncActiveFrontends() error {
 		}
 
 		active_frontends[state.Name] = state
-		urls = append(urls, state.Url)
+		if !state.DoNotRedirect {
+			urls = append(urls, state.Url)
+		}
 
 		total_metrics.CpuLoadPercent += state.Metrics.CpuLoadPercent
 		total_metrics.ClientCommsCurrentConnections += state.Metrics.ClientCommsCurrentConnections

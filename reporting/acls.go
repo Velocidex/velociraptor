@@ -14,6 +14,10 @@ import (
 func CheckNotebookAccess(
 	notebook *api_proto.NotebookMetadata,
 	user string) bool {
+	if notebook.Public {
+		return true
+	}
+
 	return notebook.Creator == user || utils.InString(notebook.Collaborators, user)
 }
 

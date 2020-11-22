@@ -34,4 +34,9 @@ message FrontendState {
     string url = 3;
 
     Metrics metrics = 4;
+
+    // If set other frontends will not redirect to this frontend
+    // automatically. This makes sense if you have an external load
+    // balancer that will redirect traffic to this node.
+    bool do_not_redirect = 6;
 }
