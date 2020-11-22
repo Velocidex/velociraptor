@@ -44,7 +44,8 @@ func doConfigFrontend() {
 			survey.WithValidator(survey.Required)), "")
 	}
 
-	if config_obj.Frontend.DynDns.DdnsUsername != "" {
+	if config_obj.Frontend.DynDns != nil &&
+		config_obj.Frontend.DynDns.DdnsUsername != "" {
 		kingpin.FatalIfError(dynDNSConfig(config_obj), "")
 	}
 

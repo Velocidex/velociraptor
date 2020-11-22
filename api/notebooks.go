@@ -92,8 +92,7 @@ func (self *ApiServer) GetNotebooks(
 		result.Items = append(result.Items, notebook)
 
 		// Document not owned or collaborated with.
-		if !notebook.Public &&
-			!reporting.CheckNotebookAccess(notebook, user_record.Name) {
+		if !reporting.CheckNotebookAccess(notebook, user_record.Name) {
 			logging.GetLogger(
 				self.config, &logging.Audit).WithFields(
 				logrus.Fields{

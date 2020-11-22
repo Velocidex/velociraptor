@@ -411,6 +411,11 @@ message FrontendConfig {
     bool use_plain_http = 24;
 
 
+    // If this is true, other frontends will not automatically
+    // redirect to this frontend. This is required when you have an
+    // external load balancer which will take care of redirection.1
+    bool do_not_redirect = 26;
+
     // These are used to secure the client/server communications -
     // Even when using external TLS certificates! This certificate
     // must be signed by the Velociraptor rooot CA in all cases. If
