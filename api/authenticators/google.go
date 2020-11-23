@@ -92,6 +92,7 @@ func oauthGoogleLogin(config_obj *config_proto.Config) http.Handler {
 }
 
 func generateStateOauthCookie(w http.ResponseWriter) *http.Cookie {
+	// Do not expire from the browser - we will expire it anyway.
 	var expiration = time.Now().Add(365 * 24 * time.Hour)
 
 	b := make([]byte, 16)
@@ -231,16 +232,39 @@ func authenticateUserHandle(config_obj *config_proto.Config,
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-CSRF-Token", csrf.Token(r))
 
-		// Reject by redirecting to the loging handler.
-		reject := func(err error) {
+		// Reject by redirecting to the login handler.
+		reject_with_username := func(err error, username string) {
 			logger := logging.GetLogger(config_obj, &logging.Audit)
 			logger.WithFields(logrus.Fields{
 				"remote": r.RemoteAddr,
 				"error":  err.Error(),
 			}).Error("OAuth2 Redirect")
 
-			// Not authorized - redirect to logon screen.
-			http.Redirect(w, r, login_url, http.StatusTemporaryRedirect)
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusUnauthorized)
+
+			fmt.Fprintf(w, `
+<html><body>
+Authorization failed. You are not registered on this system as %v.
+Contact your system administrator to get an account, or click here
+to log in again:
+
+      <a href="%s" style="text-transform:none">
+        Login with %s
+      </a>
+</body></html>
+`, username, login_url, provider)
+
+			logging.GetLogger(config_obj, &logging.Audit).
+				WithFields(logrus.Fields{
+					"user":   username,
+					"remote": r.RemoteAddr,
+					"method": r.Method,
+				}).Error("User rejected by GUI")
+		}
+
+		reject := func(err error) {
+			reject_with_username(err, "")
 		}
 
 		// We store the user name and their details in a local
@@ -283,12 +307,14 @@ func authenticateUserHandle(config_obj *config_proto.Config,
 		// Check if the claim is too old.
 		expires, pres := claims["expires"].(float64)
 		if !pres {
-			reject(errors.New("expires field not present in JWT"))
+			reject_with_username(errors.New("expires field not present in JWT"),
+				username)
 			return
 		}
 
 		if expires < float64(time.Now().Unix()) {
-			reject(errors.New("the JWT is expired - reauthenticate"))
+			reject_with_username(errors.New("the JWT is expired - reauthenticate"),
+				username)
 			return
 		}
 
@@ -297,34 +323,14 @@ func authenticateUserHandle(config_obj *config_proto.Config,
 		// Now check if the user is allowed to log in.
 		user_record, err := users.GetUser(config_obj, username)
 		if err != nil {
-			reject(errors.New("Invalid user"))
+			reject_with_username(errors.New("Invalid user"), username)
 			return
 		}
 
 		// Must have at least reader permission.
 		perm, err := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
 		if !perm || err != nil || user_record.Locked || user_record.Name != username {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			w.WriteHeader(http.StatusUnauthorized)
-
-			fmt.Fprintf(w, `
-<html><body>
-Authorization failed. You are not registered on this system as %v.
-Contact your system administrator to get an account, or click here
-to log in again:
-
-      <a href="%s" style="text-transform:none">
-        Login with %s
-      </a>
-</body></html>
-`, username, login_url, provider)
-
-			logging.GetLogger(config_obj, &logging.Audit).
-				WithFields(logrus.Fields{
-					"user":   username,
-					"remote": r.RemoteAddr,
-					"method": r.Method,
-				}).Error("User rejected by GUI")
+			reject_with_username(errors.New("Insufficient permissions"), username)
 			return
 		}
 
