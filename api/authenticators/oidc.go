@@ -26,8 +26,18 @@ func (self *OidcAuthenticator) IsPasswordLess() bool {
 }
 
 func (*OidcAuthenticator) AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
-	mux.Handle(oidcLoginURI, oauthOidcLogin(config_obj))
-	mux.Handle(oidcCallbackURI, oauthOidcCallback(config_obj))
+	provider, err := oidc.NewProvider(context.Background(),
+		config_obj.GUI.Authenticator.OidcIssuer)
+	if err != nil {
+		logging.GetLogger(config_obj, &logging.GUIComponent).
+			Errorf("can not get information from OIDC provider, "+
+				"check %v/.well-known/openid-configuration is correct and accessible from the server.",
+				config_obj.GUI.Authenticator.OidcIssuer)
+		return err
+	}
+
+	mux.Handle(oidcLoginURI, oauthOidcLogin(config_obj, provider))
+	mux.Handle(oidcCallbackURI, oauthOidcCallback(config_obj, provider))
 
 	installLogoff(config_obj, mux)
 	return nil
@@ -60,15 +70,7 @@ func getGenOauthConfig(
 	}
 }
 
-func oauthOidcLogin(config_obj *config_proto.Config) http.Handler {
-	provider, err := oidc.NewProvider(context.Background(), config_obj.GUI.Authenticator.OidcIssuer)
-	if err != nil {
-		logging.GetLogger(config_obj, &logging.GUIComponent).
-			Errorf("can not get information from OIDC provider, "+
-				"check %v/.well-known/openid-configuration is correct and accessible from the server.",
-				config_obj.GUI.Authenticator.OidcIssuer)
-	}
-
+func oauthOidcLogin(config_obj *config_proto.Config, provider *oidc.Provider) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		oidcOauthConfig := getGenOauthConfig(config_obj, provider.Endpoint(), oidcCallbackURI)
 
@@ -78,20 +80,13 @@ func oauthOidcLogin(config_obj *config_proto.Config) http.Handler {
 			oauthState = generateStateOauthCookie(w)
 		}
 
-		u := oidcOauthConfig.AuthCodeURL(oauthState.Value, oauth2.ApprovalForce)
-		http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+		url := oidcOauthConfig.AuthCodeURL(oauthState.Value,
+			oauth2.SetAuthURLParam("prompt", "login"))
+		http.Redirect(w, r, url, http.StatusFound)
 	})
 }
 
-func oauthOidcCallback(config_obj *config_proto.Config) http.Handler {
-	provider, err := oidc.NewProvider(context.Background(), config_obj.GUI.Authenticator.OidcIssuer)
-	if err != nil {
-		logging.GetLogger(config_obj, &logging.GUIComponent).
-			Errorf("can not get information from OIDC provider, "+
-				"check %v/.well-known/openid-configuration is correct and accessible from the server.",
-				config_obj.GUI.Authenticator.OidcIssuer)
-	}
-
+func oauthOidcCallback(config_obj *config_proto.Config, provider *oidc.Provider) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Read oauthState from Cookie
 		oauthState, _ := r.Cookie("oauthstate")
@@ -105,13 +100,17 @@ func oauthOidcCallback(config_obj *config_proto.Config) http.Handler {
 		oidcOauthConfig := getGenOauthConfig(config_obj, provider.Endpoint(), oidcCallbackURI)
 		oauthToken, err := oidcOauthConfig.Exchange(r.Context(), r.FormValue("code"))
 		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).Error("can not get oauthToken from OIDC provider")
+			logging.GetLogger(config_obj, &logging.GUIComponent).
+				Error("can not get oauthToken from OIDC provider: %v", err)
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
 		}
 		userInfo, err := provider.UserInfo(r.Context(), oauth2.StaticTokenSource(oauthToken))
 		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).Error("can not get UserInfo from OIDC provider")
+			logging.GetLogger(config_obj, &logging.GUIComponent).
+				Error("can not get UserInfo from OIDC provider")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
 		}
 
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
