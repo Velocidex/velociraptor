@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
@@ -96,6 +97,13 @@ func StartupEssentialServices(sm *services.Service) error {
 
 	if services.GetLabeler() == nil {
 		err := sm.Start(labels.StartLabelService)
+		if err != nil {
+			return err
+		}
+	}
+
+	if services.GetClientInfoManager() == nil {
+		err := sm.Start(client_info.StartClientInfoService)
 		if err != nil {
 			return err
 		}
