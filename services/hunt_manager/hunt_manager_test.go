@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -20,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -56,6 +58,7 @@ func (self *HuntTestSuite) SetupTest() {
 	require.NoError(t, self.sm.Start(notifications.StartNotificationService))
 	require.NoError(t, self.sm.Start(inventory.StartInventoryService))
 	require.NoError(t, self.sm.Start(repository.StartRepositoryManager))
+	require.NoError(t, self.sm.Start(client_info.StartClientInfoService))
 	require.NoError(t, self.sm.Start(StartHuntManager))
 }
 
@@ -443,6 +446,94 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 
 	// No flow should be launched.
 	_, err = LoadCollectionContext(self.config_obj, self.client_id, "F.1234")
+	assert.Error(t, err)
+}
+
+func (self *HuntTestSuite) TestHuntClientOSCondition() {
+	t := self.T()
+
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
+
+	launcher.SetFlowIdForTests("F.1234")
+
+	// The hunt will launch the Generic.Client.Info on the client.
+	hunt_obj := &api_proto.Hunt{
+		HuntId:       self.hunt_id,
+		StartRequest: self.expected,
+		State:        api_proto.Hunt_RUNNING,
+		Stats:        &api_proto.HuntStats{},
+		Expires:      uint64(time.Now().Add(7*24*time.Hour).UTC().UnixNano() / 1000),
+		Condition: &api_proto.HuntCondition{
+			UnionField: &api_proto.HuntCondition_Os{
+				Os: &api_proto.HuntOsCondition{
+					Os: api_proto.HuntOsCondition_WINDOWS,
+				},
+			},
+		},
+	}
+
+	db, err := datastore.GetDB(self.config_obj)
+	assert.NoError(t, err)
+
+	// Create a windows and linux client
+	client_id_1 := "C.12321"
+	client_id_2 := "C.12322"
+
+	client_path_manager := paths.NewClientPathManager(client_id_1)
+	err = db.SetSubject(self.config_obj,
+		client_path_manager.Path(), &actions_proto.ClientInfo{
+			System: "windows",
+		})
+	assert.NoError(t, err)
+
+	client_path_manager = paths.NewClientPathManager(client_id_2)
+	err = db.SetSubject(self.config_obj,
+		client_path_manager.Path(), &actions_proto.ClientInfo{
+			System: "linux",
+		})
+	assert.NoError(t, err)
+
+	hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
+	err = db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
+	assert.NoError(t, err)
+
+	services.GetHuntDispatcher().Refresh(self.config_obj)
+
+	// Simulate a System.Hunt.Participation event
+	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
+		"server", "", "System.Hunt.Participation")
+	journal, err := services.GetJournal()
+	assert.NoError(t, err)
+
+	journal.PushRows(self.config_obj, path_manager,
+		[]*ordereddict.Dict{
+			ordereddict.NewDict().
+				Set("HuntId", self.hunt_id).
+				Set("ClientId", client_id_1).
+				Set("Fqdn", "MyHost1").
+				Set("Participate", true),
+			ordereddict.NewDict().
+				Set("HuntId", self.hunt_id).
+				Set("ClientId", client_id_2).
+				Set("Fqdn", "MyHost2").
+				Set("Participate", true),
+		})
+
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		// The hunt index is updated since we have seen this client
+		// already (even if we decided not to launch on it).
+		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+			client_id_2, []string{hunt_obj.HuntId})
+		return err == nil
+	})
+
+	// Flow should be launched on client id because it is a Windows client.
+	_, err = LoadCollectionContext(self.config_obj, client_id_1, "F.1234")
+	assert.NoError(t, err)
+
+	// No flow should be launched on client_id_2 because it is a Linux client.
+	_, err = LoadCollectionContext(self.config_obj, client_id_2, "F.1234")
 	assert.Error(t, err)
 }
 

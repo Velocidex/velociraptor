@@ -233,6 +233,19 @@ func (self *HuntManager) ProcessRow(
 		return
 	}
 
+	// Get some info about the client
+	client_info_manager := services.GetClientInfoManager()
+	if client_info_manager == nil {
+		return
+	}
+
+	client_info, err := client_info_manager.Get(participation_row.ClientId)
+	if err != nil {
+		scope.Log("hunt_manager: failed to get client %v: %v",
+			participation_row.ClientId, err)
+		return
+	}
+
 	// Check if we already launched it on this client. We maintain
 	// a data store index of all the clients and hunts to be able
 	// to quickly check if a certain hunt ran on a particular
@@ -287,6 +300,10 @@ func (self *HuntManager) ProcessRow(
 				return errors.New("hunt is stopped")
 			}
 
+			if !huntMatchesOS(hunt_obj, client_info) {
+				return errors.New("Hunt does not match OS condition")
+			}
+
 			// Ignore hunts with label conditions which
 			// exclude this client.
 			if !huntHasLabel(config_obj, hunt_obj,
@@ -333,6 +350,8 @@ func (self *HuntManager) ProcessRow(
 		return
 	}
 
+	// Direct the request against our client and schedule it.
+	request.ClientId = participation_row.ClientId
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, config_obj, vql_subsystem.NullACLManager{}, repository, request)
 	if err != nil {
@@ -420,5 +439,26 @@ func huntHasExcludeLabel(
 	}
 
 	// Not excluded - schedule the client.
+	return true
+}
+
+func huntMatchesOS(hunt_obj *api_proto.Hunt, client_info *services.ClientInfo) bool {
+	if hunt_obj.Condition == nil {
+		return true
+	}
+	os_condition := hunt_obj.Condition.GetOs()
+	if os_condition == nil {
+		return true
+	}
+
+	switch os_condition.Os {
+	case api_proto.HuntOsCondition_WINDOWS:
+		return client_info.OS == services.Windows
+	case api_proto.HuntOsCondition_LINUX:
+		return client_info.OS == services.Linux
+	case api_proto.HuntOsCondition_OSX:
+		return client_info.OS == services.MacOS
+	}
+
 	return true
 }
