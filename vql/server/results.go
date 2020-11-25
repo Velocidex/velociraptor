@@ -26,9 +26,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -108,7 +110,9 @@ type SourcePluginArgs struct {
 	HuntId    string `vfilter:"optional,field=hunt_id,doc=Retrieve sources from this hunt (combines all results from all clients)"`
 	Artifact  string `vfilter:"optional,field=artifact,doc=The name of the artifact collection to fetch"`
 	Source    string `vfilter:"optional,field=source,doc=An optional named source within the artifact"`
-	Mode      string `vfilter:"optional,field=mode,doc=HUNT or CLIENT mode can be empty"`
+
+	NotebookId     string `vfilter:"optional,field=notebook_id,doc=The notebook to read from (shoud also include cell id)"`
+	NotebookCellId string `vfilter:"optional,field=notebook_cell_id,doc=The notebook cell read from (shoud also include notebook id)"`
 }
 
 type SourcePlugin struct{}
@@ -168,13 +172,39 @@ func (self SourcePlugin) Call(
 			return
 		}
 
-		if arg.Source != "" {
-			arg.Artifact = arg.Artifact + "/" + arg.Source
-			arg.Source = ""
-		}
+		// Depending on the parameters, we need to read from
+		// different places.
+		var path_manager api.PathManager
 
-		path_manager := artifact_paths.NewArtifactPathManager(
-			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
+		if arg.NotebookId != "" {
+			if arg.NotebookCellId == "" {
+				scope.Log("source: Both notebook_id and notebook_cell_id should be specified.")
+				return
+			}
+			path_manager = reporting.NewNotebookPathManager(
+				arg.NotebookId).Cell(arg.NotebookCellId).QueryStorage(1)
+		} else if arg.FlowId != "" {
+			if arg.ClientId == "" {
+				scope.Log("source: client_id and flow_id should be specified")
+				return
+			}
+
+			if arg.Artifact == "" {
+				scope.Log("source: When reading a flow, an artifact name should be specified.")
+				return
+			}
+
+			if arg.Source != "" {
+				arg.Artifact = arg.Artifact + "/" + arg.Source
+				arg.Source = ""
+			}
+
+			path_manager = artifact_paths.NewArtifactPathManager(
+				config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
+		} else {
+			scope.Log("source: One of flow_id, hunt_id, notebook_id should be specified.")
+			return
+		}
 
 		row_chan, err := file_store.GetTimeRange(
 			ctx, config_obj, path_manager, arg.StartTime, arg.EndTime)
@@ -234,11 +264,6 @@ func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
 	artifact_name, pres := scope.Resolve("ArtifactName")
 	if pres {
 		arg.Artifact = artifact_name.(string)
-	}
-
-	mode, pres := scope.Resolve("ReportMode")
-	if pres {
-		arg.Mode = mode.(string)
 	}
 }
 

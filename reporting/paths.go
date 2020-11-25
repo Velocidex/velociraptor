@@ -49,7 +49,7 @@ func (self *NotebookPathManager) ZipExport() string {
 			time.Now().Format("20060102150405Z")))
 }
 
-var notebook_regex = regexp.MustCompile(`N\.(F\.[^-]+?)-(C\..+)`)
+var notebook_regex = regexp.MustCompile(`N\.(F\.[^-]+?)-(C\..+|server)`)
 
 func NewNotebookPathManager(notebook_id string) *NotebookPathManager {
 	if strings.HasPrefix(notebook_id, "N.H.") {
