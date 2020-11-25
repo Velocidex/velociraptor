@@ -14,7 +14,6 @@
  },
  {
   "request_id": 5,
-  "response_id": 1,
   "FileBuffer": {
    "pathspec": {
     "path": "foo",
@@ -29,7 +28,6 @@
  },
  {
   "request_id": 5,
-  "response_id": 2,
   "FileBuffer": {
    "pathspec": {
     "path": "foo",
@@ -44,7 +42,6 @@
  },
  {
   "request_id": 5,
-  "response_id": 3,
   "FileBuffer": {
    "pathspec": {
     "path": "foo",
@@ -59,7 +56,6 @@
  },
  {
   "request_id": 5,
-  "response_id": 4,
   "FileBuffer": {
    "pathspec": {
     "path": "foo",
@@ -74,7 +70,6 @@
  },
  {
   "request_id": 5,
-  "response_id": 5,
   "FileBuffer": {
    "pathspec": {
     "path": "foo",
@@ -89,7 +84,6 @@
  },
  {
   "request_id": 5,
-  "response_id": 6,
   "FileBuffer": {
    "pathspec": {
     "path": "foo",

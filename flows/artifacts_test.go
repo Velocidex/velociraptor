@@ -216,7 +216,7 @@ func (self *TestSuite) TestRetransmission() {
 		Source:     self.client_id,
 		SessionId:  flow_id,
 		RequestId:  1,
-		ResponseId: 2,
+		ResponseId: uint64(time.Now().UnixNano()),
 		VQLResponse: &actions_proto.VQLResponse{
 			JSONLResponse: "{}",
 			TotalRows:     1,
