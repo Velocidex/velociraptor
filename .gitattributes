@@ -17,3 +17,4 @@ logs text eol=lf
 *.json binary
 *.csv binary
 *.zip binary
+*.index binary

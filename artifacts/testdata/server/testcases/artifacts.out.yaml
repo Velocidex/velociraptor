@@ -1,13 +1,4 @@
-SELECT Authors, FullPath, License, Name, Summary, Version FROM source( client_id='C.4f5e52adf0a337a9', flow_id="F.BN2HP3OSS3LK6", artifact='Windows.Applications.ChocolateyPackages')[
- {
-  "Authors": "Vinay Pamnani",
-  "FullPath": "\\C:\\ProgramData\\chocolatey\\lib\\wmiexplorer\\wmiexplorer.nuspec",
-  "License": "https://wmie.codeplex.com/license",
-  "Name": "wmiexplorer",
-  "Summary": "WMI Explorer is a utility intended to provide the ability to browse and view WMI namespaces/classes/instances/properties in a single pane of view.",
-  "Version": "2.0.0.0"
- }
-]SELECT * FROM uploads(client_id='C.4f5e52adf0a337a9', flow_id='F.BN2HJCPOF5U7U')[
+SELECT * FROM uploads(client_id='C.4f5e52adf0a337a9', flow_id='F.BN2HJCPOF5U7U')[
  {
   "Timestamp": 1573198259,
   "started": "2019-11-08 07:30:59.920512962 +0000 UTC",

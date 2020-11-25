@@ -1,0 +1,41 @@
+# Test the source() plugin. This is a one stop shop for returning the
+# result sets of artifacts on the server in various places.
+
+Queries:
+  # A collection from a client.
+  - SELECT Authors, FullPath, License, Name, Summary, Version
+    FROM source(
+       client_id='C.4f5e52adf0a337a9',
+       flow_id="F.BN2HP3OSS3LK6",
+       artifact='Windows.Applications.ChocolateyPackages')
+
+  # Reading from hunts
+  - SELECT Path, Name
+    FROM source(
+       hunt_id="H.49ba8939",
+       artifact="Windows.Network.NetstatEnriched/Netstat")
+    LIMIT 1
+
+  # Reading from notebook cells.
+  - SELECT *
+    FROM source(
+       notebook_id="N.H.19c0c0a2",
+       notebook_cell_id="NC.BUURUOMSSMJ5I")
+    LIMIT 1
+
+  # Reading client event artifacts
+  - SELECT * from source(
+       client_id='C.4f5e52adf0a337a9',
+       artifact='Windows.Events.ProcessCreation')
+    WHERE Name =~ '(?i)psexesvc'
+
+  # Reading server event artifacts
+  - SELECT * from source(
+       artifact='Server.Monitor.Health/Prometheus')
+    LIMIT 2
+
+  # Page it a bit.
+  - SELECT * from source(
+       start_row=1,
+       artifact='Server.Monitor.Health/Prometheus')
+    LIMIT 1

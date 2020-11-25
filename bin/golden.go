@@ -49,8 +49,11 @@ var (
 	golden_command = app.Command(
 		"golden", "Run tests and compare against golden files.")
 
-	golden_command_prefix = golden_command.Arg(
-		"prefix", "Golden file prefix").Required().String()
+	golden_command_directory = golden_command.Arg(
+		"directory", "Golden file directory path").Required().String()
+
+	golden_command_filter = golden_command.Flag("filter", "A regex to filter the test files").
+				String()
 
 	golden_env_map = golden_command.Flag("env", "Environment for the query.").
 			StringMap()
@@ -226,7 +229,11 @@ func doGolden() {
 
 	failures := []string{}
 
-	err = filepath.Walk(*golden_command_prefix, func(file_path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(*golden_command_directory, func(file_path string, info os.FileInfo, err error) error {
+		if *golden_command_filter != "" &&
+			!strings.HasPrefix(filepath.Base(file_path), *golden_command_filter) {
+			return nil
+		}
 
 		if !strings.HasSuffix(file_path, ".in.yaml") {
 			return nil

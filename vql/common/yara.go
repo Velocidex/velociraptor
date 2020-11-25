@@ -460,7 +460,7 @@ func (self YaraProcPlugin) Call(
 			arg.Pid, yara.ScanFlagsProcessMemory,
 			300*time.Second)
 		if err != nil {
-			scope.Log("Failed: %v", err)
+			scope.Log("proc_yara: pid %v: %v", arg.Pid, err)
 			return
 		}
 

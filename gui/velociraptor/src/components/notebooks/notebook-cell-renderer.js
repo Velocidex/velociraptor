@@ -270,6 +270,14 @@ export default class NotebookCellRenderer extends React.Component {
         }
     };
 
+    addCellFromCell = () => {
+        let content = "SELECT *\nFROM source(\n  notebook_id=\"" +
+            this.props.notebook_id + "\",\n  " +
+            "notebook_cell_id=\""+ this.state.cell.cell_id +
+            "\")\nLIMIT 50\n";
+        this.props.addCell(this.state.cell.cell_id, "VQL", content);
+    }
+
     render() {
         let selected = this.state.cell.cell_id === this.props.selected_cell_id;
 
@@ -345,6 +353,11 @@ export default class NotebookCellRenderer extends React.Component {
                     VQL
                   </Dropdown.Item>
                   <hr/>
+                  <Dropdown.Item
+                    title="Add Cell From This Cell"
+                    onClick={this.addCellFromCell}>
+                    Add Cell From This Cell
+                  </Dropdown.Item>
                   <Dropdown.Item
                     title="Add Cell From Hunt"
                     onClick={()=>this.setState({showAddCellFromHunt: true})}>
