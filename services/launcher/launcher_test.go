@@ -45,6 +45,17 @@ sources:
     SELECT * FROM info()
 `
 
+	testArtifact2 = `
+name: Test.Artifact2
+parameters:
+ - name: Foo
+   default: Foo2
+
+sources:
+- query:  |
+    SELECT * FROM info()
+`
+
 	testArtifactWithTools = `
 name: Test.Artifact.Tools
 tools:
@@ -193,11 +204,11 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	// Check the compiler produced the correct environment
 	// vars. When the VQL calls Generic.Utils.FetchBinary() it
 	// will be able to resolve these from the environment.
-	assert.Equal(self.T(), getEnvValue(compiled.Env, "Tool_Tool1_HASH"), sha_value)
-	assert.Equal(self.T(), getEnvValue(compiled.Env, "Tool_Tool1_FILENAME"), "mytool.exe")
-	assert.Equal(self.T(), getEnvValue(compiled.Env, "Tool_Tool1_URL"), tool_url)
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_HASH"), sha_value)
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_FILENAME"), "mytool.exe")
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_URL"), tool_url)
 
-	assert.Equal(self.T(), len(compiled.Query), 2)
+	assert.Equal(self.T(), len(compiled[0].Query), 2)
 
 	// Now serve the tool from Velociraptor's public directory
 	// instead.
@@ -221,9 +232,9 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 
 	filename := paths.ObfuscateName(self.config_obj, "Tool1")
 
-	assert.Equal(self.T(), getEnvValue(compiled.Env, "Tool_Tool1_HASH"), sha_value)
-	assert.Equal(self.T(), getEnvValue(compiled.Env, "Tool_Tool1_FILENAME"), "mytool.exe")
-	assert.Equal(self.T(), getEnvValue(compiled.Env, "Tool_Tool1_URL"),
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_HASH"), sha_value)
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_FILENAME"), "mytool.exe")
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_URL"),
 		"https://localhost:8000/public/"+filename)
 }
 
@@ -292,9 +303,9 @@ func (self *LauncherTestSuite) TestCompiling() {
 		ctx, self.config_obj, acl_manager, repository, false, request)
 	assert.NoError(self.T(), err)
 
-	assert.Equal(self.T(), 1, len(compiled.Env))
+	assert.Equal(self.T(), 1, len(compiled[0].Env))
 
-	serialized, err := json.Marshal(compiled.Env)
+	serialized, err := json.Marshal(compiled[0].Env)
 	assert.NoError(self.T(), err)
 
 	// Should not include artifact default parameters and only
@@ -302,12 +313,67 @@ func (self *LauncherTestSuite) TestCompiling() {
 	assert.Equal(self.T(), string(serialized),
 		"[{\"key\":\"Foo\",\"value\":\"ParameterBar\"}]")
 
-	assert.Equal(self.T(), compiled.OpsPerSecond, request.OpsPerSecond)
-	assert.Equal(self.T(), compiled.Timeout, request.Timeout)
+	assert.Equal(self.T(), compiled[0].OpsPerSecond, request.OpsPerSecond)
+	assert.Equal(self.T(), compiled[0].Timeout, request.Timeout)
 
 	// Compile into 2 queries, the last have a valid Name field.
-	assert.Equal(self.T(), len(compiled.Query), 2)
-	assert.NotEqual(self.T(), compiled.Query[1].Name, "")
+	assert.Equal(self.T(), len(compiled[0].Query), 2)
+	assert.NotEqual(self.T(), compiled[0].Query[1].Name, "")
+}
+
+func (self *LauncherTestSuite) TestCompilingMultipleArtifacts() {
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifact1, true)
+	assert.NoError(self.T(), err)
+	_, err = repository.LoadYaml(testArtifact2, true)
+	assert.NoError(self.T(), err)
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:  "UserX",
+		ClientId: "C.1234",
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				Artifact: "Test.Artifact",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "Foo", Value: "Foo1"},
+					},
+				},
+			},
+			{
+				Artifact: "Test.Artifact2",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "Foo", Value: "Foo2"},
+					},
+				},
+			},
+		},
+		OpsPerSecond: 42,
+		Timeout:      73,
+	}
+	ctx := context.Background()
+	acl_manager := vql_subsystem.NullACLManager{}
+
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository, false, request)
+	assert.NoError(self.T(), err)
+
+	// There should be two separate requests with separate values
+	// for the same key.
+	assert.Equal(self.T(), len(compiled), 2)
+	assert.Equal(self.T(), compiled[0].Env[0].Key, "Foo")
+	assert.Equal(self.T(), compiled[0].Env[0].Value, "Foo1")
+	assert.Equal(self.T(), compiled[1].Env[0].Key, "Foo")
+	assert.Equal(self.T(), compiled[1].Env[0].Value, "Foo2")
 }
 
 func (self *LauncherTestSuite) TestCompilingObfuscation() {
@@ -340,7 +406,7 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 
 	// When we do not obfuscate, artifact descriptions are carried
 	// into the compiled form.
-	assert.Equal(self.T(), compiled.Query[1].Description, "This is a test artifact")
+	assert.Equal(self.T(), compiled[0].Query[1].Description, "This is a test artifact")
 
 	// However when we obfuscate we remove descriptions.
 	self.config_obj.Frontend.DoNotCompressArtifacts = false
@@ -350,7 +416,7 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 		request)
 	assert.NoError(self.T(), err)
 
-	assert.Equal(self.T(), compiled.Query[1].Description, "")
+	assert.Equal(self.T(), compiled[0].Query[1].Description, "")
 
 }
 
@@ -394,7 +460,7 @@ func (self *LauncherTestSuite) TestCompilingPermissions() {
 	compiled, err = launcher.CompileCollectorArgs(
 		ctx, self.config_obj, acl_manager, repository, false, request)
 	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), len(compiled.Query), 2)
+	assert.Equal(self.T(), len(compiled[0].Query), 2)
 }
 
 func TestLauncher(t *testing.T) {

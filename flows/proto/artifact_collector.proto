@@ -15,6 +15,10 @@ message ArtifactParameters {
         }];
 }
 
+message ArtifactSpec {
+    string artifact = 1;
+    ArtifactParameters parameters = 2;
+}
 
 message ArtifactCollectorArgs {
     string creator = 1;
@@ -23,6 +27,9 @@ message ArtifactCollectorArgs {
     // If set we send an urgent request to the client.
     bool urgent = 21;
 
+    // Deprecated: Old way of specifying the artifacts consist of
+    // shared parameters within a list of artifacts (i.e. all
+    // artifacts share same scope).
     repeated string artifacts = 2 [(sem_type) = {
             description: "The artifacts to launch.",
             friendly_name: "Launch",
@@ -32,6 +39,9 @@ message ArtifactCollectorArgs {
             description: "Parameters to the artifacts.",
             friendly_name: "Parameters",
         }];
+
+    // New way of specifying artifacts.
+    repeated ArtifactSpec specs = 24;
 
     float ops_per_second = 6 [(sem_type) = {
             description: "Operations per second (Throttling).",
@@ -100,6 +110,8 @@ message ArtifactCollectorContext {
     uint64 total_expected_uploaded_bytes = 25;
     uint64 total_uploaded_bytes = 26;
     uint64 total_collected_rows = 28;
+
+    int64 outstanding_requests = 31;
 
     // We expect the next response from the client to have this id.
     uint64 next_response_id = 30;

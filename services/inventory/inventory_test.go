@@ -196,6 +196,7 @@ tools:
 			Artifacts: []string{"TestArtifact"},
 		})
 	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), 1, len(response))
 
 	// What is the tool info - should have resolved the final
 	// destination and the hash.
@@ -205,14 +206,14 @@ tools:
 	assert.NoError(self.T(), err)
 
 	// Make sure the tool is served directly from upstream.
-	assert.Equal(self.T(), response.Env[2].Key, "Tool_SampleTool_URL")
-	assert.Equal(self.T(), response.Env[2].Value, "htttp://www.example.com/file.exe")
+	assert.Equal(self.T(), response[0].Env[2].Key, "Tool_SampleTool_URL")
+	assert.Equal(self.T(), response[0].Env[2].Value, "htttp://www.example.com/file.exe")
 
-	assert.Equal(self.T(), response.Env[0].Key, "Tool_SampleTool_HASH")
-	assert.Equal(self.T(), response.Env[0].Value,
+	assert.Equal(self.T(), response[0].Env[0].Key, "Tool_SampleTool_HASH")
+	assert.Equal(self.T(), response[0].Env[0].Value,
 		"3c03cf5341a1e078c438f31852e1587a70cc9f91ee02eda315dd231aba0a0ab1")
 
-	golden := ordereddict.NewDict().Set("Tool", tool).Set("Request", response)
+	golden := ordereddict.NewDict().Set("Tool", tool).Set("Request", response[0])
 	serialized, err := json.MarshalIndentNormalized(golden)
 	assert.NoError(self.T(), err)
 	goldie.Assert(self.T(), "TestGihubToolsUninitialized", serialized)
@@ -291,14 +292,14 @@ tools:
 	assert.NoError(self.T(), err)
 
 	// Make sure the tool is served directly from the public directory.
-	assert.Equal(self.T(), response.Env[2].Key, "Tool_SampleTool_URL")
-	assert.Contains(self.T(), response.Env[2].Value, "https://localhost:8000/")
+	assert.Equal(self.T(), response[0].Env[2].Key, "Tool_SampleTool_URL")
+	assert.Contains(self.T(), response[0].Env[2].Value, "https://localhost:8000/")
 
 	tool, err := services.GetInventory().GetToolInfo(
 		ctx, self.config_obj, "SampleTool")
 	assert.NoError(self.T(), err)
 
-	golden := ordereddict.NewDict().Set("Tool", tool).Set("Request", response)
+	golden := ordereddict.NewDict().Set("Tool", tool).Set("Request", response[0])
 	serialized, err := json.MarshalIndentNormalized(golden)
 	assert.NoError(self.T(), err)
 	goldie.Assert(self.T(), "TestGihubToolServedLocally", serialized)

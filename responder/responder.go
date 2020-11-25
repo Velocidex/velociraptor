@@ -36,7 +36,6 @@ type Responder struct {
 
 	sync.Mutex
 	request    *crypto_proto.GrrMessage
-	next_id    uint64
 	logger     *logging.LogContext
 	start_time int64
 }
@@ -48,7 +47,6 @@ func NewResponder(
 	output chan *crypto_proto.GrrMessage) *Responder {
 	result := &Responder{
 		request:    request,
-		next_id:    0,
 		output:     output,
 		logger:     logging.GetLogger(config_obj, &logging.ClientComponent),
 		start_time: time.Now().UnixNano(),
@@ -62,8 +60,7 @@ func (self *Responder) AddResponse(message *crypto_proto.GrrMessage) {
 
 	message.SessionId = self.request.SessionId
 	message.Urgent = self.request.Urgent
-	message.ResponseId = self.next_id
-	self.next_id++
+	message.ResponseId = uint64(time.Now().UnixNano())
 	if message.RequestId == 0 {
 		message.RequestId = self.request.RequestId
 	}

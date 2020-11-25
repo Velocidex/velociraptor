@@ -141,7 +141,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 			&flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{artifact_name},
 			})
-		if err != nil {
+		if err != nil || len(request) != 1 {
 			scope.Log("Artifact %s invalid: %s",
 				strings.Join(self.prefix, "."), err.Error())
 			return
@@ -158,7 +158,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		// Pass the args in the new scope.
 		env := ordereddict.NewDict()
-		for _, request_env := range request.Env {
+		for _, request_env := range request[0].Env {
 			env.Set(request_env.Key, request_env.Value)
 		}
 
@@ -185,7 +185,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 		// Add the scope args
 		child_scope.AppendVars(env)
 
-		for _, query := range request.Query {
+		for _, query := range request[0].Query {
 			vql, err := vfilter.Parse(query.VQL)
 			if err != nil {
 				scope.Log("Artifact %s invalid: %s",

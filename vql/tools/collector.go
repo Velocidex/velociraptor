@@ -182,7 +182,7 @@ func (self CollectPlugin) Call(
 				&flows_proto.ArtifactCollectorArgs{
 					Artifacts: []string{artifact.Name},
 				})
-			if err != nil {
+			if err != nil || len(request) != 1 {
 				scope.Log("collect: Invalid artifact %v: %v",
 					name, err)
 				continue
@@ -190,7 +190,7 @@ func (self CollectPlugin) Call(
 
 			// First set defaults
 			builder.Env = ordereddict.NewDict()
-			for _, e := range request.Env {
+			for _, e := range request[0].Env {
 				builder.Env.Set(e.Key, e.Value)
 			}
 
@@ -217,7 +217,7 @@ func (self CollectPlugin) Call(
 			subscope := manager.BuildScope(builder)
 			defer subscope.Close()
 
-			for _, query := range request.Query {
+			for _, query := range request[0].Query {
 				vql, err := vfilter.Parse(query.VQL)
 				if err != nil {
 					subscope.Log("collect: %v", err)
