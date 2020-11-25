@@ -1,9 +1,4 @@
 Queries:
-  - SELECT Authors, FullPath, License, Name, Summary, Version
-    FROM source(
-       client_id='C.4f5e52adf0a337a9',
-       flow_id="F.BN2HP3OSS3LK6",
-       artifact='Windows.Applications.ChocolateyPackages')
   - SELECT * FROM uploads(client_id='C.4f5e52adf0a337a9',
                           flow_id='F.BN2HJCPOF5U7U')
 
