@@ -1,6 +1,6 @@
 import React from 'react';
 import SplitPane from 'react-split-pane';
-import HuntsList from './hunt-list.js';
+import HuntList from './hunt-list.js';
 import HuntInspector from './hunt-inspector.js';
 
 import api from '../core/api-service.js';
@@ -43,7 +43,12 @@ class VeloHunts extends React.Component {
         if (!hunt || !hunt.hunt_id) {
             return;
         }
-        this.props.history.push("/hunts/" + hunt.hunt_id);
+        let tab = this.props.match && this.props.match.params && this.props.match.params.tab;
+        if (tab) {
+            this.props.history.push("/hunts/" + hunt.hunt_id + "/" + tab);
+        } else {
+            this.props.history.push("/hunts/" + hunt.hunt_id);
+        }
         this.loadFullHunt(hunt);
     }
 
@@ -92,7 +97,7 @@ class VeloHunts extends React.Component {
     render() {
         return (
             <SplitPane split="horizontal" defaultSize="30%">
-              <HuntsList
+              <HuntList
                 updateHunts={this.fetchHunts}
                 selected_hunt={this.state.selected_hunt}
                 hunts={this.state.hunts}

@@ -1,3 +1,6 @@
+
+import "./flows.css";
+
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -14,11 +17,15 @@ import { formatColumns } from "../core/table.js";
 
 import NewCollectionWizard from './new-collection.js';
 import OfflineCollectorWizard from './offline-collector.js';
+import Spinner from '../utils/spinner.js';
+import DeleteNotebookDialog from '../notebooks/notebook-delete.js';
+import ExportNotebook from '../notebooks/export-notebook.js';
 
 import { NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { HotKeys } from "react-hotkeys";
 import { withRouter } from "react-router-dom";
+import { runArtifact } from "./utils.js";
 
 import Modal from 'react-bootstrap/Modal';
 import axios from 'axios';
@@ -31,21 +38,24 @@ class DeleteFlowDialog extends React.PureComponent {
         onClose: PropTypes.func.isRequired,
     }
 
+    state = {
+        loading: false,
+    }
+
     startDeleteFlow = () => {
         let client_id = this.props.client && this.props.client.client_id;
         let flow_id = this.props.flow && this.props.flow.session_id;
 
         if (flow_id && client_id) {
-            api.post("v1/CollectArtifact", {
-                client_id: "server",   // This collection happens on the server.
-                artifacts: ["Server.Utils.DeleteFlow"],
-                parameters: {"env": [
-                    { "key": "FlowId", "value": flow_id},
-                    { "key": "ClientId", "value": client_id},
-                    { "key": "ReallyDoIt", "value": "Y"}]},
-            }).then((response) => {
-                this.props.onClose();
-            });
+            this.setState({loading: true})
+            runArtifact("server",   // This collection happens on the server.
+                        "Server.Utils.DeleteFlow",
+                        {FlowId: flow_id,
+                         ClientId: client_id,
+                         ReallyDoIt: "Y"}, ()=>{
+                             this.props.onClose();
+                             this.setState({loading: false});
+                         });
         }
     }
 
@@ -59,7 +69,7 @@ class DeleteFlowDialog extends React.PureComponent {
               <Modal.Header closeButton>
                 <Modal.Title>Permanently delete collection</Modal.Title>
               </Modal.Header>
-              <Modal.Body>
+              <Modal.Body><Spinner loading={this.state.loading} />
                 You are about to permanently delete the artifact collection
                 <b>{this.props.flow.session_id}</b>.
                 <br/>
@@ -96,6 +106,7 @@ class FlowsList extends React.Component {
         showCopyWizard: false,
         showOfflineWizard: false,
         showDeleteWizard: false,
+        showDeleteNotebook: false,
         initialized_from_parent: false,
     }
 
@@ -217,6 +228,8 @@ class FlowsList extends React.Component {
     }
 
     render() {
+        let tab = this.props.match && this.props.match.params &&
+            this.props.match.params.tab;
         let client_id = this.props.client && this.props.client.client_id;
         let columns = getFlowColumns(client_id);
         let selected_flow = this.props.selected_flow && this.props.selected_flow.session_id;
@@ -260,7 +273,10 @@ class FlowsList extends React.Component {
                 <DeleteFlowDialog
                   client={this.props.client}
                   flow={this.props.selected_flow}
-                  onClose={(e) => this.setState({showDeleteWizard: false})}/>
+                  onClose={e=>{
+                      this.setState({showDeleteWizard: false});
+                      this.props.fetchFlows();
+                  }}/>
               }
               { this.state.showWizard &&
                 <NewCollectionWizard
@@ -283,7 +299,19 @@ class FlowsList extends React.Component {
                   onResolve={this.setCollectionRequest} />
               }
 
-              <Navbar className="toolbar">
+              { this.state.showDeleteNotebook &&
+                <DeleteNotebookDialog
+                  notebook_id={"N." + selected_flow + "-" + client_id}
+                  onClose={(e) => this.setState({showDeleteNotebook: false})}/>
+              }
+
+              { this.state.showExportNotebook &&
+                <ExportNotebook
+                  notebook={{notebook_id: "N." + selected_flow + "-" + client_id}}
+                  onClose={(e) => this.setState({showExportNotebook: false})}/>
+              }
+
+              <Navbar className="flow-toolbar">
                 <ButtonGroup>
                   <Button title="New Collection"
                           onClick={() => this.setState({showWizard: true})}
@@ -325,6 +353,28 @@ class FlowsList extends React.Component {
                   }
 
                 </ButtonGroup>
+                { tab === "notebook" &&
+                  <ButtonGroup className="float-right">
+                    <Button title="Notebooks"
+                            disabled={true}
+                            variant="outline-dark">
+                      <FontAwesomeIcon icon="book"/>
+                    </Button>
+
+                    <Button title="Delete Notebook"
+                            onClick={() => this.setState({showDeleteNotebook: true})}
+                            variant="default">
+                      <FontAwesomeIcon icon="trash"/>
+                    </Button>
+
+                    <Button title="Export Notebook"
+                            onClick={() => this.setState({showExportNotebook: true})}
+                            variant="default">
+                      <FontAwesomeIcon icon="download"/>
+                    </Button>
+
+                  </ButtonGroup>
+                }
               </Navbar>
 
               <div className="fill-parent no-margins toolbar-margin selectable">

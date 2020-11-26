@@ -30,8 +30,8 @@ export default class ExportNotebook extends React.Component {
         this.source = axios.CancelToken.source();
         this.interval = setInterval(this.fetchNotebookDetails, POLL_TIME);
 
-        // Set the abbreviated flow in the meantime while we fetch the
-        // full detailed to provide a smoother UX.
+        // Set the abbreviated notebook in the meantime while we fetch the
+        // full details to provide a smoother UX.
         this.setState({notebook: this.props.notebook});
         this.fetchNotebookDetails();
     }
@@ -80,7 +80,7 @@ export default class ExportNotebook extends React.Component {
                    dialogClassName="modal-90w"
                    onHide={this.props.onClose} >
               <Modal.Header closeButton>
-                <Modal.Title>Add cell from Hunt</Modal.Title>
+                <Modal.Title>Export notebooks</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form>
