@@ -407,7 +407,6 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 
 	for _, resp := range responder.GetTestResponses(resp) {
 		resp.Source = self.client_id
-		json.Dump(resp)
 		err := ArtifactCollectorProcessOneMessage(
 			self.config_obj, collection_context, resp)
 		assert.NoError(self.T(), err)
