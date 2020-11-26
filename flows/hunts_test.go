@@ -107,7 +107,7 @@ sources:
 	// we dont need to compile it for each client. For normal
 	// artifacts there should be only one collector args because
 	// each artifact is collected serially on the client.
-	assert.Equal(self.T(), len(hunt_obj.StartRequest.CompiledCollectorArgs), 1)
+	assert.Equal(self.T(), len(hunt_obj.StartRequest.CompiledCollectorArgs), 2)
 
 	keys := []string{}
 	for _, compiled := range hunt_obj.StartRequest.CompiledCollectorArgs {

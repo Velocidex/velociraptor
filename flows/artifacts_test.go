@@ -216,7 +216,7 @@ func (self *TestSuite) TestRetransmission() {
 		Source:     self.client_id,
 		SessionId:  flow_id,
 		RequestId:  1,
-		ResponseId: 2,
+		ResponseId: uint64(time.Now().UnixNano()),
 		VQLResponse: &actions_proto.VQLResponse{
 			JSONLResponse: "{}",
 			TotalRows:     1,
@@ -397,15 +397,19 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 
 	// Get a new collection context.
 	collection_context := &flows_proto.ArtifactCollectorContext{
-		SessionId: self.flow_id,
-		ClientId:  self.client_id,
-		Request:   &flows_proto.ArtifactCollectorArgs{},
+		SessionId:           self.flow_id,
+		ClientId:            self.client_id,
+		OutstandingRequests: 1,
+		Request: &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"Generic.Client.Info"},
+		},
 	}
 
 	for _, resp := range responder.GetTestResponses(resp) {
 		resp.Source = self.client_id
-		ArtifactCollectorProcessOneMessage(self.config_obj,
-			collection_context, resp)
+		err := ArtifactCollectorProcessOneMessage(
+			self.config_obj, collection_context, resp)
+		assert.NoError(self.T(), err)
 	}
 
 	// Close the context should force uploaded files to be
@@ -491,9 +495,10 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 
 	// Get a new collection context.
 	collection_context := &flows_proto.ArtifactCollectorContext{
-		SessionId: self.flow_id,
-		ClientId:  self.client_id,
-		Request:   &flows_proto.ArtifactCollectorArgs{},
+		SessionId:           self.flow_id,
+		ClientId:            self.client_id,
+		OutstandingRequests: 1,
+		Request:             &flows_proto.ArtifactCollectorArgs{},
 	}
 
 	for _, resp := range responder.GetTestResponses(resp) {

@@ -133,7 +133,7 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 			return nil, err
 		}
 
-		result = append(result, compiled)
+		result = append(result, compiled...)
 	}
 	return result, nil
 }

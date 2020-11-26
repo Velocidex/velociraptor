@@ -114,7 +114,7 @@ type Launcher interface {
 		repository Repository,
 		should_obfuscate bool,
 		collector_request *flows_proto.ArtifactCollectorArgs) (
-		*actions_proto.VQLCollectorArgs, error)
+		[]*actions_proto.VQLCollectorArgs, error)
 
 	// Main entry point to launch an artifact collection.
 	ScheduleArtifactCollection(

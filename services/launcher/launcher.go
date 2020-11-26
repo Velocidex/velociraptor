@@ -29,6 +29,28 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
+// Support backwards compatibility by converting the different
+// requests to a list of specs.
+func getCollectorSpecs(
+	collector_request *flows_proto.ArtifactCollectorArgs) []*flows_proto.ArtifactSpec {
+
+	// New API just return the specs directly.
+	if collector_request.Specs != nil {
+		return collector_request.Specs
+	}
+
+	// old API - convert the request to a series of specs.
+	result := []*flows_proto.ArtifactSpec{}
+	for _, artifact := range collector_request.Artifacts {
+		result = append(result, &flows_proto.ArtifactSpec{
+			Artifact:   artifact,
+			Parameters: collector_request.Parameters,
+		})
+	}
+
+	return result
+}
+
 type Launcher struct{}
 
 func (self *Launcher) CompileCollectorArgs(
@@ -38,29 +60,30 @@ func (self *Launcher) CompileCollectorArgs(
 	repository services.Repository,
 	should_obfuscate bool,
 	collector_request *flows_proto.ArtifactCollectorArgs) (
-	*actions_proto.VQLCollectorArgs, error) {
+	[]*actions_proto.VQLCollectorArgs, error) {
 
-	// Update the flow's artifacts list.
-	vql_collector_args := &actions_proto.VQLCollectorArgs{
-		OpsPerSecond: collector_request.OpsPerSecond,
-		Timeout:      collector_request.Timeout,
-		MaxRow:       1000,
-	}
+	result := []*actions_proto.VQLCollectorArgs{}
 
-	// All artifacts are compiled to the same client request
-	// because they all run serially.
-	for _, name := range collector_request.Artifacts {
+	for _, spec := range getCollectorSpecs(collector_request) {
+		// Update the flow's artifacts list.
+		vql_collector_args := &actions_proto.VQLCollectorArgs{
+			OpsPerSecond: collector_request.OpsPerSecond,
+			Timeout:      collector_request.Timeout,
+			MaxRow:       1000,
+		}
+
 		var artifact *artifacts_proto.Artifact = nil
+
 		if collector_request.AllowCustomOverrides {
-			artifact, _ = repository.Get(config_obj, "Custom."+name)
+			artifact, _ = repository.Get(config_obj, "Custom."+spec.Artifact)
 		}
 
 		if artifact == nil {
-			artifact, _ = repository.Get(config_obj, name)
+			artifact, _ = repository.Get(config_obj, spec.Artifact)
 		}
 
 		if artifact == nil {
-			return nil, errors.New("Unknown artifact " + name)
+			return nil, errors.New("Unknown artifact " + spec.Artifact)
 		}
 
 		err := CheckAccess(config_obj, artifact, acl_manager)
@@ -77,30 +100,34 @@ func (self *Launcher) CompileCollectorArgs(
 		if err != nil {
 			return nil, err
 		}
+
+		// Add any artifact dependencies.
+		err = PopulateArtifactsVQLCollectorArgs(
+			config_obj, repository, vql_collector_args)
+		if err != nil {
+			return nil, err
+		}
+
+		err = self.AddArtifactCollectorArgs(vql_collector_args, spec)
+		if err != nil {
+			return nil, err
+		}
+
+		err = getDependentTools(ctx, config_obj, vql_collector_args)
+		if err != nil {
+			return nil, err
+		}
+
+		if should_obfuscate {
+			err = artifacts.Obfuscate(config_obj, vql_collector_args)
+			if err != nil {
+				return nil, err
+			}
+		}
+		result = append(result, vql_collector_args)
 	}
 
-	// Add any artifact dependencies.
-	err := PopulateArtifactsVQLCollectorArgs(
-		config_obj, repository, vql_collector_args)
-	if err != nil {
-		return nil, err
-	}
-
-	err = self.AddArtifactCollectorArgs(
-		vql_collector_args, collector_request)
-	if err != nil {
-		return nil, err
-	}
-
-	err = getDependentTools(ctx, config_obj, vql_collector_args)
-	if err != nil {
-		return nil, err
-	}
-
-	if should_obfuscate {
-		err = artifacts.Obfuscate(config_obj, vql_collector_args)
-	}
-	return vql_collector_args, err
+	return result, nil
 }
 
 // Make sure we know about tools the artifact itself defines.
@@ -207,7 +234,7 @@ func (self *Launcher) ScheduleArtifactCollection(
 		if err != nil {
 			return "", err
 		}
-		args = append(args, compiled)
+		args = append(args, compiled...)
 	}
 
 	return ScheduleArtifactCollectionFromCollectorArgs(
@@ -226,11 +253,12 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 
 	// Generate a new collection context.
 	collection_context := &flows_proto.ArtifactCollectorContext{
-		SessionId:  NewFlowId(client_id),
-		CreateTime: uint64(time.Now().UnixNano() / 1000),
-		State:      flows_proto.ArtifactCollectorContext_RUNNING,
-		Request:    collector_request,
-		ClientId:   client_id,
+		SessionId:           NewFlowId(client_id),
+		CreateTime:          uint64(time.Now().UnixNano() / 1000),
+		State:               flows_proto.ArtifactCollectorContext_RUNNING,
+		Request:             collector_request,
+		ClientId:            client_id,
+		OutstandingRequests: int64(len(vql_collector_args)),
 	}
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -284,16 +312,16 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 // VQLCollectorArgs.
 func (self *Launcher) AddArtifactCollectorArgs(
 	vql_collector_args *actions_proto.VQLCollectorArgs,
-	collector_request *flows_proto.ArtifactCollectorArgs) error {
+	spec *flows_proto.ArtifactSpec) error {
 
 	// Add any Environment Parameters from the request.
-	if collector_request.Parameters == nil {
+	if spec.Parameters == nil {
 		return nil
 	}
 
 	// We can only specify a parameter which is defined already
-	if collector_request.Parameters != nil {
-		for _, item := range collector_request.Parameters.Env {
+	if spec.Parameters != nil {
+		for _, item := range spec.Parameters.Env {
 			vql_collector_args.Env = addOrReplaceParameter(
 				item, vql_collector_args.Env)
 		}

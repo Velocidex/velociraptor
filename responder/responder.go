@@ -31,12 +31,33 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
+var (
+	inc_mu     sync.Mutex
+	last_value uint64
+)
+
+// Response ID used to be incremental but now artifacts are collected
+// in parallel each collection needs to advance the response id
+// forward. We therefore remember the last id and ensure response id
+// is monotonically incremental but time based.
+func getIncValue() uint64 {
+	inc_mu.Lock()
+	defer inc_mu.Unlock()
+
+	value := uint64(time.Now().UnixNano())
+	if value <= last_value {
+		value = last_value + 1
+	}
+
+	last_value = value
+	return last_value
+}
+
 type Responder struct {
 	output chan *crypto_proto.GrrMessage
 
 	sync.Mutex
 	request    *crypto_proto.GrrMessage
-	next_id    uint64
 	logger     *logging.LogContext
 	start_time int64
 }
@@ -48,7 +69,6 @@ func NewResponder(
 	output chan *crypto_proto.GrrMessage) *Responder {
 	result := &Responder{
 		request:    request,
-		next_id:    0,
 		output:     output,
 		logger:     logging.GetLogger(config_obj, &logging.ClientComponent),
 		start_time: time.Now().UnixNano(),
@@ -62,8 +82,7 @@ func (self *Responder) AddResponse(message *crypto_proto.GrrMessage) {
 
 	message.SessionId = self.request.SessionId
 	message.Urgent = self.request.Urgent
-	message.ResponseId = self.next_id
-	self.next_id++
+	message.ResponseId = getIncValue()
 	if message.RequestId == 0 {
 		message.RequestId = self.request.RequestId
 	}

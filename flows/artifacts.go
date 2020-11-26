@@ -248,8 +248,11 @@ func ArtifactCollectorProcessOneMessage(
 	}
 
 	// Check that this is not a retransmission - if it is we drop
-	// it on the floor.
-	if message.ResponseId < collection_context.NextResponseId {
+	// it on the floor. Backwards compatibility - older clients
+	// increment response id from 0 but newer clients use nano
+	// timestamp.
+	if message.ResponseId > 100000 &&
+		message.ResponseId < collection_context.NextResponseId {
 		return nil
 	}
 	collection_context.NextResponseId = message.ResponseId + 1
@@ -380,8 +383,11 @@ func IsRequestComplete(
 			}
 		}
 
-		collection_context.ExecutionDuration = message.Status.Duration
-		collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED
+		collection_context.ExecutionDuration += message.Status.Duration
+		collection_context.OutstandingRequests--
+		if collection_context.OutstandingRequests <= 0 {
+			collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED
+		}
 		collection_context.Dirty = true
 	}
 

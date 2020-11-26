@@ -251,9 +251,11 @@ class NewCollectionConfigParameters extends React.Component {
         paginator: PropTypes.object,
     };
 
-    setValue = (name, value) => {
+    setValue = (artifact, name, value) => {
         let parameters = this.props.parameters;
-        parameters[name] = value;
+        let artifact_parameters = parameters[artifact] || {};
+        artifact_parameters[name] = value;
+        parameters[artifact] = artifact_parameters;
         this.props.setParameters(parameters);
     }
 
@@ -288,7 +290,8 @@ class NewCollectionConfigParameters extends React.Component {
             showExpandColumn: true,
             renderer: artifact => {
                 return _.map(artifact.parameters || [], (param, idx) => {
-                    let value = this.props.parameters[param.name];
+                    let artifact_parameters = this.props.parameters[artifact.name] || {};
+                    let value = artifact_parameters[param.name];
                     // Only set default value if the parameter is not
                     // defined. If it is an empty string then so be
                     // it.
@@ -299,7 +302,10 @@ class NewCollectionConfigParameters extends React.Component {
                     return (
                         <VeloForm param={param} key={idx}
                                   value={value}
-                                  setValue={(value) => this.setValue(param.name, value)}/>
+                                  setValue={(value) => this.setValue(
+                                      artifact.name,
+                                      param.name,
+                                      value)}/>
                     );
                 });
             }
@@ -578,6 +584,8 @@ class NewCollectionWizard extends React.Component {
             return;
         }
 
+        console.log(request);
+
         let resources = {
             ops_per_second: request.ops_per_second,
             timeout: request.timeout,
@@ -596,16 +604,35 @@ class NewCollectionWizard extends React.Component {
                 if (response && response.data &&
                     response.data.items && response.data.items.length) {
 
-                    let parameters = {};
-                    if (request.parameters) {
-                        _.each(request.parameters.env, param=>{
-                            parameters[param.key] = param.value;
+                    this.setState({artifacts: [...response.data.items]});
+
+                    // New style request.
+                    if (!_.isEmpty(request.specs)) {
+                        let parameters = {};
+                        _.each(request.specs, spec=>{
+                            let artifact_parameters = {};
+                            _.each(spec.parameters.env, param=>{
+                                artifact_parameters[param.key] = param.value;
+                            });
+                            parameters[spec.artifact] = artifact_parameters;
                         });
-                    }
-                    this.setState({
-                        artifacts: [...response.data.items],
-                        parameters: parameters,
-                    });
+
+                        this.setState({parameters: parameters});
+                    } else {
+                        let parameters = {};
+                        if (!_.isEmpty(request.parameters)) {
+                            _.each(request.artifacts, name=>{
+                                _.each(request.parameters.env, param=>{
+                                    if(_.isUndefined(parameters[name])) {
+                                        parameters[name] = {};
+                                    };
+                                    parameters[name][param.key] = param.value;
+                                });
+                            });
+                        }
+
+                        this.setState({parameters: parameters});
+                    };
                 }});
     }
 
@@ -615,7 +642,8 @@ class NewCollectionWizard extends React.Component {
         // A list of artifact descriptors we have selected so far.
         artifacts: [],
 
-        // A key/value mapping of edited parameters by the user.
+        // A key/value mapping of edited parameters by the user. Key -
+        // artifact name, value - parameters dict
         parameters: {},
 
         resources: {},
@@ -642,20 +670,24 @@ class NewCollectionWizard extends React.Component {
     }
 
     prepareRequest = () => {
+        let specs = [];
         let artifacts = [];
         _.each(this.state.artifacts, (item) => {
-            artifacts.push(item.name);
-        });
+            let spec = {
+                artifact: item.name,
+                parameters: {env: []},
+            };
 
-        // Convert the params into protobuf
-        let parameters = {env: []};
-        _.each(this.state.parameters, (v, k) => {
-            parameters.env.push({key: k, value: v});
+            _.each(this.state.parameters[item.name], (v, k) => {
+                spec.parameters.env.push({key: k, value: v});
+            });
+            specs.push(spec);
+            artifacts.push(item.name);
         });
 
         let result = {
             artifacts: artifacts,
-            parameters: parameters,
+            specs: specs,
         };
 
         if (this.state.resources.ops_per_second) {

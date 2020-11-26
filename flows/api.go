@@ -355,26 +355,6 @@ func GetFlowRequests(
 		return nil, err
 	}
 
-	// Set the task_id in the details protobuf.
-	set_task_id_in_details := func(request_id, task_id uint64) bool {
-		for _, item := range flow_details.Items {
-			if item.RequestId == request_id {
-				item.TaskId = task_id
-				return true
-			}
-		}
-
-		return false
-	}
-
-	requests, err := db.GetClientTasks(config_obj, client_id, true)
-	if err != nil {
-		return nil, err
-	}
-	for _, request := range requests {
-		set_task_id_in_details(request.RequestId, request.TaskId)
-	}
-
 	if offset > uint64(len(flow_details.Items)) {
 		return result, nil
 	}

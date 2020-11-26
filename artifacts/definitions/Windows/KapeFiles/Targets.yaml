@@ -1028,6 +1028,11 @@ parameters:
   - name: DontBeLazy
     description: Normally we prefer to use lazy_ntfs for speed. Sometimes this might miss stuff so setting this will fallback to the regular ntfs accessor.
     type: bool
+  - name: UseAutoAccessor
+    description: Uses file accessor when possible instead of ntfs parse - this is much faster.
+    type: bool
+    default: Y
+
 
 sources:
   - name: All File Metadata
@@ -1067,8 +1072,12 @@ sources:
            }, else={
              SELECT * FROM chain(
                a={
+                   -- Prefer the auto accessor if possible since it
+                   -- will fall back to ntfs if required but otherwise
+                   -- will be faster
                    SELECT * FROM Artifact.Windows.Collectors.File(
-                      RootDevice=Device, Accessor="ntfs",
+                      RootDevice=Device,
+                      Accessor=if(condition=UseAuthAccesor, then="auto", else="ntfs"),
                       collectionSpec=serialize(item=rule_specs_ntfs, format="csv"))
                }, b={
                    SELECT * FROM Artifact.Windows.Collectors.File(

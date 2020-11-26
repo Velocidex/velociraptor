@@ -73,6 +73,9 @@ func TestClientUploaderSparse(t *testing.T) {
 	assert.Equal(t, responses[0].FileBuffer.Size, uint64(18))
 
 	assert.Equal(t, CombineOutput("foo", responses), "Hello hello ")
+	for _, response := range responses {
+		response.ResponseId = 0
+	}
 	goldie.Assert(t, "ClientUploaderSparse", json.MustMarshalIndent(responses))
 }
 
@@ -198,6 +201,10 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 		"foo", "ntfs", "", 1000, range_reader)
 	responses := responder.GetTestResponses(resp)
 	assert.Equal(t, CombineOutput("foo", responses), "Hello hello ")
+	for _, response := range responses {
+		response.ResponseId = 0
+	}
+
 	goldie.Assert(t, "ClientUploaderSparseMultiBuffer",
 		json.MustMarshalIndent(responses))
 }

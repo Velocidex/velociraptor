@@ -145,7 +145,7 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 	// It should compile ok but overflow at runtime.
 	launcher, err := services.GetLauncher()
 	assert.NoError(self.T(), err)
-	vql_request, err := launcher.CompileCollectorArgs(context.Background(),
+	vql_requests, err := launcher.CompileCollectorArgs(context.Background(),
 		self.config_obj, vql_subsystem.NullACLManager{},
 		self.repository, false, request)
 	assert.NoError(self.T(), err)
@@ -155,8 +155,10 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 	defer cancel()
 	test_responder := responder.TestResponder()
 
-	actions.VQLClientAction{}.StartQuery(
-		self.config_obj, ctx, test_responder, vql_request)
+	for _, vql_request := range vql_requests {
+		actions.VQLClientAction{}.StartQuery(
+			self.config_obj, ctx, test_responder, vql_request)
+	}
 
 	assert.Contains(self.T(), getLogMessages(test_responder),
 		"Stack overflow: Artifact2, Artifact1, Artifact2, Artifact1")
@@ -171,7 +173,7 @@ func (self *ArtifactTestSuite) TestArtifactDependencies() {
 	launcher, err := services.GetLauncher()
 	assert.NoError(self.T(), err)
 
-	vql_request, err := launcher.CompileCollectorArgs(context.Background(),
+	vql_requests, err := launcher.CompileCollectorArgs(context.Background(),
 		self.config_obj, vql_subsystem.NullACLManager{},
 		self.repository, false, request)
 	assert.NoError(self.T(), err)
@@ -181,8 +183,10 @@ func (self *ArtifactTestSuite) TestArtifactDependencies() {
 	defer cancel()
 	test_responder := responder.TestResponder()
 
-	actions.VQLClientAction{}.StartQuery(
-		self.config_obj, ctx, test_responder, vql_request)
+	for _, vql_request := range vql_requests {
+		actions.VQLClientAction{}.StartQuery(
+			self.config_obj, ctx, test_responder, vql_request)
+	}
 
 	results := getResponses(test_responder)
 

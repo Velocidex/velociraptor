@@ -249,15 +249,35 @@ export default class NewHuntWizard extends React.Component {
                 if (response && response.data &&
                     response.data.items && response.data.items.length) {
 
-                    let parameters = {};
-                    _.each(request.parameters.env, param=>{
-                        parameters[param.key] = param.value;
-                    });
+                    this.setState({artifacts: [...response.data.items]});
 
-                    this.setState({
-                        artifacts: [...response.data.items],
-                        parameters: parameters,
-                    });
+                    // New style request.
+                    if (!_.isEmpty(request.specs)) {
+                        let parameters = {};
+                        _.each(request.specs, spec=>{
+                            let artifact_parameters = {};
+                            _.each(spec.parameters.env, param=>{
+                                artifact_parameters[param.key] = param.value;
+                            });
+                            parameters[spec.artifact] = artifact_parameters;
+                        });
+
+                        this.setState({parameters: parameters});
+                    } else {
+                        let parameters = {};
+                        if (!_.isEmpty(request.parameters)) {
+                            _.each(request.artifacts, name=>{
+                                _.each(request.parameters.env, param=>{
+                                    if(_.isUndefined(parameters[name])) {
+                                        parameters[name] = {};
+                                    };
+                                    parameters[name][param.key] = param.value;
+                                });
+                            });
+                        }
+
+                        this.setState({parameters: parameters});
+                    };
                 }});
 
 
@@ -270,20 +290,24 @@ export default class NewHuntWizard extends React.Component {
     }
 
     prepareRequest = () => {
+        let specs = [];
         let artifacts = [];
         _.each(this.state.artifacts, (item) => {
-            artifacts.push(item.name);
-        });
+            let spec = {
+                artifact: item.name,
+                parameters: {env: []},
+            };
 
-        // Convert the params into protobuf
-        let parameters = {env: []};
-        _.each(this.state.parameters, (v, k) => {
-            parameters.env.push({key: k, value: v});
+            _.each(this.state.parameters[item.name], (v, k) => {
+                spec.parameters.env.push({key: k, value: v});
+            });
+            specs.push(spec);
+            artifacts.push(item.name);
         });
 
         let request = {
             artifacts: artifacts,
-            parameters: parameters,
+            specs: specs,
         };
 
         if (this.state.resources.ops_per_second) {
