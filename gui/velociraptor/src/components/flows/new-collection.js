@@ -585,8 +585,6 @@ class NewCollectionWizard extends React.Component {
             return;
         }
 
-        console.log(request);
-
         let resources = {
             ops_per_second: request.ops_per_second,
             timeout: request.timeout,

@@ -18,7 +18,6 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import cellEditFactory, { Type } from 'react-bootstrap-table2-editor';
 
 import { parseCSV, serializeCSV } from '../utils/csv.js';
-
 const numberRegex = RegExp("^[0-9]+$");
 
 
