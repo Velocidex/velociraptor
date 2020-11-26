@@ -397,9 +397,10 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 
 	// Get a new collection context.
 	collection_context := &flows_proto.ArtifactCollectorContext{
-		SessionId: self.flow_id,
-		ClientId:  self.client_id,
-		Request:   &flows_proto.ArtifactCollectorArgs{},
+		SessionId:           self.flow_id,
+		ClientId:            self.client_id,
+		OutstandingRequests: 1,
+		Request:             &flows_proto.ArtifactCollectorArgs{},
 	}
 
 	for _, resp := range responder.GetTestResponses(resp) {
@@ -491,9 +492,10 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 
 	// Get a new collection context.
 	collection_context := &flows_proto.ArtifactCollectorContext{
-		SessionId: self.flow_id,
-		ClientId:  self.client_id,
-		Request:   &flows_proto.ArtifactCollectorArgs{},
+		SessionId:           self.flow_id,
+		ClientId:            self.client_id,
+		OutstandingRequests: 1,
+		Request:             &flows_proto.ArtifactCollectorArgs{},
 	}
 
 	for _, resp := range responder.GetTestResponses(resp) {
