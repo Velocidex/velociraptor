@@ -24,7 +24,7 @@ sources:
    - name: All Matches Metadata
      queries:
       # Generate the collection globs for each device
-      - LET specs = SELECT "\\\\.\\" + RootDevice + "\\" + Glob AS Glob
+      - LET specs = SELECT RootDevice + "\\" + Glob AS Glob
             FROM parse_csv(filename=collectionSpec, accessor="data")
             WHERE log(message="Processing Device " + RootDevice + " With " + Accessor)
 

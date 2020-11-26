@@ -57,6 +57,8 @@ export default class VeloForm extends React.Component {
         let param = this.props.param;
 
         switch(param.type) {
+        case "hidden":
+            return <></>;
         case "csv":
             let data = parseCSV(this.props.value);
             let columns = [{
