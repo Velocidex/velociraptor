@@ -400,13 +400,17 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 		SessionId:           self.flow_id,
 		ClientId:            self.client_id,
 		OutstandingRequests: 1,
-		Request:             &flows_proto.ArtifactCollectorArgs{},
+		Request: &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"Generic.Client.Info"},
+		},
 	}
 
 	for _, resp := range responder.GetTestResponses(resp) {
 		resp.Source = self.client_id
-		ArtifactCollectorProcessOneMessage(self.config_obj,
-			collection_context, resp)
+		json.Dump(resp)
+		err := ArtifactCollectorProcessOneMessage(
+			self.config_obj, collection_context, resp)
+		assert.NoError(self.T(), err)
 	}
 
 	// Close the context should force uploaded files to be
