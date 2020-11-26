@@ -37,6 +37,10 @@ func (self *NotebookPathManager) CellDirectory(cell_id string) string {
 	return path.Join(self.root, self.notebook_id, cell_id)
 }
 
+func (self *NotebookPathManager) Directory() string {
+	return path.Join(self.root, self.notebook_id)
+}
+
 func (self *NotebookPathManager) HtmlExport() string {
 	return path.Join("/downloads/", self.root, self.notebook_id,
 		fmt.Sprintf("%s-%s.html", self.notebook_id,

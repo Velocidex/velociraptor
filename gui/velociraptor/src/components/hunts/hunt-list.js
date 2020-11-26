@@ -1,3 +1,4 @@
+import "./hunt.css";
 import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
@@ -10,14 +11,15 @@ import filterFactory from 'react-bootstrap-table2-filter';
 import cellEditFactory from 'react-bootstrap-table2-editor';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+import { withRouter } from "react-router-dom";
 import { formatColumns } from "../core/table.js";
 
 import NewHuntWizard from './new-hunt.js';
+import DeleteNotebookDialog from '../notebooks/notebook-delete.js';
 
 import api from '../core/api-service.js';
 
-export default class HuntList extends React.Component {
+class HuntList extends React.Component {
     static propTypes = {
         selected_hunt: PropTypes.object,
 
@@ -33,6 +35,7 @@ export default class HuntList extends React.Component {
         showRunHuntDialog: false,
         showArchiveHuntDialog: false,
         showDeleteHuntDialog: false,
+        showDeleteNotebook: false,
         showCopyWizard: false,
     }
 
@@ -164,6 +167,7 @@ export default class HuntList extends React.Component {
             state = 'STOPPED';
         }
 
+        let tab = this.props.match && this.props.match.params && this.props.match.params.tab;
         return (
             <>
               { this.state.showWizard &&
@@ -228,6 +232,12 @@ export default class HuntList extends React.Component {
                 </Modal>
               }
 
+              { this.state.showDeleteNotebook &&
+                <DeleteNotebookDialog
+                  notebook_id={selected_hunt}
+                  onClose={(e) => this.setState({showDeleteNotebook: false})}/>
+              }
+
               { this.state.showDeleteHuntDialog &&
                 <Modal show={true}
                        onHide={() => this.setState({showDeleteHuntDialog: false})} >
@@ -253,7 +263,7 @@ export default class HuntList extends React.Component {
                 </Modal>
               }
 
-              <Navbar className="toolbar">
+              <Navbar className="hunt-toolbar">
                 <ButtonGroup>
                   <Button title="New Hunt"
                           onClick={() => this.setState({showWizard: true})}
@@ -291,6 +301,22 @@ export default class HuntList extends React.Component {
                     <FontAwesomeIcon icon="copy"/>
                   </Button>
                 </ButtonGroup>
+                { tab === "notebook" &&
+                  <ButtonGroup className="float-right">
+                    <Button title="Notebooks"
+                            disabled={true}
+                            variant="outline-dark">
+                      <FontAwesomeIcon icon="book"/>
+                    </Button>
+
+                    <Button title="Delete Notebook"
+                            onClick={() => this.setState({showDeleteNotebook: true})}
+                            variant="default">
+                      <FontAwesomeIcon icon="trash"/>
+                    </Button>
+                  </ButtonGroup>
+                }
+
               </Navbar>
               <div className="fill-parent no-margins toolbar-margin selectable">
                 <BootstrapTable
@@ -319,6 +345,8 @@ export default class HuntList extends React.Component {
         );
     }
 };
+
+export default withRouter(HuntList);
 
 
 export function getHuntColumns() {

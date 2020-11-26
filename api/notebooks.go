@@ -88,7 +88,7 @@ func (self *ApiServer) GetNotebooks(
 
 		// An error here just means there are no AvailableDownloads.
 		notebook.AvailableDownloads, _ = getAvailableDownloadFiles(self.config,
-			path.Join("/downloads/notebooks/", in.NotebookId))
+			path.Dir(notebook_path_manager.HtmlExport()))
 		result.Items = append(result.Items, notebook)
 
 		// Document not owned or collaborated with.

@@ -58,9 +58,15 @@ class ServerFlowsView extends React.Component {
     setSelectedFlow = (flow) => {
         this.setState({currentFlow: flow});
 
+        let tab = this.props.match && this.props.match.params && this.props.match.params.tab;
         // Update the route.
-        this.props.history.push(
-            "/collected/server/" + flow.session_id);
+        if (tab) {
+            this.props.history.push(
+                "/collected/server/" + flow.session_id + "/" + tab);
+        } else {
+            this.props.history.push(
+                "/collected/server/" + flow.session_id);
+        }
     }
 
     render() {

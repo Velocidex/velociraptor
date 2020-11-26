@@ -130,7 +130,11 @@ export default class NotebookCellRenderer extends React.Component {
     };
 
     state = {
+        // The state of the cell is determined by both its ID and its
+        // last modified timestamp. As the table is refreshed, the
+        // server will advance the timestamp causing a refresh.
         cell_timestamp: 0,
+        cell_id: "",
 
         // The full cell data.
         cell: {},
@@ -153,17 +157,25 @@ export default class NotebookCellRenderer extends React.Component {
     componentDidUpdate = (prevProps, prevState, rootNode) => {
         // Do not update the editor if we are currently editing it -
         // otherwise it will wipe the text.
-        let selected = this.state.cell.cell_id === this.props.selected_cell_id;
+        let current_cell_id = this.state.cell_id;
+        let selected = current_cell_id === this.props.selected_cell_id;
         if (!selected && this.state.currently_editing) {
             // We are not currently editing if this cell is not selected.
             this.setState({currently_editing: false});
             return;
         }
 
-        let this_timestamp = this.props.cell_metadata && this.props.cell_metadata.timestamp;
-        if (this_timestamp !== this.state.cell_timestamp) {
-            // Prevent further updates to this cell.
-            this.setState({cell_timestamp: this_timestamp});
+        // We detect the cell has changed by looking at both cell id and the cell timestamp.
+        let props_cell_timestamp = this.props.cell_metadata && this.props.cell_metadata.timestamp;
+        let props_cell_id = this.props.cell_metadata && this.props.cell_metadata.cell_id;
+
+        if (props_cell_timestamp !== this.state.cell_timestamp ||
+            props_cell_id !== current_cell_id) {
+
+            // Prevent further updates to this cell by setting the
+            // cell id and timestamp.
+            this.setState({cell_timestamp: props_cell_timestamp,
+                           cell_id: props_cell_id});
             this.fetchCellContents();
         }
     };
