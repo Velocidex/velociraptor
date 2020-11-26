@@ -26,6 +26,7 @@ import ValidatedInteger from "../forms/validated_int.js";
 import VeloAce from '../core/ace.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { HotKeys, ObserveKeys } from "react-hotkeys";
+import { requestToParameters } from "./utils.js";
 
 import api from '../core/api-service.js';
 
@@ -584,8 +585,6 @@ class NewCollectionWizard extends React.Component {
             return;
         }
 
-        console.log(request);
-
         let resources = {
             ops_per_second: request.ops_per_second,
             timeout: request.timeout,
@@ -604,35 +603,8 @@ class NewCollectionWizard extends React.Component {
                 if (response && response.data &&
                     response.data.items && response.data.items.length) {
 
-                    this.setState({artifacts: [...response.data.items]});
-
-                    // New style request.
-                    if (!_.isEmpty(request.specs)) {
-                        let parameters = {};
-                        _.each(request.specs, spec=>{
-                            let artifact_parameters = {};
-                            _.each(spec.parameters.env, param=>{
-                                artifact_parameters[param.key] = param.value;
-                            });
-                            parameters[spec.artifact] = artifact_parameters;
-                        });
-
-                        this.setState({parameters: parameters});
-                    } else {
-                        let parameters = {};
-                        if (!_.isEmpty(request.parameters)) {
-                            _.each(request.artifacts, name=>{
-                                _.each(request.parameters.env, param=>{
-                                    if(_.isUndefined(parameters[name])) {
-                                        parameters[name] = {};
-                                    };
-                                    parameters[name][param.key] = param.value;
-                                });
-                            });
-                        }
-
-                        this.setState({parameters: parameters});
-                    };
+                    this.setState({artifacts: [...response.data.items],
+                                   parameters: requestToParameters(request)});
                 }});
     }
 

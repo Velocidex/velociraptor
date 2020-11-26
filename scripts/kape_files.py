@@ -146,6 +146,18 @@ reference:
   - https://github.com/EricZimmerman/KapeFiles
 
 parameters:
+  - name: UseAutoAccessor
+    description: Uses file accessor when possible instead of ntfs parser - this is much faster.
+    type: bool
+    default: Y
+  - name: Device
+    description: Name of the drive letter to search.
+    default: "C:"
+  - name: VSSAnalysis
+    type: bool
+    default:
+    description: If set we run the collection across all VSS and collect only unique changes.
+
 %(parameters)s
   - name: KapeRules
     type: hidden
@@ -157,68 +169,134 @@ parameters:
     description: Each parameter above represents a group of rules to be triggered. This table specifies which rule IDs will be included when the parameter is checked.
     default: |
 %(rules)s
-  - name: Device
-    default: "C:"
-  - name: VSSAnalysis
-    type: bool
-    default:
-    description: If set we run the collection across all VSS and collect only unique changes.
   - name: DontBeLazy
     description: Normally we prefer to use lazy_ntfs for speed. Sometimes this might miss stuff so setting this will fallback to the regular ntfs accessor.
     type: bool
 
 sources:
   - name: All File Metadata
-    queries:
-      # Select all the rule Ids to be included depending on the group selection.
-      - |
-        LET targets <= SELECT * FROM parse_csv(filename=KapeTargets, accessor="data")
-        WHERE get(item=scope(), member=Group)
+    query: |
+      -- Select all the rule Ids to be included depending on the group
+      -- selection.
+      LET targets <= SELECT * FROM parse_csv(
+           filename=KapeTargets, accessor="data")
+      WHERE get(member=Group)
 
-      # Filter only the rules in the rule table that have an Id we want.
-      - |
-        LET rule_specs_ntfs <= SELECT Id, Glob
+      -- Filter only the rules in the rule table that have an Id we
+      -- want. Targets with $ in their name probably refer to ntfs
+      -- special files and so they are designated as ntfs
+      -- accessor. Other targets may need ntfs parsing but not
+      -- necessary - they are designated with the lazy_ntfs accessor.
+      LET rule_specs_ntfs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
         WHERE Id in array(array=targets.RuleIds) AND Accessor='ntfs'
 
-      - |
-        LET rule_specs_lazy_ntfs <= SELECT Id, Glob
+      LET rule_specs_lazy_ntfs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
         WHERE Id in array(array=targets.RuleIds) AND Accessor='lazy_ntfs'
 
-      # Call the generic VSS file collector with the globs we want in a new CSV file.
-      - |
-        LET all_results <= SELECT * FROM if(
+      -- Call the generic VSS file collector with the globs we want in
+      -- a new CSV file.
+      LET all_results <= SELECT * FROM if(
            condition=VSSAnalysis,
            then={
              SELECT * FROM chain(
                a={
+                   -- For VSS we always need to parse NTFS
                    SELECT * FROM Artifact.Windows.Collectors.VSS(
                       RootDevice=Device, Accessor="ntfs",
                       collectionSpec=serialize(item=rule_specs_ntfs, format="csv"))
                }, b={
                    SELECT * FROM Artifact.Windows.Collectors.VSS(
-                      RootDevice=Device, Accessor=if(condition=DontBeLazy,
-                                                     then="ntfs", else="lazy_ntfs"),
-                      collectionSpec=serialize(item=rule_specs_lazy_ntfs, format="csv"))
+                      RootDevice=Device,
+                      Accessor=if(condition=DontBeLazy,
+                                  then="ntfs", else="lazy_ntfs"),
+                      collectionSpec=serialize(
+                        item=rule_specs_lazy_ntfs, format="csv"))
                })
            }, else={
              SELECT * FROM chain(
                a={
+
+                   -- Special files we access with the ntfs parser.
                    SELECT * FROM Artifact.Windows.Collectors.File(
-                      RootDevice=Device, Accessor="ntfs",
-                      collectionSpec=serialize(item=rule_specs_ntfs, format="csv"))
+                      RootDevice=Device,
+                      Accessor="ntfs",
+                      collectionSpec=serialize(
+                          item=rule_specs_ntfs, format="csv"))
                }, b={
+
+                   -- Prefer the auto accessor if possible since it
+                   -- will fall back to ntfs if required but otherwise
+                   -- will be faster.
                    SELECT * FROM Artifact.Windows.Collectors.File(
-                      RootDevice=Device, Accessor=if(condition=DontBeLazy,
-                                                     then="ntfs", else="lazy_ntfs"),
-                      collectionSpec=serialize(item=rule_specs_lazy_ntfs, format="csv"))
+                      RootDevice=Device,
+                      Accessor=if(condition=UseAutoAccessor,
+                                  then="auto", else="lazy_ntfs"),
+                      collectionSpec=serialize(
+                         item=rule_specs_lazy_ntfs, format="csv"))
                })
            })
-      - SELECT * FROM all_results WHERE _Source =~ "Metadata"
+      SELECT * FROM all_results WHERE _Source =~ "Metadata"
+
   - name: Uploads
-    queries:
-      - SELECT * FROM all_results WHERE _Source =~ "Uploads"
+    query: |
+      SELECT * FROM all_results WHERE _Source =~ "Uploads"
+
+reports:
+  - type: CLIENT
+    template: |
+      {{ import "Reporting.Default" "Templates" }}
+
+      <!-- Default report in case the artifact does not have one -->
+      ## {{ .Name }}
+
+      {{ $name := .Name }}
+
+      {{ template "hidden_paragraph_start" dict "description" "View Artifact Description" }}
+
+      {{ Markdown .Description }}
+
+      ### References</h3>
+
+      {{ range .Reference }}
+      * [{{ . }}]({{.}})
+      {{- end }}
+
+      {{ template "hidden_paragraph_end" }}
+
+      {{ $query := print "SELECT SourceFile, Size, Modified, LastAccessed, Created \\
+          FROM source(source='All File Metadata')" }}
+
+      <!-- There could be a huge number of rows just to get the count, so we cap at 10000 -->
+      {{ $count := Get ( Query (print "LET X = " $query " LIMIT 10000 " \\
+         " SELECT 1 AS ALL, count() AS Count FROM X Group BY ALL") | Expand ) \\
+         "0.Count" }}
+
+      <!-- If this is a flow show the parameters. -->
+      {{ $flow := Query "LET X = SELECT Request.Parameters.env AS \\
+         Env FROM flows(client_id=ClientId, flow_id=FlowId)" \\
+         "SELECT * FROM foreach(row=X[0].Env, query={ \\
+             SELECT Key, Value FROM scope()})" | Expand }}
+
+      {{ if $flow }}
+
+      ### Selected Targets
+
+      {{- range $flow -}}{{- if eq (Get . "Value") "Y" }}
+      * {{ Get . "Key" }}
+      {{- end -}}{{- end }}
+      {{ end }}
+
+      ## Files collected
+
+      {{ if gt $count 9999 }}
+      Collected more than {{ $count }} files.
+      {{ else }}
+      Collected a total of {{ $count }} files.
+      {{ end }}
+
+      {{ Query $query | Table }}
 
 """
     parameters_str = ""

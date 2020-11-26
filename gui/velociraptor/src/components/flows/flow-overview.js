@@ -8,6 +8,8 @@ import Card from 'react-bootstrap/Card';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { formatColumns } from "../core/table.js";
+import { requestToParameters } from "./utils.js";
+
 import BootstrapTable from 'react-bootstrap-table-next';
 import _ from 'lodash';
 
@@ -81,9 +83,7 @@ export default class FlowOverview extends React.Component {
             return <h5 className="no-content">Please click a collection in the above table</h5>;
         }
 
-        let parameters = flow.request &&
-            flow.request.parameters && flow.request.parameters.env;
-        parameters = parameters || [];
+        let parameters = requestToParameters(flow.request);
 
         let artifacts_with_results = flow.artifacts_with_results || [];
         let uploaded_files = flow.uploaded_files || [];
@@ -157,16 +157,21 @@ export default class FlowOverview extends React.Component {
 
                   <h5> Parameters </h5>
                   <dl className="row">
-                    { _.map(parameters, function(item, idx) {
-                        if (item) {
-                            return <React.Fragment key={idx}>
-                                     <dt className="col-4">{item.key}</dt>
-                                     <dd className="col-8">
-                                       <VeloValueRenderer value={item.value}/>
-                                     </dd>
-                                   </React.Fragment>;
-                        };
-                        return <>{JSON.stringify(item)}</>;
+                    {_.map(artifacts, function(name, idx) {
+                        return <React.Fragment key={idx}>
+                                 <dt className="col-11">{name}</dt><dd className="col-1"/>
+                                 {_.map(parameters[name], function(value, key) {
+                                     if (value) {
+                                         return <React.Fragment key={key}>
+                                                  <dt className="col-4">{key}</dt>
+                                                  <dd className="col-8">
+                                                    <VeloValueRenderer value={value}/>
+                                                  </dd>
+                                                </React.Fragment>;
+                                     };
+                                     return <React.Fragment key={key}/>;
+                                 })}
+                               </React.Fragment>;
                     })}
                   </dl>
                 </Card.Body>
