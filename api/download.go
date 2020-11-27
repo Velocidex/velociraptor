@@ -35,6 +35,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/gorilla/schema"
@@ -48,6 +49,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
+	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -171,10 +173,12 @@ func getRSReader(
 			return nil, "", err
 		}
 
-		rs_reader, err := result_sets.NewResultSetReader(
-			file_store_factory, path_manager)
+		rs_reader, err := result_sets.NewTimedResultSetReader(
+			ctx, file_store_factory, path_manager,
+			request.StartTime, request.EndTime)
 
 		return rs_reader, log_path, err
+
 	} else {
 		path_manager := getPathManager(config_obj, request)
 		log_path, err := path_manager.GetPathForWriting()
@@ -182,12 +186,42 @@ func getRSReader(
 			return nil, "", err
 		}
 
-		rs_reader, err := result_sets.NewTimedResultSetReader(
-			ctx, file_store_factory, path_manager,
-			request.StartTime, request.EndTime)
+		rs_reader, err := result_sets.NewResultSetReader(
+			file_store_factory, path_manager)
 
 		return rs_reader, log_path, err
 	}
+}
+
+// The GUI transforms many of the raw tables we use - so when
+// exporting we need to replicate this transformation, otherwise the
+// results can be surprising.
+func getTransformer(
+	config_obj *config_proto.Config,
+	in *api_proto.GetTableRequest) func(row *ordereddict.Dict) *ordereddict.Dict {
+	if in.HuntId != "" && in.Type == "clients" {
+		return func(row *ordereddict.Dict) *ordereddict.Dict {
+			client_id := utils.GetString(row, "ClientId")
+			flow_id := utils.GetString(row, "FlowId")
+
+			flow, err := flows.LoadCollectionContext(config_obj, client_id, flow_id)
+			if err != nil {
+				flow = &flows_proto.ArtifactCollectorContext{}
+			}
+
+			return ordereddict.NewDict().
+				Set("ClientId", client_id).
+				Set("FlowId", flow_id).
+				Set("StartedTime", time.Unix(utils.GetInt64(row, "Timestamp"), 0)).
+				Set("State", flow.State.String()).
+				Set("Duration", flow.ExecutionDuration/1000000000).
+				Set("TotalBytes", flow.TotalUploadedBytes).
+				Set("TotalRows", flow.TotalCollectedRows)
+		}
+	}
+
+	// A unit transform.
+	return func(row *ordereddict.Dict) *ordereddict.Dict { return row }
 }
 
 // Download the table as specified by the v1/GetTable API.
@@ -209,6 +243,8 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 			return
 		}
 		defer rs_reader.Close()
+
+		transform := getTransformer(config_obj, request)
 
 		download_name := strings.Replace(filepath.Base(log_path), "\"", "", -1)
 
@@ -244,7 +280,7 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 			csv_writer := csv.GetCSVAppender(scope, w, true /* write_headers */)
 			for row := range rs_reader.Rows(r.Context()) {
 				csv_writer.Write(
-					filterColumns(request.Columns, row))
+					filterColumns(request.Columns, transform(row)))
 			}
 			csv_writer.Close()
 
@@ -270,7 +306,7 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 
 			for row := range rs_reader.Rows(r.Context()) {
 				serialized, err := json.Marshal(
-					filterColumns(request.Columns, row))
+					filterColumns(request.Columns, transform(row)))
 				if err != nil {
 					return
 				}

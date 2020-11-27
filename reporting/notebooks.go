@@ -7,6 +7,7 @@ import (
 	"html"
 	"io"
 	"regexp"
+	"strings"
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/alexmullins/zip"
@@ -217,8 +218,12 @@ func ExportNotebookToZip(
 		}
 
 		for _, child := range children {
-			out_fd, err := zip_writer.Create(
-				exported_path_manager.CellItem(cell_id, child.Name()))
+			out_filename := exported_path_manager.CellItem(
+				cell_id, child.Name())
+
+			// In Zip files, members should have no leading /
+			out_filename = strings.TrimPrefix(out_filename, "/")
+			out_fd, err := zip_writer.Create(out_filename)
 			if err != nil {
 				continue
 			}

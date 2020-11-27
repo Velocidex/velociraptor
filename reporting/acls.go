@@ -1,6 +1,7 @@
 package reporting
 
 import (
+	"regexp"
 	"sort"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -9,6 +10,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	nonIndexingRegex = regexp.MustCompile(`^N\.[FH]\.`)
 )
 
 func CheckNotebookAccess(
@@ -106,6 +111,13 @@ func GetAllNotebooks(
 func UpdateShareIndex(
 	config_obj *config_proto.Config,
 	notebook *api_proto.NotebookMetadata) error {
+
+	// Flow notebooks and hunt notebooks are not indexable by the
+	// general purpose notebook index because we can easily locate
+	// them using the hunt id or the flow id.
+	if nonIndexingRegex.MatchString(notebook.NotebookId) {
+		return nil
+	}
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {

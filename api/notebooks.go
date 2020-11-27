@@ -204,12 +204,9 @@ func (self *ApiServer) NewNotebook(
 	// Add the new notebook to the index so it can be seen. Only
 	// non-hunt notebooks are searchable in the index since the
 	// hunt notebooks are always found in the hunt results.
-	if !strings.HasPrefix(in.NotebookId, "N.H.") &&
-		!strings.HasPrefix(in.NotebookId, "N.F.") {
-		err = reporting.UpdateShareIndex(self.config, in)
-		if err != nil {
-			return nil, err
-		}
+	err = reporting.UpdateShareIndex(self.config, in)
+	if err != nil {
+		return nil, err
 	}
 
 	_, err = self.UpdateNotebookCell(ctx, new_cell_request)
