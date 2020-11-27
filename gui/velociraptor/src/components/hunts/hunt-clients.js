@@ -18,7 +18,6 @@ export default class HuntClients extends React.Component {
 
         let params = {
             hunt_id: hunt_id,
-            path: hunt_id,
             type: "clients",
         };
 
