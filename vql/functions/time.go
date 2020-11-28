@@ -27,6 +27,8 @@ func (self cachedTime) Size() int {
 
 type _TimestampArg struct {
 	Epoch       vfilter.Any `vfilter:"optional,field=epoch"`
+	CocoaTime   int64       `vfilter:"optional,field=cocoatime"`
+	MacTime   int64       `vfilter:"optional,field=mactime,doc=HFS+"`
 	WinFileTime int64       `vfilter:"optional,field=winfiletime"`
 	String      string      `vfilter:"optional,field=string,doc=Guess a timestamp from a string"`
 	UsStyle     bool        `vfilter:"optional,field=us_style,doc=US Style Month/Day/Year"`
@@ -50,7 +52,15 @@ func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
 		scope.Log("timestamp: %s", err.Error())
 		return vfilter.Null{}
 	}
+	 
+	if arg.CocoaTime > 0 {
+		return time.Unix((arg.CocoaTime + 978307200), 0)
+	}
 
+	if arg.MacTime > 0 {
+		return time.Unix((arg.MacTime - 2082844800), 0)
+	}
+	
 	if arg.WinFileTime > 0 {
 		return time.Unix((arg.WinFileTime/10000000)-11644473600, 0)
 	}
