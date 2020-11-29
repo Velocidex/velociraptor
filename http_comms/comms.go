@@ -170,7 +170,8 @@ func NewHTTPConnector(
 	}
 
 	tls_config := &tls.Config{
-		MinVersion: tls.VersionTLS12,
+		MinVersion:         tls.VersionTLS12,
+		ClientSessionCache: tls.NewLRUClientSessionCache(100),
 	}
 
 	// For self signed certificates we must ignore the server name

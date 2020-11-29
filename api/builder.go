@@ -89,7 +89,9 @@ func NewServerBuilder(config_obj *config_proto.Config) (*Builder, error) {
 }
 
 func (self *Builder) Close() {
-	self.server_obj.Close()
+	if self.server_obj != nil {
+		self.server_obj.Close()
+	}
 }
 
 func (self *Builder) WithAPIServer(ctx context.Context, wg *sync.WaitGroup) error {
@@ -382,7 +384,7 @@ func StartFrontendPlainHttp(
 		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
 		ReadTimeout:  500 * time.Second,
 		WriteTimeout: 900 * time.Second,
-		IdleTimeout:  150 * time.Second,
+		IdleTimeout:  300 * time.Second,
 	}
 
 	wg.Add(1)
@@ -413,12 +415,14 @@ func StartFrontendPlainHttp(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		err := services.GetNotifier().NotifyAllListeners(config_obj)
-		if err != nil {
-			server_obj.Error("Frontend server error", err)
+		notifier := services.GetNotifier()
+		if notifier != nil {
+			err := notifier.NotifyAllListeners(config_obj)
+			if err != nil {
+				server_obj.Error("Frontend server error", err)
+			}
 		}
-
-		err = server.Shutdown(time_ctx)
+		err := server.Shutdown(time_ctx)
 		if err != nil {
 			server_obj.Error("Frontend server error", err)
 		}
@@ -458,7 +462,7 @@ func StartFrontendWithAutocert(
 		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
 		ReadTimeout:  500 * time.Second,
 		WriteTimeout: 900 * time.Second,
-		IdleTimeout:  15 * time.Second,
+		IdleTimeout:  300 * time.Second,
 		TLSConfig: &tls.Config{
 			MinVersion:     tls.VersionTLS12,
 			GetCertificate: certManager.GetCertificate,

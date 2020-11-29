@@ -293,10 +293,9 @@ func NewCryptoManager(config_obj *config_proto.Config, source string, pem_str []
 		private_key:         private_key,
 		source:              source,
 		public_key_resolver: NewInMemoryPublicKeyResolver(),
-		output_cipher_cache: cache.NewLRUCache(1000),
-		input_cipher_cache:  cache.NewLRUCache(1000),
-		logger: logging.GetLogger(
-			config_obj, &logging.ClientComponent),
+		output_cipher_cache: cache.NewLRUCache(config_obj.Frontend.ExpectedClients),
+		input_cipher_cache:  cache.NewLRUCache(config_obj.Frontend.ExpectedClients),
+		logger:              logging.GetLogger(config_obj, &logging.ClientComponent),
 	}, nil
 }
 
@@ -323,8 +322,7 @@ func NewServerCryptoManager(config_obj *config_proto.Config) (*CryptoManager, er
 		public_key_resolver: NewServerPublicKeyResolver(config_obj),
 		output_cipher_cache: cache.NewLRUCache(config_obj.Frontend.ExpectedClients),
 		input_cipher_cache:  cache.NewLRUCache(config_obj.Frontend.ExpectedClients),
-		logger: logging.GetLogger(config_obj,
-			&logging.FrontendComponent),
+		logger:              logging.GetLogger(config_obj, &logging.FrontendComponent),
 	}, nil
 }
 
@@ -351,8 +349,8 @@ func NewClientCryptoManager(config_obj *config_proto.Config, client_private_key_
 		private_key:         private_key,
 		source:              client_id,
 		public_key_resolver: NewInMemoryPublicKeyResolver(),
-		output_cipher_cache: cache.NewLRUCache(1000),
-		input_cipher_cache:  cache.NewLRUCache(1000),
+		output_cipher_cache: cache.NewLRUCache(10000),
+		input_cipher_cache:  cache.NewLRUCache(10000),
 		caPool:              roots,
 		logger:              logger,
 	}, nil

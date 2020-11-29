@@ -85,7 +85,6 @@ class NewHuntConfigureHunt extends React.Component {
                         </Form.Control>
                     </Col>
                   </Form.Group>
-
                   { this.props.parameters.include_condition === "os" &&
                     <Form.Group as={Row}>
                       <Form.Label column sm="3">Operating System Included</Form.Label>
@@ -95,6 +94,7 @@ class NewHuntConfigureHunt extends React.Component {
                                       onChange={(e) => this.setParam(
                                           "include_os", e.currentTarget.value)}
                         >
+                          <option label="ALL" value="ALL">ALL</option>
                           <option label="Windows" value="WINDOWS">Windows</option>
                           <option label="Linux" value="LINUX">LINUX</option>
                           <option label="MacOS" value="OSX">OSX</option>
@@ -175,7 +175,7 @@ export default class NewHuntWizard extends React.Component {
         hunt_parameters: {
             include_condition: "",
             include_labels: [],
-            include_os: "WINDOWS", // Default selector
+            include_os: "ALL", // Default selector
             exclude_condition: "",
             excluded_labels: [],
         },
@@ -339,7 +339,8 @@ export default class NewHuntWizard extends React.Component {
         if (hunt_parameters.include_condition === "labels") {
             result.condition.labels = {"label": hunt_parameters.include_labels};
         }
-        if (hunt_parameters.include_condition === "os") {
+        if (hunt_parameters.include_condition === "os" &&
+            hunt_parameters.include_os !== "ALL") {
             result.condition.os = {"os": hunt_parameters.include_os};
         }
 

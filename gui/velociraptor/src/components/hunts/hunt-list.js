@@ -16,6 +16,7 @@ import { formatColumns } from "../core/table.js";
 
 import NewHuntWizard from './new-hunt.js';
 import DeleteNotebookDialog from '../notebooks/notebook-delete.js';
+import ExportNotebook from '../notebooks/export-notebook.js';
 
 import api from '../core/api-service.js';
 
@@ -35,6 +36,7 @@ class HuntList extends React.Component {
         showRunHuntDialog: false,
         showArchiveHuntDialog: false,
         showDeleteHuntDialog: false,
+        showExportNotebook: false,
         showDeleteNotebook: false,
         showCopyWizard: false,
     }
@@ -234,8 +236,14 @@ class HuntList extends React.Component {
 
               { this.state.showDeleteNotebook &&
                 <DeleteNotebookDialog
-                  notebook_id={selected_hunt}
+                  notebook_id={"N." + selected_hunt}
                   onClose={(e) => this.setState({showDeleteNotebook: false})}/>
+              }
+
+              { this.state.showExportNotebook &&
+                <ExportNotebook
+                  notebook={{notebook_id: "N." + selected_hunt}}
+                  onClose={(e) => this.setState({showExportNotebook: false})}/>
               }
 
               { this.state.showDeleteHuntDialog &&
@@ -313,6 +321,12 @@ class HuntList extends React.Component {
                             onClick={() => this.setState({showDeleteNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="trash"/>
+                    </Button>
+
+                    <Button title="Export Notebook"
+                            onClick={() => this.setState({showExportNotebook: true})}
+                            variant="default">
+                      <FontAwesomeIcon icon="download"/>
                     </Button>
                   </ButtonGroup>
                 }

@@ -21,15 +21,11 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path"
-	"runtime"
+	"sync"
 
-	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
-	"github.com/shirou/gopsutil/host"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -38,8 +34,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -52,11 +46,28 @@ var (
 	pool_client_writeback_dir = pool_client_command.Flag(
 		"writeback_dir", "The directory to store all writebacks.").Default(".").
 		ExistingDir()
+
+	pool_client_concurrency = pool_client_command.Flag(
+		"concurrency", "How many real queries to run.").Default("10").Int()
 )
 
-func doPoolClient() {
-	registerMockInfo()
+type counter struct {
+	i  int
+	mu sync.Mutex
+}
 
+func (self *counter) Inc() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.i++
+
+	if self.i%100 == 0 {
+		fmt.Printf("Starting %v clients\n", self.i)
+	}
+
+}
+
+func doPoolClient() {
 	number_of_clients := *pool_client_number
 	if number_of_clients <= 0 {
 		number_of_clients = 2
@@ -67,7 +78,7 @@ func doPoolClient() {
 
 	client_config, err := DefaultConfigLoader.
 		WithRequiredClient().
-		WithVerbose(true).
+		WithVerbose(*verbose_flag).
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
@@ -88,6 +99,8 @@ func doPoolClient() {
 		configs = append(configs, client_config)
 	}
 
+	c := counter{}
+
 	for i := 0; i < number_of_clients; i++ {
 		go func(i int) {
 			client_config := configs[i]
@@ -96,6 +109,10 @@ func doPoolClient() {
 				*pool_client_writeback_dir, filename)
 
 			client_config.Client.WritebackWindows = client_config.Client.WritebackLinux
+			if client_config.Client.LocalBuffer != nil {
+				client_config.Client.LocalBuffer.DiskSize = 0
+			}
+			client_config.Client.Concurrency = uint64(*pool_client_concurrency)
 
 			existing_writeback := &config_proto.Writeback{}
 			writeback, err := config.WritebackLocation(client_config)
@@ -105,9 +122,12 @@ func doPoolClient() {
 
 			// Failing to read the file is not an error - the file may not
 			// exist yet.
-			if err == nil {
+			if err == nil || len(data) == 0 {
 				err = yaml.Unmarshal(data, existing_writeback)
-				kingpin.FatalIfError(err, "Unable to load config file "+filename)
+				if err != nil {
+					fmt.Printf("Unable to load config file %v: %v", filename, err)
+					existing_writeback = &config_proto.Writeback{}
+				}
 			}
 
 			// Merge the writeback with the config.
@@ -123,7 +143,7 @@ func doPoolClient() {
 				client_config, []byte(client_config.Writeback.PrivateKey))
 			kingpin.FatalIfError(err, "Unable to parse config file")
 
-			exe, err := executor.NewClientExecutor(ctx, client_config)
+			exe, err := executor.NewPoolClientExecutor(ctx, client_config, i)
 			kingpin.FatalIfError(err, "Can not create executor.")
 
 			comm, err := http_comms.NewHTTPCommunicator(
@@ -136,6 +156,7 @@ func doPoolClient() {
 			)
 			kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")
 
+			c.Inc()
 			// Run the client in the background.
 			comm.Run(ctx)
 		}(i)
@@ -155,56 +176,4 @@ func init() {
 		}
 		return true
 	})
-}
-
-func registerMockInfo() {
-	vql.OverridePlugin(
-		vfilter.GenericListPlugin{
-			PluginName: "info",
-			Function: func(
-				scope *vfilter.Scope,
-				args *ordereddict.Dict) []vfilter.Row {
-				var result []vfilter.Row
-
-				config_obj, ok := artifacts.GetServerConfig(scope)
-				if !ok {
-					return result
-				}
-
-				key, err := crypto.ParseRsaPrivateKeyFromPemStr(
-					[]byte(config_obj.Writeback.PrivateKey))
-				if err != nil {
-					scope.Log("info: %s", err)
-					return result
-				}
-
-				client_id := crypto.ClientIDFromPublicKey(&key.PublicKey)
-
-				me, _ := os.Executable()
-				info, err := host.Info()
-				if err != nil {
-					scope.Log("info: %s", err)
-					return result
-				}
-
-				fqdn := fmt.Sprintf("%s.%s", info.Hostname, client_id)
-				item := ordereddict.NewDict().
-					Set("Hostname", fqdn).
-					Set("Uptime", info.Uptime).
-					Set("BootTime", info.BootTime).
-					Set("Procs", info.Procs).
-					Set("OS", info.OS).
-					Set("Platform", info.Platform).
-					Set("PlatformFamily", info.PlatformFamily).
-					Set("PlatformVersion", info.PlatformVersion).
-					Set("KernelVersion", info.KernelVersion).
-					Set("VirtualizationSystem", info.VirtualizationSystem).
-					Set("VirtualizationRole", info.VirtualizationRole).
-					Set("Fqdn", fqdn).
-					Set("Architecture", runtime.GOARCH).
-					Set("Exe", me)
-				result = append(result, item)
-				return result
-			},
-		})
 }

@@ -192,6 +192,9 @@ message ClientConfig {
         }];
 
     uint64 max_memory_hard_limit = 29;
+
+    // Maximum number of concurrent queries the client will allow (default 10).
+    uint64 concurrency = 31;
 }
 
 message APIConfig {
