@@ -15,7 +15,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -26,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -181,7 +181,7 @@ func createDownloadFile(
 		return "", errors.New("Client Id and Flow Id should be specified.")
 	}
 
-	hostname := api.GetHostname(config_obj, client_id)
+	hostname := services.GetHostname(client_id)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	download_file := flow_path_manager.GetDownloadsFile(hostname).Path()
 
@@ -564,7 +564,7 @@ func createHuntDownloadFile(
 				continue
 			}
 
-			hostname := api.GetHostname(config_obj, client_id)
+			hostname := services.GetHostname(client_id)
 			err := downloadFlowToZip(
 				ctx, config_obj, client_id, hostname, flow_id, zip_writer)
 			if err != nil {

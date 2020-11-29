@@ -1,6 +1,8 @@
 package services
 
-import "sync"
+import (
+	"sync"
+)
 
 var (
 	client_info_manager    ClientInfoManager
@@ -49,4 +51,14 @@ func (self ClientInfo) OSString() string {
 
 type ClientInfoManager interface {
 	Get(client_id string) (*ClientInfo, error)
+}
+
+func GetHostname(client_id string) string {
+	client_info_manager := GetClientInfoManager()
+	info, err := client_info_manager.Get(client_id)
+	if err != nil {
+		return ""
+	}
+
+	return info.Hostname
 }

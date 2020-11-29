@@ -55,6 +55,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -211,6 +212,7 @@ func getTransformer(
 
 			return ordereddict.NewDict().
 				Set("ClientId", client_id).
+				Set("Hostname", services.GetHostname(client_id)).
 				Set("FlowId", flow_id).
 				Set("StartedTime", time.Unix(utils.GetInt64(row, "Timestamp"), 0)).
 				Set("State", flow.State.String()).
@@ -367,7 +369,7 @@ func vfsFolderDownloadHandler(
 		file_store_factory := file_store.GetFileStore(config_obj)
 
 		client_id := request.ClientId
-		hostname := GetHostname(config_obj, client_id)
+		hostname := services.GetHostname(client_id)
 		client_path_manager := paths.NewClientPathManager(client_id)
 
 		db, _ := datastore.GetDB(config_obj)
