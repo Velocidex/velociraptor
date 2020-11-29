@@ -3,7 +3,7 @@ description: |
 
   **Description**:
   This artifact examines the contents of the user's dock.  The property list entry for each application represented within the dock can be modified to point to a malcious application.
-   By comparing the application name, CFURLString, and book, we can gather greater context to assist in determining if an adversary may have tampered with an entry.
+   By comparing the application name, CFURLString, and book, we can gather greater context to assist in determining if an adversary may have tampered with an entry, or if an entry has been added to emulate a legitimate application.
    
   **ATT&CK**: [T1547.009/T1547.011 - Shortcut modification/Plist modification](https://attack.mitre.org/techniques/T1547/)
   
