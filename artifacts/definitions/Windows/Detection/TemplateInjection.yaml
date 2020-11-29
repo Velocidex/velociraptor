@@ -1,0 +1,108 @@
+name: Windows.Detection.TemplateInjection
+description: |
+    This content will detect injected templates in Office documents.   
+    
+    Template injection is a form of defence evasion where a malicious macro 
+    is loaded into an OOXML document via a resource file masquerading as 
+    an office template.   
+
+author: Matt Green - @mgreen27
+
+reference:
+  - https://attack.mitre.org/techniques/T1221/
+  - https://www.sans.org/reading-room/whitepapers/testing/template-injection-attacks-bypassing-security-controls-living-land-38780
+
+type: CLIENT
+
+parameters:
+  - name: SearchGlob
+    description: Glob to search
+    default: C:\Users\**\*.{docx,dotx,xlsx,xltx,pptx,potx,ppsx,sldx}
+  - name: TemplateRegex
+    description: Regex to search inside resource section.
+    default: '^(https?|smb|\\\\\\\\)'
+  - name: UploadDocument
+    type: bool
+    description: Select to upload document on detection.
+    
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows' OR OS = 'linux' OR OS = 'darwin'
+
+    query: |
+      -- Find target docs
+      LET office_docs = SELECT FullPath AS OfficePath
+        FROM glob(globs=SearchGlob)
+
+      -- select zip members inside the doc that have some content.
+      LET document_parts = SELECT 
+            OfficePath,
+            FullPath AS ZipMemberPath
+        FROM glob(globs=url(
+            scheme="file", path=OfficePath, fragment="/**").String,
+            accessor='zip')
+        WHERE not IsDir and Size > 0 and ZipMemberPath =~ '\\.rels$'
+            
+      -- select all settings.xml.rels files
+      LET settings = SELECT  *
+        FROM foreach(row=office_docs,
+                query={
+                    SELECT *
+                    FROM glob(globs=document_parts.ZipMemberPath,accessor='zip')
+                    WHERE Size > 0 AND Name = 'settings.xml.rels'
+                })
+            
+      -- parse settings file by line and extract config
+      LET template = SELECT * FROM foreach(row=settings,
+        query={
+            SELECT
+                FullPath as SectionPath,
+                url(parse=FullPath).Path as Document,
+                url(parse=FullPath).Fragment as Section,
+                parse_string_with_regex(
+                    string=Line,
+                    regex=['\\s+Target="(?P<Target>.+)"\\s+TargetMode='
+                        ]).Target as TemplateTarget,
+                Mtime as SectionMtime,
+                Atime as SectionAtime,
+                Ctime as SectionCtime
+            FROM parse_lines(filename=FullPath,accessor='zip')
+            WHERE TemplateTarget
+        })
+            
+      -- search settings for remote or file templates
+      LET hits = SELECT * FROM foreach(row=template,
+            query={
+                SELECT
+                    FullPath,
+                    hash(path=FullPath) as Hash,
+                    Mtime,
+                    Size,
+                    Section,
+                    TemplateTarget,
+                    SectionMtime,
+                    hash(path=SectionPath,accessor='zip') as SectionHash
+                FROM stat(filename=Document)
+                WHERE
+                    TemplateTarget =~ TemplateRegex
+            })
+
+      -- upload hits to server
+      LET upload_hits = SELECT 
+            FullPath,
+            Hash,
+            Mtime,
+            Size,
+            Section,
+            TemplateTarget,
+            SectionMtime,
+            SectionHash,
+            upload(file=DocumentPath) as Upload
+        FROM hits
+      
+      -- output rows
+      SELECT * FROM if(condition= UploadDocument,
+            then= upload_hits,
+            else= hits)
+            
