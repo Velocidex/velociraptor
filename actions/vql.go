@@ -25,6 +25,7 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -36,8 +37,18 @@ import (
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+)
+
+var (
+	// Only allow a few concurrent queries at the same time in
+	// order to not overwhelm the client. We have 1 hour to grab
+	// the concurrency control - after that time, normal query
+	// execution time limits are set.
+	c_mu        sync.Mutex
+	concurrency *utils.Concurrency
 )
 
 type LogWriter struct {
@@ -83,6 +94,14 @@ func (self VQLClientAction) StartQuery(
 	if timeout == 0 {
 		timeout = 600
 	}
+
+	c := getConcurrency(config_obj)
+	err := c.StartConcurrencyControl(ctx)
+	if err != nil {
+		responder.RaiseError(fmt.Sprintf("%v", err))
+		return
+	}
+	defer c.EndConcurrencyControl()
 
 	// Cancel the query after this deadline
 	deadline := time.After(time.Second * time.Duration(timeout))
@@ -232,4 +251,19 @@ func (self VQLClientAction) StartQuery(
 	}
 
 	responder.Return()
+}
+
+func getConcurrency(config_obj *config_proto.Config) *utils.Concurrency {
+	c_mu.Lock()
+	defer c_mu.Unlock()
+
+	if concurrency == nil {
+		level := int(config_obj.Client.Concurrency)
+		if level == 0 {
+			level = 10
+		}
+		concurrency = utils.NewConcurrencyControl(level, time.Hour)
+	}
+
+	return concurrency
 }

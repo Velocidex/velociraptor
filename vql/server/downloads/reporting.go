@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-	"www.velocidex.com/golang/velociraptor/api"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -138,7 +137,7 @@ func CreateFlowReport(
 	flow_id, client_id, template string,
 	wait bool) (string, error) {
 
-	hostname := api.GetHostname(config_obj, client_id)
+	hostname := services.GetHostname(client_id)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	download_file := flow_path_manager.GetReportsFile(hostname).Path()
 

@@ -18,6 +18,8 @@
 package server
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -27,6 +29,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -64,14 +67,39 @@ var (
 		Help: "Number of POST requests frontend received from the client.",
 	})
 
+	receiveBytesCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "frontend_received_bytes",
+		Help: "Number of bytes received from the client.",
+	})
+
+	receiveDecryptionErrors = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "frontend_decryption_errors",
+		Help: "Number of errors in decrypting messages.",
+	})
+
 	enrollmentCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "frontend_enroll_response",
 		Help: "Number responses to enrol (406).",
 	})
+
 	urgentCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "frontend_urgent_responses",
 		Help: "Number urgent responses received.",
 	})
+
+	timeoutCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "frontend_timeout_rejections",
+		Help: "Number of responses rejected due to concurrency timeouts.",
+	})
+
+	concurrencyHistorgram = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "frontend_reader_latency",
+			Help:    "Latency to receive client data in second.",
+			Buckets: prometheus.LinearBuckets(0.01, 0.05, 10),
+		},
+		[]string{"status"},
+	)
 )
 
 func PrepareFrontendMux(
@@ -140,6 +168,57 @@ func maybeRedirectFrontend(handler string, w http.ResponseWriter, r *http.Reques
 	return false
 }
 
+// Read the message from the client carefully. Due to concurrency
+// control we want to dismiss slow clients as soon as possible since
+// processing them is taking a concurrency slot and causes slow down
+// for other clients.  We read the message and decrypt it before
+// taking the concurrency slot up.
+func readWithLimits(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	server_obj *Server,
+	req *http.Request) (*crypto.MessageInfo, error) {
+
+	// Read the data from the POST request into a
+	buffer := &bytes.Buffer{}
+	reader := io.LimitReader(req.Body, int64(config_obj.Frontend.MaxUploadSize*2))
+
+	// Implement rate limiting from reading the connection.
+	if config_obj.Frontend.PerClientUploadRate > 0 {
+		bucket := ratelimit.NewBucketWithRate(
+			float64(config_obj.Frontend.PerClientUploadRate),
+			100*1024)
+		reader = ratelimit.Reader(reader, bucket)
+	}
+
+	if server_obj.Bucket != nil {
+		reader = ratelimit.Reader(reader, server_obj.Bucket)
+	}
+
+	n, err := utils.Copy(ctx, buffer, reader)
+	if err != nil {
+		return nil, err
+	}
+	receiveBytesCounter.Add(float64(n))
+
+	logger := logging.GetLogger(server_obj.config, &logging.FrontendComponent)
+
+	message_info, err := server_obj.Decrypt(ctx, buffer.Bytes())
+	if err != nil {
+		logger.Debug("Unable to decrypt body from %v: %+v "+
+			"(%v out of max %v)",
+			req.RemoteAddr, err, n, config_obj.Frontend.MaxUploadSize*2)
+
+		receiveDecryptionErrors.Inc()
+		return nil, errors.New("Unable to decrypt")
+	}
+	message_info.RemoteAddr = utils.RemoteAddr(req, server_obj.config.Frontend.GetProxyHeader())
+	logger.Debug("Received a post of length %v from %v (%v)",
+		n, message_info.RemoteAddr, message_info.Source)
+
+	return message_info, nil
+}
+
 // This handler is used to receive messages from the client to the
 // server. These connections are short lived - the client will just
 // post its message and then disconnect.
@@ -159,6 +238,26 @@ func control(server_obj *Server) http.Handler {
 			panic("http handler is not a flusher")
 		}
 
+		// Allow a limited time to read from the client because this
+		// is the hot path.
+		ctx, cancel := context.WithTimeout(req.Context(), 600*time.Second)
+		defer cancel()
+
+		// If the client connection drops we close the reader.
+		notify, ok := w.(http.CloseNotifier)
+		if ok {
+			notifier := notify.CloseNotify()
+			go func() {
+				select {
+				case <-notifier:
+					cancel()
+
+				case <-ctx.Done():
+					return
+				}
+			}()
+		}
+
 		receiveCounter.Inc()
 
 		priority := req.Header.Get("X-Priority")
@@ -166,48 +265,35 @@ func control(server_obj *Server) http.Handler {
 		// allows clients with urgent messages to always be
 		// processing even when the frontend are loaded.
 		if priority != "urgent" {
-			server_obj.StartConcurrencyControl()
-			defer server_obj.EndConcurrencyControl()
+			err := server_obj.concurrency.StartConcurrencyControl(ctx)
+			if err != nil {
+				http.Error(w, "Timeout", http.StatusRequestTimeout)
+				timeoutCounter.Inc()
+				return
+			}
+			defer server_obj.concurrency.EndConcurrencyControl()
+
 		} else {
 			urgentCounter.Inc()
 		}
 
-		reader := io.LimitReader(req.Body, int64(server_obj.config.
-			Frontend.MaxUploadSize*2))
+		// Measure the latency from this point on.
+		var status string
+		timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+			concurrencyHistorgram.WithLabelValues(status).Observe(v)
+		}))
+		defer func() {
+			timer.ObserveDuration()
+		}()
 
-		if server_obj.config.Frontend.PerClientUploadRate > 0 {
-			bucket := ratelimit.NewBucketWithRate(
-				float64(server_obj.config.Frontend.PerClientUploadRate),
-				100*1024)
-			reader = ratelimit.Reader(reader, bucket)
-		}
-
-		if server_obj.Bucket != nil {
-			reader = ratelimit.Reader(reader, server_obj.Bucket)
-		}
-
-		body, err := ioutil.ReadAll(reader)
-
+		// Read the payload from the client.
+		message_info, err := readWithLimits(
+			ctx, server_obj.config, server_obj, req)
 		if err != nil {
-			logger.Debug("Unable to read body from %v: %+v (read %v)",
-				req.RemoteAddr, err, len(body))
-			http.Error(w, "", http.StatusServiceUnavailable)
-			return
-		}
-
-		message_info, err := server_obj.Decrypt(req.Context(), body)
-		if err != nil {
-			logger.Debug("Unable to decrypt body from %v: %+v "+
-				"(%v out of max %v)",
-				req.RemoteAddr, err, len(body), server_obj.config.
-					Frontend.MaxUploadSize*2)
 			// Just plain reject with a 403.
 			http.Error(w, "", http.StatusForbidden)
 			return
 		}
-		message_info.RemoteAddr = utils.RemoteAddr(req, server_obj.config.Frontend.GetProxyHeader())
-		logger.Debug("Received a post of length %v from %v (%v)", len(body),
-			message_info.RemoteAddr, message_info.Source)
 
 		// Very few Unauthenticated client messages are valid
 		// - currently only enrolment requests.
@@ -249,9 +335,8 @@ func control(server_obj *Server) http.Handler {
 
 		sync := make(chan []byte)
 		go func() {
-			defer close(sync)
-			response, _, err := server_obj.Process(
-				req.Context(), message_info,
+			defer cancel()
+			response, _, err := server_obj.Process(ctx, message_info,
 				false, // drain_requests_for_client
 			)
 			if err != nil {
@@ -274,9 +359,11 @@ func control(server_obj *Server) http.Handler {
 		// ignored).
 		for {
 			select {
+			case <-ctx.Done():
+				return
+
 			case response := <-sync:
 				_, _ = w.Write(response)
-				return
 
 			case <-time.After(3 * time.Second):
 				_, _ = w.Write(serialized_pad)
@@ -344,7 +431,12 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		source := message_info.Source
 
 		notifier := services.GetNotifier()
-		if notifier != nil && notifier.IsClientConnected(source) {
+		if notifier == nil {
+			http.Error(w, "Shutting down", http.StatusServiceUnavailable)
+			return
+		}
+
+		if notifier.IsClientConnected(source) {
 			http.Error(w, "Another Client connection exists. "+
 				"Only a single instance of the client is "+
 				"allowed to connect at the same time.",

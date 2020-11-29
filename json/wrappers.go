@@ -2,9 +2,9 @@ package json
 
 import (
 	"bytes"
+	"reflect"
 
 	"github.com/Velocidex/json"
-	"www.velocidex.com/golang/vfilter"
 )
 
 func MarshalWithOptions(v interface{}, opts *json.EncOpts) ([]byte, error) {
@@ -54,19 +54,23 @@ func MarshalIndentWithOptions(v interface{}, opts *json.EncOpts) ([]byte, error)
 }
 
 func MarshalJsonl(v interface{}) ([]byte, error) {
-	rows, ok := v.([]vfilter.Row)
-	if !ok {
+	rt := reflect.TypeOf(v)
+	if rt == nil || rt.Kind() != reflect.Slice && rt.Kind() != reflect.Array {
 		return nil, json.EncoderCallbackSkip
 	}
 
+	a_slice := reflect.ValueOf(v)
+
 	options := NewEncOpts()
 	out := bytes.Buffer{}
-	for _, row := range rows {
+	for i := 0; i < a_slice.Len(); i++ {
+		row := a_slice.Index(i).Interface()
 		serialized, err := json.MarshalWithOptions(row, options)
 		if err != nil {
 			return nil, err
 		}
 		out.Write(serialized)
+		out.Write([]byte{'\n'})
 	}
 	return out.Bytes(), nil
 }
