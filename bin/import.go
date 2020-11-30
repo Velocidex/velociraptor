@@ -20,7 +20,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
-	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -149,10 +148,7 @@ func doImport() {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	manager, err := services.GetRepositoryManager()
-	kingpin.FatalIfError(err, "Load Config ")
-
-	repository, err := manager.GetGlobalRepository(config_obj)
+	repository, err := getRepository(config_obj)
 	kingpin.FatalIfError(err, "Load Config ")
 
 	// Open the zip file we are importing.
