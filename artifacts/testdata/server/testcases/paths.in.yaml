@@ -9,3 +9,9 @@ Queries:
   - SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar') FROM scope()
   - SELECT basename(path='c:\\foo\\bar\\"F:\\foobar.txt"') FROM scope()
   - SELECT basename(path='c:\\foo\\bar\\"F:\\foo/bar.txt"') FROM scope()
+
+  # Get second last path component
+  - SELECT path_split(path="/a/b/c/d/e")[-2] FROM scope()
+
+  # Make sure we handle overflow properly by wrapping
+  - SELECT path_split(path="/a/b")[-20] FROM scope()
