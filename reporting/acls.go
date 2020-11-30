@@ -1,6 +1,7 @@
 package reporting
 
 import (
+	"io"
 	"regexp"
 	"sort"
 
@@ -56,6 +57,10 @@ func GetSharedNotebooks(
 		notebook_path_manager := NewNotebookPathManager(notebook_id)
 		notebook := &api_proto.NotebookMetadata{}
 		err := db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
+		// Notebook was removed or does not exist.
+		if err == io.EOF {
+			continue
+		}
 		if err != nil {
 			logging.GetLogger(
 				config_obj, &logging.FrontendComponent).

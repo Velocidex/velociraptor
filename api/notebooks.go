@@ -989,7 +989,6 @@ type progressReporter struct {
 }
 
 func (self *progressReporter) Report(message string) {
-	fmt.Printf("Message %v\n", message)
 	now := time.Now()
 	if now.Before(self.last.Add(4 * time.Second)) {
 		return

@@ -270,7 +270,13 @@ const pageListRenderer = ({
                 </Pagination.Item>
             ))
           }
-          <Pagination.Next onClick={()=>onPageChange(pageWithoutIndication.length)}/>
+          <Pagination.Next onClick={()=>{
+              if (_.isEmpty(pageWithoutIndication)) {
+                  return;
+              }
+              let last_page = pageWithoutIndication[pageWithoutIndication.length-1].page;
+              onPageChange(last_page);
+          }}/>
           <Form.Control
             as="input"
             className="pagination-form"

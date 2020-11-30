@@ -19,16 +19,18 @@
 */
 // VQL plugins for running on the server.
 
-package server
+package hunts
 
 import (
 	"context"
+	"path"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
@@ -88,6 +90,11 @@ func (self HuntsPlugin) Call(
 		}
 
 		for _, hunt_urn := range hunts {
+			hunt_id := path.Base(hunt_urn)
+			if !constants.HuntIdRegex.MatchString(hunt_id) {
+				continue
+			}
+
 			hunt_obj := &api_proto.Hunt{}
 			err = db.GetSubject(config_obj, hunt_urn, hunt_obj)
 			if err != nil {
@@ -101,6 +108,10 @@ func (self HuntsPlugin) Call(
 				hunt_path_manager.Stats().Path(), hunt_stats)
 			if err == nil {
 				hunt_obj.Stats = hunt_stats
+			}
+
+			if hunt_obj.HuntId != hunt_id {
+				continue
 			}
 
 			select {

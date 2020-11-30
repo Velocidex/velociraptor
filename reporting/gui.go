@@ -421,13 +421,30 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 
 				row_idx := 0
 				next_progress := time.Now().Add(4 * time.Second)
-				for row := range vql.Eval(self.ctx, self.Scope) {
-					row_idx++
-					rs_writer.Write(vfilter.RowToDict(self.ctx, self.Scope, row))
+				eval_chan := vql.Eval(self.ctx, self.Scope)
 
-					if self.Progress != nil && (row_idx%100 == 0 ||
-						time.Now().After(next_progress)) {
-						rs_writer.Flush()
+				for {
+					select {
+					case <-self.ctx.Done():
+						return
+
+					case row, ok := <-eval_chan:
+						if !ok {
+							return
+						}
+						row_idx++
+						rs_writer.Write(vfilter.RowToDict(self.ctx, self.Scope, row))
+
+						if self.Progress != nil && (row_idx%100 == 0 ||
+							time.Now().After(next_progress)) {
+							rs_writer.Flush()
+							self.Progress.Report(fmt.Sprintf(
+								"Total Rows %v", row_idx))
+							next_progress = time.Now().Add(4 * time.Second)
+						}
+
+						// Report progress even if no row is emitted
+					case <-time.After(4 * time.Second):
 						self.Progress.Report(fmt.Sprintf(
 							"Total Rows %v", row_idx))
 						next_progress = time.Now().Add(4 * time.Second)

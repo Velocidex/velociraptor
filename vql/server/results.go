@@ -37,6 +37,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/server/hunts"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -135,8 +136,9 @@ type SourcePluginArgs struct {
 	// allows post processing in multiple stages - one query
 	// reduces the data into a result set and subsequent queries
 	// operate on that reduced set.
-	NotebookId     string `vfilter:"optional,field=notebook_id,doc=The notebook to read from (shoud also include cell id)"`
-	NotebookCellId string `vfilter:"optional,field=notebook_cell_id,doc=The notebook cell read from (shoud also include notebook id)"`
+	NotebookId        string `vfilter:"optional,field=notebook_id,doc=The notebook to read from (shoud also include cell id)"`
+	NotebookCellId    string `vfilter:"optional,field=notebook_cell_id,doc=The notebook cell read from (shoud also include notebook id)"`
+	NotebookCellTable int64  `vfilter:"optional,field=notebook_cell_table,doc=A notebook cell can have multiple tables.)"`
 
 	StartRow int64 `vfilter:"optional,field=start_row,doc=Start reading the result set from this row"`
 }
@@ -187,7 +189,7 @@ func (self SourcePlugin) Call(
 				Set("source", arg.Source)
 
 			// Just delegate to the hunt_results() plugin.
-			plugin := &HuntResultsPlugin{}
+			plugin := &hunts.HuntResultsPlugin{}
 			for row := range plugin.Call(ctx, scope, args) {
 				select {
 				case <-ctx.Done():
@@ -287,8 +289,12 @@ func getResultSetReader(
 		if arg.NotebookCellId == "" {
 			return nil, errors.New("source: Both notebook_id and notebook_cell_id should be specified.")
 		}
+		table := arg.NotebookCellTable
+		if table == 0 {
+			table = 1
+		}
 		path_manager := reporting.NewNotebookPathManager(
-			arg.NotebookId).Cell(arg.NotebookCellId).QueryStorage(1)
+			arg.NotebookId).Cell(arg.NotebookCellId).QueryStorage(table)
 
 		return result_sets.NewResultSetReader(file_store_factory, path_manager)
 

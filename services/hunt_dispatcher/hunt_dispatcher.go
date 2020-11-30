@@ -202,6 +202,12 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 			hunt_obj.Stats = hunt_stats
 		}
 
+		// Should not really happen but if the file is
+		// corrupted we skip it.
+		if hunt_obj.HuntId != hunt_id {
+			continue
+		}
+
 		// This hunt is newer than the last_timestamp, we need
 		// to update it.
 		if hunt_obj.StartTime > last_timestamp {

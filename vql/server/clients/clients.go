@@ -99,7 +99,7 @@ func (self ClientsPlugin) Call(
 
 		limit := arg.Limit
 		if limit == 0 {
-			limit = 1000
+			limit = 100000
 		}
 
 		for _, client_id := range db.SearchClients(

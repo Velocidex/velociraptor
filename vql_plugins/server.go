@@ -27,5 +27,6 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/server"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/clients"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/downloads"
+	_ "www.velocidex.com/golang/velociraptor/vql/server/hunts"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/notebooks"
 )

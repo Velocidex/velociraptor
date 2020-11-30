@@ -139,7 +139,7 @@ func setArtifactFile(config_obj *config_proto.Config,
 
 		if !strings.HasPrefix(artifact_definition.Name, required_prefix) {
 			return nil, errors.New(
-				"Modified or custom artifacts must start with '" +
+				"Modified or custom artifact names must start with '" +
 					required_prefix + "'")
 		}
 
