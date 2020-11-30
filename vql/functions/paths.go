@@ -125,8 +125,36 @@ func (self PathJoinFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMa
 	}
 }
 
+type PathSplitArgs struct {
+	Path string `vfilter:"required,field=path,doc=Path to split into components."`
+}
+
+type PathSplitFunction struct{}
+
+func (self *PathSplitFunction) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	arg := &PathSplitArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("path_split: %s", err.Error())
+		return []string{}
+	}
+
+	return utils.SplitComponents(arg.Path)
+}
+
+func (self PathSplitFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "path_split",
+		Doc:     "Split a path into components. Note this is more complex than just split() because it takes into account path escaping.",
+		ArgType: type_map.AddType(scope, &PathSplitArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&DirnameFunction{})
 	vql_subsystem.RegisterFunction(&BasenameFunction{})
 	vql_subsystem.RegisterFunction(&PathJoinFunction{})
+	vql_subsystem.RegisterFunction(&PathSplitFunction{})
 }

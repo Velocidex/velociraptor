@@ -30,4 +30,12 @@ SELECT basename(path="/foo/bar/baz") FROM scope()[
  {
   "basename(path='c:\\\\foo\\\\bar\\\\\"F:\\\\foo/bar.txt\"')": "F:\\foo/bar.txt"
  }
+]SELECT path_split(path="/a/b/c/d/e")[-2] FROM scope()[
+ {
+  "path_split(path=\"/a/b/c/d/e\")[-2]": "d"
+ }
+]SELECT path_split(path="/a/b")[-20] FROM scope()[
+ {
+  "path_split(path=\"/a/b\")[-20]": "a"
+ }
 ]

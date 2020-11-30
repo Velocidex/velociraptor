@@ -412,7 +412,6 @@ type _IndexAssociativeProtocol struct{}
 
 func (self _IndexAssociativeProtocol) Applicable(
 	a vfilter.Any, b vfilter.Any) bool {
-
 	a_value := reflect.Indirect(reflect.ValueOf(a))
 	a_type := a_value.Type()
 	if a_type.Kind() != reflect.Slice {
@@ -425,7 +424,7 @@ func (self _IndexAssociativeProtocol) Applicable(
 		if err == nil {
 			return true
 		}
-	case int, float64, uint64:
+	case int, float64, uint64, int64, *int, *float64, *uint64, *int64:
 		return true
 	}
 	return false
@@ -434,6 +433,10 @@ func (self _IndexAssociativeProtocol) Applicable(
 func (self _IndexAssociativeProtocol) Associative(
 	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (
 	vfilter.Any, bool) {
+
+	if b == nil {
+		return vfilter.Null{}, false
+	}
 
 	idx := 0
 	switch t := b.(type) {
@@ -445,6 +448,16 @@ func (self _IndexAssociativeProtocol) Associative(
 		idx = int(t)
 	case uint64:
 		idx = int(t)
+	case int64:
+		idx = int(t)
+	case *int:
+		idx = int(*t)
+	case *float64:
+		idx = int(*t)
+	case *uint64:
+		idx = int(*t)
+	case *int64:
+		idx = int(*t)
 
 	default:
 		return vfilter.Null{}, false
@@ -455,8 +468,13 @@ func (self _IndexAssociativeProtocol) Associative(
 		return vfilter.Null{}, false
 	}
 
-	idx = idx % a_value.Len()
-
+	// Modulus for negative numbers should wrap around the length
+	// of the array aka python style modulus
+	// (http://python-history.blogspot.com/2010/08/why-pythons-integer-division-floors.html).
+	// This way indexing negative indexes will count from the back
+	// of the array.
+	length := a_value.Len()
+	idx = (idx%length + length) % length
 	return a_value.Index(idx).Interface(), true
 }
 
