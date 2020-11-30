@@ -35,6 +35,7 @@ parameters:
     type: choices
     choices:
       - Windows
+      - Windows_x86
       - Linux
       - MacOS
 

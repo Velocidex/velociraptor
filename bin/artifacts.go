@@ -91,11 +91,7 @@ func listArtifactsHint() []string {
 	config_obj := config.GetDefaultConfig()
 	result := []string{}
 
-	manager, err := services.GetRepositoryManager()
-	if err != nil {
-		return nil
-	}
-	repository, err := manager.GetGlobalRepository(config_obj)
+	repository, err := getRepository(config_obj)
 	if err != nil {
 		return result
 	}
