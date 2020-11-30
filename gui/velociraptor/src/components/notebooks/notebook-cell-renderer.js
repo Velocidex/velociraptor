@@ -22,6 +22,7 @@ import CreateArtifactFromCell from './create-artifact-from-cell.js';
 import AddCellFromFlowDialog from './add-cell-from-flow.js';
 import Completer from '../artifacts/syntax.js';
 import { getHuntColumns } from '../hunts/hunt-list.js';
+import VeloTimestamp from "../utils/time.js";
 
 import api from '../core/api-service.js';
 
@@ -283,9 +284,29 @@ export default class NotebookCellRenderer extends React.Component {
     };
 
     addCellFromCell = () => {
+        // Try to figure out the  tables shown in this cell.
+        var myRegexp = /"table_id":([0-9]+)/g;
+        let match = myRegexp.exec(this.state.cell.output);
+        let tables = [];
+        while (match != null) {
+            // matched text: match[0]
+            // match start: match.index
+            // capturing group n: match[n]
+            tables.push(match[1]);
+            match = myRegexp.exec(this.state.cell.output);
+        }
+
         let content = "SELECT *\nFROM source(\n  notebook_id=\"" +
-            this.props.notebook_id + "\",\n  " +
-            "notebook_cell_id=\""+ this.state.cell.cell_id +
+            this.props.notebook_id + "\",\n";
+        for(let i=0; i<tables.length;i++) {
+            if(i===0) {
+                content += "  notebook_cell_table=" + tables[i]+ ",\n";
+            } else {
+                content += "--  notebook_cell_table=" + tables[i]+ ",\n";
+            }
+        }
+
+        content += "  notebook_cell_id=\""+ this.state.cell.cell_id +
             "\")\nLIMIT 50\n";
         this.props.addCell(this.state.cell.cell_id, "VQL", content);
     }
@@ -298,6 +319,7 @@ export default class NotebookCellRenderer extends React.Component {
         // 2. The cell is being edited: Show the editing toolbar
         // 3. The cell is not selected or edited - no decorations.
         let non_editing_toolbar = (
+            <>
             <ButtonGroup>
               <Button title="Cancel"
                       onClick={() => {this.props.setSelectedCellId("");}}
@@ -389,6 +411,13 @@ export default class NotebookCellRenderer extends React.Component {
                 </Dropdown.Menu>
               </Dropdown>
             </ButtonGroup>
+            <ButtonGroup className="float-right">
+              <Button title="Rendered" disabled
+                      variant="outline-info">
+                <VeloTimestamp usec={this.state.cell.timestamp * 1000} />
+              </Button>
+            </ButtonGroup>
+            </>
         );
 
         let ace_toolbar = (

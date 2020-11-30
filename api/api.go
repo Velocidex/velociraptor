@@ -825,10 +825,11 @@ func (self *ApiServer) SetArtifactFile(
 	definition, err := setArtifactFile(self.config, in,
 		constants.ARTIFACT_CUSTOM_NAME_PREFIX /* required_prefix */)
 	if err != nil {
-		return &api_proto.APIResponse{
+		message := &api_proto.APIResponse{
 			Error:        true,
 			ErrorMessage: fmt.Sprintf("%v", err),
-		}, nil
+		}
+		return message, errors.New(message.ErrorMessage)
 	}
 
 	logging.GetLogger(self.config, &logging.Audit).

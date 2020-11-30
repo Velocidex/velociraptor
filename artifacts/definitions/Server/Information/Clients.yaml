@@ -21,7 +21,7 @@ sources:
                timestamp(epoch=last_seen_at/ 1000000).String as LastSeenAt,
                last_ip AS LastIP,
                last_seen_at AS _LastSeenAt
-        FROM clients()
+        FROM clients(count=100000)
         ORDER BY _LastSeenAt DESC
 
       - |
