@@ -95,13 +95,15 @@ func (self VQLClientAction) StartQuery(
 		timeout = 600
 	}
 
-	c := getConcurrency(config_obj)
-	err := c.StartConcurrencyControl(ctx)
-	if err != nil {
-		responder.RaiseError(fmt.Sprintf("%v", err))
-		return
+	if !arg.Urgent {
+		c := getConcurrency(config_obj)
+		err := c.StartConcurrencyControl(ctx)
+		if err != nil {
+			responder.RaiseError(fmt.Sprintf("%v", err))
+			return
+		}
+		defer c.EndConcurrencyControl()
 	}
-	defer c.EndConcurrencyControl()
 
 	// Cancel the query after this deadline
 	deadline := time.After(time.Second * time.Duration(timeout))
@@ -260,7 +262,7 @@ func getConcurrency(config_obj *config_proto.Config) *utils.Concurrency {
 	if concurrency == nil {
 		level := int(config_obj.Client.Concurrency)
 		if level == 0 {
-			level = 10
+			level = 2
 		}
 		concurrency = utils.NewConcurrencyControl(level, time.Hour)
 	}
