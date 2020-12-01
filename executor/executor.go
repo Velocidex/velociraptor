@@ -234,6 +234,9 @@ func (self *ClientExecutor) processRequestPlugin(
 	responder := responder.NewResponder(config_obj, req, self.Outbound)
 
 	if req.VQLClientAction != nil {
+		if req.Urgent {
+			req.VQLClientAction.Urgent = req.Urgent
+		}
 		actions.VQLClientAction{}.StartQuery(
 			config_obj, ctx, responder, req.VQLClientAction)
 		return

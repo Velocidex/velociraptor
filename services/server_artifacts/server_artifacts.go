@@ -78,7 +78,7 @@ func (self *contextManager) Save() error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.context.ExecutionDuration = time.Now().UnixNano() - int64(self.context.StartTime)
+	self.context.ExecutionDuration = time.Now().UnixNano()/1000 - int64(self.context.StartTime)
 
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
@@ -238,7 +238,7 @@ func (self *ServerArtifactsRunner) runQuery(
 	deadline := time.After(self.timeout)
 	collection_context.Modify(
 		func(context *flows_proto.ArtifactCollectorContext) {
-			context.StartTime = uint64(time.Now().UnixNano())
+			context.StartTime = uint64(time.Now().UnixNano() / 1000)
 		})
 	started := time.Now()
 	sub_ctx, cancel := context.WithCancel(ctx)
