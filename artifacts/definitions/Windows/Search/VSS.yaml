@@ -40,7 +40,7 @@ sources:
             basename(path=extract_vss(FullPath=FullPath).Device) AS Source,
             hash(path=FullPath, accessor='ntfs').SHA1 as SHA1
          FROM glob(globs=SearchGlob, accessor='ntfs')
-         WHERE NOT IsDIr
+         WHERE NOT IsDir
 
       -- For each full glob (including VSS device) extract all files
       -- and hashes.
