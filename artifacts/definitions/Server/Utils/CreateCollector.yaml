@@ -66,6 +66,7 @@ parameters:
       - ZIP
       - GCS
       - S3
+      - SFTP
 
   - name: target_args
     description: Type Dependent args
@@ -142,6 +143,19 @@ parameters:
           project=GCSBlob.project_id,
           name=name,
           credentials=TargetArgs.GCSKey)
+
+  - name: SFTPCollection
+    type: hidden
+    default : |
+      LET upload_file(filename, name, accessor) = upload_sftp(
+        file=filename,
+        accessor=accessor,
+        name=name,
+        user=TargetArgs.user,
+        path=TargetArgs.path,
+        privatekey=TargetArgs.privatekey,
+        endpoint=TargetArgs.endpoint,
+        hostkey = TargetArgs.hostkey)
 
   - name: CloudCollection
     type: hidden
@@ -294,7 +308,8 @@ sources:
         a = { SELECT StandardCollection AS Value FROM scope() WHERE target = "ZIP" },
         b = { SELECT S3Collection + CloudCollection AS Value  FROM scope() WHERE target = "S3" },
         c = { SELECT GCSCollection + CloudCollection AS Value  FROM scope() WHERE target = "GCS" },
-        d = { SELECT "" AS Value  FROM scope() WHERE log(message="Unknown collection type " + target) }
+        d = { SELECT SFTPCollection + CloudCollection AS Value  FROM scope() WHERE target = "SFTP" },
+        e = { SELECT "" AS Value  FROM scope() WHERE log(message="Unknown collection type " + target) }
       )
 
       LET definitions <= SELECT * FROM chain(

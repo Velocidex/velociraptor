@@ -27,7 +27,7 @@ type S3UploadArgs struct {
 	CredentialsKey    string `vfilter:"required,field=credentialskey,doc=The AWS key credentials to use"`
 	CredentialsSecret string `vfilter:"required,field=credentialssecret,doc=The AWS secret credentials to use"`
 	Endpoint          string `vfilter:"optional,field=endpoint,doc=The Endpoint to use"`
-	NoVerifyCert      bool   `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification"`
+	NoVerifyCert      string `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification"`
 }
 
 type S3UploadFunction struct{}
@@ -82,7 +82,12 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 		upload_response, err := upload_S3(
 			sub_ctx, scope, file,
 			arg.Bucket,
-			arg.Name, arg.CredentialsKey, arg.CredentialsSecret, arg.Region, arg.Endpoint, arg.NoVerifyCert)
+			arg.Name,
+			arg.CredentialsKey,
+			arg.CredentialsSecret,
+			arg.Region,
+			arg.Endpoint,
+			arg.NoVerifyCert)
 		if err != nil {
 			scope.Log("upload_S3: %v", err)
 			// Relay the error in the UploadResponse
@@ -97,7 +102,11 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 func upload_S3(ctx context.Context, scope *vfilter.Scope,
 	reader glob.ReadSeekCloser,
 	bucket, name string,
-	credentialsKey string, credentialsSecret string, region string, endpoint string, NoVerifyCert bool) (
+	credentialsKey string,
+	credentialsSecret string,
+	region string,
+	endpoint string,
+	NoVerifyCert string) (
 	*api.UploadResponse, error) {
 
 	scope.Log("upload_S3: Uploading %v to %v", name, bucket)
@@ -114,7 +123,7 @@ func upload_S3(ctx context.Context, scope *vfilter.Scope,
 	conf := aws.NewConfig().WithRegion(region).WithCredentials(creds)
 	if endpoint != "" {
 		conf = conf.WithEndpoint(endpoint).WithS3ForcePathStyle(true)
-		if NoVerifyCert {
+		if NoVerifyCert == "Y" {
 			tr := &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			}
