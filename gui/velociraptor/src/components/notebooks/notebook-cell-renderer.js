@@ -24,6 +24,7 @@ import Completer from '../artifacts/syntax.js';
 import { getHuntColumns } from '../hunts/hunt-list.js';
 import VeloTimestamp from "../utils/time.js";
 
+import axios from 'axios';
 import api from '../core/api-service.js';
 
 const cell_types = ["Markdown", "VQL"];
@@ -53,13 +54,22 @@ class AddCellFromHunt extends React.PureComponent {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         api.get("v1/ListHunts", {
             count: 100,
             offset: 0,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
+            if (response.cancel) {
+                return;
+            }
+
             let hunts = response.data.items || [];
             this.setState({hunts: hunts});
         });
+    }
+
+    componentWillUnmount = () => {
+        this.source.cancel();
     }
 
     render() {
@@ -152,7 +162,12 @@ export default class NotebookCellRenderer extends React.Component {
     }
 
     componentDidMount() {
+        this.source = axios.CancelToken.source();
         this.fetchCellContents();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -185,7 +200,11 @@ export default class NotebookCellRenderer extends React.Component {
         api.get("v1/GetNotebookCell", {
             notebook_id: this.props.notebook_id,
             cell_id: this.props.cell_metadata.cell_id,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
+            if (response.cancel) {
+                return;
+            }
+
             let cell = response.data;
             this.setState({cell: cell, input: cell.input});
         });
@@ -235,7 +254,11 @@ export default class NotebookCellRenderer extends React.Component {
             type: this.state.cell.type || "Markdown",
             currently_editing: false,
             input: this.state.cell.input,
-        }).then( (response) => {
+        }, this.source.token).then( (response) => {
+            if (response.cancel) {
+                return;
+            }
+
             this.setState({cell: response.data, currently_editing: false});
         });
     };
@@ -249,7 +272,7 @@ export default class NotebookCellRenderer extends React.Component {
         api.post("v1/CancelNotebookCell", {
             notebook_id: this.props.notebook_id,
             cell_id: this.state.cell.cell_id,
-        });
+        }, this.source.token);
     }
 
     pasteEvent = (e) => {
@@ -271,7 +294,7 @@ export default class NotebookCellRenderer extends React.Component {
                     };
 
                     api.post(
-                        'v1/UploadNotebookAttachment', request
+                        'v1/UploadNotebookAttachment', request, this.source.token
                     ).then((response) => {
                         this.state.ace.insert("\n!["+blob.name+"]("+response.data.url+")\n");
                     }, function failure(response) {

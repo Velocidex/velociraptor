@@ -6,6 +6,7 @@ import Spinner from '../utils/spinner.js';
 import _ from 'lodash';
 
 import api from '../core/api-service.js';
+import axios from 'axios';
 
 export default class NotebookRenderer extends React.Component {
     static propTypes = {
@@ -22,6 +23,14 @@ export default class NotebookRenderer extends React.Component {
         this.setState({selected_cell_id: cell_id});
     }
 
+
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
+    }
 
     upCell = (cell_id) => {
         let cell_metadata = this.props.notebook.cell_metadata;
@@ -42,7 +51,9 @@ export default class NotebookRenderer extends React.Component {
         if (changed) {
             this.props.notebook.cell_metadata = new_cells;
             this.setState({loading: true});
-            api.post('v1/UpdateNotebook', this.props.notebook).then(response=>{
+            api.post('v1/UpdateNotebook',
+                     this.props.notebook,
+                     this.source.token).then(response=>{
                 this.props.fetchNotebooks();
                 this.setState({loading: false});
             }, (response) => {
@@ -72,7 +83,9 @@ export default class NotebookRenderer extends React.Component {
         if (changed) {
             this.props.notebook.cell_metadata = new_cells;
             this.setState({loading: true});
-            api.post('v1/UpdateNotebook', this.props.notebook).then(response=>{
+            api.post('v1/UpdateNotebook',
+                     this.props.notebook,
+                     this.source.token).then(response=>{
                 this.props.fetchNotebooks();
                 this.setState({loading: false});
             }, function failure(response) {
@@ -103,7 +116,9 @@ export default class NotebookRenderer extends React.Component {
         if (changed) {
             this.props.notebook.cell_metadata = new_cells;
             this.setState({loading: true});
-            api.post('v1/UpdateNotebook', this.props.notebook).then(response=>{
+            api.post('v1/UpdateNotebook',
+                     this.props.notebook,
+                     this.source.token).then(response=>{
                 this.props.fetchNotebooks();
                 this.setState({loading: false});
             }, function failure(response) {
@@ -129,7 +144,9 @@ export default class NotebookRenderer extends React.Component {
         }
 
         this.setState({loading: true});
-        api.post('v1/NewNotebookCell', request).then((response) => {
+        api.post('v1/NewNotebookCell',
+                 request,
+                 this.source.token).then((response) => {
             this.props.fetchNotebooks();
             this.setState({selected_cell_id: response.data.latest_cell_id,
                            loading: false});

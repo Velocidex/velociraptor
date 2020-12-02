@@ -8,7 +8,7 @@ import HuntOverview from './hunt-overview.js';
 import HuntRequest from './hunt-request.js';
 import HuntClients from './hunt-clients.js';
 import HuntNotebook from './hunt-notebook.js';
-
+import Spinner from '../utils/spinner.js';
 
 import { withRouter }  from "react-router-dom";
 
@@ -28,6 +28,10 @@ class HuntInspector extends React.Component {
     }
 
     render() {
+        if (this.props.hunt && this.props.hunt.loading) {
+            return <Spinner loading={true}/>;
+        }
+
         if (!this.props.hunt || !this.props.hunt.hunt_id) {
             return <div className="no-content">Please select a hunt above</div>;
         }

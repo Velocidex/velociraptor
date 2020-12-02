@@ -35,7 +35,7 @@ export default class HuntNotebook extends React.Component {
     }
 
     componentWillUnmount() {
-        this.source.cancel("unmounted");
+        this.source.cancel();
         clearInterval(this.interval);
     }
 
@@ -63,7 +63,7 @@ export default class HuntNotebook extends React.Component {
         this.setState({loading: true});
         api.get("v1/GetNotebooks", {
             notebook_id: notebook_id,
-        }).then(response=>{
+        }, this.source.token).then(response=>{
             let notebooks = response.data.items || [];
 
             if (notebooks.length > 0) {
@@ -80,7 +80,7 @@ export default class HuntNotebook extends React.Component {
                 public: true,
             };
 
-            api.post('v1/NewNotebook', request).then((response) => {
+            api.post('v1/NewNotebook', request, this.source.token).then((response) => {
                 let cell_metadata = response.data && response.data.cell_metadata;
                 if (_.isEmpty(cell_metadata)) {
                     return;
@@ -91,7 +91,7 @@ export default class HuntNotebook extends React.Component {
                     type: "VQL",
                     cell_id: cell_metadata[0].cell_id,
                     input: this.getCellVQL(this.props.hunt),
-                }).then((response) => {
+                }, this.source.token).then((response) => {
                     this.fetchNotebooks();
                 });
             });

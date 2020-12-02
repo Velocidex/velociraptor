@@ -2,7 +2,7 @@ import React from 'react';
 import SplitPane from 'react-split-pane';
 import HuntList from './hunt-list.js';
 import HuntInspector from './hunt-inspector.js';
-
+import _ from 'lodash';
 import api from '../core/api-service.js';
 
 import axios from 'axios';
@@ -30,6 +30,7 @@ class VeloHunts extends React.Component {
 
     componentDidMount = () => {
         this.source = axios.CancelToken.source();
+        this.get_hunts_source = axios.CancelToken.source();
         this.interval = setInterval(this.fetchHunts, POLL_TIME);
         this.fetchHunts();
     }
@@ -54,11 +55,18 @@ class VeloHunts extends React.Component {
 
     loadFullHunt = (hunt) => {
         this.setState({selected_hunt: hunt});
+        this.get_hunts_source.cancel();
+        this.get_hunts_source = axios.CancelToken.source();
+        this.setState({full_selected_hunt: {loading: true}});
 
         api.get("v1/GetHunt", {
             hunt_id: hunt.hunt_id,
-        }).then((response) => {
-            this.setState({full_selected_hunt: response.data});
+        }, this.get_hunts_source.token).then((response) => {
+            if(_.isEmpty(response.data)) {
+                this.setState({full_selected_hunt: {loading: true}});
+            } else {
+                this.setState({full_selected_hunt: response.data});
+            }
         });
     }
 
@@ -71,25 +79,34 @@ class VeloHunts extends React.Component {
             offset: 0,
         }).then((response) => {
             let hunts = response.data.items || [];
+
             // If the router specifies a selected flow id, we select it.
-            for(var i=0;i<hunts.length;i++) {
-                let hunt=hunts[i];
-                if (hunt.hunt_id === selected_hunt_id) {
-                    this.loadFullHunt(hunt);
-                    break;
-                }
-            };
+            if (!this.state.init_router) {
+                for(var i=0;i<hunts.length;i++) {
+                    let hunt=hunts[i];
+                    if (hunt.hunt_id === selected_hunt_id) {
+                        this.loadFullHunt(hunt);
+                        break;
+                    }
+                };
+                this.setState({init_router: true});
+            }
 
             this.setState({hunts: hunts});
         });
 
         // Get the full hunt information from the server based on the hunt
         // metadata
-        if (selected_hunt_id) {
+        if (!this.state.init_router && selected_hunt_id) {
             api.get("v1/GetHunt", {
                 hunt_id: selected_hunt_id,
             }).then((response) => {
-                this.setState({full_selected_hunt: response.data});
+                if(_.isEmpty(response.data)) {
+                    this.setState({full_selected_hunt: {loading: true}});
+                } else {
+                    this.setState({full_selected_hunt: response.data});
+                }
+
             });
         }
     }
