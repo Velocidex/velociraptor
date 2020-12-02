@@ -3,7 +3,7 @@
 <?define PackageDescription="Velociraptor Service Installer" ?>
 <?define Manufacturer="Velocidex" ?>
 <?define Name="Velociraptor" ?>
-<?define Version="0.48.0" ?>
+<?define Version="0.53.0" ?>
 <?define BinaryName="Velociraptor.exe" ?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
@@ -29,8 +29,7 @@
                           <CreateFolder />
                         </Component>
                   </Directory>
-          <Component Id='MainExecutable'
-                     Guid='35e9ec26-d243-4fcd-9b5b-6ad37345ccea'>
+          <Component Id='MainExecutable' Guid='*'>
             <File Id='ServiceEXE' Name='$(var.BinaryName)'
                   DiskId='1'
                   Source='Output/Velociraptor.exe' KeyPath='yes'>
@@ -68,7 +67,7 @@
                 Start="install"
                 Remove="uninstall" Wait="yes" />
           </Component>
-          <Component Id='Config' Guid='d47dd101-3f53-45ef-889e-2b0db79e554c'>
+          <Component Id='Config' Guid='*'>
             <File Id='Config' Name='client.config.yaml'
                   DiskId='1' Source='Output/client.config.yaml' KeyPath='yes'>
             </File>

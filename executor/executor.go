@@ -23,9 +23,11 @@ import (
 	"log"
 	"runtime/debug"
 	"sync"
+	"time"
 
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/utils"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -101,6 +103,8 @@ type ClientExecutor struct {
 	config_obj *config_proto.Config
 	in_flight  map[string][]*_FlowContext
 	next_id    int
+
+	concurrency *utils.Concurrency
 }
 
 func (self *ClientExecutor) Cancel(flow_id string, responder *responder.Responder) bool {
@@ -234,8 +238,14 @@ func (self *ClientExecutor) processRequestPlugin(
 	responder := responder.NewResponder(config_obj, req, self.Outbound)
 
 	if req.VQLClientAction != nil {
-		if req.Urgent {
-			req.VQLClientAction.Urgent = req.Urgent
+		// Control concurrency on the executor only.
+		if !req.Urgent {
+			err := self.concurrency.StartConcurrencyControl(ctx)
+			if err != nil {
+				responder.RaiseError(fmt.Sprintf("%v", err))
+				return
+			}
+			defer self.concurrency.EndConcurrencyControl()
 		}
 		actions.VQLClientAction{}.StartQuery(
 			config_obj, ctx, responder, req.VQLClientAction)
@@ -271,11 +281,18 @@ func (self *ClientExecutor) processRequestPlugin(
 func NewClientExecutor(
 	ctx context.Context,
 	config_obj *config_proto.Config) (*ClientExecutor, error) {
+
+	level := int(config_obj.Client.Concurrency)
+	if level == 0 {
+		level = 2
+	}
+
 	result := &ClientExecutor{
-		Inbound:    make(chan *crypto_proto.GrrMessage, 10),
-		Outbound:   make(chan *crypto_proto.GrrMessage, 10),
-		in_flight:  make(map[string][]*_FlowContext),
-		config_obj: config_obj,
+		Inbound:     make(chan *crypto_proto.GrrMessage, 10),
+		Outbound:    make(chan *crypto_proto.GrrMessage, 10),
+		in_flight:   make(map[string][]*_FlowContext),
+		config_obj:  config_obj,
+		concurrency: utils.NewConcurrencyControl(level, time.Hour),
 	}
 
 	// Drain messages from server and execute them, pushing

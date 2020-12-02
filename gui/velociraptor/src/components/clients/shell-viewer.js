@@ -332,6 +332,7 @@ class ShellViewer extends Component {
             parameters: {
                 env: [{key: "Command", value: this.state.command}],
             },
+            urgent: true,
         };
 
         api.post('v1/CollectArtifact', params).then(response=>{

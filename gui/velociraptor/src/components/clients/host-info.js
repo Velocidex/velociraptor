@@ -205,6 +205,7 @@ class VeloHostInfo extends Component {
         }
 
         api.post("v1/CollectArtifact", {
+            urgent: true,
             client_id: this.props.client.client_id,
             artifacts: ["Generic.Client.Info"],
         }).then((response) => {

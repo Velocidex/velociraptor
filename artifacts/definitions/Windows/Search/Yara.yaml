@@ -2,12 +2,6 @@ name: Windows.Search.Yara
 description: |
   Searches for a specific malicious file or set of files by a Yara rule.
 
-  You will need to upload your yara file using:
-
-  ```
-  velociraptor tools upload --name YaraRules my_yara_file.yara
-  ```
-
 tools:
   - name: YaraRules
 
@@ -21,8 +15,10 @@ precondition:
 
 sources:
   - query: |
-        LET yara_rules <= SELECT read_file(filename=FullPath) AS Rule
-        FROM Artifact.Generic.Utils.FetchBinary(ToolName="YaraRules")
+        LET yara_rules <= SELECT read_file(filename=FullPath) AS Rule,
+           basename(path=FullPath) AS ToolName
+        FROM Artifact.Generic.Utils.FetchBinary(
+             ToolName="YaraRules", IsExecutable=FALSE)
 
         LET fileList = SELECT FullPath
         FROM parse_mft(
@@ -30,7 +26,9 @@ sources:
             filename="C:\\$MFT")
         WHERE InUse
           AND FileName =~ nameRegex
+          AND NOT FileName = yara_rules[0].ToolName
           AND NOT FullPath =~ "WinSXS"
+
 
         -- These files are typically short - only report a single hit.
         LET search = SELECT Rule, String.Offset AS HitOffset,
