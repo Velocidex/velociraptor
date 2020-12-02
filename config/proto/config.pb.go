@@ -427,7 +427,7 @@ type ClientConfig struct {
 	MaxUploadSize      uint64                  `protobuf:"varint,25,opt,name=max_upload_size,json=maxUploadSize,proto3" json:"max_upload_size,omitempty"`
 	LocalBuffer        *RingBufferConfig       `protobuf:"bytes,26,opt,name=local_buffer,json=localBuffer,proto3" json:"local_buffer,omitempty"`
 	MaxMemoryHardLimit uint64                  `protobuf:"varint,29,opt,name=max_memory_hard_limit,json=maxMemoryHardLimit,proto3" json:"max_memory_hard_limit,omitempty"`
-	// Maximum number of concurrent queries the client will allow (default 10).
+	// Maximum number of concurrent queries the client will allow (default 2).
 	Concurrency uint64 `protobuf:"varint,31,opt,name=concurrency,proto3" json:"concurrency,omitempty"`
 }
 
