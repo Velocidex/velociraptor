@@ -9,7 +9,7 @@ description: |
    of VSS.
    
    NOTE: Expect some false positives and build a whitelist of Urls to add for 
-   regular hunts. Alteratively target specific headers such as PE files by 
+   regular hunts. Alternatively target specific headers such as PE files by 
    adding '^MZ' to the HeaderRegex field.
 
 author: "@mgreen27 - Matt Green"
