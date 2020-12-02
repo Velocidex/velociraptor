@@ -27,7 +27,7 @@ type S3UploadArgs struct {
 	CredentialsKey    string `vfilter:"required,field=credentialskey,doc=The AWS key credentials to use"`
 	CredentialsSecret string `vfilter:"required,field=credentialssecret,doc=The AWS secret credentials to use"`
 	Endpoint          string `vfilter:"optional,field=endpoint,doc=The Endpoint to use"`
-	NoVerifyCert      string `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification"`
+	NoVerifyCert      bool   `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification"`
 }
 
 type S3UploadFunction struct{}
@@ -106,7 +106,7 @@ func upload_S3(ctx context.Context, scope *vfilter.Scope,
 	credentialsSecret string,
 	region string,
 	endpoint string,
-	NoVerifyCert string) (
+	NoVerifyCert bool) (
 	*api.UploadResponse, error) {
 
 	scope.Log("upload_S3: Uploading %v to %v", name, bucket)
@@ -123,7 +123,7 @@ func upload_S3(ctx context.Context, scope *vfilter.Scope,
 	conf := aws.NewConfig().WithRegion(region).WithCredentials(creds)
 	if endpoint != "" {
 		conf = conf.WithEndpoint(endpoint).WithS3ForcePathStyle(true)
-		if NoVerifyCert == "Y" {
+		if NoVerifyCert {
 			tr := &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			}

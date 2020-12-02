@@ -4,11 +4,11 @@ package tools
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"path/filepath"
-	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/sftp"
@@ -81,12 +81,12 @@ func (self *SFTPUploadFunction) Call(ctx context.Context,
 
 		upload_response, err := upload_SFTP(
 			sub_ctx, scope, file,
-			strings.TrimSpace(arg.User),
-			strings.TrimSpace(arg.Path),
-			strings.TrimSpace(arg.Name),
-			strings.TrimSpace(arg.PrivateKey),
-			strings.TrimSpace(arg.Endpoint),
-			strings.TrimSpace(arg.HostKey))
+			arg.User,
+			arg.Path,
+			arg.Name,
+			arg.PrivateKey,
+			arg.Endpoint,
+			arg.HostKey)
 		if err != nil {
 			scope.Log("upload_SFTP: %v", err)
 			// Relay the error in the UploadResponse
@@ -106,59 +106,80 @@ func hostkeycallback(trustedkey string) ssh.HostKeyCallback {
 	return func(_ string, _ net.Addr, k ssh.PublicKey) error {
 		ks := keyString(k)
 		if trustedkey != ks {
-			return fmt.Errorf("SSH-key verification: expected %q but got %q", trustedkey, ks)
+			return fmt.Errorf("SSH-key verification: expected %s but got %s", trustedkey, ks)
 		}
 		return nil
+	}
+}
+
+func getSFTPClient(scope *vfilter.Scope, user string, privateKey string, endpoint string, hostKey string) (*sftp.Client, error) {
+	cacheKey := fmt.Sprintf("%s %s", user, endpoint)
+	client := vql_subsystem.CacheGet(scope, cacheKey)
+	if client == nil {
+		signer, err := ssh.ParsePrivateKey([]byte(privateKey))
+		if err != nil {
+			vql_subsystem.CacheSet(scope, cacheKey, err)
+			return nil, err
+		}
+		var clientConfig *ssh.ClientConfig
+		if hostKey == "" {
+			clientConfig = &ssh.ClientConfig{
+				User: user,
+				Auth: []ssh.AuthMethod{
+					ssh.PublicKeys(signer),
+				},
+				HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			}
+		} else {
+			clientConfig = &ssh.ClientConfig{
+				User: user,
+				Auth: []ssh.AuthMethod{
+					ssh.PublicKeys(signer),
+				},
+				HostKeyCallback: hostkeycallback(hostKey),
+			}
+		}
+
+		conn, err := ssh.Dial("tcp", endpoint, clientConfig)
+		if err != nil {
+			vql_subsystem.CacheSet(scope, cacheKey, err)
+			return nil, err
+		}
+		client, err := sftp.NewClient(conn)
+		if err != nil {
+			vql_subsystem.CacheSet(scope, cacheKey, err)
+			return nil, err
+		}
+		vql_subsystem.AddGlobalDestructor(scope, func() {
+			conn.Close()
+			client.Close()
+		})
+		vql_subsystem.CacheSet(scope, cacheKey, client)
+		return client, nil
+	}
+	switch t := client.(type) {
+	case error:
+		return nil, t
+	case *sftp.Client:
+		return t, nil
+	default:
+		return nil, errors.New("Error")
 	}
 }
 
 func upload_SFTP(ctx context.Context, scope *vfilter.Scope,
 	reader io.Reader,
 	user, path, name string,
-	privateKey string, endpoint string, hostkey string) (
+	privateKey string, endpoint string, hostKey string) (
 	*api.UploadResponse, error) {
 
 	scope.Log("upload_SFTP: Uploading %v to %v", name, endpoint)
-	signer, err := ssh.ParsePrivateKey([]byte(strings.TrimSuffix(privateKey, "\n")))
+	client, err := getSFTPClient(scope, user, privateKey, endpoint, hostKey)
 	if err != nil {
 		return &api.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
-
-	var clientConfig *ssh.ClientConfig
-	if hostkey == "" {
-		clientConfig = &ssh.ClientConfig{
-			User: user,
-			Auth: []ssh.AuthMethod{
-				ssh.PublicKeys(signer),
-			},
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		}
-	} else {
-		clientConfig = &ssh.ClientConfig{
-			User: user,
-			Auth: []ssh.AuthMethod{
-				ssh.PublicKeys(signer),
-			},
-			HostKeyCallback: hostkeycallback(hostkey),
-		}
-	}
-
-	conn, err := ssh.Dial("tcp", endpoint, clientConfig)
-	if err != nil {
-		return &api.UploadResponse{
-			Error: err.Error(),
-		}, err
-	}
-	defer conn.Close()
-	client, err := sftp.NewClient(conn)
-	if err != nil {
-		return &api.UploadResponse{
-			Error: err.Error(),
-		}, err
-	}
-	defer client.Close()
 
 	fpath := filepath.Join(path, name)
 	file, err := client.Create(fpath)
