@@ -8,7 +8,7 @@ description: |
    of common content types. Additional options include a UrlWhitelist and search 
    of VSS.
    
-   NOTE: Expect some false positives and build a whitelsit of Urls to add for 
+   NOTE: Expect some false positives and build a whitelist of Urls to add for 
    regular hunts. Alteratively target specific headers such as PE files by 
    adding '^MZ' to the HeaderRegex field.
 
@@ -33,7 +33,7 @@ parameters:
     default: '.'
   - name: HeaderWhitelist
     description: 'Whitelist regex of content headers.'
-    default: '^(MSCF|0|<|----)'
+    default: '^(MSCF|0|<|.<|----)'
   - name: UrlWhitelist
     description: 'Regex to whitelist Url field'
   - name: SearchVSS
