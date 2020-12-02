@@ -11,7 +11,7 @@ description: |
   artifact or uploading a different msi file.
 
 tools:
-  - name: WindowsClient
+  - name: WindowsMSI
 
 sources:
   - precondition:
@@ -19,7 +19,7 @@ sources:
 
     query:  |
       LET bin <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
-         ToolName="WindowsClient")
+         ToolName="WindowsMSI", IsExecutable=FALSE)
 
       // Call the binary and return all its output in a single row.
       SELECT * FROM execve(

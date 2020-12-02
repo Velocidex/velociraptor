@@ -66,8 +66,6 @@ message VQLCollectorArgs {
     repeated string tools = 26 [(sem_type)={
             description: "A list of tools we will need to run this VQL.",
         }];
-
-    bool urgent = 27;
 }
 
 message VQLTypeMap {
