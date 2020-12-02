@@ -19,7 +19,7 @@ sources:
 
     query:  |
       LET bin <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
-         ToolName="WindowsMSI", IsBinary=FALSE)
+         ToolName="WindowsMSI", IsExecutable=FALSE)
 
       // Call the binary and return all its output in a single row.
       SELECT * FROM execve(
