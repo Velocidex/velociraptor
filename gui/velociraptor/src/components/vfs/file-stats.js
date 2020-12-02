@@ -45,6 +45,7 @@ class VeloFileStats extends Component {
         }
 
         api.post("v1/CollectArtifact", {
+            urgent: true,
             client_id: this.props.client.client_id,
             artifacts: ["System.VFS.DownloadFile"],
             parameters: {

@@ -184,6 +184,7 @@ class VeloFileList extends Component {
         let accessor = path[0];
         let search_path = Join(path.slice(1));
         api.post("v1/CollectArtifact", {
+            urgent: true,
             client_id: this.props.client.client_id,
             artifacts: ["System.VFS.DownloadFile"],
             parameters: {"env": [
