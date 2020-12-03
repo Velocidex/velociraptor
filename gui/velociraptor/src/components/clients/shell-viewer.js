@@ -3,13 +3,13 @@ import "./shell-viewer.css";
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from "classnames";
-
+import _ from 'lodash';
 import InputGroup from 'react-bootstrap/InputGroup';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+import { requestToParameters } from "../flows/utils.js";
 import api from '../core/api-service.js';
 import axios from 'axios';
 import VeloTimestamp from "../utils/time.js";
@@ -37,18 +37,18 @@ class VeloShellCell extends Component {
     }
 
     getInput = () => {
-        if (!this.props.flow || !this.props.flow.request ||
-            !this.props.flow.request.parameters ||
-            !this.props.flow.request.parameters.env) {
+        if (!this.props.flow || !this.props.flow.request) {
             return "";
         }
 
         // Figure out the command we requested.
-        var parameters = this.props.flow.request.parameters.env;
-        for(var i=0; i<parameters.length; i++) {
-            if (parameters[i].key === 'Command') {
-                return parameters[i].value;
-            };
+        var parameters = requestToParameters(this.props.flow.request);
+        for (let k in parameters) {
+            let params = parameters[k];
+            let command = params.Command;
+            if(_.isString(command)){
+                return command;
+            }
         }
         return "";
     }
@@ -327,9 +327,12 @@ class ShellViewer extends Component {
         var params = {
             client_id: this.props.client.client_id,
             artifacts: [artifact],
-            parameters: {
-                env: [{key: "Command", value: this.state.command}],
-            },
+            specs: [{
+                artifact: artifact,
+                parameters: {
+                    env: [{key: "Command", value: this.state.command}],
+                }
+            }],
             urgent: true,
         };
 
