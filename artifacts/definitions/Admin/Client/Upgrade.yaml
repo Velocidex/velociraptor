@@ -13,14 +13,27 @@ description: |
 tools:
   - name: WindowsMSI
 
+parameters:
+  - name: SleepDuration
+    default: 600
+    description: |
+      The MSI file is typically very large and we do not want to
+      overwhelm the server so we stagger the download over this many
+      seconds.
+
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
 
     query:  |
       LET bin <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
-         ToolName="WindowsMSI", IsExecutable=FALSE)
+         ToolName="WindowsMSI", IsExecutable=FALSE,
+         SleepDuration=SleepDuration)
 
       // Call the binary and return all its output in a single row.
-      SELECT * FROM execve(
-           argv=["msiexec.exe", "/i", bin[0].FullPath], length=10000000)
+      // If we fail to download the binary we do not run the command.
+      SELECT * FROM foreach(row=bin,
+      query={
+         SELECT * FROM execve(
+              argv=["msiexec.exe", "/i", FullPath], length=10000000)
+      })

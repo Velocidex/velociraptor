@@ -4,6 +4,7 @@ import VeloPagedTable from '../core/paged-table.js';
 import VeloTimestamp from "../utils/time.js";
 import ClientLink from '../clients/client-link.js';
 import FlowLink from '../flows/flow-link.js';
+import NumberFormatter from '../utils/number.js';
 
 export default class HuntClients extends React.Component {
     static propTypes = {
@@ -30,8 +31,16 @@ export default class HuntClients extends React.Component {
             },
             FlowId: (cell, row) => {
                 return <FlowLink flow_id={cell} client_id={row.ClientId}/>;
-            }
-
+            },
+            Duration: (cell, row) => {
+                return <NumberFormatter value={cell}/>;
+            },
+            TotalBytes: (cell, row) => {
+                return <NumberFormatter value={cell}/>;
+            },
+            TotalRows: (cell, row) => {
+                return <NumberFormatter value={cell}/>;
+            },
         };
 
         return (

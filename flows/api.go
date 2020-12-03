@@ -196,7 +196,8 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 	}
 
 	for _, item := range files {
-		if strings.HasSuffix(item.Name(), ".lock") {
+		if strings.HasSuffix(item.Name(), ".lock") ||
+			!item.Mode().IsRegular() {
 			continue
 		}
 

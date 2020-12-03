@@ -5,6 +5,8 @@ import _ from 'lodash';
 import 'react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css';
 import ToolkitProvider from 'react-bootstrap-table2-toolkit';
 
+import axios from 'axios';
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -108,8 +110,14 @@ class VeloPagedTable extends Component {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.fetchRows();
     }
+
+    componentWillUnmount() {
+        this.source.cancel();
+    }
+
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (!_.isEqual(prevProps.params, this.props.params)) {
@@ -163,7 +171,11 @@ class VeloPagedTable extends Component {
         let url = this.props.url || "v1/GetTable";
 
         this.setState({loading: true});
-        api.get(url, params).then((response) => {
+        api.get(url, params, this.source.token).then((response) => {
+            if (response.cancel) {
+                return;
+            }
+
             let pageData = PrepareData(response.data);
             let toggles = Object.assign({}, this.state.toggles);
             let columns = pageData.columns;

@@ -13,6 +13,10 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
 let api_handlers = base_path + "/api/";
 
 const handle_error = err=>{
+    if (axios.isCancel(err)) {
+        return {data: {}, cancel: true};
+    };
+
     let data = err.response && err.response.data;
     data = data || err.message;
 

@@ -45,6 +45,8 @@ func (self *ApiServer) GetNotebooks(
 	ctx context.Context,
 	in *api_proto.NotebookCellRequest) (*api_proto.Notebooks, error) {
 
+	defer Instrument("GetNotebooks")()
+
 	// Empty creators are called internally.
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	user_record, err := users.GetUser(self.config, user_name)
@@ -151,6 +153,8 @@ func (self *ApiServer) NewNotebook(
 	ctx context.Context,
 	in *api_proto.NotebookMetadata) (*api_proto.NotebookMetadata, error) {
 
+	defer Instrument("NewNotebook")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
@@ -222,6 +226,8 @@ func (self *ApiServer) NewNotebook(
 func (self *ApiServer) NewNotebookCell(
 	ctx context.Context,
 	in *api_proto.NotebookCellRequest) (*api_proto.NotebookMetadata, error) {
+
+	defer Instrument("NewNotebookCell")()
 
 	if !strings.HasPrefix(in.NotebookId, "N.") {
 		return nil, errors.New("Invalid NoteboookId")
@@ -317,6 +323,8 @@ func (self *ApiServer) UpdateNotebook(
 	ctx context.Context,
 	in *api_proto.NotebookMetadata) (*api_proto.NotebookMetadata, error) {
 
+	defer Instrument("UpdateNotebook")()
+
 	if !strings.HasPrefix(in.NotebookId, "N.") {
 		return nil, errors.New("Invalid NoteboookId")
 	}
@@ -386,6 +394,8 @@ func (self *ApiServer) UpdateNotebook(
 func (self *ApiServer) GetNotebookCell(
 	ctx context.Context,
 	in *api_proto.NotebookCellRequest) (*api_proto.NotebookCell, error) {
+
+	defer Instrument("GetNotebookCell")()
 
 	if !strings.HasPrefix(in.NotebookId, "N.") {
 		return nil, errors.New("Invalid NoteboookId")
@@ -460,6 +470,8 @@ func (self *ApiServer) GetNotebookCell(
 func (self *ApiServer) UpdateNotebookCell(
 	ctx context.Context,
 	in *api_proto.NotebookCellRequest) (*api_proto.NotebookCell, error) {
+
+	defer Instrument("UpdateNotebookCell")()
 
 	if !strings.HasPrefix(in.NotebookId, "N.") {
 		return nil, errors.New("Invalid NoteboookId")
@@ -643,6 +655,8 @@ func (self *ApiServer) CancelNotebookCell(
 	ctx context.Context,
 	in *api_proto.NotebookCellRequest) (*empty.Empty, error) {
 
+	defer Instrument("CancelNotebookCell")()
+
 	if !strings.HasPrefix(in.NotebookId, "N.") {
 		return nil, errors.New("Invalid NoteboookId")
 	}
@@ -670,6 +684,9 @@ func (self *ApiServer) CancelNotebookCell(
 func (self *ApiServer) UploadNotebookAttachment(
 	ctx context.Context,
 	in *api_proto.NotebookFileUploadRequest) (*api_proto.NotebookFileUploadResponse, error) {
+
+	defer Instrument("UploadNotebookAttachment")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
@@ -712,6 +729,8 @@ func (self *ApiServer) UploadNotebookAttachment(
 func (self *ApiServer) CreateNotebookDownloadFile(
 	ctx context.Context,
 	in *api_proto.NotebookExportRequest) (*empty.Empty, error) {
+
+	defer Instrument("CreateNotebookDownloadFile")()
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	user_record, err := users.GetUser(self.config, user_name)

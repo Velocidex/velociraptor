@@ -24,6 +24,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -72,6 +74,9 @@ type ApiServer struct {
 func (self *ApiServer) CancelFlow(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
+
+	defer Instrument("CancelFlow")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 
 	permissions := acls.COLLECT_CLIENT
@@ -108,6 +113,8 @@ func (self *ApiServer) ArchiveFlow(
 	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 
+	defer Instrument("ArchiveFlow")()
+
 	permissions := acls.COLLECT_CLIENT
 	if in.ClientId == "server" {
 		permissions = acls.COLLECT_SERVER
@@ -140,6 +147,8 @@ func (self *ApiServer) GetReport(
 	ctx context.Context,
 	in *api_proto.GetReportRequest) (*api_proto.GetReportResponse, error) {
 
+	defer Instrument("GetReport")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -166,6 +175,8 @@ func (self *ApiServer) GetReport(
 func (self *ApiServer) CollectArtifact(
 	ctx context.Context,
 	in *flows_proto.ArtifactCollectorArgs) (*flows_proto.ArtifactCollectorResponse, error) {
+
+	defer Instrument("CollectArtifact")()
 
 	result := &flows_proto.ArtifactCollectorResponse{Request: in}
 	creator := GetGRPCUserInfo(self.config, ctx).Name
@@ -234,6 +245,8 @@ func (self *ApiServer) CreateHunt(
 	ctx context.Context,
 	in *api_proto.Hunt) (*api_proto.StartFlowResponse, error) {
 
+	defer Instrument("CreateHunt")()
+
 	// Log this event as an Audit event.
 	in.Creator = GetGRPCUserInfo(self.config, ctx).Name
 	in.HuntId = flows.GetNewHuntId()
@@ -270,6 +283,8 @@ func (self *ApiServer) ModifyHunt(
 	ctx context.Context,
 	in *api_proto.Hunt) (*empty.Empty, error) {
 
+	defer Instrument("ModifyHunt")()
+
 	// Log this event as an Audit event.
 	in.Creator = GetGRPCUserInfo(self.config, ctx).Name
 
@@ -300,6 +315,8 @@ func (self *ApiServer) ListHunts(
 	ctx context.Context,
 	in *api_proto.ListHuntsRequest) (*api_proto.ListHuntsResponse, error) {
 
+	defer Instrument("ListHunts")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -323,6 +340,8 @@ func (self *ApiServer) GetHunt(
 		return &api_proto.Hunt{}, nil
 	}
 
+	defer Instrument("GetHunt")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -342,6 +361,8 @@ func (self *ApiServer) GetHunt(
 func (self *ApiServer) GetHuntResults(
 	ctx context.Context,
 	in *api_proto.GetHuntResultsRequest) (*api_proto.GetTableResponse, error) {
+
+	defer Instrument("GetHuntResults")()
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
@@ -371,6 +392,8 @@ func (self *ApiServer) GetHuntResults(
 func (self *ApiServer) ListClients(
 	ctx context.Context,
 	in *api_proto.SearchClientsRequest) (*api_proto.SearchClientsResponse, error) {
+
+	defer Instrument("ListClients")()
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 
@@ -448,6 +471,9 @@ func (self *ApiServer) ListClients(
 func (self *ApiServer) NotifyClients(
 	ctx context.Context,
 	in *api_proto.NotificationRequest) (*empty.Empty, error) {
+
+	defer Instrument("NotifyClients")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.COLLECT_CLIENT
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -472,6 +498,8 @@ func (self *ApiServer) NotifyClients(
 func (self *ApiServer) LabelClients(
 	ctx context.Context,
 	in *api_proto.LabelClientsRequest) (*api_proto.APIResponse, error) {
+
+	defer Instrument("LabelClients")()
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.LABEL_CLIENT
@@ -514,6 +542,8 @@ func (self *ApiServer) GetFlowDetails(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.FlowDetails, error) {
 
+	defer Instrument("GetFlowDetails")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -529,6 +559,8 @@ func (self *ApiServer) GetFlowDetails(
 func (self *ApiServer) GetFlowRequests(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowRequestDetails, error) {
+
+	defer Instrument("GetFlowRequests")()
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
@@ -549,6 +581,8 @@ func (self *ApiServer) GetUserUITraits(
 	result := NewDefaultUserObject(self.config)
 	user_info := GetGRPCUserInfo(self.config, ctx)
 
+	defer Instrument("GetUserUITraits")()
+
 	result.Username = user_info.Name
 	result.InterfaceTraits.Picture = user_info.Picture
 	result.InterfaceTraits.Permissions, _ = acls.GetEffectivePolicy(self.config,
@@ -566,6 +600,8 @@ func (self *ApiServer) SetGUIOptions(
 	ctx context.Context,
 	in *api_proto.SetGUIOptionsRequest) (*empty.Empty, error) {
 	user_info := GetGRPCUserInfo(self.config, ctx)
+
+	defer Instrument("SetGUIOptions")()
 
 	return &empty.Empty{}, users.SetUserOptions(self.config, user_info.Name, in)
 }
@@ -591,6 +627,8 @@ func (self *ApiServer) VFSListDirectory(
 	ctx context.Context,
 	in *flows_proto.VFSListRequest) (*flows_proto.VFSListResponse, error) {
 
+	defer Instrument("VFSListDirectory")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -608,6 +646,8 @@ func (self *ApiServer) VFSStatDirectory(
 	ctx context.Context,
 	in *flows_proto.VFSListRequest) (*flows_proto.VFSListResponse, error) {
 
+	defer Instrument("VFSStatDirectory")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -624,6 +664,8 @@ func (self *ApiServer) VFSStatDirectory(
 func (self *ApiServer) VFSStatDownload(
 	ctx context.Context,
 	in *flows_proto.VFSStatDownloadRequest) (*flows_proto.VFSDownloadInfo, error) {
+
+	defer Instrument("VFSStatDownload")()
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
@@ -643,6 +685,8 @@ func (self *ApiServer) VFSRefreshDirectory(
 	in *api_proto.VFSRefreshDirectoryRequest) (
 	*flows_proto.ArtifactCollectorResponse, error) {
 
+	defer Instrument("VFSRefreshDirectory")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.COLLECT_CLIENT
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -661,6 +705,8 @@ func (self *ApiServer) VFSGetBuffer(
 	in *api_proto.VFSFileBuffer) (
 	*api_proto.VFSFileBuffer, error) {
 
+	defer Instrument("VFSGetBuffer")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -678,6 +724,8 @@ func (self *ApiServer) VFSGetBuffer(
 func (self *ApiServer) GetTable(
 	ctx context.Context,
 	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
+
+	defer Instrument("GetTable")()
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
@@ -724,6 +772,8 @@ func (self *ApiServer) GetArtifacts(
 	in *api_proto.GetArtifactsRequest) (
 	*artifacts_proto.ArtifactDescriptors, error) {
 
+	defer Instrument("GetArtifacts")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -769,6 +819,8 @@ func (self *ApiServer) GetArtifactFile(
 	in *api_proto.GetArtifactRequest) (
 	*api_proto.GetArtifactResponse, error) {
 
+	defer Instrument("GetArtifactFile")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -792,6 +844,8 @@ func (self *ApiServer) SetArtifactFile(
 	ctx context.Context,
 	in *api_proto.SetArtifactRequest) (
 	*api_proto.APIResponse, error) {
+
+	defer Instrument("SetArtifactFile")()
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.ARTIFACT_WRITER
@@ -969,6 +1023,8 @@ func (self *ApiServer) GetServerMonitoringState(
 	in *empty.Empty) (
 	*flows_proto.ArtifactCollectorArgs, error) {
 
+	defer Instrument("GetServerMonitoringState")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -986,6 +1042,8 @@ func (self *ApiServer) SetServerMonitoringState(
 	in *flows_proto.ArtifactCollectorArgs) (
 	*flows_proto.ArtifactCollectorArgs, error) {
 
+	defer Instrument("SetServerMonitoringState")()
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.SERVER_ADMIN
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -1001,6 +1059,8 @@ func (self *ApiServer) SetServerMonitoringState(
 func (self *ApiServer) GetClientMonitoringState(
 	ctx context.Context, in *empty.Empty) (
 	*flows_proto.ClientEventTable, error) {
+
+	defer Instrument("GetClientMonitoringState")()
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.SERVER_ADMIN
@@ -1018,6 +1078,8 @@ func (self *ApiServer) SetClientMonitoringState(
 	ctx context.Context,
 	in *flows_proto.ClientEventTable) (
 	*empty.Empty, error) {
+
+	defer Instrument("SetClientMonitoringState")()
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.SERVER_ADMIN
@@ -1041,6 +1103,8 @@ func (self *ApiServer) SetClientMonitoringState(
 
 func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	in *api_proto.CreateDownloadRequest) (*api_proto.CreateDownloadResponse, error) {
+
+	defer Instrument("CreateDownloadFile")()
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.PREPARE_RESULTS
@@ -1206,6 +1270,16 @@ func StartMonitoringService(
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
+	env_inject_time, pres := os.LookupEnv("VELOCIRAPTOR_INJECT_API_SLEEP")
+	if pres {
+		logger.Info("Injecting delays for API calls since VELOCIRAPTOR_INJECT_API_SLEEP is set (only used for testing).")
+		result, err := strconv.ParseInt(env_inject_time, 0, 64)
+		if err == nil {
+			inject_time = int(result)
+		}
+	}
+
 	bind_addr := fmt.Sprintf("%s:%d",
 		config_obj.Monitoring.BindAddress,
 		config_obj.Monitoring.BindPort)
