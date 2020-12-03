@@ -34,7 +34,7 @@ export default class FlowNotebook extends React.Component {
     }
 
     componentWillUnmount() {
-        this.source.cancel("unmounted");
+        this.source.cancel();
         clearInterval(this.interval);
     }
 
@@ -60,12 +60,17 @@ export default class FlowNotebook extends React.Component {
             return;
         }
 
-
         let notebook_id = "N." + flow_id + "-" + client_id;
+
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+
         this.setState({loading: true});
         api.get("v1/GetNotebooks", {
             notebook_id: notebook_id,
-        }).then(response=>{
+        }, this.source.token).then(response=>{
+            if (response.cancel) return;
+
             let notebooks = response.data.items || [];
 
             if (notebooks.length > 0) {

@@ -50,7 +50,7 @@ class VeloHostInfo extends Component {
     }
 
     componentWillUnmount() {
-        this.source.cancel("unmounted");
+        this.source.cancel();
         clearInterval(this.interval);
         if (this.interrogate_interval) {
             clearInterval(this.interrogate_interval);
@@ -68,23 +68,30 @@ class VeloHostInfo extends Component {
 
     fetchMetadata = () => {
         this.setState({loading: true});
-        api.get("v1/GetClientMetadata/" + this.props.client.client_id).then(response=>{
-                let metadata = "Key,Value\n";
-                var rows = 0;
-                var items = response.data["items"] || [];
-                for (var i=0; i<items.length; i++) {
-                    var key = items[i]["key"] || "";
-                    var value = items[i]["value"] || "";
-                    if (!_.isUndefined(key)) {
-                        metadata += key + "," + value + "\n";
-                        rows += 1;
-                    }
-                };
-                if (rows === 0) {
-                    metadata = "Key,Value\n,\n";
-                };
-                this.setState({metadata: metadata, loading: false});
-            });
+
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+
+        api.get("v1/GetClientMetadata/" + this.props.client.client_id,
+                {}, this.source.token).then(response=>{
+                    if (response.cancel) return;
+
+                    let metadata = "Key,Value\n";
+                    var rows = 0;
+                    var items = response.data["items"] || [];
+                    for (var i=0; i<items.length; i++) {
+                        var key = items[i]["key"] || "";
+                        var value = items[i]["value"] || "";
+                        if (!_.isUndefined(key)) {
+                            metadata += key + "," + value + "\n";
+                            rows += 1;
+                        }
+                    };
+                    if (rows === 0) {
+                        metadata = "Key,Value\n,\n";
+                    };
+                    this.setState({metadata: metadata, loading: false});
+                });
     }
 
     setMetadata = (value) => {

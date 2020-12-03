@@ -47,7 +47,7 @@ class DeleteFlowDialog extends React.PureComponent {
         let flow_id = this.props.flow && this.props.flow.session_id;
 
         if (flow_id && client_id) {
-            this.setState({loading: true})
+            this.setState({loading: true});
             runArtifact("server",   // This collection happens on the server.
                         "Server.Utils.DeleteFlow",
                         {FlowId: flow_id,

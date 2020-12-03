@@ -32,15 +32,21 @@ class Notebooks extends React.Component {
     }
 
     componentWillUnmount() {
-        this.source.cancel("unmounted");
+        this.source.cancel();
         clearInterval(this.interval);
     }
 
     fetchNotebooks = () => {
+        // Cancel any in flight calls.
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+
         api.get("v1/GetNotebooks", {
             count: PAGE_SIZE,
             offset: 0,
-        }).then(function(response) {
+        }, this.source.token).then(response=>{
+            if (response.cancel) return;
+
             let notebooks = response.data.items || [];
             let selected_notebook = {};
 
@@ -59,10 +65,11 @@ class Notebooks extends React.Component {
             this.setState({notebooks: notebooks,
                            loading: false,
                            selected_notebook: selected_notebook});
-        }.bind(this));
+        });
     }
 
     setSelectedNotebook = (notebook) => {
+        notebook.loading = true;
         this.setState({selected_notebook: notebook});
         this.props.history.push("/notebooks/" + notebook.notebook_id);
     }

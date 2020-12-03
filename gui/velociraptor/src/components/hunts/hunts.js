@@ -31,12 +31,13 @@ class VeloHunts extends React.Component {
     componentDidMount = () => {
         this.source = axios.CancelToken.source();
         this.get_hunts_source = axios.CancelToken.source();
+        this.list_hunts_source = axios.CancelToken.source();
         this.interval = setInterval(this.fetchHunts, POLL_TIME);
         this.fetchHunts();
     }
 
     componentWillUnmount() {
-        this.source.cancel("unmounted");
+        this.source.cancel();
         clearInterval(this.interval);
     }
 
@@ -62,6 +63,8 @@ class VeloHunts extends React.Component {
         api.get("v1/GetHunt", {
             hunt_id: hunt.hunt_id,
         }, this.get_hunts_source.token).then((response) => {
+            if (response.cancel) return;
+
             if(_.isEmpty(response.data)) {
                 this.setState({full_selected_hunt: {loading: true}});
             } else {
@@ -74,10 +77,15 @@ class VeloHunts extends React.Component {
         let selected_hunt_id = this.props.match && this.props.match.params &&
             this.props.match.params.hunt_id;
 
+        this.list_hunts_source.cancel();
+        this.list_hunts_source = axios.CancelToken.source();
+
         api.get("v1/ListHunts", {
             count: 100,
             offset: 0,
-        }).then((response) => {
+        }, this.list_hunts_source.token).then((response) => {
+            if (response.cancel) return;
+
             let hunts = response.data.items || [];
 
             // If the router specifies a selected flow id, we select it.
@@ -98,9 +106,14 @@ class VeloHunts extends React.Component {
         // Get the full hunt information from the server based on the hunt
         // metadata
         if (!this.state.init_router && selected_hunt_id) {
+            this.get_hunts_source.cancel();
+            this.get_hunts_source = axios.CancelToken.source();
+
             api.get("v1/GetHunt", {
                 hunt_id: selected_hunt_id,
-            }).then((response) => {
+            }, this.get_hunts_source.token).then((response) => {
+                if (response.cancel) return;
+
                 if(_.isEmpty(response.data)) {
                     this.setState({full_selected_hunt: {loading: true}});
                 } else {

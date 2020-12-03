@@ -52,13 +52,13 @@ export default class NotebookRenderer extends React.Component {
             this.props.notebook.cell_metadata = new_cells;
             this.setState({loading: true});
             api.post('v1/UpdateNotebook',
-                     this.props.notebook,
-                     this.source.token).then(response=>{
-                this.props.fetchNotebooks();
-                this.setState({loading: false});
-            }, (response) => {
-                console.log("Error " + response.data);
-            });
+                     this.props.notebook, this.source.token).then(response=>{
+                         if (response.cancel) return;
+                         this.props.fetchNotebooks();
+                         this.setState({loading: false});
+                     }, (response) => {
+                         console.log("Error " + response.data);
+                     });
         }
     };
 
@@ -86,11 +86,13 @@ export default class NotebookRenderer extends React.Component {
             api.post('v1/UpdateNotebook',
                      this.props.notebook,
                      this.source.token).then(response=>{
-                this.props.fetchNotebooks();
-                this.setState({loading: false});
-            }, function failure(response) {
-                console.log("Error " + response.data);
-            });
+                         if (response.cancel) return;
+
+                         this.props.fetchNotebooks();
+                         this.setState({loading: false});
+                     }, function failure(response) {
+                         console.log("Error " + response.data);
+                     });
         }
     };
 
@@ -119,11 +121,12 @@ export default class NotebookRenderer extends React.Component {
             api.post('v1/UpdateNotebook',
                      this.props.notebook,
                      this.source.token).then(response=>{
-                this.props.fetchNotebooks();
-                this.setState({loading: false});
-            }, function failure(response) {
-                console.log("Error " + response.data);
-            });
+                         if (response.cancel) return;
+                         this.props.fetchNotebooks();
+                         this.setState({loading: false});
+                     }, function failure(response) {
+                         console.log("Error " + response.data);
+                     });
         }
     };
 
@@ -147,10 +150,11 @@ export default class NotebookRenderer extends React.Component {
         api.post('v1/NewNotebookCell',
                  request,
                  this.source.token).then((response) => {
-            this.props.fetchNotebooks();
-            this.setState({selected_cell_id: response.data.latest_cell_id,
-                           loading: false});
-        });
+                     if (response.cancel) return;
+                     this.props.fetchNotebooks();
+                     this.setState({selected_cell_id: response.data.latest_cell_id,
+                                    loading: false});
+                 });
     }
 
     render() {
@@ -160,7 +164,7 @@ export default class NotebookRenderer extends React.Component {
 
         return (
             <>
-              <Spinner loading={this.state.loading} />
+              <Spinner loading={this.state.loading || this.props.notebook.loading} />
               { _.map(this.props.notebook.cell_metadata, (cell_md, idx) => {
                   return <NotebookCellRenderer
                            selected_cell_id={this.state.selected_cell_id}

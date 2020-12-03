@@ -9,6 +9,7 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { formatColumns } from "../core/table.js";
 import { requestToParameters } from "./utils.js";
+import Spinner from '../utils/spinner.js';
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import _ from 'lodash';
@@ -55,11 +56,20 @@ export default class FlowOverview extends React.Component {
             return;
         };
 
+        // Cancel any in flight requests.
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+        this.setState({loading: true});
+
         api.get("v1/GetFlowDetails", {
             flow_id: this.props.flow.session_id,
             client_id: this.props.flow.client_id,
-        }).then((response) => {
-            this.setState({detailed_flow: response.data});
+        }, this.source.token).then((response) => {
+            if (response.cancel) {
+                return;
+            };
+
+            this.setState({detailed_flow: response.data, loading: false});
         });
     }
 
@@ -80,6 +90,10 @@ export default class FlowOverview extends React.Component {
         let artifacts = flow && flow.request && flow.request.artifacts;
 
         if (!flow || !flow.session_id || !artifacts)  {
+            if (this.state.loading) {
+                return <Spinner loading={true}/>;
+            }
+
             return <h5 className="no-content">Please click a collection in the above table</h5>;
         }
 
@@ -93,6 +107,7 @@ export default class FlowOverview extends React.Component {
         available_downloads = available_downloads || [];
 
         return (
+            <>
             <CardDeck>
               <Card>
                 <Card.Header>Overview</Card.Header>
@@ -245,6 +260,7 @@ export default class FlowOverview extends React.Component {
                 </Card.Body>
               </Card>
             </CardDeck>
+            </>
         );
     }
 };

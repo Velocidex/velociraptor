@@ -118,7 +118,6 @@ class VeloPagedTable extends Component {
         this.source.cancel();
     }
 
-
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (!_.isEqual(prevProps.params, this.props.params)) {
             this.setState({start_row: 0, toggles: {}, columns: []});
@@ -169,6 +168,9 @@ class VeloPagedTable extends Component {
         params.rows = this.state.page_size;
 
         let url = this.props.url || "v1/GetTable";
+
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
 
         this.setState({loading: true});
         api.get(url, params, this.source.token).then((response) => {

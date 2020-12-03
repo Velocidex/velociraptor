@@ -6,7 +6,7 @@ import api from '../core/api-service.js';
 import VeloReportViewer from "../artifacts/reporting.js";
 
 import _ from 'lodash';
-
+import axios from 'axios';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
@@ -74,6 +74,7 @@ class ArtifactInspector extends React.Component {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.searchInput.focus();
         let artifact_name = this.props.match && this.props.match.params &&
             this.props.match.params.artifact;
@@ -87,6 +88,10 @@ class ArtifactInspector extends React.Component {
         this.updateSearch(artifact_name);
     }
 
+    componentWillUnmount() {
+        this.source.cancel();
+    }
+
     updateSearch = (value) => {
         this.setState({current_filter: value});
         this.fetchRows(value);
@@ -94,20 +99,29 @@ class ArtifactInspector extends React.Component {
 
     fetchRows = (search_term) => {
         this.setState({loading: true});
-        api.get("v1/GetArtifacts", {search_term: search_term || "..."}).then((response) => {
-            let matchingDescriptors = [];
-            let items = response.data.items || [];
 
-            for(let i=0; i<items.length; i++) {
-                var desc = items[i];
-                matchingDescriptors.push(desc);
-            };
+        // Cancel any in flight calls.
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
 
-            this.setState({
-                matchingDescriptors: matchingDescriptors,
-                loading: false,
-            });
-        });
+        api.get("v1/GetArtifacts",
+                {search_term: search_term || "..."},
+                this.source.token).then((response) => {
+                    if (response.cancel) return;
+
+                    let matchingDescriptors = [];
+                    let items = response.data.items || [];
+
+                    for(let i=0; i<items.length; i++) {
+                        var desc = items[i];
+                        matchingDescriptors.push(desc);
+                    };
+
+                    this.setState({
+                        matchingDescriptors: matchingDescriptors,
+                        loading: false,
+                    });
+                });
     }
 
     onSelect = (row, e) => {

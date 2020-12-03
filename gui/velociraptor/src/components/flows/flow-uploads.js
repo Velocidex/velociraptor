@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
+import axios from 'axios';
 import VeloTable, { PrepareData } from '../core/table.js';
 
 import Spinner from '../utils/spinner.js';
@@ -17,7 +17,12 @@ export default class FlowUploads extends React.Component {
     };
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.fetchRows();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -41,8 +46,13 @@ export default class FlowUploads extends React.Component {
             rows: MAX_ROWS_PER_TABLE,
         };
 
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+
         this.setState({loading: true});
-        api.get("v1/GetTable", params).then((response) => {
+        api.get("v1/GetTable", params, this.source.token).then((response) => {
+            if (response.cancel) return;
+
             this.setState({loading: false, pageData: PrepareData(response.data)});
         }).catch(() => {
             this.setState({loading: false, pageData: {}});
