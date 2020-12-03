@@ -1,6 +1,6 @@
 name: MacOS.Detection.Autoruns
 description: |
-   Thie artifact collects evidence of autoruns. We also capture the files and upload them.
+   This artifact collects evidence of autoruns. We also capture the files and upload them.
 
    This code is based on
    https://github.com/CrowdStrike/automactc/blob/master/modules/mod_autoruns_v102.py
