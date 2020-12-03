@@ -2,7 +2,7 @@ import "./clients-list.css";
 
 import online from './img/online.png';
 import any from './img/any.png';
-
+import axios from 'axios';
 import _ from 'lodash';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -317,12 +317,17 @@ class VeloClientList extends Component {
     };
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         let query = this.props.match && this.props.match.params &&
             this.props.match.params.query;
         if (query && query !== this.state.query) {
             this.props.setSearch(query);
         };
         this.searchClients();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -342,6 +347,10 @@ class VeloClientList extends Component {
             return;
         }
 
+        // Cancel any in flight calls.
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+
         this.setState({loading: true});
         api.get('/v1/SearchClients', {
             query: query,
@@ -349,7 +358,9 @@ class VeloClientList extends Component {
             offset: this.state.start_row,
             sort: this.state.sort,
             filter: this.state.filter,
-        }).then(resp => {
+        }, this.source.token).then(resp => {
+            if (resp.cancel) return;
+
             let items = resp.data && resp.data.items;
             items = items || [];
             this.setState({loading: false, clients: items});

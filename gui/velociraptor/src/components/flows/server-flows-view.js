@@ -1,7 +1,7 @@
 import React from 'react';
 
 import SplitPane from 'react-split-pane';
-
+import _ from 'lodash';
 import FlowsList from './flows-list.js';
 import FlowInspector from "./flows-inspector.js";
 import { withRouter }  from "react-router-dom";
@@ -35,24 +35,39 @@ class ServerFlowsView extends React.Component {
         let selected_flow_id = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
 
+        // Cancel any in flight calls.
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+
         api.get("v1/GetClientFlows/server", {
             count: 100,
             offset: 0,
-        }).then(function(response) {
+        }, this.source.token).then(response=>{
+            if (response.cancel) return;
+
             let flows = response.data.items || [];
             let selected_flow = {};
 
             // If the router specifies a selected flow id, we select it.
-            for(var i=0;i<flows.length;i++) {
-                let flow=flows[i];
-                if (flow.session_id === selected_flow_id) {
-                    selected_flow = flow;
-                    break;
-                }
-            };
+            if (!this.state.init_router) {
+                for(var i=0;i<flows.length;i++) {
+                    let flow=flows[i];
+                    if (flow.session_id === selected_flow_id) {
+                        selected_flow = flow;
+                        break;
+                    }
+                };
 
-            this.setState({flows: flows, currentFlow: selected_flow});
-        }.bind(this));
+                // If we can not find the selected_flow we just select the first one
+                if (_.isEmpty(selected_flow) && !_.isEmpty(flows)){
+                    selected_flow = flows[0];
+                }
+
+                this.setState({init_router: true, currentFlow: selected_flow});
+            }
+
+            this.setState({flows: flows, loading: false});
+        });
     }
 
     setSelectedFlow = (flow) => {

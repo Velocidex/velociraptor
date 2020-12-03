@@ -282,32 +282,30 @@ class ShellViewer extends Component {
             artifact: "(Windows.System.PowerShell|Windows.System.CmdShell|Linux.Sys.BashShell)"
         },
                 this.source.token // CancelToken
-               ).then(
-                   function(response) {
-                       let new_state  = Object.assign({}, this.state);
-                       new_state.flows = [];
-                       if (!response.data || !response.data.items) {
-                           return;
-                       }
+               ).then(function(response) {
+                   if (response.cancel) return;
+                   let new_state  = Object.assign({}, this.state);
+                   new_state.flows = [];
+                   if (!response.data || !response.data.items) {
+                       return;
+                   }
 
-                       let items = response.data.items;
+                   let items = response.data.items;
 
-                       for(var i=0; i<items.length; i++) {
-                           var artifacts = items[i].request.artifacts;
-                           for (var j=0; j<artifacts.length; j++) {
-                               var artifact = artifacts[j];
-                               if (artifact === "Windows.System.PowerShell" ||
-                                   artifact === "Windows.System.CmdShell" ||
-                                   artifact === "Linux.Sys.BashShell" ) {
-                                   new_state.flows.push(items[i]);
-                               }
+                   for(var i=0; i<items.length; i++) {
+                       var artifacts = items[i].request.artifacts;
+                       for (var j=0; j<artifacts.length; j++) {
+                           var artifact = artifacts[j];
+                           if (artifact === "Windows.System.PowerShell" ||
+                               artifact === "Windows.System.CmdShell" ||
+                               artifact === "Linux.Sys.BashShell" ) {
+                               new_state.flows.push(items[i]);
                            }
-                       };
+                       }
+                   };
 
-                       this.setState(new_state);
-                   }.bind(this),
-                   function(){},
-               );
+                   this.setState(new_state);
+               }.bind(this), function(){});
     };
 
     launchCommand = () => {

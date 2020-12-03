@@ -56,29 +56,38 @@ class ClientFlowsView extends React.Component {
         let selected_flow_id = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
 
+        // Cancel any in flight calls.
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+
         api.get("v1/GetClientFlows/" + client_id, {
             count: 100,
             offset: 0,
-        }).then(response=>{
+        }, this.source.token).then(response=>{
+            if (response.cancel) return;
+
             let flows = response.data.items || [];
             let selected_flow = {};
 
             // If the router specifies a selected flow id, we select it.
-            for(var i=0;i<flows.length;i++) {
-                let flow=flows[i];
-                if (flow.session_id === selected_flow_id) {
-                    selected_flow = flow;
-                    break;
+            if (!this.state.init_router) {
+                for(var i=0;i<flows.length;i++) {
+                    let flow=flows[i];
+                    if (flow.session_id === selected_flow_id) {
+                        selected_flow = flow;
+                        break;
+                    }
+                };
+
+                // If we can not find the selected_flow we just select the first one
+                if (_.isEmpty(selected_flow) && !_.isEmpty(flows)){
+                    selected_flow = flows[0];
                 }
-            };
-            if (_.isEmpty(selected_flow) && !_.isEmpty(flows)){
-                selected_flow = flows[0];
-                this.setSelectedFlow(selected_flow);
+
+                this.setState({init_router: true, currentFlow: selected_flow});
             }
 
-            this.setState({flows: flows,
-                           loading: false,
-                           currentFlow: selected_flow});
+            this.setState({flows: flows, loading: false});
         });
     }
 

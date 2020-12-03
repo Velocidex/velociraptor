@@ -16,6 +16,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { formatColumns } from "../core/table.js";
 import api from '../core/api-service.js';
 
+import { requestToParameters } from "../flows/utils.js";
+
 
 export default class HuntOverview extends React.Component {
     static propTypes = {
@@ -88,8 +90,7 @@ export default class HuntOverview extends React.Component {
 
         let labels = hunt.condition && hunt.condition.labels && hunt.condition.labels.label;
         let start_request = hunt.start_request || {};
-        let parameters = start_request.parameters && start_request.parameters.env;
-        parameters = parameters || {};
+        let parameters = requestToParameters(start_request);
 
         let stats = hunt.stats || {};
 
@@ -156,11 +157,21 @@ export default class HuntOverview extends React.Component {
 
                   <h5> Parameters </h5>
                   <dl className="row">
-                    { _.map(parameters, (v, idx) => {
+                    {_.map(artifacts, function(name, idx) {
                         return <React.Fragment key={idx}>
-                          <dt className="col-4">{v.key}</dt>
-                          <dd className="col-8"><VeloValueRenderer value={v.value}/></dd>
-                        </React.Fragment> ;
+                                 <dt className="col-11">{name}</dt><dd className="col-1"/>
+                                 {_.map(parameters[name], function(value, key) {
+                                     if (value) {
+                                         return <React.Fragment key={key}>
+                                                  <dt className="col-4">{key}</dt>
+                                                  <dd className="col-8">
+                                                    <VeloValueRenderer value={value}/>
+                                                  </dd>
+                                                </React.Fragment>;
+                                     };
+                                     return <React.Fragment key={key}/>;
+                                 })}
+                               </React.Fragment>;
                     })}
                   </dl>
                 </Card.Body>

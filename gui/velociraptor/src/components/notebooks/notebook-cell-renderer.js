@@ -191,12 +191,17 @@ export default class NotebookCellRenderer extends React.Component {
             // Prevent further updates to this cell by setting the
             // cell id and timestamp.
             this.setState({cell_timestamp: props_cell_timestamp,
+                           loading: true,
                            cell_id: props_cell_id});
             this.fetchCellContents();
         }
     };
 
     fetchCellContents = () => {
+        // Cancel any in flight calls.
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+
         api.get("v1/GetNotebookCell", {
             notebook_id: this.props.notebook_id,
             cell_id: this.props.cell_metadata.cell_id,
@@ -206,7 +211,7 @@ export default class NotebookCellRenderer extends React.Component {
             }
 
             let cell = response.data;
-            this.setState({cell: cell, input: cell.input});
+            this.setState({cell: cell, input: cell.input, loading: false});
         });
     };
 
@@ -296,6 +301,7 @@ export default class NotebookCellRenderer extends React.Component {
                     api.post(
                         'v1/UploadNotebookAttachment', request, this.source.token
                     ).then((response) => {
+                        if (response.cancel) return;
                         this.state.ace.insert("\n!["+blob.name+"]("+response.data.url+")\n");
                     }, function failure(response) {
                         console.log("Error " + response.data);

@@ -4,7 +4,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import _ from 'lodash';
-
+import axios from 'axios';
 import {Treebeard, decorators} from 'react-treebeard';
 
 import { SplitPathComponents, Join } from '../utils/paths.js';
@@ -132,7 +132,12 @@ class VeloFileTree extends Component {
     }
 
     componentDidMount() {
+        this.source = axios.CancelToken.source();
         this.updateTree(this.props.vfs_path);
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -260,9 +265,15 @@ class VeloFileTree extends Component {
             node.loading = true;
             node.inflight = true;
 
+            // Cancel any in flight calls.
+            this.source.cancel();
+            this.source = axios.CancelToken.source();
+
             api.get("v1/VFSListDirectory/" + client_id, {
                 vfs_path: Join(prev_components),
-            }).then(function(response) {
+            }, this.source.token).then(function(response) {
+                if (response.cancel) return;
+
                 node.loading = false;
                 let children = [];
 

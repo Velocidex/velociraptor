@@ -2,6 +2,7 @@ import './events.css';
 
 import React from 'react';
 import PropTypes from 'prop-types';
+import axios from 'axios';
 import _ from 'lodash';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
@@ -37,7 +38,12 @@ class InspectRawJson extends React.PureComponent {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.fetchEventTable();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -49,16 +55,24 @@ class InspectRawJson extends React.PureComponent {
     }
 
     fetchEventTable = () => {
+        // Cancel any in flight calls.
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+
         let client_id = this.props.client && this.props.client.client_id;
         if (!client_id || client_id === "server") {
-            api.get("v1/GetServerMonitoringState").then(resp => {
+            api.get("v1/GetServerMonitoringState", {}, this.source.token).then(resp => {
+                if (resp.cancel) return;
+
                 let table = resp.data;
                 delete table["compiled_collector_args"];
                 this.setState({raw_json: JSON.stringify(table, null, 2)});
             });
             return;
         }
-        api.get("v1/GetClientMonitoringState").then(resp => {
+        api.get("v1/GetClientMonitoringState", {}, this.source.token).then(resp => {
+            if (resp.cancel) return;
+
             let table = resp.data;
             delete table.artifacts["compiled_collector_args"];
             _.each(table.label_events, x=> {
@@ -147,7 +161,12 @@ class EventMonitoring extends React.Component {
     };
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.fetchEventResults();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -180,9 +199,15 @@ class EventMonitoring extends React.Component {
     }
 
     fetchEventResults = () => {
+        // Cancel any in flight calls.
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+
         api.post("v1/ListAvailableEventResults", {
             client_id: this.props.client.client_id,
-        }).then(resp => {
+        }, this.source.token).then(resp => {
+            if (resp.cancel) return;
+
             let router_artifact = this.props.match && this.props.match.params &&
                 this.props.match.params.artifact;
             if (router_artifact) {

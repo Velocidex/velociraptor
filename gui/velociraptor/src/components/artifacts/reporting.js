@@ -3,7 +3,7 @@ import _ from 'lodash';
 
 import React from 'react';
 import PropTypes from 'prop-types';
-
+import axios from 'axios';
 import parse from 'html-react-parser';
 
 import api from '../core/api-service.js';
@@ -35,7 +35,12 @@ export default class VeloReportViewer extends React.Component {
     }
 
     componentDidMount() {
+        this.source = axios.CancelToken.source();
         this.updateReport();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
     }
 
     componentDidUpdate(prevProps) {
@@ -70,7 +75,14 @@ export default class VeloReportViewer extends React.Component {
         params.flow_id = this.props.flow_id;
 
         this.setState({loading: true});
-        api.post("v1/GetReport", params).then((response) => {
+
+        // Cancel any in flight calls.
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+
+        api.post("v1/GetReport", params, this.source.token).then((response) => {
+            if (response.cancel) return;
+
             let new_state  = {
                 template: response.data.template || "No Reports",
                 messages: response.data.messages || [],
