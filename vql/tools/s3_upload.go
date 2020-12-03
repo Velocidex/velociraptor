@@ -82,7 +82,12 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 		upload_response, err := upload_S3(
 			sub_ctx, scope, file,
 			arg.Bucket,
-			arg.Name, arg.CredentialsKey, arg.CredentialsSecret, arg.Region, arg.Endpoint, arg.NoVerifyCert)
+			arg.Name,
+			arg.CredentialsKey,
+			arg.CredentialsSecret,
+			arg.Region,
+			arg.Endpoint,
+			arg.NoVerifyCert)
 		if err != nil {
 			scope.Log("upload_S3: %v", err)
 			// Relay the error in the UploadResponse
@@ -97,7 +102,11 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 func upload_S3(ctx context.Context, scope *vfilter.Scope,
 	reader glob.ReadSeekCloser,
 	bucket, name string,
-	credentialsKey string, credentialsSecret string, region string, endpoint string, NoVerifyCert bool) (
+	credentialsKey string,
+	credentialsSecret string,
+	region string,
+	endpoint string,
+	NoVerifyCert bool) (
 	*api.UploadResponse, error) {
 
 	scope.Log("upload_S3: Uploading %v to %v", name, bucket)
