@@ -127,9 +127,6 @@ func (self *ClientExecutor) Cancel(
 			flow_ctx.cancel()
 		}
 
-		responder.Log(ctx, "Cancelling %v in flight queries for flow %v",
-			len(contexts), flow_id)
-
 		return true
 	}
 
