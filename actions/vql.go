@@ -43,11 +43,12 @@ import (
 type LogWriter struct {
 	config_obj *config_proto.Config
 	responder  *responder.Responder
+	ctx        context.Context
 }
 
 func (self *LogWriter) Write(b []byte) (int, error) {
 	logging.GetLogger(self.config_obj, &logging.ClientComponent).Info("%v", string(b))
-	self.responder.Log("%s", string(b))
+	self.responder.Log(self.ctx, "%s", string(b))
 	return len(b), nil
 }
 
@@ -91,7 +92,7 @@ func (self VQLClientAction) StartQuery(
 	defer cancel()
 
 	if arg.Query == nil {
-		responder.RaiseError("Query should be specified.")
+		responder.RaiseError(ctx, "Query should be specified.")
 		return
 	}
 
@@ -99,7 +100,7 @@ func (self VQLClientAction) StartQuery(
 	// sent all artifacts from the server.
 	manager, err := services.GetRepositoryManager()
 	if err != nil {
-		responder.RaiseError(fmt.Sprintf("%v", err))
+		responder.RaiseError(ctx, fmt.Sprintf("%v", err))
 		return
 	}
 
@@ -107,7 +108,7 @@ func (self VQLClientAction) StartQuery(
 	for _, artifact := range arg.Artifacts {
 		_, err := repository.LoadProto(artifact, false /* validate */)
 		if err != nil {
-			responder.RaiseError(fmt.Sprintf(
+			responder.RaiseError(ctx, fmt.Sprintf(
 				"Failed to compile artifact %v.", artifact.Name))
 			return
 		}
@@ -124,7 +125,7 @@ func (self VQLClientAction) StartQuery(
 		Env:        ordereddict.NewDict(),
 		Uploader:   uploader,
 		Repository: repository,
-		Logger:     log.New(&LogWriter{config_obj, responder}, "vql: ", 0),
+		Logger:     log.New(&LogWriter{config_obj, responder, ctx}, "vql: ", 0),
 	}
 
 	for _, env_spec := range arg.Env {
@@ -145,15 +146,20 @@ func (self VQLClientAction) StartQuery(
 
 	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(rate)))
 
+	start := time.Now()
+
 	// If we panic we need to recover and report this to the
 	// server.
 	defer func() {
+
 		r := recover()
 		if r != nil {
 			msg := string(debug.Stack())
 			scope.Log(msg)
-			responder.RaiseError(msg)
+			responder.RaiseError(ctx, msg)
 		}
+
+		scope.Log("Collection is done after %v", time.Since(start))
 	}()
 
 	// All the queries will use the same scope. This allows one
@@ -162,7 +168,7 @@ func (self VQLClientAction) StartQuery(
 		query_start := uint64(time.Now().UTC().UnixNano() / 1000)
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
-			responder.RaiseError(err.Error())
+			responder.RaiseError(ctx, err.Error())
 			return
 		}
 
@@ -180,7 +186,7 @@ func (self VQLClientAction) StartQuery(
 				scope.Log(msg)
 
 				// Queries that time out are an error on the server.
-				responder.RaiseError(msg)
+				responder.RaiseError(ctx, msg)
 
 				// Cancel the sub ctx but do not exit
 				// - we need to wait for the sub query
@@ -211,7 +217,7 @@ func (self VQLClientAction) StartQuery(
 				}
 				// Don't log empty VQL statements.
 				if query.Name != "" {
-					responder.Log(
+					responder.Log(ctx,
 						"Time %v: %s: Sending response part %d %s (%d rows).",
 						(response.Timestamp-query_start)/1000000,
 						query.Name,
@@ -221,15 +227,15 @@ func (self VQLClientAction) StartQuery(
 					)
 				}
 				response.Columns = result.Columns
-				responder.AddResponse(&crypto_proto.GrrMessage{
+				responder.AddResponse(ctx, &crypto_proto.GrrMessage{
 					VQLResponse: response})
 			}
 		}
 	}
 
 	if uploader.Count > 0 {
-		responder.Log("Uploaded %v files.", uploader.Count)
+		responder.Log(ctx, "Uploaded %v files.", uploader.Count)
 	}
 
-	responder.Return()
+	responder.Return(ctx)
 }

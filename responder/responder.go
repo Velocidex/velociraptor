@@ -18,6 +18,7 @@
 package responder
 
 import (
+	"context"
 	"fmt"
 	"runtime/debug"
 	"sync"
@@ -48,7 +49,6 @@ func getIncValue() uint64 {
 	if value <= last_value {
 		value = last_value + 1
 	}
-
 	last_value = value
 	return last_value
 }
@@ -76,9 +76,11 @@ func NewResponder(
 	return result
 }
 
-func (self *Responder) AddResponse(message *crypto_proto.GrrMessage) {
+func (self *Responder) AddResponse(
+	ctx context.Context, message *crypto_proto.GrrMessage) {
 	self.Lock()
-	defer self.Unlock()
+	output := self.output
+	self.Unlock()
 
 	message.SessionId = self.request.SessionId
 	message.Urgent = self.request.Urgent
@@ -88,15 +90,18 @@ func (self *Responder) AddResponse(message *crypto_proto.GrrMessage) {
 	}
 	message.TaskId = self.request.TaskId
 
-	if self.output != nil {
+	if output != nil {
 		select {
-		case self.output <- message:
+		case <-ctx.Done():
+			break
+
+		case output <- message:
 		}
 	}
 }
 
-func (self *Responder) RaiseError(message string) {
-	self.AddResponse(&crypto_proto.GrrMessage{
+func (self *Responder) RaiseError(ctx context.Context, message string) {
+	self.AddResponse(ctx, &crypto_proto.GrrMessage{
 		Status: &crypto_proto.GrrStatus{
 			Backtrace:    string(debug.Stack()),
 			ErrorMessage: message,
@@ -105,8 +110,8 @@ func (self *Responder) RaiseError(message string) {
 		}})
 }
 
-func (self *Responder) Return() {
-	self.AddResponse(&crypto_proto.GrrMessage{
+func (self *Responder) Return(ctx context.Context) {
+	self.AddResponse(ctx, &crypto_proto.GrrMessage{
 		Status: &crypto_proto.GrrStatus{
 			Status:   crypto_proto.GrrStatus_OK,
 			Duration: time.Now().UnixNano() - self.start_time,
@@ -114,8 +119,8 @@ func (self *Responder) Return() {
 }
 
 // Send a log message to the server.
-func (self *Responder) Log(format string, v ...interface{}) {
-	self.AddResponse(&crypto_proto.GrrMessage{
+func (self *Responder) Log(ctx context.Context, format string, v ...interface{}) {
+	self.AddResponse(ctx, &crypto_proto.GrrMessage{
 		RequestId: constants.LOG_SINK,
 		Urgent:    true,
 		LogMessage: &crypto_proto.LogMessage{

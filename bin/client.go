@@ -48,6 +48,7 @@ func RunClient(
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
 		WithCustomValidator(initFilestoreAccessor).
+		WithCustomValidator(initDebugServer).
 		WithLogFile(*logging_flag).
 		WithRequiredClient().
 		WithRequiredLogging().
