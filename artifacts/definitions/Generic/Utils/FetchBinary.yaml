@@ -25,7 +25,7 @@ parameters:
     description: Set to Y if the file needs to be executable (on windows it will have .exe extension)
 
   - name: SleepDuration
-    default: "60"
+    default: "20"
     description: A time to sleep before fetching the binary.
 
   - name: ToolInfo
