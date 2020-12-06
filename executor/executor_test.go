@@ -58,7 +58,7 @@ func (self *ExecutorTestSuite) TestCancellation() {
 
 	wg.Wait()
 
-	// The cancel message should generate a log + a status
+	// The cancel message should generate 1 log + a status
 	// message. This should only be done once, no matter how many
 	// cancellations are sent.
 	require.Equal(t, len(received_messages), 2)

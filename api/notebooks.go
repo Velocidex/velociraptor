@@ -444,23 +444,15 @@ func (self *ApiServer) GetNotebookCell(
 
 	// Cell does not exist, make it a default cell.
 	if err == io.EOF {
-		notebook = &api_proto.NotebookCell{
+		return &api_proto.NotebookCell{
 			Input:  "",
 			Output: "",
 			Data:   "{}",
 			CellId: notebook.CellId,
 			Type:   "Markdown",
-		}
-
-		// And store it for next time.
-		err = db.SetSubject(self.config,
-			notebook_path_manager.Cell(in.CellId).Path(),
-			notebook)
-		if err != nil {
-			return nil, err
-		}
-
-	} else if err != nil {
+		}, nil
+	}
+	if err != nil {
 		return nil, err
 	}
 

@@ -121,7 +121,7 @@ func (self UpdateEventTable) Run(
 	// Make a new table.
 	table, err := update(config_obj, responder, arg)
 	if err != nil {
-		responder.Log("Error updating global event table: %v", err)
+		responder.Log(ctx, "Error updating global event table: %v", err)
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
@@ -172,9 +172,9 @@ func (self UpdateEventTable) Run(
 	config_copy.Writeback.EventQueries = event_copy
 	err = config.UpdateWriteback(config_copy)
 	if err != nil {
-		responder.RaiseError(fmt.Sprintf(
+		responder.RaiseError(ctx, fmt.Sprintf(
 			"Unable to write events to writeback: %v", err))
 	}
 
-	responder.Return()
+	responder.Return(ctx)
 }

@@ -236,7 +236,11 @@ func NewSender(
 	result := &Sender{
 		NotificationReader: NewNotificationReader(config_obj, connector, manager,
 			executor, enroller, logger, name, handler, on_exit, clock),
-		ring_buffer:   ring_buffer,
+		ring_buffer: ring_buffer,
+
+		// Urgent buffer is an in memory ring buffer to handle
+		// urgent queries. This ensures urgent queries can
+		// skip the buffer ahead of normal queries.
 		urgent_buffer: NewRingBuffer(config_obj, 2*config_obj.Client.MaxUploadSize),
 		release:       make(chan bool),
 		clock:         clock,

@@ -210,7 +210,7 @@ export default class VeloForm extends React.Component {
                           if (e.currentTarget.checked) {
                               this.props.setValue("Y");
                           } else {
-                              this.props.setValue(undefined);
+                              this.props.setValue("N");
                           }
                       }}
                       checked={this.props.value === "Y"}

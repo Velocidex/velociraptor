@@ -75,7 +75,7 @@ def read_targets(ctx, project_path):
                 target["Name"],
                 target.get("Category", ""),
                 glob,
-                "ntfs" if ":" in glob else "lazy_ntfs",
+                find_accessor(glob),
                 target.get("Comment", "")])
 
     for i in range(3):
@@ -92,6 +92,15 @@ def read_targets(ctx, project_path):
 
                     for dependency in deps:
                         ctx.groups[name].add(dependency)
+
+def find_accessor(glob):
+    if ":" in glob:
+        return "ntfs"
+
+    if "$" in glob:
+        return "ntfs"
+
+    return "lazy_ntfs"
 
 
 def find_kape_dependency(ctx, glob):

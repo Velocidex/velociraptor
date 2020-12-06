@@ -38,9 +38,9 @@ func (self UpdateForeman) Run(
 		config_obj.Writeback.HuntLastTimestamp = arg.LastHuntTimestamp
 		err := config.UpdateWriteback(config_obj)
 		if err != nil {
-			responder.RaiseError(err.Error())
+			responder.RaiseError(ctx, err.Error())
 			return
 		}
 	}
-	responder.Return()
+	responder.Return(ctx)
 }

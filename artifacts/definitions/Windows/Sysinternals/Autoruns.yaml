@@ -7,9 +7,11 @@ description: |
 tools:
   - name: Autorun_x86
     url: https://live.sysinternals.com/tools/autorunsc.exe
+    serve_locally: true
 
   - name: Autorun_amd64
     url: https://live.sysinternals.com/tools/autorunsc64.exe
+    serve_locally: true
 
 precondition: SELECT OS From info() where OS = 'windows'
 
