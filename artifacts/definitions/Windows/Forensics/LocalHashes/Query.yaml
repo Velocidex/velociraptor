@@ -38,7 +38,7 @@ sources:
       -- Check hashes from the CSV or comma delimited input
       LET hashes = SELECT Hash FROM chain(
       a={
-        SELECT strip(string=Hash) AS Hash
+        SELECT lowcase(string=strip(string=Hash)) AS Hash
         FROM parse_csv(filename=Hashes, accessor="data")
       }, b={
         SELECT * FROM foreach(row=split(string=CommaDelimitedHashes, sep=","),
