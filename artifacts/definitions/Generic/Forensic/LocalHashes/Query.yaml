@@ -1,0 +1,55 @@
+name: Generic.Forensic.LocalHashes.Query
+description: |
+  This artifact maintains a local (client side) database of file
+  hashes. It is then possible to query this database using the
+  Windows.Forensics.LocalHashes.Query artifact.
+
+  NOTE: This artifact expects a CSV file with one hash per line. On
+  the command line you can encode carriage return using powershell
+  like this:
+
+  ```
+  .\velociraptor.exe -v artifacts collect Windows.Forensics.LocalHashes.Query --args "Hashes=Hash`ne6c1ce56e6729a0b077c0f2384726b30"
+  ```
+
+parameters:
+  - name: Hashes
+    description: The hash to query for.
+    type: csv
+    default: |
+      Hash
+      XXX
+
+  - name: CommaDelimitedHashes
+    description: A set of comma delimited hashes
+    default:
+
+  - name: HashDb
+    description: Name of the local hash database
+    default: hashdb.sqlite
+
+sources:
+  - query: |
+      LET hash_db <= SELECT FullPath
+      FROM Artifact.Generic.Forensic.LocalHashes.Init(HashDb=HashDb)
+
+      -- Check hashes from the CSV or comma delimited input
+      LET hashes = SELECT Hash FROM chain(
+      a={
+        SELECT lowcase(string=strip(string=Hash)) AS Hash
+        FROM Hashes
+      }, b={
+        SELECT * FROM foreach(row=split(string=CommaDelimitedHashes, sep=","),
+        query={
+           SELECT lowcase(string=strip(string=_value)) AS Hash FROM scope()
+        })
+      })
+
+      SELECT * FROM foreach(row=hashes,
+      query={
+         SELECT path AS Path, md5 AS MD5, size AS Size,
+                timestamp(epoch=time) AS Timestamp
+         FROM sqlite(file=hash_db[0].FullPath,
+                     query="SELECT path, md5, size, timestamp AS time FROM hashes WHERE md5 = ?",
+                     args=Hash)
+      })
