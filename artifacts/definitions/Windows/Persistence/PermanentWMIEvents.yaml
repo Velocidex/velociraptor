@@ -21,8 +21,7 @@ sources:
    queries:
      - LET FilterToConsumerBinding = SELECT * FROM foreach(
         row={
-                SELECT *
-                FROM parse_csv(filename=namespaces, accessor='data')
+                SELECT * FROM namespaces
         },
         query={
                 SELECT parse_string_with_regex(string=Consumer,
@@ -34,8 +33,7 @@ sources:
 
      - SELECT * FROM foreach(
             row={
-                    SELECT *
-                    FROM parse_csv(filename=namespaces, accessor='data')
+                    SELECT * FROM namespaces
             },
             query={
                  SELECT {

@@ -18,7 +18,7 @@ SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFi
   "Source": "C:",
   "Deduped": true
  }
-]SELECT EventID,ServiceName,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec( EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx", SearchVSS="True")[
+]SELECT EventID,ServiceName,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec( EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx", SearchVSS=True)[
  {
   "EventID": 7045,
   "ServiceName": "TestingDetection1",
@@ -29,7 +29,7 @@ SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFi
   "ServiceName": "TestingDetection2",
   "Source": "C:"
  }
-]SELECT EventID, Channel, Message=~ 'Clear',Source FROM Artifact.Windows.EventLogs.Cleared( SearchVSS="True")[
+]SELECT EventID, Channel, Message=~ 'Clear',Source FROM Artifact.Windows.EventLogs.Cleared( SearchVSS=True)[
  {
   "EventID": 104,
   "Channel": "System",

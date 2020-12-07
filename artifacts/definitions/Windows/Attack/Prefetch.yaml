@@ -58,7 +58,7 @@ reports:
       could potentially mean.
 
       {{ define "query" }}
-         LET lookup <= SELECT * FROM parse_csv(filename=lookupTable, accessor='data')
+         LET lookup <= SELECT * FROM lookupTable
       {{ end }}
 
       {{ define "data"}}

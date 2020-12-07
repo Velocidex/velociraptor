@@ -39,7 +39,7 @@ sources:
       LET hashes = SELECT Hash FROM chain(
       a={
         SELECT lowcase(string=strip(string=Hash)) AS Hash
-        FROM parse_csv(filename=Hashes, accessor="data")
+        FROM Hashes
       }, b={
         SELECT * FROM foreach(row=split(string=CommaDelimitedHashes, sep=","),
         query={

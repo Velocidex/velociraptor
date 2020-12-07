@@ -9,11 +9,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -22,6 +24,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -90,6 +93,73 @@ description: This is a test artifact dependency
 sources:
 - query: |
     SELECT * FROM Artifact.Test.Artifact.Deps()
+`
+
+	// Make sure that an artifact receives types parameters if
+	// specified. The compiler should convert these appropriately
+	// behind the scenes. For backwards compatibility we check
+	// that use patterns in existing artifacts still work as
+	// expected.
+	testArtifactWithTypes = `
+name: Test.Artifact.Types
+parameters:
+- name: IntValue
+  type: int
+  default: 5
+
+- name: CSVValue
+  type: csv
+  default: |
+    Header
+    Value1
+    Value2
+
+- name: TimestampValue
+  type: timestamp
+
+- name: TimestampValueUnset
+  type: timestamp
+
+- name: BoolValue
+  type: bool
+
+- name: BoolValue2
+  type: bool
+
+- name: BoolValueUnset
+  type: bool
+
+sources:
+- query: |
+     // Check that unset timestamps can be tested for and overriden
+     // with useful defaults. bool(TimestampValueUnset) is false
+     LET DateAfterTime <= if(condition=TimestampValueUnset,
+        then=timestamp(epoch=TimestampValueUnset), else=timestamp(epoch="1600-01-01"))
+
+     // TimestampValue is set so bool(TimestampValue) should be true
+     LET DateBeforeTime <= if(condition=TimestampValue,
+        then=timestamp(epoch=TimestampValue), else=timestamp(epoch="2200-01-01"))
+
+     SELECT IntValue,
+
+            // CSV parameters are parsed into an array of dicts.
+            CSVValue,
+
+            // timestamp() is passthrough for time.Time objects
+            TimestampValue, TimestampValue.Unix, timestamp(epoch=TimestampValue),
+
+            // Unset timestamps are initialized to empty time.Time
+            TimestampValueUnset, TimestampValueUnset.Unix, DateAfterTime, DateBeforeTime,
+            BoolValue, BoolValue2, BoolValueUnset,
+
+            // A lot of code still compares the bool to "Y" so this
+            // still needs to work - bool eq protocol uses "Y" as true.
+            BoolValue = "Y", BoolValue != "Y", BoolValue2 = "Y", BoolValue2 != "Y",
+            {
+                SELECT * FROM CSVValue
+            }
+     FROM scope()
+
 `
 )
 
@@ -461,6 +531,62 @@ func (self *LauncherTestSuite) TestCompilingPermissions() {
 		ctx, self.config_obj, acl_manager, repository, false, request)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(compiled[0].Query), 2)
+}
+
+func (self *LauncherTestSuite) TestParameterTypes() {
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifactWithTypes, true)
+	assert.NoError(self.T(), err)
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:   "UserX",
+		ClientId:  "C.1234",
+		Artifacts: []string{"Test.Artifact.Types"},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				// Artifact Parameters are **always**
+				// sent as strings but VQL code will
+				// convert them to their correct
+				// types.
+				Artifact: "Test.Artifact.Types",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "IntValue", Value: "9"},
+						{Key: "CSVValue",
+							Value: "Col1,Col2\nValue1,Value2\nValue3,Value4\n"},
+						{Key: "TimestampValue",
+							Value: "2020-10-01T09:20Z"},
+						{Key: "BoolValue", Value: "N"},
+						{Key: "BoolValue2", Value: "Y"},
+					},
+				},
+			},
+		},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Compile the artifact request into VQL
+	acl_manager := vql_subsystem.NullACLManager{}
+	launcher, err := services.GetLauncher()
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository, false, request)
+	assert.NoError(self.T(), err)
+
+	// Now run the VQL and receive the rows back
+	test_responder := responder.TestResponder()
+	for _, vql_request := range compiled {
+		actions.VQLClientAction{}.StartQuery(
+			self.config_obj, ctx, test_responder, vql_request)
+	}
+
+	results := getResponses(test_responder)
+	goldie.Assert(self.T(), "TestParameterTypes", json.MustMarshalIndent(results))
 }
 
 func TestLauncher(t *testing.T) {

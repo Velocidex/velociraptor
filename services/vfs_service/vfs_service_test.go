@@ -184,9 +184,12 @@ func (self *VFSServiceTestSuite) TestVFSDownload() {
 			makeStat("/a/b", "B"),
 		})
 
-	// Simulate and upload was received by our System.VFS.DownloadFile collection.
+	// Simulate an upload that was received by our System.VFS.DownloadFile collection.
 	file_store := self.GetMemoryFileStore()
-	file_store.Data[flow_path_manager.GetUploadsFile("file", "/a/b/B").Path()] = []byte("Data")
+	fd, err := file_store.WriteFile(flow_path_manager.GetUploadsFile("file", "/a/b/B").Path())
+	assert.NoError(self.T(), err)
+	fd.Write([]byte("Data"))
+	fd.Close()
 
 	self.EmulateCollection(
 		"System.VFS.DownloadFile", []*ordereddict.Dict{

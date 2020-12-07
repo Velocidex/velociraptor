@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path"
 	"regexp"
+	"strings"
 
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -30,10 +31,44 @@ func Compile(config_obj *config_proto.Config,
 	result *actions_proto.VQLCollectorArgs) error {
 	for _, parameter := range artifact.Parameters {
 		value := parameter.Default
+		name := parameter.Name
 		result.Env = append(result.Env, &actions_proto.VQLEnv{
-			Key:   parameter.Name,
+			Key:   name,
 			Value: value,
 		})
+
+		// If the parameter has a type, convert it
+		// appropriately. Note that parameters are always
+		// passed into the client as strings, so they need to
+		// be converted into their declared types explicitly
+		// in the VQL code.
+
+		// If the variable contains spaces we need to escape
+		// the name in backticks.
+		if strings.Contains(name, " ") {
+			name = "`" + name + "`"
+		}
+
+		switch parameter.Type {
+		case "int", "int64":
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf("LET %v <= int(int=%v)", name, name),
+			})
+		case "timestamp":
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf("LET %v <= timestamp(epoch=%v)", name, name),
+			})
+		case "csv":
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf("LET %v <= SELECT * FROM parse_csv(filename=%v, accessor='data')", name, name),
+			})
+		case "bool":
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf("LET %v <= %v AND %v = 'Y' ", name, name, name),
+			})
+
+		}
+
 	}
 
 	// Merge any tools we need.

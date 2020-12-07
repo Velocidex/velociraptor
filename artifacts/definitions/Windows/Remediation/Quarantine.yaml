@@ -71,7 +71,7 @@ sources:
                   SrcAddr,SrcMask,SrcPort,
                   DstAddr,DstMask,DstPort,
                   Protocol,Mirrored,Description
-              FROM parse_csv(filename=RuleLookupTable, accessor='data')
+              FROM RuleLookupTable
 
         // Parse a URL to get domain name.
         LET get_domain(URL) = parse_string_with_regex(

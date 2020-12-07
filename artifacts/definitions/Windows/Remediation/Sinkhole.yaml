@@ -1,25 +1,25 @@
 name: Windows.Remediation.Sinkhole
 description: |
-   **Apply a Sinkhole via Windows hosts file modification**  
-   This content will modify the Windows hosts file by a configurable 
-   lookup table.  
+   **Apply a Sinkhole via Windows hosts file modification**
+   This content will modify the Windows hosts file by a configurable
+   lookup table.
 
-   On application, the original configuration is backed up.  
-   When reapplying a sinkhole, the original configuration is restored then 
-   changes applied to maintain integrity of the restore process.  
-   If RestoreBackup is selected the artifact will restore the backup 
+   On application, the original configuration is backed up.
+   When reapplying a sinkhole, the original configuration is restored then
+   changes applied to maintain integrity of the restore process.
+   If RestoreBackup is selected the artifact will restore the backup
    configuration, then delete the backup with no further processing.
-   
+
    NOTE:
-   Modifying the hosts file may cause network communication issues. I have 
-   disabled any sinkhole settings on the Velociraptor agent configuration 
+   Modifying the hosts file may cause network communication issues. I have
+   disabled any sinkhole settings on the Velociraptor agent configuration
    but there are no rail guards on other domains. Use with caution.
 
 author: Matt Green - @mgreen27
 
 required_permissions:
   - EXECVE
-  
+
 type: CLIENT
 
 parameters:
@@ -49,13 +49,13 @@ sources:
 
     query: |
       -- Extract sink hole requirements from table
-      LET changes <= SELECT 
+      LET changes <= SELECT
                 Domain,
                 Sinkhole,
                 if(condition=Description,
                   then= CommentPrefix + ': ' + Description,
                   else= CommentPrefix) as Description
-            FROM parse_csv(filename=SinkholeTable, accessor='data') 
+            FROM SinkholeTable
 
       -- Check for backup to determine if sinkhole applied
       LET check_backup = SELECT FullPath FROM stat(filename=HostsFileBackup)
@@ -67,10 +67,10 @@ sources:
       LET restore = SELECT * FROM chain(
             a=copy(filename=HostsFileBackup,dest=HostsFile),
             b={
-                SELECT * 
+                SELECT *
                 FROM if(condition=RestoreBackup,
                     then={
-                        SELECT * 
+                        SELECT *
                         FROM execve(argv=['cmd.exe', '/c',
                             'del','/F',HostsFileBackup])
                     })
@@ -78,11 +78,11 @@ sources:
 
       -- Write hosts file
       LET write(DataBlob) = copy(filename=DataBlob,dest=HostsFile,accessor='data')
-      
+
       -- FlushDNS
-      LET flushdns = SELECT * 
+      LET flushdns = SELECT *
         FROM execve(argv=['cmd.exe', '/c','ipconfig','/flushdns'])
-                
+
       -- Find existing entries to modify
       LET existing = SELECT
             parse_string_with_regex(
@@ -93,8 +93,8 @@ sources:
             ]) as Record,
             Line
         FROM parse_lines(filename=HostsFile)
-        WHERE 
-            Line 
+        WHERE
+            Line
             AND NOT Line =~ '^#'
 
       -- Parse a URL to get domain name.
@@ -127,7 +127,7 @@ sources:
       -- Add new hostsfile entries
       LET find_newline = SELECT * FROM foreach(row=changes,
             query={
-                SELECT 
+                SELECT
                     format(format='\t%v\t\t%v\t\t# %v',
                         args=[Sinkhole,Domain,Description]) as Line,
                     Domain,
@@ -139,12 +139,12 @@ sources:
             })
 
       -- Determine which lines should stay the same
-      LET find_line= SELECT 
+      LET find_line= SELECT
                 Line,
                 Record.Hostname as Domain,
                 'old entry' as Type
             FROM existing
-            WHERE 
+            WHERE
                 NOT Domain in find_modline.Domain
                 AND NOT Domain in find_newline.Domain
 
@@ -154,7 +154,7 @@ sources:
             b=find_newline,
             c=find_line
       )
-      
+
       -- Join lines from staging object
       LET HostsData = join(array=build_lines.Line,sep='\r\n')
 
@@ -172,16 +172,16 @@ sources:
                             },
                         else= backup)
                 )
-                
+
       -- Do kick off logic
-      LET do_it <= SELECT * FROM if(condition= NOT RestoreBackup, 
+      LET do_it <= SELECT * FROM if(condition= NOT RestoreBackup,
             then= {
                 SELECT * FROM chain(
                     a= log(message='Adding hosts entries.'),
                     b= write(DataBlob=HostsData),
                     c= flushdns
-                    
+
                 )})
-                
+
       -- Finally show resultant HostsFile
       SELECT * FROM Artifact.Windows.System.HostsFile()
