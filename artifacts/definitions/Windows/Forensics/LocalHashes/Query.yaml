@@ -43,7 +43,7 @@ sources:
       }, b={
         SELECT * FROM foreach(row=split(string=CommaDelimitedHashes, sep=","),
         query={
-           SELECT strip(string=_value) AS Hash FROM scope()
+           SELECT lowcase(string=strip(string=_value)) AS Hash FROM scope()
         })
       })
 
