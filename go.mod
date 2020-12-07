@@ -20,8 +20,8 @@ require (
 	github.com/ZachtimusPrime/Go-Splunk-HTTP v0.0.0-20200420213219-094ff9e8d788
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/chroma v0.7.2
-	github.com/alecthomas/participle v0.6.0
-	github.com/alecthomas/repr v0.0.0-20201006074542-804e374aceb1 // indirect
+	github.com/alecthomas/participle v0.7.1
+	github.com/alecthomas/repr v0.0.0-20201120212035-bb82daffcca2 // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/aws/aws-sdk-go v1.26.7
 	github.com/bi-zone/etw v0.0.0-20200916105032-b215904fae4f
@@ -121,7 +121,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20201009013914-88dce699d74e
+	www.velocidex.com/golang/vfilter v0.0.0-20201207041817-0a52513015ec
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
 

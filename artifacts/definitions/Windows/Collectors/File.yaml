@@ -25,7 +25,7 @@ sources:
      queries:
       # Generate the collection globs for each device
       - LET specs = SELECT RootDevice + "\\" + Glob AS Glob
-            FROM parse_csv(filename=collectionSpec, accessor="data")
+            FROM collectionSpec
             WHERE log(message="Processing Device " + RootDevice + " With " + Accessor)
 
       # Join all the collection rules into a single Glob plugin. This ensure we

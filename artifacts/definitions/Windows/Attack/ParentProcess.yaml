@@ -28,7 +28,6 @@ parameters:
 sources:
      - queries:
        # Build up some cached queries for speed.
-       - LET lookup <= SELECT * FROM parse_csv(filename=lookupTable, accessor='data')
        - LET processes <= SELECT Name, Pid, Ppid, CommandLine, CreateTime, Exe FROM pslist()
        - LET processes_lookup <= SELECT Name As ProcessName, Pid As ProcID FROM processes
        - |
@@ -52,6 +51,6 @@ sources:
                     ActualParentName,
                     Pid, Ppid, CommandLine, CreateTime, Exe,
                     ParentRegex as ExpectedParentName
-             FROM lookup
+             FROM lookupTable
              WHERE ActualProcessName =~ ProcessName AND NOT ActualParentName =~ ParentRegex
          })

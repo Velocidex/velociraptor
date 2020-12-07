@@ -82,7 +82,7 @@ sources:
         LET me <= SELECT Pid FROM pslist(pid=getpid())
       - |
         LET whitelist <= SELECT upcase(string=Path) AS Path
-                FROM parse_csv(filename=pathWhitelist, accessor='data')
+                FROM pathWhitelist
       - |
         LET processes <= SELECT Name as ProcessName, CommandLine, Pid
             FROM pslist()

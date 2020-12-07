@@ -48,6 +48,7 @@ type MemoryWriter struct {
 func (self *MemoryWriter) Size() (int64, error) {
 	return int64(len(self.buf)), nil
 }
+
 func (self *MemoryWriter) Write(data []byte) (int, error) {
 	self.buf = append(self.buf, data...)
 	return len(data), nil

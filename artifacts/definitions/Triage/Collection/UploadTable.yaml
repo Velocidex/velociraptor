@@ -23,9 +23,7 @@ sources:
 
       - |
         SELECT * FROM foreach(
-         row={
-           SELECT * FROM parse_csv(filename=triageTable, accessor='data')
-         },
+         row=triageTable,
          query={
            SELECT FullPath, Size, Modifed, Type,
                FileDetails.Path AS ZipPath,

@@ -1,0 +1,39 @@
+[
+ {
+  "IntValue": 9,
+  "CSVValue": [
+   {
+    "Col1": "Value1",
+    "Col2": "Value2"
+   },
+   {
+    "Col1": "Value3",
+    "Col2": "Value4"
+   }
+  ],
+  "TimestampValue": "2020-10-01T09:20:00Z",
+  "TimestampValue.Unix": 1601544000,
+  "timestamp(epoch=TimestampValue)": "2020-10-01T09:20:00Z",
+  "TimestampValueUnset": "0001-01-01T00:00:00Z",
+  "TimestampValueUnset.Unix": -62135596800,
+  "DateAfterTime": "1600-01-01T00:00:00Z",
+  "DateBeforeTime": "2020-10-01T09:20:00Z",
+  "BoolValue": false,
+  "BoolValue2": true,
+  "BoolValueUnset": false,
+  "BoolValue = \"Y\"": false,
+  "BoolValue != \"Y\"": true,
+  "BoolValue2 = \"Y\"": true,
+  "BoolValue2 != \"Y\"": false,
+  "{ SELECT * FROM CSVValue }": [
+   {
+    "Col1": "Value1",
+    "Col2": "Value2"
+   },
+   {
+    "Col1": "Value3",
+    "Col2": "Value4"
+   }
+  ]
+ }
+]

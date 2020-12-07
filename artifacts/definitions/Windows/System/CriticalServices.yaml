@@ -27,11 +27,9 @@ parameters:
        wuauserv
 
 sources:
-     - queries:
-       - LET lookup <= SELECT * FROM parse_csv(filename=lookupTable, accessor='data')
-       - |
+     - query: |
          SELECT Name, DisplayName, Created, State, {
-            SELECT * FROM lookup WHERE Name =~ ServiceName
+            SELECT * FROM lookupTable WHERE Name =~ ServiceName
          } AS Critical
          FROM Artifact.Windows.System.Services()
          WHERE Critical AND State != "Running"
