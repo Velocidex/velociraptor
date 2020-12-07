@@ -9,4 +9,4 @@ SELECT Line from parse_lines(filename=HostFile) WHERE Line =~ "evil.com"[]SELECT
  {
   "Line": "\t127.0.0.1\t\tevil.com\t\t# Velociraptor sinkhole: Evilcorp C2 domain"
  }
-]SELECT * FROM Artifact.Windows.Remediation.Sinkhole(RestoreBackup="True")[]SELECT Line from parse_lines(filename=HostFile) WHERE Line =~ "evil.com"[]
+]SELECT * FROM Artifact.Windows.Remediation.Sinkhole(RestoreBackup=True)[]SELECT Line from parse_lines(filename=HostFile) WHERE Line =~ "evil.com"[]
