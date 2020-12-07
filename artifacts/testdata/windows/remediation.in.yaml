@@ -17,7 +17,7 @@ Queries:
     WHERE Line =~ "evil.com"
 
   # Test rolling back sinkhole - output none and check hosts file at end.
-  - SELECT * FROM Artifact.Windows.Remediation.Sinkhole(RestoreBackup="True")
+  - SELECT * FROM Artifact.Windows.Remediation.Sinkhole(RestoreBackup=True)
 
   # Should not have evil.com in it any more.
   - SELECT Line from parse_lines(filename=HostFile)
