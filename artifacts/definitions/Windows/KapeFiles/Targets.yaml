@@ -844,7 +844,7 @@ parameters:
       222,Setupapi.log XP,USBDevices,Windows/setupapi.log,lazy_ntfs,
       223,Setupapi.log Win7+,USBDevices,Windows\inf/setupapi.dev.log,lazy_ntfs,
       224,Setupapi.log Win7+,USBDevices,Windows.old\Windows\inf/setupapi.dev.log,lazy_ntfs,
-      225,Windows Your Phone - All Databases,Apps,Users\*\AppData\Local\Packages\Microsoft.YourPhone_8wekyb3d8bbwe\LocalCache\Indexed/**10,lazy_ntfs,Locates all Your Phone database files 
+      225,Windows Your Phone - All Databases,Apps,Users\*\AppData\Local\Packages\Microsoft.YourPhone_8wekyb3d8bbwe\LocalCache\Indexed/**10,lazy_ntfs,Locates all Your Phone database files
       226,Prefetch,Prefetch,Windows\prefetch/*.pf,lazy_ntfs,
       227,Prefetch,Prefetch,Windows.old\Windows\prefetch/*.pf,lazy_ntfs,
       228,Syscache,Program Execution,System Volume Information/Syscache.hve,lazy_ntfs,
@@ -1670,14 +1670,13 @@ sources:
                    -- For VSS we always need to parse NTFS
                    SELECT * FROM Artifact.Windows.Collectors.VSS(
                       RootDevice=Device, Accessor="ntfs",
-                      collectionSpec=serialize(item=rule_specs_ntfs, format="csv"))
+                      collectionSpec=rule_specs_ntfs)
                }, b={
                    SELECT * FROM Artifact.Windows.Collectors.VSS(
                       RootDevice=Device,
                       Accessor=if(condition=DontBeLazy,
                                   then="ntfs", else="lazy_ntfs"),
-                      collectionSpec=serialize(
-                        item=rule_specs_lazy_ntfs, format="csv"))
+                      collectionSpec=rule_specs_lazy_ntfs)
                })
            }, else={
              SELECT * FROM chain(
@@ -1687,8 +1686,7 @@ sources:
                    SELECT * FROM Artifact.Windows.Collectors.File(
                       RootDevice=Device,
                       Accessor="ntfs",
-                      collectionSpec=serialize(
-                          item=rule_specs_ntfs, format="csv"))
+                      collectionSpec=rule_specs_ntfs)
                }, b={
 
                    -- Prefer the auto accessor if possible since it
@@ -1698,10 +1696,10 @@ sources:
                       RootDevice=Device,
                       Accessor=if(condition=UseAutoAccessor,
                                   then="auto", else="lazy_ntfs"),
-                      collectionSpec=serialize(
-                         item=rule_specs_lazy_ntfs, format="csv"))
+                      collectionSpec=rule_specs_lazy_ntfs)
                })
            })
+
       SELECT * FROM all_results WHERE _Source =~ "Metadata"
 
   - name: Uploads
@@ -1762,5 +1760,3 @@ reports:
       {{ end }}
 
       {{ Query $query | Table }}
-
-

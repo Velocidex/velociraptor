@@ -29,7 +29,6 @@ class VeloHunts extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
         this.get_hunts_source = axios.CancelToken.source();
         this.list_hunts_source = axios.CancelToken.source();
         this.interval = setInterval(this.fetchHunts, POLL_TIME);
@@ -37,7 +36,8 @@ class VeloHunts extends React.Component {
     }
 
     componentWillUnmount() {
-        this.source.cancel();
+        this.list_hunts_source.cancel();
+        this.get_hunts_source.cancel();
         clearInterval(this.interval);
     }
 
@@ -87,25 +87,33 @@ class VeloHunts extends React.Component {
             if (response.cancel) return;
 
             let hunts = response.data.items || [];
+            let selected_hunt_id = this.state.selected_hunt && this.state.selected_hunt.hunt_id;
 
-            // If the router specifies a selected flow id, we select it.
-            if (!this.state.init_router) {
-                for(var i=0;i<hunts.length;i++) {
-                    let hunt=hunts[i];
-                    if (hunt.hunt_id === selected_hunt_id) {
-                        this.loadFullHunt(hunt);
-                        break;
-                    }
-                };
+            // If the router specifies a selected flow id, we select
+            // it but only once.
+            if (!this.state.init_router && !selected_hunt_id) {
+                selected_hunt_id = this.props.match && this.props.match.params &&
+                    this.props.match.params.hunt_id;
+
                 this.setState({init_router: true});
             }
+
+            // Update the selected hunt in the state.
+            if (selected_hunt_id) {
+                _.each(hunts, hunt=>{
+                    if (hunt.hunt_id === selected_hunt_id) {
+                        this.setState({selected_hunt: hunt});
+                    };
+                });
+            };
 
             this.setState({hunts: hunts});
         });
 
-        // Get the full hunt information from the server based on the hunt
-        // metadata
-        if (!this.state.init_router && selected_hunt_id) {
+        // Get the full hunt information from the server based on the
+        // hunt metadata - this is done every poll interval to ensure
+        // hunt stats are updated.
+        if (selected_hunt_id) {
             this.get_hunts_source.cancel();
             this.get_hunts_source = axios.CancelToken.source();
 

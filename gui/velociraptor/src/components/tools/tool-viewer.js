@@ -22,12 +22,11 @@ export default class ToolViewer extends React.Component {
     };
 
     componentDidMount = () => {
-
         this.fetchToolInfo();
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        if (!this.state.initialized_from_parent && this.props.name) {
+        if (this.props.name != prevProps.name) {
             this.fetchToolInfo();
         }
     }
@@ -35,15 +34,15 @@ export default class ToolViewer extends React.Component {
     fetchToolInfo = () => {
         api.get("v1/GetToolInfo",
                 {name: this.props.name}).then((response) => {
-            this.setState({tool: response.data, initialized_from_parent: true});
+            this.setState({tool: response.data});
         });
     }
 
     state = {
         showDialog: false,
-        initialized_from_parent: false,
         tool: {},
         tool_file: null,
+        remote_url: "",
     }
 
     uploadFile = () => {
@@ -57,6 +56,16 @@ export default class ToolViewer extends React.Component {
         });
     }
 
+    setServeUrl = url=>{
+        let tool = Object.assign({}, this.state.tool);
+        tool.url = this.state.remote_url;
+        tool.hash = "";
+        tool.filename = "";
+        tool.github_project = "";
+        tool.serve_locally = false;
+        tool.materialize = true;
+        this.setToolInfo(tool);
+    };
 
     setToolInfo = (tool) => {
         this.setState({inflight: true});
@@ -342,7 +351,8 @@ export default class ToolViewer extends React.Component {
                           As an admin you can manually upload a
                           binary to be used as that tool. This will override the
                           upstream URL setting and provide your tool to all
-                          artifacts that need it.
+                          artifacts that need it. Alternative, set a URL for clients
+                          to fetch tools from.
                         </Card.Text>
                         <Form className="selectable">
                           <InputGroup className="mb-3">
@@ -368,6 +378,24 @@ export default class ToolViewer extends React.Component {
                                   "Click to upload file"}
                               </Form.File.Label>
                             </Form.File>
+                          </InputGroup>
+                        </Form>
+                        <Form className="selectable">
+                          <InputGroup>
+                            <InputGroup.Prepend>
+                              <InputGroup.Text  as="button"
+                                disabled={this.state.inflight || !this.state.remote_url}
+                                onClick={this.setServeUrl}>
+                                { this.state.inflight ?
+                                  <FontAwesomeIcon icon="spinner" spin /> :
+                                  "Set Serve URL" }
+                              </InputGroup.Text>
+                            </InputGroup.Prepend>
+                            <Form.Control as="input"
+                                          value={this.state.remote_url}
+                                          onChange={e=>this.setState(
+                                              {remote_url: e.currentTarget.value})}
+                            />
                           </InputGroup>
                         </Form>
                       </Card.Body>

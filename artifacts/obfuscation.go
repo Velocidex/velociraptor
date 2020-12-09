@@ -3,6 +3,7 @@ package artifacts
 import (
 	"regexp"
 
+	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -41,7 +42,7 @@ func Obfuscate(
 		// forms. This removes comments.
 		ast, err := vfilter.Parse(query.VQL)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "While parsing VQL: "+query.VQL)
 		}
 
 		// TODO: Compress the AST.
