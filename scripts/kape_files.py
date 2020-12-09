@@ -214,14 +214,13 @@ sources:
                    -- For VSS we always need to parse NTFS
                    SELECT * FROM Artifact.Windows.Collectors.VSS(
                       RootDevice=Device, Accessor="ntfs",
-                      collectionSpec=serialize(item=rule_specs_ntfs, format="csv"))
+                      collectionSpec=rule_specs_ntfs)
                }, b={
                    SELECT * FROM Artifact.Windows.Collectors.VSS(
                       RootDevice=Device,
                       Accessor=if(condition=DontBeLazy,
                                   then="ntfs", else="lazy_ntfs"),
-                      collectionSpec=serialize(
-                        item=rule_specs_lazy_ntfs, format="csv"))
+                      collectionSpec=rule_specs_lazy_ntfs)
                })
            }, else={
              SELECT * FROM chain(
@@ -231,8 +230,7 @@ sources:
                    SELECT * FROM Artifact.Windows.Collectors.File(
                       RootDevice=Device,
                       Accessor="ntfs",
-                      collectionSpec=serialize(
-                          item=rule_specs_ntfs, format="csv"))
+                      collectionSpec=rule_specs_ntfs)
                }, b={
 
                    -- Prefer the auto accessor if possible since it
@@ -242,8 +240,7 @@ sources:
                       RootDevice=Device,
                       Accessor=if(condition=UseAutoAccessor,
                                   then="auto", else="lazy_ntfs"),
-                      collectionSpec=serialize(
-                         item=rule_specs_lazy_ntfs, format="csv"))
+                      collectionSpec=rule_specs_lazy_ntfs)
                })
            })
       SELECT * FROM all_results WHERE _Source =~ "Metadata"

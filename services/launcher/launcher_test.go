@@ -159,7 +159,25 @@ sources:
                 SELECT * FROM CSVValue
             }
      FROM scope()
+`
+	testArtifactWithDepsTypes = `
+name: Test.Artifact.Deps.Types
+parameters:
+- name: IntValue
+  type: int
+  default: 5
 
+- name: CSVValue
+  type: csv
+  default: |
+    Header
+    Value1
+    Value2
+
+sources:
+- query: |
+    SELECT IntValue, CSVValue
+    FROM Artifact.Test.Artifact.Types(CSVValue=CSVValue, IntValue=IntValue)
 `
 )
 
@@ -587,6 +605,63 @@ func (self *LauncherTestSuite) TestParameterTypes() {
 
 	results := getResponses(test_responder)
 	goldie.Assert(self.T(), "TestParameterTypes", json.MustMarshalIndent(results))
+}
+
+// Parsing of parameters only occurs at the launching artifact -
+// dependent artifacts receive proper typed objects.
+func (self *LauncherTestSuite) TestParameterTypesDeps() {
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifactWithTypes, true)
+	assert.NoError(self.T(), err)
+
+	_, err = repository.LoadYaml(testArtifactWithDepsTypes, true)
+	assert.NoError(self.T(), err)
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:   "UserX",
+		ClientId:  "C.1234",
+		Artifacts: []string{"Test.Artifact.Deps.Types"},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				// Artifact Parameters are **always**
+				// sent as strings but VQL code will
+				// convert them to their correct
+				// types.
+				Artifact: "Test.Artifact.Deps.Types",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "IntValue", Value: "9"},
+						{Key: "CSVValue",
+							Value: "Col1,Col2\nValue1,Value2\nValue3,Value4\n"},
+					},
+				},
+			},
+		},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Compile the artifact request into VQL
+	acl_manager := vql_subsystem.NullACLManager{}
+	launcher, err := services.GetLauncher()
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository, false, request)
+	assert.NoError(self.T(), err)
+
+	// Now run the VQL and receive the rows back
+	test_responder := responder.TestResponder()
+	for _, vql_request := range compiled {
+		actions.VQLClientAction{}.StartQuery(
+			self.config_obj, ctx, test_responder, vql_request)
+	}
+
+	results := getResponses(test_responder)
+	goldie.Assert(self.T(), "TestParameterTypesDeps", json.MustMarshalIndent(results))
 }
 
 func TestLauncher(t *testing.T) {

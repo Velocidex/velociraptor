@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"path"
 	"regexp"
-	"strings"
 
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -20,10 +19,18 @@ import (
 
 var (
 	artifact_in_query_regex = regexp.MustCompile(`Artifact\.([^\s\(]+)\(`)
+	escape_regex            = regexp.MustCompile("(^[0-9]|[\"'_ ])")
 )
 
 func escape_name(name string) string {
 	return regexp.MustCompile("[^a-zA-Z0-9]").ReplaceAllString(name, "_")
+}
+
+func maybeEscape(name string) string {
+	if escape_regex.FindString(name) != "" {
+		return "`" + name + "`"
+	}
+	return name
 }
 
 func Compile(config_obj *config_proto.Config,
@@ -45,9 +52,7 @@ func Compile(config_obj *config_proto.Config,
 
 		// If the variable contains spaces we need to escape
 		// the name in backticks.
-		if strings.Contains(name, " ") {
-			name = "`" + name + "`"
-		}
+		name = maybeEscape(name)
 
 		switch parameter.Type {
 		case "int", "int64":
