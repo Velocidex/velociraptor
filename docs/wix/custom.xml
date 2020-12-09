@@ -92,12 +92,6 @@
           <Component Id='Config' Guid='*'>
             <File Id='Config' Name='client.config.yaml'
                   DiskId='1' Source='Output/client.config.yaml' KeyPath='yes'>
-              <util:PermissionEx User="Users" GenericRead="no" Read="no"
-                                 ChangePermission="yes"/>
-              <util:PermissionEx User="Everyone" GenericRead="no" Read="no"
-                                 ChangePermission="yes"/>
-              <util:PermissionEx User="Administrators" GenericAll="yes"
-                                 ChangePermission="yes"/>
             </File>
           </Component>
         </Directory>
