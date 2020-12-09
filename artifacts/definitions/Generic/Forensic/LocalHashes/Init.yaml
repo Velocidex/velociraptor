@@ -1,9 +1,7 @@
-name: Windows.Forensics.LocalHashes.Init
+name: Generic.Forensic.LocalHashes.Init
 description: |
    This artifact creates an SQLite database on the endpoint to hold
    local file hashes. These hashes can then be queried quickly.
-
-precondition: SELECT OS from info() where OS = "windows"
 
 parameters:
   - name: HashDb

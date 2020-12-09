@@ -1,18 +1,16 @@
-name: Windows.Forensics.LocalHashes.Query
+name: Generic.Forensic.LocalHashes.Query
 description: |
   This artifact maintains a local (client side) database of file
   hashes. It is then possible to query this database using the
-  Windows.Forensics.LocalHashes.Query artifact.
+  Generic.Forensic.LocalHashes.Query artifact.
 
   NOTE: This artifact expects a CSV file with one hash per line. On
   the command line you can encode carriage return using powershell
   like this:
 
   ```
-  .\velociraptor.exe -v artifacts collect Windows.Forensics.LocalHashes.Query --args "Hashes=Hash`ne6c1ce56e6729a0b077c0f2384726b30"
+  .\velociraptor.exe -v artifacts collect Generic.Forensic.LocalHashes.Query --args "Hashes=Hash`ne6c1ce56e6729a0b077c0f2384726b30"
   ```
-
-precondition: SELECT OS from info() where OS = "windows"
 
 parameters:
   - name: Hashes
@@ -33,7 +31,7 @@ parameters:
 sources:
   - query: |
       LET hash_db <= SELECT FullPath
-      FROM Artifact.Windows.Forensics.LocalHashes.Init(HashDb=HashDb)
+      FROM Artifact.Generic.Forensic.LocalHashes.Init(HashDb=HashDb)
 
       -- Check hashes from the CSV or comma delimited input
       LET hashes = SELECT Hash FROM chain(

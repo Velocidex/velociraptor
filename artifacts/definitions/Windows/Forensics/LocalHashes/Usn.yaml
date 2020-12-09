@@ -2,7 +2,7 @@ name: Windows.Forensics.LocalHashes.Usn
 description: |
   This artifact maintains a local (client side) database of file
   hashes. It is then possible to query this database using the
-  Windows.Forensics.LocalHashes.Query artifact
+  Generic.Forensic.LocalHashes.Query artifact
 
 type: CLIENT_EVENT
 
@@ -32,7 +32,7 @@ precondition: SELECT OS from info() where OS = "windows"
 sources:
   - query: |
       LET hash_db <= SELECT FullPath
-      FROM Artifact.Windows.Forensics.LocalHashes.Init(HashDb=HashDb)
+      FROM Artifact.Generic.Forensic.LocalHashes.Init(HashDb=HashDb)
 
       LET path <= hash_db[0].FullPath
 

@@ -1,16 +1,16 @@
-SELECT basename(path=FullPath) AS Name, Size, Hash FROM Artifact.Windows.Forensics.LocalHashes.Glob( HashGlob=srcDir + '/artifacts/testdata/files/Security_1_record.evtx')[
+SELECT basename(path=FullPath) AS Name, Size, Hash FROM Artifact.Generic.Forensic.LocalHashes.Glob( HashGlob=srcDir + '/artifacts/testdata/files/Security_1_record.evtx')[
  {
   "Name": "Security_1_record.evtx",
   "Size": 69632,
   "Hash": "39985be74b8bb4ee716ab55b5f6dfbd4"
  }
-]SELECT Path, MD5, Size FROM Artifact.Windows.Forensics.LocalHashes.Query( CommaDelimitedHashes="39985be74b8bb4ee716ab55b5f6dfbd4")[
+]SELECT Path, MD5, Size FROM Artifact.Generic.Forensic.LocalHashes.Query( CommaDelimitedHashes="39985be74b8bb4ee716ab55b5f6dfbd4")[
  {
   "Path": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\Security_1_record.evtx",
   "MD5": "39985be74b8bb4ee716ab55b5f6dfbd4",
   "Size": 69632
  }
-]SELECT Path, MD5, Size FROM Artifact.Windows.Forensics.LocalHashes.Query( Hashes="Hash\n39985be74b8bb4ee716ab55b5f6dfbd4")[
+]SELECT Path, MD5, Size FROM Artifact.Generic.Forensic.LocalHashes.Query( Hashes="Hash\n39985be74b8bb4ee716ab55b5f6dfbd4")[
  {
   "Path": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\Security_1_record.evtx",
   "MD5": "39985be74b8bb4ee716ab55b5f6dfbd4",
