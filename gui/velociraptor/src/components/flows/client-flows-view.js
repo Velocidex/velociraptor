@@ -82,7 +82,7 @@ class ClientFlowsView extends React.Component {
             // Update the current selected flow with the new data.
             if (selected_flow_id) {
                 _.each(flows, flow=>{
-                    if(flow.session_id == selected_flow_id) {
+                    if(flow.session_id === selected_flow_id) {
                         this.setState({currentFlow: flow});
                     };
                 });

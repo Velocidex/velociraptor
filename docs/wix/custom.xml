@@ -21,15 +21,37 @@
     <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt='CD-ROM #1' />
     <Property Id='DiskPrompt' Value="Installation [1]" />
 
+    <PropertyRef Id="WIX_ACCOUNT_LOCALSYSTEM" />
+    <PropertyRef Id="WIX_ACCOUNT_USERS" />
+    <PropertyRef Id="WIX_ACCOUNT_ADMINISTRATORS" />
+
     <Directory Id='TARGETDIR' Name='SourceDir'>
       <Directory Id='ProgramFiles64Folder' Name='PFiles'>
         <Directory Id='INSTALLDIR' Name='$(var.Name)'>
-                  <Directory Id="CACHEDIR" Name="Tools">
-                    <Component Id="Tools" Guid="97dc953a-8a2f-494f-9585-56ae526d0b48">
-                          <CreateFolder />
-                        </Component>
-                  </Directory>
+          <Component Id='Install' Guid='9f3cfed0-b89d-43d4-8fcf-242824e84fd8'>
+            <CreateFolder>
+              <Permission User="[WIX_ACCOUNT_USERS]" GenericRead="no" Read="no"
+                          ChangePermission="yes"/>
+              <Permission User="[WIX_ACCOUNT_ADMINISTRATORS]" GenericAll="yes"
+                          ChangePermission="yes"/>
+              <Permission User="[WIX_ACCOUNT_LOCALSYSTEM]" GenericAll="yes"
+                          ChangePermission="yes"/>
+            </CreateFolder>
+          </Component>
+          <Directory Id="CACHEDIR" Name="Tools">
+            <Component Id="Tools" Guid="97dc953a-8a2f-494f-9585-56ae526d0b48">
+              <CreateFolder>
+                <Permission User="[WIX_ACCOUNT_USERS]" GenericRead="no" Read="no"
+                            ChangePermission="yes"/>
+                <Permission User="[WIX_ACCOUNT_ADMINISTRATORS]" GenericAll="yes"
+                            ChangePermission="yes"/>
+                <Permission User="[WIX_ACCOUNT_LOCALSYSTEM]" GenericAll="yes"
+                            ChangePermission="yes"/>
+              </CreateFolder>
+            </Component>
+          </Directory>
           <Component Id='MainExecutable' Guid='*'>
+
             <File Id='ServiceEXE' Name='$(var.BinaryName)'
                   DiskId='1'
                   Source='Output/Velociraptor.exe' KeyPath='yes'>
@@ -70,6 +92,12 @@
           <Component Id='Config' Guid='*'>
             <File Id='Config' Name='client.config.yaml'
                   DiskId='1' Source='Output/client.config.yaml' KeyPath='yes'>
+              <util:PermissionEx User="Users" GenericRead="no" Read="no"
+                                 ChangePermission="yes"/>
+              <util:PermissionEx User="Everyone" GenericRead="no" Read="no"
+                                 ChangePermission="yes"/>
+              <util:PermissionEx User="Administrators" GenericAll="yes"
+                                 ChangePermission="yes"/>
             </File>
           </Component>
         </Directory>
@@ -77,6 +105,7 @@
     </Directory>
 
     <Feature Id='Complete' Level='1'>
+      <ComponentRef Id='Install' />
       <ComponentRef Id='MainExecutable' />
       <ComponentRef Id='Config' />
       <ComponentRef Id='Tools' />
