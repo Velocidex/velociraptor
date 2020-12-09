@@ -26,7 +26,7 @@ export default class ToolViewer extends React.Component {
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        if (this.props.name != prevProps.name) {
+        if (this.props.name !== prevProps.name) {
             this.fetchToolInfo();
         }
     }
