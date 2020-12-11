@@ -183,12 +183,12 @@ func mergeSources(
 			source_result = query_name
 		}
 
-		if source.Precondition != "" {
+		if source_precondition != "" {
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				Name:        name,
 				Description: description,
 				VQL: fmt.Sprintf(
-					"SELECT * FROM if(then=%s, condition=%s)",
+					"SELECT * FROM if(then=%s, condition=%s, else={SELECT * FROM scope() WHERE log(message='Query skipped due to precondition') AND FALSE})",
 					source_result, source_precondition_var),
 			})
 		} else {

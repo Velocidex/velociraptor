@@ -179,6 +179,14 @@ sources:
     SELECT IntValue, CSVValue
     FROM Artifact.Test.Artifact.Types(CSVValue=CSVValue, IntValue=IntValue)
 `
+
+	testArtifactWithPrecondition = `
+name: Test.Artifact.Precondition
+precondition: SELECT * FROM info() WHERE FALSE
+sources:
+- query: |
+    SELECT * FROM info()
+`
 )
 
 type LauncherTestSuite struct {
@@ -662,6 +670,49 @@ func (self *LauncherTestSuite) TestParameterTypesDeps() {
 
 	results := getResponses(test_responder)
 	goldie.Assert(self.T(), "TestParameterTypesDeps", json.MustMarshalIndent(results))
+}
+
+func (self *LauncherTestSuite) TestPrecondition() {
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifactWithPrecondition, true)
+	assert.NoError(self.T(), err)
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:   "UserX",
+		ClientId:  "C.1234",
+		Artifacts: []string{"Test.Artifact.Precondition"},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Compile the artifact request into VQL
+	acl_manager := vql_subsystem.NullACLManager{}
+	launcher, err := services.GetLauncher()
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository, false, request)
+	assert.NoError(self.T(), err)
+
+	// Now run the VQL and receive the rows back
+	test_responder := responder.TestResponder()
+	for _, vql_request := range compiled {
+		actions.VQLClientAction{}.StartQuery(
+			self.config_obj, ctx, test_responder, vql_request)
+	}
+
+	results := getResponses(test_responder)
+	assert.Equal(self.T(), 0, len(results))
+
+	// The compiled query should have an if statement with a precondition
+	for _, query := range compiled[0].Query {
+		if query.Name != "" {
+			assert.Contains(self.T(), query.VQL, "if(then=Test_Artifact_Precondition_0_0")
+		}
+	}
 }
 
 func TestLauncher(t *testing.T) {
