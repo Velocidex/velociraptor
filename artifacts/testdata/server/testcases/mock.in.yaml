@@ -141,10 +141,9 @@ Parameters:
 
 Queries:
   # Mock out the info plugin just for fun.
-  - LET X <= SELECT mock(plugin='info', results=[dict(foo='bar'), dict(foo='baz')] ),
+  - LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict(OS='windows', foo='baz')] ),
       mock(artifact=Artifact.Windows.Network.Netstat, results=parse_json_array(data=ArtifactNetstatMock)),
       mock(plugin='netstat', results=parse_json_array(data=NetstatMock)),
-      mock(plugin='info', results=[dict(OS='windows'),]),
       mock(artifact=Artifact.Windows.System.Pslist, results=parse_json_array(data=PSListMock))
       FROM scope()
   - SELECT * FROM info()
