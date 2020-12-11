@@ -1,67 +1,121 @@
 import _ from 'lodash';
 import api from '../core/api-service.js';
 
-function _event_table2table(event_table) {
-    let result = {artifacts: event_table.artifacts,
-                  parameters: {}};
-    let env = event_table.parameters && event_table.parameters.env;
-    _.each(env, x=>{result.parameters[x.key] = x.value;});
+// Convert flows_proto.ArtifactParameters to a k,v dict.
+function _ArtifactParameters2dict(parameters) {
+    let result = {};
+    let env = parameters && parameters.env;
+    _.each(env, x=>{result[x.key] = x.value;});
+    return result;
+};
+
+function _ArtifactCollectorArgs_to_label_table(event_table) {
+    let result = {
+        // Will be replaced by full definition later.
+        artifacts: event_table.artifacts,
+        specs: {},
+    };
+
+    _.each(event_table.specs, spec=>{
+        let artifact_name = spec.artifact;
+        result.specs[artifact_name] = _ArtifactParameters2dict(spec.parameters);
+    });
+
+    // If there is no spec the add an empty one.
+    _.each(result.artifacts, artifact_name=>{
+        if(_.isUndefined(result.specs[artifact_name])) {
+            result.specs[artifact_name] = {};
+        }
+    });
 
     return result;
 }
 
 
-// Convert a proto to an internal representation:
-// Returns a dict with keys as labels and values as decriptors.
-// A descriptor is an object with {artifacts: [], parameters: {}}
-// The artifact list is a list of artifact descriptors as obtained
-// from the server.
+// Convert a flows_proto.ClientEventTable proto to an internal
+// client_event_table representation:
+/*
+   client_event_table := {
+     "All": label_table,    <-- applies to all clients
+     "label1": label_table,   <-- applies to clients labeled as label1
+   }
+
+   label_table := {
+     "artifacts": artifact_definition_list,   <-- Full artifact definitions
+     "specs": parameter_spec,
+   }
+
+   parameter_spec := {
+        artifact_name: {
+             key: value,
+             key2, value2,
+        },
+   }
+*/
 function proto2tables(table, cb) {
-    let all_artifacts = [];
     let definitions = {};
-    let result = {All: _event_table2table(table.artifacts)};
-    all_artifacts = [...result.All.artifacts];
+    let result = {All: _ArtifactCollectorArgs_to_label_table(table.artifacts)};
+    let all_artifacts = [...result.All.artifacts];
+
     _.each(table.label_events, x=>{
-        let event_table = _event_table2table(x.artifacts);
+        let event_table = _ArtifactCollectorArgs_to_label_table(x.artifacts);
         result[x.label] = event_table;
         all_artifacts = all_artifacts.concat(event_table.artifacts);
     });
 
-    // Now lookup all the artifacts for their definitions.
+    // Now lookup all the artifacts for their definitions and replace
+    // in client_event_table.
     api.get("v1/GetArtifacts", {names: all_artifacts}).then(response=>{
-            if (response && response.data && response.data.items) {
-                _.each(response.data.items, x=>{definitions[x.name]=x;});
+        if (response && response.data && response.data.items) {
+            // Create a big lookup table for all artifacts and their
+            // definitions.
+            _.each(response.data.items, x=>{
+                definitions[x.name] = x;
+            });
 
-                // Now loop over all the artifacts and replace them
-                // with the definitions.
-                _.each(result, (v, k) => {
-                    let artifacts = [];
-                    _.each(v.artifacts, name=>{
-                        if (definitions[name]) {
-                            artifacts.push(definitions[name]);
-                        }
-                    });
-                    v.artifacts = artifacts;
+            // Now loop over all the artifacts and replace them
+            // with the definitions.
+            _.each(result, (v, k) => {
+                let artifacts = [];
+                _.each(v.artifacts, name=>{
+                    if (definitions[name]) {
+                        artifacts.push(definitions[name]);
+                    }
                 });
+                v.artifacts = artifacts;
+            });
 
-                // Send the result.
-                cb(result);
-            }});
+            // Send the result.
+            cb(result);
+        }});
 
     return result;
 }
 
-function _event_table2proto(event_table) {
-    if (!event_table) {
-        return {artifacts: []};
+function _label_table2ArtifactCollectorArgs(label_table) {
+    let result = {artifacts: [], specs: []};
+
+    if (!label_table) {
+        return result;
     }
-    let result = {artifacts: [], parameters: {env: []}};
-    _.each(event_table.artifacts, def=>{
+
+    _.each(label_table.artifacts, def=>{
         result.artifacts.push(def.name);
     });
 
-    _.each(event_table.parameters, (v, k) => {
-        result.parameters.env.push({key: k, value: v});
+    _.each(label_table.specs, (v, k) => {
+        // Skip specs for artifacts that are not present.
+        if(!result.artifacts.includes(k)) {
+            return;
+        }
+
+        let artifact_name = k;
+        let parameters = {env: []};
+        _.each(v, (v, k)=>{
+            parameters.env.push({key: k, value: v});
+        });
+
+        result.specs.push({artifact: artifact_name, parameters: parameters});
     });
 
     return result;
@@ -70,12 +124,12 @@ function _event_table2proto(event_table) {
 
 function table2protobuf(table) {
     let label_events = [];
-    let result = {artifacts: _event_table2proto(table.All)};
+    let result = {artifacts: _label_table2ArtifactCollectorArgs(table.All)};
     _.each(table, (v, k) => {
         if (k !== "All" && !_.isEmpty(v.artifacts)) {
             label_events.push({
                 label: k,
-                artifacts: _event_table2proto(v)});
+                artifacts: _label_table2ArtifactCollectorArgs(v)});
         }
     });
 

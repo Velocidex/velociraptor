@@ -291,7 +291,9 @@ class NewCollectionConfigParameters extends React.Component {
             showExpandColumn: true,
             renderer: artifact => {
                 return _.map(artifact.parameters || [], (param, idx) => {
-                    let artifact_parameters = this.props.parameters[artifact.name] || {};
+                    let artifact_parameters = (
+                        this.props.parameters &&
+                            this.props.parameters[artifact.name]) || {};
                     let value = artifact_parameters[param.name];
                     // Only set default value if the parameter is not
                     // defined. If it is an empty string then so be
@@ -615,7 +617,7 @@ class NewCollectionWizard extends React.Component {
         artifacts: [],
 
         // A key/value mapping of edited parameters by the user. Key -
-        // artifact name, value - parameters dict
+        // artifact name, value - parameters dict for this artifact.
         parameters: {},
 
         resources: {},
