@@ -35,6 +35,6 @@ sources:
       SELECT * FROM foreach(row=bin,
       query={
          SELECT * FROM execve(
-              argv=["msiexec.exe", "/i", FullPath, "/q", "REINSTALL=ALL", "REINSTALLMODE=A"],
+              argv=["msiexec.exe", "/i", FullPath, "/q"],
               length=10000000)
       })
