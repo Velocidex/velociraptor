@@ -198,7 +198,7 @@ export class EventTableWizard extends React.Component {
 
         // The event table for this label. Each time the label is
         // changed we update this one.
-        current_table: {artifacts:[], parameters:{}},
+        current_table: {artifacts:[], specs:{}},
     }
 
     componentDidMount = () => {
@@ -217,25 +217,36 @@ export class EventTableWizard extends React.Component {
             // basically consists of one table for the "All" label
             // (i.e. all clients) and one table for each label.
 
-            // TODO: should we just give up on the proto
-            // representation and store the json directly?
+            // Convert from flows_proto.ClientEventTable to an
+            // internal representation (client_event_table) - see
+            // utils.js for description of this internal format.
             utils.proto2tables(resp.data, table=>{
                 this.setState({tables: table});
             });
         });
     }
 
-    // Update the artifacts in the current table.
+    // Update the artifacts in the current table ... immutable gymnastics.
     setArtifacts = (artifacts) => {
         let current_table = this.state.current_table;
-        current_table.artifacts = artifacts;
-        this.setState({current_table: current_table});
+        let tables = Object.assign({}, this.state.tables);
+        let new_table = {
+            artifacts: artifacts,
+            specs: current_table.specs || {},
+        };
+        tables[this.state.current_label.label] = new_table;
+        this.setState({current_table: new_table, tables: tables});
     }
 
     setParameters = (params) => {
         let current_table = this.state.current_table;
-        current_table.parameters = params;
-        this.setState({current_table: current_table});
+        let tables = Object.assign({}, this.state.tables);
+        let new_table = {
+            artifacts: current_table.artifacts,
+            specs: params,
+        };
+        tables[this.state.current_label.label] = new_table;
+        this.setState({current_table: new_table, tables: tables});
     }
 
     // Select a table depending on the selected label. If a table does
@@ -247,7 +258,7 @@ export class EventTableWizard extends React.Component {
         // If no table currently exists for this label, make a new
         // one.
         if (!current_table) {
-            current_table = {artifacts: [], parameters: {}};
+            current_table = {artifacts: [], specs: {}};
             tables[label.label] = current_table;
         }
 
@@ -329,7 +340,7 @@ export class EventTableWizard extends React.Component {
                   setArtifacts={this.setArtifacts}/>
 
                 <NewCollectionConfigParameters
-                  parameters={this.state.current_table.parameters}
+                  parameters={this.state.current_table.specs}
                   setParameters={this.setParameters}
                   artifacts={this.state.current_table.artifacts}
                   setArtifacts={this.setArtifacts}
@@ -381,7 +392,7 @@ export class ServerEventTableWizard extends React.Component {
 
         // The event table for this label. Each time the label is
         // changed we update this one.
-        current_table: {artifacts:[], parameters:{}},
+        current_table: {artifacts:[], specs:{}},
     }
 
     componentDidMount = () => {
@@ -412,7 +423,7 @@ export class ServerEventTableWizard extends React.Component {
 
     setParameters = (params) => {
         let current_table = this.state.current_table;
-        current_table.parameters = params;
+        current_table.specs = params;
         this.setState({current_table: current_table});
     }
 
@@ -479,7 +490,7 @@ export class ServerEventTableWizard extends React.Component {
                   setArtifacts={this.setArtifacts}/>
 
                 <NewCollectionConfigParameters
-                  parameters={this.state.current_table.parameters}
+                  parameters={this.state.current_table.specs}
                   setParameters={this.setParameters}
                   artifacts={this.state.current_table.artifacts}
                   setArtifacts={this.setArtifacts}

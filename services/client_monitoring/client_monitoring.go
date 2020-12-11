@@ -36,7 +36,7 @@ type ClientEventTable struct {
 	//    artifacts we collect from ALL clients.
 	// 2. LabelEvents is a list of ArtifactCollectorArgs keyed by
 	//    labels. If a client matches the label it will collect
-	//    those artifactd as well.
+	//    those artifacts as well.
 
 	// Each of these ArtifactCollectorArgs cache a list of
 	// VQLCollectorArgs - the actual messages sent to clients

@@ -125,7 +125,7 @@ class InspectRawJson extends React.PureComponent {
 
                     <ButtonGroup className="float-right">
                       <Button variant="secondary"
-                              onClick={() => this.setState({show: false})} >
+                              onClick={this.props.onClose} >
                         Close
                       </Button>
                     </ButtonGroup>
