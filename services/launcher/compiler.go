@@ -183,7 +183,7 @@ func mergeSources(
 			source_result = query_name
 		}
 
-		if source.Precondition != "" {
+		if source_precondition != "" {
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				Name:        name,
 				Description: description,
