@@ -2,6 +2,8 @@ package result_sets_test
 
 import (
 	"io"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
@@ -12,6 +14,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/mysql"
 	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -166,4 +169,67 @@ func (self *ResultSetTestSuite) TestResultSetWriterWriteJSONL() {
 
 func TestResultSetWriter(t *testing.T) {
 	suite.Run(t, &ResultSetTestSuite{})
+}
+
+type ResultSetTestSuiteFileBased struct {
+	ResultSetTestSuite
+	dir string
+}
+
+func (self *ResultSetTestSuiteFileBased) SetupTest() {
+	var err error
+	self.config_obj, err = new(config.Loader).WithFileLoader(
+		"../../http_comms/test_data/server.config.yaml").
+		WithRequiredFrontend().WithWriteback().
+		LoadAndValidate()
+	require.NoError(self.T(), err)
+
+	self.dir, err = ioutil.TempDir("", "file_store_test")
+	assert.NoError(self.T(), err)
+
+	self.config_obj.Datastore.Implementation = "FileBaseDataStore"
+	self.config_obj.Datastore.FilestoreDirectory = self.dir
+	self.config_obj.Datastore.Location = self.dir
+
+	self.client_id = "C.12312"
+	self.flow_id = "F.1232"
+	self.file_store = file_store.GetFileStore(self.config_obj)
+}
+
+func (self *ResultSetTestSuiteFileBased) TearDownTest() {
+	os.RemoveAll(self.dir)
+}
+
+func TestResultSetWriterFileBased(t *testing.T) {
+	suite.Run(t, &ResultSetTestSuiteFileBased{
+		ResultSetTestSuite: ResultSetTestSuite{},
+	})
+}
+
+type ResultSetTestSuiteMysql struct {
+	ResultSetTestSuite
+}
+
+func (self *ResultSetTestSuiteMysql) SetupTest() {
+	var err error
+	self.config_obj, err = new(config.Loader).WithFileLoader(
+		"../../datastore/test_data/mysql.config.yaml").
+		LoadAndValidate()
+	require.NoError(self.T(), err)
+
+	self.client_id = "C.12312"
+	self.flow_id = "F.1232"
+	self.file_store, err = mysql.SetupTest(self.config_obj)
+	if err != nil {
+		self.T().Skipf("Unable to contact mysql - skipping: %v", err)
+	}
+}
+
+func (self *ResultSetTestSuiteMysql) TearDownTest() {
+}
+
+func TestResultSetWriterMysql(t *testing.T) {
+	suite.Run(t, &ResultSetTestSuiteMysql{
+		ResultSetTestSuite: ResultSetTestSuite{},
+	})
 }

@@ -98,11 +98,9 @@ parameters:
     default: |
       // Add all the tools we are going to use to the inventory.
       LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash)
-      FROM parse_csv(filename="/inventory.csv", accessor="me")
-      WHERE log(message="Adding tool " + ToolName)
+       FROM parse_csv(filename="/inventory.csv", accessor="me")
+       WHERE log(message="Adding tool " + ToolName)
 
-      LET Artifacts <= parse_json_array(data=Artifacts)
-      LET Parameters <= parse_json(data=Parameters)
       LET baseline <= SELECT Fqdn FROM info()
 
       // Make the filename safe on windows.
@@ -165,10 +163,8 @@ parameters:
       FROM parse_csv(filename="/inventory.csv", accessor="me")
       WHERE log(message="Adding tool " + ToolName)
 
-      LET Artifacts <= parse_json_array(data=Artifacts)
-      LET Parameters <= parse_json(data=Parameters)
       LET baseline <= SELECT Fqdn, basename(path=Exe) AS Exe FROM info()
-      LET TargetArgs <= parse_json(data=target_args)
+      LET TargetArgs <= target_args
 
       // Make the filename safe on windows.
       LET filename <= regex_replace(
@@ -217,6 +213,8 @@ parameters:
       name: PackageToolsArtifact
       parameters:
        - name: Binaries
+         type: json_array
+         default: '[]'
       sources:
        - query: |
           LET temp <= tempfile()
@@ -262,10 +260,9 @@ parameters:
 sources:
   - query: |
       LET Payload <= tempfile(extension=".zip")
-      LET Artifacts <= parse_json_array(data=artifacts)
       LET Binaries <= SELECT * FROM foreach(
           row={
-             SELECT tools FROM artifact_definitions(names=Artifacts)
+             SELECT tools FROM artifact_definitions(names=artifacts)
           }, query={
              SELECT * FROM foreach(row=tools,
              query={
@@ -301,7 +298,7 @@ sources:
 
       // Create a zip file with the binaries in it.
       LET _ <= SELECT * FROM collect(artifacts="PackageToolsArtifact",
-         output=Payload, args=dict(Binaries=Binaries.Binary),
+         output=Payload, args=dict(PackageToolsArtifact=dict(Binaries=Binaries.Binary)),
          artifact_definitions=PackageToolsArtifact)
 
       LET CollectionArtifact <= SELECT Value FROM switch(
@@ -314,16 +311,23 @@ sources:
 
       LET definitions <= SELECT * FROM chain(
       a = { SELECT name, description, tools, parameters, sources, reports
-            FROM artifact_definitions(names=Artifacts + template)
+            FROM artifact_definitions(names=artifacts + template)
             WHERE name =~ "^(Custom|Packs)\\." AND
               log(message="Adding artifact_definition for " + name) },
 
+      // Create the definition of the Collector artifact.
       b = { SELECT "Collector" AS name, (
-                    dict(name="Artifacts", default=artifacts),
-                    dict(name="Parameters", default=parameters),
+                    dict(name="Artifacts",
+                         default=serialize(format='json', item=artifacts),
+                         type="json_array"),
+                    dict(name="Parameters",
+                         default=serialize(format='json', item=parameters),
+                         type="json"),
                     dict(name="Template", default=template),
                     dict(name="Password", default=Password),
-                    dict(name="target_args", default=target_args),
+                    dict(name="target_args",
+                         default=serialize(format='json', item=target_args),
+                         type="json"),
                 ) AS parameters,
                 (
                   dict(query=CollectionArtifact[0].Value),

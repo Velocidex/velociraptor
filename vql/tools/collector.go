@@ -1,28 +1,30 @@
-// +build server_vql
-
 package tools
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 type CollectPluginArgs struct {
 	Artifacts           []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect."`
-	Output              string      `vfilter:"required,field=output,doc=A path to write the output file on."`
+	Output              string      `vfilter:"optional,field=output,doc=A path to write the output file on."`
 	Report              string      `vfilter:"optional,field=report,doc=A path to write the report on."`
 	Args                vfilter.Any `vfilter:"optional,field=args,doc=Optional parameters."`
 	Password            string      `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
@@ -43,6 +45,7 @@ func (self CollectPlugin) Call(
 		defer close(output_chan)
 
 		var container *reporting.Container
+		var closer func()
 
 		// This plugin allows one to create files, collect
 		// artifacts and also define new artifacts. It is very
@@ -80,54 +83,30 @@ func (self CollectPlugin) Call(
 		if !ok {
 			config_obj = config.GetDefaultConfig()
 		}
+
+		// Get a new artifact repository with extra definitions added.
 		repository, err := getRepository(config_obj, arg.ArtifactDefinitions)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return
 		}
 
-		artifact_definitions := []*artifacts_proto.Artifact{}
-		definitions := []*artifacts_proto.Artifact{}
-		for _, name := range arg.Artifacts {
-			artifact, pres := repository.Get(config_obj, name)
-			if !pres {
-				scope.Log("Artifact %v not known.", name)
-				return
-			}
-			definitions = append(definitions, artifact)
-		}
-
+		// Create the output container
 		if arg.Output != "" {
-			container, err = reporting.NewContainer(arg.Output)
+			container, closer, err = makeContainer(config_obj, scope, repository, arg)
 			if err != nil {
 				scope.Log("collect: %v", err)
 				return
 			}
 
-			scope.Log("Will create container at %s", arg.Output)
-
-			// On exit we create a report.
+			// When we exit, close the container and flush the
+			// name to the output channel.
 			defer func() {
-				container.Close()
+				// Close the container.
+				closer()
 
-				if arg.Report != "" {
-					fd, err := os.OpenFile(
-						arg.Report, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
-					if err != nil {
-						scope.Log("Error creating report: %v", err)
-						return
-					}
-					defer fd.Close()
-
-					err = produceReport(config_obj, container,
-						arg.Template,
-						repository, fd,
-						artifact_definitions,
-						scope, arg)
-					if err != nil {
-						scope.Log("Error creating report: %v", err)
-					}
-				}
+				// Emit the result set for consumption by the
+				// rest of the query.
 				select {
 				case <-ctx.Done():
 					return
@@ -136,120 +115,86 @@ func (self CollectPlugin) Call(
 					Set("Report", arg.Report):
 				}
 			}()
-
-			// Should we encrypt it?
-			if arg.Password != "" {
-				container.Password = arg.Password
-				scope.Log("Will password protect container")
-			}
 		}
 
+		// Create a sub scope to run the new collection in -
+		// based on our existing scope but override the
+		// uploader with the container.
 		builder := services.ScopeBuilderFromScope(scope)
-		if container != nil {
-			builder.Uploader = container
+		builder.Uploader = container
+
+		// When run within an ACL context, copy the ACL
+		// manager to the subscope - otherwise the user can
+		// bypass the ACL manager and get more permissions.
+		acl_manager, ok := artifacts.GetACLManager(scope)
+		if !ok {
+			acl_manager = vql_subsystem.NullACLManager{}
 		}
 
-		for _, name := range arg.Artifacts {
-			artifact, pres := repository.Get(config_obj, name)
-			if !pres {
-				scope.Log("collect: Unknown artifact %v", name)
-				continue
+		launcher, err := services.GetLauncher()
+		if err != nil {
+			scope.Log("collect: %v", err)
+			return
+		}
 
-			}
+		// Compile the request into vql requests protobuf
+		request := getArtifactCollectorArgs(config_obj, repository, scope, arg)
+		vql_requests, err := launcher.CompileCollectorArgs(
+			ctx, config_obj, acl_manager, repository,
+			false, /* should_obfuscate */
+			request)
+		if err != nil {
+			scope.Log("collect: %v", err)
+			return
+		}
 
-			launcher, err := services.GetLauncher()
+		json.Debug(request)
+		json.Debug(vql_requests)
+
+		// Run each collection separately, one after the other.
+		for _, vql_request := range vql_requests {
+
+			// Make a new scope for each artifact.
+			manager, err := services.GetRepositoryManager()
 			if err != nil {
 				scope.Log("collect: %v", err)
 				return
 			}
 
-			err = launcher.EnsureToolsDeclared(
-				ctx, config_obj, artifact)
-			if err != nil {
-				scope.Log("collect: %v %v", name, err)
-				continue
-			}
-
-			artifact_definitions = append(artifact_definitions, artifact)
-			acl_manager, ok := artifacts.GetACLManager(scope)
-			if !ok {
-				acl_manager = vql_subsystem.NullACLManager{}
-			}
-
-			request, err := launcher.CompileCollectorArgs(
-				ctx, config_obj, acl_manager, repository,
-				false, /* should_obfuscate */
-				&flows_proto.ArtifactCollectorArgs{
-					Artifacts: []string{artifact.Name},
-				})
-			if err != nil || len(request) != 1 {
-				scope.Log("collect: Invalid artifact %v: %v",
-					name, err)
-				continue
-			}
-
-			// First set defaults
-			builder.Env = ordereddict.NewDict()
-			for _, e := range request[0].Env {
-				builder.Env.Set(e.Key, e.Value)
-			}
-
-			// Now override provided parameters
-			for _, key := range scope.GetMembers(arg.Args) {
-				if !valid_parameter(key, definitions) {
-					scope.Log("Unknown parameter %s - ignoring", key)
-				}
-
-				value, pres := scope.Associative(arg.Args, key)
-				if pres {
-					builder.Env.Set(key, value)
-				}
-			}
-
-			// Make a new scope for each artifact.
-			// Any uploads go into the container.
-			manager, err := services.GetRepositoryManager()
-			if err != nil {
-				scope.Log("collect: %v %v", name, err)
-				return
+			// Create a new environment for each request.
+			env := ordereddict.NewDict()
+			for _, env_spec := range vql_request.Env {
+				env.Set(env_spec.Key, env_spec.Value)
 			}
 
 			subscope := manager.BuildScope(builder)
+			subscope.AppendVars(env)
+
 			defer subscope.Close()
 
-			for _, query := range request[0].Query {
-				vql, err := vfilter.Parse(query.VQL)
-				if err != nil {
-					subscope.Log("collect: %v", err)
-					return
-				}
-
-				// Dont store un-named queries but run them anyway.
-				if query.Name == "" {
-					for range vql.Eval(ctx, subscope) {
-					}
-					continue
-				} else {
+			// Run each query and store the results in the container
+			for _, query := range vql_request.Query {
+				// Useful to know what is going on with the collection.
+				if query.Name != "" {
 					subscope.Log("Starting collection of %s", query.Name)
 				}
 
-				// If no container is specified, just
-				// push the result to the output
-				// channel.
+				// If there is no container we just
+				// return the rows to our caller.
 				if container == nil {
+					vql, err := vfilter.Parse(query.VQL)
+					if err != nil {
+						scope.Log("collect: %v", err)
+						return
+					}
 					for row := range vql.Eval(ctx, subscope) {
-						select {
-						case <-ctx.Done():
-							return
-						case output_chan <- row:
-						}
+						output_chan <- row
 					}
 					continue
 				}
 
-				// Otherwise push the results into the container.
 				err = container.StoreArtifact(
-					config_obj, ctx, subscope, vql, query, arg.Format)
+					config_obj, ctx, subscope, query, arg.Format)
 				if err != nil {
 					subscope.Log("collect: %v", err)
 					return
@@ -263,6 +208,66 @@ func (self CollectPlugin) Call(
 	}()
 
 	return output_chan
+}
+
+// Creates a container to write the results on. Results are completed
+// when container is closed.
+func makeContainer(
+	config_obj *config_proto.Config,
+	scope *vfilter.Scope,
+	repository services.Repository,
+	arg *CollectPluginArgs) (
+	container *reporting.Container, closer func(), err error) {
+	container, err = reporting.NewContainer(arg.Output)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	scope.Log("Will create container at %s", arg.Output)
+
+	// Should we encrypt it?
+	if arg.Password != "" {
+		container.Password = arg.Password
+		scope.Log("Will password protect container")
+	}
+
+	// On exit we create a report.
+	closer = func() {
+		container.Close()
+
+		if arg.Report != "" {
+			// Produce a report for each of the collected
+			// artifacts.
+			definitions := []*artifacts_proto.Artifact{}
+			for _, name := range arg.Artifacts {
+				artifact, pres := repository.Get(config_obj, name)
+				if !pres {
+					scope.Log("Artifact %v not known.", name)
+					return
+				}
+				definitions = append(definitions, artifact)
+			}
+
+			fd, err := os.OpenFile(
+				arg.Report, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
+			if err != nil {
+				scope.Log("Error creating report: %v", err)
+				return
+			}
+			defer fd.Close()
+
+			err = produceReport(config_obj, container,
+				arg.Template,
+				repository, fd,
+				definitions,
+				scope, arg)
+			if err != nil {
+				scope.Log("Error creating report: %v", err)
+			}
+		}
+	}
+
+	return container, closer, nil
 }
 
 func getRepository(
@@ -339,16 +344,146 @@ func (self CollectPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 	}
 }
 
-// Check if the user specified an unknown parameter.
-func valid_parameter(param_name string, definitions []*artifacts_proto.Artifact) bool {
-	for _, definition := range definitions {
-		for _, param := range definition.Parameters {
-			if param.Name == param_name {
-				return true
-			}
-		}
+// Parse the plugin arg into an artifact collector arg that can be compiled into VQL requests
+func getArtifactCollectorArgs(
+	config_obj *config_proto.Config,
+	repository services.Repository,
+	scope *vfilter.Scope,
+	arg *CollectPluginArgs) *flows_proto.ArtifactCollectorArgs {
+	request := &flows_proto.ArtifactCollectorArgs{
+		Artifacts: arg.Artifacts,
 	}
-	return false
+
+	addSpecProtobuf(config_obj, repository, scope, arg.Args, request)
+	return request
+}
+
+// Builds a spec protobuf from the arg.Args that was passed. Note that
+// artifact parameters are always strings, encoded according to the
+// parameter type.
+func addSpecProtobuf(
+	config_obj *config_proto.Config,
+	repository services.Repository,
+	scope *vfilter.Scope, spec vfilter.Any, request *flows_proto.ArtifactCollectorArgs) {
+
+	var err error
+
+	for _, name := range scope.GetMembers(spec) {
+		artifact_definitions, pres := repository.Get(config_obj, name)
+		if !pres {
+			// Artifact not known
+			continue
+		}
+
+		spec_proto := &flows_proto.ArtifactSpec{
+			Artifact:   name,
+			Parameters: &flows_proto.ArtifactParameters{},
+		}
+
+		spec_parameters, pres := scope.Associative(spec, name)
+		if !pres {
+			continue
+		}
+
+		// The parameters dict provided in the spec is a
+		// key/value dict with key being the parameter name
+		// and value being either a string or a value which
+		// will be converted to a string according to the
+		// parameter type.
+		for _, parameter_definition := range artifact_definitions.Parameters {
+			// Check if the spec specifies a value for this parameter
+			value_any, pres := scope.Associative(
+				spec_parameters, parameter_definition.Name)
+			if !pres {
+				continue
+			}
+
+			value_str, is_str := value_any.(string)
+
+			// It is not a string, convert to
+			// string according to the parameter
+			// type
+			switch parameter_definition.Type {
+			case "", "string":
+				if !is_str {
+					scope.Log("Parameter %v should be a string",
+						parameter_definition.Name)
+					continue
+				}
+			case "int", "int64":
+				value_str = fmt.Sprintf("%v", value_any)
+
+			case "bool":
+				if is_str {
+					switch value_str {
+					case "Y", "TRUE", "true", "True":
+						value_str = "Y"
+					default:
+						value_str = ""
+					}
+				} else {
+					if scope.Bool(value_any) {
+						value_str = "Y"
+					} else {
+						value_str = ""
+					}
+				}
+
+			case "choices":
+				if !is_str {
+					scope.Log("Parameter %v should be a string",
+						parameter_definition.Name)
+					continue
+				}
+
+				valid_choice := false
+				for _, choice := range parameter_definition.Choices {
+					if choice == value_str {
+						valid_choice = true
+					}
+				}
+
+				if !valid_choice {
+					scope.Log("Invalid choice for parameter %v: %v",
+						parameter_definition.Name, value_str)
+				}
+
+			case "timestamp":
+				if !is_str {
+					value_time, err := utils.AnyToTime(value_any)
+					if err != nil {
+						scope.Log("Invalid CSV for %v",
+							parameter_definition.Name)
+						continue
+					}
+					value_str = value_time.String()
+				}
+
+			case "csv":
+				if !is_str {
+					value_str, err = csv.EncodeToCSV(scope, value_any)
+					if err != nil {
+						scope.Log("Invalid CSV for %v",
+							parameter_definition.Name)
+						continue
+					}
+				}
+
+			case "json", "json_array":
+				if !is_str {
+					value_str = json.StringIndent(value_any)
+				}
+			}
+
+			spec_proto.Parameters.Env = append(spec_proto.Parameters.Env,
+				&actions_proto.VQLEnv{
+					Key:   parameter_definition.Name,
+					Value: value_str,
+				})
+		}
+
+		request.Specs = append(request.Specs, spec_proto)
+	}
 }
 
 func init() {

@@ -1,0 +1,138 @@
+{
+ "ArtifactCollectorArgs": {
+  "artifacts": [
+   "Demo.Plugins.GUI"
+  ],
+  "specs": [
+   {
+    "artifact": "Demo.Plugins.GUI",
+    "parameters": {
+     "env": [
+      {
+       "key": "ChoiceSelector",
+       "value": "InvalidChoice"
+      },
+      {
+       "key": "Flag"
+      },
+      {
+       "key": "Flag2"
+      },
+      {
+       "key": "OffFlag",
+       "value": "Y"
+      },
+      {
+       "key": "StartDate",
+       "value": "2020-12-15 06:50:35 +0000 UTC"
+      },
+      {
+       "key": "StartDate2",
+       "value": "2020-12-15 06:50:35 +0000 UTC"
+      },
+      {
+       "key": "StartDate3",
+       "value": "2020-12-15 06:50:35 +0000 UTC"
+      },
+      {
+       "key": "CSVData",
+       "value": "Foo,Baz\nBar,Baz\nBar2,Baz2\n"
+      },
+      {
+       "key": "JSONData",
+       "value": "[\n {\n  \"Foo\": \"Bar\",\n  \"Baz\": \"Baz\"\n },\n {\n  \"Foo\": \"Bar2\",\n  \"Baz\": \"Baz2\"\n }\n]"
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "vql_requests": [
+  {
+   "env": [
+    {
+     "key": "ChoiceSelector",
+     "value": "InvalidChoice"
+    },
+    {
+     "key": "Flag"
+    },
+    {
+     "key": "Flag2"
+    },
+    {
+     "key": "Flag3",
+     "value": "Y"
+    },
+    {
+     "key": "OffFlag",
+     "value": "Y"
+    },
+    {
+     "key": "StartDate",
+     "value": "2020-12-15 06:50:35 +0000 UTC"
+    },
+    {
+     "key": "StartDate2",
+     "value": "2020-12-15 06:50:35 +0000 UTC"
+    },
+    {
+     "key": "StartDate3",
+     "value": "2020-12-15 06:50:35 +0000 UTC"
+    },
+    {
+     "key": "CSVData",
+     "value": "Foo,Baz\nBar,Baz\nBar2,Baz2\n"
+    },
+    {
+     "key": "CSVData2",
+     "value": "Column1,Column2\nA,B\nC,D\n"
+    },
+    {
+     "key": "JSONData",
+     "value": "[\n {\n  \"Foo\": \"Bar\",\n  \"Baz\": \"Baz\"\n },\n {\n  \"Foo\": \"Bar2\",\n  \"Baz\": \"Baz2\"\n }\n]"
+    },
+    {
+     "key": "JSONData2",
+     "value": "[{\"foo\": \"bar\"}]\n"
+    }
+   ],
+   "Query": [
+    {
+     "VQL": "LET Flag \u003c= get(field='Flag') =~ '^(Y|TRUE|YES|OK)$' "
+    },
+    {
+     "VQL": "LET Flag2 \u003c= get(field='Flag2') =~ '^(Y|TRUE|YES|OK)$' "
+    },
+    {
+     "VQL": "LET Flag3 \u003c= get(field='Flag3') =~ '^(Y|TRUE|YES|OK)$' "
+    },
+    {
+     "VQL": "LET OffFlag \u003c= get(field='OffFlag') =~ '^(Y|TRUE|YES|OK)$' "
+    },
+    {
+     "VQL": "LET StartDate \u003c= timestamp(epoch=StartDate)"
+    },
+    {
+     "VQL": "LET StartDate2 \u003c= timestamp(epoch=StartDate2)"
+    },
+    {
+     "VQL": "LET StartDate3 \u003c= timestamp(epoch=StartDate3)"
+    },
+    {
+     "VQL": "LET CSVData \u003c= SELECT * FROM parse_csv(filename=CSVData, accessor='data')"
+    },
+    {
+     "VQL": "LET CSVData2 \u003c= SELECT * FROM parse_csv(filename=CSVData2, accessor='data')"
+    },
+    {
+     "VQL": "LET JSONData \u003c= parse_json(data=JSONData)"
+    },
+    {
+     "VQL": "LET JSONData2 \u003c= parse_json(data=JSONData2)"
+    }
+   ],
+   "max_row": 1000
+  }
+ ]
+}

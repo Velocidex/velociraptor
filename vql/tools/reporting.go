@@ -1,5 +1,3 @@
-// +build server_vql
-
 package tools
 
 import (
@@ -14,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/server"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -129,11 +126,15 @@ func produceReport(
 	return err
 }
 
+type SourcePluginArgs struct {
+	Artifact string `vfilter:"optional,field=artifact,doc=The name of the artifact collection to fetch"`
+	Source   string `vfilter:"optional,field=source,doc=An optional named source within the artifact"`
+}
+
 // A special implementation of the source() plugin which retrieves
 // data stored in reporting containers. This only exists in generating
 // reports from zip files.
 type ContainerSourcePlugin struct {
-	server.SourcePlugin
 	Container *reporting.Container
 }
 
@@ -150,8 +151,8 @@ func (self *ContainerSourcePlugin) Call(
 		// parameters. This allows its use to be more concise in
 		// reports etc where many parameters can be inferred from
 		// context.
-		arg := &server.SourcePluginArgs{}
-		server.ParseSourceArgsFromScope(arg, scope)
+		arg := &SourcePluginArgs{}
+		ParseSourceArgsFromScope(arg, scope)
 
 		// Allow the plugin args to override the environment scope.
 		err := vfilter.ExtractArgs(scope, args, arg)
@@ -177,8 +178,16 @@ func (self *ContainerSourcePlugin) Call(
 	return output_chan
 }
 
+func (self ContainerSourcePlugin) Info(
+	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "source",
+		Doc:     "Retrieve rows from stored result sets. This is a one stop show for retrieving stored result set for post processing.",
+		ArgType: type_map.AddType(scope, &SourcePluginArgs{}),
+	}
+}
+
 type ArchiveSourcePlugin struct {
-	server.SourcePlugin
 	Archive *reporting.Archive
 }
 
@@ -195,8 +204,8 @@ func (self *ArchiveSourcePlugin) Call(
 		// parameters. This allows its use to be more concise in
 		// reports etc where many parameters can be inferred from
 		// context.
-		arg := &server.SourcePluginArgs{}
-		server.ParseSourceArgsFromScope(arg, scope)
+		arg := &SourcePluginArgs{}
+		ParseSourceArgsFromScope(arg, scope)
 
 		// Allow the plugin args to override the environment scope.
 		err := vfilter.ExtractArgs(scope, args, arg)
@@ -220,4 +229,20 @@ func (self *ArchiveSourcePlugin) Call(
 	}()
 
 	return output_chan
+}
+
+func (self ArchiveSourcePlugin) Info(
+	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "source",
+		Doc:     "Retrieve rows from stored result sets. This is a one stop show for retrieving stored result set for post processing.",
+		ArgType: type_map.AddType(scope, &SourcePluginArgs{}),
+	}
+}
+
+func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
+	artifact_name, pres := scope.Resolve("ArtifactName")
+	if pres {
+		arg.Artifact = artifact_name.(string)
+	}
 }

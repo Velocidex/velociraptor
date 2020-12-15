@@ -81,7 +81,7 @@ var (
 
 	artifact_command_collect_name = artifact_command_collect.Arg(
 		"artifact_name", "The artifact name to collect.").
-		Required().HintAction(listArtifactsHint).Strings()
+		Required().HintAction(listArtifactsHint).String()
 
 	artifact_command_collect_args = artifact_command_collect.Flag(
 		"args", "Artifact args.").Strings()
@@ -143,6 +143,8 @@ func doArtifactCollect() {
 		}
 	}
 
+	collect_args = ordereddict.NewDict().Set(*artifact_command_collect_name, collect_args)
+
 	manager, err := services.GetRepositoryManager()
 	kingpin.FatalIfError(err, "GetRepositoryManager")
 
@@ -151,7 +153,7 @@ func doArtifactCollect() {
 		ACLManager: vql_subsystem.NullACLManager{},
 		Logger:     log.New(&LogWriter{config_obj}, " ", 0),
 		Env: ordereddict.NewDict().
-			Set("Artifacts", *artifact_command_collect_name).
+			Set("Artifacts", []string{*artifact_command_collect_name}).
 			Set("Output", *artifact_command_collect_output).
 			Set("Password", *artifact_command_collect_output_password).
 			Set("Report", *artifact_command_collect_report).

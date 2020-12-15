@@ -18,8 +18,11 @@
 package csv
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"io"
+	"reflect"
 	"sync"
 	"time"
 
@@ -149,6 +152,7 @@ func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) *CSV
 
 	return result
 }
+
 func GetCSVWriter(scope *vfilter.Scope, fd api.FileWriter) (*CSVWriter, error) {
 	// Seek to the end of the file.
 	length, err := fd.Size()
@@ -156,4 +160,25 @@ func GetCSVWriter(scope *vfilter.Scope, fd api.FileWriter) (*CSVWriter, error) {
 		return nil, err
 	}
 	return GetCSVAppender(scope, fd, length == 0), nil
+}
+
+func EncodeToCSV(scope *vfilter.Scope, v interface{}) (string, error) {
+	slice := reflect.ValueOf(v)
+	if slice.Type().Kind() != reflect.Slice {
+		return "", errors.New("EncodeToCSV - should be a list of rows")
+	}
+
+	buffer := &bytes.Buffer{}
+	writer := GetCSVAppender(scope, buffer, true)
+
+	for i := 0; i < slice.Len(); i++ {
+		value := slice.Index(i).Interface()
+		if value == nil {
+			continue
+		}
+		writer.Write(value)
+	}
+	writer.Close()
+
+	return buffer.String(), nil
 }

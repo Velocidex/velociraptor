@@ -96,9 +96,13 @@ func (self *Container) StoreArtifact(
 	config_obj *config_proto.Config,
 	ctx context.Context,
 	scope *vfilter.Scope,
-	vql *vfilter.VQL,
 	query *actions_proto.VQLRequest,
 	format string) error {
+
+	vql, err := vfilter.Parse(query.VQL)
+	if err != nil {
+		return err
+	}
 
 	artifact_name := query.Name
 

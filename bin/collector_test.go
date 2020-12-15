@@ -132,9 +132,15 @@ sources:
 
 	fd.Truncate()
 	fd.Write([]byte(`name: Custom.TestArtifact
+parameters:
+- name: MyParameter
+  default: DefaultMyParameter
+- name: MyDefaultParameter
+  default: DefaultMyDefaultParameter
 sources:
  - query: |
-     SELECT * FROM Artifact.Custom.TestArtifactDependent()
+     SELECT *, MyParameter, MyDefaultParameter
+     FROM Artifact.Custom.TestArtifactDependent()
 
 reports:
  - type: HTML
@@ -219,6 +225,7 @@ reports:
 		"artifacts", "collect", "Server.Utils.CreateCollector",
 		"--args", "OS=" + OS_TYPE,
 		"--args", "artifacts=[\"Custom.TestArtifact\"]",
+		"--args", "parameters={\"Custom.TestArtifact\":{\"MyParameter\": \"MyValue\"}}",
 		"--args", "target=ZIP",
 		"--args", "opt_admin=N",
 		"--args", "opt_prompt=N",
@@ -262,6 +269,13 @@ reports:
 	}
 
 	// Now just run the executable.
+	fmt.Printf("Config show\n")
+	cmd = exec.Command(output_executable, "config", "show")
+	out, err = cmd.CombinedOutput()
+	fmt.Println(string(out))
+	require.NoError(self.T(), err)
+
+	// Now just run the executable.
 	cmd = exec.Command(output_executable)
 	out, err = cmd.CombinedOutput()
 	fmt.Println(string(out))
@@ -302,6 +316,12 @@ reports:
 
 	data, err := ioutil.ReadAll(html_fd)
 	assert.NoError(self.T(), err)
+
+	// Ensure the report contains the data that was passed.
+	assert.Contains(self.T(), string(data), "MyValue")
+
+	// And the default parameter is still there.
+	assert.Contains(self.T(), string(data), "DefaultMyDefaultParameter")
 
 	assert.Contains(self.T(), string(data), "Foobar")
 	assert.Contains(self.T(), string(data), "This is the report")

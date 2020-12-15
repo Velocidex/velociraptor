@@ -453,7 +453,7 @@ func initializeDatabase(
 	}
 
 	_, err = db.Exec(`create table if not exists
-    datastore(id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    datastore(-- id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
               path text,
               path_hash BLOB(20),
               name varchar(256),
@@ -472,6 +472,20 @@ func writeContentToMysqlRow(
 	urn string,
 	serialized_content []byte) (err error) {
 
+	for i := 0; i < 10; i++ {
+		err = writeContentToMysqlRowOneTry(config_obj, urn, serialized_content)
+		if err == nil {
+			return err
+		}
+	}
+
+	return err
+}
+
+func writeContentToMysqlRowInTransaction(query string, args ...interface{}) error {
+	_, err := db.Exec(query, args...)
+	return err
+
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
@@ -488,19 +502,21 @@ func writeContentToMysqlRow(
 		err = tx.Commit()
 	}()
 
-	replace, err := tx.Prepare(`
-REPLACE INTO datastore (path, path_hash, name, data, timestamp) VALUES (?, ?, ?, ?, ?)`)
+	replace, err := tx.Prepare(query)
 	if err != nil {
 		return err
 	}
 	defer replace.Close()
 
-	insert, err := tx.Prepare(`
-INSERT IGNORE INTO datastore (path, path_hash, name, timestamp) VALUES (?, ?, ?, ?)`)
-	if err != nil {
-		return err
-	}
-	defer insert.Close()
+	_, err = replace.Exec(args...)
+	return err
+
+}
+
+func writeContentToMysqlRowOneTry(
+	config_obj *config_proto.Config,
+	urn string,
+	serialized_content []byte) (err error) {
 
 	components := utils.SplitComponents(urn)
 	for len(components) > 0 {
@@ -510,7 +526,8 @@ INSERT IGNORE INTO datastore (path, path_hash, name, timestamp) VALUES (?, ?, ?,
 		hash := string(hash_array[:])
 
 		if serialized_content != nil {
-			_, err := replace.Exec(
+			err := writeContentToMysqlRowInTransaction(`
+REPLACE INTO datastore (path, path_hash, name, data, timestamp) VALUES (?, ?, ?, ?, ?)`,
 				dir_path, hash, name, serialized_content, getTimestamp())
 			if err != nil {
 				return err
@@ -519,7 +536,9 @@ INSERT IGNORE INTO datastore (path, path_hash, name, timestamp) VALUES (?, ?, ?,
 			// If we just want to touch directories we do
 			// not want to over write existing rows
 		} else {
-			_, err := insert.Exec(dir_path, hash, name, getTimestamp())
+			err := writeContentToMysqlRowInTransaction(`
+INSERT IGNORE INTO datastore (path, path_hash, name, timestamp) VALUES (?, ?, ?, ?)`,
+				dir_path, hash, name, getTimestamp())
 			if err != nil {
 				return err
 			}

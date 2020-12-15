@@ -1,0 +1,9 @@
+{
+ "zip_contents": {
+  "Custom.TestArtifactDependent.json": [
+   {
+    "FooVar": "HelloFooVar"
+   }
+  ]
+ }
+}

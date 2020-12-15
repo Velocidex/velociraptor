@@ -162,7 +162,17 @@ func (self *FileStoreTestSuite) TestFileReadWrite() {
 	assert.Equal(self.T(), n, 11)
 	assert.Equal(self.T(), "EXTRA EXTRA", string(buff[:n]))
 
-	// Seek to middle of first chunk and read some data.
+	// Seek to middle of first chunk and read within first chunk.
+	_, err = reader.Seek(2, io.SeekStart)
+	assert.NoError(self.T(), err)
+
+	buff = make([]byte, 2)
+	n, err = reader.Read(buff)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), n, len(buff))
+	assert.Equal(self.T(), "me", string(buff[:n]))
+
+	// Seek to middle of first chunk and read some data across to next chunk.
 	_, err = reader.Seek(2, io.SeekStart)
 	assert.NoError(self.T(), err)
 
