@@ -7,7 +7,7 @@ description: |
     
     We can look for evidence of this dll, by first performing a YARA search on the MFT across all drives, then applying an addition Fireye-supplied rule against the file found via MFT.
     
-author: Wes Lambert - @therealwlambrt
+author: Wes Lambert - @therealwlambert
 
 tools:
   - name: SunburstYARARules
