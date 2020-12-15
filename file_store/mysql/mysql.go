@@ -299,8 +299,6 @@ func (self *SqlReader) Read(buff []byte) (int, error) {
 		err := db.QueryRow(`SELECT data from filestore WHERE id=? AND part = ?`,
 			self.file_id, self.part+1).Scan(&blob)
 
-		self.offset = 0
-
 		// No more parts available right now.
 		if err == sql.ErrNoRows {
 			break
@@ -310,6 +308,7 @@ func (self *SqlReader) Read(buff []byte) (int, error) {
 			return offset, err
 		}
 
+		self.offset = 0
 		self.current_chunk, err = snappy.Decode(nil, blob)
 		if err != nil {
 			return offset, err
@@ -319,7 +318,8 @@ func (self *SqlReader) Read(buff []byte) (int, error) {
 		self.part += 1
 	}
 
-	// We did not fill the buffer at all.
+	// We did not fill the buffer at all - this is an empty read
+	// so we return EOF.
 	if offset == 0 {
 		return 0, io.EOF
 	}

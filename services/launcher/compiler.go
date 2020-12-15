@@ -85,8 +85,8 @@ func Compile(config_obj *config_proto.Config,
 
 		case "bool":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= get(field='%v') =~ '^(Y|TRUE|YES|OK)$' ",
-					escaped_name, name),
+				VQL: fmt.Sprintf("LET %v <= get(field='%v') = TRUE OR get(field='%v') =~ '^(Y|TRUE|YES|OK)$' ",
+					escaped_name, name, name),
 			})
 
 		}

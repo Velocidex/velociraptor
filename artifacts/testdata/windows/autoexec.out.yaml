@@ -1,4 +1,4 @@
-SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe', hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153', filename='autorunsc_x64.exe') FROM scope()[
+SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe', hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153', filename='autorunsc_x64.exe'), inventory_add(tool='Autorun_x86', url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe', hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153', filename='autorunsc_x86.exe') FROM scope()[
  {
   "inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe', hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153', filename='autorunsc_x64.exe')": {
    "name": "Autorun_amd64",
@@ -11,6 +11,20 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
    "serve_path": "",
    "filestore_path": "",
    "filename": "autorunsc_x64.exe",
+   "hash": "083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153",
+   "materialize": false
+  },
+  "inventory_add(tool='Autorun_x86', url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe', hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153', filename='autorunsc_x86.exe')": {
+   "name": "Autorun_x86",
+   "url": "https://storage.googleapis.com/go.velocidex.com/autorunsc.exe",
+   "github_project": "",
+   "github_asset_regex": "",
+   "serve_locally": false,
+   "admin_override": true,
+   "serve_url": "",
+   "serve_path": "",
+   "filestore_path": "",
+   "filename": "autorunsc_x86.exe",
    "hash": "083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153",
    "materialize": false
   }

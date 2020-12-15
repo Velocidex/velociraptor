@@ -10,6 +10,8 @@
     "Col1": "Value3",
     "Col2": "Value4"
    }
-  ]
+  ],
+  "BoolValue": true,
+  "BoolValue2": "Y"
  }
 ]
