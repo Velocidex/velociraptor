@@ -357,7 +357,7 @@ func getArtifactCollectorArgs(
 		Artifacts: arg.Artifacts,
 	}
 
-	err := addSpecProtobuf(config_obj, repository, scope, arg.Args, request)
+	err := AddSpecProtobuf(config_obj, repository, scope, arg.Args, request)
 	if err != nil {
 		return nil, err
 	}
@@ -367,7 +367,7 @@ func getArtifactCollectorArgs(
 // Builds a spec protobuf from the arg.Args that was passed. Note that
 // artifact parameters are always strings, encoded according to the
 // parameter type.
-func addSpecProtobuf(
+func AddSpecProtobuf(
 	config_obj *config_proto.Config,
 	repository services.Repository,
 	scope *vfilter.Scope, spec vfilter.Any, request *flows_proto.ArtifactCollectorArgs) error {

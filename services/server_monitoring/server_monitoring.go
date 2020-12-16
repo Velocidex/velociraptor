@@ -6,13 +6,11 @@ package server_monitoring
 
 import (
 	"context"
-	"errors"
 	"sync"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
-	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -22,30 +20,27 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 var (
-	GlobalEventTable = &EventTable{
-		Done: make(chan bool),
-	}
-
 	DefaultServerMonitoringTable = flows_proto.ArtifactCollectorArgs{
-		Artifacts:  []string{"Server.Monitor.Health"},
-		Parameters: &flows_proto.ArtifactParameters{},
+		Artifacts: []string{"Server.Monitor.Health"},
 	}
 )
 
 type EventTable struct {
 	mu sync.Mutex
 
-	// This will be closed to signal we need to abort the current
-	// event queries.
-	Done   chan bool
-	Scopes []*vfilter.Scope
+	config_obj *config_proto.Config
 
-	wg sync.WaitGroup
+	cancel func()
+
+	wg *sync.WaitGroup
+
+	Clock utils.Clock
 }
 
 func (self *EventTable) Close() {
@@ -53,40 +48,33 @@ func (self *EventTable) Close() {
 	defer self.mu.Unlock()
 
 	// Close the old table.
-	if self.Done != nil {
-		close(self.Done)
+	if self.cancel != nil {
+		self.cancel()
 	}
 
 	// Wait here until all the old queries are cancelled.
 	self.wg.Wait()
-
-	// Clean up.
-	for _, scope := range self.Scopes {
-		scope.Close()
-	}
-
-	self.Scopes = []*vfilter.Scope{}
 }
 
 func (self *EventTable) Update(
 	config_obj *config_proto.Config,
-	arg *flows_proto.ArtifactCollectorArgs) error {
+	request *flows_proto.ArtifactCollectorArgs) error {
 	self.Close()
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	// Now create new queries.
-	self.Done = make(chan bool)
+	self.wg = &sync.WaitGroup{}
+	self.cancel = nil
 
-	// Make a context for all the VQL queries.
-	new_ctx, cancel := context.WithCancel(context.Background())
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Info("server_monitoring: Updating monitoring table")
 
-	// Cancel the context when the cancel channel is closed.
-	go func() {
-		<-self.Done
-		cancel()
-	}()
+	// Compile the ArtifactCollectorArgs into a list of requests.
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return err
+	}
 
 	manager, err := services.GetRepositoryManager()
 	if err != nil {
@@ -98,127 +86,142 @@ func (self *EventTable) Update(
 		return err
 	}
 
-	for _, name := range arg.Artifacts {
-		artifact, pres := repository.Get(config_obj, name)
-		if !pres {
-			// If the artifact is custom and was removed
-			// then this is not a fatal error. We should
-			// issue a warning and move on.
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Warn("<red>Server Artifact Manager</>: Unknown artifact " +
-				name + " please remove it from the server monitoring tables.")
-			continue
-		}
+	// No ACLs enforced on server events.
+	acl_manager := vql_subsystem.NullACLManager{}
 
-		// Server monitoring artifacts run with full admin
-		// permissions.
-		scope := manager.BuildScope(
-			services.ScopeBuilder{
-				Config:     config_obj,
-				ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
-				Logger: logging.NewPlainLogger(config_obj,
-					&logging.FrontendComponent),
-			})
+	// Make a context for all the VQL queries.
+	ctx, cancel := context.WithCancel(context.Background())
+	self.cancel = cancel
 
-		// Closing the scope is deferred to table close.
+	// Compile the collection request into multiple
+	// VQLCollectorArgs - each will be collected in a different
+	// goroutine.
+	vql_requests, err := launcher.CompileCollectorArgs(
+		ctx, config_obj, acl_manager, repository,
+		false, /* should_obfuscate */
+		request)
+	if err != nil {
+		return err
+	}
 
-		// Build env for this query.
-		env := ordereddict.NewDict()
+	// Now store the monitoring table on disk.
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
 
-		// First set param default.
-		for _, param := range artifact.Parameters {
-			env.Set(param.Name, param.Default)
-		}
+	err = db.SetSubject(config_obj, constants.ServerMonitoringFlowURN, request)
+	if err != nil {
+		return err
+	}
 
-		// Then override with the request environment.
-		if arg.Parameters != nil {
-			for _, env_spec := range arg.Parameters.Env {
-				env.Set(env_spec.Key, env_spec.Value)
-			}
-		}
-
-		// A new scope for each artifact - but shared scope
-		// for all sources.
-		scope.AppendVars(env)
-
-		// Make sure we do not consume too many resources.
-		vfilter.InstallThrottler(
-			scope, vfilter.NewTimeThrottler(float64(50)))
-
-		// Keep track of all the scopes so we can close them.
-		self.Scopes = append(self.Scopes, scope)
-
-		// Run each source concurrently.
-		for _, source := range artifact.Sources {
-			err := self.RunQuery(new_ctx, config_obj,
-				scope, name, source)
-			if err != nil {
-				return err
-			}
+	// Run each collection separately in parallel.
+	for _, vql_request := range vql_requests {
+		err = self.RunQuery(ctx, config_obj, self.wg, vql_request)
+		if err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
+// Scan the VQLCollectorArgs for a name.
+func getArtifactName(vql_request *actions_proto.VQLCollectorArgs) string {
+	for _, query := range vql_request.Query {
+		if query.Name != "" {
+			return query.Name
+		}
+	}
+	return ""
+}
+
 func (self *EventTable) RunQuery(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
-	artifact_name string,
-	source *artifacts_proto.ArtifactSource) error {
+	wg *sync.WaitGroup,
+	vql_request *actions_proto.VQLCollectorArgs) error {
 
-	// Parse all the source VQL to ensure they are valid before we
-	// try to run them.
-	vqls, err := vfilter.MultiParse(source.Query)
+	manager, err := services.GetRepositoryManager()
 	if err != nil {
 		return err
 	}
 
-	for idx, vql := range vqls {
-		if (idx < len(vqls)-1 && vql.Let == "") ||
-			(idx == len(vqls)-1 && vql.Let != "") {
-			return errors.New(
-				"Invalid artifact " + artifact_name +
-					": All Queries in a source " +
-					"must be LET queries, except for the " +
-					"final one.")
-		}
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
 	}
 
-	self.wg.Add(1)
+	builder := services.ScopeBuilder{
+		Config: config_obj,
+		// Disable ACLs on the client.
+		ACLManager: vql_subsystem.NullACLManager{},
+		Env:        ordereddict.NewDict(),
+		Repository: repository,
+		Logger:     logging.NewPlainLogger(config_obj, &logging.FrontendComponent),
+	}
 
+	for _, env_spec := range vql_request.Env {
+		builder.Env.Set(env_spec.Key, env_spec.Value)
+	}
+
+	scope := manager.BuildScope(builder)
+	/*	vfilter.InstallThrottler(
+		scope, vfilter.NewTimeThrottler(float64(50)))
+	*/
+	// Create a result set writer for the output.
+	opts := vql_subsystem.EncOptsFromScope(scope)
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	artifact_name := getArtifactName(vql_request)
+	scope.Log("server_monitoring: Collecting %v", artifact_name)
+
+	path_manager := artifacts.NewArtifactPathManager(
+		config_obj, "", "", artifact_name)
+	path_manager.Clock = self.Clock
+
+	rs_writer, err := result_sets.NewResultSetWriter(
+		file_store_factory, path_manager, opts, false /* truncate */)
+	if err != nil {
+		scope.Close()
+		return err
+	}
+
+	wg.Add(1)
 	go func() {
-		defer self.wg.Done()
-
-		if source.Name != "" {
-			artifact_name = artifact_name + "/" + source.Name
-		}
-
-		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Info("Collecting Server Event Artifact: %s", artifact_name)
-
-		path_manager := artifacts.NewArtifactPathManager(
-			config_obj, "", "", artifact_name)
-
-		// Append events to previous ones.
-		opts := vql_subsystem.EncOptsFromScope(scope)
-		file_store_factory := file_store.GetFileStore(config_obj)
-		rs_writer, err := result_sets.NewResultSetWriter(
-			file_store_factory, path_manager, opts, false /* truncate */)
-		if err != nil {
-			logger.Error("NewResultSetWriter: %v", err)
-			return
-		}
+		defer wg.Done()
 		defer rs_writer.Close()
+		defer scope.Close()
+		defer scope.Log("server_monitoring: Finished collecting %v", artifact_name)
 
-		for _, vql := range vqls {
-			for row := range vql.Eval(ctx, scope) {
-				rs_writer.Write(vfilter.RowToDict(ctx, scope, row).
-					Set("_ts", time.Now().Unix()))
-				rs_writer.Flush()
+		for _, query := range vql_request.Query {
+			vql, err := vfilter.Parse(query.VQL)
+			if err != nil {
+				scope.Log("server_monitoring: %v", err)
+				return
+			}
+
+			eval_chan := vql.Eval(ctx, scope)
+
+		one_query:
+			for {
+				select {
+				case <-ctx.Done():
+					return
+
+				case row, ok := <-eval_chan:
+					if !ok {
+						break one_query
+					}
+
+					rs_writer.Write(vfilter.RowToDict(ctx, scope, row).
+						Set("_ts", self.Clock.Now().Unix()))
+					rs_writer.Flush()
+
+				}
 			}
 		}
+
 	}()
 
 	return nil
@@ -235,31 +238,25 @@ func StartServerMonitoringService(
 		return err
 	}
 
-	artifacts := &flows_proto.ArtifactCollectorArgs{
-		Artifacts:  []string{},
-		Parameters: &flows_proto.ArtifactParameters{},
-	}
+	artifacts := &flows_proto.ArtifactCollectorArgs{}
 	err = db.GetSubject(
 		config_obj,
 		constants.ServerMonitoringFlowURN,
 		artifacts)
-	if err != nil {
+	if err != nil || artifacts.Artifacts == nil {
 		// No monitoring rules found, set defaults.
 		artifacts = proto.Clone(
 			&DefaultServerMonitoringTable).(*flows_proto.ArtifactCollectorArgs)
-		err = db.SetSubject(
-			config_obj, constants.ServerMonitoringFlowURN, artifacts)
-		if err != nil {
-			return err
-		}
 	}
 
 	logger := logging.GetLogger(
 		config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> Server Monitoring Service")
+	logger.Info("server_monitoring: <green>Starting</> Server Monitoring Service")
 
 	manager := &EventTable{
-		Done: make(chan bool),
+		config_obj: config_obj,
+		wg:         &sync.WaitGroup{},
+		Clock:      utils.RealClock{},
 	}
 
 	wg.Add(1)

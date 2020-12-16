@@ -35,12 +35,6 @@ message ArtifactCollectorArgs {
             friendly_name: "Launch",
         }];
 
-    // Deprecated... use Specs instead.
-    ArtifactParameters parameters = 5 [(sem_type) = {
-            description: "Parameters to the artifacts.",
-            friendly_name: "Parameters",
-        }];
-
     // New way of specifying artifacts.
     repeated ArtifactSpec specs = 24;
 

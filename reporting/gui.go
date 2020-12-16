@@ -397,7 +397,6 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 		for _, vql := range multi_vql {
 			// Replace the previously calculated json file.
 			opts := vql_subsystem.EncOptsFromScope(self.Scope)
-			path_manager := self.path_manager.NewQueryStorage()
 
 			// Ignore LET queries but still run them.
 			if vql.Let != "" {
@@ -406,6 +405,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 				continue
 			}
 
+			path_manager := self.path_manager.NewQueryStorage()
 			result = append(result, path_manager)
 
 			func(vql *vfilter.VQL, path_manager api.PathManager) {
@@ -418,6 +418,8 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 					return
 				}
 				defer rs_writer.Close()
+
+				rs_writer.Flush()
 
 				row_idx := 0
 				next_progress := time.Now().Add(4 * time.Second)
@@ -445,6 +447,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 
 						// Report progress even if no row is emitted
 					case <-time.After(4 * time.Second):
+						rs_writer.Flush()
 						self.Progress.Report(fmt.Sprintf(
 							"Total Rows %v", row_idx))
 						next_progress = time.Now().Add(4 * time.Second)

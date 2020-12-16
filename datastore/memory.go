@@ -34,6 +34,14 @@ func NewTestDataStore() *TestDataStore {
 	}
 }
 
+func (self *TestDataStore) Get(path string) proto.Message {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result, _ := self.Subjects[path]
+	return result
+}
+
 func (self *TestDataStore) Clear() {
 	self.mu.Lock()
 	defer self.mu.Unlock()

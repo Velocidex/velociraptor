@@ -14,23 +14,27 @@ SELECT * FROM uploads(client_id='C.4f5e52adf0a337a9', flow_id='F.BN2HJCPOF5U7U')
    "artifacts": [
     "Windows.KapeFiles.Targets"
    ],
-   "parameters": {
-    "env": [
-     {
-      "key": "Device",
-      "value": "C:"
-     },
-     {
-      "key": "VSSAnalysis",
-      "value": "Y"
-     },
-     {
-      "key": "KapeTriage",
-      "value": "Y"
+   "specs": [
+    {
+     "artifact": "Windows.KapeFiles.Targets",
+     "parameters": {
+      "env": [
+       {
+        "key": "Device",
+        "value": "C:"
+       },
+       {
+        "key": "VSSAnalysis",
+        "value": "Y"
+       },
+       {
+        "key": "KapeTriage",
+        "value": "Y"
+       }
+      ]
      }
-    ]
-   },
-   "specs": [],
+    }
+   ],
    "ops_per_second": 0,
    "timeout": 0,
    "max_rows": 0,

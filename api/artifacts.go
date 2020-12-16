@@ -436,9 +436,14 @@ func MakeCollectorRequest(
 	client_id string, artifact_name string,
 	parameters ...string) *flows_proto.ArtifactCollectorArgs {
 	result := &flows_proto.ArtifactCollectorArgs{
-		ClientId:   client_id,
-		Artifacts:  []string{artifact_name},
-		Parameters: &flows_proto.ArtifactParameters{},
+		ClientId:  client_id,
+		Artifacts: []string{artifact_name},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				Artifact:   artifact_name,
+				Parameters: &flows_proto.ArtifactParameters{},
+			},
+		},
 	}
 
 	if len(parameters)%2 != 0 {
@@ -451,7 +456,7 @@ func MakeCollectorRequest(
 			i++
 			v := parameters[i]
 			i++
-			result.Parameters.Env = append(result.Parameters.Env,
+			result.Specs[0].Parameters.Env = append(result.Specs[0].Parameters.Env,
 				&actions_proto.VQLEnv{
 					Key: k, Value: v,
 				})
