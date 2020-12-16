@@ -67,50 +67,54 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 	config_obj *config_proto.Config,
 	parent http.Handler) http.Handler {
 
+	reject_handler := samlMiddleware.RequireAccount(parent)
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-CSRF-Token", csrf.Token(r))
 
-		if token := samlMiddleware.GetAuthorizationToken(r); token != nil {
+		session, err := samlMiddleware.Session.GetSession(r)
+		if session == nil {
+			reject_handler.ServeHTTP(w, r)
+			return
+		}
 
-			username := token.Attributes.Get(userAttr(config_obj))
-			user_record, err := users.GetUser(config_obj, username)
+		username := samlsp.AttributeFromContext(r.Context(), userAttr(config_obj))
+		user_record, err := users.GetUser(config_obj, username)
 
-			perm, err2 := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
-			if err != nil || !perm || err2 != nil ||
-				user_record.Locked || user_record.Name != username {
-				w.Header().Set("Content-Type", "text/html; charset=utf-8")
-				w.WriteHeader(http.StatusUnauthorized)
+		perm, err2 := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
+		if err != nil || !perm || err2 != nil ||
+			user_record.Locked || user_record.Name != username {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusUnauthorized)
 
-				fmt.Fprintf(w, `
+			fmt.Fprintf(w, `
 <html><body>
 Authorization failed. You are not registered on this system as %v.
 Contact your system administrator to get an account, then try again.
 </body></html>
 `, username)
 
-				logging.GetLogger(config_obj, &logging.Audit).
-					WithFields(logrus.Fields{
-						"user":   username,
-						"remote": r.RemoteAddr,
-						"method": r.Method,
-					}).Error("User rejected by GUI")
+			logging.GetLogger(config_obj, &logging.Audit).
+				WithFields(logrus.Fields{
+					"user":   username,
+					"remote": r.RemoteAddr,
+					"method": r.Method,
+				}).Error("User rejected by GUI")
 
-				return
-			}
-
-			user_info := &api_proto.VelociraptorUser{
-				Name: username,
-			}
-
-			serialized, _ := json.Marshal(user_info)
-			ctx := context.WithValue(
-				r.Context(), constants.GRPC_USER_CONTEXT,
-				string(serialized))
-			GetLoggingHandler(config_obj)(parent).ServeHTTP(
-				w, r.WithContext(ctx))
 			return
 		}
-		samlMiddleware.RequireAccountHandler(w, r)
+
+		user_info := &api_proto.VelociraptorUser{
+			Name: username,
+		}
+
+		serialized, _ := json.Marshal(user_info)
+		ctx := context.WithValue(
+			r.Context(), constants.GRPC_USER_CONTEXT,
+			string(serialized))
+		GetLoggingHandler(config_obj)(parent).ServeHTTP(
+			w, r.WithContext(ctx))
+		return
 	})
 }
 

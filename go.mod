@@ -29,7 +29,7 @@ require (
 	github.com/clbanning/mxj v1.8.4
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/creack/pty v1.1.11 // indirect
-	github.com/crewjam/saml v0.3.1
+	github.com/crewjam/saml v0.4.5
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0
@@ -55,9 +55,9 @@ require (
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869 // indirect
 	github.com/jmoiron/sqlx v1.2.0
+	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/kierdavis/dateparser v0.0.0-20171227112021-81e70b820720
-	github.com/kr/pretty v0.2.0 // indirect
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.2.0+incompatible
@@ -92,7 +92,7 @@ require (
 	github.com/vjeantet/grok v1.0.0
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v0.0.0-20181217150151-a0c70a3d4213
-	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
+	golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9
 	golang.org/x/mod v0.3.0
 	golang.org/x/net v0.0.0-20201031054903-ff519b6c9102
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
