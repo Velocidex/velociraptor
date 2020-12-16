@@ -11,7 +11,7 @@ author: Wes Lambert - @therealwlambert
 
 tools:
   - name: SunburstYARARules
-    url: https://raw.githubusercontent.com/fireeye/sunburst_countermeasures/main/rules/SUNBURST/yara/APT_Backdoor_SUNBURST_1.yar
+    url: https://raw.githubusercontent.com/fireeye/sunburst_countermeasures/main/all-yara.yar
 
 parameters:
     - name: yaraMFT
