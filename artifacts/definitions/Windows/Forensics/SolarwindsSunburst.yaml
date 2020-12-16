@@ -5,7 +5,7 @@ description: |
     
     Reference: https://www.fireeye.com/blog/threat-research/2020/12/evasive-attacker-leverages-solarwinds-supply-chain-compromises-with-sunburst-backdoor.html
     
-    We can look for evidence of this dll, by first performing a YARA search on the MFT across all drives, then applying an addition Fireye-supplied rule against the file found via MFT.
+    We can look for evidence of this dll by first performing a YARA search on the MFT across all drives, then applying an additional FireEye-supplied rule against the file found via MFT.
     
 author: Wes Lambert - @therealwlambert
 
