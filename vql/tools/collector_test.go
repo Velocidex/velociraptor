@@ -113,8 +113,7 @@ reports:
 name: Custom.TestArtifactUpload
 sources:
 - query: |
-    LET tmp <= tempfile(data="hello world")
-    SELECT upload(file=tmp, name="file.txt") FROM scope()
+    SELECT upload(file=tempfile(data="hello world"), name="file.txt") AS Upload FROM scope()
 `)
 )
 
