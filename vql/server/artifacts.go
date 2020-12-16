@@ -37,6 +37,7 @@ import (
 type ScheduleCollectionFunctionArg struct {
 	ClientId  string      `vfilter:"required,field=client_id,doc=The client id to schedule a collection on"`
 	Artifacts []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
+	Env       vfilter.Any `vfilter:"optional,field=env,doc=Parameters to apply to the artifact (an alternative to a full spec)"`
 	Spec      vfilter.Any `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
 }
 
@@ -50,6 +51,11 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		scope.Log("collect_client: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	if len(arg.Artifacts) == 0 {
+		scope.Log("collect_client: no artifacts to collect!")
 		return vfilter.Null{}
 	}
 
@@ -93,6 +99,16 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		Artifacts: arg.Artifacts,
 		Creator:   vql_subsystem.GetPrincipal(scope),
 	}
+
+	if arg.Spec == nil && arg.Env != nil {
+		spec := ordereddict.NewDict()
+		for _, name := range arg.Artifacts {
+			spec.Set(name, arg.Env)
+		}
+
+		arg.Spec = spec
+	}
+
 	err = tools.AddSpecProtobuf(config_obj, repository, scope,
 		arg.Spec, request)
 	if err != nil {
