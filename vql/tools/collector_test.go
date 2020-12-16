@@ -26,10 +26,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
+
+	// Load all needed plugins
+	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
+	_ "www.velocidex.com/golang/velociraptor/vql/networking"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/csv"
-	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -102,6 +106,16 @@ reports:
      {{ Query "SELECT * FROM source()" | Table }}
 
 `)
+
+	uploadArtifactCollectorArgs = ordereddict.NewDict().
+					Set("artifacts", []string{"Custom.TestArtifactUpload"}).
+					Set("artifact_definitions", `
+name: Custom.TestArtifactUpload
+sources:
+- query: |
+    LET tmp <= tempfile(data="hello world")
+    SELECT upload(file=tmp, name="file.txt") FROM scope()
+`)
 )
 
 type TestSuite struct {
@@ -145,8 +159,9 @@ func (self *TestSuite) TestSimpleCollection() {
 	repository, err := getRepository(self.config_obj, nil)
 	assert.NoError(self.T(), err)
 
-	request := getArtifactCollectorArgs(self.config_obj,
+	request, err := getArtifactCollectorArgs(self.config_obj,
 		repository, scope, simpleCollectorArgs)
+	assert.NoError(self.T(), err)
 
 	launcher, err := services.GetLauncher()
 	assert.NoError(self.T(), err)
@@ -255,6 +270,43 @@ func (self *TestSuite) TestCollectionWithTypes() {
 	goldie.Assert(self.T(), "TestCollectionWithTypes", serialized)
 }
 
+func (self *TestSuite) TestCollectionWithUpload() {
+	output_file, err := ioutil.TempFile(os.TempDir(), "zip")
+	assert.NoError(self.T(), err)
+	output_file.Close()
+	defer os.Remove(output_file.Name())
+
+	builder := services.ScopeBuilder{
+		Config:     self.config_obj,
+		ACLManager: vql_subsystem.NullACLManager{},
+		Logger:     logging.NewPlainLogger(self.config_obj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	results := []vfilter.Row{}
+
+	// Set the output file.
+	uploadArtifactCollectorArgs.Set("output", output_file.Name())
+
+	for row := range (CollectPlugin{}).Call(context.Background(),
+		scope, uploadArtifactCollectorArgs) {
+		results = append(results, row)
+	}
+
+	zip_contents, err := openZipFile(output_file.Name())
+	assert.NoError(self.T(), err)
+
+	serialized := json.MustMarshalIndent(ordereddict.NewDict().
+		Set("zip_contents", zip_contents))
+	goldie.Assert(self.T(), "TestCollectionWithUpload", serialized)
+}
+
 func openZipFile(name string) (*ordereddict.Dict, error) {
 	result := ordereddict.NewDict()
 
@@ -276,8 +328,10 @@ func openZipFile(name string) (*ordereddict.Dict, error) {
 
 		rows, err := utils.ParseJsonToDicts(serialized)
 		if err != nil {
-			return nil, err
+			result.Set(f.Name, string(serialized))
+			continue
 		}
+
 		result.Set(f.Name, rows)
 	}
 

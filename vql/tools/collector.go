@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -91,6 +92,13 @@ func (self CollectPlugin) Call(
 			return
 		}
 
+		// Compile the request into vql requests protobuf
+		request, err := getArtifactCollectorArgs(config_obj, repository, scope, arg)
+		if err != nil {
+			scope.Log("collect: %v", err)
+			return
+		}
+
 		// Create the output container
 		if arg.Output != "" {
 			container, closer, err = makeContainer(config_obj, scope, repository, arg)
@@ -137,8 +145,6 @@ func (self CollectPlugin) Call(
 			return
 		}
 
-		// Compile the request into vql requests protobuf
-		request := getArtifactCollectorArgs(config_obj, repository, scope, arg)
 		vql_requests, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, acl_manager, repository,
 			false, /* should_obfuscate */
@@ -147,9 +153,6 @@ func (self CollectPlugin) Call(
 			scope.Log("collect: %v", err)
 			return
 		}
-
-		json.Debug(request)
-		json.Debug(vql_requests)
 
 		// Run each collection separately, one after the other.
 		for _, vql_request := range vql_requests {
@@ -349,13 +352,16 @@ func getArtifactCollectorArgs(
 	config_obj *config_proto.Config,
 	repository services.Repository,
 	scope *vfilter.Scope,
-	arg *CollectPluginArgs) *flows_proto.ArtifactCollectorArgs {
+	arg *CollectPluginArgs) (*flows_proto.ArtifactCollectorArgs, error) {
 	request := &flows_proto.ArtifactCollectorArgs{
 		Artifacts: arg.Artifacts,
 	}
 
-	addSpecProtobuf(config_obj, repository, scope, arg.Args, request)
-	return request
+	err := addSpecProtobuf(config_obj, repository, scope, arg.Args, request)
+	if err != nil {
+		return nil, err
+	}
+	return request, nil
 }
 
 // Builds a spec protobuf from the arg.Args that was passed. Note that
@@ -364,7 +370,7 @@ func getArtifactCollectorArgs(
 func addSpecProtobuf(
 	config_obj *config_proto.Config,
 	repository services.Repository,
-	scope *vfilter.Scope, spec vfilter.Any, request *flows_proto.ArtifactCollectorArgs) {
+	scope *vfilter.Scope, spec vfilter.Any, request *flows_proto.ArtifactCollectorArgs) error {
 
 	var err error
 
@@ -372,7 +378,7 @@ func addSpecProtobuf(
 		artifact_definitions, pres := repository.Get(config_obj, name)
 		if !pres {
 			// Artifact not known
-			continue
+			return errors.New(`Parameter 'args' refers to an unknown artifact. The 'args' parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`)
 		}
 
 		spec_proto := &flows_proto.ArtifactSpec{
@@ -484,6 +490,8 @@ func addSpecProtobuf(
 
 		request.Specs = append(request.Specs, spec_proto)
 	}
+
+	return nil
 }
 
 func init() {

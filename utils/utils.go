@@ -41,11 +41,6 @@ func InString(hay []string, needle string) bool {
 	return false
 }
 
-func IsNil(a interface{}) bool {
-	defer func() { _ = recover() }()
-	return a == nil || reflect.ValueOf(a).IsNil()
-}
-
 func StringSliceEq(a []string, b []string) bool {
 	if len(a) != len(b) {
 		return false

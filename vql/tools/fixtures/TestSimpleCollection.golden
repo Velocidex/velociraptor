@@ -99,16 +99,16 @@
    ],
    "Query": [
     {
-     "VQL": "LET Flag \u003c= get(field='Flag') =~ '^(Y|TRUE|YES|OK)$' "
+     "VQL": "LET Flag \u003c= get(field='Flag') = TRUE OR get(field='Flag') =~ '^(Y|TRUE|YES|OK)$' "
     },
     {
-     "VQL": "LET Flag2 \u003c= get(field='Flag2') =~ '^(Y|TRUE|YES|OK)$' "
+     "VQL": "LET Flag2 \u003c= get(field='Flag2') = TRUE OR get(field='Flag2') =~ '^(Y|TRUE|YES|OK)$' "
     },
     {
-     "VQL": "LET Flag3 \u003c= get(field='Flag3') =~ '^(Y|TRUE|YES|OK)$' "
+     "VQL": "LET Flag3 \u003c= get(field='Flag3') = TRUE OR get(field='Flag3') =~ '^(Y|TRUE|YES|OK)$' "
     },
     {
-     "VQL": "LET OffFlag \u003c= get(field='OffFlag') =~ '^(Y|TRUE|YES|OK)$' "
+     "VQL": "LET OffFlag \u003c= get(field='OffFlag') = TRUE OR get(field='OffFlag') =~ '^(Y|TRUE|YES|OK)$' "
     },
     {
      "VQL": "LET StartDate \u003c= timestamp(epoch=StartDate)"
@@ -126,10 +126,18 @@
      "VQL": "LET CSVData2 \u003c= SELECT * FROM parse_csv(filename=CSVData2, accessor='data')"
     },
     {
-     "VQL": "LET JSONData \u003c= parse_json(data=JSONData)"
+     "VQL": "LET JSONData \u003c= parse_json_array(data=JSONData)"
     },
     {
-     "VQL": "LET JSONData2 \u003c= parse_json(data=JSONData2)"
+     "VQL": "LET JSONData2 \u003c= parse_json_array(data=JSONData2)"
+    },
+    {
+     "VQL": "LET Demo_Plugins_GUI_0_0 = SELECT ChoiceSelector, Flag, Flag2, Flag3, OffFlag, StartDate, StartDate2, StartDate3, CSVData, CSVData2, JSONData, JSONData2 FROM scope()"
+    },
+    {
+     "Name": "Demo.Plugins.GUI",
+     "Description": "A demo plugin showing some GUI features.\n\nThis plugin is also used for tests.\n",
+     "VQL": "SELECT * FROM Demo_Plugins_GUI_0_0"
     }
    ],
    "max_row": 1000
