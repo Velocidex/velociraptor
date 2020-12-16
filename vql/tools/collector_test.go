@@ -29,7 +29,6 @@ import (
 	"www.velocidex.com/golang/vfilter"
 
 	// Load all needed plugins
-	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 	_ "www.velocidex.com/golang/velociraptor/vql/networking"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
@@ -113,7 +112,7 @@ reports:
 name: Custom.TestArtifactUpload
 sources:
 - query: |
-    SELECT upload(file=tempfile(data="hello world"), name="file.txt") AS Upload FROM scope()
+    SELECT upload(file="hello world", accessor="data", name="file.txt") AS Upload FROM scope()
 `)
 )
 
