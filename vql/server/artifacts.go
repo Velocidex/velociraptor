@@ -25,19 +25,19 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/tools"
 	"www.velocidex.com/golang/vfilter"
 )
 
 type ScheduleCollectionFunctionArg struct {
 	ClientId  string      `vfilter:"required,field=client_id,doc=The client id to schedule a collection on"`
 	Artifacts []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
-	Env       vfilter.Any `vfilter:"optional,field=env,doc=Parameters to apply to the artifacts"`
+	Spec      vfilter.Any `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
 }
 
 type ScheduleCollectionFunction struct{}
@@ -76,44 +76,34 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}
 	}
-	request := &flows_proto.ArtifactCollectorArgs{
-		ClientId:   arg.ClientId,
-		Artifacts:  arg.Artifacts,
-		Creator:    vql_subsystem.GetPrincipal(scope),
-		Parameters: &flows_proto.ArtifactParameters{},
+
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		scope.Log("Command can only run on the server")
+		return vfilter.Null{}
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		scope.Log("Command can only run on the server")
+		return vfilter.Null{}
 	}
 
-	for _, k := range scope.GetMembers(arg.Env) {
-		value, pres := scope.Associative(arg.Env, k)
-		if pres {
-			value_str, ok := value.(string)
-			if !ok {
-				scope.Log("collect_client: Env must be a dict of strings")
-				return vfilter.Null{}
-			}
-
-			request.Parameters.Env = append(
-				request.Parameters.Env,
-				&actions_proto.VQLEnv{
-					Key: k, Value: value_str,
-				})
-		}
+	request := &flows_proto.ArtifactCollectorArgs{
+		ClientId:  arg.ClientId,
+		Artifacts: arg.Artifacts,
+		Creator:   vql_subsystem.GetPrincipal(scope),
+	}
+	err = tools.AddSpecProtobuf(config_obj, repository, scope,
+		arg.Spec, request)
+	if err != nil {
+		scope.Log("Command can only run on the server")
+		return vfilter.Null{}
 	}
 
 	result := &flows_proto.ArtifactCollectorResponse{Request: request}
 	acl_manager, ok := artifacts.GetACLManager(scope)
 	if !ok {
 		acl_manager = vql_subsystem.NullACLManager{}
-	}
-
-	manager, err := services.GetRepositoryManager()
-	if err != nil {
-		return err
-	}
-	repository, err := manager.GetGlobalRepository(config_obj)
-	if err != nil {
-		scope.Log("collect_client: %v", err)
-		return vfilter.Null{}
 	}
 
 	launcher, err := services.GetLauncher()

@@ -29,23 +29,35 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
-// Support backwards compatibility by converting the different
-// requests to a list of specs.
+// Ensures the specs field corresponds exactly with the
+// collector_request.Artifacts field: Extra fields are removed and
+// missing fields are added.
 func getCollectorSpecs(
 	collector_request *flows_proto.ArtifactCollectorArgs) []*flows_proto.ArtifactSpec {
 
-	// New API just return the specs directly.
-	if collector_request.Specs != nil {
-		return collector_request.Specs
+	// Find the spec in the collector_request.Specs list.
+	get_spec := func(name string) *flows_proto.ArtifactSpec {
+		for _, spec := range collector_request.Specs {
+			if name == spec.Artifact {
+				return spec
+			}
+		}
+
+		return nil
 	}
 
-	// old API - convert the request to a series of specs.
 	result := []*flows_proto.ArtifactSpec{}
-	for _, artifact := range collector_request.Artifacts {
-		result = append(result, &flows_proto.ArtifactSpec{
-			Artifact:   artifact,
-			Parameters: collector_request.Parameters,
-		})
+
+	// Find all the specs from the artifacts list.
+	for _, name := range collector_request.Artifacts {
+		spec := get_spec(name)
+		if spec == nil {
+			spec = &flows_proto.ArtifactSpec{
+				Artifact: name,
+			}
+		}
+
+		result = append(result, spec)
 	}
 
 	return result

@@ -1,0 +1,41 @@
+{
+ "/server_artifacts/Server.Clock/2020-10-07.json": [
+  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_ts\":1602103388}",
+  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_ts\":1602103388}",
+  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_ts\":1602103388}",
+  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_ts\":1602103388}",
+  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_ts\":1602103388}",
+  ""
+ ],
+ "/server_artifacts/Server.Clock2/2020-10-07.json": [
+  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388}",
+  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388}",
+  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388}",
+  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388}",
+  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388}",
+  ""
+ ],
+ "/config/server_monitoring.json": {
+  "artifacts": [
+   "Server.Clock",
+   "Server.Clock2"
+  ],
+  "specs": [
+   {
+    "artifact": "Server.Clock",
+    "parameters": {
+     "env": [
+      {
+       "key": "Foo",
+       "value": "Y"
+      },
+      {
+       "key": "BoolFoo",
+       "value": "Y"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

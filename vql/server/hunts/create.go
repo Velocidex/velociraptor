@@ -24,13 +24,13 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/tools"
 
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/vfilter"
@@ -39,7 +39,7 @@ import (
 type ScheduleHuntFunctionArg struct {
 	Description string      `vfilter:"required,field=description,doc=Description of the hunt"`
 	Artifacts   []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
-	Env         vfilter.Any `vfilter:"optional,field=env,doc=Parameters to apply to the artifacts"`
+	Spec        vfilter.Any `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
 }
 
 type ScheduleHuntFunction struct{}
@@ -67,26 +67,27 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	request := &flows_proto.ArtifactCollectorArgs{
-		Creator:    vql_subsystem.GetPrincipal(scope),
-		Artifacts:  arg.Artifacts,
-		Parameters: &flows_proto.ArtifactParameters{},
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		scope.Log("Command can only run on the server")
+		return vfilter.Null{}
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		scope.Log("Command can only run on the server")
+		return vfilter.Null{}
 	}
 
-	for _, k := range scope.GetMembers(arg.Env) {
-		value, pres := scope.Associative(arg.Env, k)
-		if pres {
-			value_str, ok := value.(string)
-			if !ok {
-				scope.Log("hunt: Env must be a dict of strings")
-				return vfilter.Null{}
-			}
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:   vql_subsystem.GetPrincipal(scope),
+		Artifacts: arg.Artifacts,
+	}
 
-			request.Parameters.Env = append(request.Parameters.Env,
-				&actions_proto.VQLEnv{
-					Key: k, Value: value_str,
-				})
-		}
+	err = tools.AddSpecProtobuf(config_obj, repository, scope,
+		arg.Spec, request)
+	if err != nil {
+		scope.Log("Command can only run on the server")
+		return vfilter.Null{}
 	}
 
 	hunt_request := &api_proto.Hunt{
