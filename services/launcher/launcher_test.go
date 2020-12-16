@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,6 +24,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -32,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
 )
 
 const (
@@ -122,6 +125,7 @@ parameters:
 
 - name: BoolValue
   type: bool
+  default: Y
 
 - name: BoolValue2
   type: bool
@@ -176,8 +180,10 @@ parameters:
 
 sources:
 - query: |
-    SELECT IntValue, CSVValue
-    FROM Artifact.Test.Artifact.Types(CSVValue=CSVValue, IntValue=IntValue)
+    SELECT IntValue, CSVValue, BoolValue, BoolValue2
+    FROM Artifact.Test.Artifact.Types(
+       CSVValue=CSVValue, IntValue=IntValue,
+       BoolValue=TRUE, BoolValue2="Y")
 `
 
 	testArtifactWithPrecondition = `
@@ -670,6 +676,49 @@ func (self *LauncherTestSuite) TestParameterTypesDeps() {
 
 	results := getResponses(test_responder)
 	goldie.Assert(self.T(), "TestParameterTypesDeps", json.MustMarshalIndent(results))
+}
+
+func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifactWithTypes, true)
+	assert.NoError(self.T(), err)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	builder := services.ScopeBuilder{
+		Config:     self.config_obj,
+		ACLManager: vql_subsystem.NullACLManager{},
+		Repository: repository,
+		Logger:     logging.NewPlainLogger(self.config_obj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	queries := []string{
+		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue=0)",
+		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue=1)",
+		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue=FALSE)",
+		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue=TRUE)",
+		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue='N')",
+		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue='Y')",
+	}
+
+	results := []vfilter.Row{}
+	for _, query := range queries {
+		vql, err := vfilter.Parse(query)
+		assert.NoError(self.T(), err)
+
+		for row := range vql.Eval(ctx, scope) {
+			results = append(results, row)
+		}
+	}
+	goldie.Assert(self.T(), "TestParameterTypesDepsQuery", json.MustMarshalIndent(results))
 }
 
 func (self *LauncherTestSuite) TestPrecondition() {

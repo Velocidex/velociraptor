@@ -95,7 +95,7 @@ sources:
               (args[0]).ToolFilename AS Name,
               "Downloaded" AS DownloadStatus,
               copy(filename=Content, dest=(ToolPath[0]).Path,
-                   permissions=if(condition=IsExecutable="Y", then="x")) AS FullPath
+                   permissions=if(condition=IsExecutable, then="x")) AS FullPath
           FROM http_client(url=(args[0]).ToolURL, tempfile_extension=".exe")
           WHERE log(message=format(format="downloaded hash of %v: %v, expected %v", args=[
                     Content, Hash.SHA256, (args[0]).ToolHash]))

@@ -146,9 +146,14 @@ message Artifact {
             description: "Where the artifact gets its data."
         }];
 
-    repeated string includes = 9 [(sem_type) = {
-            description: "A list of other artifacts to merge our source with."
+    repeated string imports = 17 [(sem_type) = {
+            description: "A list of other artifacts' export VQL to preload prior to this artifact."
         }];
+
+    string export = 18 [(sem_type) = {
+            description: "VQL that this artifact exports. It will be automatically imported into the sources section."
+        }];
+
 
     repeated Report reports = 11 [(sem_type) = {
             description: "A list of reports to potentially post process this artifact.",

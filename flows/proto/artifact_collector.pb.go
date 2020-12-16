@@ -200,7 +200,8 @@ type ArtifactCollectorArgs struct {
 	// Deprecated: Old way of specifying the artifacts consist of
 	// shared parameters within a list of artifacts (i.e. all
 	// artifacts share same scope).
-	Artifacts  []string            `protobuf:"bytes,2,rep,name=artifacts,proto3" json:"artifacts,omitempty"`
+	Artifacts []string `protobuf:"bytes,2,rep,name=artifacts,proto3" json:"artifacts,omitempty"`
+	// Deprecated... use Specs instead.
 	Parameters *ArtifactParameters `protobuf:"bytes,5,opt,name=parameters,proto3" json:"parameters,omitempty"`
 	// New way of specifying artifacts.
 	Specs        []*ArtifactSpec `protobuf:"bytes,24,rep,name=specs,proto3" json:"specs,omitempty"`

@@ -246,6 +246,24 @@ export default class NotebookCellRenderer extends React.Component {
         return "yaml";
     }
 
+    recalculate = () => {
+        api.post('v1/UpdateNotebookCell', {
+            notebook_id: this.props.notebook_id,
+            cell_id: this.state.cell.cell_id,
+            type: this.state.cell.type || "Markdown",
+            currently_editing: false,
+            input: this.state.cell.input,
+        }, this.source.token).then( (response) => {
+            if (response.cancel) {
+                return;
+            }
+
+            this.setState({cell: response.data,
+                           currently_editing: false});
+        });
+
+    }
+
     saveCell = () => {
         let cell = this.state.cell;
         cell.input = this.state.ace.getValue();
@@ -255,10 +273,10 @@ export default class NotebookCellRenderer extends React.Component {
 
         api.post('v1/UpdateNotebookCell', {
             notebook_id: this.props.notebook_id,
-            cell_id: this.state.cell.cell_id,
-            type: this.state.cell.type || "Markdown",
+            cell_id: cell.cell_id,
+            type: cell.type || "Markdown",
             currently_editing: false,
-            input: this.state.cell.input,
+            input: cell.input,
         }, this.source.token).then( (response) => {
             if (response.cancel) {
                 return;
@@ -340,6 +358,7 @@ export default class NotebookCellRenderer extends React.Component {
         this.props.addCell(this.state.cell.cell_id, "VQL", content);
     }
 
+
     render() {
         let selected = this.state.cell.cell_id === this.props.selected_cell_id;
 
@@ -355,7 +374,16 @@ export default class NotebookCellRenderer extends React.Component {
                       variant="default">
                 <FontAwesomeIcon icon="window-close"/>
               </Button>
+
+              <Button title="Recalculate"
+                      disabled={this.state.cell.calculating}
+                      onClick={this.recalculate}
+                      variant="default">
+                <FontAwesomeIcon icon="sync"/>
+                 </Button>
+
               <Button title="Stop Calculating"
+                      disabled={!this.state.cell.calculating}
                       onClick={this.stopCalculating}
                       variant="default">
                 <FontAwesomeIcon icon="stop"/>
@@ -375,6 +403,7 @@ export default class NotebookCellRenderer extends React.Component {
                 </Button>
               }
               <Button title="Edit Cell"
+                      disabled={this.state.cell.calculating}
                       onClick={() => { this.setEditing(true); }}
                       variant="default">
                 <FontAwesomeIcon icon="pencil-alt"/>

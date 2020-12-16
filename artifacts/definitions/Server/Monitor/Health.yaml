@@ -49,17 +49,17 @@ reports:
       ## Server status
 
       <p>The following are total across all frontends.</p>
-      <span class="container">
-        <span class="row">
-          <span class="col-sm panel">
-           CPU and Memory Utilization
-           {{ Query "CPU" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 }}
-          </span>
-          <span class="col-sm panel">
-           Currently Connected Clients
-           {{ Query "CurrentConnections" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 }}
-          </span>
-        </span>
+          <span class="container">
+            <span class="row">
+              <span class="col-sm panel">
+               CPU and Memory Utilization
+               {{- Query "CPU" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 -}}
+              </span>
+              <span class="col-sm panel">
+               Currently Connected Clients
+               {{- Query "CurrentConnections" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 -}}
+              </span>
+            </span>
       </span>
 
 

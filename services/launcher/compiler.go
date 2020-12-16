@@ -19,7 +19,7 @@ import (
 
 var (
 	artifact_in_query_regex = regexp.MustCompile(`Artifact\.([^\s\(]+)\(`)
-	escape_regex            = regexp.MustCompile("(^[0-9]|[\"'_ ])")
+	escape_regex            = regexp.MustCompile("(^[0-9]|[\"' ])")
 )
 
 func escape_name(name string) string {
@@ -39,6 +39,7 @@ func Compile(config_obj *config_proto.Config,
 	for _, parameter := range artifact.Parameters {
 		value := parameter.Default
 		name := parameter.Name
+
 		result.Env = append(result.Env, &actions_proto.VQLEnv{
 			Key:   name,
 			Value: value,
@@ -52,24 +53,40 @@ func Compile(config_obj *config_proto.Config,
 
 		// If the variable contains spaces we need to escape
 		// the name in backticks.
-		name = maybeEscape(name)
+		escaped_name := maybeEscape(name)
 
 		switch parameter.Type {
 		case "int", "int64":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= int(int=%v)", name, name),
+				VQL: fmt.Sprintf("LET %v <= int(int=%v)", escaped_name,
+					escaped_name),
 			})
 		case "timestamp":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= timestamp(epoch=%v)", name, name),
+				VQL: fmt.Sprintf("LET %v <= timestamp(epoch=%v)", escaped_name,
+					escaped_name),
 			})
 		case "csv":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= SELECT * FROM parse_csv(filename=%v, accessor='data')", name, name),
+				VQL: fmt.Sprintf("LET %v <= SELECT * FROM parse_csv(filename=%v, accessor='data')",
+					escaped_name, escaped_name),
 			})
+		case "json":
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf("LET %v <= parse_json(data=%v)",
+					escaped_name, escaped_name),
+			})
+
+		case "json_array":
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf("LET %v <= parse_json_array(data=%v)",
+					escaped_name, escaped_name),
+			})
+
 		case "bool":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= %v AND %v = 'Y' ", name, name, name),
+				VQL: fmt.Sprintf("LET %v <= get(field='%v') = TRUE OR get(field='%v') =~ '^(Y|TRUE|YES|OK)$' ",
+					escaped_name, name, name),
 			})
 
 		}
@@ -197,17 +214,6 @@ func mergeSources(
 				Description: description,
 				VQL:         "SELECT * FROM " + source_result,
 			})
-		}
-	}
-
-	// Now process any includes.
-	for _, include := range artifact.Includes {
-		child, pres := repository.Get(config_obj, include)
-		if pres {
-			err := mergeSources(config_obj, repository, child, result, depth+1)
-			if err != nil {
-				return err
-			}
 		}
 	}
 

@@ -2,6 +2,8 @@ name: Demo.Plugins.GUI
 description: |
   A demo plugin showing some GUI features.
 
+  This plugin is also used for tests.
+
 
 parameters:
   - name: ChoiceSelector
@@ -16,10 +18,24 @@ parameters:
     type: bool
     default: Y
 
+  - name: Flag2
+    type: bool
+    default: Y
+
+  - name: Flag3
+    type: bool
+    default: Y
+
   - name: OffFlag
     type: bool
 
   - name: StartDate
+    type: timestamp
+
+  - name: StartDate2
+    type: timestamp
+
+  - name: StartDate3
     type: timestamp
 
   - name: CSVData
@@ -28,3 +44,25 @@ parameters:
       Column1,Column2
       A,B
       C,D
+
+  - name: CSVData2
+    type: csv
+    default: |
+      Column1,Column2
+      A,B
+      C,D
+
+  - name: JSONData
+    type: json_array
+    default: "[]"
+
+  - name: JSONData2
+    type: json_array
+    default: |
+      [{"foo": "bar"}]
+
+sources:
+  - query: |
+      SELECT ChoiceSelector, Flag, Flag2, Flag3, OffFlag, StartDate, StartDate2, StartDate3,
+             CSVData, CSVData2, JSONData, JSONData2
+      FROM scope()

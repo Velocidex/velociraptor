@@ -1,0 +1,51 @@
+{
+ "zip_contents": {
+  "Demo.Plugins.GUI.json": [
+   {
+    "ChoiceSelector": "InvalidChoice",
+    "Flag": false,
+    "Flag2": false,
+    "Flag3": true,
+    "OffFlag": true,
+    "StartDate": "2020-12-15T06:50:35Z",
+    "StartDate2": "2020-12-15T06:50:35Z",
+    "StartDate3": "2020-12-15T06:50:35Z",
+    "CSVData": [
+     {
+      "Foo": "Bar",
+      "Baz": "Baz"
+     },
+     {
+      "Foo": "Bar2",
+      "Baz": "Baz2"
+     }
+    ],
+    "CSVData2": [
+     {
+      "Column1": "A",
+      "Column2": "B"
+     },
+     {
+      "Column1": "C",
+      "Column2": "D"
+     }
+    ],
+    "JSONData": [
+     {
+      "Foo": "Bar",
+      "Baz": "Baz"
+     },
+     {
+      "Foo": "Bar2",
+      "Baz": "Baz2"
+     }
+    ],
+    "JSONData2": [
+     {
+      "foo": "bar"
+     }
+    ]
+   }
+  ]
+ }
+}

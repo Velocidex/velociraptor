@@ -103,7 +103,7 @@ func GetAccessor(scheme string, scope *vfilter.Scope) (
 		return res, err
 	}
 
-	return nil, errors.New("Unknown filesystem accessor")
+	return nil, errors.New("Unknown filesystem accessor: " + scheme)
 }
 
 // A factory for new accessors

@@ -4,6 +4,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -39,6 +40,10 @@ func GetUploader(scope *vfilter.Scope) (api.Uploader, bool) {
 	}
 
 	config, ok := scope_uploader.(api.Uploader)
+	if utils.IsNil(config) {
+		return nil, false
+	}
+
 	return config, ok
 }
 
@@ -49,5 +54,9 @@ func GetACLManager(scope *vfilter.Scope) (vql_subsystem.ACLManager, bool) {
 	}
 
 	config, ok := scope_manager.(vql_subsystem.ACLManager)
+	if utils.IsNil(config) {
+		return nil, false
+	}
+
 	return config, ok
 }

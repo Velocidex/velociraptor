@@ -195,11 +195,14 @@ func (self *MysqlFileStoreFileInfo) UnmarshalJSON(data []byte) error {
 type SqlReader struct {
 	config_obj *config_proto.Config
 
+	// Offset within the current cached chunk
 	offset        int64
 	current_chunk []byte
-	part          int64
-	file_id       int64
-	filename      string
+	// Current part and part offset
+	part        int64
+	part_offset int64
+	file_id     int64
+	filename    string
 
 	is_dir    bool
 	size      int64
@@ -211,15 +214,13 @@ type SqlReader struct {
 func (self *SqlReader) Seek(offset int64, whence int) (int64, error) {
 	// This is basically a tell.
 	if offset == 0 && whence == os.SEEK_CUR {
-		return self.offset, nil
+		return self.part_offset + self.offset, nil
 	}
 
 	if whence != io.SeekStart {
 		panic(fmt.Sprintf("Unsupported seek on %v (%v %v)!",
 			self.filename, offset, whence))
 	}
-
-	start_offset := int64(0)
 
 	// This query tries to find the part which covers the required
 	// offset. The inner query uses the (id, start_offset) index
@@ -235,7 +236,7 @@ SELECT A.part, A.start_offset, A.data FROM (
 JOIN filestore as A
 ON A.part = B.part AND A.id = ? AND A.end_offset > ? AND A.end_offset != A.start_offset`,
 		self.file_id, offset, self.file_id, offset).Scan(
-		&self.part, &start_offset, &blob)
+		&self.part, &self.part_offset, &blob)
 
 	// No valid range is found we are seeking past end of file.
 	if err == sql.ErrNoRows {
@@ -255,14 +256,13 @@ ON A.part = B.part AND A.id = ? AND A.end_offset > ? AND A.end_offset != A.start
 		return 0, err
 	}
 
-	// Next chunk id
-	self.part++
+	// Offset within the chunk
+	self.offset = offset - self.part_offset
 
-	// If the query above works then the offset is inside this part.
-	if int(offset-start_offset) > len(self.current_chunk) {
+	// The offset is past the end of the chunk
+	if int(self.offset) > len(self.current_chunk) {
 		return 0, errors.New("Bad chunk")
 	}
-	self.current_chunk = self.current_chunk[offset-start_offset:]
 
 	return offset, nil
 }
@@ -277,20 +277,27 @@ func (self *SqlReader) Read(buff []byte) (int, error) {
 		return 0, io.EOF
 	}
 
+	if self.current_chunk == nil {
+		_, err := self.Seek(0, io.SeekStart)
+		if err != nil {
+			return 0, err
+		}
+	}
+
 	offset := 0
-	for offset < len(buff) {
+	for offset < len(buff) && len(self.current_chunk) > 0 {
 		// Drain the current chunk until is it empty.
-		if len(self.current_chunk) > 0 {
-			n := copy(buff[offset:], self.current_chunk)
-			self.current_chunk = self.current_chunk[n:]
+		if len(self.current_chunk) > int(self.offset) {
+			n := copy(buff[offset:], self.current_chunk[self.offset:])
 			offset += n
+			self.offset += int64(n)
 			continue
 		}
 
 		// Get the next chunk and cache it.
 		blob := []byte{}
 		err := db.QueryRow(`SELECT data from filestore WHERE id=? AND part = ?`,
-			self.file_id, self.part).Scan(&blob)
+			self.file_id, self.part+1).Scan(&blob)
 
 		// No more parts available right now.
 		if err == sql.ErrNoRows {
@@ -301,6 +308,7 @@ func (self *SqlReader) Read(buff []byte) (int, error) {
 			return offset, err
 		}
 
+		self.offset = 0
 		self.current_chunk, err = snappy.Decode(nil, blob)
 		if err != nil {
 			return offset, err
@@ -310,7 +318,8 @@ func (self *SqlReader) Read(buff []byte) (int, error) {
 		self.part += 1
 	}
 
-	self.offset += int64(offset)
+	// We did not fill the buffer at all - this is an empty read
+	// so we return EOF.
 	if offset == 0 {
 		return 0, io.EOF
 	}
