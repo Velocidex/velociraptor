@@ -14,6 +14,7 @@ import (
 	"time"
 
 	errors "github.com/pkg/errors"
+	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -77,13 +78,6 @@ func (self *Launcher) CompileCollectorArgs(
 	result := []*actions_proto.VQLCollectorArgs{}
 
 	for _, spec := range getCollectorSpecs(collector_request) {
-		// Update the flow's artifacts list.
-		vql_collector_args := &actions_proto.VQLCollectorArgs{
-			OpsPerSecond: collector_request.OpsPerSecond,
-			Timeout:      collector_request.Timeout,
-			MaxRow:       1000,
-		}
-
 		var artifact *artifacts_proto.Artifact = nil
 
 		if collector_request.AllowCustomOverrides {
@@ -103,43 +97,91 @@ func (self *Launcher) CompileCollectorArgs(
 			return nil, err
 		}
 
-		err = Compile(config_obj, repository, artifact, vql_collector_args)
-		if err != nil {
-			return nil, err
-		}
-
-		err = self.EnsureToolsDeclared(ctx, config_obj, artifact)
-		if err != nil {
-			return nil, err
-		}
-
-		// Add any artifact dependencies.
-		err = PopulateArtifactsVQLCollectorArgs(
-			config_obj, repository, vql_collector_args)
-		if err != nil {
-			return nil, err
-		}
-
-		err = self.AddArtifactCollectorArgs(vql_collector_args, spec)
-		if err != nil {
-			return nil, err
-		}
-
-		err = getDependentTools(ctx, config_obj, vql_collector_args)
-		if err != nil {
-			return nil, err
-		}
-
-		if should_obfuscate {
-			err = artifacts.Obfuscate(config_obj, vql_collector_args)
+		for _, expanded_artifact := range expandArtifacts(artifact) {
+			vql_collector_args, err := self.getVQLCollectorArgs(
+				ctx, config_obj, repository, expanded_artifact,
+				spec, should_obfuscate)
 			if err != nil {
 				return nil, err
 			}
+
+			vql_collector_args.OpsPerSecond = collector_request.OpsPerSecond
+			vql_collector_args.Timeout = collector_request.Timeout
+			vql_collector_args.MaxRow = 1000
+
+			result = append(result, vql_collector_args)
 		}
-		result = append(result, vql_collector_args)
 	}
 
 	return result, nil
+}
+
+// Normally each artifact is collected in order - the first source,
+// then the second source etc. However, for event artifacts, this is
+// not possible because each source never terminates. Therefore for
+// event artifacts, we expand the artifact with multiple sources, into
+// multiple artifacts with one source each in order to ensure each
+// source is collected independently.
+func expandArtifacts(artifact *artifacts_proto.Artifact) []*artifacts_proto.Artifact {
+	switch artifact.Type {
+	default:
+		return []*artifacts_proto.Artifact{artifact}
+
+	case "server_event", "client_event":
+		result := []*artifacts_proto.Artifact{}
+		for _, source := range artifact.Sources {
+			new_artifact := proto.Clone(artifact).(*artifacts_proto.Artifact)
+			new_artifact.Sources = []*artifacts_proto.ArtifactSource{source}
+			result = append(result, new_artifact)
+		}
+		return result
+	}
+}
+
+// Compile a single artifact, resolve dependencies and tools
+func (self *Launcher) getVQLCollectorArgs(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	repository services.Repository,
+	artifact *artifacts_proto.Artifact,
+	spec *flows_proto.ArtifactSpec,
+	should_obfuscate bool) (*actions_proto.VQLCollectorArgs, error) {
+
+	vql_collector_args := &actions_proto.VQLCollectorArgs{}
+	err := CompileSingleArtifact(config_obj, repository, artifact, vql_collector_args)
+	if err != nil {
+		return nil, err
+	}
+
+	err = self.EnsureToolsDeclared(ctx, config_obj, artifact)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add any artifact dependencies.
+	err = PopulateArtifactsVQLCollectorArgs(
+		config_obj, repository, vql_collector_args)
+	if err != nil {
+		return nil, err
+	}
+
+	err = self.AddArtifactCollectorArgs(vql_collector_args, spec)
+	if err != nil {
+		return nil, err
+	}
+
+	err = getDependentTools(ctx, config_obj, vql_collector_args)
+	if err != nil {
+		return nil, err
+	}
+
+	if should_obfuscate {
+		err = artifacts.Obfuscate(config_obj, vql_collector_args)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return vql_collector_args, nil
 }
 
 // Make sure we know about tools the artifact itself defines.

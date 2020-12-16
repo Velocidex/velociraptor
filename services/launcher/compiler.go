@@ -33,7 +33,7 @@ func maybeEscape(name string) string {
 	return name
 }
 
-func Compile(config_obj *config_proto.Config,
+func CompileSingleArtifact(config_obj *config_proto.Config,
 	repository services.Repository, artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs) error {
 	for _, parameter := range artifact.Parameters {
@@ -100,18 +100,13 @@ func Compile(config_obj *config_proto.Config,
 		}
 	}
 
-	return mergeSources(config_obj, repository, artifact, result, 0)
+	return mergeSources(config_obj, repository, artifact, result)
 }
 
 func mergeSources(
 	config_obj *config_proto.Config,
 	repository services.Repository, artifact *artifacts_proto.Artifact,
-	result *actions_proto.VQLCollectorArgs,
-	depth int) error {
-
-	if depth > 10 {
-		return errors.New("Recursive include detected.")
-	}
+	result *actions_proto.VQLCollectorArgs) error {
 
 	scope := vql_subsystem.MakeScope()
 

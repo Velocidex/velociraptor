@@ -387,9 +387,14 @@ func (self *LauncherTestSuite) TestCompiling() {
 		Creator:   "UserX",
 		ClientId:  "C.1234",
 		Artifacts: []string{"Test.Artifact"},
-		Parameters: &flows_proto.ArtifactParameters{
-			Env: []*actions_proto.VQLEnv{
-				{Key: "Foo", Value: "ParameterBar"},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				Artifact: "Test.Artifact",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "Foo", Value: "ParameterBar"},
+					},
+				},
 			},
 		},
 		OpsPerSecond: 42,
@@ -436,8 +441,9 @@ func (self *LauncherTestSuite) TestCompilingMultipleArtifacts() {
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
 	request := &flows_proto.ArtifactCollectorArgs{
-		Creator:  "UserX",
-		ClientId: "C.1234",
+		Creator:   "UserX",
+		ClientId:  "C.1234",
+		Artifacts: []string{"Test.Artifact", "Test.Artifact2"},
 		Specs: []*flows_proto.ArtifactSpec{
 			{
 				Artifact: "Test.Artifact",
@@ -478,6 +484,69 @@ func (self *LauncherTestSuite) TestCompilingMultipleArtifacts() {
 	assert.Equal(self.T(), compiled[1].Env[0].Value, "Foo2")
 }
 
+// Server events need to be compiled slighly differently - each source
+// needs to run in its own goroutine.
+func (self *LauncherTestSuite) TestCompilingServerEvents() {
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	definitions := `
+name: Server.Events
+type: SERVER_EVENT
+parameters:
+- name: Foo
+  type: bool
+- name: Bar
+  type: bool
+
+sources:
+- name: Source1
+  query: |
+     SELECT Foo FROM info()
+
+- name: Source2
+  query: |
+     SELECT Bar FROM info()
+`
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(definitions, true)
+	assert.NoError(self.T(), err)
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Artifacts: []string{"Server.Events"},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				Artifact: "Server.Events",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "Foo", Value: "Y"},
+					},
+				},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	acl_manager := vql_subsystem.NullACLManager{}
+
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository, false, request)
+	assert.NoError(self.T(), err)
+
+	// There should be 2 queries that will run in parallel.
+	assert.Equal(self.T(), 2, len(compiled))
+
+	// The parameters (Env) and type conversion preamble should be
+	// duplicated across both VQLCollectorArgs instances.
+	goldie.Assert(self.T(), "TestCompilingServerEvents", json.MustMarshalIndent(compiled))
+}
+
 func (self *LauncherTestSuite) TestCompilingObfuscation() {
 	manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)
@@ -491,10 +560,9 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
 	request := &flows_proto.ArtifactCollectorArgs{
-		Creator:    "UserX",
-		ClientId:   "C.1234",
-		Artifacts:  []string{"Test.Artifact"},
-		Parameters: &flows_proto.ArtifactParameters{},
+		Creator:   "UserX",
+		ClientId:  "C.1234",
+		Artifacts: []string{"Test.Artifact"},
 	}
 	ctx := context.Background()
 	acl_manager := vql_subsystem.NullACLManager{}
