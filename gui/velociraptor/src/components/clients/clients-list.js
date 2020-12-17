@@ -154,10 +154,11 @@ class DeleteClients extends Component {
         api.post("v1/CollectArtifact", {
             client_id: "server",
             artifacts: ["Server.Utils.DeleteClient"],
-            parameters: {"env": [
-                { "key": "ClientIdList", "value": client_ids.join(",")},
-                { "key": "ReallyDoIt", "value": "Y"},
-            ]},
+            specs: [{artifact: "Server.Utils.DeleteClient",
+                     parameters: {"env": [
+                         { "key": "ClientIdList", "value": client_ids.join(",")},
+                         { "key": "ReallyDoIt", "value": "Y"},
+                     ]}}],
         }).then((response) => {
             // Hold onto the flow id.
             this.setState({flow_id: response.data.flow_id});

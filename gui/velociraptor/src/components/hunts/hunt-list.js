@@ -86,9 +86,10 @@ class HuntList extends React.Component {
             api.post("v1/CollectArtifact", {
                 client_id: "server",
                 artifacts: ["Server.Utils.CancelHunt"],
-                parameters: {env: [
-                    {key: "HuntId", value: hunt_id},
-                ]},
+                specs: [{artifact: "Server.Utils.CancelHunt",
+                         parameters: {env: [
+                             {key: "HuntId", value: hunt_id},
+                         ]}}],
             });
         });
     }
@@ -141,10 +142,11 @@ class HuntList extends React.Component {
             api.post("v1/CollectArtifact", {
                 client_id: "server",
                 artifacts: ["Server.Hunts.CancelAndDelete"],
-                parameters: {env: [
-                    {key: "HuntId", value: hunt_id},
-                    {key: "DeleteAllFiles", value: "Y"},
-                ]},
+                specs: [{artifact: "Server.Hunts.CancelAndDelete",
+                         parameters: {env: [
+                             {key: "HuntId", value: hunt_id},
+                             {key: "DeleteAllFiles", value: "Y"},
+                         ]}}],
             });
         });
     }
