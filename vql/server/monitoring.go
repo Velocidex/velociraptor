@@ -24,7 +24,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -57,7 +56,7 @@ func (self MonitoringPlugin) Call(
 			return
 		}
 
-		config_obj, ok := artifacts.GetServerConfig(scope)
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return
@@ -134,7 +133,7 @@ func (self WatchMonitoringPlugin) Call(
 			return
 		}
 
-		config_obj, ok := artifacts.GetServerConfig(scope)
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return

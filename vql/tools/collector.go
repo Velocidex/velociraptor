@@ -80,7 +80,7 @@ func (self CollectPlugin) Call(
 			arg.Template = "Reporting.Default"
 		}
 
-		config_obj, ok := artifacts.GetServerConfig(scope)
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			config_obj = config.GetDefaultConfig()
 		}

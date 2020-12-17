@@ -5,7 +5,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -38,7 +37,7 @@ func (self GetClientMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	_, ok := artifacts.GetServerConfig(scope)
+	_, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}
@@ -79,7 +78,7 @@ func (self SetClientMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	config_obj, ok := artifacts.GetServerConfig(scope)
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}
@@ -148,7 +147,7 @@ func (self GetServerMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	config_obj, ok := artifacts.GetServerConfig(scope)
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}
@@ -205,7 +204,7 @@ func (self SetServerMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	config_obj, ok := artifacts.GetServerConfig(scope)
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}

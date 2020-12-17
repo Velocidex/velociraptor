@@ -43,7 +43,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/regparser"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -371,7 +370,7 @@ func (self ReadKeyValues) Call(
 	go func() {
 		defer close(output_chan)
 
-		config_obj, ok := artifacts.GetServerConfig(scope)
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			config_obj = &config_proto.Config{}
 		}

@@ -24,7 +24,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/disk"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -49,7 +48,7 @@ func (self GlobPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		config_obj, ok := artifacts.GetServerConfig(scope)
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			config_obj = &config_proto.Config{}
 		}

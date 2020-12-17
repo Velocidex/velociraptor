@@ -149,7 +149,7 @@ func ScopeBuilderFromScope(scope *vfilter.Scope) ScopeBuilder {
 	result := ScopeBuilder{
 		Logger: scope.Logger,
 	}
-	config_obj, ok := artifacts.GetServerConfig(scope)
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if ok {
 		result.Config = config_obj
 	}

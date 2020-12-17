@@ -247,6 +247,11 @@ export default class NotebookCellRenderer extends React.Component {
     }
 
     recalculate = () => {
+        let cell = this.state.cell;
+        cell.output = "Loading";
+        cell.timestamp = 0;
+        this.setState({cell: cell});
+
         api.post('v1/UpdateNotebookCell', {
             notebook_id: this.props.notebook_id,
             cell_id: this.state.cell.cell_id,
@@ -380,7 +385,7 @@ export default class NotebookCellRenderer extends React.Component {
                       onClick={this.recalculate}
                       variant="default">
                 <FontAwesomeIcon icon="sync"/>
-                 </Button>
+              </Button>
 
               <Button title="Stop Calculating"
                       disabled={!this.state.cell.calculating}
