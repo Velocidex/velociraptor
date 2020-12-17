@@ -16,7 +16,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
@@ -58,7 +57,7 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	config_obj, ok := artifacts.GetServerConfig(scope)
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}
@@ -129,7 +128,7 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	config_obj, ok := artifacts.GetServerConfig(scope)
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}

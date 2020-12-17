@@ -9,7 +9,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -51,7 +50,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	config_obj, ok := artifacts.GetServerConfig(scope)
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}
@@ -153,7 +152,7 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	config_obj, ok := artifacts.GetServerConfig(scope)
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}

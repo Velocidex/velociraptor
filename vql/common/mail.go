@@ -24,7 +24,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	gomail "gopkg.in/gomail.v2"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -61,7 +60,7 @@ func (self MailPlugin) Call(
 			return
 		}
 
-		config_obj, ok := artifacts.GetServerConfig(scope)
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return

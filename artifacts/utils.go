@@ -9,7 +9,7 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-// Gets the config from the scope.
+// Gets the client config from the scope.
 func GetConfig(scope *vfilter.Scope) (*config_proto.ClientConfig, bool) {
 	scope_config, pres := scope.Resolve(constants.SCOPE_CONFIG)
 	if !pres {
@@ -20,16 +20,6 @@ func GetConfig(scope *vfilter.Scope) (*config_proto.ClientConfig, bool) {
 	if config == nil {
 		return nil, false
 	}
-	return config, ok
-}
-
-func GetServerConfig(scope *vfilter.Scope) (*config_proto.Config, bool) {
-	scope_config, pres := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
-	if !pres {
-		return nil, false
-	}
-
-	config, ok := scope_config.(*config_proto.Config)
 	return config, ok
 }
 

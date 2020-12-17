@@ -5,7 +5,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -28,7 +27,7 @@ func (self UsersPlugin) Call(
 			return
 		}
 
-		config_obj, ok := artifacts.GetServerConfig(scope)
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return

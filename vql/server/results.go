@@ -27,7 +27,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
@@ -65,7 +64,7 @@ func (self UploadsPlugins) Call(
 
 		arg := &UploadsPluginsArgs{}
 
-		config_obj, ok := artifacts.GetServerConfig(scope)
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return
@@ -161,7 +160,7 @@ func (self SourcePlugin) Call(
 		}
 
 		arg := &SourcePluginArgs{}
-		config_obj, ok := artifacts.GetServerConfig(scope)
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return
@@ -404,7 +403,7 @@ func (self FlowResultsPlugin) Call(
 			return
 		}
 
-		config_obj, ok := artifacts.GetServerConfig(scope)
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return

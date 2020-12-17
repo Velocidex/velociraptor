@@ -77,7 +77,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 		defer self.wg.Done()
 		defer close(output_chan)
 
-		config_obj, ok := artifacts.GetServerConfig(scope)
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("Failed to get config_obj")
 			return
