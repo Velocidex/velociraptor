@@ -187,10 +187,11 @@ class VeloFileList extends Component {
             urgent: true,
             client_id: this.props.client.client_id,
             artifacts: ["System.VFS.DownloadFile"],
-            parameters: {"env": [
-                { "key": "Path", "value": search_path},
-                { "key": "Accessor", "value": accessor},
-                { "key": "Recursively", "value": "Y"}]},
+            specs: [{artifact: "System.VFS.DownloadFile",
+                     parameters: {"env": [
+                         { "key": "Path", "value": search_path},
+                         { "key": "Accessor", "value": accessor},
+                         { "key": "Recursively", "value": "Y"}]}}],
             max_upload_bytes: 1048576000,
         }).then((response) => {
             // Hold onto the flow id.

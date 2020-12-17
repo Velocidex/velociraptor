@@ -137,7 +137,7 @@ class FlowsList extends React.Component {
     }
 
     setCollectionRequest = (request) => {
-        // Make a request to the start the flow on this client.
+        // Make a request to start the flow on this client.
         request.client_id = this.props.client.client_id;
         api.post("v1/CollectArtifact", request).then((response) => {
             // When the request is done force our parent to refresh.

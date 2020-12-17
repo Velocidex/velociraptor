@@ -48,10 +48,11 @@ class VeloFileStats extends Component {
             urgent: true,
             client_id: this.props.client.client_id,
             artifacts: ["System.VFS.DownloadFile"],
-            parameters: {
-                env: [{key: "Path", value: selectedRow._FullPath},
-                      {key: "Accessor", value: selectedRow._Accessor}],
-            }
+            specs: [{artifact: "System.VFS.DownloadFile",
+                     parameters: {
+                         env: [{key: "Path", value: selectedRow._FullPath},
+                               {key: "Accessor", value: selectedRow._Accessor}],
+                     }}],
         }).then(response => {
             let flow_id = response.data.flow_id;
             this.setState({updateOperationFlowId: flow_id});

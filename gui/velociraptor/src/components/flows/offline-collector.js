@@ -339,7 +339,8 @@ export default class OfflineCollectorWizard extends React.Component {
         let env = [];
         let request = {
             artifacts: ["Server.Utils.CreateCollector"],
-            parameters: {env: env}};
+            specs: [{artifact: "Server.Utils.CreateCollector", parameters: {env: env}}],
+        };
 
         env.push({key: "OS",
                   value: this.state.collector_parameters.target_os});

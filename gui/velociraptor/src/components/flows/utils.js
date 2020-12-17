@@ -47,7 +47,8 @@ const runArtifact = (client_id, artifact, params, on_success)=>{
     api.post("v1/CollectArtifact", {
         client_id: client_id,
         artifacts: [artifact],
-        parameters: artifact_params,
+        specs: [{artifact: artifact,
+                 parameters: artifact_params}],
         max_upload_bytes: 1048576000,
     }).then((response) => {
         let flow_id = response.data.flow_id;
