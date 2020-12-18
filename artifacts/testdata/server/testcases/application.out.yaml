@@ -16,4 +16,5 @@ SELECT StartTime,EndTime,TeamViewerID,SourceHost,User,ConnectionType,ConnectionI
   "User": "yolo",
   "ConnectionType": "RemoteControl",
   "ConnectionID": "{af03e0b1-85c3-49b2-8074-c66ce0fd5f4a}\t"
+ }
 ]
