@@ -57,6 +57,7 @@ type GuiTemplateEngine struct {
 	path_manager *NotebookCellPathManager
 	Data         map[string]*actions_proto.VQLResponse
 	Progress     utils.ProgressReporter
+	Start        time.Time
 }
 
 // Go templates can call functions which take args. The pipeline is
@@ -105,7 +106,6 @@ func (self *GuiTemplateEngine) Expand(values ...interface{}) interface{} {
 		}
 
 		for _, item := range t {
-			//path_manager := NewNotebookCellPathManager(item)
 			result_chan, err := file_store.GetTimeRange(
 				context.Background(), self.config_obj, item, 0, 0)
 			if err == nil {
@@ -425,6 +425,8 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 				next_progress := time.Now().Add(4 * time.Second)
 				eval_chan := vql.Eval(self.ctx, self.Scope)
 
+				defer self.Progress.Report("Completed query")
+
 				for {
 					select {
 					case <-self.ctx.Done():
@@ -550,6 +552,7 @@ func NewGuiTemplateEngine(
 		log_writer:         log_writer,
 		path_manager:       notebook_cell_path_manager,
 		Data:               make(map[string]*actions_proto.VQLResponse),
+		Start:              time.Now(),
 	}
 	template_engine.tmpl = template.New("").Funcs(sprig.TxtFuncMap()).Funcs(
 		template.FuncMap{

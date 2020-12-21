@@ -140,6 +140,7 @@ type SourcePluginArgs struct {
 	NotebookCellTable int64  `vfilter:"optional,field=notebook_cell_table,doc=A notebook cell can have multiple tables.)"`
 
 	StartRow int64 `vfilter:"optional,field=start_row,doc=Start reading the result set from this row"`
+	Limit    int64 `vfilter:"optional,field=count,doc=Maximum number of clients to fetch (default unlimited)'"`
 }
 
 type SourcePlugin struct{}
@@ -215,11 +216,16 @@ func (self SourcePlugin) Call(
 			}
 		}
 
+		count := int64(0)
 		for row := range result_set_reader.Rows(ctx) {
+			if arg.Limit > 0 && count >= arg.Limit {
+				return
+			}
 			select {
 			case <-ctx.Done():
 				return
 			case output_chan <- row:
+				count++
 			}
 		}
 	}()
@@ -347,6 +353,16 @@ func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
 		arg.ClientId, _ = client_id.(string)
 	}
 
+	flow_id, pres := scope.Resolve("FlowId")
+	if pres {
+		arg.FlowId, _ = flow_id.(string)
+	}
+
+	artifact_name, pres := scope.Resolve("ArtifactName")
+	if pres {
+		arg.Artifact = artifact_name.(string)
+	}
+
 	start_time, pres := scope.Resolve("StartTime")
 	if pres {
 		arg.StartTime, _ = start_time.(int64)
@@ -357,9 +373,28 @@ func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
 		arg.EndTime, _ = end_time.(int64)
 	}
 
-	flow_id, pres := scope.Resolve("FlowId")
+	notebook_id, pres := scope.Resolve("NotebookId")
 	if pres {
-		arg.FlowId, _ = flow_id.(string)
+		arg.NotebookId = notebook_id.(string)
+	}
+	notebook_cell_id, pres := scope.Resolve("NotebookCellId")
+	if pres {
+		arg.NotebookCellId = notebook_cell_id.(string)
+	}
+
+	notebook_cell_table, pres := scope.Resolve("NotebookCellTable")
+	if pres {
+		arg.NotebookCellTable = notebook_cell_table.(int64)
+	}
+
+	start_row, pres := scope.Resolve("StartRow")
+	if pres {
+		arg.StartRow = start_row.(int64)
+	}
+
+	limit, pres := scope.Resolve("Limit")
+	if pres {
+		arg.Limit = limit.(int64)
 	}
 
 	hunt_id, pres := scope.Resolve("HuntId")
@@ -367,10 +402,6 @@ func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
 		arg.HuntId, _ = hunt_id.(string)
 	}
 
-	artifact_name, pres := scope.Resolve("ArtifactName")
-	if pres {
-		arg.Artifact = artifact_name.(string)
-	}
 }
 
 type FlowResultsPluginArgs struct {
