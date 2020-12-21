@@ -32,7 +32,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
-	_ "www.velocidex.com/golang/velociraptor/vql_plugins"
+	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
+	_ "www.velocidex.com/golang/velociraptor/vql/networking"
+	_ "www.velocidex.com/golang/velociraptor/vql/windows"
+	_ "www.velocidex.com/golang/velociraptor/vql/windows/filesystems"
 )
 
 type TestRangeReader struct {
