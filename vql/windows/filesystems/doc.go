@@ -1,2 +1,2 @@
 // Windows filesystem specific plugins.
-package filesystem
+package filesystems
