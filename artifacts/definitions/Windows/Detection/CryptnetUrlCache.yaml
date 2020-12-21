@@ -51,11 +51,6 @@ sources:
             FROM parse_csv(filename=GlobLookup, accessor='data')
 
 
-      -- extract URL whitelist
-      LET DomainWhitelist <= SELECT Regex
-            FROM parse_csv(filename=DomainWhitelist, accessor='data')
-
-
       -- expand provided glob into a list of paths on the file system (fs)
       LET fspaths(path) = SELECT * FROM glob(globs=path) WHERE NOT IsDir
 

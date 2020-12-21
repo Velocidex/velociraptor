@@ -1,5 +1,4 @@
 Queries:
-  - SELECT StartTime,EndTime,TeamViewerID,SourceHost,User,ConnectionType,ConnectionID,
-           basename(path=Source) AS Source
+  - SELECT StartTime,EndTime,TeamViewerID,SourceHost,User,ConnectionType,ConnectionID
     FROM Artifact.Windows.Applications.TeamViewer.Incoming(
            FileGlob=srcDir + '/artifacts/testdata/files/Connection_incoming.txt')
