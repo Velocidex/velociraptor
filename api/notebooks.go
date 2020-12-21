@@ -670,6 +670,28 @@ func (self *ApiServer) CancelNotebookCell(
 			"User is not allowed to edit notebooks.")
 	}
 
+	// Unset the calculating bit in the notebook in case the
+	// renderer is not actually running (e.g. server restart).
+	db, err := datastore.GetDB(self.config)
+	if err != nil {
+		return nil, err
+	}
+	notebook_cell_path_manager := reporting.NewNotebookPathManager(in.NotebookId).
+		Cell(in.CellId)
+	notebook_cell := &api_proto.NotebookCell{}
+	err = db.GetSubject(self.config, notebook_cell_path_manager.Path(),
+		notebook_cell)
+	if err != nil || notebook_cell.CellId != in.CellId {
+		return nil, errors.New("No such cell")
+	}
+
+	notebook_cell.Calculating = false
+	err = db.SetSubject(self.config, notebook_cell_path_manager.Path(),
+		notebook_cell)
+	if err != nil {
+		return nil, err
+	}
+
 	return &empty.Empty{}, services.GetNotifier().NotifyListener(self.config, in.CellId)
 }
 
@@ -944,6 +966,7 @@ func updateCellContents(
 		Type:             cell_type,
 		Timestamp:        time.Now().Unix(),
 		CurrentlyEditing: currently_editing,
+		Duration:         int64(time.Since(tmpl.Start).Seconds()),
 	}
 
 	return notebook_cell, setCell(config_obj, notebook_id, notebook_cell)
@@ -1006,6 +1029,8 @@ func (self *progressReporter) Report(message string) {
 	}
 
 	self.last = now
+	duration := time.Since(self.start).Round(time.Second)
+
 	notebook_cell := proto.Clone(self.notebook_cell).(*api_proto.NotebookCell)
 	notebook_cell.Output = fmt.Sprintf(`
 <div class="padded"><i class="fa fa-spinner fa-spin fa-fw"></i>
@@ -1016,9 +1041,10 @@ func (self *progressReporter) Report(message string) {
                    params='{"notebook_id":"%s","cell_id":"%s","table_id":1,"message": "%s"}' />
 </div>
 `,
-		message, time.Since(self.start).Round(time.Second),
+		message, duration,
 		self.notebook_id, self.notebook_cell.CellId, message)
 	notebook_cell.Timestamp = now.Unix()
+	notebook_cell.Duration = int64(duration.Seconds())
 
 	// Cant do anything if we can not set the notebook times
 	_ = setCell(self.config_obj, self.notebook_id, notebook_cell)

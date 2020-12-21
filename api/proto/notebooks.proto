@@ -63,6 +63,7 @@ message NotebookCell {
     repeated string messages = 5;
 
     int64 timestamp = 6;
+    int64 duration = 10;
 
     // The type of this cell.
     string type = 7;

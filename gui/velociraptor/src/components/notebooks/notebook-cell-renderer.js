@@ -478,6 +478,8 @@ export default class NotebookCellRenderer extends React.Component {
               <Button title="Rendered" disabled
                       variant="outline-info">
                 <VeloTimestamp usec={this.state.cell.timestamp * 1000} />
+                { this.state.cell.duration &&
+                  <span>&nbsp;({this.state.cell.duration}s) </span> }
               </Button>
             </ButtonGroup>
             </>
