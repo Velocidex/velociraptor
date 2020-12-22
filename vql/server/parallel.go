@@ -181,6 +181,12 @@ func breakIntoScopes(
 			output_chan <- ordereddict.NewDict().
 				Set("ClientId", arg.ClientId).
 				Set("FlowId", arg.FlowId).
+
+				// Mask hunt id since we already take
+				// care of it in breakHuntIntoScopes
+				// and we dont want source() plugin to
+				// pick it up.
+				Set("HuntId", "").
 				Set("ArtifactName", arg.Artifact).
 				Set("StartTime", arg.StartTime).
 				Set("EndTime", arg.EndTime).

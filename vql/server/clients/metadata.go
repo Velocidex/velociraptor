@@ -25,16 +25,20 @@ func (self *ClientMetadataFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+	arg := &ClientMetadataFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("client_metadata: %s", err)
+		scope.Log("client_metadata: %s", err.Error())
 		return vfilter.Null{}
 	}
 
-	arg := &ClientMetadataFunctionArgs{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	permission := acls.READ_RESULTS
+	if arg.ClientId == "server" {
+		permission = acls.SERVER_ADMIN
+	}
+	err = vql_subsystem.CheckAccess(scope, permission)
 	if err != nil {
-		scope.Log("client_metadata: %s", err.Error())
+		scope.Log("client_metadata: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -86,17 +90,22 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.LABEL_CLIENT)
-	if err != nil {
-		scope.Log("client_set_metadata: %s", err)
-		return vfilter.Null{}
-	}
-
 	// Collapse lazy args etc.
 	expanded_args := vfilter.RowToDict(ctx, scope, args)
 	client_id, pres := expanded_args.GetString("client_id")
 	if !pres {
 		scope.Log("client_set_metadata: client_id must be specified")
+		return vfilter.Null{}
+	}
+
+	permission := acls.READ_RESULTS
+	if client_id == "server" {
+		permission = acls.SERVER_ADMIN
+	}
+
+	err := vql_subsystem.CheckAccess(scope, permission)
+	if err != nil {
+		scope.Log("client_set_metadata: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -151,7 +160,45 @@ func (self ClientSetMetadataFunction) Info(
 	}
 }
 
+type ServerMetadataFunction struct{}
+
+func (self *ServerMetadataFunction) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	args.Set("client_id", "server")
+	return (&ClientMetadataFunction{}).Call(ctx, scope, args)
+}
+
+func (self ServerMetadataFunction) Info(
+	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "server_metadata",
+		Doc:     "Returns client metadata from the datastore. Client metadata is a set of free form key/value data",
+		ArgType: type_map.AddType(scope, &ClientMetadataFunctionArgs{}),
+	}
+}
+
+type ServerSetMetadataFunction struct{}
+
+func (self *ServerSetMetadataFunction) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	args.Set("client_id", "server")
+	return (&ClientSetMetadataFunction{}).Call(ctx, scope, args)
+}
+
+func (self ServerSetMetadataFunction) Info(
+	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "server_set_metadata",
+		Doc:     "Sets client metadata. Client metadata is a set of free form key/value data",
+		ArgType: type_map.AddType(scope, &ClientSetMetadataFunctionArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&ClientMetadataFunction{})
 	vql_subsystem.RegisterFunction(&ClientSetMetadataFunction{})
+	vql_subsystem.RegisterFunction(&ServerMetadataFunction{})
+	vql_subsystem.RegisterFunction(&ServerSetMetadataFunction{})
 }

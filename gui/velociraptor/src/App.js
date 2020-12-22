@@ -5,6 +5,7 @@ import VeloNavigator from './components/sidebar/navigator.js';
 import VeloClientSearch from './components/clients/search.js';
 import VeloClientList from './components/clients/clients-list.js';
 import VeloHostInfo from './components/clients/host-info.js';
+import ServerInfo from './components/server/server-info.js';
 import ClientSetterFromRoute from './components/clients/client_info.js';
 import VeloClientSummary from './components/clients/client-summary.js';
 import VFSViewer from './components/vfs/browse-vfs.js';
@@ -134,9 +135,12 @@ class App extends Component {
                     <VeloHunts/>
                   </Route>
 
-                  <Route path="/host/:client_id/:action?">
+                  <Route path="/host/:client_id(C[^/]+)/:action?">
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
                     <VeloHostInfo client={this.state.client}  />
+                  </Route>
+                  <Route path="/host/:client_id(server)/:action?">
+                    <ServerInfo  />
                   </Route>
                   <Route path="/vfs/:client_id/:vfs_path(.*)">
                     <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />

@@ -225,13 +225,14 @@ class VeloShellCell extends Component {
 class ShellViewer extends Component {
     static propTypes = {
         client: PropTypes.object,
+        default_shell: PropTypes.object,
     }
 
     constructor(props) {
         super(props);
         this.state = {
             flows: [],
-            shell_type: 'Powershell',
+            shell_type: props.default_shell || 'Powershell',
             command: "",
         };
     }

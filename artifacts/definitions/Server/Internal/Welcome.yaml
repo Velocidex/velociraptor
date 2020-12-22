@@ -26,6 +26,7 @@ reports:
       * <a href="#/dashboard">Inspect the server's state</a>
       * <a href="#/collected/server">Building an Offline Collector</a>
       * <a href="#/notebooks">Write VQL notebooks</a>
+      * <a href="#/host/server">View Server Configuration</a>
       * <a href="#/artifacts/Server.Internal.Welcome">Customize this welcome screen</a>
 
       Or simply search for a client in the search bar above.
