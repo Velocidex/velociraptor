@@ -82,4 +82,4 @@ reports:
 
       ## Server version
 
-      {{ Query "SELECT Version FROM server_config" | Table }}
+      {{ Query "SELECT Version FROM config" | Table }}

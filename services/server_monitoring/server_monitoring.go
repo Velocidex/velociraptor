@@ -166,9 +166,9 @@ func (self *EventTable) RunQuery(
 	}
 
 	scope := manager.BuildScope(builder)
-	/*	vfilter.InstallThrottler(
+	vfilter.InstallThrottler(
 		scope, vfilter.NewTimeThrottler(float64(50)))
-	*/
+
 	// Create a result set writer for the output.
 	opts := vql_subsystem.EncOptsFromScope(scope)
 	file_store_factory := file_store.GetFileStore(config_obj)

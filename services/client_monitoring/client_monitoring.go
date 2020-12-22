@@ -59,8 +59,6 @@ type ClientEventTable struct {
 	// protobufs in memory.
 	state *flows_proto.ClientEventTable
 
-	repository services.Repository
-
 	clock utils.Clock
 
 	id string
@@ -118,6 +116,17 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 	if err != nil {
 		return nil, err
 	}
+
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil, err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	// Compile each artifact separately into its own
 	// VQLCollectorArgs so they can be run in parallel.
 	for _, name := range artifact.Artifacts {
@@ -126,7 +135,7 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 		temp.Artifacts = []string{name}
 		compiled, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, vql_subsystem.NullACLManager{},
-			self.repository,
+			repository,
 			true, /* should_obfuscate */
 			temp)
 		if err != nil {
@@ -365,20 +374,9 @@ func StartClientMonitoringService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	manager, err := services.GetRepositoryManager()
-	if err != nil {
-		return err
-	}
-
-	repository, err := manager.GetGlobalRepository(config_obj)
-	if err != nil {
-		return err
-	}
-
 	event_table := &ClientEventTable{
-		repository: repository,
-		clock:      &utils.RealClock{},
-		id:         uuid.New().String(),
+		clock: &utils.RealClock{},
+		id:    uuid.New().String(),
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)

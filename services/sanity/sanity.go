@@ -122,7 +122,59 @@ func (self *SanityChecks) Check(
 		}
 	}
 
+	err = configServerMetadata(ctx, config_obj)
+	if err != nil {
+		return err
+	}
+
 	return checkForServerUpgrade(ctx, config_obj)
+}
+
+// Sets the server metadata to defaults.
+func configServerMetadata(
+	ctx context.Context, config_obj *config_proto.Config) error {
+
+	client_path_manager := paths.NewClientPathManager("server")
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	result := &api_proto.ClientMetadata{}
+	err = db.GetSubject(config_obj, client_path_manager.Metadata(), result)
+	if err != nil && err == io.EOF {
+		// Metadata not set, start with empty set.
+		err = nil
+	}
+
+	is_set := func(field string) bool {
+		for _, item := range result.Items {
+			if item.Key == field {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Ensure the expected fields are defined
+	var was_changed bool
+	for _, field := range []string{"SlackToken"} {
+		if !is_set(field) {
+			was_changed = true
+			result.Items = append(result.Items, &api_proto.ClientMetadataItem{
+				Key: field,
+			})
+		}
+	}
+
+	if was_changed {
+		err = db.SetSubject(config_obj, client_path_manager.Metadata(), result)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // If the server is upgraded we need to do some housekeeping.
