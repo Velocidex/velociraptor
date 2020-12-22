@@ -17,9 +17,9 @@ parameters:
 sources:
   - query: |
         LET token_url = if(
-           condition=server_metadata().SlackToken,
-           then=server_metadata().SlackToken,
-           else=SlackToken)
+           condition=SlackToken,
+           then=SlackToken,
+           else=server_metadata().SlackToken)
 
         LET hits = SELECT client_id,
                os_info.fqdn as Hostname ,
