@@ -13,6 +13,16 @@ export default class FlowLogs extends React.Component {
 
     render() {
         let renderers = {
+            client_time: (cell, row, rowIndex) => {
+                return (
+                    <VeloTimestamp usec={cell * 1000}/>
+                );
+            },
+            _ts: (cell, row, rowIndex) => {
+                return (
+                    <VeloTimestamp usec={cell * 1000}/>
+                );
+            },
             Timestamp: (cell, row, rowIndex) => {
                 return (
                     <VeloTimestamp usec={cell / 1000}/>

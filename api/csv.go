@@ -136,6 +136,29 @@ func getEventTable(
 	config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) (
 	*api_proto.GetTableResponse, error) {
+	path_manager := artifacts.NewArtifactPathManager(
+		config_obj, in.ClientId, in.FlowId, in.Artifact)
+
+	return getEventTableWithPathManager(ctx, config_obj, in, path_manager)
+}
+
+func getEventTableLogs(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.GetTableRequest) (
+	*api_proto.GetTableResponse, error) {
+	path_manager := artifacts.NewMonitoringArtifactLogPathManager(
+		config_obj, in.ClientId, in.Artifact)
+
+	return getEventTableWithPathManager(ctx, config_obj, in, path_manager)
+}
+
+func getEventTableWithPathManager(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.GetTableRequest,
+	path_manager api.PathManager) (
+	*api_proto.GetTableResponse, error) {
 
 	rows := uint64(0)
 	if in.Rows == 0 {
@@ -143,9 +166,6 @@ func getEventTable(
 	}
 
 	result := &api_proto.GetTableResponse{}
-
-	path_manager := artifacts.NewArtifactPathManager(
-		config_obj, in.ClientId, in.FlowId, in.Artifact)
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_reader, err := result_sets.NewTimedResultSetReader(ctx,

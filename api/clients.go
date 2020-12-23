@@ -151,6 +151,10 @@ func (self *ApiServer) GetClientMetadata(
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
+	if in.ClientId == "server" {
+		permissions = acls.SERVER_ADMIN
+	}
+
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,

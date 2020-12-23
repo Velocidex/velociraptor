@@ -20,17 +20,20 @@ type BasicAuthenticator struct{}
 
 // Basic auth does not need any special handlers.
 func (self *BasicAuthenticator) AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
-	mux.Handle("/logoff", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	base := config_obj.GUI.BasePath
+	mux.Handle(base+"/logoff", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username, _, ok := r.BasicAuth()
 		if !ok {
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return
 		}
 
+		// The previous username is given as a query parameter.
 		params := r.URL.Query()
 		old_username, ok := params["username"]
 		if ok && len(old_username) == 1 && old_username[0] != username {
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, base, http.StatusTemporaryRedirect)
 			return
 		}
 

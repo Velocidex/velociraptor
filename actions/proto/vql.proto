@@ -63,6 +63,9 @@ message VQLCollectorArgs {
             description: "Maximum time for the query to run."
         }];
 
+    // How often to heart beat progress (default 30 sec)
+    uint64 heartbeat = 27;
+
     repeated string tools = 26 [(sem_type)={
             description: "A list of tools we will need to run this VQL.",
         }];

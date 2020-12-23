@@ -26,6 +26,8 @@ type ArtifactPathManager struct {
 
 	Clock      utils.Clock
 	file_store api.FileStore
+
+	base string
 }
 
 func NewArtifactPathManager(
@@ -39,6 +41,21 @@ func NewArtifactPathManager(
 		full_artifact_name: full_artifact_name,
 		Clock:              utils.RealClock{},
 		file_store:         file_store_factory,
+		base:               "monitoring",
+	}
+}
+
+func NewMonitoringArtifactLogPathManager(
+	config_obj *config_proto.Config,
+	client_id, full_artifact_name string) *ArtifactPathManager {
+	file_store_factory := file_store.GetFileStore(config_obj)
+	return &ArtifactPathManager{
+		config_obj:         config_obj,
+		client_id:          client_id,
+		full_artifact_name: full_artifact_name,
+		Clock:              utils.RealClock{},
+		file_store:         file_store_factory,
+		base:               "monitoring_logs",
 	}
 }
 
@@ -62,7 +79,7 @@ func (self *ArtifactPathManager) GetPathForWriting() (string, error) {
 	day_name := fmt.Sprintf("%d-%02d-%02d", now.Year(),
 		now.Month(), now.Day())
 
-	result := get_back_path(self.client_id, day_name, self.flow_id,
+	result := self.get_back_path(self.client_id, day_name, self.flow_id,
 		artifact_name, artifact_source, mode)
 
 	return result + ".json", nil
@@ -101,12 +118,12 @@ func (self *ArtifactPathManager) get_event_files() ([]*api.ResultSetFileProperti
 		} else {
 			if source_name != "" {
 				dir_name = fmt.Sprintf(
-					"/clients/%s/monitoring/%s/%s",
-					self.client_id, artifact_name, source_name)
+					"/clients/%s/%s/%s/%s",
+					self.client_id, self.base, artifact_name, source_name)
 			} else {
 				dir_name = fmt.Sprintf(
-					"/clients/%s/monitoring/%s",
-					self.client_id, artifact_name)
+					"/clients/%s/%s/%s",
+					self.client_id, self.base, artifact_name)
 			}
 		}
 
@@ -189,7 +206,8 @@ func DayNameToTimestamp(name string) int64 {
 // This function represents a map between the type of artifact and its
 // location on disk. It is used by all code that needs to read or
 // write artifact results.
-func get_back_path(client_id, day_name, flow_id, artifact_name, source_name string,
+func (self *ArtifactPathManager) get_back_path(
+	client_id, day_name, flow_id, artifact_name, source_name string,
 	mode int) string {
 
 	switch mode {
@@ -232,19 +250,21 @@ func get_back_path(client_id, day_name, flow_id, artifact_name, source_name stri
 		if client_id == "" {
 			// Should never normally happen.
 			return fmt.Sprintf(
-				"/clients/nobody/monitoring/%s/%s",
-				artifact_name, day_name)
+				"/clients/nobody/%s/%s/%s",
+				self.base, artifact_name, day_name)
 
 		} else {
 			if source_name != "" {
 				return fmt.Sprintf(
-					"/clients/%s/monitoring/%s/%s/%s",
-					client_id, artifact_name, source_name,
+					"/clients/%s/%s/%s/%s/%s",
+					client_id, self.base,
+					artifact_name, source_name,
 					day_name)
 			} else {
 				return fmt.Sprintf(
-					"/clients/%s/monitoring/%s/%s",
-					client_id, artifact_name, day_name)
+					"/clients/%s/%s/%s/%s",
+					client_id, self.base,
+					artifact_name, day_name)
 			}
 		}
 	}
