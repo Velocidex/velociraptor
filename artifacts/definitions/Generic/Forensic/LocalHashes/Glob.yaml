@@ -54,4 +54,4 @@ sources:
 
       SELECT FullPath, Hash, Size
       FROM insertion
-      WHERE SuppressOutput != "Y"
+      WHERE NOT SuppressOutput

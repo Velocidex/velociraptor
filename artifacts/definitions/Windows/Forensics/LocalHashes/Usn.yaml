@@ -79,7 +79,7 @@ sources:
       // If output is suppressed do not emit a row, but still update the local database.
       SELECT FullPath, Hash, Size, Time
       FROM insertion
-      WHERE SuppressOutput != "Y"
+      WHERE NOT SuppressOutput
 
 column_types:
   - name: Time

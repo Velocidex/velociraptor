@@ -14,7 +14,7 @@ precondition: SELECT OS FROM info() WHERE OS =~ 'darwin'
 parameters:
   - name: PlistGlob
     default: /Library/Preferences/*.plist
-  
+
   - name: Upload_File
     default: N
     type: bool
@@ -22,14 +22,14 @@ parameters:
 sources:
   - queries:
       - LET Plists = SELECT FullPath FROM glob(globs=PlistGlob)
-      - LET PlistDetails = 
+      - LET PlistDetails =
             SELECT * FROM foreach(
                 row=plist(file=FullPath),
                 query={ SELECT
                     FullPath AS FullPath,
                     timestamp(epoch=Mtime.Sec) AS Mtime,
                     plist(file=FullPath) AS Content,
-                    if(condition=(Upload_File = "Y"),
+                    if(condition=Upload_File,
                       then=upload(file=FullPath)) AS Upload
                     FROM scope()
                 }

@@ -49,7 +49,7 @@ sources:
       FROM foreach(row=tmp_exe,
         query={
           SELECT CSVFile,
-                 if(condition=AlsoUpload="Y",
+                 if(condition=AlsoUpload,
                     then=upload(file=CSVFile,
                                 name="NirsoftBrowsingHistoryView.csv")) AS Upload
           FROM execve(argv=[

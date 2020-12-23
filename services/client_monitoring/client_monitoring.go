@@ -286,22 +286,7 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(
 			return false
 		}
 
-		if modified_name == "ClientEventTable" {
-			return true
-		}
-
-		if utils.InString(self.state.Artifacts.Artifacts, modified_name) {
-			return true
-		}
-
-		for _, label_event := range self.state.LabelEvents {
-			if label_event.Artifacts != nil {
-				if utils.InString(label_event.Artifacts.Artifacts, modified_name) {
-					return true
-				}
-			}
-		}
-		return false
+		return true
 	}
 
 	if is_relevant() {

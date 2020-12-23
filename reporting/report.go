@@ -45,13 +45,20 @@ func (self *BaseTemplateEngine) Close() {
 	self.Scope.Close()
 }
 
-func (self *BaseTemplateEngine) getFunction(a interface{}, b string) interface{} {
+func (self *BaseTemplateEngine) getFunction(a interface{}, b string,
+	opts ...interface{}) interface{} {
+
 	res := a
 	var pres bool
 	for _, component := range strings.Split(b, ".") {
 		res, pres = self.Scope.Associative(res, component)
 		if !pres {
-			return ""
+			var defaultValue interface{} = ""
+			if len(opts) > 0 {
+				defaultValue = opts[0]
+			}
+
+			return defaultValue
 		}
 	}
 	return res

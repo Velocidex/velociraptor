@@ -37,7 +37,7 @@ sources:
   - queries:
       - LET artifacts_to_watch = SELECT Artifact FROM parse_csv(
              filename=artifactParameterMap, accessor='data')
-        WHERE get(item=scope(), member=Parameter) = "Y" AND log(
+        WHERE get(item=scope(), member=Parameter) AND log(
           message="Uploading artifact " + Artifact + " to Elastic")
 
       - LET events = SELECT * FROM foreach(

@@ -16,7 +16,7 @@ parameters:
   - name: CertificateInfo
     default: N
     type: bool
-     
+
 sources:
   - queries:
       - LET processes = SELECT Pid, Name
@@ -29,10 +29,10 @@ sources:
                 format(format='%x-%x', args=[ModuleBaseAddress,
                      ModuleBaseAddress+ModuleBaseSize]) AS Range,
                 ModuleName, ExePath,
-                if(condition=(Calculate_Hash = "Y"),
+                if(condition=Calculate_Hash,
                   then=hash(path=ExePath,
                             accessor=file)) AS Hash,
-                if(condition=(CertificateInfo = "Y"),
+                if(condition=CertificateInfo,
                   then=authenticode(filename=ExePath)) AS Certinfo
             FROM modules(pid=Pid)
             WHERE ExePath =~ dllRegex

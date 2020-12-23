@@ -16,5 +16,21 @@
  },
  {
   "BoolValue": true
+ },
+ {
+  "CSVValue": [
+   {
+    "Foo": 1
+   },
+   {
+    "Foo": 2
+   }
+  ]
+ },
+ {
+  "IntValue": 5
+ },
+ {
+  "TimestampValue": "2020-12-23T09:13:27Z"
  }
 ]

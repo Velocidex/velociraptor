@@ -6,6 +6,7 @@ import StepWizard from 'react-step-wizard';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import ToolViewer from "../tools/tool-viewer.js";
 import { HotKeys, ObserveKeys } from "react-hotkeys";
 
 import {
@@ -51,6 +52,7 @@ class OfflineCollectorParameters  extends React.Component {
                                       }}
                         >
                           <option value="Windows">Windows</option>
+                          <option value="Windows_x86">Windows_x86</option>
                           <option value="Linux">Linux</option>
                           <option value="MacOS">Mac OS</option>
                         </Form.Control>
@@ -261,8 +263,8 @@ class OfflineCollectorParameters  extends React.Component {
                                         this.props.parameters.target_args.endpoint = e.target.value;
                                         this.props.setParameters(this.props.parameters);
                                     }}
-                        />
-                    </Col>
+                            />
+                        </Col>
                     </Form.Group>
 
                     <Form.Group as={Row}>
@@ -279,8 +281,34 @@ class OfflineCollectorParameters  extends React.Component {
                     </Col>
                     </Form.Group>
                     </>
-
                   }
+
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">Velociraptor Binary</Form.Label>
+                    <Col sm="8">
+                      {this.props.parameters.target_os === "Windows" &&
+                       <ToolViewer name="VelociraptorWindows"/>}
+                      {this.props.parameters.target_os === "Windows_x86" &&
+                       <ToolViewer name="VelociraptorWindows_x86"/>}
+                      {this.props.parameters.target_os === "Linux" &&
+                       <ToolViewer name="VelociraptorLinux"/>}
+                      {this.props.parameters.target_os === "MacOS" &&
+                       <ToolViewer name="VelociraptorDarwin"/>}
+                    </Col>
+                  </Form.Group>
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">Temp directory</Form.Label>
+                    <Col sm="8">
+                      <Form.Control as="textarea" rows={3}
+                                    placeholder="Temp location"
+                                    value={this.props.parameters.opt_tempdir}
+                                    onChange={e => {
+                                        this.props.parameters.opt_tempdir = e.target.value;
+                                        this.props.setParameters(this.props.parameters);
+                                    }}
+                      />
+                    </Col>
+                  </Form.Group>
 
                 </Form>
               </Modal.Body>
@@ -354,6 +382,7 @@ export default class OfflineCollectorWizard extends React.Component {
         env.push({key: "opt_banner", value: "Y"});
         env.push({key: "opt_prompt", value: "N"});
         env.push({key: "opt_admin", value: "Y"});
+        env.push({key: "opt_tempdir", value: this.state.collector_parameters.opt_tempdir});
 
         return request;
     }
