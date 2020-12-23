@@ -51,7 +51,7 @@ sources:
                     FileSize,
                     FullPath,
                     regex_replace(source=FullPath, re="\\\\\\$I", replace="\\$$R") AS RecyclePath,
-                    if(condition=AlsoUpload="Y", then=upload(
+                    if(condition=AlsoUpload, then=upload(
                          file=regex_replace(source=FullPath, re="\\\\\\$I", replace="\\$$R"),
                          name=FilePath
                     )) AS Upload

@@ -1,0 +1,12 @@
+This directory contains artifacts used for manual testing.
+
+We use manual testing only rarely and only to verify backwards
+compatibility with older client versions. Velociraptor attempts to
+maintain backwards compatibility with clients officially 2 versions
+behind the current release, but usually much more than that.
+
+We have automated testing to ensure current clients work with the
+current server, but we currently need to resort to manual testing of
+older clients with current server.
+
+This directory contains some artifacts to assist in that.

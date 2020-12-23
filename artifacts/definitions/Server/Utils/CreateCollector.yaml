@@ -93,6 +93,10 @@ parameters:
     type: bool
     description: Require administrator privilege when running.
 
+  - name: opt_tempdir
+    default:
+    description: A directory to write tempfiles in
+
   - name: StandardCollection
     type: hidden
     default: |
@@ -345,10 +349,12 @@ sources:
       )
 
       LET optional_cmdline = SELECT * FROM chain(
-        a={ SELECT "-v" AS Opt FROM scope() WHERE opt_verbose = "Y"},
-        b={ SELECT "--nobanner" AS Opt FROM scope() WHERE opt_banner != "Y"},
-        c={ SELECT "--require_admin" AS Opt FROM scope() WHERE opt_admin = "Y"},
-        d={ SELECT "--prompt" AS Opt FROM scope() WHERE opt_prompt = "Y"}
+        a={ SELECT "-v" AS Opt FROM scope() WHERE opt_verbose},
+        b={ SELECT "--nobanner" AS Opt FROM scope() WHERE NOT opt_banner},
+        c={ SELECT "--require_admin" AS Opt FROM scope() WHERE opt_admin},
+        d={ SELECT "--prompt" AS Opt FROM scope() WHERE opt_prompt},
+        e={ SELECT "--tempdir" AS Opt FROM scope() WHERE opt_tempdir},
+        f={ SELECT opt_tempdir AS Opt FROM scope() WHERE opt_tempdir}
       )
 
       // Build the autoexec config file depending on the user's

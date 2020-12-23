@@ -35,5 +35,5 @@ sources:
       LET uninstall(Name) = SELECT * FROM execve(argv=['msiexec', '/quiet', '/x', Name])
 
       SELECT Name, DisplayName,
-          if(condition= ReallyDoIt="Y", then=uninstall(Name=Name).Stdout) AS UninstallLog
+          if(condition=ReallyDoIt, then=uninstall(Name=Name).Stdout) AS UninstallLog
       FROM packages

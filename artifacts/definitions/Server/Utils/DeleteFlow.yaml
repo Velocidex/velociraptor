@@ -20,11 +20,11 @@ parameters:
     description: The client id that the collection was done on
     default:
   - name: ReallyDoIt
-    description: If you really want to delete the client, check this or set to "Y".
+    description: If you really want to delete the client, check this.
     type: bool
 
 sources:
   - query: |
-       SELECT Type, if(condition=ReallyDoIt="Y",
+       SELECT Type, if(condition=ReallyDoIt,
                     then=file_store_delete(path=VFSPath)) as deleted
        FROM enumerate_flow(flow_id=FlowId,client_id=ClientId)

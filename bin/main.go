@@ -68,6 +68,9 @@ var (
 	logging_flag = app.Flag(
 		"logfile", "Write to this file as well").String()
 
+	tempdir_flag = app.Flag(
+		"tempdir", "Write all temp files to this directory").String()
+
 	command_handlers []CommandHandler
 )
 
@@ -141,6 +144,7 @@ func main() {
 
 	// Most commands load a config in the following order
 	DefaultConfigLoader = new(config.Loader).WithVerbose(*verbose_flag).
+		WithTempdir(*tempdir_flag).
 		WithFileLoader(*config_path).
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
@@ -151,6 +155,7 @@ func main() {
 	// Commands that potentially take an API config can load both
 	// - first try the API config, then try a config.
 	APIConfigLoader = new(config.Loader).WithVerbose(*verbose_flag).
+		WithTempdir(*tempdir_flag).
 		WithApiLoader(*api_config_path).
 		WithEnvApiLoader("VELOCIRAPTOR_API_CONFIG").
 		WithCustomValidator(maybe_unlock_api_config).

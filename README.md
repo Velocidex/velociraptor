@@ -81,14 +81,17 @@ We have a CI pipeline managed by GitHub actions. You can see the
 pipeline by clicking the actions tab on our GitHub project. There are
 two workflows:
 
-1. Windows Test: this workflow build a minimal version of the
+1. Windows Test: this workflow builds a minimal version of the
    Velociraptor binary (without the GUI) and runs all the tests on
    it. We also test various windows support functions in this
    pipeline. This pipeline builds on every push in each PR.
 
 2. Linux Build All Arches: This pipeline builds complete binaries for
    many supported architectures. It only runs when the PR is merged
-   into the master branch.
+   into the master branch. To download the latest binaries simply
+   select the latest run of this pipeline, scroll down the page to the
+   "Artifacts" section and download the *Binaries.zip* file (Note you
+   need to be logged into GitHub to see this).
 
 If you fork the project on GitHub, the pipelines will run on your own
 fork as well as long as you enable GitHub Actions on your fork. If you

@@ -9,11 +9,13 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"runtime"
 
 	"github.com/Velocidex/yaml/v2"
 	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // A hard error causes the loader to stop immediately.
@@ -25,8 +27,8 @@ func (self HardError) Error() string {
 	return self.err.Error()
 }
 
-type loader_func func() (*config_proto.Config, error)
-type validator func(config_obj *config_proto.Config) error
+type loader_func func(self *Loader) (*config_proto.Config, error)
+type validator func(self *Loader, config_obj *config_proto.Config) error
 
 type Loader struct {
 	verbose, use_writeback, required_logging bool
@@ -39,37 +41,78 @@ type Loader struct {
 	logger *logging.LogContext
 }
 
+func (self *Loader) WithTempdir(tmpdir string) *Loader {
+	if tmpdir == "" {
+		return self
+	}
+
+	self = self.Copy()
+	self.validators = append(self.validators,
+		func(self *Loader, config_obj *config_proto.Config) error {
+			// Expand the tmpdir if needed.
+			tmpdir = utils.ExpandEnv(tmpdir)
+
+			// Try to create a file in the directory to make sure
+			// we have permissions and the directory exists.
+			tmpfile, err := ioutil.TempFile(tmpdir, "tmp")
+			if err != nil {
+				// No we dont have permission there, fall back
+				// to system default.
+				self.Log("Can not write in temp directory to <red>%v</red> - falling back to default %v",
+					tmpdir, os.Getenv("TMP"))
+				return nil
+			}
+			defer os.Remove(tmpfile.Name())
+
+			switch runtime.GOOS {
+			case "windows":
+				os.Setenv("TMP", tmpdir)
+				os.Setenv("TEMP", tmpdir)
+			case "linux", "darwin":
+				os.Setenv("TMP", tmpdir)
+				os.Setenv("TMPDIR", tmpdir)
+			}
+			self.Log("Setting temp directory to <green>%v", tmpdir)
+
+			return nil
+		})
+	return self
+}
+
 func (self *Loader) WithLogFile(filename string) *Loader {
 	if filename == "" {
 		return self
 	}
 
 	self = self.Copy()
-	self.validators = append(self.validators, func(config_obj *config_proto.Config) error {
-		return logging.AddLogFile(filename)
-	})
+	self.validators = append(self.validators,
+		func(self *Loader, config_obj *config_proto.Config) error {
+			return logging.AddLogFile(filename)
+		})
 	return self
 }
 
 func (self *Loader) WithRequiredFrontend() *Loader {
 	self = self.Copy()
-	self.validators = append(self.validators, func(config_obj *config_proto.Config) error {
-		if config_obj.Frontend == nil {
-			return errors.New("Frontend config is required")
-		}
-		return nil
-	})
+	self.validators = append(self.validators,
+		func(self *Loader, config_obj *config_proto.Config) error {
+			if config_obj.Frontend == nil {
+				return errors.New("Frontend config is required")
+			}
+			return nil
+		})
 	return self
 }
 
 func (self *Loader) WithRequiredClient() *Loader {
 	self = self.Copy()
-	self.validators = append(self.validators, func(config_obj *config_proto.Config) error {
-		if config_obj.Client == nil {
-			return errors.New("Client config is required")
-		}
-		return nil
-	})
+	self.validators = append(self.validators,
+		func(self *Loader, config_obj *config_proto.Config) error {
+			if config_obj.Client == nil {
+				return errors.New("Client config is required")
+			}
+			return nil
+		})
 	return self
 }
 
@@ -78,41 +121,43 @@ func (self *Loader) WithRequiredClient() *Loader {
 // create as the wrong user will not be readable by the frontend.
 func (self *Loader) WithRequiredUser() *Loader {
 	self = self.Copy()
-	self.validators = append(self.validators, func(config_obj *config_proto.Config) error {
-		if config_obj.Datastore == nil ||
-			config_obj.Datastore.Implementation != "FileBaseDataStore" {
+	self.validators = append(self.validators,
+		func(self *Loader, config_obj *config_proto.Config) error {
+			if config_obj.Datastore == nil ||
+				config_obj.Datastore.Implementation != "FileBaseDataStore" {
+				return nil
+			}
+
+			if config_obj.Frontend == nil ||
+				config_obj.Frontend.RunAsUser == "" {
+				return nil
+			}
+
+			user, err := user.Current()
+			if err != nil {
+				return err
+			}
+
+			if user.Username != config_obj.Frontend.RunAsUser {
+				return errors.New(fmt.Sprintf(
+					"Velociraptor should be running as the '%s' user but you are '%s'. "+
+						"Please change user with sudo first.",
+					config_obj.Frontend.RunAsUser, user.Username))
+			}
 			return nil
-		}
-
-		if config_obj.Frontend == nil ||
-			config_obj.Frontend.RunAsUser == "" {
-			return nil
-		}
-
-		user, err := user.Current()
-		if err != nil {
-			return err
-		}
-
-		if user.Username != config_obj.Frontend.RunAsUser {
-			return errors.New(fmt.Sprintf(
-				"Velociraptor should be running as the '%s' user but you are '%s'. "+
-					"Please change user with sudo first.",
-				config_obj.Frontend.RunAsUser, user.Username))
-		}
-		return nil
-	})
+		})
 	return self
 }
 
 func (self *Loader) WithRequiredCA() *Loader {
 	self = self.Copy()
-	self.validators = append(self.validators, func(config_obj *config_proto.Config) error {
-		if config_obj.CA == nil || config_obj.CA.PrivateKey == "" {
-			return errors.New("Config with valid CA is required")
-		}
-		return nil
-	})
+	self.validators = append(self.validators,
+		func(self *Loader, config_obj *config_proto.Config) error {
+			if config_obj.CA == nil || config_obj.CA.PrivateKey == "" {
+				return errors.New("Config with valid CA is required")
+			}
+			return nil
+		})
 	return self
 }
 
@@ -136,21 +181,25 @@ func (self *Loader) WithWriteback() *Loader {
 	return self
 }
 
-func (self *Loader) WithCustomLoader(loader func() (*config_proto.Config, error)) *Loader {
+func (self *Loader) WithCustomLoader(loader func(self *Loader) (*config_proto.Config, error)) *Loader {
 	self = self.Copy()
 	self.loaders = append(self.loaders, loader)
 	return self
 }
 
-func (self *Loader) WithCustomValidator(validator func(config_obj *config_proto.Config) error) *Loader {
+func (self *Loader) WithCustomValidator(
+	validator func(config_obj *config_proto.Config) error) *Loader {
 	self = self.Copy()
-	self.validators = append(self.validators, validator)
+	self.validators = append(self.validators,
+		func(self *Loader, config_obj *config_proto.Config) error {
+			return validator(config_obj)
+		})
 	return self
 }
 
 func (self *Loader) WithNullLoader() *Loader {
 	self = self.Copy()
-	self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
+	self.loaders = append(self.loaders, func(self *Loader) (*config_proto.Config, error) {
 		self.Log("Setting empty config")
 		return &config_proto.Config{}, nil
 	})
@@ -160,7 +209,7 @@ func (self *Loader) WithNullLoader() *Loader {
 func (self *Loader) WithFileLoader(filename string) *Loader {
 	if filename != "" {
 		self = self.Copy()
-		self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
+		self.loaders = append(self.loaders, func(self *Loader) (*config_proto.Config, error) {
 			self.Log("Loading config from file %v", filename)
 			result, err := read_config_from_file(filename)
 			if err != nil {
@@ -179,7 +228,7 @@ func (self *Loader) WithFileLoader(filename string) *Loader {
 
 func (self *Loader) WithEnvLoader(env_var string) *Loader {
 	self = self.Copy()
-	self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
+	self.loaders = append(self.loaders, func(self *Loader) (*config_proto.Config, error) {
 		env_config := os.Getenv(env_var)
 		if env_config != "" {
 			self.Log("Loading config from env %v (%v)", env_var, env_config)
@@ -193,7 +242,7 @@ func (self *Loader) WithEnvLoader(env_var string) *Loader {
 
 func (self *Loader) WithEmbedded() *Loader {
 	self = self.Copy()
-	self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
+	self.loaders = append(self.loaders, func(self *Loader) (*config_proto.Config, error) {
 		result, err := read_embedded_config()
 		if err == nil {
 			self.Log("Loaded embedded config")
@@ -209,7 +258,7 @@ func (self *Loader) WithApiLoader(filename string) *Loader {
 	}
 
 	self = self.Copy()
-	self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
+	self.loaders = append(self.loaders, func(self *Loader) (*config_proto.Config, error) {
 		result, err := read_api_config_from_file(filename)
 		if err == nil {
 			self.Log("Loaded api config from %v", filename)
@@ -221,7 +270,7 @@ func (self *Loader) WithApiLoader(filename string) *Loader {
 
 func (self *Loader) WithEnvApiLoader(env_var string) *Loader {
 	self = self.Copy()
-	self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
+	self.loaders = append(self.loaders, func(self *Loader) (*config_proto.Config, error) {
 		env_config := os.Getenv(env_var)
 		if env_config != "" {
 			self.Log("Loading config from env %v (%v)", env_var, env_config)
@@ -235,6 +284,7 @@ func (self *Loader) WithEnvApiLoader(env_var string) *Loader {
 func (self *Loader) Copy() *Loader {
 	return &Loader{
 		verbose:         self.verbose,
+		logger:          self.logger,
 		write_back_path: self.write_back_path,
 		loaders:         append([]loader_func{}, self.loaders...),
 		validators:      append([]validator{}, self.validators...),
@@ -268,8 +318,11 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 		_ = logging.InitLogging(&config_proto.Config{})
 	}
 
+	// Set the logger for the rest of the loading process.
+	self.logger = logging.GetLogger(config_obj, &logging.ToolComponent)
+
 	for _, validator := range self.validators {
-		err = validator(config_obj)
+		err = validator(self, config_obj)
 		if err != nil {
 			self.Log("%v", err)
 			return err
@@ -351,7 +404,7 @@ func (self *Loader) loadWriteback(config_obj *config_proto.Config) error {
 
 func (self *Loader) LoadAndValidate() (*config_proto.Config, error) {
 	for _, loader := range self.loaders {
-		result, err := loader()
+		result, err := loader(self)
 		if err == nil {
 			return result, self.Validate(result)
 		}

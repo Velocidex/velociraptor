@@ -27,7 +27,7 @@ sources:
       FROM glob(globs="**", root=Path, accessor=Accessor)
       WHERE Mode.IsRegular
 
-      SELECT * FROM if(condition= Recursively="Y",
+      SELECT * FROM if(condition= Recursively,
         then={
            SELECT FullPath AS Path, Accessor,
                   Upload.Size AS Size,

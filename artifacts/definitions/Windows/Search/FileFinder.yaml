@@ -110,8 +110,8 @@ sources:
 
       SELECT FullPath, Inode, Mode, Size, Modified, ATime,
              MTime, CTime, Keywords, IsDir,
-               if(condition=(Upload_File = "Y" and NOT IsDir ),
+               if(condition=Upload_File and NOT IsDir,
                   then=upload(file=FullPath, accessor=Accessor)) AS Upload,
-               if(condition=(Calculate_Hash = "Y" and NOT IsDir ),
+               if(condition=Calculate_Hash and NOT IsDir,
                   then=hash(path=FullPath, accessor=Accessor)) AS Hash
       FROM keyword_search

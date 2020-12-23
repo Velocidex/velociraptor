@@ -67,20 +67,38 @@ func CompileSingleArtifact(config_obj *config_proto.Config,
 					escaped_name),
 			})
 		case "csv":
+			// Only parse from CSV if it is a string.
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= SELECT * FROM parse_csv(filename=%v, accessor='data')",
-					escaped_name, escaped_name),
+				VQL: fmt.Sprintf(`
+LET %v <= SELECT * FROM if(
+    condition=format(format="%%T", args=%v) =~ "string",
+    then={SELECT * FROM parse_csv(filename=%v, accessor='data')},
+    else=%v)
+`,
+					escaped_name, escaped_name, escaped_name, escaped_name),
 			})
+
+			// Only parse from JSON if it is a string.
 		case "json":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= parse_json(data=%v)",
-					escaped_name, escaped_name),
+				VQL: fmt.Sprintf(`
+LET %v <= if(
+    condition=format(format="%%T", args=%v) =~ "string",
+    then=parse_json(data=%v),
+    else=%v)
+`,
+					escaped_name, escaped_name, escaped_name, escaped_name),
 			})
 
 		case "json_array":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= parse_json_array(data=%v)",
-					escaped_name, escaped_name),
+				VQL: fmt.Sprintf(`
+LET %v <= if(
+    condition=format(format="%%T", args=%v) =~ "string",
+    then=parse_json_array(data=%v),
+    else=%v)
+`,
+					escaped_name, escaped_name, escaped_name, escaped_name),
 			})
 
 		case "bool":

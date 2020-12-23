@@ -1,0 +1,21 @@
+name: Custom.Test.Artifact.Deps
+
+description: |
+  Tests that parameters are passed to dependent artifacts with the
+  correct types.
+
+type: CLIENT
+
+sources:
+- query: |
+   SELECT BoolValue, CSVValue, IntValue, TimestampValue FROM chain(
+    a1={SELECT BoolValue FROM Artifact.Custom.Test.Artifact.Types(BoolValue=0)},
+    a2={SELECT BoolValue FROM Artifact.Custom.Test.Artifact.Types(BoolValue=1)},
+    a3={SELECT BoolValue FROM Artifact.Custom.Test.Artifact.Types(BoolValue=FALSE)},
+    a4={SELECT BoolValue FROM Artifact.Custom.Test.Artifact.Types(BoolValue=TRUE)},
+    a5={SELECT BoolValue FROM Artifact.Custom.Test.Artifact.Types(BoolValue='N')},
+    a6={SELECT BoolValue FROM Artifact.Custom.Test.Artifact.Types(BoolValue='Y')},
+    a7={SELECT CSVValue FROM Artifact.Custom.Test.Artifact.Types(CSVValue=[dict(Foo=1), dict(Foo=2)])},
+    a8={SELECT IntValue FROM Artifact.Custom.Test.Artifact.Types(IntValue=5)},
+    a9={SELECT TimestampValue FROM Artifact.Custom.Test.Artifact.Types(TimestampValue=timestamp(epoch=1608714807))}
+   )

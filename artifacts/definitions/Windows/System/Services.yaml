@@ -37,14 +37,14 @@ sources:
         FROM wmi(query="SELECT * From Win32_service", namespace="root/CIMV2")
       - |
         SELECT *,
-                 if(condition=(Calculate_hashes = "Y"),
+                 if(condition=Calculate_hashes,
                     then=hash(path=AbsoluteExePath,
                            accessor=file)) AS HashServiceExe,
-                 if(condition=(CertificateInfo = "Y"),
+                 if(condition=CertificateInfo,
                     then=authenticode(filename=AbsoluteExePath)) AS CertinfoServiceExe,
-                 if(condition=(Calculate_hashes = "Y"),
+                 if(condition=Calculate_hashes,
                     then=hash(path=ServiceDll,
                            accessor=file)) AS HashServiceDll,
-                 if(condition=(CertificateInfo = "Y"),
+                 if(condition=CertificateInfo,
                     then=authenticode(filename=ServiceDll)) AS CertinfoServiceDll
         FROM service

@@ -768,6 +768,8 @@ func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
+	// Passing types parameters to artifact plugin should pass
+	// them without interferance.
 	queries := []string{
 		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue=0)",
 		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue=1)",
@@ -775,6 +777,9 @@ func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
 		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue=TRUE)",
 		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue='N')",
 		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue='Y')",
+		"SELECT CSVValue FROM Artifact.Test.Artifact.Types(CSVValue=[dict(Foo=1), dict(Foo=2)])",
+		"SELECT IntValue FROM Artifact.Test.Artifact.Types(IntValue=5)",
+		"SELECT TimestampValue FROM Artifact.Test.Artifact.Types(TimestampValue=timestamp(epoch=1608714807))",
 	}
 
 	results := []vfilter.Row{}

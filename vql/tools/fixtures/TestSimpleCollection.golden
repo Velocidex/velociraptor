@@ -120,16 +120,16 @@
      "VQL": "LET StartDate3 \u003c= timestamp(epoch=StartDate3)"
     },
     {
-     "VQL": "LET CSVData \u003c= SELECT * FROM parse_csv(filename=CSVData, accessor='data')"
+     "VQL": "\nLET CSVData \u003c= SELECT * FROM if(\n    condition=format(format=\"%T\", args=CSVData) =~ \"string\",\n    then={SELECT * FROM parse_csv(filename=CSVData, accessor='data')},\n    else=CSVData)\n"
     },
     {
-     "VQL": "LET CSVData2 \u003c= SELECT * FROM parse_csv(filename=CSVData2, accessor='data')"
+     "VQL": "\nLET CSVData2 \u003c= SELECT * FROM if(\n    condition=format(format=\"%T\", args=CSVData2) =~ \"string\",\n    then={SELECT * FROM parse_csv(filename=CSVData2, accessor='data')},\n    else=CSVData2)\n"
     },
     {
-     "VQL": "LET JSONData \u003c= parse_json_array(data=JSONData)"
+     "VQL": "\nLET JSONData \u003c= if(\n    condition=format(format=\"%T\", args=JSONData) =~ \"string\",\n    then=parse_json_array(data=JSONData),\n    else=JSONData)\n"
     },
     {
-     "VQL": "LET JSONData2 \u003c= parse_json_array(data=JSONData2)"
+     "VQL": "\nLET JSONData2 \u003c= if(\n    condition=format(format=\"%T\", args=JSONData2) =~ \"string\",\n    then=parse_json_array(data=JSONData2),\n    else=JSONData2)\n"
     },
     {
      "VQL": "LET Demo_Plugins_GUI_0_0 = SELECT ChoiceSelector, Flag, Flag2, Flag3, OffFlag, StartDate, StartDate2, StartDate3, CSVData, CSVData2, JSONData, JSONData2 FROM scope()"

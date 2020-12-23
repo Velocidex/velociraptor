@@ -1,0 +1,60 @@
+name: Custom.Test.Artifact.Types
+description: |
+  A test artifact with different types of parameters. The artifact
+  compiler should be able to automatically decode the parameter types
+  as set by the GUI so that when the artifact references the parameter
+  it will be of the correct type.
+
+parameters:
+- name: IntValue
+  type: int
+  default: 5
+
+- name: CSVValue
+  type: csv
+  default: |
+    Header
+    Value1
+    Value2
+
+- name: TimestampValue
+  type: timestamp
+
+- name: TimestampValueUnset
+  type: timestamp
+
+- name: BoolValue
+  type: bool
+  default: Y
+
+- name: BoolValue2
+  type: bool
+
+- name: BoolValueUnset
+  type: bool
+
+sources:
+- query: |
+     // Check that unset timestamps can be tested for and overriden
+     // with useful defaults. bool(TimestampValueUnset) is false
+     LET DateAfterTime <= if(condition=TimestampValueUnset,
+        then=timestamp(epoch=TimestampValueUnset), else=timestamp(epoch="1600-01-01"))
+
+     // TimestampValue is set so bool(TimestampValue) should be true
+     LET DateBeforeTime <= if(condition=TimestampValue,
+        then=timestamp(epoch=TimestampValue), else=timestamp(epoch="2200-01-01"))
+
+     SELECT IntValue,
+            // CSV parameters are parsed into an array of dicts.
+            CSVValue,
+            // timestamp() is passthrough for time.Time objects
+            TimestampValue, TimestampValue.Unix, timestamp(epoch=TimestampValue),
+
+            // Unset timestamps are initialized to empty time.Time
+            TimestampValueUnset, TimestampValueUnset.Unix, DateAfterTime, DateBeforeTime,
+            BoolValue, BoolValue2, BoolValueUnset,
+            BoolValue = "Y", BoolValue != "Y", BoolValue2 = "Y", BoolValue2 != "Y",
+            {
+                SELECT * FROM CSVValue
+            }
+     FROM scope()
