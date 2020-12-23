@@ -108,10 +108,10 @@ sources:
 
     - SELECT FullPath, Inode, Mode, Size, Modified, ATime,
              MTime, CTime, Keywords,
-               if(condition=Upload_File and Mode.IsRegular ),
+               if(condition=Upload_File and Mode.IsRegular,
                   then=upload(file=FullPath,
                               accessor="file")) AS Upload,
-               if(condition=Calculate_Hash and Mode.IsRegular),
+               if(condition=Calculate_Hash and Mode.IsRegular,
                   then=hash(path=FullPath,
                             accessor="file")) AS Hash
       FROM keyword_search
