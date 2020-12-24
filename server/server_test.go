@@ -330,30 +330,6 @@ func (self *ServerTestSuite) TestMonitoring() {
 	self.RequiredFilestoreContains(path_manager.Path(), self.client_id)
 }
 
-// An invalid monitoring response will log an error in the client's
-// monitoring log.
-func (self *ServerTestSuite) TestInvalidMonitoringPacket() {
-	runner := flows.NewFlowRunner(self.config_obj)
-	runner.ProcessSingleMessage(
-		context.Background(),
-		&crypto_proto.GrrMessage{
-			Source:    self.client_id,
-			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
-			VQLResponse: &actions_proto.VQLResponse{
-				Columns: []string{"ClientId", "Timestamp",
-					"Fqdn", "HuntId", "Participate"},
-				Response: `}}}`, // Invalid json
-				Query: &actions_proto.VQLRequest{
-					Name: "System.Hunt.Participation",
-				},
-			},
-		})
-	runner.Close()
-
-	path_manager := paths.NewFlowPathManager(self.client_id, "F.Monitoring").Log()
-	self.RequiredFilestoreContains(path_manager.Path(), "invalid character")
-}
-
 // Monitoring queries which upload data.
 func (self *ServerTestSuite) TestMonitoringWithUpload() {
 	runner := flows.NewFlowRunner(self.config_obj)

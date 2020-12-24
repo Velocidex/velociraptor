@@ -85,6 +85,11 @@ func (self VQLClientAction) StartQuery(
 		timeout = 600
 	}
 
+	heartbeat := arg.Heartbeat
+	if heartbeat == 0 {
+		heartbeat = 30
+	}
+
 	// Cancel the query after this deadline
 	deadline := time.After(time.Second * time.Duration(timeout))
 	started := time.Now().Unix()
@@ -199,6 +204,11 @@ func (self VQLClientAction) StartQuery(
 				// Try again after a while to prevent spinning here.
 				deadline = time.After(time.Second * time.Duration(timeout))
 
+			case <-time.After(time.Second * time.Duration(heartbeat)):
+				responder.Log(ctx, "Time %v: %s: Waiting for rows.",
+					(uint64(time.Now().UTC().UnixNano()/1000)-
+						query_start)/1000000, query.Name)
+
 			case result, ok := <-result_chan:
 				if !ok {
 					break run_query
@@ -215,6 +225,7 @@ func (self VQLClientAction) StartQuery(
 					TotalRows:     uint64(result.TotalRows),
 					Timestamp:     uint64(time.Now().UTC().UnixNano() / 1000),
 				}
+
 				// Don't log empty VQL statements.
 				if query.Name != "" {
 					responder.Log(ctx,

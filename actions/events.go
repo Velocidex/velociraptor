@@ -141,9 +141,12 @@ func (self UpdateEventTable) Run(
 	table.wg.Add(len(table.Events))
 
 	for _, event := range table.Events {
+		query_responder := responder.Copy()
+
 		go func(event *actions_proto.VQLCollectorArgs) {
 			defer table.wg.Done()
 
+			// Name of the query we are running.
 			name := ""
 			for _, q := range event.Query {
 				if q.Name != "" {
@@ -154,12 +157,21 @@ func (self UpdateEventTable) Run(
 			if name != "" {
 				logger.Info("<green>Starting</> monitoring query %s", name)
 			}
+			query_responder.Artifact = name
+
 			// Event tables never time out
 			if event.Timeout == 0 {
 				event.Timeout = 99999999
 			}
+
+			// Dont heartbeat too often for event queries
+			// - the log generates un-neccesary traffic.
+			if event.Heartbeat == 0 {
+				event.Heartbeat = 300 // 5 minutes
+			}
+
 			action_obj.StartQuery(
-				config_obj, new_ctx, responder, event)
+				config_obj, new_ctx, query_responder, event)
 			if name != "" {
 				logger.Info("Finished monitoring query %s", name)
 			}

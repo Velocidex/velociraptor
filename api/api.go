@@ -738,8 +738,12 @@ func (self *ApiServer) GetTable(
 	var result *api_proto.GetTableResponse
 
 	// We want an event table.
-	if in.Type == "CLIENT_EVENT" || in.Type == "SERVER_EVENT" {
+	if in.Type == "CLIENT_EVENT_LOGS" || in.Type == "SERVER_EVENT_LOGS" {
+		result, err = getEventTableLogs(ctx, self.config, in)
+
+	} else if in.Type == "CLIENT_EVENT" || in.Type == "SERVER_EVENT" {
 		result, err = getEventTable(ctx, self.config, in)
+
 	} else {
 		result, err = getTable(ctx, self.config, in)
 	}

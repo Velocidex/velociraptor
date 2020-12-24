@@ -141,9 +141,59 @@ func closeContext(
 	return nil
 }
 
+// Logs from monitoring flow need to be handled especially since they
+// are separated by artifact name.
+func flushContextLogsMonitoring(
+	config_obj *config_proto.Config,
+	collection_context *flows_proto.ArtifactCollectorContext) error {
+
+	// A single packet may have multiple log messages from
+	// different artifacts. We cache the writers so we can send
+	// the right message to the right log sink.
+	writers := make(map[string]result_sets.ResultSetWriter)
+	var err error
+
+	// Append logs to messages from previous packets.
+	file_store_factory := file_store.GetFileStore(config_obj)
+	for _, row := range collection_context.Logs {
+		artifact_name := row.Artifact
+		if artifact_name == "" {
+			artifact_name = "Unknown"
+		}
+
+		// Try to get the writer from the cache.
+		rs_writer, pres := writers[artifact_name]
+		if !pres {
+			log_path_manager := artifact_paths.NewMonitoringArtifactLogPathManager(
+				config_obj, collection_context.ClientId, artifact_name)
+			rs_writer, err = result_sets.NewResultSetWriter(
+				file_store_factory, log_path_manager, nil, false /* truncate */)
+			if err != nil {
+				return err
+			}
+			defer rs_writer.Close()
+
+			writers[artifact_name] = rs_writer
+		}
+
+		rs_writer.Write(ordereddict.NewDict().
+			Set("_ts", int(time.Now().Unix())).
+			Set("client_time", int64(row.Timestamp)/1000000).
+			Set("message", row.Message))
+	}
+
+	// Clear the logs from the flow object.
+	collection_context.Logs = nil
+	return nil
+}
+
 func flushContextLogs(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext) error {
+
+	if collection_context.SessionId == constants.MONITORING_WELL_KNOWN_FLOW {
+		return flushContextLogsMonitoring(config_obj, collection_context)
+	}
 
 	flow_path_manager := paths.NewFlowPathManager(
 		collection_context.ClientId,
@@ -160,8 +210,8 @@ func flushContextLogs(
 
 	for _, row := range collection_context.Logs {
 		rs_writer.Write(ordereddict.NewDict().
-			Set("Timestamp", fmt.Sprintf("%v", row.Timestamp)).
-			Set("time", time.Unix(int64(row.Timestamp)/1000000, 0).String()).
+			Set("_ts", int(time.Now().Unix())).
+			Set("client_time", int64(row.Timestamp)/1000000).
 			Set("message", row.Message))
 	}
 
@@ -571,6 +621,22 @@ func appendUploadDataToFile(
 	return nil
 }
 
+// Generate a flow log from a client LogMessage proto. Deobfuscates
+// the message.
+func LogMessage(config_obj *config_proto.Config,
+	collection_context *flows_proto.ArtifactCollectorContext,
+	msg *crypto_proto.LogMessage) {
+	log_msg := artifacts.DeobfuscateString(config_obj, msg.Message)
+	artifact_name := artifacts.DeobfuscateString(config_obj, msg.Artifact)
+	collection_context.Logs = append(
+		collection_context.Logs, &crypto_proto.LogMessage{
+			Message:   log_msg,
+			Artifact:  artifact_name,
+			Timestamp: msg.Timestamp,
+		})
+	collection_context.Dirty = true
+}
+
 func Log(config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext,
 	log_msg string) {
@@ -674,7 +740,7 @@ func (self *FlowRunner) ProcessSingleMessage(
 	}
 
 	if job.LogMessage != nil {
-		Log(self.config_obj, collection_context, job.LogMessage.Message)
+		LogMessage(self.config_obj, collection_context, job.LogMessage)
 		return
 	}
 

@@ -60,6 +60,9 @@ type Responder struct {
 	request    *crypto_proto.GrrMessage
 	logger     *logging.LogContext
 	start_time int64
+
+	// The name of the query we are currently running.
+	Artifact string
 }
 
 // NewResponder returns a new Responder.
@@ -74,6 +77,15 @@ func NewResponder(
 		start_time: time.Now().UnixNano(),
 	}
 	return result
+}
+
+func (self *Responder) Copy() *Responder {
+	return &Responder{
+		request:    self.request,
+		output:     self.output,
+		logger:     self.logger,
+		start_time: time.Now().UnixNano(),
+	}
 }
 
 func (self *Responder) AddResponse(
@@ -126,6 +138,7 @@ func (self *Responder) Log(ctx context.Context, format string, v ...interface{})
 		LogMessage: &crypto_proto.LogMessage{
 			Message:   fmt.Sprintf(format, v...),
 			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
+			Artifact:  self.Artifact,
 		}})
 }
 

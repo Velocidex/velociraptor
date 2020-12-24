@@ -28,6 +28,7 @@ import api from '../core/api-service.js';
 
 
 const mode_raw_data = "Raw Data";
+const mode_logs = "Logs";
 const mode_report = "Report";
 
 
@@ -298,14 +299,17 @@ class EventMonitoring extends React.Component {
 
         // Check if there are any results in the current_time range
         let is_date_covered = this.isDateCovered(this.state.current_time);
-
-        let renderers = {
-            "_ts": (cell, row, rowIndex) => {
+        let timestamp_renderer = (cell, row, rowIndex) => {
                 return (
                     <VeloTimestamp usec={cell * 1000}/>
                 );
-            },
         };
+
+        let renderers = {
+            "_ts": timestamp_renderer,
+            "client_time": timestamp_renderer,
+        };
+
         let column_types = this.state.artifact && this.state.artifact.definition &&
             this.state.artifact.definition.column_types;
 
@@ -408,6 +412,12 @@ class EventMonitoring extends React.Component {
                         {mode_raw_data}
                       </Dropdown.Item>
                       <Dropdown.Item
+                        title={mode_logs}
+                        active={this.state.mode === mode_logs}
+                        onClick={() => this.setState({mode: mode_logs})}>
+                        {mode_logs}
+                      </Dropdown.Item>
+                      <Dropdown.Item
                         title={mode_report}
                         active={this.state.mode === mode_report}
                         onClick={() => this.setState({mode: mode_report})}>
@@ -417,7 +427,7 @@ class EventMonitoring extends React.Component {
                   </Dropdown>
                 </ButtonGroup>
               </Navbar>
-            { this.state.mode === mode_raw_data ?
+            { this.state.mode === mode_raw_data &&
               <Container className="event-report-viewer">
                 <VeloPagedTable
                   params={{
@@ -430,8 +440,24 @@ class EventMonitoring extends React.Component {
                   renderers={renderers}
                   column_types={column_types}
                  />
+                </Container> }
 
-              </Container> :
+            { this.state.mode === mode_logs &&
+              <Container className="event-report-viewer">
+                <VeloPagedTable
+                  params={{
+                      artifact: this.state.artifact.artifact,
+                      type: "CLIENT_EVENT_LOGS",
+                      start_time: start_ts,
+                      end_time: end_ts,
+                      client_id: this.props.client.client_id,
+                  }}
+                  renderers={renderers}
+                  column_types={column_types}
+                 />
+              </Container> }
+
+            { this.state.mode === mode_report &&
               <Container className="event-report-viewer">
                 { (this.state.artifact.artifact && is_date_covered) ?
                   <VeloReportViewer
