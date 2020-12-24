@@ -880,7 +880,7 @@ func (self *ApiServer) SetArtifactFile(
 			"User is not allowed to modify artifacts (%v).", permissions))
 	}
 
-	definition, err := setArtifactFile(self.config, in,
+	definition, err := setArtifactFile(self.config, user_name, in,
 		constants.ARTIFACT_CUSTOM_NAME_PREFIX /* required_prefix */)
 	if err != nil {
 		message := &api_proto.APIResponse{

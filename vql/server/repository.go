@@ -75,7 +75,10 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	definition, err = manager.SetArtifactFile(config_obj, arg.Definition, arg.Prefix)
+	principal := vql_subsystem.GetPrincipal(scope)
+
+	definition, err = manager.SetArtifactFile(
+		config_obj, principal, arg.Definition, arg.Prefix)
 	if err != nil {
 		scope.Log("artifact_set: %s", err)
 		return vfilter.Null{}
@@ -157,7 +160,8 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	err = manager.DeleteArtifactFile(config_obj, arg.Name)
+	principal := vql_subsystem.GetPrincipal(scope)
+	err = manager.DeleteArtifactFile(config_obj, principal, arg.Name)
 	if err != nil {
 		scope.Log("artifact_delete: %s", err)
 		return vfilter.Null{}

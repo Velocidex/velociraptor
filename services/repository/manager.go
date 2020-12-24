@@ -51,7 +51,7 @@ func (self *RepositoryManager) SetGlobalRepositoryForTests(
 }
 
 func (self *RepositoryManager) SetArtifactFile(
-	config_obj *config_proto.Config, data, required_prefix string) (
+	config_obj *config_proto.Config, principal, data, required_prefix string) (
 	*artifacts_proto.Artifact, error) {
 
 	// First ensure that the artifact is correct.
@@ -112,7 +112,9 @@ func (self *RepositoryManager) SetArtifactFile(
 
 	err = journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{
-			ordereddict.NewDict().Set("artifact", artifact.Name).
+			ordereddict.NewDict().
+				Set("setter", principal).
+				Set("artifact", artifact.Name).
 				Set("op", "set"),
 		}, "Server.Internal.ArtifactModification", "server", "")
 
@@ -120,8 +122,24 @@ func (self *RepositoryManager) SetArtifactFile(
 }
 
 func (self *RepositoryManager) DeleteArtifactFile(
-	config_obj *config_proto.Config, name string) error {
+	config_obj *config_proto.Config, principal, name string) error {
 	global_repository, err := self.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	err = journal.PushRowsToArtifact(config_obj,
+		[]*ordereddict.Dict{
+			ordereddict.NewDict().
+				Set("setter", principal).
+				Set("artifact", name).
+				Set("op", "delete"),
+		}, "Server.Internal.ArtifactModification", "server", "")
 	if err != nil {
 		return err
 	}
