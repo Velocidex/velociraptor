@@ -120,7 +120,7 @@ export default class HuntOverview extends React.Component {
                     <dd className="col-8"><VeloTimestamp usec={hunt.create_time / 1000}/></dd>
 
                     <dt className="col-4">Expiry Time</dt>
-                    <dd className="col-8"><VeloTimestamp usec={hunt.expires / 1000000}/></dd>
+                    <dd className="col-8"><VeloTimestamp usec={hunt.expires / 1000}/></dd>
 
                     <dt className="col-4">State</dt>
                     <dd className="col-8">{this.huntState(hunt)}</dd>

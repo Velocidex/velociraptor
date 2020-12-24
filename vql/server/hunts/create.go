@@ -25,19 +25,19 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/vfilter"
 )
 
 type ScheduleHuntFunctionArg struct {
 	Description string      `vfilter:"required,field=description,doc=Description of the hunt"`
 	Artifacts   []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
+	Expires     uint64      `vfilter:"optional,field=expires,doc=Number of seconds since epoch for expiry"`
 	Spec        vfilter.Any `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
 }
 
@@ -92,23 +92,20 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	hunt_request := &api_proto.Hunt{
 		HuntDescription: arg.Description,
 		StartRequest:    request,
+		Expires:         arg.Expires,
 		State:           api_proto.Hunt_RUNNING,
 	}
 
-	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
-	if err != nil {
-		scope.Log("hunt: %s", err.Error())
-		return vfilter.Null{}
-	}
-	defer func() { _ = closer() }()
-
-	response, err := client.CreateHunt(ctx, hunt_request)
+	// Run the hunt in the ACL context of the caller.
+	acl_manager := vql_subsystem.NewServerACLManager(
+		config_obj, vql_subsystem.GetPrincipal(scope))
+	hunt_id, err := flows.CreateHunt(ctx, config_obj, acl_manager, hunt_request)
 	if err != nil {
 		scope.Log("hunt: %s", err.Error())
 		return vfilter.Null{}
 	}
 
-	return json.ConvertProtoToOrderedDict(response)
+	return ordereddict.NewDict().Set("HuntId", hunt_id)
 }
 
 func (self ScheduleHuntFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

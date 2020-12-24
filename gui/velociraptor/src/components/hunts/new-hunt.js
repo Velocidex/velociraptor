@@ -333,7 +333,7 @@ export default class NewHuntWizard extends React.Component {
 
         let hunt_parameters = this.state.hunt_parameters;
         if (hunt_parameters.expires) {
-            result.expires = hunt_parameters.expires.getTime() * 1000000;
+            result.expires = hunt_parameters.expires.getTime() * 1000;
         }
 
         if (hunt_parameters.include_condition === "labels") {
