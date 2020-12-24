@@ -392,7 +392,7 @@ export function getHuntColumns() {
          type: "timestamp", sort: true },
         {dataField: "expires",
          text: "Expires", sort: true,
-         type: "nano_timestamp"},
+         type: "timestamp"},
         {dataField: "client_limit", text: "Limit"},
         {dataField: "stats.total_clients_scheduled", text: "Scheduled"},
         {dataField: "creator", text: "Creator"},

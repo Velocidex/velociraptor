@@ -30,8 +30,9 @@ sources:
 
         LET send_massage = SELECT * FROM foreach(row=hits,
         query={
-           SELECT * FROM http_client(
-            data=serialize(item=dict(
+           SELECT client_id, Hostname, LastSeen, Content, Response
+           FROM http_client(
+                data=serialize(item=dict(
                 text=format(format="Client %v (%v) has appeared online %v seconds ago",
                             args=[Hostname, client_id, LastSeen])),
                 format="json"),

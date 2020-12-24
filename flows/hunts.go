@@ -115,9 +115,13 @@ func CreateHunt(
 	}
 
 	hunt.CreateTime = uint64(time.Now().UTC().UnixNano() / 1000)
-	if hunt.Expires < hunt.CreateTime {
+	if hunt.Expires == 0 {
 		hunt.Expires = uint64(time.Now().Add(7*24*time.Hour).
 			UTC().UnixNano() / 1000)
+	}
+
+	if hunt.Expires < hunt.CreateTime {
+		return "", errors.New("Hunt expiry is in the past!")
 	}
 
 	manager, err := services.GetRepositoryManager()
