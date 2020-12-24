@@ -39,6 +39,7 @@ const helpTextCol2 = [
     ]],
     ["Editor shortcuts", [
         ["ctrl+,", "Popup the editor configuration dialog"],
+        ["ctrl+enter", "Save editor contents"],
     ]],
 ];
 

@@ -134,12 +134,12 @@ type RepositoryManager interface {
 	BuildScopeFromScratch(builder ScopeBuilder) *vfilter.Scope
 
 	// Store the file to the repository. It will be stored in the datastore as well.
-	SetArtifactFile(config_obj *config_proto.Config,
+	SetArtifactFile(config_obj *config_proto.Config, principal string,
 		data, required_prefix string) (*artifacts_proto.Artifact, error)
 
 	// Delete the file from the global repository and the data store.
 	DeleteArtifactFile(config_obj *config_proto.Config,
-		name string) error
+		principal, name string) error
 }
 
 // A helper function to build a new scope from an existing scope. This

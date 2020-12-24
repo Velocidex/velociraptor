@@ -116,7 +116,7 @@ func ensureArtifactPrefix(definition, prefix string) string {
 		})
 }
 
-func setArtifactFile(config_obj *config_proto.Config,
+func setArtifactFile(config_obj *config_proto.Config, principal string,
 	in *api_proto.SetArtifactRequest,
 	required_prefix string) (
 	*artifacts_proto.Artifact, error) {
@@ -144,11 +144,11 @@ func setArtifactFile(config_obj *config_proto.Config,
 		}
 
 		return artifact_definition, manager.DeleteArtifactFile(config_obj,
-			artifact_definition.Name)
+			principal, artifact_definition.Name)
 
 	case api_proto.SetArtifactRequest_SET:
 		return manager.SetArtifactFile(
-			config_obj, in.Artifact, required_prefix)
+			config_obj, principal, in.Artifact, required_prefix)
 	}
 
 	return nil, errors.New("Unknown op")
@@ -330,7 +330,8 @@ func (self *ApiServer) LoadArtifactPack(
 				Artifact: artifact_definition,
 			}
 
-			definition, err := setArtifactFile(self.config, request, prefix)
+			definition, err := setArtifactFile(
+				self.config, user_name, request, prefix)
 			if err == nil {
 				logging.GetLogger(self.config, &logging.Audit).
 					WithFields(logrus.Fields{

@@ -72,7 +72,7 @@ func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
 	repository_manager, _ := services.GetRepositoryManager()
-	repository_manager.SetArtifactFile(self.config_obj, `
+	repository_manager.SetArtifactFile(self.config_obj, "", `
 name: TestArtifact
 sources:
 - query:
@@ -94,7 +94,7 @@ sources:
 	assert.NotContains(self.T(), json.StringIndent(old_table), "Crib")
 
 	// Now update the artifact.
-	repository_manager.SetArtifactFile(self.config_obj, `
+	repository_manager.SetArtifactFile(self.config_obj, "", `
 name: TestArtifact
 sources:
 - query:
@@ -112,7 +112,7 @@ func (self *ClientMonitoringTestSuite) TestUpdatingClientTable() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
 	repository_manager, _ := services.GetRepositoryManager()
-	repository_manager.SetArtifactFile(self.config_obj, `
+	repository_manager.SetArtifactFile(self.config_obj, "", `
 name: TestArtifact
 sources:
 - query:
@@ -155,7 +155,7 @@ func (self *ClientMonitoringTestSuite) TestUpdatingClientTableMultiFrontend() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
 	repository_manager, _ := services.GetRepositoryManager()
-	repository_manager.SetArtifactFile(self.config_obj, `
+	repository_manager.SetArtifactFile(self.config_obj, "", `
 name: TestArtifact
 sources:
 - query:
