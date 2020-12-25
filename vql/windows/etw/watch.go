@@ -4,6 +4,7 @@ package etw
 
 import (
 	"context"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/bi-zone/etw"
@@ -44,9 +45,17 @@ func (self WatchETWPlugin) Call(
 			scope.Log("watch_etw: %s", err.Error())
 			return
 		}
-		defer session.Close()
+
+		sub_ctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+
+		cancelled := false
 
 		cb := func(e *etw.Event) {
+			if cancelled {
+				return
+			}
+
 			event := ordereddict.NewDict().
 				Set("System", e.Header)
 			data, err := e.EventProperties()
@@ -55,14 +64,18 @@ func (self WatchETWPlugin) Call(
 			}
 
 			select {
-			case <-ctx.Done():
+			case <-sub_ctx.Done():
+				return
 			case output_chan <- event:
 			}
 		}
 
-		sub_ctx, cancel := context.WithCancel(ctx)
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
 
 		go func() {
+			defer wg.Done()
+
 			// When session.Process() exits, we exit the
 			// query.
 			defer cancel()
@@ -74,6 +87,20 @@ func (self WatchETWPlugin) Call(
 
 		// Wait here until the query is cancelled.
 		<-sub_ctx.Done()
+
+		cancelled = true
+		err = session.Close()
+		if err != nil {
+			scope.Log("watch_etw: %v", err)
+			return
+		}
+
+		// Wait here for session.Process() to finish - there
+		// may be a queue of events to send to the callback
+		// that ETW will try to clear so we need to wait here
+		// until it does.
+		wg.Wait()
+
 	}()
 
 	return output_chan
