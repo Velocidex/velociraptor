@@ -352,8 +352,10 @@ func loadClientConfig() (*config_proto.Config, error) {
 		WithWriteback().
 		LoadAndValidate()
 	if err != nil {
-		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-		logger.Info("Failed to load %v will try again soon.\n", *config_path)
+		// Config obj is not valid here, we can not actually
+		// log anything since we dont know where to send it so
+		// prelog instead.
+		logging.Prelog("Failed to load %v will try again soon.\n", *config_path)
 
 		return nil, err
 	}

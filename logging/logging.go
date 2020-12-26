@@ -87,6 +87,11 @@ func Prelog(format string, v ...interface{}) {
 	mu.Lock()
 	defer mu.Unlock()
 
+	// Truncate too many logs
+	if len(prelogs) > 10000 {
+		prelogs = nil
+	}
+
 	prelogs = append(prelogs, fmt.Sprintf(format, v...))
 }
 
