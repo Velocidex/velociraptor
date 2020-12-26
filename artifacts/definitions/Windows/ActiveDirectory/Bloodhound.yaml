@@ -10,7 +10,7 @@ description: |
    additional processing.  
    
    RemovePayload - Due to potential malicious use of this tool I have also 
-   included an option to remove payload execution.
+   included an option to remove payload after execution.
    
    NOTE: Do not run this artifact as an unrestricted hunt. General recommendation
    is to run this artifact on only a handful of machines in a typical domain, 
