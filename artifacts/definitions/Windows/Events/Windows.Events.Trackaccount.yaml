@@ -1,0 +1,43 @@
+name: Windows.Events.Trackaccount
+description: |
+  Artifact to detect account usage by monitoring event id 4624. This is useful for tracking attacker activity. If you want to receive Slack notifications you can enable the server_event artifact named 'Server.Alerts.Trackaccount'
+
+author: Jos Clephas
+
+type: CLIENT_EVENT
+
+parameters:
+  - name: eventLog
+    default: C:\Windows\system32\winevt\logs\Security.evtx
+  - name: UserRegex
+    default: 'admin|user'
+  - name: LogonTypeRegex
+    default: '[3,10]'
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+    queries:
+      - LET files = SELECT * FROM glob(globs=eventLog)
+
+      - LET LogonTypeVar <= parse_json_array(data=LogonTypeRegex)
+
+      - SELECT *, timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
+              System.EventRecordID as EventRecordID,
+              System.EventID.Value as EventID,
+              System.Computer as Computer,
+              EventData.TargetUserName as TargetUserName,
+              EventData.LogonType as LogonType,
+              EventData.IpAddress as IpAddress,
+              EventData.WorkstationName as WorkstationName
+
+        FROM foreach(
+          row=files,
+          async=TRUE,
+          query={
+            SELECT *
+            FROM watch_evtx(filename=FullPath)
+            WHERE System.EventID.Value = 4624
+                AND EventData.TargetUserName =~ UserRegex
+                AND EventData.LogonType in LogonTypeVar
+        })
