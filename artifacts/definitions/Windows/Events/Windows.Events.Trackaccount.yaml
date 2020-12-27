@@ -12,7 +12,8 @@ parameters:
   - name: UserRegex
     default: 'admin|user'
   - name: LogonTypeRegex
-    default: '[3,10]'
+    type: json_array
+    default: '[2,3,4,5,7,8,9,10,11]'
 
 sources:
   - precondition:
@@ -20,16 +21,17 @@ sources:
     queries:
       - LET files = SELECT * FROM glob(globs=eventLog)
 
-      - LET LogonTypeVar <= parse_json_array(data=LogonTypeRegex)
-
-      - SELECT *, timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
+      - SELECT timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
               System.EventRecordID as EventRecordID,
               System.EventID.Value as EventID,
-              System.Computer as Computer,
+              System.Computer as SourceComputer,
               EventData.TargetUserName as TargetUserName,
               EventData.LogonType as LogonType,
               EventData.IpAddress as IpAddress,
-              EventData.WorkstationName as WorkstationName
+              EventData.WorkstationName as TargetWorkstationName,
+              System,
+              EventData,
+              Message
 
         FROM foreach(
           row=files,
@@ -39,5 +41,5 @@ sources:
             FROM watch_evtx(filename=FullPath)
             WHERE System.EventID.Value = 4624
                 AND EventData.TargetUserName =~ UserRegex
-                AND EventData.LogonType in LogonTypeVar
+                AND EventData.LogonType in LogonTypeRegex
         })
