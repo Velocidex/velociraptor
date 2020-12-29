@@ -1,0 +1,5 @@
+Queries:
+  - SELECT ModuleName, Timestamp, Functions[1]
+    FROM Artifact.Windows.System.Powershell.ModuleAnalysisCache(GlobLookup=srcDir +
+      "/artifacts/testdata/files/ModuleAnalysisCache")
+    LIMIT 10

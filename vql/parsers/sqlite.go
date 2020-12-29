@@ -34,7 +34,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -197,15 +196,9 @@ func (self _SQLitePlugin) GetHandle(
 
 		// Add the destructor to the root scope to ensure we
 		// dont get closed too early.
-		root_any, pres := scope.Resolve(constants.SCOPE_ROOT)
-		if pres {
-			root, ok := root_any.(*vfilter.Scope)
-			if ok {
-				root.AddDestructor(func() {
-					handle.Close()
-				})
-			}
-		}
+		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+			handle.Close()
+		})
 	}
 	return handle, nil
 }

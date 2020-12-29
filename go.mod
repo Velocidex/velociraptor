@@ -120,8 +120,8 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20201215135433-62fce9f56d6d
-	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
+	www.velocidex.com/golang/vfilter v0.0.0-20201229033732-028282d980f6
+	www.velocidex.com/golang/vtypes v0.0.0-20201229070616-0b57670f1d00
 )
 
 // replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
@@ -132,6 +132,7 @@ require (
 // replace www.velocidex.com/golang/go-yara => /home/mic/projects/go-yara
 // replace github.com/Velocidex/json => /home/mic/projects/json
 // replace github.com/russross/blackfriday/v2 => /home/mic/projects/blackfriday
+// replace www.velocidex.com/golang/vtypes => /home/mic/projects/vtypes
 
 replace github.com/russross/blackfriday/v2 => github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b
 

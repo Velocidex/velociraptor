@@ -335,16 +335,10 @@ func (self *_HttpPlugin) Call(
 			}
 
 			if arg.RemoveLast {
-				root_any, pres := scope.Resolve(constants.SCOPE_ROOT)
-				if pres {
-					root, ok := root_any.(*vfilter.Scope)
-					if ok {
-						scope.Log("Adding global destructor for %v", tmpfile.Name())
-						root.AddDestructor(func() {
-							remove_tmpfile(tmpfile.Name(), scope)
-						})
-					}
-				}
+				scope.Log("Adding global destructor for %v", tmpfile.Name())
+				vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+					remove_tmpfile(tmpfile.Name(), scope)
+				})
 			} else {
 				scope.AddDestructor(func() { remove_tmpfile(tmpfile.Name(), scope) })
 			}
