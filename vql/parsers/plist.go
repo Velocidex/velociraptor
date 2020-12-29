@@ -2,6 +2,8 @@ package parsers
 
 import (
 	"context"
+	"encoding/json"
+
 	"github.com/Velocidex/ordereddict"
 	"howett.net/plist"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -77,7 +79,24 @@ func (self *PlistFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return val
+	// Force the results into dicts
+	serialized, err := json.Marshal(val)
+	if err != nil {
+		scope.Log("plist: %v", err)
+		return vfilter.Null{}
+	}
+
+	dicts, err := utils.ParseJsonToDicts(serialized)
+	if err != nil {
+		scope.Log("plist: %v", err)
+		return vfilter.Null{}
+	}
+
+	if len(dicts) == 1 {
+		return dicts[0]
+	}
+
+	return dicts
 }
 
 type _PlistPluginArgs struct {

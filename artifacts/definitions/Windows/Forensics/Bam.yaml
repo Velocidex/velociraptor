@@ -30,8 +30,8 @@ sources:
             WHERE UUID = basename(path=dirname(path=FullPath))
           } As UserName,
           Name as Binary,
-          timestamp(winfiletime=binary_parse(
-               string=Data.value,
-               target="int64").AsInteger) as Bam_time
+          timestamp(winfiletime=parse_binary(
+               filename=Data.value, accessor="data",
+               profile="[]", struct="int64")) as Bam_time
         FROM glob(globs=split(string=bamKeys, sep=","), accessor="reg")
         WHERE Data.type = "BINARY"

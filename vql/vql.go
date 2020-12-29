@@ -31,6 +31,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -100,6 +101,17 @@ func _makeRootScope() *vfilter.Scope {
 
 func MakeScope() *vfilter.Scope {
 	return _makeRootScope()
+}
+
+func GetRootScope(scope *vfilter.Scope) *vfilter.Scope {
+	root_any, pres := scope.Resolve(constants.SCOPE_ROOT)
+	if pres {
+		root, ok := root_any.(*vfilter.Scope)
+		if ok {
+			return root
+		}
+	}
+	return scope
 }
 
 // MakeNewScope makes a new scope from scratch. You do not need to use

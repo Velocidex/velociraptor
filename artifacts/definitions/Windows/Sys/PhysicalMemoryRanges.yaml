@@ -9,51 +9,51 @@ parameters:
 
   - name: Profile
     default: |
-      {
-        "CM_RESOURCE_LIST": [0, {
-          "Count": [0, ["uint32"]],
-          "List": [4, ["CM_FULL_RESOURCE_DESCRIPTOR"]]
-         }],
-         "CM_FULL_RESOURCE_DESCRIPTOR": [0, {
-           "PartialResourceList": [8, ["CM_PARTIAL_RESOURCE_LIST"]]
-         }],
+      [
+        ["CM_RESOURCE_LIST", 0, [
+          ["Count", 0, "uint32"],
+          ["List", 4, "CM_FULL_RESOURCE_DESCRIPTOR"]
+        ]],
+        ["CM_FULL_RESOURCE_DESCRIPTOR", 0, [
+           ["PartialResourceList", 8, "CM_PARTIAL_RESOURCE_LIST"]
+        ]],
 
-         "CM_PARTIAL_RESOURCE_LIST": [0, {
-           "Version": [0, ["uint16"]],
-           "Revision": [2, ["uint16"]],
-           "Count": [4, ["uint32"]],
-           "PartialDescriptors": [8, ["Array", {
-              "Target": "CM_PARTIAL_RESOURCE_DESCRIPTOR"
-           }]]
-         }],
+        ["CM_PARTIAL_RESOURCE_LIST", 0, [
+           ["Version", 0, "uint16"],
+           ["Revision", 2, "uint16"],
+           ["Count", 4, "uint32"],
+           ["PartialDescriptors", 8, "Array", {
+              "type": "CM_PARTIAL_RESOURCE_DESCRIPTOR",
+              "count": "x=>x.Count"
+           }]
+        ]],
 
-         "CM_PARTIAL_RESOURCE_DESCRIPTOR": [20, {
-           "Type": [0, ["char"]],
-           "ShareDisposition": [1, ["char"]],
-           "Flags": [2, ["uint16"]],
-           "Start": [4, ["int64"]],
-           "Length": [12, ["uint32"]]
-         }]
-      }
+        ["CM_PARTIAL_RESOURCE_DESCRIPTOR", 20, [
+           ["Type", 0, "char"],
+           ["ShareDisposition", 1, "char"],
+           ["Flags",2, "uint16"],
+           ["Start",4, "int64"],
+           ["Length",12, "uint32"]
+        ]]
+      ]
 
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
-    queries:
-      - |
-        SELECT Type.AsInteger as Type,
-               format(format="%#0x", args=Start.AsInteger) as Start,
-               format(format="%#0x", args=Length.AsInteger) as Length
-        FROM foreach(
-          row={
-            SELECT Data
-              FROM stat(filename=physicalMemoryKey, accessor='reg')
-          },
-          query={
-            SELECT Type, Start, Length, Data FROM binary_parse(
-              file=Data.value,
-              accessor="data",
-              profile=Profile,
-              target="CM_RESOURCE_LIST",
-              start="List.PartialResourceList.PartialDescriptors")
-          })
+    query: |
+      SELECT * FROM foreach(
+         row={SELECT Data from stat(filename=physicalMemoryKey, accessor="registry")},
+         query={
+            SELECT * FROM foreach(
+               row=parse_binary(
+                  filename=Data.value,
+                  accessor="data",
+                  profile=Profile,
+                  struct="CM_RESOURCE_LIST").List.PartialResourceList.PartialDescriptors,
+               query={
+                  SELECT Type,
+                         format(format="%#0x", args=Start) AS Start,
+                         format(format="%#0x", args=Length) AS Length
+                  FROM scope()
+              })
+      })

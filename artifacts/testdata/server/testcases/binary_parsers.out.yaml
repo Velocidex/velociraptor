@@ -1,0 +1,52 @@
+SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershell.ModuleAnalysisCache(GlobLookup=srcDir + "/artifacts/testdata/files/ModuleAnalysisCache") LIMIT 10[
+ {
+  "ModuleName": "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\DirectAccessClientComponents\\DirectAccessClientComponents.psd1",
+  "Timestamp": "2019-11-22T01:09:05.488830566Z",
+  "Functions[1]": "Set-DAClientExperienceConfiguration"
+ },
+ {
+  "ModuleName": "C:\\Program Files\\WindowsPowerShell\\Modules\\PowerShellGet\\1.0.0.1\\PowerShellGet.psd1",
+  "Timestamp": "2019-11-22T01:12:42.637771606Z",
+  "Functions[1]": "inmo"
+ },
+ {
+  "ModuleName": "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\ISE\\ISE.psd1",
+  "Timestamp": "2019-09-30T06:50:00Z",
+  "Functions[1]": "Get-IseSnippet"
+ },
+ {
+  "ModuleName": "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\iSCSI\\iSCSI.psd1",
+  "Timestamp": "2019-11-22T01:09:41.28717041Z",
+  "Functions[1]": "New-IscsiTargetPortal"
+ },
+ {
+  "ModuleName": "C:\\Program Files\\WindowsPowerShell\\Modules\\Pester\\3.4.0\\Pester.psd1",
+  "Timestamp": "2019-11-22T01:10:32.889511108Z",
+  "Functions[1]": "Get-TestDriveItem"
+ },
+ {
+  "ModuleName": "C:\\Program Files\\WindowsPowerShell\\Modules\\Microsoft.PowerShell.Operation.Validation\\1.0.1\\Microsoft.PowerShell.Operation.Validation.psd1",
+  "Timestamp": "2019-11-22T01:10:32.938278198Z",
+  "Functions[1]": "Invoke-OperationValidation"
+ },
+ {
+  "ModuleName": "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\DeliveryOptimization\\DeliveryOptimization.psd1",
+  "Timestamp": "2019-11-22T01:08:26.081153869Z",
+  "Functions[1]": "Get-DOPercentageMaxForegroundBandwidth"
+ },
+ {
+  "ModuleName": "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\Microsoft.PowerShell.Management\\Microsoft.PowerShell.Management.psd1",
+  "Timestamp": "2019-11-22T01:10:45.914596557Z",
+  "Functions[1]": "Limit-EventLog"
+ },
+ {
+  "ModuleName": "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\Microsoft.PowerShell.Utility\\Microsoft.PowerShell.Utility.psd1",
+  "Timestamp": "2019-11-22T01:10:45.914596557Z",
+  "Functions[1]": "Convert-String"
+ },
+ {
+  "ModuleName": "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\BitsTransfer\\BitsTransfer.psd1",
+  "Timestamp": "2019-11-22T01:10:45.946586608Z",
+  "Functions[1]": "Set-BitsTransfer"
+ }
+]

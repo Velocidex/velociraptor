@@ -33,36 +33,36 @@ parameters:
 
   - name: userAssistProfile
     default: |
-      {
-        "Win10": [0, {
-          "NumberOfExecutions": [4, ["unsigned int"]],
-          "LastExecution": [60, ["unsigned long long"]]
-        }]
-      }
+      [
+        ["Header", 0, [
+          ["NumberOfExecutions", 4, "uint32"],
+          ["LastExecution", 60, "uint64"]
+        ]]
+      ]
 
 sources:
   - queries:
       - LET TMP = SELECT parse_string_with_regex(
                 string=url(parse=FullPath).Fragment,
                 regex="^.+Count\\\\\"?(?P<Name>.+?)\"?$") AS Name, FullPath,
-             binary_parse(
-               string=Data.value,
+             parse_binary(
+               filename=Data.value,
+               accessor="data",
                profile=userAssistProfile,
-               target="Win10"
-             ) As UserAssist,
+               struct="Header"
+             ) As ParsedUserAssist,
              parse_string_with_regex(
                string=FullPath,
                regex="Users/(?P<User>[^/]+)/NTUSER").User AS User
         FROM Artifact.Windows.Registry.NTUser(KeyGlob=UserAssistKey)
+
       - LET UserAssist = SELECT if(condition=Name.Name,
                    then=rot13(string=Name.Name),
                    else=url(parse=FullPath).Fragment) AS Name,
                User,
-               timestamp(
-                  winfiletime=UserAssist.LastExecution.AsInteger) As LastExecution,
-               timestamp(
-                  winfiletime=UserAssist.LastExecution.AsInteger).Unix AS LastExecutionTS,
-               UserAssist.NumberOfExecutions.AsInteger AS NumberOfExecutions
+               timestamp(winfiletime=ParsedUserAssist.LastExecution) As LastExecution,
+               timestamp(winfiletime=ParsedUserAssist.LastExecution).Unix AS LastExecutionTS,
+               ParsedUserAssist.NumberOfExecutions AS NumberOfExecutions
         FROM TMP
       - LET A1 = SELECT * FROM if(
           condition=UserFilter,
