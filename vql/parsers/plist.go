@@ -92,6 +92,10 @@ func (self *PlistFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	if len(dicts) == 1 {
+		return dicts[0]
+	}
+
 	return dicts
 }
 
