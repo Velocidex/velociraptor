@@ -39,7 +39,7 @@ func getHTMLTemplate(
 // Produce a collector report.
 func produceReport(
 	config_obj *config_proto.Config,
-	container *reporting.Container,
+	archive *reporting.Archive,
 	template string,
 	repository services.Repository,
 	writer io.Writer,
@@ -62,7 +62,7 @@ func produceReport(
 	defer subscope.Close()
 
 	// Reports can query the container directly.
-	subscope.AppendPlugins(&ContainerSourcePlugin{Container: container})
+	subscope.AppendPlugins(&ArchiveSourcePlugin{Archive: archive})
 
 	html_template_string, err := getHTMLTemplate(config_obj, template, repository)
 	if err != nil {
@@ -129,62 +129,6 @@ func produceReport(
 type SourcePluginArgs struct {
 	Artifact string `vfilter:"optional,field=artifact,doc=The name of the artifact collection to fetch"`
 	Source   string `vfilter:"optional,field=source,doc=An optional named source within the artifact"`
-}
-
-// A special implementation of the source() plugin which retrieves
-// data stored in reporting containers. This only exists in generating
-// reports from zip files.
-type ContainerSourcePlugin struct {
-	Container *reporting.Container
-}
-
-func (self *ContainerSourcePlugin) Call(
-	ctx context.Context,
-	scope *vfilter.Scope,
-	args *ordereddict.Dict) <-chan vfilter.Row {
-	output_chan := make(chan vfilter.Row)
-
-	go func() {
-		defer close(output_chan)
-
-		// This plugin will take parameters from environment
-		// parameters. This allows its use to be more concise in
-		// reports etc where many parameters can be inferred from
-		// context.
-		arg := &SourcePluginArgs{}
-		ParseSourceArgsFromScope(arg, scope)
-
-		// Allow the plugin args to override the environment scope.
-		err := vfilter.ExtractArgs(scope, args, arg)
-		if err != nil {
-			scope.Log("source: %v", err)
-			return
-		}
-
-		if arg.Source != "" {
-			arg.Artifact = arg.Artifact + "/" + arg.Source
-			arg.Source = ""
-		}
-
-		for row := range self.Container.ReadArtifactResults(ctx, scope, arg.Artifact) {
-			select {
-			case <-ctx.Done():
-				return
-			case output_chan <- row:
-			}
-		}
-	}()
-
-	return output_chan
-}
-
-func (self ContainerSourcePlugin) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
-	return &vfilter.PluginInfo{
-		Name:    "source",
-		Doc:     "Retrieve rows from stored result sets. This is a one stop show for retrieving stored result set for post processing.",
-		ArgType: type_map.AddType(scope, &SourcePluginArgs{}),
-	}
 }
 
 type ArchiveSourcePlugin struct {

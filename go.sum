@@ -79,6 +79,8 @@ github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49 h1:TJVN1zYl5sKJ
 github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49/go.mod h1:kfPUQ2gP0xtIydiR52dirNYt4OvCr+iZuepL4XaIk58=
 github.com/Velocidex/yaml/v2 v2.2.5 h1:8XZwR8tmm5UWAXotI3fL17s9fjKEMqZ293fgqUiMhBw=
 github.com/Velocidex/yaml/v2 v2.2.5/go.mod h1:VBjrsTMc/b1h0ankOOnJPYoCbJNwhpGYpnDgICEs2mk=
+github.com/Velocidex/zip v0.0.0-20201230073523-29e172503d03 h1:ifFF7cfMvLoF3e9vxyPsyRBLUMaJ1PLhxK+Ef+gicik=
+github.com/Velocidex/zip v0.0.0-20201230073523-29e172503d03/go.mod h1:1p8CU2cp64BG4334sKzhuyH/vm3k1OXEdeBCwYTssAs=
 github.com/ZachtimusPrime/Go-Splunk-HTTP v0.0.0-20200420213219-094ff9e8d788 h1:QYyFO87/l5IdxKVBCMXW5YlwqGR3nHCN3RfAdjIYnVk=
 github.com/ZachtimusPrime/Go-Splunk-HTTP v0.0.0-20200420213219-094ff9e8d788/go.mod h1:RsO+aYhoc9OyzUJwKHWWXXsjLN/85QaaEHx/PWa2+/I=
 github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38 h1:smF2tmSOzy2Mm+0dGI2AIUHY+w0BUc+4tn40djz7+6U=
@@ -260,6 +262,12 @@ github.com/grpc-ecosystem/grpc-gateway v1.14.7 h1:Nk5kuHrnWUTf/0GL1a/vchH/om9Ap2
 github.com/grpc-ecosystem/grpc-gateway v1.14.7/go.mod h1:oYZKL012gGh6LMyg/xA7Q2yq6j8bu0wa+9w14EEthWU=
 github.com/hanwen/go-fuse v1.0.1-0.20190726130028-2f298055551b h1:ek6pftAVF7gXlt1SgPMIotytc+sSx5TpXgKa/kBcIy4=
 github.com/hanwen/go-fuse v1.0.1-0.20190726130028-2f298055551b/go.mod h1:PHVWttMW0DYH6ESFXdZ8S+STmGjwEuGX6gsCPi605mg=
+github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
+github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
+github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY2I=
+github.com/hashicorp/errwrap v1.1.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
+github.com/hashicorp/go-multierror v1.1.0 h1:B9UzwGQJehnUY1yNrnwREHc3fGbC2xefo8g4TbElacI=
+github.com/hashicorp/go-multierror v1.1.0/go.mod h1:spPvp8C1qA32ftKqdAHm4hHTbPw+vmowP0z+KUhOZdA=
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.3 h1:YPkqC67at8FYaadspW/6uE0COsBxS2656RLEr8Bppgk=
@@ -794,13 +802,8 @@ www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196 h1:3oYZ7hPN
 www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196/go.mod h1:i7M+d4Vxir8nmDACh+c6CsUU1r1Wcj00aRgNp8mXcPQ=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500 h1:XqZddiAbjPIsTZcEPbqqqABS/ZV5SB7j33eczNsqD60=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500/go.mod h1:DVzloLH8L+oF3zma1Jisaat5bGF+4VLggDcYlIp00ns=
-www.velocidex.com/golang/vfilter v0.0.0-20201215135433-62fce9f56d6d h1:KrLCmEWeT+NrU70Hd7/XRxvuz8r0PuM1uZGo9Q6IVvg=
-www.velocidex.com/golang/vfilter v0.0.0-20201215135433-62fce9f56d6d/go.mod h1:XlUeViBwZxeefhxbkxW2oGUVcB/oQfxtBgnxL9jLryg=
-www.velocidex.com/golang/vfilter v0.0.0-20201229033732-028282d980f6 h1:Panir8Bu3BVI1R/MNjS+bPl/++Gg4vl0f3ZOMV9i+/A=
 www.velocidex.com/golang/vfilter v0.0.0-20201229033732-028282d980f6/go.mod h1:XlUeViBwZxeefhxbkxW2oGUVcB/oQfxtBgnxL9jLryg=
-www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b h1:z5v5o1dhtzaxvlWm6qSTYZ4OTr56Ol2JpM1Y5Wu9zQE=
-www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b/go.mod h1:tXxIx8UJuI81Hoxcv0DTq2a1Pi1H6l1uCf4dhqUSUkw=
-www.velocidex.com/golang/vtypes v0.0.0-20201229051546-6d7b229e4372 h1:XLrFhprsy06yGNZrhYeF2OhQOZ8h0/4jDZ+xeMg8rfA=
-www.velocidex.com/golang/vtypes v0.0.0-20201229051546-6d7b229e4372/go.mod h1:l1FULlPMESSjMrkimRrX0EzriJ+YIKgQAN13YicEI6E=
+www.velocidex.com/golang/vfilter v0.0.0-20201230064643-0a996eda7d99 h1:UhxTxA3KSyHbmGxMALq/g+U1psH/vUFaA7hNsiWqYF8=
+www.velocidex.com/golang/vfilter v0.0.0-20201230064643-0a996eda7d99/go.mod h1:XlUeViBwZxeefhxbkxW2oGUVcB/oQfxtBgnxL9jLryg=
 www.velocidex.com/golang/vtypes v0.0.0-20201229070616-0b57670f1d00 h1:9E9t+4d4uMWIdVqMSM13CxOK2828r+xQKqg2GdETfis=
 www.velocidex.com/golang/vtypes v0.0.0-20201229070616-0b57670f1d00/go.mod h1:l1FULlPMESSjMrkimRrX0EzriJ+YIKgQAN13YicEI6E=

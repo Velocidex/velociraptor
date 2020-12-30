@@ -50,12 +50,16 @@ sources:
    - name: Uploads
      queries:
       # Upload the files
-      - LET uploaded_tiles = SELECT Created, LastAccessed, Modified, SourceFile, Size,
+      - LET uploaded_files = SELECT * FROM foreach(row=all_results,
+        workers=30,
+        query={
+            SELECT Created, LastAccessed, Modified, SourceFile, Size,
                upload(file=SourceFile, accessor=Accessor, name=SourceFile) AS Upload
-        FROM all_results
+            FROM scope()
+        })
 
       # Separate the hashes into their own column.
       - SELECT now() AS CopiedOnTimestamp, SourceFile, Upload.Path AS DestinationFile,
                Size AS FileSize, Upload.sha256 AS SourceFileSha256,
                Created, Modified, LastAccessed
-        FROM uploaded_tiles
+        FROM uploaded_files

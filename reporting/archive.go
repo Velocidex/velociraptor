@@ -95,6 +95,10 @@ func (self *Archive) ListArtifacts() []string {
 	return result
 }
 
+func (self *Archive) Close() {
+	self.fd.Close()
+}
+
 func NewArchiveReader(path string) (*Archive, error) {
 	fd, err := os.Open(path)
 	if err != nil {

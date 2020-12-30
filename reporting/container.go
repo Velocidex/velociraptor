@@ -5,14 +5,10 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
-	"runtime/debug"
 	"strings"
-	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alexmullins/zip"
@@ -25,71 +21,23 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+
+	concurrent_zip "github.com/Velocidex/zip"
 )
 
 type Container struct {
-	sync.Mutex // Serialize access to the zip file.
-	fd         io.WriteCloser
-	zip        *zip.Writer
+	// The underlying file writer
+	fd io.WriteCloser
 
-	tempfiles map[string]*os.File
+	// We write data to this zip file using the concurrent zip
+	// implementation.
+	zip *concurrent_zip.Writer
 
-	Password     string
+	// If a password is set, we create a new zip file here, and a
+	// member within it then redirect the zip above to write on
+	// it.
 	delegate_zip *zip.Writer
-
-	current_writers int
-	backtraces      []string
-	close_backtrace []string
-}
-
-func (self *Container) writeToContainer(
-	ctx context.Context,
-	tmpfile *os.File,
-	scope *vfilter.Scope,
-	artifact, format string) error {
-
-	path_manager := NewContainerPathManager(artifact)
-
-	// Copy the original json file into the container.
-	writer, closer, err := self.getZipFileWriter(path_manager.Path())
-	if err != nil {
-		return err
-	}
-
-	_, err = tmpfile.Seek(0, 0)
-	if err != nil {
-		closer()
-		return err
-	}
-
-	_, err = utils.Copy(ctx, writer, tmpfile)
-	if err != nil {
-		closer()
-		return err
-	}
-	closer()
-
-	switch format {
-	case "csv", "":
-		writer, closer, err := self.getZipFileWriter(path_manager.CSVPath())
-		if err != nil {
-			return err
-		}
-		defer closer()
-
-		csv_writer := csv.GetCSVAppender(
-			scope, writer, true /* write_headers */)
-		defer csv_writer.Close()
-
-		// Convert from the json to csv.
-		_, err = tmpfile.Seek(0, 0)
-		if err == nil {
-			for item := range utils.ReadJsonFromFile(ctx, tmpfile) {
-				csv_writer.Write(item)
-			}
-		}
-	}
-	return nil
+	delegate_fd  io.Writer
 }
 
 func (self *Container) StoreArtifact(
@@ -97,7 +45,7 @@ func (self *Container) StoreArtifact(
 	ctx context.Context,
 	scope *vfilter.Scope,
 	query *actions_proto.VQLRequest,
-	format string) error {
+	format string) (err error) {
 
 	vql, err := vfilter.Parse(query.VQL)
 	if err != nil {
@@ -113,15 +61,41 @@ func (self *Container) StoreArtifact(
 		return nil
 	}
 
-	// Queue the query into a temp file in order to allow
-	// interleaved uploaded files to be written to the zip
-	// file. Zip files only support a single writer at a time.
-	tmpfile, err := ioutil.TempFile("", "vel")
+	// The name to use in the zip file to store results from this artifact
+	path_manager := NewContainerPathManager(artifact_name)
+	fd, err := self.zip.Create(path_manager.Path())
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 
-	self.tempfiles[artifact_name] = tmpfile
+	// Preserve the error for our caller.
+	defer func() {
+		err_ := fd.Close()
+		if err == nil {
+			err = err_
+		}
+	}()
+
+	// Optionally include CSV in the output
+	var csv_writer *csv.CSVWriter
+	if format == "csv" {
+		csv_fd, err := self.zip.Create(path_manager.CSVPath())
+		if err != nil {
+			return err
+		}
+
+		csv_writer = csv.GetCSVAppender(
+			scope, csv_fd, true /* write_headers */)
+
+		// Preserve the error for our caller.
+		defer func() {
+			csv_writer.Close()
+			err_ := csv_fd.Close()
+			if err == nil {
+				err = err_
+			}
+		}()
+	}
 
 	// Store as line delimited JSON
 	marshaler := vql_subsystem.MarshalJsonl(scope)
@@ -132,136 +106,38 @@ func (self *Container) StoreArtifact(
 			continue
 		}
 
-		_, err = tmpfile.Write(serialized)
+		_, err = fd.Write(serialized)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 
-		// Separate lines with \n
-		_, err = tmpfile.Write([]byte("\n"))
-		if err != nil {
-			return errors.WithStack(err)
+		if csv_writer != nil {
+			csv_writer.Write(row)
 		}
 	}
 
-	return self.writeToContainer(
-		ctx, tmpfile, scope, artifact_name, format)
-}
-
-func (self *Container) getZipFileWriter(name string) (io.Writer, func(), error) {
-	self.Lock()
-
-	self.current_writers++
-	self.backtraces = append(self.backtraces, string(debug.Stack()))
-
-	cancel := func() {
-		self.current_writers--
-		self.close_backtrace = append(self.close_backtrace, string(debug.Stack()))
-		self.Unlock()
-	}
-
-	if self.Password == "" {
-		fd, err := self.zip.Create(string(name))
-		return fd, cancel, err
-	}
-
-	// Zip file encryption is not great because it only encrypts
-	// the content of the file, and not its directory. We want to
-	// do better than that - so we create another zip file inside
-	// the original zip file and encrypt that.
-	if self.delegate_zip == nil {
-		fd, err := self.zip.Encrypt("data.zip", self.Password)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		self.delegate_zip = zip.NewWriter(fd)
-	}
-
-	w, err := self.delegate_zip.Create(string(name))
-
-	return w, cancel, err
-}
-
-func (self *Container) DumpRowsIntoContainer(
-	config_obj *config_proto.Config,
-	output_rows []vfilter.Row,
-	scope *vfilter.Scope,
-	query *actions_proto.VQLRequest) error {
-
-	if len(output_rows) == 0 {
-		return nil
-	}
-
-	// In this instance we want to make / unescaped.
-	sanitized_name := query.Name + ".csv"
-	writer, closer, err := self.getZipFileWriter(string(sanitized_name))
-	if err != nil {
-		return err
-	}
-
-	csv_writer := csv.GetCSVAppender(
-		scope, writer, true /* write_headers */)
-	for _, row := range output_rows {
-		csv_writer.Write(row)
-	}
-
-	csv_writer.Close()
-	closer()
-
-	sanitized_name = query.Name + ".json"
-	writer, closer, err = self.getZipFileWriter(string(sanitized_name))
-	if err != nil {
-		return err
-	}
-
-	serialized, err := vql_subsystem.MarshalJsonl(scope)(output_rows)
-	if err != nil {
-		closer()
-		return err
-	}
-	_, err = writer.Write(serialized)
-	if err != nil {
-		closer()
-		return err
-	}
-	closer()
-
-	// Format the description.
-	sanitized_name = query.Name + ".txt"
-	writer, closer, err = self.getZipFileWriter(string(sanitized_name))
-	if err != nil {
-		return err
-	}
-	defer closer()
-
-	_, err = fmt.Fprintf(writer, "# %s\n\n%s", query.Name,
-		FormatDescription(config_obj, query.Description, output_rows))
-	return err
-}
-
-func sanitize(component string) string {
-	component = strings.Replace(component, ":", "", -1)
-	component = strings.Replace(component, "?", "", -1)
-	return component
+	return nil
 }
 
 func (self *Container) ReadArtifactResults(
 	ctx context.Context,
 	scope *vfilter.Scope, artifact string) chan *ordereddict.Dict {
-	output_chan := make(chan *ordereddict.Dict)
+	return nil
+	/*
+		output_chan := make(chan *ordereddict.Dict)
 
-	// Get the tempfile we hold open with the results for this artifact
-	fd, pres := self.tempfiles[artifact]
-	if !pres {
-		scope.Log("Trying to access results for artifact %v, "+
-			"but we did not collect it!", artifact)
-		close(output_chan)
-		return output_chan
-	}
+		// Get the tempfile we hold open with the results for this artifact
+		fd, pres := self.tempfiles[artifact]
+		if !pres {
+			scope.Log("Trying to access results for artifact %v, "+
+				"but we did not collect it!", artifact)
+			close(output_chan)
+			return output_chan
+		}
 
-	_, _ = fd.Seek(0, 0)
-	return utils.ReadJsonFromFile(ctx, fd)
+		_, _ = fd.Seek(0, 0)
+		return utils.ReadJsonFromFile(ctx, fd)
+	*/
 }
 
 func sanitize_upload_name(store_as_name string) string {
@@ -277,6 +153,12 @@ func sanitize_upload_name(store_as_name string) string {
 
 	// Zip members must not have absolute paths.
 	return path.Join(components...)
+}
+
+func sanitize(component string) string {
+	component = strings.Replace(component, ":", "", -1)
+	component = strings.Replace(component, "?", "", -1)
+	return component
 }
 
 func (self *Container) Upload(
@@ -304,10 +186,11 @@ func (self *Container) Upload(
 		return result, nil
 	}
 
-	writer, closer, err := self.getZipFileWriter(sanitized_name)
+	writer, err := self.zip.Create(sanitized_name)
 	if err != nil {
 		return nil, err
 	}
+	defer writer.Close()
 
 	sha_sum := sha256.New()
 	md5_sum := md5.New()
@@ -318,7 +201,6 @@ func (self *Container) Upload(
 			Error: err.Error(),
 		}, err
 	}
-	closer()
 
 	return &api.UploadResponse{
 		Path:   sanitized_name,
@@ -339,10 +221,11 @@ func (self *Container) maybeCollectSparseFile(
 		return nil, errors.New("Not supported")
 	}
 
-	writer, closer, err := self.getZipFileWriter(sanitized_name)
+	writer, err := self.zip.Create(sanitized_name)
 	if err != nil {
 		return nil, err
 	}
+	defer writer.Close()
 
 	sha_sum := sha256.New()
 	md5_sum := md5.New()
@@ -387,18 +270,17 @@ func (self *Container) maybeCollectSparseFile(
 		}
 		count += n
 	}
-	closer()
 
 	// If there were any sparse runs, create an index.
 	if is_sparse {
-		writer, closer, err := self.getZipFileWriter(sanitized_name + ".idx")
+		writer, err := self.zip.Create(sanitized_name + ".idx")
 		if err != nil {
 			return nil, err
 		}
+		defer writer.Close()
 
 		serialized, err := utils.DictsToJson(index, nil)
 		if err != nil {
-			closer()
 			return &api.UploadResponse{
 				Error: err.Error(),
 			}, err
@@ -406,12 +288,10 @@ func (self *Container) maybeCollectSparseFile(
 
 		_, err = writer.Write(serialized)
 		if err != nil {
-			closer()
 			return &api.UploadResponse{
 				Error: err.Error(),
 			}, err
 		}
-		closer()
 	}
 
 	return &api.UploadResponse{
@@ -423,49 +303,41 @@ func (self *Container) maybeCollectSparseFile(
 }
 
 func (self *Container) Close() error {
-	self.Lock()
-	defer self.Unlock()
-
-	if self.current_writers != 0 {
-		for _, i := range self.backtraces {
-			fmt.Println(i)
-		}
-
-		for _, i := range self.close_backtrace {
-			fmt.Println(i)
-		}
-
-		panic("Closing with pending writers")
-	}
+	self.zip.Close()
 
 	if self.delegate_zip != nil {
 		self.delegate_zip.Close()
-		self.delegate_zip = nil
 	}
-
-	// Remove all the tempfiles we still hold open
-	for _, file := range self.tempfiles {
-		os.Remove(file.Name())
-	}
-
-	self.zip.Close()
-	self.zip = nil
 	return self.fd.Close()
 }
 
-func NewContainer(path string) (*Container, error) {
+func NewContainer(path string, password string) (*Container, error) {
 	fd, err := os.OpenFile(
 		path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return nil, err
 	}
 
-	zip_writer := zip.NewWriter(fd)
-	return &Container{
-		fd:        fd,
-		tempfiles: make(map[string]*os.File),
-		zip:       zip_writer,
-	}, nil
+	result := &Container{
+		fd: fd,
+	}
+
+	// We need to build a protected container.
+	if password != "" {
+		result.delegate_zip = zip.NewWriter(fd)
+
+		result.delegate_fd, err = result.delegate_zip.Encrypt(
+			"data.zip", password)
+		if err != nil {
+			return nil, err
+		}
+
+		result.zip = concurrent_zip.NewWriter(result.delegate_fd)
+	} else {
+		result.zip = concurrent_zip.NewWriter(result.fd)
+	}
+
+	return result, nil
 }
 
 // Turns os.Stdout into into file_store.WriteSeekCloser
