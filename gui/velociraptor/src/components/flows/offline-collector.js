@@ -8,6 +8,8 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import ToolViewer from "../tools/tool-viewer.js";
 import { HotKeys, ObserveKeys } from "react-hotkeys";
+import ValidatedInteger from '../forms/validated_int.js';
+import api from '../core/api-service.js';
 
 import {
     NewCollectionSelectArtifacts,
@@ -33,6 +35,22 @@ class OfflineCollectorParameters  extends React.Component {
         setParameters: PropTypes.func.isRequired,
     }
 
+    state = {
+        template_artifacts: [],
+    }
+
+    componentDidMount = () => {
+        api.get("v1/GetArtifacts", {report_type: "html"}).then((response) => {
+            let template_artifacts = [];
+            for(var i = 0; i<response.data.items.length; i++) {
+                var item = response.data.items[i];
+                template_artifacts.push(item["name"]);
+            };
+
+            this.setState({template_artifacts: template_artifacts});
+        });
+    }
+
     render() {
         return (
             <>
@@ -41,23 +59,23 @@ class OfflineCollectorParameters  extends React.Component {
               </Modal.Header>
               <Modal.Body>
                 <Form>
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">Target Operating System</Form.Label>
-                      <Col sm="8">
-                        <Form.Control as="select"
-                                      value={this.props.parameters.target_os}
-                                      onChange={(e) => {
-                                          this.props.parameters.target_os = e.currentTarget.value;
-                                          this.props.setParameters(this.props.parameters);
-                                      }}
-                        >
-                          <option value="Windows">Windows</option>
-                          <option value="Windows_x86">Windows_x86</option>
-                          <option value="Linux">Linux</option>
-                          <option value="MacOS">Mac OS</option>
-                        </Form.Control>
-                      </Col>
-                    </Form.Group>
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">Target Operating System</Form.Label>
+                    <Col sm="8">
+                      <Form.Control as="select"
+                                    value={this.props.parameters.target_os}
+                                    onChange={(e) => {
+                                        this.props.parameters.target_os = e.currentTarget.value;
+                                        this.props.setParameters(this.props.parameters);
+                                    }}
+                      >
+                        <option value="Windows">Windows</option>
+                        <option value="Windows_x86">Windows_x86</option>
+                        <option value="Linux">Linux</option>
+                        <option value="MacOS">Mac OS</option>
+                      </Form.Control>
+                    </Col>
+                  </Form.Group>
 
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">Password</Form.Label>
@@ -71,6 +89,25 @@ class OfflineCollectorParameters  extends React.Component {
                                     }} />
                     </Col>
                   </Form.Group>
+
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">Report Template</Form.Label>
+                    <Col sm="8">
+                      <Form.Control as="select"
+                                    value={this.props.parameters.template}
+                                    onChange={(e) => {
+                                        this.props.parameters.template = e.currentTarget.value;
+                                        this.props.setParameters(this.props.parameters);
+                                    }}
+                      >
+                        <option value="">No Report</option>
+                        { _.map(this.state.template_artifacts, (item, i)=>{
+                            return <option key={i} value={item}>{item}</option>;
+                        })}
+                      </Form.Control>
+                    </Col>
+                  </Form.Group>
+
 
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">Collection Type</Form.Label>
@@ -204,9 +241,6 @@ class OfflineCollectorParameters  extends React.Component {
                         </Form.Control>
                         </Col>
                     </Form.Group>
-
-
-
                     </>
                   }
 
@@ -309,6 +343,18 @@ class OfflineCollectorParameters  extends React.Component {
                       />
                     </Col>
                   </Form.Group>
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">Compression Level</Form.Label>
+                    <Col sm="8">
+                      <ValidatedInteger setValue={value=>{
+                          this.props.parameters.opt_level = value;
+                          this.props.setParameters(this.props.parameters);
+                      }}
+                                        value={this.props.parameters.opt_level}
+                                        placeholder="Compression Level (0 - 9)"
+                      />
+                    </Col>
+                  </Form.Group>
 
                 </Form>
               </Modal.Body>
@@ -349,8 +395,9 @@ export default class OfflineCollectorWizard extends React.Component {
                 region: "",
                 endpoint: "",
             },
-            template: "Reporting.Default",
+            template: "",
             password: "",
+            opt_level: 5,
         },
     }
 
@@ -378,11 +425,14 @@ export default class OfflineCollectorWizard extends React.Component {
         env.push({key: "target", value: this.state.collector_parameters.target});
         env.push({key: "target_args", value: JSON.stringify(
             this.state.collector_parameters.target_args)});
+        env.push({key: "Password", value: this.state.collector_parameters.password});
+        env.push({key: "template", value: this.state.collector_parameters.template});
         env.push({key: "opt_verbose", value: "Y"});
         env.push({key: "opt_banner", value: "Y"});
         env.push({key: "opt_prompt", value: "N"});
         env.push({key: "opt_admin", value: "Y"});
         env.push({key: "opt_tempdir", value: this.state.collector_parameters.opt_tempdir});
+        env.push({key: "opt_level", value: this.state.collector_parameters.opt_level.toString()});
 
         return request;
     }

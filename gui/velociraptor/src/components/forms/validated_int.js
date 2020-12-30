@@ -1,11 +1,11 @@
 import "./validated.css";
-
+import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
 import Form from 'react-bootstrap/Form';
 
-const regexp = new RegExp(`^-?[0-9]*$`);
+const regexp = new RegExp(`^-?[0-9]+$`);
 
 export default class ValidatedInteger extends React.Component {
     static propTypes = {
@@ -20,7 +20,10 @@ export default class ValidatedInteger extends React.Component {
     }
 
     render() {
-        let value = this.props.value || "";
+        let value = this.props.value;
+        if (_.isUndefined(value)) {
+            value = 0;
+        }
         return (
             <>
               <Form.Control placeholder={this.props.placeholder || ""}
@@ -33,6 +36,7 @@ export default class ValidatedInteger extends React.Component {
                                     this.props.setValue(parseInt(newValue));
                                     invalid = false;
                                 } else {
+                                    this.props.setValue(newValue);
                                     invalid = true;
                                 }
 
