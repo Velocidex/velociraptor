@@ -157,7 +157,7 @@ func runTest(fixture *testFixture,
 	}
 	defer os.Remove(tmpfile.Name())
 
-	container, err := reporting.NewContainer(tmpfile.Name())
+	container, err := reporting.NewContainer(tmpfile.Name(), "")
 	kingpin.FatalIfError(err, "Can not create output container")
 
 	builder := services.ScopeBuilder{

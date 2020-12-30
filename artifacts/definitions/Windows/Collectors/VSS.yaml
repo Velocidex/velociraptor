@@ -90,12 +90,16 @@ sources:
       - LET unique_mtimes = SELECT * FROM all_results GROUP BY Key
 
       # Upload the files using the MFT accessor.
-      - LET uploaded_tiles = SELECT Created, LastAccessed, Modified, MFT, SourceFile, Size,
+      - LET uploaded_files = SELECT * FROM foreach(row=unique_mtimes,
+        workers=30,
+        query={
+            SELECT Created, LastAccessed, Modified, MFT, SourceFile, Size,
                upload(file=Device+MFT, name=SourceFile, accessor="mft") AS Upload
-        FROM unique_mtimes
+            FROM scope()
+        })
 
       # Seperate the hashes into their own column.
       - SELECT now() AS CopiedOnTimestamp, SourceFile, Upload.Path AS DestinationFile,
                Size AS FileSize, Upload.sha256 AS SourceFileSha256,
                Created, Modified, LastAccessed, MFT
-        FROM uploaded_tiles
+        FROM uploaded_files

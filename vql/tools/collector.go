@@ -225,24 +225,33 @@ func makeContainer(
 	repository services.Repository,
 	arg *CollectPluginArgs) (
 	container *reporting.Container, closer func(), err error) {
-	container, err = reporting.NewContainer(arg.Output)
+	// Should we encrypt it?
+	if arg.Password != "" {
+		scope.Log("Will password protect container")
+	}
+
+	container, err = reporting.NewContainer(arg.Output, arg.Password)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	scope.Log("Will create container at %s", arg.Output)
 
-	// Should we encrypt it?
-	if arg.Password != "" {
-		container.Password = arg.Password
-		scope.Log("Will password protect container")
-	}
-
 	// On exit we create a report.
 	closer = func() {
 		container.Close()
 
 		if arg.Report != "" {
+			scope.Log("Producing collection report at %v", arg.Report)
+
+			// Open the archive back up again. // TODO: Support password.
+			archive, err := reporting.NewArchiveReader(arg.Output)
+			if err != nil {
+				scope.Log("Error opening archive: %v", err)
+				return
+			}
+			defer archive.Close()
+
 			// Produce a report for each of the collected
 			// artifacts.
 			definitions := []*artifacts_proto.Artifact{}
@@ -263,7 +272,7 @@ func makeContainer(
 			}
 			defer fd.Close()
 
-			err = produceReport(config_obj, container,
+			err = produceReport(config_obj, archive,
 				arg.Template,
 				repository, fd,
 				definitions,

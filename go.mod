@@ -17,11 +17,11 @@ require (
 	github.com/Velocidex/ordereddict v0.0.0-20200723153557-9460a6764ab8
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml/v2 v2.2.5
+	github.com/Velocidex/zip v0.0.0-20201230073523-29e172503d03
 	github.com/ZachtimusPrime/Go-Splunk-HTTP v0.0.0-20200420213219-094ff9e8d788
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/chroma v0.7.2
 	github.com/alecthomas/participle v0.7.1
-	github.com/alecthomas/repr v0.0.0-20201120212035-bb82daffcca2 // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/aws/aws-sdk-go v1.26.7
 	github.com/bi-zone/etw v0.0.0-20200916105032-b215904fae4f
@@ -48,6 +48,7 @@ require (
 	github.com/gorilla/schema v1.1.0
 	github.com/grpc-ecosystem/grpc-gateway v1.14.7
 	github.com/hanwen/go-fuse v1.0.1-0.20190726130028-2f298055551b
+	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hillu/go-ntdll v0.0.0-20190226223014-dd4204aa705e
 	github.com/hillu/go-yara v1.2.2 // indirect
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
@@ -97,7 +98,6 @@ require (
 	golang.org/x/net v0.0.0-20201031054903-ff519b6c9102
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20201101102859-da207088b7d1
-	golang.org/x/text v0.3.4 // indirect
 	golang.org/x/tools v0.0.0-20200828161849-5deb26317202 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/api v0.30.0
@@ -120,7 +120,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20201229033732-028282d980f6
+	www.velocidex.com/golang/vfilter v0.0.0-20201230064643-0a996eda7d99
 	www.velocidex.com/golang/vtypes v0.0.0-20201229070616-0b57670f1d00
 )
 
@@ -133,6 +133,7 @@ require (
 // replace github.com/Velocidex/json => /home/mic/projects/json
 // replace github.com/russross/blackfriday/v2 => /home/mic/projects/blackfriday
 // replace www.velocidex.com/golang/vtypes => /home/mic/projects/vtypes
+// replace github.com/Velocidex/zip => /home/mic/projects/zip
 
 replace github.com/russross/blackfriday/v2 => github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b
 

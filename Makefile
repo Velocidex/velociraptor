@@ -4,7 +4,7 @@ all:
 auto:
 	go run make.go -v auto
 
-test: golden
+test:
 	go test ./... --tags server_vql
 
 golden:
