@@ -46,7 +46,7 @@ parameters:
       ["Generic.Client.Info"]
 
   - name: template
-    default: Reporting.Default
+    default:
     description: The HTML report template to use.
 
   - name: Password
@@ -97,6 +97,11 @@ parameters:
     default:
     description: A directory to write tempfiles in
 
+  - name: opt_level
+    default: "4"
+    type: int
+    description: Compression level (0=no compression).
+
   - name: StandardCollection
     type: hidden
     default: |
@@ -114,10 +119,10 @@ parameters:
           re="[^0-9A-Za-z\\-.]", replace="_")
 
       LET _ <= log(message="Will collect package " + filename)
-
-      SELECT * FROM collect(artifacts=Artifacts, report=filename + ".html",
+      LET report_filename <= if(condition=Template, then=filename + ".html")
+      SELECT * FROM collect(artifacts=Artifacts, report=report_filename,
           args=Parameters, output=filename + ".zip", template=Template,
-          password=Password)
+          password=Password, level=Level)
 
   - name: S3Collection
     type: hidden
@@ -187,23 +192,25 @@ parameters:
 
       LET _ <= log(message="Will collect package " + filename +
          " and upload to cloud bucket " + TargetArgs.bucket)
-
+      LET report_filename <= if(condition=Template, then=tempfile(extension=".html"))
       LET collect_and_upload = SELECT
           upload_file(filename=Container,
                       name=filename+".zip",
                       accessor="file") AS Upload,
-          upload_file(filename=Report,
-                      name=filename+".html",
-                      accessor="file") AS ReportUpload,
+          if(condition=Template,
+             then=upload_file(filename=Report,
+                              name=filename+".html",
+                              accessor="file")) AS ReportUpload,
           upload_file(filename=baseline[0].Exe + ".log",
                       name=filename+".log",
                       accessor="file") AS LogUpload
       FROM collect(artifacts=Artifacts,
-          report=tempfile(extension=".html"),
+          report=report_filename,
           args=Parameters,
+          level=Level,
           output=tempfile(extension=".zip"),
           template=Template,
-          password=Password)
+          password=Password, level=Level)
 
       SELECT * FROM if(condition=upload_test.Path,
           then=collect_and_upload,
@@ -329,6 +336,7 @@ sources:
                          type="json"),
                     dict(name="Template", default=template),
                     dict(name="Password", default=Password),
+                    dict(name="Level", default=opt_level, type="int"),
                     dict(name="target_args",
                          default=serialize(format='json', item=target_args),
                          type="json"),

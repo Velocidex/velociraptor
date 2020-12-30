@@ -1,6 +1,7 @@
 package reporting
 
 import (
+	"compress/flate"
 	"context"
 	"crypto/md5"
 	"crypto/sha256"
@@ -29,6 +30,8 @@ type Container struct {
 	// The underlying file writer
 	fd io.WriteCloser
 
+	level int
+
 	// We write data to this zip file using the concurrent zip
 	// implementation.
 	zip *concurrent_zip.Writer
@@ -38,6 +41,19 @@ type Container struct {
 	// it.
 	delegate_zip *zip.Writer
 	delegate_fd  io.Writer
+}
+
+func (self *Container) Create(name string) (io.WriteCloser, error) {
+	header := &concurrent_zip.FileHeader{
+		Name:   name,
+		Method: concurrent_zip.Deflate,
+	}
+
+	if self.level == 0 {
+		header.Method = concurrent_zip.Store
+	}
+
+	return self.zip.CreateHeader(header)
 }
 
 func (self *Container) StoreArtifact(
@@ -63,7 +79,7 @@ func (self *Container) StoreArtifact(
 
 	// The name to use in the zip file to store results from this artifact
 	path_manager := NewContainerPathManager(artifact_name)
-	fd, err := self.zip.Create(path_manager.Path())
+	fd, err := self.Create(path_manager.Path())
 	if err != nil {
 		return err
 	}
@@ -79,7 +95,7 @@ func (self *Container) StoreArtifact(
 	// Optionally include CSV in the output
 	var csv_writer *csv.CSVWriter
 	if format == "csv" {
-		csv_fd, err := self.zip.Create(path_manager.CSVPath())
+		csv_fd, err := self.Create(path_manager.CSVPath())
 		if err != nil {
 			return err
 		}
@@ -117,27 +133,6 @@ func (self *Container) StoreArtifact(
 	}
 
 	return nil
-}
-
-func (self *Container) ReadArtifactResults(
-	ctx context.Context,
-	scope *vfilter.Scope, artifact string) chan *ordereddict.Dict {
-	return nil
-	/*
-		output_chan := make(chan *ordereddict.Dict)
-
-		// Get the tempfile we hold open with the results for this artifact
-		fd, pres := self.tempfiles[artifact]
-		if !pres {
-			scope.Log("Trying to access results for artifact %v, "+
-				"but we did not collect it!", artifact)
-			close(output_chan)
-			return output_chan
-		}
-
-		_, _ = fd.Seek(0, 0)
-		return utils.ReadJsonFromFile(ctx, fd)
-	*/
 }
 
 func sanitize_upload_name(store_as_name string) string {
@@ -186,7 +181,7 @@ func (self *Container) Upload(
 		return result, nil
 	}
 
-	writer, err := self.zip.Create(sanitized_name)
+	writer, err := self.Create(sanitized_name)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +216,7 @@ func (self *Container) maybeCollectSparseFile(
 		return nil, errors.New("Not supported")
 	}
 
-	writer, err := self.zip.Create(sanitized_name)
+	writer, err := self.Create(sanitized_name)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +268,7 @@ func (self *Container) maybeCollectSparseFile(
 
 	// If there were any sparse runs, create an index.
 	if is_sparse {
-		writer, err := self.zip.Create(sanitized_name + ".idx")
+		writer, err := self.Create(sanitized_name + ".idx")
 		if err != nil {
 			return nil, err
 		}
@@ -311,23 +306,34 @@ func (self *Container) Close() error {
 	return self.fd.Close()
 }
 
-func NewContainer(path string, password string) (*Container, error) {
+func NewContainer(path string, password string, level int64) (*Container, error) {
 	fd, err := os.OpenFile(
 		path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return nil, err
 	}
 
+	if level < 0 || level > 9 {
+		level = 5
+	}
+
 	result := &Container{
-		fd: fd,
+		fd:    fd,
+		level: int(level),
 	}
 
 	// We need to build a protected container.
 	if password != "" {
 		result.delegate_zip = zip.NewWriter(fd)
 
-		result.delegate_fd, err = result.delegate_zip.Encrypt(
-			"data.zip", password)
+		// We are writing a zip file into here - no need to
+		// compress.
+		fh := &zip.FileHeader{
+			Name:   "data.zip",
+			Method: zip.Store,
+		}
+		fh.SetPassword(password)
+		result.delegate_fd, err = result.delegate_zip.CreateHeader(fh)
 		if err != nil {
 			return nil, err
 		}
@@ -335,6 +341,10 @@ func NewContainer(path string, password string) (*Container, error) {
 		result.zip = concurrent_zip.NewWriter(result.delegate_fd)
 	} else {
 		result.zip = concurrent_zip.NewWriter(result.fd)
+		result.zip.RegisterCompressor(
+			zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
+				return flate.NewWriter(out, int(level))
+			})
 	}
 
 	return result, nil

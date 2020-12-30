@@ -32,6 +32,7 @@ type CollectPluginArgs struct {
 	Format              string      `vfilter:"optional,field=format,doc=Output format (csv, jsonl)."`
 	ArtifactDefinitions vfilter.Any `vfilter:"optional,field=artifact_definitions,doc=Optional additional custom artifacts."`
 	Template            string      `vfilter:"optional,field=template,doc=The name of a template artifact (i.e. one which has report of type HTML)."`
+	Level               int64       `vfilter:"optional,field=level,doc=Compression level between 0 (no compression) and 9."`
 }
 
 type CollectPlugin struct{}
@@ -230,7 +231,9 @@ func makeContainer(
 		scope.Log("Will password protect container")
 	}
 
-	container, err = reporting.NewContainer(arg.Output, arg.Password)
+	scope.Log("Setting compression level to %v", arg.Level)
+
+	container, err = reporting.NewContainer(arg.Output, arg.Password, arg.Level)
 	if err != nil {
 		return nil, nil, err
 	}
