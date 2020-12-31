@@ -36,7 +36,7 @@ import (
 var (
 	pool = sync.Pool{
 		New: func() interface{} {
-			buffer := make([]byte, 1024*1024) // 1Mb chunks
+			buffer := make([]byte, 64*1024) // 64kb chunks
 			return &buffer
 		},
 	}
