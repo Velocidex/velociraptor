@@ -102,6 +102,10 @@ parameters:
     type: int
     description: Compression level (0=no compression).
 
+  - name: opt_format
+    default: "jsonl"
+    description: Output format (jsonl or csv)
+
   - name: StandardCollection
     type: hidden
     default: |
@@ -122,7 +126,7 @@ parameters:
       LET report_filename <= if(condition=Template, then=filename + ".html")
       SELECT * FROM collect(artifacts=Artifacts, report=report_filename,
           args=Parameters, output=filename + ".zip", template=Template,
-          password=Password, level=Level)
+          password=Password, level=Level, format=Format)
 
   - name: S3Collection
     type: hidden
@@ -207,10 +211,11 @@ parameters:
       FROM collect(artifacts=Artifacts,
           report=report_filename,
           args=Parameters,
-          level=Level,
+          format=Format,
           output=tempfile(extension=".zip"),
           template=Template,
-          password=Password, level=Level)
+          password=Password,
+          level=Level)
 
       SELECT * FROM if(condition=upload_test.Path,
           then=collect_and_upload,
@@ -337,6 +342,7 @@ sources:
                     dict(name="Template", default=template),
                     dict(name="Password", default=Password),
                     dict(name="Level", default=opt_level, type="int"),
+                    dict(name="Format", default=opt_format),
                     dict(name="target_args",
                          default=serialize(format='json', item=target_args),
                          type="json"),

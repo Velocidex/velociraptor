@@ -80,7 +80,7 @@ class OfflineCollectorParameters  extends React.Component {
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">Password</Form.Label>
                     <Col sm="8">
-                      <Form.Control as="textarea" rows={3}
+                      <Form.Control as="input"
                                     placeholder="Password"
                                     value={this.props.parameters.password}
                                     onChange={e => {
@@ -333,7 +333,7 @@ class OfflineCollectorParameters  extends React.Component {
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">Temp directory</Form.Label>
                     <Col sm="8">
-                      <Form.Control as="textarea" rows={3}
+                      <Form.Control as="input"
                                     placeholder="Temp location"
                                     value={this.props.parameters.opt_tempdir}
                                     onChange={e => {
@@ -356,6 +356,21 @@ class OfflineCollectorParameters  extends React.Component {
                     </Col>
                   </Form.Group>
 
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">Output format</Form.Label>
+                    <Col sm="8">
+                      <Form.Control as="select"
+                                    value={this.props.parameters.opt_format}
+                                    onChange={(e) => {
+                                        this.props.parameters.opt_format = e.target.value;
+                                        this.props.setParameters(this.props.parameters);
+                                    }}
+                      >
+                        <option value="jsonl">JSON</option>
+                        <option value="csv">CSV and JSON</option>
+                      </Form.Control>
+                    </Col>
+                  </Form.Group>
                 </Form>
               </Modal.Body>
               <Modal.Footer>
@@ -398,6 +413,7 @@ export default class OfflineCollectorWizard extends React.Component {
             template: "",
             password: "",
             opt_level: 5,
+            opt_format: "jsonl",
         },
     }
 
@@ -433,6 +449,7 @@ export default class OfflineCollectorWizard extends React.Component {
         env.push({key: "opt_admin", value: "Y"});
         env.push({key: "opt_tempdir", value: this.state.collector_parameters.opt_tempdir});
         env.push({key: "opt_level", value: this.state.collector_parameters.opt_level.toString()});
+        env.push({key: "opt_format", value: this.state.collector_parameters.opt_format});
 
         return request;
     }
