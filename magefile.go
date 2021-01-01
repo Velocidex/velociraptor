@@ -260,13 +260,18 @@ func WindowsDev() error {
 		arch:       "amd64"}.Run()
 }
 
-func WindowsTest() error {
+// Windows binary with race detection. This requires building on
+// windows (ie not cross compiling). You will need to install gcc
+// first using https://jmeubank.github.io/tdm-gcc/ as well as the Go
+// windows distribution and optionally the windows node distribution
+// (for the GUI).
+func WindowsRace() error {
 	return Builder{
 		goos:        "windows",
-		disable_cgo: false,
 		extra_tags:  " release yara ",
 		filename:    "velociraptor.exe",
-		arch:        "amd64"}.Run()
+		arch:        "amd64",
+		extra_flags: []string{"-race"}}.Run()
 }
 
 func Windowsx86() error {

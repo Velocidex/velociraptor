@@ -26,6 +26,7 @@ parameters:
 
   - name: SleepDuration
     default: "20"
+    type: int
     description: A time to sleep before fetching the binary.
 
   - name: ToolInfo
@@ -123,7 +124,7 @@ sources:
         a=local_file,
         b=existing,
         c={
-           SELECT rand(range=atoi(string=SleepDuration)) AS timeout
+           SELECT rand(range=SleepDuration) AS timeout
            FROM scope()
            WHERE args AND (args[0]).ToolURL AND
               log(message=format(format='Sleeping %v Seconds',

@@ -353,9 +353,10 @@ sources:
             FROM scope() },
       c = { SELECT "Generic.Utils.FetchBinary" AS name,
             (
-               dict(name="SleepDuration"),
+               dict(name="SleepDuration", type="int", default="0"),
                dict(name="ToolName"),
                dict(name="ToolInfo"),
+               dict(name="IsExecutable", type="bool"),
             ) AS parameters,
             (
                dict(query=FetchBinaryOverride),
