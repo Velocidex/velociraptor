@@ -79,8 +79,8 @@ github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49 h1:TJVN1zYl5sKJ
 github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49/go.mod h1:kfPUQ2gP0xtIydiR52dirNYt4OvCr+iZuepL4XaIk58=
 github.com/Velocidex/yaml/v2 v2.2.5 h1:8XZwR8tmm5UWAXotI3fL17s9fjKEMqZ293fgqUiMhBw=
 github.com/Velocidex/yaml/v2 v2.2.5/go.mod h1:VBjrsTMc/b1h0ankOOnJPYoCbJNwhpGYpnDgICEs2mk=
-github.com/Velocidex/zip v0.0.0-20201230073523-29e172503d03 h1:ifFF7cfMvLoF3e9vxyPsyRBLUMaJ1PLhxK+Ef+gicik=
-github.com/Velocidex/zip v0.0.0-20201230073523-29e172503d03/go.mod h1:1p8CU2cp64BG4334sKzhuyH/vm3k1OXEdeBCwYTssAs=
+github.com/Velocidex/zip v0.0.0-20210101070220-e7ecefb7aad7 h1:IAry9WUMrVYA+XPvMF5UMN56ya5II/hoUOtqaHKOHrs=
+github.com/Velocidex/zip v0.0.0-20210101070220-e7ecefb7aad7/go.mod h1:1p8CU2cp64BG4334sKzhuyH/vm3k1OXEdeBCwYTssAs=
 github.com/ZachtimusPrime/Go-Splunk-HTTP v0.0.0-20200420213219-094ff9e8d788 h1:QYyFO87/l5IdxKVBCMXW5YlwqGR3nHCN3RfAdjIYnVk=
 github.com/ZachtimusPrime/Go-Splunk-HTTP v0.0.0-20200420213219-094ff9e8d788/go.mod h1:RsO+aYhoc9OyzUJwKHWWXXsjLN/85QaaEHx/PWa2+/I=
 github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38 h1:smF2tmSOzy2Mm+0dGI2AIUHY+w0BUc+4tn40djz7+6U=
