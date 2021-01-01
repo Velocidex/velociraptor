@@ -265,7 +265,7 @@ func WindowsDev() error {
 // first using https://jmeubank.github.io/tdm-gcc/ as well as the Go
 // windows distribution and optionally the windows node distribution
 // (for the GUI).
-func WindowsRace() error {
+func WindowsTest() error {
 	return Builder{
 		goos:        "windows",
 		extra_tags:  " release yara ",
