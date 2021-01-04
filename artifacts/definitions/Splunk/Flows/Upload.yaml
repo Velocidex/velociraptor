@@ -1,0 +1,83 @@
+name: Splunk.Flows.Upload
+
+description: |
+  This server side event monitoring artifact waits for new artifacts
+  to be collected from endpoints and automatically uploads those to a
+  Splunk server.
+
+  To configure the event collector properly a couple steps need to be
+  completed prior to setting up this event:
+    1. Configure an index to ingest the data.
+       * Go to Settings > Index.
+       * New Index.
+    2. Configure the collector.
+       * Go to Settings > Data Inputs > HTTP Event Collector.
+       * Add New.
+       * Name does not matter, but ensure indexer acknowledgement is OFF.
+       * Set `Selected Indexes` to the index configured in step 1.
+       * Save API key for this event.
+    3. Set Global settings.
+       * Go to Settings > Data Inputs > HTTP Event Collector > Global Settings
+       * Ensure `All Tokens` is set to ENABLED
+       * Copy the HTTP Port Number for this event
+       
+       > Note: `Enable SSL` only works if SSL is properly configured on your
+       Splunk server -- meaning you have proper certificates and DNS. If you are
+       accessing your Splunk instance by IP, `Enable SSL` should be set to OFF.
+
+type: SERVER_EVENT
+
+parameters:
+   - name: ArtifactNameRegex
+     default: "."
+     description: Names of artifacts to upload to Splunk
+   - name: url
+     default: http://127.0.0.1:8088/services/collector
+     description: |
+      The Splunk collector url, this is typically the url of the Splunk
+      server followed by :8088/services/collector.
+   - name: token
+     description: |
+      API token given when the event collector is configured on Splunk.
+   - name: index
+     default: velociraptor
+     description: |
+      Index to ingest the data. This should be set up when configuring
+      the event collector.
+   - name: SSL
+     default: false
+     description: |
+      SSL configured with the event collector. This is false by default.
+     
+sources:
+  - query: |  
+        LET completions = SELECT * FROM watch_monitoring(
+                     artifact="System.Flow.Completion")
+                 WHERE Flow.artifacts_with_results =~ ArtifactNameRegex 
+                     AND log(message=Flow.artifacts_with_results)
+        
+        LET documents = SELECT * FROM foreach(row=completions,
+                  query={
+                     SELECT * FROM foreach(
+                         row=Flow.artifacts_with_results,
+                         query={
+                             SELECT *, _value AS Artifact,
+                                    timestamp(epoch=now()) AS timestamp,
+                                    ClientId, Flow.session_id AS FlowId,
+                                    "artifact_" + regex_replace(source=_value,
+                                       re='[/.]', replace='_') as _index
+                             FROM source(
+                                client_id=ClientId,
+                                flow_id=Flow.session_id,
+                                artifact=_value)
+                         })
+                         WHERE log(message=_value)
+                  })
+              
+        SELECT * FROM splunk_upload(
+        query = documents,
+        url = url,
+        token = token,
+        index = velociraptor,
+        skip_verify = SSL,
+        )
