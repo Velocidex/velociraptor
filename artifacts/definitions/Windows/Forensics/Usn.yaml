@@ -17,6 +17,33 @@ parameters:
   - name: PathRegex
     description: A regex to match the entire path (you can watch a directory or a file type).
     default: .
+  - name: ReasonSelector
+    type: csv
+    description: By default it filters for all Update Reasons (file create, deleted etc). Remove the Update Reasons you don't want to see
+    default: |
+      UpdateReason
+      .
+      BASIC_INFO_CHANGE
+      CLOSE
+      COMPRESSION_CHANGE
+      DATA_EXTEND
+      DATA_OVERWRITE
+      DATA_TRUNCATION
+      EA_CHANGE
+      ENCRYPTION_CHANGE
+      FILE_CREATE
+      FILE_DELETE
+      HARD_LINK_CHANGE
+      INDEXABLE_CHANGE
+      NAMED_DATA_EXTEND
+      NAMED_DATA_OVERWRITE
+      NAMED_DATA_TRUNCATION
+      OBJECT_ID_CHANGE
+      RENAME_NEW_NAME
+      RENAME_OLD_NAME
+      REPARSE_POINT_CHANGE
+      SECURITY_CHANGE
+      STREAM_CHANGE
   - name: Device
     description: The NTFS drive to watch
     default: C:\\
@@ -25,5 +52,8 @@ precondition: SELECT OS from info() where OS = "windows"
 
 sources:
   - query: |
-      SELECT * FROM parse_usn(device=Device)
-      WHERE FullPath =~ PathRegex
+      SELECT * {
+            SELECT * FROM ReasonSelector WHERE Reason =~ UpdateReason
+         } as match
+      FROM parse_usn(device=Device)
+      WHERE FullPath =~ PathRegex AND match
