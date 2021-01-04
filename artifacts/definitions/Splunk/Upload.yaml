@@ -77,5 +77,5 @@ sources:
         url = url,
         token = token,
         index = velociraptor,
-        skip_verify = SSL,
+        skip_verify = SSL
         )
