@@ -69,7 +69,6 @@ sources:
                                 flow_id=Flow.session_id,
                                 artifact=_value)
                          })
-                         WHERE log(message=_value)
                   })
               
         SELECT * FROM splunk_upload(
