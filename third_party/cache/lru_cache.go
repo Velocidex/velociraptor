@@ -55,6 +55,10 @@ type Value interface {
 	Size() int
 }
 
+type Closer interface {
+	Close()
+}
+
 // Item is what is stored in the cache
 type Item struct {
 	Key   string
@@ -140,7 +144,16 @@ func (lru *LRUCache) Delete(key string) bool {
 
 	lru.list.Remove(element)
 	delete(lru.table, key)
-	lru.size -= element.Value.(*entry).size
+	value := element.Value.(*entry)
+	lru.size -= value.size
+
+	// If the Value has a closer then we call it when it
+	// is evicted.
+	closer, ok := value.value.(Closer)
+	if ok {
+		closer.Close()
+	}
+
 	return true
 }
 
@@ -282,5 +295,12 @@ func (lru *LRUCache) checkCapacity() {
 		delete(lru.table, delValue.key)
 		lru.size -= delValue.size
 		lru.evictions++
+
+		// If the Value has a closer then we call it when it
+		// is evicted.
+		closer, ok := delValue.value.(Closer)
+		if ok {
+			closer.Close()
+		}
 	}
 }

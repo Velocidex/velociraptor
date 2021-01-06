@@ -4,10 +4,8 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	ntfs "www.velocidex.com/golang/go-ntfs/parser"
-	"www.velocidex.com/golang/velociraptor/glob"
-	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vtypes"
 )
@@ -62,28 +60,7 @@ func (self ParseBinaryFunction) Call(
 		vql_subsystem.CacheSet(scope, arg.Profile, profile)
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, scope)
-	if err != nil {
-		scope.Log("parse_binary: %v", err)
-		return &vfilter.Null{}
-	}
-
-	fd, err := accessor.Open(arg.Filename)
-	if err != nil {
-		scope.Log("parse_binary: %v", err)
-		return &vfilter.Null{}
-	}
-
-	vql_subsystem.GetRootScope(scope).AddDestructor(func() {
-		fd.Close()
-	})
-
-	paged_reader, err := ntfs.NewPagedReader(utils.ReaderAtter{fd}, 10240, 10000)
-	if err != nil {
-		scope.Log("parse_binary: %v", err)
-		return &vfilter.Null{}
-	}
-
+	paged_reader := readers.NewPagedReader(scope, arg.Accessor, arg.Filename)
 	obj, err := profile.Parse(scope, arg.Struct, paged_reader, arg.Offset)
 	if err != nil {
 		scope.Log("parse_binary: %v", err)

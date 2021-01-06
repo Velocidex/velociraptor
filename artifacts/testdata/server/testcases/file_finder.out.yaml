@@ -1,4 +1,8 @@
-SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords FROM Artifact.Windows.Search.FileFinder( SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")[
+SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FROM scope()[
+ {
+  "mock(plugin='info', results= [dict(OS='windows'), dict(OS='windows')])": null
+ }
+]SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords FROM Artifact.Windows.Search.FileFinder( SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")[
  {
   "File": "test.zip",
   "Hash": null,

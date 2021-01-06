@@ -1,4 +1,7 @@
 Queries:
+  - SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] )
+    FROM scope()
+
   # This artifact uses the raw registry parser.
   - SELECT LastModified, Binary, Name, Size, ProductName, Publisher, BinFileVersion
     FROM Artifact.Windows.System.Amcache(

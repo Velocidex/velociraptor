@@ -1,3 +1,33 @@
 Queries:
-  - SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM glob(
-        globs=srcDir + "/artifacts/**10/*.exe")
+  # parse_pe() is a lazy function providing a lot of functionality by
+  # setting callables in the result set. These tests make sure that
+  # the lazy functions are materialized when needed in a transparent
+  # way.
+
+  # PEInfo is a lazy object - PEInfo.ImpHash is a callable - this
+  # tests a callable regex works.
+  - SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo
+    FROM glob(globs=srcDir + "/artifacts/**10/*.{exe,sys}")
+    WHERE PEInfo.ImpHash =~ "f34d5f2d4577"
+
+  # Check that Imports (which are lazy) can be passed to function args
+  - SELECT filter(list=parse_pe(file=FullPath).Imports, regex='MmGetPhysicalMemoryRanges')
+    FROM glob(globs=srcDir + "/artifacts/**10/*.sys")
+
+  - LET X = SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo
+    FROM glob(globs=srcDir + "/artifacts/**10/*.{exe,sys}")
+
+  # Test Associative protocol.
+  - SELECT PEInfo.VersionInformation.CompanyName AS CompanyName FROM X
+    WHERE CompanyName =~ "Microsoft"
+
+  # Test membership protocol
+  - SELECT Name
+    FROM glob(globs=srcDir + "/artifacts/**10/*.{sys,exe}")
+    WHERE "ntoskrnl.exe!MmGetSystemRoutineAddress" IN parse_pe(file=FullPath).Imports
+
+  # Test Iterate protocol on callables - Imports should iterate over
+  # each string in the array.
+  - SELECT * FROM foreach(
+       row=parse_pe(file=srcDir + "/artifacts/testdata/files/winpmem_x64.sys").Imports)
+    WHERE _value =~ "Physical"

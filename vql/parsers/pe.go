@@ -19,12 +19,11 @@ package parsers
 
 import (
 	"context"
-	"io"
 
 	"github.com/Velocidex/ordereddict"
 	pe "www.velocidex.com/golang/go-pe"
-	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -59,31 +58,34 @@ func (self _PEFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, scope)
-	if err != nil {
-		scope.Log("parse_pe: %v", err)
-		return &vfilter.Null{}
-	}
-	fd, err := accessor.Open(arg.Filename)
-	if err != nil {
-		scope.Log("parse_pe: %v", err)
-		return &vfilter.Null{}
-	}
-	defer fd.Close()
-
-	reader, ok := fd.(io.ReaderAt)
-	if !ok {
-		scope.Log("parse_pe: file is not seekable %s", arg.Filename)
-		return &vfilter.Null{}
-	}
-
-	pe_file, err := pe.NewPEFile(reader)
+	paged_reader := readers.NewPagedReader(scope, arg.Accessor, arg.Filename)
+	pe_file, err := pe.NewPEFile(paged_reader)
 	if err != nil {
 		scope.Log("parse_pe: %v", err)
 		return &vfilter.Null{}
 	}
 
-	return pe_file
+	// Return a lazy object.
+	return ordereddict.NewDict().
+		Set("FileHeader", pe_file.FileHeader).
+		Set("GUIDAge", pe_file.GUIDAge).
+		Set("PDB", pe_file.PDB).
+		Set("Sections", pe_file.Sections).
+		Set("VersionInformation", func() vfilter.Any {
+			return pe_file.VersionInformation()
+		}).
+		Set("Imports", func() vfilter.Any {
+			return pe_file.Imports()
+		}).
+		Set("Exports", func() vfilter.Any {
+			return pe_file.Exports()
+		}).
+		Set("Forwards", func() vfilter.Any {
+			return pe_file.Forwards()
+		}).
+		Set("ImpHash", func() vfilter.Any {
+			return pe_file.ImpHash()
+		})
 }
 
 func init() {

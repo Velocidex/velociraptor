@@ -2,6 +2,7 @@ package parsers
 
 import (
 	"context"
+	"sort"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/vjeantet/grok"
@@ -68,7 +69,17 @@ func (self GrokParseFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	return result
+	keys := make([]string, 0, len(result))
+	for k := range result {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+	result_dict := ordereddict.NewDict()
+	for _, k := range keys {
+		result_dict.Set(k, result[k])
+	}
+	return result_dict
 }
 
 func init() {

@@ -34,19 +34,16 @@ parameters:
   - name: SearchVSS
     description: "Add VSS into query."
     type: bool
-    
+
 
 sources:
-  - precondition:
-      SELECT OS From info() where OS = 'windows'
-
-    query: |
+  - query: |
       -- Build time bounds
       LET DateAfterTime <= if(condition=DateAfter,
         then=DateAfter, else="1600-01-01")
       LET DateBeforeTime <= if(condition=DateBefore,
         then=DateBefore, else="2200-01-01")
-      
+
       -- expand provided glob into a list of paths on the file system (fs)
       LET fspaths <= SELECT FullPath FROM glob(globs=expand(path=FileGlob))
 
@@ -77,11 +74,11 @@ sources:
                     AND Record.SourceHost =~ SourceHostRegex
                     AND Record.User =~ UserRegex
                     AND ( timestamp(epoch=Record.StartTime) < DateBeforeTime
-                        AND timestamp(epoch=Record.StartTime) > DateAfterTime) 
+                        AND timestamp(epoch=Record.StartTime) > DateAfterTime)
                     AND ( timestamp(epoch=Record.EndTime) < DateBeforeTime
                         AND timestamp(epoch=Record.EndTime) > DateAfterTime )
             })
-          
+
       -- include VSS in calculation and deduplicate with GROUP BY by file
       LET include_vss = SELECT * FROM foreach(row=fspaths,
             query={
@@ -97,7 +94,7 @@ sources:
 
 
       -- return rows
-      SELECT 
+      SELECT
         Record.TeamViewerID as TeamViewerID,
         Record.SourceHost as SourceHost,
         timestamp(epoch=Record.StartTime) as StartTime,

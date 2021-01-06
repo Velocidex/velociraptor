@@ -99,6 +99,17 @@ need to prepare a PR for a new feature or modify an existing feature
 you can use this to build your own binaries for testing on all
 architectures before send us the PR.
 
+## Supported platforms
+
+Velociraptor is written in Golang and so is available for all the
+platforms [supported by Go](https://github.com/golang/go/wiki/MinimumRequirements). This means that Windows XP and Windows server 2003 are **not** supported but anything after Windows 7/Vista is.
+
+We build our releases on Centos 6 (x64) for Linux and Sierra for MacOS
+so earlier platforms may not be supported by our release pipeline. If
+you need 32 bit builds you will need to build from source. You can do
+this easily by forking the project on GitHub, enabling GitHub Actions
+in your fork and editing the `Linux Build All Arches` pipeline.
+
 ## Getting help
 
 Questions and feedback are welcome at velociraptor-discuss@googlegroups.com

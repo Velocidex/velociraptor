@@ -1,4 +1,7 @@
 Queries:
+  - SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] )
+    FROM scope()
+
 # Just find a zip file.
   - SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords
     FROM Artifact.Windows.Search.FileFinder(

@@ -1,9 +1,13 @@
-SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM glob( globs=srcDir + "/artifacts/**10/*.exe")[
+SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM glob(globs=srcDir + "/artifacts/**10/*.{exe,sys}") WHERE PEInfo.ImpHash =~ "f34d5f2d4577"[
  {
   "Name": "3DBuilder.ResourceResolver.exe",
   "PEInfo": {
-   "Machine": "IMAGE_FILE_MACHINE_I386",
-   "TimeDateStamp": "2019-03-15T09:32:39Z",
+   "FileHeader": {
+    "Machine": "IMAGE_FILE_MACHINE_I386",
+    "TimeDateStamp": "2019-03-15T09:32:39Z",
+    "TimeDateStampRaw": 1552642359,
+    "Characteristics": 34
+   },
    "GUIDAge": "84068848695B4DFDA86ECCE04021A1A91",
    "PDB": "C:\\BA\\2821\\i\\obj\\resourceresolver.csproj__1458271508\\Release\\x64\\3DBuilder.ResourceResolver.pdb",
    "Sections": [
@@ -36,12 +40,36 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
     "InternalName": "3DBuilder.ResourceResolver",
     "LegalCopyright": "©Microsoft Corporation.  All rights reserved.",
     "OriginalFilename": "3DBuilder.ResourceResolver.exe",
-    "ProductName": "3D Builder",
-    "ProductVersion": "16.1.190315001-3DBuilderR16.1"
+    "ProductVersion": "16.1.190315001-3DBuilderR16.1",
+    "ProductName": "3D Builder"
    },
    "Imports": [
     "mscoree.dll!_CorExeMain"
-   ]
+   ],
+   "Exports": [],
+   "Forwards": [],
+   "ImpHash": "f34d5f2d4577ed6d9ceec516c1f5a744"
   }
+ }
+]SELECT filter(list=parse_pe(file=FullPath).Imports, regex='MmGetPhysicalMemoryRanges') FROM glob(globs=srcDir + "/artifacts/**10/*.sys")[
+ {
+  "filter(list=parse_pe(file=FullPath).Imports, regex='MmGetPhysicalMemoryRanges')": [
+   "ntoskrnl.exe!MmGetPhysicalMemoryRanges"
+  ]
+ }
+]LET X = SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM glob(globs=srcDir + "/artifacts/**10/*.{exe,sys}")[]SELECT PEInfo.VersionInformation.CompanyName AS CompanyName FROM X WHERE CompanyName =~ "Microsoft"[
+ {
+  "CompanyName": "Microsoft Corporation"
+ }
+]SELECT Name FROM glob(globs=srcDir + "/artifacts/**10/*.{sys,exe}") WHERE "ntoskrnl.exe!MmGetSystemRoutineAddress" IN parse_pe(file=FullPath).Imports[
+ {
+  "Name": "winpmem_x64.sys"
+ }
+]SELECT * FROM foreach( row=parse_pe(file=srcDir + "/artifacts/testdata/files/winpmem_x64.sys").Imports) WHERE _value =~ "Physical"[
+ {
+  "_value": "ntoskrnl.exe!MmGetVirtualForPhysical"
+ },
+ {
+  "_value": "ntoskrnl.exe!MmGetPhysicalMemoryRanges"
  }
 ]

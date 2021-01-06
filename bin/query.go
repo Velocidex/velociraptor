@@ -84,7 +84,7 @@ func outputJSONL(ctx context.Context,
 		vql_subsystem.MarshalJsonl(scope),
 		10, *max_wait) {
 		_, err := out.Write(result.Payload)
-		kingpin.FatalIfError(err, "outputCSV")
+		kingpin.FatalIfError(err, "outputJSONL")
 	}
 }
 
