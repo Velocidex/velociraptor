@@ -1,4 +1,8 @@
-SELECT String.Offset, str(str=String.Data) AS Hit
+SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FROM scope()[
+ {
+  "mock(plugin='info', results= [dict(OS='windows'), dict(OS='windows')])": null
+ }
+]SELECT String.Offset, str(str=String.Data) AS Hit
 FROM yara(rules=hiveSig, blocksize=10,
 files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
 []SELECT String.Offset, str(str=String.Data) AS Hit
@@ -88,6 +92,14 @@ files=srcDir+"/artifacts/testdata/files/yara_test.txt")
  {
   "String.Offset": 12,
   "Hit": "gfXXXXXXXXprogram\n"
+ }
+]SELECT "imphash", basename(path=FileName)
+FROM yara(rules=imphashSig, accessor="file",
+files=srcDir+"/artifacts/testdata/files/3DBuilder.ResourceResolver.exe")
+[
+ {
+  "\"imphash\"": "imphash",
+  "basename(path=FileName)": "3DBuilder.ResourceResolver.exe"
  }
 ]LET _ <= SELECT
       mock(plugin='http_client', results=[

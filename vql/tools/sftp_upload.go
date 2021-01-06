@@ -150,7 +150,7 @@ func getSFTPClient(scope *vfilter.Scope, user string, privateKey string, endpoin
 			vql_subsystem.CacheSet(scope, cacheKey, err)
 			return nil, err
 		}
-		vql_subsystem.AddGlobalDestructor(scope, func() {
+		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 			conn.Close()
 			client.Close()
 		})

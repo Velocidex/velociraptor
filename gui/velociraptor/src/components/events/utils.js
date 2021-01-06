@@ -141,6 +141,7 @@ function table2protobuf(table) {
 }
 
 
+/* eslint import/no-anonymous-default-export: [2, {"allowObject": true}] */
 export default {
     proto2tables: proto2tables,
     table2protobuf: table2protobuf,

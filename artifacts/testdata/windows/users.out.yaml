@@ -3,7 +3,7 @@ Select Name, Uid, Gid, Directory, Type  from Artifact.Windows.Sys.Users() WHERE 
   "Name": "Guest",
   "Uid": 501,
   "Gid": 513,
-  "Directory": null,
+  "Directory": [],
   "Type": "local"
  },
  {

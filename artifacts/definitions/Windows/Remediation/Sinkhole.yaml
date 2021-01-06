@@ -84,7 +84,7 @@ sources:
         FROM execve(argv=['cmd.exe', '/c','ipconfig','/flushdns'])
 
       -- Find existing entries to modify
-      LET existing = SELECT
+      LET existing <= SELECT
             parse_string_with_regex(
             string=Line,
             regex=[
@@ -110,7 +110,7 @@ sources:
             })
 
       -- Set existing entries to sinkholed values
-      LET find_modline = SELECT * FROM foreach(row=changes,
+      LET find_modline <= SELECT * FROM foreach(row=changes,
             query={
                 SELECT
                     format(format='\t%v\t\t%v\t\t# %v',
@@ -125,7 +125,7 @@ sources:
             })
 
       -- Add new hostsfile entries
-      LET find_newline = SELECT * FROM foreach(row=changes,
+      LET find_newline <= SELECT * FROM foreach(row=changes,
             query={
                 SELECT
                     format(format='\t%v\t\t%v\t\t# %v',
@@ -139,7 +139,7 @@ sources:
             })
 
       -- Determine which lines should stay the same
-      LET find_line= SELECT
+      LET find_line <= SELECT
                 Line,
                 Record.Hostname as Domain,
                 'old entry' as Type
@@ -149,7 +149,7 @@ sources:
                 AND NOT Domain in find_newline.Domain
 
       -- Add all lines to staging object
-      LET build_lines = SELECT Line FROM chain(
+      LET build_lines <= SELECT Line FROM chain(
             a=find_modline,
             b=find_newline,
             c=find_line
@@ -157,7 +157,6 @@ sources:
 
       -- Join lines from staging object
       LET HostsData = join(array=build_lines.Line,sep='\r\n')
-
 
       -- Force start of backup or restore if applicable
       LET backup_restore <= if(condition= RestoreBackup,
