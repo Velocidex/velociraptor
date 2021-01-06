@@ -68,8 +68,8 @@ github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c h1:ipQHX4FX5HKR
 github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c/go.mod h1:sko8vR34/90zvl5QdcUdvzL3J8NKjAUx9va9jPuFNoM=
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b h1:XaAmLVXrqPv60nbiQtzj5Sch7lwz3XH8x5IocQwRPJg=
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b/go.mod h1:draN67DBVJDAVmLWDIJ85CrV0UxmIGfWZ4njukhINQs=
-github.com/Velocidex/go-yara v1.1.10-0.20200414034554-457848df11f9 h1:zatH9PNN7IiBTT4X7fFAbkEB0qYlg0oK2uTS0ffGPIM=
-github.com/Velocidex/go-yara v1.1.10-0.20200414034554-457848df11f9/go.mod h1:N1A2MzBKorQm3WixuPUSm4gmzGA6i5sYrwHyUBvY5lg=
+github.com/Velocidex/go-yara v1.1.10-0.20210105022745-1b550dfa67da h1:cBHbmwrKDkQ08KCpfGgb4kNwVwXk6L3fZ0rgkS+404s=
+github.com/Velocidex/go-yara v1.1.10-0.20210105022745-1b550dfa67da/go.mod h1:N1A2MzBKorQm3WixuPUSm4gmzGA6i5sYrwHyUBvY5lg=
 github.com/Velocidex/json v0.0.0-20200724131328-8f5c7b0a25ec h1:ep1GlQfQtVZsn8yaUwILZxlK1Sw13dYhsOT3bEhZ8HE=
 github.com/Velocidex/json v0.0.0-20200724131328-8f5c7b0a25ec/go.mod h1:ukJBuruT9b24pdgZwWDvOaCYHeS03B7oQPCUWh25bwM=
 github.com/Velocidex/ordereddict v0.0.0-20191106020901-97c468e5e403/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
@@ -272,8 +272,6 @@ github.com/hashicorp/golang-lru v0.5.3 h1:YPkqC67at8FYaadspW/6uE0COsBxS2656RLEr8
 github.com/hashicorp/golang-lru v0.5.3/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uGBxy+E8yxSoD4=
 github.com/hillu/go-ntdll v0.0.0-20190226223014-dd4204aa705e h1:rxsceitojD0d6MVIXgIdUrIwmzs6k6eWZgIsZaHRtdI=
 github.com/hillu/go-ntdll v0.0.0-20190226223014-dd4204aa705e/go.mod h1:HMC/JWhvegfuUnbsNJhySmmEmNoapUDnNGjZvuJA+xc=
-github.com/hillu/go-yara v1.2.2 h1:0m+SuzCc8eUTF4WCkPPm5cxgdww7KvXAaskvz27Sue0=
-github.com/hillu/go-yara v1.2.2/go.mod h1:KLxCsvD3F8cgVK866UDHi961qbzP+twKjhNdDsuz/2M=
 github.com/hinshun/vt10x v0.0.0-20180616224451-1954e6464174/go.mod h1:DqJ97dSdRW1W22yXSB90986pcOyQ7r45iio1KN2ez1A=
 github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c h1:kp3AxgXgDOmIJFR7bIwqFhwJ2qWar8tEQSE5XXhCfVk=
 github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c/go.mod h1:DqJ97dSdRW1W22yXSB90986pcOyQ7r45iio1KN2ez1A=

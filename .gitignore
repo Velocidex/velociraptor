@@ -18,3 +18,4 @@ bin/rsrc.syso
 artifacts/assets/ab0x.go
 gui/assets/ab0x.go
 config/ab0x.go
+.eslintcache

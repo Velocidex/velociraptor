@@ -12,7 +12,7 @@ require (
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
-	github.com/Velocidex/go-yara v1.1.10-0.20200414034554-457848df11f9
+	github.com/Velocidex/go-yara v1.1.10-0.20210105022745-1b550dfa67da // indirect
 	github.com/Velocidex/json v0.0.0-20200724131328-8f5c7b0a25ec
 	github.com/Velocidex/ordereddict v0.0.0-20200723153557-9460a6764ab8
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
@@ -49,7 +49,6 @@ require (
 	github.com/hanwen/go-fuse v1.0.1-0.20190726130028-2f298055551b
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hillu/go-ntdll v0.0.0-20190226223014-dd4204aa705e
-	github.com/hillu/go-yara v1.2.2 // indirect
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
 	github.com/huandu/xstrings v1.2.0 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
@@ -127,7 +126,7 @@ require (
 // replace www.velocidex.com/golang/evtx => /home/mic/projects/evtx
 // replace www.velocidex.com/golang/go-ese => /home/mic/projects/go-ese
 // replace github.com/Velocidex/ordereddict => /home/mic/projects/ordereddict
-// replace www.velocidex.com/golang/go-yara => /home/mic/projects/go-yara
+// replace github.com/Velocidex/go-yara => /home/mic/projects/go-yara
 // replace github.com/Velocidex/json => /home/mic/projects/json
 // replace github.com/russross/blackfriday/v2 => /home/mic/projects/blackfriday
 // replace www.velocidex.com/golang/vtypes => /home/mic/projects/vtypes

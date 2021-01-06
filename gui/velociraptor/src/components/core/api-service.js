@@ -96,6 +96,7 @@ const upload = function(url, files, params) {
 
 var hooks = [];
 
+/* eslint import/no-anonymous-default-export: [2, {"allowObject": true}] */
 export default {
     get: get,
     get_blob: get_blob,

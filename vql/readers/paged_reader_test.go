@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -32,8 +31,6 @@ func (self *TestSuite) TestPagedReader() {
 	}
 	vql_subsystem.CacheSet(scope, READERS_CACHE, pool)
 	vql_subsystem.GetRootScope(scope).AddDestructor(pool.Close)
-
-	fmt.Println(scope.PrintVars())
 
 	tmp_dir, err := ioutil.TempDir("", "tmp")
 	assert.NoError(self.T(), err)
@@ -70,7 +67,6 @@ func (self *TestSuite) TestPagedReader() {
 		reader := NewPagedReader(scope, "file", filenames[i])
 		reader.ReadAt(buff, 0)
 		assert.Equal(self.T(), binary.LittleEndian.Uint32(buff), uint32(i))
-		utils.Debug(string(buff))
 	}
 
 	// Open the same reader 10 time returns from the cache.
@@ -78,7 +74,6 @@ func (self *TestSuite) TestPagedReader() {
 		reader := NewPagedReader(scope, "file", filenames[1])
 		reader.ReadAt(buff, 0)
 		assert.Equal(self.T(), binary.LittleEndian.Uint32(buff), uint32(1))
-		utils.Debug(string(buff))
 	}
 
 	// Close the scope - this should close all the pool
@@ -88,6 +83,6 @@ func (self *TestSuite) TestPagedReader() {
 	assert.Equal(self.T(), int64(0), pool.lru.Size())
 }
 
-func TestCollectorPlugin(t *testing.T) {
+func TestReaders(t *testing.T) {
 	suite.Run(t, &TestSuite{})
 }
