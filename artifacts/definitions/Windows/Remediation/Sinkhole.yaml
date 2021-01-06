@@ -154,6 +154,7 @@ sources:
             b=find_newline,
             c=find_line
       )
+      WHERE log(message=Line)
 
       -- Join lines from staging object
       LET HostsData = join(array=build_lines.Line,sep='\r\n')
