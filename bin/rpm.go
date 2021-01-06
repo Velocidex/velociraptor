@@ -74,9 +74,9 @@ start()
 	[ -f $VELOCIRAPTOR_CONFIG ] || exit 6
 
 	echo -n $"Starting $prog: "
-	$VELOCIRAPTOR --config "$VELOCIRAPTOR_CONFIG" frontend  && success || failure
+	$VELOCIRAPTOR --config "$VELOCIRAPTOR_CONFIG" client &
 	RETVAL=$?
-	[ $RETVAL -eq 0 ] && touch $lockfile
+	[ $RETVAL -eq 0 ] && /sbin/pidof $prog > $PID_FILE
 	echo
 	return $RETVAL
 }
