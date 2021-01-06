@@ -94,7 +94,9 @@ func (self *AccessorReader) Close() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.reader.Close()
+	if self.reader != nil {
+		self.reader.Close()
+	}
 	self.paged_reader = nil
 	self.reader = nil
 }
