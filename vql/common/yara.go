@@ -479,6 +479,67 @@ func (self YaraProcPlugin) Call(
 	return output_chan
 }
 
+type YaraStringFunctionArgs struct {
+	Rules   string `vfilter:"required,field=rules,doc=Yara rules"`
+	String  string `vfilter:"required,field=string,doc=The data to scan"`
+	Context int    `vfilter:"optional,field=context,doc=Return this many bytes either side of a hit"`
+	Key     string `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
+}
+
+type YaraStringFunction struct{}
+
+func (self YaraStringFunction) Info(
+	scope vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "string_yara",
+		Doc:     "Scan a string using yara rules.",
+		ArgType: type_map.AddType(scope, &YaraStringFunction{}),
+	}
+}
+
+func (self YaraStringFunction) Call(
+	ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &YaraStringFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("string_yara: %v", err)
+		return vfilter.Null{}
+	}
+
+	if arg.Key == "" {
+		rule_hash := md5.Sum([]byte(arg.Rules))
+		arg.Key = string(rule_hash[:])
+	}
+	rules, ok := vql_subsystem.CacheGet(
+		scope, arg.Key).(*yara.Rules)
+	if !ok {
+		variables := make(map[string]interface{})
+		generated_rules := RuleGenerator(scope, arg.Rules)
+		rules, err = yara.Compile(generated_rules, variables)
+		if err != nil {
+			scope.Log("Failed to initialize YARA compiler: %v", err)
+			return vfilter.Null{}
+		}
+
+		vql_subsystem.CacheSet(scope, arg.Key, rules)
+	}
+
+	matches, err := rules.ScanMem(
+		[]byte(arg.String), yara.ScanFlagsFastMode,
+		300*time.Second)
+	if err != nil {
+		scope.Log("string_yara: %v", err)
+		return vfilter.Null{}
+	}
+
+	return matches
+
+}
+
 // Provide a shortcut way to define common rules.
 func RuleGenerator(scope vfilter.Scope, rule string) string {
 	rule = strings.TrimSpace(rule)
@@ -514,4 +575,5 @@ func RuleGenerator(scope vfilter.Scope, rule string) string {
 func init() {
 	vql_subsystem.RegisterPlugin(&YaraScanPlugin{})
 	vql_subsystem.RegisterPlugin(&YaraProcPlugin{})
+	vql_subsystem.RegisterFunction(&YaraStringFunction{})
 }
