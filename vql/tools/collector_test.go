@@ -152,7 +152,7 @@ func (self *TestSuite) TearDownTest() {
 func (self *TestSuite) TestSimpleCollection() {
 	scope := vql_subsystem.MakeScope()
 
-	scope.Logger = logging.NewPlainLogger(self.config_obj, &logging.FrontendComponent)
+	scope.SetLogger(logging.NewPlainLogger(self.config_obj, &logging.FrontendComponent))
 
 	repository, err := getRepository(self.config_obj, nil)
 	assert.NoError(self.T(), err)
