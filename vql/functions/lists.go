@@ -26,11 +26,12 @@ import (
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type ArrayFunction struct{}
 
-func flatten(ctx context.Context, scope *vfilter.Scope, a vfilter.Any, depth int) []vfilter.Any {
+func flatten(ctx context.Context, scope vfilter.Scope, a vfilter.Any, depth int) []vfilter.Any {
 	var result []vfilter.Any
 
 	if depth > 4 {
@@ -38,10 +39,10 @@ func flatten(ctx context.Context, scope *vfilter.Scope, a vfilter.Any, depth int
 	}
 
 	switch t := a.(type) {
-	case vfilter.LazyExpr:
+	case types.LazyExpr:
 		a = t.Reduce()
 
-	case vfilter.StoredQuery:
+	case types.StoredQuery:
 		for row := range t.Eval(ctx, scope) {
 			// Special case a single column means the
 			// value is taken directly.
@@ -85,12 +86,12 @@ func flatten(ctx context.Context, scope *vfilter.Scope, a vfilter.Any, depth int
 }
 
 func (self *ArrayFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	return flatten(ctx, scope, args, 0)
 }
 
-func (self ArrayFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self ArrayFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name: "array",
 		Doc:  "Create an array with all the args.",
@@ -105,7 +106,7 @@ type JoinFunctionArgs struct {
 type JoinFunction struct{}
 
 func (self *JoinFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &JoinFunctionArgs{}
@@ -122,7 +123,7 @@ func (self *JoinFunction) Call(ctx context.Context,
 	return strings.Join(arg.Array, arg.Sep)
 }
 
-func (self JoinFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self JoinFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "join",
 		Doc:     "Join all the args on a separator.",
@@ -137,7 +138,7 @@ type FilterFunctionArgs struct {
 type FilterFunction struct{}
 
 func (self *FilterFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &FilterFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -168,7 +169,7 @@ func (self *FilterFunction) Call(ctx context.Context,
 	return result
 }
 
-func (self FilterFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self FilterFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "filter",
 		Doc:     "Filters a strings array by regex.",
@@ -182,7 +183,7 @@ type LenFunctionArgs struct {
 type LenFunction struct{}
 
 func (self *LenFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &LenFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -209,7 +210,7 @@ func (self *LenFunction) Call(ctx context.Context,
 	return 0
 }
 
-func (self LenFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self LenFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "len",
 		Doc:     "Returns the length of an object.",

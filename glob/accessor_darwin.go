@@ -116,7 +116,7 @@ func (u *OSFileInfo) UnmarshalJSON(data []byte) error {
 // Real implementation for non windows OSs:
 type OSFileSystemAccessor struct{}
 
-func (self OSFileSystemAccessor) New(scope *vfilter.Scope) (FileSystemAccessor, error) {
+func (self OSFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, error) {
 	result := &OSFileSystemAccessor{}
 	return result, nil
 }

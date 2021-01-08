@@ -41,7 +41,7 @@ type CopyFunctionArgs struct {
 type CopyFunction struct{}
 
 func (self *CopyFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	// Check the config if we are allowed to execve at all.
@@ -119,7 +119,7 @@ func (self *CopyFunction) Call(ctx context.Context,
 	return arg.Destination
 }
 
-func (self CopyFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self CopyFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "copy",
 		Doc:     "Copy a file.",

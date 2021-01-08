@@ -20,7 +20,7 @@ type JSCompileArgs struct {
 	Key string `vfilter:"optional,field=key,doc=If set use this key to cache the JS VM."`
 }
 
-func logIfPanic(scope *vfilter.Scope) {
+func logIfPanic(scope vfilter.Scope) {
 	err := recover()
 	if err == halt {
 		return
@@ -34,7 +34,7 @@ func logIfPanic(scope *vfilter.Scope) {
 type JSCompile struct{}
 
 func getVM(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	key string) *otto.Otto {
 	if key == "" {
 		key = "__jscontext"
@@ -57,7 +57,7 @@ func getVM(ctx context.Context,
 }
 
 func (self *JSCompile) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &JSCompileArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -78,7 +78,7 @@ func (self *JSCompile) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func (self JSCompile) Info(scope *vfilter.Scope,
+func (self JSCompile) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "js",
@@ -96,7 +96,7 @@ type JSCallArgs struct {
 type JSCall struct{}
 
 func (self *JSCall) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &JSCallArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -136,7 +136,7 @@ func (self *JSCall) Call(ctx context.Context,
 	return result
 }
 
-func (self JSCall) Info(scope *vfilter.Scope,
+func (self JSCall) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "js_call",
@@ -154,7 +154,7 @@ type JSSetArgs struct {
 type JSSet struct{}
 
 func (self *JSSet) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &JSSetArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -191,7 +191,7 @@ func (self *JSSet) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func (self JSSet) Info(scope *vfilter.Scope,
+func (self JSSet) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "js_set",
@@ -208,7 +208,7 @@ type JSGetArgs struct {
 type JSGet struct{}
 
 func (self *JSGet) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &JSGetArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -235,7 +235,7 @@ func (self *JSGet) Call(ctx context.Context,
 	return value
 }
 
-func (self JSGet) Info(scope *vfilter.Scope,
+func (self JSGet) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "js_get",

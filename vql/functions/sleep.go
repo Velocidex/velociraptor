@@ -17,7 +17,7 @@ type SleepArgs struct {
 type SleepFunction struct{}
 
 func (self *SleepFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &SleepArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -38,7 +38,7 @@ func (self *SleepFunction) Call(ctx context.Context,
 	return true
 }
 
-func (self *SleepFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self *SleepFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "sleep",
 		Doc:     "Sleep for the specified number of seconds. Always returns true.",
@@ -53,7 +53,7 @@ type RandArgs struct {
 type RandFunction struct{}
 
 func (self *RandFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &RandArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -69,7 +69,7 @@ func (self *RandFunction) Call(ctx context.Context,
 	return rand.Intn(int(arg.Range))
 }
 
-func (self RandFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self RandFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "rand",
 		Doc:     "Selects a random number.",

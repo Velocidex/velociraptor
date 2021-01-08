@@ -41,6 +41,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 var (
@@ -206,7 +207,7 @@ func getHttpClient(
 	return http_client
 }
 
-func encodeParams(arg *_HttpPluginRequest, scope *vfilter.Scope) *url.Values {
+func encodeParams(arg *_HttpPluginRequest, scope vfilter.Scope) *url.Values {
 	data := url.Values{}
 	if arg.Params != nil {
 		for _, member := range scope.GetMembers(arg.Params) {
@@ -237,7 +238,7 @@ func encodeParams(arg *_HttpPluginRequest, scope *vfilter.Scope) *url.Values {
 
 func (self *_HttpPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	arg := &_HttpPluginRequest{}
@@ -289,7 +290,7 @@ func (self *_HttpPlugin) Call(
 			for _, member := range scope.GetMembers(arg.Headers) {
 				value, pres := scope.Associative(arg.Headers, member)
 				if pres {
-					lazy_v, ok := value.(vfilter.LazyExpr)
+					lazy_v, ok := value.(types.LazyExpr)
 					if ok {
 						value = lazy_v.Reduce()
 					}
@@ -399,7 +400,7 @@ func (self _HttpPlugin) Name() string {
 	return "http_client"
 }
 
-func (self _HttpPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self _HttpPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    self.Name(),
 		Doc:     "Make a http request.",
@@ -408,7 +409,7 @@ func (self _HttpPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 }
 
 // Make sure the file is removed when the query is done.
-func remove_tmpfile(tmpfile string, scope *vfilter.Scope) {
+func remove_tmpfile(tmpfile string, scope vfilter.Scope) {
 	scope.Log("tempfile: removing tempfile %v", tmpfile)
 
 	// On windows especially we can not remove files that

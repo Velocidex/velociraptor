@@ -40,7 +40,7 @@ type _TempfileRequest struct {
 type TempfileFunction struct{}
 
 func (self *TempfileFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
@@ -116,7 +116,7 @@ func (self *TempfileFunction) Call(ctx context.Context,
 	return tmpfile.Name()
 }
 
-func (self TempfileFunction) Info(scope *vfilter.Scope,
+func (self TempfileFunction) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "tempfile",
@@ -132,7 +132,7 @@ type _TempdirRequest struct {
 type TempdirFunction struct{}
 
 func (self *TempdirFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
@@ -179,7 +179,7 @@ func (self *TempdirFunction) Call(ctx context.Context,
 	return dir
 }
 
-func (self TempdirFunction) Info(scope *vfilter.Scope,
+func (self TempdirFunction) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "tempdir",

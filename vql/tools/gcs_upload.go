@@ -32,7 +32,7 @@ type GCSUploadArgs struct {
 type GCSUploadFunction struct{}
 
 func (self *GCSUploadFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &GCSUploadArgs{}
@@ -85,7 +85,7 @@ func (self *GCSUploadFunction) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func upload_gcs(ctx context.Context, scope *vfilter.Scope,
+func upload_gcs(ctx context.Context, scope vfilter.Scope,
 	reader io.Reader,
 	projectID, bucket, name string,
 	credentials string) (
@@ -155,7 +155,7 @@ func upload_gcs(ctx context.Context, scope *vfilter.Scope,
 }
 
 func (self GCSUploadFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "upload_gcs",
 		Doc:     "Upload files to GCS.",

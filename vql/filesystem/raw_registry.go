@@ -197,7 +197,7 @@ type RawRegistryFileCache struct {
 type RawRegFileSystemAccessor struct {
 	mu       sync.Mutex
 	fd_cache map[string]*RawRegistryFileCache
-	scope    *vfilter.Scope
+	scope    vfilter.Scope
 }
 
 func (self *RawRegFileSystemAccessor) getRegHive(
@@ -248,7 +248,7 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 
 const RawRegFileSystemTag = "_RawReg"
 
-func (self *RawRegFileSystemAccessor) New(scope *vfilter.Scope) (
+func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 	glob.FileSystemAccessor, error) {
 
 	result_any := vql_subsystem.CacheGet(scope, RawRegFileSystemTag)
@@ -362,7 +362,7 @@ type ReadKeyValues struct{}
 
 func (self ReadKeyValues) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	globber := make(glob.Globber)
 	output_chan := make(chan vfilter.Row)
@@ -462,7 +462,7 @@ func (self ReadKeyValues) Call(
 	return output_chan
 }
 
-func (self ReadKeyValues) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self ReadKeyValues) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: "read_reg_key",
 		Doc: "This is a convenience function for reading the entire " +

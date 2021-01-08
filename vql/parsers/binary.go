@@ -21,7 +21,7 @@ type ParseBinaryFunctionArg struct {
 }
 type ParseBinaryFunction struct{}
 
-func (self ParseBinaryFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self ParseBinaryFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "parse_binary",
 		Doc:     "Parse a binary file into a datastructure using a profile.",
@@ -30,7 +30,7 @@ func (self ParseBinaryFunction) Info(scope *vfilter.Scope, type_map *vfilter.Typ
 }
 
 func (self ParseBinaryFunction) Call(
-	ctx context.Context, scope *vfilter.Scope,
+	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &ParseBinaryFunctionArg{}
 	err := vfilter.ExtractArgs(scope, args, arg)

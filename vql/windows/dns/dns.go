@@ -69,7 +69,7 @@ func inet_ntoa(ip [4]byte) string {
 
 type eventContext struct {
 	output chan vfilter.Row
-	scope  *vfilter.Scope
+	scope  vfilter.Scope
 }
 
 func (self *eventContext) ProcessEvent(packet []byte) {
@@ -170,7 +170,7 @@ type DNSEventPlugin struct{}
 
 func (self DNSEventPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	arg := &DNSEventPluginArgs{}
@@ -239,7 +239,7 @@ func (self DNSEventPlugin) Call(
 }
 
 func (self DNSEventPlugin) Info(
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "dns",

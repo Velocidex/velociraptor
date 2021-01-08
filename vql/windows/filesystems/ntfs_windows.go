@@ -191,7 +191,7 @@ type NTFSFileSystemAccessor struct {
 	timestamp time.Time                   // Protected by mutex
 }
 
-func (self NTFSFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self NTFSFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
 	result_any := vql_subsystem.CacheGet(scope, NTFSFileSystemTag)
 	if result_any == nil {
 		// Create a new cache in the scope.

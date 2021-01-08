@@ -10,7 +10,7 @@ import (
 )
 
 // Gets the client config from the scope.
-func GetConfig(scope *vfilter.Scope) (*config_proto.ClientConfig, bool) {
+func GetConfig(scope vfilter.Scope) (*config_proto.ClientConfig, bool) {
 	scope_config, pres := scope.Resolve(constants.SCOPE_CONFIG)
 	if !pres {
 		return nil, false
@@ -23,7 +23,7 @@ func GetConfig(scope *vfilter.Scope) (*config_proto.ClientConfig, bool) {
 	return config, ok
 }
 
-func GetUploader(scope *vfilter.Scope) (api.Uploader, bool) {
+func GetUploader(scope vfilter.Scope) (api.Uploader, bool) {
 	scope_uploader, pres := scope.Resolve(constants.SCOPE_UPLOADER)
 	if !pres {
 		return nil, false
@@ -37,7 +37,7 @@ func GetUploader(scope *vfilter.Scope) (api.Uploader, bool) {
 	return config, ok
 }
 
-func GetACLManager(scope *vfilter.Scope) (vql_subsystem.ACLManager, bool) {
+func GetACLManager(scope vfilter.Scope) (vql_subsystem.ACLManager, bool) {
 	scope_manager, pres := scope.Resolve(vql_subsystem.ACL_MANAGER_VAR)
 	if !pres {
 		return nil, false

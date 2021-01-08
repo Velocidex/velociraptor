@@ -28,7 +28,7 @@ type VelociraptorUploader struct {
 
 func (self *VelociraptorUploader) Upload(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	filename string,
 	accessor string,
 	store_as_name string,
@@ -118,7 +118,7 @@ func (self *VelociraptorUploader) Upload(
 
 func (self *VelociraptorUploader) maybeUploadSparse(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	filename string,
 	accessor string,
 	store_as_name string,

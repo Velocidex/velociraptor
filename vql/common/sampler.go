@@ -16,7 +16,7 @@ type _SamplerPluginArgs struct {
 type _SamplerPlugin struct{}
 
 func (self _SamplerPlugin) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -51,7 +51,7 @@ func (self _SamplerPlugin) Call(ctx context.Context,
 }
 
 func (self _SamplerPlugin) Info(
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: "sample",

@@ -32,7 +32,7 @@ type LogFunctionArgs struct {
 type LogFunction struct{}
 
 func (self *LogFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &LogFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -41,9 +41,12 @@ func (self *LogFunction) Call(ctx context.Context,
 		return false
 	}
 
-	last_log, ok := scope.GetContext("last_log").(string)
-	if ok && arg.Message == last_log {
-		return true
+	last_log_str, ok := scope.GetContext("last_log")
+	if ok {
+		last_log, ok := last_log_str.(string)
+		if ok && arg.Message == last_log {
+			return true
+		}
 	}
 
 	scope.Log("%v", arg.Message)
@@ -52,7 +55,7 @@ func (self *LogFunction) Call(ctx context.Context,
 	return true
 }
 
-func (self LogFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self LogFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "log",
 		Doc:     "Log the message.",

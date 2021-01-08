@@ -61,7 +61,7 @@ type HashFunctionArgs struct {
 type HashFunction struct{}
 
 func (self *HashFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &HashFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -139,7 +139,7 @@ func (self *HashFunction) Call(ctx context.Context,
 	}
 }
 
-func (self HashFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self HashFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "hash",
 		Doc:     "Calculate the hash of a file.",

@@ -6,12 +6,13 @@ import (
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type _SwitchPlugin struct{}
 
 func (self _SwitchPlugin) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -22,19 +23,10 @@ func (self _SwitchPlugin) Call(ctx context.Context,
 		members := scope.GetMembers(args)
 
 		for _, member := range members {
-			member_obj, _ := args.Get(member)
-			lazy_v, ok := member_obj.(vfilter.LazyExpr)
-			if ok {
-				member_obj = lazy_v.ToStoredQuery(scope)
+			v, pres := args.Get(member)
+			if pres {
+				queries = append(queries, arg_parser.ToStoredQuery(v))
 			}
-
-			query, ok := member_obj.(vfilter.StoredQuery)
-			if !ok {
-				scope.Log("Parameter " + member +
-					" should be a query")
-				return
-			}
-			queries = append(queries, query)
 		}
 
 		// Evaluate each query - the first query that returns
@@ -64,7 +56,7 @@ func (self _SwitchPlugin) Call(ctx context.Context,
 }
 
 func (self _SwitchPlugin) Info(
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: "switch",

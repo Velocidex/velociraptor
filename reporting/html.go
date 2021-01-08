@@ -325,7 +325,7 @@ func (self *HTMLTemplateEngine) Messages() []string {
 func NewHTMLTemplateEngine(
 	config_obj *config_proto.Config,
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
 	repository services.Repository,
 	artifact_name string,
@@ -340,7 +340,7 @@ func NewHTMLTemplateEngine(
 	}
 
 	log_writer := &logWriter{}
-	base_engine.Scope.Logger = log.New(log_writer, "", 0)
+	base_engine.Scope.SetLogger(log.New(log_writer, "", 0))
 	template_engine := &HTMLTemplateEngine{
 		BaseTemplateEngine: base_engine,
 		ctx:                ctx,

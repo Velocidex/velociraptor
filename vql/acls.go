@@ -83,7 +83,7 @@ func NewServerACLManager(
 // from within VQL so this is a safe assumption - if a user was to
 // override the ACL_MANAGER_VAR with something else this will lock
 // down the entire VQL ACL system and deny all permissions.
-func CheckAccess(scope *vfilter.Scope, permissions ...acls.ACL_PERMISSION) error {
+func CheckAccess(scope vfilter.Scope, permissions ...acls.ACL_PERMISSION) error {
 	manager_any, pres := scope.Resolve(ACL_MANAGER_VAR)
 	if !pres {
 		return fmt.Errorf("Permission denied: %v", permissions)
@@ -102,7 +102,7 @@ func CheckAccess(scope *vfilter.Scope, permissions ...acls.ACL_PERMISSION) error
 	return nil
 }
 
-func CheckFilesystemAccess(scope *vfilter.Scope, accessor string) error {
+func CheckFilesystemAccess(scope vfilter.Scope, accessor string) error {
 	switch accessor {
 
 	// These accessor are OK to use at any time.
@@ -120,7 +120,7 @@ func CheckFilesystemAccess(scope *vfilter.Scope, accessor string) error {
 }
 
 // Get the principal that is running the query if possible.
-func GetPrincipal(scope *vfilter.Scope) string {
+func GetPrincipal(scope vfilter.Scope) string {
 	manager_any, pres := scope.Resolve(ACL_MANAGER_VAR)
 	if !pres {
 		return ""

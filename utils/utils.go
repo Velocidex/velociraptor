@@ -70,7 +70,7 @@ func hard_wrap(text string, colBreak int) string {
 	return wrapped
 }
 
-func Stringify(value interface{}, scope *vfilter.Scope, min_width int) string {
+func Stringify(value interface{}, scope vfilter.Scope, min_width int) string {
 	// Deal with pointers to things as those things.
 	if reflect.TypeOf(value).Kind() == reflect.Ptr {
 		return Stringify(reflect.Indirect(

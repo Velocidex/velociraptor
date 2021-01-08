@@ -68,7 +68,7 @@ type MockerPlugin struct {
 }
 
 func (self MockerPlugin) Call(ctx context.Context,
-	scope *vfilter.Scope, args *ordereddict.Dict) <-chan vfilter.Row {
+	scope vfilter.Scope, args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
@@ -102,7 +102,7 @@ func (self MockerPlugin) Call(ctx context.Context,
 	return output_chan
 }
 
-func (self *MockerPlugin) Info(scope *vfilter.Scope,
+func (self *MockerPlugin) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: self.name,
@@ -123,7 +123,7 @@ type MockerFunction struct {
 }
 
 func (self *MockerFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	result := self.ctx.results[self.ctx.call_count%len(self.ctx.results)]
@@ -132,7 +132,7 @@ func (self *MockerFunction) Call(ctx context.Context,
 	return result
 }
 
-func (self *MockerFunction) Info(scope *vfilter.Scope,
+func (self *MockerFunction) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name: self.name,
@@ -142,7 +142,7 @@ func (self *MockerFunction) Info(scope *vfilter.Scope,
 type MockFunction struct{}
 
 func (self *MockFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &MockerFunctionArgs{}
@@ -211,7 +211,7 @@ func (self *MockFunction) Call(ctx context.Context,
 }
 
 func (self MockFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "mock",
 		Doc:     "Mock a plugin.",
@@ -229,7 +229,7 @@ type MockCheckArgs struct {
 type MockCheckFunction struct{}
 
 func (self *MockCheckFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &MockCheckArgs{}
@@ -283,7 +283,7 @@ func (self *MockCheckFunction) Call(ctx context.Context,
 }
 
 func (self MockCheckFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "mock_check",
 		Doc:     "Check expectations on a mock.",
@@ -291,7 +291,7 @@ func (self MockCheckFunction) Info(
 	}
 }
 
-func GetMockContext(scope *vfilter.Scope) (*MockingScopeContext, bool) {
+func GetMockContext(scope vfilter.Scope) (*MockingScopeContext, bool) {
 	scope_mocker, pres := scope.Resolve(constants.SCOPE_MOCK)
 	if !pres {
 		return nil, false

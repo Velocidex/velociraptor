@@ -125,13 +125,13 @@ type RepositoryManager interface {
 	// Before callers can run VQL queries they need to create a
 	// query scope. This function uses the builder pattern above
 	// to create a new scope.
-	BuildScope(builder ScopeBuilder) *vfilter.Scope
+	BuildScope(builder ScopeBuilder) vfilter.Scope
 
 	// This function is much more expensive than
 	// BuildScope(). Avoids caching plugin definitions - it is
 	// only useful when callers need to manipulate the scope in an
 	// incompatible way - e.g. override a plugin definition.
-	BuildScopeFromScratch(builder ScopeBuilder) *vfilter.Scope
+	BuildScopeFromScratch(builder ScopeBuilder) vfilter.Scope
 
 	// Store the file to the repository. It will be stored in the datastore as well.
 	SetArtifactFile(config_obj *config_proto.Config, principal string,
@@ -145,9 +145,9 @@ type RepositoryManager interface {
 // A helper function to build a new scope from an existing scope. This
 // is needed in order to isolate the existing scope from the new scope
 // (e.g. when running a sub-artifact)
-func ScopeBuilderFromScope(scope *vfilter.Scope) ScopeBuilder {
+func ScopeBuilderFromScope(scope vfilter.Scope) ScopeBuilder {
 	result := ScopeBuilder{
-		Logger: scope.Logger,
+		Logger: scope.GetLogger(),
 	}
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if ok {

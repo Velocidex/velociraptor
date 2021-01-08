@@ -73,7 +73,7 @@ var (
 )
 
 func eval_query(
-	config_obj *config_proto.Config, format, query string, scope *vfilter.Scope,
+	config_obj *config_proto.Config, format, query string, scope vfilter.Scope,
 	env *ordereddict.Dict) {
 	if config_obj.ApiConfig != nil && config_obj.ApiConfig.Name != "" {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
@@ -87,7 +87,7 @@ func eval_query(
 
 func eval_local_query(
 	config_obj *config_proto.Config, format string,
-	query string, scope *vfilter.Scope) {
+	query string, scope vfilter.Scope) {
 
 	vqls, err := vfilter.MultiParse(query)
 	kingpin.FatalIfError(err, "Unable to parse VQL Query")
@@ -309,7 +309,7 @@ type FileStoreAccessorFactory struct {
 	config_obj *config_proto.Config
 }
 
-func (self FileStoreAccessorFactory) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self FileStoreAccessorFactory) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
 	return file_store.GetFileStoreFileSystemAccessor(self.config_obj)
 }
 

@@ -44,7 +44,7 @@ type ScheduleHuntFunctionArg struct {
 type ScheduleHuntFunction struct{}
 
 func (self *ScheduleHuntFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
@@ -108,7 +108,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	return ordereddict.NewDict().Set("HuntId", hunt_id)
 }
 
-func (self ScheduleHuntFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self ScheduleHuntFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "hunt",
 		Doc:     "Launch an artifact collection against a client.",
@@ -124,7 +124,7 @@ type AddToHuntFunctionArg struct {
 type AddToHuntFunction struct{}
 
 func (self *AddToHuntFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
@@ -166,7 +166,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 	return arg.ClientId
 }
 
-func (self AddToHuntFunction) Info(scope *vfilter.Scope,
+func (self AddToHuntFunction) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "hunt_add",

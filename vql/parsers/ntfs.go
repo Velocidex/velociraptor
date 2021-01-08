@@ -30,7 +30,7 @@ import (
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
-func GetNTFSContext(scope *vfilter.Scope, device string) (*ntfs.NTFSContext, error) {
+func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, error) {
 	ntfs_ctx, ok := vql_subsystem.CacheGet(scope, device).(*ntfs.NTFSContext)
 	if !ok {
 		fd, err := os.OpenFile(device, os.O_RDONLY, os.FileMode(0666))
@@ -70,7 +70,7 @@ type NTFSModel struct {
 
 type NTFSFunction struct{}
 
-func (self NTFSFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self NTFSFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "parse_ntfs",
 		Doc:     "Parse an NTFS image file.",
@@ -79,7 +79,7 @@ func (self NTFSFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *
 }
 
 func (self NTFSFunction) Call(
-	ctx context.Context, scope *vfilter.Scope,
+	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	defer utils.RecoverVQL(scope)
@@ -145,7 +145,7 @@ type MFTScanPlugin struct{}
 
 func (self MFTScanPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -208,7 +208,7 @@ func (self MFTScanPlugin) Call(
 	return output_chan
 }
 
-func (self MFTScanPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self MFTScanPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "parse_mft",
 		Doc:     "Scan the $MFT from an NTFS volume.",
@@ -220,7 +220,7 @@ type NTFSI30ScanPlugin struct{}
 
 func (self NTFSI30ScanPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -279,7 +279,7 @@ func (self NTFSI30ScanPlugin) Call(
 	return output_chan
 }
 
-func (self NTFSI30ScanPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self NTFSI30ScanPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "parse_ntfs_i30",
 		Doc:     "Scan the $I30 stream from an NTFS MFT entry.",
@@ -291,7 +291,7 @@ type NTFSRangesPlugin struct{}
 
 func (self NTFSRangesPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -362,7 +362,7 @@ func (self NTFSRangesPlugin) Call(
 	return output_chan
 }
 
-func (self NTFSRangesPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self NTFSRangesPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "parse_ntfs_ranges",
 		Doc:     "Show the run ranges for an NTFS stream.",

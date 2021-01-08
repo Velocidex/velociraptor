@@ -27,7 +27,7 @@ import (
 	"github.com/Velocidex/yaml/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 var (
@@ -43,9 +43,9 @@ var (
 )
 
 func formatPlugins(
-	scope *vfilter.Scope,
-	info *vfilter.ScopeInformation,
-	type_map *vfilter.TypeMap) string {
+	scope types.Scope,
+	info *types.ScopeInformation,
+	type_map *types.TypeMap) string {
 	records := make(map[string]string)
 	names := []string{}
 
@@ -57,7 +57,7 @@ func formatPlugins(
 			record += "----|-------------|-----\n"
 			for _, k := range arg_desc.Fields.Keys() {
 				v_any, _ := arg_desc.Fields.Get(k)
-				v, ok := v_any.(*vfilter.TypeReference)
+				v, ok := v_any.(*types.TypeReference)
 				if !ok {
 					continue
 				}
@@ -92,13 +92,13 @@ func formatPlugins(
 		result = append(result, records[name])
 	}
 
-	return strings.Replace(strings.Join(result, "\n"), "vfilter.Any", "Any", -1)
+	return strings.Replace(strings.Join(result, "\n"), "types.Any", "Any", -1)
 }
 
 func formatFunctions(
-	scope *vfilter.Scope,
-	info *vfilter.ScopeInformation,
-	type_map *vfilter.TypeMap) string {
+	scope types.Scope,
+	info *types.ScopeInformation,
+	type_map *types.TypeMap) string {
 	records := make(map[string]string)
 	names := []string{}
 
@@ -110,7 +110,7 @@ func formatFunctions(
 			record += "----|-------------|-----\n"
 			for _, k := range arg_desc.Fields.Keys() {
 				v_any, _ := arg_desc.Fields.Get(k)
-				v, ok := v_any.(*vfilter.TypeReference)
+				v, ok := v_any.(*types.TypeReference)
 				if !ok {
 					continue
 				}
@@ -145,14 +145,14 @@ func formatFunctions(
 		result = append(result, records[name])
 	}
 
-	return strings.Replace(strings.Join(result, "\n"), "vfilter.Any", "Any", -1)
+	return strings.Replace(strings.Join(result, "\n"), "types.Any", "Any", -1)
 }
 
 func doVQLList() {
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
 
-	type_map := vfilter.NewTypeMap()
+	type_map := types.NewTypeMap()
 	info := scope.Describe(type_map)
 
 	fmt.Println("VQL Functions")
@@ -195,7 +195,7 @@ func doVQLExport() {
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
 
-	type_map := vfilter.NewTypeMap()
+	type_map := types.NewTypeMap()
 	info := scope.Describe(type_map)
 
 	old_data := []*PluginDesc{}
@@ -230,7 +230,7 @@ func doVQLExport() {
 		if pres {
 			for _, k := range arg_desc.Fields.Keys() {
 				v_any, _ := arg_desc.Fields.Get(k)
-				v, ok := v_any.(*vfilter.TypeReference)
+				v, ok := v_any.(*types.TypeReference)
 				if !ok {
 					continue
 				}
@@ -275,7 +275,7 @@ func doVQLExport() {
 		if pres {
 			for _, k := range arg_desc.Fields.Keys() {
 				v_any, _ := arg_desc.Fields.Get(k)
-				v, ok := v_any.(*vfilter.TypeReference)
+				v, ok := v_any.(*types.TypeReference)
 				if !ok {
 					continue
 				}

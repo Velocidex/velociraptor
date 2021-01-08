@@ -33,7 +33,7 @@ type S3UploadArgs struct {
 type S3UploadFunction struct{}
 
 func (self *S3UploadFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &S3UploadArgs{}
@@ -99,7 +99,7 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func upload_S3(ctx context.Context, scope *vfilter.Scope,
+func upload_S3(ctx context.Context, scope vfilter.Scope,
 	reader glob.ReadSeekCloser,
 	bucket, name string,
 	credentialsKey string,
@@ -169,7 +169,7 @@ func upload_S3(ctx context.Context, scope *vfilter.Scope,
 }
 
 func (self S3UploadFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "upload_s3",
 		Doc:     "Upload files to S3.",

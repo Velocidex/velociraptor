@@ -64,7 +64,7 @@ type HandlesPlugin struct{}
 
 func (self HandlesPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -103,7 +103,7 @@ func (self HandlesPlugin) Call(
 	return output_chan
 }
 
-func (self HandlesPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self HandlesPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "handles",
 		Doc:     "Enumerate process handles.",
@@ -153,7 +153,7 @@ func SaneNtQuerySystemInformation(class uint32) ([]byte, error) {
 	return nil, errors.New("Too much memory needed")
 }
 
-func GetHandles(scope *vfilter.Scope, arg *HandlesPluginArgs, out chan<- vfilter.Row) {
+func GetHandles(scope vfilter.Scope, arg *HandlesPluginArgs, out chan<- vfilter.Row) {
 	// This should be large enough to fit all the handles.
 	buffer, err := SaneNtQuerySystemInformation(windows.SystemHandleInformation)
 	if err != nil {
@@ -233,7 +233,7 @@ func GetHandles(scope *vfilter.Scope, arg *HandlesPluginArgs, out chan<- vfilter
 	}
 }
 
-func SendHandleInfo(arg *HandlesPluginArgs, scope *vfilter.Scope,
+func SendHandleInfo(arg *HandlesPluginArgs, scope vfilter.Scope,
 	handle_info *windows.SYSTEM_HANDLE_TABLE_ENTRY_INFO64,
 	handle syscall.Handle, out chan<- vfilter.Row) {
 
@@ -279,7 +279,7 @@ func SendHandleInfo(arg *HandlesPluginArgs, scope *vfilter.Scope,
 	}
 }
 
-func GetTokenInfo(scope *vfilter.Scope, handle syscall.Handle) *TokenHandleInfo {
+func GetTokenInfo(scope vfilter.Scope, handle syscall.Handle) *TokenHandleInfo {
 	token := gowin.Token(handle)
 	result := &TokenHandleInfo{
 		IsElevated: token.IsElevated(),
@@ -317,22 +317,24 @@ func GetTokenInfo(scope *vfilter.Scope, handle syscall.Handle) *TokenHandleInfo 
 	return result
 }
 
-func getUsernameFromSid(scope *vfilter.Scope, sid *gowin.SID) string {
+func getUsernameFromSid(scope vfilter.Scope, sid *gowin.SID) string {
 	key := sid.String()
-	username := vql_subsystem.CacheGet(scope, key)
-	if username != nil {
-		return username.(string)
+	username_any := vql_subsystem.CacheGet(scope, key)
+	if username_any != nil {
+		return username_any.(string)
 	}
 
+	// Fetch the username from the API - if we fail the username is ""
+	username := ""
 	account, domain, _, err := sid.LookupAccount("localhost")
 	if err == nil && account != "" {
 		username = fmt.Sprintf("%s\\%s", domain, account)
 	}
 	vql_subsystem.CacheSet(scope, key, username)
-	return username.(string)
+	return username
 }
 
-func GetThreadInfo(scope *vfilter.Scope, handle syscall.Handle, result *HandleInfo) {
+func GetThreadInfo(scope vfilter.Scope, handle syscall.Handle, result *HandleInfo) {
 	handle_info := windows.THREAD_BASIC_INFORMATION{}
 	var length uint32
 
@@ -363,7 +365,7 @@ func GetThreadInfo(scope *vfilter.Scope, handle syscall.Handle, result *HandleIn
 	}
 }
 
-func GetProcessName(scope *vfilter.Scope, handle syscall.Handle) *ProcessHandleInfo {
+func GetProcessName(scope vfilter.Scope, handle syscall.Handle) *ProcessHandleInfo {
 	buffer := make([]byte, 1024*2)
 
 	handle_info := windows.PROCESS_BASIC_INFORMATION{}
@@ -396,7 +398,7 @@ func GetProcessName(scope *vfilter.Scope, handle syscall.Handle) *ProcessHandleI
 	return result
 }
 
-func GetObjectName(scope *vfilter.Scope, handle syscall.Handle, result *HandleInfo) {
+func GetObjectName(scope vfilter.Scope, handle syscall.Handle, result *HandleInfo) {
 	buffer := make([]byte, 1024*2)
 
 	var length uint32
@@ -411,7 +413,7 @@ func GetObjectName(scope *vfilter.Scope, handle syscall.Handle, result *HandleIn
 	result.Name = (*windows.UNICODE_STRING)(unsafe.Pointer(&buffer[0])).String()
 }
 
-func GetObjectType(handle syscall.Handle, scope *vfilter.Scope) string {
+func GetObjectType(handle syscall.Handle, scope vfilter.Scope) string {
 	buffer := make([]byte, 1024*10)
 	length := uint32(0)
 	status, _ := windows.NtQueryObject(handle, windows.ObjectTypeInformation,

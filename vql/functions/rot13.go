@@ -32,7 +32,7 @@ type Rot13Args struct {
 type Rot13 struct{}
 
 func (self *Rot13) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &Rot13Args{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -66,7 +66,7 @@ func rot13(in []byte) []byte {
 	return result
 }
 
-func (self Rot13) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self Rot13) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "rot13",
 		Doc:     "Apply rot13 deobfuscation to the string.",

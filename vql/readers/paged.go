@@ -69,7 +69,7 @@ type AccessorReader struct {
 	mu sync.Mutex
 
 	Accessor, File string
-	Scope          *vfilter.Scope
+	Scope          vfilter.Scope
 
 	key string
 
@@ -131,7 +131,7 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 	return self.paged_reader.ReadAt(buf, offset)
 }
 
-func NewPagedReader(scope *vfilter.Scope, accessor, filename string) *AccessorReader {
+func NewPagedReader(scope vfilter.Scope, accessor, filename string) *AccessorReader {
 	var pool *ReaderPool
 
 	pool_any := vql_subsystem.CacheGet(scope, READERS_CACHE)

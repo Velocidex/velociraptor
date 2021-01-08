@@ -187,7 +187,7 @@ type WMIQueryArgs struct {
 	Namespace string `vfilter:"optional,field=namespace,doc=The WMI namespace to use (ROOT/CIMV2)"`
 }
 
-func runWMIQuery(scope *vfilter.Scope,
+func runWMIQuery(scope vfilter.Scope,
 	args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 

@@ -34,7 +34,7 @@ func (self *Archive) openFile(name string) (io.Reader, error) {
 
 func (self *Archive) ReadArtifactResults(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	artifact string) chan *ordereddict.Dict {
 
 	output_chan := make(chan *ordereddict.Dict)

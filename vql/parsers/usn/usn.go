@@ -21,7 +21,7 @@ type USNPlugin struct{}
 
 func (self USNPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -56,7 +56,7 @@ func (self USNPlugin) Call(
 	return output_chan
 }
 
-func (self USNPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self USNPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "parse_usn",
 		Doc:     "Parse the USN journal from a device.",
@@ -72,7 +72,7 @@ type WatchUSNPlugin struct{}
 
 func (self WatchUSNPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -118,7 +118,7 @@ func (self WatchUSNPlugin) Call(
 	return output_chan
 }
 
-func (self WatchUSNPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self WatchUSNPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "watch_usn",
 		Doc:     "Watch the USN journal from a device.",

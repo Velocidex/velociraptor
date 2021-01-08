@@ -30,7 +30,7 @@ func init() {
 		&vfilter.GenericListPlugin{
 			PluginName: "connections",
 			Function: func(
-				scope *vfilter.Scope,
+				scope vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 

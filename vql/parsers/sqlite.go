@@ -51,7 +51,7 @@ type _SQLitePlugin struct{}
 
 func (self _SQLitePlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
@@ -147,7 +147,7 @@ func VFSPathToFilesystemPath(path string) string {
 
 func (self _SQLitePlugin) GetHandle(
 	ctx context.Context,
-	arg *_SQLiteArgs, scope *vfilter.Scope) (
+	arg *_SQLiteArgs, scope vfilter.Scope) (
 	handle *sqlx.DB, err error) {
 	filename := VFSPathToFilesystemPath(arg.Filename)
 
@@ -206,7 +206,7 @@ func (self _SQLitePlugin) GetHandle(
 func (self _SQLitePlugin) _MakeTempfile(
 	ctx context.Context,
 	arg *_SQLiteArgs, filename string,
-	scope *vfilter.Scope) (
+	scope vfilter.Scope) (
 	string, error) {
 
 	if arg.Accessor != "data" {
@@ -247,7 +247,7 @@ func (self _SQLitePlugin) _MakeTempfile(
 	return tmpfile.Name(), nil
 }
 
-func (self _SQLitePlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self _SQLitePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "sqlite",
 		Doc:     "Opens an SQLite file and run a query against it.",

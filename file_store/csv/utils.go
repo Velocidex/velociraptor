@@ -86,7 +86,7 @@ func GetCSVReader(ctx context.Context, fd api.FileReader) CSVReader {
 
 }
 
-func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) *CSVWriter {
+func GetCSVAppender(scope vfilter.Scope, fd io.Writer, write_headers bool) *CSVWriter {
 	result := &CSVWriter{
 		row_chan: make(chan vfilter.Row),
 		wg:       sync.WaitGroup{},
@@ -153,7 +153,7 @@ func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) *CSV
 	return result
 }
 
-func GetCSVWriter(scope *vfilter.Scope, fd api.FileWriter) (*CSVWriter, error) {
+func GetCSVWriter(scope vfilter.Scope, fd api.FileWriter) (*CSVWriter, error) {
 	// Seek to the end of the file.
 	length, err := fd.Size()
 	if err != nil {
@@ -162,7 +162,7 @@ func GetCSVWriter(scope *vfilter.Scope, fd api.FileWriter) (*CSVWriter, error) {
 	return GetCSVAppender(scope, fd, length == 0), nil
 }
 
-func EncodeToCSV(scope *vfilter.Scope, v interface{}) (string, error) {
+func EncodeToCSV(scope vfilter.Scope, v interface{}) (string, error) {
 	slice := reflect.ValueOf(v)
 	if slice.Type().Kind() != reflect.Slice {
 		return "", errors.New("EncodeToCSV - should be a list of rows")

@@ -71,7 +71,7 @@ func (self *FileBasedUploader) sanitize_path(path string) string {
 
 func (self *FileBasedUploader) Upload(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	filename string,
 	accessor string,
 	store_as_name string,

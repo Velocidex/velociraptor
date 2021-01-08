@@ -36,7 +36,7 @@ func (self _CallableBool) Applicable(a vfilter.Any) bool {
 	return ok
 }
 
-func (self _CallableBool) Bool(scope *vfilter.Scope, a vfilter.Any) bool {
+func (self _CallableBool) Bool(scope vfilter.Scope, a vfilter.Any) bool {
 	v, _ := callable(a)
 	return scope.Bool(v())
 }
@@ -49,7 +49,7 @@ func (self _CallableEq) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return a_ok || b_ok
 }
 
-func (self _CallableEq) Eq(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+func (self _CallableEq) Eq(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
 	a_value, a_ok := callable(a)
 	if a_ok {
 		return scope.Eq(a_value(), b)
@@ -69,7 +69,7 @@ func (self _CallableLt) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return a_ok || b_ok
 }
 
-func (self _CallableLt) Lt(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+func (self _CallableLt) Lt(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
 	a_value, a_ok := callable(a)
 	if a_ok {
 		return scope.Lt(a_value(), b)
@@ -89,7 +89,7 @@ func (self _CallableAdd) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return a_ok || b_ok
 }
 
-func (self _CallableAdd) Add(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) vfilter.Any {
+func (self _CallableAdd) Add(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) vfilter.Any {
 	a_value, a_ok := callable(a)
 	if a_ok {
 		return scope.Add(a_value(), b)
@@ -109,7 +109,7 @@ func (self _CallableSub) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return a_ok || b_ok
 }
 
-func (self _CallableSub) Sub(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) vfilter.Any {
+func (self _CallableSub) Sub(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) vfilter.Any {
 	a_value, a_ok := callable(a)
 	if a_ok {
 		return scope.Sub(a_value(), b)
@@ -129,7 +129,7 @@ func (self _CallableMul) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return a_ok || b_ok
 }
 
-func (self _CallableMul) Mul(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) vfilter.Any {
+func (self _CallableMul) Mul(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) vfilter.Any {
 	a_value, a_ok := callable(a)
 	if a_ok {
 		return scope.Mul(a_value(), b)
@@ -149,7 +149,7 @@ func (self _CallableDiv) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return a_ok || b_ok
 }
 
-func (self _CallableDiv) Div(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) vfilter.Any {
+func (self _CallableDiv) Div(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) vfilter.Any {
 	a_value, a_ok := callable(a)
 	if a_ok {
 		return scope.Div(a_value(), b)
@@ -169,7 +169,7 @@ func (self _CallableMembership) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return a_ok || b_ok
 }
 
-func (self _CallableMembership) Membership(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+func (self _CallableMembership) Membership(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
 	a_value, a_ok := callable(a)
 	if a_ok {
 		return scope.Membership(a_value(), b)
@@ -189,7 +189,7 @@ func (self _CallableAssociative) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return a_ok || b_ok
 }
 
-func (self _CallableAssociative) GetMembers(scope *vfilter.Scope, a vfilter.Any) []string {
+func (self _CallableAssociative) GetMembers(scope vfilter.Scope, a vfilter.Any) []string {
 	a_value, a_ok := callable(a)
 	if a_ok {
 		return scope.GetMembers(a_value())
@@ -197,7 +197,7 @@ func (self _CallableAssociative) GetMembers(scope *vfilter.Scope, a vfilter.Any)
 	return []string{}
 }
 
-func (self _CallableAssociative) Associative(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (
+func (self _CallableAssociative) Associative(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (
 	vfilter.Any, bool) {
 	a_value, a_ok := callable(a)
 	if a_ok {
@@ -217,7 +217,7 @@ func (self _CallableRegex) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return b_ok
 }
 
-func (self _CallableRegex) Match(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+func (self _CallableRegex) Match(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
 	b_value, b_ok := callable(b)
 	if b_ok {
 		return scope.Match(a, b_value())
@@ -233,7 +233,7 @@ func (self _CallableIterate) Applicable(a vfilter.Any) bool {
 }
 
 func (self _CallableIterate) Iterate(ctx context.Context,
-	scope *vfilter.Scope, a vfilter.Any) <-chan vfilter.Row {
+	scope vfilter.Scope, a vfilter.Any) <-chan vfilter.Row {
 
 	a_value, a_ok := callable(a)
 	if a_ok {

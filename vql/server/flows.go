@@ -25,7 +25,7 @@ type FlowsPlugin struct{}
 
 func (self FlowsPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -96,7 +96,7 @@ func (self FlowsPlugin) Call(
 	return output_chan
 }
 
-func (self FlowsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self FlowsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "flows",
 		Doc:     "Retrieve the flows launched on each client.",
@@ -107,7 +107,7 @@ func (self FlowsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 type CancelFlowFunction struct{}
 
 func (self *CancelFlowFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &FlowsPluginArgs{}
@@ -144,7 +144,7 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 	return json.ConvertProtoToOrderedDict(res)
 }
 
-func (self CancelFlowFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self CancelFlowFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "cancel_flow",
 		Doc:     "Cancels the flow.",
@@ -156,7 +156,7 @@ type EnumerateFlowPlugin struct{}
 
 func (self EnumerateFlowPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -244,7 +244,7 @@ func (self EnumerateFlowPlugin) Call(
 	return output_chan
 }
 
-func (self EnumerateFlowPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self EnumerateFlowPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "enumerate_flow",
 		Doc:     "Enumerate all the files that make up a flow.",

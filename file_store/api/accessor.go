@@ -31,7 +31,7 @@ func NewFileStoreFileSystemAccessor(
 }
 
 func (self FileStoreFileSystemAccessor) New(
-	scope *vfilter.Scope) glob.FileSystemAccessor {
+	scope vfilter.Scope) glob.FileSystemAccessor {
 	return &FileStoreFileSystemAccessor{self.file_store}
 }
 

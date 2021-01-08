@@ -44,7 +44,7 @@ type ScheduleCollectionFunctionArg struct {
 type ScheduleCollectionFunction struct{}
 
 func (self *ScheduleCollectionFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &ScheduleCollectionFunctionArg{}
@@ -109,6 +109,11 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		arg.Spec = spec
 	}
 
+	if arg.Spec == nil {
+		scope.Log("Either spec or env must be provided.")
+		return vfilter.Null{}
+	}
+
 	err = tools.AddSpecProtobuf(config_obj, repository, scope,
 		arg.Spec, request)
 	if err != nil {
@@ -145,7 +150,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	return json.ConvertProtoToOrderedDict(result)
 }
 
-func (self ScheduleCollectionFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self ScheduleCollectionFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "collect_client",
 		Doc:     "Launch an artifact collection against a client.",

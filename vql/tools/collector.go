@@ -39,7 +39,7 @@ type CollectPlugin struct{}
 
 func (self CollectPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -222,7 +222,7 @@ func (self CollectPlugin) Call(
 // when container is closed.
 func makeContainer(
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	repository services.Repository,
 	arg *CollectPluginArgs) (
 	container *reporting.Container, closer func(), err error) {
@@ -354,7 +354,7 @@ func getRepository(
 	return repository, nil
 }
 
-func (self CollectPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self CollectPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: "collect",
 		Doc:  "Collect artifacts into a local file.",
@@ -367,7 +367,7 @@ func (self CollectPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 func getArtifactCollectorArgs(
 	config_obj *config_proto.Config,
 	repository services.Repository,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	arg *CollectPluginArgs) (*flows_proto.ArtifactCollectorArgs, error) {
 	request := &flows_proto.ArtifactCollectorArgs{
 		Artifacts: arg.Artifacts,
@@ -386,7 +386,7 @@ func getArtifactCollectorArgs(
 func AddSpecProtobuf(
 	config_obj *config_proto.Config,
 	repository services.Repository,
-	scope *vfilter.Scope, spec vfilter.Any, request *flows_proto.ArtifactCollectorArgs) error {
+	scope vfilter.Scope, spec vfilter.Any, request *flows_proto.ArtifactCollectorArgs) error {
 
 	var err error
 

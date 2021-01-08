@@ -21,7 +21,7 @@ type GetClientMonitoring struct{}
 
 func (self GetClientMonitoring) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
@@ -46,7 +46,7 @@ func (self GetClientMonitoring) Call(
 	return services.ClientEventManager().GetClientMonitoringState()
 }
 
-func (self GetClientMonitoring) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self GetClientMonitoring) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "get_client_monitoring",
 		Doc:     "Retrieve the current client monitoring state.",
@@ -62,7 +62,7 @@ type SetClientMonitoring struct{}
 
 func (self SetClientMonitoring) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
@@ -117,7 +117,7 @@ func (self SetClientMonitoring) Call(
 	return value
 }
 
-func (self SetClientMonitoring) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self SetClientMonitoring) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "set_client_monitoring",
 		Doc:     "Sets the current client monitoring state.",
@@ -131,7 +131,7 @@ type GetServerMonitoring struct{}
 
 func (self GetServerMonitoring) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
@@ -172,7 +172,7 @@ func (self GetServerMonitoring) Call(
 	return result
 }
 
-func (self GetServerMonitoring) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self GetServerMonitoring) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "get_server_monitoring",
 		Doc:     "Retrieve the current client monitoring state.",
@@ -188,7 +188,7 @@ type SetServerMonitoring struct{}
 
 func (self SetServerMonitoring) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
@@ -249,7 +249,7 @@ func (self SetServerMonitoring) Call(
 	return response
 }
 
-func (self SetServerMonitoring) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self SetServerMonitoring) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "set_server_monitoring",
 		Doc:     "Sets the current server monitoring state.",

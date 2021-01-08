@@ -176,7 +176,7 @@ type OSFileSystemAccessor struct {
 	context *AccessorContext
 }
 
-func (self OSFileSystemAccessor) New(scope *vfilter.Scope) (FileSystemAccessor, error) {
+func (self OSFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, error) {
 	return &OSFileSystemAccessor{
 		context: &AccessorContext{
 			links: make(map[_inode]bool),

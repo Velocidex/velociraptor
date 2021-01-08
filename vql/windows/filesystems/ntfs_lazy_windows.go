@@ -206,7 +206,7 @@ type LazyNTFSFileSystemAccessor struct {
 	*NTFSFileSystemAccessor
 }
 
-func (self LazyNTFSFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self LazyNTFSFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
 	base, err := NTFSFileSystemAccessor{}.New(scope)
 	if err != nil {
 		return nil, err

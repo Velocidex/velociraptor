@@ -44,7 +44,7 @@ func (self *USNWatcherService) Register(
 	device string,
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	output_chan chan vfilter.Row) func() {
 
 	self.mu.Lock()
@@ -175,6 +175,6 @@ func (self *USNWatcherService) StartMonitoring(
 type Handle struct {
 	ctx         context.Context
 	output_chan chan vfilter.Row
-	scope       *vfilter.Scope
+	scope       vfilter.Scope
 	id          int
 }

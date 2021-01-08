@@ -31,7 +31,7 @@ func init() {
 		&vfilter.GenericListPlugin{
 			PluginName: "interfaces",
 			Function: func(
-				scope *vfilter.Scope,
+				scope vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 

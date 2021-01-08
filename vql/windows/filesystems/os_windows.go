@@ -146,7 +146,7 @@ type OSFileSystemAccessor struct {
 	follow_links bool
 }
 
-func (self OSFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self OSFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
 	result := &OSFileSystemAccessor{follow_links: self.follow_links}
 	return result, nil
 }

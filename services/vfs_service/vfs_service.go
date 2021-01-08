@@ -55,7 +55,7 @@ func (self *VFSService) Start(
 func (self *VFSService) ProcessDownloadFile(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope, row *ordereddict.Dict) {
+	scope vfilter.Scope, row *ordereddict.Dict) {
 
 	defer utils.CheckForPanic("ProcessDownloadFile")
 
@@ -120,7 +120,7 @@ func (self *VFSService) ProcessDownloadFile(
 func (self *VFSService) ProcessListDirectory(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope, row *ordereddict.Dict) {
+	scope vfilter.Scope, row *ordereddict.Dict) {
 
 	client_id, _ := row.GetString("ClientId")
 	flow_id, _ := row.GetString("FlowId")

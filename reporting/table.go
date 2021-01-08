@@ -8,7 +8,7 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-func OutputRowsToTable(scope *vfilter.Scope,
+func OutputRowsToTable(scope vfilter.Scope,
 	rows []vfilter.Row,
 	out io.Writer) *tablewriter.Table {
 	var columns []string

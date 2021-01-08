@@ -43,7 +43,7 @@ func (self *ScopeCache) Set(key string, value interface{}) {
 	self.cache[key] = value
 }
 
-func CacheGet(scope *vfilter.Scope, key string) interface{} {
+func CacheGet(scope vfilter.Scope, key string) interface{} {
 	any_obj, _ := scope.Resolve(CACHE_VAR)
 	cache, ok := any_obj.(*ScopeCache)
 	if ok {
@@ -55,7 +55,7 @@ func CacheGet(scope *vfilter.Scope, key string) interface{} {
 	return nil
 }
 
-func CacheSet(scope *vfilter.Scope, key string, value interface{}) {
+func CacheSet(scope vfilter.Scope, key string, value interface{}) {
 	any_obj, _ := scope.Resolve(CACHE_VAR)
 	cache, ok := any_obj.(*ScopeCache)
 	if ok {
@@ -69,7 +69,7 @@ func CacheSet(scope *vfilter.Scope, key string, value interface{}) {
 // The server config is sensitive and so it is *not* stored in the
 // scope vars and so can not be accessed by the VQL query
 // directly. VQL plugins can access it via this method.
-func GetServerConfig(scope *vfilter.Scope) (*config_proto.Config, bool) {
+func GetServerConfig(scope vfilter.Scope) (*config_proto.Config, bool) {
 	config_any := CacheGet(scope, constants.SCOPE_SERVER_CONFIG)
 	if utils.IsNil(config_any) {
 		return nil, false

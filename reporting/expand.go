@@ -21,7 +21,7 @@ import (
 )
 
 func EvalQueryToTable(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	vql *vfilter.VQL,
 	out io.Writer) *tablewriter.Table {
 
@@ -59,7 +59,7 @@ func EvalQueryToTable(ctx context.Context,
 type Expansions struct {
 	config_obj *config_proto.Config
 	rows       []vfilter.Row
-	scope      *vfilter.Scope
+	scope      vfilter.Scope
 }
 
 // Support a number of expansions in description strings.
@@ -119,7 +119,7 @@ func (self *Expansions) Query(queries ...string) string {
 
 	defer scope.Close()
 
-	scope.Logger = log.New(os.Stderr, " ", 0)
+	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
 	for _, query := range queries {
 		vql, err := vfilter.Parse(query)

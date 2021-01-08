@@ -26,7 +26,7 @@ type UploadResponse struct {
 // Provide an uploader capable of uploading any reader object.
 type Uploader interface {
 	Upload(ctx context.Context,
-		scope *vfilter.Scope,
+		scope vfilter.Scope,
 		filename string,
 		accessor string,
 		store_as_name string,
@@ -42,7 +42,7 @@ type FileStoreUploader struct {
 
 func (self *FileStoreUploader) Upload(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	filename string,
 	accessor string,
 	store_as_name string,

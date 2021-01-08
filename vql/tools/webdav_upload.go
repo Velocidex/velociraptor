@@ -4,13 +4,14 @@ package tools
 
 import (
 	"context"
-	"github.com/Velocidex/ordereddict"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"path"
 	"time"
+
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -29,7 +30,7 @@ type WebDAVUploadArgs struct {
 type WebDAVUploadFunction struct{}
 
 func (self *WebDAVUploadFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &WebDAVUploadArgs{}
@@ -87,7 +88,7 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func upload_webdav(ctx context.Context, scope *vfilter.Scope,
+func upload_webdav(ctx context.Context, scope vfilter.Scope,
 	reader io.Reader, contentLength int64,
 	name string, webdavUrl string,
 	basicAuthUser string, basicAuthPassword string) (
@@ -139,7 +140,7 @@ func upload_webdav(ctx context.Context, scope *vfilter.Scope,
 }
 
 func (self WebDAVUploadFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "upload_webdav",
 		Doc:     "Upload files to a WebDAV server.",

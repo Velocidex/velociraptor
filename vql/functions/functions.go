@@ -41,7 +41,7 @@ type _Base64Decode struct{}
 
 func (self _Base64Decode) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_Base64DecodeArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -57,7 +57,7 @@ func (self _Base64Decode) Call(
 	return string(result)
 }
 
-func (self _Base64Decode) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _Base64Decode) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "base64decode",
 		ArgType: type_map.AddType(scope, &_Base64DecodeArgs{}),
@@ -72,7 +72,7 @@ type _Base64Encode struct{}
 
 func (self _Base64Encode) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_Base64EncodeArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -86,7 +86,7 @@ func (self _Base64Encode) Call(
 	return string(result)
 }
 
-func (self _Base64Encode) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _Base64Encode) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "base64encode",
 		ArgType: type_map.AddType(scope, &_Base64EncodeArgs{}),
@@ -101,7 +101,7 @@ type _ToLower struct{}
 
 func (self _ToLower) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ToLowerArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -113,7 +113,7 @@ func (self _ToLower) Call(
 	return strings.ToLower(arg.String)
 }
 
-func (self _ToLower) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _ToLower) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "lowcase",
 		ArgType: type_map.AddType(scope, &_ToLowerArgs{}),
@@ -124,7 +124,7 @@ type _ToUpper struct{}
 
 func (self _ToUpper) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ToLowerArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -136,7 +136,7 @@ func (self _ToUpper) Call(
 	return strings.ToUpper(arg.String)
 }
 
-func (self _ToUpper) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _ToUpper) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "upcase",
 		ArgType: type_map.AddType(scope, &_ToLowerArgs{}),
@@ -151,7 +151,7 @@ type _ToInt struct{}
 
 func (self _ToInt) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ToIntArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -171,7 +171,7 @@ func (self _ToInt) Call(
 	}
 }
 
-func (self _ToInt) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _ToInt) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "atoi",
 		Doc:     "Convert a string to an int.",
@@ -183,7 +183,7 @@ type _ParseFloat struct{}
 
 func (self _ParseFloat) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ToIntArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -215,7 +215,7 @@ func (self _ParseFloat) Call(
 	}
 }
 
-func (self _ParseFloat) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _ParseFloat) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "parse_float",
 		Doc:     "Convert a string to a float.",
@@ -227,12 +227,12 @@ type _Now struct{}
 
 func (self _Now) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	return time.Now().Unix()
 }
 
-func (self _Now) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _Now) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "now",
 		Doc:     "Returns current time in seconds since epoch.",
@@ -244,7 +244,7 @@ type _UTF16 struct{}
 
 func (self _UTF16) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &_Base64DecodeArgs{}
@@ -263,7 +263,7 @@ func (self _UTF16) Call(
 	return string(utf16.Decode(ints))
 }
 
-func (self _UTF16) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _UTF16) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "utf16",
 		Doc:     "Parse input from utf16.",
@@ -275,7 +275,7 @@ type _UTF16Encode struct{}
 
 func (self _UTF16Encode) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &_Base64EncodeArgs{}
@@ -296,7 +296,7 @@ func (self _UTF16Encode) Call(
 	return buf.String()
 }
 
-func (self _UTF16Encode) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _UTF16Encode) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "utf16_encode",
 		Doc:     "Encode a string to utf16 bytes.",
@@ -308,13 +308,13 @@ type _Scope struct{}
 
 func (self _Scope) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	return scope
 }
 
-func (self _Scope) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _Scope) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name: "scope",
 		Doc:  "return the scope.",
@@ -330,7 +330,7 @@ type _GetFunctionArgs struct {
 
 type _GetFunction struct{}
 
-func (self _GetFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _GetFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "get",
 		Doc:     "Gets the member field from item.",
@@ -340,7 +340,7 @@ func (self _GetFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *
 
 func (self _GetFunction) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_GetFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)

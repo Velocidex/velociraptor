@@ -16,7 +16,7 @@ type _ToDictFunctionArgs struct {
 // e.g. dict(foo=5, bar=6)
 type _ToDictFunc struct{}
 
-func (self _ToDictFunc) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _ToDictFunc) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "to_dict",
 		Doc:     "Construct a dict from another object. If items is a query use _key and _value columns to set the dict's keys and values.",
@@ -24,7 +24,7 @@ func (self _ToDictFunc) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 	}
 }
 
-func (self _ToDictFunc) Call(ctx context.Context, scope *vfilter.Scope,
+func (self _ToDictFunc) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &_ToDictFunctionArgs{}
@@ -60,7 +60,7 @@ func (self _ToDictFunc) Call(ctx context.Context, scope *vfilter.Scope,
 
 type _ItemsFunc struct{}
 
-func (self _ItemsFunc) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _ItemsFunc) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "items",
 		Doc:     "Iterate over dict members producing _key and _value columns",
@@ -68,7 +68,7 @@ func (self _ItemsFunc) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	}
 }
 
-func (self _ItemsFunc) Call(ctx context.Context, scope *vfilter.Scope,
+func (self _ItemsFunc) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &_ToDictFunctionArgs{}

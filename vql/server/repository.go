@@ -21,7 +21,7 @@ type ArtifactSetFunctionArgs struct {
 type ArtifactSetFunction struct{}
 
 func (self *ArtifactSetFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &ArtifactSetFunctionArgs{}
@@ -88,7 +88,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 }
 
 func (self ArtifactSetFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "artifact_set",
 		Doc:     "Sets an artifact into the global repository.",
@@ -103,7 +103,7 @@ type ArtifactDeleteFunctionArgs struct {
 type ArtifactDeleteFunction struct{}
 
 func (self *ArtifactDeleteFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &ArtifactDeleteFunctionArgs{}
@@ -171,7 +171,7 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 }
 
 func (self ArtifactDeleteFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "artifact_delete",
 		Doc:     "Deletes an artifact from the global repository.",
@@ -189,7 +189,7 @@ type ArtifactsPlugin struct{}
 
 func (self ArtifactsPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
@@ -269,7 +269,7 @@ func (self ArtifactsPlugin) Call(
 	return output_chan
 }
 
-func (self ArtifactsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self ArtifactsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "artifact_definitions",
 		Doc:     "Dump artifact definitions.",

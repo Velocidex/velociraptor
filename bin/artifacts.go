@@ -174,8 +174,8 @@ func doArtifactCollect() {
 	}()
 
 	if *trace_vql_flag {
-		scope.Tracer = logging.NewPlainLogger(config_obj,
-			&logging.ToolComponent)
+		scope.SetTracer(logging.NewPlainLogger(config_obj,
+			&logging.ToolComponent))
 	}
 
 	query := `

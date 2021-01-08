@@ -38,7 +38,7 @@ type AddLabelsArgs struct {
 type AddLabels struct{}
 
 func (self *AddLabels) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &AddLabelsArgs{}
@@ -82,7 +82,7 @@ func (self *AddLabels) Call(ctx context.Context,
 	return arg
 }
 
-func (self AddLabels) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self AddLabels) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name: "label",
 		Doc: "Add the labels to the client. " +

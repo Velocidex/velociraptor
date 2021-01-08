@@ -39,7 +39,7 @@ func (self *EventLogWatcherService) Register(
 	filename string,
 	accessor string,
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	output_chan chan vfilter.Row) func() {
 
 	self.mu.Lock()
@@ -230,5 +230,5 @@ func (self *EventLogWatcherService) monitorOnce(
 type Handle struct {
 	ctx         context.Context
 	output_chan chan vfilter.Row
-	scope       *vfilter.Scope
+	scope       vfilter.Scope
 }

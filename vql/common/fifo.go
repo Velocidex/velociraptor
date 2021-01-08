@@ -114,7 +114,7 @@ func (self *_FIFOCache) Push(row vfilter.Row) {
 
 func NewFIFOCache(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	max_time time.Duration,
 	max_rows int64,
 	stored_query vfilter.StoredQuery) *_FIFOCache {
@@ -165,7 +165,7 @@ type _FIFOPluginArgs struct {
 type _FIFOPlugin struct{}
 
 func (self _FIFOPlugin) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -195,7 +195,7 @@ func (self _FIFOPlugin) Call(ctx context.Context,
 		fifo_cache := vql_subsystem.CacheGet(scope, key)
 		if fifo_cache == nil {
 			scope.Log("Creating FIFO Cache for %v\n",
-				arg.Query.ToString(scope))
+				vfilter.ToString(arg.Query, scope))
 			fifo_cache = NewFIFOCache(
 				ctx, scope,
 				time.Duration(arg.MaxAge)*time.Second,
@@ -225,7 +225,7 @@ func (self _FIFOPlugin) Call(ctx context.Context,
 }
 
 func (self _FIFOPlugin) Info(
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: "fifo",
