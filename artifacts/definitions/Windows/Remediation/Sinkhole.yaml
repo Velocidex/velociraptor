@@ -59,12 +59,14 @@ sources:
 
       -- Check for backup to determine if sinkhole applied
       LET check_backup = SELECT FullPath FROM stat(filename=HostsFileBackup)
+      WHERE log(message="Found backup at " + FullPath)
 
       -- Backup old config
       LET backup = copy(filename=HostsFile,dest=HostsFileBackup)
 
       -- Restore old config
       LET restore = SELECT * FROM chain(
+            z=log(message="Will restore from backup"),
             a=copy(filename=HostsFileBackup,dest=HostsFile),
             b={
                 SELECT *
@@ -159,18 +161,23 @@ sources:
       LET HostsData = join(array=build_lines.Line,sep='\r\n')
 
       -- Force start of backup or restore if applicable
-      LET backup_restore <= if(condition= RestoreBackup,
-                then= if(condition= check_backup,
-                        then= restore,
-                        else= log(message='Can not restore hosts file as backup does not exist.')),
-                else= if(condition= check_backup,
-                        then={
-                            SELECT * FROM chain(
-                                a= log(message='Backup hosts file already exists.'),
-                                b= restore)
-                            },
-                        else= backup)
-                )
+      LET backup_restore <= if(
+         condition= RestoreBackup AND log(message="Will attempt to restore backup"),
+         then= if(
+            condition= check_backup,
+            then= restore,
+            -- then= { SELECT * FROM restore },
+            else= log(message='Can not restore hosts file as backup does not exist.')),
+
+         else= if(
+           condition= check_backup,
+           then={
+              SELECT * FROM chain(
+                 a= log(message='Backup hosts file already exists.'),
+                 b= restore)
+              },
+          else= backup)
+        )
 
       -- Do kick off logic
       LET do_it <= SELECT * FROM if(condition= NOT RestoreBackup,
@@ -179,7 +186,6 @@ sources:
                     a= log(message='Adding hosts entries.'),
                     b= write(DataBlob=HostsData),
                     c= flushdns
-
                 )})
 
       -- Finally show resultant HostsFile

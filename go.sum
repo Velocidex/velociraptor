@@ -802,5 +802,7 @@ www.velocidex.com/golang/vfilter v0.0.0-20210108051106-c18c13c24eff h1:00WZKnVVX
 www.velocidex.com/golang/vfilter v0.0.0-20210108051106-c18c13c24eff/go.mod h1:EdP5LDT3l9khZVjDVD2YKoDvECi3AW0e0074quDPNpA=
 www.velocidex.com/golang/vfilter v0.0.0-20210108115820-9d2b5af22eaa h1:mr3Vj/OQdi2eAOt+itOkYkzMfVRnNEaTRbRJfR2ut0w=
 www.velocidex.com/golang/vfilter v0.0.0-20210108115820-9d2b5af22eaa/go.mod h1:EdP5LDT3l9khZVjDVD2YKoDvECi3AW0e0074quDPNpA=
+www.velocidex.com/golang/vfilter v0.0.0-20210108133703-ae394da3f631 h1:Z3NY12SqlQg2w3tdXzz8kr4dtE+YmlukKKkSeSQCQHw=
+www.velocidex.com/golang/vfilter v0.0.0-20210108133703-ae394da3f631/go.mod h1:EdP5LDT3l9khZVjDVD2YKoDvECi3AW0e0074quDPNpA=
 www.velocidex.com/golang/vtypes v0.0.0-20210108052555-8a27f80edada h1:Rtn8RTS/fTxHts5/PrBP7fei2eq4I6tboHyEm3xX0ew=
 www.velocidex.com/golang/vtypes v0.0.0-20210108052555-8a27f80edada/go.mod h1:fkF6W4t1+qr1Nw51+EhAmCwQp2QtwcyNN1Ghwd1vLBM=

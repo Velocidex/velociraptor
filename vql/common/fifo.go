@@ -43,6 +43,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type _FIFOCacheEntry struct {
@@ -195,7 +196,7 @@ func (self _FIFOPlugin) Call(ctx context.Context,
 		fifo_cache := vql_subsystem.CacheGet(scope, key)
 		if fifo_cache == nil {
 			scope.Log("Creating FIFO Cache for %v\n",
-				vfilter.ToString(arg.Query, scope))
+				types.ToString(arg.Query, scope))
 			fifo_cache = NewFIFOCache(
 				ctx, scope,
 				time.Duration(arg.MaxAge)*time.Second,
