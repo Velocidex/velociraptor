@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 var (
@@ -53,7 +54,7 @@ func (self *ApiServer) GetKeywordCompletions(
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
 
-	type_map := vfilter.NewTypeMap()
+	type_map := types.NewTypeMap()
 	info := scope.Describe(type_map)
 
 	for _, item := range info.Functions {
@@ -94,14 +95,16 @@ func (self *ApiServer) GetKeywordCompletions(
 	return result, nil
 }
 
-func getArgDescriptors(arg_type string, type_map *vfilter.TypeMap,
-	scope *vfilter.Scope) []*api_proto.ArgDescriptor {
+func getArgDescriptors(
+	arg_type string,
+	type_map *vfilter.TypeMap,
+	scope vfilter.Scope) []*api_proto.ArgDescriptor {
 	args := []*api_proto.ArgDescriptor{}
 	arg_desc, pres := type_map.Get(scope, arg_type)
 	if pres && arg_desc != nil && arg_desc.Fields != nil {
 		for _, k := range arg_desc.Fields.Keys() {
 			v_any, _ := arg_desc.Fields.Get(k)
-			v, ok := v_any.(*vfilter.TypeReference)
+			v, ok := v_any.(*types.TypeReference)
 			if !ok {
 				continue
 			}

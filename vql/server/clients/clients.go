@@ -45,7 +45,7 @@ type ClientsPlugin struct{}
 
 func (self ClientsPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -121,7 +121,7 @@ func (self ClientsPlugin) Call(
 	return output_chan
 }
 
-func (self ClientsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self ClientsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "clients",
 		Doc:     "Retrieve the list of clients.",
@@ -136,7 +136,7 @@ type ClientInfoFunctionArgs struct {
 type ClientInfoFunction struct{}
 
 func (self *ClientInfoFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
@@ -167,7 +167,7 @@ func (self *ClientInfoFunction) Call(ctx context.Context,
 }
 
 func (self ClientInfoFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "client_info",
 		Doc:     "Returns client info (like the fqdn) from the datastore.",

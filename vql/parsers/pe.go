@@ -34,7 +34,7 @@ type _PEFunctionArgs struct {
 
 type _PEFunction struct{}
 
-func (self _PEFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _PEFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "parse_pe",
 		Doc:     "Parse a PE file.",
@@ -43,7 +43,7 @@ func (self _PEFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 }
 
 func (self _PEFunction) Call(
-	ctx context.Context, scope *vfilter.Scope,
+	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_PEFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)

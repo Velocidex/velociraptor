@@ -176,7 +176,7 @@ func (self *HuntManager) StartFlowCompletion(
 func (self *HuntManager) ProcessFlowCompletion(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	row *ordereddict.Dict) {
 
 	flow := &flows_proto.ArtifactCollectorContext{}
@@ -218,7 +218,7 @@ func (self *HuntManager) ProcessFlowCompletion(
 func (self *HuntManager) ProcessRow(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	row *ordereddict.Dict) {
 
 	participation_row := &ParticipationRecord{}

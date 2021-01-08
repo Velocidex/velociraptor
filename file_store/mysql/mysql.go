@@ -828,7 +828,7 @@ type SqlFileStoreAccessor struct {
 	file_store *SqlFileStore
 }
 
-func (self SqlFileStoreAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
+func (self SqlFileStoreAccessor) New(scope vfilter.Scope) glob.FileSystemAccessor {
 	return &SqlFileStoreAccessor{self.file_store}
 }
 

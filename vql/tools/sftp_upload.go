@@ -34,7 +34,7 @@ type SFTPUploadArgs struct {
 type SFTPUploadFunction struct{}
 
 func (self *SFTPUploadFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &SFTPUploadArgs{}
@@ -112,7 +112,7 @@ func hostkeycallback(trustedkey string) ssh.HostKeyCallback {
 	}
 }
 
-func getSFTPClient(scope *vfilter.Scope, user string, privateKey string, endpoint string, hostKey string) (*sftp.Client, error) {
+func getSFTPClient(scope vfilter.Scope, user string, privateKey string, endpoint string, hostKey string) (*sftp.Client, error) {
 	cacheKey := fmt.Sprintf("%s %s", user, endpoint)
 	client := vql_subsystem.CacheGet(scope, cacheKey)
 	if client == nil {
@@ -167,7 +167,7 @@ func getSFTPClient(scope *vfilter.Scope, user string, privateKey string, endpoin
 	}
 }
 
-func upload_SFTP(ctx context.Context, scope *vfilter.Scope,
+func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 	reader io.Reader,
 	user, path, name string,
 	privateKey string, endpoint string, hostKey string) (
@@ -210,7 +210,7 @@ func upload_SFTP(ctx context.Context, scope *vfilter.Scope,
 }
 
 func (self SFTPUploadFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "upload_sftp",
 		Doc:     "Upload files to SFTP.",

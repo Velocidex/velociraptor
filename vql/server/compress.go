@@ -38,7 +38,7 @@ type CompressArgs struct {
 type Compress struct{}
 
 func (self *Compress) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
@@ -105,7 +105,7 @@ func (self *Compress) Call(ctx context.Context,
 	return result
 }
 
-func (self Compress) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self Compress) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "compress",
 		Doc:     "Compress a file in the server's FileStore. ",

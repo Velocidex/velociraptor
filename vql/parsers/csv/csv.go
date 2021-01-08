@@ -40,7 +40,7 @@ type ParseCSVPlugin struct{}
 
 func (self ParseCSVPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -112,7 +112,7 @@ func (self ParseCSVPlugin) Call(
 	return output_chan
 }
 
-func (self ParseCSVPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self ParseCSVPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "parse_csv",
 		Doc:     "Parses events from a CSV file.",
@@ -124,7 +124,7 @@ type _WatchCSVPlugin struct{}
 
 func (self _WatchCSVPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -168,7 +168,7 @@ func (self _WatchCSVPlugin) Call(
 	return output_chan
 }
 
-func (self _WatchCSVPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self _WatchCSVPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: "watch_csv",
 		Doc: "Watch a CSV file and stream events from it. " +
@@ -187,7 +187,7 @@ type WriteCSVPlugin struct{}
 
 func (self WriteCSVPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -273,7 +273,7 @@ func (self WriteCSVPlugin) Call(
 	return output_chan
 }
 
-func (self WriteCSVPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self WriteCSVPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "write_csv",
 		Doc:     "Write a query into a CSV file.",

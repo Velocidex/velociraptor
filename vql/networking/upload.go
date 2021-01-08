@@ -39,7 +39,7 @@ type UploadFunctionArgs struct {
 type UploadFunction struct{}
 
 func (self *UploadFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	uploader, ok := artifacts.GetUploader(scope)
@@ -105,7 +105,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func (self UploadFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self UploadFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name: "upload",
 		Doc: "Upload a file to the upload service. For a Velociraptor " +
@@ -124,7 +124,7 @@ type UploadPlugin struct{}
 
 func (self *UploadPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -194,7 +194,7 @@ func (self *UploadPlugin) Call(
 	return output_chan
 }
 
-func (self UploadPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self UploadPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "upload",
 		Doc:     "Upload files to the server.",

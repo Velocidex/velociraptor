@@ -59,7 +59,7 @@ func (self *Container) Create(name string) (io.WriteCloser, error) {
 func (self *Container) StoreArtifact(
 	config_obj *config_proto.Config,
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	query *actions_proto.VQLRequest,
 	format string) (err error) {
 
@@ -158,7 +158,7 @@ func sanitize(component string) string {
 
 func (self *Container) Upload(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	filename string,
 	accessor string,
 	store_as_name string,

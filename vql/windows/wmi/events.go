@@ -65,7 +65,7 @@ func (self *WMIObject) Parse() (*ordereddict.Dict, error) {
 
 type eventQueryContext struct {
 	output chan vfilter.Row
-	scope  *vfilter.Scope
+	scope  vfilter.Scope
 }
 
 // This is called to handle the serialized event string. We just send
@@ -110,7 +110,7 @@ type WmiEventPlugin struct{}
 
 func (self WmiEventPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	arg := &WmiEventPluginArgs{}
@@ -180,7 +180,7 @@ func (self WmiEventPlugin) Call(
 	return output_chan
 }
 
-func (self WmiEventPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self WmiEventPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "wmi_events",
 		Doc:     "Executes an evented WMI queries asynchronously.",

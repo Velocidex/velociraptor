@@ -49,7 +49,7 @@ type GrepFunction struct{}
 
 // The Grep VQL function searches for a literal or regex match inside the file
 func (self *GrepFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &GrepFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -138,7 +138,7 @@ func (self *GrepFunction) Call(ctx context.Context,
 	}
 }
 
-func (self GrepFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self GrepFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "grep",
 		Doc:     "Search a file for keywords.",

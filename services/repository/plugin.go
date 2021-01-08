@@ -34,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 const (
@@ -68,7 +69,7 @@ func (self *ArtifactRepositoryPlugin) Print() {
 // Define vfilter.PluginGeneratorInterface
 func (self *ArtifactRepositoryPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -104,7 +105,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 		artifact_name := self.leaf.Name
 		v, pres := args.Get("source")
 		if pres {
-			lazy_v, ok := v.(vfilter.LazyExpr)
+			lazy_v, ok := v.(types.LazyExpr)
 			if ok {
 				v = lazy_v.Reduce()
 			}
@@ -175,7 +176,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 				return
 			}
 
-			lazy_v, ok := v.(vfilter.LazyExpr)
+			lazy_v, ok := v.(types.LazyExpr)
 			if ok {
 				v = lazy_v.Reduce()
 			}
@@ -214,8 +215,8 @@ func (self *ArtifactRepositoryPlugin) Call(
 // Create a mostly new scope for executing the new artifact but copy
 // over some important global variables.
 func (self *ArtifactRepositoryPlugin) copyScope(
-	scope *vfilter.Scope, my_name string) (
-	*vfilter.Scope, error) {
+	scope vfilter.Scope, my_name string) (
+	vfilter.Scope, error) {
 	env := ordereddict.NewDict()
 	for _, field := range []string{
 		vql_subsystem.ACL_MANAGER_VAR,
@@ -262,7 +263,7 @@ func (self *ArtifactRepositoryPlugin) Name() string {
 }
 
 func (self *ArtifactRepositoryPlugin) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: self.Name(),
 		Doc:  "A pseudo plugin for accessing the artifacts repository from VQL.",
@@ -302,7 +303,7 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) Applicable(
 }
 
 func (self _ArtifactRepositoryPluginAssociativeProtocol) GetMembers(
-	scope *vfilter.Scope, a vfilter.Any) []string {
+	scope vfilter.Scope, a vfilter.Any) []string {
 	var result []string
 
 	value := _getArtifactRepositoryPlugin(a)
@@ -315,7 +316,7 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) GetMembers(
 }
 
 func (self _ArtifactRepositoryPluginAssociativeProtocol) Associative(
-	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
+	scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
 
 	value := _getArtifactRepositoryPlugin(a)
 	if value == nil {

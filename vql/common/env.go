@@ -39,7 +39,7 @@ type EnvFunctionArgs struct {
 type EnvFunction struct{}
 
 func (self *EnvFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &EnvFunctionArgs{}
 
@@ -58,7 +58,7 @@ func (self *EnvFunction) Call(ctx context.Context,
 	return os.Getenv(arg.Var)
 }
 
-func (self *EnvFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self *EnvFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "environ",
 		Doc:     "Get an environment variable.",
@@ -72,7 +72,7 @@ func init() {
 		vfilter.GenericListPlugin{
 			PluginName: "environ",
 			Function: func(
-				scope *vfilter.Scope,
+				scope vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 

@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type EncodeFunctionArgs struct {
@@ -20,7 +21,7 @@ type EncodeFunctionArgs struct {
 type EncodeFunction struct{}
 
 func (self *EncodeFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &EncodeFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -31,10 +32,10 @@ func (self *EncodeFunction) Call(ctx context.Context,
 
 	result := arg.Item
 	switch t := result.(type) {
-	case vfilter.LazyExpr:
+	case types.LazyExpr:
 		result = t.Reduce()
 
-	case vfilter.StoredQuery:
+	case types.StoredQuery:
 		result_rows := []vfilter.Row{}
 		for row := range t.Eval(ctx, scope) {
 			result_rows = append(result_rows, row)
@@ -78,7 +79,7 @@ func (self *EncodeFunction) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func (self EncodeFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self EncodeFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "serialize",
 		Doc:     "Encode an object as a string (csv or json).",

@@ -43,7 +43,7 @@ func getHTMLTemplate(
 
 func WriteFlowReport(
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	repository services.Repository,
 	writer io.Writer,
 	flow_id, client_id, template string) error {
@@ -133,7 +133,7 @@ func WriteFlowReport(
 
 func CreateFlowReport(
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	flow_id, client_id, template string,
 	wait bool) (string, error) {
 

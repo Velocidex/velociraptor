@@ -45,7 +45,7 @@ type AuthenticodeArgs struct {
 type AuthenticodeFunction struct{}
 
 func (self *AuthenticodeFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
@@ -90,7 +90,7 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 }
 
 func (self AuthenticodeFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name: "authenticode",
 		Doc: "This plugin uses the Windows API to extract authenticode " +

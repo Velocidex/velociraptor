@@ -101,7 +101,7 @@ func ParseUserRecord(a *USER_INFO_3) *UserRecord {
 	}
 }
 
-func getUsers(scope *vfilter.Scope,
+func getUsers(scope vfilter.Scope,
 	args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 
@@ -148,7 +148,7 @@ type LookupSidFunctionArgs struct {
 type LookupSidFunction struct{}
 
 func (self *LookupSidFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
@@ -186,7 +186,7 @@ func (self *LookupSidFunction) Call(ctx context.Context,
 	return syscall.UTF16ToString(name)
 }
 
-func (self *LookupSidFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self *LookupSidFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "lookupSID",
 		Doc:     "Get information about the SID.",

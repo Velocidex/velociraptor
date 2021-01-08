@@ -73,10 +73,11 @@ sources:
                     AND Record.TeamViewerID =~ TeamViewerIDRegex
                     AND Record.SourceHost =~ SourceHostRegex
                     AND Record.User =~ UserRegex
-                    AND ( timestamp(epoch=Record.StartTime) < DateBeforeTime
-                        AND timestamp(epoch=Record.StartTime) > DateAfterTime)
-                    AND ( timestamp(epoch=Record.EndTime) < DateBeforeTime
-                        AND timestamp(epoch=Record.EndTime) > DateAfterTime )
+                    AND timestamp(epoch=Record.StartTime) < DateBeforeTime
+                    AND timestamp(epoch=Record.StartTime) > DateAfterTime
+                    AND timestamp(epoch=Record.EndTime) < DateBeforeTime
+                    AND timestamp(epoch=Record.EndTime) > DateAfterTime
+
             })
 
       -- include VSS in calculation and deduplicate with GROUP BY by file

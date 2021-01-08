@@ -17,7 +17,7 @@ import (
 )
 
 type streamHandler struct {
-	scope       *vfilter.Scope
+	scope       vfilter.Scope
 	output_chan chan vfilter.Row
 }
 
@@ -39,7 +39,7 @@ func (self *streamHandler) outputMultipleMessages(msgs []*auparse.AuditMessage) 
 
 type AuditPlugin struct{}
 
-func (self AuditPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self AuditPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: "audit",
 		Doc:  "Register as an audit daemon in the kernel.",
@@ -47,7 +47,7 @@ func (self AuditPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 }
 
 func (self AuditPlugin) Call(
-	ctx context.Context, scope *vfilter.Scope,
+	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 

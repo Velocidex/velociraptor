@@ -36,7 +36,7 @@ type _TimestampArg struct {
 
 type _Timestamp struct{}
 
-func (self _Timestamp) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _Timestamp) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "timestamp",
 		Doc:     "Convert from different types to a time.Time.",
@@ -44,7 +44,7 @@ func (self _Timestamp) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	}
 }
 
-func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
+func (self _Timestamp) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_TimestampArg{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -77,7 +77,7 @@ func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
 	return result
 }
 
-func TimeFromAny(scope *vfilter.Scope, timestamp vfilter.Any) (time.Time, error) {
+func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) {
 	sec := int64(0)
 	dec := int64(0)
 	switch t := timestamp.(type) {
@@ -113,7 +113,7 @@ func TimeFromAny(scope *vfilter.Scope, timestamp vfilter.Any) (time.Time, error)
 	return time.Unix(int64(sec), int64(dec)), nil
 }
 
-func parse_time_from_string(scope *vfilter.Scope, timestamp string) (
+func parse_time_from_string(scope vfilter.Scope, timestamp string) (
 	time.Time, error) {
 	time_value_any, pres := lru.Get(timestamp)
 	if pres {
@@ -132,7 +132,8 @@ func parse_time_from_string(scope *vfilter.Scope, timestamp string) (
 // Time aware operators.
 type _TimeLt struct{}
 
-func (self _TimeLt) Lt(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+// a < b
+func (self _TimeLt) Lt(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
 	a_time, _ := utils.IsTime(a)
 	b_time, _ := utils.IsTime(b)
 
@@ -146,9 +147,26 @@ func (self _TimeLt) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return a_ok && b_ok
 }
 
+type _TimeGt struct{}
+
+// a > b
+func (self _TimeGt) Gt(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+	a_time, _ := utils.IsTime(a)
+	b_time, _ := utils.IsTime(b)
+
+	return a_time.After(b_time)
+}
+
+func (self _TimeGt) Applicable(a vfilter.Any, b vfilter.Any) bool {
+	_, a_ok := utils.IsTime(a)
+	_, b_ok := utils.IsTime(b)
+
+	return a_ok && b_ok
+}
+
 type _TimeLtInt struct{}
 
-func (self _TimeLtInt) Lt(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+func (self _TimeLtInt) Lt(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
 	a_time, _ := utils.IsTime(a)
 	var b_time time.Time
 
@@ -175,9 +193,38 @@ func (self _TimeLtInt) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return ok
 }
 
+type _TimeGtInt struct{}
+
+func (self _TimeGtInt) Gt(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+	a_time, _ := utils.IsTime(a)
+	var b_time time.Time
+
+	switch t := b.(type) {
+	case float64:
+		sec_f, dec_f := math.Modf(t)
+		dec_f *= 1e9
+		b_time = time.Unix(int64(sec_f), int64(dec_f))
+	default:
+		sec, _ := utils.ToInt64(b)
+		b_time = time.Unix(sec, 0)
+	}
+
+	return a_time.After(b_time)
+}
+
+func (self _TimeGtInt) Applicable(a vfilter.Any, b vfilter.Any) bool {
+	_, a_ok := utils.IsTime(a)
+	if !a_ok {
+		return false
+	}
+
+	_, ok := utils.ToInt64(b)
+	return ok
+}
+
 type _TimeLtString struct{}
 
-func (self _TimeLtString) Lt(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+func (self _TimeLtString) Lt(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
 	a_time, _ := utils.IsTime(a)
 	b_str, _ := b.(string)
 	var b_time time.Time
@@ -207,9 +254,41 @@ func (self _TimeLtString) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return a_ok && b_ok
 }
 
+type _TimeGtString struct{}
+
+func (self _TimeGtString) Gt(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+	a_time, _ := utils.IsTime(a)
+	b_str, _ := b.(string)
+	var b_time time.Time
+
+	time_value_any, pres := lru.Get(b_str)
+	if pres {
+		b_time = time_value_any.(cachedTime).Time
+
+	} else {
+		parser := dateparser.Parser{Fuzzy: true,
+			DayFirst: true,
+			IgnoreTZ: true}
+		b_time_time, err := parser.Parse(b_str)
+		if err == nil {
+			b_time = b_time_time
+			lru.Set(b_str, cachedTime{b_time})
+		}
+	}
+
+	return a_time.After(b_time)
+}
+
+func (self _TimeGtString) Applicable(a vfilter.Any, b vfilter.Any) bool {
+	_, a_ok := utils.IsTime(a)
+	_, b_ok := b.(string)
+
+	return a_ok && b_ok
+}
+
 type _TimeEq struct{}
 
-func (self _TimeEq) Eq(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+func (self _TimeEq) Eq(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
 	a_time, _ := utils.IsTime(a)
 	b_time, _ := utils.IsTime(b)
 
@@ -225,7 +304,7 @@ func (self _TimeEq) Applicable(a vfilter.Any, b vfilter.Any) bool {
 
 type _TimeEqInt struct{}
 
-func (self _TimeEqInt) Eq(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+func (self _TimeEqInt) Eq(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
 	a_time, _ := utils.IsTime(a)
 	var b_time time.Time
 
@@ -255,8 +334,11 @@ func (self _TimeEqInt) Applicable(a vfilter.Any, b vfilter.Any) bool {
 func init() {
 	vql_subsystem.RegisterFunction(&_Timestamp{})
 	vql_subsystem.RegisterProtocol(&_TimeLt{})
+	vql_subsystem.RegisterProtocol(&_TimeGt{})
 	vql_subsystem.RegisterProtocol(&_TimeLtInt{})
+	vql_subsystem.RegisterProtocol(&_TimeGtInt{})
 	vql_subsystem.RegisterProtocol(&_TimeLtString{})
+	vql_subsystem.RegisterProtocol(&_TimeGtString{})
 	vql_subsystem.RegisterProtocol(&_TimeEq{})
 	vql_subsystem.RegisterProtocol(&_TimeEqInt{})
 }

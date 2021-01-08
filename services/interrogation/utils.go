@@ -23,7 +23,7 @@ func watchForFlowCompletion(
 	config_obj *config_proto.Config,
 	artifact_name string,
 	handler func(ctx context.Context,
-		scope *vfilter.Scope, row *ordereddict.Dict)) error {
+		scope vfilter.Scope, row *ordereddict.Dict)) error {
 
 	journal, err := services.GetJournal()
 	if err != nil {

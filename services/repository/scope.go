@@ -5,12 +5,13 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
-func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) *vfilter.Scope {
+func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 	env := ordereddict.NewDict()
 	if self.Env != nil {
 		env.MergeFrom(self.Env)
@@ -46,7 +47,7 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) *
 		env.Set(constants.SCOPE_UPLOADER, self.Uploader)
 	}
 
-	var scope *vfilter.Scope
+	var scope vfilter.Scope
 	if from_scratch {
 		scope = vql_subsystem.MakeNewScope()
 	} else {
@@ -58,18 +59,23 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) *
 	scope.AppendVars(env).AddProtocolImpl(
 		_ArtifactRepositoryPluginAssociativeProtocol{})
 
-	scope.Logger = self.Logger
+	scope.SetLogger(self.Logger)
 
 	env.Set(constants.SCOPE_ROOT, scope)
+
+	scope.AddDestructor(func() {
+		scope.Log("Query Stats: %v", json.MustMarshalString(
+			scope.GetStats().Snapshot()))
+	})
 
 	return scope
 }
 
-func (self *RepositoryManager) BuildScope(builder services.ScopeBuilder) *vfilter.Scope {
+func (self *RepositoryManager) BuildScope(builder services.ScopeBuilder) vfilter.Scope {
 	return _build(self.wg, builder, false)
 }
 
 func (self *RepositoryManager) BuildScopeFromScratch(
-	builder services.ScopeBuilder) *vfilter.Scope {
+	builder services.ScopeBuilder) vfilter.Scope {
 	return _build(self.wg, builder, true)
 }

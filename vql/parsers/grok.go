@@ -18,7 +18,7 @@ type GrokParseFunctionArgs struct {
 
 type GrokParseFunction struct{}
 
-func (self GrokParseFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self GrokParseFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "grok",
 		Doc:     "Parse a string using a Grok expression.",
@@ -27,7 +27,7 @@ func (self GrokParseFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeM
 }
 
 func (self GrokParseFunction) Call(
-	ctx context.Context, scope *vfilter.Scope,
+	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &GrokParseFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)

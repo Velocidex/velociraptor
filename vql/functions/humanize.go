@@ -34,7 +34,7 @@ type HumanizeArgs struct {
 type HumanizeFunction struct{}
 
 func (self *HumanizeFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &HumanizeArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -50,7 +50,7 @@ func (self *HumanizeFunction) Call(ctx context.Context,
 	return fmt.Sprintf("%v", arg.Bytes)
 }
 
-func (self HumanizeFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self HumanizeFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "humanize",
 		Doc:     "Format items in human readable way.",

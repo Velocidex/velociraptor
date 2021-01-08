@@ -108,7 +108,7 @@ func (self *ConnectionStat) TypeString() string {
 // The VQL WMI plugin.
 type NetstatArgs struct{}
 
-func runNetstat(scope *vfilter.Scope,
+func runNetstat(scope vfilter.Scope,
 	args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 

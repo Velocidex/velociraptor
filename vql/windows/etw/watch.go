@@ -21,7 +21,7 @@ type WatchETWPlugin struct{}
 
 func (self WatchETWPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -107,7 +107,7 @@ func (self WatchETWPlugin) Call(
 
 }
 
-func (self WatchETWPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self WatchETWPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "watch_etw",
 		Doc:     "Watch for events from an ETW provider.",

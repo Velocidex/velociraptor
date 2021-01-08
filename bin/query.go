@@ -63,7 +63,7 @@ var (
 )
 
 func outputJSON(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	vql *vfilter.VQL,
 	out io.Writer) {
 	for result := range vfilter.GetResponseChannel(
@@ -76,7 +76,7 @@ func outputJSON(ctx context.Context,
 }
 
 func outputJSONL(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	vql *vfilter.VQL,
 	out io.Writer) {
 	for result := range vfilter.GetResponseChannel(
@@ -89,7 +89,7 @@ func outputJSONL(ctx context.Context,
 }
 
 func outputCSV(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	vql *vfilter.VQL,
 	out io.Writer) {
 	result_chan := vfilter.GetResponseChannel(vql, ctx, scope,
@@ -267,7 +267,7 @@ func doQuery() {
 	ctx := InstallSignalHandler(scope)
 
 	if *trace_vql_flag {
-		scope.Tracer = log.New(os.Stderr, "VQL Trace: ", 0)
+		scope.SetTracer(log.New(os.Stderr, "VQL Trace: ", 0))
 	}
 	for _, query := range *queries {
 		statements, err := vfilter.MultiParse(query)

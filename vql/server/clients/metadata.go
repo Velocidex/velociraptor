@@ -22,7 +22,7 @@ type ClientMetadataFunctionArgs struct {
 type ClientMetadataFunction struct{}
 
 func (self *ClientMetadataFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &ClientMetadataFunctionArgs{}
@@ -72,7 +72,7 @@ func (self *ClientMetadataFunction) Call(ctx context.Context,
 }
 
 func (self ClientMetadataFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "client_metadata",
 		Doc:     "Returns client metadata from the datastore. Client metadata is a set of free form key/value data",
@@ -87,7 +87,7 @@ type ClientSetMetadataFunctionArgs struct {
 type ClientSetMetadataFunction struct{}
 
 func (self *ClientSetMetadataFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	// Collapse lazy args etc.
@@ -152,7 +152,7 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 }
 
 func (self ClientSetMetadataFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "client_set_metadata",
 		Doc:     "Sets client metadata. Client metadata is a set of free form key/value data",
@@ -163,14 +163,14 @@ func (self ClientSetMetadataFunction) Info(
 type ServerMetadataFunction struct{}
 
 func (self *ServerMetadataFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	args.Set("client_id", "server")
 	return (&ClientMetadataFunction{}).Call(ctx, scope, args)
 }
 
 func (self ServerMetadataFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "server_metadata",
 		Doc:     "Returns client metadata from the datastore. Client metadata is a set of free form key/value data",
@@ -181,14 +181,14 @@ func (self ServerMetadataFunction) Info(
 type ServerSetMetadataFunction struct{}
 
 func (self *ServerSetMetadataFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	args.Set("client_id", "server")
 	return (&ClientSetMetadataFunction{}).Call(ctx, scope, args)
 }
 
 func (self ServerSetMetadataFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "server_set_metadata",
 		Doc:     "Sets client metadata. Client metadata is a set of free form key/value data",

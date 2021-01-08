@@ -42,7 +42,7 @@ var (
 type UserNotificationManager struct {
 	writers              map[string]*csv.CSVWriter
 	config_obj           *config_proto.Config
-	scope                *vfilter.Scope
+	scope                vfilter.Scope
 	notification_channel chan *api_proto.UserNotification
 }
 

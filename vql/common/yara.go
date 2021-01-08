@@ -71,7 +71,7 @@ type YaraScanPlugin struct{}
 
 func (self YaraScanPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -139,7 +139,7 @@ func (self YaraScanPlugin) Call(
 // to recompile the rules all the time. We use the key as the cache or
 // the hash of the rules string if not provided.
 func getYaraRules(key, rules string,
-	scope *vfilter.Scope) (*yara.Rules, error) {
+	scope vfilter.Scope) (*yara.Rules, error) {
 
 	// Try to get the compiled yara expression from the
 	// scope cache.
@@ -182,7 +182,7 @@ func scanFileByAccessor(
 	total_number_of_hits int64,
 	rules *yara.Rules,
 	output_chan chan vfilter.Row,
-	scope *vfilter.Scope) {
+	scope vfilter.Scope) {
 
 	accessor, err := glob.GetAccessor(accessor_name, scope)
 	if err != nil {
@@ -253,7 +253,7 @@ func scanFile(
 	total_number_of_hits int64,
 	rules *yara.Rules,
 	output_chan chan vfilter.Row,
-	scope *vfilter.Scope) error {
+	scope vfilter.Scope) error {
 
 	yara_flag := yara.ScanFlags(0)
 	if total_number_of_hits == 1 {
@@ -394,7 +394,7 @@ func getMatchStrings(r *yara.Rule) (matchstrings []yara.MatchString) {
 }
 
 func (self YaraScanPlugin) Info(
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "yara",
@@ -413,7 +413,7 @@ type YaraProcPluginArgs struct {
 type YaraProcPlugin struct{}
 
 func (self YaraProcPlugin) Info(
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "proc_yara",
@@ -424,7 +424,7 @@ func (self YaraProcPlugin) Info(
 
 func (self YaraProcPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -480,7 +480,7 @@ func (self YaraProcPlugin) Call(
 }
 
 // Provide a shortcut way to define common rules.
-func RuleGenerator(scope *vfilter.Scope, rule string) string {
+func RuleGenerator(scope vfilter.Scope, rule string) string {
 	rule = strings.TrimSpace(rule)
 
 	// Just a normal yara rule

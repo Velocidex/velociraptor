@@ -37,7 +37,7 @@ type MFTFileSystemAccessor struct {
 	*NTFSFileSystemAccessor
 }
 
-func (self MFTFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self MFTFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
 	ntfs_accessor, err := NTFSFileSystemAccessor{}.New(scope)
 	if err != nil {
 		return nil, err

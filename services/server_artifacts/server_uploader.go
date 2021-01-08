@@ -25,7 +25,7 @@ type ServerUploader struct {
 
 func (self *ServerUploader) Upload(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	filename string,
 	accessor string,
 	store_as_name string,

@@ -34,7 +34,7 @@ type IntArgs struct {
 type IntFunction struct{}
 
 func (self *IntFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &IntArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -68,7 +68,7 @@ func (self *IntFunction) Call(ctx context.Context,
 	return 0
 }
 
-func (self IntFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self IntFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "int",
 		Doc:     "Truncate to an integer.",
@@ -83,7 +83,7 @@ type StrFunctionArgs struct {
 type StrFunction struct{}
 
 func (self *StrFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &StrFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -104,7 +104,7 @@ func (self *StrFunction) Call(ctx context.Context,
 	}
 }
 
-func (self StrFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self StrFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "str",
 		Doc:     "Normalize a String.",

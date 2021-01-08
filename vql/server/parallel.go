@@ -59,7 +59,7 @@ type ParallelPlugin struct{}
 
 func (self ParallelPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -121,7 +121,7 @@ func (self ParallelPlugin) Call(
 }
 
 func (self ParallelPlugin) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "parallelize",
 		Doc:     "Runs query on result batches in parallel.",

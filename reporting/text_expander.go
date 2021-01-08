@@ -117,7 +117,7 @@ func (self *TextTemplateEngine) Table(values ...interface{}) string {
 
 func NewTextTemplateEngine(
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
 	repository services.Repository,
 	artifact_name string) (*TextTemplateEngine, error) {

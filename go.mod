@@ -12,7 +12,7 @@ require (
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
-	github.com/Velocidex/go-yara v1.1.10-0.20210105022745-1b550dfa67da // indirect
+	github.com/Velocidex/go-yara v1.1.10-0.20210105022745-1b550dfa67da
 	github.com/Velocidex/json v0.0.0-20200724131328-8f5c7b0a25ec
 	github.com/Velocidex/ordereddict v0.0.0-20200723153557-9460a6764ab8
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
@@ -116,8 +116,8 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20210106042051-b8120775c47f
-	www.velocidex.com/golang/vtypes v0.0.0-20201229070616-0b57670f1d00
+	www.velocidex.com/golang/vfilter v0.0.0-20210108133703-ae394da3f631
+	www.velocidex.com/golang/vtypes v0.0.0-20210108052555-8a27f80edada
 )
 
 // replace www.velocidex.com/golang/go-pe => /home/mic/projects/go-pe

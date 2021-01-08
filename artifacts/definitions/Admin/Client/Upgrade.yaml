@@ -15,7 +15,8 @@ tools:
 
 parameters:
   - name: SleepDuration
-    default: 600
+    default: "600"
+    type: int
     description: |
       The MSI file is typically very large and we do not want to
       overwhelm the server so we stagger the download over this many
@@ -26,7 +27,11 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
     query:  |
-      LET bin <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
+      // Force the file to be copied to the real temp directory since
+      // we are just about to remove the Tools directory.
+      LET bin <= SELECT copy(filename=FullPath,
+          dest=expand(path="%SYSTEMROOT%\\Temp\\") + basename(path=FullPath)) AS Dest
+      FROM Artifact.Generic.Utils.FetchBinary(
          ToolName="WindowsMSI", IsExecutable=FALSE,
          SleepDuration=SleepDuration)
 
@@ -35,6 +40,6 @@ sources:
       SELECT * FROM foreach(row=bin,
       query={
          SELECT * FROM execve(
-              argv=["msiexec.exe", "/i", FullPath, "/q"],
+              argv=["msiexec.exe", "/i", Dest, "/q"],
               length=10000000)
       })

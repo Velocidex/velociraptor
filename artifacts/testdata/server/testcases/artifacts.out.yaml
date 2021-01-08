@@ -43,6 +43,44 @@ SELECT * FROM uploads(client_id='C.4f5e52adf0a337a9', flow_id='F.BN2HJCPOF5U7U')
    "compiled_collector_args": []
   }
  }
+]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', spec=dict(`Windows.KapeFiles.Targets`=dict( Device ='C:', VSSAnalysis='Y', KapeTriage='Y'))).request AS Flow FROM scope()[
+ {
+  "Flow": {
+   "creator": "",
+   "client_id": "C.11a3013ccaXXXXX",
+   "urgent": false,
+   "artifacts": [
+    "Windows.KapeFiles.Targets"
+   ],
+   "specs": [
+    {
+     "artifact": "Windows.KapeFiles.Targets",
+     "parameters": {
+      "env": [
+       {
+        "key": "Device",
+        "value": "C:"
+       },
+       {
+        "key": "VSSAnalysis",
+        "value": "Y"
+       },
+       {
+        "key": "KapeTriage",
+        "value": "Y"
+       }
+      ]
+     }
+    }
+   ],
+   "ops_per_second": 0,
+   "timeout": 0,
+   "max_rows": 0,
+   "max_upload_bytes": 0,
+   "allow_custom_overrides": false,
+   "compiled_collector_args": []
+  }
+ }
 ]SELECT name FROM artifact_definitions(names='Windows.KapeFiles.Targets') ORDER BY name[
  {
   "name": "Windows.Collectors.File"

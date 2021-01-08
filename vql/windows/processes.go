@@ -160,7 +160,7 @@ type PslistPlugin struct{}
 
 func (self PslistPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	arg := &PslistArgs{}
@@ -243,7 +243,7 @@ func (self PslistPlugin) Call(
 	return output_chan
 }
 
-func (self PslistPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self PslistPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "pslist",
 		Doc:     "Enumerate running processes.",

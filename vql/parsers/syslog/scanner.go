@@ -19,7 +19,7 @@ type ScannerPluginArgs struct {
 
 type ScannerPlugin struct{}
 
-func (self ScannerPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self ScannerPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "parse_lines",
 		Doc:     "Parse a file separated into lines.",
@@ -28,7 +28,7 @@ func (self ScannerPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 }
 
 func (self ScannerPlugin) Call(
-	ctx context.Context, scope *vfilter.Scope,
+	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -84,7 +84,7 @@ type _WatchSyslogPlugin struct{}
 
 func (self _WatchSyslogPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -136,7 +136,7 @@ func (self _WatchSyslogPlugin) Call(
 	return output_chan
 }
 
-func (self _WatchSyslogPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self _WatchSyslogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "watch_syslog",
 		Doc:     "Watch a syslog file and stream events from it. ",
@@ -144,7 +144,7 @@ func (self _WatchSyslogPlugin) Info(scope *vfilter.Scope, type_map *vfilter.Type
 	}
 }
 
-func maybeOpenGzip(scope *vfilter.Scope,
+func maybeOpenGzip(scope vfilter.Scope,
 	accessor_name, filename string) (io.ReadCloser, error) {
 	accessor, err := glob.GetAccessor(accessor_name, scope)
 	if err != nil {

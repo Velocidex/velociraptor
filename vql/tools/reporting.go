@@ -44,7 +44,7 @@ func produceReport(
 	repository services.Repository,
 	writer io.Writer,
 	definitions []*artifacts_proto.Artifact,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	arg *CollectPluginArgs) error {
 
 	builder := services.ScopeBuilderFromScope(scope)
@@ -137,7 +137,7 @@ type ArchiveSourcePlugin struct {
 
 func (self *ArchiveSourcePlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -176,7 +176,7 @@ func (self *ArchiveSourcePlugin) Call(
 }
 
 func (self ArchiveSourcePlugin) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "source",
 		Doc:     "Retrieve rows from stored result sets. This is a one stop show for retrieving stored result set for post processing.",
@@ -184,7 +184,7 @@ func (self ArchiveSourcePlugin) Info(
 	}
 }
 
-func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
+func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope vfilter.Scope) {
 	artifact_name, pres := scope.Resolve("ArtifactName")
 	if pres {
 		arg.Artifact = artifact_name.(string)

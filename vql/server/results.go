@@ -49,7 +49,7 @@ type UploadsPlugins struct{}
 
 func (self UploadsPlugins) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -98,7 +98,7 @@ func (self UploadsPlugins) Call(
 }
 
 func (self UploadsPlugins) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "uploads",
 		Doc:     "Retrieve information about a flow's uploads.",
@@ -147,7 +147,7 @@ type SourcePlugin struct{}
 
 func (self SourcePlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -234,7 +234,7 @@ func (self SourcePlugin) Call(
 }
 
 func (self SourcePlugin) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "source",
 		Doc:     "Retrieve rows from stored result sets. This is a one stop show for retrieving stored result set for post processing.",
@@ -347,7 +347,7 @@ func getResultSetReader(
 }
 
 // Override SourcePluginArgs from the scope.
-func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
+func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope vfilter.Scope) {
 	client_id, pres := scope.Resolve("ClientId")
 	if pres {
 		arg.ClientId, _ = client_id.(string)
@@ -415,7 +415,7 @@ type FlowResultsPlugin struct{}
 
 func (self FlowResultsPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
@@ -485,7 +485,7 @@ func (self FlowResultsPlugin) Call(
 	return output_chan
 }
 
-func (self FlowResultsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self FlowResultsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "flow_results",
 		Doc:     "Retrieve the results of a flow.",

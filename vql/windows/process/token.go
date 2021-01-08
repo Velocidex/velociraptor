@@ -22,7 +22,7 @@ type TokenFunction struct{}
 
 func (self TokenFunction) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
@@ -99,7 +99,7 @@ func (self TokenFunction) Call(
 	return result
 }
 
-func (self TokenFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self TokenFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "token",
 		Doc:     "Extract process token.",

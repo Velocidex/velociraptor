@@ -41,7 +41,7 @@ type CreateFlowDownloadArgs struct {
 type CreateFlowDownload struct{}
 
 func (self *CreateFlowDownload) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &CreateFlowDownloadArgs{}
@@ -93,7 +93,7 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func (self CreateFlowDownload) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self CreateFlowDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "create_flow_download",
 		Doc:     "Creates a download pack for the flow.",
@@ -112,7 +112,7 @@ type CreateHuntDownloadArgs struct {
 type CreateHuntDownload struct{}
 
 func (self *CreateHuntDownload) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &CreateHuntDownloadArgs{}
@@ -164,7 +164,7 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 	return result
 }
 
-func (self CreateHuntDownload) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self CreateHuntDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "create_hunt_download",
 		Doc:     "Creates a download pack for a hunt.",
@@ -368,7 +368,7 @@ func downloadFlowToZip(
 func createHuntDownloadFile(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	hunt_id string,
 	write_json, write_csv bool,
 	wait, only_combined bool,
@@ -588,7 +588,7 @@ func createHuntDownloadFile(
 func StoreVQLAsCSVAndJsonFile(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	query string,
 	write_csv bool,
 	write_json bool,

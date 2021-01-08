@@ -34,7 +34,7 @@ type InventoryAddFunctionArgs struct {
 type InventoryAddFunction struct{}
 
 func (self *InventoryAddFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &InventoryAddFunctionArgs{}
@@ -121,7 +121,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 }
 
 func (self *InventoryAddFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "inventory_add",
 		Doc:     "Add tool to ThirdParty inventory.",
@@ -136,7 +136,7 @@ type InventoryGetFunctionArgs struct {
 type InventoryGetFunction struct{}
 
 func (self *InventoryGetFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &InventoryGetFunctionArgs{}
@@ -177,7 +177,7 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 }
 
 func (self *InventoryGetFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "inventory_get",
 		Doc:     "Get tool info from inventory service.",
@@ -191,7 +191,7 @@ type InventoryPlugin struct{}
 
 func (self InventoryPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -211,7 +211,7 @@ func (self InventoryPlugin) Call(
 	return output_chan
 }
 
-func (self InventoryPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self InventoryPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "inventory",
 		Doc:     "Retrieve the tools inventory.",

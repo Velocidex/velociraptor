@@ -27,7 +27,7 @@ type ProfilePluginArgs struct {
 	Duration  int64 `vfilter:"optional,field=duration,doc=Duration of samples (default 30 sec)"`
 }
 
-func remove(scope *vfilter.Scope, name string) {
+func remove(scope vfilter.Scope, name string) {
 	scope.Log("profile: removing tempfile %v", name)
 
 	// On windows especially we can not remove files that
@@ -42,7 +42,7 @@ func remove(scope *vfilter.Scope, name string) {
 	}
 }
 
-func writeProfile(scope *vfilter.Scope,
+func writeProfile(scope vfilter.Scope,
 	output_chan chan vfilter.Row, name string, debug int64) {
 	tmpfile, err := ioutil.TempFile("", "tmp*.tmp")
 	if err != nil {
@@ -72,7 +72,7 @@ func writeProfile(scope *vfilter.Scope,
 
 func writeCPUProfile(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	output_chan chan vfilter.Row, duration int64) {
 	tmpfile, err := tempfile.TempFile("", "tmp", ".tmp")
 	if err != nil {
@@ -102,7 +102,7 @@ func writeCPUProfile(
 
 func writeTraceProfile(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	output_chan chan vfilter.Row, duration int64) {
 	tmpfile, err := tempfile.TempFile("", "tmp", ".tmp")
 	if err != nil {
@@ -133,7 +133,7 @@ func writeTraceProfile(
 type ProfilePlugin struct{}
 
 func (self *ProfilePlugin) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -191,7 +191,7 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 }
 
 func (self ProfilePlugin) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "profile",
 		Doc:     "Returns a profile dump from the running process.",

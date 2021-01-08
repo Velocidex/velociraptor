@@ -18,7 +18,7 @@ type PatchFunctionArgs struct {
 
 type PatchFunction struct{}
 
-func (self PatchFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self PatchFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "patch",
 		Doc:     "Patch a JSON object with a json patch.",
@@ -41,7 +41,7 @@ func to_json(item vfilter.Any) ([]byte, error) {
 
 func (self *PatchFunction) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &PatchFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)

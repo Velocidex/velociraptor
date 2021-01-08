@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/protocols"
 )
 
 // Block potentially dangerous methods.
@@ -45,20 +46,20 @@ func (self _ProcessFieldImpl) Applicable(a vfilter.Any, b vfilter.Any) bool {
 }
 
 func (self _ProcessFieldImpl) Associative(
-	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
+	scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
 	field := b.(string)
 
 	if utils.InString(_BlockedMembers, field) {
 		return false, true
 	}
 
-	res, pres := vfilter.DefaultAssociative{}.Associative(scope, a, b)
+	res, pres := protocols.DefaultAssociative{}.Associative(scope, a, b)
 	return res, pres
 }
 
-func (self _ProcessFieldImpl) GetMembers(scope *vfilter.Scope, a vfilter.Any) []string {
+func (self _ProcessFieldImpl) GetMembers(scope vfilter.Scope, a vfilter.Any) []string {
 	var result []string
-	for _, item := range (vfilter.DefaultAssociative{}).GetMembers(scope, a) {
+	for _, item := range (protocols.DefaultAssociative{}).GetMembers(scope, a) {
 		if !utils.InString(_BlockedMembers, item) {
 			result = append(result, item)
 		}
@@ -76,7 +77,7 @@ func init() {
 	RegisterPlugin(vfilter.GenericListPlugin{
 		PluginName: "pslist",
 		Function: func(
-			scope *vfilter.Scope,
+			scope vfilter.Scope,
 			args *ordereddict.Dict) []vfilter.Row {
 			var result []vfilter.Row
 

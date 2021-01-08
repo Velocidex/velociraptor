@@ -158,7 +158,7 @@ FROM scope()
    "Name1",
    "Name2"
   ],
-  "IOCdata": "[]vfilter.Any{\"Foobar\", \"Other Hit\"} [Foobar Other Hit]",
+  "IOCdata": "[]types.Any{\"Foobar\", \"Other Hit\"} [Foobar Other Hit]",
   "_Source": "Windows.Detection.RemoteYara.Process"
  }
 ]SELECT mock_check(plugin='proc_dump', expected_calls=0), mock_check(function='upload', expected_calls=0), mock_check(plugin="proc_yara", expected_calls=1) FROM scope()[
@@ -189,7 +189,7 @@ FROM scope()
    "Name1",
    "Name2"
   ],
-  "IOCdata": "[]vfilter.Any{\"Foobar\", \"Other Hit\"} [Foobar Other Hit]",
+  "IOCdata": "[]types.Any{\"Foobar\", \"Other Hit\"} [Foobar Other Hit]",
   "_Source": "Windows.Detection.RemoteYara.Process"
  }
 ]SELECT mock_check(plugin='proc_dump', expected_calls=0), mock_check(function='upload', expected_calls=0), mock_check(plugin="proc_yara", expected_calls=1) FROM scope()[
@@ -220,7 +220,7 @@ FROM scope()
    "Name1",
    "Name2"
   ],
-  "IOCdata": "[]vfilter.Any{\"Foobar\", \"Other Hit\"} [Foobar Other Hit]",
+  "IOCdata": "[]types.Any{\"Foobar\", \"Other Hit\"} [Foobar Other Hit]",
   "_Source": "Windows.Detection.RemoteYara.Process"
  },
  {

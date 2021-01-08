@@ -33,7 +33,7 @@ func (self TimeVal) Time() time.Time {
 	return time.Unix(self.Sec, 0)
 }
 
-func (self TimeVal) Materialize(ctx context.Context, scope *vfilter.Scope) vfilter.Any {
+func (self TimeVal) Materialize(ctx context.Context, scope vfilter.Scope) vfilter.Any {
 	res, _ := self.Time().UTC().MarshalText()
 	return string(res)
 }

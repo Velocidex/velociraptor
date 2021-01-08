@@ -7,6 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/protocols"
 )
 
 type _BoolDict struct{}
@@ -24,7 +25,7 @@ func (self _BoolDict) Applicable(a vfilter.Any) bool {
 	return rt.Kind() == reflect.Slice || rt.Kind() == reflect.Map
 }
 
-func (self _BoolDict) Bool(scope *vfilter.Scope, a vfilter.Any) bool {
+func (self _BoolDict) Bool(scope vfilter.Scope, a vfilter.Any) bool {
 	switch t := a.(type) {
 	case ordereddict.Dict:
 		return t.Len() > 0
@@ -54,7 +55,7 @@ func (self _BoolTime) Applicable(a vfilter.Any) bool {
 	return false
 }
 
-func (self _BoolTime) Bool(scope *vfilter.Scope, a vfilter.Any) bool {
+func (self _BoolTime) Bool(scope vfilter.Scope, a vfilter.Any) bool {
 	switch t := a.(type) {
 	case time.Time:
 		return t.Unix() > 0
@@ -67,7 +68,7 @@ func (self _BoolTime) Bool(scope *vfilter.Scope, a vfilter.Any) bool {
 
 type _BoolEq struct{}
 
-func (self _BoolEq) Eq(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+func (self _BoolEq) Eq(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
 	b_value := false
 	switch t := b.(type) {
 	case string:
@@ -114,16 +115,16 @@ func (self _GlobFileInfoAssociative) Applicable(
 }
 
 func (self _GlobFileInfoAssociative) Associative(
-	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (
+	scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (
 	vfilter.Any, bool) {
-	return vfilter.DefaultAssociative{}.Associative(scope, a, b)
+	return protocols.DefaultAssociative{}.Associative(scope, a, b)
 }
 
 // Only expose some fields that are explicitly provided by the
 // glob.FileInfo interface. This cleans up * expansion in SELECT *
 // FROM ...
 func (self _GlobFileInfoAssociative) GetMembers(
-	scope *vfilter.Scope, a vfilter.Any) []string {
+	scope vfilter.Scope, a vfilter.Any) []string {
 	return []string{"Name", "ModTime", "FullPath", "Mtime",
 		"Ctime", "Atime", "Data", "Size",
 		"IsDir", "IsLink", "Mode", "Sys"}

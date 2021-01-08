@@ -24,7 +24,7 @@ type DeleteClientArgs struct {
 type DeleteClientPlugin struct{}
 
 func (self *DeleteClientPlugin) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 
 	output_chan := make(chan vfilter.Row)
@@ -160,7 +160,7 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 }
 
 func (self DeleteClientPlugin) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "client_delete",
 		Doc:     "Delete all information related to a client. ",

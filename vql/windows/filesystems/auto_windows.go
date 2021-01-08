@@ -13,7 +13,7 @@ type AutoFilesystemAccessor struct {
 	file_delegate glob.FileSystemAccessor
 }
 
-func (self AutoFilesystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self AutoFilesystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
 	ntfs_base, err := NTFSFileSystemAccessor{}.New(scope)
 	if err != nil {
 		return nil, err

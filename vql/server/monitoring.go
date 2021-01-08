@@ -36,7 +36,7 @@ type MonitoringPlugin struct{}
 
 func (self MonitoringPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -84,7 +84,7 @@ func (self MonitoringPlugin) Call(
 	return output_chan
 }
 
-func (self MonitoringPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self MonitoringPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: "monitoring",
 		Doc: "Extract monitoring log from a client. If client_id is not specified " +
@@ -103,7 +103,7 @@ type WatchMonitoringPlugin struct{}
 
 func (self WatchMonitoringPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -171,7 +171,7 @@ func (self WatchMonitoringPlugin) Call(
 	return output_chan
 }
 
-func (self WatchMonitoringPlugin) Info(scope *vfilter.Scope,
+func (self WatchMonitoringPlugin) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: "watch_monitoring",

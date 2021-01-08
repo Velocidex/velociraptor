@@ -40,7 +40,7 @@ type GlobPlugin struct{}
 
 func (self GlobPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	globber := make(glob.Globber)
 	output_chan := make(chan vfilter.Row)
@@ -117,7 +117,7 @@ func (self GlobPlugin) Call(
 	return output_chan
 }
 
-func (self GlobPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self GlobPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "glob",
 		Doc:     "Retrieve files based on a list of glob expressions",
@@ -143,7 +143,7 @@ type ReadFilePlugin struct{}
 
 func (self ReadFilePlugin) processFile(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	arg *ReadFileArgs,
 	accessor glob.FileSystemAccessor,
 	file string,
@@ -193,7 +193,7 @@ func (self ReadFilePlugin) processFile(
 
 func (self ReadFilePlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -238,7 +238,7 @@ func (self ReadFilePlugin) Name() string {
 	return "read_file"
 }
 
-func (self ReadFilePlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self ReadFilePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "read_file",
 		Doc:     "Read files in chunks.",
@@ -255,7 +255,7 @@ type ReadFileFunctionArgs struct {
 type ReadFileFunction struct{}
 
 func (self *ReadFileFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &ReadFileFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -293,7 +293,7 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 	return string(buf[:n])
 }
 
-func (self ReadFileFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self ReadFileFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "read_file",
 		Doc:     "Read a file into a string.",
@@ -310,7 +310,7 @@ type StatPlugin struct{}
 
 func (self *StatPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -355,7 +355,7 @@ func (self StatPlugin) Name() string {
 	return "stat"
 }
 
-func (self StatPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self StatPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "stat",
 		Doc:     "Get file information. Unlike glob() this does not support wildcards.",
@@ -370,7 +370,7 @@ func init() {
 		vfilter.GenericListPlugin{
 			PluginName: "filesystems",
 			Function: func(
-				scope *vfilter.Scope,
+				scope vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 				partitions, err := disk.Partitions(true)

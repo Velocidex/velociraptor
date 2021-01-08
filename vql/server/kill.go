@@ -28,7 +28,7 @@ type KillClientFunctionArgs struct {
 type KillClientFunction struct{}
 
 func (self *KillClientFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
@@ -78,7 +78,7 @@ func (self *KillClientFunction) Call(ctx context.Context,
 }
 
 func (self KillClientFunction) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "killkillkill",
 		Doc:     "Kills the client and forces a restart - this is very aggresive!",

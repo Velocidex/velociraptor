@@ -49,7 +49,7 @@ type HuntsPlugin struct{}
 
 func (self HuntsPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
@@ -124,7 +124,7 @@ func (self HuntsPlugin) Call(
 	return output_chan
 }
 
-func (self HuntsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self HuntsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "hunts",
 		Doc:     "Retrieve the list of hunts.",
@@ -143,7 +143,7 @@ type HuntResultsPlugin struct{}
 
 func (self HuntResultsPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -284,7 +284,7 @@ func (self HuntResultsPlugin) Call(
 	return output_chan
 }
 
-func (self HuntResultsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self HuntResultsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "hunt_results",
 		Doc:     "Retrieve the results of a hunt.",
@@ -302,7 +302,7 @@ type HuntFlowsPlugin struct{}
 
 func (self HuntFlowsPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
@@ -376,7 +376,7 @@ func (self HuntFlowsPlugin) Call(
 	return output_chan
 }
 
-func (self HuntFlowsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self HuntFlowsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "hunt_flows",
 		Doc:     "Retrieve the flows launched by a hunt.",

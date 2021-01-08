@@ -34,7 +34,7 @@ type _PlistFunctionArgs struct {
 
 type PlistFunction struct{}
 
-func (self PlistFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self PlistFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "plist",
 		Doc:     "Parse plist file",
@@ -43,7 +43,7 @@ func (self PlistFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 }
 
 func (self *PlistFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) (result vfilter.Any) {
 	arg := &_PlistFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -106,7 +106,7 @@ type _PlistPluginArgs struct {
 
 type _PlistPlugin struct{}
 
-func (self _PlistPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self _PlistPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "plist",
 		Doc:     "Parses a plist file.",
@@ -116,7 +116,7 @@ func (self _PlistPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *
 
 func (self _PlistPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 

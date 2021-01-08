@@ -76,7 +76,7 @@ type SearchPlugin struct{}
 
 func (self SearchPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -125,7 +125,7 @@ func (self SearchPlugin) Call(
 	return output_chan
 }
 
-func (self SearchPlugin) Info(scope *vfilter.Scope,
+func (self SearchPlugin) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "search",

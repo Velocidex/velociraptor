@@ -9,6 +9,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 const (
@@ -19,8 +21,8 @@ type _CacheObj struct {
 	mu         sync.Mutex
 	expires    time.Time
 	period     time.Duration
-	expression vfilter.LazyExpr
-	scope      *vfilter.Scope
+	expression types.LazyExpr
+	scope      types.Scope
 	ctx        context.Context
 	key        string
 	cache      map[string]vfilter.Any
@@ -55,7 +57,7 @@ func (self *_CacheObj) Materialize() {
 	self.scope.Log("Materializing memoized query")
 
 	self.cache = make(map[string]vfilter.Any)
-	stored_query := self.expression.ToStoredQuery(self.scope)
+	stored_query := arg_parser.ToStoredQuery(self.expression)
 	for row_item := range stored_query.Eval(self.ctx, self.scope) {
 		key, pres := self.scope.Associative(row_item, self.key)
 		if pres {
@@ -65,7 +67,7 @@ func (self *_CacheObj) Materialize() {
 	}
 }
 
-func NewCacheObj(ctx context.Context, scope *vfilter.Scope, key string) *_CacheObj {
+func NewCacheObj(ctx context.Context, scope vfilter.Scope, key string) *_CacheObj {
 	return &_CacheObj{
 		scope: scope,
 		ctx:   ctx,
@@ -84,13 +86,13 @@ func (self _CacheAssociative) Applicable(a vfilter.Any, b vfilter.Any) bool {
 
 // Associate object a with key b
 func (self _CacheAssociative) Associative(
-	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
+	scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
 	cache_obj, ok := a.(*_CacheObj)
 	if !ok {
 		return vfilter.Null{}, false
 	}
 
-	lazy_b, ok := b.(*vfilter.LazyExpr)
+	lazy_b, ok := b.(types.LazyExpr)
 	if ok {
 		b = lazy_b.ReduceWithScope(scope)
 	}
@@ -109,20 +111,20 @@ func (self _CacheAssociative) Associative(
 	return res, true
 }
 
-func (self _CacheAssociative) GetMembers(scope *vfilter.Scope, a vfilter.Any) []string {
+func (self _CacheAssociative) GetMembers(scope vfilter.Scope, a vfilter.Any) []string {
 	return nil
 }
 
 type _CacheFunctionArgs struct {
-	Func   vfilter.LazyExpr `vfilter:"required,field=func,doc=A function to evaluate"`
-	Name   string           `vfilter:"optional,field=name,doc=The global name of this cache (needed when more than one)"`
-	Key    string           `vfilter:"required,field=key,doc=Cache key to use."`
-	Period int64            `vfilter:"optional,field=period,doc=The latest age of the cache."`
+	Func   types.LazyExpr `vfilter:"required,field=func,doc=A function to evaluate"`
+	Name   string         `vfilter:"optional,field=name,doc=The global name of this cache (needed when more than one)"`
+	Key    string         `vfilter:"required,field=key,doc=Cache key to use."`
+	Period int64          `vfilter:"optional,field=period,doc=The latest age of the cache."`
 }
 
 type _CacheFunc struct{}
 
-func (self _CacheFunc) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _CacheFunc) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "cache",
 		Doc:     "Creates a cache object",
@@ -130,7 +132,7 @@ func (self _CacheFunc) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	}
 }
 
-func (self _CacheFunc) Call(ctx context.Context, scope *vfilter.Scope,
+func (self _CacheFunc) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &_CacheFunctionArgs{}
@@ -169,14 +171,14 @@ func (self _CacheFunc) Call(ctx context.Context, scope *vfilter.Scope,
 }
 
 type _MemoizeFunctionArgs struct {
-	Query  vfilter.LazyExpr `vfilter:"required,field=query,doc=Query to expand into memory"`
-	Key    string           `vfilter:"required,field=key,doc=The name of the column to use as a key."`
-	Period int64            `vfilter:"optional,field=period,doc=The latest age of the cache."`
+	Query  types.LazyExpr `vfilter:"required,field=query,doc=Query to expand into memory"`
+	Key    string         `vfilter:"required,field=key,doc=The name of the column to use as a key."`
+	Period int64          `vfilter:"optional,field=period,doc=The latest age of the cache."`
 }
 
 type _MemoizeFunction struct{}
 
-func (self _MemoizeFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _MemoizeFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "memoize",
 		Doc:     "Memoize a query into memory.",
@@ -184,7 +186,7 @@ func (self _MemoizeFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMa
 	}
 }
 
-func (self _MemoizeFunction) Call(ctx context.Context, scope *vfilter.Scope,
+func (self _MemoizeFunction) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &_MemoizeFunctionArgs{}

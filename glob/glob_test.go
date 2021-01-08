@@ -101,7 +101,7 @@ func TestFnMatchTranslate(t *testing.T) {
 
 type MockFileSystemAccessor []string
 
-func (self MockFileSystemAccessor) New(scope *vfilter.Scope) FileSystemAccessor {
+func (self MockFileSystemAccessor) New(scope vfilter.Scope) FileSystemAccessor {
 	return self
 }
 

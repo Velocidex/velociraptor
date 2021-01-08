@@ -46,7 +46,7 @@ type _SRUMLookupIdArgs struct {
 
 type _SRUMLookupId struct{}
 
-func (self _SRUMLookupId) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _SRUMLookupId) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "srum_lookup_id",
 		Doc:     "Lookup a SRUM id.",
@@ -55,7 +55,7 @@ func (self _SRUMLookupId) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 }
 
 func (self _SRUMLookupId) Call(
-	ctx context.Context, scope *vfilter.Scope,
+	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	defer utils.RecoverVQL(scope)
@@ -182,7 +182,7 @@ type _ESEPlugin struct{}
 
 func (self _ESEPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
@@ -259,7 +259,7 @@ func (self _ESEPlugin) Call(
 	return output_chan
 }
 
-func (self _ESEPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self _ESEPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "parse_ese",
 		Doc:     "Opens an ESE file and dump a table.",

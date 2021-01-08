@@ -531,7 +531,7 @@ func (self *logWriter) Messages() []string {
 func NewGuiTemplateEngine(
 	config_obj *config_proto.Config,
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
 	repository services.Repository,
 	notebook_cell_path_manager *NotebookCellPathManager,
@@ -545,7 +545,7 @@ func NewGuiTemplateEngine(
 	}
 
 	log_writer := &logWriter{}
-	base_engine.Scope.Logger = log.New(log_writer, "", 0)
+	base_engine.Scope.SetLogger(log.New(log_writer, "", 0))
 	template_engine := &GuiTemplateEngine{
 		BaseTemplateEngine: base_engine,
 		ctx:                ctx,

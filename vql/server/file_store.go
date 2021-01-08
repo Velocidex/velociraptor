@@ -39,7 +39,7 @@ type DeleteFileStoreArgs struct {
 type DeleteFileStore struct{}
 
 func (self *DeleteFileStore) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &DeleteFileStoreArgs{}
 
@@ -80,7 +80,7 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 	return arg.VFSPath
 }
 
-func (self DeleteFileStore) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self DeleteFileStore) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "file_store_delete",
 		Doc:     "Delete file store paths into full filesystem paths. ",
@@ -95,7 +95,7 @@ type FileStoreArgs struct {
 type FileStore struct{}
 
 func (self *FileStore) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &FileStoreArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -121,7 +121,7 @@ func (self *FileStore) Call(ctx context.Context,
 	return result
 }
 
-func (self FileStore) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self FileStore) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "file_store",
 		Doc:     "Resolves file store paths into full filesystem paths. ",

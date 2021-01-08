@@ -35,7 +35,7 @@ type _ParseXMLFunction struct{}
 
 func (self _ParseXMLFunction) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ParseXMLFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -72,7 +72,7 @@ func (self _ParseXMLFunction) Call(
 	return result.Old()
 }
 
-func (self _ParseXMLFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _ParseXMLFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "parse_xml",
 		Doc:     "Parse an XML document into a map.",

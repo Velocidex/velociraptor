@@ -10,7 +10,7 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-func EncOptsFromScope(scope *vfilter.Scope) *json.EncOpts {
+func EncOptsFromScope(scope vfilter.Scope) *json.EncOpts {
 	// Default timezone is UTC
 	location := time.UTC
 
@@ -57,13 +57,13 @@ func EncOptsFromScope(scope *vfilter.Scope) *json.EncOpts {
 }
 
 // Utilities for encoding json via the vfilter API.
-func MarshalJson(scope *vfilter.Scope) vfilter.RowEncoder {
+func MarshalJson(scope vfilter.Scope) vfilter.RowEncoder {
 	return func(rows []vfilter.Row) ([]byte, error) {
 		return json.MarshalWithOptions(rows, EncOptsFromScope(scope))
 	}
 }
 
-func MarshalJsonIndent(scope *vfilter.Scope) vfilter.RowEncoder {
+func MarshalJsonIndent(scope vfilter.Scope) vfilter.RowEncoder {
 	return func(rows []vfilter.Row) ([]byte, error) {
 		b, err := json.MarshalWithOptions(rows, EncOptsFromScope(scope))
 		if err != nil {
@@ -78,7 +78,7 @@ func MarshalJsonIndent(scope *vfilter.Scope) vfilter.RowEncoder {
 	}
 }
 
-func MarshalJsonl(scope *vfilter.Scope) vfilter.RowEncoder {
+func MarshalJsonl(scope vfilter.Scope) vfilter.RowEncoder {
 	options := EncOptsFromScope(scope)
 
 	return func(rows []vfilter.Row) ([]byte, error) {

@@ -30,7 +30,7 @@
                         </Component>
                   </Directory>
           <Component Id='MainExecutable'
-                     Guid='35e9ec26-d243-4fcd-9b5b-6ad37345ccea'>
+                     Guid='*'>
             <File Id='ServiceEXE' Name='$(var.BinaryName)'
                   DiskId='1'
                   Source='Output/Velociraptor.exe' KeyPath='yes'>

@@ -28,7 +28,7 @@ type BaseTemplateEngine struct {
 	Artifact   *artifacts_proto.Artifact
 	Env        *ordereddict.Dict
 	Repository services.Repository
-	Scope      *vfilter.Scope
+	Scope      vfilter.Scope
 	logger     *logging.LogContext
 	config_obj *config_proto.Config
 }
@@ -318,7 +318,7 @@ func GenerateHuntReport(template_engine TemplateEngine,
 
 func newBaseTemplateEngine(
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
 	repository services.Repository,
 	artifact_name string) (

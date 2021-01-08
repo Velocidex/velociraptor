@@ -40,7 +40,7 @@ type _ExpandPath struct{}
 
 func (self _ExpandPath) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
@@ -68,7 +68,7 @@ func (self _ExpandPath) Call(
 	return expanded_path
 }
 
-func (self _ExpandPath) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _ExpandPath) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "expand",
 		Doc:     "Expand the path using the environment.",

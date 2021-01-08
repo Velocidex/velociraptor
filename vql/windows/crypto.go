@@ -151,7 +151,7 @@ func (self *CertContext) HexSerialNumber() string {
 	return self.SerialNumber.Text(16)
 }
 
-func runCertificates(scope *vfilter.Scope,
+func runCertificates(scope vfilter.Scope,
 	args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 

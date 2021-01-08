@@ -3,12 +3,13 @@ package parsers
 import (
 	"context"
 	"io"
+
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	vfilter "www.velocidex.com/golang/vfilter"
 	recyclebin "www.velocidex.com/golang/velociraptor/vql/parsers/recyclebin"
+	vfilter "www.velocidex.com/golang/vfilter"
 )
 
 /*
@@ -33,8 +34,7 @@ type _RecycleBinPluginArgs struct {
 
 type _RecycleBinPlugin struct{}
 
-
-func (self _RecycleBinPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self _RecycleBinPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "parse_recyclebin",
 		Doc:     "Parses a $I file found in the $Recycle.Bin",
@@ -44,7 +44,7 @@ func (self _RecycleBinPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeM
 
 func (self _RecycleBinPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -67,7 +67,7 @@ func (self _RecycleBinPlugin) Call(
 		for _, filename := range arg.Filenames {
 			func() {
 				defer utils.RecoverVQL(scope)
-				
+
 				accessor, err := glob.GetAccessor(arg.Accessor, scope)
 				if err != nil {
 					scope.Log("parse_recyclebin: %v", err)
@@ -107,7 +107,6 @@ func (self _RecycleBinPlugin) Call(
 
 	return output_chan
 }
-
 
 func init() {
 	vql_subsystem.RegisterPlugin(&_RecycleBinPlugin{})

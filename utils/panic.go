@@ -17,7 +17,7 @@ func CheckForPanic(msg string, vals ...interface{}) {
 	}
 }
 
-func RecoverVQL(scope *vfilter.Scope) {
+func RecoverVQL(scope vfilter.Scope) {
 	r := recover()
 	if r != nil {
 		scope.Log("PANIC: %v\n", r)

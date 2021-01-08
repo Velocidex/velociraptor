@@ -33,7 +33,7 @@ type WinObjPlugin struct{}
 
 func (self WinObjPlugin) Call(
 	ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -68,7 +68,7 @@ func (self WinObjPlugin) Call(
 	return output_chan
 }
 
-func (self WinObjPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self WinObjPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "winobj",
 		Doc:     "Enumerate The Windows Object Manager namespace.",
@@ -78,7 +78,7 @@ func (self WinObjPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *
 
 // GetObjects recursively traverses the object manager directories.
 func GetObjects(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	path string,
 	output_chan chan<- vfilter.Row, depth int) {
 
@@ -148,7 +148,7 @@ func GetObjects(ctx context.Context,
 }
 
 // Encrich the WinObjDesc with additional information
-func descObject(scope *vfilter.Scope, info *WinObjDesc) {
+func descObject(scope vfilter.Scope, info *WinObjDesc) {
 	switch info.Type {
 	case "SymbolicLink":
 		obj_attr := ntdll.NewObjectAttributes(info.Name, 0, 0, nil)

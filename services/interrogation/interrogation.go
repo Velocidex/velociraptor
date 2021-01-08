@@ -167,7 +167,7 @@ func (self *InterrogationService) Start(
 
 	return watchForFlowCompletion(
 		ctx, wg, config_obj, "Generic.Client.Info/BasicInformation",
-		func(ctx context.Context, scope *vfilter.Scope, row *ordereddict.Dict) {
+		func(ctx context.Context, scope vfilter.Scope, row *ordereddict.Dict) {
 			err := self.ProcessRow(ctx, config_obj, scope, row)
 			if err != nil {
 				logger.Error(fmt.Sprintf("InterrogationService: %v", err))
@@ -178,7 +178,7 @@ func (self *InterrogationService) Start(
 func (self *InterrogationService) ProcessRow(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope *vfilter.Scope, row *ordereddict.Dict) error {
+	scope vfilter.Scope, row *ordereddict.Dict) error {
 	client_id, _ := row.GetString("ClientId")
 	if client_id == "" {
 		return errors.New("Unknown ClientId")

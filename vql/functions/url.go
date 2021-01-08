@@ -40,7 +40,7 @@ type UrlArgs struct {
 type UrlFunction struct{}
 
 func (self *UrlFunction) Call(ctx context.Context,
-	scope *vfilter.Scope,
+	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &UrlArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -81,7 +81,7 @@ func normalize_path(path string) string {
 	return "/" + path
 }
 
-func (self UrlFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self UrlFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "url",
 		Doc:     "Construct a URL or parse one.",
