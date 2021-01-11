@@ -210,7 +210,7 @@ func (self DNSEventPlugin) Call(
 			C.destroyDNS(c_ctx)
 			cancel()
 		}
-		err := scope.AddDestructor(dest)
+		err = scope.AddDestructor(dest)
 		if err != nil {
 			dest()
 			scope.Log("dns: %s", err.Error())
