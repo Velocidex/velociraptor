@@ -1,0 +1,25 @@
+Queries:
+  # Non recursive download
+  - SELECT basename(path=Path) AS Name
+    FROM Artifact.System.VFS.DownloadFile(
+       Path=srcDir+"/artifacts/testdata/server/testcases/vfs.in.yaml")
+
+  # Recursive download
+  - SELECT basename(path=Path) AS Name
+    FROM Artifact.System.VFS.DownloadFile(
+       Recursively=TRUE,
+       Path=srcDir+"/artifacts/definitions/System/VFS")
+    WHERE Name =~ "DownloadFile"
+
+  # List directory with one level
+  - SELECT Name
+    FROM Artifact.System.VFS.ListDirectory(
+       Path=srcDir+"/artifacts/definitions/System")
+    WHERE Name =~ "VFS"
+
+  # List directory with more depth
+  - SELECT Name
+    FROM Artifact.System.VFS.ListDirectory(
+       Depth=10,
+       Path=srcDir+"/artifacts/definitions/System/")
+    WHERE _FullPath =~ "ListDirectory.yaml$"

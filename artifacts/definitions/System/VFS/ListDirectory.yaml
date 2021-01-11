@@ -14,6 +14,7 @@ parameters:
     default: file
 
   - name: Depth
+    type: int
     default: 0
 
 sources:
@@ -27,8 +28,8 @@ sources:
            Mtime as mtime,
            Atime as atime,
            Ctime as ctime
-        FROM glob(globs=Path + if(condition=atoi(string=Depth),
-             then='/**' + Depth, else='/*'),
+        FROM glob(globs=Path + if(condition=Depth,
+             then=format(format='/**%v', args=Depth), else='/*'),
              accessor=Accessor)
 
       LET NewQuery = SELECT FullPath as _FullPath,
@@ -38,8 +39,10 @@ sources:
            Mtime as mtime,
            Atime as atime,
            Ctime as ctime
-        FROM glob(globs=if(condition=atoi(string=Depth),
-             then='/**' + Depth, else='/*'),
+        FROM glob(
+             globs=if(condition=Depth,
+                then=format(format='/**%v', args=Depth),
+                else='/*'),
              root=Path,
              accessor=Accessor)
 
