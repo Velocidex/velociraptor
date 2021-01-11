@@ -1,0 +1,17 @@
+SELECT basename(path=Path) AS Name FROM Artifact.System.VFS.DownloadFile( Path=srcDir+"/artifacts/testdata/server/testcases/vfs.in.yaml")[
+ {
+  "Name": "vfs.in.yaml"
+ }
+]SELECT basename(path=Path) AS Name FROM Artifact.System.VFS.DownloadFile( Recursively=TRUE, Path=srcDir+"/artifacts/definitions/System/VFS") WHERE Name =~ "DownloadFile.yaml$"[
+ {
+  "Name": "DownloadFile.yaml"
+ }
+]SELECT Name FROM Artifact.System.VFS.ListDirectory( Path=srcDir+"/artifacts/definitions/System") WHERE Name =~ "VFS"[
+ {
+  "Name": "VFS"
+ }
+]SELECT Name FROM Artifact.System.VFS.ListDirectory( Depth=10, Path=srcDir+"/artifacts/definitions/System/") WHERE _FullPath =~ "ListDirectory.yaml$"[
+ {
+  "Name": "ListDirectory.yaml"
+ }
+]
