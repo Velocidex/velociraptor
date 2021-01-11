@@ -196,9 +196,13 @@ func (self _SQLitePlugin) GetHandle(
 
 		// Add the destructor to the root scope to ensure we
 		// dont get closed too early.
-		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+		err = vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 			handle.Close()
 		})
+		if err != nil {
+			handle.Close()
+			return nil, err
+		}
 	}
 	return handle, nil
 }
@@ -220,13 +224,18 @@ func (self _SQLitePlugin) _MakeTempfile(
 	defer tmpfile.Close()
 
 	// Make sure the file is removed when the query is done.
-	scope.AddDestructor(func() {
+	remove := func() {
 		scope.Log("sqlite: removing tempfile %v", tmpfile.Name())
 		err = os.Remove(tmpfile.Name())
 		if err != nil {
 			scope.Log("Error removing file: %v", err)
 		}
-	})
+	}
+	err = scope.AddDestructor(remove)
+	if err != nil {
+		remove()
+		return "", err
+	}
 
 	fs, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {

@@ -126,9 +126,13 @@ func NewFIFOCache(
 	}
 
 	done := make(chan bool)
-	scope.AddDestructor(func() {
+	err := scope.AddDestructor(func() {
 		close(done)
 	})
+	if err != nil {
+		scope.Log("AddDestructor: %s", err)
+		close(done)
+	}
 
 	// Start the query and populate the _FIFOCache.
 	go func() {

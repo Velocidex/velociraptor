@@ -30,7 +30,7 @@ func (self *TestSuite) TestPagedReader() {
 		lru: cache.NewLRUCache(5),
 	}
 	vql_subsystem.CacheSet(scope, READERS_CACHE, pool)
-	vql_subsystem.GetRootScope(scope).AddDestructor(pool.Close)
+	_ = vql_subsystem.GetRootScope(scope).AddDestructor(pool.Close)
 
 	tmp_dir, err := ioutil.TempDir("", "tmp")
 	assert.NoError(self.T(), err)

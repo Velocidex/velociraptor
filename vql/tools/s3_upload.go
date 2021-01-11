@@ -74,11 +74,8 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 	} else if !stat.IsDir() {
 		// Abort uploading when the scope is destroyed.
 		sub_ctx, cancel := context.WithCancel(ctx)
-		scope.AddDestructor(func() {
-			// Cancel the s3 upload when the scope destroys.
-			cancel()
-		})
-
+		// Cancel the s3 upload when the scope destroys.
+		_ = scope.AddDestructor(cancel)
 		upload_response, err := upload_S3(
 			sub_ctx, scope, file,
 			arg.Bucket,

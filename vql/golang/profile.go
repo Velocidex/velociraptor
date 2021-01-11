@@ -51,7 +51,13 @@ func writeProfile(scope vfilter.Scope,
 	}
 	defer tmpfile.Close()
 
-	scope.AddDestructor(func() { remove(scope, tmpfile.Name()) })
+	dest := func() { remove(scope, tmpfile.Name()) }
+	err = scope.AddDestructor(dest)
+	if err != nil {
+		dest()
+		scope.Log("profile: %s", err)
+		return
+	}
 
 	p := pprof.Lookup(name)
 	if p == nil {
@@ -81,7 +87,11 @@ func writeCPUProfile(
 	}
 	defer tmpfile.Close()
 
-	scope.AddDestructor(func() { remove(scope, tmpfile.Name()) })
+	err = scope.AddDestructor(func() { remove(scope, tmpfile.Name()) })
+	if err != nil {
+		scope.Log("profile: %s", err)
+		return
+	}
 
 	err = pprof.StartCPUProfile(tmpfile)
 	if err != nil {

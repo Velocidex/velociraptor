@@ -92,7 +92,12 @@ func (self ShellPlugin) Call(
 
 		// Kill subprocess when the scope is destroyed.
 		sub_ctx, cancel := context.WithCancel(ctx)
-		scope.AddDestructor(cancel)
+		err = scope.AddDestructor(cancel)
+		if err != nil {
+			cancel()
+			scope.Log("shell: %v", err)
+			return
+		}
 
 		command := exec.CommandContext(sub_ctx, arg.Argv[0], arg.Argv[1:]...)
 		stdout_pipe, err := command.StdoutPipe()

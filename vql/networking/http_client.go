@@ -335,13 +335,24 @@ func (self *_HttpPlugin) Call(
 				return
 			}
 
+			remove := func() {
+				remove_tmpfile(tmpfile.Name(), scope)
+			}
 			if arg.RemoveLast {
 				scope.Log("Adding global destructor for %v", tmpfile.Name())
-				vql_subsystem.GetRootScope(scope).AddDestructor(func() {
-					remove_tmpfile(tmpfile.Name(), scope)
-				})
+				err := vql_subsystem.GetRootScope(scope).AddDestructor(remove)
+				if err != nil {
+					remove()
+					scope.Log("http_client: %v", err)
+					return
+				}
 			} else {
-				scope.AddDestructor(func() { remove_tmpfile(tmpfile.Name(), scope) })
+				err := scope.AddDestructor(remove)
+				if err != nil {
+					remove()
+					scope.Log("http_client: %v", err)
+					return
+				}
 			}
 
 			scope.Log("http_client: Downloading %v into %v",

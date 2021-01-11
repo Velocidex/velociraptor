@@ -71,9 +71,7 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 	} else if !stat.IsDir() {
 		// Abort uploading when the scope is destroyed.
 		sub_ctx, cancel := context.WithCancel(ctx)
-		scope.AddDestructor(func() {
-			cancel()
-		})
+		_ = scope.AddDestructor(cancel)
 
 		upload_response, err := upload_webdav(
 			sub_ctx, scope, file, stat.Size(),

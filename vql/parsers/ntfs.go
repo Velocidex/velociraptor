@@ -38,7 +38,12 @@ func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, erro
 			return nil, err
 		}
 
-		scope.AddDestructor(func() { fd.Close() })
+		err = scope.AddDestructor(func() { fd.Close() })
+		if err != nil {
+			fd.Close()
+			return nil, err
+		}
+
 		paged_reader, err := ntfs.NewPagedReader(fd, 1024, 10000)
 		if err != nil {
 			return nil, err

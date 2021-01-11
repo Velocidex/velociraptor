@@ -202,7 +202,7 @@ func (self NTFSFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAcce
 		vql_subsystem.CacheSet(scope, NTFSFileSystemTag, result)
 
 		// When scope is destroyed, we close all the filehandles.
-		scope.AddDestructor(func() {
+		err := scope.AddDestructor(func() {
 			result.mu.Lock()
 			defer result.mu.Unlock()
 
@@ -213,7 +213,7 @@ func (self NTFSFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAcce
 			result.fd_cache = make(map[string]*AccessorContext)
 			vql_subsystem.CacheSet(scope, NTFSFileSystemTag, result)
 		})
-		return result, nil
+		return result, err
 	}
 
 	return result_any.(glob.FileSystemAccessor), nil

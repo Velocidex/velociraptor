@@ -141,7 +141,7 @@ func NewPagedReader(scope vfilter.Scope, accessor, filename string) *AccessorRea
 			lru: cache.NewLRUCache(50),
 		}
 		vql_subsystem.CacheSet(scope, READERS_CACHE, pool)
-		vql_subsystem.GetRootScope(scope).AddDestructor(pool.Close)
+		_ = vql_subsystem.GetRootScope(scope).AddDestructor(pool.Close)
 	} else {
 		pool = pool_any.(*ReaderPool)
 	}
