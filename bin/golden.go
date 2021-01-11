@@ -187,10 +187,11 @@ func runTest(fixture *testFixture,
 	scope := manager.BuildScopeFromScratch(builder)
 	defer scope.Close()
 
-	scope.AddDestructor(func() {
+	err = scope.AddDestructor(func() {
 		container.Close()
 		os.Remove(tmpfile.Name()) // clean up
 	})
+	kingpin.FatalIfError(err, "AddDestructor")
 
 	result := ""
 	for _, query := range fixture.Queries {

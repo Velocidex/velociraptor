@@ -446,7 +446,7 @@ func (self *ZipFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAcce
 		vql_subsystem.CacheSet(scope, ZipFileSystemAccessorTag, result)
 
 		// When scope is destroyed, we close all the filehandles.
-		scope.AddDestructor(func() {
+		err := scope.AddDestructor(func() {
 			// Decrement refs until we are allowed to
 			// close the file.
 			for _, v := range result.fd_cache {
@@ -456,7 +456,7 @@ func (self *ZipFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAcce
 				}
 			}
 		})
-		return result, nil
+		return result, err
 	}
 
 	return result_any.(glob.FileSystemAccessor), nil

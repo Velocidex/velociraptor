@@ -82,9 +82,14 @@ func (self ProcDumpPlugin) Call(
 		// Use a dmp extension to make it easier to open.
 		filename += ".dmp"
 
-		scope.AddDestructor(func() {
+		err = scope.AddDestructor(func() {
 			os.Remove(filename)
 		})
+		if err != nil {
+			os.Remove(filename)
+			scope.Log("proc_dump: %v", err)
+			return
+		}
 
 		c_filename := C.CString(filename)
 		defer C.free(unsafe.Pointer(c_filename))

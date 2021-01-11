@@ -109,9 +109,17 @@ func (self *TempfileFunction) Call(ctx context.Context,
 
 	if arg.RemoveLast {
 		scope.Log("Adding global destructor for %v", tmpfile.Name())
-		vql_subsystem.GetRootScope(scope).AddDestructor(removal)
+		err := vql_subsystem.GetRootScope(scope).AddDestructor(removal)
+		if err != nil {
+			removal()
+			scope.Log("tempfile: %v", err)
+		}
 	} else {
-		scope.AddDestructor(removal)
+		err := scope.AddDestructor(removal)
+		if err != nil {
+			removal()
+			scope.Log("tempfile: %v", err)
+		}
 	}
 	return tmpfile.Name()
 }
@@ -172,9 +180,19 @@ func (self *TempdirFunction) Call(ctx context.Context,
 
 	if arg.RemoveLast {
 		scope.Log("Adding global destructor for %v", dir)
-		vql_subsystem.GetRootScope(scope).AddDestructor(removal)
+		err := vql_subsystem.GetRootScope(scope).AddDestructor(removal)
+		if err != nil {
+			removal()
+			scope.Log("tempfile: %v", err)
+		}
+
 	} else {
-		scope.AddDestructor(removal)
+		err := scope.AddDestructor(removal)
+		if err != nil {
+			removal()
+			scope.Log("tempfile: %v", err)
+		}
+
 	}
 	return dir
 }

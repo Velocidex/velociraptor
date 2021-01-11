@@ -174,12 +174,6 @@ func (self CollectPlugin) Call(
 			subscope := manager.BuildScope(builder)
 			subscope.AppendVars(env)
 
-			// Do not close the subscope until the root
-			// scope is called - this allows raw objects
-			// to be passed between the collector and the
-			// calling scope.
-			vql_subsystem.GetRootScope(scope).AddDestructor(subscope.Close)
-
 			// Run each query and store the results in the container
 			for _, query := range vql_request.Query {
 				// Useful to know what is going on with the collection.

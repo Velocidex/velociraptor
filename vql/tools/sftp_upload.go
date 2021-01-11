@@ -75,9 +75,7 @@ func (self *SFTPUploadFunction) Call(ctx context.Context,
 	} else if !stat.IsDir() {
 		// Abort uploading when the scope is destroyed.
 		sub_ctx, cancel := context.WithCancel(ctx)
-		scope.AddDestructor(func() {
-			cancel()
-		})
+		_ = scope.AddDestructor(cancel)
 
 		upload_response, err := upload_SFTP(
 			sub_ctx, scope, file,
@@ -150,10 +148,17 @@ func getSFTPClient(scope vfilter.Scope, user string, privateKey string, endpoint
 			vql_subsystem.CacheSet(scope, cacheKey, err)
 			return nil, err
 		}
-		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+
+		remove := func() {
 			conn.Close()
 			client.Close()
-		})
+		}
+		err = vql_subsystem.GetRootScope(scope).AddDestructor(remove)
+		if err != nil {
+			remove()
+			return nil, err
+		}
+
 		vql_subsystem.CacheSet(scope, cacheKey, client)
 		return client, nil
 	}

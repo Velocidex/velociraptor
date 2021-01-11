@@ -139,9 +139,13 @@ func NewDiffCache(
 		done:         make(chan bool),
 	}
 
-	scope.AddDestructor(func() {
+	err := scope.AddDestructor(func() {
 		close(result.done)
 	})
+	if err != nil {
+		close(result.done)
+		scope.Log("AddDestructor: %s", err)
+	}
 
 	return result
 }
