@@ -9,7 +9,7 @@ Queries:
     FROM Artifact.System.VFS.DownloadFile(
        Recursively=TRUE,
        Path=srcDir+"/artifacts/definitions/System/VFS")
-    WHERE Name =~ "DownloadFile"
+    WHERE Name =~ "DownloadFile.yaml$"
 
   # List directory with one level
   - SELECT Name
