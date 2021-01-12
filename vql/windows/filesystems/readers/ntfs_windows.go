@@ -61,10 +61,12 @@ func (self *NTFSCachedContext) Start(scope vfilter.Scope) {
 		scope.Log("Will expire NTFS cache every %v\n", cache_life)
 	}
 
+	done := self.done
+
 	go func() {
 		for {
 			select {
-			case <-self.done:
+			case <-done:
 				return
 
 			case <-time.After(time.Duration(cache_life) * time.Second):
@@ -131,7 +133,6 @@ func GetNTFSCache(scope vfilter.Scope, device string) (*NTFSCachedContext, error
 			if cache_ctx.done != nil {
 				close(cache_ctx.done)
 			}
-			cache_ctx.done = nil
 			cache_ctx.mu.Unlock()
 
 			cache_ctx.Close()
