@@ -43,8 +43,6 @@ func (self *NTFSPathCache) Start(scope vfilter.Scope) {
 		scope, scope, constants.NTFS_CACHE_TIME)
 	if cache_life == 0 {
 		cache_life = 60
-	} else {
-		scope.Log("Will expire NTFS cache every %v\n", cache_life)
 	}
 
 	go func() {
@@ -54,8 +52,7 @@ func (self *NTFSPathCache) Start(scope vfilter.Scope) {
 				return
 
 			case <-time.After(time.Duration(cache_life) * time.Second):
-				self.Close()
-				scope.Log("Closing NTFS cache ")
+				self.path_listing.Clear()
 			}
 		}
 	}()
