@@ -1,4 +1,4 @@
-name: Windows.Applications.Chrome.History
+name: Windows.Applications.Edge.History
 description: |
   Enumerate the users chrome history.
 

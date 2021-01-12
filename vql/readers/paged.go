@@ -108,20 +108,17 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 	if self.reader == nil {
 		accessor, err := glob.GetAccessor(self.Accessor, self.Scope)
 		if err != nil {
-			utils.Debug(err)
 			return 0, err
 		}
 
 		self.reader, err = accessor.Open(self.File)
 		if err != nil {
-			utils.Debug(err)
 			return 0, err
 		}
 
 		self.paged_reader, err = ntfs.NewPagedReader(
 			utils.ReaderAtter{self.reader}, 1024*8, 100)
 		if err != nil {
-			utils.Debug(err)
 			return 0, err
 		}
 		self.created = time.Now()
@@ -132,9 +129,6 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 	}
 	self.last_active = time.Now()
 	result, err := self.paged_reader.ReadAt(buf, offset)
-	if err != nil {
-		utils.Debug(err)
-	}
 	return result, err
 }
 
