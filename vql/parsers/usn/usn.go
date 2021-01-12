@@ -8,7 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/parsers"
+	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -42,7 +42,7 @@ func (self USNPlugin) Call(
 			return
 		}
 
-		ntfs_ctx, err := parsers.GetNTFSContext(scope, device)
+		ntfs_ctx, err := readers.GetNTFSContext(scope, device)
 		if err != nil {
 			scope.Log("parse_usn: %v", err)
 			return

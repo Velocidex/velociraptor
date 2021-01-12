@@ -10,7 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql/parsers"
+	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -56,7 +56,7 @@ func (self *USNWatcherService) Register(
 		return func() {}
 	}
 
-	ntfs_ctx, err := parsers.GetNTFSContext(scope, device)
+	ntfs_ctx, err := readers.GetNTFSContext(scope, device)
 	if err != nil {
 		scope.Log("watch_usn: %v", err)
 		return func() {}

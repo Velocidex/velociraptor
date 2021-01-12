@@ -1,0 +1,22 @@
+name: Windows.Applications.Edge.History
+description: |
+  Enumerate the users chrome history.
+
+parameters:
+  - name: historyGlobs
+    default: \AppData\Local\Microsoft\Edge\User Data\*\History
+  - name: urlSQLQuery
+    default: |
+      SELECT url as visited_url, title, visit_count,
+             typed_count, last_visit_time
+      FROM urls
+  - name: userRegex
+    default: .
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - query: |
+      SELECT * FROM Artifact.Windows.Applications.Chrome.History(
+         historyGlobs=historyGlobs, urlSQLQuery=urlSQLQuery,
+         userRegex=userRegex)
