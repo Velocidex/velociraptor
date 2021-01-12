@@ -19,7 +19,6 @@ package parsers
 
 import (
 	"context"
-	"os"
 
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
@@ -27,38 +26,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
-
-func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, error) {
-	ntfs_ctx, ok := vql_subsystem.CacheGet(scope, device).(*ntfs.NTFSContext)
-	if !ok {
-		fd, err := os.OpenFile(device, os.O_RDONLY, os.FileMode(0666))
-		if err != nil {
-			return nil, err
-		}
-
-		err = scope.AddDestructor(func() { fd.Close() })
-		if err != nil {
-			fd.Close()
-			return nil, err
-		}
-
-		paged_reader, err := ntfs.NewPagedReader(fd, 1024, 10000)
-		if err != nil {
-			return nil, err
-		}
-
-		ntfs_ctx, err = ntfs.GetNTFSContext(paged_reader, 0)
-		if err != nil {
-			return nil, err
-		}
-
-		vql_subsystem.CacheSet(scope, device, ntfs_ctx)
-	}
-
-	return ntfs_ctx, nil
-}
 
 type NTFSFunctionArgs struct {
 	Device    string `vfilter:"required,field=device,doc=The device file to open. This may be a full path - we will figure out the device automatically."`
@@ -111,9 +81,9 @@ func (self NTFSFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	ntfs_ctx, err := GetNTFSContext(scope, device)
+	ntfs_ctx, err := readers.GetNTFSContext(scope, device)
 	if err != nil {
-		scope.Log("parse_ntfs: %v", err)
+		scope.Log("parse_ntfs: GetNTFSContext %v", err)
 		return &vfilter.Null{}
 	}
 
@@ -128,13 +98,13 @@ func (self NTFSFunction) Call(
 
 	mft_entry, err := ntfs_ctx.GetMFT(arg.MFT)
 	if err != nil {
-		scope.Log("parse_ntfs: %v", err)
+		scope.Log("parse_ntfs: GetMFT %v", err)
 		return &vfilter.Null{}
 	}
 
 	result, err := ntfs.ModelMFTEntry(ntfs_ctx, mft_entry)
 	if err != nil {
-		scope.Log("parse_ntfs: %v", err)
+		scope.Log("parse_ntfs: ModelMFTEntry %v", err)
 		return &vfilter.Null{}
 	}
 
@@ -255,7 +225,7 @@ func (self NTFSI30ScanPlugin) Call(
 			return
 		}
 
-		ntfs_ctx, err := GetNTFSContext(scope, device)
+		ntfs_ctx, err := readers.GetNTFSContext(scope, device)
 		if err != nil {
 			scope.Log("parse_ntfs_i30: %v", err)
 			return
@@ -331,7 +301,7 @@ func (self NTFSRangesPlugin) Call(
 			return
 		}
 
-		ntfs_ctx, err := GetNTFSContext(scope, device)
+		ntfs_ctx, err := readers.GetNTFSContext(scope, device)
 		if err != nil {
 			scope.Log("parse_ntfs_ranges: %v", err)
 			return

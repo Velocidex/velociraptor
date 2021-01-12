@@ -81,6 +81,7 @@ export default class HuntNotebook extends React.Component {
                 public: true,
             };
 
+            request.description += "\n\n* Click the cells bellow to edit VQL and refresh the data. *NOTE*: You need to refresh the data periodically to see the latest results.\n* Edit the content of this cell to provide a description of your hunt. You can export the hunt to HTML when done using the toolbar at the top right.\n* By default the result table below only shows 50 rows, edit the VQL to see more data.";
             api.post('v1/NewNotebook', request, this.source.token).then((response) => {
                 if (response.cancel) return;
                 let cell_metadata = response.data && response.data.cell_metadata;

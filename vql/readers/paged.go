@@ -96,9 +96,9 @@ func (self *AccessorReader) Close() {
 
 	if self.reader != nil {
 		self.reader.Close()
+		self.reader = nil
+		self.paged_reader = nil
 	}
-	self.paged_reader = nil
-	self.reader = nil
 }
 
 func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
@@ -108,17 +108,20 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 	if self.reader == nil {
 		accessor, err := glob.GetAccessor(self.Accessor, self.Scope)
 		if err != nil {
+			utils.Debug(err)
 			return 0, err
 		}
 
 		self.reader, err = accessor.Open(self.File)
 		if err != nil {
+			utils.Debug(err)
 			return 0, err
 		}
 
 		self.paged_reader, err = ntfs.NewPagedReader(
-			utils.ReaderAtter{self.reader}, 1024, 100)
+			utils.ReaderAtter{self.reader}, 1024*8, 100)
 		if err != nil {
+			utils.Debug(err)
 			return 0, err
 		}
 		self.created = time.Now()
@@ -128,7 +131,11 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 		self.pool.Activate(self)
 	}
 	self.last_active = time.Now()
-	return self.paged_reader.ReadAt(buf, offset)
+	result, err := self.paged_reader.ReadAt(buf, offset)
+	if err != nil {
+		utils.Debug(err)
+	}
+	return result, err
 }
 
 func NewPagedReader(scope vfilter.Scope, accessor, filename string) *AccessorReader {

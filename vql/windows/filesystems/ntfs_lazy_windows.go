@@ -34,22 +34,22 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	"www.velocidex.com/golang/vfilter"
 )
 
-func ExtractI30List(accessor_ctx *AccessorContext,
-	mft_entry *ntfs.MFT_ENTRY, path string) []glob.FileInfo {
+func ExtractI30List(
+	scope vfilter.Scope,
+	ntfs_ctx *ntfs.NTFSContext,
+	mft_entry *ntfs.MFT_ENTRY, device, path string) []glob.FileInfo {
+
+	path_cache := GetNTFSPathCache(scope, device)
 
 	result := []glob.FileInfo{}
-	ntfs_ctx := accessor_ctx.GetNTFSContext()
 
-	var lru_map map[string]*cacheMFT
-	value, pres := accessor_ctx.path_listing.Get(path)
-	if pres {
-		lru_map = value.(cacheElement).children
-
-	} else {
-		lru_map = make(map[string]*cacheMFT)
+	lru_map, pres := path_cache.GetDirLRU(path)
+	if !pres {
+		lru_map = make(map[string]*CacheMFT)
 		for _, record := range mft_entry.Dir(ntfs_ctx) {
 			filename := record.File()
 			name_type := filename.NameType().Name
@@ -63,24 +63,24 @@ func ExtractI30List(accessor_ctx *AccessorContext,
 			}
 
 			mft_id := int64(record.MftReference())
-			lru_map[strings.ToLower(component)] = &cacheMFT{
-				mft_id:    mft_id,
-				component: component,
-				name_type: name_type,
+			lru_map[strings.ToLower(component)] = &CacheMFT{
+				MftId:     mft_id,
+				Component: component,
+				NameType:  name_type,
 			}
 		}
 
-		SetLRUMap(accessor_ctx, path, lru_map)
+		path_cache.SetLRUMap(path, lru_map)
 	}
 
 	for _, item := range lru_map {
-		full_path := path + "\\" + item.component
+		full_path := path + "\\" + item.Component
 
 		result = append(result, &LazyNTFSFileInfo{
-			mft_id:     item.mft_id,
+			mft_id:     item.MftId,
 			ntfs_ctx:   ntfs_ctx,
-			name:       item.component,
-			nameType:   item.name_type,
+			name:       item.Component,
+			nameType:   item.NameType,
 			_full_path: full_path,
 		})
 	}
@@ -242,23 +242,23 @@ func (self *LazyNTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInf
 		return result, nil
 	}
 
-	accessor_ctx, err := self.getNTFSContext(device)
+	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device)
 	if err != nil {
 		return nil, err
 	}
 
-	root, err := accessor_ctx.ntfs_ctx.GetMFT(5)
+	root, err := ntfs_ctx.GetMFT(5)
 	if err != nil {
 		return nil, err
 	}
 
 	// Open the device path from the root.
-	dir, err := Open(root, accessor_ctx, device, subpath)
+	dir, err := Open(self.scope, root, ntfs_ctx, device, subpath)
 	if err != nil {
 		return nil, err
 	}
 
-	result = ExtractI30List(accessor_ctx, dir, path)
+	result = ExtractI30List(self.scope, ntfs_ctx, dir, device, path)
 	return result, nil
 }
 
@@ -280,19 +280,18 @@ func (self *LazyNTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekClos
 
 	components := self.PathSplit(subpath)
 
-	accessor_ctx, err := self.getNTFSContext(device)
+	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device)
 	if err != nil {
 		return nil, err
 	}
 
-	ntfs_ctx := accessor_ctx.ntfs_ctx
 	root, err := ntfs_ctx.GetMFT(5)
 	if err != nil {
 		return nil, err
 	}
 
 	// Open the device path from the root.
-	mft_entry, err := Open(root, accessor_ctx, device, subpath)
+	mft_entry, err := Open(self.scope, root, ntfs_ctx, device, subpath)
 	if err != nil {
 		return nil, err
 	}

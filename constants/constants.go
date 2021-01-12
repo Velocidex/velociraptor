@@ -82,6 +82,11 @@ const (
 
 	// USER record encoded in grpc context
 	GRPC_USER_CONTEXT key = iota
+
+	// Configuration for VQL plugins
+
+	// How often to expire the ntfs cache
+	NTFS_CACHE_TIME = "NTFS_CACHE_TIME"
 )
 
 type key int

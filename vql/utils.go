@@ -22,6 +22,7 @@ import (
 	"time"
 
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 // GetStringFromRow gets a string value from row. If it is not there
@@ -30,6 +31,11 @@ func GetStringFromRow(scope vfilter.Scope,
 	row vfilter.Row, key string) string {
 	value, pres := scope.Associative(row, key)
 	if pres {
+		lazy_expr, ok := value.(types.LazyExpr)
+		if ok {
+			value = lazy_expr.Reduce()
+		}
+
 		value_str, ok := value.(string)
 		if ok {
 			return value_str
@@ -44,6 +50,11 @@ func GetIntFromRow(scope vfilter.Scope,
 	row vfilter.Row, key string) uint64 {
 	value, pres := scope.Associative(row, key)
 	if pres {
+		lazy_expr, ok := value.(types.LazyExpr)
+		if ok {
+			value = lazy_expr.Reduce()
+		}
+
 		switch t := value.(type) {
 		case int:
 			return uint64(t)
