@@ -3,14 +3,17 @@
 package readers
 
 import (
+	"context"
 	"sync"
 	"time"
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 // The NTFS parser is responsible for extracting artifacts from
@@ -52,13 +55,24 @@ type NTFSCachedContext struct {
 
 // Close the NTFS context every minute - this forces a refresh and
 // reparse of the NTFS device.
-func (self *NTFSCachedContext) Start(scope vfilter.Scope) {
-	cache_life := vql_subsystem.GetIntFromRow(
-		scope, scope, constants.NTFS_CACHE_TIME)
+func (self *NTFSCachedContext) Start(ctx context.Context, scope vfilter.Scope) {
+	cache_life := int64(0)
+	cache_life_any, pres := scope.Resolve(constants.NTFS_CACHE_TIME)
+	if pres {
+		switch t := cache_life_any.(type) {
+		case *vfilter.StoredExpression:
+			cache_life_any = t.Reduce(ctx, scope)
+
+		case types.LazyExpr:
+			cache_life_any = t.Reduce()
+		}
+
+		cache_life, _ = utils.ToInt64(cache_life_any)
+	}
 	if cache_life == 0 {
 		cache_life = 60
 	} else {
-		scope.Log("Will expire NTFS cache every %v\n", cache_life)
+		scope.Log("Will expire NTFS cache every %v sec\n", cache_life)
 	}
 
 	done := self.done
@@ -71,7 +85,6 @@ func (self *NTFSCachedContext) Start(scope vfilter.Scope) {
 
 			case <-time.After(time.Duration(cache_life) * time.Second):
 				self.Close()
-				scope.Log("Closing NTFS cache ")
 			}
 		}
 	}()
@@ -125,7 +138,7 @@ func GetNTFSCache(scope vfilter.Scope, device string) (*NTFSCachedContext, error
 			device: device,
 			scope:  scope,
 		}
-		cache_ctx.Start(scope)
+		cache_ctx.Start(context.Background(), scope)
 
 		// Destroy the context when the scope is done.
 		err := vql_subsystem.GetRootScope(scope).AddDestructor(func() {
@@ -134,7 +147,6 @@ func GetNTFSCache(scope vfilter.Scope, device string) (*NTFSCachedContext, error
 				close(cache_ctx.done)
 			}
 			cache_ctx.mu.Unlock()
-
 			cache_ctx.Close()
 		})
 		if err != nil {
