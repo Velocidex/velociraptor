@@ -11,7 +11,7 @@ author: Wes Lambert - @therealwlambert
 
 parameters:
   - name: TheHiveURL
-    default: https://securityonion-standalone-static/thehive
+    default: https://mythehive
   - name: VeloServerURL
     default: https://myvelo
   - name: ArtifactsToAlertOn
