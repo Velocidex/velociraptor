@@ -24,7 +24,7 @@ parameters:
 
 sources:
   - query: |
-      LET HIVEKEY = if(
+      LET thehive_key = if(
            condition=TheHiveKey,
            then=TheHiveKey,
            else=server_metadata().TheHiveKey)
@@ -46,7 +46,7 @@ sources:
           SELECT * FROM http_client(
           data=serialize(item=dict(
                 title=format(format="Hit on %v for %v", args=[FlowResults, FQDN]), description=format(format="ClientId: %v\n\nFlowID: %v\n\nURL: %v//app/index.html?#/collected/%v/%v", args=[ClientId, FlowId, VeloServerURL, ClientId, FlowId]), type="artifact-alert", source="velociraptor", sourceRef=format(format="%v", args=[rand(range=1000000000)])), format="json"),
-          headers=dict(`Content-Type`="application/json", `Authorization`=format(format="Bearer %v", args=[HIVEKEY])),
+          headers=dict(`Content-Type`="application/json", `Authorization`=format(format="Bearer %v", args=[thehive_key])),
           disable_ssl_security=DisableSSLVerify,
           method="POST", 
           url=format(format="%v/api/alert", args=[TheHiveURL]))
