@@ -1,6 +1,7 @@
 package notifications
 
 import (
+	"regexp"
 	"sync"
 )
 
@@ -64,6 +65,18 @@ func (self *NotificationPool) Notify(client_id string) {
 	if pres {
 		close(c)
 		delete(self.clients, client_id)
+	}
+}
+
+func (self *NotificationPool) NotifyByRegex(re *regexp.Regexp) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for key, ch := range self.clients {
+		if re.MatchString(key) {
+			close(ch)
+			delete(self.clients, key)
+		}
 	}
 }
 

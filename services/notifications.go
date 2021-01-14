@@ -50,8 +50,13 @@ type Notifier interface {
 	ListenForNotification(id string) (chan bool, func())
 
 	// Send a notification to everyone - this is a global event
-	// directed at everyone.
+	// directed at everyone. Only used in server shutdown - use
+	// NotifyByRegex instead.
 	NotifyAllListeners(config_obj *config_proto.Config) error
+
+	// Send a notification to all listeners with an id matching
+	// this regex.
+	NotifyByRegex(config_obj *config_proto.Config, regex string) error
 
 	// Send a notification to a specific listener based on its id
 	// that was registered above.

@@ -30,6 +30,12 @@ message VQLCollectorArgs {
     option (flow_metadata) = {
         category: "Generic";
     };
+
+    // The principal that created this request - only sent when
+    // scheduling the server so the server may keep track on who ran
+    // each query.
+    string principal = 28;
+
     repeated VQLEnv env = 3 [(sem_type) = {
             description: "Environment variables to be provided for the query.",
         }];

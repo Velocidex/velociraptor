@@ -16,6 +16,7 @@ package notifications
 
 import (
 	"context"
+	"regexp"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -90,7 +91,20 @@ func StartNotificationService(
 				}
 
 				self.pool_mu.Lock()
-				if target == "All" {
+				if target == "Regex" {
+					regex_str, ok := event.GetString("Regex")
+					if ok {
+						regex, err := regexp.Compile(regex_str)
+						if err != nil {
+							logger.Error("Notification service: "+
+								"Unable to compiler regex '%v': %v\n",
+								regex_str, err)
+							continue
+						}
+						self.notification_pool.NotifyByRegex(regex)
+					}
+
+				} else if target == "All" {
 					self.notification_pool.NotifyAll()
 				} else {
 					self.notification_pool.Notify(target)
@@ -124,6 +138,19 @@ func (self *Notifier) NotifyAllListeners(config_obj *config_proto.Config) error 
 
 	return journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", "All")},
+		"Server.Internal.Notifications", "server", "",
+	)
+}
+
+func (self *Notifier) NotifyByRegex(config_obj *config_proto.Config, regex string) error {
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	return journal.PushRowsToArtifact(config_obj,
+		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", "Regex").
+			Set("Regex", regex)},
 		"Server.Internal.Notifications", "server", "",
 	)
 }

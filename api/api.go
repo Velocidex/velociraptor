@@ -482,9 +482,15 @@ func (self *ApiServer) NotifyClients(
 			"User is not allowed to launch flows.")
 	}
 
+	notifier := services.GetNotifier()
+	if notifier == nil {
+		return nil, errors.New("Notifier not ready")
+	}
+
 	if in.NotifyAll {
 		self.server_obj.Info("sending notification to everyone")
-		err = services.GetNotifier().NotifyAllListeners(self.config)
+		err = notifier.NotifyAllListeners(self.config)
+
 	} else if in.ClientId != "" {
 		self.server_obj.Info("sending notification to %s", in.ClientId)
 		err = services.GetNotifier().NotifyListener(self.config, in.ClientId)

@@ -332,11 +332,17 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 	tasks := []*crypto_proto.GrrMessage{}
 
 	for _, arg := range vql_collector_args {
+		// If sending to the server record who actually launched this.
+		if client_id == "server" {
+			arg.Principal = collection_context.Request.Creator
+		}
+
 		// The task we will schedule for the client.
 		task := &crypto_proto.GrrMessage{
 			SessionId:       collection_context.SessionId,
 			RequestId:       constants.ProcessVQLResponses,
-			VQLClientAction: arg}
+			VQLClientAction: arg,
+		}
 
 		// Send an urgent request to the client.
 		if collector_request.Urgent {

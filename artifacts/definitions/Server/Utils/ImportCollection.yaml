@@ -1,0 +1,49 @@
+name: Server.Utils.ImportCollection
+description: |
+  The Velociraptor offline collector is an automated, preconfigured
+  collection tool. Users can use the collector to automatically
+  collect any artifacts on endpoints that do not have the Velociraptor
+  client (offline endpoints).
+
+  The collector creates a ZIP archive with the results of the
+  collection in JSON files (and any uploaded files).
+
+  This artifact allows for these offline collections to be imported
+  back into the Velociraptor GUI. The collected data can then treated
+  exactly the same as if it was collected by the regular Velociraptor
+  client (i.e. post processed through the notebook interface), except
+  it was collected via the Sneakernet.
+
+  NOTE: This artifact reads the collection ZIP from the server's
+  filesystem. It is up to you to arrange for the file to be stored on
+  the server (e.g. scp it over).
+
+  NOTE: This artifact is still experimental - please provide feedback
+  on our issue board.
+
+type: SERVER
+
+parameters:
+  - name: ClientId
+    default: auto
+    description: |
+      The client id to upload this collection into. The
+      default is "auto" which will create a new client id.
+  - name: Hostname
+    description: If creating a new client, this must contain the hostname.
+  - name: Path
+    description: A path on the server containing the zip file to upload.
+
+sources:
+  - query: |
+      LET result = SELECT import_collection(
+               client_id=ClientId, hostname=Hostname,
+               filename=Path) AS Import
+        FROM scope()
+
+      SELECT Import.client_id AS ClientId, Import.session_id AS FlowId,
+             Import.total_collected_rows AS TotalRows,
+             Import.total_uploaded_files AS UploadedFiles,
+             Import.total_uploaded_bytes AS UploadedBytes,
+             Import.artifacts_with_results AS Artifacts
+      FROM result

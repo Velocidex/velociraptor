@@ -91,6 +91,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 	hunt_request := &api_proto.Hunt{
 		HuntDescription: arg.Description,
+		Creator:         vql_subsystem.GetPrincipal(scope),
 		StartRequest:    request,
 		Expires:         arg.Expires,
 		State:           api_proto.Hunt_RUNNING,
@@ -105,7 +106,9 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return ordereddict.NewDict().Set("HuntId", hunt_id)
+	return ordereddict.NewDict().
+		Set("HuntId", hunt_id).
+		Set("Request", hunt_request)
 }
 
 func (self ScheduleHuntFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
