@@ -364,6 +364,8 @@ func (self *LauncherTestSuite) TestGetDependentArtifacts() {
 	res, err := launcher.GetDependentArtifacts(self.config_obj,
 		repository, []string{"Test.Artifact.Deps2"})
 	assert.NoError(self.T(), err)
+
+	utils.Debug(res)
 }
 
 func getEnvValue(env []*actions_proto.VQLEnv, key string) string {
@@ -745,7 +747,6 @@ func (self *LauncherTestSuite) TestParameterTypesDeps() {
 	}
 
 	results := getResponses(test_responder)
-	utils.Debug(results)
 	goldie.Assert(self.T(), "TestParameterTypesDeps", json.MustMarshalIndent(results))
 }
 
