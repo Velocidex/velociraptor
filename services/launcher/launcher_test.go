@@ -35,6 +35,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+
+	// Load plugins (timestamp, parse_csv)
+	_ "www.velocidex.com/golang/velociraptor/vql/functions"
+	_ "www.velocidex.com/golang/velociraptor/vql/parsers/csv"
 )
 
 const (

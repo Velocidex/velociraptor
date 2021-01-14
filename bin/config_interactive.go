@@ -65,7 +65,7 @@ What OS will the server be deployed on?
 	}
 
 	// https://docs.microsoft.com/en-us/troubleshoot/windows-server/identity/naming-conventions-for-computer-domain-site-ou#dns-host-names
-	url_validator = regexValidator("^[a-z0-9.A-Z]+$")
+	url_validator = regexValidator("^[a-z0-9.A-Z\\-]+$")
 	port_question = &survey.Input{
 		Message: "Enter the frontend port to listen on.",
 		Default: "8000",
@@ -397,8 +397,11 @@ func dynDNSConfig(config_obj *config_proto.Config) error {
 }
 
 func configAutocert(config_obj *config_proto.Config) error {
-	err := survey.Ask([]*survey.Question{
-		{Name: "Hostname", Prompt: url_question},
+	err := survey.Ask([]*survey.Question{{
+		Name:     "Hostname",
+		Validate: url_validator,
+		Prompt:   url_question,
+	},
 	}, config_obj.Frontend)
 	if err != nil {
 		return err

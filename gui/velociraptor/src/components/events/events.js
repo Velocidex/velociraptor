@@ -307,6 +307,7 @@ class EventMonitoring extends React.Component {
 
         let renderers = {
             "_ts": timestamp_renderer,
+            "Timestamp": timestamp_renderer,
             "client_time": timestamp_renderer,
         };
 

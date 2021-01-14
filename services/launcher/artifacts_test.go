@@ -22,7 +22,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	_ "www.velocidex.com/golang/velociraptor/vql_plugins"
 )
 
 var (

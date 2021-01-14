@@ -75,6 +75,7 @@ func (self *ClientEventTable) CheckClientEventsVersion(
 	if labeler == nil {
 		return false
 	}
+
 	if client_version < self.state.Version {
 		return true
 	}

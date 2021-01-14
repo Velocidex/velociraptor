@@ -261,6 +261,11 @@ func (self *ServerArtifactsRunner) runQuery(
 		return err
 	}
 
+	principal := arg.Principal
+	if principal == "" {
+		principal = "administrator"
+	}
+
 	scope := manager.BuildScope(services.ScopeBuilder{
 		Config: self.config_obj,
 
@@ -270,13 +275,18 @@ func (self *ServerArtifactsRunner) runQuery(
 		// files in the filestore using VQL artifacts.
 		Uploader: NewServerUploader(self.config_obj,
 			path_manager, collection_context),
-		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+
+		// Run this query on behalf of the caller so they are
+		// subject to ACL checks
+		ACLManager: vql_subsystem.NewServerACLManager(self.config_obj, principal),
 		Logger: log.New(&serverLogger{
 			self.config_obj,
 			path_manager.Log(),
 		}, "", 0),
 	})
 	defer scope.Close()
+
+	scope.Log("Running query on behalf of user %v", principal)
 
 	env := ordereddict.NewDict()
 	for _, env_spec := range arg.Env {

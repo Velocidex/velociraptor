@@ -164,9 +164,14 @@ func CreateHunt(
 		// set it started.
 	} else if hunt.State == api_proto.Hunt_RUNNING {
 		hunt.StartTime = hunt.CreateTime
-		err = services.GetNotifier().NotifyAllListeners(config_obj)
-		if err != nil {
-			return "", err
+
+		// Notify all the clients.
+		notifier := services.GetNotifier()
+		if notifier != nil {
+			err = notifier.NotifyByRegex(config_obj, "^[Cc]\\.")
+			if err != nil {
+				return "", err
+			}
 		}
 	}
 
@@ -353,5 +358,9 @@ func ModifyHunt(
 	// Notify all the clients about the new hunt. New hunts are
 	// not that common so notifying all the clients at once is
 	// probably ok.
-	return services.GetNotifier().NotifyAllListeners(config_obj)
+	notifier := services.GetNotifier()
+	if notifier == nil {
+		return errors.New("Notifier not ready")
+	}
+	return notifier.NotifyByRegex(config_obj, "^[Cc]\\.")
 }
