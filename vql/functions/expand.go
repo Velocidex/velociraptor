@@ -39,7 +39,15 @@ func (self _ExpandPath) Call(
 		return vfilter.Null{}
 	}
 
-	return os.ExpandEnv(arg.Path)
+	return os.Expand(arg.Path, getenv)
+}
+
+func getenv(v string) string {
+	// Allow $ to be escaped (#850) by doubling up $
+	if v == "$" {
+		return "$"
+	}
+	return os.Getenv(v)
 }
 
 func (self _ExpandPath) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

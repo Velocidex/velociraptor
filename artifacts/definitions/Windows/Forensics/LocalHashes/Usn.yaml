@@ -24,6 +24,7 @@ parameters:
     type: bool
 
   - name: UsnCheckPeriod
+    type: int
     description: Dedup all file operations that occur within this period
     default: "10"
 
@@ -31,6 +32,8 @@ precondition: SELECT OS from info() where OS = "windows"
 
 sources:
   - query: |
+      LET NTFS_CACHE_TIME = 1
+
       LET hash_db <= SELECT FullPath
       FROM Artifact.Generic.Forensic.LocalHashes.Init(HashDb=HashDb)
 
@@ -47,7 +50,7 @@ sources:
       -- CLOSE). We therefore dedup all entries that happen within the
       -- period as a single modification.
       LET deduped = SELECT * FROM foreach(row={
-         SELECT * FROM clock(period=atoi(string=UsnCheckPeriod), start=0)
+         SELECT * FROM clock(period=UsnCheckPeriod, start=0)
       },
       query={
          -- Each time the fifo is accessed we pull all the rows and
