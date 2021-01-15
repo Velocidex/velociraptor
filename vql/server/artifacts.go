@@ -35,10 +35,14 @@ import (
 )
 
 type ScheduleCollectionFunctionArg struct {
-	ClientId  string      `vfilter:"required,field=client_id,doc=The client id to schedule a collection on"`
-	Artifacts []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
-	Env       vfilter.Any `vfilter:"optional,field=env,doc=Parameters to apply to the artifact (an alternative to a full spec)"`
-	Spec      vfilter.Any `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
+	ClientId     string      `vfilter:"required,field=client_id,doc=The client id to schedule a collection on"`
+	Artifacts    []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
+	Env          vfilter.Any `vfilter:"optional,field=env,doc=Parameters to apply to the artifact (an alternative to a full spec)"`
+	Spec         vfilter.Any `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
+	Timeout      uint64      `vfilter:"optional,field=timeout,doc=Set query timeout (default 10 min)"`
+	OpsPerSecond float64     `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
+	MaxRows      uint64      `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
+	MaxBytes     uint64      `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
 }
 
 type ScheduleCollectionFunction struct{}
@@ -95,9 +99,13 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	}
 
 	request := &flows_proto.ArtifactCollectorArgs{
-		ClientId:  arg.ClientId,
-		Artifacts: arg.Artifacts,
-		Creator:   vql_subsystem.GetPrincipal(scope),
+		ClientId:       arg.ClientId,
+		Artifacts:      arg.Artifacts,
+		Creator:        vql_subsystem.GetPrincipal(scope),
+		OpsPerSecond:   float32(arg.OpsPerSecond),
+		Timeout:        arg.Timeout,
+		MaxRows:        arg.MaxRows,
+		MaxUploadBytes: arg.MaxBytes,
 	}
 
 	if arg.Spec == nil && arg.Env != nil {
