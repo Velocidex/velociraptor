@@ -43,6 +43,7 @@ sources:
 
       LET file_modifications = SELECT Device + FullPath AS FullPath
       FROM watch_usn(device=Device)
+      WHERE FullPath =~ PathRegex
 
       -- The USN journal may contain multiple entries for the same
       -- file modification (e.g. TRUNCATE followed by APPEND and
