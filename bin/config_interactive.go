@@ -178,13 +178,17 @@ func doGenerateConfigInteractive() {
 			&config_obj.ServerType,
 			survey.WithValidator(survey.Required)), "")
 
+	// For now Mysql datastore is disabled due to performance
+	// issues.
+	config_obj.Datastore.Implementation = filebased_datastore
+
+	/*
+		kingpin.FatalIfError(
+			survey.AskOne(data_store_type,
+				&config_obj.Datastore.Implementation,
+				survey.WithValidator(survey.Required)), "")
+	*/
 	var default_data_store string
-
-	kingpin.FatalIfError(
-		survey.AskOne(data_store_type,
-			&config_obj.Datastore.Implementation,
-			survey.WithValidator(survey.Required)), "")
-
 	if config_obj.Datastore.Implementation == filebased_datastore {
 		switch config_obj.ServerType {
 		case "windows":

@@ -2,7 +2,6 @@ package result_sets
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -69,8 +68,6 @@ func getNumberOfRowsInFile(
 		count++
 	}
 
-	fmt.Printf("Brute force counted %v rows in %v\n", count, log_path)
-
 	return count
 }
 
@@ -117,10 +114,13 @@ func GetCursors(ctx context.Context,
 		defer fd.Close()
 
 		count := uint64(0)
-		defer func() {
-			fmt.Printf("(%v, %v): Brute force counted %v rows in %v\n",
-				start_time, end_time, count, prop)
-		}()
+
+		/*
+			defer func() {
+				fmt.Printf("(%v, %v): Brute force counted %v rows in %v\n",
+					start_time, end_time, count, prop)
+			}()
+		*/
 
 		rs_reader := &ResultSetReaderImpl{fd: fd}
 		for item := range rs_reader.Rows(ctx) {
