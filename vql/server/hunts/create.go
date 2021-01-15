@@ -35,10 +35,14 @@ import (
 )
 
 type ScheduleHuntFunctionArg struct {
-	Description string      `vfilter:"required,field=description,doc=Description of the hunt"`
-	Artifacts   []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
-	Expires     uint64      `vfilter:"optional,field=expires,doc=Number of seconds since epoch for expiry"`
-	Spec        vfilter.Any `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
+	Description  string      `vfilter:"required,field=description,doc=Description of the hunt"`
+	Artifacts    []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
+	Expires      uint64      `vfilter:"optional,field=expires,doc=Number of seconds since epoch for expiry"`
+	Spec         vfilter.Any `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
+	Timeout      uint64      `vfilter:"optional,field=timeout,doc=Set query timeout (default 10 min)"`
+	OpsPerSecond float64     `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
+	MaxRows      uint64      `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
+	MaxBytes     uint64      `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
 }
 
 type ScheduleHuntFunction struct{}
@@ -78,8 +82,12 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	}
 
 	request := &flows_proto.ArtifactCollectorArgs{
-		Creator:   vql_subsystem.GetPrincipal(scope),
-		Artifacts: arg.Artifacts,
+		Creator:        vql_subsystem.GetPrincipal(scope),
+		Artifacts:      arg.Artifacts,
+		OpsPerSecond:   float32(arg.OpsPerSecond),
+		Timeout:        arg.Timeout,
+		MaxRows:        arg.MaxRows,
+		MaxUploadBytes: arg.MaxBytes,
 	}
 
 	err = tools.AddSpecProtobuf(config_obj, repository, scope,
