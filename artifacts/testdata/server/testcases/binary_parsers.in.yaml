@@ -3,3 +3,7 @@ Queries:
     FROM Artifact.Windows.System.Powershell.ModuleAnalysisCache(GlobLookup=srcDir +
       "/artifacts/testdata/files/ModuleAnalysisCache")
     LIMIT 10
+
+  # Check the lnk parser
+  - SELECT _Parsed FROM Artifact.Windows.Forensics.Lnk(
+      Glob=srcDir + "/artifacts/testdata/files/1.lnk")
