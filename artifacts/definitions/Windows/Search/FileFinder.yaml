@@ -115,3 +115,13 @@ sources:
                if(condition=Calculate_Hash and NOT IsDir,
                   then=hash(path=FullPath, accessor=Accessor)) AS Hash
       FROM keyword_search
+
+column_types:
+  - name: Modified
+    type: timestamp
+  - name: ATime
+    type: timestamp
+  - name: MTime
+    type: timestamp
+  - name: CTime
+    type: timestamp
