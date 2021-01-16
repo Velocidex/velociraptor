@@ -64,9 +64,9 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
    "FileAttributes": [
     "FILE_ATTRIBUTE_NORMAL"
    ],
-   "CreationTime": "2020-11-12T11:43:21+10:00",
-   "AccessTime": "2020-11-12T11:43:21+10:00",
-   "WriteTime": "2020-11-12T11:43:21+10:00",
+   "CreationTime": "2020-11-12T01:43:21Z",
+   "AccessTime": "2020-11-12T01:43:21Z",
+   "WriteTime": "2020-11-12T01:43:21Z",
    "FileSize": 1343,
    "IconIndex": 0,
    "ShowCommand": 1,
