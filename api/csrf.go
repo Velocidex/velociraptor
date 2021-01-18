@@ -27,7 +27,7 @@ func csrfProtect(config_obj *config_proto.Config,
 	_, _ = hasher.Write([]byte(config_obj.Frontend.PrivateKey))
 	token := hasher.Sum(nil)
 
-	protectionFn := csrf.Protect(token, csrf.Path("/"))
+	protectionFn := csrf.Protect(token, csrf.Path("/"), csrf.MaxAge(7*24*60*60))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		protectionFn(parent).ServeHTTP(w, r)

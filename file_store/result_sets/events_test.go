@@ -177,10 +177,9 @@ func (self *TimedResultSetTestSuite) TestTimedResultSets() {
 	clock := &utils.MockClock{MockNow: now}
 
 	// Start off by writing some events on a queue.
-	qm := &directory.DirectoryQueueManager{
-		FileStore: self.file_store,
-		Clock:     clock,
-	}
+	qm := directory.NewDirectoryQueueManager(
+		self.config_obj, self.file_store).(*directory.DirectoryQueueManager)
+	qm.Clock = clock
 
 	path_manager := artifacts.NewArtifactPathManager(
 		self.config_obj,

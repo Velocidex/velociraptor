@@ -49,7 +49,7 @@ func (self *EnrollmentService) Start(
 		return err
 	}
 
-	events, cancel := journal.Watch("Server.Internal.Enrollment")
+	events, cancel := journal.Watch(ctx, "Server.Internal.Enrollment")
 
 	wg.Add(1)
 	go func() {

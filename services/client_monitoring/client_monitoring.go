@@ -372,7 +372,7 @@ func StartClientMonitoringService(
 		return err
 	}
 
-	events, cancel := journal.Watch("Server.Internal.ArtifactModification")
+	events, cancel := journal.Watch(ctx, "Server.Internal.ArtifactModification")
 
 	wg.Add(1)
 	go func() {

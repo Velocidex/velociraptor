@@ -21,9 +21,13 @@ export default class ValidatedInteger extends React.Component {
 
     render() {
         let value = this.props.value;
+
+        // Need to set the initial value to '' to tell React this is a
+        // controlled component.
         if (_.isUndefined(value)) {
-            value = 0;
+            value = '';
         }
+
         return (
             <>
               <Form.Control placeholder={this.props.placeholder || ""}

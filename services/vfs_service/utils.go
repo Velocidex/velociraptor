@@ -31,12 +31,15 @@ func watchForFlowCompletion(
 		return err
 	}
 
-	events, cancel := journal.Watch("System.Flow.Completion")
+	events, cancel := journal.Watch(ctx, "System.Flow.Completion")
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer cancel()
+		defer logger.Info("Stopping watch for %v", artifact_name)
 
 		builder := services.ScopeBuilder{
 			Config:     config_obj,

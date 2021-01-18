@@ -8,27 +8,45 @@
 package memory
 
 import (
+	"context"
 	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
-	pool = NewQueuePool()
+	mu   sync.Mutex
+	pool *QueuePool
 )
+
+func GlobalQueuePool(config_obj *config_proto.Config) *QueuePool {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if pool != nil {
+		return pool
+	}
+
+	pool = NewQueuePool(config_obj)
+	return pool
+}
 
 // A queue pool is an in-process listener for events.
 type Listener struct {
 	id      int64
 	Channel chan *ordereddict.Dict
+	name    string
 }
 
 type QueuePool struct {
 	mu sync.Mutex
+
+	config_obj *config_proto.Config
 
 	registrations map[string][]*Listener
 }
@@ -41,6 +59,7 @@ func (self *QueuePool) Register(vfs_path string) (<-chan *ordereddict.Dict, func
 	new_registration := &Listener{
 		Channel: make(chan *ordereddict.Dict, 1000),
 		id:      time.Now().UnixNano(),
+		name:    vfs_path,
 	}
 	registrations = append(registrations, new_registration)
 
@@ -51,6 +70,8 @@ func (self *QueuePool) Register(vfs_path string) (<-chan *ordereddict.Dict, func
 	}
 }
 
+// This holds a lock on the entire pool and it is used when the system
+// shuts down so not very often.
 func (self *QueuePool) unregister(vfs_path string, id int64) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -71,28 +92,47 @@ func (self *QueuePool) unregister(vfs_path string, id int64) {
 	}
 }
 
-func (self *QueuePool) Broadcast(vfs_path string, row *ordereddict.Dict) {
+// Make a copy of the registrations under lock and then we can take
+// our time to send them later.
+func (self *QueuePool) getRegistrations(vfs_path string) []*Listener {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	registrations, ok := self.registrations[vfs_path]
 	if ok {
-		for _, item := range registrations {
-			item.Channel <- row
+		// Make a copy of the registrations for sending this
+		// message.
+		return append([]*Listener{}, registrations...)
+	}
+
+	return nil
+}
+
+func (self *QueuePool) Broadcast(vfs_path string, row *ordereddict.Dict) {
+	// Ensure we do not hold the lock for very long here.
+	for _, item := range self.getRegistrations(vfs_path) {
+		select {
+		case item.Channel <- row:
+		case <-time.After(2 * time.Second):
+			logger := logging.GetLogger(
+				self.config_obj, &logging.FrontendComponent)
+			logger.Error("QueuePool: Dropping message to queue %v",
+				item.name)
 		}
 	}
 }
 
-func NewQueuePool() *QueuePool {
+func NewQueuePool(config_obj *config_proto.Config) *QueuePool {
 	return &QueuePool{
+		config_obj:    config_obj,
 		registrations: make(map[string][]*Listener),
 	}
 }
 
 type MemoryQueueManager struct {
-	FileStore api.FileStore
-
-	Clock utils.Clock
+	FileStore  api.FileStore
+	config_obj *config_proto.Config
+	Clock      utils.Clock
 }
 
 func (self *MemoryQueueManager) Debug() {
@@ -106,7 +146,7 @@ func (self *MemoryQueueManager) PushEventRows(
 	path_manager api.PathManager, dict_rows []*ordereddict.Dict) error {
 
 	for _, row := range dict_rows {
-		pool.Broadcast(path_manager.GetQueueName(),
+		GlobalQueuePool(self.config_obj).Broadcast(path_manager.GetQueueName(),
 			row.Set("_ts", int(self.Clock.Now().Unix())))
 	}
 
@@ -131,14 +171,15 @@ func (self *MemoryQueueManager) PushEventRows(
 }
 
 func (self *MemoryQueueManager) Watch(
-	queue_name string) (output <-chan *ordereddict.Dict, cancel func()) {
-	return pool.Register(queue_name)
+	ctx context.Context, queue_name string) (output <-chan *ordereddict.Dict, cancel func()) {
+	return GlobalQueuePool(self.config_obj).Register(queue_name)
 }
 
 func NewMemoryQueueManager(config_obj *config_proto.Config,
 	file_store api.FileStore) api.QueueManager {
 	return &MemoryQueueManager{
-		FileStore: file_store,
-		Clock:     utils.RealClock{},
+		FileStore:  file_store,
+		config_obj: config_obj,
+		Clock:      utils.RealClock{},
 	}
 }

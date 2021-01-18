@@ -30,6 +30,7 @@
 package mysql
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"sync"
@@ -242,7 +243,8 @@ func (self *MysqlQueueManager) PushEventRows(
 	return err
 }
 
-func (self *MysqlQueueManager) Watch(queue_name string) (<-chan *ordereddict.Dict, func()) {
+func (self *MysqlQueueManager) Watch(
+	ctx context.Context, queue_name string) (<-chan *ordereddict.Dict, func()) {
 	return pool.Register(queue_name)
 }
 

@@ -60,7 +60,7 @@ func StartNotificationService(
 	if err != nil {
 		return err
 	}
-	events, cancel := journal.Watch("Server.Internal.Notifications")
+	events, cancel := journal.Watch(ctx, "Server.Internal.Notifications")
 
 	wg.Add(1)
 	go func() {
@@ -74,6 +74,7 @@ func StartNotificationService(
 			self.notification_pool.Shutdown()
 			self.notification_pool = nil
 		}()
+		defer logger.Info("Exiting notification service!")
 
 		for {
 			select {
@@ -90,7 +91,6 @@ func StartNotificationService(
 					continue
 				}
 
-				self.pool_mu.Lock()
 				if target == "Regex" {
 					regex_str, ok := event.GetString("Regex")
 					if ok {
@@ -109,7 +109,6 @@ func StartNotificationService(
 				} else {
 					self.notification_pool.Notify(target)
 				}
-				self.pool_mu.Unlock()
 			}
 		}
 	}()

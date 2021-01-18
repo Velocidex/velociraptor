@@ -370,7 +370,7 @@ func (self *Labeler) Start(ctx context.Context,
 		return err
 	}
 
-	events, cancel := journal.Watch("Server.Internal.Label")
+	events, cancel := journal.Watch(ctx, "Server.Internal.Label")
 
 	wg.Add(1)
 	go func() {

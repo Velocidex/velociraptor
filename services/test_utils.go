@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -28,7 +29,8 @@ func GetPublishedEvents(
 		if err != nil {
 			return
 		}
-		events, cancel := journal.Watch(artifact)
+		ctx := context.Background()
+		events, cancel := journal.Watch(ctx, artifact)
 		defer cancel()
 
 		// Wait here until we are set up.

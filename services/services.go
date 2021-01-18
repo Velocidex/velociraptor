@@ -19,6 +19,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -52,6 +53,7 @@ type Service struct {
 }
 
 func (self *Service) Close() {
+	fmt.Printf("Closing services\n")
 	self.cancel()
 
 	// Wait for services to exit.

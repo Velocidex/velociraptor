@@ -43,6 +43,7 @@ type ScheduleHuntFunctionArg struct {
 	OpsPerSecond float64     `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
 	MaxRows      uint64      `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
 	MaxBytes     uint64      `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
+	Pause        bool        `vfilter:"optional,field=pause,doc=If specified the new hunt will be in the paused state"`
 }
 
 type ScheduleHuntFunction struct{}
@@ -53,7 +54,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
 	if err != nil {
-		scope.Log("flows: %s", err)
+		scope.Log("hunt: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -97,12 +98,17 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	state := api_proto.Hunt_RUNNING
+	if arg.Pause {
+		state = api_proto.Hunt_PAUSED
+	}
+
 	hunt_request := &api_proto.Hunt{
 		HuntDescription: arg.Description,
 		Creator:         vql_subsystem.GetPrincipal(scope),
 		StartRequest:    request,
 		Expires:         arg.Expires,
-		State:           api_proto.Hunt_RUNNING,
+		State:           state,
 	}
 
 	// Run the hunt in the ACL context of the caller.

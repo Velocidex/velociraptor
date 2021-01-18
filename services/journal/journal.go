@@ -27,7 +27,8 @@ type JournalService struct {
 	qm api.QueueManager
 }
 
-func (self *JournalService) Watch(queue_name string) (
+func (self *JournalService) Watch(
+	ctx context.Context, queue_name string) (
 	output <-chan *ordereddict.Dict, cancel func()) {
 
 	if self == nil || self.qm == nil {
@@ -35,7 +36,7 @@ func (self *JournalService) Watch(queue_name string) (
 		return nil, func() {}
 	}
 
-	return self.qm.Watch(queue_name)
+	return self.qm.Watch(ctx, queue_name)
 }
 
 func (self *JournalService) PushRowsToArtifact(

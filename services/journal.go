@@ -15,6 +15,7 @@ package services
 // in real time from client event artifacts.
 
 import (
+	"context"
 	"errors"
 	"sync"
 
@@ -52,7 +53,8 @@ type JournalService interface {
 	// Watch the artifact named by queue_name for new rows. This
 	// only makes sense for artifacts of type CLIENT_EVENT and
 	// SERVER_EVENT
-	Watch(queue_name string) (output <-chan *ordereddict.Dict, cancel func())
+	Watch(ctx context.Context,
+		queue_name string) (output <-chan *ordereddict.Dict, cancel func())
 
 	// Push the rows into the datastore in the location give by
 	// the path manager.

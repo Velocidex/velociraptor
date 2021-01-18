@@ -51,11 +51,18 @@ func GetNewHuntId() string {
 	return constants.HUNT_PREFIX + string(result)
 }
 
+// Backwards compatibility: Figure out the list of collected hunts
+// from the hunt object's request
 func FindCollectedArtifacts(
 	config_obj *config_proto.Config,
 	hunt *api_proto.Hunt) {
 	if hunt == nil || hunt.StartRequest == nil ||
 		hunt.StartRequest.Artifacts == nil {
+		return
+	}
+
+	// Hunt already has artifacts list.
+	if len(hunt.Artifacts) > 0 {
 		return
 	}
 
@@ -122,6 +129,17 @@ func CreateHunt(
 
 	if hunt.Expires < hunt.CreateTime {
 		return "", errors.New("Hunt expiry is in the past!")
+	}
+
+	// Set the artifacts information in the hunt object itself.
+	hunt.Artifacts = hunt.StartRequest.Artifacts
+	hunt.ArtifactSources = []string{}
+	for _, artifact := range hunt.StartRequest.Artifacts {
+		for _, source := range GetArtifactSources(
+			config_obj, artifact) {
+			hunt.ArtifactSources = append(
+				hunt.ArtifactSources, path.Join(artifact, source))
+		}
 	}
 
 	manager, err := services.GetRepositoryManager()
@@ -194,7 +212,12 @@ func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) 
 
 	result := &api_proto.ListHuntsResponse{}
 
-	err := services.GetHuntDispatcher().ApplyFuncOnHunts(
+	dispatcher := services.GetHuntDispatcher()
+	if dispatcher == nil {
+		return nil, errors.New("Hunt dispatcher not initialized")
+	}
+
+	err := dispatcher.ApplyFuncOnHunts(
 		func(hunt *api_proto.Hunt) error {
 			if uint64(len(result.Items)) < in.Offset {
 				return nil
@@ -205,10 +228,6 @@ func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) 
 			}
 
 			if in.IncludeArchived || hunt.State != api_proto.Hunt_ARCHIVED {
-
-				// FIXME: Backwards compatibility.
-				hunt.HuntId = path.Base(hunt.HuntId)
-
 				result.Items = append(result.Items, hunt)
 			}
 			return nil
@@ -230,23 +249,24 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 
 	var result *api_proto.Hunt
 
-	err = services.GetHuntDispatcher().ModifyHunt(
-		in.HuntId,
+	dispatcher := services.GetHuntDispatcher()
+	if dispatcher == nil {
+		return nil, errors.New("Hunt dispatcher not valid")
+	}
+
+	err = dispatcher.ModifyHunt(in.HuntId,
 		func(hunt_obj *api_proto.Hunt) error {
-			// Make a copy
+			// Make a copy of the hunt
 			result = proto.Clone(hunt_obj).(*api_proto.Hunt)
 
-			// HACK: Velociraptor only knows how to
-			// collect artifacts now. Eventually the whole
-			// concept of a flow will go away but for now
-			// we need to figure out which artifacts we
-			// are actually collecting - there are not
-			// many possibilities since we have reduced
-			// the number of possible flows significantly.
-			FindCollectedArtifacts(config_obj, result)
-
-			return nil
+			// We do not modify the hunt so it is not dirty.
+			return notModified
 		})
+	if err != notModified {
+		return nil, err
+	}
+
+	FindCollectedArtifacts(config_obj, result)
 
 	if result == nil || result.Stats == nil {
 		return result, errors.New("Not found")
@@ -254,7 +274,7 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 
 	result.Stats.AvailableDownloads, _ = availableHuntDownloadFiles(config_obj, in.HuntId)
 
-	return result, err
+	return result, nil
 }
 
 // availableHuntDownloadFiles returns the prepared zip downloads available to
@@ -275,12 +295,6 @@ func availableHuntDownloadFiles(config_obj *config_proto.Config,
 //    will update the StartTime.
 // 2. A hunt in the running state can go to the Stop state
 // 3. A hunt's description can be modified.
-
-// It is not possible to restart a stopped hunt. This is because the
-// hunt manager watches the hunt participation events for all hunts at
-// the same time, and just ignores clients that want to participate in
-// stopped hunts. It is not possible to go back and re-examine the
-// queue.
 func ModifyHunt(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -335,19 +349,9 @@ func ModifyHunt(
 				hunt.State = api_proto.Hunt_STOPPED
 			}
 
-			// Write the new hunt object to the datastore.
-			db, err := datastore.GetDB(config_obj)
-			if err != nil {
-				return err
-			}
-
-			hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
-			err = db.SetSubject(
-				config_obj, hunt_path_manager.Path(), hunt)
-			if err != nil {
-				return err
-			}
-
+			// Returning nil indicates to the hunt manager
+			// that the hunt was successfully modified. It
+			// will then flush it to disk.
 			return nil
 		})
 

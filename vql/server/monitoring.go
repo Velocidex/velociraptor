@@ -155,7 +155,7 @@ func (self WatchMonitoringPlugin) Call(
 		}
 
 		// Ask the journal service to watch the event queue for us.
-		qm_chan, cancel := journal.Watch(arg.Artifact)
+		qm_chan, cancel := journal.Watch(ctx, arg.Artifact)
 		defer cancel()
 
 		for row := range qm_chan {

@@ -64,6 +64,8 @@ func (self *VFSService) ProcessDownloadFile(
 	ts, _ := row.GetInt64("_ts")
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("VFSService: Processing System.VFS.DownloadFile from %v", client_id)
+
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 
 	path_manager := artifacts.NewArtifactPathManager(config_obj,
@@ -127,6 +129,8 @@ func (self *VFSService) ProcessListDirectory(
 	ts, _ := row.GetInt64("_ts")
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("VFSService: Processing System.VFS.ListDirectory from %v", client_id)
+
 	path_manager := artifacts.NewArtifactPathManager(config_obj,
 		client_id, flow_id, "System.VFS.ListDirectory")
 
@@ -141,6 +145,7 @@ func (self *VFSService) ProcessListDirectory(
 	var current_vfs_components []string = nil
 
 	for row := range row_chan {
+		utils.Debug(row)
 		full_path, _ := row.GetString("_FullPath")
 		accessor, _ := row.GetString("_Accessor")
 		name, _ := row.GetString("Name")
