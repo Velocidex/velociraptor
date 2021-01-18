@@ -218,7 +218,78 @@ func (self LenFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	}
 }
 
+type SliceFunctionArgs struct {
+	List  vfilter.Any `vfilter:"required,field=list,doc=A list of items to slice"`
+	Start uint64      `vfilter:"required,field=start,doc=Start index (0 based)"`
+	End   uint64      `vfilter:"required,field=end,doc=End index (0 based)"`
+}
+type SliceFunction struct{}
+
+func (self *SliceFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	arg := &SliceFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("len: %s", err.Error())
+		return &vfilter.Null{}
+	}
+
+	slice := reflect.ValueOf(arg.List)
+	// A slice of strings. Only the following are supported
+	// https://golang.org/pkg/reflect/#Value.Len
+	if slice.Type().Kind() == reflect.Slice ||
+		slice.Type().Kind() == reflect.Map ||
+		slice.Type().Kind() == reflect.Array ||
+		slice.Type().Kind() == reflect.String {
+
+		if arg.End > uint64(slice.Len()) {
+			arg.End = uint64(slice.Len())
+		}
+
+		if arg.Start > arg.End {
+			arg.Start = arg.End
+		}
+
+		result := make([]interface{}, 0, arg.End-arg.Start)
+		for i := arg.Start; i < arg.End; i++ {
+			result = append(result, slice.Index(int(i)).Interface())
+		}
+
+		return result
+	}
+
+	dict, ok := arg.List.(*ordereddict.Dict)
+	if ok {
+		keys := dict.Keys()
+		if arg.End > uint64(len(keys)) {
+			arg.End = uint64(len(keys))
+		}
+
+		if arg.Start > arg.End {
+			arg.Start = arg.End
+		}
+
+		result := make([]interface{}, 0, arg.End-arg.Start)
+		for i := arg.Start; i < arg.End; i++ {
+			result = append(result, keys[int(i)])
+		}
+		return result
+	}
+
+	return []vfilter.Any{}
+}
+
+func (self SliceFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "slice",
+		Doc:     "Slice an array.",
+		ArgType: type_map.AddType(scope, &SliceFunctionArgs{}),
+	}
+}
+
 func init() {
+	vql_subsystem.RegisterFunction(&SliceFunction{})
 	vql_subsystem.RegisterFunction(&FilterFunction{})
 	vql_subsystem.RegisterFunction(&ArrayFunction{})
 	vql_subsystem.RegisterFunction(&JoinFunction{})

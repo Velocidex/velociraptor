@@ -47,6 +47,9 @@ func (self *EventTable) Close() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Info("Closing Server Monitoring Event table")
+
 	// Close the old table.
 	if self.cancel != nil {
 		self.cancel()
@@ -117,6 +120,7 @@ func (self *EventTable) Update(
 
 	// Run each collection separately in parallel.
 	for _, vql_request := range vql_requests {
+
 		err = self.RunQuery(ctx, config_obj, self.wg, vql_request)
 		if err != nil {
 			return err
@@ -197,7 +201,6 @@ func (self *EventTable) RunQuery(
 		for _, query := range vql_request.Query {
 			vql, err := vfilter.Parse(query.VQL)
 			if err != nil {
-				scope.Log("server_monitoring: %v", err)
 				return
 			}
 
@@ -217,7 +220,6 @@ func (self *EventTable) RunQuery(
 					rs_writer.Write(vfilter.RowToDict(ctx, scope, row).
 						Set("_ts", self.Clock.Now().Unix()))
 					rs_writer.Flush()
-
 				}
 			}
 		}

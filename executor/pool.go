@@ -71,15 +71,18 @@ func (self *PoolClientExecutor) ReadResponse() <-chan *crypto_proto.GrrMessage {
 
 // Inspect the request and decide if we will cache it under a query.
 func getQueryName(message *crypto_proto.GrrMessage) string {
+	query_name := ""
 	if message.VQLClientAction != nil {
 		for _, query := range message.VQLClientAction.Query {
 			if query.Name != "" {
-				return query.Name
+				query_name = query.Name
 			}
 		}
+		// Cache it under the query name and the
+		serialized, _ := json.Marshal(message.VQLClientAction.Env)
+		return fmt.Sprintf("%v: %v", query_name, string(serialized))
 
 	}
-
 	return ""
 }
 

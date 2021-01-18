@@ -34,9 +34,11 @@ export default class FileTextView extends React.Component {
         // 1. Selected node changes (file list was selected).
         // 2. VFS path changes (tree navigated away).
         // 3. node version changes (file was refreshed).
+        // 4. page is changed
         if (prevProps.node.selected !== this.props.node.selected ||
             !_.isEqual(prevProps.node.path, this.props.node.path) ||
-            prevProps.node.version !== this.props.node.version) {
+            prevProps.node.version !== this.props.node.version ||
+            prevState.page != this.state.page) {
             this.fetchText_(this.state.page);
         };
     }

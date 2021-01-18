@@ -134,6 +134,10 @@ func ForemanProcessMessage(
 			return err
 		}
 
+		notifier := services.GetNotifier()
+		if notifier == nil {
+			return errors.New("Notifier not configured")
+		}
 		return services.GetNotifier().NotifyListener(config_obj, client_id)
 	})
 }

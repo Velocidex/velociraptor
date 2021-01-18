@@ -38,6 +38,13 @@ const get = function(url, params, cancel_token) {
         url: api_handlers + url,
         params: params,
         cancelToken: cancel_token,
+    }).then(response=>{
+        // Update the csrf token.
+        let token = response.headers["x-csrf-token"];
+        if (token && token.length > 0) {
+            window.CsrfToken = token;
+        }
+        return response;
     }).catch(handle_error);
 };
 

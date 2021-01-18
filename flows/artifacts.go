@@ -1,5 +1,5 @@
 /*
-   Velociraptor - Hunting Evil
+o   Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
 
    This program is free software: you can redistribute it and/or modify
@@ -55,6 +55,8 @@ var (
 		Name: "uploaded_bytes",
 		Help: "Total bytes of Uploaded Files.",
 	})
+
+	notModified = errors.New("Not modified")
 )
 
 // closeContext is called after all messages from the clients are
@@ -420,15 +422,21 @@ func IsRequestComplete(
 
 		// Update any hunts if needed.
 		if constants.HuntIdRegex.MatchString(collection_context.Request.Creator) {
-			err := services.GetHuntDispatcher().ModifyHunt(
+			dispatcher := services.GetHuntDispatcher()
+			if dispatcher == nil {
+				return false, errors.New("Hunt dispatcher not valid")
+			}
+
+			err := dispatcher.ModifyHunt(
 				collection_context.Request.Creator,
 				func(hunt *api_proto.Hunt) error {
 					if hunt != nil && hunt.Stats != nil {
 						hunt.Stats.TotalClientsWithResults++
+						return nil
 					}
-					return nil
+					return notModified
 				})
-			if err != nil {
+			if err != nil && err != notModified {
 				return true, err
 			}
 		}

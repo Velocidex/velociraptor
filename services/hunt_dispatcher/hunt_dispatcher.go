@@ -62,16 +62,24 @@ func (self *HuntDispatcher) GetLastTimestamp() uint64 {
 	return atomic.LoadUint64(&self.last_timestamp)
 }
 
-// Applies a callback on all hunts. Note that the entire dispatcher is
-// locked while this function is running so it should be quick. It is
-// not allowed to modify the hunts.
-func (self *HuntDispatcher) ApplyFuncOnHunts(
-	cb func(hunt *api_proto.Hunt) error) error {
-
+func (self *HuntDispatcher) getHunts() []*api_proto.Hunt {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	result := make([]*api_proto.Hunt, 0, len(self.hunts))
 	for _, hunt := range self.hunts {
+		result = append(result, hunt)
+	}
+
+	return result
+}
+
+// Applies a callback on all hunts. The callback is not allowed to
+// modify the hunts.
+func (self *HuntDispatcher) ApplyFuncOnHunts(
+	cb func(hunt *api_proto.Hunt) error) error {
+
+	for _, hunt := range self.getHunts() {
 		err := cb(hunt)
 		if err != nil {
 			return err
@@ -80,6 +88,9 @@ func (self *HuntDispatcher) ApplyFuncOnHunts(
 
 	return nil
 }
+
+// FIXME: How to make this distributed? Right now it depends on being
+// a global singleton.
 
 // Modify the hunt object under lock.
 func (self *HuntDispatcher) ModifyHunt(
@@ -93,15 +104,16 @@ func (self *HuntDispatcher) ModifyHunt(
 	}
 
 	err := cb(hunt_obj)
+	// Hunt is only modified if the cb return no error
+	if err == nil {
+		// The hunts start time could have been modified - we
+		// need to update ours then.
+		if hunt_obj.StartTime > self.GetLastTimestamp() {
+			atomic.StoreUint64(&self.last_timestamp, hunt_obj.StartTime)
+		}
 
-	// The hunts start time could have been modified - we need to
-	// update ours then.
-	if hunt_obj.StartTime > self.GetLastTimestamp() {
-		atomic.StoreUint64(&self.last_timestamp, hunt_obj.StartTime)
+		self.dirty = true
 	}
-
-	self.dirty = true
-
 	return err
 }
 

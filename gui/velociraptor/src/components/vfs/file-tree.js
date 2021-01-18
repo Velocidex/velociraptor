@@ -294,6 +294,7 @@ class VeloFileTree extends Component {
                             children.push({
                                 name: file_info.Name,
                                 path: path_components,
+                                full_path: file_info._FullPath,
                                 children: [],
                             });
                         }

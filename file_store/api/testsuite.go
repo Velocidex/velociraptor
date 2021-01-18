@@ -241,7 +241,8 @@ func (self *QueueManagerTestSuite) TestPush() {
 		ordereddict.NewDict().Set("foo", 1),
 		ordereddict.NewDict().Set("foo", 2)}
 
-	output, cancel := self.manager.Watch(artifact_name)
+	ctx := context.Background()
+	output, cancel := self.manager.Watch(ctx, artifact_name)
 	defer cancel()
 
 	err := self.manager.PushEventRows(

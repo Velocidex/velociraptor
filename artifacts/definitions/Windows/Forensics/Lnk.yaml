@@ -395,9 +395,9 @@ sources:
 column_types:
   - name: Mtime
     type: timestamp
-  - name: ATime
+  - name: Atime
     type: timestamp
-  - name: CTime
+  - name: Ctime
     type: timestamp
   - name: HeaderCreationTime
     type: timestamp

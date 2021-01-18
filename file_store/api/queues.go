@@ -10,7 +10,8 @@ import (
 // responsible for rotating the queue files as required.
 type QueueManager interface {
 	PushEventRows(path_manager PathManager, rows []*ordereddict.Dict) error
-	Watch(queue_name string) (output <-chan *ordereddict.Dict, cancel func())
+	Watch(ctx context.Context, queue_name string) (
+		output <-chan *ordereddict.Dict, cancel func())
 }
 
 type ResultSetFileProperties struct {

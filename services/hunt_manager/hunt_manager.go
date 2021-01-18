@@ -113,7 +113,7 @@ func (self *HuntManager) StartParticipation(
 	if err != nil {
 		return err
 	}
-	qm_chan, cancel := journal.Watch("System.Hunt.Participation")
+	qm_chan, cancel := journal.Watch(ctx, "System.Hunt.Participation")
 
 	wg.Add(1)
 	go func() {
@@ -149,7 +149,7 @@ func (self *HuntManager) StartFlowCompletion(
 		return err
 	}
 
-	qm_chan, cancel := journal.Watch("System.Flow.Completion")
+	qm_chan, cancel := journal.Watch(ctx, "System.Flow.Completion")
 
 	wg.Add(1)
 	go func() {
@@ -173,6 +173,8 @@ func (self *HuntManager) StartFlowCompletion(
 	return nil
 }
 
+// Watch for all flows created by a hunt and maintain the list of hunt
+// completions.
 func (self *HuntManager) ProcessFlowCompletion(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -271,14 +273,17 @@ func (self *HuntManager) ProcessRow(
 		return
 	}
 
-	request := &flows_proto.ArtifactCollectorArgs{
-		ClientId: participation_row.ClientId,
-		Creator:  participation_row.HuntId,
-	}
+	// Prepare a collection request
+	request := &flows_proto.ArtifactCollectorArgs{}
 
 	// Get hunt information about this hunt.
 	now := uint64(time.Now().UnixNano() / 1000)
-	err = services.GetHuntDispatcher().ModifyHunt(
+	dispatcher := services.GetHuntDispatcher()
+	if dispatcher == nil {
+		return
+	}
+
+	err = dispatcher.ModifyHunt(
 		participation_row.HuntId,
 		func(hunt_obj *api_proto.Hunt) error {
 			if hunt_obj.Stats == nil {
@@ -352,6 +357,11 @@ func (self *HuntManager) ProcessRow(
 
 	// Direct the request against our client and schedule it.
 	request.ClientId = participation_row.ClientId
+
+	// Make sure the flow is created by the hunt - this is how we
+	// track it.
+	request.Creator = participation_row.HuntId
+
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, config_obj, vql_subsystem.NullACLManager{}, repository, request)
 	if err != nil {

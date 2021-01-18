@@ -176,13 +176,17 @@ class VeloFileList extends Component {
 
         // To recursively download files we launch an artifact
         // collection.
-        let path = this.props.node.path || [];
-        if (path.length < 1) {
+
+        //  full_path is the client side path as told by the client's
+        //  VFSListDirectory.
+        let full_path = this.props.node && this.props.node.full_path;
+        if (!full_path || !node.path) {
             return;
         }
 
-        let accessor = path[0];
-        let search_path = Join(path.slice(1));
+        // path is a list of components starting with the accessor
+        let accessor = node.path[0];
+        let search_path = full_path;
         api.post("v1/CollectArtifact", {
             urgent: true,
             client_id: this.props.client.client_id,
