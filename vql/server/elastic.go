@@ -66,12 +66,13 @@ type _ElasticPluginArgs struct {
 	CloudID   string              `vfilter:"optional,field=cloud_id,doc=Endpoint for the Elastic Service (https://elastic.co/cloud)."`
 	APIKey    string              `vfilter:"optional,field=api_key,doc=Base64-encoded token for authorization; if set, overrides username and password."`
 	WaitTime  int64               `vfilter:"optional,field=wait_time,doc=Batch elastic upload this long (2 sec)."`
+	PipeLine  string              `vfilter:"optional,field=pipeline,doc=Pipeline for uploads"`
 }
 
 type _ElasticPlugin struct{}
 
 func (self _ElasticPlugin) Call(ctx context.Context,
-	scope vfilter.Scope,
+	scope *vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
@@ -124,7 +125,7 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 // Copy rows from row_chan to a local buffer and push it up to elastic.
 func upload_rows(
 	ctx context.Context,
-	scope vfilter.Scope, output_chan chan vfilter.Row,
+	scope *vfilter.Scope, output_chan chan vfilter.Row,
 	row_chan <-chan vfilter.Row,
 	id int64,
 	wg *sync.WaitGroup,
@@ -191,7 +192,7 @@ func upload_rows(
 
 func append_row_to_buffer(
 	ctx context.Context,
-	scope vfilter.Scope,
+	scope *vfilter.Scope,
 	row vfilter.Row, id int64, buf *bytes.Buffer,
 	arg *_ElasticPluginArgs) error {
 
@@ -204,9 +205,14 @@ func append_row_to_buffer(
 		row_dict.Delete("_index")
 	}
 
-	meta := []byte(fmt.Sprintf(
-		`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s" } }%s`,
-		id, arg.Type, index, "\n"))
+    var meta []byte = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s"} }%s`,
+            id, arg.Type, index, "\n"))
+
+	pipeline := arg.PipeLine
+    if pipeline != "" {
+        meta = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s", "pipeline": "%s" } }%s`,
+                id, arg.Type, index, pipeline, "\n"))
+    }
 
 	opts := vql_subsystem.EncOptsFromScope(scope)
 	data, err := json.MarshalWithOptions(row_dict, opts)
@@ -225,7 +231,7 @@ func append_row_to_buffer(
 
 func send_to_elastic(
 	ctx context.Context,
-	scope vfilter.Scope,
+	scope *vfilter.Scope,
 	output_chan chan vfilter.Row,
 	client *elasticsearch.Client, buf *bytes.Buffer) {
 	b := buf.Bytes()
@@ -265,7 +271,7 @@ func sanitize_index(name string) string {
 }
 
 func (self _ElasticPlugin) Info(
-	scope vfilter.Scope,
+	scope *vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: "elastic_upload",
