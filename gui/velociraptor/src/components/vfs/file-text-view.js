@@ -38,7 +38,7 @@ export default class FileTextView extends React.Component {
         if (prevProps.node.selected !== this.props.node.selected ||
             !_.isEqual(prevProps.node.path, this.props.node.path) ||
             prevProps.node.version !== this.props.node.version ||
-            prevState.page != this.state.page) {
+            prevState.page !== this.state.page) {
             this.fetchText_(this.state.page);
         };
     }

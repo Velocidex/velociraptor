@@ -10,9 +10,6 @@ parameters:
 type: SERVER
 
 sources:
-  - precondition:
-      SELECT * from server_config
-
-    queries:
+  - queries:
       - |
         SELECT * FROM hunt_results(hunt_id=huntId, artifact=ArtifactName)

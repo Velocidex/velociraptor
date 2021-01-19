@@ -179,6 +179,7 @@ export default class VeloForm extends React.Component {
                   </Form.Label>
                   <Col sm="8">
                     <Form.Control as="select"
+                                  value={this.props.value}
                                   onChange={(e) => {
                                       this.props.setValue(e.currentTarget.value);
                                   }}>

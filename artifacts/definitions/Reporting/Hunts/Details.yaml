@@ -6,10 +6,7 @@ description: |
 type: SERVER
 
 sources:
-  - precondition:
-      SELECT server_config FROM scope()
-
-    queries:
+  - queries:
       - |
         LET hunts = SELECT basename(path=hunt_id) as hunt_id,
             create_time,

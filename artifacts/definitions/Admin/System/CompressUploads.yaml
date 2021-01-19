@@ -28,9 +28,7 @@ parameters:
     default: '(?i).+ntuser.dat'
 
 sources:
-  - precondition:
-      SELECT server_config FROM scope()
-    queries:
+  - queries:
       - LET files = SELECT ClientId,
             Flow.session_id as Flow,
             Flow.uploaded_files as Files
