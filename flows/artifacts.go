@@ -485,12 +485,19 @@ func FailIfError(
 
 	// Update the hunt stats if this is a hunt.
 	if constants.HuntIdRegex.MatchString(collection_context.Request.Creator) {
-		err := services.GetHuntDispatcher().ModifyHunt(
+		dispatcher := services.GetHuntDispatcher()
+		if dispatcher == nil {
+			return errors.New("Hunt dispatcher not ready")
+		}
+
+		err := dispatcher.ModifyHunt(
 			collection_context.Request.Creator,
 			func(hunt *api_proto.Hunt) error {
 				if hunt != nil && hunt.Stats != nil {
 					hunt.Stats.TotalClientsWithErrors++
 				}
+				// We pretty much always modify the
+				// stats here.
 				return nil
 			})
 		if err != nil {
