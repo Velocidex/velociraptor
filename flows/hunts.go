@@ -333,20 +333,43 @@ func ModifyHunt(
 					return err
 				}
 
-				// We are trying to start the hunt.
+				// We are trying to start or restart the hunt.
 			} else if hunt_modification.State == api_proto.Hunt_RUNNING {
 
-				// The hunt has been expired.
-				if hunt.Stats.Stopped {
-					return errors.New("Can not start a stopped hunt.")
-				}
-
+				// We allow restarting stopped hunts
+				// but this may not work as intended
+				// because we still have a hunt index
+				// - i.e. clients that already
+				// scheduled the hunt will not
+				// re-schedule (whether they ran it or
+				// now). Usually the most reliable way
+				// to re-do a hunt is to copy it and
+				// do it again.
 				hunt.State = api_proto.Hunt_RUNNING
+				hunt.Stats.Stopped = false
 				hunt.StartTime = uint64(time.Now().UnixNano() / 1000)
 
 				// We are trying to pause or stop the hunt.
 			} else {
 				hunt.State = api_proto.Hunt_STOPPED
+			}
+
+			// Write the new hunt object to the
+			// datastore. NOTE: The hunt dispatcher does
+			// not write the hunt object itself, only the
+			// hunt stats, but here we need to update
+			// hunt.State - should we move this to the
+			// stats object?
+			db, err := datastore.GetDB(config_obj)
+			if err != nil {
+				return err
+			}
+
+			hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
+			err = db.SetSubject(
+				config_obj, hunt_path_manager.Path(), hunt)
+			if err != nil {
+				return err
 			}
 
 			// Returning nil indicates to the hunt manager

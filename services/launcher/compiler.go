@@ -34,7 +34,7 @@ func maybeEscape(name string) string {
 }
 
 func CompileSingleArtifact(config_obj *config_proto.Config,
-	repository services.Repository, artifact *artifacts_proto.Artifact,
+	artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs) error {
 	for _, parameter := range artifact.Parameters {
 		value := parameter.Default
@@ -118,12 +118,11 @@ LET %v <= if(
 		}
 	}
 
-	return mergeSources(config_obj, repository, artifact, result)
+	return mergeSources(config_obj, artifact, result)
 }
 
 func mergeSources(
-	config_obj *config_proto.Config,
-	repository services.Repository, artifact *artifacts_proto.Artifact,
+	config_obj *config_proto.Config, artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs) error {
 
 	scope := vql_subsystem.MakeScope()
@@ -335,6 +334,7 @@ func PopulateArtifactsVQLCollectorArgs(
 				filtered_parameters = append(filtered_parameters,
 					&artifacts_proto.ArtifactParameter{
 						Name:    param.Name,
+						Type:    param.Type,
 						Default: param.Default,
 					})
 			}

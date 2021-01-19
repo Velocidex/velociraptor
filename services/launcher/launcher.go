@@ -148,7 +148,7 @@ func (self *Launcher) getVQLCollectorArgs(
 	should_obfuscate bool) (*actions_proto.VQLCollectorArgs, error) {
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{}
-	err := CompileSingleArtifact(config_obj, repository, artifact, vql_collector_args)
+	err := CompileSingleArtifact(config_obj, artifact, vql_collector_args)
 	if err != nil {
 		return nil, err
 	}

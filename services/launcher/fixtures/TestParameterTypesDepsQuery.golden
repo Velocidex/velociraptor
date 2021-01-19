@@ -25,7 +25,8 @@
    {
     "Foo": 2
    }
-  ]
+  ],
+  "BoolValue": true
  },
  {
   "IntValue": 5

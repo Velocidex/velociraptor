@@ -111,9 +111,9 @@ func (self *HuntDispatcher) ModifyHunt(
 		if hunt_obj.StartTime > self.GetLastTimestamp() {
 			atomic.StoreUint64(&self.last_timestamp, hunt_obj.StartTime)
 		}
-
 		self.dirty = true
 	}
+
 	return err
 }
 
@@ -131,6 +131,7 @@ func (self *HuntDispatcher) _flush_stats(config_obj *config_proto.Config) error 
 		return err
 	}
 
+	// Only write the updated stats
 	for _, hunt_obj := range self.hunts {
 		hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
 		err = db.SetSubject(config_obj,
@@ -163,9 +164,8 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 	// is OK because we will get those clients on the next foreman
 	// update - the important thing is that foreman checks are not
 	// blocked by this.
-	atomic.StoreUint64(&self.last_timestamp, 0)
+	last_timestamp := atomic.SwapUint64(&self.last_timestamp, 0)
 
-	var last_timestamp uint64
 	defer func() {
 		atomic.StoreUint64(&self.last_timestamp, last_timestamp)
 	}()

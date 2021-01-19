@@ -112,7 +112,7 @@ name: Test.Artifact.Types
 parameters:
 - name: IntValue
   type: int
-  default: 5
+  default: "5"
 
 - name: CSVValue
   type: csv
@@ -781,7 +781,9 @@ func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
 		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue=TRUE)",
 		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue='N')",
 		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue='Y')",
-		"SELECT CSVValue FROM Artifact.Test.Artifact.Types(CSVValue=[dict(Foo=1), dict(Foo=2)])",
+
+		// Check that default parameters on artifact plugin call are properly parsed.
+		"SELECT CSVValue, BoolValue FROM Artifact.Test.Artifact.Types(CSVValue=[dict(Foo=1), dict(Foo=2)])",
 		"SELECT IntValue FROM Artifact.Test.Artifact.Types(IntValue=5)",
 		"SELECT TimestampValue FROM Artifact.Test.Artifact.Types(TimestampValue=timestamp(epoch=1608714807))",
 	}
