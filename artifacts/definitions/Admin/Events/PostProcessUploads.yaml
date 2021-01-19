@@ -30,9 +30,7 @@ parameters:
     default: Windows.Registry.NTUser.Upload
 
 sources:
-  - precondition:
-      SELECT server_config FROM scope()
-    queries:
+  - queries:
       - |
         LET files = SELECT Flow,
             array(a1=parse_json_array(data=uploadPostProcessCommand),

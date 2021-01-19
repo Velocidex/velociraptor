@@ -5,10 +5,7 @@ description: |
 type: SERVER
 
 sources:
-  - precondition:
-      SELECT * from server_config
-
-    query: |
+  - query: |
       SELECT HuntId, timestamp(epoch=create_time/1000000) as Created,
              join(array=start_request.artifacts, sep=",") as Artifact,
              State

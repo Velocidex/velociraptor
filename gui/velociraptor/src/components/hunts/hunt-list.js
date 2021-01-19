@@ -110,13 +110,12 @@ class HuntList extends React.Component {
     }
 
     updateHunt = (row) => {
-        let hunt_id = this.props.selected_hunt &&
-            this.props.selected_hunt.hunt_id;
+        let hunt_id = row.hunt_id;
 
         if (!hunt_id) {return;};
 
         api.post("v1/ModifyHunt", {
-            hunt_description: row.hunt_description,
+            hunt_description: row.hunt_description || " ",
             hunt_id: hunt_id,
         }).then((response) => {
             this.props.updateHunts();

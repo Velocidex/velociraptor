@@ -101,6 +101,10 @@ class VeloHunts extends React.Component {
             // Update the selected hunt in the state.
             if (selected_hunt_id) {
                 _.each(hunts, hunt=>{
+                    if (_.isUndefined(hunt.hunt_description)) {
+                        hunt.hunt_description = "";
+                    }
+
                     if (hunt.hunt_id === selected_hunt_id) {
                         this.setState({selected_hunt: hunt});
                     };
