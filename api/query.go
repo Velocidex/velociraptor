@@ -96,13 +96,13 @@ func streamQuery(
 
 	// Now execute the query.
 	scope := manager.BuildScope(builder)
-	defer scope.Close()
 
 	// Throttle the query if required.
 	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(rate)))
 
 	go func() {
 		defer close(response_channel)
+		defer scope.Close()
 
 		scope.Log("Starting query execution.")
 
@@ -118,7 +118,7 @@ func streamQuery(
 			// All the queries will use the same scope. This allows one
 			// query to define functions for the next query in order.
 			for query_idx, vql := range statements {
-				fmt.Printf("Running %v\n", vql.ToString(scope))
+				logger.Info("Query: Running %v\n", vql.ToString(scope))
 
 				result_chan := vfilter.GetResponseChannel(
 					vql, stream.Context(), scope,

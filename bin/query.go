@@ -174,10 +174,12 @@ func doRemoteQuery(
 
 		switch format {
 		case "json":
-			fmt.Println(json.MarshalIndent(rows))
+			fmt.Println(string(json.MustMarshalIndent(rows)))
 
 		case "jsonl":
-			fmt.Println(json.MarshalJsonl(rows))
+			for _, row := range rows {
+				fmt.Println(json.MustMarshalString(row))
+			}
 
 		case "csv":
 			scope := vql_subsystem.MakeScope()
