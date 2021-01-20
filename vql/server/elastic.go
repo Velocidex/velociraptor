@@ -66,6 +66,7 @@ type _ElasticPluginArgs struct {
 	CloudID   string              `vfilter:"optional,field=cloud_id,doc=Endpoint for the Elastic Service (https://elastic.co/cloud)."`
 	APIKey    string              `vfilter:"optional,field=api_key,doc=Base64-encoded token for authorization; if set, overrides username and password."`
 	WaitTime  int64               `vfilter:"optional,field=wait_time,doc=Batch elastic upload this long (2 sec)."`
+	PipeLine  string              `vfilter:"optional,field=pipeline,doc=Pipeline for uploads"`
 }
 
 type _ElasticPlugin struct{}
@@ -204,9 +205,15 @@ func append_row_to_buffer(
 		row_dict.Delete("_index")
 	}
 
-	meta := []byte(fmt.Sprintf(
-		`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s" } }%s`,
-		id, arg.Type, index, "\n"))
+    var meta []byte
+	pipeline := arg.PipeLine
+    if pipeline != "" {
+        meta = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s", "pipeline": "%s" } }%s`,
+                id, arg.Type, index, pipeline, "\n"))
+    } else {
+        meta = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s"} }%s`,
+            id, arg.Type, index, "\n"))
+    }
 
 	opts := vql_subsystem.EncOptsFromScope(scope)
 	data, err := json.MarshalWithOptions(row_dict, opts)
