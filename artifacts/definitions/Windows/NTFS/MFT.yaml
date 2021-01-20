@@ -107,4 +107,6 @@ sources:
       -- return rows
       SELECT * FROM if(condition=AllDrives,
         then= all_drives,
-        else= { SELECT * FROM mftsearch(MFTPath=MFTFilename) })
+        else= {
+           SELECT * FROM mftsearch(MFTPath=MFTFilename)
+        })

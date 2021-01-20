@@ -1,15 +1,15 @@
 name: Windows.Detection.CryptnetUrlCache
 description: |
    This artifact will hunt for evidence of Certutil use as a download cradle.
-   
-   The CryptnetUrlCache contains both content and metadata of files downloaded by 
-   CertUtil and other Windows Crypto components. The artifact will first look for 
-   content larger than a specified size, then check headers against a whitelist 
-   of common content types. Additional options include a UrlWhitelist and search 
+
+   The CryptnetUrlCache contains both content and metadata of files downloaded by
+   CertUtil and other Windows Crypto components. The artifact will first look for
+   content larger than a specified size, then check headers against a whitelist
+   of common content types. Additional options include a UrlWhitelist and search
    of VSS.
-   
-   NOTE: Expect some false positives and build a whitelist of Urls to add for 
-   regular hunts. Alternatively target specific headers such as PE files by 
+
+   NOTE: Expect some false positives and build a whitelist of Urls to add for
+   regular hunts. Alternatively target specific headers such as PE files by
    adding '^MZ' to the HeaderRegex field.
 
 author: "@mgreen27 - Matt Green"
@@ -65,12 +65,16 @@ sources:
       LET files <= SELECT * FROM foreach(row=CryptnetUrlCache,
             query={
                 SELECT * FROM if(condition=SearchVSS,
-                    then= vsspaths(path=FileGlob),
-                    else= fspaths(path=FileGlob))
+                    then= {
+                       SELECT * FROM vsspaths(path=FileGlob)
+                    },
+                    else= {
+                       SELECT * FROM fspaths(path=FileGlob)
+                    })
             })
 
 
-      -- extract metadata lines 
+      -- extract metadata lines
       LET metadata = SELECT * FROM foreach(row=files,
         query={
             SELECT
@@ -85,17 +89,17 @@ sources:
             FROM parse_lines(filename=FullPath)
             WHERE MetaPath =~ '\\\\Microsoft\\\\CryptnetUrlCache\\\\metadata\\\\'
             GROUP BY MetaPath
-        }) 
+        })
 
 
       -- find suspicious content files and extract headers
-      LET hits = SELECT 
+      LET hits = SELECT
             FullPath,Name,Size,
             Mtime, Atime, Ctime,
             hash(path=FullPath) as Hash,
             read_file(length=4,filename=FullPath) as Header
         FROM files
-        WHERE 
+        WHERE
             FullPath =~ '\\\\Microsoft\\\\CryptnetUrlCache\\\\Content\\\\'
             AND Size > int(int=SusSize)
 
@@ -103,7 +107,7 @@ sources:
       -- output rows
       SELECT * FROM foreach(row=hits,
         query={
-            SELECT 
+            SELECT
                 FullPath,Name,Size,Header,
                 Mtime, Atime, Ctime,
                 Url, Hash,
@@ -116,7 +120,7 @@ sources:
                 MetaPath,
                 MetaMtime,MetaAtime,MetaCtime
             FROM metadata
-            WHERE 
+            WHERE
                 MetaPath =~ Name
                 AND Header =~ HeaderRegex
                 AND NOT Header =~ HeaderWhitelist
