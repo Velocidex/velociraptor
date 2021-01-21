@@ -12,7 +12,7 @@ import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Modal from 'react-bootstrap/Modal';
 
-import { Join } from '../utils/paths.js';
+import { Join, EncodePathInURL } from '../utils/paths.js';
 import api from '../core/api-service.js';
 import axios from 'axios';
 
@@ -112,8 +112,8 @@ class VeloFileList extends Component {
         // Update the router with the new path.
         let vfs_path = [...path];
         vfs_path.push(row.Name);
-        this.props.history.push("/vfs/" + this.props.client.client_id +
-                                Join(vfs_path));
+        this.props.history.push(
+           EncodePathInURL("/vfs/"+ this.props.client.client_id + Join(vfs_path)));
     }
 
     startRecursiveVfsRefreshOperation = () => {

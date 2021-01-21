@@ -14,6 +14,8 @@ import { withRouter }  from "react-router-dom";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import { EncodePathInURL, DecodePathInURL } from '../utils/paths.js';
+
 const text_color = "#8f8f8f";
 const background_color = '#f5f5f5';
 const active_background_color = "#dee0ff";
@@ -154,7 +156,7 @@ class VeloFileTree extends Component {
             let router_vfs_path = this.props.match && this.props.match.params &&
                 this.props.match.params.vfs_path;
             if (router_vfs_path) {
-                vfs_path = SplitPathComponents(router_vfs_path);
+                vfs_path = SplitPathComponents(DecodePathInURL(router_vfs_path));
 
                 // We need to distinguish between navigating to the
                 // tree directory generally and navigating to
@@ -350,7 +352,7 @@ class VeloFileTree extends Component {
 
         // When clicking the tree the user navigates to the directory
         // - file pane is unselected.
-        this.props.history.push("/vfs/" + client_id + path + "/");
+        this.props.history.push(EncodePathInURL("/vfs/" + client_id + path +"/"));
 
         node.known = false;
         this.updateComponent(node, node.path, []);
