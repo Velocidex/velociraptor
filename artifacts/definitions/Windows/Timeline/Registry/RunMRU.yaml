@@ -104,7 +104,7 @@ sources:
                         SELECT mru_grouped
                         FROM usercommands
                         WHERE user = Username
-                        ORDER BY mru_order
+                        ORDER BY mru_grouped
                     } as mru_grouped
                 FROM results
                 ORDER BY mru_grouped

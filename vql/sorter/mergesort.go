@@ -167,8 +167,13 @@ func (self *MergeSorterCtx) Merge(ctx context.Context, output_chan chan types.Ro
 				continue
 			}
 
-			value, _ := self.memory_sorter.Scope.Associative(
+			value, pres := self.memory_sorter.Scope.Associative(
 				row, self.memory_sorter.OrderBy)
+			if !pres {
+				self.memory_sorter.Scope.Log("Order by column %v not present in row",
+					self.memory_sorter.OrderBy)
+			}
+
 			if utils.IsNil(value) {
 				continue
 			}
