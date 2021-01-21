@@ -19,5 +19,8 @@ custom:
     exclude:
       - "**/*~"
       - "**/*.map"
+  - files:
+      - "gui/velociraptor/assets/**"
+    base: "gui/velociraptor/"
 
 init: Init

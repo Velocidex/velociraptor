@@ -16,7 +16,7 @@ reports:
     template: |
       <div class="row dashboard ">
       <div class="card col-10">
-      <img src="https://www.velocidex.com/images/logos/logo.svg" class="card-img-top">
+      <img src="assets/velo.svg" height="150">
       <div class="card-body">
 
       # Welcome to Velociraptor!
