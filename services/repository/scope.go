@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/sorter"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -53,6 +54,10 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 	} else {
 		scope = vql_subsystem.MakeScope()
 	}
+
+	// Use our own sorter
+	scope.SetSorter(sorter.MergeSorter{ChunkSize: 10000})
+
 	artifact_plugin := NewArtifactRepositoryPlugin(wg, self.Repository.(*Repository))
 	env.Set("Artifact", artifact_plugin)
 

@@ -29,7 +29,7 @@ sources:
          regex="^(?P<Device>(\\\\\\\\.\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy[^\\\\]+\\\\|\\\\\\\\.\\\\.:\\\\))")
 
       -- Build a SearchGlob for all logical disks and VSS
-      LET globs = SELECT
+      LET globs = SELECT FullPath,
             FullPath + '/' + extract_path(FullPath=SearchFilesGlob).Path as SearchGlob
         FROM glob(globs='/*', accessor='ntfs')
         ORDER BY FullPath  DESC

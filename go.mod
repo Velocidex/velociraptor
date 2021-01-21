@@ -80,6 +80,7 @@ require (
 	github.com/robertkrimen/otto v0.0.0-20180617131154-15f95af6e78d
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/sebdah/goldie v1.0.0
+	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/sergi/go-diff v1.1.0
 	github.com/shirou/gopsutil v3.20.10+incompatible
 	github.com/sirupsen/logrus v1.6.0
@@ -117,7 +118,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20210115155733-3088911a7a29
+	www.velocidex.com/golang/vfilter v0.0.0-20210120155859-69f51f06d7d2
 	www.velocidex.com/golang/vtypes v0.0.0-20210116160458-a505b35bdfb8
 )
 
