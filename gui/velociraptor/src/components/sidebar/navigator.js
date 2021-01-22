@@ -7,6 +7,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import classNames from "classnames";
 import { NavLink } from "react-router-dom";
 
+import { EncodePathInURL } from '../utils/paths.js';
+
 class VeloNavigator extends Component {
     static propTypes = {
         client: PropTypes.object.isRequired,
@@ -129,7 +131,7 @@ class VeloNavigator extends Component {
                       </NavLink>
 
                       <NavLink className={disabled}
-                               to={"/vfs/" + this.props.client.client_id + vfs_path }>
+                               to={"/vfs/" + EncodePathInURL(this.props.client.client_id + vfs_path) }>
                         <ul className="nav nav-pills navigator">
                           <li className={classNames({
                               "nav-link": true,

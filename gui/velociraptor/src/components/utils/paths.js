@@ -110,3 +110,15 @@ export const Join = function(components) {
 
     return result;
 };
+
+
+// Work around encoding bugs in react router.
+export const EncodePathInURL = function(path) {
+    path = path.replace(/-/g, "%2d");
+    return encodeURI(path).replace(/%/g, "-");
+};
+
+
+export const DecodePathInURL = function(path) {
+    return decodeURI(path.replace(/-/g, "%"));
+};

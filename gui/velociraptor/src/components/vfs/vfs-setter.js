@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import { withRouter }  from "react-router-dom";
 
-import { SplitPathComponents } from '../utils/paths.js';
+import { SplitPathComponents, DecodePathInURL } from '../utils/paths.js';
 
 // A component that syncs a client id to a client record.
 class VFSSetterFromRoute extends Component {
@@ -25,7 +25,7 @@ class VFSSetterFromRoute extends Component {
             return;
         }
 
-        let url_vfs = SplitPathComponents(this.props.match.params.vfs_path || "");
+        let url_vfs = SplitPathComponents(DecodePathInURL(this.props.match.params.vfs_path || ""));
         let props_vfs = this.props.vfs_path;
 
         if (!_.isEqual(url_vfs, props_vfs)) {
