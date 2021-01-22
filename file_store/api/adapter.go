@@ -37,6 +37,10 @@ func (self FileInfoAdapter) FullPath() string {
 	return self.full_path
 }
 
+func (self FileInfoAdapter) Btime() utils.TimeVal {
+	return utils.TimeVal{}
+}
+
 func (self FileInfoAdapter) Mtime() utils.TimeVal {
 	return utils.TimeVal{}
 }

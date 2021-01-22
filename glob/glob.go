@@ -40,7 +40,12 @@ type FileInfo interface {
 	Name() string
 	ModTime() time.Time
 	FullPath() string
+
+	// Time the file was birthed (initially created)
+	Btime() utils.TimeVal
 	Mtime() utils.TimeVal
+
+	// Time the inode was changed.
 	Ctime() utils.TimeVal
 	Atime() utils.TimeVal
 	Data() interface{}

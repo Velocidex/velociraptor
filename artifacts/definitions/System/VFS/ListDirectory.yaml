@@ -38,7 +38,8 @@ sources:
            Name, Size, Mode.String AS Mode,
            Mtime as mtime,
            Atime as atime,
-           Ctime as ctime
+           Ctime as ctime,
+           Btime AS btime
         FROM glob(
              globs=if(condition=Depth,
                 then=format(format='/**%v', args=Depth),

@@ -77,6 +77,10 @@ func (self *VirtualDirectoryPath) Mtime() utils.TimeVal {
 	return utils.TimeVal{}
 }
 
+func (self *VirtualDirectoryPath) Btime() utils.TimeVal {
+	return utils.TimeVal{}
+}
+
 func (self *VirtualDirectoryPath) Ctime() utils.TimeVal {
 	return utils.TimeVal{}
 }

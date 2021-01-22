@@ -378,7 +378,8 @@ class VeloFileList extends Component {
             {dataField: "Mode", text: "Mode", sort: true},
             {dataField: "mtime", text: "mtime", sort: true},
             {dataField: "atime", text: "atime", sort: true},
-            {dataField: "ctime", text: "ctime", sort: true}
+            {dataField: "ctime", text: "ctime", sort: true},
+            {dataField: "btime", text: "btime", sort: true}
         ]);
 
         return (

@@ -114,6 +114,14 @@ func (self *OSFileInfo) FullPath() string {
 	return self._full_path
 }
 
+// On Linux we need xstat() support to get birth time.
+func (self *OSFileInfo) Btime() utils.TimeVal {
+	return utils.TimeVal{
+		Sec:  0,
+		Nsec: 0,
+	}
+}
+
 func (self *OSFileInfo) Mtime() utils.TimeVal {
 	ts := int64(self._Sys().Mtim.Sec)
 	return utils.TimeVal{

@@ -145,6 +145,14 @@ func (self *NTFSFileInfo) FullPath() string {
 	return self._full_path
 }
 
+func (self *NTFSFileInfo) Btime() utils.TimeVal {
+	nsec := self.info.Btime.UnixNano()
+	return utils.TimeVal{
+		Sec:  nsec / 1000000000,
+		Nsec: nsec,
+	}
+}
+
 func (self *NTFSFileInfo) Mtime() utils.TimeVal {
 	nsec := self.info.Mtime.UnixNano()
 	return utils.TimeVal{

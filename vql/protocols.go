@@ -125,7 +125,7 @@ func (self _GlobFileInfoAssociative) Associative(
 // FROM ...
 func (self _GlobFileInfoAssociative) GetMembers(
 	scope vfilter.Scope, a vfilter.Any) []string {
-	return []string{"Name", "ModTime", "FullPath", "Mtime",
+	return []string{"Name", "ModTime", "FullPath", "Mtime", "Btime",
 		"Ctime", "Atime", "Data", "Size",
 		"IsDir", "IsLink", "Mode", "Sys"}
 }

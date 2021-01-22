@@ -105,6 +105,10 @@ func (self *FileStoreFileInfo) FullPath() string {
 	return self.FullPath_
 }
 
+func (self *FileStoreFileInfo) Btime() utils.TimeVal {
+	return utils.TimeVal{}
+}
+
 func (self *FileStoreFileInfo) Mtime() utils.TimeVal {
 	return utils.TimeVal{}
 }

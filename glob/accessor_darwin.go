@@ -42,25 +42,40 @@ func (self *OSFileInfo) FullPath() string {
 	return self._full_path
 }
 
-func (self *OSFileInfo) Mtime() utils.TimeVal {
+func (self *OSFileInfo) Btime() utils.TimeVal {
+	ts := self.sys().Birthtimespec
 	return utils.TimeVal{
-		Sec:  int64(self.sys().Mtimespec.Sec),
-		Nsec: int64(self.sys().Mtimespec.Nsec),
+		Sec:  ts.Sec,
+		Nsec: ts.Nsec + ts.Sec*1000000000,
+	}
+}
+
+func (self *OSFileInfo) Mtime() utils.TimeVal {
+	ts := self.sys().Mtimespec
+	return utils.TimeVal{
+		Sec:  ts.Sec,
+		Nsec: ts.Nsec + ts.Sec*1000000000,
 	}
 }
 
 func (self *OSFileInfo) Ctime() utils.TimeVal {
+	ts := self.sys().Ctimespec
 	return utils.TimeVal{
-		Sec:  int64(self.sys().Ctimespec.Sec),
-		Nsec: int64(self.sys().Ctimespec.Nsec),
+		Sec:  ts.Sec,
+		Nsec: ts.Nsec + ts.Sec*1000000000,
 	}
 }
 
 func (self *OSFileInfo) Atime() utils.TimeVal {
+	ts := self.sys().Atimespec
 	return utils.TimeVal{
-		Sec:  int64(self.sys().Atimespec.Sec),
-		Nsec: int64(self.sys().Atimespec.Nsec),
+		Sec:  ts.Sec,
+		Nsec: ts.Nsec + ts.Sec*1000000000,
 	}
+}
+
+func (self *OSFileInfo) _Sys() *syscall.Stat_t {
+	return self.sys()
 }
 
 func (self *OSFileInfo) Data() interface{} {

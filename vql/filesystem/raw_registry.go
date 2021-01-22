@@ -106,6 +106,10 @@ func (self *RawRegKeyInfo) Ctime() utils.TimeVal {
 	return self.Mtime()
 }
 
+func (self *RawRegKeyInfo) Btime() utils.TimeVal {
+	return self.Mtime()
+}
+
 func (self *RawRegKeyInfo) Atime() utils.TimeVal {
 	return self.Mtime()
 }

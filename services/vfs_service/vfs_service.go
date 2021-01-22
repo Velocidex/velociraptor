@@ -145,7 +145,6 @@ func (self *VFSService) ProcessListDirectory(
 	var current_vfs_components []string = nil
 
 	for row := range row_chan {
-		utils.Debug(row)
 		full_path, _ := row.GetString("_FullPath")
 		accessor, _ := row.GetString("_Accessor")
 		name, _ := row.GetString("Name")

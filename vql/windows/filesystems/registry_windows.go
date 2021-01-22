@@ -105,6 +105,10 @@ func (self *RegKeyInfo) Mtime() utils.TimeVal {
 	}
 }
 
+func (self *RegKeyInfo) Btime() utils.TimeVal {
+	return self.Mtime()
+}
+
 func (self *RegKeyInfo) Ctime() utils.TimeVal {
 	return self.Mtime()
 }

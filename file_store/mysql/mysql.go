@@ -105,6 +105,13 @@ func (self *MysqlFileStoreFileInfo) Mtime() utils.TimeVal {
 	}
 }
 
+func (self *MysqlFileStoreFileInfo) Btime() utils.TimeVal {
+	return utils.TimeVal{
+		Sec:  self.timestamp,
+		Nsec: self.timestamp * 1000000000,
+	}
+}
+
 func (self MysqlFileStoreFileInfo) Atime() utils.TimeVal {
 	return utils.TimeVal{}
 }

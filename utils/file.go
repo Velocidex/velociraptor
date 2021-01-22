@@ -156,6 +156,11 @@ func (self *DataFileInfo) ModTime() time.Time {
 func (self *DataFileInfo) FullPath() string {
 	return string(self.data)
 }
+
+func (self *DataFileInfo) Btime() TimeVal {
+	return TimeVal{}
+}
+
 func (self *DataFileInfo) Mtime() TimeVal {
 	return TimeVal{}
 }
