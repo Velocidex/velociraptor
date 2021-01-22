@@ -21,6 +21,7 @@ func (self MockFileInfo) ModTime() time.Time       { return time.Time{} }
 func (self MockFileInfo) IsDir() bool              { return true }
 func (self MockFileInfo) Sys() interface{}         { return nil }
 func (self MockFileInfo) FullPath() string         { return self.FullPath_ }
+func (self MockFileInfo) Btime() utils.TimeVal     { return utils.TimeVal{} }
 func (self MockFileInfo) Mtime() utils.TimeVal     { return utils.TimeVal{} }
 func (self MockFileInfo) Atime() utils.TimeVal     { return utils.TimeVal{} }
 func (self MockFileInfo) Ctime() utils.TimeVal     { return utils.TimeVal{} }

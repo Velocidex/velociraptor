@@ -96,6 +96,10 @@ func (self *GzipFileInfo) Mtime() utils.TimeVal {
 	return self._modtime
 }
 
+func (self *GzipFileInfo) Btime() utils.TimeVal {
+	return self._modtime
+}
+
 func (self *GzipFileInfo) Ctime() utils.TimeVal {
 	return self._modtime
 }

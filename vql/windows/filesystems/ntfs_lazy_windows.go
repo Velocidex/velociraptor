@@ -177,6 +177,14 @@ func (self *LazyNTFSFileInfo) Mtime() utils.TimeVal {
 	}
 }
 
+func (self *LazyNTFSFileInfo) Btime() utils.TimeVal {
+	self.ensureCachedInfo()
+
+	return utils.TimeVal{
+		Sec: self.cached_info.Btime.Unix(),
+	}
+}
+
 func (self *LazyNTFSFileInfo) Ctime() utils.TimeVal {
 	self.ensureCachedInfo()
 

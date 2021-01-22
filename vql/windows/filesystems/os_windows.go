@@ -64,6 +64,15 @@ func (self *OSFileInfo) Data() interface{} {
 	return ordereddict.NewDict()
 }
 
+func (self *OSFileInfo) Btime() utils.TimeVal {
+	nsec := self.sys().CreationTime.Nanoseconds()
+	return utils.TimeVal{
+		Sec:  nsec / 1000000000,
+		Nsec: nsec,
+	}
+}
+
+
 func (self *OSFileInfo) Mtime() utils.TimeVal {
 	nsec := self.sys().LastWriteTime.Nanoseconds()
 	return utils.TimeVal{
@@ -72,8 +81,10 @@ func (self *OSFileInfo) Mtime() utils.TimeVal {
 	}
 }
 
+// Windows does not provide the ctime (inode change time) using the
+// APIs.
 func (self *OSFileInfo) Ctime() utils.TimeVal {
-	nsec := self.sys().CreationTime.Nanoseconds()
+	nsec := self.sys().LastWriteTime.Nanoseconds()
 	return utils.TimeVal{
 		Sec:  nsec / 1000000000,
 		Nsec: nsec,

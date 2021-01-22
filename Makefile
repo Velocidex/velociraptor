@@ -17,6 +17,10 @@ references:
 release:
 	go run make.go -v release
 
+# Basic darwin binary - no yara.
+darwin:
+	go run make.go -v DarwinBase
+
 linux:
 	go run make.go -v linux
 

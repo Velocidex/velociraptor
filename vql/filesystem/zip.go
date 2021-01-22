@@ -143,6 +143,10 @@ func (self *ZipFileInfo) Ctime() utils.TimeVal {
 	return self.Mtime()
 }
 
+func (self *ZipFileInfo) Btime() utils.TimeVal {
+	return self.Mtime()
+}
+
 func (self *ZipFileInfo) Atime() utils.TimeVal {
 	return self.Mtime()
 }
