@@ -1,6 +1,6 @@
 prefix '[]', Children [Category Test1], Leaf false
+prefix '[Category]', Children [Test1 Test2], Leaf false
+prefix '[Category Test1]', Children [], Leaf true
+prefix '[Category Test2]', Children [], Leaf true
 prefix '[Test1]', Children [Foobar], Leaf true
 prefix '[Test1 Foobar]', Children [], Leaf true
-prefix '[Category]', Children [Test1 Test2], Leaf false
-prefix '[Category Test2]', Children [], Leaf true
-prefix '[Category Test1]', Children [], Leaf true

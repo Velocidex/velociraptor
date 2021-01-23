@@ -64,7 +64,8 @@ func (self *ArtifactRepositoryPlugin) Print() string {
 	sort.Strings(children)
 	result := fmt.Sprintf("prefix '%v', Children %v, Leaf %v\n",
 		self.prefix, children, self.leaf != nil)
-	for _, v := range self.children {
+	for _, child := range children {
+		v := self.children[child]
 		result += v.(*ArtifactRepositoryPlugin).Print()
 	}
 	return result
