@@ -21,6 +21,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -54,16 +55,19 @@ func (self *ArtifactRepositoryPlugin) SetMock(mock []vfilter.Row) {
 	self.mock = mock
 }
 
-func (self *ArtifactRepositoryPlugin) Print() {
+func (self *ArtifactRepositoryPlugin) Print() string {
 	var children []string
-	for k := range self.children {
-		children = append(children, k)
+	for childname := range self.children {
+		children = append(children, childname)
 	}
-	fmt.Printf("prefix '%v', Children %v, Leaf %v\n",
+
+	sort.Strings(children)
+	result := fmt.Sprintf("prefix '%v', Children %v, Leaf %v\n",
 		self.prefix, children, self.leaf != nil)
 	for _, v := range self.children {
-		v.(*ArtifactRepositoryPlugin).Print()
+		result += v.(*ArtifactRepositoryPlugin).Print()
 	}
+	return result
 }
 
 // Define vfilter.PluginGeneratorInterface
@@ -345,6 +349,11 @@ func NewArtifactRepositoryPlugin(
 	}
 
 	name_listing := repository.list()
+
+	// This sorting is needed to ensure that longer artifact names
+	// come before shorter ones. This ensures that we create the
+	// tree depth first.
+	sort.Sort(sort.Reverse(sort.StringSlice(name_listing)))
 
 	// Cache it for next time and return it.
 	repository.artifact_plugin = _NewArtifactRepositoryPlugin(

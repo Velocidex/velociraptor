@@ -342,6 +342,7 @@ func PopulateArtifactsVQLCollectorArgs(
 			request.Artifacts = append(request.Artifacts,
 				&artifacts_proto.Artifact{
 					Name:       artifact.Name,
+					Type:       artifact.Type,
 					Parameters: filtered_parameters,
 					Sources:    sources,
 					Tools:      artifact.Tools,
