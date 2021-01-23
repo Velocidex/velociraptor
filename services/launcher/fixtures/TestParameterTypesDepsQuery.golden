@@ -1,9 +1,9 @@
 [
  {
-  "BoolValue": 0
+  "BoolValue": false
  },
  {
-  "BoolValue": 1
+  "BoolValue": true
  },
  {
   "BoolValue": false
@@ -12,10 +12,10 @@
   "BoolValue": true
  },
  {
-  "BoolValue": "N"
+  "BoolValue": false
  },
  {
-  "BoolValue": "Y"
+  "BoolValue": true
  },
  {
   "CSVValue": [
