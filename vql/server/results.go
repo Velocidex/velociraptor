@@ -360,7 +360,10 @@ func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope vfilter.Scope) {
 
 	artifact_name, pres := scope.Resolve("ArtifactName")
 	if pres {
-		arg.Artifact = artifact_name.(string)
+		artifact, ok := artifact_name.(string)
+		if ok {
+			arg.Artifact = artifact
+		}
 	}
 
 	start_time, pres := scope.Resolve("StartTime")
@@ -375,26 +378,26 @@ func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope vfilter.Scope) {
 
 	notebook_id, pres := scope.Resolve("NotebookId")
 	if pres {
-		arg.NotebookId = notebook_id.(string)
+		arg.NotebookId, _ = notebook_id.(string)
 	}
 	notebook_cell_id, pres := scope.Resolve("NotebookCellId")
 	if pres {
-		arg.NotebookCellId = notebook_cell_id.(string)
+		arg.NotebookCellId, _ = notebook_cell_id.(string)
 	}
 
 	notebook_cell_table, pres := scope.Resolve("NotebookCellTable")
 	if pres {
-		arg.NotebookCellTable = notebook_cell_table.(int64)
+		arg.NotebookCellTable, _ = notebook_cell_table.(int64)
 	}
 
 	start_row, pres := scope.Resolve("StartRow")
 	if pres {
-		arg.StartRow = start_row.(int64)
+		arg.StartRow, _ = start_row.(int64)
 	}
 
 	limit, pres := scope.Resolve("Limit")
 	if pres {
-		arg.Limit = limit.(int64)
+		arg.Limit, _ = limit.(int64)
 	}
 
 	hunt_id, pres := scope.Resolve("HuntId")

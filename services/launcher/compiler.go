@@ -33,7 +33,7 @@ func maybeEscape(name string) string {
 	return name
 }
 
-func CompileSingleArtifact(config_obj *config_proto.Config,
+func (self *Launcher) CompileSingleArtifact(config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs) error {
 	for _, parameter := range artifact.Parameters {
@@ -342,6 +342,7 @@ func PopulateArtifactsVQLCollectorArgs(
 			request.Artifacts = append(request.Artifacts,
 				&artifacts_proto.Artifact{
 					Name:       artifact.Name,
+					Type:       artifact.Type,
 					Parameters: filtered_parameters,
 					Sources:    sources,
 					Tools:      artifact.Tools,

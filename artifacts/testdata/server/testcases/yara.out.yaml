@@ -204,7 +204,7 @@ FROM scope()
    "Error": "OK"
   }
  }
-]SELECT * FROM Artifact.Windows.Detection.RemoteYara.Process( pidRegex='1236',  collectProcess="Y", yaraURL='http://remote')[
+]SELECT * FROM Artifact.Windows.Detection.RemoteYara.Process( pidRegex='1236',  collectProcess="Y", source="", yaraURL='http://remote')[
  {
   "ProcessName": "mimikatz.exe",
   "CommandLine": "mimikatz",
