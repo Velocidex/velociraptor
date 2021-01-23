@@ -187,7 +187,7 @@ sources:
     SELECT IntValue, CSVValue, BoolValue, BoolValue2
     FROM Artifact.Test.Artifact.Types(
        CSVValue=CSVValue, IntValue=IntValue,
-       BoolValue=TRUE, BoolValue2=TRUE)
+       BoolValue=TRUE, BoolValue2="Y")
 `
 
 	testArtifactWithPrecondition = `
@@ -779,10 +779,6 @@ func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
 		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue=1)",
 		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue=FALSE)",
 		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue=TRUE)",
-
-		// Passing values in artifact calls does not have type
-		// conversion - the values end up as they are in the
-		// sub-artifact. This should never be done in real artifacts.
 		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue='N')",
 		"SELECT BoolValue FROM Artifact.Test.Artifact.Types(BoolValue='Y')",
 
