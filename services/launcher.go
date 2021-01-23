@@ -93,6 +93,16 @@ type Launcher interface {
 		repository Repository,
 		names []string) ([]string, error)
 
+	// Compiles a single inline artifact definition without using
+	// the repository.
+	GetVQLCollectorArgs(
+		ctx context.Context,
+		config_obj *config_proto.Config,
+		repository Repository,
+		artifact *artifacts_proto.Artifact,
+		spec *flows_proto.ArtifactSpec,
+		should_obfuscate bool) (*actions_proto.VQLCollectorArgs, error)
+
 	// Compiles an ArtifactCollectorArgs (for example as passed
 	// into CreateHunt() or CollectArtifact() API into a list of
 	// VQLCollectorArgs - the messages sent to the client to

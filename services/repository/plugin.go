@@ -26,7 +26,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -103,6 +102,8 @@ func (self *ArtifactRepositoryPlugin) Call(
 		}
 
 		artifact_name := self.leaf.Name
+		source := ""
+
 		v, pres := args.Get("source")
 		if pres {
 			lazy_v, ok := v.(types.LazyExpr)
@@ -110,25 +111,60 @@ func (self *ArtifactRepositoryPlugin) Call(
 				v = lazy_v.Reduce()
 			}
 
-			source, ok := v.(string)
+			source, ok = v.(string)
 			if !ok {
 				scope.Log("Source must be a string")
 				return
 			}
+		}
 
-			artifact_name = self.leaf.Name + "/" + source
+		artifact_definition, pres := self.repository.Get(config_obj, artifact_name)
+		// Should never really happen.
+		if !pres {
+			scope.Log("Artifact %v not found", self.leaf.Name)
+			return
+		}
 
-			_, pres = self.repository.Get(config_obj, artifact_name)
-			if !pres {
-				scope.Log("Source %v not found in artifact %v",
-					source, self.leaf.Name)
-				return
+		// The artifact may have multiple sources, but we need
+		// to only call a single source here because we want
+		// to have consistent result set. So we make a copy of
+		// the artifact with just the sources we want.
+		our_artifact := &artifacts_proto.Artifact{
+			Name:       artifact_definition.Name,
+			Tools:      artifact_definition.Tools,
+			Parameters: []*artifacts_proto.ArtifactParameter{},
+		}
+
+		// Find the correct source the caller wanted.
+		for _, source_def := range artifact_definition.Sources {
+			if source_def.Name == source {
+				our_artifact.Sources = append(
+					our_artifact.Sources, source_def)
+				break
 			}
 		}
 
-		acl_manager, ok := artifacts.GetACLManager(scope)
-		if !ok {
-			acl_manager = vql_subsystem.NullACLManager{}
+		if len(our_artifact.Sources) == 0 {
+			scope.Log("Calling Artifact %s with source %s: not found.",
+				strings.Join(self.prefix, "."), source)
+			return
+		}
+
+		// Remove the parameters we are passing from the
+		// definition to avoid type conversion. Default values
+		// must be converted from string to VQL types, but
+		// here we are already passing proper types in the
+		// scope - therefore we need to prevent the compiler
+		// from generating type conversion.
+		known_parameters := make(map[string]bool)
+		for _, param := range artifact_definition.Parameters {
+			known_parameters[param.Name] = true
+
+			_, pres := args.Get(param.Name)
+			if !pres {
+				our_artifact.Parameters = append(
+					our_artifact.Parameters, param)
+			}
 		}
 
 		launcher, err := services.GetLauncher()
@@ -136,15 +172,15 @@ func (self *ArtifactRepositoryPlugin) Call(
 			return
 		}
 
-		request, err := launcher.CompileCollectorArgs(
-			ctx, config_obj, acl_manager, self.repository,
-			false, /* should_obfuscate */
-			&flows_proto.ArtifactCollectorArgs{
-				Artifacts: []string{artifact_name},
-			})
-		if err != nil || len(request) != 1 {
-			scope.Log("Artifact %s invalid: %s",
-				strings.Join(self.prefix, "."), err.Error())
+		// This will generate a singe request for our new
+		// single source artifact with reduced parameters. We
+		// will then inject our parameters as into the scope
+		// to populate the plugin.
+		request, err := launcher.GetVQLCollectorArgs(ctx, config_obj,
+			self.repository, our_artifact, &flows_proto.ArtifactSpec{}, false)
+		if err != nil {
+			scope.Log("Artifact %s invalid: %v",
+				strings.Join(self.prefix, "."), err)
 			return
 		}
 
@@ -159,16 +195,20 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		// Pass the args in the new scope.
 		env := ordereddict.NewDict()
-		for _, request_env := range request[0].Env {
+		for _, request_env := range request.Env {
 			env.Set(request_env.Key, request_env.Value)
 		}
 
-		// Allow the args to override the artifact defaults.
-		for k, v := range *args.ToDict() {
+		// Inject our parameters into the plugin environment.
+		for _, k := range args.Keys() {
 			if k == "source" {
 				continue
 			}
-			_, pres := env.Get(k)
+
+			v, _ := args.Get(k)
+
+			// Check if the parameter is known.
+			_, pres := known_parameters[k]
 			if !pres {
 				scope.Log(fmt.Sprintf(
 					"Unknown parameter %s provided to artifact %v",
@@ -176,17 +216,19 @@ func (self *ArtifactRepositoryPlugin) Call(
 				return
 			}
 
+			// If the parameter is lazy, reduce it.
 			lazy_v, ok := v.(types.LazyExpr)
 			if ok {
 				v = lazy_v.Reduce()
 			}
+
 			env.Set(k, v)
 		}
 
 		// Add the scope args
 		child_scope.AppendVars(env)
 
-		for _, query := range request[0].Query {
+		for _, query := range request.Query {
 			vql, err := vfilter.Parse(query.VQL)
 			if err != nil {
 				scope.Log("Artifact %s invalid: %s",

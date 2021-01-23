@@ -2,7 +2,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  {
   "mock(plugin='info', results= [dict(OS='windows'), dict(OS='windows')])": null
  }
-]SELECT LastModified, Binary, Name, Size, ProductName, Publisher, BinFileVersion FROM Artifact.Windows.System.Amcache( amCacheGlob=srcDir+"/artifacts/testdata/files/Amcache.hve") LIMIT 5[
+]SELECT LastModified, Binary, Name, Size, ProductName, Publisher, BinFileVersion FROM Artifact.Windows.System.Amcache( source="InventoryApplicationFile", amCacheGlob=srcDir+"/artifacts/testdata/files/Amcache.hve") LIMIT 5[
  {
   "LastModified": "2019-03-02T08:21:12Z",
   "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_base.exe",

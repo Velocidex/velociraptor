@@ -98,7 +98,7 @@ func (self *Launcher) CompileCollectorArgs(
 		}
 
 		for _, expanded_artifact := range expandArtifacts(artifact) {
-			vql_collector_args, err := self.getVQLCollectorArgs(
+			vql_collector_args, err := self.GetVQLCollectorArgs(
 				ctx, config_obj, repository, expanded_artifact,
 				spec, should_obfuscate)
 			if err != nil {
@@ -139,7 +139,7 @@ func expandArtifacts(artifact *artifacts_proto.Artifact) []*artifacts_proto.Arti
 }
 
 // Compile a single artifact, resolve dependencies and tools
-func (self *Launcher) getVQLCollectorArgs(
+func (self *Launcher) GetVQLCollectorArgs(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	repository services.Repository,
@@ -148,7 +148,7 @@ func (self *Launcher) getVQLCollectorArgs(
 	should_obfuscate bool) (*actions_proto.VQLCollectorArgs, error) {
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{}
-	err := CompileSingleArtifact(config_obj, artifact, vql_collector_args)
+	err := self.CompileSingleArtifact(config_obj, artifact, vql_collector_args)
 	if err != nil {
 		return nil, err
 	}

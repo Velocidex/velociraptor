@@ -163,7 +163,7 @@ Queries:
   #  Now we should dump and upload one process since we did specify
   #  collectProcess=TRUE
   - SELECT * FROM Artifact.Windows.Detection.RemoteYara.Process(
-           pidRegex='1236',  collectProcess="Y",
+           pidRegex='1236',  collectProcess="Y", source="Upload",
            yaraURL='http://remote')
 
   - SELECT mock_check(plugin='proc_dump', expected_calls=1),
