@@ -13,11 +13,13 @@ parameters:
 
 sources:
   - query: |
-        LET clients = SELECT client_id FROM clients()
+        LET clients = SELECT client_id, os_info.fqdn AS Fqdn FROM clients()
 
         // Get the most recent collection of our user listing.
-        LET last_user_listing = SELECT session_id AS flow_id, active_time
-           FROM flows(client_id=ClientId)
+        LET last_user_listing = SELECT
+               session_id AS flow_id,
+               active_time, client_id, Fqdn
+           FROM flows(client_id=client_id)
            WHERE artifacts_with_results =~'Windows.Sys.Users'
            ORDER BY active_time
            DESC LIMIT 1
@@ -28,7 +30,7 @@ sources:
         LET users = SELECT * FROM foreach(
             row=last_user_listing,
             query={
-              SELECT Name, UUID, client_id from source(
+              SELECT Name, UUID, client_id, Fqdn from source(
                  flow_id=flow_id,
                  artifact='Windows.Sys.Users',
                  client_id=client_id)
