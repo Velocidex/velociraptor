@@ -50,6 +50,9 @@ parameters:
   - name: Trace
     description: CPU trace
     type: bool
+  - name: Logs
+    description: Get logs
+    type: bool
   - name: Verbose
     description: Print more detail
     type: bool
@@ -59,8 +62,10 @@ parameters:
 
 sources:
   - query: |
-      SELECT Type, upload(name=Type + ".bin", file=FullPath) AS File
+      SELECT Type,
+             if(condition=FullPath, then=upload(name=Type + ".bin", file=FullPath)) AS File,
+             get(member="Line") AS Line
       FROM profile(allocs=Allocs, block=Block, goroutine=Goroutine,
-                   heap=Heap, mutex=Mutex, profile=Profile, trace=Trace,
+                   heap=Heap, mutex=Mutex, profile=Profile, trace=Trace, logs=Logs,
                    debug=if(condition=Verbose, then=2, else=1),
                    duration=atoi(string=Duration))
