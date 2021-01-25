@@ -79,6 +79,13 @@ func InitLogging(config_obj *config_proto.Config) error {
 	return nil
 }
 
+func GetPrelogs() []string {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return append([]string{}, prelogs...)
+}
+
 // Early in the startup process, we find that we need to log sometimes
 // but we have no idea where to send the logs and what components to
 // load (because the config is not fully loaded yet). We therefore
@@ -88,7 +95,7 @@ func Prelog(format string, v ...interface{}) {
 	defer mu.Unlock()
 
 	// Truncate too many logs
-	if len(prelogs) > 10000 {
+	if len(prelogs) > 1000 {
 		prelogs = nil
 	}
 
@@ -207,7 +214,7 @@ func (self *LogManager) makeNewComponent(
 	component *string) (*LogContext, error) {
 
 	Log := logrus.New()
-	Log.Out = ioutil.Discard
+	Log.Out = inMemoryLogWriter{}
 	Log.Level = logrus.DebugLevel
 
 	if config_obj != nil && config_obj.Logging != nil &&
@@ -333,4 +340,20 @@ func GetStackTrace(err error) string {
 func clearTag(message string) string {
 	message = tag_regex.ReplaceAllString(message, "")
 	return closing_tag_regex.ReplaceAllString(message, "")
+}
+
+type inMemoryLogWriter struct{}
+
+func (self inMemoryLogWriter) Write(p []byte) (n int, err error) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	// Truncate too many logs
+	if len(prelogs) > 1000 {
+		prelogs = nil
+	}
+
+	prelogs = append(prelogs, string(p))
+
+	return len(p), nil
 }
