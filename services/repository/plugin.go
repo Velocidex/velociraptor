@@ -27,6 +27,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -198,11 +199,13 @@ func (self *ArtifactRepositoryPlugin) Call(
 		child_scope.AppendVars(env)
 
 		for _, query := range request[0].Query {
+			query_log := actions.QueryLog.AddQuery(query.VQL)
 			vql, err := vfilter.Parse(query.VQL)
 			if err != nil {
 				scope.Log("Artifact %s invalid: %s",
 					strings.Join(self.prefix, "."),
 					err.Error())
+				query_log.Close()
 				return
 			}
 
@@ -213,10 +216,13 @@ func (self *ArtifactRepositoryPlugin) Call(
 				}
 				select {
 				case <-ctx.Done():
+					query_log.Close()
 					return
+
 				case output_chan <- dict_row:
 				}
 			}
+			query_log.Close()
 		}
 
 	}()

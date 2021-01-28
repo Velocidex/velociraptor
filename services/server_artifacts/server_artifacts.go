@@ -20,6 +20,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -308,6 +309,8 @@ func (self *ServerArtifactsRunner) runQuery(
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
 	for _, query := range arg.Query {
+		query_log := actions.QueryLog.AddQuery(query.VQL)
+
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
 			return err
@@ -366,6 +369,7 @@ func (self *ServerArtifactsRunner) runQuery(
 
 			case row, ok := <-read_chan:
 				if !ok {
+					query_log.Close()
 					break process_query
 				}
 				if rs_writer != nil {

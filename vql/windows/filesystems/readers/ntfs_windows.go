@@ -95,6 +95,10 @@ func (self *NTFSCachedContext) Close() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	self._CloseWithLock()
+}
+
+func (self *NTFSCachedContext) _CloseWithLock() {
 	self.paged_reader.Close()
 }
 
@@ -110,7 +114,7 @@ func (self *NTFSCachedContext) GetNTFSContext() (*ntfs.NTFSContext, error) {
 	self.paged_reader = readers.NewPagedReader(self.scope, "file", self.device)
 	ntfs_ctx, err := ntfs.GetNTFSContext(self.paged_reader, 0)
 	if err != nil {
-		self.Close()
+		self._CloseWithLock()
 		return nil, err
 	}
 

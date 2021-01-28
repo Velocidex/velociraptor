@@ -11,6 +11,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/logging"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -25,7 +26,8 @@ type ProfilePluginArgs struct {
 	Profile   bool  `vfilter:"optional,field=profile,doc=CPU profile."`
 	Trace     bool  `vfilter:"optional,field=trace,doc=CPU trace."`
 	Debug     int64 `vfilter:"optional,field=debug,doc=Debug level"`
-	Logs      bool  `vfilter:"optional,field=logs,doc=Debug level"`
+	Logs      bool  `vfilter:"optional,field=logs,doc=Recent logs"`
+	Queries   bool  `vfilter:"optional,field=queries,doc=Recent Queries run"`
 	Duration  int64 `vfilter:"optional,field=duration,doc=Duration of samples (default 30 sec)"`
 }
 
@@ -207,6 +209,20 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 					Set("Type", "logs").
 					Set("FullPath", "").
 					Set("Line", line):
+				}
+			}
+		}
+
+		if arg.Queries {
+			for _, q := range actions.QueryLog.Get() {
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- ordereddict.NewDict().
+					Set("Type", "query").
+					Set("FullPath", "").
+					Set("Line", q):
 				}
 			}
 		}

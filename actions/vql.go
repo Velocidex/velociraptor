@@ -170,10 +170,13 @@ func (self VQLClientAction) StartQuery(
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
 	for query_idx, query := range arg.Query {
+		query_log := QueryLog.AddQuery(query.VQL)
+
 		query_start := uint64(time.Now().UTC().UnixNano() / 1000)
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
 			responder.RaiseError(ctx, err.Error())
+			query_log.Close()
 			return
 		}
 
@@ -211,6 +214,7 @@ func (self VQLClientAction) StartQuery(
 
 			case result, ok := <-result_chan:
 				if !ok {
+					query_log.Close()
 					break run_query
 				}
 				// Skip let queries since they never produce results.

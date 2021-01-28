@@ -14,6 +14,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alexmullins/zip"
 	"github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -62,6 +63,9 @@ func (self *Container) StoreArtifact(
 	scope vfilter.Scope,
 	query *actions_proto.VQLRequest,
 	format string) (err error) {
+
+	query_log := actions.QueryLog.AddQuery(query.VQL)
+	defer query_log.Close()
 
 	vql, err := vfilter.Parse(query.VQL)
 	if err != nil {

@@ -1,4 +1,4 @@
-package actions
+package actions_test
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
@@ -56,7 +57,7 @@ func (self *ClientVQLTestSuite) TearDownTest() {
 func (self *ClientVQLTestSuite) TestDependentArtifacts() {
 	resp := responder.TestResponder()
 
-	VQLClientAction{}.StartQuery(self.config_obj, self.ctx, resp,
+	actions.VQLClientAction{}.StartQuery(self.config_obj, self.ctx, resp,
 		&actions_proto.VQLCollectorArgs{
 			Query: []*actions_proto.VQLRequest{
 				{

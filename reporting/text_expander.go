@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/olekukonko/tablewriter"
+	"www.velocidex.com/golang/velociraptor/actions"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -52,10 +53,12 @@ func (self *TextTemplateEngine) Query(queries ...string) []vfilter.Row {
 			query = buf.String()
 		}
 
+		query_log := actions.QueryLog.AddQuery(query)
 		vql, err := vfilter.Parse(query)
 		if err != nil {
 			self.logger.Error("VQL Error while reporting %s: %v",
 				self.Artifact.Name, err)
+			query_log.Close()
 			return result
 		}
 
@@ -65,6 +68,7 @@ func (self *TextTemplateEngine) Query(queries ...string) []vfilter.Row {
 		for row := range vql.Eval(ctx, self.Scope) {
 			result = append(result, row)
 		}
+		query_log.Close()
 	}
 
 	return result
