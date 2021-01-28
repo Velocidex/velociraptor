@@ -1,0 +1,74 @@
+name: Windows.EventLogs.Modifications
+description: |
+  It is possible to disable windows event logs on a per channel or per
+  provider basis. Attackers may disable ciritcal log sources to
+  prevent detections.
+
+  This artifact reads the state of the event log system from the
+  registry and attempts to detect when event logs were disabled.
+
+precondition:
+  SELECT * FROM info() WHERE OS =~ "windows"
+
+parameters:
+  - name: ProviderRegex
+    default: .
+  - name: DateAfter
+    description: "search for modifications after this date. YYYY-MM-DDTmm:hh:ss Z"
+    type: timestamp
+  - name: DateBefore
+    description: "search for modifications before this date. YYYY-MM-DDTmm:hh:ss Z"
+    type: timestamp
+
+sources:
+  - name: Channels
+    description: Detects status of log channels (event log files).
+    query: |
+      -- Build time bounds
+      LET DateAfterTime <= if(condition=DateAfter,
+            then=DateAfter, else=timestamp(epoch="1600-01-01"))
+      LET DateBeforeTime <= if(condition=DateBefore,
+            then=DateBefore, else=timestamp(epoch="2200-01-01"))
+
+      LET Key = '''HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\*'''
+
+      SELECT Key.Mtime AS Mtime,
+             basename(path=Key.FullPath) AS ChannelName,
+             Key.FullPath AS _Key,
+             OwningPublisher, Enabled
+      FROM read_reg_key(globs=Key)
+      WHERE ChannelName =~ ProviderRegex
+        AND Mtime.Time > DateAfterTime
+        AND Mtime.Time < DateBeforeTime
+
+  - name: Providers
+    description: Inspect the state of each provider
+    query: |
+      LET Key = '''HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\WMI\Autologger\EventLog-System\**\Enabled'''
+      LET Publishers = '''HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Publishers\*\@'''
+
+      LET ProviderNames <= memoize(key="GUID", query={
+        SELECT basename(path=dirname(path=FullPath)) AS GUID,
+               Data.value AS Name
+        FROM glob(globs=Publishers, accessor="registry")
+      })
+
+      LET X = SELECT Mtime,
+                     basename(path=dirname(path=FullPath)) AS GUID,
+                     Data.value AS Enabled,
+                     dirname(path=FullPath) AS Key,
+                     to_dict(item={
+                        SELECT Name AS _key, Data.value AS _value
+                        FROM glob(root=dirname(path=FullPath),
+                                  globs="/*", accessor="registry")
+                     }) AS Content
+        FROM glob(globs=Key, accessor="registry")
+
+      SELECT Mtime, GUID, Key AS _RegKey,
+         get(item=ProviderNames, member=GUID).Name AS ProviderName,
+         Enabled, Content
+      FROM X
+      WHERE ProviderName =~ ProviderRegex
+        AND Mtime.Time > DateAfterTime
+        AND Mtime.Time < DateBeforeTime
+      ORDER BY ProviderName
