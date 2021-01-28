@@ -8,6 +8,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -173,6 +174,7 @@ func (self CollectPlugin) Call(
 
 			subscope := manager.BuildScope(builder)
 			subscope.AppendVars(env)
+			defer subscope.Close()
 
 			// Run each query and store the results in the container
 			for _, query := range vql_request.Query {
@@ -184,6 +186,8 @@ func (self CollectPlugin) Call(
 				// If there is no container we just
 				// return the rows to our caller.
 				if container == nil {
+					query_log := actions.QueryLog.AddQuery(query.VQL)
+
 					vql, err := vfilter.Parse(query.VQL)
 					if err != nil {
 						scope.Log("collect: %v", err)
@@ -192,6 +196,8 @@ func (self CollectPlugin) Call(
 					for row := range vql.Eval(ctx, subscope) {
 						output_chan <- row
 					}
+					query_log.Close()
+
 					continue
 				}
 

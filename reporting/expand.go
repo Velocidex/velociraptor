@@ -14,6 +14,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/olekukonko/tablewriter"
+	"www.velocidex.com/golang/velociraptor/actions"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -122,6 +123,7 @@ func (self *Expansions) Query(queries ...string) string {
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
 	for _, query := range queries {
+		query_log := actions.QueryLog.AddQuery(query)
 		vql, err := vfilter.Parse(query)
 		if err != nil {
 			return fmt.Sprintf("Error: %v", err)
@@ -131,6 +133,7 @@ func (self *Expansions) Query(queries ...string) string {
 
 		table := EvalQueryToTable(ctx, scope, vql, result)
 		table.Render()
+		query_log.Close()
 	}
 
 	return result.String()

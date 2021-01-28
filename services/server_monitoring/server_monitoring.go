@@ -10,6 +10,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -199,6 +200,8 @@ func (self *EventTable) RunQuery(
 		defer scope.Log("server_monitoring: Finished collecting %v", artifact_name)
 
 		for _, query := range vql_request.Query {
+			query_log := actions.QueryLog.AddQuery(query.VQL)
+
 			vql, err := vfilter.Parse(query.VQL)
 			if err != nil {
 				return
@@ -210,10 +213,12 @@ func (self *EventTable) RunQuery(
 			for {
 				select {
 				case <-ctx.Done():
+					query_log.Close()
 					return
 
 				case row, ok := <-eval_chan:
 					if !ok {
+						query_log.Close()
 						break one_query
 					}
 

@@ -62,6 +62,8 @@ func (self *Loader) WithTempdir(tmpdir string) *Loader {
 					tmpdir, os.Getenv("TMP"))
 				return nil
 			}
+			tmpfile.Close()
+
 			defer os.Remove(tmpfile.Name())
 
 			switch runtime.GOOS {

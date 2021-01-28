@@ -53,6 +53,9 @@ parameters:
   - name: Logs
     description: Get logs
     type: bool
+  - name: QueryLogs
+    description: Get recent queries logs
+    type: bool
   - name: Verbose
     description: Print more detail
     type: bool
@@ -66,6 +69,7 @@ sources:
              if(condition=FullPath, then=upload(name=Type + ".bin", file=FullPath)) AS File,
              get(member="Line") AS Line
       FROM profile(allocs=Allocs, block=Block, goroutine=Goroutine,
-                   heap=Heap, mutex=Mutex, profile=Profile, trace=Trace, logs=Logs,
+                   heap=Heap, mutex=Mutex, profile=Profile, trace=Trace,
+                   logs=Logs, queries=QueryLogs,
                    debug=if(condition=Verbose, then=2, else=1),
                    duration=atoi(string=Duration))

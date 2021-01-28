@@ -15,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/actions"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -553,9 +554,13 @@ func createHuntDownloadFile(
 			Set("HuntId", hunt_id))
 		defer subscope.Close()
 
-		vql, _ := vfilter.Parse(
-			"SELECT Flow.session_id AS FlowId, ClientId " +
-				"FROM hunt_flows(hunt_id=HuntId)")
+		query := "SELECT Flow.session_id AS FlowId, ClientId " +
+			"FROM hunt_flows(hunt_id=HuntId)"
+		vql, _ := vfilter.Parse(query)
+
+		query_log := actions.QueryLog.AddQuery(query)
+		defer query_log.Close()
+
 		for row := range vql.Eval(ctx, subscope) {
 			flow_id := vql_subsystem.GetStringFromRow(scope, row, "FlowId")
 			client_id := vql_subsystem.GetStringFromRow(scope, row, "ClientId")
@@ -595,6 +600,8 @@ func StoreVQLAsCSVAndJsonFile(
 	csv_fd io.Writer,
 	json_fd io.Writer) error {
 
+	query_log := actions.QueryLog.AddQuery(query)
+	defer query_log.Close()
 	vql, err := vfilter.Parse(query)
 	if err != nil {
 		return err
