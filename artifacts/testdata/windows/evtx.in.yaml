@@ -18,3 +18,6 @@ Queries:
     LIMIT 1
 
   - SELECT * FROM Artifact.Windows.EventLogs.EvtxHunter( EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx",IocRegex="Get-Service" )
+
+  # Task Scheduler testing to ensure field parsing wrking as expected
+  - SELECT * FROM Artifact.Windows.EventLogs.ScheduledTasks( Security=srcDir + '/artifacts/testdata/files/SecurityTasks.evtx', TaskScheduler= srcDir + '/artifacts/testdata/files/TaskScheduler.evtx', TaskNameRegex='T1053_005_powershell' )
