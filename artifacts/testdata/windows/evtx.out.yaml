@@ -152,4 +152,121 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "FullPath": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
   "_Source": "Windows.EventLogs.EvtxHunter"
  }
+]SELECT * FROM Artifact.Windows.EventLogs.ScheduledTasks( Security=srcDir + '/artifacts/testdata/files/SecurityTasks.evtx', TaskScheduler= srcDir + '/artifacts/testdata/files/TaskScheduler.evtx', TaskNameRegex='T1053_005_powershell' )[
+ {
+  "EventTime": "2021-01-27T11:40:36Z",
+  "Computer": "RE-Dev",
+  "Channel": "Security",
+  "EventID": 4698,
+  "EventRecordID": 20024,
+  "UserName": "RE-DEV\\yolo",
+  "TaskName": "\\T1053_005_powershell",
+  "Message": "A scheduled task was created.",
+  "TaskAction": "calc.exe",
+  "EventData": {
+   "SubjectUserSid": "S-1-5-21-128822557-2730879828-3162054034-1000",
+   "SubjectUserName": "yolo",
+   "SubjectDomainName": "RE-DEV",
+   "SubjectLogonId": 200302,
+   "TaskName": "\\T1053_005_powershell",
+   "TaskContent": {
+    "Actions": {
+     "AttrContext": "Author",
+     "Exec": {
+      "Command": "calc.exe"
+     }
+    },
+    "Attrversion": "1.3",
+    "Attrxmlns": "http://schemas.microsoft.com/windows/2004/02/mit/task",
+    "Principals": {
+     "Principal": {
+      "Attrid": "Author",
+      "GroupId": "S-1-5-32-544",
+      "RunLevel": "HighestAvailable"
+     }
+    },
+    "RegistrationInfo": {
+     "URI": "\\T1053_005_powershell"
+    },
+    "Settings": {
+     "AllowHardTerminate": "true",
+     "AllowStartOnDemand": "true",
+     "DisallowStartIfOnBatteries": "true",
+     "DisallowStartOnRemoteAppSession": "false",
+     "Enabled": "true",
+     "ExecutionTimeLimit": "PT72H",
+     "Hidden": "false",
+     "IdleSettings": {
+      "Duration": "PT10M",
+      "RestartOnIdle": "false",
+      "StopOnIdleEnd": "true",
+      "WaitTimeout": "PT1H"
+     },
+     "MultipleInstancesPolicy": "IgnoreNew",
+     "Priority": "7",
+     "RunOnlyIfIdle": "false",
+     "RunOnlyIfNetworkAvailable": "false",
+     "StartWhenAvailable": "false",
+     "StopIfGoingOnBatteries": "true",
+     "UseUnifiedSchedulingEngine": "true",
+     "WakeToRun": "false"
+    },
+    "Triggers": {
+     "LogonTrigger": {
+      "Enabled": "true"
+     }
+    }
+   },
+   "ClientProcessStartKey": 5348024557502550,
+   "ClientProcessId": 3320,
+   "ParentProcessId": 840,
+   "RpcCallClientLocality": 0,
+   "FQDN": "RE-Dev"
+  },
+  "FullPath": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\SecurityTasks.evtx",
+  "_Source": "Windows.EventLogs.ScheduledTasks"
+ },
+ {
+  "EventTime": "2021-01-27T11:42:13Z",
+  "Computer": "RE-Dev",
+  "Channel": "Security",
+  "EventID": 4699,
+  "EventRecordID": 20038,
+  "UserName": "RE-DEV\\yolo",
+  "TaskName": "\\T1053_005_powershell",
+  "Message": "A scheduled task was deleted.",
+  "TaskAction": null,
+  "EventData": {
+   "SubjectUserSid": "S-1-5-21-128822557-2730879828-3162054034-1000",
+   "SubjectUserName": "yolo",
+   "SubjectDomainName": "RE-DEV",
+   "SubjectLogonId": 200302,
+   "TaskName": "\\T1053_005_powershell",
+   "TaskContent": "",
+   "ClientProcessStartKey": 5348024557502636,
+   "ClientProcessId": 4036,
+   "ParentProcessId": 5412,
+   "RpcCallClientLocality": 0,
+   "FQDN": "RE-Dev"
+  },
+  "FullPath": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\SecurityTasks.evtx",
+  "_Source": "Windows.EventLogs.ScheduledTasks"
+ },
+ {
+  "EventTime": "2021-01-27T11:42:13Z",
+  "Computer": "RE-Dev",
+  "Channel": "Microsoft-Windows-TaskScheduler/Operational",
+  "EventID": 141,
+  "EventRecordID": 2615,
+  "UserName": "RE-DEV\\yolo",
+  "TaskName": "\\T1053_005_powershell",
+  "Message": "User \"RE-DEV\\yolo\"  deleted Task Scheduler task \"\\T1053_005_powershell\"\r\n",
+  "TaskAction": "N/A",
+  "EventData": {
+   "TaskName": "\\T1053_005_powershell",
+   "UserName": "RE-DEV\\yolo"
+  },
+  "FullPath": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "_Source": "Windows.EventLogs.ScheduledTasks"
+ }
 ]
