@@ -327,9 +327,15 @@ sources:
 
       LET definitions <= SELECT * FROM chain(
       a = { SELECT name, description, tools, parameters, sources, reports
-            FROM artifact_definitions(names=artifacts + template)
+            FROM artifact_definitions(names=artifacts)
             WHERE name =~ "^(Custom|Packs)\\." AND
               log(message="Adding artifact_definition for " + name) },
+
+      -- Support custom templates
+      a2 = { SELECT name, description, tools, parameters, sources, reports
+            FROM artifact_definitions(names=template)
+            WHERE name =~ "^(Custom|Packs)\\." AND
+              log(message="Adding artifact_definition for template " + name) },
 
       // Create the definition of the Collector artifact.
       b = { SELECT "Collector" AS name, (

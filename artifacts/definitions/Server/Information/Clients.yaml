@@ -11,10 +11,8 @@ description: |
 type: SERVER
 
 sources:
-  - queries:
-      - |
-        /* Collect information about each client. */
-        LET client_info = SELECT client_id,
+  - query: |
+        SELECT client_id,
                os_info.fqdn as HostName,
                os_info.system as OS,
                os_info.release as Release,
@@ -23,14 +21,3 @@ sources:
                last_seen_at AS _LastSeenAt
         FROM clients(count=100000)
         ORDER BY _LastSeenAt DESC
-
-      - |
-        LET names = SELECT Name FROM Artifact.Server.Information.Users(
-               ClientId=client_id)
-
-      - |
-        /* For each client, also list its users. */
-        SELECT client_id,
-               HostName, OS, Release, LastSeenAt, LastIP,
-               join(array=names.Name, sep=",") AS Users
-        FROM client_info
