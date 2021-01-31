@@ -14,7 +14,9 @@ import (
 )
 
 type WatchETWArgs struct {
-	Provider string `vfilter:"required,field=guid,doc=A Provider GUID to watch "`
+	Provider    string `vfilter:"required,field=guid,doc=A Provider GUID to watch "`
+	AnyKeywords uint64 `vfilter:"optional,field=any,doc=Any Keywords "`
+	AllKeywords uint64 `vfilter:"optional,field=all,doc=All Keywords "`
 }
 
 type WatchETWPlugin struct{}
@@ -40,7 +42,11 @@ func (self WatchETWPlugin) Call(
 			scope.Log("watch_etw: %s", err.Error())
 			return
 		}
-		session, err := etw.NewSession(guid)
+		session, err := etw.NewSession(guid, func(cfg *etw.SessionOptions) {
+			cfg.MatchAnyKeyword = arg.AnyKeywords
+			cfg.MatchAllKeyword = arg.AllKeywords
+		})
+
 		if err != nil {
 			scope.Log("watch_etw: %s", err.Error())
 			return
