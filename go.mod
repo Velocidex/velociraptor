@@ -114,7 +114,7 @@ require (
 	www.velocidex.com/golang/evtx v0.0.2-0.20201104041743-4b6cdb206c95
 	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20201111050421-bbba6f6a13d3
-	www.velocidex.com/golang/go-pe v0.1.1-0.20210106024341-b436a09784ae
+	www.velocidex.com/golang/go-pe v0.1.1-0.20210201082132-138370e90206
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
