@@ -61,7 +61,7 @@ func (self _PEFunction) Call(
 	paged_reader := readers.NewPagedReader(scope, arg.Accessor, arg.Filename)
 	pe_file, err := pe.NewPEFile(paged_reader)
 	if err != nil {
-		scope.Log("parse_pe: %v", err)
+		scope.Log("parse_pe: %v for %v", err, arg.Filename)
 		return &vfilter.Null{}
 	}
 

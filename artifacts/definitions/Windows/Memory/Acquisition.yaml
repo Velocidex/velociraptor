@@ -18,7 +18,7 @@ sources:
   - queries:
       - SELECT * FROM foreach(
           row={
-            SELECT FullPath, tempfile(extension=".raw") AS Tempfile
+            SELECT FullPath, tempfile(extension=".raw", remove_last=TRUE) AS Tempfile
             FROM Artifact.Generic.Utils.FetchBinary(ToolName="WinPmem64")
           },
           query={

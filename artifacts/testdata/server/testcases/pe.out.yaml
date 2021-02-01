@@ -72,4 +72,17 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
  {
   "_value": "ntoskrnl.exe!MmGetPhysicalMemoryRanges"
  }
+]SELECT ForwardedImport, DllImportPath FROM Artifact.Windows.Detection.ForwardedImports( DLLGlob=srcDir + "/artifacts/testdata/files/wkscli.dll") LIMIT 3[
+ {
+  "ForwardedImport": "C:\\windows\\system32\\wkscli.NetAddAlternateComputerName",
+  "DllImportPath": "C:\\windows\\system32\\wkscli"
+ },
+ {
+  "ForwardedImport": "C:\\windows\\system32\\wkscli.NetEnumerateComputerNames",
+  "DllImportPath": "C:\\windows\\system32\\wkscli"
+ },
+ {
+  "ForwardedImport": "C:\\windows\\system32\\wkscli.NetGetJoinInformation",
+  "DllImportPath": "C:\\windows\\system32\\wkscli"
+ }
 ]
