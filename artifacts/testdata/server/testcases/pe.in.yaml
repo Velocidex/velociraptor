@@ -31,3 +31,8 @@ Queries:
   - SELECT * FROM foreach(
        row=parse_pe(file=srcDir + "/artifacts/testdata/files/winpmem_x64.sys").Imports)
     WHERE _value =~ "Physical"
+
+  - SELECT ForwardedImport, DllImportPath
+    FROM Artifact.Windows.Detection.ForwardedImports(
+       DLLGlob=srcDir + "/artifacts/testdata/files/wkscli.dll")
+    LIMIT 3
