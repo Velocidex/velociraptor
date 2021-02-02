@@ -183,16 +183,13 @@ sources:
         TaskName,
         if(condition= Channel = 'Microsoft-Windows-TaskScheduler/Operational',
             then= Message,
-            else= if(condition= EventID=4698,
-                then= 'A scheduled task was created.',
-                else= if(condition= EventID=4699,
-                    then= 'A scheduled task was deleted.',
-                    else= if(condition= EventID=4700,
-                        then= 'A scheduled task was enabled.',
-                        else= if(condition= EventID=4701,
-                            then= 'A scheduled task was disabled.',
-                            else=if(condition= EventID=4702,
-                                then= 'A scheduled task was updated.')))))
+            else=get(item=dict(
+                   `4698`="A scheduled task was created.",
+                   `4699`="A scheduled task was deleted.",
+                   `4700`="A scheduled task was enabled.",
+                   `4701`="A scheduled task was disabled.",
+                   `4702`="A scheduled task was updated."), 
+                member=str(str=EventID))
             ) as Message,
         if(condition= str(str=EventID)=~'^(4698|4699|4700|4701|4702)$',
         then= if(condition= EventData.TaskContent.Actions,
