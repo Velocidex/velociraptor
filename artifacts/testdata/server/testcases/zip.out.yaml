@@ -1,7 +1,7 @@
 LET zip_files = SELECT FullPath, Size FROM glob( globs=srcDir+"/artifacts/testdata/files/**/*.zip")[]SELECT basename(path=FullPath) as Name, Size FROM zip_files[
  {
   "Name": "test.zip",
-  "Size": 926
+  "Size": 1064
  }
 ]LET hits = SELECT * from foreach(row=zip_files, query= { select FullPath, Mtime, Size from glob(globs=url(scheme='file', path=FullPath, fragment='/**/*.txt').String, accessor='zip') } )[]SELECT url(parse=FullPath).Fragment as Name, Size, Mtime from hits[
  {
