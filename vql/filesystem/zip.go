@@ -240,9 +240,7 @@ loop:
 			}
 		}
 	}
-
 	return result, nil
-
 }
 
 func (self *ZipFileCache) Close() {
@@ -312,6 +310,11 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 		self.fd_cache[url.String()] = zip_file_cache
 
 		for _, i := range zip_file.File {
+			// Ignore directories which are signified by a
+			// trailing / and have no content.
+			if strings.HasSuffix(i.Name, "/") && i.UncompressedSize64 == 0 {
+				continue
+			}
 			file_path := path.Clean(i.Name)
 			zip_file_cache.lookup = append(zip_file_cache.lookup,
 				_CDLookup{

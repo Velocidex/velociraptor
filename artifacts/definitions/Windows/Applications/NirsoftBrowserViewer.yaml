@@ -42,7 +42,7 @@ sources:
 
       -- Download the binary and create a csv file to write on.
       LET tmp_exe = SELECT FullPath AS BinPath,
-                           tempfile(extension=".csv") AS CSVFile
+                           tempfile(extension=".csv", remove_last=TRUE) AS CSVFile
       FROM Artifact.Generic.Utils.FetchBinary(ToolName="NirsoftBrowsingHistoryView64")
 
       LET results = SELECT CSVFile

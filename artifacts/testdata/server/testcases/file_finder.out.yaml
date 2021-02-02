@@ -6,7 +6,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  {
   "File": "test.zip",
   "Hash": null,
-  "Size": 926,
+  "Size": 1064,
   "Upload": null,
   "Keywords": ""
  }
@@ -14,11 +14,11 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  {
   "File": "test.zip",
   "Hash": {
-   "MD5": "fa2e382dedf895a251fcc369faa8818c",
-   "SHA1": "5ba90c3c0752a2a410fee786b29e290156bb5720",
-   "SHA256": "3dd71339a8563b9f4bdedcb0b72ef3001afb40ad3e8001429cac5fa4c338347c"
+   "MD5": "0f72ff84405a6f2def7d2446d9d5e836",
+   "SHA1": "fa4788b00178b453a8bf6ae178d2c54098dddfab",
+   "SHA256": "a9182ad490142b1bfd2c816ae9a79b27caa2414835ac54903075e29eea9d5d75"
   },
-  "Size": 926,
+  "Size": 1064,
   "Upload": null,
   "Keywords": ""
  }
@@ -26,8 +26,8 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  {
   "File": "test.zip",
   "Hash": null,
-  "Size": 926,
-  "Upload.md5": "fa2e382dedf895a251fcc369faa8818c",
+  "Size": 1064,
+  "Upload.md5": "0f72ff84405a6f2def7d2446d9d5e836",
   "Keywords": ""
  }
 ]SELECT basename(path=FullPath) AS File, Keywords FROM Artifact.Windows.Search.FileFinder( YaraRule="wide nocase ascii:supercalifragilisticexpialidocious", SearchFilesGlob=srcDir + "/artifacts/testdata/**/*.in.yaml")[
