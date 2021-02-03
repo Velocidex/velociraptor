@@ -1,0 +1,64 @@
+name: Windows.Network.PacketCapture
+author: Cybereason <omer.yampel@cybereason.com>
+description: | 
+  Run this artifact twice, the first time, set the StartTrace flag to True to start the PCAP collection, 
+  this will have the VQL return a single row (the TraceFile generated)
+  When you want to stop collecting, and transform this TraceFile to a PCAP, re-run this artifact with StartTrace as false, and 
+  put path of the .etl file created in the previous step in the TraceFile. This will then convert the .etl to a PCAP and upload it.
+precondition: SELECT OS From info() where OS = 'windows'
+
+tools:
+    - name: etl2pcapng
+      url: https://github.com/microsoft/etl2pcapng/releases/download/v1.4.0/etl2pcapng.zip
+
+parameters:
+    - name: StartTrace
+      type: bool
+      default: Y
+    - name: TraceCommand
+      type: string
+      default: netsh trace start capture=yes
+    - name: TraceFile
+      type: string
+      default:
+
+
+sources:
+    - queries:
+
+        - |
+            LET tool_zip = SELECT * FROM Artifact.Generic.Utils.FetchBinary(ToolName="etl2pcapng")
+        - |
+            LET etl2pcapbin = SELECT
+                    copy(
+                        filename=url(path=tool_zip[0].FullPath,fragment="etl2pcapng/x64/etl2pcapng.exe").String,
+                        dest=tempfile(extension='.exe'),
+                        accessor='zip'
+                    ) AS file
+                FROM scope()
+        - |
+            LET outfile <= tempfile(extension=".pcapng")
+        - |
+            LET stop_trace = SELECT * FROM execve(argv=['cmd.exe', '/c', 'netsh trace stop'])
+        - |
+            LET convert_pcap = SELECT * FROM execve(argv=['cmd.exe', '/c', etl2pcapbin[0].file, TraceFile, outfile])
+        - |
+            LET end_trace = SELECT * FROM chain(
+                a=stop_trace,
+                b=convert_pcap,
+                c={SELECT upload(file=outfile) AS Upload FROM scope()},
+                d={SELECT upload(file=TraceFile) AS Upload FROM scope()}
+            )
+        - |
+            LET launch_trace =
+                SELECT
+                    split(string=split(string=Stdout, sep="Trace File: ")[1], sep="\r\nAppend:")[0] as etl_file
+                FROM
+                    execve(argv=["cmd.exe", "/c", TraceCommand])
+                WHERE log(message="stderr: " + Stderr), log(message="stdout: " + Stdout)
+        - |
+            SELECT * FROM if(
+                condition=StartTrace = "Y",
+                then=launch_trace,
+                else=end_trace
+            )
