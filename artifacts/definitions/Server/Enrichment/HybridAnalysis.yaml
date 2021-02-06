@@ -22,6 +22,11 @@ parameters:
       description: API key for Hybrid Analysis. Leave blank here if using server metadata store.
       default:
 
+    - name: UserAgent
+      type: string
+      description: Name of the user agent used for submitting hashes.
+      default: Velociraptor
+
 sources:
   - queries:
     - |
@@ -32,7 +37,7 @@ sources:
     - |
         LET URL <= 'https://hybrid-analysis.com/api/v2/search/hash'
     - |
-        LET Data = SELECT parse_json_array(data=Content) as Content from http_client(url=URL, headers=dict(`api-key`=Creds, `user-agent`="Sandbox", `Content-Type`="application/x-www-form-urlencoded"), params=dict(hash=Hash), method='POST')
+        LET Data = SELECT parse_json_array(data=Content) as Content from http_client(url=URL, headers=dict(`api-key`=Creds, `user-agent`=UserAgent, `Content-Type`="application/x-www-form-urlencoded"), params=dict(hash=Hash), method='POST')
     - |
         SELECT * from foreach (
             row=Data,
