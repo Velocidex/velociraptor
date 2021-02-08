@@ -36,5 +36,5 @@ sources:
     - | 
         LET Data = SELECT parse_json(data=Content) AS VTData from http_client(url=URL, headers=dict(`x-apikey`=Creds))
     - |
-        SELECT + format(format='%v/%v', args=[VTData.data.attributes.last_analysis_stats.malicious, VTData.data.attributes.last_analysis_stats.malicious + VTData.data.attributes.last_analysis_stats.undetected]) As VTRating, 
+        SELECT format(format='%v/%v', args=[VTData.data.attributes.last_analysis_stats.malicious, VTData.data.attributes.last_analysis_stats.malicious + VTData.data.attributes.last_analysis_stats.undetected]) As VTRating, 
             timestamp(epoch=VTData.data.attributes.first_seen_itw_date) AS FirstSeen, timestamp(epoch=VTData.data.attributes.first_submission_date) AS FirstSubmitted, timestamp(epoch=VTData.data.attributes.last_analysis_date) AS LastAnalysis, VTData.data.attributes.crowdsourced_yara_results AS YARAResults, VTData AS _Data FROM Data
