@@ -21,7 +21,7 @@ parameters:
       
     - name: VirustotalKey
       type: string
-      description: API key for Hybrid Analysis. Leave blank here if using server metadata store.
+      description: API key for Virustotal. Leave blank here if using server metadata store.
       default:
 
 sources:
