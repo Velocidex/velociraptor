@@ -621,6 +621,9 @@ func (self *ApiServer) UpdateNotebookCell(
 		// released.
 		defer query_cancel()
 
+		// Close the template when we are done with it.
+		defer tmpl.Close()
+
 		resp, err := updateCellContents(query_ctx, self.config, tmpl,
 			in.CurrentlyEditing, in.NotebookId,
 			in.CellId, cell_type, input, in.Input)
@@ -956,6 +959,8 @@ func updateCellContents(
 	if err != nil {
 		return nil, err
 	}
+
+	tmpl.Close()
 
 	notebook_cell := &api_proto.NotebookCell{
 		Input:            original_input,

@@ -517,7 +517,12 @@ func (self *logWriter) Write(b []byte) (int, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	// Do not allow the log messages to accumulate too much.
 	self.messages = append(self.messages, string(b))
+	if len(self.messages) > 1000 {
+		self.messages = nil
+	}
+
 	return len(b), nil
 }
 

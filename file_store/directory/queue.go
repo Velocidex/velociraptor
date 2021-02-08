@@ -59,20 +59,24 @@ type Listener struct {
 
 	// Name of the file_buffer
 	tmpfile string
-	cancel  func()
+
+	// The context of the creator of this listener - When it is
+	// done we drop messages to it.
+	ctx context.Context
 }
 
 // Should not block - very fast.
 func (self *Listener) Send(item *ordereddict.Dict) {
-	self.input <- item
+	select {
+	case <-self.ctx.Done():
+		return
+
+	case self.input <- item:
+	}
 }
 
 func (self *Listener) Close() {
-	self.cancel()
 	self.file_buffer.Close()
-
-	// Close the output channel so our listener will exit.
-	close(self.output)
 
 	os.Remove(self.tmpfile) // clean up file buffer
 }
@@ -98,10 +102,9 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 		return nil, err
 	}
 
-	subctx, cancel := context.WithCancel(ctx)
 	self := &Listener{
 		id:          time.Now().UnixNano(),
-		cancel:      cancel,
+		ctx:         ctx,
 		input:       make(chan *ordereddict.Dict),
 		output:      output,
 		file_buffer: file_buffer,
@@ -111,11 +114,11 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 	// Pump messages from input channel and distribute to
 	// output. If output is busy we divert to the file buffer.
 	go func() {
-		defer cancel()
+		defer self.Close()
 
 		for {
 			select {
-			case <-subctx.Done():
+			case <-ctx.Done():
 				return
 
 			case item, ok := <-self.input:
@@ -123,7 +126,7 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 					return
 				}
 				select {
-				case <-subctx.Done():
+				case <-ctx.Done():
 					return
 
 					// If we can immediately push
@@ -144,14 +147,14 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 		for {
 			// Wait here until the file has some data in it.
 			select {
-			case <-subctx.Done():
+			case <-ctx.Done():
 				return
 
 			case <-time.After(time.Second):
 				// Get some messages from the file.
 				for _, item := range self.file_buffer.Lease(100) {
 					select {
-					case <-subctx.Done():
+					case <-ctx.Done():
 						return
 					case self.output <- item:
 					}
@@ -181,9 +184,13 @@ func (self *QueuePool) Register(
 	output_chan := make(chan *ordereddict.Dict)
 
 	registrations := self.registrations[vfs_path]
-	new_registration, err := NewListener(self.config_obj, ctx, output_chan)
+
+	subctx, cancel := context.WithCancel(ctx)
+	new_registration, err := NewListener(self.config_obj, subctx, output_chan)
 	if err != nil {
 		close(output_chan)
+		cancel()
+
 		return output_chan, func() {}
 	}
 
@@ -192,6 +199,9 @@ func (self *QueuePool) Register(
 	self.registrations[vfs_path] = registrations
 
 	return output_chan, func() {
+		close(output_chan)
+		cancel()
+
 		self.unregister(vfs_path, new_registration.id)
 	}
 }

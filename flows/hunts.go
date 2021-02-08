@@ -193,6 +193,22 @@ func CreateHunt(
 		}
 	}
 
+	row := ordereddict.NewDict().
+		Set("Timestamp", time.Now().UTC().Unix()).
+		Set("Hunt", hunt)
+
+	journal, err := services.GetJournal()
+	if err != nil {
+		return "", err
+	}
+
+	err = journal.PushRowsToArtifact(config_obj,
+		[]*ordereddict.Dict{row}, "System.Hunt.Creation",
+		"server", hunt.HuntId)
+	if err != nil {
+		return "", err
+	}
+
 	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
 	err = db.SetSubject(config_obj, hunt_path_manager.Path(), hunt)
 	if err != nil {
