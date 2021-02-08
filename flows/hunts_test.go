@@ -72,6 +72,10 @@ sources:
 `, true)
 
 	repository.LoadYaml(`
+name: System.Hunt.Creation
+type: SERVER_EVENT`, true)
+
+	repository.LoadYaml(`
 name: AnotherTestArtifact
 parameters:
 - name: AnotherTestArtifact_Arg1
