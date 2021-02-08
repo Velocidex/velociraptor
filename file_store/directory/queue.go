@@ -59,20 +59,26 @@ type Listener struct {
 
 	// Name of the file_buffer
 	tmpfile string
-	cancel  func()
+
+	// The context of the creator of this listener - When it is
+	// done we drop messages to it.
+	ctx    context.Context
+	cancel func()
 }
 
 // Should not block - very fast.
 func (self *Listener) Send(item *ordereddict.Dict) {
-	self.input <- item
+	select {
+	case <-self.ctx.Done():
+		return
+
+	case self.input <- item:
+	}
 }
 
 func (self *Listener) Close() {
 	self.cancel()
 	self.file_buffer.Close()
-
-	// Close the output channel so our listener will exit.
-	close(self.output)
 
 	os.Remove(self.tmpfile) // clean up file buffer
 }
@@ -102,6 +108,7 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 	self := &Listener{
 		id:          time.Now().UnixNano(),
 		cancel:      cancel,
+		ctx:         subctx,
 		input:       make(chan *ordereddict.Dict),
 		output:      output,
 		file_buffer: file_buffer,
@@ -111,7 +118,7 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 	// Pump messages from input channel and distribute to
 	// output. If output is busy we divert to the file buffer.
 	go func() {
-		defer cancel()
+		defer self.Close()
 
 		for {
 			select {

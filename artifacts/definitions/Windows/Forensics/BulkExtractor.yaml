@@ -76,10 +76,11 @@ sources:
     - LET bin <= SELECT *
         FROM Artifact.Generic.Utils.FetchBinary(ToolName="Bulk_Extractor")
     - LET tempfolder <= tempdir()
+    - LET ExePath <= tempfile(extension=".exe")
     - LET zip_file <= SELECT
             copy(filename=url(path=bin[0].FullPath,
                 fragment="bulk_extractor.exe").String,
-                dest=tempfile(extension=".exe"),
+                dest=ExePath,
                 accessor='zip') AS Payload
         FROM scope()
     - LET target = SELECT

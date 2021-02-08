@@ -1,0 +1,5 @@
+name: System.Hunt.Creation
+description: |
+  An event artifact that fires when a user schedules a new hunt.
+
+type: SERVER_EVENT
