@@ -7,7 +7,7 @@ description: |
   
   Ex.
   
-    `SELECT * from Artifact.Server.Enrich.Virustotal(Hash=$YOURHASH)`
+    `SELECT * from Artifact.Server.Enrichment.Virustotal(Hash=$YOURHASH)`
   
   `TO-DO`: Implement a timer to spread out requests
   
