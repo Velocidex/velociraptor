@@ -7,7 +7,7 @@ description: |
   
   Ex.
   
-    `SELECT * from Artifact.Server.Enrich.HybridAnalysis(Hash=$YOURHASH)`
+    `SELECT * from Artifact.Server.Enrichment.HybridAnalysis(Hash=$YOURHASH)`
 
 type: SERVER
 
