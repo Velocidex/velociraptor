@@ -43,7 +43,9 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-type HuntsPluginArgs struct{}
+type HuntsPluginArgs struct {
+	HuntId string `vfilter:"optional,field=hunt_id,doc=A hunt id to read, if not specified we list all of them."`
+}
 
 type HuntsPlugin struct{}
 
@@ -80,12 +82,18 @@ func (self HuntsPlugin) Call(
 			return
 		}
 
-		hunt_path_manager := paths.NewHuntPathManager("")
-		hunts, err := db.ListChildren(config_obj,
-			hunt_path_manager.HuntDirectory().Path(), 0, 100)
-		if err != nil {
-			scope.Log("Error: %v", err)
-			return
+		var hunts []string
+		if arg.HuntId == "" {
+			hunt_path_manager := paths.NewHuntPathManager("")
+			hunts, err = db.ListChildren(config_obj,
+				hunt_path_manager.HuntDirectory().Path(), 0, 10000)
+			if err != nil {
+				scope.Log("Error: %v", err)
+				return
+			}
+		} else {
+			hunt_path_manager := paths.NewHuntPathManager(arg.HuntId)
+			hunts = append(hunts, hunt_path_manager.Path())
 		}
 
 		for _, hunt_urn := range hunts {
