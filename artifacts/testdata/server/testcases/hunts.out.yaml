@@ -41,13 +41,13 @@ SELECT * FROM hunt_results(hunt_id='H.49ba8939', artifact='Windows.Network.Netst
   "hunt_id": "H.49ba8939",
   "create_time": 1593490948327828
  }
-]SELECT hunt_id, create_time FROM hunts()[
- {
-  "hunt_id": "H.49ba8939",
-  "create_time": 1593490948327828
- },
+]SELECT hunt_id, create_time FROM hunts() ORDER BY hunt_id[
  {
   "hunt_id": "H.19c0c0a2",
   "create_time": 1606270777529448
+ },
+ {
+  "hunt_id": "H.49ba8939",
+  "create_time": 1593490948327828
  }
 ]

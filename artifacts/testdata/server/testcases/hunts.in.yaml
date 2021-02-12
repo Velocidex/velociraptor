@@ -8,4 +8,4 @@ Queries:
   - SELECT hunt_id, create_time FROM hunts(hunt_id="H.49ba8939")
 
   # List all hunts
-  - SELECT hunt_id, create_time FROM hunts()
+  - SELECT hunt_id, create_time FROM hunts() ORDER BY hunt_id
