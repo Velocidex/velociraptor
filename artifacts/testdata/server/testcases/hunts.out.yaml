@@ -36,4 +36,18 @@ SELECT * FROM hunt_results(hunt_id='H.49ba8939', artifact='Windows.Network.Netst
   "ClientId": "C.4f5e52adf0a337a9",
   "Fqdn": "DESKTOP-BP4S7TF"
  }
+]SELECT hunt_id, create_time FROM hunts(hunt_id="H.49ba8939")[
+ {
+  "hunt_id": "H.49ba8939",
+  "create_time": 1593490948327828
+ }
+]SELECT hunt_id, create_time FROM hunts()[
+ {
+  "hunt_id": "H.49ba8939",
+  "create_time": 1593490948327828
+ },
+ {
+  "hunt_id": "H.19c0c0a2",
+  "create_time": 1606270777529448
+ }
 ]

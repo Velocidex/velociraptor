@@ -3,3 +3,9 @@ Queries:
   - SELECT * FROM hunt_results(hunt_id='H.49ba8939',
     artifact='Windows.Network.NetstatEnriched/Netstat')
     LIMIT 1
+
+  # Retrieve hunt info by hunt id
+  - SELECT hunt_id, create_time FROM hunts(hunt_id="H.49ba8939")
+
+  # List all hunts
+  - SELECT hunt_id, create_time FROM hunts()

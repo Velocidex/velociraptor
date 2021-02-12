@@ -110,7 +110,8 @@ func hostkeycallback(trustedkey string) ssh.HostKeyCallback {
 	}
 }
 
-func getSFTPClient(scope vfilter.Scope, user string, privateKey string, endpoint string, hostKey string) (*sftp.Client, error) {
+func getSFTPClient(scope vfilter.Scope, user string, privateKey string,
+	endpoint string, hostKey string) (*sftp.Client, error) {
 	cacheKey := fmt.Sprintf("%s %s", user, endpoint)
 	client := vql_subsystem.CacheGet(scope, cacheKey)
 	if client == nil {
