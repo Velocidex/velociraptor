@@ -9,7 +9,7 @@ Queries:
   - SELECT * FROM Artifact.Windows.EventLogs.Kerbroasting(eventLog=srcDir + '/artifacts/testdata/files/EID4769_Kerbroasting.evtx')
 
   # Powershell VQL tests
-  - SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(EventLog=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")
+  - SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")
 
   - SELECT * FROM Artifact.Windows.EventLogs.PowershellModule(EventLog=srcDir + "/artifacts/testdata/files/EID4103_PowershellModule.evtx" )
 
