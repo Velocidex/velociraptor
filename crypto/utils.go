@@ -162,7 +162,7 @@ func VerifyConfig(config_obj *config_proto.Config) error {
 	}
 
 	if config_obj.Writeback.PrivateKey == "" {
-		fmt.Println("Genering new private key....")
+		fmt.Println("Generating new private key....")
 		pem, err := GeneratePrivateKey()
 		if err != nil {
 			return errors.WithStack(err)
