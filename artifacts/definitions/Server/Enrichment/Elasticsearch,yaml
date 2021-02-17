@@ -23,9 +23,9 @@ parameters:
     default: http://127.0.0.1:9200/
     description: URL for Elasticsearch
   - name: elasticUsername
-    description: Username for authentication
+    description: Username for authentication.  Leave blank to user server metadata.
   - name: elasticPassword
-    description: Password for authentication
+    description: Password for authentication.  Leave blank to user server metadata.
   - name: DisableSSLVerify
     type: bool
     default: True
