@@ -6,7 +6,7 @@ description: |
   
   Ex.
   
-    `SELECT * from Artifact.Custom.Server.Enrichment.Elastic(elasticAddress=$YOURELASTIC, elasticQuery=$YOURQUERY, elasticIndexPattern=$YOURINDEXPATTERN)`
+    `SELECT * from Artifact.Custom.Server.Enrichment.Elasticsearch(elasticAddress=$YOURELASTIC, elasticQuery=$YOURQUERY, elasticIndexPattern=$YOURINDEXPATTERN)`
 
 author: Wes Lambert - @therealwlambert
 
