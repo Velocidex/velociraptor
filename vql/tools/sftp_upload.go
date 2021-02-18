@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
@@ -188,7 +189,7 @@ func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 	}
 
 	fpath := filepath.Join(path, name)
-	file, err := client.Create(fpath)
+	file, err := client.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC)
 	if err != nil {
 		return &api.UploadResponse{
 			Error: err.Error(),
