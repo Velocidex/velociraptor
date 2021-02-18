@@ -96,6 +96,10 @@ sources:
                     AND str(str=EventID) =~ IdRegex
                     AND format(format='%v %v %v', args=[
                                EventData, UserData, Message]) =~ IocRegex
+                    AND if(condition=WhitelistRegex,
+                        then= NOT format(format='%v %v %v', args=[
+                               EventData, UserData, Message]) =~ WhitelistRegex,
+                        else= True)
             }
           )
 
