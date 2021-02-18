@@ -1,0 +1,49 @@
+name: Server.Enrichment.Elasticsearch
+description: |
+  Query Elasticsearch for information to enrich results from Velociraptor.
+  
+  This artifact can be called from within another artifact to enrich the data made available by that artifact.
+  
+  Ex.
+  
+    `SELECT * from Artifact.Custom.Server.Enrichment.Elasticsearch(elasticAddress=$YOURELASTIC, elasticQuery=$YOURQUERY, elasticIndexPattern=$YOURINDEXPATTERN)`
+
+author: Wes Lambert - @therealwlambert
+
+type: SERVER
+
+parameters:
+  - name: elasticQuery
+    default: "*"
+    description: Query to run against records in Elasticsearch
+  - name: elasticIndexPattern
+    default: "*logs*"
+    description: Index(es) to search
+  - name: elasticAddress
+    default: http://127.0.0.1:9200/
+    description: URL for Elasticsearch
+  - name: elasticUsername
+    description: Username for authentication.  Leave blank to user server metadata.
+  - name: elasticPassword
+    description: Password for authentication.  Leave blank to user server metadata.
+  - name: DisableSSLVerify
+    type: bool
+    default: True
+    
+sources:
+  - query: | 
+      LET ES_USER = if(
+           condition=elasticUsername,
+           then=elasticUsername,
+           else=server_metadata().elasticUsername)
+      LET ES_PASS = if(
+           condition=elasticPassword,
+           then=elasticPassword,
+           else=server_metadata().elasticPassword)
+      LET ES_HEADERS = if(condition=ES_PASS, then=dict(`Authorization`="Basic " + base64encode(string=ES_USER + ":" + ES_PASS)))
+      LET ES_HITS = SELECT parse_json(data=Content).hits.hits as Hits
+      FROM http_client(headers=ES_HEADERS, method="GET", url=elasticAddress+ '/' + elasticIndexPattern + '/_search?q=' + elasticQuery, disable_ssl_security=DisableSSLVerify)
+      SELECT * FROM foreach(
+        row=ES_HITS,
+        query={SELECT Hits._source AS Hits from scope()}
+      )
