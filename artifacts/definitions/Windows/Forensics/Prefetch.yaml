@@ -11,7 +11,7 @@ description: |
     - dateBefore enables search for prefetch evidence before this date.
     - binaryRegex enables to filter on binary name, e.g evil.exe.
     - hashRegex enables to filter on prefetch hash.
-    
+
 reference:
   - https://www.forensicswiki.org/wiki/Prefetch
 
@@ -51,7 +51,7 @@ sources:
                     // FilesAccessed,
                     FullPath,
                     Name AS PrefetchFileName,
-                    timestamp(epoch=Ctime.sec) as CreationTime,
+                    timestamp(epoch=Btime.sec) as CreationTime,
                     timestamp(epoch=Mtime.sec) as ModificationTime
                  FROM prefetch(filename=FullPath)
                  WHERE
