@@ -44,7 +44,8 @@ sources:
             Description,
             UUID,
             {
-                SELECT FullPath FROM glob(globs=expand(path=Directory) + "//NTUSER.DAT", accessor="file")
+                SELECT FullPath FROM glob(
+                   globs=expand(path=Directory) + "//NTUSER.DAT", accessor="file")
             } as FullPath,
             expand(path=Directory) as Directory
         FROM Artifact.Windows.Sys.Users()
@@ -55,9 +56,10 @@ sources:
                 SELECT * FROM UserProfiles
             },
             query={
-                SELECT FullPath, Data, Mtime.Sec AS Mtime, Username, Description, Uid, Gid, UUID, Directory
+                SELECT FullPath, Data, Mtime.Sec AS Mtime,
+                       Username, Description, Uid, Gid, UUID, Directory
                 FROM glob(
-                    globs=url(scheme="file",
+                    globs=url(scheme="ntfs",
                     path=FullPath,
                     fragment=KeyGlob).String,
                     accessor="raw_reg")
