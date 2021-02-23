@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type MockingScopeContext struct {
@@ -120,6 +121,13 @@ type MockerFunctionArgs struct {
 type MockerFunction struct {
 	name string
 	ctx  *_MockerCtx
+}
+
+func (self *MockerFunction) Copy() types.FunctionInterface {
+	return &MockerFunction{
+		name: self.name,
+		ctx:  self.ctx,
+	}
 }
 
 func (self *MockerFunction) Call(ctx context.Context,
