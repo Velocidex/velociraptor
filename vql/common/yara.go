@@ -114,7 +114,8 @@ func (self YaraScanPlugin) Call(
 			// into memory avoiding the need for
 			// buffering.
 			if arg.Accessor == "" {
-				err := scanFile(filename, arg.Context, arg.NumberOfHits,
+				err := scanFile(ctx, filename, arg.Context,
+					arg.NumberOfHits,
 					rules, output_chan, scope)
 
 				// Fall back to accessor scanning if
@@ -248,6 +249,7 @@ func scanFileByAccessor(
 }
 
 func scanFile(
+	ctx context.Context,
 	filename string,
 	context int,
 	total_number_of_hits int64,
@@ -275,6 +277,7 @@ func scanFile(
 		file_info:      stat,
 		filename:       filename,
 		reader:         fd,
+		ctx:            ctx,
 	}
 
 	err = rules.ScanFileWithCallback(

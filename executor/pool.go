@@ -59,6 +59,12 @@ func getInc() int64 {
 	return ts
 }
 
+// A wrapper around the standard client executor for use of pool
+// clients. When multiple requests come in for the same query and
+// parameters, we cache the results when the first request comes in
+// and then feed the results to all other requests from memory. This
+// allows us to increase the load on the server simulating a large
+// fleet of independent clients.
 type PoolClientExecutor struct {
 	*ClientExecutor
 	Outbound chan *crypto_proto.GrrMessage
@@ -78,7 +84,7 @@ func getQueryName(message *crypto_proto.GrrMessage) string {
 				query_name = query.Name
 			}
 		}
-		// Cache it under the query name and the
+		// Cache it under the query name and the serialized parameters
 		serialized, _ := json.Marshal(message.VQLClientAction.Env)
 		return fmt.Sprintf("%v: %v", query_name, string(serialized))
 
@@ -120,6 +126,11 @@ func getCompletedTransaction(message *crypto_proto.GrrMessage) *transaction {
 func (self *PoolClientExecutor) ProcessRequest(
 	ctx context.Context,
 	message *crypto_proto.GrrMessage) {
+
+	if message.UpdateEventTable != nil {
+		fmt.Println("Will update event table")
+		return
+	}
 
 	tran := getCompletedTransaction(message)
 	if tran != nil {

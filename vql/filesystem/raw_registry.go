@@ -32,7 +32,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/url"
 	"os"
 	"path"
@@ -48,6 +47,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/readers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -193,61 +193,51 @@ func NewRawValueBuffer(buf string, stat *RawRegValueInfo) *RawValueBuffer {
 	}
 }
 
-type RawRegistryFileCache struct {
-	registry *regparser.Registry
-	fd       glob.ReadSeekCloser
-}
-
 type RawRegFileSystemAccessor struct {
-	mu       sync.Mutex
-	fd_cache map[string]*RawRegistryFileCache
-	scope    vfilter.Scope
+	mu sync.Mutex
+
+	// Maintain a cache of already parsed hives
+	hive_cache map[string]*regparser.Registry
+	scope      vfilter.Scope
 }
 
 func (self *RawRegFileSystemAccessor) getRegHive(
-	file_path string) (*RawRegistryFileCache, *url.URL, error) {
-	url, err := url.Parse(file_path)
+	file_path string) (*regparser.Registry, *url.URL, error) {
+
+	// The file path is a url specifying the path to a key:
+	// Scheme is the underlying accessor
+	// Path is the path to be provided to the underlying accessor
+	// Fragment is the path within the reg hive that we need to open.
+	full_url, err := url.Parse(file_path)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	base_url := *url
+	// Cache the parsed hive under the underlying file.
+	base_url := *full_url
 	base_url.Fragment = ""
+	cache_key := base_url.String()
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	file_cache, pres := self.fd_cache[base_url.String()]
+	hive, pres := self.hive_cache[cache_key]
 	if !pres {
-		accessor, err := glob.GetAccessor(url.Scheme, self.scope)
+		paged_reader := readers.NewPagedReader(
+			self.scope,
+			base_url.Scheme, // Accessor
+			base_url.Path,   // Path to underlying file
+		)
+		hive, err = regparser.NewRegistry(paged_reader)
 		if err != nil {
+			paged_reader.Close()
 			return nil, nil, err
 		}
 
-		fd, err := accessor.Open(url.Path)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		reader, ok := fd.(io.ReaderAt)
-		if !ok {
-			return nil, nil, errors.New("file is not seekable")
-		}
-
-		registry, err := regparser.NewRegistry(reader)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		file_cache = &RawRegistryFileCache{
-			registry: registry,
-			fd:       fd,
-		}
-
-		self.fd_cache[url.String()] = file_cache
+		self.hive_cache[cache_key] = hive
 	}
 
-	return file_cache, url, nil
+	return hive, full_url, nil
 }
 
 const RawRegFileSystemTag = "_RawReg"
@@ -258,21 +248,11 @@ func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 	result_any := vql_subsystem.CacheGet(scope, RawRegFileSystemTag)
 	if result_any == nil {
 		result := &RawRegFileSystemAccessor{
-			fd_cache: make(map[string]*RawRegistryFileCache),
-			scope:    scope,
+			hive_cache: make(map[string]*regparser.Registry),
+			scope:      scope,
 		}
 		vql_subsystem.CacheSet(scope, RawRegFileSystemTag, result)
-
-		// When scope is destroyed, we close all the filehandles.
-		err := scope.AddDestructor(func() {
-			result.mu.Lock()
-			defer result.mu.Unlock()
-
-			for _, v := range result.fd_cache {
-				v.fd.Close()
-			}
-		})
-		return result, err
+		return result, nil
 	}
 
 	return result_any.(glob.FileSystemAccessor), nil
@@ -280,11 +260,12 @@ func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 
 func (self *RawRegFileSystemAccessor) ReadDir(key_path string) ([]glob.FileInfo, error) {
 	var result []glob.FileInfo
-	file_cache, url, err := self.getRegHive(key_path)
+	hive, url, err := self.getRegHive(key_path)
 	if err != nil {
 		return nil, err
 	}
-	key := file_cache.registry.OpenKey(url.Fragment)
+
+	key := hive.OpenKey(url.Fragment)
 	if key == nil {
 		return nil, errors.New("Key not found")
 	}

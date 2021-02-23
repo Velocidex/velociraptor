@@ -9,6 +9,9 @@ parameters:
     - name: nameRegex
       description: Only file names that match this regular expression will be scanned.
       default: "(exe|txt|dll|php)$"
+    - name: AlsoUpload
+      type: bool
+      description: Also upload matching files.
 
 precondition:
   SELECT * FROM info() WHERE OS =~ "windows"
@@ -44,6 +47,6 @@ sources:
         -- Only do something when yara rules are available.
         SELECT * FROM if(condition=yara_rules,
         then={
-          SELECT *, upload(file=FileName) AS Upload
+          SELECT *, if(condition=AlsoUpload, then=upload(file=FileName)) AS Upload
           FROM foreach(row=fileList, query=search)
         })
