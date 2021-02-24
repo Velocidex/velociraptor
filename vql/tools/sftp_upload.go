@@ -195,13 +195,13 @@ func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 			Error: err.Error(),
 		}, err
 	}
-	defer file.Close()
 	if _, err := file.ReadFrom(reader); err != nil {
 		return &api.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
 
+	file.Close()
 	check, err := client.Lstat(fpath)
 	if err != nil {
 		return &api.UploadResponse{
