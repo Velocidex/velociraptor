@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -28,6 +29,7 @@ type ProfilePluginArgs struct {
 	Debug     int64 `vfilter:"optional,field=debug,doc=Debug level"`
 	Logs      bool  `vfilter:"optional,field=logs,doc=Recent logs"`
 	Queries   bool  `vfilter:"optional,field=queries,doc=Recent Queries run"`
+	Metrics   bool  `vfilter:"optional,field=metrics,doc=Collect metrics"`
 	Duration  int64 `vfilter:"optional,field=duration,doc=Duration of samples (default 30 sec)"`
 }
 
@@ -43,6 +45,20 @@ func remove(scope vfilter.Scope, name string) {
 			break
 		}
 		time.Sleep(time.Second)
+	}
+}
+
+func writeMetrics(scope vfilter.Scope, output_chan chan vfilter.Row) {
+	gathering, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		scope.Log("profile: while gathering metrics: %v", err)
+		return
+	}
+
+	for _, metric := range gathering {
+		output_chan <- ordereddict.NewDict().
+			Set("Type", "metrics").
+			Set("Line", metric)
 	}
 }
 
@@ -197,6 +213,10 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 
 		if arg.Trace {
 			writeTraceProfile(ctx, scope, output_chan, arg.Duration)
+		}
+
+		if arg.Metrics {
+			writeMetrics(scope, output_chan)
 		}
 
 		if arg.Logs {
