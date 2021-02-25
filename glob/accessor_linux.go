@@ -31,9 +31,18 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
+)
+
+var (
+	fileAccessorCurrentOpened = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "accessor_file_current_open",
+		Help: "Number of currently opened files with the file accessor.",
+	})
 )
 
 type _inode struct {
@@ -236,6 +245,16 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	return result, nil
 }
 
+// Wrap the os.File object to keep track of open file handles.
+type OSFileWrapper struct {
+	*os.File
+}
+
+func (self OSFileWrapper) Close() error {
+	fileAccessorCurrentOpened.Dec()
+	return self.File.Close()
+}
+
 func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	var err error
 
@@ -259,7 +278,8 @@ func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 		return nil, err
 	}
 
-	return file, nil
+	fileAccessorCurrentOpened.Inc()
+	return OSFileWrapper{file}, nil
 }
 
 func GetPath(path string) string {

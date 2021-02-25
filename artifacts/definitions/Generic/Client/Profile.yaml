@@ -56,6 +56,9 @@ parameters:
   - name: QueryLogs
     description: Get recent queries logs
     type: bool
+  - name: Metrics
+    description: Get client metrics
+    type: bool
   - name: Verbose
     description: Print more detail
     type: bool
@@ -70,6 +73,6 @@ sources:
              get(member="Line") AS Line
       FROM profile(allocs=Allocs, block=Block, goroutine=Goroutine,
                    heap=Heap, mutex=Mutex, profile=Profile, trace=Trace,
-                   logs=Logs, queries=QueryLogs,
+                   logs=Logs, queries=QueryLogs, metrics=Metrics,
                    debug=if(condition=Verbose, then=2, else=1),
                    duration=atoi(string=Duration))
