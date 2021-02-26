@@ -1,4 +1,4 @@
-// +build windows,amd64
+// +build windows,386
 
 /*
    Velociraptor - Hunting Evil
@@ -319,7 +319,7 @@ type MODULEENTRY32W struct {
 	ProcessID    uint32
 	GlblcntUsage uint32
 	ProccntUsage uint32
-	ModBaseAddr  uint64
+	ModBaseAddr  uint32
 	ModBaseSize  uint32
 	Module       syscall.Handle
 	ModuleName   [MAX_MODULE_NAME32 + 1]uint16

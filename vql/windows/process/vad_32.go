@@ -1,4 +1,4 @@
-// +build windows,amd64,cgo
+// +build windows,386,cgo
 
 package process
 
@@ -26,9 +26,9 @@ type VMemeInfo struct {
 }
 
 type ModuleInfo struct {
-	ProcessID         uint64
-	ModuleBaseAddress uint64
-	ModuleBaseSize    uint64
+	ProcessID         uint32
+	ModuleBaseAddress uint32
+	ModuleBaseSize    uint32
 	ModuleName        string
 	ExePath           string
 }
@@ -211,9 +211,9 @@ func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
 	mi := []ModuleInfo{}
 	for {
 		mi = append(mi, ModuleInfo{
-			ProcessID:         uint64(mod_entry.ProcessID),
+			ProcessID:         mod_entry.ProcessID,
 			ModuleBaseAddress: mod_entry.ModBaseAddr,
-			ModuleBaseSize:    uint64(mod_entry.ModBaseSize),
+			ModuleBaseSize:    mod_entry.ModBaseSize,
 			ModuleName:        syscall.UTF16ToString((&mod_entry.ModuleName)[:]),
 			ExePath:           syscall.UTF16ToString((&mod_entry.ExePath)[:]),
 		})
