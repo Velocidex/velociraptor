@@ -13,6 +13,8 @@ import { requestToParameters } from "../flows/utils.js";
 import api from '../core/api-service.js';
 import axios from 'axios';
 import VeloTimestamp from "../utils/time.js";
+import VeloPagedTable from "../core/paged-table.js";
+import VeloAce from '../core/ace.js';
 
 // Refresh every 5 seconds
 const SHELL_POLL_TIME = 5000;
@@ -28,12 +30,6 @@ class VeloShellCell extends Component {
         collapsed: false,
         output: [],
         loaded: false,
-    }
-
-    set = (k, v) => {
-        let new_state  = Object.assign({}, this.state);
-        new_state[k] = v;
-        this.setState(new_state);
     }
 
     getInput = () => {
@@ -60,7 +56,7 @@ class VeloShellCell extends Component {
             return;
         };
 
-        this.set("loaded", true);
+        this.setState({"loaded": true});
 
         let artifact = this.props.flow.request.artifacts[0];
 
@@ -83,7 +79,7 @@ class VeloShellCell extends Component {
                 }
                 data.push(item);
             }
-            this.set("output", data);
+            this.setState({output: data, artifact: artifact});
         }.bind(this));
     };
 
@@ -110,7 +106,7 @@ class VeloShellCell extends Component {
             buttons.push(
                 <button className="btn btn-default" key={1}
                         title="Expand"
-                        onClick={() => this.set("collapsed", false)} >
+                        onClick={() => this.setState({collapsed: false})} >
                   <i><FontAwesomeIcon icon="expand"/></i>
                 </button>
             );
@@ -118,7 +114,7 @@ class VeloShellCell extends Component {
             buttons.push(
                 <button className="btn btn-default" key={2}
                         title="Collapse"
-                        onClick={() => this.set("collapsed", true)} >
+                        onClick={() => this.setState({collapsed: true})} >
                   <i><FontAwesomeIcon icon="compress"/></i>
                 </button>
             );
@@ -130,7 +126,7 @@ class VeloShellCell extends Component {
             buttons.push(
                 <button className="btn btn-default" key={3}
                         title="Hide Output"
-                        onClick={() => this.set("loaded", false)} >
+                        onClick={() => this.setState({"loaded": false})} >
                   <i><FontAwesomeIcon icon="eye-slash"/></i>
                 </button>
             );
@@ -189,8 +185,8 @@ class VeloShellCell extends Component {
         if (this.state.loaded) {
             output = this.state.output.map((item, index) => {
                 return <div className='notebook-output' key={index} >
-                  <pre> {item.Stdout} </pre>
-                </div>;
+                         <pre> {item.Stdout} </pre>
+                       </div>;
             });
         }
 
@@ -220,6 +216,186 @@ class VeloShellCell extends Component {
         );
     };
 };
+
+
+
+class VeloVQLCell extends Component {
+    static propTypes = {
+        flow: PropTypes.object,
+        client: PropTypes.object,
+        fetchLastShellCollections: PropTypes.func.isRequired,
+    }
+
+    state = {
+        loaded: false,
+    }
+
+    getInput = () => {
+        if (!this.props.flow || !this.props.flow.request) {
+            return "";
+        }
+
+        // Figure out the command we requested.
+        var parameters = requestToParameters(this.props.flow.request);
+        for (let k in parameters) {
+            let params = parameters[k];
+            let command = params.Command;
+            if(_.isString(command)){
+                return command;
+            }
+        }
+        return "";
+    }
+
+    cancelFlow = (e) => {
+        if (!this.props.flow || !this.props.flow.session_id ||
+            !this.props.flow.client_id) {
+            return;
+        }
+
+        api.post('v1/CancelFlow', {
+            client_id: this.props.flow.client_id,
+            flow_id: this.props.flow.session_id,
+        }).then(function() {
+            this.props.fetchLastShellCollections();
+        }.bind(this));
+    };
+
+    aceConfig = (ace) => {
+        ace.setOptions({
+            autoScrollEditorIntoView: true,
+            maxLines: 25,
+            readOnly: true,
+        });
+
+        this.setState({ace: ace});
+    };
+
+    render() {
+        let buttons = [];
+
+        // The cell can be collapsed ( inside an inset well) or
+        // expanded. These buttons can switch between the two modes.
+        if (this.state.collapsed) {
+            buttons.push(
+                <button className="btn btn-default" key={1}
+                        title="Expand"
+                        onClick={() => this.setState({collapsed: false})} >
+                  <i><FontAwesomeIcon icon="expand"/></i>
+                </button>
+            );
+        } else {
+            buttons.push(
+                <button className="btn btn-default" key={2}
+                        title="Collapse"
+                        onClick={() => this.setState({collapsed: true})} >
+                  <i><FontAwesomeIcon icon="compress"/></i>
+                </button>
+            );
+        }
+
+        // Button to load the output from the server (it could be
+        // large so we dont fetch it until the user asks)
+        if (this.state.loaded) {
+            buttons.push(
+                <button className="btn btn-default" key={3}
+                        title="Hide Output"
+                        onClick={() => this.setState({"loaded": false})} >
+                  <i><FontAwesomeIcon icon="eye-slash"/></i>
+                </button>
+            );
+        } else {
+            buttons.push(
+                <button className="btn btn-default" key={4}
+                        title="Load Output"
+                        onClick={() => this.setState({"loaded": true})}>
+                  <i><FontAwesomeIcon icon="eye"/></i>
+                </button>
+            );
+        }
+
+        // If the flow is currently running we may be able to stop it.
+        if (this.props.flow.state  === 'RUNNING') {
+            buttons.push(
+                <button className="btn btn-default" key={5}
+                        title="Stop"
+                        onClick={this.cancelFlow}>
+                  <i><FontAwesomeIcon icon="stop"/></i>
+                </button>
+            );
+        }
+
+        let flow_status;
+        if (this.props.flow.state  === 'RUNNING') {
+            flow_status = (
+                <button className="btn btn-outline-info"
+                        disabled>
+                  <i><FontAwesomeIcon icon="spinner" spin /></i>
+                  <VeloTimestamp usec={this.props.flow.create_time/1000} />
+                by {this.props.flow.request.creator}
+                </button>
+            );
+        } else if (this.props.flow.state  === 'FINISHED') {
+            flow_status = (
+                <button className="btn btn-outline-info"
+                        disabled>
+                  <VeloTimestamp usec={this.props.flow.active_time/1000} />
+                  by {this.props.flow.request.creator}
+                </button>
+            );
+
+        } else if (this.props.flow.state  === 'ERROR') {
+            flow_status = (
+                <button className="btn btn-outline-info"
+                        disabled>
+                  <i><FontAwesomeIcon icon="exclamation"/></i>
+                <VeloTimestamp usec={this.props.flow.create_time/1000} />
+            by {this.props.flow.request.creator}
+                </button>
+            );
+        }
+
+        let output = <div></div>;
+        if (this.state.loaded) {
+            let artifact = this.props.flow && this.props.flow.request &&
+                this.props.flow.request.artifacts && this.props.flow.request.artifacts[0];
+            let params = {
+                artifact: artifact,
+                client_id: this.props.flow.client_id,
+                flow_id: this.props.flow.session_id,
+            };
+            output = <VeloPagedTable params={params} />;
+        }
+
+        return (
+            <>
+              <div className={classNames({
+                       collapsed: this.state.collapsed,
+                       expanded: !this.state.collapsed,
+                       'shell-cell': true,
+                   })}>
+
+                <div className='notebook-input'>
+                  <div className="cell-toolbar">
+                    <div className="btn-group" role="group">
+                      { buttons }
+                    </div>
+                    <div className="btn-group float-right" role="group">
+                      { flow_status }
+                    </div>
+                  </div>
+
+                  <VeloAce text={this.getInput()} mode="sql"
+                           aceConfig={this.aceConfig}
+                  />
+                </div>
+                {output}
+              </div>
+            </>
+        );
+    };
+};
+
 
 
 class ShellViewer extends Component {
@@ -280,7 +456,7 @@ class ShellViewer extends Component {
 
         api.get('v1/GetClientFlows/'+ this.props.client.client_id, {
             count: 100, offset: 0,
-            artifact: "(Windows.System.PowerShell|Windows.System.CmdShell|Linux.Sys.BashShell)"
+            artifact: "(Windows.System.PowerShell|Windows.System.CmdShell|Linux.Sys.BashShell|Generic.Client.VQL)"
         },
                 this.source.token // CancelToken
                ).then(function(response) {
@@ -299,6 +475,7 @@ class ShellViewer extends Component {
                            var artifact = artifacts[j];
                            if (artifact === "Windows.System.PowerShell" ||
                                artifact === "Windows.System.CmdShell" ||
+                               artifact === "Generic.Client.VQL" ||
                                artifact === "Linux.Sys.BashShell" ) {
                                new_state.flows.push(items[i]);
                            }
@@ -321,6 +498,8 @@ class ShellViewer extends Component {
             artifact = "Windows.System.CmdShell";
         } else if(this.state.shell_type === "Bash") {
             artifact = "Linux.Sys.BashShell";
+        } else if(this.state.shell_type === "VQL") {
+            artifact = "Generic.Client.VQL";
         } else {
             return;
         };
@@ -345,6 +524,14 @@ class ShellViewer extends Component {
 
     renderCells(flows) {
         return flows.map((flow, index) => {
+            let artifact = flow && flow.request &&  flow.request.artifacts &&
+                flow.request.artifacts[0];
+            if (artifact === "Generic.Client.VQL") {
+                return <VeloVQLCell key={flow.session_id}
+                                    fetchLastShellCollections={this.fetchLastShellCollections}
+                                    flow={flow} client={this.props.client} />;
+            };
+
             return (
                 <VeloShellCell key={flow.session_id}
                                fetchLastShellCollections={this.fetchLastShellCollections}
@@ -366,6 +553,7 @@ class ShellViewer extends Component {
                       <Dropdown.Item eventKey="Powershell">Powershell</Dropdown.Item>
                       <Dropdown.Item eventKey="Cmd">Cmd</Dropdown.Item>
                       <Dropdown.Item eventKey="Bash">Bash</Dropdown.Item>
+                      <Dropdown.Item eventKey="VQL">VQL</Dropdown.Item>
                     </DropdownButton>
                   </InputGroup.Prepend>
                   <textarea focus-me="controller.focus" rows="1"
