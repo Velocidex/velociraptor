@@ -1,0 +1,12 @@
+Queries:
+  - SELECT * FROM Artifact.Windows.System.HostsFile(
+           HostsFile=srcDir + '/artifacts/testdata/files/hosts',
+           HostnameRegex = 'second.com')
+
+  - SELECT * FROM Artifact.Windows.System.HostsFile(
+           HostsFile=srcDir + '/artifacts/testdata/files/hosts',
+           ResolutionRegex = '127.0.0')
+
+  - SELECT * FROM Artifact.Windows.System.HostsFile(
+           HostsFile=srcDir + '/artifacts/testdata/files/hosts',
+           ResolutionRegex = '127.0.3.3')
