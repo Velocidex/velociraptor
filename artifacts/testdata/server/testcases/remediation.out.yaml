@@ -5,7 +5,7 @@ LET tmp <= tempfile()[]SELECT copy(filename=srcDir + "artifacts/testdata/files/h
 ]SELECT * FROM Artifact.Windows.Remediation.Sinkhole( HostsFile=tmp, SinkholeTable=SinkHoleTable) WHERE 'evil.com' in Hostname[
  {
   "Resolution": "127.0.0.1",
-  "Hostname": "evil.com\t\t",
+  "Hostname": "evil.com",
   "Comment": "Velociraptor sinkhole: Evilcorp C2 domain",
   "_Source": "Windows.Remediation.Sinkhole"
  }

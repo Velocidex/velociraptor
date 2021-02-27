@@ -50,7 +50,7 @@ sources:
       LET hostlist(string)=
             if(condition= len(list=split(string=regex_replace(source=string,
                     re='\\s+$', replace=''), sep='\\s+')) = 1,
-                then= regex_replace(source=string,re=' $', replace=''),
+                then= regex_replace(source=string,re='\\s+$', replace=''),
                 else= split(string=regex_replace(source=string,re='\\s+$',
                   replace=''), sep='\\s+'))
       
