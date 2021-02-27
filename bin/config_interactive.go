@@ -290,6 +290,12 @@ func doGenerateConfigInteractive() {
 
 	config_obj.Logging.SeparateLogsPerComponent = true
 
+	// By default disabled debug logging - it is not useful unless
+	// you are trying to debug something.
+	config_obj.Logging.Debug = &config_proto.LoggingRetentionConfig{
+		Disabled: true,
+	}
+
 	path := ""
 	kingpin.FatalIfError(
 		survey.AskOne(output_question, &path,

@@ -19,6 +19,7 @@ package logging
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -181,14 +182,26 @@ func Reset() {
 
 func getRotator(
 	config_obj *config_proto.Config,
-	base_path string) *rotatelogs.RotateLogs {
+	rotator_config *config_proto.LoggingRetentionConfig,
+	base_path string) io.Writer {
 
-	max_age := config_obj.Logging.MaxAge
+	if rotator_config == nil {
+		rotator_config = &config_proto.LoggingRetentionConfig{
+			RotationTime: config_obj.Logging.RotationTime,
+			MaxAge:       config_obj.Logging.MaxAge,
+		}
+	}
+
+	if rotator_config.Disabled {
+		return ioutil.Discard
+	}
+
+	max_age := rotator_config.MaxAge
 	if max_age == 0 {
 		max_age = 86400 * 365 // 1 year.
 	}
 
-	rotation := config_obj.Logging.RotationTime
+	rotation := rotator_config.RotationTime
 	if rotation == 0 {
 		rotation = 604800 // 7 days
 	}
@@ -229,13 +242,13 @@ func (self *LogManager) makeNewComponent(
 
 		pathMap := lfshook.WriterMap{
 			logrus.DebugLevel: getRotator(
-				config_obj,
+				config_obj, config_obj.Logging.Debug,
 				base_filename+"_debug.log"),
 			logrus.InfoLevel: getRotator(
-				config_obj,
+				config_obj, config_obj.Logging.Info,
 				base_filename+"_info.log"),
 			logrus.ErrorLevel: getRotator(
-				config_obj,
+				config_obj, config_obj.Logging.Error,
 				base_filename+"_error.log"),
 		}
 

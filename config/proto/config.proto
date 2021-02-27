@@ -544,6 +544,18 @@ message MailConfig {
         }];
 }
 
+message LoggingRetentionConfig {
+    // How often to rotate the files in seconds.
+    uint64 rotation_time = 3;
+
+    // Maximum age of each file (File will be deleted after this time (1 year).
+    uint64 max_age = 4;
+
+    // If this is true this log source is disabled.
+    bool disabled = 5;
+
+}
+
 message LoggingConfig {
     string output_directory = 1 [(sem_type) = {
             description: "The location to write log files. "
@@ -563,6 +575,9 @@ message LoggingConfig {
             default: "31536000", // One year
         }];
 
+    LoggingRetentionConfig debug = 5;
+    LoggingRetentionConfig info = 6;
+    LoggingRetentionConfig error = 7;
 }
 
 message MonitoringConfig {
