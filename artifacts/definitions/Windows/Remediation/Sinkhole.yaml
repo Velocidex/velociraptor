@@ -189,4 +189,4 @@ sources:
                 )})
 
       -- Finally show resultant HostsFile
-      SELECT * FROM Artifact.Windows.System.HostsFile()
+      SELECT * FROM Artifact.Windows.System.HostsFile(HostsFile=HostsFile)
