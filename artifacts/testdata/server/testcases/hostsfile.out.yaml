@@ -1,0 +1,31 @@
+SELECT * FROM Artifact.Windows.System.HostsFile( HostsFile=srcDir + '/artifacts/testdata/files/hosts', HostnameRegex = 'second.com')[
+ {
+  "Resolution": "127.0.3.4",
+  "Hostname": [
+   "second.com",
+   "standardcomment2.com"
+  ],
+  "Comment": "testing standard comment",
+  "_Source": "Windows.System.HostsFile"
+ }
+]SELECT * FROM Artifact.Windows.System.HostsFile( HostsFile=srcDir + '/artifacts/testdata/files/hosts', ResolutionRegex = '127.0.0')[
+ {
+  "Resolution": "127.0.0.1",
+  "Hostname": "test.com",
+  "Comment": "",
+  "_Source": "Windows.System.HostsFile"
+ },
+ {
+  "Resolution": "127.0.0.2",
+  "Hostname": "test2.com",
+  "Comment": "",
+  "_Source": "Windows.System.HostsFile"
+ }
+]SELECT * FROM Artifact.Windows.System.HostsFile( HostsFile=srcDir + '/artifacts/testdata/files/hosts', ResolutionRegex = '127.0.3.3')[
+ {
+  "Resolution": "127.0.3.3",
+  "Hostname": "standardcomment.com",
+  "Comment": "testing standard comment",
+  "_Source": "Windows.System.HostsFile"
+ }
+]
