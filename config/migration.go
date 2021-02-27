@@ -114,7 +114,29 @@ func migrate_0_4_6(config_obj *config_proto.Config) {
 	}
 }
 
+func migrate_0_5_6(config_obj *config_proto.Config) {
+	if config_obj.Logging != nil {
+		default_rotator := &config_proto.LoggingRetentionConfig{
+			RotationTime: config_obj.Logging.RotationTime,
+			MaxAge:       config_obj.Logging.MaxAge,
+		}
+
+		if config_obj.Logging.Debug == nil {
+			config_obj.Logging.Debug = default_rotator
+		}
+
+		if config_obj.Logging.Info == nil {
+			config_obj.Logging.Debug = default_rotator
+		}
+
+		if config_obj.Logging.Error == nil {
+			config_obj.Logging.Debug = default_rotator
+		}
+	}
+}
+
 func migrate(config_obj *config_proto.Config) {
 	migrate_0_4_2(config_obj)
 	migrate_0_4_6(config_obj)
+	migrate_0_5_6(config_obj)
 }
