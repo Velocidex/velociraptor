@@ -1,25 +1,26 @@
 name: Windows.NTFS.MFT
 description: |
-  This artifact parses $MFT files and returns rows of each in scope  MFT record.
-  This artifact can be used as the basis for other artifacts where the MFT needs
-  to be queried or for deleted file recovery.
-
+  This artifact parses $MFT files and returns rows of each in scope MFT record.
+  It can also hash the content of the files it matches and return certificate information.
+  And if you enable yara and enter a string, you can use simple Yara strings to match for content.
+  This artifact can be used as the basis for other artifacts where the MFT needs to be queried or for deleted file recovery.
+  
   For deleted file recovery: Take the MFT ID of a file of interest and provide
   it to the Windows.NTFS.Recover artifact.
-
+  
   To query all attached ntfs drives: check the AllDrives switch.
-
   I have added several filters to uplift search capabilities from the original
   MFT artifact. Due to the multi-drive features, the MFTPath will output the MFT
   path of the entry.
-
+  
   Available filters include:
   - FullPath regex
   - FileName regex
   - Time bounds to select files with a timestamp within time ranges
   - FileSize bounds
-
+  
 author: "Matt Green - @mgreen27"
+
 
 parameters:
   - name: MFTFilename
@@ -31,7 +32,7 @@ parameters:
     default: "."
   - name: FileRegex
     description: "Regex search over File Name"
-    default: "."
+    default: .
   - name: DateAfter
     type: timestamp
     description: "search for events after this date. YYYY-MM-DDTmm:hh:ssZ"
@@ -45,23 +46,36 @@ parameters:
     type: int64
     description: "Entries in the MFT over this size in bytes."
   - name: AllDrives
+    default: N
     type: bool
     description: "Select MFT search on all attached ntfs drives."
-
-
+  - name: Calculate_Hash
+    default: N
+    type: bool
+    description: Hash the files that matched
+  - name: CertificateInfo
+    default: N
+    type: bool
+    description: Get certificate information
+  - name: YaraEnable
+    default: Y
+    type: bool
+    description: "Enable Yara"
+  - name: YaraRegex
+    default: wide nocase ascii:BloodSword
+    description: "Search for content using yara on files that are found with the FileRegex and specified filters."
+       
 sources:
   - query: |
       -- firstly set timebounds for performance
-      LET DateAfterTime <= if(condition=DateAfter,
+      LET DateAfterTime <= if(condition=DateAfter, 
             then=DateAfter, else="1600-01-01")
-      LET DateBeforeTime <= if(condition=DateBefore,
+      LET DateBeforeTime <= if(condition=DateBefore, 
             then=DateBefore, else="2200-01-01")
-
 
       -- find all ntfs drives
       LET ntfs_drives = SELECT FullPath + '/$MFT'as Path
         FROM glob(globs="/*", accessor="ntfs")
-
 
       -- function returning MFT entries
       LET mftsearch(MFTPath) = SELECT EntryNumber,InUse,ParentEntryNumber,
@@ -71,42 +85,61 @@ sources:
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE FullPath =~ PathRegex
             AND FileName =~ FileRegex
-            AND Created0x10 < DateBeforeTime
-            AND Created0x10 > DateAfterTime
-            AND Created0x30 < DateBeforeTime
-            AND Created0x30 > DateAfterTime
-            AND LastModified0x10 < DateBeforeTime
-            AND LastModified0x10 > DateAfterTime
-            AND LastModified0x30 < DateBeforeTime
-            AND LastModified0x30 > DateAfterTime
-            AND LastRecordChange0x10 < DateBeforeTime
-            AND LastRecordChange0x10 > DateAfterTime
-            AND LastRecordChange0x30 < DateBeforeTime
-            AND LastRecordChange0x30 > DateAfterTime
-            AND LastAccess0x10 < DateBeforeTime
-            AND LastAccess0x10 > DateAfterTime
-            AND LastAccess0x30 < DateBeforeTime
+            AND Created0x10 < DateBeforeTime 
+            AND Created0x10 > DateAfterTime 
+            AND Created0x30 < DateBeforeTime 
+            AND Created0x30 > DateAfterTime 
+            AND LastModified0x10 < DateBeforeTime  
+            AND LastModified0x10 > DateAfterTime 
+            AND LastModified0x30 < DateBeforeTime  
+            AND LastModified0x30 > DateAfterTime 
+            AND LastRecordChange0x10 < DateBeforeTime  
+            AND LastRecordChange0x10 > DateAfterTime 
+            AND LastRecordChange0x30 < DateBeforeTime  
+            AND LastRecordChange0x30 > DateAfterTime 
+            AND LastAccess0x10 < DateBeforeTime  
+            AND LastAccess0x10 > DateAfterTime 
+            AND LastAccess0x30 < DateBeforeTime  
             AND LastAccess0x30 > DateAfterTime
-            AND if(condition=SizeMax,
+            AND if(condition=SizeMax, 
                 then=FileSize < atoi(string=SizeMax),
                 else=TRUE)
-            AND if(condition=SizeMin,
+            AND if(condition=SizeMin, 
                 then=FileSize > atoi(string=SizeMin),
                 else=TRUE)
-
-
+          
       -- include all attached drives
-      LET all_drives = SELECT * FROM foreach(row=ntfs_drives,
+      LET all_drives = SELECT * FROM foreach(row=ntfs_drives, 
             query={
                 SELECT *
                 FROM mftsearch(MFTPath=Path)
                 WHERE log(message="Processing " + Path)
               })
 
-
-      -- return rows
-      SELECT * FROM if(condition=AllDrives,
+      -- return rows without Yara
+      LET target = SELECT * FROM if(condition=AllDrives, 
         then= all_drives,
-        else= {
-           SELECT * FROM mftsearch(MFTPath=MFTFilename)
+        else= mftsearch(MFTPath=MFTFilename)
+        )
+
+      -- return rows with Yara
+      LET targetyara = SELECT *
+        FROM foreach(
+           row=target,
+           query={
+              SELECT *,EntryNumber,  InUse,  ParentEntryNumber,  MFTPath,  FullPath,  FileName,  FileSize,  ReferenceCount,  IsDir,  Created0x10,  Created0x30,  LastModified0x10,  LastModified0x30,  LastRecordChange0x10,  LastRecordChange0x30,  LastAccess0x10,  LastAccess0x30, File.ModeStr as ModeStr, Rule, Meta, Tags, String, Data,
+                if(condition=Calculate_Hash,then=hash(path=FileName,accessor=ntfs)) as Hash,
+                if(condition=CertificateInfo, then=authenticode(filename=ExePath)) AS Certinfo
+              FROM yara(
+                files= parse_string_with_regex(string=MFTPath, regex='(?P<DriveLetter>[A-Za-z][:][/])').DriveLetter + FullPath,
+                rules= YaraRegex,
+                number=1,
+                context=124,
+                accessor='ntfs')
         })
+
+      -- Use Yara or not
+      SELECT * FROM if(condition=YaraEnable,  
+        then=targetyara,
+        else=target
+        )
