@@ -1,6 +1,6 @@
 {
     "name": "velociraptor",
-    "version": "0.5.1",
+    "version": "0.5.7",
     "private": true,
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^1.2.30",
