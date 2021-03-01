@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
+import moment from 'moment/moment.js';
 import _ from 'lodash';
 import DateTimePicker from 'react-datetime-picker';
 import Form from 'react-bootstrap/Form';
@@ -20,6 +20,14 @@ import cellEditFactory, { Type } from 'react-bootstrap-table2-editor';
 import { parseCSV, serializeCSV } from '../utils/csv.js';
 const numberRegex = RegExp("^[0-9]+$");
 
+
+// Returns a date object in local timestamp which represents the UTC
+// date. This is needed because the date selector widget expects to
+// work in local time.
+function localTimeFromUTCTime(date) {
+    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),
+                    date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+}
 
 function convertToDate(x) {
     // Allow the value to be specified in a number of ways.
@@ -52,6 +60,14 @@ export default class VeloForm extends React.Component {
         setValue: PropTypes.func.isRequired,
     };
 
+    state = {
+        isUTC: true,
+
+        // A Date() object that is parsed from value in local time.
+        timestamp: null,
+    }
+
+
     render() {
         let param = this.props.param;
 
@@ -65,6 +81,25 @@ export default class VeloForm extends React.Component {
                 text: "",
                 style: {
                     width: '8%',
+                },
+                headerFormatter: (column, colIndex) => {
+                    if (colIndex === 0) {
+                        return <ButtonGroup>
+                                 <Button variant="default-outline" size="sm"
+                                    onClick={() => {
+                                        // Add an extra row at the current row index.
+                                        let data = parseCSV(this.props.value);
+                                        data.data.splice(0, 0, {});
+                                        this.props.setValue(
+                                            serializeCSV(data.data,
+                                                         data.columns));
+                                    }}
+                                 >
+                                   <FontAwesomeIcon icon="plus"/>
+                                 </Button>
+                               </ButtonGroup>;
+                    };
+                    return column;
                 },
                 formatter: (id, row) => {
                     return <ButtonGroup>
@@ -138,7 +173,16 @@ export default class VeloForm extends React.Component {
             );
 
         case "timestamp":
+            // value prop is always a string in ISO format in UTC timezone.
             let date = convertToDate(this.props.value);
+
+            // Internally the date selector always uses local browser
+            // time. If the form is configured to use utc mode, then
+            // we convert the UTC time to the equivalent time in local
+            // just for the form.
+            if(_.isDate(date) && this.state.isUTC) {
+                date = localTimeFromUTCTime(date);
+            }
             return (
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
@@ -152,15 +196,37 @@ export default class VeloForm extends React.Component {
                   </Form.Label>
                   <Col sm="8">
                     <DateTimePicker
+                      showLeadingZeros={true}
                       onChange={(value) => {
+                          // Clear the prop value
                           if (!_.isDate(value)) {
                               this.props.setValue(undefined);
+
+                              // If the form is in UTC we take the
+                              // date the form gives us (which is in
+                              // local timezone) and force the same
+                              // date into a serialized ISO in Z time.
+                          } else if(this.state.isUTC) {
+                              let when = moment(value);
+                              this.props.setValue(when.format('YYYY-MM-DDTHH:mm:ss') + 'Z');
+
                           } else {
-                              this.props.setValue(value.toISOString());
+                              // When in local time we just set the
+                              // time as it is.
+                              let when = moment(value);
+                              this.props.setValue(when.toISOString());
                           }
                       }}
                       value={date}
                     />
+                    {this.state.isUTC ?
+                     <Button variant="default-outline"
+                             onClick={() => this.setState({isUTC: false})}
+                             size="sm">UTC</Button>:
+                     <Button variant="default-outline"
+                             onClick={() => this.setState({isUTC: true})}
+                             size="sm">Local</Button>
+                    }
                   </Col>
                 </Form.Group>
             );
