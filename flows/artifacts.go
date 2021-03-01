@@ -211,6 +211,7 @@ func flushContextLogs(
 	defer rs_writer.Close()
 
 	for _, row := range collection_context.Logs {
+		collection_context.TotalLogs++
 		rs_writer.Write(ordereddict.NewDict().
 			Set("_ts", int(time.Now().Unix())).
 			Set("client_time", int64(row.Timestamp)/1000000).

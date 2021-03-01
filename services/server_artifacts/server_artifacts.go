@@ -52,22 +52,33 @@ func NewCollectionContext(
 	self := &contextManager{
 		config_obj:   config_obj,
 		path_manager: paths.NewFlowPathManager(client_id, flow_id),
+		context:      &flows_proto.ArtifactCollectorContext{},
 	}
 
-	self.context = &flows_proto.ArtifactCollectorContext{}
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.GetSubject(self.config_obj, self.path_manager.Path(), self.context)
-	if err != nil {
-		return nil, err
-	}
-
-	return self, nil
+	return self, self.Load(self.context)
 }
 
+// Starts a go routine which saves the context state so the GUI can monitor progress.
+func (self *contextManager) StartRefresh(ctx context.Context) {
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				self.Save()
+				return
+
+			case <-time.After(time.Duration(10) * time.Second):
+				// Context is finalized no more modifications are allowed.
+				if self.context.State != flows_proto.ArtifactCollectorContext_RUNNING {
+					return
+				}
+				self.Save()
+			}
+		}
+	}()
+}
+
+// Allow modification of the context under lock.
 func (self *contextManager) Modify(cb func(context *flows_proto.ArtifactCollectorContext)) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -75,11 +86,39 @@ func (self *contextManager) Modify(cb func(context *flows_proto.ArtifactCollecto
 	cb(self.context)
 }
 
+func (self *contextManager) Load(context *flows_proto.ArtifactCollectorContext) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.load(context)
+}
+
+func (self *contextManager) load(context *flows_proto.ArtifactCollectorContext) error {
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	err = db.GetSubject(self.config_obj, self.path_manager.Path(), context)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Flush the context to disk.
 func (self *contextManager) Save() error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.context.ExecutionDuration = time.Now().UnixNano()/1000 - int64(self.context.StartTime)
+	// Ignore collections which are not running.
+	collection_context := &flows_proto.ArtifactCollectorContext{}
+	err := self.load(collection_context)
+	if err == nil && collection_context.Request != nil &&
+		collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
+		return nil
+	}
 
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
@@ -89,8 +128,9 @@ func (self *contextManager) Save() error {
 }
 
 type serverLogger struct {
-	config_obj   *config_proto.Config
-	path_manager *paths.FlowPathManager
+	collection_context *contextManager
+	config_obj         *config_proto.Config
+	path_manager       *paths.FlowPathManager
 }
 
 // Send each log message individually to avoid any buffering - logs
@@ -108,6 +148,12 @@ func (self *serverLogger) Write(b []byte) (int, error) {
 				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
 				Set("time", time.Now().UTC().String()).
 				Set("message", msg)})
+
+	// Increment the log count.
+	self.collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
+		context.TotalLogs++
+	})
+
 	return len(b), err
 }
 
@@ -180,6 +226,7 @@ func (self *ServerArtifactsRunner) processTask(
 		return err
 	}
 
+	// Cancel the current collection
 	if task.Cancel != nil {
 		path_manager := paths.NewFlowPathManager("server", task.SessionId).Log()
 		journal, err := services.GetJournal()
@@ -193,7 +240,9 @@ func (self *ServerArtifactsRunner) processTask(
 				Set("time", time.Now().UTC().String()).
 				Set("message", "Cancelling Query")})
 
+		// This task is now done.
 		self.cancel(task.SessionId)
+
 		return err
 	}
 
@@ -209,9 +258,15 @@ func (self *ServerArtifactsRunner) processTask(
 		}
 
 		collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
-			context.State = flows_proto.ArtifactCollectorContext_FINISHED
+			if context.State == flows_proto.ArtifactCollectorContext_RUNNING {
+				context.State = flows_proto.ArtifactCollectorContext_FINISHED
+			}
 			context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
+			context.ExecutionDuration = (time.Now().UnixNano()/1000 -
+				int64(context.StartTime)) * 1000
+
 		})
+
 		_ = collection_context.Save()
 	}()
 
@@ -248,6 +303,10 @@ func (self *ServerArtifactsRunner) runQuery(
 	self.cancellationPool[task.SessionId] = cancel
 	self.mu.Unlock()
 
+	// Write collection context periodically to disk so the GUI
+	// can track progress.
+	collection_context.StartRefresh(sub_ctx)
+
 	defer func() {
 		self.cancel(task.SessionId)
 	}()
@@ -281,8 +340,9 @@ func (self *ServerArtifactsRunner) runQuery(
 		// subject to ACL checks
 		ACLManager: vql_subsystem.NewServerACLManager(self.config_obj, principal),
 		Logger: log.New(&serverLogger{
-			self.config_obj,
-			path_manager.Log(),
+			collection_context: collection_context,
+			config_obj:         self.config_obj,
+			path_manager:       path_manager.Log(),
 		}, "", 0),
 	})
 	defer scope.Close()
@@ -335,6 +395,11 @@ func (self *ServerArtifactsRunner) runQuery(
 
 			defer rs_writer.Close()
 
+			// Flush the result set periodically to ensure
+			// rows hit the disk sooner.
+			flusher_done := ResultSetFlusher(ctx, rs_writer)
+			defer flusher_done()
+
 			// Update the artifacts with results in the
 			// context.
 			collection_context.Modify(
@@ -374,8 +439,11 @@ func (self *ServerArtifactsRunner) runQuery(
 				}
 				if rs_writer != nil {
 					row_idx += 1
-					rs_writer.Write(vfilter.RowToDict(
-						sub_ctx, scope, row))
+					rs_writer.Write(vfilter.RowToDict(sub_ctx, scope, row))
+					collection_context.Modify(
+						func(context *flows_proto.ArtifactCollectorContext) {
+							context.TotalCollectedRows++
+						})
 				}
 			}
 		}

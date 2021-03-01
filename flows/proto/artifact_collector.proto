@@ -105,6 +105,7 @@ message ArtifactCollectorContext {
     uint64 total_expected_uploaded_bytes = 25;
     uint64 total_uploaded_bytes = 26;
     uint64 total_collected_rows = 28;
+    uint64 total_logs = 32;
 
     int64 outstanding_requests = 31;
 

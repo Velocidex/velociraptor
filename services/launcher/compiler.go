@@ -36,6 +36,7 @@ func maybeEscape(name string) string {
 func (self *Launcher) CompileSingleArtifact(config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs) error {
+
 	for _, parameter := range artifact.Parameters {
 		value := parameter.Default
 		name := parameter.Name
