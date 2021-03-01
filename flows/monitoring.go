@@ -43,6 +43,10 @@ func MonitoringProcessMessage(
 			json_response = response.JSONLResponse
 		}
 
+		// We need to parse each event since it needs to be
+		// pushed to the journal, in case a reader is
+		// listening to it. FIXME: This is expensive CPU wise,
+		// we need to think of a better way to do this.
 		rows, err := utils.ParseJsonToDicts([]byte(json_response))
 		if err != nil {
 			return err

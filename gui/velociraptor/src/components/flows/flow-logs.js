@@ -41,6 +41,7 @@ export default class FlowLogs extends React.Component {
                     params={{
                         client_id: this.props.flow.client_id,
                         flow_id: this.props.flow.session_id,
+                        total_logs: this.props.flow.total_logs,
                         type: "log",
                     }}
                   />

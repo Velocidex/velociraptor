@@ -7,7 +7,8 @@ import _ from 'lodash';
 import FormControl from 'react-bootstrap/FormControl';
 
 function getFlowState(flow) {
-    return {flow_id: flow.session_id};
+    return {flow_id: flow.session_id,
+            total_collected_rows: flow.total_collected_rows};
 }
 
 export default class FlowResults extends React.Component {
@@ -62,12 +63,13 @@ export default class FlowResults extends React.Component {
             client_id: client_id,
             flow_id: this.props.flow.session_id,
             artifact: selectedArtifact,
+            total_rows: this.props.flow.total_collected_rows,
         };
         this.setState({params: params});
     }
 
     render() {
-        let artifacts_with_results = this.props.flow.artifacts_with_results;
+        let artifacts_with_results = this.props.flow && this.props.flow.artifacts_with_results;
         if (_.isEmpty(artifacts_with_results)) {
             return <div className="no-content">
                      No Data Available.

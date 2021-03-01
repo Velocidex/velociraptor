@@ -16,62 +16,10 @@ import _ from 'lodash';
 
 import api from '../core/api-service.js';
 
-import axios from 'axios';
-
-const POLL_TIME = 5000;
-
 export default class FlowOverview extends React.Component {
     static propTypes = {
-        // This is the abbreviated flow details. When the component
-        // mounts we start polling for the detailed flow details and
-        // replace it.
         flow: PropTypes.object,
     };
-
-    componentDidMount = () => {
-        this.source = axios.CancelToken.source();
-        this.interval = setInterval(this.fetchDetailedFlow, POLL_TIME);
-
-        // Set the abbreviated flow in the meantime while we fetch the
-        // full detailed to provide a smoother UX.
-        this.setState({detailed_flow: {context: this.props.flow}});
-        this.fetchDetailedFlow();
-    }
-
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        let prev_flow_id = prevProps.flow && prevProps.flow.session_id;
-        if (this.props.flow.session_id !== prev_flow_id) {
-            this.setState({detailed_flow: {context: this.props.flow}});
-            this.fetchDetailedFlow();
-        };
-    }
-
-    componentWillUnmount() {
-        this.source.cancel("unmounted");
-        clearInterval(this.interval);
-    }
-
-    fetchDetailedFlow = () => {
-        if (!this.props.flow || !this.props.flow.client_id) {
-            return;
-        };
-
-        // Cancel any in flight requests.
-        this.source.cancel();
-        this.source = axios.CancelToken.source();
-        this.setState({loading: true});
-
-        api.get("v1/GetFlowDetails", {
-            flow_id: this.props.flow.session_id,
-            client_id: this.props.flow.client_id,
-        }, this.source.token).then((response) => {
-            if (response.cancel) {
-                return;
-            };
-
-            this.setState({detailed_flow: response.data, loading: false});
-        });
-    }
 
     prepareDownload = (download_type) => {
         api.post("v1/CreateDownload", {
@@ -82,11 +30,11 @@ export default class FlowOverview extends React.Component {
     };
 
     state = {
-        detailed_flow: {},
-    }
+        loading: false,
+    };
 
     render() {
-        let flow = this.state.detailed_flow && this.state.detailed_flow.context;
+        let flow = this.props.flow;
         let artifacts = flow && flow.request && flow.request.artifacts;
 
         if (!flow || !flow.session_id || !artifacts)  {
@@ -101,9 +49,9 @@ export default class FlowOverview extends React.Component {
 
         let artifacts_with_results = flow.artifacts_with_results || [];
         let uploaded_files = flow.uploaded_files || [];
-        let available_downloads = this.state.detailed_flow &&
-            this.state.detailed_flow.available_downloads &&
-            this.state.detailed_flow.available_downloads.files;
+        let available_downloads = this.props.flow &&
+            this.props.flow.available_downloads &&
+            this.props.flow.available_downloads.files;
         available_downloads = available_downloads || [];
 
         return (
