@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
+import './dark-mode.css';
 
 import VeloNavigator from './components/sidebar/navigator.js';
 import VeloClientSearch from './components/clients/search.js';
@@ -96,7 +97,7 @@ class App extends Component {
             }
         }
 
-        return (
+        return (<div>
             <UserSettings><SnackbarProvider><SidebarKeyNavigator client={this.state.client}/>
               <Navbar fixed="top" className="main-navbar justify-content-between">
                 <Form inline>
@@ -180,7 +181,7 @@ class App extends Component {
                   <Snackbar />
                 </Nav>
               </Navbar><KeyboardHelp />
-            </SnackbarProvider></UserSettings>
+            </SnackbarProvider></UserSettings></div>
         );
     };
 }

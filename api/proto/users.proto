@@ -69,6 +69,9 @@ message ApiGrrUserInterfaceTraits {
 
     repeated UILink links = 21;
 
+    // Get the user's preferred theme.
+    string theme = 2;
+
     // An opaque setting object stored by the GUI.
     string ui_settings = 1;
 };
@@ -146,6 +149,8 @@ message GetUserNotificationsRequest {
 }
 
 message SetGUIOptionsRequest {
+    string theme = 2;
+
     string options = 1;
 }
 
