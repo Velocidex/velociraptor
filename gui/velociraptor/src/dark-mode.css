@@ -1,0 +1,230 @@
+.dark-mode .main-navbar, .dark-mode div#navigator {
+    background-color: #121212;
+    border-color: var(--background-color);
+}
+
+.dark-mode .hamburger {
+    color: var(--sidebar-icon-color);
+}
+
+.dark-mode #client-search-bar {
+    background-color: var(--background-color);
+    border: 0.655385px solid #485A5F;
+    color: var(--text-foreground);
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-left: 5px;
+    height: 25px;
+}
+
+.dark-mode .react-autosuggest__suggestions-container--open {
+    margin-left: 5px;
+    background-color: var(--background-color);
+    color: var(--text-foreground);
+}
+
+.dark-mode .react-autosuggest__suggestion--highlighted {
+  background-color: var(--sidebar-icon-color-hover);
+}
+
+.dark-mode {
+    --sidebar-icon-color: #bfbfbf;
+    --sidebar-icon-color-hover: #9a9a9a;
+    --sidebar-icon-color-disabled: #8f8f8f50;
+    --sidebar-icon-color-bg: #121212;
+    --sidebar-active-icon-background-color: #343434;
+
+    --background-color: #121212;
+    --border-color: #222222;
+    --text-foreground: #eeeeee;
+    --btn-default-background: #0c500a;
+    --btn-default-background: #5cd00a80;
+    --color-default-background: #121212;
+    --btn-default-background-hover: #0c900a80;
+    --btn-outline-link: #5cd00a80;
+
+    --tab-color: #444444;
+    --tab-active-color: #aaaaaa;
+    --resizer-color: #444444;
+
+    --cell-toolbar-background-color: #121212;
+    --page-link-background-color: #121212;
+    --page-link-active-background-color: #444444;
+    --form-background-color: #121212;
+    --card-heading-background-color: #444444;
+    --table-heading-background-color: #444444;
+    --color-table-row-selected: #8f8f8f50;
+}
+
+.dark-mode .btn {
+    color: var(--text-foreground);
+    border-color: #2a2a2a;
+}
+
+.dark-mode .btn-default.active {
+    box-shadow: none;
+    color: var(--sidebar-icon-color-bg);
+}
+
+
+.dark-mode .btn-default:hover {
+    background: var(--btn-default-background-hover);
+    color: var(--text-foreground);
+}
+
+.dark-mode .btn-default:focus {
+    background: var(--btn-default-background);
+    color: var(--text-foreground);
+}
+
+
+.dark-mode .btn-primary {
+    background-image: none;
+    text-shadow: none;
+    background: none;
+}
+
+.dark-mode .btn-default {
+    background-image: none;
+    text-shadow: none;
+    background: var(--btn-default-background);
+}
+
+.dark-mode .btn-outline-info, .btn-link {
+    color: var(--btn-outline-link);
+}
+
+.dark-mode #content {
+    top: 49px;
+}
+
+
+.dark-mode h1, .dark-mode h2, .dark-mode h3 {
+    color: var(--text-foreground);
+}
+
+.dark-mode .alert-secondary {
+    color: var(--text-foreground);
+    background-color: var(--table-heading-background-color);
+}
+
+.dark-mode .alert-secondary th {
+    border-color: #2a2a2a;
+}
+
+/* Tables */
+
+.dark-mode .table-bordered th, .table-bordered td {
+    border: 1px solid var(--table-heading-background-color);
+}
+
+.dark-mode .table, .dark-mode .table-hover tr:hover {
+    color: var(--text-foreground);
+}
+
+/* Column search screen */
+.dark-mode th.sortable input {
+    background-color: var(--background-color);
+    color: var(--text-foreground);
+    border-color: var(--border-color);
+}
+
+/* Resider divider */
+.dark-mode .Resizer.horizontal {
+    border-top-color: var(--resizer-color);
+    border-bottom-color: var(--resizer-color);
+    background-color: var(--resizer-color);
+}
+
+
+.dark-mode .card {
+    background-color: var(--table-heading-background-color);
+}
+
+.dark-mode .card-header {
+    background-color: var(--card-heading-background-color);
+    color: var(--text-foreground);
+}
+
+.dark-mode .card-body {
+    background-color: var(--background-color);
+    color: var(--text-foreground);
+}
+
+/* Json container */
+.dark-mode div.pretty-json-container {
+    filter: invert(1);
+}
+
+/* Tabs */
+.dark-mode .tab-content {
+    color: var(--text-foreground);
+}
+
+.dark-mode .nav-tabs > a {
+    background-color: var(--tab-color);
+    color: var(--text-foreground);
+}
+
+.dark-mode .nav-tabs > a.active {
+    background-color: var(--tab-active-color);
+}
+
+/* forms */
+.dark-mode .form-control,
+.dark-mode .custom-file-input {
+    background-color: var(--form-background-color);
+    color: var(--text-foreground);
+}
+
+/* Pagination */
+.dark-mode .page-item .page-link {
+    background-color: var(--page-link-background-color);
+    border-color: var(--border-color);
+}
+
+.dark-mode .page-item input {
+    background-color: var(--form-background-color);
+    color: var(--text-foreground);
+    border: 1px solid var(--form-background-color);
+}
+
+.dark-mode .page-item.active .page-link {
+    background-color: var(--page-link-active-background-color);
+    border-color: var(--border-color);
+}
+
+/* artifact viewer screen */
+.dark-mode .artifact-search-table a {
+    color: var(--text-foreground);
+}
+
+.dark-mode .report-viewer {
+    color: var(--text-foreground);
+}
+
+.dark-mode .report-viewer pre {
+    filter: invert(1);
+}
+
+/* modal dialogs */
+.dark-mode .modal-content {
+    background-color: var(--page-link-active-background-color);
+    color: var(--text-foreground);
+}
+
+/* notbooks */
+.dark-mode .cell-toolbar,
+.dark-mode .notebook-input{
+    background-color: var(--page-link-active-background-color);
+    color: var(--text-foreground);
+}
+
+.dark-mode .notebook-input pre {
+    background-color: var(--background-color);
+    color: var(--text-foreground);
+}
+
+.dark-mode .notebook-cell.selected {
+    border-color: var(--border-color);
+}

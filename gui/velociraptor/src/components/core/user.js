@@ -16,6 +16,10 @@ export class UserSettings extends React.Component {
             let traits = response.data.interface_traits;
             traits.username = response.data.username;
             this.setState({traits: traits});
+
+            document.body.classList.remove('dark-mode');
+            document.body.classList.remove('light-mode');
+            document.body.classList.add(traits.theme || "light-mode");
         });
     }
 
@@ -33,6 +37,10 @@ export class UserSettings extends React.Component {
     componentWillUnmount() {
         this.source.cancel("unmounted");
         clearInterval(this.interval);
+    }
+
+    getUserOptions = (traits) => {
+        return JSON.parse(traits.ui_settings || "{}");
     }
 
     render() {

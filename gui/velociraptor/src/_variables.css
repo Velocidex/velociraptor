@@ -1,6 +1,7 @@
 :root {
     --sidebar-collapsed-width: 45px;
     --sidebar-icon-color: #8f8f8f;
+    --sidebar-active-icon-background-color: #8f8f8f;
     --sidebar-icon-color-hover: #000e7b;
     --sidebar-icon-color-disabled: #8f8f8f50;
     --sidebar-icon-color-bg: #fff;

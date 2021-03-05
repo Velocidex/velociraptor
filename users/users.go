@@ -243,7 +243,21 @@ func SetUserOptions(config_obj *config_proto.Config,
 		return err
 	}
 
-	return db.SetSubject(config_obj, path_manager.GUIOptions(), options)
+	// Merge the old options with the new options
+	old_options, err := GetUserOptions(config_obj, username)
+	if err != nil {
+		old_options = &api_proto.SetGUIOptionsRequest{}
+	}
+
+	if options.Theme != "" {
+		old_options.Theme = options.Theme
+	}
+
+	if options.Options != "" {
+		old_options.Options = options.Options
+	}
+
+	return db.SetSubject(config_obj, path_manager.GUIOptions(), old_options)
 }
 
 func GetUserOptions(config_obj *config_proto.Config, username string) (
