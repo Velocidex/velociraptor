@@ -49,7 +49,7 @@ a.active .navigator.nav-pills.nav:hover li {
 }
 
 a.active ul.navigator {
-    background-color: var(--sidebar-icon-color);
+    background-color: var(--sidebar-active-icon-background-color);
     color: var(--color-dashboard-background);
 }
 
@@ -69,7 +69,7 @@ button a.nav-link {
     height: 100%;
     position: fixed;
     z-index: 1000; /* Must be above everything else and below the modal shadow @ 1050; */
-    top: 51px;
+    top: 46px;
     left: 0;
     overflow-x: hidden;
     transition: 0.5s;

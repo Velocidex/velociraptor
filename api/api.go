@@ -597,6 +597,7 @@ func (self *ApiServer) GetUserUITraits(
 	user_options, err := users.GetUserOptions(self.config, result.Username)
 	if err == nil {
 		result.InterfaceTraits.UiSettings = user_options.Options
+		result.InterfaceTraits.Theme = user_options.Theme
 	}
 
 	return result, nil
