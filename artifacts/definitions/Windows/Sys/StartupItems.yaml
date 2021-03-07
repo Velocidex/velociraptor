@@ -19,7 +19,7 @@ parameters:
   - name: startupFolderDirectories
     default: >
       C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup/**,
-      C:/Users/*/AppData/Roaming/Microsoft/Windows/StartMenu/Programs/Startup/**
+      C:/Users/*/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup/**
 
 sources:
   - precondition:
