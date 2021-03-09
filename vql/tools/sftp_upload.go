@@ -203,7 +203,13 @@ func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 
 	file.Close()
 	check, err := client.Lstat(fpath)
-	if err != nil {
+	if e, ok := err.(*sftp.StatusError); ok && e.FxCode() == sftp.ErrSSHFxPermissionDenied {
+		scope.Log("upload_SFTP: Unable to verify size of uploaded file due to insufficient read permissions.")
+		response := &api.UploadResponse{
+			Path: fpath,
+		}
+		return response, nil
+	} else if err != nil {
 		return &api.UploadResponse{
 			Error: err.Error(),
 		}, err
