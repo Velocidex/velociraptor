@@ -52,8 +52,9 @@ var (
 
 	Manager *LogManager
 
-	mu      sync.Mutex
-	prelogs []string
+	mu          sync.Mutex
+	prelogs     []string
+	memory_logs []string
 
 	tag_regex         = regexp.MustCompile("<([^>/0]+)>")
 	closing_tag_regex = regexp.MustCompile("</>")
@@ -80,11 +81,11 @@ func InitLogging(config_obj *config_proto.Config) error {
 	return nil
 }
 
-func GetPrelogs() []string {
+func GetMemoryLogs() []string {
 	mu.Lock()
 	defer mu.Unlock()
 
-	return append([]string{}, prelogs...)
+	return append([]string{}, memory_logs...)
 }
 
 // Early in the startup process, we find that we need to log sometimes
@@ -108,6 +109,7 @@ func FlushPrelogs(config_obj *config_proto.Config) {
 	for _, msg := range prelogs {
 		logger.Info(msg)
 	}
+	prelogs = make([]string, 0)
 }
 
 type LogContext struct {
@@ -362,11 +364,11 @@ func (self inMemoryLogWriter) Write(p []byte) (n int, err error) {
 	defer mu.Unlock()
 
 	// Truncate too many logs
-	if len(prelogs) > 1000 {
+	if len(memory_logs) > 1000 {
 		prelogs = nil
 	}
 
-	prelogs = append(prelogs, string(p))
+	memory_logs = append(memory_logs, string(p))
 
 	return len(p), nil
 }

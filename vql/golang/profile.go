@@ -220,7 +220,7 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 		}
 
 		if arg.Logs {
-			for _, line := range logging.GetPrelogs() {
+			for _, line := range logging.GetMemoryLogs() {
 				select {
 				case <-ctx.Done():
 					return

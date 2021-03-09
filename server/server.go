@@ -44,6 +44,7 @@ type Server struct {
 
 	// Limit concurrency for processing messages.
 	concurrency *utils.Concurrency
+	throttler   *utils.Throttler
 
 	Bucket  *ratelimit.Bucket
 	Healthy int32
@@ -71,7 +72,7 @@ func NewServer(config_obj *config_proto.Config) (*Server, error) {
 	// This number mainly affects memory use during large tranfers
 	// as it controls the number of concurrent clients that may be
 	// transferring data (each will use some memory to buffer).
-	concurrency := int(config_obj.Frontend.Concurrency)
+	concurrency := int(config_obj.Frontend.Resources.Concurrency)
 	if concurrency == 0 {
 		concurrency = 20
 	}
@@ -83,13 +84,14 @@ func NewServer(config_obj *config_proto.Config) (*Server, error) {
 		logger: logging.GetLogger(config_obj,
 			&logging.FrontendComponent),
 		concurrency: utils.NewConcurrencyControl(concurrency, 60*time.Second),
+		throttler:   utils.NewThrottler(config_obj.Frontend.Resources.ConnectionsPerSecond),
 	}
 
-	if config_obj.Frontend.GlobalUploadRate > 0 {
+	if config_obj.Frontend.Resources.GlobalUploadRate > 0 {
 		result.logger.Info("Global upload rate set to %v bytes per second",
-			config_obj.Frontend.GlobalUploadRate)
+			config_obj.Frontend.Resources.GlobalUploadRate)
 		result.Bucket = ratelimit.NewBucketWithRate(
-			float64(config_obj.Frontend.GlobalUploadRate),
+			float64(config_obj.Frontend.Resources.GlobalUploadRate),
 			1024*1024)
 	}
 

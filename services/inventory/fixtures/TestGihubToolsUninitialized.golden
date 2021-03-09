@@ -14,10 +14,7 @@
     "value": "htttp://www.example.com/file.exe"
    }
   ],
-  "max_row": 1000,
-  "tools": [
-   "SampleTool"
-  ]
+  "max_row": 1000
  },
  "Tool": {
   "filename": "file.exe",

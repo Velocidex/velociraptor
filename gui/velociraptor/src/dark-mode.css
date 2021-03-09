@@ -54,6 +54,9 @@
     --card-heading-background-color: #444444;
     --table-heading-background-color: #444444;
     --color-table-row-selected: #8f8f8f50;
+
+    --scrollbar-track: #121212;
+    --app-footer-background-color: #444444;
 }
 
 .dark-mode .btn {
@@ -92,6 +95,10 @@
 
 .dark-mode .btn-outline-info, .btn-link {
     color: var(--btn-outline-link);
+}
+
+.dark-mode .btn.btn-link {
+    border-color: transparent;
 }
 
 .dark-mode #content {
@@ -133,6 +140,12 @@
 .dark-mode .Resizer.horizontal {
     border-top-color: var(--resizer-color);
     border-bottom-color: var(--resizer-color);
+    background-color: var(--resizer-color);
+}
+
+.dark-mode .Resizer.vertical {
+    border-left-color: var(--resizer-color);
+    border-right-color: var(--resizer-color);
     background-color: var(--resizer-color);
 }
 
@@ -181,6 +194,7 @@
 .dark-mode .page-item .page-link {
     background-color: var(--page-link-background-color);
     border-color: var(--border-color);
+    color: var(--text-foreground);
 }
 
 .dark-mode .page-item input {
@@ -227,4 +241,89 @@
 
 .dark-mode .notebook-cell.selected {
     border-color: var(--border-color);
+}
+
+
+/* file tree */
+.dark-mode div.file-tree ul {
+    background-color: var(--background-color);
+}
+
+/* hexview */
+.dark-mode .hexdump {
+    filter: invert(1);
+}
+
+
+/* width */
+.dark-mode ::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+.dark-mode ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+/* Handle */
+.dark-mode ::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+/* Handle on hover */
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+
+/* Table column selector */
+.dark-mode .dropdown-menu {
+    background-color: var(--background-color);
+}
+
+.dark-mode .dropdown-item {
+    color: var(--text-foreground);
+}
+
+.dark-mode .dropdown-item:hover {
+    background-color: var(--btn-default-background-hover);
+}
+
+.dark-mode .dropdown-item.active {
+    background-color: var(--color-table-row-selected);
+}
+
+
+/* Datepicker */
+.dark-mode .react-datepicker,
+.dark-mode .react-datetime-picker
+{
+    background-color: var(--background-color);
+    color: var(--text-foreground);
+}
+
+.dark-mode .react-datetime-picker__inputGroup__input,
+.dark-mode .react-datetime-picker__button
+{
+    filter: invert(1);
+}
+
+.dark-mode .react-datepicker-popper {
+    z-index: 10;
+}
+
+.dark-mode .react-datepicker__day {
+    color: var(--text-foreground);
+}
+
+.dark-mode .react-datepicker__day[aria-disabled="false"] {
+    background-color: var(--color-table-row-selected);
+    color: var(--text-foreground);
+}
+
+/* Footer */
+.dark-mode .app-footer.fixed-bottom {
+    background-color: var(--app-footer-background-color);
+    color: var(--text-foreground);
+    z-index: 1000;
 }

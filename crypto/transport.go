@@ -293,8 +293,8 @@ func NewCryptoManager(config_obj *config_proto.Config, source string, pem_str []
 		private_key:         private_key,
 		source:              source,
 		public_key_resolver: NewInMemoryPublicKeyResolver(),
-		output_cipher_cache: cache.NewLRUCache(config_obj.Frontend.ExpectedClients),
-		input_cipher_cache:  cache.NewLRUCache(config_obj.Frontend.ExpectedClients),
+		output_cipher_cache: cache.NewLRUCache(config_obj.Frontend.Resources.ExpectedClients),
+		input_cipher_cache:  cache.NewLRUCache(config_obj.Frontend.Resources.ExpectedClients),
 		logger:              logging.GetLogger(config_obj, &logging.ClientComponent),
 	}, nil
 }
@@ -320,8 +320,8 @@ func NewServerCryptoManager(config_obj *config_proto.Config) (*CryptoManager, er
 		private_key:         private_key,
 		source:              GetSubjectName(cert),
 		public_key_resolver: NewServerPublicKeyResolver(config_obj),
-		output_cipher_cache: cache.NewLRUCache(config_obj.Frontend.ExpectedClients),
-		input_cipher_cache:  cache.NewLRUCache(config_obj.Frontend.ExpectedClients),
+		output_cipher_cache: cache.NewLRUCache(config_obj.Frontend.Resources.ExpectedClients),
+		input_cipher_cache:  cache.NewLRUCache(config_obj.Frontend.Resources.ExpectedClients),
 		logger:              logging.GetLogger(config_obj, &logging.FrontendComponent),
 	}, nil
 }

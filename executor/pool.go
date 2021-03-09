@@ -24,10 +24,12 @@ import (
 	"time"
 
 	"google.golang.org/protobuf/proto"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -122,13 +124,33 @@ func getCompletedTransaction(message *crypto_proto.GrrMessage) *transaction {
 	return nil
 }
 
+func (self *PoolClientExecutor) maybeUpdateEventTable(
+	ctx context.Context, req *crypto_proto.GrrMessage) {
+	pool_mu.Lock()
+	defer pool_mu.Unlock()
+
+	// Only update newer tables.
+	if req.UpdateEventTable.Version <= actions.GlobalEventTableVersion() {
+		return
+	}
+
+	fmt.Printf("Installing new event table for version %v\n", req.UpdateEventTable.Version)
+	g_responder := responder.GlobalPoolEventResponder
+	g_responder.RegisterPoolClientResponder(self.id, self.Outbound)
+
+	pool_responder := g_responder.NewResponder(self.config_obj, req)
+	actions.UpdateEventTable{}.Run(
+		self.config_obj, ctx, pool_responder, req.UpdateEventTable)
+
+}
+
 // Feed a server request to the executor for execution.
 func (self *PoolClientExecutor) ProcessRequest(
 	ctx context.Context,
 	message *crypto_proto.GrrMessage) {
 
 	if message.UpdateEventTable != nil {
-		fmt.Println("Will update event table")
+		self.maybeUpdateEventTable(ctx, message)
 		return
 	}
 
