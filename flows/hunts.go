@@ -24,7 +24,8 @@ package flows
 import (
 	"context"
 	"crypto/rand"
-	"encoding/hex"
+	"encoding/base32"
+	"encoding/binary"
 	"path"
 	"sort"
 	"time"
@@ -42,13 +43,13 @@ import (
 )
 
 func GetNewHuntId() string {
-	result := make([]byte, 8)
-	buf := make([]byte, 4)
-
+	buf := make([]byte, 8)
 	_, _ = rand.Read(buf)
-	hex.Encode(result, buf)
 
-	return constants.HUNT_PREFIX + string(result)
+	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
+	result := base32.HexEncoding.EncodeToString(buf)[:13]
+
+	return constants.HUNT_PREFIX + result
 }
 
 // Backwards compatibility: Figure out the list of collected hunts
@@ -226,38 +227,44 @@ func CreateHunt(
 func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) (
 	*api_proto.ListHuntsResponse, error) {
 
-	result := &api_proto.ListHuntsResponse{}
-
 	dispatcher := services.GetHuntDispatcher()
 	if dispatcher == nil {
 		return nil, errors.New("Hunt dispatcher not initialized")
 	}
 
+	end := in.Count + in.Offset
+	if end > 1000 {
+		end = 1000
+	}
+
+	// We need to get all the active hunts so we can sort them by
+	// creation time. This should be very fast because all hunts
+	// are kept in memory inside the hunt dispatcher.
+	items := make([]*api_proto.Hunt, 0, end)
 	err := dispatcher.ApplyFuncOnHunts(
 		func(hunt *api_proto.Hunt) error {
-			if uint64(len(result.Items)) < in.Offset {
-				return nil
-			}
-
-			if uint64(len(result.Items)) >= in.Offset+in.Count {
-				return constants.STOP_ITERATION
-			}
-
+			// Only show non-archived hunts.
 			if in.IncludeArchived || hunt.State != api_proto.Hunt_ARCHIVED {
-				result.Items = append(result.Items, hunt)
+				items = append(items, hunt)
 			}
 			return nil
 		})
-
-	if err == constants.STOP_ITERATION {
-		err = nil
+	if err != nil {
+		return nil, err
 	}
 
-	sort.Slice(result.Items, func(i, j int) bool {
-		return result.Items[i].CreateTime > result.Items[j].CreateTime
+	// Sort the hunts by creations time.
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].CreateTime > items[j].CreateTime
 	})
 
-	return result, err
+	if end > uint64(len(items)) {
+		end = uint64(len(items))
+	}
+
+	return &api_proto.ListHuntsResponse{
+		Items: items[in.Offset:end],
+	}, nil
 }
 
 func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
