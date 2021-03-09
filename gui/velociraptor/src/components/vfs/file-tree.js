@@ -21,7 +21,6 @@ const background_color = '#f5f5f5';
 const active_background_color = "#dee0ff";
 
 
-
 const Header = ({onSelect, style, customStyles, node}) => {
     return (
         <div style={style.base} onClick={onSelect}>
@@ -55,7 +54,7 @@ let theme = {
       fontFamily: 'lucida grande ,tahoma,verdana,arial,sans-serif',
       fontSize: '14px',
         marginLeft: '-20px',
-        marginTop: '-24px',
+        marginTop: '-20px',
     },
     node: {
       base: {

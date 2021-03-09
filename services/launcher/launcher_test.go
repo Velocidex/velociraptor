@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"testing"
 	"time"
 
@@ -32,7 +33,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
@@ -92,6 +92,14 @@ description: This is a test artifact dependency
 sources:
 - query: |
     SELECT * FROM Artifact.Test.Artifact()
+`
+
+	testArtifactWithDepsWithTools = `
+name: Test.Artifact.DepsWithTool
+description: This is a test artifact dependency
+sources:
+- query: |
+    SELECT * FROM Artifact.Test.Artifact.Tools()
 `
 
 	testArtifactWithDeps2 = `
@@ -365,13 +373,90 @@ func (self *LauncherTestSuite) TestGetDependentArtifacts() {
 		repository, []string{"Test.Artifact.Deps2"})
 	assert.NoError(self.T(), err)
 
-	utils.Debug(res)
+	sort.Strings(res)
+	assert.Equal(self.T(), []string{"Test.Artifact",
+		"Test.Artifact.Deps", "Test.Artifact.Deps2"}, res)
+}
+
+func (self *LauncherTestSuite) TestGetDependentArtifactsWithTool() {
+	// Our tool binary and its hash.
+	message := []byte("Hello world")
+	sha_sum := sha256.New()
+	sha_sum.Write(message)
+	sha_value := hex.EncodeToString(sha_sum.Sum(nil))
+	status := 200
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(status)
+		w.Write(message)
+	}))
+	defer ts.Close()
+
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository := manager.NewRepository()
+	_, err = repository.LoadYaml(testArtifactWithDepsWithTools, true)
+	assert.NoError(self.T(), err)
+
+	artifact, err := repository.LoadYaml(testArtifactWithTools, true)
+	assert.NoError(self.T(), err)
+
+	// Update the tool to be downloaded from our test http instance.
+	tool_url := ts.URL + "/mytool.exe"
+	artifact.Tools[0].Url = tool_url
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:      "UserX",
+		ClientId:     "C.1234",
+		Artifacts:    []string{"Test.Artifact.DepsWithTool"},
+		OpsPerSecond: 42,
+		Timeout:      73,
+	}
+	ctx := context.Background()
+	acl_manager := vql_subsystem.NullACLManager{}
+
+	// Compile the request.
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(ctx, self.config_obj,
+		acl_manager, repository, false, request)
+	assert.NoError(self.T(), err)
+
+	// Check the compiler produced the correct environment
+	// vars.
+
+	// The environment vars of the main artifact should not have any tool info.
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_HASH"), "")
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_FILENAME"), "")
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_URL"), "")
+
+	// The tools info should be added to the included artifacts parameters.
+	artifact = compiled[0].Artifacts[0]
+	assert.Equal(self.T(), getParameterValue(artifact.Parameters, "Tool_Tool1_HASH"), sha_value)
+	assert.Equal(self.T(), getParameterValue(artifact.Parameters, "Tool_Tool1_FILENAME"), "mytool.exe")
+	assert.Equal(self.T(), getParameterValue(artifact.Parameters, "Tool_Tool1_URL"), tool_url)
+
+	// Dependent artifacts have no tools declared themselves.
+	assert.Nil(self.T(), artifact.Tools)
 }
 
 func getEnvValue(env []*actions_proto.VQLEnv, key string) string {
 	for _, e := range env {
 		if e.Key == key {
 			return e.Value
+		}
+	}
+	return ""
+}
+
+func getParameterValue(params []*artifacts_proto.ArtifactParameter, key string) string {
+	for _, p := range params {
+		if p.Name == key {
+			return p.Default
 		}
 	}
 	return ""

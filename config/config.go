@@ -133,15 +133,17 @@ func GetDefaultConfig() *config_proto.Config {
 
 			// A public interface for clients to
 			// connect to.
-			BindAddress:   "0.0.0.0",
-			BindPort:      8000,
-			MaxUploadSize: constants.MAX_MEMORY * 2,
+			BindAddress: "0.0.0.0",
+			BindPort:    8000,
 			DefaultClientMonitoringArtifacts: []string{
 				// Essential for client resource telemetry.
 				"Generic.Client.Stats",
 			},
-			DynDns:          &config_proto.DynDNSConfig{},
-			ExpectedClients: 10000,
+			DynDns: &config_proto.DynDNSConfig{},
+			Resources: &config_proto.FrontendResourceControl{
+				ExpectedClients: 10000,
+				MaxUploadSize:   constants.MAX_MEMORY * 2,
+			},
 			GRPCPoolMaxSize: 100,
 			GRPCPoolMaxWait: 60,
 		},

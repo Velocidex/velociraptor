@@ -10,9 +10,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -110,13 +108,6 @@ LET %v <= if(
 
 		}
 
-	}
-
-	// Merge any tools we need.
-	for _, required_tool := range artifact.Tools {
-		if !utils.InString(result.Tools, required_tool.Name) {
-			result.Tools = append(result.Tools, required_tool.Name)
-		}
 	}
 
 	return mergeSources(config_obj, artifact, result)
@@ -291,6 +282,7 @@ func GetQueryDependencies(
 // Attach additional artifacts to the request if needed to satisfy
 // dependencies.
 func PopulateArtifactsVQLCollectorArgs(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	repository services.Repository,
 	request *actions_proto.VQLCollectorArgs) error {
@@ -306,13 +298,6 @@ func PopulateArtifactsVQLCollectorArgs(
 	for k := range dependencies {
 		artifact, pres := repository.Get(config_obj, k)
 		if pres {
-			// Include any dependent tools.
-			for _, required_tool := range artifact.Tools {
-				if !utils.InString(request.Tools, required_tool.Name) {
-					request.Tools = append(request.Tools, required_tool.Name)
-				}
-			}
-
 			// Filter the artifact to contain only
 			// essential data.
 			sources := []*artifacts_proto.ArtifactSource{}
@@ -340,31 +325,47 @@ func PopulateArtifactsVQLCollectorArgs(
 					})
 			}
 
+			// Sub artifacts run in an isolated scope so
+			// the main artifact's env is not visibile to
+			// them. In the case of tools, we want the
+			// tool parameters to be visible to all sub
+			// artifacts as well. We therefore copy these
+			// into the artifact definitions as
+			// parameters. Note that dependent artifacts
+			// never declare their own tools themselves
+			// since we dont want them to fetch the tool
+			// independently.
+			tmp := &actions_proto.VQLCollectorArgs{}
+			for _, tool := range artifact.Tools {
+				err := AddToolDependency(ctx, config_obj, tool.Name, tmp)
+				if err != nil {
+					return err
+				}
+			}
+
+			for _, env := range tmp.Env {
+				filtered_parameters = append(filtered_parameters,
+					&artifacts_proto.ArtifactParameter{
+						Name:    env.Key,
+						Default: env.Value,
+					})
+			}
+
 			request.Artifacts = append(request.Artifacts,
 				&artifacts_proto.Artifact{
 					Name:       artifact.Name,
 					Type:       artifact.Type,
 					Parameters: filtered_parameters,
 					Sources:    sources,
-					Tools:      artifact.Tools,
+
+					// Do not pass tool
+					// definitions to the
+					// client. Otherwise they will
+					// be added to it's local
+					// inventory and confuse the
+					// next request.
+					Tools: nil,
 				})
-		}
-	}
-
-	return nil
-}
-
-func getDependentTools(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	vql_collector_args *actions_proto.VQLCollectorArgs) error {
-
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	for _, tool := range vql_collector_args.Tools {
-		err := AddToolDependency(ctx, config_obj, tool, vql_collector_args)
-		if err != nil {
-			logger.Error("While Adding dependencies: %v", err)
-			return err
 		}
 	}
 

@@ -80,6 +80,8 @@ class VeloHunts extends React.Component {
         this.list_hunts_source.cancel();
         this.list_hunts_source = axios.CancelToken.source();
 
+        // Some users have a lot of hunts and listing that many might
+        // be prohibitively expensive.
         api.get("v1/ListHunts", {
             count: 100,
             offset: 0,

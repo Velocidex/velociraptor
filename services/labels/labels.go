@@ -360,8 +360,8 @@ func (self *Labeler) Start(ctx context.Context,
 	config_obj *config_proto.Config, wg *sync.WaitGroup) error {
 
 	expected_clients := int64(100)
-	if config_obj.Frontend != nil {
-		expected_clients = config_obj.Frontend.ExpectedClients
+	if config_obj.Frontend != nil && config_obj.Frontend.Resources != nil {
+		expected_clients = config_obj.Frontend.Resources.ExpectedClients
 	}
 
 	self.lru = cache.NewLRUCache(expected_clients)

@@ -85,8 +85,8 @@ func (self *SanityChecks) Check(
 	}
 
 	if config_obj.Frontend != nil {
-		if config_obj.Frontend.ExpectedClients == 0 {
-			config_obj.Frontend.ExpectedClients = 10000
+		if config_obj.Frontend.Resources.ExpectedClients == 0 {
+			config_obj.Frontend.Resources.ExpectedClients = 10000
 		}
 
 		// DynDns.Hostname is deprecated, moved to Frontend.Hostname
