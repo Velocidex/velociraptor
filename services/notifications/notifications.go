@@ -101,11 +101,11 @@ func StartNotificationService(
 								regex_str, err)
 							continue
 						}
-						self.notification_pool.NotifyByRegex(regex)
+						self.notification_pool.NotifyByRegex(config_obj, regex)
 					}
 
 				} else if target == "All" {
-					self.notification_pool.NotifyAll()
+					self.notification_pool.NotifyAll(config_obj)
 				} else {
 					self.notification_pool.Notify(target)
 				}

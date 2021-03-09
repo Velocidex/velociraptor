@@ -133,6 +133,19 @@ func migrate_0_5_6(config_obj *config_proto.Config) {
 			config_obj.Logging.Debug = default_rotator
 		}
 	}
+
+	if config_obj.Frontend != nil {
+		if config_obj.Frontend.Resources == nil {
+			config_obj.Frontend.Resources = &config_proto.FrontendResourceControl{
+				Concurrency:         config_obj.Frontend.Concurrency,
+				MaxUploadSize:       config_obj.Frontend.MaxUploadSize,
+				ExpectedClients:     config_obj.Frontend.ExpectedClients,
+				PerClientUploadRate: config_obj.Frontend.PerClientUploadRate,
+				GlobalUploadRate:    config_obj.Frontend.GlobalUploadRate,
+				ClientEventMaxWait:  config_obj.Frontend.ClientEventMaxWait,
+			}
+		}
+	}
 }
 
 func migrate(config_obj *config_proto.Config) {

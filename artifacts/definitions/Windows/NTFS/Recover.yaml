@@ -13,7 +13,7 @@ description: |
 
 parameters:
  - name: MFTId
-   default: 81978
+   default: "81978"
  - name: Drive
    default: '\\.\C:'
 
@@ -23,11 +23,17 @@ precondition:
 sources:
   - name: Upload
     queries:
-       - SELECT * FROM foreach(
+       - SELECT *, upload(accessor="mft", file=Drive + Inode,
+                          name=FullPath + "/" + Inode) AS IndexUpload
+         FROM foreach(
             row=parse_ntfs(device=Drive, inode=MFTId).Attributes,
             query={
-              SELECT Type, TypeId, Id, Inode, Size, Name, FullPath,
-                     upload(accessor="mft", file=Drive + Inode,
-                            name=FullPath + "/" + Inode) AS IndexUpload
+              SELECT _value.Type AS Type,
+                     _value.TypeId AS TypeId,
+                     _value.Id AS Id,
+                     _value.Inode AS Inode,
+                     _value.Size AS Size,
+                     _value.Name AS Name,
+                     _value.FullPath AS FullPath
               FROM scope()
             })

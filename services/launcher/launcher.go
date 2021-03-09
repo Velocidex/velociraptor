@@ -160,7 +160,7 @@ func (self *Launcher) GetVQLCollectorArgs(
 
 	// Add any artifact dependencies.
 	err = PopulateArtifactsVQLCollectorArgs(
-		config_obj, repository, vql_collector_args)
+		ctx, config_obj, repository, vql_collector_args)
 	if err != nil {
 		return nil, err
 	}
@@ -170,9 +170,11 @@ func (self *Launcher) GetVQLCollectorArgs(
 		return nil, err
 	}
 
-	err = getDependentTools(ctx, config_obj, vql_collector_args)
-	if err != nil {
-		return nil, err
+	for _, tool := range artifact.Tools {
+		err = AddToolDependency(ctx, config_obj, tool.Name, vql_collector_args)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if should_obfuscate {

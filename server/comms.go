@@ -181,12 +181,12 @@ func readWithLimits(
 
 	// Read the data from the POST request into a
 	buffer := &bytes.Buffer{}
-	reader := io.LimitReader(req.Body, int64(config_obj.Frontend.MaxUploadSize*2))
+	reader := io.LimitReader(req.Body, int64(config_obj.Frontend.Resources.MaxUploadSize*2))
 
 	// Implement rate limiting from reading the connection.
-	if config_obj.Frontend.PerClientUploadRate > 0 {
+	if config_obj.Frontend.Resources.PerClientUploadRate > 0 {
 		bucket := ratelimit.NewBucketWithRate(
-			float64(config_obj.Frontend.PerClientUploadRate),
+			float64(config_obj.Frontend.Resources.PerClientUploadRate),
 			100*1024)
 		reader = ratelimit.Reader(reader, bucket)
 	}
@@ -207,7 +207,7 @@ func readWithLimits(
 	if err != nil {
 		logger.Debug("Unable to decrypt body from %v: %+v "+
 			"(%v out of max %v)",
-			req.RemoteAddr, err, n, config_obj.Frontend.MaxUploadSize*2)
+			req.RemoteAddr, err, n, config_obj.Frontend.Resources.MaxUploadSize*2)
 
 		receiveDecryptionErrors.Inc()
 		return nil, errors.New("Unable to decrypt")
@@ -230,6 +230,12 @@ func control(server_obj *Server) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if maybeRedirectFrontend("control", w, req) {
+			return
+		}
+
+		if !server_obj.throttler.Ready() {
+			// Load shed connections with a 500 error.
+			http.Error(w, "", http.StatusServiceUnavailable)
 			return
 		}
 
@@ -384,8 +390,13 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
 		if maybeRedirectFrontend("reader", w, req) {
+			return
+		}
+
+		if !server_obj.throttler.Ready() {
+			// Load shed connections with a 500 error.
+			http.Error(w, "", http.StatusServiceUnavailable)
 			return
 		}
 

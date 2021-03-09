@@ -390,6 +390,41 @@ message DynDNSConfig {
     uint64 frequency = 5;
 }
 
+message FrontendResourceControl {
+    // Connections are limited to this rate - faster client
+    // connections will result in 500 errors which will in turn cause
+    // the clients to back off. This mechanism allows the server to
+    // loadshed client connections.
+    uint64 connections_per_second = 1;
+
+    // How fast to notify clients of a new hunt creation (We dont want
+    // to overwhelm the server so we limit client notifications).
+    uint64 notifications_per_second = 2;
+
+    uint64 concurrency = 9 [(sem_type) = {
+            description: "The number of client messages to process concurrently.",
+        }];
+
+    uint64 max_upload_size = 11 [(sem_type) = {
+             description: "Maximum size in Bytes we will accept uploads for"
+        }];
+
+    // Various performoance related tweaks.
+    int64 expected_clients = 15 [(sem_type) = {
+            description: "Expected number of clients in this deployment (default 10000)",
+        }];
+
+    // Per client rate in bytes/sec
+    int64 per_client_upload_rate = 21;
+    int64 global_upload_rate = 22;
+
+    // Wait time for collecting events from clients - smaller means
+    // less latency to respond to client events but also means more
+    // TLS handshake and network overheads due to frequent POST.
+    uint64 client_event_max_wait = 23;
+}
+
+
 message FrontendConfig {
     string public_path = 8 [deprecated=true];
 
@@ -448,19 +483,11 @@ message FrontendConfig {
             description: "The DNS name of the frontend."
         }];
 
-    uint64 concurrency = 9 [(sem_type) = {
-            description: "The number of client messages to process concurrently.",
-        }];
-
     bool do_not_compress_artifacts = 10 [(sem_type) = {
             description: "When set we do not compress artifacts sent to the client. "
             "This is only useful for debugging. Note: Setting this will send the client "
             "artifact fields like name and description which may result in information "
             "disclosure if the client is untrusted."
-        }];
-
-    uint64 max_upload_size = 11 [(sem_type) = {
-             description: "Maximum size in Bytes we will accept uploads for"
         }];
 
     DynDNSConfig dyn_dns = 12 [(sem_type) = {
@@ -479,17 +506,28 @@ message FrontendConfig {
             description: "The user that the frontend should run as. If set we refuse to run as a different user.",
         }];
 
-    // Various performoance related tweaks.
-    int64 expected_clients = 15 [(sem_type) = {
-            description: "Expected number of clients in this deployment (default 10000)",
-        }];
-
     int64 GRPC_pool_max_size = 17;
     int64 GRPC_pool_max_wait = 18;
 
     // The services that will run on this frontend. If not set, all
     // services will run on the primary frontend.
     ServerServicesConfig server_services = 20;
+
+    FrontendResourceControl resources = 27;
+
+    // Below options are DEPRECATED - moved to resources by migration code.
+    uint64 concurrency = 9 [(sem_type) = {
+            description: "The number of client messages to process concurrently.",
+        }];
+
+    uint64 max_upload_size = 11 [(sem_type) = {
+             description: "Maximum size in Bytes we will accept uploads for"
+        }];
+
+    // Various performoance related tweaks.
+    int64 expected_clients = 15 [(sem_type) = {
+            description: "Expected number of clients in this deployment (default 10000)",
+        }];
 
     // Per client rate in bytes/sec
     int64 per_client_upload_rate = 21;
