@@ -89,7 +89,7 @@ func parseX509CSRFromPemStr(pem_str []byte) (*x509.CertificateRequest, error) {
 	}
 }
 
-/* GRR Client IDs are derived from the public key of the client.
+/* Velociraptor Client IDs are derived from the public key of the client.
 
 This makes it impossible to impersonate a client unless one has the
 client's corresponding private key.

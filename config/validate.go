@@ -117,7 +117,7 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 			resources.ExpectedClients = 10000
 		}
 
-		if resources.ConnectionsPerSecond <= 0 {
+		if resources.ConnectionsPerSecond == 0 {
 			resources.ConnectionsPerSecond = 100
 		}
 

@@ -63,7 +63,6 @@ export default class FlowResults extends React.Component {
             client_id: client_id,
             flow_id: this.props.flow.session_id,
             artifact: selectedArtifact,
-            total_rows: this.props.flow.total_collected_rows,
         };
         this.setState({params: params});
     }
