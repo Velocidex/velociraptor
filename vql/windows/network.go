@@ -68,8 +68,8 @@ var (
 
 // Addr is implemented compatibility to psutil
 type Addr struct {
-	IP   string `json:"ip"`
-	Port uint32 `json:"port"`
+	IP   string
+	Port uint32
 }
 
 type ConnectionStat struct {

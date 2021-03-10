@@ -1,10 +1,12 @@
 package responder
 
 import (
+	"fmt"
 	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -69,13 +71,16 @@ func (self *PoolEventResponder) NewResponder(
 				return
 			}
 
-			children := make([]chan *crypto_proto.GrrMessage, len(self.client_responders))
+			children := make([]chan *crypto_proto.GrrMessage, 0,
+				len(self.client_responders))
 			self.mu.Lock()
 			for _, c := range self.client_responders {
 				children = append(children, c)
 			}
 			self.mu.Unlock()
 
+			fmt.Printf("Pushing message to %v listeners\n", len(children))
+			json.Debug(message)
 			for _, c := range children {
 				select {
 

@@ -126,7 +126,7 @@ func NewFIFOCache(
 	}
 
 	done := make(chan bool)
-	err := scope.AddDestructor(func() {
+	err := vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 		close(done)
 	})
 	if err != nil {

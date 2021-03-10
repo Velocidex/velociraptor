@@ -62,6 +62,11 @@ var (
 		Help: "Number of POST requests frontend sent to the client.",
 	})
 
+	loadshedCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "frontend_loadshed_count",
+		Help: "Number of connections rejected due to load shedding.",
+	})
+
 	receiveCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "frontend_received_count",
 		Help: "Number of POST requests frontend received from the client.",
@@ -96,7 +101,7 @@ var (
 		prometheus.HistogramOpts{
 			Name:    "frontend_reader_latency",
 			Help:    "Latency to receive client data in second.",
-			Buckets: prometheus.LinearBuckets(0.01, 0.05, 10),
+			Buckets: prometheus.LinearBuckets(0.1, 1, 10),
 		},
 		[]string{"status"},
 	)
@@ -234,6 +239,8 @@ func control(server_obj *Server) http.Handler {
 		}
 
 		if !server_obj.throttler.Ready() {
+			loadshedCounter.Inc()
+
 			// Load shed connections with a 500 error.
 			http.Error(w, "", http.StatusServiceUnavailable)
 			return

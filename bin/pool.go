@@ -133,6 +133,9 @@ func doPoolClient() {
 			// Merge the writeback with the config.
 			client_config.Writeback = existing_writeback
 
+			// Force new events to be read from the server
+			client_config.Writeback.EventQueries = nil
+
 			// Make sure the config is ok.
 			err = crypto.VerifyConfig(client_config)
 			if err != nil {

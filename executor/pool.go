@@ -134,10 +134,17 @@ func (self *PoolClientExecutor) maybeUpdateEventTable(
 		return
 	}
 
-	fmt.Printf("Installing new event table for version %v\n", req.UpdateEventTable.Version)
-	g_responder := responder.GlobalPoolEventResponder
-	g_responder.RegisterPoolClientResponder(self.id, self.Outbound)
+	// In practice each client receives its own event table
+	// version which is the timestamp of the last table update. In
+	// the pool client we do not want to refresh the table too
+	// much so we set the version far into the future. This means
+	// that it is impossible to update the pool client's event
+	// table without a restart.
+	req.UpdateEventTable.Version += 6000 * 1000000000
 
+	fmt.Printf("Installing new event table for version %v\n", req.UpdateEventTable.Version)
+
+	g_responder := responder.GlobalPoolEventResponder
 	pool_responder := g_responder.NewResponder(self.config_obj, req)
 	actions.UpdateEventTable{}.Run(
 		self.config_obj, ctx, pool_responder, req.UpdateEventTable)
@@ -222,6 +229,10 @@ func NewPoolClientExecutor(
 	if err != nil {
 		return nil, err
 	}
+
+	// Register the new executor with the global pool responder.
+	g_responder := responder.GlobalPoolEventResponder
+	g_responder.RegisterPoolClientResponder(id, exe.Outbound)
 
 	output := make(chan *crypto_proto.GrrMessage, 10)
 
