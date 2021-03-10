@@ -64,7 +64,14 @@ type ClientEventTable struct {
 	id string
 }
 
-// Checks to see if we need to update the client event table.
+// Checks to see if we need to update the client event table. Each
+// client's table version is the timestamp when it received the event
+// table update. Clients need to renew their table if:
+// 1. Their version is behind the the global table version, or
+// 2. Their version is behind the latest label update.
+//
+// When the table is refreshed its version is set to the current
+// timestamp which implied after both of these conditions.
 func (self *ClientEventTable) CheckClientEventsVersion(
 	config_obj *config_proto.Config,
 	client_id string, client_version uint64) bool {
@@ -226,23 +233,24 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	config_obj *config_proto.Config,
 	client_id string) *crypto_proto.GrrMessage {
 	self.mu.Lock()
-	defer self.mu.Unlock()
+	state := self.state
+	self.mu.Unlock()
 
 	result := &actions_proto.VQLEventTable{
 		Version: uint64(self.clock.Now().UnixNano()),
 	}
 
-	if self.state.Artifacts == nil {
-		self.state.Artifacts = &flows_proto.ArtifactCollectorArgs{}
+	if state.Artifacts == nil {
+		state.Artifacts = &flows_proto.ArtifactCollectorArgs{}
 	}
 
-	for _, event := range self.state.Artifacts.CompiledCollectorArgs {
+	for _, event := range state.Artifacts.CompiledCollectorArgs {
 		result.Event = append(result.Event, proto.Clone(event).(*actions_proto.VQLCollectorArgs))
 	}
 
 	// Now apply any event queries that belong to this client based on labels.
 	labeler := services.GetLabeler()
-	for _, table := range self.state.LabelEvents {
+	for _, table := range state.LabelEvents {
 		if labeler.IsLabelSet(config_obj, client_id, table.Label) {
 			for _, event := range table.Artifacts.CompiledCollectorArgs {
 				result.Event = append(result.Event,
@@ -255,6 +263,14 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	// client's updates so they do not syncronize load on the
 	// server.
 	for _, event := range result.Event {
+		// Ensure responses do not come back too quickly
+		// because this increases the load on the server. We
+		// need the client to queue at least 60 seconds worth
+		// of data before reconnecting.
+		if event.MaxWait < 60 {
+			event.MaxWait = 120
+		}
+
 		event.MaxWait += uint64(rand.Intn(20))
 
 		// Event queries never time out
