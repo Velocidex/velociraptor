@@ -141,8 +141,12 @@ func GetDefaultConfig() *config_proto.Config {
 			},
 			DynDns: &config_proto.DynDNSConfig{},
 			Resources: &config_proto.FrontendResourceControl{
-				ExpectedClients: 10000,
-				MaxUploadSize:   constants.MAX_MEMORY * 2,
+				ExpectedClients:        10000,
+				ConnectionsPerSecond:   100,
+				Concurrency:            60,
+				TargetHeapSize:         1000000000, // 1Gb
+				NotificationsPerSecond: 10,
+				MaxUploadSize:          constants.MAX_MEMORY * 2,
 			},
 			GRPCPoolMaxSize: 100,
 			GRPCPoolMaxWait: 60,

@@ -29,6 +29,7 @@ import (
 
 type DirnameArgs struct {
 	Path string `vfilter:"required,field=path,doc=Extract directory name of path"`
+	Sep  string `vfilter:"optional,field=sep,doc=Separator to use (default /)"`
 }
 
 type DirnameFunction struct{}
@@ -43,9 +44,14 @@ func (self *DirnameFunction) Call(ctx context.Context,
 		return false
 	}
 
+	sep := arg.Sep
+	if sep == "" {
+		sep = "/"
+	}
+
 	components := utils.SplitComponents(arg.Path)
 	if len(components) > 0 {
-		result := utils.JoinComponents(components[:len(components)-1], "/")
+		result := utils.JoinComponents(components[:len(components)-1], sep)
 		return result
 	}
 	return vfilter.Null{}
@@ -89,6 +95,7 @@ func (self BasenameFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 
 type PathJoinArgs struct {
 	Components []string `vfilter:"required,field=components,doc=Path components to join."`
+	Sep        string   `vfilter:"optional,field=sep,doc=Separator to use (default /)"`
 }
 
 type PathJoinFunction struct{}
@@ -103,9 +110,13 @@ func (self *PathJoinFunction) Call(ctx context.Context,
 		return false
 	}
 
-	sep := "/"
-	if runtime.GOOS == "windows" {
-		sep = "\\"
+	sep := arg.Sep
+	if sep == "" {
+		if runtime.GOOS == "windows" {
+			sep = "\\"
+		} else {
+			sep = "/"
+		}
 	}
 
 	var components []string

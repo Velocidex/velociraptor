@@ -5,7 +5,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+)
+
+var (
+	notificationCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "frontend_notification_count",
+		Help: "Number of notifications we issue.",
+	})
 )
 
 type NotificationPool struct {
@@ -68,6 +77,7 @@ func (self *NotificationPool) Notify(client_id string) {
 
 	c, pres := self.clients[client_id]
 	if pres {
+		notificationCounter.Inc()
 		close(c)
 		delete(self.clients, client_id)
 	}
@@ -98,6 +108,7 @@ func (self *NotificationPool) NotifyByRegex(
 			self.mu.Lock()
 			c, pres := self.clients[client_id]
 			if pres {
+				notificationCounter.Inc()
 				close(c)
 				delete(self.clients, client_id)
 			}

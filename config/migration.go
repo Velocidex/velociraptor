@@ -144,6 +144,13 @@ func migrate_0_5_6(config_obj *config_proto.Config) {
 				GlobalUploadRate:    config_obj.Frontend.GlobalUploadRate,
 				ClientEventMaxWait:  config_obj.Frontend.ClientEventMaxWait,
 			}
+
+			config_obj.Frontend.Concurrency = 0
+			config_obj.Frontend.MaxUploadSize = 0
+			config_obj.Frontend.ExpectedClients = 0
+			config_obj.Frontend.PerClientUploadRate = 0
+			config_obj.Frontend.GlobalUploadRate = 0
+			config_obj.Frontend.ClientEventMaxWait = 0
 		}
 	}
 }

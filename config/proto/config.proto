@@ -394,27 +394,46 @@ message FrontendResourceControl {
     // Connections are limited to this rate - faster client
     // connections will result in 500 errors which will in turn cause
     // the clients to back off. This mechanism allows the server to
-    // loadshed client connections.
+    // loadshed client connections. We allow up to 10 seconds
+    // sustained QPS above this limit before we start load shedding.
     uint64 connections_per_second = 1;
 
-    // How fast to notify clients of a new hunt creation (We dont want
-    // to overwhelm the server so we limit client notifications).
+    // How fast to notify clients of a new hunt creation (This
+    // effectively limits client recruitment rate). Default 10
+    // notifications per sec.
     uint64 notifications_per_second = 2;
 
-    uint64 concurrency = 9 [(sem_type) = {
-            description: "The number of client messages to process concurrently.",
-        }];
+    // The maximum number of concurrent client connections we can
+    // process. The actual concurrency level is dynamically adjusted
+    // to try to control the target_heap_size below. As the heap size
+    // increases, the frontend will reduce the concurrency level in
+    // order to reduce memory pressure. Low concurrency levels
+    // increase average latency and in the worse case cause clients to
+    // time out. When clients timeout, they will back off and try to
+    // send data later.
+    uint64 concurrency = 9;
 
+    // Aim for this heap size (default 2Gb). If actual memory usage
+    // approaches this maximum, the frontend will begin to limit
+    // client connections.
+    uint64 target_heap_size = 10;
+
+    // Increasing this allows the frontend to receive larger POST
+    // messages lowering crypto overheads but this comes at the
+    // expense of more memory use.
     uint64 max_upload_size = 11 [(sem_type) = {
              description: "Maximum size in Bytes we will accept uploads for"
         }];
 
-    // Various performoance related tweaks.
+    // This setting controls the size of various LRU caches in the
+    // fronend (e.g. the session key cache). This number should be
+    // larger than the number of actual clients or else the system
+    // will see high CPU load from cache misses.
     int64 expected_clients = 15 [(sem_type) = {
             description: "Expected number of clients in this deployment (default 10000)",
         }];
 
-    // Per client rate in bytes/sec
+    // Bandwidth control: Per client and global rates in bytes/sec
     int64 per_client_upload_rate = 21;
     int64 global_upload_rate = 22;
 

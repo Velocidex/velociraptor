@@ -487,7 +487,7 @@ func StartFrontendWithAutocert(
 
 		err := server.ListenAndServeTLS("", "")
 		if err != nil && err != http.ErrServerClosed {
-			logger.Error("Frontend server error: %v", err)
+			logger.Error("Frontend server error", err)
 		}
 	}()
 

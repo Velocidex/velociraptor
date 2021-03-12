@@ -110,20 +110,35 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 	}
 
 	// Fill defaults for optional sections
-	if config_obj.Frontend.Resources != nil {
-		resources := config_obj.Frontend.Resources
+	if config_obj.Frontend.Resources == nil {
+		config_obj.Frontend.Resources = &config_proto.FrontendResourceControl{}
+	}
 
-		if resources.ExpectedClients == 0 {
-			resources.ExpectedClients = 10000
-		}
+	// Set default resource controls.
+	resources := config_obj.Frontend.Resources
+	if resources.ExpectedClients == 0 {
+		resources.ExpectedClients = 10000
+	}
 
-		if resources.ConnectionsPerSecond == 0 {
-			resources.ConnectionsPerSecond = 100
-		}
+	// Maximum sustained QPS before load shedding.
+	if resources.ConnectionsPerSecond == 0 {
+		resources.ConnectionsPerSecond = 100
+	}
 
-		if resources.ConnectionsPerSecond > 1000 {
-			resources.ConnectionsPerSecond = 1000
-		}
+	if resources.ConnectionsPerSecond > 1000 {
+		resources.ConnectionsPerSecond = 1000
+	}
+
+	if resources.Concurrency == 0 {
+		resources.Concurrency = 60
+	}
+
+	if resources.TargetHeapSize == 0 {
+		resources.TargetHeapSize = 1000000000 // 1Gb
+	}
+
+	if resources.NotificationsPerSecond == 0 {
+		resources.NotificationsPerSecond = 10
 	}
 
 	if config_obj.API.PinnedGwName == "" {
