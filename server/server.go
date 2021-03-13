@@ -22,9 +22,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime"
+	"sync"
 	"time"
 
 	"github.com/juju/ratelimit"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -36,6 +40,18 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+var (
+	targetConcurrency = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "frontend_maximum_concurrency",
+		Help: "Maximum number of clients we serve at the same time.",
+	})
+
+	heapSize = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "frontend_current_heap_size",
+		Help: "Size of allocated heap.",
+	})
+)
+
 type Server struct {
 	config  *config_proto.Config
 	manager *crypto.CryptoManager
@@ -43,15 +59,85 @@ type Server struct {
 	db      datastore.DataStore
 
 	// Limit concurrency for processing messages.
+	mu          sync.Mutex
 	concurrency *utils.Concurrency
 	throttler   *utils.Throttler
+
+	// The server dynamically adjusts concurrency. This signals exit.
+	done chan bool
 
 	Bucket  *ratelimit.Bucket
 	Healthy int32
 }
 
+func (self *Server) Concurrency() *utils.Concurrency {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.concurrency
+}
+
+func (self *Server) ManageConcurrency(max_concurrency uint64, target_heap_size uint64) {
+	concurrency := max_concurrency / 2
+
+	for {
+		s := runtime.MemStats{}
+		runtime.ReadMemStats(&s)
+
+		// We are using up too much memory, drop concurrency.
+		if s.Alloc > target_heap_size {
+			new_concurrency := 2 * concurrency / 3
+
+			// We need some minimum concurrency (default 10% of max)
+			if new_concurrency < max_concurrency/10 {
+				new_concurrency = max_concurrency / 10
+			}
+
+			if new_concurrency == concurrency {
+				continue
+			}
+
+			concurrency = new_concurrency
+
+			// We are using up less memory than
+			// specified, we can increase
+			// concurrency to approach the maximum level.
+		} else if s.Alloc < 2*target_heap_size/3 {
+			delta := (max_concurrency - concurrency) / 2
+			if delta == 0 {
+				continue
+			}
+			concurrency += delta
+
+		} else {
+			// Heap size is between max and 2/3 of
+			// max - this is good so no change is
+			// needed, check again later.
+			continue
+		}
+
+		// Install the new concurrency controller.
+		targetConcurrency.Set(float64(concurrency))
+		heapSize.Set(float64(s.Alloc))
+		self.mu.Lock()
+		self.concurrency = utils.NewConcurrencyControl(
+			int(concurrency), 60*time.Second)
+		self.mu.Unlock()
+
+		// Wait for a minute and check again.
+		select {
+		case <-self.done:
+			return
+
+		case <-time.After(time.Minute):
+		}
+	}
+}
+
 func (self *Server) Close() {
+	close(self.done)
 	self.db.Close()
+	self.throttler.Close()
 }
 
 func NewServer(config_obj *config_proto.Config) (*Server, error) {
@@ -72,9 +158,9 @@ func NewServer(config_obj *config_proto.Config) (*Server, error) {
 	// This number mainly affects memory use during large tranfers
 	// as it controls the number of concurrent clients that may be
 	// transferring data (each will use some memory to buffer).
-	concurrency := int(config_obj.Frontend.Resources.Concurrency)
+	concurrency := config_obj.Frontend.Resources.Concurrency
 	if concurrency == 0 {
-		concurrency = 20
+		concurrency = 60
 	}
 
 	result := Server{
@@ -83,9 +169,19 @@ func NewServer(config_obj *config_proto.Config) (*Server, error) {
 		db:      db,
 		logger: logging.GetLogger(config_obj,
 			&logging.FrontendComponent),
-		concurrency: utils.NewConcurrencyControl(concurrency, 60*time.Second),
+		concurrency: utils.NewConcurrencyControl(int(concurrency), 60*time.Second),
 		throttler:   utils.NewThrottler(config_obj.Frontend.Resources.ConnectionsPerSecond),
+		done:        make(chan bool),
 	}
+
+	heap_size := config_obj.Frontend.Resources.TargetHeapSize
+	if heap_size == 0 {
+		heap_size = 2000000000
+	}
+
+	result.logger.Info("Targetting heap size %v, with maximum concurrency %v",
+		heap_size, concurrency)
+	go result.ManageConcurrency(concurrency, heap_size)
 
 	if config_obj.Frontend.Resources.GlobalUploadRate > 0 {
 		result.logger.Info("Global upload rate set to %v bytes per second",

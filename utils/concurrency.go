@@ -21,19 +21,19 @@ type Concurrency struct {
 	timeout     time.Duration
 }
 
-func (self *Concurrency) StartConcurrencyControl(ctx context.Context) error {
+func (self *Concurrency) StartConcurrencyControl(ctx context.Context) (func(), error) {
 	// Wait here until we have enough room in the concurrency
 	// channel.
 	select {
 	case self.concurrency <- true:
 		concurrencyControl.Inc()
-		return nil
+		return self.EndConcurrencyControl, nil
 
 	case <-ctx.Done():
-		return errors.New("Timed out")
+		return nil, errors.New("Timed out")
 
 	case <-time.After(self.timeout):
-		return errors.New("Timed out")
+		return nil, errors.New("Timed out")
 	}
 }
 

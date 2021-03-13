@@ -62,6 +62,13 @@ var (
 		Help: "Number of POST requests frontend sent to the client.",
 	})
 
+	// Normally this is calculated in Graphan but it is also
+	// convenient to have an approximation right here.
+	receiveQPS = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "frontend_receive_QPS",
+		Help: "QPS of receive handler.",
+	})
+
 	loadshedCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "frontend_loadshed_count",
 		Help: "Number of connections rejected due to load shedding.",
@@ -186,7 +193,12 @@ func readWithLimits(
 
 	// Read the data from the POST request into a
 	buffer := &bytes.Buffer{}
-	reader := io.LimitReader(req.Body, int64(config_obj.Frontend.Resources.MaxUploadSize*2))
+	max_upload_size := config_obj.Frontend.Resources.MaxUploadSize
+	if max_upload_size == 0 {
+		max_upload_size = 5000000
+	}
+
+	reader := io.LimitReader(req.Body, int64(max_upload_size*2))
 
 	// Implement rate limiting from reading the connection.
 	if config_obj.Frontend.Resources.PerClientUploadRate > 0 {
@@ -211,8 +223,7 @@ func readWithLimits(
 	message_info, err := server_obj.Decrypt(ctx, buffer.Bytes())
 	if err != nil {
 		logger.Debug("Unable to decrypt body from %v: %+v "+
-			"(%v out of max %v)",
-			req.RemoteAddr, err, n, config_obj.Frontend.Resources.MaxUploadSize*2)
+			"(%v out of max %v)", req.RemoteAddr, err, n, max_upload_size*2)
 
 		receiveDecryptionErrors.Inc()
 		return nil, errors.New("Unable to decrypt")
@@ -278,13 +289,13 @@ func control(server_obj *Server) http.Handler {
 		// allows clients with urgent messages to always be
 		// processing even when the frontend are loaded.
 		if priority != "urgent" {
-			err := server_obj.concurrency.StartConcurrencyControl(ctx)
+			cancel, err := server_obj.Concurrency().StartConcurrencyControl(ctx)
 			if err != nil {
 				http.Error(w, "Timeout", http.StatusRequestTimeout)
 				timeoutCounter.Inc()
 				return
 			}
-			defer server_obj.concurrency.EndConcurrencyControl()
+			defer cancel()
 
 		} else {
 			urgentCounter.Inc()
@@ -603,4 +614,9 @@ func GetLoggingHandler(config_obj *config_proto.Config,
 			next.ServeHTTP(rec, r)
 		})
 	}
+}
+
+// Calculate QPS
+func init() {
+	utils.RegisterQPSCounter(receiveCounter, receiveQPS)
 }

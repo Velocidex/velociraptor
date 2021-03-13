@@ -208,6 +208,10 @@
     border-color: var(--border-color);
 }
 
+.dark-mode .react-bootstrap-table-pagination-total {
+    color: var(--text-foreground);
+}
+
 /* artifact viewer screen */
 .dark-mode .artifact-search-table a {
     color: var(--text-foreground);

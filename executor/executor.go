@@ -256,12 +256,12 @@ func (self *ClientExecutor) processRequestPlugin(
 	if req.VQLClientAction != nil {
 		// Control concurrency on the executor only.
 		if !req.Urgent {
-			err := self.concurrency.StartConcurrencyControl(ctx)
+			cancel, err := self.concurrency.StartConcurrencyControl(ctx)
 			if err != nil {
 				responder.RaiseError(ctx, fmt.Sprintf("%v", err))
 				return
 			}
-			defer self.concurrency.EndConcurrencyControl()
+			defer cancel()
 		}
 		actions.VQLClientAction{}.StartQuery(
 			config_obj, ctx, responder, req.VQLClientAction)

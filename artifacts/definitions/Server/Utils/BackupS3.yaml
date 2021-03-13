@@ -1,0 +1,83 @@
+name: Server.Utils.BackupS3
+description: |
+   This server monitoring artifact will automatically zip and backup
+   any collected artifacts to s3.
+
+   You will need to provide credentials to upload to the bucket. The
+   credentials can be given as parameters or they will be taken from
+   the server metadata (as DefaultBucket, DefaultRegion,
+   S3AccessKeyId, CredentialsSecret)
+
+   Thanks to @shortxstack and @Recon_InfoSec
+
+
+type: SERVER_EVENT
+
+parameters:
+   - name: ArtifactNameRegex
+     default: "."
+     description: A regular expression to select which artifacts to upload
+   - name: Bucket
+   - name: Region
+   - name: CredentialsKey
+   - name: CredentialsSecret
+
+sources:
+  - query: |
+        -- Temp file to write on. It will be truncated for each collection.
+        LET output_file <= tempfile(extension=".zip")
+
+        -- Allow these settings to be set by the artifact parameter or the server metadata.
+        LET bucket <= if(condition=Bucket, then=Bucket,
+           else=server_metadata().DefaultBucket)
+        LET credentialskey <= if(condition=CredentialsKey, then=CredentialsKey,
+           else=server_metadata().S3AccessKeyId)
+        LET region <= if(condition=Region, then=Region,
+           else=server_metadata().DefaultRegion)
+        LET credentialssecret <= if(condition=CredentialsSecret,
+              then=CredentialsSecret, else=server_metadata().S3AccessSecret)
+
+        -- Define a tmp artifact that uploads the files in the flow.
+        -- We will then collect that artifact into a zip file.
+        LET UploadFlowDefinition = '''
+        name: UploadFlow
+
+        parameters:
+           - name: FlowId
+           - name: ClientId
+
+        sources:
+          - name: FlowDetails
+            query: SELECT * FROM flows(client_id=ClientId, flow_id=FlowId)
+          - query: |
+                SELECT * FROM foreach(
+                row={
+                    SELECT * FROM enumerate_flow(client_id=ClientId, flow_id=FlowId)
+                },
+                query={
+                  SELECT FullPath,
+                         upload(file=FullPath, accessor="fs") AS Upload
+                  FROM stat(filename=VFSPath, accessor="fs")
+                })
+        '''
+
+        LET upload_to_s3(ClientId, FlowId, Fqdn) = SELECT ClientId,
+               upload_s3(bucket=bucket,
+                         credentialskey=credentialskey,
+                         credentialssecret=credentialssecret,
+                         region=region,
+                         file=output_file,
+                         name=format(format="Host %v %v %v.zip",
+                            args=[Fqdn, FlowId, timestamp(epoch=now())])) AS S3
+        FROM collect(artifacts="UploadFlow", artifact_definitions=UploadFlowDefinition,
+                     args=dict(`UploadFlow`=dict(
+                            ClientId=ClientId, FlowId=FlowId)),
+                     output=output_file)
+
+        LET completions = SELECT *, client_info(client_id=ClientId).os_info.fqdn AS Fqdn
+            FROM watch_monitoring(artifact="System.Flow.Completion")
+            WHERE Flow.artifacts_with_results =~ ArtifactNameRegex
+
+        SELECT * FROM foreach(row=completions, query={
+          SELECT * FROM upload_to_s3(ClientId=ClientId, FlowId=FlowId, Fqdn=Fqdn)
+        })
