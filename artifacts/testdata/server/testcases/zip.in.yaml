@@ -19,12 +19,12 @@ Queries:
 
   # Test the unzip() plugin
   - LET tmpdir <= tempdir()
-  - SELECT OriginalPath, relpath(path=NewPath, base=tmpdir), Size
+  - SELECT OriginalPath, relpath(path=NewPath, base=tmpdir, sep="/"), Size
     FROM unzip(filename=srcDir + '/artifacts/testdata/files/test.zip',
        output_directory=tmpdir)
 
   # Test that unzip works on virtual files.
-  - SELECT OriginalPath, relpath(path=NewPath, base=tmpdir), Size
+  - SELECT OriginalPath, relpath(path=NewPath, base=tmpdir, sep="/"), Size
     FROM unzip(
        filename=read_file(filename=srcDir + '/artifacts/testdata/files/test.zip'),
        accessor="data",

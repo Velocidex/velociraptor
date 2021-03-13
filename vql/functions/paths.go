@@ -97,6 +97,7 @@ func (self BasenameFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 type RelnameFunctionArgs struct {
 	Path string `vfilter:"required,field=path,doc=Extract directory name of path"`
 	Base string `vfilter:"required,field=base,doc=The base of the path"`
+	Sep  string `vfilter:"optional,field=sep,doc=Separator to use (default native)"`
 }
 
 type RelnameFunction struct{}
@@ -112,6 +113,11 @@ func (self *RelnameFunction) Call(ctx context.Context,
 	}
 
 	rel, _ := filepath.Rel(arg.Base, arg.Path)
+
+	if arg.Sep == "/" {
+		rel = filepath.ToSlash(rel)
+	}
+
 	return rel
 }
 
