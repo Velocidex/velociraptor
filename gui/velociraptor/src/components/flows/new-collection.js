@@ -380,7 +380,7 @@ class NewCollectionResources extends React.Component {
                     <Form.Label column sm="3">Max Execution Time in Seconds</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
-                        placeholder="600"
+                        placeholder="600s per artifact"
                         value={resources.timeout}
                         setInvalid={value => this.setState({invalid_2: value})}
                         setValue={value => this.props.setResources({timeout: value})} />
@@ -391,7 +391,7 @@ class NewCollectionResources extends React.Component {
                     <Form.Label column sm="3">Max Rows</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
-                        placeholder="Unlimited"
+                        placeholder="1,000,000 rows"
                         value={resources.max_rows}
                         setInvalid={value => this.setState({invalid_3: value})}
                         setValue={value => this.props.setResources({max_rows: value})} />
@@ -402,7 +402,7 @@ class NewCollectionResources extends React.Component {
                     <Form.Label column sm="3">Max Mb Uploaded</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
-                        placeholder="Unlimited"
+                        placeholder="1Gb"
                         value={resources.max_mbytes}
                         setInvalid={value => this.setState({invalid_4: value})}
                         setValue={value => this.props.setResources({max_mbytes: value})} />

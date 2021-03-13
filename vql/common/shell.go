@@ -206,13 +206,13 @@ func (self ShellPlugin) Call(
 			defer mu.Unlock()
 
 			if arg.Sep != "" {
-				response.Stdout = line
 				select {
 				case <-ctx.Done():
 					return
 
-				case output_chan <- response:
+				case output_chan <- &ShellResult{Stdout: line}:
 				}
+
 			} else {
 				data := response.Stdout + line
 				for len(data) > length {
@@ -235,12 +235,11 @@ func (self ShellPlugin) Call(
 			defer mu.Unlock()
 
 			if arg.Sep != "" {
-				response.Stderr = line
 				select {
 				case <-ctx.Done():
 					return
 
-				case output_chan <- response:
+				case output_chan <- &ShellResult{Stdout: line}:
 				}
 			} else {
 				data := response.Stderr + line

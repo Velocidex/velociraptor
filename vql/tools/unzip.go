@@ -3,12 +3,15 @@
 package tools
 
 import (
+	"archive/zip"
 	"context"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -23,6 +26,8 @@ type UnzipResponse struct {
 
 type UnzipPluginArgs struct {
 	Filename        string `vfilter:"required,field=filename,doc=File to unzip."`
+	Accessor        string `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	FilenameFilter  string `vfilter:"optional,field=filename_filter,doc=Only extract members matching this filter."`
 	OutputDirectory string `vfilter:"required,field=output_directory,doc=Where to unzip to"`
 }
 
@@ -33,80 +38,113 @@ func (self UnzipPlugin) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
-	globber := make(glob.Globber)
+
 	go func() {
 		defer close(output_chan)
-		config_obj, ok := vql_subsystem.GetServerConfig(scope)
-		if !ok {
-			config_obj = &config_proto.Config{}
+
+		err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
+		if err != nil {
+			scope.Log("tempdir: %s", err)
+			return
 		}
+
 		arg := &UnzipPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("unzip: %s", err.Error())
 			return
 		}
-		accessor, err := glob.GetAccessor("zip", scope)
+
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("unzip: %v", err)
 			return
 		}
 
-		root := ""
-		item_root, _, _ := accessor.GetRoot(arg.Filename)
-		root = item_root
-		err = globber.Add("#**{50}", accessor.PathSplit)
+		filter := arg.FilenameFilter
+		if filter == "" {
+			filter = "."
+		}
+
+		filter_reg, err := regexp.Compile("(?i)" + filter)
 		if err != nil {
 			scope.Log("unzip: %v", err)
 			return
 		}
 
-		file_chan := globber.ExpandWithContext(
-			ctx, config_obj, root, accessor)
-		for f := range file_chan {
-			select {
-			case <-ctx.Done():
-				return
+		output_directory, err := filepath.Abs(arg.OutputDirectory)
+		if err != nil {
+			scope.Log("unzip: %v", err)
+			return
+		}
 
-			default:
-				{
-					_, item_path, _ := accessor.GetRoot(f.FullPath())
-					if !f.IsDir() && !f.IsLink() {
-						new_path := filepath.Join(arg.OutputDirectory, item_path)
-						fd, err := accessor.Open(f.FullPath())
-						if err != nil {
-							scope.Log("unzip: %v", err)
-							return
-						}
+		s, err := accessor.Lstat(arg.Filename)
+		if err != nil {
+			scope.Log("unzip: %v", err)
+			return
+		}
 
-						if err := os.MkdirAll(filepath.Dir(new_path), 0700); err != nil {
-							scope.Log("unzip: %v", err)
-							return
-						}
+		fd, err := accessor.Open(arg.Filename)
+		if err != nil {
+			scope.Log("unzip: %v", err)
+			return
+		}
 
-						fd2, err := os.OpenFile(new_path, os.O_CREATE|os.O_WRONLY, 0700)
-						defer fd2.Close()
+		zip, err := zip.NewReader(utils.ReaderAtter{fd}, s.Size())
+		if err != nil {
+			scope.Log("unzip: %v", err)
+			return
+		}
 
-						if err != nil {
-							scope.Log("unzip: %v", err)
-							return
-						}
-
-						_, err = utils.Copy(ctx, fd2, fd)
-						if err != nil {
-							scope.Log("unzip: %v", err)
-							return
-						}
-
-						output := &UnzipResponse{
-							OriginalPath: f.FullPath(),
-							NewPath:      new_path,
-							Size:         f.Size(),
-						}
-						output_chan <- output
-					}
-				}
+		for _, member := range zip.File {
+			if !filter_reg.MatchString(member.Name) ||
+				// Zip directories end with a /
+				strings.HasSuffix(member.Name, "/") {
+				continue
 			}
+
+			// Sanitize the name for writing.
+			output_path := filepath.Join(output_directory, member.Name)
+
+			// Directory traversal ...
+			if !strings.HasPrefix(output_path, output_directory) {
+				continue
+			}
+
+			func() {
+				err = os.MkdirAll(filepath.Dir(output_path), 0700)
+				if err != nil {
+					scope.Log("unzip: %v", err)
+					return
+				}
+
+				out_fd, err := os.OpenFile(output_path, os.O_CREATE|os.O_WRONLY, 0700)
+				if err != nil {
+					scope.Log("unzip: %v", err)
+					return
+				}
+				defer out_fd.Close()
+
+				in_fd, err := member.Open()
+				if err != nil {
+					scope.Log("unzip: %v", err)
+					return
+				}
+				defer in_fd.Close()
+
+				n, err := utils.Copy(ctx, out_fd, in_fd)
+				if err != nil {
+					scope.Log("unzip: %v", err)
+					return
+				}
+
+				output := &UnzipResponse{
+					OriginalPath: member.Name,
+					NewPath:      output_path,
+					Size:         int64(n),
+				}
+				output_chan <- output
+			}()
 		}
 	}()
 	return output_chan
@@ -119,7 +157,7 @@ func (self UnzipPlugin) Name() string {
 func (self UnzipPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "unzip",
-		Doc:     "Unzips a directory",
+		Doc:     "Unzips a file into a directory",
 		ArgType: type_map.AddType(scope, &UnzipPluginArgs{}),
 	}
 }
