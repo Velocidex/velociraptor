@@ -39,7 +39,7 @@ type UrlArgs struct {
 
 type UrlFunction struct{}
 
-func (self *UrlFunction) Call(ctx context.Context,
+func (self UrlFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &UrlArgs{}

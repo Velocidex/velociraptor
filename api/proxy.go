@@ -197,6 +197,7 @@ type _templateArgs struct {
 	Version    string
 	CsrfToken  string
 	BasePath   string
+	UserTheme  string
 }
 
 // An api handler which connects to the gRPC service (i.e. it is a

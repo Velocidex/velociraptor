@@ -20,4 +20,16 @@ LET zip_files = SELECT FullPath, Size FROM glob( globs=srcDir+"/artifacts/testda
   "Hi": "hello world\n",
   "Bye": "goodbye world\n"
  }
+]LET tmpdir <= tempdir()[]SELECT OriginalPath, relpath(path=NewPath, base=tmpdir), Size FROM unzip(filename=srcDir + '/artifacts/testdata/files/test.zip', output_directory=tmpdir)[
+ {
+  "OriginalPath": "test/secret.txt",
+  "relpath(path=NewPath, base=tmpdir)": "test/secret.txt",
+  "Size": 1549
+ }
+]SELECT OriginalPath, relpath(path=NewPath, base=tmpdir), Size FROM unzip( filename=read_file(filename=srcDir + '/artifacts/testdata/files/test.zip'), accessor="data", output_directory=tmpdir)[
+ {
+  "OriginalPath": "test/secret.txt",
+  "relpath(path=NewPath, base=tmpdir)": "test/secret.txt",
+  "Size": 1549
+ }
 ]

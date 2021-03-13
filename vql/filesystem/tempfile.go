@@ -164,7 +164,7 @@ func (self *TempdirFunction) Call(ctx context.Context,
 
 	// Make sure the file is removed when the query is done.
 	removal := func() {
-		scope.Log("tempfile: removing tempfile %v", dir)
+		scope.Log("tempdir: removing tempdir %v", dir)
 
 		// On windows especially we can not remove files that
 		// are opened by something else, so we keep trying for
@@ -183,14 +183,14 @@ func (self *TempdirFunction) Call(ctx context.Context,
 		err := vql_subsystem.GetRootScope(scope).AddDestructor(removal)
 		if err != nil {
 			removal()
-			scope.Log("tempfile: %v", err)
+			scope.Log("tempdir: %v", err)
 		}
 
 	} else {
 		err := scope.AddDestructor(removal)
 		if err != nil {
 			removal()
-			scope.Log("tempfile: %v", err)
+			scope.Log("tempdir: %v", err)
 		}
 
 	}

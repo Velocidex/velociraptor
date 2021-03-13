@@ -244,8 +244,13 @@ func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) 
 	err := dispatcher.ApplyFuncOnHunts(
 		func(hunt *api_proto.Hunt) error {
 			// Only show non-archived hunts.
-			if in.IncludeArchived || hunt.State != api_proto.Hunt_ARCHIVED {
-				items = append(items, hunt)
+			if in.IncludeArchived ||
+				hunt.State != api_proto.Hunt_ARCHIVED {
+
+				// Clone the hunts so we can remove
+				// them from the locked section.
+				items = append(items,
+					proto.Clone(hunt).(*api_proto.Hunt))
 			}
 			return nil
 		})

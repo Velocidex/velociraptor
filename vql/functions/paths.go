@@ -19,6 +19,7 @@ package functions
 
 import (
 	"context"
+	"path/filepath"
 	"runtime"
 
 	"github.com/Velocidex/ordereddict"
@@ -90,6 +91,35 @@ func (self BasenameFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 		Name:    "basename",
 		Doc:     "Return the basename of the path.",
 		ArgType: type_map.AddType(scope, &DirnameArgs{}),
+	}
+}
+
+type RelnameFunctionArgs struct {
+	Path string `vfilter:"required,field=path,doc=Extract directory name of path"`
+	Base string `vfilter:"required,field=base,doc=The base of the path"`
+}
+
+type RelnameFunction struct{}
+
+func (self *RelnameFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	arg := &RelnameFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("relpath: %s", err.Error())
+		return false
+	}
+
+	rel, _ := filepath.Rel(arg.Base, arg.Path)
+	return rel
+}
+
+func (self RelnameFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "relpath",
+		Doc:     "Return the relative path of .",
+		ArgType: type_map.AddType(scope, &RelnameFunctionArgs{}),
 	}
 }
 
@@ -166,6 +196,7 @@ func (self PathSplitFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 func init() {
 	vql_subsystem.RegisterFunction(&DirnameFunction{})
 	vql_subsystem.RegisterFunction(&BasenameFunction{})
+	vql_subsystem.RegisterFunction(&RelnameFunction{})
 	vql_subsystem.RegisterFunction(&PathJoinFunction{})
 	vql_subsystem.RegisterFunction(&PathSplitFunction{})
 }

@@ -16,3 +16,16 @@ Queries:
   - SELECT read_file(filename=url(path=srcDir+'/artifacts/testdata/files/hi.gz'), accessor='gzip') AS Hi,
      read_file(filename=url(path=srcDir+'/artifacts/testdata/files/goodbye.bz2'), accessor='bzip2') AS Bye
      FROM scope()
+
+  # Test the unzip() plugin
+  - LET tmpdir <= tempdir()
+  - SELECT OriginalPath, relpath(path=NewPath, base=tmpdir), Size
+    FROM unzip(filename=srcDir + '/artifacts/testdata/files/test.zip',
+       output_directory=tmpdir)
+
+  # Test that unzip works on virtual files.
+  - SELECT OriginalPath, relpath(path=NewPath, base=tmpdir), Size
+    FROM unzip(
+       filename=read_file(filename=srcDir + '/artifacts/testdata/files/test.zip'),
+       accessor="data",
+       output_directory=tmpdir)
