@@ -11,9 +11,10 @@ import (
 )
 
 type GrokParseFunctionArgs struct {
-	Grok     string      `vfilter:"required,field=grok,doc=Grok pattern."`
-	Data     string      `vfilter:"required,field=data,doc=String to parse."`
-	Patterns vfilter.Any `vfilter:"optional,field=patterns,doc=Additional patterns."`
+	Grok        string      `vfilter:"required,field=grok,doc=Grok pattern."`
+	Data        string      `vfilter:"required,field=data,doc=String to parse."`
+	Patterns    vfilter.Any `vfilter:"optional,field=patterns,doc=Additional patterns."`
+	AllCaptures bool        `vfilter:"optional,field=all_captures,doc=Extract all captures."`
 }
 
 type GrokParseFunction struct{}
@@ -40,7 +41,9 @@ func (self GrokParseFunction) Call(
 	key := "__grok"
 	grok_parser, ok := vql_subsystem.CacheGet(scope, key).(*grok.Grok)
 	if !ok {
-		grok_parser, err = grok.New()
+		grok_parser, err = grok.NewWithConfig(&grok.Config{
+			NamedCapturesOnly: !arg.AllCaptures,
+		})
 		if err != nil {
 			scope.Log("grok: %v", err)
 			return &vfilter.Null{}
