@@ -125,7 +125,6 @@ func (self *ImportCollectionFunction) Call(ctx context.Context,
 
 	// Keep track of all the artifacts in the zip file.
 	artifacts := make(map[string]bool)
-	uploads := []string{}
 
 	// Create a new flow and path manager for it.
 	flow_id := launcher.NewFlowId(arg.ClientId)
@@ -219,7 +218,6 @@ func (self *ImportCollectionFunction) Call(ctx context.Context,
 				}
 			}()
 		} else {
-			uploads = append(uploads, file.Name)
 			new_flow.TotalUploadedFiles++
 			new_flow.TotalUploadedBytes += file.UncompressedSize64
 
@@ -255,7 +253,7 @@ func (self *ImportCollectionFunction) Call(ctx context.Context,
 
 	// Copy all unique artifacts to the request struct - this will
 	// go into the flow context.
-	for k, _ := range artifacts {
+	for k := range artifacts {
 		new_flow.Request.Artifacts = append(new_flow.Request.Artifacts, k)
 	}
 

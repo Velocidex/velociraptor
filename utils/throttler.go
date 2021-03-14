@@ -37,12 +37,15 @@ func NewThrottler(connections_per_second uint64) *Throttler {
 	}
 
 	go func() {
+		ticker := time.NewTicker(duration)
+		defer ticker.Stop()
+
 		for {
 			select {
 			case <-result.done:
 				return
 
-			case value := <-time.Tick(duration):
+			case value := <-ticker.C:
 				result.ticker <- value
 			}
 		}

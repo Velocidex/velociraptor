@@ -82,8 +82,6 @@ func (self *Server) adjustConcurrency(
 	target_heap_size uint64, concurrency uint64) uint64 {
 
 	s := runtime.MemStats{}
-
-	fmt.Printf("Checking concurrency %v\n", time.Now())
 	runtime.ReadMemStats(&s)
 
 	// We are using up too much memory, drop concurrency.
@@ -180,7 +178,7 @@ func NewServer(config_obj *config_proto.Config) (*Server, error) {
 	// available CPU cores.
 	concurrency := config_obj.Frontend.Resources.Concurrency
 	if concurrency == 0 {
-		concurrency = 20
+		concurrency = 2 * uint64(runtime.GOMAXPROCS(0))
 	}
 
 	result := Server{
