@@ -69,7 +69,8 @@ parameters:
 sources:
   - query: |
       SELECT Type,
-             if(condition=FullPath, then=upload(name=Type + ".bin", file=FullPath)) AS File,
+             if(condition=get(field="FullPath"),
+                then=upload(name=Type + ".bin", file=FullPath)) AS File,
              get(member="Line") AS Line
       FROM profile(allocs=Allocs, block=Block, goroutine=Goroutine,
                    heap=Heap, mutex=Mutex, profile=Profile, trace=Trace,

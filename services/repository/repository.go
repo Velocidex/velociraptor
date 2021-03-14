@@ -139,6 +139,7 @@ func (self *Repository) LoadYaml(data string, validate bool) (
 	}
 
 	artifact.Raw = data
+	artifact.Compiled = false
 	return self.LoadProto(artifact, validate)
 }
 
@@ -352,6 +353,10 @@ func splitQueryToQueries(query string) ([]string, error) {
 func compileArtifact(
 	config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact) error {
+	if artifact.Compiled {
+		return nil
+	}
+
 	for _, source := range artifact.Sources {
 		if source.Queries == nil {
 			// The Queries field contains the compiled queries -
@@ -378,6 +383,8 @@ func compileArtifact(
 			return err
 		}
 	}
+
+	artifact.Compiled = true
 
 	return nil
 }

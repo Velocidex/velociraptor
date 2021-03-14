@@ -331,3 +331,8 @@
     color: var(--text-foreground);
     z-index: 1000;
 }
+
+/* Spinner */
+.dark-mode .overlay .fa-spinner {
+    filter: invert(1);
+}

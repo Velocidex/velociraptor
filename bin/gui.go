@@ -152,7 +152,7 @@ func doGUI() {
 	// Just try to open the browser in the background.
 	if !*gui_command_no_browser {
 		go func() {
-			url := fmt.Sprintf("https://admin:password@%v:%v/app.html#/welcome",
+			url := fmt.Sprintf("https://admin:password@%v:%v/",
 				config_obj.GUI.BindAddress,
 				config_obj.GUI.BindPort)
 			res := OpenBrowser(url)

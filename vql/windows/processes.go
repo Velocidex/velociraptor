@@ -185,7 +185,10 @@ func (self PslistPlugin) Call(
 			return
 		}
 
-		handle, err := windows.CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
+		// If the caller specifies a pid, only query for this
+		// pid (0 means all pids).
+		handle, err := windows.CreateToolhelp32Snapshot(
+			TH32CS_SNAPPROCESS, uint32(arg.Pid))
 		if err != nil {
 			scope.Log("CreateToolhelp32Snapshot: %v ", err)
 			return

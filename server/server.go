@@ -77,52 +77,70 @@ func (self *Server) Concurrency() *utils.Concurrency {
 	return self.concurrency
 }
 
+func (self *Server) adjustConcurrency(
+	max_concurrency uint64,
+	target_heap_size uint64, concurrency uint64) uint64 {
+
+	s := runtime.MemStats{}
+
+	fmt.Printf("Checking concurrency %v\n", time.Now())
+	runtime.ReadMemStats(&s)
+
+	// We are using up too much memory, drop concurrency.
+	if s.Alloc > target_heap_size {
+		new_concurrency := 2 * concurrency / 3
+
+		// We need some minimum concurrency (default 10% of max)
+		if new_concurrency < max_concurrency/10 {
+			new_concurrency = max_concurrency / 10
+		}
+
+		// No change in concurrency - nothing to do.
+		if new_concurrency == concurrency {
+			return concurrency
+		}
+
+		// Adjust concurrency
+		concurrency = new_concurrency
+
+		// We are using up less memory than
+		// specified, we can increase
+		// concurrency to approach the maximum level.
+	} else if s.Alloc < 2*target_heap_size/3 {
+		delta := (max_concurrency - concurrency) / 2
+
+		// No change in concurrency - nothing to do.
+		if delta == 0 {
+			return concurrency
+		}
+
+		// Adjust concurrency
+		concurrency += delta
+
+	} else {
+		// Heap size is between max and 2/3 of max - this is
+		// good so no change is needed, check again later.
+		return concurrency
+	}
+
+	// Install the new concurrency controller.
+	targetConcurrency.Set(float64(concurrency))
+	heapSize.Set(float64(s.Alloc))
+	self.mu.Lock()
+	self.concurrency = utils.NewConcurrencyControl(
+		int(concurrency), 60*time.Second)
+	self.mu.Unlock()
+
+	return concurrency
+}
+
 func (self *Server) ManageConcurrency(max_concurrency uint64, target_heap_size uint64) {
 	concurrency := max_concurrency / 2
 
 	for {
-		s := runtime.MemStats{}
-		runtime.ReadMemStats(&s)
-
-		// We are using up too much memory, drop concurrency.
-		if s.Alloc > target_heap_size {
-			new_concurrency := 2 * concurrency / 3
-
-			// We need some minimum concurrency (default 10% of max)
-			if new_concurrency < max_concurrency/10 {
-				new_concurrency = max_concurrency / 10
-			}
-
-			if new_concurrency == concurrency {
-				continue
-			}
-
-			concurrency = new_concurrency
-
-			// We are using up less memory than
-			// specified, we can increase
-			// concurrency to approach the maximum level.
-		} else if s.Alloc < 2*target_heap_size/3 {
-			delta := (max_concurrency - concurrency) / 2
-			if delta == 0 {
-				continue
-			}
-			concurrency += delta
-
-		} else {
-			// Heap size is between max and 2/3 of
-			// max - this is good so no change is
-			// needed, check again later.
-			continue
-		}
-
-		// Install the new concurrency controller.
-		targetConcurrency.Set(float64(concurrency))
-		heapSize.Set(float64(s.Alloc))
-		self.mu.Lock()
-		self.concurrency = utils.NewConcurrencyControl(
-			int(concurrency), 60*time.Second)
-		self.mu.Unlock()
+		new_concurrency := self.adjustConcurrency(max_concurrency, target_heap_size, concurrency)
+		self.logger.Debug("Adjusting concurrency from %v to %v", concurrency, new_concurrency)
+		concurrency = new_concurrency
 
 		// Wait for a minute and check again.
 		select {
@@ -157,18 +175,19 @@ func NewServer(config_obj *config_proto.Config) (*Server, error) {
 
 	// This number mainly affects memory use during large tranfers
 	// as it controls the number of concurrent clients that may be
-	// transferring data (each will use some memory to buffer).
+	// transferring data (each will use some memory to
+	// buffer). This should not be too large relative to the
+	// available CPU cores.
 	concurrency := config_obj.Frontend.Resources.Concurrency
 	if concurrency == 0 {
-		concurrency = 60
+		concurrency = 20
 	}
 
 	result := Server{
-		config:  config_obj,
-		manager: manager,
-		db:      db,
-		logger: logging.GetLogger(config_obj,
-			&logging.FrontendComponent),
+		config:      config_obj,
+		manager:     manager,
+		db:          db,
+		logger:      logging.GetLogger(config_obj, &logging.FrontendComponent),
 		concurrency: utils.NewConcurrencyControl(int(concurrency), 60*time.Second),
 		throttler:   utils.NewThrottler(config_obj.Frontend.Resources.ConnectionsPerSecond),
 		done:        make(chan bool),
@@ -181,7 +200,11 @@ func NewServer(config_obj *config_proto.Config) (*Server, error) {
 
 	result.logger.Info("Targetting heap size %v, with maximum concurrency %v",
 		heap_size, concurrency)
-	go result.ManageConcurrency(concurrency, heap_size)
+
+	// If we are targetting a heap size then modulate concurrency
+	if config_obj.Frontend.Resources.TargetHeapSize > 0 {
+		go result.ManageConcurrency(concurrency, heap_size)
+	}
 
 	if config_obj.Frontend.Resources.GlobalUploadRate > 0 {
 		result.logger.Info("Global upload rate set to %v bytes per second",

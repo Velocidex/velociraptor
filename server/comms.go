@@ -245,10 +245,12 @@ func control(server_obj *Server) http.Handler {
 	logger := logging.GetLogger(server_obj.config, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+
+		/* Experimental redirection is turned off for now.
 		if maybeRedirectFrontend("control", w, req) {
 			return
 		}
-
+		*/
 		if !server_obj.throttler.Ready() {
 			loadshedCounter.Inc()
 

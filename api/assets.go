@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/gorilla/csrf"
+	"www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	gui_assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	users "www.velocidex.com/golang/velociraptor/users"
@@ -63,14 +64,14 @@ func GetTemplateHandler(
 
 		// This should never happen!
 		if userinfo.Name == "" {
-			returnError(w, 500, "Unauthenticated access.")
+			returnError(w, 401, "Unauthenticated access.")
 			return
 		}
 
 		user_options, err := users.GetUserOptions(config_obj, userinfo.Name)
 		if err != nil {
-			returnError(w, 500, "Unauthenticated access.")
-			return
+			// Options may not exist yet
+			user_options = &proto.SetGUIOptionsRequest{}
 		}
 
 		args := _templateArgs{

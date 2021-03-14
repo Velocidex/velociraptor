@@ -167,6 +167,9 @@ message Artifact {
     string raw = 7 [(sem_type) = {
             description: "The raw YAML of this artifact.",
         }];
+
+    // Artifact was already compiled.
+    bool compiled = 14;
 }
 
 message ArtifactDescriptors {
