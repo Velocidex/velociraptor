@@ -12,3 +12,7 @@
     height: 100%;
     overflow-y: auto;
 }
+
+div.ace_editor.ace_autocomplete {
+    width: 70%
+}

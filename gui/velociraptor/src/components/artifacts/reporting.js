@@ -31,7 +31,7 @@ export default class VeloReportViewer extends React.Component {
         template: "",
         data: {},
         messages: [],
-        loading: false,
+        loading: true,
     }
 
     componentDidMount() {

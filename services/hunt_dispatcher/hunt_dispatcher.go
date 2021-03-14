@@ -63,9 +63,6 @@ func (self *HuntDispatcher) GetLastTimestamp() uint64 {
 }
 
 func (self *HuntDispatcher) getHunts() []*api_proto.Hunt {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	result := make([]*api_proto.Hunt, 0, len(self.hunts))
 	for _, hunt := range self.hunts {
 		result = append(result, hunt)
@@ -78,6 +75,9 @@ func (self *HuntDispatcher) getHunts() []*api_proto.Hunt {
 // modify the hunts.
 func (self *HuntDispatcher) ApplyFuncOnHunts(
 	cb func(hunt *api_proto.Hunt) error) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	for _, hunt := range self.getHunts() {
 		err := cb(hunt)

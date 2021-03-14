@@ -86,14 +86,17 @@ func ForemanProcessMessage(
 	}
 	client_last_timestamp := foreman_checkin.LastHuntTimestamp
 
-	// Can we get away without a lock?
+	// Can we get away without a lock? If the client is already up
+	// to date we dont need to look further.
 	hunts_last_timestamp := dispatcher.GetLastTimestamp()
 	if client_last_timestamp >= hunts_last_timestamp {
 		return nil
 	}
 
-	// Nop - we need to lock and examine the hunts more carefully.
-	return dispatcher.ApplyFuncOnHunts(func(hunt *api_proto.Hunt) error {
+	// Take a snapshot of the hunts that we need to run on this
+	// client to reduce the time under lock.
+	hunts := make([]*api_proto.Hunt, 0)
+	err := dispatcher.ApplyFuncOnHunts(func(hunt *api_proto.Hunt) error {
 		// Hunt is stopped we dont care about it.
 		if hunt.State != api_proto.Hunt_RUNNING {
 			return nil
@@ -104,11 +107,29 @@ func ForemanProcessMessage(
 			return nil
 		}
 
-		journal, err := services.GetJournal()
-		if err != nil {
-			return err
-		}
+		// Take a snapshot of the hunt id and start time.
+		hunts = append(hunts, &api_proto.Hunt{
+			HuntId:    hunt.HuntId,
+			StartTime: hunt.StartTime,
+		})
 
+		return nil
+	})
+
+	// Nothing to do, return
+	if len(hunts) == 0 {
+		return err
+	}
+
+	// Now schedule the client for all the hunts that it needs to run.
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	// Record the latest timestamp
+	latest_timestamp := uint64(0)
+	for _, hunt := range hunts {
 		// Notify the hunt manager that we need to hunt this client.
 		err = journal.PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
@@ -120,24 +141,31 @@ func ForemanProcessMessage(
 			return err
 		}
 
-		// Let the client know it needs to update its foreman state.
-		err = QueueMessageForClient(
-			config_obj, client_id,
-			&crypto_proto.GrrMessage{
-				SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
-				RequestId: constants.IgnoreResponseState,
-				UpdateForeman: &actions_proto.ForemanCheckin{
-					LastHuntTimestamp: hunt.StartTime,
-				},
-			})
-		if err != nil {
-			return err
+		if hunt.StartTime > latest_timestamp {
+			latest_timestamp = hunt.StartTime
 		}
+	}
 
-		notifier := services.GetNotifier()
-		if notifier == nil {
-			return errors.New("Notifier not configured")
-		}
-		return services.GetNotifier().NotifyListener(config_obj, client_id)
-	})
+	// Let the client know it needs to update its foreman state to
+	// the latest time.
+	err = QueueMessageForClient(
+		config_obj, client_id,
+		&crypto_proto.GrrMessage{
+			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
+			RequestId: constants.IgnoreResponseState,
+			UpdateForeman: &actions_proto.ForemanCheckin{
+				LastHuntTimestamp: latest_timestamp,
+			},
+		})
+	if err != nil {
+		return err
+	}
+
+	notifier := services.GetNotifier()
+	if notifier == nil {
+		return errors.New("Notifier not configured")
+	}
+
+	// Notify the client so it can pick up the new jobs
+	return services.GetNotifier().NotifyListener(config_obj, client_id)
 }

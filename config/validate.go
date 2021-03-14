@@ -130,11 +130,7 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 	}
 
 	if resources.Concurrency == 0 {
-		resources.Concurrency = 60
-	}
-
-	if resources.TargetHeapSize == 0 {
-		resources.TargetHeapSize = 1000000000 // 1Gb
+		resources.Concurrency = 20
 	}
 
 	if resources.NotificationsPerSecond == 0 {

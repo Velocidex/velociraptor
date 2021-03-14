@@ -294,6 +294,7 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 		return nil, err
 	}
 
+	// Normalize the hunt object
 	FindCollectedArtifacts(config_obj, result)
 
 	if result == nil || result.Stats == nil {

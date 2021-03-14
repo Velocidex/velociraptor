@@ -75,15 +75,17 @@ type ClientEventTable struct {
 func (self *ClientEventTable) CheckClientEventsVersion(
 	config_obj *config_proto.Config,
 	client_id string, client_version uint64) bool {
+
 	self.mu.Lock()
-	defer self.mu.Unlock()
+	version := self.state.Version
+	self.mu.Unlock()
 
 	labeler := services.GetLabeler()
 	if labeler == nil {
 		return false
 	}
 
-	if client_version < self.state.Version {
+	if client_version < version {
 		return true
 	}
 

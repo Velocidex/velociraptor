@@ -120,13 +120,13 @@ func StartNotificationService(
 
 func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()) {
 	self.pool_mu.Lock()
-	defer self.pool_mu.Unlock()
-
 	if self.notification_pool == nil {
 		self.notification_pool = notifications.NewNotificationPool()
 	}
+	notification_pool := self.notification_pool
+	self.pool_mu.Unlock()
 
-	return self.notification_pool.Listen(client_id)
+	return notification_pool.Listen(client_id)
 }
 
 func (self *Notifier) NotifyAllListeners(config_obj *config_proto.Config) error {
@@ -169,11 +169,11 @@ func (self *Notifier) NotifyListener(config_obj *config_proto.Config, id string)
 // TODO: Make this work on all frontends.
 func (self *Notifier) IsClientConnected(client_id string) bool {
 	self.pool_mu.Lock()
-	defer self.pool_mu.Unlock()
-
 	if self.notification_pool == nil {
 		self.notification_pool = notifications.NewNotificationPool()
 	}
+	notification_pool := self.notification_pool
+	self.pool_mu.Unlock()
 
-	return self.notification_pool.IsClientConnected(client_id)
+	return notification_pool.IsClientConnected(client_id)
 }

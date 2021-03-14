@@ -1,0 +1,24 @@
+name: Windows.ETW.DNS
+description: |
+  Watches dns queries using ETW
+
+type: CLIENT_EVENT
+
+sources:
+    - precondition:
+        SELECT OS From info() where OS = 'windows'
+
+      query: |
+        SELECT System.TimeStamp AS Timestamp,
+               EventData.QueryName AS Query,
+               EventData.QueryType AS Type,
+               EventData.QueryResults AS Answer
+        FROM watch_etw(guid="{1C95126E-7EEA-49A9-A3FE-A378B03DDB4D}")
+        WHERE System.ID = 3020
+
+reports:
+  - type: MONITORING_DAILY
+    template: |
+      {{ Query "SELECT *, count() AS Count FROM source() \
+         GROUP BY Query \
+         ORDER BY Count DESC" | Table }}

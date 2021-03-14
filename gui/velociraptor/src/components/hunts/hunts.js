@@ -6,6 +6,7 @@ import _ from 'lodash';
 import api from '../core/api-service.js';
 
 import axios from 'axios';
+import Spinner from '../utils/spinner.js';
 
 import { withRouter }  from "react-router-dom";
 
@@ -26,6 +27,8 @@ class VeloHunts extends React.Component {
         // A list of hunt summary objects - contains just enough info
         // to render tables.
         hunts: [],
+
+        loading: true,
     }
 
     componentDidMount = () => {
@@ -83,7 +86,7 @@ class VeloHunts extends React.Component {
         // Some users have a lot of hunts and listing that many might
         // be prohibitively expensive.
         api.get("v1/ListHunts", {
-            count: 100,
+            count: 200,
             offset: 0,
         }, this.list_hunts_source.token).then((response) => {
             if (response.cancel) return;
@@ -113,7 +116,7 @@ class VeloHunts extends React.Component {
                 });
             };
 
-            this.setState({hunts: hunts});
+            this.setState({hunts: hunts, loading: false});
         });
 
         // Get the full hunt information from the server based on the
@@ -140,16 +143,17 @@ class VeloHunts extends React.Component {
 
     render() {
         return (
-            <SplitPane split="horizontal" defaultSize="30%">
-              <HuntList
-                updateHunts={this.fetchHunts}
-                selected_hunt={this.state.selected_hunt}
-                hunts={this.state.hunts}
-                setSelectedHunt={this.setSelectedHunt} />
-              <HuntInspector
-                hunt={this.state.full_selected_hunt} />
-            </SplitPane>
-
+            <><Spinner loading={this.state.loading}/>
+              <SplitPane split="horizontal" defaultSize="30%">
+                <HuntList
+                  updateHunts={this.fetchHunts}
+                  selected_hunt={this.state.selected_hunt}
+                  hunts={this.state.hunts}
+                  setSelectedHunt={this.setSelectedHunt} />
+                <HuntInspector
+                  hunt={this.state.full_selected_hunt} />
+              </SplitPane>
+            </>
         );
     }
 };

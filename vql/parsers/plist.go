@@ -60,7 +60,7 @@ func (self *PlistFunction) Call(ctx context.Context,
 
 	accessor, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("pslist: %v", err)
+		scope.Log("plist: %v", err)
 		return vfilter.Null{}
 	}
 
