@@ -26,7 +26,7 @@ const (
 	oauth_sso   = "Authenticate users with SSO"
 
 	// FileStore implementations
-	mysql_datastore     = "MySQL"
+	// mysql_datastore     = "MySQL"
 	filebased_datastore = "FileBaseDataStore"
 )
 
@@ -77,10 +77,12 @@ What OS will the server be deployed on?
 		Default: "8889",
 	}
 
+	/* MySQL is not supported right now.
 	data_store_type = &survey.Select{
 		Message: "Please select the datastore implementation\n",
 		Options: []string{filebased_datastore, mysql_datastore},
 	}
+	*/
 
 	// MySQL data stores
 	data_store_mysql = []*survey.Question{

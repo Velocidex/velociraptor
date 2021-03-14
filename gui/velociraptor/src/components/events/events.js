@@ -301,7 +301,7 @@ class EventMonitoring extends React.Component {
         let is_date_covered = this.isDateCovered(this.state.current_time);
         let timestamp_renderer = (cell, row, rowIndex) => {
                 return (
-                    <VeloTimestamp usec={cell * 1000}/>
+                    <VeloTimestamp usec={cell * 1000} iso={cell}/>
                 );
         };
 

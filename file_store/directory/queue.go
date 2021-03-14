@@ -44,7 +44,6 @@ import (
 // the message to each listener that is subscribed to the queue.
 type Listener struct {
 	id int64
-	mu sync.Mutex
 
 	// The consumer interested in these events. The consumer may
 	// block arbitrarily.
@@ -274,8 +273,6 @@ func NewQueuePool(config_obj *config_proto.Config) *QueuePool {
 }
 
 type DirectoryQueueManager struct {
-	mu sync.Mutex
-
 	queue_pool *QueuePool
 	FileStore  api.FileStore
 	config_obj *config_proto.Config

@@ -260,17 +260,16 @@ func isArtifactEvent(
 
 	artifact_definition, pres := repository.Get(config_obj, arg.Artifact)
 	if !pres {
-		return false, errors.New(fmt.Sprintf(
-			"Artifact %v not known", arg.Artifact))
+		return false, fmt.Errorf("Artifact %v not known", arg.Artifact)
 	}
 
 	switch artifact_definition.Type {
 	case "client_event":
 		if arg.ClientId == "" {
-			return false, errors.New(fmt.Sprintf(
+			return false, fmt.Errorf(
 				"Artifact %v is a client event artifact, "+
 					"therefore a client id is required.",
-				artifact_definition.Name))
+				artifact_definition.Name)
 		}
 		return true, nil
 

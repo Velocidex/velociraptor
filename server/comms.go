@@ -162,6 +162,7 @@ func server_pem(config_obj *config_proto.Config) http.Handler {
 }
 
 // Redirect client to another active frontend.
+/* Experimental code disabled for now.
 func maybeRedirectFrontend(handler string, w http.ResponseWriter, r *http.Request) bool {
 	_, pres := r.URL.Query()["r"]
 	if pres {
@@ -179,6 +180,7 @@ func maybeRedirectFrontend(handler string, w http.ResponseWriter, r *http.Reques
 	// Handle request ourselves.
 	return false
 }
+*/
 
 // Read the message from the client carefully. Due to concurrency
 // control we want to dismiss slow clients as soon as possible since
@@ -410,9 +412,11 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		/* Experimental redirection is turned off for now.
 		if maybeRedirectFrontend("reader", w, req) {
 			return
 		}
+		*/
 
 		if !server_obj.throttler.Ready() {
 			// Load shed connections with a 500 error.

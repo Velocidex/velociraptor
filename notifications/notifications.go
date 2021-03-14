@@ -32,15 +32,16 @@ func NewNotificationPool() *NotificationPool {
 
 func (self *NotificationPool) IsClientConnected(client_id string) bool {
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	_, pres := self.clients[client_id]
+	self.mu.Unlock()
+
 	return pres
 }
 
 func (self *NotificationPool) Listen(client_id string) (chan bool, func()) {
+	new_c := make(chan bool)
+
 	self.mu.Lock()
-	defer self.mu.Unlock()
 
 	// Close any old channels and make a new one.
 	c, pres := self.clients[client_id]
@@ -52,35 +53,32 @@ func (self *NotificationPool) Listen(client_id string) (chan bool, func()) {
 		// same time. If the old client is still connected, it
 		// will reconnect immediately but the new client will
 		// wait the full max poll to retry.
-		close(c)
+		defer close(c)
 		delete(self.clients, client_id)
 	}
+	self.clients[client_id] = new_c
+	self.mu.Unlock()
 
-	c = make(chan bool)
-	self.clients[client_id] = c
-
-	return c, func() {
+	return new_c, func() {
 		self.mu.Lock()
-		defer self.mu.Unlock()
-
 		c, pres := self.clients[client_id]
 		if pres {
-			close(c)
+			defer close(c)
 			delete(self.clients, client_id)
 		}
+		self.mu.Unlock()
 	}
 }
 
 func (self *NotificationPool) Notify(client_id string) {
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	c, pres := self.clients[client_id]
 	if pres {
 		notificationCounter.Inc()
-		close(c)
+		defer close(c)
 		delete(self.clients, client_id)
 	}
+	self.mu.Unlock()
 }
 
 func (self *NotificationPool) NotifyByRegex(
@@ -89,7 +87,7 @@ func (self *NotificationPool) NotifyByRegex(
 	// First take a snapshot of the current clients connected.
 	self.mu.Lock()
 	snapshot := make([]string, 0, len(self.clients))
-	for key, _ := range self.clients {
+	for key := range self.clients {
 		if re.MatchString(key) {
 			snapshot = append(snapshot, key)
 		}
