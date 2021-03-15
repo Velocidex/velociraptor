@@ -336,3 +336,8 @@
 .dark-mode .overlay .fa-spinner {
     filter: invert(1);
 }
+
+/* Shell output */
+.dark-mode .notebook-output pre {
+    filter: invert(1);
+}
