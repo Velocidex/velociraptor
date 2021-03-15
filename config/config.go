@@ -143,8 +143,8 @@ func GetDefaultConfig() *config_proto.Config {
 			Resources: &config_proto.FrontendResourceControl{
 				ExpectedClients:        10000,
 				ConnectionsPerSecond:   100,
-				Concurrency:            60,
-				TargetHeapSize:         1000000000, // 1Gb
+				Concurrency:            0, // By default 2 * CPU count
+				TargetHeapSize:         0, // Set to control concurrency to match target heap size.
 				NotificationsPerSecond: 10,
 				MaxUploadSize:          constants.MAX_MEMORY * 2,
 			},

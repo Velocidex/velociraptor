@@ -192,15 +192,11 @@ func NewServer(config_obj *config_proto.Config) (*Server, error) {
 	}
 
 	heap_size := config_obj.Frontend.Resources.TargetHeapSize
-	if heap_size == 0 {
-		heap_size = 2000000000
-	}
+	if heap_size > 0 {
+		// If we are targetting a heap size then modulate concurrency
+		result.logger.Info("Targetting heap size %v, with maximum concurrency %v",
+			heap_size, concurrency)
 
-	result.logger.Info("Targetting heap size %v, with maximum concurrency %v",
-		heap_size, concurrency)
-
-	// If we are targetting a heap size then modulate concurrency
-	if config_obj.Frontend.Resources.TargetHeapSize > 0 {
 		go result.ManageConcurrency(concurrency, heap_size)
 	}
 

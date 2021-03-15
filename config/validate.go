@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"regexp"
-	"runtime"
 	"strings"
 
 	errors "github.com/pkg/errors"
@@ -49,7 +48,7 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 	}
 
 	if config_obj.Client.MaxPoll == 0 {
-		config_obj.Client.MaxPoll = 60
+		config_obj.Client.MaxPoll = 60 // One minute
 	}
 
 	if config_obj.Client.PinnedServerName == "" {
@@ -128,12 +127,6 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 
 	if resources.ConnectionsPerSecond > 1000 {
 		resources.ConnectionsPerSecond = 1000
-	}
-
-	// By default concurrency should be about 2 * available CPU
-	// cores.
-	if resources.Concurrency == 0 {
-		resources.Concurrency = 2 * uint64(runtime.GOMAXPROCS(0))
 	}
 
 	if resources.NotificationsPerSecond == 0 {
