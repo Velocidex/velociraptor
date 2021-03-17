@@ -13,13 +13,37 @@ import Spinner from '../utils/spinner.js';
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import _ from 'lodash';
+import axios from 'axios';
 
 import api from '../core/api-service.js';
+
+const POLL_TIME = 5000;
 
 export default class FlowOverview extends React.Component {
     static propTypes = {
         flow: PropTypes.object,
     };
+
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+        this.interval = setInterval(this.getDetailedFlow, POLL_TIME);
+        this.getDetailedFlow();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+        clearInterval(this.interval);
+    }
+
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        let old_flow_id = prevProps.flow && prevProps.flow.session_id;
+        let new_flow_id = this.props.flow.session_id;
+
+        if (old_flow_id != new_flow_id) {
+            this.setState({available_downloads: []});
+            this.getDetailedFlow();
+        }
+    }
 
     prepareDownload = (download_type) => {
         api.post("v1/CreateDownload", {
@@ -29,8 +53,27 @@ export default class FlowOverview extends React.Component {
         });
     };
 
+    getDetailedFlow = () => {
+        let flow_id = this.props.flow.session_id;
+        let client_id = this.props.flow.client_id;
+
+        if (_.isUndefined(flow_id) || _.isUndefined(client_id)) {
+            return;
+        }
+
+        api.get("v1/GetFlowDetails", {
+            flow_id: flow_id,
+            client_id: client_id,
+        }).then((response) => {
+            let available_downloads = response.data.available_downloads &&
+                response.data.available_downloads.files;
+            this.setState({available_downloads: available_downloads || []});
+        });
+    }
+
     state = {
         loading: false,
+        available_downloads: [],
     };
 
     render() {
@@ -49,10 +92,6 @@ export default class FlowOverview extends React.Component {
 
         let artifacts_with_results = flow.artifacts_with_results || [];
         let uploaded_files = flow.uploaded_files || [];
-        let available_downloads = this.props.flow &&
-            this.props.flow.available_downloads &&
-            this.props.flow.available_downloads.files;
-        available_downloads = available_downloads || [];
 
         return (
             <>
@@ -195,7 +234,7 @@ export default class FlowOverview extends React.Component {
                         hover
                         headerClasses="alert alert-secondary"
                         bodyClasses="fixed-table-body"
-                        data={available_downloads}
+                        data={this.state.available_downloads}
                         columns={formatColumns(
                             [{dataField: "name", text: "Name", sort: true,
                               type: "download"},
