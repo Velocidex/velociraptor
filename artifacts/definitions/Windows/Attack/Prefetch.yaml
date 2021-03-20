@@ -8,7 +8,7 @@ precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
      - queries:
-       - SELECT Name, ModTime, Mtime.Sec AS modified
+       - SELECT Name, ModTime, Mtime AS modified
          FROM glob(globs="C:/Windows/Prefetch/*")
 
 # Reports can be MONITORING_DAILY, CLIENT, SERVER_EVENT

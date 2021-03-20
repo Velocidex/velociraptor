@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/json"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func MarshalGlobFileInfo(v interface{}, opts *json.EncOpts) ([]byte, error) {
@@ -21,9 +20,9 @@ func MarshalGlobFileInfo(v interface{}, opts *json.EncOpts) ([]byte, error) {
 		ModeStr  string
 		ModTime  time.Time
 		Sys      interface{}
-		Mtime    utils.TimeVal
-		Ctime    utils.TimeVal
-		Atime    utils.TimeVal
+		Mtime    time.Time
+		Ctime    time.Time
+		Atime    time.Time
 	}{
 		FullPath: self.FullPath(),
 		Size:     self.Size(),

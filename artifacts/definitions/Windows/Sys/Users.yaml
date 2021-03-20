@@ -19,7 +19,7 @@ sources:
                Key.FullPath as Description,
                ProfileImagePath as Directory,
                basename(path=Key.FullPath) as UUID,
-               Key.Mtime.Sec as Mtime,
+               Key.Mtime as Mtime,
                "roaming" as Type
            FROM read_reg_key(globs=remoteRegKey, accessor="reg")
       - |
@@ -32,7 +32,7 @@ sources:
       - |
         LET local_users_with_mtime = SELECT Uid, Gid, Name, Description,
             Directory, UUID, {
-                SELECT Mtime.Sec FROM stat(filename=expand(path=Directory))
+                SELECT Mtime FROM stat(filename=expand(path=Directory))
             } As Mtime, Type
         FROM local_users
 
@@ -59,7 +59,7 @@ reports:
       network.
 
       {{ define "users" }}
-         SELECT Name, UUID, Fqdn, timestamp(epoch=Mtime) as LastMod FROM source()
+         SELECT Name, UUID, Fqdn, Mtime as LastMod FROM source()
          WHERE NOT UUID =~ "(-5..$|S-1-5-18|S-1-5-19|S-1-5-20)"
       {{ end }}
 
@@ -81,8 +81,7 @@ reports:
       * Local users show the mtime of their home directory.
 
       {{ define "users" }}
-         LET users <= SELECT Name, UUID, Type,
-               timestamp(epoch=Mtime) as Mtime
+         LET users <= SELECT Name, UUID, Type, Mtime
          FROM source()
       {{ end }}
       {{ Query "users" "SELECT Name, UUID, Type, Mtime FROM users" | Table }}

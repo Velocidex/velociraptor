@@ -33,7 +33,6 @@ import (
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -169,36 +168,28 @@ func (self *LazyNTFSFileInfo) FullPath() string {
 	return self._full_path
 }
 
-func (self *LazyNTFSFileInfo) Mtime() utils.TimeVal {
+func (self *LazyNTFSFileInfo) Mtime() time.Time {
 	self.ensureCachedInfo()
 
-	return utils.TimeVal{
-		Sec: self.cached_info.Mtime.Unix(),
-	}
+	return self.cached_info.Mtime
 }
 
-func (self *LazyNTFSFileInfo) Btime() utils.TimeVal {
+func (self *LazyNTFSFileInfo) Btime() time.Time {
 	self.ensureCachedInfo()
 
-	return utils.TimeVal{
-		Sec: self.cached_info.Btime.Unix(),
-	}
+	return self.cached_info.Btime
 }
 
-func (self *LazyNTFSFileInfo) Ctime() utils.TimeVal {
+func (self *LazyNTFSFileInfo) Ctime() time.Time {
 	self.ensureCachedInfo()
 
-	return utils.TimeVal{
-		Sec: self.cached_info.Ctime.Unix(),
-	}
+	return self.cached_info.Ctime
 }
 
-func (self *LazyNTFSFileInfo) Atime() utils.TimeVal {
+func (self *LazyNTFSFileInfo) Atime() time.Time {
 	self.ensureCachedInfo()
 
-	return utils.TimeVal{
-		Sec: self.cached_info.Atime.Unix(),
-	}
+	return self.cached_info.Atime
 }
 
 // Not supported

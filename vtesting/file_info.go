@@ -3,8 +3,6 @@ package vtesting
 import (
 	"os"
 	"time"
-
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type MockFileInfo struct {
@@ -21,9 +19,9 @@ func (self MockFileInfo) ModTime() time.Time       { return time.Time{} }
 func (self MockFileInfo) IsDir() bool              { return true }
 func (self MockFileInfo) Sys() interface{}         { return nil }
 func (self MockFileInfo) FullPath() string         { return self.FullPath_ }
-func (self MockFileInfo) Btime() utils.TimeVal     { return utils.TimeVal{} }
-func (self MockFileInfo) Mtime() utils.TimeVal     { return utils.TimeVal{} }
-func (self MockFileInfo) Atime() utils.TimeVal     { return utils.TimeVal{} }
-func (self MockFileInfo) Ctime() utils.TimeVal     { return utils.TimeVal{} }
+func (self MockFileInfo) Btime() time.Time         { return time.Time{} }
+func (self MockFileInfo) Mtime() time.Time         { return time.Time{} }
+func (self MockFileInfo) Atime() time.Time         { return time.Time{} }
+func (self MockFileInfo) Ctime() time.Time         { return time.Time{} }
 func (self MockFileInfo) IsLink() bool             { return false }
 func (self MockFileInfo) GetLink() (string, error) { return "", nil }

@@ -50,9 +50,9 @@ sources:
       # only make one pass over the filesystem. We only want LFNs.
       - |
         LET hits = SELECT FullPath AS SourceFile, Size,
-               timestamp(epoch=Ctime.Sec) AS Created,
-               timestamp(epoch=Mtime.Sec) AS Modified,
-               timestamp(epoch=Atime.Sec) AS LastAccessed,
+               Ctime AS Created,
+               Mtime AS Modified,
+               Atime AS LastAccessed,
                Device, strip(string=FullPath, prefix=Device) AS Path,
                Data.mft AS MFT, Data.name_type AS NameType
         FROM glob(globs=specs.Glob, accessor=Accessor)

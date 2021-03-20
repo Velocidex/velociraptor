@@ -124,35 +124,23 @@ func (self *OSFileInfo) FullPath() string {
 }
 
 // On Linux we need xstat() support to get birth time.
-func (self *OSFileInfo) Btime() utils.TimeVal {
-	return utils.TimeVal{
-		Sec:  0,
-		Nsec: 0,
-	}
+func (self *OSFileInfo) Btime() time.Time {
+	return time.Time{}
 }
 
-func (self *OSFileInfo) Mtime() utils.TimeVal {
+func (self *OSFileInfo) Mtime() time.Time {
 	ts := int64(self._Sys().Mtim.Sec)
-	return utils.TimeVal{
-		Sec:  ts,
-		Nsec: int64(self._Sys().Mtim.Nsec) + ts*1000000000,
-	}
+	return time.Unix(ts, 0)
 }
 
-func (self *OSFileInfo) Ctime() utils.TimeVal {
+func (self *OSFileInfo) Ctime() time.Time {
 	ts := int64(self._Sys().Ctim.Sec)
-	return utils.TimeVal{
-		Sec:  ts,
-		Nsec: int64(self._Sys().Ctim.Nsec) + ts*1000000000,
-	}
+	return time.Unix(ts, 0)
 }
 
-func (self *OSFileInfo) Atime() utils.TimeVal {
+func (self *OSFileInfo) Atime() time.Time {
 	ts := int64(self._Sys().Atim.Sec)
-	return utils.TimeVal{
-		Sec:  ts,
-		Nsec: int64(self._Sys().Atim.Nsec) + ts*1000000000,
-	}
+	return time.Unix(ts, 0)
 }
 
 func (self *OSFileInfo) IsLink() bool {

@@ -157,19 +157,19 @@ func (self *DataFileInfo) FullPath() string {
 	return string(self.data)
 }
 
-func (self *DataFileInfo) Btime() TimeVal {
-	return TimeVal{}
+func (self *DataFileInfo) Btime() time.Time {
+	return time.Time{}
 }
 
-func (self *DataFileInfo) Mtime() TimeVal {
-	return TimeVal{}
+func (self *DataFileInfo) Mtime() time.Time {
+	return time.Time{}
 }
 
-func (self *DataFileInfo) Ctime() TimeVal {
+func (self *DataFileInfo) Ctime() time.Time {
 	return self.Mtime()
 }
 
-func (self *DataFileInfo) Atime() TimeVal {
+func (self *DataFileInfo) Atime() time.Time {
 	return self.Mtime()
 }
 

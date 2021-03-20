@@ -56,7 +56,7 @@ sources:
                 SELECT * FROM UserProfiles
             },
             query={
-                SELECT FullPath, Data, Mtime.Sec AS Mtime,
+                SELECT FullPath, Data, Mtime AS Mtime,
                        Username, Description, Uid, Gid, UUID, Directory
                 FROM glob(
                     globs=url(scheme="ntfs",

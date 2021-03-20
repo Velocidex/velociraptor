@@ -42,12 +42,12 @@ type FileInfo interface {
 	FullPath() string
 
 	// Time the file was birthed (initially created)
-	Btime() utils.TimeVal
-	Mtime() utils.TimeVal
+	Btime() time.Time
+	Mtime() time.Time
 
 	// Time the inode was changed.
-	Ctime() utils.TimeVal
-	Atime() utils.TimeVal
+	Ctime() time.Time
+	Atime() time.Time
 	Data() interface{}
 	Size() int64
 

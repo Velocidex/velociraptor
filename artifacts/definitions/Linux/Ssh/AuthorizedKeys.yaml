@@ -22,8 +22,7 @@ sources:
       - SELECT * from foreach(
           row=authorized_keys,
           query={
-            SELECT Uid, User, FullPath, Key, Comment,
-                   timestamp(epoch=Mtime.sec) AS Mtime
+            SELECT Uid, User, FullPath, Key, Comment, Mtime
             FROM split_records(
                filenames=FullPath, regex=" +", columns=["Type", "Key", "Comment"])
                WHERE Type =~ "ssh"

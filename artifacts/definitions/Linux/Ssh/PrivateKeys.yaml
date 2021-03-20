@@ -19,7 +19,7 @@ parameters:
 sources:
   - queries:
       - SELECT FullPath,
-               timestamp(epoch=Mtime.Sec) AS Mtime,
+               Mtime,
                if(condition={
                      SELECT * from yara(rules="wide ascii:ENCRYPTED", files=FullPath)
                   }, then="Yes", else="No") AS Encrypted

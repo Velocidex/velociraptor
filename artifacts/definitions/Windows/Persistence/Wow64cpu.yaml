@@ -17,7 +17,7 @@ sources:
       SELECT dirname(path=FullPath) as KeyPath,
         Name as KeyName,
         Data.value as Value,
-        timestamp(epoch=Mtime.Sec) AS LastModified
+        Mtime AS LastModified
       FROM glob(globs=split(string=TargetRegKey, sep=","), accessor="reg")
       WHERE Data.value and
         not (Name = "@" and (Data.value =~ "(wow64cpu.dll|wowarmhw.dll|xtajit.dll)"))

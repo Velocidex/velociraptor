@@ -22,7 +22,7 @@ sources:
                ProcessId as Pid, ExitCode, StartMode,
                PathName, ServiceType, StartName as UserAccount,
                {
-                 SELECT timestamp(epoch=Mtime.Sec) as Created
+                 SELECT Mtime as Created
                  FROM stat(filename=servicesKeyGlob + Name, accessor='reg')
                } AS Created,
                {

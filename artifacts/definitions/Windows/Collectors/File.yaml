@@ -33,9 +33,9 @@ sources:
       # only make one pass over the filesystem. We only want LFNs.
       - |
         LET hits = SELECT FullPath AS SourceFile, Size,
-               timestamp(epoch=Ctime.Sec) AS Created,
-               timestamp(epoch=Mtime.Sec) AS Modified,
-               timestamp(epoch=Atime.Sec) AS LastAccessed
+               Ctime AS Created,
+               Mtime AS Modified,
+               Atime AS LastAccessed
         FROM glob(globs=specs.Glob, accessor=Accessor)
         WHERE NOT IsDir AND log(message="Found " + SourceFile)
 

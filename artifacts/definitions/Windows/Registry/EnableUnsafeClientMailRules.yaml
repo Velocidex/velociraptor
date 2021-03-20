@@ -36,7 +36,7 @@ sources:
               SELECT Username,
                 NTUser as Userhive,
                 url(parse=key.FullPath).fragment as Key,
-                timestamp(epoch=key.Mtime.Sec) AS LastModified,
+                key.Mtime AS LastModified,
                 EnableUnsafeClientMailRules,
                 OutlookSecureTempFolder
               FROM read_reg_key(

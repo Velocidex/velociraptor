@@ -145,36 +145,20 @@ func (self *NTFSFileInfo) FullPath() string {
 	return self._full_path
 }
 
-func (self *NTFSFileInfo) Btime() utils.TimeVal {
-	nsec := self.info.Btime.UnixNano()
-	return utils.TimeVal{
-		Sec:  nsec / 1000000000,
-		Nsec: nsec,
-	}
+func (self *NTFSFileInfo) Btime() time.Time {
+	return self.info.Btime
 }
 
-func (self *NTFSFileInfo) Mtime() utils.TimeVal {
-	nsec := self.info.Mtime.UnixNano()
-	return utils.TimeVal{
-		Sec:  nsec / 1000000000,
-		Nsec: nsec,
-	}
+func (self *NTFSFileInfo) Mtime() time.Time {
+	return self.info.Mtime
 }
 
-func (self *NTFSFileInfo) Ctime() utils.TimeVal {
-	nsec := self.info.Ctime.UnixNano()
-	return utils.TimeVal{
-		Sec:  nsec / 1000000000,
-		Nsec: nsec,
-	}
+func (self *NTFSFileInfo) Ctime() time.Time {
+	return self.info.Ctime
 }
 
-func (self *NTFSFileInfo) Atime() utils.TimeVal {
-	nsec := self.info.Atime.UnixNano()
-	return utils.TimeVal{
-		Sec:  nsec / 1000000000,
-		Nsec: nsec,
-	}
+func (self *NTFSFileInfo) Atime() time.Time {
+	return self.info.Atime
 }
 
 // Not supported

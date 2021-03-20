@@ -6,7 +6,6 @@ import (
 
 	"github.com/Velocidex/json"
 	vjson "www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -38,22 +37,13 @@ func EncOptsFromScope(scope vfilter.Scope) *json.EncOpts {
 		case *time.Time:
 			return t.In(location).MarshalJSON()
 
-		case utils.TimeVal:
-			return t.Time().In(location).MarshalJSON()
-
-		case *utils.TimeVal:
-			return t.Time().In(location).MarshalJSON()
-
 		}
 		return nil, json.EncoderCallbackSkip
 	}
 
 	// Override time handling to support scope timezones
 	return vjson.NewEncOpts().
-		WithCallback(time.Time{}, cb).
-		WithCallback(&time.Time{}, cb).
-		WithCallback(utils.TimeVal{}, cb).
-		WithCallback(&utils.TimeVal{}, cb)
+		WithCallback(time.Time{}, cb)
 }
 
 // Utilities for encoding json via the vfilter API.

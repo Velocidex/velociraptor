@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"context"
 	"time"
 
 	"github.com/Velocidex/json"
@@ -20,24 +19,6 @@ func IsTime(a vfilter.Any) (time.Time, bool) {
 	}
 }
 
-// TODO: Deprecate this one.
-type TimeVal struct {
-	Sec  int64 `json:"sec"`
-	Nsec int64 `json:"usec"`
-}
-
-func (self TimeVal) Time() time.Time {
-	if self.Nsec > 0 {
-		return time.Unix(0, self.Nsec)
-	}
-	return time.Unix(self.Sec, 0)
-}
-
-func (self TimeVal) Materialize(ctx context.Context, scope vfilter.Scope) vfilter.Any {
-	res, _ := self.Time().UTC().MarshalText()
-	return string(res)
-}
-
 // Take care of marshaling all timestamps in UTC
 func MarshalTimes(v interface{}, opts *json.EncOpts) ([]byte, error) {
 	switch t := v.(type) {
@@ -48,12 +29,6 @@ func MarshalTimes(v interface{}, opts *json.EncOpts) ([]byte, error) {
 	case *time.Time:
 		return t.UTC().MarshalJSON()
 
-	case TimeVal:
-		return t.Time().UTC().MarshalJSON()
-
-	case *TimeVal:
-		return t.Time().UTC().MarshalJSON()
-
 	}
 	return nil, json.EncoderCallbackSkip
 }
@@ -61,8 +36,6 @@ func MarshalTimes(v interface{}, opts *json.EncOpts) ([]byte, error) {
 func init() {
 	vjson.RegisterCustomEncoder(time.Time{}, MarshalTimes)
 	vjson.RegisterCustomEncoder(&time.Time{}, MarshalTimes)
-	vjson.RegisterCustomEncoder(TimeVal{}, MarshalTimes)
-	vjson.RegisterCustomEncoder(&TimeVal{}, MarshalTimes)
 }
 
 func AnyToTime(v interface{}) (time.Time, error) {

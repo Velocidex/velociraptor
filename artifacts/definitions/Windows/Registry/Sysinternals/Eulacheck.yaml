@@ -26,7 +26,7 @@ sources:
     - |
       SELECT Key.Name as ProgramName,
              Key.FullPath as Key,
-             timestamp(epoch=Key.Mtime.Sec) AS TimeAccepted,
+             Key.Mtime AS TimeAccepted,
              {
                 SELECT Name FROM users WHERE UUID=regex_replace(
                    source=Key.FullPath, re=".+\\\\(S-[^\\\\]+)\\\\.+", replace="$1")

@@ -2,11 +2,11 @@ package api
 
 import (
 	"os"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Implement the glob.FileInfo
@@ -37,20 +37,20 @@ func (self FileInfoAdapter) FullPath() string {
 	return self.full_path
 }
 
-func (self FileInfoAdapter) Btime() utils.TimeVal {
-	return utils.TimeVal{}
+func (self FileInfoAdapter) Btime() time.Time {
+	return time.Time{}
 }
 
-func (self FileInfoAdapter) Mtime() utils.TimeVal {
-	return utils.TimeVal{}
+func (self FileInfoAdapter) Mtime() time.Time {
+	return time.Time{}
 }
 
-func (self FileInfoAdapter) Atime() utils.TimeVal {
-	return utils.TimeVal{}
+func (self FileInfoAdapter) Atime() time.Time {
+	return time.Time{}
 }
 
-func (self FileInfoAdapter) Ctime() utils.TimeVal {
-	return utils.TimeVal{}
+func (self FileInfoAdapter) Ctime() time.Time {
+	return time.Time{}
 }
 
 func (self FileInfoAdapter) IsLink() bool {

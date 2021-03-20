@@ -47,7 +47,7 @@ sources:
 - name: Sandboxed Loginitems
   queries:
   - SELECT FullPath,
-           timestamp(epoch=Mtime.Sec) AS Mtime,
+           Mtime,
            plist(file=FullPath) AS Disabled,
            upload(file=FullPath) AS Upload
     FROM glob(globs=sandboxed_loginitems)
@@ -56,8 +56,7 @@ sources:
   queries:
       - LET raw = SELECT * FROM foreach(
           row={
-            SELECT FullPath, Name,
-                   timestamp(epoch=Mtime.Sec) AS Mtime,
+            SELECT FullPath, Name, Mtime,
                    upload(file=FullPath) AS Upload
             FROM glob(globs=split(string=cronTabGlob, sep=","))
           },
@@ -98,8 +97,7 @@ sources:
 
 - name: LaunchAgentsDaemons
   queries:
-  - LET launchd_config = SELECT FullPath,
-           timestamp(epoch=Mtime.Sec) AS Mtime,
+  - LET launchd_config = SELECT FullPath, Mtime,
            plist(file=FullPath) AS LaunchdConfig,
            upload(file=FullPath) AS Upload
     FROM glob(globs=parse_json_array(data=LaunchAgentsDaemonsGlob))
@@ -117,28 +115,28 @@ sources:
 - name: ScriptingAdditions
   queries:
   - SELECT FullPath,
-           timestamp(epoch=Mtime.Sec) AS Mtime,
+           Mtime,
            upload(file=FullPath) AS Upload
     FROM glob(globs=parse_json_array(data=ScriptingAdditionsGlobs))
 
 - name: StartupItems
   queries:
   - SELECT FullPath,
-           timestamp(epoch=Mtime.Sec) AS Mtime,
+           Mtime,
            upload(file=FullPath) AS Upload
     FROM glob(globs=parse_json_array(data=StartupItemsGlobs))
 
 - name: MiscItems
   queries:
   - SELECT FullPath,
-           timestamp(epoch=Mtime.Sec) AS Mtime,
+           Mtime,
            upload(file=FullPath) AS Upload
     FROM glob(globs=parse_json_array(data=MiscItemsGlobs))
 
 - name: LoginItems
   queries:
   - SELECT FullPath,
-           timestamp(epoch=Mtime.Sec) AS Mtime,
+           Mtime,
            plist(file=FullPath) AS LoginItemConfig,
            upload(file=FullPath) AS Upload
     FROM glob(globs=parse_json_array(data=LoginItemsGlobs))
