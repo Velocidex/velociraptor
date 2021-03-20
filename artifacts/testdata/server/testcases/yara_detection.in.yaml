@@ -1,0 +1,47 @@
+Parameters:
+  IsPE: |
+      rule IsPE:TestRule {
+        meta:
+          author = "the internet"
+          date = "2021-03-04"
+          description = "A simple PE rule to test yara features"
+        condition:
+          uint16(0) == 0x5A4D and
+          uint32(uint32(0x3C)) == 0x00004550
+      }
+
+Queries:
+  # Setup our mocks --MFT needs to be mocked as below to pass srcDir
+  - |
+    LET _ <= SELECT
+          mock(plugin='info', results=[dict(OS='windows')]),
+          mock(plugin='http_client', results=[
+             dict(Url='http://remote',
+                  Content=RemoteYara, Response=200)]),
+          -- First call to Windows.NTFS.MFT reveal target dll info
+          -- srcDir needs to be used to align fields
+          mock(artifact=Artifact.Windows.NTFS.MFT, results=[
+             dict(
+              EntryNumber=42344,
+              InUse = true,
+              ParentEntryNumber = 3589,
+              MFTPath = srcDir + "$MFT",
+              FullPath = "artifacts/testdata/files/wkscli.dll",
+              FileName = "wkscli.dll",
+              FileSize = 764976,
+              ReferenceCount = 2,
+              IsDir = false,
+              Created0x10 = "2020-11-19T02:48:46.9885373Z",
+              Created0x30 = "2021-01-24T06:57:36.7073284Z",
+              LastModified0x10 = "2020-11-19T02:48:47.0041758Z",
+              LastModified0x30 = "2021-01-24T06:57:39.5353986Z",
+              LastRecordChange0x10 = "2021-01-24T06:59:40.7021579Z",
+              LastRecordChange0x30 = "2021-01-24T06:57:39.5353986Z",
+              LastAccess0x10 = "2021-03-05T13:44:04.1999087Z",
+              LastAccess0x30 = "2021-01-24T06:57:36.7073284Z")
+          ])
+    FROM scope()
+
+  # Test NTFS yara outputs from shorthand and standard yara
+  - SELECT FullPath,Size,Rule,Rule,Meta,HitContext,HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll',ShortHandYara='wide ascii:MZ')
+  - SELECT FullPath,Size,Rule,Rule,Meta,HitContext,HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll', YaraRule=IsPE)
