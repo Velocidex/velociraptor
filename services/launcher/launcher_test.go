@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sort"
@@ -41,8 +42,173 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/csv"
 )
 
-const (
-	testArtifact1 = `
+type LauncherTestSuite struct {
+	suite.Suite
+	config_obj *config_proto.Config
+	sm         *services.Service
+}
+
+func (self *LauncherTestSuite) SetupTest() {
+	var err error
+	self.config_obj, err = new(config.Loader).WithFileLoader(
+		"../../http_comms/test_data/server.config.yaml").
+		WithRequiredFrontend().WithWriteback().
+		LoadAndValidate()
+	require.NoError(self.T(), err)
+
+	// Start essential services.
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
+	self.sm = services.NewServiceManager(ctx, self.config_obj)
+
+	t := self.T()
+	assert.NoError(t, self.sm.Start(journal.StartJournalService))
+	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
+	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
+	assert.NoError(t, self.sm.Start(StartLauncherService))
+	assert.NoError(t, self.sm.Start(repository.StartRepositoryManagerForTest))
+}
+
+func (self *LauncherTestSuite) TearDownTest() {
+	self.sm.Close()
+	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
+	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+}
+
+func (self *LauncherTestSuite) LoadArtifacts(artifact_definitions []string) services.Repository {
+	manager, _ := services.GetRepositoryManager()
+	repository := manager.NewRepository()
+
+	for _, definition := range artifact_definitions {
+		_, err := repository.LoadYaml(definition, false)
+		assert.NoError(self.T(), err)
+	}
+
+	return repository
+}
+
+// Tools allow Velociraptor to automatically manage external bundles
+// (such as external executables) and push those to the clients. The
+// Artifact definition simply specifies the name of the tool and where
+// to fetch it from, and the server will automatically cache these and
+// make the binaries available to clients.
+
+// It is possible to either serve the binaries directly from
+// Velociraptor's public directory, or simply have the endpoint
+// download the tool from an external location (like an s3 bucket).
+
+var testArtifactWithTools = `
+name: Test.Artifact.Tools
+tools:
+ - name: Tool1
+   url: "%s"
+
+sources:
+- query:  |
+    SELECT * FROM info()
+`
+
+func (self *LauncherTestSuite) TestCompilingWithTools() {
+	// Our tool binary and its hash.
+	message := []byte("Hello world")
+	sha_sum := sha256.New()
+	sha_sum.Write(message)
+	sha_value := hex.EncodeToString(sha_sum.Sum(nil))
+
+	// Serve our tool from a test http server. First response will give 404 - not found.
+	status := 404
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(status)
+		w.Write(message)
+	}))
+	defer ts.Close()
+
+	// Update the tool to be downloaded from our test http instance.
+	tool_url := ts.URL + "/mytool.exe"
+	repository := self.LoadArtifacts([]string{
+		fmt.Sprintf(testArtifactWithTools, tool_url)})
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:      "UserX",
+		ClientId:     "C.1234",
+		Artifacts:    []string{"Test.Artifact.Tools"},
+		OpsPerSecond: 42,
+		Timeout:      73,
+	}
+	ctx := context.Background()
+	acl_manager := vql_subsystem.NullACLManager{}
+
+	// Simulate an error downloading the tool on demand - this
+	// prevents the VQL from being compiled, and therefore
+	// collection can not be scheduled. The server needs to
+	// download the file in order to calculate its hash - even
+	// though it is not serving it to clients.
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(ctx, self.config_obj,
+		acl_manager, repository, services.CompilerOptions{}, request)
+	assert.Error(self.T(), err)
+
+	// Now make the tool download succeed. Compiling should work
+	// and we should calculate the hash.
+	status = 200
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	// Now that we already know the hash, we dont care about
+	// downloading the file ourselves - further compiles will work
+	// automatically.
+	status = 404
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	// Check the compiler produced the correct environment
+	// vars. When the VQL calls Generic.Utils.FetchBinary() it
+	// will be able to resolve these from the environment.
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_HASH"), sha_value)
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_FILENAME"), "mytool.exe")
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_URL"), tool_url)
+
+	assert.Equal(self.T(), len(compiled[0].Query), 2)
+
+	// Now serve the tool from Velociraptor's public directory
+	// instead.
+	err = services.GetInventory().AddTool(
+		self.config_obj, &artifacts_proto.Tool{
+			Name: "Tool1",
+			// This will force Velociraptor to generate a stable
+			// public directory URL from where to serve the
+			// tool. The "tools upload" command will copy the
+			// actual tool there.
+			ServeLocally: true,
+			Filename:     "mytool.exe",
+			Url:          tool_url,
+		}, services.ToolOptions{AdminOverride: true})
+	assert.NoError(self.T(), err)
+
+	status = 200
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	filename := paths.ObfuscateName(self.config_obj, "Tool1")
+
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_HASH"), sha_value)
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_FILENAME"), "mytool.exe")
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_URL"),
+		"https://localhost:8000/public/"+filename)
+}
+
+var DependentArtifacts = []string{
+	`
 name: Test.Artifact
 description: This is a test artifact
 parameters:
@@ -53,9 +219,179 @@ parameters:
 sources:
 - query:  |
     SELECT * FROM info()
-`
+`, `
+name: Test.Artifact.Deps
+description: This is a test artifact dependency
+sources:
+- query: |
+    SELECT * FROM Artifact.Test.Artifact()
+`, `
+name: Test.Artifact.Deps2
+description: This is a test artifact dependency
+sources:
+- query: |
+    SELECT * FROM Artifact.Test.Artifact.Deps()
+`,
+}
 
-	testArtifact2 = `
+func (self *LauncherTestSuite) TestGetDependentArtifacts() {
+	repository := self.LoadArtifacts(DependentArtifacts)
+
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	res, err := launcher.GetDependentArtifacts(self.config_obj,
+		repository, []string{"Test.Artifact.Deps2"})
+	assert.NoError(self.T(), err)
+
+	sort.Strings(res)
+	assert.Equal(self.T(), []string{"Test.Artifact",
+		"Test.Artifact.Deps", "Test.Artifact.Deps2"}, res)
+}
+
+func (self *LauncherTestSuite) TestGetDependentArtifactsWithTool() {
+	// Our tool binary and its hash.
+	message := []byte("Hello world")
+	sha_sum := sha256.New()
+	sha_sum.Write(message)
+	sha_value := hex.EncodeToString(sha_sum.Sum(nil))
+	status := 200
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(status)
+		w.Write(message)
+	}))
+	defer ts.Close()
+
+	tool_url := ts.URL + "/mytool.exe"
+	repository := self.LoadArtifacts([]string{`
+name: Test.Artifact.DepsWithTool
+description: This is a test artifact dependency
+sources:
+- query: |
+    SELECT * FROM Artifact.Test.Artifact.Tools()
+`, fmt.Sprintf(testArtifactWithTools, tool_url)})
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:      "UserX",
+		ClientId:     "C.1234",
+		Artifacts:    []string{"Test.Artifact.DepsWithTool"},
+		OpsPerSecond: 42,
+		Timeout:      73,
+	}
+	ctx := context.Background()
+	acl_manager := vql_subsystem.NullACLManager{}
+
+	// Compile the request.
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(ctx, self.config_obj,
+		acl_manager, repository, services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	// Check the compiler produced the correct environment
+	// vars.
+
+	// The environment vars of the main artifact should not have any tool info.
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_HASH"), "")
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_FILENAME"), "")
+	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_URL"), "")
+
+	// The tools info should be added to the included artifacts parameters.
+	artifact := compiled[0].Artifacts[0]
+	assert.Equal(self.T(), getParameterValue(artifact.Parameters, "Tool_Tool1_HASH"), sha_value)
+	assert.Equal(self.T(), getParameterValue(artifact.Parameters, "Tool_Tool1_FILENAME"), "mytool.exe")
+	assert.Equal(self.T(), getParameterValue(artifact.Parameters, "Tool_Tool1_URL"), tool_url)
+
+	// Dependent artifacts have no tools declared themselves.
+	assert.Nil(self.T(), artifact.Tools)
+}
+
+func getEnvValue(env []*actions_proto.VQLEnv, key string) string {
+	for _, e := range env {
+		if e.Key == key {
+			return e.Value
+		}
+	}
+	return ""
+}
+
+func getParameterValue(params []*artifacts_proto.ArtifactParameter, key string) string {
+	for _, p := range params {
+		if p.Name == key {
+			return p.Default
+		}
+	}
+	return ""
+}
+
+func (self *LauncherTestSuite) TestCompiling() {
+	repository := self.LoadArtifacts(DependentArtifacts)
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:   "UserX",
+		ClientId:  "C.1234",
+		Artifacts: []string{"Test.Artifact"},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				Artifact: "Test.Artifact",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "Foo", Value: "ParameterBar"},
+					},
+				},
+			},
+		},
+		OpsPerSecond: 42,
+		Timeout:      73,
+	}
+	ctx := context.Background()
+	acl_manager := vql_subsystem.NullACLManager{}
+
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), 1, len(compiled[0].Env))
+
+	serialized, err := json.Marshal(compiled[0].Env)
+	assert.NoError(self.T(), err)
+
+	// Should not include artifact default parameters and only
+	// include provided parameters.
+	assert.Equal(self.T(), string(serialized),
+		"[{\"key\":\"Foo\",\"value\":\"ParameterBar\"}]")
+
+	assert.Equal(self.T(), compiled[0].OpsPerSecond, request.OpsPerSecond)
+	assert.Equal(self.T(), compiled[0].Timeout, request.Timeout)
+
+	// Compile into 2 queries, the last have a valid Name field.
+	assert.Equal(self.T(), len(compiled[0].Query), 2)
+	assert.NotEqual(self.T(), compiled[0].Query[1].Name, "")
+}
+
+var CompilingMultipleArtifacts = []string{
+	`
+name: Test.Artifact
+description: This is a test artifact
+parameters:
+ - name: Foo
+   description: A foo variable
+   default: DefaultBar1
+
+sources:
+- query:  |
+    SELECT * FROM info()
+`, `
 name: Test.Artifact2
 parameters:
  - name: Foo
@@ -64,20 +400,158 @@ parameters:
 sources:
 - query:  |
     SELECT * FROM info()
-`
+`}
 
-	testArtifactWithTools = `
-name: Test.Artifact.Tools
-tools:
- - name: Tool1
-   url: http://www.google.com/tool1.exe
+func (self *LauncherTestSuite) TestCompilingMultipleArtifacts() {
+	repository := self.LoadArtifacts(CompilingMultipleArtifacts)
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:   "UserX",
+		ClientId:  "C.1234",
+		Artifacts: []string{"Test.Artifact", "Test.Artifact2"},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				Artifact: "Test.Artifact",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "Foo", Value: "Foo1"},
+					},
+				},
+			},
+			{
+				Artifact: "Test.Artifact2",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "Foo", Value: "Foo2"},
+					},
+				},
+			},
+		},
+		OpsPerSecond: 42,
+		Timeout:      73,
+	}
+	ctx := context.Background()
+	acl_manager := vql_subsystem.NullACLManager{}
+
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	// There should be two separate requests with separate values
+	// for the same key.
+	assert.Equal(self.T(), len(compiled), 2)
+	assert.Equal(self.T(), compiled[0].Env[0].Key, "Foo")
+	assert.Equal(self.T(), compiled[0].Env[0].Value, "Foo1")
+	assert.Equal(self.T(), compiled[1].Env[0].Key, "Foo")
+	assert.Equal(self.T(), compiled[1].Env[0].Value, "Foo2")
+}
+
+// Server events need to be compiled slighly differently - each source
+// needs to run in its own goroutine.
+func (self *LauncherTestSuite) TestCompilingServerEvents() {
+	definitions := []string{`
+name: Server.Events
+type: SERVER_EVENT
+parameters:
+- name: Foo
+  type: bool
+- name: Bar
+  type: bool
 
 sources:
-- query:  |
-    SELECT * FROM info()
-`
+- name: Source1
+  query: |
+     SELECT Foo FROM info()
 
-	testArtifactWithPermissions = `
+- name: Source2
+  query: |
+     SELECT Bar FROM info()
+`}
+
+	repository := self.LoadArtifacts(definitions)
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Artifacts: []string{"Server.Events"},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				Artifact: "Server.Events",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "Foo", Value: "Y"},
+					},
+				},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	acl_manager := vql_subsystem.NullACLManager{}
+
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	// There should be 2 queries that will run in parallel.
+	assert.Equal(self.T(), 2, len(compiled))
+
+	// The parameters (Env) and type conversion preamble should be
+	// duplicated across both VQLCollectorArgs instances.
+	goldie.Assert(self.T(), "TestCompilingServerEvents", json.MustMarshalIndent(compiled))
+}
+
+func (self *LauncherTestSuite) TestCompilingObfuscation() {
+	repository := self.LoadArtifacts(CompilingMultipleArtifacts)
+	self.config_obj.Frontend.DoNotCompressArtifacts = true
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:   "UserX",
+		ClientId:  "C.1234",
+		Artifacts: []string{"Test.Artifact"},
+	}
+	ctx := context.Background()
+	acl_manager := vql_subsystem.NullACLManager{}
+
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	// When we do not obfuscate, artifact descriptions are carried
+	// into the compiled form.
+	assert.Equal(self.T(), compiled[0].Query[1].Description, "This is a test artifact")
+
+	// However when we obfuscate we remove descriptions.
+	self.config_obj.Frontend.DoNotCompressArtifacts = false
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{
+			ObfuscateNames: true, /* should_obfuscate */
+		}, request)
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), compiled[0].Query[1].Description, "")
+
+}
+
+func (self *LauncherTestSuite) TestCompilingPermissions() {
+	repository := self.LoadArtifacts([]string{`
 name: Test.Artifact.Permissions
 required_permissions:
 - EXECVE
@@ -85,37 +559,104 @@ required_permissions:
 sources:
 - query:  |
     SELECT * FROM info()
-`
-	testArtifactWithDeps = `
-name: Test.Artifact.Deps
-description: This is a test artifact dependency
-sources:
-- query: |
-    SELECT * FROM Artifact.Test.Artifact()
-`
+`})
 
-	testArtifactWithDepsWithTools = `
-name: Test.Artifact.DepsWithTool
-description: This is a test artifact dependency
-sources:
-- query: |
-    SELECT * FROM Artifact.Test.Artifact.Tools()
-`
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:      "UserX",
+		ClientId:     "C.1234",
+		Artifacts:    []string{"Test.Artifact.Permissions"},
+		OpsPerSecond: 42,
+		Timeout:      73,
+	}
+	ctx := context.Background()
 
-	testArtifactWithDeps2 = `
-name: Test.Artifact.Deps2
-description: This is a test artifact dependency
-sources:
-- query: |
-    SELECT * FROM Artifact.Test.Artifact.Deps()
-`
+	acl_manager := vql_subsystem.NewServerACLManager(self.config_obj, "UserX")
 
+	// Permission denied - the principal is not allowed to compile this artifact.
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.Error(self.T(), err)
+	assert.Contains(self.T(), err.Error(), "EXECVE")
+
+	// Lets give the user some permissions.
+	err = acls.SetPolicy(self.config_obj, "UserX",
+		&acl_proto.ApiClientACL{Execve: true})
+	assert.NoError(self.T(), err)
+
+	// Should be fine now.
+	acl_manager = vql_subsystem.NewServerACLManager(self.config_obj, "UserX")
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(compiled[0].Query), 2)
+}
+
+func (self *LauncherTestSuite) TestParameterTypes() {
+	repository := self.LoadArtifacts(testArtifactWithTypes)
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:   "UserX",
+		ClientId:  "C.1234",
+		Artifacts: []string{"Test.Artifact.Types"},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				// Artifact Parameters are **always**
+				// sent as strings but VQL code will
+				// convert them to their correct
+				// types.
+				Artifact: "Test.Artifact.Types",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "IntValue", Value: "9"},
+						{Key: "CSVValue",
+							Value: "Col1,Col2\nValue1,Value2\nValue3,Value4\n"},
+						{Key: "TimestampValue",
+							Value: "2020-10-01T09:20Z"},
+						{Key: "BoolValue", Value: "N"},
+						{Key: "BoolValue2", Value: "Y"},
+					},
+				},
+			},
+		},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Compile the artifact request into VQL
+	acl_manager := vql_subsystem.NullACLManager{}
+	launcher, err := services.GetLauncher()
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	// Now run the VQL and receive the rows back
+	test_responder := responder.TestResponder()
+	for _, vql_request := range compiled {
+		actions.VQLClientAction{}.StartQuery(
+			self.config_obj, ctx, test_responder, vql_request)
+	}
+
+	results := getResponses(test_responder)
+	goldie.Assert(self.T(), "TestParameterTypes", json.MustMarshalIndent(results))
+}
+
+var (
 	// Make sure that an artifact receives types parameters if
 	// specified. The compiler should convert these appropriately
 	// behind the scenes. For backwards compatibility we check
 	// that use patterns in existing artifacts still work as
 	// expected.
-	testArtifactWithTypes = `
+	testArtifactWithTypes = []string{`
 name: Test.Artifact.Types
 parameters:
 - name: IntValue
@@ -175,8 +716,7 @@ sources:
                 SELECT * FROM CSVValue
             }
      FROM scope()
-`
-	testArtifactWithDepsTypes = `
+`, `
 name: Test.Artifact.Deps.Types
 parameters:
 - name: IntValue
@@ -196,600 +736,13 @@ sources:
     FROM Artifact.Test.Artifact.Types(
        CSVValue=CSVValue, IntValue=IntValue,
        BoolValue=TRUE, BoolValue2="Y")
-`
-
-	testArtifactWithPrecondition = `
-name: Test.Artifact.Precondition
-precondition: SELECT * FROM info() WHERE FALSE
-sources:
-- query: |
-    SELECT * FROM info()
-`
+`}
 )
-
-type LauncherTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
-}
-
-func (self *LauncherTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
-
-	// Start essential services.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	t := self.T()
-	assert.NoError(t, self.sm.Start(journal.StartJournalService))
-	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
-	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
-	assert.NoError(t, self.sm.Start(StartLauncherService))
-	assert.NoError(t, self.sm.Start(repository.StartRepositoryManager))
-}
-
-func (self *LauncherTestSuite) TearDownTest() {
-	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
-}
-
-// Tools allow Velociraptor to automatically manage external bundles
-// (such as external executables) and push those to the clients. The
-// Artifact definition simply specified the name of the tool and where
-// to fetch it from, and the server will automatically cache these and
-// make the binaries available to clients.
-
-// It is possible to either server the binaries directly from
-// Velociraptor's public directory, or simply have the endpoint
-// download the tool from an external location.
-
-func (self *LauncherTestSuite) TestCompilingWithTools() {
-	// Our tool binary and its hash.
-	message := []byte("Hello world")
-	sha_sum := sha256.New()
-	sha_sum.Write(message)
-	sha_value := hex.EncodeToString(sha_sum.Sum(nil))
-
-	// Serve our tool from a test http server. First response will give 404 - not found.
-	status := 404
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(status)
-		w.Write(message)
-	}))
-	defer ts.Close()
-
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	repository := manager.NewRepository()
-	artifact, err := repository.LoadYaml(testArtifactWithTools, true)
-	assert.NoError(self.T(), err)
-
-	// Update the tool to be downloaded from our test http instance.
-	tool_url := ts.URL + "/mytool.exe"
-	artifact.Tools[0].Url = tool_url
-
-	// The artifact compiler converts artifacts into a VQL request
-	// to be run by the clients.
-	request := &flows_proto.ArtifactCollectorArgs{
-		Creator:      "UserX",
-		ClientId:     "C.1234",
-		Artifacts:    []string{"Test.Artifact.Tools"},
-		OpsPerSecond: 42,
-		Timeout:      73,
-	}
-	ctx := context.Background()
-	acl_manager := vql_subsystem.NullACLManager{}
-
-	// Simulate an error downloading the tool on demand - this
-	// prevents the VQL from being compiled, and therefore
-	// collection can not be scheduled. The server needs to
-	// download the file in order to calculate its hash - even
-	// though it is not serving it to clients.
-	launcher, err := services.GetLauncher()
-	assert.NoError(self.T(), err)
-
-	compiled, err := launcher.CompileCollectorArgs(ctx, self.config_obj,
-		acl_manager, repository, false, request)
-	assert.Error(self.T(), err)
-
-	// Now make the tool download succeed. Compiling should work
-	// and we should calculate the hash.
-	status = 200
-	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, false, request)
-	assert.NoError(self.T(), err)
-
-	// Now that we already know the hash, we dont care about
-	// downloading the file ourselves - further compiles will work
-	// automatically.
-	status = 404
-	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, false, request)
-	assert.NoError(self.T(), err)
-
-	// Check the compiler produced the correct environment
-	// vars. When the VQL calls Generic.Utils.FetchBinary() it
-	// will be able to resolve these from the environment.
-	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_HASH"), sha_value)
-	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_FILENAME"), "mytool.exe")
-	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_URL"), tool_url)
-
-	assert.Equal(self.T(), len(compiled[0].Query), 2)
-
-	// Now serve the tool from Velociraptor's public directory
-	// instead.
-	err = services.GetInventory().AddTool(
-		self.config_obj, &artifacts_proto.Tool{
-			Name: "Tool1",
-			// This will force Velociraptor to generate a stable
-			// public directory URL from where to serve the
-			// tool. The "tools upload" command will copy the
-			// actual tool there.
-			ServeLocally: true,
-			Filename:     "mytool.exe",
-			Url:          tool_url,
-		}, services.ToolOptions{AdminOverride: true})
-	assert.NoError(self.T(), err)
-
-	status = 200
-	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, false, request)
-	assert.NoError(self.T(), err)
-
-	filename := paths.ObfuscateName(self.config_obj, "Tool1")
-
-	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_HASH"), sha_value)
-	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_FILENAME"), "mytool.exe")
-	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_URL"),
-		"https://localhost:8000/public/"+filename)
-}
-
-func (self *LauncherTestSuite) TestGetDependentArtifacts() {
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(testArtifact1, true)
-	assert.NoError(self.T(), err)
-
-	_, err = repository.LoadYaml(testArtifactWithDeps, true)
-	assert.NoError(self.T(), err)
-
-	_, err = repository.LoadYaml(testArtifactWithDeps2, true)
-	assert.NoError(self.T(), err)
-
-	launcher, err := services.GetLauncher()
-	assert.NoError(self.T(), err)
-
-	res, err := launcher.GetDependentArtifacts(self.config_obj,
-		repository, []string{"Test.Artifact.Deps2"})
-	assert.NoError(self.T(), err)
-
-	sort.Strings(res)
-	assert.Equal(self.T(), []string{"Test.Artifact",
-		"Test.Artifact.Deps", "Test.Artifact.Deps2"}, res)
-}
-
-func (self *LauncherTestSuite) TestGetDependentArtifactsWithTool() {
-	// Our tool binary and its hash.
-	message := []byte("Hello world")
-	sha_sum := sha256.New()
-	sha_sum.Write(message)
-	sha_value := hex.EncodeToString(sha_sum.Sum(nil))
-	status := 200
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(status)
-		w.Write(message)
-	}))
-	defer ts.Close()
-
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(testArtifactWithDepsWithTools, true)
-	assert.NoError(self.T(), err)
-
-	artifact, err := repository.LoadYaml(testArtifactWithTools, true)
-	assert.NoError(self.T(), err)
-
-	// Update the tool to be downloaded from our test http instance.
-	tool_url := ts.URL + "/mytool.exe"
-	artifact.Tools[0].Url = tool_url
-
-	// The artifact compiler converts artifacts into a VQL request
-	// to be run by the clients.
-	request := &flows_proto.ArtifactCollectorArgs{
-		Creator:      "UserX",
-		ClientId:     "C.1234",
-		Artifacts:    []string{"Test.Artifact.DepsWithTool"},
-		OpsPerSecond: 42,
-		Timeout:      73,
-	}
-	ctx := context.Background()
-	acl_manager := vql_subsystem.NullACLManager{}
-
-	// Compile the request.
-	launcher, err := services.GetLauncher()
-	assert.NoError(self.T(), err)
-
-	compiled, err := launcher.CompileCollectorArgs(ctx, self.config_obj,
-		acl_manager, repository, false, request)
-	assert.NoError(self.T(), err)
-
-	// Check the compiler produced the correct environment
-	// vars.
-
-	// The environment vars of the main artifact should not have any tool info.
-	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_HASH"), "")
-	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_FILENAME"), "")
-	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_URL"), "")
-
-	// The tools info should be added to the included artifacts parameters.
-	artifact = compiled[0].Artifacts[0]
-	assert.Equal(self.T(), getParameterValue(artifact.Parameters, "Tool_Tool1_HASH"), sha_value)
-	assert.Equal(self.T(), getParameterValue(artifact.Parameters, "Tool_Tool1_FILENAME"), "mytool.exe")
-	assert.Equal(self.T(), getParameterValue(artifact.Parameters, "Tool_Tool1_URL"), tool_url)
-
-	// Dependent artifacts have no tools declared themselves.
-	assert.Nil(self.T(), artifact.Tools)
-}
-
-func getEnvValue(env []*actions_proto.VQLEnv, key string) string {
-	for _, e := range env {
-		if e.Key == key {
-			return e.Value
-		}
-	}
-	return ""
-}
-
-func getParameterValue(params []*artifacts_proto.ArtifactParameter, key string) string {
-	for _, p := range params {
-		if p.Name == key {
-			return p.Default
-		}
-	}
-	return ""
-}
-
-func (self *LauncherTestSuite) TestCompiling() {
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(testArtifact1, true)
-	assert.NoError(self.T(), err)
-
-	// The artifact compiler converts artifacts into a VQL request
-	// to be run by the clients.
-	request := &flows_proto.ArtifactCollectorArgs{
-		Creator:   "UserX",
-		ClientId:  "C.1234",
-		Artifacts: []string{"Test.Artifact"},
-		Specs: []*flows_proto.ArtifactSpec{
-			{
-				Artifact: "Test.Artifact",
-				Parameters: &flows_proto.ArtifactParameters{
-					Env: []*actions_proto.VQLEnv{
-						{Key: "Foo", Value: "ParameterBar"},
-					},
-				},
-			},
-		},
-		OpsPerSecond: 42,
-		Timeout:      73,
-	}
-	ctx := context.Background()
-	acl_manager := vql_subsystem.NullACLManager{}
-
-	launcher, err := services.GetLauncher()
-	assert.NoError(self.T(), err)
-
-	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, false, request)
-	assert.NoError(self.T(), err)
-
-	assert.Equal(self.T(), 1, len(compiled[0].Env))
-
-	serialized, err := json.Marshal(compiled[0].Env)
-	assert.NoError(self.T(), err)
-
-	// Should not include artifact default parameters and only
-	// include provided parameters.
-	assert.Equal(self.T(), string(serialized),
-		"[{\"key\":\"Foo\",\"value\":\"ParameterBar\"}]")
-
-	assert.Equal(self.T(), compiled[0].OpsPerSecond, request.OpsPerSecond)
-	assert.Equal(self.T(), compiled[0].Timeout, request.Timeout)
-
-	// Compile into 2 queries, the last have a valid Name field.
-	assert.Equal(self.T(), len(compiled[0].Query), 2)
-	assert.NotEqual(self.T(), compiled[0].Query[1].Name, "")
-}
-
-func (self *LauncherTestSuite) TestCompilingMultipleArtifacts() {
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(testArtifact1, true)
-	assert.NoError(self.T(), err)
-	_, err = repository.LoadYaml(testArtifact2, true)
-	assert.NoError(self.T(), err)
-
-	// The artifact compiler converts artifacts into a VQL request
-	// to be run by the clients.
-	request := &flows_proto.ArtifactCollectorArgs{
-		Creator:   "UserX",
-		ClientId:  "C.1234",
-		Artifacts: []string{"Test.Artifact", "Test.Artifact2"},
-		Specs: []*flows_proto.ArtifactSpec{
-			{
-				Artifact: "Test.Artifact",
-				Parameters: &flows_proto.ArtifactParameters{
-					Env: []*actions_proto.VQLEnv{
-						{Key: "Foo", Value: "Foo1"},
-					},
-				},
-			},
-			{
-				Artifact: "Test.Artifact2",
-				Parameters: &flows_proto.ArtifactParameters{
-					Env: []*actions_proto.VQLEnv{
-						{Key: "Foo", Value: "Foo2"},
-					},
-				},
-			},
-		},
-		OpsPerSecond: 42,
-		Timeout:      73,
-	}
-	ctx := context.Background()
-	acl_manager := vql_subsystem.NullACLManager{}
-
-	launcher, err := services.GetLauncher()
-	assert.NoError(self.T(), err)
-
-	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, false, request)
-	assert.NoError(self.T(), err)
-
-	// There should be two separate requests with separate values
-	// for the same key.
-	assert.Equal(self.T(), len(compiled), 2)
-	assert.Equal(self.T(), compiled[0].Env[0].Key, "Foo")
-	assert.Equal(self.T(), compiled[0].Env[0].Value, "Foo1")
-	assert.Equal(self.T(), compiled[1].Env[0].Key, "Foo")
-	assert.Equal(self.T(), compiled[1].Env[0].Value, "Foo2")
-}
-
-// Server events need to be compiled slighly differently - each source
-// needs to run in its own goroutine.
-func (self *LauncherTestSuite) TestCompilingServerEvents() {
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	definitions := `
-name: Server.Events
-type: SERVER_EVENT
-parameters:
-- name: Foo
-  type: bool
-- name: Bar
-  type: bool
-
-sources:
-- name: Source1
-  query: |
-     SELECT Foo FROM info()
-
-- name: Source2
-  query: |
-     SELECT Bar FROM info()
-`
-
-	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(definitions, true)
-	assert.NoError(self.T(), err)
-
-	// The artifact compiler converts artifacts into a VQL request
-	// to be run by the clients.
-	request := &flows_proto.ArtifactCollectorArgs{
-		Artifacts: []string{"Server.Events"},
-		Specs: []*flows_proto.ArtifactSpec{
-			{
-				Artifact: "Server.Events",
-				Parameters: &flows_proto.ArtifactParameters{
-					Env: []*actions_proto.VQLEnv{
-						{Key: "Foo", Value: "Y"},
-					},
-				},
-			},
-		},
-	}
-
-	ctx := context.Background()
-	acl_manager := vql_subsystem.NullACLManager{}
-
-	launcher, err := services.GetLauncher()
-	assert.NoError(self.T(), err)
-
-	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, false, request)
-	assert.NoError(self.T(), err)
-
-	// There should be 2 queries that will run in parallel.
-	assert.Equal(self.T(), 2, len(compiled))
-
-	// The parameters (Env) and type conversion preamble should be
-	// duplicated across both VQLCollectorArgs instances.
-	goldie.Assert(self.T(), "TestCompilingServerEvents", json.MustMarshalIndent(compiled))
-}
-
-func (self *LauncherTestSuite) TestCompilingObfuscation() {
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(testArtifact1, true)
-	assert.NoError(self.T(), err)
-
-	self.config_obj.Frontend.DoNotCompressArtifacts = true
-
-	// The artifact compiler converts artifacts into a VQL request
-	// to be run by the clients.
-	request := &flows_proto.ArtifactCollectorArgs{
-		Creator:   "UserX",
-		ClientId:  "C.1234",
-		Artifacts: []string{"Test.Artifact"},
-	}
-	ctx := context.Background()
-	acl_manager := vql_subsystem.NullACLManager{}
-
-	launcher, err := services.GetLauncher()
-	assert.NoError(self.T(), err)
-
-	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, false, request)
-	assert.NoError(self.T(), err)
-
-	// When we do not obfuscate, artifact descriptions are carried
-	// into the compiled form.
-	assert.Equal(self.T(), compiled[0].Query[1].Description, "This is a test artifact")
-
-	// However when we obfuscate we remove descriptions.
-	self.config_obj.Frontend.DoNotCompressArtifacts = false
-	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
-		true, /* should_obfuscate */
-		request)
-	assert.NoError(self.T(), err)
-
-	assert.Equal(self.T(), compiled[0].Query[1].Description, "")
-
-}
-
-func (self *LauncherTestSuite) TestCompilingPermissions() {
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(testArtifactWithPermissions, true)
-	assert.NoError(self.T(), err)
-
-	// The artifact compiler converts artifacts into a VQL request
-	// to be run by the clients.
-	request := &flows_proto.ArtifactCollectorArgs{
-		Creator:      "UserX",
-		ClientId:     "C.1234",
-		Artifacts:    []string{"Test.Artifact.Permissions"},
-		OpsPerSecond: 42,
-		Timeout:      73,
-	}
-	ctx := context.Background()
-
-	acl_manager := vql_subsystem.NewServerACLManager(self.config_obj, "UserX")
-
-	// Permission denied - the principal is not allowed to compile this artifact.
-	launcher, err := services.GetLauncher()
-	assert.NoError(self.T(), err)
-
-	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, false, request)
-	assert.Error(self.T(), err)
-	assert.Contains(self.T(), err.Error(), "EXECVE")
-
-	// Lets give the user some permissions.
-	err = acls.SetPolicy(self.config_obj, "UserX",
-		&acl_proto.ApiClientACL{Execve: true})
-	assert.NoError(self.T(), err)
-
-	// Should be fine now.
-	acl_manager = vql_subsystem.NewServerACLManager(self.config_obj, "UserX")
-	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, false, request)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), len(compiled[0].Query), 2)
-}
-
-func (self *LauncherTestSuite) TestParameterTypes() {
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(testArtifactWithTypes, true)
-	assert.NoError(self.T(), err)
-
-	// The artifact compiler converts artifacts into a VQL request
-	// to be run by the clients.
-	request := &flows_proto.ArtifactCollectorArgs{
-		Creator:   "UserX",
-		ClientId:  "C.1234",
-		Artifacts: []string{"Test.Artifact.Types"},
-		Specs: []*flows_proto.ArtifactSpec{
-			{
-				// Artifact Parameters are **always**
-				// sent as strings but VQL code will
-				// convert them to their correct
-				// types.
-				Artifact: "Test.Artifact.Types",
-				Parameters: &flows_proto.ArtifactParameters{
-					Env: []*actions_proto.VQLEnv{
-						{Key: "IntValue", Value: "9"},
-						{Key: "CSVValue",
-							Value: "Col1,Col2\nValue1,Value2\nValue3,Value4\n"},
-						{Key: "TimestampValue",
-							Value: "2020-10-01T09:20Z"},
-						{Key: "BoolValue", Value: "N"},
-						{Key: "BoolValue2", Value: "Y"},
-					},
-				},
-			},
-		},
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	// Compile the artifact request into VQL
-	acl_manager := vql_subsystem.NullACLManager{}
-	launcher, err := services.GetLauncher()
-	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, false, request)
-	assert.NoError(self.T(), err)
-
-	// Now run the VQL and receive the rows back
-	test_responder := responder.TestResponder()
-	for _, vql_request := range compiled {
-		actions.VQLClientAction{}.StartQuery(
-			self.config_obj, ctx, test_responder, vql_request)
-	}
-
-	results := getResponses(test_responder)
-	goldie.Assert(self.T(), "TestParameterTypes", json.MustMarshalIndent(results))
-}
 
 // Parsing of parameters only occurs at the launching artifact -
 // dependent artifacts receive proper typed objects.
 func (self *LauncherTestSuite) TestParameterTypesDeps() {
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(testArtifactWithTypes, true)
-	assert.NoError(self.T(), err)
-
-	_, err = repository.LoadYaml(testArtifactWithDepsTypes, true)
-	assert.NoError(self.T(), err)
+	repository := self.LoadArtifacts(testArtifactWithTypes)
 
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
@@ -821,7 +774,8 @@ func (self *LauncherTestSuite) TestParameterTypesDeps() {
 	acl_manager := vql_subsystem.NullACLManager{}
 	launcher, err := services.GetLauncher()
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, false, request)
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
 	// Now run the VQL and receive the rows back
@@ -836,13 +790,7 @@ func (self *LauncherTestSuite) TestParameterTypesDeps() {
 }
 
 func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(testArtifactWithTypes, true)
-	assert.NoError(self.T(), err)
-
+	repository := self.LoadArtifacts(testArtifactWithTypes)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -854,6 +802,8 @@ func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
 		Env:        ordereddict.NewDict(),
 	}
 
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
@@ -885,14 +835,22 @@ func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
 	goldie.Assert(self.T(), "TestParameterTypesDepsQuery", json.MustMarshalIndent(results))
 }
 
-func (self *LauncherTestSuite) TestPrecondition() {
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(testArtifactWithPrecondition, true)
-	assert.NoError(self.T(), err)
-
+/* When the precondition is at the top level, there will be a single
+   request with multiple sources in the same request: Serial Mode
+*/
+func (self *LauncherTestSuite) TestPreconditionTopLevel() {
+	repository := self.LoadArtifacts([]string{`
+name: Test.Artifact.Precondition
+precondition: |
+   SELECT * FROM info() WHERE FALSE
+sources:
+- name: Source1
+  query: |
+    SELECT 1 AS A FROM scope()
+- name: Source2
+  query: |
+    SELECT 2 AS A FROM scope()
+`})
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
 	request := &flows_proto.ArtifactCollectorArgs{
@@ -906,26 +864,126 @@ func (self *LauncherTestSuite) TestPrecondition() {
 	// Compile the artifact request into VQL
 	acl_manager := vql_subsystem.NullACLManager{}
 	launcher, err := services.GetLauncher()
-	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository, false, request)
 	assert.NoError(self.T(), err)
 
-	// Now run the VQL and receive the rows back
-	test_responder := responder.TestResponder()
-	for _, vql_request := range compiled {
-		actions.VQLClientAction{}.StartQuery(
-			self.config_obj, ctx, test_responder, vql_request)
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	fixture := ordereddict.NewDict().Set("WithPreconditions", compiled)
+
+	// Compile again, this time disabling the precondition
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{
+			DisablePrecondition: true,
+		}, request)
+	assert.NoError(self.T(), err)
+
+	fixture.Set("WithoutPreconditions", compiled)
+	goldie.Assert(self.T(), "TestPreconditionTopLevel",
+		json.MustMarshalIndent(fixture))
+}
+
+/* When preconditions are at the source level, artifact is collected
+   in parallel mode.
+*/
+func (self *LauncherTestSuite) TestPreconditionSourceLevel() {
+	repository := self.LoadArtifacts([]string{`
+name: Test.Artifact.Precondition
+sources:
+- name: Source1
+  query: |
+    SELECT 1 AS A FROM scope()
+- name: Source2
+  precondition: |
+     SELECT * FROM info() WHERE FALSE
+  query: |
+    SELECT 2 AS A FROM scope()
+`})
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Artifacts: []string{"Test.Artifact.Precondition"},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Compile the artifact request into VQL
+	acl_manager := vql_subsystem.NullACLManager{}
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	fixture := ordereddict.NewDict().Set("WithPreconditions", compiled)
+
+	// Compile again, this time disabling the precondition
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{
+			DisablePrecondition: true,
+		}, request)
+	assert.NoError(self.T(), err)
+
+	fixture.Set("WithoutPreconditions", compiled)
+	goldie.Assert(self.T(), "TestPreconditionSourceLevel",
+		json.MustMarshalIndent(fixture))
+}
+
+// Test that compiler rejects invalid artifacts
+func (self *LauncherTestSuite) TestInvalidArtifacts() {
+	artifact_definitions := []string{`
+name: Test.Artifact.InvalidSource
+sources:
+- query: |
+    SELECT * FROM scope()
+    LET X = SELECT * FROM scope()
+`, `
+name: Test.Artifact.InvalidSource2
+sources:
+- query: |
+    SELECT * FROM scope()
+    SELECT * FROM scope()
+`, `
+name: Test.Artifact.Precondition
+description: Invalid artifact with precondition at top level and source level.
+precondition: SELECT * FROM info() WHERE OS = "linux"
+sources:
+- name: Source1
+  query: |
+    SELECT 1 AS A FROM scope()
+- name: Source2
+  precondition: |
+     SELECT * FROM info() WHERE FALSE
+  query: |
+    SELECT 2 AS A FROM scope()
+`, `
+name: Test.Artifact.SyntaxError
+precondition: SELECT 1 FORM
+sources:
+- name: Source1
+  query: |
+    SELECT 1 AS A FROM scope()
+`, `
+name: Test.Artifact.SyntaxError
+sources:
+- query: |
+    SELECT 1 FORM
+`}
+
+	manager, _ := services.GetRepositoryManager()
+	repository := manager.NewRepository()
+
+	for _, definition := range artifact_definitions {
+		_, err := repository.LoadYaml(definition, true /* validate */)
+		assert.Error(self.T(), err, "Failed to reject "+definition)
 	}
 
-	results := getResponses(test_responder)
-	assert.Equal(self.T(), 0, len(results))
-
-	// The compiled query should have an if statement with a precondition
-	for _, query := range compiled[0].Query {
-		if query.Name != "" {
-			assert.Contains(self.T(), query.VQL, "if(then=Test_Artifact_Precondition_0_0")
-		}
-	}
 }
 
 func TestLauncher(t *testing.T) {

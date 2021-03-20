@@ -207,8 +207,22 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 			}
 		}
 
+		// Ensure precodition has correct syntax
+		if artifact.Precondition != "" {
+			_, err := vfilter.Parse(artifact.Precondition)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		for _, source := range artifact.Sources {
 			if source.Precondition != "" {
+				if artifact.Precondition != "" {
+					return nil, fmt.Errorf(
+						"Artifact %s contains a top level precondition "+
+							"and a source precondition.", artifact.Name)
+				}
+
 				_, err := vfilter.Parse(source.Precondition)
 				if err != nil {
 					return nil, err
@@ -216,16 +230,38 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 			}
 
 			if len(source.Query) == 0 {
-				return nil, errors.New(fmt.Sprintf(
+				return nil, fmt.Errorf(
 					"Source %s in artifact %s contains no queries!",
-					source.Name, artifact.Name))
+					source.Name, artifact.Name)
 			}
 
 			// Check we can parse it properly.
-			_, err := vfilter.MultiParse(source.Query)
+			queries, err := vfilter.MultiParse(source.Query)
 			if err != nil {
 				return nil, err
 			}
+
+			// Make sure the source format is correct
+			for idx2, vql := range queries {
+				if idx2 < len(queries)-1 {
+					if vql.Let == "" {
+						return nil, errors.New(
+							"Invalid artifact " + artifact.Name +
+								": All Queries in a source " +
+								"must be LET queries, except for the " +
+								"final one.")
+					}
+				} else {
+					if vql.Let != "" {
+						return nil, errors.New(
+							"Invalid artifact " + artifact.Name +
+								": All Queries in a source " +
+								"must be LET queries, except for the " +
+								"final one.")
+					}
+				}
+			}
+
 		}
 	}
 

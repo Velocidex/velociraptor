@@ -212,10 +212,14 @@ func (self *ImportCollectionFunction) Call(ctx context.Context,
 				defer rs_writer.Close()
 
 				// Now copy the rows from the zip to the filestore.
+				count := 0
 				for row := range utils.ReadJsonFromFile(ctx, fd) {
 					new_flow.TotalCollectedRows++
 					rs_writer.Write(row)
+					count++
 				}
+
+				log("Imported %v rows", count)
 			}()
 		} else {
 			new_flow.TotalUploadedFiles++

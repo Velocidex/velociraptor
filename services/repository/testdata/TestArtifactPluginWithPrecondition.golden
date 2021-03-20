@@ -1,0 +1,8 @@
+{
+ "SELECT * FROM Artifact.CallArtifactWithFalsePrecondition()": [
+  {
+   "A": 1,
+   "_Source": "CallArtifactWithFalsePrecondition"
+  }
+ ]
+}

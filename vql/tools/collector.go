@@ -149,8 +149,7 @@ func (self CollectPlugin) Call(
 
 		vql_requests, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, acl_manager, repository,
-			false, /* should_obfuscate */
-			request)
+			services.CompilerOptions{}, request)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return

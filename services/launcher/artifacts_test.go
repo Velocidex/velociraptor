@@ -85,12 +85,8 @@ type ArtifactTestSuite struct {
 }
 
 func (self *ArtifactTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
+	self.config_obj = config.GetDefaultConfig()
+	self.config_obj.Datastore.Implementation = "Test"
 
 	// Start essential services.
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
@@ -101,7 +97,7 @@ func (self *ArtifactTestSuite) SetupTest() {
 	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
 	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
 	assert.NoError(t, self.sm.Start(StartLauncherService))
-	require.NoError(t, self.sm.Start(repository.StartRepositoryManager))
+	require.NoError(t, self.sm.Start(repository.StartRepositoryManagerForTest))
 
 	manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)
@@ -129,7 +125,7 @@ func (self *ArtifactTestSuite) TestUnknownArtifact() {
 
 	_, err = launcher.CompileCollectorArgs(context.Background(), self.config_obj,
 		vql_subsystem.NullACLManager{},
-		self.repository, false, request)
+		self.repository, services.CompilerOptions{}, request)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), "Unknown artifact reference")
 }
@@ -146,7 +142,7 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 	assert.NoError(self.T(), err)
 	vql_requests, err := launcher.CompileCollectorArgs(context.Background(),
 		self.config_obj, vql_subsystem.NullACLManager{},
-		self.repository, false, request)
+		self.repository, services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
 	// If we fail this test make sure we take a resonable time.
@@ -174,7 +170,7 @@ func (self *ArtifactTestSuite) TestArtifactDependencies() {
 
 	vql_requests, err := launcher.CompileCollectorArgs(context.Background(),
 		self.config_obj, vql_subsystem.NullACLManager{},
-		self.repository, false, request)
+		self.repository, services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
 	// If we fail make sure we take a resonable time.

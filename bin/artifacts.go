@@ -260,7 +260,9 @@ func doArtifactList() {
 
 		request, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, vql_subsystem.NullACLManager{}, repository,
-			false, /* should_obfuscate */
+			services.CompilerOptions{
+				DisablePrecondition: true,
+			},
 			&flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{artifact.Name},
 			})

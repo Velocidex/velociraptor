@@ -23,6 +23,7 @@ var (
 type TestDataStore struct {
 	mu sync.Mutex
 
+	idx         uint64
 	Subjects    map[string]proto.Message
 	ClientTasks map[string][]*crypto_proto.GrrMessage
 }
@@ -87,6 +88,9 @@ func (self *TestDataStore) QueueMessageForClient(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	message.TaskId = self.idx + 1
+	self.idx++
+
 	result, pres := self.ClientTasks[client_id]
 	if !pres {
 		result = make([]*crypto_proto.GrrMessage, 0)
@@ -110,7 +114,7 @@ func (self *TestDataStore) UnQueueMessageForClient(
 		old_queue = make([]*crypto_proto.GrrMessage, 0)
 	}
 
-	new_queue := make([]*crypto_proto.GrrMessage, len(old_queue))
+	new_queue := make([]*crypto_proto.GrrMessage, 0, len(old_queue))
 	for _, item := range old_queue {
 		if message.TaskId != item.TaskId {
 			new_queue = append(new_queue, item)

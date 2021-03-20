@@ -145,9 +145,9 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 		temp.Artifacts = []string{name}
 		compiled, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, vql_subsystem.NullACLManager{},
-			repository,
-			true, /* should_obfuscate */
-			temp)
+			repository, services.CompilerOptions{
+				ObfuscateNames: true,
+			}, temp)
 		if err != nil {
 			return nil, err
 		}

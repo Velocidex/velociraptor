@@ -602,10 +602,12 @@ func (self *NotificationReader) sendToURL(
 
 	// We need to be able to cancel the read here so we do not use
 	// ioutil.ReadAll()
-	_, err = utils.Copy(ctx, encrypted, resp.Body)
+	n, err := utils.Copy(ctx, encrypted, resp.Body)
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
+	self.logger.Info("%s: received %d bytes", self.name, n)
 
 	message_info, err := self.manager.Decrypt(encrypted.Bytes())
 	if err != nil {

@@ -166,7 +166,9 @@ func CreateHunt(
 
 	compiled, err := launcher.CompileCollectorArgs(
 		ctx, config_obj, acl_manager, repository,
-		true, /* should_obfuscate */
+		services.CompilerOptions{
+			ObfuscateNames: true,
+		},
 		hunt.StartRequest)
 	if err != nil {
 		return "", err

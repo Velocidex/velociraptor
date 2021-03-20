@@ -483,7 +483,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 		self.config_obj, self.client_id,
 		true /* do_not_lease */)
 	assert.NoError(t, err)
-	assert.Equal(t, len(tasks), 1)
+	assert.Equal(t, len(tasks), 2)
 
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
@@ -641,6 +641,8 @@ func (self *ServerTestSuite) TestCompletions() {
 
 	// Emulate a response from this flow.
 	runner := flows.NewFlowRunner(self.config_obj)
+
+	// Generic.Client.Info sends two requests, lets complete them both.
 	runner.ProcessSingleMessage(
 		context.Background(),
 		&crypto_proto.GrrMessage{
@@ -661,8 +663,29 @@ func (self *ServerTestSuite) TestCompletions() {
 	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
 	require.NoError(t, err)
 
+	// Flow not complete yet - still an outstanding request.
+	require.Equal(self.T(), flows_proto.ArtifactCollectorContext_RUNNING,
+		collection_context.State)
+
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			RequestId: constants.ProcessVQLResponses,
+			Status: &crypto_proto.GrrStatus{
+				Status: crypto_proto.GrrStatus_OK,
+			},
+		})
+	runner.Close()
+
+	// Flow should be complete now that second response arrived.
+	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
+	require.NoError(t, err)
+
 	require.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED,
 		collection_context.State)
+
 }
 
 // Test flow cancellation
@@ -683,11 +706,10 @@ func (self *ServerTestSuite) TestCancellation() {
 	tasks, err := db.GetClientTasks(self.config_obj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
-	assert.Equal(t, len(tasks), 1)
+	// Generic.Client.Info has two source preconditions in parallel
+	assert.Equal(t, len(tasks), 2)
 
 	// Cancelling the flow will notify the client immediately.
-
-	// Now cancel the same flow.
 	response, err := flows.CancelFlow(
 		context.Background(),
 		self.config_obj, self.client_id, flow_id, "username")
@@ -695,20 +717,16 @@ func (self *ServerTestSuite) TestCancellation() {
 	require.Equal(t, response.FlowId, flow_id)
 
 	// Cancelling a flow simply schedules a cancel message for the
-	// client. The tasks are still queued for the client, but the
-	// client will immediately cancel them because all tasks will
-	// be drained in the same time. This saves us having to go
-	// through the client queues to remove old expired messages
-	// (possibly under lock).
+	// client and removes all pending tasks.
 	tasks, err = db.GetClientTasks(self.config_obj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
-	assert.Equal(t, len(tasks), 2)
+	assert.Equal(t, len(tasks), 1)
 
 	// Client will cancel all in flight queries from this session
 	// id.
-	require.Equal(t, tasks[1].SessionId, flow_id)
-	require.NotNil(t, tasks[1].Cancel)
+	require.Equal(t, tasks[0].SessionId, flow_id)
+	require.NotNil(t, tasks[0].Cancel)
 
 	// The flow must be marked as cancelled with an error.
 	collection_context := &flows_proto.ArtifactCollectorContext{}

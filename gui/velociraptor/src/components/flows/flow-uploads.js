@@ -94,19 +94,11 @@ export default class FlowUploads extends React.Component {
         };
 
         return (
-            <CardDeck>
-              <Card>
-                <Card.Header>Uploaded Files</Card.Header>
-                <Card.Body>
-                  <Spinner loading={this.state.loading}/>
-                <VeloTable
-                  className="col-12"
-                  renderers={renderers}
-                  rows={this.state.pageData.rows}
-                  columns={this.state.pageData.columns} />
-                </Card.Body>
-              </Card>
-            </CardDeck>
+            <VeloTable
+              className="col-12"
+              renderers={renderers}
+              rows={this.state.pageData.rows}
+              columns={this.state.pageData.columns} />
         );
     }
 };
