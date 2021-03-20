@@ -139,12 +139,15 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		launcher, err := services.GetLauncher()
 		if err != nil {
+			scope.Log("Launcher not available")
 			return
 		}
 
 		request, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, acl_manager, self.repository,
-			false, /* should_obfuscate */
+			services.CompilerOptions{
+				DisablePrecondition: true,
+			},
 			&flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{artifact_name},
 			})
@@ -155,7 +158,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 		}
 
 		if len(request) != 1 {
-			scope.Log("Artifact %s is an event artifact with multiple sources, please specify a source",
+			scope.Log("Artifact %s is an artifact with multiple sources, please specify a source",
 				strings.Join(self.prefix, "."))
 			return
 		}

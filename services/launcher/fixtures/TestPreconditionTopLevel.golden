@@ -1,0 +1,51 @@
+{
+ "WithPreconditions": [
+  {
+   "precondition": "SELECT * FROM info() WHERE FALSE\n",
+   "Query": [
+    {
+     "VQL": "LET precondition_Test_Artifact_Precondition_Source1_0 = SELECT * FROM info() WHERE FALSE\n"
+    },
+    {
+     "VQL": "LET Test_Artifact_Precondition_Source1_0_0 = SELECT 1 AS A FROM scope()"
+    },
+    {
+     "Name": "Test.Artifact.Precondition/Source1",
+     "VQL": "SELECT * FROM if(then=Test_Artifact_Precondition_Source1_0_0, condition=precondition_Test_Artifact_Precondition_Source1_0, else={SELECT * FROM scope() WHERE log(message='Query skipped due to precondition') AND FALSE})"
+    },
+    {
+     "VQL": "LET precondition_Test_Artifact_Precondition_Source2_1 = SELECT * FROM info() WHERE FALSE\n"
+    },
+    {
+     "VQL": "LET Test_Artifact_Precondition_Source2_1_0 = SELECT 2 AS A FROM scope()"
+    },
+    {
+     "Name": "Test.Artifact.Precondition/Source2",
+     "VQL": "SELECT * FROM if(then=Test_Artifact_Precondition_Source2_1_0, condition=precondition_Test_Artifact_Precondition_Source2_1, else={SELECT * FROM scope() WHERE log(message='Query skipped due to precondition') AND FALSE})"
+    }
+   ],
+   "max_row": 1000
+  }
+ ],
+ "WithoutPreconditions": [
+  {
+   "Query": [
+    {
+     "VQL": "LET Test_Artifact_Precondition_Source1_0_0 = SELECT 1 AS A FROM scope()"
+    },
+    {
+     "Name": "Test.Artifact.Precondition/Source1",
+     "VQL": "SELECT * FROM Test_Artifact_Precondition_Source1_0_0"
+    },
+    {
+     "VQL": "LET Test_Artifact_Precondition_Source2_1_0 = SELECT 2 AS A FROM scope()"
+    },
+    {
+     "Name": "Test.Artifact.Precondition/Source2",
+     "VQL": "SELECT * FROM Test_Artifact_Precondition_Source2_1_0"
+    }
+   ],
+   "max_row": 1000
+  }
+ ]
+}

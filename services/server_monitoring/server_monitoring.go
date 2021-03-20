@@ -102,8 +102,7 @@ func (self *EventTable) Update(
 	// goroutine.
 	vql_requests, err := launcher.CompileCollectorArgs(
 		ctx, config_obj, acl_manager, repository,
-		false, /* should_obfuscate */
-		request)
+		services.CompilerOptions{}, request)
 	if err != nil {
 		return err
 	}

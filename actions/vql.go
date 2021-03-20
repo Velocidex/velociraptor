@@ -96,7 +96,7 @@ func (self VQLClientAction) StartQuery(
 	sub_ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	if arg.Query == nil {
+	if len(arg.Query) == 0 {
 		responder.RaiseError(ctx, "Query should be specified.")
 		return
 	}
@@ -111,7 +111,7 @@ func (self VQLClientAction) StartQuery(
 
 	repository := manager.NewRepository()
 	for _, artifact := range arg.Artifacts {
-		_, err := repository.LoadProto(artifact, false /* validate */)
+		_, err := repository.LoadProto(artifact, true /* validate */)
 		if err != nil {
 			responder.RaiseError(ctx, fmt.Sprintf(
 				"Failed to compile artifact %v.", artifact.Name))
@@ -156,7 +156,6 @@ func (self VQLClientAction) StartQuery(
 	// If we panic we need to recover and report this to the
 	// server.
 	defer func() {
-
 		r := recover()
 		if r != nil {
 			msg := string(debug.Stack())
@@ -166,6 +165,19 @@ func (self VQLClientAction) StartQuery(
 
 		scope.Log("Collection is done after %v", time.Since(start))
 	}()
+
+	ok, err := CheckPreconditions(ctx, scope, arg)
+	if err != nil {
+		scope.Log("While evaluating preconditions: %v", err)
+		responder.RaiseError(ctx, fmt.Sprintf("While evaluating preconditions: %v", err))
+		return
+	}
+
+	if !ok {
+		scope.Log("Skipping query due to preconditions")
+		responder.Return(ctx)
+		return
+	}
 
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
@@ -253,4 +265,27 @@ func (self VQLClientAction) StartQuery(
 	}
 
 	responder.Return(ctx)
+}
+
+func CheckPreconditions(
+	ctx context.Context,
+	scope vfilter.Scope,
+	arg *actions_proto.VQLCollectorArgs) (bool, error) {
+
+	// No precondition means the query is allowed.
+	if arg.Precondition == "" {
+		return true, nil
+	}
+
+	vqls, err := vfilter.MultiParse(arg.Precondition)
+	if err != nil {
+		return false, err
+	}
+
+	for _, vql := range vqls {
+		for _ = range vql.Eval(ctx, scope) {
+			return true, nil
+		}
+	}
+	return false, nil
 }

@@ -158,6 +158,19 @@ func (self *RepositoryManager) DeleteArtifactFile(
 
 }
 
+// Start an empty repository manager without loading built in artifacts
+func StartRepositoryManagerForTest(ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
+	self := &RepositoryManager{
+		wg: wg,
+		global_repository: &Repository{
+			Data: make(map[string]*artifacts_proto.Artifact),
+		},
+	}
+	services.RegisterRepositoryManager(self)
+	return nil
+}
+
 func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 

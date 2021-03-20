@@ -167,7 +167,7 @@ func (self *TestSuite) TestSimpleCollection() {
 	acl_manager := vql_subsystem.NullACLManager{}
 	vql_requests, err := launcher.CompileCollectorArgs(
 		context.Background(), self.config_obj, acl_manager, repository,
-		false /* should_obfuscate */, request)
+		services.CompilerOptions{}, request)
 
 	serialized, err := json.MarshalIndent(ordereddict.NewDict().
 		Set("ArtifactCollectorArgs", request).

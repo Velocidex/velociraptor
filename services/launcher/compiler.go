@@ -31,7 +31,9 @@ func maybeEscape(name string) string {
 	return name
 }
 
-func (self *Launcher) CompileSingleArtifact(config_obj *config_proto.Config,
+func (self *Launcher) CompileSingleArtifact(
+	config_obj *config_proto.Config,
+	options services.CompilerOptions,
 	artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs) error {
 
@@ -110,24 +112,26 @@ LET %v <= if(
 
 	}
 
-	return mergeSources(config_obj, artifact, result)
+	return mergeSources(config_obj, options, artifact, result)
 }
 
 func mergeSources(
-	config_obj *config_proto.Config, artifact *artifacts_proto.Artifact,
+	config_obj *config_proto.Config,
+	options services.CompilerOptions,
+	artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs) error {
 
 	scope := vql_subsystem.MakeScope()
 
-	for idx, source := range artifact.Sources {
-		// If a precondition is defined at the artifact level, the
-		// source may override it.
-		source_precondition := artifact.Precondition
-		source_precondition_var := ""
-		if source.Precondition != "" {
-			source_precondition = source.Precondition
-		}
+	precondition := artifact.Precondition
+	precondition_var := ""
+	if options.DisablePrecondition {
+		precondition = ""
+	}
 
+	result.Precondition = precondition
+
+	for idx, source := range artifact.Sources {
 		// If the source has specialized name and description
 		// we use it otherwise take the name and description
 		// from the artifact itself. This allows us to create
@@ -156,12 +160,15 @@ func mergeSources(
 		prefix := fmt.Sprintf("%s_%d", escape_name(name), idx)
 		source_result := ""
 
-		if source_precondition != "" {
-			source_precondition_var = "precondition_" + prefix
+		// TODO: This is still here for old clients - new
+		// clients do not need it as they will honor the
+		// precondition field directly.
+		if precondition != "" {
+			precondition_var = "precondition_" + prefix
 			result.Query = append(result.Query,
 				&actions_proto.VQLRequest{
-					VQL: "LET " + source_precondition_var + " = " +
-						source_precondition,
+					VQL: "LET " + precondition_var + " = " +
+						precondition,
 				})
 		}
 
@@ -175,26 +182,11 @@ func mergeSources(
 		for idx2, vql := range queries {
 			query_name := fmt.Sprintf("%s_%d", prefix, idx2)
 			if idx2 < len(queries)-1 {
-				if vql.Let == "" {
-					return errors.New(
-						"Invalid artifact " + artifact.Name +
-							": All Queries in a source " +
-							"must be LET queries, except for the " +
-							"final one.")
-				}
 				result.Query = append(result.Query,
 					&actions_proto.VQLRequest{
 						VQL: vql.ToString(scope),
 					})
 			} else {
-				if vql.Let != "" {
-					return errors.New(
-						"Invalid artifact " + artifact.Name +
-							": All Queries in a source " +
-							"must be LET queries, except for the " +
-							"final one.")
-				}
-
 				result.Query = append(result.Query,
 					&actions_proto.VQLRequest{
 						VQL: "LET " + query_name +
@@ -204,13 +196,14 @@ func mergeSources(
 			source_result = query_name
 		}
 
-		if source_precondition != "" {
+		// TODO: Backwards compatibility for older clients.
+		if precondition != "" {
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				Name:        name,
 				Description: description,
 				VQL: fmt.Sprintf(
 					"SELECT * FROM if(then=%s, condition=%s, else={SELECT * FROM scope() WHERE log(message='Query skipped due to precondition') AND FALSE})",
-					source_result, source_precondition_var),
+					source_result, precondition_var),
 			})
 		} else {
 			result.Query = append(result.Query, &actions_proto.VQLRequest{

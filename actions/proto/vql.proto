@@ -31,6 +31,10 @@ message VQLCollectorArgs {
         category: "Generic";
     };
 
+    // If this is specified we run this query first and if it returns
+    // any rows we continue with the real query.
+    string precondition = 29;
+
     // The principal that created this request - only sent when
     // scheduling the server so the server may keep track on who ran
     // each query.

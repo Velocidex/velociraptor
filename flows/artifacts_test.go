@@ -284,7 +284,10 @@ func (self *TestSuite) TestResourceLimits() {
 	messages, err := db.GetClientTasks(self.config_obj, self.client_id,
 		false /* do_not_lease */)
 	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), len(messages), 1)
+
+	// Two requests since there are two source preconditions on
+	// Generic.Client.Info
+	assert.Equal(self.T(), len(messages), 2)
 
 	// Send one row.
 	message := &crypto_proto.GrrMessage{

@@ -76,6 +76,14 @@ func RegisterLauncher(l Launcher) {
 	g_launcher = l
 }
 
+type CompilerOptions struct {
+	// Should names be obfuscated in the resulting VQL?
+	ObfuscateNames bool
+
+	// Generate precondition queries.
+	DisablePrecondition bool
+}
+
 type Launcher interface {
 	// Only used for tests to force a predictable flow id.
 	SetFlowIdForTests(flow_id string)
@@ -112,7 +120,7 @@ type Launcher interface {
 		config_obj *config_proto.Config,
 		acl_manager vql_subsystem.ACLManager,
 		repository Repository,
-		should_obfuscate bool,
+		options CompilerOptions,
 		collector_request *flows_proto.ArtifactCollectorArgs) (
 		[]*actions_proto.VQLCollectorArgs, error)
 

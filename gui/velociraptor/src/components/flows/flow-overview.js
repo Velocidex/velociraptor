@@ -39,7 +39,7 @@ export default class FlowOverview extends React.Component {
         let old_flow_id = prevProps.flow && prevProps.flow.session_id;
         let new_flow_id = this.props.flow.session_id;
 
-        if (old_flow_id != new_flow_id) {
+        if (old_flow_id !== new_flow_id) {
             this.setState({available_downloads: []});
             this.getDetailedFlow();
         }

@@ -3,8 +3,6 @@ import PropTypes from 'prop-types';
 
 import VeloPagedTable from '../core/paged-table.js';
 import VeloTimestamp from "../utils/time.js";
-import CardDeck from 'react-bootstrap/CardDeck';
-import Card from 'react-bootstrap/Card';
 
 export default class FlowLogs extends React.Component {
     static propTypes = {
@@ -31,23 +29,15 @@ export default class FlowLogs extends React.Component {
         };
 
         return (
-            <CardDeck>
-              <Card>
-                <Card.Header>Query logs</Card.Header>
-                <Card.Body>
-                  <VeloPagedTable
-                    className="col-12"
-                    renderers={renderers}
-                    params={{
-                        client_id: this.props.flow.client_id,
-                        flow_id: this.props.flow.session_id,
-                        total_logs: this.props.flow.total_logs,
-                        type: "log",
-                    }}
-                  />
-                </Card.Body>
-              </Card>
-            </CardDeck>
+            <VeloPagedTable
+              className="col-12"
+              renderers={renderers}
+              params={{
+                  client_id: this.props.flow.client_id,
+                  flow_id: this.props.flow.session_id,
+                  type: "log",
+              }}
+            />
         );
     }
 }
