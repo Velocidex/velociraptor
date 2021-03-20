@@ -26,13 +26,11 @@ parameters:
   - name: PathRegex
     description: Only file names that match this regular expression will be scanned.
     default: Windows/System32/kernel32\.dll$
-  - name: SearchMFT
-    description: "Target drive MFT. Default is a C:"
-    default: "C:/$MFT"
+  - name: DriveLetter
+    description: "Target drive. Default is a C:"
+    default: "C:"
   - name: SizeMax
-    default:
   - name: SizeMin
-    default:
   - name: AllDrives
     type: bool
   - name: UploadHits
@@ -76,11 +74,11 @@ sources:
                 then= { SELECT ShortHandYara as Content FROM scope() },
                 else= { SELECT YaraRule as Content FROM scope() }))
             
-      -- first find all files with relevant extention in mft
+      -- first find all matching files mft
       LET files = SELECT IsDir,
             split(string=MFTPath,sep='\\$')[0] +  FullPath as FullPath
-        FROM Artifact.Windows.NTFS.MFT(MFTFilename=SearchMFT,AllDrives=AllDrives,
-                PathRegex=PathRegex,SizeMax=SizeMax, SizeMin=SizeMin)
+        FROM Artifact.Windows.NTFS.MFT(MFTFilename=DriveLetter + "/$MFT", AllDrives=AllDrives,
+                PathRegex=PathRegex, SizeMax=SizeMax, SizeMin=SizeMin)
         WHERE NOT IsDir
           AND if(condition=EarliestSILastChanged,
             then= LastRecordChange0x10 > EarliestSILastChanged,

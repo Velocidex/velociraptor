@@ -43,5 +43,6 @@ Queries:
     FROM scope()
 
   # Test NTFS yara outputs from shorthand and standard yara
-  - SELECT FullPath,Size,Rule,Rule,Meta,HitContext,HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll',ShortHandYara='wide ascii:MZ')
-  - SELECT FullPath,Size,Rule,Rule,Meta,HitContext,HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll', YaraRule=IsPE)
+  - SELECT relpath(path=FullPath, base=srcDir) as TestPath,Size,Rule,Rule,Meta,HitContext,HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll',ShortHandYara='wide ascii:MZ')
+  - SELECT relpath(path=FullPath, base=srcDir) as TestPath,Size,Rule,Rule,Meta,HitContext,HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll', YaraRule=IsPE)
+

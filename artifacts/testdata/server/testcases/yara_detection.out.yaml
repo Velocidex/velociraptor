@@ -26,18 +26,18 @@ LET _ <= SELECT
           LastAccess0x30 = "2021-01-24T06:57:36.7073284Z")
       ])
 FROM scope()
-[]SELECT FullPath,Size,Rule,Rule,Meta,HitContext,HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll',ShortHandYara='wide ascii:MZ')[
+[]SELECT relpath(path=FullPath, base=srcDir) as TestPath,Size,Rule,Rule,Meta,HitContext,HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll',ShortHandYara='wide ascii:MZ')[
  {
-  "FullPath": "d:\\a\\velociraptor\\velociraptor\\artifacts/testdata/files/wkscli.dll",
+  "TestPath": "artifacts\\testdata\\files\\wkscli.dll",
   "Size": 9728,
   "Rule": "X",
   "Meta": {},
   "HitContext": "MZ",
   "HitOffset": 0
  }
-]SELECT FullPath,Size,Rule,Rule,Meta,HitContext,HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll', YaraRule=IsPE)[
+]SELECT relpath(path=FullPath, base=srcDir) as TestPath,Size,Rule,Rule,Meta,HitContext,HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll', YaraRule=IsPE)[
  {
-  "FullPath": "d:\\a\\velociraptor\\velociraptor\\artifacts/testdata/files/wkscli.dll",
+  "TestPath": "artifacts\\testdata\\files\\wkscli.dll",
   "Size": 9728,
   "Rule": "IsPE",
   "Meta": {
