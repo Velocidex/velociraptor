@@ -19,7 +19,7 @@ sources:
     queries:
       - |
         SELECT Key.Name as Name,
-               timestamp(epoch=Key.Mtime.Sec) AS MTime,
+               Key.Mtime AS MTime,
                DisplayName,
                DisplayVersion,
                InstallLocation,

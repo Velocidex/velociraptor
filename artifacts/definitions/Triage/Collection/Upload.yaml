@@ -14,7 +14,7 @@ sources:
   - queries:
       - |
         LET results = SELECT FullPath, Size,
-               timestamp(epoch=Mtime.Sec) As Modifed,
+               Mtime As Modifed,
                type AS Type, {
                  SELECT * FROM upload(files=FullPath, accessor=accessor)
                } AS FileDetails

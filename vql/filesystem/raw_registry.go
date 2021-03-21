@@ -94,23 +94,19 @@ func (self *RawRegKeyInfo) ModTime() time.Time {
 	return self.key.LastWriteTime().Time
 }
 
-func (self *RawRegKeyInfo) Mtime() utils.TimeVal {
-	nsec := self.ModTime().UnixNano()
-	return utils.TimeVal{
-		Sec:  nsec / 1000000000,
-		Nsec: nsec,
-	}
+func (self *RawRegKeyInfo) Mtime() time.Time {
+	return self.ModTime()
 }
 
-func (self *RawRegKeyInfo) Ctime() utils.TimeVal {
+func (self *RawRegKeyInfo) Ctime() time.Time {
 	return self.Mtime()
 }
 
-func (self *RawRegKeyInfo) Btime() utils.TimeVal {
+func (self *RawRegKeyInfo) Btime() time.Time {
 	return self.Mtime()
 }
 
-func (self *RawRegKeyInfo) Atime() utils.TimeVal {
+func (self *RawRegKeyInfo) Atime() time.Time {
 	return self.Mtime()
 }
 

@@ -31,7 +31,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -51,33 +50,33 @@ func (self *OSFileInfo) FullPath() string {
 	return self._full_path
 }
 
-func (self *OSFileInfo) Btime() utils.TimeVal {
+func (self *OSFileInfo) Btime() time.Time {
 	ts := self.sys().Birthtimespec
-	return utils.TimeVal{
+	return time.Time{
 		Sec:  ts.Sec,
 		Nsec: ts.Nsec + ts.Sec*1000000000,
 	}
 }
 
-func (self *OSFileInfo) Mtime() utils.TimeVal {
+func (self *OSFileInfo) Mtime() time.Time {
 	ts := self.sys().Mtimespec
-	return utils.TimeVal{
+	return time.Time{
 		Sec:  ts.Sec,
 		Nsec: ts.Nsec + ts.Sec*1000000000,
 	}
 }
 
-func (self *OSFileInfo) Ctime() utils.TimeVal {
+func (self *OSFileInfo) Ctime() time.Time {
 	ts := self.sys().Ctimespec
-	return utils.TimeVal{
+	return time.Time{
 		Sec:  ts.Sec,
 		Nsec: ts.Nsec + ts.Sec*1000000000,
 	}
 }
 
-func (self *OSFileInfo) Atime() utils.TimeVal {
+func (self *OSFileInfo) Atime() time.Time {
 	ts := self.sys().Atimespec
-	return utils.TimeVal{
+	return time.Time{
 		Sec:  ts.Sec,
 		Nsec: ts.Nsec + ts.Sec*1000000000,
 	}
@@ -115,9 +114,9 @@ func (self *OSFileInfo) MarshalJSON() ([]byte, error) {
 		ModeStr  string
 		ModTime  time.Time
 		Sys      interface{}
-		Mtime    utils.TimeVal
-		Ctime    utils.TimeVal
-		Atime    utils.TimeVal
+		Mtime    time.Time
+		Ctime    time.Time
+		Atime    time.Time
 	}{
 		FullPath: self.FullPath(),
 		Size:     self.Size(),

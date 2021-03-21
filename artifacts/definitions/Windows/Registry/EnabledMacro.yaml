@@ -35,7 +35,7 @@ sources:
               Username,
               NTUser as Userhive,
               dirname(path=url(parse=FullPath).fragment) as Key,
-              timestamp(epoch=Mtime.Sec) AS LastModified
+              Mtime AS LastModified
             FROM glob(
               globs=url(scheme="file",
                 path=NTUser,

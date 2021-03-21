@@ -32,7 +32,7 @@ sources:
   - queries:
       - SELECT Mode.String AS Mode,
                FullPath, Size,
-               timestamp(epoch=Mtime.Sec) AS Mtime,
+               Mtime,
                Sys.Uid AS OwnerID,
                Sys.Gid AS GroupID
         FROM glob(globs=GlobExpression) WHERE Mode =~ '^u'

@@ -25,7 +25,7 @@ sources:
       SELECT * FROM foreach(row=history_files,
         query={
            SELECT User, FullPath,
-              timestamp(epoch=Mtime.Sec) as Mtime,
+              Mtime,
               visited_url,
               title, visit_count, typed_count,
               timestamp(winfiletime=last_visit_time * 10) as last_visit_time

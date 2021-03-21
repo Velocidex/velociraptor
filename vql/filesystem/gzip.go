@@ -46,14 +46,13 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 
 	"www.velocidex.com/golang/velociraptor/glob"
 )
 
 type GzipFileInfo struct {
-	_modtime   utils.TimeVal
+	_modtime   time.Time
 	_name      string
 	_full_path string
 }
@@ -85,26 +84,26 @@ func (self *GzipFileInfo) Mode() os.FileMode {
 }
 
 func (self *GzipFileInfo) ModTime() time.Time {
-	return self._modtime.Time()
+	return self._modtime
 }
 
 func (self *GzipFileInfo) FullPath() string {
 	return self._full_path
 }
 
-func (self *GzipFileInfo) Mtime() utils.TimeVal {
+func (self *GzipFileInfo) Mtime() time.Time {
 	return self._modtime
 }
 
-func (self *GzipFileInfo) Btime() utils.TimeVal {
+func (self *GzipFileInfo) Btime() time.Time {
 	return self._modtime
 }
 
-func (self *GzipFileInfo) Ctime() utils.TimeVal {
+func (self *GzipFileInfo) Ctime() time.Time {
 	return self._modtime
 }
 
-func (self *GzipFileInfo) Atime() utils.TimeVal {
+func (self *GzipFileInfo) Atime() time.Time {
 	return self._modtime
 }
 
@@ -252,8 +251,7 @@ func GetBzip2File(file_path string, scope vfilter.Scope) (*SeekableGzip, error) 
 	return &SeekableGzip{reader: fd,
 		gz: ioutil.NopCloser(zr),
 		info: &GzipFileInfo{
-			_modtime: utils.TimeVal{
-				Sec: stat.ModTime().Unix()},
+			_modtime:   stat.ModTime(),
 			_name:      stat.Name(),
 			_full_path: file_path,
 		}}, nil
@@ -297,8 +295,7 @@ func GetGzipFile(file_path string, scope vfilter.Scope) (*SeekableGzip, error) {
 		return &SeekableGzip{reader: fd,
 			gz: fd,
 			info: &GzipFileInfo{
-				_modtime: utils.TimeVal{
-					Sec: stat.ModTime().Unix()},
+				_modtime:   stat.ModTime(),
 				_name:      stat.Name(),
 				_full_path: file_path,
 			}}, nil
@@ -307,8 +304,7 @@ func GetGzipFile(file_path string, scope vfilter.Scope) (*SeekableGzip, error) {
 	return &SeekableGzip{reader: fd,
 		gz: zr,
 		info: &GzipFileInfo{
-			_modtime: utils.TimeVal{
-				Sec: zr.ModTime.Unix()},
+			_modtime:   zr.ModTime,
 			_name:      stat.Name(),
 			_full_path: file_path,
 		}}, nil

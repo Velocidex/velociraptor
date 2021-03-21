@@ -97,23 +97,19 @@ func (self *RegKeyInfo) ModTime() time.Time {
 	return self._modtime
 }
 
-func (self *RegKeyInfo) Mtime() utils.TimeVal {
-	nsec := self.ModTime().UnixNano()
-	return utils.TimeVal{
-		Sec:  nsec / 1000000000,
-		Nsec: nsec,
-	}
+func (self *RegKeyInfo) Mtime() time.Time {
+	return self.ModTime()
 }
 
-func (self *RegKeyInfo) Btime() utils.TimeVal {
+func (self *RegKeyInfo) Btime() time.Time {
 	return self.Mtime()
 }
 
-func (self *RegKeyInfo) Ctime() utils.TimeVal {
+func (self *RegKeyInfo) Ctime() time.Time {
 	return self.Mtime()
 }
 
-func (self *RegKeyInfo) Atime() utils.TimeVal {
+func (self *RegKeyInfo) Atime() time.Time {
 	return self.Mtime()
 }
 

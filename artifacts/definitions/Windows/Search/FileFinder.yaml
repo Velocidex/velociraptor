@@ -68,10 +68,10 @@ sources:
       LET file_search = SELECT FullPath,
                Sys.mft as Inode,
                Mode.String AS Mode, Size,
-               Mtime.Sec AS Modified,
-               timestamp(epoch=Atime.Sec) AS ATime,
-               timestamp(epoch=Mtime.Sec) AS MTime, "" AS Keywords,
-               timestamp(epoch=Ctime.Sec) AS CTime, IsDir
+               Mtime AS Modified,
+               Atime AS ATime,
+               Mtime AS MTime, "" AS Keywords,
+               Ctime AS CTime, IsDir
         FROM glob(globs=SearchFilesGlob, accessor=Accessor)
 
       LET more_recent = SELECT * FROM if(

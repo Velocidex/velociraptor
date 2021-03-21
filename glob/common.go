@@ -22,7 +22,6 @@ import (
 	"time"
 
 	errors "github.com/pkg/errors"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Virtual FileInfo for root directory - represent all drives as
@@ -69,20 +68,20 @@ func (self *VirtualDirectoryPath) FullPath() string {
 	return self.drive
 }
 
-func (self *VirtualDirectoryPath) Atime() utils.TimeVal {
-	return utils.TimeVal{}
+func (self *VirtualDirectoryPath) Atime() time.Time {
+	return time.Time{}
 }
 
-func (self *VirtualDirectoryPath) Mtime() utils.TimeVal {
-	return utils.TimeVal{}
+func (self *VirtualDirectoryPath) Mtime() time.Time {
+	return time.Time{}
 }
 
-func (self *VirtualDirectoryPath) Btime() utils.TimeVal {
-	return utils.TimeVal{}
+func (self *VirtualDirectoryPath) Btime() time.Time {
+	return time.Time{}
 }
 
-func (self *VirtualDirectoryPath) Ctime() utils.TimeVal {
-	return utils.TimeVal{}
+func (self *VirtualDirectoryPath) Ctime() time.Time {
+	return time.Time{}
 }
 
 // Not supported

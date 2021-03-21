@@ -100,12 +100,6 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 	case *time.Time:
 		return *t, nil
 
-	case *utils.TimeVal:
-		return t.Time(), nil
-
-	case utils.TimeVal:
-		return t.Time(), nil
-
 	default:
 		sec, _ = utils.ToInt64(timestamp)
 	}

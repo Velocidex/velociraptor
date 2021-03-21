@@ -31,7 +31,7 @@ sources:
 
       - |
         LET file_listing = SELECT FullPath,
-            timestamp(epoch=Mtime.Sec) As Modified,
+            Mtime As Modified,
             Size
         FROM glob(globs=Drive+"\\**", accessor="file")
         LIMIT 1000

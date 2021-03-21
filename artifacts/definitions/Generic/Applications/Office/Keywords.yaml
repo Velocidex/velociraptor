@@ -41,7 +41,7 @@ parameters:
 sources:
   - query: |
         LET office_docs = SELECT FullPath AS OfficePath,
-             timestamp(epoch=Mtime.Sec) as OfficeMtime,
+             Mtime as OfficeMtime,
              Size as OfficeSize
         FROM glob(globs=searchGlob + documentGlobs)
 

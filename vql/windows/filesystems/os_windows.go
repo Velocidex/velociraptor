@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
@@ -73,38 +74,26 @@ func (self *OSFileInfo) Data() interface{} {
 	return ordereddict.NewDict()
 }
 
-func (self *OSFileInfo) Btime() utils.TimeVal {
+func (self *OSFileInfo) Btime() time.Time {
 	nsec := self.sys().CreationTime.Nanoseconds()
-	return utils.TimeVal{
-		Sec:  nsec / 1000000000,
-		Nsec: nsec,
-	}
+	return time.Unix(0, nsec)
 }
 
-func (self *OSFileInfo) Mtime() utils.TimeVal {
+func (self *OSFileInfo) Mtime() time.Time {
 	nsec := self.sys().LastWriteTime.Nanoseconds()
-	return utils.TimeVal{
-		Sec:  nsec / 1000000000,
-		Nsec: nsec,
-	}
+	return time.Unix(0, nsec)
 }
 
 // Windows does not provide the ctime (inode change time) using the
 // APIs.
-func (self *OSFileInfo) Ctime() utils.TimeVal {
+func (self *OSFileInfo) Ctime() time.Time {
 	nsec := self.sys().LastWriteTime.Nanoseconds()
-	return utils.TimeVal{
-		Sec:  nsec / 1000000000,
-		Nsec: nsec,
-	}
+	return time.Unix(0, nsec)
 }
 
-func (self *OSFileInfo) Atime() utils.TimeVal {
+func (self *OSFileInfo) Atime() time.Time {
 	nsec := self.sys().LastAccessTime.Nanoseconds()
-	return utils.TimeVal{
-		Sec:  nsec / 1000000000,
-		Nsec: nsec,
-	}
+	return time.Unix(0, nsec)
 }
 
 func (self *OSFileInfo) IsLink() bool {

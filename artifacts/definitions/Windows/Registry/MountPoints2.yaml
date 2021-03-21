@@ -4,7 +4,7 @@ description: |
     With a "$" in the share path. This key will store all remotely mapped
     drives unless removed so is a great hunt for simple admin $ mapping based
     lateral movement.
-    
+
 author: Matt Green - @mgreen27
 
 precondition: SELECT OS From info() where OS = 'windows'
@@ -16,9 +16,9 @@ parameters:
 sources:
  - queries:
      - |
-        SELECT regex_replace(source=basename(path=url(parse=FullPath).Fragment), 
+        SELECT regex_replace(source=basename(path=url(parse=FullPath).Fragment),
           re="#", replace="\\") as MountPoint,
-          timestamp(epoch=Mtime) as ModifiedTime,
+          Mtime as ModifiedTime,
           Username,
           url(parse=FullPath).Path as Hive,
           url(parse=FullPath).Fragment as Key
