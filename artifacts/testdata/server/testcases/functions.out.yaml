@@ -17,4 +17,9 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
   "cache(func=Foo(X=10), key=5)": 10,
   "cache(func=Foo(X=10), key=10)": 15
  }
+]SELECT * FROM column_filter( query={ SELECT 1 AS A, 2 AS B, 3 AS AB, 4 AS AA FROM scope() }, include="A", exclude="B")[
+ {
+  "A": 1,
+  "AA": 4
+ }
 ]

@@ -4,24 +4,29 @@ Parameters:
         evil.com,127.0.0.1,Evilcorp C2 domain
 
 Queries:
-  - LET tmp <= tempfile()
-  - SELECT copy(filename=srcDir + "artifacts/testdata/files/hosts", dest=tmp) as CopyTmp FROM scope() WHERE CopyTmp = '27'
+  - LET tmpdir <= tempdir()
+  - LET hostfile <= tmpdir + "/hosts"
+  - LET backupfile <= tmpdir + "/backup"
+  - LET _ <= copy(filename=srcDir + "/artifacts/testdata/files/hosts", dest=hostfile)
+
   # Test Sinkhole remediation - output should not have evil.com in it (but may have other stuff)
-  - SELECT Line from parse_lines(filename=tmp) WHERE Line =~ "evil.com"
+  - SELECT Line from parse_lines(filename=hostfile) WHERE Line =~ "evil.com"
 
   # Now install the sinkhole
   - SELECT * FROM Artifact.Windows.Remediation.Sinkhole(
-          HostsFile=tmp,
-          SinkholeTable=SinkHoleTable) 
+          HostsFile=hostfile,
+          HostsFileBackup=backupfile,
+          SinkholeTable=SinkHoleTable)
     WHERE 'evil.com' in Hostname
 
   # Now it should have evil.com in it as well.
-  - SELECT Line from parse_lines(filename=tmp) WHERE Line =~ "evil.com"
+  - SELECT Line from parse_lines(filename=hostfile) WHERE Line =~ "evil.com"
 
   # Test rolling back sinkhole - output none and check hosts file at end.
   - SELECT * FROM Artifact.Windows.Remediation.Sinkhole(
-          HostsFile=tmp,
+          HostsFile=hostfile,
+          HostsFileBackup=backupfile,
           RestoreBackup=True)
 
   # Should not have evil.com in it any more.
-  - SELECT Line from parse_lines(filename=tmp) WHERE Line =~ "evil.com"
+  - SELECT Line from parse_lines(filename=hostfile) WHERE Line =~ "evil.com"
