@@ -52,34 +52,22 @@ func (self *OSFileInfo) FullPath() string {
 
 func (self *OSFileInfo) Btime() time.Time {
 	ts := self.sys().Birthtimespec
-	return time.Time{
-		Sec:  ts.Sec,
-		Nsec: ts.Nsec + ts.Sec*1000000000,
-	}
+	return time.Unix(0, ts.Nsec+ts.Sec*1000000000)
 }
 
 func (self *OSFileInfo) Mtime() time.Time {
 	ts := self.sys().Mtimespec
-	return time.Time{
-		Sec:  ts.Sec,
-		Nsec: ts.Nsec + ts.Sec*1000000000,
-	}
+	return time.Unix(0, ts.Nsec+ts.Sec*1000000000)
 }
 
 func (self *OSFileInfo) Ctime() time.Time {
 	ts := self.sys().Ctimespec
-	return time.Time{
-		Sec:  ts.Sec,
-		Nsec: ts.Nsec + ts.Sec*1000000000,
-	}
+	return time.Unix(0, ts.Nsec+ts.Sec*1000000000)
 }
 
 func (self *OSFileInfo) Atime() time.Time {
 	ts := self.sys().Atimespec
-	return time.Time{
-		Sec:  ts.Sec,
-		Nsec: ts.Nsec + ts.Sec*1000000000,
-	}
+	return time.Unix(0, ts.Nsec+ts.Sec*1000000000)
 }
 
 func (self *OSFileInfo) _Sys() *syscall.Stat_t {

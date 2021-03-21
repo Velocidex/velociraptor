@@ -26,7 +26,7 @@ Queries:
               InUse = true,
               ParentEntryNumber = 3589,
               MFTPath = srcDir + "$MFT",
-              FullPath = "artifacts/testdata/files/wkscli.dll",
+              FullPath = "/artifacts/testdata/files/wkscli.dll",
               FileName = "wkscli.dll",
               FileSize = 764976,
               ReferenceCount = 2,
@@ -43,6 +43,10 @@ Queries:
     FROM scope()
 
   # Test NTFS yara outputs from shorthand and standard yara
-  - SELECT relpath(path=FullPath, base=srcDir) as TestPath,Size,Rule,Rule,Meta,HitContext,HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll',ShortHandYara='wide ascii:MZ')
-  - SELECT relpath(path=FullPath, base=srcDir) as TestPath,Size,Rule,Rule,Meta,HitContext,HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll', YaraRule=IsPE)
+  - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,
+           Size, Rule, HitContext, HitOffset
+    FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll', ShortHandYara='wide ascii:MZ')
 
+  - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,
+           Size, Rule, HitContext, HitOffset
+    FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll', YaraRule=IsPE)

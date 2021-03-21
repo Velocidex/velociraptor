@@ -1,19 +1,19 @@
-LET tmp <= tempfile()[]SELECT copy(filename=srcDir + "artifacts/testdata/files/hosts", dest=tmp) as CopyTmp FROM scope() WHERE CopyTmp = '27'[]SELECT Line from parse_lines(filename=tmp) WHERE Line =~ "evil.com"[
+LET tmpdir <= tempdir()[]LET hostfile <= tmpdir + "/hosts"[]LET backupfile <= tmpdir + "/backup"[]LET _ <= copy(filename=srcDir + "/artifacts/testdata/files/hosts", dest=hostfile)[]SELECT Line from parse_lines(filename=hostfile) WHERE Line =~ "evil.com"[
  {
   "Line": "\t8.8.8.8\t\tevil.com"
  }
-]SELECT * FROM Artifact.Windows.Remediation.Sinkhole( HostsFile=tmp, SinkholeTable=SinkHoleTable) WHERE 'evil.com' in Hostname[
+]SELECT * FROM Artifact.Windows.Remediation.Sinkhole( HostsFile=hostfile, HostsFileBackup=backupfile, SinkholeTable=SinkHoleTable) WHERE 'evil.com' in Hostname[
  {
   "Resolution": "127.0.0.1",
   "Hostname": "evil.com",
   "Comment": "Velociraptor sinkhole: Evilcorp C2 domain",
   "_Source": "Windows.Remediation.Sinkhole"
  }
-]SELECT Line from parse_lines(filename=tmp) WHERE Line =~ "evil.com"[
+]SELECT Line from parse_lines(filename=hostfile) WHERE Line =~ "evil.com"[
  {
   "Line": "\t127.0.0.1\t\tevil.com\t\t# Velociraptor sinkhole: Evilcorp C2 domain"
  }
-]SELECT * FROM Artifact.Windows.Remediation.Sinkhole( HostsFile=tmp, RestoreBackup=True)[
+]SELECT * FROM Artifact.Windows.Remediation.Sinkhole( HostsFile=hostfile, HostsFileBackup=backupfile, RestoreBackup=True)[
  {
   "Resolution": "127.0.0.1",
   "Hostname": "test.com",
@@ -47,7 +47,7 @@ LET tmp <= tempfile()[]SELECT copy(filename=srcDir + "artifacts/testdata/files/h
   "Comment": "",
   "_Source": "Windows.Remediation.Sinkhole"
  }
-]SELECT Line from parse_lines(filename=tmp) WHERE Line =~ "evil.com"[
+]SELECT Line from parse_lines(filename=hostfile) WHERE Line =~ "evil.com"[
  {
   "Line": "\t8.8.8.8\t\tevil.com"
  }

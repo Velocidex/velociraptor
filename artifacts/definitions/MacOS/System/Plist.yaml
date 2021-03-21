@@ -27,7 +27,7 @@ sources:
                 row=plist(file=FullPath),
                 query={ SELECT
                     FullPath AS FullPath,
-                    Mtime,
+                    timestamp(epoch=Mtime.Sec) AS Mtime,
                     plist(file=FullPath) AS Content,
                     if(condition=Upload_File,
                       then=upload(file=FullPath)) AS Upload

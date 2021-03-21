@@ -23,3 +23,10 @@ Queries:
            cache(func=Foo(X=10), key=5),
            cache(func=Foo(X=10), key=10)
     FROM scope()
+
+  # Test column_filter
+  - SELECT * FROM column_filter(
+    query={
+       SELECT 1 AS A, 2 AS B, 3 AS AB, 4 AS AA
+       FROM scope()
+    }, include="A", exclude="B")
