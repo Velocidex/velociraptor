@@ -36,6 +36,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -208,6 +209,7 @@ func (self *scanReporter) scanFileByAccessor(
 	defer f.Close()
 
 	self.file_info, _ = f.Stat()
+	self.reader = utils.ReaderAtter{f}
 
 	// Support sparse file scanning
 	range_reader, ok := f.(uploads.RangeReader)
@@ -285,6 +287,7 @@ func (self *scanReporter) scanFile(
 
 	// Fill in the file stat if possible.
 	self.file_info, _ = fd.Stat()
+	self.reader = fd
 
 	err = self.rules.ScanFileWithCallback(
 		self.filename, self.yara_flag, 10*time.Second, self)
