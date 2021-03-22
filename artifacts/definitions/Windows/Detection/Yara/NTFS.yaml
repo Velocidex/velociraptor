@@ -1,26 +1,31 @@
 name: Windows.Detection.Yara.NTFS
 author: Matt Green - @mgreen27
 description: |
-  This artifact searches the MFT, returns a list of target files then runs Yara 
-  over the target list.  
-    
-  There are 3 kinds of Yara rules that can be deployed:   
-   &nbsp;1. Url link to a yara rule.   
-   &nbsp;2. Shorthand yara in the format "wide nocase ascii:string1,string2,string3".  
-   &nbsp;3. or a Standard Yara rule attached as a parameter.  
-  Only one method of Yara will be applied and search order is as above.  
-  
-  The artifact leverages Windows.NTFS.MFT so similar regex filters can be applied 
-  including Path, Size and date. The artifact also has an option to search across 
-  all attached drives and upload any files with Yara hits.  
-    
-  Some examples of path regex may include:  
-   &nbsp;Extension at a path: Windows/System32/.+\\.dll$  
-   &nbsp;More wildcards: Windows/.+/.+\\.dll$  
-   &nbsp;Specific file: Windows/System32/kernel32\.dll$  
-   &nbsp;Multiple extentions: \.(php|aspx|resx|asmx)$  
-  Note: no drive and forward slashes.
-  
+  This artifact searches the MFT, returns a list of target files then runs Yara
+  over the target list.
+
+  There are 3 kinds of Yara rules that can be deployed:
+
+  1. Url link to a yara rule.
+  2. Shorthand yara in the format `wide nocase ascii:string1,string2,string3`.
+  3. or a Standard Yara rule attached as a parameter.
+
+  Only one method of Yara will be applied and search order is as above.
+
+  The artifact leverages Windows.NTFS.MFT so similar regex filters can be applied
+  including Path, Size and date. The artifact also has an option to search across
+  all attached drives and upload any files with Yara hits.
+
+  Some examples of path regex may include:
+
+  * Extension at a path: `Windows/System32/.+\\.dll$`
+  * More wildcards: `Windows/.+/.+\\.dll$`
+  * Specific file: `Windows/System32/kernel32\.dll$`
+  * Multiple extentions: `\.(php|aspx|resx|asmx)$`
+
+  Note: no drive and forward slashes - these expressions are for paths
+  relative to the root of the filesystem.
+
 type: CLIENT
 parameters:
   - name: PathRegex
@@ -48,7 +53,7 @@ parameters:
     default:
   - name: ShortHandYara
     description: Second option Yara choice is a Velociraptor shorthand Yara rule
-    default: 
+    default:
   - name: YaraRule
     description: Final Yara option and the default if no other options provided.
     default: |
@@ -73,10 +78,10 @@ sources:
             else= if(condition=ShortHandYara,
                 then= { SELECT ShortHandYara as Content FROM scope() },
                 else= { SELECT YaraRule as Content FROM scope() }))
-            
+
       -- first find all matching files mft
       LET files = SELECT IsDir,
-            split(string=MFTPath,sep='\\$')[0] +  FullPath as FullPath
+            DriveLetter + "/" + FullPath as FullPath
         FROM Artifact.Windows.NTFS.MFT(MFTFilename=DriveLetter + "/$MFT", AllDrives=AllDrives,
                 PathRegex=PathRegex, SizeMax=SizeMax, SizeMin=SizeMin)
         WHERE NOT IsDir
@@ -92,24 +97,24 @@ sources:
           AND if(condition=LatestFNCreated,
             then= Created0x30 < LatestFNCreation,
             else= True)
-          
+
       -- scan files and only report a single hit.
       LET hits = SELECT * FROM foreach(row=files,
             query={
-                SELECT 
+                SELECT
                     FileName as FullPath,
                     File.Size AS Size,
                     File.ModTime AS ModTime,
-                    Rule, Tags, Meta, 
+                    Rule, Tags, Meta,
                     str(str=String.Data) AS HitContext,
                     String.Offset AS HitOffset
                 FROM yara(rules=yara.Content[0],files=FullPath)
                 LIMIT 1
             })
-      
+
       -- upload files that have hit
-      LET upload_hits=SELECT *, 
-            upload(file=FullPath) AS Upload 
+      LET upload_hits=SELECT *,
+            upload(file=FullPath) AS Upload
         FROM hits
 
       -- return rows

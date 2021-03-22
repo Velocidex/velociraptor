@@ -35,6 +35,7 @@ import (
 	yara "github.com/Velocidex/go-yara"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -85,10 +86,6 @@ func (self YaraScanPlugin) Call(
 			return
 		}
 
-		if arg.End == 0 {
-			arg.End = 1024 * 1024 * 100
-		}
-
 		if arg.NumberOfHits == 0 {
 			arg.NumberOfHits = 1
 		}
@@ -108,27 +105,42 @@ func (self YaraScanPlugin) Call(
 			return
 		}
 
+		yara_flag := yara.ScanFlags(0)
+		if arg.NumberOfHits == 1 {
+			yara_flag = yara.ScanFlagsFastMode
+		}
+
+		matcher := &scanReporter{
+			output_chan:    output_chan,
+			blocksize:      arg.Blocksize,
+			number_of_hits: arg.NumberOfHits,
+			context:        arg.Context,
+			ctx:            ctx,
+
+			rules:     rules,
+			scope:     scope,
+			yara_flag: yara_flag,
+		}
+
 		for _, filename := range arg.Files {
+
+			matcher.filename = filename
+
 			// If accessor is not specified we call yara's
 			// ScanFile API which mmaps the entire file
 			// into memory avoiding the need for
 			// buffering.
 			if arg.Accessor == "" {
-				err := scanFile(ctx, filename, arg.Context,
-					arg.NumberOfHits,
-					rules, output_chan, scope)
-
-				// Fall back to accessor scanning if
-				// we can not open the file directly.
+				err := matcher.scanFile(ctx, output_chan)
 				if err == nil {
 					continue
 				}
 			}
 
-			scanFileByAccessor(ctx, filename, arg.Accessor,
-				arg.Blocksize, arg.Start, arg.End,
-				arg.Context, arg.NumberOfHits,
-				rules, output_chan, scope)
+			// If scanning with the file api failed above
+			// we fall back to accessor scanning.
+			matcher.scanFileByAccessor(ctx, arg.Accessor,
+				arg.Blocksize, arg.Start, arg.End, output_chan)
 		}
 	}()
 
@@ -174,120 +186,114 @@ func getYaraRules(key, rules string,
 	}
 }
 
-func scanFileByAccessor(
+func (self *scanReporter) scanFileByAccessor(
 	ctx context.Context,
-	filename, accessor_name string,
+	accessor_name string,
 	blocksize int64,
 	start, end uint64,
-	context int,
-	total_number_of_hits int64,
-	rules *yara.Rules,
-	output_chan chan vfilter.Row,
-	scope vfilter.Scope) {
+	output_chan chan vfilter.Row) {
 
-	accessor, err := glob.GetAccessor(accessor_name, scope)
+	accessor, err := glob.GetAccessor(accessor_name, self.scope)
 	if err != nil {
-		scope.Log("yara: %v", err)
+		self.scope.Log("yara: %v", err)
 		return
 	}
 
-	yara_flag := yara.ScanFlags(0)
-	if total_number_of_hits == 1 {
-		yara_flag = yara.ScanFlagsFastMode
-	}
-
-	// Total hits per file.
-	f, err := accessor.Open(filename)
+	// Open the file with the accessor
+	f, err := accessor.Open(self.filename)
 	if err != nil {
-		scope.Log("Failed to open %v", filename)
+		self.scope.Log("Failed to open %v", self.filename)
 		return
 	}
 	defer f.Close()
 
+	self.file_info, _ = f.Stat()
+
+	// Support sparse file scanning
+	range_reader, ok := f.(uploads.RangeReader)
+	if !ok {
+		self.scanRange(start, end, f)
+		return
+	}
+
+	for _, rng := range range_reader.Ranges() {
+		if !rng.IsSparse {
+			scan_start := uint64(rng.Offset)
+			if scan_start < start {
+				scan_start = start
+			}
+
+			scan_end := uint64(rng.Offset + rng.Length)
+			if end > 0 && scan_end > end {
+				scan_end = end
+			}
+
+			if scan_start > scan_end {
+				continue
+			}
+
+			self.scanRange(scan_start, scan_end, f)
+		}
+	}
+}
+
+func (self *scanReporter) scanRange(start, end uint64, f glob.ReadSeekCloser) {
 	// Try to seek to the start offset - if it does not work then
 	// dont worry about it - just start from the beginning.
 	_, _ = f.Seek(int64(start), 0)
+	buf := make([]byte, self.blocksize)
 
-	buf := make([]byte, blocksize)
+	self.scope.Log("Scanning %v from %#0x to %#0x", self.filename, start, end)
 
-	stat, _ := f.Stat()
-
-	matcher := &scanReporter{
-		output_chan:    output_chan,
-		number_of_hits: total_number_of_hits,
-		end:            end,
-		context:        context,
-		file_info:      stat,
-		filename:       filename,
-		base_offset:    start,
-		ctx:            ctx,
-	}
-
-	for {
+	for idx := start; idx < end; {
 		n, _ := f.Read(buf)
 		if n == 0 {
 			return
 		}
+		idx += uint64(n)
 
 		scan_buf := buf[:n]
-		matcher.reader = bytes.NewReader(scan_buf)
+		self.reader = bytes.NewReader(scan_buf)
 
-		err := rules.ScanMemWithCallback(
-			scan_buf, yara_flag, 10*time.Second, matcher)
+		err := self.rules.ScanMemWithCallback(
+			scan_buf, self.yara_flag, 10*time.Second, self)
 		if err != nil {
 			return
 		}
 
-		matcher.base_offset += uint64(n)
-		if matcher.base_offset > uint64(end) {
+		self.base_offset += uint64(n)
+		if self.base_offset > uint64(end) {
 			return
 		}
 
 		// We count an op as one MB scanned.
-		vfilter.ChargeOp(scope)
+		vfilter.ChargeOp(self.scope)
 	}
 }
 
-func scanFile(
-	ctx context.Context,
-	filename string,
-	context int,
-	total_number_of_hits int64,
-	rules *yara.Rules,
-	output_chan chan vfilter.Row,
-	scope vfilter.Scope) error {
+// Scan a file called when no accessor is specified. We pass the
+// filename to libyara directly for faster scanning using mmap. This
+// also ensures that all yara features (like the PE plugin) work.
+func (self *scanReporter) scanFile(
+	ctx context.Context, output_chan chan vfilter.Row) error {
 
-	yara_flag := yara.ScanFlags(0)
-	if total_number_of_hits == 1 {
-		yara_flag = yara.ScanFlagsFastMode
-	}
-
-	fd, err := os.Open(filename)
+	fd, err := os.Open(self.filename)
 	if err != nil {
 		return err
 	}
 	defer fd.Close()
 
-	stat, _ := fd.Stat()
+	// Fill in the file stat if possible.
+	self.file_info, _ = fd.Stat()
 
-	matcher := &scanReporter{
-		output_chan:    output_chan,
-		number_of_hits: total_number_of_hits,
-		context:        context,
-		file_info:      stat,
-		filename:       filename,
-		reader:         fd,
-		ctx:            ctx,
-	}
-
-	err = rules.ScanFileWithCallback(
-		filename, yara_flag, 10*time.Second, matcher)
+	err = self.rules.ScanFileWithCallback(
+		self.filename, self.yara_flag, 10*time.Second, self)
 	if err != nil {
 		return err
 	}
 
 	// We count an op as one MB scanned.
-	vfilter.ChargeOp(scope)
+	vfilter.ChargeOp(self.scope)
 
 	return nil
 }
@@ -301,6 +307,7 @@ func scanFile(
 type scanReporter struct {
 	output_chan    chan vfilter.Row
 	number_of_hits int64
+	blocksize      int64
 	context        int
 	file_info      os.FileInfo
 	filename       string
@@ -308,6 +315,11 @@ type scanReporter struct {
 	end            uint64
 	reader         io.ReaderAt
 	ctx            context.Context
+
+	// Internal scan state
+	scope     vfilter.Scope
+	rules     *yara.Rules
+	yara_flag yara.ScanFlags
 }
 
 func (self *scanReporter) RuleMatching(rule *yara.Rule) (bool, error) {

@@ -22,6 +22,7 @@ require (
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/chroma v0.7.2
 	github.com/alecthomas/participle v0.7.1
+	github.com/alecthomas/repr v0.0.0-20210301060118-828286944d6a // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/aws/aws-sdk-go v1.26.7
 	github.com/bi-zone/etw v0.0.0-20200916105032-b215904fae4f
@@ -116,7 +117,7 @@ require (
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
 	www.velocidex.com/golang/vfilter v0.0.0-20210220121641-879064f4499e
-	www.velocidex.com/golang/vtypes v0.0.0-20210116160458-a505b35bdfb8
+	www.velocidex.com/golang/vtypes v0.0.0-20210322125033-46353273ba02
 )
 
 // replace www.velocidex.com/golang/go-pe => /home/mic/projects/go-pe
@@ -129,6 +130,7 @@ require (
 // replace github.com/Velocidex/json => /home/mic/projects/json
 // replace github.com/russross/blackfriday/v2 => /home/mic/projects/blackfriday
 // replace www.velocidex.com/golang/vtypes => /home/mic/projects/vtypes
+
 // replace github.com/Velocidex/zip => /home/mic/projects/zip
 
 replace github.com/russross/blackfriday/v2 => github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b

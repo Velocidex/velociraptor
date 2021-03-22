@@ -362,6 +362,7 @@ type PROCESS_MEMORY_COUNTERS struct {
 }
 
 //sys NtOpenThreadToken(thread_handle syscall.Handle, DesiredAccess uint32, open_as_self bool, token_handle *syscall.Handle) (status uint32) = ntdll.NtOpenThreadToken
+//sys _ReadProcessMemory(handle syscall.Handle, baseAddress uintptr, buffer uintptr, size uintptr, numRead *uintptr) (err error) = kernel32.ReadProcessMemory
 //sys GetProcessMemoryInfo(handle syscall.Handle, memCounters *PROCESS_MEMORY_COUNTERS, cb uint32) (err error) = psapi.GetProcessMemoryInfo
 //sys GetProcessIoCounters(hProcess syscall.Handle, lpIoCounters *IO_COUNTERS) (ok bool) = kernel32.GetProcessIoCounters
 //sys QueryFullProcessImageName(handle syscall.Handle, dwFlags uint32, buffer *byte, length *uint32) (ok bool) = kernel32.QueryFullProcessImageNameW
@@ -410,4 +411,19 @@ func PointerToString(ptr uintptr, len int) string {
 
 func NtCurrentProcess() syscall.Handle {
 	return syscall.Handle(windows.CurrentProcess())
+}
+
+func ReadProcessMemory(handle syscall.Handle, baseAddress uint64, dest []byte) (int, error) {
+	var numRead uintptr
+
+	n := len(dest)
+	if n == 0 {
+		return 0, nil
+	}
+	err := _ReadProcessMemory(handle, uintptr(baseAddress),
+		uintptr(unsafe.Pointer(&dest[0])), uintptr(n), &numRead)
+	if err != nil {
+		return 0, err
+	}
+	return int(numRead), nil
 }

@@ -20,6 +20,7 @@ package filesystem
 import (
 	"context"
 	"io"
+	"os"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
@@ -248,6 +249,7 @@ func (self ReadFilePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 
 type ReadFileFunctionArgs struct {
 	Length   int    `vfilter:"optional,field=length,doc=Max length of the file to read."`
+	Offset   int64  `vfilter:"optional,field=offset,doc=Where to read from the file."`
 	Filename string `vfilter:"required,field=filename,doc=One or more files to open."`
 	Accessor string `vfilter:"optional,field=accessor,doc=An accessor to use."`
 }
@@ -281,6 +283,8 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 		return ""
 	}
 	defer fd.Close()
+
+	_, _ = fd.Seek(arg.Offset, os.SEEK_SET)
 
 	n, err := io.ReadAtLeast(fd, buf, len(buf))
 	if err != nil &&

@@ -34,7 +34,7 @@ clean:
 	go run make.go -v clean
 
 generate:
-	go generate ./vql/windows/win32_windows.go
+	go generate ./vql/windows/
 	go generate ./api/mock/
 
 check:

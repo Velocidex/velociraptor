@@ -6,40 +6,41 @@ package mock_proto
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	grpc "google.golang.org/grpc"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
-	reflect "reflect"
 	proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	proto0 "www.velocidex.com/golang/velociraptor/api/proto"
 	proto1 "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	proto2 "www.velocidex.com/golang/velociraptor/flows/proto"
 )
 
-// MockAPIClient is a mock of APIClient interface
+// MockAPIClient is a mock of APIClient interface.
 type MockAPIClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockAPIClientMockRecorder
 }
 
-// MockAPIClientMockRecorder is the mock recorder for MockAPIClient
+// MockAPIClientMockRecorder is the mock recorder for MockAPIClient.
 type MockAPIClientMockRecorder struct {
 	mock *MockAPIClient
 }
 
-// NewMockAPIClient creates a new mock instance
+// NewMockAPIClient creates a new mock instance.
 func NewMockAPIClient(ctrl *gomock.Controller) *MockAPIClient {
 	mock := &MockAPIClient{ctrl: ctrl}
 	mock.recorder = &MockAPIClientMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAPIClient) EXPECT() *MockAPIClientMockRecorder {
 	return m.recorder
 }
 
-// ArchiveFlow mocks base method
+// ArchiveFlow mocks base method.
 func (m *MockAPIClient) ArchiveFlow(arg0 context.Context, arg1 *proto0.ApiFlowRequest, arg2 ...grpc.CallOption) (*proto0.StartFlowResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -52,14 +53,14 @@ func (m *MockAPIClient) ArchiveFlow(arg0 context.Context, arg1 *proto0.ApiFlowRe
 	return ret0, ret1
 }
 
-// ArchiveFlow indicates an expected call of ArchiveFlow
+// ArchiveFlow indicates an expected call of ArchiveFlow.
 func (mr *MockAPIClientMockRecorder) ArchiveFlow(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ArchiveFlow", reflect.TypeOf((*MockAPIClient)(nil).ArchiveFlow), varargs...)
 }
 
-// CancelFlow mocks base method
+// CancelFlow mocks base method.
 func (m *MockAPIClient) CancelFlow(arg0 context.Context, arg1 *proto0.ApiFlowRequest, arg2 ...grpc.CallOption) (*proto0.StartFlowResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -72,14 +73,14 @@ func (m *MockAPIClient) CancelFlow(arg0 context.Context, arg1 *proto0.ApiFlowReq
 	return ret0, ret1
 }
 
-// CancelFlow indicates an expected call of CancelFlow
+// CancelFlow indicates an expected call of CancelFlow.
 func (mr *MockAPIClientMockRecorder) CancelFlow(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelFlow", reflect.TypeOf((*MockAPIClient)(nil).CancelFlow), varargs...)
 }
 
-// CancelNotebookCell mocks base method
+// CancelNotebookCell mocks base method.
 func (m *MockAPIClient) CancelNotebookCell(arg0 context.Context, arg1 *proto0.NotebookCellRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -92,14 +93,14 @@ func (m *MockAPIClient) CancelNotebookCell(arg0 context.Context, arg1 *proto0.No
 	return ret0, ret1
 }
 
-// CancelNotebookCell indicates an expected call of CancelNotebookCell
+// CancelNotebookCell indicates an expected call of CancelNotebookCell.
 func (mr *MockAPIClientMockRecorder) CancelNotebookCell(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelNotebookCell", reflect.TypeOf((*MockAPIClient)(nil).CancelNotebookCell), varargs...)
 }
 
-// CollectArtifact mocks base method
+// CollectArtifact mocks base method.
 func (m *MockAPIClient) CollectArtifact(arg0 context.Context, arg1 *proto2.ArtifactCollectorArgs, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -112,14 +113,14 @@ func (m *MockAPIClient) CollectArtifact(arg0 context.Context, arg1 *proto2.Artif
 	return ret0, ret1
 }
 
-// CollectArtifact indicates an expected call of CollectArtifact
+// CollectArtifact indicates an expected call of CollectArtifact.
 func (mr *MockAPIClientMockRecorder) CollectArtifact(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CollectArtifact", reflect.TypeOf((*MockAPIClient)(nil).CollectArtifact), varargs...)
 }
 
-// CreateDownloadFile mocks base method
+// CreateDownloadFile mocks base method.
 func (m *MockAPIClient) CreateDownloadFile(arg0 context.Context, arg1 *proto0.CreateDownloadRequest, arg2 ...grpc.CallOption) (*proto0.CreateDownloadResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -132,14 +133,14 @@ func (m *MockAPIClient) CreateDownloadFile(arg0 context.Context, arg1 *proto0.Cr
 	return ret0, ret1
 }
 
-// CreateDownloadFile indicates an expected call of CreateDownloadFile
+// CreateDownloadFile indicates an expected call of CreateDownloadFile.
 func (mr *MockAPIClientMockRecorder) CreateDownloadFile(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDownloadFile", reflect.TypeOf((*MockAPIClient)(nil).CreateDownloadFile), varargs...)
 }
 
-// CreateHunt mocks base method
+// CreateHunt mocks base method.
 func (m *MockAPIClient) CreateHunt(arg0 context.Context, arg1 *proto0.Hunt, arg2 ...grpc.CallOption) (*proto0.StartFlowResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -152,14 +153,14 @@ func (m *MockAPIClient) CreateHunt(arg0 context.Context, arg1 *proto0.Hunt, arg2
 	return ret0, ret1
 }
 
-// CreateHunt indicates an expected call of CreateHunt
+// CreateHunt indicates an expected call of CreateHunt.
 func (mr *MockAPIClientMockRecorder) CreateHunt(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateHunt", reflect.TypeOf((*MockAPIClient)(nil).CreateHunt), varargs...)
 }
 
-// CreateNotebookDownloadFile mocks base method
+// CreateNotebookDownloadFile mocks base method.
 func (m *MockAPIClient) CreateNotebookDownloadFile(arg0 context.Context, arg1 *proto0.NotebookExportRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -172,14 +173,14 @@ func (m *MockAPIClient) CreateNotebookDownloadFile(arg0 context.Context, arg1 *p
 	return ret0, ret1
 }
 
-// CreateNotebookDownloadFile indicates an expected call of CreateNotebookDownloadFile
+// CreateNotebookDownloadFile indicates an expected call of CreateNotebookDownloadFile.
 func (mr *MockAPIClientMockRecorder) CreateNotebookDownloadFile(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNotebookDownloadFile", reflect.TypeOf((*MockAPIClient)(nil).CreateNotebookDownloadFile), varargs...)
 }
 
-// ExportNotebook mocks base method
+// ExportNotebook mocks base method.
 func (m *MockAPIClient) ExportNotebook(arg0 context.Context, arg1 *proto0.NotebookExportRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -192,14 +193,14 @@ func (m *MockAPIClient) ExportNotebook(arg0 context.Context, arg1 *proto0.Notebo
 	return ret0, ret1
 }
 
-// ExportNotebook indicates an expected call of ExportNotebook
+// ExportNotebook indicates an expected call of ExportNotebook.
 func (mr *MockAPIClientMockRecorder) ExportNotebook(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportNotebook", reflect.TypeOf((*MockAPIClient)(nil).ExportNotebook), varargs...)
 }
 
-// GetArtifactFile mocks base method
+// GetArtifactFile mocks base method.
 func (m *MockAPIClient) GetArtifactFile(arg0 context.Context, arg1 *proto0.GetArtifactRequest, arg2 ...grpc.CallOption) (*proto0.GetArtifactResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -212,14 +213,14 @@ func (m *MockAPIClient) GetArtifactFile(arg0 context.Context, arg1 *proto0.GetAr
 	return ret0, ret1
 }
 
-// GetArtifactFile indicates an expected call of GetArtifactFile
+// GetArtifactFile indicates an expected call of GetArtifactFile.
 func (mr *MockAPIClientMockRecorder) GetArtifactFile(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetArtifactFile", reflect.TypeOf((*MockAPIClient)(nil).GetArtifactFile), varargs...)
 }
 
-// GetArtifacts mocks base method
+// GetArtifacts mocks base method.
 func (m *MockAPIClient) GetArtifacts(arg0 context.Context, arg1 *proto0.GetArtifactsRequest, arg2 ...grpc.CallOption) (*proto1.ArtifactDescriptors, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -232,14 +233,14 @@ func (m *MockAPIClient) GetArtifacts(arg0 context.Context, arg1 *proto0.GetArtif
 	return ret0, ret1
 }
 
-// GetArtifacts indicates an expected call of GetArtifacts
+// GetArtifacts indicates an expected call of GetArtifacts.
 func (mr *MockAPIClientMockRecorder) GetArtifacts(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetArtifacts", reflect.TypeOf((*MockAPIClient)(nil).GetArtifacts), varargs...)
 }
 
-// GetClient mocks base method
+// GetClient mocks base method.
 func (m *MockAPIClient) GetClient(arg0 context.Context, arg1 *proto0.GetClientRequest, arg2 ...grpc.CallOption) (*proto0.ApiClient, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -252,14 +253,14 @@ func (m *MockAPIClient) GetClient(arg0 context.Context, arg1 *proto0.GetClientRe
 	return ret0, ret1
 }
 
-// GetClient indicates an expected call of GetClient
+// GetClient indicates an expected call of GetClient.
 func (mr *MockAPIClientMockRecorder) GetClient(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClient", reflect.TypeOf((*MockAPIClient)(nil).GetClient), varargs...)
 }
 
-// GetClientFlows mocks base method
+// GetClientFlows mocks base method.
 func (m *MockAPIClient) GetClientFlows(arg0 context.Context, arg1 *proto0.ApiFlowRequest, arg2 ...grpc.CallOption) (*proto0.ApiFlowResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -272,14 +273,14 @@ func (m *MockAPIClient) GetClientFlows(arg0 context.Context, arg1 *proto0.ApiFlo
 	return ret0, ret1
 }
 
-// GetClientFlows indicates an expected call of GetClientFlows
+// GetClientFlows indicates an expected call of GetClientFlows.
 func (mr *MockAPIClientMockRecorder) GetClientFlows(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientFlows", reflect.TypeOf((*MockAPIClient)(nil).GetClientFlows), varargs...)
 }
 
-// GetClientMetadata mocks base method
+// GetClientMetadata mocks base method.
 func (m *MockAPIClient) GetClientMetadata(arg0 context.Context, arg1 *proto0.GetClientRequest, arg2 ...grpc.CallOption) (*proto0.ClientMetadata, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -292,14 +293,14 @@ func (m *MockAPIClient) GetClientMetadata(arg0 context.Context, arg1 *proto0.Get
 	return ret0, ret1
 }
 
-// GetClientMetadata indicates an expected call of GetClientMetadata
+// GetClientMetadata indicates an expected call of GetClientMetadata.
 func (mr *MockAPIClientMockRecorder) GetClientMetadata(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientMetadata", reflect.TypeOf((*MockAPIClient)(nil).GetClientMetadata), varargs...)
 }
 
-// GetClientMonitoringState mocks base method
+// GetClientMonitoringState mocks base method.
 func (m *MockAPIClient) GetClientMonitoringState(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto2.ClientEventTable, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -312,14 +313,14 @@ func (m *MockAPIClient) GetClientMonitoringState(arg0 context.Context, arg1 *emp
 	return ret0, ret1
 }
 
-// GetClientMonitoringState indicates an expected call of GetClientMonitoringState
+// GetClientMonitoringState indicates an expected call of GetClientMonitoringState.
 func (mr *MockAPIClientMockRecorder) GetClientMonitoringState(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientMonitoringState", reflect.TypeOf((*MockAPIClient)(nil).GetClientMonitoringState), varargs...)
 }
 
-// GetFlowDetails mocks base method
+// GetFlowDetails mocks base method.
 func (m *MockAPIClient) GetFlowDetails(arg0 context.Context, arg1 *proto0.ApiFlowRequest, arg2 ...grpc.CallOption) (*proto0.FlowDetails, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -332,14 +333,14 @@ func (m *MockAPIClient) GetFlowDetails(arg0 context.Context, arg1 *proto0.ApiFlo
 	return ret0, ret1
 }
 
-// GetFlowDetails indicates an expected call of GetFlowDetails
+// GetFlowDetails indicates an expected call of GetFlowDetails.
 func (mr *MockAPIClientMockRecorder) GetFlowDetails(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlowDetails", reflect.TypeOf((*MockAPIClient)(nil).GetFlowDetails), varargs...)
 }
 
-// GetFlowRequests mocks base method
+// GetFlowRequests mocks base method.
 func (m *MockAPIClient) GetFlowRequests(arg0 context.Context, arg1 *proto0.ApiFlowRequest, arg2 ...grpc.CallOption) (*proto0.ApiFlowRequestDetails, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -352,14 +353,14 @@ func (m *MockAPIClient) GetFlowRequests(arg0 context.Context, arg1 *proto0.ApiFl
 	return ret0, ret1
 }
 
-// GetFlowRequests indicates an expected call of GetFlowRequests
+// GetFlowRequests indicates an expected call of GetFlowRequests.
 func (mr *MockAPIClientMockRecorder) GetFlowRequests(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlowRequests", reflect.TypeOf((*MockAPIClient)(nil).GetFlowRequests), varargs...)
 }
 
-// GetHunt mocks base method
+// GetHunt mocks base method.
 func (m *MockAPIClient) GetHunt(arg0 context.Context, arg1 *proto0.GetHuntRequest, arg2 ...grpc.CallOption) (*proto0.Hunt, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -372,14 +373,14 @@ func (m *MockAPIClient) GetHunt(arg0 context.Context, arg1 *proto0.GetHuntReques
 	return ret0, ret1
 }
 
-// GetHunt indicates an expected call of GetHunt
+// GetHunt indicates an expected call of GetHunt.
 func (mr *MockAPIClientMockRecorder) GetHunt(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHunt", reflect.TypeOf((*MockAPIClient)(nil).GetHunt), varargs...)
 }
 
-// GetHuntFlows mocks base method
+// GetHuntFlows mocks base method.
 func (m *MockAPIClient) GetHuntFlows(arg0 context.Context, arg1 *proto0.GetTableRequest, arg2 ...grpc.CallOption) (*proto0.GetTableResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -392,14 +393,14 @@ func (m *MockAPIClient) GetHuntFlows(arg0 context.Context, arg1 *proto0.GetTable
 	return ret0, ret1
 }
 
-// GetHuntFlows indicates an expected call of GetHuntFlows
+// GetHuntFlows indicates an expected call of GetHuntFlows.
 func (mr *MockAPIClientMockRecorder) GetHuntFlows(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHuntFlows", reflect.TypeOf((*MockAPIClient)(nil).GetHuntFlows), varargs...)
 }
 
-// GetHuntResults mocks base method
+// GetHuntResults mocks base method.
 func (m *MockAPIClient) GetHuntResults(arg0 context.Context, arg1 *proto0.GetHuntResultsRequest, arg2 ...grpc.CallOption) (*proto0.GetTableResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -412,14 +413,14 @@ func (m *MockAPIClient) GetHuntResults(arg0 context.Context, arg1 *proto0.GetHun
 	return ret0, ret1
 }
 
-// GetHuntResults indicates an expected call of GetHuntResults
+// GetHuntResults indicates an expected call of GetHuntResults.
 func (mr *MockAPIClientMockRecorder) GetHuntResults(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHuntResults", reflect.TypeOf((*MockAPIClient)(nil).GetHuntResults), varargs...)
 }
 
-// GetKeywordCompletions mocks base method
+// GetKeywordCompletions mocks base method.
 func (m *MockAPIClient) GetKeywordCompletions(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.KeywordCompletions, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -432,14 +433,14 @@ func (m *MockAPIClient) GetKeywordCompletions(arg0 context.Context, arg1 *emptyp
 	return ret0, ret1
 }
 
-// GetKeywordCompletions indicates an expected call of GetKeywordCompletions
+// GetKeywordCompletions indicates an expected call of GetKeywordCompletions.
 func (mr *MockAPIClientMockRecorder) GetKeywordCompletions(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKeywordCompletions", reflect.TypeOf((*MockAPIClient)(nil).GetKeywordCompletions), varargs...)
 }
 
-// GetNotebookCell mocks base method
+// GetNotebookCell mocks base method.
 func (m *MockAPIClient) GetNotebookCell(arg0 context.Context, arg1 *proto0.NotebookCellRequest, arg2 ...grpc.CallOption) (*proto0.NotebookCell, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -452,14 +453,14 @@ func (m *MockAPIClient) GetNotebookCell(arg0 context.Context, arg1 *proto0.Noteb
 	return ret0, ret1
 }
 
-// GetNotebookCell indicates an expected call of GetNotebookCell
+// GetNotebookCell indicates an expected call of GetNotebookCell.
 func (mr *MockAPIClientMockRecorder) GetNotebookCell(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotebookCell", reflect.TypeOf((*MockAPIClient)(nil).GetNotebookCell), varargs...)
 }
 
-// GetNotebooks mocks base method
+// GetNotebooks mocks base method.
 func (m *MockAPIClient) GetNotebooks(arg0 context.Context, arg1 *proto0.NotebookCellRequest, arg2 ...grpc.CallOption) (*proto0.Notebooks, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -472,14 +473,14 @@ func (m *MockAPIClient) GetNotebooks(arg0 context.Context, arg1 *proto0.Notebook
 	return ret0, ret1
 }
 
-// GetNotebooks indicates an expected call of GetNotebooks
+// GetNotebooks indicates an expected call of GetNotebooks.
 func (mr *MockAPIClientMockRecorder) GetNotebooks(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotebooks", reflect.TypeOf((*MockAPIClient)(nil).GetNotebooks), varargs...)
 }
 
-// GetReport mocks base method
+// GetReport mocks base method.
 func (m *MockAPIClient) GetReport(arg0 context.Context, arg1 *proto0.GetReportRequest, arg2 ...grpc.CallOption) (*proto0.GetReportResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -492,14 +493,14 @@ func (m *MockAPIClient) GetReport(arg0 context.Context, arg1 *proto0.GetReportRe
 	return ret0, ret1
 }
 
-// GetReport indicates an expected call of GetReport
+// GetReport indicates an expected call of GetReport.
 func (mr *MockAPIClientMockRecorder) GetReport(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReport", reflect.TypeOf((*MockAPIClient)(nil).GetReport), varargs...)
 }
 
-// GetServerMonitoringState mocks base method
+// GetServerMonitoringState mocks base method.
 func (m *MockAPIClient) GetServerMonitoringState(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorArgs, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -512,14 +513,14 @@ func (m *MockAPIClient) GetServerMonitoringState(arg0 context.Context, arg1 *emp
 	return ret0, ret1
 }
 
-// GetServerMonitoringState indicates an expected call of GetServerMonitoringState
+// GetServerMonitoringState indicates an expected call of GetServerMonitoringState.
 func (mr *MockAPIClientMockRecorder) GetServerMonitoringState(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetServerMonitoringState", reflect.TypeOf((*MockAPIClient)(nil).GetServerMonitoringState), varargs...)
 }
 
-// GetTable mocks base method
+// GetTable mocks base method.
 func (m *MockAPIClient) GetTable(arg0 context.Context, arg1 *proto0.GetTableRequest, arg2 ...grpc.CallOption) (*proto0.GetTableResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -532,14 +533,14 @@ func (m *MockAPIClient) GetTable(arg0 context.Context, arg1 *proto0.GetTableRequ
 	return ret0, ret1
 }
 
-// GetTable indicates an expected call of GetTable
+// GetTable indicates an expected call of GetTable.
 func (mr *MockAPIClientMockRecorder) GetTable(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTable", reflect.TypeOf((*MockAPIClient)(nil).GetTable), varargs...)
 }
 
-// GetToolInfo mocks base method
+// GetToolInfo mocks base method.
 func (m *MockAPIClient) GetToolInfo(arg0 context.Context, arg1 *proto1.Tool, arg2 ...grpc.CallOption) (*proto1.Tool, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -552,14 +553,14 @@ func (m *MockAPIClient) GetToolInfo(arg0 context.Context, arg1 *proto1.Tool, arg
 	return ret0, ret1
 }
 
-// GetToolInfo indicates an expected call of GetToolInfo
+// GetToolInfo indicates an expected call of GetToolInfo.
 func (mr *MockAPIClientMockRecorder) GetToolInfo(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetToolInfo", reflect.TypeOf((*MockAPIClient)(nil).GetToolInfo), varargs...)
 }
 
-// GetUserNotificationCount mocks base method
+// GetUserNotificationCount mocks base method.
 func (m *MockAPIClient) GetUserNotificationCount(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.UserNotificationCount, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -572,14 +573,14 @@ func (m *MockAPIClient) GetUserNotificationCount(arg0 context.Context, arg1 *emp
 	return ret0, ret1
 }
 
-// GetUserNotificationCount indicates an expected call of GetUserNotificationCount
+// GetUserNotificationCount indicates an expected call of GetUserNotificationCount.
 func (mr *MockAPIClientMockRecorder) GetUserNotificationCount(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserNotificationCount", reflect.TypeOf((*MockAPIClient)(nil).GetUserNotificationCount), varargs...)
 }
 
-// GetUserNotifications mocks base method
+// GetUserNotifications mocks base method.
 func (m *MockAPIClient) GetUserNotifications(arg0 context.Context, arg1 *proto0.GetUserNotificationsRequest, arg2 ...grpc.CallOption) (*proto0.GetUserNotificationsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -592,14 +593,14 @@ func (m *MockAPIClient) GetUserNotifications(arg0 context.Context, arg1 *proto0.
 	return ret0, ret1
 }
 
-// GetUserNotifications indicates an expected call of GetUserNotifications
+// GetUserNotifications indicates an expected call of GetUserNotifications.
 func (mr *MockAPIClientMockRecorder) GetUserNotifications(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserNotifications", reflect.TypeOf((*MockAPIClient)(nil).GetUserNotifications), varargs...)
 }
 
-// GetUserUITraits mocks base method
+// GetUserUITraits mocks base method.
 func (m *MockAPIClient) GetUserUITraits(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.ApiGrrUser, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -612,14 +613,14 @@ func (m *MockAPIClient) GetUserUITraits(arg0 context.Context, arg1 *emptypb.Empt
 	return ret0, ret1
 }
 
-// GetUserUITraits indicates an expected call of GetUserUITraits
+// GetUserUITraits indicates an expected call of GetUserUITraits.
 func (mr *MockAPIClientMockRecorder) GetUserUITraits(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserUITraits", reflect.TypeOf((*MockAPIClient)(nil).GetUserUITraits), varargs...)
 }
 
-// GetUsers mocks base method
+// GetUsers mocks base method.
 func (m *MockAPIClient) GetUsers(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.Users, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -632,14 +633,14 @@ func (m *MockAPIClient) GetUsers(arg0 context.Context, arg1 *emptypb.Empty, arg2
 	return ret0, ret1
 }
 
-// GetUsers indicates an expected call of GetUsers
+// GetUsers indicates an expected call of GetUsers.
 func (mr *MockAPIClientMockRecorder) GetUsers(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockAPIClient)(nil).GetUsers), varargs...)
 }
 
-// LabelClients mocks base method
+// LabelClients mocks base method.
 func (m *MockAPIClient) LabelClients(arg0 context.Context, arg1 *proto0.LabelClientsRequest, arg2 ...grpc.CallOption) (*proto0.APIResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -652,14 +653,14 @@ func (m *MockAPIClient) LabelClients(arg0 context.Context, arg1 *proto0.LabelCli
 	return ret0, ret1
 }
 
-// LabelClients indicates an expected call of LabelClients
+// LabelClients indicates an expected call of LabelClients.
 func (mr *MockAPIClientMockRecorder) LabelClients(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LabelClients", reflect.TypeOf((*MockAPIClient)(nil).LabelClients), varargs...)
 }
 
-// ListAvailableEventResults mocks base method
+// ListAvailableEventResults mocks base method.
 func (m *MockAPIClient) ListAvailableEventResults(arg0 context.Context, arg1 *proto0.ListAvailableEventResultsRequest, arg2 ...grpc.CallOption) (*proto0.ListAvailableEventResultsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -672,14 +673,14 @@ func (m *MockAPIClient) ListAvailableEventResults(arg0 context.Context, arg1 *pr
 	return ret0, ret1
 }
 
-// ListAvailableEventResults indicates an expected call of ListAvailableEventResults
+// ListAvailableEventResults indicates an expected call of ListAvailableEventResults.
 func (mr *MockAPIClientMockRecorder) ListAvailableEventResults(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAvailableEventResults", reflect.TypeOf((*MockAPIClient)(nil).ListAvailableEventResults), varargs...)
 }
 
-// ListClients mocks base method
+// ListClients mocks base method.
 func (m *MockAPIClient) ListClients(arg0 context.Context, arg1 *proto0.SearchClientsRequest, arg2 ...grpc.CallOption) (*proto0.SearchClientsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -692,14 +693,14 @@ func (m *MockAPIClient) ListClients(arg0 context.Context, arg1 *proto0.SearchCli
 	return ret0, ret1
 }
 
-// ListClients indicates an expected call of ListClients
+// ListClients indicates an expected call of ListClients.
 func (mr *MockAPIClientMockRecorder) ListClients(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListClients", reflect.TypeOf((*MockAPIClient)(nil).ListClients), varargs...)
 }
 
-// ListHunts mocks base method
+// ListHunts mocks base method.
 func (m *MockAPIClient) ListHunts(arg0 context.Context, arg1 *proto0.ListHuntsRequest, arg2 ...grpc.CallOption) (*proto0.ListHuntsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -712,14 +713,14 @@ func (m *MockAPIClient) ListHunts(arg0 context.Context, arg1 *proto0.ListHuntsRe
 	return ret0, ret1
 }
 
-// ListHunts indicates an expected call of ListHunts
+// ListHunts indicates an expected call of ListHunts.
 func (mr *MockAPIClientMockRecorder) ListHunts(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListHunts", reflect.TypeOf((*MockAPIClient)(nil).ListHunts), varargs...)
 }
 
-// LoadArtifactPack mocks base method
+// LoadArtifactPack mocks base method.
 func (m *MockAPIClient) LoadArtifactPack(arg0 context.Context, arg1 *proto0.VFSFileBuffer, arg2 ...grpc.CallOption) (*proto0.LoadArtifactPackResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -732,14 +733,14 @@ func (m *MockAPIClient) LoadArtifactPack(arg0 context.Context, arg1 *proto0.VFSF
 	return ret0, ret1
 }
 
-// LoadArtifactPack indicates an expected call of LoadArtifactPack
+// LoadArtifactPack indicates an expected call of LoadArtifactPack.
 func (mr *MockAPIClientMockRecorder) LoadArtifactPack(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadArtifactPack", reflect.TypeOf((*MockAPIClient)(nil).LoadArtifactPack), varargs...)
 }
 
-// ModifyHunt mocks base method
+// ModifyHunt mocks base method.
 func (m *MockAPIClient) ModifyHunt(arg0 context.Context, arg1 *proto0.Hunt, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -752,14 +753,14 @@ func (m *MockAPIClient) ModifyHunt(arg0 context.Context, arg1 *proto0.Hunt, arg2
 	return ret0, ret1
 }
 
-// ModifyHunt indicates an expected call of ModifyHunt
+// ModifyHunt indicates an expected call of ModifyHunt.
 func (mr *MockAPIClientMockRecorder) ModifyHunt(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyHunt", reflect.TypeOf((*MockAPIClient)(nil).ModifyHunt), varargs...)
 }
 
-// NewNotebook mocks base method
+// NewNotebook mocks base method.
 func (m *MockAPIClient) NewNotebook(arg0 context.Context, arg1 *proto0.NotebookMetadata, arg2 ...grpc.CallOption) (*proto0.NotebookMetadata, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -772,14 +773,14 @@ func (m *MockAPIClient) NewNotebook(arg0 context.Context, arg1 *proto0.NotebookM
 	return ret0, ret1
 }
 
-// NewNotebook indicates an expected call of NewNotebook
+// NewNotebook indicates an expected call of NewNotebook.
 func (mr *MockAPIClientMockRecorder) NewNotebook(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewNotebook", reflect.TypeOf((*MockAPIClient)(nil).NewNotebook), varargs...)
 }
 
-// NewNotebookCell mocks base method
+// NewNotebookCell mocks base method.
 func (m *MockAPIClient) NewNotebookCell(arg0 context.Context, arg1 *proto0.NotebookCellRequest, arg2 ...grpc.CallOption) (*proto0.NotebookMetadata, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -792,14 +793,14 @@ func (m *MockAPIClient) NewNotebookCell(arg0 context.Context, arg1 *proto0.Noteb
 	return ret0, ret1
 }
 
-// NewNotebookCell indicates an expected call of NewNotebookCell
+// NewNotebookCell indicates an expected call of NewNotebookCell.
 func (mr *MockAPIClientMockRecorder) NewNotebookCell(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewNotebookCell", reflect.TypeOf((*MockAPIClient)(nil).NewNotebookCell), varargs...)
 }
 
-// NotifyClients mocks base method
+// NotifyClients mocks base method.
 func (m *MockAPIClient) NotifyClients(arg0 context.Context, arg1 *proto0.NotificationRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -812,14 +813,14 @@ func (m *MockAPIClient) NotifyClients(arg0 context.Context, arg1 *proto0.Notific
 	return ret0, ret1
 }
 
-// NotifyClients indicates an expected call of NotifyClients
+// NotifyClients indicates an expected call of NotifyClients.
 func (mr *MockAPIClientMockRecorder) NotifyClients(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifyClients", reflect.TypeOf((*MockAPIClient)(nil).NotifyClients), varargs...)
 }
 
-// Query mocks base method
+// Query mocks base method.
 func (m *MockAPIClient) Query(arg0 context.Context, arg1 *proto.VQLCollectorArgs, arg2 ...grpc.CallOption) (proto0.API_QueryClient, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -832,14 +833,14 @@ func (m *MockAPIClient) Query(arg0 context.Context, arg1 *proto.VQLCollectorArgs
 	return ret0, ret1
 }
 
-// Query indicates an expected call of Query
+// Query indicates an expected call of Query.
 func (mr *MockAPIClientMockRecorder) Query(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Query", reflect.TypeOf((*MockAPIClient)(nil).Query), varargs...)
 }
 
-// SetArtifactFile mocks base method
+// SetArtifactFile mocks base method.
 func (m *MockAPIClient) SetArtifactFile(arg0 context.Context, arg1 *proto0.SetArtifactRequest, arg2 ...grpc.CallOption) (*proto0.APIResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -852,14 +853,14 @@ func (m *MockAPIClient) SetArtifactFile(arg0 context.Context, arg1 *proto0.SetAr
 	return ret0, ret1
 }
 
-// SetArtifactFile indicates an expected call of SetArtifactFile
+// SetArtifactFile indicates an expected call of SetArtifactFile.
 func (mr *MockAPIClientMockRecorder) SetArtifactFile(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetArtifactFile", reflect.TypeOf((*MockAPIClient)(nil).SetArtifactFile), varargs...)
 }
 
-// SetClientMetadata mocks base method
+// SetClientMetadata mocks base method.
 func (m *MockAPIClient) SetClientMetadata(arg0 context.Context, arg1 *proto0.ClientMetadata, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -872,14 +873,14 @@ func (m *MockAPIClient) SetClientMetadata(arg0 context.Context, arg1 *proto0.Cli
 	return ret0, ret1
 }
 
-// SetClientMetadata indicates an expected call of SetClientMetadata
+// SetClientMetadata indicates an expected call of SetClientMetadata.
 func (mr *MockAPIClientMockRecorder) SetClientMetadata(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetClientMetadata", reflect.TypeOf((*MockAPIClient)(nil).SetClientMetadata), varargs...)
 }
 
-// SetClientMonitoringState mocks base method
+// SetClientMonitoringState mocks base method.
 func (m *MockAPIClient) SetClientMonitoringState(arg0 context.Context, arg1 *proto2.ClientEventTable, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -892,14 +893,14 @@ func (m *MockAPIClient) SetClientMonitoringState(arg0 context.Context, arg1 *pro
 	return ret0, ret1
 }
 
-// SetClientMonitoringState indicates an expected call of SetClientMonitoringState
+// SetClientMonitoringState indicates an expected call of SetClientMonitoringState.
 func (mr *MockAPIClientMockRecorder) SetClientMonitoringState(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetClientMonitoringState", reflect.TypeOf((*MockAPIClient)(nil).SetClientMonitoringState), varargs...)
 }
 
-// SetGUIOptions mocks base method
+// SetGUIOptions mocks base method.
 func (m *MockAPIClient) SetGUIOptions(arg0 context.Context, arg1 *proto0.SetGUIOptionsRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -912,14 +913,14 @@ func (m *MockAPIClient) SetGUIOptions(arg0 context.Context, arg1 *proto0.SetGUIO
 	return ret0, ret1
 }
 
-// SetGUIOptions indicates an expected call of SetGUIOptions
+// SetGUIOptions indicates an expected call of SetGUIOptions.
 func (mr *MockAPIClientMockRecorder) SetGUIOptions(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGUIOptions", reflect.TypeOf((*MockAPIClient)(nil).SetGUIOptions), varargs...)
 }
 
-// SetServerMonitoringState mocks base method
+// SetServerMonitoringState mocks base method.
 func (m *MockAPIClient) SetServerMonitoringState(arg0 context.Context, arg1 *proto2.ArtifactCollectorArgs, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorArgs, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -932,14 +933,14 @@ func (m *MockAPIClient) SetServerMonitoringState(arg0 context.Context, arg1 *pro
 	return ret0, ret1
 }
 
-// SetServerMonitoringState indicates an expected call of SetServerMonitoringState
+// SetServerMonitoringState indicates an expected call of SetServerMonitoringState.
 func (mr *MockAPIClientMockRecorder) SetServerMonitoringState(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetServerMonitoringState", reflect.TypeOf((*MockAPIClient)(nil).SetServerMonitoringState), varargs...)
 }
 
-// SetToolInfo mocks base method
+// SetToolInfo mocks base method.
 func (m *MockAPIClient) SetToolInfo(arg0 context.Context, arg1 *proto1.Tool, arg2 ...grpc.CallOption) (*proto1.Tool, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -952,14 +953,14 @@ func (m *MockAPIClient) SetToolInfo(arg0 context.Context, arg1 *proto1.Tool, arg
 	return ret0, ret1
 }
 
-// SetToolInfo indicates an expected call of SetToolInfo
+// SetToolInfo indicates an expected call of SetToolInfo.
 func (mr *MockAPIClientMockRecorder) SetToolInfo(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetToolInfo", reflect.TypeOf((*MockAPIClient)(nil).SetToolInfo), varargs...)
 }
 
-// UpdateNotebook mocks base method
+// UpdateNotebook mocks base method.
 func (m *MockAPIClient) UpdateNotebook(arg0 context.Context, arg1 *proto0.NotebookMetadata, arg2 ...grpc.CallOption) (*proto0.NotebookMetadata, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -972,14 +973,14 @@ func (m *MockAPIClient) UpdateNotebook(arg0 context.Context, arg1 *proto0.Notebo
 	return ret0, ret1
 }
 
-// UpdateNotebook indicates an expected call of UpdateNotebook
+// UpdateNotebook indicates an expected call of UpdateNotebook.
 func (mr *MockAPIClientMockRecorder) UpdateNotebook(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNotebook", reflect.TypeOf((*MockAPIClient)(nil).UpdateNotebook), varargs...)
 }
 
-// UpdateNotebookCell mocks base method
+// UpdateNotebookCell mocks base method.
 func (m *MockAPIClient) UpdateNotebookCell(arg0 context.Context, arg1 *proto0.NotebookCellRequest, arg2 ...grpc.CallOption) (*proto0.NotebookCell, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -992,14 +993,14 @@ func (m *MockAPIClient) UpdateNotebookCell(arg0 context.Context, arg1 *proto0.No
 	return ret0, ret1
 }
 
-// UpdateNotebookCell indicates an expected call of UpdateNotebookCell
+// UpdateNotebookCell indicates an expected call of UpdateNotebookCell.
 func (mr *MockAPIClientMockRecorder) UpdateNotebookCell(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNotebookCell", reflect.TypeOf((*MockAPIClient)(nil).UpdateNotebookCell), varargs...)
 }
 
-// UploadNotebookAttachment mocks base method
+// UploadNotebookAttachment mocks base method.
 func (m *MockAPIClient) UploadNotebookAttachment(arg0 context.Context, arg1 *proto0.NotebookFileUploadRequest, arg2 ...grpc.CallOption) (*proto0.NotebookFileUploadResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -1012,14 +1013,14 @@ func (m *MockAPIClient) UploadNotebookAttachment(arg0 context.Context, arg1 *pro
 	return ret0, ret1
 }
 
-// UploadNotebookAttachment indicates an expected call of UploadNotebookAttachment
+// UploadNotebookAttachment indicates an expected call of UploadNotebookAttachment.
 func (mr *MockAPIClientMockRecorder) UploadNotebookAttachment(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadNotebookAttachment", reflect.TypeOf((*MockAPIClient)(nil).UploadNotebookAttachment), varargs...)
 }
 
-// VFSGetBuffer mocks base method
+// VFSGetBuffer mocks base method.
 func (m *MockAPIClient) VFSGetBuffer(arg0 context.Context, arg1 *proto0.VFSFileBuffer, arg2 ...grpc.CallOption) (*proto0.VFSFileBuffer, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -1032,14 +1033,14 @@ func (m *MockAPIClient) VFSGetBuffer(arg0 context.Context, arg1 *proto0.VFSFileB
 	return ret0, ret1
 }
 
-// VFSGetBuffer indicates an expected call of VFSGetBuffer
+// VFSGetBuffer indicates an expected call of VFSGetBuffer.
 func (mr *MockAPIClientMockRecorder) VFSGetBuffer(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VFSGetBuffer", reflect.TypeOf((*MockAPIClient)(nil).VFSGetBuffer), varargs...)
 }
 
-// VFSListDirectory mocks base method
+// VFSListDirectory mocks base method.
 func (m *MockAPIClient) VFSListDirectory(arg0 context.Context, arg1 *proto2.VFSListRequest, arg2 ...grpc.CallOption) (*proto2.VFSListResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -1052,14 +1053,14 @@ func (m *MockAPIClient) VFSListDirectory(arg0 context.Context, arg1 *proto2.VFSL
 	return ret0, ret1
 }
 
-// VFSListDirectory indicates an expected call of VFSListDirectory
+// VFSListDirectory indicates an expected call of VFSListDirectory.
 func (mr *MockAPIClientMockRecorder) VFSListDirectory(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VFSListDirectory", reflect.TypeOf((*MockAPIClient)(nil).VFSListDirectory), varargs...)
 }
 
-// VFSRefreshDirectory mocks base method
+// VFSRefreshDirectory mocks base method.
 func (m *MockAPIClient) VFSRefreshDirectory(arg0 context.Context, arg1 *proto0.VFSRefreshDirectoryRequest, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -1072,14 +1073,14 @@ func (m *MockAPIClient) VFSRefreshDirectory(arg0 context.Context, arg1 *proto0.V
 	return ret0, ret1
 }
 
-// VFSRefreshDirectory indicates an expected call of VFSRefreshDirectory
+// VFSRefreshDirectory indicates an expected call of VFSRefreshDirectory.
 func (mr *MockAPIClientMockRecorder) VFSRefreshDirectory(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VFSRefreshDirectory", reflect.TypeOf((*MockAPIClient)(nil).VFSRefreshDirectory), varargs...)
 }
 
-// VFSStatDirectory mocks base method
+// VFSStatDirectory mocks base method.
 func (m *MockAPIClient) VFSStatDirectory(arg0 context.Context, arg1 *proto2.VFSListRequest, arg2 ...grpc.CallOption) (*proto2.VFSListResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -1092,14 +1093,14 @@ func (m *MockAPIClient) VFSStatDirectory(arg0 context.Context, arg1 *proto2.VFSL
 	return ret0, ret1
 }
 
-// VFSStatDirectory indicates an expected call of VFSStatDirectory
+// VFSStatDirectory indicates an expected call of VFSStatDirectory.
 func (mr *MockAPIClientMockRecorder) VFSStatDirectory(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VFSStatDirectory", reflect.TypeOf((*MockAPIClient)(nil).VFSStatDirectory), varargs...)
 }
 
-// VFSStatDownload mocks base method
+// VFSStatDownload mocks base method.
 func (m *MockAPIClient) VFSStatDownload(arg0 context.Context, arg1 *proto2.VFSStatDownloadRequest, arg2 ...grpc.CallOption) (*proto2.VFSDownloadInfo, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -1112,14 +1113,14 @@ func (m *MockAPIClient) VFSStatDownload(arg0 context.Context, arg1 *proto2.VFSSt
 	return ret0, ret1
 }
 
-// VFSStatDownload indicates an expected call of VFSStatDownload
+// VFSStatDownload indicates an expected call of VFSStatDownload.
 func (mr *MockAPIClientMockRecorder) VFSStatDownload(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VFSStatDownload", reflect.TypeOf((*MockAPIClient)(nil).VFSStatDownload), varargs...)
 }
 
-// WriteEvent mocks base method
+// WriteEvent mocks base method.
 func (m *MockAPIClient) WriteEvent(arg0 context.Context, arg1 *proto.VQLResponse, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -1132,7 +1133,7 @@ func (m *MockAPIClient) WriteEvent(arg0 context.Context, arg1 *proto.VQLResponse
 	return ret0, ret1
 }
 
-// WriteEvent indicates an expected call of WriteEvent
+// WriteEvent indicates an expected call of WriteEvent.
 func (mr *MockAPIClientMockRecorder) WriteEvent(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
