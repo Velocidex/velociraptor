@@ -17,7 +17,8 @@ Queries:
           mock(plugin='info', results=[dict(OS='windows')]),
           mock(plugin='http_client', results=[
              dict(Url='http://remote',
-                  Content=RemoteYara, Response=200)]),
+                  Content=IsPE, Response=200)]),
+
           -- First call to Windows.NTFS.MFT reveal target dll info
           -- srcDir needs to be used to align fields
           mock(artifact=Artifact.Windows.NTFS.MFT, results=[
@@ -45,8 +46,12 @@ Queries:
   # Test NTFS yara outputs from shorthand and standard yara
   - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,
            Size, Rule, HitContext, HitOffset
-    FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll', ShortHandYara='wide ascii:MZ')
+    FROM Artifact.Windows.Detection.Yara.NTFS(
+       DriveLetter=srcDir,
+       PathRegex='wkscli.dll', ShortHandYara='wide ascii:MZ')
 
   - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,
            Size, Rule, HitContext, HitOffset
-    FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll', YaraRule=IsPE)
+    FROM Artifact.Windows.Detection.Yara.NTFS(
+         DriveLetter=srcDir,
+         PathRegex='wkscli.dll', YaraRule=IsPE)

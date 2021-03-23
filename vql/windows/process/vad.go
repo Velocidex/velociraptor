@@ -111,11 +111,12 @@ func (self VADPlugin) Call(
 			return
 		}
 
-		vads, err := GetVads(uint32(arg.Pid))
+		vads, handle, err := GetVads(uint32(arg.Pid))
 		if err != nil {
 			scope.Log("vad: %s", err.Error())
 			return
 		}
+		defer windows.CloseHandle(handle)
 
 		for _, vad := range vads {
 			select {
@@ -137,14 +138,14 @@ func (self VADPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 	}
 }
 
-func GetVads(pid uint32) ([]*VMemeInfo, error) {
+func GetVads(pid uint32) ([]*VMemeInfo, syscall.Handle, error) {
 	result := []*VMemeInfo{}
 
 	proc_handle, err := windows.OpenProcess(
 		windows.PROCESS_QUERY_INFORMATION|windows.PROCESS_VM_READ,
 		false, pid)
 	if err != nil {
-		return nil, errors.New(
+		return nil, 0, errors.New(
 			fmt.Sprintf("OpenProcess for pid %v: %v ", pid, err))
 	}
 
@@ -160,7 +161,8 @@ func GetVads(pid uint32) ([]*VMemeInfo, error) {
 			unsafe.Sizeof(info))
 
 		if err != nil {
-			return result, err
+			windows.CloseHandle(proc_handle)
+			return result, 0, err
 		}
 
 		filename := ""
@@ -188,11 +190,11 @@ func GetVads(pid uint32) ([]*VMemeInfo, error) {
 		i += info.RegionSize
 	}
 
-	return result, nil
+	return result, proc_handle, nil
 }
 
 func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
-	handle, err := windows.CreateToolhelp32Snapshot(windows.TH32CS_SNAPMODULE | windows.TH32CS_SNAPMODULE32, pid)
+	handle, err := windows.CreateToolhelp32Snapshot(windows.TH32CS_SNAPMODULE|windows.TH32CS_SNAPMODULE32, pid)
 	if err != nil {
 		return nil, errors.New(
 			fmt.Sprintf("CreateToolhelp32Snapshot for pid %v: %v ", pid, err))

@@ -26,14 +26,11 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
-	"www.velocidex.com/golang/vfilter/protocols"
 )
 
 type ParseJsonFunctionArg struct {
@@ -311,7 +308,7 @@ func (self _ProtobufAssociativeProtocol) Applicable(
 	_, b_ok := b.(string)
 	if b_ok {
 		switch a.(type) {
-		case proto.Message, *proto.Message:
+		case protoreflect.ProtoMessage:
 			return true
 		}
 	}
@@ -337,33 +334,26 @@ func (self _ProtobufAssociativeProtocol) Associative(
 	a_value := reflect.Indirect(reflect.ValueOf(a))
 	a_type := a_value.Type()
 
-	properties := proto.GetProperties(a_type)
-	if properties == nil {
-		return nil, false
-	}
-
-	for _, item := range properties.Prop {
-		if field == item.OrigName || field == item.Name {
-			result, pres := protocols.DefaultAssociative{}.Associative(
-				scope, a, item.Name)
-
-			// If the result is an any, we decode that
-			// dynamically. This is more useful than a
-			// binary blob.
-			any_result, ok := result.(*any.Any)
-			if ok {
-				var tmp_args ptypes.DynamicAny
-				err := ptypes.UnmarshalAny(any_result, &tmp_args)
-				if err == nil {
-					return tmp_args.Message, pres
-				}
+	// Protobuf reflection API V2 is far too complicated - this is
+	// a hack but works ok for now.
+	for i := 0; i < a_type.NumField(); i++ {
+		struct_field := a_type.Field(i)
+		if field == struct_field.Name {
+			field_value := a_value.Field(i)
+			if field_value.CanInterface() {
+				return field_value.Interface(), true
 			}
+		}
 
-			return result, pres
+		json_tag := strings.Split(struct_field.Tag.Get("json"), ",")
+		if field == json_tag[0] {
+			field_value := a_value.Field(i)
+			if field_value.CanInterface() {
+				return a_value.Field(i).Interface(), true
+			}
 		}
 	}
-
-	return nil, false
+	return vfilter.Null{}, false
 }
 
 // Emit the json serializable field name only. This makes this field
@@ -376,18 +366,13 @@ func (self _ProtobufAssociativeProtocol) GetMembers(
 	a_value := reflect.Indirect(reflect.ValueOf(a))
 	a_type := a_value.Type()
 
-	properties := proto.GetProperties(a_type)
-	if properties == nil {
-		return result
-	}
-
-	for _, item := range properties.Prop {
-		// Only real exported fields should be collected.
-		if len(item.OrigName) > 0 && !strings.HasPrefix(item.OrigName, "XXX") {
-			result = append(result, item.OrigName)
+	for i := 0; i < a_type.NumField(); i++ {
+		struct_field := a_type.Field(i)
+		json_tag := strings.Split(struct_field.Tag.Get("json"), ",")[0]
+		if json_tag != "" {
+			result = append(result, json_tag)
 		}
 	}
-
 	return result
 }
 

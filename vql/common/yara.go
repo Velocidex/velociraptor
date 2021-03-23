@@ -35,6 +35,8 @@ import (
 	yara "github.com/Velocidex/go-yara"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -63,7 +65,7 @@ type YaraScanPluginArgs struct {
 	Start        uint64   `vfilter:"optional,field=start,doc=The start offset to scan"`
 	End          uint64   `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
 	NumberOfHits int64    `vfilter:"optional,field=number,doc=Stop after this many hits (1)."`
-	Blocksize    int64    `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (1mb)."`
+	Blocksize    uint64   `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (1mb)."`
 	Key          string   `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
 }
 
@@ -85,10 +87,6 @@ func (self YaraScanPlugin) Call(
 			return
 		}
 
-		if arg.End == 0 {
-			arg.End = 1024 * 1024 * 100
-		}
-
 		if arg.NumberOfHits == 0 {
 			arg.NumberOfHits = 1
 		}
@@ -108,27 +106,45 @@ func (self YaraScanPlugin) Call(
 			return
 		}
 
+		yara_flag := yara.ScanFlags(0)
+		if arg.NumberOfHits == 1 {
+			yara_flag = yara.ScanFlagsFastMode
+		}
+
+		matcher := &scanReporter{
+			output_chan:    output_chan,
+			blocksize:      arg.Blocksize,
+			number_of_hits: arg.NumberOfHits,
+			context:        arg.Context,
+			ctx:            ctx,
+
+			rules:     rules,
+			scope:     scope,
+			yara_flag: yara_flag,
+		}
+
 		for _, filename := range arg.Files {
+
+			matcher.filename = filename
+
 			// If accessor is not specified we call yara's
 			// ScanFile API which mmaps the entire file
 			// into memory avoiding the need for
 			// buffering.
-			if arg.Accessor == "" {
-				err := scanFile(ctx, filename, arg.Context,
-					arg.NumberOfHits,
-					rules, output_chan, scope)
-
-				// Fall back to accessor scanning if
-				// we can not open the file directly.
+			if arg.Accessor == "" || arg.Accessor == "file" {
+				err := matcher.scanFile(ctx, output_chan)
 				if err == nil {
 					continue
+				} else {
+					scope.Log("Directly scanning file %v failed, will use accessor",
+						filename)
 				}
 			}
 
-			scanFileByAccessor(ctx, filename, arg.Accessor,
-				arg.Blocksize, arg.Start, arg.End,
-				arg.Context, arg.NumberOfHits,
-				rules, output_chan, scope)
+			// If scanning with the file api failed above
+			// we fall back to accessor scanning.
+			matcher.scanFileByAccessor(ctx, arg.Accessor,
+				arg.Blocksize, arg.Start, arg.End, output_chan)
 		}
 	}()
 
@@ -174,120 +190,130 @@ func getYaraRules(key, rules string,
 	}
 }
 
-func scanFileByAccessor(
+func (self *scanReporter) scanFileByAccessor(
 	ctx context.Context,
-	filename, accessor_name string,
-	blocksize int64,
+	accessor_name string,
+	blocksize uint64,
 	start, end uint64,
-	context int,
-	total_number_of_hits int64,
-	rules *yara.Rules,
-	output_chan chan vfilter.Row,
-	scope vfilter.Scope) {
+	output_chan chan vfilter.Row) {
 
-	accessor, err := glob.GetAccessor(accessor_name, scope)
+	accessor, err := glob.GetAccessor(accessor_name, self.scope)
 	if err != nil {
-		scope.Log("yara: %v", err)
+		self.scope.Log("yara: %v", err)
 		return
 	}
 
-	yara_flag := yara.ScanFlags(0)
-	if total_number_of_hits == 1 {
-		yara_flag = yara.ScanFlagsFastMode
-	}
-
-	// Total hits per file.
-	f, err := accessor.Open(filename)
+	// Open the file with the accessor
+	f, err := accessor.Open(self.filename)
 	if err != nil {
-		scope.Log("Failed to open %v", filename)
+		self.scope.Log("Failed to open %v", self.filename)
 		return
 	}
 	defer f.Close()
 
+	self.file_info, _ = f.Stat()
+	self.reader = utils.ReaderAtter{f}
+
+	// Support sparse file scanning
+	range_reader, ok := f.(uploads.RangeReader)
+	if !ok {
+		// File does not support ranges, just cap the end at
+		// the end of the file.
+		if end == 0 && self.file_info != nil {
+			end = uint64(self.file_info.Size())
+		}
+
+		self.scanRange(start, end, f)
+		return
+	}
+
+	for _, rng := range range_reader.Ranges() {
+		if !rng.IsSparse {
+			scan_start := uint64(rng.Offset)
+			if scan_start < start {
+				scan_start = start
+			}
+
+			scan_end := uint64(rng.Offset + rng.Length)
+			if end > 0 && scan_end > end {
+				scan_end = end
+			}
+
+			if scan_start > scan_end {
+				continue
+			}
+
+			self.scanRange(scan_start, scan_end, f)
+		}
+	}
+}
+
+func (self *scanReporter) scanRange(start, end uint64, f glob.ReadSeekCloser) {
 	// Try to seek to the start offset - if it does not work then
 	// dont worry about it - just start from the beginning.
 	_, _ = f.Seek(int64(start), 0)
+	buf := make([]byte, self.blocksize)
 
-	buf := make([]byte, blocksize)
+	self.scope.Log("Scanning %v from %#0x to %#0x", self.filename, start, end)
 
-	stat, _ := f.Stat()
+	// base_offset reflects the file offset where we scan.
+	for self.base_offset = start; self.base_offset < end; {
+		// Only read up to the end of the range
+		to_read := end - start
+		if to_read > self.blocksize {
+			to_read = self.blocksize
+		}
 
-	matcher := &scanReporter{
-		output_chan:    output_chan,
-		number_of_hits: total_number_of_hits,
-		end:            end,
-		context:        context,
-		file_info:      stat,
-		filename:       filename,
-		base_offset:    start,
-		ctx:            ctx,
-	}
-
-	for {
-		n, _ := f.Read(buf)
+		n, _ := f.Read(buf[:to_read])
 		if n == 0 {
 			return
 		}
 
 		scan_buf := buf[:n]
-		matcher.reader = bytes.NewReader(scan_buf)
 
-		err := rules.ScanMemWithCallback(
-			scan_buf, yara_flag, 10*time.Second, matcher)
+		// Set the reader and base_offset before we call the
+		// yara callback so it can report the correct offset
+		// match and extract any context data.
+		self.reader = bytes.NewReader(scan_buf)
+
+		err := self.rules.ScanMemWithCallback(
+			scan_buf, self.yara_flag, 10*time.Second, self)
 		if err != nil {
 			return
 		}
 
-		matcher.base_offset += uint64(n)
-		if matcher.base_offset > uint64(end) {
-			return
-		}
+		// Advance the read pointer
+		self.base_offset += uint64(n)
 
 		// We count an op as one MB scanned.
-		vfilter.ChargeOp(scope)
+		vfilter.ChargeOp(self.scope)
 	}
 }
 
-func scanFile(
-	ctx context.Context,
-	filename string,
-	context int,
-	total_number_of_hits int64,
-	rules *yara.Rules,
-	output_chan chan vfilter.Row,
-	scope vfilter.Scope) error {
+// Scan a file called when no accessor is specified. We pass the
+// filename to libyara directly for faster scanning using mmap. This
+// also ensures that all yara features (like the PE plugin) work.
+func (self *scanReporter) scanFile(
+	ctx context.Context, output_chan chan vfilter.Row) error {
 
-	yara_flag := yara.ScanFlags(0)
-	if total_number_of_hits == 1 {
-		yara_flag = yara.ScanFlagsFastMode
-	}
-
-	fd, err := os.Open(filename)
+	fd, err := os.Open(self.filename)
 	if err != nil {
 		return err
 	}
 	defer fd.Close()
 
-	stat, _ := fd.Stat()
+	// Fill in the file stat if possible.
+	self.file_info, _ = fd.Stat()
+	self.reader = fd
 
-	matcher := &scanReporter{
-		output_chan:    output_chan,
-		number_of_hits: total_number_of_hits,
-		context:        context,
-		file_info:      stat,
-		filename:       filename,
-		reader:         fd,
-		ctx:            ctx,
-	}
-
-	err = rules.ScanFileWithCallback(
-		filename, yara_flag, 10*time.Second, matcher)
+	err = self.rules.ScanFileWithCallback(
+		self.filename, self.yara_flag, 10*time.Second, self)
 	if err != nil {
 		return err
 	}
 
 	// We count an op as one MB scanned.
-	vfilter.ChargeOp(scope)
+	vfilter.ChargeOp(self.scope)
 
 	return nil
 }
@@ -301,6 +327,7 @@ func scanFile(
 type scanReporter struct {
 	output_chan    chan vfilter.Row
 	number_of_hits int64
+	blocksize      uint64
 	context        int
 	file_info      os.FileInfo
 	filename       string
@@ -308,6 +335,11 @@ type scanReporter struct {
 	end            uint64
 	reader         io.ReaderAt
 	ctx            context.Context
+
+	// Internal scan state
+	scope     vfilter.Scope
+	rules     *yara.Rules
+	yara_flag yara.ScanFlags
 }
 
 func (self *scanReporter) RuleMatching(rule *yara.Rule) (bool, error) {
@@ -491,27 +523,38 @@ func RuleGenerator(scope vfilter.Scope, rule string) string {
 		return rule
 	}
 
+	// Shorthand syntax looks like:
+	// ascii wide: foo,bar,baz
+
 	tmp := strings.SplitN(rule, ":", 2)
 	if len(tmp) != 2 {
 		return rule
 	}
-	method, data := tmp[0], tmp[1]
-	switch method {
-	case "wide", "wide ascii", "wide nocase", "wide nocase ascii":
-		string_clause := ""
-		for _, item := range strings.Split(data, ",") {
-			item = strings.TrimSpace(item)
-			string_clause += fmt.Sprintf(
-				" $ = \"%s\" %s\n", item, method)
-			scope.Log("Compiling shorthand yara rule %v", string_clause)
-		}
+	keywords, data := tmp[0], tmp[1]
+	data = strings.TrimSpace(data)
 
-		return fmt.Sprintf(
-			"rule X { strings: %s condition: any of them }",
-			string_clause)
+	method := ""
+	for _, kw := range strings.Split(keywords, " ") {
+		switch kw {
+		case "wide", "ascii", "nocase":
+			method += " " + kw
+		default:
+			scope.Log("Unknown shorthand directive %v", kw)
+			return rule
+		}
 	}
 
-	return rule
+	string_clause := ""
+	for idx, item := range strings.Split(data, ",") {
+		item = strings.TrimSpace(item)
+		string_clause += fmt.Sprintf(
+			" $a%v = \"%s\" %s\n", idx, item, method)
+		scope.Log("Compiling shorthand yara rule %v", string_clause)
+	}
+
+	return fmt.Sprintf(
+		"rule X { strings: %s condition: any of them }",
+		string_clause)
 }
 
 func init() {

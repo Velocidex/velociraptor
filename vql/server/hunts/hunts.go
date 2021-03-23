@@ -124,7 +124,7 @@ func (self HuntsPlugin) Call(
 			select {
 			case <-ctx.Done():
 				return
-			case output_chan <- hunt_obj:
+			case output_chan <- json.ConvertProtoToOrderedDict(hunt_obj):
 			}
 		}
 	}()

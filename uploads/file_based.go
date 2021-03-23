@@ -160,7 +160,7 @@ func (self *FileBasedUploader) maybeCollectSparseFile(
 		return nil, errors.New("Not supported")
 	}
 
-	writer, err := os.OpenFile(sanitized_name, os.O_RDWR|os.O_CREATE, 0700)
+	writer, err := os.OpenFile(sanitized_name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 	if err != nil {
 		return nil, err
 	}

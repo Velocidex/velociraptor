@@ -1,0 +1,80 @@
+name: Windows.Forensics.ProcessInfo
+description: |
+   Extract information about processes.
+
+parameters:
+  - name: ProcessNameRegex
+    default: .
+
+sources:
+- query: |
+       LET profile = '''[
+       ["PEB",0 , [
+           # https://docs.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-peb
+           ["ProcessParameters", 32, "Pointer", {
+                "type": "ProcessParameters",
+           }],
+       ]],
+       ["ProcessParameters", 0, [
+          ["ImagePathName", 96, "UNICODE_STRING"],
+          ["CommandLine", 112, "UNICODE_STRING"],
+          ["CurrentDirectory", 56, "CURDIR"],
+          ["EnvironmentSize", 1008, "uint64"],
+          ["Environment", 128, "Pointer", {
+              "type": "String",
+              "type_options": {
+                 "length": "x=>x.EnvironmentSize",
+                 "encoding": "utf16",
+                 "max_length": 10000,
+                 "term": "",
+              }}]
+       ]],
+       ["CURDIR", 0, [
+         ["DosPath", 0, "UNICODE_STRING"],
+       ]],
+       ["UNICODE_STRING", 16, [
+          ["Length", 0, "uint16"],
+          ["Buffer", 8, "Pointer", {
+              "type": "String",
+              "type_options": {
+                "encoding": "utf16",
+                "length": "x=>x.Length",
+                "term": "",
+              }}],
+       ]]
+       ]'''
+
+       LET ParsePeb(PID) = SELECT Name,
+           format(format="%0#x", args=PebBaseAddress) AS PebBaseAddress, Pid,
+           parse_binary(accessor="process",
+                        filename=format(format="/%v", args=PID),
+                        profile=profile,
+                        struct="PEB",
+                        offset=PebBaseAddress) AS Data
+       FROM pslist(pid=PID)
+
+       -- The Environment string consists of null terminated
+       -- lines. Each line contains the variable name followed by an =
+       -- sign and then the variable value.
+       LET SplitEnv(EnvString) =  SELECT parse_string_with_regex(
+          string=_value, regex="^(?P<Name>[^=]*)=(?P<Value>.+)") AS Line
+               FROM foreach(row=split(string=EnvString, sep="\x00"))
+
+       -- Massage the parsed data into a structured table
+       LET Calculate(PID) = SELECT Name, PebBaseAddress, Pid,
+              Data.ProcessParameters.ImagePathName.Buffer AS ImagePathName,
+              Data.ProcessParameters.CommandLine.Buffer AS CommandLine,
+              Data.ProcessParameters.CurrentDirectory.DosPath.Buffer AS CurrentDirectory,
+              -- Build an Env dict out of the parsed string.
+              to_dict(item={
+                 SELECT Line.Name AS _key, Line.Value AS _value
+                 FROM SplitEnv(EnvString=Data.ProcessParameters.Environment)
+              }) AS Env
+        FROM ParsePeb(PID=PID)
+
+        SELECT * FROM foreach(row={
+           SELECT Pid FROM pslist()
+           WHERE Name =~ ProcessNameRegex
+        }, query={
+           SELECT * FROM Calculate(PID=Pid)
+        })

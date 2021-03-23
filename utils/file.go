@@ -122,7 +122,7 @@ func NewDataFileInfo(data string) *DataFileInfo {
 }
 
 type DataFileInfo struct {
-	data []byte
+	RawData []byte
 }
 
 func (self *DataFileInfo) IsDir() bool {
@@ -130,7 +130,7 @@ func (self *DataFileInfo) IsDir() bool {
 }
 
 func (self *DataFileInfo) Size() int64 {
-	return int64(len(self.data))
+	return int64(len(self.RawData))
 }
 
 func (self *DataFileInfo) Data() interface{} {
@@ -138,7 +138,7 @@ func (self *DataFileInfo) Data() interface{} {
 }
 
 func (self *DataFileInfo) Name() string {
-	return string(self.data)
+	return string(self.RawData)
 }
 
 func (self *DataFileInfo) Sys() interface{} {
@@ -154,7 +154,7 @@ func (self *DataFileInfo) ModTime() time.Time {
 }
 
 func (self *DataFileInfo) FullPath() string {
-	return string(self.data)
+	return string(self.RawData)
 }
 
 func (self *DataFileInfo) Btime() time.Time {

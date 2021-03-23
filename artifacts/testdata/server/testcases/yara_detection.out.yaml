@@ -2,7 +2,8 @@ LET _ <= SELECT
       mock(plugin='info', results=[dict(OS='windows')]),
       mock(plugin='http_client', results=[
          dict(Url='http://remote',
-              Content=RemoteYara, Response=200)]),
+              Content=IsPE, Response=200)]),
+
       -- First call to Windows.NTFS.MFT reveal target dll info
       -- srcDir needs to be used to align fields
       mock(artifact=Artifact.Windows.NTFS.MFT, results=[
@@ -26,7 +27,7 @@ LET _ <= SELECT
           LastAccess0x30 = "2021-01-24T06:57:36.7073284Z")
       ])
 FROM scope()
-[]SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll', ShortHandYara='wide ascii:MZ')[
+[]SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', ShortHandYara='wide ascii:MZ')[
  {
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
@@ -34,7 +35,7 @@ FROM scope()
   "HitContext": "MZ",
   "HitOffset": 0
  }
-]SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS(PathRegex='wkscli.dll', YaraRule=IsPE)[
+]SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', YaraRule=IsPE)[
  {
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
