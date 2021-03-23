@@ -12,9 +12,9 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -123,8 +123,7 @@ func (self *MySQLDataStore) GetSubject(
 	}
 
 	if strings.HasSuffix(urn, ".json") {
-		return jsonpb.UnmarshalString(
-			string(serialized_content), message)
+		return protojson.Unmarshal(serialized_content, message)
 	}
 
 	err = proto.Unmarshal(serialized_content, message)
@@ -141,14 +140,11 @@ func (self *MySQLDataStore) SetSubject(
 
 	// Encode as JSON
 	if strings.HasSuffix(urn, ".json") {
-		marshaler := &jsonpb.Marshaler{Indent: " "}
-		serialized_content, err := marshaler.MarshalToString(
-			message)
+		serialized_content, err := protojson.Marshal(message)
 		if err != nil {
 			return err
 		}
-		return writeContentToMysqlRow(
-			config_obj, urn, []byte(serialized_content))
+		return writeContentToMysqlRow(config_obj, urn, serialized_content)
 	}
 	serialized_content, err := proto.Marshal(message)
 	if err != nil {

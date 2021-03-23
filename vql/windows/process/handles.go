@@ -94,7 +94,7 @@ func (self HandlesPlugin) Call(
 
 		err = TryToGrantSeDebugPrivilege()
 		if err != nil {
-			scope.Log("handles while trying to grant SeDebugPrivilege: %s", err.Error())
+			scope.Log("handles while trying to grant SeDebugPrivilege: %v", err)
 		}
 
 		GetHandles(scope, arg, output_chan)

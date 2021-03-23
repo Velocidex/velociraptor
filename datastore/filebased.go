@@ -46,10 +46,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	errors "github.com/pkg/errors"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -149,8 +149,7 @@ func (self *FileBaseDataStore) GetSubject(
 	}
 
 	if strings.HasSuffix(urn, ".json") {
-		return jsonpb.UnmarshalString(
-			string(serialized_content), message)
+		return protojson.Unmarshal(serialized_content, message)
 	}
 
 	return proto.Unmarshal(serialized_content, message)
@@ -197,14 +196,11 @@ func (self *FileBaseDataStore) SetSubject(
 
 	// Encode as JSON
 	if strings.HasSuffix(urn, ".json") {
-		marshaler := &jsonpb.Marshaler{Indent: " "}
-		serialized_content, err := marshaler.MarshalToString(
-			message)
+		serialized_content, err := protojson.Marshal(message)
 		if err != nil {
 			return err
 		}
-		return writeContentToFile(
-			config_obj, urn, []byte(serialized_content))
+		return writeContentToFile(config_obj, urn, serialized_content)
 	}
 	serialized_content, err := proto.Marshal(message)
 	if err != nil {

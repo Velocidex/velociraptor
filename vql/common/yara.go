@@ -214,6 +214,12 @@ func (self *scanReporter) scanFileByAccessor(
 	// Support sparse file scanning
 	range_reader, ok := f.(uploads.RangeReader)
 	if !ok {
+		// File does not support ranges, just cap the end at
+		// the end of the file.
+		if end == 0 && self.file_info != nil {
+			end = uint64(self.file_info.Size())
+		}
+
 		self.scanRange(start, end, f)
 		return
 	}
