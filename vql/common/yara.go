@@ -65,7 +65,7 @@ type YaraScanPluginArgs struct {
 	Start        uint64   `vfilter:"optional,field=start,doc=The start offset to scan"`
 	End          uint64   `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
 	NumberOfHits int64    `vfilter:"optional,field=number,doc=Stop after this many hits (1)."`
-	Blocksize    int64    `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (1mb)."`
+	Blocksize    uint64   `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (1mb)."`
 	Key          string   `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
 }
 
@@ -131,10 +131,13 @@ func (self YaraScanPlugin) Call(
 			// ScanFile API which mmaps the entire file
 			// into memory avoiding the need for
 			// buffering.
-			if arg.Accessor == "" {
+			if arg.Accessor == "" || arg.Accessor == "file" {
 				err := matcher.scanFile(ctx, output_chan)
 				if err == nil {
 					continue
+				} else {
+					scope.Log("Directly scanning file %v failed, will use accessor",
+						filename)
 				}
 			}
 
@@ -190,7 +193,7 @@ func getYaraRules(key, rules string,
 func (self *scanReporter) scanFileByAccessor(
 	ctx context.Context,
 	accessor_name string,
-	blocksize int64,
+	blocksize uint64,
 	start, end uint64,
 	output_chan chan vfilter.Row) {
 
@@ -253,14 +256,24 @@ func (self *scanReporter) scanRange(start, end uint64, f glob.ReadSeekCloser) {
 
 	self.scope.Log("Scanning %v from %#0x to %#0x", self.filename, start, end)
 
-	for idx := start; idx < end; {
-		n, _ := f.Read(buf)
+	// base_offset reflects the file offset where we scan.
+	for self.base_offset = start; self.base_offset < end; {
+		// Only read up to the end of the range
+		to_read := end - start
+		if to_read > self.blocksize {
+			to_read = self.blocksize
+		}
+
+		n, _ := f.Read(buf[:to_read])
 		if n == 0 {
 			return
 		}
-		idx += uint64(n)
 
 		scan_buf := buf[:n]
+
+		// Set the reader and base_offset before we call the
+		// yara callback so it can report the correct offset
+		// match and extract any context data.
 		self.reader = bytes.NewReader(scan_buf)
 
 		err := self.rules.ScanMemWithCallback(
@@ -269,10 +282,8 @@ func (self *scanReporter) scanRange(start, end uint64, f glob.ReadSeekCloser) {
 			return
 		}
 
+		// Advance the read pointer
 		self.base_offset += uint64(n)
-		if self.base_offset > uint64(end) {
-			return
-		}
 
 		// We count an op as one MB scanned.
 		vfilter.ChargeOp(self.scope)
@@ -316,7 +327,7 @@ func (self *scanReporter) scanFile(
 type scanReporter struct {
 	output_chan    chan vfilter.Row
 	number_of_hits int64
-	blocksize      int64
+	blocksize      uint64
 	context        int
 	file_info      os.FileInfo
 	filename       string
@@ -512,27 +523,38 @@ func RuleGenerator(scope vfilter.Scope, rule string) string {
 		return rule
 	}
 
+	// Shorthand syntax looks like:
+	// ascii wide: foo,bar,baz
+
 	tmp := strings.SplitN(rule, ":", 2)
 	if len(tmp) != 2 {
 		return rule
 	}
-	method, data := tmp[0], tmp[1]
-	switch method {
-	case "wide", "wide ascii", "wide nocase", "wide nocase ascii":
-		string_clause := ""
-		for _, item := range strings.Split(data, ",") {
-			item = strings.TrimSpace(item)
-			string_clause += fmt.Sprintf(
-				" $ = \"%s\" %s\n", item, method)
-			scope.Log("Compiling shorthand yara rule %v", string_clause)
-		}
+	keywords, data := tmp[0], tmp[1]
+	data = strings.TrimSpace(data)
 
-		return fmt.Sprintf(
-			"rule X { strings: %s condition: any of them }",
-			string_clause)
+	method := ""
+	for _, kw := range strings.Split(keywords, " ") {
+		switch kw {
+		case "wide", "ascii", "nocase":
+			method += " " + kw
+		default:
+			scope.Log("Unknown shorthand directive %v", kw)
+			return rule
+		}
 	}
 
-	return rule
+	string_clause := ""
+	for idx, item := range strings.Split(data, ",") {
+		item = strings.TrimSpace(item)
+		string_clause += fmt.Sprintf(
+			" $a%v = \"%s\" %s\n", idx, item, method)
+		scope.Log("Compiling shorthand yara rule %v", string_clause)
+	}
+
+	return fmt.Sprintf(
+		"rule X { strings: %s condition: any of them }",
+		string_clause)
 }
 
 func init() {
