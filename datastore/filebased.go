@@ -148,6 +148,14 @@ func (self *FileBaseDataStore) GetSubject(
 		return err
 	}
 
+	// Clear the target.
+	proto.Reset(message)
+
+	// Nothing to do - no data.
+	if len(serialized_content) == 0 {
+		return nil
+	}
+
 	if strings.HasSuffix(urn, ".json") {
 		return protojson.Unmarshal(serialized_content, message)
 	}

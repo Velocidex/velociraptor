@@ -19,7 +19,7 @@ description: |
        * Go to Settings > Data Inputs > HTTP Event Collector > Global Settings
        * Ensure `All Tokens` is set to ENABLED
        * Copy the HTTP Port Number for this event
-       
+
        > Note: `Enable SSL` only works if SSL is properly configured on your
        Splunk server -- meaning you have proper certificates and DNS. If you are
        accessing your Splunk instance by IP, `Enable SSL` should be set to OFF.
@@ -46,14 +46,14 @@ parameters:
      default: false
      description: |
       SSL configured with the event collector. This is false by default.
-     
+
 sources:
-  - query: |  
+  - query: |
         LET completions = SELECT * FROM watch_monitoring(
                      artifact="System.Flow.Completion")
-                 WHERE Flow.artifacts_with_results =~ ArtifactNameRegex 
+                 WHERE Flow.artifacts_with_results =~ ArtifactNameRegex
                      AND log(message=Flow.artifacts_with_results)
-        
+
         LET documents = SELECT * FROM foreach(row=completions,
                   query={
                      SELECT * FROM foreach(
@@ -70,11 +70,11 @@ sources:
                                 artifact=_value)
                          })
                   })
-              
+
         SELECT * FROM splunk_upload(
         query = documents,
         url = url,
         token = token,
-        index = velociraptor,
+        index = index,
         skip_verify = SSL
         )

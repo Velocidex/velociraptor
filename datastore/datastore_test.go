@@ -36,6 +36,11 @@ func (self BaseTestSuite) TestSetGetSubject() {
 	err = self.datastore.GetSubject(self.config_obj, urn+"foo", read_message)
 	assert.NoError(self.T(), err)
 
+	// Same for json files.
+	err = self.datastore.GetSubject(
+		self.config_obj, urn+"foo.json", read_message)
+	assert.NoError(self.T(), err)
+
 	// Delete the subject
 	err = self.datastore.DeleteSubject(self.config_obj, urn)
 	assert.NoError(self.T(), err)
