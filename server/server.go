@@ -99,6 +99,7 @@ func (self *Server) adjustConcurrency(
 		}
 
 		// Adjust concurrency
+		self.logger.Debug("Adjusting concurrency from %v to %v", concurrency, new_concurrency)
 		concurrency = new_concurrency
 
 		// We are using up less memory than
@@ -113,6 +114,7 @@ func (self *Server) adjustConcurrency(
 		}
 
 		// Adjust concurrency
+		self.logger.Debug("Adjusting concurrency from %v to %v", concurrency, concurrency+delta)
 		concurrency += delta
 
 	} else {
@@ -122,6 +124,7 @@ func (self *Server) adjustConcurrency(
 	}
 
 	// Install the new concurrency controller.
+
 	targetConcurrency.Set(float64(concurrency))
 	heapSize.Set(float64(s.Alloc))
 	self.mu.Lock()
@@ -137,7 +140,6 @@ func (self *Server) ManageConcurrency(max_concurrency uint64, target_heap_size u
 
 	for {
 		new_concurrency := self.adjustConcurrency(max_concurrency, target_heap_size, concurrency)
-		self.logger.Debug("Adjusting concurrency from %v to %v", concurrency, new_concurrency)
 		concurrency = new_concurrency
 
 		// Wait for a minute and check again.
