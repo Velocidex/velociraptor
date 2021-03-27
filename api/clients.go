@@ -19,8 +19,8 @@ package api
 
 import (
 	"errors"
-	"io/fs"
 	"net"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -168,7 +168,7 @@ func (self *ApiServer) GetClientMetadata(
 
 	result := &api_proto.ClientMetadata{}
 	err = db.GetSubject(self.config, client_path_manager.Metadata(), result)
-	if errors.Is(err, fs.ErrNotExist) {
+	if errors.Is(err, os.ErrNotExist) {
 		// Metadata not set, start with empty set.
 		err = nil
 	}

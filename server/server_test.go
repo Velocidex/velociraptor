@@ -3,7 +3,7 @@ package server_test
 import (
 	"context"
 	"fmt"
-	"io/fs"
+	"os"
 	"regexp"
 	"sync"
 	"testing"
@@ -778,7 +778,7 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
 	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
-	require.Error(t, err, fs.ErrNotExist)
+	require.Error(t, err, os.ErrNotExist)
 }
 
 // Test flow archiving

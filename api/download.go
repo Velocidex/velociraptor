@@ -28,10 +28,10 @@ package api
 import (
 	"archive/zip"
 	"io"
-	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -435,7 +435,7 @@ func vfsGetBuffer(
 	}
 
 	n, err := reader_at.ReadAt(result.Data, int64(offset))
-	if err != nil && errors.Is(err, fs.ErrNotExist) &&
+	if err != nil && errors.Is(err, os.ErrNotExist) &&
 		errors.Cause(err) != io.ErrUnexpectedEOF {
 		return nil, err
 	}

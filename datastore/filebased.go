@@ -38,7 +38,6 @@ package datastore
 
 import (
 	"io"
-	"io/fs"
 	"io/ioutil"
 	"os"
 	"path"
@@ -152,7 +151,7 @@ func (self *FileBaseDataStore) GetSubject(
 	serialized_content, err := readContentFromFile(
 		config_obj, urn, true /* must_exist */)
 	if err != nil {
-		return errors.Wrap(fs.ErrNotExist, err.Error())
+		return errors.Wrap(os.ErrNotExist, err.Error())
 	}
 
 	if strings.HasSuffix(urn, ".json") {
@@ -162,7 +161,7 @@ func (self *FileBaseDataStore) GetSubject(
 	}
 
 	if err != nil {
-		return errors.Wrap(fs.ErrNotExist, err.Error())
+		return errors.Wrap(os.ErrNotExist, err.Error())
 	}
 	return nil
 }

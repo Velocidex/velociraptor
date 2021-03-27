@@ -22,7 +22,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"fmt"
-	"io/fs"
+	"os"
 	"path"
 	"regexp"
 
@@ -131,7 +131,7 @@ func GetUserWithHashes(config_obj *config_proto.Config, username string) (
 	user_record := &api_proto.VelociraptorUser{}
 	err = db.GetSubject(config_obj,
 		paths.UserPathManager{Name: username}.Path(), user_record)
-	if errors.Is(err, fs.ErrNotExist) || user_record.Name == "" {
+	if errors.Is(err, os.ErrNotExist) || user_record.Name == "" {
 		return nil, errors.New("User not found")
 	}
 

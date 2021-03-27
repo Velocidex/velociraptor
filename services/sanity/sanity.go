@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"io/fs"
+	"os"
 	"strings"
 	"sync"
 
@@ -142,7 +142,7 @@ func configServerMetadata(
 
 	result := &api_proto.ClientMetadata{}
 	err = db.GetSubject(config_obj, client_path_manager.Metadata(), result)
-	if errors.Is(err, fs.ErrNotExist) {
+	if errors.Is(err, os.ErrNotExist) {
 		// Metadata not set, start with empty set.
 		err = nil
 	}

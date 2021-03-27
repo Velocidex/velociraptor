@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
-	"io/fs"
+	"os"
 	"path"
 	"strings"
 	"time"
@@ -78,7 +78,7 @@ func (self *ApiServer) GetNotebooks(
 
 		// Handle the EOF especially: it means there is no such
 		// notebook and return an empty result set.
-		if errors.Is(err, fs.ErrNotExist) || notebook.NotebookId == "" {
+		if errors.Is(err, os.ErrNotExist) || notebook.NotebookId == "" {
 			return result, nil
 		}
 		if err != nil {
@@ -443,7 +443,7 @@ func (self *ApiServer) GetNotebookCell(
 		notebook)
 
 	// Cell does not exist, make it a default cell.
-	if errors.Is(err, fs.ErrNotExist) {
+	if errors.Is(err, os.ErrNotExist) {
 		return &api_proto.NotebookCell{
 			Input:  "",
 			Output: "",
