@@ -613,23 +613,6 @@ func (self *ApiServer) SetGUIOptions(
 	return &empty.Empty{}, users.SetUserOptions(self.config, user_info.Name, in)
 }
 
-func (self *ApiServer) GetUserNotifications(
-	ctx context.Context,
-	in *api_proto.GetUserNotificationsRequest) (
-	*api_proto.GetUserNotificationsResponse, error) {
-	result, err := users.GetUserNotifications(
-		self.config, GetGRPCUserInfo(self.config, ctx).Name, in.ClearPending)
-	return result, err
-}
-
-func (self *ApiServer) GetUserNotificationCount(
-	ctx context.Context,
-	in *empty.Empty) (*api_proto.UserNotificationCount, error) {
-	n, err := users.GetUserNotificationCount(
-		self.config, GetGRPCUserInfo(self.config, ctx).Name)
-	return &api_proto.UserNotificationCount{Count: n}, err
-}
-
 func (self *ApiServer) VFSListDirectory(
 	ctx context.Context,
 	in *flows_proto.VFSListRequest) (*flows_proto.VFSListResponse, error) {

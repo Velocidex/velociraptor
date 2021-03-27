@@ -1,7 +1,8 @@
 package reporting
 
 import (
-	"io"
+	"errors"
+	"io/fs"
 	"regexp"
 	"sort"
 
@@ -58,10 +59,10 @@ func GetSharedNotebooks(
 		notebook := &api_proto.NotebookMetadata{}
 		err := db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
 		// Notebook was removed or does not exist.
-		if err == io.EOF {
+		if errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
-		if err != nil {
+		if err != nil || notebook.NotebookId == "" {
 			logging.GetLogger(
 				config_obj, &logging.FrontendComponent).
 				Error("Unable to open notebook: %v", err)
@@ -103,7 +104,7 @@ func GetAllNotebooks(
 	for _, urn := range notebook_urns {
 		notebook := &api_proto.NotebookMetadata{}
 		err := db.GetSubject(config_obj, urn, notebook)
-		if err != nil {
+		if err != nil || notebook.NotebookId == "" {
 			continue
 		}
 		result = append(result, notebook)

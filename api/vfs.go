@@ -129,11 +129,10 @@ func renderDBVFS(
 	// Figure out where the directory info is.
 	vfs_path := append([]string{
 		"clients", client_id, "vfs"}, components...)
-	err = db.GetSubject(
+
+	// If file does not exist, we have an empty response
+	_ = db.GetSubject(
 		config_obj, utils.JoinComponents(vfs_path, "/"), result)
-	if err != nil {
-		return nil, err
-	}
 
 	// Empty responses mean the directory is empty - no need to
 	// worry about downloads.

@@ -202,17 +202,16 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 		hunt_path_manager := paths.NewHuntPathManager(hunt_id)
 		err = db.GetSubject(
 			config_obj, hunt_path_manager.Path(), hunt_obj)
-		if err != nil {
+		if err != nil || hunt_obj.HuntId == "" {
 			continue
 		}
 
 		// Re-read the stats into the hunt object.
 		hunt_stats := &api_proto.HuntStats{}
-		err := db.GetSubject(config_obj,
+		_ = db.GetSubject(config_obj,
 			hunt_path_manager.Stats().Path(), hunt_stats)
-		if err == nil {
-			hunt_obj.Stats = hunt_stats
-		}
+		// Regardless of errors we need to set the stats.
+		hunt_obj.Stats = hunt_stats
 
 		// Should not really happen but if the file is
 		// corrupted we skip it.

@@ -104,7 +104,7 @@ func (self HuntsPlugin) Call(
 
 			hunt_obj := &api_proto.Hunt{}
 			err = db.GetSubject(config_obj, hunt_urn, hunt_obj)
-			if err != nil {
+			if err != nil || hunt_obj.HuntId == "" {
 				continue
 			}
 
@@ -190,7 +190,7 @@ func (self HuntResultsPlugin) Call(
 			hunt_obj := &api_proto.Hunt{}
 			err = db.GetSubject(config_obj,
 				hunt_path_manager.Path(), hunt_obj)
-			if err != nil {
+			if err != nil || hunt_obj.HuntId == "" {
 				scope.Log("hunt_results: %v", err)
 				return
 			}

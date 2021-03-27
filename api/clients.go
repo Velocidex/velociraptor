@@ -19,7 +19,7 @@ package api
 
 import (
 	"errors"
-	"io"
+	"io/fs"
 	"net"
 	"regexp"
 	"strings"
@@ -74,8 +74,7 @@ func GetApiClient(
 	result.Labels = services.GetLabeler().GetClientLabels(config_obj, client_id)
 
 	client_info := &actions_proto.ClientInfo{}
-	err = db.GetSubject(config_obj,
-		client_path_manager.Path(), client_info)
+	err = db.GetSubject(config_obj, client_path_manager.Path(), client_info)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +168,7 @@ func (self *ApiServer) GetClientMetadata(
 
 	result := &api_proto.ClientMetadata{}
 	err = db.GetSubject(self.config, client_path_manager.Metadata(), result)
-	if err != nil && err == io.EOF {
+	if errors.Is(err, fs.ErrNotExist) {
 		// Metadata not set, start with empty set.
 		err = nil
 	}

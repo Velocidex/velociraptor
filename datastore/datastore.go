@@ -20,10 +20,15 @@ package datastore
 
 import (
 	"errors"
+	"sync"
 
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+)
+
+var (
+	mu sync.Mutex
 )
 
 type SortingSense int
@@ -53,6 +58,9 @@ type DataStore interface {
 		client_id string,
 		message *crypto_proto.GrrMessage) error
 
+	// Reads a stored message from the datastore. If there is no
+	// stored message at this URN, the function returns an
+	// fs.ErrNotExist error.
 	GetSubject(
 		config_obj *config_proto.Config,
 		urn string,
@@ -114,9 +122,6 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 	switch config_obj.Datastore.Implementation {
 	case "FileBaseDataStore":
 		return file_based_imp, nil
-
-	case "MySQL":
-		return NewMySQLDataStore(config_obj)
 
 	case "Test":
 		mu.Lock()

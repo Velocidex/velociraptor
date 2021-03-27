@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
@@ -46,7 +47,7 @@ func (self *ServicesTestSuite) SetupTest() {
 	// Start essential services.
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
+	require.NoError(self.T(), self.sm.Start(client_info.StartClientInfoService))
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
 	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))

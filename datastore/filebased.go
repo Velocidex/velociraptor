@@ -38,6 +38,7 @@ package datastore
 
 import (
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path"
@@ -137,30 +138,33 @@ func (self *FileBaseDataStore) QueueMessageForClient(
 		client_path_manager.Task(req.TaskId).Path(), req)
 }
 
+/* Gets a protobuf encoded struct from the data store.  Objects are
+   addressed by the urn which is a string (URNs are typically managed
+   by a path manager)
+
+   FIXME: Refactor GetSubject to accept path manager directly.
+*/
 func (self *FileBaseDataStore) GetSubject(
 	config_obj *config_proto.Config,
 	urn string,
 	message proto.Message) error {
 
 	serialized_content, err := readContentFromFile(
-		config_obj, urn, false /* must_exist */)
+		config_obj, urn, true /* must_exist */)
 	if err != nil {
-		return err
-	}
-
-	// Clear the target.
-	proto.Reset(message)
-
-	// Nothing to do - no data.
-	if len(serialized_content) == 0 {
-		return nil
+		return errors.Wrap(fs.ErrNotExist, err.Error())
 	}
 
 	if strings.HasSuffix(urn, ".json") {
-		return protojson.Unmarshal(serialized_content, message)
+		err = protojson.Unmarshal(serialized_content, message)
+	} else {
+		err = proto.Unmarshal(serialized_content, message)
 	}
 
-	return proto.Unmarshal(serialized_content, message)
+	if err != nil {
+		return errors.Wrap(fs.ErrNotExist, err.Error())
+	}
+	return nil
 }
 
 func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,

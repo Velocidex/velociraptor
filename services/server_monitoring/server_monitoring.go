@@ -246,9 +246,7 @@ func StartServerMonitoringService(
 
 	artifacts := &flows_proto.ArtifactCollectorArgs{}
 	err = db.GetSubject(
-		config_obj,
-		constants.ServerMonitoringFlowURN,
-		artifacts)
+		config_obj, constants.ServerMonitoringFlowURN, artifacts)
 	if err != nil || artifacts.Artifacts == nil {
 		// No monitoring rules found, set defaults.
 		artifacts = proto.Clone(

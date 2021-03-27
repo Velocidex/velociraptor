@@ -22,9 +22,9 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"fmt"
+	"io/fs"
 	"path"
 	"regexp"
-	"strings"
 
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -131,106 +131,11 @@ func GetUserWithHashes(config_obj *config_proto.Config, username string) (
 	user_record := &api_proto.VelociraptorUser{}
 	err = db.GetSubject(config_obj,
 		paths.UserPathManager{Name: username}.Path(), user_record)
-
-	if user_record.Name == "" {
+	if errors.Is(err, fs.ErrNotExist) || user_record.Name == "" {
 		return nil, errors.New("User not found")
 	}
 
 	return user_record, err
-}
-
-func GetUserNotificationCount(config_obj *config_proto.Config, username string) (uint64, error) {
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return 0, err
-	}
-
-	result, err := db.ListChildren(config_obj,
-		constants.USER_URN+username+"/notifications/pending", 0, 50)
-	if err != nil {
-		return 0, nil
-	}
-
-	return uint64(len(result)), nil
-}
-
-func GetUserNotifications(config_obj *config_proto.Config, username string, clear_pending bool) (
-	*api_proto.GetUserNotificationsResponse, error) {
-	result := &api_proto.GetUserNotificationsResponse{}
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	// First read the pending notifications.
-	urn := fmt.Sprintf("%s/%s/notifications/pending",
-		constants.USER_URN, username)
-	notification_urns, err := db.ListChildren(
-		config_obj, urn, 0, 50)
-	if err != nil {
-		return nil, err
-	}
-
-	to_clear := make(map[string]*api_proto.UserNotification)
-	for _, notification_urn := range notification_urns {
-		item := &api_proto.UserNotification{}
-		err = db.GetSubject(config_obj, notification_urn, item)
-		if err != nil {
-			continue
-		}
-
-		if clear_pending {
-			to_clear[notification_urn] = item
-		}
-
-		result.Items = append(result.Items, item)
-	}
-
-	// Now get some already read notifications.
-	if len(result.Items) < 50 {
-		read_urn := fmt.Sprintf("%s/%s/notifications/read",
-			constants.USER_URN, username)
-
-		read_urns, _ := db.ListChildren(
-			config_obj, read_urn, 0, uint64(50-len(result.Items)))
-		for _, read_notification_urn := range read_urns {
-			item := &api_proto.UserNotification{}
-			err = db.GetSubject(config_obj, read_notification_urn, item)
-			if err != nil {
-				continue
-			}
-			result.Items = append(result.Items, item)
-		}
-	}
-
-	if len(to_clear) > 0 {
-		for urn, item := range to_clear {
-			err = db.DeleteSubject(config_obj, urn)
-			if err != nil {
-				return nil, err
-			}
-			new_urn := strings.Replace(urn, "pending", "read", -1)
-			item.State = api_proto.UserNotification_STATE_NOT_PENDING
-			err = db.SetSubject(config_obj, new_urn, item)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-	}
-
-	return result, nil
-}
-
-func Notify(config_obj *config_proto.Config, notification *api_proto.UserNotification) error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if gUserNotificationManager == nil {
-		return errors.New("Uninitialized UserNotificationManager")
-	}
-	gUserNotificationManager.Notify(notification)
-	return nil
 }
 
 func SetUserOptions(config_obj *config_proto.Config,

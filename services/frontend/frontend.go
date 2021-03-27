@@ -10,7 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
+	"io/fs"
 	"math/rand"
 	"sync"
 	"time"
@@ -168,7 +168,7 @@ func (self *FrontendManager) syncActiveFrontends() error {
 	for _, child := range children {
 		state := &frontend_proto.FrontendState{}
 		err = db.GetSubject(self.config_obj, child, state)
-		if err != nil && err != io.EOF {
+		if !errors.Is(err, fs.ErrNotExist) {
 			return err
 		}
 

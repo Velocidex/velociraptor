@@ -31,6 +31,7 @@ import (
 	"context"
 	"encoding/binary"
 	"io"
+	"io/fs"
 	"os"
 
 	"github.com/Velocidex/json"
@@ -334,7 +335,7 @@ func (self ResultSetFactory) NewResultSetReader(
 	}
 
 	fd, err := file_store_factory.ReadFile(log_path)
-	if err == io.EOF || os.IsNotExist(errors.Cause(err)) {
+	if err == io.EOF || errors.Is(err, fs.ErrNotExist) {
 		fd = &NullReader{bytes.NewReader([]byte{})}
 	} else if err != nil {
 		return nil, err
