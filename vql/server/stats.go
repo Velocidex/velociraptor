@@ -4,12 +4,11 @@ package server
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
-	"www.velocidex.com/golang/vfilter/types"
+	"www.velocidex.com/golang/vfilter/functions"
 )
 
 type rateState struct {
@@ -22,7 +21,9 @@ type _RateFunctionArgs struct {
 	Y float64 `vfilter:"required,field=y,doc=The Y float"`
 }
 
-type _RateFunction struct{}
+type _RateFunction struct {
+	functions.Aggregator
+}
 
 func (self _RateFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
@@ -43,24 +44,19 @@ func (self _RateFunction) Call(
 		return vfilter.Null{}
 	}
 
-	previous_value_any, pres := scope.GetContext(GetID(&self))
+	previous_value_any, pres := self.GetContext(scope)
 	if !pres {
-		scope.SetContext(GetID(&self), &rateState{x: arg.X, y: arg.Y})
+		self.SetContext(scope, &rateState{x: arg.X, y: arg.Y})
 		return vfilter.Null{}
 	}
 
 	state := previous_value_any.(*rateState)
 	value := (arg.X - state.x) / (arg.Y - state.y)
-	scope.SetContext(GetID(&self), &rateState{x: arg.X, y: arg.Y})
+	self.SetContext(scope, &rateState{x: arg.X, y: arg.Y})
 
 	return value
 }
 
 func init() {
 	vql_subsystem.RegisterFunction(&_RateFunction{})
-}
-
-// Returns a unique ID for the object.
-func GetID(obj types.Any) string {
-	return fmt.Sprintf("%p", obj)
 }

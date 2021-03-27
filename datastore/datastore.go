@@ -60,7 +60,7 @@ type DataStore interface {
 
 	// Reads a stored message from the datastore. If there is no
 	// stored message at this URN, the function returns an
-	// fs.ErrNotExist error.
+	// os.ErrNotExist error.
 	GetSubject(
 		config_obj *config_proto.Config,
 		urn string,

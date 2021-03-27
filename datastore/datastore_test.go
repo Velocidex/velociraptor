@@ -1,7 +1,7 @@
 package datastore
 
 import (
-	"io/fs"
+	"os"
 	"sort"
 	"testing"
 	"time"
@@ -33,16 +33,16 @@ func (self BaseTestSuite) TestSetGetSubject() {
 
 	assert.Equal(self.T(), message.Source, read_message.Source)
 
-	// Not existing urn returns fs.ErrNotExist error and an empty message
+	// Not existing urn returns os.ErrNotExist error and an empty message
 	read_message.SessionId = "X"
 	err = self.datastore.GetSubject(self.config_obj, urn+"foo", read_message)
-	assert.Error(self.T(), err, fs.ErrNotExist)
+	assert.Error(self.T(), err, os.ErrNotExist)
 
 	// Same for json files.
 	read_message.SessionId = "X"
 	err = self.datastore.GetSubject(
 		self.config_obj, urn+"foo.json", read_message)
-	assert.Error(self.T(), err, fs.ErrNotExist)
+	assert.Error(self.T(), err, os.ErrNotExist)
 
 	// Delete the subject
 	err = self.datastore.DeleteSubject(self.config_obj, urn)
@@ -50,7 +50,7 @@ func (self BaseTestSuite) TestSetGetSubject() {
 
 	// It should now be cleared
 	err = self.datastore.GetSubject(self.config_obj, urn, read_message)
-	assert.Error(self.T(), err, fs.ErrNotExist)
+	assert.Error(self.T(), err, os.ErrNotExist)
 }
 
 func (self BaseTestSuite) TestListChildren() {

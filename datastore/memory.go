@@ -3,7 +3,7 @@ package datastore
 import (
 	"errors"
 	"fmt"
-	"io/fs"
+	"os"
 	"path"
 	"sort"
 	"strings"
@@ -166,7 +166,7 @@ func (self *TestDataStore) GetSubject(
 
 	result, pres := self.Subjects[urn]
 	if !pres {
-		return fs.ErrNotExist
+		return os.ErrNotExist
 	}
 	proto.Merge(message, result)
 	return nil
