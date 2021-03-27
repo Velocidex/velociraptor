@@ -90,7 +90,7 @@ func GetFlows(
 
 			collection_context := &flows_proto.ArtifactCollectorContext{}
 			err := db.GetSubject(config_obj, urn, collection_context)
-			if err != nil {
+			if err != nil || collection_context.SessionId == "" {
 				logging.GetLogger(
 					config_obj, &logging.FrontendComponent).
 					Error("Unable to open collection: %v", err)

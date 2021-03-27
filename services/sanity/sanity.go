@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"io"
+	"io/fs"
 	"strings"
 	"sync"
 
@@ -142,7 +142,7 @@ func configServerMetadata(
 
 	result := &api_proto.ClientMetadata{}
 	err = db.GetSubject(config_obj, client_path_manager.Metadata(), result)
-	if err != nil && err == io.EOF {
+	if errors.Is(err, fs.ErrNotExist) {
 		// Metadata not set, start with empty set.
 		err = nil
 	}
@@ -186,11 +186,9 @@ func checkForServerUpgrade(
 	}
 	state := &api_proto.ServerState{}
 	state_path_manager := &paths.ServerStatePathManager{}
-	err = db.GetSubject(config_obj, state_path_manager.Path(), state)
-	if err != nil && err != io.EOF {
-		return err
-	}
 
+	// If the current state is not there it will have version = 0
+	_ = db.GetSubject(config_obj, state_path_manager.Path(), state)
 	if config_obj.Version == nil {
 		return errors.New("config_obj.Version not configured")
 	}

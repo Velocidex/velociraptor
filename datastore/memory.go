@@ -3,6 +3,7 @@ package datastore
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"path"
 	"sort"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
@@ -26,6 +28,8 @@ type TestDataStore struct {
 	idx         uint64
 	Subjects    map[string]proto.Message
 	ClientTasks map[string][]*crypto_proto.GrrMessage
+
+	clock vtesting.Clock
 }
 
 func NewTestDataStore() *TestDataStore {
@@ -78,6 +82,34 @@ func (self *TestDataStore) GetClientTasks(config_obj *config_proto.Config,
 func (self *TestDataStore) Walk(
 	config_obj *config_proto.Config,
 	root string, walkFn WalkFunc) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	root_components := utils.SplitComponents(root)
+
+	is_subpath := func(components []string) bool {
+		if len(root_components) > len(components) {
+			return false
+		}
+
+		for i := 0; i < len(root_components); i++ {
+			if root_components[i] != components[i] {
+				return false
+			}
+		}
+		return true
+	}
+
+	for k := range self.Subjects {
+		components := utils.SplitComponents(k)
+		if !is_subpath(components) {
+			continue
+		}
+
+		walkFn(k)
+	}
+
 	return nil
 }
 
@@ -132,10 +164,11 @@ func (self *TestDataStore) GetSubject(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	result := self.Subjects[urn]
-	if result != nil {
-		proto.Merge(message, result)
+	result, pres := self.Subjects[urn]
+	if !pres {
+		return fs.ErrNotExist
 	}
+	proto.Merge(message, result)
 	return nil
 }
 

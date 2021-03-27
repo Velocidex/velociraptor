@@ -60,6 +60,16 @@ func (self *HuntTestSuite) SetupTest() {
 	require.NoError(t, self.sm.Start(repository.StartRepositoryManager))
 	require.NoError(t, self.sm.Start(client_info.StartClientInfoService))
 	require.NoError(t, self.sm.Start(StartHuntManager))
+
+	// Write a client record.
+	client_info_obj := &actions_proto.ClientInfo{
+		ClientId: self.client_id,
+	}
+	client_path_manager := paths.NewClientPathManager(self.client_id)
+	db, _ := datastore.GetDB(self.config_obj)
+	err := db.SetSubject(self.config_obj,
+		client_path_manager.Path(), client_info_obj)
+	assert.NoError(self.T(), err)
 }
 
 func (self *HuntTestSuite) TearDownTest() {

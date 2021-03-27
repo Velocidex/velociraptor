@@ -8,7 +8,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
-	"www.velocidex.com/golang/velociraptor/file_store/mysql"
 )
 
 // GetQueueManager selects an appropriate QueueManager object based on
@@ -28,9 +27,6 @@ func GetQueueManager(config_obj *config_proto.Config) (api.QueueManager, error) 
 
 	case "FileBaseDataStore":
 		return directory.NewDirectoryQueueManager(config_obj, file_store), nil
-
-	case "MySQL":
-		return mysql.NewMysqlQueueManager(file_store.(*mysql.SqlFileStore)), nil
 
 	default:
 		return nil, fmt.Errorf("Unsupported QueueManager %v",

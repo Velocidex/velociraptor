@@ -40,8 +40,6 @@ type APIClient interface {
 	// Users
 	GetUserUITraits(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ApiGrrUser, error)
 	SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest, opts ...grpc.CallOption) (*empty.Empty, error)
-	GetUserNotifications(ctx context.Context, in *GetUserNotificationsRequest, opts ...grpc.CallOption) (*GetUserNotificationsResponse, error)
-	GetUserNotificationCount(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*UserNotificationCount, error)
 	// List all the GUI users known on this server.
 	GetUsers(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Users, error)
 	// VFS
@@ -238,24 +236,6 @@ func (c *aPIClient) GetUserUITraits(ctx context.Context, in *empty.Empty, opts .
 func (c *aPIClient) SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/SetGUIOptions", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *aPIClient) GetUserNotifications(ctx context.Context, in *GetUserNotificationsRequest, opts ...grpc.CallOption) (*GetUserNotificationsResponse, error) {
-	out := new(GetUserNotificationsResponse)
-	err := c.cc.Invoke(ctx, "/proto.API/GetUserNotifications", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *aPIClient) GetUserNotificationCount(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*UserNotificationCount, error) {
-	out := new(UserNotificationCount)
-	err := c.cc.Invoke(ctx, "/proto.API/GetUserNotificationCount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -649,8 +629,6 @@ type APIServer interface {
 	// Users
 	GetUserUITraits(context.Context, *empty.Empty) (*ApiGrrUser, error)
 	SetGUIOptions(context.Context, *SetGUIOptionsRequest) (*empty.Empty, error)
-	GetUserNotifications(context.Context, *GetUserNotificationsRequest) (*GetUserNotificationsResponse, error)
-	GetUserNotificationCount(context.Context, *empty.Empty) (*UserNotificationCount, error)
 	// List all the GUI users known on this server.
 	GetUsers(context.Context, *empty.Empty) (*Users, error)
 	// VFS
@@ -759,12 +737,6 @@ func (UnimplementedAPIServer) GetUserUITraits(context.Context, *empty.Empty) (*A
 }
 func (UnimplementedAPIServer) SetGUIOptions(context.Context, *SetGUIOptionsRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetGUIOptions not implemented")
-}
-func (UnimplementedAPIServer) GetUserNotifications(context.Context, *GetUserNotificationsRequest) (*GetUserNotificationsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserNotifications not implemented")
-}
-func (UnimplementedAPIServer) GetUserNotificationCount(context.Context, *empty.Empty) (*UserNotificationCount, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserNotificationCount not implemented")
 }
 func (UnimplementedAPIServer) GetUsers(context.Context, *empty.Empty) (*Users, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUsers not implemented")
@@ -1159,42 +1131,6 @@ func _API_SetGUIOptions_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(APIServer).SetGUIOptions(ctx, req.(*SetGUIOptionsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _API_GetUserNotifications_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserNotificationsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(APIServer).GetUserNotifications(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.API/GetUserNotifications",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).GetUserNotifications(ctx, req.(*GetUserNotificationsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _API_GetUserNotificationCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(APIServer).GetUserNotificationCount(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.API/GetUserNotificationCount",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).GetUserNotificationCount(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1952,14 +1888,6 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetGUIOptions",
 			Handler:    _API_SetGUIOptions_Handler,
-		},
-		{
-			MethodName: "GetUserNotifications",
-			Handler:    _API_GetUserNotifications_Handler,
-		},
-		{
-			MethodName: "GetUserNotificationCount",
-			Handler:    _API_GetUserNotificationCount_Handler,
 		},
 		{
 			MethodName: "GetUsers",

@@ -14,7 +14,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/mysql"
 	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -206,6 +205,7 @@ func TestResultSetWriterFileBased(t *testing.T) {
 	})
 }
 
+/*
 type ResultSetTestSuiteMysql struct {
 	ResultSetTestSuite
 }
@@ -233,3 +233,5 @@ func TestResultSetWriterMysql(t *testing.T) {
 		ResultSetTestSuite: ResultSetTestSuite{},
 	})
 }
+
+*/

@@ -25,7 +25,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
-	"www.velocidex.com/golang/velociraptor/file_store/mysql"
 	"www.velocidex.com/golang/velociraptor/glob"
 )
 
@@ -39,13 +38,6 @@ func GetFileStore(config_obj *config_proto.Config) api.FileStore {
 	switch config_obj.Datastore.Implementation {
 	case "Test":
 		return memory.Test_memory_file_store
-
-	case "MySQL":
-		res, err := mysql.NewSqlFileStore(config_obj)
-		if err != nil {
-			panic(err)
-		}
-		return res
 
 	case "FileBaseDataStore":
 		return directory.NewDirectoryFileStore(config_obj)
@@ -64,12 +56,6 @@ func GetFileStoreFileSystemAccessor(
 	}
 
 	switch config_obj.Datastore.Implementation {
-	case "MySQL":
-		datastore, err := mysql.NewSqlFileStore(config_obj)
-		if err != nil {
-			return nil, err
-		}
-		return mysql.NewSqlFileStoreAccessor(datastore.(*mysql.SqlFileStore)), nil
 
 	case "FileBaseDataStore":
 		return api.NewFileStoreFileSystemAccessor(

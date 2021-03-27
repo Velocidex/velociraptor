@@ -176,19 +176,6 @@ service API {
         };
     }
 
-    rpc GetUserNotifications(GetUserNotificationsRequest) returns (GetUserNotificationsResponse) {
-        option (google.api.http) = {
-            post: "/api/v1/GetUserNotifications",
-            body: "*"
-        };
-    }
-
-    rpc GetUserNotificationCount(google.protobuf.Empty) returns (UserNotificationCount) {
-        option (google.api.http) = {
-            get: "/api/v1/GetUserNotificationCount",
-        };
-    }
-
     // List all the GUI users known on this server.
     rpc GetUsers(google.protobuf.Empty) returns(Users) {
         option (google.api.http) = {

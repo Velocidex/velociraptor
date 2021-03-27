@@ -152,6 +152,11 @@ func migrate_0_5_6(config_obj *config_proto.Config) {
 			config_obj.Frontend.GlobalUploadRate = 0
 			config_obj.Frontend.ClientEventMaxWait = 0
 		}
+
+		// Update all the extra frontends to use the same resources.
+		for _, fe := range config_obj.ExtraFrontends {
+			fe.Resources = config_obj.Frontend.Resources
+		}
 	}
 }
 

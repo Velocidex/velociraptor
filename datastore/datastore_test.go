@@ -1,6 +1,7 @@
 package datastore
 
 import (
+	"io/fs"
 	"sort"
 	"testing"
 	"time"
@@ -32,14 +33,16 @@ func (self BaseTestSuite) TestSetGetSubject() {
 
 	assert.Equal(self.T(), message.Source, read_message.Source)
 
-	// Not existing urn returns no error but an empty message
+	// Not existing urn returns fs.ErrNotExist error and an empty message
+	read_message.SessionId = "X"
 	err = self.datastore.GetSubject(self.config_obj, urn+"foo", read_message)
-	assert.NoError(self.T(), err)
+	assert.Error(self.T(), err, fs.ErrNotExist)
 
 	// Same for json files.
+	read_message.SessionId = "X"
 	err = self.datastore.GetSubject(
 		self.config_obj, urn+"foo.json", read_message)
-	assert.NoError(self.T(), err)
+	assert.Error(self.T(), err, fs.ErrNotExist)
 
 	// Delete the subject
 	err = self.datastore.DeleteSubject(self.config_obj, urn)
@@ -47,9 +50,7 @@ func (self BaseTestSuite) TestSetGetSubject() {
 
 	// It should now be cleared
 	err = self.datastore.GetSubject(self.config_obj, urn, read_message)
-	assert.NoError(self.T(), err)
-
-	assert.Equal(self.T(), "", read_message.Source)
+	assert.Error(self.T(), err, fs.ErrNotExist)
 }
 
 func (self BaseTestSuite) TestListChildren() {
@@ -97,7 +98,7 @@ func (self BaseTestSuite) TestListChildren() {
 			visited = append(visited, path_name)
 			return nil
 		})
-
+	sort.Strings(visited)
 	assert.Equal(self.T(), []string{"/a/b/c/1", "/a/b/c/2", "/a/b/c/3"}, visited)
 }
 

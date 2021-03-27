@@ -88,22 +88,17 @@ func (self *EnrollmentService) ProcessRow(
 		return nil
 	}
 
-	// Get the client record from the data store.
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
+	// Get the client info from the client info manager.
+	client_info_manager := services.GetClientInfoManager()
+	if client_info_manager == nil {
+		return errors.New("Client info manager not started")
 	}
+	_, err := client_info_manager.Get(client_id)
 
-	client_info := &actions_proto.ClientInfo{}
-	client_path_manager := paths.NewClientPathManager(client_id)
-
-	err = db.GetSubject(config_obj, client_path_manager.Path(), client_info)
-	if err == nil &&
-		// If we have a valid client record we do not need to
-		// interrogate. Interrogation happens automatically only once
-		// - the first time a client appears.
-		client_info.ClientId == client_id ||
-		len(client_info.Hostname) > 0 {
+	// If we have a valid client record we do not need to
+	// interrogate. Interrogation happens automatically only once
+	// - the first time a client appears.
+	if err == nil {
 		return nil
 	}
 
@@ -138,8 +133,16 @@ func (self *EnrollmentService) ProcessRow(
 	}
 
 	// Write an intermediate record while the interrogation is in flight.
-	client_info.ClientId = client_id
-	client_info.LastInterrogateFlowId = flow_id
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	client_path_manager := paths.NewClientPathManager(client_id)
+	client_info := &actions_proto.ClientInfo{
+		ClientId:              client_id,
+		LastInterrogateFlowId: flow_id,
+	}
 	err = db.SetSubject(config_obj, client_path_manager.Path(), client_info)
 	if err != nil {
 		return err

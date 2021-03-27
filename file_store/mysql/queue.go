@@ -1,3 +1,5 @@
+// +build deprecated
+
 // A Mysql queue implementation.
 
 // The goal of this implementation is to allow for efficient following
