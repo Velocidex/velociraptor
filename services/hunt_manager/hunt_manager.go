@@ -56,6 +56,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -198,12 +199,8 @@ func (self *HuntManager) ProcessFlowCompletion(
 	}
 
 	path_manager := paths.NewHuntPathManager(hunt_id)
-	journal, err := services.GetJournal()
-	if err != nil {
-		return
-	}
 
-	err = journal.PushRows(config_obj, path_manager.ClientErrors(),
+	err = file_store.PushRows(config_obj, path_manager.ClientErrors(),
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", flow.ClientId).
 			Set("FlowId", flow.SessionId).
@@ -371,14 +368,9 @@ func (self *HuntManager) ProcessRow(
 
 	row.Set("FlowId", flow_id)
 	row.Set("Timestamp", time.Now().Unix())
-	journal, err := services.GetJournal()
-	if err != nil {
-		scope.Log("hunt manager: %v", err)
-		return
-	}
 
 	path_manager := paths.NewHuntPathManager(participation_row.HuntId)
-	err = journal.PushRows(config_obj,
+	err = file_store.PushRows(config_obj,
 		path_manager.Clients(), []*ordereddict.Dict{row})
 	if err != nil {
 		scope.Log("hunt manager: %v", err)

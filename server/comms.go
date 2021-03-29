@@ -62,7 +62,7 @@ var (
 		Help: "Number of POST requests frontend sent to the client.",
 	})
 
-	// Normally this is calculated in Graphan but it is also
+	// Normally this is calculated in Graphana but it is also
 	// convenient to have an approximation right here.
 	receiveQPS = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "frontend_receive_QPS",

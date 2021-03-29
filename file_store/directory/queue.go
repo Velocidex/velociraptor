@@ -1,6 +1,6 @@
 // A Queue manager that uses files on disk.
 
-// The queue manager is a broken between writers and readers. Writers
+// The queue manager is a broker between writers and readers. Writers
 // want to emit a message to a queue with minimumal delay, and have
 // the message dispatched to all readers with minimal latency.
 
@@ -13,8 +13,8 @@
 // This queue manager uses a combination of a channel and a disk file
 // to buffer messages for readers. When a writer writes to the queue
 // manager, the manager attempts to write on the channel but if it is
-// not available, then writer switches to a ring buffer file on disk.
-// A separate go routine drains the disk file into the channel
+// not available, then the writer switches to a ring buffer file on
+// disk.  A separate go routine drains the disk file into the channel
 // periodically. Therefore, we never block the writer - either the
 // message is delivered immediately to the buffered channel, or it is
 // written to disk and later delivered.

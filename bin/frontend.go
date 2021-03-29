@@ -84,18 +84,19 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 	// Increase resource limits.
 	server.IncreaseLimits(config_obj)
 
-	// These services must start on all frontends
-	err := startup.StartupEssentialServices(sm)
-	if err != nil {
-		return nil, err
-	}
-
-	// Start the frontend service if needed.
-	err = sm.Start(func(ctx context.Context, wg *sync.WaitGroup,
+	// Start the frontend service if needed. This must happen
+	// first so other services can contact the master node.
+	err := sm.Start(func(ctx context.Context, wg *sync.WaitGroup,
 		config_obj *config_proto.Config) error {
 		return frontend.StartFrontendService(
 			ctx, wg, config_obj, *frontend_node)
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	// These services must start on all frontends
+	err = startup.StartupEssentialServices(sm)
 	if err != nil {
 		return nil, err
 	}

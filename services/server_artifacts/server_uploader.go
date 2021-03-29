@@ -12,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -43,12 +42,7 @@ func (self *ServerUploader) Upload(
 	result, err := self.FileStoreUploader.Upload(ctx, scope, filename,
 		accessor, store_as_name, expected_size, reader)
 	if err == nil {
-		journal, err := services.GetJournal()
-		if err != nil {
-			return nil, err
-		}
-
-		err = journal.PushRows(self.config_obj,
+		err = file_store.PushRows(self.config_obj,
 			self.path_manager.UploadMetadata(),
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().Unix()).

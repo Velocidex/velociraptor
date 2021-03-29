@@ -21,7 +21,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
 var (
@@ -56,10 +55,10 @@ type JournalService interface {
 	Watch(ctx context.Context,
 		queue_name string) (output <-chan *ordereddict.Dict, cancel func())
 
-	// Push the rows into the datastore in the location give by
+	// Push the rows into the datastore in the location given by
 	// the path manager.
-	PushRows(config_obj *config_proto.Config,
-		path_manager api.PathManager, rows []*ordereddict.Dict) error
+	//	PushRows(config_obj *config_proto.Config,
+	//		path_manager api.PathManager, rows []*ordereddict.Dict) error
 
 	// Push the rows to the event artifact queue
 	PushRowsToArtifact(config_obj *config_proto.Config,

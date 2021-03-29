@@ -50,6 +50,9 @@ var (
 	// Used for high value audit related events.
 	Audit = "VelociraptorAudit"
 
+	// The node name of this node.
+	node_name = ""
+
 	Manager *LogManager
 
 	mu          sync.Mutex
@@ -59,6 +62,22 @@ var (
 	tag_regex         = regexp.MustCompile("<([^>/0]+)>")
 	closing_tag_regex = regexp.MustCompile("</>")
 )
+
+func GetNodeName() string {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return node_name
+}
+
+// Each node in a cluster stores logs in its own directory.
+func SetNodeName(config_obj *config_proto.Config, name string) error {
+	mu.Lock()
+	defer mu.Unlock()
+
+	node_name = name
+	return InitLogging(config_obj)
+}
 
 func InitLogging(config_obj *config_proto.Config) error {
 	Manager = &LogManager{
@@ -234,14 +253,15 @@ func (self *LogManager) makeNewComponent(
 
 	if config_obj != nil && config_obj.Logging != nil &&
 		config_obj.Logging.OutputDirectory != "" {
-		err := os.MkdirAll(config_obj.Logging.OutputDirectory, 0700)
+
+		base_directory := filepath.Join(
+			config_obj.Logging.OutputDirectory, node_name)
+		err := os.MkdirAll(base_directory, 0700)
 		if err != nil {
 			return nil, errors.New("Unable to create logging directory.")
 		}
-		base_filename := filepath.Join(
-			config_obj.Logging.OutputDirectory,
-			*component)
 
+		base_filename := filepath.Join(base_directory, *component)
 		pathMap := lfshook.WriterMap{
 			logrus.DebugLevel: getRotator(
 				config_obj, config_obj.Logging.Debug,

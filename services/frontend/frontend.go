@@ -17,8 +17,10 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	frontend_proto "www.velocidex.com/golang/velociraptor/services/frontend/proto"
@@ -47,6 +49,28 @@ type FrontendManager struct {
 	urls []string
 
 	sample int
+
+	// If true we are the master node otherwise we are a slave
+	// node.
+	i_am_master bool
+}
+
+func (self *FrontendManager) GetMasterAPIClient(ctx context.Context) (
+	api_proto.APIClient, func() error, error) {
+	if self.i_am_master {
+		return nil, nil, services.FrontendIsMaster
+	}
+
+	// We are a slave so we return a connection to the master
+	return grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+}
+
+func (self *FrontendManager) GetNodeName() string {
+	return GetFrontendName(self.config_obj.Frontend)
+}
+
+func (self *FrontendManager) GetMasterName() string {
+	return self.primary_frontend
 }
 
 func GetFrontendName(fe *config_proto.FrontendConfig) string {
@@ -252,7 +276,7 @@ func (self *FrontendManager) selectFrontend(node string) error {
 		}
 		self.config_obj.Frontend = conf
 
-		logger.Info("Selected frontend configuration %v", node)
+		logger.Info("<green>Frontend:</> Selected frontend node %v", node)
 		return nil
 	}
 
@@ -270,7 +294,7 @@ func (self *FrontendManager) selectFrontend(node string) error {
 
 			logger := logging.GetLogger(
 				self.config_obj, &logging.FrontendComponent)
-			logger.Info("Selected frontend configuration %v", name)
+			logger.Info("<green>Frontend:</> Selected frontend node %v", name)
 
 			return nil
 		}
@@ -287,7 +311,8 @@ func getURL(fe_config *config_proto.FrontendConfig) string {
 		fe_config.BindPort)
 }
 
-// Install a frontend manager.
+// Install a frontend manager. This must be the first service created
+// in the frontend.
 func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config, node string) error {
 	if config_obj.Frontend == nil {
@@ -361,6 +386,23 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 		return err
 	}
 
+	// We are the master if our node name is the same as the
+	// primary node name.
+	node_name := GetFrontendName(config_obj.Frontend)
+	if fe_manager.primary_frontend == node_name {
+		logger.Info("<green>Frontend:</> Server will be master.")
+		fe_manager.i_am_master = true
+	} else {
+		logger.Info("<green>Frontend:</> Server will be slave.")
+
+		// Reset the logger so our logs go into the correct
+		// node's logs.
+		err := logging.SetNodeName(config_obj, node_name)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Store the selection in the data store. NOTE this is a small
 	// race but frontends do not get restarted that often so maybe
 	// it's fine.
@@ -397,10 +439,7 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 			}
 		}
 	}()
-	notifier := services.GetNotifier()
-	if notifier == nil {
-		return errors.New("Notifier not ready")
-	}
 
-	return services.GetNotifier().NotifyListener(config_obj, "Frontend")
+	// Start the replication service ASAP if needed.
+	return nil
 }

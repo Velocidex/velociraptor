@@ -141,7 +141,8 @@ func (self *Notifier) NotifyAllListeners(config_obj *config_proto.Config) error 
 	)
 }
 
-func (self *Notifier) NotifyByRegex(config_obj *config_proto.Config, regex string) error {
+func (self *Notifier) NotifyByRegex(
+	config_obj *config_proto.Config, regex string) error {
 	journal, err := services.GetJournal()
 	if err != nil {
 		return err
