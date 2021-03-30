@@ -26,7 +26,7 @@ sources:
                  FROM stat(filename=servicesKeyGlob + Name, accessor='reg')
                } AS Created,
                {
-                 SELECT ServiceDll FROM read_reg_key(globs=servicesKeyGlob + Name + "\\Parameters")
+                 SELECT expand(path=ServiceDll) FROM read_reg_key(globs=servicesKeyGlob + Name + "\\Parameters")
                } AS ServiceDll,
                {
                  SELECT FailureCommand FROM read_reg_key(globs=servicesKeyGlob + Name)
@@ -39,12 +39,12 @@ sources:
         SELECT *,
                  if(condition=Calculate_hashes,
                     then=hash(path=AbsoluteExePath,
-                           accessor=file)) AS HashServiceExe,
+                           accessor="file")) AS HashServiceExe,
                  if(condition=CertificateInfo,
                     then=authenticode(filename=AbsoluteExePath)) AS CertinfoServiceExe,
                  if(condition=Calculate_hashes,
                     then=hash(path=ServiceDll,
-                           accessor=file)) AS HashServiceDll,
+                           accessor="file")) AS HashServiceDll,
                  if(condition=CertificateInfo,
                     then=authenticode(filename=ServiceDll)) AS CertinfoServiceDll
         FROM service

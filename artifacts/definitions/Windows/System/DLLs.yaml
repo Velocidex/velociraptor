@@ -30,7 +30,7 @@ sources:
                      ModuleBaseAddress+ModuleBaseSize]) AS Range,
                 ModuleName, ExePath,
                 if(condition=Calculate_Hash,
-                  then=hash(path=ExePath,
+                  then=hash(path=expand(path=ExePath),
                             accessor=file)) AS Hash,
                 if(condition=CertificateInfo,
                   then=authenticode(filename=ExePath)) AS Certinfo
