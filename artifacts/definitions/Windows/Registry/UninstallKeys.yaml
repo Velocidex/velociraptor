@@ -1,0 +1,30 @@
+name: Windows.Registry.UninstallKeys
+author: Zach Stanford - @svch0st
+description: |
+   This artifact will list Uninstall keys from the SOFTWARE registry hive
+
+type: CLIENT
+
+parameters:
+   - name: RegGlob		
+     default: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\**
+   - name: NameRegex		
+     default: .
+
+sources:
+  - query: |
+      SELECT 
+            Key.Mtime as Mtime,
+            Key.Atime as Atime,
+            Key.Ctime as Ctime,
+            Key.Name as Name,
+            DisplayName,
+            DisplayVersion,
+            InstallLocation,
+            InstallSource,
+            Language,
+            Publisher,
+            UninstallString,
+            InstallDate
+        FROM read_reg_key(globs=RegGlob)
+        WHERE DisplayName =~ NameRegex
