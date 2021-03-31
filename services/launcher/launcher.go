@@ -237,6 +237,11 @@ func expandArtifacts(artifact *artifacts_proto.Artifact) []*artifacts_proto.Arti
 		for _, source := range artifact.Sources {
 			new_artifact := proto.Clone(artifact).(*artifacts_proto.Artifact)
 			new_artifact.Sources = []*artifacts_proto.ArtifactSource{source}
+			// A precondition at the source level will
+			// override an artifact wide preconditon.
+			if source.Precondition != "" {
+				new_artifact.Precondition = source.Precondition
+			}
 			result = append(result, new_artifact)
 		}
 		return result
