@@ -65,6 +65,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -94,61 +95,21 @@ func (self *HuntManager) Start(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> the hunt manager service.")
 
-	err := self.WatchQueue(ctx, config_obj, wg,
+	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.HuntModification", self.ProcessMutation)
 	if err != nil {
 		return err
 	}
 
-	err = self.WatchQueue(ctx, config_obj, wg,
+	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"System.Hunt.Participation", self.ProcessParticipation)
 	if err != nil {
 		return err
 	}
 
-	err = self.WatchQueue(ctx, config_obj, wg,
+	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"System.Flow.Completion", self.ProcessFlowCompletion)
 	return err
-}
-
-// Watch the Participation queue and schedule new collections.
-func (self *HuntManager) WatchQueue(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	wg *sync.WaitGroup,
-	artifact string,
-
-	// A processor for rows from the queue
-	processor func(ctx context.Context,
-		config_obj *config_proto.Config,
-		row *ordereddict.Dict) error) error {
-
-	journal, err := services.GetJournal()
-	if err != nil {
-		return err
-	}
-	qm_chan, cancel := journal.Watch(ctx, artifact)
-
-	wg.Add(1)
-	go func() {
-		defer cancel()
-		defer wg.Done()
-
-		for {
-			select {
-			case row, ok := <-qm_chan:
-				if !ok {
-					return
-				}
-				processor(ctx, config_obj, row)
-
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-
-	return nil
 }
 
 // Modify a hunt object.

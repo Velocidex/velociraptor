@@ -145,8 +145,14 @@ func ForemanProcessMessage(
 	}
 
 	// Let the client know it needs to update its foreman state to
-	// the latest time.
-	err = QueueMessageForClient(
+	// the latest time. We schedule an UpdateForeman message for
+	// the client. Note that it is possible that the client does
+	// not update its timestamp immediately and therefore might
+	// end up sending multiple participation events to the hunt
+	// manager - this is ok since the hunt manager keeps hunt
+	// participation index and will automatically skip multiple
+	// messages.
+	return QueueMessageForClient(
 		config_obj, client_id,
 		&crypto_proto.GrrMessage{
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
@@ -155,15 +161,4 @@ func ForemanProcessMessage(
 				LastHuntTimestamp: latest_timestamp,
 			},
 		})
-	if err != nil {
-		return err
-	}
-
-	notifier := services.GetNotifier()
-	if notifier == nil {
-		return errors.New("Notifier not configured")
-	}
-
-	// Notify the client so it can pick up the new jobs
-	return services.GetNotifier().NotifyListener(config_obj, client_id)
 }

@@ -18,15 +18,13 @@
 package api
 
 import (
+	"context"
 	"errors"
-	"net"
 	"os"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -43,6 +41,7 @@ import (
 )
 
 func GetApiClient(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	server_obj *server.Server,
 	client_id string, detailed bool) (
@@ -110,38 +109,14 @@ func GetApiClient(
 	result.LastSeenAt = client_info.Ping
 	result.LastIp = client_info.IpAddress
 
-	// Update the time to now if the client is currently actually
-	// connected.
-	if server_obj != nil &&
-		services.GetNotifier().IsClientConnected(client_id) {
+	if server_obj != nil && detailed &&
+		// Wait up to 2 seconds to find out if clients are connected.
+		services.GetNotifier().IsClientConnected(ctx,
+			config_obj, client_id, 2) {
 		result.LastSeenAt = uint64(time.Now().UnixNano() / 1000)
 	}
 
-	remote_address := strings.Split(result.LastIp, ":")[0]
-	if _is_ip_in_ranges(remote_address, config_obj.GUI.InternalCidr) {
-		result.LastIpClass = api_proto.ApiClient_INTERNAL
-	} else if _is_ip_in_ranges(remote_address, config_obj.GUI.InternalCidr) {
-		result.LastIpClass = api_proto.ApiClient_VPN
-	} else {
-		result.LastIpClass = api_proto.ApiClient_EXTERNAL
-	}
-
 	return result, nil
-}
-
-func _is_ip_in_ranges(remote string, ranges []string) bool {
-	for _, ip_range := range ranges {
-		_, ipNet, err := net.ParseCIDR(ip_range)
-		if err != nil {
-			return false
-		}
-
-		if ipNet.Contains(net.ParseIP(remote)) {
-			return true
-		}
-	}
-
-	return false
 }
 
 func (self *ApiServer) GetClientMetadata(
@@ -209,7 +184,7 @@ func (self *ApiServer) GetClient(
 			"User is not allowed to view clients.")
 	}
 
-	api_client, err := GetApiClient(
+	api_client, err := GetApiClient(ctx,
 		self.config,
 		self.server_obj,
 		in.ClientId,

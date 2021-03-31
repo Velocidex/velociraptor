@@ -77,7 +77,9 @@ func (self *ImportCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
-	api_client, err := api.GetApiClient(config_obj, nil, arg.ClientId, false /* detailed */)
+	api_client, err := api.GetApiClient(ctx,
+		config_obj, nil, arg.ClientId,
+		false /* detailed */)
 	if err != nil || api_client.AgentInformation == nil ||
 		api_client.AgentInformation.Name == "" {
 		scope.Log("import_collection: client_id not known")

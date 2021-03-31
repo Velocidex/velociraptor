@@ -58,7 +58,9 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 		}
 
 		if arg.ReallyDoIt {
-			client_info, err := api.GetApiClient(config_obj, nil, arg.ClientId, false)
+			client_info, err := api.GetApiClient(ctx,
+				config_obj, nil, arg.ClientId,
+				false /* detailed */)
 			if err != nil {
 				scope.Log("client_delete: %s", err.Error())
 				return

@@ -444,7 +444,9 @@ func (self *ApiServer) ListClients(
 			result.Names = append(result.Names, client_id)
 		} else {
 			api_client, err := GetApiClient(
-				self.config, self.server_obj, client_id, false)
+				ctx, self.config,
+				self.server_obj, client_id,
+				false /* detailed */)
 			if err != nil {
 				continue
 			}

@@ -16,19 +16,25 @@ package notifications
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 )
 
 type Notifier struct {
 	pool_mu           sync.Mutex
 	notification_pool *notifications.NotificationPool
+
+	idx uint64
 }
 
 // The notifier service watches for events from
@@ -41,26 +47,25 @@ func StartNotificationService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	self := &Notifier{}
-
-	self.pool_mu.Lock()
-	defer self.pool_mu.Unlock()
-
-	if self.notification_pool != nil {
-		self.notification_pool.Shutdown()
+	self := &Notifier{
+		notification_pool: notifications.NewNotificationPool(),
 	}
-
-	self.notification_pool = notifications.NewNotificationPool()
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> the notification service.")
 
-	// Watch the journal.
-	journal, err := services.GetJournal()
+	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
+		"Server.Internal.Ping", self.ProcessPing)
 	if err != nil {
 		return err
 	}
-	events, cancel := journal.Watch(ctx, "Server.Internal.Notifications")
+
+	// Watch the journal.
+	journal_service, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+	events, cancel := journal_service.Watch(ctx, "Server.Internal.Notifications")
 
 	wg.Add(1)
 	go func() {
@@ -118,6 +123,29 @@ func StartNotificationService(
 	return nil
 }
 
+// When receiving a Ping request, we simply notify the target if the
+// ClientId is currently connected to this server.
+func (self *Notifier) ProcessPing(ctx context.Context,
+	config_obj *config_proto.Config,
+	row *ordereddict.Dict) error {
+	client_id, pres := row.GetString("ClientId")
+	if !pres {
+		return nil
+	}
+
+	if !self.notification_pool.IsClientConnected(client_id) {
+		return nil
+	}
+
+	notify_target, pres := row.GetString("NotifyTarget")
+	if !pres {
+		return nil
+	}
+
+	// Notify the target of the Ping.
+	return self.NotifyListener(config_obj, notify_target)
+}
+
 func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()) {
 	self.pool_mu.Lock()
 	if self.notification_pool == nil {
@@ -167,14 +195,43 @@ func (self *Notifier) NotifyListener(config_obj *config_proto.Config, id string)
 	)
 }
 
-// TODO: Make this work on all frontends.
-func (self *Notifier) IsClientConnected(client_id string) bool {
-	self.pool_mu.Lock()
-	if self.notification_pool == nil {
-		self.notification_pool = notifications.NewNotificationPool()
-	}
-	notification_pool := self.notification_pool
-	self.pool_mu.Unlock()
+func (self *Notifier) IsClientConnected(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id string, timeout int) bool {
 
-	return notification_pool.IsClientConnected(client_id)
+	// Get a unique ID
+	atomic.StoreUint64(&self.idx, self.idx+1)
+
+	// Watch for Ping replies on this notification.
+	id := fmt.Sprintf("Notify%v", self.idx)
+	done, cancel := self.ListenForNotification(id)
+	defer cancel()
+
+	// Send ping to all nodes, they will reply with a
+	// notification.
+	journal, err := services.GetJournal()
+	if err != nil {
+		return false
+	}
+
+	err = journal.PushRowsToArtifact(config_obj,
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("ClientId", client_id).
+			Set("NotifyTarget", id)},
+		"Server.Internal.Ping", "server", "")
+	if err != nil {
+		return false
+	}
+
+	// Now wait here for the reply.
+	select {
+	case <-done:
+		// Client is found!
+		return true
+
+	case <-time.After(time.Duration(timeout) * time.Second):
+		// Nope - not found within the timeout.
+		return false
+	}
 }

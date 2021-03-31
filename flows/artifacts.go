@@ -420,28 +420,6 @@ func IsRequestComplete(
 
 	// Only terminate a running flow.
 	if collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
-
-		// Update any hunts if needed.
-		if constants.HuntIdRegex.MatchString(collection_context.Request.Creator) {
-			dispatcher := services.GetHuntDispatcher()
-			if dispatcher == nil {
-				return false, errors.New("Hunt dispatcher not valid")
-			}
-
-			err := dispatcher.ModifyHunt(
-				collection_context.Request.Creator,
-				func(hunt *api_proto.Hunt) error {
-					if hunt != nil && hunt.Stats != nil {
-						hunt.Stats.TotalClientsWithResults++
-						return nil
-					}
-					return notModified
-				})
-			if err != nil && err != notModified {
-				return true, err
-			}
-		}
-
 		collection_context.ExecutionDuration += message.Status.Duration
 		collection_context.OutstandingRequests--
 		if collection_context.OutstandingRequests <= 0 {

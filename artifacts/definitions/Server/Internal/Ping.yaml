@@ -1,0 +1,10 @@
+name: Server.Internal.Ping
+description: |
+  An internal queue for Ping requests. Will ellicit
+  Server.Internal.Pong events.
+
+type: SERVER_EVENT
+
+column_types:
+  - name: ClientId
+  - name: NotifyTarget

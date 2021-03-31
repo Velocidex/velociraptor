@@ -12,12 +12,31 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+)
+
+var (
+	replicationTotalSent = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "replication_service_total_send",
+		Help: "Total number of PushRow rpc calls.",
+	})
+
+	replicationTotalReceive = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "replication_service_total_receive",
+		Help: "Total number of Events received from the master rpc calls.",
+	})
+
+	replicationTotalSendErrors = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "replication_service_total_send_errors",
+		Help: "Total number of PushRow rpc calls.",
+	})
 )
 
 type ReplicationService struct {
@@ -55,7 +74,7 @@ func (self *ReplicationService) Start(
 	}()
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> Replication service to node %v.",
+	logger.Debug("<green>Starting</> Replication service to node %v.",
 		services.Frontend.GetMasterName())
 
 	return nil
@@ -64,6 +83,8 @@ func (self *ReplicationService) Start(
 func (self *ReplicationService) PushRowsToArtifact(
 	config_obj *config_proto.Config,
 	rows []*ordereddict.Dict, artifact, client_id, flow_id string) error {
+
+	replicationTotalSent.Inc()
 
 	// FIXME: implement buffer file here.
 	ctx := context.Background()
@@ -81,9 +102,11 @@ func (self *ReplicationService) PushRowsToArtifact(
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("<green>ReplicationService</> Sending %v rows to %v.", len(rows), artifact)
+	logger.Debug("<green>ReplicationService</> Sending %v rows to %v for %v.",
+		len(rows), artifact, client_id)
 
-	// Are we the master?
+	// Are we the master? This will error out if we are the
+	// master. ReplicationService only runs on the slaves.
 	api_client, closer, err := services.Frontend.GetMasterAPIClient(ctx)
 	if err != nil {
 		return errors.Wrap(err, "ReplicationService: ")
@@ -91,6 +114,9 @@ func (self *ReplicationService) PushRowsToArtifact(
 	defer closer()
 
 	_, err = api_client.PushEvents(ctx, request)
+	if err != nil {
+		replicationTotalSendErrors.Inc()
+	}
 	return err
 }
 
@@ -105,7 +131,7 @@ func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 	// Are we the master?
 	api_client, closer_, err := services.Frontend.GetMasterAPIClient(ctx)
 	if err != nil {
-		logger.Debug("ReplicationService: %v", err)
+		logger.Debug("<red>ReplicationService</> %v", err)
 		close(output_chan)
 		return output_chan, func() {}
 	}
@@ -130,6 +156,9 @@ func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 			if err != nil {
 				continue
 			}
+
+			replicationTotalReceive.Inc()
+
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			dict := ordereddict.NewDict()
 			err = dict.UnmarshalJSON(event.Jsonl)
@@ -139,7 +168,7 @@ func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 					return
 
 				case output_chan <- dict:
-					logger.Debug("ReplicationService: Received event on %v: %v\n", queue, dict)
+					logger.Debug("<green>ReplicationService</>: Received event on %v: %v\n", queue, dict)
 				}
 			}
 

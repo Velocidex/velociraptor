@@ -251,8 +251,10 @@ func (self HuntResultsPlugin) Call(
 			}
 
 			if participation_row.Participate {
-				api_client, err := api.GetApiClient(
-					config_obj, nil, participation_row.ClientId, false)
+				api_client, err := api.GetApiClient(ctx,
+					config_obj, nil,
+					participation_row.ClientId,
+					false /* detailed */)
 				if err != nil {
 					continue
 				}

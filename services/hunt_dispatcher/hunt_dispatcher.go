@@ -19,14 +19,17 @@ package hunt_dispatcher
 
 // The hunt dispatcher is a local in memory cache of current active
 // hunts. As clients check in to the frontend, the server makes sure
-// there are no outstanding hunts for that client. Hunts may only be
-// modified via the hunt dispatcher (i.e. hunts are not modified by
-// changing data store entries directly).
+// there are no outstanding hunts for that client, and this needs to
+// be in memory for quick access. The hunt dispatcher refreshes the
+// hunt list periodically from the data store to receive fresh data.
 
 // In multi frontend deployments, each node has its own hunt
-// dispatcher, initialized from the data store. After startup, the
-// hunt list is replicated via the ReplicationService to all
-// frontends.
+// dispatcher, initialized from the data store. On slave nodes, the
+// hunt dispatcher is not allowed to write updates to the data store,
+// only read them. The master's hunt dispatcher is responsible for
+// maintaining the hunt state across all nodes. In order to update a
+// hunt's property (e.g. TotalClientsScheduled etc), callers should
+// call MutateHunt() to pass a mutation to the master.
 
 import (
 	"context"
@@ -115,9 +118,6 @@ func (self *HuntDispatcher) ApplyFuncOnHunts(
 	return nil
 }
 
-// FIXME: How to make this distributed? Right now it depends on being
-// a global singleton.
-
 func (self *HuntDispatcher) GetHunt(hunt_id string) (*api_proto.Hunt, bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -148,6 +148,7 @@ func (self *HuntDispatcher) ModifyHunt(
 	defer self.mu.Unlock()
 
 	if !self.i_am_master {
+		panic(1)
 		return errors.New("Unable to modify hunts on the slave. Please use MutateHunt()")
 	}
 
