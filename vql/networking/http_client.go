@@ -53,7 +53,7 @@ var (
 	http_client_no_ssl *http.Client
 )
 
-type _HttpPluginRequest struct {
+type HttpPluginRequest struct {
 	Url     string      `vfilter:"required,field=url,doc=The URL to fetch"`
 	Params  vfilter.Any `vfilter:"optional,field=params,doc=Parameters to encode as POST or GET query strings"`
 	Headers vfilter.Any `vfilter:"optional,field=headers,doc=A dict of headers to send."`
@@ -77,7 +77,6 @@ type _HttpPlugin struct{}
 
 func customVerifyPeerCert(
 	config_obj *config_proto.ClientConfig,
-	url_str string,
 	rawCerts [][]byte,
 	verifiedChains [][]*x509.Certificate) error {
 
@@ -124,9 +123,9 @@ func customVerifyPeerCert(
 	})
 }
 
-func getHttpClient(
+func GetHttpClient(
 	config_obj *config_proto.ClientConfig,
-	arg *_HttpPluginRequest) *http.Client {
+	arg *HttpPluginRequest) *http.Client {
 
 	// If we deployed Velociraptor using self signed certificates
 	// we want to be able to trust our own server. Our own server
@@ -136,7 +135,7 @@ func getHttpClient(
 	// ignore the server's Common Name.
 
 	// It is a unix domain socket.
-	if strings.HasPrefix(arg.Url, "/") {
+	if arg != nil && strings.HasPrefix(arg.Url, "/") {
 		components := strings.Split(arg.Url, ":")
 		if len(components) == 1 {
 			components = append(components, "/")
@@ -157,7 +156,7 @@ func getHttpClient(
 	mu.Lock()
 	defer mu.Unlock()
 
-	if arg.DisableSSLSecurity {
+	if arg != nil && arg.DisableSSLSecurity {
 		if http_client_no_ssl != nil {
 			return http_client_no_ssl
 		}
@@ -196,7 +195,6 @@ func getHttpClient(
 					verifiedChains [][]*x509.Certificate) error {
 					return customVerifyPeerCert(
 						config_obj,
-						arg.Url,
 						rawCerts,
 						verifiedChains)
 				},
@@ -207,7 +205,7 @@ func getHttpClient(
 	return http_client
 }
 
-func encodeParams(arg *_HttpPluginRequest, scope vfilter.Scope) *url.Values {
+func encodeParams(arg *HttpPluginRequest, scope vfilter.Scope) *url.Values {
 	data := url.Values{}
 	if arg.Params != nil {
 		for _, member := range scope.GetMembers(arg.Params) {
@@ -241,7 +239,7 @@ func (self *_HttpPlugin) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
-	arg := &_HttpPluginRequest{}
+	arg := &HttpPluginRequest{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		goto error
@@ -267,7 +265,7 @@ func (self *_HttpPlugin) Call(
 		config_obj, _ := artifacts.GetConfig(scope)
 
 		params := encodeParams(arg, scope)
-		client := getHttpClient(config_obj, arg)
+		client := GetHttpClient(config_obj, arg)
 
 		data := arg.Data
 		if data == "" {
@@ -415,7 +413,7 @@ func (self _HttpPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	return &vfilter.PluginInfo{
 		Name:    self.Name(),
 		Doc:     "Make a http request.",
-		ArgType: type_map.AddType(scope, &_HttpPluginRequest{}),
+		ArgType: type_map.AddType(scope, &HttpPluginRequest{}),
 	}
 }
 
