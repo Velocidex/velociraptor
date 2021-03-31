@@ -247,7 +247,8 @@ func control(server_obj *Server) http.Handler {
 	logger := logging.GetLogger(server_obj.config, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
+		fmt.Printf("Got connection from %v\n", req.RemoteAddr)
+		defer fmt.Printf("Closed connection from %v\n", req.RemoteAddr)
 		/* Experimental redirection is turned off for now.
 		if maybeRedirectFrontend("control", w, req) {
 			return

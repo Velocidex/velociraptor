@@ -46,6 +46,7 @@ import (
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 // ForemanProcessMessage processes a ForemanCheckin message from the
@@ -62,19 +63,16 @@ func ForemanProcessMessage(
 
 	// Update the client's event tables.
 	client_event_manager := services.ClientEventManager()
-	if client_event_manager == nil {
-		// Not really an error - this happens when the server
-		// shuts down.
-		return nil
-	}
-
-	if client_event_manager.CheckClientEventsVersion(
-		config_obj, client_id, foreman_checkin.LastEventTableVersion) {
+	if client_event_manager != nil &&
+		client_event_manager.CheckClientEventsVersion(
+			config_obj, client_id,
+			foreman_checkin.LastEventTableVersion) {
 		err := QueueMessageForClient(
 			config_obj, client_id,
 			client_event_manager.GetClientUpdateEventTableMessage(
 				config_obj, client_id))
 		if err != nil {
+			utils.Debug(err)
 			return err
 		}
 	}

@@ -21,10 +21,7 @@ import (
 )
 
 type ReplicationService struct {
-	config_obj *config_proto.Config
-	api_client api_proto.APIClient
-	closer     func() error // Closer for the api_client
-
+	config_obj  *config_proto.Config
 	file_buffer *directory.FileBasedRingBuffer
 	tmpfile     *os.File
 }
@@ -32,10 +29,9 @@ type ReplicationService struct {
 func (self *ReplicationService) Start(
 	ctx context.Context, wg *sync.WaitGroup) (err error) {
 
-	// Are we the master?
-	api_client, closer, err := services.Frontend.GetMasterAPIClient(ctx)
-	if err != nil {
-		return errors.Wrap(err, "ReplicationService: ")
+	// If we are the master node we do not replicate anywhere.
+	if services.Frontend.GetNodeName() == services.Frontend.GetMasterName() {
+		return services.FrontendIsMaster
 	}
 
 	self.tmpfile, err = ioutil.TempFile("", "replication")
@@ -62,9 +58,6 @@ func (self *ReplicationService) Start(
 	logger.Info("<green>Starting</> Replication service to node %v.",
 		services.Frontend.GetMasterName())
 
-	self.api_client = api_client
-	self.closer = closer
-
 	return nil
 }
 
@@ -90,7 +83,14 @@ func (self *ReplicationService) PushRowsToArtifact(
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("<green>ReplicationService</> Sending %v rows to %v.", len(rows), artifact)
 
-	_, err = self.api_client.PushEvents(ctx, request)
+	// Are we the master?
+	api_client, closer, err := services.Frontend.GetMasterAPIClient(ctx)
+	if err != nil {
+		return errors.Wrap(err, "ReplicationService: ")
+	}
+	defer closer()
+
+	_, err = api_client.PushEvents(ctx, request)
 	return err
 }
 
@@ -102,14 +102,22 @@ func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("<green>ReplicationService</>: Watching for events from %v", queue)
 
-	// Failed to connect with the master. What should we do here?
-	subctx, cancel := context.WithCancel(ctx)
-	stream, err := self.api_client.WatchEvent(subctx, &api_proto.EventRequest{
+	// Are we the master?
+	api_client, closer_, err := services.Frontend.GetMasterAPIClient(ctx)
+	if err != nil {
+		logger.Debug("ReplicationService: %v", err)
+		close(output_chan)
+		return output_chan, func() {}
+	}
+
+	closer := func() { closer_() }
+
+	stream, err := api_client.WatchEvent(ctx, &api_proto.EventRequest{
 		Queue: queue,
 	})
 	if err != nil {
 		close(output_chan)
-		return output_chan, func() {}
+		return output_chan, closer
 	}
 
 	go func() {
@@ -138,13 +146,10 @@ func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 		}
 	}()
 
-	return output_chan, cancel
+	return output_chan, closer
 }
 
 func (self *ReplicationService) Close() {
-	if self.closer != nil {
-		self.closer()
-	}
 	self.file_buffer.Close()
 	os.Remove(self.tmpfile.Name()) // clean up file buffer
 }

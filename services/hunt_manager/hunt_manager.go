@@ -17,26 +17,30 @@
 */
 /*
 
-  The hunt manager service should only be run once across the entire
-  deployment.  The hunt manager service watches for new clients added
-  to a hunt and schedules new flows on them. It is written as a single
-  thread so it is allowed to fall behind - it is not on the critical
-  path and should be able to catch up with no problems.
+  The hunt manager service only runs once on the master node and
+  mediates updating the hunt objects in the data store. The hunt
+  manager service watches for new clients added to a hunt and
+  schedules new flows on them. It is written as a single thread so it
+  is allowed to fall behind - it is not on the critical path and
+  should be able to catch up with no problems.
 
   Hunt dispatching logic:
 
-1) Client checks in with foreman.
+1) Client checks in with foreman. The foreman consults a read only
+   copy of the hunts in the HuntDispatcher service to see if the
+   client has run the hunt before.
 
 2) If foreman decides client has not run this hunt, foreman pushes a
    message on the `System.Hunt.Participation` queue.
 
 3) Hunt manager watches for new rows on System.Hunt.Participation and
-   schedules collection.
+   schedules collection on the client.
 
 4) Hunt manager watches for flow completions and updates hunt stats re
    success or error of flow completion.
 
-Note that steps 1 & 2 are on the critical path and 3-4 are not.
+Note that steps 1 & 2 are on the critical path (and may be on a remote
+frontend) and 3-4 are run on the master node.
 
 */
 
@@ -66,6 +70,8 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+// This is the record that will be sent by the foreman to the hunt
+// manager.
 type ParticipationRecord struct {
 	HuntId      string `vfilter:"required,field=HuntId"`
 	ClientId    string `vfilter:"required,field=ClientId"`
@@ -77,7 +83,9 @@ type ParticipationRecord struct {
 	TS          uint64 `vfilter:"optional,field=_ts"`
 }
 
-type HuntManager struct{}
+type HuntManager struct {
+	scope vfilter.Scope
+}
 
 func (self *HuntManager) Start(
 	ctx context.Context,
@@ -86,35 +94,40 @@ func (self *HuntManager) Start(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> the hunt manager service.")
 
-	err := self.StartParticipation(ctx, config_obj, wg)
+	err := self.WatchQueue(ctx, config_obj, wg,
+		"Server.Internal.HuntModification", self.ProcessMutation)
 	if err != nil {
 		return err
 	}
 
-	return self.StartFlowCompletion(ctx, config_obj, wg)
+	err = self.WatchQueue(ctx, config_obj, wg,
+		"System.Hunt.Participation", self.ProcessParticipation)
+	if err != nil {
+		return err
+	}
+
+	err = self.WatchQueue(ctx, config_obj, wg,
+		"System.Flow.Completion", self.ProcessFlowCompletion)
+	return err
 }
 
 // Watch the Participation queue and schedule new collections.
-func (self *HuntManager) StartParticipation(
+func (self *HuntManager) WatchQueue(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	wg *sync.WaitGroup) error {
+	wg *sync.WaitGroup,
+	artifact string,
 
-	manager, err := services.GetRepositoryManager()
-	if err != nil {
-		return err
-	}
+	// A processor for rows from the queue
+	processor func(ctx context.Context,
+		config_obj *config_proto.Config,
+		row *ordereddict.Dict) error) error {
 
-	scope := manager.BuildScope(
-		services.ScopeBuilder{
-			Config: config_obj,
-			Logger: logging.NewPlainLogger(config_obj, &logging.GenericComponent),
-		})
 	journal, err := services.GetJournal()
 	if err != nil {
 		return err
 	}
-	qm_chan, cancel := journal.Watch(ctx, "System.Hunt.Participation")
+	qm_chan, cancel := journal.Watch(ctx, artifact)
 
 	wg.Add(1)
 	go func() {
@@ -127,7 +140,7 @@ func (self *HuntManager) StartParticipation(
 				if !ok {
 					return
 				}
-				self.ProcessRow(ctx, config_obj, scope, row)
+				processor(ctx, config_obj, row)
 
 			case <-ctx.Done():
 				return
@@ -138,40 +151,69 @@ func (self *HuntManager) StartParticipation(
 	return nil
 }
 
-// Watch the Flow.Completion queue and report status.
-func (self *HuntManager) StartFlowCompletion(
+// Modify a hunt object.
+func (self *HuntManager) ProcessMutation(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	wg *sync.WaitGroup) error {
+	row *ordereddict.Dict) error {
 
-	scope := vfilter.NewScope()
-	journal, err := services.GetJournal()
+	mutation := &api_proto.HuntMutation{}
+	mutation_cell, pres := row.Get("mutation")
+	if !pres {
+		return errors.New("No mutation")
+	}
+
+	err := utils.ParseIntoProtobuf(mutation_cell, mutation)
 	if err != nil {
+		utils.Debug(err)
 		return err
 	}
 
-	qm_chan, cancel := journal.Watch(ctx, "System.Flow.Completion")
-
-	wg.Add(1)
-	go func() {
-		defer cancel()
-		defer wg.Done()
-
-		for {
-			select {
-			case row, ok := <-qm_chan:
-				if !ok {
-					return
-				}
-				self.ProcessFlowCompletion(ctx, config_obj, scope, row)
-
-			case <-ctx.Done():
-				return
+	dispatcher := services.GetHuntDispatcher()
+	return dispatcher.ModifyHunt(mutation.HuntId,
+		func(hunt_obj *api_proto.Hunt) error {
+			if hunt_obj.Stats == nil {
+				hunt_obj.Stats = &api_proto.HuntStats{}
 			}
-		}
-	}()
 
-	return nil
+			if mutation.Stats == nil {
+				mutation.Stats = &api_proto.HuntStats{}
+			}
+
+			hunt_obj.Stats.TotalClientsScheduled +=
+				mutation.Stats.TotalClientsScheduled
+
+			hunt_obj.Stats.TotalClientsWithResults +=
+				mutation.Stats.TotalClientsWithResults
+
+			// Have we stopped the hunt?
+			if mutation.State == api_proto.Hunt_STOPPED ||
+				mutation.State == api_proto.Hunt_PAUSED {
+				hunt_obj.Stats.Stopped = true
+				hunt_obj.State = api_proto.Hunt_STOPPED
+			}
+
+			if mutation.State == api_proto.Hunt_RUNNING {
+				hunt_obj.Stats.Stopped = false
+				hunt_obj.State = api_proto.Hunt_RUNNING
+			}
+
+			if mutation.State == api_proto.Hunt_ARCHIVED {
+				hunt_obj.State = api_proto.Hunt_ARCHIVED
+			}
+
+			if mutation.Description != "" {
+				hunt_obj.HuntDescription = mutation.Description
+			}
+
+			if mutation.StartTime > 0 {
+				hunt_obj.StartTime = mutation.StartTime
+			}
+
+			fmt.Printf("Modifying %v\n", mutation)
+
+			return nil
+		})
 }
 
 // Watch for all flows created by a hunt and maintain the list of hunt
@@ -179,28 +221,42 @@ func (self *HuntManager) StartFlowCompletion(
 func (self *HuntManager) ProcessFlowCompletion(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope vfilter.Scope,
-	row *ordereddict.Dict) {
+	row *ordereddict.Dict) error {
+
+	utils.Debug(row)
 
 	flow := &flows_proto.ArtifactCollectorContext{}
 	flow_any, _ := row.Get("Flow")
 	err := utils.ParseIntoProtobuf(flow_any, flow)
 	if err != nil {
-		return
+		return err
 	}
 
 	if flow.Request == nil {
-		return
+		return nil
 	}
 
 	hunt_id := flow.Request.Creator
 	if !strings.HasPrefix(hunt_id, constants.HUNT_PREFIX) {
-		return
+		return nil
+	}
+
+	// Flow is complete so add it to the hunt stats.
+	dispatcher := services.GetHuntDispatcher()
+	err = dispatcher.MutateHunt(config_obj,
+		&api_proto.HuntMutation{
+			HuntId: hunt_id,
+			Stats: &api_proto.HuntStats{
+				TotalClientsWithResults: 1,
+			},
+		})
+	if err != nil {
+		utils.Debug(err)
+		return err
 	}
 
 	path_manager := paths.NewHuntPathManager(hunt_id)
-
-	err = file_store.PushRows(config_obj, path_manager.ClientErrors(),
+	return file_store.PushRows(config_obj, path_manager.ClientErrors(),
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", flow.ClientId).
 			Set("FlowId", flow.SessionId).
@@ -208,184 +264,92 @@ func (self *HuntManager) ProcessFlowCompletion(
 			Set("EndTime", time.Unix(0, int64(flow.ActiveTime*1000))).
 			Set("Status", flow.State.String()).
 			Set("Error", flow.Status)})
-	if err != nil {
-		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Error(fmt.Sprintf("ProcessFlowCompletion: %v", err))
-	}
 }
 
-func (self *HuntManager) ProcessRow(
+func (self *HuntManager) ProcessParticipation(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope vfilter.Scope,
-	row *ordereddict.Dict) {
+	row *ordereddict.Dict) error {
 
 	participation_row := &ParticipationRecord{}
-	err := vfilter.ExtractArgs(scope, row, participation_row)
+	err := vfilter.ExtractArgs(self.scope, row, participation_row)
 	if err != nil {
-		scope.Log("hunt_manager: %v", err)
-		return
+		return err
 	}
 
 	// The client will not participate in this hunt - nothing to do.
 	if !participation_row.Participate {
-		return
+		return nil
 	}
 
 	// Get some info about the client
 	client_info_manager := services.GetClientInfoManager()
 	if client_info_manager == nil {
-		return
+		return nil
 	}
 
 	client_info, err := client_info_manager.Get(participation_row.ClientId)
 	if err != nil {
-		scope.Log("hunt_manager: failed to get client %v: %v",
+		return fmt.Errorf("hunt_manager: failed to get client %v: %w",
 			participation_row.ClientId, err)
-		return
 	}
 
-	// Check if we already launched it on this client. We maintain
-	// a data store index of all the clients and hunts to be able
-	// to quickly check if a certain hunt ran on a particular
-	// client. We dont care too much how fast this is because the
-	// hunt manager is running as an independent service and not
-	// in the critical path.
-	db, err := datastore.GetDB(config_obj)
+	err = checkHuntRanOnClient(config_obj, participation_row.ClientId,
+		participation_row.HuntId)
 	if err != nil {
-		return
+		return err
 	}
-
-	hunt_ids := []string{participation_row.HuntId}
-	err = db.CheckIndex(config_obj, constants.HUNT_INDEX,
-		participation_row.ClientId, hunt_ids)
-	if err == nil {
-		return
-	}
-
-	err = db.SetIndex(config_obj, constants.HUNT_INDEX,
-		participation_row.ClientId, hunt_ids)
-	if err != nil {
-		scope.Log("Setting hunt index: %v", err)
-		return
-	}
-
-	// Prepare a collection request
-	request := &flows_proto.ArtifactCollectorArgs{}
 
 	// Get hunt information about this hunt.
-	now := uint64(time.Now().UnixNano() / 1000)
 	dispatcher := services.GetHuntDispatcher()
 	if dispatcher == nil {
-		return
+		return errors.New("hunt dispatcher invalid")
 	}
 
-	err = dispatcher.ModifyHunt(
-		participation_row.HuntId,
-		func(hunt_obj *api_proto.Hunt) error {
-			if hunt_obj.Stats == nil {
-				hunt_obj.Stats = &api_proto.HuntStats{}
-			}
-
-			// The event may override the regular hunt
-			// logic.
-			if participation_row.Override {
-				proto.Merge(request, hunt_obj.StartRequest)
-				hunt_obj.Stats.TotalClientsScheduled += 1
-
-				return nil
-			}
-
-			// Ignore stopped hunts.
-			if hunt_obj.Stats.Stopped ||
-				hunt_obj.State != api_proto.Hunt_RUNNING {
-				return errors.New("hunt is stopped")
-			}
-
-			if !huntMatchesOS(hunt_obj, client_info) {
-				return errors.New("Hunt does not match OS condition")
-			}
-
-			// Ignore hunts with label conditions which
-			// exclude this client.
-			if !huntHasLabel(config_obj, hunt_obj,
-				participation_row.ClientId) {
-				return errors.New("hunt label does not match")
-			}
-
-			// Hunt limit exceeded or it expired - we stop it.
-			if (hunt_obj.ClientLimit > 0 &&
-				hunt_obj.Stats.TotalClientsScheduled >= hunt_obj.ClientLimit) ||
-				now > hunt_obj.Expires {
-
-				// Stop the hunt.
-				hunt_obj.Stats.Stopped = true
-				return errors.New("hunt is expired")
-			}
-
-			// Use hunt information to launch the flow
-			// against this client.
-			proto.Merge(request, hunt_obj.StartRequest)
-			hunt_obj.Stats.TotalClientsScheduled += 1
-
-			return nil
-		})
-
-	if err != nil {
-		return
+	hunt_obj, pres := dispatcher.GetHunt(participation_row.HuntId)
+	if !pres {
+		return fmt.Errorf("Hunt %v not known", participation_row.HuntId)
 	}
 
-	manager, err := services.GetRepositoryManager()
-	if err != nil {
-		scope.Log("hunt_manager: %v", err)
-		return
+	// The event may override the regular hunt logic.
+	if participation_row.Override {
+		return scheduleHuntOnClient(ctx, config_obj,
+			hunt_obj, participation_row.ClientId)
 	}
 
-	repository, err := manager.GetGlobalRepository(config_obj)
-	if err != nil {
-		scope.Log("hunt manager: GetGlobalRepository: %v", err)
-		return
+	// Ignore stopped hunts.
+	if hunt_obj.Stats.Stopped ||
+		hunt_obj.State != api_proto.Hunt_RUNNING {
+		return errors.New("hunt is stopped")
+
+	} else if !huntMatchesOS(hunt_obj, client_info) {
+		return errors.New("Hunt does not match OS condition")
+
+		// Ignore hunts with label conditions which
+		// exclude this client.
+
+	} else if !huntHasLabel(config_obj, hunt_obj,
+		participation_row.ClientId) {
+		return errors.New("hunt label does not match")
 	}
 
-	launcher, err := services.GetLauncher()
-	if err != nil {
-		return
+	// Hunt limit exceeded or it expired - we stop it.
+	now := uint64(time.Now().UnixNano() / 1000)
+	if (hunt_obj.ClientLimit > 0 &&
+		hunt_obj.Stats.TotalClientsScheduled >= hunt_obj.ClientLimit) ||
+		now > hunt_obj.Expires {
+
+		// Hunt is expired, stop the hunt.
+		return dispatcher.MutateHunt(config_obj,
+			&api_proto.HuntMutation{
+				HuntId: participation_row.HuntId,
+				Stats:  &api_proto.HuntStats{Stopped: true}})
 	}
 
-	// Direct the request against our client and schedule it.
-	request.ClientId = participation_row.ClientId
-
-	// Make sure the flow is created by the hunt - this is how we
-	// track it.
-	request.Creator = participation_row.HuntId
-
-	flow_id, err := launcher.ScheduleArtifactCollection(
-		ctx, config_obj, vql_subsystem.NullACLManager{}, repository, request)
-	if err != nil {
-		scope.Log("hunt manager: %v", err)
-		return
-	}
-
-	row.Set("FlowId", flow_id)
-	row.Set("Timestamp", time.Now().Unix())
-
-	path_manager := paths.NewHuntPathManager(participation_row.HuntId)
-	err = file_store.PushRows(config_obj,
-		path_manager.Clients(), []*ordereddict.Dict{row})
-	if err != nil {
-		scope.Log("hunt manager: %v", err)
-		return
-	}
-
-	// Notify the client
-	notifier := services.GetNotifier()
-	if notifier != nil {
-		err = services.GetNotifier().NotifyListener(
-			config_obj, participation_row.ClientId)
-		if err != nil {
-			scope.Log("hunt manager: %v", err)
-		}
-	}
+	// Use hunt information to launch the flow against this
+	// client.
+	return scheduleHuntOnClient(ctx,
+		config_obj, hunt_obj, participation_row.ClientId)
 }
 
 func StartHuntManager(
@@ -393,7 +357,18 @@ func StartHuntManager(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	result := &HuntManager{}
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	result := &HuntManager{
+		scope: manager.BuildScope(
+			services.ScopeBuilder{
+				Config: config_obj,
+				Logger: logging.NewPlainLogger(config_obj, &logging.GenericComponent),
+			}),
+	}
 	return result.Start(ctx, config_obj, wg)
 }
 
@@ -463,4 +438,112 @@ func huntMatchesOS(hunt_obj *api_proto.Hunt, client_info *services.ClientInfo) b
 	}
 
 	return true
+}
+
+// Check if we already launched it on this client. We maintain
+// a data store index of all the clients and hunts to be able
+// to quickly check if a certain hunt ran on a particular
+// client. We dont care too much how fast this is because the
+// hunt manager is running as an independent service and not
+// in the critical path.
+func checkHuntRanOnClient(
+	config_obj *config_proto.Config,
+	client_id, hunt_id string) error {
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	hunt_ids := []string{hunt_id}
+	err = db.CheckIndex(
+		config_obj, constants.HUNT_INDEX, client_id, hunt_ids)
+	if err == nil {
+		return errors.New("Client already ran this hunt")
+	}
+
+	err = db.SetIndex(
+		config_obj, constants.HUNT_INDEX, client_id, hunt_ids)
+	if err != nil {
+		return fmt.Errorf("Setting hunt index: %w", err)
+	}
+
+	return nil
+}
+
+func scheduleHuntOnClient(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	hunt_obj *api_proto.Hunt, client_id string) error {
+
+	hunt_id := hunt_obj.HuntId
+
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return err
+	}
+
+	// The request is pre-compiled into the hunt object.
+	request := &flows_proto.ArtifactCollectorArgs{}
+	proto.Merge(request, hunt_obj.StartRequest)
+
+	// Direct the request against our client and schedule it.
+	request.ClientId = client_id
+
+	// Make sure the flow is created by the hunt - this is how we
+	// track it.
+	request.Creator = hunt_id
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
+		ctx, config_obj, vql_subsystem.NullACLManager{}, repository, request)
+	if err != nil {
+		return err
+	}
+
+	// Append the row to the hunt so we can quickly query all
+	// clients that belong on this hunt and their flow id.
+	row := ordereddict.NewDict().
+		Set("HuntId", hunt_id).
+		Set("ClientId", client_id).
+		Set("FlowId", flow_id).
+		Set("Timestamp", time.Now().Unix())
+
+	path_manager := paths.NewHuntPathManager(hunt_id)
+	err = file_store.PushRows(config_obj,
+		path_manager.Clients(), []*ordereddict.Dict{row})
+	if err != nil {
+		return err
+	}
+
+	// Modify the hunt stats.
+	dispatcher := services.GetHuntDispatcher()
+	if dispatcher == nil {
+		return errors.New("hunt dispatcher invalid")
+	}
+
+	err = dispatcher.MutateHunt(config_obj,
+		&api_proto.HuntMutation{
+			HuntId: hunt_id,
+			Stats: &api_proto.HuntStats{
+				TotalClientsScheduled: 1}})
+	if err != nil {
+		return err
+	}
+
+	// Notify the client that the hunt applies to it.
+	notifier := services.GetNotifier()
+	if notifier != nil {
+		_ = notifier.NotifyListener(config_obj, client_id)
+	}
+
+	return nil
 }

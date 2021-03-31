@@ -46,6 +46,9 @@ var (
 	api_config_path = app.Flag("api_config", "The API configuration file.").
 			Short('a').String()
 
+	override_flag = app.Flag("config_override", "A json object to override the config.").
+			Short('o').String()
+
 	run_as = app.Flag("runas", "Run as this username's ACLs").String()
 
 	artifact_definitions_dir = app.Flag(
@@ -150,7 +153,8 @@ func main() {
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
 		WithCustomValidator(initFilestoreAccessor).
 		WithCustomValidator(initDebugServer).
-		WithLogFile(*logging_flag)
+		WithLogFile(*logging_flag).
+		WithOverride(*override_flag)
 
 	// Commands that potentially take an API config can load both
 	// - first try the API config, then try a config.

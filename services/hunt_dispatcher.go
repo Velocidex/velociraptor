@@ -52,6 +52,13 @@ type IHuntDispatcher interface {
 	// all frontends.
 	ModifyHunt(hunt_id string, cb func(hunt *api_proto.Hunt) error) error
 
+	// Gets read only access to the hunt object.
+	GetHunt(hunt_id string) (*api_proto.Hunt, bool)
+
+	// Send a mutation to a hunt object.
+	MutateHunt(config_obj *config_proto.Config,
+		mutation *api_proto.HuntMutation) error
+
 	// Re-read the hunts from the data store. This happens
 	// periodically and can also be triggered when a change is
 	// written to the datastore (e.g. new hunt scheduled) to pick

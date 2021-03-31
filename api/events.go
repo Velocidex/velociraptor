@@ -21,8 +21,6 @@ func (self *ApiServer) PushEvents(
 	ctx context.Context,
 	in *api_proto.PushEventRequest) (*empty.Empty, error) {
 
-	utils.Debug(in)
-
 	// Get the TLS context from the peer and verify its
 	// certificate.
 	peer, ok := peer.FromContext(ctx)

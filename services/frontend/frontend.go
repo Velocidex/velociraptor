@@ -357,6 +357,15 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 
 	fe_manager.addFrontendConfig(config_obj.Frontend)
 	for _, fe_config := range config_obj.ExtraFrontends {
+		// Slaves run these services
+		fe_config.ServerServices = &config_proto.ServerServicesConfig{
+			HuntDispatcher:   true,
+			StatsCollector:   true,
+			ClientMonitoring: true,
+			SanityChecker:    true,
+			FrontendServer:   true,
+		}
+
 		// Duplicate keys to all frontends.
 		fe_config.Certificate = config_obj.Frontend.Certificate
 		fe_config.PrivateKey = config_obj.Frontend.PrivateKey

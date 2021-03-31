@@ -13,6 +13,8 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	errors "github.com/pkg/errors"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -146,6 +148,27 @@ func (self *Loader) WithRequiredUser() *Loader {
 						"Please change user with sudo first.",
 					config_obj.Frontend.RunAsUser, user.Username))
 			}
+			return nil
+		})
+	return self
+}
+
+func (self *Loader) WithOverride(json_data string) *Loader {
+	self = self.Copy()
+	self.validators = append(self.validators,
+		func(self *Loader, config_obj *config_proto.Config) error {
+			if json_data == "" {
+				return nil
+			}
+
+			// Merge the json blob with the config
+			src := &config_proto.Config{}
+			err := protojson.Unmarshal([]byte(json_data), src)
+			if err != nil {
+				return err
+			}
+
+			proto.Merge(config_obj, src)
 			return nil
 		})
 	return self

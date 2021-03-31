@@ -26,6 +26,7 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"encoding/binary"
+	"fmt"
 	"path"
 	"sort"
 	"time"
@@ -277,35 +278,28 @@ func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) 
 func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 	hunt *api_proto.Hunt, err error) {
 
-	var result *api_proto.Hunt
+	var hunt_obj *api_proto.Hunt
 
 	dispatcher := services.GetHuntDispatcher()
 	if dispatcher == nil {
 		return nil, errors.New("Hunt dispatcher not valid")
 	}
 
-	err = dispatcher.ModifyHunt(in.HuntId,
-		func(hunt_obj *api_proto.Hunt) error {
-			// Make a copy of the hunt
-			result = proto.Clone(hunt_obj).(*api_proto.Hunt)
-
-			// We do not modify the hunt so it is not dirty.
-			return notModified
-		})
-	if err != notModified {
+	hunt_obj, pres := dispatcher.GetHunt(in.HuntId)
+	if !pres {
 		return nil, err
 	}
 
 	// Normalize the hunt object
-	FindCollectedArtifacts(config_obj, result)
+	FindCollectedArtifacts(config_obj, hunt_obj)
 
-	if result == nil || result.Stats == nil {
-		return result, errors.New("Not found")
+	if hunt_obj == nil || hunt_obj.Stats == nil {
+		return nil, errors.New("Not found")
 	}
 
-	result.Stats.AvailableDownloads, _ = availableHuntDownloadFiles(config_obj, in.HuntId)
+	hunt_obj.Stats.AvailableDownloads, _ = availableHuntDownloadFiles(config_obj, in.HuntId)
 
-	return result, nil
+	return hunt_obj, nil
 }
 
 // availableHuntDownloadFiles returns the prepared zip downloads available to
@@ -331,84 +325,61 @@ func ModifyHunt(
 	config_obj *config_proto.Config,
 	hunt_modification *api_proto.Hunt,
 	user string) error {
+
+	mutation := &api_proto.HuntMutation{
+		HuntId:      hunt_modification.HuntId,
+		Description: hunt_modification.HuntDescription,
+	}
+
+	// Is the description changed?
+	if hunt_modification.HuntDescription != "" {
+		mutation.Description = hunt_modification.HuntDescription
+
+		// Archive the hunt.
+	} else if hunt_modification.State == api_proto.Hunt_ARCHIVED {
+		mutation.State = api_proto.Hunt_ARCHIVED
+
+		row := ordereddict.NewDict().
+			Set("Timestamp", time.Now().UTC().Unix()).
+			Set("HuntId", mutation.HuntId).
+			Set("User", user)
+
+		journal, err := services.GetJournal()
+		if err != nil {
+			return err
+		}
+
+		err = journal.PushRowsToArtifact(config_obj,
+			[]*ordereddict.Dict{row}, "System.Hunt.Archive",
+			"server", hunt_modification.HuntId)
+		if err != nil {
+			return err
+		}
+
+		// We are trying to start or restart the hunt.
+	} else if hunt_modification.State == api_proto.Hunt_RUNNING {
+
+		// We allow restarting stopped hunts
+		// but this may not work as intended
+		// because we still have a hunt index
+		// - i.e. clients that already
+		// scheduled the hunt will not
+		// re-schedule (whether they ran it or
+		// not). Usually the most reliable way
+		// to re-do a hunt is to copy it and
+		// do it again.
+		mutation.State = api_proto.Hunt_RUNNING
+		mutation.StartTime = uint64(time.Now().UnixNano() / 1000)
+
+		// We are trying to pause or stop the hunt.
+	} else if hunt_modification.State == api_proto.Hunt_STOPPED ||
+		hunt_modification.State == api_proto.Hunt_PAUSED {
+		mutation.State = api_proto.Hunt_STOPPED
+	}
+
+	fmt.Printf("Mutating hunt %v-> %v\n", hunt_modification, mutation)
 	dispatcher := services.GetHuntDispatcher()
-	err := dispatcher.ModifyHunt(
-		hunt_modification.HuntId,
-		func(hunt *api_proto.Hunt) error {
-			if hunt.Stats == nil {
-				return errors.New("Invalid hunt")
-			}
-
-			// Is the description changed?
-			if hunt_modification.HuntDescription != "" {
-				hunt.HuntDescription = hunt_modification.HuntDescription
-
-				// Archive the hunt.
-			} else if hunt_modification.State == api_proto.Hunt_ARCHIVED {
-				hunt.State = api_proto.Hunt_ARCHIVED
-
-				row := ordereddict.NewDict().
-					Set("Timestamp", time.Now().UTC().Unix()).
-					Set("Hunt", hunt).
-					Set("User", user)
-
-				journal, err := services.GetJournal()
-				if err != nil {
-					return err
-				}
-
-				err = journal.PushRowsToArtifact(config_obj,
-					[]*ordereddict.Dict{row}, "System.Hunt.Archive",
-					"server", hunt_modification.HuntId)
-				if err != nil {
-					return err
-				}
-
-				// We are trying to start or restart the hunt.
-			} else if hunt_modification.State == api_proto.Hunt_RUNNING {
-
-				// We allow restarting stopped hunts
-				// but this may not work as intended
-				// because we still have a hunt index
-				// - i.e. clients that already
-				// scheduled the hunt will not
-				// re-schedule (whether they ran it or
-				// now). Usually the most reliable way
-				// to re-do a hunt is to copy it and
-				// do it again.
-				hunt.State = api_proto.Hunt_RUNNING
-				hunt.Stats.Stopped = false
-				hunt.StartTime = uint64(time.Now().UnixNano() / 1000)
-
-				// We are trying to pause or stop the hunt.
-			} else {
-				hunt.State = api_proto.Hunt_STOPPED
-			}
-
-			// Write the new hunt object to the
-			// datastore. NOTE: The hunt dispatcher does
-			// not write the hunt object itself, only the
-			// hunt stats, but here we need to update
-			// hunt.State - should we move this to the
-			// stats object?
-			db, err := datastore.GetDB(config_obj)
-			if err != nil {
-				return err
-			}
-
-			hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
-			err = db.SetSubject(
-				config_obj, hunt_path_manager.Path(), hunt)
-			if err != nil {
-				return err
-			}
-
-			// Returning nil indicates to the hunt manager
-			// that the hunt was successfully modified. It
-			// will then flush it to disk.
-			return nil
-		})
-
+	err := dispatcher.MutateHunt(config_obj, mutation)
 	if err != nil {
 		return err
 	}
