@@ -121,7 +121,6 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 	artifact *flows_proto.ArtifactCollectorArgs) (
 	[]*actions_proto.VQLCollectorArgs, error) {
 
-	result := []*actions_proto.VQLCollectorArgs{}
 	launcher, err := services.GetLauncher()
 	if err != nil {
 		return nil, err
@@ -137,24 +136,11 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 		return nil, err
 	}
 
-	// Compile each artifact separately into its own
-	// VQLCollectorArgs so they can be run in parallel.
-	for _, name := range artifact.Artifacts {
-		// Make a local copy.
-		temp := proto.Clone(artifact).(*flows_proto.ArtifactCollectorArgs)
-		temp.Artifacts = []string{name}
-		compiled, err := launcher.CompileCollectorArgs(
-			ctx, config_obj, vql_subsystem.NullACLManager{},
-			repository, services.CompilerOptions{
-				ObfuscateNames: true,
-			}, temp)
-		if err != nil {
-			return nil, err
-		}
-
-		result = append(result, compiled...)
-	}
-	return result, nil
+	return launcher.CompileCollectorArgs(
+		ctx, config_obj, vql_subsystem.NullACLManager{},
+		repository, services.CompilerOptions{
+			ObfuscateNames: true,
+		}, artifact)
 }
 
 func (self *ClientEventTable) compileState(

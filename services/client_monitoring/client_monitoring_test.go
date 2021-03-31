@@ -341,9 +341,13 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompilingMultipleArti
 	// Count how many SELECT statements exist in each event table.
 	for _, event := range table.UpdateEventTable.Event {
 		count := 0
+		// Make sure we have a dedicated precondition in each event.
+		assert.Contains(self.T(), event.Precondition, "SELECT")
 		for _, query := range event.Query {
 			if strings.HasPrefix(query.VQL, "SELECT") {
 				count++
+				// Make sure it contains the precondition
+				assert.Contains(self.T(), query.VQL, "precondition_")
 			}
 		}
 		assert.Equal(self.T(), 1, count)
