@@ -51,7 +51,8 @@
         "react-step-wizard": "^5.3.5",
         "react-treebeard": "^3.2.4",
         "recharts": "^1.8.5",
-        "styled-components": "^5.2.0"
+        "styled-components": "^5.2.0",
+        "y18n": "^4.0.1"
     },
     "homepage": ".",
     "scripts": {
