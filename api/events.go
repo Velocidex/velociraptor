@@ -121,14 +121,16 @@ func (self *ApiServer) WriteEvent(
 		}
 
 		// Check that the principal is allowed to push to the queue.
-		ok, err := acls.CheckAccessWithToken(token, acls.PUBLISH, in.Query.Name)
+		ok, err := acls.CheckAccessWithToken(token,
+			acls.MACHINE_STATE, in.Query.Name)
 		if err != nil {
 			return nil, err
 		}
 
 		if !ok {
 			return nil, status.Error(codes.PermissionDenied,
-				"Permission denied: PUBLISH "+peer_name+" to "+in.Query.Name)
+				"Permission denied: MACHINE_STATE "+
+					peer_name+" to "+in.Query.Name)
 		}
 
 		rows, err := utils.ParseJsonToDicts([]byte(in.Response))

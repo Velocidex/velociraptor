@@ -5,13 +5,12 @@ package journal
 
 import (
 	"context"
-	"io"
 	"io/ioutil"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -43,15 +42,21 @@ type ReplicationService struct {
 	config_obj  *config_proto.Config
 	file_buffer *directory.FileBasedRingBuffer
 	tmpfile     *os.File
+
+	api_client api_proto.APIClient
+	closer     func() error
 }
 
 func (self *ReplicationService) Start(
 	ctx context.Context, wg *sync.WaitGroup) (err error) {
 
 	// If we are the master node we do not replicate anywhere.
-	if services.Frontend.GetNodeName() == services.Frontend.GetMasterName() {
-		return services.FrontendIsMaster
+	api_client, closer, err := services.Frontend.GetMasterAPIClient(ctx)
+	if err != nil {
+		return err
 	}
+	self.api_client = api_client
+	self.closer = closer
 
 	self.tmpfile, err = ioutil.TempFile("", "replication")
 	if err != nil {
@@ -105,15 +110,7 @@ func (self *ReplicationService) PushRowsToArtifact(
 	logger.Debug("<green>ReplicationService</> Sending %v rows to %v for %v.",
 		len(rows), artifact, client_id)
 
-	// Are we the master? This will error out if we are the
-	// master. ReplicationService only runs on the slaves.
-	api_client, closer, err := services.Frontend.GetMasterAPIClient(ctx)
-	if err != nil {
-		return errors.Wrap(err, "ReplicationService: ")
-	}
-	defer closer()
-
-	_, err = api_client.PushEvents(ctx, request)
+	_, err = self.api_client.PushEvents(ctx, request)
 	if err != nil {
 		replicationTotalSendErrors.Inc()
 	}
@@ -124,37 +121,52 @@ func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 	<-chan *ordereddict.Dict, func()) {
 
 	output_chan := make(chan *ordereddict.Dict)
+	subctx, cancel := context.WithCancel(ctx)
+
+	go func() {
+		for {
+			// Keep retrying to reconnect in case the
+			// connection dropped.
+			for event := range self.watchOnce(subctx, queue) {
+				output_chan <- event
+			}
+
+			time.Sleep(10 * time.Second)
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Info("<green>ReplicationService Reconnect</>: Watch for events from %v", queue)
+		}
+	}()
+
+	return output_chan, cancel
+}
+
+// Try to connect to the API handler once and return in case of
+// failure.
+func (self *ReplicationService) watchOnce(ctx context.Context, queue string) <-chan *ordereddict.Dict {
+
+	output_chan := make(chan *ordereddict.Dict)
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("<green>ReplicationService</>: Watching for events from %v", queue)
 
-	// Are we the master?
-	api_client, closer_, err := services.Frontend.GetMasterAPIClient(ctx)
-	if err != nil {
-		logger.Debug("<red>ReplicationService</> %v", err)
-		close(output_chan)
-		return output_chan, func() {}
-	}
+	subctx, cancel := context.WithCancel(ctx)
 
-	closer := func() { closer_() }
-
-	stream, err := api_client.WatchEvent(ctx, &api_proto.EventRequest{
+	stream, err := self.api_client.WatchEvent(subctx, &api_proto.EventRequest{
 		Queue: queue,
 	})
 	if err != nil {
 		close(output_chan)
-		return output_chan, closer
+		return output_chan
 	}
 
 	go func() {
+		defer close(output_chan)
+		defer cancel()
+
 		for {
 			event, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-
 			if err != nil {
-				continue
+				return
 			}
 
 			replicationTotalReceive.Inc()
@@ -175,10 +187,11 @@ func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 		}
 	}()
 
-	return output_chan, closer
+	return output_chan
 }
 
 func (self *ReplicationService) Close() {
+	self.closer()
 	self.file_buffer.Close()
 	os.Remove(self.tmpfile.Name()) // clean up file buffer
 }

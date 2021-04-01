@@ -126,7 +126,6 @@ func (self *HuntManager) ProcessMutation(
 
 	err := utils.ParseIntoProtobuf(mutation_cell, mutation)
 	if err != nil {
-		utils.Debug(err)
 		return err
 	}
 
@@ -171,8 +170,6 @@ func (self *HuntManager) ProcessMutation(
 				hunt_obj.StartTime = mutation.StartTime
 			}
 
-			fmt.Printf("Modifying %v\n", mutation)
-
 			return nil
 		})
 }
@@ -183,8 +180,6 @@ func (self *HuntManager) ProcessFlowCompletion(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
-
-	utils.Debug(row)
 
 	flow := &flows_proto.ArtifactCollectorContext{}
 	flow_any, _ := row.Get("Flow")
@@ -212,7 +207,6 @@ func (self *HuntManager) ProcessFlowCompletion(
 			},
 		})
 	if err != nil {
-		utils.Debug(err)
 		return err
 	}
 
