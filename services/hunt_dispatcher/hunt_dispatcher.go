@@ -318,10 +318,21 @@ func StartHuntDispatcher(
 		logger.Info("<green>Starting</> Hunt Dispatcher Service.")
 
 		for {
+			// Also listen for notifications so we can refresh as soon as
+			// the hunt is started.
+			notifier := services.GetNotifier()
+			notification, cancel := notifier.ListenForNotification(
+				"HuntDispatcher")
+			defer cancel()
+
 			select {
 			case <-ctx.Done():
 				result.Close(config_obj)
 				return
+
+			case <-notification:
+				cancel()
+				_ = result.Refresh(config_obj)
 
 			case <-time.After(10 * time.Second):
 				err := result.Refresh(config_obj)

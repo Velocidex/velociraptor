@@ -78,10 +78,11 @@ type ParticipationRecord struct {
 	ClientId    string `vfilter:"required,field=ClientId"`
 	Fqdn        string `vfilter:"optional,field=Fqdn"`
 	FlowId      string `vfilter:"optional,field=FlowId"`
-	Participate bool   `vfilter:"required,field=Participate"`
+	Participate bool   `vfilter:"optional,field=Participate"`
 	Override    bool   `vfilter:"optional,field=Override"`
 	Timestamp   uint64 `vfilter:"optional,field=Timestamp"`
 	TS          uint64 `vfilter:"optional,field=_ts"`
+	ID          uint64 `vfilter:"optional,field=_id"`
 }
 
 type HuntManager struct {
@@ -129,6 +130,13 @@ func (self *HuntManager) ProcessMutation(
 		return err
 	}
 
+	// We notify all node's hunt dispatcher only when the hunt
+	// status is changed (started or stopped).
+	notifier := services.GetNotifier()
+	if notifier == nil {
+		return errors.New("Notifier not ready")
+	}
+
 	dispatcher := services.GetHuntDispatcher()
 	return dispatcher.ModifyHunt(mutation.HuntId,
 		func(hunt_obj *api_proto.Hunt) error {
@@ -151,15 +159,21 @@ func (self *HuntManager) ProcessMutation(
 				mutation.State == api_proto.Hunt_PAUSED {
 				hunt_obj.Stats.Stopped = true
 				hunt_obj.State = api_proto.Hunt_STOPPED
+				_ = notifier.NotifyListener(
+					config_obj, "HuntDispatcher")
 			}
 
 			if mutation.State == api_proto.Hunt_RUNNING {
 				hunt_obj.Stats.Stopped = false
 				hunt_obj.State = api_proto.Hunt_RUNNING
+				_ = notifier.NotifyListener(
+					config_obj, "HuntDispatcher")
 			}
 
 			if mutation.State == api_proto.Hunt_ARCHIVED {
 				hunt_obj.State = api_proto.Hunt_ARCHIVED
+				_ = notifier.NotifyListener(
+					config_obj, "HuntDispatcher")
 			}
 
 			if mutation.Description != "" {
@@ -198,14 +212,19 @@ func (self *HuntManager) ProcessFlowCompletion(
 	}
 
 	// Flow is complete so add it to the hunt stats.
+	mutation := &api_proto.HuntMutation{
+		HuntId: hunt_id,
+		Stats:  &api_proto.HuntStats{},
+	}
+
+	if flow.State == flows_proto.ArtifactCollectorContext_FINISHED {
+		mutation.Stats.TotalClientsWithResults = 1
+	} else {
+		mutation.Stats.TotalClientsWithErrors = 1
+	}
+
 	dispatcher := services.GetHuntDispatcher()
-	err = dispatcher.MutateHunt(config_obj,
-		&api_proto.HuntMutation{
-			HuntId: hunt_id,
-			Stats: &api_proto.HuntStats{
-				TotalClientsWithResults: 1,
-			},
-		})
+	err = dispatcher.MutateHunt(config_obj, mutation)
 	if err != nil {
 		return err
 	}
@@ -229,12 +248,9 @@ func (self *HuntManager) ProcessParticipation(
 	participation_row := &ParticipationRecord{}
 	err := vfilter.ExtractArgs(self.scope, row, participation_row)
 	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Debug("ProcessParticipation: %v", err)
 		return err
-	}
-
-	// The client will not participate in this hunt - nothing to do.
-	if !participation_row.Participate {
-		return nil
 	}
 
 	// Get some info about the client

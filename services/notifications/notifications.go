@@ -204,7 +204,7 @@ func (self *Notifier) IsClientConnected(
 	atomic.StoreUint64(&self.idx, self.idx+1)
 
 	// Watch for Ping replies on this notification.
-	id := fmt.Sprintf("Notify%v", self.idx)
+	id := fmt.Sprintf("IsClientConnected%v", self.idx)
 	done, cancel := self.ListenForNotification(id)
 	defer cancel()
 

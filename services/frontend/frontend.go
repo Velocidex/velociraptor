@@ -30,9 +30,7 @@ func PushMetrics(ctx context.Context, wg *sync.WaitGroup,
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		metrics := &FrontendMetrics{
-			NodeName: node_name,
-		}
+		metrics := &FrontendMetrics{NodeName: node_name}
 		rows := make([]*ordereddict.Dict, 1)
 
 		for {
@@ -55,12 +53,11 @@ func PushMetrics(ctx context.Context, wg *sync.WaitGroup,
 			if calculateMetrics(metrics) == nil {
 				rows[0] = ordereddict.NewDict().
 					Set("Node", node_name).
-					Set("Metrics", metrics)
-				_ = journal.PushRowsToArtifact(config_obj,
+					Set("Metrics", metrics.ToDict())
+				err = journal.PushRowsToArtifact(config_obj,
 					rows, "Server.Internal.FrontendMetrics",
 					"server", "")
 			}
-
 		}
 
 	}()
@@ -125,6 +122,16 @@ type FrontendMetrics struct {
 	NodeName                      string
 }
 
+func (self FrontendMetrics) ToDict() *ordereddict.Dict {
+	return ordereddict.NewDict().
+		Set("Timestamp", self.Timestamp).
+		Set("ProcessCpuNanoSecondsTotal", self.ProcessCpuNanoSecondsTotal).
+		Set("CpuLoadPercent", self.CpuLoadPercent).
+		Set("ClientCommsCurrentConnections", self.ClientCommsCurrentConnections).
+		Set("ProcessResidentMemoryBytes", self.ProcessResidentMemoryBytes).
+		Set("NodeName", self.NodeName)
+}
+
 // The master frontend is responsible for aggregating slave stats into
 // a single artifact that we can use to display in the GUI.
 type MasterFrontendManager struct {
@@ -142,6 +149,7 @@ func (self *MasterFrontendManager) processMetrics(ctx context.Context,
 	if !pres {
 		return nil
 	}
+
 	row, pres = row_metric.(*ordereddict.Dict)
 	if !pres {
 		return nil
