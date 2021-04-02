@@ -318,7 +318,10 @@ func StartHuntDispatcher(
 			// Also listen for notifications so we can refresh as soon as
 			// the hunt is started.
 			notifier := services.GetNotifier()
+			// This only happens at shutdown so wait until
+			// we shutdown as well.
 			if notifier == nil {
+				<-ctx.Done()
 				return
 			}
 			notification, cancel := notifier.ListenForNotification(
