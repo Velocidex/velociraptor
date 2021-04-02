@@ -325,7 +325,7 @@ class VeloTable extends Component {
 
 export default VeloTable;
 
-const int_regex = /^[-0-9]+$/;
+const int_regex = /^-?[0-9]+$/;
 
 export function PrepareData(value) {
     var rows = [];

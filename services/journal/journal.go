@@ -65,7 +65,8 @@ func StartJournalService(
 
 	// Are we running on a slave frontend? If so we try to start
 	// our replication service.
-	if services.Frontend != nil {
+	fe_manager := services.GetFrontendManager()
+	if fe_manager != nil && !fe_manager.IsMaster() {
 		service := &ReplicationService{
 			config_obj: config_obj,
 		}

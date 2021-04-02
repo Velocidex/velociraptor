@@ -18,13 +18,9 @@
 package main
 
 import (
-	"context"
-	"sync"
-
 	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
@@ -38,8 +34,7 @@ var (
 	frontend_cmd     = app.Command("frontend", "Run the frontend and GUI.")
 	compression_flag = frontend_cmd.Flag("disable_artifact_compression",
 		"Disables artifact compressions").Bool()
-	frontend_node = frontend_cmd.Flag("node", "Run this specified node only").
-			String()
+	frontend_cmd_slave = frontend_cmd.Flag("slave", "This is a slave frontend").Bool()
 )
 
 func doFrontend() {
@@ -86,11 +81,9 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 
 	// Start the frontend service if needed. This must happen
 	// first so other services can contact the master node.
-	err := sm.Start(func(ctx context.Context, wg *sync.WaitGroup,
-		config_obj *config_proto.Config) error {
-		return frontend.StartFrontendService(
-			ctx, wg, config_obj, *frontend_node)
-	})
+
+	config_obj.Frontend.IsMaster = !*frontend_cmd_slave
+	err := sm.Start(frontend.StartFrontendService)
 	if err != nil {
 		return nil, err
 	}

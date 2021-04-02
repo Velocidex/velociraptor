@@ -136,6 +136,10 @@ func main() {
 		}
 	}
 
+	// Automatically add config flags
+	default_config, err := parseFlagsToDefaultConfig(app)
+	kingpin.FatalIfError(err, "Adding config flags.")
+
 	command := kingpin.MustParse(app.Parse(args))
 
 	if *no_color_flag {
@@ -154,7 +158,10 @@ func main() {
 		WithCustomValidator(initFilestoreAccessor).
 		WithCustomValidator(initDebugServer).
 		WithLogFile(*logging_flag).
-		WithOverride(*override_flag)
+		WithOverride(*override_flag).
+		WithCustomValidator(func(config_obj *config_proto.Config) error {
+			return mergeFlagConfig(config_obj, default_config)
+		})
 
 	// Commands that potentially take an API config can load both
 	// - first try the API config, then try a config.

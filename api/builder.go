@@ -333,7 +333,7 @@ func StartFrontendHttps(
 
 		err := server.ListenAndServeTLS("", "")
 		if err != nil && err != http.ErrServerClosed {
-			server_obj.Error("Frontend server error", err)
+			server_obj.Error("Frontend server error %v", err)
 		}
 	}()
 
@@ -353,7 +353,7 @@ func StartFrontendHttps(
 
 		err := server.Shutdown(time_ctx)
 		if err != nil {
-			server_obj.Error("Frontend server error", err)
+			server_obj.Error("Frontend server error %v", err)
 		}
 	}()
 
@@ -398,7 +398,7 @@ func StartFrontendPlainHttp(
 
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			server_obj.Error("Frontend server error", err)
+			server_obj.Error("Frontend server error %v", err)
 		}
 	}()
 
@@ -419,12 +419,12 @@ func StartFrontendPlainHttp(
 		if notifier != nil {
 			err := notifier.NotifyAllListeners(config_obj)
 			if err != nil {
-				server_obj.Error("Frontend server error", err)
+				server_obj.Error("Frontend server error %v", err)
 			}
 		}
 		err := server.Shutdown(time_ctx)
 		if err != nil {
-			server_obj.Error("Frontend server error", err)
+			server_obj.Error("Frontend server error %v", err)
 		}
 	}()
 

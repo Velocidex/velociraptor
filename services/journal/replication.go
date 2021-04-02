@@ -51,7 +51,8 @@ func (self *ReplicationService) Start(
 	ctx context.Context, wg *sync.WaitGroup) (err error) {
 
 	// If we are the master node we do not replicate anywhere.
-	api_client, closer, err := services.Frontend.GetMasterAPIClient(ctx)
+	api_client, closer, err := services.GetFrontendManager().
+		GetMasterAPIClient(ctx)
 	if err != nil {
 		return err
 	}
@@ -79,8 +80,7 @@ func (self *ReplicationService) Start(
 	}()
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Debug("<green>Starting</> Replication service to node %v.",
-		services.Frontend.GetMasterName())
+	logger.Debug("<green>Starting</> Replication service to master frontend")
 
 	return nil
 }
@@ -132,8 +132,10 @@ func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 			}
 
 			time.Sleep(10 * time.Second)
-			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-			logger.Info("<green>ReplicationService Reconnect</>: Watch for events from %v", queue)
+			logger := logging.GetLogger(self.config_obj,
+				&logging.FrontendComponent)
+			logger.Info("<green>ReplicationService Reconnect</>: "+
+				"Watch for events from %v", queue)
 		}
 	}()
 

@@ -42,6 +42,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -81,10 +82,6 @@ type HuntDispatcher struct {
 	mu    sync.Mutex
 	hunts map[string]*api_proto.Hunt
 	dirty bool
-
-	// The hunt dispatcher on the master is allowed to modify hunt
-	// objects.
-	i_am_master bool
 }
 
 func (self *HuntDispatcher) GetLastTimestamp() uint64 {
@@ -123,7 +120,11 @@ func (self *HuntDispatcher) GetHunt(hunt_id string) (*api_proto.Hunt, bool) {
 	defer self.mu.Unlock()
 
 	hunt_obj, pres := self.hunts[hunt_id]
-	return hunt_obj, pres
+	if pres {
+		return proto.Clone(hunt_obj).(*api_proto.Hunt), true
+	}
+
+	return nil, false
 }
 
 func (self *HuntDispatcher) MutateHunt(
@@ -147,8 +148,10 @@ func (self *HuntDispatcher) ModifyHunt(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if !self.i_am_master {
-		panic(1)
+	if !services.GetFrontendManager().IsMaster() {
+		// This is really a critical error.
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Error("Unable to modify hunts on the slave. Please use MutateHunt()")
 		return errors.New("Unable to modify hunts on the slave. Please use MutateHunt()")
 	}
 
@@ -178,9 +181,16 @@ func (self *HuntDispatcher) ModifyHunt(
 func (self *HuntDispatcher) _flush_stats(config_obj *config_proto.Config) error {
 	// Already locked.
 	// Only do something if we are dirty.
-	if !self.dirty || !self.i_am_master {
+	if !self.dirty {
 		return nil
 	}
+
+	// If we are a slave frontend we never flush data - it is up
+	// to the master to sync the hunts
+	if !services.GetFrontendManager().IsMaster() {
+		return nil
+	}
+
 	self.dirty = false
 
 	db, err := datastore.GetDB(config_obj)
@@ -290,11 +300,6 @@ func StartHuntDispatcher(
 	result := &HuntDispatcher{
 		config_obj: config_obj,
 		hunts:      make(map[string]*api_proto.Hunt),
-	}
-
-	// Slave nodes are not allowed to modify the hunt objects.
-	if services.Frontend.GetNodeName() == services.Frontend.GetMasterName() {
-		result.i_am_master = true
 	}
 
 	// flush the hunts every 10 seconds.

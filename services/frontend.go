@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"os"
+	"sync"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 )
@@ -12,19 +13,29 @@ import (
 // frontends to spread the load between them.
 
 var (
-	Frontend FrontendManager
+	frontend_mu sync.Mutex
+
+	gFrontend FrontendManager
 
 	FrontendIsMaster = os.ErrNotExist
 )
 
-type FrontendManager interface {
-	// The FrontendManager returns a URL to an active
-	// frontend. The method may be used to redirect a client to an
-	// active and ready frontend.
-	GetFrontendURL() (string, bool)
+func RegisterFrontendManager(frontend FrontendManager) {
+	frontend_mu.Lock()
+	defer frontend_mu.Unlock()
 
-	GetNodeName() string
-	GetMasterName() string
+	gFrontend = frontend
+}
+
+func GetFrontendManager() FrontendManager {
+	frontend_mu.Lock()
+	defer frontend_mu.Unlock()
+
+	return gFrontend
+}
+
+type FrontendManager interface {
+	IsMaster() bool
 
 	// Establish a gRPC connection to the master node. If we are
 	// running on the master node already then returns a

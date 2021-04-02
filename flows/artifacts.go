@@ -1,5 +1,5 @@
 /*
-o   Velociraptor - Hunting Evil
+   Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
 
    This program is free software: you can redistribute it and/or modify

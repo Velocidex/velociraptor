@@ -85,10 +85,6 @@ func Deobfuscate(
 	response *actions_proto.VQLResponse) error {
 	var err error
 
-	if config_obj.Frontend.DoNotCompressArtifacts {
-		return nil
-	}
-
 	response.Query.Name, err = obfuscator.Decrypt(config_obj, response.Query.Name)
 	if err != nil {
 		return err

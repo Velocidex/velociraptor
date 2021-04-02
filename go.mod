@@ -15,6 +15,7 @@ require (
 	github.com/Velocidex/go-yara v1.1.10-0.20210105022745-1b550dfa67da
 	github.com/Velocidex/json v0.0.0-20200724131328-8f5c7b0a25ec
 	github.com/Velocidex/ordereddict v0.0.0-20200723153557-9460a6764ab8
+	github.com/Velocidex/sflags v0.0.0-00010101000000-000000000000 // indirect
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml/v2 v2.2.5
 	github.com/Velocidex/zip v0.0.0-20210101070220-e7ecefb7aad7
@@ -132,6 +133,8 @@ require (
 // replace www.velocidex.com/golang/vtypes => /home/mic/projects/vtypes
 
 // replace github.com/Velocidex/zip => /home/mic/projects/zip
+
+replace github.com/Velocidex/sflags => /home/mic/projects/sflags
 
 replace github.com/russross/blackfriday/v2 => github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b
 
