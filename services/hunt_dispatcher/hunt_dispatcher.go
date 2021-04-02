@@ -318,6 +318,9 @@ func StartHuntDispatcher(
 			// Also listen for notifications so we can refresh as soon as
 			// the hunt is started.
 			notifier := services.GetNotifier()
+			if notifier == nil {
+				return
+			}
 			notification, cancel := notifier.ListenForNotification(
 				"HuntDispatcher")
 			defer cancel()

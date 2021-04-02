@@ -27,7 +27,6 @@ func mergeFlagConfig(config_obj *config_proto.Config,
 	}
 
 	proto.Merge(config_obj, default_config)
-	json.Dump(config_obj)
 	return nil
 }
 
