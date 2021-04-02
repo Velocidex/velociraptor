@@ -368,6 +368,7 @@ func StartClientMonitoringService(
 		clock: &utils.RealClock{},
 		id:    uuid.New().String(),
 	}
+	services.RegisterClientEventManager(event_table)
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Client Monitoring Service")
@@ -398,8 +399,6 @@ func StartClientMonitoringService(
 			}
 		}
 	}()
-
-	services.RegisterClientEventManager(event_table)
 
 	return event_table.LoadFromFile(ctx, config_obj)
 }

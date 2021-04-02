@@ -63,12 +63,6 @@ var (
 // memory under lock. We can modify hunt statistics, query for
 // applicable hunts etc. Hunts are flushed to disk periodically and
 // read from disk when new hunts are created.
-
-// Note: Hunt information is broken into two:
-// 1. The hunt details themselves are modified by the GUI.
-// 2. The hunt stats are modified by the hunt manager.
-
-// The two are stored in different objects in the data store.
 type HuntDispatcher struct {
 	// This is the last timestamp of the latest hunt. At steady
 	// state all clients will have run all hunts, therefore we can
@@ -102,10 +96,12 @@ func (self *HuntDispatcher) getHunts() []*api_proto.Hunt {
 func (self *HuntDispatcher) ApplyFuncOnHunts(
 	cb func(hunt *api_proto.Hunt) error) error {
 
+	// Take a snapshot of the hunts list.
 	self.mu.Lock()
-	defer self.mu.Unlock()
+	hunts := self.getHunts()
+	self.mu.Unlock()
 
-	for _, hunt := range self.getHunts() {
+	for _, hunt := range hunts {
 		err := cb(hunt)
 		if err != nil {
 			return err
@@ -301,6 +297,7 @@ func StartHuntDispatcher(
 		config_obj: config_obj,
 		hunts:      make(map[string]*api_proto.Hunt),
 	}
+	services.RegisterHuntDispatcher(result)
 
 	// flush the hunts every 10 seconds.
 	wg.Add(1)
@@ -343,14 +340,12 @@ func StartHuntDispatcher(
 		}
 	}()
 
-	services.RegisterHuntDispatcher(result)
-
 	// Try to refresh the hunts table the first time. If we cant
 	// we will just keep trying anyway later.
 	err := result.Refresh(config_obj)
 	if err != nil {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Error("Unable to Refresh hunt dispatcher: %w", err)
+		logger.Error("Unable to Refresh hunt dispatcher: %v", err)
 	}
 
 	return nil

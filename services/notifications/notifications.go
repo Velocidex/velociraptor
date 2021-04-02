@@ -50,6 +50,7 @@ func StartNotificationService(
 	self := &Notifier{
 		notification_pool: notifications.NewNotificationPool(),
 	}
+	services.RegisterNotifier(self)
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> the notification service.")
@@ -117,8 +118,6 @@ func StartNotificationService(
 			}
 		}
 	}()
-
-	services.RegisterNotifier(self)
 
 	return nil
 }

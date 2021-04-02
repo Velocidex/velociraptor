@@ -26,7 +26,6 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"encoding/binary"
-	"fmt"
 	"path"
 	"sort"
 	"time"
@@ -326,6 +325,8 @@ func ModifyHunt(
 	hunt_modification *api_proto.Hunt,
 	user string) error {
 
+	// We can not modify the hunt directly, instead we send a
+	// mutation to the hunt manager on the master.
 	mutation := &api_proto.HuntMutation{
 		HuntId:      hunt_modification.HuntId,
 		Description: hunt_modification.HuntDescription,
@@ -344,6 +345,7 @@ func ModifyHunt(
 			Set("HuntId", mutation.HuntId).
 			Set("User", user)
 
+		// Alert listeners that the hunt is being archived.
 		journal, err := services.GetJournal()
 		if err != nil {
 			return err
@@ -377,7 +379,6 @@ func ModifyHunt(
 		mutation.State = api_proto.Hunt_STOPPED
 	}
 
-	fmt.Printf("Mutating hunt %v-> %v\n", hunt_modification, mutation)
 	dispatcher := services.GetHuntDispatcher()
 	err := dispatcher.MutateHunt(config_obj, mutation)
 	if err != nil {

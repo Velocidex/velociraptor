@@ -69,9 +69,13 @@ github.com/Velocidex/go-yara v1.1.10-0.20210105022745-1b550dfa67da h1:cBHbmwrKDk
 github.com/Velocidex/go-yara v1.1.10-0.20210105022745-1b550dfa67da/go.mod h1:N1A2MzBKorQm3WixuPUSm4gmzGA6i5sYrwHyUBvY5lg=
 github.com/Velocidex/json v0.0.0-20200724131328-8f5c7b0a25ec h1:ep1GlQfQtVZsn8yaUwILZxlK1Sw13dYhsOT3bEhZ8HE=
 github.com/Velocidex/json v0.0.0-20200724131328-8f5c7b0a25ec/go.mod h1:ukJBuruT9b24pdgZwWDvOaCYHeS03B7oQPCUWh25bwM=
+github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0 h1:oMdYhZqDdZq0PpVFxGvjhhNhxNl6D7ycR0SuKkbEKac=
+github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0/go.mod h1:ukJBuruT9b24pdgZwWDvOaCYHeS03B7oQPCUWh25bwM=
 github.com/Velocidex/ordereddict v0.0.0-20191106020901-97c468e5e403/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
 github.com/Velocidex/ordereddict v0.0.0-20200723153557-9460a6764ab8 h1:wRt5CLsj5hS3OpJjQYJMuUrmxKwRfUn76+4sqjfmNbA=
 github.com/Velocidex/ordereddict v0.0.0-20200723153557-9460a6764ab8/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
+github.com/Velocidex/sflags v0.3.1-0.20210402155316-b09f53df5162 h1:wcYgZ8Z8w0JNMqqOFcOYrucDGaNYeCMd8ScDDCo/p8w=
+github.com/Velocidex/sflags v0.3.1-0.20210402155316-b09f53df5162/go.mod h1:VbiCXG8oNiOTw+Dv6B0Qc3lKlbhlArfBMX20om018ZA=
 github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49 h1:TJVN1zYl5sKJUq571gYqU/5VqFIap9MUo2KNujc0fcg=
 github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49/go.mod h1:kfPUQ2gP0xtIydiR52dirNYt4OvCr+iZuepL4XaIk58=
 github.com/Velocidex/yaml v2.1.0+incompatible h1:XtpJSzJ95+UbheJ5ZwHZOUH8sHhYpypGaL3zmaL2klc=

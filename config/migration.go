@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -57,6 +58,8 @@ func migrate_0_4_2(config_obj *config_proto.Config) {
 			}
 
 			if config_obj.Frontend.Hostname == "" {
+				json.Dump(config_obj)
+
 				panic("Unable to deduce the Frontend.hostname")
 			}
 			logging.Prelog("Guessing Frontend.hostname from Client.server_urls: %v",

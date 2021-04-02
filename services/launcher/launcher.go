@@ -574,6 +574,8 @@ func StartLauncherService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
+	services.RegisterLauncher(&Launcher{})
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -582,6 +584,5 @@ func StartLauncherService(
 		<-ctx.Done()
 	}()
 
-	services.RegisterLauncher(&Launcher{})
 	return nil
 }

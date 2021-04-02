@@ -19,9 +19,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
+	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -50,7 +50,10 @@ func (self *HuntTestSuite) SetupTest() {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
 
+	self.config_obj.Frontend.IsMaster = true
+
 	// Start the journaling service manually for tests.
+	require.NoError(t, self.sm.Start(frontend.StartFrontendService))
 	require.NoError(t, self.sm.Start(journal.StartJournalService))
 	require.NoError(t, self.sm.Start(hunt_dispatcher.StartHuntDispatcher))
 	require.NoError(t, self.sm.Start(launcher.StartLauncherService))
@@ -169,17 +172,16 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
-	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
-		self.client_id, "", "System.Hunt.Participation")
 	journal, err := services.GetJournal()
 	assert.NoError(t, err)
 
-	journal.PushRows(self.config_obj, path_manager,
+	journal.PushRowsToArtifact(self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost").
-			Set("Participate", true)})
+			Set("Participate", true)},
+		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
@@ -232,17 +234,16 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
-	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
-		self.client_id, "", "System.Hunt.Participation")
 	journal, err := services.GetJournal()
 	assert.NoError(t, err)
 
-	journal.PushRows(self.config_obj, path_manager,
+	journal.PushRowsToArtifact(self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost").
-			Set("Participate", true)})
+			Set("Participate", true)},
+		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
@@ -288,17 +289,16 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
-	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
-		self.client_id, "", "System.Hunt.Participation")
 	journal, err := services.GetJournal()
 	assert.NoError(t, err)
 
-	journal.PushRows(self.config_obj, path_manager,
+	journal.PushRowsToArtifact(self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
 			Set("Override", true).
-			Set("Participate", true)})
+			Set("Participate", true)},
+		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
@@ -357,17 +357,16 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
-	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
-		self.client_id, "", "System.Hunt.Participation")
 	journal, err := services.GetJournal()
 	assert.NoError(t, err)
 
-	journal.PushRows(self.config_obj, path_manager,
+	journal.PushRowsToArtifact(self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost").
-			Set("Participate", true)})
+			Set("Participate", true)},
+		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
@@ -434,17 +433,16 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
-	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
-		self.client_id, "", "System.Hunt.Participation")
 	journal, err := services.GetJournal()
 	assert.NoError(t, err)
 
-	journal.PushRows(self.config_obj, path_manager,
+	journal.PushRowsToArtifact(self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost").
-			Set("Participate", true)})
+			Set("Participate", true)},
+		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
@@ -511,12 +509,10 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
-	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
-		"server", "", "System.Hunt.Participation")
 	journal, err := services.GetJournal()
 	assert.NoError(t, err)
 
-	journal.PushRows(self.config_obj, path_manager,
+	journal.PushRowsToArtifact(self.config_obj,
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("HuntId", self.hunt_id).
@@ -528,7 +524,8 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 				Set("ClientId", client_id_2).
 				Set("Fqdn", "MyHost2").
 				Set("Participate", true),
-		})
+		},
+		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client

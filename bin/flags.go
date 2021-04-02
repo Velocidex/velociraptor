@@ -8,11 +8,26 @@ import (
 	proto "github.com/golang/protobuf/proto"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 )
 
 func mergeFlagConfig(config_obj *config_proto.Config,
 	default_config *config_proto.Config) error {
+
+	enc_opts := json.NewEncOpts().WithOmitEmptyStructs()
+	serialized, err := json.MarshalWithOptions(default_config, enc_opts)
+	if err != nil {
+		return err
+	}
+
+	default_config = &config_proto.Config{}
+	err = json.Unmarshal(serialized, default_config)
+	if err != nil {
+		return err
+	}
+
 	proto.Merge(config_obj, default_config)
+	json.Dump(config_obj)
 	return nil
 }
 
