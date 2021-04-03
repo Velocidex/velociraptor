@@ -385,7 +385,7 @@ func (self inMemoryLogWriter) Write(p []byte) (n int, err error) {
 
 	// Truncate too many logs
 	if len(memory_logs) > 1000 {
-		prelogs = nil
+		memory_logs = nil
 	}
 
 	memory_logs = append(memory_logs, string(p))

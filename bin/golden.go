@@ -39,6 +39,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/startup"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
@@ -146,6 +147,9 @@ func runTest(fixture *testFixture,
 		return "", err
 	}
 	defer sm.Close()
+
+	err = sm.Start(hunt_dispatcher.StartHuntDispatcher)
+	kingpin.FatalIfError(err, "Starting services")
 
 	_, err = getRepository(config_obj)
 	kingpin.FatalIfError(err, "Loading extra artifacts")
