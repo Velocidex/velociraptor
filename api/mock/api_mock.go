@@ -560,46 +560,6 @@ func (mr *MockAPIClientMockRecorder) GetToolInfo(arg0, arg1 interface{}, arg2 ..
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetToolInfo", reflect.TypeOf((*MockAPIClient)(nil).GetToolInfo), varargs...)
 }
 
-// GetUserNotificationCount mocks base method.
-func (m *MockAPIClient) GetUserNotificationCount(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.UserNotificationCount, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetUserNotificationCount", varargs...)
-	ret0, _ := ret[0].(*proto0.UserNotificationCount)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUserNotificationCount indicates an expected call of GetUserNotificationCount.
-func (mr *MockAPIClientMockRecorder) GetUserNotificationCount(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserNotificationCount", reflect.TypeOf((*MockAPIClient)(nil).GetUserNotificationCount), varargs...)
-}
-
-// GetUserNotifications mocks base method.
-func (m *MockAPIClient) GetUserNotifications(arg0 context.Context, arg1 *proto0.GetUserNotificationsRequest, arg2 ...grpc.CallOption) (*proto0.GetUserNotificationsResponse, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetUserNotifications", varargs...)
-	ret0, _ := ret[0].(*proto0.GetUserNotificationsResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUserNotifications indicates an expected call of GetUserNotifications.
-func (mr *MockAPIClientMockRecorder) GetUserNotifications(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserNotifications", reflect.TypeOf((*MockAPIClient)(nil).GetUserNotifications), varargs...)
-}
-
 // GetUserUITraits mocks base method.
 func (m *MockAPIClient) GetUserUITraits(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.ApiGrrUser, error) {
 	m.ctrl.T.Helper()
@@ -1118,6 +1078,26 @@ func (mr *MockAPIClientMockRecorder) VFSStatDownload(arg0, arg1 interface{}, arg
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VFSStatDownload", reflect.TypeOf((*MockAPIClient)(nil).VFSStatDownload), varargs...)
+}
+
+// WatchEvent mocks base method.
+func (m *MockAPIClient) WatchEvent(arg0 context.Context, arg1 *proto0.EventRequest, arg2 ...grpc.CallOption) (*proto0.EventResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "WatchEvent", varargs...)
+	ret0, _ := ret[0].(*proto0.EventResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WatchEvent indicates an expected call of WatchEvent.
+func (mr *MockAPIClientMockRecorder) WatchEvent(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchEvent", reflect.TypeOf((*MockAPIClient)(nil).WatchEvent), varargs...)
 }
 
 // WriteEvent mocks base method.

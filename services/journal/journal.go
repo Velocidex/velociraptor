@@ -24,7 +24,8 @@ import (
 )
 
 type JournalService struct {
-	qm api.QueueManager
+	config_obj *config_proto.Config
+	qm         api.QueueManager
 }
 
 func (self *JournalService) Watch(
@@ -36,21 +37,17 @@ func (self *JournalService) Watch(
 		return nil, func() {}
 	}
 
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Info("Watching for events from %v", queue_name)
 	return self.qm.Watch(ctx, queue_name)
 }
 
 func (self *JournalService) PushRowsToArtifact(
-	config_obj *config_proto.Config,
-	rows []*ordereddict.Dict, artifact, client_id, flows_id string) error {
+	config_obj *config_proto.Config, rows []*ordereddict.Dict,
+	artifact, client_id, flows_id string) error {
 
 	path_manager := artifacts.NewArtifactPathManager(
 		config_obj, client_id, flows_id, artifact)
-	return self.PushRows(config_obj, path_manager, rows)
-}
-
-func (self *JournalService) PushRows(
-	config_obj *config_proto.Config,
-	path_manager api.PathManager, rows []*ordereddict.Dict) error {
 	if self != nil && self.qm != nil {
 		return self.qm.PushEventRows(path_manager, rows)
 	}
@@ -66,10 +63,27 @@ func (self *JournalService) Start(config_obj *config_proto.Config) error {
 func StartJournalService(
 	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) error {
 
+	// Are we running on a slave frontend? If so we try to start
+	// our replication service.
+	fe_manager := services.GetFrontendManager()
+	if fe_manager != nil && !fe_manager.IsMaster() {
+		service := &ReplicationService{
+			config_obj: config_obj,
+		}
+
+		err := service.Start(ctx, wg)
+		if err == nil {
+			services.RegisterJournal(service)
+			return nil
+		}
+	}
+
 	// It is valid to have a journal service with no configured datastore:
 	// 1. Watchers will never be notified.
 	// 2. PushRows() will fail with an error.
-	service := &JournalService{}
+	service := &JournalService{
+		config_obj: config_obj,
+	}
 	old_service, err := services.GetJournal()
 	if err == nil {
 		service.qm = old_service.(*JournalService).qm
@@ -80,6 +94,8 @@ func StartJournalService(
 		service.qm = qm
 	}
 
+	services.RegisterJournal(service)
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -87,8 +103,6 @@ func StartJournalService(
 
 		<-ctx.Done()
 	}()
-
-	services.RegisterJournal(service)
 
 	return service.Start(config_obj)
 }

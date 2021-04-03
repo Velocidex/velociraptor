@@ -21,7 +21,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -62,7 +61,7 @@ var (
 		Help: "Number of POST requests frontend sent to the client.",
 	})
 
-	// Normally this is calculated in Graphan but it is also
+	// Normally this is calculated in Graphana but it is also
 	// convenient to have an approximation right here.
 	receiveQPS = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "frontend_receive_QPS",
@@ -247,12 +246,6 @@ func control(server_obj *Server) http.Handler {
 	logger := logging.GetLogger(server_obj.config, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
-		/* Experimental redirection is turned off for now.
-		if maybeRedirectFrontend("control", w, req) {
-			return
-		}
-		*/
 		if !server_obj.throttler.Ready() {
 			loadshedCounter.Inc()
 
@@ -471,6 +464,10 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			return
 		}
 
+		/* This is expensive to enforce in a distributed
+		   setting. It may not be a huge problem anyway so for
+		   now we skip this check.
+
 		if notifier.IsClientConnected(source) {
 			http.Error(w, "Another Client connection exists. "+
 				"Only a single instance of the client is "+
@@ -479,7 +476,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			fmt.Printf("Source %v Conflict\n", source)
 			return
 		}
-
+		*/
 		notification, cancel := notifier.ListenForNotification(source)
 		defer cancel()
 

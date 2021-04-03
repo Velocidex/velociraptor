@@ -161,3 +161,11 @@ message GetHuntResultsRequest {
     string hunt_id = 3;
     string artifact = 4;
 }
+
+message HuntMutation {
+    string hunt_id = 1;
+    HuntStats stats = 2;
+    string description = 3;
+    Hunt.State state = 4;
+    uint64 start_time = 5;
+}

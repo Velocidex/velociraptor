@@ -19,7 +19,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -84,27 +83,23 @@ func (self *VFSServiceTestSuite) EmulateCollection(
 
 	// Emulate a Generic.Client.Info collection: First write the
 	// result set, then write the collection context.
-	artifact_path_manager := artifacts.NewArtifactPathManager(
-		self.config_obj, self.client_id, self.flow_id, artifact)
-
-	// Write a result set for this artifact.
 	journal, err := services.GetJournal()
 	assert.NoError(self.T(), err)
 
-	journal.PushRows(self.config_obj, artifact_path_manager, rows)
+	journal.PushRowsToArtifact(self.config_obj, rows,
+		artifact, self.client_id, self.flow_id)
 
 	// Emulate a flow completion message coming from the flow processor.
-	artifact_path_manager = artifacts.NewArtifactPathManager(
-		self.config_obj, "server", "", "System.Flow.Completion")
-
-	journal.PushRows(self.config_obj, artifact_path_manager,
+	journal.PushRowsToArtifact(self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).
 			Set("Flow", &flows_proto.ArtifactCollectorContext{
 				ClientId:             self.client_id,
 				SessionId:            self.flow_id,
-				ArtifactsWithResults: []string{artifact}})})
+				ArtifactsWithResults: []string{artifact}})},
+		"System.Flow.Completion", "server", "")
+
 	return self.flow_id
 }
 

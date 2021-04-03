@@ -69,6 +69,30 @@ message NotificationRequest {
     bool notify_all = 2;
 }
 
+message EventRequest {
+    string queue = 1;
+
+    // The node who is requesting the event stream.
+    string node = 2;
+}
+
+message EventResponse {
+    // The originator of the event.
+    string source = 1;
+
+    // A sequence of events encoded as jsonl.
+    bytes jsonl = 2;
+}
+
+// Used to push rows into the artifact queue.
+message PushEventRequest {
+    string artifact = 1;
+    string client_id = 2;
+    string flow_id = 3;
+
+    bytes jsonl = 4;
+}
+
 
 service API {
     // Hunts
@@ -434,6 +458,12 @@ service API {
 
     // Streaming free form VQL.
     rpc Query(VQLCollectorArgs) returns (stream VQLResponse) {}
+
+    // Watch for events from the master.
+    rpc WatchEvent(EventRequest) returns (stream EventResponse) {}
+
+    // Push the events to the master
+    rpc PushEvents(PushEventRequest) returns (google.protobuf.Empty) {}
 
     // Push monitoring event to the server.
     rpc WriteEvent(VQLResponse) returns (google.protobuf.Empty) {}

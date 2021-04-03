@@ -137,12 +137,7 @@ type serverLogger struct {
 // need to be available immediately.
 func (self *serverLogger) Write(b []byte) (int, error) {
 	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
-	journal, err := services.GetJournal()
-	if err != nil {
-		return 0, err
-	}
-
-	err = journal.PushRows(self.config_obj,
+	err := file_store.PushRows(self.config_obj,
 		self.path_manager, []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
@@ -229,16 +224,12 @@ func (self *ServerArtifactsRunner) processTask(
 	// Cancel the current collection
 	if task.Cancel != nil {
 		path_manager := paths.NewFlowPathManager("server", task.SessionId).Log()
-		journal, err := services.GetJournal()
-		if err != nil {
-			return err
-		}
-
-		err = journal.PushRows(config_obj, path_manager, []*ordereddict.Dict{
-			ordereddict.NewDict().
-				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
-				Set("time", time.Now().UTC().String()).
-				Set("message", "Cancelling Query")})
+		err = file_store.PushRows(config_obj,
+			path_manager, []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Timestamp", time.Now().UTC().UnixNano()/1000).
+					Set("time", time.Now().UTC().String()).
+					Set("message", "Cancelling Query")})
 
 		// This task is now done.
 		self.cancel(task.SessionId)

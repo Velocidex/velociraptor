@@ -48,7 +48,7 @@ FROM clients(search='label:*') ORDER BY client_id
   "last_crash_at": 0,
   "last_ip": "192.168.0.5:40933",
   "last_interrogate_flow_id": "F.BN21C82J8DM8K",
-  "last_ip_class": "INTERNAL",
+  "last_ip_class": "UNKNOWN",
   "labels": [
    "WinBoxes"
   ]

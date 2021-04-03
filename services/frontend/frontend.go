@@ -10,69 +10,72 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/rand"
-	"os"
 	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	frontend_proto "www.velocidex.com/golang/velociraptor/services/frontend/proto"
+	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-type FrontendManager struct {
-	mu sync.Mutex
+func PushMetrics(ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config, node_name string) error {
 
-	// All the frontends loaded in the config file.
-	frontends map[string]*config_proto.FrontendConfig
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		metrics := &FrontendMetrics{NodeName: node_name}
+		rows := make([]*ordereddict.Dict, 1)
 
-	// A constantly refreshing list of active frontends from the
-	// data store.
-	active_frontends map[string]*frontend_proto.FrontendState
+		for {
+			// Wait for 10 seconds between updates
+			select {
+			case <-ctx.Done():
+				return
 
-	config_obj *config_proto.Config
+			case <-time.After(10 * time.Second):
+			}
 
-	path_manager *FrontendPathManager
+			// Journal may not be ready yet so it is not
+			// an error if its not there, just try again
+			// later.
+			journal, err := services.GetJournal()
+			if err != nil {
+				continue
+			}
 
-	my_state *frontend_proto.FrontendState
+			if calculateMetrics(metrics) == nil {
+				rows[0] = ordereddict.NewDict().
+					Set("Node", node_name).
+					Set("Metrics", metrics.ToDict())
+				err = journal.PushRowsToArtifact(config_obj,
+					rows, "Server.Internal.FrontendMetrics",
+					"server", "")
+			}
+		}
 
-	// For now we only allow frontends to be distributed.
-	primary_frontend string
+	}()
 
-	// A list of active frontend URLs
-	urls []string
-
-	sample int
+	return nil
 }
 
-func GetFrontendName(fe *config_proto.FrontendConfig) string {
-	return fmt.Sprintf("%s:%d", fe.Hostname, fe.BindPort)
-}
+func calculateMetrics(metrics *FrontendMetrics) error {
+	now := time.Now()
 
-func (self *FrontendManager) addFrontendConfig(fe *config_proto.FrontendConfig) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	name := GetFrontendName(fe)
-	_, pres := self.frontends[name]
-	if pres {
-		panic("Config specifies duplicate frontends: " + name)
-	}
-
-	self.frontends[name] = fe
-}
-
-func (self *FrontendManager) calculateMetrics(now int64) error {
-	metrics := &frontend_proto.Metrics{}
-
+	// Time difference in nanosec
+	delta_t := now.UnixNano() - metrics.Timestamp.UnixNano()
 	gathering, err := prometheus.DefaultGatherer.Gather()
 	if err != nil {
+		metrics.Timestamp = now
 		return err
 	}
+
 	for _, metric := range gathering {
 		if len(metric.Metric) == 0 {
 			continue
@@ -83,18 +86,15 @@ func (self *FrontendManager) calculateMetrics(now int64) error {
 			if metric.Metric[0].Counter != nil {
 				total_time := (int64)(*metric.Metric[0].Counter.Value * 1e9)
 
-				if self.my_state.Metrics != nil {
-					delta_cpu := (total_time -
-						self.my_state.Metrics.ProcessCpuNanoSecondsTotal)
-					delta_t := now - self.my_state.Heartbeat
+				delta_cpu := (total_time - metrics.ProcessCpuNanoSecondsTotal)
 
-					if delta_t > 0 && self.my_state.Heartbeat > 0 {
-						metrics.CpuLoadPercent = delta_cpu *
-							100 / delta_t
-					}
+				if delta_t > 0 && metrics.Timestamp.UnixNano() > 0 {
+					metrics.CpuLoadPercent =
+						delta_cpu * 100 / delta_t
 				}
 				metrics.ProcessCpuNanoSecondsTotal = total_time
 			}
+
 		case "client_comms_current_connections":
 			if metric.Metric[0].Gauge != nil {
 				metrics.ClientCommsCurrentConnections = (int64)(
@@ -109,206 +109,144 @@ func (self *FrontendManager) calculateMetrics(now int64) error {
 		}
 	}
 
-	self.my_state.Metrics = metrics
-
+	metrics.Timestamp = now
 	return nil
 }
 
-func (self *FrontendManager) setMyState() error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return err
-	}
-
-	now := time.Now().UnixNano()
-	path_manager := self.path_manager.Frontend(self.my_state.Name)
-
-	// Calculate the metrics.
-	err = self.calculateMetrics(now)
-	if err != nil {
-		return err
-	}
-	self.my_state.Heartbeat = now
-	self.my_state.DoNotRedirect = self.config_obj.Frontend.DoNotRedirect
-	return db.SetSubject(self.config_obj, path_manager, self.my_state)
+type FrontendMetrics struct {
+	Timestamp                     time.Time
+	ProcessCpuNanoSecondsTotal    int64
+	CpuLoadPercent                int64
+	ClientCommsCurrentConnections int64
+	ProcessResidentMemoryBytes    int64
+	NodeName                      string
 }
 
-func (self *FrontendManager) clearMyState() error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return err
-	}
-	return db.DeleteSubject(self.config_obj,
-		self.path_manager.Frontend(self.my_state.Name))
+func (self FrontendMetrics) ToDict() *ordereddict.Dict {
+	return ordereddict.NewDict().
+		Set("Timestamp", self.Timestamp).
+		Set("ProcessCpuNanoSecondsTotal", self.ProcessCpuNanoSecondsTotal).
+		Set("CpuLoadPercent", self.CpuLoadPercent).
+		Set("ClientCommsCurrentConnections", self.ClientCommsCurrentConnections).
+		Set("ProcessResidentMemoryBytes", self.ProcessResidentMemoryBytes).
+		Set("NodeName", self.NodeName)
 }
 
-func (self *FrontendManager) syncActiveFrontends() error {
-	active_frontends := make(map[string]*frontend_proto.FrontendState)
+// The master frontend is responsible for aggregating slave stats into
+// a single artifact that we can use to display in the GUI.
+type MasterFrontendManager struct {
+	config_obj *config_proto.Config
 
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return err
-	}
-
-	now := time.Now().UnixNano()
-	children, err := db.ListChildren(self.config_obj,
-		self.path_manager.Path(), 0, 1000)
-	if err != nil {
-		return err
-	}
-
-	total_metrics := &frontend_proto.Metrics{}
-	urls := make([]string, 0, len(children))
-	for _, child := range children {
-		state := &frontend_proto.FrontendState{}
-		err = db.GetSubject(self.config_obj, child, state)
-		if !errors.Is(err, os.ErrNotExist) {
-			return err
-		}
-
-		// Only count frontends that were active at least 30
-		// seconds ago.
-		if state.Heartbeat < now-30000000000 { // 30 sec
-			continue
-		}
-
-		active_frontends[state.Name] = state
-		if !state.DoNotRedirect {
-			urls = append(urls, state.Url)
-		}
-
-		total_metrics.CpuLoadPercent += state.Metrics.CpuLoadPercent
-		total_metrics.ClientCommsCurrentConnections += state.Metrics.ClientCommsCurrentConnections
-		total_metrics.ProcessResidentMemoryBytes += state.Metrics.ProcessResidentMemoryBytes
-	}
-
-	// Keep the lock to a minimum.
-	self.mu.Lock()
-	self.active_frontends = active_frontends
-	self.urls = urls
-	self.mu.Unlock()
-
-	if self.sample%2 == 0 {
-		journal, err := services.GetJournal()
-		if err != nil {
-			return err
-		}
-
-		err = journal.PushRowsToArtifact(self.config_obj,
-			[]*ordereddict.Dict{ordereddict.NewDict().
-				Set("CPUPercent", total_metrics.CpuLoadPercent).
-				Set("MemoryUse", total_metrics.ProcessResidentMemoryBytes).
-				Set("client_comms_current_connections",
-					total_metrics.ClientCommsCurrentConnections)},
-			"Server.Monitor.Health/Prometheus", "server", "")
-		if err != nil {
-			return err
-		}
-	}
-	self.sample++
-
-	return nil
+	mu    sync.Mutex
+	stats map[string]*FrontendMetrics
 }
 
-// GetFrontendURL gets a URL of another frontend. If we return this
-// frontend's url then we must serve this request ourselves.
-func (self *FrontendManager) GetFrontendURL() (string, bool) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
+func (self *MasterFrontendManager) processMetrics(ctx context.Context,
+	config_obj *config_proto.Config,
+	row *ordereddict.Dict) error {
 
-	if len(self.urls) <= 1 {
-		return "", false
-	}
-
-	result := self.urls[rand.Intn(len(self.urls))]
-	return result, result != self.my_state.Url
-}
-
-// Selects a frontend to take on.
-func (self *FrontendManager) selectFrontend(node string) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-
-	heartbeat := time.Now().UnixNano()
-
-	if node != "" {
-		conf, pres := self.frontends[node]
-		if !pres {
-			return errors.New("Unknown node " + node)
-		}
-
-		self.my_state = &frontend_proto.FrontendState{
-			Name:      node,
-			Heartbeat: heartbeat,
-			Url:       getURL(conf),
-		}
-		self.config_obj.Frontend = conf
-
-		logger.Info("Selected frontend configuration %v", node)
+	row_metric, pres := row.Get("Metrics")
+	if !pres {
 		return nil
 	}
 
-	for name, conf := range self.frontends {
-		active_state, pres := self.active_frontends[name]
+	row, pres = row_metric.(*ordereddict.Dict)
+	if !pres {
+		return nil
+	}
 
-		// older than 60 sec or not present - select this frontend.
-		if !pres || active_state.Heartbeat < heartbeat-600000000000 {
-			self.my_state = &frontend_proto.FrontendState{
-				Name:      name,
-				Heartbeat: heartbeat,
-				Url:       getURL(conf),
-			}
-			self.config_obj.Frontend = conf
+	metric := &FrontendMetrics{
+		Timestamp: time.Now(),
+		ProcessCpuNanoSecondsTotal: utils.GetInt64(
+			row, "ProcessCpuNanoSecondsTotal"),
+		CpuLoadPercent: utils.GetInt64(
+			row, "CpuLoadPercent"),
+		ClientCommsCurrentConnections: utils.GetInt64(
+			row, "ClientCommsCurrentConnections"),
+		ProcessResidentMemoryBytes: utils.GetInt64(
+			row, "ProcessResidentMemoryBytes"),
+		NodeName: utils.GetString(
+			row, "NodeName"),
+	}
 
-			logger := logging.GetLogger(
-				self.config_obj, &logging.FrontendComponent)
-			logger.Info("Selected frontend configuration %v", name)
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
-			return nil
+	self.stats[metric.NodeName] = metric
+
+	return nil
+}
+
+// Every 10 seconds read the cummulative stats and update the
+// Server.Monitor.Health artifact.
+func (self *MasterFrontendManager) UpdateStats(ctx context.Context) {
+	rows := make([]*ordereddict.Dict, 1)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(10 * time.Second):
 		}
-	}
 
-	return errors.New("All frontends appear to be active.")
+		// Calculate the total stats from all our valid
+		// frontends.
+		now := time.Now()
+
+		// Take a snapshot
+		self.mu.Lock()
+		active_frontends := make(map[string]FrontendMetrics)
+		for k, v := range self.stats {
+			if now.Sub(v.Timestamp) < 60*time.Second {
+				// Make a copy
+				active_frontends[k] = *v
+			}
+		}
+		self.mu.Unlock()
+
+		// Calculate totals
+		total_ClientCommsCurrentConnections := int64(0)
+		total_CpuLoadPercent := int64(0)
+		total_ProcessResidentMemoryBytes := int64(0)
+		for _, v := range active_frontends {
+			total_ClientCommsCurrentConnections += v.ClientCommsCurrentConnections
+			total_CpuLoadPercent += v.CpuLoadPercent
+			total_ProcessResidentMemoryBytes += v.ProcessResidentMemoryBytes
+		}
+
+		rows[0] = ordereddict.NewDict().
+			Set("TotalFrontends", len(active_frontends)).
+			Set("CPUPercent", total_CpuLoadPercent).
+			Set("MemoryUse", total_ProcessResidentMemoryBytes).
+			Set("client_comms_current_connections", total_ClientCommsCurrentConnections)
+
+		journal, err := services.GetJournal()
+		if err != nil {
+			continue
+		}
+
+		_ = journal.PushRowsToArtifact(self.config_obj,
+			rows, "Server.Monitor.Health/Prometheus", "server", "")
+	}
 }
 
-func getURL(fe_config *config_proto.FrontendConfig) string {
-	if fe_config.BindPort == 443 {
-		return fmt.Sprintf("https://%s/", fe_config.Hostname)
-	}
-	return fmt.Sprintf("https://%s:%d/", fe_config.Hostname,
-		fe_config.BindPort)
+func (self MasterFrontendManager) IsMaster() bool {
+	return true
 }
 
-// Install a frontend manager.
-func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
-	config_obj *config_proto.Config, node string) error {
-	if config_obj.Frontend == nil {
-		return errors.New("Frontend not configured")
-	}
+// The master does not replicate anywhere.
+func (self MasterFrontendManager) GetMasterAPIClient(ctx context.Context) (
+	api_proto.APIClient, func() error, error) {
+	return nil, nil, services.FrontendIsMaster
+}
 
-	var err error
-
-	fe_manager := &FrontendManager{
-		frontends:        make(map[string]*config_proto.FrontendConfig),
-		active_frontends: make(map[string]*frontend_proto.FrontendState),
-		config_obj:       config_obj,
-		path_manager:     &FrontendPathManager{},
-		primary_frontend: GetFrontendName(config_obj.Frontend),
-	}
-
-	services.Frontend = fe_manager
+func (self MasterFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
 
 	// If no service specification is set, we start all services
-	// on the primary frontend.
-	if config_obj.Frontend.ServerServices == nil {
+	// on the master frontend.
+	if config_obj.Frontend.ServerServices == nil ||
+		!config_obj.Frontend.ServerServices.FrontendServer {
 		config_obj.Frontend.ServerServices = &config_proto.ServerServicesConfig{
 			HuntManager:       true,
 			HuntDispatcher:    true,
@@ -328,79 +266,84 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 		}
 	}
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Info("<green>Frontend:</> Server will be master.")
 
-	fe_manager.addFrontendConfig(config_obj.Frontend)
-	for _, fe_config := range config_obj.ExtraFrontends {
-		// Duplicate keys to all frontends.
-		fe_config.Certificate = config_obj.Frontend.Certificate
-		fe_config.PrivateKey = config_obj.Frontend.PrivateKey
-		fe_manager.addFrontendConfig(fe_config)
-	}
-
-	// Select a frontend to run as
-	for i := 0; i < 10; i++ {
-		err = fe_manager.syncActiveFrontends()
-		if err != nil {
-			return err
-		}
-		err = fe_manager.selectFrontend(node)
-		if err == nil {
-			break
-		}
-		logger.Info("Waiting for frontend slot to become available.")
-		select {
-		case <-ctx.Done():
-			return nil
-
-		case <-time.After(10 * time.Second):
-			continue
-		}
-	}
+	// Push our metrics to the master node.
+	err := PushMetrics(ctx, wg, config_obj, "master")
 	if err != nil {
 		return err
 	}
 
-	// Store the selection in the data store. NOTE this is a small
-	// race but frontends do not get restarted that often so maybe
-	// it's fine.
-	err = fe_manager.setMyState()
-	if err != nil {
-		return err
-	}
+	go self.UpdateStats(ctx)
+	go utils.Retry(func() error {
+		return journal.WatchQueueWithCB(ctx, config_obj, wg,
+			"Server.Internal.FrontendMetrics",
+			self.processMetrics)
+	}, 10, time.Second)
 
-	// Secondary frontends do not run services if they are not configured to.
+	return err
+}
+
+type SlaveFrontendManager struct {
+	config_obj *config_proto.Config
+	name       string
+}
+
+func (self SlaveFrontendManager) IsMaster() bool {
+	return false
+}
+
+// The slave replicates to the master node.
+func (self SlaveFrontendManager) GetMasterAPIClient(ctx context.Context) (
+	api_proto.APIClient, func() error, error) {
+	return grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+}
+
+func (self *SlaveFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
+
+	// If no service specification is set, we start only some
+	// services on slave frontends.
 	if config_obj.Frontend.ServerServices == nil {
-		config_obj.Frontend.ServerServices = &config_proto.ServerServicesConfig{}
-	}
-
-	// Start the update loop
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		for {
-			select {
-			case <-ctx.Done():
-				// Not a guaranteed removal but if we
-				// exit cleanly we can free up the
-				// frontend slot.
-				err = fe_manager.clearMyState()
-				if err != nil {
-					logger.Error("Unable to remove frontend: %v", err)
-				}
-				return
-
-			case <-time.After(10 * time.Second):
-				_ = fe_manager.setMyState()
-				_ = fe_manager.syncActiveFrontends()
-			}
+		config_obj.Frontend.ServerServices = &config_proto.ServerServicesConfig{
+			HuntDispatcher:   true,
+			StatsCollector:   true,
+			ClientMonitoring: true,
+			SanityChecker:    true,
+			FrontendServer:   true,
 		}
-	}()
-	notifier := services.GetNotifier()
-	if notifier == nil {
-		return errors.New("Notifier not ready")
 	}
 
-	return services.GetNotifier().NotifyListener(config_obj, "Frontend")
+	self.name = fmt.Sprintf("%s:%d", config_obj.Frontend.Hostname,
+		config_obj.Frontend.BindPort)
+
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Info("<green>Frontend:</> Server will be slave, with ID %v.", self.name)
+
+	// Push our metrics to the master node.
+	return PushMetrics(ctx, wg, config_obj, self.name)
+}
+
+// Install a frontend manager. This must be the first service created
+// in the frontend. The service will determine if we are running in
+// master or slave context.
+func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
+	if config_obj.Frontend == nil {
+		return errors.New("Frontend not configured")
+	}
+
+	if config_obj.Frontend.IsMaster {
+		manager := &MasterFrontendManager{
+			config_obj: config_obj,
+			stats:      make(map[string]*FrontendMetrics),
+		}
+		services.RegisterFrontendManager(manager)
+		return manager.Start(ctx, wg, config_obj)
+	}
+
+	manager := &SlaveFrontendManager{config_obj: config_obj}
+	services.RegisterFrontendManager(manager)
+	return manager.Start(ctx, wg, config_obj)
 }

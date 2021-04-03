@@ -31,7 +31,7 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
   "last_crash_at": 0,
   "last_ip": "192.168.0.5:40933",
   "last_interrogate_flow_id": "F.BN21C82J8DM8K",
-  "last_ip_class": "INTERNAL",
+  "last_ip_class": "UNKNOWN",
   "labels": []
  }
 ]SELECT client_id, timestamp(epoch=create_time/1000000) as CreateTime, request.artifacts as Artifacts, session_id as Flow FROM flows(client_id='C.4f5e52adf0a337a9') WHERE Artifacts =~ "Netstat"[

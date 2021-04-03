@@ -120,6 +120,7 @@ func StartupEssentialServices(sm *services.Service) error {
 	return nil
 }
 
+// Start usual services that run on frontends only (i.e. not the client).
 func StartupFrontendServices(sm *services.Service) error {
 	spec := getServerServices(sm.Config)
 

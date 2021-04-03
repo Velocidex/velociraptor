@@ -348,6 +348,7 @@ func StartInventoryService(
 		// Use the VQL http client so it can accept the same certs.
 		Client: networking.GetHttpClient(config_obj.Client, nil),
 	}
+	services.RegisterInventory(inventory_service)
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -397,7 +398,6 @@ func StartInventoryService(
 
 	logger.Info("<green>Starting</> Inventory Service")
 
-	services.RegisterInventory(inventory_service)
 	_ = inventory_service.LoadFromFile(config_obj)
 
 	return nil

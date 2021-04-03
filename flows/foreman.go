@@ -46,6 +46,7 @@ import (
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 // ForemanProcessMessage processes a ForemanCheckin message from the
@@ -62,19 +63,16 @@ func ForemanProcessMessage(
 
 	// Update the client's event tables.
 	client_event_manager := services.ClientEventManager()
-	if client_event_manager == nil {
-		// Not really an error - this happens when the server
-		// shuts down.
-		return nil
-	}
-
-	if client_event_manager.CheckClientEventsVersion(
-		config_obj, client_id, foreman_checkin.LastEventTableVersion) {
+	if client_event_manager != nil &&
+		client_event_manager.CheckClientEventsVersion(
+			config_obj, client_id,
+			foreman_checkin.LastEventTableVersion) {
 		err := QueueMessageForClient(
 			config_obj, client_id,
 			client_event_manager.GetClientUpdateEventTableMessage(
 				config_obj, client_id))
 		if err != nil {
+			utils.Debug(err)
 			return err
 		}
 	}
@@ -147,8 +145,14 @@ func ForemanProcessMessage(
 	}
 
 	// Let the client know it needs to update its foreman state to
-	// the latest time.
-	err = QueueMessageForClient(
+	// the latest time. We schedule an UpdateForeman message for
+	// the client. Note that it is possible that the client does
+	// not update its timestamp immediately and therefore might
+	// end up sending multiple participation events to the hunt
+	// manager - this is ok since the hunt manager keeps hunt
+	// participation index and will automatically skip multiple
+	// messages.
+	return QueueMessageForClient(
 		config_obj, client_id,
 		&crypto_proto.GrrMessage{
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
@@ -157,15 +161,4 @@ func ForemanProcessMessage(
 				LastHuntTimestamp: latest_timestamp,
 			},
 		})
-	if err != nil {
-		return err
-	}
-
-	notifier := services.GetNotifier()
-	if notifier == nil {
-		return errors.New("Notifier not configured")
-	}
-
-	// Notify the client so it can pick up the new jobs
-	return services.GetNotifier().NotifyListener(config_obj, client_id)
 }

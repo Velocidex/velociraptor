@@ -87,7 +87,7 @@ message VQLTypeMap {
 }
 
 message VQLResponse {
-    // Response is encoded in a json array of rows.
+    // DEPRECATED: Response is encoded in a json array of rows.
     string Response = 1 [(sem_type) = {
             description: "JSON encoded response.",
         }];

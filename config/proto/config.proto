@@ -450,13 +450,12 @@ message FrontendConfig {
     // Publicly accessible hostname for this frontend.
     string hostname = 19;
 
-    string bind_address = 1 [(sem_type) = {
-            description: "Address to bind frontend endpoint. Clients connect to this endpoint to poll for jobs."
-        }];
+    // Address to bind frontend endpoint. Clients connect to this
+    // endpoint to poll for jobs.
+    string bind_address = 1;
 
-    uint32 bind_port = 2 [(sem_type) = {
-            description: "Port to bind to."
-        }];
+    // Port to bind to
+    uint32 bind_port = 2;
 
     // Serve the GUI from this base path instead of "/"
     string base_path = 25;
@@ -466,12 +465,6 @@ message FrontendConfig {
     // configured by the wizard - you will need to manually configure
     // it. You better know what you are doing here!
     bool use_plain_http = 24;
-
-
-    // If this is true, other frontends will not automatically
-    // redirect to this frontend. This is required when you have an
-    // external load balancer which will take care of redirection.1
-    bool do_not_redirect = 26;
 
     // These are used to secure the client/server communications -
     // Even when using external TLS certificates! This certificate
@@ -534,6 +527,11 @@ message FrontendConfig {
 
     FrontendResourceControl resources = 27;
 
+    // Used internally to tag this frontend as the master.
+    bool is_master = 30;
+
+    // DEPRECATED ****************************************************
+
     // Below options are DEPRECATED - moved to resources by migration code.
     uint64 concurrency = 9 [(sem_type) = {
             description: "The number of client messages to process concurrently.",
@@ -556,6 +554,9 @@ message FrontendConfig {
     // less latency to respond to client events but also means more
     // TLS handshake and network overheads due to frequent POST.
     uint64 client_event_max_wait = 23;
+
+    // DEPRECATED - ignored.
+    bool do_not_redirect = 26;
 }
 
 

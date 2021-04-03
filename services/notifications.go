@@ -15,6 +15,7 @@ package services
 // need to poll something.
 
 import (
+	"context"
 	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -63,6 +64,9 @@ type Notifier interface {
 	NotifyListener(config_obj *config_proto.Config, id string) error
 
 	// Check if there is someone listening for the specified
-	// id. Currently this only works on one frontend.
-	IsClientConnected(client_id string) bool
+	// id. This method queries all nodes to check if the client is
+	// connected.
+	IsClientConnected(ctx context.Context,
+		config_obj *config_proto.Config,
+		client_id string, timeout int) bool
 }

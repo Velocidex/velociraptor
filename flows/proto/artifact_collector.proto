@@ -153,6 +153,9 @@ message ArtifactCollectorContext {
     repeated LogMessage logs = 20;
 
     bool dirty = 2;
+
+    // Total number of times the flow was loaded from the data store.
+    uint64 total_loads = 33;
 }
 
 // Artifacts to collect for each label.

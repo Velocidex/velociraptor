@@ -97,11 +97,6 @@ type Repository interface {
 
 	// List
 	List() []string
-
-	/*
-		PopulateArtifactsVQLCollectorArgs(
-			request *actions_proto.VQLCollectorArgs) error
-	*/
 }
 
 // Manages the global artifact repository

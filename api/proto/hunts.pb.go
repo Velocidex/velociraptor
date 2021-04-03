@@ -769,6 +769,85 @@ func (x *GetHuntResultsRequest) GetArtifact() string {
 	return ""
 }
 
+type HuntMutation struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	HuntId      string     `protobuf:"bytes,1,opt,name=hunt_id,json=huntId,proto3" json:"hunt_id,omitempty"`
+	Stats       *HuntStats `protobuf:"bytes,2,opt,name=stats,proto3" json:"stats,omitempty"`
+	Description string     `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	State       Hunt_State `protobuf:"varint,4,opt,name=state,proto3,enum=proto.Hunt_State" json:"state,omitempty"`
+	StartTime   uint64     `protobuf:"varint,5,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+}
+
+func (x *HuntMutation) Reset() {
+	*x = HuntMutation{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_hunts_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *HuntMutation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HuntMutation) ProtoMessage() {}
+
+func (x *HuntMutation) ProtoReflect() protoreflect.Message {
+	mi := &file_hunts_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HuntMutation.ProtoReflect.Descriptor instead.
+func (*HuntMutation) Descriptor() ([]byte, []int) {
+	return file_hunts_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *HuntMutation) GetHuntId() string {
+	if x != nil {
+		return x.HuntId
+	}
+	return ""
+}
+
+func (x *HuntMutation) GetStats() *HuntStats {
+	if x != nil {
+		return x.Stats
+	}
+	return nil
+}
+
+func (x *HuntMutation) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *HuntMutation) GetState() Hunt_State {
+	if x != nil {
+		return x.State
+	}
+	return Hunt_UNSET
+}
+
+func (x *HuntMutation) GetStartTime() uint64 {
+	if x != nil {
+		return x.StartTime
+	}
+	return 0
+}
+
 var File_hunts_proto protoreflect.FileDescriptor
 
 var file_hunts_proto_rawDesc = []byte{
@@ -963,10 +1042,22 @@ var file_hunts_proto_rawDesc = []byte{
 	0x07, 0x68, 0x75, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
 	0x68, 0x75, 0x6e, 0x74, 0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61,
 	0x63, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61,
-	0x63, 0x74, 0x42, 0x31, 0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69,
-	0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x76,
-	0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x63, 0x74, 0x22, 0xb9, 0x01, 0x0a, 0x0c, 0x48, 0x75, 0x6e, 0x74, 0x4d, 0x75, 0x74, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x12, 0x17, 0x0a, 0x07, 0x68, 0x75, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x68, 0x75, 0x6e, 0x74, 0x49, 0x64, 0x12, 0x26, 0x0a, 0x05,
+	0x73, 0x74, 0x61, 0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x2e, 0x48, 0x75, 0x6e, 0x74, 0x53, 0x74, 0x61, 0x74, 0x73, 0x52, 0x05, 0x73,
+	0x74, 0x61, 0x74, 0x73, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74,
+	0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72,
+	0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x27, 0x0a, 0x05, 0x73, 0x74, 0x61, 0x74, 0x65, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x48, 0x75,
+	0x6e, 0x74, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x65, 0x52, 0x05, 0x73, 0x74, 0x61, 0x74, 0x65, 0x12,
+	0x1d, 0x0a, 0x0a, 0x73, 0x74, 0x61, 0x72, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x05, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x09, 0x73, 0x74, 0x61, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x42, 0x31,
+	0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64, 0x65, 0x78, 0x2e,
+	0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63,
+	0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -982,7 +1073,7 @@ func file_hunts_proto_rawDescGZIP() []byte {
 }
 
 var file_hunts_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_hunts_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_hunts_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_hunts_proto_goTypes = []interface{}{
 	(HuntOsCondition_OS)(0),             // 0: proto.HuntOsCondition.OS
 	(Hunt_State)(0),                     // 1: proto.Hunt.State
@@ -995,25 +1086,28 @@ var file_hunts_proto_goTypes = []interface{}{
 	(*ListHuntsResponse)(nil),           // 8: proto.ListHuntsResponse
 	(*GetHuntRequest)(nil),              // 9: proto.GetHuntRequest
 	(*GetHuntResultsRequest)(nil),       // 10: proto.GetHuntResultsRequest
-	(*AvailableDownloads)(nil),          // 11: proto.AvailableDownloads
-	(*proto.ArtifactCollectorArgs)(nil), // 12: proto.ArtifactCollectorArgs
+	(*HuntMutation)(nil),                // 11: proto.HuntMutation
+	(*AvailableDownloads)(nil),          // 12: proto.AvailableDownloads
+	(*proto.ArtifactCollectorArgs)(nil), // 13: proto.ArtifactCollectorArgs
 }
 var file_hunts_proto_depIdxs = []int32{
 	0,  // 0: proto.HuntOsCondition.os:type_name -> proto.HuntOsCondition.OS
 	2,  // 1: proto.HuntCondition.excluded_labels:type_name -> proto.HuntLabelCondition
 	2,  // 2: proto.HuntCondition.labels:type_name -> proto.HuntLabelCondition
 	3,  // 3: proto.HuntCondition.os:type_name -> proto.HuntOsCondition
-	11, // 4: proto.HuntStats.available_downloads:type_name -> proto.AvailableDownloads
-	12, // 5: proto.Hunt.start_request:type_name -> proto.ArtifactCollectorArgs
+	12, // 4: proto.HuntStats.available_downloads:type_name -> proto.AvailableDownloads
+	13, // 5: proto.Hunt.start_request:type_name -> proto.ArtifactCollectorArgs
 	4,  // 6: proto.Hunt.condition:type_name -> proto.HuntCondition
 	5,  // 7: proto.Hunt.stats:type_name -> proto.HuntStats
 	1,  // 8: proto.Hunt.state:type_name -> proto.Hunt.State
 	6,  // 9: proto.ListHuntsResponse.items:type_name -> proto.Hunt
-	10, // [10:10] is the sub-list for method output_type
-	10, // [10:10] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	5,  // 10: proto.HuntMutation.stats:type_name -> proto.HuntStats
+	1,  // 11: proto.HuntMutation.state:type_name -> proto.Hunt.State
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_hunts_proto_init() }
@@ -1131,6 +1225,18 @@ func file_hunts_proto_init() {
 				return nil
 			}
 		}
+		file_hunts_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*HuntMutation); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_hunts_proto_msgTypes[2].OneofWrappers = []interface{}{
 		(*HuntCondition_Labels)(nil),
@@ -1142,7 +1248,7 @@ func file_hunts_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_hunts_proto_rawDesc,
 			NumEnums:      2,
-			NumMessages:   9,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

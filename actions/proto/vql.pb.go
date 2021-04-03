@@ -335,7 +335,7 @@ type VQLResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Response is encoded in a json array of rows.
+	// DEPRECATED: Response is encoded in a json array of rows.
 	Response string `protobuf:"bytes,1,opt,name=Response,proto3" json:"Response,omitempty"`
 	// Response is encoded as line delimited JSON.
 	JSONLResponse string        `protobuf:"bytes,10,opt,name=JSONLResponse,proto3" json:"JSONLResponse,omitempty"`

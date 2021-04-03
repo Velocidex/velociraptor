@@ -8,6 +8,8 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+type EncOpts = json.EncOpts
+
 func MarshalJSONDict(v interface{}, opts *json.EncOpts) ([]byte, error) {
 	self, ok := v.(*ordereddict.Dict)
 	if !ok || self == nil {

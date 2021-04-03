@@ -80,7 +80,8 @@ func (self ClientsPlugin) Call(
 		// If a client id is specified we do not need to search at all.
 		if arg.ClientId != "" {
 			api_client, err := api.GetApiClient(
-				config_obj, nil, arg.ClientId, false)
+				ctx, config_obj, nil,
+				arg.ClientId, false /* detailed */)
 			if err == nil {
 				select {
 				case <-ctx.Done():
@@ -105,7 +106,8 @@ func (self ClientsPlugin) Call(
 			config_obj, constants.CLIENT_INDEX_URN,
 			search, "", arg.Start, limit, datastore.UNSORTED) {
 			api_client, err := api.GetApiClient(
-				config_obj, nil, client_id, false)
+				ctx, config_obj, nil, client_id,
+				false /* detailed */)
 			if err == nil {
 				select {
 				case <-ctx.Done():
@@ -158,7 +160,9 @@ func (self *ClientInfoFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	api_client, err := api.GetApiClient(config_obj, nil, arg.ClientId, true)
+	api_client, err := api.GetApiClient(ctx,
+		config_obj, nil, arg.ClientId,
+		false /* detailed */)
 	if err != nil {
 		scope.Log("client_info: %s", err.Error())
 		return vfilter.Null{}
