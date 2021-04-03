@@ -284,7 +284,7 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(
 	defer self.mu.Unlock()
 
 	modified_name, pres := event.GetString("artifact")
-	if !pres || modified_name != "ClientEventTable" {
+	if !pres || modified_name == "" {
 		return
 	}
 
@@ -297,6 +297,12 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(
 			return false
 		}
 
+		// We could try to figure out if the artifact actually
+		// changed anythign but this is hard to know - not
+		// only do we need to look at the artifact in the
+		// event table but all dependencies as well. So for
+		// now we just recompile the event table when any
+		// artifact is changed.
 		return true
 	}
 
