@@ -3,6 +3,11 @@
 // the GUI at any time.
 //
 // This service maintains access to the global event table.
+
+// NOTE: The client's event table will be updated when the client's
+// table's version is after:
+// 1. The global event table state was modified.
+// 2. Any label was updated for that client.
 package client_monitoring
 
 import (
@@ -80,13 +85,14 @@ func (self *ClientEventTable) CheckClientEventsVersion(
 	version := self.state.Version
 	self.mu.Unlock()
 
+	if client_version < version {
+		return true
+	}
+
+	// Now check the label group
 	labeler := services.GetLabeler()
 	if labeler == nil {
 		return false
-	}
-
-	if client_version < version {
-		return true
 	}
 
 	// If the client's labels have changed after their table
@@ -286,22 +292,25 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(
 
 	// Determine if the modified artifact affects us.
 	is_relevant := func() bool {
-		// Ignore events that we sent.
+		// Ignore events that we sent ourselves.
 		if setter == self.id {
 			return false
 		}
 
+		// We could try to figure out if the artifact actually
+		// changed anythign but this is hard to know - not
+		// only do we need to look at the artifact in the
+		// event table but all dependencies as well. So for
+		// now we just recompile the event table when any
+		// artifact is changed.
 		return true
 	}
 
 	if is_relevant() {
-		// Recompile artifacts and update the version.
-		self.state.Version = uint64(self.clock.Now().UnixNano())
-
-		clear_caches(self.state)
-		err := self.compileState(ctx, config_obj, self.state)
+		err := self.load_from_file(ctx, config_obj)
 		if err != nil {
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger := logging.GetLogger(
+				config_obj, &logging.FrontendComponent)
 			logger.Error("compileState: %v", err)
 		}
 	}
@@ -329,7 +338,13 @@ func (self *ClientEventTable) LoadFromFile(
 		return errors.New("Frontend not configured")
 	}
 
+	return self.load_from_file(ctx, config_obj)
+}
+
+func (self *ClientEventTable) load_from_file(
+	ctx context.Context, config_obj *config_proto.Config) error {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("Reloading client monitoring tables from datastore\n")
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
