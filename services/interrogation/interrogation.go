@@ -87,9 +87,6 @@ func (self *EnrollmentService) ProcessEnrollment(
 	// Wait for rate token
 	self.limiter.Wait(ctx)
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Debug("Interrogating %v", client_id)
-
 	manager, err := services.GetRepositoryManager()
 	if err != nil {
 		return err
@@ -200,9 +197,6 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	if client_info == nil {
 		return errors.New("No Generic.Client.Info results")
 	}
-
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Enrolling %v.", client_id)
 
 	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(config_obj)
