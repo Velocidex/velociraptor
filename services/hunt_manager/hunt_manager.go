@@ -82,6 +82,9 @@ type ParticipationRecord struct {
 	Override  bool   `vfilter:"optional,field=Override"`
 	Timestamp uint64 `vfilter:"optional,field=Timestamp"`
 	TS        uint64 `vfilter:"optional,field=_ts"`
+
+	// Deprecated
+	Participate bool `vfilter:"optional,field=Participate"`
 }
 
 type HuntManager struct {

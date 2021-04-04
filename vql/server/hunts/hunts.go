@@ -257,6 +257,7 @@ func (self HuntResultsPlugin) Call(
 				participation_row.ClientId,
 				false /* detailed */)
 			if err != nil {
+				scope.Log("hunt_results: %v", err)
 				continue
 			}
 
