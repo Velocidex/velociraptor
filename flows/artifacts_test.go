@@ -215,7 +215,7 @@ func (self *TestSuite) TestRetransmission() {
 	assert.NoError(self.T(), err)
 
 	// Send one row.
-	message := &crypto_proto.GrrMessage{
+	message := &crypto_proto.VeloMessage{
 		Source:     self.client_id,
 		SessionId:  flow_id,
 		RequestId:  1,
@@ -290,7 +290,7 @@ func (self *TestSuite) TestResourceLimits() {
 	assert.Equal(self.T(), len(messages), 2)
 
 	// Send one row.
-	message := &crypto_proto.GrrMessage{
+	message := &crypto_proto.VeloMessage{
 		Source:     self.client_id,
 		SessionId:  flow_id,
 		RequestId:  1,

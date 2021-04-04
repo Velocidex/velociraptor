@@ -53,8 +53,8 @@ type MySQLDataStore struct {
 func (self *MySQLDataStore) GetClientTasks(
 	config_obj *config_proto.Config,
 	client_id string,
-	do_not_lease bool) ([]*crypto_proto.GrrMessage, error) {
-	result := []*crypto_proto.GrrMessage{}
+	do_not_lease bool) ([]*crypto_proto.VeloMessage, error) {
+	result := []*crypto_proto.VeloMessage{}
 	now := uint64(self.clock.Now().UTC().UnixNano() / 1000)
 
 	client_path_manager := paths.NewClientPathManager(client_id)
@@ -74,7 +74,7 @@ func (self *MySQLDataStore) GetClientTasks(
 
 		// Here we read the task from the task_urn and remove
 		// it from the queue.
-		message := &crypto_proto.GrrMessage{}
+		message := &crypto_proto.VeloMessage{}
 		err = self.GetSubject(config_obj, task_urn, message)
 		if err != nil {
 			continue
@@ -94,7 +94,7 @@ func (self *MySQLDataStore) GetClientTasks(
 func (self *MySQLDataStore) UnQueueMessageForClient(
 	config_obj *config_proto.Config,
 	client_id string,
-	message *crypto_proto.GrrMessage) error {
+	message *crypto_proto.VeloMessage) error {
 
 	client_path_manager := paths.NewClientPathManager(client_id)
 	return self.DeleteSubject(config_obj,
@@ -104,7 +104,7 @@ func (self *MySQLDataStore) UnQueueMessageForClient(
 func (self *MySQLDataStore) QueueMessageForClient(
 	config_obj *config_proto.Config,
 	client_id string,
-	req *crypto_proto.GrrMessage) error {
+	req *crypto_proto.VeloMessage) error {
 
 	req.TaskId = uint64(self.clock.Now().UTC().UnixNano() / 1000)
 	client_path_manager := paths.NewClientPathManager(client_id)
@@ -236,7 +236,7 @@ func (self *MySQLDataStore) SetIndex(
 	for _, keyword := range keywords {
 		subject := path.Join(index_urn, strings.ToLower(keyword), entity)
 		err := self.SetSubject(config_obj, subject,
-			&crypto_proto.GrrMessage{RequestId: 1})
+			&crypto_proto.VeloMessage{RequestId: 1})
 		if err != nil {
 			return err
 		}
@@ -266,7 +266,7 @@ func (self *MySQLDataStore) CheckIndex(
 	index_urn string,
 	entity string,
 	keywords []string) error {
-	data := &crypto_proto.GrrMessage{}
+	data := &crypto_proto.VeloMessage{}
 
 	for _, keyword := range keywords {
 		subject := path.Join(index_urn, strings.ToLower(keyword), entity)

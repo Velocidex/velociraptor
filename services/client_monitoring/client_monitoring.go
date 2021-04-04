@@ -225,7 +225,7 @@ func (self *ClientEventTable) setClientMonitoringState(
 
 func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	config_obj *config_proto.Config,
-	client_id string) *crypto_proto.GrrMessage {
+	client_id string) *crypto_proto.VeloMessage {
 	self.mu.Lock()
 	state := self.state
 	self.mu.Unlock()
@@ -271,7 +271,7 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 		event.Timeout = 99999999
 	}
 
-	return &crypto_proto.GrrMessage{
+	return &crypto_proto.VeloMessage{
 		UpdateEventTable: result,
 		SessionId:        constants.MONITORING_WELL_KNOWN_FLOW,
 	}

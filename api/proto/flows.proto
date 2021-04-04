@@ -29,11 +29,11 @@ message FlowDetails {
 // for sending to the client. NOTE: Clients do not know anything about
 // artifacts - they only interprect raw VQL as compiled by the server.
 message ApiFlowRequestDetails {
-    repeated GrrMessage items = 1;
+    repeated VeloMessage items = 1;
 }
 
 message ApiFlowResultDetails {
-    repeated GrrMessage items = 1;
+    repeated VeloMessage items = 1;
 }
 
 message ApiFlowLogDetails {

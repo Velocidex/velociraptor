@@ -68,6 +68,12 @@ func (self *ArtifactPathManager) Path() string {
 	return result
 }
 
+func (self *ArtifactPathManager) getDayName() string {
+	now := self.Clock.Now().UTC()
+	return fmt.Sprintf("%d-%02d-%02d", now.Year(),
+		now.Month(), now.Day())
+}
+
 func (self *ArtifactPathManager) GetPathForWriting() (string, error) {
 	artifact_name, artifact_source := paths.SplitFullSourceName(self.full_artifact_name)
 	mode, err := GetArtifactMode(self.config_obj, artifact_name)
@@ -75,14 +81,10 @@ func (self *ArtifactPathManager) GetPathForWriting() (string, error) {
 		return "", err
 	}
 
-	now := self.Clock.Now().UTC()
-	day_name := fmt.Sprintf("%d-%02d-%02d", now.Year(),
-		now.Month(), now.Day())
-
-	result := self.get_back_path(self.client_id, day_name, self.flow_id,
+	result := self.get_back_path(self.client_id, self.flow_id,
 		artifact_name, artifact_source, mode)
 
-	return result + ".json", nil
+	return result, nil
 }
 
 // Get the result set files for event artifacts by listing the
@@ -184,8 +186,7 @@ func (self *ArtifactPathManager) GeneratePaths(ctx context.Context) <-chan *api.
 	return output
 }
 
-var day_name_regex = regexp.MustCompile(
-	`\d\d\d\d-\d\d-\d\d`)
+var day_name_regex = regexp.MustCompile(`\d\d\d\d-\d\d-\d\d`)
 
 func DayNameToTimestamp(name string) int64 {
 	matches := day_name_regex.FindAllString(name, -1)
@@ -199,27 +200,26 @@ func DayNameToTimestamp(name string) int64 {
 	return 0
 }
 
-// Resolve the path relative to the filestore where the CVS files are
-// stored. This depends on what kind of log it is (mode), and various
-// other details depending on the mode.
+// Resolve the path relative to the filestore where the JSONL files
+// are stored. This depends on what kind of log it is (mode), and
+// various other details depending on the mode.
 //
 // This function represents a map between the type of artifact and its
 // location on disk. It is used by all code that needs to read or
 // write artifact results.
 func (self *ArtifactPathManager) get_back_path(
-	client_id, day_name, flow_id, artifact_name, source_name string,
-	mode int) string {
+	client_id, flow_id, artifact_name, source_name string, mode int) string {
 
 	switch mode {
 	case paths.MODE_CLIENT:
 		if source_name != "" {
 			return fmt.Sprintf(
-				"/clients/%s/artifacts/%s/%s/%s",
+				"/clients/%s/artifacts/%s/%s/%s.json",
 				client_id, artifact_name,
 				flow_id, source_name)
 		} else {
 			return fmt.Sprintf(
-				"/clients/%s/artifacts/%s/%s",
+				"/clients/%s/artifacts/%s/%s.json",
 				client_id, artifact_name,
 				flow_id)
 		}
@@ -227,46 +227,54 @@ func (self *ArtifactPathManager) get_back_path(
 	case paths.MODE_SERVER:
 		if source_name != "" {
 			return fmt.Sprintf(
-				"/clients/server/artifacts/%s/%s/%s",
+				"/clients/server/artifacts/%s/%s/%s.json",
 				artifact_name, flow_id, source_name)
 		} else {
 			return fmt.Sprintf(
-				"/clients/server/artifacts/%s/%s",
+				"/clients/server/artifacts/%s/%s.json",
 				artifact_name, flow_id)
 		}
 
 	case paths.MODE_SERVER_EVENT:
 		if source_name != "" {
 			return fmt.Sprintf(
-				"/server_artifacts/%s/%s/%s",
-				artifact_name, source_name, day_name)
+				"/server_artifacts/%s/%s/%s.json",
+				artifact_name, source_name,
+				self.getDayName())
 		} else {
 			return fmt.Sprintf(
-				"/server_artifacts/%s/%s",
-				artifact_name, day_name)
+				"/server_artifacts/%s/%s.json",
+				artifact_name,
+				self.getDayName())
 		}
 
 	case paths.MODE_CLIENT_EVENT:
 		if client_id == "" {
 			// Should never normally happen.
 			return fmt.Sprintf(
-				"/clients/nobody/%s/%s/%s",
-				self.base, artifact_name, day_name)
+				"/clients/nobody/%s/%s/%s.json",
+				self.base, artifact_name,
+				self.getDayName())
 
 		} else {
 			if source_name != "" {
 				return fmt.Sprintf(
-					"/clients/%s/%s/%s/%s/%s",
+					"/clients/%s/%s/%s/%s/%s.json",
 					client_id, self.base,
 					artifact_name, source_name,
-					day_name)
+					self.getDayName())
 			} else {
 				return fmt.Sprintf(
-					"/clients/%s/%s/%s/%s",
+					"/clients/%s/%s/%s/%s.json",
 					client_id, self.base,
-					artifact_name, day_name)
+					artifact_name, self.getDayName())
 			}
 		}
+
+		// Internal artifacts are not written anywhere but are
+		// still replicated.
+	case paths.INTERNAL:
+		return ""
 	}
 
 	return ""

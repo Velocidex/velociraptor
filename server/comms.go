@@ -405,13 +405,10 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		/* Experimental redirection is turned off for now.
-		if maybeRedirectFrontend("reader", w, req) {
-			return
-		}
-		*/
 
-		if !server_obj.throttler.Ready() {
+		if false && !server_obj.throttler.Ready() {
+			loadshedCounter.Inc()
+
 			// Load shed connections with a 500 error.
 			http.Error(w, "", http.StatusServiceUnavailable)
 			return

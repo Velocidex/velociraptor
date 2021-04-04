@@ -18,68 +18,50 @@ package interrogation
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
+	"golang.org/x/time/rate"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/vfilter"
 )
 
-type EnrollmentService struct{}
+type EnrollmentService struct {
+	limiter *rate.Limiter
+}
 
 func (self *EnrollmentService) Start(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 
-	journal, err := services.GetJournal()
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("<green>Starting</> Enrollment service.")
+
+	err := journal.WatchForCollectionWithCB(ctx, config_obj, wg,
+		"Generic.Client.Info/BasicInformation",
+		self.ProcessInterrogateResults)
 	if err != nil {
 		return err
 	}
 
-	events, cancel := journal.Watch(ctx, "Server.Internal.Enrollment")
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer cancel()
-
-		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Info("<green>Starting</> Enrollment service.")
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-
-			case event, ok := <-events:
-				if !ok {
-					return
-				}
-				err := self.ProcessRow(ctx, config_obj, event)
-				if err != nil {
-					logger.Error("Enrollment Service: %v", err)
-				}
-			}
-		}
-	}()
-
-	return nil
+	return journal.WatchQueueWithCB(ctx, config_obj, wg,
+		"Server.Internal.Enrollment", self.ProcessEnrollment)
 }
 
-func (self *EnrollmentService) ProcessRow(
+func (self *EnrollmentService) ProcessEnrollment(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
@@ -101,6 +83,9 @@ func (self *EnrollmentService) ProcessRow(
 	if err == nil {
 		return nil
 	}
+
+	// Wait for rate token
+	self.limiter.Wait(ctx)
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Debug("Interrogating %v", client_id)
@@ -148,57 +133,46 @@ func (self *EnrollmentService) ProcessRow(
 		return err
 	}
 
-	// Notify the client
-	notifier := services.GetNotifier()
-	if notifier != nil {
-		err = services.GetNotifier().NotifyListener(config_obj, client_id)
-		return err
-	}
-	return nil
-}
-
-// Watch the system's flow completion log for interrogate artifacts.
-type InterrogationService struct{}
-
-// Watch for Generic.Client.Info artifacts.
-func (self *InterrogationService) Start(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	wg *sync.WaitGroup) error {
-
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-
-	return watchForFlowCompletion(
-		ctx, wg, config_obj, "Generic.Client.Info/BasicInformation",
-		func(ctx context.Context, scope vfilter.Scope, row *ordereddict.Dict) {
-			err := self.ProcessRow(ctx, config_obj, scope, row)
-			if err != nil {
-				logger.Error(fmt.Sprintf("InterrogationService: %v", err))
-			}
-		})
-}
-
-func (self *InterrogationService) ProcessRow(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	scope vfilter.Scope, row *ordereddict.Dict) error {
-	client_id, _ := row.GetString("ClientId")
-	if client_id == "" {
-		return errors.New("Unknown ClientId")
+	keywords := []string{
+		"all", // This is used for "." search
+		client_id,
 	}
 
-	flow_id, _ := row.GetString("FlowId")
-
-	path_manager := artifacts.NewArtifactPathManager(config_obj,
-		client_id, flow_id, "Generic.Client.Info/BasicInformation")
-	row_chan, err := file_store.GetTimeRange(
-		ctx, config_obj, path_manager, 0, 0)
+	err = db.SetIndex(config_obj,
+		constants.CLIENT_INDEX_URN,
+		client_id, keywords)
 	if err != nil {
 		return err
 	}
 
+	// Notify the client
+	notifier := services.GetNotifier()
+	if notifier != nil {
+		return services.GetNotifier().
+			NotifyListener(config_obj, client_id)
+	}
+	return nil
+}
+
+func (self *EnrollmentService) ProcessInterrogateResults(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id, flow_id string) error {
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	path_manager := artifacts.NewArtifactPathManager(config_obj,
+		client_id, flow_id, "Generic.Client.Info/BasicInformation")
+	rs_reader, err := result_sets.NewResultSetReader(
+		file_store_factory, path_manager)
+	if err != nil {
+		return err
+	}
+	defer rs_reader.Close()
+
 	var client_info *actions_proto.ClientInfo
-	for row := range row_chan {
+
+	// Should return only one row
+	for row := range rs_reader.Rows(ctx) {
 		getter := func(field string) string {
 			result, _ := row.GetString(field)
 			return result
@@ -220,11 +194,15 @@ func (self *InterrogationService) ProcessRow(
 		if ok {
 			client_info.Labels = append(client_info.Labels, label_array...)
 		}
+		break
 	}
 
 	if client_info == nil {
 		return errors.New("No Generic.Client.Info results")
 	}
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("Enrolling %v.", client_id)
 
 	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(config_obj)
@@ -251,8 +229,6 @@ func (self *InterrogationService) ProcessRow(
 	// Update the client indexes for the GUI. Add any keywords we
 	// wish to be searchable in the UI here.
 	keywords := []string{
-		"all", // This is used for "." search
-		client_id,
 		client_info.Hostname,
 		client_info.Fqdn,
 		"host:" + client_info.Hostname,
@@ -260,8 +236,7 @@ func (self *InterrogationService) ProcessRow(
 
 	return db.SetIndex(config_obj,
 		constants.CLIENT_INDEX_URN,
-		client_id, keywords,
-	)
+		client_id, keywords)
 }
 
 func StartInterrogationService(
@@ -269,13 +244,18 @@ func StartInterrogationService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	enrollment_server := &EnrollmentService{}
-	err := enrollment_server.Start(ctx, config_obj, wg)
-	if err != nil {
-		return err
+	limit_rate := config_obj.Frontend.Resources.EnrollmentsPerSecond
+	if limit_rate == 0 {
+		limit_rate = 10
 	}
 
-	result := &InterrogationService{}
+	// Negative enrollment rate means to disable enrollment service.
+	if limit_rate < 0 {
+		return nil
+	}
 
-	return result.Start(ctx, config_obj, wg)
+	enrollment_server := &EnrollmentService{
+		limiter: rate.NewLimiter(rate.Limit(limit_rate), 1),
+	}
+	return enrollment_server.Start(ctx, config_obj, wg)
 }

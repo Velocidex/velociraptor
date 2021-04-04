@@ -33,17 +33,17 @@ var (
 type PoolEventResponder struct {
 	mu sync.Mutex
 
-	client_responders map[int]chan *crypto_proto.GrrMessage
+	client_responders map[int]chan *crypto_proto.VeloMessage
 }
 
 func NewPoolEventResponder() *PoolEventResponder {
 	return &PoolEventResponder{
-		client_responders: make(map[int]chan *crypto_proto.GrrMessage),
+		client_responders: make(map[int]chan *crypto_proto.VeloMessage),
 	}
 }
 
 func (self *PoolEventResponder) RegisterPoolClientResponder(
-	id int, outbound chan *crypto_proto.GrrMessage) {
+	id int, outbound chan *crypto_proto.VeloMessage) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -53,9 +53,9 @@ func (self *PoolEventResponder) RegisterPoolClientResponder(
 // Gets a new responder which is feeding the GlobalPoolEventResponder
 func (self *PoolEventResponder) NewResponder(
 	config_obj *config_proto.Config,
-	req *crypto_proto.GrrMessage) *Responder {
+	req *crypto_proto.VeloMessage) *Responder {
 	// The PoolEventResponder input
-	in := make(chan *crypto_proto.GrrMessage)
+	in := make(chan *crypto_proto.VeloMessage)
 
 	// Prepare a new responder that will feed us.
 	result := &Responder{
@@ -71,7 +71,7 @@ func (self *PoolEventResponder) NewResponder(
 				return
 			}
 
-			children := make([]chan *crypto_proto.GrrMessage, 0,
+			children := make([]chan *crypto_proto.VeloMessage, 0,
 				len(self.client_responders))
 			self.mu.Lock()
 			for _, c := range self.client_responders {

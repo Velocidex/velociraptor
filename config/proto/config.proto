@@ -403,6 +403,9 @@ message FrontendResourceControl {
     // notifications per sec.
     uint64 notifications_per_second = 2;
 
+    // How quickly do we enroll clients (default 100/s, -1 to disable enrollments)
+    int64 enrollments_per_second = 3;
+
     // The maximum number of concurrent client connections we can
     // process. The actual concurrency level is dynamically adjusted
     // to try to control the target_heap_size below. As the heap size

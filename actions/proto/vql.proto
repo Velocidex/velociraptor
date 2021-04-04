@@ -26,11 +26,9 @@ message VQLEnv {
     string value = 2;
 }
 
+// This is the most common type of message - it specifies a query to
+// run on the endpoint.
 message VQLCollectorArgs {
-    option (flow_metadata) = {
-        category: "Generic";
-    };
-
     // If this is specified we run this query first and if it returns
     // any rows we continue with the real query.
     string precondition = 29;

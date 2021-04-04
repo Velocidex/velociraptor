@@ -132,7 +132,7 @@ func (self *ServerTestSuite) TestEnrollment() {
 
 	self.server.ProcessSingleUnauthenticatedMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			CSR: &crypto_proto.Certificate{Pem: csr_message}})
 
 	db, err := datastore.GetDB(self.config_obj)
@@ -188,7 +188,7 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	// table version.
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source: self.client_id,
 			ForemanCheckin: &actions_proto.ForemanCheckin{
 				LastEventTableVersion: 0,
@@ -253,7 +253,7 @@ func (self *ServerTestSuite) TestForeman() {
 	// timestamp.
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source: self.client_id,
 			ForemanCheckin: &actions_proto.ForemanCheckin{
 				LastHuntTimestamp: 0,
@@ -309,14 +309,14 @@ func (self *ServerTestSuite) TestMonitoring() {
 	runner := flows.NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
 			VQLResponse: &actions_proto.VQLResponse{
-				Columns: []string{"ClientId", "Timestamp", "Fqdn",
-					"HuntId", "Participate"},
+				Columns: []string{
+					"ClientId", "Timestamp", "Fqdn", "HuntId"},
 				Response: fmt.Sprintf(
-					`[{"ClientId": "%s", "Participate": true, "HuntId": "H.123"}]`,
+					`[{"ClientId": "%s", "HuntId": "H.123"}]`,
 					self.client_id),
 				Query: &actions_proto.VQLRequest{
 					Name: "System.Hunt.Participation",
@@ -336,7 +336,7 @@ func (self *ServerTestSuite) TestMonitoringWithUpload() {
 	runner := flows.NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
 			RequestId: constants.TransferWellKnownFlowId,
@@ -368,7 +368,7 @@ func (self *ServerTestSuite) TestLog() {
 	runner := flows.NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
 			LogMessage: &crypto_proto.LogMessage{
@@ -379,7 +379,7 @@ func (self *ServerTestSuite) TestLog() {
 
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
 			LogMessage: &crypto_proto.LogMessage{
@@ -400,7 +400,7 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 	runner := flows.NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: "F.1234",
 			LogMessage: &crypto_proto.LogMessage{
@@ -422,7 +422,7 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 	runner = flows.NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: "F.1234",
 			Status:    &crypto_proto.GrrStatus{},
@@ -438,7 +438,7 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 	runner = flows.NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source:      self.client_id,
 			SessionId:   "F.1234",
 			VQLResponse: &actions_proto.VQLResponse{},
@@ -531,7 +531,7 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 	runner := flows.NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
 			RequestId: constants.TransferWellKnownFlowId,
@@ -568,7 +568,7 @@ func (self *ServerTestSuite) TestVQLResponse() {
 	runner := flows.NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
 			RequestId: constants.ProcessVQLResponses,
@@ -601,7 +601,7 @@ func (self *ServerTestSuite) TestErrorMessage() {
 	runner := flows.NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
 			RequestId: constants.ProcessVQLResponses,
@@ -646,7 +646,7 @@ func (self *ServerTestSuite) TestCompletions() {
 	// Generic.Client.Info sends two requests, lets complete them both.
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
 			RequestId: constants.ProcessVQLResponses,
@@ -670,7 +670,7 @@ func (self *ServerTestSuite) TestCompletions() {
 
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
 			RequestId: constants.ProcessVQLResponses,
@@ -757,7 +757,7 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 	flow_id := "F.NONEXISTENT"
 	runner.ProcessSingleMessage(
 		context.Background(),
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Source:      self.client_id,
 			SessionId:   flow_id,
 			VQLResponse: &actions_proto.VQLResponse{},

@@ -312,7 +312,7 @@ func LoadCollectionContext(
 func ArtifactCollectorProcessOneMessage(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext,
-	message *crypto_proto.GrrMessage) error {
+	message *crypto_proto.VeloMessage) error {
 
 	err := FailIfError(config_obj, collection_context, message)
 	if err != nil {
@@ -425,7 +425,7 @@ func ArtifactCollectorProcessOneMessage(
 func IsRequestComplete(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext,
-	message *crypto_proto.GrrMessage) (bool, error) {
+	message *crypto_proto.VeloMessage) (bool, error) {
 
 	// Nope request is not complete.
 	if message.Status == nil {
@@ -453,7 +453,7 @@ func IsRequestComplete(
 func FailIfError(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext,
-	message *crypto_proto.GrrMessage) error {
+	message *crypto_proto.VeloMessage) error {
 
 	// Not a status message
 	if message.Status == nil {
@@ -487,7 +487,7 @@ func FailIfError(
 func appendUploadDataToFile(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext,
-	message *crypto_proto.GrrMessage) error {
+	message *crypto_proto.VeloMessage) error {
 
 	file_buffer := message.FileBuffer
 	if file_buffer == nil || file_buffer.Pathspec == nil {
@@ -670,7 +670,7 @@ func (self *FlowRunner) Close() {
 
 func (self *FlowRunner) ProcessSingleMessage(
 	ctx context.Context,
-	job *crypto_proto.GrrMessage) {
+	job *crypto_proto.VeloMessage) {
 
 	// Foreman messages are related to hunts.
 	if job.ForemanCheckin != nil {
@@ -722,7 +722,7 @@ func (self *FlowRunner) ProcessSingleMessage(
 			db, err := datastore.GetDB(self.config_obj)
 			if err == nil {
 				err := db.QueueMessageForClient(self.config_obj, job.Source,
-					&crypto_proto.GrrMessage{
+					&crypto_proto.VeloMessage{
 						Cancel:    &crypto_proto.Cancel{},
 						SessionId: job.SessionId,
 					})

@@ -53,7 +53,6 @@ reports:
                   RSS / 1000000 AS MemoryUse
            FROM source(artifact="Generic.Client.Stats",
                        client_id=ClientId,
-                       mode="CLIENT_EVENT",
                        start_time=now() - 86400)
            WHERE CPUPercent >= 0
       {{ end }}

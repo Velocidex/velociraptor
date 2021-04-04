@@ -78,7 +78,7 @@ func (self *Enroller) MaybeEnrol() {
 		self.last_enrollment_time = time.Now()
 		self.logger.Info("Enrolling")
 
-		go self.executor.SendToServer(&crypto_proto.GrrMessage{
+		go self.executor.SendToServer(&crypto_proto.VeloMessage{
 			SessionId: constants.ENROLLMENT_WELL_KNOWN_FLOW,
 			CSR: &crypto_proto.Certificate{
 				Type: crypto_proto.Certificate_CSR,
@@ -99,7 +99,7 @@ func (self *Enroller) GetMessageList() *crypto_proto.MessageList {
 		return &crypto_proto.MessageList{}
 	}
 	return &crypto_proto.MessageList{
-		Job: []*crypto_proto.GrrMessage{{
+		Job: []*crypto_proto.VeloMessage{{
 			SessionId: constants.FOREMAN_WELL_KNOWN_FLOW,
 			ForemanCheckin: &actions_proto.ForemanCheckin{
 				LastHuntTimestamp: self.config_obj.Writeback.HuntLastTimestamp,
@@ -615,7 +615,7 @@ func (self *NotificationReader) sendToURL(
 	}
 
 	return message_info.IterateJobs(ctx,
-		func(ctx context.Context, msg *crypto_proto.GrrMessage) {
+		func(ctx context.Context, msg *crypto_proto.VeloMessage) {
 
 			// Abort the client, but leave the client
 			// running a bit to send acks. NOTE: This has
@@ -683,7 +683,7 @@ func (self *NotificationReader) Start(ctx context.Context) {
 // message in every reader message to improve hunt latency.
 func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 	return &crypto_proto.MessageList{
-		Job: []*crypto_proto.GrrMessage{{
+		Job: []*crypto_proto.VeloMessage{{
 			SessionId: constants.FOREMAN_WELL_KNOWN_FLOW,
 			ForemanCheckin: &actions_proto.ForemanCheckin{
 				LastEventTableVersion: actions.GlobalEventTableVersion(),

@@ -268,7 +268,7 @@ func CancelFlow(
 	// Queue a cancellation message to the client for this flow
 	// id.
 	err = db.QueueMessageForClient(config_obj, client_id,
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},
 			SessionId: flow_id,
 		})

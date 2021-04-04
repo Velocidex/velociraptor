@@ -149,6 +149,11 @@ func (self ResultSetFactory) NewResultSetWriter(
 		return nil, err
 	}
 
+	// If no path is provided, we are just a log sink
+	if log_path == "" {
+		return &NullResultSetWriter{}, nil
+	}
+
 	fd, err := file_store_factory.WriteFile(log_path)
 	if err != nil {
 		return nil, err

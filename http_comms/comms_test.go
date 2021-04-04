@@ -180,8 +180,8 @@ func (self *CommsTestSuite) TestAbort() {
 
 	// Not a real executor but we can emulate closing channels.
 	exec := &executor.ClientExecutor{
-		Outbound: make(chan *crypto_proto.GrrMessage),
-		Inbound:  make(chan *crypto_proto.GrrMessage),
+		Outbound: make(chan *crypto_proto.VeloMessage),
+		Inbound:  make(chan *crypto_proto.VeloMessage),
 	}
 
 	crypto_manager := &crypto.NullCryptoManager{}

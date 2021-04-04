@@ -1,12 +1,13 @@
 package notifications
 
 import (
+	"context"
 	"regexp"
 	"sync"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"golang.org/x/time/rate"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
@@ -96,11 +97,17 @@ func (self *NotificationPool) NotifyByRegex(
 
 	// Now notify all these clients in the background if
 	// possible. Take it slow so as not to overwhelm the server.
-	rate := config_obj.Frontend.Resources.NotificationsPerSecond
-	if rate == 0 || rate > 1000 {
-		rate = 1000
-	}
-	sleep_time := time.Duration(1000/rate) * time.Millisecond
+	limiter_rate := rate.Limit(config_obj.Frontend.Resources.NotificationsPerSecond)
+	subctx, cancel := context.WithCancel(context.Background())
+	limiter := rate.NewLimiter(limiter_rate, 1)
+
+	go func() {
+		select {
+		case <-self.done:
+			cancel()
+		}
+	}()
+
 	go func() {
 		for _, client_id := range snapshot {
 			self.mu.Lock()
@@ -111,12 +118,7 @@ func (self *NotificationPool) NotifyByRegex(
 				delete(self.clients, client_id)
 			}
 			self.mu.Unlock()
-
-			select {
-			case <-self.done:
-				return
-			case <-time.After(sleep_time):
-			}
+			limiter.Wait(subctx)
 		}
 	}()
 }

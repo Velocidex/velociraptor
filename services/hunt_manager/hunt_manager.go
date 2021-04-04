@@ -56,6 +56,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/proto"
+	"golang.org/x/time/rate"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -74,19 +75,21 @@ import (
 // This is the record that will be sent by the foreman to the hunt
 // manager.
 type ParticipationRecord struct {
-	HuntId      string `vfilter:"required,field=HuntId"`
-	ClientId    string `vfilter:"required,field=ClientId"`
-	Fqdn        string `vfilter:"optional,field=Fqdn"`
-	FlowId      string `vfilter:"optional,field=FlowId"`
-	Participate bool   `vfilter:"optional,field=Participate"`
-	Override    bool   `vfilter:"optional,field=Override"`
-	Timestamp   uint64 `vfilter:"optional,field=Timestamp"`
-	TS          uint64 `vfilter:"optional,field=_ts"`
-	ID          uint64 `vfilter:"optional,field=_id"`
+	HuntId    string `vfilter:"required,field=HuntId"`
+	ClientId  string `vfilter:"required,field=ClientId"`
+	Fqdn      string `vfilter:"optional,field=Fqdn"`
+	FlowId    string `vfilter:"optional,field=FlowId"`
+	Override  bool   `vfilter:"optional,field=Override"`
+	Timestamp uint64 `vfilter:"optional,field=Timestamp"`
+	TS        uint64 `vfilter:"optional,field=_ts"`
 }
 
 type HuntManager struct {
 	scope vfilter.Scope
+
+	// Limits how quickly we schedule hunts. Should be fast enough
+	// to be reasoable without overloading frontends
+	limiter *rate.Limiter
 }
 
 func (self *HuntManager) Start(
@@ -94,7 +97,8 @@ func (self *HuntManager) Start(
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> the hunt manager service.")
+	logger.Info("<green>Starting</> the hunt manager service with rate limit %v/s.",
+		config_obj.Frontend.Resources.NotificationsPerSecond)
 
 	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.HuntModification", self.ProcessMutation)
@@ -319,6 +323,10 @@ func (self *HuntManager) ProcessParticipation(
 
 	// Use hunt information to launch the flow against this
 	// client.
+	now_ts := time.Now()
+	self.limiter.Wait(ctx)
+	fmt.Printf("Now is %v\n", time.Now().Sub(now_ts))
+
 	return scheduleHuntOnClient(ctx,
 		config_obj, hunt_obj, participation_row.ClientId)
 }
@@ -334,6 +342,8 @@ func StartHuntManager(
 	}
 
 	result := &HuntManager{
+		limiter: rate.NewLimiter(rate.Limit(
+			config_obj.Frontend.Resources.NotificationsPerSecond), 1),
 		scope: manager.BuildScope(
 			services.ScopeBuilder{
 				Config: config_obj,

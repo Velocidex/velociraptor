@@ -172,8 +172,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", arg.HuntId).
 			Set("ClientId", arg.ClientId).
-			Set("Override", true).
-			Set("Participate", true)},
+			Set("Override", true)},
 		"System.Hunt.Participation", arg.ClientId, "")
 	if err != nil {
 		scope.Log("hunt_add: %s", err.Error())

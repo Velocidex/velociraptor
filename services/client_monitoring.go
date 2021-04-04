@@ -59,7 +59,7 @@ type ClientEventTable interface {
 	// to update.
 	GetClientUpdateEventTableMessage(
 		config_obj *config_proto.Config,
-		client_id string) *crypto_proto.GrrMessage
+		client_id string) *crypto_proto.VeloMessage
 
 	// Get the full client monitoring table.
 	GetClientMonitoringState() *flows_proto.ClientEventTable

@@ -82,7 +82,7 @@ func (self *TestSuite) TestEncDecServerToClient() {
 	message_list := &crypto_proto.MessageList{}
 	for i := 0; i < 5; i++ {
 		message_list.Job = append(
-			message_list.Job, &crypto_proto.GrrMessage{
+			message_list.Job, &crypto_proto.VeloMessage{
 				Name: "OMG it's a string"})
 	}
 
@@ -104,9 +104,9 @@ func (self *TestSuite) TestEncDecServerToClient() {
 			t.Fatal(err)
 		}
 		message_info.IterateJobs(context.Background(),
-			func(ctx context.Context, item *crypto_proto.GrrMessage) {
+			func(ctx context.Context, item *crypto_proto.VeloMessage) {
 				assert.Equal(t, item.Name, "OMG it's a string")
-				assert.Equal(t, item.AuthState, crypto_proto.GrrMessage_AUTHENTICATED)
+				assert.Equal(t, item.AuthState, crypto_proto.VeloMessage_AUTHENTICATED)
 			})
 	}
 
@@ -121,7 +121,7 @@ func (self *TestSuite) TestEncDecClientToServer() {
 	message_list := &crypto_proto.MessageList{}
 	for i := 0; i < 5; i++ {
 		message_list.Job = append(
-			message_list.Job, &crypto_proto.GrrMessage{
+			message_list.Job, &crypto_proto.VeloMessage{
 				Name: "OMG it's a string"})
 	}
 
@@ -142,10 +142,10 @@ func (self *TestSuite) TestEncDecClientToServer() {
 		}
 
 		message_info.IterateJobs(context.Background(),
-			func(ctx context.Context, item *crypto_proto.GrrMessage) {
+			func(ctx context.Context, item *crypto_proto.VeloMessage) {
 				assert.Equal(t, item.Name, "OMG it's a string")
 				assert.Equal(
-					t, item.AuthState, crypto_proto.GrrMessage_AUTHENTICATED)
+					t, item.AuthState, crypto_proto.VeloMessage_AUTHENTICATED)
 			})
 	}
 

@@ -21,13 +21,13 @@ type BaseTestSuite struct {
 }
 
 func (self BaseTestSuite) TestSetGetSubject() {
-	message := &crypto_proto.GrrMessage{Source: "Server"}
+	message := &crypto_proto.VeloMessage{Source: "Server"}
 
 	urn := "/a/b/c"
 	err := self.datastore.SetSubject(self.config_obj, urn, message)
 	assert.NoError(self.T(), err)
 
-	read_message := &crypto_proto.GrrMessage{}
+	read_message := &crypto_proto.VeloMessage{}
 	err = self.datastore.GetSubject(self.config_obj, urn, read_message)
 	assert.NoError(self.T(), err)
 
@@ -54,7 +54,7 @@ func (self BaseTestSuite) TestSetGetSubject() {
 }
 
 func (self BaseTestSuite) TestListChildren() {
-	message := &crypto_proto.GrrMessage{Source: "Server"}
+	message := &crypto_proto.VeloMessage{Source: "Server"}
 
 	urn := "/a/b/c"
 	err := self.datastore.SetSubject(self.config_obj, urn+"/1", message)

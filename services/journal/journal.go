@@ -2,11 +2,11 @@
 // them to storage. Velociraptor uses the artifact name and source as
 // the name of the queue that will be written.
 
-// The service will also allow for registration of interested events.
+// The service will also allow for registration of interested events
+// and will deliver events to interested parties.
 
 // We use the underlying file store's queue manager to actually manage
 // the notifications and watching and write the events to storage.
-
 package journal
 
 import (
@@ -80,7 +80,7 @@ func StartJournalService(
 
 	// It is valid to have a journal service with no configured datastore:
 	// 1. Watchers will never be notified.
-	// 2. PushRows() will fail with an error.
+	// 2. PushRowsToArtifact() will fail with an error.
 	service := &JournalService{
 		config_obj: config_obj,
 	}

@@ -4,7 +4,7 @@ description: |
   dispatcher from all nodes sends this mutation to the hunt manager
   which applies it.
 
-type: SERVER_EVENT
+type: INTERNAL
 
 column_types:
   - name: HuntId

@@ -70,18 +70,18 @@ func (self *canceller) IsCancelled(flow_id string) bool {
 
 type Executor interface {
 	// These are called by the executor code.
-	ReadFromServer() *crypto_proto.GrrMessage
-	SendToServer(message *crypto_proto.GrrMessage)
+	ReadFromServer() *crypto_proto.VeloMessage
+	SendToServer(message *crypto_proto.VeloMessage)
 
 	// These two are called by the comms module.
 
 	// Feed a server request to the executor for execution.
 	ProcessRequest(
 		ctx context.Context,
-		message *crypto_proto.GrrMessage)
+		message *crypto_proto.VeloMessage)
 
 	// Read a single response from the executor to be sent to the server.
-	ReadResponse() <-chan *crypto_proto.GrrMessage
+	ReadResponse() <-chan *crypto_proto.VeloMessage
 }
 
 // A concerete implementation of a client executor.
@@ -95,8 +95,8 @@ type _FlowContext struct {
 }
 
 type ClientExecutor struct {
-	Inbound  chan *crypto_proto.GrrMessage
-	Outbound chan *crypto_proto.GrrMessage
+	Inbound  chan *crypto_proto.VeloMessage
+	Outbound chan *crypto_proto.VeloMessage
 
 	// Map all the contexts with the flow id.
 	mu         sync.Mutex
@@ -183,28 +183,28 @@ func (self *ClientExecutor) _CloseContext(flow_context *_FlowContext) {
 
 // Blocks until a request is received from the server. Called by the
 // Executors internal processor.
-func (self *ClientExecutor) ReadFromServer() *crypto_proto.GrrMessage {
+func (self *ClientExecutor) ReadFromServer() *crypto_proto.VeloMessage {
 	msg := <-self.Inbound
 	return msg
 }
 
-func (self *ClientExecutor) SendToServer(message *crypto_proto.GrrMessage) {
+func (self *ClientExecutor) SendToServer(message *crypto_proto.VeloMessage) {
 	self.Outbound <- message
 }
 
 func (self *ClientExecutor) ProcessRequest(
 	ctx context.Context,
-	message *crypto_proto.GrrMessage) {
+	message *crypto_proto.VeloMessage) {
 	self.Inbound <- message
 }
 
-func (self *ClientExecutor) ReadResponse() <-chan *crypto_proto.GrrMessage {
+func (self *ClientExecutor) ReadResponse() <-chan *crypto_proto.VeloMessage {
 	return self.Outbound
 }
 
-func makeErrorResponse(output chan *crypto_proto.GrrMessage,
-	req *crypto_proto.GrrMessage, message string) {
-	output <- &crypto_proto.GrrMessage{
+func makeErrorResponse(output chan *crypto_proto.VeloMessage,
+	req *crypto_proto.VeloMessage, message string) {
+	output <- &crypto_proto.VeloMessage{
 		SessionId: req.SessionId,
 		RequestId: constants.LOG_SINK,
 		LogMessage: &crypto_proto.LogMessage{
@@ -213,7 +213,7 @@ func makeErrorResponse(output chan *crypto_proto.GrrMessage,
 		},
 	}
 
-	output <- &crypto_proto.GrrMessage{
+	output <- &crypto_proto.VeloMessage{
 		SessionId:  req.SessionId,
 		RequestId:  req.RequestId,
 		ResponseId: 1,
@@ -227,7 +227,7 @@ func makeErrorResponse(output chan *crypto_proto.GrrMessage,
 func (self *ClientExecutor) processRequestPlugin(
 	config_obj *config_proto.Config,
 	ctx context.Context,
-	req *crypto_proto.GrrMessage) {
+	req *crypto_proto.VeloMessage) {
 
 	// If we panic we need to recover and report this to the
 	// server.
@@ -241,7 +241,7 @@ func (self *ClientExecutor) processRequestPlugin(
 	}()
 
 	// Never serve unauthenticated requests.
-	if req.AuthState != crypto_proto.GrrMessage_AUTHENTICATED {
+	if req.AuthState != crypto_proto.VeloMessage_AUTHENTICATED {
 		log.Printf("Unauthenticated")
 		makeErrorResponse(self.Outbound,
 			req, fmt.Sprintf("Unauthenticated message received: %v.", req))
@@ -304,8 +304,8 @@ func NewClientExecutor(
 	}
 
 	result := &ClientExecutor{
-		Inbound:     make(chan *crypto_proto.GrrMessage, 10),
-		Outbound:    make(chan *crypto_proto.GrrMessage, 10),
+		Inbound:     make(chan *crypto_proto.VeloMessage, 10),
+		Outbound:    make(chan *crypto_proto.VeloMessage, 10),
 		in_flight:   make(map[string][]*_FlowContext),
 		config_obj:  config_obj,
 		concurrency: utils.NewConcurrencyControl(level, time.Hour),
@@ -339,7 +339,7 @@ func NewClientExecutor(
 
 				// Ignore unauthenticated messages - the
 				// server should never send us those.
-				if req.AuthState == crypto_proto.GrrMessage_AUTHENTICATED {
+				if req.AuthState == crypto_proto.VeloMessage_AUTHENTICATED {
 					// Each request has its own context.
 					ctx, flow_context := result._FlowContext(
 						req.SessionId)

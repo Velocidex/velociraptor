@@ -26,7 +26,7 @@ func (self *TestRangeReader) Ranges() []Range {
 }
 
 // Combine the output of all fragments into a strings
-func CombineOutput(name string, responses []*crypto_proto.GrrMessage) string {
+func CombineOutput(name string, responses []*crypto_proto.VeloMessage) string {
 	result := []byte{}
 
 	for _, item := range responses {
@@ -38,7 +38,7 @@ func CombineOutput(name string, responses []*crypto_proto.GrrMessage) string {
 	return string(result)
 }
 
-func GetIndex(responses []*crypto_proto.GrrMessage) []*actions_proto.Range {
+func GetIndex(responses []*crypto_proto.VeloMessage) []*actions_proto.Range {
 	return responses[len(responses)-1].FileBuffer.Index.Ranges
 }
 
