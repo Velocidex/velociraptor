@@ -16,6 +16,7 @@ const (
 	MODE_CLIENT_EVENT = 2
 	MODE_SERVER       = 3
 	MODE_SERVER_EVENT = 4
+	INTERNAL          = 5
 )
 
 func ModeNameToMode(name string) int {
@@ -29,8 +30,10 @@ func ModeNameToMode(name string) int {
 		return MODE_SERVER
 	case "SERVER_EVENT":
 		return MODE_SERVER_EVENT
+	case "INTERNAL":
+		return INTERNAL
 	}
-	return 0
+	return MODE_INVALID
 }
 
 // Fully qualified source names are obtained by joining the artifact

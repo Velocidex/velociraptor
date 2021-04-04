@@ -50,10 +50,42 @@ type EventTable struct {
 
 	config_obj *config_proto.Config
 
-	// This will be closed to signal we need to abort the current
-	// event queries.
+	// This will be closed to signal that we need to abort the
+	// current event queries.
 	Done chan bool
 	wg   sync.WaitGroup
+}
+
+func (self *EventTable) equal(events []*actions_proto.VQLCollectorArgs) bool {
+	if len(events) != len(self.Events) {
+		return false
+	}
+
+	for i := range self.Events {
+		lhs := self.Events[i]
+		rhs := events[i]
+
+		if len(lhs.Query) != len(rhs.Query) {
+			return false
+		}
+
+		for j := range lhs.Query {
+			if !proto.Equal(lhs.Query[j], rhs.Query[j]) {
+				return false
+			}
+		}
+
+		if len(lhs.Env) != len(rhs.Env) {
+			return false
+		}
+
+		for j := range lhs.Env {
+			if !proto.Equal(lhs.Env[j], rhs.Env[j]) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func (self *EventTable) Close() {
@@ -74,14 +106,28 @@ func GlobalEventTableVersion() uint64 {
 func update(
 	config_obj *config_proto.Config,
 	responder *responder.Responder,
-	table *actions_proto.VQLEventTable) (*EventTable, error) {
+	table *actions_proto.VQLEventTable) (*EventTable, error, bool) {
 
 	mu.Lock()
 	defer mu.Unlock()
 
 	// Only update the event table if we need to.
 	if table.Version <= GlobalEventTable.version {
-		return GlobalEventTable, nil
+		return GlobalEventTable, nil, false
+	}
+
+	// If the new update is identical to the old queries we wont
+	// restart. This can happen e.g. if the server changes label
+	// groups and recaculates the table version but the actual
+	// queries dont end up changing.
+	if GlobalEventTable.equal(table.Event) {
+		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+		logger.Info("Client event query update %v did not "+
+			"change queries, skipping", table.Version)
+
+		// Update the version only but keep queries the same.
+		GlobalEventTable.version = table.Version
+		return GlobalEventTable, nil, false
 	}
 
 	// Close the old table.
@@ -90,10 +136,9 @@ func update(
 	}
 
 	// Make a new table.
-	GlobalEventTable = NewEventTable(
-		config_obj, responder, table)
+	GlobalEventTable = NewEventTable(config_obj, responder, table)
 
-	return GlobalEventTable, nil
+	return GlobalEventTable, nil, true /* changed */
 }
 
 func NewEventTable(
@@ -119,9 +164,24 @@ func (self UpdateEventTable) Run(
 	arg *actions_proto.VQLEventTable) {
 
 	// Make a new table.
-	table, err := update(config_obj, responder, arg)
+	table, err, changed := update(config_obj, responder, arg)
 	if err != nil {
-		responder.Log(ctx, "Error updating global event table: %v", err)
+		responder.RaiseError(ctx, fmt.Sprintf(
+			"Error updating global event table: %v", err))
+		return
+	}
+
+	// No change required, skip it.
+	if !changed {
+		// We still need to write the new version
+		err = update_writeback(config_obj, arg)
+		if err != nil {
+			responder.RaiseError(ctx, fmt.Sprintf(
+				"Unable to write events to writeback: %v", err))
+		} else {
+			responder.Return(ctx)
+		}
+		return
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
@@ -178,15 +238,24 @@ func (self UpdateEventTable) Run(
 		}(event)
 	}
 
-	// Store the event table in the Writeback file.
-	config_copy := proto.Clone(config_obj).(*config_proto.Config)
-	event_copy := proto.Clone(arg).(*actions_proto.VQLEventTable)
-	config_copy.Writeback.EventQueries = event_copy
-	err = config.UpdateWriteback(config_copy)
+	err = update_writeback(config_obj, arg)
 	if err != nil {
 		responder.RaiseError(ctx, fmt.Sprintf(
 			"Unable to write events to writeback: %v", err))
+		return
 	}
 
 	responder.Return(ctx)
+}
+
+func update_writeback(
+	config_obj *config_proto.Config,
+	event_table *actions_proto.VQLEventTable) error {
+
+	// Store the event table in the Writeback file.
+	config_copy := proto.Clone(config_obj).(*config_proto.Config)
+	event_copy := proto.Clone(event_table).(*actions_proto.VQLEventTable)
+	config_copy.Writeback.EventQueries = event_copy
+
+	return config.UpdateWriteback(config_copy)
 }

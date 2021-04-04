@@ -30,7 +30,7 @@ func (self *ExecutorTestSuite) TestCancellation() {
 	executor, err := NewClientExecutor(ctx, config_obj)
 	require.NoError(t, err)
 
-	var received_messages []*crypto_proto.GrrMessage
+	var received_messages []*crypto_proto.VeloMessage
 
 	wg.Add(1)
 	go func() {
@@ -46,8 +46,8 @@ func (self *ExecutorTestSuite) TestCancellation() {
 	// Send cancel message
 	flow_id := "F.XXX"
 	for i := 0; i < 100; i++ {
-		executor.Inbound <- &crypto_proto.GrrMessage{
-			AuthState: crypto_proto.GrrMessage_AUTHENTICATED,
+		executor.Inbound <- &crypto_proto.VeloMessage{
+			AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
 			SessionId: flow_id,
 			Cancel:    &crypto_proto.Cancel{},
 			RequestId: 1}

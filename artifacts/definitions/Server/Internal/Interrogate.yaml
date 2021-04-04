@@ -32,8 +32,7 @@ sources:
                     client_id=ClientId,
                     flow_id=FlowId,
                     source="BasicInformation",
-                    artifact="Custom.Generic.Client.Info",
-                    mode="CLIENT")
+                    artifact="Custom.Generic.Client.Info")
                },
             b={
                 SELECT ClientId,
@@ -52,7 +51,6 @@ sources:
                   client_id=ClientId,
                   flow_id=FlowId,
                   source="BasicInformation",
-                  artifact="Generic.Client.Info",
-                  mode="CLIENT")
+                  artifact="Generic.Client.Info")
             })
           })

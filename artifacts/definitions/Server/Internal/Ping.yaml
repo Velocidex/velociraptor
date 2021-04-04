@@ -3,7 +3,7 @@ description: |
   An internal queue for Ping requests. Will ellicit
   Server.Internal.Pong events.
 
-type: SERVER_EVENT
+type: INTERNAL
 
 column_types:
   - name: ClientId

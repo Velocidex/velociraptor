@@ -217,7 +217,7 @@ func NewServer(config_obj *config_proto.Config) (*Server, error) {
 // authenticated.
 func (self *Server) ProcessSingleUnauthenticatedMessage(
 	ctx context.Context,
-	message *crypto_proto.GrrMessage) {
+	message *crypto_proto.VeloMessage) {
 	if message.CSR != nil {
 		err := enroll(ctx, self.config, self, message.CSR)
 		if err != nil {
@@ -290,13 +290,13 @@ func (self *Server) Process(
 	return response, len(message_list.Job), nil
 }
 
-func (self *Server) DrainRequestsForClient(client_id string) []*crypto_proto.GrrMessage {
+func (self *Server) DrainRequestsForClient(client_id string) []*crypto_proto.VeloMessage {
 	result, err := self.db.GetClientTasks(self.config, client_id, false)
 	if err == nil {
 		return result
 	}
 
-	return []*crypto_proto.GrrMessage{}
+	return []*crypto_proto.VeloMessage{}
 }
 
 func (self *Server) Error(msg string, err error) {

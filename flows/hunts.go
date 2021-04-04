@@ -286,7 +286,7 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 
 	hunt_obj, pres := dispatcher.GetHunt(in.HuntId)
 	if !pres {
-		return nil, err
+		return nil, errors.New("Hunt not found")
 	}
 
 	// Normalize the hunt object

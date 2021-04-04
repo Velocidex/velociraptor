@@ -54,10 +54,10 @@ func getIncValue() uint64 {
 }
 
 type Responder struct {
-	output chan *crypto_proto.GrrMessage
+	output chan *crypto_proto.VeloMessage
 
 	sync.Mutex
-	request    *crypto_proto.GrrMessage
+	request    *crypto_proto.VeloMessage
 	logger     *logging.LogContext
 	start_time int64
 
@@ -68,8 +68,8 @@ type Responder struct {
 // NewResponder returns a new Responder.
 func NewResponder(
 	config_obj *config_proto.Config,
-	request *crypto_proto.GrrMessage,
-	output chan *crypto_proto.GrrMessage) *Responder {
+	request *crypto_proto.VeloMessage,
+	output chan *crypto_proto.VeloMessage) *Responder {
 	result := &Responder{
 		request:    request,
 		output:     output,
@@ -89,11 +89,12 @@ func (self *Responder) Copy() *Responder {
 }
 
 func (self *Responder) AddResponse(
-	ctx context.Context, message *crypto_proto.GrrMessage) {
+	ctx context.Context, message *crypto_proto.VeloMessage) {
 	self.Lock()
 	output := self.output
 	self.Unlock()
 
+	message.QueryId = self.request.QueryId
 	message.SessionId = self.request.SessionId
 	message.Urgent = self.request.Urgent
 	message.ResponseId = getIncValue()
@@ -113,7 +114,7 @@ func (self *Responder) AddResponse(
 }
 
 func (self *Responder) RaiseError(ctx context.Context, message string) {
-	self.AddResponse(ctx, &crypto_proto.GrrMessage{
+	self.AddResponse(ctx, &crypto_proto.VeloMessage{
 		Status: &crypto_proto.GrrStatus{
 			Backtrace:    string(debug.Stack()),
 			ErrorMessage: message,
@@ -123,7 +124,7 @@ func (self *Responder) RaiseError(ctx context.Context, message string) {
 }
 
 func (self *Responder) Return(ctx context.Context) {
-	self.AddResponse(ctx, &crypto_proto.GrrMessage{
+	self.AddResponse(ctx, &crypto_proto.VeloMessage{
 		Status: &crypto_proto.GrrStatus{
 			Status:   crypto_proto.GrrStatus_OK,
 			Duration: time.Now().UnixNano() - self.start_time,
@@ -132,7 +133,7 @@ func (self *Responder) Return(ctx context.Context) {
 
 // Send a log message to the server.
 func (self *Responder) Log(ctx context.Context, format string, v ...interface{}) {
-	self.AddResponse(ctx, &crypto_proto.GrrMessage{
+	self.AddResponse(ctx, &crypto_proto.VeloMessage{
 		RequestId: constants.LOG_SINK,
 		LogMessage: &crypto_proto.LogMessage{
 			Message:   fmt.Sprintf(format, v...),
@@ -147,7 +148,7 @@ func (self *Responder) SessionId() string {
 
 // If a message was received from an old client we convert it into the
 // proper form.
-func NormalizeGrrMessageForBackwardCompatibility(msg *crypto_proto.GrrMessage) error {
+func NormalizeVeloMessageForBackwardCompatibility(msg *crypto_proto.VeloMessage) error {
 	if msg.UpdateEventTable != nil ||
 		msg.VQLClientAction != nil ||
 		msg.Cancel != nil ||

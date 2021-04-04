@@ -59,7 +59,7 @@ func (self *KillClientFunction) Call(ctx context.Context,
 	// Queue a cancellation message to the client for this flow
 	// id.
 	err = db.QueueMessageForClient(config_obj, arg.ClientId,
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			KillKillKill: &crypto_proto.Cancel{},
 			SessionId:    constants.MONITORING_WELL_KNOWN_FLOW,
 		})

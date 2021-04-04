@@ -12,10 +12,13 @@ option go_package = "www.velocidex.com/golang/velociraptor/crypto/proto";
 
 // This message is sent between the client and the server.
 // Next field: 24
-message GrrMessage {
+message VeloMessage {
   string session_id = 1 [(sem_type) = {
       description: "The session id of the flow that this message belongs to."
     }];
+
+  // An incrementing query id in this session.
+  uint64 query_id = 37;
 
   uint64 request_id = 2 [(sem_type) = {
       description: "The message is in response to this request number "
@@ -36,7 +39,7 @@ message GrrMessage {
     }];
 
   // A Flag to indicate if the message is authenticated. Note that the client
-  // does not get to decide this - the_server will verify the message and tag it
+  // does not get to decide this - the server will verify the message and tag it
   // as such. The message is then passed down the chain of components carrying
   // this tag.
 
@@ -78,7 +81,7 @@ message GrrMessage {
 
 
   // DEPRECATED: The following fields were used as part of the old
-  // GrrMessage communication protocol. These fields were replaced
+  // VeloMessage communication protocol. These fields were replaced
   // by the messages above.
   string name = 4 [(sem_type) = {
       description: "This is the name of the client action that will be "
@@ -141,7 +144,7 @@ message GrrStatus {
 
 // This is a list of job messages.
 message MessageList {
-  repeated GrrMessage job = 1;
+  repeated VeloMessage job = 1;
 };
 
 // This is the protobuf which is transmitted on the wire

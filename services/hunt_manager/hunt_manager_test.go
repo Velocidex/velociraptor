@@ -115,8 +115,8 @@ func (self *HuntTestSuite) TestHuntManager() {
 	journal.PushRowsToArtifact(self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
-			Set("ClientId", self.client_id).
-			Set("Participate", true)},
+			Set("ClientId", self.client_id),
+		},
 		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -179,8 +179,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
-			Set("Fqdn", "MyHost").
-			Set("Participate", true)},
+			Set("Fqdn", "MyHost"),
+		},
 		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -241,8 +241,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
-			Set("Fqdn", "MyHost").
-			Set("Participate", true)},
+			Set("Fqdn", "MyHost"),
+		},
 		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -296,8 +296,8 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
-			Set("Override", true).
-			Set("Participate", true)},
+			Set("Override", true),
+		},
 		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -364,8 +364,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
-			Set("Fqdn", "MyHost").
-			Set("Participate", true)},
+			Set("Fqdn", "MyHost"),
+		},
 		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -440,8 +440,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
-			Set("Fqdn", "MyHost").
-			Set("Participate", true)},
+			Set("Fqdn", "MyHost"),
+		},
 		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -517,13 +517,11 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 			ordereddict.NewDict().
 				Set("HuntId", self.hunt_id).
 				Set("ClientId", client_id_1).
-				Set("Fqdn", "MyHost1").
-				Set("Participate", true),
+				Set("Fqdn", "MyHost1"),
 			ordereddict.NewDict().
 				Set("HuntId", self.hunt_id).
 				Set("ClientId", client_id_2).
-				Set("Fqdn", "MyHost2").
-				Set("Participate", true),
+				Set("Fqdn", "MyHost2"),
 		},
 		"System.Hunt.Participation", self.client_id, "")
 

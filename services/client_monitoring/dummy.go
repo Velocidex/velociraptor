@@ -19,8 +19,8 @@ func (self Dummy) CheckClientEventsVersion(
 
 func (self Dummy) GetClientUpdateEventTableMessage(
 	config_obj *config_proto.Config,
-	client_id string) *crypto_proto.GrrMessage {
-	return &crypto_proto.GrrMessage{}
+	client_id string) *crypto_proto.VeloMessage {
+	return &crypto_proto.VeloMessage{}
 }
 
 func (self Dummy) GetClientMonitoringState() *flows_proto.ClientEventTable {

@@ -66,7 +66,7 @@ func cancelCollection(config_obj *config_proto.Config, client_id, flow_id string
 		return err
 	}
 	err = db.QueueMessageForClient(config_obj, client_id,
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},
 			SessionId: flow_id,
 		})

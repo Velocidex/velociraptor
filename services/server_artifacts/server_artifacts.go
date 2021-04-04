@@ -207,7 +207,7 @@ func (self *ServerArtifactsRunner) cancel(flow_id string) {
 func (self *ServerArtifactsRunner) processTask(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	task *crypto_proto.GrrMessage) error {
+	task *crypto_proto.VeloMessage) error {
 
 	collection_context, err := NewCollectionContext(
 		self.config_obj, "server", task.SessionId)
@@ -266,7 +266,7 @@ func (self *ServerArtifactsRunner) processTask(
 
 func (self *ServerArtifactsRunner) runQuery(
 	ctx context.Context,
-	task *crypto_proto.GrrMessage,
+	task *crypto_proto.VeloMessage,
 	collection_context *contextManager) error {
 
 	// Set up the logger for writing query logs. Note this must be

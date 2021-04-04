@@ -44,8 +44,8 @@ var (
 )
 
 type transaction struct {
-	Request   *crypto_proto.GrrMessage
-	Responses []*crypto_proto.GrrMessage
+	Request   *crypto_proto.VeloMessage
+	Responses []*crypto_proto.VeloMessage
 
 	// While the transaction is running we need to make other
 	// threads wait until it is done.
@@ -69,16 +69,16 @@ func getInc() int64 {
 // fleet of independent clients.
 type PoolClientExecutor struct {
 	*ClientExecutor
-	Outbound chan *crypto_proto.GrrMessage
+	Outbound chan *crypto_proto.VeloMessage
 	id       int
 }
 
-func (self *PoolClientExecutor) ReadResponse() <-chan *crypto_proto.GrrMessage {
+func (self *PoolClientExecutor) ReadResponse() <-chan *crypto_proto.VeloMessage {
 	return self.Outbound
 }
 
 // Inspect the request and decide if we will cache it under a query.
-func getQueryName(message *crypto_proto.GrrMessage) string {
+func getQueryName(message *crypto_proto.VeloMessage) string {
 	query_name := ""
 	if message.VQLClientAction != nil {
 		for _, query := range message.VQLClientAction.Query {
@@ -94,7 +94,11 @@ func getQueryName(message *crypto_proto.GrrMessage) string {
 	return ""
 }
 
-func getCompletedTransaction(message *crypto_proto.GrrMessage) *transaction {
+func getSessionKey(message *crypto_proto.VeloMessage) string {
+	return fmt.Sprintf("%s/%d", message.SessionId, message.QueryId)
+}
+
+func getCompletedTransaction(message *crypto_proto.VeloMessage) *transaction {
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
 
@@ -117,15 +121,16 @@ func getCompletedTransaction(message *crypto_proto.GrrMessage) *transaction {
 		Request: message,
 		IsDone:  make(chan bool),
 	}
+	session_id_cache_key := getSessionKey(message)
 	query_cache[query_name] = trans
-	session_id_cache[message.SessionId] = trans
+	session_id_cache[session_id_cache_key] = trans
 
-	fmt.Printf("Starting transaction for %v\n", message.SessionId)
+	fmt.Printf("Starting transaction for %v\n", session_id_cache_key)
 	return nil
 }
 
 func (self *PoolClientExecutor) maybeUpdateEventTable(
-	ctx context.Context, req *crypto_proto.GrrMessage) {
+	ctx context.Context, req *crypto_proto.VeloMessage) {
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
 
@@ -154,7 +159,7 @@ func (self *PoolClientExecutor) maybeUpdateEventTable(
 // Feed a server request to the executor for execution.
 func (self *PoolClientExecutor) ProcessRequest(
 	ctx context.Context,
-	message *crypto_proto.GrrMessage) {
+	message *crypto_proto.VeloMessage) {
 
 	if message.UpdateEventTable != nil {
 		self.maybeUpdateEventTable(ctx, message)
@@ -168,7 +173,7 @@ func (self *PoolClientExecutor) ProcessRequest(
 
 		fmt.Printf("Getting %v responses from cache\n", len(tran.Responses))
 		for _, resp := range tran.Responses {
-			response := &crypto_proto.GrrMessage{
+			response := &crypto_proto.VeloMessage{
 				SessionId:   message.SessionId,
 				RequestId:   message.RequestId,
 				ResponseId:  uint64(getInc()),
@@ -234,7 +239,7 @@ func NewPoolClientExecutor(
 	g_responder := responder.GlobalPoolEventResponder
 	g_responder.RegisterPoolClientResponder(id, exe.Outbound)
 
-	output := make(chan *crypto_proto.GrrMessage, 10)
+	output := make(chan *crypto_proto.VeloMessage, 10)
 
 	go func() {
 		delegate_messages := exe.ReadResponse()
@@ -259,11 +264,11 @@ func NewPoolClientExecutor(
 	}, nil
 }
 
-func maybeCacheResult(response *crypto_proto.GrrMessage) {
+func maybeCacheResult(response *crypto_proto.VeloMessage) {
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
 
-	session_id := response.SessionId
+	session_id := getSessionKey(response)
 
 	// Check if the transaction is tracked
 	tran, pres := session_id_cache[session_id]
@@ -271,7 +276,8 @@ func maybeCacheResult(response *crypto_proto.GrrMessage) {
 		fmt.Printf("%v\n", response)
 		tran.Responses = append(tran.Responses, response)
 		if response.Status != nil && !tran.Done {
-			fmt.Printf("Completing transaction for session_id %v\n", response.SessionId)
+			fmt.Printf("Completing transaction for session_id %v\n",
+				session_id)
 			// The transaction is now done.
 			close(tran.IsDone)
 			tran.Done = true

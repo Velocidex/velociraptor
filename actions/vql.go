@@ -254,7 +254,7 @@ func (self VQLClientAction) StartQuery(
 					)
 				}
 				response.Columns = result.Columns
-				responder.AddResponse(ctx, &crypto_proto.GrrMessage{
+				responder.AddResponse(ctx, &crypto_proto.VeloMessage{
 					VQLResponse: response})
 			}
 		}

@@ -8,14 +8,14 @@ import (
 
 type TestExecutor struct{}
 
-func (self *TestExecutor) ReadFromServer() *crypto_proto.GrrMessage {
+func (self *TestExecutor) ReadFromServer() *crypto_proto.VeloMessage {
 	return nil
 }
-func (self *TestExecutor) SendToServer(message *crypto_proto.GrrMessage) {}
+func (self *TestExecutor) SendToServer(message *crypto_proto.VeloMessage) {}
 func (self *TestExecutor) ProcessRequest(
 	ctx context.Context,
-	message *crypto_proto.GrrMessage) {
+	message *crypto_proto.VeloMessage) {
 }
-func (self *TestExecutor) ReadResponse() <-chan *crypto_proto.GrrMessage {
+func (self *TestExecutor) ReadResponse() <-chan *crypto_proto.VeloMessage {
 	return nil
 }

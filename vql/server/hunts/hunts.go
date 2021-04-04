@@ -235,57 +235,58 @@ func (self HuntResultsPlugin) Call(
 
 		// Backwards compatibility.
 		hunt_path_manager := paths.NewHuntPathManager(arg.HuntId).Clients()
-		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
-			hunt_path_manager, 0, 0)
+		file_store_factory := file_store.GetFileStore(config_obj)
+		rs_reader, err := result_sets.NewResultSetReader(
+			file_store_factory, hunt_path_manager)
 		if err != nil {
 			return
 		}
+		defer rs_reader.Close()
 
 		// Read each file and emit it with some extra columns
 		// for context.
-		for row := range row_chan {
+		for row := range rs_reader.Rows(ctx) {
 			participation_row := &hunt_manager.ParticipationRecord{}
 			err := vfilter.ExtractArgs(scope, row, participation_row)
 			if err != nil {
 				continue
 			}
 
-			if participation_row.Participate {
-				api_client, err := api.GetApiClient(ctx,
-					config_obj, nil,
-					participation_row.ClientId,
-					false /* detailed */)
-				if err != nil {
-					continue
+			api_client, err := api.GetApiClient(ctx,
+				config_obj, nil,
+				participation_row.ClientId,
+				false /* detailed */)
+			if err != nil {
+				scope.Log("hunt_results: %v", err)
+				continue
+			}
+
+			// Read individual flow's results.
+			path_manager := artifact_paths.NewArtifactPathManager(
+				config_obj,
+				participation_row.ClientId,
+				participation_row.FlowId,
+				arg.Artifact)
+			row_chan, err := file_store.GetTimeRange(
+				ctx, config_obj, path_manager, 0, 0)
+			if err != nil {
+				continue
+			}
+
+			// Read each result set and emit it
+			// with some extra columns for
+			// context.
+			for row := range row_chan {
+				row.Set("FlowId", participation_row.FlowId).
+					Set("ClientId", participation_row.ClientId)
+
+				if api_client.OsInfo != nil {
+					row.Set("Fqdn", api_client.OsInfo.Fqdn)
 				}
-
-				// Read individual flow's results.
-				path_manager := artifact_paths.NewArtifactPathManager(
-					config_obj,
-					participation_row.ClientId,
-					participation_row.FlowId,
-					arg.Artifact)
-				row_chan, err := file_store.GetTimeRange(
-					ctx, config_obj, path_manager, 0, 0)
-				if err != nil {
-					continue
-				}
-
-				// Read each result set and emit it
-				// with some extra columns for
-				// context.
-				for row := range row_chan {
-					row.Set("FlowId", participation_row.FlowId).
-						Set("ClientId", participation_row.ClientId)
-
-					if api_client.OsInfo != nil {
-						row.Set("Fqdn", api_client.OsInfo.Fqdn)
-					}
-					select {
-					case <-ctx.Done():
-						return
-					case output_chan <- row:
-					}
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- row:
 				}
 			}
 		}

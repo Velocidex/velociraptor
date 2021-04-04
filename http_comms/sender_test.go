@@ -65,7 +65,7 @@ func (self *MockHTTPConnector) Post(handler string, data []byte, urgent bool) (*
 	require.NoError(self.t, err)
 
 	message_info.IterateJobs(context.Background(),
-		func(ctx context.Context, item *crypto_proto.GrrMessage) {
+		func(ctx context.Context, item *crypto_proto.VeloMessage) {
 			self.received = append(self.received, item.Name)
 		})
 
@@ -81,7 +81,7 @@ func (self *MockHTTPConnector) ServerName() string { return "VelociraptorServer"
 func CanSendToExecutor(
 	wg *sync.WaitGroup,
 	exec *executor.ClientExecutor,
-	msg *crypto_proto.GrrMessage) bool {
+	msg *crypto_proto.VeloMessage) bool {
 	select {
 	case exec.Outbound <- msg:
 		// Add to the wg a task - this will be subtracted when
@@ -103,8 +103,8 @@ func testRingBuffer(
 
 	manager := &crypto.NullCryptoManager{}
 	exe := &executor.ClientExecutor{
-		Inbound:  make(chan *crypto_proto.GrrMessage),
-		Outbound: make(chan *crypto_proto.GrrMessage),
+		Inbound:  make(chan *crypto_proto.VeloMessage),
+		Outbound: make(chan *crypto_proto.VeloMessage),
 	}
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
@@ -130,7 +130,7 @@ func testRingBuffer(
 	// prevent more messages from being generated. This ensures
 	// that all messages will be written to disk in case of a
 	// crash.
-	msg := &crypto_proto.GrrMessage{
+	msg := &crypto_proto.VeloMessage{
 		Name: message,
 	}
 

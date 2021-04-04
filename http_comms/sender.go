@@ -87,7 +87,7 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 				// Urgent messages are queued in
 				// memory and dispatched separately.
 				item := &crypto_proto.MessageList{
-					Job: []*crypto_proto.GrrMessage{msg}}
+					Job: []*crypto_proto.VeloMessage{msg}}
 
 				serialized_msg, err := proto.Marshal(item)
 				if err != nil {
@@ -99,7 +99,7 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 
 			} else {
 				// NOTE: This is kind of a hack. We hold in
-				// memory a bunch of GrrMessage proto objects
+				// memory a bunch of VeloMessage proto objects
 				// and we want to serialize them into a
 				// MessageList proto one at the time (so we
 				// can track how large the final message is
@@ -107,11 +107,11 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 				// format property of protobufs that repeated
 				// fields can be appended on the wire, and
 				// then parsed as a single message. This saves
-				// us encoding the GrrMessage just to see how
+				// us encoding the VeloMessage just to see how
 				// large it is going to be and then encoding
 				// it again.
 				item := &crypto_proto.MessageList{
-					Job: []*crypto_proto.GrrMessage{msg}}
+					Job: []*crypto_proto.VeloMessage{msg}}
 				serialized_msg, err := proto.Marshal(item)
 				if err != nil {
 					// Can't serialize the message

@@ -2,4 +2,4 @@ name: Server.Internal.Label
 description: |
   An internal artifact used to track new labeling events.
 
-type: SERVER_EVENT
+type: INTERNAL

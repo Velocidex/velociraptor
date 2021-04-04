@@ -46,17 +46,17 @@ type DataStore interface {
 	GetClientTasks(
 		config_obj *config_proto.Config,
 		client_id string,
-		do_not_lease bool) ([]*crypto_proto.GrrMessage, error)
+		do_not_lease bool) ([]*crypto_proto.VeloMessage, error)
 
 	UnQueueMessageForClient(
 		config_obj *config_proto.Config,
 		client_id string,
-		message *crypto_proto.GrrMessage) error
+		message *crypto_proto.VeloMessage) error
 
 	QueueMessageForClient(
 		config_obj *config_proto.Config,
 		client_id string,
-		message *crypto_proto.GrrMessage) error
+		message *crypto_proto.VeloMessage) error
 
 	// Reads a stored message from the datastore. If there is no
 	// stored message at this URN, the function returns an

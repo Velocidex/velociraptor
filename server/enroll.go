@@ -50,7 +50,8 @@ func enroll(
 	}
 
 	return journal.PushRowsToArtifact(config_obj,
-		[]*ordereddict.Dict{ordereddict.NewDict().Set("ClientId", client_id)},
-		"Server.Internal.Enrollment", "server" /* client_id */, "",
-	)
+		[]*ordereddict.Dict{
+			ordereddict.NewDict().
+				Set("ClientId", client_id)},
+		"Server.Internal.Enrollment", client_id, "")
 }

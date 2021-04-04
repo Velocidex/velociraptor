@@ -132,8 +132,7 @@ func ForemanProcessMessage(
 		err = journal.PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("HuntId", hunt.HuntId).
-				Set("ClientId", client_id).
-				Set("Participate", true),
+				Set("ClientId", client_id),
 			}, "System.Hunt.Participation", client_id, "")
 		if err != nil {
 			return err
@@ -154,7 +153,7 @@ func ForemanProcessMessage(
 	// messages.
 	return QueueMessageForClient(
 		config_obj, client_id,
-		&crypto_proto.GrrMessage{
+		&crypto_proto.VeloMessage{
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
 			RequestId: constants.IgnoreResponseState,
 			UpdateForeman: &actions_proto.ForemanCheckin{

@@ -298,7 +298,7 @@ func TestRingBufferCancellation(t *testing.T) {
 	defer os.Remove(filename)
 
 	message_list := &crypto_proto.MessageList{
-		Job: []*crypto_proto.GrrMessage{{
+		Job: []*crypto_proto.VeloMessage{{
 			SessionId: "F.1234",
 		}},
 	}

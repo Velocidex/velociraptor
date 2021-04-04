@@ -24,10 +24,10 @@ import (
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 )
 
-// ProduceBackwardCompatibleGrrMessage is used for messages going from
+// ProduceBackwardCompatibleVeloMessage is used for messages going from
 // the server to the client. In order to support old clients we
 // duplicate the data in the extra fields.
-func ProduceBackwardCompatibleGrrMessage(req *crypto_proto.GrrMessage) *crypto_proto.GrrMessage {
+func ProduceBackwardCompatibleVeloMessage(req *crypto_proto.VeloMessage) *crypto_proto.VeloMessage {
 	var payload proto.Message
 
 	// Only bother for server -> client messages since this we
@@ -69,9 +69,9 @@ func ProduceBackwardCompatibleGrrMessage(req *crypto_proto.GrrMessage) *crypto_p
 func QueueMessageForClient(
 	config_obj *config_proto.Config,
 	client_id string,
-	req *crypto_proto.GrrMessage) error {
+	req *crypto_proto.VeloMessage) error {
 
-	req = ProduceBackwardCompatibleGrrMessage(req)
+	req = ProduceBackwardCompatibleVeloMessage(req)
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {

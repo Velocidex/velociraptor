@@ -254,7 +254,7 @@ func (self *scanReporter) scanRange(start, end uint64, f glob.ReadSeekCloser) {
 	_, _ = f.Seek(int64(start), 0)
 	buf := make([]byte, self.blocksize)
 
-	self.scope.Log("Scanning %v from %#0x to %#0x", self.filename, start, end)
+	// self.scope.Log("Scanning %v from %#0x to %#0x", self.filename, start, end)
 
 	// base_offset reflects the file offset where we scan.
 	for self.base_offset = start; self.base_offset < end; {

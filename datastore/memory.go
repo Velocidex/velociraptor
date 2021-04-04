@@ -27,7 +27,7 @@ type TestDataStore struct {
 
 	idx         uint64
 	Subjects    map[string]proto.Message
-	ClientTasks map[string][]*crypto_proto.GrrMessage
+	ClientTasks map[string][]*crypto_proto.VeloMessage
 
 	clock vtesting.Clock
 }
@@ -35,7 +35,7 @@ type TestDataStore struct {
 func NewTestDataStore() *TestDataStore {
 	return &TestDataStore{
 		Subjects:    make(map[string]proto.Message),
-		ClientTasks: make(map[string][]*crypto_proto.GrrMessage),
+		ClientTasks: make(map[string][]*crypto_proto.VeloMessage),
 	}
 }
 
@@ -52,7 +52,7 @@ func (self *TestDataStore) Clear() {
 	defer self.mu.Unlock()
 
 	self.Subjects = make(map[string]proto.Message)
-	self.ClientTasks = make(map[string][]*crypto_proto.GrrMessage)
+	self.ClientTasks = make(map[string][]*crypto_proto.VeloMessage)
 }
 
 func (self *TestDataStore) Debug() {
@@ -68,7 +68,7 @@ func (self *TestDataStore) Debug() {
 
 func (self *TestDataStore) GetClientTasks(config_obj *config_proto.Config,
 	client_id string,
-	do_not_lease bool) ([]*crypto_proto.GrrMessage, error) {
+	do_not_lease bool) ([]*crypto_proto.VeloMessage, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -116,7 +116,7 @@ func (self *TestDataStore) Walk(
 func (self *TestDataStore) QueueMessageForClient(
 	config_obj *config_proto.Config,
 	client_id string,
-	message *crypto_proto.GrrMessage) error {
+	message *crypto_proto.VeloMessage) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -125,7 +125,7 @@ func (self *TestDataStore) QueueMessageForClient(
 
 	result, pres := self.ClientTasks[client_id]
 	if !pres {
-		result = make([]*crypto_proto.GrrMessage, 0)
+		result = make([]*crypto_proto.VeloMessage, 0)
 	}
 
 	result = append(result, message)
@@ -137,16 +137,16 @@ func (self *TestDataStore) QueueMessageForClient(
 func (self *TestDataStore) UnQueueMessageForClient(
 	config_obj *config_proto.Config,
 	client_id string,
-	message *crypto_proto.GrrMessage) error {
+	message *crypto_proto.VeloMessage) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	old_queue, pres := self.ClientTasks[client_id]
 	if !pres {
-		old_queue = make([]*crypto_proto.GrrMessage, 0)
+		old_queue = make([]*crypto_proto.VeloMessage, 0)
 	}
 
-	new_queue := make([]*crypto_proto.GrrMessage, 0, len(old_queue))
+	new_queue := make([]*crypto_proto.VeloMessage, 0, len(old_queue))
 	for _, item := range old_queue {
 		if message.TaskId != item.TaskId {
 			new_queue = append(new_queue, item)

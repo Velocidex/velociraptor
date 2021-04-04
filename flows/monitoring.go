@@ -14,7 +14,7 @@ import (
 func MonitoringProcessMessage(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext,
-	message *crypto_proto.GrrMessage) error {
+	message *crypto_proto.VeloMessage) error {
 
 	err := FailIfError(config_obj, collection_context, message)
 	if err != nil {

@@ -53,7 +53,7 @@ func StartEventTableService(
 		actions.GlobalEventTableVersion())
 
 	responder := responder.NewResponder(
-		config_obj, &crypto_proto.GrrMessage{
+		config_obj, &crypto_proto.VeloMessage{
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
 		}, exe.Outbound)
 	if config_obj.Writeback.EventQueries != nil {
