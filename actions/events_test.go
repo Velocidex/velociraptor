@@ -161,7 +161,9 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	assert.NotEqual(self.T(), version, 0)
 
 	// And we ran some queries.
-	assert.True(self.T(), len(actions.QueryLog.Get()) > 0)
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		return len(actions.QueryLog.Get()) > 0
+	})
 
 	// We no longer need to update the event table - it is up to date.
 	assert.False(self.T(),
