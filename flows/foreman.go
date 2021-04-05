@@ -46,7 +46,6 @@ import (
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/services"
-	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 // ForemanProcessMessage processes a ForemanCheckin message from the
@@ -72,7 +71,6 @@ func ForemanProcessMessage(
 			client_event_manager.GetClientUpdateEventTableMessage(
 				config_obj, client_id))
 		if err != nil {
-			utils.Debug(err)
 			return err
 		}
 	}

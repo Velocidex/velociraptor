@@ -117,11 +117,8 @@ func GetDefaultConfig() *config_proto.Config {
 		GUI: &config_proto.GUIConfig{
 			// Bind port for GUI. If you expose this on a
 			// reachable IP address you must enable TLS!
-			BindAddress: "127.0.0.1",
-			BindPort:    8889,
-			InternalCidr: []string{
-				"127.0.0.1/12", "192.168.0.0/16",
-			},
+			BindAddress:  "127.0.0.1",
+			BindPort:     8889,
 			ReverseProxy: []*config_proto.ReverseProxyConfig{},
 			Authenticator: &config_proto.Authenticator{
 				Type: "Basic",

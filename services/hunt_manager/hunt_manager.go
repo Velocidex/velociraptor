@@ -331,9 +331,7 @@ func (self *HuntManager) ProcessParticipation(
 
 	// Use hunt information to launch the flow against this
 	// client.
-	now_ts := time.Now()
 	self.limiter.Wait(ctx)
-	fmt.Printf("Now is %v\n", time.Now().Sub(now_ts))
 
 	return scheduleHuntOnClient(ctx,
 		config_obj, hunt_obj, participation_row.ClientId)
