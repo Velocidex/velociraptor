@@ -216,11 +216,13 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 		label_manager.SetClientLabel(self.config_obj, self.client_id,
 			"Label1"))
 
-	// We need to update the table again.
-	assert.True(self.T(),
-		client_manager.CheckClientEventsVersion(
+	// We need to update the table again (takes a while for the
+	// client manager to notice the label change).
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		return client_manager.CheckClientEventsVersion(
 			self.config_obj, self.client_id,
-			actions.GlobalEventTableVersion()))
+			actions.GlobalEventTableVersion())
+	})
 
 	new_message = client_manager.GetClientUpdateEventTableMessage(
 		self.config_obj, self.client_id)
