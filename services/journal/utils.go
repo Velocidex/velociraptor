@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -39,7 +38,6 @@ func WatchForCollectionWithCB(ctx context.Context,
 
 			// This is not what we are looking for.
 			if !utils.InString(flow.ArtifactsWithResults, artifact) {
-				json.Dump(flow)
 				return nil
 			}
 

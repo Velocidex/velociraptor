@@ -22,8 +22,11 @@ package vtesting
 
 import (
 	"io/ioutil"
+	"runtime/debug"
 	"testing"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func ReadFile(t *testing.T, filename string) []byte {
@@ -48,6 +51,20 @@ func (self RealClock) After(d time.Duration) <-chan time.Time {
 	return time.After(d)
 }
 
+// Compares lists of strings regardless of order.
+func CompareStrings(expected []string, watched []string) bool {
+	if len(expected) != len(watched) {
+		return false
+	}
+
+	for _, item := range watched {
+		if !utils.InString(expected, item) {
+			return false
+		}
+	}
+	return true
+}
+
 func WaitUntil(deadline time.Duration, t *testing.T, cb func() bool) {
 	end_time := time.Now().Add(deadline)
 
@@ -60,5 +77,5 @@ func WaitUntil(deadline time.Duration, t *testing.T, cb func() bool) {
 		time.Sleep(50 * time.Millisecond)
 	}
 
-	t.Fatalf("Timed out")
+	t.Fatalf("Timed out " + string(debug.Stack()))
 }

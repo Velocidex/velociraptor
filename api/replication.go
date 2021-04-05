@@ -37,6 +37,8 @@ func streamEvents(
 		return err
 	}
 
+	// The API service is running on the master only! This means
+	// the journal service is local.
 	output_chan, cancel := journal.Watch(ctx, in.Queue)
 	defer cancel()
 
