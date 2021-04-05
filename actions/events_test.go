@@ -161,7 +161,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	assert.NotEqual(self.T(), version, 0)
 
 	// And we ran some queries.
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return len(actions.QueryLog.Get()) > 0
 	})
 
@@ -203,7 +203,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 		new_message.UpdateEventTable)
 
 	// Wait for the event table version to change
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return version != actions.GlobalEventTableVersion()
 	})
 
@@ -218,7 +218,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// We need to update the table again (takes a while for the
 	// client manager to notice the label change).
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return client_manager.CheckClientEventsVersion(
 			self.config_obj, self.client_id,
 			actions.GlobalEventTableVersion())
@@ -235,7 +235,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 		new_message.UpdateEventTable)
 
 	// Wait for the event table to be swapped.
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return len(actions.QueryLog.Get()) > 2
 	})
 
