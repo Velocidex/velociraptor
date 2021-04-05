@@ -272,10 +272,15 @@ func (self *HuntManager) ProcessParticipation(
 			participation_row.ClientId, err)
 	}
 
+	// If the hunt ran on the client already we just ignore
+	// it. This is possible because the client may not have
+	// updated its last hunt number in time to have a number of
+	// hunt participation messages sent for it from different
+	// frontends.
 	err = checkHuntRanOnClient(config_obj, participation_row.ClientId,
 		participation_row.HuntId)
 	if err != nil {
-		return err
+		return nil
 	}
 
 	// Get hunt information about this hunt.

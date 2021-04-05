@@ -15,7 +15,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -39,12 +38,50 @@ var (
 )
 
 type ReplicationService struct {
-	config_obj  *config_proto.Config
-	file_buffer *directory.FileBasedRingBuffer
-	tmpfile     *os.File
+	config_obj    *config_proto.Config
+	Buffer        *BufferFile
+	tmpfile       *os.File
+	ctx           context.Context
+	RetryDuration time.Duration
+
+	sender chan *api_proto.PushEventRequest
 
 	api_client api_proto.APIClient
 	closer     func() error
+}
+
+func (self *ReplicationService) pumpEventFromBufferFile() {
+	for {
+		event, err := self.Buffer.Lease()
+		// No events available or some other error, sleep and
+		// try again later.
+		if err != nil {
+			select {
+			case <-self.ctx.Done():
+				return
+
+			case <-time.After(self.RetryDuration):
+				continue
+			}
+		}
+
+		// Retry to send the event.
+		for {
+			_, err := self.api_client.PushEvents(self.ctx, event)
+			if err == nil {
+				break
+			}
+			// We are unable to send it, sleep and
+			// try again later.
+			select {
+			case <-self.ctx.Done():
+				return
+
+			case <-time.After(self.RetryDuration):
+				continue
+			}
+		}
+	}
 }
 
 func (self *ReplicationService) Start(
@@ -56,27 +93,54 @@ func (self *ReplicationService) Start(
 	if err != nil {
 		return err
 	}
+
+	// Initialize our default values and start the service for
+	// real.
 	self.api_client = api_client
 	self.closer = closer
+	self.ctx = ctx
+	self.sender = make(chan *api_proto.PushEventRequest, 100)
+	self.RetryDuration = time.Second
 
 	self.tmpfile, err = ioutil.TempFile("", "replication")
 	if err != nil {
 		return err
 	}
 
-	self.file_buffer, err = directory.NewFileBasedRingBuffer(
-		self.config_obj, self.tmpfile)
+	self.Buffer, err = NewBufferFile(self.config_obj, self.tmpfile)
 	if err != nil {
 		return err
 	}
 
+	go self.pumpEventFromBufferFile()
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
 		defer self.Close()
 
-		<-ctx.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+				// Read events from the channel and
+				// try to send them
+			case request, ok := <-self.sender:
+				if !ok {
+					return
+				}
+				_, err = self.api_client.PushEvents(ctx, request)
+				if err != nil {
+					replicationTotalSendErrors.Inc()
+
+					// Attempt to push the events
+					// to the buffer file instead
+					// for later delivery.
+					_ = self.Buffer.Enqueue(request)
+				}
+			}
+		}
 	}()
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
@@ -90,9 +154,6 @@ func (self *ReplicationService) PushRowsToArtifact(
 	rows []*ordereddict.Dict, artifact, client_id, flow_id string) error {
 
 	replicationTotalSent.Inc()
-
-	// FIXME: implement buffer file here.
-	ctx := context.Background()
 
 	serialized, err := json.MarshalJsonl(rows)
 	if err != nil {
@@ -110,11 +171,14 @@ func (self *ReplicationService) PushRowsToArtifact(
 	logger.Debug("<green>ReplicationService</> Sending %v rows to %v for %v.",
 		len(rows), artifact, client_id)
 
-	_, err = self.api_client.PushEvents(ctx, request)
-	if err != nil {
-		replicationTotalSendErrors.Inc()
+	// Should not block! If the channel is full we save the event
+	// into the file buffer for later.
+	select {
+	case self.sender <- request:
+		return nil
+	default:
+		return self.Buffer.Enqueue(request)
 	}
-	return err
 }
 
 func (self *ReplicationService) Watch(ctx context.Context, queue string) (
@@ -131,7 +195,12 @@ func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 				output_chan <- event
 			}
 
-			time.Sleep(10 * time.Second)
+			select {
+			case <-self.ctx.Done():
+				return
+			case <-time.After(self.RetryDuration):
+			}
+
 			logger := logging.GetLogger(self.config_obj,
 				&logging.FrontendComponent)
 			logger.Info("<green>ReplicationService Reconnect</>: "+
@@ -194,6 +263,6 @@ func (self *ReplicationService) watchOnce(ctx context.Context, queue string) <-c
 
 func (self *ReplicationService) Close() {
 	self.closer()
-	self.file_buffer.Close()
+	self.Buffer.Close()
 	os.Remove(self.tmpfile.Name()) // clean up file buffer
 }
