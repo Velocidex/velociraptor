@@ -25,6 +25,12 @@ type QueryLogType struct {
 	Queries []*QueryLogEntry
 }
 
+func (self *QueryLogType) Clear() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.Queries = nil
+}
+
 func (self *QueryLogType) AddQuery(query string) *QueryLogEntry {
 	self.mu.Lock()
 	defer self.mu.Unlock()
