@@ -80,7 +80,7 @@ sources:
 `, "")
 
 	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.clock = current_clock
+	manager.Clock = current_clock
 
 	err := manager.SetClientMonitoringState(context.Background(), self.config_obj,
 		&flows_proto.ClientEventTable{
@@ -120,7 +120,7 @@ sources:
 `, "")
 
 	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.clock = current_clock
+	manager.Clock = current_clock
 
 	// Set the initial table.
 	err := manager.SetClientMonitoringState(context.Background(), self.config_obj,
@@ -163,7 +163,7 @@ sources:
 `, "")
 
 	manager1 := services.ClientEventManager().(*ClientEventTable)
-	manager1.clock = current_clock
+	manager1.Clock = current_clock
 
 	// Set the initial table.
 	err := manager1.SetClientMonitoringState(context.Background(),
@@ -180,7 +180,7 @@ sources:
 	// Now another frontend sets the client monitoring state
 	require.NoError(self.T(), self.sm.Start(StartClientMonitoringService))
 	manager2 := services.ClientEventManager().(*ClientEventTable)
-	manager2.clock = current_clock
+	manager2.Clock = current_clock
 
 	// Now update the monitoring state
 	err = manager2.SetClientMonitoringState(context.Background(),
@@ -209,7 +209,7 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 
 	// If no table exists, we will get a default table.
 	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.clock = current_clock
+	manager.Clock = current_clock
 
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
 	manager.SetClientMonitoringState(context.Background(),
@@ -324,7 +324,7 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompilingMultipleArti
 
 	// If no table exists, we will get a default table.
 	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.clock = current_clock
+	manager.Clock = current_clock
 
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
 	manager.SetClientMonitoringState(context.Background(),
@@ -377,7 +377,7 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoring() {
 
 	// If no table exists, we will get a default table.
 	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.clock = current_clock
+	manager.Clock = current_clock
 
 	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
 	assert.NoError(self.T(), manager.LoadFromFile(context.Background(), self.config_obj))
