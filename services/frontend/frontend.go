@@ -168,8 +168,8 @@ func (self *FrontendManager) syncActiveFrontends() error {
 	for _, child := range children {
 		state := &frontend_proto.FrontendState{}
 		err = db.GetSubject(self.config_obj, child, state)
-		if !errors.Is(err, os.ErrNotExist) {
-			return err
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			continue
 		}
 
 		// Only count frontends that were active at least 30
