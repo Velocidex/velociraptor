@@ -15,7 +15,7 @@ parameters:
     description: If specified only show executions after this time.
 
   - name: Win10TimelineGlob
-    default: C:\Users\*\AppData\Local\ConnectedDevicesPlatform\L.*\ActivitiesCache.db
+    default: C:\Users\*\AppData\Local\ConnectedDevicesPlatform\.*\ActivitiesCache.db
 
 precondition: SELECT OS From info() where OS = 'windows'
 
