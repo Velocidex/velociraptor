@@ -55,7 +55,8 @@ function _ArtifactCollectorArgs_to_label_table(event_table) {
 function proto2tables(table, cb) {
     let definitions = {};
     let result = {All: _ArtifactCollectorArgs_to_label_table(table.artifacts)};
-    let all_artifacts = [...result.All.artifacts];
+    let all = result.All || {};
+    let all_artifacts = all.artifacts || [];
 
     _.each(table.label_events, x=>{
         let event_table = _ArtifactCollectorArgs_to_label_table(x.artifacts);
