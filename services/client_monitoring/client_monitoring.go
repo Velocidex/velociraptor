@@ -64,7 +64,7 @@ type ClientEventTable struct {
 	// protobufs in memory.
 	state *flows_proto.ClientEventTable
 
-	clock utils.Clock
+	Clock utils.Clock
 
 	id string
 }
@@ -188,7 +188,7 @@ func (self *ClientEventTable) setClientMonitoringState(
 	}
 
 	self.state = state
-	state.Version = uint64(self.clock.Now().UnixNano())
+	state.Version = uint64(self.Clock.Now().UnixNano())
 
 	// Store the new table in the data store.
 	db, err := datastore.GetDB(config_obj)
@@ -231,7 +231,7 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	self.mu.Unlock()
 
 	result := &actions_proto.VQLEventTable{
-		Version: uint64(self.clock.Now().UnixNano()),
+		Version: uint64(self.Clock.Now().UnixNano()),
 	}
 
 	if state.Artifacts == nil {
@@ -380,7 +380,7 @@ func StartClientMonitoringService(
 	config_obj *config_proto.Config) error {
 
 	event_table := &ClientEventTable{
-		clock: &utils.RealClock{},
+		Clock: &utils.RealClock{},
 		id:    uuid.New().String(),
 	}
 	services.RegisterClientEventManager(event_table)

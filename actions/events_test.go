@@ -25,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -49,6 +50,8 @@ type EventsTestSuite struct {
 	sm         *services.Service
 	responder  *responder.Responder
 	writeback  string
+
+	Clock utils.Clock
 }
 
 func (self *EventsTestSuite) SetupTest() {
@@ -58,6 +61,7 @@ func (self *EventsTestSuite) SetupTest() {
 	self.config_obj = config.GetDefaultConfig()
 	self.config_obj.Frontend.DoNotCompressArtifacts = true
 	self.config_obj.Datastore.Implementation = "Test"
+	self.Clock = &utils.IncClock{}
 
 	tmpfile, err := ioutil.TempFile("", "")
 	require.NoError(t, err)
@@ -124,6 +128,7 @@ var server_state = &flows_proto.ClientEventTable{
 
 func (self *EventsTestSuite) TestEventTableUpdate() {
 	client_manager := services.ClientEventManager()
+	client_manager.(*client_monitoring.ClientEventTable).Clock = self.Clock
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
@@ -177,6 +182,8 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// be the same as the old one, except the version will be
 	// advanced.
 	label_manager := services.GetLabeler()
+	label_manager.(*labels.Labeler).Clock = self.Clock
+
 	require.NoError(self.T(),
 		label_manager.SetClientLabel(self.config_obj, self.client_id,
 			"Foobar"))
