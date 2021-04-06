@@ -157,6 +157,9 @@ func (self *CommsTestSuite) SetupTest() {
 	cm := &crypto.NullCryptoManager{}
 	self.empty_response, _ = cm.EncryptMessageList(
 		&crypto_proto.MessageList{}, "C.1234")
+
+	// Disable randomness for the test.
+	Rand = func(int) int { return 0 }
 }
 
 func (self *CommsTestSuite) TearDownTest() {

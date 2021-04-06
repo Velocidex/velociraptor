@@ -47,6 +47,8 @@ import (
 
 var (
 	RedirectError = errors.New("RedirectError")
+
+	Rand func(int) int = rand.Intn
 )
 
 // Responsible for maybe enrolling the client. Enrollments should not
@@ -194,6 +196,11 @@ func NewHTTPConnector(
 		logger:     logger,
 		clock:      clock,
 
+		// Start with a random URL from the set of
+		// preconfigured URLs. This should distribute clients
+		// randomly to all frontends.
+		current_url_idx: Rand(len(urls)),
+
 		minPoll:    time.Duration(1) * time.Second,
 		maxPoll:    time.Duration(max_poll) * time.Second,
 		maxPollDev: maxPollDev,
@@ -310,7 +317,7 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 			// For safety we wait after redirect in case we end up
 			// in a redirect loop.
 			wait := self.maxPoll + time.Duration(
-				rand.Intn(int(self.maxPollDev)))*time.Second
+				Rand(int(self.maxPollDev)))*time.Second
 			self.logger.Info("Waiting after redirect: %v", wait)
 			<-self.clock.After(wait)
 		}
@@ -352,7 +359,7 @@ func (self *HTTPConnector) advanceToNextServer() {
 	// sleep to back off.
 	if self.current_url_idx == self.last_success_idx {
 		wait := self.maxPoll + time.Duration(
-			rand.Intn(int(self.maxPollDev)))*time.Second
+			Rand(int(self.maxPollDev)))*time.Second
 
 		self.logger.Info(
 			"Waiting for a reachable server: %v", wait)
@@ -542,7 +549,7 @@ func (self *NotificationReader) sendMessageList(
 			// Add random wait between polls to avoid
 			// synchronization of endpoints.
 			wait := self.maxPoll + time.Duration(
-				rand.Intn(int(self.maxPollDev)))*time.Second
+				Rand(int(self.maxPollDev)))*time.Second
 			self.logger.Info("Sleeping for %v", wait)
 
 			select {
