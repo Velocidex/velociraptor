@@ -1,6 +1,7 @@
 # Only trigger when a PR is committed.
 name: Linux Build All Arches
 on:
+  workflow_dispatch:
   pull_request:
     types: [closed]
 #    branches:
