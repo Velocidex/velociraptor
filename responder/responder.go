@@ -94,6 +94,7 @@ func (self *Responder) AddResponse(
 	output := self.output
 	self.Unlock()
 
+	message.QueryId = self.request.QueryId
 	message.SessionId = self.request.SessionId
 	message.Urgent = self.request.Urgent
 	message.ResponseId = getIncValue()

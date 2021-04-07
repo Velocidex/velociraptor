@@ -17,6 +17,9 @@ message GrrMessage {
       description: "The session id of the flow that this message belongs to."
     }];
 
+    // An incrementing query id in this session.
+    uint64 query_id = 37;
+
   uint64 request_id = 2 [(sem_type) = {
       description: "The message is in response to this request number "
       "(requests increment from 1)."
