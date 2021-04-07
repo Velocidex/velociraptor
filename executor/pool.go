@@ -94,6 +94,10 @@ func getQueryName(message *crypto_proto.GrrMessage) string {
 	return ""
 }
 
+func getSessionKey(message *crypto_proto.GrrMessage) string {
+	return fmt.Sprintf("%s/%d", message.SessionId, message.QueryId)
+}
+
 func getCompletedTransaction(message *crypto_proto.GrrMessage) *transaction {
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
@@ -117,10 +121,11 @@ func getCompletedTransaction(message *crypto_proto.GrrMessage) *transaction {
 		Request: message,
 		IsDone:  make(chan bool),
 	}
+	session_id_cache_key := getSessionKey(message)
 	query_cache[query_name] = trans
-	session_id_cache[message.SessionId] = trans
+	session_id_cache[session_id_cache_key] = trans
 
-	fmt.Printf("Starting transaction for %v\n", message.SessionId)
+	fmt.Printf("Starting transaction for %v\n", session_id_cache_key)
 	return nil
 }
 
@@ -263,7 +268,7 @@ func maybeCacheResult(response *crypto_proto.GrrMessage) {
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
 
-	session_id := response.SessionId
+	session_id := getSessionKey(response)
 
 	// Check if the transaction is tracked
 	tran, pres := session_id_cache[session_id]
@@ -271,7 +276,8 @@ func maybeCacheResult(response *crypto_proto.GrrMessage) {
 		fmt.Printf("%v\n", response)
 		tran.Responses = append(tran.Responses, response)
 		if response.Status != nil && !tran.Done {
-			fmt.Printf("Completing transaction for session_id %v\n", response.SessionId)
+			fmt.Printf("Completing transaction for session_id %v\n",
+				session_id)
 			// The transaction is now done.
 			close(tran.IsDone)
 			tran.Done = true
