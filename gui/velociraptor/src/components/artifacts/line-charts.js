@@ -97,7 +97,7 @@ class TimeTickRenderer extends React.Component {
         let last_date =  this.props.data[this.props.data.length -1][this.props.dataKey];
 
         let value = date.getUTCFullYear().toString().padStart(4, "0") + "-" +
-            date.getUTCMonth().toString().padStart(2, "0") + "-" +
+            (date.getUTCMonth()+1).toString().padStart(2, "0") + "-" +
             date.getUTCDate().toString().padStart(2, "0");
 
         if (last_date - first_date < 24 * 60 * 60) {

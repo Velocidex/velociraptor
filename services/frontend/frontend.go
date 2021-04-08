@@ -132,8 +132,8 @@ func (self FrontendMetrics) ToDict() *ordereddict.Dict {
 		Set("NodeName", self.NodeName)
 }
 
-// The master frontend is responsible for aggregating slave stats into
-// a single artifact that we can use to display in the GUI.
+// The master frontend is responsible for aggregating minion stats
+// into a single artifact that we can use to display in the GUI.
 type MasterFrontendManager struct {
 	config_obj *config_proto.Config
 
@@ -285,26 +285,26 @@ func (self MasterFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
 	return err
 }
 
-type SlaveFrontendManager struct {
+type MinionFrontendManager struct {
 	config_obj *config_proto.Config
 	name       string
 }
 
-func (self SlaveFrontendManager) IsMaster() bool {
+func (self MinionFrontendManager) IsMaster() bool {
 	return false
 }
 
-// The slave replicates to the master node.
-func (self SlaveFrontendManager) GetMasterAPIClient(ctx context.Context) (
+// The minion frontend replicates to the master node.
+func (self MinionFrontendManager) GetMasterAPIClient(ctx context.Context) (
 	api_proto.APIClient, func() error, error) {
 	return grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
 }
 
-func (self *SlaveFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
+func (self *MinionFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
 	// If no service specification is set, we start only some
-	// services on slave frontends.
+	// services on minion frontends.
 	if config_obj.Frontend.ServerServices == nil {
 		config_obj.Frontend.ServerServices = &config_proto.ServerServicesConfig{
 			HuntDispatcher:   true,
@@ -319,7 +319,7 @@ func (self *SlaveFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
 		config_obj.Frontend.BindPort)
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Frontend:</> Server will be slave, with ID %v.", self.name)
+	logger.Info("<green>Frontend:</> Server will be a minion, with ID %v.", self.name)
 
 	// Push our metrics to the master node.
 	return PushMetrics(ctx, wg, config_obj, self.name)
@@ -327,7 +327,7 @@ func (self *SlaveFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
 
 // Install a frontend manager. This must be the first service created
 // in the frontend. The service will determine if we are running in
-// master or slave context.
+// master or minion context.
 func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 	if config_obj.Frontend == nil {
@@ -343,7 +343,7 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 		return manager.Start(ctx, wg, config_obj)
 	}
 
-	manager := &SlaveFrontendManager{config_obj: config_obj}
+	manager := &MinionFrontendManager{config_obj: config_obj}
 	services.RegisterFrontendManager(manager)
 	return manager.Start(ctx, wg, config_obj)
 }

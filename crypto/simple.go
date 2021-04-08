@@ -75,7 +75,7 @@ func (self *Obfuscator) Decrypt(config_obj *config_proto.Config, name string) (
 		return "", err
 	}
 
-	if len(cipher_text) < 16 {
+	if len(cipher_text) < 16 || len(cipher_text)%16 != 0 {
 		return "", errors.New("Cipher error")
 	}
 

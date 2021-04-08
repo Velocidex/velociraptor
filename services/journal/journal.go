@@ -63,7 +63,7 @@ func (self *JournalService) Start(config_obj *config_proto.Config) error {
 func StartJournalService(
 	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) error {
 
-	// Are we running on a slave frontend? If so we try to start
+	// Are we running on a minion frontend? If so we try to start
 	// our replication service.
 	fe_manager := services.GetFrontendManager()
 	if fe_manager != nil && !fe_manager.IsMaster() {

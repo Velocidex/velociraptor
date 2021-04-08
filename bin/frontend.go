@@ -34,7 +34,7 @@ var (
 	frontend_cmd     = app.Command("frontend", "Run the frontend and GUI.")
 	compression_flag = frontend_cmd.Flag("disable_artifact_compression",
 		"Disables artifact compressions").Bool()
-	frontend_cmd_slave = frontend_cmd.Flag("slave", "This is a slave frontend").Bool()
+	frontend_cmd_minion = frontend_cmd.Flag("minion", "This is a minion frontend").Bool()
 )
 
 func doFrontend() {
@@ -82,7 +82,7 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 	// Start the frontend service if needed. This must happen
 	// first so other services can contact the master node.
 
-	config_obj.Frontend.IsMaster = !*frontend_cmd_slave
+	config_obj.Frontend.IsMaster = !*frontend_cmd_minion
 	err := sm.Start(frontend.StartFrontendService)
 	if err != nil {
 		return nil, err
