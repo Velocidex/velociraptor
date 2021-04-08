@@ -34,7 +34,7 @@ func (self MockFrontendService) IsMaster() bool {
 	return false
 }
 
-// The slave replicates to the master node.
+// The minion replicates to the master node.
 func (self MockFrontendService) GetMasterAPIClient(ctx context.Context) (
 	api_proto.APIClient, func() error, error) {
 	return self.mock, func() error { return nil }, nil
@@ -78,8 +78,8 @@ func (self *ReplicationTestSuite) SetupTest() {
 	self.ctrl = gomock.NewController(self.T())
 	self.mock = mock_proto.NewMockAPIClient(self.ctrl)
 
-	// Replication service only runs on the slave node. We mock
-	// the slave frontend manager so we can inject the RPC mock.
+	// Replication service only runs on the minion node. We mock
+	// the minion frontend manager so we can inject the RPC mock.
 	services.RegisterFrontendManager(&MockFrontendService{self.mock})
 }
 
@@ -148,7 +148,7 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 		return &emptypb.Empty{}, last_error
 	}
 
-	// Push an event into the journal service on the slave. It
+	// Push an event into the journal service on the minion. It
 	// will result in an RPC on the master to pass the event on.
 	self.mock.EXPECT().PushEvents(gomock.Any(), gomock.Any()).
 		DoAndReturn(record_push_event).AnyTimes()

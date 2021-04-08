@@ -24,7 +24,7 @@ package hunt_dispatcher
 // hunt list periodically from the data store to receive fresh data.
 
 // In multi frontend deployments, each node has its own hunt
-// dispatcher, initialized from the data store. On slave nodes, the
+// dispatcher, initialized from the data store. On minion nodes, the
 // hunt dispatcher is not allowed to write updates to the data store,
 // only read them. The master's hunt dispatcher is responsible for
 // maintaining the hunt state across all nodes. In order to update a
@@ -147,8 +147,8 @@ func (self *HuntDispatcher) ModifyHunt(
 	if !services.GetFrontendManager().IsMaster() {
 		// This is really a critical error.
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-		logger.Error("Unable to modify hunts on the slave. Please use MutateHunt()")
-		return errors.New("Unable to modify hunts on the slave. Please use MutateHunt()")
+		logger.Error("Unable to modify hunts on a minion node. Please use MutateHunt()")
+		return errors.New("Unable to modify hunts on a minion node. Please use MutateHunt()")
 	}
 
 	hunt_obj, pres := self.hunts[hunt_id]
@@ -181,7 +181,7 @@ func (self *HuntDispatcher) _flush_stats(config_obj *config_proto.Config) error 
 		return nil
 	}
 
-	// If we are a slave frontend we never flush data - it is up
+	// If we are a minion frontend we never flush data - it is up
 	// to the master to sync the hunts
 	if !services.GetFrontendManager().IsMaster() {
 		return nil
