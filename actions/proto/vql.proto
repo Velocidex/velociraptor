@@ -10,9 +10,11 @@ package proto;
 option go_package = "www.velocidex.com/golang/velociraptor/actions/proto";
 
 message VQLRequest {
+    // DEPRECATED: Will be populated for compatibility with older clients.
     string Name = 2 [(sem_type) = {
             description: "The name of this query. This should be descriptive to indicate what type of informaiton the query retrieves.",
         }];
+    // DEPRECATED: Not used any more.
     string Description = 3 [(sem_type) = {
             description: "What this query is supposed to do.",
         }];

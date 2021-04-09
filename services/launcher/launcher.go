@@ -188,6 +188,13 @@ func (self *Launcher) CompileCollectorArgs(
 
 	result := []*actions_proto.VQLCollectorArgs{}
 
+	// We extract the default resource limits from each artifact
+	// definition and calculate a collection wide default. For
+	// example if a collection specifies artifact A (with max_rows
+	// = 10) and artifact B (with max_rows = 20), then the
+	// collection will have max_rows = 20.
+	var max_rows, max_upload_bytes uint64
+
 	for _, spec := range getCollectorSpecs(collector_request) {
 		var artifact *artifacts_proto.Artifact = nil
 
@@ -208,6 +215,18 @@ func (self *Launcher) CompileCollectorArgs(
 			return nil, err
 		}
 
+		// Adjust collection wide resources to be the maximum
+		// number of all default
+		if artifact.Resources != nil {
+			if artifact.Resources.MaxRows > max_rows {
+				max_rows = artifact.Resources.MaxRows
+			}
+
+			if artifact.Resources.MaxUploadBytes > max_upload_bytes {
+				max_upload_bytes = artifact.Resources.MaxUploadBytes
+			}
+		}
+
 		for _, expanded_artifact := range expandArtifacts(artifact) {
 			vql_collector_args, err := self.GetVQLCollectorArgs(
 				ctx, config_obj, repository, expanded_artifact,
@@ -216,12 +235,30 @@ func (self *Launcher) CompileCollectorArgs(
 				return nil, err
 			}
 
-			vql_collector_args.OpsPerSecond = collector_request.OpsPerSecond
-			vql_collector_args.Timeout = collector_request.Timeout
+			// If the request specifies resource controls
+			// they override the defaults.
+			if collector_request.OpsPerSecond > 0 {
+				vql_collector_args.OpsPerSecond = collector_request.OpsPerSecond
+			}
+
+			if collector_request.Timeout > 0 {
+				vql_collector_args.Timeout = collector_request.Timeout
+			}
+
 			vql_collector_args.MaxRow = 1000
 
 			result = append(result, vql_collector_args)
 		}
+	}
+
+	// Adjust the collection wide resources to take the defaults
+	// from artifacts definitions.
+	if collector_request.MaxRows == 0 {
+		collector_request.MaxRows = max_rows
+	}
+
+	if collector_request.MaxUploadBytes == 0 {
+		collector_request.MaxUploadBytes = max_upload_bytes
 	}
 
 	return result, nil
@@ -242,6 +279,8 @@ func expandArtifacts(artifact *artifacts_proto.Artifact) []*artifacts_proto.Arti
 			if source.Precondition != "" {
 				new_artifact.Precondition = source.Precondition
 			}
+			new_artifact.Resources = artifact.Resources
+
 			result = append(result, new_artifact)
 		}
 		return result

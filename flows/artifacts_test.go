@@ -329,7 +329,7 @@ func (self *TestSuite) TestResourceLimits() {
 		self.client_id, flow_id)
 	assert.NoError(self.T(), err)
 
-	// Collection has 1 row and it is still in the running state.
+	// Collection has 2 rows and it is still in the running state.
 	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(2))
 	assert.Equal(self.T(), collection_context.State,
 		flows_proto.ArtifactCollectorContext_RUNNING)
@@ -347,7 +347,7 @@ func (self *TestSuite) TestResourceLimits() {
 		self.client_id, flow_id)
 	assert.NoError(self.T(), err)
 
-	// Collection has 1 row and it is still in the running state.
+	// Collection has 7 rows and it is still in the running state.
 	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(7))
 	assert.Equal(self.T(), collection_context.State,
 		flows_proto.ArtifactCollectorContext_ERROR)

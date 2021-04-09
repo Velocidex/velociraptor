@@ -112,6 +112,12 @@ LET %v <= if(
 
 	}
 
+	// Apply artifact default resource controls.
+	if artifact.Resources != nil {
+		result.Timeout = artifact.Resources.Timeout
+		result.OpsPerSecond = artifact.Resources.OpsPerSecond
+	}
+
 	return mergeSources(config_obj, options, artifact, result)
 }
 
@@ -147,14 +153,8 @@ func mergeSources(
 		// of an artifact (Although obviously the client can
 		// see the actual VQL query that it is running).
 		name := artifact.Name
-		description := artifact.Description
-
 		if source.Name != "" {
 			name = path.Join(name, source.Name)
-		}
-
-		if source.Description != "" {
-			description = source.Description
 		}
 
 		prefix := fmt.Sprintf("%s_%d", escape_name(name), idx)
@@ -199,17 +199,15 @@ func mergeSources(
 		// TODO: Backwards compatibility for older clients.
 		if precondition != "" {
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				Name:        name,
-				Description: description,
+				Name: name,
 				VQL: fmt.Sprintf(
 					"SELECT * FROM if(then=%s, condition=%s, else={SELECT * FROM scope() WHERE log(message='Query skipped due to precondition') AND FALSE})",
 					source_result, precondition_var),
 			})
 		} else {
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				Name:        name,
-				Description: description,
-				VQL:         "SELECT * FROM " + source_result,
+				Name: name,
+				VQL:  "SELECT * FROM " + source_result,
 			})
 		}
 	}
