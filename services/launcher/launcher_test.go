@@ -532,22 +532,7 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 		ctx, self.config_obj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
-
-	// When we do not obfuscate, artifact descriptions are carried
-	// into the compiled form.
-	assert.Equal(self.T(), compiled[0].Query[1].Description, "This is a test artifact")
-
-	// However when we obfuscate we remove descriptions.
-	self.config_obj.Frontend.DoNotCompressArtifacts = false
-	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
-		services.CompilerOptions{
-			ObfuscateNames: true, /* should_obfuscate */
-		}, request)
-	assert.NoError(self.T(), err)
-
 	assert.Equal(self.T(), compiled[0].Query[1].Description, "")
-
 }
 
 func (self *LauncherTestSuite) TestCompilingPermissions() {
@@ -984,6 +969,91 @@ sources:
 		assert.Error(self.T(), err, "Failed to reject "+definition)
 	}
 
+}
+
+func (self *LauncherTestSuite) TestArtifactResources() {
+	artifact_definitions := []string{`
+name: Test.Artifact.Timeout
+resources:
+  timeout: 5
+  max_rows: 10
+sources:
+- query: |
+    SELECT * FROM scope()
+`, `
+name: Test.Artifact.MaxRows
+resources:
+  max_rows: 20
+sources:
+- query: |
+    SELECT * FROM scope()
+`}
+
+	manager, _ := services.GetRepositoryManager()
+	repository := manager.NewRepository()
+
+	for _, definition := range artifact_definitions {
+		_, err := repository.LoadYaml(definition, true /* validate */)
+		assert.NoError(self.T(), err)
+	}
+
+	request := &flows_proto.ArtifactCollectorArgs{
+		Artifacts: []string{
+			"Test.Artifact.Timeout",
+			"Test.Artifact.MaxRows",
+		},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Compile the artifact request into VQL
+	acl_manager := vql_subsystem.NullACLManager{}
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	// No timeout specified in the request causes the timeout to
+	// be set according to the artifact defaults.
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), getReqName(compiled[0]), "Test.Artifact.Timeout")
+	assert.Equal(self.T(), compiled[0].Timeout, uint64(5))
+
+	// Timeout is not specified in the artifact so it will take on
+	// default value.
+	assert.Equal(self.T(), getReqName(compiled[1]), "Test.Artifact.MaxRows")
+	assert.Equal(self.T(), compiled[1].Timeout, uint64(0))
+
+	// MaxRows is enforced by the server on the entire collection,
+	// therefore the highest MaxRows in any of the collected
+	// artifacts will be chosen.
+	assert.Equal(self.T(), request.MaxRows, uint64(20))
+
+	// Specifying timeout in the request overrides all defaults.
+	request.Timeout = 20
+	request.MaxRows = 100
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.config_obj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), getReqName(compiled[0]), "Test.Artifact.Timeout")
+	assert.Equal(self.T(), compiled[0].Timeout, uint64(20))
+
+	assert.Equal(self.T(), getReqName(compiled[1]), "Test.Artifact.MaxRows")
+	assert.Equal(self.T(), compiled[1].Timeout, uint64(20))
+
+	// Specifying MaxRows in the request overrides the setting.
+	assert.Equal(self.T(), request.MaxRows, uint64(100))
+}
+
+func getReqName(in *actions_proto.VQLCollectorArgs) string {
+	for _, query := range in.Query {
+		if query.Name != "" {
+			return query.Name
+		}
+	}
+	return ""
 }
 
 func TestLauncher(t *testing.T) {

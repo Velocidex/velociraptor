@@ -344,6 +344,7 @@ class NewCollectionConfigParameters extends React.Component {
 
 class NewCollectionResources extends React.Component {
     static propTypes = {
+        artifacts: PropTypes.array,
         resources: PropTypes.object,
         setResources: PropTypes.func,
         paginator: PropTypes.object,
@@ -354,6 +355,24 @@ class NewCollectionResources extends React.Component {
     isInvalid = () => {
         return this.state.invalid_1 || this.state.invalid_2 ||
             this.state.invalid_3 || this.state.invalid_4;
+    }
+
+    getTimeout = (artifacts) => {
+        let timeout = 0;
+        _.each(artifacts, (definition) => {
+            let def_timeout = definition.resources && definition.resources.timeout;
+            def_timeout = def_timeout || 0;
+
+            if (def_timeout > timeout) {
+                timeout = def_timeout;
+            }
+        });
+
+        if (timeout === 0) {
+            timeout = 600;
+        }
+
+        return timeout + "s per artifact";
     }
 
     render() {
@@ -380,7 +399,7 @@ class NewCollectionResources extends React.Component {
                     <Form.Label column sm="3">Max Execution Time in Seconds</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
-                        placeholder="600s per artifact"
+                        placeholder={this.getTimeout(this.props.artifacts)}
                         value={resources.timeout}
                         setInvalid={value => this.setState({invalid_2: value})}
                         setValue={value => this.props.setResources({timeout: value})} />
@@ -591,7 +610,7 @@ class NewCollectionWizard extends React.Component {
             ops_per_second: request.ops_per_second,
             timeout: request.timeout,
             max_rows: request.max_rows,
-            max_mbytes: (request.max_upload_bytes || 0) / 1024 / 1024,
+            max_mbytes: (request.max_upload_bytes) / 1024 / 1024  || undefined,
         };
 
         this.setState({
@@ -730,6 +749,7 @@ class NewCollectionWizard extends React.Component {
             NEXT_STEP: this.gotoNextStep(),
             PREV_STEP: this.gotoPrevStep(),
         };
+
         return (
             <Modal show={true}
                    className="full-height"
@@ -757,6 +777,7 @@ class NewCollectionWizard extends React.Component {
                     request={request}/>
 
                   <NewCollectionResources
+                    artifacts={this.state.artifacts}
                     resources={this.state.resources}
                     paginator={new PaginationBuilder(
                         "Specify Resources",

@@ -118,6 +118,9 @@ message Artifact {
             description: "A list of required permissions to collect this artifact."
         }];
 
+    // Default resource limits.
+    Resources resources = 19;
+
     // An optional list of tool descriptions. These are only used to
     // initialize Velociraptor if there is no previous tool
     // definition. It will not override existing tools. The user may
@@ -241,4 +244,15 @@ message Tool {
 message third_party {
     repeated Tool tools = 1;
     uint64 version = 2;
+}
+
+
+message Resources {
+    // Default timeout for this artifact
+    uint64 timeout = 1;
+    float ops_per_second = 4;
+
+    // Default resource use for the entire collection.
+    uint64 max_rows = 2;
+    uint64 max_upload_bytes = 3;
 }

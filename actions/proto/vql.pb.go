@@ -29,7 +29,9 @@ type VQLRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Name        string `protobuf:"bytes,2,opt,name=Name,proto3" json:"Name,omitempty"`
+	// DEPRECATED: Will be populated for compatibility with older clients.
+	Name string `protobuf:"bytes,2,opt,name=Name,proto3" json:"Name,omitempty"`
+	// DEPRECATED: Not used any more.
 	Description string `protobuf:"bytes,3,opt,name=Description,proto3" json:"Description,omitempty"`
 	VQL         string `protobuf:"bytes,1,opt,name=VQL,proto3" json:"VQL,omitempty"`
 }
