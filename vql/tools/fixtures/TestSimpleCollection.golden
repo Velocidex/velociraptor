@@ -136,7 +136,6 @@
     },
     {
      "Name": "Demo.Plugins.GUI",
-     "Description": "A demo plugin showing some GUI features.\n\nThis plugin is also used for tests.\n",
      "VQL": "SELECT * FROM Demo_Plugins_GUI_0_0"
     }
    ],
