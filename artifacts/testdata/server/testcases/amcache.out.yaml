@@ -1,0 +1,109 @@
+LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict(OS='windows', foo='baz')] ), mock(plugin='glob', results=[dict(FullPath='C:\\Windows\\AppCompat\\Programs\\Amcache.hve')] ), mock(plugin='read_reg_key', results=parse_json_array(data=ReadRegMock)) FROM scope()[]SELECT * FROM Artifact.Windows.Detection.Amcache(SHA1Regex = '1234567890abcdef00001234567890abcdefffff')[
+ {
+  "HivePath": "/C:/Windows/AppCompat/Programs/Amcache.hve",
+  "EntryKey": "\\Root\\File\\3d4ad068-875c-4d05-915d-80dbc131d854\\4800002f315",
+  "KeyMTime": "2021-03-18T23:03:12Z",
+  "EntryType": "File",
+  "SHA1": "1234567890abcdef00001234567890abcdefffff",
+  "EntryName": "a.exe",
+  "EntryPath": "C:\\Users\\Public\\a.exe",
+  "Publisher": null,
+  "OriginalFileName": null,
+  "BinaryType": null,
+  "_Source": "Windows.Detection.Amcache"
+ }
+]SELECT * FROM Artifact.Windows.Detection.Amcache(PathRegex = 'C:\\\\Users\\\\Public\\\\')[
+ {
+  "HivePath": "/C:/Windows/appcompat/Programs/Amcache.hve",
+  "EntryKey": "\\Root\\InventoryApplicationFile\\1.exe|e7ecb4ace0d41711",
+  "KeyMTime": "2021-03-30T21:26:02Z",
+  "EntryType": "InventoryApplicationFile",
+  "SHA1": "12345678611028f3328f52f1f136907d9cb6a701",
+  "EntryName": "1.exe",
+  "EntryPath": "C:\\Users\\Public\\1.exe",
+  "Publisher": null,
+  "OriginalFileName": "",
+  "BinaryType": "pe64_amd64",
+  "_Source": "Windows.Detection.Amcache"
+ },
+ {
+  "HivePath": "/C:/Windows/AppCompat/Programs/Amcache.hve",
+  "EntryKey": "\\Root\\File\\3d4ad068-875c-4d05-915d-80dbc131d854\\4800002f315",
+  "KeyMTime": "2021-03-18T23:03:12Z",
+  "EntryType": "File",
+  "SHA1": "1234567890abcdef00001234567890abcdefffff",
+  "EntryName": "a.exe",
+  "EntryPath": "C:\\Users\\Public\\a.exe",
+  "Publisher": null,
+  "OriginalFileName": null,
+  "BinaryType": null,
+  "_Source": "Windows.Detection.Amcache"
+ }
+]SELECT * FROM Artifact.Windows.Detection.Amcache(NameRegex = '^a\\.exe$')[
+ {
+  "HivePath": "/C:/Windows/AppCompat/Programs/Amcache.hve",
+  "EntryKey": "\\Root\\File\\3d4ad068-875c-4d05-915d-80dbc131d854\\4800002f315",
+  "KeyMTime": "2021-03-18T23:03:12Z",
+  "EntryType": "File",
+  "SHA1": "1234567890abcdef00001234567890abcdefffff",
+  "EntryName": "a.exe",
+  "EntryPath": "C:\\Users\\Public\\a.exe",
+  "Publisher": null,
+  "OriginalFileName": null,
+  "BinaryType": null,
+  "_Source": "Windows.Detection.Amcache"
+ }
+]SELECT * FROM Artifact.Windows.Detection.Amcache()[
+ {
+  "HivePath": "/C:/Windows/appcompat/Programs/Amcache.hve",
+  "EntryKey": "\\Root\\InventoryDevicePnp\\\"pci/ven_8086\u0026dev_10d3\u0026subsys_07d015ad\u0026rev_00/000c29ffff23301200\"",
+  "KeyMTime": "2021-04-09T21:47:09Z",
+  "EntryType": "InventoryDevicePnp",
+  "SHA1": "22a9b6e2023b86e51419c8a43ce567b28093c037",
+  "EntryName": "e1i65x64.sys",
+  "EntryPath": null,
+  "Publisher": "Microsoft",
+  "OriginalFileName": null,
+  "BinaryType": "DevicePnp",
+  "_Source": "Windows.Detection.Amcache"
+ },
+ {
+  "HivePath": "/C:/Windows/appcompat/Programs/Amcache.hve",
+  "EntryKey": "\\Root\\InventoryApplicationFile\\7z.exe|1e434041bd08abf9",
+  "KeyMTime": "2021-01-26T00:44:14Z",
+  "EntryType": "InventoryApplicationFile",
+  "SHA1": "12345678d435163ae3945cbef30ef6b9872a4591",
+  "EntryName": "7z.exe",
+  "EntryPath": "c:\\programdata\\7-zip\\bin\\x64\\7z.exe",
+  "Publisher": "igor pavlov",
+  "OriginalFileName": "7z.exe",
+  "BinaryType": "pe64_amd64",
+  "_Source": "Windows.Detection.Amcache"
+ },
+ {
+  "HivePath": "/C:/Windows/appcompat/Programs/Amcache.hve",
+  "EntryKey": "\\Root\\InventoryApplicationFile\\1.exe|e7ecb4ace0d41711",
+  "KeyMTime": "2021-03-30T21:26:02Z",
+  "EntryType": "InventoryApplicationFile",
+  "SHA1": "12345678611028f3328f52f1f136907d9cb6a701",
+  "EntryName": "1.exe",
+  "EntryPath": "C:\\Users\\Public\\1.exe",
+  "Publisher": null,
+  "OriginalFileName": "",
+  "BinaryType": "pe64_amd64",
+  "_Source": "Windows.Detection.Amcache"
+ },
+ {
+  "HivePath": "/C:/Windows/AppCompat/Programs/Amcache.hve",
+  "EntryKey": "\\Root\\File\\3d4ad068-875c-4d05-915d-80dbc131d854\\4800002f315",
+  "KeyMTime": "2021-03-18T23:03:12Z",
+  "EntryType": "File",
+  "SHA1": "1234567890abcdef00001234567890abcdefffff",
+  "EntryName": "a.exe",
+  "EntryPath": "C:\\Users\\Public\\a.exe",
+  "Publisher": null,
+  "OriginalFileName": null,
+  "BinaryType": null,
+  "_Source": "Windows.Detection.Amcache"
+ }
+]
