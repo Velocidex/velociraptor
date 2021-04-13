@@ -35,6 +35,8 @@ var (
 	compression_flag = frontend_cmd.Flag("disable_artifact_compression",
 		"Disables artifact compressions").Bool()
 	frontend_cmd_minion = frontend_cmd.Flag("minion", "This is a minion frontend").Bool()
+
+	frontend_cmd_node = frontend_cmd.Flag("node", "The name of a minion - selects from available frontend configurations").String()
 )
 
 func doFrontend() {
@@ -47,11 +49,17 @@ func doFrontend() {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
+	if *frontend_cmd_node != "" {
+		kingpin.FatalIfError(frontend.SelectFrontend(
+			*frontend_cmd_node, config_obj),
+			"Selecting minion frontend")
+	}
+
 	sm := services.NewServiceManager(ctx, config_obj)
 	defer sm.Close()
 
 	server, err := startFrontend(sm)
-	kingpin.FatalIfError(err, "startFrontend")
+	kingpin.FatalIfError(err, "startFrontend %+vv", err)
 	defer server.Close()
 
 	sm.Wg.Wait()

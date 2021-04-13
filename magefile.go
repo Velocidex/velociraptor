@@ -73,11 +73,17 @@ func (self *Builder) Name() string {
 		self.extension = ".exe"
 	}
 
-	return fmt.Sprintf("%s-%s-%s-%s%s",
+	name := fmt.Sprintf("%s-%s-%s-%s%s",
 		name, version,
 		self.goos,
 		self.arch,
 		self.extension)
+
+	if self.disable_cgo {
+		name += "-nocgo"
+	}
+
+	return name
 }
 
 func (self *Builder) Env() map[string]string {

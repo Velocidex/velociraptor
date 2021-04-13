@@ -46,6 +46,10 @@ var (
 		"config", "Manipulate the configuration.")
 	config_show_command = config_command.Command(
 		"show", "Show the current config.")
+
+	config_show_command_json = config_show_command.Flag(
+		"json", "Show the config as JSON").Bool()
+
 	config_client_command = config_command.Command(
 		"client", "Dump the client's config file.")
 
@@ -89,10 +93,15 @@ func doShowConfig() {
 	config_obj, err := DefaultConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
 
-	res, err := yaml.Marshal(config_obj)
-	if err != nil {
+	if *config_show_command_json {
+		serialized, err := json.Marshal(config_obj)
 		kingpin.FatalIfError(err, "Unable to encode config.")
+		fmt.Printf("%v", string(serialized))
+		return
 	}
+
+	res, err := yaml.Marshal(config_obj)
+	kingpin.FatalIfError(err, "Unable to encode config.")
 
 	fmt.Printf("%v", string(res))
 }

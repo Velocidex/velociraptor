@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	VERSION                    = "0.5.8-rc1"
+	VERSION                    = "0.5.9-rc1"
 	ENROLLMENT_WELL_KNOWN_FLOW = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 
