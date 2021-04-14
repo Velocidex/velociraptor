@@ -333,7 +333,7 @@ func StartFrontendHttps(
 
 		err := server.ListenAndServeTLS("", "")
 		if err != nil && err != http.ErrServerClosed {
-			server_obj.Error("Frontend server error %v", err)
+			server_obj.Fatal("Frontend server error %v", err)
 		}
 	}()
 
@@ -398,7 +398,7 @@ func StartFrontendPlainHttp(
 
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			server_obj.Error("Frontend server error %v", err)
+			server_obj.Fatal("Frontend server error %v", err)
 		}
 	}()
 
@@ -487,7 +487,7 @@ func StartFrontendWithAutocert(
 
 		err := server.ListenAndServeTLS("", "")
 		if err != nil && err != http.ErrServerClosed {
-			server_obj.Error("Frontend server error", err)
+			server_obj.Fatal("Frontend server error", err)
 		}
 	}()
 

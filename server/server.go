@@ -22,7 +22,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"runtime"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -297,6 +299,14 @@ func (self *Server) DrainRequestsForClient(client_id string) []*crypto_proto.Vel
 	}
 
 	return []*crypto_proto.VeloMessage{}
+}
+
+// Fatal error - terminate immediately.
+func (self *Server) Fatal(msg string, err error) {
+	message := fmt.Sprintf(msg, err)
+	message += "\n" + string(debug.Stack())
+	self.logger.Error(message)
+	os.Exit(-1)
 }
 
 func (self *Server) Error(msg string, err error) {

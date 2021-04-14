@@ -15,6 +15,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -346,4 +347,17 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 	manager := &MinionFrontendManager{config_obj: config_obj}
 	services.RegisterFrontendManager(manager)
 	return manager.Start(ctx, wg, config_obj)
+}
+
+// Selects the node by name from the extra frontends configuration
+func SelectFrontend(node string, config_obj *config_proto.Config) error {
+	for _, fe := range config_obj.ExtraFrontends {
+		fe_name := fmt.Sprintf("%v:%v", fe.Hostname, fe.BindPort)
+		if fe_name == node {
+			proto.Merge(config_obj.Frontend, fe)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("Frontend %v not found!", node)
 }

@@ -3,7 +3,7 @@
 <?define PackageDescription="Velociraptor Service Installer" ?>
 <?define Manufacturer="Velocidex" ?>
 <?define Name="Velociraptor" ?>
-<?define Version="0.48.0" ?>
+<?define Version="0.59.0" ?>
 <?define BinaryName="Velociraptor.exe" ?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
@@ -63,7 +63,7 @@
             </ServiceInstall>
             <ServiceControl
                 Id="StartService"
-                Name="Velociraptor"
+                Name="$(var.Name)"
                 Stop="both"
                 Start="install"
                 Remove="uninstall" Wait="yes" />

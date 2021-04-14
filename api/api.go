@@ -20,7 +20,6 @@ package api
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -29,6 +28,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	errors "github.com/pkg/errors"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -1128,7 +1129,7 @@ func startAPIServer(
 
 	lis, err := net.Listen(config_obj.API.BindScheme, bind_addr)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	// Use the server certificate to secure the gRPC connection.
@@ -1136,7 +1137,7 @@ func startAPIServer(
 		[]byte(config_obj.Frontend.Certificate),
 		[]byte(config_obj.Frontend.PrivateKey))
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	// Authenticate API clients using certificates.
