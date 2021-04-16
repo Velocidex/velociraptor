@@ -1,68 +1,81 @@
-/*
-   Velociraptor - Hunting Evil
-   Copyright (C) 2019 Velocidex Innovations.
-
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
-
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
-
-// This plugin provides support for parsing sqlite files. Because we
-// use the actual library we must provide it with a file on
-// disk. Since VQL may specify an arbitrary accessor, we can make a
-// temp copy of the sqlite file in order to query it. The temp copy
-// remains alive for the duration of the query, and we will cache it.
-// Deprecated. Used SQL Plugin instead
+//+build extras
 package parsers
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/go-sql-driver/mysql"
 	"www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
-type _SQLiteArgs struct {
-	Filename string      `vfilter:"required,field=file"`
-	Accessor string      `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	Query    string      `vfilter:"required,field=query"`
-	Args     vfilter.Any `vfilter:"optional,field=args"`
+type SQLPluginArgs struct {
+	Driver     string      `vfilter:"required,field=driver, doc=sqlite, mysql,or postgres"`
+	ConnString string      `vfilter:"optional,field=connstring, doc=SQL Connection String"`
+	Filename   string      `vfilter:"optional,field=file, doc=Required if using sqlite driver"`
+	Accessor   string      `vfilter:"optional,field=accessor,doc=The accessor to use if using sqlite"`
+	Query      string      `vfilter:"required,field=query"`
+	Args       vfilter.Any `vfilter:"optional,field=args"`
 }
 
-type _SQLitePlugin struct{}
+type SQLPlugin struct{}
 
-func (self _SQLitePlugin) Call(
+// Get DB handle from cache if it exists, else create a new connection
+func (self SQLPlugin) GetHandleOther(scope vfilter.Scope, connstring string, driver string) (*sqlx.DB, error) {
+	cacheKey := fmt.Sprintf("%s %s", driver, connstring)
+	client := vql_subsystem.CacheGet(scope, cacheKey)
+
+	if client == nil {
+		client, err := sqlx.Open(driver, connstring)
+		if err != nil {
+			return nil, err
+		}
+		if driver == "mysql" {
+			// Important settings according to mysql driver README
+			client.SetConnMaxLifetime(time.Minute * 3)
+			client.SetMaxOpenConns(10)
+			client.SetMaxIdleConns(10)
+		}
+		return client, nil
+
+	}
+	switch t := client.(type) {
+	case error:
+		return nil, t
+	case *sqlx.DB:
+		return t, nil
+	default:
+		return nil, errors.New("Error")
+	}
+
+}
+
+func (self SQLPlugin) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
-		scope.Log("sqlite plugin deprecated. Use sql instead")
 		defer close(output_chan)
 		defer utils.RecoverVQL(scope)
 
-		arg := &_SQLiteArgs{}
+		arg := &SQLPluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
-			scope.Log("sqlite: %v", err)
+			scope.Log("sql: %v", err)
 			return
 		}
 
@@ -70,16 +83,37 @@ func (self _SQLitePlugin) Call(
 			arg.Accessor = "file"
 		}
 
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("sqlite: %s", err)
+		if arg.Driver != "sqlite" && arg.Driver != "mysql" && arg.Driver != "postgres" {
+			scope.Log("sql: Unsupported driver %s!", arg.Driver)
 			return
 		}
 
-		handle, err := self.GetHandle(ctx, arg, scope)
-		if err != nil {
-			scope.Log("sqlite: %v", err)
-			return
+		var handle *sqlx.DB
+		if arg.Driver == "sqlite" {
+			if arg.Filename == "" {
+				scope.Log("sql: file parameter required for sqlite driver!")
+				return
+			}
+			handle, err = self.GetHandleSqlite(ctx, arg, scope)
+			if err != nil {
+				scope.Log("sql: %s", err)
+				return
+			}
+			err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+			if err != nil {
+				scope.Log("sql: %s", err)
+				return
+			}
+		} else {
+			if arg.ConnString == "" {
+				scope.Log("sql: file parameter required for %s driver!", arg.Driver)
+				return
+			}
+			handle, err = self.GetHandleOther(scope, arg.ConnString, arg.Driver)
+			if err != nil {
+				scope.Log("sql: %s", err)
+				return
+			}
 		}
 
 		query_parameters := []interface{}{}
@@ -101,22 +135,19 @@ func (self _SQLitePlugin) Call(
 		}
 		rows, err := handle.Queryx(query, query_parameters...)
 		if err != nil {
-			scope.Log("sqlite: %v", err)
+			scope.Log("sql: %v", err)
 			return
 		}
 		defer rows.Close()
-
 		columns, err := rows.Columns()
 		if err != nil {
-			scope.Log("sqlite: %v", err)
-			return
+			scope.Log("sql: %s", err)
 		}
-
 		for rows.Next() {
 			row := ordereddict.NewDict()
 			values, err := rows.SliceScan()
 			if err != nil {
-				scope.Log("sqlite: %v", err)
+				scope.Log("sql: %v", err)
 				return
 			}
 
@@ -138,13 +169,16 @@ func (self _SQLitePlugin) Call(
 		}
 
 	}()
-
 	return output_chan
 }
 
-func (self _SQLitePlugin) GetHandle(
+func VFSPathToFilesystemPath(path string) string {
+	return strings.TrimPrefix(path, "\\")
+}
+// Get DB Handle for SQLite Databases
+func (self SQLPlugin) GetHandleSqlite(
 	ctx context.Context,
-	arg *_SQLiteArgs, scope vfilter.Scope) (
+	arg *SQLPluginArgs, scope vfilter.Scope) (
 	handle *sqlx.DB, err error) {
 	filename := VFSPathToFilesystemPath(arg.Filename)
 
@@ -204,9 +238,9 @@ func (self _SQLitePlugin) GetHandle(
 	return handle, nil
 }
 
-func (self _SQLitePlugin) _MakeTempfile(
+func (self SQLPlugin) _MakeTempfile(
 	ctx context.Context,
-	arg *_SQLiteArgs, filename string,
+	arg *SQLPluginArgs, filename string,
 	scope vfilter.Scope) (
 	string, error) {
 
@@ -222,7 +256,7 @@ func (self _SQLitePlugin) _MakeTempfile(
 
 	// Make sure the file is removed when the query is done.
 	remove := func() {
-		scope.Log("sqlite: removing tempfile %v", tmpfile.Name())
+		scope.Log("sql: removing tempfile %v", tmpfile.Name())
 		err = os.Remove(tmpfile.Name())
 		if err != nil {
 			scope.Log("Error removing file: %v", err)
@@ -253,14 +287,14 @@ func (self _SQLitePlugin) _MakeTempfile(
 	return tmpfile.Name(), nil
 }
 
-func (self _SQLitePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self SQLPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "sqlite",
-		Doc:     "Opens an SQLite file and run a query against it.",
-		ArgType: type_map.AddType(scope, &_SQLiteArgs{}),
+		Name:    "sql",
+		Doc:     "Run queries against sqlite, mysql, and postgres databases",
+		ArgType: type_map.AddType(scope, &SQLPluginArgs{}),
 	}
 }
 
 func init() {
-	vql_subsystem.RegisterPlugin(&_SQLitePlugin{})
+	vql_subsystem.RegisterPlugin(&SQLPlugin{})
 }
