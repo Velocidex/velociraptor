@@ -1,32 +1,32 @@
 name: Windows.Detection.Amcache
 author: Matt Green - @mgreen27
 description: |
-    This artifact collects AMCache entries with a SHA1 hash to enable threat 
-    detection.  
-    
-    AmCache is an artifact which stores metadata related to PE execution and 
-    program installation on Windows 7 and Server 2008 R2 and above. This artifact 
-    includes EntryName, EntryPath and SHA1 as great data points for IOC collection. 
-    Secondary datapoints include publisher/company, BinaryType and OriginalFileName.  
-    
-    Available filters include:  
-    
-      - SHA1regex - regex entries to filter by SHA1.   
-      - PathRegex - filter on path if available. 
+    This artifact collects AMCache entries with a SHA1 hash to enable threat
+    detection.
+
+    AmCache is an artifact which stores metadata related to PE execution and
+    program installation on Windows 7 and Server 2008 R2 and above. This artifact
+    includes EntryName, EntryPath and SHA1 as great data points for IOC collection.
+    Secondary datapoints include publisher/company, BinaryType and OriginalFileName.
+
+    Available filters include:
+
+      - SHA1regex - regex entries to filter by SHA1.
+      - PathRegex - filter on path if available.
       - NameRegex - filter on EntryName / binary.
-      
-    NOTE:   
-    
-      - Secondary fields are not consistent across AMCache types and some legacy 
-      versions do not return these fields. 
-      - Some enrichment has occured but any secondary fields should be treated as 
-      guidance only.  
-      - This artifact collects only entries with a SHA1, for complete AMCache 
+
+    NOTE:
+
+      - Secondary fields are not consistent across AMCache types and some legacy
+      versions do not return these fields.
+      - Some enrichment has occured but any secondary fields should be treated as
+      guidance only.
+      - This artifact collects only entries with a SHA1, for complete AMCache
       analysis please download raw artifact sets.
 
 reference:
   - https://www.ssi.gouv.fr/uploads/2019/01/anssi-coriin_2019-analysis_amcache.pdf
-  
+
 parameters:
   - name: AMCacheGlob
     default: "%SYSTEMROOT%/appcompat/Programs/Amcache.hve"
@@ -42,14 +42,14 @@ parameters:
     description: Regex of recorded path.
   - name: NameRegex
     description: Regex of entry / binary name
-    
+
 
 sources:
   - queries:
       - |
         LET files <= SELECT FullPath FROM glob(globs=expand(path=AMCacheGlob))
-        
-        SELECT * FROM foreach(row=files, 
+
+        SELECT * FROM foreach(row=files,
                 query={
                     SELECT
                       url(parse=Key.FullPath).Path As HivePath,
@@ -57,42 +57,48 @@ sources:
                       Key.ModTime as KeyMTime,
                       parse_string_with_regex(string=Key.FullPath,
                           regex='%5CRoot%5C(\\w+)%5C').g1 as EntryType,
-                      if(condition= FileId,
-                          then = strip(string=FileId,prefix='0000'),
-                      else= if(condition= `101`,
-                          then= strip(string=`101`,prefix='0000'),
-                      else= if(condition= DriverId,
-                          then= strip(string=DriverId,prefix='0000')))) as SHA1,
-                      if(condition=Name,
-                          then=Name,
-                          else= if(condition=FriendlyName,
-                              then=FriendlyName,
-                              else=if(condition=`15`,
-                                  then=split(string=str(str=`15`), sep='\\\\')[-1],
-                                  else= if(condition=DriverName,
-                                    then=DriverName)))) as EntryName,
-                      if(condition=LowerCaseLongPath,
+
+                      if(condition=get(member="FileId"),
+                         then=strip(string=FileId, prefix='0000'),
+                      else=if(condition=get(member="101"),
+                         then=strip(string=`101`, prefix='0000'),
+                      else=if(condition=get(member="DriverId"),
+                         then=strip(string=DriverId, prefix='0000')))) as SHA1,
+
+                      if(condition=get(member="Name"),
+                         then=Name,
+                      else=if(condition=get(member="FriendlyName"),
+                         then=FriendlyName,
+                      else=if(condition=get(member="15"),
+                         then=split(string=str(str=`15`), sep='\\\\')[-1],
+                      else=if(condition=get(member="DriverName"),
+                         then=DriverName)))) as EntryName,
+
+                      if(condition=get(member="LowerCaseLongPath"),
                           then=LowerCaseLongPath,
-                          else= if(condition=`15`,
-                              then=`15`,
-                          else=if(condition=AddinCLSID,
-                              then=AddinCLSID))) as EntryPath,
-                      if(condition=Publisher,
+                      else=if(condition=get(member="15"),
+                          then=`15`,
+                      else=if(condition=get(member="AddinCLSID"),
+                          then=AddinCLSID))) as EntryPath,
+
+                      if(condition=get(member="Publisher"),
                           then=Publisher,
-                          else=if(condition=Provider,
-                              then=Provider,
-                              else= if(condition=DriverCompany,
-                                  then=DriverCompany))) as Publisher,
-                      OriginalFileName,
-                      if(condition =BinaryType,
-                          then= BinaryType,
-                          else=if(condition=AddInType,
-                              then=AddinType + ' ' + OfficeArchitecture,
-                          else= if(condition=Key.FullPath=~ 'InventoryDevicePnp',
-                              then='DevicePnp',
-                              else=if(condition=Key.FullPath=~'InventoryDriverBinary',
-                                  then='DriverBinary')))) as BinaryType
-  
+                      else=if(condition=get(member="Provider"),
+                          then=Provider,
+                      else=if(condition=get(member="DriverCompany"),
+                          then=DriverCompany))) as Publisher,
+
+                      get(member="OriginalFileName") AS OriginalFileName,
+
+                      if(condition=get(member="BinaryType"),
+                         then=BinaryType,
+                      else=if(condition=get(member="AddInType"),
+                         then=AddinType + ' ' + OfficeArchitecture,
+                      else=if(condition=Key.FullPath =~ 'InventoryDevicePnp',
+                         then='DevicePnp',
+                      else=if(condition=Key.FullPath =~ 'InventoryDriverBinary',
+                         then='DriverBinary')))) as BinaryType
+
                     FROM read_reg_key(globs=url(scheme='file', path=FullPath,
                                  fragment=KeyPathGlob).String,accessor='raw_reg')
                     WHERE SHA1
@@ -104,7 +110,3 @@ sources:
                             then= EntryPath =~ PathRegex,
                             else= True)
             })
-
-        
-        
-        
