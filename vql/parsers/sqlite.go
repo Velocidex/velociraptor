@@ -21,6 +21,7 @@
 // disk. Since VQL may specify an arbitrary accessor, we can make a
 // temp copy of the sqlite file in order to query it. The temp copy
 // remains alive for the duration of the query, and we will cache it.
+// Deprecated. Used SQL Plugin instead
 package parsers
 
 import (
@@ -53,6 +54,22 @@ func (self _SQLitePlugin) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+	go func() {
+		scope.Log("sqlite plugin deprecated. Use sql instead")
+		defer close(output_chan)
+		defer utils.RecoverVQL(scope)
+
+		arg := &_SQLiteArgs{}
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("sqlite: %v", err)
+			return
+		}
+
+		if arg.Accessor == "" {
+			arg.Accessor = "file"
+		}
 
 	args.Set("driver", "sqlite")
 
@@ -60,16 +77,9 @@ func (self _SQLitePlugin) Call(
 	return SQLPlugin{}.Call(ctx, scope, args)
 }
 
-// Velociraptor always uses the path separator at the root of
-// filesystem (on windows this means before the drive letter). This
-// convension confuses the sqlite driver. So convert
-// "\C:\Windows\X.sqlite" to "C:\Windows\X.sqlite"
-func VFSPathToFilesystemPath(path string) string {
-	return strings.TrimPrefix(path, "\\")
-}
-
-func GetHandleSqlite(ctx context.Context,
-	arg *SQLPluginArgs, scope vfilter.Scope) (
+func (self _SQLitePlugin) GetHandle(
+	ctx context.Context,
+	arg *_SQLiteArgs, scope vfilter.Scope) (
 	handle *sqlx.DB, err error) {
 	filename := VFSPathToFilesystemPath(arg.Filename)
 
