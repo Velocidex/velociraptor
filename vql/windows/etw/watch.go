@@ -17,6 +17,7 @@ type WatchETWArgs struct {
 	Provider    string `vfilter:"required,field=guid,doc=A Provider GUID to watch "`
 	AnyKeywords uint64 `vfilter:"optional,field=any,doc=Any Keywords "`
 	AllKeywords uint64 `vfilter:"optional,field=all,doc=All Keywords "`
+	Level       int64  `vfilter:"optional,field=level,doc=Log level (0-5)"`
 }
 
 type WatchETWPlugin struct{}
@@ -37,6 +38,11 @@ func (self WatchETWPlugin) Call(
 			return
 		}
 
+		// By default listen to DEBUG level logs
+		if arg.Level == 0 {
+			arg.Level = 5
+		}
+
 		guid, err := windows.GUIDFromString(arg.Provider)
 		if err != nil {
 			scope.Log("watch_etw: %s", err.Error())
@@ -45,6 +51,7 @@ func (self WatchETWPlugin) Call(
 		session, err := etw.NewSession(guid, func(cfg *etw.SessionOptions) {
 			cfg.MatchAnyKeyword = arg.AnyKeywords
 			cfg.MatchAllKeyword = arg.AllKeywords
+			cfg.Level = etw.TraceLevel(arg.Level)
 		})
 
 		if err != nil {

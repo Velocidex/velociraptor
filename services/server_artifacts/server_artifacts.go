@@ -281,8 +281,13 @@ func (self *ServerArtifactsRunner) runQuery(
 		return errors.New("Query should be specified")
 	}
 
+	timeout := time.Duration(arg.Timeout) * time.Second
+	if timeout == 0 {
+		timeout = self.timeout
+	}
+
 	// Cancel the query after this deadline
-	deadline := time.After(self.timeout)
+	deadline := time.After(timeout)
 	collection_context.Modify(
 		func(context *flows_proto.ArtifactCollectorContext) {
 			context.StartTime = uint64(time.Now().UnixNano() / 1000)
