@@ -222,9 +222,14 @@ func (self EnumerateFlowPlugin) Call(
 		}
 
 		for _, artifact_name := range collection_context.ArtifactsWithResults {
-			result_path, err := artifact_paths.NewArtifactPathManager(
-				config_obj, arg.ClientId, arg.FlowId, artifact_name).
-				GetPathForWriting()
+			path_manager, err := artifact_paths.NewArtifactPathManager(
+				config_obj, arg.ClientId, arg.FlowId, artifact_name)
+			if err != nil {
+				scope.Log("enumerate_flow: %v", err)
+				continue
+			}
+
+			result_path, err := path_manager.GetPathForWriting()
 			if err != nil {
 				scope.Log("enumerate_flow: %v", err)
 				continue

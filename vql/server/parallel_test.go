@@ -87,9 +87,10 @@ func (self *TestSuite) TestArtifactSource() {
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 
-	path_manager := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(
 		self.config_obj, self.client_id, self.flow_id,
 		"Test.Artifact")
+	assert.NoError(self.T(), err)
 
 	// Append logs to messages from previous packets.
 	rs_writer, err := result_sets.NewResultSetWriter(
@@ -180,8 +181,9 @@ func (self *TestSuite) TestHuntsSource() {
 			Set("ts", 0).
 			Set("Timestamp", 0))
 
-		path_manager := artifacts.NewArtifactPathManager(
+		path_manager, err := artifacts.NewArtifactPathManager(
 			self.config_obj, client_id, flow_id, "Test.Artifact")
+		assert.NoError(self.T(), err)
 
 		// Append logs to messages from previous packets.
 		rs_writer, err := result_sets.NewResultSetWriter(

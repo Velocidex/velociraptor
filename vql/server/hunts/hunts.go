@@ -262,11 +262,15 @@ func (self HuntResultsPlugin) Call(
 			}
 
 			// Read individual flow's results.
-			path_manager := artifact_paths.NewArtifactPathManager(
+			path_manager, err := artifact_paths.NewArtifactPathManager(
 				config_obj,
 				participation_row.ClientId,
 				participation_row.FlowId,
 				arg.Artifact)
+			if err != nil {
+				continue
+			}
+
 			row_chan, err := file_store.GetTimeRange(
 				ctx, config_obj, path_manager, 0, 0)
 			if err != nil {

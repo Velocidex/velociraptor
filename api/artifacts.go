@@ -383,14 +383,23 @@ func (self *ApiServer) ListAvailableEventResults(
 		return nil, err
 	}
 
-	path_manager := artifacts.NewMonitoringArtifactPathManager(in.ClientId)
+	path_manager, err := artifacts.NewArtifactLogPathManager(
+		self.config, in.ClientId, "", "Generic.Client.Stats")
+	if err != nil {
+		return nil, err
+	}
+	// The root path where we store all day logs for all
+	// artifacts. We walk this path to find all the day logs for
+	// this client.
+	log_path := path_manager.GetRootPath()
+
 	file_store_factory := file_store.GetFileStore(self.config)
 
 	seen := make(map[string]*api_proto.AvailableEvent)
-	err = file_store_factory.Walk(path_manager.Path(),
+	err = file_store_factory.Walk(log_path,
 		func(full_path string, info os.FileInfo, err error) error {
 			if !info.IsDir() && info.Size() > 0 {
-				relative_path := strings.TrimPrefix(full_path, path_manager.Path())
+				relative_path := strings.TrimPrefix(full_path, log_path)
 				artifact_name := strings.TrimLeft(path.Dir(relative_path), "/")
 				date_name := path.Base(relative_path)
 				timestamp := paths.DayNameToTimestamp(date_name)

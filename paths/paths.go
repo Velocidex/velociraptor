@@ -11,12 +11,12 @@ import (
 
 const (
 	// The different types of artifacts.
-	MODE_INVALID      = 0
-	MODE_CLIENT       = 1
-	MODE_CLIENT_EVENT = 2
-	MODE_SERVER       = 3
-	MODE_SERVER_EVENT = 4
-	INTERNAL          = 5
+	MODE_INVALID = iota
+	MODE_CLIENT
+	MODE_CLIENT_EVENT
+	MODE_SERVER
+	MODE_SERVER_EVENT
+	INTERNAL
 )
 
 func ModeNameToMode(name string) int {

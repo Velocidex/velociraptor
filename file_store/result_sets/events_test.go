@@ -181,11 +181,13 @@ func (self *TimedResultSetTestSuite) TestTimedResultSets() {
 		self.config_obj, self.file_store).(*directory.DirectoryQueueManager)
 	qm.Clock = clock
 
-	path_manager := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(
 		self.config_obj,
 		self.client_id,
 		self.flow_id,
 		"Windows.Events.ProcessCreation")
+	assert.NoError(self.T(), err)
+
 	path_manager.Clock = clock
 
 	// Push an event every hour for 48 hours.

@@ -251,6 +251,8 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 	reader := bytes.NewReader(data)
 	req, err := http.NewRequest("POST", self.GetCurrentUrl(handler), reader)
 	if err != nil {
+		self.logger.Info("Post to %v returned %v - advancing to next server\n",
+			self.GetCurrentUrl(handler), err)
 		self.advanceToNextServer()
 		return nil, errors.WithStack(err)
 	}
@@ -262,6 +264,9 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 
 	resp, err := self.client.Do(req)
 	if err != nil {
+		self.logger.Info("Post to %v returned %v - advancing to next server\n",
+			self.GetCurrentUrl(handler), err)
+
 		// POST error - rotate to next URL
 		self.advanceToNextServer()
 		return nil, errors.WithStack(err)
@@ -272,6 +277,8 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 	if resp.StatusCode == 301 {
 		dest, pres := resp.Header["Location"]
 		if !pres || len(dest) == 0 {
+			self.logger.Info("Redirect without location header - advancing\n")
+
 			self.advanceToNextServer()
 			return nil, errors.New("Redirect without a Location header?")
 		}
@@ -328,6 +335,9 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 		return resp, nil
 
 	} else if resp.StatusCode != 200 {
+		self.logger.Info("Post to %v returned %v - advancing\n",
+			self.GetCurrentUrl(handler), resp.StatusCode)
+
 		// POST error - rotate to next URL
 		self.advanceToNextServer()
 
@@ -392,7 +402,6 @@ func (self *HTTPConnector) ReKeyNextServer() {
 		}
 
 		self.advanceToNextServer()
-
 	}
 }
 
@@ -567,7 +576,7 @@ func (self *NotificationReader) sendMessageList(
 func (self *NotificationReader) sendToURL(
 	ctx context.Context,
 	message_list [][]byte,
-	urgent bool) error {
+	urgent bool) (err error) {
 
 	if self.connector.ServerName() == "" {
 		self.connector.ReKeyNextServer()
