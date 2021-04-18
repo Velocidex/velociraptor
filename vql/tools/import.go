@@ -21,7 +21,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -40,7 +39,7 @@ type ImportCollectionFunctionArgs struct {
 
 type ImportCollectionFunction struct{}
 
-func (self *ImportCollectionFunction) Call(ctx context.Context,
+func (self ImportCollectionFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
@@ -141,8 +140,6 @@ func (self *ImportCollectionFunction) Call(ctx context.Context,
 		CreateTime: uint64(time.Now().UnixNano() / 1000),
 		State:      flows_proto.ArtifactCollectorContext_FINISHED,
 	}
-
-	json.Dump(new_flow)
 
 	uploaded_files_result_set, err := result_sets.NewResultSetWriter(
 		file_store_factory, path_manager.UploadMetadata(),

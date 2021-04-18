@@ -55,7 +55,7 @@ func GetApiClient(
 		ClientId: client_id,
 	}
 
-	// Special well know client id.
+	// Special well known client id.
 	if client_id == "server" {
 		return result, nil
 	}
@@ -95,7 +95,8 @@ func GetApiClient(
 	err = db.GetSubject(config_obj, client_path_manager.Key().Path(),
 		public_key_info)
 	if err != nil {
-		return nil, err
+		// Offline clients do not have public key files, so
+		// this is not actually an error.
 	}
 
 	result.FirstSeenAt = public_key_info.EnrollTime
@@ -103,7 +104,8 @@ func GetApiClient(
 	err = db.GetSubject(config_obj, client_path_manager.Ping().Path(),
 		client_info)
 	if err != nil {
-		return nil, err
+		// Offline clients do not have public key files, so
+		// this is not actually an error.
 	}
 
 	result.LastSeenAt = client_info.Ping
