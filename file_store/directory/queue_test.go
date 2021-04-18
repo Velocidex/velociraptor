@@ -104,8 +104,9 @@ func (self *TestSuite) TestQueueManager() {
 
 	reader, cancel := manager.Watch(ctx, "TestQueue")
 
-	path_manager := artifacts.NewMonitoringArtifactLogPathManager(self.config_obj,
-		"C.123", "TestQueue")
+	path_manager, err := artifacts.NewArtifactPathManager(self.config_obj,
+		"C.123", "", "TestQueue")
+	assert.NoError(self.T(), err)
 
 	// Query the state of the manager for testing.
 	dbg := manager.Debug()

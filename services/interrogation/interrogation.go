@@ -157,8 +157,12 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	client_id, flow_id string) error {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	path_manager := artifacts.NewArtifactPathManager(config_obj,
+	path_manager, err := artifacts.NewArtifactPathManager(config_obj,
 		client_id, flow_id, "Generic.Client.Info/BasicInformation")
+	if err != nil {
+		return err
+	}
+
 	rs_reader, err := result_sets.NewResultSetReader(
 		file_store_factory, path_manager)
 	if err != nil {

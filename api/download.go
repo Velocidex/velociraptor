@@ -166,9 +166,12 @@ func getRSReader(
 
 	// We want an event table.
 	if request.Type == "CLIENT_EVENT" || request.Type == "SERVER_EVENT" {
-		path_manager := artifacts.NewArtifactPathManager(
+		path_manager, err := artifacts.NewArtifactPathManager(
 			config_obj, request.ClientId, request.FlowId,
 			request.Artifact)
+		if err != nil {
+			return nil, "", err
+		}
 
 		log_path, err := path_manager.GetPathForWriting()
 		if err != nil {
@@ -182,7 +185,11 @@ func getRSReader(
 		return rs_reader, log_path, err
 
 	} else {
-		path_manager := getPathManager(config_obj, request)
+		path_manager, err := getPathManager(config_obj, request)
+		if err != nil {
+			return nil, "", err
+		}
+
 		log_path, err := path_manager.GetPathForWriting()
 		if err != nil {
 			return nil, "", err

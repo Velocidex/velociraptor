@@ -68,8 +68,13 @@ func (self *VFSService) ProcessDownloadFile(
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 
-	path_manager := artifacts.NewArtifactPathManager(config_obj,
+	path_manager, err := artifacts.NewArtifactPathManager(config_obj,
 		client_id, flow_id, "System.VFS.DownloadFile")
+	if err != nil {
+		logger.Error("Unable to read artifact: %v", err)
+		return
+	}
+
 	row_chan, err := file_store.GetTimeRange(
 		ctx, config_obj, path_manager, 0, 0)
 	if err != nil {
@@ -131,8 +136,12 @@ func (self *VFSService) ProcessListDirectory(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("VFSService: Processing System.VFS.ListDirectory from %v", client_id)
 
-	path_manager := artifacts.NewArtifactPathManager(config_obj,
+	path_manager, err := artifacts.NewArtifactPathManager(config_obj,
 		client_id, flow_id, "System.VFS.ListDirectory")
+	if err != nil {
+		logger.Error("Unable to read artifact: %v", err)
+		return
+	}
 
 	row_chan, err := file_store.GetTimeRange(
 		ctx, config_obj, path_manager, 0, 0)

@@ -159,7 +159,8 @@ class VeloPagedTable extends Component {
 
 
     fetchRows = () => {
-        if (_.isEmpty(this.props.params)) {
+        if (_.isEmpty(this.props.params) || !this.props.params.artifact) {
+            this.setState({loading: false});
             return;
         }
 

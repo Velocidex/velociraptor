@@ -101,11 +101,13 @@ func (self *PathManageTestSuite) TestPathManager() {
 	ts := int64(1587800823)
 
 	for _, testcase := range path_tests {
-		path_manager := artifacts.NewArtifactPathManager(
+		path_manager, err := artifacts.NewArtifactPathManager(
 			self.config_obj,
 			testcase.client_id,
 			testcase.flow_id,
 			testcase.full_artifact_name)
+		assert.NoError(self.T(), err)
+
 		path_manager.Clock = utils.MockClock{MockNow: time.Unix(ts, 0)}
 		path, err := path_manager.GetPathForWriting()
 		assert.NoError(self.T(), err)
@@ -135,11 +137,12 @@ func (self *PathManageTestSuite) TestPathManagerDailyRotations() {
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	clock := &utils.MockClock{}
 
-	path_manager := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(
 		self.config_obj,
 		"C.123",
 		"F.123",
 		"Windows.Events.ProcessCreation")
+	assert.NoError(self.T(), err)
 	path_manager.Clock = clock
 
 	qm := directory.NewDirectoryQueueManager(

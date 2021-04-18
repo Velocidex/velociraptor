@@ -57,6 +57,7 @@ func (self *NotificationPool) Listen(client_id string) (chan bool, func()) {
 		defer close(c)
 		delete(self.clients, client_id)
 	}
+
 	self.clients[client_id] = new_c
 	self.mu.Unlock()
 

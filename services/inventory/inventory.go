@@ -358,9 +358,10 @@ func StartInventoryService(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
-	notification, cancel := services.GetNotifier().ListenForNotification(
-		constants.ThirdPartyInventory)
-	defer cancel()
+	notifier := services.GetNotifier()
+	if notifier == nil {
+		return errors.New("Notification service not started")
+	}
 
 	wg.Add(1)
 	go func() {
@@ -369,6 +370,9 @@ func StartInventoryService(
 		defer inventory_service.Close()
 
 		for {
+			notification, cancel := notifier.ListenForNotification(
+				constants.ThirdPartyInventory)
+
 			select {
 			case <-ctx.Done():
 				return
@@ -379,7 +383,7 @@ func StartInventoryService(
 					logger.Error("StartInventoryService: %v", err)
 				}
 
-			case <-time.After(time.Second):
+			case <-time.After(600 * time.Second):
 				err = inventory_service.LoadFromFile(config_obj)
 				if err != nil {
 					logger.Error("StartInventoryService: %v", err)
@@ -387,12 +391,6 @@ func StartInventoryService(
 			}
 
 			cancel()
-			notifier := services.GetNotifier()
-			if notifier == nil {
-				return
-			}
-			notification, cancel = notifier.ListenForNotification(
-				constants.ThirdPartyInventory)
 		}
 	}()
 

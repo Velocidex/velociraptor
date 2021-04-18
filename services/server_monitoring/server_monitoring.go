@@ -6,7 +6,9 @@ package server_monitoring
 
 import (
 	"context"
+	"log"
 	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
@@ -156,13 +158,34 @@ func (self *EventTable) RunQuery(
 		return err
 	}
 
+	artifact_name := getArtifactName(vql_request)
+	path_manager, err := artifacts.NewArtifactPathManager(
+		config_obj, "", "", artifact_name)
+	if err != nil {
+		return err
+	}
+
+	path_manager.Clock = self.Clock
+
+	// We write the logs to special files.
+	log_path_manager, err := artifacts.NewArtifactLogPathManager(
+		config_obj, "server", "", artifact_name)
+	if err != nil {
+		return err
+	}
+	log_path_manager.Clock = self.Clock
+
 	builder := services.ScopeBuilder{
 		Config: config_obj,
 		// Disable ACLs on the client.
 		ACLManager: vql_subsystem.NullACLManager{},
 		Env:        ordereddict.NewDict(),
 		Repository: repository,
-		Logger:     logging.NewPlainLogger(config_obj, &logging.FrontendComponent),
+		Logger: log.New(&serverLogger{
+			config_obj:   self.config_obj,
+			path_manager: log_path_manager,
+			Clock:        self.Clock,
+		}, "", 0),
 	}
 
 	for _, env_spec := range vql_request.Env {
@@ -173,16 +196,17 @@ func (self *EventTable) RunQuery(
 	vfilter.InstallThrottler(
 		scope, vfilter.NewTimeThrottler(float64(50)))
 
+	// Log a heartbeat so we know something is happening.
+	heartbeat := vql_request.Heartbeat
+	if heartbeat == 0 {
+		heartbeat = 120
+	}
+
 	// Create a result set writer for the output.
 	opts := vql_subsystem.EncOptsFromScope(scope)
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	artifact_name := getArtifactName(vql_request)
 	scope.Log("server_monitoring: Collecting %v", artifact_name)
-
-	path_manager := artifacts.NewArtifactPathManager(
-		config_obj, "", "", artifact_name)
-	path_manager.Clock = self.Clock
 
 	rs_writer, err := result_sets.NewResultSetWriter(
 		file_store_factory, path_manager, opts, false /* truncate */)
@@ -200,6 +224,7 @@ func (self *EventTable) RunQuery(
 
 		for _, query := range vql_request.Query {
 			query_log := actions.QueryLog.AddQuery(query.VQL)
+			query_start := uint64(self.Clock.Now().UTC().UnixNano() / 1000)
 
 			vql, err := vfilter.Parse(query.VQL)
 			if err != nil {
@@ -214,6 +239,11 @@ func (self *EventTable) RunQuery(
 				case <-ctx.Done():
 					query_log.Close()
 					return
+
+				case <-time.After(time.Second * time.Duration(heartbeat)):
+					scope.Log("Time %v: %s: Waiting for rows.",
+						(uint64(self.Clock.Now().UTC().UnixNano()/1000)-
+							query_start)/1000000, query.Name)
 
 				case row, ok := <-eval_chan:
 					if !ok {

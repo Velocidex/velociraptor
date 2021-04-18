@@ -455,9 +455,10 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 	assert.Equal(self.T(), uploaded_size, int64(12))
 
 	// Check the System.Upload.Completion event.
-	artifact_path_manager := artifacts.NewArtifactPathManager(
+	artifact_path_manager, err := artifacts.NewArtifactPathManager(
 		self.config_obj, self.client_id, self.flow_id,
 		"System.Upload.Completion")
+	assert.NoError(self.T(), err)
 
 	event_rows := test_utils.FileReadRows(self.T(), self.config_obj,
 		artifact_path_manager.Path())
@@ -564,9 +565,10 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 		flow_path_manager.GetUploadsFile("ntfs", "sparse").IndexPath())
 
 	// Check the System.Upload.Completion event.
-	artifact_path_manager := artifacts.NewArtifactPathManager(
+	artifact_path_manager, err := artifacts.NewArtifactPathManager(
 		self.config_obj, self.client_id, self.flow_id,
 		"System.Upload.Completion")
+	assert.NoError(self.T(), err)
 
 	event_rows := test_utils.FileReadRows(self.T(), self.config_obj,
 		artifact_path_manager.Path())
@@ -678,9 +680,10 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 		flow_path_manager.GetUploadsFile("ntfs", "sparse").IndexPath())
 
 	// Check the System.Upload.Completion event.
-	artifact_path_manager := artifacts.NewArtifactPathManager(
+	artifact_path_manager, err := artifacts.NewArtifactPathManager(
 		self.config_obj, self.client_id, self.flow_id,
 		"System.Upload.Completion")
+	assert.NoError(self.T(), err)
 
 	event_rows := test_utils.FileReadRows(self.T(), self.config_obj,
 		artifact_path_manager.Path())

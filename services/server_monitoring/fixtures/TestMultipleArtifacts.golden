@@ -7,12 +7,24 @@
   "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_ts\":1602103388}",
   ""
  ],
+ "/server_artifact_logs/Server.Clock/2020-10-07.json": [
+  "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"server_monitoring: Collecting Server.Clock\\n\"}",
+  "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"server_monitoring: Finished collecting Server.Clock\\n\"}",
+  "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"Query Stats: {\\\"RowsScanned\\\":5,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":2,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":22}\\n\"}",
+  ""
+ ],
  "/server_artifacts/Server.Clock2/2020-10-07.json": [
   "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388}",
   "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388}",
   "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388}",
   "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388}",
   "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388}",
+  ""
+ ],
+ "/server_artifact_logs/Server.Clock2/2020-10-07.json": [
+  "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"server_monitoring: Collecting Server.Clock2\\n\"}",
+  "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"server_monitoring: Finished collecting Server.Clock2\\n\"}",
+  "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"Query Stats: {\\\"RowsScanned\\\":5,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":0,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":22}\\n\"}",
   ""
  ],
  "/config/server_monitoring.json": {

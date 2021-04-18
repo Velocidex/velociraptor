@@ -308,8 +308,14 @@ func downloadFlowToZip(
 	// Copy result sets
 	for _, artifact_with_results := range flow_details.Context.ArtifactsWithResults {
 		// Paths inside the zip file should be friendlier.
-		path_manager := artifact_paths.NewArtifactPathManager(config_obj,
-			client_id, flow_details.Context.SessionId, artifact_with_results)
+		path_manager, err := artifact_paths.NewArtifactPathManager(
+			config_obj,
+			client_id, flow_details.Context.SessionId,
+			artifact_with_results)
+		if err != nil {
+			return err
+		}
+
 		rs_path, err := path_manager.GetPathForWriting()
 		if err == nil {
 			err = copier(rs_path)
