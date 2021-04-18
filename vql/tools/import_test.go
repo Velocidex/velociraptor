@@ -2,6 +2,8 @@ package tools
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
@@ -36,11 +38,18 @@ func (self *TestSuite) TestImportCollection() {
 	import_file_path, err := filepath.Abs("fixtures/import.zip")
 	assert.NoError(self.T(), err)
 
+	fd, err := os.Open(import_file_path)
+	assert.NoError(self.T(), err)
+	defer fd.Close()
+	data, err := ioutil.ReadAll(fd)
+	assert.NoError(self.T(), err)
+
 	result := ImportCollectionFunction{}.Call(ctx, scope,
 		ordereddict.NewDict().
 			Set("client_id", "auto").
 			Set("hostname", "MyNewHost").
-			Set("filename", import_file_path))
+			Set("accessor", "data").
+			Set("filename", data))
 	context, ok := result.(*proto.ArtifactCollectorContext)
 	assert.True(self.T(), ok)
 
