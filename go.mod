@@ -11,6 +11,7 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
+	github.com/Velocidex/fileb0x v1.1.2-0.20200125141948-d54f40400160 // indirect
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.10-0.20210105022745-1b550dfa67da
 	github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0
@@ -94,13 +95,13 @@ require (
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v0.0.0-20181217150151-a0c70a3d4213
 	golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9
-	golang.org/x/mod v0.3.0
+	golang.org/x/mod v0.4.1
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
 	golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
 	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
-	golang.org/x/tools v0.0.0-20200828161849-5deb26317202 // indirect
+	golang.org/x/tools/gopls v0.6.10 // indirect
 	google.golang.org/api v0.30.0
 	google.golang.org/genproto v0.0.0-20210224155714-063164c882e6
 	google.golang.org/grpc v1.36.0
