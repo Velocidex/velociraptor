@@ -379,8 +379,11 @@ func (self *ServerArtifactsRunner) runQuery(
 				self.config_obj, query.Name)
 
 			opts := vql_subsystem.EncOptsFromScope(scope)
-			path_manager := artifact_paths.NewArtifactPathManager(
+			path_manager, err := artifact_paths.NewArtifactPathManager(
 				self.config_obj, "server", task.SessionId, name)
+			if err != nil {
+				return err
+			}
 
 			file_store_factory := file_store.GetFileStore(self.config_obj)
 			rs_writer, err = result_sets.NewResultSetWriter(

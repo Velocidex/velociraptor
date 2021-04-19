@@ -161,7 +161,10 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	fs := test_utils.GetMemoryFileStore(self.T(), self.config_obj)
 	for _, path := range []string{
 		"/server_artifacts/Server.Clock/2020-10-07.json",
+		"/server_artifact_logs/Server.Clock/2020-10-07.json",
+
 		"/server_artifacts/Server.Clock2/2020-10-07.json",
+		"/server_artifact_logs/Server.Clock2/2020-10-07.json",
 	} {
 		value, pres := fs.Get(path)
 		if pres {

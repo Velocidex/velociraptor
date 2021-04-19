@@ -69,4 +69,7 @@ type Notifier interface {
 	IsClientConnected(ctx context.Context,
 		config_obj *config_proto.Config,
 		client_id string, timeout int) bool
+
+	// Check only the current node if the client is connected.
+	IsClientDirectlyConnected(client_id string) bool
 }

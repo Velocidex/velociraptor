@@ -46,8 +46,12 @@ func (self *JournalService) PushRowsToArtifact(
 	config_obj *config_proto.Config, rows []*ordereddict.Dict,
 	artifact, client_id, flows_id string) error {
 
-	path_manager := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(
 		config_obj, client_id, flows_id, artifact)
+	if err != nil {
+		return err
+	}
+
 	if self != nil && self.qm != nil {
 		return self.qm.PushEventRows(path_manager, rows)
 	}

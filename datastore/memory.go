@@ -1,13 +1,14 @@
 package datastore
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path"
 	"sort"
 	"strings"
 	"sync"
+
+	errors "github.com/pkg/errors"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/protobuf/proto"
@@ -166,7 +167,8 @@ func (self *TestDataStore) GetSubject(
 
 	result, pres := self.Subjects[urn]
 	if !pres {
-		return os.ErrNotExist
+		return errors.WithMessage(os.ErrNotExist,
+			fmt.Sprintf("While openning %v: not found", urn))
 	}
 	proto.Merge(message, result)
 	return nil

@@ -319,8 +319,11 @@ func getResultSetReader(
 				arg.EndTime = time.Now().Unix()
 			}
 
-			path_manager := artifact_paths.NewArtifactPathManager(
+			path_manager, err := artifact_paths.NewArtifactPathManager(
 				config_obj, arg.ClientId, "", arg.Artifact)
+			if err != nil {
+				return nil, err
+			}
 
 			return result_sets.NewTimedResultSetReader(ctx, file_store_factory,
 				path_manager, uint64(arg.StartTime), uint64(arg.EndTime))
@@ -334,8 +337,11 @@ func getResultSetReader(
 				"be specified for non event artifacts.")
 		}
 
-		path_manager := artifact_paths.NewArtifactPathManager(
+		path_manager, err := artifact_paths.NewArtifactPathManager(
 			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
+		if err != nil {
+			return nil, err
+		}
 
 		return result_sets.NewResultSetReader(file_store_factory, path_manager)
 
@@ -466,8 +472,13 @@ func (self FlowResultsPlugin) Call(
 			arg.Source = ""
 		}
 
-		path_manager := artifact_paths.NewArtifactPathManager(
+		path_manager, err := artifact_paths.NewArtifactPathManager(
 			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
+		if err != nil {
+			scope.Log("source: %v", err)
+			return
+		}
+
 		row_chan, err := file_store.GetTimeRange(
 			ctx, config_obj, path_manager, 0, 0)
 		if err != nil {

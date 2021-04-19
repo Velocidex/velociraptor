@@ -405,15 +405,6 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
-		if false && !server_obj.throttler.Ready() {
-			loadshedCounter.Inc()
-
-			// Load shed connections with a 500 error.
-			http.Error(w, "", http.StatusServiceUnavailable)
-			return
-		}
-
 		ctx := req.Context()
 
 		flusher, ok := w.(http.Flusher)
@@ -461,19 +452,14 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			return
 		}
 
-		/* This is expensive to enforce in a distributed
-		   setting. It may not be a huge problem anyway so for
-		   now we skip this check.
-
-		if notifier.IsClientConnected(source) {
+		if notifier.IsClientDirectlyConnected(source) {
 			http.Error(w, "Another Client connection exists. "+
 				"Only a single instance of the client is "+
 				"allowed to connect at the same time.",
 				http.StatusConflict)
-			fmt.Printf("Source %v Conflict\n", source)
 			return
 		}
-		*/
+
 		notification, cancel := notifier.ListenForNotification(source)
 		defer cancel()
 
@@ -505,6 +491,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			server_obj.Error("Error:", err)
 			return
 		}
+
 		if count > 0 {
 			// Send the new messages to the client
 			// and finish the request off.

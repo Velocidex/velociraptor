@@ -18,6 +18,7 @@
 package api
 
 import (
+	errors "github.com/pkg/errors"
 	context "golang.org/x/net/context"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -43,10 +44,9 @@ func getTable(
 	}
 
 	result := &api_proto.GetTableResponse{}
-
-	path_manager := getPathManager(config_obj, in)
-	if path_manager == nil {
-		return result, nil
+	path_manager, err := getPathManager(config_obj, in)
+	if err != nil {
+		return result, err
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -102,7 +102,7 @@ func getTable(
 
 func getPathManager(
 	config_obj *config_proto.Config,
-	in *api_proto.GetTableRequest) api.PathManager {
+	in *api_proto.GetTableRequest) (api.PathManager, error) {
 
 	if in.FlowId != "" && in.Artifact != "" {
 		return artifacts.NewArtifactPathManager(
@@ -113,22 +113,22 @@ func getPathManager(
 			in.ClientId, in.FlowId)
 		switch in.Type {
 		case "log":
-			return flow_path_manager.Log()
+			return flow_path_manager.Log(), nil
 		case "uploads":
-			return flow_path_manager.UploadMetadata()
+			return flow_path_manager.UploadMetadata(), nil
 		}
 	} else if in.HuntId != "" && in.Type == "clients" {
-		return paths.NewHuntPathManager(in.HuntId).Clients()
+		return paths.NewHuntPathManager(in.HuntId).Clients(), nil
 
 	} else if in.HuntId != "" && in.Type == "hunt_status" {
-		return paths.NewHuntPathManager(in.HuntId).ClientErrors()
+		return paths.NewHuntPathManager(in.HuntId).ClientErrors(), nil
 
 	} else if in.NotebookId != "" && in.CellId != "" {
 		return reporting.NewNotebookPathManager(in.NotebookId).Cell(
-			in.CellId).QueryStorage(in.TableId)
+			in.CellId).QueryStorage(in.TableId), nil
 	}
 
-	return nil
+	return nil, errors.New("Invalid request")
 }
 
 func getEventTable(
@@ -136,8 +136,11 @@ func getEventTable(
 	config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) (
 	*api_proto.GetTableResponse, error) {
-	path_manager := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(
 		config_obj, in.ClientId, in.FlowId, in.Artifact)
+	if err != nil {
+		return nil, err
+	}
 
 	return getEventTableWithPathManager(ctx, config_obj, in, path_manager)
 }
@@ -147,9 +150,11 @@ func getEventTableLogs(
 	config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) (
 	*api_proto.GetTableResponse, error) {
-	path_manager := artifacts.NewMonitoringArtifactLogPathManager(
-		config_obj, in.ClientId, in.Artifact)
-
+	path_manager, err := artifacts.NewArtifactLogPathManager(
+		config_obj, in.ClientId, "", in.Artifact)
+	if err != nil {
+		return nil, err
+	}
 	return getEventTableWithPathManager(ctx, config_obj, in, path_manager)
 }
 

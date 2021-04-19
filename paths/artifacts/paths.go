@@ -2,7 +2,6 @@ package artifacts
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"path"
 	"regexp"
@@ -23,40 +22,35 @@ import (
 type ArtifactPathManager struct {
 	config_obj                             *config_proto.Config
 	client_id, flow_id, full_artifact_name string
-
-	Clock      utils.Clock
-	file_store api.FileStore
-
-	base string
+	base_artifact_name, source             string
+	mode                                   int
+	Clock                                  utils.Clock
+	file_store                             api.FileStore
 }
 
 func NewArtifactPathManager(
 	config_obj *config_proto.Config,
-	client_id, flow_id, full_artifact_name string) *ArtifactPathManager {
+	client_id, flow_id, full_artifact_name string) (
+	*ArtifactPathManager, error) {
+	artifact_name, artifact_source := paths.SplitFullSourceName(full_artifact_name)
+
+	mode, err := GetArtifactMode(config_obj, artifact_name)
+	if err != nil {
+		return nil, err
+	}
+
 	file_store_factory := file_store.GetFileStore(config_obj)
 	return &ArtifactPathManager{
 		config_obj:         config_obj,
 		client_id:          client_id,
 		flow_id:            flow_id,
 		full_artifact_name: full_artifact_name,
+		base_artifact_name: artifact_name,
+		source:             artifact_source,
+		mode:               mode,
 		Clock:              utils.RealClock{},
 		file_store:         file_store_factory,
-		base:               "monitoring",
-	}
-}
-
-func NewMonitoringArtifactLogPathManager(
-	config_obj *config_proto.Config,
-	client_id, full_artifact_name string) *ArtifactPathManager {
-	file_store_factory := file_store.GetFileStore(config_obj)
-	return &ArtifactPathManager{
-		config_obj:         config_obj,
-		client_id:          client_id,
-		full_artifact_name: full_artifact_name,
-		Clock:              utils.RealClock{},
-		file_store:         file_store_factory,
-		base:               "monitoring_logs",
-	}
+	}, nil
 }
 
 func (self *ArtifactPathManager) GetQueueName() string {
@@ -74,72 +68,101 @@ func (self *ArtifactPathManager) getDayName() string {
 		now.Month(), now.Day())
 }
 
+// Resolve the path relative to the filestore where the JSONL files
+// are stored. This depends on what kind of log it is (mode), and
+// various other details depending on the mode.
+//
+// This function represents a map between the type of artifact and its
+// location on disk. It is used by all code that needs to read or
+// write artifact results.
 func (self *ArtifactPathManager) GetPathForWriting() (string, error) {
-	artifact_name, artifact_source := paths.SplitFullSourceName(self.full_artifact_name)
-	mode, err := GetArtifactMode(self.config_obj, artifact_name)
-	if err != nil {
-		return "", err
-	}
-
-	result := self.get_back_path(self.client_id, self.flow_id,
-		artifact_name, artifact_source, mode)
-
-	return result, nil
-}
-
-// Get the result set files for event artifacts by listing the
-// directory that contains all the daily files. NOTE: This is mostly
-// used by the DirectoryFileStore to avoid having to scan large event
-// files for small time ranges. The SqlFileStore does not need to do
-// this because there is a timestamp index on the events themselves.
-func (self *ArtifactPathManager) get_event_files() ([]*api.ResultSetFileProperties, error) {
-	artifact_name, source_name := paths.SplitFullSourceName(self.full_artifact_name)
-	mode, err := GetArtifactMode(self.config_obj, self.full_artifact_name)
-	if err != nil {
-		return nil, err
-	}
-
-	dir_name := ""
-
-	switch mode {
-	case paths.MODE_SERVER_EVENT:
-		if source_name != "" {
-			dir_name = fmt.Sprintf(
-				"/server_artifacts/%s/%s/",
-				artifact_name, source_name)
+	switch self.mode {
+	case paths.MODE_CLIENT:
+		if self.source != "" {
+			return fmt.Sprintf(
+				"/clients/%s/artifacts/%s/%s/%s.json",
+				self.client_id, self.base_artifact_name,
+				self.flow_id, self.source), nil
 		} else {
-			dir_name = fmt.Sprintf(
-				"/server_artifacts/%s/",
-				artifact_name)
+			return fmt.Sprintf(
+				"/clients/%s/artifacts/%s/%s.json",
+				self.client_id, self.base_artifact_name,
+				self.flow_id), nil
+		}
+
+	case paths.MODE_SERVER:
+		if self.source != "" {
+			return fmt.Sprintf(
+				"/clients/server/artifacts/%s/%s/%s.json",
+				self.base_artifact_name,
+				self.flow_id, self.source), nil
+		} else {
+			return fmt.Sprintf(
+				"/clients/server/artifacts/%s/%s.json",
+				self.base_artifact_name, self.flow_id), nil
+		}
+
+	case paths.MODE_SERVER_EVENT:
+		if self.source != "" {
+			return fmt.Sprintf(
+				"/server_artifacts/%s/%s/%s.json",
+				self.base_artifact_name, self.source,
+				self.getDayName()), nil
+		} else {
+			return fmt.Sprintf(
+				"/server_artifacts/%s/%s.json",
+				self.base_artifact_name, self.getDayName()), nil
 		}
 
 	case paths.MODE_CLIENT_EVENT:
 		if self.client_id == "" {
-			return nil, errors.New("Client event without client id")
+			// Should never normally happen.
+			return fmt.Sprintf(
+				"/clients/nobody/%s/%s.json",
+				self.base_artifact_name, self.getDayName()), nil
 
 		} else {
-			if source_name != "" {
-				dir_name = fmt.Sprintf(
-					"/clients/%s/%s/%s/%s",
-					self.client_id, self.base, artifact_name, source_name)
+			if self.source != "" {
+				return fmt.Sprintf(
+					"/clients/%s/monitoring/%s/%s/%s.json",
+					self.client_id,
+					self.base_artifact_name, self.source,
+					self.getDayName()), nil
 			} else {
-				dir_name = fmt.Sprintf(
-					"/clients/%s/%s/%s",
-					self.client_id, self.base, artifact_name)
+				return fmt.Sprintf(
+					"/clients/%s/monitoring/%s/%s.json",
+					self.client_id, self.base_artifact_name,
+					self.getDayName()), nil
 			}
 		}
 
-	default:
-		path_for_writing, err := self.GetPathForWriting()
-		if err != nil {
-			return nil, err
-		}
+		// Internal artifacts are not written anywhere but are
+		// still replicated.
+	case paths.INTERNAL:
+		return "", nil
+	}
+
+	return "", nil
+}
+
+// Get the result set files for event artifacts by listing the
+// directory that contains all the daily files.
+func (self *ArtifactPathManager) get_event_files(path_for_writing string) (
+	[]*api.ResultSetFileProperties, error) {
+
+	switch self.mode {
+	case paths.MODE_SERVER_EVENT, paths.MODE_CLIENT_EVENT:
+	case paths.MODE_CLIENT, paths.MODE_SERVER:
 		return []*api.ResultSetFileProperties{
 			&api.ResultSetFileProperties{
 				Path: path_for_writing,
 			}}, nil
+
+	default:
+		return nil, nil
 	}
 
+	dir_name := path.Dir(path_for_writing)
 	children, err := self.file_store.ListDirectory(dir_name)
 	if err != nil {
 		return nil, err
@@ -171,8 +194,13 @@ func (self *ArtifactPathManager) GeneratePaths(ctx context.Context) <-chan *api.
 	go func() {
 		defer close(output)
 
+		path_for_writing, err := self.GetPathForWriting()
+		if err != nil {
+			return //nil, err
+		}
+
 		// Find the directory over which we need to list.
-		children, _ := self.get_event_files()
+		children, _ := self.get_event_files(path_for_writing)
 		for _, child := range children {
 			select {
 			case <-ctx.Done():
@@ -198,109 +226,6 @@ func DayNameToTimestamp(name string) int64 {
 		}
 	}
 	return 0
-}
-
-// Resolve the path relative to the filestore where the JSONL files
-// are stored. This depends on what kind of log it is (mode), and
-// various other details depending on the mode.
-//
-// This function represents a map between the type of artifact and its
-// location on disk. It is used by all code that needs to read or
-// write artifact results.
-func (self *ArtifactPathManager) get_back_path(
-	client_id, flow_id, artifact_name, source_name string, mode int) string {
-
-	switch mode {
-	case paths.MODE_CLIENT:
-		if source_name != "" {
-			return fmt.Sprintf(
-				"/clients/%s/artifacts/%s/%s/%s.json",
-				client_id, artifact_name,
-				flow_id, source_name)
-		} else {
-			return fmt.Sprintf(
-				"/clients/%s/artifacts/%s/%s.json",
-				client_id, artifact_name,
-				flow_id)
-		}
-
-	case paths.MODE_SERVER:
-		if source_name != "" {
-			return fmt.Sprintf(
-				"/clients/server/artifacts/%s/%s/%s.json",
-				artifact_name, flow_id, source_name)
-		} else {
-			return fmt.Sprintf(
-				"/clients/server/artifacts/%s/%s.json",
-				artifact_name, flow_id)
-		}
-
-	case paths.MODE_SERVER_EVENT:
-		if source_name != "" {
-			return fmt.Sprintf(
-				"/server_artifacts/%s/%s/%s.json",
-				artifact_name, source_name,
-				self.getDayName())
-		} else {
-			return fmt.Sprintf(
-				"/server_artifacts/%s/%s.json",
-				artifact_name,
-				self.getDayName())
-		}
-
-	case paths.MODE_CLIENT_EVENT:
-		if client_id == "" {
-			// Should never normally happen.
-			return fmt.Sprintf(
-				"/clients/nobody/%s/%s/%s.json",
-				self.base, artifact_name,
-				self.getDayName())
-
-		} else {
-			if source_name != "" {
-				return fmt.Sprintf(
-					"/clients/%s/%s/%s/%s/%s.json",
-					client_id, self.base,
-					artifact_name, source_name,
-					self.getDayName())
-			} else {
-				return fmt.Sprintf(
-					"/clients/%s/%s/%s/%s.json",
-					client_id, self.base,
-					artifact_name, self.getDayName())
-			}
-		}
-
-		// Internal artifacts are not written anywhere but are
-		// still replicated.
-	case paths.INTERNAL:
-		return ""
-	}
-
-	return ""
-}
-
-type MonitoringArtifactPathManager struct {
-	path string
-}
-
-func (self MonitoringArtifactPathManager) Path() string {
-	return self.path
-}
-
-// Represents the directory where all the available monitoring logs
-// are present - i.e. listing this directory reveals all logs
-// currently available.
-func NewMonitoringArtifactPathManager(client_id string) *MonitoringArtifactPathManager {
-	result := &MonitoringArtifactPathManager{}
-
-	if client_id != "" || client_id == "server" {
-		result.path = path.Join("/clients", client_id, "monitoring")
-	} else {
-		result.path = "/server_artifacts"
-	}
-
-	return result
 }
 
 func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int, error) {

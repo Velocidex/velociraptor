@@ -279,8 +279,9 @@ func (self *ServerTestSuite) TestForeman() {
 	assert.Equal(t, tasks[0].UpdateForeman.LastHuntTimestamp, services.GetHuntDispatcher().
 		GetLastTimestamp())
 
-	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
+	path_manager, err := artifacts.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
+	assert.NoError(t, err)
 
 	rows := []*ordereddict.Dict{}
 	row_chan, err := file_store.GetTimeRange(self.sm.Ctx, self.config_obj,
@@ -325,8 +326,9 @@ func (self *ServerTestSuite) TestMonitoring() {
 		})
 	runner.Close()
 
-	path_manager := artifacts.NewArtifactPathManager(self.config_obj,
+	path_manager, err := artifacts.NewArtifactPathManager(self.config_obj,
 		self.client_id, constants.MONITORING_WELL_KNOWN_FLOW, "System.Hunt.Participation")
+	assert.NoError(self.T(), err)
 
 	self.RequiredFilestoreContains(path_manager.Path(), self.client_id)
 }
@@ -584,8 +586,10 @@ func (self *ServerTestSuite) TestVQLResponse() {
 		})
 	runner.Close()
 
-	flow_path_manager := artifacts.NewArtifactPathManager(self.config_obj,
+	flow_path_manager, err := artifacts.NewArtifactPathManager(self.config_obj,
 		self.client_id, flow_id, "Generic.Client.Info")
+	assert.NoError(self.T(), err)
+
 	self.RequiredFilestoreContains(flow_path_manager.Path(), self.client_id)
 }
 

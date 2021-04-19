@@ -172,7 +172,6 @@ func flushContextLogsMonitoring(
 	// different artifacts. We cache the writers so we can send
 	// the right message to the right log sink.
 	writers := make(map[string]result_sets.ResultSetWriter)
-	var err error
 
 	// Append logs to messages from previous packets.
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -185,8 +184,13 @@ func flushContextLogsMonitoring(
 		// Try to get the writer from the cache.
 		rs_writer, pres := writers[artifact_name]
 		if !pres {
-			log_path_manager := artifact_paths.NewMonitoringArtifactLogPathManager(
-				config_obj, collection_context.ClientId, artifact_name)
+			log_path_manager, err := artifact_paths.NewArtifactLogPathManager(
+				config_obj, collection_context.ClientId,
+				collection_context.SessionId, artifact_name)
+			if err != nil {
+				return err
+			}
+
 			rs_writer, err = result_sets.NewResultSetWriter(
 				file_store_factory, log_path_manager, nil, false /* truncate */)
 			if err != nil {
@@ -363,10 +367,14 @@ func ArtifactCollectorProcessOneMessage(
 
 		rows_written := uint64(0)
 		if response.Query.Name != "" {
-			path_manager := artifact_paths.NewArtifactPathManager(config_obj,
+			path_manager, err := artifact_paths.NewArtifactPathManager(
+				config_obj,
 				collection_context.Request.ClientId,
 				collection_context.SessionId,
 				response.Query.Name)
+			if err != nil {
+				return err
+			}
 
 			file_store_factory := file_store.GetFileStore(config_obj)
 			rs_writer, err := result_sets.NewResultSetWriter(
