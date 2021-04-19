@@ -1,5 +1,3 @@
-//+build extras
-
 package parsers
 
 import (
