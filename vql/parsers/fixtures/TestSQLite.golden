@@ -1,0 +1,14 @@
+{
+ "Simple SELECT": [
+  {
+   "column1": 1,
+   "column2": "first"
+  }
+ ],
+ "Simple SELECT with args": [
+  {
+   "column1": 1,
+   "column1 + ?": 2
+  }
+ ]
+}

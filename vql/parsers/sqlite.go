@@ -21,14 +21,14 @@
 // disk. Since VQL may specify an arbitrary accessor, we can make a
 // temp copy of the sqlite file in order to query it. The temp copy
 // remains alive for the duration of the query, and we will cache it.
-// Deprecated. Used SQL Plugin instead
 package parsers
 
 import (
 	"context"
+	"errors"
 	"io/ioutil"
+	"net/url"
 	"os"
-	"reflect"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -53,105 +53,34 @@ func (self _SQLitePlugin) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
-	output_chan := make(chan vfilter.Row)
-	go func() {
-		scope.Log("sqlite plugin deprecated. Use sql instead")
-		defer close(output_chan)
-		defer utils.RecoverVQL(scope)
 
-		arg := &_SQLiteArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
-		if err != nil {
-			scope.Log("sqlite: %v", err)
-			return
-		}
+	args.Set("driver", "sqlite")
 
-		if arg.Accessor == "" {
-			arg.Accessor = "file"
-		}
-
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("sqlite: %s", err)
-			return
-		}
-
-		handle, err := self.GetHandle(ctx, arg, scope)
-		if err != nil {
-			scope.Log("sqlite: %v", err)
-			return
-		}
-
-		query_parameters := []interface{}{}
-		if arg.Args != nil {
-			args_value := reflect.Indirect(reflect.ValueOf(arg.Args))
-			if args_value.Type().Kind() != reflect.Slice {
-				query_parameters = append(query_parameters, arg.Args)
-			} else {
-				for i := 0; i < args_value.Len(); i++ {
-					query_parameters = append(query_parameters,
-						args_value.Index(i).Interface())
-				}
-			}
-		}
-
-		query := strings.TrimSpace(arg.Query)
-		if query == "" {
-			return
-		}
-		rows, err := handle.Queryx(query, query_parameters...)
-		if err != nil {
-			scope.Log("sqlite: %v", err)
-			return
-		}
-		defer rows.Close()
-
-		columns, err := rows.Columns()
-		if err != nil {
-			scope.Log("sqlite: %v", err)
-			return
-		}
-
-		for rows.Next() {
-			row := ordereddict.NewDict()
-			values, err := rows.SliceScan()
-			if err != nil {
-				scope.Log("sqlite: %v", err)
-				return
-			}
-
-			for idx, item := range columns {
-				var value interface{} = values[idx]
-				bytes_value, ok := value.([]byte)
-				if ok {
-					value = string(bytes_value)
-				}
-				row.Set(item, value)
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-
-			case output_chan <- row:
-			}
-		}
-
-	}()
-
-	return output_chan
+	// This is just an alias for the sql plugin.
+	return SQLPlugin{}.Call(ctx, scope, args)
 }
 
-func (self _SQLitePlugin) GetHandle(
-	ctx context.Context,
-	arg *_SQLiteArgs, scope vfilter.Scope) (
+// Velociraptor always uses the path separator at the root of
+// filesystem (on windows this means before the drive letter). This
+// convension confuses the sqlite driver. So convert
+// "\C:\Windows\X.sqlite" to "C:\Windows\X.sqlite"
+func VFSPathToFilesystemPath(path string) string {
+	return strings.TrimPrefix(path, "\\")
+}
+
+func GetHandleSqlite(ctx context.Context,
+	arg *SQLPluginArgs, scope vfilter.Scope) (
 	handle *sqlx.DB, err error) {
 	filename := VFSPathToFilesystemPath(arg.Filename)
+
+	if filename == "" {
+		return nil, errors.New("file parameter required for sqlite driver!")
+	}
 
 	key := "sqlite_" + filename + arg.Accessor
 	handle, ok := vql_subsystem.CacheGet(scope, key).(*sqlx.DB)
 	if !ok {
-		if arg.Accessor == "file" {
+		if arg.Accessor == "file" || arg.Accessor == "" {
 			handle, err = sqlx.Connect("sqlite3", filename)
 			if err != nil {
 				// An error occurred maybe the database
@@ -163,25 +92,46 @@ func (self _SQLitePlugin) GetHandle(
 				} else {
 					scope.Log("Unable to open sqlite file: %v", err)
 				}
+
+				//If the database is missing etc we
+				//just return the error, but locked
+				//files are handled especially.
 				if !strings.Contains(err.Error(), "locked") {
 					return nil, err
 				}
+
 				scope.Log("Sqlite file %v is locked with %v, creating a local copy",
 					filename, err)
-				filename, err = self._MakeTempfile(ctx, arg, filename, scope)
+
+				// When using the file accessor it is
+				// possible to pass sqlite options by
+				// encoding them into the filename. In
+				// this case we need to extract the
+				// filename (from before the ?) so we
+				// can copy it over.
+				filename_url, err := url.Parse(filename)
+				if err == nil {
+					filename = filename_url.Path
+				}
+
+				filename, err = _MakeTempfile(ctx, arg, filename, scope)
 				if err != nil {
 					scope.Log("Unable to create temp file: %v", err)
 					return nil, err
 				}
 				scope.Log("Using local copy %v", filename)
-
 			}
+
+			// All other accessors, make a copy and
+			// operate on that.
 		} else {
-			filename, err = self._MakeTempfile(ctx, arg, filename, scope)
+			filename, err = _MakeTempfile(ctx, arg, filename, scope)
 			if err != nil {
 				return nil, err
 			}
 		}
+
+		// Try once again to connect to the new file
 		if handle == nil {
 			handle, err = sqlx.Connect("sqlite3", filename)
 			if err != nil {
@@ -204,9 +154,8 @@ func (self _SQLitePlugin) GetHandle(
 	return handle, nil
 }
 
-func (self _SQLitePlugin) _MakeTempfile(
-	ctx context.Context,
-	arg *_SQLiteArgs, filename string,
+func _MakeTempfile(ctx context.Context,
+	arg *SQLPluginArgs, filename string,
 	scope vfilter.Scope) (
 	string, error) {
 
@@ -256,7 +205,7 @@ func (self _SQLitePlugin) _MakeTempfile(
 func (self _SQLitePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "sqlite",
-		Doc:     "Opens an SQLite file and run a query against it.",
+		Doc:     "Opens an SQLite file and run a query against it (This is an alias to the sql() plugin which supports more database types).",
 		ArgType: type_map.AddType(scope, &_SQLiteArgs{}),
 	}
 }
