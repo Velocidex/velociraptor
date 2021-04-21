@@ -373,30 +373,63 @@ func (self *ApiServer) ListAvailableEventResults(
 			"User is not allowed to view results.")
 	}
 
-	manager, err := services.GetRepositoryManager()
+	// Figure out where all the monitoring artifacts logs are
+	// stored by looking at some examples.
+	exemplar := "Generic.Client.Stats"
+	if in.ClientId == "" || in.ClientId == "server" {
+		exemplar = "Server.Monitor.Health"
+	}
+
+	path_manager, err := artifacts.NewArtifactPathManager(
+		self.config, in.ClientId, "", exemplar)
 	if err != nil {
 		return nil, err
 	}
 
-	repository, err := manager.GetGlobalRepository(self.config)
-	if err != nil {
-		return nil, err
-	}
+	// Analyzer analyses the path name from disk and adds to the events list.
+	seen := make(map[string]*api_proto.AvailableEvent)
 
-	path_manager, err := artifacts.NewArtifactLogPathManager(
-		self.config, in.ClientId, "", "Generic.Client.Stats")
-	if err != nil {
-		return nil, err
-	}
 	// The root path where we store all day logs for all
 	// artifacts. We walk this path to find all the day logs for
 	// this client.
-	log_path := path_manager.GetRootPath()
+	err = getAllEvents(self.config, path_manager.GetRootPath(), seen)
+	if err != nil {
+		return nil, err
+	}
 
-	file_store_factory := file_store.GetFileStore(self.config)
+	err = getAllEvents(self.config, path_manager.Logs().GetRootPath(), seen)
+	if err != nil {
+		return nil, err
+	}
 
-	seen := make(map[string]*api_proto.AvailableEvent)
-	err = file_store_factory.Walk(log_path,
+	result := &api_proto.ListAvailableEventResultsResponse{}
+	for _, item := range seen {
+		result.Logs = append(result.Logs, item)
+	}
+
+	sort.Slice(result.Logs, func(i, j int) bool {
+		return result.Logs[i].Artifact < result.Logs[j].Artifact
+	})
+
+	return result, nil
+}
+
+func getAllEvents(config_obj *config_proto.Config,
+	log_path string,
+	seen map[string]*api_proto.AvailableEvent) error {
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
+	return file_store_factory.Walk(log_path,
 		func(full_path string, info os.FileInfo, err error) error {
 			if !info.IsDir() && info.Size() > 0 {
 				relative_path := strings.TrimPrefix(full_path, log_path)
@@ -412,7 +445,7 @@ func (self *ApiServer) ListAvailableEventResults(
 						}
 
 						artifact, pres := repository.Get(
-							self.config, artifact_name)
+							config_obj, artifact_name)
 						if pres {
 							event.Definition = artifact
 						}
@@ -424,20 +457,6 @@ func (self *ApiServer) ListAvailableEventResults(
 			}
 			return nil
 		})
-	if err != nil {
-		return nil, err
-	}
-
-	result := &api_proto.ListAvailableEventResultsResponse{}
-	for _, item := range seen {
-		result.Logs = append(result.Logs, item)
-	}
-
-	sort.Slice(result.Logs, func(i, j int) bool {
-		return result.Logs[i].Artifact < result.Logs[j].Artifact
-	})
-
-	return result, nil
 }
 
 // MakeCollectorRequest is a convenience function for creating

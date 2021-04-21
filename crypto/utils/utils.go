@@ -15,7 +15,7 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package crypto
+package utils
 
 import (
 	"crypto/rand"
@@ -70,7 +70,7 @@ func ParseX509CertFromPemStr(pem_str []byte) (*x509.Certificate, error) {
 	}
 }
 
-func parseX509CSRFromPemStr(pem_str []byte) (*x509.CertificateRequest, error) {
+func ParseX509CSRFromPemStr(pem_str []byte) (*x509.CertificateRequest, error) {
 	for {
 		block, rest := pem.Decode(pem_str)
 		if block == nil {

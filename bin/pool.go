@@ -28,7 +28,8 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/crypto"
+	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -137,12 +138,12 @@ func doPoolClient() {
 			client_config.Writeback.EventQueries = nil
 
 			// Make sure the config is ok.
-			err = crypto.VerifyConfig(client_config)
+			err = crypto_utils.VerifyConfig(client_config)
 			if err != nil {
 				kingpin.FatalIfError(err, "Invalid config")
 			}
 
-			manager, err := crypto.NewClientCryptoManager(
+			manager, err := crypto_client.NewClientCryptoManager(
 				client_config, []byte(client_config.Writeback.PrivateKey))
 			kingpin.FatalIfError(err, "Unable to parse config file")
 

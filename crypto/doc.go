@@ -44,7 +44,7 @@
    was seen previously.
 
 5. Integrity of each packet's payload is assured through a HMAC. The
-   hmac key is consta nt throughout the session and it is specified in
+   hmac key is constant throughout the session and it is specified in
    the cipher object. Note we check the hmac before anything else to
    reject malformed packets earlier and save some cycles.
 

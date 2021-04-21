@@ -206,7 +206,7 @@ func (self *EventTable) RunQuery(
 	opts := vql_subsystem.EncOptsFromScope(scope)
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	scope.Log("server_monitoring: Collecting %v", artifact_name)
+	scope.Log("server_monitoring: Collecting <green>%v</>", artifact_name)
 
 	rs_writer, err := result_sets.NewResultSetWriter(
 		file_store_factory, path_manager, opts, false /* truncate */)

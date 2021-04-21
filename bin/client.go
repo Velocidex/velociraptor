@@ -23,7 +23,8 @@ import (
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/crypto"
+	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -56,14 +57,14 @@ func RunClient(
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	// Make sure the config crypto is ok.
-	err = crypto.VerifyConfig(config_obj)
+	err = crypto_utils.VerifyConfig(config_obj)
 	if err != nil {
 		kingpin.FatalIfError(err, "Invalid config")
 	}
 
 	executor.SetTempfile(config_obj)
 
-	manager, err := crypto.NewClientCryptoManager(
+	manager, err := crypto_client.NewClientCryptoManager(
 		config_obj, []byte(config_obj.Writeback.PrivateKey))
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to parse config file")

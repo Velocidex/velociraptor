@@ -35,6 +35,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	crypto_server "www.velocidex.com/golang/velociraptor/crypto/server"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -56,7 +57,7 @@ var (
 
 type Server struct {
 	config  *config_proto.Config
-	manager *crypto.CryptoManager
+	manager *crypto_server.ServerCryptoManager
 	logger  *logging.LogContext
 	db      datastore.DataStore
 
@@ -160,12 +161,14 @@ func (self *Server) Close() {
 	self.throttler.Close()
 }
 
-func NewServer(config_obj *config_proto.Config) (*Server, error) {
+func NewServer(ctx context.Context,
+	config_obj *config_proto.Config,
+	wg *sync.WaitGroup) (*Server, error) {
 	if config_obj.Frontend == nil {
 		return nil, errors.New("Frontend not configured")
 	}
 
-	manager, err := crypto.NewServerCryptoManager(config_obj)
+	manager, err := crypto_server.NewServerCryptoManager(ctx, config_obj, wg)
 	if err != nil {
 		return nil, err
 	}

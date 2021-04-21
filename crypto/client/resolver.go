@@ -15,22 +15,15 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package crypto
+package client
 
 import (
 	"crypto/rsa"
 	"strings"
 	"sync"
-	"time"
-
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/third_party/cache"
 )
 
-type publicKeyResolver interface {
+type PublicKeyResolver interface {
 	GetPublicKey(subject string) (*rsa.PublicKey, bool)
 	SetPublicKey(subject string, key *rsa.PublicKey) error
 	Clear() // Flush all internal caches.
@@ -41,7 +34,7 @@ type inMemoryPublicKeyResolver struct {
 	public_keys map[string]*rsa.PublicKey
 }
 
-func NewInMemoryPublicKeyResolver() publicKeyResolver {
+func NewInMemoryPublicKeyResolver() PublicKeyResolver {
 	return &inMemoryPublicKeyResolver{
 		public_keys: make(map[string]*rsa.PublicKey),
 	}
@@ -83,59 +76,4 @@ func (self *inMemoryPublicKeyResolver) SetPublicKey(
 
 func (self *inMemoryPublicKeyResolver) Clear() {
 	self.public_keys = make(map[string]*rsa.PublicKey)
-}
-
-type serverPublicKeyResolver struct {
-	config_obj *config_proto.Config
-	cache      *cache.LRUCache
-}
-
-func (self *serverPublicKeyResolver) GetPublicKey(
-	client_id string) (*rsa.PublicKey, bool) {
-
-	client_path_manager := paths.NewClientPathManager(client_id)
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return nil, false
-	}
-
-	pem := &crypto_proto.PublicKey{}
-	err = db.GetSubject(self.config_obj,
-		client_path_manager.Key().Path(), pem)
-	if err != nil {
-		return nil, false
-	}
-
-	key, err := PemToPublicKey(pem.Pem)
-	if err != nil {
-		return nil, false
-	}
-
-	return key, true
-}
-
-func (self *serverPublicKeyResolver) SetPublicKey(
-	client_id string, key *rsa.PublicKey) error {
-
-	client_path_manager := paths.NewClientPathManager(client_id)
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return err
-	}
-
-	pem := &crypto_proto.PublicKey{
-		Pem:        PublicKeyToPem(key),
-		EnrollTime: uint64(time.Now().Unix()),
-	}
-	return db.SetSubject(self.config_obj,
-		client_path_manager.Key().Path(), pem)
-}
-
-func (self *serverPublicKeyResolver) Clear() {}
-
-func NewServerPublicKeyResolver(config_obj *config_proto.Config) publicKeyResolver {
-	return &serverPublicKeyResolver{
-		config_obj: config_obj,
-		cache:      cache.NewLRUCache(config_obj.Frontend.Resources.ExpectedClients),
-	}
 }

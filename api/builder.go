@@ -69,11 +69,13 @@ func (self *Builder) StartServer(ctx context.Context, wg *sync.WaitGroup) error 
 	return startSelfSignedFrontend(ctx, wg, self.config_obj, self.server_obj)
 }
 
-func NewServerBuilder(config_obj *config_proto.Config) (*Builder, error) {
+func NewServerBuilder(ctx context.Context,
+	config_obj *config_proto.Config,
+	wg *sync.WaitGroup) (*Builder, error) {
 	result := &Builder{config_obj: config_obj}
 
 	// Create a new server
-	server_obj, err := server.NewServer(config_obj)
+	server_obj, err := server.NewServer(ctx, config_obj, wg)
 	if err != nil {
 		return nil, err
 	}

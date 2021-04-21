@@ -13,7 +13,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/crypto"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/users"
@@ -30,12 +30,12 @@ func (self *SamlAuthenticator) IsPasswordLess() bool {
 func (self *SamlAuthenticator) AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	auther := config_obj.GUI.Authenticator
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
-	key, err := crypto.ParseRsaPrivateKeyFromPemStr([]byte(auther.SamlPrivateKey))
+	key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr([]byte(auther.SamlPrivateKey))
 	if err != nil {
 		return err
 	}
 
-	cert, err := crypto.ParseX509CertFromPemStr([]byte(auther.SamlCertificate))
+	cert, err := crypto_utils.ParseX509CertFromPemStr([]byte(auther.SamlCertificate))
 	if err != nil {
 		return err
 	}
