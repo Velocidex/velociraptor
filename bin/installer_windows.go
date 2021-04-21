@@ -38,7 +38,8 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/crypto"
+	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -363,7 +364,7 @@ func loadClientConfig() (*config_proto.Config, error) {
 	executor.SetTempfile(config_obj)
 
 	// Make sure the config is ok.
-	err = crypto.VerifyConfig(config_obj)
+	err = crypto_utils.VerifyConfig(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -487,7 +488,7 @@ func runOnce(result *VelociraptorService, elog debug.Log) {
 		return
 	}
 
-	manager, err := crypto.NewClientCryptoManager(
+	manager, err := crypto_client.NewClientCryptoManager(
 		config_obj, []byte(config_obj.Writeback.PrivateKey))
 	if err != nil {
 		elog.Error(1, fmt.Sprintf(
