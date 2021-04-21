@@ -49,7 +49,7 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/crypto"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -920,7 +920,7 @@ func (self *ApiServer) Query(
 			return status.Error(codes.InvalidArgument, "no chains verified")
 		}
 
-		peer_name := crypto.GetSubjectName(peer_cert)
+		peer_name := crypto_utils.GetSubjectName(peer_cert)
 
 		// Check that the principal is allowed to issue queries.
 		permissions := acls.ANY_QUERY

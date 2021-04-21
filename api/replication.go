@@ -13,7 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/crypto"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -89,7 +89,7 @@ func (self *ApiServer) WatchEvent(
 			return status.Error(codes.InvalidArgument, "no chains verified")
 		}
 
-		peer_name := crypto.GetSubjectName(peer_cert)
+		peer_name := crypto_utils.GetSubjectName(peer_cert)
 
 		// Check that the principal is allowed to issue queries.
 		permissions := acls.ANY_QUERY

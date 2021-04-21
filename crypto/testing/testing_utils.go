@@ -1,9 +1,11 @@
-package crypto
+package testing
 
 import (
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -15,12 +17,12 @@ func (self *NullCryptoManager) GetCSR() ([]byte, error) {
 func (self *NullCryptoManager) AddCertificate(certificate_pem []byte) (
 	string, error) {
 
-	server_cert, err := ParseX509CertFromPemStr(certificate_pem)
+	server_cert, err := crypto_utils.ParseX509CertFromPemStr(certificate_pem)
 	if err != nil {
 		return "", err
 	}
 
-	return GetSubjectName(server_cert), nil
+	return crypto_utils.GetSubjectName(server_cert), nil
 }
 
 func (self *NullCryptoManager) EncryptMessageList(
@@ -61,7 +63,7 @@ func (self *NullCryptoManager) Encrypt(
 }
 
 func (self *NullCryptoManager) Decrypt(cipher_text []byte) (
-	*MessageInfo, error) {
+	*crypto.MessageInfo, error) {
 
 	packed_message_list := &crypto_proto.PackedMessageList{}
 	err := proto.Unmarshal(cipher_text, packed_message_list)
@@ -69,7 +71,7 @@ func (self *NullCryptoManager) Decrypt(cipher_text []byte) (
 		return nil, errors.WithStack(err)
 	}
 
-	return &MessageInfo{
+	return &crypto.MessageInfo{
 		RawCompressed: packed_message_list.MessageList,
 		Authenticated: true,
 		Source:        "C.123456",

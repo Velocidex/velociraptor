@@ -159,7 +159,7 @@ class VeloPagedTable extends Component {
 
 
     fetchRows = () => {
-        if (_.isEmpty(this.props.params) || !this.props.params.artifact) {
+        if (_.isEmpty(this.props.params)) {
             this.setState({loading: false});
             return;
         }
@@ -174,6 +174,7 @@ class VeloPagedTable extends Component {
         this.source = axios.CancelToken.source();
 
         this.setState({loading: true});
+
         api.get(url, params, this.source.token).then((response) => {
             if (response.cancel) {
                 return;

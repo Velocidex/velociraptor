@@ -35,7 +35,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/crypto"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -253,7 +253,7 @@ func GetAPIHandler(
 	CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
 
 	// Make sure the cert is ok.
-	gw_cert, err := crypto.ParseX509CertFromPemStr(
+	gw_cert, err := crypto_utils.ParseX509CertFromPemStr(
 		[]byte(config_obj.GUI.GwCertificate))
 	if err != nil {
 		return nil, err
@@ -264,7 +264,7 @@ func GetAPIHandler(
 		return nil, err
 	}
 
-	gw_name := crypto.GetSubjectName(gw_cert)
+	gw_name := crypto_utils.GetSubjectName(gw_cert)
 	if gw_name != config_obj.API.PinnedGwName {
 		return nil, errors.New("GUI gRPC proxy Certificate is not correct")
 	}

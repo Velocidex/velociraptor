@@ -114,7 +114,7 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 		return nil, err
 	}
 
-	server_builder, err := api.NewServerBuilder(config_obj)
+	server_builder, err := api.NewServerBuilder(sm.Ctx, config_obj, sm.Wg)
 	if err != nil {
 		return nil, err
 	}

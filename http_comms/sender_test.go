@@ -32,8 +32,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	crypto_test "www.velocidex.com/golang/velociraptor/crypto/testing"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -59,7 +59,7 @@ func (self *MockHTTPConnector) Post(handler string, data []byte, urgent bool) (*
 
 	defer self.wg.Done()
 
-	manager := crypto.NullCryptoManager{}
+	manager := crypto_test.NullCryptoManager{}
 
 	message_info, err := manager.Decrypt(data)
 	require.NoError(self.t, err)
@@ -101,7 +101,7 @@ func testRingBuffer(
 	t *testing.T) {
 	t.Parallel()
 
-	manager := &crypto.NullCryptoManager{}
+	manager := &crypto_test.NullCryptoManager{}
 	exe := &executor.ClientExecutor{
 		Inbound:  make(chan *crypto_proto.VeloMessage),
 		Outbound: make(chan *crypto_proto.VeloMessage),

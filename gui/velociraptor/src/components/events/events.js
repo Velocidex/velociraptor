@@ -203,9 +203,10 @@ class EventMonitoring extends React.Component {
         // Cancel any in flight calls.
         this.source.cancel();
         this.source = axios.CancelToken.source();
+        let client_id = this.props.client.client_id || "server";
 
         api.post("v1/ListAvailableEventResults", {
-            client_id: this.props.client.client_id,
+            client_id: client_id,
         }, this.source.token).then(resp => {
             if (resp.cancel) return;
 
@@ -428,7 +429,7 @@ class EventMonitoring extends React.Component {
                   </Dropdown>
                 </ButtonGroup>
               </Navbar>
-            { this.state.mode === mode_raw_data &&
+            { this.state.mode === mode_raw_data && this.state.artifact.artifact &&
               <Container className="event-report-viewer">
                 <VeloPagedTable
                   params={{

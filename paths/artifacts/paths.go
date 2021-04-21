@@ -53,6 +53,10 @@ func NewArtifactPathManager(
 	}, nil
 }
 
+func (self *ArtifactPathManager) Logs() *ArtifactLogPathManager {
+	return &ArtifactLogPathManager{self}
+}
+
 func (self *ArtifactPathManager) GetQueueName() string {
 	return self.full_artifact_name
 }
@@ -60,6 +64,30 @@ func (self *ArtifactPathManager) GetQueueName() string {
 func (self *ArtifactPathManager) Path() string {
 	result, _ := self.GetPathForWriting()
 	return result
+}
+
+// Returns the root path for all day logs. Walking this path will
+// produce all logs for this client and all artifacts.
+func (self *ArtifactPathManager) GetRootPath() string {
+	switch self.mode {
+	case paths.MODE_CLIENT, paths.MODE_SERVER:
+		return fmt.Sprintf("/clients")
+
+	case paths.MODE_SERVER_EVENT:
+		return "/server_artifacts"
+
+	case paths.MODE_CLIENT_EVENT:
+		if self.client_id == "" {
+			// Should never normally happen.
+			return "/clients/nobody"
+
+		} else {
+			return fmt.Sprintf("/clients/%s/monitoring",
+				self.client_id)
+		}
+	default:
+		return "invalid"
+	}
 }
 
 func (self *ArtifactPathManager) getDayName() string {

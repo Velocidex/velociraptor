@@ -126,7 +126,7 @@ type HTTPConnector struct {
 	// URL. Note, when the URL is changed, the CryptoManager is
 	// initialized by a successful connection to the URL's
 	// server.pem endpoint.
-	manager crypto.ICryptoManager
+	manager crypto.IClientCryptoManager
 	logger  *logging.LogContext
 
 	minPoll, maxPoll time.Duration
@@ -152,7 +152,7 @@ type HTTPConnector struct {
 
 func NewHTTPConnector(
 	config_obj *config_proto.Config,
-	manager crypto.ICryptoManager,
+	manager crypto.IClientCryptoManager,
 	logger *logging.LogContext,
 	urls []string,
 	clock utils.Clock) (*HTTPConnector, error) {
@@ -748,7 +748,7 @@ func (self *HTTPCommunicator) Run(ctx context.Context) {
 
 func NewHTTPCommunicator(
 	config_obj *config_proto.Config,
-	manager crypto.ICryptoManager,
+	manager crypto.IClientCryptoManager,
 	executor executor.Executor,
 	urls []string,
 	on_exit func(),

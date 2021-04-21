@@ -15,11 +15,12 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package crypto
+package crypto_test
 
 import (
 	"context"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -29,15 +30,18 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	crypto_server "www.velocidex.com/golang/velociraptor/crypto/server"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type TestSuite struct {
 	suite.Suite
 	config_obj     *config_proto.Config
-	server_manager *CryptoManager
-	client_manager *CryptoManager
+	server_manager *crypto_server.ServerCryptoManager
+	client_manager *crypto_client.ClientCryptoManager
 	client_id      string
 }
 
@@ -52,11 +56,11 @@ func (self *TestSuite) SetupTest() {
 	self.config_obj = config_obj
 	self.config_obj.Client.WritebackLinux = ""
 	self.config_obj.Client.WritebackWindows = ""
-	key, _ := GeneratePrivateKey()
+	key, _ := crypto_utils.GeneratePrivateKey()
 	self.config_obj.Writeback.PrivateKey = string(key)
 
 	// Configure the client manager.
-	self.client_manager, err = NewClientCryptoManager(
+	self.client_manager, err = crypto_client.NewClientCryptoManager(
 		self.config_obj, []byte(self.config_obj.Writeback.PrivateKey))
 	require.NoError(t, err)
 
@@ -64,17 +68,22 @@ func (self *TestSuite) SetupTest() {
 		[]byte(self.config_obj.Frontend.Certificate))
 	require.NoError(t, err)
 
-	self.client_id = ClientIDFromPublicKey(
-		&self.client_manager.private_key.PublicKey)
+	private_key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr(key)
+	assert.NoError(t, err)
+
+	self.client_id = crypto_utils.ClientIDFromPublicKey(&private_key.PublicKey)
 
 	// Configure the server manager.
-	self.server_manager, err = NewServerCryptoManager(self.config_obj)
+	ctx := context.Background()
+	wg := &sync.WaitGroup{}
+	self.server_manager, err = crypto_server.NewServerCryptoManager(
+		ctx, self.config_obj, wg)
 	require.NoError(t, err)
 
 	// Install an in memory public key resolver.
-	self.server_manager.public_key_resolver = NewInMemoryPublicKeyResolver()
-	self.server_manager.public_key_resolver.SetPublicKey(
-		self.client_id, &self.client_manager.private_key.PublicKey)
+	self.server_manager.Resolver = crypto_client.NewInMemoryPublicKeyResolver()
+	self.server_manager.Resolver.SetPublicKey(
+		self.client_id, &private_key.PublicKey)
 }
 
 func (self *TestSuite) TestEncDecServerToClient() {
@@ -95,7 +104,7 @@ func (self *TestSuite) TestEncDecServerToClient() {
 		self.client_id)
 	assert.NoError(t, err)
 
-	initial_c := testutil.ToFloat64(rsaDecryptCounter)
+	initial_c := testutil.ToFloat64(crypto_client.RsaDecryptCounter)
 
 	// Decrypt the same message 100 times.
 	for i := 0; i < 100; i++ {
@@ -112,7 +121,7 @@ func (self *TestSuite) TestEncDecServerToClient() {
 
 	// This should only do the RSA operation once since it should
 	// hit the LRU cache each time.
-	c := testutil.ToFloat64(rsaDecryptCounter)
+	c := testutil.ToFloat64(crypto_client.RsaDecryptCounter)
 	assert.Equal(t, c-initial_c, float64(1))
 }
 
@@ -132,7 +141,7 @@ func (self *TestSuite) TestEncDecClientToServer() {
 		config_obj.Client.PinnedServerName)
 	assert.NoError(t, err)
 
-	initial_c := testutil.ToFloat64(rsaDecryptCounter)
+	initial_c := testutil.ToFloat64(crypto_client.RsaDecryptCounter)
 
 	// Decrypt the same message 100 times.
 	for i := 0; i < 100; i++ {
@@ -151,7 +160,7 @@ func (self *TestSuite) TestEncDecClientToServer() {
 
 	// This should only do the RSA operation once since it should
 	// hit the LRU cache each time.
-	c := testutil.ToFloat64(rsaDecryptCounter)
+	c := testutil.ToFloat64(crypto_client.RsaDecryptCounter)
 	assert.Equal(t, c-initial_c, float64(1))
 }
 
@@ -160,7 +169,7 @@ func (self *TestSuite) TestEncryption() {
 	plain_text := []byte("hello world")
 
 	config_obj := config.GetDefaultConfig()
-	initial_c := testutil.ToFloat64(rsaDecryptCounter)
+	initial_c := testutil.ToFloat64(crypto_client.RsaDecryptCounter)
 	for i := 0; i < 100; i++ {
 		compressed, err := utils.Compress(plain_text)
 		assert.NoError(t, err)
@@ -181,20 +190,20 @@ func (self *TestSuite) TestEncryption() {
 	}
 
 	// We should encrypt this only once since we cache the cipher in the output LRU.
-	c := testutil.ToFloat64(rsaDecryptCounter)
+	c := testutil.ToFloat64(crypto_client.RsaDecryptCounter)
 	assert.Equal(t, c-initial_c, float64(1))
 }
 
 func (self *TestSuite) TestClientIDFromPublicKey() {
 	t := self.T()
 
-	client_private_key, err := ParseRsaPrivateKeyFromPemStr(
+	client_private_key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr(
 		[]byte(self.config_obj.Writeback.PrivateKey))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	client_id := ClientIDFromPublicKey(&client_private_key.PublicKey)
+	client_id := crypto_utils.ClientIDFromPublicKey(&client_private_key.PublicKey)
 	assert.True(t, strings.HasPrefix(client_id, "C."))
 }
 

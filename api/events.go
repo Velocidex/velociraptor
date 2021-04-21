@@ -12,7 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/crypto"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -45,7 +45,7 @@ func (self *ApiServer) PushEvents(
 			return nil, status.Error(codes.InvalidArgument, "no chains verified")
 		}
 
-		peer_name := crypto.GetSubjectName(peer_cert)
+		peer_name := crypto_utils.GetSubjectName(peer_cert)
 		if peer_name != self.config.Client.PinnedServerName {
 			token, err := acls.GetEffectivePolicy(self.config, peer_name)
 			if err != nil {
@@ -113,7 +113,7 @@ func (self *ApiServer) WriteEvent(
 			return nil, status.Error(codes.InvalidArgument, "no chains verified")
 		}
 
-		peer_name := crypto.GetSubjectName(peer_cert)
+		peer_name := crypto_utils.GetSubjectName(peer_cert)
 
 		token, err := acls.GetEffectivePolicy(self.config, peer_name)
 		if err != nil {

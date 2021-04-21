@@ -25,7 +25,7 @@ import (
 	"google.golang.org/grpc/peer"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/crypto"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -40,7 +40,7 @@ func GetGRPCUserInfo(
 	if ok {
 		tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
 		if ok && config_obj.API != nil {
-			v := crypto.GetSubjectName(
+			v := crypto_utils.GetSubjectName(
 				tlsInfo.State.PeerCertificates[0])
 
 			// Calls from the gRPC gateway are allowed to

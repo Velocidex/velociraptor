@@ -30,6 +30,7 @@ import (
 
 	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/crypto/utils"
 )
 
 type CertBundle struct {
@@ -119,13 +120,13 @@ func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBund
 		return nil, err
 	}
 
-	ca_cert, err := ParseX509CertFromPemStr([]byte(
+	ca_cert, err := utils.ParseX509CertFromPemStr([]byte(
 		config_obj.Client.CaCertificate))
 	if err != nil {
 		return nil, err
 	}
 
-	ca_private_key, err := ParseRsaPrivateKeyFromPemStr(
+	ca_private_key, err := utils.ParseRsaPrivateKeyFromPemStr(
 		[]byte(config_obj.CA.PrivateKey))
 	if err != nil {
 		return nil, err

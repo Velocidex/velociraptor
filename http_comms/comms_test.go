@@ -34,8 +34,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	crypto_test "www.velocidex.com/golang/velociraptor/crypto/testing"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -154,7 +154,7 @@ func (self *CommsTestSuite) SetupTest() {
 	self.config_obj = config_obj
 	self.config_obj.Client.LocalBuffer.DiskSize = 0
 
-	cm := &crypto.NullCryptoManager{}
+	cm := &crypto_test.NullCryptoManager{}
 	self.empty_response, _ = cm.EncryptMessageList(
 		&crypto_proto.MessageList{}, "C.1234")
 
@@ -187,7 +187,7 @@ func (self *CommsTestSuite) TestAbort() {
 		Inbound:  make(chan *crypto_proto.VeloMessage),
 	}
 
-	crypto_manager := &crypto.NullCryptoManager{}
+	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
 		exec, urls, on_error, utils.RealClock{})
 	assert.NoError(self.T(), err)
@@ -223,7 +223,7 @@ func (self *CommsTestSuite) TestEnrollment() {
 	clock := &FakeClock{events: &self.frontend1.events}
 	clock.MockNow = time.Now()
 
-	crypto_manager := &crypto.NullCryptoManager{}
+	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
 		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
@@ -257,7 +257,7 @@ func (self *CommsTestSuite) TestServerError() {
 	clock := &FakeClock{events: &self.frontend1.events}
 	clock.MockNow = time.Now()
 
-	crypto_manager := &crypto.NullCryptoManager{}
+	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
 		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
@@ -299,7 +299,7 @@ func (self *CommsTestSuite) TestMultiFrontends() {
 	clock := &FakeClock{events: &self.frontend1.events}
 	clock.MockNow = time.Now()
 
-	crypto_manager := &crypto.NullCryptoManager{}
+	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
 		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
@@ -356,7 +356,7 @@ func (self *CommsTestSuite) TestMultiFrontendsAllIsBorked() {
 	clock := &FakeClock{events: &self.frontend1.events}
 	clock.MockNow = time.Now()
 
-	crypto_manager := &crypto.NullCryptoManager{}
+	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
 		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
@@ -426,7 +426,7 @@ func (self *CommsTestSuite) TestMultiFrontendsIntermittantFailure() {
 	clock := &FakeClock{events: &self.frontend1.events}
 	clock.MockNow = time.Now()
 
-	crypto_manager := &crypto.NullCryptoManager{}
+	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
 		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
@@ -481,7 +481,7 @@ func (self *CommsTestSuite) TestMultiFrontendsHeavyFailure() {
 	clock := &FakeClock{events: &self.frontend1.events}
 	clock.MockNow = time.Now()
 
-	crypto_manager := &crypto.NullCryptoManager{}
+	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
 		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
@@ -548,7 +548,7 @@ func (self *CommsTestSuite) TestMultiFrontendRedirect() {
 	clock := &FakeClock{events: &self.frontend1.events}
 	clock.MockNow = time.Now()
 
-	crypto_manager := &crypto.NullCryptoManager{}
+	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
 		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
@@ -610,7 +610,7 @@ func (self *CommsTestSuite) TestMultiFrontendRedirectWithErrors() {
 	clock := &FakeClock{events: &self.frontend1.events}
 	clock.MockNow = time.Now()
 
-	crypto_manager := &crypto.NullCryptoManager{}
+	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
 		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
@@ -700,7 +700,7 @@ func (self *CommsTestSuite) TestMultiRedirects() {
 	clock := &FakeClock{events: &self.frontend1.events}
 	clock.MockNow = time.Now()
 
-	crypto_manager := &crypto.NullCryptoManager{}
+	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
 		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)

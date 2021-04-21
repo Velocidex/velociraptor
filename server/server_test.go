@@ -20,7 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/crypto"
+	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -46,7 +46,7 @@ import (
 type ServerTestSuite struct {
 	suite.Suite
 	server        *server.Server
-	client_crypto *crypto.CryptoManager
+	client_crypto *crypto_client.ClientCryptoManager
 	config_obj    *config_proto.Config
 	client_id     string
 	sm            *services.Service
@@ -91,10 +91,10 @@ func (self *ServerTestSuite) SetupTest() {
 
 	manager.GetGlobalRepository(self.config_obj)
 
-	self.server, err = server.NewServer(self.config_obj)
+	self.server, err = server.NewServer(self.sm.Ctx, self.config_obj, self.sm.Wg)
 	require.NoError(self.T(), err)
 
-	self.client_crypto, err = crypto.NewClientCryptoManager(
+	self.client_crypto, err = crypto_client.NewClientCryptoManager(
 		self.config_obj, []byte(self.config_obj.Writeback.PrivateKey))
 	require.NoError(self.T(), err)
 
