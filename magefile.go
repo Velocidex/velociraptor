@@ -223,6 +223,17 @@ func Linux() error {
 		arch:       "amd64"}.Run()
 }
 
+func Freebsd() error {
+	return Builder{
+		extra_tags: " release yara ",
+		goos:       "freebsd",
+
+		// When building on actual freebsd we should have c
+		// compilers, otherwise disable cgo.
+		disable_cgo: runtime.GOOS != "freebsd",
+		arch:        "amd64"}.Run()
+}
+
 func Aix() error {
 	return Builder{
 		extra_tags:  " release yara ",
