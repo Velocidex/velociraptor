@@ -2,7 +2,7 @@ import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import VeloTimestamp from "../utils/time.js";
 import VeloValueRenderer from "../utils/value.js";
-
+import ArtifactLink from '../artifacts/artifacts-link.js';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
 import Dropdown from 'react-bootstrap/Dropdown';
@@ -103,7 +103,9 @@ export default class FlowOverview extends React.Component {
                     <dt className="col-4">Artifact Names</dt>
                     <dd className="col-8">
                       { _.map(artifacts, function(v, idx) {
-                          return <div key={idx}>{v}</div>;
+                          return <ArtifactLink
+                                   artifact={v}
+                                   key={idx}>{v}</ArtifactLink>;
                       })}
                     </dd>
 
