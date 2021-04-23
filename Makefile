@@ -24,6 +24,9 @@ darwin:
 linux:
 	go run make.go -v linux
 
+freebsd:
+	go run make.go -v freebsd
+
 windows:
 	go run make.go -v windowsDev
 
