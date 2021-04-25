@@ -20,12 +20,12 @@ package api
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"errors"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	errors "github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -261,7 +261,7 @@ func GetAPIHandler(
 
 	_, err = gw_cert.Verify(x509.VerifyOptions{Roots: CA_Pool})
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	gw_name := crypto_utils.GetSubjectName(gw_cert)

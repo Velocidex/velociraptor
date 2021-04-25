@@ -10,7 +10,7 @@
  "/server_artifact_logs/Server.Clock/2020-10-07.json": [
   "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"server_monitoring: Collecting \\u003cgreen\\u003eServer.Clock\\u003c/\\u003e\\n\"}",
   "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"server_monitoring: Finished collecting Server.Clock\\n\"}",
-  "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"Query Stats: {\\\"RowsScanned\\\":5,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":2,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":22}\\n\"}",
+  "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"
   ""
  ],
  "/server_artifacts/Server.Clock2/2020-10-07.json": [
@@ -24,7 +24,7 @@
  "/server_artifact_logs/Server.Clock2/2020-10-07.json": [
   "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"server_monitoring: Collecting \\u003cgreen\\u003eServer.Clock2\\u003c/\\u003e\\n\"}",
   "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"server_monitoring: Finished collecting Server.Clock2\\n\"}",
-  "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"Query Stats: {\\\"RowsScanned\\\":5,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":0,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":22}\\n\"}",
+  "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"
   ""
  ],
  "/config/server_monitoring.json": {

@@ -92,6 +92,9 @@ type Repository interface {
 	Get(config_obj *config_proto.Config,
 		name string) (*artifacts_proto.Artifact, bool)
 
+	// An optimization that avoids copying the entire artifact definition
+	GetArtifactType(config_obj *config_proto.Config, artifact_name string) (string, error)
+
 	// Remove a named artifact from the repository.
 	Del(name string)
 
