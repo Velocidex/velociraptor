@@ -267,7 +267,7 @@ func (self *ServerArtifactsRunner) processTask(
 func (self *ServerArtifactsRunner) runQuery(
 	ctx context.Context,
 	task *crypto_proto.VeloMessage,
-	collection_context *contextManager) error {
+	collection_context *contextManager) (err error) {
 
 	// Set up the logger for writing query logs. Note this must be
 	// destroyed last since we need to be able to receive logs
@@ -305,6 +305,22 @@ func (self *ServerArtifactsRunner) runQuery(
 
 	defer func() {
 		self.cancel(task.SessionId)
+
+		// Send a completion event when the query is finished..
+		row := ordereddict.NewDict().
+			Set("Timestamp", time.Now().UTC().Unix()).
+			Set("Flow", collection_context.context).
+			Set("FlowId", collection_context.context.SessionId).
+			Set("ClientId", "server")
+
+		journal, err := services.GetJournal()
+		if err != nil {
+			return
+		}
+		journal.PushRowsToArtifact(self.config_obj,
+			[]*ordereddict.Dict{row},
+			"System.Flow.Completion", "server", collection_context.context.SessionId,
+		)
 	}()
 
 	// Where to write the logs.
