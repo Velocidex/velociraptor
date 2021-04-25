@@ -237,8 +237,6 @@ func (self *CommsTestSuite) TestEnrollment() {
 
 	communicator.receiver.sendMessageList(context.Background(), nil, false)
 
-	utils.Debug(self.frontend1.events)
-
 	checkResponses(self.T(), self.frontend1.events, []string{
 		// First request looks for server.pem but fails on frontend1
 		"0 request: /server.pem",

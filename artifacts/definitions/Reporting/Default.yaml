@@ -253,7 +253,7 @@ reports:
                  {{ $data := Query "SELECT timestamp(epoch=now()).UTC.String AS Time, OS, Fqdn FROM info()" | Expand }}
                  {{ Get $hostinfo "0.Fqdn" }} Artifact Collection
                </div>
-               <div class="col">{{- Get $data "0.Time" -}}</div>
+               <div class="col">{{- Get $data "0" -}}</div>
              </div>
 
              {{ range .parts }}

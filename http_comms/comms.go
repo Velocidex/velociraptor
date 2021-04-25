@@ -799,6 +799,7 @@ func NewHTTPCommunicator(
 			manager:    manager,
 			executor:   executor,
 			logger:     logger,
+			clock:      clock,
 		},
 		on_exit: on_exit,
 		sender:  sender,
