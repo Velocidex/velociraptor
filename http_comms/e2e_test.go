@@ -122,7 +122,7 @@ func (self *TestSuite) makeServer(
 	// Wait for it to come up
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		req, err := http.Get("http://localhost:8000/server.pem")
-		if err != nil {
+		if err != nil || req.StatusCode != http.StatusOK {
 			return false
 		}
 		defer req.Body.Close()
