@@ -225,7 +225,19 @@ class OfflineCollectorParameters  extends React.Component {
                         />
                       </Col>
                     </Form.Group>
-
+                    <Form.Group as={Row}>
+                      <Form.Label column sm="3">Bucket Encryption</Form.Label>
+                      <Col sm="8">
+                        <Form.Control as="textarea" rows={3}
+                                      placeholder="Encryption method (blank if no encryption)"
+                                      value={this.props.parameters.target_args.encryption}
+                                      onChange={e => {
+                                          this.props.parameters.target_args.encryption = e.target.value;
+                                          this.props.setParameters(this.props.parameters);
+                                      }}
+                        />
+                      </Col>
+                    </Form.Group>
                     <Form.Group as={Row}>
                         <Form.Label column sm="3">Skip Cert Verification</Form.Label>
                         <Col sm="8">
@@ -409,6 +421,7 @@ export default class OfflineCollectorWizard extends React.Component {
                 credentialsSecret: "",
                 region: "",
                 endpoint: "",
+                encryption: "",
             },
             template: "",
             password: "",
