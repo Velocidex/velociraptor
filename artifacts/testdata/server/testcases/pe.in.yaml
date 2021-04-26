@@ -36,3 +36,8 @@ Queries:
     FROM Artifact.Windows.Detection.ForwardedImports(
        DLLGlob=srcDir + "/artifacts/testdata/files/wkscli.dll")
     LIMIT 3
+
+  # Adding output for BinaryRename here as its best place with no Mocks
+  - SELECT Name, Size, VersionInformation, Hash, _Source 
+    FROM Artifact.Windows.Detection.BinaryRename(
+        TargetGlob =srcDir + '/artifacts/testdata/files/notnbt.exe')
