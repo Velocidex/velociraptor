@@ -226,13 +226,13 @@ class OfflineCollectorParameters  extends React.Component {
                       </Col>
                     </Form.Group>
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">Bucket Encryption</Form.Label>
+                      <Form.Label column sm="3">Server Side Encryption</Form.Label>
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
-                                      placeholder="Encryption method (blank if no encryption)"
-                                      value={this.props.parameters.target_args.encryption}
+                                      placeholder="Server Side Encryption method (blank if no encryption)"
+                                      value={this.props.parameters.target_args.serverSideEncryption}
                                       onChange={e => {
-                                          this.props.parameters.target_args.encryption = e.target.value;
+                                          this.props.parameters.target_args.serverSideEncryption = e.target.value;
                                           this.props.setParameters(this.props.parameters);
                                       }}
                         />
@@ -421,7 +421,7 @@ export default class OfflineCollectorWizard extends React.Component {
                 credentialsSecret: "",
                 region: "",
                 endpoint: "",
-                encryption: "",
+                serverSideEncryption: "",
             },
             template: "",
             password: "",
