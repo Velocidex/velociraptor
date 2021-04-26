@@ -10,7 +10,8 @@ description: |
 
     Add additional entries to the VersionInfoTable parameter. For straight 
     detection on an Internal or Original name, the Filename entry can be set to
-    an unlikley value - e.g XXXXX.
+    an unlikely value - e.g XXXXX.
+
     
 reference:
   - https://mgreen27.github.io/posts/2019/05/12/BinaryRename.html
