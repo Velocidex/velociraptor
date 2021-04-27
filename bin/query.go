@@ -173,6 +173,16 @@ func doRemoteQuery(
 		kingpin.FatalIfError(err, "GetAPIClient")
 
 		switch format {
+		case "text":
+			vfilter_rows := make([]vfilter.Row, 0, len(rows))
+			for _, row := range rows {
+				vfilter_rows = append(vfilter_rows, row)
+			}
+
+			scope := vql_subsystem.MakeScope()
+			table := reporting.OutputRowsToTable(scope, vfilter_rows, os.Stdout)
+			table.Render()
+
 		case "json":
 			fmt.Println(string(json.MustMarshalIndent(rows)))
 
