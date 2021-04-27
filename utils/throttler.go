@@ -28,6 +28,16 @@ func (self *Throttler) Close() {
 // connections as a load shedding strategy. The rejected clients will
 // automatically back off and attempt to reconnect in a short time.
 func NewThrottler(connections_per_second uint64) *Throttler {
+	if connections_per_second == 0 || connections_per_second > 1000 {
+		result := &Throttler{
+			ticker: make(chan time.Time),
+			done:   make(chan bool),
+		}
+
+		close(result.ticker)
+		return result
+	}
+
 	duration := time.Duration(1000000/connections_per_second) * time.Microsecond
 	result := &Throttler{
 		// Have some buffering so we can spike QPS temporarily
