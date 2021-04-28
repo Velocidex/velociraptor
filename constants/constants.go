@@ -83,10 +83,17 @@ const (
 	// USER record encoded in grpc context
 	GRPC_USER_CONTEXT key = iota
 
-	// Configuration for VQL plugins
+	// Configuration for VQL plugins. These can be set in an
+	// artifact to control the way VQL works.
 
-	// How often to expire the ntfs cache
+	// How often to expire the ntfs cache.
 	NTFS_CACHE_TIME = "NTFS_CACHE_TIME"
+
+	// Number of clusters to cache in memory (default 100).
+	NTFS_CACHE_SIZE = "NTFS_CACHE_SIZE"
+
+	RAW_REG_CACHE_SIZE = "RAW_REG_CACHE_SIZE"
+	BINARY_CACHE_SIZE  = "BINARY_CACHE_SIZE"
 )
 
 type key int
