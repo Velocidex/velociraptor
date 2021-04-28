@@ -18,6 +18,9 @@ parameters:
     default: "%SYSTEMROOT%/appcompat/Programs/Amcache.hve"
   - name: amCacheRegPath
     default: /Root/InventoryApplicationFile/*
+  - name: NTFS_CACHE_SIZE
+    type: int
+    default: 1000
 
 precondition: |
   SELECT OS From info() where OS = 'windows'

@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/dimchansky/utfbom"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -57,7 +58,8 @@ func (self ScannerPlugin) Call(
 				}
 				defer fd.Close()
 
-				scanner := bufio.NewScanner(fd)
+				// Support a BOM just incase
+				scanner := bufio.NewScanner(utfbom.SkipOnly(fd))
 				for scanner.Scan() {
 					select {
 					case <-ctx.Done():
