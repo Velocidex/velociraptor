@@ -10,6 +10,11 @@ import humanizeDuration from "humanize-duration";
 const renderToolTip = (props, ts) => {
     let now = new Date().getTime();
     let difference = (now-ts.getTime());
+    if (difference < 0) {
+        return <Tooltip {...props}>
+                 In {humanizeDuration(difference, { round: true })}
+               </Tooltip>;
+    }
     return <Tooltip {...props}>
              {humanizeDuration(difference, { round: true })} ago
            </Tooltip>;
