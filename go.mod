@@ -11,11 +11,10 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
-	github.com/Velocidex/fileb0x v1.1.2-0.20200125141948-d54f40400160 // indirect
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.10-0.20210423154840-dace8239c158
 	github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0
-	github.com/Velocidex/ordereddict v0.0.0-20210502082334-cf5d9045c0d1
+	github.com/Velocidex/ordereddict v0.0.0-20200723153557-9460a6764ab8
 	github.com/Velocidex/sflags v0.3.1-0.20210402155316-b09f53df5162
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml/v2 v2.2.5
@@ -43,7 +42,7 @@ require (
 	github.com/go-ole/go-ole v1.2.4
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/mock v1.4.4
-	github.com/golang/protobuf v1.4.3
+	github.com/golang/protobuf v1.5.2
 	github.com/golang/snappy v0.0.1
 	github.com/google/rpmpack v0.0.0-20200615183209-0c831d19bd44
 	github.com/google/uuid v1.1.2
@@ -97,22 +96,23 @@ require (
 	github.com/xor-gate/debpkg v0.0.0-20181217150151-a0c70a3d4213
 	golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9
 	golang.org/x/mod v0.4.1
-	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
+	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
 	golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93
-	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
+	golang.org/x/sys v0.0.0-20210320140829-1e4c9ba3b0c4
 	golang.org/x/text v0.3.6 // indirect
-	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
-	golang.org/x/tools/gopls v0.6.10 // indirect
+	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
+	golang.org/x/tools v0.1.1-0.20210408155258-593413344da1 // indirect
 	google.golang.org/api v0.30.0
-	google.golang.org/genproto v0.0.0-20210224155714-063164c882e6
-	google.golang.org/grpc v1.36.0
-	google.golang.org/protobuf v1.25.1-0.20201208041424-160c7477e0e8
+	google.golang.org/genproto v0.0.0-20210416161957-9910b6c460de
+	google.golang.org/grpc v1.36.1
+	google.golang.org/protobuf v1.26.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
 	www.velocidex.com/golang/evtx v0.0.2-0.20201104041743-4b6cdb206c95
 	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
