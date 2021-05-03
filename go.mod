@@ -14,7 +14,7 @@ require (
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.10-0.20210423154840-dace8239c158
 	github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0
-	github.com/Velocidex/ordereddict v0.0.0-20200723153557-9460a6764ab8
+	github.com/Velocidex/ordereddict v0.0.0-20210502082334-cf5d9045c0d1
 	github.com/Velocidex/sflags v0.3.1-0.20210402155316-b09f53df5162
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml/v2 v2.2.5
@@ -33,7 +33,7 @@ require (
 	github.com/crewjam/saml v0.4.5
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/dimchansky/utfbom v1.1.1 // indirect
+	github.com/dimchansky/utfbom v1.1.1
 	github.com/dustin/go-humanize v1.0.0
 	github.com/elastic/go-elasticsearch/v7 v7.3.0 // indirect
 	github.com/elastic/go-libaudit v0.4.0
@@ -120,7 +120,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20210424234412-ae5b320f6e90
+	www.velocidex.com/golang/vfilter v0.0.0-20210502142502-4d8770ff3de8
 	www.velocidex.com/golang/vtypes v0.0.0-20210323032031-b61f37170666
 )
 
