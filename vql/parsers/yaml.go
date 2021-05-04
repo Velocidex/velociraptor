@@ -3,7 +3,7 @@ package parsers
 import (
 	"context"
 	"github.com/Velocidex/ordereddict"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 	"io"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -54,14 +54,19 @@ func (self ParseYamlFunction) Call(
 		scope.Log("parse_yaml: %v", err)
 		return nil
 	}
-	m := make(map[interface{}]interface{})
-	err = yaml.Unmarshal(data, &m)
+	m,err := yaml.YAMLToJSON(data)
 	if err != nil {
 		scope.Log("parse_yaml: %v", err)
 		return nil
 	}
+	ordered_dict := ordereddict.NewDict()
+	err = ordered_dict.UnmarshalJSON(m)
+	if err != nil {
+		scope.Log("parse_yaml: %v", err)
+		return nil
+	}
+	return ordered_dict
 
-	return m
 }
 
 func (self ParseYamlFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
