@@ -14,7 +14,7 @@ require (
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.10-0.20210423154840-dace8239c158
 	github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0
-	github.com/Velocidex/ordereddict v0.0.0-20200723153557-9460a6764ab8
+	github.com/Velocidex/ordereddict v0.0.0-20210502082334-cf5d9045c0d1
 	github.com/Velocidex/sflags v0.3.1-0.20210402155316-b09f53df5162
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml/v2 v2.2.5
@@ -65,7 +65,7 @@ require (
 	github.com/lestrrat-go/file-rotatelogs v2.2.0+incompatible
 	github.com/lestrrat-go/strftime v0.0.0-20190725011945-5c849dd2c51d // indirect
 	github.com/lib/pq v1.2.0
-	github.com/magefile/mage v1.10.0
+	github.com/magefile/mage v1.11.0
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
@@ -112,9 +112,8 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
-	gopkg.in/yaml.v2 v2.3.0
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
-	sigs.k8s.io/yaml v1.2.0 // indirect
+	sigs.k8s.io/yaml v1.2.0
 	www.velocidex.com/golang/evtx v0.0.2-0.20201104041743-4b6cdb206c95
 	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20201111050421-bbba6f6a13d3
