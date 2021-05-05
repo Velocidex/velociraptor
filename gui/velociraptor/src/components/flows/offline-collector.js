@@ -228,14 +228,17 @@ class OfflineCollectorParameters  extends React.Component {
                     <Form.Group as={Row}>
                       <Form.Label column sm="3">Server Side Encryption</Form.Label>
                       <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                      placeholder="Server Side Encryption method (blank if no encryption)"
-                                      value={this.props.parameters.target_args.serverSideEncryption}
-                                      onChange={e => {
-                                          this.props.parameters.target_args.serverSideEncryption = e.target.value;
-                                          this.props.setParameters(this.props.parameters);
-                                      }}
-                        />
+                        <Form.Control as="select"
+                                        value={this.props.parameters.target_args.serverSideEncryption}
+                                        onChange={(e) => {
+                                            this.props.parameters.target_args.serverSideEncryption = e.target.value;
+                                            this.props.setParameters(this.props.parameters);
+                                        }}
+                        >
+                            <option value="">None</option>
+                            <option value="aws:kms">aws:kms</option>
+                            <option value="AES256">AES256</option>
+                        </Form.Control>
                       </Col>
                     </Form.Group>
                     <Form.Group as={Row}>
