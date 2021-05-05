@@ -142,14 +142,23 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 	}
 
 	uploader := s3manager.NewUploader(sess)
-
-	result, err := uploader.UploadWithContext(
-		ctx, &s3manager.UploadInput{
-			Bucket:               aws.String(bucket),
-			Key:                  aws.String(name),
-			ServerSideEncryption: aws.String(serverSideEncryption),
-			Body:                 reader,
-		})
+	var result *s3manager.UploadOutput
+	if serverSideEncryption != "" {
+		result, err = uploader.UploadWithContext(
+			ctx, &s3manager.UploadInput{
+				Bucket:               aws.String(bucket),
+				Key:                  aws.String(name),
+				ServerSideEncryption: aws.String(serverSideEncryption),
+				Body:                 reader,
+			})
+	} else {
+		result, err = uploader.UploadWithContext(
+			ctx, &s3manager.UploadInput{
+				Bucket: aws.String(bucket),
+				Key:    aws.String(name),
+				Body:   reader,
+			})
+	}
 	if err != nil {
 		return &api.UploadResponse{
 			Error: err.Error(),
