@@ -10,39 +10,24 @@ type: SERVER
 
 tools:
   - name: VelociraptorWindows
-    url: http://127.0.0.1/velociraptor-v0.5.9-rc1-linux-amd64
+    github_project: Velocidex/velociraptor
+    github_asset_regex: windows-amd64.exe
     serve_locally: true
 
   - name: VelociraptorWindows_x86
-    url: http://127.0.0.1/velociraptor-v0.5.9-rc1-linux-amd64
+    github_project: Velocidex/velociraptor
+    github_asset_regex: windows-386.exe
     serve_locally: true
 
   - name: VelociraptorLinux
-    url: http://127.0.0.1/velociraptor-v0.5.9-rc1-linux-amd64
+    github_project: Velocidex/velociraptor
+    github_asset_regex: linux-amd64
     serve_locally: true
 
   - name: VelociraptorDarwin
-    url: http://127.0.0.1/velociraptor-v0.5.9-rc1-linux-amd64
+    github_project: Velocidex/velociraptor
+    github_asset_regex: darwin-amd64
     serve_locally: true
-#  - name: VelociraptorWindows
-#    github_project: fabfaeb/velociraptor
-#    github_asset_regex: windows-amd64.exe
-#    serve_locally: true
-#
-#  - name: VelociraptorWindows_x86
-#    github_project: fabfaeb/velociraptor
-#    github_asset_regex: windows-386.exe
-#    serve_locally: true
-#
-#  - name: VelociraptorLinux
-#    github_project: fabfaeb/velociraptor
-#    github_asset_regex: linux-amd64
-#    serve_locally: true
-#
-#  - name: VelociraptorDarwin
-#    github_project: fabfaeb/velociraptor
-#    github_asset_regex: darwin-amd64
-#    serve_locally: true
 
 parameters:
   - name: OS
@@ -156,7 +141,6 @@ parameters:
           credentialssecret=TargetArgs.credentialsSecret,
           region=TargetArgs.region,
           endpoint=TargetArgs.endpoint,
-          serversideencryption=TargetArgs.serverSideEncryption,
           noverifycert=TargetArgs.noverifycert)
 
   - name: GCSCollection
