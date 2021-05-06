@@ -124,13 +124,32 @@ func (self _LiteralComponent) Match(f FileInfo) bool {
 	return strings.EqualFold(self.path, f.Name())
 }
 
+type GlobOptions struct {
+	// Do not follow symbolic links.
+	DoNotFollowSymlinks bool
+
+	// Stay on the one filesystem
+	OneFilesystem bool
+}
+
 // A tree of filters - each filter branches to a subfilter.
-type Globber map[_PathFilterer]*Globber
+type Globber struct {
+	filters map[_PathFilterer]*Globber
+	options GlobOptions
+}
+
+func (self *Globber) WithOptions(options GlobOptions) *Globber {
+	self.options = options
+
+	return self
+}
 
 // A factory for a new Globber. To use the globber simply Add()
 // any patterns and call Expand() using a suitable FileSystemAccessor.
-func NewGlobber() Globber {
-	return make(Globber)
+func NewGlobber() *Globber {
+	return &Globber{
+		filters: make(map[_PathFilterer]*Globber),
+	}
 }
 
 func (self Globber) DebugString() string {
@@ -141,7 +160,7 @@ func (self Globber) _DebugString(indent string) string {
 	re := regexp.MustCompile("^")
 
 	result := []string{}
-	for k, v := range self {
+	for k, v := range self.filters {
 		if v == nil {
 			continue
 		}
@@ -200,22 +219,22 @@ func (self *Globber) _add_filter(components []_PathFilterer) error {
 	var current *Globber = self
 
 	for _, element := range components {
-		next, pres := (*current)[element]
+		next, pres := current.filters[element]
 		if pres {
 			current = next
 		} else {
-			next := &Globber{}
-			(*current)[element] = next
+			next := NewGlobber().WithOptions(self.options)
+			current.filters[element] = next
 			current = next
 		}
 	}
 
 	// Add Sentinal to ensure matches are reported here.
-	(*current)[sentinal_filter] = nil
+	current.filters[sentinal_filter] = nil
 	return nil
 }
 
-func is_dir_or_link(f FileInfo, accessor FileSystemAccessor, depth int) bool {
+func (self *Globber) is_dir_or_link(f FileInfo, accessor FileSystemAccessor, depth int) bool {
 	// Do not follow symlinks to symlinks deeply.
 	if depth > 10 {
 		return false
@@ -224,6 +243,11 @@ func is_dir_or_link(f FileInfo, accessor FileSystemAccessor, depth int) bool {
 	// If it is a link we need to determine if the target is a
 	// directory.
 	if f.IsLink() {
+
+		if self.options.DoNotFollowSymlinks {
+			return false
+		}
+
 		target, err := f.GetLink()
 		if err == nil {
 			// This is a link to a network share or
@@ -234,7 +258,7 @@ func is_dir_or_link(f FileInfo, accessor FileSystemAccessor, depth int) bool {
 
 			target_info, err := accessor.Lstat(target)
 			if err == nil {
-				return is_dir_or_link(target_info, accessor, depth+1)
+				return self.is_dir_or_link(target_info, accessor, depth+1)
 			}
 
 			// Hmm we failed to lstat the target - assume
@@ -253,7 +277,7 @@ func is_dir_or_link(f FileInfo, accessor FileSystemAccessor, depth int) bool {
 // Expands the component tree by traversing the filesystem. This
 // version uses a context to allow cancellation. We write the FileInfo
 // into the output channel.
-func (self Globber) ExpandWithContext(
+func (self *Globber) ExpandWithContext(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	root string,
@@ -285,20 +309,20 @@ func (self Globber) ExpandWithContext(
 		// For each file that matched, we check which component
 		// would match it.
 		for _, f := range files {
-			for filterer, next := range self {
+			for filterer, next := range self.filters {
 				if !filterer.Match(f) {
 					continue
 				}
 				if next == nil {
 					continue
 				}
-				_, next_has_sentinal := (*next)[sentinal_filter]
+				_, next_has_sentinal := next.filters[sentinal_filter]
 				if next_has_sentinal {
 					result = append(result, f)
 				}
 
 				// Only recurse into directories.
-				if is_dir_or_link(f, accessor, 0) {
+				if self.is_dir_or_link(f, accessor, 0) {
 					next_path := accessor.PathJoin(root, f.Name())
 					item := []*Globber{next}
 					prev_item, pres := children[next_path]
@@ -350,11 +374,11 @@ func (self Globber) ExpandWithContext(
 }
 
 func is_sentinal(globber *Globber) bool {
-	if len(*globber) != 1 {
+	if len(globber.filters) != 1 {
 		return false
 	}
 
-	for k, v := range *globber {
+	for k, v := range globber.filters {
 		if k == sentinal_filter && v == nil {
 			return true
 		}

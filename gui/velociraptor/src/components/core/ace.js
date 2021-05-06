@@ -78,6 +78,11 @@ import 'ace-builds/src-min-noconflict/mode-json.js';
 import 'ace-builds/src-min-noconflict/mode-markdown.js';
 import 'ace-builds/src-min-noconflict/mode-sql.js';
 
+// Custom VQL syntax highlighter
+import VqlMode from './mode-vql.js';
+import MarkdownMode from './mode-markdown.js';
+import YamlMode from './mode-yaml.js';
+
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -171,6 +176,21 @@ export default class VeloAce extends Component {
     state = {
         // The raw ace editor.
         ace: {},
+        mode: "text",
+    }
+
+    componentDidUpdate() {
+        if (this.props.mode !== this.state.mode) {
+            this.setState({mode: this.props.mode});
+
+            if (this.props.mode === "vql") {
+                this.refs.ace.editor.getSession().setMode(new VqlMode());
+            } else if(this.props.mode === "markdown") {
+                this.refs.ace.editor.getSession().setMode(new MarkdownMode());
+            } else if(this.props.mode === "yaml") {
+                this.refs.ace.editor.getSession().setMode(new YamlMode());
+            }
+        };
     }
 
     render() {
@@ -186,7 +206,7 @@ export default class VeloAce extends Component {
                   className="full-height"
                   showGutter={true}
                   focus={true}
-                  mode={this.props.mode || 'sql'}
+                  mode='sql'
                   theme="github"
                   value={this.props.text || ''}
                   onChange={this.props.onChange}

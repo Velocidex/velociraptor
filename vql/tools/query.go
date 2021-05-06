@@ -36,6 +36,11 @@ func (self QueryPlugin) Call(
 			return
 		}
 
+		arg_value, ok := arg.Env.(types.LazyExpr)
+		if ok {
+			arg.Env = arg_value.Reduce()
+		}
+
 		// Build the query args
 		env := ordereddict.NewDict()
 		for _, member := range scope.GetMembers(arg.Env) {

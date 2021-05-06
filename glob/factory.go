@@ -31,8 +31,7 @@ var (
 	handlers map[string]FileSystemAccessorFactory
 )
 
-// Interface for accessing the filesystem. Used for dependency
-// injection.
+// Interface for accessing the filesystem.
 type FileSystemAccessor interface {
 	ReadDir(path string) ([]FileInfo, error)
 	Open(path string) (ReadSeekCloser, error)

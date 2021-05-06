@@ -349,7 +349,7 @@ func (self ReadKeyValues) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
-	globber := make(glob.Globber)
+	globber := glob.NewGlobber()
 	output_chan := make(chan vfilter.Row)
 
 	go func() {

@@ -234,7 +234,7 @@ export default class NotebookCellRenderer extends React.Component {
 
     ace_type = (type) => {
         if (type === "VQL") {
-            return "sql";
+            return "vql";
         }
         if (type === "Markdown") {
             return "markdown";
