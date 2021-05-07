@@ -65,7 +65,7 @@ func (self *NTFSCachedContext) Start(ctx context.Context, scope vfilter.Scope) {
 			cache_life_any = t.Reduce(ctx, scope)
 
 		case types.LazyExpr:
-			cache_life_any = t.Reduce()
+			cache_life_any = t.Reduce(ctx)
 		}
 
 		cache_life, _ = utils.ToInt64(cache_life_any)

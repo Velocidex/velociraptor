@@ -21,6 +21,7 @@
 package windows
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"net"
@@ -109,8 +110,8 @@ func (self *ConnectionStat) TypeString() string {
 // The VQL WMI plugin.
 type NetstatArgs struct{}
 
-func runNetstat(scope vfilter.Scope,
-	args *ordereddict.Dict) []vfilter.Row {
+func runNetstat(
+	ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)

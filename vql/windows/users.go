@@ -102,8 +102,8 @@ func ParseUserRecord(a *USER_INFO_3) *UserRecord {
 	}
 }
 
-func getUsers(scope vfilter.Scope,
-	args *ordereddict.Dict) []vfilter.Row {
+func getUsers(
+	ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 
 	level := uint32(3)
