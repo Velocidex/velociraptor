@@ -14,6 +14,7 @@ import (
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type FlowsPluginArgs struct {
@@ -39,7 +40,7 @@ func (self FlowsPlugin) Call(
 		}
 
 		arg := &FlowsPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("flows: %v", err)
 			return
@@ -111,7 +112,7 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &FlowsPluginArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("cancel_flow: %s", err.Error())
 		return vfilter.Null{}
@@ -170,7 +171,7 @@ func (self EnumerateFlowPlugin) Call(
 		}
 
 		arg := &FlowsPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("enumerate_flow: %s", err.Error())
 			return

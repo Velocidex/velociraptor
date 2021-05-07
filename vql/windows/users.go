@@ -29,6 +29,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type UserRecord struct {
@@ -158,7 +159,7 @@ func (self *LookupSidFunction) Call(ctx context.Context,
 	}
 
 	arg := &LookupSidFunctionArgs{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("LookupSID: %s", err.Error())
 		return false

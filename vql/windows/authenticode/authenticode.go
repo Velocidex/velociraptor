@@ -36,6 +36,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type AuthenticodeArgs struct {
@@ -55,7 +56,7 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 	}
 
 	arg := &AuthenticodeArgs{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("authenticode: %v", err)
 		return vfilter.Null{}

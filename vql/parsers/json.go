@@ -31,6 +31,7 @@ import (
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ParseJsonFunctionArg struct {
@@ -50,7 +51,7 @@ func (self ParseJsonFunction) Call(
 	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &ParseJsonFunctionArg{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("parse_json: %v", err)
 		return &vfilter.Null{}
@@ -79,7 +80,7 @@ func (self ParseJsonArray) Call(
 	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &ParseJsonFunctionArg{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("parse_json_array: %v", err)
 		return &vfilter.Null{}
@@ -132,7 +133,7 @@ func (self ParseJsonlPlugin) Call(
 		defer close(output_chan)
 
 		arg := &ParseJsonlPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("parse_jsonl: %s", err.Error())
 			return

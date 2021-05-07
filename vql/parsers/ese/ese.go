@@ -30,6 +30,7 @@ import (
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type SRUMId struct {
@@ -61,7 +62,7 @@ func (self _SRUMLookupId) Call(
 	defer utils.RecoverVQL(scope)
 
 	arg := &_SRUMLookupIdArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("srum_lookup_id: %v", err)
 		return &vfilter.Null{}
@@ -117,7 +118,7 @@ func (self _SRUMLookupId) Call(
 		scope.Log("Parsing SruDbIdMapTable for %v", arg.Filename)
 		err = catalog.DumpTable("SruDbIdMapTable", func(row *ordereddict.Dict) error {
 			id_details := &SRUMId{}
-			err := vfilter.ExtractArgs(scope, row, id_details)
+			err := arg_parser.ExtractArgsWithContext(ctx, scope, row, id_details)
 			if err != nil {
 				return err
 			}
@@ -190,7 +191,7 @@ func (self _ESEPlugin) Call(
 		defer utils.RecoverVQL(scope)
 
 		arg := &_ESEArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("parse_ese: %v", err)
 			return

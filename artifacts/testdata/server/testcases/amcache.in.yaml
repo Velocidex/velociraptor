@@ -76,7 +76,7 @@ Parameters:
         "Size": 468992,
         "Language": 1033,
         "Usn": 106933632
-      },  
+      },
       {
         "Key": {
           "FullPath": "file:///C:/Windows/appcompat/Programs/Amcache.hve#%5CRoot%5CInventoryApplicationFile%5C1.exe%7Ce7ecb4ace0d41711",
@@ -139,4 +139,3 @@ Queries:
   - SELECT * FROM Artifact.Windows.Detection.Amcache(PathRegex = 'C:\\\\Users\\\\Public\\\\')
   - SELECT * FROM Artifact.Windows.Detection.Amcache(NameRegex = '^a\\.exe$')
   - SELECT * FROM Artifact.Windows.Detection.Amcache()
-

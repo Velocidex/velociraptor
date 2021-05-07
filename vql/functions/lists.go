@@ -26,6 +26,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
@@ -40,7 +41,7 @@ func flatten(ctx context.Context, scope vfilter.Scope, a vfilter.Any, depth int)
 
 	switch t := a.(type) {
 	case types.LazyExpr:
-		a = t.Reduce()
+		a = t.Reduce(ctx)
 
 	case types.StoredQuery:
 		for row := range t.Eval(ctx, scope) {
@@ -110,7 +111,7 @@ func (self *JoinFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &JoinFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("join: %s", err.Error())
 		return false
@@ -141,7 +142,7 @@ func (self *FilterFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &FilterFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("filter: %s", err.Error())
 		return &vfilter.Null{}
@@ -186,7 +187,7 @@ func (self *LenFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &LenFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("len: %s", err.Error())
 		return &vfilter.Null{}
@@ -229,7 +230,7 @@ func (self *SliceFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &SliceFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("len: %s", err.Error())
 		return &vfilter.Null{}

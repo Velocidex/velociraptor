@@ -52,6 +52,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type _ElasticPluginArgs struct {
@@ -86,7 +87,7 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 		}
 
 		arg := _ElasticPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, &arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
 		if err != nil {
 			scope.Log("elastic: %v", err)
 			return
@@ -205,15 +206,15 @@ func append_row_to_buffer(
 		row_dict.Delete("_index")
 	}
 
-    var meta []byte
+	var meta []byte
 	pipeline := arg.PipeLine
-    if pipeline != "" {
-        meta = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s", "pipeline": "%s" } }%s`,
-                id, arg.Type, index, pipeline, "\n"))
-    } else {
-        meta = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s"} }%s`,
-            id, arg.Type, index, "\n"))
-    }
+	if pipeline != "" {
+		meta = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s", "pipeline": "%s" } }%s`,
+			id, arg.Type, index, pipeline, "\n"))
+	} else {
+		meta = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s"} }%s`,
+			id, arg.Type, index, "\n"))
+	}
 
 	opts := vql_subsystem.EncOptsFromScope(scope)
 	data, err := json.MarshalWithOptions(row_dict, opts)

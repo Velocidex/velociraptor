@@ -60,6 +60,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type SearchPluginArgs struct {
@@ -90,7 +91,7 @@ func (self SearchPlugin) Call(
 		}
 
 		arg := &SearchPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("search: %v", err)
 			return

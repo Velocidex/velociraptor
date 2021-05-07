@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type _TempfileRequest struct {
@@ -50,7 +51,7 @@ func (self *TempfileFunction) Call(ctx context.Context,
 	}
 
 	arg := &_TempfileRequest{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("tempfile: %s", err.Error())
 		return false
@@ -150,7 +151,7 @@ func (self *TempdirFunction) Call(ctx context.Context,
 	}
 
 	arg := &_TempdirRequest{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("tempdir: %s", err.Error())
 		return false

@@ -17,6 +17,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type WinObjDesc struct {
@@ -55,7 +56,7 @@ func (self WinObjPlugin) Call(
 		defer vql_subsystem.CheckForPanic(scope, "winobj")
 
 		arg := &WinObjPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("winobj: %s", err.Error())
 			return

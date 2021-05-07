@@ -31,6 +31,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type _Base64DecodeArgs struct {
@@ -44,7 +45,7 @@ func (self _Base64Decode) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_Base64DecodeArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("base64decode: %s", err.Error())
 		return vfilter.Null{}
@@ -75,7 +76,7 @@ func (self _Base64Encode) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_Base64EncodeArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("base64encode: %s", err.Error())
 		return vfilter.Null{}
@@ -104,7 +105,7 @@ func (self _ToLower) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ToLowerArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("lowcase: %s", err.Error())
 		return vfilter.Null{}
@@ -127,7 +128,7 @@ func (self _ToUpper) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ToLowerArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("upcase: %s", err.Error())
 		return vfilter.Null{}
@@ -154,7 +155,7 @@ func (self _ToInt) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ToIntArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("atoi: %s", err.Error())
 		return vfilter.Null{}
@@ -186,7 +187,7 @@ func (self _ParseFloat) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ToIntArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("atoi: %s", err.Error())
 		return vfilter.Null{}
@@ -248,7 +249,7 @@ func (self _UTF16) Call(
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &_Base64DecodeArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("utf16: %s", err.Error())
 		return vfilter.Null{}
@@ -279,7 +280,7 @@ func (self _UTF16Encode) Call(
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &_Base64EncodeArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("utf16_encode: %s", err.Error())
 		return vfilter.Null{}
@@ -343,7 +344,7 @@ func (self _GetFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_GetFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("get: %s", err.Error())
 		return vfilter.Null{}

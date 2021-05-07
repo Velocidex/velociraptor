@@ -16,6 +16,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type VMemeInfo struct {
@@ -56,7 +57,7 @@ func (self ModulesPlugin) Call(
 
 		defer vql_subsystem.CheckForPanic(scope, "module")
 
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("modules: %s", err.Error())
 			return
@@ -105,7 +106,7 @@ func (self VADPlugin) Call(
 
 		defer vql_subsystem.CheckForPanic(scope, "module")
 
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("vad: %s", err.Error())
 			return

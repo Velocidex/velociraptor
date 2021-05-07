@@ -7,6 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ItemsPluginArgs struct {
@@ -25,7 +26,7 @@ func (self ItemsPlugin) Call(
 		defer close(output_chan)
 
 		arg := &ItemsPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("items: %v", err)
 			return
@@ -33,7 +34,7 @@ func (self ItemsPlugin) Call(
 
 		switch t := arg.Item.(type) {
 		case vfilter.LazyExpr:
-			arg.Item = t.Reduce()
+			arg.Item = t.Reduce(ctx)
 		}
 
 		a_value := reflect.Indirect(reflect.ValueOf(arg.Item))

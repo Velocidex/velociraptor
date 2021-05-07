@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 // This is very similar to the source plugin, but runs the query over
@@ -79,7 +80,7 @@ func (self ParallelPlugin) Call(
 			return
 		}
 
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("parallel: %v", err)
 			return

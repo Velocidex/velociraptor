@@ -26,6 +26,7 @@ ordereddict.Dict().
 package wmi
 
 import (
+	"context"
 	"errors"
 	"runtime"
 	"sync"
@@ -36,6 +37,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 var (
@@ -187,8 +189,8 @@ type WMIQueryArgs struct {
 	Namespace string `vfilter:"optional,field=namespace,doc=The WMI namespace to use (ROOT/CIMV2)"`
 }
 
-func runWMIQuery(scope vfilter.Scope,
-	args *ordereddict.Dict) []vfilter.Row {
+func runWMIQuery(
+	ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
@@ -198,7 +200,7 @@ func runWMIQuery(scope vfilter.Scope,
 	}
 
 	arg := &WMIQueryArgs{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("wmi: %s", err.Error())
 		return result

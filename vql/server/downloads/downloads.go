@@ -29,6 +29,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type CreateFlowDownloadArgs struct {
@@ -46,7 +47,7 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &CreateFlowDownloadArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("create_flow_download: %s", err.Error())
 		return vfilter.Null{}
@@ -117,7 +118,7 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &CreateHuntDownloadArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("create_hunt_download: %s", err.Error())
 		return vfilter.Null{}

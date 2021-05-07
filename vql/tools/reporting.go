@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ReportPart struct {
@@ -152,7 +153,7 @@ func (self *ArchiveSourcePlugin) Call(
 		ParseSourceArgsFromScope(arg, scope)
 
 		// Allow the plugin args to override the environment scope.
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("source: %v", err)
 			return

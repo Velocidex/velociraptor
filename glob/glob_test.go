@@ -202,7 +202,7 @@ func TestGlobWithContext(t *testing.T) {
 	for idx, fixture := range _GlobFixture {
 		var returned []string
 
-		globber := &Globber{}
+		globber := NewGlobber()
 		for _, pattern := range fixture.patterns {
 			err := globber.Add(pattern, MockFileSystemAccessor{}.PathSplit)
 			if err != nil {
@@ -226,7 +226,7 @@ func TestGlobWithContext(t *testing.T) {
 
 func TestBraceExpansion(t *testing.T) {
 	var result []string
-	globber := make(Globber)
+	globber := NewGlobber()
 	globber._brace_expansion("{/bin/{a,b},/usr/bin/{c,d}}/*.exe", &result)
 	sort.Strings(result)
 

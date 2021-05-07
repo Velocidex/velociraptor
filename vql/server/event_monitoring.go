@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type GetClientMonitoringArgs struct{}
@@ -31,7 +32,7 @@ func (self GetClientMonitoring) Call(
 	}
 
 	arg := &GetClientMonitoringArgs{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("get_client_monitoring: %v", err)
 		return vfilter.Null{}
@@ -72,7 +73,7 @@ func (self SetClientMonitoring) Call(
 	}
 
 	arg := &SetClientMonitoringArgs{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("set_client_monitoring: %v", err)
 		return vfilter.Null{}
@@ -141,7 +142,7 @@ func (self GetServerMonitoring) Call(
 	}
 
 	arg := &GetServerMonitoringArgs{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("get_server_monitoring: %v", err)
 		return vfilter.Null{}
@@ -198,7 +199,7 @@ func (self SetServerMonitoring) Call(
 	}
 
 	arg := &SetServerMonitoringArgs{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("set_server_monitoring: %v", err)
 		return vfilter.Null{}

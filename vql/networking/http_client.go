@@ -41,6 +41,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
@@ -240,7 +241,7 @@ func (self *_HttpPlugin) Call(
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	arg := &HttpPluginRequest{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		goto error
 	}
@@ -290,7 +291,7 @@ func (self *_HttpPlugin) Call(
 				if pres {
 					lazy_v, ok := value.(types.LazyExpr)
 					if ok {
-						value = lazy_v.Reduce()
+						value = lazy_v.Reduce(ctx)
 					}
 
 					str_value, ok := value.(string)

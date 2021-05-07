@@ -30,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type MonitoringPlugin struct{}
@@ -50,7 +51,7 @@ func (self MonitoringPlugin) Call(
 		}
 
 		arg := &SourcePluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("monitoring: %v", err)
 			return
@@ -131,7 +132,7 @@ func (self WatchMonitoringPlugin) Call(
 		}
 
 		arg := &MonitoringPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_monitoring: %v", err)
 			return

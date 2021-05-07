@@ -81,7 +81,12 @@ func (self *QueuePool) unregister(vfs_path string, id int64) {
 		new_registrations := make([]*Listener, 0, len(registrations))
 		for _, item := range registrations {
 			if id == item.id {
-				close(item.Channel)
+				// Do not close the channel in case
+				// the writer is still active. This
+				// fixes a race where a channel is
+				// deregistered while a broadcast is
+				// still taking place.
+				// close(item.Channel)
 			} else {
 				new_registrations = append(new_registrations,
 					item)

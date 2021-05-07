@@ -29,6 +29,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type CopyFunctionArgs struct {
@@ -52,7 +53,7 @@ func (self *CopyFunction) Call(ctx context.Context,
 	}
 
 	arg := &CopyFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("copy: %v", err)
 		return vfilter.Null{}

@@ -7,6 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ColumnFilterArgs struct {
@@ -27,7 +28,7 @@ func (self ColumnFilter) Call(
 		defer close(output_chan)
 
 		arg := &ColumnFilterArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("column_filter: %v", err)
 			return

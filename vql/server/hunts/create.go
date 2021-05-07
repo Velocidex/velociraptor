@@ -30,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 
 	"www.velocidex.com/golang/vfilter"
 )
@@ -59,7 +60,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	}
 
 	arg := &ScheduleHuntFunctionArg{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("hunt: %s", err.Error())
 		return vfilter.Null{}
@@ -151,7 +152,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 	}
 
 	arg := &AddToHuntFunctionArg{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("hunt_add: %s", err.Error())
 		return vfilter.Null{}

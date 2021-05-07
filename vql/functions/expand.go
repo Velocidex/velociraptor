@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type _ExpandPathArgs struct {
@@ -33,7 +34,7 @@ func (self _ExpandPath) Call(
 	}
 
 	arg := &_ExpandPathArgs{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("expand: %s", err.Error())
 		return vfilter.Null{}

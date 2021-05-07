@@ -87,7 +87,7 @@ func (self *AccessorLinuxTestSuite) TestSymlinks() {
 
 	// Now glob through the files - this should not lock up since
 	// the cycle should be detected.
-	globber := make(Globber)
+	globber := NewGlobber()
 	globber.Add("**/*.txt", accessor.PathSplit)
 
 	hits := []string{}

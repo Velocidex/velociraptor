@@ -107,7 +107,8 @@ func (self *Repository) LoadDirectory(config_obj *config_proto.Config, dirname s
 	return count, err
 }
 
-var query_regexp = regexp.MustCompile(`(?im)(^ +- +)(SELECT|LET|//)`)
+var query_regexp = regexp.MustCompile(`(?im)^[\s-]*(precondition|query):\s*$`)
+var queries_regexp = regexp.MustCompile(`(?im)(^ +- +)(SELECT|LET|//)`)
 
 // Fix common YAML errors.
 func sanitize_artifact_yaml(data string) string {
@@ -123,9 +124,14 @@ func sanitize_artifact_yaml(data string) string {
 	// order to trick the yaml decoder to do the right thing.
 
 	result := query_regexp.ReplaceAllStringFunc(data, func(m string) string {
-		parts := query_regexp.FindStringSubmatch(m)
+		return m + " |\n"
+	})
+
+	result = queries_regexp.ReplaceAllStringFunc(result, func(m string) string {
+		parts := queries_regexp.FindStringSubmatch(m)
 		return parts[1] + "|\n" + strings.Repeat(" ", len(parts[1])) + parts[2]
 	})
+
 	return result
 
 }

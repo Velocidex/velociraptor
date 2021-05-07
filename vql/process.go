@@ -23,11 +23,14 @@
 package vql
 
 import (
+	"context"
+
 	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/process"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/protocols"
 )
 
@@ -77,6 +80,7 @@ func init() {
 	RegisterPlugin(vfilter.GenericListPlugin{
 		PluginName: "pslist",
 		Function: func(
+			ctx context.Context,
 			scope vfilter.Scope,
 			args *ordereddict.Dict) []vfilter.Row {
 			var result []vfilter.Row
@@ -88,7 +92,7 @@ func init() {
 			}
 
 			arg := &PslistArgs{}
-			err = vfilter.ExtractArgs(scope, args, arg)
+			err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 			if err != nil {
 				scope.Log("pslist: %s", err.Error())
 				return result

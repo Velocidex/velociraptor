@@ -43,6 +43,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	wmi_parse "www.velocidex.com/golang/velociraptor/vql/windows/wmi/parse"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type WMIObject struct {
@@ -127,7 +128,7 @@ func (self WmiEventPlugin) Call(
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("wmi_events: %s", err.Error())
 			return

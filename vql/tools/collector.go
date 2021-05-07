@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 
@@ -22,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type CollectPluginArgs struct {
@@ -63,7 +63,7 @@ func (self CollectPlugin) Call(
 		}
 
 		arg := &CollectPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return
@@ -393,7 +393,7 @@ func AddSpecProtobuf(
 		artifact_definitions, pres := repository.Get(config_obj, name)
 		if !pres {
 			// Artifact not known
-			return errors.New(`Parameter 'args' refers to an unknown artifact. The 'args' parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`)
+			return fmt.Errorf(`Parameter 'args' refers to an unknown artifact (%v). The 'args' parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`, name)
 		}
 
 		spec_proto := &flows_proto.ArtifactSpec{

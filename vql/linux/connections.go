@@ -18,6 +18,8 @@
 package linux
 
 import (
+	"context"
+
 	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/net"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -30,6 +32,7 @@ func init() {
 		&vfilter.GenericListPlugin{
 			PluginName: "connections",
 			Function: func(
+				ctx context.Context,
 				scope vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row

@@ -26,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type EnvPluginArgs struct {
@@ -49,7 +50,7 @@ func (self *EnvFunction) Call(ctx context.Context,
 		return false
 	}
 
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("environ: %s", err.Error())
 		return false
@@ -72,12 +73,13 @@ func init() {
 		vfilter.GenericListPlugin{
 			PluginName: "environ",
 			Function: func(
+				ctx context.Context,
 				scope vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 
 				arg := &EnvPluginArgs{}
-				err := vfilter.ExtractArgs(scope, args, arg)
+				err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 				if err != nil {
 					scope.Log("%s: %s", "environ", err.Error())
 					return result

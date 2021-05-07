@@ -34,13 +34,13 @@ parameters:
       Windows.Events.ServiceCreation,WindowsEventsServiceCreation
 
 sources:
-  - queries:
-      - LET artifacts_to_watch = SELECT Artifact FROM parse_csv(
+  - query: |
+      LET artifacts_to_watch = SELECT Artifact FROM parse_csv(
              filename=artifactParameterMap, accessor='data')
         WHERE get(item=scope(), member=Parameter) AND log(
           message="Uploading artifact " + Artifact + " to Elastic")
 
-      - LET events = SELECT * FROM foreach(
+      LET events = SELECT * FROM foreach(
           row=artifacts_to_watch,
           async=TRUE,   // Required for event queries in foreach()
           query={
@@ -50,7 +50,7 @@ sources:
              FROM watch_monitoring(artifact=Artifact)
           })
 
-      - SELECT * FROM elastic_upload(
+      SELECT * FROM elastic_upload(
           query=events,
           type="ClientEvents",
           addresses=split(string=ElasticAddresses, sep=","))

@@ -10,6 +10,7 @@ import (
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 /*
@@ -47,7 +48,7 @@ func (self _PrefetchPlugin) Call(
 		defer close(output_chan)
 
 		arg := &_PrefetchPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("prefetch: %s", err.Error())
 			return
