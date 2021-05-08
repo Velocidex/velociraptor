@@ -60,6 +60,9 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
 ]LET X = SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM glob(globs=srcDir + "/artifacts/**10/*.{exe,sys}")[]SELECT PEInfo.VersionInformation.CompanyName AS CompanyName FROM X WHERE CompanyName =~ "Microsoft"[
  {
   "CompanyName": "Microsoft Corporation"
+ },
+ {
+  "CompanyName": "Microsoft Corporation"
  }
 ]SELECT Name FROM glob(globs=srcDir + "/artifacts/**10/*.{sys,exe}") WHERE "ntoskrnl.exe!MmGetSystemRoutineAddress" IN parse_pe(file=FullPath).Imports[
  {
@@ -84,5 +87,26 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
  {
   "ForwardedImport": "C:\\windows\\system32\\wkscli.NetGetJoinInformation",
   "DllImportPath": "C:\\windows\\system32\\wkscli"
+ }
+]SELECT Name, Size, VersionInformation, Hash, _Source FROM Artifact.Windows.Detection.BinaryRename( TargetGlob =srcDir + '/artifacts/testdata/files/notnbt.exe')[
+ {
+  "Name": "notnbt.exe",
+  "Size": 17920,
+  "VersionInformation": {
+   "CompanyName": "Microsoft Corporation",
+   "FileDescription": "TCP/IP NetBios Information",
+   "FileVersion": "10.0.15063.0 (WinBuild.160101.0800)",
+   "InternalName": "nbtinfo.exe",
+   "LegalCopyright": "© Microsoft Corporation. All rights reserved.",
+   "OriginalFilename": "nbtinfo.exe",
+   "ProductName": "Microsoft® Windows® Operating System",
+   "ProductVersion": "10.0.15063.0"
+  },
+  "Hash": {
+   "MD5": "223217d8ba4cc10005c96b3925d7586f",
+   "SHA1": "8f859aaf0247fa5e1788d37aa8012a0eea58656c",
+   "SHA256": "b8fe6a3865a407d56dfdc086545ae292434996a6e72e4a435f4bd08f1e3ba2d0"
+  },
+  "_Source": "Windows.Detection.BinaryRename"
  }
 ]

@@ -269,7 +269,6 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 func (self RegFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
 	stat, err := self.Lstat(path)
 	if err != nil {
-		fmt.Printf("Stat error: %v\n", err)
 		return nil, err
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -60,7 +61,8 @@ func (self ParseBinaryFunction) Call(
 		vql_subsystem.CacheSet(scope, arg.Profile, profile)
 	}
 
-	paged_reader := readers.NewPagedReader(scope, arg.Accessor, arg.Filename)
+	lru_size := vql_subsystem.GetIntFromRow(scope, scope, constants.BINARY_CACHE_SIZE)
+	paged_reader := readers.NewPagedReader(scope, arg.Accessor, arg.Filename, int(lru_size))
 	obj, err := profile.Parse(scope, arg.Struct, paged_reader, arg.Offset)
 	if err != nil {
 		scope.Log("parse_binary: %v", err)

@@ -115,13 +115,6 @@ func GetCursors(ctx context.Context,
 
 		count := uint64(0)
 
-		/*
-			defer func() {
-				fmt.Printf("(%v, %v): Brute force counted %v rows in %v\n",
-					start_time, end_time, count, prop)
-			}()
-		*/
-
 		rs_reader := &ResultSetReaderImpl{fd: fd}
 		for item := range rs_reader.Rows(ctx) {
 			ts := uint64(utils.GetInt64(item, "_ts"))

@@ -11,6 +11,8 @@ description: |
   You can use this to add important information to your specific
   deployment.
 
+type: SERVER
+
 reports:
   - type: CLIENT
     template: |

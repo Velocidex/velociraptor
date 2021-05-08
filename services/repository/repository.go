@@ -277,6 +277,19 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 	return artifact, nil
 }
 
+func (self *Repository) GetArtifactType(
+	config_obj *config_proto.Config, artifact_name string) (string, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	artifact, pres := self.get(artifact_name)
+	if !pres {
+		return "", fmt.Errorf("Artifact %s not known", artifact_name)
+	}
+
+	return artifact.Type, nil
+}
+
 func (self *Repository) Get(
 	config_obj *config_proto.Config, name string) (*artifacts_proto.Artifact, bool) {
 	self.mu.Lock()

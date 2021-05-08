@@ -1,0 +1,33 @@
+name: Windows.Detection.EnvironmentVariables
+description: |
+   Find processes with the specified environment variables.
+
+parameters:
+   - name: ProcessNameRegex
+     default: .
+   - name: EnvironmentVariableRegex
+     default: COMSPEC
+   - name: FilterValueRegex
+     default: .
+   - name: WhitelistValueRegex
+     description: Ignore these values
+     default: ^C:\\Windows\\.+cmd.exe$
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+      SELECT * FROM foreach(
+      row={
+          SELECT * FROM Artifact.Windows.Forensics.ProcessInfo(
+             ProcessNameRegex=ProcessNameRegex)
+      },
+      query={
+          SELECT Name, ImagePathName, CommandLine,
+             _key AS Var, _value AS Value
+          FROM items(item=Env)
+      })
+      WHERE Var =~ EnvironmentVariableRegex
+        AND Value =~ FilterValueRegex
+        AND NOT Value =~ WhitelistValueRegex
