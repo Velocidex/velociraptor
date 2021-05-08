@@ -38,8 +38,8 @@ sources:
              OwningPublisher, Enabled
       FROM read_reg_key(globs=Key)
       WHERE ChannelName =~ ProviderRegex
-        AND Mtime.Time > DateAfterTime
-        AND Mtime.Time < DateBeforeTime
+        AND Mtime > DateAfterTime
+        AND Mtime < DateBeforeTime
 
   - name: Providers
     description: Inspect the state of each provider
@@ -69,6 +69,6 @@ sources:
          Enabled, Content
       FROM X
       WHERE ProviderName =~ ProviderRegex
-        AND Mtime.Time > DateAfterTime
-        AND Mtime.Time < DateBeforeTime
+        AND Mtime > DateAfterTime
+        AND Mtime < DateBeforeTime
       ORDER BY ProviderName

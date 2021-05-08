@@ -100,6 +100,10 @@ func InitLogging(config_obj *config_proto.Config) error {
 	return nil
 }
 
+func ClearMemoryLogs() {
+	memory_logs = nil
+}
+
 func GetMemoryLogs() []string {
 	mu.Lock()
 	defer mu.Unlock()

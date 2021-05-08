@@ -23,6 +23,7 @@ package vtesting
 import (
 	"io/ioutil"
 	"runtime/debug"
+	"strings"
 	"testing"
 	"time"
 
@@ -63,6 +64,15 @@ func CompareStrings(expected []string, watched []string) bool {
 		}
 	}
 	return true
+}
+
+func ContainsString(expected string, watched []string) bool {
+	for _, line := range watched {
+		if strings.Contains(line, expected) {
+			return true
+		}
+	}
+	return false
 }
 
 func WaitUntil(deadline time.Duration, t *testing.T, cb func() bool) {

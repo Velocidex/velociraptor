@@ -68,11 +68,6 @@ var (
 		Help: "QPS of receive handler.",
 	})
 
-	loadshedCounter = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "frontend_loadshed_count",
-		Help: "Number of connections rejected due to load shedding.",
-	})
-
 	receiveCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "frontend_received_count",
 		Help: "Number of POST requests frontend received from the client.",
@@ -246,14 +241,6 @@ func control(server_obj *Server) http.Handler {
 	logger := logging.GetLogger(server_obj.config, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		if !server_obj.throttler.Ready() {
-			loadshedCounter.Inc()
-
-			// Load shed connections with a 500 error.
-			http.Error(w, "", http.StatusServiceUnavailable)
-			return
-		}
-
 		flusher, ok := w.(http.Flusher)
 		if !ok {
 			panic("http handler is not a flusher")

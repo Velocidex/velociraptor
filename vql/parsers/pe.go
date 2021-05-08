@@ -22,6 +22,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	pe "www.velocidex.com/golang/go-pe"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -58,7 +59,8 @@ func (self _PEFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	paged_reader := readers.NewPagedReader(scope, arg.Accessor, arg.Filename)
+	lru_size := vql_subsystem.GetIntFromRow(scope, scope, constants.BINARY_CACHE_SIZE)
+	paged_reader := readers.NewPagedReader(scope, arg.Accessor, arg.Filename, int(lru_size))
 	pe_file, err := pe.NewPEFile(paged_reader)
 	if err != nil {
 		scope.Log("parse_pe: %v for %v", err, arg.Filename)

@@ -53,7 +53,7 @@ func (self MergeSorter) sortWithCtx(ctx context.Context,
 	go func() {
 		defer close(output_chan)
 
-		// When we exit this function we merge all out chunks.
+		// When we exit this function we merge all our chunks.
 		defer sort_ctx.Merge(ctx, output_chan)
 
 		// Feed the context all the rows until the input is
@@ -172,10 +172,6 @@ func (self *MergeSorterCtx) Merge(ctx context.Context, output_chan chan types.Ro
 			if !pres {
 				self.memory_sorter.Scope.Log("Order by column %v not present in row",
 					self.memory_sorter.OrderBy)
-			}
-
-			if utils.IsNil(value) {
-				continue
 			}
 
 			// smallest_value is not set yet.
