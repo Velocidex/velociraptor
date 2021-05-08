@@ -1,5 +1,5 @@
 name: Windows Test
-on: [pull_request]
+on: [pull_request, workflow_dispatch]
 jobs:
   build:
     name: Windows Test
