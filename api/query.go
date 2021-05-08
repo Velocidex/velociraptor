@@ -126,7 +126,6 @@ func streamQuery(
 					int(arg.MaxRow), int(arg.MaxWait))
 
 				for result := range result_chan {
-					fmt.Printf("Got %v\n", string(result.Payload))
 					// Skip let queries since they never produce results.
 					if vql.Let != "" {
 						continue

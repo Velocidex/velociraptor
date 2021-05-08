@@ -263,7 +263,7 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 	}
 
 	resp, err := self.client.Do(req)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		self.logger.Info("Post to %v returned %v - advancing to next server\n",
 			self.GetCurrentUrl(handler), err)
 
@@ -799,6 +799,7 @@ func NewHTTPCommunicator(
 			manager:    manager,
 			executor:   executor,
 			logger:     logger,
+			clock:      clock,
 		},
 		on_exit: on_exit,
 		sender:  sender,

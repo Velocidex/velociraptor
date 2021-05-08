@@ -42,6 +42,10 @@ func (self *ClientCryptoManager) AddCertificate(certificate_pem []byte) (string,
 		return "", err
 	}
 
+	// Remove the cached key for this server. This is essential to
+	// ensure servers can rotate their keys.
+	self.cipher_lru.Delete(server_name)
+
 	return server_name, nil
 }
 

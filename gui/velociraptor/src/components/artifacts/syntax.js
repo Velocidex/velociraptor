@@ -277,7 +277,7 @@ export default class Completer {
                         score: 1000,
                         value: arg.name,
                         meta: arg.type,
-                        docHTML: "<h1>" + arg.description + "</h1>",
+                        docHTML: arg.description,
                     });
                 }
             }

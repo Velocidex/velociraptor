@@ -333,7 +333,14 @@ func StartFrontendHttps(
 
 		atomic.StoreInt32(&server_obj.Healthy, 1)
 
-		err := server.ListenAndServeTLS("", "")
+		listener, err, closer := server_obj.NewLoadSheddingListener(server.Addr)
+		if err != nil {
+			server_obj.Fatal("Frontend server: Can not listen on "+server.Addr,
+				err)
+		}
+		defer closer()
+
+		err = server.ServeTLS(listener, "", "")
 		if err != nil && err != http.ErrServerClosed {
 			server_obj.Fatal("Frontend server error %v", err)
 		}
@@ -487,7 +494,18 @@ func StartFrontendWithAutocert(
 			get_hostname(config_obj.Frontend.Hostname, config_obj.Frontend.BindAddress))
 		atomic.StoreInt32(&server_obj.Healthy, 1)
 
-		err := server.ListenAndServeTLS("", "")
+		// TODO: When running in autocert mode we use the same
+		// port for the GUI and clients. If we load shed the
+		// clients we will also load shed the GUI... Does this
+		// makes sense?
+		listener, err, closer := server_obj.NewLoadSheddingListener(server.Addr)
+		if err != nil {
+			server_obj.Fatal("Frontend server: Can not listen on "+server.Addr,
+				err)
+		}
+		defer closer()
+
+		err = server.ServeTLS(listener, "", "")
 		if err != nil && err != http.ErrServerClosed {
 			server_obj.Fatal("Frontend server error", err)
 		}

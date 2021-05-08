@@ -138,10 +138,10 @@ func GetDefaultConfig() *config_proto.Config {
 			},
 			DynDns: &config_proto.DynDNSConfig{},
 			Resources: &config_proto.FrontendResourceControl{
-				ExpectedClients:        10000,
-				ConnectionsPerSecond:   100,
-				Concurrency:            0, // By default 2 * CPU count
-				TargetHeapSize:         0, // Set to control concurrency to match target heap size.
+				ExpectedClients:        30000, // Controls RSA cache size
+				ConnectionsPerSecond:   100,   // QPS load shedding limit (>1000 disable)
+				Concurrency:            0,     // By default 2 * CPU count
+				TargetHeapSize:         0,     // (Disabled) Set to control concurrency to match target heap size.
 				NotificationsPerSecond: 10,
 				MaxUploadSize:          constants.MAX_MEMORY * 2,
 			},
