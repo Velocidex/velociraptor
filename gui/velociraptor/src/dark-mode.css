@@ -341,3 +341,19 @@
 .dark-mode .notebook-output pre {
     filter: invert(1);
 }
+
+/* ACE things */
+.dark-mode .ace_tooltip {
+    background-color: var(--background-color);
+    color: var(--text-foreground);
+}
+
+
+.dark-mode .custom-tooltip {
+    margin: 0;
+    padding: 10px;
+    background-color: var(--background-color);
+    border: 1px solid #ccc;
+    white-space: nowrap;
+    display: block;
+}

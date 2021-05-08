@@ -104,6 +104,7 @@ type AccessorReader struct {
 
 	// How long to keep the file handle open
 	Lifetime time.Duration
+	lru_size int
 }
 
 func (self *AccessorReader) Size() int {
@@ -147,8 +148,13 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 			return 0, err
 		}
 
+		lru_size := self.lru_size
+		if lru_size == 0 {
+			lru_size = 100
+		}
+
 		self.paged_reader, err = ntfs.NewPagedReader(
-			utils.ReaderAtter{self.reader}, 1024*8, 100)
+			utils.ReaderAtter{self.reader}, 1024*8, lru_size)
 		if err != nil {
 			return 0, err
 		}
@@ -214,7 +220,9 @@ func GetReaderPool(scope vfilter.Scope, lru_size int64) *ReaderPool {
 	return pool
 }
 
-func NewPagedReader(scope vfilter.Scope, accessor, filename string) *AccessorReader {
+func NewPagedReader(scope vfilter.Scope,
+	accessor, filename string,
+	lru_size int) *AccessorReader {
 
 	// Get the reader pool from the scope.
 	pool := GetReaderPool(scope, 50)
@@ -237,6 +245,7 @@ func NewPagedReader(scope vfilter.Scope, accessor, filename string) *AccessorRea
 
 		// By default close all files after a minute.
 		Lifetime: time.Minute,
+		lru_size: lru_size,
 	}
 
 	pool.lru.Set(key, result)

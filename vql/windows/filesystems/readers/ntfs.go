@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	"www.velocidex.com/golang/vfilter"
@@ -38,7 +39,8 @@ func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, erro
 		return cache_ctx, nil
 	}
 
-	paged_reader := readers.NewPagedReader(scope, "file", device)
+	lru_size := vql_subsystem.GetIntFromRow(scope, scope, constants.NTFS_CACHE_SIZE)
+	paged_reader := readers.NewPagedReader(scope, "file", device, int(lru_size))
 	ntfs_ctx, err := ntfs.GetNTFSContext(paged_reader, 0)
 	if err != nil {
 		paged_reader.Close()

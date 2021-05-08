@@ -407,19 +407,25 @@ message FrontendResourceControl {
     int64 enrollments_per_second = 3;
 
     // The maximum number of concurrent client connections we can
-    // process. The actual concurrency level is dynamically adjusted
-    // to try to control the target_heap_size below. As the heap size
-    // increases, the frontend will reduce the concurrency level in
-    // order to reduce memory pressure. Low concurrency levels
-    // increase average latency and in the worse case cause clients to
-    // time out. When clients timeout, they will back off and try to
-    // send data later.
+    // process. The actual concurrency level can be dynamically
+    // adjusted to try to control the target_heap_size below. As the
+    // heap size increases, the frontend will reduce the concurrency
+    // level in order to reduce memory pressure. Low concurrency
+    // levels increase average latency and in the worse case cause
+    // clients to time out. When clients timeout, they will back off
+    // and try to send data later.
     uint64 concurrency = 9;
 
     // Aim for this heap size (default 2Gb). If actual memory usage
     // approaches this maximum, the frontend will begin to limit
     // client connections.
     uint64 target_heap_size = 10;
+
+    // The maximum time a client will be waiting for a concurrency
+    // slot before timing out. A small value will result in many
+    // reconnections under load.
+    uint64 concurrency_timeout = 24;
+
 
     // Increasing this allows the frontend to receive larger POST
     // messages lowering crypto overheads but this comes at the

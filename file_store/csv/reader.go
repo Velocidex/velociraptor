@@ -82,6 +82,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 )
 
+const (
+	bom0 = 0xef
+	bom1 = 0xbb
+	bom2 = 0xbf
+)
+
 // A ParseError is returned for parsing errors.
 // Line numbers are 1-indexed and columns are 0-indexed.
 type ParseError struct {
@@ -197,11 +203,19 @@ type Reader struct {
 
 // NewReader returns a new Reader that reads from r.
 func NewReader(r io.ReadSeeker) *Reader {
-	return &Reader{
+	result := &Reader{
 		Comma:      ',',
 		r:          bufio.NewReader(r),
 		raw_reader: r,
 	}
+
+	// Swallow the BOM if possible.
+	b, err := result.r.Peek(3)
+	if err == nil && b[0] == bom0 && b[1] == bom1 && b[2] == bom2 {
+		result.Seek(3)
+	}
+
+	return result
 }
 
 // Read reads one record (a slice of fields) from r.

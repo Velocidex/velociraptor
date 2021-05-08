@@ -47,6 +47,7 @@ type NTFSCachedContext struct {
 	scope        vfilter.Scope
 	paged_reader *readers.AccessorReader
 	ntfs_ctx     *ntfs.NTFSContext
+	lru_size     int
 
 	// When this is closed we stop refreshing the cache. Normally
 	// only closed when the scope is destroyed.
@@ -111,7 +112,9 @@ func (self *NTFSCachedContext) GetNTFSContext() (*ntfs.NTFSContext, error) {
 		return self.ntfs_ctx, nil
 	}
 
-	self.paged_reader = readers.NewPagedReader(self.scope, "file", self.device)
+	lru_size := vql_subsystem.GetIntFromRow(self.scope, self.scope, constants.NTFS_CACHE_SIZE)
+	self.paged_reader = readers.NewPagedReader(
+		self.scope, "file", self.device, int(lru_size))
 	ntfs_ctx, err := ntfs.GetNTFSContext(self.paged_reader, 0)
 	if err != nil {
 		self._CloseWithLock()

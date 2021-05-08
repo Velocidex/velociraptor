@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -83,6 +84,21 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 	manager, _ := services.GetRepositoryManager()
 	repository, _ := manager.GetGlobalRepository(self.config_obj)
 
+	complete_flow_id := ""
+
+	err := journal.WatchQueueWithCB(self.sm.Ctx, self.config_obj, self.sm.Wg,
+		"System.Flow.Completion", func(
+			ctx context.Context,
+			config_obj *config_proto.Config,
+			row *ordereddict.Dict) error {
+			flow, pres := row.Get("Flow")
+			if pres {
+				complete_flow_id = flow.(*flows_proto.ArtifactCollectorContext).SessionId
+			}
+			return nil
+		})
+	assert.NoError(self.T(), err)
+
 	launcher, err := services.GetLauncher()
 	assert.NoError(self.T(), err)
 
@@ -111,6 +127,10 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 		assert.NoError(self.T(), err)
 
 		return details.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
+	})
+
+	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
+		return complete_flow_id == flow_id
 	})
 
 	return details

@@ -2,6 +2,7 @@ package server_monitoring
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -178,7 +179,10 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 		golden.Set(path, db.Get(path))
 	}
 
-	goldie.Assert(self.T(), "TestMultipleArtifacts", json.MustMarshalIndent(golden))
+	golden_str := json.MustMarshalIndent(golden)
+	golden_str = regexp.MustCompile("Query Stats.+").ReplaceAll(golden_str, []byte{})
+
+	goldie.Assert(self.T(), "TestMultipleArtifacts", golden_str)
 }
 
 func TestServerMonitoring(t *testing.T) {

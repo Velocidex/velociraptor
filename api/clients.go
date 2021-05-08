@@ -70,7 +70,12 @@ func GetApiClient(
 		return nil, err
 	}
 
-	result.Labels = services.GetLabeler().GetClientLabels(config_obj, client_id)
+	labeler := services.GetLabeler()
+	if labeler == nil {
+		return nil, errors.New("Labeler not ready")
+	}
+
+	result.Labels = labeler.GetClientLabels(config_obj, client_id)
 
 	client_info := &actions_proto.ClientInfo{}
 	err = db.GetSubject(config_obj, client_path_manager.Path(), client_info)
