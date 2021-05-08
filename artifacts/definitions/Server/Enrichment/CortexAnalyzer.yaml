@@ -1,0 +1,98 @@
+name: Server.Enrichment.CortexAnalyzer
+description: |
+
+
+   **Description**: Run Cortex analyzer jobs across all enabled and applicable analyzers (based on supported analyzer data types), then retrieve the results.
+
+   This artifact can be called from within another artifact (such as one looking for files) to enrich the data made available by that artifact.
+
+    Ex.
+
+    `SELECT * from Artifact.Server.Enrichment.CortexAnalyzer(Observable=$YOURHASH, ObservableType='hash')`
+
+    **Reference**: https://github.com/TheHive-Project/Cortex
+
+author: Wes Lambert - @therealwlambert
+
+type: SERVER
+
+parameters:
+   - name: Observable
+     description: Data to be analyzed by Cortex 
+     default: 
+   - name: ObservableType
+     description: Type of observable to be submitted to Cortex. Ex. `hash`, `domain`, `ip`
+     default:
+   - name: TLP
+     description: TLP for the job submitted to Cortex
+     default: 0
+   - name: CortexURL
+     description: URL used for Cortex job submission. It is recommended to use the <a href="#/host/server">server metadata store</a> for this.
+     default: ''
+   - name: CortexKey
+     description: API key used for authentication to Cortex. It is recommended to use the <a href="#/host/server">server metadata store</a> for this.
+     default: ''
+   - name: DisableSSLVerify
+     type: bool
+     description: Disable SSL Verification
+     default: True
+   - name: JobMessage
+     description: Message to be used when running analyzer job
+     default: Job submmitted by Velociraptor
+   - name: JobWaitTime
+     description: Amount of time to wait for a report from Cortex.
+     default: 10minute
+
+sources:
+  - query: |
+        LET OBSERVABLE <= Observable
+        LET OBSERVABLE_DATATYPE <= ObservableType
+        LET URL <= if(
+                condition=CortexURL,
+            then=CortexURL,
+            else=server_metadata().CortexURL)
+        LET cortex_key = 
+            if(
+                condition=CortexKey,
+            then=CortexKey,
+            else=server_metadata().CortexKey)
+        LET ENABLED_ANALYZERS = SELECT Content FROM 
+            http_client(
+                url=URL + '/analyzer', 
+                method='GET', 
+                disable_ssl_security=True, 
+                headers=dict(
+                    `Authorization`=format(format="Bearer %v", args=[cortex_key])))
+        LET ANALYZERS_SUPPORTED = SELECT name AS AnalyzerName, id AS ID, dataTypeList AS DList FROM parse_json_array(data=ENABLED_ANALYZERS.Content)
+        LET ANALYZERS_MATCH_TYPE = SELECT ID  FROM foreach(row=ANALYZERS_SUPPORTED, query={ SELECT AnalyzerName, ID, _value AS Match FROM 
+            if(
+                condition= filter(list=DList, regex=OBSERVABLE_DATATYPE),
+            then="yes",
+            else="no")}) WHERE Match = "yes"
+        LET ANALYZER_RUN = SELECT parse_json(data=Content) AS Resp FROM 
+            http_client(
+                url=URL + '/analyzer/'+ ID + '/run' , 
+                method='POST', 
+                disable_ssl_security=True, 
+                headers=dict(
+                    `Content-Type`="application/json", 
+                    `Authorization`=format(format="Bearer %v", 
+                    args=[cortex_key])),
+                    data=serialize(item=dict(
+                        data=OBSERVABLE, dataType=OBSERVABLE_DATATYPE, tlp=TLP, message=JobMessage
+                    ))
+            )
+        LET JOBID = SELECT Resp.id AS JobID from foreach(row=ANALYZER_RUN)
+        LET GETREPORT = SELECT Content AS Resp FROM 
+            http_client(
+                url=format(format="%v/job/%v/waitreport?atMost=%v", args=[URL,JOBID.JobID[0], JobWaitTime]),
+                method='GET', 
+                disable_ssl_security=True, 
+                headers=dict(
+                    `Content-Type`="application/json", 
+                    `Authorization`=format(format="Bearer %v", 
+                    args=[cortex_key])
+                )
+            )
+        LET REPORT = SELECT parse_json(data=Resp) AS Details FROM GETREPORT
+        SELECT Observable, Details.workerName as AnalyzerName, Details as _Details, Details.report AS Report FROM foreach(row=ANALYZERS_MATCH_TYPE, query={SELECT * FROM REPORT})
