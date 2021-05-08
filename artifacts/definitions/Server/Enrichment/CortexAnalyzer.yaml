@@ -60,7 +60,7 @@ sources:
             http_client(
                 url=URL + '/analyzer', 
                 method='GET', 
-                disable_ssl_security=True, 
+                disable_ssl_security=DisableSSLVerify, 
                 headers=dict(
                     `Authorization`=format(format="Bearer %v", args=[cortex_key])))
         LET ANALYZERS_SUPPORTED = SELECT name AS AnalyzerName, id AS ID, dataTypeList AS DList FROM parse_json_array(data=ENABLED_ANALYZERS.Content)
@@ -73,7 +73,7 @@ sources:
             http_client(
                 url=URL + '/analyzer/'+ ID + '/run' , 
                 method='POST', 
-                disable_ssl_security=True, 
+                disable_ssl_security=DisableSSLVerify, 
                 headers=dict(
                     `Content-Type`="application/json", 
                     `Authorization`=format(format="Bearer %v", 
@@ -87,7 +87,7 @@ sources:
             http_client(
                 url=format(format="%v/job/%v/waitreport?atMost=%v", args=[URL,JOBID.JobID[0], JobWaitTime]),
                 method='GET', 
-                disable_ssl_security=True, 
+                disable_ssl_security=DisableSSLVerify, 
                 headers=dict(
                     `Content-Type`="application/json", 
                     `Authorization`=format(format="Bearer %v", 
