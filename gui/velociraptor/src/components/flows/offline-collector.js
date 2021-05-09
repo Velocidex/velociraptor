@@ -225,7 +225,22 @@ class OfflineCollectorParameters  extends React.Component {
                         />
                       </Col>
                     </Form.Group>
-
+                    <Form.Group as={Row}>
+                      <Form.Label column sm="3">Server Side Encryption</Form.Label>
+                      <Col sm="8">
+                        <Form.Control as="select"
+                                        value={this.props.parameters.target_args.serverSideEncryption}
+                                        onChange={(e) => {
+                                            this.props.parameters.target_args.serverSideEncryption = e.target.value;
+                                            this.props.setParameters(this.props.parameters);
+                                        }}
+                        >
+                            <option value="">None</option>
+                            <option value="aws:kms">aws:kms</option>
+                            <option value="AES256">AES256</option>
+                        </Form.Control>
+                      </Col>
+                    </Form.Group>
                     <Form.Group as={Row}>
                         <Form.Label column sm="3">Skip Cert Verification</Form.Label>
                         <Col sm="8">
@@ -409,6 +424,7 @@ export default class OfflineCollectorWizard extends React.Component {
                 credentialsSecret: "",
                 region: "",
                 endpoint: "",
+                serverSideEncryption: "",
             },
             template: "",
             password: "",
