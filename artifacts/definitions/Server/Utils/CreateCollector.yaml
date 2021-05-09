@@ -141,6 +141,7 @@ parameters:
           credentialssecret=TargetArgs.credentialsSecret,
           region=TargetArgs.region,
           endpoint=TargetArgs.endpoint,
+          serversideencryption=TargetArgs.serverSideEncryption,
           noverifycert=TargetArgs.noverifycert)
 
   - name: GCSCollection
