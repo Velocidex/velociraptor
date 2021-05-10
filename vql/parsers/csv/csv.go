@@ -19,6 +19,7 @@ package csv
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 
@@ -33,8 +34,10 @@ import (
 )
 
 type ParseCSVPluginArgs struct {
-	Filenames []string `vfilter:"required,field=filename,doc=CSV files to open"`
-	Accessor  string   `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Filenames   []string `vfilter:"required,field=filename,doc=CSV files to open"`
+	Accessor    string   `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	AutoHeaders bool     `vfilter:"optional,field=auto_headers,doc=If unset the first row is headers"`
+	Separator   string   `vfilter:"optional,field=separator,doc=Comma separator"`
 }
 
 type ParseCSVPlugin struct{}
@@ -76,10 +79,21 @@ func (self ParseCSVPlugin) Call(
 				}
 				defer fd.Close()
 
+				var headers []string
 				csv_reader := csv.NewReader(fd)
-				headers, err := csv_reader.Read()
-				if err != nil {
-					return
+				if arg.Separator != "" {
+					if len(arg.Separator) != 1 {
+						scope.Log("parse_csv: separator can only be one character")
+						return
+					}
+					csv_reader.Comma = rune(arg.Separator[0])
+				}
+
+				if !arg.AutoHeaders {
+					headers, err = csv_reader.Read()
+					if err != nil {
+						return
+					}
 				}
 
 				for {
@@ -90,6 +104,13 @@ func (self ParseCSVPlugin) Call(
 							scope.Log("parse_csv: %v", err)
 						}
 						return
+					}
+
+					if headers == nil {
+						for idx := range row_data {
+							headers = append(headers,
+								fmt.Sprintf("Col%v", idx))
+						}
 					}
 
 					for idx, row_item := range row_data {
