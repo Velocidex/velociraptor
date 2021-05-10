@@ -1,0 +1,39 @@
+{
+ "0: CSV with column header and JSON": [
+  {
+   "ColA": 1,
+   "ColB": 2,
+   "ColC": 3
+  },
+  {
+   "ColA": 1,
+   "ColB": {
+    "a": 1
+   },
+   "ColC": [
+    1,
+    2,
+    3
+   ]
+  }
+ ],
+ "1: CSV with no headers and linebreak": [
+  {
+   "Col0": 1,
+   "Col1": 3,
+   "Col2": 4
+  },
+  {
+   "Col0": 7,
+   "Col1": "4\n3",
+   "Col2": 5
+  }
+ ],
+ "2: CSV with separator": [
+  {
+   "ColA": 1,
+   "ColB": 2,
+   "ColC": 3
+  }
+ ]
+}
