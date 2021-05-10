@@ -31,6 +31,7 @@ import (
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 var (
@@ -138,7 +139,7 @@ func (self _SplitRecordParser) Call(
 	var compiled_regex *regexp.Regexp
 
 	arg := _SplitRecordParserArgs{}
-	err := vfilter.ExtractArgs(scope, args, &arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
 	if err != nil {
 		goto error
 	}

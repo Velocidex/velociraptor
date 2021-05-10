@@ -36,7 +36,7 @@ func (self _CallableBool) Applicable(a vfilter.Any) bool {
 	return ok
 }
 
-func (self _CallableBool) Bool(scope vfilter.Scope, a vfilter.Any) bool {
+func (self _CallableBool) Bool(ctx context.Context, scope vfilter.Scope, a vfilter.Any) bool {
 	v, _ := callable(a)
 	return scope.Bool(v())
 }

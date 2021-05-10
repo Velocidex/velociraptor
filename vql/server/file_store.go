@@ -30,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type DeleteFileStoreArgs struct {
@@ -49,7 +50,7 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("file_store_delete: %s", err.Error())
 		return vfilter.Null{}
@@ -98,7 +99,7 @@ func (self *FileStore) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &FileStoreArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("file_store: %s", err.Error())
 		return vfilter.Null{}

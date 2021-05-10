@@ -11,6 +11,7 @@ import (
 	"golang.org/x/sys/windows"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type WatchETWArgs struct {
@@ -32,7 +33,7 @@ func (self WatchETWPlugin) Call(
 		defer close(output_chan)
 
 		arg := &WatchETWArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_etw: %s", err.Error())
 			return

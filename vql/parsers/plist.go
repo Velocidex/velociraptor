@@ -10,6 +10,7 @@ import (
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 /*
@@ -46,7 +47,7 @@ func (self *PlistFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) (result vfilter.Any) {
 	arg := &_PlistFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("plist: %s", err.Error())
 		return vfilter.Null{}
@@ -124,7 +125,7 @@ func (self _PlistPlugin) Call(
 		defer close(output_chan)
 
 		arg := &_PlistPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("plist: %s", err.Error())
 			return

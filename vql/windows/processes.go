@@ -33,6 +33,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type PslistArgs struct {
@@ -202,7 +203,7 @@ func (self PslistPlugin) Call(
 
 		defer vql_subsystem.CheckForPanic(scope, "pslist")
 
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("pslist: %s", err.Error())
 			return

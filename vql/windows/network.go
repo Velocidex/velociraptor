@@ -21,6 +21,7 @@
 package windows
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"net"
@@ -34,6 +35,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 // Function reference.
@@ -108,8 +110,8 @@ func (self *ConnectionStat) TypeString() string {
 // The VQL WMI plugin.
 type NetstatArgs struct{}
 
-func runNetstat(scope vfilter.Scope,
-	args *ordereddict.Dict) []vfilter.Row {
+func runNetstat(
+	ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
@@ -125,7 +127,7 @@ func runNetstat(scope vfilter.Scope,
 		return result
 	}
 
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		return logerror(err)
 	}

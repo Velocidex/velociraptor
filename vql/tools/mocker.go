@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
@@ -154,13 +155,18 @@ func (self *MockFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &MockerFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("mock: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	rows := []vfilter.Row{}
+
+	results_lazy, ok := arg.Results.(types.LazyExpr)
+	if ok {
+		arg.Results = results_lazy.Reduce(ctx)
+	}
 
 	rt := reflect.TypeOf(arg.Results)
 	if rt == nil {
@@ -173,7 +179,13 @@ func (self *MockFunction) Call(ctx context.Context,
 	} else {
 		value := reflect.ValueOf(arg.Results)
 		for i := 0; i < value.Len(); i++ {
-			rows = append(rows, value.Index(i).Interface())
+			item := value.Index(i).Interface()
+			item_lazy, ok := item.(types.LazyExpr)
+			if ok {
+				item = item_lazy.Reduce(ctx)
+			}
+
+			rows = append(rows, item)
 		}
 	}
 
@@ -204,7 +216,13 @@ func (self *MockFunction) Call(ctx context.Context,
 		scope.AppendFunctions(mock_plugin)
 
 	} else if arg.Artifact != nil {
-		artifact_plugin, ok := arg.Artifact.(*repository.ArtifactRepositoryPlugin)
+		item := arg.Artifact
+		item_lazy, ok := item.(types.LazyExpr)
+		if ok {
+			item = item_lazy.Reduce(ctx)
+		}
+
+		artifact_plugin, ok := item.(*repository.ArtifactRepositoryPlugin)
 		if !ok {
 			scope.Log("mock: artifact is not defined")
 			return vfilter.Null{}
@@ -241,7 +259,7 @@ func (self *MockCheckFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &MockCheckArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("mock_check: %s", err.Error())
 		return vfilter.Null{}

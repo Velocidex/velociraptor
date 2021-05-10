@@ -2,12 +2,14 @@ package parsers
 
 import (
 	"context"
+	"io/ioutil"
+
 	"github.com/Velocidex/ordereddict"
 	"sigs.k8s.io/yaml"
-	"io"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ParseYamlFunctionArgs struct {
@@ -23,7 +25,7 @@ func (self ParseYamlFunction) Call(
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &ParseYamlFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("parse_yaml: %s", err.Error())
 		return nil
@@ -49,12 +51,12 @@ func (self ParseYamlFunction) Call(
 	}
 	defer fd.Close()
 
-	data, err := io.ReadAll(fd)
+	data, err := ioutil.ReadAll(fd)
 	if err != nil {
 		scope.Log("parse_yaml: %v", err)
 		return nil
 	}
-	m,err := yaml.YAMLToJSON(data)
+	m, err := yaml.YAMLToJSON(data)
 	if err != nil {
 		scope.Log("parse_yaml: %v", err)
 		return nil

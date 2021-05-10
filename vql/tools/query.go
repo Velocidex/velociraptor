@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
@@ -30,10 +31,15 @@ func (self QueryPlugin) Call(
 		// subquery will receive the same privileges as the
 		// calling query.
 		arg := &QueryPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("query: %v", err)
 			return
+		}
+
+		arg_value, ok := arg.Env.(types.LazyExpr)
+		if ok {
+			arg.Env = arg_value.Reduce(ctx)
 		}
 
 		// Build the query args

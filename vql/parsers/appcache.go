@@ -7,6 +7,7 @@ import (
 	"www.velocidex.com/golang/regparser/appcompatcache"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type AppCompatCacheArgs struct {
@@ -24,7 +25,7 @@ func (self AppCompatCache) Call(
 	go func() {
 		defer close(output_chan)
 		arg := AppCompatCacheArgs{}
-		err := vfilter.ExtractArgs(scope, args, &arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
 		if err != nil {
 			scope.Log("AppCompatCache: %v", err)
 			return

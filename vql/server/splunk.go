@@ -34,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type _SplunkPluginArgs struct {
@@ -66,7 +67,7 @@ func (self _SplunkPlugin) Call(ctx context.Context,
 		}
 
 		arg := _SplunkPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, &arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
 		if err != nil {
 			return
 		}

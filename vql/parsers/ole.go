@@ -31,6 +31,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type _OLEVBAArgs struct {
@@ -141,7 +142,7 @@ func (self _OLEVBAPlugin) Call(
 		defer close(output_chan)
 
 		arg := &_OLEVBAArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("olevba: %s", err.Error())
 			return

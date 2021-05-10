@@ -26,6 +26,7 @@ package windows
 import "C"
 
 import (
+	"context"
 	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/x509"
@@ -151,8 +152,8 @@ func (self *CertContext) HexSerialNumber() string {
 	return self.SerialNumber.Text(16)
 }
 
-func runCertificates(scope vfilter.Scope,
-	args *ordereddict.Dict) []vfilter.Row {
+func runCertificates(
+	ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
@@ -162,15 +163,15 @@ func runCertificates(scope vfilter.Scope,
 	}
 
 	// The context is passed to the cert walker.
-	ctx := &certContext{}
-	ptr := pointer.Save(ctx)
+	cert_ctx := &certContext{}
+	ptr := pointer.Save(cert_ctx)
 	defer pointer.Unref(ptr)
 
 	C.get_all_certs(ptr)
 
 	// Remove duplicates.
 	seen := make(map[string]bool)
-	for _, c := range ctx.Certs {
+	for _, c := range cert_ctx.Certs {
 		fp := c.SHA1()
 		_, pres := seen[fp]
 		if !pres {

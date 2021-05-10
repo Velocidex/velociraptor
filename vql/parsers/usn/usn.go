@@ -10,6 +10,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type USNPluginArgs struct {
@@ -30,7 +31,7 @@ func (self USNPlugin) Call(
 		defer utils.RecoverVQL(scope)
 
 		arg := &USNPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("parse_usn: %v", err)
 			return
@@ -81,7 +82,7 @@ func (self WatchUSNPlugin) Call(
 		defer utils.RecoverVQL(scope)
 
 		arg := &WatchUSNPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_usn: %v", err)
 			return

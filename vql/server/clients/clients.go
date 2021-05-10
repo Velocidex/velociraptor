@@ -32,6 +32,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ClientsPluginArgs struct {
@@ -59,7 +60,7 @@ func (self ClientsPlugin) Call(
 		}
 
 		arg := &ClientsPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("clients: %v", err)
 			return
@@ -148,7 +149,7 @@ func (self *ClientInfoFunction) Call(ctx context.Context,
 	}
 
 	arg := &ClientInfoFunctionArgs{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("client_info: %s", err.Error())
 		return vfilter.Null{}

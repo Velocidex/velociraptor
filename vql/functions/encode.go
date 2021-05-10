@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
@@ -24,7 +25,7 @@ func (self *EncodeFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &EncodeFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("serialize: %s", err.Error())
 		return vfilter.Null{}
@@ -33,7 +34,7 @@ func (self *EncodeFunction) Call(ctx context.Context,
 	result := arg.Item
 	switch t := result.(type) {
 	case types.LazyExpr:
-		result = t.Reduce()
+		result = t.Reduce(ctx)
 
 	case types.StoredQuery:
 		result_rows := []vfilter.Row{}

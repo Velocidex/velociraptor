@@ -10,6 +10,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	recyclebin "www.velocidex.com/golang/velociraptor/vql/parsers/recyclebin"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 /*
@@ -52,7 +53,7 @@ func (self _RecycleBinPlugin) Call(
 		defer close(output_chan)
 
 		arg := &_RecycleBinPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("parse_recyclebin: %s", err.Error())
 			return

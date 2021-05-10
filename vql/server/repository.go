@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ArtifactSetFunctionArgs struct {
@@ -25,7 +26,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &ArtifactSetFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("artifact_set: %v", err)
 		return vfilter.Null{}
@@ -107,7 +108,7 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &ArtifactDeleteFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("artifact_delete: %v", err)
 		return vfilter.Null{}
@@ -202,7 +203,7 @@ func (self ArtifactsPlugin) Call(
 		}
 
 		arg := &ArtifactsPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("artifact_definitions: %v", err)
 			return

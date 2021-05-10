@@ -145,6 +145,10 @@ func (self *HuntManager) ProcessMutation(
 	}
 
 	dispatcher := services.GetHuntDispatcher()
+	if dispatcher == nil {
+		return errors.New("Hunt Dispatcher not ready")
+	}
+
 	return dispatcher.ModifyHunt(mutation.HuntId,
 		func(hunt_obj *api_proto.Hunt) error {
 			if hunt_obj.Stats == nil {

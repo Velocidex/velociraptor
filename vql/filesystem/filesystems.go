@@ -18,10 +18,13 @@
 package filesystem
 
 import (
+	"context"
+
 	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/disk"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ExtendedFileSystemInfo struct {
@@ -52,12 +55,13 @@ func init() {
 		&vfilter.GenericListPlugin{
 			PluginName: "partitions",
 			Function: func(
+				ctx context.Context,
 				scope vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 
 				arg := &PartitionsArgs{}
-				err := vfilter.ExtractArgs(scope, args, arg)
+				err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 				if err != nil {
 					scope.Log("%s: %s", "partitions", err.Error())
 					return result

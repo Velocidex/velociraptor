@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type SFTPUploadArgs struct {
@@ -39,7 +40,7 @@ func (self *SFTPUploadFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &SFTPUploadArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("upload_sftp: %s", err.Error())
 		return vfilter.Null{}

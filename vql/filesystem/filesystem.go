@@ -29,12 +29,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type GlobPluginArgs struct {
-	Globs    []string `vfilter:"required,field=globs,doc=One or more glob patterns to apply to the filesystem."`
-	Root     string   `vfilter:"optional,field=root,doc=The root directory to glob from (default '')."`
-	Accessor string   `vfilter:"optional,field=accessor,doc=An accessor to use."`
+	Globs               []string `vfilter:"required,field=globs,doc=One or more glob patterns to apply to the filesystem."`
+	Root                string   `vfilter:"optional,field=root,doc=The root directory to glob from (default '')."`
+	Accessor            string   `vfilter:"optional,field=accessor,doc=An accessor to use."`
+	DoNotFollowSymlinks bool     `vfilter:"optional,field=nosymlink,doc=If set we do not follow symlinks."`
 }
 
 type GlobPlugin struct{}
@@ -43,7 +45,6 @@ func (self GlobPlugin) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
-	globber := make(glob.Globber)
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -55,7 +56,7 @@ func (self GlobPlugin) Call(
 		}
 
 		arg := &GlobPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("glob: %s", err.Error())
 			return
@@ -74,6 +75,10 @@ func (self GlobPlugin) Call(
 		}
 
 		root := arg.Root
+
+		globber := glob.NewGlobber().WithOptions(glob.GlobOptions{
+			DoNotFollowSymlinks: arg.DoNotFollowSymlinks,
+		})
 
 		// If root is not specified we try to find a common
 		// root from the globs.
@@ -199,7 +204,7 @@ func (self ReadFilePlugin) Call(
 	output_chan := make(chan vfilter.Row)
 
 	arg := &ReadFileArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("%s: %s", self.Name(), err.Error())
 		close(output_chan)
@@ -260,7 +265,7 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &ReadFileFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("read_file: %s", err.Error())
 		return ""
@@ -322,7 +327,7 @@ func (self *StatPlugin) Call(
 		defer close(output_chan)
 
 		arg := &StatArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("stat: %s", err.Error())
 			return
@@ -374,6 +379,7 @@ func init() {
 		vfilter.GenericListPlugin{
 			PluginName: "filesystems",
 			Function: func(
+				ctx context.Context,
 				scope vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row

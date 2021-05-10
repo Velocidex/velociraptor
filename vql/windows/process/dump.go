@@ -38,6 +38,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ProcDumpPlugin struct{}
@@ -61,7 +62,7 @@ func (self ProcDumpPlugin) Call(
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("proc_dump: %s", err.Error())
 			return

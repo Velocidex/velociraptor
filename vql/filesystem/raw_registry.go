@@ -50,6 +50,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 const (
@@ -349,7 +350,7 @@ func (self ReadKeyValues) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
-	globber := make(glob.Globber)
+	globber := glob.NewGlobber()
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -361,7 +362,7 @@ func (self ReadKeyValues) Call(
 		}
 
 		arg := &ReadKeyValuesArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("read_reg_key: %s", err.Error())
 			return

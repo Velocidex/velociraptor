@@ -8,6 +8,7 @@ import (
 	"github.com/vjeantet/grok"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type GrokParseFunctionArgs struct {
@@ -31,7 +32,7 @@ func (self GrokParseFunction) Call(
 	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &GrokParseFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("grok: %v", err)
 		return &vfilter.Null{}

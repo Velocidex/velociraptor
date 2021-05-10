@@ -31,6 +31,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ShellPluginArgs struct {
@@ -71,7 +72,7 @@ func (self ShellPlugin) Call(
 		}
 
 		arg := &ShellPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("shell: %v", err)
 			return

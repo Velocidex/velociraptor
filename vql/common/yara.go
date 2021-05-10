@@ -39,6 +39,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type YaraHit struct {
@@ -81,7 +82,7 @@ func (self YaraScanPlugin) Call(
 		defer close(output_chan)
 
 		arg := &YaraScanPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("yarascan: %v", err)
 			return
@@ -467,7 +468,7 @@ func (self YaraProcPlugin) Call(
 		defer close(output_chan)
 
 		arg := &YaraProcPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("proc_yara: %v", err)
 			return

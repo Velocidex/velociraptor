@@ -28,6 +28,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type NTFSFunctionArgs struct {
@@ -60,7 +61,7 @@ func (self NTFSFunction) Call(
 	defer utils.RecoverVQL(scope)
 
 	arg := &NTFSFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("parse_ntfs: %v", err)
 		return &vfilter.Null{}
@@ -129,7 +130,7 @@ func (self MFTScanPlugin) Call(
 		defer utils.RecoverVQL(scope)
 
 		arg := &MFTScanPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("parse_mft: %v", err)
 			return
@@ -204,7 +205,7 @@ func (self NTFSI30ScanPlugin) Call(
 		defer utils.RecoverVQL(scope)
 
 		arg := &NTFSFunctionArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("parse_ntfs_i30: %v", err)
 			return
@@ -275,7 +276,7 @@ func (self NTFSRangesPlugin) Call(
 		defer utils.RecoverVQL(scope)
 
 		arg := &NTFSFunctionArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("parse_ntfs_ranges: %v", err)
 			return

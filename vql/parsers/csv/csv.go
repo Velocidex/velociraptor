@@ -29,6 +29,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ParseCSVPluginArgs struct {
@@ -48,7 +49,7 @@ func (self ParseCSVPlugin) Call(
 		defer close(output_chan)
 
 		arg := &ParseCSVPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("parse_csv: %s", err.Error())
 			return
@@ -132,7 +133,7 @@ func (self _WatchCSVPlugin) Call(
 		defer close(output_chan)
 
 		arg := &ParseCSVPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_csv: %s", err.Error())
 			return
@@ -195,7 +196,7 @@ func (self WriteCSVPlugin) Call(
 		defer close(output_chan)
 
 		arg := &WriteCSVPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("write_csv: %s", err.Error())
 			return

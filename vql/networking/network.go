@@ -18,6 +18,7 @@
 package networking
 
 import (
+	"context"
 	"net"
 
 	"github.com/Velocidex/ordereddict"
@@ -31,6 +32,7 @@ func init() {
 		&vfilter.GenericListPlugin{
 			PluginName: "interfaces",
 			Function: func(
+				ctx context.Context,
 				scope vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row

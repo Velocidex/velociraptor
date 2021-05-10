@@ -25,7 +25,7 @@ func (self _SwitchPlugin) Call(ctx context.Context,
 		for _, member := range members {
 			v, pres := args.Get(member)
 			if pres {
-				queries = append(queries, arg_parser.ToStoredQuery(v))
+				queries = append(queries, arg_parser.ToStoredQuery(ctx, v))
 			}
 		}
 

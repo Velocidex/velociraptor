@@ -18,6 +18,7 @@
 package vql
 
 import (
+	"context"
 	"os"
 	"runtime"
 
@@ -27,6 +28,7 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 func getInfo(host *host.InfoStat) *ordereddict.Dict {
@@ -52,6 +54,7 @@ func init() {
 		vfilter.GenericListPlugin{
 			PluginName: "info",
 			Function: func(
+				ctx context.Context,
 				scope vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
@@ -63,7 +66,7 @@ func init() {
 				}
 
 				arg := &vfilter.Empty{}
-				err = vfilter.ExtractArgs(scope, args, arg)
+				err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 				if err != nil {
 					scope.Log("info: %s", err.Error())
 					return result

@@ -113,7 +113,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 		if pres {
 			lazy_v, ok := v.(types.LazyExpr)
 			if ok {
-				v = lazy_v.Reduce()
+				v = lazy_v.Reduce(ctx)
 			}
 
 			source, ok := v.(string)
@@ -193,7 +193,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 			lazy_v, ok := v.(types.LazyExpr)
 			if ok {
-				v = lazy_v.Reduce()
+				v = lazy_v.Reduce(ctx)
 			}
 			env.Set(k, v)
 		}

@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type _SamplerPluginArgs struct {
@@ -24,7 +25,7 @@ func (self _SamplerPlugin) Call(ctx context.Context,
 		defer close(output_chan)
 
 		arg := &_SamplerPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("sample: %v", err)
 			return

@@ -57,7 +57,7 @@ func (self *_CacheObj) Materialize() {
 	self.scope.Log("Materializing memoized query")
 
 	self.cache = make(map[string]vfilter.Any)
-	stored_query := arg_parser.ToStoredQuery(self.expression)
+	stored_query := arg_parser.ToStoredQuery(self.ctx, self.expression)
 	for row_item := range stored_query.Eval(self.ctx, self.scope) {
 		key, pres := self.scope.Associative(row_item, self.key)
 		if pres {
@@ -87,6 +87,8 @@ func (self _CacheAssociative) Applicable(a vfilter.Any, b vfilter.Any) bool {
 // Associate object a with key b
 func (self _CacheAssociative) Associative(
 	scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
+	ctx := context.Background()
+
 	cache_obj, ok := a.(*_CacheObj)
 	if !ok {
 		return vfilter.Null{}, false
@@ -94,7 +96,7 @@ func (self _CacheAssociative) Associative(
 
 	lazy_b, ok := b.(types.LazyExpr)
 	if ok {
-		b = lazy_b.ReduceWithScope(scope)
+		b = lazy_b.ReduceWithScope(ctx, scope)
 	}
 
 	key := json.StringIndent(b)
@@ -136,7 +138,7 @@ func (self _CacheFunc) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &_CacheFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("cache: %s", err.Error())
 		return vfilter.Null{}
@@ -160,7 +162,7 @@ func (self _CacheFunc) Call(ctx context.Context, scope vfilter.Scope,
 
 	value, pres := cache_obj.(*_CacheObj).Get(arg.Key)
 	if !pres {
-		value = arg.Func.ReduceWithScope(scope)
+		value = arg.Func.ReduceWithScope(ctx, scope)
 		if !vql_subsystem.IsNull(value) {
 			cache_obj.(*_CacheObj).Set(arg.Key, value)
 		}
@@ -190,7 +192,7 @@ func (self _MemoizeFunction) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &_MemoizeFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("memoize: %s", err.Error())
 		return vfilter.Null{}

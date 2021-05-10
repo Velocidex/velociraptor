@@ -26,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 // We also offer a VQL function to manage the upload.
@@ -49,7 +50,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 	}
 
 	arg := &UploadFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("upload: %s", err.Error())
 		return vfilter.Null{}
@@ -132,7 +133,7 @@ func (self *UploadPlugin) Call(
 		defer close(output_chan)
 
 		arg := &UploadPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("upload: %s", err.Error())
 			return

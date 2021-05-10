@@ -2,6 +2,8 @@ import api from '../core/api-service.js';
 
 import language_tools from 'ace-builds/src-min-noconflict/ext-language_tools.js';
 
+// Custom VQL syntax highlighter
+import VqlMode from '../core/mode-vql.js';
 
 // This is a syntax editor class controlling suggestions from the
 // server.
@@ -287,10 +289,6 @@ export default class Completer {
 
 
     initializeAceEditor = (ace, options) => {
-        api.get('v1/GetKeywordCompletions').then((response) => {
-            this.state.completions = response.data['items'];
-        });
-
         // create a completer object with a required callback function:
         var vqlCompleter = {
             identifierRegexps: [/[a-zA-Z_0-9.?$\-\u00A2-\uFFFF]/],
@@ -326,6 +324,11 @@ export default class Completer {
                 }
             }
         };
+
+        api.get('v1/GetKeywordCompletions').then((response) => {
+            this.state.completions = response.data['items'];
+            VqlMode.setCompletions(this.state.completions);
+        });
 
         // finally, bind to langTools:
         language_tools.setCompleters();

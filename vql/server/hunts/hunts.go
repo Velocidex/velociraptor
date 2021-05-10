@@ -41,6 +41,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type HuntsPluginArgs struct {
@@ -64,7 +65,7 @@ func (self HuntsPlugin) Call(
 		}
 
 		arg := &HuntsPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("hunts: %v", err)
 			return
@@ -165,7 +166,7 @@ func (self HuntResultsPlugin) Call(
 		}
 
 		arg := &HuntResultsPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("hunt_results: %v", err)
 			return
@@ -247,7 +248,7 @@ func (self HuntResultsPlugin) Call(
 		// for context.
 		for row := range rs_reader.Rows(ctx) {
 			participation_row := &hunt_manager.ParticipationRecord{}
-			err := vfilter.ExtractArgs(scope, row, participation_row)
+			err := arg_parser.ExtractArgsWithContext(ctx, scope, row, participation_row)
 			if err != nil {
 				continue
 			}
@@ -330,7 +331,7 @@ func (self HuntFlowsPlugin) Call(
 		}
 
 		arg := &HuntFlowsPluginArgs{}
-		err = vfilter.ExtractArgs(scope, args, arg)
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("hunt_flows: %v", err)
 			return
@@ -361,7 +362,7 @@ func (self HuntFlowsPlugin) Call(
 
 		for row := range rs_reader.Rows(ctx) {
 			participation_row := &hunt_manager.ParticipationRecord{}
-			err := vfilter.ExtractArgs(scope, row, participation_row)
+			err := arg_parser.ExtractArgsWithContext(ctx, scope, row, participation_row)
 			if err != nil {
 				return
 			}

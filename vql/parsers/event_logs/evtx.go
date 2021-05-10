@@ -26,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type _ParseEvtxPluginArgs struct {
@@ -46,7 +47,7 @@ func (self _ParseEvtxPlugin) Call(
 		defer close(output_chan)
 
 		arg := &_ParseEvtxPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("parse_evtx: %s", err.Error())
 			return
@@ -154,7 +155,7 @@ func (self _WatchEvtxPlugin) Call(
 		// Do not close output_chan - The event log service
 		// owns it and it will be closed by it.
 		arg := &_ParseEvtxPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_evtx: %s", err.Error())
 			return

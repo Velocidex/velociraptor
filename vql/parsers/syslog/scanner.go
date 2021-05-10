@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ScannerPluginArgs struct {
@@ -37,7 +38,7 @@ func (self ScannerPlugin) Call(
 		defer close(output_chan)
 
 		arg := &ScannerPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("parse_lines: %v", err)
 			return
@@ -94,7 +95,7 @@ func (self _WatchSyslogPlugin) Call(
 		defer close(output_chan)
 
 		arg := &ScannerPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_syslog: %s", err.Error())
 			return

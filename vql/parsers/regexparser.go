@@ -28,6 +28,7 @@ import (
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 const BUFF_SIZE = 40960
@@ -132,7 +133,7 @@ func (self _ParseFileWithRegex) Call(
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	arg := &_ParseFileWithRegexArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("parse_records_with_regex: %s", err.Error())
 		close(output_chan)
@@ -188,7 +189,7 @@ func (self *_ParseStringWithRegexFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) (result vfilter.Any) {
 	arg := &_ParseStringWithRegexFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("parse_string_with_regex: %s", err.Error())
 		return vfilter.Null{}
@@ -258,7 +259,7 @@ func (self _RegexReplace) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &_RegexReplaceArg{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("regex_replace: %s", err.Error())
 		return vfilter.Null{}

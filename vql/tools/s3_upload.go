@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type S3UploadArgs struct {
@@ -38,7 +39,7 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &S3UploadArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("upload_S3: %s", err.Error())
 		return vfilter.Null{}

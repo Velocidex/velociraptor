@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ForPluginArgs struct {
@@ -26,7 +27,7 @@ func (self ForPlugin) Call(
 		defer close(output_chan)
 
 		arg := &ForPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("for: %v", err)
 			return
@@ -82,7 +83,7 @@ func (self RangePlugin) Call(
 		defer close(output_chan)
 
 		arg := &RangePluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("range: %v", err)
 			return
