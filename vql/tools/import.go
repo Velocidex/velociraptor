@@ -175,6 +175,10 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	log("Importing zip file %v into client id %v", arg.Filename, arg.ClientId)
 
 	for _, file := range zipfile.File {
+		if file.Mode().IsDir() {
+			continue
+		}
+
 		log("Filename %v", file.Name)
 
 		// Files can be either an artifact or an upload
@@ -243,6 +247,10 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 				out_path := path_manager.GetUploadsFile("file", file.Name).Path()
 				out_fd, err := file_store_factory.WriteFile(out_path)
+				if err != nil {
+					log("Error copying %v: %v", out_path, err)
+					return
+				}
 				defer out_fd.Close()
 
 				log("Copying file %v -> %v", file.Name, out_path)
