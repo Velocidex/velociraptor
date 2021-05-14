@@ -31,7 +31,7 @@ import Modal from 'react-bootstrap/Modal';
 import axios from 'axios';
 
 
-class DeleteFlowDialog extends React.PureComponent {
+export class DeleteFlowDialog extends React.PureComponent {
     static propTypes = {
         client: PropTypes.object,
         flow: PropTypes.object,

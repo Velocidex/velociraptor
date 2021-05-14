@@ -15,6 +15,9 @@ import axios from 'axios';
 import VeloTimestamp from "../utils/time.js";
 import VeloPagedTable from "../core/paged-table.js";
 import VeloAce from '../core/ace.js';
+import Completer from '../artifacts/syntax.js';
+import { DeleteFlowDialog } from "../flows/flows-list.js";
+
 
 // Refresh every 5 seconds
 const SHELL_POLL_TIME = 5000;
@@ -30,6 +33,7 @@ class VeloShellCell extends Component {
         collapsed: false,
         output: [],
         loaded: false,
+        showDeleteWizard: false,
     }
 
     getInput = () => {
@@ -151,9 +155,9 @@ class VeloShellCell extends Component {
             );
         }
 
-        let flow_status;
+        let flow_status = [];
         if (this.props.flow.state  === 'RUNNING') {
-            flow_status = (
+            flow_status.push(
                 <button className="btn btn-outline-info"
                         disabled>
                   <i><FontAwesomeIcon icon="spinner" spin /></i>
@@ -162,7 +166,7 @@ class VeloShellCell extends Component {
                 </button>
             );
         } else if (this.props.flow.state  === 'FINISHED') {
-            flow_status = (
+            flow_status.push(
                 <button className="btn btn-outline-info"
                         disabled>
                   <VeloTimestamp usec={this.props.flow.active_time/1000} />
@@ -171,7 +175,7 @@ class VeloShellCell extends Component {
             );
 
         } else if (this.props.flow.state  === 'ERROR') {
-            flow_status = (
+            flow_status.push(
                 <button className="btn btn-outline-info"
                         disabled>
                   <i><FontAwesomeIcon icon="exclamation"/></i>
@@ -180,6 +184,15 @@ class VeloShellCell extends Component {
                 </button>
             );
         }
+
+        flow_status.push(
+            <button className="btn btn-default" key={5}
+                    title="Delete"
+                    onClick={()=>this.setState({showDeleteWizard: true})}>
+              <i><FontAwesomeIcon icon="trash"/></i>
+            </button>
+        );
+
 
         let output = "";
         if (this.state.loaded) {
@@ -192,6 +205,15 @@ class VeloShellCell extends Component {
 
         return (
             <>
+              { this.state.showDeleteWizard &&
+                <DeleteFlowDialog
+                  client={this.props.client}
+                  flow={this.props.flow}
+                  onClose={e=>{
+                      this.setState({showDeleteWizard: false});
+                  }}
+                />
+              }
               <div className={classNames({
                        collapsed: this.state.collapsed,
                        expanded: !this.state.collapsed,
@@ -228,6 +250,7 @@ class VeloVQLCell extends Component {
 
     state = {
         loaded: false,
+        showDeleteWizard: false,
     }
 
     getInput = () => {
@@ -325,9 +348,9 @@ class VeloVQLCell extends Component {
             );
         }
 
-        let flow_status;
+        let flow_status = [];
         if (this.props.flow.state  === 'RUNNING') {
-            flow_status = (
+            flow_status.push(
                 <button className="btn btn-outline-info"
                         disabled>
                   <i><FontAwesomeIcon icon="spinner" spin /></i>
@@ -336,7 +359,7 @@ class VeloVQLCell extends Component {
                 </button>
             );
         } else if (this.props.flow.state  === 'FINISHED') {
-            flow_status = (
+            flow_status.push(
                 <button className="btn btn-outline-info"
                         disabled>
                   <VeloTimestamp usec={this.props.flow.active_time/1000} />
@@ -345,7 +368,7 @@ class VeloVQLCell extends Component {
             );
 
         } else if (this.props.flow.state  === 'ERROR') {
-            flow_status = (
+            flow_status.push(
                 <button className="btn btn-outline-info"
                         disabled>
                   <i><FontAwesomeIcon icon="exclamation"/></i>
@@ -354,6 +377,14 @@ class VeloVQLCell extends Component {
                 </button>
             );
         }
+
+        flow_status.push(
+            <button className="btn btn-default" key={5}
+                    title="Delete"
+                    onClick={()=>this.setState({showDeleteWizard: true})}>
+              <i><FontAwesomeIcon icon="trash"/></i>
+            </button>
+        );
 
         let output = <div></div>;
         if (this.state.loaded) {
@@ -369,6 +400,15 @@ class VeloVQLCell extends Component {
 
         return (
             <>
+              { this.state.showDeleteWizard &&
+                <DeleteFlowDialog
+                  client={this.props.client}
+                  flow={this.props.flow}
+                  onClose={e=>{
+                      this.setState({showDeleteWizard: false});
+                  }}
+                />
+              }
               <div className={classNames({
                        collapsed: this.state.collapsed,
                        expanded: !this.state.collapsed,
@@ -438,13 +478,11 @@ class ShellViewer extends Component {
     setType = (shell) => {
         this.setState({
             shell_type: shell,
-            command: this.state.command,
         });
     };
 
     setText = (e) => {
         this.setState({
-            shell_type: this.state.shell_type,
             command: e.target.value,
         });
     };
@@ -463,11 +501,11 @@ class ShellViewer extends Component {
                    if (response.cancel) return;
                    let new_state  = Object.assign({}, this.state);
                    new_state.flows = [];
-                   if (!response.data || !response.data.items) {
+                   if (!response.data) {
                        return;
                    }
 
-                   let items = response.data.items;
+                   let items = response.data.items || [];
 
                    for(var i=0; i<items.length; i++) {
                        var artifacts = items[i].request.artifacts;
@@ -540,7 +578,26 @@ class ShellViewer extends Component {
         });
     };
 
+    aceConfig = (ace) => {
+        // Attach a completer to ACE.
+        let completer = new Completer();
+        completer.initializeAceEditor(ace, {});
+
+        ace.setOptions({
+            autoScrollEditorIntoView: true,
+            maxLines: 25
+        });
+
+        this.setState({ace: ace});
+    };
+
     render() {
+        let simple_textarea = true;
+        if (this.state.shell_type == "VQL") {
+            simple_textarea = false;
+        }
+
+
         return (
             <>
               <div className="shell-command">
@@ -556,10 +613,26 @@ class ShellViewer extends Component {
                       <Dropdown.Item eventKey="VQL">VQL</Dropdown.Item>
                     </DropdownButton>
                   </InputGroup.Prepend>
-                  <textarea focus-me="controller.focus" rows="1"
-                            className="form-control"
-                            onChange={(e) => this.setText(e)}>
-                  </textarea>
+                  { simple_textarea ?
+                    <textarea focus-me="controller.focus" rows="1"
+                              className="form-control"
+                              onChange={(e) => this.setText(e)}>
+                      {this.state.command}
+                    </textarea> :
+                    <VeloAce
+                      mode="VQL"
+                      aceConfig={this.aceConfig}
+                      text={this.state.command}
+                      onChange={(value) => {this.setState({command: value});}}
+                      commands={[{
+                          name: 'saveAndExit',
+                          bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
+                          exec: (editor) => {
+                              this.launchCommand();
+                          },
+                      }]}
+                    />
+                  }
 
                   <InputGroup.Append className="input-group-append">
                     <button className="btn btn-danger" type="button"
