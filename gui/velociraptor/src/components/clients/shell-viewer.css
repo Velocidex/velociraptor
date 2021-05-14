@@ -108,3 +108,9 @@ div.dt-buttons {
     max-height: calc(100vh - 50px - 20px - 47px -  66px - 40px);
     overflow-y: auto;
 }
+
+.shell-command .velo-ace-editor {
+    flex: auto;
+    width: 1%;
+    min-width: 0;
+}
