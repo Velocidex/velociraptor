@@ -48,7 +48,14 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
    ],
    "Exports": [],
    "Forwards": [],
-   "ImpHash": "f34d5f2d4577ed6d9ceec516c1f5a744"
+   "ImpHash": "f34d5f2d4577ed6d9ceec516c1f5a744",
+   "Authenticode": null,
+   "AuthenticodeHash": {
+    "MD5": "39d2911f6adf11a77198bf5681ba65ad",
+    "SHA1": "6a9e35385dfec42e3042f9de9ce3372d80b100f2",
+    "SHA256": "de7035461fd0ab763271b703fc0852681b90880eca4560f5ddcfcfae95b01711",
+    "HashMatches": false
+   }
   }
  }
 ]SELECT filter(list=parse_pe(file=FullPath).Imports, regex='MmGetPhysicalMemoryRanges') FROM glob(globs=srcDir + "/artifacts/**10/*.sys")[
@@ -108,5 +115,292 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
    "SHA256": "b8fe6a3865a407d56dfdc086545ae292434996a6e72e4a435f4bd08f1e3ba2d0"
   },
   "_Source": "Windows.Detection.BinaryRename"
+ }
+]LET X = SELECT parse_pe(file=FullPath) as PEInfo FROM glob(globs=srcDir + "/artifacts/**/winpmem*.sys")[]SELECT PEInfo.Authenticode AS Authenticode, PEInfo.AuthenticodeHash AS AuthenticodeHash FROM X[
+ {
+  "Authenticode": {
+   "Signer": {
+    "IssuerName": "C=BE, O=GlobalSign nv-sa, CN=GlobalSign CodeSigning CA - G3",
+    "SerialNumber": "1b5ec28c23900ff153cd554b",
+    "DigestAlgorithm": "SHA1",
+    "AuthenticatedAttributes": {
+     "ProgramName": "",
+     "MoreInfo": "",
+     "ContentType": "1.3.6.1.4.1.311.2.1.4",
+     "MessageDigest": "S68RSkyyZVia9ZfH2zW/lFKOWg8=",
+     "MessageDigestHex": "4baf114a4cb265589af597c7db35bf94528e5a0f"
+    },
+    "UnauthenticatedAttributes": {},
+    "Subject": "C=US, ST=New York, L=Syosset, O=Binalyze LLC, OU=Binalyze LLC, CN=Binalyze LLC, emailAddress=contact@binalyze.com"
+   },
+   "Certificates": [
+    {
+     "SerialNumber": "47c30ffefc22bb280f96fea75251",
+     "SignatureAlgorithm": "SHA1-RSA",
+     "Subject": "C=BE, O=GlobalSign nv-sa, CN=GlobalSign CodeSigning CA - G3",
+     "Issuer": "C=BE, O=GlobalSign nv-sa, OU=Root CA, CN=GlobalSign Root CA",
+     "NotBefore": "2016-03-16T00:00:00Z",
+     "NotAfter": "2024-03-16T00:00:00Z",
+     "PublicKey": "RSA\n                Public-Key: (2048 bit)\n                Modulus:\n                    c6:a0:35:88:53:57:8b:f0:ec:ac:86:40:64:9b:7e:\n                    4e:a7:4d:2a:4b:cf:30:4e:53:0b:80:87:f3:fc:0d:\n                    1d:cd:5e:e2:aa:11:b8:cb:cc:19:8e:99:e2:13:4b:\n                    be:76:5d:9f:91:47:57:5c:4d:aa:07:2d:45:55:ee:\n                    a6:37:f4:b0:50:aa:36:36:25:3a:29:60:77:3e:b1:\n                    71:f3:a4:44:e8:31:4a:a0:71:76:11:26:10:c5:ab:\n                    87:ec:b0:59:09:8d:bc:32:ff:47:b3:77:02:52:31:\n                    fe:bc:f8:67:5b:f1:7e:28:bc:82:c7:e9:fa:94:de:\n                    68:ab:45:1c:a2:8b:b5:01:c6:ed:cb:85:d5:35:b5:\n                    b7:18:13:ae:47:5f:6e:52:02:47:72:4a:6a:e7:36:\n                    cf:5a:e2:44:ed:f1:d0:b6:08:3b:f7:49:ec:ff:b7:\n                    39:3d:b9:92:ec:71:8f:39:c7:ed:88:53:48:85:58:\n                    4b:3e:12:b9:00:48:41:56:bc:a3:52:3a:64:2c:ae:\n                    3a:0c:29:a4:30:f7:c6:64:50:bd:fc:57:d0:1d:05:\n                    0c:7b:cc:bc:43:6e:65:24:50:72:3f:b5:f3:e7:e6:\n                    55:e1:49:78:b7:43:43:4a:a7:d8:1c:8e:c0:d2:9b:\n                    dd:d3:d7:cc:b4:51:86:5f:31:c9:2c:34:66:38:72:\n                    5b\n                Exponent: 65537 (0x10001)\n",
+     "Extensions": {
+      "KeyUsage": {
+       "Critical": true,
+       "KeyUsage": [
+        "Certificate Sign",
+        "CRL Sign"
+       ]
+      },
+      "Extended Key Usage": {
+       "Critical": false,
+       "KeyUsage": [
+        "Code Signing",
+        "OCSP Signing"
+       ]
+      },
+      "BasicConstraints": {
+       "Critical": true,
+       "IsCA": true,
+       "MaxPathLen": 0
+      },
+      "SubjectKeyId": {
+       "Critical": false,
+       "Value": "B3:D3:E6:D5:71:56:7D:39:58:B3:78:D2:2B:B8:F7:A1:1F:FD:4B:9B"
+      },
+      "AuthorityKeyIdentifier": {
+       "Critical": false,
+       "KeyId": ""
+      },
+      "CRLDistributionPoints": {
+       "Critical": false,
+       "URI": [
+        "http://crl.globalsign.com/root.crl"
+       ]
+      },
+      "CertificatePolicies": {
+       "Critical": false,
+       "Policy": [
+        "1.3.6.1.4.1.4146.1.50",
+        "1.3.6.1.4.1.4146.1.95"
+       ]
+      }
+     }
+    },
+    {
+     "SerialNumber": "1b5ec28c23900ff153cd554b",
+     "SignatureAlgorithm": "SHA1-RSA",
+     "Subject": "C=US, ST=New York, L=Syosset, O=Binalyze LLC, OU=Binalyze LLC, CN=Binalyze LLC, emailAddress=contact@binalyze.com",
+     "Issuer": "C=BE, O=GlobalSign nv-sa, CN=GlobalSign CodeSigning CA - G3",
+     "NotBefore": "2020-05-12T21:05:18Z",
+     "NotAfter": "2023-05-13T21:05:18Z",
+     "PublicKey": "RSA\n                Public-Key: (2048 bit)\n                Modulus:\n                    e2:87:f3:8b:4f:11:d5:3a:ad:eb:3b:1c:72:79:ed:\n                    ec:5b:18:8f:7a:e2:3f:aa:cd:3b:0d:3f:8d:6f:24:\n                    ac:51:99:5d:ee:7c:79:fb:f1:d2:c4:42:85:e6:d4:\n                    9e:ac:db:ec:60:c6:65:ea:8d:56:1b:fa:52:a2:c8:\n                    61:0a:e6:8c:02:33:eb:d8:2b:2c:8c:4c:4c:4c:16:\n                    07:3c:c4:0e:7a:9a:e0:9a:2d:4b:f2:4e:1e:95:19:\n                    a0:1d:0a:8d:4b:84:87:ec:c4:0e:02:16:de:9f:25:\n                    7a:cc:3b:4b:26:38:53:01:ea:d4:8e:e1:a8:72:4b:\n                    c4:a9:1b:fe:43:29:77:4a:85:ca:3d:67:03:cf:4d:\n                    e2:8d:90:bb:95:63:86:ea:fb:71:a7:a8:17:12:fa:\n                    c1:2d:92:7f:aa:a4:94:06:4b:1d:ca:e1:7b:54:04:\n                    ef:4b:bf:9c:df:d3:70:05:92:f1:d1:af:09:6b:e9:\n                    4f:11:75:3e:13:ce:69:f0:21:84:5d:81:27:5d:28:\n                    e8:41:49:1b:ee:5c:21:64:5c:a2:9b:b4:c9:04:fa:\n                    f5:82:f7:f7:68:29:17:f1:ba:e6:a9:5b:71:87:ba:\n                    65:e3:09:e3:68:37:d1:90:6b:7c:c9:44:37:b5:70:\n                    d0:b7:f6:71:c0:1c:23:6e:91:af:90:50:12:43:ac:\n                    2f\n                Exponent: 65537 (0x10001)\n",
+     "Extensions": {
+      "KeyUsage": {
+       "Critical": true,
+       "KeyUsage": [
+        "Digital Signature"
+       ]
+      },
+      "CertificatePolicies": {
+       "Critical": false,
+       "Policy": [
+        "1.3.6.1.4.1.4146.1.50",
+        "Code Signing (2.23.140.1.4.1)"
+       ]
+      },
+      "BasicConstraints": {
+       "Critical": false,
+       "IsCA": false,
+       "MaxPathLen": -1
+      },
+      "CRLDistributionPoints": {
+       "Critical": false,
+       "URI": [
+        "http://crl.globalsign.com/gs/gscodesigng3.crl"
+       ]
+      },
+      "Extended Key Usage": {
+       "Critical": false,
+       "KeyUsage": [
+        "Code Signing"
+       ]
+      },
+      "AuthorityKeyIdentifier": {
+       "Critical": false,
+       "KeyId": ""
+      },
+      "SubjectKeyId": {
+       "Critical": false,
+       "Value": "36:94:68:8E:EE:49:12:E2:68:0B:CA:CB:60:30:3C:BE:0B:EB:EC:71"
+      }
+     }
+    },
+    {
+     "SerialNumber": "6129152700000000002a",
+     "SignatureAlgorithm": "SHA1-RSA",
+     "Subject": "C=BE, O=GlobalSign nv-sa, OU=Root CA, CN=GlobalSign Root CA",
+     "Issuer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Code Verification Root",
+     "NotBefore": "2011-04-15T19:55:08Z",
+     "NotAfter": "2021-04-15T20:05:08Z",
+     "PublicKey": "RSA\n                Public-Key: (2048 bit)\n                Modulus:\n                    da:0e:e6:99:8d:ce:a3:e3:4f:8a:7e:fb:f1:8b:83:\n                    25:6b:ea:48:1f:f1:2a:b0:b9:95:11:04:bd:f0:63:\n                    d1:e2:67:66:cf:1c:dd:cf:1b:48:2b:ee:8d:89:8e:\n                    9a:af:29:80:65:ab:e9:c7:2d:12:cb:ab:1c:4c:70:\n                    07:a1:3d:0a:30:cd:15:8d:4f:f8:dd:d4:8c:50:15:\n                    1c:ef:50:ee:c4:2e:f7:fc:e9:52:f2:91:7d:e0:6d:\n                    d5:35:30:8e:5e:43:73:f2:41:e9:d5:6a:e3:b2:89:\n                    3a:56:39:38:6f:06:3c:88:69:5b:2a:4d:c5:a7:54:\n                    b8:6c:89:cc:9b:f9:3c:ca:e5:fd:89:f5:12:3c:92:\n                    78:96:d6:dc:74:6e:93:44:61:d1:8d:c7:46:b2:75:\n                    0e:86:e8:19:8a:d5:6d:6c:d5:78:16:95:a2:e9:c8:\n                    0a:38:eb:f2:24:13:4f:73:54:93:13:85:3a:1b:bc:\n                    1e:34:b5:8b:05:8c:b9:77:8b:b1:db:1f:20:91:ab:\n                    09:53:6e:90:ce:7b:37:74:b9:70:47:91:22:51:63:\n                    16:79:ae:b1:ae:41:26:08:c8:19:2b:d1:46:aa:48:\n                    d6:64:2a:d7:83:34:ff:2c:2a:c1:6c:19:43:4a:07:\n                    85:e7:d3:7c:f6:21:68:ef:ea:f2:52:9f:7f:93:90:\n                    cf\n                Exponent: 65537 (0x10001)\n",
+     "Extensions": {
+      "CertificatePolicies": {
+       "Critical": false,
+       "Policy": [
+        "Any Policy (2.5.29.32.0)"
+       ]
+      },
+      "KeyUsage": {
+       "Critical": false,
+       "KeyUsage": [
+        "Digital Signature",
+        "Certificate Sign",
+        "CRL Sign"
+       ]
+      },
+      "BasicConstraints": {
+       "Critical": true,
+       "IsCA": true,
+       "MaxPathLen": -1
+      },
+      "SubjectKeyId": {
+       "Critical": false,
+       "Value": "60:7B:66:1A:45:0D:97:CA:89:50:2F:7D:04:CD:34:A8:FF:FC:FD:4B"
+      },
+      "AuthorityKeyIdentifier": {
+       "Critical": false,
+       "KeyId": ""
+      },
+      "CRLDistributionPoints": {
+       "Critical": false,
+       "URI": [
+        "http://crl.microsoft.com/pki/crl/products/MicrosoftCodeVerifRoot.crl"
+       ]
+      }
+     }
+    }
+   ],
+   "HashType": "SHA1",
+   "ExpectedHash": "68R2PF3A2eCewCghaePbNaJIGyA=",
+   "ExpectedHashHex": "ebc4763c5dc0d9e09ec0282169e3db35a2481b20"
+  },
+  "AuthenticodeHash": {
+   "MD5": "140894d677732cb8a4dfe99448a6edab",
+   "SHA1": "ebc4763c5dc0d9e09ec0282169e3db35a2481b20",
+   "SHA256": "133860770c3080a64d581d2e3b21356b3a2f4c218cf426fe97ac4ad4466400e5",
+   "HashMatches": true
+  }
+ }
+]SELECT Signer FROM Artifact.Windows.System.Signers( ShowAllSigners=TRUE, ExecutableGlobs=srcDir + "/artifacts/**/*.{exe,sys}")[
+ {
+  "Signer": "C=US, ST=New York, L=Syosset, O=Binalyze LLC, OU=Binalyze LLC, CN=Binalyze LLC, emailAddress=contact@binalyze.com"
+ }
+]SELECT * FROM Artifact.Windows.System.CatFiles(SignerExcludeRegex="DoNotExclude", CatGlobs=srcDir + "/artifacts/**/*.cat")[
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "027e387210927b592c6c979bf4ac695093e8069a",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "1e520397902c237d6789b7ac53f8e96443bbe42e36f4a064802ae04dfd349491",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "22b7108be535368e6120999e668450a39de4a4a9cda26ab5cea19d1b14b2589f",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "3623bda85d57aad0eaf2f4729d0849f7a236d6029c3a72e98c0da70bbc4dd314",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "396e2e7af465bb6b41017c6190502cb1ea221d4d",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "41cde58159e9243c3cadd6051c07aa7ec56f956f",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "4bdf4e683b3e2eccd0b98802cac9f07148a3b867",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "4ec49fc9981d847f28916e53299df3a102af9d32ac1c0e19df2ae5bbccb61739",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "52b0e2e1521343c3fd9030c01ec968ff5e2176bd",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "5f51017631c16d7145874d8bbe0e302b0e1bc4a8862d6fb4111474dab3d7c809",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "6c99e6307e53b5f3a9431ac375c01c43c75861b6",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "7ec24c6daee289fbd40c13635da56fb1e9f868b65e3120b59d480d394acd8285",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "85f1daff689cef5a8bafdce3d2d635341801863969b9eaa7da2bdd93b8d03b35",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "86b2847535d02ff8534fa9f465eab922d60eb008",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "8f3de05a109175abea746598d66137e715d0cc1d",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "a88b7331c452b1f774e52ef9410fd6b6fb00435dc69b4760c78abe2dda392acd",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "c2a17caf87e6b7c603f7b203bfdd469692d65dd718fcb23fabee28b3fbde765e",
+  "_Source": "Windows.System.CatFiles"
+ },
+ {
+  "Name": "ntexe.cat",
+  "Signer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
+  "Hash": "e67fad2d8818d31e9ea4ad95b9bac49bf7c490d0",
+  "_Source": "Windows.System.CatFiles"
  }
 ]

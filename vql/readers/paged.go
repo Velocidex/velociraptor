@@ -59,24 +59,16 @@ import (
 const READERS_CACHE = "$accessor_reader"
 
 type ReaderPool struct {
-	mu sync.Mutex
-
 	lru *cache.LRUCache
 }
 
 // Moves the reader to the head of the LRU.
 func (self *ReaderPool) Activate(reader *AccessorReader) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	self.lru.Set(reader.Key(), reader)
 }
 
 // Flush all contained readers.
 func (self *ReaderPool) Close() {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	for _, k := range self.lru.Keys() {
 		self.lru.Delete(k)
 	}
@@ -116,35 +108,41 @@ func (self *AccessorReader) Key() string {
 }
 func (self *AccessorReader) Close() {
 	self.mu.Lock()
-	defer self.mu.Unlock()
+
+	cancel := self.cancel
+	self.cancel = nil
+
+	reader := self.reader
+	self.reader = nil
+	self.paged_reader = nil
+
+	self.mu.Unlock()
 
 	// Cancel any future alarms
-	if self.cancel != nil {
-		self.cancel()
-		self.cancel = nil
+	if cancel != nil {
+		cancel()
 	}
 
-	if self.reader != nil {
-		self.reader.Close()
-		self.reader = nil
-		self.paged_reader = nil
+	if reader != nil {
+		reader.Close()
 	}
 }
 
 func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 	self.mu.Lock()
-	defer self.mu.Unlock()
 
 	// It is ok to close the reader at any time. We expect this
 	// and just re-open the underlying file when needed.
 	if self.reader == nil {
 		accessor, err := glob.GetAccessor(self.Accessor, self.Scope)
 		if err != nil {
+			self.mu.Unlock()
 			return 0, err
 		}
 
-		self.reader, err = accessor.Open(self.File)
+		reader, err := accessor.Open(self.File)
 		if err != nil {
+			self.mu.Unlock()
 			return 0, err
 		}
 
@@ -153,16 +151,13 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 			lru_size = 100
 		}
 
-		self.paged_reader, err = ntfs.NewPagedReader(
-			utils.ReaderAtter{self.reader}, 1024*8, lru_size)
+		paged_reader, err := ntfs.NewPagedReader(
+			utils.ReaderAtter{reader}, 1024*8, lru_size)
 		if err != nil {
+			self.mu.Unlock()
 			return 0, err
 		}
 		self.created = time.Now()
-
-		// Add ourselves to the active list - this might
-		// expire another reader due to the LRU.
-		self.pool.Activate(self)
 
 		// Set an alarm to close the file in the future - this
 		// ensures we dont hold open handles for long running
@@ -189,9 +184,26 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 				self.Close()
 			}
 		}()
+
+		self.last_active = time.Now()
+		result, err := paged_reader.ReadAt(buf, offset)
+		self.paged_reader = paged_reader
+		self.reader = reader
+
+		self.mu.Unlock()
+
+		// Add ourselves to the active list - this might
+		// expire another reader due to the LRU so we release
+		// the lock first.
+		self.pool.Activate(self)
+
+		return result, err
 	}
+
 	self.last_active = time.Now()
 	result, err := self.paged_reader.ReadAt(buf, offset)
+
+	self.mu.Unlock()
 	return result, err
 }
 
@@ -199,6 +211,10 @@ func GetReaderPool(scope vfilter.Scope, lru_size int64) *ReaderPool {
 	// Manage the reader pool in the scope cache.
 	pool_any := vql_subsystem.CacheGet(scope, READERS_CACHE)
 	if utils.IsNil(pool_any) {
+		if lru_size == 0 {
+			lru_size = 100
+		}
+
 		// Create a reader pool
 		pool := &ReaderPool{
 			lru: cache.NewLRUCache(lru_size),

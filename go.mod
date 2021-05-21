@@ -15,6 +15,7 @@ require (
 	github.com/Velocidex/go-yara v1.1.10-0.20210423154840-dace8239c158
 	github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0
 	github.com/Velocidex/ordereddict v0.0.0-20210502082334-cf5d9045c0d1
+	github.com/Velocidex/pkcs7 v0.0.0-20210524015001-8d1eee94a157
 	github.com/Velocidex/sflags v0.3.1-0.20210402155316-b09f53df5162
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml/v2 v2.2.5
@@ -99,7 +100,6 @@ require (
 	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
 	golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93
 	golang.org/x/sys v0.0.0-20210320140829-1e4c9ba3b0c4
-	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
 	golang.org/x/tools v0.1.1-0.20210408155258-593413344da1 // indirect
 	google.golang.org/api v0.30.0
@@ -116,11 +116,11 @@ require (
 	www.velocidex.com/golang/evtx v0.0.2-0.20201104041743-4b6cdb206c95
 	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20201111050421-bbba6f6a13d3
-	www.velocidex.com/golang/go-pe v0.1.1-0.20210201082132-138370e90206
+	www.velocidex.com/golang/go-pe v0.1.1-0.20210524015317-07c8b305094e
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20210510075417-cd15116e1b52
+	www.velocidex.com/golang/vfilter v0.0.0-20210515085940-25d96b94dafb
 	www.velocidex.com/golang/vtypes v0.0.0-20210323032031-b61f37170666
 )
 

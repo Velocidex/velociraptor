@@ -38,6 +38,21 @@ Queries:
     LIMIT 3
 
   # Adding output for BinaryRename here as its best place with no Mocks
-  - SELECT Name, Size, VersionInformation, Hash, _Source 
+  - SELECT Name, Size, VersionInformation, Hash, _Source
     FROM Artifact.Windows.Detection.BinaryRename(
         TargetGlob =srcDir + '/artifacts/testdata/files/notnbt.exe')
+
+  # Test the Authenticode analysis from parse_pe()
+  - LET X = SELECT parse_pe(file=FullPath) as PEInfo
+    FROM glob(globs=srcDir + "/artifacts/**/winpmem*.sys")
+
+  - SELECT PEInfo.Authenticode AS Authenticode, PEInfo.AuthenticodeHash AS AuthenticodeHash FROM X
+
+  # Test the authenticode parsing code using the Windows.System.Signers artifact
+  - SELECT Signer FROM Artifact.Windows.System.Signers(
+         ShowAllSigners=TRUE,
+         ExecutableGlobs=srcDir + "/artifacts/**/*.{exe,sys}")
+
+  # Test the extraction of cat files.
+  - SELECT * FROM Artifact.Windows.System.CatFiles(SignerExcludeRegex="DoNotExclude",
+        CatGlobs=srcDir + "/artifacts/**/*.cat")
