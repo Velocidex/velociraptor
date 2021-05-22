@@ -14,10 +14,5 @@
         "Comment": ""
       }
     ]
-  },
-  "Markdown in comments Markdown": "\n{{ Query \"SELECT * FROM query(query=Query0)\" | Table }}\n\n# This is markdown\n\n\n{{ Query \"SELECT * FROM query(query=Query2)\" | Table }}\n",
-  "Markdown in comments Markdown Env": {
-    "Query0": "SELECT 1 / 2 FROM info()",
-    "Query2": "SELECT * FROM glob()"
   }
 }

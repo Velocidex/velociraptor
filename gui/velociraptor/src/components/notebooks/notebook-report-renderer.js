@@ -38,7 +38,6 @@ export default class NotebookReportRenderer extends React.Component {
                 }
 
                 if (domNode.name === "grr-csv-viewer") {
-                    let params = {};
                     try {
                         let params = JSON.parse(domNode.attribs.params);
                         return (
@@ -48,7 +47,7 @@ export default class NotebookReportRenderer extends React.Component {
                             />
                         );
                     } catch(e) {
-                        return;
+                        return domNode;
                     }
                 };
                 return domNode;

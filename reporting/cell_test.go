@@ -29,14 +29,10 @@ SELECT * FROM glob()
 func TestVQL2MarkdownConversion(t *testing.T) {
 	result := ordereddict.NewDict()
 	for _, testcase := range TestCases {
-		parsed, err := parseVQLCell(testcase.Input)
+		parsed, err := ConvertVQLCellToContent(testcase.Input)
 		assert.NoError(t, err)
 
 		result.Set(testcase.Name, parsed)
-
-		content, env := ConvertVQLCellToMarkdownCell(testcase.Input)
-		result.Set(testcase.Name+" Markdown", content)
-		result.Set(testcase.Name+" Markdown Env", env)
 	}
 
 	g := goldie.New(
