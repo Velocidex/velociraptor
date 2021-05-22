@@ -238,7 +238,10 @@ class HuntList extends React.Component {
               { this.state.showDeleteNotebook &&
                 <DeleteNotebookDialog
                   notebook_id={"N." + selected_hunt}
-                  onClose={(e) => this.setState({showDeleteNotebook: false})}/>
+                  onClose={e=>{
+                      this.setState({showDeleteNotebook: false});
+                      this.props.updateHunts();
+                  }}/>
               }
 
               { this.state.showExportNotebook &&

@@ -175,7 +175,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 		}
 		return result
 
-	case []*ordereddict.Dict:
+	case []interface{}:
 		if len(t) == 0 { // No rows returned.
 			self.Scope.Log("Query produced no rows.")
 			return ""
@@ -193,7 +193,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 			Columns:  self.Scope.GetMembers(t[0]),
 		}
 		return fmt.Sprintf(
-			`<div class="panel"><grr-csv-viewer value="data['%s']" /></div>`, key)
+			`<div class="panel"><inline-table-viewer value="%s" /></div>`, key)
 	}
 }
 
@@ -581,6 +581,7 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 
 	// Angular directives.
 	p.AllowAttrs("value", "params").OnElements("grr-csv-viewer")
+	p.AllowAttrs("value", "params").OnElements("inline-table-viewer")
 	p.AllowAttrs("value", "params").OnElements("grr-line-chart")
 	p.AllowAttrs("value", "params").OnElements("grr-timeline")
 	p.AllowAttrs("name").OnElements("grr-tool-viewer")

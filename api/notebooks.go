@@ -24,6 +24,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
@@ -172,37 +173,28 @@ func (self *ApiServer) NewNotebook(
 	in.CreatedTime = time.Now().Unix()
 	in.ModifiedTime = in.CreatedTime
 
-	// Allow hunt notebooks to be created with specified hunt ID.
+	// Allow hunt notebooks to be created with a specified hunt ID.
 	if !strings.HasPrefix(in.NotebookId, "N.H.") &&
 		!strings.HasPrefix(in.NotebookId, "N.F.") {
 		in.NotebookId = NewNotebookId()
 	}
-
-	new_cell_id := NewNotebookCellId()
-
-	in.CellMetadata = append(in.CellMetadata, &api_proto.NotebookCell{
-		CellId:    new_cell_id,
-		Timestamp: time.Now().Unix(),
-	})
 
 	db, err := datastore.GetDB(self.config)
 	if err != nil {
 		return nil, err
 	}
 
+	// Store the notebook metadata first before creating the
+	// cells. Calculating the cells will try to open the notebook.
 	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
 	err = db.SetSubject(self.config, notebook_path_manager.Path(), in)
 	if err != nil {
 		return nil, err
 	}
 
-	// Add a new single cell to the notebook.
-	new_cell_request := &api_proto.NotebookCellRequest{
-		Input:            fmt.Sprintf("# %s\n\n%s\n", in.Name, in.Description),
-		NotebookId:       in.NotebookId,
-		CellId:           new_cell_id,
-		Type:             "Markdown",
-		CurrentlyEditing: true,
+	err = self.createInitialNotebook(ctx, user_name, in)
+	if err != nil {
+		return nil, err
 	}
 
 	// Add the new notebook to the index so it can be seen. Only
@@ -213,14 +205,143 @@ func (self *ApiServer) NewNotebook(
 		return nil, err
 	}
 
-	_, err = self.UpdateNotebookCell(ctx, new_cell_request)
-	if err != nil {
-		return nil, err
+	err = db.SetSubject(self.config, notebook_path_manager.Path(), in)
+	return in, err
+}
+
+// Create the initial cells of the notebook.
+func (self *ApiServer) createInitialNotebook(
+	ctx context.Context,
+	user_name string,
+	notebook_metadata *api_proto.NotebookMetadata) error {
+
+	// All cells receive a header from the name and description of
+	// the notebook.
+	new_cells := []*api_proto.NotebookCellRequest{{
+		Input: fmt.Sprintf("# %s\n\n%s\n", notebook_metadata.Name,
+			notebook_metadata.Description),
+		Type:             "Markdown",
+		CurrentlyEditing: true,
+	}}
+
+	if notebook_metadata.Context != nil {
+		if notebook_metadata.Context.HuntId != "" {
+			new_cells = getCellsForHunt(ctx, self.config,
+				notebook_metadata.Context.HuntId, notebook_metadata)
+		} else if notebook_metadata.Context.FlowId != "" &&
+			notebook_metadata.Context.ClientId != "" {
+			new_cells = getCellsForFlow(ctx, self.config,
+				notebook_metadata.Context.ClientId,
+				notebook_metadata.Context.FlowId, notebook_metadata)
+		}
 	}
 
-	notebook := &api_proto.NotebookMetadata{}
-	err = db.GetSubject(self.config, notebook_path_manager.Path(), notebook)
-	return notebook, err
+	for _, cell := range new_cells {
+		new_cell_id := NewNotebookCellId()
+
+		notebook_metadata.CellMetadata = append(notebook_metadata.CellMetadata, &api_proto.NotebookCell{
+			CellId:    new_cell_id,
+			Env:       cell.Env,
+			Timestamp: time.Now().Unix(),
+		})
+		cell.NotebookId = notebook_metadata.NotebookId
+		cell.CellId = new_cell_id
+
+		_, err := self.updateNotebookCell(ctx, notebook_metadata, user_name, cell)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func getCellsForHunt(ctx context.Context,
+	config_obj *config_proto.Config,
+	hunt_id string,
+	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
+
+	dispatcher := services.GetHuntDispatcher()
+	if dispatcher == nil {
+		return nil
+	}
+
+	hunt_obj, pres := dispatcher.GetHunt(hunt_id)
+	if !pres {
+		return nil
+	}
+	sources := hunt_obj.ArtifactSources
+	if len(sources) == 0 {
+		if hunt_obj.StartRequest != nil {
+			sources = hunt_obj.StartRequest.Artifacts
+		} else {
+			return nil
+		}
+	}
+
+	return getDefaultCellsForSources(config_obj, sources)
+}
+
+func getCellsForFlow(ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id, flow_id string,
+	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
+
+	flow_context, err := flows.LoadCollectionContext(config_obj, client_id, flow_id)
+	if err != nil {
+		return nil
+	}
+
+	return getDefaultCellsForSources(config_obj, flow_context.ArtifactsWithResults)
+}
+
+func getDefaultCellsForSources(config_obj *config_proto.Config,
+	sources []string) []*api_proto.NotebookCellRequest {
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil
+	}
+
+	// Create one table per artifact by default.
+	var result []*api_proto.NotebookCellRequest
+
+	for _, source := range sources {
+		// Check if the artifact has custom notebook cells defined.
+		artifact_source, pres := repository.GetSource(config_obj, source)
+		if !pres {
+			continue
+		}
+		env := []*api_proto.Env{{Key: "ArtifactName", Value: source}}
+
+		// If the artifact_source defines a notebook, let it do its own thing.
+		if len(artifact_source.Notebook) > 0 {
+			for _, cell := range artifact_source.Notebook {
+				result = append(result, &api_proto.NotebookCellRequest{
+					Type:  cell.Type,
+					Env:   env,
+					Input: cell.Template})
+			}
+
+		} else {
+			// Otherwise build a default notebook.
+			result = append(result, &api_proto.NotebookCellRequest{
+				Type:  "Markdown",
+				Env:   env,
+				Input: "# " + source})
+
+			result = append(result, &api_proto.NotebookCellRequest{
+				Type:  "VQL",
+				Env:   env,
+				Input: "\nSELECT * FROM source()\nLIMIT 50\n",
+			})
+		}
+	}
+
+	return result
 }
 
 func (self *ApiServer) NewNotebookCell(
@@ -310,6 +431,7 @@ func (self *ApiServer) NewNotebookCell(
 		NotebookId: in.NotebookId,
 		CellId:     notebook.LatestCellId,
 		Type:       in.Type,
+		Env:        in.Env,
 
 		// New cells are opened for editing.
 		CurrentlyEditing: true,
@@ -486,21 +608,14 @@ func (self *ApiServer) UpdateNotebookCell(
 			"User is not allowed to edit notebooks.")
 	}
 
-	notebook_cell := &api_proto.NotebookCell{
-		Input:            in.Input,
-		Output:           `<div class="padded"><i class="fa fa-spinner fa-spin fa-fw"></i> Calculating...</div>`,
-		CellId:           in.CellId,
-		Type:             in.Type,
-		Timestamp:        time.Now().Unix(),
-		CurrentlyEditing: in.CurrentlyEditing,
-		Calculating:      true,
-	}
-
-	db, _ := datastore.GetDB(self.config)
-
 	// Check that the user has access to this notebook.
 	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
 	notebook_metadata := &api_proto.NotebookMetadata{}
+	db, err := datastore.GetDB(self.config)
+	if err != nil {
+		return nil, err
+	}
+
 	err = db.GetSubject(self.config,
 		notebook_path_manager.Path(), notebook_metadata)
 	if err != nil {
@@ -511,7 +626,33 @@ func (self *ApiServer) UpdateNotebookCell(
 		return nil, errors.New("Notebook is not shared with user.")
 	}
 
+	return self.updateNotebookCell(ctx, notebook_metadata, user_name, in)
+}
+
+func (self *ApiServer) updateNotebookCell(
+	ctx context.Context,
+	notebook_metadata *api_proto.NotebookMetadata,
+	user_name string,
+	in *api_proto.NotebookCellRequest) (*api_proto.NotebookCell, error) {
+
+	notebook_cell := &api_proto.NotebookCell{
+		Input:            in.Input,
+		Output:           `<div class="padded"><i class="fa fa-spinner fa-spin fa-fw"></i> Calculating...</div>`,
+		CellId:           in.CellId,
+		Type:             in.Type,
+		Timestamp:        time.Now().Unix(),
+		CurrentlyEditing: in.CurrentlyEditing,
+		Calculating:      true,
+		Env:              in.Env,
+	}
+
+	db, err := datastore.GetDB(self.config)
+	if err != nil {
+		return nil, err
+	}
+
 	// And store it for next time.
+	notebook_path_manager := reporting.NewNotebookPathManager(notebook_metadata.NotebookId)
 	err = db.SetSubject(self.config,
 		notebook_path_manager.Cell(in.CellId).Path(),
 		notebook_cell)
@@ -550,31 +691,18 @@ func (self *ApiServer) UpdateNotebookCell(
 		start:         time.Now(),
 	}
 
+	// Add the notebook environment into the cell template.
+	for _, env := range notebook_metadata.Env {
+		tmpl.SetEnv(env.Key, env.Value)
+	}
+
+	// Also apply the cell env
+	for _, env := range in.Env {
+		tmpl.SetEnv(env.Key, env.Value)
+	}
+
 	input := in.Input
 	cell_type := in.Type
-
-	// For artifacts we parse and check the artifact in the main
-	// thread so we can return errors to the user
-	// immediately. Ultimately the artifact will be converted to a
-	// VQL query to run which we pass to the template engine
-	// asynchronously.
-	if in.Type == "Artifact" {
-		// New artifacts are added to a temporary repository
-		// so they do not affect the global one.
-		repository := global_repo.Copy()
-		artifact_obj, err := repository.LoadYaml(input, true /* validate */)
-		if err != nil {
-			return nil, err
-		}
-
-		// Update the artifact plugin in the template.
-		/* FIXME
-		artifact_plugin := artifacts.NewArtifactRepositoryPlugin(repository)
-		tmpl.Env.Set("Artifact", artifact_plugin)
-		*/
-		input = fmt.Sprintf(`{{ Query "SELECT * FROM Artifact.%v()" | Table}}`,
-			artifact_obj.Name)
-	}
 
 	// Update the content asynchronously
 	start_time := time.Now()
@@ -626,7 +754,7 @@ func (self *ApiServer) UpdateNotebookCell(
 
 		resp, err := updateCellContents(query_ctx, self.config, tmpl,
 			in.CurrentlyEditing, in.NotebookId,
-			in.CellId, cell_type, input, in.Input)
+			in.CellId, cell_type, in.Env, input, in.Input)
 		if err != nil {
 			main_err = err
 			logger := logging.GetLogger(self.config, &logging.GUIComponent)
@@ -925,6 +1053,7 @@ func updateCellContents(
 	tmpl *reporting.GuiTemplateEngine,
 	currently_editing bool,
 	notebook_id, cell_id, cell_type string,
+	env []*api_proto.Env,
 	input, original_input string) (*api_proto.NotebookCell, error) {
 
 	// Do not let exceptions take down the server.
@@ -935,20 +1064,22 @@ func updateCellContents(
 
 	switch cell_type {
 
-	case "Markdown", "Artifact":
-		output, err = tmpl.Execute(
-			&artifacts_proto.Report{Template: input})
+	case "Markdown":
+		// A Markdown cell just feeds directly into the
+		// template.
+		output, err = tmpl.Execute(&artifacts_proto.Report{Template: input})
 		if err != nil {
 			return nil, err
 		}
 
 	case "VQL":
-		if input != "" {
-			rows := tmpl.Query(input)
-			output_any, ok := tmpl.Table(rows).(string)
-			if ok {
-				output = output_any
-			}
+		// A VQL cell gets converted to a normal template
+		// first.
+		content, env := reporting.ConvertVQLCellToMarkdownCell(input)
+		tmpl.Env.MergeFrom(env)
+		output, err = tmpl.Execute(&artifacts_proto.Report{Template: content})
+		if err != nil {
+			return nil, err
 		}
 
 	default:
@@ -969,6 +1100,7 @@ func updateCellContents(
 		Messages:         tmpl.Messages(),
 		CellId:           cell_id,
 		Type:             cell_type,
+		Env:              env,
 		Timestamp:        time.Now().Unix(),
 		CurrentlyEditing: currently_editing,
 		Duration:         int64(time.Since(tmpl.Start).Seconds()),

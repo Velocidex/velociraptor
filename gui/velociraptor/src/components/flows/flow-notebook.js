@@ -39,16 +39,12 @@ export default class FlowNotebook extends React.Component {
     }
 
     getCellVQL = (flow) => {
-        let client_id = flow.client_id;
-        var flow_id = flow.session_id;
         var query = "SELECT * \nFROM source(\n";
         var sources = flow["artifacts_with_results"] || flow["request"]["artifacts"];
-        query += "    artifact='" + sources[0] + "',\n";
         for (var i=1; i<sources.length; i++) {
             query += "    -- artifact='" + sources[i] + "',\n";
         }
-        query += "    client_id='" + client_id + "', flow_id='" +
-            flow_id + "')\nLIMIT 50\n";
+        query += "    artifact='" + sources[0] + "'\n) LIMIT 50";
 
         return query;
     }
@@ -82,8 +78,18 @@ export default class FlowNotebook extends React.Component {
             let request = {
                 name: "Notebook for Collection " + flow_id,
                 notebook_id: notebook_id,
-                // Hunt notebooks are all public.
+                context: {
+                    type: "flow",
+                    flow_id: flow_id,
+                    client_id: client_id,
+                },
+                // Flow notebooks are all public.
                 public: true,
+                env: [
+                    {key: "FlowId", value: flow_id},
+                    {key: "ClientId", value: client_id},
+                    {key: "NotebookId", notebook_id},
+                ],
             };
 
             api.post('v1/NewNotebook', request).then((response) => {
@@ -92,14 +98,7 @@ export default class FlowNotebook extends React.Component {
                     return;
                 }
 
-                api.post('v1/NewNotebookCell', {
-                    notebook_id: notebook_id,
-                    type: "VQL",
-                    cell_id: cell_metadata[0].cell_id,
-                    input: this.getCellVQL(this.props.flow),
-                }).then((response) => {
-                    this.fetchNotebooks();
-                });
+                this.fetchNotebooks();
             });
         });
     }

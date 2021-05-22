@@ -33,6 +33,12 @@ message ArtifactParameter {
     string friendly_name = 5;
 }
 
+message NotebookSourceCell {
+    string template = 1;
+    string type = 2;
+}
+
+
 message ArtifactSource {
     option (semantic) = {
         description: "Where the artifact gets its data."
@@ -63,6 +69,9 @@ message ArtifactSource {
             description: "Queries that will run in order. Only output from "
             "the last query will be collected."
         }];
+
+    // Notebook cells that will be added as part of the source.
+    repeated NotebookSourceCell notebook = 5;
 }
 
 

@@ -91,6 +91,10 @@ class VeloPagedTable extends Component {
         // The URL Handler to fetch the table content. Defaults to
         // "v1/GetTable".
         url: PropTypes.string,
+
+
+        // When called will cause the table to be recalculated.
+        refresh: PropTypes.func,
     }
 
     state = {
@@ -226,7 +230,10 @@ class VeloPagedTable extends Component {
 
         if (_.isEmpty(this.state.columns)) {
             return <div className="no-content">
-                     No Data Available.
+                     <div>No Data Available.</div>
+                     <Button variant="default" onClick={this.props.refresh}>
+                       Recalculate <FontAwesomeIcon icon="sync"/>
+                     </Button>
                    </div>;
         }
 
