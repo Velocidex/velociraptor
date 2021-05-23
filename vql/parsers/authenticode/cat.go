@@ -96,9 +96,11 @@ func VerifyCatalogSignature(fd *os.File, normalized_path string, output *ordered
 		return "", err
 	}
 
-	// Report the cat file itself.
-	p := (*[0xffff]uint16)(unsafe.Pointer(&catalogInfo.WszCatalogFile[0]))
-	cat_file := windows.UTF16ToString(p[:catalogInfo.CbStruct/2])
+	// Report the cat file itself. Convert the static byte array
+	// from UTF16 to a string
+	p := (*[unsafe.Sizeof(catalogInfo.WszCatalogFile) / 2]uint16)(
+		unsafe.Pointer(&catalogInfo.WszCatalogFile[0]))
+	cat_file := windows.UTF16ToString(p[:])
 
 	// Calculate the member tag - it is usually the hex
 	// string of the hash but not always.
