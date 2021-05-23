@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/go-pe"
 	"www.velocidex.com/golang/velociraptor/utils"
 	windows "www.velocidex.com/golang/velociraptor/vql/windows"
+	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems"
 )
 
 const (
