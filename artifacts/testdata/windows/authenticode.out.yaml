@@ -1,0 +1,10 @@
+LET X = SELECT authenticode(filename="C:/Windows/notebpad.exe") AS A, authenticode(filename='c:/Windows/system32/ntoskrnl.exe' ) AS B FROM scope()[]SELECT A.Filename, A.IssuerName, A.SubjectName, B.Filename, B.IssuerName, B.SubjectName FROM X[
+ {
+  "A.Filename": null,
+  "A.IssuerName": null,
+  "A.SubjectName": null,
+  "B.Filename": "c:\\Windows\\system32\\ntoskrnl.exe",
+  "B.IssuerName": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows Production PCA 2011",
+  "B.SubjectName": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows"
+ }
+]
