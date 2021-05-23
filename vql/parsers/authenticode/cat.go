@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 	"syscall"
 	"unsafe"
 
@@ -98,8 +97,8 @@ func VerifyCatalogSignature(fd *os.File, normalized_path string, output *ordered
 	}
 
 	// Report the cat file itself.
-	cat_file := strings.SplitN(windows.LPWSTRToString(
-		(windows.LPWSTR)(unsafe.Pointer(&catalogInfo.WszCatalogFile[0]))), "\x00", 2)[0]
+	p := (*[0xffff]uint16)(unsafe.Pointer(&catalogInfo.WszCatalogFile[0]))
+	cat_file := windows.UTF16ToString(p[:catalogInfo.CbStruct/2])
 
 	// Calculate the member tag - it is usually the hex
 	// string of the hash but not always.
