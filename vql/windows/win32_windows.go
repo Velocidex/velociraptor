@@ -427,3 +427,155 @@ func ReadProcessMemory(handle syscall.Handle, baseAddress uint64, dest []byte) (
 	}
 	return int(numRead), nil
 }
+
+func HasWintrustDll() error {
+	err := procCryptCATAdminAcquireContext2.Find()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Wintrust dll functions - may not be there always.
+//sys CryptCATAdminAcquireContext2(handle *syscall.Handle, pgSubsystem *GUID, pwszHashAlgorithm *byte, pStrongHashPolicy *byte, dwFlags uint32) (err error) = wintrust.CryptCATAdminAcquireContext2
+//sys CryptCATAdminReleaseContext(handle syscall.Handle, unused int32) (ok bool) = wintrust.CryptCATAdminReleaseContext
+//sys CryptCATAdminCalcHashFromFileHandle2(handle syscall.Handle, fd uintptr, pcbHash *uint32, pbHash *byte, dwFlags uint32) (err error) = wintrust.CryptCATAdminCalcHashFromFileHandle2
+//sys CryptCATAdminEnumCatalogFromHash(handle syscall.Handle, pbHash *byte, pcbHash uint32, dwFlags uint32, phPrevCatInfo *syscall.Handle) (HCATINFO syscall.Handle) = wintrust.CryptCATAdminEnumCatalogFromHash
+//sys CryptCATCatalogInfoFromContext(handle syscall.Handle, psCatInfo *CATALOG_INFO, dwFlags uint32) (err error) = wintrust.CryptCATCatalogInfoFromContext
+//sys CryptCATAdminReleaseCatalogContext(handle syscall.Handle, handle2 syscall.Handle, dwFlags uint32) (err error) = wintrust.CryptCATAdminReleaseCatalogContext
+//sys WinVerifyTrust(handle syscall.Handle, action *GUID, data *WINTRUST_DATA) (ret uint32, err error) [failretval!=0] = wintrust.WinVerifyTrust
+//sys WTHelperProvDataFromStateData(handle syscall.Handle) (provider *CRYPT_PROVIDER_DATA, err error) [failretval==nil] = wintrust.WTHelperProvDataFromStateData
+//sys WTHelperGetProvSignerFromChain(pProvData *CRYPT_PROVIDER_DATA, idxSigner uint32, fCounterSigner bool, idxCounterSigner uint32) (signer *CRYPT_PROVIDER_SGNR, err error) [failretval==nil] = wintrust.WTHelperGetProvSignerFromChain
+
+type WINTRUST_FILE_INFO struct {
+	CbStruct       uint32
+	PcwszFilePath  uintptr
+	HFile          uintptr
+	PgKnownSubject *GUID
+}
+
+type CATALOG_INFO struct {
+	CbStruct       uint32
+	WszCatalogFile [1024]byte
+}
+
+type WINTRUST_CATALOG_INFO struct {
+	CbStruct             uint32
+	DwCatalogVersion     uint32
+	PcwszCatalogFilePath uintptr
+	PcwszMemberTag       uintptr
+	PcwszMemberFilePath  uintptr
+	HMemberFile          uintptr
+	PbCalculatedFileHash uintptr
+	CbCalculatedFileHash uint32
+	PcCatalogContext     uintptr
+	HCatAdmin            syscall.Handle
+}
+
+type WINTRUST_DATA struct {
+	CbStruct            uint32                       //0-4
+	PPolicyCallbackData uintptr                      //4-12
+	PSIPClientData      uintptr                      //12-20
+	DwUIChoice          uint32                       //20-24
+	FdwRevocationChecks uint32                       //24-28
+	DwUnionChoice       uint32                       //28-32
+	Union               uintptr                      //32-40
+	DwStateAction       uint32                       //40-44
+	HWVTStateData       syscall.Handle               //44-48
+	PwszURLReference    uintptr                      //48-56
+	DwProvFlags         uint32                       //56-60
+	DwUIContext         uint32                       // 60-64
+	PSignatureSettings  *WINTRUST_SIGNATURE_SETTINGS // 64-72
+} // 72
+
+type WINTRUST_SIGNATURE_SETTINGS struct {
+	CbStruct           uint32
+	DwIndex            uint32
+	DwFlags            uint32
+	CSecondarySigs     uint32
+	DwVerifiedSigIndex uint32
+	PCryptoPolicy      *byte
+}
+
+// Opaque structure
+type CRYPT_PROVIDER_DATA struct {
+	Reserved uint32
+}
+
+type CRYPT_PROVIDER_SGNR struct {
+	CbStruct                            uint32
+	SftVerifyAsOfLow, SftVerifyAsOfHigh uint32 // Need to split into 2 uint32 to maintain alignment
+	CsCertChain                         uint32
+	PasCertChain                        *CRYPT_PROVIDER_CERT
+	DwSignerType                        uint32
+	PsSigner                            *CMSG_SIGNER_INFO
+	DwError                             uint32
+	CsCounterSigners                    uint32
+	PasCounterSigners                   uintptr
+	PChainContext                       uintptr
+}
+
+type CMSG_SIGNER_INFO struct {
+	DwVersion               uint32
+	Issuer                  CRYPTOAPI_BLOB
+	SerialNumber            CRYPTOAPI_BLOB
+	HashAlgorithm           CRYPT_ALGORITHM_IDENTIFIER
+	HashEncryptionAlgorithm CRYPT_ALGORITHM_IDENTIFIER
+	EncryptedHash           CRYPTOAPI_BLOB
+
+	// Some extra fields we dont use
+	//CRYPT_ATTRIBUTES           AuthAttrs;
+	//CRYPT_ATTRIBUTES           UnauthAttrs;
+}
+
+type CRYPTOAPI_BLOB struct {
+	CbData uint32
+	PbData uintptr
+}
+
+type CRYPT_ALGORITHM_IDENTIFIER struct {
+	PszObjId   *byte
+	Parameters CRYPTOAPI_BLOB
+}
+
+type CRYPT_PROVIDER_CERT struct {
+	CbStruct uint32
+	PCert    *CERT_CONTEXT
+	// More fields we dont care about
+}
+
+type CERT_CONTEXT struct {
+	DwCertEncodingType uint32
+	PbCertEncoded      *byte
+	CbCertEncoded      uint32
+	PCertInfo          uintptr
+	HCertStore         uint32
+}
+
+const (
+	WTD_UI_ALL    = 1
+	WTD_UI_NONE   = 2
+	WTD_UI_NOBAD  = 3
+	WTD_UI_NOGOOD = 4
+
+	WTD_REVOKE_NONE       = 0x00000000
+	WTD_REVOKE_WHOLECHAIN = 0x00000001
+
+	WTD_CHOICE_FILE    = 1
+	WTD_CHOICE_CATALOG = 2
+	WTD_CHOICE_BLOB    = 3
+	WTD_CHOICE_SIGNER  = 4
+	WTD_CHOICE_CERT    = 5
+
+	WTD_STATEACTION_IGNORE           = 0x00000000
+	WTD_STATEACTION_VERIFY           = 0x00000001
+	WTD_STATEACTION_CLOSE            = 0x00000002
+	WTD_STATEACTION_AUTO_CACHE       = 0x00000003
+	WTD_STATEACTION_AUTO_CACHE_FLUSH = 0x00000004
+	WTD_REVOCATION_CHECK_NONE        = 0x00000010
+	WTD_SAFER_FLAG                   = 0x00000100
+	WTD_CACHE_ONLY_URL_RETRIEVAL     = 0x00001000
+
+	INVALID_HANDLE_VALUE = syscall.Handle(0xFFFFFFFF)
+)

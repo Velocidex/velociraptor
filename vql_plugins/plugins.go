@@ -28,6 +28,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/golang"
 	_ "www.velocidex.com/golang/velociraptor/vql/networking"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
+	_ "www.velocidex.com/golang/velociraptor/vql/parsers/authenticode"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/crypto"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/csv"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/ese"

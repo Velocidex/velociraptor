@@ -62,6 +62,8 @@ func (self _PEFunction) Call(
 
 	lru_size := vql_subsystem.GetIntFromRow(scope, scope, constants.BINARY_CACHE_SIZE)
 	paged_reader := readers.NewPagedReader(scope, arg.Accessor, arg.Filename, int(lru_size))
+	defer paged_reader.Close()
+
 	pe_file, err := pe.NewPEFile(paged_reader)
 	if err != nil {
 		// Suppress logging for invalid PE files.
