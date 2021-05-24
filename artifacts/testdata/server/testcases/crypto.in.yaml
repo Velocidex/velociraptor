@@ -1,0 +1,8 @@
+Queries:
+  # Mock out a single root ca with the binary blob that normally resides there.
+  - LET X <= SELECT mock(plugin="glob", results=[dict(FullPath='''\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\SystemCertificates\ROOT\Certificates\18f7c1fcc3090203fd5baa2f861a754976c8dd25\Blob''',
+       ModTime=timestamp(epoch="2018-09-15T07:36:04.5303712Z"),
+       Data=dict(value=read_file(filename=srcDir+'/artifacts/testdata/files/root_store_reg.bin')))])
+    FROM scope()
+  - SELECT * FROM Artifact.Windows.System.RootCAStore()
+    LIMIT 1

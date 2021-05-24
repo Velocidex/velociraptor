@@ -593,7 +593,7 @@ class ShellViewer extends Component {
 
     render() {
         let simple_textarea = true;
-        if (this.state.shell_type == "VQL") {
+        if (this.state.shell_type === "VQL") {
             simple_textarea = false;
         }
 

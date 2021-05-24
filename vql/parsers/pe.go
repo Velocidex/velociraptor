@@ -64,7 +64,8 @@ func (self _PEFunction) Call(
 	paged_reader := readers.NewPagedReader(scope, arg.Accessor, arg.Filename, int(lru_size))
 	pe_file, err := pe.NewPEFile(paged_reader)
 	if err != nil {
-		scope.Log("parse_pe: %v for %v", err, arg.Filename)
+		// Suppress logging for invalid PE files.
+		// scope.Log("parse_pe: %v for %v", err, arg.Filename)
 		return &vfilter.Null{}
 	}
 
@@ -88,6 +89,17 @@ func (self _PEFunction) Call(
 		}).
 		Set("ImpHash", func() vfilter.Any {
 			return pe_file.ImpHash()
+		}).
+		Set("Authenticode", func() vfilter.Any {
+			info, err := pe.ParseAuthenticode(pe_file)
+			if err != nil {
+				return vfilter.Null{}
+			}
+
+			return pe.PKCS7ToOrderedDict(info)
+		}).
+		Set("AuthenticodeHash", func() vfilter.Any {
+			return pe_file.CalcHashToDict()
 		})
 }
 

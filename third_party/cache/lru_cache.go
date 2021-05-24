@@ -135,10 +135,10 @@ func (lru *LRUCache) SetIfAbsent(key string, value Value) {
 // Delete removes an entry from the cache, and returns if the entry existed.
 func (lru *LRUCache) Delete(key string) bool {
 	lru.mu.Lock()
-	defer lru.mu.Unlock()
 
 	element := lru.table[key]
 	if element == nil {
+		defer lru.mu.Unlock()
 		return false
 	}
 
@@ -151,9 +151,14 @@ func (lru *LRUCache) Delete(key string) bool {
 	// is evicted.
 	closer, ok := value.value.(Closer)
 	if ok {
+		// Release the lock before calling the closer to avoid
+		// deadlock.
+		lru.mu.Unlock()
 		closer.Close()
+		return true
 	}
 
+	lru.mu.Unlock()
 	return true
 }
 
@@ -300,7 +305,12 @@ func (lru *LRUCache) checkCapacity() {
 		// is evicted.
 		closer, ok := delValue.value.(Closer)
 		if ok {
+			// Release the lock before we call the closer
+			// and re-acquire it. This helps when the
+			// closer needs to also access the LRU.
+			lru.mu.Unlock()
 			closer.Close()
+			lru.mu.Lock()
 		}
 	}
 }

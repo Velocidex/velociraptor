@@ -58,13 +58,10 @@ message ArtifactSource {
             description: "A multi-line VQL query"
         }];
 
+    // Deprecated - use query above for new artifacts.
     repeated string queries = 2 [(sem_type) = {
             description: "Queries that will run in order. Only output from "
             "the last query will be collected."
-        }];
-
-    repeated string post_process = 5 [(sem_type) = {
-            description: "A list of queries that will be run over the results for post processing.",
         }];
 }
 

@@ -6,7 +6,7 @@ export class YamlHighlightRules extends window.ace.acequire("ace/mode/yaml_highl
 
         this.$rules["start"] = [{
             token : "keyword",
-            regex : /\s*-?\s*(name|type|description|sources|parameters|author|reference|required_permissions|resources|tools|parameters|url|default):/,
+            regex : /\s*-?\s*(name|type|description|choices|sources|parameters|author|reference|required_permissions|resources|tools|parameters|url|default|serve_locally|github_asset_regex|github_project|column_types):/,
         }, {
             token: "keyword",
             regex: /.*(precondition|query):\s*[|]?/,

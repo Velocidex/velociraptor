@@ -30,6 +30,9 @@ parameters:
       description: "Regex of executable name."
     - name: hashRegex
       description: "Regex of prefetch hash."
+    - name: IncludeFilesAccessed
+      description: Include all accessed files
+      type: bool
 
 precondition: SELECT OS From info() where OS = 'windows'
 
@@ -48,11 +51,12 @@ sources:
                     Version,
                     LastRunTimes,
                     RunCount,
-                    // FilesAccessed,
                     FullPath,
                     Name AS PrefetchFileName,
-                    timestamp(epoch=Btime.sec) as CreationTime,
-                    timestamp(epoch=Mtime.sec) as ModificationTime
+                    Btime as CreationTime,
+                    Mtime as ModificationTime,
+                    filter(list=FilesAccessed, regex=".exe$")[0] AS Binary,
+                    if(condition= IncludeFilesAccessed, then=FilesAccessed) AS FilesAccessed
                  FROM prefetch(filename=FullPath)
                  WHERE
                     if(condition=binaryRegex, then= Executable =~ binaryRegex,
@@ -110,3 +114,10 @@ sources:
         FROM if(condition = (dateBefore OR dateAfter),
             then={ SELECT * FROM timeFilteredStdOut },
             else={ SELECT * FROM pf  })
+
+
+column_types:
+  - name: CreationTime
+    type: timestamp
+  - name: ModificationTime
+    type: timestamp

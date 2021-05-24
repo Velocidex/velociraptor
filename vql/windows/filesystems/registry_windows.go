@@ -371,8 +371,6 @@ func getValueInfo(key registry.Key, components []string) (*RegValueInfo, error) 
 
 	switch value_type {
 	case registry.DWORD, registry.DWORD_BIG_ENDIAN, registry.QWORD:
-		value_info._data = ordereddict.NewDict().
-			Set("type", value_info.Type)
 		data, _, err := key.GetIntegerValue(value_name)
 		if err != nil {
 			return nil, err
@@ -387,7 +385,9 @@ func getValueInfo(key registry.Key, components []string) (*RegValueInfo, error) 
 			value_info.Type = "QWORD"
 		}
 
-		value_info._data.Set("value", data)
+		value_info._data = ordereddict.NewDict().
+			Set("type", value_info.Type).
+			Set("value", data)
 
 	case registry.BINARY:
 		data, _, err := key.GetBinaryValue(value_name)

@@ -1,0 +1,40 @@
+name: Windows.System.CatFiles
+description: |
+   Windows stores many hashes in .cat files. These catalog files
+   contain a set of trusted hashes for drivers and other binaries,
+   even if the PE files do not themselves contain authenticode
+   signatures.
+
+   This artifact extracts all the trusted hashes from a system by
+   parsing all the cat files.
+
+parameters:
+   - name: CatGlobs
+     default: C:\Windows\System32\CatRoot\*\*.cat
+   - name: SignerExcludeRegex
+     description: Exclude hashes from this Signer
+     default: Microsoft
+   - name: SignerFilterRegex
+     description: Only show hashes from this signer.
+     default: .
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+        LET parsed_cats = SELECT Name, parse_pkcs7(data=read_file(filename=FullPath)) AS PKCS7
+        FROM glob(globs=CatGlobs)
+
+        -- Extract the CertificateTrustList and Subject who signed the cat file.
+        LET extracted = SELECT Name, PKCS7.Signer.Subject AS Signer,
+            PKCS7.CertificateTrustList.Hash AS CTL
+        FROM parsed_cats
+        WHERE Signer =~ SignerFilterRegex AND NOT Signer =~ SignerExcludeRegex
+
+        -- Expand all the hashes in the same cat file to flatten the results
+        SELECT * FROM foreach(row=extracted, query={
+            SELECT * FROM foreach(row=CTL, query={
+                SELECT Name, Signer, _value AS Hash FROM scope()
+            })
+        })

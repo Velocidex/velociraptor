@@ -1,0 +1,19 @@
+LET X <= SELECT mock(plugin="glob", results=[dict(FullPath='''\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\SystemCertificates\ROOT\Certificates\18f7c1fcc3090203fd5baa2f861a754976c8dd25\Blob''', ModTime=timestamp(epoch="2018-09-15T07:36:04.5303712Z"), Data=dict(value=read_file(filename=srcDir+'/artifacts/testdata/files/root_store_reg.bin')))]) FROM scope()[]SELECT * FROM Artifact.Windows.System.RootCAStore() LIMIT 1[
+ {
+  "_RegistryValue": "\\HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\SystemCertificates\\ROOT\\Certificates\\18f7c1fcc3090203fd5baa2f861a754976c8dd25\\Blob",
+  "ModTime": "2018-09-15T07:36:04.5303712Z",
+  "Name": "VeriSign Time Stamping CA",
+  "FingerPrint": "18f7c1fcc3090203fd5baa2f861a754976c8dd25",
+  "Certificate": {
+   "SerialNumber": "4a19d2388c82591ca55d735f155ddca3",
+   "SignatureAlgorithm": "MD5-RSA",
+   "Subject": "O=VeriSign Trust Network, OU=VeriSign, Inc., OU=VeriSign Time Stamping Service Root, OU=NO LIABILITY ACCEPTED, (c)97 VeriSign, Inc.",
+   "Issuer": "O=VeriSign Trust Network, OU=VeriSign, Inc., OU=VeriSign Time Stamping Service Root, OU=NO LIABILITY ACCEPTED, (c)97 VeriSign, Inc.",
+   "NotBefore": "1997-05-12T00:00:00Z",
+   "NotAfter": "2004-01-07T23:59:59Z",
+   "PublicKey": "RSA\n                Public-Key: (1024 bit)\n                Modulus:\n                    d3:2e:20:f0:68:7c:2c:2d:2e:81:1c:b1:06:b2:a7:\n                    0b:b7:11:0d:57:da:53:d8:75:e3:c9:33:2a:b2:d4:\n                    f6:09:5b:34:f3:e9:90:fe:09:0c:d0:db:1b:5a:b9:\n                    cd:e7:f6:88:b1:9d:c0:87:25:eb:7d:58:10:73:6a:\n                    78:cb:71:15:fd:c6:58:f6:29:ab:58:5e:96:04:fd:\n                    2d:62:11:58:81:1c:ca:71:94:d5:22:58:2f:d5:cc:\n                    14:05:84:36:ba:94:aa:b4:4d:4a:e9:ee:3b:22:ad:\n                    56:99:7e:21:9c:6c:86:c0:4a:47:97:6a:b4:a6:36:\n                    d5:fc:09:2d:d3:b4:39:9b\n                Exponent: 65537 (0x10001)\n",
+   "Extensions": {}
+  },
+  "_Source": "Windows.System.RootCAStore"
+ }
+]
