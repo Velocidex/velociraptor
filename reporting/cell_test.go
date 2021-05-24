@@ -19,16 +19,31 @@ SELECT 1 / 2 FROM info()
 /* c
 
 # This is markdown
+with multiple lines
+/*
+This is still a comment!
 
 */
 
 SELECT * FROM glob()
+`}, {"Comments in VQL", `
+SELECT * FROM glob(globs='C:/Windows/*/*.exe')
+`}, {"Comments within lines", `
+SELECT * FROM glob(/* Foobar */globs='C:/Windows/*/*.exe')
+`}, {"Multi line VQL", `
+SELECT *, count() AS Count
+FROM certificates()
 `},
 }
 
 func TestVQL2MarkdownConversion(t *testing.T) {
 	result := ordereddict.NewDict()
 	for _, testcase := range TestCases {
+		/*
+			tokens, err := parser.Lex(bytes.NewReader([]byte(testcase.Input)))
+			utils.Debug(tokens)
+			utils.Debug(err)
+		*/
 		parsed, err := ConvertVQLCellToContent(testcase.Input)
 		assert.NoError(t, err)
 

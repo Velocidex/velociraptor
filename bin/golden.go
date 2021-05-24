@@ -226,7 +226,7 @@ func doGolden() {
 	_, cancel := makeCtxWithTimeout(120)
 	defer cancel()
 
-	config_obj, err := DefaultConfigLoader.LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Can not load configuration.")
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)

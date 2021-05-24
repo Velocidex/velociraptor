@@ -18,7 +18,7 @@ var (
 )
 
 func doExportNotebook() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	sm, err := startEssentialServices(config_obj)

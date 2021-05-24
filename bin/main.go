@@ -115,7 +115,8 @@ func maybe_unlock_api_config(config_obj *config_proto.Config) error {
 }
 
 var (
-	DefaultConfigLoader, APIConfigLoader *config.Loader
+	APIConfigLoader *config.Loader
+	default_config  *config_proto.Config
 )
 
 func main() {
@@ -137,7 +138,8 @@ func main() {
 	}
 
 	// Automatically add config flags
-	default_config, err := parseFlagsToDefaultConfig(app)
+	var err error
+	default_config, err = parseFlagsToDefaultConfig(app)
 	kingpin.FatalIfError(err, "Adding config flags.")
 
 	command := kingpin.MustParse(app.Parse(args))
@@ -148,20 +150,6 @@ func main() {
 
 	doBanner()
 	defer doPrompt()
-
-	// Most commands load a config in the following order
-	DefaultConfigLoader = new(config.Loader).WithVerbose(*verbose_flag).
-		WithTempdir(*tempdir_flag).
-		WithFileLoader(*config_path).
-		WithEmbedded().
-		WithEnvLoader("VELOCIRAPTOR_CONFIG").
-		WithCustomValidator(initFilestoreAccessor).
-		WithCustomValidator(initDebugServer).
-		WithLogFile(*logging_flag).
-		WithOverride(*override_flag).
-		WithCustomValidator(func(config_obj *config_proto.Config) error {
-			return mergeFlagConfig(config_obj, default_config)
-		})
 
 	// Commands that potentially take an API config can load both
 	// - first try the API config, then try a config.
@@ -200,4 +188,20 @@ func main() {
 			break
 		}
 	}
+}
+
+func makeDefaultConfigLoader() *config.Loader {
+	return new(config.Loader).
+		WithVerbose(*verbose_flag).
+		WithTempdir(*tempdir_flag).
+		WithFileLoader(*config_path).
+		WithEmbedded().
+		WithEnvLoader("VELOCIRAPTOR_CONFIG").
+		WithCustomValidator(initFilestoreAccessor).
+		WithCustomValidator(initDebugServer).
+		WithLogFile(*logging_flag).
+		WithOverride(*override_flag).
+		WithCustomValidator(func(config_obj *config_proto.Config) error {
+			return mergeFlagConfig(config_obj, default_config)
+		})
 }

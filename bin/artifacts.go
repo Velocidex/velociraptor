@@ -124,7 +124,7 @@ func getRepository(config_obj *config_proto.Config) (services.Repository, error)
 func doArtifactCollect() {
 	checkAdmin()
 
-	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
 	sm, err := startEssentialServices(config_obj)
@@ -191,7 +191,7 @@ func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
 }
 
 func doArtifactShow() {
-	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
 	sm, err := startEssentialServices(config_obj)
@@ -212,7 +212,7 @@ func doArtifactShow() {
 }
 
 func doArtifactList() {
-	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
 	sm, err := startEssentialServices(config_obj)

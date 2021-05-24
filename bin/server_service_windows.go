@@ -227,7 +227,7 @@ func startServiceServerService(name string) error {
 		return fmt.Errorf("could not access service: %v", err)
 	}
 	defer s.Close()
-	err = s.Start("service", "run")
+	err = s.Start("server_service", "run")
 	if err != nil {
 		return fmt.Errorf("could not start service: %v", err)
 	}
@@ -286,7 +286,7 @@ func removeServiceServerService(name string) error {
 }
 
 func doRemoveServerService() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
@@ -320,8 +320,15 @@ func loadServerConfig() (*config_proto.Config, error) {
 		config_path = &config_target_path
 	}
 
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredFrontend().
+		WithRequiredLogging().LoadAndValidate()
 	if err != nil {
+		// Config obj is not valid here, we can not actually
+		// log anything since we dont know where to send it so
+		// prelog instead.
+		logging.Prelog("Failed to load %v will try again soon.\n", *config_path)
+
 		return nil, err
 	}
 
@@ -474,7 +481,7 @@ func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		var err error
 
-		loader := DefaultConfigLoader.WithRequiredFrontend()
+		loader := makeDefaultConfigLoader().WithRequiredFrontend()
 
 		switch command {
 		case server_service_installl_command.FullCommand():

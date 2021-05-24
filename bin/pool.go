@@ -77,7 +77,7 @@ func doPoolClient() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	client_config, err := DefaultConfigLoader.
+	client_config, err := makeDefaultConfigLoader().
 		WithRequiredClient().
 		WithVerbose(*verbose_flag).
 		LoadAndValidate()

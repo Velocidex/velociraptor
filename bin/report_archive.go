@@ -36,7 +36,7 @@ var (
 )
 
 func doReportArchive() {
-	config_obj, err := DefaultConfigLoader.
+	config_obj, err := makeDefaultConfigLoader().
 		WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
