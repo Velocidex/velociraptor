@@ -14,3 +14,4 @@ Queries:
       dict(
          HiveGlob=srcDir+"/artifacts/testdata/files/UsrClass.dat",
          KeyGlob='''\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\**'''),])
+    ORDER BY KeyPath
