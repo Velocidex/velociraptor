@@ -275,12 +275,12 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
  }
 ]SELECT EventID, DomainName, UserName, LogonType, SourceIP, Description FROM Artifact.Windows.EventLogs.RDPAuth( Security=srcDir + '/artifacts/testdata/files/RDPAuth_Security.evtx', System= srcDir + '/artifacts/testdata/files/RDPAuth_System.evtx', LocalSessionManager= srcDir + '/artifacts/testdata/files/RDPAuth_LocalSessionManager.evtx', RemoteConnectionManager= srcDir + '/artifacts/testdata/files/RDPAuth_RemoteConnectionManager.evtx') WHERE NOT LogonType = 3 GROUP BY EventID[
  {
-  "EventID": 1149,
-  "DomainName": "null",
+  "EventID": 23,
+  "DomainName": "WINDOMAIN",
   "UserName": "vagrant",
   "LogonType": "null",
-  "SourceIP": "192.168.38.1",
-  "Description": "RDP_INITIATION_SUCCESSFUL"
+  "SourceIP": "null",
+  "Description": "RDP_SESSION_LOGOFF"
  },
  {
   "EventID": 21,
@@ -299,12 +299,12 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Description": "RDP_REMOTE_CONNECTED"
  },
  {
-  "EventID": 23,
-  "DomainName": "WINDOMAIN",
-  "UserName": "vagrant",
+  "EventID": 40,
+  "DomainName": "null",
+  "UserName": "null",
   "LogonType": "null",
   "SourceIP": "null",
-  "Description": "RDP_SESSION_LOGOFF"
+  "Description": "RDP_REMOTE_DISCONNECTED_REASON"
  },
  {
   "EventID": 24,
@@ -323,12 +323,20 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Description": "RDP_REMOTE_RECONNECTION"
  },
  {
-  "EventID": 40,
+  "EventID": 1149,
   "DomainName": "null",
-  "UserName": "null",
+  "UserName": "vagrant",
+  "LogonType": "null",
+  "SourceIP": "192.168.38.1",
+  "Description": "RDP_INITIATION_SUCCESSFUL"
+ },
+ {
+  "EventID": 4647,
+  "DomainName": "WINDOMAIN",
+  "UserName": "vagrant",
   "LogonType": "null",
   "SourceIP": "null",
-  "Description": "RDP_REMOTE_DISCONNECTED_REASON"
+  "Description": "USER_INITIATED_LOGOFF"
  },
  {
   "EventID": 4624,
@@ -345,13 +353,5 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "LogonType": 10,
   "SourceIP": "null",
   "Description": "LOGOFF_DISCONNECT"
- },
- {
-  "EventID": 4647,
-  "DomainName": "WINDOMAIN",
-  "UserName": "vagrant",
-  "LogonType": "null",
-  "SourceIP": "null",
-  "Description": "USER_INITIATED_LOGOFF"
  }
 ]
