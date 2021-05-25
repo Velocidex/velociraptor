@@ -1,0 +1,68 @@
+name: Windows.Forensics.Shellbags
+description: |
+  Windows uses the Shellbag keys to store user preferences for GUI
+  folder display within Windows Explorer.
+
+reference:
+  - https://www.sans.org/blog/computer-forensic-artifacts-windows-7-shellbags/
+
+parameters:
+  - name: MRUGlob
+    type: csv
+    default: |
+      Glob
+      HKEY_CURRENT_USER\Software\Microsoft\Windows\Shell\BagMRU\**
+      HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\**
+
+imports:
+  # Link files use the same internal format as shellbags so we import
+  # the profile here.
+  - Windows.Forensics.Lnk
+
+sources:
+  - query: |
+      LET X = SELECT FullPath,
+          parse_binary(profile=Profile, filename=Data.value, accessor="data", struct="ItemIDList") as _Parsed,
+          base64encode(string=Data.value) AS _RawData, ModTime
+      FROM glob(globs=MRUGlob.Glob, accessor="registry")
+      WHERE Data.type = "BINARY" AND Name =~ "[0-9]+"
+
+      LET AllResults <= SELECT FullPath,
+        _Parsed.ShellBag.Description AS Description,
+        _Parsed, _RawData, ModTime
+      FROM X
+
+      // Recursive function to join path components together.
+      LET FormPath(MRUPath, Description) = SELECT * FROM chain(
+        b={
+          SELECT MRUPath AS FullPath, Description,
+              -- Signify unknown component as ?
+              Description.LongName || Description.ShortName || "?" AS Name
+          FROM scope()
+        },
+        c={
+          SELECT * FROM foreach(row={
+            SELECT FullPath, Description
+            FROM AllResults
+            WHERE FullPath = dirname(path=MRUPath, sep="\\")
+            LIMIT 1
+          }, query={
+            SELECT * FROM FormPath(MRUPath=FullPath, Description=Description)
+          })
+        })
+        ORDER BY FullPath
+
+        // Now display all hits and their reconstructed path
+        LET ReconstructedPath = SELECT ModTime, FullPath, Description, {
+           SELECT * FROM FormPath(MRUPath=FullPath, Description=Description)
+        } AS Chain, _RawData, _Parsed
+        FROM AllResults
+
+        SELECT ModTime, FullPath, Description,
+               join(array=Chain.Name, sep=" -> ") AS Path,
+               _RawData, _Parsed
+        FROM ReconstructedPath
+
+column_types:
+  - name: _RawData
+    type: base64

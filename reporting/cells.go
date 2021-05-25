@@ -6,6 +6,17 @@ import (
 	"github.com/alecthomas/participle/lexer/stateful"
 )
 
+/*
+  Notebooks cells of VQL type may have markdown interspersed
+  throughout. This allows users to document their VQL queries directly
+  in the cell itself rather than having to add another cell. Markdown
+  is allowed in multiline comments
+
+  This module parses out the VQL into a series of fragments, each are
+  either VQL or Comment sections. The VQL is evaluated together with
+  the comment is rendered as a markdown block.
+*/
+
 var (
 	def = lexer.Must(stateful.New(stateful.Rules{
 		"Root": {

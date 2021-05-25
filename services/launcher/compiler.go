@@ -118,7 +118,53 @@ LET %v <= if(
 		result.OpsPerSecond = artifact.Resources.OpsPerSecond
 	}
 
+	err := resolveImports(config_obj, artifact, result)
+	if err != nil {
+		return err
+	}
+
 	return mergeSources(config_obj, options, artifact, result)
+}
+
+func resolveImports(config_obj *config_proto.Config,
+	artifact *artifacts_proto.Artifact,
+	result *actions_proto.VQLCollectorArgs) error {
+	// Resolve imports if needed. First check if the artifact
+	// itself declares exports for itself (by default each
+	// artifact imports its own exports).
+	if artifact.Export != "" {
+		result.Query = append(result.Query, &actions_proto.VQLRequest{
+			VQL: artifact.Export,
+		})
+	}
+
+	if artifact.Imports == nil {
+		return nil
+	}
+
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+	global_repo, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
+	// These are a list of names to be imported.
+	for _, imported := range artifact.Imports {
+		dependent_artifact, pres := global_repo.Get(config_obj, imported)
+		if !pres {
+			return fmt.Errorf("Artifact %v imports %v which is not known.",
+				artifact.Name, imported)
+		}
+		if dependent_artifact.Export != "" {
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: dependent_artifact.Export,
+			})
+		}
+	}
+	return nil
 }
 
 func mergeSources(

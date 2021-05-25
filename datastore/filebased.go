@@ -504,7 +504,12 @@ func SanitizeString(component string) []rune {
 		component += "_"
 	}
 
-	result := make([]rune, len(component)*4)
+	length := len(component)
+	if length > 1024 {
+		length = 1024
+	}
+
+	result := make([]rune, length*4)
 	result_idx := 0
 
 	for _, c := range []byte(component) {

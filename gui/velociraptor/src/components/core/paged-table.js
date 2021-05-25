@@ -23,6 +23,7 @@ import Spinner from '../utils/spinner.js';
 import api from '../core/api-service.js';
 import VeloTimestamp from "../utils/time.js";
 import ClientLink from '../clients/client-link.js';
+import HexView from '../utils/hex.js';
 
 import { InspectRawJson, ColumnToggleList, sizePerPageRenderer, PrepareData } from './table.js';
 
@@ -147,6 +148,15 @@ class VeloPagedTable extends Component {
             if (column === column_types[i].name) {
                 let type = column_types[i].type;
                 switch (type) {
+                case "base64":
+                    return (cell, row, rowIndex)=>{
+                        let decoded = cell.slice(0,1000);
+                        try {
+                            decoded = atob(cell);
+                        } catch(e) {};
+
+                        return <HexView data={decoded} height="2"/>;
+                    };
                 case "timestamp":
                     return (cell, row, rowIndex)=><VeloTimestamp usec={cell * 1000} iso={cell}/>;
 

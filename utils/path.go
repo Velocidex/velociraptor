@@ -154,8 +154,13 @@ func SplitPlainComponents(path string) []string {
 }
 
 func escapeComponent(component string) string {
+	length := len(component)
+	if length > 1024 {
+		length = 1024
+	}
+
 	hasQuotes := false
-	result := make([]byte, 0, len(component)*2)
+	result := make([]byte, 0, length*2)
 	for i := 0; i < len(component); i++ {
 		result = append(result, component[i])
 
@@ -266,7 +271,11 @@ func shouldEscape(c byte) bool {
 var hexTable = []byte("0123456789ABCDEF")
 
 func SanitizeString(component string) string {
-	result := make([]byte, len(component)*4)
+	length := len(component)
+	if length > 1024 {
+		length = 1024
+	}
+	result := make([]byte, length*4)
 	result_idx := 0
 
 	for _, c := range []byte(component) {

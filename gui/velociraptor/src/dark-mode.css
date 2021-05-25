@@ -54,7 +54,7 @@
     --card-heading-background-color: #444444;
     --table-heading-background-color: #444444;
     --color-table-row-selected: #8f8f8f50;
-
+    --color-monospace-color: #eeeeee;
     --scrollbar-track: #121212;
     --app-footer-background-color: #444444;
 }
@@ -253,12 +253,6 @@
     background-color: var(--background-color);
 }
 
-/* hexview */
-.dark-mode .hexdump {
-    filter: invert(1);
-}
-
-
 /* width */
 .dark-mode ::-webkit-scrollbar {
     width: 10px;
@@ -356,4 +350,9 @@
     border: 1px solid #ccc;
     white-space: nowrap;
     display: block;
+}
+
+
+.dark-mode .file-hex-view td, .file-hex-view th {
+    border: 0px;
 }

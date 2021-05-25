@@ -20,8 +20,7 @@ parameters:
     description: Also upload the link files themselves.
     type: bool
 
-sources:
-  - query: |
+export: |
      LET Profile = '''
      [
       ["ShellLinkHeader", 0, [
@@ -134,15 +133,34 @@ sources:
           "end_bit": 7,
         }],
 
+        ["Subtype", 2, "BitField", {
+           "type": "uint8",
+           "start_bit": 0,
+           "end_bit": 1,
+        }],
+
         # For now only support some common shell bags
         ["ShellBag", 0, "Union", {
            "selector": "x=>x.Type",
             "choices": {
+               "64": "ShellBag0x40",
                "48": "ShellBag0x30",
                "16": "ShellBag0x1f",
                "32": "ShellBag0x20",
             }
         }]
+      ]],
+
+      ["ShellBag0x40", 0, [
+         ["Name", 5, "String", {
+            encoding: "utf8",
+         }],
+         ["Description", 0, "Value", {
+             "value": 'x=>dict(
+             Type="NetworkLocation",
+             ShortName=x.Name
+             )'
+         }]
       ]],
 
       # A LinkInfo stores information about the destination of the link.
@@ -279,11 +297,16 @@ sources:
 
       # Volume name
       ["ShellBag0x20", 0, [
-        ["Name", 3, "String"],
-        ["Description", 0, "Value", {
+         ["__Name", 3, "String"],
+         # Name is only valid if the first bit is set.
+         ["Name", 3, "Value", {
+             "value": "x=>if(condition=x.ParentOf.Subtype, then=x.__Name, else='')",
+         }],
+         ["Description", 0, "Value", {
             "value": 'x=>dict(
-              ShortName=x.Name,
-              Type="Volume"
+                LongName=x.Name,
+                ShortName=x.Name,
+                Type="Volume"
             )'
         }]
       ]],
@@ -376,6 +399,8 @@ sources:
      ]
      '''
 
+sources:
+  - query: |
      LET link_files = SELECT parse_binary(
          filename=FullPath,
          profile=Profile, struct="ShellLinkHeader")  AS Parsed,

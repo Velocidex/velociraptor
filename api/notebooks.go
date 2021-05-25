@@ -1077,7 +1077,12 @@ func updateCellContents(
 		// markdown fragments.
 		cell_content, err := reporting.ConvertVQLCellToContent(input)
 		if err != nil {
-			return nil, err
+			// Ignore errors and just treat the whole
+			// thing as VQL - this will fail to render the
+			// comment and just ignore it - it is probably
+			// malformed.
+			cell_content = &reporting.Content{}
+			cell_content.PushVQL(input)
 		}
 
 		for _, fragment := range cell_content.Fragments {
