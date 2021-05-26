@@ -6,7 +6,7 @@ parameters:
    - name: ProcessNameRegex
      default: .
    - name: EnvironmentVariableRegex
-     default: COMSPEC
+     default: COMSPEC|COR_PROFILER
    - name: FilterValueRegex
      default: .
    - name: WhitelistValueRegex
@@ -31,3 +31,51 @@ sources:
       WHERE Var =~ EnvironmentVariableRegex
         AND Value =~ FilterValueRegex
         AND NOT Value =~ WhitelistValueRegex
+
+    notebook:
+      - type: Markdown
+        template: |-
+          # Process Environment Variables
+
+          Environment variables control the way subprocesses work. In
+          this artifact we look for processes with unusual sets of
+          environment variables.
+
+          {{ $unusual := Query "SELECT * FROM source() WHERE \
+              Var =~ 'COR_PROFILER|COMPlus_ETWEnabled'" | Expand }}
+
+          {{ if $unusual }}
+          ## Some unusual environment variables.
+
+          There have been some unusual environment variables
+          detected. These normally indicate malicious activity.
+
+          {{ Table $unusual }}
+
+          {{ end }}
+
+          {{ $unusual = Query "SELECT * FROM source() WHERE \
+              Var =~ 'COMSPEC' AND NOT CommandLine =~ 'cmd.exe$'" | Expand }}
+          {{ if $unusual }}
+
+          ## Unusual COMSPEC setting.
+
+          The `COMSPEC` environment variable is usually used to launch
+          the command prompt (cmd.exe) but Velociraptor found some
+          hits where this is not the case. It could indicate malicious
+          activity.
+
+          {{ Table $unusual }}
+
+          {{ end }}
+
+      - type: VQL
+        template: |
+
+          /* Markdown
+          ## All collected results.
+
+          */
+
+          SELECT * FROM source()
+          LIMIT 50

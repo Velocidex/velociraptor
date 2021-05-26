@@ -256,6 +256,7 @@ export default class NotebookCellRenderer extends React.Component {
             notebook_id: this.props.notebook_id,
             cell_id: this.state.cell.cell_id,
             type: this.state.cell.type || "Markdown",
+            env: this.state.cell.env,
             currently_editing: false,
             input: this.state.cell.input,
         }, this.source.token).then( (response) => {
@@ -280,6 +281,7 @@ export default class NotebookCellRenderer extends React.Component {
             notebook_id: this.props.notebook_id,
             cell_id: cell.cell_id,
             type: cell.type || "Markdown",
+            env: this.state.cell.env,
             currently_editing: false,
             input: cell.input,
         }, this.source.token).then( (response) => {
@@ -360,7 +362,8 @@ export default class NotebookCellRenderer extends React.Component {
 
         content += "  notebook_cell_id=\""+ this.state.cell.cell_id +
             "\")\nLIMIT 50\n";
-        this.props.addCell(this.state.cell.cell_id, "VQL", content);
+
+        this.props.addCell(this.state.cell.cell_id, "VQL", content, this.state.cell.env);
     }
 
 
@@ -438,14 +441,15 @@ export default class NotebookCellRenderer extends React.Component {
                   <Dropdown.Item
                     title="Markdown"
                     onClick={() => {
-                        this.props.addCell(this.state.cell.cell_id, "Markdown");
+                        // Preserve the current cell's environemnt for the new cell
+                        this.props.addCell(this.state.cell.cell_id, "Markdown", "", this.state.cell.env);
                     }}>
                     Markdown
                   </Dropdown.Item>
                   <Dropdown.Item
                     title="VQL"
                     onClick={() => {
-                        this.props.addCell(this.state.cell.cell_id, "VQL");
+                        this.props.addCell(this.state.cell.cell_id, "VQL", "", this.state.cell.env);
                     }}>
                     VQL
                   </Dropdown.Item>
@@ -590,6 +594,7 @@ export default class NotebookCellRenderer extends React.Component {
                      onClick={() => {this.props.setSelectedCellId(this.state.cell.cell_id);}}
                 >
                   <NotebookReportRenderer
+                    refresh={this.recalculate}
                     cell={this.state.cell}/>
                   { selected &&
                     _.map(this.state.cell.messages, (msg, idx) => {

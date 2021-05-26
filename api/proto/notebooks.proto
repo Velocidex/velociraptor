@@ -6,6 +6,11 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
+message Env {
+    string key = 1;
+    string value = 2;
+}
+
 message NotebookExportRequest {
     string notebook_id = 1;
     string type = 2;
@@ -21,12 +26,24 @@ message NotebookCellRequest {
     string type = 6;
 
     bool currently_editing = 8;
+
+    repeated Env env = 9;
+}
+
+message NotebookContext {
+    string type = 1;
+    string hunt_id = 2;
+    string flow_id = 3;
+    string client_id = 4;
 }
 
 message NotebookMetadata {
     string name = 1;
     string description = 2;
     string creator = 3;
+
+    // Type of notebook - Hunt, Flow or empty for default.
+    NotebookContext context = 16;
 
     // A list of usernames that have access to this notebook.
     repeated string collaborators = 12;
@@ -49,6 +66,10 @@ message NotebookMetadata {
     bool hidden = 9;
 
     AvailableDownloads available_downloads = 10;
+
+    // These environment variables will be populated into each
+    // notebook cell in this notebook.
+    repeated Env env = 14;
 }
 
 message Notebooks {
@@ -71,6 +92,8 @@ message NotebookCell {
     bool currently_editing = 8;
 
     bool calculating = 9;
+
+    repeated Env env = 11;
 }
 
 message NotebookFileUploadRequest {

@@ -296,6 +296,23 @@ func (self *Repository) GetArtifactType(
 	return artifact.Type, nil
 }
 
+func (self *Repository) GetSource(
+	config_obj *config_proto.Config, name string) (*artifacts_proto.ArtifactSource, bool) {
+	artifact_name, source_name := paths.SplitFullSourceName(name)
+
+	artifact, pres := self.Get(config_obj, artifact_name)
+	if !pres {
+		return nil, false
+	}
+	for _, source := range artifact.Sources {
+		if source.Name == source_name {
+			return source, true
+		}
+	}
+
+	return nil, false
+}
+
 func (self *Repository) Get(
 	config_obj *config_proto.Config, name string) (*artifacts_proto.Artifact, bool) {
 	self.mu.Lock()

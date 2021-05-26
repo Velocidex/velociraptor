@@ -2,11 +2,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import parse from 'html-react-parser';
+import VeloTable from '../core/table.js';
 
 import NotebookTableRenderer from './notebook-table-renderer.js';
 
 export default class NotebookReportRenderer extends React.Component {
     static propTypes = {
+        refresh: PropTypes.func,
         cell: PropTypes.object,
     };
 
@@ -18,14 +20,36 @@ export default class NotebookReportRenderer extends React.Component {
 
         let template = parse(this.props.cell.output, {
             replace: (domNode) => {
-                if (domNode.name === "grr-csv-viewer") {
-                    let params = JSON.parse(domNode.attribs.params);
+                // A table which contains the data inline.
+                if (domNode.name === "inline-table-viewer") {
+                    try {
+                        let data = JSON.parse(this.props.cell.data || '{}');
+                        let response = data[domNode.attribs.value || "unknown"] || {};
+                        let rows = JSON.parse(response.Response);
+                        return (
+                            <VeloTable
+                              rows={rows}
+                              columns={response.Columns}
+                            />
+                        );
+                    } catch(e) {
 
-                    return (
-                        <NotebookTableRenderer
-                          params={params}
-                        />
-                    );
+                    };
+                }
+
+                if (domNode.name === "grr-csv-viewer") {
+                    let params = {};
+                    try {
+                        let params = JSON.parse(domNode.attribs.params);
+                        return (
+                            <NotebookTableRenderer
+                              refresh={this.props.refresh}
+                              params={params}
+                            />
+                        );
+                    } catch(e) {
+                        return;
+                    }
                 };
                 return domNode;
             }

@@ -39,20 +39,6 @@ export default class HuntNotebook extends React.Component {
         clearInterval(this.interval);
     }
 
-    getCellVQL = (hunt) => {
-        var hunt_id = hunt["hunt_id"];
-        var query = "SELECT * \nFROM hunt_results(\n";
-        var sources = hunt["artifact_sources"] || hunt["start_request"]["artifacts"];
-        query += "    artifact='" + sources[0] + "',\n";
-        for (var i=1; i<sources.length; i++) {
-            query += "    // artifact='" + sources[i] + "',\n";
-        }
-        query += "    hunt_id='" + hunt_id + "')\nLIMIT 50\n";
-
-        return query;
-    }
-
-
     fetchNotebooks = () => {
         let hunt_id = this.props.hunt && this.props.hunt.hunt_id;
         if (!hunt_id) {
@@ -77,11 +63,17 @@ export default class HuntNotebook extends React.Component {
                 description: this.props.hunt.description ||
                     "This is a notebook for processing a hunt.",
                 notebook_id: notebook_id,
+                context: {
+                    type: "Hunt",
+                    hunt_id: hunt_id,
+                },
                 // Hunt notebooks are all public.
                 public: true,
+                env: [
+                    {key: "HuntId", value: hunt_id},
+                ],
             };
 
-            request.description += "\n\n* Click the cells bellow to edit VQL and refresh the data. *NOTE*: You need to refresh the data periodically to see the latest results.\n* Edit the content of this cell to provide a description of your hunt. You can export the hunt to HTML when done using the toolbar at the top right.\n* By default the result table below only shows 50 rows, edit the VQL to see more data.";
             api.post('v1/NewNotebook', request, this.source.token).then((response) => {
                 if (response.cancel) return;
                 let cell_metadata = response.data && response.data.cell_metadata;
@@ -89,15 +81,7 @@ export default class HuntNotebook extends React.Component {
                     return;
                 }
 
-                api.post('v1/NewNotebookCell', {
-                    notebook_id: notebook_id,
-                    type: "VQL",
-                    cell_id: cell_metadata[0].cell_id,
-                    input: this.getCellVQL(this.props.hunt),
-                }, this.source.token).then((response) => {
-                    if (response.cancel) return;
-                    this.fetchNotebooks();
-                });
+                this.fetchNotebooks();
             });
         });
     }
