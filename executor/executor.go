@@ -314,7 +314,10 @@ func NewClientExecutor(
 	// Drain messages from server and execute them, pushing
 	// results to the output channel.
 	go func() {
-		defer close(result.Outbound)
+		// Keep this open to avoid sending on close
+		// channels. The executed queries should finish
+		// themselves when the context is done.
+		// defer close(result.Outbound)
 
 		// Do not exit until all goroutines have finished.
 		wg := &sync.WaitGroup{}

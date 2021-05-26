@@ -54,8 +54,19 @@ type EventTable struct {
 	// current event queries.
 	Done chan bool
 	wg   sync.WaitGroup
+
+	// Keep track of inflight queries for shutdown. This wait
+	// group belongs to the client's service manager. As we issue
+	// queries we increment it and when queries are done we
+	// decrement it. The service manager will wait for this before
+	// exiting allowing the client to shut down in an orderly
+	// fashion.
+	service_wg *sync.WaitGroup
 }
 
+// Determine if the current table is the same as the new set of
+// queries. Returns true if the queries are the same and not change is
+// needed.
 func (self *EventTable) equal(events []*actions_proto.VQLCollectorArgs) bool {
 	if len(events) != len(self.Events) {
 		return false
@@ -88,6 +99,7 @@ func (self *EventTable) equal(events []*actions_proto.VQLCollectorArgs) bool {
 	return true
 }
 
+// Teardown all the current quries. Blocks until they all shut down.
 func (self *EventTable) Close() {
 	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
 	logger.Info("Closing EventTable\n")
@@ -135,8 +147,11 @@ func update(
 		GlobalEventTable.Close()
 	}
 
-	// Make a new table.
-	GlobalEventTable = NewEventTable(config_obj, responder, table)
+	// Reset the table.
+	GlobalEventTable.Events = table.Event
+	GlobalEventTable.version = table.Version
+	GlobalEventTable.Done = make(chan bool)
+	GlobalEventTable.config_obj = config_obj
 
 	return GlobalEventTable, nil, true /* changed */
 }
@@ -199,12 +214,14 @@ func (self UpdateEventTable) Run(
 	// Start a new query for each event.
 	action_obj := &VQLClientAction{}
 	table.wg.Add(len(table.Events))
+	table.service_wg.Add(len(table.Events))
 
 	for _, event := range table.Events {
 		query_responder := responder.Copy()
 
 		go func(event *actions_proto.VQLCollectorArgs) {
 			defer table.wg.Done()
+			defer table.service_wg.Done()
 
 			// Name of the query we are running.
 			name := ""
@@ -258,4 +275,22 @@ func update_writeback(
 	config_copy.Writeback.EventQueries = event_copy
 
 	return config.UpdateWriteback(config_copy)
+}
+
+func InitializeEventTable(ctx context.Context, service_wg *sync.WaitGroup) {
+	mu.Lock()
+	GlobalEventTable = &EventTable{
+		service_wg: service_wg,
+	}
+	mu.Unlock()
+
+	// When the context is finished, tear down the event table.
+	go func() {
+		<-ctx.Done()
+
+		mu.Lock()
+		close(GlobalEventTable.Done)
+		mu.Unlock()
+	}()
+
 }

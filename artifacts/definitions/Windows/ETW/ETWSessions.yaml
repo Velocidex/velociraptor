@@ -1,0 +1,27 @@
+name: Windows.ETW.ETWSessions
+description: |
+  Windows Event Tracing exposes a lot of low level system information
+  and events. It is normally employed be security tools to gather
+  telemetry, however may also be used maliciously.
+
+  This artifact monitors for all new ETW sessions and reports the
+  tracing process as well as the provider that is being traced.
+
+type: CLIENT_EVENT
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - query: |
+      LET PublisherGlob = '''HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Publishers\*\@'''
+
+      LET GUIDLookup(GUID) = SELECT Data.value AS Provider
+         FROM stat(accessor="registry", filename=path_join(components=[PublisherGlob, GUID, "@"]))
+
+      SELECT System.TimeStamp AS Timestamp, {
+           SELECT Name, CommandLine from pslist(pid=System.ProcessID)
+        } AS ProcessInfo ,
+        GUIDLookup(GUID=EventData.ProviderName)[0].Provider AS Provider,
+        System AS _System, EventData AS _EventData
+      FROM watch_etw(guid="{B675EC37-BDB6-4648-BC92-F3FDC74D3CA2}", any=0x400)
+      WHERE System.ID = 14
