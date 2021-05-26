@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -132,6 +133,11 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
+
+	// Wait until the entire event table is cleaned up.
+	wg := &sync.WaitGroup{}
+	actions.InitializeEventTable(ctx, wg)
+	defer wg.Wait()
 
 	require.NoError(self.T(), client_manager.SetClientMonitoringState(
 		ctx, self.config_obj, server_state))

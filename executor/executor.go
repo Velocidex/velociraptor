@@ -315,8 +315,9 @@ func NewClientExecutor(
 	// results to the output channel.
 	go func() {
 		// Keep this open to avoid sending on close
-		// channels. The executed queries should finish
+		// channels. The executed queries should finish by
 		// themselves when the context is done.
+
 		// defer close(result.Outbound)
 
 		// Do not exit until all goroutines have finished.
