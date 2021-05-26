@@ -1073,13 +1073,33 @@ func updateCellContents(
 		}
 
 	case "VQL":
-		// A VQL cell gets converted to a normal template
-		// first.
-		content, env := reporting.ConvertVQLCellToMarkdownCell(input)
-		tmpl.Env.MergeFrom(env)
-		output, err = tmpl.Execute(&artifacts_proto.Report{Template: content})
+		// A VQL cell gets converted to a set of VQL and
+		// markdown fragments.
+		cell_content, err := reporting.ConvertVQLCellToContent(input)
 		if err != nil {
 			return nil, err
+		}
+
+		for _, fragment := range cell_content.Fragments {
+			if fragment.VQL != "" {
+				rows := tmpl.Query(fragment.VQL)
+				output_any, ok := tmpl.Table(rows).(string)
+				if ok {
+					output += output_any
+				}
+
+			} else if fragment.Comment != "" {
+				lines := strings.SplitN(fragment.Comment, "\n", 2)
+				if len(lines) <= 1 {
+					input = lines[0]
+				} else {
+					input = lines[1]
+				}
+				output, err = tmpl.Execute(&artifacts_proto.Report{Template: input})
+				if err != nil {
+					return nil, err
+				}
+			}
 		}
 
 	default:
