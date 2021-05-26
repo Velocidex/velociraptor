@@ -3,6 +3,7 @@ package functions
 import (
 	"context"
 	"encoding/hex"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -26,7 +27,7 @@ func (self *UnhexFunction) Call(ctx context.Context,
 		return false
 	}
 
-	res, _ := hex.DecodeString(arg.String)
+	res, _ := hex.DecodeString(strings.TrimPrefix(arg.String, "0x"))
 	return string(res)
 }
 

@@ -26,6 +26,7 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -167,23 +168,7 @@ func doVQLList() {
 	fmt.Println(formatPlugins(scope, info, type_map))
 }
 
-type ArgDesc struct {
-	Name        string
-	Description string
-	Type        string
-	Repeated    bool
-	Required    bool
-}
-
-type PluginDesc struct {
-	Name        string
-	Description string
-	Type        string
-	Args        []*ArgDesc
-	Category    string
-}
-
-func getOldItem(name, item_type string, old_data []*PluginDesc) *PluginDesc {
+func getOldItem(name, item_type string, old_data []*api_proto.Completion) *api_proto.Completion {
 	for _, item := range old_data {
 		if item.Name == name && item.Type == item_type {
 			return item
@@ -199,7 +184,7 @@ func doVQLExport() {
 	type_map := types.NewTypeMap()
 	info := scope.Describe(type_map)
 
-	old_data := []*PluginDesc{}
+	old_data := []*api_proto.Completion{}
 	if vql_info_export_old_file != nil {
 		data, err := ioutil.ReadAll(*vql_info_export_old_file)
 		if err == nil {
@@ -208,7 +193,7 @@ func doVQLExport() {
 		}
 	}
 
-	new_data := []*PluginDesc{}
+	new_data := []*api_proto.Completion{}
 	seen_plugins := make(map[string]bool)
 	seen_functions := make(map[string]bool)
 
@@ -217,7 +202,7 @@ func doVQLExport() {
 
 		new_item := getOldItem(item.Name, "Plugin", old_data)
 		if new_item == nil {
-			new_item = &PluginDesc{
+			new_item = &api_proto.Completion{
 				Name:        item.Name,
 				Description: item.Doc,
 				Type:        "Plugin",
@@ -236,7 +221,7 @@ func doVQLExport() {
 					continue
 				}
 
-				arg := &ArgDesc{
+				arg := &api_proto.ArgDescriptor{
 					Repeated: v.Repeated,
 					Name:     k,
 					Type:     v.Target,
@@ -262,7 +247,7 @@ func doVQLExport() {
 
 		new_item := getOldItem(item.Name, "Function", old_data)
 		if new_item == nil {
-			new_item = &PluginDesc{
+			new_item = &api_proto.Completion{
 				Name:        item.Name,
 				Description: item.Doc,
 				Type:        "Function",
@@ -281,7 +266,7 @@ func doVQLExport() {
 					continue
 				}
 
-				arg := &ArgDesc{
+				arg := &api_proto.ArgDescriptor{
 					Repeated: v.Repeated,
 					Type:     v.Target,
 					Name:     k,

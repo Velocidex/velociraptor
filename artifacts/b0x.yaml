@@ -12,4 +12,6 @@ output: "ab0x.go"
 custom:
   - files:
       - "artifacts/definitions/**/*.yaml"
+      - "docs/references/vql.yaml"
+
 init: Init

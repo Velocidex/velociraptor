@@ -44,3 +44,8 @@
 pre {
     white-space: pre-wrap;
 }
+
+.arg-help {
+    max-height: 400px;
+    overflow-y: auto;
+}

@@ -472,10 +472,7 @@ func StartFrontendWithAutocert(
 		ReadTimeout:  500 * time.Second,
 		WriteTimeout: 900 * time.Second,
 		IdleTimeout:  300 * time.Second,
-		TLSConfig: &tls.Config{
-			MinVersion:     tls.VersionTLS12,
-			GetCertificate: certManager.GetCertificate,
-		},
+		TLSConfig:    certManager.TLSConfig(),
 	}
 
 	// We must have port 80 open to serve the HTTP 01 challenge.
