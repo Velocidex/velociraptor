@@ -126,6 +126,7 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 		conf = conf.WithEndpoint(endpoint).WithS3ForcePathStyle(true)
 		if NoVerifyCert {
 			tr := &http.Transport{
+				Proxy:           http.ProxyFromEnvironment,
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			}
 

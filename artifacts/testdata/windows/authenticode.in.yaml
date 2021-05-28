@@ -1,0 +1,8 @@
+Queries:
+  # Notepad is signed via catalog, kernel is normally pe signed.
+  - LET X = SELECT authenticode(filename="C:/Windows/notepad.exe") AS A,
+      authenticode(filename='c:/Windows/system32/ntoskrnl.exe' ) AS B FROM scope()
+
+  - SELECT A.Filename, A.IssuerName, A.SubjectName,
+           B.Filename, B.IssuerName, B.SubjectName
+    FROM X

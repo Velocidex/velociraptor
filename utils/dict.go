@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/vfilter"
 )
 
 // Returns the containing dict for a nested dict. This allows fetching
@@ -42,5 +43,11 @@ func GetString(dict *ordereddict.Dict, key string) string {
 func GetInt64(dict *ordereddict.Dict, key string) int64 {
 	subdict, last := _get(dict, key)
 	res, _ := subdict.GetInt64(last)
+	return res
+}
+
+func GetAny(dict *ordereddict.Dict, key string) vfilter.Any {
+	subdict, last := _get(dict, key)
+	res, _ := subdict.Get(last)
 	return res
 }

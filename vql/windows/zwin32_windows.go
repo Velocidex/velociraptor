@@ -40,31 +40,41 @@ var (
 	modpsapi    = NewLazySystemDLL("psapi.dll")
 	modAdvapi32 = NewLazySystemDLL("Advapi32.dll")
 	modnetapi32 = NewLazySystemDLL("netapi32.dll")
+	modwintrust = NewLazySystemDLL("wintrust.dll")
 
-	procNtOpenThreadToken          = modntdll.NewProc("NtOpenThreadToken")
-	procReadProcessMemory          = modkernel32.NewProc("ReadProcessMemory")
-	procGetProcessMemoryInfo       = modpsapi.NewProc("GetProcessMemoryInfo")
-	procGetProcessIoCounters       = modkernel32.NewProc("GetProcessIoCounters")
-	procQueryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
-	procNtOpenDirectoryObject      = modntdll.NewProc("NtOpenDirectoryObject")
-	procAdjustTokenPrivileges      = modAdvapi32.NewProc("AdjustTokenPrivileges")
-	procLookupPrivilegeValueW      = modAdvapi32.NewProc("LookupPrivilegeValueW")
-	procNtDuplicateObject          = modntdll.NewProc("NtDuplicateObject")
-	procNtQueryInformationProcess  = modntdll.NewProc("NtQueryInformationProcess")
-	procNtQueryInformationThread   = modntdll.NewProc("NtQueryInformationThread")
-	procNtQueryObject              = modntdll.NewProc("NtQueryObject")
-	procNtQuerySystemInformation   = modntdll.NewProc("NtQuerySystemInformation")
-	procCloseHandle                = modkernel32.NewProc("CloseHandle")
-	procOpenProcess                = modkernel32.NewProc("OpenProcess")
-	procGetSystemInfo              = modkernel32.NewProc("GetSystemInfo")
-	procModule32NextW              = modkernel32.NewProc("Module32NextW")
-	procModule32FirstW             = modkernel32.NewProc("Module32FirstW")
-	procCreateToolhelp32Snapshot   = modkernel32.NewProc("CreateToolhelp32Snapshot")
-	procGetMappedFileNameW         = modpsapi.NewProc("GetMappedFileNameW")
-	procVirtualQueryEx             = modkernel32.NewProc("VirtualQueryEx")
-	procNetApiBufferFree           = modnetapi32.NewProc("NetApiBufferFree")
-	procNetUserEnum                = modnetapi32.NewProc("NetUserEnum")
-	procNetUserGetGroups           = modnetapi32.NewProc("NetUserGetGroups")
+	procNtOpenThreadToken                    = modntdll.NewProc("NtOpenThreadToken")
+	procReadProcessMemory                    = modkernel32.NewProc("ReadProcessMemory")
+	procGetProcessMemoryInfo                 = modpsapi.NewProc("GetProcessMemoryInfo")
+	procGetProcessIoCounters                 = modkernel32.NewProc("GetProcessIoCounters")
+	procQueryFullProcessImageNameW           = modkernel32.NewProc("QueryFullProcessImageNameW")
+	procNtOpenDirectoryObject                = modntdll.NewProc("NtOpenDirectoryObject")
+	procAdjustTokenPrivileges                = modAdvapi32.NewProc("AdjustTokenPrivileges")
+	procLookupPrivilegeValueW                = modAdvapi32.NewProc("LookupPrivilegeValueW")
+	procNtDuplicateObject                    = modntdll.NewProc("NtDuplicateObject")
+	procNtQueryInformationProcess            = modntdll.NewProc("NtQueryInformationProcess")
+	procNtQueryInformationThread             = modntdll.NewProc("NtQueryInformationThread")
+	procNtQueryObject                        = modntdll.NewProc("NtQueryObject")
+	procNtQuerySystemInformation             = modntdll.NewProc("NtQuerySystemInformation")
+	procCloseHandle                          = modkernel32.NewProc("CloseHandle")
+	procOpenProcess                          = modkernel32.NewProc("OpenProcess")
+	procGetSystemInfo                        = modkernel32.NewProc("GetSystemInfo")
+	procModule32NextW                        = modkernel32.NewProc("Module32NextW")
+	procModule32FirstW                       = modkernel32.NewProc("Module32FirstW")
+	procCreateToolhelp32Snapshot             = modkernel32.NewProc("CreateToolhelp32Snapshot")
+	procGetMappedFileNameW                   = modpsapi.NewProc("GetMappedFileNameW")
+	procVirtualQueryEx                       = modkernel32.NewProc("VirtualQueryEx")
+	procNetApiBufferFree                     = modnetapi32.NewProc("NetApiBufferFree")
+	procNetUserEnum                          = modnetapi32.NewProc("NetUserEnum")
+	procNetUserGetGroups                     = modnetapi32.NewProc("NetUserGetGroups")
+	procCryptCATAdminAcquireContext2         = modwintrust.NewProc("CryptCATAdminAcquireContext2")
+	procCryptCATAdminReleaseContext          = modwintrust.NewProc("CryptCATAdminReleaseContext")
+	procCryptCATAdminCalcHashFromFileHandle2 = modwintrust.NewProc("CryptCATAdminCalcHashFromFileHandle2")
+	procCryptCATAdminEnumCatalogFromHash     = modwintrust.NewProc("CryptCATAdminEnumCatalogFromHash")
+	procCryptCATCatalogInfoFromContext       = modwintrust.NewProc("CryptCATCatalogInfoFromContext")
+	procCryptCATAdminReleaseCatalogContext   = modwintrust.NewProc("CryptCATAdminReleaseCatalogContext")
+	procWinVerifyTrust                       = modwintrust.NewProc("WinVerifyTrust")
+	procWTHelperProvDataFromStateData        = modwintrust.NewProc("WTHelperProvDataFromStateData")
+	procWTHelperGetProvSignerFromChain       = modwintrust.NewProc("WTHelperGetProvSignerFromChain")
 )
 
 func NtOpenThreadToken(thread_handle syscall.Handle, DesiredAccess uint32, open_as_self bool, token_handle *syscall.Handle) (status uint32) {
@@ -316,5 +326,110 @@ func NetUserEnum(servername *uint16, level uint32, filter uint32, bufptr *uintpt
 func NetUserGetGroups(servername *LPCWSTR, username *LPCWSTR, level DWORD, bufptr *LPBYTE, prefmaxlen DWORD, entriesread *LPDWORD, totalentries *LPDWORD) (status NET_API_STATUS) {
 	r0, _, _ := syscall.Syscall9(procNetUserGetGroups.Addr(), 7, uintptr(unsafe.Pointer(servername)), uintptr(unsafe.Pointer(username)), uintptr(level), uintptr(unsafe.Pointer(bufptr)), uintptr(prefmaxlen), uintptr(unsafe.Pointer(entriesread)), uintptr(unsafe.Pointer(totalentries)), 0, 0)
 	status = NET_API_STATUS(r0)
+	return
+}
+
+func CryptCATAdminAcquireContext2(handle *syscall.Handle, pgSubsystem *GUID, pwszHashAlgorithm *byte, pStrongHashPolicy *byte, dwFlags uint32) (err error) {
+	r1, _, e1 := syscall.Syscall6(procCryptCATAdminAcquireContext2.Addr(), 5, uintptr(unsafe.Pointer(handle)), uintptr(unsafe.Pointer(pgSubsystem)), uintptr(unsafe.Pointer(pwszHashAlgorithm)), uintptr(unsafe.Pointer(pStrongHashPolicy)), uintptr(dwFlags), 0)
+	if r1 == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func CryptCATAdminReleaseContext(handle syscall.Handle, unused int32) (ok bool) {
+	r0, _, _ := syscall.Syscall(procCryptCATAdminReleaseContext.Addr(), 2, uintptr(handle), uintptr(unused), 0)
+	ok = r0 != 0
+	return
+}
+
+func CryptCATAdminCalcHashFromFileHandle2(handle syscall.Handle, fd uintptr, pcbHash *uint32, pbHash *byte, dwFlags uint32) (err error) {
+	r1, _, e1 := syscall.Syscall6(procCryptCATAdminCalcHashFromFileHandle2.Addr(), 5, uintptr(handle), uintptr(fd), uintptr(unsafe.Pointer(pcbHash)), uintptr(unsafe.Pointer(pbHash)), uintptr(dwFlags), 0)
+	if r1 == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func CryptCATAdminEnumCatalogFromHash(handle syscall.Handle, pbHash *byte, pcbHash uint32, dwFlags uint32, phPrevCatInfo *syscall.Handle) (HCATINFO syscall.Handle) {
+	r0, _, _ := syscall.Syscall6(procCryptCATAdminEnumCatalogFromHash.Addr(), 5, uintptr(handle), uintptr(unsafe.Pointer(pbHash)), uintptr(pcbHash), uintptr(dwFlags), uintptr(unsafe.Pointer(phPrevCatInfo)), 0)
+	HCATINFO = syscall.Handle(r0)
+	return
+}
+
+func CryptCATCatalogInfoFromContext(handle syscall.Handle, psCatInfo *CATALOG_INFO, dwFlags uint32) (err error) {
+	r1, _, e1 := syscall.Syscall(procCryptCATCatalogInfoFromContext.Addr(), 3, uintptr(handle), uintptr(unsafe.Pointer(psCatInfo)), uintptr(dwFlags))
+	if r1 == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func CryptCATAdminReleaseCatalogContext(handle syscall.Handle, handle2 syscall.Handle, dwFlags uint32) (err error) {
+	r1, _, e1 := syscall.Syscall(procCryptCATAdminReleaseCatalogContext.Addr(), 3, uintptr(handle), uintptr(handle2), uintptr(dwFlags))
+	if r1 == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func WinVerifyTrust(handle syscall.Handle, action *GUID, data *WINTRUST_DATA) (ret uint32, err error) {
+	r0, _, e1 := syscall.Syscall(procWinVerifyTrust.Addr(), 3, uintptr(handle), uintptr(unsafe.Pointer(action)), uintptr(unsafe.Pointer(data)))
+	ret = uint32(r0)
+	if ret != 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func WTHelperProvDataFromStateData(handle syscall.Handle) (provider *CRYPT_PROVIDER_DATA, err error) {
+	r0, _, e1 := syscall.Syscall(procWTHelperProvDataFromStateData.Addr(), 1, uintptr(handle), 0, 0)
+	provider = (*CRYPT_PROVIDER_DATA)(unsafe.Pointer(r0))
+	if provider == nil {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func WTHelperGetProvSignerFromChain(pProvData *CRYPT_PROVIDER_DATA, idxSigner uint32, fCounterSigner bool, idxCounterSigner uint32) (signer *CRYPT_PROVIDER_SGNR, err error) {
+	var _p0 uint32
+	if fCounterSigner {
+		_p0 = 1
+	} else {
+		_p0 = 0
+	}
+	r0, _, e1 := syscall.Syscall6(procWTHelperGetProvSignerFromChain.Addr(), 4, uintptr(unsafe.Pointer(pProvData)), uintptr(idxSigner), uintptr(_p0), uintptr(idxCounterSigner), 0, 0)
+	signer = (*CRYPT_PROVIDER_SGNR)(unsafe.Pointer(r0))
+	if signer == nil {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
 	return
 }

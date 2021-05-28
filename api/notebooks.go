@@ -1095,10 +1095,11 @@ func updateCellContents(
 				} else {
 					input = lines[1]
 				}
-				output, err = tmpl.Execute(&artifacts_proto.Report{Template: input})
+				fragment_output, err := tmpl.Execute(&artifacts_proto.Report{Template: input})
 				if err != nil {
 					return nil, err
 				}
+				output += fragment_output
 			}
 		}
 

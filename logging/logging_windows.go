@@ -13,11 +13,12 @@ import (
 
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sys/windows"
 )
 
 var (
-	kernel32Dll    *syscall.LazyDLL  = syscall.NewLazyDLL("Kernel32.dll")
-	setConsoleMode *syscall.LazyProc = kernel32Dll.NewProc("SetConsoleMode")
+	kernel32Dll    *windows.LazyDLL  = windows.NewLazySystemDLL("Kernel32.dll")
+	setConsoleMode *windows.LazyProc = kernel32Dll.NewProc("SetConsoleMode")
 
 	color_map = map[string]string{
 		"reset":  "\033[0m",

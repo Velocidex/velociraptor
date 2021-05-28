@@ -146,6 +146,7 @@ func GetHttpClient(
 		return &http.Client{
 			Timeout: time.Second * 10000,
 			Transport: &http.Transport{
+				Proxy:               http.ProxyFromEnvironment,
 				MaxIdleConnsPerHost: 10,
 				DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
 					return net.Dial("unix", components[0])
@@ -165,6 +166,7 @@ func GetHttpClient(
 		http_client_no_ssl = &http.Client{
 			Timeout: time.Second * 10000,
 			Transport: &http.Transport{
+				Proxy:        http.ProxyFromEnvironment,
 				MaxIdleConns: 10,
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: true,
@@ -182,6 +184,7 @@ func GetHttpClient(
 	http_client = &http.Client{
 		Timeout: time.Second * 10000,
 		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
 			Dial: (&net.Dialer{
 				KeepAlive: 600 * time.Second,
 			}).Dial,

@@ -104,6 +104,7 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 	parsedUrl.Path = path.Join(parsedUrl.Path, name)
 
 	var netTransport = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
 			Timeout: 30 * time.Second, // TCP connect timeout
 		}).DialContext,

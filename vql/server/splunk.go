@@ -123,6 +123,7 @@ func _upload_rows(
 		&http.Client{
 			Timeout: time.Second * 20,
 			Transport: &http.Transport{
+				Proxy:           http.ProxyFromEnvironment,
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: arg.SkipVerify},
 			},
 		}, // Optional HTTP Client objects
