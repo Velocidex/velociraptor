@@ -40,7 +40,7 @@ var (
 )
 
 func doFrontend() {
-	config_obj, err := DefaultConfigLoader.
+	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredUser().
 		WithRequiredLogging().LoadAndValidate()

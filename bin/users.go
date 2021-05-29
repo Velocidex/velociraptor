@@ -53,7 +53,7 @@ var (
 )
 
 func doAddUser() {
-	config_obj, err := DefaultConfigLoader.
+	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredUser().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
@@ -106,7 +106,7 @@ func doAddUser() {
 }
 
 func doShowUser() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	sm, err := startEssentialServices(config_obj)
@@ -123,7 +123,7 @@ func doShowUser() {
 }
 
 func doLockUser() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	sm, err := startEssentialServices(config_obj)

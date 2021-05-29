@@ -94,7 +94,7 @@ var (
 )
 
 func doShowConfig() {
-	config_obj, err := DefaultConfigLoader.LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
 
 	if *config_show_command_json {
@@ -205,7 +205,7 @@ func doGenerateConfigNonInteractive() {
 }
 
 func doRotateKeyConfig() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
@@ -239,7 +239,7 @@ func doRotateKeyConfig() {
 }
 
 func doReissueServerKeys() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
@@ -286,7 +286,7 @@ func getClientConfig(config_obj *config_proto.Config) *config_proto.Config {
 }
 
 func doDumpClientConfig() {
-	config_obj, err := DefaultConfigLoader.WithRequiredClient().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
 
 	client_config := getClientConfig(config_obj)
@@ -298,7 +298,7 @@ func doDumpClientConfig() {
 }
 
 func doDumpApiClientConfig() {
-	config_obj, err := DefaultConfigLoader.WithRequiredCA().
+	config_obj, err := makeDefaultConfigLoader().WithRequiredCA().
 		WithRequiredUser().
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")

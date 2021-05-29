@@ -53,7 +53,7 @@ var (
 )
 
 func doThirdPartyShow() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().
+	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
@@ -77,7 +77,7 @@ func doThirdPartyShow() {
 }
 
 func doThirdPartyRm() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().
+	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
@@ -90,7 +90,7 @@ func doThirdPartyRm() {
 }
 
 func doThirdPartyUpload() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().
+	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 

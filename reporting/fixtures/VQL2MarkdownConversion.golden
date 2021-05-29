@@ -7,10 +7,34 @@
       },
       {
         "VQL": "",
-        "Comment": " c\n\n# This is markdown\n\n"
+        "Comment": " c\n\n# This is markdown\nwith multiple lines\n/*\nThis is still a comment!\n\n"
       },
       {
         "VQL": "\n\nSELECT * FROM glob()\n",
+        "Comment": ""
+      }
+    ]
+  },
+  "Comments in VQL": {
+    "Fragments": [
+      {
+        "VQL": "\nSELECT * FROM glob(globs='C:/Windows/*/*.exe')\n",
+        "Comment": ""
+      }
+    ]
+  },
+  "Comments within lines": {
+    "Fragments": [
+      {
+        "VQL": "\nSELECT * FROM glob(/* Foobar */globs='C:/Windows/*/*.exe')\n",
+        "Comment": ""
+      }
+    ]
+  },
+  "Multi line VQL": {
+    "Fragments": [
+      {
+        "VQL": "\nSELECT *, count() AS Count\nFROM certificates()\n",
         "Comment": ""
       }
     ]

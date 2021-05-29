@@ -31,7 +31,7 @@ func reportCurrentSetup(config_obj *config_proto.Config) string {
 }
 
 func doConfigFrontend() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
 
 	doit := false

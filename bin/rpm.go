@@ -167,7 +167,7 @@ func doClientRPM() {
 	// deb on the same system where the logs should go.
 	_ = config.ValidateClientConfig(&config_proto.Config{})
 
-	config_obj, err := DefaultConfigLoader.
+	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
@@ -269,7 +269,7 @@ func doClientSysVRPM() {
 	// deb on the same system where the logs should go.
 	_ = config.ValidateClientConfig(&config_proto.Config{})
 
-	config_obj, err := DefaultConfigLoader.
+	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 

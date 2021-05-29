@@ -32,7 +32,7 @@ var (
 )
 
 func doUnzip() {
-	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config")
 
 	sm, err := startEssentialServices(config_obj)

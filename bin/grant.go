@@ -49,7 +49,7 @@ var (
 )
 
 func doGrant() {
-	config_obj, err := DefaultConfigLoader.
+	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredUser().
 		LoadAndValidate()
@@ -102,7 +102,7 @@ func doGrant() {
 }
 
 func doShow() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
 
 	sm, err := startEssentialServices(config_obj)

@@ -45,10 +45,9 @@ func doGUI() {
 	client_config_path := filepath.Join(datastore_directory, "client.config.yaml")
 
 	// Try to open the config file from there
-	config_obj, err := DefaultConfigLoader.
+	config_obj, err := makeDefaultConfigLoader().
 		WithVerbose(true).
-		WithFileLoader(server_config_path).
-		LoadAndValidate()
+		WithFileLoader(server_config_path).LoadAndValidate()
 	if err != nil || config_obj.Frontend == nil {
 
 		// Need to generate a new config. This config is not
