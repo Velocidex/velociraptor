@@ -10,7 +10,7 @@ require (
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
-	github.com/Velocidex/amsi v0.0.0-20200608120838-e5d93b76f119 // indirect
+	github.com/Velocidex/amsi v0.0.0-20200608120838-e5d93b76f119
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.10-0.20210423154840-dace8239c158
@@ -25,7 +25,6 @@ require (
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/chroma v0.7.2
 	github.com/alecthomas/participle v0.7.1
-	github.com/alecthomas/repr v0.0.0-20210301060118-828286944d6a // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/aws/aws-sdk-go v1.26.7
 	github.com/bi-zone/etw v0.0.0-20200916105032-b215904fae4f
@@ -121,8 +120,8 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20210515085940-25d96b94dafb
-	www.velocidex.com/golang/vtypes v0.0.0-20210323032031-b61f37170666
+	www.velocidex.com/golang/vfilter v0.0.0-20210531163909-d0a0745e41b7
+	www.velocidex.com/golang/vtypes v0.0.0-20210531054645-7ec8b6e24d88
 )
 
 // replace www.velocidex.com/golang/go-pe => /home/mic/projects/go-pe

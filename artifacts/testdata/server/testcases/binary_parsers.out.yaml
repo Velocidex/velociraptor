@@ -78,6 +78,7 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
       "ItemIDSize": 20,
       "Offset": 78,
       "Type": 16,
+      "Subtype": 1,
       "ShellBag": {
        "Description": {
         "ShortName": "My Computer",
@@ -89,9 +90,11 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
       "ItemIDSize": 25,
       "Offset": 98,
       "Type": 32,
+      "Subtype": 1,
       "ShellBag": {
        "Name": "F:\\",
        "Description": {
+        "LongName": "F:\\",
         "ShortName": "F:\\",
         "Type": "Volume"
        }
@@ -101,6 +104,7 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
       "ItemIDSize": 74,
       "Offset": 123,
       "Type": 48,
+      "Subtype": 1,
       "ShellBag": {
        "Size": 74,
        "Type": 49,
@@ -108,14 +112,14 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
         "Directory",
         "Unicode"
        ],
-       "LastModificationTime": "2020-12-14T02:28:18Z",
+       "LastModificationTime": "2020-11-12T01:24:36Z",
        "ShortName": "tmp",
        "Extension": {
         "Size": 56,
         "Version": 9,
         "Signature": "0xbeef0004",
-        "CreateDate": "2020-12-14T02:28:18Z",
-        "LastAccessed": "2020-12-14T02:28:18Z",
+        "CreateDate": "2020-11-12T01:24:36Z",
+        "LastAccessed": "2020-11-12T01:24:36Z",
         "MFTReference": {
          "MFTID": 8651087,
          "SequenceNumber": 0
@@ -127,9 +131,9 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
          "Directory",
          "Unicode"
         ],
-        "Modified": "2020-12-14T02:28:18Z",
-        "LastAccessed": "2020-12-14T02:28:18Z",
-        "CreateDate": "2020-12-14T02:28:18Z",
+        "Modified": "2020-11-12T01:24:36Z",
+        "LastAccessed": "2020-11-12T01:24:36Z",
+        "CreateDate": "2020-11-12T01:24:36Z",
         "ShortName": "tmp",
         "LongName": "tmp",
         "MFTID": 8651087,
@@ -141,6 +145,7 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
       "ItemIDSize": 84,
       "Offset": 197,
       "Type": 48,
+      "Subtype": 0,
       "ShellBag": {
        "Size": 84,
        "Type": 50,

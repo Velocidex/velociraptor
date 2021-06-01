@@ -39,3 +39,12 @@
     font-size: 2.0em;
     color: var(--color-no-content-color);
 }
+
+
+.file-hex-view td, .file-hex-view th {
+    border: 0px;
+}
+
+.file-hex-view td, .file-hex-view button {
+    width: 100%;
+}
