@@ -7,3 +7,11 @@ Queries:
     FROM Artifact.Windows.System.Amcache(
        source="InventoryApplicationFile",
        amCacheGlob=srcDir+"/artifacts/testdata/files/Amcache.hve") LIMIT 5
+
+  # Test the shell bags artifact
+  - SELECT ModTime, KeyPath, Description, Path, _Parsed
+    FROM Artifact.Windows.Forensics.Shellbags(SearchSpecs=[
+      dict(
+         HiveGlob=srcDir+"/artifacts/testdata/files/UsrClass.dat",
+         KeyGlob='''\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\**'''),])
+    ORDER BY KeyPath

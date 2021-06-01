@@ -3,16 +3,21 @@ description: |
   Windows uses the Shellbag keys to store user preferences for GUI
   folder display within Windows Explorer.
 
+  This artifact uses the raw registry parser to inspect various user
+  registry hives around the filesystem for BagMRU keys. Different OS
+  versions may have slightly different locations for the MRU keys.
+
 reference:
   - https://www.sans.org/blog/computer-forensic-artifacts-windows-7-shellbags/
 
 parameters:
-  - name: MRUGlob
+  - name: SearchSpecs
     type: csv
+    description: Define locations of MRU bags in various registries.
     default: |
-      Glob
-      HKEY_CURRENT_USER\Software\Microsoft\Windows\Shell\BagMRU\**
-      HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\**
+      HiveGlob,KeyGlob
+      C:/Users/*/NTUSER.dat,\Software\Microsoft\Windows\Shell\BagMRU\**
+      C:/Users/*/AppData/Local/Microsoft/Windows/UsrClass.dat,\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\**
 
 imports:
   # Link files use the same internal format as shellbags so we import
@@ -21,44 +26,61 @@ imports:
 
 sources:
   - query: |
-      LET X = SELECT FullPath,
+      LET AllHives = SELECT * FROM foreach(row=SearchSpecs,
+        query={
+            SELECT FullPath AS HivePath, KeyGlob
+            FROM glob(globs=HiveGlob)
+            WHERE log(message="Inspecting hive " + HivePath)
+        })
+
+      LET ShellValues = SELECT * FROM foreach(row=AllHives,
+        query={
+           SELECT url(parse=FullPath) AS URL, Data, ModTime
+           FROM glob(globs=url(path=HivePath, fragment=KeyGlob).String, accessor="raw_reg")
+           WHERE Data.type = "REG_BINARY" AND URL.Fragment =~ "[0-9]$"
+        })
+
+      LET ParsedValues = SELECT URL.Path AS Hive, URL.Fragment AS KeyPath,
           parse_binary(profile=Profile, filename=Data.value, accessor="data", struct="ItemIDList") as _Parsed,
           base64encode(string=Data.value) AS _RawData, ModTime
-      FROM glob(globs=MRUGlob.Glob, accessor="registry")
-      WHERE Data.type = "BINARY" AND Name =~ "[0-9]+"
+      FROM ShellValues
 
-      LET AllResults <= SELECT FullPath,
+      LET AllResults <= SELECT Hive, KeyPath,
         _Parsed.ShellBag.Description AS Description,
         _Parsed, _RawData, ModTime
-      FROM X
+      FROM ParsedValues
 
-      // Recursive function to join path components together.
-      LET FormPath(MRUPath, Description) = SELECT * FROM chain(
-        b={
-          SELECT MRUPath AS FullPath, Description,
+      // Recursive function to join path components together. Limit recursion depth just in case.
+      LET FormPath(MRUPath, MRUHive, Description, Depth) = SELECT * FROM if(
+        condition=Depth < 20, then={SELECT * FROM chain(
+          b={
+            SELECT MRUPath, MRUHive, Description,
               -- Signify unknown component as ?
               Description.LongName || Description.ShortName || "?" AS Name
-          FROM scope()
-        },
-        c={
-          SELECT * FROM foreach(row={
-            SELECT FullPath, Description
-            FROM AllResults
-            WHERE FullPath = dirname(path=MRUPath, sep="\\")
-            LIMIT 1
-          }, query={
-            SELECT * FROM FormPath(MRUPath=FullPath, Description=Description)
+            FROM scope()
+          },
+          c={
+            SELECT * FROM foreach(row={
+              SELECT KeyPath, MRUHive, Description
+              FROM AllResults
+              WHERE Hive = MRUHive AND KeyPath = dirname(path=MRUPath, sep="\\")
+              LIMIT 1
+            }, query={
+              SELECT * FROM FormPath(MRUPath=KeyPath, MRUHive=MRUHive,
+                                     Description=Description, Depth=Depth + 1)
+            })
           })
+          ORDER BY MRUPath
+          LIMIT 10
         })
-        ORDER BY FullPath
 
         // Now display all hits and their reconstructed path
-        LET ReconstructedPath = SELECT ModTime, FullPath, Description, {
-           SELECT * FROM FormPath(MRUPath=FullPath, Description=Description)
+        LET ReconstructedPath = SELECT ModTime, Hive, KeyPath, Description, {
+           SELECT * FROM FormPath(MRUPath=KeyPath, MRUHive=Hive, Description=Description, Depth=0)
         } AS Chain, _RawData, _Parsed
         FROM AllResults
 
-        SELECT ModTime, FullPath, Description,
+        SELECT ModTime, Hive, KeyPath, Description,
                join(array=Chain.Name, sep=" -> ") AS Path,
                _RawData, _Parsed
         FROM ReconstructedPath

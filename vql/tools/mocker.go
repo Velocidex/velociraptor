@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -65,6 +66,7 @@ type _MockerCtx struct {
 }
 
 type MockerPlugin struct {
+	mu   sync.Mutex
 	name string
 	ctx  *_MockerCtx
 }
@@ -75,10 +77,12 @@ func (self MockerPlugin) Call(ctx context.Context,
 	go func() {
 		defer close(output_chan)
 
+		self.mu.Lock()
 		self.ctx.args = append(self.ctx.args, args)
 
 		result := self.ctx.results[self.ctx.call_count%len(self.ctx.results)]
 		self.ctx.call_count += 1
+		self.mu.Unlock()
 
 		a_value := reflect.Indirect(reflect.ValueOf(result))
 		a_type := a_value.Type()

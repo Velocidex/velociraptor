@@ -291,7 +291,12 @@ func getCellsForFlow(ctx context.Context,
 		return nil
 	}
 
-	return getDefaultCellsForSources(config_obj, flow_context.ArtifactsWithResults)
+	sources := flow_context.ArtifactsWithResults
+	if len(sources) == 0 && flow_context.Request != nil {
+		sources = flow_context.Request.Artifacts
+	}
+
+	return getDefaultCellsForSources(config_obj, sources)
 }
 
 func getDefaultCellsForSources(config_obj *config_proto.Config,

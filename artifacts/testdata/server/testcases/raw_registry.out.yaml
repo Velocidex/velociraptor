@@ -48,4 +48,266 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "Publisher": "google inc.",
   "BinFileVersion": "72.0.3626.121"
  }
+]SELECT ModTime, KeyPath, Description, Path, _Parsed FROM Artifact.Windows.Forensics.Shellbags(SearchSpecs=[ dict( HiveGlob=srcDir+"/artifacts/testdata/files/UsrClass.dat", KeyGlob='''\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\**'''),]) ORDER BY KeyPath[
+ {
+  "ModTime": "2021-06-01T06:28:19Z",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\0",
+  "Description": {
+   "ShortName": "My Computer",
+   "Type": "Root"
+  },
+  "Path": "My Computer",
+  "_Parsed": {
+   "ItemIDSize": 20,
+   "Offset": 0,
+   "Type": 16,
+   "Subtype": 1,
+   "ShellBag": {
+    "Description": {
+     "ShortName": "My Computer",
+     "Type": "Root"
+    }
+   }
+  }
+ },
+ {
+  "ModTime": "2021-06-01T06:28:19Z",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\1",
+  "Description": {
+   "ShortName": "My Computer",
+   "Type": "Root"
+  },
+  "Path": "My Computer",
+  "_Parsed": {
+   "ItemIDSize": 20,
+   "Offset": 0,
+   "Type": 16,
+   "Subtype": 1,
+   "ShellBag": {
+    "Description": {
+     "ShortName": "My Computer",
+     "Type": "Root"
+    }
+   }
+  }
+ },
+ {
+  "ModTime": "2021-06-01T06:27:57Z",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\1\\0",
+  "Description": {
+   "LongName": "",
+   "ShortName": "",
+   "Type": "Volume"
+  },
+  "Path": "My Computer -\u003e ?",
+  "_Parsed": {
+   "ItemIDSize": 20,
+   "Offset": 0,
+   "Type": 32,
+   "Subtype": 0,
+   "ShellBag": {
+    "Name": "",
+    "Description": {
+     "LongName": "",
+     "ShortName": "",
+     "Type": "Volume"
+    }
+   }
+  }
+ },
+ {
+  "ModTime": "2021-06-01T06:28:19Z",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\2",
+  "Description": {
+   "ShortName": "My Computer",
+   "Type": "Root"
+  },
+  "Path": "My Computer",
+  "_Parsed": {
+   "ItemIDSize": 85,
+   "Offset": 0,
+   "Type": 16,
+   "Subtype": 1,
+   "ShellBag": {
+    "Description": {
+     "ShortName": "My Computer",
+     "Type": "Root"
+    }
+   }
+  }
+ },
+ {
+  "ModTime": "2021-06-01T06:28:19Z",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3",
+  "Description": {
+   "ShortName": "My Computer",
+   "Type": "Root"
+  },
+  "Path": "My Computer",
+  "_Parsed": {
+   "ItemIDSize": 20,
+   "Offset": 0,
+   "Type": 16,
+   "Subtype": 1,
+   "ShellBag": {
+    "Description": {
+     "ShortName": "My Computer",
+     "Type": "Root"
+    }
+   }
+  }
+ },
+ {
+  "ModTime": "2021-06-01T06:28:10Z",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0",
+  "Description": null,
+  "Path": "My Computer -\u003e ?",
+  "_Parsed": {
+   "ItemIDSize": 538,
+   "Offset": 0,
+   "Type": 0,
+   "Subtype": 0,
+   "ShellBag": null
+  }
+ },
+ {
+  "ModTime": "2021-06-01T06:28:10Z",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0\\0",
+  "Description": {
+   "Type": "NetworkLocation",
+   "ShortName": "\\\\vmware-host\\Shared Folders"
+  },
+  "Path": "My Computer -\u003e ? -\u003e \\\\vmware-host\\Shared Folders",
+  "_Parsed": {
+   "ItemIDSize": 58,
+   "Offset": 0,
+   "Type": 64,
+   "Subtype": 1,
+   "ShellBag": {
+    "Name": "\\\\vmware-host\\Shared Folders",
+    "Description": {
+     "Type": "NetworkLocation",
+     "ShortName": "\\\\vmware-host\\Shared Folders"
+    }
+   }
+  }
+ },
+ {
+  "ModTime": "2021-06-01T06:28:12Z",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0\\0\\0",
+  "Description": {
+   "Type": [
+    "Directory",
+    "Unicode"
+   ],
+   "Modified": "2021-05-28T03:04:52Z",
+   "LastAccessed": "2021-05-31T08:50:34Z",
+   "CreateDate": "2021-05-28T03:04:52Z",
+   "ShortName": "shared",
+   "LongName": "shared",
+   "MFTID": 49548416,
+   "MFTSeq": 0
+  },
+  "Path": "My Computer -\u003e ? -\u003e \\\\vmware-host\\Shared Folders -\u003e shared",
+  "_Parsed": {
+   "ItemIDSize": 84,
+   "Offset": 0,
+   "Type": 48,
+   "Subtype": 1,
+   "ShellBag": {
+    "Size": 84,
+    "Type": 49,
+    "SubType": [
+     "Directory",
+     "Unicode"
+    ],
+    "LastModificationTime": "2021-05-28T03:04:52Z",
+    "ShortName": "shared",
+    "Extension": {
+     "Size": 62,
+     "Version": 9,
+     "Signature": "0xbeef0004",
+     "CreateDate": "2021-05-28T03:04:52Z",
+     "LastAccessed": "2021-05-31T08:50:34Z",
+     "MFTReference": {
+      "MFTID": 49548416,
+      "SequenceNumber": 0
+     },
+     "LongName": "shared"
+    },
+    "Description": {
+     "Type": [
+      "Directory",
+      "Unicode"
+     ],
+     "Modified": "2021-05-28T03:04:52Z",
+     "LastAccessed": "2021-05-31T08:50:34Z",
+     "CreateDate": "2021-05-28T03:04:52Z",
+     "ShortName": "shared",
+     "LongName": "shared",
+     "MFTID": 49548416,
+     "MFTSeq": 0
+    }
+   }
+  }
+ },
+ {
+  "ModTime": "2021-06-01T06:28:19Z",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0\\0\\0\\0",
+  "Description": {
+   "Type": [
+    "Directory",
+    "Unicode"
+   ],
+   "Modified": "2021-05-31T16:57:36Z",
+   "LastAccessed": "2021-05-31T16:57:36Z",
+   "CreateDate": "2021-05-31T16:57:36Z",
+   "ShortName": "tmp",
+   "LongName": "tmp",
+   "MFTID": 8651087,
+   "MFTSeq": 0
+  },
+  "Path": "My Computer -\u003e ? -\u003e \\\\vmware-host\\Shared Folders -\u003e shared -\u003e tmp",
+  "_Parsed": {
+   "ItemIDSize": 74,
+   "Offset": 0,
+   "Type": 48,
+   "Subtype": 1,
+   "ShellBag": {
+    "Size": 74,
+    "Type": 49,
+    "SubType": [
+     "Directory",
+     "Unicode"
+    ],
+    "LastModificationTime": "2021-05-31T16:57:36Z",
+    "ShortName": "tmp",
+    "Extension": {
+     "Size": 56,
+     "Version": 9,
+     "Signature": "0xbeef0004",
+     "CreateDate": "2021-05-31T16:57:36Z",
+     "LastAccessed": "2021-05-31T16:57:36Z",
+     "MFTReference": {
+      "MFTID": 8651087,
+      "SequenceNumber": 0
+     },
+     "LongName": "tmp"
+    },
+    "Description": {
+     "Type": [
+      "Directory",
+      "Unicode"
+     ],
+     "Modified": "2021-05-31T16:57:36Z",
+     "LastAccessed": "2021-05-31T16:57:36Z",
+     "CreateDate": "2021-05-31T16:57:36Z",
+     "ShortName": "tmp",
+     "LongName": "tmp",
+     "MFTID": 8651087,
+     "MFTSeq": 0
+    }
+   }
+  }
+ }
 ]
