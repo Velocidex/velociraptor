@@ -8,7 +8,8 @@ message ArgDescriptor {
     string name = 1;
     string type = 2;
     string description = 3;
-    bool is_repeated = 4;
+    bool repeated = 4;
+    bool required = 5;
 }
 
 message Completion {

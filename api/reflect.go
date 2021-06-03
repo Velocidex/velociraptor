@@ -21,10 +21,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Velocidex/yaml/v2"
 	"github.com/golang/protobuf/ptypes/empty"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts/assets"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -34,6 +36,50 @@ import (
 var (
 	doc_regex = regexp.MustCompile("doc=(.+)")
 )
+
+// Loads the api description from the embedded asset
+func LoadApiDescription() ([]*api_proto.Completion, error) {
+	assets.Init()
+
+	data, err := assets.ReadFile("docs/references/vql.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	result := []*api_proto.Completion{}
+	err = yaml.Unmarshal(data, &result)
+	return result, err
+}
+
+func IntrospectDescription() []*api_proto.Completion {
+	result := []*api_proto.Completion{}
+
+	scope := vql_subsystem.MakeScope()
+	defer scope.Close()
+
+	type_map := types.NewTypeMap()
+	info := scope.Describe(type_map)
+
+	for _, item := range info.Functions {
+		result = append(result, &api_proto.Completion{
+			Name:        item.Name,
+			Description: item.Doc,
+			Type:        "Function",
+			Args:        getArgDescriptors(item.ArgType, type_map, scope),
+		})
+	}
+
+	for _, item := range info.Plugins {
+		result = append(result, &api_proto.Completion{
+			Name:        item.Name,
+			Description: item.Doc,
+			Type:        "Plugin",
+			Args:        getArgDescriptors(item.ArgType, type_map, scope),
+		})
+	}
+
+	return result
+}
 
 func (self *ApiServer) GetKeywordCompletions(
 	ctx context.Context,
@@ -51,29 +97,11 @@ func (self *ApiServer) GetKeywordCompletions(
 		},
 	}
 
-	scope := vql_subsystem.MakeScope()
-	defer scope.Close()
-
-	type_map := types.NewTypeMap()
-	info := scope.Describe(type_map)
-
-	for _, item := range info.Functions {
-		result.Items = append(result.Items, &api_proto.Completion{
-			Name:        item.Name,
-			Description: item.Doc,
-			Type:        "Function",
-			Args:        getArgDescriptors(item.ArgType, type_map, scope),
-		})
+	descriptions, err := LoadApiDescription()
+	if err != nil {
+		descriptions = IntrospectDescription()
 	}
-
-	for _, item := range info.Plugins {
-		result.Items = append(result.Items, &api_proto.Completion{
-			Name:        item.Name,
-			Description: item.Doc,
-			Type:        "Plugin",
-			Args:        getArgDescriptors(item.ArgType, type_map, scope),
-		})
-	}
+	result.Items = append(result.Items, descriptions...)
 
 	manager, err := services.GetRepositoryManager()
 	if err != nil {
@@ -84,11 +112,15 @@ func (self *ApiServer) GetKeywordCompletions(
 		return nil, err
 	}
 	for _, name := range repository.List() {
+		artifact, pres := repository.Get(self.config, name)
+		if !pres {
+			continue
+		}
 		result.Items = append(result.Items, &api_proto.Completion{
-			Name: "Artifact." + name,
-			Type: "Artifact",
-			Args: getArtifactParamDescriptors(
-				self.config, name, type_map, repository),
+			Name:        "Artifact." + name,
+			Type:        "Artifact",
+			Description: artifact.Description,
+			Args:        getArtifactParamDescriptors(artifact),
 		})
 	}
 
@@ -133,15 +165,8 @@ func getArgDescriptors(
 	return args
 }
 
-func getArtifactParamDescriptors(
-	config_obj *config_proto.Config,
-	name string, type_map *vfilter.TypeMap,
-	repository services.Repository) []*api_proto.ArgDescriptor {
+func getArtifactParamDescriptors(artifact *artifacts_proto.Artifact) []*api_proto.ArgDescriptor {
 	args := []*api_proto.ArgDescriptor{}
-	artifact, pres := repository.Get(config_obj, name)
-	if !pres {
-		return args
-	}
 
 	for _, parameter := range artifact.Parameters {
 		args = append(args, &api_proto.ArgDescriptor{
