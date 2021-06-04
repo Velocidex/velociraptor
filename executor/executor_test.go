@@ -37,9 +37,15 @@ func (self *ExecutorTestSuite) TestCancellation() {
 		defer wg.Done()
 
 		// Wait here until the executor is fully cancelled.
-		for message := range executor.Outbound {
-			received_messages = append(
-				received_messages, message)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case message := <-executor.Outbound:
+				received_messages = append(
+					received_messages, message)
+			}
 		}
 	}()
 

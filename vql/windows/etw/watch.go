@@ -4,7 +4,10 @@ package etw
 
 import (
 	"context"
+	"fmt"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/bi-zone/etw"
@@ -12,9 +15,11 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type WatchETWArgs struct {
+	Name        string `vfilter:"optional,field=name,doc=A session name "`
 	Provider    string `vfilter:"required,field=guid,doc=A Provider GUID to watch "`
 	AnyKeywords uint64 `vfilter:"optional,field=any,doc=Any Keywords "`
 	AllKeywords uint64 `vfilter:"optional,field=all,doc=All Keywords "`
@@ -44,81 +49,106 @@ func (self WatchETWPlugin) Call(
 			arg.Level = 5
 		}
 
+		// Select a default session name
+		if arg.Name == "" {
+			arg.Name = fmt.Sprintf("Velociraptor-%v", time.Now().Unix())
+		}
+
 		guid, err := windows.GUIDFromString(arg.Provider)
 		if err != nil {
 			scope.Log("watch_etw: %s", err.Error())
 			return
 		}
-		session, err := etw.NewSession(guid, func(cfg *etw.SessionOptions) {
-			cfg.MatchAnyKeyword = arg.AnyKeywords
-			cfg.MatchAllKeyword = arg.AllKeywords
-			cfg.Level = etw.TraceLevel(arg.Level)
-		})
 
-		if err != nil {
-			scope.Log("watch_etw: %s", err.Error())
-			return
-		}
-
-		sub_ctx, cancel := context.WithCancel(ctx)
-		defer cancel()
-
-		cancelled := false
-
-		cb := func(e *etw.Event) {
-			if cancelled {
-				return
-			}
-
-			event := ordereddict.NewDict().
-				Set("System", e.Header)
-			data, err := e.EventProperties()
-			if err == nil {
-				event.Set("EventData", data)
-			}
-
-			select {
-			case <-sub_ctx.Done():
-				return
-			case output_chan <- event:
-			}
-		}
-
-		wg := &sync.WaitGroup{}
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
-			// When session.Process() exits, we exit the
-			// query.
-			defer cancel()
-			err := session.Process(cb)
+		for {
+			err = createSession(ctx, scope, guid, arg, output_chan)
 			if err != nil {
 				scope.Log("watch_etw: %v", err)
 			}
-		}()
 
-		// Wait here until the query is cancelled.
-		<-sub_ctx.Done()
-
-		cancelled = true
-		err = session.Close()
-		if err != nil {
-			scope.Log("watch_etw: %v", err)
-			return
+			scope.Log("ETW session interrupted, will retry again.")
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(time.Minute):
+			}
 		}
-
-		// Wait here for session.Process() to finish - there
-		// may be a queue of events to send to the callback
-		// that ETW will try to clear so we need to wait here
-		// until it does.
-		wg.Wait()
 
 	}()
 
 	return output_chan
+}
 
+func createSession(ctx context.Context, scope types.Scope, guid windows.GUID,
+	arg *WatchETWArgs, output_chan chan vfilter.Row) error {
+	session, err := etw.NewSession(guid, func(cfg *etw.SessionOptions) {
+		cfg.MatchAnyKeyword = arg.AnyKeywords
+		cfg.MatchAllKeyword = arg.AllKeywords
+		cfg.Level = etw.TraceLevel(arg.Level)
+		cfg.Name = arg.Name
+	})
+	if err != nil {
+		scope.Log("watch_etw: %s", err.Error())
+		return err
+	}
+
+	// Signal to the callback to ignore more messages
+	var cancelled uint64
+
+	sub_ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	cb := func(e *etw.Event) {
+		if atomic.LoadUint64(&cancelled) > 0 {
+			return
+		}
+		event := ordereddict.NewDict().
+			Set("System", e.Header)
+
+		data, err := e.EventProperties()
+		if err == nil {
+			event.Set("EventData", data)
+		}
+
+		select {
+		case <-sub_ctx.Done():
+			return
+		case output_chan <- event:
+		}
+	}
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+
+		// When session.Process() exits, we exit the
+		// query.
+		defer cancel()
+		err := session.Process(cb)
+		if err != nil {
+			scope.Log("watch_etw: %v", err)
+		}
+	}()
+
+	// Wait here until the query is cancelled.
+	<-sub_ctx.Done()
+
+	atomic.StoreUint64(&cancelled, 1)
+
+	err = session.Close()
+	if err != nil {
+		return err
+	}
+
+	// Wait here for session.Process() to finish - there
+	// may be a queue of events to send to the callback
+	// that ETW will try to clear so we need to wait here
+	// until it does.
+	wg.Wait()
+
+	return nil
 }
 
 func (self WatchETWPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {

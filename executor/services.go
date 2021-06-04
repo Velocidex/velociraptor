@@ -56,6 +56,9 @@ func StartEventTableService(
 		config_obj, &crypto_proto.VeloMessage{
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
 		}, exe.Outbound)
+
+	actions.InitializeEventTable(ctx, wg)
+
 	if config_obj.Writeback.EventQueries != nil {
 		actions.UpdateEventTable{}.Run(config_obj, ctx,
 			responder, config_obj.Writeback.EventQueries)

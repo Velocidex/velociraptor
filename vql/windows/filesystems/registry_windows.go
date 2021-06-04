@@ -362,6 +362,10 @@ func getValueInfo(key registry.Key, components []string) (*RegValueInfo, error) 
 			_components: components,
 		}}
 
+	if value_name == "@" {
+		value_name = ""
+	}
+
 	buf_size, value_type, err := key.GetValue(value_name, nil)
 	if err != nil {
 		return nil, err
