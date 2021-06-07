@@ -7,7 +7,11 @@ description: |
 
 parameters:
  - name: DirectoryGlobs
-   default: C:\Users\
+   default: C:\Users\**
+
+ - name: SlackOnly
+   description: "Select to return only entries from Slack space."
+   type: bool
 
 precondition:
   SELECT * FROM info() where OS = 'windows'
@@ -18,7 +22,7 @@ sources:
        - LET inodes = SELECT FullPath, Data.mft AS MFT,
              parse_ntfs(device=FullPath, inode=Data.mft) AS MFTInfo
          FROM glob(globs=DirectoryGlobs, accessor="ntfs")
-         WHERE IsDir
+         WHERE IsDir and log(message=MFT)
 
        - LET upload_streams = SELECT * FROM foreach(
             row=MFTInfo.Attributes,
@@ -37,7 +41,8 @@ sources:
        - SELECT * FROM foreach(
            row=inodes,
            query={
-             SELECT FullPath, Name, NameType, Size, AllocatedSize,
-                    IsSlack, SlackOffset, Mtime, Atime, Ctime, Btime, MFTId
-             FROM parse_ntfs_i30(device=MFTInfo.Device, inode=MFT)
-           })
+                 SELECT FullPath, Name, NameType, Size, AllocatedSize,
+                        IsSlack, SlackOffset, Mtime, Atime, Ctime, Btime, MFTId
+                 FROM parse_ntfs_i30(device=MFTInfo.Device, inode=MFT)
+                 WHERE IsSlack = true or NOT SlackOnly
+                })

@@ -1,0 +1,96 @@
+name: Windows.Applications.SBECmd
+description: |
+    Execute Eric Zimmerman's SBECmd and return output for analysis
+    
+    Objective:
+    
+    - Find which folders were accessed on the local machine, the network, and/or removable devices. Evidence of previously existing folders after deletion/overwrite. When certain folders were accessed.
+
+    Interpretation:
+    
+    - Stores information about which folders were most recently browsed by the user.
+    
+    MITRE ATT&CK ID: TA0009 - Collection
+    
+author: Eduardo Mattos - @eduardfir
+
+reference:
+  - https://github.com/EricZimmerman
+  
+required_permissions:
+  - EXECVE
+
+type: CLIENT
+
+tools:
+  - name: SBECmd
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: tactic
+    description: ATT&CK tactic
+    default: collection
+    type: hidden
+    
+  - name: userRegex
+    default: .
+
+  - name: UploadFiles
+    description: "Select to Upload SBECmd Output files."
+    type: bool
+    
+  - name: RemovePayload
+    description: "Select to Remove Payload after execution."
+    type: bool
+
+
+sources:
+  - query: |
+      -- get context on target binary
+      LET payload <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
+                    ToolName="SBECmd", IsExecutable=TRUE)
+
+      -- build tempfolder for output    
+      LET tempfolder <= tempdir(remove_last=TRUE)
+
+      -- get users with profiles 
+      LET UserProfiles = SELECT Uid, Name, Directory, UUID, Mtime
+                        FROM Artifact.Windows.Sys.Users()
+                        WHERE Name =~ userRegex and Directory =~ "Users"
+
+      -- execute payload
+      LET deploy <= SELECT * FROM foreach(row=UserProfiles,
+                    query={
+                        SELECT *, Name
+                        FROM execve(argv=[
+                            payload.FullPath[0],
+                            "-d", Directory,
+                            "--csv", tempfolder + "\\" + Name,
+                            "--dedupe"])
+                    })
+
+      -- parse csvs
+      SELECT * FROM foreach(row=deploy,
+      query={
+        SELECT *, Name as UserName
+        FROM parse_csv(filename=tempfolder + "\\" + Name + "\\Deduplicated.csv")
+      })
+
+  - name: Uploads
+    queries:
+          - |
+              SELECT * FROM chain(
+                a={
+                    SELECT * FROM if(condition=UploadFiles,
+                        then={
+                            SELECT Name, upload(file=FullPath, name=relpath(base=tempfile, path=FullPath)) as FileDetails
+                            FROM glob(globs="/**", root=tempfolder)})
+                },
+                b={ 
+                    SELECT * FROM if(condition=RemovePayload,
+                        then={
+                            SELECT * FROM execve(argv=['powershell','Remove-Item',
+                                                    payload.FullPath[0],'-Force' ])})
+                })
+              WHERE Stdout =~ "SBECmd"
