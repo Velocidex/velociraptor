@@ -4,5 +4,6 @@
    "A": 1,
    "_Source": "CallArtifactWithFalsePrecondition"
   }
- ]
+ ],
+ "SELECT * FROM Artifact.CallArtifactWithFalsePrecondition(precondition=TRUE)": []
 }

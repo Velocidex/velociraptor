@@ -244,7 +244,7 @@ func StartInterrogationService(
 
 	limit_rate := config_obj.Frontend.Resources.EnrollmentsPerSecond
 	if limit_rate == 0 {
-		limit_rate = 10
+		limit_rate = 100
 	}
 
 	// Negative enrollment rate means to disable enrollment service.

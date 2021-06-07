@@ -184,17 +184,28 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 		},
 		"System.Hunt.Participation", self.client_id, "")
 
+	time.Sleep(time.Second)
+
+	// No flow should be launched.
+	_, err = LoadCollectionContext(self.config_obj, self.client_id, "F.1234")
+	assert.Error(t, err)
+
+	// Now add the label to the client. The hunt will now be
+	// scheduled automatically.
+	labeler := services.GetLabeler()
+	err = labeler.SetClientLabel(self.config_obj, self.client_id, "MyLabel")
+	assert.NoError(t, err)
+
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		// The hunt index is updated since we have seen this client
-		// already (even if we decided not to launch on it).
+		// The hunt index is updated since we now run on it.
 		err := db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
 		return err == nil
 	})
 
-	// No flow should be launched.
+	// The flow is now created.
 	_, err = LoadCollectionContext(self.config_obj, self.client_id, "F.1234")
-	assert.Error(t, err)
+	assert.NoError(t, err)
 }
 
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
@@ -445,13 +456,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 		},
 		"System.Hunt.Participation", self.client_id, "")
 
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		// The hunt index is updated since we have seen this client
-		// already (even if we decided not to launch on it).
-		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
-			self.client_id, []string{hunt_obj.HuntId})
-		return err == nil
-	})
+	time.Sleep(time.Second)
 
 	// No flow should be launched.
 	_, err = LoadCollectionContext(self.config_obj, self.client_id, "F.1234")
@@ -527,16 +532,10 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		// The hunt index is updated since we have seen this client
-		// already (even if we decided not to launch on it).
-		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
-			client_id_2, []string{hunt_obj.HuntId})
+		// Flow should be launched on client id because it is a Windows client.
+		_, err = LoadCollectionContext(self.config_obj, client_id_1, "F.1234")
 		return err == nil
 	})
-
-	// Flow should be launched on client id because it is a Windows client.
-	_, err = LoadCollectionContext(self.config_obj, client_id_1, "F.1234")
-	assert.NoError(t, err)
 
 	// No flow should be launched on client_id_2 because it is a Linux client.
 	_, err = LoadCollectionContext(self.config_obj, client_id_2, "F.1234")

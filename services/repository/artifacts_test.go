@@ -191,6 +191,7 @@ func (self *PluginTestSuite) TestArtifactPluginWithPrecondition() {
 
 	queries := []string{
 		"SELECT * FROM Artifact.CallArtifactWithFalsePrecondition()",
+		"SELECT * FROM Artifact.CallArtifactWithFalsePrecondition(precondition=TRUE)",
 	}
 
 	results := ordereddict.NewDict()
