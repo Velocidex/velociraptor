@@ -78,6 +78,10 @@ func (self *NTFSCachedContext) Start(ctx context.Context, scope vfilter.Scope) {
 
 	done := self.done
 
+	lru_size := vql_subsystem.GetIntFromRow(self.scope, self.scope, constants.NTFS_CACHE_SIZE)
+	self.paged_reader = readers.NewPagedReader(
+		self.scope, "file", self.device, int(lru_size))
+
 	go func() {
 		for {
 			select {
@@ -112,9 +116,6 @@ func (self *NTFSCachedContext) GetNTFSContext() (*ntfs.NTFSContext, error) {
 		return self.ntfs_ctx, nil
 	}
 
-	lru_size := vql_subsystem.GetIntFromRow(self.scope, self.scope, constants.NTFS_CACHE_SIZE)
-	self.paged_reader = readers.NewPagedReader(
-		self.scope, "file", self.device, int(lru_size))
 	ntfs_ctx, err := ntfs.GetNTFSContext(self.paged_reader, 0)
 	if err != nil {
 		self._CloseWithLock()

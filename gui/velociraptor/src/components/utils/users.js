@@ -1,8 +1,9 @@
+import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
 import api from '../core/api-service.js';
-import MultiSelect from "@khanacademy/react-multi-select";
+import CreatableSelect from 'react-select/creatable';
 
 // FIXME - get the current username.
 const username = "";
@@ -44,15 +45,21 @@ export default class UserForm extends React.Component {
         });
     };
 
+    handleChange = (newValue, actionMeta) => {
+        this.props.onChange(_.map(newValue, x=>x.value));
+    };
+
     render() {
         return (
-            <>
-              <MultiSelect
-                options={this.state.options}
-                selected={this.props.value}
-                onSelectedChanged={selected => this.props.onChange(selected)}
-              />
-            </>
+            <CreatableSelect
+              isMulti
+              isClearable
+              className="users"
+              classNamePrefix="velo"
+              options={this.state.options}
+              onChange={this.handleChange}
+              placeholder="Select a user"
+            />
         );
     }
 };

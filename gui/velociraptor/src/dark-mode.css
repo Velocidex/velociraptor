@@ -37,7 +37,6 @@
     --background-color: #121212;
     --border-color: #222222;
     --text-foreground: #eeeeee;
-    --btn-default-background: #0c500a;
     --btn-default-background: #5cd00a80;
     --color-default-background: #121212;
     --btn-default-background-hover: #0c900a80;
@@ -355,4 +354,21 @@
 
 .dark-mode .file-hex-view td, .file-hex-view th {
     border: 0px;
+}
+
+.dark-mode .labels, .dark-mode .velo__control, .dark-mode .velo__menu {
+    background-color: var(--background-color);
+    color: var(--text-foreground);
+}
+
+.dark-mode .velo__multi-value {
+    background-color: var(--btn-default-background);
+}
+
+.dark-mode .velo__input {
+    color: var(--text-foreground);
+}
+
+.dark-mode .velo__option:hover, .dark-mode .velo__option--is-focused, .dark-mode .velo__multi-value:hover {
+    background-color: var(--btn-default-background-hover);
 }

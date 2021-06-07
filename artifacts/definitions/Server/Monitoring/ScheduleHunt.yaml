@@ -1,8 +1,11 @@
 name: Server.Monitoring.ScheduleHunt
 description: |
-     Run client interrogation periodically
+     Run client interrogation periodically. This is a sample event
+     artifact to schedule a hunt periodically. You can change it to
+     launch other artifacts.
 
 type: SERVER_EVENT
+
 parameters:
   - name: ScheduleDayRegex
     default: Tuesday
@@ -16,7 +19,10 @@ sources:
       LET schedule = SELECT UTC.String AS Now,
       Weekday.String AS Today
       FROM clock(period=60)
-      WHERE Now =~ TimeRegex AND Today =~ DayRegex
+      WHERE Now =~ ScheduleTimeRegex AND Today =~ ScheduleDayRegex AND
+          log(message="Launching at time " + Now)
 
       SELECT hunt(artifacts=["Generic.Client.Info"],
-      description="Periodic info hunt") FROM schedule
+                  spec=dict(`Generic.Client.Info`=dict()),
+                  description="Periodic info hunt")
+      FROM schedule

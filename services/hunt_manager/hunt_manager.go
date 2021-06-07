@@ -116,6 +116,12 @@ func (self *HuntManager) Start(
 	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
+		"Server.Internal.Label", self.ProcessLabelChange)
+	if err != nil {
+		return err
+	}
+
+	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"System.Flow.Completion", self.ProcessFlowCompletion)
 	return err
 }
@@ -249,6 +255,44 @@ func (self *HuntManager) ProcessFlowCompletion(
 			Set("EndTime", time.Unix(0, int64(flow.ActiveTime*1000))).
 			Set("Status", flow.State.String()).
 			Set("Error", flow.Status)})
+}
+
+// When a label is changed we check all the active hunts to see if any
+// of them are affected.
+func (self *HuntManager) ProcessLabelChange(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	row *ordereddict.Dict) error {
+
+	client_id, pres := row.GetString("client_id")
+	if !pres {
+		return nil
+	}
+
+	// We only care when a label is added to a client.
+	operation, pres := row.GetString("Operation")
+	if !pres || operation != "Add" {
+		return nil
+	}
+
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	// Get hunt information about this hunt.
+	dispatcher := services.GetHuntDispatcher()
+	if dispatcher == nil {
+		return errors.New("hunt dispatcher invalid")
+	}
+
+	return dispatcher.ApplyFuncOnHunts(func(hunt *api_proto.Hunt) error {
+		return journal.PushRowsToArtifact(config_obj,
+			[]*ordereddict.Dict{ordereddict.NewDict().
+				Set("HuntId", hunt.HuntId).
+				Set("ClientId", client_id)},
+			"System.Hunt.Participation", "server", "")
+	})
 }
 
 func (self *HuntManager) ProcessParticipation(
@@ -452,6 +496,17 @@ func checkHuntRanOnClient(
 		return errors.New("Client already ran this hunt")
 	}
 
+	return nil
+}
+
+func setHuntRanOnClient(config_obj *config_proto.Config,
+	client_id, hunt_id string) error {
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	hunt_ids := []string{hunt_id}
 	err = db.SetIndex(
 		config_obj, constants.HUNT_INDEX, client_id, hunt_ids)
 	if err != nil {
@@ -526,6 +581,11 @@ func scheduleHuntOnClient(
 			HuntId: hunt_id,
 			Stats: &api_proto.HuntStats{
 				TotalClientsScheduled: 1}})
+	if err != nil {
+		return err
+	}
+
+	err = setHuntRanOnClient(config_obj, client_id, hunt_id)
 	if err != nil {
 		return err
 	}

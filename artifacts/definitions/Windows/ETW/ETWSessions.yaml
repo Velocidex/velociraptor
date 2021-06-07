@@ -1,7 +1,7 @@
 name: Windows.ETW.ETWSessions
 description: |
   Windows Event Tracing exposes a lot of low level system information
-  and events. It is normally employed be security tools to gather
+  and events. It is normally employed by security tools to gather
   telemetry, however may also be used maliciously.
 
   This artifact monitors for all new ETW sessions and reports the

@@ -4,7 +4,8 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 
 import api from '../core/api-service.js';
-import MultiSelect from "@khanacademy/react-multi-select";
+import CreatableSelect from 'react-select/creatable';
+
 
 export default class LabelForm extends React.Component {
     static propTypes = {
@@ -41,14 +42,20 @@ export default class LabelForm extends React.Component {
         });
     };
 
+    handleChange = (newValue, actionMeta) => {
+        this.props.onChange(_.map(newValue, x=>x.value));
+    };
     render() {
         return (
             <>
-              <MultiSelect
+              <CreatableSelect
+                isMulti
+                isClearable
+                className="labels"
+                classNamePrefix="velo"
                 options={this.state.options}
-                selected={this.props.value}
+                onChange={this.handleChange}
                 placeholder="Select a label"
-                onSelectedChanged={selected => this.props.onChange(selected)}
               />
             </>
         );
