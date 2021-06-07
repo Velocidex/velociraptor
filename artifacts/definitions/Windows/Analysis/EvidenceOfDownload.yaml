@@ -16,20 +16,16 @@ type: CLIENT
 
 parameters:
    - name: DirectoryPath
-     default: "/C:/Users/dfir/Downloads/"
+     default: "/C:/Users/*/Downloads/"
 
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
 
     query: |
-     SELECT get(item=split(string=FullPath, sep=":Zone.Identifier"),member='0') as DownloadedFilePath,
-            hash(path=get(item=split(string=FullPath, sep=":Zone.Identifier"),member='0')) as FileHash,
-            read_file(filename=FullPath,accessor="ntfs") as ZoneIdentifierContent
-     FROM glob(globs=path_join(components=[DirectoryPath,"**/*:Zone.Identifier"]),accessor="ntfs")
-     WHERE ZoneIdentifierContent =~ "ZoneId=3" or ZoneIdentifierContent =~ "ZoneId=4"
-
-
-
-
-
+     LET X = SELECT split(string=FullPath, sep=":Zone.Identifier")[0] as DownloadedFilePath, read_file(filename=FullPath,accessor="ntfs") as ZoneIdentifierContent
+             FROM glob(globs=path_join(components=[DirectoryPath,"**/*:Zone.Identifier"]),accessor="ntfs")
+             WHERE ZoneIdentifierContent =~ "ZoneId=3" or ZoneIdentifierContent =~ "ZoneId=4"
+             
+     SELECT DownloadedFilePath, hash(path=DownloadedFilePath) as FileHash, ZoneIdentifierContent
+     FROM X
