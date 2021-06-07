@@ -27,15 +27,14 @@ sources:
        - LET upload_streams = SELECT * FROM foreach(
             row=MFTInfo.Attributes,
             query={
-              SELECT Type, TypeId, Id, Inode, Size, Name, FullPath, IndexUpload,
+              SELECT Type, TypeId, Id, Inode, Size, Name, FullPath,
                      upload(accessor="mft", file=MFTInfo.Device + Inode,
                             name=FullPath + "/" + Inode) AS IndexUpload
               FROM scope()
               WHERE Type =~ "INDEX_"
             })
-            WHERE log(message=IndexUpload)
 
-       - SELECT * FROM foreach(row=inodes, query=upload_streams) 
+       - SELECT * FROM foreach(row=inodes, query=upload_streams)
 
   - name: AnalyzeI30
     queries:
