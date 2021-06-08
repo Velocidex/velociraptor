@@ -246,11 +246,16 @@ class VeloPagedTable extends Component {
         }
 
         if (_.isEmpty(this.state.columns)) {
+            if (this.props.refresh) {
+                return <div className="no-content">
+                         <div>No Data Available.</div>
+                         <Button variant="default" onClick={this.props.refresh}>
+                           Recalculate <FontAwesomeIcon icon="sync"/>
+                         </Button>
+                       </div>;
+            }
             return <div className="no-content">
                      <div>No Data Available.</div>
-                     <Button variant="default" onClick={this.props.refresh}>
-                       Recalculate <FontAwesomeIcon icon="sync"/>
-                     </Button>
                    </div>;
         }
 
