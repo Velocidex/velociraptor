@@ -30,10 +30,13 @@ type VirtualDirectoryPath struct {
 	drive string
 	// This holds information about the drive.
 	data interface{}
+	size int64
+	mode os.FileMode
 }
 
-func NewVirtualDirectoryPath(path string, data interface{}) *VirtualDirectoryPath {
-	return &VirtualDirectoryPath{drive: path, data: data}
+func NewVirtualDirectoryPath(path string, data interface{},
+	size int64, mode os.FileMode) *VirtualDirectoryPath {
+	return &VirtualDirectoryPath{drive: path, data: data, size: size, mode: mode}
 }
 
 func (self *VirtualDirectoryPath) Name() string {
@@ -45,11 +48,11 @@ func (self *VirtualDirectoryPath) Data() interface{} {
 }
 
 func (self *VirtualDirectoryPath) Size() int64 {
-	return 0
+	return self.size
 }
 
 func (self *VirtualDirectoryPath) Mode() os.FileMode {
-	return os.ModeDir
+	return self.mode
 }
 
 func (self *VirtualDirectoryPath) ModTime() time.Time {

@@ -169,14 +169,12 @@ func discoverDriveLetters() ([]glob.FileInfo, error) {
 		"ROOT\\CIMV2")
 	if err == nil {
 		for _, row := range shadow_volumes {
-			k, pres := row.Get("DeviceID")
+			size, _ := row.GetInt64("Size")
+			device_name, pres := row.GetString("DeviceID")
 			if pres {
-				device_name, ok := k.(string)
-				if ok {
-					virtual_directory := glob.NewVirtualDirectoryPath(
-						escape(device_name), row)
-					result = append(result, virtual_directory)
-				}
+				virtual_directory := glob.NewVirtualDirectoryPath(
+					escape(device_name), row, size, os.ModeDir)
+				result = append(result, virtual_directory)
 			}
 		}
 	}

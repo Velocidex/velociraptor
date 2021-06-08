@@ -59,6 +59,7 @@ func (self *MockingScopeContext) Reset() {
 }
 
 type _MockerCtx struct {
+	mu      sync.Mutex
 	results []vfilter.Any
 	args    []*ordereddict.Dict
 
@@ -66,7 +67,6 @@ type _MockerCtx struct {
 }
 
 type MockerPlugin struct {
-	mu   sync.Mutex
 	name string
 	ctx  *_MockerCtx
 }
@@ -77,12 +77,12 @@ func (self MockerPlugin) Call(ctx context.Context,
 	go func() {
 		defer close(output_chan)
 
-		self.mu.Lock()
+		self.ctx.mu.Lock()
 		self.ctx.args = append(self.ctx.args, args)
 
 		result := self.ctx.results[self.ctx.call_count%len(self.ctx.results)]
 		self.ctx.call_count += 1
-		self.mu.Unlock()
+		self.ctx.mu.Unlock()
 
 		a_value := reflect.Indirect(reflect.ValueOf(result))
 		a_type := a_value.Type()
@@ -139,8 +139,10 @@ func (self *MockerFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
+	self.ctx.mu.Lock()
 	result := self.ctx.results[self.ctx.call_count%len(self.ctx.results)]
 	self.ctx.call_count += 1
+	self.ctx.mu.Unlock()
 
 	return result
 }

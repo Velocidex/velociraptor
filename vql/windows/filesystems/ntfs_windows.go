@@ -28,6 +28,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -35,12 +36,15 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	vql_readers "www.velocidex.com/golang/velociraptor/vql/readers"
 	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
@@ -195,14 +199,13 @@ func discoverVSS() ([]glob.FileInfo, error) {
 		"ROOT\\CIMV2")
 	if err == nil {
 		for _, row := range shadow_volumes {
-			k, pres := row.Get("DeviceObject")
+			size_str, _ := row.GetString("Size")
+			size, _ := strconv.Atoi(size_str)
+			device_name, pres := row.GetString("DeviceObject")
 			if pres {
-				device_name, ok := k.(string)
-				if ok {
-					virtual_directory := glob.NewVirtualDirectoryPath(
-						device_name, row)
-					result = append(result, virtual_directory)
-				}
+				virtual_directory := glob.NewVirtualDirectoryPath(
+					device_name, row, int64(size), os.ModeDir)
+				result = append(result, virtual_directory)
 			}
 		}
 	}
@@ -220,14 +223,14 @@ func discoverLogicalDisks() ([]glob.FileInfo, error) {
 		"ROOT\\CIMV2")
 	if err == nil {
 		for _, row := range shadow_volumes {
-			k, pres := row.Get("DeviceID")
+			size_str, _ := row.GetString("Size")
+			size, _ := strconv.Atoi(size_str)
+
+			device_name, pres := row.GetString("DeviceID")
 			if pres {
-				device_name, ok := k.(string)
-				if ok {
-					virtual_directory := glob.NewVirtualDirectoryPath(
-						"\\\\.\\"+device_name, row)
-					result = append(result, virtual_directory)
-				}
+				virtual_directory := glob.NewVirtualDirectoryPath(
+					"\\\\.\\"+device_name, row, int64(size), os.ModeDir)
+				result = append(result, virtual_directory)
 			}
 		}
 	}
@@ -388,6 +391,29 @@ func (self *readAdapter) Seek(offset int64, whence int) (int64, error) {
 	return self.pos, nil
 }
 
+func (self *NTFSFileSystemAccessor) openRawDevice(device string) (res glob.ReadSeekCloser, err error) {
+	// Find stats about this device
+	infos, err := self.ReadDir("/*")
+	if err != nil {
+		return nil, err
+	}
+
+	var stat_info glob.FileInfo
+	lower_device := strings.ToLower(device)
+
+	for _, info := range infos {
+		if lower_device == strings.ToLower(info.Name()) {
+			stat_info = info
+			break
+		}
+	}
+
+	lru_size := vql_subsystem.GetIntFromRow(self.scope, self.scope, constants.NTFS_CACHE_SIZE)
+	device_reader := vql_readers.NewPagedReader(
+		self.scope, "file", device, int(lru_size))
+	return &readSeekReaderAdapter{reader: device_reader, info: stat_info}, nil
+}
+
 func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, err error) {
 	defer func() {
 		r := recover()
@@ -402,6 +428,11 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, 
 	device, subpath, err := self.GetRoot(path)
 	if err != nil {
 		return nil, errors.New("Unable to open raw device")
+	}
+	fmt.Printf("Subpath %v Device %v\n", subpath, device)
+
+	if subpath == "" {
+		return self.openRawDevice(device)
 	}
 
 	components := self.PathSplit(subpath)
