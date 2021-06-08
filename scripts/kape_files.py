@@ -22,6 +22,7 @@ import csv
 import re
 import os
 import yaml
+from collections import OrderedDict
 
 BLACKLISTED = ["!ALL.tkape"]
 
@@ -30,13 +31,13 @@ class KapeContext:
     groups = {}
     rows = [["Id", "Name", "Category", "Glob", "Accessor", "Comment"]]
     kape_files = []
-    kape_data = {}
+    kape_data = OrderedDict()
 
 def read_targets(ctx, project_path):
     for root, dirs, files in os.walk(
             project_path + "/Targets", topdown=False):
 
-        for name in files:
+        for name in sorted(files):
             if not name.endswith(".tkape") or name in BLACKLISTED:
                 continue
 
@@ -60,6 +61,11 @@ def read_targets(ctx, project_path):
             mask = target.get("FileMask")
             if mask:
                 glob = glob.rstrip("\\") + "/" + mask
+
+            # If the glob ends with \\ it means that it is a directory
+            # and we actually mean to collect all the files in it.
+            if glob.endswith("\\"):
+                glob += "*"
 
             # Expand the targets in the glob
             if ".tkape" in glob:
@@ -189,7 +195,7 @@ sources:
       -- selection.
       LET targets <= SELECT * FROM parse_csv(
            filename=KapeTargets, accessor="data")
-      WHERE get(member=Group)
+      WHERE get(member=Group) AND log(message="Selecting " + Group)
 
       -- Filter only the rules in the rule table that have an Id we
       -- want. Targets with $ in their name probably refer to ntfs
@@ -199,10 +205,12 @@ sources:
       LET rule_specs_ntfs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
         WHERE Id in array(array=targets.RuleIds) AND Accessor='ntfs'
+        AND log(message="ntfs: Selecting glob " + Glob)
 
       LET rule_specs_lazy_ntfs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
         WHERE Id in array(array=targets.RuleIds) AND Accessor='lazy_ntfs'
+        AND log(message="auto: Selecting glob " + Glob)
 
       -- Call the generic VSS file collector with the globs we want in
       -- a new CSV file.
@@ -243,6 +251,7 @@ sources:
                       collectionSpec=rule_specs_lazy_ntfs)
                })
            })
+
       SELECT * FROM all_results WHERE _Source =~ "Metadata"
 
   - name: Uploads
@@ -277,7 +286,7 @@ reports:
       <!-- There could be a huge number of rows just to get the count, so we cap at 10000 -->
       {{ $count := Get ( Query (print "LET X = " $query " LIMIT 10000 " \\
          " SELECT 1 AS ALL, count() AS Count FROM X Group BY ALL") | Expand ) \\
-         "0.Count" }}
+         "0.Count" 0 }}
 
       <!-- If this is a flow show the parameters. -->
       {{ $flow := Query "LET X = SELECT Request.Parameters.env AS \\
@@ -313,7 +322,7 @@ reports:
             sanitize(k),
             ctx.kape_data[k].get("Description"),
             ctx.kape_data[k].get("Author"),
-            ", ".join([ctx.rows[x][1] for x in v]))
+            ", ".join(sorted([ctx.rows[x][1] for x in v])))
 
         ids = ['%s' % x for x in v]
         if len(ids) > 0:

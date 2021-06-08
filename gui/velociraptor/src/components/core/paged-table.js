@@ -96,6 +96,9 @@ class VeloPagedTable extends Component {
 
         // When called will cause the table to be recalculated.
         refresh: PropTypes.func,
+
+        // A version to force refresh of the table.
+        version: PropTypes.object,
     }
 
     state = {
@@ -124,6 +127,10 @@ class VeloPagedTable extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        if (!_.isEqual(prevProps.version, this.props.version)) {
+            this.fetchRows();
+        };
+
         if (!_.isEqual(prevProps.params, this.props.params)) {
             this.setState({start_row: 0, toggles: {}, columns: []});
         };

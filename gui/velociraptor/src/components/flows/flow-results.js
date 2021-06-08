@@ -87,6 +87,7 @@ export default class FlowResults extends React.Component {
               <VeloPagedTable
                 className="col-12"
                 params={this.state.params}
+                version={getFlowState(this.props.flow)}
               />
             </>
         );
