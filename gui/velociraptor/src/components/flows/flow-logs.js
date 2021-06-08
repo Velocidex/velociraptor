@@ -1,8 +1,16 @@
+import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
 import VeloPagedTable from '../core/paged-table.js';
 import VeloTimestamp from "../utils/time.js";
+
+
+function getFlowState(flow) {
+    return {flow_id: flow.session_id,
+            total_logs: flow.total_logs};
+}
+
 
 export default class FlowLogs extends React.Component {
     static propTypes = {
@@ -37,6 +45,7 @@ export default class FlowLogs extends React.Component {
                   flow_id: this.props.flow.session_id,
                   type: "log",
               }}
+              version={getFlowState(this.props.flow)}
             />
         );
     }
