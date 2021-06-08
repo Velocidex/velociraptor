@@ -194,9 +194,12 @@ func makeDefaultConfigLoader() *config.Loader {
 	return new(config.Loader).
 		WithVerbose(*verbose_flag).
 		WithTempdir(*tempdir_flag).
-		WithFileLoader(*config_path).
+
+		// Attempting to load Embedded config must come before
+		// loading from a file.
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
+		WithFileLoader(*config_path).
 		WithCustomValidator(initFilestoreAccessor).
 		WithCustomValidator(initDebugServer).
 		WithLogFile(*logging_flag).
