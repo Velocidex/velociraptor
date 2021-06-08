@@ -144,6 +144,29 @@ func (self *EventLogWatcherService) findLastEvent(
 	return last_event
 }
 
+func (self *EventLogWatcherService) getActiveHandles(key string) []*Handle {
+	handles, pres := self.registrations[key]
+	if !pres {
+		return nil
+	}
+
+	new_handles := make([]*Handle, 0, len(handles))
+	for _, h := range handles {
+		select {
+		case <-h.ctx.Done():
+			continue
+		default:
+			new_handles = append(new_handles, h)
+		}
+	}
+
+	if len(new_handles) == 0 {
+		delete(self.registrations, key)
+	}
+
+	return new_handles
+}
+
 func (self *EventLogWatcherService) monitorOnce(
 	filename string,
 	accessor_name string,
@@ -154,8 +177,8 @@ func (self *EventLogWatcherService) monitorOnce(
 	defer self.mu.Unlock()
 
 	key := filename + accessor_name
-	handles, pres := self.registrations[key]
-	if !pres {
+	handles := self.getActiveHandles(key)
+	if len(handles) == 0 {
 		return 0
 	}
 

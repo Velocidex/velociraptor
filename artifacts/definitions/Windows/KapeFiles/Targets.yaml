@@ -795,7 +795,7 @@ parameters:
       173,Desktop LNK files XP,LNKFiles,Documents and Settings\*\Desktop/*.LNK,lazy_ntfs,
       174,Desktop LNK files,LNKFiles,Users\*\Desktop/*.LNK,lazy_ntfs,
       175,Restore point LNK files XP,LNKFiles,System Volume Information\_restore*\RP*/*.LNK,lazy_ntfs,
-      176,$Recycle.Bin,Deleted Files,$Recycle.Bin/**10,ntfs,
+      176,$Recycle.Bin,Deleted Files,$Recycle.Bin/**10,lazy_ntfs,
       177,RECYCLER WinXP,Deleted Files,RECYCLER/**10,lazy_ntfs,
       178,SAM registry transaction files,Registry,Windows\System32\config/SAM.LOG*,lazy_ntfs,
       179,SAM registry transaction files,Registry,Windows.old\Windows\System32\config/SAM.LOG*,lazy_ntfs,
@@ -1164,7 +1164,7 @@ parameters:
       541,RDPCoreTS Event Logs,EventLogs,Windows.old\Windows\System32\winevt\logs/Microsoft-Windows-RemoteDesktopServices-RdpCoreTS*,lazy_ntfs,Can be used to correlate RDP logon failures by originating IP
       542,RecentFileCache,ApplicationCompatability,Windows\AppCompat\Programs/RecentFileCache.bcf,lazy_ntfs,
       543,RecentFileCache,ApplicationCompatability,Windows.old\Windows\AppCompat\Programs/RecentFileCache.bcf,lazy_ntfs,
-      544,$Recycle.Bin,Deleted Files,$Recycle.Bin/**10,ntfs,
+      544,$Recycle.Bin,Deleted Files,$Recycle.Bin/**10,lazy_ntfs,
       545,RECYCLER WinXP,Deleted Files,RECYCLER/**10,lazy_ntfs,
       546,SAM registry transaction files,Registry,Windows\System32\config/SAM.LOG*,lazy_ntfs,
       547,SAM registry transaction files,Registry,Windows.old\Windows\System32\config/SAM.LOG*,lazy_ntfs,
