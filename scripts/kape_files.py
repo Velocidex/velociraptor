@@ -26,6 +26,9 @@ from collections import OrderedDict
 
 BLACKLISTED = ["!ALL.tkape"]
 
+# The following paths are not NTFS files, so they can be read normally.
+NOT_NTFS = ["$Recycle.Bin"]
+
 
 class KapeContext:
     groups = {}
@@ -100,6 +103,11 @@ def read_targets(ctx, project_path):
                         ctx.groups[name].add(dependency)
 
 def find_accessor(glob):
+    for subtype in NOT_NTFS:
+        if subtype in glob:
+            return "lazy_ntfs"
+
+
     if ":" in glob:
         return "ntfs"
 
