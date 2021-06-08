@@ -4,11 +4,11 @@ description: |
 
   The USN journal is a very important source of information about when
   and how files were manipulated on the filesystem. However, typically
-  the journal is rotates within a few days.
+  the journal is rotated within a few days.
 
-  This artifact carves out URN journal entries from the raw disk. This
+  This artifact carves out USN journal entries from the raw disk. This
   might recover older entries which have since been rotated from the
-  disk.
+  journal file.
 
   ## Notes
 
@@ -20,7 +20,7 @@ description: |
      probably increase the collection timeout past 10 minutes (usually
      more than an hour).
 
-  3. The reassembled FullPath is derviced from the MFTId referenced in
+  3. The reassembled FullPath is derived from the MFTId referenced in
      the USN record. Bear in mind that this might be out of date and
      inaccurate.
 
@@ -150,7 +150,7 @@ sources:
         -- reduce further using other conditions.
         LET YaraRule = '''rule X {
             strings:
-              // First byte is the name length < 255
+              // First byte is the record length < 255 second byte should be 0-1 (0-512 bytes per record)
               // Version Major and Minor must be 2 and 0
               // D7 01 is the ending of a reasonable WinFileTime
               // Name Offset and Name Length are short ints but should be < 255
