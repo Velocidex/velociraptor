@@ -7,14 +7,11 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/evtx"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
-)
-
-const (
-	FREQUENCY = 3 * time.Second
 )
 
 var (
@@ -58,7 +55,9 @@ func (self *EventLogWatcherService) Register(
 		registration = []*Handle{}
 		self.registrations[key] = registration
 
-		go self.StartMonitoring(filename, accessor)
+		frequency := vql_subsystem.GetIntFromRow(scope, scope, constants.EVTX_FREQUENCY)
+
+		go self.StartMonitoring(filename, accessor, frequency)
 	}
 
 	registration = append(registration, handle)
@@ -72,9 +71,14 @@ func (self *EventLogWatcherService) Register(
 // Monitor the filename for new events and emit them to all interested
 // listeners. If no listeners exist we terminate.
 func (self *EventLogWatcherService) StartMonitoring(
-	filename string, accessor_name string) {
+	filename string, accessor_name string, frequency uint64) {
 
 	defer utils.CheckForPanic("StartMonitoring")
+
+	// By default check every 3 seconds.
+	if frequency == 0 {
+		frequency = 3
+	}
 
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
@@ -100,7 +104,7 @@ func (self *EventLogWatcherService) StartMonitoring(
 		last_event = self.monitorOnce(
 			filename, accessor_name, accessor, last_event)
 
-		time.Sleep(FREQUENCY)
+		time.Sleep(time.Duration(frequency) * time.Second)
 	}
 }
 
