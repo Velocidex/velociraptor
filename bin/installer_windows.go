@@ -337,15 +337,12 @@ func loadClientConfig() (*config_proto.Config, error) {
 		return nil, err
 	}
 
-	// If the config path is not specified we look for the config
-	// file next to the service executable.
-	if *config_path == "" {
-		config_target_path := strings.TrimSuffix(
-			executable, filepath.Ext(executable)) + ".config.yaml"
-		config_path = &config_target_path
-	}
-
 	config_obj, err := makeDefaultConfigLoader().
+
+		// If the config path is not specified we look for the config
+		// file next to the service executable.
+		WithFileLoader(strings.TrimSuffix(
+			executable, filepath.Ext(executable)) + ".config.yaml").
 		WithRequiredClient().
 		WithWriteback().LoadAndValidate()
 	if err != nil {

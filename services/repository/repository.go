@@ -112,6 +112,9 @@ var queries_regexp = regexp.MustCompile(`(?im)(^ +- +)(SELECT|LET|//)`)
 
 // Fix common YAML errors.
 func sanitize_artifact_yaml(data string) string {
+	// First convert to standard line ending.
+	data = strings.Replace(data, "\r\n", "\n", -1)
+
 	// YAML has two types of block level scalars. The default one
 	// (which is more intuitive to use) does not preserve white
 	// space. This leads to terrible rendering in the GUI and
@@ -133,7 +136,6 @@ func sanitize_artifact_yaml(data string) string {
 	})
 
 	return result
-
 }
 
 func (self *Repository) LoadYaml(data string, validate bool) (
