@@ -192,7 +192,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 	if len(components) == 0 {
 		for k, _ := range root_keys {
 			result = append(result,
-				glob.NewVirtualDirectoryPath(k, nil))
+				glob.NewVirtualDirectoryPath(k, nil, 0, os.ModeDir))
 		}
 		return result, nil
 	}
