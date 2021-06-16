@@ -17,7 +17,7 @@ export default class FileHexView extends React.Component {
     state = {
         page: 0,
         rows: 25,
-        columns: 0x14,
+        columns: 0x10,
         hexDataRows: [],
         loading: true,
     }
@@ -66,14 +66,15 @@ export default class FileHexView extends React.Component {
         };
 
         this.setState({loading: true});
-        api.get_blob(url, params).then((response) => {
-            this.parseFileContentToHexRepresentation_(response, page);
+        api.get_blob(url, params).then(buffer=> {
+            const view = new Uint8Array(buffer);
+            this.parseFileContentToHexRepresentation_(view, page);
         });
     };
 
-    parseFileContentToHexRepresentation_ = (fileContent, page) => {
-        if (!fileContent) {
-            fileContent = "";
+    parseFileContentToHexRepresentation_ = (intArray, page) => {
+        if (!intArray) {
+            intArray = "";
         }
         let hexDataRows = [];
         var chunkSize = this.state.rows * this.state.columns;
@@ -81,10 +82,16 @@ export default class FileHexView extends React.Component {
         for(var i = 0; i < this.state.rows; i++){
             let offset = page * chunkSize;
             var rowOffset = offset + (i * this.state.columns);
-            var data = fileContent.substr(i * this.state.columns, this.state.columns);
+            var data = intArray.slice(i * this.state.columns, (i+1)*this.state.columns);
             var data_row = [];
+            var safe_data = "";
             for (var j = 0; j < data.length; j++) {
-                var char = data.charCodeAt(j).toString(16);
+                var char = data[j].toString(16);
+                if (data[j] > 0x20 && data[j] < 0x7f) {
+                    safe_data += String.fromCharCode(data[j]);
+                } else {
+                    safe_data += ".";
+                };
                 data_row.push(('0' + char).substr(-2)); // add leading zero if necessary
             };
 
@@ -92,7 +99,7 @@ export default class FileHexView extends React.Component {
                 offset: rowOffset,
                 data_row: data_row,
                 data: data,
-                safe_data: data.replace(/[^\x20-\x7f]/g, '.'),
+                safe_data: safe_data,
             });
         }
 
@@ -162,29 +169,29 @@ export default class FileHexView extends React.Component {
                     <table>
                       <thead>
                         <tr>
-                          <th>Offset</th>
-                          <th>00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13</th>
+                          <th className="hex_column offset">Offset</th>
+                          <th className="hex_column">00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f </th>
                           <th></th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr>
-                          <td>
+                          <td className="hex_column offset">
                             <table className="offset-area">
                               <tbody>
                                 { _.map(this.state.hexDataRows, function(row, idx) {
                                     return <tr key={idx}>
                                              <td className="offset">
-                                               { row.offset }
+                                               0x{ row.offset.toString(16) }
                                              </td>
                                            </tr>; })}
                               </tbody>
                             </table>
                           </td>
-                          <td>
+                          <td className="hex_column">
                             { hexArea }
                           </td>
-                          <td>
+                          <td className="hex_column">
                             { contextArea }
                           </td>
                         </tr>
