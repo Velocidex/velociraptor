@@ -67,15 +67,33 @@ export default class FileTextView extends React.Component {
         };
 
         this.setState({loading: true});
-        api.get_blob(url, params).then(function(response) {
-            this.parseFileContentToTextRepresentation_(response || "", page);
-        }.bind(this), function() {
+        api.get_blob(url, params).then(buffer=>{
+            const view = new Uint8Array(buffer);
+            this.parseFileContentToTextRepresentation_(view, page);
+        }, ()=>{
             this.setState({hexDataRows: [], loading: false, page: page});
-        }.bind(this));
+        });
     };
 
-    parseFileContentToTextRepresentation_ = (fileContent, page) => {
-        let rawdata = fileContent.replace(/[^\x20-\x7f\r\n]/g, '.');
+    parseFileContentToTextRepresentation_ = (intArray, page) => {
+        let rawdata = "";
+        let line_length = 0;
+        for (var i = 0; i < intArray.length; i++) {
+            if(intArray[i] > 0x20 && intArray[i]<0x7f) {
+                rawdata += String.fromCharCode(intArray[i]);
+            } else {
+                rawdata += ".";
+            }
+            line_length += 1;
+            if (intArray[i] === 0xa) {
+                line_length = 0;
+                rawdata += "\n";
+            }
+            if (line_length > 80) {
+                rawdata += "\n";
+                line_length = 0;
+            }
+        };
         this.setState({rawdata: rawdata, loading: false, page: page});
     };
 
