@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 
 	"reflect"
@@ -243,7 +244,9 @@ func getCompiled(ctx context.Context,
 	scope vfilter.Scope,
 	key string, code string, globals vfilter.Any) (*ordereddict.Dict, error) {
 	if key == "" {
-		key = "__slcontext"
+		new_hash := sha256.New()
+		new_hash.Write([]byte(code))
+		key = string(new_hash.Sum(nil))
 	}
 
 	compiled_vars, ok := vql_subsystem.CacheGet(scope, key).(*ordereddict.Dict)
@@ -459,12 +462,13 @@ func (self *StarlarkFunc) Info(scope vfilter.Scope,
 
 type StarlarkVarsArgs struct {
 	Code    string      `vfilter:"required,field=code,doc=Starlark code to compile."`
-	Vars     []string    `vfilter:"optional,field=vars,doc=Name of variables to return. Returns all if not specified."`
+	Vars    []string    `vfilter:"optional,field=vars,doc=Name of variables to return. Returns all if not specified."`
 	Key     string      `vfilter:"optional,field=key,doc=If set use this key to cache the Starlark code."`
 	Globals vfilter.Any `vfilter:"optional,field=globals,doc="Global Arguments to pass to Starlark code."`
 }
 
 type StarlarkVars struct{}
+
 func (self *StarlarkVars) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
@@ -485,8 +489,8 @@ func (self *StarlarkVars) Call(ctx context.Context,
 	}
 	results := ordereddict.NewDict()
 	if len(arg.Vars) != 0 {
-		for _,item := range arg.Vars {
-			ret,ok := compiled_args.Get(item)
+		for _, item := range arg.Vars {
+			ret, ok := compiled_args.Get(item)
 			if !ok {
 				scope.Log("starl_vars: %s not found!", item)
 				return vfilter.Null{}
@@ -500,9 +504,8 @@ func (self *StarlarkVars) Call(ctx context.Context,
 
 }
 
-
 func (self *StarlarkVars) Info(scope vfilter.Scope,
-      type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "starl_vars",
 		Doc:     "Retreive Starlark Variables",
