@@ -29,6 +29,7 @@ type StarlarkCompile struct{}
 var ErrStarlarkConversion = errors.New("failed to convert Starlark data type")
 
 // Convert starlark types to Golang and VQL types
+// Code modified from https://github.com/cirruslabs/cirrus-cli/blob/master/pkg/larker/converthook.go
 func starlarkValueAsInterface(value starlark.Value) (interface{}, error) {
 	switch v := value.(type) {
 	case *starlark.Function:
@@ -101,6 +102,7 @@ func starlarkValueAsInterface(value starlark.Value) (interface{}, error) {
 }
 
 // Convert Golang and VQL types to Starlark Types
+// Code modified from https://github.com/cirruslabs/cirrus-cli/blob/master/pkg/larker/converthook.go
 func interfaceAsStarlarkValue(value interface{}) (starlark.Value, error) {
 	switch v := value.(type) {
 	case nil:
