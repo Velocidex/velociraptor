@@ -154,7 +154,7 @@ sources:
               // Version Major and Minor must be 2 and 0
               // D7 01 is the ending of a reasonable WinFileTime
               // Name Offset and Name Length are short ints but should be < 255
-              $a = { ?? (00 | 01) 00 00 02 00 00 00 [30] D? 01 [13] 00 ?? 00 }
+              $a = { ?? (00 | 01) 00 00 02 00 00 00 [24] ?? ?? ?? ?? ?? ?? D? 01 [16] ?? 00 3c 00  }
             condition:
               any of them
         }

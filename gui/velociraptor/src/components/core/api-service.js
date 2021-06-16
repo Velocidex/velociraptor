@@ -56,7 +56,17 @@ const get_blob = function(url, params, cancel_token) {
         params: params,
         cancelToken: cancel_token,
     }).then((blob) => {
-        return blob.data.text();
+        var arrayPromise = new Promise(function(resolve) {
+            var reader = new FileReader();
+
+            reader.onloadend = function() {
+                resolve(reader.result);
+            };
+
+            reader.readAsArrayBuffer(blob.data);
+        });
+
+        return arrayPromise;
     }).catch(err=>{
         let data = err.response && err.response.data;
         data.text().then((message)=>_.each(hooks, h=>h("Error: " + message)));
