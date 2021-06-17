@@ -105,14 +105,14 @@ func starlarkValueAsInterface(value starlark.Value) (interface{}, error) {
 	case *starlark.Dict:
 		result := ordereddict.NewDict()
 		for _, item := range v.Items() {
-			key := item[0]
+			key := item[0].String()
 			value := item[1]
 
 			dictValueInterfaced, err := starlarkValueAsInterface(value)
 			if err != nil {
 				return nil, err
 			}
-			result.Set(key.String(), dictValueInterfaced)
+			result.Set(key[1:len(key)-1], dictValueInterfaced)
 		}
 
 		return result, nil
