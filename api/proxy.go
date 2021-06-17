@@ -151,20 +151,20 @@ func PrepareGUIMux(
 	// Serve prepared zip files.
 	mux.Handle(base+"/downloads/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			config_obj, http.FileServer(
+			config_obj, http.StripPrefix(base, http.FileServer(
 				api.NewFileSystem(
 					config_obj,
 					file_store.GetFileStore(config_obj),
-					"/downloads/")))))
+					"/downloads/"))))))
 
 	// Serve notebook items
 	mux.Handle(base+"/notebooks/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			config_obj, http.FileServer(
+			config_obj, http.StripPrefix(base, http.FileServer(
 				api.NewFileSystem(
 					config_obj,
 					file_store.GetFileStore(config_obj),
-					"/notebooks/")))))
+					"/notebooks/"))))))
 
 	// Assets etc do not need auth.
 	install_static_assets(config_obj, mux)
