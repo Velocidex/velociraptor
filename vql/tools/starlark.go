@@ -186,7 +186,6 @@ func interfaceAsStarlarkValue(value interface{}, ctx context.Context, scope vfil
 
 		return result, nil
 	case []vfilter.Any:
-		println("HEREINANY")
 		result := starlark.NewList([]starlark.Value{})
 
 		for _, item := range v {
