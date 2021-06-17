@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"crypto/sha256"
 	"errors"
 
 	"reflect"
@@ -10,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/qri-io/starlib"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
@@ -47,6 +47,25 @@ func starlarkValueAsInterface(value starlark.Value) (interface{}, error) {
 		return float64(v), nil
 	case starlark.String:
 		return string(v), nil
+
+	case *starlark.Set:
+		it := v.Iterate()
+		defer it.Done()
+
+		var listItem starlark.Value
+		var result []interface{}
+
+		for it.Next(&listItem) {
+			listItemInterfaced, err := starlarkValueAsInterface(listItem)
+			if err != nil {
+				return nil, err
+			}
+
+			result = append(result, listItemInterfaced)
+		}
+
+		return result, nil
+
 	case *starlark.List:
 		it := v.Iterate()
 		defer it.Done()
@@ -65,7 +84,7 @@ func starlarkValueAsInterface(value starlark.Value) (interface{}, error) {
 
 		return result, nil
 
-	case *starlark.Set:
+	case starlark.Tuple:
 		it := v.Iterate()
 		defer it.Done()
 
@@ -97,6 +116,19 @@ func starlarkValueAsInterface(value starlark.Value) (interface{}, error) {
 		}
 
 		return result, nil
+
+	case *starlarkstruct.Struct:
+		result := ordereddict.NewDict()
+		string_dict := starlark.StringDict{}
+		v.ToStringDict(string_dict)
+		for key, value := range string_dict {
+			res, err := starlarkValueAsInterface(value)
+			if err != nil {
+				return nil, err
+			}
+			result.Set(key, res)
+		}
+		return result,nil
 	default:
 		return nil, fmt.Errorf("%w: unsupported type %T", ErrStarlarkConversion, value)
 	}
@@ -104,7 +136,7 @@ func starlarkValueAsInterface(value starlark.Value) (interface{}, error) {
 
 // Convert Golang and VQL types to Starlark Types
 // Code modified from https://github.com/cirruslabs/cirrus-cli/blob/master/pkg/larker/converthook.go
-func interfaceAsStarlarkValue(value interface{}) (starlark.Value, error) {
+func interfaceAsStarlarkValue(value interface{}, ctx context.Context, scope vfilter.Scope) (starlark.Value, error) {
 	switch v := value.(type) {
 	case nil:
 		return starlark.None, nil
@@ -142,7 +174,7 @@ func interfaceAsStarlarkValue(value interface{}) (starlark.Value, error) {
 		result := starlark.NewList([]starlark.Value{})
 
 		for _, item := range v {
-			listValueStarlarked, err := interfaceAsStarlarkValue(item)
+			listValueStarlarked, err := interfaceAsStarlarkValue(item, ctx, scope)
 			if err != nil {
 				return nil, err
 			}
@@ -154,10 +186,11 @@ func interfaceAsStarlarkValue(value interface{}) (starlark.Value, error) {
 
 		return result, nil
 	case []vfilter.Any:
+		println("HEREINANY")
 		result := starlark.NewList([]starlark.Value{})
 
 		for _, item := range v {
-			listValueStarlarked, err := interfaceAsStarlarkValue(item)
+			listValueStarlarked, err := interfaceAsStarlarkValue(item, ctx, scope)
 			if err != nil {
 				return nil, err
 			}
@@ -168,11 +201,12 @@ func interfaceAsStarlarkValue(value interface{}) (starlark.Value, error) {
 		}
 
 		return result, nil
+
 	case map[string]interface{}:
 		result := map[string]starlark.Value{}
 
 		for key, value := range v {
-			mapValueStarlarked, err := interfaceAsStarlarkValue(value)
+			mapValueStarlarked, err := interfaceAsStarlarkValue(value, ctx, scope)
 			if err != nil {
 				return nil, err
 			}
@@ -187,7 +221,7 @@ func interfaceAsStarlarkValue(value interface{}) (starlark.Value, error) {
 
 		keyword_tuple := make([]starlark.Tuple, 0)
 		for key, value := range v {
-			mapValueStarlarked, err := interfaceAsStarlarkValue(value)
+			mapValueStarlarked, err := interfaceAsStarlarkValue(value, ctx, scope)
 			if err != nil {
 				return nil, err
 			}
@@ -203,8 +237,12 @@ func interfaceAsStarlarkValue(value interface{}) (starlark.Value, error) {
 		// Most of the time we're here
 		result := map[string]starlark.Value{}
 
+		recurse_dict, err := reduceRecurse(v, ctx, scope)
+		if err != nil {
+			return nil, err
+		}
 		// Convert data to JSON and back to make sure it's types starlark can understand
-		data, err := v.MarshalJSON()
+		data, err := recurse_dict.(*ordereddict.Dict).MarshalJSON()
 		if err != nil {
 			return nil, err
 		}
@@ -214,7 +252,7 @@ func interfaceAsStarlarkValue(value interface{}) (starlark.Value, error) {
 			return nil, err
 		}
 		for key, value := range *new_dict.ToDict() {
-			mapValueStarlarked, err := interfaceAsStarlarkValue(value)
+			mapValueStarlarked, err := interfaceAsStarlarkValue(value, ctx, scope)
 			if err != nil {
 				return nil, err
 			}
@@ -226,11 +264,64 @@ func interfaceAsStarlarkValue(value interface{}) (starlark.Value, error) {
 
 		return dict, nil
 
+	case vfilter.LazyExpr:
+		result, err := interfaceAsStarlarkValue(v.Reduce(ctx), ctx, scope)
+		if err != nil {
+			return nil, err
+		}
+		return result, nil
 	default:
 		return nil, fmt.Errorf("%w: unsupported type %T", ErrStarlarkConversion, value)
 	}
 }
 
+// recurse dicts and lazy expressions to make sure everything is reduced
+func reduceRecurse(obj vfilter.Any, ctx context.Context, scope vfilter.Scope) (vfilter.Any, error) {
+	switch t := obj.(type) {
+	case *ordereddict.Dict:
+		{
+			sub_dict := ordereddict.NewDict()
+			for key, value := range *t.ToDict() {
+				results, err := reduceRecurse(value, ctx, scope)
+				if err != nil {
+					return nil, err
+				}
+				sub_dict.Set(key, results)
+			}
+			return sub_dict, nil
+		}
+	case vfilter.LazyExpr:
+		{
+			result, err := reduceRecurse(t.Reduce(ctx), ctx, scope)
+			if err != nil {
+				return nil, err
+			}
+			return result, nil
+		}
+	case *vfilter.LazyExprImpl:
+		{
+			result, err := reduceRecurse(t.Reduce(ctx), ctx, scope)
+			if err != nil {
+				return nil, err
+			}
+			return result, nil
+
+		}
+	case vfilter.StoredQuery:
+		{
+			row_channel := t.Eval(ctx, scope)
+			rows := []*ordereddict.Dict{}
+			for row := range row_channel {
+				rows = append(rows, vfilter.RowToDict(ctx, scope, row))
+			}
+			return rows, nil
+		}
+	default:
+		return obj, nil
+	}
+}
+
+// Code modified from https://github.com/cirruslabs/cirrus-cli/blob/master/pkg/larker/converthook.go
 func tryIntegerOrFloat(floatValue float64) (starlark.Value, error) {
 	if integerValue := int64(floatValue); floatValue == float64(integerValue) {
 		return starlark.MakeInt64(integerValue), nil
@@ -244,15 +335,13 @@ func getCompiled(ctx context.Context,
 	scope vfilter.Scope,
 	key string, code string, globals vfilter.Any) (*ordereddict.Dict, error) {
 	if key == "" {
-		new_hash := sha256.New()
-		new_hash.Write([]byte(code))
-		key = string(new_hash.Sum(nil))
+		key = code
 	}
 
 	compiled_vars, ok := vql_subsystem.CacheGet(scope, key).(*ordereddict.Dict)
 	if !ok {
 		compiled_vars = ordereddict.NewDict()
-		err := compileStarlark(code, globals, compiled_vars)
+		err := compileStarlark(code, globals, compiled_vars, ctx, scope)
 		if err != nil {
 			return nil, err
 		}
@@ -264,31 +353,31 @@ func getCompiled(ctx context.Context,
 
 // User doesn't actually specify extras, that's done in extractStarlarkFuncArgs
 type StarlarkFuncArgs struct {
-	Func    string      `vfilter:"required,field=func,doc=Starlark function to call."`
-	Code    string      `vfilter:"required,field=code,doc=Starlark code to compile."`
-	Args    vfilter.Any `vfilter:"optional,field=args,doc=Positional args for the function."`
-	Kwargs  vfilter.Any `vfilter:"optional,field=kwargs,doc=KW args for the function."`
-	Key     string      `vfilter:"optional,field=key,doc=If set use this key to cache the Starlark code."`
-	Extras  vfilter.Any `vfilter:"optional,field=extras,doc="Extra Arguments to pass to Starlark code. Set implicitly"`
-	Globals vfilter.Any `vfilter:"optional,field=globals,doc="Global Arguments to pass to Starlark code."`
+	Func    string           `vfilter:"required,field=func,doc=Starlark function to call."`
+	Code    string           `vfilter:"required,field=code,doc=Starlark code to compile."`
+	Args    vfilter.LazyExpr `vfilter:"optional,field=args,doc=Positional args for the function."`
+	Kwargs  vfilter.LazyExpr `vfilter:"optional,field=kwargs,doc=KW args for the function."`
+	Key     string           `vfilter:"optional,field=key,doc=If set use this key to cache the Starlark code."`
+	Extras  vfilter.Any      `vfilter:"optional,field=extras,doc="Extra Arguments to pass to Starlark code. Set implicitly"`
+	Globals vfilter.LazyExpr `vfilter:"optional,field=globals,doc="Global Arguments to pass to Starlark code."`
 }
 
 type StarlarkFunc struct{}
 
-func compileStarlark(code string, globals vfilter.Any, compiled_vars *ordereddict.Dict) error {
-	sthread := &starlark.Thread{Name: "VQL Thread"}
-	predeclared, err := interfaceAsStarlarkValue(globals)
+func compileStarlark(code string, globals vfilter.Any, compiled_vars *ordereddict.Dict, ctx context.Context, scope vfilter.Scope) error {
+	sthread := &starlark.Thread{Name: "VQL Thread", Load: starlib.Loader}
+	starvals, err := interfaceAsStarlarkValue(globals, ctx, scope)
 	if err != nil {
 		return err
 
 	}
 	stringdict := starlark.StringDict{}
-	switch predeclared.(type) {
+	switch t := starvals.(type) {
 	case *starlarkstruct.Struct:
-		predeclared.(*starlarkstruct.Struct).ToStringDict(stringdict)
+		t.ToStringDict(stringdict)
 	case starlark.NoneType: // Do nothing
 	default:
-		return errors.New("Invalid data type provided to globals!")
+		return errors.New(fmt.Sprintf("Unrecognized data type %T provided to globals!", starvals))
 	}
 	new_globals, err := starlark.ExecFile(sthread, "apparent/filename.star", code, stringdict)
 	if err != nil {
@@ -310,15 +399,11 @@ func extractStarlarkFuncArgs(args *ordereddict.Dict, ctx context.Context) *order
 	result := ordereddict.NewDict()
 	extra_args := ordereddict.NewDict()
 	for key, value := range *args.ToDict() {
-		if key != "func" && key != "code" && key != "args" && key != "kwargs" && key != "key" && key != "globals" {
-			switch t := value.(type) {
-			case types.LazyExpr:
-				extra_args.Set(key, t.Reduce(ctx))
-			default:
-				extra_args.Set(key, t)
-			}
-		} else {
+		switch key {
+		case "func", "code", "args", "kwargs", "key", "globals":
 			result.Set(key, value)
+		default:
+			extra_args.Set(key, value)
 		}
 	}
 	result.Set("extras", extra_args)
@@ -326,13 +411,19 @@ func extractStarlarkFuncArgs(args *ordereddict.Dict, ctx context.Context) *order
 }
 
 // Turn dicts into starlark tuples to pass to starlark.Call
-func makeKwargsTuple(kwargs *ordereddict.Dict) ([]starlark.Tuple, error) {
-	starlark_args, err := interfaceAsStarlarkValue(kwargs)
+func makeKwargsTuple(kwargs *ordereddict.Dict, ctx context.Context, scope vfilter.Scope) ([]starlark.Tuple, error) {
+	starlark_args, err := interfaceAsStarlarkValue(kwargs, ctx, scope)
 	if err != nil {
 		return nil, err
 	}
 	starlark_tuple := make([]starlark.Tuple, 0)
 	new_string_dict := starlark.StringDict{}
+	switch t := starlark_args.(type) {
+	case *starlarkstruct.Struct:
+		t.ToStringDict(new_string_dict)
+	default:
+		return nil, errors.New(fmt.Sprintf("Unsupported Type %T", starlark_args))
+	}
 	starlark_args.(*starlarkstruct.Struct).ToStringDict(new_string_dict)
 	for key, value := range new_string_dict {
 		starlark_tuple = append(starlark_tuple, starlark.Tuple{starlark.String(key), value})
@@ -362,7 +453,7 @@ func (self *StarlarkFunc) Call(ctx context.Context,
 	}
 
 	// create new thread per call
-	sthread := &starlark.Thread{Name: "VQL Thread"}
+	sthread := &starlark.Thread{Name: "VQL Thread", Load: starlib.Loader}
 	sfunc, ok := compiled_args.Get(arg.Func)
 	if !ok {
 		scope.Log("starl_func: %s not found within starlark scope!", arg.Func)
@@ -396,7 +487,7 @@ func (self *StarlarkFunc) Call(ctx context.Context,
 			}
 		}
 
-		starlark_args, err := interfaceAsStarlarkValue(call_args)
+		starlark_args, err := interfaceAsStarlarkValue(call_args, ctx, scope)
 		if err != nil {
 			scope.Log("starl_func: %s", err.Error())
 			return vfilter.Null{}
@@ -408,20 +499,28 @@ func (self *StarlarkFunc) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 	} else if arg.Kwargs != nil {
-		starlark_tuple, nil := makeKwargsTuple(arg.Kwargs.(*ordereddict.Dict))
-		if err != nil {
-			scope.Log("starl_func: %s", err.Error())
-			return vfilter.Null{}
-		}
-		empty_tuple := starlark.Tuple{}
-		value, err = starlark.Call(sthread, inferred, empty_tuple, starlark_tuple)
-		if err != nil {
-			scope.Log("starl_func: %s", err.Error())
+		switch t := arg.Kwargs.Reduce(ctx).(type) {
+		case *ordereddict.Dict:
+			{
+				starlark_tuple, nil := makeKwargsTuple(t, ctx, scope)
+				if err != nil {
+					scope.Log("starl_func: %s", err.Error())
+					return vfilter.Null{}
+				}
+				empty_tuple := starlark.Tuple{}
+				value, err = starlark.Call(sthread, inferred, empty_tuple, starlark_tuple)
+				if err != nil {
+					scope.Log("starl_func: %s", err.Error())
+					return vfilter.Null{}
+				}
+			}
+		default:
+			scope.Log("starl_func: Non-dict type %T provided to kwargs!", arg.Kwargs)
 			return vfilter.Null{}
 		}
 
 	} else if arg.Extras.(*ordereddict.Dict).Len() > 0 {
-		starlark_tuple, nil := makeKwargsTuple(arg.Extras.(*ordereddict.Dict))
+		starlark_tuple, nil := makeKwargsTuple(arg.Extras.(*ordereddict.Dict), ctx, scope)
 		if err != nil {
 			scope.Log("starl_func: %s", err.Error())
 			return vfilter.Null{}
@@ -429,7 +528,7 @@ func (self *StarlarkFunc) Call(ctx context.Context,
 		empty_tuple := starlark.Tuple{}
 		value, err = starlark.Call(sthread, inferred, empty_tuple, starlark_tuple)
 		if err != nil {
-			scope.Log("starl_func 410: %s", err.Error())
+			scope.Log("starl_func: %s", err.Error())
 			return vfilter.Null{}
 		}
 
@@ -461,10 +560,10 @@ func (self *StarlarkFunc) Info(scope vfilter.Scope,
 }
 
 type StarlarkVarsArgs struct {
-	Code    string      `vfilter:"required,field=code,doc=Starlark code to compile."`
-	Vars    []string    `vfilter:"optional,field=vars,doc=Name of variables to return. Returns all if not specified."`
-	Key     string      `vfilter:"optional,field=key,doc=If set use this key to cache the Starlark code."`
-	Globals vfilter.Any `vfilter:"optional,field=globals,doc="Global Arguments to pass to Starlark code."`
+	Code    string           `vfilter:"required,field=code,doc=Starlark code to compile."`
+	Vars    []string         `vfilter:"optional,field=vars,doc=Name of variables to return. Returns all if not specified."`
+	Key     string           `vfilter:"optional,field=key,doc=If set use this key to cache the Starlark code."`
+	Globals vfilter.LazyExpr `vfilter:"optional,field=globals,doc="Global Arguments to pass to Starlark code."`
 }
 
 type StarlarkVars struct{}
@@ -517,6 +616,8 @@ func init() {
 	// Must be set to allow recursion and starlark sets
 	resolve.AllowSet = true
 	resolve.AllowRecursion = true
+	resolve.AllowLambda = true
+	resolve.AllowNestedDef = true
 	vql_subsystem.RegisterFunction(&StarlarkFunc{})
 	vql_subsystem.RegisterFunction(&StarlarkVars{})
 }
