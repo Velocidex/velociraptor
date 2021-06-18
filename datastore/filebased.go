@@ -46,6 +46,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync/atomic"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	errors "github.com/pkg/errors"
@@ -57,13 +58,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
 	file_based_imp = &FileBaseDataStore{
-		clock: vtesting.RealClock{},
+		clock: utils.RealClock{},
 	}
+
+	g_id uint64
 )
 
 const (
@@ -73,7 +75,7 @@ const (
 )
 
 type FileBaseDataStore struct {
-	clock vtesting.Clock
+	clock utils.Clock
 }
 
 func (self *FileBaseDataStore) GetClientTasks(
@@ -81,7 +83,7 @@ func (self *FileBaseDataStore) GetClientTasks(
 	client_id string,
 	do_not_lease bool) ([]*crypto_proto.VeloMessage, error) {
 	result := []*crypto_proto.VeloMessage{}
-	now := uint64(self.clock.Now().UTC().UnixNano() / 1000)
+	now := self.currentTaskId()
 
 	client_path_manager := paths.NewClientPathManager(client_id)
 	now_urn := client_path_manager.Task(now).Path()
@@ -127,12 +129,19 @@ func (self *FileBaseDataStore) UnQueueMessageForClient(
 		client_path_manager.Task(message.TaskId).Path())
 }
 
+func (self *FileBaseDataStore) currentTaskId() uint64 {
+	id := atomic.AddUint64(&g_id, 1)
+	return uint64(self.clock.Now().UTC().UnixNano()&0x7fffffffffff0000) | (id & 0xFFFF)
+}
+
 func (self *FileBaseDataStore) QueueMessageForClient(
 	config_obj *config_proto.Config,
 	client_id string,
 	req *crypto_proto.VeloMessage) error {
 
-	req.TaskId = uint64(self.clock.Now().UTC().UnixNano() / 1000)
+	// Task ID is related to time.
+	req.TaskId = self.currentTaskId()
+
 	client_path_manager := paths.NewClientPathManager(client_id)
 	return self.SetSubject(config_obj,
 		client_path_manager.Task(req.TaskId).Path(), req)
