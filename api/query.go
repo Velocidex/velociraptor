@@ -19,6 +19,7 @@ package api
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"runtime/debug"
 	"time"
@@ -27,6 +28,7 @@ import (
 	"github.com/dustin/go-humanize"
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	context "golang.org/x/net/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -37,6 +39,7 @@ import (
 )
 
 func streamQuery(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	arg *actions_proto.VQLCollectorArgs,
 	stream api_proto.API_QueryServer,
@@ -70,7 +73,7 @@ func streamQuery(
 	}()
 
 	response_channel := make(chan *actions_proto.VQLResponse)
-	scope_logger := MakeLogger(response_channel)
+	scope_logger := MakeLogger(ctx, response_channel)
 
 	// Add extra artifacts to the query from the global repository.
 	manager, err := services.GetRepositoryManager()
@@ -167,17 +170,23 @@ func streamQuery(
 
 type logWriter struct {
 	output chan<- *actions_proto.VQLResponse
+	ctx    context.Context
 }
 
 func (self *logWriter) Write(b []byte) (int, error) {
-	self.output <- &actions_proto.VQLResponse{
+	select {
+	case <-self.ctx.Done():
+		return 0, io.EOF
+
+	case self.output <- &actions_proto.VQLResponse{
 		Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 		Log:       string(b),
+	}:
 	}
 	return len(b), nil
 }
 
-func MakeLogger(output chan *actions_proto.VQLResponse) *log.Logger {
-	result := &logWriter{output: output}
+func MakeLogger(ctx context.Context, output chan *actions_proto.VQLResponse) *log.Logger {
+	result := &logWriter{output: output, ctx: ctx}
 	return log.New(result, "vql: ", 0)
 }
