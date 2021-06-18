@@ -268,6 +268,8 @@ func (self *Server) Process(
 	drain_requests_for_client bool) (
 	[]byte, int, error) {
 
+	// json.TraceMessage(message_info.Source, message_info)
+
 	runner := flows.NewFlowRunner(self.config)
 	defer runner.Close()
 
@@ -295,6 +297,12 @@ func (self *Server) Process(
 			message_list.Job,
 			self.DrainRequestsForClient(message_info.Source)...)
 	}
+
+	/*
+		for i := 0; i < len(message_list.Job); i++ {
+			json.TraceMessage(message_info.Source+"_out", message_list.Job[i])
+		}
+	*/
 
 	// Messages sent to clients are typically small and we do not
 	// benefit from compression.
