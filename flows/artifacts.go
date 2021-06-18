@@ -680,6 +680,8 @@ func (self *FlowRunner) ProcessSingleMessage(
 	ctx context.Context,
 	job *crypto_proto.VeloMessage) {
 
+	// json.TraceMessage(job.Source+"_job", job)
+
 	// Foreman messages are related to hunts.
 	if job.ForemanCheckin != nil {
 		err := ForemanProcessMessage(

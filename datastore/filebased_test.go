@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -12,7 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type FilebasedTestSuite struct {
@@ -31,7 +32,7 @@ func TestFilebasedDatabase(t *testing.T) {
 
 	suite.Run(t, &FilebasedTestSuite{BaseTestSuite{
 		datastore: &FileBaseDataStore{
-			clock: vtesting.RealClock{},
+			clock: utils.MockClock{MockNow: time.Unix(100, 0)},
 		},
 		config_obj: config_obj,
 	}})
@@ -42,7 +43,7 @@ func benchmarkSearchClientCount(b *testing.B, count int, sort_direction SortingS
 	defer os.RemoveAll(dir) // clean up
 
 	db := &FileBaseDataStore{
-		clock: vtesting.RealClock{},
+		clock: utils.RealClock{},
 	}
 
 	config_obj := config.GetDefaultConfig()
