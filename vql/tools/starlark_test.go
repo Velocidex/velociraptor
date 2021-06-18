@@ -6,8 +6,10 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -51,6 +53,35 @@ def Foo(X, Y, Z):
 
 type StarlarkTestSuite struct {
 	suite.Suite
+}
+
+func (self *StarlarkTestSuite) TestStarlarkInfiniteFunc() {
+	ctx := context.Background()
+	sub_ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+	defer cancel()
+
+	scope := vql_subsystem.MakeScope()
+	scope.SetLogger(log.New(os.Stderr, "", 0))
+
+	defer scope.Close()
+
+	// The following should timeout in 1 second.
+	mod := StarlarkCompileFunction{}.Call(sub_ctx, scope, ordereddict.NewDict().
+		Set("code", `
+def Foo():
+   while 1:
+     pass
+`))
+
+	foobar_any, pres := scope.Associative(mod, "Foo")
+	assert.True(self.T(), pres)
+
+	// Call the function
+	foobar_func, ok := foobar_any.(types.FunctionInterface)
+	assert.True(self.T(), ok)
+
+	res := foobar_func.Call(sub_ctx, scope, ordereddict.NewDict())
+	assert.Equal(self.T(), res, types.Null{})
 }
 
 func (self *StarlarkTestSuite) TestStarlarkFunc() {

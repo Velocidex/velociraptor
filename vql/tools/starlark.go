@@ -430,6 +430,15 @@ func (self starlarkFuncWrapper) Call(ctx context.Context,
 
 	// create new thread per call
 	sthread := &starlark.Thread{Name: "VQL Thread", Load: starlib.Loader}
+
+	// Cancel the thread when we are done.
+	sub_ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	go func() {
+		<-sub_ctx.Done()
+		sthread.Cancel("Cancelled")
+	}()
+
 	kwargs, err := makeKwargsTuple(ctx, scope, args)
 	if err != nil {
 		scope.Log("starl: %v", err)
@@ -438,7 +447,7 @@ func (self starlarkFuncWrapper) Call(ctx context.Context,
 
 	value, err := starlark.Call(sthread, self.delegate, starlark.Tuple{}, kwargs)
 	if err != nil {
-		scope.Log("starl: %s", err.Error())
+		scope.Log("starl: %v", err)
 		return vfilter.Null{}
 	}
 
