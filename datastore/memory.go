@@ -16,7 +16,6 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
@@ -30,7 +29,7 @@ type TestDataStore struct {
 	Subjects    map[string]proto.Message
 	ClientTasks map[string][]*crypto_proto.VeloMessage
 
-	clock vtesting.Clock
+	clock utils.Clock
 }
 
 func NewTestDataStore() *TestDataStore {

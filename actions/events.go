@@ -152,6 +152,7 @@ func update(
 	GlobalEventTable.version = table.Version
 	GlobalEventTable.Done = make(chan bool)
 	GlobalEventTable.config_obj = config_obj
+	GlobalEventTable.service_wg = &sync.WaitGroup{}
 
 	return GlobalEventTable, nil, true /* changed */
 }
