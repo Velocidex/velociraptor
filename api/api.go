@@ -792,7 +792,7 @@ func (self *ApiServer) Query(
 		// return the first good match
 		if true {
 			// Cert is good enough for us, run the query.
-			return streamQuery(self.config, in, stream, peer_name)
+			return streamQuery(stream.Context(), self.config, in, stream, peer_name)
 		}
 	}
 
