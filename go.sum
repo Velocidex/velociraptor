@@ -110,6 +110,8 @@ github.com/alecthomas/repr v0.0.0-20200325044227-4184120f674c/go.mod h1:xTS7Pm1p
 github.com/alecthomas/repr v0.0.0-20201120212035-bb82daffcca2/go.mod h1:2kn6fqh/zIyPLmm3ugklbEi5hg5wS435eygvNfaDQL8=
 github.com/alecthomas/repr v0.0.0-20210301060118-828286944d6a h1:GY6ZI5mOHoiQ+g2ETFQGYu6fNgc6bCe4b4kr8tSrhpg=
 github.com/alecthomas/repr v0.0.0-20210301060118-828286944d6a/go.mod h1:2kn6fqh/zIyPLmm3ugklbEi5hg5wS435eygvNfaDQL8=
+github.com/alecthomas/repr v0.0.0-20210611225437-1a2716eca9d6 h1:U80AUqb3eEPLw60yvrEa2WadeJw+U1N8XeCVsUREep0=
+github.com/alecthomas/repr v0.0.0-20210611225437-1a2716eca9d6/go.mod h1:2kn6fqh/zIyPLmm3ugklbEi5hg5wS435eygvNfaDQL8=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
@@ -968,5 +970,7 @@ www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500/go.mod h1:
 www.velocidex.com/golang/vfilter v0.0.0-20210515085940-25d96b94dafb/go.mod h1:KB724xBNYh4lgipyGwsvx0/5hXRqsKjmrMrkSjGESvU=
 www.velocidex.com/golang/vfilter v0.0.0-20210531163909-d0a0745e41b7 h1:3xbomFv89/F/RlXE5jHDFz2aQHL9iFc+dtB/VRVaJs0=
 www.velocidex.com/golang/vfilter v0.0.0-20210531163909-d0a0745e41b7/go.mod h1:KB724xBNYh4lgipyGwsvx0/5hXRqsKjmrMrkSjGESvU=
+www.velocidex.com/golang/vfilter v0.0.0-20210620044135-56aeed157e90 h1:eR1lB34q/EyhoQ/xy3wtw2TsWG9ml3djxBHixI6WaGU=
+www.velocidex.com/golang/vfilter v0.0.0-20210620044135-56aeed157e90/go.mod h1:KB724xBNYh4lgipyGwsvx0/5hXRqsKjmrMrkSjGESvU=
 www.velocidex.com/golang/vtypes v0.0.0-20210531054645-7ec8b6e24d88 h1:Fb7nzCAXBVzXbSUXO5sq5msYieB2GMfG7BGnZRDjKMM=
 www.velocidex.com/golang/vtypes v0.0.0-20210531054645-7ec8b6e24d88/go.mod h1:PIG8uSY330pJd620KPksZpTaAsX3sIMiiNJQihZph6c=
