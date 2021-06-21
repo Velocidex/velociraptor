@@ -21,8 +21,6 @@ import (
 func toolUploadHandler(
 	config_obj *config_proto.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("File Upload Endpoint Hit")
-
 		// Check for acls
 		userinfo := GetUserInfo(r.Context(), config_obj)
 		permissions := acls.ARTIFACT_WRITER
@@ -40,6 +38,7 @@ func toolUploadHandler(
 			returnError(w, http.StatusBadRequest, "Unsupported params")
 			return
 		}
+		defer r.MultipartForm.RemoveAll()
 
 		tool := &artifacts_proto.Tool{}
 		params, pres := r.Form["_params_"]
