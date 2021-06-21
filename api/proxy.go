@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	errors "github.com/pkg/errors"
@@ -151,20 +152,20 @@ func PrepareGUIMux(
 	// Serve prepared zip files.
 	mux.Handle(base+"/downloads/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			config_obj, http.StripPrefix(base, http.FileServer(
+			config_obj, http.StripPrefix(base, forceMime(http.FileServer(
 				api.NewFileSystem(
 					config_obj,
 					file_store.GetFileStore(config_obj),
-					"/downloads/"))))))
+					"/downloads/")))))))
 
 	// Serve notebook items
 	mux.Handle(base+"/notebooks/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			config_obj, http.StripPrefix(base, http.FileServer(
+			config_obj, http.StripPrefix(base, forceMime(http.FileServer(
 				api.NewFileSystem(
 					config_obj,
 					file_store.GetFileStore(config_obj),
-					"/notebooks/"))))))
+					"/notebooks/")))))))
 
 	// Assets etc do not need auth.
 	install_static_assets(config_obj, mux)
@@ -293,4 +294,18 @@ func GetAPIHandler(
 		http.StripPrefix(base, grpc_proxy_mux))
 
 	return reverse_proxy_mux, nil
+}
+
+// Force mime type to binary stream.
+func forceMime(parent http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Prevent directory listings.
+		if strings.HasSuffix(r.URL.Path, "/") {
+			http.NotFound(w, r)
+			return
+		}
+
+		w.Header().Set("Content-Type", "binary/octet-stream")
+		parent.ServeHTTP(w, r)
+	})
 }

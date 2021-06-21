@@ -25,6 +25,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -127,9 +128,9 @@ func PrepareFrontendMux(
 	// does not have to be a physical directory - it is served
 	// from the filestore.
 	router.Handle(base+"/public/", GetLoggingHandler(config_obj, "/public")(
-		http.StripPrefix(base, http.FileServer(api.NewFileSystem(config_obj,
+		http.StripPrefix(base, forceMime(http.FileServer(api.NewFileSystem(config_obj,
 			file_store.GetFileStore(config_obj),
-			"/public/")))))
+			"/public/"))))))
 
 	return nil
 }
@@ -588,6 +589,20 @@ func GetLoggingHandler(config_obj *config_proto.Config,
 			next.ServeHTTP(rec, r)
 		})
 	}
+}
+
+// Force mime type to binary stream.
+func forceMime(parent http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Prevent directory listings.
+		if strings.HasSuffix(r.URL.Path, "/") {
+			http.NotFound(w, r)
+			return
+		}
+
+		w.Header().Set("Content-Type", "binary/octet-stream")
+		parent.ServeHTTP(w, r)
+	})
 }
 
 // Calculate QPS

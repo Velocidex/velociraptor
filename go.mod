@@ -82,7 +82,7 @@ require (
 	github.com/prometheus/client_golang v1.2.1
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
-	github.com/robertkrimen/otto v0.0.0-20180617131154-15f95af6e78d
+	github.com/robertkrimen/otto v0.0.0-20210614181706-373ff5438452
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/sebdah/goldie v1.0.0
 	github.com/sebdah/goldie/v2 v2.5.3
@@ -120,7 +120,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20210531163909-d0a0745e41b7
+	www.velocidex.com/golang/vfilter v0.0.0-20210621143251-8e57fc2e83c6
 	www.velocidex.com/golang/vtypes v0.0.0-20210531054645-7ec8b6e24d88
 )
 
