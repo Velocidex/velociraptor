@@ -71,6 +71,8 @@ func (self UploadsPlugins) Call(
 			return
 		}
 
+		ParseUploadArgsFromScope(arg, scope)
+
 		// Allow the plugin args to override the environment scope.
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
@@ -104,6 +106,18 @@ func (self UploadsPlugins) Info(
 		Name:    "uploads",
 		Doc:     "Retrieve information about a flow's uploads.",
 		ArgType: type_map.AddType(scope, &UploadsPluginsArgs{}),
+	}
+}
+
+func ParseUploadArgsFromScope(arg *UploadsPluginsArgs, scope vfilter.Scope) {
+	client_id, pres := scope.Resolve("ClientId")
+	if pres {
+		arg.ClientId, _ = client_id.(string)
+	}
+
+	flow_id, pres := scope.Resolve("FlowId")
+	if pres {
+		arg.FlowId, _ = flow_id.(string)
 	}
 }
 
