@@ -18,7 +18,33 @@ Queries:
           mock(plugin='http_client', results=[
              dict(Url='http://remote',
                   Content=IsPE, Response=200)]),
-
+          mock(plugin='glob', results=[
+            dict(
+              Name='wkscli.dll',
+              ModTime=timestamp(string='2021-06-21T05:57:50.185936246Z'),
+              FullPath=srcDir + '/artifacts/testdata/files/wkscli.dll',
+              Mtime=timestamp(string='2021-06-21T05:57:50.185936246Z'),
+              Btime=timestamp(string='2021-06-21T05:57:50.185836399Z'),
+              Ctime=timestamp(string='2021-06-21T05:57:50.185936246Z'),
+              Atime=timestamp(string='2021-06-22T05:21:58.301135969Z'),
+              Data=null,
+              Size=9728,
+              IsDir=false,
+              IsLink=false
+            ),
+            dict(
+              Name='notnbt.exe',
+              ModTime=timestamp(string='2021-06-21T05:57:50.184145696Z'),
+              FullPath=srcDir + '/artifacts/testdata/files/notnbt.exe',
+              Mtime=timestamp(string='2021-01-01T05:57:50.184145696Z'),
+              Btime=timestamp(string='2021-03-01T05:57:50.184086639Z'),
+              Ctime=timestamp(string='2021-03-21T05:57:50.184145696Z'),
+              Atime=timestamp(string='2021-03-21T05:57:50.184157002Z'),
+              Data=null,
+              Size=17920,
+              IsDir=false,
+              IsLink=false
+            )]),
           -- First call to Windows.NTFS.MFT reveal target dll info
           -- srcDir needs to be used to align fields
           mock(artifact=Artifact.Windows.NTFS.MFT, results=[
@@ -55,3 +81,11 @@ Queries:
     FROM Artifact.Windows.Detection.Yara.NTFS(
          DriveLetter=srcDir,
          PathRegex='wkscli.dll', YaraRule=IsPE)
+
+  # test Generic glob based yara then a couple of time bounded queries
+  - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime
+    FROM Artifact.Generic.Detection.Yara.Glob(YaraRule=IsPE)
+  - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime
+    FROM Artifact.Generic.Detection.Yara.Glob(DateAfter='2021-03-01', DateBefore='2021-07-01',YaraRule=IsPE)
+  - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime
+    FROM Artifact.Generic.Detection.Yara.Glob(DateBefore='2021-04-01',YaraRule=IsPE)
