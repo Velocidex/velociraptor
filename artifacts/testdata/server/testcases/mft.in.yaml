@@ -1,0 +1,41 @@
+Queries:
+  # Setup our mocks --parse_mft needs to be mocked
+  - |
+    LET _ <= SELECT
+          mock(plugin='info', results=[dict(OS='windows')]),
+          mock(plugin='parse_mft', results=[
+            dict(
+              EntryNumber=287634,InUse=true,ParentEntryNumber=287637,
+              FullPath='Program Files/Velociraptor/client.config.yaml',FileName='client.config.yaml',
+              FileSize=2512,ReferenceCount=2,IsDir=false,
+              Created0x10=timestamp(string='2021-06-21T01:39:11.6812434Z'),Created0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
+              LastModified0x10=timestamp(string='2021-08-01T01:39:48.8960671Z'),LastModified0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
+              LastRecordChange0x10=timestamp(string='2021-06-25T01:39:48.8960671Z'),LastRecordChange0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
+              LastAccess0x10=timestamp(string='2021-06-21T14:35:09.727465Z'),LastAccess0x30=timestamp(string='2021-06-21T01:39:11.6812434Z')
+            ),
+            dict(
+              EntryNumber=287639,InUse=true,ParentEntryNumber=287637,
+              FullPath='ProgramFiles/Velociraptor/Velociraptor.exe',FileName='Velociraptor.exe',
+              FileSize=41810344,ReferenceCount=2,IsDir=false,
+              Created0x10=timestamp(string='2021-06-01T01:39:11.6812434Z'),Created0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
+              LastModified0x10=timestamp(string='2021-06-25T01:39:48.8960671Z'),LastModified0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
+              LastRecordChange0x10=timestamp(string='2021-06-25T01:39:48.8960671Z'),LastRecordChange0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
+              LastAccess0x10=timestamp(string='2021-06-21T14:35:09.727465Z'),LastAccess0x30=timestamp(string='2021-06-21T01:39:11.6812434Z')
+            ),
+            dict(
+              EntryNumber=287649,InUse=true,ParentEntryNumber=287637,
+              FullPath='ProgramFiles/Velociraptor/velociraptor.writeback.yaml',FileName='velociraptor.writeback.yaml',
+              FileSize=3520,ReferenceCount=2,IsDir=false,
+              Created0x10=timestamp(string='2021-06-21T01:39:11.6812434Z'),Created0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
+              LastModified0x10=timestamp(string='2021-02-02T01:39:48.8960671Z'),LastModified0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
+              LastRecordChange0x10=timestamp(string='2021-01-25T01:39:48.8960671Z'),LastRecordChange0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
+              LastAccess0x10=timestamp(string='2021-06-21T14:35:09.727465Z'),LastAccess0x30=timestamp(string='2021-06-21T01:39:11.6812434Z')
+            )])
+      FROM scope()
+
+  # Test MFT output
+  - SELECT * FROM Artifact.Windows.NTFS.MFT()
+  # Test time contraints
+  - SELECT * FROM Artifact.Windows.NTFS.MFT(DateBefore='2021-06-21')
+  - SELECT * FROM Artifact.Windows.NTFS.MFT(DateAfter='2021-07-01')
+  - SELECT * FROM Artifact.Windows.NTFS.MFT(DateAfter='2021-07-01', DateBefore='2021-09-01')
