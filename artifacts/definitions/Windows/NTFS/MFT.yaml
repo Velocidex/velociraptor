@@ -1,4 +1,5 @@
 name: Windows.NTFS.MFT
+author: "Matt Green - @mgreen27"
 description: |
   This artifact parses $MFT files and returns rows of each in scope  MFT record.
   This artifact can be used as the basis for other artifacts where the MFT needs
@@ -19,7 +20,6 @@ description: |
   - Time bounds to select files with a timestamp within time ranges
   - FileSize bounds
 
-author: "Matt Green - @mgreen27"
 
 parameters:
   - name: MFTFilename
@@ -51,11 +51,18 @@ parameters:
 
 sources:
   - query: |
-      -- firstly set timebounds for performance
-      LET DateAfterTime <= if(condition=DateAfter,
-            then=DateAfter, else="1600-01-01")
-      LET DateBeforeTime <= if(condition=DateBefore,
-            then=DateBefore, else="2200-01-01")
+      -- time testing
+      LET time_test(stamp) = 
+            if(condition= DateBefore AND DateAfter,
+                then= stamp < DateBefore AND stamp > DateAfter,
+                else= 
+            if(condition=DateBefore,
+                then= stamp < DateBefore,
+                else= 
+            if(condition= DateAfter,
+                then= stamp > DateAfter,
+                else= True
+            )))
 
 
       -- find all ntfs drives
@@ -71,28 +78,21 @@ sources:
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE FullPath =~ PathRegex
             AND FileName =~ FileRegex
-            AND Created0x10 < DateBeforeTime
-            AND Created0x10 > DateAfterTime
-            AND Created0x30 < DateBeforeTime
-            AND Created0x30 > DateAfterTime
-            AND LastModified0x10 < DateBeforeTime
-            AND LastModified0x10 > DateAfterTime
-            AND LastModified0x30 < DateBeforeTime
-            AND LastModified0x30 > DateAfterTime
-            AND LastRecordChange0x10 < DateBeforeTime
-            AND LastRecordChange0x10 > DateAfterTime
-            AND LastRecordChange0x30 < DateBeforeTime
-            AND LastRecordChange0x30 > DateAfterTime
-            AND LastAccess0x10 < DateBeforeTime
-            AND LastAccess0x10 > DateAfterTime
-            AND LastAccess0x30 < DateBeforeTime
-            AND LastAccess0x30 > DateAfterTime
             AND if(condition=SizeMax,
                 then=FileSize < atoi(string=SizeMax),
                 else=TRUE)
             AND if(condition=SizeMin,
                 then=FileSize > atoi(string=SizeMin),
                 else=TRUE)
+            AND 
+             ( time_test(stamp=Created0x10)
+            OR time_test(stamp=Created0x30)
+            OR time_test(stamp=LastModified0x10)
+            OR time_test(stamp=LastModified0x30)
+            OR time_test(stamp=LastRecordChange0x10)
+            OR time_test(stamp=LastRecordChange0x30)
+            OR time_test(stamp=LastAccess0x10)
+            OR time_test(stamp=LastAccess0x30))
 
 
       -- include all attached drives
