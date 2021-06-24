@@ -25,6 +25,7 @@ require (
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/chroma v0.7.2
 	github.com/alecthomas/participle v0.7.1
+	github.com/alecthomas/repr v0.0.0-20210611225437-1a2716eca9d6 // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/aws/aws-sdk-go v1.26.7
 	github.com/bi-zone/etw v0.0.0-20200916105032-b215904fae4f
@@ -121,7 +122,7 @@ require (
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
 	www.velocidex.com/golang/vfilter v0.0.0-20210621143251-8e57fc2e83c6
-	www.velocidex.com/golang/vtypes v0.0.0-20210531054645-7ec8b6e24d88
+	www.velocidex.com/golang/vtypes v0.0.0-20210624153356-79a8d2c1b823
 )
 
 // replace www.velocidex.com/golang/go-pe => /home/mic/projects/go-pe
