@@ -64,8 +64,10 @@ class ServerFlowsView extends React.Component {
             selected_flow = flows[0];
           }
 
-          this.setState({ init_router: true,
-          currentFlow: selected_flow });
+          this.setState({
+            init_router: true,
+            currentFlow: selected_flow
+          });
         }
 
         this.setState({ flows: flows, loading: false });
@@ -90,7 +92,7 @@ class ServerFlowsView extends React.Component {
   render() {
     return (
       <>
-              <Spinner loading={this.state.loading} /> {
+        <Spinner loading={this.state.loading} /> {
         !this.props.fullscreen ?
           <SplitPane split="horizontal" defaultSize="30%">
                     <FlowsList
