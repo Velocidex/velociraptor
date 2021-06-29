@@ -8,7 +8,7 @@ import api from '../core/api-service.js';
 import axios from 'axios';
 import Spinner from '../utils/spinner.js';
 
-import { withRouter }  from "react-router-dom";
+import { withRouter } from "react-router-dom";
 
 const POLL_TIME = 5000;
 
@@ -48,9 +48,11 @@ class VeloHunts extends React.Component {
         if (!hunt || !hunt.hunt_id) {
             return;
         }
-        let tab = this.props.match && this.props.match.params && this.props.match.params.tab;
+        let tab = this.props.match && this.props.match.params && this
+            .props.match.params.tab;
         if (tab) {
-            this.props.history.push("/hunts/" + hunt.hunt_id + "/" + tab);
+            this.props.history.push("/hunts/" + hunt.hunt_id + "/" +
+                tab);
         } else {
             this.props.history.push("/hunts/" + hunt.hunt_id);
         }
@@ -58,26 +60,30 @@ class VeloHunts extends React.Component {
     }
 
     loadFullHunt = (hunt) => {
-        this.setState({selected_hunt: hunt});
+        this.setState({ selected_hunt: hunt });
         this.get_hunts_source.cancel();
         this.get_hunts_source = axios.CancelToken.source();
-        this.setState({full_selected_hunt: {loading: true}});
+        this.setState({ full_selected_hunt: { loading: true } });
 
         api.get("v1/GetHunt", {
-            hunt_id: hunt.hunt_id,
-        }, this.get_hunts_source.token).then((response) => {
-            if (response.cancel) return;
+                hunt_id: hunt.hunt_id,
+            }, this.get_hunts_source.token)
+            .then((response) => {
+                if (response.cancel) return;
 
-            if(_.isEmpty(response.data)) {
-                this.setState({full_selected_hunt: {loading: true}});
-            } else {
-                this.setState({full_selected_hunt: response.data});
-            }
-        });
+                if (_.isEmpty(response.data)) {
+                    this
+            .setState({ full_selected_hunt: { loading: true } });
+                } else {
+                    this.setState({ full_selected_hunt: response
+                            .data });
+                }
+            });
     }
 
     fetchHunts = () => {
-        let selected_hunt_id = this.props.match && this.props.match.params &&
+        let selected_hunt_id = this.props.match && this.props.match
+            .params &&
             this.props.match.params.hunt_id;
 
         this.list_hunts_source.cancel();
@@ -86,38 +92,44 @@ class VeloHunts extends React.Component {
         // Some users have a lot of hunts and listing that many might
         // be prohibitively expensive.
         api.get("v1/ListHunts", {
-            count: 200,
-            offset: 0,
-        }, this.list_hunts_source.token).then((response) => {
-            if (response.cancel) return;
+                count: 200,
+                offset: 0,
+            }, this.list_hunts_source.token)
+            .then((response) => {
+                if (response.cancel) return;
 
-            let hunts = response.data.items || [];
-            let selected_hunt_id = this.state.selected_hunt && this.state.selected_hunt.hunt_id;
+                let hunts = response.data.items || [];
+                let selected_hunt_id = this.state.selected_hunt &&
+                    this.state.selected_hunt.hunt_id;
 
-            // If the router specifies a selected flow id, we select
-            // it but only once.
-            if (!this.state.init_router && !selected_hunt_id) {
-                selected_hunt_id = this.props.match && this.props.match.params &&
-                    this.props.match.params.hunt_id;
+                // If the router specifies a selected flow id, we select
+                // it but only once.
+                if (!this.state.init_router && !selected_hunt_id) {
+                    selected_hunt_id = this.props.match && this
+                        .props.match.params &&
+                        this.props.match.params.hunt_id;
 
-                this.setState({init_router: true});
-            }
+                    this.setState({ init_router: true });
+                }
 
-            // Update the selected hunt in the state.
-            if (selected_hunt_id) {
-                _.each(hunts, hunt=>{
-                    if (_.isUndefined(hunt.hunt_description)) {
-                        hunt.hunt_description = "";
-                    }
+                // Update the selected hunt in the state.
+                if (selected_hunt_id) {
+                    _.each(hunts, hunt => {
+                        if (_.isUndefined(hunt
+                                .hunt_description)) {
+                            hunt.hunt_description = "";
+                        }
 
-                    if (hunt.hunt_id === selected_hunt_id) {
-                        this.setState({selected_hunt: hunt});
-                    };
-                });
-            };
+                        if (hunt.hunt_id ===
+                            selected_hunt_id) {
+                            this
+                    .setState({ selected_hunt: hunt });
+                        };
+                    });
+                };
 
-            this.setState({hunts: hunts, loading: false});
-        });
+                this.setState({ hunts: hunts, loading: false });
+            });
 
         // Get the full hunt information from the server based on the
         // hunt metadata - this is done every poll interval to ensure
@@ -127,25 +139,28 @@ class VeloHunts extends React.Component {
             this.get_hunts_source = axios.CancelToken.source();
 
             api.get("v1/GetHunt", {
-                hunt_id: selected_hunt_id,
-            }, this.get_hunts_source.token).then((response) => {
-                if (response.cancel) return;
+                    hunt_id: selected_hunt_id,
+                }, this.get_hunts_source.token)
+                .then((response) => {
+                    if (response.cancel) return;
 
-                if(_.isEmpty(response.data)) {
-                    this.setState({full_selected_hunt: {loading: true}});
-                } else {
-                    this.setState({full_selected_hunt: response.data});
-                }
+                    if (_.isEmpty(response.data)) {
+                        this
+                .setState({ full_selected_hunt: { loading: true } });
+                    } else {
+                        this.setState({ full_selected_hunt: response
+                                .data });
+                    }
 
-            });
+                });
         }
     }
 
     render() {
         return (
-            <><Spinner loading={this.state.loading}/>
-              {!this.props.fullscreen ?
-                <SplitPane split="horizontal" defaultSize="30%">
+            <><Spinner loading={this.state.loading}/> {
+                !this.props.fullscreen ?
+                    <SplitPane split="horizontal" defaultSize="30%">
                     <HuntList
                     updateHunts={this.fetchHunts}
                     selected_hunt={this.state.selected_hunt}
@@ -155,13 +170,13 @@ class VeloHunts extends React.Component {
                     hunt={this.state.full_selected_hunt}
                     fullscreen={this.props.fullscreen}
                     toggleFullscreen={this.props.toggleFullscreen}/>
-               </SplitPane>:
-               <HuntInspector
+               </SplitPane> :
+                    <HuntInspector
                  hunt={this.state.full_selected_hunt}
                  fullscreen={this.props.fullscreen}
                  toggleFullscreen={this.props.toggleFullscreen}/>
-              }
-            </>
+            } <
+            />
         );
     }
 };

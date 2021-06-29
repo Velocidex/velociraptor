@@ -10,7 +10,7 @@ import HuntClients from './hunt-clients.js';
 import HuntNotebook from './hunt-notebook.js';
 import Spinner from '../utils/spinner.js';
 
-import { withRouter }  from "react-router-dom";
+import { withRouter } from "react-router-dom";
 
 class HuntInspector extends React.Component {
     static propTypes = {
@@ -22,7 +22,7 @@ class HuntInspector extends React.Component {
     }
 
     setDefaultTab = (tab) => {
-        this.setState({tab: tab});
+        this.setState({ tab: tab });
         this.props.history.push(
             "/hunts/" + this.props.hunt.hunt_id + "/" + tab);
     }
@@ -42,7 +42,7 @@ class HuntInspector extends React.Component {
         tab = tab || this.state.tab;
 
         return (
-            <>
+                <>
             { !this.props.fullscreen ?
 
             <div className="padded">
@@ -67,12 +67,12 @@ class HuntInspector extends React.Component {
 
               </Tabs>
             </div>:
-             <HuntNotebook hunt={this.props.hunt}
+                <HuntNotebook hunt={this.props.hunt}
                            toggleFullscreen={this.props.toggleFullscreen}/>
-            }
-            </>
-        );
-    }
+            } <
+            />
+    );
+}
 };
 
 export default withRouter(HuntInspector);

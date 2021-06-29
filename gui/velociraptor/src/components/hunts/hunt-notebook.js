@@ -7,7 +7,6 @@ import _ from 'lodash';
 
 const POLL_TIME = 5000;
 
-
 export default class HuntNotebook extends React.Component {
     static propTypes = {
         hunt: PropTypes.object,
@@ -26,7 +25,8 @@ export default class HuntNotebook extends React.Component {
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
         let prev_hunt_id = prevProps.hunt && prevProps.hunt.hunt_id;
-        let current_hunt_id = this.props.hunt && this.props.hunt.hunt_id;
+        let current_hunt_id = this.props.hunt && this.props.hunt
+        .hunt_id;
         if (prev_hunt_id !== current_hunt_id) {
             // Re-render the table if the hunt id changes.
             this.fetchNotebooks();
@@ -46,56 +46,61 @@ export default class HuntNotebook extends React.Component {
         }
 
         let notebook_id = "N." + hunt_id;
-        this.setState({loading: true});
+        this.setState({ loading: true });
         api.get("v1/GetNotebooks", {
-            notebook_id: notebook_id,
-        }, this.source.token).then(response=>{
-            if (response.cancel) return;
-            let notebooks = response.data.items || [];
-
-            if (notebooks.length > 0) {
-                this.setState({notebook: notebooks[0], loading: false});
-                return;
-            }
-
-            let request = {
-                name: "Notebook for Hunt " + hunt_id,
-                description: this.props.hunt.description ||
-                    "This is a notebook for processing a hunt.",
                 notebook_id: notebook_id,
-                context: {
-                    type: "Hunt",
-                    hunt_id: hunt_id,
-                },
-                // Hunt notebooks are all public.
-                public: true,
-                env: [
-                    {key: "HuntId", value: hunt_id},
-                ],
-            };
-
-            api.post('v1/NewNotebook', request, this.source.token).then((response) => {
+            }, this.source.token)
+            .then(response => {
                 if (response.cancel) return;
-                let cell_metadata = response.data && response.data.cell_metadata;
-                if (_.isEmpty(cell_metadata)) {
+                let notebooks = response.data.items || [];
+
+                if (notebooks.length > 0) {
+                    this.setState({ notebook: notebooks[0],
+                        loading: false });
                     return;
                 }
 
-                this.fetchNotebooks();
+                let request = {
+                    name: "Notebook for Hunt " + hunt_id,
+                    description: this.props.hunt.description ||
+                        "This is a notebook for processing a hunt.",
+                    notebook_id: notebook_id,
+                    context: {
+                        type: "Hunt",
+                        hunt_id: hunt_id,
+                    },
+                    // Hunt notebooks are all public.
+                    public: true,
+                    env: [
+                        { key: "HuntId", value: hunt_id },
+                    ],
+                };
+
+                api.post('v1/NewNotebook', request, this.source
+                        .token)
+                    .then((response) => {
+                        if (response.cancel) return;
+                        let cell_metadata = response.data &&
+                            response.data.cell_metadata;
+                        if (_.isEmpty(cell_metadata)) {
+                            return;
+                        }
+
+                        this.fetchNotebooks();
+                    });
             });
-        });
     }
 
     render() {
         return (
-            <> {!_.isEmpty(this.state.notebook) &&
+                <> {!_.isEmpty(this.state.notebook) &&
                 <NotebookRenderer
                   notebook={this.state.notebook}
                   fetchNotebooks={this.fetchNotebooks}
                   toggleFullscreen={this.props.toggleFullscreen}
                 />
-               }
-            </>
-        );
-    }
+            } <
+            />
+    );
+}
 };

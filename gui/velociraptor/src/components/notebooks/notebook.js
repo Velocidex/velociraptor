@@ -15,73 +15,75 @@ const POLL_TIME = 5000;
 const PAGE_SIZE = 100;
 
 class Notebooks extends React.Component {
-  state = {
-    notebooks: [],
-    selected_notebook: {},
+    state = {
+        notebooks: [],
+        selected_notebook: {},
 
-    // Only show the spinner the first time the component is
-    // mounted.
-    loading: true,
-  }
+        // Only show the spinner the first time the component is
+        // mounted.
+        loading: true,
+    }
 
-  componentDidMount = () => {
-    this.source = axios.CancelToken.source();
-    this.interval = setInterval(this.fetchNotebooks, POLL_TIME);
-    this.fetchNotebooks();
-  }
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+        this.interval = setInterval(this.fetchNotebooks, POLL_TIME);
+        this.fetchNotebooks();
+    }
 
-  componentWillUnmount() {
-    this.source.cancel();
-    clearInterval(this.interval);
-  }
+    componentWillUnmount() {
+        this.source.cancel();
+        clearInterval(this.interval);
+    }
 
-  fetchNotebooks = () => {
-    // Cancel any in flight calls.
-    this.source.cancel();
-    this.source = axios.CancelToken.source();
+    fetchNotebooks = () => {
+        // Cancel any in flight calls.
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
 
-    api.get("v1/GetNotebooks", {
-        count: PAGE_SIZE,
-        offset: 0,
-      }, this.source.token)
-      .then(response => {
-        if (response.cancel) return;
+        api.get("v1/GetNotebooks", {
+                count: PAGE_SIZE,
+                offset: 0,
+            }, this.source.token)
+            .then(response => {
+                if (response.cancel) return;
 
-        let notebooks = response.data.items || [];
-        let selected_notebook = {};
+                let notebooks = response.data.items || [];
+                let selected_notebook = {};
 
-        // Check the router for a notebook id
-        let notebook_id = this.props.match && this.props.match.params &&
-          this.props.match.params.notebook_id;
-        if (notebook_id) {
-          for (var i = 0; i < notebooks.length; i++) {
-            if (notebooks[i].notebook_id === notebook_id) {
-              selected_notebook = notebooks[i];
-              break;
-            }
-          }
-        }
+                // Check the router for a notebook id
+                let notebook_id = this.props.match && this.props
+                    .match.params &&
+                    this.props.match.params.notebook_id;
+                if (notebook_id) {
+                    for (var i = 0; i < notebooks.length; i++) {
+                        if (notebooks[i].notebook_id ===
+                            notebook_id) {
+                            selected_notebook = notebooks[i];
+                            break;
+                        }
+                    }
+                }
 
-        this.setState({
-          notebooks: notebooks,
-          loading: false,
-          selected_notebook: selected_notebook
-        });
-      });
-  }
+                this.setState({
+                    notebooks: notebooks,
+                    loading: false,
+                    selected_notebook: selected_notebook
+                });
+            });
+    }
 
-  setSelectedNotebook = (notebook) => {
-    notebook.loading = true;
-    this.setState({ selected_notebook: notebook });
-    this.props.history.push("/notebooks/" + notebook.notebook_id);
-  }
+    setSelectedNotebook = (notebook) => {
+        notebook.loading = true;
+        this.setState({ selected_notebook: notebook });
+        this.props.history.push("/notebooks/" + notebook.notebook_id);
+    }
 
-  render() {
-    return (
-      <>
+    render() {
+        return (
+            <>
               <Spinner loading={this.state.loading} /> {
-        !this.props.fullscreen ?
-          <SplitPane split="horizontal"
+                !this.props.fullscreen ?
+                    <SplitPane split="horizontal"
                          defaultSize="30%"
                          >
                 <NotebooksList
@@ -96,15 +98,15 @@ class Notebooks extends React.Component {
                   toggleFullscreen={this.props.toggleFullscreen}
                 />
                 </SplitPane> :
-          <NotebookRenderer
+                    <NotebookRenderer
                   fetchNotebooks={this.fetchNotebooks}
                   notebook={this.state.selected_notebook}
                   toggleFullscreen={this.props.toggleFullscreen}
                 />
-      } <
-      />
-    );
-  }
+            } <
+            />
+        );
+    }
 };
 
 export default withRouter(Notebooks);

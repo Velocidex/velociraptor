@@ -18,7 +18,6 @@ import api from '../core/api-service.js';
 
 import { requestToParameters } from "../flows/utils.js";
 
-
 export default class HuntOverview extends React.Component {
     static propTypes = {
         hunt: PropTypes.object,
@@ -49,34 +48,35 @@ export default class HuntOverview extends React.Component {
             hunt_id: this.props.hunt.hunt_id,
         };
 
-        switch(download_type) {
-        case "all":
-            params.json_format = true;
-            params.csv_format = true;
-            break;
+        switch (download_type) {
+            case "all":
+                params.json_format = true;
+                params.csv_format = true;
+                break;
 
-        case 'summary':
-            params.only_combined_hunt = true;
-            break;
+            case 'summary':
+                params.only_combined_hunt = true;
+                break;
 
-        case 'summary-json':
-            params.only_combined_hunt = true;
-            params.json_format = true;
-            break;
+            case 'summary-json':
+                params.only_combined_hunt = true;
+                params.json_format = true;
+                break;
 
-        case 'summary-csv':
-            params.only_combined_hunt = true;
-            params.csv_format = true;
-            break;
+            case 'summary-csv':
+                params.only_combined_hunt = true;
+                params.csv_format = true;
+                break;
 
-        default:
-            return;
+            default:
+                return;
         }
 
-        this.setState({preparing: true});
-        api.post("v1/CreateDownload", params).then(resp=>{
-            this.setState({preparing: false});
-        });
+        this.setState({ preparing: true });
+        api.post("v1/CreateDownload", params)
+            .then(resp => {
+                this.setState({ preparing: false });
+            });
     }
 
     render() {
@@ -85,16 +85,19 @@ export default class HuntOverview extends React.Component {
             return <div>Please select a hunt to view above.</div>;
         };
 
-        let artifacts = hunt.start_request && hunt.start_request.artifacts;
+        let artifacts = hunt.start_request && hunt.start_request
+            .artifacts;
         artifacts = artifacts || [];
 
-        let labels = hunt.condition && hunt.condition.labels && hunt.condition.labels.label;
+        let labels = hunt.condition && hunt.condition.labels && hunt
+            .condition.labels.label;
         let start_request = hunt.start_request || {};
         let parameters = requestToParameters(start_request);
 
         let stats = hunt.stats || {};
 
-        let files = stats.available_downloads && stats.available_downloads.files;
+        let files = stats.available_downloads && stats
+            .available_downloads.files;
         files = files || [];
 
         return (
