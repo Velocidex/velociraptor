@@ -99,35 +99,43 @@ class FlowInspector extends React.Component {
         }
 
         return (
-            <div className="padded">
-              <Tabs activeKey={this.state.tab}
-                    onSelect={this.setDefaultTab}>
-                <Tab eventKey="overview" title="Artifact Collection">
-                  { this.state.tab === "overview" &&
-                    <FlowOverview flow={this.state.detailed_flow.context}/>}
-                </Tab>
-                <Tab eventKey="uploads" title="Uploaded Files">
-                  { this.state.tab === "uploads" &&
-                    <FlowUploads flow={this.props.flow}/> }
-                </Tab>
-                <Tab eventKey="requests" title="Requests">
-                  { this.state.tab === "requests" &&
-                    <FlowRequests flow={this.props.flow} />}
-                </Tab>
-                <Tab eventKey="results" title="Results">
-                  { this.state.tab === "results" &&
-                    <FlowResults flow={this.state.detailed_flow.context} />}
-                </Tab>
-                <Tab eventKey="logs" title="Log">
-                  { this.state.tab === "logs" &&
-                    <FlowLogs flow={this.state.detailed_flow.context} />}
-                </Tab>
-                <Tab eventKey="notebook" title="Notebook">
-                  { this.state.tab === "notebook" &&
-                    <FlowNotebook flow={this.props.flow} />}
-                </Tab>
-              </Tabs>
-            </div>
+            <>
+            { !this.props.fullscreen ?
+                <div className="padded">
+                <Tabs activeKey={this.state.tab}
+                        onSelect={this.setDefaultTab}>
+                    <Tab eventKey="overview" title="Artifact Collection">
+                    { this.state.tab === "overview" &&
+                        <FlowOverview flow={this.state.detailed_flow.context}/>}
+                    </Tab>
+                    <Tab eventKey="uploads" title="Uploaded Files">
+                    { this.state.tab === "uploads" &&
+                        <FlowUploads flow={this.props.flow}/> }
+                    </Tab>
+                    <Tab eventKey="requests" title="Requests">
+                    { this.state.tab === "requests" &&
+                        <FlowRequests flow={this.props.flow} />}
+                    </Tab>
+                    <Tab eventKey="results" title="Results">
+                    { this.state.tab === "results" &&
+                        <FlowResults flow={this.state.detailed_flow.context} />}
+                    </Tab>
+                    <Tab eventKey="logs" title="Log">
+                    { this.state.tab === "logs" &&
+                        <FlowLogs flow={this.state.detailed_flow.context} />}
+                    </Tab>
+                    <Tab eventKey="notebook" title="Notebook">
+                    { this.state.tab === "notebook" &&
+                      <FlowNotebook flow={this.props.flow}
+                                    toggleFullscreen={this.props.toggleFullscreen}/>}
+                    </Tab>
+                </Tabs>
+              </div>:
+              <FlowNotebook flow={this.props.flow}
+                            toggleFullscreen={this.props.toggleFullscreen}/>}
+            }
+        </>
+
         );
     }
 };

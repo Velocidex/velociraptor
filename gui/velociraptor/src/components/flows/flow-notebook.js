@@ -109,6 +109,7 @@ export default class FlowNotebook extends React.Component {
                 <NotebookRenderer
                   notebook={this.state.notebook}
                   fetchNotebooks={this.fetchNotebooks}
+                  toggleFullscreen={this.props.toggleFullscreen}
                 />
                }
             </>

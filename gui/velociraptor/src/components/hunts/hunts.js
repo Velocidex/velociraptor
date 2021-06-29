@@ -144,15 +144,23 @@ class VeloHunts extends React.Component {
     render() {
         return (
             <><Spinner loading={this.state.loading}/>
-              <SplitPane split="horizontal" defaultSize="30%">
-                <HuntList
-                  updateHunts={this.fetchHunts}
-                  selected_hunt={this.state.selected_hunt}
-                  hunts={this.state.hunts}
-                  setSelectedHunt={this.setSelectedHunt} />
-                <HuntInspector
-                  hunt={this.state.full_selected_hunt} />
-              </SplitPane>
+              {!this.props.fullscreen ?
+                <SplitPane split="horizontal" defaultSize="30%">
+                    <HuntList
+                    updateHunts={this.fetchHunts}
+                    selected_hunt={this.state.selected_hunt}
+                    hunts={this.state.hunts}
+                    setSelectedHunt={this.setSelectedHunt} />
+                    <HuntInspector
+                    hunt={this.state.full_selected_hunt}
+                    fullscreen={this.props.fullscreen}
+                    toggleFullscreen={this.props.toggleFullscreen}/>
+               </SplitPane>:
+               <HuntInspector
+                 hunt={this.state.full_selected_hunt}
+                 fullscreen={this.props.fullscreen}
+                 toggleFullscreen={this.props.toggleFullscreen}/>
+              }
             </>
         );
     }

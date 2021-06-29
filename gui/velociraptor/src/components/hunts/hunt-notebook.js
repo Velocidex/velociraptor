@@ -92,6 +92,7 @@ export default class HuntNotebook extends React.Component {
                 <NotebookRenderer
                   notebook={this.state.notebook}
                   fetchNotebooks={this.fetchNotebooks}
+                  toggleFullscreen={this.props.toggleFullscreen}
                 />
                }
             </>

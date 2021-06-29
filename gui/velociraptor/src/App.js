@@ -28,7 +28,7 @@ import { UserSettings } from './components/core/user.js';
 
 import { Switch, Route } from "react-router-dom";
 import { Join } from './components/utils/paths.js';
-import { withRouter }  from "react-router-dom";
+import { withRouter } from "react-router-dom";
 
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
@@ -53,137 +53,221 @@ import SidebarKeyNavigator from './components/sidebar/hotkeys.js';
 */
 
 class App extends Component {
-    state = {
-        client: {},
+  state = {
+    client: {},
 
-        // The file listing in the current directory.
-        current_node: {},
+    // The file listing in the current directory.
+    current_node: {},
 
-        // The current row within the current node that is selected.
-        selected_row: {},
+    // The current row within the current node that is selected.
+    selected_row: {},
 
-        query: "",
-        query_version: "",
+    query: "",
+    query_version: "",
+  }
+
+  // Called to update the current client.
+  setClient = (client) => {
+    this.setState({ client: client });
+  };
+
+  setClientSearch = (query) => {
+    let now = new Date();
+    this.setState({ query: query, query_version: now.getTime() });
+    this.props.history.push('/search/' + (query || "all"));
+  };
+
+  updateCurrentNode = (node) => {
+    this.setState({ current_node: node });
+  }
+
+  toggleFullscreen = () => {
+    this.setState({ fullscreen: !this.state.fullscreen })
+  };
+
+  render() {
+    // We need to prepare a vfs_path for the navigator to link
+    // to. Depending on the current node, we make a link with or
+    // without a final "/".
+    let vfs_path = "/";
+    if (this.state.current_node && this.state.current_node.path) {
+      let path = [...this.state.current_node.path];
+      let name = this.state.current_node.selected && this.state.current_node
+        .selected.Name;
+      if (name) {
+        path.push(name);
+        vfs_path = Join(path);
+      } else {
+        vfs_path = Join(path) + "/";
+      }
     }
 
-    // Called to update the current client.
-    setClient = (client) => {
-        this.setState({client: client});
-    };
+    return (
+      <>
+             <div>
+             { !this.state.fullscreen ?
+                <UserSettings><SnackbarProvider><SidebarKeyNavigator client={this.state.client}/>
+                <Navbar fixed="top" className="main-navbar justify-content-between">
+                    <Form inline>
+                    <VeloNavigator
+                        vfs_path={vfs_path}
+                        client={this.state.client} />
 
-    setClientSearch = (query) => {
-        let now = new Date();
-        this.setState({query: query, query_version: now.getTime()});
-        this.props.history.push('/search/' + (query || "all"));
-    };
-
-    updateCurrentNode = (node) => {
-        this.setState({current_node: node});
-    }
-
-    render() {
-        // We need to prepare a vfs_path for the navigator to link
-        // to. Depending on the current node, we make a link with or
-        // without a final "/".
-        let vfs_path = "/";
-        if (this.state.current_node && this.state.current_node.path) {
-            let path = [...this.state.current_node.path];
-            let name = this.state.current_node.selected && this.state.current_node.selected.Name;
-            if (name) {
-                path.push(name);
-                vfs_path = Join(path);
-            } else {
-                vfs_path = Join(path) + "/";
-            }
-        }
-
-        return (<div>
-            <UserSettings><SnackbarProvider><SidebarKeyNavigator client={this.state.client}/>
-              <Navbar fixed="top" className="main-navbar justify-content-between">
-                <Form inline>
-                  <VeloNavigator
-                    vfs_path={vfs_path}
-                    client={this.state.client} />
-
-                  <VeloClientSearch
-                    setSearch={this.setClientSearch}
-                  />
-                </Form>
-                <VeloClientSummary
-                  setClient={this.setClient}
-                  client={this.state.client}/>
-                <UserLabel className="navbar-text"/>
-              </Navbar>
-              <div id="content">
-                <Switch>
-                  <Route path="/dashboard">
-                    <UserDashboard />
-                  </Route>
-                  <Route exact path="/" component={Welcome}/>
-                  <Route exact path="/welcome" component={Welcome}/>
-                  <Route path="/search/:query?">
-                    <VeloClientList
-                      setSearch={this.setClientSearch}
-                      version={this.state.query_version}
-                      query={this.state.query}
-                      setClient={this.setClient}
+                    <VeloClientSearch
+                        setSearch={this.setClientSearch}
                     />
-                  </Route>
-                  <Route path="/artifacts/:artifact?">
-                    <ArtifactInspector/>
-                  </Route>
-                  <Route path="/hunts/:hunt_id?/:tab?">
-                    <VeloHunts/>
-                  </Route>
+                    </Form>
+                    <VeloClientSummary
+                    setClient={this.setClient}
+                    client={this.state.client}/>
+                    <UserLabel className="navbar-text"/>
+                </Navbar>
+                <div id="content">
+                    <Switch>
+                    <Route path="/dashboard">
+                        <UserDashboard />
+                    </Route>
+                    <Route exact path="/" component={Welcome}/>
+                    <Route exact path="/welcome" component={Welcome}/>
+                    <Route path="/search/:query?">
+                        <VeloClientList
+                        setSearch={this.setClientSearch}
+                        version={this.state.query_version}
+                        query={this.state.query}
+                        setClient={this.setClient}
+                        />
+                    </Route>
+                    <Route path="/artifacts/:artifact?">
+                        <ArtifactInspector/>
+                    </Route>
+                    <Route path="/hunts/:hunt_id?/:tab?">
+                      <VeloHunts toggleFullscreen={this.toggleFullscreen}
+                                 fullscreen={this.state.fullscreen}/>
+                    </Route>
 
-                  <Route path="/host/:client_id(C[^/]+)/:action?">
-                    <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
-                    <VeloHostInfo client={this.state.client}  />
-                  </Route>
-                  <Route path="/host/:client_id(server)/:action?">
-                    <ServerInfo  />
-                  </Route>
-                  <Route path="/vfs/:client_id/:vfs_path(.*)">
-                    <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
-                    <VFSViewer client={this.state.client}
-                               selectedRow={this.state.selected_row}
-                               updateCurrentNode={this.updateCurrentNode}
-                               node={this.state.current_node}
-                               vfs_path={this.state.vfs_path} />
-                  </Route>
-                  {/* ClientFlowsView will only be invoked when the
-                    * client is starts with C - the ServerFlowsView is
-                    * invoked when client_id == "server"
-                    */}
-                  <Route path="/collected/:client_id(C[^/]+)/:flow_id?/:tab?">
-                    <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
-                    <ClientFlowsView client={this.state.client} />
-                  </Route>
-                  <Route path="/collected/server/:flow_id?/:tab?">
-                    <ServerFlowsView />
-                  </Route>
-                  <Route path="/notebooks/:notebook_id?">
-                    <Notebook />
-                  </Route>
-                  <Route path="/events/:client_id(C[^/]+)/:artifact?/:time?">
-                    <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
-                    <EventMonitoring client={this.state.client}/>
-                  </Route>
-                  <Route path="/events/server/:artifact?/:time?">
-                    <EventMonitoring client={{client_id: ""}}/>
-                  </Route>
-                </Switch>
-              </div>
-              <Navbar fixed="bottom" className="app-footer justify-content-between ">
-                <Nav></Nav>
-                <Nav>
-                  <VeloLiveClock className="float-right" />
-                  <Snackbar />
-                </Nav>
-              </Navbar><KeyboardHelp />
-            </SnackbarProvider></UserSettings></div>
-        );
-    };
+                    <Route path="/host/:client_id(C[^/]+)/:action?">
+                        <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
+                        <VeloHostInfo client={this.state.client}  />
+                    </Route>
+                    <Route path="/host/:client_id(server)/:action?">
+                        <ServerInfo  />
+                    </Route>
+                    <Route path="/vfs/:client_id/:vfs_path(.*)">
+                        <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
+                        <VFSViewer client={this.state.client}
+                                selectedRow={this.state.selected_row}
+                                updateCurrentNode={this.updateCurrentNode}
+                                node={this.state.current_node}
+                                vfs_path={this.state.vfs_path} />
+                    </Route>
+                    {/* ClientFlowsView will only be invoked when the
+                        * client is starts with C - the ServerFlowsView is
+                        * invoked when client_id == "server"
+                        */}
+                    <Route path="/collected/:client_id(C[^/]+)/:flow_id?/:tab?">
+                        <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
+                        <ClientFlowsView client={this.state.client}
+                                        fullscreen={this.state.fullscreen}
+                                        toggleFullscreen={this.toggleFullscreen}/>
+                    </Route>
+                    <Route path="/collected/server/:flow_id?/:tab?">
+                      <ServerFlowsView fullscreen={this.state.fullscreen}
+                                       toggleFullscreen={this.toggleFullscreen}/>
+                    </Route>
+                    <Route path="/notebooks/:notebook_id?">
+                      <Notebook fullscreen={this.state.fullscreen}
+                                toggleFullscreen={this.toggleFullscreen}
+                                />
+                    </Route>
+                    <Route path="/events/:client_id(C[^/]+)/:artifact?/:time?">
+                        <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
+                        <EventMonitoring client={this.state.client}/>
+                    </Route>
+                    <Route path="/events/server/:artifact?/:time?">
+                        <EventMonitoring client={{client_id: ""}}/>
+                    </Route>
+                    </Switch>
+                </div>
+                <Navbar fixed="bottom" className="app-footer justify-content-between ">
+                    <Nav></Nav>
+                    <Nav>
+                    <VeloLiveClock className="float-right" />
+                    <Snackbar />
+                    </Nav>
+                </Navbar><KeyboardHelp />
+                </SnackbarProvider></UserSettings>:
+                    <UserSettings>
+               <div id="content" width="100%" height="100%" style={{top:"0px", bottom:"0px", right:"0px", marginLeft:"0px", overflowY: "auto"}}>
+                        <Switch>
+                        <Route path="/dashboard">
+                            <UserDashboard />
+                        </Route>
+                        <Route exact path="/" component={Welcome}/>
+                        <Route exact path="/welcome" component={Welcome}/>
+                        <Route path="/search/:query?">
+                            <VeloClientList
+                            setSearch={this.setClientSearch}
+                            version={this.state.query_version}
+                            query={this.state.query}
+                            setClient={this.setClient}
+                            />
+                        </Route>
+                        <Route path="/artifacts/:artifact?">
+                            <ArtifactInspector/>
+                        </Route>
+                        <Route path="/hunts/:hunt_id?/:tab?">
+                          <VeloHunts fullscreen={this.state.fullscreen}
+                                     toggleFullscreen={this.toggleFullscreen}/>
+                        </Route>
+
+                        <Route path="/host/:client_id(C[^/]+)/:action?">
+                            <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
+                            <VeloHostInfo client={this.state.client}  />
+                        </Route>
+                        <Route path="/host/:client_id(server)/:action?">
+                            <ServerInfo  />
+                        </Route>
+                        <Route path="/vfs/:client_id/:vfs_path(.*)">
+                            <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
+                            <VFSViewer client={this.state.client}
+                                    selectedRow={this.state.selected_row}
+                                    updateCurrentNode={this.updateCurrentNode}
+                                    node={this.state.current_node}
+                                    vfs_path={this.state.vfs_path} />
+                        </Route>
+                        {/* ClientFlowsView will only be invoked when the
+                            * client is starts with C - the ServerFlowsView is
+                            * invoked when client_id == "server"
+                            */}
+                        <Route path="/collected/:client_id(C[^/]+)/:flow_id?/:tab?">
+                            <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
+                          <ClientFlowsView client={this.state.client}
+                                           fullscreen={this.state.fullscreen}
+                                           toggleFullscreen={this.toggleFullscreen}/>
+                        </Route>
+                        <Route path="/collected/server/:flow_id?/:tab?">
+                          <ServerFlowsView fullscreen={this.state.fullscreen}
+                                           toggleFullscreen={this.toggleFullscreen}/>
+                        </Route>
+                        <Route path="/notebooks/:notebook_id?">
+                          <Notebook fullscreen={this.state.fullscreen}
+                                    toggleFullscreen={this.toggleFullscreen}/>
+                        </Route>
+                        <Route path="/events/:client_id(C[^/]+)/:artifact?/:time?">
+                            <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
+                            <EventMonitoring client={this.state.client}/>
+                        </Route>
+                        <Route path="/events/server/:artifact?/:time?">
+                            <EventMonitoring client={{client_id: ""}}/>
+                        </Route>
+                        </Switch>
+                    </div>
+               </UserSettings>
+            }
+         </div> <
+      />
+    );
+  };
 }
 
 export default withRouter(App);

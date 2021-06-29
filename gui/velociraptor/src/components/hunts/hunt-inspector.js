@@ -42,6 +42,9 @@ class HuntInspector extends React.Component {
         tab = tab || this.state.tab;
 
         return (
+            <>
+            { !this.props.fullscreen ?
+
             <div className="padded">
               <Tabs defaultActiveKey={tab} onSelect={this.setDefaultTab}>
                 <Tab eventKey="overview" title="Overview">
@@ -58,11 +61,16 @@ class HuntInspector extends React.Component {
                 </Tab>
                 <Tab eventKey="notebook" title="Notebook">
                   { tab === "notebook" &&
-                    <HuntNotebook hunt={this.props.hunt} />}
+                    <HuntNotebook hunt={this.props.hunt}
+                                  toggleFullscreen={this.props.toggleFullscreen}/>}
                 </Tab>
 
               </Tabs>
-            </div>
+            </div>:
+             <HuntNotebook hunt={this.props.hunt}
+                           toggleFullscreen={this.props.toggleFullscreen}/>
+            }
+            </>
         );
     }
 };

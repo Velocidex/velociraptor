@@ -14,6 +14,9 @@ import { withRouter }  from "react-router-dom";
 const POLL_TIME = 5000;
 const PAGE_SIZE = 100;
 
+const resizerStyle = {
+    //    width: "25px",
+};
 
 class Notebooks extends React.Component {
     state = {
@@ -78,7 +81,10 @@ class Notebooks extends React.Component {
         return (
             <>
               <Spinner loading={this.state.loading} />
-              <SplitPane split="horizontal" defaultSize="30%">
+              { !this.props.fullscreen ?
+              <SplitPane split="horizontal"
+                         defaultSize="30%"
+                         >
                 <NotebooksList
                   fetchNotebooks={this.fetchNotebooks}
                   selected_notebook={this.state.selected_notebook}
@@ -88,8 +94,15 @@ class Notebooks extends React.Component {
                 <NotebookRenderer
                   fetchNotebooks={this.fetchNotebooks}
                   notebook={this.state.selected_notebook}
+                  toggleFullscreen={this.props.toggleFullscreen}
                 />
-              </SplitPane>
+                </SplitPane>:
+                <NotebookRenderer
+                  fetchNotebooks={this.fetchNotebooks}
+                  notebook={this.state.selected_notebook}
+                  toggleFullscreen={this.props.toggleFullscreen}
+                />
+              }
             </>
         );
     }

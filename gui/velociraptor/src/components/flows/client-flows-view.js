@@ -110,17 +110,27 @@ class ClientFlowsView extends React.Component {
         return (
             <>
               <Spinner loading={this.state.loading} />
-              <SplitPane split="horizontal" defaultSize="30%">
-                <FlowsList
-                  selected_flow={this.state.currentFlow}
-                  flows={this.state.flows}
-                  fetchFlows={this.fetchFlows}
-                  setSelectedFlow={this.setSelectedFlow}
-                  client={this.props.client}/>
+              { !this.props.fullscreen ?
+                <SplitPane split="horizontal" defaultSize="30%">
+                    <FlowsList
+                    selected_flow={this.state.currentFlow}
+                    flows={this.state.flows}
+                    fetchFlows={this.fetchFlows}
+                    setSelectedFlow={this.setSelectedFlow}
+                    client={this.props.client}/>
+                    <FlowInspector
+                    flow={this.state.currentFlow}
+                      client={this.props.client}
+                      fullscreen={this.props.fullscreen}
+                      toggleFullscreen={this.props.toggleFullscreen}/>
+            </SplitPane>:
                 <FlowInspector
-                  flow={this.state.currentFlow}
-                  client={this.props.client}/>
-              </SplitPane>
+                flow={this.state.currentFlow}
+                client={this.props.client}
+                fullscreen={this.props.fullscreen}
+                toggleFullscreen={this.props.toggleFullscreen}/>
+            }
+
             </>
         );
     }

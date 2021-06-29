@@ -194,7 +194,9 @@ export default class NotebooksList extends React.Component {
 
     render() {
         let columns = formatColumns([
-            {dataField: "notebook_id", text: "NotebookId"},
+            {dataField: "notebook_id", text: "NotebookId", formatter: (cell, row) => {
+                return <a href={`#/notebooks/${cell}`}>{cell}</a>
+            }},
             {dataField: "name", text: "Name",
              sort: true, filtered: true },
             {dataField: "description", text: "Description",
@@ -297,18 +299,18 @@ export default class NotebooksList extends React.Component {
               <div className="fill-parent no-margins toolbar-margin selectable">
                 {_.isEmpty(this.props.notebooks) ?
                  <div className="no-content">No notebooks available - create one first</div> :
-                 <BootstrapTable
-                   hover
-                   condensed
-                   keyField="notebook_id"
-                   bootstrap4
-                   headerClasses="alert alert-secondary"
-                   bodyClasses="fixed-table-body"
-                   data={this.props.notebooks}
-                   columns={columns}
-                   selectRow={ selectRow }
-                   filter={ filterFactory() }
-                 />}
+                  <BootstrapTable
+                    hover
+                    condensed
+                    keyField="notebook_id"
+                    bootstrap4
+                    headerClasses="alert alert-secondary"
+                    bodyClasses="fixed-table-body"
+                    data={this.props.notebooks}
+                    columns={columns}
+                    selectRow={ selectRow }
+                    filter={ filterFactory() }
+                  />}
               </div>
             </>
         );
