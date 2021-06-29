@@ -58,7 +58,8 @@ sources:
        -- sign and then the variable value.
        LET SplitEnv(EnvString) =  SELECT parse_string_with_regex(
           string=_value, regex="^(?P<Name>[^=]*)=(?P<Value>.+)") AS Line
-               FROM foreach(row=split(string=EnvString, sep="\x00"))
+       FROM foreach(row=split(string=EnvString, sep="\x00"))
+       WHERE Line
 
        -- Massage the parsed data into a structured table
        LET Calculate(PID) = SELECT Name, PebBaseAddress, Pid,

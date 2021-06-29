@@ -175,7 +175,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 		}
 		return result
 
-	case []interface{}:
+	case []*ordereddict.Dict:
 		if len(t) == 0 { // No rows returned.
 			self.Scope.Log("Query produced no rows.")
 			return ""
