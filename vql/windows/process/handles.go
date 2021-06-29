@@ -31,8 +31,8 @@ type ThreadHandleInfo struct {
 }
 
 type ProcessHandleInfo struct {
-	TargetPid uint32 `json:"Pid,omitempty"`
-	Binary    string `json:"Binary,omitempty"`
+	Pid    uint32 `json:"Pid,omitempty"`
+	Binary string `json:"Binary,omitempty"`
 }
 
 type TokenHandleInfo struct {
@@ -382,7 +382,7 @@ func GetProcessName(scope vfilter.Scope, handle syscall.Handle) *ProcessHandleIn
 		return nil
 	}
 
-	result := &ProcessHandleInfo{TargetPid: handle_info.UniqueProcessId}
+	result := &ProcessHandleInfo{Pid: handle_info.UniqueProcessId}
 
 	// Fetch the binary image
 	status = windows.NtQueryInformationProcess(
