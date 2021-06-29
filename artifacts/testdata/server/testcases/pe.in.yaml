@@ -19,7 +19,7 @@ Queries:
 
   # Test Associative protocol.
   - SELECT PEInfo.VersionInformation.CompanyName AS CompanyName FROM X
-    WHERE CompanyName =~ "Microsoft"
+    WHERE PEInfo.VersionInformation AND CompanyName =~ "Microsoft"
 
   # Test membership protocol
   - SELECT Name

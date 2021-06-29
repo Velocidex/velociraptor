@@ -96,7 +96,7 @@ sources:
             Line
         FROM parse_lines(filename=HostsFile)
         WHERE
-            Line
+            Record AND Line
             AND NOT Line =~ '^#'
 
       -- Parse a URL to get domain name.

@@ -24,12 +24,14 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime/pprof"
 	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
+	errors "github.com/pkg/errors"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/shirou/gopsutil/process"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -164,10 +166,11 @@ func runTest(fixture *testFixture,
 	container, err := reporting.NewContainer(tmpfile.Name(), "", 5)
 	kingpin.FatalIfError(err, "Can not create output container")
 
+	log_writer := &MemoryLogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
-		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
+		Logger:     log.New(log_writer, "Velociraptor: ", 0),
 		Uploader:   container,
 		Env: ordereddict.NewDict().
 			Set("GoldenOutput", tmpfile.Name()).
@@ -217,6 +220,15 @@ func runTest(fixture *testFixture,
 			}
 			result += string(query_result.Payload)
 		}
+	}
+
+	res, err := log_writer.Matches("Symbol .+ not found")
+	if err != nil {
+		return result, err
+	}
+
+	if res {
+		return result, errors.New("Symbol not found error!")
 	}
 
 	return result, nil
@@ -306,4 +318,31 @@ func init() {
 		}
 		return true
 	})
+}
+
+type MemoryLogWriter struct {
+	config_obj *config_proto.Config
+	logs       []string
+}
+
+func (self *MemoryLogWriter) Write(b []byte) (int, error) {
+	self.logs = append(self.logs, string(b))
+
+	logging.GetLogger(self.config_obj, &logging.ClientComponent).Info("%v", string(b))
+	return len(b), nil
+}
+
+func (self *MemoryLogWriter) Matches(pattern string) (bool, error) {
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return false, err
+	}
+
+	for _, line := range self.logs {
+		if re.FindString(line) != "" {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

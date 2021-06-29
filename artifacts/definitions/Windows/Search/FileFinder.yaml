@@ -66,7 +66,7 @@ parameters:
 sources:
   - query: |
       LET file_search = SELECT FullPath,
-               Sys.mft as Inode,
+               get(item=Sys, field="mft") as Inode,
                Mode.String AS Mode, Size,
                Mtime AS Modified,
                Atime AS ATime,

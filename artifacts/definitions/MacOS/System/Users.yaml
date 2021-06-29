@@ -26,9 +26,9 @@ sources:
 
       - SELECT Name, RealName, UserShell, HomeDir,
                get(item=AppleId, field="appleid.apple.com") AS AppleId,
-               timestamp(epoch=AccountPolicyData.creationTime) AS CreationTime,
-               AccountPolicyData.failedLoginCount AS FailedLoginCount,
-               timestamp(epoch=AccountPolicyData.failedLoginTimestamp) AS FailedLoginTimestamp,
-               timestamp(epoch=AccountPolicyData.passwordLastSetTime) AS PasswordLastSetTime
+               timestamp(epoch=get(member="AccountPolicyData.creationTime")) AS CreationTime,
+               get(member="AccountPolicyData.failedLoginCount") AS FailedLoginCount,
+               timestamp(epoch=get(member="AccountPolicyData.failedLoginTimestamp")) AS FailedLoginTimestamp,
+               timestamp(epoch=get(member="AccountPolicyData.passwordLastSetTime")) AS PasswordLastSetTime
         FROM foreach(row=user_plist, query=UserDetails)
         WHERE NOT OnlyShowRealUsers OR NOT UserShell =~ 'false'
