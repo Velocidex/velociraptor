@@ -346,7 +346,9 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 	}
 
 	// Remember the last successful index.
+	self.mu.Lock()
 	self.last_success_idx = self.current_url_idx
+	self.mu.Unlock()
 
 	return resp, nil
 }
@@ -357,6 +359,9 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 // another we wont necessarily wait but if all frontends are down we
 // wait once per loop.
 func (self *HTTPConnector) advanceToNextServer() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	// Advance the current URL to the next one in
 	// line. Reset the server name (will be fetched from
 	// the PEM) and do not use redirects.
@@ -392,9 +397,6 @@ func (self *HTTPConnector) String() string {
 // call. All other POST operations will be blocked until a valid
 // server is found.
 func (self *HTTPConnector) ReKeyNextServer() {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	for {
 		err := self.rekeyNextServer()
 		if err == nil {
@@ -413,6 +415,9 @@ func (self *HTTPConnector) ServerName() string {
 }
 
 func (self *HTTPConnector) rekeyNextServer() error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	// Try to fetch the server pem.
 	url := self.urls[self.current_url_idx]
 
