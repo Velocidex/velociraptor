@@ -56,7 +56,7 @@ sources:
           b={
             SELECT MRUPath, MRUHive, Description,
               -- Signify unknown component as ?
-              get(member="Description.LongName") || get(member="Description.ShortName") || "?" AS Name
+              Description.LongName || Description.ShortName || "?" AS Name
             FROM scope()
           },
           c={

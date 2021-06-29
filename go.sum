@@ -942,8 +942,6 @@ honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWh
 honnef.co/go/tools v0.0.1-2019.2.3/go.mod h1:a3bituU0lyd329TUQxRnasdCoJDkEUEAqEt0JzvZhAg=
 honnef.co/go/tools v0.0.1-2020.1.3/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9vFzvIQ3k=
 honnef.co/go/tools v0.0.1-2020.1.4/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9vFzvIQ3k=
-howett.net/plist v0.0.0-20181124034731-591f970eefbb h1:jhnBjNi9UFpfpl8YZhA9CrOqpnJdvzuiHsl/dnxl11M=
-howett.net/plist v0.0.0-20181124034731-591f970eefbb/go.mod h1:vMygbs4qMhSZSc4lCUl2OEE+rDiIIJAIdR4m7MiMcm0=
 howett.net/plist v0.0.0-20201203080718-1454fab16a06 h1:QDxUo/w2COstK1wIBYpzQlHX/NqaQTcf9jyz347nI58=
 howett.net/plist v0.0.0-20201203080718-1454fab16a06/go.mod h1:vMygbs4qMhSZSc4lCUl2OEE+rDiIIJAIdR4m7MiMcm0=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
@@ -967,7 +965,7 @@ www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196/go.mod h1:i
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500 h1:XqZddiAbjPIsTZcEPbqqqABS/ZV5SB7j33eczNsqD60=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500/go.mod h1:DVzloLH8L+oF3zma1Jisaat5bGF+4VLggDcYlIp00ns=
 www.velocidex.com/golang/vfilter v0.0.0-20210515085940-25d96b94dafb/go.mod h1:KB724xBNYh4lgipyGwsvx0/5hXRqsKjmrMrkSjGESvU=
-www.velocidex.com/golang/vfilter v0.0.0-20210621143251-8e57fc2e83c6 h1:EPExL5jjHBmDNn/jWd9LmDS7sgBIf9ppYf5YpH+Aw10=
-www.velocidex.com/golang/vfilter v0.0.0-20210621143251-8e57fc2e83c6/go.mod h1:KB724xBNYh4lgipyGwsvx0/5hXRqsKjmrMrkSjGESvU=
+www.velocidex.com/golang/vfilter v0.0.0-20210630033040-9c8261d8c095 h1:boDFsEOosv+a+6SnfP8SFJQGH45WQ2ukj5UJf9Qsses=
+www.velocidex.com/golang/vfilter v0.0.0-20210630033040-9c8261d8c095/go.mod h1:KB724xBNYh4lgipyGwsvx0/5hXRqsKjmrMrkSjGESvU=
 www.velocidex.com/golang/vtypes v0.0.0-20210624153356-79a8d2c1b823 h1:7NLuLQkIiTKI0aQt5MVPs+5e5bFpWm6Z18qdfDQ77LE=
 www.velocidex.com/golang/vtypes v0.0.0-20210624153356-79a8d2c1b823/go.mod h1:PIG8uSY330pJd620KPksZpTaAsX3sIMiiNJQihZph6c=
