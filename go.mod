@@ -114,7 +114,7 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
-	howett.net/plist v0.0.0-20181124034731-591f970eefbb
+	howett.net/plist v0.0.0-20201203080718-1454fab16a06
 	www.velocidex.com/golang/evtx v0.0.2-0.20201104041743-4b6cdb206c95
 	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20201111050421-bbba6f6a13d3
@@ -122,7 +122,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20210621143251-8e57fc2e83c6
+	www.velocidex.com/golang/vfilter v0.0.0-20210630033040-9c8261d8c095
 	www.velocidex.com/golang/vtypes v0.0.0-20210624153356-79a8d2c1b823
 )
 

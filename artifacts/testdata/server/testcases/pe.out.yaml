@@ -64,7 +64,7 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
    "ntoskrnl.exe!MmGetPhysicalMemoryRanges"
   ]
  }
-]LET X = SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM glob(globs=srcDir + "/artifacts/**10/*.{exe,sys}")[]SELECT PEInfo.VersionInformation.CompanyName AS CompanyName FROM X WHERE CompanyName =~ "Microsoft"[
+]LET X = SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM glob(globs=srcDir + "/artifacts/**10/*.{exe,sys}")[]SELECT PEInfo.VersionInformation.CompanyName AS CompanyName FROM X WHERE PEInfo.VersionInformation AND CompanyName =~ "Microsoft"[
  {
   "CompanyName": "Microsoft Corporation"
  },
