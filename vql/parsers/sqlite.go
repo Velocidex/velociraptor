@@ -27,7 +27,6 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"strings"
 
@@ -109,12 +108,8 @@ func GetHandleSqlite(ctx context.Context,
 				// this case we need to extract the
 				// filename (from before the ?) so we
 				// can copy it over.
-				filename_url, err := url.Parse(filename)
-				if err == nil {
-					filename = filename_url.Path
-				}
-
-				filename, err = _MakeTempfile(ctx, arg, filename, scope)
+				parts := strings.Split(filename, "?")
+				filename, err = _MakeTempfile(ctx, arg, parts[0], scope)
 				if err != nil {
 					scope.Log("Unable to create temp file: %v", err)
 					return nil, err
