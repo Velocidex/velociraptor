@@ -46,13 +46,16 @@ parameters:
         net1.exe,net1.exe,net1.exe,
         netsh.exe,netsh.exe,netsh.exe,
         powershell_ise.exe,powershell_ise.exe,powershell_ise.exe,
-        XXXXX,nc,nc.exe,NetCat for Windows - https://github.com/diegocr/netcat
-        XXXXX,AdFind.exe,AdFind.exe,Joeware ADFind
         dsquery.exe,dsquery.exe,dsquery.exe,Microsoft AD DS/LDS query command line utility
         nbtstat.exe,nbtinfo.exe,nbtinfo.exe,Microsoft TCP/IP NetBios Information
         nltest.exe,nltestrk.exe,nltestrk.exe,Microsoft® Logon Server Test Utility
         qprocess.exe,qprocess,qprocess.exe,Query Process Utility
         qwinsta.exe,qwinsta,qwinsta.exe,Query Session Utility
+        XXXXX,nc,nc.exe,NetCat for Windows - https://github.com/diegocr/netcat
+        XXXXX,AdFind.exe,AdFind.exe,Joeware ADFind
+        XXXXX,rclone,rclone.exe,Rsync for cloud storage
+        XXXXX,MEGAsync.exe,MEGAsync.exe,MEGAsync
+        XXXXX,MEGAcmdShell.exe,MEGAcmdShell,MEGAcmdShell
 
 sources:
   - query: |
