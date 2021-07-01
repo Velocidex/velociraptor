@@ -7,7 +7,7 @@ Parameters:
         "data_len": 6,
         "value": "ab"
       },
-      "Mtime": {"sec": 1588211977},
+      "Mtime": "2020-04-30T01:59:37Z",
       "Username": "yolo",
       "Description": "",
       "Uid": 1000,
@@ -24,9 +24,9 @@ Parameters:
        "Data": {
         "type": "Key"
        },
-       "Mtime": {"sec": 1588211977},
-       "Ctime": {"sec": 1588211977},
-       "Atime": {"sec": 1588211977}
+       "Mtime": "2020-04-30T01:59:37Z",
+       "Ctime": "2020-04-30T01:59:37Z",
+       "Atime": "2020-04-30T01:59:37Z"
       },
       "Atime": "2020-04-30T01:59:37Z",
       "Ctime": "2020-04-30T01:59:37Z",
@@ -41,7 +41,7 @@ Parameters:
       "IsLink": false,
       "ModTime": "2020-04-30T01:59:37Z",
       "Mode": 493,
-      "Mtime": {"sec": 1588211977},
+      "Mtime": "2020-04-30T01:59:37Z",
       "Name": "MRUList",
       "Size": 6,
       "Sys": {
@@ -58,9 +58,9 @@ Parameters:
        "Data": {
         "type": "Key"
        },
-       "Mtime": {"sec": 1588211217},
-       "Ctime": {"sec": 1588211977},
-       "Atime": {"sec": 1588211977}
+       "Mtime": "2020-04-30T01:46:57Z",
+       "Ctime": "2020-04-30T01:59:37Z",
+       "Atime": "2020-04-30T01:59:37Z"
       },
       "Atime": "2020-04-30T01:59:37Z",
       "Ctime": "2020-04-30T01:59:37Z",
@@ -75,7 +75,7 @@ Parameters:
       "IsLink": false,
       "ModTime": "2020-04-30T01:59:37Z",
       "Mode": 493,
-      "Mtime": {"sec": 1588211217},
+      "Mtime": "2020-04-30T01:46:57Z",
       "Name": "a",
       "Size": 22,
       "Sys": {
@@ -92,9 +92,9 @@ Parameters:
        "Data": {
         "type": "Key"
        },
-       "Mtime": {"sec": 1588211217},
-       "Ctime": {"sec": 1588211977},
-       "Atime": {"sec": 1588211977}
+       "Mtime": "2020-04-30T01:46:57Z",
+       "Ctime": "2020-04-30T01:59:37Z",
+       "Atime": "2020-04-30T01:59:37Z"
       },
       "Atime": "2020-04-30T01:59:37Z",
       "Ctime": "2020-04-30T01:59:37Z",
@@ -109,7 +109,7 @@ Parameters:
       "IsLink": false,
       "ModTime": "2020-04-30T01:59:37Z",
       "Mode": 493,
-      "Mtime": {"sec": 1588211217},
+      "Mtime": "2020-04-30T01:46:57Z",
       "Name": "b",
       "Size": 44,
       "Sys": {
