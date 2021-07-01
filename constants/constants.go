@@ -39,6 +39,9 @@ const (
 	NOTEBOOK_INDEX = "/notebook_index/"
 	USER_URN       = "/users/"
 
+	// Timelines
+	TIMELINE_URN = "/timelines/"
+
 	// Well known flows - Request ID:
 	LOG_SINK uint64 = 980
 

@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "proto/semantic.proto";
+
+package proto;
+
+option go_package = "www.velocidex.com/golang/velociraptor/timelines/proto";
+
+message SuperTimeline {
+    string name = 1;
+    repeated string timelines = 2;
+}

@@ -1,5 +1,6 @@
 .padded {
     padding: 20px;
+    width: fit-content;
     background-color: var(--color-default-background);
 }
 
