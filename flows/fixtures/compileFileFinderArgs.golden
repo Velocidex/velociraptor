@@ -22,7 +22,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00])  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Unix) as mtime , timestamp(epoch=Atime.Unix) as atime , timestamp(epoch=Ctime.Unix) as ctime from glob(globs=[Path00])  "
     },
     {
      "VQL": "let files = SELECT FullPath , Size , Mode.String As Mode , mtime , atime , ctime, null as GrepHit FROM _simple"
@@ -61,7 +61,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Mtime.Sec \u003e 5  AND  Mtime.Sec \u003c 10  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Unix) as mtime , timestamp(epoch=Atime.Unix) as atime , timestamp(epoch=Ctime.Unix) as ctime from glob(globs=[Path00]) WHERE  Mtime.Unix \u003e 5  AND  Mtime.Unix \u003c 10  "
     },
     {
      "VQL": "let files = SELECT FullPath , Size , Mode.String As Mode , mtime , atime , ctime, null as GrepHit FROM _simple"
@@ -99,7 +99,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Mtime.Sec \u003e 5  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Unix) as mtime , timestamp(epoch=Atime.Unix) as atime , timestamp(epoch=Ctime.Unix) as ctime from glob(globs=[Path00]) WHERE  Mtime.Unix \u003e 5  "
     },
     {
      "VQL": "let files = SELECT FullPath , Size , Mode.String As Mode , mtime , atime , ctime, null as GrepHit FROM _simple"
@@ -158,7 +158,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Atime.Sec \u003e 5  AND  Atime.Sec \u003c 10  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Unix) as mtime , timestamp(epoch=Atime.Unix) as atime , timestamp(epoch=Ctime.Unix) as ctime from glob(globs=[Path00]) WHERE  Atime.Unix \u003e 5  AND  Atime.Unix \u003c 10  "
     },
     {
      "VQL": "let files = SELECT FullPath , Size , Mode.String As Mode , mtime , atime , ctime, null as GrepHit FROM _simple"
@@ -197,7 +197,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Ctime.Sec \u003e 5  AND  Ctime.Sec \u003c 10  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Unix) as mtime , timestamp(epoch=Atime.Unix) as atime , timestamp(epoch=Ctime.Unix) as ctime from glob(globs=[Path00]) WHERE  Ctime.Unix \u003e 5  AND  Ctime.Unix \u003c 10  "
     },
     {
      "VQL": "let files = SELECT FullPath , Size , Mode.String As Mode , mtime , atime , ctime, null as GrepHit FROM _simple"
@@ -236,7 +236,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Size \u003e 500  AND  Size \u003c 1000  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Unix) as mtime , timestamp(epoch=Atime.Unix) as atime , timestamp(epoch=Ctime.Unix) as ctime from glob(globs=[Path00]) WHERE  Size \u003e 500  AND  Size \u003c 1000  "
     },
     {
      "VQL": "let files = SELECT FullPath , Size , Mode.String As Mode , mtime , atime , ctime, null as GrepHit FROM _simple"
@@ -278,7 +278,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00])  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Unix) as mtime , timestamp(epoch=Atime.Unix) as atime , timestamp(epoch=Ctime.Unix) as ctime from glob(globs=[Path00])  "
     },
     {
      "VQL": "let files = SELECT FullPath , Size , Mode.String As Mode , mtime , atime , ctime , grep(keywords=[KW00], path=FullPath) as GrepHit from _simple WHERE GrepHit "
@@ -327,7 +327,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Mtime.Sec \u003e 15  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Unix) as mtime , timestamp(epoch=Atime.Unix) as atime , timestamp(epoch=Ctime.Unix) as ctime from glob(globs=[Path00]) WHERE  Mtime.Unix \u003e 15  "
     },
     {
      "VQL": "let files = SELECT FullPath , Size , Mode.String As Mode , mtime , atime , ctime , grep(keywords=[KW00], path=FullPath) as GrepHit from _simple WHERE GrepHit "
@@ -372,7 +372,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Mtime.Sec \u003e 15  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Unix) as mtime , timestamp(epoch=Atime.Unix) as atime , timestamp(epoch=Ctime.Unix) as ctime from glob(globs=[Path00]) WHERE  Mtime.Unix \u003e 15  "
     },
     {
      "VQL": "let files = SELECT FullPath , Size , Mode.String As Mode , mtime , atime , ctime, null as GrepHit FROM _simple"

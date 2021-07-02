@@ -63,7 +63,7 @@ sources:
                     Username,
                     "HKEY_USERS\\" + UUID + dirname(path=url(parse="ntfs://" +
                         FullPath).Fragment) as reg_key,
-                    timestamp(epoch=Mtime.sec) as reg_mtime,
+                    timestamp(epoch=Mtime.Unix) as reg_mtime,
                     basename(path=url(parse=FullPath).Fragment) as reg_name,
                     split(string=Data.value, sep="\\\\1$")[0] as reg_value,
                     Data.type as reg_type,

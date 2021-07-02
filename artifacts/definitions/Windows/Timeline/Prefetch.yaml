@@ -54,8 +54,8 @@ sources:
                     // FilesAccessed, 
                     FullPath, 
                     Name AS PrefetchFileName,
-                    timestamp(epoch=Ctime.sec) as CreationTime,
-                    timestamp(epoch=Mtime.sec) as ModificationTime
+                    timestamp(epoch=Ctime.Unix) as CreationTime,
+                    timestamp(epoch=Mtime.Unix) as ModificationTime
                  FROM prefetch(filename=FullPath)
                  WHERE  
                     if(condition=binaryRegex, then= Executable =~ binaryRegex,

@@ -40,7 +40,7 @@ The key must be a string. You can create the key using the format()
 VQL function where you can combine several columns to create a unique
 key. For example watching for new files or modified files can be achieved by:
 
-SELECT format(format="%v@%v", args=[FullPath, Mtime.Sec]) as Key, ....
+SELECT format(format="%v@%v", args=[FullPath, Mtime.Unix]) as Key, ....
 
 */
 package common
