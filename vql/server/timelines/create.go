@@ -14,7 +14,8 @@ import (
 )
 
 type AddTimelineFunctionArgs struct {
-	Timeline string            `vfilter:"required,field=timeline"`
+	Timeline string            `vfilter:"required,field=timeline,doc=Supertimeline to add to"`
+	Name     string            `vfilter:"required,field=name,doc=Name of child timeline"`
 	Query    types.StoredQuery `vfilter:"required,field=query,doc=Run this query to generate the timeline."`
 	Key      string            `vfilter:"required,field=key,doc=The column representing the time."`
 }
@@ -52,7 +53,7 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 	defer super.Close()
 
 	// make a new timeline to store in the super timeline.
-	writer, err := super.AddChild()
+	writer, err := super.AddChild(arg.Name)
 	if err != nil {
 		scope.Log("timeline_add: %v", err)
 		return vfilter.Null{}

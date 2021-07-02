@@ -19,7 +19,7 @@ import { faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
          faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
          faBinoculars, faUpload, faExternalLinkAlt, faTags, faTimes, faFolder,
          faSignOutAlt, faBroom, faPaperPlane, faEdit, faChevronDown, faFileDownload,
-         faEraser, faFileCsv, faFileImport,
+         faEraser, faFileCsv, faFileImport, faMinus,
        } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
@@ -30,7 +30,7 @@ library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
             faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
             faFolderOpen , faHistory, faBinoculars, faUpload, faExternalLinkAlt,
             faTags, faTimes, faFolder, faSignOutAlt, faBroom, faPaperPlane, faEdit,
-            faChevronDown, faFileDownload, faEraser, faFileCsv, faFileImport,
+            faChevronDown, faFileDownload, faEraser, faFileCsv, faFileImport, faMinus,
            );
 
 ReactDOM.render(

@@ -1,0 +1,54 @@
+.timeline-value-item {
+    margin-right: 2ex;
+}
+
+.timeline-value {
+    display: inline-flex;
+}
+
+.timeline-table-item {
+    color: var(--color-table-row-selected);
+    background: var(--color-table-row-selected);
+}
+
+
+.super-timeline .form-check {
+    line-height: normal;
+}
+
+.super-timeline .react-calendar-timeline .rct-header-root {
+    background: var(--color-timeline-header);
+}
+
+.super-timeline .react-calendar-timeline .rct-dateHeader-primary {
+    color: var(--color-default-font);
+}
+
+
+.timeline-item-1 {
+    background: var(--color-timeline-1);
+}
+
+.timeline-item-2 {
+    background: var(--color-timeline-2);
+}
+
+.timeline-item-3 {
+    background: var(--color-timeline-3);
+}
+
+.timeline-item-4 {
+    background: var(--color-timeline-4);
+}
+
+.timeline-item-5 {
+    background: var(--color-timeline-5);
+}
+
+.timeline-item-6 {
+    background: var(--color-timeline-6);
+}
+
+.timeline-item-7 {
+    background: var(--color-timeline-7);
+}

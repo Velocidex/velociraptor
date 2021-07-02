@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 
 import parse from 'html-react-parser';
 import VeloTable from '../core/table.js';
+import TimelineRenderer from "../timeline/timeline.js";
+import VeloLineChart from '../artifacts/line-charts.js';
 
 import NotebookTableRenderer from './notebook-table-renderer.js';
 
@@ -37,6 +39,12 @@ export default class NotebookReportRenderer extends React.Component {
                     };
                 }
 
+                if (domNode.name === "grr-timeline") {
+                    return (
+                        <TimelineRenderer name={domNode.attribs.name} params={domNode.attribs.params}/>
+                    );
+                };
+
                 if (domNode.name === "grr-csv-viewer") {
                     try {
                         let params = JSON.parse(domNode.attribs.params);
@@ -50,6 +58,23 @@ export default class NotebookReportRenderer extends React.Component {
                         return domNode;
                     }
                 };
+
+                if (domNode.name === "grr-line-chart") {
+                    // Figure out where the data is: attribs.value is
+                    // something like data['table2']
+                    let re = /'([^']+)'/;
+                    let match = re.exec(domNode.attribs.value);
+                    let data = this.state.data[match[1]];
+                    let rows = JSON.parse(data.Response);
+                    let params = JSON.parse(domNode.attribs.params);
+
+                    return (
+                        <VeloLineChart data={rows}
+                                       columns={data.Columns}
+                                       params={params} />
+                    );
+                };
+
                 return domNode;
             }
         });

@@ -62,4 +62,13 @@
     --color-diff-added: #dff0d8;
     --color-diff-removed: #f2dede;
     --color-troggle-highlight-color: #cdcdcd;
+
+    --color-timeline-header: #cdcdcd60;
+    --color-timeline-1: #dff0d860;
+    --color-timeline-2: #a9444220;
+    --color-timeline-3: #2aabd2;
+    --color-timeline-4: #f0c36d;
+    --color-timeline-5: #bbb;
+    --color-timeline-6: #008000;
+    --color-timeline-7: #471ecb;
 }

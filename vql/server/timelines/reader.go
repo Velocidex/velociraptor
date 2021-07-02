@@ -14,8 +14,9 @@ import (
 )
 
 type TimelinePluginArgs struct {
-	Timeline  string      `vfilter:"required,field=timeline,doc=Name of the timeline to read"`
-	StartTime vfilter.Any `vfilter:"optional,field=start,doc=First timestamp to fetch"`
+	Timeline       string      `vfilter:"required,field=timeline,doc=Name of the timeline to read"`
+	SkipComponents []string    `vfilter:"optional,field=skip,doc=List of child components to skip"`
+	StartTime      vfilter.Any `vfilter:"optional,field=start,doc=First timestamp to fetch"`
 }
 
 type TimelinePlugin struct{}
@@ -49,7 +50,7 @@ func (self TimelinePlugin) Call(
 		}
 
 		path_manager := &timelines.SuperTimelinePathManager{arg.Timeline}
-		reader, err := timelines.NewSuperTimelineReader(config_obj, path_manager)
+		reader, err := timelines.NewSuperTimelineReader(config_obj, path_manager, arg.SkipComponents)
 		if err != nil {
 			scope.Log("timeline: %v", err)
 			return

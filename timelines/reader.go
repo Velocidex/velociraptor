@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"context"
 	"encoding/binary"
+	"fmt"
+	"os"
 	"sort"
 	"time"
 
@@ -12,43 +14,58 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
+	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 )
 
 type TimelineItem struct {
-	Row  *ordereddict.Dict
-	Time int64
+	Row    *ordereddict.Dict
+	Time   int64
+	Source string
 }
 
 type TimelineReader struct {
+	id          string
 	current_idx int
+	offset      int64
 	fd          api.FileReader
 	index_fd    api.FileReader
 	index_stat  glob.FileInfo
 }
 
-func (self *TimelineReader) getIndex(i int) *IndexRecord {
+func (self *TimelineReader) getIndex(i int) (*IndexRecord, error) {
 	idx_record := &IndexRecord{}
-
 	_, err := self.index_fd.Seek(int64(i)*IndexRecordSize, 0)
 	if err != nil {
-		return idx_record
+		return nil, err
 	}
 
-	_ = binary.Read(self.index_fd, binary.LittleEndian, idx_record)
-	return idx_record
+	err = binary.Read(self.index_fd, binary.LittleEndian, idx_record)
+	return idx_record, err
 }
 
-func (self *TimelineReader) SeekToTime(timestamp time.Time) {
+func (self *TimelineReader) Stat() *timelines_proto.Timeline {
+	first_record, _ := self.getIndex(0)
+	last_record, _ := self.getIndex(int(self.index_stat.Size()/IndexRecordSize - 1))
+
+	return &timelines_proto.Timeline{
+		Id:        self.id,
+		StartTime: first_record.Timestamp,
+		EndTime:   last_record.Timestamp,
+	}
+}
+
+func (self *TimelineReader) SeekToTime(timestamp time.Time) error {
 	timestamp_int := timestamp.UnixNano()
 	number_of_points := self.index_stat.Size() / IndexRecordSize
 
 	self.current_idx = sort.Search(int(number_of_points), func(i int) bool {
 		// Read the index record at offset i
-		idx_record := self.getIndex(i)
+		idx_record, _ := self.getIndex(i)
 		return idx_record.Timestamp >= timestamp_int
 	})
-	idx_record := self.getIndex(self.current_idx)
-	self.fd.Seek(idx_record.Offset, 0)
+	idx_record, err := self.getIndex(self.current_idx)
+	self.offset = idx_record.Offset
+	return err
 }
 
 func (self *TimelineReader) Read(ctx context.Context) <-chan TimelineItem {
@@ -56,6 +73,9 @@ func (self *TimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 
 	go func() {
 		defer close(output_chan)
+
+		self.fd.Seek(self.offset, os.SEEK_SET)
+		fmt.Printf("Seekin g to %v\n", self.offset)
 
 		reader := bufio.NewReader(self.fd)
 		for {
@@ -74,7 +94,10 @@ func (self *TimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 					return
 				}
 
-				idx_record := self.getIndex(self.current_idx)
+				idx_record, err := self.getIndex(self.current_idx)
+				if err != nil {
+					return
+				}
 				self.current_idx++
 
 				item := ordereddict.NewDict()
@@ -88,7 +111,9 @@ func (self *TimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 				}
 
 				output_chan <- TimelineItem{
-					Row: item, Time: idx_record.Timestamp,
+					Source: self.id,
+					Row:    item,
+					Time:   idx_record.Timestamp,
 				}
 			}
 		}
@@ -124,6 +149,11 @@ func NewTimelineReader(config_obj *config_proto.Config,
 		return nil, err
 	}
 
-	return &TimelineReader{fd: fd, index_fd: index_fd, index_stat: stats}, nil
+	return &TimelineReader{
+		id:         path_manager.Name,
+		fd:         fd,
+		index_fd:   index_fd,
+		index_stat: stats,
+	}, nil
 
 }

@@ -91,6 +91,7 @@ func NewTimelineWriter(
 	if err != nil {
 		return nil, err
 	}
+	fd.Truncate()
 
 	index_fd, err := file_store_factory.WriteFile(
 		path_manager.Index())
@@ -98,6 +99,7 @@ func NewTimelineWriter(
 		fd.Close()
 		return nil, err
 	}
+	index_fd.Truncate()
 
 	return &TimelineWriter{fd: fd, index_fd: index_fd}, nil
 

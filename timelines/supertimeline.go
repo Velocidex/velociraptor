@@ -2,12 +2,15 @@ package timelines
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // A Supertimeline is a collection of individual timelines
@@ -19,9 +22,9 @@ func (self *SuperTimelinePathManager) Path() string {
 	return constants.TIMELINE_URN + self.Name
 }
 
-func (self *SuperTimelinePathManager) NewChild() *TimelinePathManager {
+func (self *SuperTimelinePathManager) NewChild(name string) *TimelinePathManager {
 	return &TimelinePathManager{
-		Name:  NewTimelineId(),
+		Name:  name,
 		Super: self.Name,
 	}
 }
@@ -37,6 +40,16 @@ type SuperTimelineReader struct {
 	*timelines_proto.SuperTimeline
 
 	readers []*TimelineReader
+}
+
+func (self *SuperTimelineReader) Stat() *timelines_proto.SuperTimeline {
+	result := proto.Clone(self.SuperTimeline).(*timelines_proto.SuperTimeline)
+	result.Timelines = nil
+	for _, reader := range self.readers {
+		result.Timelines = append(result.Timelines, reader.Stat())
+	}
+
+	return result
 }
 
 func (self *SuperTimelineReader) Close() {
@@ -124,7 +137,8 @@ func (self *SuperTimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 
 func NewSuperTimelineReader(
 	config_obj *config_proto.Config,
-	path_manager *SuperTimelinePathManager) (*SuperTimelineReader, error) {
+	path_manager *SuperTimelinePathManager,
+	skip_components []string) (*SuperTimelineReader, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -137,15 +151,18 @@ func NewSuperTimelineReader(
 	}
 
 	// Open all the readers.
-	for _, name := range result.Timelines {
-		reader, err := NewTimelineReader(config_obj, path_manager.GetChild(name))
+	for _, timeline := range result.Timelines {
+		if utils.InString(skip_components, timeline.Id) {
+			continue
+		}
+		reader, err := NewTimelineReader(config_obj, path_manager.GetChild(timeline.Id))
 		if err != nil {
+			fmt.Printf("NewSuperTimelineReader err: %v\n", err)
 			result.Close()
 			return nil, err
 		}
 		result.readers = append(result.readers, reader)
 	}
-
 	return result, nil
 }
 
@@ -163,10 +180,12 @@ func (self *SuperTimelineWriter) Close() {
 	db.SetSubject(self.config_obj, self.path_manager.Path(), self.SuperTimeline)
 }
 
-func (self *SuperTimelineWriter) AddChild() (*TimelineWriter, error) {
-	new_timeline_path_manager := self.path_manager.NewChild()
+func (self *SuperTimelineWriter) AddChild(name string) (*TimelineWriter, error) {
+	new_timeline_path_manager := self.path_manager.NewChild(name)
 	writer, err := NewTimelineWriter(self.config_obj, new_timeline_path_manager)
-	self.Timelines = append(self.Timelines, new_timeline_path_manager.Name)
+	self.Timelines = append(self.Timelines, &timelines_proto.Timeline{
+		Id: new_timeline_path_manager.Name,
+	})
 	return writer, err
 }
 
