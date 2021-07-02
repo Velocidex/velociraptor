@@ -16,7 +16,7 @@ SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFi
   "FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Users\\test2.txt",
   "SHA1": "1896ab50888c9c3d4150f5044b2568cea317a8e8",
   "Source": "_HarddiskVolumeShadowCopy1",
-  "Deduped": true
+  "Deduped": false
  }
 ]SELECT EventID,ServiceName,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec( EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx", SearchVSS=True)[
  {
