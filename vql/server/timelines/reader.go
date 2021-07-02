@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/timelines"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
@@ -17,6 +18,7 @@ type TimelinePluginArgs struct {
 	Timeline       string      `vfilter:"required,field=timeline,doc=Name of the timeline to read"`
 	SkipComponents []string    `vfilter:"optional,field=skip,doc=List of child components to skip"`
 	StartTime      vfilter.Any `vfilter:"optional,field=start,doc=First timestamp to fetch"`
+	NotebookId     string      `vfilter:"optional,field=notebook_id,doc=The notebook ID the timeline is stored in."`
 }
 
 type TimelinePlugin struct{}
@@ -49,8 +51,19 @@ func (self TimelinePlugin) Call(
 			return
 		}
 
-		path_manager := &timelines.SuperTimelinePathManager{arg.Timeline}
-		reader, err := timelines.NewSuperTimelineReader(config_obj, path_manager, arg.SkipComponents)
+		notebook_id := arg.NotebookId
+		if notebook_id == "" {
+			notebook_id = vql_subsystem.GetStringFromRow(scope, scope, "NotebookId")
+		}
+
+		if notebook_id == "" {
+			scope.Log("timeline_add: Notebook ID must be specified")
+			return
+		}
+
+		super_path_manager := reporting.NewNotebookPathManager(notebook_id)
+		reader, err := timelines.NewSuperTimelineReader(config_obj,
+			super_path_manager.Timeline(arg.Timeline), arg.SkipComponents)
 		if err != nil {
 			scope.Log("timeline: %v", err)
 			return

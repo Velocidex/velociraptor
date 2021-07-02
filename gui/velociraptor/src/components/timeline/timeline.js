@@ -87,6 +87,7 @@ class TimelineTableRenderer  extends Component {
             {dataField: '_id', hidden: true},
             {dataField: 'Time',
              text: "Time",
+             classes: "timeline-time",
              formatter: (cell, row, rowIndex) => {
                  return <div className={this.getTimelineClass(row._Source)}>
                           <VeloTimestamp usec={cell / 1000000}/>
@@ -123,6 +124,7 @@ class TimelineTableRenderer  extends Component {
 export default class TimelineRenderer extends React.Component {
     static propTypes = {
         name: PropTypes.string,
+        notebook_id: PropTypes.string,
         params: PropTypes.string,
     }
 
@@ -177,6 +179,7 @@ export default class TimelineRenderer extends React.Component {
             start_time: this.state.start_time * 1000000,
             rows: this.state.row_count,
             skip_components: skip_components,
+            notebook_id: this.props.notebook_id,
         };
 
         let url = this.props.url || "v1/GetTable";
@@ -247,7 +250,13 @@ export default class TimelineRenderer extends React.Component {
     }
 
     render() {
-        let super_timeline = JSON.parse(this.props.params);
+        let super_timeline = {timelines:[]};
+        try {
+            super_timeline = JSON.parse(this.props.params);
+        } catch(e) {
+            return <></>;
+        }
+
         let groups = [{id: -1, title: "Table View"}];
         let items = [{
             id:-1, group: -1,
@@ -266,7 +275,9 @@ export default class TimelineRenderer extends React.Component {
         }];
         let smallest = 10000000000000000;
         let largest = 0;
-        for (let i=0;i<super_timeline.timelines.length;i++) {
+        let timelines = super_timeline.timelines || [];
+
+        for (let i=0;i<timelines.length;i++) {
             let timeline = super_timeline.timelines[i];
             let start = timeline.start_time / 1000000;
             let end = timeline.end_time / 1000000;
@@ -298,6 +309,10 @@ export default class TimelineRenderer extends React.Component {
                     }
                 },
             });
+        }
+
+        if (smallest > largest) {
+            smallest = largest;
         }
 
         return <div className="super-timeline">Super-timeline {this.props.name}

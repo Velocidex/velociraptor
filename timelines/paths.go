@@ -1,32 +1,37 @@
 package timelines
 
 import (
-	"crypto/rand"
-	"encoding/base32"
-	"encoding/binary"
-	"time"
-
-	"www.velocidex.com/golang/velociraptor/constants"
+	"path"
 )
 
 type TimelinePathManager struct {
-	Name  string
-	Super string
+	Name string
+	root string
 }
 
 func (self TimelinePathManager) Path() string {
-	return constants.TIMELINE_URN + self.Super + "/" + self.Name + ".json"
+	return self.root + "/" + self.Name + ".json"
 }
+
 func (self TimelinePathManager) Index() string {
-	return constants.TIMELINE_URN + self.Super + "/" + self.Name + ".idx"
+	return self.root + "/" + self.Name + ".idx"
 }
 
-func NewTimelineId() string {
-	buf := make([]byte, 8)
-	_, _ = rand.Read(buf)
+// A Supertimeline is a collection of individual timelines. Create
+// this path manager using a notebook path manager.
+type SuperTimelinePathManager struct {
+	Name string
+	Root string // Base directory where we store the timeline.
+}
 
-	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
-	result := base32.HexEncoding.EncodeToString(buf)[:13]
+func (self *SuperTimelinePathManager) Path() string {
+	return path.Join("/", self.Root, "timelines", self.Name+".json")
+}
 
-	return "T." + result
+// Add a child timeline to the super timeline.
+func (self *SuperTimelinePathManager) GetChild(child_name string) *TimelinePathManager {
+	return &TimelinePathManager{
+		Name: child_name,
+		root: self.Path(),
+	}
 }

@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "flows.proto";
 
+
 package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
@@ -70,6 +71,8 @@ message NotebookMetadata {
     // These environment variables will be populated into each
     // notebook cell in this notebook.
     repeated Env env = 14;
+
+    repeated string timelines = 15;
 }
 
 message Notebooks {

@@ -260,15 +260,16 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 		return ""
 
 	case string:
-		timeline_path_manager := &timelines.SuperTimelinePathManager{t}
+		timeline_path_manager := self.path_manager.Notebook().Timeline(t)
+		parameters := "{}"
 		reader, err := timelines.NewSuperTimelineReader(self.config_obj, timeline_path_manager, nil)
-		if err != nil {
-			return ""
+		if err == nil {
+			parameters = json.MustMarshalString(reader.Stat())
 		}
 
 		return fmt.Sprintf(
 			`<div class="panel"><grr-timeline name='%s' `+
-				`params='%s' /></div>`, t, json.MustMarshalString(reader.Stat()))
+				`params='%s' /></div>`, t, parameters)
 
 	case []*NotebookCellQuery:
 		result := ""

@@ -7,34 +7,10 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
-
-// A Supertimeline is a collection of individual timelines
-type SuperTimelinePathManager struct {
-	Name string
-}
-
-func (self *SuperTimelinePathManager) Path() string {
-	return constants.TIMELINE_URN + self.Name
-}
-
-func (self *SuperTimelinePathManager) NewChild(name string) *TimelinePathManager {
-	return &TimelinePathManager{
-		Name:  name,
-		Super: self.Name,
-	}
-}
-
-func (self *SuperTimelinePathManager) GetChild(name string) *TimelinePathManager {
-	return &TimelinePathManager{
-		Name:  name,
-		Super: self.Name,
-	}
-}
 
 type SuperTimelineReader struct {
 	*timelines_proto.SuperTimeline
@@ -181,8 +157,19 @@ func (self *SuperTimelineWriter) Close() {
 }
 
 func (self *SuperTimelineWriter) AddChild(name string) (*TimelineWriter, error) {
-	new_timeline_path_manager := self.path_manager.NewChild(name)
+	new_timeline_path_manager := self.path_manager.GetChild(name)
 	writer, err := NewTimelineWriter(self.config_obj, new_timeline_path_manager)
+	if err != nil {
+		return nil, err
+	}
+
+	// Only add a new child if it is not already in there.
+	for _, item := range self.Timelines {
+		if item.Id == new_timeline_path_manager.Name {
+			return writer, err
+		}
+	}
+
 	self.Timelines = append(self.Timelines, &timelines_proto.Timeline{
 		Id: new_timeline_path_manager.Name,
 	})
@@ -191,12 +178,12 @@ func (self *SuperTimelineWriter) AddChild(name string) (*TimelineWriter, error) 
 
 func NewSuperTimelineWriter(
 	config_obj *config_proto.Config,
-	name string) (*SuperTimelineWriter, error) {
+	path_manager *SuperTimelinePathManager) (*SuperTimelineWriter, error) {
 
 	self := &SuperTimelineWriter{
 		SuperTimeline: &timelines_proto.SuperTimeline{},
 		config_obj:    config_obj,
-		path_manager:  &SuperTimelinePathManager{name},
+		path_manager:  path_manager,
 	}
 
 	db, err := datastore.GetDB(config_obj)
@@ -206,7 +193,7 @@ func NewSuperTimelineWriter(
 
 	err = db.GetSubject(config_obj, self.path_manager.Path(), self.SuperTimeline)
 	if err != nil {
-		self.SuperTimeline.Name = name
+		self.SuperTimeline.Name = path_manager.Name
 	}
 
 	return self, nil

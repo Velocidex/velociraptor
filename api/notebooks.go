@@ -687,6 +687,8 @@ func (self *ApiServer) updateNotebookCell(
 		return nil, err
 	}
 
+	tmpl.SetEnv("NotebookId", in.NotebookId)
+
 	// Register a progress reporter so we can monitor how the
 	// template rendering is going.
 	tmpl.Progress = &progressReporter{

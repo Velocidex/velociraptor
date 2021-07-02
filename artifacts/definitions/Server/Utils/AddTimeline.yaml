@@ -1,0 +1,17 @@
+name: Server.Utils.AddTimeline
+description: |
+  Adds a new timeline to a super timeline.
+
+type: SERVER
+
+parameters:
+  - name: NotebookId
+  - name: Timeline
+    description: Timeline name
+  - name: Query
+    description: A query that will be parsed and run.
+
+sources:
+  - query: |
+      SELECT Query, NotebookId, Timeline
+      FROM scope()

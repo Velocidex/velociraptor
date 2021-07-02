@@ -10,6 +10,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/timelines"
 )
 
 type NotebookPathManager struct {
@@ -53,6 +54,13 @@ func (self *NotebookPathManager) ZipExport() string {
 			time.Now().Format("20060102150405Z")))
 }
 
+func (self *NotebookPathManager) Timeline(name string) *timelines.SuperTimelinePathManager {
+	return &timelines.SuperTimelinePathManager{
+		Root: self.Directory(),
+		Name: name,
+	}
+}
+
 var notebook_regex = regexp.MustCompile(`N\.(F\.[^-]+?)-(C\..+|server)`)
 
 func NewNotebookPathManager(notebook_id string) *NotebookPathManager {
@@ -67,7 +75,7 @@ func NewNotebookPathManager(notebook_id string) *NotebookPathManager {
 
 	matches := notebook_regex.FindStringSubmatch(notebook_id)
 	if len(matches) == 3 {
-		// For hunt notebooks store them in the hunt itself.
+		// For collections notebooks store them in the hunt itself.
 		return &NotebookPathManager{
 			notebook_id: notebook_id,
 			root: path.Join("/clients/", matches[2],
@@ -89,6 +97,13 @@ type NotebookCellPathManager struct {
 
 func (self *NotebookCellPathManager) Path() string {
 	return path.Join(self.root, self.notebook_id, self.cell_id+".json")
+}
+
+func (self *NotebookCellPathManager) Notebook() *NotebookPathManager {
+	return &NotebookPathManager{
+		notebook_id: self.notebook_id,
+		root:        self.root,
+	}
 }
 
 func (self *NotebookCellPathManager) Item(name string) string {

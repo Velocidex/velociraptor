@@ -12,6 +12,7 @@ export default class NotebookReportRenderer extends React.Component {
     static propTypes = {
         refresh: PropTypes.func,
         cell: PropTypes.object,
+        notebook_id: PropTypes.string,
     };
 
     render() {
@@ -41,7 +42,10 @@ export default class NotebookReportRenderer extends React.Component {
 
                 if (domNode.name === "grr-timeline") {
                     return (
-                        <TimelineRenderer name={domNode.attribs.name} params={domNode.attribs.params}/>
+                        <TimelineRenderer
+                          notebook_id={this.props.notebook_id}
+                          name={domNode.attribs.name}
+                          params={domNode.attribs.params}/>
                     );
                 };
 

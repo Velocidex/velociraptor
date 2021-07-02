@@ -231,7 +231,11 @@ func getTimeline(
 	config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
 
-	path_manager := &timelines.SuperTimelinePathManager{in.Timeline}
+	if in.NotebookId == "" {
+		return nil, errors.New("NotebookId must be specified")
+	}
+
+	path_manager := reporting.NewNotebookPathManager(in.NotebookId).Timeline(in.Timeline)
 	reader, err := timelines.NewSuperTimelineReader(config_obj, path_manager, in.SkipComponents)
 	if err != nil {
 		return nil, err

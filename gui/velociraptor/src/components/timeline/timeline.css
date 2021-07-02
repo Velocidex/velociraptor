@@ -11,7 +11,6 @@
     background: var(--color-timeline-table-shown);
 }
 
-
 .super-timeline .form-check {
     line-height: normal;
 }
@@ -38,10 +37,20 @@
     padding-bottom: 0;
 }
 
+.super-timeline .velo-table {
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+td.timeline-time {
+    width: 15em;
+    overflow-x: hidden;
+}
+
 .timeline-item-1 {
     background: var(--color-timeline-1);
     color: var(--color-default-font);
-}
+  }
 
 .timeline-item-2 {
     background: var(--color-timeline-2);

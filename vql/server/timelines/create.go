@@ -6,6 +6,9 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/timelines"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -14,10 +17,11 @@ import (
 )
 
 type AddTimelineFunctionArgs struct {
-	Timeline string            `vfilter:"required,field=timeline,doc=Supertimeline to add to"`
-	Name     string            `vfilter:"required,field=name,doc=Name of child timeline"`
-	Query    types.StoredQuery `vfilter:"required,field=query,doc=Run this query to generate the timeline."`
-	Key      string            `vfilter:"required,field=key,doc=The column representing the time."`
+	Timeline   string            `vfilter:"required,field=timeline,doc=Supertimeline to add to"`
+	Name       string            `vfilter:"required,field=name,doc=Name of child timeline"`
+	Query      types.StoredQuery `vfilter:"required,field=query,doc=Run this query to generate the timeline."`
+	Key        string            `vfilter:"required,field=key,doc=The column representing the time."`
+	NotebookId string            `vfilter:"optional,field=notebook_id,doc=The notebook ID the timeline is stored in."`
 }
 
 type AddTimelineFunction struct{}
@@ -45,7 +49,19 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	super, err := timelines.NewSuperTimelineWriter(config_obj, arg.Timeline)
+	notebook_id := arg.NotebookId
+	if notebook_id == "" {
+		notebook_id = vql_subsystem.GetStringFromRow(scope, scope, "NotebookId")
+	}
+
+	if notebook_id == "" {
+		scope.Log("timeline_add: Notebook ID must be specified")
+		return vfilter.Null{}
+	}
+
+	notebook_path_manager := reporting.NewNotebookPathManager(notebook_id)
+	super, err := timelines.NewSuperTimelineWriter(
+		config_obj, notebook_path_manager.Timeline(arg.Timeline))
 	if err != nil {
 		scope.Log("timeline_add: %v", err)
 		return vfilter.Null{}
@@ -80,6 +96,28 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 		}
 
 		writer.Write(ts, vfilter.RowToDict(sub_ctx, subscope, row))
+	}
+
+	// Now record the new timeline in the notebook if needed.
+	db, _ := datastore.GetDB(config_obj)
+	notebook_metadata := &api_proto.NotebookMetadata{}
+	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook_metadata)
+	if err != nil {
+		scope.Log("timeline_add: %v", err)
+		return vfilter.Null{}
+	}
+
+	for _, item := range notebook_metadata.Timelines {
+		if item == arg.Timeline {
+			return super.SuperTimeline
+		}
+	}
+
+	notebook_metadata.Timelines = append(notebook_metadata.Timelines, arg.Timeline)
+	err = db.SetSubject(config_obj, notebook_path_manager.Path(), notebook_metadata)
+	if err != nil {
+		scope.Log("timeline_add: %v", err)
+		return vfilter.Null{}
 	}
 
 	return super.SuperTimeline
