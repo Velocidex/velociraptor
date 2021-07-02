@@ -6,10 +6,7 @@ import _ from 'lodash';
 import Timeline, {
     TimelineMarkers,
     CustomMarker,
-    TodayMarker,
-    CursorMarker
 } from 'react-calendar-timeline';
-import VeloTable from '../core/table.js';
 import api from '../core/api-service.js';
 import axios from 'axios';
 import { PrepareData } from '../core/table.js';
@@ -22,9 +19,9 @@ import 'react-calendar-timeline/lib/Timeline.css';
 import moment from 'moment';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-const item_colors = ["white", "red",
-                     "blue", "cyan"];
+import BootstrapTable from 'react-bootstrap-table-next';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import Navbar from 'react-bootstrap/Navbar';
 
 class TimelineValueRenderer extends Component {
     static propTypes = {
@@ -64,6 +61,65 @@ class TimelineValueRenderer extends Component {
     }
 }
 
+class TimelineTableRenderer  extends Component {
+    static propTypes = {
+        rows: PropTypes.array,
+        timelines: PropTypes.object,
+    }
+
+    getTimelineClass = (name) => {
+        let timelines = this.props.timelines.timelines;
+        for(let i=0;i<timelines.length;i++) {
+            if (timelines[i].id === name) {
+                return "timeline-item-" + (i + 1);
+            };
+        }
+        return "";
+    }
+
+    render() {
+        if (!this.props.rows) {
+            return <div></div>;
+        }
+
+        let rows = this.props.rows;
+        let columns = [
+            {dataField: '_id', hidden: true},
+            {dataField: 'Time',
+             text: "Time",
+             formatter: (cell, row, rowIndex) => {
+                 return <div className={this.getTimelineClass(row._Source)}>
+                          <VeloTimestamp usec={cell / 1000000}/>
+                        </div>;
+             }},
+            {dataField: 'Data',
+             text: "Data",
+             formatter: (cell, row, rowIndex) => {
+                 return <TimelineValueRenderer value={cell}/>;
+             }},
+        ];
+
+        // Add an id field for react ordering.
+        for (var j=0; j<rows.length; j++) {
+            rows[j]["_id"] = j;
+        }
+        return (
+            <div className="velo-table">
+              <BootstrapTable
+                hover
+                condensed
+                data={rows}
+                columns={columns}
+                keyField="_id"
+                headerClasses="hidden-header"
+                bodyClasses="fixed-table-body"
+              />
+            </div>
+        );
+    }
+}
+
+
 export default class TimelineRenderer extends React.Component {
     static propTypes = {
         name: PropTypes.string,
@@ -89,6 +145,11 @@ export default class TimelineRenderer extends React.Component {
             return true;
         };
 
+        if (!_.isEqual(prevState.row_count, this.state.row_count)) {
+            this.fetchRows();
+            return true;
+        };
+
         return false;
     }
 
@@ -99,6 +160,7 @@ export default class TimelineRenderer extends React.Component {
         loading: true,
         disabled: {},
         version: 0,
+        row_count: 10,
     };
 
     fetchRows = () => {
@@ -113,7 +175,7 @@ export default class TimelineRenderer extends React.Component {
             type: "TIMELINE",
             timeline: this.props.name,
             start_time: this.state.start_time * 1000000,
-            rows: 10,
+            rows: this.state.row_count,
             skip_components: skip_components,
         };
 
@@ -163,17 +225,29 @@ export default class TimelineRenderer extends React.Component {
         );
     };
 
-    getTimelineClass = (name, timelines) => {
-        for(let i=0;i<timelines.length;i++) {
-            if (timelines[i].id === name) {
-                return "timeline-item-" + (i + 1);
-            };
-        }
-        return "";
+    pageSizeSelector = () => {
+        let options = [10, 20, 50, 100];
+
+        return <div className="btn-group" role="group">
+                 { _.map(options, option=>{
+                     return <button
+                              key={ option }
+                              type="button"
+                              onClick={()=>this.setState({row_count: option})}
+                              className={ `btn ${option === this.state.row_count ? 'btn-secondary' : 'btn-default'}` }
+                            >
+                              { option }
+                            </button>;
+                     }) }
+               </div>;
+    }
+
+    nextPage = ()=>{
+        this.setState({start_time: this.state.table_end + 1});
     }
 
     render() {
-        let params = JSON.parse(this.props.params);
+        let super_timeline = JSON.parse(this.props.params);
         let groups = [{id: -1, title: "Table View"}];
         let items = [{
             id:-1, group: -1,
@@ -192,8 +266,8 @@ export default class TimelineRenderer extends React.Component {
         }];
         let smallest = 10000000000000000;
         let largest = 0;
-        for (let i=0;i<params.timelines.length;i++) {
-            let timeline = params.timelines[i];
+        for (let i=0;i<super_timeline.timelines.length;i++) {
+            let timeline = super_timeline.timelines[i];
             let start = timeline.start_time / 1000000;
             let end = timeline.end_time / 1000000;
             if (start < smallest) {
@@ -227,6 +301,16 @@ export default class TimelineRenderer extends React.Component {
         }
 
         return <div className="super-timeline">Super-timeline {this.props.name}
+                 <Navbar className="toolbar">
+                   <ButtonGroup>
+                     { this.pageSizeSelector() }
+                     <Button title="Next"
+                             onClick={() => {this.nextPage(); }}
+                             variant="default">
+                       <FontAwesomeIcon icon="forward"/>
+                     </Button>
+                   </ButtonGroup>
+                 </Navbar>
                  <Timeline
                    groups={groups}
                    items={items}
@@ -247,23 +331,22 @@ export default class TimelineRenderer extends React.Component {
                    groupRenderer={this.groupRenderer}
                  >
                    <TimelineMarkers>
-                     <CustomMarker date={this.state.start_time} />
+                     <CustomMarker
+                       date={this.state.start_time} >
+                       { ({ styles, date }) => {
+                           styles.backgroundColor = undefined;
+                           styles.width = undefined;
+                           return <div style={styles}
+                                       className="timeline-marker"
+                                  />;
+                       }}
+                     </CustomMarker>
                    </TimelineMarkers>
                  </Timeline>
                  { this.state.columns &&
-                   <VeloTable rows={this.state.rows}
-                              columns={this.state.columns}
-                              renderers={{
-                                  "Time": (cell, row, rowIndex) => {
-                                      return<div className={this.getTimelineClass(row._Source, params.timelines)}>
-                                              <VeloTimestamp usec={cell / 1000000}/>
-                                            </div>;
-                                  },
-                                  "Data": (cell, row, rowIndex) => {
-                                      return <TimelineValueRenderer value={cell}/>;
-                                  },
-                              }}
-                   />
+                   <TimelineTableRenderer
+                     timelines={super_timeline}
+                     rows={this.state.rows} />
                  }
                </div>;
     }

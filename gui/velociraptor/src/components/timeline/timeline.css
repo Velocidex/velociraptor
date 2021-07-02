@@ -7,8 +7,8 @@
 }
 
 .timeline-table-item {
-    color: var(--color-table-row-selected);
-    background: var(--color-table-row-selected);
+    color: var(--color-timeline-table-shown);
+    background: var(--color-timeline-table-shown);
 }
 
 
@@ -20,21 +20,37 @@
     background: var(--color-timeline-header);
 }
 
+.super-timeline .react-calendar-timeline .rct-dateHeader {
+    background: var(--color-timeline-header);
+    color: var(--color-default-font);
+}
+
 .super-timeline .react-calendar-timeline .rct-dateHeader-primary {
     color: var(--color-default-font);
 }
 
+.super-timeline .hidden-header {
+    display: none;
+}
+
+.super-timeline td {
+    padding-top: 0;
+    padding-bottom: 0;
+}
 
 .timeline-item-1 {
     background: var(--color-timeline-1);
+    color: var(--color-default-font);
 }
 
 .timeline-item-2 {
     background: var(--color-timeline-2);
+    color: var(--color-default-font);
 }
 
 .timeline-item-3 {
     background: var(--color-timeline-3);
+    color: var(--color-default-font);
 }
 
 .timeline-item-4 {
@@ -51,4 +67,9 @@
 
 .timeline-item-7 {
     background: var(--color-timeline-7);
+}
+
+.timeline-marker {
+    background-color: var(--color-default-font);
+    width: 5px;
 }
