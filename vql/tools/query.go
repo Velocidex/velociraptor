@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -49,10 +50,22 @@ func (self QueryPlugin) Call(
 			env.Set(member, v)
 		}
 
-		// Parse and compile the query
-		subscope := scope.Copy()
+		// Build a completely new scope to evaluate the query
+		// in.
+		builder := services.ScopeBuilderFromScope(scope)
+
+		// Make a new scope for each artifact.
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			scope.Log("query: %v", err)
+			return
+		}
+
+		subscope := manager.BuildScope(builder).AppendVars(env)
 		defer subscope.Close()
 
+		// Parse and compile the query
+		scope.Log("query: running query %v", arg.Query)
 		statements, err := vfilter.MultiParse(arg.Query)
 		if err != nil {
 			scope.Log("query: %v", err)
@@ -60,7 +73,7 @@ func (self QueryPlugin) Call(
 		}
 
 		for _, vql := range statements {
-			row_chan := vql.Eval(ctx, scope)
+			row_chan := vql.Eval(ctx, subscope)
 			for {
 				select {
 				case <-ctx.Done():

@@ -47,6 +47,10 @@ func (self *TimelineReader) Stat() *timelines_proto.Timeline {
 	first_record, _ := self.getIndex(0)
 	last_record, _ := self.getIndex(int(self.index_stat.Size()/IndexRecordSize - 1))
 
+	if first_record == nil || last_record == nil {
+		return &timelines_proto.Timeline{Id: self.id}
+	}
+
 	return &timelines_proto.Timeline{
 		Id:        self.id,
 		StartTime: first_record.Timestamp,

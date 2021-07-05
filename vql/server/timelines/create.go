@@ -2,7 +2,6 @@ package timelines
 
 import (
 	"context"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -11,6 +10,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/timelines"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
+	"www.velocidex.com/golang/velociraptor/vql/sorter"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
@@ -82,20 +83,23 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 	sub_ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	for row := range arg.Query.Eval(sub_ctx, subscope) {
+	// Timelines have to be sorted, so we force them to be sorted
+	// by the key.
+	sorter := sorter.MergeSorter{10000}
+	sorted_chan := sorter.Sort(sub_ctx, subscope, arg.Query.Eval(sub_ctx, subscope),
+		arg.Key, false /* desc */)
+
+	for row := range sorted_chan {
 		key, pres := scope.Associative(row, arg.Key)
 		if !pres {
 			scope.Log("timeline_add: Key %v is not found in query", arg.Key)
 			return vfilter.Null{}
 		}
 
-		ts, ok := key.(time.Time)
-		if !ok {
-			scope.Log("timeline_add: Key %v is not a timestamp it is of type %T", arg.Key, key)
-			return vfilter.Null{}
+		ts, err := functions.TimeFromAny(scope, key)
+		if err == nil {
+			writer.Write(ts, vfilter.RowToDict(sub_ctx, subscope, row))
 		}
-
-		writer.Write(ts, vfilter.RowToDict(sub_ctx, subscope, row))
 	}
 
 	// Now record the new timeline in the notebook if needed.

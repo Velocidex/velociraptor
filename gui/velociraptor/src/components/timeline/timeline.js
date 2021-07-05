@@ -246,7 +246,9 @@ export default class TimelineRenderer extends React.Component {
     }
 
     nextPage = ()=>{
-        this.setState({start_time: this.state.table_end + 1});
+        if (this.state.table_end > 0) {
+            this.setState({start_time: this.state.table_end + 1});
+        }
     }
 
     render() {
@@ -315,6 +317,11 @@ export default class TimelineRenderer extends React.Component {
             smallest = largest;
         }
 
+        if (_.isNaN(smallest)) {
+            smallest = 0;
+            largest =0;
+        }
+
         return <div className="super-timeline">Super-timeline {this.props.name}
                  <Navbar className="toolbar">
                    <ButtonGroup>
@@ -332,7 +339,10 @@ export default class TimelineRenderer extends React.Component {
                    defaultTimeStart={moment(smallest).add(-1, "day")}
                    defaultTimeEnd={moment(largest).add(1, "day")}
                    itemTouchSendsClick={true}
+                   minZoom={5*60*1000}
+                   dragSnap={1000}
                    onCanvasClick={(groupId, time, e) => {
+                       console.log(time);
                        this.setState({start_time: time});
                    }}
                    onItemSelect={(itemId, e, time) => {
@@ -340,6 +350,7 @@ export default class TimelineRenderer extends React.Component {
                        return false;
                    }}
                    onItemClick={(itemId, e, time) => {
+                       console.log(time);
                        this.setState({start_time: time});
                        return false;
                    }}

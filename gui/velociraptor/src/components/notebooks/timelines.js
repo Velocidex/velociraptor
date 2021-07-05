@@ -9,6 +9,11 @@ import Modal from 'react-bootstrap/Modal';
 import CreatableSelect from 'react-select/creatable';
 import Select from 'react-select';
 import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 
 const POLL_TIME = 2000;
 
@@ -43,12 +48,11 @@ export class AddTimelineDialog extends React.Component {
                 <Modal.Title>Add Timeline</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <CreatableSelect
-                  isClearable
-                  className="labels"
-                  classNamePrefix="velo"
+                <Select
                   options={options}
-                  onSelect={(e)=>this.setState({timeline: e.value})}
+                  onChange={(e)=>{
+                      this.setState({timeline: e.value});
+                  }}
                   placeholder="Timeline name"
                 />
 
@@ -77,8 +81,14 @@ export class AddVQLCellToTimeline extends React.Component {
     }
 
     state = {
+        // Super timeline - Can be created
         timeline: "",
         time_column: "",
+
+        // name for new child timeline
+        name: "",
+
+        loading: false,
     }
 
     componentDidMount = () => {
@@ -115,12 +125,34 @@ export class AddVQLCellToTimeline extends React.Component {
             }
 
             if(response && response.data && response.data.columns) {
-                this.setState({columns: response.data.columns});
+                // Filter all columns that look like a time
+                let columns = [];
+                let rows = response.data.rows;
+                if (!rows) {
+                    return;
+                }
+                _.each(response.data.rows[0].cell, (x, idx)=>{
+                    if (/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(x)){
+                        console.log(x);
+                        columns.push(response.data.columns[idx]);
+                    };
+                });
+
+                this.setState({columns: columns});
             }
         });
     };
 
     addTimeline = ()=>{
+        let env = {};
+        _.each(this.props.notebook_metadata.env, x=>{
+            env[x.key] = x.value;
+        });
+
+        _.each(this.props.cell.env, x=>{
+            env[x.key] = x.value;
+        });
+
         api.post("v1/CollectArtifact", {
             client_id: "server",
             artifacts: ["Server.Utils.AddTimeline"],
@@ -128,14 +160,19 @@ export class AddVQLCellToTimeline extends React.Component {
                      parameters:{"env": [
                          {"key": "NotebookId", "value": this.props.notebook_metadata.notebook_id},
                          {"key": "Timeline", "value": this.state.timeline},
+                         {"key": "ChildName", "value": this.state.name},
                          {"key": "Key", "value": this.state.time_column},
-                         {"key": "Query", "value": this.props.cell.input}
+                         {"key": "Query", "value": this.props.cell.input},
+                         {"key": "RemoveLimit", "value": "Y"},
+                         {"key": "Env", "value": JSON.stringify(env)},
                      ]},
                     }],
         }).then(response=>{
             // Hold onto the flow id.
             this.setState({
-                lastOperationId: response.data.flow_id});
+                loading: true,
+                lastOperationId: response.data.flow_id,
+            });
 
             // Start polling for flow completion.
             this.interval = setInterval(() => {
@@ -148,9 +185,11 @@ export class AddVQLCellToTimeline extends React.Component {
                         return;
                     }
 
+                    // Done! Close the dialog.
                     clearInterval(this.interval);
                     this.interval = undefined;
                     this.props.closeDialog();
+                    this.setState({loading: false});
                 });
             }, POLL_TIME);
 
@@ -167,26 +206,46 @@ export class AddVQLCellToTimeline extends React.Component {
         });
         return (
             <Modal show={true}
-                   size="sm"
+                   size="lg"
                    onHide={this.props.closeDialog} >
               <Modal.Header closeButton>
                 <Modal.Title>Add Timeline</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <CreatableSelect
-                  isClearable
-                  className="labels"
-                  classNamePrefix="velo"
-                  options={options}
-                  onChange={(e)=>this.setState({timeline: e && e.value})}
-                  placeholder="Timeline name"
-                />
+                <Form.Group as={Row}>
+                  <Form.Label column sm="3">Super Timeline</Form.Label>
+                  <Col sm="8">
+                    <CreatableSelect
+                      isClearable
+                      className="labels"
+                      classNamePrefix="velo"
+                      options={options}
+                      onChange={(e)=>this.setState({timeline: e && e.value})}
+                      placeholder="Timeline name"
+                    />
+                  </Col>
+                </Form.Group>
 
-                <Select
-                  options={column_options}
-                  onChange={(e)=>this.setState({time_column: e && e.value})}
-                  placeholder="Time Column"
-                />
+                <Form.Group as={Row}>
+                  <Form.Label column sm="3">Timeline Name</Form.Label>
+                  <Col sm="8">
+                    <Form.Control as="textarea"
+                                  rows={1}
+                                  value={this.state.name}
+                                  onChange={(e) => this.setState(
+                                      {name: e.currentTarget.value})} />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row}>
+                  <Form.Label column sm="3">Time column</Form.Label>
+                  <Col sm="8">
+                    <Select
+                      options={column_options}
+                      onChange={(e)=>this.setState({time_column: e && e.value})}
+                      placeholder="Time Column"
+                    />
+                  </Col>
+                </Form.Group>
 
               </Modal.Body>
               <Modal.Footer>
@@ -195,9 +254,11 @@ export class AddVQLCellToTimeline extends React.Component {
                   Cancel
                 </Button>
                 <Button variant="primary"
-                        disabled={!this.state.timeline || !this.state.time_column}
+                        disabled={!this.state.timeline || !this.state.time_column ||
+                                  !this.state.name || this.state.loading }
                         onClick={this.addTimeline}>
-                  Add Timeline
+                  { this.state.loading ?  <><FontAwesomeIcon icon="spinner" spin /> Running </>:
+                    <> Add Timeline </> }
                 </Button>
               </Modal.Footer>
             </Modal>

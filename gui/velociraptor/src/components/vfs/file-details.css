@@ -1,7 +1,10 @@
 .padded {
     padding: 20px;
-    width: fit-content;
     background-color: var(--color-default-background);
+}
+
+.padded .velo-table {
+    overflow-x: auto;
 }
 
 .tab-content {

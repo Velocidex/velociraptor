@@ -32,6 +32,6 @@ func (self *SuperTimelinePathManager) Path() string {
 func (self *SuperTimelinePathManager) GetChild(child_name string) *TimelinePathManager {
 	return &TimelinePathManager{
 		Name: child_name,
-		root: self.Path(),
+		root: path.Join("/", self.Root, "timelines", self.Name),
 	}
 }
