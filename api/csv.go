@@ -18,6 +18,8 @@
 package api
 
 import (
+	"time"
+
 	errors "github.com/pkg/errors"
 	context "golang.org/x/net/context"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
@@ -27,6 +29,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/timelines"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -212,6 +215,52 @@ func getEventTableWithPathManager(
 		}
 		result.Rows = append(result.Rows, &api_proto.Row{
 			Cell: row_data,
+		})
+
+		rows += 1
+		if rows > in.Rows {
+			break
+		}
+	}
+
+	return result, nil
+}
+
+func getTimeline(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
+
+	if in.NotebookId == "" {
+		return nil, errors.New("NotebookId must be specified")
+	}
+
+	path_manager := reporting.NewNotebookPathManager(in.NotebookId).Timeline(in.Timeline)
+	reader, err := timelines.NewSuperTimelineReader(config_obj, path_manager, in.SkipComponents)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+
+	if in.StartTime != 0 {
+		ts := time.Unix(0, int64(in.StartTime))
+		reader.SeekToTime(ts)
+	}
+
+	rows := uint64(0)
+	result := &api_proto.GetTableResponse{
+		Columns: []string{"_Source", "Time", "Data"},
+	}
+	for item := range reader.Read(ctx) {
+		if result.StartTime == 0 {
+			result.StartTime = item.Time
+		}
+		result.EndTime = item.Time
+		result.Rows = append(result.Rows, &api_proto.Row{
+			Cell: []string{
+				item.Source,
+				csv.AnyToString(item.Time),
+				csv.AnyToString(item.Row)},
 		})
 
 		rows += 1

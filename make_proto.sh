@@ -21,6 +21,7 @@ for i in $CWD/proto/ $CWD/crypto/proto/ \
                      $CWD/actions/proto/ \
                      $CWD/services/frontend/proto/ \
                      $CWD/config/proto/ \
+                     $CWD/timelines/proto/ \
                      $CWD/acls/proto/ \
                      $CWD/flows/proto/ ; do
     echo Building protos in $i

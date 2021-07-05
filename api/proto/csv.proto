@@ -38,9 +38,15 @@ message GetTableRequest {
     string cell_id = 10;
     int64 table_id = 11;
 
+    // For timelines
+    string timeline = 16;
+    // Skip these timeline components.
+    repeated string skip_components = 17;
+
     // For download handler when creating an export file - control
     // output format. Can be "csv", "jsonl"
     string download_format = 12;
+
 
     // If specified only emit these columns.
     repeated string columns = 15;
@@ -60,4 +66,7 @@ message GetTableResponse {
     int64 total_rows = 3;
 
     repeated ColumnType column_types = 4;
+
+    int64 start_time = 5;
+    int64 end_time = 6;
 }

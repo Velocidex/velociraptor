@@ -11,6 +11,7 @@ import VeloTable from '../core/table.js';
 import VeloLineChart from './line-charts.js';
 import Spinner from '../utils/spinner.js';
 import ToolViewer from "../tools/tool-viewer.js";
+import Timeline from "../timeline/timeline.js";
 
 // Renders a report in the DOM.
 
@@ -124,6 +125,7 @@ export default class VeloReportViewer extends React.Component {
     render() {
         let template = parse(this.cleanupHTML(this.state.template), {
             replace: (domNode) => {
+                console.log(domNode.name);
                 if (domNode.name === "inline-table-viewer") {
                     console.log(this.state.template);
                     try {
@@ -152,11 +154,19 @@ export default class VeloReportViewer extends React.Component {
                         <VeloTable rows={rows} columns={data.Columns} />
                     );
                 };
+
                 if (domNode.name === "grr-tool-viewer") {
                     return (
                         <ToolViewer name={domNode.attribs.name}/>
                     );
                 };
+
+                if (domNode.name === "grr-timeline") {
+                    return (
+                        <Timeline name={domNode.attribs.name}/>
+                    );
+                };
+
                 if (domNode.name === "grr-line-chart") {
                     // Figure out where the data is: attribs.value is
                     // something like data['table2']

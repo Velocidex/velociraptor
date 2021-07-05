@@ -30,7 +30,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -159,8 +158,6 @@ func doArtifactCollect() {
 
 		spec.Set(name, collect_args)
 	}
-
-	json.Dump(spec)
 
 	manager, err := services.GetRepositoryManager()
 	kingpin.FatalIfError(err, "GetRepositoryManager")

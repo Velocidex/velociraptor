@@ -16,7 +16,6 @@ import (
 
 	"github.com/Depado/bfchroma"
 	"github.com/Masterminds/sprig"
-	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 
@@ -29,7 +28,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/timelines"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -257,6 +258,18 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 	switch t := argv[0].(type) {
 	default:
 		return ""
+
+	case string:
+		timeline_path_manager := self.path_manager.Notebook().Timeline(t)
+		parameters := "{}"
+		reader, err := timelines.NewSuperTimelineReader(self.config_obj, timeline_path_manager, nil)
+		if err == nil {
+			parameters = json.MustMarshalString(reader.Stat())
+		}
+
+		return fmt.Sprintf(
+			`<div class="panel"><grr-timeline name='%s' `+
+				`params='%s' /></div>`, t, parameters)
 
 	case []*NotebookCellQuery:
 		result := ""
@@ -583,7 +596,7 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p.AllowAttrs("value", "params").OnElements("grr-csv-viewer")
 	p.AllowAttrs("value", "params").OnElements("inline-table-viewer")
 	p.AllowAttrs("value", "params").OnElements("grr-line-chart")
-	p.AllowAttrs("value", "params").OnElements("grr-timeline")
+	p.AllowAttrs("name", "params").OnElements("grr-timeline")
 	p.AllowAttrs("name").OnElements("grr-tool-viewer")
 
 	// Required for syntax highlighting.

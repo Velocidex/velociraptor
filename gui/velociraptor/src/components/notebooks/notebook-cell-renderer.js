@@ -23,6 +23,7 @@ import AddCellFromFlowDialog from './add-cell-from-flow.js';
 import Completer from '../artifacts/syntax.js';
 import { getHuntColumns } from '../hunts/hunt-list.js';
 import VeloTimestamp from "../utils/time.js";
+import { AddTimelineDialog, AddVQLCellToTimeline } from "./timelines.js";
 
 import axios from 'axios';
 import api from '../core/api-service.js';
@@ -131,6 +132,7 @@ export default class NotebookCellRenderer extends React.Component {
     static propTypes = {
         cell_metadata: PropTypes.object,
         notebook_id: PropTypes.string,
+        notebook_metadata: PropTypes.object.isRequired,
         selected_cell_id: PropTypes.string,
         setSelectedCellId: PropTypes.func,
 
@@ -156,6 +158,8 @@ export default class NotebookCellRenderer extends React.Component {
         currently_editing: false,
         input: "",
 
+        showAddTimeline: false,
+        showAddCellToTimeline: false,
         showAddCellFromHunt: false,
         showAddCellFromFlow: false,
         showCreateArtifactFromCell: false,
@@ -433,6 +437,13 @@ export default class NotebookCellRenderer extends React.Component {
                 <FontAwesomeIcon icon="arrow-down"/>
               </Button>
 
+              {this.state.cell && this.state.cell.type === "VQL" &&
+               <Button title="Add Timeline"
+                       onClick={()=>this.setState({showAddCellToTimeline: true})}
+                       variant="default">
+                 <FontAwesomeIcon icon="calendar-alt"/>
+               </Button>}
+
               <Dropdown title="Add Cell" variant="default">
                 <Dropdown.Toggle variant="default">
                   <FontAwesomeIcon icon="plus"/>
@@ -454,6 +465,11 @@ export default class NotebookCellRenderer extends React.Component {
                     VQL
                   </Dropdown.Item>
                   <hr/>
+                  <Dropdown.Item
+                    title="Add Timeline"
+                    onClick={()=>this.setState({showAddTimeline: true})}>
+                    Add Timeline
+                  </Dropdown.Item>
                   <Dropdown.Item
                     title="Add Cell From This Cell"
                     onClick={this.addCellFromCell}>
@@ -558,6 +574,20 @@ export default class NotebookCellRenderer extends React.Component {
                   vql={this.state.input}
                   onClose={()=>this.setState({showCreateArtifactFromCell: false})} />
               }
+              { this.state.showAddTimeline &&
+                <AddTimelineDialog
+                  notebook_metadata={this.props.notebook_metadata}
+                  addCell={(text, type)=>{
+                      this.props.addCell(this.state.cell.cell_id, type, text);
+                  }}
+                  closeDialog={()=>this.setState({showAddTimeline: false})} />
+              }
+              { this.state.showAddCellToTimeline &&
+                <AddVQLCellToTimeline
+                  cell={this.state.cell}
+                  notebook_metadata={this.props.notebook_metadata}
+                  closeDialog={()=>this.setState({showAddCellToTimeline: false})} />
+              }
 
               <div className={classNames({selected: selected, "notebook-cell": true})} >
                 <div className='notebook-input'>
@@ -595,6 +625,7 @@ export default class NotebookCellRenderer extends React.Component {
                 >
                   <NotebookReportRenderer
                     refresh={this.recalculate}
+                    notebook_id={this.props.notebook_id}
                     cell={this.state.cell}/>
                   { selected &&
                     _.map(this.state.cell.messages, (msg, idx) => {

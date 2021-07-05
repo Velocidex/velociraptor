@@ -56,6 +56,17 @@
     --color-monospace-color: #eeeeee;
     --scrollbar-track: #121212;
     --app-footer-background-color: #444444;
+
+    --color-default-font: #eeeeee;
+    --color-timeline-header: #cdcdcd20;
+    --color-timeline-table-shown: #dd4b3920;
+    --color-timeline-1: #dff0d820;
+    --color-timeline-2: #a9444220;
+    --color-timeline-3: #2aabd2;
+    --color-timeline-4: #f0c36d;
+    --color-timeline-5: #bbb;
+    --color-timeline-6: #008000;
+    --color-timeline-7: #471ecb;
 }
 
 .dark-mode .btn {
