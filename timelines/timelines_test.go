@@ -39,13 +39,14 @@ func (self *TimelineTestSuite) TearDownTest() {
 }
 
 func (self *TimelineTestSuite) TestSuperTimelineWriter() {
-	super, err := NewSuperTimelineWriter(self.config_obj, "Test")
+	path_manager := &SuperTimelinePathManager{"Test", "notebooks/N.1234/"}
+	super, err := NewSuperTimelineWriter(self.config_obj, path_manager)
 	assert.NoError(self.T(), err)
 
-	timeline, err := super.AddChild()
+	timeline, err := super.AddChild("1")
 	assert.NoError(self.T(), err)
 
-	timeline2, err := super.AddChild()
+	timeline2, err := super.AddChild("2")
 	assert.NoError(self.T(), err)
 
 	for i := int64(0); i <= 10; i++ {
@@ -60,9 +61,7 @@ func (self *TimelineTestSuite) TestSuperTimelineWriter() {
 	super.Close()
 
 	// test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
-
-	path_manager := &SuperTimelinePathManager{"Test"}
-	reader, err := NewSuperTimelineReader(self.config_obj, path_manager)
+	reader, err := NewSuperTimelineReader(self.config_obj, path_manager, nil)
 	assert.NoError(self.T(), err)
 	defer reader.Close()
 
