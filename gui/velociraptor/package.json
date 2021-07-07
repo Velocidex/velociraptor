@@ -20,6 +20,7 @@
         "html-react-parser": "^0.14.0",
         "http-proxy-middleware": "^1.0.5",
         "humanize-duration": "^3.24.0",
+        "interactjs": "^1.10.11",
         "is-svg": "^4.2.2",
         "lodash": "^4.17.21",
         "moment": "^2.28.0",
