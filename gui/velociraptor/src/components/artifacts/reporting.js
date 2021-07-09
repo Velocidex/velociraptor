@@ -124,6 +124,22 @@ export default class VeloReportViewer extends React.Component {
     render() {
         let template = parse(this.cleanupHTML(this.state.template), {
             replace: (domNode) => {
+                if (domNode.name === "inline-table-viewer") {
+                    try {
+                        let data = this.state.data;
+                        let response = data[domNode.attribs.value || "unknown"] || {};
+                        let rows = JSON.parse(response.Response);
+                        return (
+                            <VeloTable
+                              rows={rows}
+                              columns={response.Columns}
+                            />
+                        );
+                    } catch(e) {
+
+                    };
+                }
+
                 if (domNode.name === "grr-csv-viewer") {
                     // Figure out where the data is: attribs.value is something like data['table2']
                     let re = /'([^']+)'/;

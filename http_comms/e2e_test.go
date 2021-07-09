@@ -163,6 +163,8 @@ func (self *TestSuite) makeClient(
 }
 
 func (self *TestSuite) TestServerRotateKeyE2E() {
+	logging.ClearMemoryLogs()
+
 	server_ctx, server_cancel := context.WithCancel(self.sm.Ctx)
 	server_wg := &sync.WaitGroup{}
 
@@ -172,12 +174,15 @@ func (self *TestSuite) TestServerRotateKeyE2E() {
 	client_wg := &sync.WaitGroup{}
 
 	comm := self.makeClient(client_ctx, client_wg)
-	err := comm.sender.sendToURL(client_ctx, [][]byte{}, false)
-	assert.NoError(self.T(), err)
+
+	// Stop the receive and send loops to prevent race with direct post
+	comm.SetPause(true)
 
 	// Make sure the client is properly enrolled
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		// json.Dump(logging.GetMemoryLogs())
+		err := comm.sender.sendToURL(client_ctx, [][]byte{}, false)
+		assert.NoError(self.T(), err)
+
 		return vtesting.ContainsString("response with status: 200", logging.GetMemoryLogs())
 	})
 	//	json.Dump(logging.GetMemoryLogs())
@@ -201,17 +206,26 @@ func (self *TestSuite) TestServerRotateKeyE2E() {
 
 	self.makeServer(server_ctx, server_wg)
 
-	//	json.Dump(logging.GetMemoryLogs())
-
 	logging.ClearMemoryLogs()
 
 	// Sending another one will produce an error.
-	err = comm.sender.sendToURL(client_ctx, [][]byte{}, false)
-	assert.Error(self.T(), err)
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		err := comm.sender.sendToURL(client_ctx, [][]byte{}, false)
+		if err == nil {
+			// No error yet - retry
+			return false
+		}
+
+		return vtesting.ContainsString("Unable to decrypt body", logging.GetMemoryLogs())
+	})
 
 	// Make sure the client properly rekeys and continues to talk to the server
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		// json.Dump(logging.GetMemoryLogs())
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		err := comm.sender.sendToURL(client_ctx, [][]byte{}, false)
+		if err != nil {
+			return false
+		}
+
 		return vtesting.ContainsString("response with status: 200", logging.GetMemoryLogs())
 	})
 
