@@ -6598,7 +6598,7 @@
   "resolved" "https://registry.npmjs.org/inline-style-parser/-/inline-style-parser-0.1.1.tgz"
   "version" "0.1.1"
 
-"interactjs@^1.3.4":
+"interactjs@^1.10.11", "interactjs@^1.3.4":
   "integrity" "sha512-VPUWsGAOPmrZe1YF7Fq/4AIBBZ+3FikZRS8bpzT6VsAfUuhxl/CKJY73IAiZHd3fz9p174CXErn0Qs81XEFICA=="
   "resolved" "https://registry.npmjs.org/interactjs/-/interactjs-1.10.11.tgz"
   "version" "1.10.11"
