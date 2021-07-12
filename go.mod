@@ -140,6 +140,10 @@ require (
 // replace github.com/Velocidex/zip => /home/mic/projects/zip
 // replace github.com/Velocidex/sflags => /home/mic/projects/sflags
 
+// replace github.com/bi-zone/etw => /home/mic/projects/etw
+
+replace github.com/bi-zone/etw => github.com/Velocidex/etw v0.0.0-20210711115942-8b4530f1496a
+
 replace github.com/russross/blackfriday/v2 => github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b
 
 go 1.14
