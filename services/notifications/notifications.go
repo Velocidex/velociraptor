@@ -204,10 +204,10 @@ func (self *Notifier) IsClientConnected(
 	client_id string, timeout int) bool {
 
 	// Get a unique ID
-	atomic.StoreUint64(&self.idx, self.idx+1)
+	idx := atomic.AddUint64(&self.idx, 1)
 
 	// Watch for Ping replies on this notification.
-	id := fmt.Sprintf("IsClientConnected%v", self.idx)
+	id := fmt.Sprintf("IsClientConnected%v", idx)
 	done, cancel := self.ListenForNotification(id)
 	defer cancel()
 
