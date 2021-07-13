@@ -1,18 +1,21 @@
-name: Windows.Detection.ProcessMemory.CobaltStrike
+name: Windows.Detection.Yara.Process
+author: Matt Green - @mgreen27
 description: |
-  This artifact scans processes for a Cobalt Strike yara signature and enables 
-  fast upload of processes with hits for analysis
+  This artifact enables running Yara over processes in memory.
+    
+  There are 3 kinds of Yara rules that can be deployed:   
+   &nbsp;1. Url link to a yara rule.   
+   &nbsp;2. Shorthand yara in the format "wide nocase ascii:string1,string2,string3".  
+   &nbsp;3. or a Standard Yara rule attached as a parameter.  
+  Only one method of Yara will be applied and search order is as above. The 
+  default is Cobalt Strike opcodes.
   
-  Commonly abused by attackers for its high feature / low cost return on 
-  investment, Cobalt Strike is a commercial penetration testing tool providing 
-  post exploitation capability throughout the attack lifecycle.
-
-author: "Matt Green - @mgreen27"
-
-reference:
-  - https://attack.mitre.org/software/S0154/
-  - https://malpedia.caad.fkie.fraunhofer.de/details/win.cobalt_strike
-
+  Regex parameters can be applied for process name and pid for targeting. The 
+  artifact also has an option to upload any process with Yara hits.  
+  
+  Note: the Yara scan will stop after one hit.
+  
+type: CLIENT
 parameters:
   - name: ProcessRegex
     default: .
@@ -20,7 +23,12 @@ parameters:
     default: .
   - name: UploadHits
     type: bool
+  - name: YaraUrl
+    description: If configured will attempt to download Yara rules from Url
+  - name: ShortHandYara
+    description: Second option Yara choice is a Velociraptor shorthand Yara rule
   - name: YaraRule
+    description: Final Yara option and the default if no other options provided.
     default: |
       rule win_cobalt_strike_auto {
          meta:
@@ -54,14 +62,33 @@ parameters:
         condition:
             7 of them
       }
+  - name: PathWhitelist
+    description: |
+        Process paths to exclude. Default is common AntiVirus we have seen cause 
+        false positives with signitures in memory.
+    type: csv
+    default: |
+      Path
+      C:\Program Files\Folder to Exclude\binary.exe
+
 
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
 
     query: |
+      -- check which Yara to use
+      LET yara <= if(condition=YaraUrl,
+            then= { SELECT Content FROM http_client( url=YaraUrl, method='GET') },
+            else= if(condition=ShortHandYara,
+                then= { SELECT ShortHandYara as Content FROM scope() },
+                else= { SELECT YaraRule as Content FROM scope() }))
+            
       -- find velociraptor process
       LET me = SELECT Pid FROM pslist(pid=getpid())
+      
+      -- allow whitelist case sensitive
+      LET whitelist <= SELECT upcase(string=Path) AS Path FROM PathWhitelist
       
       -- find all processes and add filters
       LET processes = SELECT Name as ProcessName, CommandLine, Pid
@@ -70,25 +97,26 @@ sources:
             Name =~ ProcessRegex
             AND format(format="%d", args=Pid) =~ PidRegex
             AND NOT Pid in me.Pid
+            AND NOT upcase(string=Exe) in whitelist.Path
 
-      -- scan processes in scope with our rule
+      -- scan processes in scope with our rule, limit 1 hit
       LET hits = SELECT * FROM foreach(
         row=processes,
         query={
-            SELECT 
+            SELECT
                 ProcessName,
                 CommandLine,
                 Pid,
-                Strings.Offset as Offsets,
                 Namespace,
                 Rule,
                 Meta,
-                Strings.Name as IOCname,
-                Strings.Data as IOCdata
-             FROM proc_yara(rules=YaraRule, pid=Pid) 
+                String.Offset as HitOffset,
+                String.Name as HitName,
+                String.HexData as HitHexData
+             FROM yara(files=Pid,accessor='process',rules=YaraRule,number=99) 
              LIMIT 1
           })
-      
+           
       -- upload hits using proc_dump plugin
       LET upload_hits = SELECT * FROM foreach(
         row=hits,
@@ -97,19 +125,19 @@ sources:
                 ProcessName,
                 CommandLine,
                 Pid,
-                Offsets,
                 Namespace,
                 Rule,
                 Meta,
-                IOCname,
-                IOCdata,
+                HitOffset,
+                HitName,
+                HitHexData,
                 upload(file=FullPath,name=format(format='%v-%v.dmp',
                     args= [ split(string=ProcessName,sep='\\.')[0], Pid ]
                         )) as ProcessDump
             FROM proc_dump(pid=Pid)
-          })
-      
-      -- output rows
-      SELECT * FROM if(condition= UploadHits,
-            then= upload_hits,
-            else= hits)
+          })            
+
+      -- return rows
+      SELECT * FROM if(condition=UploadHits,
+        then=upload_hits,
+        else=hits)
