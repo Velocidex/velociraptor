@@ -10,6 +10,7 @@ Parameters:
           uint32(uint32(0x3C)) == 0x00004550
       }
 
+
 Queries:
   # Setup our mocks --MFT needs to be mocked as below to pass srcDir
   - |
@@ -89,3 +90,4 @@ Queries:
     FROM Artifact.Generic.Detection.Yara.Glob(DateAfter='2021-03-01', DateBefore='2021-07-01',YaraRule=IsPE)
   - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime
     FROM Artifact.Generic.Detection.Yara.Glob(DateBefore='2021-04-01',YaraRule=IsPE)
+
