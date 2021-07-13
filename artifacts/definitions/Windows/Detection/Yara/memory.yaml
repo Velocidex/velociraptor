@@ -62,6 +62,15 @@ parameters:
         condition:
             7 of them
       }
+  - name: PathWhitelist
+    description: |
+        Process paths to exclude. Default is common AntiVirus we have seen cause 
+        false positives with signitures in memory.
+    type: csv
+    default: |
+      Path
+      C:\Program Files\Folder to Exclude\binary.exe
+
 
 sources:
   - precondition:
@@ -78,6 +87,9 @@ sources:
       -- find velociraptor process
       LET me = SELECT Pid FROM pslist(pid=getpid())
       
+      -- allow whitelist case sensitive
+      LET whitelist <= SELECT upcase(string=Path) AS Path FROM PathWhitelist
+      
       -- find all processes and add filters
       LET processes = SELECT Name as ProcessName, CommandLine, Pid
         FROM pslist()
@@ -85,6 +97,7 @@ sources:
             Name =~ ProcessRegex
             AND format(format="%d", args=Pid) =~ PidRegex
             AND NOT Pid in me.Pid
+            AND NOT upcase(string=Exe) in whitelist.Path
 
       -- scan processes in scope with our rule, limit 1 hit
       LET hits = SELECT * FROM foreach(
