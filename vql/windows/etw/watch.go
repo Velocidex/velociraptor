@@ -18,6 +18,10 @@ import (
 	"www.velocidex.com/golang/vfilter/types"
 )
 
+var (
+	id uint64
+)
+
 type WatchETWArgs struct {
 	Name        string `vfilter:"optional,field=name,doc=A session name "`
 	Provider    string `vfilter:"required,field=guid,doc=A Provider GUID to watch "`
@@ -51,7 +55,8 @@ func (self WatchETWPlugin) Call(
 
 		// Select a default session name
 		if arg.Name == "" {
-			arg.Name = fmt.Sprintf("Velociraptor-%v", time.Now().Unix())
+			new_id := atomic.AddUint64(&id, 1)
+			arg.Name = fmt.Sprintf("Velociraptor-%v", new_id)
 		}
 
 		guid, err := windows.GUIDFromString(arg.Provider)
@@ -122,6 +127,8 @@ func createSession(ctx context.Context, scope types.Scope, guid windows.GUID,
 
 	go func() {
 		defer wg.Done()
+
+		scope.Log("watch_etw: Creating session %v", arg.Name)
 
 		// When session.Process() exits, we exit the
 		// query.

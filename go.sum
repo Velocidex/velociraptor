@@ -65,6 +65,8 @@ github.com/Velocidex/cgofuse v1.1.2 h1:5zvc/Wonpou45AtdA4ZSDENYEKaaOFr8uyYoq6tdu
 github.com/Velocidex/cgofuse v1.1.2/go.mod h1:3uaCG9bbPLFSM6WqwcboehPaB4gAgRKx+zQ8M3nKNI4=
 github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c h1:ipQHX4FX5HKRAUA6n8EQGZK/ROLXHQ7tVwtoEwo57Hg=
 github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c/go.mod h1:sko8vR34/90zvl5QdcUdvzL3J8NKjAUx9va9jPuFNoM=
+github.com/Velocidex/etw v0.0.0-20210711115942-8b4530f1496a h1:PUqhqILGHEevT2TSjRxu/M2oRdc/s1IojJE9en40XB0=
+github.com/Velocidex/etw v0.0.0-20210711115942-8b4530f1496a/go.mod h1:zKqsOt4mtyCJdf0+N6gOlEuQYz7glH2dVg7GiNpY67M=
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b h1:XaAmLVXrqPv60nbiQtzj5Sch7lwz3XH8x5IocQwRPJg=
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b/go.mod h1:draN67DBVJDAVmLWDIJ85CrV0UxmIGfWZ4njukhINQs=
 github.com/Velocidex/go-yara v1.1.10-0.20210423154840-dace8239c158 h1:gvnUc2P/5i7wclLwMAFnJlXu35bZz7pDXdFV5SCfhW4=
