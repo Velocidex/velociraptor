@@ -28,6 +28,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -76,6 +77,7 @@ func (self *FileBasedUploader) Upload(
 	accessor string,
 	store_as_name string,
 	expected_size int64,
+	mtime time.Time,
 	reader io.Reader) (
 	*api.UploadResponse, error) {
 

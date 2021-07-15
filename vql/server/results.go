@@ -304,10 +304,7 @@ func getResultSetReader(
 	file_store_factory := file_store.GetFileStore(config_obj)
 
 	// Is it a notebook?
-	if arg.NotebookId != "" {
-		if arg.NotebookCellId == "" {
-			return nil, errors.New("source: Both notebook_id and notebook_cell_id should be specified.")
-		}
+	if arg.NotebookId != "" && arg.NotebookCellId != "" {
 		table := arg.NotebookCellTable
 		if table == 0 {
 			table = 1
@@ -316,8 +313,9 @@ func getResultSetReader(
 			arg.NotebookId).Cell(arg.NotebookCellId).QueryStorage(table)
 
 		return result_sets.NewResultSetReader(file_store_factory, path_manager)
+	}
 
-	} else if arg.Artifact != "" {
+	if arg.Artifact != "" {
 		if arg.Source != "" {
 			arg.Artifact = arg.Artifact + "/" + arg.Source
 			arg.Source = ""

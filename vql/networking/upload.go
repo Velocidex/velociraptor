@@ -25,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -33,9 +34,10 @@ import (
 // Example: select upload(file=FullPath) from glob(globs="/bin/*")
 
 type UploadFunctionArgs struct {
-	File     string `vfilter:"required,field=file,doc=The file to upload"`
-	Name     string `vfilter:"optional,field=name,doc=The name of the file that should be stored on the server"`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	File     string      `vfilter:"required,field=file,doc=The file to upload"`
+	Name     string      `vfilter:"optional,field=name,doc=The name of the file that should be stored on the server"`
+	Accessor string      `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Mtime    vfilter.Any `vfilter:"optional,field=mtime,doc=Modified time to record"`
 }
 type UploadFunction struct{}
 
@@ -84,6 +86,8 @@ func (self *UploadFunction) Call(ctx context.Context,
 	}
 	defer file.Close()
 
+	mtime, _ := functions.TimeFromAny(scope, arg.Mtime)
+
 	stat, err := file.Stat()
 	if err != nil {
 		scope.Log("upload: Unable to stat %s: %v",
@@ -94,6 +98,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 			arg.Accessor,
 			arg.Name,
 			stat.Size(), // Expected size.
+			mtime,
 			file)
 		if err != nil {
 			return &api.UploadResponse{
@@ -117,8 +122,9 @@ func (self UploadFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 }
 
 type UploadPluginArgs struct {
-	Files    []string `vfilter:"required,field=files,doc=A list of files to upload"`
-	Accessor string   `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Files    []string    `vfilter:"required,field=files,doc=A list of files to upload"`
+	Accessor string      `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Mtime    vfilter.Any `vfilter:"optional,field=mtime,doc=Modified time to record"`
 }
 
 type UploadPlugin struct{}
@@ -160,6 +166,8 @@ func (self *UploadPlugin) Call(
 			return
 		}
 
+		mtime, _ := functions.TimeFromAny(scope, arg.Mtime)
+
 		for _, filename := range arg.Files {
 			file, err := accessor.Open(filename)
 			if err != nil {
@@ -178,6 +186,7 @@ func (self *UploadPlugin) Call(
 					arg.Accessor,
 					filename,
 					stat.Size(), // Expected size.
+					mtime,
 					file)
 				if err != nil {
 					scope.Log("upload: Failed to upload %s: %s",

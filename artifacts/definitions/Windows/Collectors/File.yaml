@@ -54,7 +54,8 @@ sources:
         workers=30,
         query={
             SELECT Created, LastAccessed, Modified, SourceFile, Size,
-               upload(file=SourceFile, accessor=Accessor, name=SourceFile) AS Upload
+               upload(file=SourceFile, accessor=Accessor, name=SourceFile,
+                      mtime=Modified) AS Upload
             FROM scope()
         })
 

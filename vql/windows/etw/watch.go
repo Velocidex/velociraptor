@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	id uint64
+	id = time.Now().Unix()
 )
 
 type WatchETWArgs struct {
@@ -55,7 +55,7 @@ func (self WatchETWPlugin) Call(
 
 		// Select a default session name
 		if arg.Name == "" {
-			new_id := atomic.AddUint64(&id, 1)
+			new_id := atomic.AddInt64(&id, 1)
 			arg.Name = fmt.Sprintf("Velociraptor-%v", new_id)
 		}
 
