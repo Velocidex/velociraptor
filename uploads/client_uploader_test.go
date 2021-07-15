@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
@@ -14,6 +15,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/responder"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+)
+
+var (
+	nilTime = time.Unix(0, 0)
 )
 
 type TestRangeReader struct {
@@ -64,7 +69,7 @@ func TestClientUploaderSparse(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		"foo", "ntfs", "", 1000, range_reader)
+		"foo", "ntfs", "", 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
 
 	// Expected size is the combined sum of all ranges with data
@@ -104,7 +109,7 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		"foo", "ntfs", "", 1000, range_reader)
+		"foo", "ntfs", "", 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
 
 	// Expected size is the combined sum of all ranges with data
@@ -138,7 +143,8 @@ func TestClientUploader(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 
-	resp, err := uploader.Upload(ctx, scope, name, "file", "", 1000, fd)
+	resp, err := uploader.Upload(
+		ctx, scope, name, "file", "", 1000, nilTime, fd)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.Path, name)
 	assert.Equal(t, resp.Size, uint64(11))
@@ -167,7 +173,7 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		"foo", "ntfs", "", 1000, range_reader)
+		"foo", "ntfs", "", 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
 
 	// Expected size is the combined sum of all ranges with data
@@ -198,7 +204,7 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		"foo", "ntfs", "", 1000, range_reader)
+		"foo", "ntfs", "", 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
 	assert.Equal(t, CombineOutput("foo", responses), "Hello hello ")
 	for _, response := range responses {
@@ -230,7 +236,7 @@ func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		"foo", "ntfs", "", 1000, range_reader)
+		"foo", "ntfs", "", 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
 	assert.Equal(t, CombineOutput("foo", responses), "Hello hello ")
 

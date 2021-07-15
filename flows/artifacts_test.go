@@ -38,6 +38,8 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/windows/filesystems"
 )
 
+var nilTime = time.Unix(0, 0)
+
 type TestRangeReader struct {
 	*bytes.Reader
 	ranges []uploads.Range
@@ -399,7 +401,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 
 	scope := vql_subsystem.MakeScope()
 	uploader.Upload(context.Background(), scope,
-		"foo", "ntfs", "", 1000, reader)
+		"foo", "ntfs", "", 1000, nilTime, reader)
 
 	// Get a new collection context.
 	collection_context := &flows_proto.ArtifactCollectorContext{
@@ -498,7 +500,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 
 	scope := vql_subsystem.MakeScope()
 	uploader.Upload(context.Background(), scope,
-		"sparse", "ntfs", "", 1000, reader)
+		"sparse", "ntfs", "", 1000, nilTime, reader)
 
 	// Get a new collection context.
 	collection_context := &flows_proto.ArtifactCollectorContext{
@@ -618,7 +620,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 
 	// Upload the file to the responder.
 	uploader.Upload(context.Background(), scope,
-		"sparse", "ntfs", "", 1000, fd)
+		"sparse", "ntfs", "", 1000, nilTime, fd)
 
 	// Get a new collection context.
 	collection_context := &flows_proto.ArtifactCollectorContext{
