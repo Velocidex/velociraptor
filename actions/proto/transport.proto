@@ -53,6 +53,8 @@ message FileBuffer {
 
     // Set when the file is sparse.
     Index index = 6;
+
+    int64 mtime = 10;
 }
 
 message ForemanCheckin {

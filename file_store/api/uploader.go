@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"io"
 	"path"
+	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/vfilter"
@@ -31,6 +32,7 @@ type Uploader interface {
 		accessor string,
 		store_as_name string,
 		expected_size int64,
+		mtime time.Time,
 		reader io.Reader) (*UploadResponse, error)
 }
 
@@ -47,6 +49,7 @@ func (self *FileStoreUploader) Upload(
 	accessor string,
 	store_as_name string,
 	expected_size int64,
+	mtime time.Time,
 	reader io.Reader) (
 	*UploadResponse, error) {
 

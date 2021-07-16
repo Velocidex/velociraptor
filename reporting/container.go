@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alexmullins/zip"
@@ -44,10 +45,11 @@ type Container struct {
 	delegate_fd  io.Writer
 }
 
-func (self *Container) Create(name string) (io.WriteCloser, error) {
+func (self *Container) Create(name string, mtime time.Time) (io.WriteCloser, error) {
 	header := &concurrent_zip.FileHeader{
-		Name:   name,
-		Method: concurrent_zip.Deflate,
+		Name:     name,
+		Method:   concurrent_zip.Deflate,
+		Modified: mtime,
 	}
 
 	if self.level == 0 {
@@ -83,7 +85,7 @@ func (self *Container) StoreArtifact(
 
 	// The name to use in the zip file to store results from this artifact
 	path_manager := NewContainerPathManager(artifact_name)
-	fd, err := self.Create(path_manager.Path())
+	fd, err := self.Create(path_manager.Path(), time.Time{})
 	if err != nil {
 		return err
 	}
@@ -99,7 +101,7 @@ func (self *Container) StoreArtifact(
 	// Optionally include CSV in the output
 	var csv_writer *csv.CSVWriter
 	if format == "csv" {
-		csv_fd, err := self.Create(path_manager.CSVPath())
+		csv_fd, err := self.Create(path_manager.CSVPath(), time.Time{})
 		if err != nil {
 			return err
 		}
@@ -167,6 +169,7 @@ func (self *Container) Upload(
 	accessor string,
 	store_as_name string,
 	expected_size int64,
+	mtime time.Time,
 	reader io.Reader) (*api.UploadResponse, error) {
 
 	if store_as_name == "" {
@@ -180,12 +183,12 @@ func (self *Container) Upload(
 
 	// Try to collect sparse files if possible
 	result, err := self.maybeCollectSparseFile(
-		ctx, reader, store_as_name, sanitized_name)
+		ctx, reader, store_as_name, sanitized_name, mtime)
 	if err == nil {
 		return result, nil
 	}
 
-	writer, err := self.Create(sanitized_name)
+	writer, err := self.Create(sanitized_name, mtime)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +214,7 @@ func (self *Container) Upload(
 
 func (self *Container) maybeCollectSparseFile(
 	ctx context.Context,
-	reader io.Reader, store_as_name, sanitized_name string) (
+	reader io.Reader, store_as_name, sanitized_name string, mtime time.Time) (
 	*api.UploadResponse, error) {
 
 	// Can the reader produce ranges?
@@ -220,7 +223,7 @@ func (self *Container) maybeCollectSparseFile(
 		return nil, errors.New("Not supported")
 	}
 
-	writer, err := self.Create(sanitized_name)
+	writer, err := self.Create(sanitized_name, mtime)
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +275,7 @@ func (self *Container) maybeCollectSparseFile(
 
 	// If there were any sparse runs, create an index.
 	if is_sparse {
-		writer, err := self.Create(sanitized_name + ".idx")
+		writer, err := self.Create(sanitized_name+".idx", time.Time{})
 		if err != nil {
 			return nil, err
 		}

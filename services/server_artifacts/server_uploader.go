@@ -29,6 +29,7 @@ func (self *ServerUploader) Upload(
 	accessor string,
 	store_as_name string,
 	expected_size int64,
+	mtime time.Time,
 	reader io.Reader) (*api.UploadResponse, error) {
 
 	// The server may write to the root of the filestore by
@@ -40,7 +41,7 @@ func (self *ServerUploader) Upload(
 	}
 
 	result, err := self.FileStoreUploader.Upload(ctx, scope, filename,
-		accessor, store_as_name, expected_size, reader)
+		accessor, store_as_name, expected_size, mtime, reader)
 	if err == nil {
 		err = file_store.PushRows(self.config_obj,
 			self.path_manager.UploadMetadata(),
@@ -48,7 +49,8 @@ func (self *ServerUploader) Upload(
 				Set("Timestamp", time.Now().UTC().Unix()).
 				Set("started", time.Now().UTC().String()).
 				Set("vfs_path", result.Path).
-				Set("expected_size", result.Size)},
+				Set("expected_size", result.Size).
+				Set("mtime", mtime)},
 		)
 		if err != nil {
 			return nil, err

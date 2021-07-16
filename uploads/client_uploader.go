@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"time"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -33,13 +34,14 @@ func (self *VelociraptorUploader) Upload(
 	accessor string,
 	store_as_name string,
 	expected_size int64,
+	mtime time.Time,
 	reader io.Reader) (
 	*api.UploadResponse, error) {
 
 	// Try to collect sparse files if possible
 	result, err := self.maybeUploadSparse(
 		ctx, scope, filename, accessor, store_as_name,
-		expected_size, reader)
+		expected_size, mtime, reader)
 	if err == nil {
 		return result, nil
 	}
@@ -87,6 +89,7 @@ func (self *VelociraptorUploader) Upload(
 			Offset:     offset,
 			Size:       uint64(expected_size),
 			StoredSize: uint64(expected_size),
+			Mtime:      mtime.UnixNano(),
 			Data:       data,
 		}
 
@@ -123,6 +126,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 	accessor string,
 	store_as_name string,
 	ignored_expected_size int64,
+	mtime time.Time,
 	reader io.Reader) (
 	*api.UploadResponse, error) {
 
@@ -208,6 +212,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 				StoredSize: 0,
 				IsSparse:   is_sparse,
 				Index:      index,
+				Mtime:      mtime.UnixNano(),
 				Eof:        true,
 			},
 		})
@@ -275,6 +280,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 				Size:       uint64(real_size),
 				StoredSize: uint64(expected_size),
 				IsSparse:   is_sparse,
+				Mtime:      mtime.UnixNano(),
 				Data:       data,
 			}
 
