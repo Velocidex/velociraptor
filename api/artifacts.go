@@ -23,10 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path"
 	"regexp"
-	"sort"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -39,11 +36,8 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -353,110 +347,6 @@ func (self *ApiServer) LoadArtifactPack(
 	}
 
 	return result, nil
-}
-
-func (self *ApiServer) ListAvailableEventResults(
-	ctx context.Context,
-	in *api_proto.ListAvailableEventResultsRequest) (
-	*api_proto.ListAvailableEventResultsResponse, error) {
-
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
-	user_record, err := users.GetUser(self.config, user_name)
-	if err != nil {
-		return nil, err
-	}
-
-	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
-	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
-			"User is not allowed to view results.")
-	}
-
-	// Figure out where all the monitoring artifacts logs are
-	// stored by looking at some examples.
-	exemplar := "Generic.Client.Stats"
-	if in.ClientId == "" || in.ClientId == "server" {
-		exemplar = "Server.Monitor.Health"
-	}
-
-	path_manager, err := artifacts.NewArtifactPathManager(
-		self.config, in.ClientId, "", exemplar)
-	if err != nil {
-		return nil, err
-	}
-
-	// Analyzer analyses the path name from disk and adds to the events list.
-	seen := make(map[string]*api_proto.AvailableEvent)
-
-	// The root path where we store all day logs for all
-	// artifacts. We walk this path to find all the day logs for
-	// this client.
-	err = getAllEvents(self.config, path_manager.GetRootPath(), seen)
-	if err != nil {
-		return nil, err
-	}
-
-	err = getAllEvents(self.config, path_manager.Logs().GetRootPath(), seen)
-	if err != nil {
-		return nil, err
-	}
-
-	result := &api_proto.ListAvailableEventResultsResponse{}
-	for _, item := range seen {
-		result.Logs = append(result.Logs, item)
-	}
-
-	sort.Slice(result.Logs, func(i, j int) bool {
-		return result.Logs[i].Artifact < result.Logs[j].Artifact
-	})
-
-	return result, nil
-}
-
-func getAllEvents(config_obj *config_proto.Config,
-	log_path string,
-	seen map[string]*api_proto.AvailableEvent) error {
-	file_store_factory := file_store.GetFileStore(config_obj)
-
-	manager, err := services.GetRepositoryManager()
-	if err != nil {
-		return err
-	}
-
-	repository, err := manager.GetGlobalRepository(config_obj)
-	if err != nil {
-		return err
-	}
-
-	return file_store_factory.Walk(log_path,
-		func(full_path string, info os.FileInfo, err error) error {
-			if !info.IsDir() && info.Size() > 0 {
-				relative_path := strings.TrimPrefix(full_path, log_path)
-				artifact_name := strings.TrimLeft(path.Dir(relative_path), "/")
-				date_name := path.Base(relative_path)
-				timestamp := paths.DayNameToTimestamp(date_name)
-
-				if timestamp != 0 {
-					event, pres := seen[artifact_name]
-					if !pres {
-						event = &api_proto.AvailableEvent{
-							Artifact: artifact_name,
-						}
-
-						artifact, pres := repository.Get(
-							config_obj, artifact_name)
-						if pres {
-							event.Definition = artifact
-						}
-					}
-					event.Timestamps = append(event.Timestamps,
-						int32(timestamp))
-					seen[artifact_name] = event
-				}
-			}
-			return nil
-		})
 }
 
 // MakeCollectorRequest is a convenience function for creating

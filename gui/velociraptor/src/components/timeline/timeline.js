@@ -342,7 +342,6 @@ export default class TimelineRenderer extends React.Component {
                    minZoom={5*60*1000}
                    dragSnap={1000}
                    onCanvasClick={(groupId, time, e) => {
-                       console.log(time);
                        this.setState({start_time: time});
                    }}
                    onItemSelect={(itemId, e, time) => {
@@ -350,7 +349,6 @@ export default class TimelineRenderer extends React.Component {
                        return false;
                    }}
                    onItemClick={(itemId, e, time) => {
-                       console.log(time);
                        this.setState({start_time: time});
                        return false;
                    }}

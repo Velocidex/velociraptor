@@ -17,6 +17,7 @@ type QueueManager interface {
 type ResultSetFileProperties struct {
 	Path               string
 	StartTime, EndTime int64
+	Size               int64
 }
 
 // Path manager tells the filestore where to store things.

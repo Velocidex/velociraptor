@@ -21,6 +21,7 @@ import VeloAce from '../core/ace.js';
 import { SettingsButton } from '../core/ace.js';
 import VeloPagedTable from '../core/paged-table.js';
 import VeloTimestamp from "../utils/time.js";
+import EventTimelineViewer from "./timeline-viewer.js";
 
 import { withRouter }  from "react-router-dom";
 
@@ -197,6 +198,9 @@ class EventMonitoring extends React.Component {
 
         // Are we viewing the report or the raw data?
         mode: mode_raw_data,
+
+
+        buttonsRenderer: ()=>{},
     }
 
     fetchEventResults = () => {
@@ -216,16 +220,8 @@ class EventMonitoring extends React.Component {
                 let logs = resp.data.logs || [];
                 for(let i=0; i<logs.length;i++) {
                     let log=logs[i];
-                    if (log.artifact === router_artifact &&
-                        log.timestamps.length > 0) {
-                        let last_time = new Date(
-                            log.timestamps[log.timestamps.length-1]*1000);
-
-                        let local_timestamp = localDayFromUTCDate(last_time);
-
-                        this.setState({artifact: log,
-                                       activeStartDate: local_timestamp,
-                                       current_time: local_timestamp});
+                    if (log.artifact === router_artifact) {
+                        this.setState({artifact: log});
                     }
                 }
             }
@@ -234,39 +230,12 @@ class EventMonitoring extends React.Component {
         });
     }
 
-    dateDisabled = ({activeStartDate, date, view }) => !this.isDateCovered(date);
-
     setDay = (date) => {
         this.setState({current_time: date});
     }
 
-    // Given a date in local time, determine if there is any log that
-    // has data in that range.
-    isDateCovered = (date) => {
-        if (!this.state.artifact || !this.state.artifact.timestamps) {
-            return false;
-        }
-
-        const {start_ts, end_ts} = get_day_range(date);
-
-        // Tile is enabled if there is a timestamp in the range.
-        for (let i=0; i<=this.state.artifact.timestamps.length; i++) {
-            let ts=this.state.artifact.timestamps[i];
-            if ((start_ts <= ts) && (ts < end_ts)) {
-                return true;
-            }
-        };
-
-        return false;
-    }
-
     setArtifact = (artifact) => {
         let current_time = new Date();
-
-        // Set the timestamp to the latest available time.
-        if (artifact.timestamps.length > 0) {
-            current_time = new Date(artifact.timestamps[artifact.timestamps.length-1] * 1000);
-        }
 
         // Unfortunately the date selector operates in local time so
         // we need to cheat it by setting a date which is the same in
@@ -294,16 +263,10 @@ class EventMonitoring extends React.Component {
     }
 
     render() {
-        // this.state.current_time is the date in current timezone but
-        // we want it in utc times.
-        const {start_ts, end_ts} = get_day_range(this.state.current_time);
-
-        // Check if there are any results in the current_time range
-        let is_date_covered = this.isDateCovered(this.state.current_time);
         let timestamp_renderer = (cell, row, rowIndex) => {
-                return (
-                    <VeloTimestamp usec={cell * 1000} iso={cell}/>
-                );
+            return (
+                <VeloTimestamp usec={cell}/>
+            );
         };
 
         let renderers = {
@@ -362,6 +325,7 @@ class EventMonitoring extends React.Component {
                       </Button>
                     </>
                   }
+                  { this.state.buttonsRenderer() }
                   <Dropdown title={this.state.artifact.artifact ||
                                    "Select artifact"} variant="default">
                     <Dropdown.Toggle variant="default">
@@ -386,20 +350,8 @@ class EventMonitoring extends React.Component {
                       })}
                     </Dropdown.Menu>
                   </Dropdown>
-                  <DatePicker
-                    filterDate={x=>this.isDateCovered(x)}
-                    selected={this.state.current_time}
-                    onSelect={this.setDay}
-                    disabled={_.isEmpty(this.state.artifact) ||
-                              _.isEmpty(this.state.artifact.timestamps)}
-                    disabledKeyboardNavigation
-                    customInput={
-                        <Form.Control placeholder="Select artifact to view"
-                          className="time-selector" size="sm">
-                        </Form.Control>
-                    }
-                  />
                 </ButtonGroup>
+
                 <ButtonGroup className="float-right">
                   <Dropdown title="mode" variant="default">
                     <Dropdown.Toggle variant="default">
@@ -429,46 +381,25 @@ class EventMonitoring extends React.Component {
                   </Dropdown>
                 </ButtonGroup>
               </Navbar>
-            { this.state.mode === mode_raw_data && this.state.artifact.artifact &&
-              <Container className="event-report-viewer">
-                <VeloPagedTable
-                  params={{
-                      artifact: this.state.artifact.artifact,
-                      type: "CLIENT_EVENT",
-                      start_time: start_ts,
-                      end_time: end_ts,
-                      client_id: this.props.client.client_id,
-                  }}
+              { (this.state.mode === mode_raw_data ||
+                 this.state.mode == mode_logs) && this.state.artifact.artifact &&
+                <Container className="event-report-viewer">
+                <EventTimelineViewer
+                  toolbar={x=>this.setState({buttonsRenderer: x})}
+                  client_id={this.props.client.client_id}
+                  artifact={this.state.artifact.artifact}
+                  mode={this.state.mode}
                   renderers={renderers}
                   column_types={column_types}
                  />
                 </Container> }
 
-            { this.state.mode === mode_logs &&
-              <Container className="event-report-viewer">
-                <VeloPagedTable
-                  params={{
-                      artifact: this.state.artifact.artifact,
-                      type: "CLIENT_EVENT_LOGS",
-                      start_time: start_ts,
-                      end_time: end_ts,
-                      client_id: this.props.client.client_id,
-                  }}
-                  renderers={renderers}
-                  column_types={column_types}
-                 />
-              </Container> }
-
             { this.state.mode === mode_report &&
               <Container className="event-report-viewer">
-                { (this.state.artifact.artifact && is_date_covered) ?
+                { this.state.artifact.artifact ?
                   <VeloReportViewer
                     artifact={this.state.artifact.artifact}
                     type="CLIENT_EVENT"
-                    params={{
-                        start_time: start_ts,
-                        end_time: end_ts,
-                    }}
                     client={this.props.client}
                   /> :
                   <div className="no-content">Please select an artifact to view above.</div>

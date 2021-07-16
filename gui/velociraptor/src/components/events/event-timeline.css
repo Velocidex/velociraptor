@@ -1,0 +1,93 @@
+
+.timeline-value-item {
+    margin-right: 2ex;
+}
+
+.timeline-value {
+    display: inline-flex;
+}
+
+.timeline-table-item {
+    color: var(--color-timeline-table-shown);
+    background: var(--color-timeline-table-shown);
+}
+
+.event-report-viewer .form-check {
+    line-height: normal;
+}
+
+.event-report-viewer .react-calendar-timeline .rct-header-root {
+    background: var(--color-timeline-header);
+}
+
+.event-report-viewer .react-calendar-timeline .rct-dateHeader {
+    background: var(--color-timeline-header);
+    color: var(--color-default-font);
+}
+
+.super-timeline .react-calendar-timeline .rct-dateHeader-primary {
+    color: var(--color-default-font);
+}
+
+.super-timeline .hidden-header {
+    display: none;
+}
+
+.event-report-viewer td {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.event-report-viewer .velo-table {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+td.timeline-time {
+    width: 15em;
+    overflow-x: hidden;
+}
+
+.timeline-item-1 {
+    background: var(--color-timeline-1);
+    color: var(--color-default-font);
+  }
+
+.timeline-item-2 {
+    background: var(--color-timeline-2);
+    color: var(--color-default-font);
+}
+
+.timeline-item-3 {
+    background: var(--color-timeline-3);
+    color: var(--color-default-font);
+}
+
+.timeline-item-4 {
+    background: var(--color-timeline-4);
+}
+
+.timeline-item-5 {
+    background: var(--color-timeline-5);
+}
+
+.timeline-item-6 {
+    background: var(--color-timeline-6);
+}
+
+.timeline-item-7 {
+    background: var(--color-timeline-7);
+}
+
+.timeline-marker {
+    background-color: var(--color-default-font);
+    width: 5px;
+}
+
+.react-calendar-timeline .rct-vertical-lines .rct-vl.rct-day-6, .react-calendar-timeline .rct-vertical-lines .rct-vl.rct-day-0 {
+    background: var(--timeline-weekend-background);
+}
+
+.page-size-dropdown .disabled {
+    background-color: var(--sidebar-icon-color-disabled);
+}

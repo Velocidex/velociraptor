@@ -207,6 +207,7 @@ func (self *ArtifactPathManager) get_event_files(path_for_writing string) (
 			Path:      full_path,
 			StartTime: timestamp,
 			EndTime:   timestamp + 60*60*24,
+			Size:      child.Size(),
 		})
 	}
 
