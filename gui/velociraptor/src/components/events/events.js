@@ -9,17 +9,14 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Dropdown from 'react-bootstrap/Dropdown';
-import DatePicker  from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-import Form from 'react-bootstrap/Form';
 import { EventTableWizard, ServerEventTableWizard } from './event-table.js';
 import Container from  'react-bootstrap/Container';
 import VeloReportViewer from "../artifacts/reporting.js";
 import Modal from 'react-bootstrap/Modal';
 import VeloAce from '../core/ace.js';
 import { SettingsButton } from '../core/ace.js';
-import VeloPagedTable from '../core/paged-table.js';
 import VeloTimestamp from "../utils/time.js";
 import EventTimelineViewer from "./timeline-viewer.js";
 
@@ -139,24 +136,6 @@ class InspectRawJson extends React.PureComponent {
     };
 }
 
-
-// Returns a date object in local timestamp which represents the UTC
-// date.
-function localDayFromUTCDate(date) {
-    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-}
-
-function utcEpochFromLocalDate(date) {
-    return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 1000;
-}
-
-// Convert from date in local time to a utc range covering that day.
-function get_day_range(date) {
-    let start_ts = utcEpochFromLocalDate(date);
-    let end_ts = start_ts + 60 * 60 * 24;
-    return {start_ts: start_ts, end_ts: end_ts};
-};
-
 class EventMonitoring extends React.Component {
     static propTypes = {
         client: PropTypes.object,
@@ -186,9 +165,6 @@ class EventMonitoring extends React.Component {
         // All available artifacts
         available_artifacts: [],
 
-        current_time: new Date(),
-        activeStartDate: new Date(),
-
         showDateSelector: false,
         showEventTableWizard: false,
 
@@ -199,7 +175,8 @@ class EventMonitoring extends React.Component {
         // Are we viewing the report or the raw data?
         mode: mode_raw_data,
 
-
+        // A callback for child components to add toolbar buttons in
+        // this component.
         buttonsRenderer: ()=>{},
     }
 
@@ -235,16 +212,7 @@ class EventMonitoring extends React.Component {
     }
 
     setArtifact = (artifact) => {
-        let current_time = new Date();
-
-        // Unfortunately the date selector operates in local time so
-        // we need to cheat it by setting a date which is the same in
-        // local time as the date is in utc. This way when the user
-        // selects the date in local time, they will actually end up
-        // selecting the utc date.
-        let local_time = localDayFromUTCDate(current_time);
-
-        this.setState({artifact: artifact, current_time: local_time});
+        this.setState({artifact: artifact});
         let client_id = this.props.client && this.props.client.client_id;
         client_id = client_id || "server";
         this.props.history.push('/events/' + client_id + '/' + artifact.artifact);
@@ -382,7 +350,7 @@ class EventMonitoring extends React.Component {
                 </ButtonGroup>
               </Navbar>
               { (this.state.mode === mode_raw_data ||
-                 this.state.mode == mode_logs) && this.state.artifact.artifact &&
+                 this.state.mode === mode_logs) && this.state.artifact.artifact &&
                 <Container className="event-report-viewer">
                 <EventTimelineViewer
                   toolbar={x=>this.setState({buttonsRenderer: x})}

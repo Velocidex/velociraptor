@@ -12,7 +12,6 @@ import moment from 'moment-timezone';
 import axios from 'axios';
 import { PrepareData } from '../core/table.js';
 import api from '../core/api-service.js';
-import VeloTable from  '../core/table.js';
 import BootstrapTable from 'react-bootstrap-table-next';
 import VeloValueRenderer from '../utils/value.js';
 import Dropdown from 'react-bootstrap/Dropdown';
@@ -161,7 +160,7 @@ export default class EventTimelineViewer extends React.Component {
             if (resp.cancel || !resp.data.logs) return;
 
             let av_t = resp.data.logs[0].row_timestamps;
-            if (this.props.mode == "Logs") {
+            if (this.props.mode === "Logs") {
                 av_t = resp.data.logs[0].log_timestamps;
             }
 
@@ -195,7 +194,7 @@ export default class EventTimelineViewer extends React.Component {
         this.props.toolbar(this.renderToolbar);
 
         let mode = "CLIENT_EVENT";
-        if (this.props.mode == "Logs") {
+        if (this.props.mode === "Logs") {
             mode = "CLIENT_EVENT_LOGS";
         }
 
@@ -227,7 +226,7 @@ export default class EventTimelineViewer extends React.Component {
 
             let columns = ["_ts"];
             _.each(pageData.columns, x=>{
-                if(x!="_ts") {
+                if(x!=="_ts") {
                     columns.push(x);
                 }
             });
@@ -259,7 +258,7 @@ export default class EventTimelineViewer extends React.Component {
                    {_.map(options, (x, idx)=>{
                        return <Dropdown.Item
                                 key={idx}
-                                href="#" disabled={x==this.state.row_count}
+                                href="#" disabled={x===this.state.row_count}
                                 eventKey={x}>{x}
                               </Dropdown.Item>;
                    })}
@@ -269,7 +268,7 @@ export default class EventTimelineViewer extends React.Component {
 
     centerPage = () => {
         let page_size = this.state.visibleTimeEnd - this.state.visibleTimeStart;
-        if (page_size == 0) {
+        if (page_size === 0) {
             page_size = 60*60*24*1000;
         }
         this.setState({
