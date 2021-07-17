@@ -39,7 +39,7 @@ class VeloTimestamp extends Component {
         }
 
         // If the timestamp is a number then it might be in usec
-        if (!ts && _.isNumber(value) && value > 0) {
+        if (!ts && !_.isNaN(value) &&  _.isNumber(value) && value > 0) {
             // Or maybe in seconds since epoch.
             if (value > 20000000000) {
                 value /= 1000;

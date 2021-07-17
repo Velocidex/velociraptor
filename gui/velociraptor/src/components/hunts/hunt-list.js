@@ -150,6 +150,14 @@ class HuntList extends React.Component {
         });
     }
 
+    setFullScreen = () => {
+        if (this.props.selected_hunt) {
+            this.props.history.push(
+                "/fullscreen/hunts/" +
+                    this.props.selected_hunt.hunt_id + "/notebook");
+        }
+    }
+
     render() {
         let columns = getHuntColumns();
         let selected_hunt = this.props.selected_hunt && this.props.selected_hunt.hunt_id;
@@ -319,6 +327,12 @@ class HuntList extends React.Component {
                             disabled={true}
                             variant="outline-dark">
                       <FontAwesomeIcon icon="book"/>
+                    </Button>
+
+                    <Button title="Full Screen"
+                            onClick={this.setFullScreen}
+                            variant="default">
+                      <FontAwesomeIcon icon="expand"/>
                     </Button>
 
                     <Button title="Delete Notebook"

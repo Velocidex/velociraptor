@@ -22,6 +22,8 @@ import UserForm from '../utils/users.js';
 import api from '../core/api-service.js';
 
 import { formatColumns } from "../core/table.js";
+import { withRouter }  from "react-router-dom";
+
 
 class NewNotebook extends React.Component {
     static propTypes = {
@@ -175,9 +177,7 @@ class DeleteNotebook extends React.Component {
     }
 }
 
-
-
-export default class NotebooksList extends React.Component {
+class NotebooksList extends React.Component {
     static propTypes = {
         notebooks: PropTypes.array,
         selected_notebook: PropTypes.object,
@@ -190,6 +190,15 @@ export default class NotebooksList extends React.Component {
         showDeleteNotebookDialog: false,
         showEditNotebookDialog: false,
         showExportNotebookDialog: false,
+    }
+
+    setFullScreen = () => {
+        if (this.props.selected_notebook &&
+            this.props.selected_notebook.notebook_id) {
+            this.props.history.push(
+                "/fullscreen/notebooks/" +
+                    this.props.selected_notebook.notebook_id);
+        }
     }
 
     render() {
@@ -269,6 +278,14 @@ export default class NotebooksList extends React.Component {
 
               <Navbar className="toolbar">
                 <ButtonGroup>
+                  <Button title="Full Screen"
+                          disabled={!this.props.selected_notebook ||
+                                    !this.props.selected_notebook.notebook_id}
+                          onClick={this.setFullScreen}
+                          variant="default">
+                    <FontAwesomeIcon icon="expand"/>
+                  </Button>
+
                   <Button title="NewNotebook"
                           onClick={()=>this.setState({showNewNotebookDialog: true})}
                           variant="default">
@@ -314,3 +331,5 @@ export default class NotebooksList extends React.Component {
         );
     }
 };
+
+export default withRouter(NotebooksList);

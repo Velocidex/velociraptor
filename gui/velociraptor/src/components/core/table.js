@@ -417,7 +417,10 @@ export function formatColumns(columns) {
         case "mb":
             x.formatter=(cell, row) => {
                 if (cell) {
-                    return (cell /1024/1024).toFixed(0);
+                    let result = (cell /1024/1024).toFixed(0);
+                    if (_.isNumber(result) && !_.isNaN(result)) {
+                        return result;
+                    }
                 }
                 return <></>;
             };
@@ -425,7 +428,11 @@ export function formatColumns(columns) {
             break;
         case "timestamp":
             x.formatter= (cell, row) => {
-                return <VeloTimestamp usec={cell / 1000}/>;
+                let result = cell /1000;
+                if (_.isNumber(result) && !_.isNaN(result)) {
+                    return <VeloTimestamp usec={result}/>;
+                }
+                return cell;
             };
             x.type = null;
             break;
