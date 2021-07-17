@@ -134,12 +134,20 @@ message ListAvailableEventResultsRequest {
        description: "The client ID we list the available monitoring logs. "
        "If empty we list the server's monitoring logs."
     }];
+
+    // Which artifact to list timestamps for. If not specified we only
+    // list artifact names.
+    string artifact = 2;
+
+    // This can be empty or "logs" to list the logs.
+    string log_type = 3;
 }
 
 message AvailableEvent {
     string artifact = 1;
     Artifact definition = 3;
-    repeated int32 timestamps = 2;
+    repeated int32 row_timestamps = 2;
+    repeated int32 log_timestamps = 4;
 }
 
 message ListAvailableEventResultsResponse {

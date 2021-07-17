@@ -119,6 +119,10 @@ func GetCursors(ctx context.Context,
 		for item := range rs_reader.Rows(ctx) {
 			ts := uint64(utils.GetInt64(item, "_ts"))
 
+			if ts > 20000000000 {
+				ts /= 1000000
+			}
+
 			// If we have not found the start yet and this
 			// row's timestamp is after the required
 			// start, then we add a start cursor to it.
@@ -210,6 +214,7 @@ func (self partPathManager) GeneratePaths(
 
 type TimedResultSetReader struct {
 	cursors            []*Cursor
+	start_ts           uint64
 	start_idx          uint64
 	file_store_factory api.FileStore
 }
@@ -307,6 +312,7 @@ func (self ResultSetFactory) NewTimedResultSetReader(
 		start_time, end_time)
 
 	return &TimedResultSetReader{
+		start_ts:           start_time,
 		cursors:            cursors,
 		file_store_factory: file_store_factory}, nil
 }
