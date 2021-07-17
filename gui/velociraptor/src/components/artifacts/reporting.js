@@ -125,9 +125,7 @@ export default class VeloReportViewer extends React.Component {
     render() {
         let template = parse(this.cleanupHTML(this.state.template), {
             replace: (domNode) => {
-                console.log(domNode.name);
                 if (domNode.name === "inline-table-viewer") {
-                    console.log(this.state.template);
                     try {
                         let data = this.state.data;
                         let response = data[domNode.attribs.value || "unknown"] || {};

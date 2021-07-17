@@ -227,6 +227,19 @@ class FlowsList extends React.Component {
             "/collected/" + client_id + "/" + selected_flow + "/" + tab);
     }
 
+    setFullScreen = () => {
+        let client_id = this.props.selected_flow &&
+            this.props.selected_flow.client_id;
+        let selected_flow = this.props.selected_flow &&
+            this.props.selected_flow.session_id;
+
+        if (client_id && selected_flow) {
+            this.props.history.push(
+                "/fullscreen/collected/" + client_id + "/" +
+                selected_flow + "/notebook");
+        }
+    }
+
     render() {
         let tab = this.props.match && this.props.match.params &&
             this.props.match.params.tab;
@@ -359,6 +372,12 @@ class FlowsList extends React.Component {
                             disabled={true}
                             variant="outline-dark">
                       <FontAwesomeIcon icon="book"/>
+                    </Button>
+
+                    <Button title="Full Screen"
+                            onClick={this.setFullScreen}
+                            variant="default">
+                      <FontAwesomeIcon icon="expand"/>
                     </Button>
 
                     <Button title="Delete Notebook"
