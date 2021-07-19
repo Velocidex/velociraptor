@@ -13,7 +13,8 @@ description: |
   Regex parameters can be applied for process name and pid for targeting. The 
   artifact also has an option to upload any process with Yara hits.  
   
-  Note: the Yara scan will stop after one hit.
+  Note: the Yara scan will stop after one hit. Multi-string rules will also only 
+  show one string in returned rows.
   
 type: CLIENT
 parameters:
@@ -113,7 +114,7 @@ sources:
                 String.Offset as HitOffset,
                 String.Name as HitName,
                 String.HexData as HitHexData
-             FROM yara(files=Pid,accessor='process',rules=YaraRule,number=99) 
+             FROM yara(files=Pid,accessor='process',rules=yara.Content[0]) 
              LIMIT 1
           })
            
