@@ -289,6 +289,7 @@ func doQuery() {
 			data, err := ioutil.ReadFile(*scope_file)
 			kingpin.FatalIfError(err, "Read Scope File")
 			err = json.Unmarshal(data, &scope_data)
+			kingpin.FatalIfError(err, "Unmarshal Scope Data")
 			err = serialize.DeserializeScope(ctx, scope, scope_data.Scope)
 			kingpin.FatalIfError(err, "Parse Scope")
 		}
