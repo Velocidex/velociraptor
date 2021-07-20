@@ -167,54 +167,57 @@ func (self SourcePlugin) Call(
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
+	err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+	if err != nil {
+		scope.Log("uploads: %s", err)
+		close(output_chan)
+		return output_chan
+	}
+
+	arg := &SourcePluginArgs{}
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("Command can only run on the server")
+		close(output_chan)
+		return output_chan
+	}
+
+	// This plugin will take parameters from environment
+	// parameters. This allows its use to be more concise in
+	// reports etc where many parameters can be inferred from
+	// context.
+	ParseSourceArgsFromScope(arg, scope)
+
+	// Allow the plugin args to override the environment scope.
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("source: %v", err)
+		close(output_chan)
+		return output_chan
+	}
+
+	// Hunt mode is just a proxy for the hunt_results()
+	// plugin.
+	if arg.HuntId != "" {
+		new_args := ordereddict.NewDict().
+			Set("hunt_id", arg.HuntId).
+			Set("artifact", arg.Artifact).
+			Set("source", arg.Source)
+
+		// Just delegate to the hunt_results() plugin.
+		return hunts.HuntResultsPlugin{}.Call(ctx, scope, new_args)
+	}
+
+	// Event artifacts just proxy for the monitoring plugin.
+	if arg.Artifact != "" {
+		ok, _ := isArtifactEvent(config_obj, arg)
+		if ok {
+			return MonitoringPlugin{}.Call(ctx, scope, args)
+		}
+	}
+
 	go func() {
 		defer close(output_chan)
-
-		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
-		if err != nil {
-			scope.Log("uploads: %s", err)
-			return
-		}
-
-		arg := &SourcePluginArgs{}
-		config_obj, ok := vql_subsystem.GetServerConfig(scope)
-		if !ok {
-			scope.Log("Command can only run on the server")
-			return
-		}
-
-		// This plugin will take parameters from environment
-		// parameters. This allows its use to be more concise in
-		// reports etc where many parameters can be inferred from
-		// context.
-		ParseSourceArgsFromScope(arg, scope)
-
-		// Allow the plugin args to override the environment scope.
-		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
-		if err != nil {
-			scope.Log("source: %v", err)
-			return
-		}
-
-		// Hunt mode is just a proxy for the hunt_results()
-		// plugin.
-		if arg.HuntId != "" {
-			args := ordereddict.NewDict().
-				Set("hunt_id", arg.HuntId).
-				Set("artifact", arg.Artifact).
-				Set("source", arg.Source)
-
-			// Just delegate to the hunt_results() plugin.
-			plugin := &hunts.HuntResultsPlugin{}
-			for row := range plugin.Call(ctx, scope, args) {
-				select {
-				case <-ctx.Done():
-					return
-				case output_chan <- row:
-				}
-			}
-			return
-		}
 
 		// Depending on the parameters, we need to read from
 		// different places.

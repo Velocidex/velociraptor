@@ -94,7 +94,14 @@ func (self MonitoringPlugin) Call(
 			reader.SetMaxTime(end)
 		}
 
+		count := int64(0)
 		for row := range reader.Rows(ctx) {
+			if count < arg.StartRow {
+				count++
+				continue
+			}
+			count++
+
 			select {
 			case <-ctx.Done():
 				return

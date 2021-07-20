@@ -3,6 +3,7 @@ package timed
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"time"
 
@@ -59,7 +60,7 @@ type TimedResultSetReader struct {
 	current_files_idx  int
 	current_reader     *timelines.TimelineReader
 	start              time.Time
-	end                *time.Time
+	end                time.Time
 	file_store_factory api.FileStore
 }
 
@@ -71,6 +72,11 @@ func (self *TimedResultSetReader) GetAvailableFiles(
 func (self *TimedResultSetReader) SeekToTime(offset time.Time) error {
 	self.start = offset
 	for idx, file := range self.files {
+		if offset.Before(file.StartTime) {
+			self.current_files_idx = idx
+			return nil
+		}
+
 		// This file spans the required time
 		if offset.After(file.StartTime) && offset.Before(file.EndTime) {
 			self.current_files_idx = idx
@@ -98,7 +104,7 @@ func (self *TimedResultSetReader) SeekToTime(offset time.Time) error {
 }
 
 func (self *TimedResultSetReader) SetMaxTime(end time.Time) {
-	self.end = &end
+	self.end = end
 }
 
 func (self *TimedResultSetReader) Close() {}
@@ -111,7 +117,11 @@ func (self *TimedResultSetReader) getReader() (*timelines.TimelineReader, error)
 	// Search for the next file to open
 	for self.current_files_idx < len(self.files) {
 		current_file := self.files[self.current_files_idx]
-		if self.end != nil && current_file.StartTime.After(*self.end) {
+		fmt.Printf("Checking file %v-%v with end %v\n",
+			current_file.StartTime,
+			current_file.EndTime, self.end)
+		if self.end.Unix() != 0 &&
+			current_file.StartTime.After(self.end) {
 			return nil, io.EOF
 		}
 
@@ -191,7 +201,8 @@ func (self *TimedResultSetReader) Rows(
 			}
 
 			for item := range reader.Read(ctx) {
-				if self.end != nil && item.Time.After(*self.end) {
+				if self.end.Unix() > 0 &&
+					item.Time.After(self.end) {
 					break
 				}
 
