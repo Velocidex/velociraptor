@@ -96,6 +96,13 @@ func NewDirectoryFileStore(config_obj *config_proto.Config) *DirectoryFileStore 
 	return &DirectoryFileStore{config_obj}
 }
 
+func (self *DirectoryFileStore) Move(src string, dest string) error {
+	src_path := self.FilenameToFileStorePath(src)
+	dest_path := self.FilenameToFileStorePath(dest)
+
+	return os.Rename(src_path, dest_path)
+}
+
 func (self *DirectoryFileStore) ListDirectory(dirname string) (
 	[]os.FileInfo, error) {
 

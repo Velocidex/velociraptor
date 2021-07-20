@@ -8,6 +8,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/timelines"
 )
 
@@ -82,7 +83,12 @@ func (self *TimedResultSetReader) SeekToTime(offset time.Time) error {
 			if err != nil {
 				return err
 			}
-			return reader.SeekToTime(offset)
+			err = reader.SeekToTime(offset)
+			if err == io.EOF {
+				return nil
+			}
+
+			return err
 		}
 	}
 
@@ -109,10 +115,16 @@ func (self *TimedResultSetReader) getReader() (*timelines.TimelineReader, error)
 			return nil, io.EOF
 		}
 
-		reader, err := timelines.NewTimelineReader(self.file_store_factory,
-			timelinePathManager(current_file.Path))
+		path_manager := timelinePathManager(current_file.Path)
+		reader, err := timelines.NewTimelineReader(
+			self.file_store_factory, path_manager)
 		if err != nil {
-			return nil, err
+			// Try to upgrade the index from older
+			// versions.
+			reader, err = self.maybeUpgradeIndex(path_manager)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		self.current_files_idx++
@@ -121,6 +133,48 @@ func (self *TimedResultSetReader) getReader() (*timelines.TimelineReader, error)
 	}
 
 	return nil, errors.New("Not found")
+}
+
+func (self *TimedResultSetReader) maybeUpgradeIndex(
+	path_manager timelines.TimelinePathManagerInterface) (
+	*timelines.TimelineReader, error) {
+
+	reader, err := result_sets.NewResultSetReader(
+		self.file_store_factory,
+		partPathManager{path_manager.Path()})
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+
+	// Read all the lines from the json and write them to a new
+	// tmp file.
+	ctx := context.Background()
+	new_path := path_manager.Path() + ".tmp"
+	tmp_path_manager := timelinePathManager(new_path)
+	tmp_writer, err := timelines.NewTimelineWriter(
+		self.file_store_factory, tmp_path_manager)
+	if err != nil {
+		return nil, err
+	}
+
+	for row := range reader.Rows(ctx) {
+		ts, pres := row.GetInt64("_ts")
+		if pres {
+			tmp_writer.Write(time.Unix(ts, 0), row)
+		}
+	}
+
+	tmp_writer.Close()
+
+	self.file_store_factory.Move(tmp_path_manager.Path(),
+		path_manager.Path())
+	self.file_store_factory.Move(tmp_path_manager.Index(),
+		path_manager.Index())
+
+	// Try to open the file again.
+	return timelines.NewTimelineReader(
+		self.file_store_factory, path_manager)
 }
 
 func (self *TimedResultSetReader) Rows(

@@ -85,7 +85,9 @@ func (self *MemoryFileStore) Debug() {
 		v_any, _ := self.Data.Get(k)
 		v := v_any.([]byte)
 		// Render index files especially
-		if strings.HasSuffix(k, ".index") {
+		if strings.HasSuffix(k, ".index") ||
+			strings.HasSuffix(k, ".idx") ||
+			strings.HasSuffix(k, ".tidx") {
 			fmt.Printf("%v: %v\n", k, hex.Dump(v))
 			continue
 		}
@@ -141,6 +143,20 @@ func (self *MemoryFileStore) StatFile(filename string) (os.FileInfo, error) {
 		FullPath_: filename,
 		Size_:     int64(len(buff.([]byte))),
 	}, nil
+}
+
+func (self *MemoryFileStore) Move(src, dest string) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	buff, pres := self.Data.Get(src)
+	if !pres {
+		return os.ErrNotExist
+	}
+
+	self.Data.Set(dest, buff)
+	self.Data.Delete(src)
+	return nil
 }
 
 func (self *MemoryFileStore) ListDirectory(dirname string) ([]os.FileInfo, error) {

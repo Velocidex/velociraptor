@@ -124,8 +124,9 @@ func (self timelinePathManager) Name() string {
 	return string(self)
 }
 
+// Timed indexes have the extension tidx
 func (self timelinePathManager) Index() string {
-	return string(self) + ".index"
+	return string(self) + ".tidx"
 }
 
 func NewTimedResultSetWriter(
