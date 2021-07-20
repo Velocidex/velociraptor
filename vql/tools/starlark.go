@@ -315,7 +315,7 @@ func tryIntegerOrFloat(floatValue float64) (starlark.Value, error) {
 	return starlark.Float(floatValue), nil
 }
 
-func compileStarlark(ctx context.Context, scope types.Scope,
+func CompileStarlark(ctx context.Context, scope types.Scope,
 	code string, globals vfilter.Any) (*ordereddict.Dict, error) {
 
 	sthread := &starlark.Thread{Name: "VQL Thread", Load: starlib.Loader}
@@ -349,6 +349,12 @@ func compileStarlark(ctx context.Context, scope types.Scope,
 		}
 		compiled_vars.Set(key, entry)
 	}
+
+	// Set for serialization
+	orig_vals := ordereddict.NewDict()
+	orig_vals.Set("globals", globals)
+	orig_vals.Set("code", code)
+	compiled_vars.Set("__starlark", orig_vals)
 
 	return compiled_vars, nil
 }
@@ -399,7 +405,7 @@ func (self StarlarkCompileFunction) Call(ctx context.Context,
 	defer logIfPanic(scope)
 
 	// grab compiled code
-	compiled_args, err := compileStarlark(ctx, scope, arg.Code, arg.Globals)
+	compiled_args, err := CompileStarlark(ctx, scope, arg.Code, arg.Globals)
 	if err != nil {
 		scope.Log("starl: %v", err)
 		return vfilter.Null{}

@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -37,6 +38,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/serialize"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -60,6 +62,7 @@ var (
 
 	max_wait = app.Flag("max_wait", "Maximum time to queue results.").
 			Default("10").Int()
+	scope_file = query.Flag("scope_file", "Load scope from here. Creates if empty").Default("").String()
 )
 
 func outputJSON(ctx context.Context,
@@ -272,15 +275,25 @@ func doQuery() {
 	kingpin.FatalIfError(err, "GetRepositoryManager")
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
-
 	// Install throttler into the scope.
 	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(*rate)))
 
 	ctx := InstallSignalHandler(scope)
-
 	if *trace_vql_flag {
 		scope.SetTracer(log.New(os.Stderr, "VQL Trace: ", 0))
 	}
+
+	if *scope_file != "" {
+		if _, err := os.Stat(*scope_file); err == nil {
+			var scope_data serialize.ScopeItems
+			data, err := ioutil.ReadFile(*scope_file)
+			kingpin.FatalIfError(err, "Read Scope File")
+			err = json.Unmarshal(data, &scope_data)
+			err = serialize.DeserializeScope(ctx, scope, scope_data.Scope)
+			kingpin.FatalIfError(err, "Parse Scope")
+		}
+	}
+
 	for _, query := range *queries {
 		statements, err := vfilter.MultiParse(query)
 		kingpin.FatalIfError(err, "Unable to parse VQL Query")
@@ -301,6 +314,12 @@ func doQuery() {
 			}
 		}
 	}
+	if *scope_file != "" {
+		scope_str := serialize.SerializeScope(scope)
+		err = ioutil.WriteFile(*scope_file, scope_str, 0644)
+		kingpin.FatalIfError(err, "Scope Write")
+	}
+
 }
 
 func init() {
