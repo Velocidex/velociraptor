@@ -55,7 +55,28 @@
    "Time": "2020-04-26T11:20:00Z"
   }
  ],
- "From 0 to midway through first file": [],
+ "From 0 to midway through first file": [
+  {
+   "_ts": 1587800000,
+   "Time": "2020-04-25T07:33:20Z"
+  },
+  {
+   "_ts": 1587810000,
+   "Time": "2020-04-25T10:20:00Z"
+  },
+  {
+   "_ts": 1587820000,
+   "Time": "2020-04-25T13:06:40Z"
+  },
+  {
+   "_ts": 1587830000,
+   "Time": "2020-04-25T15:53:20Z"
+  },
+  {
+   "_ts": 1587840000,
+   "Time": "2020-04-25T18:40:00Z"
+  }
+ ],
  "Start and end are within the first file.": [
   {
    "_ts": 1587810000,

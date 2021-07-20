@@ -1,5 +1,3 @@
-// +build server_vql
-
 package result_sets
 
 import (

@@ -3,7 +3,6 @@ package timed
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"time"
 
@@ -117,10 +116,7 @@ func (self *TimedResultSetReader) getReader() (*timelines.TimelineReader, error)
 	// Search for the next file to open
 	for self.current_files_idx < len(self.files) {
 		current_file := self.files[self.current_files_idx]
-		fmt.Printf("Checking file %v-%v with end %v\n",
-			current_file.StartTime,
-			current_file.EndTime, self.end)
-		if self.end.Unix() != 0 &&
+		if !self.end.IsZero() &&
 			current_file.StartTime.After(self.end) {
 			return nil, io.EOF
 		}
@@ -201,7 +197,7 @@ func (self *TimedResultSetReader) Rows(
 			}
 
 			for item := range reader.Read(ctx) {
-				if self.end.Unix() > 0 &&
+				if !self.end.IsZero() &&
 					item.Time.After(self.end) {
 					break
 				}

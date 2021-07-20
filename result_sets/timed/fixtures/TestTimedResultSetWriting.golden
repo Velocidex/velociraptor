@@ -55,7 +55,28 @@
    "Now": 1587900000
   }
  ],
- "From 0 to midway through first file": [],
+ "From 0 to midway through first file": [
+  {
+   "Time": "2020-04-25T07:33:20Z",
+   "Now": 1587800000
+  },
+  {
+   "Time": "2020-04-25T10:20:00Z",
+   "Now": 1587810000
+  },
+  {
+   "Time": "2020-04-25T13:06:40Z",
+   "Now": 1587820000
+  },
+  {
+   "Time": "2020-04-25T15:53:20Z",
+   "Now": 1587830000
+  },
+  {
+   "Time": "2020-04-25T18:40:00Z",
+   "Now": 1587840000
+  }
+ ],
  "Start and end are within the first file.": [
   {
    "Time": "2020-04-25T10:20:00Z",
