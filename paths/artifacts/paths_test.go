@@ -23,8 +23,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 
-	_ "www.velocidex.com/golang/velociraptor/file_store/result_sets/simple"
-	_ "www.velocidex.com/golang/velociraptor/file_store/result_sets/timed"
+	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 type path_tests_t struct {

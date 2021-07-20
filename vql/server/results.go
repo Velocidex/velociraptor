@@ -23,17 +23,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/server/hunts"
@@ -219,15 +218,22 @@ func (self SourcePlugin) Call(
 
 		// Depending on the parameters, we need to read from
 		// different places.
-		row_chan, closer, err := getRows(ctx, config_obj, arg)
+		result_set_reader, err := getResultSetReader(ctx, config_obj, arg)
 		if err != nil {
 			scope.Log("source: %v", err)
 			return
 		}
-		defer closer()
+
+		if arg.StartRow > 0 {
+			err = result_set_reader.SeekToRow(arg.StartRow)
+			if err != nil {
+				scope.Log("source: %v", err)
+				return
+			}
+		}
 
 		count := int64(0)
-		for row := range row_chan {
+		for row := range result_set_reader.Rows(ctx) {
 			if arg.Limit > 0 && count >= arg.Limit {
 				return
 			}
@@ -291,10 +297,10 @@ func isArtifactEvent(
 	}
 }
 
-func getRows(
+func getResultSetReader(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	arg *SourcePluginArgs) (<-chan *ordereddict.Dict, func(), error) {
+	arg *SourcePluginArgs) (result_sets.ResultSetReader, error) {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
@@ -304,18 +310,10 @@ func getRows(
 		if table == 0 {
 			table = 1
 		}
-		path_manager := reporting.NewNotebookPathManager(arg.NotebookId).
-			Cell(arg.NotebookCellId).QueryStorage(table)
+		path_manager := reporting.NewNotebookPathManager(
+			arg.NotebookId).Cell(arg.NotebookCellId).QueryStorage(table)
 
-		reader, err := result_sets.NewResultSetReader(
-			file_store_factory, path_manager)
-		err = reader.SeekToRow(arg.StartRow)
-		if err != nil {
-			reader.Close()
-			return nil, nil, err
-		}
-
-		return reader.Rows(ctx), reader.Close, err
+		return result_sets.NewResultSetReader(file_store_factory, path_manager)
 	}
 
 	if arg.Artifact != "" {
@@ -326,61 +324,32 @@ func getRows(
 
 		is_event, err := isArtifactEvent(config_obj, arg)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		// Event result sets can be sliced by time ranges.
 		if is_event {
-			if arg.EndTime == 0 {
-				arg.EndTime = time.Now().Unix()
-			}
-
-			path_manager, err := artifact_paths.NewArtifactPathManager(
-				config_obj, arg.ClientId, "", arg.Artifact)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			reader, err := result_sets.NewTimedResultSetReader(
-				ctx, file_store_factory, path_manager)
-			if err != nil {
-				return nil, nil, err
-			}
-			reader.SeekToTime(time.Unix(int64(arg.StartTime), 0))
-			reader.SetMaxTime(time.Unix(int64(arg.EndTime), 0))
-
-			return reader.Rows(ctx), reader.Close, nil
+			return nil, errors.New("source plugin can not be used for event queries.")
 		}
 
 		// Must specify a client id and flow id for regular
 		// collections.
 		if arg.FlowId == "" || arg.ClientId == "" {
-			return nil, nil, errors.New("source: client_id and flow_id should " +
+			return nil, errors.New("source: client_id and flow_id should " +
 				"be specified for non event artifacts.")
 		}
 
 		path_manager, err := artifact_paths.NewArtifactPathManager(
 			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
-		reader, err := result_sets.NewResultSetReader(
-			file_store_factory, path_manager)
-		if err != nil {
-			return nil, nil, err
-		}
+		return result_sets.NewResultSetReader(file_store_factory, path_manager)
 
-		err = reader.SeekToRow(arg.StartRow)
-		if err != nil {
-			reader.Close()
-			return nil, nil, err
-		}
-
-		return reader.Rows(ctx), reader.Close, nil
 	}
 
-	return nil, nil, errors.New(
+	return nil, errors.New(
 		"source: One of artifact, flow_id, hunt_id, notebook_id should be specified.")
 }
 
@@ -513,14 +482,14 @@ func (self FlowResultsPlugin) Call(
 		}
 
 		file_store_factory := file_store.GetFileStore(config_obj)
-		reader, err := result_sets.NewResultSetReader(
+		rs_reader, err := result_sets.NewResultSetReader(
 			file_store_factory, path_manager)
 		if err != nil {
 			scope.Log("source: %v", err)
 			return
 		}
 
-		for row := range reader.Rows(ctx) {
+		for row := range rs_reader.Rows(ctx) {
 			select {
 			case <-ctx.Done():
 				return

@@ -24,12 +24,12 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
@@ -43,8 +43,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
-	_ "www.velocidex.com/golang/velociraptor/file_store/result_sets/simple"
-	_ "www.velocidex.com/golang/velociraptor/file_store/result_sets/timed"
+	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 type ServerTestSuite struct {

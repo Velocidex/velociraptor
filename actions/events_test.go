@@ -28,6 +28,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 var (

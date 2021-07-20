@@ -15,7 +15,7 @@ import (
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/timelines"
 	"www.velocidex.com/golang/velociraptor/utils"
 )

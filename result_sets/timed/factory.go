@@ -5,7 +5,9 @@ import (
 
 	"github.com/Velocidex/json"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
+	"www.velocidex.com/golang/velociraptor/result_sets"
+
+	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
 )
 
 type TimedFactory struct{}

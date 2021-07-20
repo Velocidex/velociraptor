@@ -37,9 +37,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vjson "www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 )
 
 const (

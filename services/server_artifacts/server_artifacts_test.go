@@ -25,6 +25,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 )
 

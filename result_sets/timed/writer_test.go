@@ -16,10 +16,10 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -74,7 +74,7 @@ type TimedResultSetTestSuite struct {
 func (self *TimedResultSetTestSuite) SetupTest() {
 	var err error
 	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../../http_comms/test_data/server.config.yaml").
+		"../../http_comms/test_data/server.config.yaml").
 		WithRequiredFrontend().WithWriteback().
 		LoadAndValidate()
 	require.NoError(self.T(), err)
@@ -171,7 +171,7 @@ type TimedResultSetTestSuiteFileBased struct {
 func (self *TimedResultSetTestSuiteFileBased) SetupTest() {
 	var err error
 	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../../http_comms/test_data/server.config.yaml").
+		"../../http_comms/test_data/server.config.yaml").
 		WithRequiredFrontend().WithWriteback().
 		LoadAndValidate()
 	require.NoError(self.T(), err)

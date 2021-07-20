@@ -8,8 +8,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 
-	_ "www.velocidex.com/golang/velociraptor/file_store/result_sets/simple"
-	_ "www.velocidex.com/golang/velociraptor/file_store/result_sets/timed"
+	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 func TestMemoryQueueManager(t *testing.T) {

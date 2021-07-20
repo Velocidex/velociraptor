@@ -9,9 +9,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 )
