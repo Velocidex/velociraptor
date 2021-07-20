@@ -2,6 +2,7 @@ package functions
 
 import (
 	"context"
+	"errors"
 	"math"
 	"time"
 
@@ -103,6 +104,10 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 
 	default:
 		sec, _ = utils.ToInt64(timestamp)
+	}
+
+	if sec == 0 {
+		return time.Time{}, errors.New("Invalid time")
 	}
 
 	return time.Unix(int64(sec), int64(dec)), nil

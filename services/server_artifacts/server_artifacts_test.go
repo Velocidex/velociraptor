@@ -179,7 +179,7 @@ sources:
 		"server", details.Context.SessionId)
 	log_data := test_utils.FileReadAll(self.T(), self.config_obj,
 		flow_path_manager.Log().Path())
-	assert.Contains(self.T(), log_data, "Query timed out after 1 seconds")
+	assert.Contains(self.T(), log_data, "Query timed out after ")
 }
 
 // The server artifact runner impersonates the flow creator for ACL

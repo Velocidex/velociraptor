@@ -144,8 +144,8 @@ type SourcePluginArgs struct {
 
 	// If the artifact name specifies an event artifact, you may
 	// also specify start and end times to return.
-	StartTime int64 `vfilter:"optional,field=start_time,doc=Start return events from this date (for event sources)"`
-	EndTime   int64 `vfilter:"optional,field=end_time,doc=Stop end events reach this time (event sources)."`
+	StartTime vfilter.Any `vfilter:"optional,field=start_time,doc=Start return events from this date (for event sources)"`
+	EndTime   vfilter.Any `vfilter:"optional,field=end_time,doc=Stop end events reach this time (event sources)."`
 
 	// A source may specify a notebook cell to read from - this
 	// allows post processing in multiple stages - one query

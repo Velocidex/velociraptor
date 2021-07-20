@@ -29,6 +29,7 @@ import (
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
@@ -80,18 +81,22 @@ func (self MonitoringPlugin) Call(
 			return
 		}
 
-		start, err := functions.TimeFromAny(scope, arg.StartTime)
-		if err == nil {
-			err = reader.SeekToTime(start)
-			if err != nil {
-				scope.Log("monitoring: %v", err)
-				return
+		if !utils.IsNil(arg.StartTime) {
+			start, err := functions.TimeFromAny(scope, arg.StartTime)
+			if err == nil {
+				err = reader.SeekToTime(start)
+				if err != nil {
+					scope.Log("monitoring: %v", err)
+					return
+				}
 			}
 		}
 
-		end, err := functions.TimeFromAny(scope, arg.StartTime)
-		if err == nil {
-			reader.SetMaxTime(end)
+		if !utils.IsNil(arg.EndTime) {
+			end, err := functions.TimeFromAny(scope, arg.EndTime)
+			if err == nil {
+				reader.SetMaxTime(end)
+			}
 		}
 
 		count := int64(0)
