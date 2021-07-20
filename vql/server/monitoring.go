@@ -25,10 +25,12 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -70,14 +72,29 @@ func (self MonitoringPlugin) Call(
 			return
 		}
 
-		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
-			path_manager, arg.StartTime, arg.EndTime)
+		file_store_factory := file_store.GetFileStore(config_obj)
+		reader, err := result_sets.NewTimedResultSetReader(
+			ctx, file_store_factory, path_manager)
 		if err != nil {
 			scope.Log("monitoring: %v", err)
 			return
 		}
 
-		for row := range row_chan {
+		start, err := functions.TimeFromAny(scope, arg.StartTime)
+		if err == nil {
+			err = reader.SeekToTime(start)
+			if err != nil {
+				scope.Log("monitoring: %v", err)
+				return
+			}
+		}
+
+		end, err := functions.TimeFromAny(scope, arg.StartTime)
+		if err == nil {
+			reader.SetMaxTime(end)
+		}
+
+		for row := range reader.Rows(ctx) {
 			select {
 			case <-ctx.Done():
 				return

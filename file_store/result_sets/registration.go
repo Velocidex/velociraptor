@@ -8,8 +8,21 @@ import (
 )
 
 var (
-	factory Factory
+	rs_factory       Factory
+	timed_rs_factory TimedFactory
 )
+
+type TimedFactory interface {
+	NewTimedResultSetWriter(
+		file_store_factory api.FileStore,
+		path_manager api.PathManager,
+		opts *json.EncOpts) (TimedResultSetWriter, error)
+
+	NewTimedResultSetReader(
+		ctx context.Context,
+		file_store api.FileStore,
+		path_manager api.PathManager) (TimedResultSetReader, error)
+}
 
 type Factory interface {
 	NewResultSetWriter(
@@ -21,15 +34,13 @@ type Factory interface {
 	NewResultSetReader(
 		file_store_factory api.FileStore,
 		path_manager api.PathManager) (ResultSetReader, error)
-
-	NewTimedResultSetReader(
-		ctx context.Context,
-		file_store api.FileStore,
-		path_manager api.PathManager,
-		start_time, end_time uint64) (ResultSetReader, error)
 }
 
 // Allows for registration of the result set factory.
-func Register(impl Factory) {
-	factory = impl
+func RegisterResultSetFactory(impl Factory) {
+	rs_factory = impl
+}
+
+func RegisterTimedResultSetFactory(impl TimedFactory) {
+	timed_rs_factory = impl
 }

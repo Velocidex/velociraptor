@@ -208,8 +208,8 @@ func (self *EventTable) RunQuery(
 
 	scope.Log("server_monitoring: Collecting <green>%v</>", artifact_name)
 
-	rs_writer, err := result_sets.NewResultSetWriter(
-		file_store_factory, path_manager, opts, false /* truncate */)
+	rs_writer, err := result_sets.NewTimedResultSetWriter(
+		file_store_factory, path_manager, opts)
 	if err != nil {
 		scope.Close()
 		return err

@@ -104,31 +104,16 @@ func (self *ArtifactLogPathManager) GetPathForWriting() (string, error) {
 	return "", nil
 }
 
-func (self *ArtifactLogPathManager) GeneratePaths(
-	ctx context.Context) <-chan *api.ResultSetFileProperties {
-	output := make(chan *api.ResultSetFileProperties)
+func (self *ArtifactLogPathManager) GetAvailableFiles(
+	ctx context.Context) []*api.ResultSetFileProperties {
+	path_for_writing, err := self.GetPathForWriting()
+	if err != nil {
+		return nil
+	}
 
-	go func() {
-		defer close(output)
-
-		path_for_writing, err := self.GetPathForWriting()
-		if err != nil {
-			return
-		}
-
-		// List all daily files in the required directory.
-		children, _ := self.get_event_files(path_for_writing)
-		for _, child := range children {
-			select {
-			case <-ctx.Done():
-				return
-
-			case output <- child:
-			}
-		}
-	}()
-
-	return output
+	// List all daily files in the required directory.
+	children, _ := self.get_event_files(path_for_writing)
+	return children
 }
 
 func NewArtifactLogPathManager(

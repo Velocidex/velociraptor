@@ -19,6 +19,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -380,13 +381,16 @@ func convertCSVTags(
 
 	path_manager := NewNotebookPathManager(params.NotebookId).Cell(
 		params.CellId).QueryStorage(params.TableId)
-	row_chan, err := file_store.GetTimeRange(ctx, config_obj, path_manager, 0, 0)
+	file_store_factory := file_store.GetFileStore(config_obj)
+	reader, err := result_sets.NewResultSetReader(
+		file_store_factory, path_manager)
 	if err != nil {
 		return "", err
 	}
+	defer reader.Close()
 
 	headers := false
-	for row := range row_chan {
+	for row := range reader.Rows(ctx) {
 		if !headers {
 			output.WriteString("\n<table class=\"table table-striped\">\n <thead>\n")
 			output.WriteString("  <tr>\n")

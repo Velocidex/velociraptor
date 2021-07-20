@@ -2,7 +2,6 @@ package timelines
 
 import (
 	"context"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -81,7 +80,7 @@ func (self TimelinePlugin) Call(
 		}
 
 		for item := range reader.Read(ctx) {
-			output_chan <- item.Row.Set("_ts", time.Unix(0, item.Time))
+			output_chan <- item.Row.Set("_ts", item.Time)
 		}
 	}()
 

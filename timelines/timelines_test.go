@@ -88,7 +88,8 @@ func (self *TimelineTestSuite) TestSuperTimelineWriter() {
 
 func (self *TimelineTestSuite) TestTimelineWriter() {
 	path_manager := &TimelinePathManager{"T.1234", "Test"}
-	timeline, err := NewTimelineWriter(self.config_obj, path_manager)
+	file_store_factory := file_store.GetFileStore(self.config_obj)
+	timeline, err := NewTimelineWriter(file_store_factory, path_manager)
 	assert.NoError(self.T(), err)
 
 	for i := int64(0); i <= 10; i++ {
@@ -98,7 +99,7 @@ func (self *TimelineTestSuite) TestTimelineWriter() {
 
 	//	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
 
-	reader, err := NewTimelineReader(self.config_obj, path_manager)
+	reader, err := NewTimelineReader(file_store_factory, path_manager)
 	assert.NoError(self.T(), err)
 	defer reader.Close()
 

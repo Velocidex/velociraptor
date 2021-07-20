@@ -13,9 +13,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -25,6 +22,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
+
+	_ "www.velocidex.com/golang/velociraptor/file_store/result_sets/simple"
+	_ "www.velocidex.com/golang/velociraptor/file_store/result_sets/timed"
 )
 
 type path_tests_t struct {
@@ -128,84 +128,6 @@ func (self *PathManageTestSuite) TestPathManager() {
 		assert.Equal(self.T(), ok, true)
 		assert.Equal(self.T(), string(data), "{\"_ts\":1587800823}\n")
 	}
-}
-
-// Test the path manager with DirectoryFileStore
-func (self *PathManageTestSuite) TestPathManagerDailyRotations() {
-	t := self.T()
-
-	file_store_factory := file_store.GetFileStore(self.config_obj)
-	clock := &utils.MockClock{}
-
-	path_manager, err := artifacts.NewArtifactPathManager(
-		self.config_obj,
-		"C.123",
-		"F.123",
-		"Windows.Events.ProcessCreation")
-	assert.NoError(self.T(), err)
-	path_manager.Clock = clock
-
-	qm := directory.NewDirectoryQueueManager(
-		self.config_obj,
-		file_store_factory).(*directory.DirectoryQueueManager)
-	qm.Clock = clock
-
-	// Write 3 different events in different days
-	timestamps := []int64{1587200823, 1587300823, 1587400823}
-	for _, ts := range timestamps {
-		clock.MockNow = time.Unix(ts, 0)
-		err := qm.PushEventRows(path_manager,
-			[]*ordereddict.Dict{ordereddict.NewDict()})
-		assert.NoError(self.T(), err)
-	}
-
-	ctx := context.Background()
-	results := []*api.ResultSetFileProperties{}
-	for child := range path_manager.GeneratePaths(ctx) {
-		results = append(results, child)
-	}
-
-	assert.Equal(t, len(results), 3)
-	for idx, result := range results {
-		assert.True(t, timestamps[idx] > result.StartTime,
-			"Timestamp %v %v", timestamps[idx], result)
-		assert.True(t, timestamps[idx] < result.EndTime,
-			"Timestamp %v %v", timestamps[idx], result)
-	}
-
-	// Test GetTimeRange - no time range specified should return
-	// all items.
-	times := []int64{}
-	row_chan, err := file_store.GetTimeRange(ctx, self.config_obj,
-		path_manager, 0, 0)
-	assert.NoError(t, err)
-	for row := range row_chan {
-		ts, _ := row.Get("_ts")
-		times = append(times, ts.(int64))
-	}
-	assert.Equal(t, times, timestamps)
-
-	// Cover a small time range - no end time
-	times = nil
-	row_chan, err = file_store.GetTimeRange(ctx, self.config_obj,
-		path_manager, 1587300822, 0)
-	assert.NoError(t, err)
-	for row := range row_chan {
-		ts, _ := row.Get("_ts")
-		times = append(times, ts.(int64))
-	}
-	assert.Equal(t, times, timestamps[1:])
-
-	// Cover a small time range - no start time
-	times = nil
-	row_chan, err = file_store.GetTimeRange(ctx, self.config_obj,
-		path_manager, 0, 1587300824)
-	assert.NoError(t, err)
-	for row := range row_chan {
-		ts, _ := row.Get("_ts")
-		times = append(times, ts.(int64))
-	}
-	assert.Equal(t, times, timestamps[:2])
 }
 
 func TestPathTest(t *testing.T) {

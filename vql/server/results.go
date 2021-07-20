@@ -81,14 +81,16 @@ func (self UploadsPlugins) Call(
 		}
 
 		flow_path_manager := paths.NewFlowPathManager(arg.ClientId, arg.FlowId)
-		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
-			flow_path_manager.UploadMetadata(), 0, 0)
+		file_store_factory := file_store.GetFileStore(config_obj)
+		reader, err := result_sets.NewResultSetReader(
+			file_store_factory, flow_path_manager.UploadMetadata())
 		if err != nil {
 			scope.Log("uploads: %v", err)
 			return
 		}
+		defer reader.Close()
 
-		for row := range row_chan {
+		for row := range reader.Rows(ctx) {
 			select {
 			case <-ctx.Done():
 				return
@@ -217,22 +219,15 @@ func (self SourcePlugin) Call(
 
 		// Depending on the parameters, we need to read from
 		// different places.
-		result_set_reader, err := getResultSetReader(ctx, config_obj, arg)
+		row_chan, closer, err := getRows(ctx, config_obj, arg)
 		if err != nil {
 			scope.Log("source: %v", err)
 			return
 		}
-
-		if arg.StartRow > 0 {
-			err = result_set_reader.SeekToRow(arg.StartRow)
-			if err != nil {
-				scope.Log("source: %v", err)
-				return
-			}
-		}
+		defer closer()
 
 		count := int64(0)
-		for row := range result_set_reader.Rows(ctx) {
+		for row := range row_chan {
 			if arg.Limit > 0 && count >= arg.Limit {
 				return
 			}
@@ -296,10 +291,10 @@ func isArtifactEvent(
 	}
 }
 
-func getResultSetReader(
+func getRows(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	arg *SourcePluginArgs) (result_sets.ResultSetReader, error) {
+	arg *SourcePluginArgs) (<-chan *ordereddict.Dict, func(), error) {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
@@ -309,10 +304,18 @@ func getResultSetReader(
 		if table == 0 {
 			table = 1
 		}
-		path_manager := reporting.NewNotebookPathManager(
-			arg.NotebookId).Cell(arg.NotebookCellId).QueryStorage(table)
+		path_manager := reporting.NewNotebookPathManager(arg.NotebookId).
+			Cell(arg.NotebookCellId).QueryStorage(table)
 
-		return result_sets.NewResultSetReader(file_store_factory, path_manager)
+		reader, err := result_sets.NewResultSetReader(
+			file_store_factory, path_manager)
+		err = reader.SeekToRow(arg.StartRow)
+		if err != nil {
+			reader.Close()
+			return nil, nil, err
+		}
+
+		return reader.Rows(ctx), reader.Close, err
 	}
 
 	if arg.Artifact != "" {
@@ -323,7 +326,7 @@ func getResultSetReader(
 
 		is_event, err := isArtifactEvent(config_obj, arg)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		// Event result sets can be sliced by time ranges.
@@ -335,32 +338,49 @@ func getResultSetReader(
 			path_manager, err := artifact_paths.NewArtifactPathManager(
 				config_obj, arg.ClientId, "", arg.Artifact)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 
-			return result_sets.NewTimedResultSetReader(ctx, file_store_factory,
-				path_manager, uint64(arg.StartTime), uint64(arg.EndTime))
+			reader, err := result_sets.NewTimedResultSetReader(
+				ctx, file_store_factory, path_manager)
+			if err != nil {
+				return nil, nil, err
+			}
+			reader.SeekToTime(time.Unix(int64(arg.StartTime), 0))
+			reader.SetMaxTime(time.Unix(int64(arg.EndTime), 0))
 
+			return reader.Rows(ctx), reader.Close, nil
 		}
 
 		// Must specify a client id and flow id for regular
 		// collections.
 		if arg.FlowId == "" || arg.ClientId == "" {
-			return nil, errors.New("source: client_id and flow_id should " +
+			return nil, nil, errors.New("source: client_id and flow_id should " +
 				"be specified for non event artifacts.")
 		}
 
 		path_manager, err := artifact_paths.NewArtifactPathManager(
 			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
-		return result_sets.NewResultSetReader(file_store_factory, path_manager)
+		reader, err := result_sets.NewResultSetReader(
+			file_store_factory, path_manager)
+		if err != nil {
+			return nil, nil, err
+		}
 
+		err = reader.SeekToRow(arg.StartRow)
+		if err != nil {
+			reader.Close()
+			return nil, nil, err
+		}
+
+		return reader.Rows(ctx), reader.Close, nil
 	}
 
-	return nil, errors.New(
+	return nil, nil, errors.New(
 		"source: One of artifact, flow_id, hunt_id, notebook_id should be specified.")
 }
 
@@ -492,14 +512,15 @@ func (self FlowResultsPlugin) Call(
 			return
 		}
 
-		row_chan, err := file_store.GetTimeRange(
-			ctx, config_obj, path_manager, 0, 0)
+		file_store_factory := file_store.GetFileStore(config_obj)
+		reader, err := result_sets.NewResultSetReader(
+			file_store_factory, path_manager)
 		if err != nil {
 			scope.Log("source: %v", err)
 			return
 		}
 
-		for row := range row_chan {
+		for row := range reader.Rows(ctx) {
 			select {
 			case <-ctx.Done():
 				return

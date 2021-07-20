@@ -3,6 +3,7 @@ package result_sets
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
@@ -21,10 +22,28 @@ func NewResultSetWriter(
 	path_manager api.PathManager,
 	opts *json.EncOpts,
 	truncate bool) (ResultSetWriter, error) {
-	if factory == nil {
+	if rs_factory == nil {
 		return nil, errors.New("ResultSet factory not initialized")
 	}
-	return factory.NewResultSetWriter(file_store, path_manager, opts, truncate)
+	return rs_factory.NewResultSetWriter(
+		file_store, path_manager, opts, truncate)
+}
+
+type TimedResultSetWriter interface {
+	Write(row *ordereddict.Dict)
+	Flush()
+	Close()
+}
+
+func NewTimedResultSetWriter(
+	file_store api.FileStore,
+	path_manager api.PathManager,
+	opts *json.EncOpts) (TimedResultSetWriter, error) {
+	if timed_rs_factory == nil {
+		return nil, errors.New("ResultSet factory not initialized")
+	}
+	return timed_rs_factory.NewTimedResultSetWriter(
+		file_store, path_manager, opts)
 }
 
 type ResultSetReader interface {
@@ -37,10 +56,18 @@ type ResultSetReader interface {
 func NewResultSetReader(
 	file_store api.FileStore,
 	path_manager api.PathManager) (ResultSetReader, error) {
-	if factory == nil {
+	if rs_factory == nil {
 		return nil, errors.New("ResultSet factory not initialized")
 	}
-	return factory.NewResultSetReader(file_store, path_manager)
+	return rs_factory.NewResultSetReader(file_store, path_manager)
+}
+
+type TimedResultSetReader interface {
+	SeekToTime(start time.Time) error
+	SetMaxTime(end time.Time)
+	Rows(ctx context.Context) <-chan *ordereddict.Dict
+	Close()
+	GetAvailableFiles(ctx context.Context) []*api.ResultSetFileProperties
 }
 
 // Some result sets store events (rows with a timestamp) over periods
@@ -49,11 +76,10 @@ func NewResultSetReader(
 func NewTimedResultSetReader(
 	ctx context.Context,
 	file_store api.FileStore,
-	path_manager api.PathManager,
-	start_time, end_time uint64) (ResultSetReader, error) {
-	if factory == nil {
-		return nil, errors.New("ResultSet factory not initialized")
+	path_manager api.PathManager) (TimedResultSetReader, error) {
+	if timed_rs_factory == nil {
+		return nil, errors.New("TimedResultSetReader factory not initialized")
 	}
-	return factory.NewTimedResultSetReader(
-		ctx, file_store, path_manager, start_time, end_time)
+	return timed_rs_factory.NewTimedResultSetReader(
+		ctx, file_store, path_manager)
 }

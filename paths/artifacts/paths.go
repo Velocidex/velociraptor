@@ -206,55 +206,42 @@ func (self *ArtifactPathManager) get_event_files(path_for_writing string) (
 		result = append(result, &api.ResultSetFileProperties{
 			Path:      full_path,
 			StartTime: timestamp,
-			EndTime:   timestamp + 60*60*24,
+			EndTime:   timestamp.Add(24 * time.Hour),
 			Size:      child.Size(),
 		})
 	}
 
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].StartTime < result[j].StartTime
+		return result[i].StartTime.Before(result[j].StartTime)
 	})
 	return result, nil
 }
 
-func (self *ArtifactPathManager) GeneratePaths(ctx context.Context) <-chan *api.ResultSetFileProperties {
-	output := make(chan *api.ResultSetFileProperties)
+func (self *ArtifactPathManager) GetAvailableFiles(
+	ctx context.Context) []*api.ResultSetFileProperties {
 
-	go func() {
-		defer close(output)
+	path_for_writing, err := self.GetPathForWriting()
+	if err != nil {
+		return nil
+	}
 
-		path_for_writing, err := self.GetPathForWriting()
-		if err != nil {
-			return //nil, err
-		}
-
-		// Find the directory over which we need to list.
-		children, _ := self.get_event_files(path_for_writing)
-		for _, child := range children {
-			select {
-			case <-ctx.Done():
-				return
-
-			case output <- child:
-			}
-		}
-	}()
-
-	return output
+	// Find the directory over which we need to list.
+	children, _ := self.get_event_files(path_for_writing)
+	return children
 }
 
 var day_name_regex = regexp.MustCompile(`\d\d\d\d-\d\d-\d\d`)
 
-func DayNameToTimestamp(name string) int64 {
+func DayNameToTimestamp(name string) time.Time {
 	matches := day_name_regex.FindAllString(name, -1)
 	if len(matches) == 1 {
 		time, err := time.Parse("2006-01-02 MST",
 			matches[0]+" UTC")
 		if err == nil {
-			return time.Unix()
+			return time
 		}
 	}
-	return 0
+	return time.Time{}
 }
 
 func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int, error) {

@@ -107,13 +107,16 @@ func (self *GuiTemplateEngine) Expand(values ...interface{}) interface{} {
 		}
 
 		for _, item := range t {
-			result_chan, err := file_store.GetTimeRange(
-				context.Background(), self.config_obj, item, 0, 0)
+			file_store_factory := file_store.GetFileStore(self.config_obj)
+			reader, err := result_sets.NewResultSetReader(
+				file_store_factory, item)
 			if err == nil {
-				for row := range result_chan {
+				for row := range reader.Rows(self.ctx) {
 					results = append(results, row)
 				}
+				reader.Close()
 			}
+
 		}
 
 	case []*ordereddict.Dict:

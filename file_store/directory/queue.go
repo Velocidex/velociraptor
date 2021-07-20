@@ -286,8 +286,8 @@ func (self *DirectoryQueueManager) Debug() *ordereddict.Dict {
 func (self *DirectoryQueueManager) PushEventRows(
 	path_manager api.PathManager, dict_rows []*ordereddict.Dict) error {
 
-	rs_writer, err := result_sets.NewResultSetWriter(
-		self.FileStore, path_manager, nil, false /* truncate */)
+	rs_writer, err := result_sets.NewTimedResultSetWriter(
+		self.FileStore, path_manager, nil)
 	if err != nil {
 		return err
 	}

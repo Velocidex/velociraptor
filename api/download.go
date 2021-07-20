@@ -158,10 +158,11 @@ func vfsFileDownloadHandler(
 	})
 }
 
-func getRSReader(
+func getRows(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	request *api_proto.GetTableRequest) (result_sets.ResultSetReader, string, error) {
+	request *api_proto.GetTableRequest) (
+	rows <-chan *ordereddict.Dict, close func(), log_path string, err error) {
 	file_store_factory := file_store.GetFileStore(config_obj)
 
 	// We want an event table.
@@ -170,35 +171,34 @@ func getRSReader(
 			config_obj, request.ClientId, request.FlowId,
 			request.Artifact)
 		if err != nil {
-			return nil, "", err
+			return nil, nil, "", err
 		}
 
 		log_path, err := path_manager.GetPathForWriting()
 		if err != nil {
-			return nil, "", err
+			return nil, nil, "", err
 		}
 
 		rs_reader, err := result_sets.NewTimedResultSetReader(
-			ctx, file_store_factory, path_manager,
-			request.StartTime, request.EndTime)
+			ctx, file_store_factory, path_manager)
 
-		return rs_reader, log_path, err
+		return rs_reader.Rows(ctx), rs_reader.Close, log_path, err
 
 	} else {
 		path_manager, err := getPathManager(config_obj, request)
 		if err != nil {
-			return nil, "", err
+			return nil, nil, "", err
 		}
 
 		log_path, err := path_manager.GetPathForWriting()
 		if err != nil {
-			return nil, "", err
+			return nil, nil, "", err
 		}
 
 		rs_reader, err := result_sets.NewResultSetReader(
 			file_store_factory, path_manager)
 
-		return rs_reader, log_path, err
+		return rs_reader.Rows(ctx), rs_reader.Close, log_path, err
 	}
 }
 
@@ -246,13 +246,13 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 			return
 		}
 
-		rs_reader, log_path, err := getRSReader(r.Context(),
-			config_obj, request)
+		row_chan, closer, log_path, err := getRows(
+			r.Context(), config_obj, request)
 		if err != nil {
 			returnError(w, 400, "Invalid request")
 			return
 		}
-		defer rs_reader.Close()
+		defer closer()
 
 		transform := getTransformer(config_obj, request)
 
@@ -288,7 +288,7 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 
 			scope := vql_subsystem.MakeScope()
 			csv_writer := csv.GetCSVAppender(scope, w, true /* write_headers */)
-			for row := range rs_reader.Rows(r.Context()) {
+			for row := range row_chan {
 				csv_writer.Write(
 					filterColumns(request.Columns, transform(row)))
 			}
@@ -314,7 +314,7 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 				"remote":  r.RemoteAddr,
 			}).Info("DownloadTable")
 
-			for row := range rs_reader.Rows(r.Context()) {
+			for row := range row_chan {
 				serialized, err := json.Marshal(
 					filterColumns(request.Columns, transform(row)))
 				if err != nil {

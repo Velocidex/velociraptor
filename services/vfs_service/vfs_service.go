@@ -15,6 +15,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -75,14 +76,16 @@ func (self *VFSService) ProcessDownloadFile(
 		return
 	}
 
-	row_chan, err := file_store.GetTimeRange(
-		ctx, config_obj, path_manager, 0, 0)
+	file_store_factory := file_store.GetFileStore(config_obj)
+	reader, err := result_sets.NewResultSetReader(
+		file_store_factory, path_manager)
 	if err != nil {
 		logger.Error("Unable to read artifact: %v", err)
 		return
 	}
+	defer reader.Close()
 
-	for row := range row_chan {
+	for row := range reader.Rows(ctx) {
 		Accessor, _ := row.GetString("Accessor")
 		Path, _ := row.GetString("Path")
 		MD5, _ := row.GetString("Md5")
@@ -143,17 +146,19 @@ func (self *VFSService) ProcessListDirectory(
 		return
 	}
 
-	row_chan, err := file_store.GetTimeRange(
-		ctx, config_obj, path_manager, 0, 0)
+	file_store_factory := file_store.GetFileStore(config_obj)
+	reader, err := result_sets.NewResultSetReader(
+		file_store_factory, path_manager)
 	if err != nil {
 		logger.Error("Unable to read artifact: %v", err)
 		return
 	}
+	defer reader.Close()
 
 	var rows []*ordereddict.Dict
 	var current_vfs_components []string = nil
 
-	for row := range row_chan {
+	for row := range reader.Rows(ctx) {
 		full_path, _ := row.GetString("_FullPath")
 		accessor, _ := row.GetString("_Accessor")
 		name, _ := row.GetString("Name")

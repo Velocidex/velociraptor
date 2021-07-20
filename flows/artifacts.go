@@ -162,62 +162,13 @@ func closeContext(
 	return nil
 }
 
-// Logs from monitoring flow need to be handled especially since they
-// are separated by artifact name.
-func flushContextLogsMonitoring(
-	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext) error {
-
-	// A single packet may have multiple log messages from
-	// different artifacts. We cache the writers so we can send
-	// the right message to the right log sink.
-	writers := make(map[string]result_sets.ResultSetWriter)
-
-	// Append logs to messages from previous packets.
-	file_store_factory := file_store.GetFileStore(config_obj)
-	for _, row := range collection_context.Logs {
-		artifact_name := row.Artifact
-		if artifact_name == "" {
-			artifact_name = "Unknown"
-		}
-
-		// Try to get the writer from the cache.
-		rs_writer, pres := writers[artifact_name]
-		if !pres {
-			log_path_manager, err := artifact_paths.NewArtifactLogPathManager(
-				config_obj, collection_context.ClientId,
-				collection_context.SessionId, artifact_name)
-			if err != nil {
-				return err
-			}
-
-			rs_writer, err = result_sets.NewResultSetWriter(
-				file_store_factory, log_path_manager, nil, false /* truncate */)
-			if err != nil {
-				return err
-			}
-			defer rs_writer.Close()
-
-			writers[artifact_name] = rs_writer
-		}
-
-		rs_writer.Write(ordereddict.NewDict().
-			Set("_ts", int(time.Now().Unix())).
-			Set("client_time", int64(row.Timestamp)/1000000).
-			Set("message", row.Message))
-	}
-
-	// Clear the logs from the flow object.
-	collection_context.Logs = nil
-	return nil
-}
-
 // Flush the logs to disk. During execution the flow collects the logs
 // in memory and then flushes it all when done.
 func flushContextLogs(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext) error {
 
+	// Handle monitoring flow specially.
 	if collection_context.SessionId == constants.MONITORING_WELL_KNOWN_FLOW {
 		return flushContextLogsMonitoring(config_obj, collection_context)
 	}

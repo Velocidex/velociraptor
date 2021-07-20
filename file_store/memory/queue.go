@@ -15,6 +15,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -150,29 +151,21 @@ func (self *MemoryQueueManager) Debug() {
 func (self *MemoryQueueManager) PushEventRows(
 	path_manager api.PathManager, dict_rows []*ordereddict.Dict) error {
 
+	rs_writer, err := result_sets.NewTimedResultSetWriter(
+		self.FileStore, path_manager, nil)
+	if err != nil {
+		return err
+	}
+	defer rs_writer.Close()
+
 	for _, row := range dict_rows {
-		GlobalQueuePool(self.config_obj).Broadcast(path_manager.GetQueueName(),
-			row.Set("_ts", int(self.Clock.Now().Unix())))
+		// Set a timestamp per event for easier querying.
+		row.Set("_ts", int(self.Clock.Now().Unix()))
+		rs_writer.Write(row)
+		GlobalQueuePool(self.config_obj).Broadcast(
+			path_manager.GetQueueName(), row)
 	}
-
-	log_path, err := path_manager.GetPathForWriting()
-	if err != nil {
-		return err
-	}
-
-	fd, err := self.FileStore.WriteFile(log_path)
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-
-	serialized, err := utils.DictsToJson(dict_rows, nil)
-	if err != nil {
-		return err
-	}
-
-	_, err = fd.Write(serialized)
-	return err
+	return nil
 }
 
 func (self *MemoryQueueManager) Watch(

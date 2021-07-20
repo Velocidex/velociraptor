@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 )
@@ -16,7 +17,7 @@ type QueueManager interface {
 
 type ResultSetFileProperties struct {
 	Path               string
-	StartTime, EndTime int64
+	StartTime, EndTime time.Time
 	Size               int64
 }
 
@@ -30,5 +31,5 @@ type PathManager interface {
 	GetQueueName() string
 
 	// Generate paths for reading linked result sets.
-	GeneratePaths(ctx context.Context) <-chan *ResultSetFileProperties
+	GetAvailableFiles(ctx context.Context) []*ResultSetFileProperties
 }
