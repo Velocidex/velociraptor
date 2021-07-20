@@ -22,4 +22,10 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
   "A": 1,
   "AA": 4
  }
+]SELECT xor(string='test@velociraptor',key='$'), xor(string='test@velociraptor',key='test'), xor(string=unhex(string='000100010002'), key=unhex(string='2e')) FROM scope()[
+ {
+  "xor(string='test@velociraptor', key='$')": "PAWPdRAHKGMVETPKV",
+  "xor(string='test@velociraptor', key='test')": "\u0000\u0000\u0000\u00004\u0013\u0016\u0018\u001b\u0006\u001a\u0006\u0015\u0015\u0007\u001b\u0006",
+  "xor(string=unhex(string='000100010002'), key=unhex(string='2e'))": "././.,"
+ }
 ]

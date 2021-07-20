@@ -30,3 +30,11 @@ Queries:
        SELECT 1 AS A, 2 AS B, 3 AS AB, 4 AS AA
        FROM scope()
     }, include="A", exclude="B")
+
+
+  # Test Xor stanard, multi character, hex
+  - SELECT  
+      xor(string='test@velociraptor',key='$'),
+      xor(string='test@velociraptor',key='test'),
+      xor(string=unhex(string='000100010002'), key=unhex(string='2e'))
+    FROM scope()
