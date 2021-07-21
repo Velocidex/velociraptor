@@ -1,4 +1,4 @@
-package result_sets
+package simple
 
 import "github.com/Velocidex/ordereddict"
 

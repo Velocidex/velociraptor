@@ -29,6 +29,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
@@ -41,6 +42,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+
+	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 type ServerTestSuite struct {
@@ -284,10 +288,11 @@ func (self *ServerTestSuite) TestForeman() {
 	assert.NoError(t, err)
 
 	rows := []*ordereddict.Dict{}
-	row_chan, err := file_store.GetTimeRange(self.sm.Ctx, self.config_obj,
-		path_manager, 0, 0)
+	file_store_factory := file_store.GetFileStore(self.config_obj)
+	rs_reader, err := result_sets.NewResultSetReader(file_store_factory,
+		path_manager)
 	assert.NoError(t, err)
-	for row := range row_chan {
+	for row := range rs_reader.Rows(self.sm.Ctx) {
 		rows = append(rows, row)
 	}
 	assert.Equal(t, len(rows), 1)
@@ -327,10 +332,12 @@ func (self *ServerTestSuite) TestMonitoring() {
 	runner.Close()
 
 	path_manager, err := artifacts.NewArtifactPathManager(self.config_obj,
-		self.client_id, constants.MONITORING_WELL_KNOWN_FLOW, "System.Hunt.Participation")
+		self.client_id, constants.MONITORING_WELL_KNOWN_FLOW,
+		"System.Hunt.Participation")
 	assert.NoError(self.T(), err)
 
 	self.RequiredFilestoreContains(path_manager.Path(), self.client_id)
+	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
 }
 
 // Monitoring queries which upload data.

@@ -25,10 +25,10 @@ import (
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
-	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/timelines"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -170,36 +170,29 @@ func getEventTableWithPathManager(
 
 	rows := uint64(0)
 	if in.Rows == 0 {
-		in.Rows = 500
+		in.Rows = 10
 	}
 
 	result := &api_proto.GetTableResponse{}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_reader, err := result_sets.NewTimedResultSetReader(ctx,
-		file_store_factory, path_manager, in.StartTime, in.EndTime)
+		file_store_factory, path_manager)
 	if err != nil {
 		return nil, err
 	}
 	defer rs_reader.Close()
 
-	// Let the browser know how many rows we have in total.
-	result.TotalRows = rs_reader.TotalRows()
-
-	// FIXME: Backwards compatibility: Just give a few
-	// rows if the result set does not have an index. This
-	// is the same as the previous behavior but for new
-	// collections, an index is created and we respect the
-	// number of rows the callers asked for. Eventually
-	// this will not be needed.
-	if result.TotalRows < 0 {
-		in.Rows = 100
-	}
-
-	// Seek to the row we need.
-	err = rs_reader.SeekToRow(int64(in.StartRow))
+	err = rs_reader.SeekToTime(time.Unix(int64(in.StartTime), 0))
 	if err != nil {
 		return nil, err
+	}
+
+	if in.EndTime != 0 {
+		err = rs_reader.SeekToTime(time.Unix(int64(in.EndTime), 0))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Unpack the rows into the output protobuf
@@ -253,9 +246,9 @@ func getTimeline(
 	}
 	for item := range reader.Read(ctx) {
 		if result.StartTime == 0 {
-			result.StartTime = item.Time
+			result.StartTime = item.Time.UnixNano()
 		}
-		result.EndTime = item.Time
+		result.EndTime = item.Time.UnixNano()
 		result.Rows = append(result.Rows, &api_proto.Row{
 			Cell: []string{
 				item.Source,

@@ -154,18 +154,11 @@ func (self *NotebookCellQuery) GetQueueName() string {
 	return ""
 }
 
-func (self *NotebookCellQuery) GeneratePaths(ctx context.Context) <-chan *api.ResultSetFileProperties {
-	output := make(chan *api.ResultSetFileProperties)
-
-	go func() {
-		defer close(output)
-
-		output <- &api.ResultSetFileProperties{
-			Path: self.Path(),
-		}
-	}()
-
-	return output
+func (self *NotebookCellQuery) GetAvailableFiles(
+	ctx context.Context) []*api.ResultSetFileProperties {
+	return []*api.ResultSetFileProperties{{
+		Path: self.Path(),
+	}}
 }
 
 type NotebookExportPathManager struct {

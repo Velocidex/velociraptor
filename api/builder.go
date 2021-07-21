@@ -15,6 +15,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
+
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 // Builder builds a new GUI and Frontend server based on configuration

@@ -23,7 +23,7 @@
 // offset to the start of the blob, and each will have an incrementing
 // upper 24 bits.
 
-package result_sets
+package simple
 
 import (
 	"bufio"
@@ -39,6 +39,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vjson "www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 )
 
 const (
@@ -143,7 +144,7 @@ func (self ResultSetFactory) NewResultSetWriter(
 	file_store_factory api.FileStore,
 	path_manager api.PathManager,
 	opts *json.EncOpts,
-	truncate bool) (ResultSetWriter, error) {
+	truncate bool) (result_sets.ResultSetWriter, error) {
 	log_path, err := path_manager.GetPathForWriting()
 	if err != nil {
 		return nil, err
@@ -331,7 +332,7 @@ func (self NullReader) Stat() (glob.FileInfo, error) {
 
 func (self ResultSetFactory) NewResultSetReader(
 	file_store_factory api.FileStore,
-	path_manager api.PathManager) (ResultSetReader, error) {
+	path_manager api.PathManager) (result_sets.ResultSetReader, error) {
 
 	log_path, err := path_manager.GetPathForWriting()
 	if err != nil {
@@ -368,5 +369,5 @@ func (self ResultSetFactory) NewResultSetReader(
 }
 
 func init() {
-	Register(ResultSetFactory{})
+	result_sets.RegisterResultSetFactory(ResultSetFactory{})
 }

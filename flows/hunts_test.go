@@ -20,6 +20,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 type HuntTestSuite struct {

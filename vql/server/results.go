@@ -23,17 +23,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/server/hunts"
@@ -81,14 +80,16 @@ func (self UploadsPlugins) Call(
 		}
 
 		flow_path_manager := paths.NewFlowPathManager(arg.ClientId, arg.FlowId)
-		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
-			flow_path_manager.UploadMetadata(), 0, 0)
+		file_store_factory := file_store.GetFileStore(config_obj)
+		reader, err := result_sets.NewResultSetReader(
+			file_store_factory, flow_path_manager.UploadMetadata())
 		if err != nil {
 			scope.Log("uploads: %v", err)
 			return
 		}
+		defer reader.Close()
 
-		for row := range row_chan {
+		for row := range reader.Rows(ctx) {
 			select {
 			case <-ctx.Done():
 				return
@@ -143,8 +144,8 @@ type SourcePluginArgs struct {
 
 	// If the artifact name specifies an event artifact, you may
 	// also specify start and end times to return.
-	StartTime int64 `vfilter:"optional,field=start_time,doc=Start return events from this date (for event sources)"`
-	EndTime   int64 `vfilter:"optional,field=end_time,doc=Stop end events reach this time (event sources)."`
+	StartTime vfilter.Any `vfilter:"optional,field=start_time,doc=Start return events from this date (for event sources)"`
+	EndTime   vfilter.Any `vfilter:"optional,field=end_time,doc=Stop end events reach this time (event sources)."`
 
 	// A source may specify a notebook cell to read from - this
 	// allows post processing in multiple stages - one query
@@ -166,54 +167,57 @@ func (self SourcePlugin) Call(
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
+	err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+	if err != nil {
+		scope.Log("uploads: %s", err)
+		close(output_chan)
+		return output_chan
+	}
+
+	arg := &SourcePluginArgs{}
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("Command can only run on the server")
+		close(output_chan)
+		return output_chan
+	}
+
+	// This plugin will take parameters from environment
+	// parameters. This allows its use to be more concise in
+	// reports etc where many parameters can be inferred from
+	// context.
+	ParseSourceArgsFromScope(arg, scope)
+
+	// Allow the plugin args to override the environment scope.
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("source: %v", err)
+		close(output_chan)
+		return output_chan
+	}
+
+	// Hunt mode is just a proxy for the hunt_results()
+	// plugin.
+	if arg.HuntId != "" {
+		new_args := ordereddict.NewDict().
+			Set("hunt_id", arg.HuntId).
+			Set("artifact", arg.Artifact).
+			Set("source", arg.Source)
+
+		// Just delegate to the hunt_results() plugin.
+		return hunts.HuntResultsPlugin{}.Call(ctx, scope, new_args)
+	}
+
+	// Event artifacts just proxy for the monitoring plugin.
+	if arg.Artifact != "" {
+		ok, _ := isArtifactEvent(config_obj, arg)
+		if ok {
+			return MonitoringPlugin{}.Call(ctx, scope, args)
+		}
+	}
+
 	go func() {
 		defer close(output_chan)
-
-		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
-		if err != nil {
-			scope.Log("uploads: %s", err)
-			return
-		}
-
-		arg := &SourcePluginArgs{}
-		config_obj, ok := vql_subsystem.GetServerConfig(scope)
-		if !ok {
-			scope.Log("Command can only run on the server")
-			return
-		}
-
-		// This plugin will take parameters from environment
-		// parameters. This allows its use to be more concise in
-		// reports etc where many parameters can be inferred from
-		// context.
-		ParseSourceArgsFromScope(arg, scope)
-
-		// Allow the plugin args to override the environment scope.
-		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
-		if err != nil {
-			scope.Log("source: %v", err)
-			return
-		}
-
-		// Hunt mode is just a proxy for the hunt_results()
-		// plugin.
-		if arg.HuntId != "" {
-			args := ordereddict.NewDict().
-				Set("hunt_id", arg.HuntId).
-				Set("artifact", arg.Artifact).
-				Set("source", arg.Source)
-
-			// Just delegate to the hunt_results() plugin.
-			plugin := &hunts.HuntResultsPlugin{}
-			for row := range plugin.Call(ctx, scope, args) {
-				select {
-				case <-ctx.Done():
-					return
-				case output_chan <- row:
-				}
-			}
-			return
-		}
 
 		// Depending on the parameters, we need to read from
 		// different places.
@@ -328,19 +332,7 @@ func getResultSetReader(
 
 		// Event result sets can be sliced by time ranges.
 		if is_event {
-			if arg.EndTime == 0 {
-				arg.EndTime = time.Now().Unix()
-			}
-
-			path_manager, err := artifact_paths.NewArtifactPathManager(
-				config_obj, arg.ClientId, "", arg.Artifact)
-			if err != nil {
-				return nil, err
-			}
-
-			return result_sets.NewTimedResultSetReader(ctx, file_store_factory,
-				path_manager, uint64(arg.StartTime), uint64(arg.EndTime))
-
+			return nil, errors.New("source plugin can not be used for event queries.")
 		}
 
 		// Must specify a client id and flow id for regular
@@ -492,14 +484,15 @@ func (self FlowResultsPlugin) Call(
 			return
 		}
 
-		row_chan, err := file_store.GetTimeRange(
-			ctx, config_obj, path_manager, 0, 0)
+		file_store_factory := file_store.GetFileStore(config_obj)
+		rs_reader, err := result_sets.NewResultSetReader(
+			file_store_factory, path_manager)
 		if err != nil {
 			scope.Log("source: %v", err)
 			return
 		}
 
-		for row := range row_chan {
+		for row := range rs_reader.Rows(ctx) {
 			select {
 			case <-ctx.Done():
 				return

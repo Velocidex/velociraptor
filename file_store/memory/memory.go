@@ -2,6 +2,7 @@ package memory
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -19,7 +21,8 @@ import (
 var (
 	// Only used for tests.
 	Test_memory_file_store *MemoryFileStore = &MemoryFileStore{
-		Data: make(map[string][]byte)}
+		Data: ordereddict.NewDict(),
+	}
 )
 
 type MemoryReader struct {
@@ -58,7 +61,7 @@ func (self *MemoryWriter) Close() error {
 	self.memory_file_store.mu.Lock()
 	defer self.memory_file_store.mu.Unlock()
 
-	self.memory_file_store.Data[self.filename] = self.buf
+	self.memory_file_store.Data.Set(self.filename, self.buf)
 	return nil
 }
 
@@ -70,7 +73,7 @@ func (self *MemoryWriter) Truncate() error {
 type MemoryFileStore struct {
 	mu sync.Mutex
 
-	Data map[string][]byte
+	Data *ordereddict.Dict
 }
 
 func (self *MemoryFileStore) Debug() {
@@ -78,7 +81,17 @@ func (self *MemoryFileStore) Debug() {
 	defer self.mu.Unlock()
 
 	fmt.Printf("MemoryFileStore: \n")
-	for k, v := range self.Data {
+	for _, k := range self.Data.Keys() {
+		v_any, _ := self.Data.Get(k)
+		v := v_any.([]byte)
+		// Render index files especially
+		if strings.HasSuffix(k, ".index") ||
+			strings.HasSuffix(k, ".idx") ||
+			strings.HasSuffix(k, ".tidx") {
+			fmt.Printf("%v: %v\n", k, hex.Dump(v))
+			continue
+		}
+
 		fmt.Printf("%v: %v\n", k, string(v))
 	}
 }
@@ -87,8 +100,9 @@ func (self *MemoryFileStore) ReadFile(filename string) (api.FileReader, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	data, pres := self.Data[filename]
+	data_any, pres := self.Data.Get(filename)
 	if pres {
+		data := data_any.([]byte)
 		return MemoryReader{
 			Reader:   bytes.NewReader(data),
 			filename: filename,
@@ -102,14 +116,14 @@ func (self *MemoryFileStore) WriteFile(filename string) (api.FileWriter, error) 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	buf, pres := self.Data[filename]
+	buf, pres := self.Data.Get(filename)
 	if !pres {
 		buf = []byte{}
 	}
-	self.Data[filename] = buf
+	self.Data.Set(filename, buf)
 
 	return &MemoryWriter{
-		buf:               buf,
+		buf:               buf.([]byte),
 		memory_file_store: self,
 		filename:          filename,
 	}, nil
@@ -119,7 +133,7 @@ func (self *MemoryFileStore) StatFile(filename string) (os.FileInfo, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	buff, pres := self.Data[filename]
+	buff, pres := self.Data.Get(filename)
 	if !pres {
 		return nil, os.ErrNotExist
 	}
@@ -127,33 +141,49 @@ func (self *MemoryFileStore) StatFile(filename string) (os.FileInfo, error) {
 	return &vtesting.MockFileInfo{
 		Name_:     path.Base(filename),
 		FullPath_: filename,
-		Size_:     int64(len(buff)),
+		Size_:     int64(len(buff.([]byte))),
 	}, nil
+}
+
+func (self *MemoryFileStore) Move(src, dest string) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	buff, pres := self.Data.Get(src)
+	if !pres {
+		return os.ErrNotExist
+	}
+
+	self.Data.Set(dest, buff)
+	self.Data.Delete(src)
+	return nil
 }
 
 func (self *MemoryFileStore) ListDirectory(dirname string) ([]os.FileInfo, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	result := []os.FileInfo{}
 	files := []string{}
-	for filename := range self.Data {
+	for _, filename := range self.Data.Keys() {
+		v_any, _ := self.Data.Get(filename)
+		v := v_any.([]byte)
+
 		if strings.HasPrefix(filename, dirname) {
-			k := strings.TrimLeft(strings.TrimPrefix(filename, dirname), "/")
+			k := strings.TrimLeft(
+				strings.TrimPrefix(filename, dirname), "/")
 			components := strings.Split(k, "/")
 			if len(components) > 0 &&
 				!utils.InString(files, components[0]) {
+				result = append(result, &vtesting.MockFileInfo{
+					Name_:     components[0],
+					FullPath_: path.Join(dirname, components[0]),
+					Size_:     int64(len(v)),
+				})
 				files = append(files, components[0])
 			}
 		}
 	}
-	result := []os.FileInfo{}
-	for _, file := range files {
-		result = append(result, &vtesting.MockFileInfo{
-			Name_:     file,
-			FullPath_: path.Join(dirname, file),
-		})
-	}
-
 	return result, nil
 }
 
@@ -183,7 +213,7 @@ func (self *MemoryFileStore) Delete(filename string) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	delete(self.Data, filename)
+	self.Data.Delete(filename)
 	return nil
 }
 
@@ -191,13 +221,16 @@ func (self *MemoryFileStore) Get(filename string) ([]byte, bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	res, pres := self.Data[filename]
-	return res, pres
+	res, pres := self.Data.Get(filename)
+	if pres {
+		return res.([]byte), pres
+	}
+	return nil, false
 }
 
 func (self *MemoryFileStore) Clear() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.Data = make(map[string][]byte)
+	self.Data = ordereddict.NewDict()
 }

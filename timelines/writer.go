@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	vjson "www.velocidex.com/golang/velociraptor/json"
@@ -83,9 +81,8 @@ func (self *TimelineWriter) Close() {
 }
 
 func NewTimelineWriter(
-	config_obj *config_proto.Config,
-	path_manager *TimelinePathManager) (*TimelineWriter, error) {
-	file_store_factory := file_store.GetFileStore(config_obj)
+	file_store_factory api.FileStore,
+	path_manager TimelinePathManagerInterface) (*TimelineWriter, error) {
 	fd, err := file_store_factory.WriteFile(
 		path_manager.Path())
 	if err != nil {

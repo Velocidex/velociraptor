@@ -36,7 +36,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -286,8 +286,8 @@ func (self *DirectoryQueueManager) Debug() *ordereddict.Dict {
 func (self *DirectoryQueueManager) PushEventRows(
 	path_manager api.PathManager, dict_rows []*ordereddict.Dict) error {
 
-	rs_writer, err := result_sets.NewResultSetWriter(
-		self.FileStore, path_manager, nil, false /* truncate */)
+	rs_writer, err := result_sets.NewTimedResultSetWriter(
+		self.FileStore, path_manager, nil)
 	if err != nil {
 		return err
 	}

@@ -220,7 +220,7 @@ func listAvailableEventTimestampFiles(
 	ctx context.Context, path_manager api.PathManager) ([]int32, error) {
 	result := []int32{}
 
-	for prop := range path_manager.GeneratePaths(ctx) {
+	for _, prop := range path_manager.GetAvailableFiles(ctx) {
 		if prop.Size == 0 {
 			continue
 		}

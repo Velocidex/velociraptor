@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -59,7 +60,7 @@ func (self ClockPlugin) Call(
 		duration := time.Duration(arg.Period)*time.Second +
 			time.Duration(arg.PeriodMs)*time.Second/1000
 
-		if arg.StartTime != nil {
+		if !utils.IsNil(arg.StartTime) {
 			start, err := functions.TimeFromAny(scope, arg.StartTime)
 			if err != nil {
 				scope.Log("clock: %v", err)

@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -208,14 +209,15 @@ func (self EnumerateFlowPlugin) Call(
 
 		defer emit("UploadMetadata", upload_metadata_path)
 
-		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
-			flow_path_manager.UploadMetadata(), 0, 0)
+		file_store_factory := file_store.GetFileStore(config_obj)
+		reader, err := result_sets.NewResultSetReader(
+			file_store_factory, flow_path_manager.UploadMetadata())
 		if err != nil {
 			scope.Log("enumerate_flow: %v", err)
 			return
 		}
 
-		for row := range row_chan {
+		for row := range reader.Rows(ctx) {
 			upload, pres := row.GetString("vfs_path")
 			if pres {
 				emit("Upload", upload)

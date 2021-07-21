@@ -1,6 +1,6 @@
-{ "_ts": 1571988000, "Timestamp": "2019-10-25T07:18:20Z", "PPID": 4700, "PID": 6884, "Name": "velociraptor.exe", "CommandLine": "velociraptor.exe  --config client.config.yaml client -v --debug", "ParentInfo": "\"C:\\WINDOWS\\system32\\cmd.exe\" " }
-{ "_ts": 1571988100, "Timestamp": "2019-10-25T07:20:32Z", "PPID": 3800, "PID": 5276, "Name": "PsExec.exe", "CommandLine": "bin\\PsExec.exe  -s cmd.exe", "ParentInfo": "\"C:\\WINDOWS\\system32\\cmd.exe\" " }
-{ "_ts": 1571988100, "Timestamp": "2019-10-25T07:20:33Z", "PPID": 604, "PID": 7176, "Name": "PSEXESVC.exe", "CommandLine": "C:\\WINDOWS\\PSEXESVC.exe", "ParentInfo": "" }
-{ "_ts": 1571988100, "Timestamp": "2019-10-25T07:20:33Z", "PPID": 7176, "PID": 6848, "Name": "cmd.exe", "CommandLine": "\"cmd.exe\" ", "ParentInfo": "C:\\WINDOWS\\PSEXESVC.exe" }
-{ "_ts": 1571988100, "Timestamp": "2019-10-25T07:20:33Z", "PPID": 6848, "PID": 5660, "Name": "conhost.exe", "CommandLine": "\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4", "ParentInfo": "\"cmd.exe\" " }
-{ "_ts": 1571988100, "Timestamp": "2019-10-25T07:20:36Z", "PPID": 6848, "PID": 5280, "Name": "whoami.exe", "CommandLine": "", "ParentInfo": "\"cmd.exe\" " }
+{"_ts":1571988000,"Timestamp":"2019-10-25T07:18:20Z","PPID":4700,"PID":6884,"Name":"velociraptor.exe","CommandLine":"velociraptor.exe  --config client.config.yaml client -v --debug","ParentInfo":"\"C:\\WINDOWS\\system32\\cmd.exe\" "}
+{"_ts":1571988100,"Timestamp":"2019-10-25T07:20:32Z","PPID":3800,"PID":5276,"Name":"PsExec.exe","CommandLine":"bin\\PsExec.exe  -s cmd.exe","ParentInfo":"\"C:\\WINDOWS\\system32\\cmd.exe\" "}
+{"_ts":1571988100,"Timestamp":"2019-10-25T07:20:33Z","PPID":604,"PID":7176,"Name":"PSEXESVC.exe","CommandLine":"C:\\WINDOWS\\PSEXESVC.exe","ParentInfo":""}
+{"_ts":1571988100,"Timestamp":"2019-10-25T07:20:33Z","PPID":7176,"PID":6848,"Name":"cmd.exe","CommandLine":"\"cmd.exe\" ","ParentInfo":"C:\\WINDOWS\\PSEXESVC.exe"}
+{"_ts":1571988100,"Timestamp":"2019-10-25T07:20:33Z","PPID":6848,"PID":5660,"Name":"conhost.exe","CommandLine":"\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4","ParentInfo":"\"cmd.exe\" "}
+{"_ts":1571988100,"Timestamp":"2019-10-25T07:20:36Z","PPID":6848,"PID":5280,"Name":"whoami.exe","CommandLine":"","ParentInfo":"\"cmd.exe\" "}

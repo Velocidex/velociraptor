@@ -4,14 +4,11 @@ import (
 	"bufio"
 	"context"
 	"encoding/binary"
-	"fmt"
 	"os"
 	"sort"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
@@ -19,7 +16,7 @@ import (
 
 type TimelineItem struct {
 	Row    *ordereddict.Dict
-	Time   int64
+	Time   time.Time
 	Source string
 }
 
@@ -79,8 +76,6 @@ func (self *TimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 		defer close(output_chan)
 
 		self.fd.Seek(self.offset, os.SEEK_SET)
-		fmt.Printf("Seekin g to %v\n", self.offset)
-
 		reader := bufio.NewReader(self.fd)
 		for {
 			select {
@@ -117,7 +112,7 @@ func (self *TimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 				output_chan <- TimelineItem{
 					Source: self.id,
 					Row:    item,
-					Time:   idx_record.Timestamp,
+					Time:   time.Unix(0, idx_record.Timestamp),
 				}
 			}
 		}
@@ -132,9 +127,9 @@ func (self *TimelineReader) Close() {
 	self.index_fd.Close()
 }
 
-func NewTimelineReader(config_obj *config_proto.Config,
-	path_manager *TimelinePathManager) (*TimelineReader, error) {
-	file_store_factory := file_store.GetFileStore(config_obj)
+func NewTimelineReader(
+	file_store_factory api.FileStore,
+	path_manager TimelinePathManagerInterface) (*TimelineReader, error) {
 	fd, err := file_store_factory.ReadFile(path_manager.Path())
 	if err != nil {
 		return nil, err
@@ -154,7 +149,7 @@ func NewTimelineReader(config_obj *config_proto.Config,
 	}
 
 	return &TimelineReader{
-		id:         path_manager.Name,
+		id:         path_manager.Name(),
 		fd:         fd,
 		index_fd:   index_fd,
 		index_stat: stats,

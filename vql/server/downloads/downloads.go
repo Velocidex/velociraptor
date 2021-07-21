@@ -25,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -333,14 +334,14 @@ func downloadFlowToZip(
 		}
 
 		// File uploads are stored in their own json file.
-		row_chan, err := file_store.GetTimeRange(
-			ctx, config_obj, path_manager, 0, 0)
+		reader, err := result_sets.NewResultSetReader(
+			file_store_factory, path_manager)
 		if err != nil {
 			return err
 		}
 		scope := vql_subsystem.MakeScope()
 		csv_writer := csv.GetCSVAppender(scope, f, true /* write_headers */)
-		for row := range row_chan {
+		for row := range reader.Rows(ctx) {
 			csv_writer.Write(row)
 		}
 		csv_writer.Close()
@@ -357,13 +358,13 @@ func downloadFlowToZip(
 	// processing.
 
 	// File uploads are stored in their own json file.
-	row_chan, err := file_store.GetTimeRange(
-		ctx, config_obj, flow_path_manager.UploadMetadata(), 0, 0)
+	reader, err := result_sets.NewResultSetReader(
+		file_store_factory, flow_path_manager.UploadMetadata())
 	if err != nil {
 		return err
 	}
 
-	for row := range row_chan {
+	for row := range reader.Rows(ctx) {
 		vfs_path_any, pres := row.Get("vfs_path")
 		if pres {
 			err = copier(vfs_path_any.(string))

@@ -22,6 +22,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
+
+	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 var (

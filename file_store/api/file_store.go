@@ -49,4 +49,5 @@ type FileStore interface {
 	ListDirectory(dirname string) ([]os.FileInfo, error)
 	Walk(root string, cb filepath.WalkFunc) error
 	Delete(filename string) error
+	Move(src, dest string) error
 }

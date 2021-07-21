@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"time"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -45,17 +46,12 @@ func (self FlowPathManager) GetQueueName() string {
 	return self.client_id + self.flow_id
 }
 
-func (self FlowPathManager) GeneratePaths(ctx context.Context) <-chan *api.ResultSetFileProperties {
-	output := make(chan *api.ResultSetFileProperties)
-	go func() {
-		defer close(output)
-
-		output <- &api.ResultSetFileProperties{
-			Path:    self.path,
-			EndTime: int64(1) << 62,
-		}
-	}()
-	return output
+func (self FlowPathManager) GetAvailableFiles(
+	ctx context.Context) []*api.ResultSetFileProperties {
+	return []*api.ResultSetFileProperties{{
+		Path:    self.path,
+		EndTime: time.Unix(int64(1)<<62, 0),
+	}}
 }
 
 func NewFlowPathManager(client_id, flow_id string) *FlowPathManager {

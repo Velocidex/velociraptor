@@ -4,17 +4,27 @@ import (
 	"path"
 )
 
+type TimelinePathManagerInterface interface {
+	Path() string
+	Index() string
+	Name() string
+}
+
 type TimelinePathManager struct {
-	Name string
+	name string
 	root string
 }
 
 func (self TimelinePathManager) Path() string {
-	return self.root + "/" + self.Name + ".json"
+	return self.root + "/" + self.name + ".json"
+}
+
+func (self TimelinePathManager) Name() string {
+	return self.name
 }
 
 func (self TimelinePathManager) Index() string {
-	return self.root + "/" + self.Name + ".idx"
+	return self.root + "/" + self.name + ".idx"
 }
 
 // A Supertimeline is a collection of individual timelines. Create
@@ -31,7 +41,7 @@ func (self *SuperTimelinePathManager) Path() string {
 // Add a child timeline to the super timeline.
 func (self *SuperTimelinePathManager) GetChild(child_name string) *TimelinePathManager {
 	return &TimelinePathManager{
-		Name: child_name,
+		name: child_name,
 		root: path.Join("/", self.Root, "timelines", self.Name),
 	}
 }

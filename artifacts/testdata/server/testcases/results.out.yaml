@@ -1,4 +1,13 @@
-SELECT Authors, FullPath, License, Name, Summary, Version FROM source( client_id='C.4f5e52adf0a337a9', flow_id="F.BN2HP3OSS3LK6", artifact='Windows.Applications.ChocolateyPackages')[]SELECT Path, Name FROM source( hunt_id="H.49ba8939", artifact="Windows.Network.NetstatEnriched/Netstat") LIMIT 1[
+SELECT Authors, FullPath, License, Name, Summary, Version FROM source( client_id='C.4f5e52adf0a337a9', flow_id="F.BN2HP3OSS3LK6", artifact='Windows.Applications.ChocolateyPackages')[
+ {
+  "Authors": "Vinay Pamnani",
+  "FullPath": "\\C:\\ProgramData\\chocolatey\\lib\\wmiexplorer\\wmiexplorer.nuspec",
+  "License": "https://wmie.codeplex.com/license",
+  "Name": "wmiexplorer",
+  "Summary": "WMI Explorer is a utility intended to provide the ability to browse and view WMI namespaces/classes/instances/properties in a single pane of view.",
+  "Version": "2.0.0.0"
+ }
+]SELECT Path, Name FROM source( hunt_id="H.49ba8939", artifact="Windows.Network.NetstatEnriched/Netstat") LIMIT 1[
  {
   "Path": "C:\\Windows\\System32\\svchost.exe",
   "Name": "svchost.exe"

@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -68,7 +69,7 @@ func (self *SuperTimelineReader) getSmallest(
 		}
 
 		// Check if the item is smallest than the result.
-		if smallest == nil || slots[idx].Time < smallest.Time {
+		if smallest == nil || slots[idx].Time.Before(smallest.Time) {
 			smallest = slots[idx]
 			smallest_idx = idx
 		}
@@ -131,7 +132,9 @@ func NewSuperTimelineReader(
 		if utils.InString(skip_components, timeline.Id) {
 			continue
 		}
-		reader, err := NewTimelineReader(config_obj, path_manager.GetChild(timeline.Id))
+		file_store_factory := file_store.GetFileStore(config_obj)
+		reader, err := NewTimelineReader(
+			file_store_factory, path_manager.GetChild(timeline.Id))
 		if err != nil {
 			fmt.Printf("NewSuperTimelineReader err: %v\n", err)
 			result.Close()
@@ -158,20 +161,22 @@ func (self *SuperTimelineWriter) Close() {
 
 func (self *SuperTimelineWriter) AddChild(name string) (*TimelineWriter, error) {
 	new_timeline_path_manager := self.path_manager.GetChild(name)
-	writer, err := NewTimelineWriter(self.config_obj, new_timeline_path_manager)
+	file_store_factory := file_store.GetFileStore(self.config_obj)
+	writer, err := NewTimelineWriter(
+		file_store_factory, new_timeline_path_manager)
 	if err != nil {
 		return nil, err
 	}
 
 	// Only add a new child if it is not already in there.
 	for _, item := range self.Timelines {
-		if item.Id == new_timeline_path_manager.Name {
+		if item.Id == new_timeline_path_manager.Name() {
 			return writer, err
 		}
 	}
 
 	self.Timelines = append(self.Timelines, &timelines_proto.Timeline{
-		Id: new_timeline_path_manager.Name,
+		Id: new_timeline_path_manager.Name(),
 	})
 	return writer, err
 }

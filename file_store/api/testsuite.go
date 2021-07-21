@@ -289,13 +289,7 @@ func (self MockPathManager) GetQueueName() string {
 	return self.ArtifactName
 }
 
-func (self MockPathManager) GeneratePaths(ctx context.Context) <-chan *ResultSetFileProperties {
-	output := make(chan *ResultSetFileProperties)
-
-	go func() {
-		defer close(output)
-
-	}()
-
-	return output
+func (self MockPathManager) GetAvailableFiles(
+	ctx context.Context) []*ResultSetFileProperties {
+	return nil
 }

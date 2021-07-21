@@ -32,11 +32,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/result_sets"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -272,8 +272,8 @@ func (self HuntResultsPlugin) Call(
 				continue
 			}
 
-			row_chan, err := file_store.GetTimeRange(
-				ctx, config_obj, path_manager, 0, 0)
+			reader, err := result_sets.NewResultSetReader(
+				file_store_factory, path_manager)
 			if err != nil {
 				continue
 			}
@@ -281,7 +281,7 @@ func (self HuntResultsPlugin) Call(
 			// Read each result set and emit it
 			// with some extra columns for
 			// context.
-			for row := range row_chan {
+			for row := range reader.Rows(ctx) {
 				row.Set("FlowId", participation_row.FlowId).
 					Set("ClientId", participation_row.ClientId)
 

@@ -3,6 +3,7 @@ package paths
 import (
 	"context"
 	"path"
+	"time"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
@@ -37,17 +38,12 @@ func (self HuntPathManager) GetHuntDownloadsFile(only_combined bool,
 		base_filename+self.hunt_id+suffix+".zip")
 }
 
-func (self HuntPathManager) GeneratePaths(ctx context.Context) <-chan *api.ResultSetFileProperties {
-	output := make(chan *api.ResultSetFileProperties)
-	go func() {
-		defer close(output)
-
-		output <- &api.ResultSetFileProperties{
-			Path:    self.path,
-			EndTime: int64(1) << 62,
-		}
-	}()
-	return output
+func (self HuntPathManager) GetAvailableFiles(
+	ctx context.Context) []*api.ResultSetFileProperties {
+	return []*api.ResultSetFileProperties{{
+		Path:    self.path,
+		EndTime: time.Unix(int64(1)<<62, 0),
+	}}
 }
 
 func NewHuntPathManager(hunt_id string) *HuntPathManager {
