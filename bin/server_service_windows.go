@@ -200,7 +200,7 @@ func installServiceServerService(
 		},
 
 		// Executable will be started with this command line args:
-		"service", "run")
+		"server_service", "run")
 	if err != nil {
 		return err
 	}
