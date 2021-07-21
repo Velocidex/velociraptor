@@ -60,6 +60,10 @@ var (
 
 	max_wait = app.Flag("max_wait", "Maximum time to queue results.").
 			Default("10").Int()
+
+	scope_file = query.Flag("scope_file",
+		"Load scope from here. Creates a new file if file not found").
+		Default("").String()
 )
 
 func outputJSON(ctx context.Context,
@@ -272,6 +276,21 @@ func doQuery() {
 	kingpin.FatalIfError(err, "GetRepositoryManager")
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
+
+	if *scope_file != "" {
+		scope, err = loadScopeFromFile(*scope_file, scope)
+		kingpin.FatalIfError(err, "loadScopeFromFile")
+
+		// When the scope is destroyed store it in the file again.
+		scope.AddDestructor(func() {
+			err := storeScopeInFile(*scope_file, scope)
+			if err != nil {
+				scope.Log("Storing scope in %v: %v",
+					*scope_file, err)
+			}
+		})
+
+	}
 
 	// Install throttler into the scope.
 	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(*rate)))
