@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"fmt"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/qri-io/starlib"
@@ -106,7 +107,11 @@ func starlarkValueAsInterface(value starlark.Value) (interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			result.Set(key[1:len(key)-1], dictValueInterfaced)
+			if strings.HasPrefix(key, "\"") && strings.HasSuffix(key, "\""){
+			  result.Set(key[1:len(key)-1], dictValueInterfaced)
+			} else {
+			  result.Set(key, dictValueInterfaced)
+			}
 		}
 
 		return result, nil
