@@ -139,13 +139,13 @@ func doInstallServerService(config_obj *config_proto.Config) (err error) {
 		return errors.WithStack(err)
 	}
 	if pres {
-		err = removeService(service_name)
+		err = removeServiceServerService(service_name)
 		if err != nil {
 			errors.Wrap(err, "Remove old service")
 		}
 	}
 
-	err = installService(config_obj, target_path, logger)
+	err = installServiceServerService(config_obj, target_path, logger)
 	if err != nil {
 		return errors.Wrap(err, "Install service")
 	}
@@ -154,7 +154,7 @@ func doInstallServerService(config_obj *config_proto.Config) (err error) {
 
 	// Since we stopped the service here, we need to make sure it
 	// is started again.
-	err = startService(service_name)
+	err = startServiceServerService(service_name)
 
 	// We can not start the service - everything is messed
 	// up! Just die here.
@@ -517,7 +517,8 @@ func init() {
 		case server_service_start_command.FullCommand():
 			config_obj, err := loader.LoadAndValidate()
 			kingpin.FatalIfError(err, "Unable to load config file")
-			err = startService(config_obj.Client.WindowsInstaller.ServiceName)
+			err = startServiceServerService(
+				config_obj.Client.WindowsInstaller.ServiceName)
 
 		case server_service_stop_command.FullCommand():
 			config_obj, err := loader.LoadAndValidate()

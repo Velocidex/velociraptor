@@ -1,0 +1,22 @@
+{
+  "0: Marshal Starlark function": [
+    "{",
+    " \"type\": \"Scope\",",
+    " \"data\": {",
+    "  \"vars\": {",
+    "   \"X\": {",
+    "    \"type\": \"StarlModule\",",
+    "    \"data\": {",
+    "     \"Code\": \"def foo(x): return x+1\"",
+    "    }",
+    "   }",
+    "  }",
+    " }",
+    "}"
+  ],
+  "0: Rows Starlark function": [
+    {
+      "X.foo(x=1)": 2
+    }
+  ]
+}

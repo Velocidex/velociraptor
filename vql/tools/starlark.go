@@ -11,6 +11,7 @@ import (
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
+	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -316,7 +317,7 @@ func tryIntegerOrFloat(floatValue float64) (starlark.Value, error) {
 }
 
 func compileStarlark(ctx context.Context, scope types.Scope,
-	code string, globals vfilter.Any) (*ordereddict.Dict, error) {
+	code string, globals vfilter.Any) (*StarlModule, error) {
 
 	sthread := &starlark.Thread{Name: "VQL Thread", Load: starlib.Loader}
 	starvals, err := interfaceAsStarlarkValue(ctx, scope, globals)
@@ -350,7 +351,11 @@ func compileStarlark(ctx context.Context, scope types.Scope,
 		compiled_vars.Set(key, entry)
 	}
 
-	return compiled_vars, nil
+	return &StarlModule{
+		Dict:    compiled_vars,
+		Code:    code,
+		Globals: globals,
+	}, nil
 }
 
 // Turn dicts into starlark tuples to pass to starlark.Call
@@ -464,6 +469,43 @@ func (self starlarkFuncWrapper) Info(scope types.Scope,
 	return &types.FunctionInfo{}
 }
 
+// A thin wrapper that will be stored in the VQL scope. Supports
+// marshalling.
+type StarlModule struct {
+	*ordereddict.Dict
+
+	Code    string
+	Globals interface{}
+}
+
+type starlModuleSerialized struct {
+	Code string
+}
+
+// The types.Marshaler interface
+func (self *StarlModule) Marshal(scope types.Scope) (*types.MarshalItem, error) {
+
+	serialized, err := json.Marshal(starlModuleSerialized{
+		Code: self.Code,
+	})
+	return &types.MarshalItem{
+		Type: "StarlModule",
+		Data: serialized,
+	}, err
+}
+
+func (self StarlModule) Unmarshal(unmarshaller types.Unmarshaller,
+	scope types.Scope, item *types.MarshalItem) (interface{}, error) {
+	startl_module := &starlModuleSerialized{}
+	err := json.Unmarshal(item.Data, &startl_module)
+	if err != nil {
+		return nil, err
+	}
+
+	return compileStarlark(context.Background(), scope,
+		startl_module.Code, nil)
+}
+
 func init() {
 	// Must be set to allow recursion and starlark sets
 	resolve.AllowSet = true
@@ -471,4 +513,35 @@ func init() {
 	resolve.AllowLambda = true
 	resolve.AllowNestedDef = true
 	vql_subsystem.RegisterFunction(&StarlarkCompileFunction{})
+	vql_subsystem.RegisterProtocol(&StarlModuleAssociative{})
+}
+
+// Define some protocols.
+
+// Modules are associative
+type StarlModuleAssociative struct{}
+
+func (self StarlModuleAssociative) Applicable(a types.Any, b types.Any) bool {
+	_, a_ok := a.(*StarlModule)
+	_, b_ok := b.(string)
+	return a_ok && b_ok
+}
+
+func (self StarlModuleAssociative) GetMembers(
+	scope vfilter.Scope, a vfilter.Any) []string {
+	a_value, a_ok := a.(*StarlModule)
+	if a_ok {
+		return scope.GetMembers(a_value.Dict)
+	}
+	return nil
+}
+
+func (self StarlModuleAssociative) Associative(
+	scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (
+	vfilter.Any, bool) {
+	a_value, a_ok := a.(*StarlModule)
+	if a_ok {
+		return scope.Associative(a_value.Dict, b)
+	}
+	return vfilter.Null{}, false
 }
