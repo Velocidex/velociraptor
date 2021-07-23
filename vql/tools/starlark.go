@@ -99,14 +99,36 @@ func starlarkValueAsInterface(value starlark.Value) (interface{}, error) {
 	case *starlark.Dict:
 		result := ordereddict.NewDict()
 		for _, item := range v.Items() {
-			key := item[0].String()
+			key := item[0]
 			value := item[1]
 
 			dictValueInterfaced, err := starlarkValueAsInterface(value)
 			if err != nil {
 				return nil, err
 			}
-			result.Set(key[1:len(key)-1], dictValueInterfaced)
+
+			dictKeyInterfaced, err := starlarkValueAsInterface(key)
+			if err != nil {
+				return nil, err
+			}
+
+			// JSON keys must be strings so we need to
+			// convert from the Starlark type to a string.
+			switch t := dictKeyInterfaced.(type) {
+			case string:
+				result.Set(t, dictValueInterfaced)
+
+			case fmt.Stringer:
+				result.Set(t.String(), dictValueInterfaced)
+
+			case float64:
+				result.Set(fmt.Sprintf("%f", t),
+					dictValueInterfaced)
+
+			case int64:
+				result.Set(fmt.Sprintf("%d", t),
+					dictValueInterfaced)
+			}
 		}
 
 		return result, nil
