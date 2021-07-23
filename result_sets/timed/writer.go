@@ -90,8 +90,9 @@ func (self *TimedResultSetWriterImpl) getWriter(ts time.Time) (
 		return self.writer, nil
 	}
 
-	writer, err := timelines.NewTimelineWriter(self.file_store_factory,
-		timelinePathManager(log_path))
+	writer, err := timelines.NewTimelineWriter(
+		self.file_store_factory,
+		timelinePathManager(log_path), false /* truncate */)
 	if err != nil {
 		return nil, err
 	}
