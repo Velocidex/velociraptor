@@ -7,7 +7,7 @@ import (
 	"time"
 
 	oidc "github.com/coreos/go-oidc"
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/golang-jwt/jwt"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

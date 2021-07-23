@@ -1,17 +1,19 @@
 module www.velocidex.com/golang/velociraptor
 
 require (
-	cloud.google.com/go/storage v1.10.0
+	cloud.google.com/go v0.88.0 // indirect
+	cloud.google.com/go/storage v1.16.0
 	github.com/Depado/bfchroma v1.2.0
-	github.com/Masterminds/goutils v1.1.0 // indirect
+	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
-	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
+	github.com/Netflix/go-expect v0.0.0-20210722184520-ef0bf57d82b3 // indirect
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/amsi v0.0.0-20200608120838-e5d93b76f119
 	github.com/Velocidex/cgofuse v1.1.2
+	github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22 // indirect
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.10-0.20210423154840-dace8239c158
 	github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0
@@ -21,20 +23,20 @@ require (
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml/v2 v2.2.5
 	github.com/Velocidex/zip v0.0.0-20210101070220-e7ecefb7aad7
-	github.com/ZachtimusPrime/Go-Splunk-HTTP v0.0.0-20200420213219-094ff9e8d788
+	github.com/ZachtimusPrime/Go-Splunk-HTTP v2.0.1+incompatible
+	github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2 v2.0.1 // indirect
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/chroma v0.7.2
 	github.com/alecthomas/participle v0.7.1
 	github.com/alecthomas/repr v0.0.0-20210611225437-1a2716eca9d6 // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
-	github.com/aws/aws-sdk-go v1.26.7
+	github.com/aws/aws-sdk-go v1.40.6
 	github.com/bi-zone/etw v0.0.0-20200916105032-b215904fae4f
 	github.com/clbanning/mxj v1.8.4
 	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/creack/pty v1.1.11 // indirect
+	github.com/creack/pty v1.1.13 // indirect
 	github.com/crewjam/saml v0.4.5
 	github.com/davecgh/go-spew v1.1.1
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dimchansky/utfbom v1.1.1
 	github.com/dustin/go-humanize v1.0.0
 	github.com/elastic/go-elasticsearch/v7 v7.3.0 // indirect
@@ -43,19 +45,21 @@ require (
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
 	github.com/go-ole/go-ole v1.2.4
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/golang/mock v1.4.4
+	github.com/golang-jwt/jwt v3.2.1+incompatible
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
-	github.com/golang/snappy v0.0.1
+	github.com/golang/snappy v0.0.3
 	github.com/google/rpmpack v0.0.0-20200615183209-0c831d19bd44
-	github.com/google/uuid v1.1.3
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/csrf v1.6.2
 	github.com/gorilla/schema v1.1.0
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.3.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.5.0
 	github.com/hanwen/go-fuse v1.0.1-0.20190726130028-2f298055551b
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hillu/go-ntdll v0.0.0-20190226223014-dd4204aa705e
+	github.com/hillu/go-ntdll v0.0.0-20210404124636-a6f426aa8d92
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
-	github.com/huandu/xstrings v1.2.0 // indirect
+	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869 // indirect
 	github.com/jmoiron/sqlx v1.2.1-0.20190826204134-d7d95172beb5
@@ -73,7 +77,7 @@ require (
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mattn/go-sqlite3 v1.14.6
-	github.com/microcosm-cc/bluemonday v1.0.2
+	github.com/microcosm-cc/bluemonday v1.0.15
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
@@ -89,31 +93,32 @@ require (
 	github.com/sebdah/goldie v1.0.0
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/sergi/go-diff v1.1.0
-	github.com/shirou/gopsutil v3.20.10+incompatible
+	github.com/shirou/gopsutil v3.21.6+incompatible
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tebeka/strftime v0.1.3 // indirect
 	github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a
+	github.com/tklauser/go-sysconf v0.3.7 // indirect
 	github.com/vjeantet/grok v1.0.0
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v0.0.0-20181217150151-a0c70a3d4213
 	go.starlark.net v0.0.0-20210602144842-1cdb82c9e17a
-	golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9
-	golang.org/x/mod v0.4.1
-	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
-	golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93
-	golang.org/x/sys v0.0.0-20210320140829-1e4c9ba3b0c4
+	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
+	golang.org/x/mod v0.4.2
+	golang.org/x/net v0.0.0-20210716203947-853a461950ff
+	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
+	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
-	golang.org/x/tools v0.1.1-0.20210408155258-593413344da1 // indirect
-	google.golang.org/api v0.30.0
-	google.golang.org/genproto v0.0.0-20210416161957-9910b6c460de
-	google.golang.org/grpc v1.36.1
-	google.golang.org/protobuf v1.26.0
+	google.golang.org/api v0.51.0
+	google.golang.org/genproto v0.0.0-20210722135532-667f2b7c528f
+	google.golang.org/grpc v1.39.0
+	google.golang.org/protobuf v1.27.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	howett.net/plist v0.0.0-20201203080718-1454fab16a06
 	www.velocidex.com/golang/evtx v0.0.2-0.20201104041743-4b6cdb206c95
 	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
@@ -140,9 +145,7 @@ require (
 // replace github.com/Velocidex/zip => /home/mic/projects/zip
 // replace github.com/Velocidex/sflags => /home/mic/projects/sflags
 
-// replace github.com/bi-zone/etw => /home/mic/projects/etw
-
-replace github.com/bi-zone/etw => github.com/Velocidex/etw v0.0.0-20210711115942-8b4530f1496a
+// replace github.com/Velocidex/etw => /home/mic/projects/etw
 
 replace github.com/russross/blackfriday/v2 => github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b
 
