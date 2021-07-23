@@ -123,7 +123,7 @@ require (
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
 	www.velocidex.com/golang/vfilter v0.0.0-20210722104156-f367efa5ede6
-	www.velocidex.com/golang/vtypes v0.0.0-20210624153356-79a8d2c1b823
+	www.velocidex.com/golang/vtypes v0.0.0-20210723112704-86a8e7cd9aa4
 )
 
 // replace www.velocidex.com/golang/go-pe => /home/mic/projects/go-pe
