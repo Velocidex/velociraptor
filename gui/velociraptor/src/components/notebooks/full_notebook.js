@@ -76,7 +76,7 @@ class FullScreenNotebook extends React.Component {
             <>
               <Spinner loading={this.state.loading} />
               <Navbar className="toolbar">
-                <ButtonGroup>
+                <ButtonGroup className="float-right floating-button">
                   <Button title="Exit Fullscreen"
                           onClick={this.setSelectedNotebook}
                           variant="default">
@@ -84,7 +84,7 @@ class FullScreenNotebook extends React.Component {
                   </Button>
                 </ButtonGroup>
               </Navbar>
-              <div className="fill-parent no-margins toolbar-margin selectable">
+              <div className="fill-parent no-margins selectable">
                 <NotebookRenderer
                  fetchNotebooks={this.fetchNotebooks}
                  notebook={this.state.selected_notebook}

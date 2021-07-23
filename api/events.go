@@ -20,8 +20,8 @@ import (
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -207,28 +207,29 @@ func listAvailableEventTimestamps(
 		},
 	}
 
-	timestamps, err := listAvailableEventTimestampFiles(ctx, path_manager)
+	timestamps, err := listAvailableEventTimestampFiles(ctx, self, path_manager)
 	result.Logs[0].RowTimestamps = timestamps
 
-	timestamps, err = listAvailableEventTimestampFiles(ctx, path_manager.Logs())
+	timestamps, err = listAvailableEventTimestampFiles(
+		ctx, self, path_manager.Logs())
 	result.Logs[0].LogTimestamps = timestamps
 
 	return result, nil
 }
 
 func listAvailableEventTimestampFiles(
-	ctx context.Context, path_manager api.PathManager) ([]int32, error) {
+	ctx context.Context, self *ApiServer, path_manager api.PathManager) ([]int32, error) {
 	result := []int32{}
 
-	for _, prop := range path_manager.GetAvailableFiles(ctx) {
-		if prop.Size == 0 {
-			continue
-		}
-		date_name := path.Base(prop.Path)
-		ts := paths.DayNameToTimestamp(date_name)
-		if ts != 0 {
-			result = append(result, int32(ts))
-		}
+	file_store_factory := file_store.GetFileStore(self.config)
+	reader, err := result_sets.NewTimedResultSetReader(
+		ctx, file_store_factory, path_manager)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, prop := range reader.GetAvailableFiles(ctx) {
+		result = append(result, int32(prop.StartTime.Unix()))
 	}
 	return result, nil
 }

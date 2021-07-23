@@ -37,7 +37,7 @@ class FullScreenFlowNotebook extends React.Component {
     render() {
         return <>
                  <Navbar className="toolbar">
-                   <ButtonGroup>
+                   <ButtonGroup className="float-right floating-button">
                      <Button title="Exit Fullscreen"
                              onClick={this.setSelectedNotebook}
                              variant="default">
@@ -45,7 +45,7 @@ class FullScreenFlowNotebook extends React.Component {
                      </Button>
                    </ButtonGroup>
                  </Navbar>
-                 <div className="fill-parent no-margins toolbar-margin selectable">
+                 <div className="fill-parent no-margins selectable">
                    <FlowNotebook
                      flow={{
                          client_id: this.state.client_id,

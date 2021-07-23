@@ -3,6 +3,10 @@
     border-color: var(--background-color);
 }
 
+body.dark-mode {
+    background-color: var(--background-color);
+}
+
 .dark-mode .hamburger {
     color: var(--sidebar-icon-color);
 }

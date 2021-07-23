@@ -55,6 +55,10 @@ class VeloTimestamp extends Component {
             };
         }
 
+        if (_.isNaN(value)) {
+            return <></>;
+        }
+
         // Could not parse it - just return what we got.
         if (!ts) {
             return <div>{value && JSON.stringify(value)}</div>;

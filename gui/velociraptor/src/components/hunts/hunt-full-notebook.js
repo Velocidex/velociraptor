@@ -28,7 +28,7 @@ class FullScreenHuntNotebook extends React.Component {
     render() {
         return <>
                  <Navbar className="toolbar">
-                   <ButtonGroup>
+                   <ButtonGroup className="float-right floating-button">
                      <Button title="Exit Fullscreen"
                              onClick={this.setSelectedNotebook}
                              variant="default">
@@ -36,7 +36,7 @@ class FullScreenHuntNotebook extends React.Component {
                      </Button>
                    </ButtonGroup>
                  </Navbar>
-                 <div className="fill-parent no-margins toolbar-margin selectable">
+                 <div className="fill-parent no-margins selectable">
                    <HuntNotebook
                      hunt={{hunt_id: this.state.hunt_id}}
                    />

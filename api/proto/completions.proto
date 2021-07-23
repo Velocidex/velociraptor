@@ -17,6 +17,7 @@ message Completion {
     string description = 2;
     string type = 3;
     repeated ArgDescriptor args = 4;
+    string category = 5;
 }
 
 message KeywordCompletions {
