@@ -55,6 +55,10 @@ nav.app-footer.fixed-bottom {
     z-index: 1200;
 }
 
+.floating-button {
+    z-index: 1200;
+    margin-right: 10px;
+}
 
 grr-navigator .nav-pills li.active .nav-link:hover {
     background-color: var(--sidebar-icon-color);

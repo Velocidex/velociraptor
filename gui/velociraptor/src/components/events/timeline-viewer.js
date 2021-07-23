@@ -292,9 +292,16 @@ export default class EventTimelineViewer extends React.Component {
 
             this.setState({
                 start_time: this.state.table_end + 1,
-                visibleTimeStart: this.state.table_end + 1,
-                visibleTimeEnd: this.state.table_end + page_size,
             });
+
+            // Only scroll the timeline once we go past the view port.
+            if (this.state.table_end > this.state.visibleTimeEnd) {
+                this.setState({
+                    visibleTimeStart: this.state.table_end + 1,
+                    visibleTimeEnd: this.state.table_end + page_size,
+                });
+            }
+
             this.fetchRows();
         }
     }
