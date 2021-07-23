@@ -64,6 +64,9 @@ var (
 	scope_file = query.Flag("scope_file",
 		"Load scope from here. Creates a new file if file not found").
 		Default("").String()
+
+	do_not_update = query.Flag("do_not_update_scope_file",
+		"Do not update the scope file with the new scope").Bool()
 )
 
 func outputJSON(ctx context.Context,
@@ -282,13 +285,15 @@ func doQuery() {
 		kingpin.FatalIfError(err, "loadScopeFromFile")
 
 		// When the scope is destroyed store it in the file again.
-		scope.AddDestructor(func() {
-			err := storeScopeInFile(*scope_file, scope)
-			if err != nil {
-				scope.Log("Storing scope in %v: %v",
-					*scope_file, err)
-			}
-		})
+		if !*do_not_update {
+			scope.AddDestructor(func() {
+				err := storeScopeInFile(*scope_file, scope)
+				if err != nil {
+					scope.Log("Storing scope in %v: %v",
+						*scope_file, err)
+				}
+			})
+		}
 
 	}
 

@@ -30,7 +30,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk"
+	"github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"

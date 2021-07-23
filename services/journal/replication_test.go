@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	mock_proto "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -102,7 +103,7 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 	// Record the WatchEvents calls
 	watched := []string{}
 	mock_watch_event_recorder := func(
-		ctx context.Context, in *api_proto.EventRequest) (
+		ctx context.Context, in *api_proto.EventRequest, opts ...grpc.CallOption) (
 		api_proto.API_WatchEventClient, error) {
 		watched = append(watched, in.Queue)
 		return stream, nil
@@ -138,7 +139,8 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 
 	// Sending some rows to an event queue
 	record_push_event := func(ctx context.Context,
-		in *api_proto.PushEventRequest) (*emptypb.Empty, error) {
+		in *api_proto.PushEventRequest,
+		opts ...grpc.CallOption) (*emptypb.Empty, error) {
 		// On error do not capture the request
 		if last_error != nil {
 			return nil, last_error

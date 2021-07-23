@@ -27,7 +27,7 @@ import (
 	"net/http"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/golang-jwt/jwt"
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"

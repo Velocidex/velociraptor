@@ -9,8 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Velocidex/etw"
 	"github.com/Velocidex/ordereddict"
-	"github.com/bi-zone/etw"
 	"golang.org/x/sys/windows"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
