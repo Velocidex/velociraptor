@@ -189,10 +189,7 @@ func getEventTableWithPathManager(
 	}
 
 	if in.EndTime != 0 {
-		err = rs_reader.SeekToTime(time.Unix(int64(in.EndTime), 0))
-		if err != nil {
-			return nil, err
-		}
+		rs_reader.SetMaxTime(time.Unix(int64(in.EndTime), 0))
 	}
 
 	// Unpack the rows into the output protobuf

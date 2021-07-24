@@ -82,13 +82,13 @@ func (self *TimelineWriter) Close() {
 
 func NewTimelineWriter(
 	file_store_factory api.FileStore,
-	path_manager TimelinePathManagerInterface) (*TimelineWriter, error) {
+	path_manager TimelinePathManagerInterface,
+	truncate bool) (*TimelineWriter, error) {
 	fd, err := file_store_factory.WriteFile(
 		path_manager.Path())
 	if err != nil {
 		return nil, err
 	}
-	fd.Truncate()
 
 	index_fd, err := file_store_factory.WriteFile(
 		path_manager.Index())
@@ -96,7 +96,11 @@ func NewTimelineWriter(
 		fd.Close()
 		return nil, err
 	}
-	index_fd.Truncate()
+
+	if truncate {
+		fd.Truncate()
+		index_fd.Truncate()
+	}
 
 	return &TimelineWriter{fd: fd, index_fd: index_fd}, nil
 

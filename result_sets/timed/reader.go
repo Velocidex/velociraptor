@@ -3,6 +3,7 @@ package timed
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"time"
 
@@ -68,7 +69,16 @@ func (self *TimedResultSetReader) GetAvailableFiles(
 	return self.files
 }
 
+func (self *TimedResultSetReader) Debug() {
+	fmt.Printf("Current idx %v\n", self.current_files_idx)
+	for _, file := range self.files {
+		fmt.Printf("%v %v-%v\n", file.Path, file.StartTime, file.EndTime)
+	}
+}
+
 func (self *TimedResultSetReader) SeekToTime(offset time.Time) error {
+	self.Close()
+
 	self.start = offset
 	for idx, file := range self.files {
 		if offset.Before(file.StartTime) {
@@ -77,7 +87,8 @@ func (self *TimedResultSetReader) SeekToTime(offset time.Time) error {
 		}
 
 		// This file spans the required time
-		if offset.After(file.StartTime) && offset.Before(file.EndTime) {
+		if (offset.Equal(file.StartTime) || offset.After(file.StartTime)) &&
+			offset.Before(file.EndTime) {
 			self.current_files_idx = idx
 
 			reader, err := self.getReader()
@@ -106,7 +117,12 @@ func (self *TimedResultSetReader) SetMaxTime(end time.Time) {
 	self.end = end
 }
 
-func (self *TimedResultSetReader) Close() {}
+func (self *TimedResultSetReader) Close() {
+	if self.current_reader != nil {
+		self.current_reader.Close()
+		self.current_reader = nil
+	}
+}
 
 func (self *TimedResultSetReader) getReader() (*timelines.TimelineReader, error) {
 	if self.current_reader != nil {
@@ -133,7 +149,6 @@ func (self *TimedResultSetReader) getReader() (*timelines.TimelineReader, error)
 			}
 		}
 
-		self.current_files_idx++
 		self.current_reader = reader
 		return reader, nil
 	}
@@ -159,7 +174,8 @@ func (self *TimedResultSetReader) maybeUpgradeIndex(
 	new_path := path_manager.Path() + ".tmp"
 	tmp_path_manager := timelinePathManager(new_path)
 	tmp_writer, err := timelines.NewTimelineWriter(
-		self.file_store_factory, tmp_path_manager)
+		self.file_store_factory, tmp_path_manager,
+		true /* truncate */)
 	if err != nil {
 		return nil, err
 	}
@@ -211,8 +227,8 @@ func (self *TimedResultSetReader) Rows(
 
 			// When the reader is exhausted reset it so
 			// next getReader() can pick the next reader.
-			self.current_reader.Close()
-			self.current_reader = nil
+			self.Close()
+			self.current_files_idx++
 		}
 	}()
 

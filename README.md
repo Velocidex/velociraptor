@@ -1,11 +1,11 @@
 # Velociraptor - Endpoint visibility and collection tool.
 
 Velociraptor is a tool for collecting host based state information
-using Velocidex Query Language (VQL) queries.
+using The Velociraptor Query Language (VQL) queries.
 
 To learn more about Velociraptor, read the documentation on:
 
-   https://www.velocidex.com/docs/
+https://docs.velociraptor.app/
 
 ## Quick start
 
@@ -24,13 +24,12 @@ collect artifacts from the client (which is just running on your own
 machine) as normal.
 
 Once you are ready for a full deployment, check out the various deployment options at
-https://www.velocidex.com/docs/getting-started
+https://docs.velociraptor.app/docs/overview/deployment/
 
 ## Training
 
-We have our complete training course (7 sessions x 2 hours each) on
-YouTube here
-https://www.youtube.com/playlist?list=PLz4xB83Y3Vbjtqr_ttOkBWZZ_ewEVVPXQ
+We have our complete training course (7 sessions x 2 hours each)
+https://docs.velociraptor.app/training/
 
 The course covers many aspects of Velociraptor in detail.
 
@@ -113,7 +112,9 @@ architectures before send us the PR.
 ## Supported platforms
 
 Velociraptor is written in Golang and so is available for all the
-platforms [supported by Go](https://github.com/golang/go/wiki/MinimumRequirements). This means that Windows XP and Windows server 2003 are **not** supported but anything after Windows 7/Vista is.
+platforms [supported by Go](https://github.com/golang/go/wiki/MinimumRequirements).
+This means that Windows XP and Windows server 2003 are **not**
+supported but anything after Windows 7/Vista is.
 
 We build our releases on Centos 6 (x64) for Linux and Sierra for MacOS
 so earlier platforms may not be supported by our release pipeline. If
@@ -121,16 +122,25 @@ you need 32 bit builds you will need to build from source. You can do
 this easily by forking the project on GitHub, enabling GitHub Actions
 in your fork and editing the `Linux Build All Arches` pipeline.
 
+## Artifact Exchange
+
+Velociraptor's power comes from `VQL Artifacts`, that define many
+capabilities to collect many types of data from endpoints.
+Velociraptor comes with many built in `Artifacts` for the most common
+use cases. The community also maintains a large number of additional
+artifacts through the [Artifact Exchange](https://docs.velociraptor.app/exchange/).
+
 ## Getting help
 
 Questions and feedback are welcome at velociraptor-discuss@googlegroups.com
 
-You can also chat with us directly on discord https://www.velocidex.com/discord
+You can also chat with us directly on discord https://docs.velociraptor.app/discord
 
 File issues on https://github.com/Velocidex/velociraptor
 
 Read more about Velociraptor on our blog:
-
-https://www.velocidex.com/blog/
+https://docs.velociraptor.app/blog/
 
 Hang out on Medium https://medium.com/velociraptor-ir
+
+Follow us on Twitter @velocidex
