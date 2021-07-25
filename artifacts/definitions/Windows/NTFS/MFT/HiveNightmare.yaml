@@ -1,0 +1,104 @@
+name: Windows.NTFS.MFT.HiveNightmare
+description: |
+  This artifact uses Windows.NTFS.MFT (By Matt Green - @mgreen27) to find several files created as part of the POC tooling for HiveNightmare (CVE-2021-36934):
+  
+    - \hive_sam_ - https://github.com/FireFart/hivenightmare
+    - \SAM-20 - https://github.com/GossiTheDog/HiveNightmare
+    - \SAM-haxx - https://github.com/GossiTheDog/HiveNightmare
+    - \Sam.save - PowerShell version
+    - \Sam.hive - https://github.com/WiredPulse/Invoke-HiveNightmare
+    - C:\windows\temp\sam - https://github.com/cube0x0/CVE-2021-36934
+
+  See Florian Roth's rule here:
+  - https://github.com/SigmaHQ/sigma/blob/master/rules/windows/file_event/win_hivenightmare_file_exports.yml
+
+author: "Zach Stanford - @svch0st"
+
+parameters:
+  - name: MFTFilename
+    default: "C:/$MFT"
+  - name: Accessor
+    default: ntfs
+  - name: PathRegex
+    description: "Regex search over FullPath."
+    default: "Windows/Temp/sam$"
+  - name: FileRegex
+    description: "Regex search over File Name"
+    default: "^(hive_sam_|SAM-2021-|SAM-2022-|SAM-haxx$|Sam.save$|Sam.hive$)"
+  - name: DateAfter
+    type: timestamp
+    description: "search for events after this date. YYYY-MM-DDTmm:hh:ssZ"
+  - name: DateBefore
+    type: timestamp
+    description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
+  - name: SizeMax
+    type: int64
+    description: "Entries in the MFT under this size in bytes."
+  - name: SizeMin
+    type: int64
+    description: "Entries in the MFT over this size in bytes."
+  - name: AllDrives
+    type: bool
+    description: "Select MFT search on all attached ntfs drives."
+
+
+sources:
+  - query: |
+      -- firstly set timebounds for performance
+      LET DateAfterTime <= if(condition=DateAfter,
+            then=DateAfter, else="1600-01-01")
+      LET DateBeforeTime <= if(condition=DateBefore,
+            then=DateBefore, else="2200-01-01")
+
+
+      -- find all ntfs drives
+      LET ntfs_drives = SELECT FullPath + '/$MFT'as Path
+        FROM glob(globs="/*", accessor="ntfs")
+
+
+      -- function returning MFT entries
+      LET mftsearch(MFTPath) = SELECT EntryNumber,InUse,ParentEntryNumber,
+            MFTPath,FullPath,FileName,FileSize,ReferenceCount,IsDir,
+            Created0x10,Created0x30,LastModified0x10,LastModified0x30,
+            LastRecordChange0x10,LastRecordChange0x30,LastAccess0x10,LastAccess0x30
+        FROM parse_mft(filename=MFTPath, accessor=Accessor)
+        WHERE FullPath =~ PathRegex  OR FileName =~ FileRegex
+            AND Created0x10 < DateBeforeTime
+            AND Created0x10 > DateAfterTime
+            AND Created0x30 < DateBeforeTime
+            AND Created0x30 > DateAfterTime
+            AND LastModified0x10 < DateBeforeTime
+            AND LastModified0x10 > DateAfterTime
+            AND LastModified0x30 < DateBeforeTime
+            AND LastModified0x30 > DateAfterTime
+            AND LastRecordChange0x10 < DateBeforeTime
+            AND LastRecordChange0x10 > DateAfterTime
+            AND LastRecordChange0x30 < DateBeforeTime
+            AND LastRecordChange0x30 > DateAfterTime
+            AND LastAccess0x10 < DateBeforeTime
+            AND LastAccess0x10 > DateAfterTime
+            AND LastAccess0x30 < DateBeforeTime
+            AND LastAccess0x30 > DateAfterTime
+            AND if(condition=SizeMax,
+                then=FileSize < atoi(string=SizeMax),
+                else=TRUE)
+            AND if(condition=SizeMin,
+                then=FileSize > atoi(string=SizeMin),
+                else=TRUE)
+
+
+      -- include all attached drives
+      LET all_drives = SELECT * FROM foreach(row=ntfs_drives,
+            query={
+                SELECT *
+                FROM mftsearch(MFTPath=Path)
+                WHERE log(message="Processing " + Path)
+              })
+
+
+      -- return rows
+      SELECT * FROM if(condition=AllDrives,
+        then= all_drives,
+        else= {
+           SELECT * FROM mftsearch(MFTPath=MFTFilename)
+        })
