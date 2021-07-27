@@ -17,7 +17,7 @@ require (
 	github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22 // indirect
 	github.com/Velocidex/fileb0x v1.1.2-0.20200125141948-d54f40400160 // indirect
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
-	github.com/Velocidex/go-yara v1.1.10-0.20210423154840-dace8239c158
+	github.com/Velocidex/go-yara v1.1.10-0.20210726130504-d5e402efc424
 	github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0
 	github.com/Velocidex/ordereddict v0.0.0-20210502082334-cf5d9045c0d1
 	github.com/Velocidex/pkcs7 v0.0.0-20210524015001-8d1eee94a157

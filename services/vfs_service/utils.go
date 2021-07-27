@@ -7,6 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -24,7 +25,8 @@ func watchForFlowCompletion(
 	artifact_name string,
 	handler func(ctx context.Context,
 		config_obj *config_proto.Config,
-		scope vfilter.Scope, row *ordereddict.Dict)) error {
+		scope vfilter.Scope, row *ordereddict.Dict,
+		flow *proto.ArtifactCollectorContext)) error {
 
 	journal, err := services.GetJournal()
 	if err != nil {
@@ -58,10 +60,6 @@ func watchForFlowCompletion(
 		scope := manager.BuildScope(builder)
 		defer scope.Close()
 
-		// Allow the artifact we are following to be over-ridden by
-		// the user.
-		custom_artifact_name := constants.ARTIFACT_CUSTOM_NAME_PREFIX + artifact_name
-
 		for {
 			select {
 			case <-ctx.Done():
@@ -79,13 +77,34 @@ func watchForFlowCompletion(
 					continue
 				}
 
-				if utils.InString(flow.ArtifactsWithResults, artifact_name) ||
-					utils.InString(flow.ArtifactsWithResults, custom_artifact_name) {
-					handler(ctx, config_obj, scope, event)
+				if shouldForwardFlow(flow, artifact_name) {
+					handler(ctx, config_obj, scope, event, flow)
 				}
 			}
 		}
 	}()
 
 	return nil
+}
+
+func shouldForwardFlow(flow *flows_proto.ArtifactCollectorContext,
+	artifact_name string) bool {
+	if utils.InString(flow.ArtifactsWithResults, artifact_name) {
+		return true
+	}
+
+	// Allow the artifact we are following to be over-ridden by
+	// the user.
+	custom_artifact_name := constants.ARTIFACT_CUSTOM_NAME_PREFIX + artifact_name
+
+	if utils.InString(flow.ArtifactsWithResults, custom_artifact_name) {
+		return true
+	}
+	// Forward empty flows that returned no results as well.
+	if flow.Request != nil &&
+		utils.InString(flow.Request.Artifacts, artifact_name) {
+		return true
+	}
+
+	return false
 }

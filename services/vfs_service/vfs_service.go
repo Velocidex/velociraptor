@@ -56,7 +56,8 @@ func (self *VFSService) Start(
 func (self *VFSService) ProcessDownloadFile(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope vfilter.Scope, row *ordereddict.Dict) {
+	scope vfilter.Scope, row *ordereddict.Dict,
+	flow *flows_proto.ArtifactCollectorContext) {
 
 	defer utils.CheckForPanic("ProcessDownloadFile")
 
@@ -127,10 +128,51 @@ func (self *VFSService) ProcessDownloadFile(
 	}
 }
 
+// When the VFSListDirectory artifact returns no rows we need to write
+// an empty VFS entry but our algorithm relies on the FullPath
+// returned by the client in the artifact results. So we need to go
+// about it a different way.
+func (self *VFSService) handleEmptyListDirectory(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope vfilter.Scope, row *ordereddict.Dict,
+	flow *flows_proto.ArtifactCollectorContext) {
+
+	ts, _ := row.GetInt64("_ts")
+	client_id, _ := row.GetString("ClientId")
+	flow_id, _ := row.GetString("FlowId")
+
+	vfs_path := findParam("Path", flow)
+	accessor := findParam("Accessor", flow)
+
+	// Probably an invalid request.
+	if vfs_path == "" || accessor == "" {
+		return
+	}
+
+	vfs_components := getVfsComponents(vfs_path, accessor)
+
+	// Write an empty set to the VFS entry.
+	err := self.flush_state(config_obj, uint64(ts), client_id, flow_id,
+		vfs_components, []*ordereddict.Dict{})
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Error("Unable to save directory: %v", err)
+		return
+	}
+}
+
 func (self *VFSService) ProcessListDirectory(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope vfilter.Scope, row *ordereddict.Dict) {
+	scope vfilter.Scope, row *ordereddict.Dict,
+	flow *flows_proto.ArtifactCollectorContext) {
+
+	// An empty result set needs special handling.
+	if flow.TotalCollectedRows == 0 {
+		self.handleEmptyListDirectory(ctx, config_obj, scope, row, flow)
+		return
+	}
 
 	client_id, _ := row.GetString("ClientId")
 	flow_id, _ := row.GetString("FlowId")
@@ -146,6 +188,8 @@ func (self *VFSService) ProcessListDirectory(
 		return
 	}
 
+	// Read the results from the flow and build a VFSListResponse
+	// for storing in the VFS.
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(
 		file_store_factory, path_manager)
@@ -161,14 +205,8 @@ func (self *VFSService) ProcessListDirectory(
 	for row := range reader.Rows(ctx) {
 		full_path, _ := row.GetString("_FullPath")
 		accessor, _ := row.GetString("_Accessor")
-		name, _ := row.GetString("Name")
-
-		if name == "." || name == ".." {
-			continue
-		}
 
 		vfs_components := getVfsComponents(full_path, accessor)
-
 		if vfs_components == nil {
 			continue
 		}
@@ -208,12 +246,31 @@ func (self *VFSService) ProcessListDirectory(
 	}
 }
 
+func findParam(name string, flow *flows_proto.ArtifactCollectorContext) string {
+	if flow == nil || flow.Request == nil {
+		return ""
+	}
+	for _, spec := range flow.Request.Specs {
+		if spec.Parameters == nil {
+			continue
+		}
+		for _, env := range spec.Parameters.Env {
+			if env.Key == name {
+				return env.Value
+			}
+		}
+	}
+	return ""
+}
+
 // Flush the current state into the database and clear it for the next directory.
 func (self *VFSService) flush_state(
 	config_obj *config_proto.Config, timestamp uint64, client_id, flow_id string,
 	vfs_components []string, rows []*ordereddict.Dict) error {
-	if len(rows) == 0 {
-		return nil
+
+	var columns []string
+	if len(rows) > 0 {
+		columns = rows[0].Keys()
 	}
 
 	serialized, err := json.Marshal(rows)
@@ -229,7 +286,7 @@ func (self *VFSService) flush_state(
 	return db.SetSubject(config_obj,
 		client_path_manager.VFSPath(vfs_components),
 		&flows_proto.VFSListResponse{
-			Columns:   rows[0].Keys(),
+			Columns:   columns,
 			Timestamp: timestamp,
 			Response:  string(serialized),
 			TotalRows: uint64(len(rows)),

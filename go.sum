@@ -100,6 +100,8 @@ github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b h1
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b/go.mod h1:draN67DBVJDAVmLWDIJ85CrV0UxmIGfWZ4njukhINQs=
 github.com/Velocidex/go-yara v1.1.10-0.20210423154840-dace8239c158 h1:gvnUc2P/5i7wclLwMAFnJlXu35bZz7pDXdFV5SCfhW4=
 github.com/Velocidex/go-yara v1.1.10-0.20210423154840-dace8239c158/go.mod h1:N1A2MzBKorQm3WixuPUSm4gmzGA6i5sYrwHyUBvY5lg=
+github.com/Velocidex/go-yara v1.1.10-0.20210726130504-d5e402efc424 h1:36GhJ1iRd/9yGgvlRWREcPRrWG2H4mF2lEpOvdYP55w=
+github.com/Velocidex/go-yara v1.1.10-0.20210726130504-d5e402efc424/go.mod h1:N1A2MzBKorQm3WixuPUSm4gmzGA6i5sYrwHyUBvY5lg=
 github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0 h1:oMdYhZqDdZq0PpVFxGvjhhNhxNl6D7ycR0SuKkbEKac=
 github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0/go.mod h1:ukJBuruT9b24pdgZwWDvOaCYHeS03B7oQPCUWh25bwM=
 github.com/Velocidex/ordereddict v0.0.0-20191106020901-97c468e5e403/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=

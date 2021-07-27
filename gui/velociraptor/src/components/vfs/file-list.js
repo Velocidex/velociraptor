@@ -2,10 +2,11 @@ import './file-list.css';
 import _ from 'lodash';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-
+import classNames from "classnames";
 import BootstrapTable from 'react-bootstrap-table-next';
 
 import filterFactory from 'react-bootstrap-table2-filter';
+import { Link } from  "react-router-dom";
 
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
@@ -143,7 +144,8 @@ class VeloFileList extends Component {
                         return;
                     }
 
-                    // The node is refreshed with the correct flow id, we can stop polling.
+                    // The node is refreshed with the correct flow id,
+                    // we can stop polling.
                     clearInterval(this.recursive_interval);
                     this.recursive_interval = undefined;
 
@@ -260,6 +262,10 @@ class VeloFileList extends Component {
             // Start polling for flow completion.
             this.source = axios.CancelToken.source();
             this.interval = setInterval(() => {
+                // If it not enough here to just wait for the flow to
+                // finish, we need to wait for the vfs service to
+                // actually write the new directory entry otherwise
+                // the gui can refresh with the old data still there.
                 api.get("v1/VFSStatDirectory", {
                     client_id: this.props.client.client_id,
                     vfs_path: Join(path),
@@ -351,6 +357,17 @@ class VeloFileList extends Component {
                   </Button>
                 }
 
+                <Link to={"/collected/" +this.props.client.client_id +
+                          "/" + this.props.node.flow_id + "/overview"}
+                      title="View Collection"
+                      role="button"
+                      className={classNames({
+                          "btn": true,
+                          "btn-default": true,
+                          "disabled":  !this.props.node.flow_id,
+                      })}>
+                  <FontAwesomeIcon icon="eye"/>
+                </Link>
               </ButtonGroup>
             </Navbar>
         );
@@ -364,6 +381,15 @@ class VeloFileList extends Component {
                   </div>
                 </>
             );
+        }
+
+        if (_.isEmpty(this.props.node.raw_data)) {
+            return <>
+                     { toolbar }
+                     <div className="fill-parent no-margins toolbar-margin">
+                       <h5 className="no-content">Directory is empty.</h5>
+                     </div>
+                   </>;
         }
 
         let columns = formatColumns([

@@ -180,3 +180,14 @@ func (self *DataFileInfo) IsLink() bool {
 func (self *DataFileInfo) GetLink() (string, error) {
 	return "", errors.New("Not implemented")
 }
+
+func ReadDirNames(dirname string) ([]string, error) {
+	f, err := os.Open(dirname)
+	if err != nil {
+		return nil, err
+	}
+	names, err := f.Readdirnames(-1)
+	f.Close()
+
+	return names, err
+}

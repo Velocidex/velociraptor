@@ -253,6 +253,16 @@ func (self *FileBaseDataStore) DeleteSubject(
 	return nil
 }
 
+func listChildNames(config_obj *config_proto.Config, urn string) (
+	[]string, error) {
+	filename, err := urnToFilename(config_obj, urn)
+	if err != nil {
+		return nil, err
+	}
+	dirname := strings.TrimSuffix(filename, ".db")
+	return utils.ReadDirNames(dirname)
+}
+
 func listChildren(config_obj *config_proto.Config,
 	urn string) ([]os.FileInfo, error) {
 	filename, err := urnToFilename(config_obj, urn)
@@ -387,19 +397,19 @@ func (self *FileBaseDataStore) SearchClients(
 	// to enumerate all the clients, sort them and then chop them
 	// up into pages.
 	can_quit_early := func() bool {
-		return sort_direction == UNSORTED &&
+		return limit > 0 && sort_direction == UNSORTED &&
 			uint64(len(result)) > offset+limit
 	}
 
 	add_func := func(key string) {
-		children, err := listChildren(config_obj,
-			path.Join(index_urn, key))
+		children, err := listChildNames(
+			config_obj, path.Join(index_urn, key))
 		if err != nil {
 			return
 		}
 
 		for _, child_urn := range children {
-			name := UnsanitizeComponent(child_urn.Name())
+			name := UnsanitizeComponent(child_urn)
 			name = strings.TrimSuffix(name, ".db")
 			_, pres := seen[name]
 			if !pres {
@@ -417,7 +427,7 @@ func (self *FileBaseDataStore) SearchClients(
 	if strings.ContainsAny(query, "[]*?") {
 		// We could make it smarter in future but this is
 		// quick enough for now.
-		sets, err := listChildren(config_obj, index_urn)
+		sets, err := listChildNames(config_obj, index_urn)
 		if err != nil {
 			return result
 		}
@@ -427,7 +437,7 @@ func (self *FileBaseDataStore) SearchClients(
 		}
 
 		for _, set := range sets {
-			name := UnsanitizeComponent(set.Name())
+			name := UnsanitizeComponent(set)
 			name = strings.TrimSuffix(name, ".db")
 			matched, err := path.Match(query, name)
 			if err != nil {
@@ -472,11 +482,15 @@ func (self *FileBaseDataStore) SearchClients(
 	}
 
 	// Clamp the limit to the end of the results we have.
-	if uint64(len(result))-offset < limit {
-		limit = uint64(len(result)) - offset
+	if limit > 0 {
+		if uint64(len(result))-offset < limit {
+			limit = uint64(len(result)) - offset
+		}
+
+		return result[offset : offset+limit]
 	}
 
-	return result[offset : offset+limit]
+	return result[offset:]
 }
 
 // Called to close all db handles etc. Not thread safe.
