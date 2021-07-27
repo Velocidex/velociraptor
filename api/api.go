@@ -292,7 +292,7 @@ func (self *ApiServer) ListClients(
 	result := &api_proto.SearchClientsResponse{}
 	for _, client_id := range db.SearchClients(
 		self.config, constants.CLIENT_INDEX_URN,
-		in.Query, query_type, in.Offset, limit, sort_direction) {
+		in.Query, query_type, in.Offset, 0, sort_direction) {
 		if in.NameOnly || query_type == "key" {
 			result.Names = append(result.Names, client_id)
 		} else {
@@ -313,7 +313,7 @@ func (self *ApiServer) ListClients(
 
 			result.Items = append(result.Items, api_client)
 
-			if uint64(len(result.Items)) >= in.Limit {
+			if uint64(len(result.Items)) >= limit {
 				break
 			}
 		}

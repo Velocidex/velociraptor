@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -128,6 +129,52 @@ func (self *VFSServiceTestSuite) TestVFSListDirectory() {
 	assert.Equal(self.T(), self.getFullPath(resp), []string{
 		"/a/b/c", "/a/b/d", "/a/b/e",
 	})
+}
+
+func (self *VFSServiceTestSuite) TestVFSListDirectoryEmpty() {
+	journal, err := services.GetJournal()
+	assert.NoError(self.T(), err)
+
+	// Emulate a flow completion message coming from the flow processor.
+	artifact := "System.VFS.ListDirectory"
+	journal.PushRowsToArtifact(self.config_obj,
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("ClientId", self.client_id).
+			Set("FlowId", self.flow_id).
+			Set("Flow", &flows_proto.ArtifactCollectorContext{
+				ClientId:  self.client_id,
+				SessionId: self.flow_id,
+				Request: &flows_proto.ArtifactCollectorArgs{
+					Artifacts: []string{artifact},
+					Specs: []*flows_proto.ArtifactSpec{{
+						Artifact: artifact,
+						Parameters: &flows_proto.ArtifactParameters{
+							Env: []*actions_proto.VQLEnv{{
+								Key:   "Path",
+								Value: "/a/b/",
+							}, {
+								Key:   "Accessor",
+								Value: "file",
+							}},
+						},
+					}},
+				}}),
+		}, "System.Flow.Completion", "server", "")
+
+	db, err := datastore.GetDB(self.config_obj)
+	assert.NoError(self.T(), err)
+
+	client_path_manager := paths.NewClientPathManager(self.client_id)
+	resp := &flows_proto.VFSListResponse{}
+
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		db.GetSubject(self.config_obj,
+			client_path_manager.VFSPath([]string{"file", "a", "b"}),
+			resp)
+		utils.Debug(resp)
+		return resp.Timestamp > 0
+	})
+	assert.Equal(self.T(), self.getFullPath(resp), []string{})
 }
 
 func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectory() {

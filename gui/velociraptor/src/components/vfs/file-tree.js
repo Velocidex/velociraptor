@@ -280,7 +280,8 @@ class VeloFileTree extends Component {
 
                 if (response && response.data && response.data.Response) {
                     // Hold on to the raw data.
-                    node.raw_data = JSON.parse(response.data.Response);
+                    node.raw_data = JSON.parse(response.data.Response) || [];
+                    node.flow_id = response.data.flow_id;
 
                     // Extract the directory children from the raw_data
                     for (var i=0; i<node.raw_data.length; i++) {
