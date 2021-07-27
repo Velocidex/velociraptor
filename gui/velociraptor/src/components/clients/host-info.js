@@ -19,8 +19,6 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Spinner from '../utils/spinner.js';
 import Form from 'react-bootstrap/Form';
-import Col from 'react-bootstrap/Col';
-import Row from 'react-bootstrap/Row';
 
 import { Link } from  "react-router-dom";
 import api from '../core/api-service.js';
