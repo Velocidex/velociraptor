@@ -100,7 +100,9 @@ func (self *VFSServiceTestSuite) EmulateCollection(
 			Set("Flow", &flows_proto.ArtifactCollectorContext{
 				ClientId:             self.client_id,
 				SessionId:            self.flow_id,
-				ArtifactsWithResults: []string{artifact}})},
+				ArtifactsWithResults: []string{artifact},
+				TotalCollectedRows:   uint64(len(rows)),
+			})},
 		"System.Flow.Completion", "server", "")
 
 	return self.flow_id
@@ -171,7 +173,6 @@ func (self *VFSServiceTestSuite) TestVFSListDirectoryEmpty() {
 		db.GetSubject(self.config_obj,
 			client_path_manager.VFSPath([]string{"file", "a", "b"}),
 			resp)
-		utils.Debug(resp)
 		return resp.Timestamp > 0
 	})
 	assert.Equal(self.T(), self.getFullPath(resp), []string{})
