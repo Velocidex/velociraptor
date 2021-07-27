@@ -8,12 +8,11 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
-	"www.velocidex.com/golang/vfilter/types"
 )
 
 type QueryPluginArgs struct {
-	Query string    `vfilter:"required,field=query,doc=A VQL Query to parse and execute."`
-	Env   types.Any `vfilter:"optional,field=env,doc=A dict of args to insert into the scope."`
+	Query string            `vfilter:"required,field=query,doc=A VQL Query to parse and execute."`
+	Env   *ordereddict.Dict `vfilter:"optional,field=env,doc=A dict of args to insert into the scope."`
 }
 
 type QueryPlugin struct{}
@@ -38,18 +37,6 @@ func (self QueryPlugin) Call(
 			return
 		}
 
-		arg_value, ok := arg.Env.(types.LazyExpr)
-		if ok {
-			arg.Env = arg_value.Reduce(ctx)
-		}
-
-		// Build the query args
-		env := ordereddict.NewDict()
-		for _, member := range scope.GetMembers(arg.Env) {
-			v, _ := scope.Associative(arg.Env, member)
-			env.Set(member, v)
-		}
-
 		// Build a completely new scope to evaluate the query
 		// in.
 		builder := services.ScopeBuilderFromScope(scope)
@@ -61,7 +48,7 @@ func (self QueryPlugin) Call(
 			return
 		}
 
-		subscope := manager.BuildScope(builder).AppendVars(env)
+		subscope := manager.BuildScope(builder).AppendVars(arg.Env)
 		defer subscope.Close()
 
 		// Parse and compile the query
@@ -74,6 +61,7 @@ func (self QueryPlugin) Call(
 
 		for _, vql := range statements {
 			row_chan := vql.Eval(ctx, subscope)
+		get_rows:
 			for {
 				select {
 				case <-ctx.Done():
@@ -81,7 +69,7 @@ func (self QueryPlugin) Call(
 
 				case row, ok := <-row_chan:
 					if !ok {
-						return
+						break get_rows
 					}
 
 					output_chan <- row

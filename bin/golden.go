@@ -135,26 +135,11 @@ func makeCtxWithTimeout(duration int) (context.Context, func()) {
 	return ctx, cancel
 }
 
-func runTest(fixture *testFixture,
+func runTest(fixture *testFixture, sm *services.Service,
 	config_obj *config_proto.Config) (string, error) {
 
 	ctx, cancel := makeCtxWithTimeout(30)
 	defer cancel()
-
-	//Force a clean slate for each test.
-	startup.Reset()
-
-	sm, err := startEssentialServices(config_obj)
-	if err != nil {
-		return "", err
-	}
-	defer sm.Close()
-
-	err = sm.Start(hunt_dispatcher.StartHuntDispatcher)
-	kingpin.FatalIfError(err, "Starting services")
-
-	_, err = getRepository(config_obj)
-	kingpin.FatalIfError(err, "Loading extra artifacts")
 
 	// Create an output container.
 	tmpfile, err := ioutil.TempFile("", "golden")
@@ -166,7 +151,8 @@ func runTest(fixture *testFixture,
 	container, err := reporting.NewContainer(tmpfile.Name(), "", 5)
 	kingpin.FatalIfError(err, "Can not create output container")
 
-	log_writer := &MemoryLogWriter{config_obj: config_obj}
+	log_writer.Clear()
+
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
@@ -235,6 +221,8 @@ func runTest(fixture *testFixture,
 }
 
 func doGolden() {
+	vql_subsystem.RegisterPlugin(&MemoryLogPlugin{})
+
 	_, cancel := makeCtxWithTimeout(120)
 	defer cancel()
 
@@ -243,8 +231,22 @@ func doGolden() {
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	logger.Info("Starting golden file test.")
+	log_writer = &MemoryLogWriter{config_obj: config_obj}
 
 	failures := []string{}
+
+	//Force a clean slate for each test.
+	startup.Reset()
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Startup")
+	defer sm.Close()
+
+	err = sm.Start(hunt_dispatcher.StartHuntDispatcher)
+	kingpin.FatalIfError(err, "Starting services")
+
+	_, err = getRepository(config_obj)
+	kingpin.FatalIfError(err, "Loading extra artifacts")
 
 	err = filepath.Walk(*golden_command_directory, func(file_path string, info os.FileInfo, err error) error {
 		if *golden_command_filter != "" &&
@@ -266,7 +268,7 @@ func doGolden() {
 		err = yaml.Unmarshal(data, &fixture)
 		kingpin.FatalIfError(err, "Unmarshal input file")
 
-		result, err := runTest(&fixture, config_obj)
+		result, err := runTest(&fixture, sm, config_obj)
 		kingpin.FatalIfError(err, "Running test")
 
 		outfile := strings.Replace(file_path, ".in.", ".out.", -1)
@@ -320,9 +322,15 @@ func init() {
 	})
 }
 
+var log_writer *MemoryLogWriter
+
 type MemoryLogWriter struct {
 	config_obj *config_proto.Config
 	logs       []string
+}
+
+func (self *MemoryLogWriter) Clear() {
+	self.logs = nil
 }
 
 func (self *MemoryLogWriter) Write(b []byte) (int, error) {
@@ -345,4 +353,36 @@ func (self *MemoryLogWriter) Matches(pattern string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// Some tests need to inspect the logs
+type MemoryLogPlugin struct{}
+
+func (self MemoryLogPlugin) Call(
+	ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+
+		if log_writer != nil {
+			for _, line := range log_writer.logs {
+				output_chan <- ordereddict.NewDict().
+					Set("Log", line)
+			}
+		}
+
+	}()
+
+	return output_chan
+}
+
+func (self MemoryLogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "test_read_logs",
+		Doc:     "Read logs in golden test.",
+		ArgType: type_map.AddType(scope, vfilter.Null{}),
+	}
 }

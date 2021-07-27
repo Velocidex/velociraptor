@@ -38,7 +38,7 @@ const SORT_DOWN = 2;
 const UNFILTERED = 0;
 const ONLINE = 1;
 
-class LabelClients extends Component {
+export class LabelClients extends Component {
     static propTypes = {
         affectedClients: PropTypes.array,
         onResolve: PropTypes.func.isRequired,
@@ -125,7 +125,7 @@ class LabelClients extends Component {
                 </Button>
                 <Button variant="primary"
                         onClick={this.labelClients}>
-                  Run it!
+                  Add it!
                 </Button>
               </Modal.Footer>
             </Modal>
