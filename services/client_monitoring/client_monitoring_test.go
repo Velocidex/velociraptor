@@ -356,41 +356,6 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompilingMultipleArti
 	}
 }
 
-func (self *ClientMonitoringTestSuite) TestClientMonitoringCompilingDependentArtifacts() {
-	current_clock := &utils.IncClock{NowTime: 10}
-
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	repository, err := manager.GetGlobalRepository(config_obj)
-	assert.NoError(self.T(), err)
-
-	repository.LoadYaml(`
-name: TestArtifact
-type: CLIENT_EVENT
-sources:
-- query: SELECT * FROM Artifact
-
-	// If no table exists, we will get a default table.
-	event_manager := services.ClientEventManager().(*ClientEventTable)
-	event_manager.Clock = current_clock
-
-	// Install an initial monitoring table: Everyone gets ServiceCreation.
-	event_manager.SetClientMonitoringState(context.Background(),
-		self.config_obj, &flows_proto.ClientEventTable{
-			Artifacts: &flows_proto.ArtifactCollectorArgs{
-				Artifacts: []string{
-					"Windows.Events.ServiceCreation",
-					"Windows.Events.ProcessCreation",
-				},
-			},
-		})
-
-	table := event_manager.GetClientUpdateEventTableMessage(self.config_obj, self.client_id)
-
-	json.Dump(table)
-}
-
 func extractArtifacts(args *actions_proto.VQLEventTable) []string {
 	result := []string{}
 
