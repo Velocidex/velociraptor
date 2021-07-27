@@ -2,6 +2,7 @@ module www.velocidex.com/golang/velociraptor
 
 require (
 	cloud.google.com/go v0.88.0 // indirect
+	cloud.google.com/go/pubsub v1.13.0
 	cloud.google.com/go/storage v1.16.0
 	github.com/Depado/bfchroma v1.2.0
 	github.com/Masterminds/goutils v1.1.1 // indirect
@@ -14,6 +15,7 @@ require (
 	github.com/Velocidex/amsi v0.0.0-20200608120838-e5d93b76f119
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22 // indirect
+	github.com/Velocidex/fileb0x v1.1.2-0.20200125141948-d54f40400160 // indirect
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.10-0.20210423154840-dace8239c158
 	github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0
@@ -24,7 +26,7 @@ require (
 	github.com/Velocidex/yaml/v2 v2.2.5
 	github.com/Velocidex/zip v0.0.0-20210101070220-e7ecefb7aad7
 	github.com/ZachtimusPrime/Go-Splunk-HTTP v2.0.1+incompatible
-	github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2 v2.0.1 // indirect
+	github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2 v2.0.1
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/chroma v0.7.2
 	github.com/alecthomas/participle v0.7.1
@@ -108,7 +110,7 @@ require (
 	golang.org/x/net v0.0.0-20210716203947-853a461950ff
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
-	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
+	golang.org/x/time v0.0.0-20210611083556-38a9dc6acbc6
 	google.golang.org/api v0.51.0
 	google.golang.org/genproto v0.0.0-20210722135532-667f2b7c528f
 	google.golang.org/grpc v1.39.0
