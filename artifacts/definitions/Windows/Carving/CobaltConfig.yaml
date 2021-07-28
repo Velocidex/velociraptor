@@ -13,7 +13,7 @@ parameters:
     default: .
   - name: ExtractBytes
     type: int
-    default: 15000
+    default: 10000
   - name: FindConfig
     default: |
         rule find_cobalt_strike_config {
@@ -76,35 +76,36 @@ export: |
         ["UserAgent", "x=>len(list=x.__useragent_prefix) + 6", "String"],
 
         # 0x000a:PostUri,0x0003:Type,
-        ["__PostUri_prefix", 0, "String", {"term_hex": "000a0003"}],
-        ["PostURI", "x=>len(list=x.__PostUri_prefix) + 6", "String", {"term_hex":"0000"}],
+        ["__PostUri_prefix", 0, "String", {"term_hex": "000a0003", length: 10000, max_length: 10000}],
+        ["PostURI", "x=>len(list=x.__PostUri_prefix) + 6", "String"],
+        #["PostURI", 0, "String", {length=10, term="XXXX"}],
 
         # 0x000b:Malleable_C2_Instructions,0x0003:Type,
-        ["__Malleable_C2_Instructions_prefix", "x=>x.BeaconType + 8", "String",{"term_hex": "000b0003"}],
+        ["__Malleable_C2_Instructions_prefix", 0, "String",{"term_hex": "000b0003", length: 10000, max_length: 10000}],
         ["Malleable_C2_Instructions", "x=>len(list=x.__Malleable_C2_Instructions_prefix) + 6", "String"],
 
         # 0x000c:HttpGetHeader,0x0003:Type,
-        ["__http_get_header_prefix", 0, "String",{"term_hex": "000c0003"}],
+        ["__http_get_header_prefix", 0, "String",{"term_hex": "000c0003", length: 10000, max_length: 10000}],
         ["HttpGetHeader", "x=>len(list=x.__http_get_header_prefix) + 6", "String",{"term_hex":"0000"}],
 
         # 0x000d:HttpPostHeader,0x0003:Type,
-        ["__http_post_header_prefix", 0, "String",{"term_hex": "000d0003"}],
+        ["__http_post_header_prefix", 0, "String",{"term_hex": "000d0003", length: 10000, max_length: 10000}],
         ["HttpPostHeader", "x=>len(list=x.__http_post_header_prefix) + 6", "String",{"term_hex":"0000"}],
 
         # 0x000e:SpawnTo,0x0003:Type
-        ["__SpawnTo_header_prefix", 0, "String",{"term_hex": "000d0003"}],
+        ["__SpawnTo_header_prefix", 0, "String",{"term_hex": "000d0003", length: 10000, max_length: 10000}],
         ["SpawnTo", "x=>len(list=x.__SpawnTo_header_prefix) + 6", "String",{"term_hex":"0000"}],
 
         # 0x000f:PipeName,0x0003:Type
-        ["__pipename_prefix", 0, "String",{"term_hex": "001f0003"}],
+        ["__pipename_prefix", 0, "String",{"term_hex": "000f0003", length: 10000, max_length: 10000}],
         ["Pipename", "x=>len(list=x.__pipename_prefix) + 6", "String",{"term_hex":"0000"}],
 
         # 0x001d:spawn_to_x86,0x0003:Type
-        ["__spawnx86_prefix", 0, "String",{"term_hex": "001d0003"}],
+        ["__spawnx86_prefix", 0, "String",{"term_hex": "001d0003", length: 10000, max_length: 10000}],
         ["SpawnTox86", "x=>len(list=x.__spawnx86_prefix) + 6", "String",{"term_hex":"0000"}],
 
         # 0x001e:spawn_to_x64,0x0003:Type
-        ["__spawnx64_prefix", 0, "String",{"term_hex": "001e"}],
+        ["__spawnx64_prefix", 0, "String",{"term_hex": "001e", length: 10000, max_length: 10000}],
         ["SpawnTox64", "x=>len(list=x.__spawnx64_prefix) + 6", "String",{"term_hex":"0000"}],
     ]]]'''
 
@@ -153,7 +154,7 @@ sources:
             filename=xor(string=Data,key=Xor),
             profile=Profile,
             struct="CobaltConfig") AS DecodedConfig,
-        format(format="% x", args=xor(string=Data,key=Xor)) as DecodedData
+            format(format="% x", args=xor(string=Data,key=Xor)) as DecodedData
       FROM if(condition=TargetFile,
         then= file_hits,
         else= process_hits)
