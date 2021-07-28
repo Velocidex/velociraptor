@@ -13,7 +13,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/api"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -23,6 +22,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -79,9 +79,8 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
-	api_client, err := api.GetApiClient(ctx,
-		config_obj, nil, arg.ClientId,
-		false /* detailed */)
+	api_client, err := search.GetApiClient(ctx,
+		config_obj, arg.ClientId, false /* detailed */)
 	if err != nil || api_client.AgentInformation == nil ||
 		api_client.AgentInformation.Name == "" {
 		scope.Log("import_collection: client_id not known")

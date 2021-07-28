@@ -26,10 +26,11 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/api"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/search"
+	vsearch "www.velocidex.com/golang/velociraptor/search"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -80,8 +81,8 @@ func (self ClientsPlugin) Call(
 
 		// If a client id is specified we do not need to search at all.
 		if arg.ClientId != "" {
-			api_client, err := api.GetApiClient(
-				ctx, config_obj, nil,
+			api_client, err := vsearch.GetApiClient(
+				ctx, config_obj,
 				arg.ClientId, false /* detailed */)
 			if err == nil {
 				select {
@@ -106,8 +107,8 @@ func (self ClientsPlugin) Call(
 		for _, client_id := range db.SearchClients(
 			config_obj, constants.CLIENT_INDEX_URN,
 			search, "", arg.Start, limit, datastore.UNSORTED) {
-			api_client, err := api.GetApiClient(
-				ctx, config_obj, nil, client_id,
+			api_client, err := vsearch.GetApiClient(
+				ctx, config_obj, client_id,
 				false /* detailed */)
 			if err == nil {
 				select {
@@ -161,9 +162,8 @@ func (self *ClientInfoFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	api_client, err := api.GetApiClient(ctx,
-		config_obj, nil, arg.ClientId,
-		false /* detailed */)
+	api_client, err := search.GetApiClient(ctx,
+		config_obj, arg.ClientId, false /* detailed */)
 	if err != nil {
 		scope.Log("client_info: %s", err.Error())
 		return vfilter.Null{}

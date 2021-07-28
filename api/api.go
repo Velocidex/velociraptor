@@ -50,11 +50,11 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
@@ -256,70 +256,7 @@ func (self *ApiServer) ListClients(
 			"User is not allowed to view clients.")
 	}
 
-	db, err := datastore.GetDB(self.config)
-	if err != nil {
-		return nil, err
-	}
-
-	limit := uint64(50)
-	if in.Limit > 0 {
-		limit = in.Limit
-	}
-
-	query_type := ""
-	if in.Type == api_proto.SearchClientsRequest_KEY {
-		query_type = "key"
-	}
-
-	sort_direction := datastore.UNSORTED
-	switch in.Sort {
-	case api_proto.SearchClientsRequest_SORT_UP:
-		sort_direction = datastore.SORT_UP
-	case api_proto.SearchClientsRequest_SORT_DOWN:
-		sort_direction = datastore.SORT_DOWN
-	}
-
-	// If the output is filtered, we need to retrieve as many
-	// clients as possible because we may eliminate them with the
-	// filter.
-	if in.Filter != api_proto.SearchClientsRequest_UNFILTERED {
-		limit = 100000
-	}
-
-	// Microseconds
-	now := uint64(time.Now().UnixNano() / 1000)
-
-	result := &api_proto.SearchClientsResponse{}
-	for _, client_id := range db.SearchClients(
-		self.config, constants.CLIENT_INDEX_URN,
-		in.Query, query_type, in.Offset, 0, sort_direction) {
-		if in.NameOnly || query_type == "key" {
-			result.Names = append(result.Names, client_id)
-		} else {
-			api_client, err := GetApiClient(
-				ctx, self.config,
-				self.server_obj, client_id,
-				false /* detailed */)
-			if err != nil {
-				continue
-			}
-
-			// Skip clients that are offline
-			if in.Filter == api_proto.SearchClientsRequest_ONLINE &&
-				now > api_client.LastSeenAt &&
-				now-api_client.LastSeenAt > 1000000*60*15 {
-				continue
-			}
-
-			result.Items = append(result.Items, api_client)
-
-			if uint64(len(result.Items)) >= limit {
-				break
-			}
-		}
-	}
-
-	return result, nil
+	return search.SearchClients(ctx, self.config, in, user_name)
 }
 
 func (self *ApiServer) NotifyClients(

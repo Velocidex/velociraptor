@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type UserPathManager struct {
@@ -24,4 +25,8 @@ func (self UserPathManager) ACL() string {
 
 func (self UserPathManager) GUIOptions() string {
 	return constants.USER_URN + "/gui/" + self.Name + ".json"
+}
+
+func (self UserPathManager) MRU() string {
+	return utils.JoinComponents([]string{constants.USER_URN, self.Name}, "/")
 }

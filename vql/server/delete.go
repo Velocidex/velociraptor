@@ -6,12 +6,12 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/api"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -143,9 +143,8 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 func reallyDeleteClient(ctx context.Context,
 	config_obj *config_proto.Config, scope vfilter.Scope,
 	db datastore.DataStore, arg *DeleteClientArgs) error {
-	client_info, err := api.GetApiClient(ctx,
-		config_obj, nil, arg.ClientId,
-		false /* detailed */)
+	client_info, err := search.GetApiClient(ctx,
+		config_obj, arg.ClientId, false /* detailed */)
 	if err != nil {
 		return err
 	}
