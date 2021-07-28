@@ -64,7 +64,6 @@ func (self MockAPIClientFactory) GetAPIClient(
 	ctx context.Context,
 	config_obj *config_proto.Config) (api_proto.APIClient, func() error, error) {
 	return self.mock, func() error { return nil }, nil
-
 }
 
 func (self *ServerTestSuite) SetupTest() {

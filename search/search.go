@@ -5,6 +5,7 @@ package search
 import (
 	"context"
 	"errors"
+	"path"
 	"strings"
 	"time"
 
@@ -39,11 +40,25 @@ func searchRecents(
 
 	now := uint64(time.Now().UnixNano() / 1000)
 	result := &api_proto.SearchClientsResponse{}
-	for _, client_id := range db.SearchClients(config_obj, path_manager.MRU(),
-		"mru", "key", in.Offset, in.Limit, datastore.UNSORTED) {
+
+	children, err := db.ListChildren(
+		config_obj, path_manager.MRU()+"/mru", 0, 1000)
+	if err != nil {
+		return nil, err
+	}
+
+	// Sort the children in reverse order - most recent first.
+	total_count := 0
+	for i := len(children) - 1; i >= 0; i-- {
+		client_id := path.Base(children[i])
 		api_client, err := GetApiClient(
 			ctx, config_obj, client_id, false /* detailed */)
 		if err != nil {
+			continue
+		}
+
+		total_count++
+		if uint64(total_count) < in.Offset {
 			continue
 		}
 
@@ -56,10 +71,11 @@ func searchRecents(
 
 		result.Items = append(result.Items, api_client)
 
-		if uint64(len(result.Items)) >= limit {
+		if uint64(len(result.Items)) > limit {
 			break
 		}
 	}
+
 	return result, nil
 }
 
@@ -112,15 +128,23 @@ func SearchClients(
 	now := uint64(time.Now().UnixNano() / 1000)
 
 	result := &api_proto.SearchClientsResponse{}
-	for _, client_id := range db.SearchClients(
+	total_count := 0
+	children := db.SearchClients(
 		config_obj, constants.CLIENT_INDEX_URN,
-		in.Query, query_type, in.Offset, 0, sort_direction) {
+		in.Query, query_type, 0, 1000000, sort_direction)
+
+	for _, client_id := range children {
 		if in.NameOnly || query_type == "key" {
 			result.Names = append(result.Names, client_id)
 		} else {
 			api_client, err := GetApiClient(
 				ctx, config_obj, client_id, false /* detailed */)
 			if err != nil {
+				continue
+			}
+
+			total_count++
+			if uint64(total_count) < in.Offset {
 				continue
 			}
 
@@ -133,7 +157,7 @@ func SearchClients(
 
 			result.Items = append(result.Items, api_client)
 
-			if uint64(len(result.Items)) >= limit {
+			if uint64(len(result.Items)) > limit {
 				break
 			}
 		}
