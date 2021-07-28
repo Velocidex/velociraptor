@@ -27,6 +27,10 @@ func (self ClientPathManager) GetQueueName() string {
 	return self.client_id
 }
 
+func (self ClientPathManager) MRU(username string) string {
+	return utils.JoinComponents([]string{"users", username, "mru"}, "/")
+}
+
 func (self ClientPathManager) GetAvailableFiles(
 	ctx context.Context) []*api.ResultSetFileProperties {
 	return []*api.ResultSetFileProperties{{

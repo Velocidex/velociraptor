@@ -106,6 +106,9 @@ message GetClientRequest {
     bool lightweight = 2 [(sem_type) = {
             description: "If set only collect some information.",
         }];
+
+    // If true we also update the MRU for this client.
+    bool update_mru = 3;
 }
 
 message LabelClientsRequest {

@@ -191,6 +191,13 @@ func (self *ApiServer) GetClient(
 			"User is not allowed to view clients.")
 	}
 
+	if in.UpdateMru {
+		err = updateMRU(self.config, user_name, in.ClientId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	api_client, err := GetApiClient(ctx,
 		self.config,
 		self.server_obj,
@@ -239,7 +246,21 @@ func (self *ApiServer) GetClientFlows(
 			return false
 		}
 	}
-
 	return flows.GetFlows(self.config, in.ClientId,
 		in.IncludeArchived, filter, in.Offset, in.Count)
+}
+
+func updateMRU(
+	config_obj *config_proto.Config,
+	user_name string, client_id string) error {
+	path_manager := paths.NewClientPathManager(client_id)
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	err = db.SetIndex(config_obj, path_manager.MRU(user_name),
+		client_id, []string{"mru"})
+
+	return err
 }
