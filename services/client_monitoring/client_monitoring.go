@@ -359,6 +359,15 @@ func (self *ClientEventTable) load_from_file(
 		self.state.Artifacts = &flows_proto.ArtifactCollectorArgs{
 			Artifacts: config_obj.Frontend.DefaultClientMonitoringArtifacts,
 		}
+		self.state.LabelEvents = append(self.state.LabelEvents,
+			&flows_proto.LabelEvents{
+				Label: "Quarantine",
+				Artifacts: &flows_proto.ArtifactCollectorArgs{
+					Artifacts: []string{
+						"Windows.Remediation.QuarantineMonitor",
+					},
+				},
+			})
 		logger.Info("Creating default Client Monitoring Service")
 
 		err = self.compileState(ctx, config_obj, self.state)

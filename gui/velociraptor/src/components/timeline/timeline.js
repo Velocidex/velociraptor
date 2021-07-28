@@ -155,6 +155,14 @@ export default class TimelineRenderer extends React.Component {
         return false;
     }
 
+    handleTimeChange = (visibleTimeStart, visibleTimeEnd) => {
+        this.setState({
+            visibleTimeStart,
+            visibleTimeEnd,
+            scrolling: true
+        });
+    };
+
     state = {
         start_time: 0,
         table_start: 0,
@@ -163,6 +171,8 @@ export default class TimelineRenderer extends React.Component {
         disabled: {},
         version: 0,
         row_count: 10,
+        visibleTimeStart: 0,
+        visibleTimeEnd: 0,
     };
 
     fetchRows = () => {
@@ -173,10 +183,15 @@ export default class TimelineRenderer extends React.Component {
             };
         });
 
+        let start_time = this.state.start_time * 1000000;
+        if (start_time < 1000000000) {
+            start_time = 0;
+        }
+
         let params = {
             type: "TIMELINE",
             timeline: this.props.name,
-            start_time: this.state.start_time * 1000000,
+            start_time: start_time,
             rows: this.state.row_count,
             skip_components: skip_components,
             notebook_id: this.props.notebook_id,
@@ -193,15 +208,22 @@ export default class TimelineRenderer extends React.Component {
             if (response.cancel) {
                 return;
             }
-
+            let start_time = (response.data.start_time / 1000000) || 0;
             let pageData = PrepareData(response.data);
             this.setState({
-                table_start: response.data.start_time / 1000000,
-                table_end:  response.data.end_time / 1000000,
+                table_start: start_time,
+                table_end:  response.data.end_time / 1000000 || 0,
                 columns: pageData.columns,
                 rows: pageData.rows,
                 version: Date(),
             });
+
+            if (this.state.visibleTimeStart === 0) {
+                let visibleTimeStart = start_time || Date.now();
+                let visibleTimeEnd = visibleTimeStart + 60 * 60 * 10000;
+                this.setState({visibleTimeStart: visibleTimeStart,
+                               visibleTimeEnd: visibleTimeEnd});
+            }
         });
     };
 
@@ -353,6 +375,9 @@ export default class TimelineRenderer extends React.Component {
                        return false;
                    }}
                    groupRenderer={this.groupRenderer}
+                   onTimeChange={this.handleTimeChange}
+                   visibleTimeStart={this.state.visibleTimeStart}
+                   visibleTimeEnd={this.state.visibleTimeEnd}
                  >
                    <TimelineMarkers>
                      <CustomMarker

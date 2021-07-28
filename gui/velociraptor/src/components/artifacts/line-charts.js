@@ -115,7 +115,6 @@ class TimeTickRenderer extends React.Component {
     }
 }
 
-
 export default class VeloLineChart extends React.Component {
     static propTypes = {
         params: PropTypes.object,

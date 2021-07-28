@@ -132,10 +132,10 @@ export default class NotebookRenderer extends React.Component {
 
     addCell = (cell_id, cell_type, content, env) => {
         let request = {};
-        switch(cell_type) {
-        case "VQL":
-        case "Markdown":
-        case "Artifact":
+        switch(cell_type.toLowerCase()) {
+        case "vql":
+        case "markdown":
+        case "artifact":
             request = {
                 notebook_id: this.props.notebook.notebook_id,
                 type: cell_type,

@@ -54,6 +54,10 @@ func (self MonitoringPlugin) Call(
 		}
 
 		arg := &SourcePluginArgs{}
+
+		// Allow the plugin to be filled in from the environment
+		ParseSourceArgsFromScope(arg, scope)
+
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("monitoring: %v", err)
@@ -64,6 +68,13 @@ func (self MonitoringPlugin) Call(
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return
+		}
+
+		// Allow the source to be specified separately but
+		// really the full artifact name is required here.
+		if arg.Source != "" {
+			arg.Artifact = arg.Artifact + "/" + arg.Source
+			arg.Source = ""
 		}
 
 		path_manager, err := artifact_paths.NewArtifactPathManager(

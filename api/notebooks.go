@@ -92,6 +92,10 @@ func (self *ApiServer) GetNotebooks(
 		// An error here just means there are no AvailableDownloads.
 		notebook.AvailableDownloads, _ = getAvailableDownloadFiles(self.config,
 			path.Dir(notebook_path_manager.HtmlExport()))
+
+		notebook.Timelines = getAvailableTimelines(
+			self.config, notebook_path_manager)
+
 		result.Items = append(result.Items, notebook)
 
 		// Document not owned or collaborated with.
@@ -1018,6 +1022,24 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 	return nil
 }
 
+func getAvailableTimelines(
+	config_obj *config_proto.Config,
+	path_manager *reporting.NotebookPathManager) []string {
+
+	result := []string{}
+	db, err := datastore.GetDB(config_obj)
+	files, err := db.ListChildren(config_obj, path_manager.TimelineDir(),
+		0, 1000)
+	if err != nil {
+		return nil
+	}
+
+	for _, f := range files {
+		result = append(result, path.Base(f))
+	}
+	return result
+}
+
 func getAvailableDownloadFiles(config_obj *config_proto.Config,
 	download_path string) (*api_proto.AvailableDownloads, error) {
 	result := &api_proto.AvailableDownloads{}
@@ -1069,9 +1091,11 @@ func updateCellContents(
 	output := ""
 	var err error
 
+	cell_type = strings.ToLower(cell_type)
+
 	switch cell_type {
 
-	case "Markdown":
+	case "markdown", "md":
 		// A Markdown cell just feeds directly into the
 		// template.
 		output, err = tmpl.Execute(&artifacts_proto.Report{Template: input})
@@ -1079,7 +1103,7 @@ func updateCellContents(
 			return nil, err
 		}
 
-	case "VQL":
+	case "vql":
 		// A VQL cell gets converted to a set of VQL and
 		// markdown fragments.
 		cell_content, err := reporting.ConvertVQLCellToContent(input)
@@ -1116,7 +1140,7 @@ func updateCellContents(
 		}
 
 	default:
-		return nil, errors.New("Unsupported cell type")
+		return nil, errors.New("Unsupported cell type.")
 	}
 
 	encoded_data, err := json.Marshal(tmpl.Data)

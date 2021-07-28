@@ -232,15 +232,17 @@ func getTimeline(
 	}
 	defer reader.Close()
 
+	result := &api_proto.GetTableResponse{
+		Columns:   []string{"_Source", "Time", "Data"},
+		StartTime: int64(in.StartTime),
+	}
+
 	if in.StartTime != 0 {
 		ts := time.Unix(0, int64(in.StartTime))
 		reader.SeekToTime(ts)
 	}
 
 	rows := uint64(0)
-	result := &api_proto.GetTableResponse{
-		Columns: []string{"_Source", "Time", "Data"},
-	}
 	for item := range reader.Read(ctx) {
 		if result.StartTime == 0 {
 			result.StartTime = item.Time.UnixNano()

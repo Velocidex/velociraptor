@@ -1,0 +1,8 @@
+Queries:
+  - SELECT * FROM query(query='''
+       LET Foo = SELECT log(message="I Ran at the end") FROM scope()
+       LET _ <= log(message="First!")
+       LET _ <= atexit(query=Foo, env=dict(X="Me too", Y=2))
+       LET _ <= log(message="Second!")
+       ''')
+  - SELECT * FROM test_read_logs()
