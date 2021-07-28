@@ -151,9 +151,10 @@ class VeloHostInfo extends Component {
 
     updateClientInfo = () => {
         let client_id = this.props.client && this.props.client.client_id;
-
-        api.get("v1/GetClient/" + client_id).then(
+        if (client_id) {
+            api.get("v1/GetClient/" + client_id).then(
                 response=>this.props.setClient(response.data));
+        };
     }
 
     fetchMetadata = () => {

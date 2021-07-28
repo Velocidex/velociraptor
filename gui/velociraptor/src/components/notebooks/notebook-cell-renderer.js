@@ -237,13 +237,13 @@ export default class NotebookCellRenderer extends React.Component {
     };
 
     ace_type = (type) => {
-        if (type === "VQL") {
+        if (type.toLowerCase() === "vql") {
             return "vql";
         }
-        if (type === "Markdown") {
+        if (type.toLowerCase() === "markdown") {
             return "markdown";
         }
-        if (type === "Artifact") {
+        if (type.toLowerCase() === "artifact") {
             return "yaml";
         }
 
@@ -437,7 +437,7 @@ export default class NotebookCellRenderer extends React.Component {
                 <FontAwesomeIcon icon="arrow-down"/>
               </Button>
 
-              {this.state.cell && this.state.cell.type === "VQL" &&
+              {this.state.cell && this.state.cell.type === "vql" &&
                <Button title="Add Timeline"
                        onClick={()=>this.setState({showAddCellToTimeline: true})}
                        variant="default">
@@ -545,7 +545,7 @@ export default class NotebookCellRenderer extends React.Component {
                                  this.setState({cell: cell});
                              }} >
                   { _.map(cell_types, (v, idx) => {
-                      return <option value={v} key={idx}>
+                      return <option value={v.toLowerCase()} key={idx}>
                                {v}
                              </option>;
                   })}

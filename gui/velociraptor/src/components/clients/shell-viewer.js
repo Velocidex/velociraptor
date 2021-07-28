@@ -158,7 +158,7 @@ class VeloShellCell extends Component {
         let flow_status = [];
         if (this.props.flow.state  === 'RUNNING') {
             flow_status.push(
-                <button className="btn btn-outline-info"
+                <button className="btn btn-outline-info" key={6}
                         disabled>
                   <i><FontAwesomeIcon icon="spinner" spin /></i>
                   <VeloTimestamp usec={this.props.flow.create_time/1000} />
@@ -167,7 +167,7 @@ class VeloShellCell extends Component {
             );
         } else if (this.props.flow.state  === 'FINISHED') {
             flow_status.push(
-                <button className="btn btn-outline-info"
+                <button className="btn btn-outline-info" key={7}
                         disabled>
                   <VeloTimestamp usec={this.props.flow.active_time/1000} />
                   by {this.props.flow.request.creator}
@@ -176,7 +176,7 @@ class VeloShellCell extends Component {
 
         } else if (this.props.flow.state  === 'ERROR') {
             flow_status.push(
-                <button className="btn btn-outline-info"
+                <button className="btn btn-outline-info" key={8}
                         disabled>
                   <i><FontAwesomeIcon icon="exclamation"/></i>
                 <VeloTimestamp usec={this.props.flow.create_time/1000} />
@@ -186,7 +186,7 @@ class VeloShellCell extends Component {
         }
 
         flow_status.push(
-            <button className="btn btn-default" key={5}
+            <button className="btn btn-default" key={9}
                     title="Delete"
                     onClick={()=>this.setState({showDeleteWizard: true})}>
               <i><FontAwesomeIcon icon="trash"/></i>
@@ -351,7 +351,7 @@ class VeloVQLCell extends Component {
         let flow_status = [];
         if (this.props.flow.state  === 'RUNNING') {
             flow_status.push(
-                <button className="btn btn-outline-info"
+                <button className="btn btn-outline-info" key={15}
                         disabled>
                   <i><FontAwesomeIcon icon="spinner" spin /></i>
                   <VeloTimestamp usec={this.props.flow.create_time/1000} />
@@ -360,7 +360,7 @@ class VeloVQLCell extends Component {
             );
         } else if (this.props.flow.state  === 'FINISHED') {
             flow_status.push(
-                <button className="btn btn-outline-info"
+                <button className="btn btn-outline-info" key={12}
                         disabled>
                   <VeloTimestamp usec={this.props.flow.active_time/1000} />
                   by {this.props.flow.request.creator}
@@ -369,7 +369,7 @@ class VeloVQLCell extends Component {
 
         } else if (this.props.flow.state  === 'ERROR') {
             flow_status.push(
-                <button className="btn btn-outline-info"
+                <button className="btn btn-outline-info" key={13}
                         disabled>
                   <i><FontAwesomeIcon icon="exclamation"/></i>
                 <VeloTimestamp usec={this.props.flow.create_time/1000} />
@@ -530,13 +530,13 @@ class ShellViewer extends Component {
         }
 
         var artifact = "";
-        if (this.state.shell_type === "Powershell") {
+        if (this.state.shell_type.toLowerCase() === "powershell") {
             artifact = "Windows.System.PowerShell";
-        } else if(this.state.shell_type === "Cmd") {
+        } else if(this.state.shell_type.toLowerCase() === "cmd") {
             artifact = "Windows.System.CmdShell";
-        } else if(this.state.shell_type === "Bash") {
+        } else if(this.state.shell_type.toLowerCase() === "bash") {
             artifact = "Linux.Sys.BashShell";
-        } else if(this.state.shell_type === "VQL") {
+        } else if(this.state.shell_type.toLowerCase() === "vql") {
             artifact = "Generic.Client.VQL";
         } else {
             return;
@@ -616,8 +616,8 @@ class ShellViewer extends Component {
                   { simple_textarea ?
                     <textarea focus-me="controller.focus" rows="1"
                               className="form-control"
+                              value={this.state.command}
                               onChange={(e) => this.setText(e)}>
-                      {this.state.command}
                     </textarea> :
                     <VeloAce
                       mode="VQL"

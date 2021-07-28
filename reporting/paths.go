@@ -54,9 +54,13 @@ func (self *NotebookPathManager) ZipExport() string {
 			time.Now().Format("20060102150405Z")))
 }
 
+func (self *NotebookPathManager) TimelineDir() string {
+	return path.Join(self.Directory(), "timelines")
+}
+
 func (self *NotebookPathManager) Timeline(name string) *timelines.SuperTimelinePathManager {
 	return &timelines.SuperTimelinePathManager{
-		Root: self.Directory(),
+		Root: self.TimelineDir(),
 		Name: name,
 	}
 }

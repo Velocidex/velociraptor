@@ -1,3 +1,5 @@
+import "./timelines.css";
+
 import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
@@ -48,7 +50,7 @@ export class AddTimelineDialog extends React.Component {
                 <Modal.Title>Add Timeline</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <Select
+                <CreatableSelect
                   options={options}
                   onChange={(e)=>{
                       this.setState({timeline: e.value});
@@ -107,16 +109,18 @@ export class AddVQLCellToTimeline extends React.Component {
             replace: (domNode) => {
                 if (domNode.name === "grr-csv-viewer") {
                     try {
-                        tags.push(JSON.parse(domNode.attribs.params));
+                        tags.push(JSON.parse(decodeURIComponent(domNode.attribs.params)));
                     } catch(e) { }
                 };
                 return domNode;
             }
         });
-        if (!tags) {
+        if (_.isEmpty(tags)) {
             return;
         }
 
+        // Just get the first row from the first table. We look at all
+        // the values to figure out which ones look like timestamps.
         let params = tags[0];
         params.rows = 1;
         api.get("v1/GetTable", params, this.source.token).then((response) => {
@@ -133,7 +137,6 @@ export class AddVQLCellToTimeline extends React.Component {
                 }
                 _.each(response.data.rows[0].cell, (x, idx)=>{
                     if (/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(x)){
-                        console.log(x);
                         columns.push(response.data.columns[idx]);
                     };
                 });
@@ -221,7 +224,7 @@ export class AddVQLCellToTimeline extends React.Component {
                       classNamePrefix="velo"
                       options={options}
                       onChange={(e)=>this.setState({timeline: e && e.value})}
-                      placeholder="Timeline name"
+                      placeholder="Super-timeline name"
                     />
                   </Col>
                 </Form.Group>
@@ -231,6 +234,7 @@ export class AddVQLCellToTimeline extends React.Component {
                   <Col sm="8">
                     <Form.Control as="textarea"
                                   rows={1}
+                                  placeholder="Child timeline name"
                                   value={this.state.name}
                                   onChange={(e) => this.setState(
                                       {name: e.currentTarget.value})} />
@@ -240,6 +244,8 @@ export class AddVQLCellToTimeline extends React.Component {
                   <Form.Label column sm="3">Time column</Form.Label>
                   <Col sm="8">
                     <Select
+                      className="time-column"
+                      classNamePrefix="velo"
                       options={column_options}
                       onChange={(e)=>this.setState({time_column: e && e.value})}
                       placeholder="Time Column"

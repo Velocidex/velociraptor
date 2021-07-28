@@ -66,3 +66,65 @@ sources:
       SELECT ChoiceSelector, Flag, Flag2, Flag3, OffFlag, StartDate, StartDate2, StartDate3,
              CSVData, CSVData2, JSONData, JSONData2
       FROM scope()
+
+    notebook:
+      - type: md
+        template: |
+          # GUI Notebook tests
+
+          The following cells are testing the notebook in the flow. To
+          run this test simply collect the `Demo.Plugins.GUI` artifact
+          and check the output is correct.
+
+          **Each of the below cells should have a H2 heading**
+
+      - type: md
+        template: |
+          ## Code syntax highlighting for VQL
+
+          ```vql
+          SELECT * FROM info()
+          ```
+
+      - type: vql
+        template: |
+          /*
+          ## A VQL cell with a heading.
+          */
+          SELECT * FROM info()
+
+      - type: Markdown
+        template: |
+          ## A Line Chart
+
+          The following should show a CPU load chart of the last 10 min.
+
+          {{ define "Q" }}
+            SELECT _ts, CPUPercent
+            FROM source(
+                  source="Prometheus",
+                  artifact="Server.Monitor.Health",
+                  start_time=now() - 10 * 60)
+            LIMIT 100
+          {{ end }}
+
+          {{ Query "Q" | LineChart "xaxis_mode" "time" }}
+
+      - type: vql
+        template: |
+          /*
+          ## Adding timelines
+
+          Add a timeline from this time series data
+          */
+          SELECT timestamp(epoch=_ts) AS Timestamp, CPUPercent
+          FROM source(
+            source="Prometheus",
+            artifact="Server.Monitor.Health",
+            start_time=now() - 10 * 60)
+
+      - type: Markdown
+        template: |
+          ## This is an empty timeline - add the below column to it.
+
+          {{ Timeline "Test" }}

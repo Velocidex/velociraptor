@@ -124,7 +124,13 @@ func NewSuperTimelineReader(
 	result := &SuperTimelineReader{SuperTimeline: &timelines_proto.SuperTimeline{}}
 	err = db.GetSubject(config_obj, path_manager.Path(), result.SuperTimeline)
 	if err != nil {
-		return nil, err
+		// SuperTimeline does not exist yet, just make an
+		// empty one.
+		result.SuperTimeline.Name = path_manager.Name
+		err = db.SetSubject(config_obj, path_manager.Path(), result)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Open all the readers.

@@ -35,7 +35,7 @@ type SuperTimelinePathManager struct {
 }
 
 func (self *SuperTimelinePathManager) Path() string {
-	return path.Join("/", self.Root, "timelines", self.Name+".json")
+	return path.Join("/", self.Root, self.Name+".json")
 }
 
 // Add a child timeline to the super timeline.

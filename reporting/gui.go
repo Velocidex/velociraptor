@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"net/url"
 	"regexp"
 	"strings"
 	"sync"
@@ -175,7 +176,8 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 		for _, item := range t {
 			result += fmt.Sprintf(
 				`<div class="panel"><grr-csv-viewer base-url="'v1/GetTable'" `+
-					`params='%s' /></div>`, item.Params())
+					`params='%s' /></div>`, url.QueryEscape(
+					item.Params().String()))
 		}
 		return result
 
@@ -197,7 +199,8 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 			Columns:  self.Scope.GetMembers(t[0]),
 		}
 		return fmt.Sprintf(
-			`<div class="panel"><inline-table-viewer value="%s" /></div>`, key)
+			`<div class="panel"><inline-table-viewer value="%s" /></div>`,
+			url.QueryEscape(key))
 	}
 }
 
@@ -217,9 +220,13 @@ func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
 	case []*NotebookCellQuery:
 		result := ""
 		for _, item := range t {
+			params := item.Params()
+			params.MergeFrom(options)
+
 			result += fmt.Sprintf(
-				`<div class="panel"><grr-line-chart base-url="'v1/GetTable'" `+
-					`params='%s' /></div>`, item.Params())
+				`<div class="panel"><notebook-line-chart base-url="'v1/GetTable'" `+
+					`params='%s' /></div>`,
+				url.QueryEscape(params.String()))
 		}
 		return result
 
@@ -246,7 +253,7 @@ func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
 		}
 		return fmt.Sprintf(
 			`<grr-line-chart value="data['%s']" params='%s' />`,
-			key, string(parameters))
+			key, url.QueryEscape(string(parameters)))
 	}
 }
 
@@ -272,14 +279,16 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 
 		return fmt.Sprintf(
 			`<div class="panel"><grr-timeline name='%s' `+
-				`params='%s' /></div>`, t, parameters)
+				`params='%s' /></div>`, url.QueryEscape(t),
+			url.QueryEscape(parameters))
 
 	case []*NotebookCellQuery:
 		result := ""
 		for _, item := range t {
 			result += fmt.Sprintf(
 				`<div class="panel"><grr-timeline base-url="'v1/GetTable'" `+
-					`params='%s' /></div>`, item.Params())
+					`params='%s' /></div>`,
+				url.QueryEscape(item.Params().String()))
 		}
 		return result
 
@@ -305,7 +314,7 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 		}
 		return fmt.Sprintf(
 			`<grr-timeline value="data['%s']" params='%s' />`,
-			key, string(parameters))
+			key, url.QueryEscape(string(parameters)))
 	}
 }
 
@@ -362,7 +371,9 @@ func (self *GuiTemplateEngine) Execute(report *artifacts_proto.Report) (string, 
 	*/
 
 	// Sanitize the HTML.
-	return bm_policy.Sanitize(output_string), nil
+	result := bm_policy.Sanitize(output_string)
+	utils.Debug(result)
+	return result, nil
 }
 
 func (self *GuiTemplateEngine) getMultiLineQuery(query string) (string, error) {
@@ -599,6 +610,7 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p.AllowAttrs("value", "params").OnElements("grr-csv-viewer")
 	p.AllowAttrs("value", "params").OnElements("inline-table-viewer")
 	p.AllowAttrs("value", "params").OnElements("grr-line-chart")
+	p.AllowAttrs("params").OnElements("notebook-line-chart")
 	p.AllowAttrs("name", "params").OnElements("grr-timeline")
 	p.AllowAttrs("name").OnElements("grr-tool-viewer")
 

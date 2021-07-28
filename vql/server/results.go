@@ -212,6 +212,7 @@ func (self SourcePlugin) Call(
 	if arg.Artifact != "" {
 		ok, _ := isArtifactEvent(config_obj, arg)
 		if ok {
+			// Just delegate directly to the monitoring plugin.
 			return MonitoringPlugin{}.Call(ctx, scope, args)
 		}
 	}
@@ -414,7 +415,6 @@ func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope vfilter.Scope) {
 	if pres {
 		arg.HuntId, _ = hunt_id.(string)
 	}
-
 }
 
 type FlowResultsPluginArgs struct {

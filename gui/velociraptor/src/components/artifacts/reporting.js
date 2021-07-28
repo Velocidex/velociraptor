@@ -128,7 +128,8 @@ export default class VeloReportViewer extends React.Component {
                 if (domNode.name === "inline-table-viewer") {
                     try {
                         let data = this.state.data;
-                        let response = data[domNode.attribs.value || "unknown"] || {};
+                        let value = decodeURIComponent(domNode.attribs.value || "");
+                        let response = data[value] || {};
                         let rows = JSON.parse(response.Response);
                         return (
                             <VeloTable
@@ -144,7 +145,8 @@ export default class VeloReportViewer extends React.Component {
                 if (domNode.name === "grr-csv-viewer") {
                     // Figure out where the data is: attribs.value is something like data['table2']
                     let re = /'([^']+)'/;
-                    let match = re.exec(domNode.attribs.value);
+                    let value = decodeURIComponent(domNode.attribs.value || "");
+                    let match = re.exec(value);
                     let data = this.state.data[match[1]];
                     let rows = JSON.parse(data.Response);
 
@@ -154,14 +156,16 @@ export default class VeloReportViewer extends React.Component {
                 };
 
                 if (domNode.name === "grr-tool-viewer") {
+                    let name = decodeURIComponent(domNode.attribs.name ||"");
                     return (
-                        <ToolViewer name={domNode.attribs.name}/>
+                        <ToolViewer name={name}/>
                     );
                 };
 
                 if (domNode.name === "grr-timeline") {
+                    let name = decodeURIComponent(domNode.attribs.name ||"");
                     return (
-                        <Timeline name={domNode.attribs.name}/>
+                        <Timeline name={name}/>
                     );
                 };
 
@@ -169,16 +173,21 @@ export default class VeloReportViewer extends React.Component {
                     // Figure out where the data is: attribs.value is
                     // something like data['table2']
                     let re = /'([^']+)'/;
-                    let match = re.exec(domNode.attribs.value);
+                    let value = decodeURIComponent(domNode.attribs.value || "");
+                    let match = re.exec(value);
                     let data = this.state.data[match[1]];
-                    let rows = JSON.parse(data.Response);
-                    let params = JSON.parse(domNode.attribs.params);
+                    try {
+                        let rows = JSON.parse(data.Response);
+                        let params = JSON.parse(decodeURIComponent(domNode.attribs.params));
+                        return (
+                            <VeloLineChart data={rows}
+                                           columns={data.Columns}
+                                           params={params} />
+                        );
 
-                    return (
-                        <VeloLineChart data={rows}
-                                       columns={data.Columns}
-                                       params={params} />
-                    );
+                    } catch (e) {
+                        return domNode;
+                    }
                 };
 
                 return domNode;

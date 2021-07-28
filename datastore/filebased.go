@@ -315,6 +315,7 @@ func (self *FileBaseDataStore) ListChildren(
 
 		name := UnsanitizeComponent(children[i].Name())
 		name = strings.TrimSuffix(name, ".db")
+		name = strings.TrimSuffix(name, ".json")
 		result = append(result, utils.PathJoin(urn, name, "/"))
 	}
 
