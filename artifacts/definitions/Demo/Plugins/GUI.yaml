@@ -78,6 +78,15 @@ sources:
 
           **Each of the below cells should have a H2 heading**
 
+          ## Check that notebok environment variables are populated
+          {{ $x := Query "SELECT * FROM items(\
+             item=dict(NotebookId=NotebookId, ClientId=ClientId,\
+                       FlowId=FlowId, ArtifactName=ArtifactName))" | Expand }}
+
+          {{ range $x }}
+          * {{ Get . "_key" }} - {{ Get . "_value" }}
+          {{- end -}}
+
       - type: md
         template: |
           ## Code syntax highlighting for VQL
@@ -123,8 +132,22 @@ sources:
             artifact="Server.Monitor.Health",
             start_time=now() - 10 * 60)
 
+          LET T1 = SELECT
+               timestamp(epoch=_ts) AS Timestamp,
+               dict(X=CPUPercent, Y=1) AS Dict
+          FROM source(
+            source="Prometheus",
+            artifact="Server.Monitor.Health",
+            start_time=now() - 10 * 60)
+
+          -- Add the time series into the timeline.
+          SELECT timeline_add(
+              key="Timestamp", name="Time 'line' &\" ",
+              query=T1, timeline="Test \"Timeline\"")
+          FROM scope()
+
       - type: Markdown
         template: |
-          ## This is an empty timeline - add the below column to it.
+          ## This super timeline should have one timeline.
 
-          {{ Timeline "Test" }}
+          {{ Timeline "Test \"Timeline\"" }}

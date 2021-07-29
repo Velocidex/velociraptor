@@ -88,7 +88,7 @@ export default class FlowNotebook extends React.Component {
                 env: [
                     {key: "FlowId", value: flow_id},
                     {key: "ClientId", value: client_id},
-                    {key: "NotebookId", notebook_id},
+                    {key: "NotebookId", value: notebook_id},
                 ],
             };
 

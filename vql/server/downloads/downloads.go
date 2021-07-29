@@ -247,8 +247,10 @@ func createDownloadFile(
 		defer cancel()
 
 		err := downloadFlowToZip(ctx, config_obj, client_id, hostname, flow_id, zip_writer)
-		logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-		logger.Error("downloadFlowToZip: %v", err)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+			logger.Error("downloadFlowToZip: %v", err)
+		}
 	}()
 
 	if wait {
