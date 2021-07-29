@@ -27,7 +27,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -37,6 +36,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -253,9 +253,8 @@ func (self HuntResultsPlugin) Call(
 				continue
 			}
 
-			api_client, err := api.GetApiClient(ctx,
-				config_obj, nil,
-				participation_row.ClientId,
+			api_client, err := search.GetApiClient(ctx,
+				config_obj, participation_row.ClientId,
 				false /* detailed */)
 			if err != nil {
 				scope.Log("hunt_results: %v", err)

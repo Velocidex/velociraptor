@@ -430,7 +430,14 @@ class VeloClientList extends Component {
 
     render() {
         let columns = getClientColumns();
-        let total_size = this.state.clients.length + this.state.page_size + this.state.start_row;
+        let total_size = this.state.clients.length +
+            this.state.start_row;
+
+        if (total_size === this.state.page_size) {
+            total_size++;
+        }
+        console.log(this.state);
+
 
         columns[0].headerFormatter = (column, colIndex, { sortElement, filterElement }) => {
             return (

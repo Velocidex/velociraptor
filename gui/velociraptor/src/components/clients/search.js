@@ -9,10 +9,13 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import FormGroup from 'react-bootstrap/FormGroup';
 import { withRouter }  from "react-router-dom";
 import Autosuggest from 'react-autosuggest';
+import Dropdown from 'react-bootstrap/Dropdown';
+import UserConfig from '../core/user.js';
 
 import api from '../core/api-service.js';
 
 class VeloClientSearch extends Component {
+    static contextType = UserConfig;
     static propTypes = {
         // Update the applications's search parameter.
         setSearch: PropTypes.func.isRequired,
@@ -50,8 +53,10 @@ class VeloClientSearch extends Component {
 
         }).then(resp => {
             if (resp.data && resp.data.names) {
+                let options = resp.data.names;
+                options.push("recent:" + this.context.traits.username);
                 this.setState({
-                    options: resp.data.names,
+                    options: options,
                 });
             }
             return true;
@@ -84,12 +89,27 @@ class VeloClientSearch extends Component {
                           variant="default" type="submit">
                     <FontAwesomeIcon icon="search"/>
                   </Button>
-                  <Button id="show-hosts-btn"
-                          onClick={(e) => this.setQuery("all")}
-                          variant="default" type="button">
-                    <FontAwesomeIcon icon="server"/>
-                    <span className="button-label">Show All</span>
-                  </Button>
+                  <Dropdown>
+                    <Dropdown.Toggle variant="default">
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      <Dropdown.Item
+                        id="show-hosts-btn"
+                        onClick={(e) => this.setQuery("all")}
+                        variant="default" type="button">
+                        <FontAwesomeIcon icon="server"/>
+                        <span className="button-label">Show All</span>
+                      </Dropdown.Item>
+                      <Dropdown.Item
+                        title="Recent"
+                        onClick={(e) => this.setQuery(
+                            "recent:" + this.context.traits.username)}
+                        variant="default" type="button">
+                        <FontAwesomeIcon icon="bookmark"/>
+                        <span className="button-label">Recent Hosts</span>
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
                 </ButtonGroup>
               </FormGroup>
         );

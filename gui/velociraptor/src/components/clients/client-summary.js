@@ -33,10 +33,18 @@ export default class VeloClientSummary extends Component {
         this.source.cancel();
         this.source = axios.CancelToken.source();
 
+        let params = {update_mru: true};
         let client_id = this.props.client && this.props.client.client_id;
         if (client_id) {
-            api.get("v1/GetClient/" + client_id).then(
-                response=>this.props.setClient(response.data));
+            api.get("v1/GetClient/" + client_id, params).then(
+                response=>{
+                    this.props.setClient(response.data);
+                }).catch(err=>{
+                    // The client is not valid - navigate away from
+                    // it.
+                    this.props.setClient({});
+                    return false;
+                });
         }
     }
 

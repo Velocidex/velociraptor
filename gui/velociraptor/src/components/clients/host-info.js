@@ -150,10 +150,13 @@ class VeloHostInfo extends Component {
     }
 
     updateClientInfo = () => {
+        let params = {update_mru: true};
         let client_id = this.props.client && this.props.client.client_id;
         if (client_id) {
-            api.get("v1/GetClient/" + client_id).then(
-                response=>this.props.setClient(response.data));
+            api.get("v1/GetClient/" + client_id, params).then(
+                response=>{
+                    return this.props.setClient(response.data);
+                }, this.source);
         };
     }
 
