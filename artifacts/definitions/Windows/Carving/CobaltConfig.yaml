@@ -1,8 +1,8 @@
-name: Custom.ReverseEngineering.CobaltConfig
+name: Windows.Carving.CobaltConfig
 author: Matt Green - @mgreen27
 description: |
   This artifact extracts cobalt config
-  
+
 type: CLIENT
 parameters:
   - name: TargetFile
@@ -12,18 +12,19 @@ parameters:
   - name: ProcessRegex
     default: .
   - name: ExtractBytes
-    default: 15000
+    type: int
+    default: 10000
   - name: FindConfig
     default: |
         rule find_cobalt_strike_config {
         strings:
              $69 = { 69 68 69 68 69 6b ?? ?? 69 6b 69 68 69 6b ?? ?? 69 6a }
              $2e = { 2e 2f 2e 2f 2e 2c ?? ?? 2e 2c 2e 2f 2e 2c ?? ?? 2e }
-        
+
         condition:
               any of them
         }
-        
+
 export: |
   LET Profile = '''[
     [CobaltConfig, 0, [
@@ -38,77 +39,75 @@ export: |
                  "16": "windows-beacon_tcp-bind_tcp"
             }
         }],
-        
+
         # 0x0002:Port, 0x0001:Type, 0x0002:Length
-        ["__port_prefix", "x=>x.BeaconType + 8", "String",{"term_exp": "x=> unhex(string='0x000200010002')"}],
+        ["__port_prefix", 0, "String",{
+            "term_hex": "000200010002"
+        }],
         ["Port", "x=>len(list=x.__port_prefix) + 6", "uint16b"],
-        
+
         # 0x0003:Sleeptime,0x0002:Type, 0x0004:Length
-        ["__sleeptime_prefix","x=>x.BeaconType + 8", "String",{"term_exp": "x=> unhex(string='0x000300020004')"}],
+        ["__sleeptime_prefix", 0, "String", {"term_hex": "000300020004"}],
         ["Sleeptime", "x=>len(list=x.__sleeptime_prefix) + 6", "uint32b"],
-        
+
         # 0x0004:Maxgetsize,0x0002:Type, 0x0004:Length
-        ["__maxgetsize_prefix","x=>x.BeaconType + 8", "String",{"term_exp": "x=> unhex(string='0x000400020004')"}],
+        ["__maxgetsize_prefix", 0, "String",{"term_hex": "000400020004"}],
         ["Maxgetsize", "x=>len(list=x.__maxgetsize_prefix) + 6", "uint32b"],
-        
+
         # 0x0005:Jitter, 0x0001:Type, 0x0002:Length
-        ["__jitter_prefix", "x=>x.BeaconType + 8", "String",{"term_exp": "x=> unhex(string='0x000500010002')"}],
+        ["__jitter_prefix", 0, "String",{"term_hex": "000500010002"}],
         ["Jitter", "x=>len(list=x.__jitter_prefix) + 6", "uint16b"],
-        
+
         # 0x0006:MaxDns, 0x0001:Type, 0x0002:Length
-        ["__maxdns_prefix", "x=>x.BeaconType + 8", "String",{"term_exp": "x=> unhex(string='0x000600010002')"}],
+        ["__maxdns_prefix", 0, "String",{"term_hex": "000600010002"}],
         ["MaxDns", "x=>len(list=x.__maxdns_prefix) + 6", "uint16b"],
-        
+
         # 0x0007:Publickey,0x0003:Type,
-        ["__publickey_prefix", 0, "String",{"term_exp": "x=> unhex(string='0x000700030100')"}],
+        ["__publickey_prefix", 0, "String",{"term_hex": "000700030100"}],
         ["__publickey_raw", "x=>len(list=x.__publickey_prefix) + 6", "String",{"term_hex":"00000008"}],
         ["PublicKey", "x=>len(list=x.__publickey_prefix) + 6", "Value",{"value":"x=>encode(string=x.__publickey_raw,type='hex')"}],
-        
+
         # 0x0008:server/get-uri,0x0003:Type,
-        ["__c2server_prefix", "x=>x.BeaconType + 8", "String",{"term_exp": "x=> unhex(string='0x00080003')"}],
+        ["__c2server_prefix", 0, "String",{"term_hex": "00080003"}],
         ["c2_server", "x=>len(list=x.__c2server_prefix) + 6", "String"],
-        
+
         # 0x0009:useragent,0x0003:Type,
-        ["__useragent_prefix", "x=>x.BeaconType + 8", "String",{"term_exp": "x=> unhex(string='0x00090003')"}],
+        ["__useragent_prefix", 0, "String",{"term_hex": "00090003"}],
         ["UserAgent", "x=>len(list=x.__useragent_prefix) + 6", "String"],
-        
+
         # 0x000a:PostUri,0x0003:Type,
-        ["__PostUri_prefix", "x=>x.BeaconType + 8", "String",{"term_exp": "x=> unhex(string='0x000a0003')"}],
-        #["PostUri_prefix", "x=>x.BeaconType + 8", "String",{"term_exp": "x=> unhex(string='0x000a0003')"}],
-        ["PostURI", "x=>len(list=x.__PostUri_prefix) + 6", "String",{"term_hex":"0000"}],
+        ["__PostUri_prefix", 0, "String", {"term_hex": "000a0003", length: 10000, max_length: 10000}],
+        ["PostURI", "x=>len(list=x.__PostUri_prefix) + 6", "String"],
+        #["PostURI", 0, "String", {length=10, term="XXXX"}],
 
         # 0x000b:Malleable_C2_Instructions,0x0003:Type,
-        ["__Malleable_C2_Instructions_prefix", "x=>x.BeaconType + 8", "String",{"term_exp": "x=> unhex(string='0x000b0003')"}],
+        ["__Malleable_C2_Instructions_prefix", 0, "String",{"term_hex": "000b0003", length: 10000, max_length: 10000}],
         ["Malleable_C2_Instructions", "x=>len(list=x.__Malleable_C2_Instructions_prefix) + 6", "String"],
 
         # 0x000c:HttpGetHeader,0x0003:Type,
-        ["__http_get_header_prefix", "x=>x.BeaconType + 8", "String",{"term_exp": "x=> unhex(string='0x000c0003')"}],
+        ["__http_get_header_prefix", 0, "String",{"term_hex": "000c0003", length: 10000, max_length: 10000}],
         ["HttpGetHeader", "x=>len(list=x.__http_get_header_prefix) + 6", "String",{"term_hex":"0000"}],
-        
+
         # 0x000d:HttpPostHeader,0x0003:Type,
-        ["__http_post_header_prefix", "x=>x.BeaconType + 8", "String",{"term_exp": "x=>unhex(string='0x000d0003')"}],
+        ["__http_post_header_prefix", 0, "String",{"term_hex": "000d0003", length: 10000, max_length: 10000}],
         ["HttpPostHeader", "x=>len(list=x.__http_post_header_prefix) + 6", "String",{"term_hex":"0000"}],
-        
+
         # 0x000e:SpawnTo,0x0003:Type
-        ["__SpawnTo_header_prefix", 0, "String",{"term_exp": "x=>unhex(string='0x000d0003')"}],
+        ["__SpawnTo_header_prefix", 0, "String",{"term_hex": "000d0003", length: 10000, max_length: 10000}],
         ["SpawnTo", "x=>len(list=x.__SpawnTo_header_prefix) + 6", "String",{"term_hex":"0000"}],
-        
+
         # 0x000f:PipeName,0x0003:Type
-        ["__pipename_prefix", 0, "String",{"term_exp": "x=>unhex(string='0x001f0003')"}],
+        ["__pipename_prefix", 0, "String",{"term_hex": "000f0003", length: 10000, max_length: 10000}],
         ["Pipename", "x=>len(list=x.__pipename_prefix) + 6", "String",{"term_hex":"0000"}],
-        
+
         # 0x001d:spawn_to_x86,0x0003:Type
-        ["__spawnx86_prefix", 0, "String",{"term_exp": "x=>unhex(string='0x001d0003')"}],
+        ["__spawnx86_prefix", 0, "String",{"term_hex": "001d0003", length: 10000, max_length: 10000}],
         ["SpawnTox86", "x=>len(list=x.__spawnx86_prefix) + 6", "String",{"term_hex":"0000"}],
-        
+
         # 0x001e:spawn_to_x64,0x0003:Type
-        ["__spawnx64_prefix", 0, "String",{"term_exp": "x=>unhex(string='0x001e')"}],
+        ["__spawnx64_prefix", 0, "String",{"term_hex": "001e", length: 10000, max_length: 10000}],
         ["SpawnTox64", "x=>len(list=x.__spawnx64_prefix) + 6", "String",{"term_hex":"0000"}],
     ]]]'''
-
-
-
-
 
 sources:
   - query: |
@@ -118,18 +117,17 @@ sources:
                 String.Offset as Offset,
                 substr(start=0,end=1,str=String.Data) as Xor,
                 read_file(filename=TargetFile,
-                        offset=String.Offset,
-                        length=int(int=ExtractBytes)
-                    ) as Data
-             FROM yara(files=TargetFile, rules=FindConfig, number=99) 
-      
+                          offset=String.Offset,
+                          length=ExtractBytes) as Data
+             FROM yara(files=TargetFile, rules=FindConfig, number=99)
+
       -- find velociraptor process
       LET me = SELECT Pid FROM pslist(pid=getpid())
-      
+
       -- find all processes and add filters
       LET processes = SELECT Name as ProcessName, CommandLine, Pid
         FROM pslist()
-        WHERE 
+        WHERE
             Name =~ ProcessRegex
             AND format(format="%d", args=Pid) =~ PidRegex
             AND NOT Pid in me.Pid
@@ -146,17 +144,17 @@ sources:
                         offset=String.Offset,
                         length=int(int=ExtractBytes)
                     ) as Data
-             FROM yara(files=Pid, accessor='process', 
+             FROM yara(files=Pid, accessor='process',
                 rules=FindConfig, number=99)
           })
-          
+
       -- output rows
       SELECT Source,Offset, Xor,
         parse_binary(accessor="data",
             filename=xor(string=Data,key=Xor),
             profile=Profile,
             struct="CobaltConfig") AS DecodedConfig,
-        xor(string=Data,key=Xor) as DecodedData
+            format(format="% x", args=xor(string=Data,key=Xor)) as DecodedData
       FROM if(condition=TargetFile,
         then= file_hits,
         else= process_hits)

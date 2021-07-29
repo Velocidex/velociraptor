@@ -1,0 +1,3 @@
+Queries:
+  - SELECT * FROM Artifact.Windows.Carving.CobaltConfig(
+      TargetFile=srcDir + "/artifacts/testdata/files/CSDump.bin")
