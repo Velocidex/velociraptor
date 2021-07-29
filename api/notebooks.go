@@ -1035,7 +1035,7 @@ func getAvailableTimelines(
 	}
 
 	for _, f := range files {
-		result = append(result, path.Base(f))
+		result = append(result, utils.Base(f))
 	}
 	return result
 }

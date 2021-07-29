@@ -38,8 +38,12 @@
 }
 
 .super-timeline .velo-table {
-    max-height: 50vh;
+    height: 50vh;
     overflow-y: auto;
+}
+
+.super-timeline .velo-table.no-content {
+    padding-top: 10vh;
 }
 
 td.timeline-time {

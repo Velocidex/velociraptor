@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"html"
 	"log"
-	"net/url"
 	"regexp"
 	"strings"
 	"sync"
@@ -176,7 +175,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 		for _, item := range t {
 			result += fmt.Sprintf(
 				`<div class="panel"><grr-csv-viewer base-url="'v1/GetTable'" `+
-					`params='%s' /></div>`, url.QueryEscape(
+					`params='%s' /></div>`, utils.QueryEscape(
 					item.Params().String()))
 		}
 		return result
@@ -200,7 +199,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 		}
 		return fmt.Sprintf(
 			`<div class="panel"><inline-table-viewer value="%s" /></div>`,
-			url.QueryEscape(key))
+			utils.QueryEscape(key))
 	}
 }
 
@@ -226,7 +225,7 @@ func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
 			result += fmt.Sprintf(
 				`<div class="panel"><notebook-line-chart base-url="'v1/GetTable'" `+
 					`params='%s' /></div>`,
-				url.QueryEscape(params.String()))
+				utils.QueryEscape(params.String()))
 		}
 		return result
 
@@ -253,7 +252,7 @@ func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
 		}
 		return fmt.Sprintf(
 			`<grr-line-chart value="data['%s']" params='%s' />`,
-			key, url.QueryEscape(string(parameters)))
+			key, utils.QueryEscape(string(parameters)))
 	}
 }
 
@@ -279,8 +278,8 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 
 		return fmt.Sprintf(
 			`<div class="panel"><grr-timeline name='%s' `+
-				`params='%s' /></div>`, url.QueryEscape(t),
-			url.QueryEscape(parameters))
+				`params='%s' /></div>`, utils.QueryEscape(t),
+			utils.QueryEscape(parameters))
 
 	case []*NotebookCellQuery:
 		result := ""
@@ -288,7 +287,7 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 			result += fmt.Sprintf(
 				`<div class="panel"><grr-timeline base-url="'v1/GetTable'" `+
 					`params='%s' /></div>`,
-				url.QueryEscape(item.Params().String()))
+				utils.QueryEscape(item.Params().String()))
 		}
 		return result
 
@@ -314,7 +313,7 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 		}
 		return fmt.Sprintf(
 			`<grr-timeline value="data['%s']" params='%s' />`,
-			key, url.QueryEscape(string(parameters)))
+			key, utils.QueryEscape(string(parameters)))
 	}
 }
 

@@ -52,7 +52,10 @@ class TimelineValueRenderer extends Component {
                     <FontAwesomeIcon icon="plus"/>
                   </Button>
                   { _.map(this.props.value, (v, k) => {
-                      return <span key={k} className="timeline-value-item">{k}: {v}</span>;
+                      let value = JSON.stringify(v);
+                      return <span key={k} className="timeline-value-item">
+                               {k}: {value}
+                             </span>;
                   })}
                 </span>
               }
@@ -78,8 +81,8 @@ class TimelineTableRenderer  extends Component {
     }
 
     render() {
-        if (!this.props.rows) {
-            return <div></div>;
+        if (_.isEmpty(this.props.rows)) {
+            return <div className="no-content velo-table">No events</div>;
         }
 
         let rows = this.props.rows;
@@ -90,7 +93,7 @@ class TimelineTableRenderer  extends Component {
              classes: "timeline-time",
              formatter: (cell, row, rowIndex) => {
                  return <div className={this.getTimelineClass(row._Source)}>
-                          <VeloTimestamp usec={cell / 1000000}/>
+                          <VeloTimestamp usec={cell}/>
                         </div>;
              }},
             {dataField: 'Data',

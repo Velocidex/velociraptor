@@ -62,6 +62,9 @@ reports:
             </span>
       </span>
 
+      ## Disk Space
+
+      {{ Query "SELECT * FROM Artifact.Generic.Client.DiskSpace()" | Table }}
 
       ## Users
 
