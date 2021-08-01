@@ -1,0 +1,34 @@
+package utils
+
+import (
+	"testing"
+
+	"github.com/Velocidex/ordereddict"
+	"github.com/sebdah/goldie"
+	"github.com/stretchr/testify/assert"
+	"www.velocidex.com/golang/velociraptor/json"
+)
+
+// Sanitized strings should be prefectly reversible.
+func TestSanitize(t *testing.T) {
+	golden := ordereddict.NewDict()
+	for _, name := range []string{
+		"Simple string",
+		"你好",
+		"Word \"With\" quotes",
+		"../../../",
+		"foo.db",
+		"bar.json.db",
+		// Binary string with invalid utf8 sequence
+		"\x00\x01\xf0\xf2\xff\xc3\x28",
+	} {
+		sanitized := SanitizeString(name)
+		unsanitized := UnsanitizeComponent(sanitized)
+
+		// fmt.Printf("Name %v (% x) -> %v -> (% x)\n", name, []byte(name), sanitized, []byte(unsanitized))
+		assert.Equal(t, unsanitized, name)
+
+		golden.Set(name, sanitized)
+	}
+	goldie.Assert(t, "TestSanitize", json.MustMarshalIndent(golden))
+}

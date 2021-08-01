@@ -5,7 +5,7 @@ package search
 import (
 	"context"
 	"errors"
-	"path"
+	"sort"
 	"strings"
 	"time"
 
@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func splitIntoOperatorAndTerms(term string) (string, string) {
@@ -41,16 +42,24 @@ func searchRecents(
 	now := uint64(time.Now().UnixNano() / 1000)
 	result := &api_proto.SearchClientsResponse{}
 
-	children, err := db.ListChildren(
-		config_obj, path_manager.MRU()+"/mru", 0, 1000)
+	children, err := db.ListChildrenJSON(
+		config_obj, path_manager.MRUIndex())
 	if err != nil {
 		return nil, err
 	}
 
+	utils.Debug(children)
+
+	// Sort the children in MRU order
+	sort.Slice(children, func(i, j int) bool {
+		return children[i].Modified.UnixNano() <
+			children[j].Modified.UnixNano()
+	})
+
 	// Sort the children in reverse order - most recent first.
 	total_count := 0
 	for i := len(children) - 1; i >= 0; i-- {
-		client_id := path.Base(children[i])
+		client_id := children[i].Name
 		api_client, err := GetApiClient(
 			ctx, config_obj, client_id, false /* detailed */)
 		if err != nil {

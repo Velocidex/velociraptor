@@ -1,82 +1,66 @@
 package paths
 
 import (
-	"context"
 	"fmt"
-	"path"
-	"time"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ClientPathManager struct {
-	path      string
+	root      api.SafeDatastorePath
 	client_id string
 }
 
-func (self ClientPathManager) Path() string {
-	return self.path
-}
-
-func (self ClientPathManager) GetPathForWriting() (string, error) {
-	return self.path, nil
-}
-
-func (self ClientPathManager) GetQueueName() string {
-	return self.client_id
-}
-
-func (self ClientPathManager) GetAvailableFiles(
-	ctx context.Context) []*api.ResultSetFileProperties {
-	return []*api.ResultSetFileProperties{{
-		Path:    self.path,
-		EndTime: time.Unix(int64(1)<<62, 0),
-	}}
+// Where we store client records in datastore.
+func (self ClientPathManager) Path() api.SafeDatastorePath {
+	return self.root.AddChild(self.client_id)
 }
 
 func NewClientPathManager(client_id string) *ClientPathManager {
 	return &ClientPathManager{
-		path:      path.Join("/clients", client_id),
+		root:      api.NewSafeDatastorePath("clients", client_id),
 		client_id: client_id,
 	}
 }
 
-// Gets the flow's log file.
-func (self ClientPathManager) Ping() *ClientPathManager {
-	self.path = path.Join(self.path, "ping")
-	return &self
+// We store the last time we saw the client in this location.
+func (self ClientPathManager) Ping() api.SafeDatastorePath {
+	return self.root.AddChild("ping")
 }
 
 // Keep a record of all the client's labels.
-func (self ClientPathManager) Labels() string {
-	return path.Join(self.path, "labels.json")
+func (self ClientPathManager) Labels() api.SafeDatastorePath {
+	return self.root.AddChild("labels.json")
 }
 
-func (self ClientPathManager) Metadata() string {
-	return path.Join(self.path, "metadata.json")
+// Each client can have arbitrary key/value metadata.
+func (self ClientPathManager) Metadata() api.SafeDatastorePath {
+	return self.root.AddChild("metadata.json")
 }
 
-func (self ClientPathManager) Key() *ClientPathManager {
-	self.path = path.Join(self.path, "key")
-	return &self
+// Store each client's public key so we can communicate with it.
+func (self ClientPathManager) Key() api.SafeDatastorePath {
+	return self.root.AddChild("key")
 }
 
-func (self ClientPathManager) TasksDirectory() *ClientPathManager {
-	self.path = path.Join(self.path, "tasks")
-	return &self
+// Queue tasks for the client in a directory within the client's main directory.
+func (self ClientPathManager) TasksDirectory() api.SafeDatastorePath {
+	return self.root.AddChild("tasks")
 }
 
-func (self ClientPathManager) Task(task_id uint64) *ClientPathManager {
-	self.path = path.Join(self.path, "tasks", fmt.Sprintf("%d", task_id))
-	return &self
+// Store each task within the tasks directory.
+func (self ClientPathManager) Task(task_id uint64) api.SafeDatastorePath {
+	return self.root.AddChild("tasks", fmt.Sprintf("%d", task_id))
 }
 
-func (self ClientPathManager) VFSPath(vfs_components []string) string {
-	return utils.JoinComponents(append([]string{
-		"clients", self.client_id, "vfs"}, vfs_components...), "/")
+// Where we store client VFS information - depends on client paths.
+func (self ClientPathManager) VFSPath(vfs_components []string) []string {
+	return append([]string{
+		"clients", self.client_id, "vfs"}, vfs_components...)
 }
 
-func (self ClientPathManager) VFSDownloadInfoPath(vfs string) string {
-	return path.Join("clients", self.client_id, "vfs_files", vfs)
+func (self ClientPathManager) VFSDownloadInfoPath(
+	vfs_components []string) []string {
+	return append([]string{
+		"clients", self.client_id, "vfs_files"}, vfs_components...)
 }

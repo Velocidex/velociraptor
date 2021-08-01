@@ -463,7 +463,7 @@ func appendUploadDataToFile(
 		file_buffer.Pathspec.Accessor,
 		file_buffer.Pathspec.Path)
 
-	fd, err := file_store_factory.WriteFile(file_path_manager.Path())
+	fd, err := file_store_factory.WriteFileComponent(file_path_manager.Path())
 	if err != nil {
 		// If we fail to write this one file we keep going -
 		// otherwise the flow will be terminated.
@@ -494,7 +494,8 @@ func appendUploadDataToFile(
 		collection_context.UploadedFiles = append(
 			collection_context.UploadedFiles,
 			&flows_proto.ArtifactUploadedFileInfo{
-				Name:       file_path_manager.Path(),
+				Name:       file_path_manager.FullPath(),
+				Components: file_path_manager.Path(),
 				Size:       file_buffer.Size,
 				StoredSize: size,
 			})
@@ -516,7 +517,8 @@ func appendUploadDataToFile(
 
 	// Does this packet have an index? It could be sparse.
 	if file_buffer.Index != nil {
-		fd, err := file_store_factory.WriteFile(file_path_manager.IndexPath())
+		fd, err := file_store_factory.WriteFileComponent(
+			file_path_manager.IndexPath())
 		if err != nil {
 			return err
 		}
@@ -536,7 +538,8 @@ func appendUploadDataToFile(
 		collection_context.UploadedFiles = append(
 			collection_context.UploadedFiles,
 			&flows_proto.ArtifactUploadedFileInfo{
-				Name:       file_path_manager.IndexPath(),
+				Name:       file_path_manager.IndexFullPath(),
+				Components: file_path_manager.IndexPath(),
 				Size:       uint64(len(data)),
 				StoredSize: uint64(len(data)),
 			})

@@ -64,7 +64,8 @@ func (self FileInfoAdapter) GetLink() (string, error) {
 type FileAdapter struct {
 	*os.File
 
-	FullPath string
+	FullPath   string
+	Components []string
 }
 
 func (self *FileAdapter) Stat() (glob.FileInfo, error) {

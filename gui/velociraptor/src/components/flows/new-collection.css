@@ -35,3 +35,12 @@
     width: 100%;
     margin-bottom: 0;
 }
+
+.favorites {
+    width: 400px;
+    line-height: normal;
+}
+
+.favorite-button {
+    height: 42px;
+}

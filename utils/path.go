@@ -55,30 +55,39 @@ func consumeComponent(path string) (next_path string, component string) {
 	}
 	length := len(path)
 
+	// The first character indicated the type of component.
 	switch path[0] {
+	// An empty component.
 	case '/', '\\':
 		return path[1:], ""
 
+		// A quoted component - scan to the next quote
+		// allowing for quote escapes by double quoting.
 	case '"':
 		result := []byte{}
 		for i := 1; i < length; i++ {
 			switch path[i] {
 			case '"':
+				// End of string.
 				if i >= length-1 {
 					return "", string(result)
 				}
 
+				// Peek at next char
 				next_char := path[i+1]
 				switch next_char {
-				case '"': // Double quoted quote
+				case '"': // Double quoted quote - unescape it
 					result = append(result, next_char)
 					i += 1
 					continue
 
+					// Path separator after quote
+					// - end of component.
 				case '/', '\\':
 					return path[i+1 : length], string(result)
 				default:
-					// Should never happen, " followed by *
+					// Should never happen, "
+					// followed by anything
 					result = append(result, next_char)
 					continue
 				}
@@ -235,10 +244,9 @@ func Clean(path string) string {
 	return JoinComponents(SplitComponents(path), "/")
 }
 
-func CleanPathForZip(filename, client_id, hostname string) string {
+func CleanComponentsForZip(components []string, client_id, hostname string) string {
 	hostname = SanitizeString(hostname)
-	components := []string{}
-	for _, component := range SplitComponents(filename) {
+	for _, component := range components {
 		// Replace any client id with hostnames
 		if component == client_id {
 			component = hostname
@@ -248,46 +256,21 @@ func CleanPathForZip(filename, client_id, hostname string) string {
 	}
 
 	// Zip files should not have absolute paths
-	filename = strings.Join(components, "/")
-	return filename
+	return strings.Join(components, "/")
 }
 
-// We are very conservative about our escaping.
-func shouldEscape(c byte) bool {
-	if 'A' <= c && c <= 'Z' ||
-		'a' <= c && c <= 'z' ||
-		'0' <= c && c <= '9' {
-		return false
-	}
-
-	switch c {
-	case '-', '_', '.', '~', ' ', '$':
-		return false
-	}
-
-	return true
-}
-
-var hexTable = []byte("0123456789ABCDEF")
-
-func SanitizeString(component string) string {
-	length := len(component)
-	if length > 1024 {
-		length = 1024
-	}
-	result := make([]byte, length*4)
-	result_idx := 0
-
-	for _, c := range []byte(component) {
-		if !shouldEscape(c) {
-			result[result_idx] = c
-			result_idx += 1
-		} else {
-			result[result_idx] = '%'
-			result[result_idx+1] = hexTable[c>>4]
-			result[result_idx+2] = hexTable[c&15]
-			result_idx += 3
+func CleanPathForZip(path, client_id, hostname string) string {
+	components := SplitComponents(path)
+	hostname = SanitizeString(hostname)
+	for _, component := range components {
+		// Replace any client id with hostnames
+		if component == client_id {
+			component = hostname
 		}
+
+		components = append(components, SanitizeString(component))
 	}
-	return string(result[:result_idx])
+
+	// Zip files should not have absolute paths
+	return strings.Join(components, "/")
 }

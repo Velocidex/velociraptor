@@ -31,7 +31,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -57,7 +56,7 @@ func (self *FileBasedUploader) sanitize_path(path string) string {
 	for _, component := range utils.SplitComponents(path) {
 		if len(component) > 0 {
 			components = append(components,
-				string(datastore.SanitizeString(component)))
+				string(utils.SanitizeString(component)))
 		}
 	}
 

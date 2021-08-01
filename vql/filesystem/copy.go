@@ -15,7 +15,7 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package common
+package filesystem
 
 import (
 	"context"
@@ -37,6 +37,7 @@ type CopyFunctionArgs struct {
 	Accessor    string `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	Destination string `vfilter:"required,field=dest,doc=The destination file to write."`
 	Permissions string `vfilter:"optional,field=permissions,doc=Required permissions (e.g. 'x')."`
+	Append      bool   `vfilter:"optional,field=append,doc=If true we append to the target file otherwise truncate it"`
 }
 
 type CopyFunction struct{}
@@ -102,8 +103,12 @@ func (self *CopyFunction) Call(ctx context.Context,
 			arg.Destination)
 	}
 
-	to, err := os.OpenFile(arg.Destination,
-		os.O_RDWR|os.O_CREATE|os.O_TRUNC, permissions)
+	flags := os.O_RDWR | os.O_CREATE | os.O_TRUNC
+	if arg.Append {
+		flags = os.O_WRONLY | os.O_APPEND
+	}
+
+	to, err := os.OpenFile(arg.Destination, flags, permissions)
 	if err != nil {
 		scope.Log("copy: Failed to open %v for writing: %v",
 			arg.Destination, err)

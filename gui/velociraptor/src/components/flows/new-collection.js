@@ -14,6 +14,7 @@ import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import VeloReportViewer from "../artifacts/reporting.js";
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import Select from 'react-select';
 
 import Spinner from '../utils/spinner.js';
 import Col from 'react-bootstrap/Col';
@@ -118,6 +119,10 @@ class NewCollectionSelectArtifacts extends React.Component {
         loading: false,
 
         initialized_from_parent: false,
+
+        favorites: [],
+        favorite_options: [],
+        showFavoriteSelector: false,
     }
 
     componentDidMount = () => {
@@ -176,6 +181,19 @@ class NewCollectionSelectArtifacts extends React.Component {
         e.stopPropagation();
     }
 
+    fetchFavorites = () => {
+        api.get('v1/GetUserFavorites', {
+            type: this.props.artifactType,
+        }).then(response=>{
+            this.setState({
+                favorites: response.data.items,
+                favorite_options: _.map(response.data.items, x=>{
+                    return {value: x.name, label: x.name,
+                            color: "#00B8D9", isFixed: true};
+                })});
+        });
+    }
+
     render() {
         let columns = [{dataField: "name", text: "",
                         formatter: (cell, row) => {
@@ -199,7 +217,28 @@ class NewCollectionSelectArtifacts extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-                <Modal.Title>{ this.props.paginator.title }</Modal.Title>
+                <Modal.Title className="flex-fill">{ this.props.paginator.title }
+                  <ButtonGroup className="float-right">
+                    { this.state.showFavoriteSelector &&
+                      <Select
+                        className="favorites"
+                        classNamePrefix="velo"
+                        options={this.state.favorite_options}
+                        onChange={this.setFavorite}
+                        placeholder="Favorite Name"
+                      />}
+                    <Button variant="default"
+                            onClick={(e)=>{
+                                this.fetchFavorites();
+                                this.setState({
+                                    showFavoriteSelector: !this.state.showFavoriteSelector
+                                });
+                            }}
+                            className="favorite-button float-right">
+                    <FontAwesomeIcon icon="heart"/>
+                  </Button>
+                  </ButtonGroup>
+                </Modal.Title>
               </Modal.Header>
 
               <Modal.Body>

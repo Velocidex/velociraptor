@@ -29,7 +29,7 @@ func BenchmarkSetSubject(b *testing.B) {
 				ClientId: client_id,
 			}
 			db.SetSubject(config_obj,
-				client_path_manager.Ping().Path(), client_info)
+				client_path_manager.Ping(), client_info)
 		}
 	})
 

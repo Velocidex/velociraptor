@@ -561,6 +561,26 @@ func (mr *MockAPIClientMockRecorder) GetToolInfo(arg0, arg1 interface{}, arg2 ..
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetToolInfo", reflect.TypeOf((*MockAPIClient)(nil).GetToolInfo), varargs...)
 }
 
+// GetUserFavorites mocks base method.
+func (m *MockAPIClient) GetUserFavorites(arg0 context.Context, arg1 *proto0.Favorite, arg2 ...grpc.CallOption) (*proto0.Favorites, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetUserFavorites", varargs...)
+	ret0, _ := ret[0].(*proto0.Favorites)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserFavorites indicates an expected call of GetUserFavorites.
+func (mr *MockAPIClientMockRecorder) GetUserFavorites(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserFavorites", reflect.TypeOf((*MockAPIClient)(nil).GetUserFavorites), varargs...)
+}
+
 // GetUserUITraits mocks base method.
 func (m *MockAPIClient) GetUserUITraits(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.ApiGrrUser, error) {
 	m.ctrl.T.Helper()

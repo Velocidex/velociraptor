@@ -1,0 +1,9 @@
+{
+ "Simple string": "Simple string",
+ "你好": "%E4%BD%A0%E5%A5%BD",
+ "Word \"With\" quotes": "Word %22With%22 quotes",
+ "../../../": "%2E%2E%2F..%2F..%2F",
+ "foo.db": "foo.db_",
+ "bar.json.db": "bar.json.db_",
+ "\u0000\u0001\ufffd\ufffd\ufffd\ufffd(": "%00%01%F0%F2%FF%C3%28"
+}

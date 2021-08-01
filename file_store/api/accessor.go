@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -36,16 +37,23 @@ func (self FileStoreFileSystemAccessor) New(
 
 func (self FileStoreFileSystemAccessor) Lstat(
 	filename string) (glob.FileInfo, error) {
-	lstat, err := self.file_store.StatFile(filename)
+
+	components := utils.SplitComponents(filename)
+	lstat, err := self.file_store.StatFile(
+		NewSafeDatastorePath(components...))
 	if err != nil {
 		return nil, err
 	}
 
-	return &FileStoreFileInfo{lstat, filename, nil}, nil
+	return &FileStoreFileInfo{
+		FileInfo:  lstat,
+		FullPath_: filename,
+	}, nil
 }
 
 func (self FileStoreFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
-	files, err := self.file_store.ListDirectory(path)
+	components := NewSafeDatastorePath(utils.SplitComponents(path)...)
+	files, err := self.file_store.ListDirectory(components)
 	if err != nil {
 		return nil, err
 	}
@@ -53,14 +61,18 @@ func (self FileStoreFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, e
 	var result []glob.FileInfo
 	for _, f := range files {
 		result = append(result,
-			&FileStoreFileInfo{f, filepath.Join(path, f.Name()), nil})
+			&FileStoreFileInfo{
+				FileInfo:  f,
+				FullPath_: filepath.Join(path, f.Name()),
+			})
 	}
 
 	return result, nil
 }
 
 func (self FileStoreFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
-	file, err := self.file_store.ReadFile(path)
+	components := NewSafeDatastorePath(utils.SplitComponents(path)...)
+	file, err := self.file_store.ReadFile(components)
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +96,9 @@ func (self *FileStoreFileSystemAccessor) GetRoot(path string) (string, string, e
 
 type FileStoreFileInfo struct {
 	os.FileInfo
-	FullPath_ string
-	Data_     interface{}
+	FullPath_  string
+	Components []string
+	Data_      interface{}
 }
 
 func (self FileStoreFileInfo) Name() string {

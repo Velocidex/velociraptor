@@ -11,8 +11,25 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/paths"
+)
+
+var (
+	testPaths = []struct {
+		urn  api.SafeDatastorePath
+		path string
+	}{
+		{api.NewSafeDatastorePath("a", "b", "c"), "/a/b/c.db"},
+
+		// Path components are actually a list of strings.
+		{api.NewSafeDatastorePath("a", "b/c", "d"),
+			"/a/b%2Fc/d.db"},
+
+		{api.NewSafeDatastorePath("a", "b/c", "d/d"),
+			"/a/b%2Fc/d%2Fd.db"},
+	}
 )
 
 type BaseTestSuite struct {
@@ -22,10 +39,88 @@ type BaseTestSuite struct {
 	datastore  DataStore
 }
 
+func (self BaseTestSuite) TestSetGetJSON() {
+	message := &crypto_proto.VeloMessage{Source: "Server"}
+	for _, components := range [][]string{
+		[]string{"a", "b/c", "d"},
+		[]string{"a", "b/c", "d/a"},
+		[]string{"a", "b/c", "d?\""},
+	} {
+		err := self.datastore.SetSubjectJSON(
+			self.config_obj, components, message)
+		assert.NoError(self.T(), err)
+
+		read_message := &crypto_proto.VeloMessage{}
+		err = self.datastore.GetSubjectJSON(self.config_obj,
+			components, read_message)
+		assert.NoError(self.T(), err)
+
+		assert.Equal(self.T(), message.Source, read_message.Source)
+	}
+
+	// Now test that ListChildren works properly.
+	children, err := self.datastore.ListChildrenJSON(
+		self.config_obj, []string{"a", "b/c"})
+	assert.NoError(self.T(), err)
+
+	sort.Slice(children, func(i, j int) bool {
+		return children[i].Modified.UnixNano() <
+			children[j].Modified.UnixNano()
+	})
+
+	results := []string{}
+	for _, i := range children {
+		results = append(results, i.Name)
+	}
+	sort.Strings(results)
+	assert.Equal(self.T(), []string{"d", "d/a", "d?\""}, results)
+}
+
+// Old server versions might have data encoded in protobufs. As we
+// port new data to json, we need to support reading the old data
+// properly.
+func (self BaseTestSuite) TestSetGetMigration() {
+	message := &crypto_proto.VeloMessage{Source: "Server"}
+	for _, components := range [][]string{
+		[]string{"a", "b", "c"},
+	} {
+		// Write a protobuf based file
+		urn := api.NewSafeDatastorePath(components...)
+		err := self.datastore.SetSubject(
+			self.config_obj, urn, message)
+		assert.NoError(self.T(), err)
+
+		// Even if we read it with json it should work.
+		read_message := &crypto_proto.VeloMessage{}
+		err = self.datastore.GetSubjectJSON(self.config_obj,
+			components, read_message)
+		assert.NoError(self.T(), err)
+
+		assert.Equal(self.T(), message.Source, read_message.Source)
+	}
+
+}
+
+func (self BaseTestSuite) TestSetGetSubjectWithEscaping() {
+	message := &crypto_proto.VeloMessage{Source: "Server"}
+	for _, testcase := range testPaths {
+		err := self.datastore.SetSubject(
+			self.config_obj, testcase.urn, message)
+		assert.NoError(self.T(), err)
+
+		read_message := &crypto_proto.VeloMessage{}
+		err = self.datastore.GetSubject(self.config_obj,
+			testcase.urn, read_message)
+		assert.NoError(self.T(), err)
+
+		assert.Equal(self.T(), message.Source, read_message.Source)
+	}
+}
+
 func (self BaseTestSuite) TestSetGetSubject() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
 
-	urn := "/a/b/c"
+	urn := api.NewSafeDatastorePath("a", "b", "c")
 	err := self.datastore.SetSubject(self.config_obj, urn, message)
 	assert.NoError(self.T(), err)
 
@@ -37,13 +132,14 @@ func (self BaseTestSuite) TestSetGetSubject() {
 
 	// Not existing urn returns os.ErrNotExist error and an empty message
 	read_message.SessionId = "X"
-	err = self.datastore.GetSubject(self.config_obj, urn+"foo", read_message)
+	err = self.datastore.GetSubject(self.config_obj,
+		urn.AddChild("foo"), read_message)
 	assert.Error(self.T(), err, os.ErrNotExist)
 
 	// Same for json files.
 	read_message.SessionId = "X"
 	err = self.datastore.GetSubject(
-		self.config_obj, urn+"foo.json", read_message)
+		self.config_obj, urn.AddChild("foo.json"), read_message)
 	assert.Error(self.T(), err, os.ErrNotExist)
 
 	// Delete the subject
@@ -58,68 +154,76 @@ func (self BaseTestSuite) TestSetGetSubject() {
 func (self BaseTestSuite) TestListChildren() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
 
-	urn := "/a/b/c"
-	err := self.datastore.SetSubject(self.config_obj, urn+"/1", message)
+	urn := api.NewSafeDatastorePath("a", "b", "c")
+	err := self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("1"), message)
 	assert.NoError(self.T(), err)
 
 	time.Sleep(10 * time.Millisecond)
 
-	err = self.datastore.SetSubject(self.config_obj, urn+"/2", message)
+	err = self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("2"), message)
 	assert.NoError(self.T(), err)
 
 	time.Sleep(10 * time.Millisecond)
 
-	err = self.datastore.SetSubject(self.config_obj, urn+"/3", message)
+	err = self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("3"), message)
 	assert.NoError(self.T(), err)
 
 	time.Sleep(10 * time.Millisecond)
 
-	children, err := self.datastore.ListChildren(self.config_obj, urn, 0, 100)
+	children, err := self.datastore.ListChildren(
+		self.config_obj, urn, 0, 100)
 	assert.NoError(self.T(), err)
 
 	// ListChildren gives the full path to all children
-	sort.Strings(children)
 	assert.Equal(self.T(), []string{
 		"/a/b/c/1",
 		"/a/b/c/2",
-		"/a/b/c/3"}, children)
+		"/a/b/c/3"}, asStrings(children))
 
-	children, err = self.datastore.ListChildren(self.config_obj, urn, 0, 2)
+	children, err = self.datastore.ListChildren(self.config_obj,
+		urn, 0, 2)
 	assert.NoError(self.T(), err)
 
-	assert.Equal(self.T(), []string{"/a/b/c/1", "/a/b/c/2"}, children)
+	assert.Equal(self.T(), []string{"/a/b/c/1", "/a/b/c/2"},
+		asStrings(children))
 
-	children, err = self.datastore.ListChildren(self.config_obj, urn, 1, 2)
+	children, err = self.datastore.ListChildren(self.config_obj,
+		urn, 1, 2)
 	assert.NoError(self.T(), err)
 
-	assert.Equal(self.T(), []string{"/a/b/c/2", "/a/b/c/3"}, children)
+	assert.Equal(self.T(), []string{"/a/b/c/2", "/a/b/c/3"},
+		asStrings(children))
 
-	visited := []string{}
-	self.datastore.Walk(self.config_obj, "/\"a\"/b",
-		func(path_name string) error {
+	visited := []api.SafeDatastorePath{}
+	self.datastore.Walk(self.config_obj,
+		api.NewSafeDatastorePath("a", "b"),
+		func(path_name api.SafeDatastorePath) error {
 			visited = append(visited, path_name)
 			return nil
 		})
-	sort.Strings(visited)
-	assert.Equal(self.T(), []string{"/a/b/c/1", "/a/b/c/2", "/a/b/c/3"}, visited)
+	assert.Equal(self.T(), []string{"/a/b/c/1", "/a/b/c/2", "/a/b/c/3"},
+		asStrings(visited))
 }
 
 func (self BaseTestSuite) TestIndexes() {
 	client_id := "C.1234"
 	client_id_2 := "C.1235"
-	err := self.datastore.SetIndex(self.config_obj, constants.CLIENT_INDEX_URN,
+	err := self.datastore.SetIndex(self.config_obj, paths.CLIENT_INDEX_URN,
 		client_id, []string{"all", client_id, "Hostname", "FQDN", "host:Foo"})
 	assert.NoError(self.T(), err)
-	err = self.datastore.SetIndex(self.config_obj, constants.CLIENT_INDEX_URN,
+	err = self.datastore.SetIndex(self.config_obj, paths.CLIENT_INDEX_URN,
 		client_id_2, []string{"all", client_id_2, "Hostname2", "FQDN2", "host:Bar"})
 	assert.NoError(self.T(), err)
 
-	hits := self.datastore.SearchClients(self.config_obj, constants.CLIENT_INDEX_URN,
-		"all", "", 0, 100, SORT_UP)
+	hits := self.datastore.SearchClients(self.config_obj,
+		paths.CLIENT_INDEX_URN, "all", "", 0, 100, SORT_UP)
 	sort.Strings(hits)
 	assert.Equal(self.T(), []string{client_id, client_id_2}, hits)
 
-	hits = self.datastore.SearchClients(self.config_obj, constants.CLIENT_INDEX_URN,
+	hits = self.datastore.SearchClients(self.config_obj, paths.CLIENT_INDEX_URN,
 		"*foo", "", 0, 100, SORT_UP)
 	assert.Equal(self.T(), []string{client_id}, hits)
 }
@@ -185,4 +289,14 @@ func benchmarkSearchClient(b *testing.B,
 	data_store DataStore,
 	config_obj *config_proto.Config) {
 
+}
+
+func asStrings(in []api.SafeDatastorePath) []string {
+	children := make([]string, 0, len(in))
+	for _, i := range in {
+		children = append(children, i.AsRelativeFilename())
+	}
+	sort.Strings(children)
+
+	return children
 }

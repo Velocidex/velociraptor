@@ -19,7 +19,6 @@ package api
 
 import (
 	"os"
-	"path/filepath"
 
 	"www.velocidex.com/golang/velociraptor/glob"
 )
@@ -42,12 +41,19 @@ type FileWriter interface {
 	Close() error
 }
 
+type WalkFunc func(urn SafeDatastorePath, info os.FileInfo) error
 type FileStore interface {
-	ReadFile(filename string) (FileReader, error)
-	WriteFile(filename string) (FileWriter, error)
-	StatFile(filename string) (os.FileInfo, error)
-	ListDirectory(dirname string) ([]os.FileInfo, error)
-	Walk(root string, cb filepath.WalkFunc) error
-	Delete(filename string) error
-	Move(src, dest string) error
+	ReadFile(filename SafeDatastorePath) (FileReader, error)
+	WriteFile(filename SafeDatastorePath) (FileWriter, error)
+	StatFile(filename SafeDatastorePath) (os.FileInfo, error)
+	ListDirectory(dirname SafeDatastorePath) ([]os.FileInfo, error)
+	Walk(root SafeDatastorePath, cb WalkFunc) error
+	Delete(filename SafeDatastorePath) error
+	Move(src, dest SafeDatastorePath) error
+
+	// The following API can be used with unsafe path components.
+	ReadFileComponents(filename UnsafeDatastorePath) (FileReader, error)
+	WriteFileComponent(filename UnsafeDatastorePath) (FileWriter, error)
+	StatFileComponents(filename UnsafeDatastorePath) (os.FileInfo, error)
+	ListDirectoryComponents(filename UnsafeDatastorePath) ([]os.FileInfo, error)
 }

@@ -249,7 +249,7 @@ class VeloFileList extends Component {
         let path = this.props.node.path || [];
         api.post("v1/VFSRefreshDirectory", {
             client_id: this.props.client.client_id,
-            vfs_path: Join(path),
+            vfs_components: path,
             depth: 0
         }).then((response) => {
             // Here we need to wait for the completion of the flow
@@ -268,7 +268,7 @@ class VeloFileList extends Component {
                 // the gui can refresh with the old data still there.
                 api.get("v1/VFSStatDirectory", {
                     client_id: this.props.client.client_id,
-                    vfs_path: Join(path),
+                    vfs_components: path,
                     flow_id: this.state.lastRefreshOperationId,
                 }).then((response) => {
                     // The node is refreshed with the correct flow id, we can stop polling.

@@ -380,13 +380,15 @@ func vfsFolderDownloadHandler(
 		hostname := services.GetHostname(client_id)
 		client_path_manager := paths.NewClientPathManager(client_id)
 
+		vfs_components := utils.SplitComponents(request.VfsPath)
 		db, _ := datastore.GetDB(config_obj)
-		_ = db.Walk(config_obj, client_path_manager.VFSDownloadInfoPath(request.VfsPath),
-			func(path_name string) error {
+		_ = db.WalkComponents(config_obj,
+			client_path_manager.VFSDownloadInfoPath(vfs_components),
+			func(components []string) error {
 				download_info := &flows_proto.VFSDownloadInfo{}
-				err := db.GetSubject(config_obj, path_name, download_info)
+				err := db.GetSubjectJSON(config_obj, components, download_info)
 				if err != nil {
-					logger.Warn("Cant open %s: %v", path_name, err)
+					logger.Warn("Cant open %v: %v", components, err)
 					return nil
 				}
 
@@ -395,10 +397,12 @@ func vfsFolderDownloadHandler(
 					return err
 				}
 
-				zh, err := zip_writer.Create(utils.CleanPathForZip(
-					path_name, client_id, hostname))
+				path_name := utils.CleanComponentsForZip(
+					components, client_id, hostname)
+				zh, err := zip_writer.Create(path_name)
 				if err != nil {
-					logger.Warn("Cant create zip %s: %v", path_name, err)
+					logger.Warn("Cant create zip member %s: %v",
+						path_name, err)
 					return nil
 				}
 

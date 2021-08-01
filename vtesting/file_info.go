@@ -6,9 +6,10 @@ import (
 )
 
 type MockFileInfo struct {
-	Name_     string
-	FullPath_ string
-	Size_     int64
+	Name_      string
+	FullPath_  string
+	Size_      int64
+	Components []string
 }
 
 func (self MockFileInfo) Data() interface{}        { return nil }

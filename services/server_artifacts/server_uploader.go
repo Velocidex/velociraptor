@@ -37,7 +37,8 @@ func (self *ServerUploader) Upload(
 	if strings.HasPrefix(store_as_name, "fs://") {
 		store_as_name = strings.TrimPrefix(store_as_name, "fs://")
 	} else {
-		store_as_name = self.path_manager.GetUploadsFile(accessor, store_as_name).Path()
+		store_as_name = self.path_manager.GetUploadsFile(
+			accessor, store_as_name).FullPath()
 	}
 
 	result, err := self.FileStoreUploader.Upload(ctx, scope, filename,

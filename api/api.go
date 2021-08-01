@@ -406,7 +406,7 @@ func (self *ApiServer) SetGUIOptions(
 
 func (self *ApiServer) VFSListDirectory(
 	ctx context.Context,
-	in *flows_proto.VFSListRequest) (*flows_proto.VFSListResponse, error) {
+	in *api_proto.VFSListRequest) (*api_proto.VFSListResponse, error) {
 
 	defer Instrument("VFSListDirectory")()
 
@@ -419,13 +419,13 @@ func (self *ApiServer) VFSListDirectory(
 	}
 
 	result, err := vfsListDirectory(
-		self.config, in.ClientId, in.VfsPath)
+		self.config, in.ClientId, in.VfsComponents)
 	return result, err
 }
 
 func (self *ApiServer) VFSStatDirectory(
 	ctx context.Context,
-	in *flows_proto.VFSListRequest) (*flows_proto.VFSListResponse, error) {
+	in *api_proto.VFSListRequest) (*api_proto.VFSListResponse, error) {
 
 	defer Instrument("VFSStatDirectory")()
 
@@ -438,13 +438,13 @@ func (self *ApiServer) VFSStatDirectory(
 	}
 
 	result, err := vfsStatDirectory(
-		self.config, in.ClientId, in.VfsPath)
+		self.config, in.ClientId, in.VfsComponents)
 	return result, err
 }
 
 func (self *ApiServer) VFSStatDownload(
 	ctx context.Context,
-	in *flows_proto.VFSStatDownloadRequest) (*flows_proto.VFSDownloadInfo, error) {
+	in *api_proto.VFSStatDownloadRequest) (*flows_proto.VFSDownloadInfo, error) {
 
 	defer Instrument("VFSStatDownload")()
 
@@ -457,7 +457,7 @@ func (self *ApiServer) VFSStatDownload(
 	}
 
 	result, err := vfsStatDownload(
-		self.config, in.ClientId, in.Accessor, in.Path)
+		self.config, in.ClientId, in.Accessor, in.Components)
 	return result, err
 }
 
@@ -477,7 +477,7 @@ func (self *ApiServer) VFSRefreshDirectory(
 	}
 
 	result, err := vfsRefreshDirectory(
-		self, ctx, in.ClientId, in.VfsPath, in.Depth)
+		self, ctx, in.ClientId, in.VfsComponents, in.Depth)
 	return result, err
 }
 

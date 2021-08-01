@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
-	"path"
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -39,7 +38,7 @@ type Uploader interface {
 // An uploader into the filestore.
 type FileStoreUploader struct {
 	file_store FileStore
-	root_path  string
+	root_path  SafeDatastorePath
 }
 
 func (self *FileStoreUploader) Upload(
@@ -57,8 +56,7 @@ func (self *FileStoreUploader) Upload(
 		store_as_name = filename
 	}
 
-	output_path := path.Join(self.root_path, store_as_name)
-
+	output_path := self.root_path.AddChild(store_as_name)
 	out_fd, err := self.file_store.WriteFile(output_path)
 	if err != nil {
 		scope.Log("Unable to open file %s: %v", store_as_name, err)
@@ -104,7 +102,7 @@ loop:
 
 	scope.Log("Uploaded %v (%v bytes)", output_path, offset)
 	return &UploadResponse{
-		Path:   output_path,
+		Path:   output_path.AsRelativeFilename(),
 		Size:   uint64(offset),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
 		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
@@ -114,6 +112,6 @@ loop:
 func NewFileStoreUploader(
 	config_obj *config_proto.Config,
 	fs FileStore,
-	root_path string) *FileStoreUploader {
+	root_path SafeDatastorePath) *FileStoreUploader {
 	return &FileStoreUploader{fs, root_path}
 }

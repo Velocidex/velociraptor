@@ -39,7 +39,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -96,19 +95,19 @@ func NewDirectoryFileStore(config_obj *config_proto.Config) *DirectoryFileStore 
 	return &DirectoryFileStore{config_obj}
 }
 
-func (self *DirectoryFileStore) Move(src string, dest string) error {
-	src_path := self.FilenameToFileStorePath(src)
-	dest_path := self.FilenameToFileStorePath(dest)
+func (self *DirectoryFileStore) Move(src, dest api.SafeDatastorePath) error {
+	src_path := src.AsFilestoreFilename(self.config_obj)
+	dest_path := dest.AsFilestoreFilename(self.config_obj)
 
 	return os.Rename(src_path, dest_path)
 }
 
-func (self *DirectoryFileStore) ListDirectory(dirname string) (
+func (self *DirectoryFileStore) ListDirectory(dirname api.SafeDatastorePath) (
 	[]os.FileInfo, error) {
 
 	listCounter.Inc()
 
-	file_path := self.FilenameToFileStorePath(dirname)
+	file_path := dirname.AsFilestoreFilename(self.config_obj)
 	files, err := utils.ReadDir(file_path)
 	if err != nil {
 		return nil, err
@@ -179,7 +178,7 @@ func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) string 
 	components := []string{self.config_obj.Datastore.FilestoreDirectory}
 	for _, component := range utils.SplitComponents(filename) {
 		components = append(components,
-			string(datastore.SanitizeString(component)))
+			utils.SanitizeString(component))
 	}
 
 	// OS filenames may use / or \ as separators. On windows we
@@ -208,7 +207,7 @@ func (self *DirectoryFileStore) FileStorePathToFilename(filename string) (
 		filename,
 		string(os.PathSeparator)) {
 		components = append(components,
-			string(datastore.UnsanitizeComponent(component)))
+			utils.UnsanitizeComponent(component))
 	}
 
 	// Filestore filenames always use / as separator.

@@ -247,7 +247,8 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 				defer fd.Close()
 
 				out_path := path_manager.GetUploadsFile("file", file.Name).Path()
-				out_fd, err := file_store_factory.WriteFile(out_path)
+				out_fd, err := file_store_factory.WriteFileComponent(
+					out_path)
 				if err != nil {
 					log("Error copying %v: %v", out_path, err)
 					return

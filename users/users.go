@@ -73,7 +73,7 @@ func SetUser(config_obj *config_proto.Config, user_record *api_proto.Velocirapto
 		return err
 	}
 
-	return db.SetSubject(config_obj,
+	return db.SetSubjectJSON(config_obj,
 		paths.UserPathManager{Name: user_record.Name}.Path(),
 		user_record)
 }
@@ -129,7 +129,7 @@ func GetUserWithHashes(config_obj *config_proto.Config, username string) (
 	}
 
 	user_record := &api_proto.VelociraptorUser{}
-	err = db.GetSubject(config_obj,
+	err = db.GetSubjectJSON(config_obj,
 		paths.UserPathManager{Name: username}.Path(), user_record)
 	if errors.Is(err, os.ErrNotExist) || user_record.Name == "" {
 		return nil, errors.New("User not found")
@@ -162,7 +162,7 @@ func SetUserOptions(config_obj *config_proto.Config,
 		old_options.Options = options.Options
 	}
 
-	return db.SetSubject(config_obj, path_manager.GUIOptions(), old_options)
+	return db.SetSubjectJSON(config_obj, path_manager.GUIOptions(), old_options)
 }
 
 func GetUserOptions(config_obj *config_proto.Config, username string) (
@@ -175,7 +175,7 @@ func GetUserOptions(config_obj *config_proto.Config, username string) (
 	}
 
 	options := &api_proto.SetGUIOptionsRequest{}
-	err = db.GetSubject(config_obj, path_manager.GUIOptions(), options)
+	err = db.GetSubjectJSON(config_obj, path_manager.GUIOptions(), options)
 	if options.Options == "" {
 		options.Options = default_user_options
 	}

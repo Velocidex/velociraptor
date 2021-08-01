@@ -3,10 +3,10 @@ package paths
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"path"
 
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
 func ObfuscateName(
@@ -21,13 +21,17 @@ func ObfuscateName(
 
 }
 
-func NewInventoryPathManager(
-	config_obj *config_proto.Config, tool *artifacts_proto.Tool) *ClientPathManager {
+type InventoryPathManager struct {
+	root api.SafeDatastorePath
+}
+
+func NewInventoryPathManager(config_obj *config_proto.Config,
+	tool *artifacts_proto.Tool) *InventoryPathManager {
 	if tool.FilestorePath == "" {
 		tool.FilestorePath = ObfuscateName(config_obj, tool.Name)
 	}
 
-	return &ClientPathManager{
-		path: path.Join("/public/", tool.FilestorePath),
+	return &InventoryPathManager{
+		root: api.NewSafeDatastorePath("public", tool.FilestorePath),
 	}
 }

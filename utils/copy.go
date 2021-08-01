@@ -81,3 +81,9 @@ func CopyN(ctx context.Context, dst io.Writer, src io.Reader, count int64) (
 	}
 	return offset, nil
 }
+
+func CopySlice(in []string) []string {
+	result := make([]string, len(in))
+	copy(result, in)
+	return result
+}

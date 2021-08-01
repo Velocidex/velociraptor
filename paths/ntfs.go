@@ -2,9 +2,10 @@ package paths
 
 import (
 	"errors"
-	"path/filepath"
 	"regexp"
 	"strings"
+
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -13,39 +14,54 @@ var (
 		`(?i)^[/\\]?([a-z]:)(.*)`)
 	deviceDriveRegex = regexp.MustCompile(
 		`(?i)^(\\\\[\?\.]\\[a-zA-Z]:)(.*)`)
+
 	deviceDirectoryRegex = regexp.MustCompile(
 		`(?i)^(\\\\[\?\.]\\GLOBALROOT\\Device\\[^/\\]+)([/\\]?.*)`)
 )
 
-func GetDeviceAndSubpath(path string) (device string, subpath string, err error) {
-	// Make sure not to run filepath.Clean() because it will
-	// collapse multiple slashes (and prevent device names from
-	// being recognized).
+// Detect device names from a client's path.
+func GetDeviceAndSubpath(path string) (device string, subpath []string, err error) {
 	path = strings.Replace(path, "/", "\\", -1)
 
 	m := deviceDriveRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
-		return m[1], clean(m[2]), nil
+		return m[1], utils.SplitComponents(m[2]), nil
 	}
 
 	m = driveRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
-		return "\\\\.\\" + m[1], clean(m[2]), nil
+		return "\\\\.\\" + m[1], utils.SplitComponents(m[2]), nil
 	}
 
 	m = deviceDirectoryRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
-		return m[1], clean(m[2]), nil
+		return m[1], utils.SplitComponents(m[2]), nil
 	}
 
-	return "/", path, errors.New("Unsupported device type")
+	return "/", nil, errors.New("Unsupported device type")
 }
 
-func clean(path string) string {
-	result := filepath.Clean(path)
-	if result == "." {
-		result = ""
+func GetDeviceAndSubpathComponents(path_components []string) (device string, subpath_components []string, err error) {
+	if len(path_components) == 0 {
+		return "", nil, errors.New("Unsupported device type")
 	}
 
-	return result
+	// Check the first component for a device spec
+	m := deviceDriveRegex.FindStringSubmatch(path_components[0])
+	if len(m) != 0 {
+		return path_components[0], path_components[1:], nil
+	}
+
+	// Check it for a drive
+	m = driveRegex.FindStringSubmatch(path_components[0])
+	if len(m) != 0 {
+		return "\\\\.\\" + m[1], path_components[1:], nil
+	}
+
+	m = deviceDirectoryRegex.FindStringSubmatch(path_components[0])
+	if len(m) != 0 {
+		return m[1], path_components[1:], nil
+	}
+
+	return "/", path_components, errors.New("Unsupported device type")
 }

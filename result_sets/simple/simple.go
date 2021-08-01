@@ -142,16 +142,12 @@ type ResultSetFactory struct{}
 
 func (self ResultSetFactory) NewResultSetWriter(
 	file_store_factory api.FileStore,
-	path_manager api.PathManager,
+	log_path api.SafeDatastorePath,
 	opts *json.EncOpts,
 	truncate bool) (result_sets.ResultSetWriter, error) {
-	log_path, err := path_manager.GetPathForWriting()
-	if err != nil {
-		return nil, err
-	}
 
 	// If no path is provided, we are just a log sink
-	if log_path == "" {
+	if log_path.IsEmpty() {
 		return &NullResultSetWriter{}, nil
 	}
 
@@ -160,7 +156,8 @@ func (self ResultSetFactory) NewResultSetWriter(
 		return nil, err
 	}
 
-	idx_fd, err := file_store_factory.WriteFile(log_path + ".index")
+	idx_fd, err := file_store_factory.WriteFile(log_path.SetFileExtension(
+		".index"))
 	if err != nil {
 		fd.Close()
 		return nil, err
@@ -191,7 +188,7 @@ type ResultSetReaderImpl struct {
 	total_rows int64
 	fd         api.FileReader
 	idx_fd     api.FileReader
-	log_path   string
+	log_path   api.SafeDatastorePath
 }
 
 func (self *ResultSetReaderImpl) TotalRows() int64 {
@@ -332,12 +329,7 @@ func (self NullReader) Stat() (glob.FileInfo, error) {
 
 func (self ResultSetFactory) NewResultSetReader(
 	file_store_factory api.FileStore,
-	path_manager api.PathManager) (result_sets.ResultSetReader, error) {
-
-	log_path, err := path_manager.GetPathForWriting()
-	if err != nil {
-		return nil, err
-	}
+	log_path api.SafeDatastorePath) (result_sets.ResultSetReader, error) {
 
 	fd, err := file_store_factory.ReadFile(log_path)
 	if err == io.EOF || errors.Is(err, os.ErrNotExist) {
@@ -348,7 +340,8 @@ func (self ResultSetFactory) NewResultSetReader(
 
 	// -1 indicates we dont know how many rows there are
 	total_rows := int64(-1)
-	idx_fd, err := file_store_factory.ReadFile(log_path + ".index")
+	idx_fd, err := file_store_factory.ReadFile(log_path.SetFileExtension(
+		".index"))
 	if err == nil {
 		stat, err := idx_fd.Stat()
 		if err == nil {

@@ -123,7 +123,7 @@ func (self *VFSServiceTestSuite) TestVFSListDirectory() {
 	resp := &flows_proto.VFSListResponse{}
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.config_obj,
+		db.GetSubjectJSON(self.config_obj,
 			client_path_manager.VFSPath([]string{"file", "a", "b"}),
 			resp)
 		return resp.TotalRows == 3
@@ -170,7 +170,7 @@ func (self *VFSServiceTestSuite) TestVFSListDirectoryEmpty() {
 	resp := &flows_proto.VFSListResponse{}
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.config_obj,
+		db.GetSubjectJSON(self.config_obj,
 			client_path_manager.VFSPath([]string{"file", "a", "b"}),
 			resp)
 		return resp.Timestamp > 0
@@ -195,7 +195,7 @@ func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectory() {
 
 	// The response in VFS path /file/a/b
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.config_obj,
+		db.GetSubjectJSON(self.config_obj,
 			client_path_manager.VFSPath([]string{"file", "a", "b"}),
 			resp)
 		return resp.TotalRows == 2
@@ -209,7 +209,7 @@ func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectory() {
 
 	// The response in VFS path /file/a/b/c
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.config_obj,
+		db.GetSubjectJSON(self.config_obj,
 			client_path_manager.VFSPath([]string{"file", "a", "b", "c"}),
 			resp)
 		return resp.TotalRows == 2

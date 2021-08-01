@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"sort"
 
 	"github.com/Velocidex/ordereddict"
@@ -40,11 +39,12 @@ func NewFileStoreTestSuite(config_obj *config_proto.Config,
 }
 
 func (self *FileStoreTestSuite) TestListChildrenIntermediateDirs() {
-	fd, err := self.filestore.WriteFile("/a/b/c/d/Foo")
+	components := NewSafeDatastorePath("a", "b", "c", "d", "Foo")
+	fd, err := self.filestore.WriteFile(components)
 	assert.NoError(self.T(), err)
 	defer fd.Close()
 
-	infos, err := self.filestore.ListDirectory("/a")
+	infos, err := self.filestore.ListDirectory(NewSafeDatastorePath("a"))
 	assert.NoError(self.T(), err)
 
 	names := []string{}
@@ -57,16 +57,16 @@ func (self *FileStoreTestSuite) TestListChildrenIntermediateDirs() {
 }
 
 func (self *FileStoreTestSuite) TestListChildren() {
-	filename := "/a/b"
-	fd, err := self.filestore.WriteFile(path.Join(filename, "Foo.txt"))
+	filename := NewSafeDatastorePath("a", "b")
+	fd, err := self.filestore.WriteFile(filename.AddChild("Foo.txt"))
 	assert.NoError(self.T(), err)
 	defer fd.Close()
 
-	fd, err = self.filestore.WriteFile(path.Join(filename, "Bar.txt"))
+	fd, err = self.filestore.WriteFile(filename.AddChild("Bar.txt"))
 	assert.NoError(self.T(), err)
 	defer fd.Close()
 
-	fd, err = self.filestore.WriteFile(path.Join(filename, "Bar", "Baz"))
+	fd, err = self.filestore.WriteFile(filename.AddChild("Bar", "Baz"))
 	assert.NoError(self.T(), err)
 	defer fd.Close()
 
@@ -82,10 +82,12 @@ func (self *FileStoreTestSuite) TestListChildren() {
 	assert.Equal(self.T(), names, []string{"Bar", "Bar.txt", "Foo.txt"})
 
 	names = nil
-	err = self.filestore.Walk(filename, func(path string, info os.FileInfo, err error) error {
+	err = self.filestore.Walk(filename, func(
+		path SafeDatastorePath, info os.FileInfo) error {
 		// Ignore directories as they are not important.
 		if !info.IsDir() {
-			names = append(names, path)
+			names = append(names, path.AsFilestoreFilename(
+				self.config_obj))
 		}
 		return nil
 	})
@@ -100,16 +102,19 @@ func (self *FileStoreTestSuite) TestListChildren() {
 
 	// Walk non existent directory just returns no results.
 	names = nil
-	err = self.filestore.Walk(filename+"/nonexistant", func(path string, info os.FileInfo, err error) error {
-		names = append(names, path)
-		return nil
-	})
+	err = self.filestore.Walk(filename.AddChild("nonexistant"),
+		func(path SafeDatastorePath, info os.FileInfo) error {
+			names = append(names, path.AsFilestoreFilename(
+				self.config_obj))
+			return nil
+		})
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(names), 0)
 }
 
 func (self *FileStoreTestSuite) TestFileReadWrite() {
-	fd, err := self.filestore.WriteFile("/test/foo")
+	filename := NewSafeDatastorePath("test", "foo")
+	fd, err := self.filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 	defer fd.Close()
 
@@ -126,7 +131,7 @@ func (self *FileStoreTestSuite) TestFileReadWrite() {
 	assert.NoError(self.T(), err)
 
 	buff := make([]byte, 6)
-	reader, err := self.filestore.ReadFile("/test/foo")
+	reader, err := self.filestore.ReadFile(filename)
 	assert.NoError(self.T(), err)
 	defer reader.Close()
 
@@ -206,7 +211,7 @@ func (self *FileStoreTestSuite) TestFileReadWrite() {
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), int64(29), size)
 
-	fd, err = self.filestore.WriteFile("/test/foo")
+	fd, err = self.filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 	size, err = fd.Size()
 	assert.NoError(self.T(), err)
@@ -229,7 +234,8 @@ func (self *QueueManagerTestSuite) Debug() {
 }
 
 func (self *QueueManagerTestSuite) FilestoreGet(path string) string {
-	fd, _ := self.file_store.ReadFile(path)
+	components := NewSafeDatastorePath(utils.SplitComponents(path)...)
+	fd, _ := self.file_store.ReadFile(components)
 	value, _ := ioutil.ReadAll(fd)
 	return string(value)
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -89,15 +90,23 @@ func (self *VFSService) ProcessDownloadFile(
 	for row := range reader.Rows(ctx) {
 		Accessor, _ := row.GetString("Accessor")
 		Path, _ := row.GetString("Path")
+
+		// Internally we only deal with path components so
+		// split the Path provided by the artifact into
+		// components.
+		client_path_components := utils.SplitComponents(Path)
+
 		MD5, _ := row.GetString("Md5")
 		SHA256, _ := row.GetString("Sha256")
 
 		// Figure out where the file was uploaded to.
-		vfs_path_manager := flow_path_manager.GetUploadsFile(Accessor, Path)
+		vfs_path_manager := flow_path_manager.GetUploadsFile(
+			Accessor, client_path_components)
 
 		// Check to make sure the file actually exists.
 		file_store_factory := file_store.GetFileStore(config_obj)
-		_, err := file_store_factory.StatFile(vfs_path_manager.Path())
+		_, err := file_store_factory.StatFileComponents(
+			vfs_path_manager.Path())
 		if err != nil {
 			logger.Error(
 				"Unable to save flow %v: %v",
@@ -105,20 +114,23 @@ func (self *VFSService) ProcessDownloadFile(
 			continue
 		}
 
-		_, err = file_store_factory.StatFile(vfs_path_manager.IndexPath())
+		_, err = file_store_factory.StatFileComponents(
+			vfs_path_manager.IndexPath())
 
 		// We store a place holder in the VFS pointing at the
 		// read vfs_path of the download.
 		db, _ := datastore.GetDB(config_obj)
-		err = db.SetSubject(config_obj,
-			flow_path_manager.GetVFSDownloadInfoPath(Accessor, Path).Path(),
+		err = db.SetSubjectJSON(config_obj,
+			flow_path_manager.GetVFSDownloadInfoPath(
+				Accessor, client_path_components).Path(),
 			&flows_proto.VFSDownloadInfo{
-				VfsPath: vfs_path_manager.Path(),
-				Mtime:   uint64(ts) * 1000000,
-				Sparse:  err == nil, // If index file exists we have an index.
-				Size:    vql_subsystem.GetIntFromRow(scope, row, "Size"),
-				MD5:     MD5,
-				SHA256:  SHA256,
+				VfsPath:    vfs_path_manager.FullPath(),
+				Components: vfs_path_manager.Path(),
+				Mtime:      uint64(ts) * 1000000,
+				Sparse:     err == nil, // If index file exists we have an index.
+				Size:       vql_subsystem.GetIntFromRow(scope, row, "Size"),
+				MD5:        MD5,
+				SHA256:     SHA256,
 			})
 		if err != nil {
 			logger.Error(
@@ -283,9 +295,9 @@ func (self *VFSService) flush_state(
 		return err
 	}
 	client_path_manager := paths.NewClientPathManager(client_id)
-	return db.SetSubject(config_obj,
+	return db.SetSubjectJSON(config_obj,
 		client_path_manager.VFSPath(vfs_components),
-		&flows_proto.VFSListResponse{
+		&api_proto.VFSListResponse{
 			Columns:   columns,
 			Timestamp: timestamp,
 			Response:  string(serialized),
