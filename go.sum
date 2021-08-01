@@ -982,3 +982,5 @@ www.velocidex.com/golang/vfilter v0.0.0-20210727160300-eadf120417ae h1:vwvMEW+I6
 www.velocidex.com/golang/vfilter v0.0.0-20210727160300-eadf120417ae/go.mod h1:KB724xBNYh4lgipyGwsvx0/5hXRqsKjmrMrkSjGESvU=
 www.velocidex.com/golang/vtypes v0.0.0-20210723112704-86a8e7cd9aa4 h1:y5NGh7FKlgU2Y44FfCCl1JE1dgADpDW1AffmtP91b3A=
 www.velocidex.com/golang/vtypes v0.0.0-20210723112704-86a8e7cd9aa4/go.mod h1:PIG8uSY330pJd620KPksZpTaAsX3sIMiiNJQihZph6c=
+www.velocidex.com/golang/vtypes v0.0.0-20210728123451-f085971da113 h1:IXya95AX2bUPIbgi4vEWeer6MoNdKC3nRRtxsulcAuQ=
+www.velocidex.com/golang/vtypes v0.0.0-20210728123451-f085971da113/go.mod h1:PIG8uSY330pJd620KPksZpTaAsX3sIMiiNJQihZph6c=
