@@ -1,3 +1,5 @@
 Queries:
-  - SELECT * FROM Artifact.Windows.Carving.CobaltStrike(
-      TargetFileGlob=srcDir + "/artifacts/testdata/files/CSDump.bin")
+  - SELECT 
+      split(sep='velociraptor',String=ConfigSource) as ConfigSource,
+      Offset, Xor, DecodedConfig,DecodedData
+    FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSDump.bin")

@@ -14,7 +14,8 @@ description: |
   - Configuration is built in a typical index / type / length / value structure 
   with either big endian values or zero terminated strings.
   - During testing, some fields were observed presenting best with a zero byte 
-  terminator, others as the defined length. 
+  terminator, others as the defined length. Defined length have been base64 
+  encoded to account for binary output for post processing.
   
   NOTE:  
   This content simply carves the configuration and does not unpack files on
@@ -103,22 +104,26 @@ export: |
         # 0x000b:Malleable_C2_Instructions,0x0003:Type, adding length check as not sure if we can rely on termination
         ["__Malleable_C2_Instructions_prefix", 0, "String",{"term_hex": "000b0003", length: 10000, max_length: 10000}],
         ["__Malleable_C2_Instructions_length","x=>len(list=x.__Malleable_C2_Instructions_prefix) + 4","uint16b"],
-        ["Malleable_C2_Instructions", "x=>len(list=x.__Malleable_C2_Instructions_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__Malleable_C2_Instructions_length"}],
+        ["__Malleable_C2_Instructions", "x=>len(list=x.__Malleable_C2_Instructions_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__Malleable_C2_Instructions_length"}],
+        ["Malleable_C2_Instructions",0,"Value",{ "value": "x=>'base64:' + base64encode(string=x.__Malleable_C2_Instructions)" }],
 
         # 0x000c:HttpGetHeader,0x0003:Type, adding length check as we can not rely on termination
         ["__HttpGetHeader_prefix", 0, "String",{"term_hex": "000c0003", length: 10000, max_length: 10000}],
         ["__HttpGetHeader_length","x=>len(list=x.__HttpGetHeader_prefix) + 4","uint16b"],
-        ["HttpGetHeader","x=>len(list=x.__HttpGetHeader_prefix) + 6","String",{"term":"***NOTERM***", "length": "x=> x.__HttpGetHeader_length"}],
+        ["__HttpGetHeader","x=>len(list=x.__HttpGetHeader_prefix) + 6","String",{"term":"***NOTERM***", "length": "x=> x.__HttpGetHeader_length"}],
+        ["HttpGetHeader",0,"Value",{ "value": "x=>'base64:' + base64encode(string=x.__HttpGetHeader)" }],
 
         # 0x000d:HttpPostHeader,0x0003:Type, adding length check as we can not rely on termination
         ["__http_post_header_prefix", 0, "String",{"term_hex": "000d0003", length: 10000, max_length: 10000}],
         ["__HttpPostHeader_length","x=>len(list=x.__http_post_header_prefix) + 4","uint16b"],
-        ["HttpPostHeader","x=>len(list=x.__http_post_header_prefix) + 6","String",{"term":"***NOTERM***", "length": "x=> x.__HttpPostHeader_length"}],
+        ["__HttpPostHeader","x=>len(list=x.__http_post_header_prefix) + 6","String",{"term":"***NOTERM***", "length": "x=> x.__HttpPostHeader_length"}],
+        ["HttpPostHeader",0,"Value",{ "value": "x=>'base64:' + base64encode(string=x.__HttpPostHeader)" }],
         
         # 0x000e:SpawnTo,0x0003:Type # Adding length check as we can not rely on termination
         ["__SpawnTo_header_prefix", 0, "String",{"term_hex": "000e0003", length: 10000, max_length: 10000}],
         ["__SpawnTo_header_length","x=>len(list=x.__SpawnTo_header_prefix) + 4","uint16b"],
-        ["SpawnTo", "x=>len(list=x.__SpawnTo_header_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__SpawnTo_header_length"}],
+        ["__SpawnTo", "x=>len(list=x.__SpawnTo_header_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__SpawnTo_header_length"}],
+        ["SpawnTo",0,"Value",{ "value": "x=>'base64:' + base64encode(string=x.__SpawnTo)" }],
 
         # 0x000f:PipeName,0x0003:Type
         ["__pipename_prefix", 0, "String",{"term_hex": "000f0003", length: 10000, max_length: 10000}],
@@ -150,11 +155,25 @@ export: |
         ["__DNSSleep_prefix", 0, "String",{"term_hex": "001400020004", length: 10000, max_length: 10000}],
         ["DNSSleep", "x=>len(list=x.__DNSSleep_prefix) + 6", "uint32b"],
         
-        #0x0015: 'SSH_', to add - didnt find any examples
-        #0x0016: 'SSH_', to add - didnt find any examples 
-        #0x0017: 'SSH_', to add - didnt find any examples
-        #0x0018: 'SSH_', to add - didnt find any examples
-        #0x0019: 'SSH_', to add - didnt find any examples
+        # 0x0015:SSH_1, to complete - didnt find any examples assuming zero terminated
+        ["__SSH_1_prefix", 0, "String",{"term_hex": "00150003", length: 10000, max_length: 10000}],
+        ["SSH_1", "x=>len(list=x.__SSH_1_prefix) + 6", "String"],
+        
+        # 0x0016:SSH_2, to complete - didnt find any examples assuming zero terminated
+        ["__SSH_2_prefix", 0, "String",{"term_hex": "00160003", length: 10000, max_length: 10000}],
+        ["SSH_2", "x=>len(list=x.__SSH_2_prefix) + 6", "String"],
+        
+        # 0x0017:SSH_3, to complete - didnt find any examples assuming zero terminated
+        ["__SSH_3_prefix", 0, "String",{"term_hex": "00170003", length: 10000, max_length: 10000}],
+        ["SSH_3", "x=>len(list=x.__SSH_3_prefix) + 6", "String"],
+        
+        # 0x0018:SSH_4, to complete - didnt find any examples assuming zero terminated
+        ["__SSH_4_prefix", 0, "String",{"term_hex": "00180003", length: 10000, max_length: 10000}],
+        ["SSH_4", "x=>len(list=x.__SSH_4_prefix) + 6", "String"],
+        
+        # 0x0019:SSH_5, to complete - didnt find any examples assuming zero terminated
+        ["__SSH_5_prefix", 0, "String",{"term_hex": "00190003", length: 10000, max_length: 10000}],
+        ["SSH_5", "x=>len(list=x.__SSH_5_prefix) + 6", "String"],
         
         # 0x001a:GetVerb,0x0003:Type
         ["__GetVerb_prefix", 0, "String",{"term_hex": "001a0003"}],
@@ -180,20 +199,20 @@ export: |
         ["__CryptoScheme_prefix", 0, "String",{"term_hex": "001f00010002", length: 10000, max_length: 10000}],
         ["CryptoScheme", "x=>len(list=x.__CryptoScheme_prefix) + 6", "uint16b"],
         
-        # 0x0020:Proxy, 0x0003:Type # Adding length check as we can not rely on termination
+        # 0x0020:Proxy, 0x0003:Type
         ["__Proxy_prefix", 0, "String",{"term_hex": "000e0003", length: 10000, max_length: 10000}],
-        ["__Proxy_length","x=>len(list=x.__Proxy_prefix) + 4","uint16b"],
-        ["Proxy", "x=>len(list=x.__Proxy_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__Proxy_length"}],
+        #["__Proxy_length","x=>len(list=x.__Proxy_prefix) + 4","uint16b"],
+        ["Proxy", "x=>len(list=x.__Proxy_prefix) + 6", "String"],
         
-        # 0x0021:ProxyUsername, 0x0003:Type # Adding length check as we can not rely on termination
+        # 0x0021:ProxyUsername, 0x0003:Type
         ["__ProxyUsername_prefix", 0, "String",{"term_hex": "000e0003", length: 10000, max_length: 10000}],
         ["__ProxyUsername_length","x=>len(list=x.__ProxyUsername_prefix) + 4","uint16b"],
-        ["ProxyUsername", "x=>len(list=x.__ProxyUsername_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__ProxyUsername_length"}],
+        ["ProxyUsername", "x=>len(list=x.__ProxyUsername_prefix) + 6", "String"],
         
-        # 0x0022:ProxyPassword, 0x0003:Type # Adding length check as we can not rely on termination
+        # 0x0022:ProxyPassword, 0x0003:Type
         ["__ProxyPassword_prefix", 0, "String",{"term_hex": "000e0003", length: 10000, max_length: 10000}],
         ["__ProxyPassword_length","x=>len(list=x.__ProxyPassword_prefix) + 4","uint16b"],
-        ["ProxyPassword", "x=>len(list=x.__ProxyPassword_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__ProxyPassword_length"}],
+        ["ProxyPassword", "x=>len(list=x.__ProxyPassword_prefix) + 6", "String"],
         
         # 0x0023:ProxyType, 0x0001:Type, 0x0002:Length
         ["__ProxyType", 0, "String",{"term_hex": "002300010002", length: 10000, max_length: 10000}],
@@ -232,7 +251,8 @@ export: |
         # 0x002a:ObfuscateSectionsInfo,0x0003:Type # Adding length check as we can not rely on termination
         ["__ObfuscateSectionsInfo_prefix", 0, "String",{"term_hex": "002a0003", length: 10000, max_length: 10000}],
         ["__ObfuscateSectionsInfo_length","x=>len(list=x.__ObfuscateSectionsInfo_prefix) + 4","uint16b"],
-        ["ObfuscateSectionsInfo", "x=>len(list=x.__ObfuscateSectionsInfo_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__ObfuscateSectionsInfo_length"}],
+        ["__ObfuscateSectionsInfo", "x=>len(list=x.__ObfuscateSectionsInfo_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__ObfuscateSectionsInfo_length"}],
+        ["ObfuscateSectionsInfo",0,"Value",{ "value": "x=>'base64:' + base64encode(string=x.__ObfuscateSectionsInfo)" }],
         
         #0x002b:ProcessInjectStartRWX, 0x0001:Type, 0x0002:Length
         ["__ProcessInjectStartRWX", 0, "String",{"term_hex": "002b00010002", length: 10000, max_length: 10000}],
@@ -271,12 +291,14 @@ export: |
         # 0x002e:ProcessInjectTransformx86, 0x0003:Type, # Adding length check as we can not rely on termination
         ["__ProcessInjectTransformx86_prefix", 0, "String",{"term_hex": "002e0003", length: 10000, max_length: 10000}],
         ["__ProcessInjectTransformx86_length","x=>len(list=x.__ProcessInjectTransformx86_prefix) + 4","uint16b"],
-        ["ProcessInjectTransformx86", "x=>len(list=x.__ProcessInjectTransformx86_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__ProcessInjectTransformx86_length"}],
+        ["__ProcessInjectTransformx86", "x=>len(list=x.__ProcessInjectTransformx86_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__ProcessInjectTransformx86_length"}],
+        ["ProcessInjectTransformx86",0,"Value",{ "value": "x=>'base64:' + base64encode(string=x.__ProcessInjectTransformx86)" }],
         
         # 0x002f:ProcessInjectTransformx64, 0x0003:Type, # Adding length check as we can not rely on termination
         ["__ProcessInjectTransformx64_prefix", 0, "String",{"term_hex": "002f0003", length: 10000, max_length: 10000}],
         ["__ProcessInjectTransformx64_length","x=>len(list=x.__ProcessInjectTransformx64_prefix) + 4","uint16b"],
-        ["ProcessInjectTransformx64", "x=>len(list=x.__ProcessInjectTransformx64_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__ProcessInjectTransformx64_length"}],
+        ["__ProcessInjectTransformx64", "x=>len(list=x.__ProcessInjectTransformx64_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__ProcessInjectTransformx64_length"}],
+        ["ProcessInjectTransformx64",0,"Value",{ "value": "x=>'base64:' + base64encode(string=x.__ProcessInjectTransformx64)" }],
         
         # 0x0032:UsesCookies, 0x0001:Type, 0x0002:Length
         ["__UsesCookies_prefix", 0, "String",{"term_hex": "003200010002", length: 10000, max_length: 10000}],
@@ -285,7 +307,8 @@ export: |
         # 0x0033:ProcessInjectExecute, 0x0003:Type # Adding length check as we can not rely on termination
         ["__ProcessInjectExecute_prefix", 0, "String",{"term_hex": "00330003", length: 10000, max_length: 10000}],
         ["__ProcessInjectExecute_length","x=>len(list=x.__ProcessInjectExecute_prefix) + 4","uint16b"],
-        ["ProcessInjectExecute", "x=>len(list=x.__ProcessInjectExecute_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__ProcessInjectExecute_length"}],
+        ["__ProcessInjectExecute", "x=>len(list=x.__ProcessInjectExecute_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__ProcessInjectExecute_length"}],
+        ["ProcessInjectExecute",0,"Value",{ "value": "x=>'base64:' + base64encode(string=x.__ProcessInjectExecute)" }],
         
         # 0x0034:ProcessInjectAllocationMethod, 0x0001:Type, 0x0002:Length
         ["__ProcessInjectAllocationMethod_prefix", 0, "String",{"term_hex": "003400010002", length: 10000, max_length: 10000}],
@@ -294,12 +317,12 @@ export: |
         # 0x0035:ProcessInjectStub, 0x0003:Type # Adding length check as we can not rely on termination
         ["__ProcessInjectStub_prefix", 0, "String",{"term_hex": "00350003", length: 10000, max_length: 10000}],
         ["__ProcessInjectStub_length","x=>len(list=x.__ProcessInjectStub_prefix) + 4","uint16b"],
-        ["ProcessInjectStub", "x=>len(list=x.__ProcessInjectStub_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__ProcessInjectStub_length"}],
+        ["__ProcessInjectStub", "x=>len(list=x.__ProcessInjectStub_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__ProcessInjectStub_length"}],
+        ["ProcessInjectStub",0,"Value",{ "value": "x=>'base64:' + base64encode(string=x.__ProcessInjectStub)" }],
         
         # 0x0036:HostHeader, 0x0003:Type # Adding length check as we can not rely on termination
         ["__HostHeader_prefix", 0, "String",{"term_hex": "00360003", length: 10000, max_length: 10000}],
-        ["__HostHeader_length","x=>len(list=x.__HostHeader_prefix) + 4","uint16b"],
-        ["HostHeader", "x=>len(list=x.__HostHeader_prefix) + 6", "String",{"term":"***NOTERM***", "length": "x=> x.__HostHeader_length"}],
+        ["HostHeader", "x=>len(list=x.__HostHeader_prefix) + 6", "String"],
     ]]]'''
 
 sources:
@@ -348,7 +371,7 @@ sources:
           })
 
       -- output rows
-        SELECT 
+      SELECT 
             ConfigSource,
             Offset, 
             Xor,
