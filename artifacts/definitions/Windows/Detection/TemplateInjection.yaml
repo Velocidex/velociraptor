@@ -20,7 +20,7 @@ parameters:
     default: C:\Users\**\*.{docx,dotx,xlsx,xltx,pptx,potx,ppsx,sldx}
   - name: TemplateRegex
     description: Regex to search inside resource section.
-    default: '^(https?|smb|\\\\\\\\)'
+    default: '^(https?|smb|\\\\|//)'
   - name: UploadDocument
     type: bool
     description: Select to upload document on detection.
