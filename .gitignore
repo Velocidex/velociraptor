@@ -19,3 +19,5 @@ artifacts/assets/ab0x.go
 gui/assets/ab0x.go
 config/ab0x.go
 .eslintcache
+**/.DS_Store
+.DS_Store
