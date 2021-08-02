@@ -83,11 +83,10 @@ func (self *FileStoreTestSuite) TestListChildren() {
 
 	names = nil
 	err = self.filestore.Walk(filename, func(
-		path SafeDatastorePath, info os.FileInfo) error {
+		path PathSpec, info os.FileInfo) error {
 		// Ignore directories as they are not important.
 		if !info.IsDir() {
-			names = append(names, path.AsFilestoreFilename(
-				self.config_obj))
+			names = append(names, path.AsClientPath())
 		}
 		return nil
 	})
@@ -103,7 +102,7 @@ func (self *FileStoreTestSuite) TestListChildren() {
 	// Walk non existent directory just returns no results.
 	names = nil
 	err = self.filestore.Walk(filename.AddChild("nonexistant"),
-		func(path SafeDatastorePath, info os.FileInfo) error {
+		func(path PathSpec, info os.FileInfo) error {
 			names = append(names, path.AsFilestoreFilename(
 				self.config_obj))
 			return nil
@@ -233,10 +232,11 @@ func (self *QueueManagerTestSuite) Debug() {
 	}
 }
 
-func (self *QueueManagerTestSuite) FilestoreGet(path string) string {
-	components := NewSafeDatastorePath(utils.SplitComponents(path)...)
-	fd, _ := self.file_store.ReadFile(components)
-	value, _ := ioutil.ReadAll(fd)
+func (self *QueueManagerTestSuite) FilestoreGet(path PathSpec) string {
+	fd, err := self.file_store.ReadFile(path.SetType("json"))
+	assert.NoError(self.T(), err)
+	value, err := ioutil.ReadAll(fd)
+	assert.NoError(self.T(), err)
 	return string(value)
 }
 
@@ -251,8 +251,10 @@ func (self *QueueManagerTestSuite) TestPush() {
 	output, cancel := self.manager.Watch(ctx, artifact_name)
 	defer cancel()
 
+	log_path := NewUnsafeDatastorePath("log_path")
 	err := self.manager.PushEventRows(
-		MockPathManager{"log_path", artifact_name}, payload)
+		MockPathManager{log_path, artifact_name},
+		payload)
 
 	assert.NoError(self.T(), err)
 
@@ -268,7 +270,7 @@ func (self *QueueManagerTestSuite) TestPush() {
 	}
 
 	// Make sure the manager wrote the event to the filestore as well.
-	assert.Contains(self.T(), self.FilestoreGet("log_path"), "foo")
+	assert.Contains(self.T(), self.FilestoreGet(log_path), "foo")
 }
 
 func NewQueueManagerTestSuite(
@@ -283,11 +285,11 @@ func NewQueueManagerTestSuite(
 }
 
 type MockPathManager struct {
-	Path         string
+	Path         PathSpec
 	ArtifactName string
 }
 
-func (self MockPathManager) GetPathForWriting() (string, error) {
+func (self MockPathManager) GetPathForWriting() (PathSpec, error) {
 	return self.Path, nil
 }
 

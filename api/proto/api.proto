@@ -18,7 +18,7 @@ import "users.proto";
 import "csv.proto";
 import "download.proto";
 import "completions.proto";
-import "vfs.proto";
+import "vfs_api.proto";
 
 package proto;
 
@@ -55,13 +55,10 @@ message VFSRefreshDirectoryRequest {
 
 message VFSFileBuffer {
     string client_id = 1;
-    string vfs_path = 2 [(sem_type) = {
-            description: "The VFS Path to list files in .",
-        }];
-
     uint64 offset = 3;
     uint32 length = 4;
     bytes data = 5;
+    repeated string components = 6;
 }
 
 

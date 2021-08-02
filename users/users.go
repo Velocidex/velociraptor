@@ -23,13 +23,11 @@ import (
 	"crypto/subtle"
 	"fmt"
 	"os"
-	"path"
 	"regexp"
 
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	constants "www.velocidex.com/golang/velociraptor/constants"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 )
@@ -73,7 +71,7 @@ func SetUser(config_obj *config_proto.Config, user_record *api_proto.Velocirapto
 		return err
 	}
 
-	return db.SetSubjectJSON(config_obj,
+	return db.SetSubject(config_obj,
 		paths.UserPathManager{Name: user_record.Name}.Path(),
 		user_record)
 }
@@ -84,14 +82,14 @@ func ListUsers(config_obj *config_proto.Config) ([]*api_proto.VelociraptorUser, 
 		return nil, err
 	}
 
-	children, err := db.ListChildren(config_obj, constants.USER_URN, 0, 500)
+	children, err := db.ListChildren(config_obj, paths.USER_URN, 0, 500)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make([]*api_proto.VelociraptorUser, 0, len(children))
 	for _, child := range children {
-		username := path.Base(child)
+		username := child.Base()
 		user_record, err := GetUser(config_obj, username)
 		if err == nil {
 			result = append(result, user_record)
@@ -129,7 +127,7 @@ func GetUserWithHashes(config_obj *config_proto.Config, username string) (
 	}
 
 	user_record := &api_proto.VelociraptorUser{}
-	err = db.GetSubjectJSON(config_obj,
+	err = db.GetSubject(config_obj,
 		paths.UserPathManager{Name: username}.Path(), user_record)
 	if errors.Is(err, os.ErrNotExist) || user_record.Name == "" {
 		return nil, errors.New("User not found")
@@ -162,7 +160,7 @@ func SetUserOptions(config_obj *config_proto.Config,
 		old_options.Options = options.Options
 	}
 
-	return db.SetSubjectJSON(config_obj, path_manager.GUIOptions(), old_options)
+	return db.SetSubject(config_obj, path_manager.GUIOptions(), old_options)
 }
 
 func GetUserOptions(config_obj *config_proto.Config, username string) (
@@ -175,7 +173,7 @@ func GetUserOptions(config_obj *config_proto.Config, username string) (
 	}
 
 	options := &api_proto.SetGUIOptionsRequest{}
-	err = db.GetSubjectJSON(config_obj, path_manager.GUIOptions(), options)
+	err = db.GetSubject(config_obj, path_manager.GUIOptions(), options)
 	if options.Options == "" {
 		options.Options = default_user_options
 	}

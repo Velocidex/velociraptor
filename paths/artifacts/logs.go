@@ -2,7 +2,6 @@ package artifacts
 
 import (
 	"context"
-	"fmt"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -15,93 +14,96 @@ type ArtifactLogPathManager struct {
 	*ArtifactPathManager
 }
 
-func (self *ArtifactLogPathManager) Path() string {
+func (self *ArtifactLogPathManager) Path() api.PathSpec {
 	result, _ := self.GetPathForWriting()
 	return result
 }
 
 // Returns the root path for all day logs. Walking this path will
 // produce all logs for this client and all artifacts.
-func (self *ArtifactLogPathManager) GetRootPath() string {
+func (self *ArtifactLogPathManager) GetRootPath() api.PathSpec {
 	switch self.mode {
 	case paths.MODE_CLIENT:
-		return fmt.Sprintf(
-			"/clients/%s/collections/%s/logs",
-			self.client_id, self.flow_id)
+		return api.NewUnsafeDatastorePath(
+			"clients", self.client_id,
+			"collections", self.flow_id, "logs")
 
 	case paths.MODE_SERVER:
-		return fmt.Sprintf(
-			"/clients/server/collections/%s/logs", self.flow_id)
+		return api.NewUnsafeDatastorePath(
+			"clients", "server",
+			"collections", self.flow_id, "logs")
 
 	case paths.MODE_SERVER_EVENT:
-		return "/server_artifact_logs"
+		return api.NewUnsafeDatastorePath("server_artifact_logs")
 
 	case paths.MODE_CLIENT_EVENT:
 		if self.client_id == "" {
 			// Should never normally happen.
-			return "/clients/nobody"
+			return api.NewUnsafeDatastorePath("clients", "nobody")
 
 		} else {
-			return fmt.Sprintf("/clients/%s/monitoring_logs",
-				self.client_id)
+			return api.NewUnsafeDatastorePath(
+				"clients", self.client_id, "monitoring_logs")
 		}
 	default:
-		return "invalid"
+		return nil
 	}
 }
 
-func (self *ArtifactLogPathManager) GetPathForWriting() (string, error) {
+func (self *ArtifactLogPathManager) GetPathForWriting() (api.PathSpec, error) {
 	switch self.mode {
 	case paths.MODE_CLIENT:
-		return fmt.Sprintf(
-			"/clients/%s/collections/%s/logs",
-			self.client_id, self.flow_id), nil
+		return api.NewUnsafeDatastorePath(
+			"clients", self.client_id,
+			"collections", self.flow_id, "logs"), nil
 
 	case paths.MODE_SERVER:
-		return fmt.Sprintf(
-			"/clients/server/collections/%s/logs", self.flow_id), nil
+		return api.NewUnsafeDatastorePath(
+			"clients", "server",
+			"collections", self.flow_id, "logs"), nil
 
 	case paths.MODE_SERVER_EVENT:
 		if self.source != "" {
-			return fmt.Sprintf(
-				"/server_artifact_logs/%s/%s/%s.json",
+			return api.NewUnsafeDatastorePath(
+				"server_artifact_logs",
 				self.base_artifact_name, self.source,
 				self.getDayName()), nil
 		} else {
-			return fmt.Sprintf(
-				"/server_artifact_logs/%s/%s.json",
+			return api.NewUnsafeDatastorePath(
+				"server_artifact_logs",
 				self.base_artifact_name, self.getDayName()), nil
 		}
 
 	case paths.MODE_CLIENT_EVENT:
 		if self.client_id == "" {
 			// Should never normally happen.
-			return fmt.Sprintf(
-				"/clients/nobody/%s/%s.json",
+			return api.NewUnsafeDatastorePath(
+				"clients", "nobody",
 				self.base_artifact_name, self.getDayName()), nil
 
 		} else {
 			if self.source != "" {
-				return fmt.Sprintf(
-					"/clients/%s/monitoring_logs/%s/%s/%s.json",
-					self.client_id,
+				return api.NewUnsafeDatastorePath(
+					"clients", self.client_id,
+					"monitoring_logs",
 					self.base_artifact_name, self.source,
 					self.getDayName()), nil
 			} else {
-				return fmt.Sprintf(
-					"/clients/%s/monitoring_logs/%s/%s.json",
-					self.client_id,
-					self.base_artifact_name, self.getDayName()), nil
+				return api.NewUnsafeDatastorePath(
+					"clients", self.client_id,
+					"monitoring_logs",
+					self.base_artifact_name,
+					self.getDayName()), nil
 			}
 		}
 
 		// Internal artifacts are not written anywhere but are
 		// still replicated.
 	case paths.INTERNAL:
-		return "", nil
+		return nil, nil
 	}
 
-	return "", nil
+	return nil, nil
 }
 
 func (self *ArtifactLogPathManager) GetAvailableFiles(

@@ -136,7 +136,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 	}
 
 	err = db.SetIndex(config_obj,
-		constants.CLIENT_INDEX_URN,
+		paths.CLIENT_INDEX_URN,
 		client_id, keywords)
 	if err != nil {
 		return err
@@ -164,7 +164,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	}
 
 	rs_reader, err := result_sets.NewResultSetReader(
-		file_store_factory, path_manager)
+		file_store_factory, path_manager.Path())
 	if err != nil {
 		return err
 	}
@@ -233,7 +233,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	}
 
 	return db.SetIndex(config_obj,
-		constants.CLIENT_INDEX_URN,
+		paths.CLIENT_INDEX_URN,
 		client_id, keywords)
 }
 

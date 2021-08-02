@@ -25,7 +25,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -240,38 +239,6 @@ func (self WriteCSVPlugin) Call(
 				return
 			}
 			defer file.Close()
-
-			writer = csv.GetCSVAppender(scope, file, true)
-			defer writer.Close()
-
-		case "fs":
-			err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
-			if err != nil {
-				scope.Log("write_csv: %s", err)
-				return
-			}
-
-			config_obj, ok := vql_subsystem.GetServerConfig(scope)
-			if !ok {
-				scope.Log("Command can only run on the server")
-				return
-			}
-
-			file_store_factory := file_store.GetFileStore(config_obj)
-			file, err := file_store_factory.WriteFile(arg.Filename)
-			if err != nil {
-				scope.Log("write_csv: Unable to open file %s: %v",
-					arg.Filename, err)
-				return
-			}
-			defer file.Close()
-
-			err = file.Truncate()
-			if err != nil {
-				scope.Log("write_csv: Unable to truncate file %s: %v",
-					arg.Filename, err)
-				return
-			}
 
 			writer = csv.GetCSVAppender(scope, file, true)
 			defer writer.Close()

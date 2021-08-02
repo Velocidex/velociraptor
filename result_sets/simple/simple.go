@@ -40,6 +40,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
@@ -142,12 +143,12 @@ type ResultSetFactory struct{}
 
 func (self ResultSetFactory) NewResultSetWriter(
 	file_store_factory api.FileStore,
-	log_path api.SafeDatastorePath,
+	log_path api.PathSpec,
 	opts *json.EncOpts,
 	truncate bool) (result_sets.ResultSetWriter, error) {
 
 	// If no path is provided, we are just a log sink
-	if log_path.IsEmpty() {
+	if utils.IsNil(log_path) {
 		return &NullResultSetWriter{}, nil
 	}
 
@@ -156,8 +157,8 @@ func (self ResultSetFactory) NewResultSetWriter(
 		return nil, err
 	}
 
-	idx_fd, err := file_store_factory.WriteFile(log_path.SetFileExtension(
-		".index"))
+	idx_fd, err := file_store_factory.WriteFile(log_path.SetType(
+		"index"))
 	if err != nil {
 		fd.Close()
 		return nil, err
@@ -188,7 +189,7 @@ type ResultSetReaderImpl struct {
 	total_rows int64
 	fd         api.FileReader
 	idx_fd     api.FileReader
-	log_path   api.SafeDatastorePath
+	log_path   api.PathSpec
 }
 
 func (self *ResultSetReaderImpl) TotalRows() int64 {
@@ -329,7 +330,7 @@ func (self NullReader) Stat() (glob.FileInfo, error) {
 
 func (self ResultSetFactory) NewResultSetReader(
 	file_store_factory api.FileStore,
-	log_path api.SafeDatastorePath) (result_sets.ResultSetReader, error) {
+	log_path api.PathSpec) (result_sets.ResultSetReader, error) {
 
 	fd, err := file_store_factory.ReadFile(log_path)
 	if err == io.EOF || errors.Is(err, os.ErrNotExist) {
@@ -340,8 +341,7 @@ func (self ResultSetFactory) NewResultSetReader(
 
 	// -1 indicates we dont know how many rows there are
 	total_rows := int64(-1)
-	idx_fd, err := file_store_factory.ReadFile(log_path.SetFileExtension(
-		".index"))
+	idx_fd, err := file_store_factory.ReadFile(log_path.SetType("index"))
 	if err == nil {
 		stat, err := idx_fd.Stat()
 		if err == nil {

@@ -50,19 +50,19 @@ func NewTimedResultSetReader(
 type Factory interface {
 	NewResultSetWriter(
 		file_store_factory api.FileStore,
-		log_path api.SafeDatastorePath,
+		log_path api.PathSpec,
 		opts *json.EncOpts,
 		truncate bool) (ResultSetWriter, error)
 
 	NewResultSetReader(
 		file_store_factory api.FileStore,
-		log_path api.SafeDatastorePath,
+		log_path api.PathSpec,
 	) (ResultSetReader, error)
 }
 
 func NewResultSetWriter(
 	file_store_factory api.FileStore,
-	log_path api.SafeDatastorePath,
+	log_path api.PathSpec,
 	opts *json.EncOpts,
 	truncate bool) (ResultSetWriter, error) {
 	if rs_factory == nil {
@@ -75,7 +75,7 @@ func NewResultSetWriter(
 
 func NewResultSetReader(
 	file_store_factory api.FileStore,
-	log_path api.SafeDatastorePath) (ResultSetReader, error) {
+	log_path api.PathSpec) (ResultSetReader, error) {
 	if rs_factory == nil {
 		panic(errors.New("ResultSetFactory not initialized"))
 	}

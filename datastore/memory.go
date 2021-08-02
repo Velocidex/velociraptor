@@ -104,7 +104,7 @@ func isSubPath(parent_components []string, child_components []string) bool {
 
 func (self *TestDataStore) Walk(
 	config_obj *config_proto.Config,
-	root api.SafeDatastorePath, walkFn WalkFunc) error {
+	root api.PathSpec, walkFn WalkFunc) error {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -166,51 +166,21 @@ func (self *TestDataStore) UnQueueMessageForClient(
 	return nil
 }
 
-func (self *TestDataStore) GetSubjectJSON(
-	config_obj *config_proto.Config,
-	path api.UnsafeDatastorePath,
-	message proto.Message) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	filename := path.AsDatastoreFilename(config_obj)
-	result, pres := self.Subjects[filename]
-	if !pres {
-		// Try to open the protobuf version
-		filename := path.SetFileExtension("").AsDatastoreFilename(config_obj)
-		result, pres = self.Subjects[filename]
-		if !pres {
-			return errors.WithMessage(os.ErrNotExist,
-				fmt.Sprintf("While openning %v: not found", filename))
-		}
-	}
-	proto.Merge(message, result)
-	return nil
-}
-
-func (self *TestDataStore) SetSubjectJSON(
-	config_obj *config_proto.Config,
-	path api.UnsafeDatastorePath,
-	message proto.Message) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	filename := path.SetFileExtension(".json").AsDatastoreFilename(
-		config_obj)
-	self.Subjects[filename] = message
-	self.Components[filename] = path.Components()
-
-	return nil
+func (self *TestDataStore) Trace(name, filename string) {
+	// return
+	fmt.Printf("Trace TestDataStore: %v: %v\n", name, filename)
 }
 
 func (self *TestDataStore) GetSubject(
 	config_obj *config_proto.Config,
-	urn api.SafeDatastorePath,
+	urn api.PathSpec,
 	message proto.Message) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	result, pres := self.Subjects[urn.AsDatastoreFilename(config_obj)]
+	path := urn.AsDatastoreFilename(config_obj)
+	self.Trace("GetSubject", path)
+	result, pres := self.Subjects[path]
 	if !pres {
 		return errors.WithMessage(os.ErrNotExist,
 			fmt.Sprintf("While openning %v: not found", urn))
@@ -221,12 +191,14 @@ func (self *TestDataStore) GetSubject(
 
 func (self *TestDataStore) SetSubject(
 	config_obj *config_proto.Config,
-	urn api.SafeDatastorePath,
+	urn api.PathSpec,
 	message proto.Message) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	filename := urn.AsDatastoreFilename(config_obj)
+	self.Trace("SetSubject", filename)
+
 	self.Subjects[filename] = message
 	self.Components[filename] = urn.Components()
 
@@ -235,57 +207,28 @@ func (self *TestDataStore) SetSubject(
 
 func (self *TestDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
-	urn api.SafeDatastorePath) error {
+	urn api.PathSpec) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	filename := urn.AsDatastoreFilename(config_obj)
+	self.Trace("DeleteSubject", filename)
 	delete(self.Subjects, filename)
 	delete(self.Components, filename)
 
 	return nil
 }
 
-func (self *TestDataStore) ListChildrenJSON(
-	config_obj *config_proto.Config,
-	root api.UnsafeDatastorePath) ([]*DatastoreInfo, error) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	root_components := root.Components()
-	result := []*DatastoreInfo{}
-	for filename, components := range self.Components {
-		// We only want direct children
-		if len(components) != len(root_components)+1 {
-			continue
-		}
-
-		if !isSubPath(root_components, components) {
-			continue
-		}
-
-		name := components[len(components)-1]
-		if strings.HasSuffix(filename, ".json.db") {
-			// Unsanitize the component from a filename to
-			// a component name. ListChildrenJSON only
-			// lists json files.
-			result = append(result, &DatastoreInfo{
-				Name: utils.UnsanitizeComponent(name),
-			})
-		}
-	}
-
-	return result, nil
-}
-
 // Lists all the children of a URN.
 func (self *TestDataStore) ListChildren(
 	config_obj *config_proto.Config,
-	urn api.SafeDatastorePath,
+	urn api.PathSpec,
 	offset uint64, length uint64) (
-	[]api.SafeDatastorePath, error) {
+	[]api.PathSpec, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	self.Trace("ListChildren", urn.AsDatastoreDirectory(config_obj))
 
 	seen := make(map[string]bool)
 	root_components := urn.Components()
@@ -310,7 +253,7 @@ func (self *TestDataStore) ListChildren(
 
 	sort.Strings(names)
 
-	result := make([]api.SafeDatastorePath, 0, len(names))
+	result := make([]api.PathSpec, 0, len(names))
 	for _, name := range names {
 		result = append(result, urn.AddChild(name))
 	}
@@ -326,7 +269,7 @@ func (self *TestDataStore) ListChildren(
 // keywords will return the entity urn.
 func (self *TestDataStore) SetIndex(
 	config_obj *config_proto.Config,
-	index_urn api.SafeDatastorePath,
+	index_urn api.PathSpec,
 	entity string,
 	keywords []string) error {
 	self.mu.Lock()
@@ -346,7 +289,7 @@ func (self *TestDataStore) SetIndex(
 
 func (self *TestDataStore) UnsetIndex(
 	config_obj *config_proto.Config,
-	index_urn api.SafeDatastorePath,
+	index_urn api.PathSpec,
 	entity string,
 	keywords []string) error {
 	self.mu.Lock()
@@ -365,7 +308,7 @@ func (self *TestDataStore) UnsetIndex(
 
 func (self *TestDataStore) CheckIndex(
 	config_obj *config_proto.Config,
-	index_urn api.SafeDatastorePath,
+	index_urn api.PathSpec,
 	entity string,
 	keywords []string) error {
 	self.mu.Lock()
@@ -385,7 +328,7 @@ func (self *TestDataStore) CheckIndex(
 }
 
 // List all direct children
-func (self *TestDataStore) listChildren(urn api.SafeDatastorePath) []string {
+func (self *TestDataStore) listChildren(urn api.PathSpec) []string {
 	seen := make(map[string]bool)
 	result := []string{}
 
@@ -409,7 +352,7 @@ func (self *TestDataStore) listChildren(urn api.SafeDatastorePath) []string {
 
 func (self *TestDataStore) SearchClients(
 	config_obj *config_proto.Config,
-	index_urn api.SafeDatastorePath,
+	index_urn api.PathSpec,
 	query string, query_type string,
 	offset uint64, limit uint64, sort_direction SortingSense) []string {
 	seen := make(map[string]bool)
@@ -493,37 +436,4 @@ func (self *TestDataStore) Close() {
 	defer mu.Unlock()
 
 	gTestDatastore = NewTestDataStore()
-}
-
-func (self *TestDataStore) WalkComponents(
-	config_obj *config_proto.Config,
-	root api.UnsafeDatastorePath, walkFn ComponentWalkFunc) error {
-
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	root_components := root.Components()
-
-	is_subpath := func(components []string) bool {
-		if len(root_components) > len(components) {
-			return false
-		}
-
-		for i := 0; i < len(root_components); i++ {
-			if root_components[i] != components[i] {
-				return false
-			}
-		}
-		return true
-	}
-
-	for k := range self.Subjects {
-		components := utils.SplitComponents(k)
-		if !is_subpath(components) {
-			continue
-		}
-
-		walkFn(components)
-	}
-	return nil
 }

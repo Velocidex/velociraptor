@@ -70,7 +70,7 @@ func (self *AddFavorite) Call(ctx context.Context,
 		Spec:        specs,
 		Type:        arg.Type,
 	}
-	err = db.SetSubjectJSON(config_obj,
+	err = db.SetSubject(config_obj,
 		path_manager.Favorites(arg.Name, arg.Type), fav)
 	if err != nil {
 		scope.Log("favorites_save: %s", err)

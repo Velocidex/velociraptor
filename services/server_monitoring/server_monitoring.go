@@ -15,11 +15,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -115,7 +115,7 @@ func (self *EventTable) Update(
 		return err
 	}
 
-	err = db.SetSubject(config_obj, constants.ServerMonitoringFlowURN, request)
+	err = db.SetSubject(config_obj, paths.ServerMonitoringFlowURN, request)
 	if err != nil {
 		return err
 	}
@@ -276,7 +276,7 @@ func StartServerMonitoringService(
 
 	artifacts := &flows_proto.ArtifactCollectorArgs{}
 	err = db.GetSubject(
-		config_obj, constants.ServerMonitoringFlowURN, artifacts)
+		config_obj, paths.ServerMonitoringFlowURN, artifacts)
 	if err != nil || artifacts.Artifacts == nil {
 		// No monitoring rules found, set defaults.
 		artifacts = proto.Clone(

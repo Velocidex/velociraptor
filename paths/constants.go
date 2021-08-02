@@ -4,12 +4,13 @@ import "www.velocidex.com/golang/velociraptor/file_store/api"
 
 var (
 	// The GUI uses this as the client index.
-	CLIENT_INDEX_URN = api.NewSafeDatastorePath("client_index")
+	CLIENT_INDEX_URN = api.NewSafeDatastorePath("client_index").SetType("")
 
 	// An index of all the hunts and clients.
-	HUNT_INDEX     = api.NewSafeDatastorePath("hunt_index")
-	NOTEBOOK_INDEX = api.NewSafeDatastorePath("notebook_index")
-	USER_URN       = api.NewSafeDatastorePath("users")
+	HUNT_INDEX     = api.NewSafeDatastorePath("hunt_index").SetType("")
+	NOTEBOOK_INDEX = api.NewSafeDatastorePath("notebook_index").SetType("")
+
+	USER_URN = api.NewUnsafeDatastorePath("users").SetType("json")
 
 	// Timelines
 	TIMELINE_URN = api.NewSafeDatastorePath("timelines")
@@ -21,11 +22,11 @@ var (
 	// These store configuration for the server and client
 	// monitoring artifacts.
 	ServerMonitoringFlowURN = api.NewSafeDatastorePath(
-		"config", "server_monitoring.json")
+		"config", "server_monitoring").SetType("json")
 
 	ClientMonitoringFlowURN = api.NewSafeDatastorePath(
-		"config", "client_monitoring.json")
+		"config", "client_monitoring").SetType("json")
 
 	ThirdPartyInventory = api.NewSafeDatastorePath(
-		"config", "inventory.json")
+		"config", "inventory").SetType("json")
 )

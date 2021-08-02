@@ -113,7 +113,7 @@ func (self *PathManageTestSuite) TestPathManager() {
 		assert.NoError(self.T(), err)
 		assert.Equal(self.T(), path, testcase.expected)
 
-		file_store := memory.Test_memory_file_store
+		file_store := memory.NewMemoryFileStore()
 		file_store.Clear()
 
 		qm := memory.NewMemoryQueueManager(

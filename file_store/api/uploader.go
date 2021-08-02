@@ -9,6 +9,7 @@ import (
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -38,7 +39,7 @@ type Uploader interface {
 // An uploader into the filestore.
 type FileStoreUploader struct {
 	file_store FileStore
-	root_path  SafeDatastorePath
+	root_path  PathSpec
 }
 
 func (self *FileStoreUploader) Upload(
@@ -102,7 +103,7 @@ loop:
 
 	scope.Log("Uploaded %v (%v bytes)", output_path, offset)
 	return &UploadResponse{
-		Path:   output_path.AsRelativeFilename(),
+		Path:   utils.JoinComponents(output_path.Components(), "/"),
 		Size:   uint64(offset),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
 		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
@@ -112,6 +113,6 @@ loop:
 func NewFileStoreUploader(
 	config_obj *config_proto.Config,
 	fs FileStore,
-	root_path SafeDatastorePath) *FileStoreUploader {
+	root_path PathSpec) *FileStoreUploader {
 	return &FileStoreUploader{fs, root_path}
 }

@@ -42,11 +42,13 @@ func TestDirectoryQueueManager(t *testing.T) {
 
 	config_obj := config.GetDefaultConfig()
 	config_obj.Datastore.Implementation = "FileBaseDataStore"
-	config_obj.Datastore.FilestoreDirectory = dir
-	config_obj.Datastore.Location = dir
+	config_obj.Datastore.FilestoreDirectory = dir + "/"
+	config_obj.Datastore.Location = dir + "/"
 
-	manager := directory.NewDirectoryQueueManager(config_obj, memory.Test_memory_file_store)
-	suite.Run(t, api.NewQueueManagerTestSuite(config_obj, manager, memory.Test_memory_file_store))
+	file_store := memory.NewMemoryFileStore(config_obj)
+	manager := directory.NewDirectoryQueueManager(config_obj, file_store)
+	suite.Run(t, api.NewQueueManagerTestSuite(
+		config_obj, manager, file_store))
 }
 
 type TestSuite struct {

@@ -30,9 +30,7 @@ package directory
 
 import (
 	"os"
-	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -95,19 +93,19 @@ func NewDirectoryFileStore(config_obj *config_proto.Config) *DirectoryFileStore 
 	return &DirectoryFileStore{config_obj}
 }
 
-func (self *DirectoryFileStore) Move(src, dest api.SafeDatastorePath) error {
+func (self *DirectoryFileStore) Move(src, dest api.PathSpec) error {
 	src_path := src.AsFilestoreFilename(self.config_obj)
 	dest_path := dest.AsFilestoreFilename(self.config_obj)
 
 	return os.Rename(src_path, dest_path)
 }
 
-func (self *DirectoryFileStore) ListDirectory(dirname api.SafeDatastorePath) (
+func (self *DirectoryFileStore) ListDirectory(dirname api.PathSpec) (
 	[]os.FileInfo, error) {
 
 	listCounter.Inc()
 
-	file_path := dirname.AsFilestoreFilename(self.config_obj)
+	file_path := dirname.AsFilestoreDirectory(self.config_obj)
 	files, err := utils.ReadDir(file_path)
 	if err != nil {
 		return nil, err
@@ -115,36 +113,48 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.SafeDatastorePath) (
 
 	var result []os.FileInfo
 	for _, fileinfo := range files {
-		result = append(result, &api.FileStoreFileInfo{
-			FileInfo:  fileinfo,
-			FullPath_: utils.PathJoin(dirname, fileinfo.Name(), "/")})
+		// Each file from the filesystem will be potentially
+		// encoded.
+		result = append(result, api.NewFileStoreFileInfo(
+			self.config_obj,
+			dirname.AddChild(
+				utils.UnsanitizeComponent(fileinfo.Name())),
+			fileinfo))
 	}
 
 	return result, nil
 }
 
-func (self *DirectoryFileStore) ReadFile(filename string) (api.FileReader, error) {
-	file_path := self.FilenameToFileStorePath(filename)
+func (self *DirectoryFileStore) ReadFile(
+	filename api.PathSpec) (api.FileReader, error) {
+	file_path := filename.AsFilestoreFilename(self.config_obj)
 	openCounter.Inc()
 	file, err := os.Open(file_path)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return &api.FileAdapter{File: file, FullPath: filename}, nil
+	return &api.FileAdapter{
+		File:     file,
+		FullPath: filename,
+	}, nil
 }
 
-func (self *DirectoryFileStore) StatFile(filename string) (os.FileInfo, error) {
-	file_path := self.FilenameToFileStorePath(filename)
+func (self *DirectoryFileStore) StatFile(
+	filename api.PathSpec) (os.FileInfo, error) {
+	file_path := filename.AsFilestoreFilename(self.config_obj)
 	file, err := os.Stat(file_path)
 	if err != nil {
 		return nil, err
 	}
 
-	return &api.FileStoreFileInfo{FileInfo: file, FullPath_: filename}, nil
+	return &api.FileStoreFileInfo{
+		FileInfo: file,
+	}, nil
 }
 
-func (self *DirectoryFileStore) WriteFile(filename string) (api.FileWriter, error) {
-	file_path := self.FilenameToFileStorePath(filename)
+func (self *DirectoryFileStore) WriteFile(
+	filename api.PathSpec) (api.FileWriter, error) {
+	file_path := filename.AsFilestoreFilename(self.config_obj)
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
@@ -164,84 +174,33 @@ func (self *DirectoryFileStore) WriteFile(filename string) (api.FileWriter, erro
 	return &DirectoryFileWriter{file}, nil
 }
 
-func (self *DirectoryFileStore) Delete(filename string) error {
-	file_path := self.FilenameToFileStorePath(filename)
+func (self *DirectoryFileStore) Delete(filename api.PathSpec) error {
+	file_path := filename.AsFilestoreFilename(self.config_obj)
 	return os.Remove(file_path)
 }
 
-// In the below:
-// Filename: is an abstract filename to be represented in the file store.
-// FileStorePath: An actual path to store the file on the filesystem.
-//
-// On windows, the FileStorePath always includes the LFN prefix.
-func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) string {
-	components := []string{self.config_obj.Datastore.FilestoreDirectory}
-	for _, component := range utils.SplitComponents(filename) {
-		components = append(components,
-			utils.SanitizeString(component))
+func (self *DirectoryFileStore) Walk(root api.PathSpec, walkFn api.WalkFunc) error {
+	// Walking a non-existant directory just returns no results.
+	children, err := self.ListDirectory(root)
+	if err != nil {
+		return nil
 	}
 
-	// OS filenames may use / or \ as separators. On windows we
-	// prefix the LFN prefix to be able to access long paths but
-	// then we must use \ as a separator.
-	result := filepath.Join(components...)
+	for _, child := range children {
+		child_spec := root.AddChild(child.Name())
+		if child.IsDir() {
+			err = self.Walk(child_spec, walkFn)
+			if err != nil {
+				return err
+			}
+			continue
+		}
 
-	if runtime.GOOS == "windows" {
-		return WINDOWS_LFN_PREFIX + result
+		if strings.HasSuffix(child.Name(), ".db") {
+			continue
+		}
+
+		walkFn(child_spec, child)
 	}
-	return result
-}
-
-// Converts from a physical path on disk to a normalized filestore path.
-func (self *DirectoryFileStore) FileStorePathToFilename(filename string) (
-	string, error) {
-
-	if runtime.GOOS == "windows" {
-		filename = strings.TrimPrefix(filename, WINDOWS_LFN_PREFIX)
-	}
-	filename = strings.TrimPrefix(filename,
-		self.config_obj.Datastore.FilestoreDirectory)
-
-	components := []string{}
-	for _, component := range strings.Split(
-		filename,
-		string(os.PathSeparator)) {
-		components = append(components,
-			utils.UnsanitizeComponent(component))
-	}
-
-	// Filestore filenames always use / as separator.
-	result := "/" + path.Join(components...)
-	return result, nil
-}
-
-func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) error {
-	path := self.FilenameToFileStorePath(root)
-	return filepath.Walk(path,
-		func(path string, info os.FileInfo, err error) error {
-			// Ignore stat errors.
-			if info == nil || err != nil {
-				return nil
-			}
-
-			// Not a filestore file - its a data store path.
-			if strings.HasSuffix(path, ".db") ||
-				strings.HasSuffix(path, ".db\"") {
-				return nil
-			}
-
-			filename, err_1 := self.FileStorePathToFilename(path)
-			if err_1 != nil {
-				return err_1
-			}
-
-			if !info.IsDir() {
-				return walkFn(filename,
-					&api.FileStoreFileInfo{
-						FileInfo:  info,
-						FullPath_: path,
-					}, err)
-			}
-			return nil
-		})
+	return nil
 }

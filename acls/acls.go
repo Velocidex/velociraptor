@@ -208,7 +208,7 @@ func GetPolicy(
 
 	acl_obj := &acl_proto.ApiClientACL{}
 	user_path_manager := paths.UserPathManager{Name: principal}
-	err = db.GetSubjectJSON(config_obj, user_path_manager.ACL(), acl_obj)
+	err = db.GetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +229,7 @@ func GetEffectivePolicy(
 
 	acl_obj := &acl_proto.ApiClientACL{}
 	user_path_manager := paths.UserPathManager{Name: principal}
-	err = db.GetSubjectJSON(config_obj, user_path_manager.ACL(), acl_obj)
+	err = db.GetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +252,7 @@ func SetPolicy(
 	}
 
 	user_path_manager := paths.UserPathManager{Name: principal}
-	return db.SetSubjectJSON(config_obj, user_path_manager.ACL(), acl_obj)
+	return db.SetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 }
 
 func CheckAccess(

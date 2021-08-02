@@ -8,7 +8,6 @@ package api
 import (
 	"os"
 	"path"
-	"path/filepath"
 	"regexp"
 	"time"
 
@@ -23,37 +22,45 @@ import (
 
 type FileStoreFileSystemAccessor struct {
 	file_store FileStore
+	config_obj *config_proto.Config
 }
 
 func NewFileStoreFileSystemAccessor(
 	config_obj *config_proto.Config, fs FileStore) *FileStoreFileSystemAccessor {
-	return &FileStoreFileSystemAccessor{fs}
+	return &FileStoreFileSystemAccessor{
+		file_store: fs,
+		config_obj: config_obj,
+	}
 }
 
 func (self FileStoreFileSystemAccessor) New(
 	scope vfilter.Scope) glob.FileSystemAccessor {
-	return &FileStoreFileSystemAccessor{self.file_store}
+	return &FileStoreFileSystemAccessor{
+		file_store: self.file_store,
+		config_obj: self.config_obj,
+	}
 }
 
 func (self FileStoreFileSystemAccessor) Lstat(
 	filename string) (glob.FileInfo, error) {
 
-	components := utils.SplitComponents(filename)
-	lstat, err := self.file_store.StatFile(
-		NewSafeDatastorePath(components...))
+	fullpath := NewUnsafeDatastorePath(
+		utils.SplitComponents(filename)...).AsSafe()
+	lstat, err := self.file_store.StatFile(fullpath)
 	if err != nil {
 		return nil, err
 	}
 
 	return &FileStoreFileInfo{
-		FileInfo:  lstat,
-		FullPath_: filename,
+		FileInfo:   lstat,
+		config_obj: self.config_obj,
+		fullpath:   fullpath,
 	}, nil
 }
 
 func (self FileStoreFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
-	components := NewSafeDatastorePath(utils.SplitComponents(path)...)
-	files, err := self.file_store.ListDirectory(components)
+	fullpath := NewUnsafeDatastorePath(utils.SplitComponents(path)...).AsSafe()
+	files, err := self.file_store.ListDirectory(fullpath)
 	if err != nil {
 		return nil, err
 	}
@@ -62,8 +69,9 @@ func (self FileStoreFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, e
 	for _, f := range files {
 		result = append(result,
 			&FileStoreFileInfo{
-				FileInfo:  f,
-				FullPath_: filepath.Join(path, f.Name()),
+				FileInfo:   f,
+				fullpath:   fullpath,
+				config_obj: self.config_obj,
 			})
 	}
 
@@ -94,15 +102,26 @@ func (self *FileStoreFileSystemAccessor) GetRoot(path string) (string, string, e
 	return "/", path, nil
 }
 
+func NewFileStoreFileInfo(
+	config_obj *config_proto.Config,
+	fullpath PathSpec,
+	info os.FileInfo) *FileStoreFileInfo {
+	return &FileStoreFileInfo{
+		config_obj: config_obj,
+		FileInfo:   info,
+		fullpath:   fullpath,
+	}
+}
+
 type FileStoreFileInfo struct {
 	os.FileInfo
-	FullPath_  string
-	Components []string
+	fullpath   PathSpec
+	config_obj *config_proto.Config
 	Data_      interface{}
 }
 
 func (self FileStoreFileInfo) Name() string {
-	return self.FileInfo.Name()
+	return self.fullpath.Base()
 }
 
 func (self *FileStoreFileInfo) Data() interface{} {
@@ -114,7 +133,7 @@ func (self *FileStoreFileInfo) Data() interface{} {
 }
 
 func (self *FileStoreFileInfo) FullPath() string {
-	return self.FullPath_
+	return self.fullpath.AsClientPath()
 }
 
 func (self *FileStoreFileInfo) Btime() time.Time {
@@ -138,7 +157,8 @@ func (self *FileStoreFileInfo) IsLink() bool {
 }
 
 func (self *FileStoreFileInfo) GetLink() (string, error) {
-	target, err := os.Readlink(self.FullPath_)
+	filename := self.fullpath.AsFilestoreFilename(self.config_obj)
+	target, err := os.Readlink(filename)
 	if err != nil {
 		return "", err
 	}
@@ -173,4 +193,13 @@ func (self *FileStoreFileInfo) MarshalJSON() ([]byte, error) {
 
 func (self *FileStoreFileInfo) UnmarshalJSON(data []byte) error {
 	return nil
+}
+
+type FileReaderAdapter struct {
+	FileReader
+}
+
+func (self *FileReaderAdapter) Stat() (os.FileInfo, error) {
+	stat, err := self.FileReader.Stat()
+	return stat, err
 }

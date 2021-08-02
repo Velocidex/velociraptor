@@ -7,7 +7,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -24,6 +23,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -91,7 +91,7 @@ func (self *ApiServer) GetNotebooks(
 
 		// An error here just means there are no AvailableDownloads.
 		notebook.AvailableDownloads, _ = getAvailableDownloadFiles(self.config,
-			path.Dir(notebook_path_manager.HtmlExport()))
+			notebook_path_manager.HtmlExport().Dir())
 
 		notebook.Timelines = getAvailableTimelines(
 			self.config, notebook_path_manager)
@@ -862,8 +862,8 @@ func (self *ApiServer) UploadNotebookAttachment(
 	}
 
 	filename := NewNotebookAttachmentId() + in.Filename
-	full_path := path.Join("/notebooks", in.NotebookId,
-		string(datastore.SanitizeString(filename)))
+	full_path := reporting.NewNotebookPathManager(in.NotebookId).
+		Attachment(filename)
 	file_store_factory := file_store.GetFileStore(self.config)
 	fd, err := file_store_factory.WriteFile(full_path)
 	if err != nil {
@@ -877,7 +877,7 @@ func (self *ApiServer) UploadNotebookAttachment(
 	}
 
 	result := &api_proto.NotebookFileUploadResponse{
-		Url: full_path,
+		Url: full_path.AsClientPath(),
 	}
 	return result, nil
 }
@@ -933,8 +933,9 @@ func exportZipNotebook(
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	filename := notebook_path_manager.ZipExport()
+	lock_file_name := filename.SetType("lock")
 
-	lock_file, err := file_store_factory.WriteFile(filename + ".lock")
+	lock_file, err := file_store_factory.WriteFile(lock_file_name)
 	if err != nil {
 		return err
 	}
@@ -945,7 +946,7 @@ func exportZipNotebook(
 
 	go func() {
 		defer func() {
-			_ = file_store_factory.Delete(filename + ".lock")
+			_ = file_store_factory.Delete(lock_file_name)
 		}()
 
 		defer cancel()
@@ -986,8 +987,9 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	filename := notebook_path_manager.HtmlExport()
+	lock_file_name := filename.SetType("lock")
 
-	lock_file, err := file_store_factory.WriteFile(filename + ".lock")
+	lock_file, err := file_store_factory.WriteFile(lock_file_name)
 	if err != nil {
 		return err
 	}
@@ -1002,7 +1004,7 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 	sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 
 	go func() {
-		defer func() { _ = file_store_factory.Delete(filename + ".lock") }()
+		defer func() { _ = file_store_factory.Delete(lock_file_name) }()
 		defer writer.Close()
 		defer cancel()
 
@@ -1035,13 +1037,13 @@ func getAvailableTimelines(
 	}
 
 	for _, f := range files {
-		result = append(result, utils.Base(f))
+		result = append(result, f.Base())
 	}
 	return result
 }
 
 func getAvailableDownloadFiles(config_obj *config_proto.Config,
-	download_path string) (*api_proto.AvailableDownloads, error) {
+	download_path api.PathSpec) (*api_proto.AvailableDownloads, error) {
 	result := &api_proto.AvailableDownloads{}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -1065,8 +1067,9 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 		}
 
 		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
-			Name:     item.Name(),
-			Path:     path.Join(download_path, item.Name()),
+			Name: item.Name(),
+			Path: download_path.AddChild(
+				item.Name()).AsClientPath(),
 			Size:     uint64(item.Size()),
 			Date:     fmt.Sprintf("%v", item.ModTime()),
 			Complete: is_complete(item.Name()),

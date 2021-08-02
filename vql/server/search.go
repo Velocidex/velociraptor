@@ -56,8 +56,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -113,7 +113,7 @@ func (self SearchPlugin) Call(
 		}
 
 		for _, item := range db.SearchClients(
-			config_obj, constants.CLIENT_INDEX_URN,
+			config_obj, paths.CLIENT_INDEX_URN,
 			arg.Query, arg.Type, arg.Offset, arg.Limit, datastore.UNSORTED) {
 			select {
 			case <-ctx.Done():

@@ -69,7 +69,7 @@ func GetApiClient(
 	}
 
 	public_key_info := &crypto_proto.PublicKey{}
-	err = db.GetSubject(config_obj, client_path_manager.Key().Path(),
+	err = db.GetSubject(config_obj, client_path_manager.Key(),
 		public_key_info)
 	if err != nil {
 		// Offline clients do not have public key files, so
@@ -78,7 +78,7 @@ func GetApiClient(
 
 	result.FirstSeenAt = public_key_info.EnrollTime
 
-	err = db.GetSubject(config_obj, client_path_manager.Ping().Path(),
+	err = db.GetSubject(config_obj, client_path_manager.Ping(),
 		client_info)
 	if err != nil {
 		// Offline clients do not have public key files, so

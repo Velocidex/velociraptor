@@ -38,8 +38,9 @@ type TimedResultSetWriterImpl struct {
 
 	// Recalculate the writer based on the log_path to support
 	// correct file rotation.
-	log_path string
-	writer   *timelines.TimelineWriter
+	log_path      api.PathSpec
+	last_log_base string
+	writer        *timelines.TimelineWriter
 
 	Clock utils.Clock
 }
@@ -82,22 +83,23 @@ func (self *TimedResultSetWriterImpl) getWriter(ts time.Time) (
 	}
 
 	// If no path is provided, we are just a log sink
-	if log_path == "" {
+	if log_path == nil {
 		return nil, ignoreRowError
 	}
 
-	if log_path == self.log_path {
+	if log_path.Base() == self.last_log_base {
 		return self.writer, nil
 	}
 
 	writer, err := timelines.NewTimelineWriter(
 		self.file_store_factory,
-		timelinePathManager(log_path), false /* truncate */)
+		new_timelinePathManager(log_path), false /* truncate */)
 	if err != nil {
 		return nil, err
 	}
 
 	self.log_path = log_path
+	self.last_log_base = log_path.Base()
 	if self.writer != nil {
 		self.writer.Close()
 	}
@@ -110,24 +112,34 @@ func (self *TimedResultSetWriterImpl) Close() {
 	self.Flush()
 	if self.writer != nil {
 		self.writer.Close()
-		self.log_path = ""
+		self.log_path = nil
 		self.writer = nil
 	}
 }
 
-type timelinePathManager string
+type timelinePathManager struct {
+	path api.PathSpec
+	name string
+}
 
-func (self timelinePathManager) Path() string {
-	return string(self)
+func (self timelinePathManager) Path() api.PathSpec {
+	return self.path
 }
 
 func (self timelinePathManager) Name() string {
-	return string(self)
+	return self.name
 }
 
 // Timed indexes have the extension tidx
-func (self timelinePathManager) Index() string {
-	return string(self) + ".tidx"
+func (self timelinePathManager) Index() api.PathSpec {
+	return self.path.SetType("json.tidx")
+}
+
+func new_timelinePathManager(path api.PathSpec) *timelinePathManager {
+	return &timelinePathManager{
+		path: path.SetType("json"),
+		name: path.Base(),
+	}
 }
 
 func NewTimedResultSetWriter(

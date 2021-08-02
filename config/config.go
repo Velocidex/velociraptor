@@ -153,8 +153,8 @@ func GetDefaultConfig() *config_proto.Config {
 
 			// Users would probably need to change
 			// this to something more permanent.
-			Location:           "/var/tmp/velociraptor",
-			FilestoreDirectory: "/var/tmp/velociraptor",
+			Location:           "/var/tmp/velociraptor/",
+			FilestoreDirectory: "/var/tmp/velociraptor/",
 		},
 		Writeback: &config_proto.Writeback{},
 		Mail:      &config_proto.MailConfig{},

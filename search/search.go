@@ -5,13 +5,11 @@ package search
 import (
 	"context"
 	"errors"
-	"sort"
 	"strings"
 	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -42,24 +40,18 @@ func searchRecents(
 	now := uint64(time.Now().UnixNano() / 1000)
 	result := &api_proto.SearchClientsResponse{}
 
-	children, err := db.ListChildrenJSON(
-		config_obj, path_manager.MRUIndex())
+	children, err := db.ListChildren(
+		config_obj, path_manager.MRUIndex(), 0, 1000)
 	if err != nil {
 		return nil, err
 	}
 
 	utils.Debug(children)
 
-	// Sort the children in MRU order
-	sort.Slice(children, func(i, j int) bool {
-		return children[i].Modified.UnixNano() <
-			children[j].Modified.UnixNano()
-	})
-
 	// Sort the children in reverse order - most recent first.
 	total_count := 0
 	for i := len(children) - 1; i >= 0; i-- {
-		client_id := children[i].Name
+		client_id := children[i].Base()
 		api_client, err := GetApiClient(
 			ctx, config_obj, client_id, false /* detailed */)
 		if err != nil {
@@ -139,7 +131,7 @@ func SearchClients(
 	result := &api_proto.SearchClientsResponse{}
 	total_count := 0
 	children := db.SearchClients(
-		config_obj, constants.CLIENT_INDEX_URN,
+		config_obj, paths.CLIENT_INDEX_URN,
 		in.Query, query_type, 0, 1000000, sort_direction)
 
 	for _, client_id := range children {

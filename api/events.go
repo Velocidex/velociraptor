@@ -3,7 +3,6 @@ package api
 import (
 	"crypto/x509"
 	"os"
-	"path"
 	"sort"
 	"strings"
 
@@ -277,16 +276,16 @@ func listAvailableEventArtifacts(
 
 func getAllArtifacts(
 	config_obj *config_proto.Config,
-	log_path string,
+	log_path api.PathSpec,
 	seen map[string]*api_proto.AvailableEvent) error {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
 	return file_store_factory.Walk(log_path,
-		func(full_path string, info os.FileInfo, err error) error {
+		func(full_path api.PathSpec, info os.FileInfo) error {
 			if !info.IsDir() && info.Size() > 0 {
-				relative_path := strings.TrimPrefix(full_path, log_path)
-				artifact_name := strings.TrimLeft(path.Dir(relative_path), "/")
+				relative_path := full_path.Components()[len(log_path.Components()):]
+				artifact_name := strings.Join(relative_path, ".")
 				event, pres := seen[artifact_name]
 				if !pres {
 					event = &api_proto.AvailableEvent{

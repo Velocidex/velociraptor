@@ -26,6 +26,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -65,14 +66,18 @@ func (self *Compress) Call(ctx context.Context,
 	file_store_factory := file_store.GetFileStore(config_obj)
 	for _, path := range arg.VFSPath {
 		func() {
-			fd, err := file_store_factory.ReadFile(path)
+			pathspec := paths.UnsafeDatastorePathFromClientPath(
+				nil, path)
+			fd, err := file_store_factory.ReadFile(pathspec)
 			if err != nil {
 				scope.Log("compress: %v", err)
 				return
 			}
 			defer fd.Close()
 
-			out_fd, err := file_store_factory.WriteFile(path + ".gz")
+			compressed_path := pathspec.Dir().AddChild(
+				pathspec.Base() + ".gz")
+			out_fd, err := file_store_factory.WriteFile(compressed_path)
 			if err != nil {
 				scope.Log("compress: %v", err)
 				return
@@ -87,13 +92,13 @@ func (self *Compress) Call(ctx context.Context,
 			_, err = utils.Copy(ctx, zw, fd)
 			if err != nil {
 				scope.Log("compress: %v", err)
-				err2 := file_store_factory.Delete(path + ".gz")
+				err2 := file_store_factory.Delete(compressed_path)
 				if err2 != nil {
 					scope.Log("compress: cleaning up %v (%v)", err2, err)
 				}
 				return
 			} else {
-				err := file_store_factory.Delete(path)
+				err := file_store_factory.Delete(pathspec)
 				if err != nil {
 					scope.Log("compress: %v", err)
 				}

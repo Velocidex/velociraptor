@@ -228,8 +228,9 @@ func ExportNotebookToZip(
 				cell_id, child.Name())
 
 			// In Zip files, members should have no leading /
-			out_filename = strings.TrimPrefix(out_filename, "/")
-			out_fd, err := zip_writer.Create(out_filename)
+			zip_out_filename := strings.TrimPrefix(
+				out_filename.AsClientPath(), "/")
+			out_fd, err := zip_writer.Create(zip_out_filename)
 			if err != nil {
 				continue
 			}
@@ -383,7 +384,7 @@ func convertCSVTags(
 		params.CellId).QueryStorage(params.TableId)
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(
-		file_store_factory, path_manager)
+		file_store_factory, path_manager.Path())
 	if err != nil {
 		return "", err
 	}

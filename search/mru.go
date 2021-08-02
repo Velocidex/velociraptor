@@ -17,6 +17,6 @@ func UpdateMRU(
 	}
 
 	item := &api_proto.ApiClient{ClientId: client_id}
-	return db.SetSubjectJSON(
+	return db.SetSubject(
 		config_obj, path_manager.MRUClient(client_id), item)
 }

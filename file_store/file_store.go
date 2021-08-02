@@ -37,7 +37,7 @@ func GetFileStore(config_obj *config_proto.Config) api.FileStore {
 
 	switch config_obj.Datastore.Implementation {
 	case "Test":
-		return memory.Test_memory_file_store
+		return memory.NewMemoryFileStore(config_obj)
 
 	case "FileBaseDataStore":
 		return directory.NewDirectoryFileStore(config_obj)
@@ -63,7 +63,7 @@ func GetFileStoreFileSystemAccessor(
 
 	case "Test":
 		return api.NewFileStoreFileSystemAccessor(
-			config_obj, memory.Test_memory_file_store), nil
+			config_obj, memory.NewMemoryFileStore(config_obj)), nil
 
 	}
 

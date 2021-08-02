@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -57,7 +58,8 @@ func (self *VFSServiceTestSuite) SetupTest() {
 		LoadAndValidate()
 	require.NoError(self.T(), err)
 
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
+	//	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
+	ctx := context.Background()
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
 
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
@@ -120,10 +122,10 @@ func (self *VFSServiceTestSuite) TestVFSListDirectory() {
 	assert.NoError(self.T(), err)
 
 	client_path_manager := paths.NewClientPathManager(self.client_id)
-	resp := &flows_proto.VFSListResponse{}
+	resp := &api_proto.VFSListResponse{}
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubjectJSON(self.config_obj,
+		db.GetSubject(self.config_obj,
 			client_path_manager.VFSPath([]string{"file", "a", "b"}),
 			resp)
 		return resp.TotalRows == 3
@@ -167,10 +169,10 @@ func (self *VFSServiceTestSuite) TestVFSListDirectoryEmpty() {
 	assert.NoError(self.T(), err)
 
 	client_path_manager := paths.NewClientPathManager(self.client_id)
-	resp := &flows_proto.VFSListResponse{}
+	resp := &api_proto.VFSListResponse{}
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubjectJSON(self.config_obj,
+		db.GetSubject(self.config_obj,
 			client_path_manager.VFSPath([]string{"file", "a", "b"}),
 			resp)
 		return resp.Timestamp > 0
@@ -191,11 +193,11 @@ func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectory() {
 	assert.NoError(self.T(), err)
 
 	client_path_manager := paths.NewClientPathManager(self.client_id)
-	resp := &flows_proto.VFSListResponse{}
+	resp := &api_proto.VFSListResponse{}
 
 	// The response in VFS path /file/a/b
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubjectJSON(self.config_obj,
+		db.GetSubject(self.config_obj,
 			client_path_manager.VFSPath([]string{"file", "a", "b"}),
 			resp)
 		return resp.TotalRows == 2
@@ -205,11 +207,11 @@ func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectory() {
 		"/a/b/A", "/a/b/B",
 	})
 
-	resp = &flows_proto.VFSListResponse{}
+	resp = &api_proto.VFSListResponse{}
 
 	// The response in VFS path /file/a/b/c
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubjectJSON(self.config_obj,
+		db.GetSubject(self.config_obj,
 			client_path_manager.VFSPath([]string{"file", "a", "b", "c"}),
 			resp)
 		return resp.TotalRows == 2
@@ -253,16 +255,17 @@ func (self *VFSServiceTestSuite) TestVFSDownload() {
 	resp := &proto.VFSDownloadInfo{}
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		db.GetSubject(self.config_obj,
-			flow_path_manager.GetVFSDownloadInfoPath("file", "/a/b/B").Path(),
+			flow_path_manager.GetVFSDownloadInfoPath("file", "/a/b/B"),
 			resp)
 		return resp.Size == 10
 	})
 
-	assert.Equal(self.T(), resp.VfsPath,
-		flow_path_manager.GetUploadsFile("file", "/a/b/B").Path())
+	assert.Equal(self.T(), resp.Components,
+		flow_path_manager.GetUploadsFile("file", "/a/b/B").
+			Path().Components())
 }
 
-func (self *VFSServiceTestSuite) getFullPath(resp *flows_proto.VFSListResponse) []string {
+func (self *VFSServiceTestSuite) getFullPath(resp *api_proto.VFSListResponse) []string {
 	json_response := resp.Response
 	rows, err := utils.ParseJsonToDicts([]byte(json_response))
 	assert.NoError(self.T(), err)

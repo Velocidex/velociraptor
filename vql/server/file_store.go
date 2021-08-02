@@ -27,7 +27,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/directory"
+	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -69,9 +69,13 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	if strings.HasSuffix(arg.VFSPath, "db") {
-		err = db.DeleteSubject(config_obj, strings.TrimSuffix(arg.VFSPath, ".db"))
+		pathspec := paths.UnsafeDatastorePathFromClientPath(
+			nil, strings.TrimSuffix(arg.VFSPath, ".db"))
+		err = db.DeleteSubject(config_obj, pathspec)
 	} else {
-		err = file_store_factory.Delete(arg.VFSPath)
+		pathspec := paths.UnsafeDatastorePathFromClientPath(
+			nil, arg.VFSPath)
+		err = file_store_factory.Delete(pathspec)
 	}
 
 	if err != nil {
@@ -112,11 +116,10 @@ func (self *FileStore) Call(ctx context.Context,
 	}
 
 	result := []string{}
-	file_store_factory := file_store.GetFileStore(config_obj)
 	for _, path := range arg.VFSPath {
-		file_path := file_store_factory.(*directory.DirectoryFileStore).
-			FilenameToFileStorePath(path)
-		result = append(result, file_path)
+		pathspec := paths.UnsafeDatastorePathFromClientPath(
+			nil, path)
+		result = append(result, pathspec.AsFilestoreFilename(config_obj))
 	}
 
 	return result

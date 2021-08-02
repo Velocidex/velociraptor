@@ -2,9 +2,9 @@ package api
 
 import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -17,7 +17,7 @@ func getServerMonitoringState(config_obj *config_proto.Config) (
 
 	result := &flows_proto.ArtifactCollectorArgs{}
 	err = db.GetSubject(config_obj,
-		constants.ServerMonitoringFlowURN,
+		paths.ServerMonitoringFlowURN,
 		result,
 	)
 	_ = err // if an error we return an empty collector args.
@@ -38,6 +38,6 @@ func setServerMonitoringState(
 	}
 
 	return db.SetSubject(
-		config_obj, constants.ServerMonitoringFlowURN,
+		config_obj, paths.ServerMonitoringFlowURN,
 		args)
 }

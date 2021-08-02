@@ -18,9 +18,15 @@ type serverLogger struct {
 // Send each log message individually to avoid any buffering - logs
 // need to be available immediately.
 func (self *serverLogger) Write(b []byte) (int, error) {
+	// Path may change as the log files rotate.
+	path, err := self.path_manager.GetPathForWriting()
+	if err != nil {
+		return 0, err
+	}
+
 	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
-	err := file_store.PushRows(self.config_obj,
-		self.path_manager, []*ordereddict.Dict{
+	err = file_store.PushRows(self.config_obj,
+		path, []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("_ts", self.Clock.Now().UTC().UnixNano()/1000).
 				Set("Timestamp", self.Clock.Now().UTC().String()).

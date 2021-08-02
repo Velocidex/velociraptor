@@ -1,3 +1,5 @@
+// +build deprecated
+
 package directory
 
 import (
@@ -48,8 +50,7 @@ func (self *DirectoryFileStore) ListDirectoryComponents(components []string) (
 		child_components := append(
 			make([]string, 0, len(components)+1), components...)
 		result = append(result, &api.FileStoreFileInfo{
-			FileInfo:   fileinfo,
-			Components: append(child_components, fileinfo.Name()),
+			FileInfo: fileinfo,
 		})
 	}
 

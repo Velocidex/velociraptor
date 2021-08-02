@@ -9,7 +9,9 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 )
 
 // Loads the global repository with artifacts from the frontend path
@@ -24,10 +26,11 @@ func InitializeGlobalRepositoryFromFilestore(
 
 	// Load artifacts from the custom file store.
 	file_store_factory := file_store.GetFileStore(config_obj)
-	err := file_store_factory.Walk(constants.ARTIFACT_DEFINITION_PREFIX,
-		func(path string, info os.FileInfo, err error) error {
-			if err == nil && (strings.HasSuffix(path, ".yaml") ||
-				strings.HasSuffix(path, ".yml")) {
+	err := file_store_factory.Walk(paths.ARTIFACT_DEFINITION_PREFIX,
+		func(path api.PathSpec, info os.FileInfo) error {
+			basename := path.Base()
+			if strings.HasSuffix(basename, ".yaml") ||
+				strings.HasSuffix(basename, ".yml") {
 				fd, err := file_store_factory.ReadFile(path)
 				if err != nil {
 					logger.Error("GetGlobalRepository: %v", err)

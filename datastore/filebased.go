@@ -146,7 +146,7 @@ func (self *FileBaseDataStore) QueueMessageForClient(
 */
 func (self *FileBaseDataStore) GetSubject(
 	config_obj *config_proto.Config,
-	urn api.SafeDatastorePath,
+	urn api.PathSpec,
 	message proto.Message) error {
 
 	serialized_content, err := readContentFromFile(
@@ -156,10 +156,12 @@ func (self *FileBaseDataStore) GetSubject(
 		// migration from old protobuf based datastore files
 		// to newer json based blobs while still being able to
 		// read old files.
-		if urn.IsJSON() {
+		if urn.Type() == "json" {
+			fallback_path := api.NewUnsafeDatastorePath(
+				urn.Components()...)
+
 			serialized_content, err = readContentFromFile(
-				config_obj, urn.SetFileExtension(""),
-				true /* must_exist */)
+				config_obj, fallback_path, true /* must_exist */)
 		}
 		if err != nil {
 			return errors.WithMessage(os.ErrNotExist,
@@ -186,7 +188,7 @@ func (self *FileBaseDataStore) GetSubject(
 }
 
 func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,
-	root api.SafeDatastorePath, walkFn WalkFunc) error {
+	root api.PathSpec, walkFn WalkFunc) error {
 
 	return filepath.Walk(root.AsDatastoreDirectory(config_obj),
 		func(path string, info os.FileInfo, err error) error {
@@ -211,11 +213,11 @@ func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,
 
 func (self *FileBaseDataStore) SetSubject(
 	config_obj *config_proto.Config,
-	urn api.SafeDatastorePath,
+	urn api.PathSpec,
 	message proto.Message) error {
 
 	// Encode as JSON
-	if urn.IsJSON() {
+	if urn.Type() == "json" {
 		serialized_content, err := protojson.Marshal(message)
 		if err != nil {
 			return err
@@ -232,7 +234,7 @@ func (self *FileBaseDataStore) SetSubject(
 
 func (self *FileBaseDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
-	urn api.SafeDatastorePath) error {
+	urn api.PathSpec) error {
 
 	err := os.Remove(urn.AsDatastoreFilename(config_obj))
 
@@ -247,14 +249,14 @@ func (self *FileBaseDataStore) DeleteSubject(
 }
 
 func listChildNames(config_obj *config_proto.Config,
-	urn api.SafeDatastorePath) (
+	urn api.PathSpec) (
 	[]string, error) {
 	return utils.ReadDirNames(
 		urn.AsDatastoreDirectory(config_obj))
 }
 
 func listChildren(config_obj *config_proto.Config,
-	urn api.SafeDatastorePath) ([]os.FileInfo, error) {
+	urn api.PathSpec) ([]os.FileInfo, error) {
 	children, err := utils.ReadDirUnsorted(
 		urn.AsDatastoreDirectory(config_obj))
 	if err != nil {
@@ -269,9 +271,9 @@ func listChildren(config_obj *config_proto.Config,
 // Lists all the children of a URN.
 func (self *FileBaseDataStore) ListChildren(
 	config_obj *config_proto.Config,
-	urn api.SafeDatastorePath,
+	urn api.PathSpec,
 	offset uint64, length uint64) (
-	[]api.SafeDatastorePath, error) {
+	[]api.PathSpec, error) {
 	all_children, err := listChildren(config_obj, urn)
 	if err != nil {
 		return nil, err
@@ -293,7 +295,7 @@ func (self *FileBaseDataStore) ListChildren(
 	})
 
 	// Slice the result according to the required offset and count.
-	result := make([]api.SafeDatastorePath, 0, len(children))
+	result := make([]api.PathSpec, 0, len(children))
 	for i := offset; i < offset+length; i++ {
 		if i >= uint64(len(children)) {
 			break
@@ -313,7 +315,7 @@ func (self *FileBaseDataStore) ListChildren(
 // keywords will return the entity urn.
 func (self *FileBaseDataStore) SetIndex(
 	config_obj *config_proto.Config,
-	index_urn api.SafeDatastorePath,
+	index_urn api.PathSpec,
 	entity string,
 	keywords []string) error {
 
@@ -334,7 +336,7 @@ func (self *FileBaseDataStore) SetIndex(
 
 func (self *FileBaseDataStore) UnsetIndex(
 	config_obj *config_proto.Config,
-	index_urn api.SafeDatastorePath,
+	index_urn api.PathSpec,
 	entity string,
 	keywords []string) error {
 
@@ -353,7 +355,7 @@ func (self *FileBaseDataStore) UnsetIndex(
 
 func (self *FileBaseDataStore) CheckIndex(
 	config_obj *config_proto.Config,
-	index_urn api.SafeDatastorePath,
+	index_urn api.PathSpec,
 	entity string,
 	keywords []string) error {
 
@@ -375,7 +377,7 @@ func (self *FileBaseDataStore) CheckIndex(
 
 func (self *FileBaseDataStore) SearchClients(
 	config_obj *config_proto.Config,
-	index_urn api.SafeDatastorePath,
+	index_urn api.PathSpec,
 	query string, query_type string,
 	offset uint64, limit uint64, sort_direction SortingSense) []string {
 
@@ -497,7 +499,7 @@ func (self *FileBaseDataStore) SearchClients(
 func (self *FileBaseDataStore) Close() {}
 
 func writeContentToFile(config_obj *config_proto.Config,
-	urn api.SafeDatastorePath, data []byte) error {
+	urn api.PathSpec, data []byte) error {
 
 	filename := urn.AsDatastoreFilename(config_obj)
 	file, err := os.OpenFile(
@@ -534,7 +536,7 @@ func writeContentToFile(config_obj *config_proto.Config,
 }
 
 func readContentFromFile(
-	config_obj *config_proto.Config, urn api.SafeDatastorePath,
+	config_obj *config_proto.Config, urn api.PathSpec,
 	must_exist bool) ([]byte, error) {
 	file, err := os.Open(urn.AsDatastoreFilename(config_obj))
 	if err == nil {
@@ -554,7 +556,7 @@ func readContentFromFile(
 
 // Convert a file name from the data store to a SafeDatastorePath
 func FilenameToURN(config_obj *config_proto.Config,
-	filename string) api.SafeDatastorePath {
+	filename string) api.PathSpec {
 	if runtime.GOOS == "windows" {
 		filename = strings.TrimPrefix(filename, WINDOWS_LFN_PREFIX)
 	}

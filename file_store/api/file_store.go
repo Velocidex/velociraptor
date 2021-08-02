@@ -41,19 +41,13 @@ type FileWriter interface {
 	Close() error
 }
 
-type WalkFunc func(urn SafeDatastorePath, info os.FileInfo) error
+type WalkFunc func(urn PathSpec, info os.FileInfo) error
 type FileStore interface {
-	ReadFile(filename SafeDatastorePath) (FileReader, error)
-	WriteFile(filename SafeDatastorePath) (FileWriter, error)
-	StatFile(filename SafeDatastorePath) (os.FileInfo, error)
-	ListDirectory(dirname SafeDatastorePath) ([]os.FileInfo, error)
-	Walk(root SafeDatastorePath, cb WalkFunc) error
-	Delete(filename SafeDatastorePath) error
-	Move(src, dest SafeDatastorePath) error
-
-	// The following API can be used with unsafe path components.
-	ReadFileComponents(filename UnsafeDatastorePath) (FileReader, error)
-	WriteFileComponent(filename UnsafeDatastorePath) (FileWriter, error)
-	StatFileComponents(filename UnsafeDatastorePath) (os.FileInfo, error)
-	ListDirectoryComponents(filename UnsafeDatastorePath) ([]os.FileInfo, error)
+	ReadFile(filename PathSpec) (FileReader, error)
+	WriteFile(filename PathSpec) (FileWriter, error)
+	StatFile(filename PathSpec) (os.FileInfo, error)
+	ListDirectory(dirname PathSpec) ([]os.FileInfo, error)
+	Walk(root PathSpec, cb WalkFunc) error
+	Delete(filename PathSpec) error
+	Move(src, dest PathSpec) error
 }

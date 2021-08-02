@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"path"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -90,7 +89,7 @@ func (self FlowsPlugin) Call(
 		}
 
 		for _, child_urn := range flow_urns {
-			sender(path.Base(child_urn), arg.ClientId)
+			sender(child_urn.Base(), arg.ClientId)
 			vfilter.ChargeOp(scope)
 		}
 	}()
@@ -204,10 +203,9 @@ func (self EnumerateFlowPlugin) Call(
 		flow_path_manager := paths.NewFlowPathManager(
 			arg.ClientId, arg.FlowId)
 
-		upload_metadata_path, _ := flow_path_manager.UploadMetadata().
-			GetPathForWriting()
+		upload_metadata_path := flow_path_manager.UploadMetadata()
 
-		defer emit("UploadMetadata", upload_metadata_path)
+		defer emit("UploadMetadata", upload_metadata_path.AsClientPath())
 
 		file_store_factory := file_store.GetFileStore(config_obj)
 		reader, err := result_sets.NewResultSetReader(
@@ -237,16 +235,16 @@ func (self EnumerateFlowPlugin) Call(
 				scope.Log("enumerate_flow: %v", err)
 				continue
 			}
-			emit("Result", result_path)
+			emit("Result", result_path.AsClientPath())
 
 		}
 
 		// The flow's logs
-		log_path, _ := flow_path_manager.Log().GetPathForWriting()
-		emit("Log", log_path)
+		log_path := flow_path_manager.Log()
+		emit("Log", log_path.AsClientPath())
 
 		// The flow's metadata
-		emit("CollectionContext", flow_path_manager.Path()+".db")
+		emit("CollectionContext", flow_path_manager.Path().AsClientPath()+".db")
 	}()
 
 	return output_chan

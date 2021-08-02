@@ -54,6 +54,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -496,8 +497,10 @@ func (self *ApiServer) VFSGetBuffer(
 			"User is not allowed to view the VFS.")
 	}
 
+	path_spec := paths.NewClientPathManager(
+		in.ClientId).VFSPath(in.Components)
 	result, err := vfsGetBuffer(
-		self.config, in.ClientId, in.VfsPath, in.Offset, in.Length)
+		self.config, in.ClientId, path_spec, in.Offset, in.Length)
 
 	return result, err
 }

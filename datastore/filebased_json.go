@@ -65,7 +65,7 @@ func componentsToFilename(
 // files contained within the directory.
 func (self *FileBaseDataStore) ListChildrenJSON(
 	config_obj *config_proto.Config,
-	path api.UnsafeDatastorePath) ([]*DatastoreInfo, error) {
+	path api.PathSpec) ([]*DatastoreInfo, error) {
 
 	dirpath := path.AsDatastoreDirectory(config_obj)
 	child_names, err := utils.ReadDirNames(dirpath)
@@ -99,16 +99,17 @@ func (self *FileBaseDataStore) ListChildrenJSON(
 
 func (self *FileBaseDataStore) GetSubjectJSON(
 	config_obj *config_proto.Config,
-	path api.UnsafeDatastorePath,
+	path api.PathSpec,
 	message proto.Message) error {
 
-	filename := path.AsDatastoreFilename(config_obj)
+	filename := path.SetType("json").
+		AsDatastoreFilename(config_obj)
 	file, err := os.Open(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Try to read the file as an old protobuf
 			// based file.
-			filename = path.SetFileExtension("").
+			filename = path.SetType("").
 				AsDatastoreFilename(config_obj)
 			file, err = os.Open(filename)
 			if err != nil {
@@ -148,10 +149,11 @@ func (self *FileBaseDataStore) GetSubjectJSON(
 
 func (self *FileBaseDataStore) SetSubjectJSON(
 	config_obj *config_proto.Config,
-	path api.UnsafeDatastorePath,
+	path api.PathSpec,
 	message proto.Message) error {
 
-	filename := path.AsDatastoreFilename(config_obj)
+	filename := path.SetType("json").
+		AsDatastoreFilename(config_obj)
 
 	// Encode as JSON
 	serialized_content, err := protojson.Marshal(message)
@@ -193,7 +195,7 @@ func (self *FileBaseDataStore) SetSubjectJSON(
 
 func (self *FileBaseDataStore) WalkComponents(
 	config_obj *config_proto.Config,
-	root_components api.UnsafeDatastorePath, walkFn ComponentWalkFunc) error {
+	root_components api.PathSpec, walkFn ComponentWalkFunc) error {
 
 	dirname := root_components.AsDatastoreDirectory(config_obj)
 	names, err := utils.ReadDirNames(dirname)

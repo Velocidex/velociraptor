@@ -134,12 +134,12 @@ func (self MonitoringPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 		Name: "monitoring",
 		Doc: "Extract monitoring log from a client. If client_id is not specified " +
 			"we watch the global journal which contains event logs from all clients.",
-		ArgType: type_map.AddType(scope, &MonitoringPluginArgs{}),
+		ArgType: type_map.AddType(scope, &SourcePluginArgs{}),
 	}
 }
 
-type MonitoringPluginArgs struct {
-	Artifact string `vfilter:"required,field=artifact,doc=The event artifact name to watch"`
+type WatchMonitoringPluginArgs struct {
+	Artifact string `vfilter:"optional,field=artifact,doc=The artifact to watch"`
 }
 
 // The watch_monitoring plugin watches for new rows written to the
@@ -171,7 +171,7 @@ func (self WatchMonitoringPlugin) Call(
 			return
 		}
 
-		arg := &MonitoringPluginArgs{}
+		arg := &WatchMonitoringPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_monitoring: %v", err)
@@ -224,7 +224,7 @@ func (self WatchMonitoringPlugin) Info(scope vfilter.Scope,
 		Doc: "Watch clients' monitoring log. This is an event plugin. If " +
 			"client_id is not provided we watch the global journal which contains " +
 			"events from all clients.",
-		ArgType: type_map.AddType(scope, &MonitoringPluginArgs{}),
+		ArgType: type_map.AddType(scope, &WatchMonitoringPluginArgs{}),
 	}
 }
 

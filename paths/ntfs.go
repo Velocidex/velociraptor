@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -18,6 +19,22 @@ var (
 	deviceDirectoryRegex = regexp.MustCompile(
 		`(?i)^(\\\\[\?\.]\\GLOBALROOT\\Device\\[^/\\]+)([/\\]?.*)`)
 )
+
+func UnsafeDatastorePathFromClientPath(
+	base_path api.PathSpec,
+	accessor, client_path string) api.PathSpec {
+	device, subpath, err := GetDeviceAndSubpath(client_path)
+	if !utils.IsNil(base_path) {
+		if err == nil {
+			return base_path.AddUnsafeChild(
+				accessor, device).AddChild(subpath...)
+		}
+		return base_path.AddUnsafeChild(accessor).AddChild(
+			utils.SplitComponents(client_path)...)
+	}
+	return api.NewUnsafeDatastorePath(accessor).AddChild(
+		utils.SplitComponents(client_path)...)
+}
 
 // Detect device names from a client's path.
 func GetDeviceAndSubpath(path string) (device string, subpath []string, err error) {

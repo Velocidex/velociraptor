@@ -286,7 +286,7 @@ func (self *Server) Process(
 
 	client_path_manager := paths.NewClientPathManager(message_info.Source)
 	err = self.db.SetSubject(
-		self.config, client_path_manager.Ping().Path(), client_info)
+		self.config, client_path_manager.Ping(), client_info)
 	if err != nil {
 		return nil, 0, err
 	}

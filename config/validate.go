@@ -145,6 +145,14 @@ func ValidateDatastoreConfig(config_obj *config_proto.Config) error {
 		return errors.New("No Datastore config")
 	}
 
+	if config_obj.Datastore.Location == "" {
+		config_obj.Datastore.Location = "/"
+	}
+
+	if config_obj.Datastore.FilestoreDirectory == "" {
+		config_obj.Datastore.FilestoreDirectory = "/"
+	}
+
 	// If mysql connection params are specified we create
 	// a mysql_connection_string
 	if config_obj.Datastore.MysqlConnectionString == "" &&

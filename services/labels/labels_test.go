@@ -12,7 +12,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -74,7 +73,7 @@ func (self *LabelsTestSuite) TestPopulateFromIndex() {
 	db, err := datastore.GetDB(self.config_obj)
 	require.NoError(self.T(), err)
 
-	err = db.SetIndex(self.config_obj, constants.CLIENT_INDEX_URN,
+	err = db.SetIndex(self.config_obj, paths.CLIENT_INDEX_URN,
 		"label:Label1", []string{self.client_id})
 	require.NoError(self.T(), err)
 

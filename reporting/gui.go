@@ -26,7 +26,6 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -109,7 +108,7 @@ func (self *GuiTemplateEngine) Expand(values ...interface{}) interface{} {
 		for _, item := range t {
 			file_store_factory := file_store.GetFileStore(self.config_obj)
 			reader, err := result_sets.NewResultSetReader(
-				file_store_factory, item)
+				file_store_factory, item.Path())
 			if err == nil {
 				for row := range reader.Rows(self.ctx) {
 					results = append(results, row)
@@ -431,57 +430,56 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 				continue
 			}
 
-			path_manager := self.path_manager.NewQueryStorage()
-			result = append(result, path_manager)
+			path := self.path_manager.NewQueryStorage()
+			result = append(result, path)
 
-			func(vql *vfilter.VQL, path_manager api.PathManager) {
-				file_store_factory := file_store.GetFileStore(self.config_obj)
+			file_store_factory := file_store.GetFileStore(self.config_obj)
 
-				rs_writer, err := result_sets.NewResultSetWriter(
-					file_store_factory, path_manager, opts, true /* truncate */)
-				if err != nil {
-					self.Error("Error: %v\n", err)
-					return
-				}
-				defer rs_writer.Close()
+			rs_writer, err := result_sets.NewResultSetWriter(
+				file_store_factory, path.Path(),
+				opts, true /* truncate */)
+			if err != nil {
+				self.Error("Error: %v\n", err)
+				return nil
+			}
+			defer rs_writer.Close()
 
-				rs_writer.Flush()
+			rs_writer.Flush()
 
-				row_idx := 0
-				next_progress := time.Now().Add(4 * time.Second)
-				eval_chan := vql.Eval(self.ctx, self.Scope)
+			row_idx := 0
+			next_progress := time.Now().Add(4 * time.Second)
+			eval_chan := vql.Eval(self.ctx, self.Scope)
 
-				defer self.Progress.Report("Completed query")
+			defer self.Progress.Report("Completed query")
+		do_query:
+			for {
+				select {
+				case <-self.ctx.Done():
+					return nil
 
-				for {
-					select {
-					case <-self.ctx.Done():
-						return
+				case row, ok := <-eval_chan:
+					if !ok {
+						continue do_query
+					}
+					row_idx++
+					rs_writer.Write(vfilter.RowToDict(self.ctx, self.Scope, row))
 
-					case row, ok := <-eval_chan:
-						if !ok {
-							return
-						}
-						row_idx++
-						rs_writer.Write(vfilter.RowToDict(self.ctx, self.Scope, row))
-
-						if self.Progress != nil && (row_idx%100 == 0 ||
-							time.Now().After(next_progress)) {
-							rs_writer.Flush()
-							self.Progress.Report(fmt.Sprintf(
-								"Total Rows %v", row_idx))
-							next_progress = time.Now().Add(4 * time.Second)
-						}
-
-						// Report progress even if no row is emitted
-					case <-time.After(4 * time.Second):
+					if self.Progress != nil && (row_idx%100 == 0 ||
+						time.Now().After(next_progress)) {
 						rs_writer.Flush()
 						self.Progress.Report(fmt.Sprintf(
 							"Total Rows %v", row_idx))
 						next_progress = time.Now().Add(4 * time.Second)
 					}
+
+					// Report progress even if no row is emitted
+				case <-time.After(4 * time.Second):
+					rs_writer.Flush()
+					self.Progress.Report(fmt.Sprintf(
+						"Total Rows %v", row_idx))
+					next_progress = time.Now().Add(4 * time.Second)
 				}
-			}(vql, path_manager)
+			}
 		}
 	}
 	return result

@@ -26,9 +26,9 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/search"
 	vsearch "www.velocidex.com/golang/velociraptor/search"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -105,7 +105,7 @@ func (self ClientsPlugin) Call(
 		}
 
 		for _, client_id := range db.SearchClients(
-			config_obj, constants.CLIENT_INDEX_URN,
+			config_obj, paths.CLIENT_INDEX_URN,
 			search, "", arg.Start, limit, datastore.UNSORTED) {
 			api_client, err := vsearch.GetApiClient(
 				ctx, config_obj, client_id,

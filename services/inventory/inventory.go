@@ -47,7 +47,6 @@ import (
 	"github.com/pkg/errors"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -226,7 +225,7 @@ func (self *InventoryService) materializeTool(
 		tool.ServeUrl = tool.Url
 	}
 
-	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
+	return self.db.SetSubject(config_obj, paths.ThirdPartyInventory, self.binaries)
 }
 
 func (self *InventoryService) RemoveTool(
@@ -247,7 +246,7 @@ func (self *InventoryService) RemoveTool(
 
 	self.binaries.Tools = tools
 
-	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
+	return self.db.SetSubject(config_obj, paths.ThirdPartyInventory, self.binaries)
 }
 
 func (self *InventoryService) AddTool(config_obj *config_proto.Config,
@@ -313,7 +312,7 @@ func (self *InventoryService) AddTool(config_obj *config_proto.Config,
 
 	self.binaries.Version = uint64(self.Clock.Now().UnixNano())
 
-	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
+	return self.db.SetSubject(config_obj, paths.ThirdPartyInventory, self.binaries)
 }
 
 func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) error {
@@ -321,7 +320,7 @@ func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) erro
 	defer self.mu.Unlock()
 
 	inventory := &artifacts_proto.ThirdParty{}
-	err := self.db.GetSubject(config_obj, constants.ThirdPartyInventory, inventory)
+	err := self.db.GetSubject(config_obj, paths.ThirdPartyInventory, inventory)
 
 	// Ignore errors from reading the inventory file - it might be
 	// missing or corrupt but this is not an error - just try again later.
@@ -370,8 +369,9 @@ func StartInventoryService(
 		defer inventory_service.Close()
 
 		for {
+			// Watch for notifications that the inventory is changed.
 			notification, cancel := notifier.ListenForNotification(
-				constants.ThirdPartyInventory)
+				"Server.Internal.Inventory")
 
 			select {
 			case <-ctx.Done():

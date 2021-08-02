@@ -38,23 +38,6 @@ import (
 // from it, so reading from already constructed cursors is extremely
 // quick.
 
-type partPathManager struct {
-	log_path string
-}
-
-func (self partPathManager) GetPathForWriting() (string, error) {
-	return self.log_path, nil
-}
-
-func (self partPathManager) GetQueueName() string {
-	return ""
-}
-
-func (self partPathManager) GetAvailableFiles(
-	ctx context.Context) []*api.ResultSetFileProperties {
-	return nil
-}
-
 type TimedResultSetReader struct {
 	files              []*api.ResultSetFileProperties
 	current_files_idx  int
@@ -137,7 +120,7 @@ func (self *TimedResultSetReader) getReader() (*timelines.TimelineReader, error)
 			return nil, io.EOF
 		}
 
-		path_manager := timelinePathManager(current_file.Path)
+		path_manager := new_timelinePathManager(current_file.Path)
 		reader, err := timelines.NewTimelineReader(
 			self.file_store_factory, path_manager)
 		if err != nil {
@@ -161,8 +144,7 @@ func (self *TimedResultSetReader) maybeUpgradeIndex(
 	*timelines.TimelineReader, error) {
 
 	reader, err := result_sets.NewResultSetReader(
-		self.file_store_factory,
-		partPathManager{path_manager.Path()})
+		self.file_store_factory, path_manager.Path())
 	if err != nil {
 		return nil, err
 	}
@@ -171,8 +153,8 @@ func (self *TimedResultSetReader) maybeUpgradeIndex(
 	// Read all the lines from the json and write them to a new
 	// tmp file.
 	ctx := context.Background()
-	new_path := path_manager.Path() + ".tmp"
-	tmp_path_manager := timelinePathManager(new_path)
+	new_path := path_manager.Path().SetType("tmp")
+	tmp_path_manager := new_timelinePathManager(new_path)
 	tmp_writer, err := timelines.NewTimelineWriter(
 		self.file_store_factory, tmp_path_manager,
 		true /* truncate */)

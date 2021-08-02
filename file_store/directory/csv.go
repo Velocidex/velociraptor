@@ -34,7 +34,7 @@ func row_to_dict(row_data []interface{}, headers []string) (*ordereddict.Dict, i
 func ReadRowsCSV(
 	ctx context.Context,
 	file_store api.FileStore,
-	log_path string, start_time, end_time int64) (
+	log_path api.SafeDatastorePath, start_time, end_time int64) (
 	<-chan *ordereddict.Dict, error) {
 
 	fd, err := file_store.ReadFile(log_path)

@@ -39,7 +39,10 @@ func (self *TimelineTestSuite) TearDownTest() {
 }
 
 func (self *TimelineTestSuite) TestSuperTimelineWriter() {
-	path_manager := &SuperTimelinePathManager{"Test", "notebooks/N.1234/"}
+	path_manager := &SuperTimelinePathManager{
+		Name: "Test",
+		Root: api.NewUnsafeDatastorePath("notebooks", "N.1234"),
+	}
 	super, err := NewSuperTimelineWriter(self.config_obj, path_manager)
 	assert.NoError(self.T(), err)
 
@@ -87,7 +90,10 @@ func (self *TimelineTestSuite) TestSuperTimelineWriter() {
 }
 
 func (self *TimelineTestSuite) TestTimelineWriter() {
-	path_manager := &TimelinePathManager{"T.1234", "Test"}
+	path_manager := &TimelinePathManager{
+		name: "T.1234",
+		root: api.NewUnsafeDatastorePath("Test"),
+	}
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	timeline, err := NewTimelineWriter(file_store_factory, path_manager, true /* truncate */)
 	assert.NoError(self.T(), err)

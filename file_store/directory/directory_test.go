@@ -18,8 +18,8 @@ func TestDirectoryFileStore(t *testing.T) {
 	defer os.RemoveAll(dir) // clean up
 
 	config_obj := config.GetDefaultConfig()
-	config_obj.Datastore.FilestoreDirectory = dir
-	config_obj.Datastore.Location = dir
+	config_obj.Datastore.FilestoreDirectory = dir + "/"
+	config_obj.Datastore.Location = dir + "/"
 
 	file_store := NewDirectoryFileStore(config_obj)
 	suite.Run(t, api.NewFileStoreTestSuite(config_obj, file_store))

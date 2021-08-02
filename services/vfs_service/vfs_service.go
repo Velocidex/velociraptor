@@ -74,13 +74,21 @@ func (self *VFSService) ProcessDownloadFile(
 	path_manager, err := artifacts.NewArtifactPathManager(config_obj,
 		client_id, flow_id, "System.VFS.DownloadFile")
 	if err != nil {
+		utils.Debug(err)
+		logger.Error("Unable to read artifact: %v", err)
+		return
+	}
+
+	path, err := path_manager.GetPathForWriting()
+	if err != nil {
+
 		logger.Error("Unable to read artifact: %v", err)
 		return
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(
-		file_store_factory, path_manager)
+		file_store_factory, path)
 	if err != nil {
 		logger.Error("Unable to read artifact: %v", err)
 		return
@@ -91,51 +99,43 @@ func (self *VFSService) ProcessDownloadFile(
 		Accessor, _ := row.GetString("Accessor")
 		Path, _ := row.GetString("Path")
 
-		// Internally we only deal with path components so
-		// split the Path provided by the artifact into
-		// components.
-		client_path_components := utils.SplitComponents(Path)
-
 		MD5, _ := row.GetString("Md5")
 		SHA256, _ := row.GetString("Sha256")
 
 		// Figure out where the file was uploaded to.
-		vfs_path_manager := flow_path_manager.GetUploadsFile(
-			Accessor, client_path_components)
+		uploaded_file_manager := flow_path_manager.GetUploadsFile(
+			Accessor, Path)
 
 		// Check to make sure the file actually exists.
 		file_store_factory := file_store.GetFileStore(config_obj)
-		_, err := file_store_factory.StatFileComponents(
-			vfs_path_manager.Path())
+		_, err := file_store_factory.StatFile(uploaded_file_manager.Path())
 		if err != nil {
 			logger.Error(
-				"Unable to save flow %v: %v",
-				vfs_path_manager.Path(), err)
+				"Unable to save flow %v: %v", Path, err)
 			continue
 		}
 
-		_, err = file_store_factory.StatFileComponents(
-			vfs_path_manager.IndexPath())
+		// Check if the index file exists
+		_, err = file_store_factory.StatFile(
+			uploaded_file_manager.IndexPath())
+		has_index_file := err == nil
 
 		// We store a place holder in the VFS pointing at the
 		// read vfs_path of the download.
 		db, _ := datastore.GetDB(config_obj)
-		err = db.SetSubjectJSON(config_obj,
-			flow_path_manager.GetVFSDownloadInfoPath(
-				Accessor, client_path_components).Path(),
+		err = db.SetSubject(config_obj,
+			flow_path_manager.GetVFSDownloadInfoPath(Accessor, Path),
 			&flows_proto.VFSDownloadInfo{
-				VfsPath:    vfs_path_manager.FullPath(),
-				Components: vfs_path_manager.Path(),
-				Mtime:      uint64(ts) * 1000000,
-				Sparse:     err == nil, // If index file exists we have an index.
-				Size:       vql_subsystem.GetIntFromRow(scope, row, "Size"),
-				MD5:        MD5,
-				SHA256:     SHA256,
+				Components: uploaded_file_manager.
+					Path().Components(),
+				Mtime:  uint64(ts) * 1000000,
+				Sparse: has_index_file, // If index file exists we have an index.
+				Size:   vql_subsystem.GetIntFromRow(scope, row, "Size"),
+				MD5:    MD5,
+				SHA256: SHA256,
 			})
 		if err != nil {
-			logger.Error(
-				"Unable to save flow %v: %v",
-				vfs_path_manager.Path(), err)
+			logger.Error("Unable to save flow %v: %v", Path, err)
 		}
 	}
 }
@@ -162,7 +162,8 @@ func (self *VFSService) handleEmptyListDirectory(
 		return
 	}
 
-	vfs_components := getVfsComponents(vfs_path, accessor)
+	vfs_components := paths.UnsafeDatastorePathFromClientPath(
+		nil, accessor, vfs_path).Components()
 
 	// Write an empty set to the VFS entry.
 	err := self.flush_state(config_obj, uint64(ts), client_id, flow_id,
@@ -204,7 +205,7 @@ func (self *VFSService) ProcessListDirectory(
 	// for storing in the VFS.
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(
-		file_store_factory, path_manager)
+		file_store_factory, path_manager.Path())
 	if err != nil {
 		logger.Error("Unable to read artifact: %v", err)
 		return
@@ -217,13 +218,12 @@ func (self *VFSService) ProcessListDirectory(
 	for row := range reader.Rows(ctx) {
 		full_path, _ := row.GetString("_FullPath")
 		accessor, _ := row.GetString("_Accessor")
-
-		vfs_components := getVfsComponents(full_path, accessor)
-		if vfs_components == nil {
+		client_path := paths.UnsafeDatastorePathFromClientPath(
+			nil, accessor, full_path)
+		dir_components := client_path.Dir().Components()
+		if client_path == nil {
 			continue
 		}
-
-		dir_components := vfs_components[:len(vfs_components)-1]
 
 		// This row does not belong in the current
 		// collection - flush the collection and start
@@ -238,7 +238,8 @@ func (self *VFSService) ProcessListDirectory(
 			// the first collection before the first row
 			// is processed.
 			if current_vfs_components != nil {
-				err := self.flush_state(config_obj, uint64(ts), client_id,
+				err := self.flush_state(
+					config_obj, uint64(ts), client_id,
 					flow_id, current_vfs_components, rows)
 				if err != nil {
 					return
@@ -295,7 +296,7 @@ func (self *VFSService) flush_state(
 		return err
 	}
 	client_path_manager := paths.NewClientPathManager(client_id)
-	return db.SetSubjectJSON(config_obj,
+	return db.SetSubject(config_obj,
 		client_path_manager.VFSPath(vfs_components),
 		&api_proto.VFSListResponse{
 			Columns:   columns,
@@ -305,28 +306,6 @@ func (self *VFSService) flush_state(
 			ClientId:  client_id,
 			FlowId:    flow_id,
 		})
-}
-
-// The inverse of GetClientPath()
-func getVfsComponents(client_path string, accessor string) []string {
-	switch accessor {
-
-	case "reg", "registry":
-		return append([]string{"registry"}, utils.SplitComponents(client_path)...)
-
-	case "ntfs":
-		device, subpath, err := paths.GetDeviceAndSubpath(client_path)
-		if err == nil {
-			if subpath == "" || subpath == "." {
-				return []string{"ntfs", device}
-			}
-			return append([]string{"ntfs", device},
-				utils.SplitPlainComponents(subpath)...)
-		}
-	}
-
-	return append([]string{"file"},
-		utils.SplitPlainComponents(client_path)...)
 }
 
 func StartVFSService(

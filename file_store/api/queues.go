@@ -16,7 +16,7 @@ type QueueManager interface {
 }
 
 type ResultSetFileProperties struct {
-	Path               string
+	Path               PathSpec
 	StartTime, EndTime time.Time
 	Size               int64
 }
@@ -24,7 +24,7 @@ type ResultSetFileProperties struct {
 // Path manager tells the filestore where to store things.
 type PathManager interface {
 	// Gets a log path for writing new rows on.
-	GetPathForWriting() (string, error)
+	GetPathForWriting() (PathSpec, error)
 
 	// The name of the queue we will use to watch for any rows
 	// inserted into this result set.

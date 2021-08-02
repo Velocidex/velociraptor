@@ -8,13 +8,13 @@ import (
 )
 
 func PushRows(config_obj *config_proto.Config,
-	path_manager api.PathManager,
+	path api.PathSpec,
 	rows []*ordereddict.Dict) error {
 
 	file_store_factory := GetFileStore(config_obj)
 
 	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		path_manager, nil, false /* truncate */)
+		path, nil, false /* truncate */)
 	if err != nil {
 		return err
 	}

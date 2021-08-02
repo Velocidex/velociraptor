@@ -258,19 +258,3 @@ func CleanComponentsForZip(components []string, client_id, hostname string) stri
 	// Zip files should not have absolute paths
 	return strings.Join(components, "/")
 }
-
-func CleanPathForZip(path, client_id, hostname string) string {
-	components := SplitComponents(path)
-	hostname = SanitizeString(hostname)
-	for _, component := range components {
-		// Replace any client id with hostnames
-		if component == client_id {
-			component = hostname
-		}
-
-		components = append(components, SanitizeString(component))
-	}
-
-	// Zip files should not have absolute paths
-	return strings.Join(components, "/")
-}

@@ -103,7 +103,7 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 
 	// Initially Server.Monitor.Health should be created if no
 	// other config exists.
-	configuration, ok := db.Get("/config/server_monitoring.json").(*flows_proto.ArtifactCollectorArgs)
+	configuration, ok := db.Get("/config/server_monitoring.json.db").(*flows_proto.ArtifactCollectorArgs)
 	assert.True(self.T(), ok)
 	assert.Equal(self.T(), 1, len(configuration.Artifacts))
 	assert.Equal(self.T(), "Server.Monitor.Health", configuration.Artifacts[0])
@@ -140,7 +140,7 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	assert.NoError(self.T(), err)
 
 	// Make sure the new configuration is written to disk
-	configuration, ok = db.Get("/config/server_monitoring.json").(*flows_proto.ArtifactCollectorArgs)
+	configuration, ok = db.Get("/config/server_monitoring.json.db").(*flows_proto.ArtifactCollectorArgs)
 	assert.True(self.T(), ok)
 	assert.Equal(self.T(), 2, len(configuration.Artifacts))
 	assert.Equal(self.T(), "Server.Clock", configuration.Artifacts[0])
@@ -175,7 +175,7 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	}
 
 	for _, path := range []string{
-		"/config/server_monitoring.json",
+		"/config/server_monitoring.json.db",
 	} {
 		golden.Set(path, db.Get(path))
 	}

@@ -7,17 +7,18 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Implement the glob.FileInfo
 type FileInfoAdapter struct {
 	os.FileInfo
 
-	full_path string
+	full_path PathSpec
 	_data     interface{}
 }
 
-func NewFileInfoAdapter(fd os.FileInfo, full_path string, data interface{}) *FileInfoAdapter {
+func NewFileInfoAdapter(fd os.FileInfo, full_path PathSpec, data interface{}) *FileInfoAdapter {
 	return &FileInfoAdapter{
 		FileInfo:  fd,
 		full_path: full_path,
@@ -34,7 +35,7 @@ func (self FileInfoAdapter) Data() interface{} {
 }
 
 func (self FileInfoAdapter) FullPath() string {
-	return self.full_path
+	return utils.JoinComponents(self.full_path.Components(), "/")
 }
 
 func (self FileInfoAdapter) Btime() time.Time {
@@ -61,11 +62,12 @@ func (self FileInfoAdapter) GetLink() (string, error) {
 	return "", errors.New("Not implemented")
 }
 
+// A Wrapper around a regular file to present the glob.FileInfo
+// interface
 type FileAdapter struct {
 	*os.File
 
-	FullPath   string
-	Components []string
+	FullPath PathSpec
 }
 
 func (self *FileAdapter) Stat() (glob.FileInfo, error) {
@@ -74,13 +76,4 @@ func (self *FileAdapter) Stat() (glob.FileInfo, error) {
 		return nil, err
 	}
 	return NewFileInfoAdapter(stat, self.FullPath, nil), nil
-}
-
-type FileReaderAdapter struct {
-	FileReader
-}
-
-func (self *FileReaderAdapter) Stat() (os.FileInfo, error) {
-	stat, err := self.FileReader.Stat()
-	return stat, err
 }

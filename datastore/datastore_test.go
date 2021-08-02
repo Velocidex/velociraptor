@@ -14,6 +14,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -41,18 +42,18 @@ type BaseTestSuite struct {
 
 func (self BaseTestSuite) TestSetGetJSON() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
-	for _, components := range [][]string{
-		[]string{"a", "b/c", "d"},
-		[]string{"a", "b/c", "d/a"},
-		[]string{"a", "b/c", "d?\""},
+	for _, path := range []api.UnsafeDatastorePath{
+		api.NewUnsafeDatastorePath("a", "b/c", "d"),
+		api.NewUnsafeDatastorePath("a", "b/c", "d/a"),
+		api.NewUnsafeDatastorePath("a", "b/c", "d?\""),
 	} {
 		err := self.datastore.SetSubjectJSON(
-			self.config_obj, components, message)
+			self.config_obj, path, message)
 		assert.NoError(self.T(), err)
 
 		read_message := &crypto_proto.VeloMessage{}
 		err = self.datastore.GetSubjectJSON(self.config_obj,
-			components, read_message)
+			path, read_message)
 		assert.NoError(self.T(), err)
 
 		assert.Equal(self.T(), message.Source, read_message.Source)
@@ -60,7 +61,7 @@ func (self BaseTestSuite) TestSetGetJSON() {
 
 	// Now test that ListChildren works properly.
 	children, err := self.datastore.ListChildrenJSON(
-		self.config_obj, []string{"a", "b/c"})
+		self.config_obj, api.NewUnsafeDatastorePath("a", "b/c"))
 	assert.NoError(self.T(), err)
 
 	sort.Slice(children, func(i, j int) bool {
@@ -81,11 +82,11 @@ func (self BaseTestSuite) TestSetGetJSON() {
 // properly.
 func (self BaseTestSuite) TestSetGetMigration() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
-	for _, components := range [][]string{
-		[]string{"a", "b", "c"},
+	for _, path := range []api.UnsafeDatastorePath{
+		api.NewUnsafeDatastorePath("a", "b", "c"),
 	} {
 		// Write a protobuf based file
-		urn := api.NewSafeDatastorePath(components...)
+		urn := api.NewSafeDatastorePath(path.Components()...)
 		err := self.datastore.SetSubject(
 			self.config_obj, urn, message)
 		assert.NoError(self.T(), err)
@@ -93,12 +94,11 @@ func (self BaseTestSuite) TestSetGetMigration() {
 		// Even if we read it with json it should work.
 		read_message := &crypto_proto.VeloMessage{}
 		err = self.datastore.GetSubjectJSON(self.config_obj,
-			components, read_message)
+			path, read_message)
 		assert.NoError(self.T(), err)
 
 		assert.Equal(self.T(), message.Source, read_message.Source)
 	}
-
 }
 
 func (self BaseTestSuite) TestSetGetSubjectWithEscaping() {
@@ -197,10 +197,10 @@ func (self BaseTestSuite) TestListChildren() {
 	assert.Equal(self.T(), []string{"/a/b/c/2", "/a/b/c/3"},
 		asStrings(children))
 
-	visited := []api.SafeDatastorePath{}
+	visited := []api.PathSpec{}
 	self.datastore.Walk(self.config_obj,
 		api.NewSafeDatastorePath("a", "b"),
-		func(path_name api.SafeDatastorePath) error {
+		func(path_name api.PathSpec) error {
 			visited = append(visited, path_name)
 			return nil
 		})
@@ -291,10 +291,11 @@ func benchmarkSearchClient(b *testing.B,
 
 }
 
-func asStrings(in []api.SafeDatastorePath) []string {
+func asStrings(in []api.PathSpec) []string {
 	children := make([]string, 0, len(in))
 	for _, i := range in {
-		children = append(children, i.AsRelativeFilename())
+		children = append(children, utils.JoinComponents(
+			i.Components(), "/"))
 	}
 	sort.Strings(children)
 

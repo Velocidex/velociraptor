@@ -8,8 +8,8 @@ import (
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -85,7 +85,7 @@ func (self *Labeler) getRecordFromIndex(
 	}
 
 	for _, label := range db.SearchClients(
-		config_obj, constants.CLIENT_INDEX_URN,
+		config_obj, paths.CLIENT_INDEX_URN,
 		client_id, "", 0, 1000, datastore.UNSORTED) {
 		if strings.HasPrefix(label, "label:") {
 			result.record.Label = append(result.record.Label,
@@ -299,7 +299,7 @@ func (self *Labeler) RemoveClientLabel(
 }
 
 type indexManipulator func(config_obj *config_proto.Config,
-	index_urn string, entity string, keywords []string) error
+	index_urn api.PathSpec, entity string, keywords []string) error
 
 func (self *Labeler) adjustIndex(
 	config_obj *config_proto.Config,
@@ -310,14 +310,14 @@ func (self *Labeler) adjustIndex(
 	}
 	err := index_func(
 		config_obj,
-		constants.CLIENT_INDEX_URN,
+		paths.CLIENT_INDEX_URN,
 		client_id, []string{label})
 	if err != nil {
 		return err
 	}
 	err = index_func(
 		config_obj,
-		constants.CLIENT_INDEX_URN,
+		paths.CLIENT_INDEX_URN,
 		label, []string{client_id})
 	if err != nil {
 		return err

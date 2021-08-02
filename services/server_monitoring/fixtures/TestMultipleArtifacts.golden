@@ -27,7 +27,7 @@
   "{\"_ts\":1602103388000000,\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"
   ""
  ],
- "/config/server_monitoring.json": {
+ "/config/server_monitoring.json.db": {
   "artifacts": [
    "Server.Clock",
    "Server.Clock2"

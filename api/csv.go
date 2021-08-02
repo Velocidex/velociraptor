@@ -47,14 +47,14 @@ func getTable(
 	}
 
 	result := &api_proto.GetTableResponse{}
-	path_manager, err := getPathManager(config_obj, in)
+	path_spec, err := getPathSpec(config_obj, in)
 	if err != nil {
 		return result, err
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_reader, err := result_sets.NewResultSetReader(
-		file_store_factory, path_manager)
+		file_store_factory, path_spec)
 	if err != nil {
 		return result, nil
 	}
@@ -103,17 +103,22 @@ func getTable(
 	return result, nil
 }
 
-func getPathManager(
+func getPathSpec(
 	config_obj *config_proto.Config,
-	in *api_proto.GetTableRequest) (api.PathManager, error) {
+	in *api_proto.GetTableRequest) (api.PathSpec, error) {
 
 	if in.FlowId != "" && in.Artifact != "" {
-		return artifacts.NewArtifactPathManager(
+		path_manager, err := artifacts.NewArtifactPathManager(
 			config_obj, in.ClientId, in.FlowId, in.Artifact)
+		if err != nil {
+			return nil, err
+		}
+		return path_manager.Path(), nil
 
 	} else if in.FlowId != "" && in.Type != "" {
 		flow_path_manager := paths.NewFlowPathManager(
 			in.ClientId, in.FlowId)
+
 		switch in.Type {
 		case "log":
 			return flow_path_manager.Log(), nil
@@ -128,7 +133,7 @@ func getPathManager(
 
 	} else if in.NotebookId != "" && in.CellId != "" {
 		return reporting.NewNotebookPathManager(in.NotebookId).Cell(
-			in.CellId).QueryStorage(in.TableId), nil
+			in.CellId).QueryStorage(in.TableId).Path(), nil
 	}
 
 	return nil, errors.New("Invalid request")

@@ -5,11 +5,11 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -162,7 +162,7 @@ func (self GetServerMonitoring) Call(
 
 	result := &flows_proto.ArtifactCollectorArgs{}
 	err = db.GetSubject(config_obj,
-		constants.ServerMonitoringFlowURN,
+		paths.ServerMonitoringFlowURN,
 		result)
 
 	if err != nil {

@@ -26,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -201,7 +202,7 @@ func (self *ClientEventTable) setClientMonitoringState(
 		return err
 	}
 
-	err = db.SetSubject(config_obj, constants.ClientMonitoringFlowURN,
+	err = db.SetSubject(config_obj, paths.ClientMonitoringFlowURN,
 		self.state)
 	if err != nil {
 		return err
@@ -352,7 +353,7 @@ func (self *ClientEventTable) load_from_file(
 
 	self.state = &flows_proto.ClientEventTable{}
 	err = db.GetSubject(config_obj,
-		constants.ClientMonitoringFlowURN, self.state)
+		paths.ClientMonitoringFlowURN, self.state)
 	if err != nil || self.state.Version == 0 {
 		// No client monitoring rules found, install some
 		// defaults.

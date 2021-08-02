@@ -329,7 +329,9 @@ func ArtifactCollectorProcessOneMessage(
 
 			file_store_factory := file_store.GetFileStore(config_obj)
 			rs_writer, err := result_sets.NewResultSetWriter(
-				file_store_factory, path_manager, nil, false /* truncate */)
+				file_store_factory,
+				path_manager.Path(),
+				nil, false /* truncate */)
 			if err != nil {
 				return err
 			}
@@ -463,13 +465,13 @@ func appendUploadDataToFile(
 		file_buffer.Pathspec.Accessor,
 		file_buffer.Pathspec.Path)
 
-	fd, err := file_store_factory.WriteFileComponent(file_path_manager.Path())
+	fd, err := file_store_factory.WriteFile(file_path_manager.Path())
 	if err != nil {
 		// If we fail to write this one file we keep going -
 		// otherwise the flow will be terminated.
 		Log(config_obj, collection_context,
 			fmt.Sprintf("While writing to %v: %v",
-				file_path_manager.Path(), err))
+				file_path_manager.Path().AsClientPath(), err))
 		return nil
 	}
 	defer fd.Close()
@@ -494,8 +496,8 @@ func appendUploadDataToFile(
 		collection_context.UploadedFiles = append(
 			collection_context.UploadedFiles,
 			&flows_proto.ArtifactUploadedFileInfo{
-				Name:       file_path_manager.FullPath(),
-				Components: file_path_manager.Path(),
+				Name:       file_path_manager.Path().AsClientPath(),
+				Components: file_path_manager.Path().Components(),
 				Size:       file_buffer.Size,
 				StoredSize: size,
 			})
@@ -511,13 +513,13 @@ func appendUploadDataToFile(
 	if err != nil {
 		Log(config_obj, collection_context,
 			fmt.Sprintf("While writing to %v: %v",
-				file_path_manager.Path(), err))
+				file_path_manager.Path().AsClientPath(), err))
 		return nil
 	}
 
 	// Does this packet have an index? It could be sparse.
 	if file_buffer.Index != nil {
-		fd, err := file_store_factory.WriteFileComponent(
+		fd, err := file_store_factory.WriteFile(
 			file_path_manager.IndexPath())
 		if err != nil {
 			return err
@@ -538,8 +540,10 @@ func appendUploadDataToFile(
 		collection_context.UploadedFiles = append(
 			collection_context.UploadedFiles,
 			&flows_proto.ArtifactUploadedFileInfo{
-				Name:       file_path_manager.IndexFullPath(),
-				Components: file_path_manager.IndexPath(),
+				Name: file_path_manager.IndexPath().
+					AsClientPath(),
+				Components: file_path_manager.IndexPath().
+					Components(),
 				Size:       uint64(len(data)),
 				StoredSize: uint64(len(data)),
 			})
@@ -554,7 +558,7 @@ func appendUploadDataToFile(
 		row := ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("ClientId", message.Source).
-			Set("VFSPath", file_path_manager.Path()).
+			Set("VFSPath", file_path_manager.Path().AsClientPath()).
 			Set("UploadName", file_buffer.Pathspec.Path).
 			Set("Accessor", file_buffer.Pathspec.Accessor).
 			Set("Size", file_buffer.Size).

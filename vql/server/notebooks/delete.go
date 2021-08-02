@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -69,7 +70,7 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 
 		// Indiscriminately delete all the client's datastore files.
 		err = db.Walk(config_obj, notebook_path_manager.Directory(),
-			func(filename string) error {
+			func(filename api.PathSpec) error {
 				select {
 				case <-ctx.Done():
 					return nil
@@ -96,7 +97,7 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 
 		// Delete the filestore files.
 		err = file_store_factory.Walk(notebook_path_manager.Directory(),
-			func(filename string, info os.FileInfo, err error) error {
+			func(filename api.PathSpec, info os.FileInfo) error {
 				select {
 				case <-ctx.Done():
 					return nil

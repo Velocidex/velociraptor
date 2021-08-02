@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -50,6 +51,22 @@ func (self *JournalService) PushRowsToArtifact(
 		config_obj, client_id, flows_id, artifact)
 	if err != nil {
 		return err
+	}
+
+	// Just a regular artifact, append to the existing result set.
+	if !path_manager.IsEvent() {
+		file_store_factory := file_store.GetFileStore(config_obj)
+		rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
+			path_manager.Path(), nil, false /* truncate */)
+		if err != nil {
+			return err
+		}
+		defer rs_writer.Close()
+
+		for _, row := range rows {
+			rs_writer.Write(row)
+		}
+		return nil
 	}
 
 	if self != nil && self.qm != nil {

@@ -5,13 +5,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -20,10 +20,22 @@ import (
 
 var (
 	// Only used for tests.
-	Test_memory_file_store *MemoryFileStore = &MemoryFileStore{
-		Data: ordereddict.NewDict(),
-	}
+	Test_memory_file_store *MemoryFileStore
 )
+
+func NewMemoryFileStore(config_obj *config_proto.Config) *MemoryFileStore {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if Test_memory_file_store == nil {
+		Test_memory_file_store = &MemoryFileStore{
+			Data:       ordereddict.NewDict(),
+			config_obj: config_obj,
+		}
+	}
+
+	return Test_memory_file_store
+}
 
 type MemoryReader struct {
 	*bytes.Reader
@@ -73,7 +85,8 @@ func (self *MemoryWriter) Truncate() error {
 type MemoryFileStore struct {
 	mu sync.Mutex
 
-	Data *ordereddict.Dict
+	config_obj *config_proto.Config
+	Data       *ordereddict.Dict
 }
 
 func (self *MemoryFileStore) Debug() {
@@ -96,10 +109,12 @@ func (self *MemoryFileStore) Debug() {
 	}
 }
 
-func (self *MemoryFileStore) ReadFile(filename string) (api.FileReader, error) {
+func (self *MemoryFileStore) ReadFile(path api.PathSpec) (api.FileReader, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	filename := path.AsFilestoreFilename(self.config_obj)
+	self.Trace("ReadFile", filename)
 	data_any, pres := self.Data.Get(filename)
 	if pres {
 		data := data_any.([]byte)
@@ -112,10 +127,12 @@ func (self *MemoryFileStore) ReadFile(filename string) (api.FileReader, error) {
 	return nil, errors.New("Not found")
 }
 
-func (self *MemoryFileStore) WriteFile(filename string) (api.FileWriter, error) {
+func (self *MemoryFileStore) WriteFile(path api.PathSpec) (api.FileWriter, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	filename := path.AsFilestoreFilename(self.config_obj)
+	self.Trace("WriteFile", filename)
 	buf, pres := self.Data.Get(filename)
 	if !pres {
 		buf = []byte{}
@@ -129,40 +146,46 @@ func (self *MemoryFileStore) WriteFile(filename string) (api.FileWriter, error) 
 	}, nil
 }
 
-func (self *MemoryFileStore) StatFile(filename string) (os.FileInfo, error) {
+func (self *MemoryFileStore) StatFile(path api.PathSpec) (os.FileInfo, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	filename := path.AsFilestoreFilename(self.config_obj)
+	self.Trace("StatFile", filename)
 	buff, pres := self.Data.Get(filename)
 	if !pres {
 		return nil, os.ErrNotExist
 	}
 
 	return &vtesting.MockFileInfo{
-		Name_:     path.Base(filename),
+		Name_:     path.Base(),
 		FullPath_: filename,
 		Size_:     int64(len(buff.([]byte))),
 	}, nil
 }
 
-func (self *MemoryFileStore) Move(src, dest string) error {
+func (self *MemoryFileStore) Move(src, dest api.PathSpec) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	buff, pres := self.Data.Get(src)
+	src_filename := src.AsFilestoreFilename(self.config_obj)
+	dest_filename := dest.AsFilestoreFilename(self.config_obj)
+	buff, pres := self.Data.Get(src_filename)
 	if !pres {
 		return os.ErrNotExist
 	}
 
-	self.Data.Set(dest, buff)
-	self.Data.Delete(src)
+	self.Data.Set(dest_filename, buff)
+	self.Data.Delete(src_filename)
 	return nil
 }
 
-func (self *MemoryFileStore) ListDirectory(dirname string) ([]os.FileInfo, error) {
+func (self *MemoryFileStore) ListDirectory(path api.PathSpec) ([]os.FileInfo, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	dirname := path.AsFilestoreDirectory(self.config_obj)
+	self.Trace("ListDirectory", dirname)
 	result := []os.FileInfo{}
 	files := []string{}
 	for _, filename := range self.Data.Keys() {
@@ -176,9 +199,10 @@ func (self *MemoryFileStore) ListDirectory(dirname string) ([]os.FileInfo, error
 			if len(components) > 0 &&
 				!utils.InString(files, components[0]) {
 				result = append(result, &vtesting.MockFileInfo{
-					Name_:     components[0],
-					FullPath_: path.Join(dirname, components[0]),
-					Size_:     int64(len(v)),
+					Name_: components[0],
+					FullPath_: path.AddChild(
+						components[0]).AsClientPath(),
+					Size_: int64(len(v)),
 				})
 				files = append(files, components[0])
 			}
@@ -187,15 +211,17 @@ func (self *MemoryFileStore) ListDirectory(dirname string) ([]os.FileInfo, error
 	return result, nil
 }
 
-func (self *MemoryFileStore) Walk(root string, walkFn filepath.WalkFunc) error {
+func (self *MemoryFileStore) Walk(
+	root api.PathSpec, walkFn api.WalkFunc) error {
 	children, err := self.ListDirectory(root)
 	if err != nil {
 		return err
 	}
 
 	for _, child_info := range children {
-		full_path := path.Join(root, child_info.Name())
-		err1 := walkFn(full_path, child_info, err)
+		full_path := root.AddChild(utils.UnsanitizeComponent(
+			child_info.Name()))
+		err1 := walkFn(full_path, child_info)
 		if err1 == filepath.SkipDir {
 			continue
 		}
@@ -209,12 +235,19 @@ func (self *MemoryFileStore) Walk(root string, walkFn filepath.WalkFunc) error {
 	return nil
 }
 
-func (self *MemoryFileStore) Delete(filename string) error {
+func (self *MemoryFileStore) Delete(path api.PathSpec) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	filename := path.AsFilestoreFilename(self.config_obj)
+	self.Trace("Delete", filename)
 	self.Data.Delete(filename)
 	return nil
+}
+
+func (self *MemoryFileStore) Trace(name, filename string) {
+	// return
+	fmt.Printf("Trace MemoryFileStore: %v: %v\n", name, filename)
 }
 
 func (self *MemoryFileStore) Get(filename string) ([]byte, bool) {

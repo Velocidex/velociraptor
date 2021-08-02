@@ -317,7 +317,8 @@ func getResultSetReader(
 		path_manager := reporting.NewNotebookPathManager(
 			arg.NotebookId).Cell(arg.NotebookCellId).QueryStorage(table)
 
-		return result_sets.NewResultSetReader(file_store_factory, path_manager)
+		return result_sets.NewResultSetReader(
+			file_store_factory, path_manager.Path())
 	}
 
 	if arg.Artifact != "" {
@@ -349,7 +350,8 @@ func getResultSetReader(
 			return nil, err
 		}
 
-		return result_sets.NewResultSetReader(file_store_factory, path_manager)
+		return result_sets.NewResultSetReader(
+			file_store_factory, path_manager.Path())
 
 	}
 
@@ -486,7 +488,7 @@ func (self FlowResultsPlugin) Call(
 
 		file_store_factory := file_store.GetFileStore(config_obj)
 		rs_reader, err := result_sets.NewResultSetReader(
-			file_store_factory, path_manager)
+			file_store_factory, path_manager.Path())
 		if err != nil {
 			scope.Log("source: %v", err)
 			return

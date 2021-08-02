@@ -22,7 +22,11 @@ func ObfuscateName(
 }
 
 type InventoryPathManager struct {
-	root api.SafeDatastorePath
+	root api.PathSpec
+}
+
+func (self InventoryPathManager) Path() api.PathSpec {
+	return self.root
 }
 
 func NewInventoryPathManager(config_obj *config_proto.Config,
@@ -32,6 +36,6 @@ func NewInventoryPathManager(config_obj *config_proto.Config,
 	}
 
 	return &InventoryPathManager{
-		root: api.NewSafeDatastorePath("public", tool.FilestorePath),
+		root: api.NewUnsafeDatastorePath("public", tool.FilestorePath),
 	}
 }

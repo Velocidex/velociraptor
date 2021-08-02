@@ -71,6 +71,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -119,8 +120,8 @@ func renderDBVFS(
 
 	// Figure out where the download info files are.
 	download_info_path := path_manager.VFSDownloadInfoPath(components)
-	downloaded_files, _ := db.ListChildrenJSON(
-		config_obj, download_info_path)
+	downloaded_files, _ := db.ListChildren(
+		config_obj, download_info_path, 0, 1000)
 
 	result := &api_proto.VFSListResponse{}
 
@@ -128,7 +129,7 @@ func renderDBVFS(
 	vfs_path := path_manager.VFSPath(components)
 
 	// If file does not exist, we have an empty response
-	_ = db.GetSubjectJSON(config_obj, vfs_path, result)
+	_ = db.GetSubject(config_obj, vfs_path, result)
 
 	// Empty responses mean the directory is empty - no need to
 	// worry about downloads.
@@ -143,7 +144,7 @@ func renderDBVFS(
 	if len(downloaded_files) > 0 {
 		lookup := make(map[string]bool)
 		for _, filename := range downloaded_files {
-			lookup[filename.Name] = true
+			lookup[filename.Base()] = true
 		}
 
 		var rows []map[string]interface{}
@@ -166,11 +167,9 @@ func renderDBVFS(
 			}
 
 			// Make a copy for each path
-			file_components := append([]string{}, download_info_path...)
-			file_components = append(file_components, name)
-
+			file_components := download_info_path.AddChild(name)
 			download_info := &flows_proto.VFSDownloadInfo{}
-			err := db.GetSubjectJSON(
+			err := db.GetSubject(
 				config_obj, file_components, download_info)
 			if err == nil {
 				// Support reading older
@@ -206,10 +205,9 @@ func renderDBVFS(
 // Render VFS nodes from the filestore.
 func renderFileStore(
 	config_obj *config_proto.Config,
-	components []string) (*api_proto.VFSListResponse, error) {
+	vfs_path api.PathSpec) (*api_proto.VFSListResponse, error) {
 	var rows []*FileInfoRow
 
-	vfs_path := utils.JoinComponents(components, "/")
 	items, err := file_store.GetFileStore(config_obj).
 		ListDirectory(vfs_path)
 	if err == nil {
@@ -218,7 +216,8 @@ func renderFileStore(
 				Name:      item.Name(),
 				Size:      item.Size(),
 				Timestamp: item.ModTime().Format("2006-01-02 15:04:05"),
-				FullPath:  utils.PathJoin(vfs_path, item.Name(), "/"),
+				FullPath: vfs_path.AddChild(
+					item.Name()).AsClientPath(),
 			}
 
 			if item.IsDir() {
@@ -257,23 +256,6 @@ func renderFileStore(
 	return result, nil
 }
 
-// We export some paths from the file_store into the VFS. This
-// function maps from the browser's vfs view into the file_store
-// prefix. If this function returns ok, then the full filestore path
-// can be obtained by joining the prefix with the vfs_path provided.
-func getVFSPathPrefix(components []string, client_id string) (prefix []string, ok bool) {
-	if len(components) > 0 && components[0] == "artifacts" {
-		return []string{"clients", client_id}, true
-	}
-
-	if client_id != "" && len(components) > 2 &&
-		components[0] == "clients" && components[1] == client_id {
-		return nil, true
-	}
-
-	return nil, false
-}
-
 func vfsListDirectory(
 	config_obj *config_proto.Config,
 	client_id string,
@@ -281,11 +263,6 @@ func vfsListDirectory(
 
 	if len(components) == 0 {
 		return renderRootVFS(client_id), nil
-	}
-
-	prefix, ok := getVFSPathPrefix(components, client_id)
-	if ok {
-		return renderFileStore(config_obj, append(prefix, components...))
 	}
 
 	return renderDBVFS(config_obj, client_id, components)
@@ -311,7 +288,7 @@ func vfsStatDirectory(
 	// not exist yet then it will have no flow id associated with
 	// it. This allows the gui to watch for the VFS directory to
 	// appear for the first time.
-	_ = db.GetSubjectJSON(config_obj,
+	_ = db.GetSubject(config_obj,
 		path_manager.VFSPath(vfs_components), result)
 
 	// Remove the actual response which might be large.
@@ -326,8 +303,8 @@ func vfsStatDownload(
 	accessor string,
 	path_components []string) (*flows_proto.VFSDownloadInfo, error) {
 
-	path_manager := paths.NewFlowPathManager(client_id, "").GetVFSDownloadInfoPath(
-		accessor, path_components)
+	path_spec := paths.NewClientPathManager(client_id).
+		VFSDownloadInfoPath(path_components)
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -340,7 +317,7 @@ func vfsStatDownload(
 	// not exist yet then it will have no flow id associated with
 	// it. This allows the gui to watch for the VFS directory to
 	// appear for the first time.
-	err = db.GetSubjectJSON(config_obj, path_manager.Path(), result)
+	err = db.GetSubject(config_obj, path_spec, result)
 	if err != nil {
 		return nil, err
 	}

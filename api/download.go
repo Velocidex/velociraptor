@@ -32,8 +32,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -48,6 +46,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -75,11 +74,11 @@ func returnError(w http.ResponseWriter, code int, message string) {
 }
 
 type vfsFileDownloadRequest struct {
-	ClientId string `schema:"client_id"`
-	VfsPath  string `schema:"vfs_path,required"`
-	Offset   int64  `schema:"offset"`
-	Length   int    `schema:"length"`
-	Encoding string `schema:"encoding"`
+	ClientId   string   `schema:"client_id"`
+	Components []string `schema:"vfs_path,required"`
+	Offset     int64    `schema:"offset"`
+	Length     int      `schema:"length"`
+	Encoding   string   `schema:"encoding"`
 }
 
 // URL format: /api/v1/DownloadVFSFile
@@ -94,7 +93,9 @@ func vfsFileDownloadHandler(
 			return
 		}
 
-		file, err := file_store.GetFileStore(config_obj).ReadFile(request.VfsPath)
+		path_spec := api.NewUnsafeDatastorePath(request.Components...)
+		file, err := file_store.GetFileStore(config_obj).ReadFile(
+			path_spec)
 		if err != nil {
 			returnError(w, 404, err.Error())
 			return
@@ -108,7 +109,7 @@ func vfsFileDownloadHandler(
 
 		var reader_at io.ReaderAt = &utils.ReaderAtter{Reader: file}
 
-		index, err := getIndex(config_obj, request.VfsPath)
+		index, err := getIndex(config_obj, path_spec)
 
 		// If the file is sparse, we use the sparse reader.
 		if err == nil && len(index.Ranges) > 0 {
@@ -122,9 +123,9 @@ func vfsFileDownloadHandler(
 
 		// From here on we sent the headers and we can not
 		// really report an error to the client.
-		filename := strings.Replace(request.VfsPath, "\"", "_", -1)
+		filename := strings.Replace(path_spec.Base(), "\"", "_", -1)
 		w.Header().Set("Content-Disposition", "attachment; filename="+
-			url.PathEscape(path.Base(filename)))
+			url.PathEscape(filename))
 		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
 
@@ -162,7 +163,8 @@ func getRows(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	request *api_proto.GetTableRequest) (
-	rows <-chan *ordereddict.Dict, close func(), log_path string, err error) {
+	rows <-chan *ordereddict.Dict, close func(),
+	log_path api.PathSpec, err error) {
 	file_store_factory := file_store.GetFileStore(config_obj)
 
 	// We want an event table.
@@ -171,12 +173,12 @@ func getRows(
 			config_obj, request.ClientId, request.FlowId,
 			request.Artifact)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, nil, nil, err
 		}
 
 		log_path, err := path_manager.GetPathForWriting()
 		if err != nil {
-			return nil, nil, "", err
+			return nil, nil, nil, err
 		}
 
 		rs_reader, err := result_sets.NewTimedResultSetReader(
@@ -185,18 +187,13 @@ func getRows(
 		return rs_reader.Rows(ctx), rs_reader.Close, log_path, err
 
 	} else {
-		path_manager, err := getPathManager(config_obj, request)
+		log_path, err := getPathSpec(config_obj, request)
 		if err != nil {
-			return nil, nil, "", err
-		}
-
-		log_path, err := path_manager.GetPathForWriting()
-		if err != nil {
-			return nil, nil, "", err
+			return nil, nil, nil, err
 		}
 
 		rs_reader, err := result_sets.NewResultSetReader(
-			file_store_factory, path_manager)
+			file_store_factory, log_path)
 
 		return rs_reader.Rows(ctx), rs_reader.Close, log_path, err
 	}
@@ -256,7 +253,7 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 
 		transform := getTransformer(config_obj, request)
 
-		download_name := strings.Replace(filepath.Base(log_path), "\"", "", -1)
+		download_name := strings.Replace(log_path.Base(), "\"", "", -1)
 
 		// Log an audit event.
 		userinfo := GetUserInfo(r.Context(), config_obj)
@@ -355,9 +352,11 @@ func vfsFolderDownloadHandler(
 			return
 		}
 
+		path_spec := api.NewUnsafeDatastorePath(request.Components...)
+
 		// From here on we already sent the headers and we can
 		// not really report an error to the client.
-		filename := strings.Replace(request.VfsPath, "\"", "", -1)
+		filename := strings.Replace(path_spec.Base(), "\"", "", -1)
 		w.Header().Set("Content-Disposition", "attachment; filename="+
 			url.PathEscape(filename+".zip"))
 		w.Header().Set("Content-Type", "binary/octet-stream")
@@ -366,7 +365,7 @@ func vfsFolderDownloadHandler(
 		logger := logging.GetLogger(config_obj, &logging.Audit)
 		logger.WithFields(logrus.Fields{
 			"user":      userinfo.Name,
-			"vfs_path":  request.VfsPath,
+			"vfs_path":  request.Components,
 			"client_id": request.ClientId,
 			"remote":    r.RemoteAddr,
 		}).Info("DownloadVFSPath")
@@ -380,25 +379,27 @@ func vfsFolderDownloadHandler(
 		hostname := services.GetHostname(client_id)
 		client_path_manager := paths.NewClientPathManager(client_id)
 
-		vfs_components := utils.SplitComponents(request.VfsPath)
 		db, _ := datastore.GetDB(config_obj)
-		_ = db.WalkComponents(config_obj,
-			client_path_manager.VFSDownloadInfoPath(vfs_components),
-			func(components []string) error {
+		_ = db.Walk(config_obj,
+			client_path_manager.VFSDownloadInfoPath(
+				path_spec.Components()),
+			func(components api.PathSpec) error {
 				download_info := &flows_proto.VFSDownloadInfo{}
-				err := db.GetSubjectJSON(config_obj, components, download_info)
+				err := db.GetSubject(config_obj, components, download_info)
 				if err != nil {
 					logger.Warn("Cant open %v: %v", components, err)
 					return nil
 				}
 
-				fd, err := file_store_factory.ReadFile(download_info.VfsPath)
+				target_file := api.NewUnsafeDatastorePath(
+					download_info.Components...)
+				fd, err := file_store_factory.ReadFile(target_file)
 				if err != nil {
 					return err
 				}
 
 				path_name := utils.CleanComponentsForZip(
-					components, client_id, hostname)
+					components.Components(), client_id, hostname)
 				zh, err := zip_writer.Create(path_name)
 				if err != nil {
 					logger.Warn("Cant create zip member %s: %v",
@@ -419,7 +420,7 @@ func vfsFolderDownloadHandler(
 
 func vfsGetBuffer(
 	config_obj *config_proto.Config,
-	client_id string, vfs_path string, offset uint64, length uint32) (
+	client_id string, vfs_path api.PathSpec, offset uint64, length uint32) (
 	*api_proto.VFSFileBuffer, error) {
 
 	file, err := file_store.GetFileStore(config_obj).ReadFile(vfs_path)
@@ -457,11 +458,11 @@ func vfsGetBuffer(
 }
 
 func getIndex(config_obj *config_proto.Config,
-	vfs_path string) (*actions_proto.Index, error) {
+	vfs_path api.PathSpec) (*actions_proto.Index, error) {
 	index := &actions_proto.Index{}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.ReadFile(vfs_path + ".idx")
+	fd, err := file_store_factory.ReadFile(vfs_path.SetType("idx"))
 	if err != nil {
 		return nil, err
 	}

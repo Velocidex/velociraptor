@@ -14,6 +14,7 @@ import (
 
 func TestMemoryQueueManager(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
-	manager := memory.NewMemoryQueueManager(config_obj, memory.Test_memory_file_store)
-	suite.Run(t, api.NewQueueManagerTestSuite(config_obj, manager, memory.Test_memory_file_store))
+	file_store := memory.NewMemoryFileStore(config_obj)
+	manager := memory.NewMemoryQueueManager(config_obj, file_store)
+	suite.Run(t, api.NewQueueManagerTestSuite(config_obj, manager, file_store))
 }

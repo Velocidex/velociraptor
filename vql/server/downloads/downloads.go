@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 	"sync"
 	"time"
 
@@ -19,6 +18,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -178,14 +178,14 @@ func (self CreateHuntDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 func createDownloadFile(
 	config_obj *config_proto.Config,
 	flow_id, client_id string,
-	wait bool) (string, error) {
+	wait bool) (api.PathSpec, error) {
 	if client_id == "" || flow_id == "" {
-		return "", errors.New("Client Id and Flow Id should be specified.")
+		return nil, errors.New("Client Id and Flow Id should be specified.")
 	}
 
 	hostname := services.GetHostname(client_id)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	download_file := flow_path_manager.GetDownloadsFile(hostname).Path()
+	download_file := flow_path_manager.GetDownloadsFile(hostname)
 
 	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 	logger.WithFields(logrus.Fields{
@@ -197,23 +197,24 @@ func createDownloadFile(
 	file_store_factory := file_store.GetFileStore(config_obj)
 	fd, err := file_store_factory.WriteFile(download_file)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	err = fd.Truncate()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	lock_file, err := file_store_factory.WriteFile(download_file + ".lock")
+	lock_file, err := file_store_factory.WriteFile(
+		download_file.SetType("lock"))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	lock_file.Close()
 
 	flow_details, err := flows.GetFlowDetails(config_obj, client_id, flow_id)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Do these first to ensure errors are returned if the zip file
@@ -222,7 +223,7 @@ func createDownloadFile(
 	f, err := zip_writer.Create("FlowDetails")
 	if err != nil {
 		fd.Close()
-		return "", err
+		return nil, err
 	}
 
 	flow_details_json, _ := json.ConvertProtoToOrderedDict(flow_details).MarshalJSON()
@@ -230,7 +231,7 @@ func createDownloadFile(
 	if err != nil {
 		zip_writer.Close()
 		fd.Close()
-		return "", err
+		return nil, err
 	}
 
 	wg := sync.WaitGroup{}
@@ -239,7 +240,10 @@ func createDownloadFile(
 	// Write the bulk of the data asyncronously.
 	go func() {
 		defer wg.Done()
-		defer func() { _ = file_store_factory.Delete(download_file + ".lock") }()
+		defer func() {
+			_ = file_store_factory.Delete(
+				download_file.SetType("lock"))
+		}()
 		defer fd.Close()
 		defer zip_writer.Close()
 
@@ -274,7 +278,7 @@ func downloadFlowToZip(
 	}
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	copier := func(upload_name string) error {
+	copier := func(upload_name api.PathSpec) error {
 
 		reader, err := file_store_factory.ReadFile(upload_name)
 		if err != nil {
@@ -283,7 +287,8 @@ func downloadFlowToZip(
 		defer reader.Close()
 
 		// Clean the name so it makes a reasonable zip member.
-		file_member_name := utils.CleanPathForZip(upload_name, client_id, hostname)
+		file_member_name := utils.CleanComponentsForZip(
+			upload_name.Components(), client_id, hostname)
 		f, err := zip_writer.Create(file_member_name)
 		if err != nil {
 			return err
@@ -304,7 +309,7 @@ func downloadFlowToZip(
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 
 	// Copy the flow's logs.
-	err = copier(flow_path_manager.Log().Path())
+	err = copier(flow_path_manager.Log())
 	if err != nil {
 		return err
 	}
@@ -329,15 +334,16 @@ func downloadFlowToZip(
 		}
 
 		// Also make a csv file why not?
-		f, err := zip_writer.Create(utils.CleanPathForZip(
-			strings.TrimSuffix(rs_path, ".json")+".csv", client_id, hostname))
+		zip_file_name := utils.CleanComponentsForZip(
+			rs_path.SetType("csv").Components(), client_id, hostname)
+		f, err := zip_writer.Create(zip_file_name)
 		if err != nil {
 			continue
 		}
 
 		// File uploads are stored in their own json file.
 		reader, err := result_sets.NewResultSetReader(
-			file_store_factory, path_manager)
+			file_store_factory, path_manager.Path())
 		if err != nil {
 			return err
 		}
@@ -369,7 +375,7 @@ func downloadFlowToZip(
 	for row := range reader.Rows(ctx) {
 		vfs_path_any, pres := row.Get("vfs_path")
 		if pres {
-			err = copier(vfs_path_any.(string))
+			err = copier(vfs_path_any.(api.PathSpec))
 		}
 	}
 
@@ -383,9 +389,9 @@ func createHuntDownloadFile(
 	hunt_id string,
 	write_json, write_csv bool,
 	wait, only_combined bool,
-	base_filename string) (string, error) {
+	base_filename string) (api.PathSpec, error) {
 	if hunt_id == "" {
-		return "", errors.New("Hunt Id should be specified.")
+		return nil, errors.New("Hunt Id should be specified.")
 	}
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
@@ -400,28 +406,29 @@ func createHuntDownloadFile(
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	lock_file, err := file_store_factory.WriteFile(download_file + ".lock")
+	lock_file, err := file_store_factory.WriteFile(
+		download_file.SetType("lock"))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	lock_file.Close()
 
 	fd, err := file_store_factory.WriteFile(download_file)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	err = fd.Truncate()
 	if err != nil {
 		fd.Close()
-		return "", err
+		return nil, err
 	}
 
 	hunt_details, err := flows.GetHunt(config_obj,
 		&api_proto.GetHuntRequest{HuntId: hunt_id})
 	if err != nil {
 		fd.Close()
-		return "", err
+		return nil, err
 	}
 
 	// Do these first to ensure errors are returned if the zip file
@@ -431,7 +438,7 @@ func createHuntDownloadFile(
 	if err != nil {
 		zip_writer.Close()
 		fd.Close()
-		return "", err
+		return nil, err
 	}
 
 	hunt_details_json, _ := json.ConvertProtoToOrderedDict(hunt_details).MarshalJSON()
@@ -440,7 +447,7 @@ func createHuntDownloadFile(
 	if err != nil {
 		zip_writer.Close()
 		fd.Close()
-		return "", err
+		return nil, err
 	}
 
 	wg := sync.WaitGroup{}
@@ -450,7 +457,8 @@ func createHuntDownloadFile(
 	go func() {
 		defer wg.Done()
 		defer func() {
-			err := file_store_factory.Delete(download_file + ".lock")
+			err := file_store_factory.Delete(
+				download_file.SetType("lock"))
 			if err != nil {
 				logger.Error("Failed to bind to remove lock file for %v: %v",
 					download_file, err)
@@ -525,8 +533,10 @@ func createHuntDownloadFile(
 				defer reader.Close()
 
 				// Clean the name so it makes a reasonable zip member.
-				f, err := zip_writer.Create(utils.CleanPathForZip(
-					output_name, "", ""))
+				f, err := zip_writer.Create(
+					utils.CleanComponentsForZip(
+						utils.SplitComponents(
+							output_name), "", ""))
 				if err != nil {
 					return err
 				}
