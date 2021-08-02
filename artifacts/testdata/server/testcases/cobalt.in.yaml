@@ -1,5 +1,4 @@
 Queries:
-  - SELECT 
-      split(sep='velociraptor',String=ConfigSource) as ConfigSource,
+  - SELECT relpath(path=ConfigSource, base=srcDir, sep="/") as TestPath, 
       Offset, Xor, DecodedConfig,DecodedData
     FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSDump.bin")
