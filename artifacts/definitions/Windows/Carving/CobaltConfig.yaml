@@ -344,7 +344,7 @@ sources:
             })
 
       -- find velociraptor process
-      LET me = SELECT Pid FROM pslist(pid=getpid())
+      LET me <= SELECT Pid FROM pslist(pid=getpid())
 
       -- find all processes and add filters
       LET processes = SELECT Name as ProcessName, CommandLine, Pid
