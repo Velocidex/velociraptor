@@ -157,9 +157,7 @@ func (self *FileBaseDataStore) GetSubject(
 		// to newer json based blobs while still being able to
 		// read old files.
 		if urn.Type() == "json" {
-			fallback_path := api.NewUnsafeDatastorePath(
-				urn.Components()...)
-
+			fallback_path := urn.SetType("")
 			serialized_content, err = readContentFromFile(
 				config_obj, fallback_path, true /* must_exist */)
 		}
@@ -305,7 +303,8 @@ func (self *FileBaseDataStore) ListChildren(
 		name := children[i].Name()
 		name = strings.TrimSuffix(name, ".db")
 		name = strings.TrimSuffix(name, ".json")
-		result = append(result, urn.AddChild(name))
+		result = append(result,
+			urn.AddChild(utils.UnsanitizeComponent(name)))
 	}
 
 	return result, nil

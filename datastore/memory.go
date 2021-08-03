@@ -182,8 +182,12 @@ func (self *TestDataStore) GetSubject(
 	self.Trace("GetSubject", path)
 	result, pres := self.Subjects[path]
 	if !pres {
-		return errors.WithMessage(os.ErrNotExist,
-			fmt.Sprintf("While openning %v: not found", urn))
+		fallback_path := urn.SetType("").AsDatastoreFilename(config_obj)
+		result, pres = self.Subjects[fallback_path]
+		if !pres {
+			return errors.WithMessage(os.ErrNotExist,
+				fmt.Sprintf("While openning %v: not found", urn))
+		}
 	}
 	proto.Merge(message, result)
 	return nil

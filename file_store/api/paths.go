@@ -124,10 +124,7 @@ func (self UnsafeDatastorePath) Components() []string {
 }
 
 func (self UnsafeDatastorePath) Type() string {
-	if self.extension == ".json" {
-		return "json"
-	}
-	return ""
+	return self.extension
 }
 
 func (self UnsafeDatastorePath) AsSafe() SafeDatastorePath {

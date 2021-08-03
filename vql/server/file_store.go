@@ -70,11 +70,11 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 	file_store_factory := file_store.GetFileStore(config_obj)
 	if strings.HasSuffix(arg.VFSPath, "db") {
 		pathspec := paths.UnsafeDatastorePathFromClientPath(
-			nil, strings.TrimSuffix(arg.VFSPath, ".db"))
+			nil, "fs", strings.TrimSuffix(arg.VFSPath, ".db"))
 		err = db.DeleteSubject(config_obj, pathspec)
 	} else {
 		pathspec := paths.UnsafeDatastorePathFromClientPath(
-			nil, arg.VFSPath)
+			nil, "fs", arg.VFSPath)
 		err = file_store_factory.Delete(pathspec)
 	}
 
@@ -118,7 +118,7 @@ func (self *FileStore) Call(ctx context.Context,
 	result := []string{}
 	for _, path := range arg.VFSPath {
 		pathspec := paths.UnsafeDatastorePathFromClientPath(
-			nil, path)
+			nil, "fs", path)
 		result = append(result, pathspec.AsFilestoreFilename(config_obj))
 	}
 

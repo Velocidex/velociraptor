@@ -190,7 +190,8 @@ func (self *TestSuite) TestHuntsSource() {
 
 		// Append logs to messages from previous packets.
 		rs_writer, err := result_sets.NewResultSetWriter(
-			file_store_factory, path_manager, nil, true /* truncate */)
+			file_store_factory, path_manager.Path(),
+			nil, true /* truncate */)
 		assert.NoError(self.T(), err)
 
 		for i := 0; i < 100; i++ {

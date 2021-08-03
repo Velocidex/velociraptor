@@ -74,8 +74,8 @@ func (self *PathManageTestSuite) SetupTest() {
 	assert.NoError(self.T(), err)
 
 	self.config_obj.Datastore.Implementation = "FileBaseDataStore"
-	self.config_obj.Datastore.FilestoreDirectory = self.dirname
-	self.config_obj.Datastore.Location = self.dirname
+	self.config_obj.Datastore.FilestoreDirectory = self.dirname + "/"
+	self.config_obj.Datastore.Location = self.dirname + "/"
 
 	// Start essential services.
 	self.ctx, _ = context.WithTimeout(context.Background(), time.Second*60)
@@ -111,9 +111,11 @@ func (self *PathManageTestSuite) TestPathManager() {
 		path_manager.Clock = utils.MockClock{MockNow: time.Unix(ts, 0)}
 		path, err := path_manager.GetPathForWriting()
 		assert.NoError(self.T(), err)
-		assert.Equal(self.T(), path, testcase.expected)
+		assert.Equal(self.T(),
+			path.AsFilestoreFilename(self.config_obj),
+			self.dirname+testcase.expected)
 
-		file_store := memory.NewMemoryFileStore()
+		file_store := memory.NewMemoryFileStore(self.config_obj)
 		file_store.Clear()
 
 		qm := memory.NewMemoryQueueManager(
@@ -124,7 +126,7 @@ func (self *PathManageTestSuite) TestPathManager() {
 			[]*ordereddict.Dict{ordereddict.NewDict()})
 		assert.NoError(self.T(), err)
 
-		data, ok := file_store.Get(testcase.expected)
+		data, ok := file_store.Get(self.dirname + testcase.expected)
 		assert.Equal(self.T(), ok, true)
 		assert.Equal(self.T(), string(data), "{\"_ts\":1587800823}\n")
 	}

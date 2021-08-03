@@ -47,12 +47,12 @@ func (self BaseTestSuite) TestSetGetJSON() {
 		api.NewUnsafeDatastorePath("a", "b/c", "d/a"),
 		api.NewUnsafeDatastorePath("a", "b/c", "d?\""),
 	} {
-		err := self.datastore.SetSubjectJSON(
+		err := self.datastore.SetSubject(
 			self.config_obj, path, message)
 		assert.NoError(self.T(), err)
 
 		read_message := &crypto_proto.VeloMessage{}
-		err = self.datastore.GetSubjectJSON(self.config_obj,
+		err = self.datastore.GetSubject(self.config_obj,
 			path, read_message)
 		assert.NoError(self.T(), err)
 
@@ -60,18 +60,14 @@ func (self BaseTestSuite) TestSetGetJSON() {
 	}
 
 	// Now test that ListChildren works properly.
-	children, err := self.datastore.ListChildrenJSON(
-		self.config_obj, api.NewUnsafeDatastorePath("a", "b/c"))
+	children, err := self.datastore.ListChildren(
+		self.config_obj, api.NewUnsafeDatastorePath("a", "b/c"),
+		0, 100)
 	assert.NoError(self.T(), err)
-
-	sort.Slice(children, func(i, j int) bool {
-		return children[i].Modified.UnixNano() <
-			children[j].Modified.UnixNano()
-	})
 
 	results := []string{}
 	for _, i := range children {
-		results = append(results, i.Name)
+		results = append(results, i.Base())
 	}
 	sort.Strings(results)
 	assert.Equal(self.T(), []string{"d", "d/a", "d?\""}, results)
@@ -86,15 +82,16 @@ func (self BaseTestSuite) TestSetGetMigration() {
 		api.NewUnsafeDatastorePath("a", "b", "c"),
 	} {
 		// Write a protobuf based file
-		urn := api.NewSafeDatastorePath(path.Components()...)
+		urn := api.NewSafeDatastorePath(path.Components()...).
+			SetType("")
 		err := self.datastore.SetSubject(
 			self.config_obj, urn, message)
 		assert.NoError(self.T(), err)
 
 		// Even if we read it with json it should work.
 		read_message := &crypto_proto.VeloMessage{}
-		err = self.datastore.GetSubjectJSON(self.config_obj,
-			path, read_message)
+		err = self.datastore.GetSubject(self.config_obj,
+			path.SetType("json"), read_message)
 		assert.NoError(self.T(), err)
 
 		assert.Equal(self.T(), message.Source, read_message.Source)
@@ -120,7 +117,7 @@ func (self BaseTestSuite) TestSetGetSubjectWithEscaping() {
 func (self BaseTestSuite) TestSetGetSubject() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
 
-	urn := api.NewSafeDatastorePath("a", "b", "c")
+	urn := api.NewSafeDatastorePath("a", "b", "c").SetType("")
 	err := self.datastore.SetSubject(self.config_obj, urn, message)
 	assert.NoError(self.T(), err)
 
@@ -139,7 +136,7 @@ func (self BaseTestSuite) TestSetGetSubject() {
 	// Same for json files.
 	read_message.SessionId = "X"
 	err = self.datastore.GetSubject(
-		self.config_obj, urn.AddChild("foo.json"), read_message)
+		self.config_obj, urn.AddChild("foo").SetType("json"), read_message)
 	assert.Error(self.T(), err, os.ErrNotExist)
 
 	// Delete the subject

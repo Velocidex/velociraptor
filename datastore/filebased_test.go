@@ -49,7 +49,7 @@ func (self *FilebasedTestSuite) SetupTest() {
 
 	self.config_obj = config.GetDefaultConfig()
 	self.config_obj.Datastore.FilestoreDirectory = self.dirname
-	self.config_obj.Datastore.Location = self.dirname
+	self.config_obj.Datastore.Location = self.dirname + "/"
 	self.BaseTestSuite.config_obj = self.config_obj
 }
 
