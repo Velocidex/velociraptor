@@ -443,13 +443,14 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 
 	// Check the upload metadata file.
 	upload_metadata_rows := test_utils.FileReadRows(self.T(), self.config_obj,
-		flow_path_manager.UploadMetadata().Path())
+		flow_path_manager.UploadMetadata())
 
 	assert.Equal(self.T(), len(upload_metadata_rows), 1)
 
 	vfs_path, _ := upload_metadata_rows[0].GetString("vfs_path")
 	assert.Equal(self.T(), vfs_path,
-		flow_path_manager.GetUploadsFile("ntfs", "foo").Path())
+		flow_path_manager.GetUploadsFile("ntfs", "foo").
+			Path().AsClientPath())
 
 	file_size, _ := upload_metadata_rows[0].GetInt64("file_size")
 	assert.Equal(self.T(), file_size, int64(12))
@@ -470,7 +471,8 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 
 	vfs_path, _ = event_rows[0].GetString("VFSPath")
 	assert.Equal(self.T(), vfs_path,
-		flow_path_manager.GetUploadsFile("ntfs", "foo").Path())
+		flow_path_manager.GetUploadsFile("ntfs", "foo").
+			Path().AsClientPath())
 
 	file_size, _ = event_rows[0].GetInt64("Size")
 	assert.Equal(self.T(), file_size, int64(12))
@@ -545,14 +547,15 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 
 	// Check the upload metadata file.
 	upload_metadata_rows := test_utils.FileReadRows(self.T(), self.config_obj,
-		flow_path_manager.UploadMetadata().Path())
+		flow_path_manager.UploadMetadata())
 
 	// There should be two rows - one for the file and one for the index.
 	assert.Equal(self.T(), len(upload_metadata_rows), 2)
 
 	vfs_path, _ := upload_metadata_rows[0].GetString("vfs_path")
 	assert.Equal(self.T(), vfs_path,
-		flow_path_manager.GetUploadsFile("ntfs", "sparse").Path())
+		flow_path_manager.GetUploadsFile("ntfs", "sparse").
+			Path().AsClientPath())
 
 	// The file is actually 18 bytes on the client.
 	file_size, _ := upload_metadata_rows[0].GetInt64("file_size")
@@ -565,7 +568,8 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 	// Second row is for the index.
 	vfs_path, _ = upload_metadata_rows[1].GetString("vfs_path")
 	assert.Equal(self.T(), vfs_path,
-		flow_path_manager.GetUploadsFile("ntfs", "sparse").IndexPath())
+		flow_path_manager.GetUploadsFile("ntfs", "sparse").
+			IndexPath().AsClientPath())
 
 	// Check the System.Upload.Completion event.
 	artifact_path_manager, err := artifacts.NewArtifactPathManager(
@@ -580,7 +584,8 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 
 	vfs_path, _ = event_rows[0].GetString("VFSPath")
 	assert.Equal(self.T(), vfs_path,
-		flow_path_manager.GetUploadsFile("ntfs", "sparse").Path())
+		flow_path_manager.GetUploadsFile("ntfs", "sparse").
+			Path().AsClientPath())
 
 	file_size, _ = event_rows[0].GetInt64("Size")
 	assert.Equal(self.T(), file_size, int64(18))
@@ -660,7 +665,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 
 	// Check the upload metadata file.
 	upload_metadata_rows := test_utils.FileReadRows(self.T(), self.config_obj,
-		flow_path_manager.UploadMetadata().Path())
+		flow_path_manager.UploadMetadata())
 
 	// There should be two rows - one for the file and one for the index.
 	assert.Equal(self.T(), len(upload_metadata_rows), 2)

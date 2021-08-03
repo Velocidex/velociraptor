@@ -176,7 +176,7 @@ func (self *ArtifactPathManager) GetPathForWriting() (api.PathSpec, error) {
 			} else {
 				return api.NewUnsafeDatastorePath(
 					"clients", self.client_id, "monitoring",
-					self.client_id, self.base_artifact_name,
+					self.base_artifact_name,
 					self.getDayName()), nil
 			}
 		}
@@ -222,7 +222,8 @@ func (self *ArtifactPathManager) get_event_files(path_for_writing api.PathSpec) 
 
 		timestamp := DayNameToTimestamp(child_name)
 		result = append(result, &api.ResultSetFileProperties{
-			Path:      full_path,
+			Path: full_path.Dir().AddChild(
+				strings.TrimSuffix(child_name, ".json")),
 			StartTime: timestamp,
 			EndTime:   timestamp.Add(24 * time.Hour),
 			Size:      child.Size(),

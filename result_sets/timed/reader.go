@@ -9,6 +9,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/timelines"
 )
@@ -49,6 +50,7 @@ type TimedResultSetReader struct {
 
 func (self *TimedResultSetReader) GetAvailableFiles(
 	ctx context.Context) []*api.ResultSetFileProperties {
+	json.Dump(self.files[0].Path)
 	return self.files
 }
 
@@ -171,10 +173,10 @@ func (self *TimedResultSetReader) maybeUpgradeIndex(
 
 	tmp_writer.Close()
 
+	// Update the json file itself, and leave the new index
+	// around.
 	self.file_store_factory.Move(tmp_path_manager.Path(),
 		path_manager.Path())
-	self.file_store_factory.Move(tmp_path_manager.Index(),
-		path_manager.Index())
 
 	// Try to open the file again.
 	return timelines.NewTimelineReader(

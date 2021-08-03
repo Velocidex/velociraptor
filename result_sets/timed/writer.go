@@ -137,7 +137,7 @@ func (self timelinePathManager) Index() api.PathSpec {
 
 func new_timelinePathManager(path api.PathSpec) *timelinePathManager {
 	return &timelinePathManager{
-		path: path.SetType("json"),
+		path: path,
 		name: path.Base(),
 	}
 }

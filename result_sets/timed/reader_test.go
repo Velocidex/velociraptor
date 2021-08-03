@@ -38,7 +38,8 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 		clock.MockNow = time.Unix(now, 0)
 
 		writer, err := result_sets.NewResultSetWriter(
-			file_store_factory, path_manager, nil, false /* truncate */)
+			file_store_factory, path_manager.Path(),
+			nil, false /* truncate */)
 		assert.NoError(self.T(), err)
 
 		writer.Write(ordereddict.NewDict().
@@ -67,6 +68,8 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 		}
 		result.Set(testcase.name, rows)
 	}
+
+	utils.Debug(result)
 
 	goldie.Assert(self.T(), "TestTimedResultSetMigration",
 		json.MustMarshalIndent(result))

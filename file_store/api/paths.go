@@ -3,6 +3,7 @@ package api
 import (
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -97,6 +98,10 @@ type PathSpec interface {
 type UnsafeDatastorePath struct {
 	components []string
 	extension  string
+}
+
+func (self UnsafeDatastorePath) MarshalJSON() ([]byte, error) {
+	return []byte(strconv.Quote(self.AsClientPath())), nil
 }
 
 func (self UnsafeDatastorePath) Base() string {
@@ -228,6 +233,10 @@ func NewSafeDatastorePath(path_components ...string) SafeDatastorePath {
 	}
 
 	return result
+}
+
+func (self *SafeDatastorePath) MarshalJSON() ([]byte, error) {
+	return []byte(self.AsClientPath()), nil
 }
 
 // A SafeDatastorePath can be safely converted to an unsafe one. Since

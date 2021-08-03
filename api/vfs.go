@@ -70,8 +70,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
-	file_store "www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -99,8 +97,7 @@ func renderRootVFS(client_id string) *api_proto.VFSListResponse {
    [
     {"Mode": "drwxrwxrwx", "Name": "file"},
     {"Mode": "drwxrwxrwx", "Name": "ntfs"},
-    {"Mode": "drwxrwxrwx", "Name": "registry"},
-    {"Mode": "drwxrwxrwx", "Name": "artifacts"}
+    {"Mode": "drwxrwxrwx", "Name": "registry"}
    ]`,
 	}
 }
@@ -120,8 +117,7 @@ func renderDBVFS(
 
 	// Figure out where the download info files are.
 	download_info_path := path_manager.VFSDownloadInfoPath(components)
-	downloaded_files, _ := db.ListChildren(
-		config_obj, download_info_path, 0, 1000)
+	downloaded_files, _ := db.ListChildren(config_obj, download_info_path, 0, 1000)
 
 	result := &api_proto.VFSListResponse{}
 
@@ -198,60 +194,6 @@ func renderDBVFS(
 		Column: "Download",
 		Type:   "Download",
 	})
-
-	return result, nil
-}
-
-// Render VFS nodes from the filestore.
-func renderFileStore(
-	config_obj *config_proto.Config,
-	vfs_path api.PathSpec) (*api_proto.VFSListResponse, error) {
-	var rows []*FileInfoRow
-
-	items, err := file_store.GetFileStore(config_obj).
-		ListDirectory(vfs_path)
-	if err == nil {
-		for _, item := range items {
-			row := &FileInfoRow{
-				Name:      item.Name(),
-				Size:      item.Size(),
-				Timestamp: item.ModTime().Format("2006-01-02 15:04:05"),
-				FullPath: vfs_path.AddChild(
-					item.Name()).AsClientPath(),
-			}
-
-			if item.IsDir() {
-				row.Mode = "dr-xr-xr-x"
-			} else {
-				row.Mode = "-r--r--r--"
-				row.Download = &flows_proto.VFSDownloadInfo{
-					VfsPath: row.FullPath,
-					Size:    uint64(item.Size()),
-					Mtime:   uint64(item.ModTime().UnixNano() / 1000),
-				}
-			}
-
-			rows = append(rows, row)
-		}
-	}
-
-	encoded_rows, err := json.MarshalIndent(rows)
-	if err != nil {
-		return nil, err
-	}
-
-	result := &api_proto.VFSListResponse{
-		Columns: []string{
-			"Download", "Name", "Size", "Mode", "Timestamp",
-		},
-		Response: string(encoded_rows),
-		Types: []*actions_proto.VQLTypeMap{
-			&actions_proto.VQLTypeMap{
-				Column: "Download",
-				Type:   "Download",
-			},
-		},
-	}
 
 	return result, nil
 }

@@ -15,7 +15,7 @@ type UploadFile struct {
 
 // Where the uploaded file is stored in the filestore.
 func (self UploadFile) Path() api.PathSpec {
-	return self.path
+	return self.path.SetType("")
 }
 
 // Where to write the index path - if the uploaded file is a sparse
