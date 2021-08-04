@@ -31,7 +31,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
-	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -314,7 +313,7 @@ func getResultSetReader(
 		if table == 0 {
 			table = 1
 		}
-		path_manager := reporting.NewNotebookPathManager(
+		path_manager := paths.NewNotebookPathManager(
 			arg.NotebookId).Cell(arg.NotebookCellId).QueryStorage(table)
 
 		return result_sets.NewResultSetReader(

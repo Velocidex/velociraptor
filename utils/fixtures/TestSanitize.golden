@@ -5,5 +5,6 @@
  "../../../": "%2E%2E%2F..%2F..%2F",
  "foo.db": "foo.db_",
  "bar.json.db": "bar.json.db_",
- "\u0000\u0001\ufffd\ufffd\ufffd\ufffd(": "%00%01%F0%F2%FF%C3%28"
+ "\u0000\u0001\ufffd\ufffd\ufffd\ufffd(": "%00%01%F0%F2%FF%C3%28",
+ "\\\\.\\C:\\你好世界\\\"你好/世界.db\"": "%5C%5C.%5CC%3A%5C%E4%BD%A0%E5%A5%BD%E4%B8%96%E7%95%8C%5C%22%E4%BD%A0%E5%A5%BD%2F%E4%B8%96%E7%95%8C.db%22"
 }

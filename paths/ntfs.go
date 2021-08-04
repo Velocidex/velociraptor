@@ -3,7 +3,6 @@ package paths
 import (
 	"errors"
 	"regexp"
-	"strings"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -38,8 +37,6 @@ func UnsafeDatastorePathFromClientPath(
 
 // Detect device names from a client's path.
 func GetDeviceAndSubpath(path string) (device string, subpath []string, err error) {
-	path = strings.Replace(path, "/", "\\", -1)
-
 	m := deviceDriveRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
 		return m[1], utils.SplitComponents(m[2]), nil

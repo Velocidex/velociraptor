@@ -55,7 +55,7 @@ func GetSharedNotebooks(
 			break
 		}
 
-		notebook_path_manager := NewNotebookPathManager(notebook_id)
+		notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
 		notebook := &api_proto.NotebookMetadata{}
 		err := db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
 		// Notebook was removed or does not exist.
@@ -96,7 +96,7 @@ func GetAllNotebooks(
 
 	// List all available notebooks
 	notebook_urns, err := db.ListChildren(
-		config_obj, NotebookDir(), 0, 1000000)
+		config_obj, paths.NotebookDir(), 0, 1000000)
 	if err != nil {
 		return nil, err
 	}

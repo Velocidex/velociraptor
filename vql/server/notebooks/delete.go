@@ -9,7 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -58,7 +58,7 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 
 		file_store_factory := file_store.GetFileStore(config_obj)
 
-		notebook_path_manager := reporting.NewNotebookPathManager(arg.NotebookId)
+		notebook_path_manager := paths.NewNotebookPathManager(arg.NotebookId)
 
 		if arg.ReallyDoIt {
 			err = db.DeleteSubject(config_obj, notebook_path_manager.Path())

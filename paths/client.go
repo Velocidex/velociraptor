@@ -13,13 +13,12 @@ type ClientPathManager struct {
 
 // Where we store client records in datastore.
 func (self ClientPathManager) Path() api.PathSpec {
-	return self.root.AddChild(self.client_id)
+	return self.root
 }
 
 func NewClientPathManager(client_id string) *ClientPathManager {
 	return &ClientPathManager{
-		root: api.NewSafeDatastorePath(
-			"clients", client_id).SetType(""),
+		root:      CLIENTS_ROOT.AddChild(client_id),
 		client_id: client_id,
 	}
 }
@@ -31,12 +30,14 @@ func (self ClientPathManager) Ping() api.PathSpec {
 
 // Keep a record of all the client's labels.
 func (self ClientPathManager) Labels() api.PathSpec {
-	return self.root.AddChild("labels").SetType("json")
+	return self.root.AddChild("labels").
+		SetType(api.PATH_TYPE_DATASTORE_JSON)
 }
 
 // Each client can have arbitrary key/value metadata.
 func (self ClientPathManager) Metadata() api.PathSpec {
-	return self.root.AddChild("metadata").SetType("json")
+	return self.root.AddChild("metadata").
+		SetType(api.PATH_TYPE_DATASTORE_JSON)
 }
 
 // Store each client's public key so we can communicate with it.
@@ -56,12 +57,20 @@ func (self ClientPathManager) Task(task_id uint64) api.PathSpec {
 
 // Where we store client VFS information - depends on client paths.
 func (self ClientPathManager) VFSPath(vfs_components []string) api.PathSpec {
-	return api.NewUnsafeDatastorePath(
-		"clients", self.client_id, "vfs").AddChild(vfs_components...)
+	return CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs").
+		AddChild(vfs_components...)
 }
 
 func (self ClientPathManager) VFSDownloadInfoPath(
 	vfs_components []string) api.PathSpec {
-	return api.NewUnsafeDatastorePath(
-		"clients", self.client_id, "vfs_files").AddChild(vfs_components...)
+	return CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs_files").
+		AddChild(vfs_components...)
+}
+
+func (self ClientPathManager) VFSDownloadInfoFromClientPath(
+	accessor, client_path string) api.PathSpec {
+	base_path := CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs_files")
+
+	return UnsafeDatastorePathFromClientPath(
+		base_path, accessor, client_path)
 }

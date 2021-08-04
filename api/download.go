@@ -462,7 +462,8 @@ func getIndex(config_obj *config_proto.Config,
 	index := &actions_proto.Index{}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.ReadFile(vfs_path.SetType("idx"))
+	fd, err := file_store_factory.ReadFile(
+		vfs_path.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX))
 	if err != nil {
 		return nil, err
 	}

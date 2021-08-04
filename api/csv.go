@@ -27,7 +27,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
-	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/timelines"
 
@@ -132,7 +131,7 @@ func getPathSpec(
 		return paths.NewHuntPathManager(in.HuntId).ClientErrors(), nil
 
 	} else if in.NotebookId != "" && in.CellId != "" {
-		return reporting.NewNotebookPathManager(in.NotebookId).Cell(
+		return paths.NewNotebookPathManager(in.NotebookId).Cell(
 			in.CellId).QueryStorage(in.TableId).Path(), nil
 	}
 
@@ -230,7 +229,7 @@ func getTimeline(
 		return nil, errors.New("NotebookId must be specified")
 	}
 
-	path_manager := reporting.NewNotebookPathManager(in.NotebookId).Timeline(in.Timeline)
+	path_manager := paths.NewNotebookPathManager(in.NotebookId).Timeline(in.Timeline)
 	reader, err := timelines.NewSuperTimelineReader(config_obj, path_manager, in.SkipComponents)
 	if err != nil {
 		return nil, err

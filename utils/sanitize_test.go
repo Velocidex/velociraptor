@@ -21,6 +21,7 @@ func TestSanitize(t *testing.T) {
 		"bar.json.db",
 		// Binary string with invalid utf8 sequence
 		"\x00\x01\xf0\xf2\xff\xc3\x28",
+		`\\.\C:\你好世界\"你好/世界.db"`,
 	} {
 		sanitized := SanitizeString(name)
 		unsanitized := UnsanitizeComponent(sanitized)

@@ -156,14 +156,16 @@ func (self *FileBaseDataStore) GetSubject(
 		// migration from old protobuf based datastore files
 		// to newer json based blobs while still being able to
 		// read old files.
-		if urn.Type() == "json" {
-			fallback_path := urn.SetType("")
+		if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
 			serialized_content, err = readContentFromFile(
-				config_obj, fallback_path, true /* must_exist */)
+				config_obj,
+				urn.SetType(api.PATH_TYPE_DATASTORE_PROTO),
+				true /* must_exist */)
 		}
 		if err != nil {
 			return errors.WithMessage(os.ErrNotExist,
-				fmt.Sprintf("While openning %v: %v", urn, err))
+				fmt.Sprintf("While openning %v: %v",
+					urn.AsClientPath(), err))
 		}
 	}
 
@@ -215,7 +217,7 @@ func (self *FileBaseDataStore) SetSubject(
 	message proto.Message) error {
 
 	// Encode as JSON
-	if urn.Type() == "json" {
+	if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
 		serialized_content, err := protojson.Marshal(message)
 		if err != nil {
 			return err
@@ -303,6 +305,7 @@ func (self *FileBaseDataStore) ListChildren(
 		name := children[i].Name()
 		name = strings.TrimSuffix(name, ".db")
 		name = strings.TrimSuffix(name, ".json")
+		utils.Debug(name)
 		result = append(result,
 			urn.AddChild(utils.UnsanitizeComponent(name)))
 	}

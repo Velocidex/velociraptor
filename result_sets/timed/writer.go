@@ -15,6 +15,7 @@ import (
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/timelines"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -93,7 +94,8 @@ func (self *TimedResultSetWriterImpl) getWriter(ts time.Time) (
 
 	writer, err := timelines.NewTimelineWriter(
 		self.file_store_factory,
-		new_timelinePathManager(log_path), false /* truncate */)
+		paths.NewTimelinePathManager(
+			log_path.Base(), log_path), false /* truncate */)
 	if err != nil {
 		return nil, err
 	}
@@ -114,31 +116,6 @@ func (self *TimedResultSetWriterImpl) Close() {
 		self.writer.Close()
 		self.log_path = nil
 		self.writer = nil
-	}
-}
-
-type timelinePathManager struct {
-	path api.PathSpec
-	name string
-}
-
-func (self timelinePathManager) Path() api.PathSpec {
-	return self.path
-}
-
-func (self timelinePathManager) Name() string {
-	return self.name
-}
-
-// Timed indexes have the extension tidx
-func (self timelinePathManager) Index() api.PathSpec {
-	return self.path.SetType("json.tidx")
-}
-
-func new_timelinePathManager(path api.PathSpec) *timelinePathManager {
-	return &timelinePathManager{
-		path: path,
-		name: path.Base(),
 	}
 }
 

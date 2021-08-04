@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -164,7 +165,7 @@ pre {
 func ExportNotebookToZip(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	notebook_path_manager *NotebookPathManager) error {
+	notebook_path_manager *paths.NotebookPathManager) error {
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -213,8 +214,8 @@ func ExportNotebookToZip(
 	defer zip_writer.Close()
 
 	cell_copier := func(notebook_id, cell_id string) {
-		path_manager := NewNotebookPathManager(notebook_id)
-		exported_path_manager := NewNotebookExportPathManager(
+		path_manager := paths.NewNotebookPathManager(notebook_id)
+		exported_path_manager := paths.NewNotebookExportPathManager(
 			notebook_id)
 
 		children, err := file_store_factory.ListDirectory(
@@ -269,7 +270,7 @@ func ExportNotebookToHTML(
 		return err
 	}
 
-	notebook_path_manager := NewNotebookPathManager(notebook_id)
+	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
 	notebook := &api_proto.NotebookMetadata{}
 	err = db.GetSubject(config_obj, notebook_path_manager.Path(),
 		notebook)
@@ -380,7 +381,7 @@ func convertCSVTags(
 		return "", err
 	}
 
-	path_manager := NewNotebookPathManager(params.NotebookId).Cell(
+	path_manager := paths.NewNotebookPathManager(params.NotebookId).Cell(
 		params.CellId).QueryStorage(params.TableId)
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(

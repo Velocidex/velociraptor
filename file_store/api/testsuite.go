@@ -233,7 +233,7 @@ func (self *QueueManagerTestSuite) Debug() {
 }
 
 func (self *QueueManagerTestSuite) FilestoreGet(path PathSpec) string {
-	fd, err := self.file_store.ReadFile(path.SetType("json"))
+	fd, err := self.file_store.ReadFile(path)
 	assert.NoError(self.T(), err)
 	value, err := ioutil.ReadAll(fd)
 	assert.NoError(self.T(), err)

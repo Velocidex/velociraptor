@@ -15,20 +15,12 @@
 package datastore
 
 import (
-	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
-	errors "github.com/pkg/errors"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -95,102 +87,6 @@ func (self *FileBaseDataStore) ListChildrenJSON(
 	}
 
 	return result, nil
-}
-
-func (self *FileBaseDataStore) GetSubjectJSON(
-	config_obj *config_proto.Config,
-	path api.PathSpec,
-	message proto.Message) error {
-
-	filename := path.SetType("json").
-		AsDatastoreFilename(config_obj)
-	file, err := os.Open(filename)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// Try to read the file as an old protobuf
-			// based file.
-			filename = path.SetType("").
-				AsDatastoreFilename(config_obj)
-			file, err = os.Open(filename)
-			if err != nil {
-				return err
-			}
-			defer file.Close()
-
-			serialized_content, err := ioutil.ReadAll(
-				io.LimitReader(file, constants.MAX_MEMORY))
-			if err != nil {
-				return nil
-			}
-
-			// It might be an older file, try to read the
-			// protobuf version.
-			return proto.Unmarshal(serialized_content, message)
-		}
-		return err
-	}
-	defer file.Close()
-
-	serialized_content, err := ioutil.ReadAll(
-		io.LimitReader(file, constants.MAX_MEMORY))
-
-	// Empty file means no subject is set.
-	if len(serialized_content) == 0 {
-		return nil
-	}
-
-	err = protojson.Unmarshal(serialized_content, message)
-	if err != nil {
-		return errors.WithMessage(os.ErrNotExist,
-			fmt.Sprintf("While openning %v: %v", filename, err))
-	}
-	return nil
-}
-
-func (self *FileBaseDataStore) SetSubjectJSON(
-	config_obj *config_proto.Config,
-	path api.PathSpec,
-	message proto.Message) error {
-
-	filename := path.SetType("json").
-		AsDatastoreFilename(config_obj)
-
-	// Encode as JSON
-	serialized_content, err := protojson.Marshal(message)
-	if err != nil {
-		return err
-	}
-
-	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0660)
-
-	// Try to create intermediate directories and try again.
-	if err != nil && os.IsNotExist(err) {
-		err = os.MkdirAll(filepath.Dir(filename), 0700)
-		if err != nil {
-			return err
-		}
-		file, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0660)
-		if err != nil {
-			return err
-		}
-	}
-	if err != nil {
-		logging.GetLogger(config_obj, &logging.FrontendComponent).Error(
-			"Unable to open file "+filename, err)
-		return errors.WithStack(err)
-	}
-	defer file.Close()
-
-	err = file.Truncate(0)
-	if err != nil {
-		return err
-	}
-
-	_, err = file.Write(serialized_content)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
 }
 
 func (self *FileBaseDataStore) WalkComponents(

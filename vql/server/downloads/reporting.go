@@ -141,6 +141,7 @@ func CreateFlowReport(
 	hostname := services.GetHostname(client_id)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	download_file := flow_path_manager.GetReportsFile(hostname)
+	lock_file_spec := download_file.SetType(api.PATH_TYPE_FILESTORE_LOCK)
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	writer, err := file_store_factory.WriteFile(download_file)
@@ -152,8 +153,7 @@ func CreateFlowReport(
 		return nil, err
 	}
 
-	lock_file, err := file_store_factory.WriteFile(
-		download_file.SetType("lock"))
+	lock_file, err := file_store_factory.WriteFile(lock_file_spec)
 	if err != nil {
 		return nil, err
 	}
@@ -181,8 +181,7 @@ func CreateFlowReport(
 		defer writer.Close()
 		defer subscope.Close()
 		defer func() {
-			err := file_store_factory.Delete(
-				download_file.SetType("lock"))
+			err := file_store_factory.Delete(lock_file_spec)
 			if err != nil {
 				logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 				logger.Error("Failed to bind to remove lock file for %v: %v",

@@ -27,6 +27,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/timelines"
@@ -54,7 +55,7 @@ type GuiTemplateEngine struct {
 	tmpl         *template.Template
 	ctx          context.Context
 	log_writer   *logWriter
-	path_manager *NotebookCellPathManager
+	path_manager *paths.NotebookCellPathManager
 	Data         map[string]*actions_proto.VQLResponse
 	Progress     utils.ProgressReporter
 	Start        time.Time
@@ -99,7 +100,7 @@ func (self *GuiTemplateEngine) Expand(values ...interface{}) interface{} {
 	default:
 		return t
 
-	case []*NotebookCellQuery:
+	case []*paths.NotebookCellQuery:
 		if len(t) == 0 { // No rows returned.
 			self.Scope.Log("Query produced no rows.")
 			return results
@@ -164,7 +165,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 	default:
 		return t
 
-	case []*NotebookCellQuery:
+	case []*paths.NotebookCellQuery:
 		if len(t) == 0 { // No rows returned.
 			self.Scope.Log("Query produced no rows.")
 			return ""
@@ -215,7 +216,7 @@ func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
 	default:
 		return ""
 
-	case []*NotebookCellQuery:
+	case []*paths.NotebookCellQuery:
 		result := ""
 		for _, item := range t {
 			params := item.Params()
@@ -280,7 +281,7 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 				`params='%s' /></div>`, utils.QueryEscape(t),
 			utils.QueryEscape(parameters))
 
-	case []*NotebookCellQuery:
+	case []*paths.NotebookCellQuery:
 		result := ""
 		for _, item := range t {
 			result += fmt.Sprintf(
@@ -399,7 +400,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 		return self.queryRows(queries...)
 	}
 
-	result := []*NotebookCellQuery{}
+	result := []*paths.NotebookCellQuery{}
 	for _, query := range queries {
 		query, err := self.getMultiLineQuery(query)
 		if err != nil {
@@ -563,7 +564,7 @@ func NewGuiTemplateEngine(
 	scope vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
 	repository services.Repository,
-	notebook_cell_path_manager *NotebookCellPathManager,
+	notebook_cell_path_manager *paths.NotebookCellPathManager,
 	artifact_name string) (
 	*GuiTemplateEngine, error) {
 

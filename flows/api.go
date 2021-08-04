@@ -203,8 +203,8 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 
 		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
 			Name: item.Name(),
-			Path: api.AsDownloadURL(
-				download_path.AddChild(item.Name())),
+			Path: download_path.AddChild(
+				item.Name()).AsClientPath(),
 			Size:     uint64(item.Size()),
 			Date:     item.ModTime().UTC().Format(time.RFC3339),
 			Complete: is_complete(item.Name()),

@@ -157,8 +157,8 @@ func (self ResultSetFactory) NewResultSetWriter(
 		return nil, err
 	}
 
-	idx_fd, err := file_store_factory.WriteFile(log_path.SetType(
-		"index"))
+	idx_fd, err := file_store_factory.WriteFile(log_path.
+		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
 	if err != nil {
 		fd.Close()
 		return nil, err
@@ -341,7 +341,8 @@ func (self ResultSetFactory) NewResultSetReader(
 
 	// -1 indicates we dont know how many rows there are
 	total_rows := int64(-1)
-	idx_fd, err := file_store_factory.ReadFile(log_path.SetType("index"))
+	idx_fd, err := file_store_factory.ReadFile(log_path.
+		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
 	if err == nil {
 		stat, err := idx_fd.Stat()
 		if err == nil {

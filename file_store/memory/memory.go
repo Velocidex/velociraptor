@@ -198,13 +198,14 @@ func (self *MemoryFileStore) ListDirectory(path api.PathSpec) ([]os.FileInfo, er
 			components := strings.Split(k, "/")
 			if len(components) > 0 &&
 				!utils.InString(files, components[0]) {
+				base := utils.UnsanitizeComponent(components[0])
+
 				result = append(result, &vtesting.MockFileInfo{
-					Name_: components[0],
-					FullPath_: path.AddChild(
-						components[0]).AsClientPath(),
-					Size_: int64(len(v)),
+					Name_:     base,
+					FullPath_: path.AddChild(base).AsClientPath(),
+					Size_:     int64(len(v)),
 				})
-				files = append(files, components[0])
+				files = append(files, base)
 			}
 		}
 	}

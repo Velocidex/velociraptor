@@ -1,4 +1,4 @@
-package timelines
+package paths
 
 import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -16,7 +16,7 @@ type TimelinePathManager struct {
 }
 
 func (self TimelinePathManager) Path() api.PathSpec {
-	return self.root.AddChild(self.name).SetType("json")
+	return self.root.AddChild(self.name)
 }
 
 func (self TimelinePathManager) Name() string {
@@ -24,7 +24,15 @@ func (self TimelinePathManager) Name() string {
 }
 
 func (self TimelinePathManager) Index() api.PathSpec {
-	return self.root.AddChild(self.name).SetType("json.idx")
+	return self.root.AddChild(self.name).
+		SetType(api.PATH_TYPE_FILESTORE_JSON_TIME_INDEX)
+}
+
+func NewTimelinePathManager(name string, root api.PathSpec) *TimelinePathManager {
+	return &TimelinePathManager{
+		name: name,
+		root: root,
+	}
 }
 
 // A Supertimeline is a collection of individual timelines. Create
@@ -36,8 +44,16 @@ type SuperTimelinePathManager struct {
 	Root api.PathSpec
 }
 
+func NewSuperTimelinePathManager(
+	name string, root api.PathSpec) *SuperTimelinePathManager {
+	return &SuperTimelinePathManager{
+		Name: name,
+		Root: root,
+	}
+}
+
 func (self *SuperTimelinePathManager) Path() api.PathSpec {
-	return self.Root.AddChild(self.Name)
+	return self.Root.AddUnsafeChild(self.Name)
 }
 
 // Add a child timeline to the super timeline.
@@ -45,6 +61,7 @@ func (self *SuperTimelinePathManager) GetChild(
 	child_name string) *TimelinePathManager {
 	return &TimelinePathManager{
 		name: child_name,
-		root: self.Root.AddChild("timelines", self.Name),
+		root: self.Root.AddUnsafeChild(self.Name).
+			SetType(api.PATH_TYPE_FILESTORE_JSON),
 	}
 }

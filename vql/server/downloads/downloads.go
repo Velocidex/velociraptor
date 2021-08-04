@@ -205,8 +205,8 @@ func createDownloadFile(
 		return nil, err
 	}
 
-	lock_file, err := file_store_factory.WriteFile(
-		download_file.SetType("lock"))
+	lock_file_spec := download_file.SetType(api.PATH_TYPE_FILESTORE_LOCK)
+	lock_file, err := file_store_factory.WriteFile(lock_file_spec)
 	if err != nil {
 		return nil, err
 	}
@@ -241,8 +241,7 @@ func createDownloadFile(
 	go func() {
 		defer wg.Done()
 		defer func() {
-			_ = file_store_factory.Delete(
-				download_file.SetType("lock"))
+			_ = file_store_factory.Delete(lock_file_spec)
 		}()
 		defer fd.Close()
 		defer zip_writer.Close()
@@ -334,8 +333,9 @@ func downloadFlowToZip(
 		}
 
 		// Also make a csv file why not?
-		zip_file_name := utils.CleanComponentsForZip(
-			rs_path.SetType("csv").Components(), client_id, hostname)
+		zip_file_name := utils.CleanComponentsForZip(rs_path.
+			SetType(api.PATH_TYPE_FILESTORE_CSV).
+			Components(), client_id, hostname)
 		f, err := zip_writer.Create(zip_file_name)
 		if err != nil {
 			continue
@@ -405,9 +405,8 @@ func createHuntDownloadFile(
 	}).Info("CreateHuntDownload")
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-
-	lock_file, err := file_store_factory.WriteFile(
-		download_file.SetType("lock"))
+	lock_file_spec := download_file.SetType(api.PATH_TYPE_FILESTORE_LOCK)
+	lock_file, err := file_store_factory.WriteFile(lock_file_spec)
 	if err != nil {
 		return nil, err
 	}
@@ -457,8 +456,7 @@ func createHuntDownloadFile(
 	go func() {
 		defer wg.Done()
 		defer func() {
-			err := file_store_factory.Delete(
-				download_file.SetType("lock"))
+			err := file_store_factory.Delete(lock_file_spec)
 			if err != nil {
 				logger.Error("Failed to bind to remove lock file for %v: %v",
 					download_file, err)

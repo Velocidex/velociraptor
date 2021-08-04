@@ -83,7 +83,7 @@ func (self BaseTestSuite) TestSetGetMigration() {
 	} {
 		// Write a protobuf based file
 		urn := api.NewSafeDatastorePath(path.Components()...).
-			SetType("")
+			SetType(api.PATH_TYPE_DATASTORE_PROTO)
 		err := self.datastore.SetSubject(
 			self.config_obj, urn, message)
 		assert.NoError(self.T(), err)
@@ -91,7 +91,7 @@ func (self BaseTestSuite) TestSetGetMigration() {
 		// Even if we read it with json it should work.
 		read_message := &crypto_proto.VeloMessage{}
 		err = self.datastore.GetSubject(self.config_obj,
-			path.SetType("json"), read_message)
+			path.SetType(api.PATH_TYPE_DATASTORE_JSON), read_message)
 		assert.NoError(self.T(), err)
 
 		assert.Equal(self.T(), message.Source, read_message.Source)
@@ -117,7 +117,8 @@ func (self BaseTestSuite) TestSetGetSubjectWithEscaping() {
 func (self BaseTestSuite) TestSetGetSubject() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
 
-	urn := api.NewSafeDatastorePath("a", "b", "c").SetType("")
+	urn := api.NewSafeDatastorePath("a", "b", "c").
+		SetType(api.PATH_TYPE_DATASTORE_PROTO)
 	err := self.datastore.SetSubject(self.config_obj, urn, message)
 	assert.NoError(self.T(), err)
 
@@ -136,7 +137,9 @@ func (self BaseTestSuite) TestSetGetSubject() {
 	// Same for json files.
 	read_message.SessionId = "X"
 	err = self.datastore.GetSubject(
-		self.config_obj, urn.AddChild("foo").SetType("json"), read_message)
+		self.config_obj, urn.AddChild("foo").
+			SetType(api.PATH_TYPE_DATASTORE_JSON),
+		read_message)
 	assert.Error(self.T(), err, os.ErrNotExist)
 
 	// Delete the subject
@@ -201,7 +204,11 @@ func (self BaseTestSuite) TestListChildren() {
 			visited = append(visited, path_name)
 			return nil
 		})
-	assert.Equal(self.T(), []string{"/a/b/c/1", "/a/b/c/2", "/a/b/c/3"},
+	utils.Debug(visited)
+	assert.Equal(self.T(), []string{
+		"/a/b/c/1.json",
+		"/a/b/c/2.json",
+		"/a/b/c/3.json"},
 		asStrings(visited))
 }
 

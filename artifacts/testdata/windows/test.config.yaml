@@ -141,5 +141,5 @@ Frontend:
 
 Datastore:
   implementation: FileBaseDataStore
-  filestore_directory: ./artifacts/testdata/server
-  location: ./artifacts/testdata/server
+  filestore_directory: ./artifacts/testdata/server/
+  location: ./artifacts/testdata/server/

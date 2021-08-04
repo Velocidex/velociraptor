@@ -82,7 +82,7 @@ func ListUsers(config_obj *config_proto.Config) ([]*api_proto.VelociraptorUser, 
 		return nil, err
 	}
 
-	children, err := db.ListChildren(config_obj, paths.USER_URN, 0, 500)
+	children, err := db.ListChildren(config_obj, paths.USERS_ROOT, 0, 500)
 	if err != nil {
 		return nil, err
 	}

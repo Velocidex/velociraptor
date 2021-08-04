@@ -36,6 +36,6 @@ func NewInventoryPathManager(config_obj *config_proto.Config,
 	}
 
 	return &InventoryPathManager{
-		root: api.NewUnsafeDatastorePath("public", tool.FilestorePath),
+		root: PUBLIC_ROOT.AddChild(tool.FilestorePath),
 	}
 }

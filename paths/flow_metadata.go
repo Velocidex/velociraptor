@@ -15,13 +15,13 @@ type UploadFile struct {
 
 // Where the uploaded file is stored in the filestore.
 func (self UploadFile) Path() api.PathSpec {
-	return self.path.SetType("")
+	return self.path
 }
 
 // Where to write the index path - if the uploaded file is a sparse
 // file, an index file will be written with the ranges.
 func (self UploadFile) IndexPath() api.PathSpec {
-	return self.path.SetType("idx")
+	return self.path.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX)
 }
 
 // Manage information about each collection.
@@ -31,12 +31,12 @@ type FlowPathManager struct {
 }
 
 func (self FlowPathManager) Path() api.PathSpec {
-	return api.NewSafeDatastorePath("clients", self.client_id,
-		"collections", self.flow_id).SetType("")
+	return CLIENTS_ROOT.AddChild(self.client_id,
+		"collections", self.flow_id)
 }
 
 func (self FlowPathManager) ContainerPath() api.PathSpec {
-	return api.NewSafeDatastorePath("clients", self.client_id, "collections")
+	return CLIENTS_ROOT.AddChild(self.client_id, "collections")
 }
 
 func NewFlowPathManager(client_id, flow_id string) *FlowPathManager {
@@ -48,15 +48,18 @@ func NewFlowPathManager(client_id, flow_id string) *FlowPathManager {
 
 // Gets the flow's log file.
 func (self FlowPathManager) Log() api.PathSpec {
-	return self.Path().AddChild("logs")
+	return self.Path().AddChild("logs").
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
 func (self FlowPathManager) Task() api.PathSpec {
-	return self.Path().AddChild("task")
+	return self.Path().AddChild("task").
+		SetType(api.PATH_TYPE_DATASTORE_PROTO)
 }
 
 func (self FlowPathManager) UploadMetadata() api.PathSpec {
-	return self.Path().AddChild("uploads").SetType("json")
+	return self.Path().AddChild("uploads").SetType(
+		api.PATH_TYPE_FILESTORE_JSON)
 }
 
 func (self FlowPathManager) GetDownloadsFile(hostname string) api.PathSpec {
@@ -64,9 +67,8 @@ func (self FlowPathManager) GetDownloadsFile(hostname string) api.PathSpec {
 	if hostname != "" {
 		hostname += "-"
 	}
-	return api.NewSafeDatastorePath("downloads", self.client_id,
-		self.flow_id).AsUnsafe().AddChild(
-		fmt.Sprintf("%v%v-%v.zip", hostname, self.client_id, self.flow_id))
+	return DOWNLOADS_ROOT.AddUnsafeChild(self.client_id, self.flow_id,
+		fmt.Sprintf("%v%v-%v", hostname, self.client_id, self.flow_id))
 }
 
 func (self FlowPathManager) GetReportsFile(hostname string) api.PathSpec {
@@ -74,33 +76,10 @@ func (self FlowPathManager) GetReportsFile(hostname string) api.PathSpec {
 	if hostname != "" {
 		hostname += "-"
 	}
-	return api.NewSafeDatastorePath("downloads", self.client_id,
-		self.flow_id).AsUnsafe().AddChild(
-		fmt.Sprintf("Report %v%v-%v.html", hostname, self.client_id, self.flow_id))
-}
-
-// Figure out where to store the VFSDownloadInfo file. We maintain a
-// metadata file in the client's VFS area linking back to the
-// collection which most recently uploaded this file.
-func (self FlowPathManager) GetVFSDownloadInfoPath(
-	accessor string, client_path string) api.PathSpec {
-	base_path := api.NewSafeDatastorePath(
-		"clients", self.client_id, "vfs_files", accessor)
-
-	return UnsafeDatastorePathFromClientPath(base_path, accessor, client_path)
-}
-
-// GetVFSDownloadInfoPath returns the vfs path to the directory info
-// file.
-func (self FlowPathManager) GetVFSDirectoryInfoPath(
-	accessor, client_path string) *UploadFile {
-	base_path := api.NewSafeDatastorePath(
-		"clients", self.client_id, "vfs", accessor)
-
-	return &UploadFile{
-		path: UnsafeDatastorePathFromClientPath(
-			base_path, accessor, client_path),
-	}
+	return DOWNLOADS_ROOT.AddUnsafeChild(self.client_id, self.flow_id,
+		fmt.Sprintf("Report %v%v-%v", hostname,
+			self.client_id, self.flow_id)).
+		SetType(api.PATH_TYPE_FILESTORE_DOWNLOAD_REPORT)
 }
 
 // Where to store the uploaded file in the filestore.
@@ -111,9 +90,9 @@ func (self FlowPathManager) GetUploadsFile(
 		accessor = "file"
 	}
 
-	base_path := api.NewSafeDatastorePath(
-		"clients", self.client_id, "collections",
-		self.flow_id, "uploads", accessor)
+	base_path := CLIENTS_ROOT.AddUnsafeChild(self.client_id, "collections",
+		self.flow_id, "uploads").
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
 
 	return &UploadFile{
 		path: UnsafeDatastorePathFromClientPath(

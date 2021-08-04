@@ -61,7 +61,8 @@ var (
 	golden_env_map = golden_command.Flag("env", "Environment for the query.").
 			StringMap()
 
-	testonly = golden_command.Flag("testonly", "Do not update the fixture.").Bool()
+	testonly      = golden_command.Flag("testonly", "Do not update the fixture.").Bool()
+	disable_alarm = golden_command.Flag("disable_alarm", "Do not terminate when deadlocked.").Bool()
 )
 
 type testFixture struct {
@@ -138,8 +139,13 @@ func makeCtxWithTimeout(duration int) (context.Context, func()) {
 func runTest(fixture *testFixture, sm *services.Service,
 	config_obj *config_proto.Config) (string, error) {
 
-	ctx, cancel := makeCtxWithTimeout(30)
-	defer cancel()
+	ctx := context.Background()
+	if !*disable_alarm {
+		sub_ctx, cancel := makeCtxWithTimeout(30)
+		defer cancel()
+
+		ctx = sub_ctx
+	}
 
 	// Create an output container.
 	tmpfile, err := ioutil.TempFile("", "golden")
@@ -223,8 +229,10 @@ func runTest(fixture *testFixture, sm *services.Service,
 func doGolden() {
 	vql_subsystem.RegisterPlugin(&MemoryLogPlugin{})
 
-	_, cancel := makeCtxWithTimeout(120)
-	defer cancel()
+	if !*disable_alarm {
+		_, cancel := makeCtxWithTimeout(120)
+		defer cancel()
+	}
 
 	config_obj, err := makeDefaultConfigLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Can not load configuration.")

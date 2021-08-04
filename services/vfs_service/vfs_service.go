@@ -70,8 +70,9 @@ func (self *VFSService) ProcessDownloadFile(
 	logger.Info("VFSService: Processing System.VFS.DownloadFile from %v", client_id)
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
+	client_path_manager := paths.NewClientPathManager(client_id)
 
-	path_manager, err := artifacts.NewArtifactPathManager(config_obj,
+	artifact_path_manager, err := artifacts.NewArtifactPathManager(config_obj,
 		client_id, flow_id, "System.VFS.DownloadFile")
 	if err != nil {
 		utils.Debug(err)
@@ -79,16 +80,9 @@ func (self *VFSService) ProcessDownloadFile(
 		return
 	}
 
-	path, err := path_manager.GetPathForWriting()
-	if err != nil {
-
-		logger.Error("Unable to read artifact: %v", err)
-		return
-	}
-
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(
-		file_store_factory, path)
+		file_store_factory, artifact_path_manager.Path())
 	if err != nil {
 		logger.Error("Unable to read artifact: %v", err)
 		return
@@ -124,7 +118,8 @@ func (self *VFSService) ProcessDownloadFile(
 		// read vfs_path of the download.
 		db, _ := datastore.GetDB(config_obj)
 		err = db.SetSubject(config_obj,
-			flow_path_manager.GetVFSDownloadInfoPath(Accessor, Path),
+			client_path_manager.VFSDownloadInfoFromClientPath(
+				Accessor, Path),
 			&flows_proto.VFSDownloadInfo{
 				Components: uploaded_file_manager.
 					Path().Components(),

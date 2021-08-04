@@ -182,7 +182,8 @@ func (self *TestDataStore) GetSubject(
 	self.Trace("GetSubject", path)
 	result, pres := self.Subjects[path]
 	if !pres {
-		fallback_path := urn.SetType("").AsDatastoreFilename(config_obj)
+		fallback_path := urn.SetType(api.PATH_TYPE_DATASTORE_PROTO).
+			AsDatastoreFilename(config_obj)
 		result, pres = self.Subjects[fallback_path]
 		if !pres {
 			return errors.WithMessage(os.ErrNotExist,
