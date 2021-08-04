@@ -46,8 +46,8 @@ type DatastoreInfo struct {
 	Modified time.Time
 }
 
-type WalkFunc func(urn api.PathSpec) error
-type ComponentWalkFunc func(components api.PathSpec) error
+type WalkFunc func(urn api.DSPathSpec) error
+type ComponentWalkFunc func(components api.DSPathSpec) error
 
 type DataStore interface {
 	// Retrieve all the client's tasks.
@@ -71,50 +71,50 @@ type DataStore interface {
 	// os.ErrNotExist error.
 	GetSubject(
 		config_obj *config_proto.Config,
-		urn api.PathSpec,
+		urn api.DSPathSpec,
 		message proto.Message) error
 
 	SetSubject(
 		config_obj *config_proto.Config,
-		urn api.PathSpec,
+		urn api.DSPathSpec,
 		message proto.Message) error
 
 	DeleteSubject(
 		config_obj *config_proto.Config,
-		urn api.PathSpec) error
+		urn api.DSPathSpec) error
 
 	// Lists all the children of a URN.
 	ListChildren(
 		config_obj *config_proto.Config,
-		urn api.PathSpec,
-		offset uint64, length uint64) ([]api.PathSpec, error)
+		urn api.DSPathSpec,
+		offset uint64, length uint64) ([]api.DSPathSpec, error)
 
 	Walk(config_obj *config_proto.Config,
-		root api.PathSpec, walkFn WalkFunc) error
+		root api.DSPathSpec, walkFn WalkFunc) error
 
 	// Update the posting list index. Searching for any of the
 	// keywords will return the entity urn.
 	SetIndex(
 		config_obj *config_proto.Config,
-		index_urn api.PathSpec,
+		index_urn api.DSPathSpec,
 		entity string,
 		keywords []string) error
 
 	UnsetIndex(
 		config_obj *config_proto.Config,
-		index_urn api.PathSpec,
+		index_urn api.DSPathSpec,
 		entity string,
 		keywords []string) error
 
 	CheckIndex(
 		config_obj *config_proto.Config,
-		index_urn api.PathSpec,
+		index_urn api.DSPathSpec,
 		entity string,
 		keywords []string) error
 
 	SearchClients(
 		config_obj *config_proto.Config,
-		index_urn api.PathSpec,
+		index_urn api.DSPathSpec,
 		query string, query_type string,
 		offset uint64, limit uint64, sort SortingSense) []string
 

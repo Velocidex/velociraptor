@@ -83,7 +83,7 @@ func (self HuntsPlugin) Call(
 			return
 		}
 
-		var hunts []api.PathSpec
+		var hunts []api.DSPathSpec
 		if arg.HuntId == "" {
 			hunt_path_manager := paths.NewHuntPathManager("")
 			hunts, err = db.ListChildren(config_obj,

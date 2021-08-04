@@ -9,7 +9,7 @@ func (self *PathManagerTestSuite) TestTimelinePathManager() {
 	// Put the timeline in a notebook
 	manager := paths.NewSuperTimelinePathManager(
 		"你好世界/hello",
-		paths.NewNotebookPathManager("N.123").TimelineDir())
+		paths.NewNotebookPathManager("N.123").SuperTimelineDir())
 
 	assert.Equal(self.T(), "/ds/notebooks/N.123/timelines/%E4%BD%A0%E5%A5%BD%E4%B8%96%E7%95%8C%2Fhello.json.db",
 		self.getDatastorePath(manager.Path()))

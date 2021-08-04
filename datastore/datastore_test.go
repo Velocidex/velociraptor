@@ -13,22 +13,23 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
 	testPaths = []struct {
-		urn  api.SafeDatastorePath
+		urn  api.DSPathSpec
 		path string
 	}{
-		{api.NewSafeDatastorePath("a", "b", "c"), "/a/b/c.db"},
+		{path_specs.NewSafeDatastorePath("a", "b", "c"), "/a/b/c.db"},
 
 		// Path components are actually a list of strings.
-		{api.NewSafeDatastorePath("a", "b/c", "d"),
+		{path_specs.NewSafeDatastorePath("a", "b/c", "d"),
 			"/a/b%2Fc/d.db"},
 
-		{api.NewSafeDatastorePath("a", "b/c", "d/d"),
+		{path_specs.NewSafeDatastorePath("a", "b/c", "d/d"),
 			"/a/b%2Fc/d%2Fd.db"},
 	}
 )
@@ -42,10 +43,10 @@ type BaseTestSuite struct {
 
 func (self BaseTestSuite) TestSetGetJSON() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
-	for _, path := range []api.UnsafeDatastorePath{
-		api.NewUnsafeDatastorePath("a", "b/c", "d"),
-		api.NewUnsafeDatastorePath("a", "b/c", "d/a"),
-		api.NewUnsafeDatastorePath("a", "b/c", "d?\""),
+	for _, path := range []path_specs.DSPathSpec{
+		path_specs.NewUnsafeDatastorePath("a", "b/c", "d"),
+		path_specs.NewUnsafeDatastorePath("a", "b/c", "d/a"),
+		path_specs.NewUnsafeDatastorePath("a", "b/c", "d?\""),
 	} {
 		err := self.datastore.SetSubject(
 			self.config_obj, path, message)
@@ -61,7 +62,7 @@ func (self BaseTestSuite) TestSetGetJSON() {
 
 	// Now test that ListChildren works properly.
 	children, err := self.datastore.ListChildren(
-		self.config_obj, api.NewUnsafeDatastorePath("a", "b/c"),
+		self.config_obj, path_specs.NewUnsafeDatastorePath("a", "b/c"),
 		0, 100)
 	assert.NoError(self.T(), err)
 
@@ -78,11 +79,11 @@ func (self BaseTestSuite) TestSetGetJSON() {
 // properly.
 func (self BaseTestSuite) TestSetGetMigration() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
-	for _, path := range []api.UnsafeDatastorePath{
-		api.NewUnsafeDatastorePath("a", "b", "c"),
+	for _, path := range []path_specs.DSPathSpec{
+		path_specs.NewUnsafeDatastorePath("a", "b", "c"),
 	} {
 		// Write a protobuf based file
-		urn := api.NewSafeDatastorePath(path.Components()...).
+		urn := path_specs.NewSafeDatastorePath(path.Components()...).
 			SetType(api.PATH_TYPE_DATASTORE_PROTO)
 		err := self.datastore.SetSubject(
 			self.config_obj, urn, message)
@@ -117,7 +118,7 @@ func (self BaseTestSuite) TestSetGetSubjectWithEscaping() {
 func (self BaseTestSuite) TestSetGetSubject() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
 
-	urn := api.NewSafeDatastorePath("a", "b", "c").
+	urn := path_specs.NewSafeDatastorePath("a", "b", "c").
 		SetType(api.PATH_TYPE_DATASTORE_PROTO)
 	err := self.datastore.SetSubject(self.config_obj, urn, message)
 	assert.NoError(self.T(), err)
@@ -154,7 +155,7 @@ func (self BaseTestSuite) TestSetGetSubject() {
 func (self BaseTestSuite) TestListChildren() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
 
-	urn := api.NewSafeDatastorePath("a", "b", "c")
+	urn := path_specs.NewSafeDatastorePath("a", "b", "c")
 	err := self.datastore.SetSubject(self.config_obj,
 		urn.AddChild("1"), message)
 	assert.NoError(self.T(), err)
@@ -197,18 +198,17 @@ func (self BaseTestSuite) TestListChildren() {
 	assert.Equal(self.T(), []string{"/a/b/c/2", "/a/b/c/3"},
 		asStrings(children))
 
-	visited := []api.PathSpec{}
+	visited := []api.DSPathSpec{}
 	self.datastore.Walk(self.config_obj,
-		api.NewSafeDatastorePath("a", "b"),
-		func(path_name api.PathSpec) error {
+		path_specs.NewSafeDatastorePath("a", "b"),
+		func(path_name api.DSPathSpec) error {
 			visited = append(visited, path_name)
 			return nil
 		})
-	utils.Debug(visited)
 	assert.Equal(self.T(), []string{
-		"/a/b/c/1.json",
-		"/a/b/c/2.json",
-		"/a/b/c/3.json"},
+		"/a/b/c/1",
+		"/a/b/c/2",
+		"/a/b/c/3"},
 		asStrings(visited))
 }
 
@@ -295,7 +295,7 @@ func benchmarkSearchClient(b *testing.B,
 
 }
 
-func asStrings(in []api.PathSpec) []string {
+func asStrings(in []api.DSPathSpec) []string {
 	children := make([]string, 0, len(in))
 	for _, i := range in {
 		children = append(children, utils.JoinComponents(

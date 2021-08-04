@@ -178,7 +178,7 @@ func (self CreateHuntDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 func createDownloadFile(
 	config_obj *config_proto.Config,
 	flow_id, client_id string,
-	wait bool) (api.PathSpec, error) {
+	wait bool) (api.FSPathSpec, error) {
 	if client_id == "" || flow_id == "" {
 		return nil, errors.New("Client Id and Flow Id should be specified.")
 	}
@@ -277,7 +277,7 @@ func downloadFlowToZip(
 	}
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	copier := func(upload_name api.PathSpec) error {
+	copier := func(upload_name api.FSPathSpec) error {
 
 		reader, err := file_store_factory.ReadFile(upload_name)
 		if err != nil {
@@ -375,7 +375,7 @@ func downloadFlowToZip(
 	for row := range reader.Rows(ctx) {
 		vfs_path_any, pres := row.Get("vfs_path")
 		if pres {
-			err = copier(vfs_path_any.(api.PathSpec))
+			err = copier(vfs_path_any.(api.FSPathSpec))
 		}
 	}
 
@@ -389,7 +389,7 @@ func createHuntDownloadFile(
 	hunt_id string,
 	write_json, write_csv bool,
 	wait, only_combined bool,
-	base_filename string) (api.PathSpec, error) {
+	base_filename string) (api.FSPathSpec, error) {
 	if hunt_id == "" {
 		return nil, errors.New("Hunt Id should be specified.")
 	}

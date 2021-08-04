@@ -10,7 +10,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/paths"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 )
@@ -27,7 +26,7 @@ type TimelineReader struct {
 	offset      int64
 	fd          api.FileReader
 	index_fd    api.FileReader
-	index_stat  glob.FileInfo
+	index_stat  api.FileInfo
 }
 
 func (self *TimelineReader) getIndex(i int) (*IndexRecord, error) {

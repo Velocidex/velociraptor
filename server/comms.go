@@ -31,7 +31,7 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/accessors"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 
@@ -128,9 +128,10 @@ func PrepareFrontendMux(
 	// does not have to be a physical directory - it is served
 	// from the filestore.
 	router.Handle(base+"/public/", GetLoggingHandler(config_obj, "/public")(
-		http.StripPrefix(base, forceMime(http.FileServer(api.NewFileSystem(config_obj,
-			file_store.GetFileStore(config_obj),
-			"/public/"))))))
+		http.StripPrefix(base, forceMime(http.FileServer(
+			accessors.NewFileSystem(config_obj,
+				file_store.GetFileStore(config_obj),
+				"/public/"))))))
 
 	return nil
 }

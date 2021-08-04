@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -19,9 +20,9 @@ var (
 		`(?i)^(\\\\[\?\.]\\GLOBALROOT\\Device\\[^/\\]+)([/\\]?.*)`)
 )
 
-func UnsafeDatastorePathFromClientPath(
-	base_path api.PathSpec,
-	accessor, client_path string) api.PathSpec {
+func UnsafeFilestorePathFromClientPath(
+	base_path api.FSPathSpec,
+	accessor, client_path string) api.FSPathSpec {
 	device, subpath, err := GetDeviceAndSubpath(client_path)
 	if !utils.IsNil(base_path) {
 		if err == nil {
@@ -31,7 +32,23 @@ func UnsafeDatastorePathFromClientPath(
 		return base_path.AddUnsafeChild(accessor).AddChild(
 			utils.SplitComponents(client_path)...)
 	}
-	return api.NewUnsafeDatastorePath(accessor).AddChild(
+	return path_specs.NewUnsafeFilestorePath(accessor).AddChild(
+		utils.SplitComponents(client_path)...)
+}
+
+func UnsafeDatastorePathFromClientPath(
+	base_path api.DSPathSpec,
+	accessor, client_path string) api.DSPathSpec {
+	device, subpath, err := GetDeviceAndSubpath(client_path)
+	if !utils.IsNil(base_path) {
+		if err == nil {
+			return base_path.AddUnsafeChild(
+				accessor, device).AddChild(subpath...)
+		}
+		return base_path.AddUnsafeChild(accessor).AddChild(
+			utils.SplitComponents(client_path)...)
+	}
+	return path_specs.NewUnsafeDatastorePath(accessor).AddChild(
 		utils.SplitComponents(client_path)...)
 }
 

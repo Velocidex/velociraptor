@@ -13,10 +13,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/file_store/tests"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -47,7 +47,7 @@ func TestDirectoryQueueManager(t *testing.T) {
 
 	file_store := memory.NewMemoryFileStore(config_obj)
 	manager := directory.NewDirectoryQueueManager(config_obj, file_store)
-	suite.Run(t, api.NewQueueManagerTestSuite(
+	suite.Run(t, tests.NewQueueManagerTestSuite(
 		config_obj, manager, file_store))
 }
 

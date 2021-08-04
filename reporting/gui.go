@@ -269,7 +269,8 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 		return ""
 
 	case string:
-		timeline_path_manager := self.path_manager.Notebook().Timeline(t)
+		timeline_path_manager := self.path_manager.Notebook().
+			SuperTimeline(t)
 		parameters := "{}"
 		reader, err := timelines.NewSuperTimelineReader(self.config_obj, timeline_path_manager, nil)
 		if err == nil {
@@ -371,7 +372,6 @@ func (self *GuiTemplateEngine) Execute(report *artifacts_proto.Report) (string, 
 
 	// Sanitize the HTML.
 	result := bm_policy.Sanitize(output_string)
-	utils.Debug(result)
 	return result, nil
 }
 

@@ -39,7 +39,7 @@ type TimedResultSetWriterImpl struct {
 
 	// Recalculate the writer based on the log_path to support
 	// correct file rotation.
-	log_path      api.PathSpec
+	log_path      api.FSPathSpec
 	last_log_base string
 	writer        *timelines.TimelineWriter
 

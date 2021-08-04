@@ -62,7 +62,7 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 
 	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
 	super, err := timelines.NewSuperTimelineWriter(
-		config_obj, notebook_path_manager.Timeline(arg.Timeline))
+		config_obj, notebook_path_manager.SuperTimeline(arg.Timeline))
 	if err != nil {
 		scope.Log("timeline_add: %v", err)
 		return vfilter.Null{}

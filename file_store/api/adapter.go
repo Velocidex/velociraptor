@@ -6,7 +6,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -14,16 +13,21 @@ import (
 type FileInfoAdapter struct {
 	os.FileInfo
 
-	full_path PathSpec
+	full_path FSPathSpec
 	_data     interface{}
 }
 
-func NewFileInfoAdapter(fd os.FileInfo, full_path PathSpec, data interface{}) *FileInfoAdapter {
+func NewFileInfoAdapter(fd os.FileInfo,
+	full_path FSPathSpec, data interface{}) *FileInfoAdapter {
 	return &FileInfoAdapter{
 		FileInfo:  fd,
 		full_path: full_path,
 		_data:     data,
 	}
+}
+
+func (self FileInfoAdapter) PathSpec() FSPathSpec {
+	return self.full_path
 }
 
 func (self FileInfoAdapter) Data() interface{} {
@@ -67,13 +71,17 @@ func (self FileInfoAdapter) GetLink() (string, error) {
 type FileAdapter struct {
 	*os.File
 
-	FullPath PathSpec
+	PathSpec_ FSPathSpec
 }
 
-func (self *FileAdapter) Stat() (glob.FileInfo, error) {
+func (self *FileAdapter) PathSpec() FSPathSpec {
+	return self.PathSpec_
+}
+
+func (self *FileAdapter) Stat() (FileInfo, error) {
 	stat, err := self.File.Stat()
 	if err != nil {
 		return nil, err
 	}
-	return NewFileInfoAdapter(stat, self.FullPath, nil), nil
+	return NewFileInfoAdapter(stat, self.PathSpec_, nil), nil
 }

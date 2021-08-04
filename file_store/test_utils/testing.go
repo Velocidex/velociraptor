@@ -33,7 +33,7 @@ func GetMemoryDataStore(
 }
 
 func FileReadAll(t *testing.T, config_obj *config_proto.Config,
-	vfs_path api.PathSpec) string {
+	vfs_path api.FSPathSpec) string {
 	file_store_factory := file_store.GetFileStore(config_obj)
 	fd, err := file_store_factory.ReadFile(vfs_path)
 	require.NoError(t, err)
@@ -47,7 +47,7 @@ func FileReadAll(t *testing.T, config_obj *config_proto.Config,
 }
 
 func FileReadRows(t *testing.T, config_obj *config_proto.Config,
-	vfs_path api.PathSpec) []*ordereddict.Dict {
+	vfs_path api.FSPathSpec) []*ordereddict.Dict {
 
 	data := FileReadAll(t, config_obj, vfs_path)
 	res, err := utils.ParseJsonToDicts([]byte(data))

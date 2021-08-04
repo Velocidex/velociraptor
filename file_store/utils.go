@@ -8,7 +8,7 @@ import (
 )
 
 func PushRows(config_obj *config_proto.Config,
-	path api.PathSpec,
+	path api.FSPathSpec,
 	rows []*ordereddict.Dict) error {
 
 	file_store_factory := GetFileStore(config_obj)

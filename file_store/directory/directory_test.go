@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/tests"
 )
 
 func TestDirectoryFileStore(t *testing.T) {
@@ -22,5 +22,5 @@ func TestDirectoryFileStore(t *testing.T) {
 	config_obj.Datastore.Location = dir + "/"
 
 	file_store := NewDirectoryFileStore(config_obj)
-	suite.Run(t, api.NewFileStoreTestSuite(config_obj, file_store))
+	suite.Run(t, tests.NewFileStoreTestSuite(config_obj, file_store))
 }

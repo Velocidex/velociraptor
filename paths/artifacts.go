@@ -7,7 +7,7 @@ import (
 )
 
 // Convert an artifact name to a path component to store its definition.
-func GetArtifactDefintionPath(name string) api.PathSpec {
+func GetArtifactDefintionPath(name string) api.FSPathSpec {
 	return ARTIFACT_DEFINITION_PREFIX.
 		AddUnsafeChild(strings.Split(name, ".")...)
 }

@@ -10,17 +10,17 @@ import (
 // path incorporates the filename on the client so it is not safe to
 // directly use in the file store.
 type UploadFile struct {
-	path api.PathSpec
+	path api.FSPathSpec
 }
 
 // Where the uploaded file is stored in the filestore.
-func (self UploadFile) Path() api.PathSpec {
+func (self UploadFile) Path() api.FSPathSpec {
 	return self.path
 }
 
 // Where to write the index path - if the uploaded file is a sparse
 // file, an index file will be written with the ranges.
-func (self UploadFile) IndexPath() api.PathSpec {
+func (self UploadFile) IndexPath() api.FSPathSpec {
 	return self.path.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX)
 }
 
@@ -30,12 +30,12 @@ type FlowPathManager struct {
 	flow_id   string
 }
 
-func (self FlowPathManager) Path() api.PathSpec {
+func (self FlowPathManager) Path() api.DSPathSpec {
 	return CLIENTS_ROOT.AddChild(self.client_id,
 		"collections", self.flow_id)
 }
 
-func (self FlowPathManager) ContainerPath() api.PathSpec {
+func (self FlowPathManager) ContainerPath() api.DSPathSpec {
 	return CLIENTS_ROOT.AddChild(self.client_id, "collections")
 }
 
@@ -47,22 +47,22 @@ func NewFlowPathManager(client_id, flow_id string) *FlowPathManager {
 }
 
 // Gets the flow's log file.
-func (self FlowPathManager) Log() api.PathSpec {
+func (self FlowPathManager) Log() api.FSPathSpec {
 	return self.Path().AddChild("logs").
+		AsFilestorePath().
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
-func (self FlowPathManager) Task() api.PathSpec {
+func (self FlowPathManager) Task() api.DSPathSpec {
 	return self.Path().AddChild("task").
 		SetType(api.PATH_TYPE_DATASTORE_PROTO)
 }
 
-func (self FlowPathManager) UploadMetadata() api.PathSpec {
-	return self.Path().AddChild("uploads").SetType(
-		api.PATH_TYPE_FILESTORE_JSON)
+func (self FlowPathManager) UploadMetadata() api.FSPathSpec {
+	return self.Path().AddChild("uploads").AsFilestorePath()
 }
 
-func (self FlowPathManager) GetDownloadsFile(hostname string) api.PathSpec {
+func (self FlowPathManager) GetDownloadsFile(hostname string) api.FSPathSpec {
 	// If there is no hostname we drop the leading -
 	if hostname != "" {
 		hostname += "-"
@@ -71,7 +71,7 @@ func (self FlowPathManager) GetDownloadsFile(hostname string) api.PathSpec {
 		fmt.Sprintf("%v%v-%v", hostname, self.client_id, self.flow_id))
 }
 
-func (self FlowPathManager) GetReportsFile(hostname string) api.PathSpec {
+func (self FlowPathManager) GetReportsFile(hostname string) api.FSPathSpec {
 	// If there is no hostname we drop the leading -
 	if hostname != "" {
 		hostname += "-"
@@ -91,11 +91,11 @@ func (self FlowPathManager) GetUploadsFile(
 	}
 
 	base_path := CLIENTS_ROOT.AddUnsafeChild(self.client_id, "collections",
-		self.flow_id, "uploads").
+		self.flow_id, "uploads").AsFilestorePath().
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
 
 	return &UploadFile{
-		path: UnsafeDatastorePathFromClientPath(
+		path: UnsafeFilestorePathFromClientPath(
 			base_path, accessor, client_path),
 	}
 }

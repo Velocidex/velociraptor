@@ -177,7 +177,7 @@ func availableDownloadFiles(config_obj *config_proto.Config,
 }
 
 func getAvailableDownloadFiles(config_obj *config_proto.Config,
-	download_path api.PathSpec) (*api_proto.AvailableDownloads, error) {
+	download_path api.FSPathSpec) (*api_proto.AvailableDownloads, error) {
 	result := &api_proto.AvailableDownloads{}
 
 	file_store_factory := file_store.GetFileStore(config_obj)

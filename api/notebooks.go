@@ -1032,8 +1032,8 @@ func getAvailableTimelines(
 
 	result := []string{}
 	db, err := datastore.GetDB(config_obj)
-	files, err := db.ListChildren(config_obj, path_manager.TimelineDir(),
-		0, 1000)
+	files, err := db.ListChildren(
+		config_obj, path_manager.SuperTimelineDir(), 0, 1000)
 	if err != nil {
 		return nil
 	}
@@ -1045,7 +1045,7 @@ func getAvailableTimelines(
 }
 
 func getAvailableDownloadFiles(config_obj *config_proto.Config,
-	download_path api.PathSpec) (*api_proto.AvailableDownloads, error) {
+	download_path api.FSPathSpec) (*api_proto.AvailableDownloads, error) {
 	result := &api_proto.AvailableDownloads{}
 
 	file_store_factory := file_store.GetFileStore(config_obj)

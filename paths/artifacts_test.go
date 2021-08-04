@@ -7,8 +7,8 @@ import (
 
 func (self *PathManagerTestSuite) TestArtifactPathManager() {
 	assert.Equal(self.T(),
-		"/ds/artifact_definitions/Windows/Some/Artifact.yaml",
-		self.getDatastorePath(
+		"/fs/artifact_definitions/Windows/Some/Artifact.yaml",
+		self.getFilestorePath(
 			paths.GetArtifactDefintionPath("Windows.Some.Artifact")))
 
 }

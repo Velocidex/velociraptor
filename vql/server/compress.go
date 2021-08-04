@@ -66,7 +66,7 @@ func (self *Compress) Call(ctx context.Context,
 	file_store_factory := file_store.GetFileStore(config_obj)
 	for _, path := range arg.VFSPath {
 		func() {
-			pathspec := paths.UnsafeDatastorePathFromClientPath(
+			pathspec := paths.UnsafeFilestorePathFromClientPath(
 				nil, "fs", path)
 			fd, err := file_store_factory.ReadFile(pathspec)
 			if err != nil {

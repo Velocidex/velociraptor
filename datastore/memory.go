@@ -19,6 +19,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -104,7 +105,7 @@ func isSubPath(parent_components []string, child_components []string) bool {
 
 func (self *TestDataStore) Walk(
 	config_obj *config_proto.Config,
-	root api.PathSpec, walkFn WalkFunc) error {
+	root api.DSPathSpec, walkFn WalkFunc) error {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -116,7 +117,7 @@ func (self *TestDataStore) Walk(
 			continue
 		}
 
-		walkFn(api.NewSafeDatastorePath(components...))
+		walkFn(path_specs.NewSafeDatastorePath(components...))
 	}
 
 	return nil
@@ -173,7 +174,7 @@ func (self *TestDataStore) Trace(name, filename string) {
 
 func (self *TestDataStore) GetSubject(
 	config_obj *config_proto.Config,
-	urn api.PathSpec,
+	urn api.DSPathSpec,
 	message proto.Message) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -196,7 +197,7 @@ func (self *TestDataStore) GetSubject(
 
 func (self *TestDataStore) SetSubject(
 	config_obj *config_proto.Config,
-	urn api.PathSpec,
+	urn api.DSPathSpec,
 	message proto.Message) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -212,7 +213,7 @@ func (self *TestDataStore) SetSubject(
 
 func (self *TestDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
-	urn api.PathSpec) error {
+	urn api.DSPathSpec) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -227,9 +228,9 @@ func (self *TestDataStore) DeleteSubject(
 // Lists all the children of a URN.
 func (self *TestDataStore) ListChildren(
 	config_obj *config_proto.Config,
-	urn api.PathSpec,
+	urn api.DSPathSpec,
 	offset uint64, length uint64) (
-	[]api.PathSpec, error) {
+	[]api.DSPathSpec, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -258,7 +259,7 @@ func (self *TestDataStore) ListChildren(
 
 	sort.Strings(names)
 
-	result := make([]api.PathSpec, 0, len(names))
+	result := make([]api.DSPathSpec, 0, len(names))
 	for _, name := range names {
 		result = append(result, urn.AddChild(name))
 	}
@@ -274,7 +275,7 @@ func (self *TestDataStore) ListChildren(
 // keywords will return the entity urn.
 func (self *TestDataStore) SetIndex(
 	config_obj *config_proto.Config,
-	index_urn api.PathSpec,
+	index_urn api.DSPathSpec,
 	entity string,
 	keywords []string) error {
 	self.mu.Lock()
@@ -294,7 +295,7 @@ func (self *TestDataStore) SetIndex(
 
 func (self *TestDataStore) UnsetIndex(
 	config_obj *config_proto.Config,
-	index_urn api.PathSpec,
+	index_urn api.DSPathSpec,
 	entity string,
 	keywords []string) error {
 	self.mu.Lock()
@@ -313,7 +314,7 @@ func (self *TestDataStore) UnsetIndex(
 
 func (self *TestDataStore) CheckIndex(
 	config_obj *config_proto.Config,
-	index_urn api.PathSpec,
+	index_urn api.DSPathSpec,
 	entity string,
 	keywords []string) error {
 	self.mu.Lock()
@@ -333,7 +334,7 @@ func (self *TestDataStore) CheckIndex(
 }
 
 // List all direct children
-func (self *TestDataStore) listChildren(urn api.PathSpec) []string {
+func (self *TestDataStore) listChildren(urn api.DSPathSpec) []string {
 	seen := make(map[string]bool)
 	result := []string{}
 
@@ -357,7 +358,7 @@ func (self *TestDataStore) listChildren(urn api.PathSpec) []string {
 
 func (self *TestDataStore) SearchClients(
 	config_obj *config_proto.Config,
-	index_urn api.PathSpec,
+	index_urn api.DSPathSpec,
 	query string, query_type string,
 	offset uint64, limit uint64, sort_direction SortingSense) []string {
 	seen := make(map[string]bool)

@@ -56,6 +56,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -146,7 +147,7 @@ func (self *FileBaseDataStore) QueueMessageForClient(
 */
 func (self *FileBaseDataStore) GetSubject(
 	config_obj *config_proto.Config,
-	urn api.PathSpec,
+	urn api.DSPathSpec,
 	message proto.Message) error {
 
 	serialized_content, err := readContentFromFile(
@@ -188,32 +189,43 @@ func (self *FileBaseDataStore) GetSubject(
 }
 
 func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,
-	root api.PathSpec, walkFn WalkFunc) error {
+	root api.DSPathSpec, walkFn WalkFunc) error {
+	all_children, err := listChildren(config_obj, root)
+	if err != nil {
+		return err
+	}
 
-	return filepath.Walk(root.AsDatastoreDirectory(config_obj),
-		func(path string, info os.FileInfo, err error) error {
+	for _, child := range all_children {
+		name := child.Name()
+		// Recurse into directories
+		if child.IsDir() {
+			err := self.Walk(
+				config_obj,
+				root.AddChild(utils.UnsanitizeComponent(
+					name)), walkFn)
 			if err != nil {
-				return err
+				// Do not quit the walk early.
 			}
 
-			if info.IsDir() {
-				return nil
+		} else {
+			// If the filename ends with .db then it is
+			// part of the data store.
+			if strings.HasSuffix(name, ".db") {
+				name = strings.TrimSuffix(name, ".db")
+				name = strings.TrimSuffix(name, ".json")
+				walkFn(root.AddChild(
+					utils.UnsanitizeComponent(name)))
+				continue
 			}
+		}
+	}
 
-			// We are only interested in filenames that end with .db
-			basename := info.Name()
-			if !strings.HasSuffix(basename, ".db") {
-				return nil
-			}
-
-			urn := FilenameToURN(config_obj, path)
-			return walkFn(urn)
-		})
+	return nil
 }
 
 func (self *FileBaseDataStore) SetSubject(
 	config_obj *config_proto.Config,
-	urn api.PathSpec,
+	urn api.DSPathSpec,
 	message proto.Message) error {
 
 	// Encode as JSON
@@ -234,7 +246,7 @@ func (self *FileBaseDataStore) SetSubject(
 
 func (self *FileBaseDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
-	urn api.PathSpec) error {
+	urn api.DSPathSpec) error {
 
 	err := os.Remove(urn.AsDatastoreFilename(config_obj))
 
@@ -249,14 +261,14 @@ func (self *FileBaseDataStore) DeleteSubject(
 }
 
 func listChildNames(config_obj *config_proto.Config,
-	urn api.PathSpec) (
+	urn api.DSPathSpec) (
 	[]string, error) {
 	return utils.ReadDirNames(
 		urn.AsDatastoreDirectory(config_obj))
 }
 
 func listChildren(config_obj *config_proto.Config,
-	urn api.PathSpec) ([]os.FileInfo, error) {
+	urn api.DSPathSpec) ([]os.FileInfo, error) {
 	children, err := utils.ReadDirUnsorted(
 		urn.AsDatastoreDirectory(config_obj))
 	if err != nil {
@@ -271,9 +283,9 @@ func listChildren(config_obj *config_proto.Config,
 // Lists all the children of a URN.
 func (self *FileBaseDataStore) ListChildren(
 	config_obj *config_proto.Config,
-	urn api.PathSpec,
+	urn api.DSPathSpec,
 	offset uint64, length uint64) (
-	[]api.PathSpec, error) {
+	[]api.DSPathSpec, error) {
 	all_children, err := listChildren(config_obj, urn)
 	if err != nil {
 		return nil, err
@@ -295,7 +307,7 @@ func (self *FileBaseDataStore) ListChildren(
 	})
 
 	// Slice the result according to the required offset and count.
-	result := make([]api.PathSpec, 0, len(children))
+	result := make([]api.DSPathSpec, 0, len(children))
 	for i := offset; i < offset+length; i++ {
 		if i >= uint64(len(children)) {
 			break
@@ -305,7 +317,6 @@ func (self *FileBaseDataStore) ListChildren(
 		name := children[i].Name()
 		name = strings.TrimSuffix(name, ".db")
 		name = strings.TrimSuffix(name, ".json")
-		utils.Debug(name)
 		result = append(result,
 			urn.AddChild(utils.UnsanitizeComponent(name)))
 	}
@@ -317,7 +328,7 @@ func (self *FileBaseDataStore) ListChildren(
 // keywords will return the entity urn.
 func (self *FileBaseDataStore) SetIndex(
 	config_obj *config_proto.Config,
-	index_urn api.PathSpec,
+	index_urn api.DSPathSpec,
 	entity string,
 	keywords []string) error {
 
@@ -338,7 +349,7 @@ func (self *FileBaseDataStore) SetIndex(
 
 func (self *FileBaseDataStore) UnsetIndex(
 	config_obj *config_proto.Config,
-	index_urn api.PathSpec,
+	index_urn api.DSPathSpec,
 	entity string,
 	keywords []string) error {
 
@@ -357,7 +368,7 @@ func (self *FileBaseDataStore) UnsetIndex(
 
 func (self *FileBaseDataStore) CheckIndex(
 	config_obj *config_proto.Config,
-	index_urn api.PathSpec,
+	index_urn api.DSPathSpec,
 	entity string,
 	keywords []string) error {
 
@@ -379,7 +390,7 @@ func (self *FileBaseDataStore) CheckIndex(
 
 func (self *FileBaseDataStore) SearchClients(
 	config_obj *config_proto.Config,
-	index_urn api.PathSpec,
+	index_urn api.DSPathSpec,
 	query string, query_type string,
 	offset uint64, limit uint64, sort_direction SortingSense) []string {
 
@@ -501,7 +512,7 @@ func (self *FileBaseDataStore) SearchClients(
 func (self *FileBaseDataStore) Close() {}
 
 func writeContentToFile(config_obj *config_proto.Config,
-	urn api.PathSpec, data []byte) error {
+	urn api.DSPathSpec, data []byte) error {
 
 	filename := urn.AsDatastoreFilename(config_obj)
 	file, err := os.OpenFile(
@@ -538,7 +549,7 @@ func writeContentToFile(config_obj *config_proto.Config,
 }
 
 func readContentFromFile(
-	config_obj *config_proto.Config, urn api.PathSpec,
+	config_obj *config_proto.Config, urn api.DSPathSpec,
 	must_exist bool) ([]byte, error) {
 	file, err := os.Open(urn.AsDatastoreFilename(config_obj))
 	if err == nil {
@@ -556,23 +567,30 @@ func readContentFromFile(
 	return nil, errors.WithStack(err)
 }
 
-// Convert a file name from the data store to a SafeDatastorePath
+// Convert a file name from the data store to a DSPathSpec
 func FilenameToURN(config_obj *config_proto.Config,
-	filename string) api.PathSpec {
+	filename string) api.DSPathSpec {
 	if runtime.GOOS == "windows" {
 		filename = strings.TrimPrefix(filename, WINDOWS_LFN_PREFIX)
 	}
 
-	filename = strings.TrimPrefix(
-		filename, config_obj.Datastore.FilestoreDirectory)
+	filename = strings.TrimPrefix(filename, config_obj.Datastore.Location)
 
 	components := []string{}
+	// DS filenames are always clean so a strings split is fine.
 	for _, component := range strings.Split(
 		filename, string(os.PathSeparator)) {
-		component = strings.TrimSuffix(component, ".db")
 		if component != "" {
 			components = append(components, component)
 		}
 	}
-	return api.NewSafeDatastorePath(components...)
+
+	// Strip any extension from the last component.
+	if len(components) > 0 {
+		last := len(components) - 1
+		components[last] = strings.TrimPrefix(
+			strings.TrimSuffix(components[last], ".db"), ".json")
+	}
+
+	return path_specs.NewSafeDatastorePath(components...)
 }

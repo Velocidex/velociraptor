@@ -64,7 +64,7 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 
 		// Indiscriminately delete all the client's datastore files.
 		err = db.Walk(config_obj, client_path_manager.Path(),
-			func(filename api.PathSpec) error {
+			func(filename api.DSPathSpec) error {
 				select {
 				case <-ctx.Done():
 					return nil
@@ -100,8 +100,9 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 		}
 
 		// Delete the filestore files.
-		err = file_store_factory.Walk(client_path_manager.Path(),
-			func(filename api.PathSpec, info os.FileInfo) error {
+		err = file_store_factory.Walk(
+			client_path_manager.Path().AsFilestorePath(),
+			func(filename api.FSPathSpec, info os.FileInfo) error {
 				select {
 				case <-ctx.Done():
 					return nil

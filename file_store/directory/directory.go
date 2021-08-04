@@ -37,6 +37,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/accessors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -93,15 +94,15 @@ func NewDirectoryFileStore(config_obj *config_proto.Config) *DirectoryFileStore 
 	return &DirectoryFileStore{config_obj}
 }
 
-func (self *DirectoryFileStore) Move(src, dest api.PathSpec) error {
+func (self *DirectoryFileStore) Move(src, dest api.FSPathSpec) error {
 	src_path := src.AsFilestoreFilename(self.config_obj)
 	dest_path := dest.AsFilestoreFilename(self.config_obj)
 
 	return os.Rename(src_path, dest_path)
 }
 
-func (self *DirectoryFileStore) ListDirectory(dirname api.PathSpec) (
-	[]os.FileInfo, error) {
+func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
+	[]api.FileInfo, error) {
 
 	listCounter.Inc()
 
@@ -111,14 +112,23 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.PathSpec) (
 		return nil, err
 	}
 
-	var result []os.FileInfo
+	var result []api.FileInfo
 	for _, fileinfo := range files {
 		// Each file from the filesystem will be potentially
 		// encoded.
-		result = append(result, api.NewFileStoreFileInfo(
+		name := fileinfo.Name()
+
+		// Eliminate the data store files
+		if strings.HasSuffix(name, ".db") {
+			continue
+		}
+
+		name_type, name := api.GetFileStorePathTypeFromExtension(name)
+		result = append(result, accessors.NewFileStoreFileInfo(
 			self.config_obj,
 			dirname.AddChild(
-				utils.UnsanitizeComponent(fileinfo.Name())),
+				utils.UnsanitizeComponent(name)).
+				SetType(name_type),
 			fileinfo))
 	}
 
@@ -126,7 +136,7 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.PathSpec) (
 }
 
 func (self *DirectoryFileStore) ReadFile(
-	filename api.PathSpec) (api.FileReader, error) {
+	filename api.FSPathSpec) (api.FileReader, error) {
 	file_path := filename.AsFilestoreFilename(self.config_obj)
 	openCounter.Inc()
 	file, err := os.Open(file_path)
@@ -134,26 +144,26 @@ func (self *DirectoryFileStore) ReadFile(
 		return nil, errors.WithStack(err)
 	}
 	return &api.FileAdapter{
-		File:     file,
-		FullPath: filename,
+		File:      file,
+		PathSpec_: filename,
 	}, nil
 }
 
 func (self *DirectoryFileStore) StatFile(
-	filename api.PathSpec) (os.FileInfo, error) {
+	filename api.FSPathSpec) (api.FileInfo, error) {
 	file_path := filename.AsFilestoreFilename(self.config_obj)
 	file, err := os.Stat(file_path)
 	if err != nil {
 		return nil, err
 	}
 
-	return &api.FileStoreFileInfo{
+	return &accessors.FileStoreFileInfo{
 		FileInfo: file,
 	}, nil
 }
 
 func (self *DirectoryFileStore) WriteFile(
-	filename api.PathSpec) (api.FileWriter, error) {
+	filename api.FSPathSpec) (api.FileWriter, error) {
 	file_path := filename.AsFilestoreFilename(self.config_obj)
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {
@@ -174,12 +184,12 @@ func (self *DirectoryFileStore) WriteFile(
 	return &DirectoryFileWriter{file}, nil
 }
 
-func (self *DirectoryFileStore) Delete(filename api.PathSpec) error {
+func (self *DirectoryFileStore) Delete(filename api.FSPathSpec) error {
 	file_path := filename.AsFilestoreFilename(self.config_obj)
 	return os.Remove(file_path)
 }
 
-func (self *DirectoryFileStore) Walk(root api.PathSpec, walkFn api.WalkFunc) error {
+func (self *DirectoryFileStore) Walk(root api.FSPathSpec, walkFn api.WalkFunc) error {
 	// Walking a non-existant directory just returns no results.
 	children, err := self.ListDirectory(root)
 	if err != nil {

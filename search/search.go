@@ -12,7 +12,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func splitIntoOperatorAndTerms(term string) (string, string) {
@@ -45,8 +44,6 @@ func searchRecents(
 	if err != nil {
 		return nil, err
 	}
-
-	utils.Debug(children)
 
 	// Sort the children in reverse order - most recent first.
 	total_count := 0

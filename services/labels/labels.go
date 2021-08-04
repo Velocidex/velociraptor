@@ -299,7 +299,7 @@ func (self *Labeler) RemoveClientLabel(
 }
 
 type indexManipulator func(config_obj *config_proto.Config,
-	index_urn api.PathSpec, entity string, keywords []string) error
+	index_urn api.DSPathSpec, entity string, keywords []string) error
 
 func (self *Labeler) adjustIndex(
 	config_obj *config_proto.Config,

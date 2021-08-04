@@ -28,7 +28,7 @@ func (self *PathManagerTestSuite) SetupTest() {
 // Use the path spec to store to the data store and figure out exactly
 // where the file will be created. Return this path - this includes
 // any file store escaping or path transformations.
-func (self *PathManagerTestSuite) getDatastorePath(path_spec api.PathSpec) string {
+func (self *PathManagerTestSuite) getDatastorePath(path_spec api.DSPathSpec) string {
 	ds := datastore.NewTestDataStore()
 	data := &crypto_proto.VeloMessage{}
 	ds.SetSubject(self.config_obj, path_spec, data)
@@ -53,7 +53,7 @@ func (self *PathManagerTestSuite) getDatastorePath(path_spec api.PathSpec) strin
 	return results[0]
 }
 
-func (self *PathManagerTestSuite) getFilestorePath(path_spec api.PathSpec) string {
+func (self *PathManagerTestSuite) getFilestorePath(path_spec api.FSPathSpec) string {
 	fs := memory.NewMemoryFileStore(self.config_obj)
 	fs.Clear()
 
@@ -79,7 +79,8 @@ func (self *PathManagerTestSuite) getFilestorePath(path_spec api.PathSpec) strin
 		// Strip the filestore extension for the child name
 		// for comparison.
 		child_name = strings.TrimSuffix(child_name,
-			api.GetExtensionForFilestore(path_spec, path_spec.Type()))
+			api.GetExtensionForFilestore(
+				path_spec, path_spec.Type()))
 
 		assert.Equal(self.T(), child_name, path_spec.Base())
 	}

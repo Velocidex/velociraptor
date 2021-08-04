@@ -22,10 +22,10 @@ func ObfuscateName(
 }
 
 type InventoryPathManager struct {
-	root api.PathSpec
+	root api.FSPathSpec
 }
 
-func (self InventoryPathManager) Path() api.PathSpec {
+func (self InventoryPathManager) Path() api.FSPathSpec {
 	return self.root
 }
 

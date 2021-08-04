@@ -37,7 +37,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/glob"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -143,7 +142,7 @@ type ResultSetFactory struct{}
 
 func (self ResultSetFactory) NewResultSetWriter(
 	file_store_factory api.FileStore,
-	log_path api.PathSpec,
+	log_path api.FSPathSpec,
 	opts *json.EncOpts,
 	truncate bool) (result_sets.ResultSetWriter, error) {
 
@@ -189,7 +188,7 @@ type ResultSetReaderImpl struct {
 	total_rows int64
 	fd         api.FileReader
 	idx_fd     api.FileReader
-	log_path   api.PathSpec
+	log_path   api.FSPathSpec
 }
 
 func (self *ResultSetReaderImpl) TotalRows() int64 {
@@ -318,23 +317,31 @@ func (self *ResultSetReaderImpl) Close() {
 
 type NullReader struct {
 	*bytes.Reader
+	pathSpec_ api.FSPathSpec
+}
+
+func (self NullReader) PathSpec() api.FSPathSpec {
+	return self.pathSpec_
 }
 
 func (self NullReader) Close() error {
 	return nil
 }
 
-func (self NullReader) Stat() (glob.FileInfo, error) {
+func (self NullReader) Stat() (api.FileInfo, error) {
 	return nil, errors.New("Not found")
 }
 
 func (self ResultSetFactory) NewResultSetReader(
 	file_store_factory api.FileStore,
-	log_path api.PathSpec) (result_sets.ResultSetReader, error) {
+	log_path api.FSPathSpec) (result_sets.ResultSetReader, error) {
 
 	fd, err := file_store_factory.ReadFile(log_path)
 	if err == io.EOF || errors.Is(err, os.ErrNotExist) {
-		fd = &NullReader{bytes.NewReader([]byte{})}
+		fd = &NullReader{
+			Reader:    bytes.NewReader([]byte{}),
+			pathSpec_: log_path,
+		}
 	} else if err != nil {
 		return nil, err
 	}
@@ -351,7 +358,10 @@ func (self ResultSetFactory) NewResultSetReader(
 	}
 
 	if os.IsNotExist(err) {
-		idx_fd = &NullReader{bytes.NewReader([]byte{})}
+		idx_fd = &NullReader{
+			Reader:    bytes.NewReader([]byte{}),
+			pathSpec_: log_path,
+		}
 	}
 
 	return &ResultSetReaderImpl{

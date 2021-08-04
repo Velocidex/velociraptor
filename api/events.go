@@ -276,13 +276,13 @@ func listAvailableEventArtifacts(
 
 func getAllArtifacts(
 	config_obj *config_proto.Config,
-	log_path api.PathSpec,
+	log_path api.FSPathSpec,
 	seen map[string]*api_proto.AvailableEvent) error {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
 	return file_store_factory.Walk(log_path,
-		func(full_path api.PathSpec, info os.FileInfo) error {
+		func(full_path api.FSPathSpec, info os.FileInfo) error {
 			if !info.IsDir() && info.Size() > 0 {
 				relative_path := full_path.Components()[len(log_path.Components()):]
 				artifact_name := strings.Join(relative_path, ".")

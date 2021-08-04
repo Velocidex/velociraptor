@@ -1,4 +1,4 @@
-package api
+package accessors
 
 // This implements a filesystem accessor which can be used to access
 // the generic filestore. This allows us to run globs on the file
@@ -11,6 +11,8 @@ import (
 	"regexp"
 	"time"
 
+	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 
@@ -21,12 +23,12 @@ import (
 )
 
 type FileStoreFileSystemAccessor struct {
-	file_store FileStore
+	file_store api.FileStore
 	config_obj *config_proto.Config
 }
 
 func NewFileStoreFileSystemAccessor(
-	config_obj *config_proto.Config, fs FileStore) *FileStoreFileSystemAccessor {
+	config_obj *config_proto.Config, fs api.FileStore) *FileStoreFileSystemAccessor {
 	return &FileStoreFileSystemAccessor{
 		file_store: fs,
 		config_obj: config_obj,
@@ -44,7 +46,7 @@ func (self FileStoreFileSystemAccessor) New(
 func (self FileStoreFileSystemAccessor) Lstat(
 	filename string) (glob.FileInfo, error) {
 
-	fullpath := NewUnsafeDatastorePath(
+	fullpath := path_specs.NewUnsafeFilestorePath(
 		utils.SplitComponents(filename)...).AsSafe()
 	lstat, err := self.file_store.StatFile(fullpath)
 	if err != nil {
@@ -59,7 +61,8 @@ func (self FileStoreFileSystemAccessor) Lstat(
 }
 
 func (self FileStoreFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
-	fullpath := NewUnsafeDatastorePath(utils.SplitComponents(path)...).AsSafe()
+	fullpath := path_specs.NewUnsafeFilestorePath(
+		utils.SplitComponents(path)...).AsSafe()
 	files, err := self.file_store.ListDirectory(fullpath)
 	if err != nil {
 		return nil, err
@@ -79,7 +82,8 @@ func (self FileStoreFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, e
 }
 
 func (self FileStoreFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
-	components := NewSafeDatastorePath(utils.SplitComponents(path)...)
+	components := path_specs.NewSafeFilestorePath(
+		utils.SplitComponents(path)...)
 	file, err := self.file_store.ReadFile(components)
 	if err != nil {
 		return nil, err
@@ -104,7 +108,7 @@ func (self *FileStoreFileSystemAccessor) GetRoot(path string) (string, string, e
 
 func NewFileStoreFileInfo(
 	config_obj *config_proto.Config,
-	fullpath PathSpec,
+	fullpath api.FSPathSpec,
 	info os.FileInfo) *FileStoreFileInfo {
 	return &FileStoreFileInfo{
 		config_obj: config_obj,
@@ -115,7 +119,7 @@ func NewFileStoreFileInfo(
 
 type FileStoreFileInfo struct {
 	os.FileInfo
-	fullpath   PathSpec
+	fullpath   api.FSPathSpec
 	config_obj *config_proto.Config
 	Data_      interface{}
 }
@@ -134,6 +138,10 @@ func (self *FileStoreFileInfo) Data() interface{} {
 
 func (self *FileStoreFileInfo) FullPath() string {
 	return self.fullpath.AsClientPath()
+}
+
+func (self *FileStoreFileInfo) PathSpec() api.FSPathSpec {
+	return self.fullpath
 }
 
 func (self *FileStoreFileInfo) Btime() time.Time {
@@ -196,7 +204,7 @@ func (self *FileStoreFileInfo) UnmarshalJSON(data []byte) error {
 }
 
 type FileReaderAdapter struct {
-	FileReader
+	api.FileReader
 }
 
 func (self *FileReaderAdapter) Stat() (os.FileInfo, error) {

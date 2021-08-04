@@ -132,7 +132,7 @@ func (self *contextManager) Save() error {
 type serverLogger struct {
 	collection_context *contextManager
 	config_obj         *config_proto.Config
-	path               api.PathSpec
+	path               api.FSPathSpec
 }
 
 // Send each log message individually to avoid any buffering - logs

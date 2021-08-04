@@ -14,86 +14,84 @@ type ArtifactLogPathManager struct {
 	*ArtifactPathManager
 }
 
-func (self *ArtifactLogPathManager) Path() api.PathSpec {
+func (self *ArtifactLogPathManager) Path() api.FSPathSpec {
 	result, _ := self.GetPathForWriting()
 	return result
 }
 
 // Returns the root path for all day logs. Walking this path will
 // produce all logs for this client and all artifacts.
-func (self *ArtifactLogPathManager) GetRootPath() api.PathSpec {
+func (self *ArtifactLogPathManager) GetRootPath() api.FSPathSpec {
 	switch self.mode {
 	case paths.MODE_CLIENT:
-		return api.NewUnsafeDatastorePath(
-			"clients", self.client_id,
-			"collections", self.flow_id, "logs")
+		return paths.CLIENTS_ROOT.AddChild(
+			self.client_id, "collections",
+			self.flow_id, "logs").AsFilestorePath()
 
 	case paths.MODE_SERVER:
-		return api.NewUnsafeDatastorePath(
-			"clients", "server",
-			"collections", self.flow_id, "logs")
+		return paths.CLIENTS_ROOT.AddChild(
+			"server", "collections",
+			self.flow_id, "logs").AsFilestorePath()
 
 	case paths.MODE_SERVER_EVENT:
-		return api.NewUnsafeDatastorePath("server_artifact_logs")
+		return paths.SERVER_MONITORING_LOGS_ROOT
 
 	case paths.MODE_CLIENT_EVENT:
 		if self.client_id == "" {
 			// Should never normally happen.
-			return api.NewUnsafeDatastorePath("clients", "nobody")
+			return paths.CLIENTS_ROOT.AddChild("nobody").
+				AsFilestorePath()
 
 		} else {
-			return api.NewUnsafeDatastorePath(
-				"clients", self.client_id, "monitoring_logs")
+			return paths.CLIENTS_ROOT.AddChild(
+				self.client_id, "monitoring_logs").
+				AsFilestorePath()
 		}
 	default:
 		return nil
 	}
 }
 
-func (self *ArtifactLogPathManager) GetPathForWriting() (api.PathSpec, error) {
+func (self *ArtifactLogPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 	switch self.mode {
 	case paths.MODE_CLIENT:
-		return api.NewUnsafeDatastorePath(
-			"clients", self.client_id,
-			"collections", self.flow_id, "logs"), nil
+		return paths.CLIENTS_ROOT.AddChild(
+			self.client_id, "collections",
+			self.flow_id, "logs").AsFilestorePath(), nil
 
 	case paths.MODE_SERVER:
-		return api.NewUnsafeDatastorePath(
-			"clients", "server",
-			"collections", self.flow_id, "logs"), nil
+		return paths.CLIENTS_ROOT.AddChild(
+			"server", "collections",
+			self.flow_id, "logs").AsFilestorePath(), nil
 
 	case paths.MODE_SERVER_EVENT:
 		if self.source != "" {
-			return api.NewUnsafeDatastorePath(
-				"server_artifact_logs",
+			return paths.SERVER_MONITORING_LOGS_ROOT.AddChild(
 				self.base_artifact_name, self.source,
 				self.getDayName()), nil
 		} else {
-			return api.NewUnsafeDatastorePath(
-				"server_artifact_logs",
+			return paths.SERVER_MONITORING_LOGS_ROOT.AddChild(
 				self.base_artifact_name, self.getDayName()), nil
 		}
 
 	case paths.MODE_CLIENT_EVENT:
 		if self.client_id == "" {
 			// Should never normally happen.
-			return api.NewUnsafeDatastorePath(
-				"clients", "nobody",
-				self.base_artifact_name, self.getDayName()), nil
+			return paths.CLIENTS_ROOT.AddChild(
+				"nobody", self.base_artifact_name,
+				self.getDayName()).AsFilestorePath(), nil
 
 		} else {
 			if self.source != "" {
-				return api.NewUnsafeDatastorePath(
-					"clients", self.client_id,
-					"monitoring_logs",
+				return paths.CLIENTS_ROOT.AddChild(
+					self.client_id, "monitoring_logs",
 					self.base_artifact_name, self.source,
-					self.getDayName()), nil
+					self.getDayName()).AsFilestorePath(), nil
 			} else {
-				return api.NewUnsafeDatastorePath(
-					"clients", self.client_id,
-					"monitoring_logs",
+				return paths.CLIENTS_ROOT.AddChild(
+					self.client_id, "monitoring_logs",
 					self.base_artifact_name,
-					self.getDayName()), nil
+					self.getDayName()).AsFilestorePath(), nil
 			}
 		}
 

@@ -1,4 +1,4 @@
-package api
+package accessors
 
 import (
 	"net/http"
@@ -6,14 +6,16 @@ import (
 	"strings"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type HTTPFileAdapter struct {
-	FileReader
-	file_store FileStore
+	api.FileReader
+	file_store api.FileStore
 
-	filename SafeDatastorePath
+	filename api.FSPathSpec
 }
 
 func (self *HTTPFileAdapter) Stat() (os.FileInfo, error) {
@@ -22,13 +24,22 @@ func (self *HTTPFileAdapter) Stat() (os.FileInfo, error) {
 }
 
 func (self HTTPFileAdapter) Readdir(count int) ([]os.FileInfo, error) {
-	return self.file_store.ListDirectory(self.filename)
+	children, err := self.file_store.ListDirectory(self.filename)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]os.FileInfo, 0, len(children))
+	for _, i := range children {
+		result = append(result, i)
+	}
+
+	return result, nil
 }
 
 // Implementation of http.FileSystem
 type FileSystem struct {
 	config_obj *config_proto.Config
-	file_store FileStore
+	file_store api.FileStore
 
 	// The required prefix of the filesystem.
 	prefix string
@@ -39,7 +50,8 @@ func (self FileSystem) Open(path string) (http.File, error) {
 		return nil, os.ErrNotExist
 	}
 
-	components := NewSafeDatastorePath(utils.SplitComponents(path)...)
+	components := path_specs.NewSafeFilestorePath(
+		utils.SplitComponents(path)...)
 	fd, err := self.file_store.ReadFile(components)
 	if err != nil {
 		return nil, os.ErrNotExist
@@ -54,7 +66,7 @@ func (self FileSystem) Open(path string) (http.File, error) {
 
 func NewFileSystem(
 	config_obj *config_proto.Config,
-	file_store FileStore,
+	file_store api.FileStore,
 	prefix string) *FileSystem {
 	return &FileSystem{
 		config_obj: config_obj,

@@ -136,7 +136,7 @@ func CreateFlowReport(
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
 	flow_id, client_id, template string,
-	wait bool) (api.PathSpec, error) {
+	wait bool) (api.FSPathSpec, error) {
 
 	hostname := services.GetHostname(client_id)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)

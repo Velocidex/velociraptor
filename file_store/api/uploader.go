@@ -39,7 +39,7 @@ type Uploader interface {
 // An uploader into the filestore.
 type FileStoreUploader struct {
 	file_store FileStore
-	root_path  PathSpec
+	root_path  FSPathSpec
 }
 
 func (self *FileStoreUploader) Upload(
@@ -113,6 +113,6 @@ loop:
 func NewFileStoreUploader(
 	config_obj *config_proto.Config,
 	fs FileStore,
-	root_path PathSpec) *FileStoreUploader {
+	root_path FSPathSpec) *FileStoreUploader {
 	return &FileStoreUploader{fs, root_path}
 }

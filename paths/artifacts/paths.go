@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
-	"strings"
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -80,29 +79,32 @@ func (self *ArtifactPathManager) GetQueueName() string {
 	return self.full_artifact_name
 }
 
-func (self *ArtifactPathManager) Path() api.PathSpec {
+func (self *ArtifactPathManager) Path() api.FSPathSpec {
 	result, _ := self.GetPathForWriting()
 	return result
 }
 
 // Returns the root path for all day logs. Walking this path will
 // produce all logs for this client and all artifacts.
-func (self *ArtifactPathManager) GetRootPath() api.PathSpec {
+func (self *ArtifactPathManager) GetRootPath() api.FSPathSpec {
 	switch self.mode {
 	case paths.MODE_CLIENT, paths.MODE_SERVER:
-		return api.NewUnsafeDatastorePath("clients")
+		return paths.CLIENTS_ROOT.AddChild(
+			self.client_id, "collections",
+			self.flow_id).AsFilestorePath()
 
 	case paths.MODE_SERVER_EVENT:
-		return api.NewUnsafeDatastorePath("server_artifacts")
+		return paths.SERVER_MONITORING_ROOT
 
 	case paths.MODE_CLIENT_EVENT:
 		if self.client_id == "" {
 			// Should never normally happen.
-			return api.NewUnsafeDatastorePath("clients", "nobody")
-
+			return paths.CLIENTS_ROOT.AddChild("nobody").
+				AsFilestorePath()
 		} else {
-			return api.NewUnsafeDatastorePath(
-				"clients", self.client_id, "monitoring")
+			return paths.CLIENTS_ROOT.AddChild(
+				self.client_id, "monitoring").
+				AsFilestorePath()
 		}
 	default:
 		return nil
@@ -122,62 +124,61 @@ func (self *ArtifactPathManager) getDayName() string {
 // This function represents a map between the type of artifact and its
 // location on disk. It is used by all code that needs to read or
 // write artifact results.
-func (self *ArtifactPathManager) GetPathForWriting() (api.PathSpec, error) {
+func (self *ArtifactPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 	switch self.mode {
 	case paths.MODE_CLIENT:
 		if self.source != "" {
-			return api.NewUnsafeDatastorePath(
-				"clients", self.client_id, "artifacts",
+			return paths.CLIENTS_ROOT.AddChild(
+				self.client_id, "artifacts",
 				self.base_artifact_name, self.flow_id,
-				self.source), nil
+				self.source).AsFilestorePath(), nil
 		} else {
-			return api.NewUnsafeDatastorePath(
-				"clients", self.client_id, "artifacts",
-				self.base_artifact_name, self.flow_id), nil
+			return paths.CLIENTS_ROOT.AddChild(
+				self.client_id, "artifacts",
+				self.base_artifact_name,
+				self.flow_id).AsFilestorePath(), nil
 		}
 
 	case paths.MODE_SERVER:
 		if self.source != "" {
-			return api.NewUnsafeDatastorePath(
-				"clients", "server", "artifacts",
-				self.base_artifact_name,
-				self.flow_id, self.source), nil
+			return paths.CLIENTS_ROOT.AddChild(
+				"server", "artifacts", self.base_artifact_name,
+				self.flow_id, self.source).AsFilestorePath(), nil
 		} else {
-			return api.NewUnsafeDatastorePath(
-				"clients", "server", "artifacts",
-				self.base_artifact_name, self.flow_id), nil
+			return paths.CLIENTS_ROOT.AddChild(
+				"server", "artifacts", self.base_artifact_name,
+				self.flow_id).AsFilestorePath(), nil
 		}
 
 	case paths.MODE_SERVER_EVENT:
 		if self.source != "" {
-			return api.NewUnsafeDatastorePath(
-				"server_artifacts",
+			return paths.SERVER_MONITORING_ROOT.AddChild(
 				self.base_artifact_name, self.source,
 				self.getDayName()), nil
 		} else {
-			return api.NewUnsafeDatastorePath(
-				"server_artifacts",
-				self.base_artifact_name, self.getDayName()), nil
+			return paths.SERVER_MONITORING_ROOT.AddChild(
+				self.base_artifact_name,
+				self.getDayName()), nil
 		}
 
 	case paths.MODE_CLIENT_EVENT:
 		if self.client_id == "" {
 			// Should never normally happen.
-			return api.NewUnsafeDatastorePath(
-				"clients", "nobody",
-				self.base_artifact_name, self.getDayName()), nil
+			return paths.CLIENTS_ROOT.AddChild(
+				"nobody", self.base_artifact_name,
+				self.getDayName()).AsFilestorePath(), nil
 
 		} else {
 			if self.source != "" {
-				return api.NewUnsafeDatastorePath(
-					"clients", self.client_id, "monitoring",
+				return paths.CLIENTS_ROOT.AddChild(
+					self.client_id, "monitoring",
 					self.base_artifact_name, self.source,
-					self.getDayName()), nil
+					self.getDayName()).AsFilestorePath(), nil
 			} else {
-				return api.NewUnsafeDatastorePath(
-					"clients", self.client_id, "monitoring",
+				return paths.CLIENTS_ROOT.AddChild(
+					self.client_id, "monitoring",
 					self.base_artifact_name,
-					self.getDayName()), nil
+					self.getDayName()).AsFilestorePath(), nil
 			}
 		}
 
@@ -192,7 +193,7 @@ func (self *ArtifactPathManager) GetPathForWriting() (api.PathSpec, error) {
 
 // Get the result set files for event artifacts by listing the
 // directory that contains all the daily files.
-func (self *ArtifactPathManager) get_event_files(path_for_writing api.PathSpec) (
+func (self *ArtifactPathManager) get_event_files(path_for_writing api.FSPathSpec) (
 	[]*api.ResultSetFileProperties, error) {
 
 	switch self.mode {
@@ -214,16 +215,14 @@ func (self *ArtifactPathManager) get_event_files(path_for_writing api.PathSpec) 
 	}
 	result := make([]*api.ResultSetFileProperties, 0, len(children))
 	for _, child := range children {
-		child_name := child.Name()
-		full_path := dir_name.AddChild(child_name)
-		if !strings.HasSuffix(child_name, ".json") {
+		// We only want to see the JSON files
+		if child.PathSpec().Type() != api.PATH_TYPE_FILESTORE_JSON {
 			continue
 		}
 
-		timestamp := DayNameToTimestamp(child_name)
+		timestamp := DayNameToTimestamp(child.Name())
 		result = append(result, &api.ResultSetFileProperties{
-			Path: full_path.Dir().AddChild(
-				strings.TrimSuffix(child_name, ".json")),
+			Path:      child.PathSpec(),
 			StartTime: timestamp,
 			EndTime:   timestamp.Add(24 * time.Hour),
 			Size:      child.Size(),

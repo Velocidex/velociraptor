@@ -498,7 +498,7 @@ func (self *ApiServer) VFSGetBuffer(
 	}
 
 	path_spec := paths.NewClientPathManager(
-		in.ClientId).VFSPath(in.Components)
+		in.ClientId).FSItem(in.Components)
 	result, err := vfsGetBuffer(
 		self.config, in.ClientId, path_spec, in.Offset, in.Length)
 

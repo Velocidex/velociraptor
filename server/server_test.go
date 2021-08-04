@@ -300,7 +300,7 @@ func (self *ServerTestSuite) TestForeman() {
 }
 
 func (self *ServerTestSuite) RequiredFilestoreContains(
-	filename file_store_api.PathSpec, regex string) {
+	filename file_store_api.FSPathSpec, regex string) {
 
 	file_store_factory := test_utils.GetMemoryFileStore(self.T(), self.config_obj)
 

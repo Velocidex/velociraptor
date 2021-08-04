@@ -224,6 +224,7 @@ func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectory() {
 
 func (self *VFSServiceTestSuite) TestVFSDownload() {
 	flow_path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id)
+	client_path_manager := paths.NewClientPathManager(self.client_id)
 
 	self.EmulateCollection(
 		"System.VFS.ListDirectory", []*ordereddict.Dict{
@@ -255,7 +256,8 @@ func (self *VFSServiceTestSuite) TestVFSDownload() {
 	resp := &proto.VFSDownloadInfo{}
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		db.GetSubject(self.config_obj,
-			flow_path_manager.GetVFSDownloadInfoPath("file", "/a/b/B"),
+			client_path_manager.VFSDownloadInfoFromClientPath(
+				"file", "/a/b/B"),
 			resp)
 		return resp.Size == 10
 	})

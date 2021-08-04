@@ -12,21 +12,21 @@ import (
 
 type NotebookPathManager struct {
 	notebook_id string
-	root        api.PathSpec
+	root        api.DSPathSpec
 	Clock       utils.Clock
 }
 
-func NotebookDir() api.PathSpec {
+func NotebookDir() api.DSPathSpec {
 	return NOTEBOOK_ROOT
 }
 
 // Where to store attachments? In the notebook path.
-func (self *NotebookPathManager) Attachment(name string) api.PathSpec {
+func (self *NotebookPathManager) Attachment(name string) api.FSPathSpec {
 	return self.root.AddUnsafeChild(self.notebook_id, "files", name).
-		SetType(api.PATH_TYPE_FILESTORE_ANY)
+		AsFilestorePath().SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
-func (self *NotebookPathManager) Path() api.PathSpec {
+func (self *NotebookPathManager) Path() api.DSPathSpec {
 	return self.root.AddChild(self.notebook_id)
 }
 
@@ -38,42 +38,49 @@ func (self *NotebookPathManager) Cell(cell_id string) *NotebookCellPathManager {
 	}
 }
 
-func (self *NotebookPathManager) CellDirectory(cell_id string) api.PathSpec {
-	return self.root.AddChild(self.notebook_id, cell_id)
+func (self *NotebookPathManager) CellDirectory(cell_id string) api.FSPathSpec {
+	return self.root.AddChild(self.notebook_id, cell_id).AsFilestorePath()
 }
 
-func (self *NotebookPathManager) Directory() api.PathSpec {
+func (self *NotebookPathManager) Directory() api.FSPathSpec {
+	return self.root.AddChild(self.notebook_id).AsFilestorePath()
+}
+
+func (self *NotebookPathManager) DSDirectory() api.DSPathSpec {
 	return self.root.AddChild(self.notebook_id)
 }
 
-func (self *NotebookPathManager) HtmlExport() api.PathSpec {
+func (self *NotebookPathManager) HtmlExport() api.FSPathSpec {
 	return DOWNLOADS_ROOT.AddChild("notebooks", self.notebook_id,
 		fmt.Sprintf("%s-%s", self.notebook_id,
 			self.Clock.Now().Format("20060102150405Z"))).
 		SetType(api.PATH_TYPE_FILESTORE_DOWNLOAD_REPORT)
 }
 
-func (self *NotebookPathManager) ZipExport() api.PathSpec {
+func (self *NotebookPathManager) ZipExport() api.FSPathSpec {
 	return DOWNLOADS_ROOT.AddChild("notebooks", self.notebook_id,
 		fmt.Sprintf("%s-%s", self.notebook_id,
 			self.Clock.Now().Format("20060102150405Z"))).
 		SetType(api.PATH_TYPE_FILESTORE_DOWNLOAD_ZIP)
 }
 
-func (self *NotebookPathManager) TimelineDir() api.PathSpec {
-	return self.Directory().AddChild("timelines")
+// Where we store all our super timelines
+func (self *NotebookPathManager) SuperTimelineDir() api.DSPathSpec {
+	return self.root.AddChild(self.notebook_id, "timelines")
 }
 
-func (self *NotebookPathManager) Timeline(name string) *SuperTimelinePathManager {
+// Create a new supertimeline in this notebook.
+func (self *NotebookPathManager) SuperTimeline(
+	name string) *SuperTimelinePathManager {
 	return &SuperTimelinePathManager{
-		Root: self.TimelineDir(),
+		Root: self.SuperTimelineDir(),
 		Name: name,
 	}
 }
 
 var notebook_regex = regexp.MustCompile(`N\.(F\.[^-]+?)-(C\..+|server)`)
 
-func rootPathFromNotebookID(notebook_id string) api.PathSpec {
+func rootPathFromNotebookID(notebook_id string) api.DSPathSpec {
 	if strings.HasPrefix(notebook_id, "N.H.") {
 		// For hunt notebooks store them in the hunt itself.
 		return HUNTS_ROOT.AddChild(
@@ -102,10 +109,10 @@ func NewNotebookPathManager(notebook_id string) *NotebookPathManager {
 type NotebookCellPathManager struct {
 	notebook_id, cell_id string
 	table_id             int64
-	root                 api.PathSpec
+	root                 api.DSPathSpec
 }
 
-func (self *NotebookCellPathManager) Path() api.PathSpec {
+func (self *NotebookCellPathManager) Path() api.DSPathSpec {
 	return self.root.AddChild(self.notebook_id, self.cell_id)
 }
 
@@ -116,8 +123,9 @@ func (self *NotebookCellPathManager) Notebook() *NotebookPathManager {
 	}
 }
 
-func (self *NotebookCellPathManager) Item(name string) api.PathSpec {
-	return self.root.AddChild(self.notebook_id, self.cell_id, name)
+func (self *NotebookCellPathManager) Item(name string) api.FSPathSpec {
+	return self.root.AddChild(self.notebook_id, self.cell_id, name).
+		AsFilestorePath()
 }
 
 func (self *NotebookCellPathManager) NewQueryStorage() *NotebookCellQuery {
@@ -126,7 +134,7 @@ func (self *NotebookCellPathManager) NewQueryStorage() *NotebookCellQuery {
 		notebook_id: self.notebook_id,
 		cell_id:     self.cell_id,
 		id:          self.table_id,
-		root:        self.root,
+		root:        self.root.AsFilestorePath(),
 	}
 }
 
@@ -135,20 +143,19 @@ func (self *NotebookCellPathManager) QueryStorage(id int64) *NotebookCellQuery {
 		notebook_id: self.notebook_id,
 		cell_id:     self.cell_id,
 		id:          id,
-		root:        self.root,
+		root:        self.root.AsFilestorePath(),
 	}
 }
 
 type NotebookCellQuery struct {
 	notebook_id, cell_id string
 	id                   int64
-	root                 api.PathSpec
+	root                 api.FSPathSpec
 }
 
-func (self *NotebookCellQuery) Path() api.PathSpec {
+func (self *NotebookCellQuery) Path() api.FSPathSpec {
 	return self.root.AddChild(self.notebook_id, self.cell_id,
-		fmt.Sprintf("query_%d", self.id)).
-		SetType(api.PATH_TYPE_FILESTORE_JSON)
+		fmt.Sprintf("query_%d", self.id))
 }
 
 func (self *NotebookCellQuery) Params() *ordereddict.Dict {
@@ -159,14 +166,14 @@ func (self *NotebookCellQuery) Params() *ordereddict.Dict {
 
 type NotebookExportPathManager struct {
 	notebook_id string
-	root        api.PathSpec
+	root        api.DSPathSpec
 }
 
-func (self *NotebookExportPathManager) CellMetadata(cell_id string) api.PathSpec {
+func (self *NotebookExportPathManager) CellMetadata(cell_id string) api.DSPathSpec {
 	return self.root.AddChild(self.notebook_id, cell_id)
 }
 
-func (self *NotebookExportPathManager) CellItem(cell_id, name string) api.PathSpec {
+func (self *NotebookExportPathManager) CellItem(cell_id, name string) api.DSPathSpec {
 	return self.root.AddChild(self.notebook_id, cell_id, name)
 }
 

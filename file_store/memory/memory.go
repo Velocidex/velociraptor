@@ -13,7 +13,6 @@ import (
 	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
@@ -39,16 +38,18 @@ func NewMemoryFileStore(config_obj *config_proto.Config) *MemoryFileStore {
 
 type MemoryReader struct {
 	*bytes.Reader
-	filename string
+	pathSpec_ api.FSPathSpec
+	filename  string
 }
 
 func (self MemoryReader) Close() error {
 	return nil
 }
 
-func (self MemoryReader) Stat() (glob.FileInfo, error) {
+func (self MemoryReader) Stat() (api.FileInfo, error) {
 	return vtesting.MockFileInfo{
 		Name_:     self.filename,
+		PathSpec_: self.pathSpec_,
 		FullPath_: self.filename,
 		Size_:     int64(self.Reader.Len()),
 	}, nil
@@ -109,7 +110,7 @@ func (self *MemoryFileStore) Debug() {
 	}
 }
 
-func (self *MemoryFileStore) ReadFile(path api.PathSpec) (api.FileReader, error) {
+func (self *MemoryFileStore) ReadFile(path api.FSPathSpec) (api.FileReader, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -119,15 +120,16 @@ func (self *MemoryFileStore) ReadFile(path api.PathSpec) (api.FileReader, error)
 	if pres {
 		data := data_any.([]byte)
 		return MemoryReader{
-			Reader:   bytes.NewReader(data),
-			filename: filename,
+			Reader:    bytes.NewReader(data),
+			pathSpec_: path,
+			filename:  filename,
 		}, nil
 	}
 
 	return nil, errors.New("Not found")
 }
 
-func (self *MemoryFileStore) WriteFile(path api.PathSpec) (api.FileWriter, error) {
+func (self *MemoryFileStore) WriteFile(path api.FSPathSpec) (api.FileWriter, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -146,7 +148,7 @@ func (self *MemoryFileStore) WriteFile(path api.PathSpec) (api.FileWriter, error
 	}, nil
 }
 
-func (self *MemoryFileStore) StatFile(path api.PathSpec) (os.FileInfo, error) {
+func (self *MemoryFileStore) StatFile(path api.FSPathSpec) (api.FileInfo, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -164,7 +166,7 @@ func (self *MemoryFileStore) StatFile(path api.PathSpec) (os.FileInfo, error) {
 	}, nil
 }
 
-func (self *MemoryFileStore) Move(src, dest api.PathSpec) error {
+func (self *MemoryFileStore) Move(src, dest api.FSPathSpec) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -180,13 +182,13 @@ func (self *MemoryFileStore) Move(src, dest api.PathSpec) error {
 	return nil
 }
 
-func (self *MemoryFileStore) ListDirectory(path api.PathSpec) ([]os.FileInfo, error) {
+func (self *MemoryFileStore) ListDirectory(path api.FSPathSpec) ([]api.FileInfo, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	dirname := path.AsFilestoreDirectory(self.config_obj)
 	self.Trace("ListDirectory", dirname)
-	result := []os.FileInfo{}
+	result := []api.FileInfo{}
 	files := []string{}
 	for _, filename := range self.Data.Keys() {
 		v_any, _ := self.Data.Get(filename)
@@ -198,14 +200,22 @@ func (self *MemoryFileStore) ListDirectory(path api.PathSpec) ([]os.FileInfo, er
 			components := strings.Split(k, "/")
 			if len(components) > 0 &&
 				!utils.InString(files, components[0]) {
-				base := utils.UnsanitizeComponent(components[0])
+				name := utils.UnsanitizeComponent(components[0])
+
+				if strings.HasSuffix(name, ".db") {
+					continue
+				}
+
+				name_type, name := api.GetFileStorePathTypeFromExtension(name)
+				child := path.AddChild(name).SetType(name_type)
 
 				result = append(result, &vtesting.MockFileInfo{
-					Name_:     base,
-					FullPath_: path.AddChild(base).AsClientPath(),
+					Name_:     name,
+					PathSpec_: child,
+					FullPath_: child.AsClientPath(),
 					Size_:     int64(len(v)),
 				})
-				files = append(files, base)
+				files = append(files, name)
 			}
 		}
 	}
@@ -213,7 +223,7 @@ func (self *MemoryFileStore) ListDirectory(path api.PathSpec) ([]os.FileInfo, er
 }
 
 func (self *MemoryFileStore) Walk(
-	root api.PathSpec, walkFn api.WalkFunc) error {
+	root api.FSPathSpec, walkFn api.WalkFunc) error {
 	children, err := self.ListDirectory(root)
 	if err != nil {
 		return err
@@ -236,7 +246,7 @@ func (self *MemoryFileStore) Walk(
 	return nil
 }
 
-func (self *MemoryFileStore) Delete(path api.PathSpec) error {
+func (self *MemoryFileStore) Delete(path api.FSPathSpec) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 

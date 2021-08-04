@@ -60,9 +60,11 @@ func (self TimelinePlugin) Call(
 			return
 		}
 
-		super_path_manager := paths.NewNotebookPathManager(notebook_id)
+		super_path_manager := paths.NewNotebookPathManager(notebook_id).
+			SuperTimeline(arg.Timeline)
+
 		reader, err := timelines.NewSuperTimelineReader(config_obj,
-			super_path_manager.Timeline(arg.Timeline), arg.SkipComponents)
+			super_path_manager, arg.SkipComponents)
 		if err != nil {
 			scope.Log("timeline: %v", err)
 			return

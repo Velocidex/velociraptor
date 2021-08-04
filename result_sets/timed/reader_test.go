@@ -69,8 +69,6 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 		result.Set(testcase.name, rows)
 	}
 
-	utils.Debug(result)
-
 	goldie.Assert(self.T(), "TestTimedResultSetMigration",
 		json.MustMarshalIndent(result))
 }

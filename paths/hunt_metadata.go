@@ -5,17 +5,17 @@ import (
 )
 
 type HuntPathManager struct {
-	path    api.PathSpec
+	path    api.DSPathSpec
 	hunt_id string
 }
 
-func (self HuntPathManager) Path() api.PathSpec {
+func (self HuntPathManager) Path() api.DSPathSpec {
 	return self.path
 }
 
 // Get the file store path for placing the download zip for the flow.
 func (self HuntPathManager) GetHuntDownloadsFile(only_combined bool,
-	base_filename string) api.PathSpec {
+	base_filename string) api.FSPathSpec {
 	suffix := ""
 	if only_combined {
 		suffix = "-summary"
@@ -34,22 +34,21 @@ func NewHuntPathManager(hunt_id string) *HuntPathManager {
 	}
 }
 
-func (self HuntPathManager) Stats() api.PathSpec {
+func (self HuntPathManager) Stats() api.DSPathSpec {
 	return self.path.AddChild("stats")
 }
 
-func (self HuntPathManager) HuntDirectory() api.PathSpec {
+func (self HuntPathManager) HuntDirectory() api.DSPathSpec {
 	return HUNTS_ROOT
 }
 
 // Get result set for storing participating clients.
-func (self HuntPathManager) Clients() api.PathSpec {
-	return HUNTS_ROOT.AddChild(self.hunt_id).SetType(
-		api.PATH_TYPE_FILESTORE_JSON)
+func (self HuntPathManager) Clients() api.FSPathSpec {
+	return HUNTS_ROOT.AddChild(self.hunt_id).AsFilestorePath()
 }
 
 // Where to store client errors.
-func (self HuntPathManager) ClientErrors() api.PathSpec {
-	return HUNTS_ROOT.AddChild(self.hunt_id + "_errors").SetType(
-		api.PATH_TYPE_FILESTORE_JSON)
+func (self HuntPathManager) ClientErrors() api.FSPathSpec {
+	return HUNTS_ROOT.AddChild(self.hunt_id + "_errors").
+		AsFilestorePath()
 }

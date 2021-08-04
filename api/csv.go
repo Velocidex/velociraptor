@@ -104,7 +104,7 @@ func getTable(
 
 func getPathSpec(
 	config_obj *config_proto.Config,
-	in *api_proto.GetTableRequest) (api.PathSpec, error) {
+	in *api_proto.GetTableRequest) (api.FSPathSpec, error) {
 
 	if in.FlowId != "" && in.Artifact != "" {
 		path_manager, err := artifacts.NewArtifactPathManager(
@@ -229,8 +229,10 @@ func getTimeline(
 		return nil, errors.New("NotebookId must be specified")
 	}
 
-	path_manager := paths.NewNotebookPathManager(in.NotebookId).Timeline(in.Timeline)
-	reader, err := timelines.NewSuperTimelineReader(config_obj, path_manager, in.SkipComponents)
+	path_manager := paths.NewNotebookPathManager(in.NotebookId).
+		SuperTimeline(in.Timeline)
+	reader, err := timelines.NewSuperTimelineReader(
+		config_obj, path_manager, in.SkipComponents)
 	if err != nil {
 		return nil, err
 	}
