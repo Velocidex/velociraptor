@@ -13,8 +13,7 @@ func GetExtensionForDatastore(path_spec DSPathSpec, t PathType) string {
 		return ".json.db"
 
 	}
-	panic("filestore path used for datastore for " +
-		path_spec.AsClientPath())
+	return ".db"
 }
 
 func GetExtensionForFilestore(path_spec FSPathSpec, t PathType) string {
@@ -57,7 +56,7 @@ func GetExtensionForFilestore(path_spec FSPathSpec, t PathType) string {
 		return ""
 	}
 
-	panic("Unsupported path type for " + path_spec.AsClientPath())
+	return ""
 }
 
 func GetFileStorePathTypeFromExtension(name string) (PathType, string) {

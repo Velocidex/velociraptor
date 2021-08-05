@@ -86,7 +86,8 @@ func (self DSPathSpec) SetType(ext api.PathType) api.DSPathSpec {
 }
 
 func (self DSPathSpec) AsClientPath() string {
-	return utils.JoinComponents(self.components, "/")
+	return utils.JoinComponents(self.components, "/") +
+		api.GetExtensionForDatastore(self, self.path_type)
 }
 
 func (self DSPathSpec) AsDatastoreDirectory(

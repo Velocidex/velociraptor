@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"sync"
 	"time"
 
@@ -20,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -164,7 +164,7 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return result
+	return result.AsClientPath()
 }
 
 func (self CreateHuntDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -286,8 +286,8 @@ func downloadFlowToZip(
 		defer reader.Close()
 
 		// Clean the name so it makes a reasonable zip member.
-		file_member_name := utils.CleanComponentsForZip(
-			upload_name.Components(), client_id, hostname)
+		file_member_name := path_specs.CleanPathForZip(
+			upload_name, client_id, hostname)
 		f, err := zip_writer.Create(file_member_name)
 		if err != nil {
 			return err
@@ -333,9 +333,9 @@ func downloadFlowToZip(
 		}
 
 		// Also make a csv file why not?
-		zip_file_name := utils.CleanComponentsForZip(rs_path.
-			SetType(api.PATH_TYPE_FILESTORE_CSV).
-			Components(), client_id, hostname)
+		zip_file_name := path_specs.CleanPathForZip(rs_path.
+			SetType(api.PATH_TYPE_FILESTORE_CSV),
+			client_id, hostname)
 		f, err := zip_writer.Create(zip_file_name)
 		if err != nil {
 			continue
@@ -416,6 +416,7 @@ func createHuntDownloadFile(
 	if err != nil {
 		return nil, err
 	}
+	// fd is closed in a goroutine below.
 
 	err = fd.Truncate()
 	if err != nil {
@@ -523,7 +524,7 @@ func createHuntDownloadFile(
 			csv_tmpfile.Close()
 			json_tmpfile.Close()
 
-			copier := func(name string, output_name string) error {
+			copier := func(name string, output_name api.FSPathSpec) error {
 				reader, err := os.Open(name)
 				if err != nil {
 					return err
@@ -532,9 +533,8 @@ func createHuntDownloadFile(
 
 				// Clean the name so it makes a reasonable zip member.
 				f, err := zip_writer.Create(
-					utils.CleanComponentsForZip(
-						utils.SplitComponents(
-							output_name), "", ""))
+					path_specs.CleanPathForZip(output_name,
+						"", ""))
 				if err != nil {
 					return err
 				}
@@ -543,9 +543,15 @@ func createHuntDownloadFile(
 				return err
 			}
 
+			output_path := path_specs.NewSafeFilestorePath(
+				"All " + artifact).
+				SetType(api.PATH_TYPE_FILESTORE_CSV)
+			if source != "" {
+				output_path = output_path.AddChild(source)
+			}
+
 			if write_csv {
-				err = copier(csv_tmpfile.Name(), "All "+
-					path.Join(artifact, source)+".csv")
+				err = copier(csv_tmpfile.Name(), output_path)
 				if err != nil {
 					report_err(err)
 					continue
@@ -553,8 +559,9 @@ func createHuntDownloadFile(
 			}
 
 			if write_json {
-				err = copier(json_tmpfile.Name(), "All "+
-					path.Join(artifact, source)+".json")
+				output_path = output_path.
+					SetType(api.PATH_TYPE_FILESTORE_JSON)
+				err = copier(json_tmpfile.Name(), output_path)
 				if err != nil {
 					report_err(err)
 				}

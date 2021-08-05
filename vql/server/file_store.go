@@ -118,7 +118,7 @@ func (self *FileStore) Call(ctx context.Context,
 	result := []string{}
 	for _, path := range arg.VFSPath {
 		pathspec := paths.UnsafeFilestorePathFromClientPath(
-			nil, "fs", path)
+			nil, "", path)
 		result = append(result, pathspec.AsFilestoreFilename(config_obj))
 	}
 

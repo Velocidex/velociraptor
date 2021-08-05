@@ -75,6 +75,11 @@ func (self FSPathSpec) AsFilestoreDirectory(
 		config_obj.Datastore.FilestoreDirectory)
 }
 
+func (self FSPathSpec) AsClientPath() string {
+	return utils.JoinComponents(self.components, "/") +
+		api.GetExtensionForFilestore(self, self.path_type)
+}
+
 func NewUnsafeFilestorePath(path_components ...string) FSPathSpec {
 	result := FSPathSpec{DSPathSpec{
 		components: path_components,

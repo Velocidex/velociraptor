@@ -23,17 +23,28 @@ var (
 func UnsafeFilestorePathFromClientPath(
 	base_path api.FSPathSpec,
 	accessor, client_path string) api.FSPathSpec {
+	var result api.FSPathSpec
+
 	device, subpath, err := GetDeviceAndSubpath(client_path)
 	if !utils.IsNil(base_path) {
 		if err == nil {
-			return base_path.AddUnsafeChild(
+			result = base_path.AddUnsafeChild(
 				accessor, device).AddChild(subpath...)
+		} else {
+			result = base_path.AddUnsafeChild(accessor).AddChild(
+				utils.SplitComponents(client_path)...)
 		}
-		return base_path.AddUnsafeChild(accessor).AddChild(
+	} else if accessor != "" {
+		result = path_specs.NewUnsafeFilestorePath(accessor).AddChild(
+			utils.SplitComponents(client_path)...)
+	} else {
+		result = path_specs.NewUnsafeFilestorePath(
 			utils.SplitComponents(client_path)...)
 	}
-	return path_specs.NewUnsafeFilestorePath(accessor).AddChild(
-		utils.SplitComponents(client_path)...)
+
+	name_type, name := api.GetFileStorePathTypeFromExtension(result.Base())
+
+	return result.Dir().AddChild(name).SetType(name_type)
 }
 
 func UnsafeDatastorePathFromClientPath(

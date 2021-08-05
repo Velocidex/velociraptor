@@ -12,6 +12,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/paths"
 )
 
 type PathManagerTestSuite struct {
@@ -23,6 +25,24 @@ func (self *PathManagerTestSuite) SetupTest() {
 	self.config_obj = config.GetDefaultConfig()
 	self.config_obj.Datastore.Location = "/ds/"
 	self.config_obj.Datastore.FilestoreDirectory = "/fs/"
+}
+
+func (self *PathManagerTestSuite) TestAsClientPath() {
+	path_spec := path_specs.NewSafeFilestorePath("a", "b", "c").
+		SetType(api.PATH_TYPE_FILESTORE_JSON)
+
+	client_path := path_spec.AsClientPath()
+
+	// The client path needs to carry the extension
+	assert.True(self.T(), strings.HasSuffix(client_path, ".json"))
+
+	// Parse the path back into a path spec - this should restore
+	// the type from the extension.
+	new_path_spec := paths.UnsafeFilestorePathFromClientPath(
+		nil, "", client_path)
+
+	assert.Equal(self.T(), new_path_spec.Type(), path_spec.Type())
+	assert.Equal(self.T(), new_path_spec.Components(), path_spec.Components())
 }
 
 // Use the path spec to store to the data store and figure out exactly
