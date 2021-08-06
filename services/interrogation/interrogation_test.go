@@ -175,9 +175,10 @@ func (self *ServicesTestSuite) TestEnrollService() {
 	children, err := db.ListChildren(
 		self.config_obj, flow_path_manager.ContainerPath(), 0, 100)
 	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), children,
-		[]string{flow_path_manager.ContainerPath() +
-			"/" + client_info.LastInterrogateFlowId})
+
+	assert.Equal(self.T(), len(children), 1)
+	assert.Equal(self.T(), children[0].Base(),
+		client_info.LastInterrogateFlowId)
 }
 
 func TestInterrogationService(t *testing.T) {

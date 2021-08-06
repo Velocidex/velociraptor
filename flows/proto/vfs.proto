@@ -1,73 +1,26 @@
 syntax = "proto3";
 
 import "proto/semantic.proto";
-import "actions/proto/vql.proto";
 
 package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/flows/proto";
 
+// This is stored in the VFS datastores to indicate where the actual
+// download exist (usually in the flow filestore).
 message VFSDownloadInfo {
+    // Deprecated but leave it here so we can read older files
+    // downloaded within the filestore.
     string vfs_path = 1;
+
     uint64 size = 2;
     uint64 mtime = 3;
     bool sparse = 4;
     string MD5 = 5;
     string SHA256 = 6;
-}
 
-message VFSListResponse {
-  string Response = 1;
-  repeated string Columns = 2;
-  VQLRequest Query = 3;
-  uint64 timestamp = 4;
-  uint64 total_rows = 7;
-  repeated VQLTypeMap types = 8;
-
-  // The actual artifact that contains the data.
-  string client_id = 9;
-  string flow_id = 10;
-}
-
-message VFSStatDownloadRequest {
-    string client_id = 1;
-    string accessor = 4;
-    string path = 5;
-}
-
-message VFSListRequest {
-    string client_id = 1 [(sem_type) = {
-            description: "The client to list",
-            type: "RDFURN",
-            label: HIDDEN,
-        }];
-
-    string vfs_path = 2 [(sem_type) = {
-            description: "The VFS Path to list files in .",
-        }];
-
-    uint64 recursion_depth = 3 [(sem_type) = {
-            default: "0",
-            description: "If > 0 then recurse this many directories.",
-        }];
-}
-
-message VFSListRequestState {
-    string vfs_path = 1;
-    string accessor = 3;
-    VQLResponse current = 2;
-}
-
-message VFSDownloadFileRequest {
-    string client_id = 1 [(sem_type) = {
-            description: "The client id",
-            type: "RDFURN",
-            label: HIDDEN,
-        }];
-
-    repeated string vfs_path = 2 [(sem_type) = {
-            description: "The VFS Path to the file to download.",
-        }];
+    // The VFS path is now expressed as a list of components
+    repeated string components = 7;
 }
 
 message ClientMonitoringState {

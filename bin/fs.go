@@ -30,6 +30,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/glob"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
@@ -252,10 +253,11 @@ func doCp(path, accessor string, dump_dir string) {
 		}
 
 	case "fs":
+		output_path_spec := path_specs.NewSafeFilestorePath(output_path)
 		builder.Uploader = api.NewFileStoreUploader(
 			config_obj,
 			file_store.GetFileStore(config_obj),
-			output_path)
+			output_path_spec)
 
 	default:
 		kingpin.Fatalf("Can not write to accessor %v\n", output_accessor)

@@ -100,7 +100,7 @@ func (self *TestSuite) EnrolClient() {
 	err = db.SetSubject(self.config_obj, client_path_manager.Path(), client_info_obj)
 	assert.NoError(self.T(), err)
 
-	err = db.SetSubject(self.config_obj, client_path_manager.Key().Path(), pem)
+	err = db.SetSubject(self.config_obj, client_path_manager.Key(), pem)
 	assert.NoError(self.T(), err)
 }
 

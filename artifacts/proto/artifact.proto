@@ -6,6 +6,12 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/artifacts/proto";
 
+message ArtifactEnv {
+    string key = 1;
+    string value = 2;
+}
+
+
 message ColumnType {
     string name = 1;
     string type = 2;
@@ -36,6 +42,7 @@ message ArtifactParameter {
 message NotebookSourceCell {
     string template = 1;
     string type = 2;
+    repeated ArtifactEnv env = 3;
 }
 
 

@@ -26,8 +26,8 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/timelines"
@@ -55,7 +55,7 @@ type GuiTemplateEngine struct {
 	tmpl         *template.Template
 	ctx          context.Context
 	log_writer   *logWriter
-	path_manager *NotebookCellPathManager
+	path_manager *paths.NotebookCellPathManager
 	Data         map[string]*actions_proto.VQLResponse
 	Progress     utils.ProgressReporter
 	Start        time.Time
@@ -100,7 +100,7 @@ func (self *GuiTemplateEngine) Expand(values ...interface{}) interface{} {
 	default:
 		return t
 
-	case []*NotebookCellQuery:
+	case []*paths.NotebookCellQuery:
 		if len(t) == 0 { // No rows returned.
 			self.Scope.Log("Query produced no rows.")
 			return results
@@ -109,7 +109,7 @@ func (self *GuiTemplateEngine) Expand(values ...interface{}) interface{} {
 		for _, item := range t {
 			file_store_factory := file_store.GetFileStore(self.config_obj)
 			reader, err := result_sets.NewResultSetReader(
-				file_store_factory, item)
+				file_store_factory, item.Path())
 			if err == nil {
 				for row := range reader.Rows(self.ctx) {
 					results = append(results, row)
@@ -165,7 +165,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 	default:
 		return t
 
-	case []*NotebookCellQuery:
+	case []*paths.NotebookCellQuery:
 		if len(t) == 0 { // No rows returned.
 			self.Scope.Log("Query produced no rows.")
 			return ""
@@ -216,7 +216,7 @@ func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
 	default:
 		return ""
 
-	case []*NotebookCellQuery:
+	case []*paths.NotebookCellQuery:
 		result := ""
 		for _, item := range t {
 			params := item.Params()
@@ -269,7 +269,8 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 		return ""
 
 	case string:
-		timeline_path_manager := self.path_manager.Notebook().Timeline(t)
+		timeline_path_manager := self.path_manager.Notebook().
+			SuperTimeline(t)
 		parameters := "{}"
 		reader, err := timelines.NewSuperTimelineReader(self.config_obj, timeline_path_manager, nil)
 		if err == nil {
@@ -281,7 +282,7 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 				`params='%s' /></div>`, utils.QueryEscape(t),
 			utils.QueryEscape(parameters))
 
-	case []*NotebookCellQuery:
+	case []*paths.NotebookCellQuery:
 		result := ""
 		for _, item := range t {
 			result += fmt.Sprintf(
@@ -371,7 +372,6 @@ func (self *GuiTemplateEngine) Execute(report *artifacts_proto.Report) (string, 
 
 	// Sanitize the HTML.
 	result := bm_policy.Sanitize(output_string)
-	utils.Debug(result)
 	return result, nil
 }
 
@@ -400,7 +400,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 		return self.queryRows(queries...)
 	}
 
-	result := []*NotebookCellQuery{}
+	result := []*paths.NotebookCellQuery{}
 	for _, query := range queries {
 		query, err := self.getMultiLineQuery(query)
 		if err != nil {
@@ -431,57 +431,56 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 				continue
 			}
 
-			path_manager := self.path_manager.NewQueryStorage()
-			result = append(result, path_manager)
+			path := self.path_manager.NewQueryStorage()
+			result = append(result, path)
 
-			func(vql *vfilter.VQL, path_manager api.PathManager) {
-				file_store_factory := file_store.GetFileStore(self.config_obj)
+			file_store_factory := file_store.GetFileStore(self.config_obj)
 
-				rs_writer, err := result_sets.NewResultSetWriter(
-					file_store_factory, path_manager, opts, true /* truncate */)
-				if err != nil {
-					self.Error("Error: %v\n", err)
-					return
-				}
-				defer rs_writer.Close()
+			rs_writer, err := result_sets.NewResultSetWriter(
+				file_store_factory, path.Path(),
+				opts, true /* truncate */)
+			if err != nil {
+				self.Error("Error: %v\n", err)
+				return nil
+			}
+			defer rs_writer.Close()
 
-				rs_writer.Flush()
+			rs_writer.Flush()
 
-				row_idx := 0
-				next_progress := time.Now().Add(4 * time.Second)
-				eval_chan := vql.Eval(self.ctx, self.Scope)
+			row_idx := 0
+			next_progress := time.Now().Add(4 * time.Second)
+			eval_chan := vql.Eval(self.ctx, self.Scope)
 
-				defer self.Progress.Report("Completed query")
+			defer self.Progress.Report("Completed query")
+		do_query:
+			for {
+				select {
+				case <-self.ctx.Done():
+					return nil
 
-				for {
-					select {
-					case <-self.ctx.Done():
-						return
+				case row, ok := <-eval_chan:
+					if !ok {
+						break do_query
+					}
+					row_idx++
+					rs_writer.Write(vfilter.RowToDict(self.ctx, self.Scope, row))
 
-					case row, ok := <-eval_chan:
-						if !ok {
-							return
-						}
-						row_idx++
-						rs_writer.Write(vfilter.RowToDict(self.ctx, self.Scope, row))
-
-						if self.Progress != nil && (row_idx%100 == 0 ||
-							time.Now().After(next_progress)) {
-							rs_writer.Flush()
-							self.Progress.Report(fmt.Sprintf(
-								"Total Rows %v", row_idx))
-							next_progress = time.Now().Add(4 * time.Second)
-						}
-
-						// Report progress even if no row is emitted
-					case <-time.After(4 * time.Second):
+					if self.Progress != nil && (row_idx%100 == 0 ||
+						time.Now().After(next_progress)) {
 						rs_writer.Flush()
 						self.Progress.Report(fmt.Sprintf(
 							"Total Rows %v", row_idx))
 						next_progress = time.Now().Add(4 * time.Second)
 					}
+
+					// Report progress even if no row is emitted
+				case <-time.After(4 * time.Second):
+					rs_writer.Flush()
+					self.Progress.Report(fmt.Sprintf(
+						"Total Rows %v", row_idx))
+					next_progress = time.Now().Add(4 * time.Second)
 				}
-			}(vql, path_manager)
+			}
 		}
 	}
 	return result
@@ -565,7 +564,7 @@ func NewGuiTemplateEngine(
 	scope vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
 	repository services.Repository,
-	notebook_cell_path_manager *NotebookCellPathManager,
+	notebook_cell_path_manager *paths.NotebookCellPathManager,
 	artifact_name string) (
 	*GuiTemplateEngine, error) {
 

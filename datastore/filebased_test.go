@@ -2,8 +2,10 @@ package datastore
 
 import (
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -11,31 +13,58 @@ import (
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type FilebasedTestSuite struct {
 	BaseTestSuite
+	dirname string
+}
+
+func (self FilebasedTestSuite) DumpDirectory() {
+	filepath.Walk(self.dirname, func(path string,
+		info fs.FileInfo, err error) error {
+		if !info.IsDir() {
+			fmt.Printf("%v: %v\n", path, info.Size())
+		}
+		return nil
+	})
+}
+
+func (self FilebasedTestSuite) TestSetGetSubjectWithEscaping() {
+	self.BaseTestSuite.TestSetGetSubjectWithEscaping()
+	self.DumpDirectory()
+}
+
+func (self FilebasedTestSuite) TestSetGetJSON() {
+	self.BaseTestSuite.TestSetGetJSON()
+	self.DumpDirectory()
+}
+
+func (self *FilebasedTestSuite) SetupTest() {
+	var err error
+	self.dirname, err = ioutil.TempDir("", "datastore_test")
+	assert.NoError(self.T(), err)
+
+	self.config_obj = config.GetDefaultConfig()
+	self.config_obj.Datastore.FilestoreDirectory = self.dirname
+	self.config_obj.Datastore.Location = self.dirname
+	self.BaseTestSuite.config_obj = self.config_obj
+}
+
+func (self FilebasedTestSuite) TearDownTest() {
+	os.RemoveAll(self.dirname) // clean up
 }
 
 func TestFilebasedDatabase(t *testing.T) {
-	dir, err := ioutil.TempDir("", "datastore_test")
-	assert.NoError(t, err)
-
-	defer os.RemoveAll(dir) // clean up
-
-	config_obj := config.GetDefaultConfig()
-	config_obj.Datastore.FilestoreDirectory = dir
-	config_obj.Datastore.Location = dir
-
-	suite.Run(t, &FilebasedTestSuite{BaseTestSuite{
-		datastore: &FileBaseDataStore{
-			clock: utils.MockClock{MockNow: time.Unix(100, 0)},
+	suite.Run(t, &FilebasedTestSuite{
+		BaseTestSuite: BaseTestSuite{
+			datastore: &FileBaseDataStore{
+				clock: utils.MockClock{MockNow: time.Unix(100, 0)},
+			},
 		},
-		config_obj: config_obj,
-	}})
+	})
 }
 
 func benchmarkSearchClientCount(b *testing.B, count int, sort_direction SortingSense) {
@@ -77,7 +106,7 @@ func benchmarkSearchClientCount(b *testing.B, count int, sort_direction SortingS
 			"label:Host" + client_id,
 		}
 
-		err = db.SetIndex(config_obj, constants.CLIENT_INDEX_URN,
+		err = db.SetIndex(config_obj, paths.CLIENT_INDEX_URN,
 			client_id, keywords)
 		if err != nil {
 			fmt.Printf("Failed %v\n", err)
@@ -103,7 +132,7 @@ func benchmarkSearchClientCount(b *testing.B, count int, sort_direction SortingS
 			for i := 0; i < b.N; i++ {
 				// Only retrieve the first 10 clients for the first page.
 				hits := db.SearchClients(
-					config_obj, constants.CLIENT_INDEX_URN,
+					config_obj, paths.CLIENT_INDEX_URN,
 					bm.query, "", 0, 10, sort_direction)
 				if len(hits) != bm.expected {
 					fmt.Printf("Got %v hits (%v) expected %v\n",

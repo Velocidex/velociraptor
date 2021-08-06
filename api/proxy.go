@@ -38,7 +38,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/accessors"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -141,10 +141,6 @@ func PrepareGUIMux(
 		auther.AuthenticateUserHandler(
 			config_obj, vfsFileDownloadHandler(config_obj))))
 
-	mux.Handle(base+"/api/v1/DownloadVFSFolder", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(
-			config_obj, vfsFolderDownloadHandler(config_obj))))
-
 	mux.Handle(base+"/api/v1/UploadTool", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, toolUploadHandler(config_obj))))
@@ -153,7 +149,7 @@ func PrepareGUIMux(
 	mux.Handle(base+"/downloads/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, http.StripPrefix(base, forceMime(http.FileServer(
-				api.NewFileSystem(
+				accessors.NewFileSystem(
 					config_obj,
 					file_store.GetFileStore(config_obj),
 					"/downloads/")))))))
@@ -162,7 +158,7 @@ func PrepareGUIMux(
 	mux.Handle(base+"/notebooks/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, http.StripPrefix(base, forceMime(http.FileServer(
-				api.NewFileSystem(
+				accessors.NewFileSystem(
 					config_obj,
 					file_store.GetFileStore(config_obj),
 					"/notebooks/")))))))

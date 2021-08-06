@@ -2,7 +2,6 @@ package artifacts
 
 import (
 	"context"
-	"fmt"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -15,93 +14,94 @@ type ArtifactLogPathManager struct {
 	*ArtifactPathManager
 }
 
-func (self *ArtifactLogPathManager) Path() string {
+func (self *ArtifactLogPathManager) Path() api.FSPathSpec {
 	result, _ := self.GetPathForWriting()
 	return result
 }
 
 // Returns the root path for all day logs. Walking this path will
 // produce all logs for this client and all artifacts.
-func (self *ArtifactLogPathManager) GetRootPath() string {
+func (self *ArtifactLogPathManager) GetRootPath() api.FSPathSpec {
 	switch self.mode {
 	case paths.MODE_CLIENT:
-		return fmt.Sprintf(
-			"/clients/%s/collections/%s/logs",
-			self.client_id, self.flow_id)
+		return paths.CLIENTS_ROOT.AddChild(
+			self.client_id, "collections",
+			self.flow_id, "logs").AsFilestorePath()
 
 	case paths.MODE_SERVER:
-		return fmt.Sprintf(
-			"/clients/server/collections/%s/logs", self.flow_id)
+		return paths.CLIENTS_ROOT.AddChild(
+			"server", "collections",
+			self.flow_id, "logs").AsFilestorePath()
 
 	case paths.MODE_SERVER_EVENT:
-		return "/server_artifact_logs"
+		return paths.SERVER_MONITORING_LOGS_ROOT
 
 	case paths.MODE_CLIENT_EVENT:
 		if self.client_id == "" {
 			// Should never normally happen.
-			return "/clients/nobody"
+			return paths.CLIENTS_ROOT.AddChild("nobody").
+				AsFilestorePath()
 
 		} else {
-			return fmt.Sprintf("/clients/%s/monitoring_logs",
-				self.client_id)
+			return paths.CLIENTS_ROOT.AddChild(
+				self.client_id, "monitoring_logs").
+				AsFilestorePath()
 		}
 	default:
-		return "invalid"
+		return nil
 	}
 }
 
-func (self *ArtifactLogPathManager) GetPathForWriting() (string, error) {
+func (self *ArtifactLogPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 	switch self.mode {
 	case paths.MODE_CLIENT:
-		return fmt.Sprintf(
-			"/clients/%s/collections/%s/logs",
-			self.client_id, self.flow_id), nil
+		return paths.CLIENTS_ROOT.AddChild(
+			self.client_id, "collections",
+			self.flow_id, "logs").AsFilestorePath(), nil
 
 	case paths.MODE_SERVER:
-		return fmt.Sprintf(
-			"/clients/server/collections/%s/logs", self.flow_id), nil
+		return paths.CLIENTS_ROOT.AddChild(
+			"server", "collections",
+			self.flow_id, "logs").AsFilestorePath(), nil
 
 	case paths.MODE_SERVER_EVENT:
 		if self.source != "" {
-			return fmt.Sprintf(
-				"/server_artifact_logs/%s/%s/%s.json",
+			return paths.SERVER_MONITORING_LOGS_ROOT.AddChild(
 				self.base_artifact_name, self.source,
 				self.getDayName()), nil
 		} else {
-			return fmt.Sprintf(
-				"/server_artifact_logs/%s/%s.json",
+			return paths.SERVER_MONITORING_LOGS_ROOT.AddChild(
 				self.base_artifact_name, self.getDayName()), nil
 		}
 
 	case paths.MODE_CLIENT_EVENT:
 		if self.client_id == "" {
 			// Should never normally happen.
-			return fmt.Sprintf(
-				"/clients/nobody/%s/%s.json",
-				self.base_artifact_name, self.getDayName()), nil
+			return paths.CLIENTS_ROOT.AddChild(
+				"nobody", self.base_artifact_name,
+				self.getDayName()).AsFilestorePath(), nil
 
 		} else {
 			if self.source != "" {
-				return fmt.Sprintf(
-					"/clients/%s/monitoring_logs/%s/%s/%s.json",
-					self.client_id,
+				return paths.CLIENTS_ROOT.AddChild(
+					self.client_id, "monitoring_logs",
 					self.base_artifact_name, self.source,
-					self.getDayName()), nil
+					self.getDayName()).AsFilestorePath(), nil
 			} else {
-				return fmt.Sprintf(
-					"/clients/%s/monitoring_logs/%s/%s.json",
-					self.client_id,
-					self.base_artifact_name, self.getDayName()), nil
+				return paths.CLIENTS_ROOT.AddChild(
+					self.client_id, "monitoring_logs",
+					self.base_artifact_name,
+					self.getDayName()).AsFilestorePath(), nil
 			}
 		}
 
 		// Internal artifacts are not written anywhere but are
 		// still replicated.
 	case paths.INTERNAL:
-		return "", nil
+		return nil, nil
 	}
 
-	return "", nil
+	return nil, nil
 }
 
 func (self *ArtifactLogPathManager) GetAvailableFiles(

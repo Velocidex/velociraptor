@@ -15,6 +15,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/tests"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -143,7 +144,7 @@ type MemoryQueueManager struct {
 
 func (self *MemoryQueueManager) Debug() {
 	switch t := self.FileStore.(type) {
-	case api.Debugger:
+	case tests.Debugger:
 		t.Debug()
 	}
 }

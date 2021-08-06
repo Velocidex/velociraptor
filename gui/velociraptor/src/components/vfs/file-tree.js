@@ -271,7 +271,7 @@ class VeloFileTree extends Component {
             this.source = axios.CancelToken.source();
 
             api.get("v1/VFSListDirectory/" + client_id, {
-                vfs_path: Join(prev_components),
+                vfs_components: prev_components,
             }, this.source.token).then(function(response) {
                 if (response.cancel) return;
 

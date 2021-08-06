@@ -42,11 +42,12 @@ type APIClient interface {
 	SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	// List all the GUI users known on this server.
 	GetUsers(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Users, error)
+	GetUserFavorites(ctx context.Context, in *Favorite, opts ...grpc.CallOption) (*Favorites, error)
 	// VFS
-	VFSListDirectory(ctx context.Context, in *proto.VFSListRequest, opts ...grpc.CallOption) (*proto.VFSListResponse, error)
+	VFSListDirectory(ctx context.Context, in *VFSListRequest, opts ...grpc.CallOption) (*VFSListResponse, error)
 	VFSRefreshDirectory(ctx context.Context, in *VFSRefreshDirectoryRequest, opts ...grpc.CallOption) (*proto.ArtifactCollectorResponse, error)
-	VFSStatDirectory(ctx context.Context, in *proto.VFSListRequest, opts ...grpc.CallOption) (*proto.VFSListResponse, error)
-	VFSStatDownload(ctx context.Context, in *proto.VFSStatDownloadRequest, opts ...grpc.CallOption) (*proto.VFSDownloadInfo, error)
+	VFSStatDirectory(ctx context.Context, in *VFSListRequest, opts ...grpc.CallOption) (*VFSListResponse, error)
+	VFSStatDownload(ctx context.Context, in *VFSStatDownloadRequest, opts ...grpc.CallOption) (*proto.VFSDownloadInfo, error)
 	GetTable(ctx context.Context, in *GetTableRequest, opts ...grpc.CallOption) (*GetTableResponse, error)
 	// Flows
 	CollectArtifact(ctx context.Context, in *proto.ArtifactCollectorArgs, opts ...grpc.CallOption) (*proto.ArtifactCollectorResponse, error)
@@ -255,8 +256,17 @@ func (c *aPIClient) GetUsers(ctx context.Context, in *empty.Empty, opts ...grpc.
 	return out, nil
 }
 
-func (c *aPIClient) VFSListDirectory(ctx context.Context, in *proto.VFSListRequest, opts ...grpc.CallOption) (*proto.VFSListResponse, error) {
-	out := new(proto.VFSListResponse)
+func (c *aPIClient) GetUserFavorites(ctx context.Context, in *Favorite, opts ...grpc.CallOption) (*Favorites, error) {
+	out := new(Favorites)
+	err := c.cc.Invoke(ctx, "/proto.API/GetUserFavorites", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) VFSListDirectory(ctx context.Context, in *VFSListRequest, opts ...grpc.CallOption) (*VFSListResponse, error) {
+	out := new(VFSListResponse)
 	err := c.cc.Invoke(ctx, "/proto.API/VFSListDirectory", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -273,8 +283,8 @@ func (c *aPIClient) VFSRefreshDirectory(ctx context.Context, in *VFSRefreshDirec
 	return out, nil
 }
 
-func (c *aPIClient) VFSStatDirectory(ctx context.Context, in *proto.VFSListRequest, opts ...grpc.CallOption) (*proto.VFSListResponse, error) {
-	out := new(proto.VFSListResponse)
+func (c *aPIClient) VFSStatDirectory(ctx context.Context, in *VFSListRequest, opts ...grpc.CallOption) (*VFSListResponse, error) {
+	out := new(VFSListResponse)
 	err := c.cc.Invoke(ctx, "/proto.API/VFSStatDirectory", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -282,7 +292,7 @@ func (c *aPIClient) VFSStatDirectory(ctx context.Context, in *proto.VFSListReque
 	return out, nil
 }
 
-func (c *aPIClient) VFSStatDownload(ctx context.Context, in *proto.VFSStatDownloadRequest, opts ...grpc.CallOption) (*proto.VFSDownloadInfo, error) {
+func (c *aPIClient) VFSStatDownload(ctx context.Context, in *VFSStatDownloadRequest, opts ...grpc.CallOption) (*proto.VFSDownloadInfo, error) {
 	out := new(proto.VFSDownloadInfo)
 	err := c.cc.Invoke(ctx, "/proto.API/VFSStatDownload", in, out, opts...)
 	if err != nil {
@@ -676,11 +686,12 @@ type APIServer interface {
 	SetGUIOptions(context.Context, *SetGUIOptionsRequest) (*empty.Empty, error)
 	// List all the GUI users known on this server.
 	GetUsers(context.Context, *empty.Empty) (*Users, error)
+	GetUserFavorites(context.Context, *Favorite) (*Favorites, error)
 	// VFS
-	VFSListDirectory(context.Context, *proto.VFSListRequest) (*proto.VFSListResponse, error)
+	VFSListDirectory(context.Context, *VFSListRequest) (*VFSListResponse, error)
 	VFSRefreshDirectory(context.Context, *VFSRefreshDirectoryRequest) (*proto.ArtifactCollectorResponse, error)
-	VFSStatDirectory(context.Context, *proto.VFSListRequest) (*proto.VFSListResponse, error)
-	VFSStatDownload(context.Context, *proto.VFSStatDownloadRequest) (*proto.VFSDownloadInfo, error)
+	VFSStatDirectory(context.Context, *VFSListRequest) (*VFSListResponse, error)
+	VFSStatDownload(context.Context, *VFSStatDownloadRequest) (*proto.VFSDownloadInfo, error)
 	GetTable(context.Context, *GetTableRequest) (*GetTableResponse, error)
 	// Flows
 	CollectArtifact(context.Context, *proto.ArtifactCollectorArgs) (*proto.ArtifactCollectorResponse, error)
@@ -790,16 +801,19 @@ func (UnimplementedAPIServer) SetGUIOptions(context.Context, *SetGUIOptionsReque
 func (UnimplementedAPIServer) GetUsers(context.Context, *empty.Empty) (*Users, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUsers not implemented")
 }
-func (UnimplementedAPIServer) VFSListDirectory(context.Context, *proto.VFSListRequest) (*proto.VFSListResponse, error) {
+func (UnimplementedAPIServer) GetUserFavorites(context.Context, *Favorite) (*Favorites, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserFavorites not implemented")
+}
+func (UnimplementedAPIServer) VFSListDirectory(context.Context, *VFSListRequest) (*VFSListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VFSListDirectory not implemented")
 }
 func (UnimplementedAPIServer) VFSRefreshDirectory(context.Context, *VFSRefreshDirectoryRequest) (*proto.ArtifactCollectorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VFSRefreshDirectory not implemented")
 }
-func (UnimplementedAPIServer) VFSStatDirectory(context.Context, *proto.VFSListRequest) (*proto.VFSListResponse, error) {
+func (UnimplementedAPIServer) VFSStatDirectory(context.Context, *VFSListRequest) (*VFSListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VFSStatDirectory not implemented")
 }
-func (UnimplementedAPIServer) VFSStatDownload(context.Context, *proto.VFSStatDownloadRequest) (*proto.VFSDownloadInfo, error) {
+func (UnimplementedAPIServer) VFSStatDownload(context.Context, *VFSStatDownloadRequest) (*proto.VFSDownloadInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VFSStatDownload not implemented")
 }
 func (UnimplementedAPIServer) GetTable(context.Context, *GetTableRequest) (*GetTableResponse, error) {
@@ -1208,8 +1222,26 @@ func _API_GetUsers_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _API_GetUserFavorites_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Favorite)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).GetUserFavorites(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/GetUserFavorites",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).GetUserFavorites(ctx, req.(*Favorite))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _API_VFSListDirectory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(proto.VFSListRequest)
+	in := new(VFSListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1221,7 +1253,7 @@ func _API_VFSListDirectory_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/proto.API/VFSListDirectory",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).VFSListDirectory(ctx, req.(*proto.VFSListRequest))
+		return srv.(APIServer).VFSListDirectory(ctx, req.(*VFSListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1245,7 +1277,7 @@ func _API_VFSRefreshDirectory_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _API_VFSStatDirectory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(proto.VFSListRequest)
+	in := new(VFSListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1257,13 +1289,13 @@ func _API_VFSStatDirectory_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/proto.API/VFSStatDirectory",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).VFSStatDirectory(ctx, req.(*proto.VFSListRequest))
+		return srv.(APIServer).VFSStatDirectory(ctx, req.(*VFSListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _API_VFSStatDownload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(proto.VFSStatDownloadRequest)
+	in := new(VFSStatDownloadRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1275,7 +1307,7 @@ func _API_VFSStatDownload_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/proto.API/VFSStatDownload",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).VFSStatDownload(ctx, req.(*proto.VFSStatDownloadRequest))
+		return srv.(APIServer).VFSStatDownload(ctx, req.(*VFSStatDownloadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1986,6 +2018,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUsers",
 			Handler:    _API_GetUsers_Handler,
+		},
+		{
+			MethodName: "GetUserFavorites",
+			Handler:    _API_GetUserFavorites_Handler,
 		},
 		{
 			MethodName: "VFSListDirectory",

@@ -124,7 +124,7 @@ func (self *serverPublicKeyResolver) GetPublicKey(
 
 	pem := &crypto_proto.PublicKey{}
 	err = db.GetSubject(self.config_obj,
-		client_path_manager.Key().Path(), pem)
+		client_path_manager.Key(), pem)
 	if err != nil {
 		return nil, false
 	}
@@ -151,7 +151,7 @@ func (self *serverPublicKeyResolver) SetPublicKey(
 		EnrollTime: uint64(time.Now().Unix()),
 	}
 	return db.SetSubject(self.config_obj,
-		client_path_manager.Key().Path(), pem)
+		client_path_manager.Key(), pem)
 }
 
 func (self *serverPublicKeyResolver) Clear() {}

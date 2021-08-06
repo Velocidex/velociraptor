@@ -5,7 +5,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/timelines"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
@@ -60,9 +60,11 @@ func (self TimelinePlugin) Call(
 			return
 		}
 
-		super_path_manager := reporting.NewNotebookPathManager(notebook_id)
+		super_path_manager := paths.NewNotebookPathManager(notebook_id).
+			SuperTimeline(arg.Timeline)
+
 		reader, err := timelines.NewSuperTimelineReader(config_obj,
-			super_path_manager.Timeline(arg.Timeline), arg.SkipComponents)
+			super_path_manager, arg.SkipComponents)
 		if err != nil {
 			scope.Log("timeline: %v", err)
 			return

@@ -142,12 +142,21 @@ sources:
 
           -- Add the time series into the timeline.
           SELECT timeline_add(
-              key="Timestamp", name="Time 'line' &\" ",
-              query=T1, timeline="Test \"Timeline\"")
+              key="Timestamp", name="Time 你好世界 'line' &\" ",
+              query=T1, timeline="Test \"Timeline 你好世界\""),
+           timeline_add(
+              key="Timestamp", name="2",
+              query=T1, timeline="Test \"Timeline 你好世界\"")
           FROM scope()
 
       - type: Markdown
+        env:
+          - key: Timeline
+            value: Test "Timeline 你好世界"
         template: |
-          ## This super timeline should have one timeline.
+          ## This super timeline should have two timelines.
 
-          {{ Timeline "Test \"Timeline\"" }}
+          Add a timeline manually and hit refresh on this cell to
+          check it is being updated.
+
+          {{ Scope "Timeline" | Timeline }}

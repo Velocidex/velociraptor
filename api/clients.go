@@ -29,7 +29,6 @@ import (
 	"google.golang.org/grpc/status"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -104,7 +103,7 @@ func (self *ApiServer) GetClient(
 	}
 
 	if in.UpdateMru {
-		err = updateMRU(self.config, user_name, in.ClientId)
+		err = search.UpdateMRU(self.config, user_name, in.ClientId)
 		if err != nil {
 			return nil, err
 		}
@@ -166,19 +165,4 @@ func (self *ApiServer) GetClientFlows(
 	}
 	return flows.GetFlows(self.config, in.ClientId,
 		in.IncludeArchived, filter, in.Offset, in.Count)
-}
-
-func updateMRU(
-	config_obj *config_proto.Config,
-	user_name string, client_id string) error {
-	path_manager := &paths.UserPathManager{user_name}
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	err = db.SetIndex(config_obj, path_manager.MRU(),
-		client_id, []string{"mru"})
-
-	return err
 }

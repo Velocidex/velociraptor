@@ -37,9 +37,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/glob"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
@@ -142,16 +142,12 @@ type ResultSetFactory struct{}
 
 func (self ResultSetFactory) NewResultSetWriter(
 	file_store_factory api.FileStore,
-	path_manager api.PathManager,
+	log_path api.FSPathSpec,
 	opts *json.EncOpts,
 	truncate bool) (result_sets.ResultSetWriter, error) {
-	log_path, err := path_manager.GetPathForWriting()
-	if err != nil {
-		return nil, err
-	}
 
 	// If no path is provided, we are just a log sink
-	if log_path == "" {
+	if utils.IsNil(log_path) {
 		return &NullResultSetWriter{}, nil
 	}
 
@@ -160,7 +156,8 @@ func (self ResultSetFactory) NewResultSetWriter(
 		return nil, err
 	}
 
-	idx_fd, err := file_store_factory.WriteFile(log_path + ".index")
+	idx_fd, err := file_store_factory.WriteFile(log_path.
+		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
 	if err != nil {
 		fd.Close()
 		return nil, err
@@ -191,7 +188,7 @@ type ResultSetReaderImpl struct {
 	total_rows int64
 	fd         api.FileReader
 	idx_fd     api.FileReader
-	log_path   string
+	log_path   api.FSPathSpec
 }
 
 func (self *ResultSetReaderImpl) TotalRows() int64 {
@@ -320,35 +317,39 @@ func (self *ResultSetReaderImpl) Close() {
 
 type NullReader struct {
 	*bytes.Reader
+	pathSpec_ api.FSPathSpec
+}
+
+func (self NullReader) PathSpec() api.FSPathSpec {
+	return self.pathSpec_
 }
 
 func (self NullReader) Close() error {
 	return nil
 }
 
-func (self NullReader) Stat() (glob.FileInfo, error) {
+func (self NullReader) Stat() (api.FileInfo, error) {
 	return nil, errors.New("Not found")
 }
 
 func (self ResultSetFactory) NewResultSetReader(
 	file_store_factory api.FileStore,
-	path_manager api.PathManager) (result_sets.ResultSetReader, error) {
-
-	log_path, err := path_manager.GetPathForWriting()
-	if err != nil {
-		return nil, err
-	}
+	log_path api.FSPathSpec) (result_sets.ResultSetReader, error) {
 
 	fd, err := file_store_factory.ReadFile(log_path)
 	if err == io.EOF || errors.Is(err, os.ErrNotExist) {
-		fd = &NullReader{bytes.NewReader([]byte{})}
+		fd = &NullReader{
+			Reader:    bytes.NewReader([]byte{}),
+			pathSpec_: log_path,
+		}
 	} else if err != nil {
 		return nil, err
 	}
 
 	// -1 indicates we dont know how many rows there are
 	total_rows := int64(-1)
-	idx_fd, err := file_store_factory.ReadFile(log_path + ".index")
+	idx_fd, err := file_store_factory.ReadFile(log_path.
+		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
 	if err == nil {
 		stat, err := idx_fd.Stat()
 		if err == nil {
@@ -357,7 +358,10 @@ func (self ResultSetFactory) NewResultSetReader(
 	}
 
 	if os.IsNotExist(err) {
-		idx_fd = &NullReader{bytes.NewReader([]byte{})}
+		idx_fd = &NullReader{
+			Reader:    bytes.NewReader([]byte{}),
+			pathSpec_: log_path,
+		}
 	}
 
 	return &ResultSetReaderImpl{

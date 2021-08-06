@@ -34,7 +34,6 @@ package hunt_dispatcher
 import (
 	"context"
 	"errors"
-	"path"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -248,13 +247,13 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 
 	hunt_path_manager := paths.NewHuntPathManager("")
 	hunts, err := db.ListChildren(config_obj,
-		hunt_path_manager.HuntDirectory().Path(), 0, 1000)
+		hunt_path_manager.HuntDirectory(), 0, 1000)
 	if err != nil {
 		return err
 	}
 
 	for _, hunt_urn := range hunts {
-		hunt_id := path.Base(hunt_urn)
+		hunt_id := hunt_urn.Base()
 		if !constants.HuntIdRegex.MatchString(hunt_id) {
 			continue
 		}

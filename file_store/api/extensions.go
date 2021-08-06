@@ -1,0 +1,104 @@
+package api
+
+import (
+	"strings"
+)
+
+func GetExtensionForDatastore(path_spec DSPathSpec, t PathType) string {
+	switch t {
+	case PATH_TYPE_DATASTORE_PROTO:
+		return ".db"
+
+	case PATH_TYPE_DATASTORE_JSON:
+		return ".json.db"
+
+	}
+	return ".db"
+}
+
+func GetExtensionForFilestore(path_spec FSPathSpec, t PathType) string {
+	switch t {
+	case PATH_TYPE_DATASTORE_PROTO, PATH_TYPE_DATASTORE_JSON:
+		panic("datastore path used for filestore for " +
+			path_spec.AsClientPath())
+
+	case PATH_TYPE_FILESTORE_JSON:
+		return ".json"
+
+	case PATH_TYPE_FILESTORE_JSON_INDEX:
+		return ".json.index"
+
+	case PATH_TYPE_FILESTORE_JSON_TIME_INDEX:
+		return ".json.tidx"
+
+	case PATH_TYPE_FILESTORE_SPARSE_IDX:
+		return ".idx"
+
+	case PATH_TYPE_FILESTORE_DOWNLOAD_ZIP:
+		return ".zip"
+
+	case PATH_TYPE_FILESTORE_DOWNLOAD_REPORT:
+		return ".html"
+
+	case PATH_TYPE_FILESTORE_TMP:
+		return ".tmp"
+
+	case PATH_TYPE_FILESTORE_LOCK:
+		return ".lock"
+
+	case PATH_TYPE_FILESTORE_CSV:
+		return ".csv"
+
+	case PATH_TYPE_FILESTORE_YAML:
+		return ".yaml"
+
+	case PATH_TYPE_FILESTORE_ANY:
+		return ""
+	}
+
+	return ""
+}
+
+func GetFileStorePathTypeFromExtension(name string) (PathType, string) {
+	if strings.HasSuffix(name, ".json") {
+		return PATH_TYPE_FILESTORE_JSON, name[:len(name)-5]
+	}
+
+	if strings.HasSuffix(name, ".json.index") {
+		return PATH_TYPE_FILESTORE_JSON_INDEX, name[:len(name)-11]
+	}
+
+	if strings.HasSuffix(name, ".json.tidx") {
+		return PATH_TYPE_FILESTORE_JSON_TIME_INDEX, name[:len(name)-10]
+	}
+
+	if strings.HasSuffix(name, ".idx") {
+		return PATH_TYPE_FILESTORE_SPARSE_IDX, name[:len(name)-4]
+	}
+
+	if strings.HasSuffix(name, ".zip") {
+		return PATH_TYPE_FILESTORE_DOWNLOAD_ZIP, name[:len(name)-4]
+	}
+
+	if strings.HasSuffix(name, ".html") {
+		return PATH_TYPE_FILESTORE_DOWNLOAD_REPORT, name[:len(name)-5]
+	}
+
+	if strings.HasSuffix(name, ".tmp") {
+		return PATH_TYPE_FILESTORE_TMP, name[:len(name)-4]
+	}
+
+	if strings.HasSuffix(name, ".lock") {
+		return PATH_TYPE_FILESTORE_LOCK, name[:len(name)-5]
+	}
+
+	if strings.HasSuffix(name, ".csv") {
+		return PATH_TYPE_FILESTORE_CSV, name[:len(name)-4]
+	}
+
+	if strings.HasSuffix(name, ".yaml") {
+		return PATH_TYPE_FILESTORE_YAML, name[:len(name)-5]
+	}
+
+	return PATH_TYPE_FILESTORE_ANY, name
+}

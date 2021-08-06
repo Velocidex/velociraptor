@@ -4,6 +4,9 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"path"
+	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
@@ -111,9 +115,11 @@ func (self *PathManageTestSuite) TestPathManager() {
 		path_manager.Clock = utils.MockClock{MockNow: time.Unix(ts, 0)}
 		path, err := path_manager.GetPathForWriting()
 		assert.NoError(self.T(), err)
-		assert.Equal(self.T(), path, testcase.expected)
+		assert.Equal(self.T(),
+			cleanPath(path.AsFilestoreFilename(self.config_obj)),
+			cleanPath(self.dirname+"/"+testcase.expected))
 
-		file_store := memory.Test_memory_file_store
+		file_store := memory.NewMemoryFileStore(self.config_obj)
 		file_store.Clear()
 
 		qm := memory.NewMemoryQueueManager(
@@ -124,7 +130,8 @@ func (self *PathManageTestSuite) TestPathManager() {
 			[]*ordereddict.Dict{ordereddict.NewDict()})
 		assert.NoError(self.T(), err)
 
-		data, ok := file_store.Get(testcase.expected)
+		data, ok := file_store.Get(cleanPath(
+			self.dirname + testcase.expected))
 		assert.Equal(self.T(), ok, true)
 		assert.Equal(self.T(), string(data), "{\"_ts\":1587800823}\n")
 	}
@@ -132,4 +139,12 @@ func (self *PathManageTestSuite) TestPathManager() {
 
 func TestPathTest(t *testing.T) {
 	suite.Run(t, &PathManageTestSuite{})
+}
+
+func cleanPath(in string) string {
+	if runtime.GOOS == "windows" {
+		return path.Clean(strings.Replace(strings.TrimPrefix(
+			in, path_specs.WINDOWS_LFN_PREFIX), "\\", "/", -1))
+	}
+	return path.Clean(in)
 }

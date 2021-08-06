@@ -178,7 +178,7 @@ sources:
 	flow_path_manager := paths.NewFlowPathManager(
 		"server", details.Context.SessionId)
 	log_data := test_utils.FileReadAll(self.T(), self.config_obj,
-		flow_path_manager.Log().Path())
+		flow_path_manager.Log())
 	assert.Contains(self.T(), log_data, "Query timed out after ")
 }
 
@@ -214,7 +214,7 @@ sources:
 	flow_path_manager := paths.NewFlowPathManager(
 		"server", details.Context.SessionId)
 	log_data := test_utils.FileReadAll(self.T(), self.config_obj,
-		flow_path_manager.Log().Path())
+		flow_path_manager.Log())
 	assert.Contains(self.T(), log_data, "Permission denied: [MACHINE_STATE]")
 }
 

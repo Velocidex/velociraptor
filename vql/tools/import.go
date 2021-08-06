@@ -14,7 +14,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -215,7 +214,8 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 				}
 
 				rs_writer, err := result_sets.NewResultSetWriter(
-					file_store_factory, artifact_path_manager,
+					file_store_factory,
+					artifact_path_manager.Path(),
 					nil, true /* truncate */)
 				if err != nil {
 					log("Error copying %v", err)
@@ -363,7 +363,7 @@ func makeNewClient(
 	}
 
 	return client_id, db.SetIndex(config_obj,
-		constants.CLIENT_INDEX_URN,
+		paths.CLIENT_INDEX_URN,
 		client_id, keywords,
 	)
 }

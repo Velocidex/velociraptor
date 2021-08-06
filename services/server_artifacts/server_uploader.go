@@ -3,13 +3,13 @@ package server_artifacts
 import (
 	"context"
 	"io"
-	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/vfilter"
@@ -31,14 +31,6 @@ func (self *ServerUploader) Upload(
 	expected_size int64,
 	mtime time.Time,
 	reader io.Reader) (*api.UploadResponse, error) {
-
-	// The server may write to the root of the filestore by
-	// prefixing the store_as_name with fs://
-	if strings.HasPrefix(store_as_name, "fs://") {
-		store_as_name = strings.TrimPrefix(store_as_name, "fs://")
-	} else {
-		store_as_name = self.path_manager.GetUploadsFile(accessor, store_as_name).Path()
-	}
 
 	result, err := self.FileStoreUploader.Upload(ctx, scope, filename,
 		accessor, store_as_name, expected_size, mtime, reader)
@@ -74,7 +66,8 @@ func NewServerUploader(
 	collection_context *contextManager) api.Uploader {
 	return &ServerUploader{
 		FileStoreUploader: api.NewFileStoreUploader(config_obj,
-			file_store.GetFileStore(config_obj), "/"),
+			file_store.GetFileStore(config_obj),
+			path_specs.NewUnsafeFilestorePath()),
 		path_manager:       path_manager,
 		collection_context: collection_context,
 		config_obj:         config_obj,

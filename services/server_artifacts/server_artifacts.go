@@ -26,6 +26,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -131,7 +132,7 @@ func (self *contextManager) Save() error {
 type serverLogger struct {
 	collection_context *contextManager
 	config_obj         *config_proto.Config
-	path_manager       *paths.FlowPathManager
+	path               api.FSPathSpec
 }
 
 // Send each log message individually to avoid any buffering - logs
@@ -139,7 +140,7 @@ type serverLogger struct {
 func (self *serverLogger) Write(b []byte) (int, error) {
 	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
 	err := file_store.PushRows(self.config_obj,
-		self.path_manager, []*ordereddict.Dict{
+		self.path, []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
 				Set("time", time.Now().UTC().String()).
@@ -355,7 +356,7 @@ func (self *ServerArtifactsRunner) runQuery(
 		Logger: log.New(&serverLogger{
 			collection_context: collection_context,
 			config_obj:         self.config_obj,
-			path_manager:       path_manager.Log(),
+			path:               path_manager.Log(),
 		}, "", 0),
 	})
 	defer scope.Close()
@@ -404,7 +405,8 @@ func (self *ServerArtifactsRunner) runQuery(
 
 			file_store_factory := file_store.GetFileStore(self.config_obj)
 			rs_writer, err = result_sets.NewResultSetWriter(
-				file_store_factory, path_manager, opts, false /* truncate */)
+				file_store_factory, path_manager.Path(),
+				opts, false /* truncate */)
 			if err != nil {
 				return err
 			}

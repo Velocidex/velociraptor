@@ -22,6 +22,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/paths"
 )
 
 type CollectorTestSuite struct {
@@ -109,7 +110,9 @@ func (self *CollectorTestSuite) TestCollector() {
 
 	// Create a new artifact..
 	file_store_factory := file_store.GetFileStore(self.config_obj)
-	fd, err := file_store_factory.WriteFile("/artifact_definitions/Custom/TestArtifactDependent.yaml")
+
+	fd, err := file_store_factory.WriteFile(paths.GetArtifactDefintionPath(
+		"Custom.TestArtifactDependent"))
 	assert.NoError(self.T(), err)
 
 	fd.Truncate()
@@ -127,7 +130,8 @@ sources:
 `))
 	fd.Close()
 
-	fd, err = file_store_factory.WriteFile("/artifact_definitions/Custom/TestArtifact.yaml")
+	fd, err = file_store_factory.WriteFile(
+		paths.GetArtifactDefintionPath("Custom.TestArtifact"))
 	assert.NoError(self.T(), err)
 
 	fd.Truncate()

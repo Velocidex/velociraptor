@@ -561,6 +561,26 @@ func (mr *MockAPIClientMockRecorder) GetToolInfo(arg0, arg1 interface{}, arg2 ..
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetToolInfo", reflect.TypeOf((*MockAPIClient)(nil).GetToolInfo), varargs...)
 }
 
+// GetUserFavorites mocks base method.
+func (m *MockAPIClient) GetUserFavorites(arg0 context.Context, arg1 *proto0.Favorite, arg2 ...grpc.CallOption) (*proto0.Favorites, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetUserFavorites", varargs...)
+	ret0, _ := ret[0].(*proto0.Favorites)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserFavorites indicates an expected call of GetUserFavorites.
+func (mr *MockAPIClientMockRecorder) GetUserFavorites(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserFavorites", reflect.TypeOf((*MockAPIClient)(nil).GetUserFavorites), varargs...)
+}
+
 // GetUserUITraits mocks base method.
 func (m *MockAPIClient) GetUserUITraits(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.ApiGrrUser, error) {
 	m.ctrl.T.Helper()
@@ -1022,14 +1042,14 @@ func (mr *MockAPIClientMockRecorder) VFSGetBuffer(arg0, arg1 interface{}, arg2 .
 }
 
 // VFSListDirectory mocks base method.
-func (m *MockAPIClient) VFSListDirectory(arg0 context.Context, arg1 *proto2.VFSListRequest, arg2 ...grpc.CallOption) (*proto2.VFSListResponse, error) {
+func (m *MockAPIClient) VFSListDirectory(arg0 context.Context, arg1 *proto0.VFSListRequest, arg2 ...grpc.CallOption) (*proto0.VFSListResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "VFSListDirectory", varargs...)
-	ret0, _ := ret[0].(*proto2.VFSListResponse)
+	ret0, _ := ret[0].(*proto0.VFSListResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1062,14 +1082,14 @@ func (mr *MockAPIClientMockRecorder) VFSRefreshDirectory(arg0, arg1 interface{},
 }
 
 // VFSStatDirectory mocks base method.
-func (m *MockAPIClient) VFSStatDirectory(arg0 context.Context, arg1 *proto2.VFSListRequest, arg2 ...grpc.CallOption) (*proto2.VFSListResponse, error) {
+func (m *MockAPIClient) VFSStatDirectory(arg0 context.Context, arg1 *proto0.VFSListRequest, arg2 ...grpc.CallOption) (*proto0.VFSListResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "VFSStatDirectory", varargs...)
-	ret0, _ := ret[0].(*proto2.VFSListResponse)
+	ret0, _ := ret[0].(*proto0.VFSListResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1082,7 +1102,7 @@ func (mr *MockAPIClientMockRecorder) VFSStatDirectory(arg0, arg1 interface{}, ar
 }
 
 // VFSStatDownload mocks base method.
-func (m *MockAPIClient) VFSStatDownload(arg0 context.Context, arg1 *proto2.VFSStatDownloadRequest, arg2 ...grpc.CallOption) (*proto2.VFSDownloadInfo, error) {
+func (m *MockAPIClient) VFSStatDownload(arg0 context.Context, arg1 *proto0.VFSStatDownloadRequest, arg2 ...grpc.CallOption) (*proto2.VFSDownloadInfo, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {

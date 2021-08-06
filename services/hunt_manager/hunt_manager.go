@@ -491,7 +491,7 @@ func checkHuntRanOnClient(
 
 	hunt_ids := []string{hunt_id}
 	err = db.CheckIndex(
-		config_obj, constants.HUNT_INDEX, client_id, hunt_ids)
+		config_obj, paths.HUNT_INDEX, client_id, hunt_ids)
 	if err == nil {
 		return errors.New("Client already ran this hunt")
 	}
@@ -508,7 +508,7 @@ func setHuntRanOnClient(config_obj *config_proto.Config,
 
 	hunt_ids := []string{hunt_id}
 	err = db.SetIndex(
-		config_obj, constants.HUNT_INDEX, client_id, hunt_ids)
+		config_obj, paths.HUNT_INDEX, client_id, hunt_ids)
 	if err != nil {
 		return fmt.Errorf("Setting hunt index: %w", err)
 	}

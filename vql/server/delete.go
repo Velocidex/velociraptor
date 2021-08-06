@@ -7,9 +7,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -64,7 +64,7 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 
 		// Indiscriminately delete all the client's datastore files.
 		err = db.Walk(config_obj, client_path_manager.Path(),
-			func(filename string) error {
+			func(filename api.DSPathSpec) error {
 				select {
 				case <-ctx.Done():
 					return nil
@@ -100,8 +100,9 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 		}
 
 		// Delete the filestore files.
-		err = file_store_factory.Walk(client_path_manager.Path(),
-			func(filename string, info os.FileInfo, err error) error {
+		err = file_store_factory.Walk(
+			client_path_manager.Path().AsFilestorePath(),
+			func(filename api.FSPathSpec, info os.FileInfo) error {
 				select {
 				case <-ctx.Done():
 					return nil
@@ -171,7 +172,7 @@ func reallyDeleteClient(ctx context.Context,
 		keywords = append(keywords, client_info.OsInfo.Fqdn)
 		keywords = append(keywords, "host:"+client_info.OsInfo.Fqdn)
 	}
-	err = db.UnsetIndex(config_obj, constants.CLIENT_INDEX_URN,
+	err = db.UnsetIndex(config_obj, paths.CLIENT_INDEX_URN,
 		arg.ClientId, keywords)
 	if err != nil {
 		return err

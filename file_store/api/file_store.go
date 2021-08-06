@@ -19,15 +19,12 @@ package api
 
 import (
 	"os"
-	"path/filepath"
-
-	"www.velocidex.com/golang/velociraptor/glob"
 )
 
 type FileReader interface {
 	Read(buff []byte) (int, error)
 	Seek(offset int64, whence int) (int64, error)
-	Stat() (glob.FileInfo, error)
+	Stat() (FileInfo, error)
 	Close() error
 }
 
@@ -42,12 +39,18 @@ type FileWriter interface {
 	Close() error
 }
 
+type FileInfo interface {
+	os.FileInfo
+	PathSpec() FSPathSpec
+}
+
+type WalkFunc func(urn FSPathSpec, info os.FileInfo) error
 type FileStore interface {
-	ReadFile(filename string) (FileReader, error)
-	WriteFile(filename string) (FileWriter, error)
-	StatFile(filename string) (os.FileInfo, error)
-	ListDirectory(dirname string) ([]os.FileInfo, error)
-	Walk(root string, cb filepath.WalkFunc) error
-	Delete(filename string) error
-	Move(src, dest string) error
+	ReadFile(filename FSPathSpec) (FileReader, error)
+	WriteFile(filename FSPathSpec) (FileWriter, error)
+	StatFile(filename FSPathSpec) (FileInfo, error)
+	ListDirectory(dirname FSPathSpec) ([]FileInfo, error)
+	Walk(root FSPathSpec, cb WalkFunc) error
+	Delete(filename FSPathSpec) error
+	Move(src, dest FSPathSpec) error
 }

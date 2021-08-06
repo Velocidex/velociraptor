@@ -38,3 +38,12 @@ func (self *ApiServer) GetUsers(
 
 	return result, nil
 }
+
+func (self *ApiServer) GetUserFavorites(
+	ctx context.Context,
+	in *api_proto.Favorite) (*api_proto.Favorites, error) {
+
+	// No special permission requires to view a user's own favorites.
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	return users.GetFavorites(self.config, user_name, in.Type)
+}

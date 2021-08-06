@@ -376,8 +376,8 @@ func (self *CommsTestSuite) TestMultiFrontendsAllIsBorked() {
 
 	communicator.receiver.sendMessageList(context.Background(), nil, false)
 
-	utils.Debug(self.frontend1.events)
-	utils.Debug(self.frontend2.events)
+	//utils.Debug(self.frontend1.events)
+	//utils.Debug(self.frontend2.events)
 
 	checkResponses(self.T(), self.frontend1.events, []string{
 		// First request looks for server.pem but fails on frontend1
@@ -447,8 +447,8 @@ func (self *CommsTestSuite) TestMultiFrontendsIntermittantFailure() {
 
 	communicator.receiver.sendMessageList(context.Background(), nil, false)
 
-	utils.Debug(self.frontend1.events)
-	utils.Debug(self.frontend2.events)
+	//utils.Debug(self.frontend1.events)
+	//utils.Debug(self.frontend2.events)
 
 	// Message ordering is important
 	checkResponses(self.T(), self.frontend1.events, []string{
@@ -503,8 +503,8 @@ func (self *CommsTestSuite) TestMultiFrontendsHeavyFailure() {
 
 	communicator.receiver.sendMessageList(context.Background(), nil, false)
 
-	utils.Debug(self.frontend1.events)
-	utils.Debug(self.frontend2.events)
+	//utils.Debug(self.frontend1.events)
+	//utils.Debug(self.frontend2.events)
 
 	// Message ordering is important
 	checkResponses(self.T(), self.frontend1.events, []string{
@@ -571,8 +571,8 @@ func (self *CommsTestSuite) TestMultiFrontendRedirect() {
 	communicator.receiver.sendMessageList(context.Background(), nil, false)
 	communicator.receiver.sendMessageList(context.Background(), nil, false)
 
-	utils.Debug(self.frontend1.events)
-	utils.Debug(self.frontend2.events)
+	//utils.Debug(self.frontend1.events)
+	//utils.Debug(self.frontend2.events)
 
 	// Message ordering is important
 	checkResponses(self.T(), self.frontend1.events, []string{
@@ -638,8 +638,8 @@ func (self *CommsTestSuite) TestMultiFrontendRedirectWithErrors() {
 	communicator.receiver.sendMessageList(context.Background(), nil, false)
 	communicator.receiver.sendMessageList(context.Background(), nil, false)
 
-	utils.Debug(self.frontend1.events)
-	utils.Debug(self.frontend2.events)
+	//utils.Debug(self.frontend1.events)
+	//utils.Debug(self.frontend2.events)
 
 	// Message ordering is important
 	checkResponses(self.T(), self.frontend1.events, []string{
@@ -687,7 +687,7 @@ func (self *CommsTestSuite) TestMultiFrontendRedirectWithErrors() {
 		"18 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
 	})
 
-	utils.Debug(communicator.receiver.connector.(*HTTPConnector).urls)
+	//utils.Debug(communicator.receiver.connector.(*HTTPConnector).urls)
 
 }
 
@@ -723,8 +723,8 @@ func (self *CommsTestSuite) TestMultiRedirects() {
 
 	communicator.receiver.sendMessageList(context.Background(), nil, false)
 
-	utils.Debug(self.frontend1.events)
-	utils.Debug(self.frontend2.events)
+	//utils.Debug(self.frontend1.events)
+	//utils.Debug(self.frontend2.events)
 
 	// Multiple redirections should not add duplicates to the url list.
 	assert.Equal(self.T(), communicator.receiver.connector.(*HTTPConnector).urls,

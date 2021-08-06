@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"regexp"
+	"strings"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -160,8 +161,27 @@ func migrate_0_5_6(config_obj *config_proto.Config) {
 	}
 }
 
+func migrate_0_6_1(config_obj *config_proto.Config) {
+	// We require the datastore location to have no trailing path
+	// separators.
+	if config_obj.Datastore != nil {
+		config_obj.Datastore.Location = strings.TrimSuffix(
+			config_obj.Datastore.Location, "\\")
+
+		config_obj.Datastore.Location = strings.TrimSuffix(
+			config_obj.Datastore.Location, "/")
+
+		config_obj.Datastore.FilestoreDirectory = strings.TrimSuffix(
+			config_obj.Datastore.FilestoreDirectory, "\\")
+
+		config_obj.Datastore.FilestoreDirectory = strings.TrimSuffix(
+			config_obj.Datastore.FilestoreDirectory, "/")
+	}
+}
+
 func migrate(config_obj *config_proto.Config) {
 	migrate_0_4_2(config_obj)
 	migrate_0_4_6(config_obj)
 	migrate_0_5_6(config_obj)
+	migrate_0_6_1(config_obj)
 }

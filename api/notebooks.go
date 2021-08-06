@@ -7,7 +7,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -24,9 +23,11 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
@@ -71,7 +72,7 @@ func (self *ApiServer) GetNotebooks(
 
 	// We want a single notebook metadata.
 	if in.NotebookId != "" {
-		notebook_path_manager := reporting.NewNotebookPathManager(
+		notebook_path_manager := paths.NewNotebookPathManager(
 			in.NotebookId)
 		notebook := &api_proto.NotebookMetadata{}
 		err := db.GetSubject(self.config, notebook_path_manager.Path(),
@@ -91,7 +92,7 @@ func (self *ApiServer) GetNotebooks(
 
 		// An error here just means there are no AvailableDownloads.
 		notebook.AvailableDownloads, _ = getAvailableDownloadFiles(self.config,
-			path.Dir(notebook_path_manager.HtmlExport()))
+			notebook_path_manager.HtmlExport().Dir())
 
 		notebook.Timelines = getAvailableTimelines(
 			self.config, notebook_path_manager)
@@ -190,7 +191,7 @@ func (self *ApiServer) NewNotebook(
 
 	// Store the notebook metadata first before creating the
 	// cells. Calculating the cells will try to open the notebook.
-	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
+	notebook_path_manager := paths.NewNotebookPathManager(in.NotebookId)
 	err = db.SetSubject(self.config, notebook_path_manager.Path(), in)
 	if err != nil {
 		return nil, err
@@ -329,6 +330,13 @@ func getDefaultCellsForSources(config_obj *config_proto.Config,
 		// If the artifact_source defines a notebook, let it do its own thing.
 		if len(artifact_source.Notebook) > 0 {
 			for _, cell := range artifact_source.Notebook {
+				for _, i := range cell.Env {
+					env = append(env, &api_proto.Env{
+						Key:   i.Key,
+						Value: i.Value,
+					})
+				}
+
 				result = append(result, &api_proto.NotebookCellRequest{
 					Type:  cell.Type,
 					Env:   env,
@@ -387,7 +395,7 @@ func (self *ApiServer) NewNotebookCell(
 	}
 
 	notebook := &api_proto.NotebookMetadata{}
-	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
+	notebook_path_manager := paths.NewNotebookPathManager(in.NotebookId)
 	err = db.GetSubject(self.config, notebook_path_manager.Path(), notebook)
 	if err != nil {
 		return nil, err
@@ -479,7 +487,7 @@ func (self *ApiServer) UpdateNotebook(
 	}
 
 	old_notebook := &api_proto.NotebookMetadata{}
-	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
+	notebook_path_manager := paths.NewNotebookPathManager(in.NotebookId)
 	err = db.GetSubject(self.config, notebook_path_manager.Path(), old_notebook)
 	if err != nil {
 		return nil, err
@@ -555,7 +563,7 @@ func (self *ApiServer) GetNotebookCell(
 	}
 
 	// Check the user is allowed to manipulate this notebook.
-	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
+	notebook_path_manager := paths.NewNotebookPathManager(in.NotebookId)
 
 	notebook_metadata := &api_proto.NotebookMetadata{}
 	err = db.GetSubject(self.config,
@@ -618,7 +626,7 @@ func (self *ApiServer) UpdateNotebookCell(
 	}
 
 	// Check that the user has access to this notebook.
-	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
+	notebook_path_manager := paths.NewNotebookPathManager(in.NotebookId)
 	notebook_metadata := &api_proto.NotebookMetadata{}
 	db, err := datastore.GetDB(self.config)
 	if err != nil {
@@ -661,7 +669,8 @@ func (self *ApiServer) updateNotebookCell(
 	}
 
 	// And store it for next time.
-	notebook_path_manager := reporting.NewNotebookPathManager(notebook_metadata.NotebookId)
+	notebook_path_manager := paths.NewNotebookPathManager(
+		notebook_metadata.NotebookId)
 	err = db.SetSubject(self.config,
 		notebook_path_manager.Cell(in.CellId).Path(),
 		notebook_cell)
@@ -818,8 +827,8 @@ func (self *ApiServer) CancelNotebookCell(
 	if err != nil {
 		return nil, err
 	}
-	notebook_cell_path_manager := reporting.NewNotebookPathManager(in.NotebookId).
-		Cell(in.CellId)
+	notebook_cell_path_manager := paths.NewNotebookPathManager(
+		in.NotebookId).Cell(in.CellId)
 	notebook_cell := &api_proto.NotebookCell{}
 	err = db.GetSubject(self.config, notebook_cell_path_manager.Path(),
 		notebook_cell)
@@ -862,8 +871,8 @@ func (self *ApiServer) UploadNotebookAttachment(
 	}
 
 	filename := NewNotebookAttachmentId() + in.Filename
-	full_path := path.Join("/notebooks", in.NotebookId,
-		string(datastore.SanitizeString(filename)))
+	full_path := paths.NewNotebookPathManager(in.NotebookId).
+		Attachment(filename)
 	file_store_factory := file_store.GetFileStore(self.config)
 	fd, err := file_store_factory.WriteFile(full_path)
 	if err != nil {
@@ -877,7 +886,7 @@ func (self *ApiServer) UploadNotebookAttachment(
 	}
 
 	result := &api_proto.NotebookFileUploadResponse{
-		Url: full_path,
+		Url: full_path.AsClientPath(),
 	}
 	return result, nil
 }
@@ -921,7 +930,7 @@ func exportZipNotebook(
 	}
 
 	notebook := &api_proto.NotebookMetadata{}
-	notebook_path_manager := reporting.NewNotebookPathManager(notebook_id)
+	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
 	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
 	if err != nil {
 		return err
@@ -933,8 +942,9 @@ func exportZipNotebook(
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	filename := notebook_path_manager.ZipExport()
+	lock_file_name := filename.SetType(api.PATH_TYPE_FILESTORE_LOCK)
 
-	lock_file, err := file_store_factory.WriteFile(filename + ".lock")
+	lock_file, err := file_store_factory.WriteFile(lock_file_name)
 	if err != nil {
 		return err
 	}
@@ -945,7 +955,7 @@ func exportZipNotebook(
 
 	go func() {
 		defer func() {
-			_ = file_store_factory.Delete(filename + ".lock")
+			_ = file_store_factory.Delete(lock_file_name)
 		}()
 
 		defer cancel()
@@ -974,7 +984,7 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 	}
 
 	notebook := &api_proto.NotebookMetadata{}
-	notebook_path_manager := reporting.NewNotebookPathManager(notebook_id)
+	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
 	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
 	if err != nil {
 		return err
@@ -986,8 +996,9 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	filename := notebook_path_manager.HtmlExport()
+	lock_file_name := filename.SetType(api.PATH_TYPE_FILESTORE_LOCK)
 
-	lock_file, err := file_store_factory.WriteFile(filename + ".lock")
+	lock_file, err := file_store_factory.WriteFile(lock_file_name)
 	if err != nil {
 		return err
 	}
@@ -1002,7 +1013,7 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 	sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 
 	go func() {
-		defer func() { _ = file_store_factory.Delete(filename + ".lock") }()
+		defer func() { _ = file_store_factory.Delete(lock_file_name) }()
 		defer writer.Close()
 		defer cancel()
 
@@ -1024,24 +1035,24 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 
 func getAvailableTimelines(
 	config_obj *config_proto.Config,
-	path_manager *reporting.NotebookPathManager) []string {
+	path_manager *paths.NotebookPathManager) []string {
 
 	result := []string{}
 	db, err := datastore.GetDB(config_obj)
-	files, err := db.ListChildren(config_obj, path_manager.TimelineDir(),
-		0, 1000)
+	files, err := db.ListChildren(
+		config_obj, path_manager.SuperTimelineDir(), 0, 1000)
 	if err != nil {
 		return nil
 	}
 
 	for _, f := range files {
-		result = append(result, utils.Base(f))
+		result = append(result, f.Base())
 	}
 	return result
 }
 
 func getAvailableDownloadFiles(config_obj *config_proto.Config,
-	download_path string) (*api_proto.AvailableDownloads, error) {
+	download_path api.FSPathSpec) (*api_proto.AvailableDownloads, error) {
 	result := &api_proto.AvailableDownloads{}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -1065,8 +1076,9 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 		}
 
 		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
-			Name:     item.Name(),
-			Path:     path.Join(download_path, item.Name()),
+			Name: item.Name(),
+			Path: download_path.AddChild(
+				item.Name()).AsClientPath(),
 			Size:     uint64(item.Size()),
 			Date:     fmt.Sprintf("%v", item.ModTime()),
 			Complete: is_complete(item.Name()),
@@ -1093,6 +1105,40 @@ func updateCellContents(
 
 	cell_type = strings.ToLower(cell_type)
 
+	// Create a new cell to set the result in.
+	make_cell := func(output string) *api_proto.NotebookCell {
+		messages := tmpl.Messages()
+
+		encoded_data, err := json.Marshal(tmpl.Data)
+		if err != nil {
+			messages = append(messages,
+				fmt.Sprintf("Error: %v", err))
+		}
+
+		return &api_proto.NotebookCell{
+			Input:            original_input,
+			Output:           output,
+			Data:             string(encoded_data),
+			Messages:         tmpl.Messages(),
+			CellId:           cell_id,
+			Type:             cell_type,
+			Env:              env,
+			Timestamp:        time.Now().Unix(),
+			CurrentlyEditing: currently_editing,
+			Duration:         int64(time.Since(tmpl.Start).Seconds()),
+		}
+	}
+
+	// If an error occurs it is important to ensure the cell is
+	// still written with an error message.
+	make_error_cell := func(err error) (*api_proto.NotebookCell, error) {
+		notebook_cell := make_cell("")
+		notebook_cell.Messages = append(notebook_cell.Messages,
+			fmt.Sprintf("Error: %v", err))
+		setCell(config_obj, notebook_id, notebook_cell)
+		return notebook_cell, err
+	}
+
 	switch cell_type {
 
 	case "markdown", "md":
@@ -1100,7 +1146,7 @@ func updateCellContents(
 		// template.
 		output, err = tmpl.Execute(&artifacts_proto.Report{Template: input})
 		if err != nil {
-			return nil, err
+			return make_error_cell(err)
 		}
 
 	case "vql":
@@ -1133,36 +1179,19 @@ func updateCellContents(
 				}
 				fragment_output, err := tmpl.Execute(&artifacts_proto.Report{Template: input})
 				if err != nil {
-					return nil, err
+					return make_error_cell(err)
 				}
 				output += fragment_output
 			}
 		}
 
 	default:
-		return nil, errors.New("Unsupported cell type.")
-	}
-
-	encoded_data, err := json.Marshal(tmpl.Data)
-	if err != nil {
-		return nil, err
+		return make_error_cell(errors.New("Unsupported cell type."))
 	}
 
 	tmpl.Close()
 
-	notebook_cell := &api_proto.NotebookCell{
-		Input:            original_input,
-		Output:           output,
-		Data:             string(encoded_data),
-		Messages:         tmpl.Messages(),
-		CellId:           cell_id,
-		Type:             cell_type,
-		Env:              env,
-		Timestamp:        time.Now().Unix(),
-		CurrentlyEditing: currently_editing,
-		Duration:         int64(time.Since(tmpl.Start).Seconds()),
-	}
-
+	notebook_cell := make_cell(output)
 	return notebook_cell, setCell(config_obj, notebook_id, notebook_cell)
 }
 
@@ -1177,7 +1206,7 @@ func setCell(
 	}
 
 	// And store it for next time.
-	notebook_path_manager := reporting.NewNotebookPathManager(notebook_id)
+	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
 	err = db.SetSubject(config_obj,
 		notebook_path_manager.Cell(notebook_cell.CellId).Path(),
 		notebook_cell)

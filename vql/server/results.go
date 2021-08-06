@@ -31,7 +31,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
-	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -314,10 +313,11 @@ func getResultSetReader(
 		if table == 0 {
 			table = 1
 		}
-		path_manager := reporting.NewNotebookPathManager(
+		path_manager := paths.NewNotebookPathManager(
 			arg.NotebookId).Cell(arg.NotebookCellId).QueryStorage(table)
 
-		return result_sets.NewResultSetReader(file_store_factory, path_manager)
+		return result_sets.NewResultSetReader(
+			file_store_factory, path_manager.Path())
 	}
 
 	if arg.Artifact != "" {
@@ -349,7 +349,8 @@ func getResultSetReader(
 			return nil, err
 		}
 
-		return result_sets.NewResultSetReader(file_store_factory, path_manager)
+		return result_sets.NewResultSetReader(
+			file_store_factory, path_manager.Path())
 
 	}
 
@@ -486,7 +487,7 @@ func (self FlowResultsPlugin) Call(
 
 		file_store_factory := file_store.GetFileStore(config_obj)
 		rs_reader, err := result_sets.NewResultSetReader(
-			file_store_factory, path_manager)
+			file_store_factory, path_manager.Path())
 		if err != nil {
 			scope.Log("source: %v", err)
 			return

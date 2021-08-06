@@ -539,7 +539,7 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 
 	// Record the tasks for provenance of what we actually did.
 	err = db.SetSubject(config_obj,
-		flow_path_manager.Task().Path(),
+		flow_path_manager.Task(),
 		&api_proto.ApiFlowRequestDetails{Items: tasks})
 	if err != nil {
 		return "", err

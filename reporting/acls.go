@@ -8,9 +8,9 @@ import (
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -45,7 +45,7 @@ func GetSharedNotebooks(
 	// Return all the notebooks from the index that potentially
 	// could be shared with the user.
 	for idx, notebook_id := range db.SearchClients(
-		config_obj, constants.NOTEBOOK_INDEX, user, "",
+		config_obj, paths.NOTEBOOK_INDEX, user, "",
 		offset, count, datastore.SORT_UP) {
 		if uint64(idx) < offset {
 			continue
@@ -55,7 +55,7 @@ func GetSharedNotebooks(
 			break
 		}
 
-		notebook_path_manager := NewNotebookPathManager(notebook_id)
+		notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
 		notebook := &api_proto.NotebookMetadata{}
 		err := db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
 		// Notebook was removed or does not exist.
@@ -96,7 +96,7 @@ func GetAllNotebooks(
 
 	// List all available notebooks
 	notebook_urns, err := db.ListChildren(
-		config_obj, NotebookDir(), 0, 1000000)
+		config_obj, paths.NotebookDir(), 0, 1000000)
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +131,6 @@ func UpdateShareIndex(
 	}
 
 	users := append([]string{notebook.Creator}, notebook.Collaborators...)
-	return db.SetIndex(config_obj, constants.NOTEBOOK_INDEX,
+	return db.SetIndex(config_obj, paths.NOTEBOOK_INDEX,
 		notebook.NotebookId, users)
 }

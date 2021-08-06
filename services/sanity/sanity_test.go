@@ -98,7 +98,7 @@ tools:
 
 	db := test_utils.GetMemoryDataStore(self.T(), self.config_obj)
 	golden := ordereddict.NewDict().
-		Set("/config/inventory.json", db.Subjects["/config/inventory.json"])
+		Set("/config/inventory.json", db.Subjects["/config/inventory.json.db"])
 
 	serialized, err := json.MarshalIndentNormalized(golden)
 	assert.NoError(self.T(), err)
@@ -121,8 +121,8 @@ func (self *ServicesTestSuite) TestCreateUser() {
 
 	db := test_utils.GetMemoryDataStore(self.T(), self.config_obj)
 	golden := ordereddict.NewDict().
-		Set("/users/User1", db.Subjects["/users/User1"]).
-		Set("/acl/User1.json", db.Subjects["/acl/User1.json"])
+		Set("/users/User1", db.Subjects["/users/User1.db"]).
+		Set("/acl/User1.json", db.Subjects["/acl/User1.json.db"])
 
 	serialized, err := json.MarshalIndentNormalized(golden)
 	assert.NoError(self.T(), err)

@@ -15,7 +15,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -124,7 +123,7 @@ func (self *HuntTestSuite) TestHuntManager() {
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated.
-		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+		err = db.CheckIndex(self.config_obj, paths.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
 		if err != nil {
 			return false
@@ -200,7 +199,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we now run on it.
-		err := db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+		err := db.CheckIndex(self.config_obj, paths.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
 		return err == nil
 	})
@@ -262,7 +261,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
-		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+		err = db.CheckIndex(self.config_obj, paths.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
 		if err != nil {
 			return false
@@ -317,7 +316,7 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
-		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+		err = db.CheckIndex(self.config_obj, paths.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
 		if err != nil {
 			return false
@@ -385,7 +384,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
-		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+		err = db.CheckIndex(self.config_obj, paths.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
 		if err != nil {
 			return false

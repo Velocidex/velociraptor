@@ -5,13 +5,11 @@ package search
 import (
 	"context"
 	"errors"
-	"path"
 	"strings"
 	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 )
@@ -42,7 +40,7 @@ func searchRecents(
 	result := &api_proto.SearchClientsResponse{}
 
 	children, err := db.ListChildren(
-		config_obj, path_manager.MRU()+"/mru", 0, 1000)
+		config_obj, path_manager.MRUIndex(), 0, 1000)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +48,7 @@ func searchRecents(
 	// Sort the children in reverse order - most recent first.
 	total_count := 0
 	for i := len(children) - 1; i >= 0; i-- {
-		client_id := path.Base(children[i])
+		client_id := children[i].Base()
 		api_client, err := GetApiClient(
 			ctx, config_obj, client_id, false /* detailed */)
 		if err != nil {
@@ -130,7 +128,7 @@ func SearchClients(
 	result := &api_proto.SearchClientsResponse{}
 	total_count := 0
 	children := db.SearchClients(
-		config_obj, constants.CLIENT_INDEX_URN,
+		config_obj, paths.CLIENT_INDEX_URN,
 		in.Query, query_type, 0, 1000000, sort_direction)
 
 	for _, client_id := range children {

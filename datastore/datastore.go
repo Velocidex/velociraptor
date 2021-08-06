@@ -20,11 +20,14 @@ package datastore
 
 import (
 	"errors"
+	"strings"
 	"sync"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
 var (
@@ -39,7 +42,13 @@ const (
 	SORT_DOWN = SortingSense(2)
 )
 
-type WalkFunc func(urn string) error
+type DatastoreInfo struct {
+	Name     string
+	Modified time.Time
+}
+
+type WalkFunc func(urn api.DSPathSpec) error
+type ComponentWalkFunc func(components api.DSPathSpec) error
 
 type DataStore interface {
 	// Retrieve all the client's tasks.
@@ -63,50 +72,50 @@ type DataStore interface {
 	// os.ErrNotExist error.
 	GetSubject(
 		config_obj *config_proto.Config,
-		urn string,
+		urn api.DSPathSpec,
 		message proto.Message) error
 
 	SetSubject(
 		config_obj *config_proto.Config,
-		urn string,
+		urn api.DSPathSpec,
 		message proto.Message) error
 
 	DeleteSubject(
 		config_obj *config_proto.Config,
-		urn string) error
+		urn api.DSPathSpec) error
 
 	// Lists all the children of a URN.
 	ListChildren(
 		config_obj *config_proto.Config,
-		urn string,
-		offset uint64, length uint64) ([]string, error)
+		urn api.DSPathSpec,
+		offset uint64, length uint64) ([]api.DSPathSpec, error)
 
 	Walk(config_obj *config_proto.Config,
-		root string, walkFn WalkFunc) error
+		root api.DSPathSpec, walkFn WalkFunc) error
 
 	// Update the posting list index. Searching for any of the
 	// keywords will return the entity urn.
 	SetIndex(
 		config_obj *config_proto.Config,
-		index_urn string,
+		index_urn api.DSPathSpec,
 		entity string,
 		keywords []string) error
 
 	UnsetIndex(
 		config_obj *config_proto.Config,
-		index_urn string,
+		index_urn api.DSPathSpec,
 		entity string,
 		keywords []string) error
 
 	CheckIndex(
 		config_obj *config_proto.Config,
-		index_urn string,
+		index_urn api.DSPathSpec,
 		entity string,
 		keywords []string) error
 
 	SearchClients(
 		config_obj *config_proto.Config,
-		index_urn string,
+		index_urn api.DSPathSpec,
 		query string, query_type string,
 		offset uint64, limit uint64, sort SortingSense) []string
 
@@ -121,11 +130,23 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 
 	switch config_obj.Datastore.Implementation {
 	case "FileBaseDataStore":
+		if config_obj.Datastore.Location == "" {
+			return nil, errors.New(
+				"No Datastore_location is set in the config.")
+		}
+
 		return file_based_imp, nil
 
 	case "Test":
 		mu.Lock()
 		defer mu.Unlock()
+
+		// Sanitize the FilestoreDirectory parameter so we
+		// have a consistent filename in the test datastore.
+		config_obj.Datastore.Location = strings.TrimSuffix(
+			config_obj.Datastore.Location, "/")
+		config_obj.Datastore.Location = strings.TrimSuffix(
+			config_obj.Datastore.Location, "\\")
 
 		return gTestDatastore, nil
 

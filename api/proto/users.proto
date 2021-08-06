@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "proto/semantic.proto";
 import "acls/proto/acl.proto";
+import "flows/proto/artifact_collector.proto";
 
 package proto;
 
@@ -156,4 +157,17 @@ message SetGUIOptionsRequest {
 
 message Users {
     repeated VelociraptorUser users = 1;
+}
+
+// Store favorite collections (essential preset collection specs)
+message Favorite {
+    string name = 1;
+    string description = 2;
+    repeated ArtifactSpec spec = 3;
+
+    string type = 4;
+}
+
+message Favorites {
+    repeated Favorite items = 1;
 }

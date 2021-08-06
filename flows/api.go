@@ -19,7 +19,6 @@ package flows
 
 import (
 	"context"
-	"path"
 	"sort"
 	"strings"
 	"time"
@@ -32,6 +31,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -75,7 +75,7 @@ func GetFlows(
 		// Flow IDs represent timestamp so they are sortable. The UI
 		// relies on more recent flows being at the top.
 		sort.Slice(flow_urns, func(i, j int) bool {
-			return flow_urns[i] > flow_urns[j]
+			return flow_urns[i].Base() > flow_urns[j].Base()
 		})
 
 		// Collect the items that match from this backend read
@@ -84,7 +84,7 @@ func GetFlows(
 
 		for _, urn := range flow_urns {
 			// Hide the monitoring flow since it is not a real flow.
-			if strings.HasSuffix(urn, constants.MONITORING_WELL_KNOWN_FLOW) {
+			if urn.Base() == constants.MONITORING_WELL_KNOWN_FLOW {
 				continue
 			}
 
@@ -170,14 +170,14 @@ func availableDownloadFiles(config_obj *config_proto.Config,
 	client_id string, flow_id string) (*api_proto.AvailableDownloads, error) {
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	download_file := flow_path_manager.GetDownloadsFile("").Path()
-	download_path := path.Dir(download_file)
+	download_file := flow_path_manager.GetDownloadsFile("X")
+	download_path := download_file.Dir()
 
 	return getAvailableDownloadFiles(config_obj, download_path)
 }
 
 func getAvailableDownloadFiles(config_obj *config_proto.Config,
-	download_path string) (*api_proto.AvailableDownloads, error) {
+	download_path api.FSPathSpec) (*api_proto.AvailableDownloads, error) {
 	result := &api_proto.AvailableDownloads{}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -202,8 +202,9 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 		}
 
 		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
-			Name:     item.Name(),
-			Path:     path.Join(download_path, item.Name()),
+			Name: item.Name(),
+			Path: download_path.AddChild(
+				item.Name()).AsClientPath(),
 			Size:     uint64(item.Size()),
 			Date:     item.ModTime().UTC().Format(time.RFC3339),
 			Complete: is_complete(item.Name()),
@@ -350,8 +351,8 @@ func GetFlowRequests(
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	flow_details := &api_proto.ApiFlowRequestDetails{}
-	err = db.GetSubject(config_obj, flow_path_manager.Task().Path(),
-		flow_details)
+	err = db.GetSubject(
+		config_obj, flow_path_manager.Task(), flow_details)
 	if err != nil {
 		return nil, err
 	}

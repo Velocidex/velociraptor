@@ -100,7 +100,7 @@ sources:
 	assert.NoError(self.T(), err)
 
 	db := test_utils.GetMemoryDataStore(self.T(), self.config_obj)
-	hunt_obj, pres := db.Subjects["/hunts/"+hunt_id].(*api_proto.Hunt)
+	hunt_obj, pres := db.Subjects["/hunts/"+hunt_id+".db"].(*api_proto.Hunt)
 	assert.True(self.T(), pres)
 
 	assert.Equal(self.T(), hunt_obj.HuntDescription, request.HuntDescription)

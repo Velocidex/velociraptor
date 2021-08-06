@@ -2,7 +2,6 @@
 syntax = "proto3";
 
 import "proto/semantic.proto";
-import "proto/flow_metadata.proto";
 import "artifacts/proto/artifact.proto";
 
 package proto;

@@ -27,7 +27,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
-	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/timelines"
 
@@ -47,14 +46,14 @@ func getTable(
 	}
 
 	result := &api_proto.GetTableResponse{}
-	path_manager, err := getPathManager(config_obj, in)
+	path_spec, err := getPathSpec(config_obj, in)
 	if err != nil {
 		return result, err
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_reader, err := result_sets.NewResultSetReader(
-		file_store_factory, path_manager)
+		file_store_factory, path_spec)
 	if err != nil {
 		return result, nil
 	}
@@ -103,17 +102,22 @@ func getTable(
 	return result, nil
 }
 
-func getPathManager(
+func getPathSpec(
 	config_obj *config_proto.Config,
-	in *api_proto.GetTableRequest) (api.PathManager, error) {
+	in *api_proto.GetTableRequest) (api.FSPathSpec, error) {
 
 	if in.FlowId != "" && in.Artifact != "" {
-		return artifacts.NewArtifactPathManager(
+		path_manager, err := artifacts.NewArtifactPathManager(
 			config_obj, in.ClientId, in.FlowId, in.Artifact)
+		if err != nil {
+			return nil, err
+		}
+		return path_manager.Path(), nil
 
 	} else if in.FlowId != "" && in.Type != "" {
 		flow_path_manager := paths.NewFlowPathManager(
 			in.ClientId, in.FlowId)
+
 		switch in.Type {
 		case "log":
 			return flow_path_manager.Log(), nil
@@ -127,8 +131,8 @@ func getPathManager(
 		return paths.NewHuntPathManager(in.HuntId).ClientErrors(), nil
 
 	} else if in.NotebookId != "" && in.CellId != "" {
-		return reporting.NewNotebookPathManager(in.NotebookId).Cell(
-			in.CellId).QueryStorage(in.TableId), nil
+		return paths.NewNotebookPathManager(in.NotebookId).Cell(
+			in.CellId).QueryStorage(in.TableId).Path(), nil
 	}
 
 	return nil, errors.New("Invalid request")
@@ -225,8 +229,10 @@ func getTimeline(
 		return nil, errors.New("NotebookId must be specified")
 	}
 
-	path_manager := reporting.NewNotebookPathManager(in.NotebookId).Timeline(in.Timeline)
-	reader, err := timelines.NewSuperTimelineReader(config_obj, path_manager, in.SkipComponents)
+	path_manager := paths.NewNotebookPathManager(in.NotebookId).
+		SuperTimeline(in.Timeline)
+	reader, err := timelines.NewSuperTimelineReader(
+		config_obj, path_manager, in.SkipComponents)
 	if err != nil {
 		return nil, err
 	}

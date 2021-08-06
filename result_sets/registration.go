@@ -50,35 +50,36 @@ func NewTimedResultSetReader(
 type Factory interface {
 	NewResultSetWriter(
 		file_store_factory api.FileStore,
-		path_manager api.PathManager,
+		log_path api.FSPathSpec,
 		opts *json.EncOpts,
 		truncate bool) (ResultSetWriter, error)
 
 	NewResultSetReader(
 		file_store_factory api.FileStore,
-		path_manager api.PathManager) (ResultSetReader, error)
+		log_path api.FSPathSpec,
+	) (ResultSetReader, error)
 }
 
 func NewResultSetWriter(
 	file_store_factory api.FileStore,
-	path_manager api.PathManager,
+	log_path api.FSPathSpec,
 	opts *json.EncOpts,
 	truncate bool) (ResultSetWriter, error) {
 	if rs_factory == nil {
 		panic(errors.New("ResultSetFactory not initialized"))
 	}
 	return rs_factory.NewResultSetWriter(file_store_factory,
-		path_manager, opts, truncate)
+		log_path, opts, truncate)
 
 }
 
 func NewResultSetReader(
 	file_store_factory api.FileStore,
-	path_manager api.PathManager) (ResultSetReader, error) {
+	log_path api.FSPathSpec) (ResultSetReader, error) {
 	if rs_factory == nil {
 		panic(errors.New("ResultSetFactory not initialized"))
 	}
-	return rs_factory.NewResultSetReader(file_store_factory, path_manager)
+	return rs_factory.NewResultSetReader(file_store_factory, log_path)
 }
 
 // Allows for registration of the result set factory.

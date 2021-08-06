@@ -85,7 +85,8 @@ func (self *ResultSetTestSuite) TestResultSetSimple() {
 	assert.NoError(self.T(), err)
 
 	writer, err := result_sets.NewResultSetWriter(
-		self.file_store, path_manager, nil, true /* truncate */)
+		self.file_store, path_manager.Path(),
+		nil, true /* truncate */)
 	assert.NoError(self.T(), err)
 
 	// Write 5 rows separately
@@ -105,7 +106,7 @@ func (self *ResultSetTestSuite) TestResultSetSimple() {
 
 	for _, test_case := range test_cases {
 		rs_reader, err := result_sets.NewResultSetReader(
-			self.file_store, path_manager)
+			self.file_store, path_manager.Path())
 		assert.NoError(self.T(), err)
 		defer rs_reader.Close()
 

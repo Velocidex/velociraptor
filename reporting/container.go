@@ -20,6 +20,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -84,7 +85,7 @@ func (self *Container) StoreArtifact(
 	}
 
 	// The name to use in the zip file to store results from this artifact
-	path_manager := NewContainerPathManager(artifact_name)
+	path_manager := paths.NewContainerPathManager(artifact_name)
 	fd, err := self.Create(path_manager.Path(), time.Time{})
 	if err != nil {
 		return err

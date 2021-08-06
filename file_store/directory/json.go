@@ -12,7 +12,7 @@ import (
 func ReadRowsJSON(
 	ctx context.Context,
 	file_store api.FileStore,
-	log_path string, start_time, end_time int64) (
+	log_path api.FSPathSpec, start_time, end_time int64) (
 	<-chan *ordereddict.Dict, error) {
 
 	fd, err := file_store.ReadFile(log_path)

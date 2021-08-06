@@ -3,12 +3,16 @@ package vtesting
 import (
 	"os"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
 type MockFileInfo struct {
-	Name_     string
-	FullPath_ string
-	Size_     int64
+	Name_      string
+	PathSpec_  api.FSPathSpec
+	FullPath_  string
+	Size_      int64
+	Components []string
 }
 
 func (self MockFileInfo) Data() interface{}        { return nil }
@@ -19,6 +23,7 @@ func (self MockFileInfo) ModTime() time.Time       { return time.Time{} }
 func (self MockFileInfo) IsDir() bool              { return true }
 func (self MockFileInfo) Sys() interface{}         { return nil }
 func (self MockFileInfo) FullPath() string         { return self.FullPath_ }
+func (self MockFileInfo) PathSpec() api.FSPathSpec { return self.PathSpec_ }
 func (self MockFileInfo) Btime() time.Time         { return time.Time{} }
 func (self MockFileInfo) Mtime() time.Time         { return time.Time{} }
 func (self MockFileInfo) Atime() time.Time         { return time.Time{} }

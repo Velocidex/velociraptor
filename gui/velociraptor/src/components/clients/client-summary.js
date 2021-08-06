@@ -42,7 +42,7 @@ export default class VeloClientSummary extends Component {
                 }).catch(err=>{
                     // The client is not valid - navigate away from
                     // it.
-                    this.props.setClient({});
+                    // this.props.setClient({});
                     return false;
                 });
         }

@@ -24,6 +24,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	file_store_api "www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -144,7 +145,7 @@ func (self *ServerTestSuite) TestEnrollment() {
 	pub_key := &crypto_proto.PublicKey{}
 	err = db.GetSubject(
 		self.config_obj,
-		paths.NewClientPathManager(self.client_id).Key().Path(),
+		paths.NewClientPathManager(self.client_id).Key(),
 		pub_key)
 
 	assert.NoError(self.T(), err)
@@ -242,7 +243,8 @@ func (self *ServerTestSuite) TestForeman() {
 
 	// Check for hunt object in the data store.
 	hunt := &api_proto.Hunt{}
-	err = db.GetSubject(self.config_obj, "/hunts/"+hunt_id, hunt)
+	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
+	err = db.GetSubject(self.config_obj, hunt_path_manager.Path(), hunt)
 	require.NoError(t, err)
 
 	assert.NotNil(t, hunt.StartRequest.CompiledCollectorArgs)
@@ -288,8 +290,8 @@ func (self *ServerTestSuite) TestForeman() {
 
 	rows := []*ordereddict.Dict{}
 	file_store_factory := file_store.GetFileStore(self.config_obj)
-	rs_reader, err := result_sets.NewResultSetReader(file_store_factory,
-		path_manager)
+	rs_reader, err := result_sets.NewResultSetReader(
+		file_store_factory, path_manager.Path())
 	assert.NoError(t, err)
 	for row := range rs_reader.Rows(self.sm.Ctx) {
 		rows = append(rows, row)
@@ -297,10 +299,13 @@ func (self *ServerTestSuite) TestForeman() {
 	assert.Equal(t, len(rows), 1)
 }
 
-func (self *ServerTestSuite) RequiredFilestoreContains(filename string, regex string) {
+func (self *ServerTestSuite) RequiredFilestoreContains(
+	filename file_store_api.FSPathSpec, regex string) {
+
 	file_store_factory := test_utils.GetMemoryFileStore(self.T(), self.config_obj)
 
-	value, pres := file_store_factory.Get(filename)
+	value, pres := file_store_factory.Get(filename.AsFilestoreFilename(
+		self.config_obj))
 	if !pres {
 		self.T().FailNow()
 	}
@@ -396,9 +401,9 @@ func (self *ServerTestSuite) TestLog() {
 		})
 	runner.Close()
 
-	path_manager := paths.NewFlowPathManager(self.client_id, flow_id).Log()
-	self.RequiredFilestoreContains(path_manager.Path(), "Foobar")
-	self.RequiredFilestoreContains(path_manager.Path(), "ZooBar")
+	path_spec := paths.NewFlowPathManager(self.client_id, flow_id).Log()
+	self.RequiredFilestoreContains(path_spec, "Foobar")
+	self.RequiredFilestoreContains(path_spec, "ZooBar")
 }
 
 // Test that messages intended to unknown flows are handled
@@ -561,7 +566,7 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 		"hello world")
 
 	self.RequiredFilestoreContains(
-		flow_path_manager.UploadMetadata().Path(), flow_id)
+		flow_path_manager.UploadMetadata(), flow_id)
 }
 
 // Test VQLResponse are written correctly.
@@ -627,7 +632,7 @@ func (self *ServerTestSuite) TestErrorMessage() {
 
 	// A log is generated
 	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
-	self.RequiredFilestoreContains(path_manager.Log().Path(), "Error generated")
+	self.RequiredFilestoreContains(path_manager.Log(), "Error generated")
 
 	// The collection_context is marked as errored.
 	collection_context := &flows_proto.ArtifactCollectorContext{}

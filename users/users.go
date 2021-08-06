@@ -23,13 +23,11 @@ import (
 	"crypto/subtle"
 	"fmt"
 	"os"
-	"path"
 	"regexp"
 
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	constants "www.velocidex.com/golang/velociraptor/constants"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 )
@@ -84,14 +82,14 @@ func ListUsers(config_obj *config_proto.Config) ([]*api_proto.VelociraptorUser, 
 		return nil, err
 	}
 
-	children, err := db.ListChildren(config_obj, constants.USER_URN, 0, 500)
+	children, err := db.ListChildren(config_obj, paths.USERS_ROOT, 0, 500)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make([]*api_proto.VelociraptorUser, 0, len(children))
 	for _, child := range children {
-		username := path.Base(child)
+		username := child.Base()
 		user_record, err := GetUser(config_obj, username)
 		if err == nil {
 			result = append(result, user_record)

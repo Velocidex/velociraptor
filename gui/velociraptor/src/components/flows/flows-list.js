@@ -28,6 +28,9 @@ import { withRouter } from "react-router-dom";
 import { runArtifact } from "./utils.js";
 
 import Modal from 'react-bootstrap/Modal';
+import UserConfig from '../core/user.js';
+import VeloForm from '../forms/form.js';
+
 import axios from 'axios';
 
 
@@ -40,6 +43,14 @@ export class DeleteFlowDialog extends React.PureComponent {
 
     state = {
         loading: false,
+    }
+
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
     }
 
     startDeleteFlow = () => {
@@ -55,7 +66,7 @@ export class DeleteFlowDialog extends React.PureComponent {
                          ReallyDoIt: "Y"}, ()=>{
                              this.props.onClose();
                              this.setState({loading: false});
-                         });
+                         }, this.source.token);
         }
     }
 
@@ -84,6 +95,88 @@ export class DeleteFlowDialog extends React.PureComponent {
                   Close
                 </Button>
                 <Button variant="primary" onClick={this.startDeleteFlow}>
+                  Yes do it!
+                </Button>
+              </Modal.Footer>
+            </Modal>
+        );
+    }
+}
+
+export class SaveCollectionDialog extends React.PureComponent {
+    static contextType = UserConfig;
+    static propTypes = {
+        client: PropTypes.object,
+        flow: PropTypes.object,
+        onClose: PropTypes.func.isRequired,
+    }
+
+    state = {
+        loading: false,
+    }
+
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+     }
+
+    componentWillUnmount() {
+        this.source.cancel();
+    }
+
+    startSaveFlow = () => {
+        let client_id = this.props.client && this.props.client.client_id;
+        let specs = this.props.flow.request.specs;
+        let type = "CLIENT";
+        if (client_id==="server") {
+            type = "SERVER";
+        }
+
+        this.setState({loading: true});
+        runArtifact("server",   // This collection happens on the server.
+                    "Server.Utils.SaveFavoriteFlow",
+                    {
+                        Specs: JSON.stringify(specs),
+                        Name: this.state.name,
+                        Description: this.state.description,
+                        Type: type,
+                    }, ()=>{
+                        this.props.onClose();
+                        this.setState({loading: false});
+                    }, this.source.token);
+    }
+
+    render() {
+        let collected_artifacts = this.props.flow.artifacts_with_results || [];
+        let artifacts = collected_artifacts.join(",");
+        return (
+            <Modal show={true} onHide={this.props.onClose}>
+              <Modal.Header closeButton>
+                <Modal.Title>Save this collection to your Favorites</Modal.Title>
+              </Modal.Header>
+              <Modal.Body><Spinner loading={this.state.loading} />
+                You can easily collect the same collection from your
+                favorites in future.
+                <br/>
+                This collection was the artifacts <b>{artifacts}</b>
+                <br/><br/>
+                <VeloForm
+                  param={{name: "Name", description: "New Favorite name"}}
+                  value={this.state.name}
+                  setValue={x=>this.setState({name:x})}
+                />
+                <VeloForm
+                  param={{name: "Description",
+                          description: "Describe this favorite"}}
+                  value={this.state.description}
+                  setValue={x=>this.setState({description:x})}
+                />
+
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary" onClick={this.props.onClose}>
+                  Close
+                </Button>
+                <Button variant="primary" onClick={this.startSaveFlow}>
                   Yes do it!
                 </Button>
               </Modal.Footer>
@@ -291,6 +384,13 @@ class FlowsList extends React.Component {
                       this.props.fetchFlows();
                   }}/>
               }
+              { this.state.showSaveCollectionDialog &&
+                <SaveCollectionDialog
+                  flow={this.props.selected_flow}
+                  onClose={e=>{
+                      this.setState({showSaveCollectionDialog: false});
+                  }}/>
+              }
               { this.state.showWizard &&
                 <NewCollectionWizard
                   client={this.props.client}
@@ -355,6 +455,13 @@ class FlowsList extends React.Component {
                           onClick={() => this.setState({showCopyWizard: true})}
                           variant="default">
                     <FontAwesomeIcon icon="copy"/>
+                  </Button>
+                  <Button title="Save Collection"
+                          onClick={() => this.setState({
+                              showSaveCollectionDialog: true
+                          })}
+                          variant="default">
+                    <FontAwesomeIcon icon="save"/>
                   </Button>
 
                   { isServer &&

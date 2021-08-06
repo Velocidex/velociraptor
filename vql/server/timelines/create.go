@@ -7,7 +7,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/timelines"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
@@ -60,9 +60,9 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	notebook_path_manager := reporting.NewNotebookPathManager(notebook_id)
+	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
 	super, err := timelines.NewSuperTimelineWriter(
-		config_obj, notebook_path_manager.Timeline(arg.Timeline))
+		config_obj, notebook_path_manager.SuperTimeline(arg.Timeline))
 	if err != nil {
 		scope.Log("timeline_add: %v", err)
 		return vfilter.Null{}

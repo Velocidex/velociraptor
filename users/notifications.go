@@ -21,7 +21,6 @@ package users
 
 import (
 	"context"
-	"path"
 	"sync"
 	"time"
 
@@ -31,6 +30,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -90,9 +90,9 @@ func (self *UserNotificationManager) HandleNotification(
 
 		// Writer is added to cache and closed when the
 		// manager is closed.
+		path_manager := paths.NewUserPathManager(message.Username)
 		fd, err := file_store_factory.WriteFile(
-			path.Join("/users/", message.Username,
-				"notifications.csv"))
+			path_manager.Notifications())
 		if err != nil {
 			return
 		}

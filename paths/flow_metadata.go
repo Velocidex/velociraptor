@@ -1,166 +1,101 @@
 package paths
 
 import (
-	"context"
 	"fmt"
-	"path"
-	"time"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-// Represents paths for storing an uploaded file in the filestore.
+// Represents paths for storing an uploaded file in the filestore. The
+// path incorporates the filename on the client so it is not safe to
+// directly use in the file store.
 type UploadFile struct {
-	path string
+	path api.FSPathSpec
 }
 
-func (self UploadFile) Path() string {
+// Where the uploaded file is stored in the filestore.
+func (self UploadFile) Path() api.FSPathSpec {
 	return self.path
 }
 
-// Where to write the index path
-func (self UploadFile) IndexPath() string {
-	return self.path + ".idx"
+// Where to write the index path - if the uploaded file is a sparse
+// file, an index file will be written with the ranges.
+func (self UploadFile) IndexPath() api.FSPathSpec {
+	return self.path.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX)
 }
 
+// Manage information about each collection.
 type FlowPathManager struct {
-	path      string
 	client_id string
 	flow_id   string
 }
 
-func (self FlowPathManager) Path() string {
-	return self.path
+func (self FlowPathManager) Path() api.DSPathSpec {
+	return CLIENTS_ROOT.AddChild(self.client_id,
+		"collections", self.flow_id)
 }
 
-func (self FlowPathManager) ContainerPath() string {
-	return path.Join("/clients", self.client_id, "collections")
-}
-
-func (self FlowPathManager) GetPathForWriting() (string, error) {
-	return self.path, nil
-}
-
-func (self FlowPathManager) GetQueueName() string {
-	return self.client_id + self.flow_id
-}
-
-func (self FlowPathManager) GetAvailableFiles(
-	ctx context.Context) []*api.ResultSetFileProperties {
-	return []*api.ResultSetFileProperties{{
-		Path:    self.path,
-		EndTime: time.Unix(int64(1)<<62, 0),
-	}}
+func (self FlowPathManager) ContainerPath() api.DSPathSpec {
+	return CLIENTS_ROOT.AddChild(self.client_id, "collections")
 }
 
 func NewFlowPathManager(client_id, flow_id string) *FlowPathManager {
 	return &FlowPathManager{
-		path:      path.Join("/clients", client_id, "collections", flow_id),
 		client_id: client_id,
 		flow_id:   flow_id,
 	}
 }
 
 // Gets the flow's log file.
-func (self FlowPathManager) Log() *FlowPathManager {
-	self.path = path.Join(self.path, "logs")
-	return &self
+func (self FlowPathManager) Log() api.FSPathSpec {
+	return self.Path().AddChild("logs").
+		AsFilestorePath().
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
-func (self FlowPathManager) Task() *FlowPathManager {
-	self.path = path.Join(self.path, "task")
-	return &self
+func (self FlowPathManager) Task() api.DSPathSpec {
+	return self.Path().AddChild("task").
+		SetType(api.PATH_TYPE_DATASTORE_PROTO)
 }
 
-func (self FlowPathManager) UploadMetadata() *FlowPathManager {
-	self.path = path.Join(self.path, "uploads.json")
-	return &self
+func (self FlowPathManager) UploadMetadata() api.FSPathSpec {
+	return self.Path().AddChild("uploads").AsFilestorePath()
 }
 
-func (self FlowPathManager) GetDownloadsFile(hostname string) *FlowPathManager {
+func (self FlowPathManager) GetDownloadsFile(hostname string) api.FSPathSpec {
 	// If there is no hostname we drop the leading -
 	if hostname != "" {
 		hostname += "-"
 	}
-	self.path = path.Join("/downloads", self.client_id, self.flow_id,
-		fmt.Sprintf("%v%v-%v.zip", hostname, self.client_id, self.flow_id))
-	return &self
+	return DOWNLOADS_ROOT.AddUnsafeChild(self.client_id, self.flow_id,
+		fmt.Sprintf("%v%v-%v", hostname, self.client_id, self.flow_id))
 }
 
-func (self FlowPathManager) GetReportsFile(hostname string) *FlowPathManager {
+func (self FlowPathManager) GetReportsFile(hostname string) api.FSPathSpec {
 	// If there is no hostname we drop the leading -
 	if hostname != "" {
 		hostname += "-"
 	}
-	self.path = path.Join("/downloads", self.client_id, self.flow_id,
-		fmt.Sprintf("Report %v%v-%v.html", hostname, self.client_id, self.flow_id))
-	return &self
+	return DOWNLOADS_ROOT.AddUnsafeChild(self.client_id, self.flow_id,
+		fmt.Sprintf("Report %v%v-%v", hostname,
+			self.client_id, self.flow_id)).
+		SetType(api.PATH_TYPE_FILESTORE_DOWNLOAD_REPORT)
 }
 
-// Figure out where to store the VFSDownloadInfo file. We maintain a
-// metadata file in the client's VFS area linking back to the
-// collection which most recently uploaded this file.
-func (self FlowPathManager) GetVFSDownloadInfoPath(
-	accessor, client_path string) *FlowPathManager {
-	components := []string{"clients", self.client_id, "vfs_files", accessor}
-
-	if accessor == "ntfs" {
-		device, subpath, err := GetDeviceAndSubpath(client_path)
-		if err == nil {
-			components = append(components, device)
-			components = append(components, utils.SplitComponents(subpath)...)
-			self.path = utils.JoinComponents(components, "/")
-			return &self
-		}
-	}
-
-	components = append(components, utils.SplitComponents(client_path)...)
-	self.path = utils.JoinComponents(components, "/")
-	return &self
-}
-
-// GetVFSDownloadInfoPath returns the vfs path to the directory info
-// file.
-func (self FlowPathManager) GetVFSDirectoryInfoPath(accessor, client_path string) *FlowPathManager {
-	components := []string{"clients", self.client_id, "vfs", accessor}
-
-	if accessor == "ntfs" {
-		device, subpath, err := GetDeviceAndSubpath(client_path)
-		if err == nil {
-			components = append(components, device)
-			components = append(components, utils.SplitComponents(subpath)...)
-			self.path = utils.JoinComponents(components, "/")
-			return &self
-		}
-	}
-
-	components = append(components, utils.SplitComponents(client_path)...)
-	self.path = utils.JoinComponents(components, "/")
-	return &self
-}
-
-// Currently only CLIENT artifacts upload files. We store the uploaded
-// file inside the collection that uploaded it.
-func (self FlowPathManager) GetUploadsFile(accessor, client_path string) *UploadFile {
+// Where to store the uploaded file in the filestore.
+func (self FlowPathManager) GetUploadsFile(
+	accessor, client_path string) *UploadFile {
 	// Apply the default accessor if not specified.
 	if accessor == "" {
 		accessor = "file"
 	}
 
-	components := []string{
-		"clients", self.client_id, "collections",
-		self.flow_id, "uploads", accessor}
+	base_path := CLIENTS_ROOT.AddUnsafeChild(self.client_id, "collections",
+		self.flow_id, "uploads").AsFilestorePath().
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
 
-	if accessor == "ntfs" {
-		device, subpath, err := GetDeviceAndSubpath(client_path)
-		if err == nil {
-			components = append(components, device)
-			components = append(components, utils.SplitComponents(subpath)...)
-			return &UploadFile{utils.JoinComponents(components, "/")}
-		}
+	return &UploadFile{
+		path: base_path.AddUnsafeChild(accessor).
+			AddChild(ExtractClientPathComponents(client_path)...),
 	}
-
-	components = append(components, utils.SplitComponents(client_path)...)
-	return &UploadFile{utils.JoinComponents(components, "/")}
 }

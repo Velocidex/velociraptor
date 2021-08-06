@@ -1,0 +1,5 @@
+name: Server.Internal.Inventory
+description: |
+  An internal artifact to listen to inventory (tools) changes.
+
+type: INTERNAL

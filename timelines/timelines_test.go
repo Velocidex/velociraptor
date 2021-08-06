@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/paths"
 )
 
 type TimelineTestSuite struct {
@@ -39,7 +40,10 @@ func (self *TimelineTestSuite) TearDownTest() {
 }
 
 func (self *TimelineTestSuite) TestSuperTimelineWriter() {
-	path_manager := &SuperTimelinePathManager{"Test", "notebooks/N.1234/"}
+	path_manager := &paths.SuperTimelinePathManager{
+		Name: "Test",
+		Root: paths.NewNotebookPathManager("N.1234").Path(),
+	}
 	super, err := NewSuperTimelineWriter(self.config_obj, path_manager)
 	assert.NoError(self.T(), err)
 
@@ -87,7 +91,10 @@ func (self *TimelineTestSuite) TestSuperTimelineWriter() {
 }
 
 func (self *TimelineTestSuite) TestTimelineWriter() {
-	path_manager := &TimelinePathManager{"T.1234", "Test"}
+	// Write a timeline in a notebook.
+	path_manager := paths.NewNotebookPathManager("N.1234").
+		SuperTimeline("T.1234").GetChild("Test")
+
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	timeline, err := NewTimelineWriter(file_store_factory, path_manager, true /* truncate */)
 	assert.NoError(self.T(), err)

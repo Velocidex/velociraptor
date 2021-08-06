@@ -31,17 +31,6 @@ const (
 	FOREMAN_WELL_KNOWN_FLOW = "E.Foreman"
 	HUNT_PREFIX             = "H."
 
-	// The GUI uses this as the client index.
-	CLIENT_INDEX_URN = "/client_index/"
-
-	// An index of all the hunts and clients.
-	HUNT_INDEX     = "/hunt_index/"
-	NOTEBOOK_INDEX = "/notebook_index/"
-	USER_URN       = "/users/"
-
-	// Timelines
-	TIMELINE_URN = "/timelines/"
-
 	// Well known flows - Request ID:
 	LOG_SINK uint64 = 980
 
@@ -52,17 +41,8 @@ const (
 	MAX_MEMORY    = 5 * 1024 * 1024
 	MAX_POST_SIZE = 5 * 1024 * 1024
 
-	// Filestore paths for artifacts must begin with this prefix.
-	ARTIFACT_DEFINITION_PREFIX = "/artifact_definitions/"
-
 	// Messages to the client which we dont care about their responses.
 	IgnoreResponseState = uint64(101)
-
-	// These store configuration for the server and client
-	// monitoring artifacts.
-	ServerMonitoringFlowURN = "/config/server_monitoring.json"
-	ClientMonitoringFlowURN = "/config/client_monitoring.json"
-	ThirdPartyInventory     = "/config/inventory.json"
 
 	USER_AGENT = "Velociraptor - Dig Deeper!"
 

@@ -11,6 +11,7 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -135,35 +136,36 @@ func CreateFlowReport(
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
 	flow_id, client_id, template string,
-	wait bool) (string, error) {
+	wait bool) (api.FSPathSpec, error) {
 
 	hostname := services.GetHostname(client_id)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	download_file := flow_path_manager.GetReportsFile(hostname).Path()
+	download_file := flow_path_manager.GetReportsFile(hostname)
+	lock_file_spec := download_file.SetType(api.PATH_TYPE_FILESTORE_LOCK)
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	writer, err := file_store_factory.WriteFile(download_file)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	err = writer.Truncate()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	lock_file, err := file_store_factory.WriteFile(download_file + ".lock")
+	lock_file, err := file_store_factory.WriteFile(lock_file_spec)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	lock_file.Close()
 
 	manager, err := services.GetRepositoryManager()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	builder := services.ScopeBuilderFromScope(scope)
@@ -179,7 +181,7 @@ func CreateFlowReport(
 		defer writer.Close()
 		defer subscope.Close()
 		defer func() {
-			err := file_store_factory.Delete(download_file + ".lock")
+			err := file_store_factory.Delete(lock_file_spec)
 			if err != nil {
 				logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 				logger.Error("Failed to bind to remove lock file for %v: %v",

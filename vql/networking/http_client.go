@@ -433,7 +433,7 @@ func remove_tmpfile(tmpfile string, scope vfilter.Scope) {
 		if err == nil {
 			break
 		}
-		utils.Debug(err)
+		scope.Log("tempfile: Error %v - will retry", err)
 		time.Sleep(time.Second)
 	}
 }

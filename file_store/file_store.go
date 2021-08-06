@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/accessors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
@@ -37,7 +38,7 @@ func GetFileStore(config_obj *config_proto.Config) api.FileStore {
 
 	switch config_obj.Datastore.Implementation {
 	case "Test":
-		return memory.Test_memory_file_store
+		return memory.NewMemoryFileStore(config_obj)
 
 	case "FileBaseDataStore":
 		return directory.NewDirectoryFileStore(config_obj)
@@ -58,12 +59,12 @@ func GetFileStoreFileSystemAccessor(
 	switch config_obj.Datastore.Implementation {
 
 	case "FileBaseDataStore":
-		return api.NewFileStoreFileSystemAccessor(
+		return accessors.NewFileStoreFileSystemAccessor(
 			config_obj, directory.NewDirectoryFileStore(config_obj)), nil
 
 	case "Test":
-		return api.NewFileStoreFileSystemAccessor(
-			config_obj, memory.Test_memory_file_store), nil
+		return accessors.NewFileStoreFileSystemAccessor(
+			config_obj, memory.NewMemoryFileStore(config_obj)), nil
 
 	}
 

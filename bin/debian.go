@@ -200,14 +200,18 @@ fi
 
 # Make the filestore path accessible to the user.
 mkdir -p '%s'
-chown -R velociraptor:velociraptor '%s' /etc/velociraptor/
+
+# Only chown two levels of the filestore directory in case
+# this is an upgrade and there are many files already there.
+chown velociraptor:velociraptor '%s' /etc/velociraptor/
+chown velociraptor:velociraptor '%s/*' /etc/velociraptor/
 chmod -R go-r /etc/velociraptor/
 chmod o+x /usr/local/bin/velociraptor /usr/local/bin/velociraptor.bin
 
 setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bin
 /bin/systemctl enable velociraptor_server
 /bin/systemctl start velociraptor_server
-`, filestore_path, filestore_path))
+`, filestore_path, filestore_path, filestore_path))
 	kingpin.FatalIfError(err, "Adding file")
 
 	err = deb.AddControlExtraString("prerm", `

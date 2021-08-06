@@ -9,6 +9,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/paths"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -114,7 +115,7 @@ func (self *SuperTimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 
 func NewSuperTimelineReader(
 	config_obj *config_proto.Config,
-	path_manager *SuperTimelinePathManager,
+	path_manager *paths.SuperTimelinePathManager,
 	skip_components []string) (*SuperTimelineReader, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -154,7 +155,7 @@ func NewSuperTimelineReader(
 type SuperTimelineWriter struct {
 	*timelines_proto.SuperTimeline
 	config_obj   *config_proto.Config
-	path_manager *SuperTimelinePathManager
+	path_manager *paths.SuperTimelinePathManager
 }
 
 func (self *SuperTimelineWriter) Close() {
@@ -189,7 +190,7 @@ func (self *SuperTimelineWriter) AddChild(name string) (*TimelineWriter, error) 
 
 func NewSuperTimelineWriter(
 	config_obj *config_proto.Config,
-	path_manager *SuperTimelinePathManager) (*SuperTimelineWriter, error) {
+	path_manager *paths.SuperTimelinePathManager) (*SuperTimelineWriter, error) {
 
 	self := &SuperTimelineWriter{
 		SuperTimeline: &timelines_proto.SuperTimeline{},

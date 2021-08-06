@@ -23,7 +23,6 @@ package hunts
 
 import (
 	"context"
-	"path"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -31,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -83,11 +83,11 @@ func (self HuntsPlugin) Call(
 			return
 		}
 
-		var hunts []string
+		var hunts []api.DSPathSpec
 		if arg.HuntId == "" {
 			hunt_path_manager := paths.NewHuntPathManager("")
 			hunts, err = db.ListChildren(config_obj,
-				hunt_path_manager.HuntDirectory().Path(), 0, 10000)
+				hunt_path_manager.HuntDirectory(), 0, 10000)
 			if err != nil {
 				scope.Log("Error: %v", err)
 				return
@@ -98,7 +98,7 @@ func (self HuntsPlugin) Call(
 		}
 
 		for _, hunt_urn := range hunts {
-			hunt_id := path.Base(hunt_urn)
+			hunt_id := hunt_urn.Base()
 			if !constants.HuntIdRegex.MatchString(hunt_id) {
 				continue
 			}
@@ -113,7 +113,7 @@ func (self HuntsPlugin) Call(
 			hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
 			hunt_stats := &api_proto.HuntStats{}
 			err := db.GetSubject(config_obj,
-				hunt_path_manager.Stats().Path(), hunt_stats)
+				hunt_path_manager.Stats(), hunt_stats)
 			if err == nil {
 				hunt_obj.Stats = hunt_stats
 			}
@@ -272,7 +272,7 @@ func (self HuntResultsPlugin) Call(
 			}
 
 			reader, err := result_sets.NewResultSetReader(
-				file_store_factory, path_manager)
+				file_store_factory, path_manager.Path())
 			if err != nil {
 				continue
 			}
@@ -347,7 +347,7 @@ func (self HuntFlowsPlugin) Call(
 		rs_reader, err := result_sets.NewResultSetReader(
 			file_store_factory, hunt_path_manager)
 		if err != nil {
-			scope.Log("Error %v: %v\n", err, hunt_path_manager.Path())
+			scope.Log("hunt_flows: %v\n", err)
 			return
 		}
 		defer rs_reader.Close()
@@ -355,7 +355,7 @@ func (self HuntFlowsPlugin) Call(
 		// Seek to the row we need.
 		err = rs_reader.SeekToRow(int64(arg.StartRow))
 		if err != nil {
-			scope.Log("Error %v: %v\n", err, hunt_path_manager.Path())
+			scope.Log("hunt_flows: %v\n", err)
 			return
 		}
 
