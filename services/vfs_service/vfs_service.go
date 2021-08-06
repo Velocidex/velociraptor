@@ -16,6 +16,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -157,8 +158,8 @@ func (self *VFSService) handleEmptyListDirectory(
 		return
 	}
 
-	vfs_components := paths.UnsafeDatastorePathFromClientPath(
-		nil, accessor, vfs_path).Components()
+	vfs_components := append([]string{accessor},
+		paths.ExtractClientPathComponents(vfs_path)...)
 
 	// Write an empty set to the VFS entry.
 	err := self.flush_state(config_obj, uint64(ts), client_id, flow_id,
@@ -213,10 +214,11 @@ func (self *VFSService) ProcessListDirectory(
 	for row := range reader.Rows(ctx) {
 		full_path, _ := row.GetString("_FullPath")
 		accessor, _ := row.GetString("_Accessor")
-		client_path := paths.UnsafeDatastorePathFromClientPath(
-			nil, accessor, full_path)
-		dir_components := client_path.Dir().Components()
-		if client_path == nil {
+		file_vfs_path := path_specs.NewUnsafeFilestorePath(accessor).
+			AddChild(paths.ExtractClientPathComponents(full_path)...)
+
+		dir_components := file_vfs_path.Dir().Components()
+		if len(dir_components) == 0 {
 			continue
 		}
 

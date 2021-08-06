@@ -460,7 +460,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 
 				case row, ok := <-eval_chan:
 					if !ok {
-						continue do_query
+						break do_query
 					}
 					row_idx++
 					rs_writer.Write(vfilter.RowToDict(self.ctx, self.Scope, row))

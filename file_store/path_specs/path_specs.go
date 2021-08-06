@@ -47,19 +47,6 @@ func (self DSPathSpec) Type() api.PathType {
 	return self.path_type
 }
 
-func (self DSPathSpec) AsSafe() api.DSPathSpec {
-	new_components := make([]string, 0, len(self.components))
-	for _, i := range self.components {
-		new_components = append(new_components, utils.SanitizeString(i))
-	}
-
-	return DSPathSpec{
-		components: new_components,
-		path_type:  self.path_type,
-		is_safe:    true,
-	}
-}
-
 // Adds an unsafe component to this path.
 func (self DSPathSpec) AddChild(child ...string) api.DSPathSpec {
 	return DSPathSpec{
@@ -106,7 +93,7 @@ func (self DSPathSpec) asUnsafeDirWithRoot(root string) string {
 	for _, i := range self.components {
 		new_components = append(new_components, utils.SanitizeString(i))
 	}
-	result := strings.Join(new_components, sep)
+	result := sep + strings.Join(new_components, sep)
 
 	// This relies on the filepath starting with a drive letter
 	// and having \ as path separators. Main's
@@ -158,7 +145,7 @@ func (self DSPathSpec) asSafeDirWithRoot(root string) string {
 	// No need to sanitize here because the DSPathSpec is already
 	// safe.
 	sep := string(filepath.Separator)
-	result := strings.Join(self.components, sep)
+	result := sep + strings.Join(self.components, sep)
 
 	// This relies on the filepath starting with a drive letter
 	// and having \ as path separators, and having a trailing

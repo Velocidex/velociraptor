@@ -174,8 +174,6 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 		}
 	}
 
-	fs.Debug()
-
 	for _, path := range []string{
 		"/config/server_monitoring.json.db",
 	} {

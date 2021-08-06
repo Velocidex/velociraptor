@@ -92,7 +92,8 @@ class TimelineTableRenderer  extends Component {
              text: "Time",
              classes: "timeline-time",
              formatter: (cell, row, rowIndex) => {
-                 return <div className={this.getTimelineClass(row._Source)}>
+                 return <div className={this.getTimelineClass(
+                     _.toString(row._Source))}>
                           <VeloTimestamp usec={cell}/>
                         </div>;
              }},

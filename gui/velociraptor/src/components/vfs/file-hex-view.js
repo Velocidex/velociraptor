@@ -45,23 +45,25 @@ export default class FileHexView extends React.Component {
             return;
         }
 
-        var download = selectedRow && selectedRow.Download;
-        if (!download) {
+        let name = selectedRow && selectedRow.Name;
+        if (!name) {
             return;
         }
 
-        var filePath = download.vfs_path;
-        if (!filePath) {
+        let fileComponents = this.props.node.path.slice();
+        if (_.isEmpty(fileComponents)) {
             return;
         }
+        fileComponents.push(name);
 
         var chunkSize = this.state.rows * this.state.columns;
         var url = 'v1/DownloadVFSFile';
 
+        // vfsFileDownloadRequest struct schema in /api/download.go
         var params = {
             offset: page * chunkSize,
             length: chunkSize,
-            vfs_path: filePath,
+            components: fileComponents,
             client_id: client_id,
         };
 

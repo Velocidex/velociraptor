@@ -74,8 +74,8 @@ func (self *PathManageTestSuite) SetupTest() {
 	assert.NoError(self.T(), err)
 
 	self.config_obj.Datastore.Implementation = "FileBaseDataStore"
-	self.config_obj.Datastore.FilestoreDirectory = self.dirname + "/"
-	self.config_obj.Datastore.Location = self.dirname + "/"
+	self.config_obj.Datastore.FilestoreDirectory = self.dirname
+	self.config_obj.Datastore.Location = self.dirname
 
 	// Start essential services.
 	self.ctx, _ = context.WithTimeout(context.Background(), time.Second*60)

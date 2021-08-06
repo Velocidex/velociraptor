@@ -1,5 +1,3 @@
-// +build server_vql
-
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -22,11 +20,11 @@ package server
 import (
 	"compress/gzip"
 	"context"
+	"os"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -34,7 +32,8 @@ import (
 )
 
 type CompressArgs struct {
-	VFSPath []string `vfilter:"required,field=path,doc=A VFS path to compress"`
+	Path   string `vfilter:"required,field=path,doc=A path to compress"`
+	Output string `vfilter:"optional,field=output,doc=A path to write the output - default is the path with a .gz extension"`
 }
 
 type Compress struct{}
@@ -56,59 +55,36 @@ func (self *Compress) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	config_obj, ok := vql_subsystem.GetServerConfig(scope)
-	if !ok {
-		scope.Log("Command can only run on the server")
+	fd, err := os.Open(arg.Path)
+	if err != nil {
+		scope.Log("compress: %v", err)
+		return vfilter.Null{}
+	}
+	defer fd.Close()
+
+	out_fd, err := os.OpenFile(arg.Output, os.O_RDWR|os.O_CREATE, 0660)
+	if err != nil {
+		scope.Log("compress: %v", err)
+		return vfilter.Null{}
+	}
+	defer out_fd.Close()
+
+	zw := gzip.NewWriter(out_fd)
+	defer zw.Close()
+
+	zw.Name = strings.TrimPrefix(arg.Path, "/")
+
+	_, err = utils.Copy(ctx, zw, fd)
+	if err != nil {
+		scope.Log("compress: %v", err)
+		err2 := os.Remove(arg.Output)
+		if err2 != nil {
+			scope.Log("compress: cleaning up %v (%v)", err2, err)
+		}
 		return vfilter.Null{}
 	}
 
-	result := []string{}
-	file_store_factory := file_store.GetFileStore(config_obj)
-	for _, path := range arg.VFSPath {
-		func() {
-			pathspec := paths.UnsafeFilestorePathFromClientPath(
-				nil, "fs", path)
-			fd, err := file_store_factory.ReadFile(pathspec)
-			if err != nil {
-				scope.Log("compress: %v", err)
-				return
-			}
-			defer fd.Close()
-
-			compressed_path := pathspec.Dir().AddChild(
-				pathspec.Base() + ".gz")
-			out_fd, err := file_store_factory.WriteFile(compressed_path)
-			if err != nil {
-				scope.Log("compress: %v", err)
-				return
-			}
-			defer out_fd.Close()
-
-			zw := gzip.NewWriter(out_fd)
-			defer zw.Close()
-
-			zw.Name = path
-
-			_, err = utils.Copy(ctx, zw, fd)
-			if err != nil {
-				scope.Log("compress: %v", err)
-				err2 := file_store_factory.Delete(compressed_path)
-				if err2 != nil {
-					scope.Log("compress: cleaning up %v (%v)", err2, err)
-				}
-				return
-			} else {
-				err := file_store_factory.Delete(pathspec)
-				if err != nil {
-					scope.Log("compress: %v", err)
-				}
-			}
-
-			result = append(result, path)
-		}()
-	}
-
-	return result
+	return arg.Output
 }
 
 func (self Compress) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

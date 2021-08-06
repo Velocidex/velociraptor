@@ -168,7 +168,7 @@ func (self *TestDataStore) UnQueueMessageForClient(
 }
 
 func (self *TestDataStore) Trace(name, filename string) {
-	// return
+	return
 	fmt.Printf("Trace TestDataStore: %v: %v\n", name, filename)
 }
 

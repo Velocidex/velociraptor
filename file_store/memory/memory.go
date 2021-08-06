@@ -33,6 +33,10 @@ func NewMemoryFileStore(config_obj *config_proto.Config) *MemoryFileStore {
 		}
 	}
 
+	// Sanitize the FilestoreDirectory
+	config_obj.Datastore.FilestoreDirectory = strings.TrimSuffix(
+		config_obj.Datastore.FilestoreDirectory, "/")
+
 	return Test_memory_file_store
 }
 
@@ -257,7 +261,7 @@ func (self *MemoryFileStore) Delete(path api.FSPathSpec) error {
 }
 
 func (self *MemoryFileStore) Trace(name, filename string) {
-	// return
+	return
 	fmt.Printf("Trace MemoryFileStore: %v: %v\n", name, filename)
 }
 

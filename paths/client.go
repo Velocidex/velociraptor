@@ -77,8 +77,7 @@ func (self ClientPathManager) VFSDownloadInfoPath(
 
 func (self ClientPathManager) VFSDownloadInfoFromClientPath(
 	accessor, client_path string) api.DSPathSpec {
-	base_path := CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs_files")
-
-	return UnsafeDatastorePathFromClientPath(
-		base_path, accessor, client_path)
+	return CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs_files").
+		AddChild(accessor).
+		AddChild(ExtractClientPathComponents(client_path)...)
 }

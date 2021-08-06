@@ -20,6 +20,7 @@ package datastore
 
 import (
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -139,6 +140,11 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 	case "Test":
 		mu.Lock()
 		defer mu.Unlock()
+
+		// Sanitize the FilestoreDirectory parameter so we
+		// have a consistent filename in the test datastore.
+		config_obj.Datastore.Location = strings.TrimSuffix(
+			config_obj.Datastore.Location, "/")
 
 		return gTestDatastore, nil
 

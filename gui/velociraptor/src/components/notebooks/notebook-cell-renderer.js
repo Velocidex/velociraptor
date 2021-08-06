@@ -33,6 +33,8 @@ const cell_types = ["Markdown", "VQL"];
 class AddCellFromHunt extends React.PureComponent {
     static propTypes = {
         closeDialog: PropTypes.func.isRequired,
+
+        // func(text, type, env)
         addCell: PropTypes.func,
     }
 
@@ -139,6 +141,8 @@ export default class NotebookCellRenderer extends React.Component {
         upCell: PropTypes.func,
         downCell: PropTypes.func,
         deleteCell: PropTypes.func,
+
+        // func(notebook_cell_id, text, type, env)
         addCell: PropTypes.func,
     };
 
@@ -367,7 +371,8 @@ export default class NotebookCellRenderer extends React.Component {
         content += "  notebook_cell_id=\""+ this.state.cell.cell_id +
             "\")\nLIMIT 50\n";
 
-        this.props.addCell(this.state.cell.cell_id, "VQL", content, this.state.cell.env);
+        this.props.addCell(this.state.cell.cell_id, "VQL", content,
+                           this.state.cell.env);
     }
 
 
@@ -557,15 +562,15 @@ export default class NotebookCellRenderer extends React.Component {
         return (
             <>{ this.state.showAddCellFromHunt &&
                 <AddCellFromHunt
-                  addCell={(text, type)=>{
-                      this.props.addCell(this.state.cell.cell_id, type, text);
+                  addCell={(text, type, env)=>{
+                      this.props.addCell(this.state.cell.cell_id, type, text, env);
                   }}
                   closeDialog={()=>this.setState({showAddCellFromHunt: false})} />
               }
               { this.state.showAddCellFromFlow &&
                 <AddCellFromFlowDialog
-                  addCell={(text, type)=>{
-                      this.props.addCell(this.state.cell.cell_id, type, text);
+                  addCell={(text, type, env)=>{
+                      this.props.addCell(this.state.cell.cell_id, type, text, env);
                   }}
                   closeDialog={()=>this.setState({showAddCellFromFlow: false})} />
               }
@@ -577,8 +582,8 @@ export default class NotebookCellRenderer extends React.Component {
               { this.state.showAddTimeline &&
                 <AddTimelineDialog
                   notebook_metadata={this.props.notebook_metadata}
-                  addCell={(text, type)=>{
-                      this.props.addCell(this.state.cell.cell_id, type, text);
+                  addCell={(text, type, env)=>{
+                      this.props.addCell(this.state.cell.cell_id, type, text, env);
                   }}
                   closeDialog={()=>this.setState({showAddTimeline: false})} />
               }

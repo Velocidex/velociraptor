@@ -23,8 +23,8 @@ type PathManagerTestSuite struct {
 
 func (self *PathManagerTestSuite) SetupTest() {
 	self.config_obj = config.GetDefaultConfig()
-	self.config_obj.Datastore.Location = "/ds/"
-	self.config_obj.Datastore.FilestoreDirectory = "/fs/"
+	self.config_obj.Datastore.Location = "/ds"
+	self.config_obj.Datastore.FilestoreDirectory = "/fs"
 }
 
 func (self *PathManagerTestSuite) TestAsClientPath() {
@@ -38,8 +38,7 @@ func (self *PathManagerTestSuite) TestAsClientPath() {
 
 	// Parse the path back into a path spec - this should restore
 	// the type from the extension.
-	new_path_spec := paths.UnsafeFilestorePathFromClientPath(
-		nil, "", client_path)
+	new_path_spec := paths.ExtractClientPathSpec("", client_path)
 
 	assert.Equal(self.T(), new_path_spec.Type(), path_spec.Type())
 	assert.Equal(self.T(), new_path_spec.Components(), path_spec.Components())

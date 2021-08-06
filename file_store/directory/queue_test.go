@@ -42,8 +42,8 @@ func TestDirectoryQueueManager(t *testing.T) {
 
 	config_obj := config.GetDefaultConfig()
 	config_obj.Datastore.Implementation = "FileBaseDataStore"
-	config_obj.Datastore.FilestoreDirectory = dir + "/"
-	config_obj.Datastore.Location = dir + "/"
+	config_obj.Datastore.FilestoreDirectory = dir
+	config_obj.Datastore.Location = dir
 
 	file_store := memory.NewMemoryFileStore(config_obj)
 	manager := directory.NewDirectoryQueueManager(config_obj, file_store)

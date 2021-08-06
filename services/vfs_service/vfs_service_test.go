@@ -58,8 +58,7 @@ func (self *VFSServiceTestSuite) SetupTest() {
 		LoadAndValidate()
 	require.NoError(self.T(), err)
 
-	//	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	ctx := context.Background()
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
 
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))

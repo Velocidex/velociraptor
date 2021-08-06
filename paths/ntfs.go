@@ -13,6 +13,7 @@ var (
 	// For convenience we transform paths like c:\Windows -> \\.\c:\Windows
 	driveRegex = regexp.MustCompile(
 		`(?i)^[/\\]?([a-z]:)(.*)`)
+
 	deviceDriveRegex = regexp.MustCompile(
 		`(?i)^(\\\\[\?\.]\\[a-zA-Z]:)(.*)`)
 
@@ -20,50 +21,52 @@ var (
 		`(?i)^(\\\\[\?\.]\\GLOBALROOT\\Device\\[^/\\]+)([/\\]?.*)`)
 )
 
-func UnsafeFilestorePathFromClientPath(
-	base_path api.FSPathSpec,
-	accessor, client_path string) api.FSPathSpec {
-	var result api.FSPathSpec
+// Breaks a client path into components. The client's path may consist
+// of a drive letter or a device which will be treated as a single
+// component. For example:
+// C:\Windows -> "C:\", "Windows"
+// \\.\c:\Windows -> "\\.\C:", "Windows"
 
-	device, subpath, err := GetDeviceAndSubpath(client_path)
-	if !utils.IsNil(base_path) {
-		if err == nil {
-			result = base_path.AddUnsafeChild(
-				accessor, device).AddChild(subpath...)
-		} else {
-			result = base_path.AddUnsafeChild(accessor).AddChild(
-				utils.SplitComponents(client_path)...)
-		}
-	} else if accessor != "" {
-		result = path_specs.NewUnsafeFilestorePath(accessor).AddChild(
-			utils.SplitComponents(client_path)...)
-	} else {
-		result = path_specs.NewUnsafeFilestorePath(
-			utils.SplitComponents(client_path)...)
+// Other components that contain path separators need to be properly
+// quoted as usual:
+// HKEY_LOCAL_MACHINE\Software\Microsoft\"http://www.google.com"\Foo ->
+// "HKEY_LOCAL_MACHINE", "Software", "Microsoft", "http://www.google.com", "Foo"
+func ExtractClientPathSpec(accessor, path string) api.FSPathSpec {
+	result := path_specs.NewUnsafeFilestorePath()
+	if accessor != "" {
+		result = result.AddChild(accessor)
 	}
 
-	name_type, name := api.GetFileStorePathTypeFromExtension(result.Base())
+	components := ExtractClientPathComponents(path)
 
-	return result.Dir().AddChild(name).SetType(name_type)
-}
-
-func UnsafeDatastorePathFromClientPath(
-	base_path api.DSPathSpec,
-	accessor, client_path string) api.DSPathSpec {
-	device, subpath, err := GetDeviceAndSubpath(client_path)
-	if !utils.IsNil(base_path) {
-		if err == nil {
-			return base_path.AddUnsafeChild(
-				accessor, device).AddChild(subpath...)
-		}
-		return base_path.AddUnsafeChild(accessor).AddChild(
-			utils.SplitComponents(client_path)...)
+	// Restore the PathSpec type from its extensions
+	if len(components) > 0 {
+		last := len(components) - 1
+		name_type, name := api.GetFileStorePathTypeFromExtension(
+			components[last])
+		components[last] = name
+		result = result.SetType(name_type)
 	}
-	return path_specs.NewUnsafeDatastorePath(accessor).AddChild(
-		utils.SplitComponents(client_path)...)
+
+	return result.AddChild(components...)
 }
 
-// Detect device names from a client's path.
+func ExtractClientPathComponents(path string) []string {
+	m := deviceDriveRegex.FindStringSubmatch(path)
+	if len(m) != 0 {
+		return append([]string{m[1]}, utils.SplitComponents(m[2])...)
+	}
+
+	m = deviceDirectoryRegex.FindStringSubmatch(path)
+	if len(m) != 0 {
+		return append([]string{m[1]}, utils.SplitComponents(m[2])...)
+	}
+
+	return utils.SplitComponents(path)
+}
+
+// Detect device names from a client's path. This converts Windows
+// paths into NTFS format suitable for consumption by the ntfs parser.
 func GetDeviceAndSubpath(path string) (device string, subpath []string, err error) {
 	m := deviceDriveRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
@@ -81,29 +84,4 @@ func GetDeviceAndSubpath(path string) (device string, subpath []string, err erro
 	}
 
 	return "/", nil, errors.New("Unsupported device type")
-}
-
-func GetDeviceAndSubpathComponents(path_components []string) (device string, subpath_components []string, err error) {
-	if len(path_components) == 0 {
-		return "", nil, errors.New("Unsupported device type")
-	}
-
-	// Check the first component for a device spec
-	m := deviceDriveRegex.FindStringSubmatch(path_components[0])
-	if len(m) != 0 {
-		return path_components[0], path_components[1:], nil
-	}
-
-	// Check it for a drive
-	m = driveRegex.FindStringSubmatch(path_components[0])
-	if len(m) != 0 {
-		return "\\\\.\\" + m[1], path_components[1:], nil
-	}
-
-	m = deviceDirectoryRegex.FindStringSubmatch(path_components[0])
-	if len(m) != 0 {
-		return m[1], path_components[1:], nil
-	}
-
-	return "/", path_components, errors.New("Unsupported device type")
 }

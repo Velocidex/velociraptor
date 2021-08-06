@@ -150,20 +150,17 @@ func (self *FileStoreTestSuite) TestListChildren() {
 	names = nil
 	err = self.filestore.Walk(filename, func(
 		path api.FSPathSpec, info os.FileInfo) error {
-		// Ignore directories as they are not important.
-		if !info.IsDir() {
-			names = append(names, path.AsClientPath())
-		}
+		names = append(names, path.AsClientPath())
 		return nil
 	})
 	assert.NoError(self.T(), err)
 
 	sort.Strings(names)
-	fmt.Println(names)
-	assert.Equal(self.T(), names, []string{
-		"/a/b/Bar.txt",
-		"/a/b/Bar/Baz",
-		"/a/b/Foo.txt"})
+	// AsClientPath() restores the extension.
+	assert.Equal(self.T(), []string{
+		"/a/b/Bar.txt.json",
+		"/a/b/Bar/Baz.json",
+		"/a/b/Foo.txt.json"}, names)
 
 	// Walk non existent directory just returns no results.
 	names = nil

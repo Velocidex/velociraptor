@@ -45,6 +45,14 @@ export class DeleteFlowDialog extends React.PureComponent {
         loading: false,
     }
 
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
+    }
+
     startDeleteFlow = () => {
         let client_id = this.props.client && this.props.client.client_id;
         let flow_id = this.props.flow && this.props.flow.session_id;
@@ -58,7 +66,7 @@ export class DeleteFlowDialog extends React.PureComponent {
                          ReallyDoIt: "Y"}, ()=>{
                              this.props.onClose();
                              this.setState({loading: false});
-                         });
+                         }, this.source.token);
         }
     }
 
@@ -107,6 +115,14 @@ export class SaveCollectionDialog extends React.PureComponent {
         loading: false,
     }
 
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+     }
+
+    componentWillUnmount() {
+        this.source.cancel();
+    }
+
     startSaveFlow = () => {
         let client_id = this.props.client && this.props.client.client_id;
         let specs = this.props.flow.request.specs;
@@ -126,7 +142,7 @@ export class SaveCollectionDialog extends React.PureComponent {
                     }, ()=>{
                         this.props.onClose();
                         this.setState({loading: false});
-                    });
+                    }, this.source.token);
     }
 
     render() {

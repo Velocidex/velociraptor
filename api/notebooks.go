@@ -330,6 +330,13 @@ func getDefaultCellsForSources(config_obj *config_proto.Config,
 		// If the artifact_source defines a notebook, let it do its own thing.
 		if len(artifact_source.Notebook) > 0 {
 			for _, cell := range artifact_source.Notebook {
+				for _, i := range cell.Env {
+					env = append(env, &api_proto.Env{
+						Key:   i.Key,
+						Value: i.Value,
+					})
+				}
+
 				result = append(result, &api_proto.NotebookCellRequest{
 					Type:  cell.Type,
 					Env:   env,
@@ -1098,6 +1105,40 @@ func updateCellContents(
 
 	cell_type = strings.ToLower(cell_type)
 
+	// Create a new cell to set the result in.
+	make_cell := func(output string) *api_proto.NotebookCell {
+		messages := tmpl.Messages()
+
+		encoded_data, err := json.Marshal(tmpl.Data)
+		if err != nil {
+			messages = append(messages,
+				fmt.Sprintf("Error: %v", err))
+		}
+
+		return &api_proto.NotebookCell{
+			Input:            original_input,
+			Output:           output,
+			Data:             string(encoded_data),
+			Messages:         tmpl.Messages(),
+			CellId:           cell_id,
+			Type:             cell_type,
+			Env:              env,
+			Timestamp:        time.Now().Unix(),
+			CurrentlyEditing: currently_editing,
+			Duration:         int64(time.Since(tmpl.Start).Seconds()),
+		}
+	}
+
+	// If an error occurs it is important to ensure the cell is
+	// still written with an error message.
+	make_error_cell := func(err error) (*api_proto.NotebookCell, error) {
+		notebook_cell := make_cell("")
+		notebook_cell.Messages = append(notebook_cell.Messages,
+			fmt.Sprintf("Error: %v", err))
+		setCell(config_obj, notebook_id, notebook_cell)
+		return notebook_cell, err
+	}
+
 	switch cell_type {
 
 	case "markdown", "md":
@@ -1105,7 +1146,7 @@ func updateCellContents(
 		// template.
 		output, err = tmpl.Execute(&artifacts_proto.Report{Template: input})
 		if err != nil {
-			return nil, err
+			return make_error_cell(err)
 		}
 
 	case "vql":
@@ -1138,36 +1179,19 @@ func updateCellContents(
 				}
 				fragment_output, err := tmpl.Execute(&artifacts_proto.Report{Template: input})
 				if err != nil {
-					return nil, err
+					return make_error_cell(err)
 				}
 				output += fragment_output
 			}
 		}
 
 	default:
-		return nil, errors.New("Unsupported cell type.")
-	}
-
-	encoded_data, err := json.Marshal(tmpl.Data)
-	if err != nil {
-		return nil, err
+		return make_error_cell(errors.New("Unsupported cell type."))
 	}
 
 	tmpl.Close()
 
-	notebook_cell := &api_proto.NotebookCell{
-		Input:            original_input,
-		Output:           output,
-		Data:             string(encoded_data),
-		Messages:         tmpl.Messages(),
-		CellId:           cell_id,
-		Type:             cell_type,
-		Env:              env,
-		Timestamp:        time.Now().Unix(),
-		CurrentlyEditing: currently_editing,
-		Duration:         int64(time.Since(tmpl.Start).Seconds()),
-	}
-
+	notebook_cell := make_cell(output)
 	return notebook_cell, setCell(config_obj, notebook_id, notebook_cell)
 }
 

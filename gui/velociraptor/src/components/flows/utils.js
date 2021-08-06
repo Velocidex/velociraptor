@@ -38,7 +38,7 @@ const requestToParameters = (request) => {
 
 const POLL_TIME = 1000;
 
-const runArtifact = (client_id, artifact, params, on_success)=>{
+const runArtifact = (client_id, artifact, params, on_success, token)=>{
     let artifact_params = {env: []};
     _.each(params, (v, k) => {
         artifact_params.env.push({key: k, value: v});
@@ -50,7 +50,7 @@ const runArtifact = (client_id, artifact, params, on_success)=>{
         specs: [{artifact: artifact,
                  parameters: artifact_params}],
         max_upload_bytes: 1048576000,
-    }).then((response) => {
+    }, token).then((response) => {
         let flow_id = response.data.flow_id;
 
         // Start polling for flow completion.
@@ -58,7 +58,7 @@ const runArtifact = (client_id, artifact, params, on_success)=>{
             api.get("v1/GetFlowDetails", {
                 client_id: client_id,
                 flow_id: flow_id,
-            }).then((response) => {
+            }, token).then((response) => {
                 let context = response.data.context;
                 if (context.state === "RUNNING") {
                     return;

@@ -37,7 +37,7 @@ func (self *PathManagerTestSuite) TestClientPathManager() {
 
 	// AsClientPath produces a path string escaped with quotes for
 	// path separators, rooted at the data store root.
-	assert.Equal(self.T(), `/clients/C.123/vfs/file/"\\.\C:"/你好世界`,
+	assert.Equal(self.T(), `/clients/C.123/vfs/file/"\\.\C:"/你好世界.db`,
 		path_spec.AsClientPath())
 
 	assert.Equal(self.T(), "/ds/clients/C.123/vfs/file/%5C%5C.%5CC%3A/%E4%BD%A0%E5%A5%BD%E4%B8%96%E7%95%8C.db",

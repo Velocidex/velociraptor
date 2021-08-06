@@ -41,6 +41,14 @@ class QuarantineDialog extends Component {
         message: "",
     }
 
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
+    }
+
     startQuarantine = () => {
         let client_id = this.props.client && this.props.client.client_id;
 
@@ -61,7 +69,7 @@ class QuarantineDialog extends Component {
                 ()=>{
                     this.props.onClose();
                     this.setState({loading: false});
-                });
+                }, this.source.token);
             });
         }
     }
@@ -246,7 +254,7 @@ class VeloHostInfo extends Component {
                 ()=>{
                     this.updateClientInfo();
                     this.setState({loading: false});
-                });
+                }, this.source.token);
             });
         }
     }

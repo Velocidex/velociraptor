@@ -95,7 +95,7 @@ func (self FlowPathManager) GetUploadsFile(
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
 
 	return &UploadFile{
-		path: UnsafeFilestorePathFromClientPath(
-			base_path, accessor, client_path),
+		path: base_path.AddUnsafeChild(accessor).
+			AddChild(ExtractClientPathComponents(client_path)...),
 	}
 }

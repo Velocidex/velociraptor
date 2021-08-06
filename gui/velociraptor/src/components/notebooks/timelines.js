@@ -33,7 +33,11 @@ export class AddTimelineDialog extends React.Component {
 
     addTimeline = ()=>{
         if (this.state.timeline) {
-            this.props.addCell('{{ Timeline "' + this.state.timeline + '" }}', "Markdown");
+            // Inject the timeline name in the scope so we dont have
+            // to escape it for the template.
+            this.props.addCell(
+                '{{ Scope "Timeline" | Timeline }}', "Markdown",
+                [{key: "Timeline", value:this.state.timeline}]);
         }
         this.props.closeDialog();
     }
@@ -99,6 +103,9 @@ export class AddVQLCellToTimeline extends React.Component {
     }
 
     componentWillUnmount() {
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
         this.source.cancel();
     }
 
@@ -170,7 +177,7 @@ export class AddVQLCellToTimeline extends React.Component {
                          {"key": "Env", "value": JSON.stringify(env)},
                      ]},
                     }],
-        }).then(response=>{
+        }, this.source.token).then(response=>{
             // Hold onto the flow id.
             this.setState({
                 loading: true,

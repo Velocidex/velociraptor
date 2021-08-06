@@ -47,6 +47,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -74,13 +75,16 @@ func returnError(w http.ResponseWriter, code int, message string) {
 
 type vfsFileDownloadRequest struct {
 	ClientId   string   `schema:"client_id"`
-	Components []string `schema:"vfs_path,required"`
+	Components []string `schema:"components[],required"`
 	Offset     int64    `schema:"offset"`
 	Length     int      `schema:"length"`
 	Encoding   string   `schema:"encoding"`
 }
 
 // URL format: /api/v1/DownloadVFSFile
+
+// This URL allows the caller to download **any** member of the
+// filestore (providing they have at least read permissions).
 func vfsFileDownloadHandler(
 	config_obj *config_proto.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +109,9 @@ func vfsFileDownloadHandler(
 			return
 		}
 
-		path_spec := client_path_manager.FSItem(download_info.Components)
+		path_spec := path_specs.NewUnsafeFilestorePath(
+			download_info.Components...).
+			SetType(api.PATH_TYPE_FILESTORE_ANY)
 		file, err := file_store.GetFileStore(config_obj).ReadFile(path_spec)
 		if err != nil {
 			returnError(w, 404, err.Error())

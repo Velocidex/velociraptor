@@ -47,7 +47,7 @@ func (self FileStoreFileSystemAccessor) Lstat(
 	filename string) (glob.FileInfo, error) {
 
 	fullpath := path_specs.NewUnsafeFilestorePath(
-		utils.SplitComponents(filename)...).AsSafe()
+		utils.SplitComponents(filename)...)
 	lstat, err := self.file_store.StatFile(fullpath)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (self FileStoreFileSystemAccessor) Lstat(
 
 func (self FileStoreFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
 	fullpath := path_specs.NewUnsafeFilestorePath(
-		utils.SplitComponents(path)...).AsSafe()
+		utils.SplitComponents(path)...)
 	files, err := self.file_store.ListDirectory(fullpath)
 	if err != nil {
 		return nil, err

@@ -21,19 +21,6 @@ func (self FSPathSpec) Dir() api.FSPathSpec {
 	}}
 }
 
-func (self FSPathSpec) AsSafe() api.FSPathSpec {
-	new_components := make([]string, 0, len(self.components))
-	for _, i := range self.components {
-		new_components = append(new_components, utils.SanitizeString(i))
-	}
-
-	return FSPathSpec{DSPathSpec{
-		components: new_components,
-		path_type:  self.path_type,
-		is_safe:    true,
-	}}
-}
-
 // Adds an unsafe component to this path.
 func (self FSPathSpec) AddChild(child ...string) api.FSPathSpec {
 	return FSPathSpec{DSPathSpec{
@@ -80,7 +67,7 @@ func (self FSPathSpec) AsClientPath() string {
 		api.GetExtensionForFilestore(self, self.path_type)
 }
 
-func NewUnsafeFilestorePath(path_components ...string) FSPathSpec {
+func NewUnsafeFilestorePath(path_components ...string) api.FSPathSpec {
 	result := FSPathSpec{DSPathSpec{
 		components: path_components,
 		// By default write JSON files.
@@ -91,7 +78,7 @@ func NewUnsafeFilestorePath(path_components ...string) FSPathSpec {
 	return result
 }
 
-func NewSafeFilestorePath(path_components ...string) FSPathSpec {
+func NewSafeFilestorePath(path_components ...string) api.FSPathSpec {
 	result := FSPathSpec{DSPathSpec{
 		components: path_components,
 		path_type:  api.PATH_TYPE_FILESTORE_JSON,
