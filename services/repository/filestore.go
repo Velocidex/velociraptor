@@ -49,11 +49,12 @@ func InitializeGlobalRepositoryFromFilestore(
 				string(data), false /* validate */)
 			if err != nil {
 				logger.Info("Unable to load custom "+
-					"artifact %s: %v", path, err)
+					"artifact %s: %v",
+					path.AsClientPath(), err)
 				return nil
 			}
 			artifact_obj.Raw = string(data)
-			logger.Info("Loaded %s", path)
+			logger.Info("Loaded %s", path.AsClientPath())
 
 			return nil
 		})

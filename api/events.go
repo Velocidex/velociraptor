@@ -250,7 +250,8 @@ func listAvailableEventArtifacts(
 		return nil, err
 	}
 
-	// Analyzer analyses the path name from disk and adds to the events list.
+	// getAllArtifacts analyses the path name from disk and adds
+	// to the events list.
 	seen := make(map[string]*api_proto.AvailableEvent)
 	err = getAllArtifacts(self.config, path_manager.GetRootPath(), seen)
 	if err != nil {
@@ -283,9 +284,18 @@ func getAllArtifacts(
 
 	return file_store_factory.Walk(log_path,
 		func(full_path api.FSPathSpec, info os.FileInfo) error {
+			// Walking the events directory will give us
+			// all the day json files. Each day json file
+			// is contained in a directory structure which
+			// reflects the name of the artifact, for
+			// example:
+
+			// <log_path>/Server.Monitor.Health/Prometheus/2021-08-01.json
+			// Corresponds to the artifact Server.Monitor.Health/Prometheus
 			if !info.IsDir() && info.Size() > 0 {
-				relative_path := full_path.Components()[len(log_path.Components()):]
-				artifact_name := strings.Join(relative_path, ".")
+				relative_path := full_path.Dir().
+					Components()[len(log_path.Components()):]
+				artifact_name := strings.Join(relative_path, "/")
 				event, pres := seen[artifact_name]
 				if !pres {
 					event = &api_proto.AvailableEvent{

@@ -430,7 +430,7 @@ export default class EventTimelineViewer extends React.Component {
                  >
                    <TimelineMarkers>
                      <CustomMarker
-                       date={this.state.start_time} >
+                       date={this.state.start_time || new Date()} >
                        { ({ styles, date }) => {
                            styles.backgroundColor = undefined;
                            styles.width = undefined;
