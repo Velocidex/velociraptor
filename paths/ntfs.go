@@ -67,21 +67,21 @@ func ExtractClientPathComponents(path string) []string {
 
 // Detect device names from a client's path. This converts Windows
 // paths into NTFS format suitable for consumption by the ntfs parser.
-func GetDeviceAndSubpath(path string) (device string, subpath []string, err error) {
+func GetDeviceAndSubpath(path string) (device string, subpath string, err error) {
 	m := deviceDriveRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
-		return m[1], utils.SplitComponents(m[2]), nil
+		return m[1], m[2], nil
 	}
 
 	m = driveRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
-		return "\\\\.\\" + m[1], utils.SplitComponents(m[2]), nil
+		return "\\\\.\\" + m[1], m[2], nil
 	}
 
 	m = deviceDirectoryRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
-		return m[1], utils.SplitComponents(m[2]), nil
+		return m[1], m[2], nil
 	}
 
-	return "/", nil, errors.New("Unsupported device type")
+	return "/", "", errors.New("Unsupported device type")
 }
