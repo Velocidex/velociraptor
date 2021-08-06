@@ -531,7 +531,7 @@ func writeContentToFile(config_obj *config_proto.Config,
 	}
 	if err != nil {
 		logging.GetLogger(config_obj, &logging.FrontendComponent).Error(
-			"Unable to open file "+filename, err)
+			"Unable to open file %v: %v", filename, err)
 		return errors.WithStack(err)
 	}
 	defer file.Close()

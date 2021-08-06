@@ -5,7 +5,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
@@ -118,7 +121,7 @@ func (self *MemoryFileStore) ReadFile(path api.FSPathSpec) (api.FileReader, erro
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	filename := path.AsFilestoreFilename(self.config_obj)
+	filename := pathSpecToPath(path, self.config_obj)
 	self.Trace("ReadFile", filename)
 	data_any, pres := self.Data.Get(filename)
 	if pres {
@@ -137,7 +140,7 @@ func (self *MemoryFileStore) WriteFile(path api.FSPathSpec) (api.FileWriter, err
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	filename := path.AsFilestoreFilename(self.config_obj)
+	filename := pathSpecToPath(path, self.config_obj)
 	self.Trace("WriteFile", filename)
 	buf, pres := self.Data.Get(filename)
 	if !pres {
@@ -156,7 +159,7 @@ func (self *MemoryFileStore) StatFile(path api.FSPathSpec) (api.FileInfo, error)
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	filename := path.AsFilestoreFilename(self.config_obj)
+	filename := pathSpecToPath(path, self.config_obj)
 	self.Trace("StatFile", filename)
 	buff, pres := self.Data.Get(filename)
 	if !pres {
@@ -174,8 +177,8 @@ func (self *MemoryFileStore) Move(src, dest api.FSPathSpec) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	src_filename := src.AsFilestoreFilename(self.config_obj)
-	dest_filename := dest.AsFilestoreFilename(self.config_obj)
+	src_filename := pathSpecToPath(src, self.config_obj)
+	dest_filename := pathSpecToPath(dest, self.config_obj)
 	buff, pres := self.Data.Get(src_filename)
 	if !pres {
 		return os.ErrNotExist
@@ -190,7 +193,7 @@ func (self *MemoryFileStore) ListDirectory(path api.FSPathSpec) ([]api.FileInfo,
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	dirname := path.AsFilestoreDirectory(self.config_obj)
+	dirname := pathDirSpecToPath(path, self.config_obj)
 	self.Trace("ListDirectory", dirname)
 	result := []api.FileInfo{}
 	files := []string{}
@@ -254,7 +257,7 @@ func (self *MemoryFileStore) Delete(path api.FSPathSpec) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	filename := path.AsFilestoreFilename(self.config_obj)
+	filename := pathSpecToPath(path, self.config_obj)
 	self.Trace("Delete", filename)
 	self.Data.Delete(filename)
 	return nil
@@ -281,4 +284,32 @@ func (self *MemoryFileStore) Clear() {
 	defer self.mu.Unlock()
 
 	self.Data = ordereddict.NewDict()
+}
+
+func pathSpecToPath(
+	p api.FSPathSpec, config_obj *config_proto.Config) string {
+	result := p.AsFilestoreFilename(config_obj)
+
+	// Sanitize it on windows to convert back to a common format
+	// for comparisons.
+	if runtime.GOOS == "windows" {
+		return path.Clean(strings.Replace(strings.TrimPrefix(
+			result, path_specs.WINDOWS_LFN_PREFIX), "\\", "/", -1))
+	}
+
+	return result
+}
+
+func pathDirSpecToPath(p api.FSPathSpec,
+	config_obj *config_proto.Config) string {
+	result := p.AsFilestoreDirectory(config_obj)
+
+	// Sanitize it on windows to convert back to a common format
+	// for comparisons.
+	if runtime.GOOS == "windows" {
+		return path.Clean(strings.Replace(strings.TrimPrefix(
+			result, path_specs.WINDOWS_LFN_PREFIX), "\\", "/", -1))
+	}
+
+	return result
 }

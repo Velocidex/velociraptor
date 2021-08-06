@@ -11,6 +11,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+const (
+	WINDOWS_LFN_PREFIX = "\\\\?\\"
+)
+
 type DSPathSpec struct {
 	components []string
 	path_type  api.PathType
@@ -152,7 +156,7 @@ func (self DSPathSpec) asSafeDirWithRoot(root string) string {
 	// \. Main's config.ValidateDatastoreConfig() ensures this is
 	// the case.
 	if runtime.GOOS == "windows" {
-		return "\\\\?\\" + root + result
+		return WINDOWS_LFN_PREFIX + root + result
 	}
 	return root + result
 }

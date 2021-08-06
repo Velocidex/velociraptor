@@ -23,13 +23,14 @@ var (
 		urn  api.DSPathSpec
 		path string
 	}{
+		// This one should be safe
 		{path_specs.NewSafeDatastorePath("a", "b", "c"), "/a/b/c.db"},
 
 		// Path components are actually a list of strings.
-		{path_specs.NewSafeDatastorePath("a", "b/c", "d"),
+		{path_specs.NewUnsafeDatastorePath("a", "b/c", "d"),
 			"/a/b%2Fc/d.db"},
 
-		{path_specs.NewSafeDatastorePath("a", "b/c", "d/d"),
+		{path_specs.NewUnsafeDatastorePath("a", "b/c", "d/d"),
 			"/a/b%2Fc/d%2Fd.db"},
 	}
 )

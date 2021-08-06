@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -179,12 +180,12 @@ func (self *TestDataStore) GetSubject(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	path := urn.AsDatastoreFilename(config_obj)
+	path := pathSpecToPath(urn, config_obj)
 	self.Trace("GetSubject", path)
 	result, pres := self.Subjects[path]
 	if !pres {
-		fallback_path := urn.SetType(api.PATH_TYPE_DATASTORE_PROTO).
-			AsDatastoreFilename(config_obj)
+		fallback_path := pathSpecToPath(
+			urn.SetType(api.PATH_TYPE_DATASTORE_PROTO), config_obj)
 		result, pres = self.Subjects[fallback_path]
 		if !pres {
 			return errors.WithMessage(os.ErrNotExist,
@@ -202,7 +203,7 @@ func (self *TestDataStore) SetSubject(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	filename := urn.AsDatastoreFilename(config_obj)
+	filename := pathSpecToPath(urn, config_obj)
 	self.Trace("SetSubject", filename)
 
 	self.Subjects[filename] = message
@@ -217,7 +218,7 @@ func (self *TestDataStore) DeleteSubject(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	filename := urn.AsDatastoreFilename(config_obj)
+	filename := pathSpecToPath(urn, config_obj)
 	self.Trace("DeleteSubject", filename)
 	delete(self.Subjects, filename)
 	delete(self.Components, filename)
@@ -234,7 +235,7 @@ func (self *TestDataStore) ListChildren(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.Trace("ListChildren", urn.AsDatastoreDirectory(config_obj))
+	self.Trace("ListChildren", pathDirSpecToPath(urn, config_obj))
 
 	seen := make(map[string]bool)
 	root_components := urn.Components()
@@ -286,7 +287,7 @@ func (self *TestDataStore) SetIndex(
 	for _, keyword := range keywords {
 		keyword = utils.SanitizeString(strings.ToLower(keyword))
 		components := index_urn.AddChild(keyword, entity)
-		subject := components.AsDatastoreFilename(config_obj)
+		subject := pathSpecToPath(components, config_obj)
 		self.Subjects[subject] = &empty.Empty{}
 		self.Components[subject] = components.Components()
 	}
@@ -304,8 +305,8 @@ func (self *TestDataStore) UnsetIndex(
 	entity = utils.SanitizeString(entity)
 	for _, keyword := range keywords {
 		keyword = utils.SanitizeString(strings.ToLower(keyword))
-		subject := index_urn.AddChild(keyword, entity).
-			AsDatastoreFilename(config_obj)
+		subject := pathSpecToPath(
+			index_urn.AddChild(keyword, entity), config_obj)
 		delete(self.Subjects, subject)
 		delete(self.Components, subject)
 	}
@@ -323,8 +324,8 @@ func (self *TestDataStore) CheckIndex(
 	entity = utils.SanitizeString(entity)
 	for _, keyword := range keywords {
 		keyword = utils.SanitizeString(strings.ToLower(keyword))
-		subject := index_urn.AddChild(keyword, entity).
-			AsDatastoreFilename(config_obj)
+		subject := pathSpecToPath(
+			index_urn.AddChild(keyword, entity), config_obj)
 		_, pres := self.Subjects[subject]
 		if pres {
 			return nil
@@ -442,4 +443,32 @@ func (self *TestDataStore) Close() {
 	defer mu.Unlock()
 
 	gTestDatastore = NewTestDataStore()
+}
+
+func pathSpecToPath(p api.DSPathSpec,
+	config_obj *config_proto.Config) string {
+	result := p.AsDatastoreFilename(config_obj)
+
+	// Sanitize it on windows to convert back to a common format
+	// for comparisons.
+	if runtime.GOOS == "windows" {
+		return path.Clean(strings.Replace(strings.TrimPrefix(
+			result, path_specs.WINDOWS_LFN_PREFIX), "\\", "/", -1))
+	}
+
+	return result
+}
+
+func pathDirSpecToPath(p api.DSPathSpec,
+	config_obj *config_proto.Config) string {
+	result := p.AsDatastoreDirectory(config_obj)
+
+	// Sanitize it on windows to convert back to a common format
+	// for comparisons.
+	if runtime.GOOS == "windows" {
+		return path.Clean(strings.Replace(strings.TrimPrefix(
+			result, path_specs.WINDOWS_LFN_PREFIX), "\\", "/", -1))
+	}
+
+	return result
 }
