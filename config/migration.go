@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"regexp"
-	"runtime"
 	"strings"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -163,16 +162,20 @@ func migrate_0_5_6(config_obj *config_proto.Config) {
 }
 
 func migrate_0_6_1(config_obj *config_proto.Config) {
+	// We require the datastore location to have no trailing path
+	// separators.
 	if config_obj.Datastore != nil {
-		if config_obj.ServerType == "windows" || runtime.GOOS == "windows" {
-			// Make sure the data store location has a trailing \
-			if !strings.HasSuffix(config_obj.Datastore.Location, "\\") {
-				config_obj.Datastore.Location += "\\"
-			}
-			if !strings.HasSuffix(config_obj.Datastore.FilestoreDirectory, "\\") {
-				config_obj.Datastore.FilestoreDirectory += "\\"
-			}
-		}
+		config_obj.Datastore.Location = strings.TrimSuffix(
+			config_obj.Datastore.Location, "\\")
+
+		config_obj.Datastore.Location = strings.TrimSuffix(
+			config_obj.Datastore.Location, "/")
+
+		config_obj.Datastore.FilestoreDirectory = strings.TrimSuffix(
+			config_obj.Datastore.FilestoreDirectory, "\\")
+
+		config_obj.Datastore.FilestoreDirectory = strings.TrimSuffix(
+			config_obj.Datastore.FilestoreDirectory, "/")
 	}
 }
 
