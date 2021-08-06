@@ -272,7 +272,7 @@ func (self *MemoryFileStore) Get(filename string) ([]byte, bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	res, pres := self.Data.Get(filename)
+	res, pres := self.Data.Get(cleanPathForWindows(filename))
 	if pres {
 		return res.([]byte), pres
 	}
@@ -288,8 +288,10 @@ func (self *MemoryFileStore) Clear() {
 
 func pathSpecToPath(
 	p api.FSPathSpec, config_obj *config_proto.Config) string {
-	result := p.AsFilestoreFilename(config_obj)
+	return cleanPathForWindows(p.AsFilestoreFilename(config_obj))
+}
 
+func cleanPathForWindows(result string) string {
 	// Sanitize it on windows to convert back to a common format
 	// for comparisons.
 	if runtime.GOOS == "windows" {
@@ -302,14 +304,5 @@ func pathSpecToPath(
 
 func pathDirSpecToPath(p api.FSPathSpec,
 	config_obj *config_proto.Config) string {
-	result := p.AsFilestoreDirectory(config_obj)
-
-	// Sanitize it on windows to convert back to a common format
-	// for comparisons.
-	if runtime.GOOS == "windows" {
-		return path.Clean(strings.Replace(strings.TrimPrefix(
-			result, path_specs.WINDOWS_LFN_PREFIX), "\\", "/", -1))
-	}
-
-	return result
+	return cleanPathForWindows(p.AsFilestoreDirectory(config_obj))
 }

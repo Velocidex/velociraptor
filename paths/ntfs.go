@@ -2,7 +2,9 @@ package paths
 
 import (
 	"errors"
+	"path/filepath"
 	"regexp"
+	"strings"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
@@ -68,20 +70,34 @@ func ExtractClientPathComponents(path string) []string {
 // Detect device names from a client's path. This converts Windows
 // paths into NTFS format suitable for consumption by the ntfs parser.
 func GetDeviceAndSubpath(path string) (device string, subpath string, err error) {
+	// Make sure not to run filepath.Clean() because it will
+	// collapse multiple slashes (and prevent device names from
+	// being recognized).
+	path = strings.Replace(path, "/", "\\", -1)
+
 	m := deviceDriveRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
-		return m[1], m[2], nil
+		return m[1], clean(m[2]), nil
 	}
 
 	m = driveRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
-		return "\\\\.\\" + m[1], m[2], nil
+		return "\\\\.\\" + m[1], clean(m[2]), nil
 	}
 
 	m = deviceDirectoryRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
-		return m[1], m[2], nil
+		return m[1], clean(m[2]), nil
 	}
 
-	return "/", "", errors.New("Unsupported device type")
+	return "/", path, errors.New("Unsupported device type")
+}
+
+func clean(path string) string {
+	result := filepath.Clean(path)
+	if result == "." {
+		result = ""
+	}
+
+	return result
 }
