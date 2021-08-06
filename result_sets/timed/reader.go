@@ -9,7 +9,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/timelines"
@@ -51,7 +50,6 @@ type TimedResultSetReader struct {
 
 func (self *TimedResultSetReader) GetAvailableFiles(
 	ctx context.Context) []*api.ResultSetFileProperties {
-	json.Dump(self.files[0].Path)
 	return self.files
 }
 

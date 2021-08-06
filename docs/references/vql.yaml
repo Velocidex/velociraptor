@@ -61,6 +61,30 @@
     type: string
     description: Required name prefix
   category: server
+- name: atexit
+  description: |
+    Install a query to run when the query is unwound. This is used to
+    clean up when the query ends.
+
+    For example:
+
+    ```vql
+    LET _ = atexit(query={
+      SELECT rm(filename="Foobar.txt") FROM scope()
+    })
+    ```
+  type: Function
+  args:
+  - name: query
+    type: Any
+    description: A VQL Query to parse and execute.
+    required: true
+  - name: env
+    type: ordereddict.Dict
+    description: A dict of args to insert into the scope.
+  - name: timeout
+    type: uint64
+    description: How long to wait for destructors to run (default 60 seconds).
 - name: atoi
   description: Convert a string to an int.
   type: Function
@@ -425,9 +449,11 @@
   args:
   - name: path
     type: string
-    description: A VFS path to compress
-    repeated: true
+    description: A path to compress
     required: true
+  - name: output
+    type: string
+    description: A path to write the output - default is the path with a .gz extension
   category: server
 - name: connections
   description: List all active connections
@@ -451,6 +477,9 @@
   - name: permissions
     type: string
     description: Required permissions (e.g. 'x').
+  - name: append
+    type: bool
+    description: If true we append to the target file otherwise truncate it
   category: basic
 - name: count
   description: Counts the items.
@@ -742,6 +771,26 @@
     description: A path with environment escapes
     required: true
   category: basic
+- name: favorites_save
+  description: Save a collection into the favorites.
+  type: Function
+  args:
+  - name: name
+    type: string
+    description: A name for this collection template.
+    required: true
+  - name: description
+    type: string
+    description: A description for the template.
+  - name: specs
+    type: LazyExpr
+    description: The collection request spec that will be saved. We use this to create
+      the new collection.
+    required: true
+  - name: type
+    type: string
+    description: The type of favorite.
+    required: true
 - name: fifo
   description: |
     Executes 'query' and cache a number of rows from it. For each invocation
@@ -952,6 +1001,41 @@
     type: Any
     description: An array of elements to apply into the format string.
   category: basic
+- name: gcs_pubsub_publish
+  description: Publish a message to Google PubSub.
+  type: Function
+  args:
+  - name: topic
+    type: string
+    description: The topic to publish to
+    required: true
+  - name: project_id
+    type: string
+    description: The project id to publish to
+    required: true
+  - name: msg
+    type: Any
+    description: Message to publish to Pubsub
+    required: true
+  - name: credentials
+    type: string
+    description: The credentials to use
+    required: true
+- name: geoip
+  description: |
+    Lookup an IP Address using the MaxMind GeoIP database. You can get
+    a copy of the database from https://www.maxmind.com/. The database
+    must be locally accessible on the server.
+  type: Function
+  args:
+  - name: ip
+    type: string
+    description: IP Address to lookup.
+    required: true
+  - name: db
+    type: string
+    description: Path to the MaxMind GeoIP Database.
+    required: true
 - name: get
   description: |
     Gets the member field from item.
@@ -1266,6 +1350,10 @@
   - name: HuntId
     type: string
     required: true
+  - name: FlowId
+    type: string
+    description: If a flow id is specified we do not create a new flow, but instead
+      add this flow_id to the hunt.
   category: server
 - name: hunt_flows
   description: Retrieve the flows launched by a hunt.
@@ -1731,10 +1819,42 @@
     we watch the global journal which contains event logs from all clients.
   type: Plugin
   args:
+  - name: client_id
+    type: string
+    description: The client id to extract
+  - name: flow_id
+    type: string
+    description: A flow ID (client or server artifacts)
+  - name: hunt_id
+    type: string
+    description: Retrieve sources from this hunt (combines all results from all clients)
   - name: artifact
     type: string
-    description: The event artifact name to watch
-    required: true
+    description: The name of the artifact collection to fetch
+  - name: source
+    type: string
+    description: An optional named source within the artifact
+  - name: start_time
+    type: Any
+    description: Start return events from this date (for event sources)
+  - name: end_time
+    type: Any
+    description: Stop end events reach this time (event sources).
+  - name: notebook_id
+    type: string
+    description: The notebook to read from (shoud also include cell id)
+  - name: notebook_cell_id
+    type: string
+    description: The notebook cell read from (shoud also include notebook id)
+  - name: notebook_cell_table
+    type: int64
+    description: A notebook cell can have multiple tables.)
+  - name: start_row
+    type: int64
+    description: Start reading the result set from this row
+  - name: count
+    type: int64
+    description: Maximum number of clients to fetch (default unlimited)'
   category: server
 - name: netstat
   description: Collect network information.
@@ -2499,7 +2619,8 @@
   args:
   - name: pid
     type: int64
-    description: A process ID to list. If not provided list all processes.
+    description: A pid to list. If this is provided we are able to operate much faster
+      by only opening a single process.
   category: plugin
 - name: query
   description: Launch a subquery and materialize it into a list of rows.
@@ -2518,7 +2639,7 @@
     description: A VQL Query to parse and execute.
     required: true
   - name: env
-    type: Any
+    type: ordereddict.Dict
     description: A dict of args to insert into the scope.
 - name: rand
   description: Selects a random number.
@@ -2663,6 +2784,14 @@
   - name: sep
     type: string
     description: Separator to use (default native)
+- name: rm
+  description: Remove a file from the filesystem using the API.
+  type: Function
+  args:
+  - name: filename
+    type: string
+    description: Filename to remove.
+    required: true
 - name: rot13
   description: Apply rot13 deobfuscation to the string.
   type: Function
@@ -3572,8 +3701,7 @@
   args:
   - name: artifact
     type: string
-    description: The event artifact name to watch
-    required: true
+    description: The artifact to watch
   category: event
 - name: watch_syslog
   description: 'Watch a syslog file and stream events from it. '

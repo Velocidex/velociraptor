@@ -133,9 +133,21 @@ func resolveImports(config_obj *config_proto.Config,
 	// itself declares exports for itself (by default each
 	// artifact imports its own exports).
 	if artifact.Export != "" {
-		result.Query = append(result.Query, &actions_proto.VQLRequest{
-			VQL: artifact.Export,
-		})
+		scope := vql_subsystem.MakeScope()
+
+		// Support multiple queries in the export section.
+		queries, err := vfilter.MultiParse(artifact.Export)
+		if err != nil {
+			return fmt.Errorf("While parsing export in %s: %w",
+				artifact.Name, err)
+		}
+
+		for _, q := range queries {
+			result.Query = append(result.Query,
+				&actions_proto.VQLRequest{
+					VQL: q.ToString(scope),
+				})
+		}
 	}
 
 	if artifact.Imports == nil {
