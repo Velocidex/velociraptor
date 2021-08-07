@@ -37,7 +37,17 @@ var (
 	frontend_cmd_minion = frontend_cmd.Flag("minion", "This is a minion frontend").Bool()
 
 	frontend_cmd_node = frontend_cmd.Flag("node", "The name of a minion - selects from available frontend configurations").String()
+
+	frontend_disable_panic_guard = frontend_cmd.Flag("disable-panic-guard",
+		"Disabled the panic guard mechanism (not recommended)").Bool()
 )
+
+func doFrontendWithPanicGuard() {
+	if !*frontend_disable_panic_guard {
+		writeLogOnPanic()
+	}
+	doFrontend()
+}
 
 func doFrontend() {
 	config_obj, err := makeDefaultConfigLoader().
@@ -133,7 +143,7 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		if command == frontend_cmd.FullCommand() {
-			doFrontend()
+			doFrontendWithPanicGuard()
 			return true
 		}
 		return false
