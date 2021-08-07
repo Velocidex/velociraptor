@@ -17,6 +17,10 @@ const (
 
 type ACLManager interface {
 	CheckAccess(permission ...acls.ACL_PERMISSION) (bool, error)
+
+	// Extended check with extra args (Used for PUBLISH)
+	CheckAccessWithArgs(
+		permission acls.ACL_PERMISSION, args ...string) (bool, error)
 }
 
 // NullACLManager is an acl manager which allows everything. This is
@@ -26,6 +30,11 @@ type NullACLManager struct{}
 
 func (self NullACLManager) CheckAccess(
 	permission ...acls.ACL_PERMISSION) (bool, error) {
+	return true, nil
+}
+
+func (self NullACLManager) CheckAccessWithArgs(
+	permission acls.ACL_PERMISSION, args ...string) (bool, error) {
 	return true, nil
 }
 
@@ -47,6 +56,11 @@ func (self *ServerACLManager) CheckAccess(
 	}
 
 	return true, nil
+}
+
+func (self *ServerACLManager) CheckAccessWithArgs(
+	permission acls.ACL_PERMISSION, args ...string) (bool, error) {
+	return acls.CheckAccessWithToken(self.Token, permission, args...)
 }
 
 // NewRoleACLManager creates an ACL manager with only the assigned
@@ -95,6 +109,26 @@ func CheckAccess(scope vfilter.Scope, permissions ...acls.ACL_PERMISSION) error 
 	}
 
 	perm, err := manager.CheckAccess(permissions...)
+	if !perm || err != nil {
+		return fmt.Errorf("Permission denied: %v", permissions)
+	}
+
+	return nil
+}
+
+func CheckAccessWithArgs(scope vfilter.Scope, permissions acls.ACL_PERMISSION,
+	args ...string) error {
+	manager_any, pres := scope.Resolve(ACL_MANAGER_VAR)
+	if !pres {
+		return fmt.Errorf("Permission denied: %v", permissions)
+	}
+
+	manager, ok := manager_any.(ACLManager)
+	if !ok {
+		return fmt.Errorf("Permission denied: %v", permissions)
+	}
+
+	perm, err := manager.CheckAccessWithArgs(permissions, args...)
 	if !perm || err != nil {
 		return fmt.Errorf("Permission denied: %v", permissions)
 	}

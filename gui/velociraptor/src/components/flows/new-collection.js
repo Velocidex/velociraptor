@@ -30,7 +30,7 @@ import { HotKeys, ObserveKeys } from "react-hotkeys";
 import { requestToParameters } from "./utils.js";
 
 import api from '../core/api-service.js';
-
+import axios from 'axios';
 
 class PaginationBuilder {
     PaginationSteps = ["Select Artifacts", "Configure Parameters",
@@ -103,7 +103,8 @@ class NewCollectionSelectArtifacts extends React.Component {
         artifacts: PropTypes.array,
 
         // Update the wizard's artifacts list.
-        setArtifacts: PropTypes.func,
+        setArtifacts: PropTypes.func.isRequired,
+        setParameters: PropTypes.func.isRequired,
         paginator: PropTypes.object,
 
         // Artifact type CLIENT, SERVER, CLIENT_EVENT, SERVER_EVENT
@@ -126,11 +127,16 @@ class NewCollectionSelectArtifacts extends React.Component {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.doSearch("...");
         const el = document.getElementById("text-filter-column-name-search-for-artifact-input");
         if (el) {
             setTimeout(()=>el.focus(), 1000);
         };
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
     }
 
     onSelect = (row, isSelect) => {
@@ -142,7 +148,6 @@ class NewCollectionSelectArtifacts extends React.Component {
         }
         this.props.setArtifacts(new_artifacts);
         this.setState({selectedDescriptor: row});
-
     }
 
     onSelectAll = (isSelect, rows) => {
@@ -194,6 +199,35 @@ class NewCollectionSelectArtifacts extends React.Component {
         });
     }
 
+    setFavorite = (spec) => {
+        // First set all the artifacts in the spec.
+        let artifacts = [];
+        _.each(spec, x=>artifacts.push(x.artifact));
+
+        api.get("v1/GetArtifacts", {
+            type: this.props.artifactType,
+            names: artifacts}).then((response) => {
+                let items = response.data.items || [];
+                this.setState({
+                    selectedDescriptor: items[0],
+                    matchingDescriptors: items,
+                });
+                // Set the artifacts.
+                this.props.setArtifacts(items);
+                this.props.setParameters(requestToParameters({specs: spec}));
+
+            }, this.source.token);
+    }
+
+    setFavorite_ = (selection) => {
+        _.each(this.state.favorites, fav=>{
+            if(selection.value === fav.name) {
+                this.setFavorite(fav.spec);
+            }
+        });
+        return true;
+    }
+
     render() {
         let columns = [{dataField: "name", text: "",
                         formatter: (cell, row) => {
@@ -224,7 +258,7 @@ class NewCollectionSelectArtifacts extends React.Component {
                         className="favorites"
                         classNamePrefix="velo"
                         options={this.state.favorite_options}
-                        onChange={this.setFavorite}
+                        onChange={this.setFavorite_}
                         placeholder="Favorite Name"
                       />}
                     <Button variant="default"
@@ -508,7 +542,6 @@ class NewCollectionRequest extends React.Component {
         );
     }
 }
-
 
 class NewCollectionLaunch extends React.Component {
     static propTypes = {
@@ -803,7 +836,9 @@ class NewCollectionWizard extends React.Component {
                     paginator={new PaginationBuilder(
                         "Select Artifacts",
                         "New Collection: Select Artifacts to collect")}
-                    setArtifacts={this.setArtifacts}/>
+                    setArtifacts={this.setArtifacts}
+                    setParameters={this.setParameters}
+                    />
 
                   <NewCollectionConfigParameters
                     parameters={this.state.parameters}
