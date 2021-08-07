@@ -2851,6 +2851,22 @@
     type: string
     description: The type of search (e.g. 'key')
   category: server
+- name: send_event
+  description: |
+    Sends an event to a server event monitoring queue.
+
+    This is used to send an event to a waiting server event monitoring
+    artifact (either as a VQL query running on the server or perhaps
+    an external program waiting for this event via the API.
+
+  type: Function
+  args:
+  - name: artifact
+    type: string
+    required: true
+  - name: row
+    type: ordereddict.Dict
+    required: true
 - name: serialize
   description: Encode an object as a string (csv or json).
   type: Function

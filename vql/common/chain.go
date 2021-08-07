@@ -1,0 +1,90 @@
+package common
+
+import (
+	"context"
+	"sort"
+	"sync"
+
+	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
+)
+
+type _ChainPluginArgs struct {
+	Async bool `vfilter:"optional,field=async,doc=If specified we run all queries asynchronously and combine the output."`
+}
+
+type _ChainPlugin struct{}
+
+func (self _ChainPlugin) Info(scope types.Scope, type_map *types.TypeMap) *types.PluginInfo {
+	return &types.PluginInfo{
+		Name: "chain",
+		Doc: "Chain the output of several queries into the same result set." +
+			"This plugin takes any args and chains them.",
+		ArgType: type_map.AddType(scope, &_ChainPluginArgs{}),
+	}
+}
+
+func (self _ChainPlugin) Call(
+	ctx context.Context,
+	scope types.Scope,
+	args *ordereddict.Dict) <-chan types.Row {
+	output_chan := make(chan types.Row)
+
+	queries := []types.StoredQuery{}
+	members := scope.GetMembers(args)
+	sort.Strings(members)
+
+	go func() {
+		defer close(output_chan)
+
+		var async bool
+
+		async_any, pres := args.Get("async")
+		if pres && scope.Bool(async_any) {
+			async = true
+		}
+
+		for _, member := range members {
+			member_obj, pres := args.Get(member)
+			if pres {
+				queries = append(queries, arg_parser.ToStoredQuery(ctx, member_obj))
+			}
+		}
+
+		wg := &sync.WaitGroup{}
+
+		eval_query := func(query types.StoredQuery) {
+			defer wg.Done()
+
+			new_scope := scope.Copy()
+
+			in_chan := query.Eval(ctx, new_scope)
+			for item := range in_chan {
+				select {
+				case <-ctx.Done():
+					new_scope.Close()
+					return
+
+				case output_chan <- item:
+				}
+			}
+
+			new_scope.Close()
+		}
+
+		for _, query := range queries {
+			wg.Add(1)
+			if async {
+				go eval_query(query)
+			} else {
+				eval_query(query)
+			}
+		}
+
+		wg.Wait()
+	}()
+
+	return output_chan
+
+}
