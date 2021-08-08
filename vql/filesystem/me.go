@@ -71,8 +71,8 @@ func (self *MEFileSystemAccessor) GetZipFile(
 			file_path := path.Clean(i.Name)
 			zip_file_cache.lookup = append(zip_file_cache.lookup,
 				_CDLookup{
-					components: strings.Split(file_path, "/"),
-					info:       i,
+					components:  strings.Split(file_path, "/"),
+					member_file: i,
 				})
 		}
 	}
@@ -98,7 +98,7 @@ func (self *MEFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error)
 
 	info := info_generic.(*ZipFileInfo)
 
-	fd, err := info.info.Open()
+	fd, err := info.member_file.Open()
 	if err != nil {
 		return nil, err
 	}

@@ -55,6 +55,9 @@ message FileBuffer {
     Index index = 6;
 
     int64 mtime = 10;
+    int64 atime = 11;
+    int64 ctime = 12;
+    int64 btime = 13;
 }
 
 message ForemanCheckin {

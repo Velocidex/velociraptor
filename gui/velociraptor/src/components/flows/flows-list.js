@@ -30,6 +30,7 @@ import { runArtifact } from "./utils.js";
 import Modal from 'react-bootstrap/Modal';
 import UserConfig from '../core/user.js';
 import VeloForm from '../forms/form.js';
+import AddFlowToHuntDialog from './flows-add-to-hunt.js';
 
 import axios from 'axios';
 
@@ -196,6 +197,7 @@ class FlowsList extends React.Component {
 
     state = {
         showWizard: false,
+        showAddToHunt: false,
         showCopyWizard: false,
         showOfflineWizard: false,
         showDeleteWizard: false,
@@ -398,6 +400,14 @@ class FlowsList extends React.Component {
                   onResolve={this.setCollectionRequest} />
               }
 
+              { this.state.showAddToHunt &&
+                <AddFlowToHuntDialog
+                  client={this.props.client}
+                  flow={this.props.selected_flow}
+                  onClose={e=>this.setState({showAddToHunt: false})}
+                />
+              }
+
               { this.state.showCopyWizard &&
                 <NewCollectionWizard
                   client={this.props.client}
@@ -436,6 +446,12 @@ class FlowsList extends React.Component {
                           onClick={this.archiveButtonClicked}
                           variant="default">
                     <FontAwesomeIcon icon="archive"/>
+                  </Button>
+
+                  <Button title="Add to hunt"
+                          onClick={()=>this.setState({showAddToHunt: true})}
+                          variant="default">
+                    <FontAwesomeIcon icon="crosshairs"/>
                   </Button>
 
                   <Button title="Delete Artifact Collection"

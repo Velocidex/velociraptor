@@ -15,19 +15,21 @@ import (
 )
 
 var (
-	unzip_cmd        = app.Command("unzip", "Convert a CSV file to another format")
+	unzip_cmd        = app.Command("unzip", "Unzip a container file")
 	unzip_cmd_filter = unzip_cmd.Flag("where", "A WHERE condition for the query").String()
 
 	unzip_path = unzip_cmd.Flag("dump_dir", "Directory to dump output files.").
 			Default(".").String()
 
 	unzip_format = unzip_cmd.Flag("format", "Output format for csv output").
-			Default("json").Enum("text", "json", "jsonl")
-	unzip_cmd_list = unzip_cmd.Flag("list", "List files in the zip").Short('l').Bool()
-	unzip_cmd_csv  = unzip_cmd.Flag("csv", "Parse CSV files and emit rows in default format").
-			Short('C').Bool()
+			Default("json").Enum("text", "json", "csv", "jsonl")
 
-	unzip_cmd_file   = unzip_cmd.Arg("file", "Zip file to parse").Required().String()
+	unzip_cmd_list = unzip_cmd.Flag("list", "List files in the zip").Short('l').Bool()
+
+	unzip_cmd_print = unzip_cmd.Flag("print", "Dump out the files in the zip").Short('p').Bool()
+
+	unzip_cmd_file = unzip_cmd.Arg("file", "Zip file to parse").Required().String()
+
 	unzip_cmd_member = unzip_cmd.Arg("members", "Members glob to extract").Default("/**").String()
 )
 
@@ -53,30 +55,21 @@ func doUnzip() {
 		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
 		Env: ordereddict.NewDict().
 			Set("ZipPath", filename).
+			Set("DumpDir", *unzip_path).
 			Set("MemberGlob", *unzip_cmd_member),
 	}
 
-	var query string
+	if *unzip_cmd_list {
+		runUnzipList(builder)
+	} else if *unzip_cmd_print {
+		runUnzipPrint(builder)
+	} else {
+		runUnzipFiles(builder)
+	}
+}
 
-	if *unzip_cmd_csv {
-		query = `
-       SELECT * FROM foreach(
-         row={
-           SELECT FullPath
-           FROM glob(globs=url(scheme='file',
-                           path=ZipPath,
-                           fragment=MemberGlob).String,
-                 accessor='zip')
-           WHERE NOT IsDir AND Name =~ "\\.csv$"
-         }, query={
-           SELECT * FROM parse_csv(filename=FullPath, accessor='zip')
-       })`
-		if *unzip_cmd_filter != "" {
-			query += " WHERE " + *unzip_cmd_filter
-		}
-
-	} else if *unzip_cmd_list {
-		query = `
+func runUnzipList(builder services.ScopeBuilder) {
+	query := `
        SELECT url(parse=FullPath).Fragment AS Filename,
               Size
        FROM glob(globs=url(scheme='file',
@@ -85,16 +78,19 @@ func doUnzip() {
                  accessor='zip')
        WHERE NOT IsDir`
 
-		if *unzip_cmd_filter != "" {
-			query += " AND " + *unzip_cmd_filter
-		}
+	if *unzip_cmd_filter != "" {
+		query += " AND " + *unzip_cmd_filter
+	}
 
-	} else {
-		builder.Uploader = &uploads.FileBasedUploader{
-			UploadDir: *unzip_path,
-		}
+	runQueryWithEnv(query, builder)
+}
 
-		query = `
+func runUnzipFiles(builder services.ScopeBuilder) {
+	builder.Uploader = &uploads.FileBasedUploader{
+		UploadDir: *unzip_path,
+	}
+
+	query := `
        SELECT upload(
                file=FullPath, accessor='zip',
                name=url(parse=FullPath).Fragment) AS Extracted
@@ -104,11 +100,32 @@ func doUnzip() {
                  accessor='zip')
        WHERE NOT IsDir`
 
-		if *unzip_cmd_filter != "" {
-			query += " AND " + *unzip_cmd_filter
-		}
+	if *unzip_cmd_filter != "" {
+		query += " AND " + *unzip_cmd_filter
 	}
 
+	runQueryWithEnv(query, builder)
+}
+
+func runUnzipPrint(builder services.ScopeBuilder) {
+	query := `
+       SELECT * FROM foreach(
+       row={
+          SELECT FullPath
+          FROM glob(globs=url(scheme='file',
+                              path=ZipPath,
+                              fragment=MemberGlob).String,
+                    accessor='zip')
+          WHERE NOT IsDir AND FullPath =~ '.json$'
+       }, query={
+          SELECT *
+          FROM parse_jsonl(filename=FullPath, accessor='zip')
+       })
+    `
+	runQueryWithEnv(query, builder)
+}
+
+func getAllStats(query string, builder services.ScopeBuilder) []*ordereddict.Dict {
 	manager, err := services.GetRepositoryManager()
 	kingpin.FatalIfError(err, "GetRepositoryManager")
 
@@ -120,18 +137,45 @@ func doUnzip() {
 
 	ctx := InstallSignalHandler(scope)
 
-	scope.Log("Running query %v", query)
+	result := []*ordereddict.Dict{}
+	for row := range vql.Eval(ctx, scope) {
+		d, ok := row.(*ordereddict.Dict)
+		if ok {
+			result = append(result, d)
+		}
+	}
+	return result
+}
 
-	switch *unzip_format {
-	case "text":
-		table := reporting.EvalQueryToTable(ctx, scope, vql, os.Stdout)
-		table.Render()
+func runQueryWithEnv(query string, builder services.ScopeBuilder) {
+	manager, err := services.GetRepositoryManager()
+	kingpin.FatalIfError(err, "GetRepositoryManager")
 
-	case "jsonl":
-		outputJSONL(ctx, scope, vql, os.Stdout)
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
 
-	case "json":
-		outputJSON(ctx, scope, vql, os.Stdout)
+	vqls, err := vfilter.MultiParse(query)
+	kingpin.FatalIfError(err, "Unable to parse VQL Query")
+
+	ctx := InstallSignalHandler(scope)
+
+	for _, vql := range vqls {
+		scope.Log("Running query %v", query)
+
+		switch *unzip_format {
+		case "text":
+			table := reporting.EvalQueryToTable(ctx, scope, vql, os.Stdout)
+			table.Render()
+
+		case "jsonl":
+			outputJSONL(ctx, scope, vql, os.Stdout)
+
+		case "json":
+			outputJSON(ctx, scope, vql, os.Stdout)
+
+		case "csv":
+			outputCSV(ctx, scope, vql, os.Stdout)
+		}
 	}
 }
 

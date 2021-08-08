@@ -162,10 +162,20 @@ message GetHuntResultsRequest {
     string artifact = 4;
 }
 
+message FlowAssignment {
+    string client_id = 1;
+    string flow_id = 2;
+}
+
 message HuntMutation {
     string hunt_id = 1;
     HuntStats stats = 2;
     string description = 3;
     Hunt.State state = 4;
     uint64 start_time = 5;
+
+    // A mutation can directly assign an existing flow to the
+    // hunt. This allows a flow to be rerun and added to the hunt
+    // later.
+    FlowAssignment assignment = 6;
 }

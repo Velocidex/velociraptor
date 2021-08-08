@@ -4,8 +4,8 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -24,8 +24,13 @@ func (self *serverLogger) Write(b []byte) (int, error) {
 		return 0, err
 	}
 
+	journal, err := services.GetJournal()
+	if err != nil {
+		return 0, err
+	}
+
 	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
-	err = file_store.PushRows(self.config_obj,
+	err = journal.AppendToResultSet(self.config_obj,
 		path, []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("_ts", self.Clock.Now().UTC().UnixNano()/1000).

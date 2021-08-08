@@ -170,12 +170,28 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	err = journal.PushRowsToArtifact(config_obj,
-		[]*ordereddict.Dict{ordereddict.NewDict().
-			Set("HuntId", arg.HuntId).
-			Set("ClientId", arg.ClientId).
-			Set("Override", true)},
-		"System.Hunt.Participation", arg.ClientId, "")
+	// Send this
+	if arg.FlowId != "" {
+		err = journal.PushRowsToArtifact(config_obj,
+			[]*ordereddict.Dict{ordereddict.NewDict().
+				Set("HuntId", arg.HuntId).
+				Set("mutation", &api_proto.HuntMutation{
+					HuntId: arg.HuntId,
+					Assignment: &api_proto.FlowAssignment{
+						ClientId: arg.ClientId,
+						FlowId:   arg.FlowId,
+					},
+				})},
+			"Server.Internal.HuntModification", arg.ClientId, "")
+	} else {
+		err = journal.PushRowsToArtifact(config_obj,
+			[]*ordereddict.Dict{ordereddict.NewDict().
+				Set("HuntId", arg.HuntId).
+				Set("ClientId", arg.ClientId).
+				Set("Override", true)},
+			"System.Hunt.Participation", arg.ClientId, "")
+	}
+
 	if err != nil {
 		scope.Log("hunt_add: %s", err.Error())
 		return vfilter.Null{}

@@ -1,0 +1,69 @@
+name: Windows.KapeFiles.Extract
+description: |
+  The Windows.KapeFiles.Targets artifact collects files into a Zip
+  file. Zip files can not generally preserve timestamps since they
+  only have a single timestamp concept. Velociraptor will only record
+  the modified time in the zip file header itself but all the times
+  are present in the metadata file:
+
+  "Windows.KapeFiles.Targets/All File Metadata.json"
+
+  Sometimes, users wish to extract the contents of a collection to a
+  directory, and run an external tool over the data. Some such
+  external tools assume the file timestamps (e.g. prefetch files) are
+  meaningful. In this case we need to preserve the timestamps.
+
+  You can use this artifact to extract the content of a collection
+  while preserving the timestamps. The artifact will read the metadata
+  file, unpack the contents of the container and set the timestamps on
+  the resulting file.
+
+  NOTE: Windows allows 3 timestamps to be set (MAC time except for
+  Btime), while Linux only allows 2 timestamps (Modified and
+  Accessed).
+
+  ## Example - command line invocation
+
+  ```
+  velociraptor-v0.6.1-rc1-linux-amd64 artifacts collect Windows.KapeFiles.Extract --args ContainerPath=Collection-DESKTOP-2OR51GL-2021-07-16_06_56_50_-0700_PDT.zip --args OutputDirectory=/tmp/MyOutput/
+  ```
+
+parameters:
+  - name: MetadataFile
+    default: "Windows.KapeFiles.Targets/All File Metadata.json"
+    description: Name of the KapeFile.Targets metadata file.
+  - name: OutputDirectory
+    description: Directory to write on (must be set).
+  - name: ContainerPath
+    description: Path to container (zip file) to unpack.
+
+
+sources:
+  - query: |
+      LET FileStats = SELECT *,
+         regex_replace(
+            source=regex_replace(
+              source=SourceFile,
+              re='[:?]', replace=""),
+            re='\\\\', replace='/')  AS ZipPath
+      FROM parse_jsonl(filename=url(scheme='file',
+           path=ContainerPath,
+           fragment=MetadataFile),
+      accessor='zip')
+
+      LET doit = SELECT ZipPath, Created, LastAccessed, Modified,
+         upload_directory(
+           output=OutputDirectory, name=ZipPath,
+           mtime=Modified, atime=LastAccessed, ctime=Created,
+           accessor='zip',
+           file=url(
+               scheme='file',
+               path=ContainerPath,
+               fragment=ZipPath)) AS CreatedFile
+      FROM FileStats
+
+      SELECT * FROM if(condition= OutputDirectory AND ContainerPath, then=doit,
+         else={
+           SELECT * FROM scope() WHERE
+           log(message="<red>ERROR</>: Both OutputDirectory and ContainerPath must be specified.") AND FALSE
+      })
