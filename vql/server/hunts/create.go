@@ -135,9 +135,9 @@ func (self ScheduleHuntFunction) Info(scope vfilter.Scope, type_map *vfilter.Typ
 }
 
 type AddToHuntFunctionArg struct {
-	ClientId string `vfilter:"required,field=ClientId"`
-	HuntId   string `vfilter:"required,field=HuntId"`
-	FlowId   string `vfilter:"optional,field=FlowId,doc=If a flow id is specified we do not create a new flow, but instead add this flow_id to the hunt."`
+	ClientId string `vfilter:"required,field=client_id"`
+	HuntId   string `vfilter:"required,field=hunt_id"`
+	FlowId   string `vfilter:"optional,field=flow_id,doc=If a flow id is specified we do not create a new flow, but instead add this flow_id to the hunt."`
 }
 
 type AddToHuntFunction struct{}

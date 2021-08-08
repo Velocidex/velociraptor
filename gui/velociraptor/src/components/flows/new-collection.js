@@ -104,7 +104,7 @@ class NewCollectionSelectArtifacts extends React.Component {
 
         // Update the wizard's artifacts list.
         setArtifacts: PropTypes.func.isRequired,
-        setParameters: PropTypes.func.isRequired,
+        setParameters: PropTypes.func,
         paginator: PropTypes.object,
 
         // Artifact type CLIENT, SERVER, CLIENT_EVENT, SERVER_EVENT
@@ -212,10 +212,12 @@ class NewCollectionSelectArtifacts extends React.Component {
                     selectedDescriptor: items[0],
                     matchingDescriptors: items,
                 });
+
                 // Set the artifacts.
                 this.props.setArtifacts(items);
-                this.props.setParameters(requestToParameters({specs: spec}));
-
+                if (this.props.setParameters) {
+                    this.props.setParameters(requestToParameters({specs: spec}));
+                };
             }, this.source.token);
     }
 

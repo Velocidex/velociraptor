@@ -61,6 +61,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -218,6 +219,13 @@ func (self *HuntManager) maybeDirectlyAssignFlow(
 		return nil
 	}
 
+	// Verify the flow actually exists.
+	_, err := flows.GetFlowDetails(config_obj, assignment.ClientId,
+		assignment.FlowId)
+	if err != nil {
+		return err
+	}
+
 	// Append the flow to the client's table.
 	journal, err := services.GetJournal()
 	if err != nil {
@@ -238,7 +246,10 @@ func (self *HuntManager) maybeDirectlyAssignFlow(
 	}
 
 	// Add this flow to the total.
-	mutation.Stats = &api_proto.HuntStats{TotalClientsScheduled: 1}
+	mutation.Stats = &api_proto.HuntStats{
+		TotalClientsScheduled:   1,
+		TotalClientsWithResults: 1,
+	}
 
 	return nil
 }

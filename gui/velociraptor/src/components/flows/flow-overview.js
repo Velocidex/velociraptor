@@ -50,7 +50,7 @@ export default class FlowOverview extends React.Component {
             flow_id: this.props.flow.session_id,
             client_id: this.props.flow.client_id,
             download_type: download_type || "",
-        });
+        }, this.source.token);
     };
 
     getDetailedFlow = () => {
@@ -64,7 +64,7 @@ export default class FlowOverview extends React.Component {
         api.get("v1/GetFlowDetails", {
             flow_id: flow_id,
             client_id: client_id,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             let available_downloads = response.data.available_downloads &&
                 response.data.available_downloads.files;
             this.setState({available_downloads: available_downloads || []});

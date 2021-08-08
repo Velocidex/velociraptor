@@ -245,19 +245,6 @@ class FlowsList extends React.Component {
         });
     }
 
-    archiveButtonClicked = () => {
-        let client_id = this.props.selected_flow && this.props.selected_flow.client_id;
-        let flow_id = this.props.selected_flow && this.props.selected_flow.session_id;
-
-        if (client_id && flow_id) {
-            api.post("v1/ArchiveFlow", {
-                client_id: client_id, flow_id: flow_id
-            }).then((response) => {
-                this.props.fetchFlows();
-            });
-        }
-    }
-
     cancelButtonClicked = () => {
         let client_id = this.props.selected_flow && this.props.selected_flow.client_id;
         let flow_id = this.props.selected_flow && this.props.selected_flow.session_id;
@@ -440,12 +427,6 @@ class FlowsList extends React.Component {
                           onClick={() => this.setState({showWizard: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
-                  </Button>
-
-                  <Button title="Archive Artifact Collection"
-                          onClick={this.archiveButtonClicked}
-                          variant="default">
-                    <FontAwesomeIcon icon="archive"/>
                   </Button>
 
                   <Button title="Add to hunt"
