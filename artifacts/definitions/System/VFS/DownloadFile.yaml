@@ -22,21 +22,19 @@ parameters:
 
 sources:
   - query: |
-      LET download_one_file = SELECT Path, Accessor,
-           Size, StoredSize, Error, Sha256, Md5
-        FROM upload(files=Path, accessor=Accessor)
+      LET download_one_file = SELECT FullPath AS Path, Accessor,
+          Size, upload(file=FullPath, accessor=Accessor) AS Upload
+      FROM stat(filename=Path, accessor=Accessor)
 
-      LET download_recursive = SELECT FullPath, Accessor,
+      LET download_recursive = SELECT FullPath AS Path, Accessor,
           Size, upload(file=FullPath, accessor=Accessor) AS Upload
       FROM glob(globs="**", root=Path, accessor=Accessor)
       WHERE Mode.IsRegular
 
-      SELECT * FROM if(condition= Recursively,
-        then={
-           SELECT FullPath AS Path, Accessor,
-                  Upload.Size AS Size,
-                  Upload.StoredSize AS StoredSize,
-                  Upload.Sha256 AS Sha256,
-                  Upload.Md5 AS Md5
-           FROM download_recursive
-        }, else=download_one_file)
+      SELECT Path, Accessor,
+             Upload.Size AS Size,
+             Upload.StoredSize AS StoredSize,
+             Upload.Sha256 AS Sha256,
+             Upload.Md5 AS Md5
+      FROM if(condition=Recursively, then=download_recursive,
+              else=download_one_file)

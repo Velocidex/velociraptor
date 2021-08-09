@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync/atomic"
 
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -31,9 +32,7 @@ func (self *MEFileSystemAccessor) GetZipFile(
 	zip_file_cache, pres := self.fd_cache[me]
 	self.mu.Unlock()
 
-	if pres {
-		zip_file_cache.refs++
-	} else {
+	if !pres {
 		accessor, err := glob.GetAccessor("file", self.scope)
 		if err != nil {
 			return nil, err
@@ -78,6 +77,8 @@ func (self *MEFileSystemAccessor) GetZipFile(
 		}
 		self.mu.Unlock()
 	}
+
+	atomic.AddInt64(&zip_file_cache.refs, 1)
 
 	return zip_file_cache, nil
 }

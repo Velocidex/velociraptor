@@ -49,6 +49,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -178,7 +179,7 @@ type ZipFileCache struct {
 
 	// Reference counting - all outstanding references to the zip
 	// file. Make sure to call ZipFileCache.Close()
-	refs int
+	refs int64
 
 	// An alternative lookup structure to fetch a zip.File (which will
 	// be wrapped by a ZipFileInfo)
@@ -206,7 +207,7 @@ func (self *ZipFileCache) Open(
 
 	// We are leaking a zip.File out of our cache so we need to
 	// increase our reference count.
-	self.refs++
+	atomic.AddInt64(&self.refs, 1)
 
 	return &SeekableZip{
 		ReadCloser: fd,
@@ -297,7 +298,7 @@ func (self *ZipFileCache) Close() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.refs--
+	atomic.AddInt64(&self.refs, -1)
 	if self.refs == 0 {
 		self.fd.Close()
 		self.is_closed = true
@@ -378,8 +379,7 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 		self.mu.Unlock()
 	}
 
-	//
-	zip_file_cache.refs++
+	atomic.AddInt64(&zip_file_cache.refs, 1)
 
 	return zip_file_cache, url, nil
 
@@ -510,10 +510,12 @@ func (self *ZipFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAcce
 			// Decrement refs until we are allowed to
 			// close the file.
 			for _, v := range result.fd_cache {
-				v.refs--
+				v.mu.Lock()
+				atomic.AddInt64(&v.refs, -1)
 				if v.refs == 0 {
 					v.fd.Close()
 				}
+				v.mu.Unlock()
 			}
 		})
 		return result, err
