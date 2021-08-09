@@ -405,6 +405,9 @@ export class ServerEventTableWizard extends React.Component {
 
     fetchEventTable = () => {
         api.get("v1/GetServerMonitoringState").then(resp => {
+            let empty_table = {All: {artifacts: [], specs: {}}};
+            this.setState({tables: empty_table, current_table: empty_table.All});
+
             // Pretend this is the same as the client event
             // table. Since the server events do not do labels, just
             // make them all go under the "All" label.

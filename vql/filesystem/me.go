@@ -28,9 +28,9 @@ func (self *MEFileSystemAccessor) GetZipFile(
 	}
 
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	zip_file_cache, pres := self.fd_cache[me]
+	self.mu.Unlock()
+
 	if pres {
 		zip_file_cache.refs++
 	} else {
@@ -65,6 +65,7 @@ func (self *MEFileSystemAccessor) GetZipFile(
 			refs:     1,
 		}
 
+		self.mu.Lock()
 		self.fd_cache[me] = zip_file_cache
 
 		for _, i := range zip_file.File {
@@ -75,6 +76,7 @@ func (self *MEFileSystemAccessor) GetZipFile(
 					member_file: i,
 				})
 		}
+		self.mu.Unlock()
 	}
 
 	return zip_file_cache, nil
@@ -90,20 +92,21 @@ func (self *MEFileSystemAccessor) Lstat(file_path string) (glob.FileInfo, error)
 	return root.GetZipInfo(components, file_path)
 }
 
-func (self *MEFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
-	info_generic, err := self.Lstat(path)
+func (self *MEFileSystemAccessor) Open(filename string) (glob.ReadSeekCloser, error) {
+	// Fetch the zip file from cache again.
+	zip_file_cache, err := self.GetZipFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	info := info_generic.(*ZipFileInfo)
-
-	fd, err := info.member_file.Open()
+	// Get the zip member from the zip file.
+	fd, err := zip_file_cache.Open(
+		fragmentToComponents(filename), filename)
 	if err != nil {
+		zip_file_cache.Close()
 		return nil, err
 	}
-
-	return &SeekableZip{ReadCloser: fd, info: info}, nil
+	return fd, nil
 }
 
 func (self *MEFileSystemAccessor) ReadDir(file_path string) ([]glob.FileInfo, error) {
