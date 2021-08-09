@@ -32,6 +32,12 @@ h4 {
 }
 
 
+.max-height .modal-body {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+
 .main-navbar {
     border-top: 0px;
     border-style: solid;

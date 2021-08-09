@@ -35,8 +35,6 @@ export default class AddFlowToHuntDialog extends React.Component {
     }
 
     fetchCompatibleHunts = () => {
-        console.log(this.props.flow);
-
         let artifacts = this.props.flow && this.props.flow.request &&
             this.props.flow.request.artifacts;
 
@@ -50,8 +48,6 @@ export default class AddFlowToHuntDialog extends React.Component {
             let filtered_hunts = _.filter(hunts, x=>{
                 return !_.isEmpty(_.intersection(artifacts, x.artifacts));
             });
-
-            console.log(filtered_hunts);
             this.setState({
                 hunts: filtered_hunts,
                 loading: false,
@@ -100,7 +96,7 @@ export default class AddFlowToHuntDialog extends React.Component {
         ]);
 
         return (
-            <Modal show={true}
+            <Modal show={true} className="max-height"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
                 <Modal.Title>Manually add collection to hunt</Modal.Title>
