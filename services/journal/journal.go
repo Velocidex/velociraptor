@@ -27,6 +27,11 @@ import (
 type JournalService struct {
 	config_obj *config_proto.Config
 	qm         api.QueueManager
+
+	// Synchronizes access to files. NOTE: This only works within
+	// process!
+	mu    sync.Mutex
+	locks map[string]*sync.Mutex
 }
 
 func (self *JournalService) Watch(
@@ -41,6 +46,42 @@ func (self *JournalService) Watch(
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Watching for events from %v", queue_name)
 	return self.qm.Watch(ctx, queue_name)
+}
+
+func (self *JournalService) AppendToResultSet(
+	config_obj *config_proto.Config,
+	path api.FSPathSpec,
+	rows []*ordereddict.Dict) error {
+
+	// Key a lock to manage access to this file.
+	self.mu.Lock()
+	key := path.AsClientPath()
+	mu, pres := self.locks[key]
+	if !pres {
+		mu = &sync.Mutex{}
+		self.locks[key] = mu
+	}
+	self.mu.Unlock()
+
+	// Lock the file.
+	mu.Lock()
+	defer mu.Unlock()
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
+		path, nil, false /* truncate */)
+	if err != nil {
+		return err
+	}
+
+	for _, row := range rows {
+		rs_writer.Write(row)
+	}
+
+	rs_writer.Close()
+
+	return nil
 }
 
 func (self *JournalService) PushRowsToArtifact(
@@ -90,6 +131,7 @@ func StartJournalService(
 	if fe_manager != nil && !fe_manager.IsMaster() {
 		service := &ReplicationService{
 			config_obj: config_obj,
+			locks:      make(map[string]*sync.Mutex),
 		}
 
 		err := service.Start(ctx, wg)
@@ -104,6 +146,7 @@ func StartJournalService(
 	// 2. PushRowsToArtifact() will fail with an error.
 	service := &JournalService{
 		config_obj: config_obj,
+		locks:      make(map[string]*sync.Mutex),
 	}
 	old_service, err := services.GetJournal()
 	if err == nil {

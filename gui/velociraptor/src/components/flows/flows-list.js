@@ -30,6 +30,7 @@ import { runArtifact } from "./utils.js";
 import Modal from 'react-bootstrap/Modal';
 import UserConfig from '../core/user.js';
 import VeloForm from '../forms/form.js';
+import AddFlowToHuntDialog from './flows-add-to-hunt.js';
 
 import axios from 'axios';
 
@@ -196,6 +197,7 @@ class FlowsList extends React.Component {
 
     state = {
         showWizard: false,
+        showAddToHunt: false,
         showCopyWizard: false,
         showOfflineWizard: false,
         showDeleteWizard: false,
@@ -241,19 +243,6 @@ class FlowsList extends React.Component {
                            showOfflineWizard: false,
                            showCopyWizard: false});
         });
-    }
-
-    archiveButtonClicked = () => {
-        let client_id = this.props.selected_flow && this.props.selected_flow.client_id;
-        let flow_id = this.props.selected_flow && this.props.selected_flow.session_id;
-
-        if (client_id && flow_id) {
-            api.post("v1/ArchiveFlow", {
-                client_id: client_id, flow_id: flow_id
-            }).then((response) => {
-                this.props.fetchFlows();
-            });
-        }
     }
 
     cancelButtonClicked = () => {
@@ -398,6 +387,14 @@ class FlowsList extends React.Component {
                   onResolve={this.setCollectionRequest} />
               }
 
+              { this.state.showAddToHunt &&
+                <AddFlowToHuntDialog
+                  client={this.props.client}
+                  flow={this.props.selected_flow}
+                  onClose={e=>this.setState({showAddToHunt: false})}
+                />
+              }
+
               { this.state.showCopyWizard &&
                 <NewCollectionWizard
                   client={this.props.client}
@@ -432,10 +429,10 @@ class FlowsList extends React.Component {
                     <FontAwesomeIcon icon="plus"/>
                   </Button>
 
-                  <Button title="Archive Artifact Collection"
-                          onClick={this.archiveButtonClicked}
+                  <Button title="Add to hunt"
+                          onClick={()=>this.setState({showAddToHunt: true})}
                           variant="default">
-                    <FontAwesomeIcon icon="archive"/>
+                    <FontAwesomeIcon icon="crosshairs"/>
                   </Button>
 
                   <Button title="Delete Artifact Collection"

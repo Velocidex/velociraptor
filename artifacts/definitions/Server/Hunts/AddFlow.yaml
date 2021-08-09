@@ -1,0 +1,28 @@
+name: Server.Hunts.AddFlow
+description: |
+  This artifact adds an exisiting flow to a running hunt.
+
+  This helps in the case where the original flow in the hunt timed
+  out. The user then can re-run the hunt manually possibly increasing
+  timeout. Then they can simply click the add flow to hunt button in
+  the UI to add the flow to an existing time.
+
+type: SERVER
+
+parameters:
+  - name: HuntId
+  - name: ClientId
+  - name: FlowId
+
+sources:
+  - query: |
+      SELECT * FROM if(condition=HuntId AND ClientId AND FlowId,
+      then={
+         SELECT hunt_add(hunt_id=HuntId,
+             client_id=ClientId,
+             flow_id=FlowId)
+         FROM scope()
+      }, else={
+         SELECT * FROM scope() WHERE
+         log(message="<red>ERROR</>: You must set HuntId, ClientId and FlowId.") AND FALSE
+      })

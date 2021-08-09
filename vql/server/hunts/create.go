@@ -135,9 +135,9 @@ func (self ScheduleHuntFunction) Info(scope vfilter.Scope, type_map *vfilter.Typ
 }
 
 type AddToHuntFunctionArg struct {
-	ClientId string `vfilter:"required,field=ClientId"`
-	HuntId   string `vfilter:"required,field=HuntId"`
-	FlowId   string `vfilter:"optional,field=FlowId,doc=If a flow id is specified we do not create a new flow, but instead add this flow_id to the hunt."`
+	ClientId string `vfilter:"required,field=client_id"`
+	HuntId   string `vfilter:"required,field=hunt_id"`
+	FlowId   string `vfilter:"optional,field=flow_id,doc=If a flow id is specified we do not create a new flow, but instead add this flow_id to the hunt."`
 }
 
 type AddToHuntFunction struct{}
@@ -170,12 +170,28 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	err = journal.PushRowsToArtifact(config_obj,
-		[]*ordereddict.Dict{ordereddict.NewDict().
-			Set("HuntId", arg.HuntId).
-			Set("ClientId", arg.ClientId).
-			Set("Override", true)},
-		"System.Hunt.Participation", arg.ClientId, "")
+	// Send this
+	if arg.FlowId != "" {
+		err = journal.PushRowsToArtifact(config_obj,
+			[]*ordereddict.Dict{ordereddict.NewDict().
+				Set("HuntId", arg.HuntId).
+				Set("mutation", &api_proto.HuntMutation{
+					HuntId: arg.HuntId,
+					Assignment: &api_proto.FlowAssignment{
+						ClientId: arg.ClientId,
+						FlowId:   arg.FlowId,
+					},
+				})},
+			"Server.Internal.HuntModification", arg.ClientId, "")
+	} else {
+		err = journal.PushRowsToArtifact(config_obj,
+			[]*ordereddict.Dict{ordereddict.NewDict().
+				Set("HuntId", arg.HuntId).
+				Set("ClientId", arg.ClientId).
+				Set("Override", true)},
+			"System.Hunt.Participation", arg.ClientId, "")
+	}
+
 	if err != nil {
 		scope.Log("hunt_add: %s", err.Error())
 		return vfilter.Null{}

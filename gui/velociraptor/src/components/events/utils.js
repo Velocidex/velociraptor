@@ -12,7 +12,7 @@ function _ArtifactParameters2dict(parameters) {
 function _ArtifactCollectorArgs_to_label_table(event_table) {
     let result = {
         // Will be replaced by full definition later.
-        artifacts: event_table.artifacts,
+        artifacts: event_table.artifacts || [],
         specs: {},
     };
 
@@ -54,7 +54,8 @@ function _ArtifactCollectorArgs_to_label_table(event_table) {
 */
 function proto2tables(table, cb) {
     let definitions = {};
-    let result = {All: _ArtifactCollectorArgs_to_label_table(table.artifacts)};
+    let result = {All: _ArtifactCollectorArgs_to_label_table(
+        table.artifacts || [])};
     let all_artifacts = [...result.All.artifacts];
 
     _.each(table.label_events, x=>{

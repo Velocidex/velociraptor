@@ -35,6 +35,9 @@ func (self *VelociraptorUploader) Upload(
 	store_as_name string,
 	expected_size int64,
 	mtime time.Time,
+	atime time.Time,
+	ctime time.Time,
+	btime time.Time,
 	reader io.Reader) (
 	*api.UploadResponse, error) {
 
@@ -90,6 +93,9 @@ func (self *VelociraptorUploader) Upload(
 			Size:       uint64(expected_size),
 			StoredSize: uint64(expected_size),
 			Mtime:      mtime.UnixNano(),
+			Atime:      atime.UnixNano(),
+			Ctime:      ctime.UnixNano(),
+			Btime:      btime.UnixNano(),
 			Data:       data,
 		}
 

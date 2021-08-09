@@ -21,9 +21,11 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
@@ -38,7 +40,11 @@ type UploadFunctionArgs struct {
 	Name     string      `vfilter:"optional,field=name,doc=The name of the file that should be stored on the server"`
 	Accessor string      `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	Mtime    vfilter.Any `vfilter:"optional,field=mtime,doc=Modified time to record"`
+	Atime    vfilter.Any `vfilter:"optional,field=atime,doc=Access time to record"`
+	Ctime    vfilter.Any `vfilter:"optional,field=ctime,doc=Change time to record"`
+	Btime    vfilter.Any `vfilter:"optional,field=btime,doc=Birth time to record"`
 }
+
 type UploadFunction struct{}
 
 func (self *UploadFunction) Call(ctx context.Context,
@@ -86,29 +92,39 @@ func (self *UploadFunction) Call(ctx context.Context,
 	}
 	defer file.Close()
 
-	mtime, _ := functions.TimeFromAny(scope, arg.Mtime)
-
 	stat, err := file.Stat()
 	if err != nil {
 		scope.Log("upload: Unable to stat %s: %v",
 			arg.File, err)
-	} else if !stat.IsDir() {
-		upload_response, err := uploader.Upload(
-			ctx, scope, arg.File,
-			arg.Accessor,
-			arg.Name,
-			stat.Size(), // Expected size.
-			mtime,
-			file)
-		if err != nil {
-			return &api.UploadResponse{
-				Error: err.Error(),
-			}
-		}
-		return upload_response
+		return vfilter.Null{}
 	}
 
-	return vfilter.Null{}
+	if stat.IsDir() {
+		return vfilter.Null{}
+	}
+
+	mtime, err := functions.TimeFromAny(scope, arg.Mtime)
+	if err != nil {
+		mtime = stat.ModTime()
+	}
+
+	atime, _ := functions.TimeFromAny(scope, arg.Atime)
+	ctime, _ := functions.TimeFromAny(scope, arg.Ctime)
+	btime, _ := functions.TimeFromAny(scope, arg.Btime)
+
+	upload_response, err := uploader.Upload(
+		ctx, scope, arg.File,
+		arg.Accessor,
+		arg.Name,
+		stat.Size(), // Expected size.
+		mtime, atime, ctime, btime,
+		file)
+	if err != nil {
+		return &api.UploadResponse{
+			Error: err.Error(),
+		}
+	}
+	return upload_response
 }
 
 func (self UploadFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -121,98 +137,119 @@ func (self UploadFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 	}
 }
 
-type UploadPluginArgs struct {
-	Files    []string    `vfilter:"required,field=files,doc=A list of files to upload"`
-	Accessor string      `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	Mtime    vfilter.Any `vfilter:"optional,field=mtime,doc=Modified time to record"`
+type UploadDirectoryFunctionArgs struct {
+	File       string `vfilter:"required,field=file,doc=The file to upload"`
+	Name       string `vfilter:"optional,field=name,doc=Filename to be stored within the output directory"`
+	Accessor   string `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	OutputPath string `vfilter:"required,field=output,doc=An output directory to store files in."`
+
+	Mtime vfilter.Any `vfilter:"optional,field=mtime,doc=Modified time to set the output file."`
+	Atime vfilter.Any `vfilter:"optional,field=atime,doc=Access time to set the output file."`
+	Ctime vfilter.Any `vfilter:"optional,field=ctime,doc=Change time to set the output file."`
+	Btime vfilter.Any `vfilter:"optional,field=btime,doc=Birth time to set the output file."`
 }
 
-type UploadPlugin struct{}
+type UploadDirectoryFunction struct{}
 
-func (self *UploadPlugin) Call(
-	ctx context.Context,
+func (self *UploadDirectoryFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
-	args *ordereddict.Dict) <-chan vfilter.Row {
-	output_chan := make(chan vfilter.Row)
+	args *ordereddict.Dict) vfilter.Any {
 
-	go func() {
-		defer close(output_chan)
+	arg := &UploadDirectoryFunctionArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("upload_directory: %s", err.Error())
+		return vfilter.Null{}
+	}
 
-		arg := &UploadPluginArgs{}
-		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
-		if err != nil {
-			scope.Log("upload: %s", err.Error())
-			return
+	if arg.File == "" {
+		return vfilter.Null{}
+	}
+
+	uploader := &uploads.FileBasedUploader{
+		UploadDir: arg.OutputPath,
+	}
+
+	if arg.File == "" {
+		return vfilter.Null{}
+	}
+
+	// We need to be able to read from the accessor
+	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("upload_directory: %s", err)
+		return vfilter.Null{}
+	}
+
+	// We are going to write on the filesystem.
+	err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
+	if err != nil {
+		scope.Log("upload_directory: %s", err)
+		return vfilter.Null{}
+	}
+
+	accessor, err := glob.GetAccessor(arg.Accessor, scope)
+	if err != nil {
+		scope.Log("upload_directory: %v", err)
+		return &api.UploadResponse{
+			Error: err.Error(),
 		}
+	}
 
-		uploader, ok := artifacts.GetUploader(scope)
-		if !ok {
-			scope.Log("upload: Uploader not configured.")
-
-			// If the uploader is not configured, we need to do
-			// nothing.
-			return
+	file, err := accessor.Open(arg.File)
+	if err != nil {
+		scope.Log("upload_directory: Unable to open %s: %s",
+			arg.File, err.Error())
+		return &api.UploadResponse{
+			Error: err.Error(),
 		}
+	}
+	defer file.Close()
 
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("upload: %s", err)
-			return
+	stat, err := file.Stat()
+	if err != nil {
+		scope.Log("upload_directory: Unable to stat %s: %v", arg.File, err)
+		return vfilter.Null{}
+	}
+
+	if stat.IsDir() {
+		return vfilter.Null{}
+	}
+
+	// Stat only has a single time.
+	mtime, err := functions.TimeFromAny(scope, arg.Mtime)
+	if err != nil {
+		mtime = stat.ModTime()
+	}
+
+	atime, _ := functions.TimeFromAny(scope, arg.Atime)
+	ctime, _ := functions.TimeFromAny(scope, arg.Ctime)
+	btime, _ := functions.TimeFromAny(scope, arg.Btime)
+
+	upload_response, err := uploader.Upload(
+		ctx, scope, arg.File,
+		arg.Accessor,
+		arg.Name,
+		stat.Size(), // Expected size.
+		mtime, atime, ctime, btime,
+		file)
+	if err != nil {
+		return &api.UploadResponse{
+			Error: err.Error(),
 		}
-
-		accessor, err := glob.GetAccessor(arg.Accessor, scope)
-		if err != nil {
-			scope.Log("upload: %v", err)
-			return
-		}
-
-		mtime, _ := functions.TimeFromAny(scope, arg.Mtime)
-
-		for _, filename := range arg.Files {
-			file, err := accessor.Open(filename)
-			if err != nil {
-				scope.Log("upload: Unable to open %s: %s",
-					filename, err.Error())
-				continue
-			}
-
-			stat, err := file.Stat()
-			if err != nil {
-				scope.Log("upload: Unable to stat %s: %v",
-					filename, err)
-			} else if !stat.IsDir() {
-				upload_response, err := uploader.Upload(
-					ctx, scope, filename,
-					arg.Accessor,
-					filename,
-					stat.Size(), // Expected size.
-					mtime,
-					file)
-				if err != nil {
-					scope.Log("upload: Failed to upload %s: %s",
-						filename, err.Error())
-					continue
-				}
-				select {
-				case <-ctx.Done():
-					return
-				case output_chan <- upload_response:
-				}
-			}
-		}
-	}()
-	return output_chan
+	}
+	return upload_response
 }
 
-func (self UploadPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
-	return &vfilter.PluginInfo{
-		Name:    "upload",
-		Doc:     "Upload files to the server.",
-		ArgType: type_map.AddType(scope, &UploadPluginArgs{}),
+func (self UploadDirectoryFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "upload_directory",
+		Doc:     "Upload a file to an upload directory. The final filename will be the output directory path followed by the filename path.",
+		ArgType: type_map.AddType(scope, &UploadDirectoryFunctionArgs{}),
 	}
 }
 
 func init() {
 	vql_subsystem.RegisterFunction(&UploadFunction{})
-	vql_subsystem.RegisterPlugin(&UploadPlugin{})
+	vql_subsystem.RegisterFunction(&UploadDirectoryFunction{})
 }

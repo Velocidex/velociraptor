@@ -77,6 +77,9 @@ func (self *FileBasedUploader) Upload(
 	store_as_name string,
 	expected_size int64,
 	mtime time.Time,
+	atime time.Time,
+	ctime time.Time,
+	btime time.Time,
 	reader io.Reader) (
 	*api.UploadResponse, error) {
 
@@ -140,6 +143,9 @@ func (self *FileBasedUploader) Upload(
 
 		offset += int64(n)
 	}
+
+	// It is not an error if we cant set the timestamps - best effort.
+	_ = setFileTimestamps(file_path, mtime, atime, ctime)
 
 	scope.Log("Uploaded %v (%v bytes)", file_path, offset)
 	return &api.UploadResponse{

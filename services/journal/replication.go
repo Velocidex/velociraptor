@@ -15,8 +15,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -48,6 +51,11 @@ type ReplicationService struct {
 
 	api_client api_proto.APIClient
 	closer     func() error
+
+	// Synchronizes access to files. NOTE: This only works within
+	// process!
+	mu    sync.Mutex
+	locks map[string]*sync.Mutex
 }
 
 func (self *ReplicationService) pumpEventFromBufferFile() {
@@ -145,6 +153,42 @@ func (self *ReplicationService) Start(
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Debug("<green>Starting</> Replication service to master frontend")
+
+	return nil
+}
+
+func (self *ReplicationService) AppendToResultSet(
+	config_obj *config_proto.Config,
+	path api.FSPathSpec,
+	rows []*ordereddict.Dict) error {
+
+	// Key a lock to manage access to this file.
+	self.mu.Lock()
+	key := path.AsClientPath()
+	mu, pres := self.locks[key]
+	if !pres {
+		mu = &sync.Mutex{}
+		self.locks[key] = mu
+	}
+	self.mu.Unlock()
+
+	// Lock the file.
+	mu.Lock()
+	defer mu.Unlock()
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
+		path, nil, false /* truncate */)
+	if err != nil {
+		return err
+	}
+
+	for _, row := range rows {
+		rs_writer.Write(row)
+	}
+
+	rs_writer.Close()
 
 	return nil
 }

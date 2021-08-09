@@ -144,7 +144,8 @@ func TestClientUploader(t *testing.T) {
 	scope := vql_subsystem.MakeScope()
 
 	resp, err := uploader.Upload(
-		ctx, scope, name, "file", "", 1000, nilTime, fd)
+		ctx, scope, name, "file", "", 1000,
+		nilTime, nilTime, nilTime, nilTime, fd)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.Path, name)
 	assert.Equal(t, resp.Size, uint64(11))

@@ -39,7 +39,7 @@
 4) Hunt manager watches for flow completions and updates hunt stats re
    success or error of flow completion.
 
-Note that steps 1 & 2 are on the critical path (and may be on a remote
+Note that steps 1 & 2 are on the critical path (and may be on a minion
 frontend) and 3-4 are run on the master node.
 
 */
@@ -61,7 +61,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -143,6 +143,11 @@ func (self *HuntManager) ProcessMutation(
 		return err
 	}
 
+	err = self.maybeDirectlyAssignFlow(config_obj, mutation)
+	if err != nil {
+		return err
+	}
+
 	// We notify all node's hunt dispatcher only when the hunt
 	// status is changed (started or stopped).
 	notifier := services.GetNotifier()
@@ -205,6 +210,50 @@ func (self *HuntManager) ProcessMutation(
 		})
 }
 
+// Check if the mutation requests a flow to be added to the hunt.
+func (self *HuntManager) maybeDirectlyAssignFlow(
+	config_obj *config_proto.Config,
+	mutation *api_proto.HuntMutation) error {
+	assignment := mutation.Assignment
+	if assignment == nil {
+		return nil
+	}
+
+	// Verify the flow actually exists.
+	_, err := flows.GetFlowDetails(config_obj, assignment.ClientId,
+		assignment.FlowId)
+	if err != nil {
+		return err
+	}
+
+	// Append the flow to the client's table.
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	path_manager := paths.NewHuntPathManager(mutation.HuntId)
+	err = journal.AppendToResultSet(config_obj,
+		path_manager.Clients(), []*ordereddict.Dict{
+			ordereddict.NewDict().
+				Set("HuntId", mutation.HuntId).
+				Set("ClientId", assignment.ClientId).
+				Set("FlowId", assignment.FlowId).
+				Set("Timestamp", time.Now().Unix()),
+		})
+	if err != nil {
+		return err
+	}
+
+	// Add this flow to the total.
+	mutation.Stats = &api_proto.HuntStats{
+		TotalClientsScheduled:   1,
+		TotalClientsWithResults: 1,
+	}
+
+	return nil
+}
+
 // Watch for all flows created by a hunt and maintain the list of hunt
 // completions.
 func (self *HuntManager) ProcessFlowCompletion(
@@ -246,8 +295,13 @@ func (self *HuntManager) ProcessFlowCompletion(
 		return err
 	}
 
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
 	path_manager := paths.NewHuntPathManager(hunt_id)
-	return file_store.PushRows(config_obj, path_manager.ClientErrors(),
+	return journal.AppendToResultSet(config_obj, path_manager.ClientErrors(),
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", flow.ClientId).
 			Set("FlowId", flow.SessionId).
@@ -555,6 +609,11 @@ func scheduleHuntOnClient(
 		return err
 	}
 
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
 	// Append the row to the hunt so we can quickly query all
 	// clients that belong on this hunt and their flow id.
 	row := ordereddict.NewDict().
@@ -564,7 +623,7 @@ func scheduleHuntOnClient(
 		Set("Timestamp", time.Now().Unix())
 
 	path_manager := paths.NewHuntPathManager(hunt_id)
-	err = file_store.PushRows(config_obj,
+	err = journal.AppendToResultSet(config_obj,
 		path_manager.Clients(), []*ordereddict.Dict{row})
 	if err != nil {
 		return err

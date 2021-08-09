@@ -16,7 +16,8 @@ import (
 )
 
 var (
-	lru *cache.LRUCache = cache.NewLRUCache(100)
+	lru              *cache.LRUCache = cache.NewLRUCache(100)
+	invalidTimeError                 = errors.New("Invalid time")
 )
 
 type cachedTime struct {
@@ -103,11 +104,15 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 		return *t, nil
 
 	default:
-		sec, _ = utils.ToInt64(timestamp)
+		var ok bool
+		sec, ok = utils.ToInt64(timestamp)
+		if !ok {
+			return time.Time{}, invalidTimeError
+		}
 	}
 
 	if sec == 0 {
-		return time.Time{}, errors.New("Invalid time")
+		return time.Time{}, invalidTimeError
 	}
 
 	return time.Unix(int64(sec), int64(dec)), nil

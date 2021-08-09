@@ -86,7 +86,7 @@ class VeloHunts extends React.Component {
         // Some users have a lot of hunts and listing that many might
         // be prohibitively expensive.
         api.get("v1/ListHunts", {
-            count: 200,
+            count: 2000,
             offset: 0,
         }, this.list_hunts_source.token).then((response) => {
             if (response.cancel) return;

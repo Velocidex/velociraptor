@@ -33,6 +33,9 @@ type Uploader interface {
 		store_as_name string,
 		expected_size int64,
 		mtime time.Time,
+		atime time.Time,
+		ctime time.Time,
+		btime time.Time,
 		reader io.Reader) (*UploadResponse, error)
 }
 
@@ -50,6 +53,9 @@ func (self *FileStoreUploader) Upload(
 	store_as_name string,
 	expected_size int64,
 	mtime time.Time,
+	atime time.Time,
+	ctime time.Time,
+	btime time.Time,
 	reader io.Reader) (
 	*UploadResponse, error) {
 
