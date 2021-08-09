@@ -48,6 +48,10 @@ func (self *JournalService) Watch(
 	return self.qm.Watch(ctx, queue_name)
 }
 
+// Write rows to a simple result set. This function manages concurrent
+// access to the result set within the same frontend. Currently there
+// is no need to manage write concurrency across frontends because
+// clients can only talk with a single frontend at the time.
 func (self *JournalService) AppendToResultSet(
 	config_obj *config_proto.Config,
 	path api.FSPathSpec,
@@ -56,19 +60,20 @@ func (self *JournalService) AppendToResultSet(
 	// Key a lock to manage access to this file.
 	self.mu.Lock()
 	key := path.AsClientPath()
-	mu, pres := self.locks[key]
+	per_file_mu, pres := self.locks[key]
 	if !pres {
-		mu = &sync.Mutex{}
-		self.locks[key] = mu
+		per_file_mu = &sync.Mutex{}
+		self.locks[key] = per_file_mu
 	}
 	self.mu.Unlock()
 
 	// Lock the file.
-	mu.Lock()
-	defer mu.Unlock()
+	per_file_mu.Lock()
+	defer per_file_mu.Unlock()
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
+	// Append the data to the end of the file.
 	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
 		path, nil, false /* truncate */)
 	if err != nil {
@@ -96,20 +101,15 @@ func (self *JournalService) PushRowsToArtifact(
 
 	// Just a regular artifact, append to the existing result set.
 	if !path_manager.IsEvent() {
-		file_store_factory := file_store.GetFileStore(config_obj)
-		rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
-			path_manager.Path(), nil, false /* truncate */)
+		path, err := path_manager.GetPathForWriting()
 		if err != nil {
 			return err
 		}
-		defer rs_writer.Close()
-
-		for _, row := range rows {
-			rs_writer.Write(row)
-		}
-		return nil
+		return self.AppendToResultSet(config_obj, path, rows)
 	}
 
+	// The Queue manager will manage writing event artifacts to a
+	// timed result set, including multi frontend synchronisation.
 	if self != nil && self.qm != nil {
 		return self.qm.PushEventRows(path_manager, rows)
 	}

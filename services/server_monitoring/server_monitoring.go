@@ -43,7 +43,19 @@ type EventTable struct {
 
 	wg *sync.WaitGroup
 
-	Clock utils.Clock
+	logger *serverLogger
+	Clock  utils.Clock
+
+	tracer *QueryTracer
+}
+
+func (self *EventTable) Tracer() *QueryTracer {
+	return self.tracer
+}
+
+func (self *EventTable) SetClock(clock utils.Clock) {
+	self.Clock = clock
+	self.logger.Clock = clock
 }
 
 func (self *EventTable) Close() {
@@ -175,17 +187,19 @@ func (self *EventTable) RunQuery(
 	}
 	log_path_manager.Clock = self.Clock
 
+	self.logger = &serverLogger{
+		config_obj:   self.config_obj,
+		path_manager: log_path_manager,
+		Clock:        self.Clock,
+	}
+
 	builder := services.ScopeBuilder{
 		Config: config_obj,
 		// Disable ACLs on the client.
 		ACLManager: vql_subsystem.NullACLManager{},
 		Env:        ordereddict.NewDict(),
 		Repository: repository,
-		Logger: log.New(&serverLogger{
-			config_obj:   self.config_obj,
-			path_manager: log_path_manager,
-			Clock:        self.Clock,
-		}, "", 0),
+		Logger:     log.New(self.logger, "", 0),
 	}
 
 	for _, env_spec := range vql_request.Env {
@@ -208,8 +222,8 @@ func (self *EventTable) RunQuery(
 
 	scope.Log("server_monitoring: Collecting <green>%v</>", artifact_name)
 
-	rs_writer, err := result_sets.NewTimedResultSetWriter(
-		file_store_factory, path_manager, opts)
+	rs_writer, err := result_sets.NewTimedResultSetWriterWithClock(
+		file_store_factory, path_manager, opts, self.Clock)
 	if err != nil {
 		scope.Close()
 		return err
@@ -225,6 +239,10 @@ func (self *EventTable) RunQuery(
 		for _, query := range vql_request.Query {
 			query_log := actions.QueryLog.AddQuery(query.VQL)
 			query_start := uint64(self.Clock.Now().UTC().UnixNano() / 1000)
+
+			// Record the current query.
+			self.tracer.Set(query.VQL)
+			defer self.tracer.Clear(query.VQL)
 
 			vql, err := vfilter.Parse(query.VQL)
 			if err != nil {
@@ -256,6 +274,7 @@ func (self *EventTable) RunQuery(
 					rs_writer.Flush()
 				}
 			}
+			self.tracer.Clear(query.VQL)
 		}
 
 	}()
@@ -291,6 +310,7 @@ func StartServerMonitoringService(
 		config_obj: config_obj,
 		wg:         &sync.WaitGroup{},
 		Clock:      utils.RealClock{},
+		tracer:     NewQueryTracer(),
 	}
 
 	wg.Add(1)

@@ -2,6 +2,7 @@ package server_monitoring
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 	"testing"
@@ -24,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 	_ "www.velocidex.com/golang/velociraptor/vql/common"
@@ -165,12 +167,20 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 		"/server_artifacts/Server.Clock/2020-10-07.json",
 		"/server_artifact_logs/Server.Clock/2020-10-07.json",
 
+		// Make sure files have time indexes.
+		"/server_artifacts/Server.Clock/2020-10-07.json.tidx",
+		"/server_artifact_logs/Server.Clock/2020-10-07.json.tidx",
+
 		"/server_artifacts/Server.Clock2/2020-10-07.json",
 		"/server_artifact_logs/Server.Clock2/2020-10-07.json",
 	} {
 		value, pres := fs.Get(path)
 		if pres {
-			golden.Set(path, strings.Split(string(value), "\n"))
+			if strings.HasSuffix(path, ".tidx") {
+				golden.Set(path, fmt.Sprintf("% x", value))
+			} else {
+				golden.Set(path, strings.Split(string(value), "\n"))
+			}
 		}
 	}
 
@@ -184,6 +194,51 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	golden_str = regexp.MustCompile("Query Stats.+").ReplaceAll(golden_str, []byte{})
 
 	goldie.Assert(self.T(), "TestMultipleArtifacts", golden_str)
+}
+
+func (self *ServerMonitoringTestSuite) TestEmptyTable() {
+	event_table := services.GetServerEventManager().(*EventTable)
+	event_table.Clock = &utils.MockClock{MockNow: time.Unix(1602103388, 0)}
+
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.config_obj)
+	assert.NoError(self.T(), err)
+
+	// Add the new artifacts to the repository
+	_, err = repository.LoadYaml(`
+name: Sleep
+sources:
+- query: SELECT sleep(time=1000) FROM scope()
+`, true /* validate */)
+	assert.NoError(self.T(), err)
+
+	// Install a table with a sleep artifact.
+	err = services.GetServerEventManager().Update(self.config_obj,
+		&flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"Sleep"},
+			Specs:     []*flows_proto.ArtifactSpec{},
+		})
+	assert.NoError(self.T(), err)
+
+	// Wait until the query is installed.
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		return len(event_table.Tracer().Dump()) > 0
+	})
+
+	// Now install an empty table - all queries should quit.
+	err = services.GetServerEventManager().Update(self.config_obj,
+		&flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{},
+			Specs:     []*flows_proto.ArtifactSpec{},
+		})
+	assert.NoError(self.T(), err)
+
+	// Wait until all queries are done.
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		return len(event_table.Tracer().Dump()) == 0
+	})
 }
 
 func TestServerMonitoring(t *testing.T) {
