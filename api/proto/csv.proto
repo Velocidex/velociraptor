@@ -47,6 +47,8 @@ message GetTableRequest {
     // output format. Can be "csv", "jsonl"
     string download_format = 12;
 
+    // Optionally for downloads, the caller may specify the filename.
+    string download_filename = 18;
 
     // If specified only emit these columns.
     repeated string columns = 15;

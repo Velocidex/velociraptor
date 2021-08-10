@@ -270,7 +270,10 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 
 		transform := getTransformer(config_obj, request)
 
-		download_name := strings.Replace(log_path.Base(), "\"", "", -1)
+		download_name := request.DownloadFilename
+		if download_name == "" {
+			download_name = strings.Replace(log_path.Base(), "\"", "", -1)
+		}
 
 		// Log an audit event.
 		userinfo := GetUserInfo(r.Context(), config_obj)

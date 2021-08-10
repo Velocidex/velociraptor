@@ -203,6 +203,8 @@ func (self *TimedResultSetReader) Rows(
 					break
 				}
 
+				item.Row.Set("_ts", item.Time.UnixNano()/1000000)
+
 				select {
 				case <-ctx.Done():
 					return
