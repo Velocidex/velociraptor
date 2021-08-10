@@ -91,3 +91,25 @@ td.timeline-time {
 .page-size-dropdown .disabled {
     background-color: var(--sidebar-icon-color-disabled);
 }
+
+
+.timeline-table .timestamp {
+    max-height: 2ex;
+    overflow-y: hidden;
+    display: block;
+}
+
+.timeline-table .timestamp:hover {
+    max-height: none;
+}
+
+.download-time-range {
+    display: inline-block;
+    padding-left: 20px;
+    color: var(--color-headline-color);
+}
+
+.button-label .download-format {
+    display: inline-block;
+    width: 3em;
+}

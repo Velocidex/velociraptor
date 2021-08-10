@@ -20,32 +20,32 @@ SELECT Authors, FullPath, License, Name, Summary, Version FROM source( client_id
  }
 ]SELECT * from source( client_id='C.4f5e52adf0a337a9', artifact='Windows.Events.ProcessCreation') WHERE Name =~ '(?i)psexesvc'[
  {
-  "_ts": 1571988100,
   "Timestamp": "2019-10-25T07:20:33Z",
   "PPID": 604,
   "PID": 7176,
   "Name": "PSEXESVC.exe",
   "CommandLine": "C:\\WINDOWS\\PSEXESVC.exe",
-  "ParentInfo": ""
+  "ParentInfo": "",
+  "_ts": 1571988100000
  }
 ]SELECT * from source( artifact='Server.Monitor.Health/Prometheus') LIMIT 2[
  {
   "CPUPercent": 0,
   "MemoryUse": 0,
   "client_comms_current_connections": 0,
-  "_ts": 1604840903
+  "_ts": 1604840903000
  },
  {
   "CPUPercent": 53,
   "MemoryUse": 256434176,
   "client_comms_current_connections": 0,
-  "_ts": 1604840923
+  "_ts": 1604840923000
  }
 ]SELECT * from source( start_row=1, artifact='Server.Monitor.Health/Prometheus') LIMIT 1[
  {
   "CPUPercent": 53,
   "MemoryUse": 256434176,
   "client_comms_current_connections": 0,
-  "_ts": 1604840923
+  "_ts": 1604840923000
  }
 ]

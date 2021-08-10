@@ -52,7 +52,7 @@ build_release: build_docker
 	docker run --rm -v `pwd`:/build/ -u `id -u`:`id -g` -e HOME=/tmp/  velo_builder
 
 debug:
-	dlv debug --wd=. --build-flags="-tags 'server_vql extras'" ./bin/ -- frontend -v --debug
+	dlv debug --wd=. --build-flags="-tags 'server_vql extras'" ./bin/ -- frontend --disable-panic-guard -v --debug
 
 debug_client:
 	dlv debug --build-flags="-tags 'server_vql extras'" ./bin/ -- client -v

@@ -21,6 +21,7 @@ import { faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
          faSignOutAlt, faBroom, faPaperPlane, faEdit, faChevronDown, faFileDownload,
          faEraser, faFileCsv, faFileImport, faMinus, faForward, faCalendarAlt,
          faCompressAlt, faBackward, faMedkit, faVirusSlash, faBookmark, faHeart,
+         faFileCode
        } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
@@ -33,7 +34,7 @@ library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
             faTags, faTimes, faFolder, faSignOutAlt, faBroom, faPaperPlane, faEdit,
             faChevronDown, faFileDownload, faEraser, faFileCsv, faFileImport, faMinus,
             faForward, faCalendarAlt, faCompressAlt, faBackward, faMedkit, faVirusSlash,
-            faBookmark, faHeart,
+            faBookmark, faHeart, faFileCode
            );
 
 ReactDOM.render(

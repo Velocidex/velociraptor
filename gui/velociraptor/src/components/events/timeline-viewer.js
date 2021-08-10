@@ -8,7 +8,7 @@ import Timeline, {
     CustomMarker,
 } from 'react-calendar-timeline';
 import moment from 'moment-timezone';
-
+import qs from 'qs';
 import axios from 'axios';
 import { PrepareData } from '../core/table.js';
 import api from '../core/api-service.js';
@@ -63,6 +63,9 @@ class EventTableRenderer  extends Component {
         for(var i=0;i<this.props.columns.length;i++) {
             var name = this.props.columns[i];
             let definition ={ dataField: name, text: name};
+            if (name == "_ts") {
+                definition.text = "Server Time";
+            }
             if (this.props.renderers && this.props.renderers[name]) {
                 definition.formatter = this.props.renderers[name];
             } else {
@@ -82,7 +85,7 @@ class EventTableRenderer  extends Component {
         }
 
         return (
-            <div className="velo-table">
+            <div className="velo-table timeline-table">
               <BootstrapTable
                 hover
                 condensed
@@ -289,9 +292,8 @@ export default class EventTimelineViewer extends React.Component {
     nextPage = ()=>{
         if (this.state.table_end > 0) {
             let page_size = this.state.visibleTimeEnd - this.state.visibleTimeStart;
-
             this.setState({
-                start_time: this.state.table_end + 1,
+                start_time: this.state.table_end + 1000,
             });
 
             // Only scroll the timeline once we go past the view port.
@@ -306,9 +308,68 @@ export default class EventTimelineViewer extends React.Component {
         }
     }
 
+    startDownload = (type) => {
+        return true;
+    }
+
     renderToolbar = () => {
+        let mode = "CLIENT_EVENT";
+        if (this.props.mode === "Logs") {
+            mode = "CLIENT_EVENT_LOGS";
+        }
+
+        let start_time = moment(this.state.visibleTimeStart).format();
+        let end_time = moment(this.state.visibleTimeEnd).format();
+        let basename = `${this.props.artifact}-${start_time}-${end_time}-${this.props.client_id}`;
+        let downloads_json = {
+            columns: this.state.columns,
+            client_id: this.props.client_id,
+            artifact: this.props.artifact,
+            type: mode,
+            start_time: parseInt(this.state.visibleTimeStart / 1000),
+            end_time: parseInt(this.state.visibleTimeEnd / 1000),
+            rows: 1,
+            download_format: "json",
+            download_filename: basename,
+        };
+
+        let downloads_csv = Object.assign({}, downloads_json);
+        downloads_csv.download_format = "csv";
+
         return <>
                  {this.pageSizeSelector()}
+                 <Dropdown>
+                   <Dropdown.Toggle variant="default">
+                     <FontAwesomeIcon icon="download"/>
+                   </Dropdown.Toggle>
+                   <Dropdown.Menu>
+                     <Dropdown.Item as="a"
+                       href={api.base_path + "/api/v1/DownloadTable?" +
+                             qs.stringify(downloads_csv,  {indices: false})}
+                       variant="default" type="button">
+                       <FontAwesomeIcon icon="file-csv"/>
+                       <span className="button-label">
+                         <div className="download-format">CSV</div>
+                         <div className="download-time-range">
+                           {start_time} - {end_time}
+                         </div>
+                       </span>
+                     </Dropdown.Item>
+                     <Dropdown.Item as="a"
+                       href={api.base_path + "/api/v1/DownloadTable?" +
+                             qs.stringify(downloads_json,  {indices: false})}
+                       variant="default" type="button">
+                       <FontAwesomeIcon icon="file-code"/>
+                       <span className="button-label">
+                         <div className="download-format">JSON</div>
+                         <div className="download-time-range">
+                           {start_time} - {end_time}
+                         </div>
+                       </span>
+                     </Dropdown.Item>
+                   </Dropdown.Menu>
+                 </Dropdown>
+
                  <Button title="Previous"
                          onClick={() => this.prevPage()}
                          variant="default">
@@ -367,8 +428,8 @@ export default class EventTimelineViewer extends React.Component {
 
         let items = [{
             id:-1, group: -1,
-            start_time: this.state.table_start,
-            end_time: this.state.table_end,
+            start_time: moment(this.state.table_start),
+            end_time: moment(this.state.table_end),
             canMove: false,
             canResize: false,
             canChangeGroup: false,
