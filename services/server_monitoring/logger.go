@@ -4,8 +4,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/result_sets/timed"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -18,23 +19,21 @@ type serverLogger struct {
 // Send each log message individually to avoid any buffering - logs
 // need to be available immediately.
 func (self *serverLogger) Write(b []byte) (int, error) {
-	// Path may change as the log files rotate.
-	path, err := self.path_manager.GetPathForWriting()
+	file_store_factory := file_store.GetFileStore(self.config_obj)
+
+	writer, err := timed.NewTimedResultSetWriterWithClock(
+		file_store_factory, self.path_manager, nil, self.Clock)
 	if err != nil {
 		return 0, err
 	}
+	defer writer.Close()
 
-	journal, err := services.GetJournal()
-	if err != nil {
-		return 0, err
-	}
-
+	// Logs for event queries are written to timed result sets just
+	// like the regular artifacts.
 	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
-	err = journal.AppendToResultSet(self.config_obj,
-		path, []*ordereddict.Dict{
-			ordereddict.NewDict().
-				Set("_ts", self.Clock.Now().UTC().UnixNano()/1000).
-				Set("Timestamp", self.Clock.Now().UTC().String()).
-				Set("Message", msg)})
-	return len(b), err
+	writer.Write(ordereddict.NewDict().
+		Set("Timestamp", self.Clock.Now().UTC().String()).
+		Set("Message", msg))
+
+	return len(b), nil
 }

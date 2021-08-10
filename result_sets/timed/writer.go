@@ -131,3 +131,17 @@ func NewTimedResultSetWriter(
 		Clock:              utils.RealClock{},
 	}, nil
 }
+
+func NewTimedResultSetWriterWithClock(
+	file_store_factory api.FileStore,
+	path_manager api.PathManager,
+	opts *json.EncOpts,
+	clock utils.Clock) (result_sets.TimedResultSetWriter, error) {
+
+	return &TimedResultSetWriterImpl{
+		file_store_factory: file_store_factory,
+		path_manager:       path_manager,
+		opts:               opts,
+		Clock:              clock,
+	}, nil
+}
