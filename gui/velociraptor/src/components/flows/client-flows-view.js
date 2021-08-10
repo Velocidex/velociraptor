@@ -58,7 +58,7 @@ class ClientFlowsView extends React.Component {
         this.source = axios.CancelToken.source();
 
         api.get("v1/GetClientFlows/" + client_id, {
-            count: 100,
+            count: 1000,
             offset: 0,
         }, this.source.token).then(response=>{
             if (response.cancel) return;

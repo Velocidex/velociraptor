@@ -319,6 +319,11 @@ class VeloHostInfo extends Component {
 
                         <dt className="col-sm-3">Hostname</dt>
                         <dd className="col-sm-9">
+                          { info.os_info.hostname }
+                        </dd>
+
+                        <dt className="col-sm-3">FQDN</dt>
+                        <dd className="col-sm-9">
                           { info.os_info.fqdn }
                         </dd>
 

@@ -143,7 +143,7 @@ message Uname {
    string system = 1 [(sem_type) = {
       description: "The system platform (Windows|Darwin|Linux).",
     }];
-   string node = 2 [(sem_type) = {
+   string hostname = 2 [(sem_type) = {
       description: "The hostname of this system.",
     }];
    string release = 3 [(sem_type) = {
