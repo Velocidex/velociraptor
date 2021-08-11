@@ -14,7 +14,7 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
   },
   "os_info": {
    "system": "windows",
-   "node": "",
+   "hostname": "DESKTOP-BP4S7TF",
    "release": "Microsoft Windows 10 Enterprise Evaluation10.0.18362 Build 18362",
    "version": "",
    "machine": "amd64",

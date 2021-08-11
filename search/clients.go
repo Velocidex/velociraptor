@@ -62,10 +62,11 @@ func GetApiClient(
 	}
 
 	result.OsInfo = &api_proto.Uname{
-		System:  client_info.System,
-		Release: client_info.Release,
-		Machine: client_info.Architecture,
-		Fqdn:    client_info.Fqdn,
+		System:   client_info.System,
+		Hostname: client_info.Hostname,
+		Release:  client_info.Release,
+		Machine:  client_info.Architecture,
+		Fqdn:     client_info.Fqdn,
 	}
 
 	public_key_info := &crypto_proto.PublicKey{}
