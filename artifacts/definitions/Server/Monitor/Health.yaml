@@ -5,7 +5,7 @@ description: |
 
   You may edit this artifact to customize your server dashboard.
 
-  Alternativly, edit the Welcome screen at the
+  Alternatively, edit the Welcome screen at the
   `Server.Internal.Welcome` artifact.
 
 type: SERVER_EVENT
