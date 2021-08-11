@@ -36,15 +36,17 @@ import (
 )
 
 type ScheduleHuntFunctionArg struct {
-	Description  string      `vfilter:"required,field=description,doc=Description of the hunt"`
-	Artifacts    []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
-	Expires      uint64      `vfilter:"optional,field=expires,doc=Number of milliseconds since epoch for expiry"`
-	Spec         vfilter.Any `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
-	Timeout      uint64      `vfilter:"optional,field=timeout,doc=Set query timeout (default 10 min)"`
-	OpsPerSecond float64     `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
-	MaxRows      uint64      `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
-	MaxBytes     uint64      `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
-	Pause        bool        `vfilter:"optional,field=pause,doc=If specified the new hunt will be in the paused state"`
+	Description   string      `vfilter:"required,field=description,doc=Description of the hunt"`
+	Artifacts     []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
+	Expires       uint64      `vfilter:"optional,field=expires,doc=Number of milliseconds since epoch for expiry"`
+	Spec          vfilter.Any `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
+	Timeout       uint64      `vfilter:"optional,field=timeout,doc=Set query timeout (default 10 min)"`
+	OpsPerSecond  float64     `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
+	MaxRows       uint64      `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
+	MaxBytes      uint64      `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
+	Pause         bool        `vfilter:"optional,field=pause,doc=If specified the new hunt will be in the paused state"`
+	IncludeLabels []string    `vfilter:"optional,field=include_labels,doc=If specified only include these labels"`
+	ExcludeLabels []string    `vfilter:"optional,field=exclude_labels,doc=If specified exclude these labels"`
 }
 
 type ScheduleHuntFunction struct{}
@@ -110,6 +112,22 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		StartRequest:    request,
 		Expires:         arg.Expires,
 		State:           state,
+	}
+
+	if len(arg.IncludeLabels) > 0 {
+		hunt_request.Condition = &api_proto.HuntCondition{
+			UnionField: &api_proto.HuntCondition_Labels{
+				Labels: &api_proto.HuntLabelCondition{
+					Label: arg.IncludeLabels,
+				},
+			},
+		}
+
+		if len(arg.ExcludeLabels) > 0 {
+			hunt_request.Condition.ExcludedLabels = &api_proto.HuntLabelCondition{
+				Label: arg.ExcludeLabels,
+			}
+		}
 	}
 
 	// Run the hunt in the ACL context of the caller.
