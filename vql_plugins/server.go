@@ -31,4 +31,5 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/server/hunts"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/notebooks"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/timelines"
+	_ "www.velocidex.com/golang/velociraptor/vql/server/users"
 )

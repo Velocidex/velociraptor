@@ -1,0 +1,17 @@
+SELECT * FROM gui_users() WHERE name =~ "TestUser"[]SELECT user_create( user="TestUser", password="hunter2", roles=["reader", "investigator"]) FROM scope()[
+ {
+  "user_create(user=\"TestUser\", password=\"hunter2\", roles= [\"reader\", \"investigator\"])": "TestUser"
+ }
+]SELECT name, Permissions.roles FROM gui_users() WHERE name =~ "TestUser"[
+ {
+  "name": "TestUser",
+  "Permissions.roles": [
+   "reader",
+   "investigator"
+  ]
+ }
+]SELECT user_delete(user="TestUser") FROM scope()[
+ {
+  "user_delete(user=\"TestUser\")": "TestUser"
+ }
+]SELECT * FROM gui_users() WHERE name =~ "TestUser"[]

@@ -19,6 +19,8 @@ import DeleteNotebookDialog from '../notebooks/notebook-delete.js';
 import ExportNotebook from '../notebooks/export-notebook.js';
 
 import api from '../core/api-service.js';
+import axios from 'axios';
+
 
 class HuntList extends React.Component {
     static propTypes = {
@@ -30,6 +32,14 @@ class HuntList extends React.Component {
         setSelectedHunt: PropTypes.func,
         updateHunts: PropTypes.func,
     };
+
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
+    }
 
     state = {
         showWizard: false,
@@ -43,7 +53,7 @@ class HuntList extends React.Component {
 
     // Launch the hunt.
     setCollectionRequest = (request) => {
-        api.post('v1/CreateHunt', request).then((response) => {
+        api.post('v1/CreateHunt', request, this.source.token).then((response) => {
             // Keep the wizard up until the server confirms the
             // creation worked.
             this.setState({showWizard: false,
@@ -63,7 +73,7 @@ class HuntList extends React.Component {
         api.post("v1/ModifyHunt", {
             state: "RUNNING",
             hunt_id: hunt_id,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             this.props.updateHunts();
             this.setState({showRunHuntDialog: false});
         });
@@ -78,7 +88,7 @@ class HuntList extends React.Component {
         api.post("v1/ModifyHunt", {
             state: "PAUSED",
             hunt_id: hunt_id,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             this.props.updateHunts();
 
             // Start Cancelling all in flight collections in the
@@ -90,7 +100,7 @@ class HuntList extends React.Component {
                          parameters: {env: [
                              {key: "HuntId", value: hunt_id},
                          ]}}],
-            });
+            }, this.source.token);
         });
     }
 
@@ -103,7 +113,7 @@ class HuntList extends React.Component {
         api.post("v1/ModifyHunt", {
             state: "ARCHIVED",
             hunt_id: hunt_id,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             this.props.updateHunts();
             this.setState({showArchiveHuntDialog: false});
         });
@@ -117,7 +127,7 @@ class HuntList extends React.Component {
         api.post("v1/ModifyHunt", {
             hunt_description: row.hunt_description || " ",
             hunt_id: hunt_id,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             this.props.updateHunts();
         });
     }
@@ -132,7 +142,7 @@ class HuntList extends React.Component {
         api.post("v1/ModifyHunt", {
             state: "ARCHIVED",
             hunt_id: hunt_id,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             this.props.updateHunts();
             this.setState({showDeleteHuntDialog: false});
 
@@ -146,7 +156,7 @@ class HuntList extends React.Component {
                              {key: "HuntId", value: hunt_id},
                              {key: "DeleteAllFiles", value: "Y"},
                          ]}}],
-            });
+            }, this.source.token);
         });
     }
 

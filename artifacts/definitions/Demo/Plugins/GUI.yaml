@@ -110,9 +110,8 @@ sources:
 
           {{ define "Q" }}
             SELECT _ts, CPUPercent
-            FROM source(
-                  source="Prometheus",
-                  artifact="Server.Monitor.Health",
+            FROM monitoring(
+                  artifact="Server.Monitor.Health/Prometheus",
                   start_time=now() - 10 * 60)
             LIMIT 100
           {{ end }}
@@ -127,7 +126,7 @@ sources:
           Add a timeline from this time series data
           */
           SELECT timestamp(epoch=_ts) AS Timestamp, CPUPercent
-          FROM source(
+          FROM monitoring(
             source="Prometheus",
             artifact="Server.Monitor.Health",
             start_time=now() - 10 * 60)
@@ -135,7 +134,7 @@ sources:
           LET T1 = SELECT
                timestamp(epoch=_ts) AS Timestamp,
                dict(X=CPUPercent, Y=1) AS Dict
-          FROM source(
+          FROM monitoring(
             source="Prometheus",
             artifact="Server.Monitor.Health",
             start_time=now() - 10 * 60)

@@ -1,0 +1,16 @@
+Queries:
+  # Should return no users
+  - SELECT * FROM gui_users() WHERE name =~ "TestUser"
+
+  # Lets create a user
+  - SELECT user_create(
+       user="TestUser", password="hunter2",
+       roles=["reader", "investigator"]) FROM scope()
+
+  - SELECT name, Permissions.roles FROM gui_users() WHERE name =~ "TestUser"
+
+  # Now delete it
+  - SELECT user_delete(user="TestUser") FROM scope()
+
+  # Should be gone now.
+  - SELECT * FROM gui_users() WHERE name =~ "TestUser"

@@ -109,9 +109,23 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 		if !ok {
 			return time.Time{}, invalidTimeError
 		}
+
+		// Maybe it is in ns
+		if sec > 20000000000000000 { // 11 October 2603 in microsec
+			dec = sec
+			sec = 0
+
+		} else if sec > 20000000000000 { // 11 October 2603 in milliseconds
+			dec = sec * 1000
+			sec = 0
+
+		} else if sec > 20000000000 { // 11 October 2603 in seconds
+			dec = sec * 1000000
+			sec = 0
+		}
 	}
 
-	if sec == 0 {
+	if sec == 0 && dec == 0 {
 		return time.Time{}, invalidTimeError
 	}
 
