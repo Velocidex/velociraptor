@@ -159,9 +159,10 @@ func (self *NotebookCellQuery) Path() api.FSPathSpec {
 }
 
 func (self *NotebookCellQuery) Params() *ordereddict.Dict {
-	return ordereddict.NewDict().Set("notebook_id", self.notebook_id).
+	result := ordereddict.NewDict().Set("notebook_id", self.notebook_id).
 		Set("cell_id", self.cell_id).
 		Set("table_id", self.id)
+	return result
 }
 
 type NotebookExportPathManager struct {

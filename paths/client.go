@@ -1,9 +1,12 @@
 package paths
 
 import (
+	"errors"
 	"fmt"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ClientPathManager struct {
@@ -80,4 +83,24 @@ func (self ClientPathManager) VFSDownloadInfoFromClientPath(
 	return CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs_files").
 		AddChild(accessor).
 		AddChild(ExtractClientPathComponents(client_path)...)
+}
+
+// The uploads tab contains the full VFS path. This function parses
+// that and returns an FSPathSpec to access uploads.
+// We check to make sure the VFS path belongs to this client.
+func (self ClientPathManager) GetUploadsFileFromVFSPath(vfs_path string) (
+	api.FSPathSpec, error) {
+	components := utils.SplitComponents(vfs_path)
+	if len(components) < 5 {
+		return nil, errors.New("Vfs path is too short")
+	}
+
+	if components[0] != "clients" ||
+		components[1] != self.client_id ||
+		components[2] != "collections" {
+		return nil, errors.New("Invalid vfs_path")
+	}
+
+	return path_specs.NewUnsafeFilestorePath(components...).
+		SetType(api.PATH_TYPE_FILESTORE_ANY), nil
 }

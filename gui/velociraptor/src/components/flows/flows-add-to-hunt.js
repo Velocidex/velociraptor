@@ -7,6 +7,7 @@ import Button from 'react-bootstrap/Button';
 import Spinner from '../utils/spinner.js';
 import BootstrapTable from 'react-bootstrap-table-next';
 import { formatColumns } from "../core/table.js";
+import ArtifactLink from '../artifacts/artifacts-link.js';
 
 import axios from 'axios';
 import api from '../core/api-service.js';
@@ -75,6 +76,9 @@ export default class AddFlowToHuntDialog extends React.Component {
     }
 
     render() {
+        let artifacts = this.props.flow && this.props.flow.request &&
+            this.props.flow.request.artifacts;
+
         const selectRow = {
             mode: "radio",
             clickToSelect: true,
@@ -102,7 +106,22 @@ export default class AddFlowToHuntDialog extends React.Component {
                 <Modal.Title>Manually add collection to hunt</Modal.Title>
               </Modal.Header>
               <Modal.Body><Spinner loading={this.state.loading} />
-                { !_.isEmpty(this.state.hunts) &&
+                { _.isEmpty(this.state.hunts) ?
+                  <>
+                  <h3>No compatible hunts.</h3>
+                    <p>
+                      Please create a hunt that collects one or
+                      more of the following artifacts.
+                    </p>
+                    <ul className="list-group">
+                      {_.map(artifacts, (x, idx)=>{
+                          return <li className="list-group-item" key={idx}>
+                                   <ArtifactLink artifact={x} />
+                                 </li>;
+                      })}
+                    </ul>
+                  </>
+                  :
                   <BootstrapTable
                     hover
                     condensed

@@ -34,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 // The templating language is used to generate markdown and the
@@ -85,6 +86,38 @@ func parseOptions(values []interface{}) (*ordereddict.Dict, []interface{}) {
 		result = append(result, value)
 	}
 	return dict, result
+}
+
+// When rendering a table the user can introduce options into the
+// scope.
+func (self *GuiTemplateEngine) getTableOptions() (*ordereddict.Dict, error) {
+	column_types, pres := self.Scope.Resolve("ColumnTypes")
+	if !pres {
+		return nil, errors.New("Not found")
+	}
+
+	// Reduce the object if needed.
+	column_types_lazy, ok := column_types.(types.StoredExpression)
+	if ok {
+		column_types = column_types_lazy.Reduce(self.ctx, self.Scope)
+	}
+
+	serialized, err := json.Marshal(column_types)
+	if err != nil {
+		return nil, err
+	}
+
+	options, err := utils.ParseJsonToDicts(serialized)
+	if err != nil {
+		return nil, err
+	}
+
+	// Not the right number of options
+	if len(options) != 1 {
+		return ordereddict.NewDict(), nil
+	}
+
+	return options[0], nil
 }
 
 func (self *GuiTemplateEngine) Expand(values ...interface{}) interface{} {
@@ -171,12 +204,20 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 			return ""
 		}
 
+		table_options, err := self.getTableOptions()
+		if err != nil {
+			table_options = ordereddict.NewDict()
+		}
+
 		result := ""
 		for _, item := range t {
+			options := item.Params()
+			options.Set("TableOptions", table_options)
+
 			result += fmt.Sprintf(
 				`<div class="panel"><grr-csv-viewer base-url="'v1/GetTable'" `+
-					`params='%s' /></div>`, utils.QueryEscape(
-					item.Params().String()))
+					`params='%s' /></div>`,
+				utils.QueryEscape(options.String()))
 		}
 		return result
 
@@ -452,6 +493,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 			eval_chan := vql.Eval(self.ctx, self.Scope)
 
 			defer self.Progress.Report("Completed query")
+
 		do_query:
 			for {
 				select {

@@ -59,7 +59,7 @@ const runArtifact = (client_id, artifact, params, on_success, token)=>{
                 client_id: client_id,
                 flow_id: flow_id,
             }, token).then((response) => {
-                let context = response.data.context;
+                let context = response.data.context || {};
                 if (context.state === "RUNNING") {
                     return;
                 }

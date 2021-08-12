@@ -20,6 +20,55 @@ const renderToolTip = (props, ts) => {
            </Tooltip>;
 };
 
+const digitsRegex = /^[0-9.]+$/;
+
+// Try hard to convert the value into a proper timestamp.
+export const ToStandardTime = value => {
+    // Maybe the timestamp is specified as an iso string
+    if (_.isString(value)) {
+        // Really an int that got converted to a string along the way
+        // (can happen with 64 bit ints which JSON does not support).
+        if (digitsRegex.test(value)) {
+            value = parseFloat(value);
+
+        } else {
+            // Maybe an iso string
+            let parsed = new Date(value);
+            if (!_.isNaN(parsed.getTime())) {
+
+                // Ok this is fine.
+                return parsed;
+            };
+        }
+    }
+
+    // If the timestamp is anumber then it might be in sec, msec,
+    // usec or nsec - we want to support all of those.
+    if (!_.isNaN(value) &&  _.isNumber(value) && value > 0) {
+        // Maybe nsec
+        if (value > 20000000000000000) {  // 11 October 2603 in microsec
+            value /= 1000000;  // To msec
+
+        } else if (value > 20000000000000) {  // 11 October 2603 in milliseconds
+            value /= 1000;
+
+        } else if (value > 20000000000) { // 11 October 2603 in seconds
+            // Already in msec.
+
+        } else {
+            // Might be in sec - convert to ms.
+            value = value * 1000;
+        }
+
+
+        let parsed = new Date(value);
+        if (!_.isNaN(parsed.getTime())) {
+            return parsed;
+        };
+    }
+    return value;
+};
+
 class VeloTimestamp extends Component {
     static propTypes = {
         usec: PropTypes.any,
@@ -27,35 +76,10 @@ class VeloTimestamp extends Component {
     }
 
     render() {
-        var value = this.props.iso || this.props.usec;
+        let value = this.props.iso || this.props.usec;
+        let ts = ToStandardTime(value);
 
-        var ts;
-        // Maybe the timestamp is specified as an iso
-        if (_.isString(value)) {
-            let parsed = new Date(value);
-            if (!_.isNaN(parsed.getTime())) {
-                ts = parsed;
-            }
-        }
-
-        // If the timestamp is a number then it might be in usec
-        if (!ts && !_.isNaN(value) &&  _.isNumber(value) && value > 0) {
-            // Or maybe in seconds since epoch.
-            if (value > 20000000000) {
-                value /= 1000;
-            }
-
-            if (value > 20000000000) {
-                value /= 1000;
-            }
-
-            let parsed = new Date(value * 1000);
-            if (!_.isNaN(parsed.getTime())) {
-                ts = parsed;
-            };
-        }
-
-        if (_.isNaN(value)) {
+        if (_.isNaN(ts)) {
             return <></>;
         }
 

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -63,7 +62,7 @@ func (self *FileStoreUploader) Upload(
 		store_as_name = filename
 	}
 
-	output_path := self.root_path.AddChild(store_as_name)
+	output_path := self.root_path.AddUnsafeChild(store_as_name)
 	out_fd, err := self.file_store.WriteFile(output_path)
 	if err != nil {
 		scope.Log("Unable to open file %s: %v", store_as_name, err)
@@ -107,9 +106,9 @@ loop:
 		}
 	}
 
-	scope.Log("Uploaded %v (%v bytes)", output_path, offset)
+	scope.Log("Uploaded %v (%v bytes)", output_path.AsClientPath(), offset)
 	return &UploadResponse{
-		Path:   utils.JoinComponents(output_path.Components(), "/"),
+		Path:   output_path.AsClientPath(),
 		Size:   uint64(offset),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
 		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),

@@ -126,7 +126,7 @@ class VeloFileList extends Component {
         let path = this.props.node.path || [];
         api.post("v1/VFSRefreshDirectory", {
             client_id: this.props.client.client_id,
-            vfs_path: Join(path),
+            vfs_components: path,
             depth: 10
         }).then((response) => {
             // Hold onto the flow id.

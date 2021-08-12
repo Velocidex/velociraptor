@@ -62,6 +62,16 @@ func (self FlowPathManager) UploadMetadata() api.FSPathSpec {
 	return self.Path().AddChild("uploads").AsFilestorePath()
 }
 
+func (self FlowPathManager) UploadContainer() api.FSPathSpec {
+	return self.Path().AddUnsafeChild("uploads").
+		AsFilestorePath().
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
+}
+
+func (self FlowPathManager) GetDownloadsDirectory() api.FSPathSpec {
+	return DOWNLOADS_ROOT.AddUnsafeChild(self.client_id, self.flow_id)
+}
+
 func (self FlowPathManager) GetDownloadsFile(hostname string) api.FSPathSpec {
 	// If there is no hostname we drop the leading -
 	if hostname != "" {

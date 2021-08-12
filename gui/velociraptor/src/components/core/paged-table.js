@@ -25,7 +25,11 @@ import VeloTimestamp from "../utils/time.js";
 import ClientLink from '../clients/client-link.js';
 import HexView from '../utils/hex.js';
 
-import { InspectRawJson, ColumnToggleList, sizePerPageRenderer, PrepareData } from './table.js';
+import {
+    InspectRawJson, ColumnToggleList,
+    sizePerPageRenderer, PrepareData,
+    formatColumns,
+} from './table.js';
 
 
 
@@ -259,7 +263,7 @@ class VeloPagedTable extends Component {
                    </div>;
         }
 
-
+        let table_options = this.props.params.TableOptions || {};
         let rows = this.state.rows;
         let column_names = [];
         let columns = [{dataField: '_id', hidden: true}];
@@ -279,6 +283,12 @@ class VeloPagedTable extends Component {
                 column_names.push(name);
             }
 
+            // Allow the user to specify the column type for
+            // rendering. This can be done in the notebook by simply
+            // setting a VQL variable:
+            // LET ColumnTypes = dict(BootTime="timestamp")
+            definition.type = table_options[name];
+
             columns.push(definition);
         }
 
@@ -287,6 +297,7 @@ class VeloPagedTable extends Component {
             rows[j]["_id"] = j;
         }
 
+        columns = formatColumns(columns);
 
         let total_size = this.state.total_size || 0;
         if (total_size < 0 && !_.isEmpty(this.state.rows)) {

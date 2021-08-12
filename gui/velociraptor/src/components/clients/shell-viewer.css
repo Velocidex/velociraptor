@@ -114,3 +114,7 @@ div.dt-buttons {
     width: 1%;
     min-width: 0;
 }
+
+.shell-results .timestamp {
+    padding: 5px;
+}

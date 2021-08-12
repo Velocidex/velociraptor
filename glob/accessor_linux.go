@@ -179,6 +179,8 @@ func (self *OSFileInfo) _Sys() *syscall.Stat_t {
 // Real implementation for non windows OSs:
 type OSFileSystemAccessor struct {
 	context *AccessorContext
+
+	allow_raw_access bool
 }
 
 func (self OSFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, error) {
@@ -186,6 +188,7 @@ func (self OSFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, e
 		context: &AccessorContext{
 			links: make(map[_inode]bool),
 		},
+		allow_raw_access: self.allow_raw_access,
 	}, nil
 }
 
@@ -252,13 +255,19 @@ func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 		return nil, err
 	}
 
-	lstat, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
+	// Usually we dont allow direct access to devices otherwise a
+	// recursive yara scan can get into /proc/ and crash the
+	// kernel. Sometimes this is exactly what we want so we provide
+	// the "raw_file" accessor.
+	if !self.allow_raw_access {
+		lstat, err := os.Stat(path)
+		if err != nil {
+			return nil, err
+		}
 
-	if !lstat.Mode().IsRegular() {
-		return nil, errors.New("Only regular files supported")
+		if !lstat.Mode().IsRegular() {
+			return nil, errors.New("Only regular files supported")
+		}
 	}
 
 	file, err := os.Open(path)
@@ -290,6 +299,9 @@ func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
 
 func init() {
 	Register("file", &OSFileSystemAccessor{})
+	Register("raw_file", &OSFileSystemAccessor{
+		allow_raw_access: true,
+	})
 
 	// On Linux the auto accessor is the same as file.
 	Register("auto", &OSFileSystemAccessor{})

@@ -9,7 +9,7 @@ type: CLIENT
 
 parameters:
   - name: syslogAuthLogPath
-    default: /var/log/auth.log*
+    default: /var/log/{auth.log,secure}*
 
   - name: SSHGrok
     description: A Grok expression for parsing SSH auth lines.

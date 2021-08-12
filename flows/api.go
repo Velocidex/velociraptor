@@ -20,7 +20,6 @@ package flows
 import (
 	"context"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -170,25 +169,27 @@ func availableDownloadFiles(config_obj *config_proto.Config,
 	client_id string, flow_id string) (*api_proto.AvailableDownloads, error) {
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	download_file := flow_path_manager.GetDownloadsFile("X")
-	download_path := download_file.Dir()
+	download_dir := flow_path_manager.GetDownloadsDirectory()
 
-	return getAvailableDownloadFiles(config_obj, download_path)
+	return getAvailableDownloadFiles(config_obj, download_dir)
 }
 
 func getAvailableDownloadFiles(config_obj *config_proto.Config,
-	download_path api.FSPathSpec) (*api_proto.AvailableDownloads, error) {
+	download_dir api.FSPathSpec) (*api_proto.AvailableDownloads, error) {
 	result := &api_proto.AvailableDownloads{}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	files, err := file_store_factory.ListDirectory(download_path)
+	files, err := file_store_factory.ListDirectory(download_dir)
 	if err != nil {
 		return nil, err
 	}
 
 	is_complete := func(name string) bool {
 		for _, item := range files {
-			if item.Name() == name+".lock" {
+			ps := item.PathSpec()
+			// If there is a lock file we are not done.
+			if ps.Base() == name &&
+				ps.Type() == api.PATH_TYPE_FILESTORE_LOCK {
 				return false
 			}
 		}
@@ -196,18 +197,20 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 	}
 
 	for _, item := range files {
-		if strings.HasSuffix(item.Name(), ".lock") ||
-			!item.Mode().IsRegular() {
+		ps := item.PathSpec()
+
+		// Skip lock files
+		if ps.Type() == api.PATH_TYPE_FILESTORE_LOCK {
 			continue
 		}
 
 		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
-			Name: item.Name(),
-			Path: download_path.AddChild(
-				item.Name()).AsClientPath(),
+			Name:     item.Name(),
+			Type:     api.GetExtensionForFilestore(ps, ps.Type()),
+			Path:     ps.AsClientPath(),
 			Size:     uint64(item.Size()),
 			Date:     item.ModTime().UTC().Format(time.RFC3339),
-			Complete: is_complete(item.Name()),
+			Complete: is_complete(ps.Base()),
 		})
 	}
 

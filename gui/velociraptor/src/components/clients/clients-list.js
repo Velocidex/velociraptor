@@ -13,7 +13,6 @@ import VeloClientStatusIcon from "./client-status.js";
 import { formatColumns } from "../core/table.js";
 import filterFactory from 'react-bootstrap-table2-filter';
 import BootstrapTable from 'react-bootstrap-table-next';
-import ClientLink from './client-link.js';
 import Spinner from '../utils/spinner.js';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
@@ -575,10 +574,7 @@ export function getClientColumns() {
          formatter: (cell, row) => {
              return <VeloClientStatusIcon client={row}/>;
          }},
-        {dataField: "client_id", text: "Client ID",
-         formatter: (cell, row) => {
-             return <ClientLink client_id={cell}/>;
-         }},
+        {dataField: "client_id", text: "Client ID", type: "client"},
         {dataField: "os_info.fqdn", text: "Hostname",
          sort: true},
         {dataField: "os_info.release", text: "OS Version"},

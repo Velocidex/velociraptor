@@ -9,6 +9,7 @@ option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
 message AvailableDownloadFile {
     string name = 1;
+    string type = 6;
     string path = 5;
     bool complete = 2;
     uint64 size = 3;

@@ -150,6 +150,7 @@ func (self *FileBaseDataStore) GetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
+	Trace(config_obj, "GetSubject", urn)
 	serialized_content, err := readContentFromFile(
 		config_obj, urn, true /* must_exist */)
 	if err != nil {
@@ -190,6 +191,9 @@ func (self *FileBaseDataStore) GetSubject(
 
 func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,
 	root api.DSPathSpec, walkFn WalkFunc) error {
+
+	TraceDirectory(config_obj, "Walk", root)
+
 	all_children, err := listChildren(config_obj, root)
 	if err != nil {
 		return err
@@ -228,6 +232,8 @@ func (self *FileBaseDataStore) SetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
+	Trace(config_obj, "SetSubject", urn)
+
 	// Encode as JSON
 	if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
 		serialized_content, err := protojson.Marshal(message)
@@ -247,6 +253,8 @@ func (self *FileBaseDataStore) SetSubject(
 func (self *FileBaseDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) error {
+
+	Trace(config_obj, "DeleteSubject", urn)
 
 	err := os.Remove(urn.AsDatastoreFilename(config_obj))
 
@@ -286,6 +294,9 @@ func (self *FileBaseDataStore) ListChildren(
 	urn api.DSPathSpec,
 	offset uint64, length uint64) (
 	[]api.DSPathSpec, error) {
+
+	TraceDirectory(config_obj, "ListChildren", urn)
+
 	all_children, err := listChildren(config_obj, urn)
 	if err != nil {
 		return nil, err
@@ -593,4 +604,22 @@ func FilenameToURN(config_obj *config_proto.Config,
 	}
 
 	return path_specs.NewSafeDatastorePath(components...)
+}
+
+func Trace(config_obj *config_proto.Config,
+	name string, filename api.DSPathSpec) {
+
+	return
+
+	fmt.Printf("Trace FileBaseDataStore: %v: %v\n", name,
+		filename.AsDatastoreFilename(config_obj))
+}
+
+func TraceDirectory(config_obj *config_proto.Config,
+	name string, filename api.DSPathSpec) {
+
+	return
+
+	fmt.Printf("Trace FileBaseDataStore: %v: %v\n", name,
+		filename.AsDatastoreDirectory(config_obj))
 }

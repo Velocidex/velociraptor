@@ -1,0 +1,37 @@
+.monospace {
+  font-family: var(--font-monospace);
+  font-size: 13px;
+  color: var(--color-monospace-color);
+  padding: 0;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.hexdump {
+    margin: 0px;
+}
+
+td.hex_column, th.hex_column {
+    width: fit-content;
+}
+
+td.offset {
+    text-align: right;
+}
+
+th.offset {
+    text-align: right;
+    padding-right: 40px;
+}
+
+.content-area .data {
+    width: 1em;
+}
+
+.hex-dialog-body .offset-area {
+    padding-right: 40px;
+}
+
+.hex-dialog-body table.offset-area {
+    margin-left: 30px;
+}
