@@ -15,6 +15,7 @@ import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { ToStandardTime } from '../utils/time.js';
 
 
 const POLL_TIME = 2000;
@@ -143,7 +144,9 @@ export class AddVQLCellToTimeline extends React.Component {
                     return;
                 }
                 _.each(response.data.rows[0].cell, (x, idx)=>{
-                    if (/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(x)){
+                    let parsed = ToStandardTime(x);
+                    console.log(parsed);
+                    if (_.isDate(parsed)) {
                         columns.push(response.data.columns[idx]);
                     };
                 });

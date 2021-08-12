@@ -13,6 +13,8 @@ import filterFactory from 'react-bootstrap-table2-filter';
 import api from '../core/api-service.js';
 import axios from 'axios';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 const POLL_TIME = 5000;
 
 export default class ExportNotebook extends React.Component {
@@ -67,10 +69,18 @@ export default class ExportNotebook extends React.Component {
         files = files || [];
 
         let columns = formatColumns([
+            {dataField: "type", text: "Type", formatter: (cell, row) => {
+                if (cell === ".html") {
+                    return <FontAwesomeIcon icon="flag"/>;
+                } else if (cell === ".zip") {
+                    return <FontAwesomeIcon icon="archive"/>;
+                };
+                return cell;
+            }, sort: true},
             {dataField: "name", text: "Name",
              sort: true, filtered: true, type: "download"},
             {dataField: "size", text: "Size"},
-            {dataField: "date", text: "Date"},
+            {dataField: "date", text: "Date", type: "timestamp"},
         ]);
 
         return (

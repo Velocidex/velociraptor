@@ -1063,7 +1063,10 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 
 	is_complete := func(name string) bool {
 		for _, item := range files {
-			if item.Name() == name+".lock" {
+			ps := item.PathSpec()
+			// If there is a lock file we are not done.
+			if ps.Base() == name &&
+				ps.Type() == api.PATH_TYPE_FILESTORE_LOCK {
 				return false
 			}
 		}
@@ -1071,17 +1074,20 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 	}
 
 	for _, item := range files {
-		if strings.HasSuffix(item.Name(), ".lock") {
+		ps := item.PathSpec()
+
+		// Skip lock files
+		if ps.Type() == api.PATH_TYPE_FILESTORE_LOCK {
 			continue
 		}
 
 		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
-			Name: item.Name(),
-			Path: download_path.AddChild(
-				item.Name()).AsClientPath(),
+			Name:     item.Name(),
+			Type:     api.GetExtensionForFilestore(ps, ps.Type()),
+			Path:     ps.AsClientPath(),
 			Size:     uint64(item.Size()),
 			Date:     fmt.Sprintf("%v", item.ModTime()),
-			Complete: is_complete(item.Name()),
+			Complete: is_complete(ps.Base()),
 		})
 	}
 

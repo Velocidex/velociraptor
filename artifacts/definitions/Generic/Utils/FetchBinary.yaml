@@ -33,6 +33,12 @@ parameters:
     type: hidden
     description: A dict containing the tool information.
 
+  - name: TemporaryOnly
+    type: bool
+    description: |
+      If true we use a temporary directory to hold the binary and
+      remove it afterwards
+
 sources:
   - query: |
       -- The following VQL is particularly ancient because it is
@@ -67,8 +73,18 @@ sources:
       // Keep the binaries cached in the temp directory. We verify the
       // hashes all the time so this should be safe.
       LET binpath <= SELECT Path FROM switch(
-          a={SELECT dirname(path=tempfile()) AS Path FROM scope() WHERE Path},
-          e={SELECT "/tmp" AS Path FROM info_cache WHERE OS = "linux"}
+
+          -- Allow user to specify a temporary directory which
+          -- will be cleaned up.
+          a={SELECT tempdir(remove_last=TRUE) AS Path
+             FROM scope() WHERE TemporaryOnly },
+
+          -- Otherwise use the temp directory (The official MSI
+          -- sets this to a known location)
+          b={SELECT dirname(path=tempfile()) AS Path
+             FROM scope() WHERE Path },
+
+          c={SELECT "/tmp" AS Path FROM info_cache WHERE OS = "linux" }
         )
 
       // Where we should save the file.

@@ -62,14 +62,17 @@ class QuarantineDialog extends Component {
                 client_ids: [client_id],
                 operation: "set",
                 labels: ["Quarantine"],
-            }).then((response) => {runArtifact(
-                client_id,
-                "Windows.Remediation.Quarantine",
-                {MessageBox: this.state.message},
-                ()=>{
-                    this.props.onClose();
-                    this.setState({loading: false});
-                }, this.source.token);
+            }, this.source.token).then((response) => {
+
+                this.source = axios.CancelToken.source();
+                runArtifact(
+                    client_id,
+                    "Windows.Remediation.Quarantine",
+                    {MessageBox: this.state.message},
+                    ()=>{
+                        this.props.onClose();
+                        this.setState({loading: false});
+                    }, this.source.token);
             });
         }
     }
@@ -161,7 +164,7 @@ class VeloHostInfo extends Component {
         let params = {update_mru: true};
         let client_id = this.props.client && this.props.client.client_id;
         if (client_id) {
-            api.get("v1/GetClient/" + client_id, params).then(
+            api.get("v1/GetClient/" + client_id, params, this.source.token).then(
                 response=>{
                     return this.props.setClient(response.data);
                 }, this.source);
@@ -203,7 +206,7 @@ class VeloHostInfo extends Component {
         });
 
         var params = {client_id: this.props.client.client_id, items: items};
-        api.post("v1/SetClientMetadata", params).then(() => {
+        api.post("v1/SetClientMetadata", params, this.source.token).then(() => {
             this.fetchMetadata();
         });
     }
@@ -229,7 +232,7 @@ class VeloHostInfo extends Component {
             client_ids: [client_id],
             operation: "remove",
             labels: [label],
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             this.updateClientInfo();
         });
     }
@@ -247,7 +250,7 @@ class VeloHostInfo extends Component {
                 client_ids: [client_id],
                 operation: "remove",
                 labels: ["Quarantine"],
-            }).then((response) => {runArtifact(
+            }, this.source.token).then((response) => {runArtifact(
                 client_id,
                 "Windows.Remediation.Quarantine",
                 {RemovePolicy: "Y"},
@@ -379,7 +382,7 @@ class VeloHostInfo extends Component {
             urgent: true,
             client_id: this.props.client.client_id,
             artifacts: ["Generic.Client.Info"],
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             this.setState({interrogateOperationId: response.data.flow_id});
 
             // Start polling for flow completion.
@@ -387,7 +390,7 @@ class VeloHostInfo extends Component {
                 api.get("v1/GetFlowDetails", {
                     client_id: this.props.client.client_id,
                     flow_id: this.state.interrogateOperationId,
-                }).then((response) => {
+                }, this.source.token).then((response) => {
                     let context = response.data.context;
                     if (context.state === "RUNNING") {
                         return;

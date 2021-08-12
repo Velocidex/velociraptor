@@ -75,7 +75,8 @@ func returnError(w http.ResponseWriter, code int, message string) {
 
 type vfsFileDownloadRequest struct {
 	ClientId   string   `schema:"client_id"`
-	Components []string `schema:"components[],required"`
+	VfsPath    string   `schema:"vfs_path"`
+	Components []string `schema:"components[]"`
 	Offset     int64    `schema:"offset"`
 	Length     int      `schema:"length"`
 	Encoding   string   `schema:"encoding"`
@@ -96,22 +97,36 @@ func vfsFileDownloadHandler(
 			return
 		}
 
-		db, _ := datastore.GetDB(config_obj)
-
+		var path_spec api.FSPathSpec
 		client_path_manager := paths.NewClientPathManager(request.ClientId)
-		info_path_spec := client_path_manager.VFSDownloadInfoPath(
-			request.Components)
-		download_info := &flows_proto.VFSDownloadInfo{}
 
-		err = db.GetSubject(config_obj, info_path_spec, download_info)
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
+		// Uploads table has direct vfs paths
+		if request.VfsPath != "" {
+			path_spec, err = client_path_manager.GetUploadsFileFromVFSPath(
+				request.VfsPath)
+			if err != nil {
+				returnError(w, 404, err.Error())
+				return
+			}
+
+		} else {
+			db, _ := datastore.GetDB(config_obj)
+
+			info_path_spec := client_path_manager.VFSDownloadInfoPath(
+				request.Components)
+			download_info := &flows_proto.VFSDownloadInfo{}
+
+			err = db.GetSubject(config_obj, info_path_spec, download_info)
+			if err != nil {
+				returnError(w, 404, err.Error())
+				return
+			}
+			path_spec = path_specs.NewUnsafeFilestorePath(
+				download_info.Components...).
+				SetType(api.PATH_TYPE_FILESTORE_ANY)
+
 		}
 
-		path_spec := path_specs.NewUnsafeFilestorePath(
-			download_info.Components...).
-			SetType(api.PATH_TYPE_FILESTORE_ANY)
 		file, err := file_store.GetFileStore(config_obj).ReadFile(path_spec)
 		if err != nil {
 			returnError(w, 404, err.Error())

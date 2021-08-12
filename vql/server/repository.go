@@ -134,7 +134,7 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 
 	definition, pres := global_repository.Get(config_obj, arg.Name)
 	if !pres {
-		scope.Log("artifact_delete: Artifact %v not found", arg.Name)
+		scope.Log("artifact_delete: Artifact '%v' not found", arg.Name)
 		return vfilter.Null{}
 	}
 
@@ -253,6 +253,9 @@ func (self ArtifactsPlugin) Call(
 		}
 
 		for _, name := range deps {
+			if name == "" {
+				continue
+			}
 			artifact, pres := repository.Get(config_obj, name)
 			if !pres {
 				scope.Log("artifact_definitions: artifact %v not known", name)

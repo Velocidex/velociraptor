@@ -23,6 +23,9 @@ import VeloNotImplemented from '../core/notimplemented.js';
 import VeloAce from '../core/ace.js';
 import VeloValueRenderer from '../utils/value.js';
 import api from '../core/api-service.js';
+import { NavLink } from "react-router-dom";
+import ClientLink from '../clients/client-link.js';
+import { HexViewPopup } from '../utils/hex.js';
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
@@ -427,19 +430,9 @@ export function formatColumns(columns) {
             x.type = null;
             break;
         case "timestamp":
-            x.formatter= (cell, row) => {
-                let result = cell /1000;
-                if (_.isNumber(result) && !_.isNaN(result)) {
-                    return <VeloTimestamp usec={result}/>;
-                }
-                return cell;
-            };
-            x.type = null;
-            break;
-
         case "nano_timestamp":
             x.formatter= (cell, row) => {
-                return <VeloTimestamp usec={cell / 1000000}/>;
+                return <VeloTimestamp usec={cell}/>;
             };
             x.type = null;
             break;
@@ -457,7 +450,60 @@ export function formatColumns(columns) {
             };
             x.type = null;
             break;
-        default: break;
+
+        case "flow":
+            x.formatter = (cell, row) => {
+                let client_id = row["ClientId"];
+                if (!client_id) {
+                    return cell;
+                };
+                return <NavLink
+                         tabIndex="0"
+                         id={cell}
+                         to={"/collected/" + client_id + "/" + cell}>{cell}
+                       </NavLink>;
+            };
+            x.type = null;
+            break;
+
+        case "client":
+            x.formatter = (cell, row) => {
+                return <ClientLink client_id={cell}/>;
+            };
+            x.type = null;
+            break;
+
+        case "hex":
+            x.formatter = (cell, row) => {
+                return <HexViewPopup data={cell}/>;
+            };
+            x.type = null;
+            break;
+
+        case "base64hex":
+            x.formatter = (cell, row) => {
+                try {
+                    cell = atob(cell);
+                } catch(e) {};
+                return <HexViewPopup data={cell}/>;
+            };
+            x.type = null;
+            break;
+
+
+            // Types supported by the underlying BootstrapTable - just
+            // pass them on.
+        case "string":
+        case "number":
+        case "bool":
+        case "date":
+        case undefined:
+            break;
+
+        default:
+            console.log("Unsupported column type " + x.type);
+            x.type = null;
+            break;
         };
     });
 

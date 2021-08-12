@@ -106,6 +106,10 @@ parameters:
     default: "jsonl"
     description: Output format (jsonl or csv)
 
+  - name: opt_output_directory
+    default: ""
+    description: An optional output directory prefix
+
   - name: StandardCollection
     type: hidden
     default: |
@@ -116,11 +120,12 @@ parameters:
 
       LET baseline <= SELECT Fqdn FROM info()
 
-      // Make the filename safe on windows.
-      LET filename <= regex_replace(
+      // Make the filename safe on windows but we trust the OutputPrefix.
+      LET filename <= OutputPrefix + regex_replace(
           source=format(format="Collection-%s-%s",
-                        args=[baseline[0].Fqdn, timestamp(epoch=now())]),
-          re="[^0-9A-Za-z\\-.]", replace="_")
+                        args=[baseline[0].Fqdn,
+                              timestamp(epoch=now()).MarshalText]),
+          re="[^0-9A-Za-z\\-]", replace="_")
 
       LET _ <= log(message="Will collect package " + filename)
       LET report_filename <= if(condition=Template, then=filename + ".html")
@@ -180,11 +185,12 @@ parameters:
       LET baseline <= SELECT Fqdn, basename(path=Exe) AS Exe FROM info()
       LET TargetArgs <= target_args
 
-      // Make the filename safe on windows.
-      LET filename <= regex_replace(
+      // Make the filename safe on windows but we trust the OutputPrefix.
+      LET filename <= OutputPrefix + regex_replace(
           source=format(format="Collection-%s-%s",
-                        args=[baseline[0].Fqdn, timestamp(epoch=now())]),
-          re="[^0-9A-Za-z\\-.]", replace="_")
+                        args=[baseline[0].Fqdn,
+                              timestamp(epoch=now()).MarshalText]),
+          re="[^0-9A-Za-z\\-]", replace="_")
 
       // Try to upload the log file now to see if we are even able to
       // upload at all - we do this to avoid having to collect all the
@@ -350,6 +356,7 @@ sources:
                     dict(name="Password", default=Password),
                     dict(name="Level", default=opt_level, type="int"),
                     dict(name="Format", default=opt_format),
+                    dict(name="OutputPrefix", default=opt_output_directory),
                     dict(name="target_args",
                          default=serialize(format='json', item=target_args),
                          type="json"),

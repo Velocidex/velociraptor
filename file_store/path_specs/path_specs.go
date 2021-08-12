@@ -95,7 +95,9 @@ func (self DSPathSpec) asUnsafeDirWithRoot(root string) string {
 	sep := string(filepath.Separator)
 	new_components := make([]string, 0, len(self.components))
 	for _, i := range self.components {
-		new_components = append(new_components, utils.SanitizeString(i))
+		if i != "" {
+			new_components = append(new_components, utils.SanitizeString(i))
+		}
 	}
 	result := sep + strings.Join(new_components, sep)
 
@@ -149,14 +151,22 @@ func (self DSPathSpec) asSafeDirWithRoot(root string) string {
 	// No need to sanitize here because the DSPathSpec is already
 	// safe.
 	sep := string(filepath.Separator)
-	result := sep + strings.Join(self.components, sep)
 
 	// This relies on the filepath starting with a drive letter
 	// and having \ as path separators, and having a trailing
 	// \. Main's config.ValidateDatastoreConfig() ensures this is
 	// the case.
 	if runtime.GOOS == "windows" {
-		return WINDOWS_LFN_PREFIX + root + result
+		// Remove empty components which are broken on windows due to
+		// the long filename hack.
+		components := make([]string, 0, len(self.components))
+		for _, c := range self.components {
+			if c != "" {
+				components = append(components, c)
+			}
+		}
+		return WINDOWS_LFN_PREFIX + root + sep + strings.Join(components, sep)
 	}
-	return root + result
+
+	return root + sep + strings.Join(self.components, sep)
 }

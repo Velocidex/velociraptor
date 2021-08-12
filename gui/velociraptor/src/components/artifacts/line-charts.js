@@ -6,6 +6,8 @@ import _ from 'lodash';
 import { ReferenceArea, ResponsiveContainer, LineChart,
          Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 
+import { ToStandardTime } from '../utils/time.js';
+
 const strokes = [
     "#ff7300", "#f48f8f", "#207300", "#f4208f"
 ];
@@ -36,13 +38,14 @@ class CustomTooltip extends React.Component {
               );
           });
 
-          let now = new Date();
           let x_column = this.props.columns[0];
           let value = payload[0].payload[x_column];
-          try {
-              now.setTime(value * 1000);
+          let now = ToStandardTime(value);
+          if (_.isNaN(now)) {
+              value = "";
+          } else {
               value = now.toISOString();
-          } catch(e) {}
+          }
 
           return (
               <>
@@ -90,9 +93,10 @@ class TimeTickRenderer extends React.Component {
     }
 
     render() {
-        let date = new Date();
-        date.setTime(this.props.payload.value * 1000);
-
+        let date = ToStandardTime(this.props.payload.value);
+        if (_.isNaN(date)) {
+            return <></>;
+        }
         let first_date = this.props.data[0][this.props.dataKey];
         let last_date =  this.props.data[this.props.data.length -1][this.props.dataKey];
 

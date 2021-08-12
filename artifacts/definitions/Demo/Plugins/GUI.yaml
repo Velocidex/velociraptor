@@ -100,7 +100,36 @@ sources:
           /*
           ## A VQL cell with a heading.
           */
-          SELECT * FROM info()
+          LET ColumnTypes = dict(
+            Time1="timestamp",
+            Time2="timestamp",
+            Time3="timestamp",
+            Time4="timestamp",
+            FlowId="flow",
+            ClientId="client",
+            Data="hex",
+            Base64Data="base64hex"
+          )
+
+          LET Data <= read_file(filename="/dev/urandom", length=100)
+          LET Base64Data = base64encode(string=Data)
+
+          SELECT 1628609690.1 AS Raw,
+
+                 -- float
+                 1628609690.1 AS Time1,
+
+                 -- ms as a string
+                 "1628609690100" AS Time2,
+
+                 -- ns
+                 1628609690100000 AS Time3,
+
+                 -- Standard string form
+                 "2021-08-10T15:34:50Z" AS Time4,
+
+                 FlowId, ClientId, Data, Base64Data
+          FROM scope()
 
       - type: Markdown
         template: |

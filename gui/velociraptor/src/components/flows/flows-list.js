@@ -20,8 +20,6 @@ import OfflineCollectorWizard from './offline-collector.js';
 import Spinner from '../utils/spinner.js';
 import DeleteNotebookDialog from '../notebooks/notebook-delete.js';
 import ExportNotebook from '../notebooks/export-notebook.js';
-
-import { NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { HotKeys } from "react-hotkeys";
 import { withRouter } from "react-router-dom";
@@ -429,12 +427,13 @@ class FlowsList extends React.Component {
                     <FontAwesomeIcon icon="plus"/>
                   </Button>
 
-                  <Button title="Add to hunt"
-                          onClick={()=>this.setState({showAddToHunt: true})}
-                          variant="default">
-                    <FontAwesomeIcon icon="crosshairs"/>
-                  </Button>
-
+                  { client_id !== "server" &&
+                    <Button title="Add to hunt"
+                            onClick={()=>this.setState({showAddToHunt: true})}
+                            variant="default">
+                      <FontAwesomeIcon icon="crosshairs"/>
+                    </Button>
+                  }
                   <Button title="Delete Artifact Collection"
                           onClick={()=>this.setState({showDeleteWizard: true}) }
                           variant="default">
@@ -537,14 +536,7 @@ export function getFlowColumns(client_id) {
              return <FontAwesomeIcon icon="exclamation"/>;
          }
         },
-        {dataField: "session_id", text: "FlowId",
-         formatter: (cell, row) => {
-             return <NavLink
-                      tabIndex="0"
-                      id={cell}
-                      to={"/collected/" + client_id + "/" + cell}>{cell}
-        </NavLink>;
-         }},
+        {dataField: "session_id", text: "FlowId", type: "flow"},
         {dataField: "request.artifacts", text: "Artifacts",
          sort: true, filtered: true,
          formatter: (cell, row) => {

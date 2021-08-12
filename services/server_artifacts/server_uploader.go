@@ -9,7 +9,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -77,7 +76,7 @@ func NewServerUploader(
 	return &ServerUploader{
 		FileStoreUploader: api.NewFileStoreUploader(config_obj,
 			file_store.GetFileStore(config_obj),
-			path_specs.NewUnsafeFilestorePath()),
+			path_manager.UploadContainer()),
 		path_manager:       path_manager,
 		collection_context: collection_context,
 		config_obj:         config_obj,
