@@ -203,7 +203,8 @@ mkdir -p '%s'
 
 # Only chown two levels of the filestore directory in case
 # this is an upgrade and there are many files already there.
-chown velociraptor:velociraptor '%s' '%s'/* /etc/velociraptor/*
+chown velociraptor:velociraptor '%s' '%s'/*
+chown velociraptor:velociraptor -R /etc/velociraptor/
 chmod -R go-r /etc/velociraptor/
 chmod o+x /usr/local/bin/velociraptor /usr/local/bin/velociraptor.bin
 
