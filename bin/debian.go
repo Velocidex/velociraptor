@@ -199,15 +199,19 @@ if ! getent passwd velociraptor >/dev/null; then
 fi
 
 # Make the filestore path accessible to the user.
-mkdir -p '%s'
+mkdir -p '%s'/config
 
 # Only chown two levels of the filestore directory in case
 # this is an upgrade and there are many files already there.
-chown velociraptor:velociraptor '%s' /etc/velociraptor/
-chown velociraptor:velociraptor '%s/*' /etc/velociraptor/
+# otherwise chown -R takes too long.
+chown velociraptor:velociraptor '%s' '%s'/*
+chown velociraptor:velociraptor -R /etc/velociraptor/
+
+# Lock down permissions on the config file.
 chmod -R go-r /etc/velociraptor/
 chmod o+x /usr/local/bin/velociraptor /usr/local/bin/velociraptor.bin
 
+# Allow the server to bind to low ports and increase its fd limit.
 setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bin
 /bin/systemctl enable velociraptor_server
 /bin/systemctl start velociraptor_server
