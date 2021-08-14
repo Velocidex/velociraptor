@@ -42,7 +42,7 @@ parameters:
     type: csv
     default: |
       Glob
-      /home/*
+      /home/someuser/*
     description: Alternative specify multiple globs in a table
 
   - name: Keywords

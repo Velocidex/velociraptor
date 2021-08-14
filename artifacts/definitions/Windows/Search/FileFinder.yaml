@@ -42,7 +42,7 @@ parameters:
     type: csv
     default: |
       Glob
-      C:\Users\*
+      C:/Users/SomeUser/*
     description: Alternative specify multiple globs in a table
 
   - name: Accessor
