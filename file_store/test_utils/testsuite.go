@@ -1,15 +1,14 @@
-package server
+package test_utils
 
 import (
 	"context"
-	"testing"
+	"os"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -18,48 +17,40 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/repository"
 )
 
-type DeleteTestSuite struct {
+type TestSuite struct {
 	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
-
-	client_id, flow_id string
+	ConfigObj *config_proto.Config
+	Ctx       context.Context
+	cancel    func()
+	sm        *services.Service
 }
 
-func (self *DeleteTestSuite) SetupTest() {
+func (self *TestSuite) SetupTest() {
 	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().WithVerbose(true).
+	os.Setenv("VELOCIRAPTOR_CONFIG", SERVER_CONFIG)
+
+	self.ConfigObj, err = new(config.Loader).
+		WithEnvLiteralLoader("VELOCIRAPTOR_CONFIG").WithRequiredFrontend().
+		WithWriteback().WithVerbose(true).
 		LoadAndValidate()
 	require.NoError(self.T(), err)
 
-	self.config_obj.Frontend.DoNotCompressArtifacts = true
+	self.ConfigObj.Frontend.DoNotCompressArtifacts = true
 
 	// Start essential services.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
+	self.Ctx, self.cancel = context.WithTimeout(context.Background(), time.Second*60)
+	self.sm = services.NewServiceManager(self.Ctx, self.ConfigObj)
 
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
 	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
 	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
 	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-
-	self.client_id = "C.123"
-	self.flow_id = "F.123"
 }
 
-func (self *DeleteTestSuite) TearDownTest() {
+func (self *TestSuite) TearDownTest() {
+	self.cancel()
 	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
-}
-
-func (self *DeleteTestSuite) TestDeleteClient() {
-
-}
-
-func TestDeletePlugin(t *testing.T) {
-	suite.Run(t, &DeleteTestSuite{})
+	GetMemoryFileStore(self.T(), self.ConfigObj).Clear()
+	GetMemoryDataStore(self.T(), self.ConfigObj).Clear()
 }

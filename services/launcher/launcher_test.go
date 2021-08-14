@@ -1,4 +1,4 @@
-package launcher
+package launcher_test
 
 import (
 	"context"
@@ -14,15 +14,12 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -30,10 +27,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
@@ -43,35 +36,7 @@ import (
 )
 
 type LauncherTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
-}
-
-func (self *LauncherTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
-
-	// Start essential services.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	t := self.T()
-	assert.NoError(t, self.sm.Start(journal.StartJournalService))
-	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
-	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
-	assert.NoError(t, self.sm.Start(StartLauncherService))
-	assert.NoError(t, self.sm.Start(repository.StartRepositoryManagerForTest))
-}
-
-func (self *LauncherTestSuite) TearDownTest() {
-	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+	test_utils.TestSuite
 }
 
 func (self *LauncherTestSuite) LoadArtifacts(artifact_definitions []string) services.Repository {
@@ -148,7 +113,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	launcher, err := services.GetLauncher()
 	assert.NoError(self.T(), err)
 
-	compiled, err := launcher.CompileCollectorArgs(ctx, self.config_obj,
+	compiled, err := launcher.CompileCollectorArgs(ctx, self.ConfigObj,
 		acl_manager, repository, services.CompilerOptions{}, request)
 	assert.Error(self.T(), err)
 
@@ -156,7 +121,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	// and we should calculate the hash.
 	status = 200
 	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
@@ -165,7 +130,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	// automatically.
 	status = 404
 	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
@@ -181,7 +146,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	// Now serve the tool from Velociraptor's public directory
 	// instead.
 	err = services.GetInventory().AddTool(
-		self.config_obj, &artifacts_proto.Tool{
+		self.ConfigObj, &artifacts_proto.Tool{
 			Name: "Tool1",
 			// This will force Velociraptor to generate a stable
 			// public directory URL from where to serve the
@@ -195,11 +160,11 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 
 	status = 200
 	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
-	filename := paths.ObfuscateName(self.config_obj, "Tool1")
+	filename := paths.ObfuscateName(self.ConfigObj, "Tool1")
 
 	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_HASH"), sha_value)
 	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_FILENAME"), "mytool.exe")
@@ -240,7 +205,7 @@ func (self *LauncherTestSuite) TestGetDependentArtifacts() {
 	launcher, err := services.GetLauncher()
 	assert.NoError(self.T(), err)
 
-	res, err := launcher.GetDependentArtifacts(self.config_obj,
+	res, err := launcher.GetDependentArtifacts(self.ConfigObj,
 		repository, []string{"Test.Artifact.Deps2"})
 	assert.NoError(self.T(), err)
 
@@ -288,7 +253,7 @@ sources:
 	launcher, err := services.GetLauncher()
 	assert.NoError(self.T(), err)
 
-	compiled, err := launcher.CompileCollectorArgs(ctx, self.config_obj,
+	compiled, err := launcher.CompileCollectorArgs(ctx, self.ConfigObj,
 		acl_manager, repository, services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
@@ -357,7 +322,7 @@ func (self *LauncherTestSuite) TestCompiling() {
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
@@ -439,7 +404,7 @@ func (self *LauncherTestSuite) TestCompilingMultipleArtifacts() {
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
@@ -499,7 +464,7 @@ sources:
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
@@ -513,7 +478,7 @@ sources:
 
 func (self *LauncherTestSuite) TestCompilingObfuscation() {
 	repository := self.LoadArtifacts(CompilingMultipleArtifacts)
-	self.config_obj.Frontend.DoNotCompressArtifacts = true
+	self.ConfigObj.Frontend.DoNotCompressArtifacts = true
 
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
@@ -529,7 +494,7 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), compiled[0].Query[1].Description, "")
@@ -557,27 +522,27 @@ sources:
 	}
 	ctx := context.Background()
 
-	acl_manager := vql_subsystem.NewServerACLManager(self.config_obj, "UserX")
+	acl_manager := vql_subsystem.NewServerACLManager(self.ConfigObj, "UserX")
 
 	// Permission denied - the principal is not allowed to compile this artifact.
 	launcher, err := services.GetLauncher()
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), "EXECVE")
 
 	// Lets give the user some permissions.
-	err = acls.SetPolicy(self.config_obj, "UserX",
+	err = acls.SetPolicy(self.ConfigObj, "UserX",
 		&acl_proto.ApiClientACL{Execve: true})
 	assert.NoError(self.T(), err)
 
 	// Should be fine now.
-	acl_manager = vql_subsystem.NewServerACLManager(self.config_obj, "UserX")
+	acl_manager = vql_subsystem.NewServerACLManager(self.ConfigObj, "UserX")
 	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(compiled[0].Query), 2)
@@ -620,7 +585,7 @@ func (self *LauncherTestSuite) TestParameterTypes() {
 	acl_manager := vql_subsystem.NullACLManager{}
 	launcher, err := services.GetLauncher()
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
@@ -628,7 +593,7 @@ func (self *LauncherTestSuite) TestParameterTypes() {
 	test_responder := responder.TestResponder()
 	for _, vql_request := range compiled {
 		actions.VQLClientAction{}.StartQuery(
-			self.config_obj, ctx, test_responder, vql_request)
+			self.ConfigObj, ctx, test_responder, vql_request)
 	}
 
 	results := getResponses(test_responder)
@@ -759,7 +724,7 @@ func (self *LauncherTestSuite) TestParameterTypesDeps() {
 	acl_manager := vql_subsystem.NullACLManager{}
 	launcher, err := services.GetLauncher()
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
@@ -767,7 +732,7 @@ func (self *LauncherTestSuite) TestParameterTypesDeps() {
 	test_responder := responder.TestResponder()
 	for _, vql_request := range compiled {
 		actions.VQLClientAction{}.StartQuery(
-			self.config_obj, ctx, test_responder, vql_request)
+			self.ConfigObj, ctx, test_responder, vql_request)
 	}
 
 	results := getResponses(test_responder)
@@ -780,10 +745,10 @@ func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
 	defer cancel()
 
 	builder := services.ScopeBuilder{
-		Config:     self.config_obj,
+		Config:     self.ConfigObj,
 		ACLManager: vql_subsystem.NullACLManager{},
 		Repository: repository,
-		Logger:     logging.NewPlainLogger(self.config_obj, &logging.FrontendComponent),
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
 
@@ -852,7 +817,7 @@ sources:
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
@@ -860,7 +825,7 @@ sources:
 
 	// Compile again, this time disabling the precondition
 	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{
 			DisablePrecondition: true,
 		}, request)
@@ -901,7 +866,7 @@ sources:
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
@@ -909,7 +874,7 @@ sources:
 
 	// Compile again, this time disabling the precondition
 	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{
 			DisablePrecondition: true,
 		}, request)
@@ -1014,7 +979,7 @@ sources:
 	// No timeout specified in the request causes the timeout to
 	// be set according to the artifact defaults.
 	compiled, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), getReqName(compiled[0]), "Test.Artifact.Timeout")
@@ -1034,7 +999,7 @@ sources:
 	request.Timeout = 20
 	request.MaxRows = 100
 	compiled, err = launcher.CompileCollectorArgs(
-		ctx, self.config_obj, acl_manager, repository,
+		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), getReqName(compiled[0]), "Test.Artifact.Timeout")

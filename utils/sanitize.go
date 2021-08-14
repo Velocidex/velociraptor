@@ -93,7 +93,7 @@ func UnsanitizeComponent(component string) string {
 	for {
 		if i >= len(component) {
 			// Strip a single trailing _
-			if result[j-1] == '_' {
+			if j > 0 && result[j-1] == '_' {
 				j--
 			}
 

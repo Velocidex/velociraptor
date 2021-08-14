@@ -1,4 +1,4 @@
-package server
+package clients
 
 import (
 	"context"
@@ -25,7 +25,7 @@ type DeleteClientArgs struct {
 
 type DeleteClientPlugin struct{}
 
-func (self *DeleteClientPlugin) Call(ctx context.Context,
+func (self DeleteClientPlugin) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 

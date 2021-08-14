@@ -62,3 +62,6 @@ debug_golden:
 
 lint:
 	golangci-lint run
+
+KapeFilesSync:
+	python3 scripts/kape_files.py ~/projects/KapeFiles/ > artifacts/definitions/Windows/KapeFiles/Targets.yaml

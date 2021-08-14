@@ -1,4 +1,4 @@
-package inventory
+package inventory_test
 
 import (
 	"bytes"
@@ -6,25 +6,19 @@ import (
 	"io/ioutil"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -49,40 +43,10 @@ func (self MockClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 type ServicesTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	client_id  string
-	flow_id    string
-	sm         *services.Service
-	mock       *MockClient
-}
-
-func (self *ServicesTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
-
-	// Start essential services.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
-	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
-	require.NoError(self.T(), self.sm.Start(StartInventoryService))
-
-	self.client_id = "C.12312"
-	self.flow_id = "F.1232"
-}
-
-func (self *ServicesTestSuite) TearDownTest() {
-	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+	test_utils.TestSuite
+	client_id string
+	flow_id   string
+	mock      *MockClient
 }
 
 func (self *ServicesTestSuite) TestGihubTools() {
@@ -95,7 +59,7 @@ func (self *ServicesTestSuite) TestGihubTools() {
 	// Add a new tool from github.
 	inventory := services.GetInventory()
 	err := inventory.AddTool(
-		self.config_obj, &artifacts_proto.Tool{
+		self.ConfigObj, &artifacts_proto.Tool{
 			Name:             tool_name,
 			GithubProject:    "Velocidex/velociraptor",
 			GithubAssetRegex: "windows-amd64.exe",
@@ -106,7 +70,7 @@ func (self *ServicesTestSuite) TestGihubTools() {
 	// actual file (the URL is still pending).
 	assert.Equal(self.T(), self.mock.count, 0)
 
-	tool, err := inventory.GetToolInfo(ctx, self.config_obj, tool_name)
+	tool, err := inventory.GetToolInfo(ctx, self.ConfigObj, tool_name)
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), len(self.mock.responses), 0)
@@ -122,7 +86,7 @@ func (self *ServicesTestSuite) TestGihubTools() {
 
 	// What does the launcher do?
 	request := &actions_proto.VQLCollectorArgs{}
-	err = launcher.AddToolDependency(ctx, self.config_obj, tool_name, request)
+	err = launcher.AddToolDependency(ctx, self.ConfigObj, tool_name, request)
 	assert.NoError(self.T(), err)
 
 	golden.Set("VQLCollectorArgs", request)
@@ -144,7 +108,7 @@ func (self *ServicesTestSuite) installGitHubMock() {
 		},
 	}
 
-	inventory := services.GetInventory().(*InventoryService)
+	inventory := services.GetInventory().(*inventory.InventoryService)
 	inventory.Client = self.mock
 }
 
@@ -159,7 +123,7 @@ func (self *ServicesTestSuite) installGitHubMockVersion2() {
 		},
 	}
 
-	inventory := services.GetInventory().(*InventoryService)
+	inventory := services.GetInventory().(*inventory.InventoryService)
 	inventory.Client = self.mock
 }
 
@@ -190,7 +154,7 @@ tools:
 	assert.NoError(self.T(), err)
 
 	response, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, vql_subsystem.NullACLManager{}, repository,
+		ctx, self.ConfigObj, vql_subsystem.NullACLManager{}, repository,
 		services.CompilerOptions{},
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
@@ -202,7 +166,7 @@ tools:
 	// destination and the hash.
 	tool_name := "SampleTool"
 	inventory := services.GetInventory()
-	tool, err := inventory.GetToolInfo(ctx, self.config_obj, tool_name)
+	tool, err := inventory.GetToolInfo(ctx, self.ConfigObj, tool_name)
 	assert.NoError(self.T(), err)
 
 	// Make sure the tool is served directly from upstream.
@@ -234,10 +198,10 @@ func (self *ServicesTestSuite) TestUpgrade() {
 	}
 
 	inventory := services.GetInventory()
-	err := inventory.AddTool(self.config_obj, tool_definition, services.ToolOptions{})
+	err := inventory.AddTool(self.ConfigObj, tool_definition, services.ToolOptions{})
 	assert.NoError(self.T(), err)
 
-	tool, err := inventory.GetToolInfo(ctx, self.config_obj, tool_name)
+	tool, err := inventory.GetToolInfo(ctx, self.ConfigObj, tool_name)
 	assert.NoError(self.T(), err)
 
 	// First version.
@@ -247,11 +211,11 @@ func (self *ServicesTestSuite) TestUpgrade() {
 	// Now force the tool to update by re-adding it but this time it is a new version.
 	self.installGitHubMockVersion2()
 
-	err = inventory.AddTool(self.config_obj, tool_definition, services.ToolOptions{})
+	err = inventory.AddTool(self.ConfigObj, tool_definition, services.ToolOptions{})
 	assert.NoError(self.T(), err)
 
 	// Check the tool information.
-	tool, err = inventory.GetToolInfo(ctx, self.config_obj, tool_name)
+	tool, err = inventory.GetToolInfo(ctx, self.ConfigObj, tool_name)
 	assert.NoError(self.T(), err)
 
 	// Make sure the tool is updated and the hash is changed.
@@ -284,7 +248,7 @@ tools:
 	assert.NoError(self.T(), err)
 
 	response, err := launcher.CompileCollectorArgs(
-		ctx, self.config_obj, vql_subsystem.NullACLManager{}, repository,
+		ctx, self.ConfigObj, vql_subsystem.NullACLManager{}, repository,
 		services.CompilerOptions{},
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
@@ -296,7 +260,7 @@ tools:
 	assert.Contains(self.T(), response[0].Env[2].Value, "https://localhost:8000/")
 
 	tool, err := services.GetInventory().GetToolInfo(
-		ctx, self.config_obj, "SampleTool")
+		ctx, self.ConfigObj, "SampleTool")
 	assert.NoError(self.T(), err)
 
 	golden := ordereddict.NewDict().Set("Tool", tool).Set("Request", response[0])
@@ -330,13 +294,13 @@ tools:
 	_, err = repository.LoadYaml(test_artifact, true /* validate */)
 	assert.NoError(self.T(), err)
 
-	_, pres := repository.Get(self.config_obj, "TestArtifact")
+	_, pres := repository.Get(self.ConfigObj, "TestArtifact")
 	assert.True(self.T(), pres)
 
 	_, err = repository.LoadYaml(test_artifact2, true /* validate */)
 	assert.NoError(self.T(), err)
 
-	_, pres = repository.Get(self.config_obj, "TestArtifact2")
+	_, pres = repository.Get(self.ConfigObj, "TestArtifact2")
 	assert.True(self.T(), pres)
 
 	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
@@ -359,7 +323,7 @@ tools:
 `
 
 	// The admin sets a very minimal tool definition.
-	err := services.GetInventory().AddTool(self.config_obj,
+	err := services.GetInventory().AddTool(self.ConfigObj,
 		&artifacts_proto.Tool{
 			Name: "SampleTool",
 			Hash: "XXXXX",
@@ -375,7 +339,7 @@ tools:
 	_, err = repository.LoadYaml(test_artifact, true /* validate */)
 	assert.NoError(self.T(), err)
 
-	_, pres := repository.Get(self.config_obj, "TestArtifact")
+	_, pres := repository.Get(self.ConfigObj, "TestArtifact")
 	assert.True(self.T(), pres)
 
 	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
@@ -405,13 +369,13 @@ tools:
 	_, err = repository.LoadYaml(test_artifact, true /* validate */)
 	assert.NoError(self.T(), err)
 
-	_, pres := repository.Get(self.config_obj, "TestArtifact")
+	_, pres := repository.Get(self.ConfigObj, "TestArtifact")
 	assert.True(self.T(), pres)
 
 	// The admin sets a very minimal tool definition which would
 	// normally be less than the existing tool - but they should
 	// prevail.
-	err = services.GetInventory().AddTool(self.config_obj,
+	err = services.GetInventory().AddTool(self.ConfigObj,
 		&artifacts_proto.Tool{
 			Name: "SampleTool",
 			Hash: "XXXXX",
@@ -428,14 +392,14 @@ tools:
 
 // If the admin set the tool previously, they should be able to upgrade it.
 func (self *ServicesTestSuite) TestAdminOverrideAdminSet() {
-	err := services.GetInventory().AddTool(self.config_obj,
+	err := services.GetInventory().AddTool(self.ConfigObj,
 		&artifacts_proto.Tool{
 			Name: "SampleTool",
 			Hash: "XXXXX",
 		}, services.ToolOptions{AdminOverride: true})
 	assert.NoError(self.T(), err)
 
-	err = services.GetInventory().AddTool(self.config_obj,
+	err = services.GetInventory().AddTool(self.ConfigObj,
 		&artifacts_proto.Tool{
 			Name: "SampleTool",
 			Hash: "YYYYY",
@@ -451,5 +415,8 @@ func (self *ServicesTestSuite) TestAdminOverrideAdminSet() {
 }
 
 func TestInventoryService(t *testing.T) {
-	suite.Run(t, &ServicesTestSuite{})
+	suite.Run(t, &ServicesTestSuite{
+		client_id: "C.12312",
+		flow_id:   "F.1232",
+	})
 }

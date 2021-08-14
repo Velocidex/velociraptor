@@ -177,6 +177,13 @@ func migrate_0_6_1(config_obj *config_proto.Config) {
 		config_obj.Datastore.FilestoreDirectory = strings.TrimSuffix(
 			config_obj.Datastore.FilestoreDirectory, "/")
 	}
+
+	if config_obj.Defaults == nil {
+		config_obj.Defaults = &config_proto.Defaults{
+			HuntExpiryHours:        24 * 7,
+			NotebookCellTimeoutMin: 10,
+		}
+	}
 }
 
 func migrate(config_obj *config_proto.Config) {

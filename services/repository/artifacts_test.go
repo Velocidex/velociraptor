@@ -15,104 +15,57 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package repository
+package repository_test
 
 import (
-	"context"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
+	repository_impl "www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/vql/common"
 )
 
+// The test artifact plugin: This is the gateway to calling other
+// artifacts from within VQL.
+type PluginTestSuite struct {
+	test_utils.TestSuite
+}
+
 // Load all built in artifacts and make sure they validate
 // syntax. This should catch syntax errors in built in artifacts.
-func TestArtifactsSyntax(t *testing.T) {
-	config_obj, err := new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(t, err)
-
-	sm := services.NewServiceManager(context.Background(), config_obj)
-	defer sm.Close()
-
-	assert.NoError(t, sm.Start(journal.StartJournalService))
-	assert.NoError(t, sm.Start(notifications.StartNotificationService))
-	assert.NoError(t, sm.Start(inventory.StartInventoryService))
-	assert.NoError(t, sm.Start(StartRepositoryManager))
-
+func (self *PluginTestSuite) TestArtifactsSyntax() {
 	manager, err := services.GetRepositoryManager()
-	assert.NoError(t, err)
+	assert.NoError(self.T(), err)
 
-	repository, err := manager.GetGlobalRepository(config_obj)
-	assert.NoError(t, err)
+	ConfigObj := self.ConfigObj
+	repository, err := manager.GetGlobalRepository(ConfigObj)
+	assert.NoError(self.T(), err)
 
 	new_repository := manager.NewRepository()
 
 	for _, artifact_name := range repository.List() {
-		artifact, pres := repository.Get(config_obj, artifact_name)
-		assert.True(t, pres)
+		artifact, pres := repository.Get(ConfigObj, artifact_name)
+		assert.True(self.T(), pres)
 
 		if artifact != nil {
 			_, err = new_repository.LoadProto(artifact, true /* validate */)
-			assert.NoError(t, err, "Error compiling "+artifact_name)
+			assert.NoError(self.T(), err, "Error compiling "+artifact_name)
 		}
 	}
-}
-
-// The test artifact plugin: This is the gateway to calling other
-// artifacts from within VQL.
-type PluginTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
-	ctx        context.Context
-	cancel     func()
-}
-
-func (self *PluginTestSuite) SetupTest() {
-	self.config_obj = config.GetDefaultConfig()
-	self.config_obj.Datastore.Implementation = "Test"
-
-	// Start essential services.
-	self.ctx, self.cancel = context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(self.ctx, self.config_obj)
-
-	assert.NoError(self.T(), self.sm.Start(StartRepositoryManagerForTest))
-	assert.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	assert.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
-	assert.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
-	assert.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-}
-
-func (self *PluginTestSuite) TearDownTest() {
-	self.sm.Close()
-	self.cancel()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
 }
 
 func (self *PluginTestSuite) LoadArtifacts(artifact_definitions []string) services.Repository {
@@ -151,7 +104,8 @@ func (self *PluginTestSuite) TestArtifactPlugin() {
 	repository := self.LoadArtifacts(artifact_definitions)
 
 	wg := &sync.WaitGroup{}
-	p := NewArtifactRepositoryPlugin(wg, repository.(*Repository)).(*ArtifactRepositoryPlugin)
+	p := repository_impl.NewArtifactRepositoryPlugin(
+		wg, repository.(*repository_impl.Repository)).(*repository_impl.ArtifactRepositoryPlugin)
 
 	g := goldie.New(self.T())
 	g.Assert(self.T(), "TestArtifactPlugin", []byte(p.Print()))
@@ -178,10 +132,10 @@ func (self *PluginTestSuite) TestArtifactPluginWithPrecondition() {
 	repository := self.LoadArtifacts(artifact_definitions_precondition)
 
 	builder := services.ScopeBuilder{
-		Config:     self.config_obj,
+		Config:     self.ConfigObj,
 		ACLManager: vql_subsystem.NullACLManager{},
 		Repository: repository,
-		Logger:     logging.NewPlainLogger(self.config_obj, &logging.FrontendComponent),
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
 
@@ -200,7 +154,7 @@ func (self *PluginTestSuite) TestArtifactPluginWithPrecondition() {
 		vql, err := vfilter.Parse(query)
 		assert.NoError(self.T(), err)
 
-		for row := range vql.Eval(self.ctx, scope) {
+		for row := range vql.Eval(self.Ctx, scope) {
 			rows = append(rows, row)
 		}
 		results.Set(query, rows)
@@ -241,14 +195,14 @@ func (self *PluginTestSuite) TestEventPluginMultipleSources() {
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
-		self.ctx, self.config_obj, acl_manager, repository,
+		self.Ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
 	test_responder := responder.TestResponder()
 	for _, vql_request := range compiled {
 		actions.VQLClientAction{}.StartQuery(
-			self.config_obj, self.ctx,
+			self.ConfigObj, self.Ctx,
 			test_responder, vql_request)
 	}
 
@@ -294,14 +248,14 @@ func (self *PluginTestSuite) TestClientPluginMultipleSources() {
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
-		self.ctx, self.config_obj, acl_manager, repository,
+		self.Ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
 	test_responder := responder.TestResponder()
 	for _, vql_request := range compiled {
 		actions.VQLClientAction{}.StartQuery(
-			self.config_obj, self.ctx, test_responder, vql_request)
+			self.ConfigObj, self.Ctx, test_responder, vql_request)
 	}
 
 	results := ""

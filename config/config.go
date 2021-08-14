@@ -164,6 +164,10 @@ func GetDefaultConfig() *config_proto.Config {
 			BindPort:    8003,
 		},
 		ApiConfig: &config_proto.ApiClientConfig{},
+		Defaults: &config_proto.Defaults{
+			HuntExpiryHours:        24 * 7,
+			NotebookCellTimeoutMin: 10,
+		},
 	}
 
 	// The client's version needs to keep in sync with the

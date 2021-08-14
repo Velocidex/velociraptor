@@ -44,7 +44,7 @@ func (self *FileStoreTestSuite) TestListChildrenIntermediateDirs() {
 	components := path_specs.NewSafeFilestorePath("a", "b", "c", "d", "Foo")
 	fd, err := self.filestore.WriteFile(components)
 	assert.NoError(self.T(), err)
-	defer fd.Close()
+	fd.Close()
 
 	infos, err := self.filestore.ListDirectory(
 		path_specs.NewSafeFilestorePath("a"))
@@ -57,6 +57,31 @@ func (self *FileStoreTestSuite) TestListChildrenIntermediateDirs() {
 
 	sort.Strings(names)
 	assert.Equal(self.T(), names, []string{"b"})
+}
+
+func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
+	path_spec := path_specs.NewSafeFilestorePath("subdir", "Foo").
+		SetType(api.PATH_TYPE_FILESTORE_JSON)
+	fd, err := self.filestore.WriteFile(path_spec)
+	assert.NoError(self.T(), err)
+	fd.Close()
+
+	fd, err = self.filestore.WriteFile(path_spec.
+		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
+	assert.NoError(self.T(), err)
+	fd.Close()
+
+	infos, err := self.filestore.ListDirectory(
+		path_specs.NewSafeFilestorePath("subdir"))
+	assert.NoError(self.T(), err)
+
+	names := []string{}
+	for _, info := range infos {
+		names = append(names, info.Name())
+	}
+
+	sort.Strings(names)
+	assert.Equal(self.T(), names, []string{"Foo", "Foo"})
 }
 
 // List children recovers child's type based on extensions.
@@ -89,7 +114,7 @@ func (self *FileStoreTestSuite) TestListChildrenWithTypes() {
 
 		fd, err := self.filestore.WriteFile(filename.AddChild("Foo.txt"))
 		assert.NoError(self.T(), err)
-		defer fd.Close()
+		fd.Close()
 
 		infos, err := self.filestore.ListDirectory(filename)
 		assert.NoError(self.T(), err)
@@ -122,19 +147,19 @@ func (self *FileStoreTestSuite) TestListChildrenWithTypes() {
 	}
 }
 
-func (self *FileStoreTestSuite) TestListChildren() {
+func (self *FileStoreTestSuite) TestListDirectory() {
 	filename := path_specs.NewSafeFilestorePath("a", "b")
 	fd, err := self.filestore.WriteFile(filename.AddChild("Foo.txt"))
 	assert.NoError(self.T(), err)
-	defer fd.Close()
+	fd.Close()
 
 	fd, err = self.filestore.WriteFile(filename.AddChild("Bar.txt"))
 	assert.NoError(self.T(), err)
-	defer fd.Close()
+	fd.Close()
 
 	fd, err = self.filestore.WriteFile(filename.AddChild("Bar", "Baz"))
 	assert.NoError(self.T(), err)
-	defer fd.Close()
+	fd.Close()
 
 	infos, err := self.filestore.ListDirectory(filename)
 	assert.NoError(self.T(), err)
@@ -178,7 +203,6 @@ func (self *FileStoreTestSuite) TestFileReadWrite() {
 	filename := path_specs.NewSafeFilestorePath("test", "foo")
 	fd, err := self.filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
-	defer fd.Close()
 
 	// Write some data.
 	_, err = fd.Write([]byte("Some data"))
@@ -191,6 +215,7 @@ func (self *FileStoreTestSuite) TestFileReadWrite() {
 
 	_, err = fd.Write([]byte("MORE data"))
 	assert.NoError(self.T(), err)
+	fd.Close()
 
 	buff := make([]byte, 6)
 	reader, err := self.filestore.ReadFile(filename)
@@ -219,9 +244,12 @@ func (self *FileStoreTestSuite) TestFileReadWrite() {
 	assert.Equal(self.T(), err, io.EOF)
 	assert.Equal(self.T(), n, 0)
 
-	// Write some data.
+	// Write some more data to the end of the file.
+	fd, err = self.filestore.WriteFile(filename)
+	assert.NoError(self.T(), err)
 	_, err = fd.Write([]byte("EXTRA EXTRA"))
 	assert.NoError(self.T(), err)
+	fd.Close()
 
 	// New read picks the new data.
 	n, err = reader.Read(buff)
@@ -269,15 +297,12 @@ func (self *FileStoreTestSuite) TestFileReadWrite() {
 	assert.Equal(self.T(), n, 4)
 
 	// Reopenning the file should give the right size.
-	size, err = fd.Size()
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), int64(29), size)
-
 	fd, err = self.filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 	size, err = fd.Size()
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), int64(29), size)
+	fd.Close()
 }
 
 type QueueManagerTestSuite struct {

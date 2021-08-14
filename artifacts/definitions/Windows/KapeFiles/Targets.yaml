@@ -87,7 +87,7 @@ parameters:
     description: "Antivirus (by Andrew Rathbun): AVG AV Logs, AVG AV Logs (XP), AVG AV Report Logs (XP), AVG Report Logs, Application Event Log Win7+, Application Event Log Win7+, Application Event Log XP, Application Event Log XP, Avast AV Index, Avast AV Logs, Avast AV Logs (XP), Avast AV User Logs, Avira Activity Logs, Bitdefender Endpoint Security Logs, Bitdefender Internet Security Logs, Bitdefender SQLite DB Files, ComboFix, Cybereason Anti-Ransomware Logs, Cybereason Application Control and NGAV Logs, Cybereason Sensor Communications and Anti-Malware Logs, ESET NOD32 AV Logs, ESET NOD32 AV Logs (XP), Emsisoft Scan Logs, F-Secure Logs, F-Secure Scheduled Scan Reports, F-Secure User Logs, HitmanPro Alert Logs, HitmanPro Database, HitmanPro Logs, MalwareBytes Anti-Malware Logs, MalwareBytes Anti-Malware Scan Logs, MalwareBytes Anti-Malware Scan Results Logs, MalwareBytes Anti-Malware Service Logs, McAfee Desktop Protection Logs, McAfee Desktop Protection Logs XP, McAfee Endpoint Security Logs, McAfee Endpoint Security Logs, McAfee VirusScan Logs, McAfee ePO Logs, RogueKiller Reports, SUPERAntiSpyware Logs, SecureAge Antvirus Logs, SentinelOne EDR Log, Sophos Logs, Sophos Logs (XP), Symantec Endpoint Protection Logs, Symantec Endpoint Protection Logs (XP), Symantec Endpoint Protection Quarantine, Symantec Endpoint Protection Quarantine (XP), Symantec Endpoint Protection User Logs, Symantec Event Log Win7+, Symantec Event Log Win7+, TotalAV Logs, TotalAV Logs, Trend Micro Logs, Trend Micro Security Agent Connection Logs, Trend Micro Security Agent Report Logs, VIPRE Business Agent Logs, VIPRE Business User Logs (up to v4), VIPRE Business User Logs (v5-v6), VIPRE Business User Logs (v7+), Webroot Program Data, Windows Defender Event Logs, Windows Defender Event Logs, Windows Defender Logs, Windows Defender Logs, Windows Defender Logs, Windows Defender Logs, ccSubSDK Database, registrationInfo.xml"
     type: bool
   - name: AnyDesk
-    description: "AnyDesk (by Andrew Rathbun and Scott Hanson): AnyDesk Logs - ProgramData - *.trace, AnyDesk Logs - ProgramData - connection_trace.txt, AnyDesk Logs - User Profile - *.trace, AnyDesk Logs - User Profile - connection_trace.txt, AnyDesk Videos"
+    description: "AnyDesk (by Andrew Rathbun, Scott Hanson, and Nicole Jao): AnyDesk Logs - ProgramData - *.trace, AnyDesk Logs - ProgramData - connection_trace.txt, AnyDesk Logs - System User Account, AnyDesk Logs - User Profile - *.trace, AnyDesk Logs - User Profile - connection_trace.txt, AnyDesk Videos"
     type: bool
   - name: ApacheAccessLog
     description: "Apache Access Log (by Hadar Yudovich): Apache Access Log"
@@ -333,7 +333,7 @@ parameters:
     description: "Kali on Windows Subsystem for Linux (by Matt Dawson): Kali WSL .bash_history, Kali WSL .bashrc, Kali WSL .profile, Kali WSL /etc/bash.bashrc, Kali WSL /etc/crontab, Kali WSL /etc/debian_version, Kali WSL /etc/fstab, Kali WSL /etc/group, Kali WSL /etc/hostname, Kali WSL /etc/hosts, Kali WSL /etc/os-release, Kali WSL /etc/passwd, Kali WSL /etc/profile, Kali WSL /etc/shadow, Kali WSL /etc/timezone, Kali WSL Apt Logs, Kali WSL User Crontabs"
     type: bool
   - name: KapeTriage
-    description: "Kape Triage collections that will collect most of the files needed for a DFIR Investigation.  This module pulls evidence from File System files, Registry Hives, Event Logs, Scheduled Tasks, Evidence of Execution, SRUM data, Web Browser data (IE/Edge, Chrome, Mozilla history), LNK Files, Jump Lists, 3rd party remote access software logs, 3rd party antivirus software logs, Windows 10 Timeline database, and $I Recycle Bin data files. (by Scott Downie): $Boot, $J, $J, $LogFile, $MFT, $Max, $Max, $SDS, $SDS, $T, $T, AVG AV Logs, AVG AV Logs (XP), AVG AV Report Logs (XP), AVG Report Logs, ActivitiesCache.db, Addons, Addons XP, Amcache, Amcache, Amcache transaction files, Amcache transaction files, Ammyy Program Data, AnyDesk Logs - ProgramData - *.trace, AnyDesk Logs - ProgramData - connection_trace.txt, AnyDesk Logs - User Profile - *.trace, AnyDesk Logs - User Profile - connection_trace.txt, AnyDesk Videos, Application Event Log Win7+, Application Event Log Win7+, Application Event Log XP, Application Event Log XP, Avast AV Index, Avast AV Logs, Avast AV Logs (XP), Avast AV User Logs, Avira Activity Logs, Bitdefender Endpoint Security Logs, Bitdefender Internet Security Logs, Bitdefender SQLite DB Files, Bookmarks, Bookmarks, Chrome Cookies, Chrome Cookies XP, Chrome Current Session, Chrome Current Session XP, Chrome Current Tabs, Chrome Current Tabs XP, Chrome Download Metadata, Chrome Extension Cookies, Chrome Favicons, Chrome Favicons XP, Chrome History, Chrome History XP, Chrome Last Session, Chrome Last Session XP, Chrome Last Tabs, Chrome Last Tabs XP, Chrome Login Data, Chrome Login Data XP, Chrome Media History, Chrome Network Action Predictor, Chrome Network Persistent State, Chrome Preferences, Chrome Preferences XP, Chrome Quota Manager, Chrome Reporting and NEL, Chrome Sessions Folder, Chrome Shortcuts, Chrome Shortcuts XP, Chrome SyncData Database, Chrome Top Sites, Chrome Top Sites XP, Chrome Trust Tokens, Chrome Visited Links, Chrome Visited Links XP, Chrome Web Data, Chrome Web Data XP, Chrome bookmarks, Chrome bookmarks XP, ComboFix, Cookies, Cookies, Cookies XP, Cybereason Anti-Ransomware Logs, Cybereason Application Control and NGAV Logs, Cybereason Sensor Communications and Anti-Malware Logs, Desktop LNK Files, Desktop LNK Files XP, Downloads, Downloads XP, ESET NOD32 AV Logs, ESET NOD32 AV Logs (XP), Edge Bookmarks, Edge Collections, Edge Cookies, Edge Current Session, Edge Current Tabs, Edge Favicons, Edge History, Edge Last Session, Edge Last Tabs, Edge Login Data, Edge Media History, Edge Network Action Predictor, Edge Preferences, Edge Sessions Folder, Edge Shortcuts, Edge SyncData Database, Edge Top Sites, Edge Visited Links, Edge Web Data, Edge bookmarks, Edge folder, Emsisoft Scan Logs, Event logs Win7+, Event logs Win7+, Event logs XP, Extensions, F-Secure Logs, F-Secure Scheduled Scan Reports, F-Secure User Logs, Favicons, Favicons XP, Form history, Form history XP, HitmanPro Alert Logs, HitmanPro Database, HitmanPro Logs, IE 11 Cookies, IE 11 Metadata, IE 9/10 Cookies, IE 9/10 Download History, IE 9/10 History, Index.dat History, Index.dat History subdirectory, Index.dat Office, Index.dat Office XP, Index.dat UserData, Index.dat cookies, Kaseya Agent Edge Service Logs, Kaseya Agent Endpoint Service Logs, Kaseya Agent Endpoint Service Logs (XP), Kaseya Agent Service Log, Kaseya Live Connect Logs, Kaseya Live Connect Logs (XP), Kaseya Setup Log, Kaseya Setup Log, Kaseya Setup Log, LNK Files from C:\ProgramData, LNK Files from Microsoft Office Recent, LNK Files from Recent, LNK Files from Recent (XP), Local Internet Explorer folder, Local Service registry hive, Local Service registry hive, Local Service registry transaction files, Local Service registry transaction files, LocalSessionManager Event Logs, LocalSessionManager Event Logs, LogMeIn Application Logs, LogMeIn ProgramData Logs, MalwareBytes Anti-Malware Logs, MalwareBytes Anti-Malware Scan Logs, MalwareBytes Anti-Malware Scan Results Logs, MalwareBytes Anti-Malware Service Logs, McAfee Desktop Protection Logs, McAfee Desktop Protection Logs XP, McAfee Endpoint Security Logs, McAfee Endpoint Security Logs, McAfee VirusScan Logs, McAfee ePO Logs, NTUSER.DAT DEFAULT registry hive, NTUSER.DAT DEFAULT registry hive, NTUSER.DAT DEFAULT transaction files, NTUSER.DAT DEFAULT transaction files, NTUSER.DAT registry hive, NTUSER.DAT registry hive XP, NTUSER.DAT registry transaction files, Network Service registry hive, Network Service registry hive, Network Service registry transaction files, Network Service registry transaction files, Opera - Local Folder, Opera - Roaming Folder, Password, Password, Password, Password XP, Password XP, Password XP, Permissions, Places, Places XP, PowerShell Console Log, Preferences, Prefetch, Prefetch, Protections, Puffin - Autocomplete Data, Puffin - Cookies, Puffin - Image Cache, Puffin - Password (Encrypted), Puffin - Password Forms Data, Puffin - Subscription Data, Puffin - data.db, RDP Cache Files, RDP Cache Files, RDPClient Event Logs, RDPClient Event Logs, RDPCoreTS Event Logs, RDPCoreTS Event Logs, RECYCLER - WinXP, Radmin Server 32bit Chats, Radmin Server 32bit Log, Radmin Server 64bit Chats, Radmin Server 64bit Log, Radmin Viewer Chats, RealVNC Log, RecentFileCache, RecentFileCache, Recycle Bin - Windows Vista+, RegBack registry transaction files, RegBack registry transaction files, RemoteConnectionManager Event Logs, RemoteConnectionManager Event Logs, Restore point LNK Files XP, Roaming Internet Explorer folder, RogueKiller Reports, SAM registry hive, SAM registry hive, SAM registry hive (RegBack), SAM registry hive (RegBack), SAM registry transaction files, SAM registry transaction files, SECURITY registry hive, SECURITY registry hive, SECURITY registry hive (RegBack), SECURITY registry hive (RegBack), SECURITY registry transaction files, SECURITY registry transaction files, SOFTWARE registry hive, SOFTWARE registry hive, SOFTWARE registry hive, SOFTWARE registry hive, SOFTWARE registry hive (RegBack), SOFTWARE registry hive (RegBack), SOFTWARE registry transaction files, SOFTWARE registry transaction files, SOFTWARE registry transaction files, SOFTWARE registry transaction files, SRUM, SRUM, SUPERAntiSpyware Logs, SYSTEM registry hive, SYSTEM registry hive, SYSTEM registry hive (RegBack), SYSTEM registry hive (RegBack), SYSTEM registry hive (RegBack), SYSTEM registry hive (RegBack), SYSTEM registry transaction files, SYSTEM registry transaction files, ScreenConnect Session Database, ScreenConnect Session Database, ScreenConnect User Config, Search, Search XP, SecureAge Antvirus Logs, SentinelOne EDR Log, Sessionstore, Sessionstore Folder, Sessionstore XP, Signons, Signons XP, Sophos Logs, Sophos Logs (XP), Storage Sync, Symantec Endpoint Protection Logs, Symantec Endpoint Protection Logs (XP), Symantec Endpoint Protection Quarantine, Symantec Endpoint Protection Quarantine (XP), Symantec Endpoint Protection User Logs, Symantec Event Log Win7+, Symantec Event Log Win7+, Syscache, Syscache transaction files, System Profile registry hive, System Profile registry hive, System Profile registry transaction files, System Profile registry transaction files, System Restore Points Registry Hives (XP), TeamViewer Application Logs, TeamViewer Configuration Files, TeamViewer Connection Logs, TotalAV Logs, TotalAV Logs, Trend Micro Logs, Trend Micro Security Agent Connection Logs, Trend Micro Security Agent Report Logs, UsrClass.dat registry hive, UsrClass.dat registry transaction files, VIPRE Business Agent Logs, VIPRE Business User Logs (up to v4), VIPRE Business User Logs (v5-v6), VIPRE Business User Logs (v7+), Webappstore, Webappstore XP, Webroot Program Data, Windows Defender Event Logs, Windows Defender Event Logs, Windows Defender Logs, Windows Defender Logs, Windows Defender Logs, Windows Defender Logs, Windows Protect Folder, Windows Protect Folder, XML, XML, at .job, at .job, at SchedLgU.txt, at SchedLgU.txt, ccSubSDK Database, mRemoteNG Connection Configuration and Backups, mRemoteNG Logs, mRemoteNG Program Settings, registrationInfo.xml"
+    description: "Kape Triage collections that will collect most of the files needed for a DFIR Investigation.  This module pulls evidence from File System files, Registry Hives, Event Logs, Scheduled Tasks, Evidence of Execution, SRUM data, Web Browser data (IE/Edge, Chrome, Mozilla history), LNK Files, Jump Lists, 3rd party remote access software logs, 3rd party antivirus software logs, Windows 10 Timeline database, and $I Recycle Bin data files. (by Scott Downie): $Boot, $J, $J, $LogFile, $MFT, $Max, $Max, $SDS, $SDS, $T, $T, AVG AV Logs, AVG AV Logs (XP), AVG AV Report Logs (XP), AVG Report Logs, ActivitiesCache.db, Addons, Addons XP, Amcache, Amcache, Amcache transaction files, Amcache transaction files, Ammyy Program Data, AnyDesk Logs - ProgramData - *.trace, AnyDesk Logs - ProgramData - connection_trace.txt, AnyDesk Logs - System User Account, AnyDesk Logs - User Profile - *.trace, AnyDesk Logs - User Profile - connection_trace.txt, AnyDesk Videos, Application Event Log Win7+, Application Event Log Win7+, Application Event Log XP, Application Event Log XP, Avast AV Index, Avast AV Logs, Avast AV Logs (XP), Avast AV User Logs, Avira Activity Logs, Bitdefender Endpoint Security Logs, Bitdefender Internet Security Logs, Bitdefender SQLite DB Files, Bookmarks, Bookmarks, Chrome Cookies, Chrome Cookies XP, Chrome Current Session, Chrome Current Session XP, Chrome Current Tabs, Chrome Current Tabs XP, Chrome Download Metadata, Chrome Extension Cookies, Chrome Favicons, Chrome Favicons XP, Chrome History, Chrome History XP, Chrome Last Session, Chrome Last Session XP, Chrome Last Tabs, Chrome Last Tabs XP, Chrome Login Data, Chrome Login Data XP, Chrome Media History, Chrome Network Action Predictor, Chrome Network Persistent State, Chrome Preferences, Chrome Preferences XP, Chrome Quota Manager, Chrome Reporting and NEL, Chrome Sessions Folder, Chrome Shortcuts, Chrome Shortcuts XP, Chrome SyncData Database, Chrome Top Sites, Chrome Top Sites XP, Chrome Trust Tokens, Chrome Visited Links, Chrome Visited Links XP, Chrome Web Data, Chrome Web Data XP, Chrome bookmarks, Chrome bookmarks XP, ComboFix, Cookies, Cookies, Cookies XP, Cybereason Anti-Ransomware Logs, Cybereason Application Control and NGAV Logs, Cybereason Sensor Communications and Anti-Malware Logs, Desktop LNK Files, Desktop LNK Files XP, Downloads, Downloads XP, ESET NOD32 AV Logs, ESET NOD32 AV Logs (XP), Edge Bookmarks, Edge Collections, Edge Cookies, Edge Current Session, Edge Current Tabs, Edge Favicons, Edge History, Edge Last Session, Edge Last Tabs, Edge Login Data, Edge Media History, Edge Network Action Predictor, Edge Preferences, Edge Sessions Folder, Edge Shortcuts, Edge SyncData Database, Edge Top Sites, Edge Visited Links, Edge Web Data, Edge bookmarks, Edge folder, Emsisoft Scan Logs, Event logs Win7+, Event logs Win7+, Event logs XP, Extensions, F-Secure Logs, F-Secure Scheduled Scan Reports, F-Secure User Logs, Favicons, Favicons XP, Form history, Form history XP, HitmanPro Alert Logs, HitmanPro Database, HitmanPro Logs, IE 11 Cookies, IE 11 Metadata, IE 9/10 Cookies, IE 9/10 Download History, IE 9/10 History, Index.dat History, Index.dat History subdirectory, Index.dat Office, Index.dat Office XP, Index.dat UserData, Index.dat cookies, Kaseya Agent Edge Service Logs, Kaseya Agent Endpoint Service Logs, Kaseya Agent Endpoint Service Logs (XP), Kaseya Agent Service Log, Kaseya Live Connect Logs, Kaseya Live Connect Logs (XP), Kaseya Setup Log, Kaseya Setup Log, Kaseya Setup Log, LNK Files from C:\ProgramData, LNK Files from Microsoft Office Recent, LNK Files from Recent, LNK Files from Recent (XP), Local Internet Explorer folder, Local Service registry hive, Local Service registry hive, Local Service registry transaction files, Local Service registry transaction files, LocalSessionManager Event Logs, LocalSessionManager Event Logs, LogMeIn Application Logs, LogMeIn ProgramData Logs, MalwareBytes Anti-Malware Logs, MalwareBytes Anti-Malware Scan Logs, MalwareBytes Anti-Malware Scan Results Logs, MalwareBytes Anti-Malware Service Logs, McAfee Desktop Protection Logs, McAfee Desktop Protection Logs XP, McAfee Endpoint Security Logs, McAfee Endpoint Security Logs, McAfee VirusScan Logs, McAfee ePO Logs, NTUSER.DAT DEFAULT registry hive, NTUSER.DAT DEFAULT registry hive, NTUSER.DAT DEFAULT transaction files, NTUSER.DAT DEFAULT transaction files, NTUSER.DAT registry hive, NTUSER.DAT registry hive XP, NTUSER.DAT registry transaction files, Network Service registry hive, Network Service registry hive, Network Service registry transaction files, Network Service registry transaction files, Opera - Local Folder, Opera - Roaming Folder, Password, Password, Password, Password XP, Password XP, Password XP, Permissions, Places, Places XP, PowerShell Console Log, Preferences, Prefetch, Prefetch, Protections, Puffin - Autocomplete Data, Puffin - Cookies, Puffin - Image Cache, Puffin - Password (Encrypted), Puffin - Password Forms Data, Puffin - Subscription Data, Puffin - data.db, RDP Cache Files, RDP Cache Files, RDPClient Event Logs, RDPClient Event Logs, RDPCoreTS Event Logs, RDPCoreTS Event Logs, RECYCLER - WinXP, Radmin Server 32bit Chats, Radmin Server 32bit Log, Radmin Server 64bit Chats, Radmin Server 64bit Log, Radmin Viewer Chats, RealVNC Log, RecentFileCache, RecentFileCache, Recycle Bin - Windows Vista+, RegBack registry transaction files, RegBack registry transaction files, RemoteConnectionManager Event Logs, RemoteConnectionManager Event Logs, Restore point LNK Files XP, Roaming Internet Explorer folder, RogueKiller Reports, SAM registry hive, SAM registry hive, SAM registry hive (RegBack), SAM registry hive (RegBack), SAM registry transaction files, SAM registry transaction files, SECURITY registry hive, SECURITY registry hive, SECURITY registry hive (RegBack), SECURITY registry hive (RegBack), SECURITY registry transaction files, SECURITY registry transaction files, SOFTWARE registry hive, SOFTWARE registry hive, SOFTWARE registry hive, SOFTWARE registry hive, SOFTWARE registry hive (RegBack), SOFTWARE registry hive (RegBack), SOFTWARE registry transaction files, SOFTWARE registry transaction files, SOFTWARE registry transaction files, SOFTWARE registry transaction files, SRUM, SRUM, SUPERAntiSpyware Logs, SYSTEM registry hive, SYSTEM registry hive, SYSTEM registry hive (RegBack), SYSTEM registry hive (RegBack), SYSTEM registry hive (RegBack), SYSTEM registry hive (RegBack), SYSTEM registry transaction files, SYSTEM registry transaction files, ScreenConnect Session Database, ScreenConnect Session Database, ScreenConnect User Config, Search, Search XP, SecureAge Antvirus Logs, SentinelOne EDR Log, Sessionstore, Sessionstore Folder, Sessionstore XP, Signons, Signons XP, Sophos Logs, Sophos Logs (XP), Storage Sync, Symantec Endpoint Protection Logs, Symantec Endpoint Protection Logs (XP), Symantec Endpoint Protection Quarantine, Symantec Endpoint Protection Quarantine (XP), Symantec Endpoint Protection User Logs, Symantec Event Log Win7+, Symantec Event Log Win7+, Syscache, Syscache transaction files, System Profile registry hive, System Profile registry hive, System Profile registry transaction files, System Profile registry transaction files, System Restore Points Registry Hives (XP), TeamViewer Application Logs, TeamViewer Configuration Files, TeamViewer Connection Logs, TotalAV Logs, TotalAV Logs, Trend Micro Logs, Trend Micro Security Agent Connection Logs, Trend Micro Security Agent Report Logs, UsrClass.dat registry hive, UsrClass.dat registry transaction files, VIPRE Business Agent Logs, VIPRE Business User Logs (up to v4), VIPRE Business User Logs (v5-v6), VIPRE Business User Logs (v7+), Webappstore, Webappstore XP, Webroot Program Data, Windows Defender Event Logs, Windows Defender Event Logs, Windows Defender Logs, Windows Defender Logs, Windows Defender Logs, Windows Defender Logs, Windows Protect Folder, Windows Protect Folder, XML, XML, at .job, at .job, at SchedLgU.txt, at SchedLgU.txt, ccSubSDK Database, mRemoteNG Connection Configuration and Backups, mRemoteNG Logs, mRemoteNG Program Settings, registrationInfo.xml"
     type: bool
   - name: Kaseya
     description: "Kaseya Data (by Drew Ervin and Andrew Rathbun): Kaseya Agent Edge Service Logs, Kaseya Agent Endpoint Service Logs, Kaseya Agent Endpoint Service Logs (XP), Kaseya Agent Service Log, Kaseya Live Connect Logs, Kaseya Live Connect Logs (XP), Kaseya Setup Log, Kaseya Setup Log, Kaseya Setup Log"
@@ -501,7 +501,7 @@ parameters:
     description: "User Related Registry hives (by Eric Zimmerman / Mark Hallman): NTUSER.DAT DEFAULT registry hive, NTUSER.DAT DEFAULT registry hive, NTUSER.DAT DEFAULT transaction files, NTUSER.DAT DEFAULT transaction files, NTUSER.DAT registry hive, NTUSER.DAT registry hive XP, NTUSER.DAT registry transaction files, UsrClass.dat registry hive, UsrClass.dat registry transaction files"
     type: bool
   - name: RemoteAdmin
-    description: "Composite target for files related to remote administration tools (by Drew Ervin, Mathias Frank, Andrew Rathbun): Ammyy Program Data, AnyDesk Logs - ProgramData - *.trace, AnyDesk Logs - ProgramData - connection_trace.txt, AnyDesk Logs - User Profile - *.trace, AnyDesk Logs - User Profile - connection_trace.txt, AnyDesk Videos, Application Event Log Win7+, Application Event Log Win7+, Application Event Log XP, Application Event Log XP, Kaseya Agent Edge Service Logs, Kaseya Agent Endpoint Service Logs, Kaseya Agent Endpoint Service Logs (XP), Kaseya Agent Service Log, Kaseya Live Connect Logs, Kaseya Live Connect Logs (XP), Kaseya Setup Log, Kaseya Setup Log, Kaseya Setup Log, LocalSessionManager Event Logs, LocalSessionManager Event Logs, LogMeIn Application Logs, LogMeIn ProgramData Logs, RDP Cache Files, RDP Cache Files, RDPClient Event Logs, RDPClient Event Logs, RDPCoreTS Event Logs, RDPCoreTS Event Logs, Radmin Server 32bit Chats, Radmin Server 32bit Log, Radmin Server 64bit Chats, Radmin Server 64bit Log, Radmin Viewer Chats, RealVNC Log, RemoteConnectionManager Event Logs, RemoteConnectionManager Event Logs, ScreenConnect Session Database, ScreenConnect Session Database, ScreenConnect User Config, TeamViewer Application Logs, TeamViewer Configuration Files, TeamViewer Connection Logs, mRemoteNG Connection Configuration and Backups, mRemoteNG Logs, mRemoteNG Program Settings"
+    description: "Composite target for files related to remote administration tools (by Drew Ervin, Mathias Frank, Andrew Rathbun): Ammyy Program Data, AnyDesk Logs - ProgramData - *.trace, AnyDesk Logs - ProgramData - connection_trace.txt, AnyDesk Logs - System User Account, AnyDesk Logs - User Profile - *.trace, AnyDesk Logs - User Profile - connection_trace.txt, AnyDesk Videos, Application Event Log Win7+, Application Event Log Win7+, Application Event Log XP, Application Event Log XP, Kaseya Agent Edge Service Logs, Kaseya Agent Endpoint Service Logs, Kaseya Agent Endpoint Service Logs (XP), Kaseya Agent Service Log, Kaseya Live Connect Logs, Kaseya Live Connect Logs (XP), Kaseya Setup Log, Kaseya Setup Log, Kaseya Setup Log, LocalSessionManager Event Logs, LocalSessionManager Event Logs, LogMeIn Application Logs, LogMeIn ProgramData Logs, RDP Cache Files, RDP Cache Files, RDPClient Event Logs, RDPClient Event Logs, RDPCoreTS Event Logs, RDPCoreTS Event Logs, Radmin Server 32bit Chats, Radmin Server 32bit Log, Radmin Server 64bit Chats, Radmin Server 64bit Log, Radmin Viewer Chats, RealVNC Log, RemoteConnectionManager Event Logs, RemoteConnectionManager Event Logs, ScreenConnect Session Database, ScreenConnect Session Database, ScreenConnect User Config, TeamViewer Application Logs, TeamViewer Configuration Files, TeamViewer Connection Logs, mRemoteNG Connection Configuration and Backups, mRemoteNG Logs, mRemoteNG Program Settings"
     type: bool
   - name: RogueKiller
     description: "RogueKiller Anti-Malware (by Adlice Software) (by Drew Ervin): RogueKiller Reports"
@@ -535,6 +535,9 @@ parameters:
     type: bool
   - name: SentinelOne
     description: "Sentinel One Logs (by Kirtan Shah): SentinelOne EDR Log"
+    type: bool
+  - name: ServerTriage
+    description: "A compound target for gathering artifacts common to servers. (by Eric Capuano): Apache Access Log, Confluence Wiki Log Files, Confluence Wiki Log Files, Exchange TransportRoles log files, Exchange client access log files, FileZilla Log Files, FileZilla Server XML Log Files, IIS log files, IIS log files, IIS log files, IIS log files, IIS log files, MS SQL Errorlog, MS SQL Errorlogs, ManageEngine Desktop Central Log Files, NGINX Log Files, OpenSSH Authorized Administrator Keys, OpenSSH Host DSA Key, OpenSSH Host ECDSA Key, OpenSSH Host ED25519 Key, OpenSSH Host RSA Key, OpenSSH Server Config File, OpenSSH Server Logs, OpenSSH User Authorized Keys, OpenSSH User Authorized Keys 2"
     type: bool
   - name: ShareX
     description: "ShareX (by Andrew Rathbun): ShareX"
@@ -679,6 +682,9 @@ parameters:
     type: bool
   - name: WebBrowsers
     description: "Web browser history, bookmarks, etc. (by Eric Zimmerman): Addons, Addons XP, Bookmarks, Bookmarks, Chrome Cookies, Chrome Cookies XP, Chrome Current Session, Chrome Current Session XP, Chrome Current Tabs, Chrome Current Tabs XP, Chrome Download Metadata, Chrome Extension Cookies, Chrome Favicons, Chrome Favicons XP, Chrome History, Chrome History XP, Chrome Last Session, Chrome Last Session XP, Chrome Last Tabs, Chrome Last Tabs XP, Chrome Login Data, Chrome Login Data XP, Chrome Media History, Chrome Network Action Predictor, Chrome Network Persistent State, Chrome Preferences, Chrome Preferences XP, Chrome Quota Manager, Chrome Reporting and NEL, Chrome Sessions Folder, Chrome Shortcuts, Chrome Shortcuts XP, Chrome SyncData Database, Chrome Top Sites, Chrome Top Sites XP, Chrome Trust Tokens, Chrome Visited Links, Chrome Visited Links XP, Chrome Web Data, Chrome Web Data XP, Chrome bookmarks, Chrome bookmarks XP, Cookies, Cookies, Cookies XP, Downloads, Downloads XP, Edge Bookmarks, Edge Collections, Edge Cookies, Edge Current Session, Edge Current Tabs, Edge Favicons, Edge History, Edge Last Session, Edge Last Tabs, Edge Login Data, Edge Media History, Edge Network Action Predictor, Edge Preferences, Edge Sessions Folder, Edge Shortcuts, Edge SyncData Database, Edge Top Sites, Edge Visited Links, Edge Web Data, Edge bookmarks, Edge folder, Extensions, Favicons, Favicons XP, Form history, Form history XP, IE 11 Cookies, IE 11 Metadata, IE 9/10 Cookies, IE 9/10 Download History, IE 9/10 History, Index.dat History, Index.dat History subdirectory, Index.dat Office, Index.dat Office XP, Index.dat UserData, Index.dat cookies, Local Internet Explorer folder, Opera - Local Folder, Opera - Roaming Folder, Password, Password, Password, Password XP, Password XP, Password XP, Permissions, Places, Places XP, Preferences, Protections, Puffin - Autocomplete Data, Puffin - Cookies, Puffin - Image Cache, Puffin - Password (Encrypted), Puffin - Password Forms Data, Puffin - Subscription Data, Puffin - data.db, Roaming Internet Explorer folder, Search, Search XP, Sessionstore, Sessionstore Folder, Sessionstore XP, Signons, Signons XP, Storage Sync, Webappstore, Webappstore XP, Windows Protect Folder, Windows Protect Folder"
+    type: bool
+  - name: WebServers
+    description: "Logs from all known web server applications and supporting services (by Eric Capuano): Apache Access Log, IIS log files, IIS log files, IIS log files, IIS log files, IIS log files, MS SQL Errorlog, MS SQL Errorlogs, NGINX Log Files"
     type: bool
   - name: Webroot
     description: "Webroot Antivirus (by Drew Ervin): Webroot Program Data"
@@ -1546,259 +1552,260 @@ parameters:
       803,AnyDesk Logs - ProgramData - *.trace,Communications,ProgramData\AnyDesk/*.trace,lazy_ntfs,Collects the trace logs for AnyDesk from programdata
       804,AnyDesk Videos,Communications,Users\*\Videos\AnyDesk/*.anydesk,lazy_ntfs,Collects any session recordings made by the user while using AnyDesk
       805,AnyDesk Logs - User Profile - connection_trace.txt,Communications,Users\*\AppData\Roaming\AnyDesk/connection_trace.txt,lazy_ntfs,Collects the connection trace log from user profile
-      806,AnyDesk Logs - ProgramData - connection_trace.txt,Communications,ProgramData\AnyDesk/connection_trace.txt,lazy_ntfs,Collects the connection trace log from programdata
-      807,Aspera Client Logs,FileDownload,Users\*\AppData\Local\Aspera\Aspera Connect\var\log/**10/*.log,lazy_ntfs,
-      808,Aspera Server Logs,FileDownload,Users\*\.aspera\connect\var\log/**10/*.log,lazy_ntfs,
-      809,Box User Files,Apps,Users\*\Box/**10,lazy_ntfs,Caution! This target will collect Box Drive contents from the local drive AND on-demand cloud files. Ensure your scope of authority permits cloud collections before use
-      810,Box Sync User Files,Apps,Users\*\Box Sync/**10,lazy_ntfs,
-      811,Box Drive Application Metadata,Apps,Users\*\AppData\Local\Box\Box\*/**10,lazy_ntfs,
-      812,Box Sync Application Metadata,Apps,Users\*\AppData\Local\Box Sync\*/**10,lazy_ntfs,
-      813,Cisco Jabber Database,Communications,Users\*\AppData\Local\Cisco\Unified Communications\Jabber\CSF\History/*.db,lazy_ntfs,The Cisco Jabber process needs to be killed before database can be copied.
-      814,ClipboardMaster - Clipboard History - Text,Apps,Users\*\AppData\Roaming\Jumping Bytes\ClipboardMaster/Clipboard.clm4,lazy_ntfs,Locates the user’s clipboard history (text) for ClipboardMaster
-      815,ClipboardMaster - Clipboard History - Images,Apps,Users\*\AppData\Roaming\Jumping Bytes\ClipboardMaster\pics/**10,lazy_ntfs,Locates the user’s clipboard history (images) for ClipboardMaster
-      816,ClipboardMaster - Clipboard History - Backups,Apps,Users\*\AppData\Roaming\Jumping Bytes\ClipboardMaster/Clipboard.clm4.ba*,lazy_ntfs,Locates the user’s clipboard history (backups) for ClipboardMaster
-      817,Confluence Wiki Log Files,Logs,Atlassian\Application Data\Confluence\logs/*.log*,lazy_ntfs,
-      818,Confluence Wiki Log Files,Logs,Program Files\Atlassian\Confluence\logs/*.log,lazy_ntfs,
-      819,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data\MRU/rename_folders.osd,lazy_ntfs,Locates .osd file which contains names of folders that have been renamed manually by the user.
-      820,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data\MRU/rename_files.osd,lazy_ntfs,Locates .osd file which contains names of files that have been renamed manually by the user.
-      821,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data\MRU/find_contains.osd,lazy_ntfs,Locates .osd file which contains search queries initiated by the user during a search for files with contents related to the search query.
-      822,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data\MRU/find_name.osd,lazy_ntfs,Locates .osd file which contains search queries initiated by the user during a search for files with a filename related to the search query.
-      823,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data\MRU/find_path.osd,lazy_ntfs,Locates .osd file which contains file paths related to user activity - not exactly sure how these are generated at this time.
-      824,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data/recent.osd,lazy_ntfs,Locates .osd file which contains file paths related to recent user activity. Effectively the DOpus Shellbags-equivalent. Appears to be for last 10 folder visited within the Lister.
-      825,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data/backupconfig.osd,lazy_ntfs,Locates .osd file which contains file paths related to the location of the backup settings files for Directory Opus.
-      826,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\Thumbnail Cache\*,lazy_ntfs,Locates .osd file which contains file paths related to the location of the backup settings files for Directory Opus.
-      827,Directory Opus,Apps,Users\*\AppData\Roaming\GPSoftware\Directory Opus\Logs\*,lazy_ntfs,Locates .txt files that will be named with the IP address of the FTP server Directory Opus was used to connect to. All-activity.txt will simply be a combination of all other .txt files present in this directory.
-      828,Discord Cache Files,Communications,Users\*\AppData\Roaming\discord\cache/**10,lazy_ntfs,Gets cached data from Discord app
-      829,Discord Local Storage LevelDB Files,Communications,Users\*\AppData\Roaming\discord\local storage\leveldb/**10,lazy_ntfs,Gets LevelDB database from Discord app
-      830,Double Commander - history.xml,Apps,Users\*\AppData\Roaming\doublecmd/history.xml,lazy_ntfs,Locates an .xml file that contains Shellbags-equivalent artifacts that are sorted in temporal order from bottom to top.
-      831,Double Commander - doublecmd.xml,Apps,Users\*\AppData\Roaming\doublecmd/doublecmd.xml,lazy_ntfs,Locates an .xml file that contains Shellbags-equivalent artifacts that are sorted in temporal order from top to bottom.
-      832,Double Commander - FTP Log,Apps,Users\*\AppData\Roaming\doublecmd/doublecmd*.log,lazy_ntfs,Locates log files that'll be named with the following naming convention: doublecmd_2021-04-03.log.
-      833,Dropbox User Files,Apps,Users\*\Dropbox*/**10,lazy_ntfs,
-      834,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox/info.json,lazy_ntfs,Getting individual files because folder may contain very large extraneous files
-      835,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*/filecache.db*,lazy_ntfs,Getting individual files because folder may contain very large extraneous files
-      836,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*/config.dbx,lazy_ntfs,Getting individual files because folder may contain very large extraneous files
-      837,Windows Protect Folder,FileSystem,Users\*\AppData\Roaming\Microsoft\Protect\*/**10,lazy_ntfs,Required for offline decryption of Dropbox databases
-      838,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*/home.db,lazy_ntfs,SQlite database which appears to keep track of the user's recent Dropbox activity
-      839,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*/icon.db,lazy_ntfs,SQLite database which appears to keep track of icons in the user's Drobox sync history which can give an indication as to which files and folders are present
-      840,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*/sync_history.db,lazy_ntfs,SQLite database which appears to keep track of the user's Drobox sync history
-      841,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*\sync/nucleus.sqlite3*,lazy_ntfs,SQLite database which appears to contain a table for deleted files
-      842,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox/host.db,lazy_ntfs,"SQLite database which contains the local path of the user's Dropbox folder encoded in BASE64. Decode each line separately, not together."
-      843,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox/host.dbx,lazy_ntfs,"SQLite database which contains the local path of the user's Dropbox folder encoded in BASE64. Decode each line separately, not together."
-      844,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*\sync/aggregation.dbx,lazy_ntfs,SQLite database which appears to contain snapshot table of the user's Dropbox contents in JSON with timestamps in UNIX Epoch
-      845,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*/avatarcache.db,lazy_ntfs,SQLite database which appears to contain the ID's of account(s) on the user's system where Dropbox is installed
-      846,EF Commander - .ini File,Apps,Users\*\AppData\Roaming\EFSoftware\*,lazy_ntfs,Locates folder where all configuration files reside
-      847,Evernote Accounts,App,Users\*\AppData\Local\Evernote\Evernote\Databases/**10/.accounts,lazy_ntfs,Holds username and email of accounts
-      848,Evernote Notebooks,App,Users\*\AppData\Local\Evernote\Evernote\Databases/**10/*.exb,lazy_ntfs,SQLite Database of the notes
-      849,Evernote Notebook Snippets,App,Users\*\AppData\Local\Evernote\Evernote\Databases/**10/*.exb.snippets,lazy_ntfs,Note 'Snippets'
-      850,Everything (VoidTools),FileSystem,Users\*\AppData\Local\Everything/Everything.db,lazy_ntfs,Copies out Everything.db
-      851,Everything (VoidTools) - Run History,FileSystem,Users\*\AppData\Roaming\Everything/Run History.csv,lazy_ntfs,Copies out a CSV containing the history of items ran from Everything's search results window
-      852,Everything (VoidTools) - Search History,FileSystem,Users\*\AppData\Roaming\Everything/Search History.csv,lazy_ntfs,Copies out a CSV containing the history of items searched for within Everything with timestamps
-      853,Exchange client access log files,Logs,Program Files\Microsoft\Exchange Server\*\Logging/**10/*.log,lazy_ntfs,Highly dependent on Exchange configuration
-      854,Exchange Server Modified Compiled Files,Apps,Windows\Microsoft.NET\Framework*\v*\Temporary ASP.NET Files/**10/Regex:*.\b[a-zA-Z0-9_-]{8}\b.compiled,ntfs,Highly dependent on Exchange configuration
-      855,Exchange Server Modified Compiled Files,Apps,inetpub\wwwroot\aspnet_client/**10/Regex:*.\b[a-zA-Z0-9_-]{8}\b.compiled,ntfs,Highly dependent on Exchange configuration
-      856,Exchange Server Modified Compiled Files,Apps,inetpub\wwwroot\aspnet_client\system_web/**10/Regex:*.\b[a-zA-Z0-9_-]{8}\b.compiled,ntfs,Highly dependent on Exchange configuration
-      857,Exchange Server Modified Compiled Files,Apps,Program Files\Microsoft\Exchange Server\V15\FrontEnd\HttpProxy\owa\auth/**10/Regex:*.\b[a-zA-Z0-9_-]{8}\b.compiled,ntfs,Highly dependent on Exchange configuration
-      858,Exchange TransportRoles log files,Logs,Program Files\Microsoft\Exchange Server\*\TransportRoles\Logs/**10/*.log,lazy_ntfs,Highly dependent on Exchange configuration
-      859,Fences - Desktop Screenshots,Apps,Users\*\AppData\Roaming\Stardock\Fences\Backups,lazy_ntfs,Locates all screenshots taken automatically by the Fences application
-      860,FileZilla XML Log Files,Logs,Users\*\AppData\Roaming\FileZilla/*.xml*,lazy_ntfs,
-      861,FileZilla SQLite3 Log Files,Logs,Users\*\AppData\Roaming\FileZilla/*.sqlite3*,lazy_ntfs,
-      862,FileZilla Server XML Log Files,Logs,Users\*\AppData\Roaming\FileZilla Server/*.xml*,lazy_ntfs,
-      863,FileZilla Log Files,Logs,Program Files (x86)\FileZilla Server\Logs/*.log*,lazy_ntfs,
-      864,Free Commander - FreeCommander.ini,Apps,Users\*\AppData\Local\FreeCommanderXE\Settings/FreeCommander.ini,lazy_ntfs,Locates an .ini file that contains Shellbags-equivalent artifacts.
-      865,Free Commander - FreeCommander.ftp.ini,Apps,Users\*\AppData\Local\FreeCommanderXE\Settings/FreeCommander.ftp.ini,lazy_ntfs,Locates an .ini file that contains the file path to the FTP log for Free Commander.
-      866,Free Commander - FreeCommander.hist.ini,Apps,Users\*\AppData\Local\FreeCommanderXE\Settings/FreeCommander.hist.ini,lazy_ntfs,Locates an .ini file that contains Shellbags-equivalent artifacts that are sorted in temporal order from top to bottom for both left and right directory browsers.
-      867,Free Commander - FreeCommander.fav.xml,Apps,Users\*\AppData\Local\FreeCommanderXE\Settings/FreeCommander.fav.xml,lazy_ntfs,Locates an .xml file that contains favorited files/folder by the user.
-      868,Free Commander - Backup Settings,Apps,Users\*\AppData\Local\FreeCommanderXE\Settings\Bkp_Settings*/**10,lazy_ntfs,"Locates an exact copy of the above files which will have a timestamped folder name, i.e. Bkp_Settings-YYYY-MM-DD HH-MM-SS."
-      869,Free Commander - FTP Log,Apps,Users\*\AppData\Local\Temp/fc*.log,lazy_ntfs,Locates log file(s) that have a default naming convention of fc_ftplog_20210403 but can be modified by the user.
-      870,Free Commander - FTP Related Information,Apps,Users\*\AppData\Local\Temp\FreeCommander*/**10,lazy_ntfs,Locates a folder that may be named randomly that contains more FTP related information as well as .tmp files that are created while the user is traversing folders during an active FTP session. These files are deleted upon program exit.
-      871,FDM Database,App,Users\*\AppData\Local\Free Download Manager/**10/fdm.sqlite,lazy_ntfs,"fdm.sqlite shows Torrents, downloads, folder history, auth credentials and more. Will also pull fdm.sqlite in db_backup/"
-      872,FDM Backup Info,App,Users\*\AppData\Local\Free Download Manager\backup/backup.info,lazy_ntfs,"Backup info file - can change backup name from userdata.zip, so could give indication of file name"
-      873,FDM Database (userdata.zip),App,Users\*\AppData\Local\Free Download Manager\backup/userdata.zip,lazy_ntfs,fdm.sqlite can also appear in the backup folder in a compressed userdata.zip file
-      874,FreeFileSync,Apps,Users\*\AppData\Roaming\FreeFileSync\Logs,lazy_ntfs,Copies out all log files
-      875,Google Drive User Files,Apps,Users\*\Google Drive*/**10,lazy_ntfs,Google Drive Backup and Sync Application
-      876,Google Drive Metadata,Apps,Users\*\AppData\Local\Google\Drive/**10,lazy_ntfs,Google Drive Backup and Sync Application
-      877,Google File Stream Metadata,Apps,Users\*\AppData\Local\Google\DriveFS/**10,lazy_ntfs,Google Drive File Stream Application
-      878,HeidiSQL Backup files (*.sql),Apps,Users\*\AppData\Roaming\HeidiSQL\Backups\*,lazy_ntfs,
-      879,HeidiSQL (tabs.ini),Apps,Users\*\AppData\Roaming\HeidiSQL/tabs.ini,lazy_ntfs,
-      880,HexChat Chat Logs,Communications,Users\*\AppData\Roaming\HexChat\logs/**10,lazy_ntfs,
-      881,IceChat Chat Logs,Communications,Users\*\AppData\Local\IceChat Networks\IceChat\Logs/**10,lazy_ntfs,
-      882,IrfanView Configuration File,FileKnowledge,Users\*\AppData\Roaming\IrfanView/i_view32.ini,lazy_ntfs,
-      883,JDownloader 2.0 Download Lists,App,Users\*\AppData\Local\JDownloader 2.0\cfg/**10/downloadList*.zip,lazy_ntfs,"Zip folder which contains several files (00,00_00 and extraInfo) which list the download folder, the time it was created, the name of the download, origin URL, referral URL and more"
-      884,JDownloader 2.0 Link Collector,App,Users\*\AppData\Local\JDownloader 2.0\cfg/**10/linkcollector*.zip,lazy_ntfs,"Zip folder which contains several files (0X,0X_00 and extraInfo) which list the websites crawled for links, the referral URLs, timestamps and more"
-      885,JDownloader 2.0 General Settings,App,Users\*\AppData\Local\JDownloader 2.0\cfg/**10/org.jdownloader.settings.GeneralSettings.json,lazy_ntfs,General user config for JDownloader 2.0. Holds default download folder.
-      886,JDownloader 2.0 Link Grabber Settings,App,Users\*\AppData\Local\JDownloader 2.0\cfg/**10/org.jdownloader.gui.views.linkgrabber.addlinksdialog.LinkgrabberSettings.json,lazy_ntfs,Linkgrabber Settings for JDownloader 2.0. Holds latest download destination folder.
-      887,JDownloader 2.0 Proxy Settings,App,Users\*\AppData\Local\JDownloader 2.0\cfg/**10/org.jdownloader.settings.InternetConnectionSettings.customproxylist.json,lazy_ntfs,Proxy configuration for JDownloader 2.0
-      888,Java WebStart Cache User Level - Default,Communication,Users\*\AppData\Local\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
-      889,Java WebStart Cache User Level - IE Protected Mode,Communication,Users\*\AppData\LocalLow\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
-      890,Java WebStart Cache System level,Communication,Windows\System32\config\systemprofile\AppData\Local\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
-      891,Java WebStart Cache System level,Communication,Windows.old\Windows\System32\config\systemprofile\AppData\Local\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
-      892,Java WebStart Cache System level - IE Protected Mode,Communication,Windows\System32\config\systemprofile\AppData\LocalLow\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
-      893,Java WebStart Cache System level - IE Protected Mode,Communication,Windows.old\Windows\System32\config\systemprofile\AppData\LocalLow\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
-      894,Java WebStart Cache System level (SysWow64),Communication,Windows\SysWOW64\config\systemprofile\AppData\Local\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
-      895,Java WebStart Cache System level (SysWow64),Communication,Windows.old\Windows\SysWOW64\config\systemprofile\AppData\Local\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
-      896,Java WebStart Cache System level (SysWow64) - IE Protected Mode,Communication,Windows\SysWOW64\config\systemprofile\AppData\LocalLow\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
-      897,Java WebStart Cache System level (SysWow64) - IE Protected Mode,Communication,Windows.old\Windows\SysWOW64\config\systemprofile\AppData\LocalLow\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
-      898,Java WebStart Cache User Level - XP,Communications,Documents and Settings\*\Application Data\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
-      899,Kaseya Live Connect Logs (XP),ApplicationLogs,Documents and Settings\*\Application Data\Kaseya\Log/**10,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
-      900,Kaseya Live Connect Logs,ApplicationLogs,Users\*\AppData\Local\Kaseya\Log\KaseyaLiveConnect/**10,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
-      901,Kaseya Agent Endpoint Service Logs (XP),ApplicationLogs,Documents and Settings\All Users\Application Data\Kaseya\Log\Endpoint/**10,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
-      902,Kaseya Agent Endpoint Service Logs,ApplicationLogs,ProgramData\Kaseya\Log\Endpoint/**10,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
-      903,Kaseya Agent Service Log,ApplicationLogs,Program Files*\Kaseya\*/agentmon.log*,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
-      904,Kaseya Setup Log,ApplicationLogs,Users\*\AppData\Local\Temp/KASetup.log,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229011448
-      905,Kaseya Setup Log,ApplicationLogs,Windows\Temp/KASetup.log,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229011448
-      906,Kaseya Setup Log,ApplicationLogs,Windows.old\Windows\Temp/KASetup.log,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229011448
-      907,Kaseya Agent Edge Service Logs,ApplicationLogs,ProgramData\Kaseya\Log\KaseyaEdgeServices/**10,lazy_ntfs,https://www.huntress.com/blog/rapid-response-kaseya-vsa-mass-msp-ransomware-incident
-      908,LogMeIn ProgramData Logs,ApplicationLogs,ProgramData\LogMeIn\Logs/**10,lazy_ntfs,
-      909,LogMeIn Application Logs,ApplicationLogs,Users\*\AppData\Local\temp\LogMeInLogs/**10,lazy_ntfs,"Contains RemoteAssist (formerly GoToAssist), GoToMeeting, and other GoTo* logs"
-      910,Macrium Reflect,Apps,ProgramData\Macrium\Macrium Service\*,lazy_ntfs,Copies out all log files
-      911,Macrium Reflect,Apps,ProgramData\Macrium\Reflect\*,lazy_ntfs,Copies out the Reflect folder which contains many important logs
-      912,Macrium Reflect,Apps,ProgramData\Macrium\Reflect Launcher,lazy_ntfs,Copies out the Reflect folder which contains many important logs
-      913,Mattermost - Chat Logs,Apps,Users\*\AppData\Roaming\Mattermost\IndexedDB/**10,lazy_ntfs,Locates Mattermost logs and copies them
-      914,MediaMonkey - Media SQLite Database,Apps,Users\*\AppData\Roaming\MediaMonkey/MM.DB,lazy_ntfs,Locates SQLite DB that contains a complete enumeration of the user's media collection within MediaMonkey
-      915,MediaMonkey - MediaMonkey.ini,Apps,Users\*\AppData\Roaming\MediaMonkey/MediaMonkey.ini,lazy_ntfs,Locates .ini file which contains information about the user's MediaMonkey application instance
-      916,Microsoft OneNote - FullTextSearchIndex,Apps,Users\*\AppData\Local\Packages\Microsoft.Office.OneNote_8wekyb3d8bbwe\LocalState\AppData\Local\OneNote\*\FullTextSearchIndex,lazy_ntfs,Grabs database(s) comprising of each OneNote notebook's text content
-      917,Microsoft OneNote - RecentNotebooks_SeenURLs,Apps,Users\*\AppData\Local\Packages\Microsoft.Office.OneNote_8wekyb3d8bbwe\LocalState\AppData\Local\OneNote\Notifications/RecentNotebooks_SeenURLs,lazy_ntfs,Grabs a file that appears to record recently seen OneNote notebooks
-      918,Microsoft OneNote - AccessibilityCheckerIndex,Apps,Users\*\AppData\Local\Packages\Microsoft.Office.OneNote_8wekyb3d8bbwe\LocalState\AppData\Local\OneNote\16.0\AccessibilityCheckerIndex,lazy_ntfs,Grabs database(s) comprising of each OneNote notebook's version sync error history
-      919,Microsoft OneNote - User NoteTags,Apps,Users\*\AppData\Local\Packages\Microsoft.Office.OneNote_8wekyb3d8bbwe\LocalState\AppData\Local\OneNote\16.0\NoteTags/*LiveId.db,lazy_ntfs,Grabs a database that stores the user specified tags within OneNote to be used application-wide
-      920,Microsoft OneNote - RecentSearches,Apps,Users\*\AppData\Local\Packages\Microsoft.Office.OneNote_8wekyb3d8bbwe\LocalState\AppData\Local\OneNote\16.0\RecentSearches/RecentSearches.db,lazy_ntfs,Grabs a database that stores the user's recent searches within OneNote
-      921,"Microsoft Sticky Notes - Windows 7, 8, and 10 version 1511 and earlier",Apps,Users\*\AppData\Roaming\Microsoft\StickyNotes/StickyNotes.snt,lazy_ntfs,
-      922,Microsoft Sticky Notes - 1607 and later,Apps,Users\*\AppData\Local\Packages\Microsoft.MicrosoftStickyNotes*\LocalState/plum.sqlite*,lazy_ntfs,
-      923,Microsoft Teams IndexedDB Cache,Apps,Users\*\AppData\Roaming\Microsoft\Teams\IndexedDB\https_teams.microsoft.com_0.indexeddb.leveldb/**10,lazy_ntfs,"LevelDB database which can contain inbound/outbound chat messages, call history and more"
-      924,Microsoft Teams Local Storage Cache,Apps,Users\*\AppData\Roaming\Microsoft\Teams\Local Storage\leveldb/**10,lazy_ntfs,"LevelDB database which can contain meeting history, file transfer logs and more"
-      925,Microsoft Teams Cache,Apps,Users\*\AppData\Roaming\Microsoft\Teams\Cache/**10,lazy_ntfs,Chromium cache which can be viewed with Nirsoft's ChromeCacheView
-      926,Microsoft Teams Config,Apps,Users\*\AppData\Roaming\Microsoft\Teams/desktop-config.json,lazy_ntfs,JSON config file for Teams
-      927,Microsoft To Do - SQLite Database of To Do tasks,Apps,Users\*\AppData\Local\Packages\Microsoft.Todos_8wekyb3d8bbwe\LocalState\AccountsRoot\*/todosqlite.db*,lazy_ntfs,
-      928,Microsoft To Do - User Avatar,Apps,Users\*\AppData\Local\Packages\Microsoft.Todos_8wekyb3d8bbwe\LocalState\AccountsRoot\4c444a17ebb042fb92df97d00d1c802a\avatars/UserAvatar.jpg,lazy_ntfs,
-      929,Midnight Commander -- All Configuation Files,Apps,Users\*\Midnight Commander\*,lazy_ntfs,Locates folder where all configuration files reside
-      930,Multi Commander - Application Folder,Apps,Users\*\AppData\Local\MultiCommander*/**10,lazy_ntfs,Locates the contents of the Application folder.
-      931,Multi Commander - Config Folder,Apps,Users\*\AppData\Roaming\MultiCommander*\Config/**10,lazy_ntfs,Locates the contents of the Config folder.
-      932,Multi Commander - Log Folder,Apps,Users\*\AppData\Roaming\MultiCommander*\Logs/**10,lazy_ntfs,Locates log file(s) related to user activity within Multi Commander.
-      933,Multi Commander - UserData Folder,Apps,Users\*\AppData\Roaming\MultiCommander*\UserData/**10,lazy_ntfs,Locates the contents of the UserData folder.
-      934,Multi Commander - Log File,Apps,Users\*\AppData\Roaming\MultiCommander*/**10/*MultiCommander.log,lazy_ntfs,Locates log file(s) associated with Milti Commander. Commonly in YYYY-MM-DD (numbers)-MultiCommander.log naming convention.
-      935,Notepad++ Unsaved Edits,Text Editor,Users\*\AppData\Roaming\Notepad++\backup/**10,lazy_ntfs,Locates non-saved Notepad++ files and copies them.
-      936,Notepad++ Config,Text Editor,Users\*\AppData\Roaming\Notepad++/config.xml,lazy_ntfs,"Retrieves config.xml which contains recently searched terms, replaced terms and recently opened documents"
-      937,One Commander - All Configuration Files,Apps,Users\*\OneCommander\*,lazy_ntfs,Locates folder where all configuration files reside
-      938,One Commander - Other Configuration Files,Apps,Users\*\AppData\Local\Apps\2.0\*\*\onec*/**10,lazy_ntfs,Locates folder where all configuration files reside
-      939,OneDrive User Files,Apps,Users\*\OneDrive*/**10,lazy_ntfs,Caution -- This target will collect OneDrive contents from the local drive AND on-demand cloud files. Ensure your scope of authority permits cloud collections before use
-      940,OneDrive Metadata Logs,Apps,Users\*\AppData\Local\Microsoft\OneDrive\logs/**10,lazy_ntfs,
-      941,OneDrive Metadata Settings,Apps,Users\*\AppData\Local\Microsoft\OneDrive\settings/**10,lazy_ntfs,
-      942,OpenSSH Config File,Apps,Users\*\.ssh/config,lazy_ntfs,"Config file can hold usernames, IP addresses and ports, key locations and configured shortcuts for servers e.g. ssh web-server"
-      943,OpenSSH Known Hosts,Apps,Users\*\.ssh/known_hosts,lazy_ntfs,"Known hosts file can hold a list of connected FQDNs/IP Addresses and ports if they are non-default, as well as public key fingerprints"
-      944,OpenSSH Public Keys,Apps,Users\*\.ssh/*.pub,lazy_ntfs,"Gets all public keys (*.pub). It is more difficult to find private keys as they typically do not have a file extension. However, the .pub files should be able to help find the private keys as they are typically named the same."
-      945,OpenSSH Default Private Key,Apps,Users\*\.ssh/id_rsa,lazy_ntfs,Default name for an auto-generated SSH private key
-      946,OpenSSH Server Config File,Apps,ProgramData\ssh/sshd_config,lazy_ntfs,Config file can hold information on allowed/denied users
-      947,OpenSSH Server Logs,Apps,ProgramData\ssh\logs/*,lazy_ntfs,OpenSSH server logs
-      948,OpenSSH Host ECDSA Key,Apps,ProgramData\ssh/ssh_host_ecdsa_key,lazy_ntfs,Retrieves the host ECDSA key
-      949,OpenSSH Host ED25519 Key,Apps,ProgramData\ssh/ssh_host_ed25519_key,lazy_ntfs,Retrieves the host ED25519 key
-      950,OpenSSH Host DSA Key,Apps,ProgramData\ssh/ssh_host_dsa_key,lazy_ntfs,Retrieves the host DSA key
-      951,OpenSSH Host RSA Key,Apps,ProgramData\ssh/ssh_host_rsa_key,lazy_ntfs,Retrieves the host RSA key
-      952,OpenSSH User Authorized Keys,Apps,Users\*\.ssh/authorized_keys,lazy_ntfs,Retrieves the user's authorised public keys
-      953,OpenSSH User Authorized Keys 2,Apps,Users\*\.ssh/authorized_keys2,lazy_ntfs,Retrieves the user's authorised public keys from the second file
-      954,OpenSSH Authorized Administrator Keys,Apps,ProgramData\ssh/administrators_authorized_keys,lazy_ntfs,Retrieves the administrator group's authorised public keys
-      955,OpenVPN Client Config,ApplicationLogs,Users\*\OpenVPN\config/**10,lazy_ntfs,Contains OpenVPN Configs (Profiles)
-      956,OpenVPN Client Config,ApplicationLogs,Program Files*\OpenVPN\config/**10,lazy_ntfs,Contains OpenVPN Configs(Profiles)
-      957,OpenVPN Client Config,ApplicationLogs,Users\*\OpenVPN\log/*.log,lazy_ntfs,Contains OpenVPN Logs for each Config(Profile)
-      958,PST XP,Communications,Documents and Settings\*\Local Settings\Application Data\Microsoft\Outlook/*.pst,lazy_ntfs,
-      959,OST XP,Communications,Documents and Settings\*\Local Settings\Application Data\Microsoft\Outlook/*.ost,lazy_ntfs,
-      960,PST,Communications,Users\*\AppData\Local\Microsoft\Outlook/*.pst,lazy_ntfs,
-      961,OST,Communications,Users\*\AppData\Local\Microsoft\Outlook/*.ost,lazy_ntfs,
-      962,PST (2013 or 2016),Communications,Users\*\Documents\Outlook Files/*.pst,lazy_ntfs,
-      963,OST (2013 or 2016),Communications,Users\*\Documents\Outlook Files/*.ost,lazy_ntfs,
-      964,PeaZip Configuration Files,FileKnowledge,Users\*\AppData\Roaming\PeaZip/**10,lazy_ntfs,
-      965,ProtonVPN - Connection Logs,ApplicationLogs,Users\*\AppData\Local\ProtonVPN\Logs,lazy_ntfs,Locates ProtonVPN connection logs.
-      966,Q-Dir - .ini File,Apps,Users\*\AppData\Roaming\Q-Dir/Q-Dir.ini,lazy_ntfs,Locates .ini file associated with Q-Dir which stores useful user activity information.
-      967,Q-Dir - .qdr file,Apps,Users\*\AppData\Roaming\Q-Dir/start.qdr,lazy_ntfs,"Locates .qdr file associated with Q-Dir which stores useful user activity information, including the last 4 folders opened (encoded, unfortunately)."
-      968,QFinderPro,Apps,Users\*\AppData\Local\QNAP\QfinderPro,lazy_ntfs,Locates a JSON file that provides network location information for any QNAP connected devices.
-      969,Radmin Server 32bit Log,ApplicationLogs,Windows\SysWOW64\rserver30/Radm_log.htm,lazy_ntfs,Contains Application Log entries such as service start and incomming connections.
-      970,Radmin Server 64bit Log,ApplicationLogs,Windows\System32\rserver30/Radm_log.htm,lazy_ntfs,Contains Application Log entries such as service start and incomming connections.
-      971,Radmin Server 32bit Chats,ApplicationLogs,Windows\SysWOW64\rserver30\CHATLOGS\*/*.htm,lazy_ntfs,Previous chat logs
-      972,Radmin Server 64bit Chats,ApplicationLogs,Windows\System32\rserver30\CHATLOGS\*/*.htm,lazy_ntfs,Previous chat logs
-      973,Radmin Viewer Chats,ApplicationLogs,Users\*\Documents\ChatLogs\*/*.htm,lazy_ntfs,Previous chat logs
-      974,ScreenConnect Session Database,ApplicationLogs,Program Files*\ScreenConnect\App_Data/Session.db,lazy_ntfs,SQLite database with session information
-      975,ScreenConnect Session Database,ApplicationLogs,Program Files*\ScreenConnect\App_Data/User.xml,lazy_ntfs,Contains each user's last authenticated time
-      976,ScreenConnect User Config,ApplicationLogs,ProgramData\ScreenConnect Client*/user.config,lazy_ntfs,Contains server domain and IP info
-      977,ShareX,Apps,Users\*\Documents\ShareX/**10,lazy_ntfs,Locates and captures all files within the default ShareX folder path
-      978,Signal Attachments cache,Communications,Users\*\AppData\Roaming\Signal\attachments.noindex/**10,lazy_ntfs,Profile pictures (and possibly attachments) for users who this individual has as contacts or has communicated with
-      979,Signal Logs,Communications,Users\*\AppData\Roaming\Signal\logs/**10,lazy_ntfs,"Logs for Signal. Most recent has the extension .log while old ones will have extension .log.0, .log.1 etc."
-      980,Signal config.json,Communications,Users\*\AppData\Roaming\Signal/config.json,lazy_ntfs,config.json holds the db.sqlite SQLCipher raw key
-      981,Signal Database,Communications,Users\*\AppData\Roaming\Signal\sql/db.sqlite,lazy_ntfs,"Stores attachment details, conversations, messages, and more"
-      982,main.db (App <v12),Communications,Users\*\AppData\Local\Packages\Microsoft.SkypeApp_*\LocalState\*/main.db,lazy_ntfs,
-      983,skype.db (App +v12),Communications,Users\*\AppData\Local\Packages\Microsoft.SkypeApp_*\LocalState\*/skype.db,lazy_ntfs,
-      984,main.db XP,Communications,Documents and Settings\*\Application Data\Skype\*/main.db,lazy_ntfs,
-      985,main.db Win7+,Communications,Users\*\AppData\Roaming\Skype\*/main.db,lazy_ntfs,
-      986,s4l-[username].db (App +v8),Communications,Users\*\AppData\Local\Packages\Microsoft.SkypeApp_*\LocalState/s4l-*.db,lazy_ntfs,
-      987,leveldb (Skype for Desktop +v8),Communications,Users\*\AppData\Roaming\Microsoft\Skype for Desktop\IndexedDB\*.leveldb/**10,lazy_ntfs,
-      988,Skype for Destkop v8+ Chromium Cache,Communications,Users\*\AppData\Roaming\Microsoft\Skype for Desktop\Cache/**10,lazy_ntfs,Can be viewed with Nirsoft's ChromeCacheView
-      989,Slack - Chat Logs,Apps,Users\*\AppData\Roaming\Slack\IndexedDB/**10,lazy_ntfs,Locates Slack logs and copies them
-      990,Snagit - Captures,Apps,Users\*\AppData\Local\TechSmith\Snagit\DataStore,lazy_ntfs,Locates all Snagit captures
-      991,SpeedCommander - .ini File,Apps,Users\*\AppData\Roaming\SpeedProject\SpeedCommander 19\*,lazy_ntfs,Locates folder where all configuration files reside
-      992,SublimeText 2/3 Auto Save Session,Text Editor,Users\*\AppData\Roaming\Sublime Text*\Settings/Session.sublime_session,lazy_ntfs,Sublime Text 2/3 stores unsaved (temporary) files and its content in its Session.sublime_session file
-      993,SugarSync Log File,Apps,Users\*\AppData\Local\SugarSync/sc1.log,lazy_ntfs,Locates a log file the gives a play-by-play of what the user synced when.
-      994,SugarSync - Shared Folders (Default Location),Apps,Users\*\Documents\SugarSync Shared Folders/**10,lazy_ntfs,
-      995,SugarSync - My SugarSync (Default Location),Apps,Users\*\Documents\My SugarSync/**10,lazy_ntfs,
-      996,SumatraPDF Settings - SessionData,FileKnowledge,Users\*\AppData\Local\SumatraPDF/SumatraPDF-settings.txt,lazy_ntfs,Settings file which contains information about previous user session
-      997,SumatraPDF Cache,FileKnowledge,Users\*\AppData\Local\SumatraPDF\sumatrapdfcache,lazy_ntfs,Folder contains a PNG snapshot of each PDF file the user had open at the time of last application close
-      998,Tablacus Explorer - remember.xml,Logs,Users\*\AppData\Local\Temp\*\config/**10/remember.xml,lazy_ntfs,
-      999,Tablacus Explorer - window.xml,Logs,Users\*\AppData\Local\Temp\*\config/**10/window.xml,lazy_ntfs,
-      1000,Tablacus Explorer - window1.xml,Logs,Users\*\AppData\Local\Temp\*\config/**10/window1.xml,lazy_ntfs,
-      1001,TeamViewer Connection Logs,Communications,Program Files*\TeamViewer/connections*.txt,lazy_ntfs,Includes connections_incoming.txt and connections.txt
-      1002,TeamViewer Application Logs,ApplicationLogs,Program Files*\TeamViewer/TeamViewer*_Logfile*,lazy_ntfs,Includes TeamViewer<version>_Logfile.log and TeamViewer<version>_Logfile_OLD.log
-      1003,TeamViewer Configuration Files,ApplicationLogs,Users\*\AppData\Roaming\TeamViewer\MRU\RemoteSupport/**10,lazy_ntfs,Includes miscellaneous config files
-      1004,Telegram app folder,Apps,Users\*\AppData\Roaming\Telegram Desktop/**10,lazy_ntfs,Telegram app folder structure
-      1005,Telegram downloaded files,Apps,Users\*\Downloads\Telegram Desktop/**10,lazy_ntfs,Chat Attachments
-      1006,TeraCopy,TeraCopy,Users\*\AppData\Roaming\TeraCopy/**10,lazy_ntfs,
-      1007,Mozilla Thunderbird Install Date,Apps,Users\*\AppData\Roaming\Thunderbird\Crash Reports/InstallTime*,lazy_ntfs,Holds install time in Unix Seconds timestamp
-      1008,Mozilla Thunderbird Profiles.ini,Apps,Users\*\AppData\Roaming\Thunderbird/profiles.ini,lazy_ntfs,Profiles list - can hold references to other profiles held elsewhere on the device
-      1009,Mozilla Thunderbird prefs.js,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*/prefs.js,lazy_ntfs,User Preferences for that profile
-      1010,Mozilla Thunderbird Global Messages Database,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*/global-messages-db.sqlite,lazy_ntfs,"Holds list of contacts, emails, and other potentially useful artifacts"
-      1011,Mozilla Thunderbird logins.json,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*/logins.json,lazy_ntfs,"Holds last time online login used, last time password changed, hostname, HTTP(s) URL and more"
-      1012,Mozilla Thunderbird places.sqlite,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*/places.sqlite,lazy_ntfs,"Holds history for Thunderbird - as it contains portions of Firefox embedded, it can be used to visit websites too"
-      1013,Mozilla Thunderbird ImapMail INBOX,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*\ImapMail/**10/INBOX,lazy_ntfs,"Holds all email files with headers, content etc"
-      1014,Mozilla Thunderbird Mail INBOX,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*\Mail/**10/INBOX,lazy_ntfs,"Holds all email files with headers, content etc"
-      1015,Mozilla Thunderbird Calendar Data,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*\calendar-data/local.sqlite,lazy_ntfs,Holds local calendar data
-      1016,Mozilla Thunderbird Attachments,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*\Attachments\*,lazy_ntfs,Holds attachments
-      1017,Mozilla Thunderbird Address Book,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*/abook.sqlite,lazy_ntfs,Holds local address book
-      1018,Total Commander - .ini File,Apps,Users\*\AppData\Roaming\GHISLER/wincmd.ini,lazy_ntfs,Locates .ini file associated with Total Commander which stores useful user activity information.
-      1019,Total Commander - Log File,Apps,**10/totalcmd.log,lazy_ntfs,Locates log file associated with Total Commander. NOTE: this log file is NOT enabled by default and the filename can be modified.
-      1020,Total Commander - Temp Files Created During Folder Traversal,Apps,Users\*\AppData\Local\Temp/FTP*.tmp,lazy_ntfs,Locates .tmp files which are created during the user's folder traversal and provide insight into contents of each folder traversed.
-      1021,Total Commander - FTP .ini File,Apps,Users\*\AppData\Roaming\GHISLER/wcx_ftp.ini,lazy_ntfs,Locates .ini file associated with Total Commander which stores useful FTP information.
-      1022,Total Commander - File Tree,Apps,Users\*\AppData\Local\GHISLER/treeinfo*.wc,lazy_ntfs,Locates a file that contains an exhaustive file tree of a user's file system.
-      1023,Total Commander - FTP Logs,Apps,Users\*\AppData\Local\Temp/tcftp.log,lazy_ntfs,Locates a file that contains the Total Commander FTP logs.
-      1024,TreeSize - ScanHistory.XML,Apps,Users\*\AppData\Roaming\JAM Software\TreeSize/scanhistory.xml,lazy_ntfs,Locates XML file that provides a list of previously scanned directories by the user.
-      1025,VLC Recently Opened Files,Apps,Users\*\AppData\Roaming\vlc/vlc-qt-interface.ini,lazy_ntfs,Configuration file for VLC. Holds [RecentsMRL] key which lists recently opened files as well as sometimes retaining timestamps for file opening
-      1026,VLC Recorded Files,Apps,Users\*\Videos/vlc-*.avi,lazy_ntfs,"Recorded files in VLC. Sometimes the Record button may be pressed instead of Play by suspects, which can record them watching content with VLC"
-      1027,VMware - Virtual Machine Inventory,Apps,Users\*\AppData\Roaming\VMware,lazy_ntfs,Locates an inventory of all Virtual Machines on disk.
-      1028,VMware (Fusion/Workstation/Server/Player),Memory,**10/*.vmem,lazy_ntfs,Captures all raw memory from VMware virtual machines.
-      1029,VMware (Fusion/Workstation/Server/Player),Memory,**10/*.vmss,lazy_ntfs,Captures all memory images from VMware virtual machines.
-      1030,VMware (Fusion/Workstation/Server/Player),Memory,**10/*.vmsn,lazy_ntfs,Captures all memory images from VMware virtual machines.
-      1031,RealVNC Log,ApplicationLogs,Users\*\AppData\Local\RealVNC/vncserver.log,lazy_ntfs,https://www.realvnc.com/en/connect/docs/logging.html#logging
-      1032,Viber Config Database,Apps,Users\*\AppData\Roaming\ViberPC/config.db,lazy_ntfs,Configuration file for Viber
-      1033,Viber Users Data Database,Apps,Users\*\AppData\Roaming\ViberPC\*/viber.db,lazy_ntfs,"Viber data for that user, containing Calls, Chat Messages, Contacts and more"
-      1034,Viber Users Avatars Cache,Apps,Users\*\AppData\Roaming\ViberPC\*\Avatars,lazy_ntfs,Cache of the Avatars for other Viber users
-      1035,Viber Users Backgrounds Cache,Apps,Users\*\AppData\Roaming\ViberPC\*\Backgrounds,lazy_ntfs,Store of the backgrounds
-      1036,Viber Users Thumbnails Cache,Apps,Users\*\AppData\Roaming\ViberPC\*\Thumbnails,lazy_ntfs,Cache of the thumbnails for uploaded/downloaded images
-      1037,VirtualBox VM configs,Apps,**10/*.vbox,lazy_ntfs,Locates all .vbox VM configuration files on disk
-      1038,VirtualBox VM backup configs,Apps,**10/*.vbox-prev,lazy_ntfs,Locates all backup .vbox VM configuration files on disk
-      1039,VirtualBox Logs,Apps,**10/VBox.log,lazy_ntfs,Locates all VBox.log files on disk
-      1040,VirtualBox Backup Logs,Apps,**10/VBox.log.*,lazy_ntfs,Locates all backup VBox.log files on disk - these can show historic VM usage
-      1041,VirtualBox Hardening Logs,Apps,**10/VBoxHardening.log,lazy_ntfs,Locates all VBoxHardening.log files on disk
-      1042,VirtualBox,Memory,**10/*.sav,lazy_ntfs,Captures all partial memory images from VirtualBox.
-      1043,WhatsApp Cache,Apps,Users\*\AppData\Roaming\WhatsApp\Cache,lazy_ntfs,"Copies the cache of WhatsApp. Can be opened with Chrome Cache Viewer for viewing embedded thumbnails and other image artefacts, as well as extracting .enc message files or other files"
-      1044,WhatsApp Local Storage,Apps,Users\*\AppData\Roaming\WhatsApp\Local Storage\leveldb,lazy_ntfs,"Copies the Local Storage leveldb of WhatsApp. Contains phone model and name of user, plus encrypted base64 strings which can be viewed with LevelDBDumper"
-      1045,WinSCP (.ini file),Logs,**10/WinSCP.ini,lazy_ntfs,
-      1046,Windows Your Phone - All Databases,Apps,Users\*\AppData\Local\Packages\Microsoft.YourPhone_8wekyb3d8bbwe\LocalCache\Indexed/**10,lazy_ntfs,Locates all Your Phone database files
-      1047,XYplorer - .ini file,Apps,Users\*\AppData\Roaming\XYplorer/XYplorer.ini,lazy_ntfs,Locates .ini file associated with Total Commander which stores useful user activity information.
-      1048,XYplorer - .ini file for each respective pane,Apps,Users\*\AppData\Roaming\XYplorer\Panes\*/**10/pane.ini,lazy_ntfs,Locates the .ini file for the left and right pane.
-      1049,XYplorer - AutoBackup folder,Apps,Users\*\AppData\Roaming\XYplorer\AutoBackup/**10,lazy_ntfs,Locates the AutoBackup folder and copies its contents.
-      1050,XYplorer - .dat files,Apps,Users\*\AppData\Roaming\XYplorer/**10/*.dat,lazy_ntfs,"Locates the .dat files in the XYplorer's AppData folder, all of which are updated upon program's exit."
-      1051,iTunes Backup Folder,Communications,Users\*\AppData\Roaming\Apple\Mobilesync\Backup/**10,lazy_ntfs,
-      1052,iTunes Backup Folder,Communications,Users\*\AppData\Roaming\Apple Computer\Mobilesync\Backup/**10,lazy_ntfs,
-      1053,iTunes Backup Folder - iOS13,Communications,Users\*\Apple\Mobilesync\Backup\*,lazy_ntfs,
-      1054,mIRC Chat Logs (Vista+),Communications,Users\*\AppData\Roaming\mIRC\logs/**10,lazy_ntfs,
-      1055,mIRC Chat Logs (2000/XP),Communications,Documents and Settings\*\Application Data\mIRC\logs/**10,lazy_ntfs,
-      1056,mRemoteNG Logs,Communications,Users\*\AppData\Roaming\mRemoteNG/mRemoteNG.log,lazy_ntfs,Contains log entries for remote connections
-      1057,mRemoteNG Connection Configuration and Backups,Communications,Users\*\AppData\Roaming\mRemoteNG/confCons.xml*,lazy_ntfs,"Contains connection config, often with obfuscated credentials"
-      1058,mRemoteNG Program Settings,Communications,Users\*\AppData\*\mRemoteNG/**10/user.config,lazy_ntfs,Contains user-specific program settings
+      806,AnyDesk Logs - ProgramData - connection_trace.txt,Communications,ProgramData\AnyDesk/connection_trace.txt,lazy_ntfs,Collects the connection trace log from ProgramData
+      807,AnyDesk Logs - System User Account,Communications,Windows\SysWOW64\config\systemprofile\AppData\Roaming\AnyDesk\*,lazy_ntfs,Collects the logs associated with the System user account
+      808,Aspera Client Logs,FileDownload,Users\*\AppData\Local\Aspera\Aspera Connect\var\log/**10/*.log,lazy_ntfs,
+      809,Aspera Server Logs,FileDownload,Users\*\.aspera\connect\var\log/**10/*.log,lazy_ntfs,
+      810,Box User Files,Apps,Users\*\Box/**10,lazy_ntfs,Caution! This target will collect Box Drive contents from the local drive AND on-demand cloud files. Ensure your scope of authority permits cloud collections before use
+      811,Box Sync User Files,Apps,Users\*\Box Sync/**10,lazy_ntfs,
+      812,Box Drive Application Metadata,Apps,Users\*\AppData\Local\Box\Box\*/**10,lazy_ntfs,
+      813,Box Sync Application Metadata,Apps,Users\*\AppData\Local\Box Sync\*/**10,lazy_ntfs,
+      814,Cisco Jabber Database,Communications,Users\*\AppData\Local\Cisco\Unified Communications\Jabber\CSF\History/*.db,lazy_ntfs,The Cisco Jabber process needs to be killed before database can be copied.
+      815,ClipboardMaster - Clipboard History - Text,Apps,Users\*\AppData\Roaming\Jumping Bytes\ClipboardMaster/Clipboard.clm4,lazy_ntfs,Locates the user’s clipboard history (text) for ClipboardMaster
+      816,ClipboardMaster - Clipboard History - Images,Apps,Users\*\AppData\Roaming\Jumping Bytes\ClipboardMaster\pics/**10,lazy_ntfs,Locates the user’s clipboard history (images) for ClipboardMaster
+      817,ClipboardMaster - Clipboard History - Backups,Apps,Users\*\AppData\Roaming\Jumping Bytes\ClipboardMaster/Clipboard.clm4.ba*,lazy_ntfs,Locates the user’s clipboard history (backups) for ClipboardMaster
+      818,Confluence Wiki Log Files,Logs,Atlassian\Application Data\Confluence\logs/*.log*,lazy_ntfs,
+      819,Confluence Wiki Log Files,Logs,Program Files\Atlassian\Confluence\logs/*.log,lazy_ntfs,
+      820,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data\MRU/rename_folders.osd,lazy_ntfs,Locates .osd file which contains names of folders that have been renamed manually by the user.
+      821,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data\MRU/rename_files.osd,lazy_ntfs,Locates .osd file which contains names of files that have been renamed manually by the user.
+      822,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data\MRU/find_contains.osd,lazy_ntfs,Locates .osd file which contains search queries initiated by the user during a search for files with contents related to the search query.
+      823,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data\MRU/find_name.osd,lazy_ntfs,Locates .osd file which contains search queries initiated by the user during a search for files with a filename related to the search query.
+      824,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data\MRU/find_path.osd,lazy_ntfs,Locates .osd file which contains file paths related to user activity - not exactly sure how these are generated at this time.
+      825,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data/recent.osd,lazy_ntfs,Locates .osd file which contains file paths related to recent user activity. Effectively the DOpus Shellbags-equivalent. Appears to be for last 10 folder visited within the Lister.
+      826,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\State Data/backupconfig.osd,lazy_ntfs,Locates .osd file which contains file paths related to the location of the backup settings files for Directory Opus.
+      827,Directory Opus,Apps,Users\*\AppData\Local\GPSoftware\Directory Opus\Thumbnail Cache\*,lazy_ntfs,Locates .osd file which contains file paths related to the location of the backup settings files for Directory Opus.
+      828,Directory Opus,Apps,Users\*\AppData\Roaming\GPSoftware\Directory Opus\Logs\*,lazy_ntfs,Locates .txt files that will be named with the IP address of the FTP server Directory Opus was used to connect to. All-activity.txt will simply be a combination of all other .txt files present in this directory.
+      829,Discord Cache Files,Communications,Users\*\AppData\Roaming\discord\cache/**10,lazy_ntfs,Gets cached data from Discord app
+      830,Discord Local Storage LevelDB Files,Communications,Users\*\AppData\Roaming\discord\local storage\leveldb/**10,lazy_ntfs,Gets LevelDB database from Discord app
+      831,Double Commander - history.xml,Apps,Users\*\AppData\Roaming\doublecmd/history.xml,lazy_ntfs,Locates an .xml file that contains Shellbags-equivalent artifacts that are sorted in temporal order from bottom to top.
+      832,Double Commander - doublecmd.xml,Apps,Users\*\AppData\Roaming\doublecmd/doublecmd.xml,lazy_ntfs,Locates an .xml file that contains Shellbags-equivalent artifacts that are sorted in temporal order from top to bottom.
+      833,Double Commander - FTP Log,Apps,Users\*\AppData\Roaming\doublecmd/doublecmd*.log,lazy_ntfs,Locates log files that'll be named with the following naming convention: doublecmd_2021-04-03.log.
+      834,Dropbox User Files,Apps,Users\*\Dropbox*/**10,lazy_ntfs,
+      835,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox/info.json,lazy_ntfs,Getting individual files because folder may contain very large extraneous files
+      836,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*/filecache.db*,lazy_ntfs,Getting individual files because folder may contain very large extraneous files
+      837,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*/config.dbx,lazy_ntfs,Getting individual files because folder may contain very large extraneous files
+      838,Windows Protect Folder,FileSystem,Users\*\AppData\Roaming\Microsoft\Protect\*/**10,lazy_ntfs,Required for offline decryption of Dropbox databases
+      839,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*/home.db,lazy_ntfs,SQlite database which appears to keep track of the user's recent Dropbox activity
+      840,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*/icon.db,lazy_ntfs,SQLite database which appears to keep track of icons in the user's Drobox sync history which can give an indication as to which files and folders are present
+      841,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*/sync_history.db,lazy_ntfs,SQLite database which appears to keep track of the user's Drobox sync history
+      842,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*\sync/nucleus.sqlite3*,lazy_ntfs,SQLite database which appears to contain a table for deleted files
+      843,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox/host.db,lazy_ntfs,"SQLite database which contains the local path of the user's Dropbox folder encoded in BASE64. Decode each line separately, not together."
+      844,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox/host.dbx,lazy_ntfs,"SQLite database which contains the local path of the user's Dropbox folder encoded in BASE64. Decode each line separately, not together."
+      845,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*\sync/aggregation.dbx,lazy_ntfs,SQLite database which appears to contain snapshot table of the user's Dropbox contents in JSON with timestamps in UNIX Epoch
+      846,Dropbox Metadata,Apps,Users\*\AppData\Local\Dropbox\*/avatarcache.db,lazy_ntfs,SQLite database which appears to contain the ID's of account(s) on the user's system where Dropbox is installed
+      847,EF Commander - .ini File,Apps,Users\*\AppData\Roaming\EFSoftware\*,lazy_ntfs,Locates folder where all configuration files reside
+      848,Evernote Accounts,App,Users\*\AppData\Local\Evernote\Evernote\Databases/**10/.accounts,lazy_ntfs,Holds username and email of accounts
+      849,Evernote Notebooks,App,Users\*\AppData\Local\Evernote\Evernote\Databases/**10/*.exb,lazy_ntfs,SQLite Database of the notes
+      850,Evernote Notebook Snippets,App,Users\*\AppData\Local\Evernote\Evernote\Databases/**10/*.exb.snippets,lazy_ntfs,Note 'Snippets'
+      851,Everything (VoidTools),FileSystem,Users\*\AppData\Local\Everything/Everything.db,lazy_ntfs,Copies out Everything.db
+      852,Everything (VoidTools) - Run History,FileSystem,Users\*\AppData\Roaming\Everything/Run History.csv,lazy_ntfs,Copies out a CSV containing the history of items ran from Everything's search results window
+      853,Everything (VoidTools) - Search History,FileSystem,Users\*\AppData\Roaming\Everything/Search History.csv,lazy_ntfs,Copies out a CSV containing the history of items searched for within Everything with timestamps
+      854,Exchange client access log files,Logs,Program Files\Microsoft\Exchange Server\*\Logging/**10/*.log,lazy_ntfs,Highly dependent on Exchange configuration
+      855,Exchange Server Modified Compiled Files,Apps,Windows\Microsoft.NET\Framework*\v*\Temporary ASP.NET Files/**10/Regex:*.\b[a-zA-Z0-9_-]{8}\b.compiled,ntfs,Highly dependent on Exchange configuration
+      856,Exchange Server Modified Compiled Files,Apps,inetpub\wwwroot\aspnet_client/**10/Regex:*.\b[a-zA-Z0-9_-]{8}\b.compiled,ntfs,Highly dependent on Exchange configuration
+      857,Exchange Server Modified Compiled Files,Apps,inetpub\wwwroot\aspnet_client\system_web/**10/Regex:*.\b[a-zA-Z0-9_-]{8}\b.compiled,ntfs,Highly dependent on Exchange configuration
+      858,Exchange Server Modified Compiled Files,Apps,Program Files\Microsoft\Exchange Server\V15\FrontEnd\HttpProxy\owa\auth/**10/Regex:*.\b[a-zA-Z0-9_-]{8}\b.compiled,ntfs,Highly dependent on Exchange configuration
+      859,Exchange TransportRoles log files,Logs,Program Files\Microsoft\Exchange Server\*\TransportRoles\Logs/**10/*.log,lazy_ntfs,Highly dependent on Exchange configuration
+      860,Fences - Desktop Screenshots,Apps,Users\*\AppData\Roaming\Stardock\Fences\Backups,lazy_ntfs,Locates all screenshots taken automatically by the Fences application
+      861,FileZilla XML Log Files,Logs,Users\*\AppData\Roaming\FileZilla/*.xml*,lazy_ntfs,
+      862,FileZilla SQLite3 Log Files,Logs,Users\*\AppData\Roaming\FileZilla/*.sqlite3*,lazy_ntfs,
+      863,FileZilla Server XML Log Files,Logs,Users\*\AppData\Roaming\FileZilla Server/*.xml*,lazy_ntfs,
+      864,FileZilla Log Files,Logs,Program Files (x86)\FileZilla Server\Logs/*.log*,lazy_ntfs,
+      865,Free Commander - FreeCommander.ini,Apps,Users\*\AppData\Local\FreeCommanderXE\Settings/FreeCommander.ini,lazy_ntfs,Locates an .ini file that contains Shellbags-equivalent artifacts.
+      866,Free Commander - FreeCommander.ftp.ini,Apps,Users\*\AppData\Local\FreeCommanderXE\Settings/FreeCommander.ftp.ini,lazy_ntfs,Locates an .ini file that contains the file path to the FTP log for Free Commander.
+      867,Free Commander - FreeCommander.hist.ini,Apps,Users\*\AppData\Local\FreeCommanderXE\Settings/FreeCommander.hist.ini,lazy_ntfs,Locates an .ini file that contains Shellbags-equivalent artifacts that are sorted in temporal order from top to bottom for both left and right directory browsers.
+      868,Free Commander - FreeCommander.fav.xml,Apps,Users\*\AppData\Local\FreeCommanderXE\Settings/FreeCommander.fav.xml,lazy_ntfs,Locates an .xml file that contains favorited files/folder by the user.
+      869,Free Commander - Backup Settings,Apps,Users\*\AppData\Local\FreeCommanderXE\Settings\Bkp_Settings*/**10,lazy_ntfs,"Locates an exact copy of the above files which will have a timestamped folder name, i.e. Bkp_Settings-YYYY-MM-DD HH-MM-SS."
+      870,Free Commander - FTP Log,Apps,Users\*\AppData\Local\Temp/fc*.log,lazy_ntfs,Locates log file(s) that have a default naming convention of fc_ftplog_20210403 but can be modified by the user.
+      871,Free Commander - FTP Related Information,Apps,Users\*\AppData\Local\Temp\FreeCommander*/**10,lazy_ntfs,Locates a folder that may be named randomly that contains more FTP related information as well as .tmp files that are created while the user is traversing folders during an active FTP session. These files are deleted upon program exit.
+      872,FDM Database,App,Users\*\AppData\Local\Free Download Manager/**10/fdm.sqlite,lazy_ntfs,"fdm.sqlite shows Torrents, downloads, folder history, auth credentials and more. Will also pull fdm.sqlite in db_backup/"
+      873,FDM Backup Info,App,Users\*\AppData\Local\Free Download Manager\backup/backup.info,lazy_ntfs,"Backup info file - can change backup name from userdata.zip, so could give indication of file name"
+      874,FDM Database (userdata.zip),App,Users\*\AppData\Local\Free Download Manager\backup/userdata.zip,lazy_ntfs,fdm.sqlite can also appear in the backup folder in a compressed userdata.zip file
+      875,FreeFileSync,Apps,Users\*\AppData\Roaming\FreeFileSync\Logs,lazy_ntfs,Copies out all log files
+      876,Google Drive User Files,Apps,Users\*\Google Drive*/**10,lazy_ntfs,Google Drive Backup and Sync Application
+      877,Google Drive Metadata,Apps,Users\*\AppData\Local\Google\Drive/**10,lazy_ntfs,Google Drive Backup and Sync Application
+      878,Google File Stream Metadata,Apps,Users\*\AppData\Local\Google\DriveFS/**10,lazy_ntfs,Google Drive File Stream Application
+      879,HeidiSQL Backup files (*.sql),Apps,Users\*\AppData\Roaming\HeidiSQL\Backups\*,lazy_ntfs,
+      880,HeidiSQL (tabs.ini),Apps,Users\*\AppData\Roaming\HeidiSQL/tabs.ini,lazy_ntfs,
+      881,HexChat Chat Logs,Communications,Users\*\AppData\Roaming\HexChat\logs/**10,lazy_ntfs,
+      882,IceChat Chat Logs,Communications,Users\*\AppData\Local\IceChat Networks\IceChat\Logs/**10,lazy_ntfs,
+      883,IrfanView Configuration File,FileKnowledge,Users\*\AppData\Roaming\IrfanView/i_view32.ini,lazy_ntfs,
+      884,JDownloader 2.0 Download Lists,App,Users\*\AppData\Local\JDownloader 2.0\cfg/**10/downloadList*.zip,lazy_ntfs,"Zip folder which contains several files (00,00_00 and extraInfo) which list the download folder, the time it was created, the name of the download, origin URL, referral URL and more"
+      885,JDownloader 2.0 Link Collector,App,Users\*\AppData\Local\JDownloader 2.0\cfg/**10/linkcollector*.zip,lazy_ntfs,"Zip folder which contains several files (0X,0X_00 and extraInfo) which list the websites crawled for links, the referral URLs, timestamps and more"
+      886,JDownloader 2.0 General Settings,App,Users\*\AppData\Local\JDownloader 2.0\cfg/**10/org.jdownloader.settings.GeneralSettings.json,lazy_ntfs,General user config for JDownloader 2.0. Holds default download folder.
+      887,JDownloader 2.0 Link Grabber Settings,App,Users\*\AppData\Local\JDownloader 2.0\cfg/**10/org.jdownloader.gui.views.linkgrabber.addlinksdialog.LinkgrabberSettings.json,lazy_ntfs,Linkgrabber Settings for JDownloader 2.0. Holds latest download destination folder.
+      888,JDownloader 2.0 Proxy Settings,App,Users\*\AppData\Local\JDownloader 2.0\cfg/**10/org.jdownloader.settings.InternetConnectionSettings.customproxylist.json,lazy_ntfs,Proxy configuration for JDownloader 2.0
+      889,Java WebStart Cache User Level - Default,Communication,Users\*\AppData\Local\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
+      890,Java WebStart Cache User Level - IE Protected Mode,Communication,Users\*\AppData\LocalLow\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
+      891,Java WebStart Cache System level,Communication,Windows\System32\config\systemprofile\AppData\Local\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
+      892,Java WebStart Cache System level,Communication,Windows.old\Windows\System32\config\systemprofile\AppData\Local\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
+      893,Java WebStart Cache System level - IE Protected Mode,Communication,Windows\System32\config\systemprofile\AppData\LocalLow\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
+      894,Java WebStart Cache System level - IE Protected Mode,Communication,Windows.old\Windows\System32\config\systemprofile\AppData\LocalLow\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
+      895,Java WebStart Cache System level (SysWow64),Communication,Windows\SysWOW64\config\systemprofile\AppData\Local\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
+      896,Java WebStart Cache System level (SysWow64),Communication,Windows.old\Windows\SysWOW64\config\systemprofile\AppData\Local\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
+      897,Java WebStart Cache System level (SysWow64) - IE Protected Mode,Communication,Windows\SysWOW64\config\systemprofile\AppData\LocalLow\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
+      898,Java WebStart Cache System level (SysWow64) - IE Protected Mode,Communication,Windows.old\Windows\SysWOW64\config\systemprofile\AppData\LocalLow\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
+      899,Java WebStart Cache User Level - XP,Communications,Documents and Settings\*\Application Data\Sun\Java\Deployment\cache\*\*/*.idx,lazy_ntfs,
+      900,Kaseya Live Connect Logs (XP),ApplicationLogs,Documents and Settings\*\Application Data\Kaseya\Log/**10,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
+      901,Kaseya Live Connect Logs,ApplicationLogs,Users\*\AppData\Local\Kaseya\Log\KaseyaLiveConnect/**10,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
+      902,Kaseya Agent Endpoint Service Logs (XP),ApplicationLogs,Documents and Settings\All Users\Application Data\Kaseya\Log\Endpoint/**10,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
+      903,Kaseya Agent Endpoint Service Logs,ApplicationLogs,ProgramData\Kaseya\Log\Endpoint/**10,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
+      904,Kaseya Agent Service Log,ApplicationLogs,Program Files*\Kaseya\*/agentmon.log*,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
+      905,Kaseya Setup Log,ApplicationLogs,Users\*\AppData\Local\Temp/KASetup.log,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229011448
+      906,Kaseya Setup Log,ApplicationLogs,Windows\Temp/KASetup.log,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229011448
+      907,Kaseya Setup Log,ApplicationLogs,Windows.old\Windows\Temp/KASetup.log,lazy_ntfs,https://helpdesk.kaseya.com/hc/en-gb/articles/229011448
+      908,Kaseya Agent Edge Service Logs,ApplicationLogs,ProgramData\Kaseya\Log\KaseyaEdgeServices/**10,lazy_ntfs,https://www.huntress.com/blog/rapid-response-kaseya-vsa-mass-msp-ransomware-incident
+      909,LogMeIn ProgramData Logs,ApplicationLogs,ProgramData\LogMeIn\Logs/**10,lazy_ntfs,
+      910,LogMeIn Application Logs,ApplicationLogs,Users\*\AppData\Local\temp\LogMeInLogs/**10,lazy_ntfs,"Contains RemoteAssist (formerly GoToAssist), GoToMeeting, and other GoTo* logs"
+      911,Macrium Reflect,Apps,ProgramData\Macrium\Macrium Service\*,lazy_ntfs,Copies out all log files
+      912,Macrium Reflect,Apps,ProgramData\Macrium\Reflect\*,lazy_ntfs,Copies out the Reflect folder which contains many important logs
+      913,Macrium Reflect,Apps,ProgramData\Macrium\Reflect Launcher,lazy_ntfs,Copies out the Reflect folder which contains many important logs
+      914,Mattermost - Chat Logs,Apps,Users\*\AppData\Roaming\Mattermost\IndexedDB/**10,lazy_ntfs,Locates Mattermost logs and copies them
+      915,MediaMonkey - Media SQLite Database,Apps,Users\*\AppData\Roaming\MediaMonkey/MM.DB,lazy_ntfs,Locates SQLite DB that contains a complete enumeration of the user's media collection within MediaMonkey
+      916,MediaMonkey - MediaMonkey.ini,Apps,Users\*\AppData\Roaming\MediaMonkey/MediaMonkey.ini,lazy_ntfs,Locates .ini file which contains information about the user's MediaMonkey application instance
+      917,Microsoft OneNote - FullTextSearchIndex,Apps,Users\*\AppData\Local\Packages\Microsoft.Office.OneNote_8wekyb3d8bbwe\LocalState\AppData\Local\OneNote\*\FullTextSearchIndex,lazy_ntfs,Grabs database(s) comprising of each OneNote notebook's text content
+      918,Microsoft OneNote - RecentNotebooks_SeenURLs,Apps,Users\*\AppData\Local\Packages\Microsoft.Office.OneNote_8wekyb3d8bbwe\LocalState\AppData\Local\OneNote\Notifications/RecentNotebooks_SeenURLs,lazy_ntfs,Grabs a file that appears to record recently seen OneNote notebooks
+      919,Microsoft OneNote - AccessibilityCheckerIndex,Apps,Users\*\AppData\Local\Packages\Microsoft.Office.OneNote_8wekyb3d8bbwe\LocalState\AppData\Local\OneNote\16.0\AccessibilityCheckerIndex,lazy_ntfs,Grabs database(s) comprising of each OneNote notebook's version sync error history
+      920,Microsoft OneNote - User NoteTags,Apps,Users\*\AppData\Local\Packages\Microsoft.Office.OneNote_8wekyb3d8bbwe\LocalState\AppData\Local\OneNote\16.0\NoteTags/*LiveId.db,lazy_ntfs,Grabs a database that stores the user specified tags within OneNote to be used application-wide
+      921,Microsoft OneNote - RecentSearches,Apps,Users\*\AppData\Local\Packages\Microsoft.Office.OneNote_8wekyb3d8bbwe\LocalState\AppData\Local\OneNote\16.0\RecentSearches/RecentSearches.db,lazy_ntfs,Grabs a database that stores the user's recent searches within OneNote
+      922,"Microsoft Sticky Notes - Windows 7, 8, and 10 version 1511 and earlier",Apps,Users\*\AppData\Roaming\Microsoft\StickyNotes/StickyNotes.snt,lazy_ntfs,
+      923,Microsoft Sticky Notes - 1607 and later,Apps,Users\*\AppData\Local\Packages\Microsoft.MicrosoftStickyNotes*\LocalState/plum.sqlite*,lazy_ntfs,
+      924,Microsoft Teams IndexedDB Cache,Apps,Users\*\AppData\Roaming\Microsoft\Teams\IndexedDB\https_teams.microsoft.com_0.indexeddb.leveldb/**10,lazy_ntfs,"LevelDB database which can contain inbound/outbound chat messages, call history and more"
+      925,Microsoft Teams Local Storage Cache,Apps,Users\*\AppData\Roaming\Microsoft\Teams\Local Storage\leveldb/**10,lazy_ntfs,"LevelDB database which can contain meeting history, file transfer logs and more"
+      926,Microsoft Teams Cache,Apps,Users\*\AppData\Roaming\Microsoft\Teams\Cache/**10,lazy_ntfs,Chromium cache which can be viewed with Nirsoft's ChromeCacheView
+      927,Microsoft Teams Config,Apps,Users\*\AppData\Roaming\Microsoft\Teams/desktop-config.json,lazy_ntfs,JSON config file for Teams
+      928,Microsoft To Do - SQLite Database of To Do tasks,Apps,Users\*\AppData\Local\Packages\Microsoft.Todos_8wekyb3d8bbwe\LocalState\AccountsRoot\*/todosqlite.db*,lazy_ntfs,
+      929,Microsoft To Do - User Avatar,Apps,Users\*\AppData\Local\Packages\Microsoft.Todos_8wekyb3d8bbwe\LocalState\AccountsRoot\4c444a17ebb042fb92df97d00d1c802a\avatars/UserAvatar.jpg,lazy_ntfs,
+      930,Midnight Commander -- All Configuation Files,Apps,Users\*\Midnight Commander\*,lazy_ntfs,Locates folder where all configuration files reside
+      931,Multi Commander - Application Folder,Apps,Users\*\AppData\Local\MultiCommander*/**10,lazy_ntfs,Locates the contents of the Application folder.
+      932,Multi Commander - Config Folder,Apps,Users\*\AppData\Roaming\MultiCommander*\Config/**10,lazy_ntfs,Locates the contents of the Config folder.
+      933,Multi Commander - Log Folder,Apps,Users\*\AppData\Roaming\MultiCommander*\Logs/**10,lazy_ntfs,Locates log file(s) related to user activity within Multi Commander.
+      934,Multi Commander - UserData Folder,Apps,Users\*\AppData\Roaming\MultiCommander*\UserData/**10,lazy_ntfs,Locates the contents of the UserData folder.
+      935,Multi Commander - Log File,Apps,Users\*\AppData\Roaming\MultiCommander*/**10/*MultiCommander.log,lazy_ntfs,Locates log file(s) associated with Milti Commander. Commonly in YYYY-MM-DD (numbers)-MultiCommander.log naming convention.
+      936,Notepad++ Unsaved Edits,Text Editor,Users\*\AppData\Roaming\Notepad++\backup/**10,lazy_ntfs,Locates non-saved Notepad++ files and copies them.
+      937,Notepad++ Config,Text Editor,Users\*\AppData\Roaming\Notepad++/config.xml,lazy_ntfs,"Retrieves config.xml which contains recently searched terms, replaced terms and recently opened documents"
+      938,One Commander - All Configuration Files,Apps,Users\*\OneCommander\*,lazy_ntfs,Locates folder where all configuration files reside
+      939,One Commander - Other Configuration Files,Apps,Users\*\AppData\Local\Apps\2.0\*\*\onec*/**10,lazy_ntfs,Locates folder where all configuration files reside
+      940,OneDrive User Files,Apps,Users\*\OneDrive*/**10,lazy_ntfs,Caution -- This target will collect OneDrive contents from the local drive AND on-demand cloud files. Ensure your scope of authority permits cloud collections before use
+      941,OneDrive Metadata Logs,Apps,Users\*\AppData\Local\Microsoft\OneDrive\logs/**10,lazy_ntfs,
+      942,OneDrive Metadata Settings,Apps,Users\*\AppData\Local\Microsoft\OneDrive\settings/**10,lazy_ntfs,
+      943,OpenSSH Config File,Apps,Users\*\.ssh/config,lazy_ntfs,"Config file can hold usernames, IP addresses and ports, key locations and configured shortcuts for servers e.g. ssh web-server"
+      944,OpenSSH Known Hosts,Apps,Users\*\.ssh/known_hosts,lazy_ntfs,"Known hosts file can hold a list of connected FQDNs/IP Addresses and ports if they are non-default, as well as public key fingerprints"
+      945,OpenSSH Public Keys,Apps,Users\*\.ssh/*.pub,lazy_ntfs,"Gets all public keys (*.pub). It is more difficult to find private keys as they typically do not have a file extension. However, the .pub files should be able to help find the private keys as they are typically named the same."
+      946,OpenSSH Default Private Key,Apps,Users\*\.ssh/id_rsa,lazy_ntfs,Default name for an auto-generated SSH private key
+      947,OpenSSH Server Config File,Apps,ProgramData\ssh/sshd_config,lazy_ntfs,Config file can hold information on allowed/denied users
+      948,OpenSSH Server Logs,Apps,ProgramData\ssh\logs/*,lazy_ntfs,OpenSSH server logs
+      949,OpenSSH Host ECDSA Key,Apps,ProgramData\ssh/ssh_host_ecdsa_key,lazy_ntfs,Retrieves the host ECDSA key
+      950,OpenSSH Host ED25519 Key,Apps,ProgramData\ssh/ssh_host_ed25519_key,lazy_ntfs,Retrieves the host ED25519 key
+      951,OpenSSH Host DSA Key,Apps,ProgramData\ssh/ssh_host_dsa_key,lazy_ntfs,Retrieves the host DSA key
+      952,OpenSSH Host RSA Key,Apps,ProgramData\ssh/ssh_host_rsa_key,lazy_ntfs,Retrieves the host RSA key
+      953,OpenSSH User Authorized Keys,Apps,Users\*\.ssh/authorized_keys,lazy_ntfs,Retrieves the user's authorised public keys
+      954,OpenSSH User Authorized Keys 2,Apps,Users\*\.ssh/authorized_keys2,lazy_ntfs,Retrieves the user's authorised public keys from the second file
+      955,OpenSSH Authorized Administrator Keys,Apps,ProgramData\ssh/administrators_authorized_keys,lazy_ntfs,Retrieves the administrator group's authorised public keys
+      956,OpenVPN Client Config,ApplicationLogs,Users\*\OpenVPN\config/**10,lazy_ntfs,Contains OpenVPN Configs (Profiles)
+      957,OpenVPN Client Config,ApplicationLogs,Program Files*\OpenVPN\config/**10,lazy_ntfs,Contains OpenVPN Configs(Profiles)
+      958,OpenVPN Client Config,ApplicationLogs,Users\*\OpenVPN\log/*.log,lazy_ntfs,Contains OpenVPN Logs for each Config(Profile)
+      959,PST XP,Communications,Documents and Settings\*\Local Settings\Application Data\Microsoft\Outlook/*.pst,lazy_ntfs,
+      960,OST XP,Communications,Documents and Settings\*\Local Settings\Application Data\Microsoft\Outlook/*.ost,lazy_ntfs,
+      961,PST,Communications,Users\*\AppData\Local\Microsoft\Outlook/*.pst,lazy_ntfs,
+      962,OST,Communications,Users\*\AppData\Local\Microsoft\Outlook/*.ost,lazy_ntfs,
+      963,PST (2013 or 2016),Communications,Users\*\Documents\Outlook Files/*.pst,lazy_ntfs,
+      964,OST (2013 or 2016),Communications,Users\*\Documents\Outlook Files/*.ost,lazy_ntfs,
+      965,PeaZip Configuration Files,FileKnowledge,Users\*\AppData\Roaming\PeaZip/**10,lazy_ntfs,
+      966,ProtonVPN - Connection Logs,ApplicationLogs,Users\*\AppData\Local\ProtonVPN\Logs,lazy_ntfs,Locates ProtonVPN connection logs.
+      967,Q-Dir - .ini File,Apps,Users\*\AppData\Roaming\Q-Dir/Q-Dir.ini,lazy_ntfs,Locates .ini file associated with Q-Dir which stores useful user activity information.
+      968,Q-Dir - .qdr file,Apps,Users\*\AppData\Roaming\Q-Dir/start.qdr,lazy_ntfs,"Locates .qdr file associated with Q-Dir which stores useful user activity information, including the last 4 folders opened (encoded, unfortunately)."
+      969,QFinderPro,Apps,Users\*\AppData\Local\QNAP\QfinderPro,lazy_ntfs,Locates a JSON file that provides network location information for any QNAP connected devices.
+      970,Radmin Server 32bit Log,ApplicationLogs,Windows\SysWOW64\rserver30/Radm_log.htm,lazy_ntfs,Contains Application Log entries such as service start and incomming connections.
+      971,Radmin Server 64bit Log,ApplicationLogs,Windows\System32\rserver30/Radm_log.htm,lazy_ntfs,Contains Application Log entries such as service start and incomming connections.
+      972,Radmin Server 32bit Chats,ApplicationLogs,Windows\SysWOW64\rserver30\CHATLOGS\*/*.htm,lazy_ntfs,Previous chat logs
+      973,Radmin Server 64bit Chats,ApplicationLogs,Windows\System32\rserver30\CHATLOGS\*/*.htm,lazy_ntfs,Previous chat logs
+      974,Radmin Viewer Chats,ApplicationLogs,Users\*\Documents\ChatLogs\*/*.htm,lazy_ntfs,Previous chat logs
+      975,ScreenConnect Session Database,ApplicationLogs,Program Files*\ScreenConnect\App_Data/Session.db,lazy_ntfs,SQLite database with session information
+      976,ScreenConnect Session Database,ApplicationLogs,Program Files*\ScreenConnect\App_Data/User.xml,lazy_ntfs,Contains each user's last authenticated time
+      977,ScreenConnect User Config,ApplicationLogs,ProgramData\ScreenConnect Client*/user.config,lazy_ntfs,Contains server domain and IP info
+      978,ShareX,Apps,Users\*\Documents\ShareX/**10,lazy_ntfs,Locates and captures all files within the default ShareX folder path
+      979,Signal Attachments cache,Communications,Users\*\AppData\Roaming\Signal\attachments.noindex/**10,lazy_ntfs,Profile pictures (and possibly attachments) for users who this individual has as contacts or has communicated with
+      980,Signal Logs,Communications,Users\*\AppData\Roaming\Signal\logs/**10,lazy_ntfs,"Logs for Signal. Most recent has the extension .log while old ones will have extension .log.0, .log.1 etc."
+      981,Signal config.json,Communications,Users\*\AppData\Roaming\Signal/config.json,lazy_ntfs,config.json holds the db.sqlite SQLCipher raw key
+      982,Signal Database,Communications,Users\*\AppData\Roaming\Signal\sql/db.sqlite,lazy_ntfs,"Stores attachment details, conversations, messages, and more"
+      983,main.db (App <v12),Communications,Users\*\AppData\Local\Packages\Microsoft.SkypeApp_*\LocalState\*/main.db,lazy_ntfs,
+      984,skype.db (App +v12),Communications,Users\*\AppData\Local\Packages\Microsoft.SkypeApp_*\LocalState\*/skype.db,lazy_ntfs,
+      985,main.db XP,Communications,Documents and Settings\*\Application Data\Skype\*/main.db,lazy_ntfs,
+      986,main.db Win7+,Communications,Users\*\AppData\Roaming\Skype\*/main.db,lazy_ntfs,
+      987,s4l-[username].db (App +v8),Communications,Users\*\AppData\Local\Packages\Microsoft.SkypeApp_*\LocalState/s4l-*.db,lazy_ntfs,
+      988,leveldb (Skype for Desktop +v8),Communications,Users\*\AppData\Roaming\Microsoft\Skype for Desktop\IndexedDB\*.leveldb/**10,lazy_ntfs,
+      989,Skype for Destkop v8+ Chromium Cache,Communications,Users\*\AppData\Roaming\Microsoft\Skype for Desktop\Cache/**10,lazy_ntfs,Can be viewed with Nirsoft's ChromeCacheView
+      990,Slack - Chat Logs,Apps,Users\*\AppData\Roaming\Slack\IndexedDB/**10,lazy_ntfs,Locates Slack logs and copies them
+      991,Snagit - Captures,Apps,Users\*\AppData\Local\TechSmith\Snagit\DataStore,lazy_ntfs,Locates all Snagit captures
+      992,SpeedCommander - .ini File,Apps,Users\*\AppData\Roaming\SpeedProject\SpeedCommander 19\*,lazy_ntfs,Locates folder where all configuration files reside
+      993,SublimeText 2/3 Auto Save Session,Text Editor,Users\*\AppData\Roaming\Sublime Text*\Settings/Session.sublime_session,lazy_ntfs,Sublime Text 2/3 stores unsaved (temporary) files and its content in its Session.sublime_session file
+      994,SugarSync Log File,Apps,Users\*\AppData\Local\SugarSync/sc1.log,lazy_ntfs,Locates a log file the gives a play-by-play of what the user synced when.
+      995,SugarSync - Shared Folders (Default Location),Apps,Users\*\Documents\SugarSync Shared Folders/**10,lazy_ntfs,
+      996,SugarSync - My SugarSync (Default Location),Apps,Users\*\Documents\My SugarSync/**10,lazy_ntfs,
+      997,SumatraPDF Settings - SessionData,FileKnowledge,Users\*\AppData\Local\SumatraPDF/SumatraPDF-settings.txt,lazy_ntfs,Settings file which contains information about previous user session
+      998,SumatraPDF Cache,FileKnowledge,Users\*\AppData\Local\SumatraPDF\sumatrapdfcache,lazy_ntfs,Folder contains a PNG snapshot of each PDF file the user had open at the time of last application close
+      999,Tablacus Explorer - remember.xml,Logs,Users\*\AppData\Local\Temp\*\config/**10/remember.xml,lazy_ntfs,
+      1000,Tablacus Explorer - window.xml,Logs,Users\*\AppData\Local\Temp\*\config/**10/window.xml,lazy_ntfs,
+      1001,Tablacus Explorer - window1.xml,Logs,Users\*\AppData\Local\Temp\*\config/**10/window1.xml,lazy_ntfs,
+      1002,TeamViewer Connection Logs,Communications,Program Files*\TeamViewer/connections*.txt,lazy_ntfs,Includes connections_incoming.txt and connections.txt
+      1003,TeamViewer Application Logs,ApplicationLogs,Program Files*\TeamViewer/TeamViewer*_Logfile*,lazy_ntfs,Includes TeamViewer<version>_Logfile.log and TeamViewer<version>_Logfile_OLD.log
+      1004,TeamViewer Configuration Files,ApplicationLogs,Users\*\AppData\Roaming\TeamViewer\MRU\RemoteSupport/**10,lazy_ntfs,Includes miscellaneous config files
+      1005,Telegram app folder,Apps,Users\*\AppData\Roaming\Telegram Desktop/**10,lazy_ntfs,Telegram app folder structure
+      1006,Telegram downloaded files,Apps,Users\*\Downloads\Telegram Desktop/**10,lazy_ntfs,Chat Attachments
+      1007,TeraCopy,TeraCopy,Users\*\AppData\Roaming\TeraCopy/**10,lazy_ntfs,
+      1008,Mozilla Thunderbird Install Date,Apps,Users\*\AppData\Roaming\Thunderbird\Crash Reports/InstallTime*,lazy_ntfs,Holds install time in Unix Seconds timestamp
+      1009,Mozilla Thunderbird Profiles.ini,Apps,Users\*\AppData\Roaming\Thunderbird/profiles.ini,lazy_ntfs,Profiles list - can hold references to other profiles held elsewhere on the device
+      1010,Mozilla Thunderbird prefs.js,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*/prefs.js,lazy_ntfs,User Preferences for that profile
+      1011,Mozilla Thunderbird Global Messages Database,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*/global-messages-db.sqlite,lazy_ntfs,"Holds list of contacts, emails, and other potentially useful artifacts"
+      1012,Mozilla Thunderbird logins.json,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*/logins.json,lazy_ntfs,"Holds last time online login used, last time password changed, hostname, HTTP(s) URL and more"
+      1013,Mozilla Thunderbird places.sqlite,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*/places.sqlite,lazy_ntfs,"Holds history for Thunderbird - as it contains portions of Firefox embedded, it can be used to visit websites too"
+      1014,Mozilla Thunderbird ImapMail INBOX,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*\ImapMail/**10/INBOX,lazy_ntfs,"Holds all email files with headers, content etc"
+      1015,Mozilla Thunderbird Mail INBOX,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*\Mail/**10/INBOX,lazy_ntfs,"Holds all email files with headers, content etc"
+      1016,Mozilla Thunderbird Calendar Data,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*\calendar-data/local.sqlite,lazy_ntfs,Holds local calendar data
+      1017,Mozilla Thunderbird Attachments,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*\Attachments\*,lazy_ntfs,Holds attachments
+      1018,Mozilla Thunderbird Address Book,Apps,Users\*\AppData\Roaming\Thunderbird\Profiles\*/abook.sqlite,lazy_ntfs,Holds local address book
+      1019,Total Commander - .ini File,Apps,Users\*\AppData\Roaming\GHISLER/wincmd.ini,lazy_ntfs,Locates .ini file associated with Total Commander which stores useful user activity information.
+      1020,Total Commander - Log File,Apps,**10/totalcmd.log,lazy_ntfs,Locates log file associated with Total Commander. NOTE: this log file is NOT enabled by default and the filename can be modified.
+      1021,Total Commander - Temp Files Created During Folder Traversal,Apps,Users\*\AppData\Local\Temp/FTP*.tmp,lazy_ntfs,Locates .tmp files which are created during the user's folder traversal and provide insight into contents of each folder traversed.
+      1022,Total Commander - FTP .ini File,Apps,Users\*\AppData\Roaming\GHISLER/wcx_ftp.ini,lazy_ntfs,Locates .ini file associated with Total Commander which stores useful FTP information.
+      1023,Total Commander - File Tree,Apps,Users\*\AppData\Local\GHISLER/treeinfo*.wc,lazy_ntfs,Locates a file that contains an exhaustive file tree of a user's file system.
+      1024,Total Commander - FTP Logs,Apps,Users\*\AppData\Local\Temp/tcftp.log,lazy_ntfs,Locates a file that contains the Total Commander FTP logs.
+      1025,TreeSize - ScanHistory.XML,Apps,Users\*\AppData\Roaming\JAM Software\TreeSize/scanhistory.xml,lazy_ntfs,Locates XML file that provides a list of previously scanned directories by the user.
+      1026,VLC Recently Opened Files,Apps,Users\*\AppData\Roaming\vlc/vlc-qt-interface.ini,lazy_ntfs,Configuration file for VLC. Holds [RecentsMRL] key which lists recently opened files as well as sometimes retaining timestamps for file opening
+      1027,VLC Recorded Files,Apps,Users\*\Videos/vlc-*.avi,lazy_ntfs,"Recorded files in VLC. Sometimes the Record button may be pressed instead of Play by suspects, which can record them watching content with VLC"
+      1028,VMware - Virtual Machine Inventory,Apps,Users\*\AppData\Roaming\VMware,lazy_ntfs,Locates an inventory of all Virtual Machines on disk.
+      1029,VMware (Fusion/Workstation/Server/Player),Memory,**10/*.vmem,lazy_ntfs,Captures all raw memory from VMware virtual machines.
+      1030,VMware (Fusion/Workstation/Server/Player),Memory,**10/*.vmss,lazy_ntfs,Captures all memory images from VMware virtual machines.
+      1031,VMware (Fusion/Workstation/Server/Player),Memory,**10/*.vmsn,lazy_ntfs,Captures all memory images from VMware virtual machines.
+      1032,RealVNC Log,ApplicationLogs,Users\*\AppData\Local\RealVNC/vncserver.log,lazy_ntfs,https://www.realvnc.com/en/connect/docs/logging.html#logging
+      1033,Viber Config Database,Apps,Users\*\AppData\Roaming\ViberPC/config.db,lazy_ntfs,Configuration file for Viber
+      1034,Viber Users Data Database,Apps,Users\*\AppData\Roaming\ViberPC\*/viber.db,lazy_ntfs,"Viber data for that user, containing Calls, Chat Messages, Contacts and more"
+      1035,Viber Users Avatars Cache,Apps,Users\*\AppData\Roaming\ViberPC\*\Avatars,lazy_ntfs,Cache of the Avatars for other Viber users
+      1036,Viber Users Backgrounds Cache,Apps,Users\*\AppData\Roaming\ViberPC\*\Backgrounds,lazy_ntfs,Store of the backgrounds
+      1037,Viber Users Thumbnails Cache,Apps,Users\*\AppData\Roaming\ViberPC\*\Thumbnails,lazy_ntfs,Cache of the thumbnails for uploaded/downloaded images
+      1038,VirtualBox VM configs,Apps,**10/*.vbox,lazy_ntfs,Locates all .vbox VM configuration files on disk
+      1039,VirtualBox VM backup configs,Apps,**10/*.vbox-prev,lazy_ntfs,Locates all backup .vbox VM configuration files on disk
+      1040,VirtualBox Logs,Apps,**10/VBox.log,lazy_ntfs,Locates all VBox.log files on disk
+      1041,VirtualBox Backup Logs,Apps,**10/VBox.log.*,lazy_ntfs,Locates all backup VBox.log files on disk - these can show historic VM usage
+      1042,VirtualBox Hardening Logs,Apps,**10/VBoxHardening.log,lazy_ntfs,Locates all VBoxHardening.log files on disk
+      1043,VirtualBox,Memory,**10/*.sav,lazy_ntfs,Captures all partial memory images from VirtualBox.
+      1044,WhatsApp Cache,Apps,Users\*\AppData\Roaming\WhatsApp\Cache,lazy_ntfs,"Copies the cache of WhatsApp. Can be opened with Chrome Cache Viewer for viewing embedded thumbnails and other image artefacts, as well as extracting .enc message files or other files"
+      1045,WhatsApp Local Storage,Apps,Users\*\AppData\Roaming\WhatsApp\Local Storage\leveldb,lazy_ntfs,"Copies the Local Storage leveldb of WhatsApp. Contains phone model and name of user, plus encrypted base64 strings which can be viewed with LevelDBDumper"
+      1046,WinSCP (.ini file),Logs,**10/WinSCP.ini,lazy_ntfs,
+      1047,Windows Your Phone - All Databases,Apps,Users\*\AppData\Local\Packages\Microsoft.YourPhone_8wekyb3d8bbwe\LocalCache\Indexed/**10,lazy_ntfs,Locates all Your Phone database files
+      1048,XYplorer - .ini file,Apps,Users\*\AppData\Roaming\XYplorer/XYplorer.ini,lazy_ntfs,Locates .ini file associated with Total Commander which stores useful user activity information.
+      1049,XYplorer - .ini file for each respective pane,Apps,Users\*\AppData\Roaming\XYplorer\Panes\*/**10/pane.ini,lazy_ntfs,Locates the .ini file for the left and right pane.
+      1050,XYplorer - AutoBackup folder,Apps,Users\*\AppData\Roaming\XYplorer\AutoBackup/**10,lazy_ntfs,Locates the AutoBackup folder and copies its contents.
+      1051,XYplorer - .dat files,Apps,Users\*\AppData\Roaming\XYplorer/**10/*.dat,lazy_ntfs,"Locates the .dat files in the XYplorer's AppData folder, all of which are updated upon program's exit."
+      1052,iTunes Backup Folder,Communications,Users\*\AppData\Roaming\Apple\Mobilesync\Backup/**10,lazy_ntfs,
+      1053,iTunes Backup Folder,Communications,Users\*\AppData\Roaming\Apple Computer\Mobilesync\Backup/**10,lazy_ntfs,
+      1054,iTunes Backup Folder - iOS13,Communications,Users\*\Apple\Mobilesync\Backup\*,lazy_ntfs,
+      1055,mIRC Chat Logs (Vista+),Communications,Users\*\AppData\Roaming\mIRC\logs/**10,lazy_ntfs,
+      1056,mIRC Chat Logs (2000/XP),Communications,Documents and Settings\*\Application Data\mIRC\logs/**10,lazy_ntfs,
+      1057,mRemoteNG Logs,Communications,Users\*\AppData\Roaming\mRemoteNG/mRemoteNG.log,lazy_ntfs,Contains log entries for remote connections
+      1058,mRemoteNG Connection Configuration and Backups,Communications,Users\*\AppData\Roaming\mRemoteNG/confCons.xml*,lazy_ntfs,"Contains connection config, often with obfuscated credentials"
+      1059,mRemoteNG Program Settings,Communications,Users\*\AppData\*\mRemoteNG/**10/user.config,lazy_ntfs,Contains user-specific program settings
   - name: KapeTargets
     type: hidden
     description: Each parameter above represents a group of rules to be triggered. This table specifies which rule IDs will be included when the parameter is checked.
@@ -1821,33 +1828,33 @@ parameters:
       Amcache,"[609, 610, 611, 612]"
       Ammyy,[801]
       Antivirus,"[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 613, 614, 615, 616]"
-      AnyDesk,"[802, 803, 804, 805, 806]"
+      AnyDesk,"[802, 803, 804, 805, 806, 807]"
       ApacheAccessLog,[143]
       AppData,[557]
       ApplicationEvents,"[613, 614, 615, 616]"
-      AsperaConnect,"[807, 808]"
+      AsperaConnect,"[808, 809]"
       Avast,"[5, 6, 7, 8]"
       AviraAVLogs,[9]
       BCD,"[617, 618]"
       BITS,[619]
       BitTorrent,[570]
       Bitdefender,"[10, 11, 12]"
-      BoxDrive,"[809, 810, 811, 812]"
+      BoxDrive,"[810, 811, 812, 813]"
       BrowserCache,"[430, 431, 432, 433, 434, 435]"
       CertUtil,"[620, 621, 622]"
       Chrome,"[436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 470, 471, 472, 473, 474]"
       ChromeExtensions,"[475, 476]"
       ChromeFileSystem,[477]
-      CiscoJabber,[813]
-      ClipboardMaster,"[814, 815, 816]"
-      CloudStorage,"[809, 810, 811, 812, 833, 834, 835, 836, 837, 838, 839, 840, 841, 842, 843, 844, 845, 875, 876, 877, 939, 940, 941, 993, 994, 995]"
+      CiscoJabber,[814]
+      ClipboardMaster,"[815, 816, 817]"
+      CloudStorage,"[810, 811, 812, 813, 834, 835, 836, 837, 838, 839, 840, 841, 842, 843, 844, 845, 846, 876, 877, 878, 940, 941, 942, 994, 995, 996]"
       CombinedLogs,"[153, 633, 634, 635, 636, 637, 638, 639, 640, 641, 642, 643, 644, 781, 782]"
       ComboFix,[13]
-      ConfluenceLogs,"[817, 818]"
+      ConfluenceLogs,"[818, 819]"
       Cybereason,"[14, 15, 16]"
       DC__,[571]
       Debian,"[67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83]"
-      DirectoryOpus,"[819, 820, 821, 822, 823, 824, 825, 826, 827]"
+      DirectoryOpus,"[820, 821, 822, 823, 824, 825, 826, 827, 828]"
       DirectoryTraversalWildCardExample,[558]
       DirectoryTraversal_AudioFiles,[559]
       DirectoryTraversal_ExcelDocuments,[560]
@@ -1856,10 +1863,10 @@ parameters:
       DirectoryTraversal_SQLiteDatabases,[563]
       DirectoryTraversal_VideoFiles,[564]
       DirectoryTraversal_WordDocuments,[565]
-      Discord,"[828, 829]"
-      DoubleCommander,"[830, 831, 832]"
-      Dropbox,"[833, 834, 835, 836, 837, 838, 839, 840, 841, 842, 843, 844, 845]"
-      EFCommander,[846]
+      Discord,"[829, 830]"
+      DoubleCommander,"[831, 832, 833]"
+      Dropbox,"[834, 835, 836, 837, 838, 839, 840, 841, 842, 843, 844, 845, 846]"
+      EFCommander,[847]
       ESET,"[17, 18]"
       Edge,[478]
       EdgeChromium,"[479, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499]"
@@ -1869,89 +1876,89 @@ parameters:
       EventLogs,"[633, 634, 635]"
       EventTraceLogs,"[636, 637, 638, 639, 640, 641, 642, 643, 644]"
       EventTranscriptDB,"[645, 646]"
-      Evernote,"[847, 848, 849]"
-      Everything__VoidTools_,"[850, 851, 852]"
+      Evernote,"[848, 849, 850]"
+      Everything__VoidTools_,"[851, 852, 853]"
       EvidenceOfExecution,"[609, 610, 611, 612, 677, 678, 689, 690, 765, 766]"
-      Exchange,"[853, 858]"
-      ExchangeClientAccess,[853]
-      ExchangeCve_2021_26855,"[854, 855, 856, 857]"
-      ExchangeTransport,[858]
+      Exchange,"[854, 859]"
+      ExchangeClientAccess,[854]
+      ExchangeCve_2021_26855,"[855, 856, 857, 858]"
+      ExchangeTransport,[859]
       FSecure,"[20, 21, 22]"
-      FTPClients,"[860, 861, 862, 863, 1045]"
-      Fences,[859]
-      FileExplorerReplacements,"[819, 820, 821, 822, 823, 824, 825, 826, 827, 830, 831, 832, 846, 864, 865, 866, 867, 868, 869, 870, 929, 930, 931, 932, 933, 934, 937, 938, 966, 967, 991, 998, 999, 1000, 1018, 1019, 1020, 1021, 1022, 1023, 1047, 1048, 1049, 1050]"
+      FTPClients,"[861, 862, 863, 864, 1046]"
+      Fences,[860]
+      FileExplorerReplacements,"[820, 821, 822, 823, 824, 825, 826, 827, 828, 831, 832, 833, 847, 865, 866, 867, 868, 869, 870, 871, 930, 931, 932, 933, 934, 935, 938, 939, 967, 968, 992, 999, 1000, 1001, 1019, 1020, 1021, 1022, 1023, 1024, 1048, 1049, 1050, 1051]"
       FileSystem,"[597, 598, 599, 600, 601, 602, 603, 605, 606, 607, 608]"
-      FileZillaClient,"[860, 861]"
-      FileZillaServer,"[862, 863]"
+      FileZillaClient,"[861, 862]"
+      FileZillaServer,"[863, 864]"
       Firefox,"[500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515, 516, 517, 518, 519, 520, 521, 522, 523, 524, 525, 526, 527, 528, 529, 530, 531, 532, 533, 534]"
-      FreeCommander,"[864, 865, 866, 867, 868, 869, 870]"
-      FreeDownloadManager,"[871, 872, 873]"
-      FreeFileSync,[874]
+      FreeCommander,"[865, 866, 867, 868, 869, 870, 871]"
+      FreeDownloadManager,"[872, 873, 874]"
+      FreeFileSync,[875]
       Freenet,"[572, 573, 574, 575, 576]"
       FrostWire,"[577, 578, 579]"
       Gigatribe,"[580, 581, 582]"
-      GoogleDrive,"[875, 876, 877]"
+      GoogleDrive,"[876, 877, 878]"
       GroupPolicy,"[647, 648, 649, 650, 651, 652]"
-      HeidiSQL,"[878, 879]"
-      HexChat,[880]
+      HeidiSQL,"[879, 880]"
+      HexChat,[881]
       HitmanPro,"[23, 24, 25]"
       IISLogFiles,"[144, 145, 146, 147, 148]"
-      IRCClients,"[880, 881, 1054, 1055]"
-      IceChat,[881]
+      IRCClients,"[881, 882, 1055, 1056]"
+      IceChat,[882]
       InternetExplorer,"[535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 546, 547]"
-      IrfanView,[882]
-      JDownloader2,"[883, 884, 885, 886, 887]"
-      JavaWebCache,"[888, 889, 890, 891, 892, 893, 894, 895, 896, 897, 898]"
+      IrfanView,[883]
+      JDownloader2,"[884, 885, 886, 887, 888]"
+      JavaWebCache,"[889, 890, 891, 892, 893, 894, 895, 896, 897, 898, 899]"
       Kali,"[84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100]"
-      KapeTriage,"[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 153, 436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 470, 471, 472, 473, 474, 478, 479, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515, 516, 517, 518, 519, 520, 521, 522, 523, 524, 525, 526, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552, 553, 554, 555, 556, 597, 598, 599, 600, 601, 602, 603, 605, 606, 607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 633, 634, 635, 653, 654, 655, 656, 657, 658, 659, 677, 678, 679, 680, 681, 682, 683, 684, 685, 686, 687, 688, 689, 690, 693, 694, 695, 696, 697, 698, 699, 700, 701, 702, 703, 704, 705, 706, 707, 708, 709, 710, 711, 712, 713, 714, 715, 716, 717, 718, 719, 720, 721, 722, 723, 724, 725, 726, 727, 728, 729, 730, 731, 732, 733, 734, 735, 736, 737, 738, 739, 740, 741, 742, 743, 744, 749, 750, 751, 752, 753, 754, 755, 756, 757, 758, 759, 760, 765, 766, 791, 801, 802, 803, 804, 805, 806, 899, 900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 969, 970, 971, 972, 973, 974, 975, 976, 1001, 1002, 1003, 1031, 1056, 1057, 1058]"
-      Kaseya,"[899, 900, 901, 902, 903, 904, 905, 906, 907]"
+      KapeTriage,"[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 153, 436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 470, 471, 472, 473, 474, 478, 479, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515, 516, 517, 518, 519, 520, 521, 522, 523, 524, 525, 526, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552, 553, 554, 555, 556, 597, 598, 599, 600, 601, 602, 603, 605, 606, 607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 633, 634, 635, 653, 654, 655, 656, 657, 658, 659, 677, 678, 679, 680, 681, 682, 683, 684, 685, 686, 687, 688, 689, 690, 693, 694, 695, 696, 697, 698, 699, 700, 701, 702, 703, 704, 705, 706, 707, 708, 709, 710, 711, 712, 713, 714, 715, 716, 717, 718, 719, 720, 721, 722, 723, 724, 725, 726, 727, 728, 729, 730, 731, 732, 733, 734, 735, 736, 737, 738, 739, 740, 741, 742, 743, 744, 749, 750, 751, 752, 753, 754, 755, 756, 757, 758, 759, 760, 765, 766, 791, 801, 802, 803, 804, 805, 806, 807, 900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 970, 971, 972, 973, 974, 975, 976, 977, 1002, 1003, 1004, 1032, 1057, 1058, 1059]"
+      Kaseya,"[900, 901, 902, 903, 904, 905, 906, 907, 908]"
       LNKFilesAndJumpLists,"[653, 654, 655, 656, 657, 658, 659]"
       LinuxOnWindowsProfileFiles,"[660, 661, 662, 663]"
       LiveUserFiles,"[566, 567, 568, 569]"
       LogFiles,"[664, 665]"
-      LogMeIn,"[613, 614, 615, 616, 908, 909]"
+      LogMeIn,"[613, 614, 615, 616, 909, 910]"
       MOF,[666]
       MSSQLErrorLog,"[149, 150]"
-      MacriumReflect,"[910, 911, 912]"
+      MacriumReflect,"[911, 912, 913]"
       Malwarebytes,"[26, 27, 28, 29]"
       ManageEngineLogs,[151]
-      Mattermost,[913]
+      Mattermost,[914]
       McAfee,"[30, 31, 32, 33, 34]"
       McAfee_ePO,[35]
-      MediaMonkey,"[914, 915]"
+      MediaMonkey,"[915, 916]"
       MemoryFiles,"[667, 668, 669, 670, 671]"
-      MicrosoftOneNote,"[916, 917, 918, 919, 920]"
-      MicrosoftStickyNotes,"[921, 922]"
-      MicrosoftTeams,"[923, 924, 925, 926]"
-      MicrosoftToDo,"[927, 928]"
-      MidnightCommander,[929]
+      MicrosoftOneNote,"[917, 918, 919, 920, 921]"
+      MicrosoftStickyNotes,"[922, 923]"
+      MicrosoftTeams,"[924, 925, 926, 927]"
+      MicrosoftToDo,"[928, 929]"
+      MidnightCommander,[930]
       MiniTimelineCollection,"[597, 598, 599, 600, 601, 602, 603, 605, 606, 607, 608, 633, 634, 635, 695, 696, 697, 698, 699, 700, 701, 702, 703, 704, 705, 706, 707, 708, 709, 710, 711, 712, 713, 714, 715, 716, 717, 718, 719, 720, 721, 722, 723, 724, 725, 726, 727, 728, 729, 730, 731, 732, 733, 734, 735, 736, 737, 738, 739, 740, 741, 742, 743, 744]"
-      MultiCommander,"[930, 931, 932, 933, 934]"
+      MultiCommander,"[931, 932, 933, 934, 935]"
       NGINXLogs,[152]
       NZBGet,"[583, 584]"
       NewsbinPro,[585]
       Newsleecher,[586]
-      Notepad__,"[935, 936]"
+      Notepad__,"[936, 937]"
       OfficeAutosave,"[672, 673, 674, 675]"
       OfficeDocumentCache,[676]
-      OneCommander,"[937, 938]"
-      OneDrive,"[939, 940, 941]"
-      OpenSSHClient,"[942, 943, 944, 945]"
-      OpenSSHServer,"[946, 947, 948, 949, 950, 951, 952, 953, 954]"
-      OpenVPNClient,"[955, 956, 957]"
+      OneCommander,"[938, 939]"
+      OneDrive,"[940, 941, 942]"
+      OpenSSHClient,"[943, 944, 945, 946]"
+      OpenSSHServer,"[947, 948, 949, 950, 951, 952, 953, 954, 955]"
+      OpenVPNClient,"[956, 957, 958]"
       Opera,"[548, 549]"
-      OutlookPSTOST,"[958, 959, 960, 961, 962, 963]"
+      OutlookPSTOST,"[959, 960, 961, 962, 963, 964]"
       P2PClients,"[571, 577, 578, 579, 580, 581, 582, 589, 590, 591]"
-      PeaZip,[964]
+      PeaZip,[965]
       PowerShellConsole,[153]
       Prefetch,"[677, 678]"
-      ProtonVPN,[965]
+      ProtonVPN,[966]
       PuffinSecureBrowser,"[550, 551, 552, 553, 554, 555, 556]"
-      Q_Dir,"[966, 967]"
-      QFinderPro__QNAP_,[968]
+      Q_Dir,"[967, 968]"
+      QFinderPro__QNAP_,[969]
       RDPCache,"[679, 680]"
       RDPLogs,"[681, 682, 683, 684, 685, 686, 687, 688]"
-      Radmin,"[969, 970, 971, 972, 973]"
+      Radmin,"[970, 971, 972, 973, 974]"
       RecentFileCache,"[689, 690]"
       RecycleBin,"[691, 692, 693, 694]"
       RecycleBin_DataFiles,"[691, 692]"
@@ -1959,7 +1966,7 @@ parameters:
       RegistryHives,"[695, 696, 697, 698, 699, 700, 701, 702, 703, 704, 705, 706, 707, 708, 709, 710, 711, 712, 713, 714, 715, 716, 717, 718, 719, 720, 721, 722, 723, 724, 725, 726, 727, 728, 729, 730, 731, 732, 733, 734, 735, 736, 737, 738, 739, 740, 741, 742, 743, 744]"
       RegistryHivesSystem,"[695, 696, 697, 698, 699, 700, 701, 702, 703, 704, 705, 706, 707, 708, 709, 710, 711, 712, 713, 714, 715, 716, 717, 718, 719, 720, 721, 722, 723, 724, 725, 726, 727, 728, 729, 730, 731, 732, 733, 734, 735]"
       RegistryHivesUser,"[736, 737, 738, 739, 740, 741, 742, 743, 744]"
-      RemoteAdmin,"[613, 614, 615, 616, 679, 680, 681, 682, 683, 684, 685, 686, 687, 688, 801, 802, 803, 804, 805, 806, 899, 900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 969, 970, 971, 972, 973, 974, 975, 976, 1001, 1002, 1003, 1031, 1056, 1057, 1058]"
+      RemoteAdmin,"[613, 614, 615, 616, 679, 680, 681, 682, 683, 684, 685, 686, 687, 688, 801, 802, 803, 804, 805, 806, 807, 900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 970, 971, 972, 973, 974, 975, 976, 977, 1002, 1003, 1004, 1032, 1057, 1058, 1059]"
       RogueKiller,[36]
       SABnbzd,"[587, 588]"
       SDB,"[745, 746, 747, 748]"
@@ -1968,72 +1975,74 @@ parameters:
       SUPERAntiSpyware,[37]
       SUSELinuxEnterpriseServer,"[101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113]"
       ScheduledTasks,"[755, 756, 757, 758, 759, 760]"
-      ScreenConnect,"[613, 614, 615, 616, 974, 975, 976]"
+      ScreenConnect,"[613, 614, 615, 616, 975, 976, 977]"
       SecureAge,[38]
       SentinelOne,[39]
-      ShareX,[977]
+      ServerTriage,"[143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 818, 819, 854, 859, 863, 864, 947, 948, 949, 950, 951, 952, 953, 954, 955]"
+      ShareX,[978]
       Shareaza,[589]
-      Signal,"[978, 979, 980, 981]"
+      Signal,"[979, 980, 981, 982]"
       SignatureCatalog,"[761, 762]"
-      Skype,"[982, 983, 984, 985, 986, 987, 988]"
-      Slack,[989]
-      Snagit,[990]
+      Skype,"[983, 984, 985, 986, 987, 988, 989]"
+      Slack,[990]
+      Snagit,[991]
       Sophos,"[40, 41, 613, 614, 615, 616]"
       Soulseek,"[590, 591]"
-      SpeedCommander,[991]
+      SpeedCommander,[992]
       StartupInfo,"[763, 764]"
-      SublimeText,[992]
-      SugarSync,"[993, 994, 995]"
-      SumatraPDF,"[996, 997]"
+      SublimeText,[993]
+      SugarSync,"[994, 995, 996]"
+      SumatraPDF,"[997, 998]"
       Symantec_AV_Logs,"[42, 43, 44, 45, 46, 47, 48, 49, 50, 613, 614, 615, 616]"
       Syscache,"[765, 766]"
-      TablacusExplorer,"[998, 999, 1000]"
-      TeamViewerLogs,"[1001, 1002, 1003]"
-      Telegram,"[1004, 1005]"
-      TeraCopy,[1006]
+      TablacusExplorer,"[999, 1000, 1001]"
+      TeamViewerLogs,"[1002, 1003, 1004]"
+      Telegram,"[1005, 1006]"
+      TeraCopy,[1007]
       ThumbCache,[767]
-      Thunderbird,"[1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017]"
+      Thunderbird,"[1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018]"
       TorrentClients,"[570, 594, 595, 596]"
       Torrents,[592]
       TotalAV,"[51, 52]"
-      TotalCommander,"[1018, 1019, 1020, 1021, 1022, 1023]"
-      TreeSize,[1024]
+      TotalCommander,"[1019, 1020, 1021, 1022, 1023, 1024]"
+      TreeSize,[1025]
       TrendMicro,"[53, 54, 55]"
       USBDevicesLogs,"[768, 769, 770]"
       Ubuntu,"[114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129]"
       Usenet,[593]
       UsenetClients,"[583, 584, 585, 586, 587, 588]"
       VIPRE,"[56, 57, 58, 59]"
-      VLC_Media_Player,"[1025, 1026]"
-      VMware,"[771, 772, 773, 774, 1027, 1028, 1029, 1030]"
-      VMwareInventory,[1027]
-      VMwareMemory,"[1028, 1029, 1030]"
-      VNCLogs,"[613, 614, 615, 616, 1031]"
-      Viber,"[1032, 1033, 1034, 1035, 1036]"
-      VirtualBox,"[771, 772, 773, 774, 1037, 1038, 1039, 1040, 1041, 1042]"
-      VirtualBoxConfig,"[1037, 1038]"
-      VirtualBoxLogs,"[1039, 1040, 1041]"
-      VirtualBoxMemory,[1042]
+      VLC_Media_Player,"[1026, 1027]"
+      VMware,"[771, 772, 773, 774, 1028, 1029, 1030, 1031]"
+      VMwareInventory,[1028]
+      VMwareMemory,"[1029, 1030, 1031]"
+      VNCLogs,"[613, 614, 615, 616, 1032]"
+      Viber,"[1033, 1034, 1035, 1036, 1037]"
+      VirtualBox,"[771, 772, 773, 774, 1038, 1039, 1040, 1041, 1042, 1043]"
+      VirtualBoxConfig,"[1038, 1039]"
+      VirtualBoxLogs,"[1040, 1041, 1042]"
+      VirtualBoxMemory,[1043]
       VirtualDisks,"[771, 772, 773, 774]"
       WBEM,"[775, 776]"
       WER,"[777, 778, 779, 780]"
       WSL,"[67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142]"
       WebBrowsers,"[436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 470, 471, 472, 473, 474, 478, 479, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515, 516, 517, 518, 519, 520, 521, 522, 523, 524, 525, 526, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552, 553, 554, 555, 556]"
+      WebServers,"[143, 144, 145, 146, 147, 148, 149, 150, 152]"
       Webroot,[60]
-      WhatsApp,"[1043, 1044]"
-      WinSCP,[1045]
+      WhatsApp,"[1044, 1045]"
+      WinSCP,[1046]
       WindowsDefender,"[61, 62, 63, 64, 65, 66]"
       WindowsFirewall,"[781, 782]"
       WindowsIndexSearch,[783]
       WindowsNotificationsDB,"[784, 785]"
       WindowsOSUpgradeArtifacts,"[786, 787, 788, 789, 790]"
       WindowsTimeline,[791]
-      WindowsYourPhone,[1046]
+      WindowsYourPhone,[1047]
       XPRestorePoints,[792]
-      XYplorer,"[1047, 1048, 1049, 1050]"
-      iTunesBackup,"[1051, 1052, 1053]"
-      mIRC,"[1054, 1055]"
-      mRemoteNG,"[1056, 1057, 1058]"
+      XYplorer,"[1048, 1049, 1050, 1051]"
+      iTunesBackup,"[1052, 1053, 1054]"
+      mIRC,"[1055, 1056]"
+      mRemoteNG,"[1057, 1058, 1059]"
       openSUSE,"[130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142]"
       qBittorrent,"[594, 595]"
       uTorrent,[596]

@@ -21,6 +21,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path"
 	"reflect"
 	"regexp"
@@ -131,6 +132,7 @@ func (self MockFileSystemAccessor) ReadDir(filepath string) ([]FileInfo, error) 
 		result = append(result, vtesting.MockFileInfo{
 			Name_:     k,
 			FullPath_: path.Join(subpath, k),
+			Mode_:     os.ModeDir,
 		})
 	}
 	return result, nil

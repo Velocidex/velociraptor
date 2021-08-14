@@ -109,3 +109,9 @@ func (self FlowPathManager) GetUploadsFile(
 			AddChild(ExtractClientPathComponents(client_path)...),
 	}
 }
+
+// The manager for the flow's notebook
+func (self FlowPathManager) Notebook() *NotebookPathManager {
+	notebook_id := fmt.Sprintf("N.%v-%v", self.flow_id, self.client_id)
+	return NewNotebookPathManager(notebook_id)
+}
