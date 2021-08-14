@@ -144,6 +144,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 func reallyDeleteClient(ctx context.Context,
 	config_obj *config_proto.Config, scope vfilter.Scope,
 	db datastore.DataStore, arg *DeleteClientArgs) error {
+
 	client_info, err := search.GetApiClient(ctx,
 		config_obj, arg.ClientId, false /* detailed */)
 	if err != nil {

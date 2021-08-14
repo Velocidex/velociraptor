@@ -146,10 +146,14 @@ type MemoryFileStore struct {
 }
 
 func (self *MemoryFileStore) Debug() {
+	fmt.Println(self.DebugString())
+}
+
+func (self *MemoryFileStore) DebugString() string {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	fmt.Printf("MemoryFileStore: \n")
+	result := "MemoryFileStore: \n"
 	for _, k := range self.Data.Keys() {
 		v_any, _ := self.Data.Get(k)
 		v := v_any.([]byte)
@@ -157,12 +161,14 @@ func (self *MemoryFileStore) Debug() {
 		if strings.HasSuffix(k, ".index") ||
 			strings.HasSuffix(k, ".idx") ||
 			strings.HasSuffix(k, ".tidx") {
-			fmt.Printf("%v: %v\n", k, hex.Dump(v))
+			result += fmt.Sprintf("%v: %v\n", k, hex.Dump(v))
 			continue
 		}
 
-		fmt.Printf("%v: %v\n", k, string(v))
+		result += fmt.Sprintf("%v: %v\n", k, string(v))
 	}
+
+	return result
 }
 
 func (self *MemoryFileStore) ReadFile(path api.FSPathSpec) (api.FileReader, error) {
@@ -246,12 +252,15 @@ func (self *MemoryFileStore) ListDirectory(root_path api.FSPathSpec) ([]api.File
 	self.Trace("ListDirectory", dirname)
 
 	root_components := root_path.Components()
-
+	seen := make(map[string]bool)
 	result := []api.FileInfo{}
 	for _, filename := range self.Paths.Keys() {
 		path_spec_any, _ := self.Paths.Get(filename)
 		path_spec := path_spec_any.(api.FSPathSpec)
-		v_any, _ := self.Data.Get(filename)
+		v_any, pres := self.Data.Get(filename)
+		if !pres {
+			continue
+		}
 		v := v_any.([]byte)
 
 		components := path_spec.Components()
@@ -261,9 +270,6 @@ func (self *MemoryFileStore) ListDirectory(root_path api.FSPathSpec) ([]api.File
 		}
 
 		name := components[len(root_components)]
-		if strings.HasSuffix(name, ".db") {
-			continue
-		}
 
 		// It is a directory if there are more components so we add a
 		// directory node.
@@ -275,27 +281,43 @@ func (self *MemoryFileStore) ListDirectory(root_path api.FSPathSpec) ([]api.File
 		// File
 		// root_components = ["a"]
 		// components = ["a", "b"]
+		var new_child api.FileInfo
 		if len(root_components)+1 == len(components) {
 			base_name := path.Base(filename)
-			name_type, name := api.GetFileStorePathTypeFromExtension(base_name)
-			child := root_path.AddChild(name).SetType(name_type)
 
-			result = append(result, &vtesting.MockFileInfo{
+			// This is a datastore path - skip
+			if strings.HasSuffix(base_name, ".db") {
+				continue
+			}
+
+			name_type, name := api.GetFileStorePathTypeFromExtension(base_name)
+			child := root_path.AddUnsafeChild(name).SetType(name_type)
+
+			new_child = &vtesting.MockFileInfo{
 				Name_:     child.Base(),
 				PathSpec_: child,
 				FullPath_: child.AsClientPath(),
 				Size_:     int64(len(v)),
-			})
+			}
 
 		} else {
-			child := root_path.AddChild(name)
-			result = append(result, &vtesting.MockFileInfo{
+			child := root_path.AddUnsafeChild(name).
+				SetType(api.PATH_TYPE_FILESTORE_ANY)
+			new_child = &vtesting.MockFileInfo{
 				Name_:     child.Base(),
 				PathSpec_: child,
 				FullPath_: child.AsClientPath(),
 				Size_:     int64(len(v)),
 				Mode_:     os.ModeDir,
-			})
+			}
+		}
+
+		// Deduplicate on client path
+		key := new_child.PathSpec().AsClientPath()
+		_, pres = seen[key]
+		if !pres {
+			seen[key] = true
+			result = append(result, new_child)
 		}
 	}
 

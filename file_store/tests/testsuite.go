@@ -71,6 +71,16 @@ func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
 	assert.NoError(self.T(), err)
 	fd.Close()
 
+	fd, err = self.filestore.WriteFile(path_spec.AddChild("dir", "value").
+		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
+	assert.NoError(self.T(), err)
+	fd.Close()
+
+	fd, err = self.filestore.WriteFile(path_spec.AddChild("dir2", "value").
+		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
+	assert.NoError(self.T(), err)
+	fd.Close()
+
 	infos, err := self.filestore.ListDirectory(
 		path_specs.NewSafeFilestorePath("subdir"))
 	assert.NoError(self.T(), err)

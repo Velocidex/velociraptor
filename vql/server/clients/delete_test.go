@@ -9,7 +9,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -19,11 +21,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+
+	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 var (
 	sample_flow = `collections/F.1234/task.db
-collections/F.1234/uploads/ntfs/%3A%3A.%3AC/Windows/notepad.exe
+collections/F.1234/uploads/ntfs/"\\.\C:"/Windows/notepad.exe
 collections/F.1234/logs
 collections/F.1234/logs.json.index
 collections/F.1234/uploads.json
@@ -58,6 +63,8 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 	db, err := datastore.GetDB(ConfigObj)
 	assert.NoError(self.T(), err)
 
+	golden := ordereddict.NewDict()
+
 	file_store_factory := file_store.GetFileStore(ConfigObj)
 
 	for _, line := range strings.Split(sample_flow, "\n") {
@@ -73,6 +80,20 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 		}
 	}
 
+	// Populate the client's space with some data.
+	client_info := &actions_proto.ClientInfo{
+		ClientId: self.client_id,
+	}
+	client_path_manager := paths.NewClientPathManager(self.client_id)
+	db.SetSubject(self.ConfigObj,
+		client_path_manager.Ping(), client_info)
+	db.SetSubject(self.ConfigObj,
+		client_path_manager.Path(), client_info)
+
+	golden.Set("Before filestore",
+		strings.Split(test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).
+			DebugString(), "\n"))
+
 	manager, _ := services.GetRepositoryManager()
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
@@ -81,6 +102,7 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 			&logging.FrontendComponent),
 		Env: ordereddict.NewDict(),
 	}
+
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
@@ -92,8 +114,12 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 			Set("really_do_it", true).
 			Set("client_id", self.client_id)))
 
-	test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
-	json.Dump(result)
+	golden.Set("After filestore",
+		strings.Split(test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).
+			DebugString(), "\n"))
+
+	golden.Set("Files deleted", result)
+	goldie.Assert(self.T(), "TestDeleteClient", json.MustMarshalIndent(golden))
 }
 
 func TestDeletePlugin(t *testing.T) {

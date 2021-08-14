@@ -1,6 +1,8 @@
 package path_specs
 
 import (
+	"strconv"
+
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -19,6 +21,10 @@ func (self FSPathSpec) Dir() api.FSPathSpec {
 		components: new_components,
 		path_type:  self.path_type,
 	}}
+}
+
+func (self FSPathSpec) MarshalJSON() ([]byte, error) {
+	return []byte(strconv.Quote(self.AsClientPath())), nil
 }
 
 // Adds an unsafe component to this path.
