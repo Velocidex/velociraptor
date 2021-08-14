@@ -2,6 +2,7 @@ package clients
 
 import (
 	"context"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -63,6 +64,7 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 	db, err := datastore.GetDB(ConfigObj)
 	assert.NoError(self.T(), err)
 
+	memory_db := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
 	golden := ordereddict.NewDict()
 
 	file_store_factory := file_store.GetFileStore(ConfigObj)
@@ -70,7 +72,8 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 	for _, line := range strings.Split(sample_flow, "\n") {
 		line = "/clients/C.123/" + line
 		if strings.HasSuffix(line, ".db") {
-			db.SetSubject(self.ConfigObj, paths.DSPathSpecFromClientPath(line),
+			db.SetSubject(self.ConfigObj,
+				paths.DSPathSpecFromClientPath(line),
 				&empty.Empty{})
 		} else {
 			path_spec := paths.FSPathSpecFromClientPath(line)
@@ -90,9 +93,14 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 	db.SetSubject(self.ConfigObj,
 		client_path_manager.Path(), client_info)
 
-	golden.Set("Before filestore",
-		strings.Split(test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).
-			DebugString(), "\n"))
+	// Get a list of all filestore items before deletion
+	before := []string{}
+	for _, k := range memory_db.Paths.Keys() {
+		if strings.Contains(k, "C.123") {
+			before = append(before, k)
+		}
+	}
+	golden.Set("Before filestore", before)
 
 	manager, _ := services.GetRepositoryManager()
 	builder := services.ScopeBuilder{
@@ -114,9 +122,20 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 			Set("really_do_it", true).
 			Set("client_id", self.client_id)))
 
-	golden.Set("After filestore",
-		strings.Split(test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).
-			DebugString(), "\n"))
+	after := []string{}
+	for _, k := range test_utils.GetMemoryFileStore(
+		self.T(), self.ConfigObj).Paths.Keys() {
+		if strings.Contains(k, "C.123") {
+			after = append(after, k)
+		}
+	}
+	golden.Set("After filestore", after)
+
+	sort.Slice(result, func(i, j int) bool {
+		l, _ := result[i].(*ordereddict.Dict).GetString("vfs_path")
+		r, _ := result[j].(*ordereddict.Dict).GetString("vfs_path")
+		return l < r
+	})
 
 	golden.Set("Files deleted", result)
 	goldie.Assert(self.T(), "TestDeleteClient", json.MustMarshalIndent(golden))

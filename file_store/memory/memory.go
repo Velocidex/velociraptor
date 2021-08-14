@@ -356,6 +356,7 @@ func (self *MemoryFileStore) Delete(path api.FSPathSpec) error {
 	filename := pathSpecToPath(path, self.config_obj)
 	self.Trace("Delete", filename)
 	self.Data.Delete(filename)
+	self.Paths.Delete(filename)
 	return nil
 }
 

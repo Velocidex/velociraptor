@@ -91,7 +91,9 @@ func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
 	}
 
 	sort.Strings(names)
-	assert.Equal(self.T(), names, []string{"Foo", "Foo"})
+	// One for the directory, one for the JSON and one for the JSON
+	// index
+	assert.Equal(self.T(), names, []string{"Foo", "Foo", "Foo"})
 }
 
 // List children recovers child's type based on extensions.

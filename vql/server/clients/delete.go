@@ -72,7 +72,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 				case output_chan <- ordereddict.NewDict().
 					Set("client_id", arg.ClientId).
 					Set("type", "Datastore").
-					Set("vfs_path", filename).
+					Set("vfs_path", filename.AsClientPath()).
 					Set("really_do_it", arg.ReallyDoIt):
 				}
 
@@ -110,7 +110,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 				case output_chan <- ordereddict.NewDict().
 					Set("client_id", arg.ClientId).
 					Set("type", "Filestore").
-					Set("vfs_path", filename).
+					Set("vfs_path", filename.AsClientPath()).
 					Set("really_do_it", arg.ReallyDoIt):
 				}
 
