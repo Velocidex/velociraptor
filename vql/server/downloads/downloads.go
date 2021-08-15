@@ -373,9 +373,10 @@ func downloadFlowToZip(
 	}
 
 	for row := range reader.Rows(ctx) {
-		vfs_path_any, pres := row.Get("vfs_path")
+		vfs_path, pres := row.GetString("vfs_path")
 		if pres {
-			err = copier(vfs_path_any.(api.FSPathSpec))
+			path_spec := paths.FSPathSpecFromClientPath(vfs_path)
+			err = copier(path_spec)
 		}
 	}
 

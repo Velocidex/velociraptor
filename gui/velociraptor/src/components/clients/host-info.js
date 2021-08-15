@@ -63,8 +63,6 @@ class QuarantineDialog extends Component {
                 operation: "set",
                 labels: ["Quarantine"],
             }, this.source.token).then((response) => {
-
-                this.source = axios.CancelToken.source();
                 runArtifact(
                     client_id,
                     "Windows.Remediation.Quarantine",

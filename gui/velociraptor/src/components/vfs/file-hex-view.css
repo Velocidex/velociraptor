@@ -36,5 +36,5 @@
 }
 
 .file-hex-view td, .file-hex-view button {
-    width: 100%;
+    width: fit-content;
 }

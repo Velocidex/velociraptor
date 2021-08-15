@@ -182,9 +182,9 @@ export default class NewHuntWizard extends React.Component {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         let state = this.setStateFromBase(this.props.baseHunt || {});
         this.setState(state);
-        this.source = axios.CancelToken.source();
     }
 
     componentWillUnmount() {
