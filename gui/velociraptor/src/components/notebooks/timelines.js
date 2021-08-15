@@ -145,7 +145,6 @@ export class AddVQLCellToTimeline extends React.Component {
                 }
                 _.each(response.data.rows[0].cell, (x, idx)=>{
                     let parsed = ToStandardTime(x);
-                    console.log(parsed);
                     if (_.isDate(parsed)) {
                         columns.push(response.data.columns[idx]);
                     };

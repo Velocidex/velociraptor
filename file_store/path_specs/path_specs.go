@@ -29,6 +29,9 @@ func (self DSPathSpec) MarshalJSON() ([]byte, error) {
 }
 
 func (self DSPathSpec) Base() string {
+	if len(self.components) == 0 {
+		return ""
+	}
 	return self.components[len(self.components)-1]
 }
 
