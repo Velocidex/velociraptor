@@ -19,7 +19,7 @@
 */
 
 // VQL plugins handy for registry parsing.
-package windows
+package registry
 
 import (
 	"context"

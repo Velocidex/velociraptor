@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import { withRouter }  from "react-router-dom";
 
 import api from '../core/api-service.js';
+import axios from 'axios';
+
 
 // A component that syncs a client id to a client record.
 class ClientSetterFromRoute extends Component {
@@ -16,7 +18,12 @@ class ClientSetterFromRoute extends Component {
     }
 
     componentDidMount() {
+        this.source = axios.CancelToken.source();
         this.maybeUpdateClientInfo();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     maybeUpdateClientInfo() {
@@ -37,7 +44,7 @@ class ClientSetterFromRoute extends Component {
                 query: client_id,
                 count: 1,
 
-            }).then(resp => {
+            }, this.source.token).then(resp => {
                 if (resp.data && resp.data.items) {
                     this.props.setClient(resp.data.items[0]);
                 }

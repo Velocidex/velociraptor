@@ -13,7 +13,6 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/amsi v0.0.0-20200608120838-e5d93b76f119
-	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.10-0.20210726130504-d5e402efc424
@@ -48,13 +47,11 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
-	github.com/golang/snappy v0.0.3
 	github.com/google/rpmpack v0.0.0-20200615183209-0c831d19bd44
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/csrf v1.6.2
 	github.com/gorilla/schema v1.1.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.5.0
-	github.com/hanwen/go-fuse v1.0.1-0.20190726130028-2f298055551b
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hillu/go-ntdll v0.0.0-20210404124636-a6f426aa8d92
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
@@ -78,9 +75,9 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/microcosm-cc/bluemonday v1.0.15
 	github.com/mitchellh/copystructure v1.2.0 // indirect
-	github.com/mitchellh/panicwrap v1.0.0 // indirect
+	github.com/mitchellh/panicwrap v1.0.0
 	github.com/olekukonko/tablewriter v0.0.4
-	github.com/oschwald/maxminddb-golang v1.8.0 // indirect
+	github.com/oschwald/maxminddb-golang v1.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.12.0
 	github.com/pquerna/cachecontrol v0.0.0-20200921180117-858c6e7e6b7e // indirect

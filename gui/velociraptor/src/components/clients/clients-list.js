@@ -43,6 +43,14 @@ export class LabelClients extends Component {
         onResolve: PropTypes.func.isRequired,
     }
 
+    componentDidMount() {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
     labelClients = () => {
         let labels = this.state.labels;
         if (this.state.new_label) {
@@ -56,7 +64,7 @@ export class LabelClients extends Component {
             client_ids: client_ids,
             operation: "set",
             labels: labels,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             this.props.onResolve();
         });
     }
@@ -146,6 +154,14 @@ class DeleteClients extends Component {
         flow_id: null,
     }
 
+    componentDidMount() {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
     deleteClients = () => {
         let client_ids = _.map(this.props.affectedClients,
                                client => client.client_id);
@@ -158,7 +174,7 @@ class DeleteClients extends Component {
                          { "key": "ClientIdList", "value": client_ids.join(",")},
                          { "key": "ReallyDoIt", "value": "Y"},
                      ]}}],
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             // Hold onto the flow id.
             this.setState({flow_id: response.data.flow_id});
 
@@ -167,7 +183,7 @@ class DeleteClients extends Component {
                 api.get("v1/GetFlowDetails", {
                     client_id: "server",
                     flow_id: this.state.flow_id,
-                }).then((response) => {
+                }, this.source.token).then((response) => {
                     let context = response.data.context;
                     if (context.state === "RUNNING") {
                         this.setState({flow_context: context});
@@ -421,7 +437,7 @@ class VeloClientList extends Component {
             client_ids: [client.client_id],
             operation: "remove",
             labels: [label],
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             client.labels = client.labels.filter(x=>x !== label);
             this.setState({showLabelDialog: false});
         });

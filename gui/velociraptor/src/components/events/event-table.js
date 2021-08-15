@@ -13,6 +13,8 @@ import Table  from 'react-bootstrap/Table';
 import utils from './utils.js';
 import { HotKeys, ObserveKeys } from "react-hotkeys";
 import { Typeahead, Token } from 'react-bootstrap-typeahead';
+import axios from 'axios';
+
 import "react-bootstrap-typeahead/css/Typeahead.css";
 
 import {
@@ -44,7 +46,12 @@ class EventTableLabelGroup extends React.Component {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.loadLabels();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     loadLabels = () => {
@@ -52,7 +59,7 @@ class EventTableLabelGroup extends React.Component {
             query: "label:*",
             limit: 100,
             type: 1,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             let labels = _.map(response.data.names, (x) => {
                 x = x.replace(/^label:/, "");
                 return x;
@@ -202,7 +209,12 @@ export class EventTableWizard extends React.Component {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.fetchEventTable();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -210,7 +222,7 @@ export class EventTableWizard extends React.Component {
     }
 
     fetchEventTable = () => {
-        api.get("v1/GetClientMonitoringState").then(resp => {
+        api.get("v1/GetClientMonitoringState", {}, this.source.token).then(resp => {
             // For historical reasons the client monitoring state
             // protobuf is more complex than it needs to be. We
             // convert it to more sensible internal representation. It
@@ -404,7 +416,7 @@ export class ServerEventTableWizard extends React.Component {
     }
 
     fetchEventTable = () => {
-        api.get("v1/GetServerMonitoringState").then(resp => {
+        api.get("v1/GetServerMonitoringState", {}, this.source.token).then(resp => {
             let empty_table = {All: {artifacts: [], specs: {}}};
             this.setState({tables: empty_table, current_table: empty_table.All});
 

@@ -36,6 +36,14 @@ class VeloShellCell extends Component {
         showDeleteWizard: false,
     }
 
+    componentDidMount() {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
     getInput = () => {
         if (!this.props.flow || !this.props.flow.request) {
             return "";
@@ -69,7 +77,7 @@ class VeloShellCell extends Component {
             client_id: this.props.flow.client_id,
             flow_id: this.props.flow.session_id,
             rows: 500,
-        }).then(function(response) {
+        }, this.source.token).then(function(response) {
             if (!response || !response.data || !response.data.rows) {
                 return;
             };
@@ -96,7 +104,7 @@ class VeloShellCell extends Component {
         api.post('v1/CancelFlow', {
             client_id: this.props.flow.client_id,
             flow_id: this.props.flow.session_id,
-        }).then(function() {
+        }, this.source.token).then(function() {
             this.props.fetchLastShellCollections();
         }.bind(this));
     };
@@ -279,7 +287,7 @@ class VeloVQLCell extends Component {
         api.post('v1/CancelFlow', {
             client_id: this.props.flow.client_id,
             flow_id: this.props.flow.session_id,
-        }).then(function() {
+        }, this.source.token).then(function() {
             this.props.fetchLastShellCollections();
         }.bind(this));
     };
@@ -557,7 +565,7 @@ class ShellViewer extends Component {
         api.post('v1/CollectArtifact', params).then(response=>{
             // Refresh the artifacts immediately.
             this.fetchLastShellCollections();
-        });
+        }, this.source.token);
     };
 
     renderCells(flows) {

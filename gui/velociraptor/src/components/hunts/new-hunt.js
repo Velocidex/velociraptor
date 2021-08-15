@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import _ from 'lodash';
 import Modal from 'react-bootstrap/Modal';
-
+import axios from 'axios';
 import StepWizard from 'react-step-wizard';
 
 import Form from 'react-bootstrap/Form';
@@ -184,6 +184,11 @@ export default class NewHuntWizard extends React.Component {
     componentDidMount = () => {
         let state = this.setStateFromBase(this.props.baseHunt || {});
         this.setState(state);
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     setArtifacts = (artifacts) => {
@@ -245,7 +250,9 @@ export default class NewHuntWizard extends React.Component {
             state.hunt_parameters.expires = expiry;
 
             // Resolve the artifacts from the request into a list of descriptors.
-            api.get("v1/GetArtifacts", {names: request.artifacts}).then(response=>{
+            api.get("v1/GetArtifacts",
+                    {names: request.artifacts},
+                    this.source.token).then(response=>{
                 if (response && response.data &&
                     response.data.items && response.data.items.length) {
 

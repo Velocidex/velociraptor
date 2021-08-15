@@ -89,6 +89,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import UserConfig from './user.js';
 
 import api from '../core/api-service.js';
+import axios from 'axios';
+
+
 
 export class SettingsButton extends Component {
     static propTypes = {
@@ -167,7 +170,8 @@ export default class VeloAce extends Component {
         // server.
         if (!_.isEqual(new_options, this.getUserOptions())) {
             api.post("v1/SetGUIOptions",
-                     {options: JSON.stringify(new_options)}).then((response) => {
+                     {options: JSON.stringify(new_options)},
+                     this.source.token).then((response) => {
                          this.context.updateTraits();
                      });
         }
@@ -177,6 +181,14 @@ export default class VeloAce extends Component {
         // The raw ace editor.
         ace: {},
         mode: "text",
+    }
+
+    componentDidMount() {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     componentDidUpdate() {

@@ -192,7 +192,7 @@ export class AddVQLCellToTimeline extends React.Component {
                 api.get("v1/GetFlowDetails", {
                     client_id: "server",
                     flow_id: this.state.lastOperationId,
-                }).then((response) => {
+                }, this.source.token).then((response) => {
                     let context = response.data.context;
                     if (context.state === "RUNNING") {
                         return;

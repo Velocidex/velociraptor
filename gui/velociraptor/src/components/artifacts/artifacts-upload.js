@@ -9,7 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import classNames from "classnames";
 import api from '../core/api-service.js';
 import BootstrapTable from 'react-bootstrap-table-next';
-
+import axios from 'axios';
 import filterFactory from 'react-bootstrap-table2-filter';
 import { formatColumns } from "../core/table.js";
 
@@ -25,6 +25,14 @@ export default class ArtifactsUpload extends React.Component {
         uploaded: [],
     }
 
+    componentDidMount() {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
     uploadFile = () => {
         if (!this.state.pack_file) {
             return;
@@ -37,7 +45,8 @@ export default class ArtifactsUpload extends React.Component {
             };
 
             this.setState({loading: true});
-            api.post("v1/LoadArtifactPack", request).then(response => {
+            api.post("v1/LoadArtifactPack", request,
+                     this.source.token).then(response => {
                 let uploaded = _.map(response.data.successful_artifacts,
                                      (x, idx)=>{
                                          return {name: x, id: idx};

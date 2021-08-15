@@ -10,6 +10,8 @@ import ToolViewer from "../tools/tool-viewer.js";
 import { HotKeys, ObserveKeys } from "react-hotkeys";
 import ValidatedInteger from '../forms/validated_int.js';
 import api from '../core/api-service.js';
+import axios from 'axios';
+
 
 import {
     NewCollectionSelectArtifacts,
@@ -40,7 +42,9 @@ class OfflineCollectorParameters  extends React.Component {
     }
 
     componentDidMount = () => {
-        api.get("v1/GetArtifacts", {report_type: "html"}).then((response) => {
+        this.source = axios.CancelToken.source();
+        api.get("v1/GetArtifacts", {report_type: "html"},
+                this.source.token).then((response) => {
             let template_artifacts = [];
             for(var i = 0; i<response.data.items.length; i++) {
                 var item = response.data.items[i];
@@ -49,6 +53,10 @@ class OfflineCollectorParameters  extends React.Component {
 
             this.setState({template_artifacts: template_artifacts});
         });
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     render() {
@@ -386,6 +394,20 @@ class OfflineCollectorParameters  extends React.Component {
                       </Form.Control>
                     </Col>
                   </Form.Group>
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">Output Prefix</Form.Label>
+                    <Col sm="8">
+                      <Form.Control as="input"
+                                    placeholder="Output filename prefix"
+                                    value={this.props.parameters.opt_output_directory}
+                                    onChange={e => {
+                                        this.props.parameters.opt_output_directory = e.target.value;
+                                        this.props.setParameters(this.props.parameters);
+                                    }}
+                      />
+                    </Col>
+                  </Form.Group>
+
                 </Form>
               </Modal.Body>
               <Modal.Footer>
@@ -429,6 +451,7 @@ export default class OfflineCollectorWizard extends React.Component {
             template: "",
             password: "",
             opt_level: 5,
+            opt_output_directory: "",
             opt_format: "jsonl",
         },
     }
@@ -465,6 +488,7 @@ export default class OfflineCollectorWizard extends React.Component {
         env.push({key: "opt_admin", value: "Y"});
         env.push({key: "opt_tempdir", value: this.state.collector_parameters.opt_tempdir});
         env.push({key: "opt_level", value: this.state.collector_parameters.opt_level.toString()});
+        env.push({key: "opt_output_directory", value: this.state.collector_parameters.opt_output_directory});
         env.push({key: "opt_format", value: this.state.collector_parameters.opt_format});
 
         return request;

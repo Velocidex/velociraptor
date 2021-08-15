@@ -12,7 +12,7 @@ const POLL_TIME = 5000;
 // A component which maintains the user settings
 export class UserSettings extends React.Component {
     updateTraits = () => {
-        api.get("v1/GetUserUITraits").then((response) => {
+        api.get("v1/GetUserUITraits", {}, this.source.token).then((response) => {
             let traits = response.data.interface_traits;
             traits.username = response.data.username;
             this.setState({traits: traits});

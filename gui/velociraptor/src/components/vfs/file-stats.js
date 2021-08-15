@@ -27,11 +27,22 @@ class VeloFileStats extends Component {
         updateOperationFlowId: false,
     }
 
+    componentDidMount() {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
+    }
+
     cancelDownload = () => {
         api.post("v1/CancelFlow", {
             client_id: this.props.client.client_id,
             flow_id: this.state.updateOperationFlowId,
-        });
+        }, this.source.token);
     }
 
     updateFile = () => {
@@ -53,7 +64,7 @@ class VeloFileStats extends Component {
                          env: [{key: "Path", value: selectedRow._FullPath},
                                {key: "Accessor", value: selectedRow._Accessor}],
                      }}],
-        }).then(response => {
+        }, this.source.token).then(response => {
             let flow_id = response.data.flow_id;
             this.setState({updateOperationFlowId: flow_id});
 
@@ -63,7 +74,7 @@ class VeloFileStats extends Component {
                 api.get("v1/GetFlowDetails", {
                     client_id: this.props.client.client_id,
                     flow_id: flow_id,
-                }).then((response) => {
+                }, this.source.token).then((response) => {
                     if (response.data.context.state !== "RUNNING") {
                         this.source.cancel("unmounted");
                         clearInterval(this.interval);
@@ -86,15 +97,6 @@ class VeloFileStats extends Component {
                 });
             }, POLL_TIME);
         });
-    }
-
-    componentWillUnmount() {
-        if (this.source) {
-            this.source.cancel("unmounted");
-        }
-        if (this.interval) {
-            clearInterval(this.interval);
-        }
     }
 
     render() {

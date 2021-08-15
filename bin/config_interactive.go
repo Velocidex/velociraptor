@@ -26,7 +26,6 @@ const (
 	oauth_sso   = "Authenticate users with SSO"
 
 	// FileStore implementations
-	// mysql_datastore     = "MySQL"
 	filebased_datastore = "FileBaseDataStore"
 )
 

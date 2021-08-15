@@ -87,7 +87,7 @@ class ServerInfo extends Component {
         };
         api.post("v1/SetClientMetadata", params).then(() => {
             this.fetchMetadata();
-        });
+        }, this.source.token);
     }
 
     setMode = (mode) => {

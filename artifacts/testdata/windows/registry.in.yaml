@@ -32,3 +32,18 @@ Queries:
         accessor='reg')
     WHERE Type
     ORDER BY FullPath
+
+  # Check for value creation
+  - LET KeyPath = '''HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\"Microsoft-Windows-Application Server-Applications/Debug"/Foobar2/'''
+  - SELECT reg_set_value(path=KeyPath + "Value",
+                         value="Hello", type="SZ", create=TRUE)
+    FROM scope()
+
+  # We should be able to see the new value in there
+  - SELECT FullPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")
+
+  # Remove the key (this only works for keys without key children).
+  - SELECT reg_rm_key(path=KeyPath) FROM scope()
+
+  # Check that its gone now.
+  - SELECT FullPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")

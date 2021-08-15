@@ -5,7 +5,7 @@ import api from '../core/api-service.js';
 import Pagination from '../bootstrap/pagination/index.js';
 import Spinner from '../utils/spinner.js';
 import utils from './utils.js';
-
+import axios from 'axios';
 import "./file-hex-view.css";
 
 export default class FileHexView extends React.Component {
@@ -23,7 +23,12 @@ export default class FileHexView extends React.Component {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.fetchText_(0);
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -68,7 +73,7 @@ export default class FileHexView extends React.Component {
         };
 
         this.setState({loading: true});
-        api.get_blob(url, params).then(buffer=> {
+        api.get_blob(url, params, this.source.token).then(buffer=> {
             const view = new Uint8Array(buffer);
             this.parseFileContentToHexRepresentation_(view, page);
         });

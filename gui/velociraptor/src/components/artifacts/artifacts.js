@@ -140,7 +140,7 @@ class ArtifactInspector extends React.Component {
         api.post('v1/SetArtifactFile', {
             artifact: "name: "+selected,
             op: "DELETE",
-        }).then(resp => {
+        }, this.source.token).then(resp => {
             this.fetchRows(this.state.current_filter);
             this.setState({showDeleteArtifactDialog: false});
         });

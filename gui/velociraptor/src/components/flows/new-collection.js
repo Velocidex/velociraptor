@@ -168,10 +168,10 @@ class NewCollectionSelectArtifacts extends React.Component {
         this.setState({loading: true});
         api.get("v1/GetArtifacts", {
             type: this.props.artifactType,
-            search_term: value}).then((response) => {
-            let items = response.data.items || [];
-            this.setState({matchingDescriptors: items, loading: false});
-        });
+            search_term: value}, this.source.token).then((response) => {
+                let items = response.data.items || [];
+                this.setState({matchingDescriptors: items, loading: false});
+            });
     }
 
     toggleSelection = (row, e) => {
@@ -189,7 +189,7 @@ class NewCollectionSelectArtifacts extends React.Component {
     fetchFavorites = () => {
         api.get('v1/GetUserFavorites', {
             type: this.props.artifactType,
-        }).then(response=>{
+        }, this.source.token).then(response=>{
             this.setState({
                 favorites: response.data.items,
                 favorite_options: _.map(response.data.items, x=>{
@@ -206,7 +206,7 @@ class NewCollectionSelectArtifacts extends React.Component {
 
         api.get("v1/GetArtifacts", {
             type: this.props.artifactType,
-            names: artifacts}).then((response) => {
+            names: artifacts}, this.source.token).then((response) => {
                 let items = response.data.items || [];
                 this.setState({
                     selectedDescriptor: items[0],
@@ -554,6 +554,14 @@ class NewCollectionLaunch extends React.Component {
         tools: PropTypes.array,
     }
 
+    componentDidMount() {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
     componentDidUpdate = (prevProps, prevState, rootNode) => {
         if (this.props.isActive && !prevProps.isActive) {
             this.processTools();
@@ -612,7 +620,7 @@ class NewCollectionLaunch extends React.Component {
         api.get('v1/GetToolInfo', {
             name: first_tool,
             materialize: true,
-        }).then(response=>{
+        }, this.source.token).then(response=>{
             this.checkTools(tools);
         }).catch(err=>{
             let data = err.response && err.response.data && err.response.data.message;
@@ -665,7 +673,12 @@ class NewCollectionWizard extends React.Component {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.initializeFromBaseFlow();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -694,7 +707,8 @@ class NewCollectionWizard extends React.Component {
         });
 
         // Resolve the artifacts from the request into a list of descriptors.
-        api.get("v1/GetArtifacts", {names: request.artifacts}).then(response=>{
+        api.get("v1/GetArtifacts",
+                {names: request.artifacts}, this.source.token).then(response=>{
                 if (response && response.data &&
                     response.data.items && response.data.items.length) {
 

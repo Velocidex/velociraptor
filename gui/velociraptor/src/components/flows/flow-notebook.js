@@ -92,7 +92,8 @@ export default class FlowNotebook extends React.Component {
                 ],
             };
 
-            api.post('v1/NewNotebook', request).then((response) => {
+            api.post('v1/NewNotebook', request,
+                     this.source.token).then((response) => {
                 let cell_metadata = response.data && response.data.cell_metadata;
                 if (_.isEmpty(cell_metadata)) {
                     return;

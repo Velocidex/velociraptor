@@ -219,13 +219,15 @@ class EventMonitoring extends React.Component {
     }
 
     setEventTable = (request) => {
-        api.post("v1/SetClientMonitoringState", request).then(resp=>{
+        api.post("v1/SetClientMonitoringState", request,
+                 this.source.token).then(resp=>{
             this.setState({showEventTableWizard: false});
         });
     }
 
     setServerEventTable = (request) => {
-        api.post("v1/SetServerMonitoringState", request).then(resp=>{
+        api.post("v1/SetServerMonitoringState", request,
+                 this.source.token).then(resp=>{
             this.setState({showServerEventTableWizard: false});
         });
     }

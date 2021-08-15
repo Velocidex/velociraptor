@@ -1,5 +1,8 @@
 SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  {
+  "FullPath": "HKCU"
+ },
+ {
   "FullPath": "HKEY_CLASSES_ROOT"
  },
  {
@@ -16,9 +19,18 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  },
  {
   "FullPath": "HKEY_USERS"
+ },
+ {
+  "FullPath": "HKLM"
+ },
+ {
+  "FullPath": "HKU"
  }
 ]SELECT FullPath FROM glob(globs="\\*", accessor="reg")[
  {
+  "FullPath": "HKCU"
+ },
+ {
   "FullPath": "HKEY_CLASSES_ROOT"
  },
  {
@@ -35,6 +47,12 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  },
  {
   "FullPath": "HKEY_USERS"
+ },
+ {
+  "FullPath": "HKLM"
+ },
+ {
+  "FullPath": "HKU"
  }
 ]SELECT FullPath FROM glob(globs="\\HKEY_LOCAL_MACHINE\\*", accessor="reg")[
  {
@@ -110,4 +128,20 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  {
   "FullPath": "\\HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\PortProxy\\v4tov4\\tcp\\\"0.0.0.0/3389\""
  }
-]
+]LET KeyPath = '''HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\"Microsoft-Windows-Application Server-Applications/Debug"/Foobar2/'''[]SELECT reg_set_value(path=KeyPath + "Value", value="Hello", type="SZ", create=TRUE) FROM scope()[
+ {
+  "reg_set_value(path=KeyPath + \"Value\", value=\"Hello\", type=\"SZ\", create=TRUE)": true
+ }
+]SELECT FullPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")[
+ {
+  "FullPath": "\\HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WINEVT\\Channels\\\"Microsoft-Windows-Application Server-Applications/Debug\"\\Foobar2\\Value",
+  "Data": {
+   "type": "SZ",
+   "value": "Hello"
+  }
+ }
+]SELECT reg_rm_key(path=KeyPath) FROM scope()[
+ {
+  "reg_rm_key(path=KeyPath)": true
+ }
+]SELECT FullPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")[]

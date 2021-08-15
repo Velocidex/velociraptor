@@ -7,7 +7,7 @@ import Pagination from '../bootstrap/pagination/index.js';
 import Spinner from '../utils/spinner.js';
 import utils from './utils.js';
 import VeloAce from '../core/ace.js';
-
+import axios from 'axios';
 import "./file-hex-view.css";
 
 
@@ -26,7 +26,12 @@ export default class FileTextView extends React.Component {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.fetchText_(0);
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -70,7 +75,7 @@ export default class FileTextView extends React.Component {
         };
 
         this.setState({loading: true});
-        api.get_blob(url, params).then(buffer=>{
+        api.get_blob(url, params, this.source.token).then(buffer=>{
             const view = new Uint8Array(buffer);
             this.parseFileContentToTextRepresentation_(view, page);
         }, ()=>{

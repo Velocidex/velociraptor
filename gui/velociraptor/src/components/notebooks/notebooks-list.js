@@ -20,6 +20,7 @@ import Alert from 'react-bootstrap/Alert';
 
 import UserForm from '../utils/users.js';
 import api from '../core/api-service.js';
+import axios from 'axios';
 
 import { formatColumns } from "../core/table.js";
 import { withRouter }  from "react-router-dom";
@@ -33,6 +34,7 @@ class NewNotebook extends React.Component {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         if(!_.isEmpty(this.props.notebook)) {
             this.setState({
                 name: this.props.notebook.name,
@@ -43,6 +45,10 @@ class NewNotebook extends React.Component {
                 collaborators: this.props.notebook.collaborators || [],
             });
         }
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     newNotebook = () => {
@@ -58,7 +64,7 @@ class NewNotebook extends React.Component {
             modified_time: this.state.modified_time,
             notebook_id: this.state.notebook_id,
             cell_metadata: this.state.cell_metadata,
-        }).then(this.props.updateNotebooks);
+        }, this.source.token).then(this.props.updateNotebooks);
     }
 
     state = {
@@ -138,10 +144,18 @@ class DeleteNotebook extends React.Component {
         updateNotebooks: PropTypes.func.isRequired,
     }
 
+    componentDidMount() {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
     deleteNotebook = () => {
         let notebook = Object.assign({}, this.props.notebook);
         notebook.hidden = true;
-        api.post("v1/UpdateNotebook", notebook).then(
+        api.post("v1/UpdateNotebook", notebook, this.source.token).then(
             this.props.updateNotebooks);
     }
 

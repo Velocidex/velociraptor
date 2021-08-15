@@ -425,8 +425,6 @@ class VeloHostInfo extends Component {
                                     showQuarantineDialog: false,
                                 })}
               />}
-              <Spinner loading={this.state.loading ||
-                                this.state.metadata_loading} />
               <div className="full-width-height">
                 <div className="client-info">
                   <div className="btn-group float-left toolbar" data-toggle="buttons">
