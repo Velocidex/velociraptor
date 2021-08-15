@@ -109,8 +109,7 @@ func (self *TestDataStore) Walk(
 	root api.DSPathSpec, walkFn WalkFunc) error {
 
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
+	result_path_specs := []api.DSPathSpec{}
 	root_components := root.Components()
 	for k := range self.Subjects {
 		components := self.Components[k]
@@ -118,7 +117,13 @@ func (self *TestDataStore) Walk(
 			continue
 		}
 
-		walkFn(path_specs.NewSafeDatastorePath(components...))
+		result_path_specs = append(result_path_specs,
+			path_specs.NewSafeDatastorePath(components...))
+	}
+	self.mu.Unlock()
+
+	for _, path_spec := range result_path_specs {
+		walkFn(path_spec)
 	}
 
 	return nil
@@ -189,7 +194,8 @@ func (self *TestDataStore) GetSubject(
 		result, pres = self.Subjects[fallback_path]
 		if !pres {
 			return errors.WithMessage(os.ErrNotExist,
-				fmt.Sprintf("While openning %v: not found", urn))
+				fmt.Sprintf("While openning %v: not found",
+					urn.AsClientPath()))
 		}
 	}
 	proto.Merge(message, result)

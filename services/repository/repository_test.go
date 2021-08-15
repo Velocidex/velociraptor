@@ -1,4 +1,4 @@
-package repository
+package repository_test
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	repository_impl "www.velocidex.com/golang/velociraptor/services/repository"
 )
 
 func TestLoadingFromFilestore(t *testing.T) {
@@ -43,7 +44,7 @@ func TestLoadingFromFilestore(t *testing.T) {
 	sm := services.NewServiceManager(ctx, config_obj)
 	defer sm.Close()
 
-	require.NoError(t, sm.Start(StartRepositoryManager))
+	require.NoError(t, sm.Start(repository_impl.StartRepositoryManager))
 
 	manager, err := services.GetRepositoryManager()
 	assert.NoError(t, err)

@@ -743,6 +743,11 @@ func (self *ApiServer) updateNotebookCell(
 			ListenForNotification(in.CellId)
 		defer remove_notification()
 
+		default_notebook_expiry := self.config.Defaults.NotebookCellTimeoutMin
+		if default_notebook_expiry == 0 {
+			default_notebook_expiry = 10
+		}
+
 		select {
 		// Query is done - get out of here.
 		case <-query_ctx.Done():
@@ -752,7 +757,7 @@ func (self *ApiServer) updateNotebookCell(
 			tmpl.Scope.Log("Cancelled after %v !", time.Since(start_time))
 
 			// Set a timeout.
-		case <-time.After(10 * time.Minute):
+		case <-time.After(time.Duration(default_notebook_expiry) * time.Minute):
 			tmpl.Scope.Log("Query timed out after %v !", time.Since(start_time))
 		}
 

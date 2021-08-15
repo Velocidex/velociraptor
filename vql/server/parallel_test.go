@@ -5,15 +5,11 @@ import (
 	"fmt"
 	"sort"
 	"testing"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -22,11 +18,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
@@ -40,57 +31,24 @@ name: Test.Artifact
 )
 
 type TestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
-
+	test_utils.TestSuite
 	client_id, flow_id string
-}
-
-func (self *TestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().WithVerbose(true).
-		LoadAndValidate()
-	require.NoError(self.T(), err)
-
-	self.config_obj.Frontend.DoNotCompressArtifacts = true
-
-	// Start essential services.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
-	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
-	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
-	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-
-	self.client_id = "C.123"
-	self.flow_id = "F.123"
-}
-
-func (self *TestSuite) TearDownTest() {
-	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
 }
 
 func (self *TestSuite) TestArtifactSource() {
 	manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)
 
-	repository, err := manager.GetGlobalRepository(self.config_obj)
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	_, err = repository.LoadYaml(testArtifact, true)
 	assert.NoError(self.T(), err)
 
-	file_store_factory := file_store.GetFileStore(self.config_obj)
+	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 
 	path_manager, err := artifacts.NewArtifactPathManager(
-		self.config_obj, self.client_id, self.flow_id,
+		self.ConfigObj, self.client_id, self.flow_id,
 		"Test.Artifact")
 	assert.NoError(self.T(), err)
 
@@ -108,7 +66,7 @@ func (self *TestSuite) TestArtifactSource() {
 	ctx := context.Background()
 
 	row_chan, err := breakIntoScopes(
-		ctx, self.config_obj,
+		ctx, self.ConfigObj,
 		&ParallelPluginArgs{
 			Artifact:  "Test.Artifact",
 			FlowId:    self.flow_id,
@@ -124,9 +82,9 @@ func (self *TestSuite) TestArtifactSource() {
 	}
 
 	builder := services.ScopeBuilder{
-		Config:     self.config_obj,
+		Config:     self.ConfigObj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     logging.NewPlainLogger(self.config_obj, &logging.FrontendComponent),
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env: ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id),
@@ -152,20 +110,20 @@ SELECT * FROM parallelize(
 
 	assert.Equal(self.T(), 100, len(result))
 
-	// test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
+	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
 }
 
 func (self *TestSuite) TestHuntsSource() {
 	manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)
 
-	repository, err := manager.GetGlobalRepository(self.config_obj)
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	_, err = repository.LoadYaml(testArtifact, true)
 	assert.NoError(self.T(), err)
 
-	file_store_factory := file_store.GetFileStore(self.config_obj)
+	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 
 	hunt_id := "H.123"
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id).Clients()
@@ -185,7 +143,7 @@ func (self *TestSuite) TestHuntsSource() {
 			Set("Timestamp", 0))
 
 		path_manager, err := artifacts.NewArtifactPathManager(
-			self.config_obj, client_id, flow_id, "Test.Artifact")
+			self.ConfigObj, client_id, flow_id, "Test.Artifact")
 		assert.NoError(self.T(), err)
 
 		// Append logs to messages from previous packets.
@@ -206,7 +164,7 @@ func (self *TestSuite) TestHuntsSource() {
 	ctx := context.Background()
 
 	row_chan, err := breakIntoScopes(
-		ctx, self.config_obj,
+		ctx, self.ConfigObj,
 		&ParallelPluginArgs{
 			Artifact:  "Test.Artifact",
 			HuntId:    hunt_id,
@@ -228,9 +186,9 @@ func (self *TestSuite) TestHuntsSource() {
 	goldie.Assert(self.T(), "TestHuntsSource", json.MustMarshalIndent(sections))
 
 	builder := services.ScopeBuilder{
-		Config:     self.config_obj,
+		Config:     self.ConfigObj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     logging.NewPlainLogger(self.config_obj, &logging.FrontendComponent),
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict().Set("MyHuntId", hunt_id),
 	}
 	scope := manager.BuildScope(builder)
@@ -256,5 +214,8 @@ SELECT * FROM parallelize(
 }
 
 func TestParallelPlugin(t *testing.T) {
-	suite.Run(t, &TestSuite{})
+	suite.Run(t, &TestSuite{
+		client_id: "C.123",
+		flow_id:   "F.123",
+	})
 }

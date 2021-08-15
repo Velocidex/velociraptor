@@ -429,8 +429,6 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, 
 	if err != nil {
 		return nil, errors.New("Unable to open raw device")
 	}
-	fmt.Printf("Subpath %v Device %v\n", subpath, device)
-
 	if subpath == "" {
 		return self.openRawDevice(device)
 	}

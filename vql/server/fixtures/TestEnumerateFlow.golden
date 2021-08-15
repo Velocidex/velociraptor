@@ -1,0 +1,42 @@
+[
+ {
+  "Type": "UploadMetadata",
+  "VFSPath": "/clients/C.123/collections/F.1234/uploads.json"
+ },
+ {
+  "Type": "Log",
+  "VFSPath": "/clients/C.123/collections/F.1234/logs"
+ },
+ {
+  "Type": "Log",
+  "VFSPath": "/clients/C.123/collections/F.1234/logs.json.index"
+ },
+ {
+  "Type": "CollectionContext",
+  "VFSPath": "/clients/C.123/collections/F.1234.db"
+ },
+ {
+  "Type": "Task",
+  "VFSPath": "/clients/C.123/collections/F.1234/task.db"
+ },
+ {
+  "Type": "Notebook",
+  "VFSPath": "/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123.json.db"
+ },
+ {
+  "Type": "NotebookData",
+  "VFSPath": "/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT16FBL4PM.json.db"
+ },
+ {
+  "Type": "NotebookData",
+  "VFSPath": "/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU.json.db"
+ },
+ {
+  "Type": "NotebookItem",
+  "VFSPath": "/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json"
+ },
+ {
+  "Type": "NotebookItem",
+  "VFSPath": "/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json.index"
+ }
+]

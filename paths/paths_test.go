@@ -72,6 +72,7 @@ func (self *PathManagerTestSuite) getDatastorePath(path_spec api.DSPathSpec) str
 	return results[0]
 }
 
+// Gets the actual file store path written (including escapes)
 func (self *PathManagerTestSuite) getFilestorePath(path_spec api.FSPathSpec) string {
 	fs := memory.NewMemoryFileStore(self.config_obj)
 	fs.Clear()
@@ -87,22 +88,6 @@ func (self *PathManagerTestSuite) getFilestorePath(path_spec api.FSPathSpec) str
 		results = append(results, k)
 	}
 	assert.Equal(self.T(), 1, len(results))
-
-	// Check that ListChildren() returns the correct path.
-	children, err := fs.ListDirectory(path_spec.Dir())
-	assert.NoError(self.T(), err)
-
-	for _, child := range children {
-		child_name := child.Name()
-
-		// Strip the filestore extension for the child name
-		// for comparison.
-		child_name = strings.TrimSuffix(child_name,
-			api.GetExtensionForFilestore(
-				path_spec, path_spec.Type()))
-
-		assert.Equal(self.T(), child_name, path_spec.Base())
-	}
 
 	return results[0]
 }

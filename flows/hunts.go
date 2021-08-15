@@ -124,7 +124,12 @@ func CreateHunt(
 
 	hunt.CreateTime = uint64(time.Now().UTC().UnixNano() / 1000)
 	if hunt.Expires == 0 {
-		hunt.Expires = uint64(time.Now().Add(7*24*time.Hour).
+		default_expiry := config_obj.Defaults.HuntExpiryHours
+		if default_expiry == 0 {
+			default_expiry = 7 * 24
+		}
+		hunt.Expires = uint64(time.Now().Add(
+			time.Duration(default_expiry)*time.Hour).
 			UTC().UnixNano() / 1000)
 	}
 

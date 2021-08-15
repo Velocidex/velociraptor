@@ -35,8 +35,15 @@ precondition:
 
 parameters:
   - name: SearchFilesGlob
-    default: /home/*/**
+    default: /home/*
     description: Use a glob to define the files that will be searched.
+
+  - name: SearchFilesGlobTable
+    type: csv
+    default: |
+      Glob
+      /home/someuser/*
+    description: Alternative specify multiple globs in a table
 
   - name: Keywords
     default:
@@ -69,7 +76,7 @@ sources:
                Mtime AS MTime,
                Ctime AS CTime,
                IsDir, Mode
-        FROM glob(globs=SearchFilesGlob,
+        FROM glob(globs=SearchFilesGlobTable.Glob + SearchFilesGlob,
                   accessor="file")
 
     - LET more_recent = SELECT * FROM if(

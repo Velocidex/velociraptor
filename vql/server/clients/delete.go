@@ -1,4 +1,4 @@
-package server
+package clients
 
 import (
 	"context"
@@ -25,7 +25,7 @@ type DeleteClientArgs struct {
 
 type DeleteClientPlugin struct{}
 
-func (self *DeleteClientPlugin) Call(ctx context.Context,
+func (self DeleteClientPlugin) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 
@@ -72,7 +72,7 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 				case output_chan <- ordereddict.NewDict().
 					Set("client_id", arg.ClientId).
 					Set("type", "Datastore").
-					Set("vfs_path", filename).
+					Set("vfs_path", filename.AsClientPath()).
 					Set("really_do_it", arg.ReallyDoIt):
 				}
 
@@ -110,7 +110,7 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 				case output_chan <- ordereddict.NewDict().
 					Set("client_id", arg.ClientId).
 					Set("type", "Filestore").
-					Set("vfs_path", filename).
+					Set("vfs_path", filename.AsClientPath()).
 					Set("really_do_it", arg.ReallyDoIt):
 				}
 
@@ -144,6 +144,7 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 func reallyDeleteClient(ctx context.Context,
 	config_obj *config_proto.Config, scope vfilter.Scope,
 	db datastore.DataStore, arg *DeleteClientArgs) error {
+
 	client_info, err := search.GetApiClient(ctx,
 		config_obj, arg.ClientId, false /* detailed */)
 	if err != nil {

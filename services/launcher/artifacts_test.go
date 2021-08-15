@@ -1,4 +1,4 @@
-package launcher
+package launcher_test
 
 import (
 	"context"
@@ -7,19 +7,12 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -78,26 +71,12 @@ sources:
 )
 
 type ArtifactTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
+	test_utils.TestSuite
 	repository services.Repository
-	sm         *services.Service
 }
 
 func (self *ArtifactTestSuite) SetupTest() {
-	self.config_obj = config.GetDefaultConfig()
-	self.config_obj.Datastore.Implementation = "Test"
-
-	// Start essential services.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	t := self.T()
-	assert.NoError(t, self.sm.Start(journal.StartJournalService))
-	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
-	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
-	assert.NoError(t, self.sm.Start(StartLauncherService))
-	require.NoError(t, self.sm.Start(repository.StartRepositoryManagerForTest))
+	self.TestSuite.SetupTest()
 
 	manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)
@@ -106,12 +85,6 @@ func (self *ArtifactTestSuite) SetupTest() {
 	for _, definition := range test_artifact_definitions {
 		self.repository.LoadYaml(definition, false)
 	}
-}
-
-func (self *ArtifactTestSuite) TearDownTest() {
-	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
 }
 
 func (self *ArtifactTestSuite) TestUnknownArtifact() {
@@ -123,7 +96,7 @@ func (self *ArtifactTestSuite) TestUnknownArtifact() {
 	launcher, err := services.GetLauncher()
 	assert.NoError(self.T(), err)
 
-	_, err = launcher.CompileCollectorArgs(context.Background(), self.config_obj,
+	_, err = launcher.CompileCollectorArgs(context.Background(), self.ConfigObj,
 		vql_subsystem.NullACLManager{},
 		self.repository, services.CompilerOptions{}, request)
 	assert.Error(self.T(), err)
@@ -141,7 +114,7 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 	launcher, err := services.GetLauncher()
 	assert.NoError(self.T(), err)
 	vql_requests, err := launcher.CompileCollectorArgs(context.Background(),
-		self.config_obj, vql_subsystem.NullACLManager{},
+		self.ConfigObj, vql_subsystem.NullACLManager{},
 		self.repository, services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
@@ -152,7 +125,7 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 
 	for _, vql_request := range vql_requests {
 		actions.VQLClientAction{}.StartQuery(
-			self.config_obj, ctx, test_responder, vql_request)
+			self.ConfigObj, ctx, test_responder, vql_request)
 	}
 
 	assert.Contains(self.T(), getLogMessages(test_responder),
@@ -169,7 +142,7 @@ func (self *ArtifactTestSuite) TestArtifactDependencies() {
 	assert.NoError(self.T(), err)
 
 	vql_requests, err := launcher.CompileCollectorArgs(context.Background(),
-		self.config_obj, vql_subsystem.NullACLManager{},
+		self.ConfigObj, vql_subsystem.NullACLManager{},
 		self.repository, services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
@@ -180,7 +153,7 @@ func (self *ArtifactTestSuite) TestArtifactDependencies() {
 
 	for _, vql_request := range vql_requests {
 		actions.VQLClientAction{}.StartQuery(
-			self.config_obj, ctx, test_responder, vql_request)
+			self.ConfigObj, ctx, test_responder, vql_request)
 	}
 
 	results := getResponses(test_responder)

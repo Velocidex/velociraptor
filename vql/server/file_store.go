@@ -27,6 +27,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -73,13 +74,15 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 		// This is a data store path
 		pathspec := path_specs.NewUnsafeDatastorePath(
 			utils.SplitComponents(
-				strings.TrimSuffix(arg.VFSPath, ".db"))...)
+				strings.TrimSuffix(arg.VFSPath, ".db"))...).
+			SetType(api.PATH_TYPE_DATASTORE_PROTO)
 		err = db.DeleteSubject(config_obj, pathspec)
 	} else {
 
 		// This is a file store path.
 		pathspec := path_specs.NewUnsafeFilestorePath(
-			utils.SplitComponents(arg.VFSPath)...)
+			utils.SplitComponents(arg.VFSPath)...).
+			SetType(api.PATH_TYPE_FILESTORE_ANY)
 		err = file_store_factory.Delete(pathspec)
 	}
 

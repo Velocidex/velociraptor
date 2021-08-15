@@ -188,3 +188,20 @@ sources:
           check it is being updated.
 
           {{ Scope "Timeline" | Timeline }}
+
+      - type: VQL
+        template: |
+          /*
+          # Test table scrolling.
+
+          Check both expanded and contracted states of the cell
+          */
+          LET Test = "Hellothereongline"
+
+          SELECT Test AS Test1, Test AS Test2, Test AS Test3,
+                 Test AS Test4, Test AS Test5,
+                 Test AS Test11, Test AS Test21,
+                 Test AS Test13, Test AS Test14, Test AS Test15,
+                 Test AS Test21, Test AS Test22,
+                 Test AS Test23, Test AS Test24, Test AS Test25
+          FROM range(start=0, end=100, step=1)

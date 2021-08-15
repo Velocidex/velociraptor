@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 func ReadFile(t *testing.T, filename string) []byte {
@@ -74,4 +75,13 @@ func WaitUntil(deadline time.Duration, t *testing.T, cb func() bool) {
 	}
 
 	t.Fatalf("Timed out " + string(debug.Stack()))
+}
+
+func RunPlugin(in <-chan types.Row) []types.Row {
+	result := make([]types.Row, 0)
+	for row := range in {
+		result = append(result, row)
+	}
+
+	return result
 }

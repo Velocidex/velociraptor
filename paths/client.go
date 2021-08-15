@@ -58,6 +58,10 @@ func (self ClientPathManager) Task(task_id uint64) api.DSPathSpec {
 	return self.root.AddChild("tasks", fmt.Sprintf("%d", task_id))
 }
 
+func (self ClientPathManager) Flow(flow_id string) *FlowPathManager {
+	return NewFlowPathManager(self.client_id, flow_id)
+}
+
 // Where we store client VFS information - depends on client paths.
 func (self ClientPathManager) VFSPath(vfs_components []string) api.DSPathSpec {
 	return CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs").

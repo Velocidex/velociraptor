@@ -680,6 +680,10 @@ message ServerServicesConfig {
    bool gui_server = 15;
 }
 
+message Defaults {
+    int64 hunt_expiry_hours = 1;
+    int64 notebook_cell_timeout_min = 2;
+}
 
 message Config {
     string autocert_domain = 21 [deprecated=true];
@@ -745,4 +749,6 @@ message Config {
 
     // If set we obfuscate VQL to the clients using this key.
     string obfuscation_nonce = 32;
+
+    Defaults defaults = 33;
 }

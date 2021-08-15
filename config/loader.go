@@ -265,6 +265,25 @@ func (self *Loader) WithEnvLoader(env_var string) *Loader {
 	return self
 }
 
+func (self *Loader) WithEnvLiteralLoader(env_var string) *Loader {
+	self = self.Copy()
+	self.loaders = append(self.loaders, func(self *Loader) (*config_proto.Config, error) {
+		env_config := os.Getenv(env_var)
+		if env_config != "" {
+			self.Log("Loading literal config from env %v", env_var)
+			result := &config_proto.Config{}
+			err := yaml.UnmarshalStrict([]byte(env_config), result)
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			return result, nil
+		}
+		return nil, errors.New(fmt.Sprintf("Env var %v is not set", env_var))
+	})
+
+	return self
+}
+
 func (self *Loader) WithEmbedded() *Loader {
 	self = self.Copy()
 	self.loaders = append(self.loaders, func(self *Loader) (*config_proto.Config, error) {

@@ -1,3 +1,7 @@
+.collapsed.notebook-output .report-viewer {
+    width: fit-content;
+}
+
 .report-viewer h1 {
         font-size: 3ex;
 }

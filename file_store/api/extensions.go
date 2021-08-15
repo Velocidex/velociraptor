@@ -13,6 +13,7 @@ func GetExtensionForDatastore(path_spec DSPathSpec, t PathType) string {
 		return ".json.db"
 
 	}
+
 	return ".db"
 }
 
@@ -57,6 +58,18 @@ func GetExtensionForFilestore(path_spec FSPathSpec, t PathType) string {
 	}
 
 	return ""
+}
+
+func GetDataStorePathTypeFromExtension(name string) (PathType, string) {
+	if strings.HasSuffix(name, ".json.db") {
+		return PATH_TYPE_DATASTORE_JSON, name[:len(name)-8]
+	}
+
+	if strings.HasSuffix(name, ".db") {
+		return PATH_TYPE_DATASTORE_PROTO, name[:len(name)-3]
+	}
+
+	return PATH_TYPE_DATASTORE_PROTO, name
 }
 
 func GetFileStorePathTypeFromExtension(name string) (PathType, string) {

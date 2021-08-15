@@ -83,7 +83,7 @@ class QuarantineDialog extends Component {
               <Modal.Header closeButton>
                 <Modal.Title>Quarantine host</Modal.Title>
               </Modal.Header>
-              <Modal.Body><Spinner loading={this.state.loading} />
+              <Modal.Body><Spinner loading={this.state.loading } />
                 <p>You are about to quarantine this host.</p>
 
                 <p>
@@ -132,6 +132,7 @@ class VeloHostInfo extends Component {
         metadata: "Key,Value\n,\n",
 
         loading: false,
+        metadata_loading: false,
 
         showQuarantineDialog: false,
     }
@@ -140,6 +141,7 @@ class VeloHostInfo extends Component {
         this.source = axios.CancelToken.source();
         this.interval = setInterval(this.fetchMetadata, POLL_TIME);
         this.updateClientInfo();
+        this.fetchMetadata();
     }
 
     componentWillUnmount() {
@@ -161,18 +163,21 @@ class VeloHostInfo extends Component {
     }
 
     updateClientInfo = () => {
+        this.setState({loading: true});
+
         let params = {update_mru: true};
         let client_id = this.props.client && this.props.client.client_id;
         if (client_id) {
             api.get("v1/GetClient/" + client_id, params, this.source.token).then(
                 response=>{
+                    this.setState({loading: false});
                     return this.props.setClient(response.data);
                 }, this.source);
         };
     }
 
     fetchMetadata = () => {
-        this.setState({loading: true});
+        this.setState({metadata_loading: true});
 
         this.source.cancel();
         this.source = axios.CancelToken.source();
@@ -195,7 +200,8 @@ class VeloHostInfo extends Component {
                     if (rows === 0) {
                         metadata = "Key,Value\n,\n";
                     };
-                    this.setState({metadata: metadata, loading: false});
+                    this.setState({metadata: metadata,
+                                   metadata_loading: false});
                 });
     }
 
@@ -419,6 +425,8 @@ class VeloHostInfo extends Component {
                                     showQuarantineDialog: false,
                                 })}
               />}
+              <Spinner loading={this.state.loading ||
+                                this.state.metadata_loading} />
               <div className="full-width-height">
                 <div className="client-info">
                   <div className="btn-group float-left toolbar" data-toggle="buttons">
