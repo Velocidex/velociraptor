@@ -46,7 +46,7 @@ export default class ExportNotebook extends React.Component {
     fetchNotebookDetails = () => {
         api.get("v1/GetNotebooks", {
             notebook_id: this.props.notebook.notebook_id,
-        }).then(resp=>{
+        }, this.source.token).then(resp=>{
             let items = resp.data.items;
             if (_.isEmpty(items)) {
                 return;
@@ -60,7 +60,7 @@ export default class ExportNotebook extends React.Component {
         api.post("v1/CreateNotebookDownloadFile", {
             notebook_id: this.props.notebook.notebook_id,
             type: type,
-        });
+        }, this.source.token);
     }
 
     render() {

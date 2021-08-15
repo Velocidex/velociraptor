@@ -128,7 +128,7 @@ class VeloFileList extends Component {
             client_id: this.props.client.client_id,
             vfs_components: path,
             depth: 10
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             // Hold onto the flow id.
             this.setState({lastRecursiveRefreshOperationId: response.data.flow_id});
 
@@ -137,7 +137,7 @@ class VeloFileList extends Component {
                 api.get("v1/GetFlowDetails", {
                     client_id: this.props.client.client_id,
                     flow_id: this.state.lastRecursiveRefreshOperationId,
-                }).then((response) => {
+                }, this.source.token).then((response) => {
                     let context = response.data.context;
                     if (context.state === "RUNNING") {
                         this.setState({lastRecursiveRefreshData: context});
@@ -166,7 +166,7 @@ class VeloFileList extends Component {
         api.post("v1/CancelFlow", {
             client_id: this.props.client.client_id,
             flow_id: this.state.lastRecursiveRefreshOperationId,
-        });
+        }, this.source.token);
     }
 
     startRecursiveVfsDownloadOperation = () => {
@@ -199,7 +199,7 @@ class VeloFileList extends Component {
                          { "key": "Accessor", "value": accessor},
                          { "key": "Recursively", "value": "Y"}]}}],
             max_upload_bytes: 1048576000,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             // Hold onto the flow id.
             this.setState({
                 showDownloadAllDialog: false,
@@ -210,7 +210,7 @@ class VeloFileList extends Component {
                 api.get("v1/GetFlowDetails", {
                     client_id: this.props.client.client_id,
                     flow_id: this.state.lastRecursiveDownloadOperationId,
-                }).then((response) => {
+                }, this.source.token).then((response) => {
                     let context = response.data.context;
                     if (context.state === "RUNNING") {
                         this.setState({lastRecursiveDownloadData: context});
@@ -237,7 +237,7 @@ class VeloFileList extends Component {
         api.post("v1/CancelFlow", {
             client_id: this.props.client.client_id,
             flow_id: this.state.lastRecursiveDownloadOperationId,
-        });
+        }, this.source.token);
     }
 
     startVfsRefreshOperation = () => {
@@ -251,7 +251,7 @@ class VeloFileList extends Component {
             client_id: this.props.client.client_id,
             vfs_components: path,
             depth: 0
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             // Here we need to wait for the completion of the flow
             // *AND* the directory to be processed by the vfs
             // service. So it is not enough to just watch the flow
@@ -270,7 +270,7 @@ class VeloFileList extends Component {
                     client_id: this.props.client.client_id,
                     vfs_components: path,
                     flow_id: this.state.lastRefreshOperationId,
-                }).then((response) => {
+                }, this.source.token).then((response) => {
                     // The node is refreshed with the correct flow id, we can stop polling.
                     if (response.data.flow_id === this.state.lastRefreshOperationId) {
                         clearInterval(this.interval);

@@ -13,6 +13,8 @@ import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import api from '../core/api-service.js';
+import axios from 'axios';
+
 
 class UserSettings extends React.PureComponent {
     static contextType = UserConfig;
@@ -68,6 +70,14 @@ export default class UserLabel extends React.Component {
         showUserSettings: false,
     }
 
+    componentDidMount() {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
     setSettings = (theme) => {
         this.setState({showUserSettings: false});
         if (_.isEmpty(theme)) {
@@ -86,7 +96,7 @@ export default class UserLabel extends React.Component {
             api.post("v1/SetGUIOptions", {
                 options: JSON.stringify(ace_options),
                 'theme': theme,
-            }).then((response) => {
+            }, this.source.token).then((response) => {
                 this.context.updateTraits();
             });
         }

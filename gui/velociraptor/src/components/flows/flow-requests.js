@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import VeloAce from '../core/ace.js';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
-
+import axios from 'axios';
 import api from '../core/api-service.js';
 
 export default class FlowRequests extends React.Component {
@@ -17,7 +17,12 @@ export default class FlowRequests extends React.Component {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.fetchRequests();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -33,7 +38,7 @@ export default class FlowRequests extends React.Component {
         api.get("v1/GetFlowRequests", {
             flow_id: this.props.flow.session_id,
             client_id: this.props.flow.client_id,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             this.setState({requests: response.data.items});
         });
     }

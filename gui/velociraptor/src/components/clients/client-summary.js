@@ -36,7 +36,8 @@ export default class VeloClientSummary extends Component {
         let params = {update_mru: true};
         let client_id = this.props.client && this.props.client.client_id;
         if (client_id) {
-            api.get("v1/GetClient/" + client_id, params).then(
+            api.get("v1/GetClient/" + client_id, params,
+                    this.source.token).then(
                 response=>{
                     this.props.setClient(response.data);
                 }).catch(err=>{

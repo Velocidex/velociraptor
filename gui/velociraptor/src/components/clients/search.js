@@ -13,6 +13,8 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import UserConfig from '../core/user.js';
 
 import api from '../core/api-service.js';
+import axios from 'axios';
+
 
 class VeloClientSearch extends Component {
     static contextType = UserConfig;
@@ -22,12 +24,17 @@ class VeloClientSearch extends Component {
     };
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         let query = this.props.match && this.props.match.params &&
             this.props.match.params.query;
         if (query && query !== this.state.query) {
             this.this.setState({query: query});
         };
     };
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
 
     state = {
         // query used to update suggestions.
@@ -51,7 +58,7 @@ class VeloClientSearch extends Component {
             count: 10,
             type:1,
 
-        }).then(resp => {
+        }, this.source.token).then(resp => {
             if (resp.data && resp.data.names) {
                 let options = resp.data.names;
                 options.push("recent:" + this.context.traits.username);

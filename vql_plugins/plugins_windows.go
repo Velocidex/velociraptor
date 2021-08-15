@@ -23,5 +23,6 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/windows/etw"
 	_ "www.velocidex.com/golang/velociraptor/vql/windows/filesystems"
 	_ "www.velocidex.com/golang/velociraptor/vql/windows/process"
+	_ "www.velocidex.com/golang/velociraptor/vql/windows/registry"
 	_ "www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 )

@@ -228,31 +228,6 @@ class HuntList extends React.Component {
                  </Modal.Footer>
                </Modal>
               }
-              { this.state.showArchiveHuntDialog &&
-                <Modal show={this.state.showArchiveHuntDialog}
-                       onHide={() => this.setState({showArchiveHuntDialog: false})} >
-                  <Modal.Header closeButton>
-                    <Modal.Title>Archive this hunt?</Modal.Title>
-                  </Modal.Header>
-
-                  <Modal.Body>
-                    <p>Archiving a hunt simply hides it from the GUI.</p>
-                    <p>Are you sure you want to archive this hunt? You can still access its data providing you know it's hunt ID and from VQL queries.</p>
-                  </Modal.Body>
-
-                  <Modal.Footer>
-                    <Button variant="secondary"
-                            onClick={() => this.setState({showArchiveHuntDialog: false})}>
-                      Close
-                    </Button>
-                    <Button variant="primary"
-                            onClick={this.archiveHunt}>
-                      Kill it!
-                    </Button>
-                  </Modal.Footer>
-                </Modal>
-              }
-
               { this.state.showDeleteNotebook &&
                 <DeleteNotebookDialog
                   notebook_id={"N." + selected_hunt}
@@ -312,17 +287,11 @@ class HuntList extends React.Component {
                           variant="default">
                     <FontAwesomeIcon icon="stop"/>
                   </Button>
-                  <Button title="Archive Hunt"
-                          disabled={state === 'RUNNING'}
-                          onClick={() => this.setState({showArchiveHuntDialog: true})}
-                          variant="default">
-                    <FontAwesomeIcon icon="archive"/>
-                  </Button>
                   <Button title="Delete Hunt"
                           disabled={state === 'RUNNING'}
                           onClick={() => this.setState({showDeleteHuntDialog: true})}
                           variant="default">
-                    <FontAwesomeIcon icon="eraser"/>
+                    <FontAwesomeIcon icon="trash-alt"/>
                   </Button>
                   <Button title="Copy Hunt"
                           disabled={!selected_hunt}

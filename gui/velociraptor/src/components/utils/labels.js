@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 
 import api from '../core/api-service.js';
+import axios from 'axios';
 import CreatableSelect from 'react-select/creatable';
 
 
@@ -14,7 +15,12 @@ export default class LabelForm extends React.Component {
     };
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.loadLabels();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -33,7 +39,7 @@ export default class LabelForm extends React.Component {
             query: "label:*",
             limit: 100,
             type: 1,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             let labels = _.map(response.data.names, (x) => {
                 x = x.replace(/^label:/, "");
                 return {value: x, label: x, color: "#00B8D9", isFixed: true};

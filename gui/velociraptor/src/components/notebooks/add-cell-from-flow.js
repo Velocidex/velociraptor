@@ -10,6 +10,7 @@ import VeloClientSearch from '../clients/search.js';
 
 import { getClientColumns } from '../clients/clients-list.js';
 import { getFlowColumns } from '../flows/flows-list.js';
+import axios from 'axios';
 
 
 export default class AddCellFromFlowDialog extends React.Component {
@@ -18,16 +19,20 @@ export default class AddCellFromFlowDialog extends React.Component {
         addCell: PropTypes.func,
     }
 
-
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.setSearch("all");
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     setSearch = (query) => {
         api.get('/v1/SearchClients', {
             query: query,
             limit: 50,
-        }).then(resp => {
+        }, this.source.token).then(resp => {
             let items = resp.data && resp.data.items;
             items = items || [];
             this.setState({loading: false, clients: items});
@@ -55,7 +60,7 @@ export default class AddCellFromFlowDialog extends React.Component {
         api.get("v1/GetClientFlows/" + client_id, {
             count: 100,
             offset: 0,
-        }).then(response=>{
+        }, this.source.token).then(response=>{
             let flows = response.data.items || [];
             this.setState({flows: flows, selectedClient: selectedClient});
         });

@@ -13,7 +13,7 @@ import FlowOverview from './flow-overview.js';
 import FlowUploads from './flow-uploads.js';
 import FlowResults from './flow-results.js';
 import FlowLogs from './flow-logs.js';
-
+import axios from 'axios';
 
 class FlowPopupInspector extends React.Component {
     static propTypes = {
@@ -70,13 +70,21 @@ export default class FlowLink extends React.Component {
         loading: false,
     }
 
+    componentDidMount() {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
     fetchFullFlow = () => {
         this.setState({showFlowInspector: true, loading: true});
 
         api.get("v1/GetFlowDetails", {
             flow_id: this.props.flow_id,
             client_id: this.props.client_id,
-        }).then((response) => {
+        }, this.source.token).then((response) => {
             this.setState({flow: response.data.context, loading: false});
         });
     }

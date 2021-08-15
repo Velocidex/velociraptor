@@ -232,7 +232,8 @@ class FlowsList extends React.Component {
     setCollectionRequest = (request) => {
         // Make a request to start the flow on this client.
         request.client_id = this.props.client.client_id;
-        api.post("v1/CollectArtifact", request).then((response) => {
+        api.post("v1/CollectArtifact",
+                 request, this.source.token).then((response) => {
             // When the request is done force our parent to refresh.
             this.props.fetchFlows();
 
@@ -250,7 +251,7 @@ class FlowsList extends React.Component {
         if (client_id && flow_id) {
             api.post("v1/CancelFlow", {
                 client_id: client_id, flow_id: flow_id
-            }).then((response) => {
+            }, this.source.token).then((response) => {
                 this.props.fetchFlows();
             });
         }
@@ -437,7 +438,7 @@ class FlowsList extends React.Component {
                   <Button title="Delete Artifact Collection"
                           onClick={()=>this.setState({showDeleteWizard: true}) }
                           variant="default">
-                    <FontAwesomeIcon icon="eraser"/>
+                    <FontAwesomeIcon icon="trash-alt"/>
                   </Button>
 
                   { this.props.selected_flow.state === "RUNNING" &&

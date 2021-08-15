@@ -42,11 +42,15 @@ import (
 )
 
 var (
+	// Include some common aliases.
 	root_keys = map[string]registry.Key{
 		"HKEY_CLASSES_ROOT":     registry.CLASSES_ROOT,
 		"HKEY_CURRENT_USER":     registry.CURRENT_USER,
+		"HKCU":                  registry.CURRENT_USER,
 		"HKEY_LOCAL_MACHINE":    registry.LOCAL_MACHINE,
+		"HKLM":                  registry.LOCAL_MACHINE,
 		"HKEY_USERS":            registry.USERS,
+		"HKU":                   registry.USERS,
 		"HKEY_CURRENT_CONFIG":   registry.CURRENT_CONFIG,
 		"HKEY_PERFORMANCE_DATA": registry.PERFORMANCE_DATA,
 	}
@@ -55,6 +59,11 @@ var (
 	// itself.
 	MAX_EMBEDDED_REG_VALUE = 4 * 1024
 )
+
+func GetHiveFromName(name string) (registry.Key, bool) {
+	hive, pres := root_keys[name]
+	return hive, pres
+}
 
 type RegKeyInfo struct {
 	_modtime    time.Time

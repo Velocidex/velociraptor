@@ -145,21 +145,6 @@ func ValidateDatastoreConfig(config_obj *config_proto.Config) error {
 		return errors.New("No Datastore config")
 	}
 
-	// If mysql connection params are specified we create
-	// a mysql_connection_string
-	if config_obj.Datastore.MysqlConnectionString == "" &&
-		(config_obj.Datastore.MysqlDatabase != "" ||
-			config_obj.Datastore.MysqlServer != "" ||
-			config_obj.Datastore.MysqlUsername != "" ||
-			config_obj.Datastore.MysqlPassword != "") {
-		config_obj.Datastore.MysqlConnectionString = fmt.Sprintf(
-			"%s:%s@tcp(%s)/%s",
-			config_obj.Datastore.MysqlUsername,
-			config_obj.Datastore.MysqlPassword,
-			config_obj.Datastore.MysqlServer,
-			config_obj.Datastore.MysqlDatabase)
-	}
-
 	// On windows we require file locations to include a drive
 	// letter.
 	if config_obj.ServerType == "windows" {

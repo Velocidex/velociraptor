@@ -15,7 +15,7 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { formatColumns } from "../core/table.js";
 import api from '../core/api-service.js';
-
+import axios from 'axios';
 import { requestToParameters } from "../flows/utils.js";
 
 
@@ -26,6 +26,14 @@ export default class HuntOverview extends React.Component {
 
     state = {
         preparing: false,
+    }
+
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     huntState = () => {
@@ -74,7 +82,8 @@ export default class HuntOverview extends React.Component {
         }
 
         this.setState({preparing: true});
-        api.post("v1/CreateDownload", params).then(resp=>{
+        api.post("v1/CreateDownload", params,
+                 this.source.token).then(resp=>{
             this.setState({preparing: false});
         });
     }

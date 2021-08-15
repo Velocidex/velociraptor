@@ -3,6 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import api from '../core/api-service.js';
+import axios from 'axios';
 import CreatableSelect from 'react-select/creatable';
 
 // FIXME - get the current username.
@@ -15,7 +16,12 @@ export default class UserForm extends React.Component {
     };
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.loadUsers();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -30,7 +36,7 @@ export default class UserForm extends React.Component {
     }
 
     loadUsers = () => {
-        api.get("v1/GetUsers").then((response) => {
+        api.get("v1/GetUsers", {}, this.source.token).then((response) => {
             let names = [];
             for(var i = 0; i<response.data.users.length; i++) {
                 var name = response.data.users[i].name;

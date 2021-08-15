@@ -3,7 +3,7 @@ import './tool-viewer.css';
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
-
+import axios from 'axios';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import api from '../core/api-service.js';
@@ -22,7 +22,12 @@ export default class ToolViewer extends React.Component {
     };
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.fetchToolInfo();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -33,7 +38,8 @@ export default class ToolViewer extends React.Component {
 
     fetchToolInfo = () => {
         api.get("v1/GetToolInfo",
-                {name: this.props.name}).then((response) => {
+                {name: this.props.name},
+               this.source.token).then((response) => {
             this.setState({tool: response.data});
         });
     }
@@ -69,7 +75,8 @@ export default class ToolViewer extends React.Component {
 
     setToolInfo = (tool) => {
         this.setState({inflight: true});
-        api.post("v1/SetToolInfo", tool).then((response) => {
+        api.post("v1/SetToolInfo", tool,
+                 this.source.token).then((response) => {
             this.setState({tool: response.data});
         }).finally(() => {
             this.setState({inflight: false});

@@ -19,6 +19,7 @@ package functions
 
 import (
 	"context"
+
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -27,7 +28,7 @@ import (
 
 type XorArgs struct {
 	String string `vfilter:"required,field=string,doc=String to apply Xor"`
-	Key string `vfilter:"required,field=key,doc=Xor key."`
+	Key    string `vfilter:"required,field=key,doc=Xor key."`
 }
 
 type Xor struct{}
@@ -42,24 +43,22 @@ func (self *Xor) Call(ctx context.Context,
 		return false
 	}
 
-	byte_output := xorbytes([]byte(arg.String),[]byte(arg.Key))
+	byte_output := xorbytes([]byte(arg.String), []byte(arg.Key))
 
 	return string(byte_output)
-
 }
 
+func xorbytes(data, key []byte) (output []byte) {
+	if len(key) == 0 {
+		return data
+	}
 
-func xorbytes( data, key []byte ) ( output []byte ) { 
+	for i := range data {
+		output = append(output, data[i]^key[i%len(key)])
+	}
 
-    for i:= range data {
-    	output = append(output, data[i] ^ key[i % len(key)])
-    }
-
-    return output
+	return output
 }
-
-
-
 
 func (self Xor) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
