@@ -1697,6 +1697,14 @@
   - name: pause
     type: bool
     description: If specified the new hunt will be in the paused state
+  - name: include_labels
+    type: string
+    description: If specified only include these labels
+    repeated: true
+  - name: exclude_labels
+    type: string
+    description: If specified exclude these labels
+    repeated: true
   category: server
 - name: hunt_add
   description: |
@@ -3055,8 +3063,7 @@
   args:
   - name: pid
     type: int64
-    description: A pid to list. If this is provided we are able to operate much faster
-      by only opening a single process.
+    description: A process ID to list. If not provided list all processes.
   category: plugin
 - name: query
   description: Launch a subquery and materialize it into a list of rows.
@@ -3187,6 +3194,41 @@
     type: string
     description: The accessor to use.
   category: windows
+- name: reg_rm_key
+  description: Removes a key and all its values from the registry.
+  type: Function
+  args:
+  - name: path
+    type: string
+    description: Registry key path.
+    required: true
+- name: reg_rm_value
+  description: Removes a value in the registry.
+  type: Function
+  args:
+  - name: path
+    type: string
+    description: Registry value path.
+    required: true
+- name: reg_set_value
+  description: Set a value in the registry.
+  type: Function
+  args:
+  - name: path
+    type: string
+    description: Registry value path.
+    required: true
+  - name: value
+    type: LazyExpr
+    description: Value to set
+    required: true
+  - name: type
+    type: string
+    description: Type to set (SZ, DWORD, QWORD)
+    required: true
+  - name: create
+    type: bool
+    description: Set to create missing intermediate keys
 - name: regex_replace
   description: Search and replace a string with a regexp. Note you can use $1 to replace
     the capture string.
@@ -4399,3 +4441,4 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
+
