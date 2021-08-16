@@ -408,7 +408,12 @@ export class ServerEventTableWizard extends React.Component {
     }
 
     componentDidMount = () => {
+        this.source = axios.CancelToken.source();
         this.fetchEventTable();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
