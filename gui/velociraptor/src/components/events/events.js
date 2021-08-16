@@ -60,13 +60,16 @@ class InspectRawJson extends React.PureComponent {
 
         let client_id = this.props.client && this.props.client.client_id;
         if (!client_id || client_id === "server") {
-            api.get("v1/GetServerMonitoringState", {}, this.source.token).then(resp => {
-                if (resp.cancel) return;
+            api.get("v1/GetServerMonitoringState", {},
+                    this.source.token).then(resp => {
+                        if (resp.cancel) return;
 
-                let table = resp.data;
-                delete table["compiled_collector_args"];
-                this.setState({raw_json: JSON.stringify(table, null, 2)});
-            });
+                        let table = resp.data;
+                        delete table["compiled_collector_args"];
+                        this.setState({
+                            raw_json: JSON.stringify(table, null, 2),
+                        });
+                    });
             return;
         }
         api.get("v1/GetClientMonitoringState", {}, this.source.token).then(resp => {
