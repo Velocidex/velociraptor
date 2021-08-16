@@ -175,7 +175,7 @@ func (self ServerMetadataFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "server_metadata",
-		Doc:     "Returns client metadata from the datastore. Client metadata is a set of free form key/value data",
+		Doc:     "Returns server metadata from the datastore. Server metadata is a set of free form key/value data",
 		ArgType: type_map.AddType(scope, &ClientMetadataFunctionArgs{}),
 	}
 }
@@ -193,7 +193,7 @@ func (self ServerSetMetadataFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "server_set_metadata",
-		Doc:     "Sets client metadata. Client metadata is a set of free form key/value data",
+		Doc:     "Sets server metadata. Server metadata is a set of free form key/value data",
 		ArgType: type_map.AddType(scope, &ClientSetMetadataFunctionArgs{}),
 	}
 }
