@@ -26,6 +26,8 @@ import api from '../core/api-service.js';
 import { NavLink } from "react-router-dom";
 import ClientLink from '../clients/client-link.js';
 import { HexViewPopup } from '../utils/hex.js';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
@@ -417,16 +419,48 @@ export function formatColumns(columns) {
             };
         }
         switch(x.type) {
+        case "number":
+            if (!_.isObject(x.style)) {
+                x.style = {};
+            }
+            x.style.textAlign = "right";
+            x.type = null;
+            break;
+
         case "mb":
             x.formatter=(cell, row) => {
-                if (cell) {
-                    let result = (cell /1024/1024).toFixed(0);
-                    if (_.isNumber(result) && !_.isNaN(result)) {
-                        return result;
+                let result = cell/1024/1024;
+                let value = cell;
+                let suffix = "";
+                if (_.isFinite(result) && result > 0) {
+                    suffix = "Mb";
+                    value = result.toFixed(0);
+                } else {
+                    result = (cell /1024).toFixed(0);
+                    if (_.isFinite(result) && result > 0) {
+                        suffix = "Kb";
+                        value = result.toFixed(0);
+                    } else {
+                        if (_.isFinite(cell)) {
+                            suffix = "b";
+                            value = cell.toFixed(0);
+                        }
                     }
                 }
-                return <></>;
+                return <OverlayTrigger
+                         delay={{show: 250, hide: 400}}
+                         overlay={(props)=>{
+                             return <Tooltip {...props}>{cell}</Tooltip>;
+                         }}>
+                         <span className="number">
+                         {value} {suffix}
+                         </span>
+                       </OverlayTrigger>;
             };
+            if (!_.isObject(x.style)) {
+                x.style = {};
+            }
+            x.style.textAlign = "right";
             x.type = null;
             break;
         case "timestamp":
@@ -494,7 +528,6 @@ export function formatColumns(columns) {
             // Types supported by the underlying BootstrapTable - just
             // pass them on.
         case "string":
-        case "number":
         case "bool":
         case "date":
         case undefined:

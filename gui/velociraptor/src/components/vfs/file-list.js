@@ -400,7 +400,7 @@ class VeloFileList extends Component {
                 return <></>;
             }, sort: true},
             {dataField: "Name", text: "Name", sort: true, filtered: true},
-            {dataField: "Size", text: "Size", sort: true},
+            {dataField: "Size", text: "Size", sort: true, type: "mb"},
             {dataField: "Mode", text: "Mode", sort: true},
             {dataField: "mtime", text: "mtime", sort: true},
             {dataField: "atime", text: "atime", sort: true},

@@ -214,6 +214,12 @@ func (self *VFSService) ProcessListDirectory(
 	for row := range reader.Rows(ctx) {
 		full_path, _ := row.GetString("_FullPath")
 		accessor, _ := row.GetString("_Accessor")
+		name, _ := row.GetString("Name")
+
+		if name == "." || name == ".." || name == "" {
+			continue
+		}
+
 		file_vfs_path := path_specs.NewUnsafeFilestorePath(accessor).
 			AddChild(paths.ExtractClientPathComponents(full_path)...)
 
