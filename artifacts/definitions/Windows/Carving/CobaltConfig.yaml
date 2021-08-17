@@ -10,7 +10,7 @@ description: |
   byte size, xor with discovered key, then attempt configuration extraction.
   
   - Cobalt Strike beacon configuration is typically XORed with 0x69 or 0x2e 
-  (depending on version).   
+  (depending on version) but trivial to change.   
   - Configuration is built in a typical index / type / length / value structure 
   with either big endian values or zero terminated strings.
   - During testing, some fields were observed presenting best with a zero byte 
@@ -39,12 +39,16 @@ parameters:
   - name: ExtractBytes
     type: int
     default: 10000
-  - name: FindConfig
+  - name: BruteXor
+    type: bool
+    description: Select to attempt brute forcing Xor byte in config. Default is 0x2e or 0x69.
+  - name: FindConfigTemplate
+    type: hidden
     default: |
         rule find_cobalt_strike_config {
         strings:
-             $69 = { 69 68 69 68 69 6b ?? ?? 69 6b 69 68 69 6b ?? ?? 69 6a }
-             $2e = { 2e 2f 2e 2f 2e 2c ?? ?? 2e 2c 2e 2f 2e 2c ?? ?? 2e }
+            $REPLACEME
+
         condition:
               any of them
         }
@@ -327,6 +331,43 @@ export: |
 
 sources:
   - query: |
+      -- section to dynamically generate Xor configuration yara hunt strings
+      LET a <= unhex(string='01')
+      LET b <= unhex(string='02')
+      LET c <= unhex(string='03')
+    
+      LET XorChars <= 
+        SELECT format(format="%#02x", args=_value) AS H, 
+            unhex(string=format(format="%02x", args=_value)) as X
+        FROM range(start=0, end=256, step=1)
+        WHERE if(condition=BruteXor,
+                    then=True,
+                    else= H=~ '0x2e|0x69')
+
+      Let XorCharsStep2 = 
+        SELECT H, X, 
+            xor(string=a, key=X) as aXor,
+            xor(string=b, key=X) as bXor,
+            xor(string=c, key=X) as cXor,
+            len(list=X)
+        FROM XorChars
+    
+      LET XorCharsStep3 = 
+        SELECT -- { 00 01 00 01 00 02 ?? ?? 00 02 00 01 00 02 ?? ?? 00 03 }
+            X,H,
+            H + ' = { ' + format(format='% x', args=X + aXor + X + aXor + X + bXor) + 
+            ' ?? ?? ' + format(format='% x', args=X + bXor + X + aXor + X + bXor) + 
+            ' ?? ?? ' + format(format='% x', args=X + cXor) + ' }'  as Line
+        FROM XorCharsStep2
+        
+      LET FindConfig = 
+            regex_replace(
+                source=FindConfigTemplate,
+                re='REPLACEME',
+                replace=join(array=XorCharsStep3.Line, sep=" $$"))
+        
+    
+      
       -- find target files
       LET TargetFiles = SELECT FullPath FROM glob(globs=TargetFileGlob) 
       
@@ -358,23 +399,23 @@ sources:
       LET process_hits = SELECT * FROM foreach(
         row=processes,
         query={
-            SELECT
+            SELECT *,
                 dict(Pid=Pid, ProcessName=ProcessName,CommandLine=CommandLine) as ConfigSource,
                 String.Offset as Offset,
                 substr(start=0,end=1,str=String.Data) as Xor,
                 read_file(filename=str(str=Pid), accessor='process',
-                        offset=String.Offset,
-                        length=int(int=ExtractBytes)
+                    offset=String.Offset,
+                    length=int(int=ExtractBytes)
                     ) as Data
-             FROM yara(files=Pid, accessor='process',
-                rules=FindConfig, number=99)
+            FROM yara(files=Pid, accessor='process',
+                rules=FindConfig, number=999)
           })
 
       -- output rows
       SELECT 
             ConfigSource,
             Offset, 
-            Xor,
+            format(format='0x%x',args=Xor) as Xor, 
             parse_binary(accessor="data",
                 filename=xor(string=Data,key=Xor),
                 profile=Profile,
