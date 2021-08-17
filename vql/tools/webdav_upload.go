@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"path"
 	"time"
+	"crypto/tls"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -26,6 +27,7 @@ type WebDAVUploadArgs struct {
 	Url               string `vfilter:"required,field=url,doc=The WebDAV url"`
 	BasicAuthUser     string `vfilter:"optional,field=basic_auth_user,doc=The username to use in HTTP basic auth"`
 	BasicAuthPassword string `vfilter:"optional,field=basic_auth_password,doc=The password to use in HTTP basic auth"`
+	NoVerifyCert      bool   `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification"`
 }
 
 type WebDAVUploadFunction struct{}
@@ -76,7 +78,11 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 
 		upload_response, err := upload_webdav(
 			sub_ctx, scope, file, stat.Size(),
-			arg.Name, arg.Url, arg.BasicAuthUser, arg.BasicAuthPassword)
+			arg.Name, 
+			arg.Url, 
+			arg.BasicAuthUser, 
+			arg.BasicAuthPassword,
+			arg.NoVerifyCert)
 		if err != nil {
 			scope.Log("upload_webdav: %v", err)
 			return vfilter.Null{}
@@ -88,9 +94,13 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 }
 
 func upload_webdav(ctx context.Context, scope vfilter.Scope,
-	reader io.Reader, contentLength int64,
-	name string, webdavUrl string,
-	basicAuthUser string, basicAuthPassword string) (
+	reader io.Reader, 
+	contentLength int64,
+	name string, 
+	webdavUrl string,
+	basicAuthUser string, 
+	basicAuthPassword string,
+	NoVerifyCert bool) (
 	*api.UploadResponse, error) {
 
 	scope.Log("upload_webdav: Uploading %v to %v", name, webdavUrl)
@@ -103,12 +113,17 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 	}
 	parsedUrl.Path = path.Join(parsedUrl.Path, name)
 
+	tlsConfig := &tls.Config{}
+	if NoVerifyCert {
+		tlsConfig.InsecureSkipVerify = true
+	}
 	var netTransport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
 			Timeout: 30 * time.Second, // TCP connect timeout
 		}).DialContext,
 		TLSHandshakeTimeout: 30 * time.Second,
+		TLSClientConfig: tlsConfig,
 	}
 	client := &http.Client{
 		Transport: netTransport,
