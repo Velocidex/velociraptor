@@ -61,6 +61,7 @@ func (self *FilestoreTestSuite) TestEnumerateFlow() {
 			path_spec := paths.FSPathSpecFromClientPath(line)
 			fd, err := file_store_factory.WriteFile(path_spec)
 			assert.NoError(self.T(), err)
+			fd.Write([]byte("X"))
 			fd.Close()
 		}
 	}
