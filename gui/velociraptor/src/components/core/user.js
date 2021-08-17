@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React from 'react';
 import api from '../core/api-service.js';
 import axios from 'axios';
@@ -14,6 +15,10 @@ export class UserSettings extends React.Component {
     updateTraits = () => {
         api.get("v1/GetUserUITraits", {}, this.source.token).then((response) => {
             let traits = response.data.interface_traits;
+            if (_.isUndefined(traits)) {
+                return;
+            }
+
             traits.username = response.data.username;
             this.setState({traits: traits});
 

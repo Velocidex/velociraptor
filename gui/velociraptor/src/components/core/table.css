@@ -34,3 +34,8 @@ a.btn.btn-default.active {
     height: 37.6px;
     width: 8em;
 }
+
+td .number {
+    text-align: end;
+    white-space: nowrap;
+}
