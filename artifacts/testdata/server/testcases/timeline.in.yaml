@@ -39,7 +39,7 @@ Parameters:
      }]
 
 Queries:
-  # Mock up test for Windows.Timeline.RMFT
+  # Mock up test for Windows.Timeline.MFT
   #- SELECT * from Artifact.Windows.Timeline.MFT(CompressedOutput=FALSE,Inode=64560,TimeOutput='FILE_NAME')
   #- SELECT * from Artifact.Windows.Timeline.MFT(CompressedOutput=TRUE,Inode=64560)
   - LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10,
