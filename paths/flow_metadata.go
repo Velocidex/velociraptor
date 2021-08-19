@@ -32,7 +32,8 @@ type FlowPathManager struct {
 
 func (self FlowPathManager) Path() api.DSPathSpec {
 	return CLIENTS_ROOT.AddChild(self.client_id,
-		"collections", self.flow_id)
+		"collections", self.flow_id).
+		SetTag("FlowContext")
 }
 
 func (self FlowPathManager) ContainerPath() api.DSPathSpec {
@@ -55,7 +56,8 @@ func (self FlowPathManager) Log() api.FSPathSpec {
 
 func (self FlowPathManager) Task() api.DSPathSpec {
 	return self.Path().AddChild("task").
-		SetType(api.PATH_TYPE_DATASTORE_PROTO)
+		SetType(api.PATH_TYPE_DATASTORE_PROTO).
+		SetTag("FlowTask")
 }
 
 func (self FlowPathManager) UploadMetadata() api.FSPathSpec {

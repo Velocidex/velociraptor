@@ -22,6 +22,8 @@ type DSPathSpec struct {
 	// If this is true we can avoid sanitizing the path on writing
 	// to the filestore.
 	is_safe bool
+
+	tag string
 }
 
 func (self DSPathSpec) MarshalJSON() ([]byte, error) {
@@ -33,6 +35,15 @@ func (self DSPathSpec) Base() string {
 		return ""
 	}
 	return self.components[len(self.components)-1]
+}
+
+func (self DSPathSpec) Tag() string {
+	return self.tag
+}
+
+func (self DSPathSpec) SetTag(tag string) api.DSPathSpec {
+	self.tag = tag
+	return self
 }
 
 func (self DSPathSpec) Dir() api.DSPathSpec {

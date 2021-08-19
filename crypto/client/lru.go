@@ -83,6 +83,8 @@ func (self *CipherLRU) Set(source string, inbound_cipher, output_cipher *_Cipher
 	element, pres := self.by_source[source]
 	if pres {
 		old_entry := element.Value.(*entry)
+
+		// Merge the old entries if needed into the new entry.
 		if new_entry.outbound_cipher == nil {
 			new_entry.outbound_cipher = old_entry.outbound_cipher
 		}
@@ -91,8 +93,30 @@ func (self *CipherLRU) Set(source string, inbound_cipher, output_cipher *_Cipher
 			new_entry.inbound_cipher = old_entry.inbound_cipher
 		}
 
-		// update in place
+		// Update LRU list in place and push to front.
 		element.Value = new_entry
+		self.list.PushFront(element)
+
+		// There is also a second reference to the cipher from the
+		// by_inbound_cipher map - we need to remove any old reference
+		// and update it now.
+
+		// Remove the old by_inbound_cipher reference and update it
+		if inbound_cipher != nil &&
+			inbound_cipher.encrypted_cipher != nil {
+
+			if old_entry.inbound_cipher != nil {
+				delete(self.by_inbound_cipher, string(
+					old_entry.inbound_cipher.encrypted_cipher))
+			}
+
+			// Update the by_inbound_cipher reference to point at the new cipher.
+			self.by_inbound_cipher[string(inbound_cipher.encrypted_cipher)] =
+				inbound_cipher
+		}
+
+		// No need to adjust size of LRU or check for capacity since
+		// the number of elements has not changed.
 
 	} else {
 		// Add new element

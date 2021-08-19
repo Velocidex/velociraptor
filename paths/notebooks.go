@@ -27,7 +27,7 @@ func (self *NotebookPathManager) Attachment(name string) api.FSPathSpec {
 }
 
 func (self *NotebookPathManager) Path() api.DSPathSpec {
-	return self.root.AddChild(self.notebook_id)
+	return self.root.AddChild(self.notebook_id).SetTag("Notebook")
 }
 
 func (self *NotebookPathManager) Cell(cell_id string) *NotebookCellPathManager {
@@ -113,7 +113,8 @@ type NotebookCellPathManager struct {
 }
 
 func (self *NotebookCellPathManager) Path() api.DSPathSpec {
-	return self.root.AddChild(self.notebook_id, self.cell_id)
+	return self.root.AddChild(self.notebook_id, self.cell_id).
+		SetTag("NotebookCell")
 }
 
 func (self *NotebookCellPathManager) Notebook() *NotebookPathManager {

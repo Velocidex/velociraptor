@@ -126,6 +126,9 @@ type DSPathSpec interface {
 	AddUnsafeChild(child ...string) DSPathSpec
 
 	AsFilestorePath() FSPathSpec
+
+	Tag() string
+	SetTag(string) DSPathSpec
 }
 
 type FSPathSpec interface {

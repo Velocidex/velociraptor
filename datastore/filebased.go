@@ -150,6 +150,8 @@ func (self *FileBaseDataStore) GetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
+	defer Instrument("read", urn)()
+
 	Trace(config_obj, "GetSubject", urn)
 	serialized_content, err := readContentFromFile(
 		config_obj, urn, true /* must_exist */)
@@ -233,6 +235,8 @@ func (self *FileBaseDataStore) SetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
+	defer Instrument("write", urn)()
+
 	Trace(config_obj, "SetSubject", urn)
 
 	// Encode as JSON
@@ -255,6 +259,8 @@ func (self *FileBaseDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) error {
 
+	defer Instrument("delete", urn)()
+
 	Trace(config_obj, "DeleteSubject", urn)
 
 	err := os.Remove(urn.AsDatastoreFilename(config_obj))
@@ -272,12 +278,16 @@ func (self *FileBaseDataStore) DeleteSubject(
 func listChildNames(config_obj *config_proto.Config,
 	urn api.DSPathSpec) (
 	[]string, error) {
+	defer Instrument("list", urn)()
+
 	return utils.ReadDirNames(
 		urn.AsDatastoreDirectory(config_obj))
 }
 
 func listChildren(config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]os.FileInfo, error) {
+	defer Instrument("list", urn)()
+
 	children, err := utils.ReadDirUnsorted(
 		urn.AsDatastoreDirectory(config_obj))
 	if err != nil {
