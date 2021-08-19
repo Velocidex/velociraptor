@@ -28,13 +28,14 @@ func NewClientPathManager(client_id string) *ClientPathManager {
 
 // We store the last time we saw the client in this location.
 func (self ClientPathManager) Ping() api.DSPathSpec {
-	return self.root.AddChild("ping")
+	return self.root.AddChild("ping").SetTag("ClientPing")
 }
 
 // Keep a record of all the client's labels.
 func (self ClientPathManager) Labels() api.DSPathSpec {
 	return self.root.AddChild("labels").
-		SetType(api.PATH_TYPE_DATASTORE_JSON)
+		SetType(api.PATH_TYPE_DATASTORE_JSON).
+		SetTag("ClientLabels")
 }
 
 // Each client can have arbitrary key/value metadata.
@@ -45,17 +46,20 @@ func (self ClientPathManager) Metadata() api.DSPathSpec {
 
 // Store each client's public key so we can communicate with it.
 func (self ClientPathManager) Key() api.DSPathSpec {
-	return self.root.AddChild("key")
+	return self.root.AddChild("key").
+		SetTag("ClientKey")
 }
 
 // Queue tasks for the client in a directory within the client's main directory.
 func (self ClientPathManager) TasksDirectory() api.DSPathSpec {
-	return self.root.AddChild("tasks")
+	return self.root.AddChild("tasks").
+		SetTag("ClientTaskQueue")
 }
 
 // Store each task within the tasks directory.
 func (self ClientPathManager) Task(task_id uint64) api.DSPathSpec {
-	return self.root.AddChild("tasks", fmt.Sprintf("%d", task_id))
+	return self.root.AddChild("tasks", fmt.Sprintf("%d", task_id)).
+		SetTag("ClientTask")
 }
 
 func (self ClientPathManager) Flow(flow_id string) *FlowPathManager {
