@@ -1,4 +1,23 @@
+Parameters:
+  TestYara: |
+      rule CobaltStrike_v3 {
+         strings: 
+          strings: 
+            $a = { 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 2e 2e 2e }
+            $b = { 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e }
+         condition: $a
+      }
+      rule CobaltStrike_v3_2 {
+         strings: $a = { 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 }
+         condition: $a
+      }
+      
+
 Queries:
-  - SELECT relpath(path=ConfigSource, base=srcDir, sep="/") as TestPath, 
+  - SELECT relpath(path=ConfigSource.FullPath, base=srcDir, sep="/") as TestPath,ConfigSource.Detection, 
       Offset, Xor, DecodedConfig,DecodedData
-    FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSDump.bin")
+    FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSDump.bin",DetectionYara=TestYara)
+    WHERE Xor = "0x69"
+  - SELECT relpath(path=ConfigSource.FullPath, base=srcDir, sep="/") as TestPath,ConfigSource.Detection, 
+      Offset, Xor, DecodedConfig,DecodedData
+    FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSDump.bin",DetectionYara='')
