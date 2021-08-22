@@ -8,8 +8,10 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 )
 
@@ -29,6 +31,26 @@ func (self CachedInfo) Size() int {
 type ClientInfoManager struct {
 	config_obj *config_proto.Config
 	lru        *cache.LRUCache
+}
+
+func (self *ClientInfoManager) Start(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	wg *sync.WaitGroup) error {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("<green>Starting</> Client Info service.")
+
+	return journal.WatchForCollectionWithCB(ctx, config_obj, wg,
+		"Generic.Client.Info/BasicInformation",
+		self.ProcessInterrogateResults)
+}
+
+func (self *ClientInfoManager) ProcessInterrogateResults(
+	ctx context.Context, config_obj *config_proto.Config,
+	client_id, flow_id string) error {
+	self.lru.Delete(client_id)
+	return nil
 }
 
 func (self *ClientInfoManager) Get(client_id string) (*services.ClientInfo, error) {
@@ -66,6 +88,7 @@ func (self *ClientInfoManager) Get(client_id string) (*services.ClientInfo, erro
 	client_info := &services.ClientInfo{
 		Hostname: record.Hostname,
 		OS:       os,
+		Info:     record,
 	}
 
 	self.lru.Set(client_id, &CachedInfo{
@@ -85,10 +108,11 @@ func StartClientInfoService(
 		expected_clients = config_obj.Frontend.Resources.ExpectedClients
 	}
 
-	services.RegisterClientInfoManager(&ClientInfoManager{
+	service := &ClientInfoManager{
 		config_obj: config_obj,
 		lru:        cache.NewLRUCache(expected_clients),
-	})
+	}
+	services.RegisterClientInfoManager(service)
 
-	return nil
+	return service.Start(ctx, config_obj, wg)
 }

@@ -122,8 +122,16 @@ func (self *TestDataStore) Walk(
 	}
 	self.mu.Unlock()
 
+	// Sort entries by name
+	sort.Slice(result_path_specs, func(i, j int) bool {
+		return result_path_specs[i].Base() < result_path_specs[j].Base()
+	})
+
 	for _, path_spec := range result_path_specs {
-		walkFn(path_spec)
+		err := walkFn(path_spec)
+		if err == StopIteration {
+			return err
+		}
 	}
 
 	return nil
@@ -185,6 +193,8 @@ func (self *TestDataStore) GetSubject(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	defer Instrument("read", urn)()
+
 	path := pathSpecToPath(urn, config_obj)
 	self.Trace("GetSubject", path)
 	result, pres := self.Subjects[path]
@@ -209,6 +219,8 @@ func (self *TestDataStore) SetSubject(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	defer Instrument("write", urn)()
+
 	filename := pathSpecToPath(urn, config_obj)
 	self.Trace("SetSubject", filename)
 
@@ -224,6 +236,8 @@ func (self *TestDataStore) DeleteSubject(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	defer Instrument("delete", urn)()
+
 	filename := pathSpecToPath(urn, config_obj)
 	self.Trace("DeleteSubject", filename)
 	delete(self.Subjects, filename)
@@ -235,47 +249,56 @@ func (self *TestDataStore) DeleteSubject(
 // Lists all the children of a URN.
 func (self *TestDataStore) ListChildren(
 	config_obj *config_proto.Config,
-	urn api.DSPathSpec,
-	offset uint64, length uint64) (
-	[]api.DSPathSpec, error) {
+	urn api.DSPathSpec) ([]api.DSPathSpec, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	defer Instrument("list", urn)()
+
 	self.Trace("ListChildren", pathDirSpecToPath(urn, config_obj))
 
-	seen := make(map[string]bool)
+	seen_dirs := make(map[string]bool)
+	seen_files := make(map[string]bool)
 	root_components := urn.Components()
-	names := []string{}
+	file_names := []string{}
+	dir_names := []string{}
 	for _, components := range self.Components {
-		// We only want direct children
-		if len(components) != len(root_components)+1 {
-			continue
-		}
-
 		if !isSubPath(root_components, components) {
 			continue
 		}
 
-		name := components[len(components)-1]
-		_, pres := seen[name]
+		// Deeper directories
+		if len(components) > len(root_components)+1 {
+			name := components[len(root_components)]
+			_, pres := seen_dirs[name]
+			if !pres {
+				dir_names = append(dir_names, name)
+				seen_dirs[name] = true
+			}
+			continue
+		}
+
+		name := components[len(root_components)]
+		_, pres := seen_files[name]
 		if !pres {
-			names = append(names, name)
-			seen[name] = true
+			file_names = append(file_names, name)
+			seen_files[name] = true
 		}
 	}
 
-	sort.Strings(names)
+	sort.Strings(file_names)
+	sort.Strings(dir_names)
 
-	result := make([]api.DSPathSpec, 0, len(names))
-	for _, name := range names {
+	result := make([]api.DSPathSpec, 0, len(dir_names)+len(file_names))
+	for _, name := range dir_names {
+		result = append(result, urn.AddChild(name).SetDir())
+	}
+
+	for _, name := range file_names {
 		result = append(result, urn.AddChild(name))
 	}
-	end := offset + length
-	if end > uint64(len(result)) {
-		end = uint64(len(result))
-	}
 
-	return result[offset:end], nil
+	return result, nil
 }
 
 // Update the posting list index. Searching for any of the
@@ -370,6 +393,8 @@ func (self *TestDataStore) SearchClients(
 	offset uint64, limit uint64, sort_direction SortingSense) []string {
 	seen := make(map[string]bool)
 	result := []string{}
+
+	defer Instrument("SearchClients", index_urn)()
 
 	query = strings.ToLower(query)
 	if query == "." || query == "" {

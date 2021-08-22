@@ -246,8 +246,7 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 	}
 
 	hunt_path_manager := paths.NewHuntPathManager("")
-	hunts, err := db.ListChildren(config_obj,
-		hunt_path_manager.HuntDirectory(), 0, 1000)
+	hunts, err := db.ListChildren(config_obj, hunt_path_manager.HuntDirectory())
 	if err != nil {
 		return err
 	}

@@ -32,6 +32,8 @@ import (
 
 var (
 	mu sync.Mutex
+
+	StopIteration = errors.New("StopIteration")
 )
 
 type SortingSense int
@@ -47,8 +49,8 @@ type DatastoreInfo struct {
 	Modified time.Time
 }
 
+// When WalkFunc return StopIteration we exit the walk.
 type WalkFunc func(urn api.DSPathSpec) error
-type ComponentWalkFunc func(components api.DSPathSpec) error
 
 type DataStore interface {
 	// Retrieve all the client's tasks.
@@ -87,8 +89,7 @@ type DataStore interface {
 	// Lists all the children of a URN.
 	ListChildren(
 		config_obj *config_proto.Config,
-		urn api.DSPathSpec,
-		offset uint64, length uint64) ([]api.DSPathSpec, error)
+		urn api.DSPathSpec) ([]api.DSPathSpec, error)
 
 	Walk(config_obj *config_proto.Config,
 		root api.DSPathSpec, walkFn WalkFunc) error

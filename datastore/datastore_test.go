@@ -63,8 +63,7 @@ func (self BaseTestSuite) TestSetGetJSON() {
 
 	// Now test that ListChildren works properly.
 	children, err := self.datastore.ListChildren(
-		self.config_obj, path_specs.NewUnsafeDatastorePath("a", "b/c"),
-		0, 100)
+		self.config_obj, path_specs.NewUnsafeDatastorePath("a", "b/c"))
 	assert.NoError(self.T(), err)
 
 	results := []string{}
@@ -176,7 +175,7 @@ func (self BaseTestSuite) TestListChildren() {
 	time.Sleep(10 * time.Millisecond)
 
 	children, err := self.datastore.ListChildren(
-		self.config_obj, urn, 0, 100)
+		self.config_obj, urn)
 	assert.NoError(self.T(), err)
 
 	// ListChildren gives the full path to all children
@@ -184,20 +183,6 @@ func (self BaseTestSuite) TestListChildren() {
 		"/a/b/c/1",
 		"/a/b/c/2",
 		"/a/b/c/3"}, asStrings(children))
-
-	children, err = self.datastore.ListChildren(self.config_obj,
-		urn, 0, 2)
-	assert.NoError(self.T(), err)
-
-	assert.Equal(self.T(), []string{"/a/b/c/1", "/a/b/c/2"},
-		asStrings(children))
-
-	children, err = self.datastore.ListChildren(self.config_obj,
-		urn, 1, 2)
-	assert.NoError(self.T(), err)
-
-	assert.Equal(self.T(), []string{"/a/b/c/2", "/a/b/c/3"},
-		asStrings(children))
 
 	visited := []api.DSPathSpec{}
 	self.datastore.Walk(self.config_obj,
@@ -211,6 +196,35 @@ func (self BaseTestSuite) TestListChildren() {
 		"/a/b/c/2",
 		"/a/b/c/3"},
 		asStrings(visited))
+}
+
+func (self BaseTestSuite) TestListChildrenSubdirs() {
+	message := &crypto_proto.VeloMessage{Source: "Server"}
+
+	urn := path_specs.NewSafeDatastorePath("Root")
+
+	// Add a deep item with the same path as a shorter item.
+	err := self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("Subdir1", "item"), message)
+	assert.NoError(self.T(), err)
+
+	err = self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("Subdir1"), message)
+	assert.NoError(self.T(), err)
+
+	err = self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("item"), message)
+	assert.NoError(self.T(), err)
+
+	children, err := self.datastore.ListChildren(
+		self.config_obj, urn)
+	assert.NoError(self.T(), err)
+
+	// Get one file and one directory
+	assert.Equal(self.T(), []string{
+		"/Root/Subdir1",
+		"/Root/Subdir1:dir",
+		"/Root/item"}, asStrings(children))
 }
 
 func (self BaseTestSuite) TestIndexes() {
@@ -299,8 +313,12 @@ func benchmarkSearchClient(b *testing.B,
 func asStrings(in []api.DSPathSpec) []string {
 	children := make([]string, 0, len(in))
 	for _, i := range in {
-		children = append(children, utils.JoinComponents(
-			i.Components(), "/"))
+		name := utils.JoinComponents(i.Components(), "/")
+		if i.IsDir() {
+			name += ":dir"
+		}
+
+		children = append(children, name)
 	}
 	sort.Strings(children)
 

@@ -127,6 +127,11 @@ func (self *SanityChecks) Check(
 		return err
 	}
 
+	err = maybeMigrateClientIndex(ctx, config_obj)
+	if err != nil {
+		return err
+	}
+
 	return checkForServerUpgrade(ctx, config_obj)
 }
 

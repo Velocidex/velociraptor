@@ -83,8 +83,8 @@ func (self FlowsPlugin) Call(
 		}
 
 		flow_path_manager := paths.NewFlowPathManager(arg.ClientId, arg.FlowId)
-		flow_urns, err := db.ListChildren(
-			config_obj, flow_path_manager.ContainerPath(), 0, 10000)
+		flow_urns, err := db.ListChildren(config_obj,
+			flow_path_manager.ContainerPath())
 		if err != nil {
 			scope.Log("Error: %v", err)
 			return

@@ -1,0 +1,128 @@
+package search_test
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/alecthomas/assert"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/suite"
+	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/search"
+	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+type TestSuite struct {
+	test_utils.TestSuite
+
+	clients []string
+}
+
+// Make some clients in the index.
+func (self *TestSuite) populatedClients() {
+	self.clients = nil
+	bytes := []byte("00000000")
+	for i := 0; i < 4; i++ {
+		bytes[0] = byte(i)
+		for k := 0; k < 4; k++ {
+			bytes[3] = byte(k)
+			for j := 0; j < 4; j++ {
+				bytes[7] = byte(j)
+				client_id := fmt.Sprintf("C.%02x", bytes)
+				self.clients = append(self.clients, client_id)
+				err := search.SetIndex(self.ConfigObj, client_id, client_id)
+				assert.NoError(self.T(), err)
+			}
+		}
+	}
+}
+
+func (self *TestSuite) TestPrefixSearch() {
+	self.populatedClients()
+
+	// test_utils.GetMemoryDataStore(self.T(), self.ConfigObj).Debug()
+
+	initial_op_count := getIndexListings(self.T())
+
+	// Read all clients.
+	prefix := "C.0230300330"
+	ctx := context.Background()
+	searched_clients := []string{}
+	for client_id := range search.SearchIndexWithPrefix(
+		ctx, self.ConfigObj, prefix) {
+		searched_clients = append(searched_clients, client_id)
+	}
+
+	prefixed_clients := []string{}
+	for _, client_id := range self.clients {
+		if strings.HasPrefix(client_id, prefix) {
+			prefixed_clients = append(prefixed_clients, client_id)
+		}
+	}
+	assert.Equal(self.T(), prefixed_clients, searched_clients)
+
+	current_op_count := getIndexListings(self.T())
+	assert.Equal(self.T(), uint64(34), current_op_count-initial_op_count)
+}
+
+func (self *TestSuite) TestEnumerateIndex() {
+	// Make some clients
+	self.populatedClients()
+	// test_utils.GetMemoryDataStore(self.T(), self.ConfigObj).Debug()
+
+	// Measure how many ListChildren() operations are performed
+	initial_op_count := getIndexListings(self.T())
+
+	// Read all clients.
+	ctx := context.Background()
+	searched_clients := []string{}
+	for client_id := range search.SearchIndexWithPrefix(ctx, self.ConfigObj, "") {
+		searched_clients = append(searched_clients, client_id)
+	}
+
+	assert.Equal(self.T(), self.clients, searched_clients)
+
+	current_op_count := getIndexListings(self.T())
+	// These numbers depend on the partition size.
+	assert.Equal(self.T(), uint64(490), current_op_count-initial_op_count)
+
+	// Now test that early exit reduces the number of listing
+	// operations.
+	initial_op_count = current_op_count
+
+	// Only read one client
+	ctx, cancel := context.WithCancel(context.Background())
+	for client_id := range search.SearchIndexWithPrefix(ctx, self.ConfigObj, "") {
+		assert.Equal(self.T(), "C.0030300030303000", client_id)
+		cancel()
+		break
+	}
+
+	current_op_count = getIndexListings(self.T())
+	utils.Debug(current_op_count - initial_op_count)
+	assert.True(self.T(), 50 > current_op_count-initial_op_count)
+}
+
+func getIndexListings(t *testing.T) uint64 {
+	gathering, err := prometheus.DefaultGatherer.Gather()
+	assert.NoError(t, err)
+
+	for _, metric := range gathering {
+		if *metric.Name == "datastore_latency" {
+			for _, m := range metric.Metric {
+				if len(m.Label) >= 2 &&
+					*m.Label[0].Value == "list" &&
+					*m.Label[1].Value == "Index" {
+					return *m.Histogram.SampleCount
+				}
+			}
+		}
+	}
+	return 0
+}
+
+func TestIndexing(t *testing.T) {
+	suite.Run(t, &TestSuite{})
+}

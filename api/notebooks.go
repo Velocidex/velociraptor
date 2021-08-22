@@ -1044,8 +1044,7 @@ func getAvailableTimelines(
 
 	result := []string{}
 	db, err := datastore.GetDB(config_obj)
-	files, err := db.ListChildren(
-		config_obj, path_manager.SuperTimelineDir(), 0, 1000)
+	files, err := db.ListChildren(config_obj, path_manager.SuperTimelineDir())
 	if err != nil {
 		return nil
 	}

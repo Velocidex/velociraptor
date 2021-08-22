@@ -95,8 +95,7 @@ func GetAllNotebooks(
 	}
 
 	// List all available notebooks
-	notebook_urns, err := db.ListChildren(
-		config_obj, paths.NotebookDir(), 0, 1000000)
+	notebook_urns, err := db.ListChildren(config_obj, paths.NotebookDir())
 	if err != nil {
 		return nil, err
 	}

@@ -129,6 +129,10 @@ type DSPathSpec interface {
 
 	Tag() string
 	SetTag(string) DSPathSpec
+
+	// If true we can apply this path to ListChildren()
+	IsDir() bool
+	SetDir() DSPathSpec
 }
 
 type FSPathSpec interface {

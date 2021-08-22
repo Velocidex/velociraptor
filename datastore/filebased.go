@@ -88,7 +88,7 @@ func (self *FileBaseDataStore) GetClientTasks(
 
 	client_path_manager := paths.NewClientPathManager(client_id)
 	tasks, err := self.ListChildren(
-		config_obj, client_path_manager.TasksDirectory(), 0, 100)
+		config_obj, client_path_manager.TasksDirectory())
 	if err != nil {
 		return nil, err
 	}
@@ -220,8 +220,11 @@ func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,
 			if strings.HasSuffix(name, ".db") {
 				name = strings.TrimSuffix(name, ".db")
 				name = strings.TrimSuffix(name, ".json")
-				walkFn(root.AddChild(
+				err := walkFn(root.AddChild(
 					utils.UnsanitizeComponent(name)))
+				if err == StopIteration {
+					return nil
+				}
 				continue
 			}
 		}
@@ -286,6 +289,7 @@ func listChildNames(config_obj *config_proto.Config,
 
 func listChildren(config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]os.FileInfo, error) {
+
 	defer Instrument("list", urn)()
 
 	children, err := utils.ReadDirUnsorted(
@@ -302,8 +306,7 @@ func listChildren(config_obj *config_proto.Config,
 // Lists all the children of a URN.
 func (self *FileBaseDataStore) ListChildren(
 	config_obj *config_proto.Config,
-	urn api.DSPathSpec,
-	offset uint64, length uint64) (
+	urn api.DSPathSpec) (
 	[]api.DSPathSpec, error) {
 
 	TraceDirectory(config_obj, "ListChildren", urn)
@@ -313,12 +316,10 @@ func (self *FileBaseDataStore) ListChildren(
 		return nil, err
 	}
 
-	// In the same directory we may have files and directories -
-	// in here we only care about the files which have a .db
-	// extension so filter the directory listing.
+	// In the same directory we may have files and directories
 	children := make([]os.FileInfo, 0, len(all_children))
 	for _, child := range all_children {
-		if strings.HasSuffix(child.Name(), ".db") {
+		if strings.HasSuffix(child.Name(), ".db") || child.IsDir() {
 			children = append(children, child)
 		}
 	}
@@ -330,17 +331,16 @@ func (self *FileBaseDataStore) ListChildren(
 
 	// Slice the result according to the required offset and count.
 	result := make([]api.DSPathSpec, 0, len(children))
-	for i := offset; i < offset+length; i++ {
-		if i >= uint64(len(children)) {
-			break
-		}
-
+	for _, child := range children {
 		// Strip data store extensions
-		name := children[i].Name()
+		name := child.Name()
 		name = strings.TrimSuffix(name, ".db")
 		name = strings.TrimSuffix(name, ".json")
-		result = append(result,
-			urn.AddChild(utils.UnsanitizeComponent(name)))
+		child_pathspec := urn.AddChild(utils.UnsanitizeComponent(name))
+		if child.IsDir() {
+			child_pathspec = child_pathspec.SetDir()
+		}
+		result = append(result, child_pathspec)
 	}
 
 	return result, nil
@@ -415,6 +415,8 @@ func (self *FileBaseDataStore) SearchClients(
 	index_urn api.DSPathSpec,
 	query string, query_type string,
 	offset uint64, limit uint64, sort_direction SortingSense) []string {
+
+	defer Instrument("search", index_urn)()
 
 	seen := make(map[string]bool)
 
