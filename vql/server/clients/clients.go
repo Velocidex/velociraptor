@@ -26,9 +26,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/datastore"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/search"
 	vsearch "www.velocidex.com/golang/velociraptor/search"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -73,12 +72,6 @@ func (self ClientsPlugin) Call(
 			return
 		}
 
-		db, err := datastore.GetDB(config_obj)
-		if err != nil {
-			scope.Log("Error: %v", err)
-			return
-		}
-
 		// If a client id is specified we do not need to search at all.
 		if arg.ClientId != "" {
 			api_client, err := vsearch.GetApiClient(
@@ -94,9 +87,9 @@ func (self ClientsPlugin) Call(
 			return
 		}
 
-		search := arg.Search
-		if search == "" {
-			search = "all"
+		search_term := arg.Search
+		if search_term == "" {
+			search_term = "all"
 		}
 
 		limit := arg.Limit
@@ -104,19 +97,20 @@ func (self ClientsPlugin) Call(
 			limit = 100000
 		}
 
-		for _, client_id := range db.SearchClients(
-			config_obj, paths.CLIENT_INDEX_URN,
-			search, "", arg.Start, limit, datastore.UNSORTED) {
-			api_client, err := vsearch.GetApiClient(
-				ctx, config_obj, client_id,
-				false /* detailed */)
-			if err == nil {
-				select {
-				case <-ctx.Done():
-					return
-				case output_chan <- json.ConvertProtoToOrderedDict(
-					api_client):
-				}
+		search_response, err := search.SearchClients(ctx,
+			config_obj, &api_proto.SearchClientsRequest{
+				Query: search_term,
+			}, "")
+		if err != nil {
+			scope.Log("clients: %v", err)
+			return
+		}
+
+		for _, api_client := range search_response.Items {
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- json.ConvertProtoToOrderedDict(api_client):
 			}
 			vfilter.ChargeOp(scope)
 		}

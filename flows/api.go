@@ -37,10 +37,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
-var (
-	get_flows_sub_query_count = 1000
-)
-
 // Filter will be applied on flows to remove those we dont care about.
 func GetFlows(
 	config_obj *config_proto.Config,
@@ -62,6 +58,7 @@ func GetFlows(
 		return nil, err
 	}
 
+	// We only care about the flow contexts
 	for _, urn := range all_flow_urns {
 		if !urn.IsDir() {
 			flow_urns = append(flow_urns, urn)
@@ -111,7 +108,7 @@ func GetFlows(
 			continue
 		}
 
-		if !flow_filter(collection_context) {
+		if flow_filter != nil && !flow_filter(collection_context) {
 			continue
 		}
 

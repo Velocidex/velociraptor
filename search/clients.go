@@ -144,7 +144,8 @@ func FastGetApiClient(
 			Machine:  client_info.Info.Architecture,
 			Fqdn:     client_info.Info.Fqdn,
 		},
-		LastSeenAt: ping_info.Ping,
-		LastIp:     ping_info.IpAddress,
+		LastSeenAt:            ping_info.Ping,
+		LastIp:                ping_info.IpAddress,
+		LastInterrogateFlowId: client_info.Info.LastInterrogateFlowId,
 	}, nil
 }

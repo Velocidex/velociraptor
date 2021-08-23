@@ -27,6 +27,7 @@ package cache
 
 import (
 	"container/list"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -194,6 +195,25 @@ type Stats struct {
 	Length, Size, Capacity, Evictions int64
 	Hits, Misses                      int64
 	oldest                            time.Time
+}
+
+func (lru *LRUCache) StatsOld() (
+	length, size, capacity, evictions int64, oldest time.Time) {
+	lru.mu.Lock()
+	defer lru.mu.Unlock()
+	if lastElem := lru.list.Back(); lastElem != nil {
+		oldest = lastElem.Value.(*entry).timeAccessed
+	}
+	return int64(lru.list.Len()), lru.size, lru.capacity, lru.evictions, oldest
+}
+
+// StatsJSON returns stats as a JSON object in a string.
+func (lru *LRUCache) StatsJSON() string {
+	if lru == nil {
+		return "{}"
+	}
+	l, s, c, e, o := lru.StatsOld()
+	return fmt.Sprintf("{\"Length\": %v, \"Size\": %v, \"Capacity\": %v, \"Evictions\": %v, \"OldestAccess\": \"%v\"}", l, s, c, e, o)
 }
 
 // Stats returns a few stats on the cache.

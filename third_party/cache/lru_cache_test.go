@@ -33,7 +33,7 @@ func (cv *CacheValue) Size() int {
 
 func TestInitialState(t *testing.T) {
 	cache := NewLRUCache(5)
-	l, sz, c, e, _ := cache.Stats()
+	l, sz, c, e, _ := cache.StatsOld()
 	if l != 0 {
 		t.Errorf("length = %v, want 0", l)
 	}
@@ -110,13 +110,13 @@ func TestSetUpdatesSize(t *testing.T) {
 	emptyValue := &CacheValue{0}
 	key := "key1"
 	cache.Set(key, emptyValue)
-	if _, sz, _, _, _ := cache.Stats(); sz != 0 {
+	if _, sz, _, _, _ := cache.StatsOld(); sz != 0 {
 		t.Errorf("cache.Size() = %v, expected 0", sz)
 	}
 	someValue := &CacheValue{20}
 	key = "key2"
 	cache.Set(key, someValue)
-	if _, sz, _, _, _ := cache.Stats(); sz != 20 {
+	if _, sz, _, _, _ := cache.StatsOld(); sz != 20 {
 		t.Errorf("cache.Size() = %v, expected 20", sz)
 	}
 }
@@ -141,14 +141,14 @@ func TestSetWithOldKeyUpdatesSize(t *testing.T) {
 	key := "key1"
 	cache.Set(key, emptyValue)
 
-	if _, sz, _, _, _ := cache.Stats(); sz != 0 {
+	if _, sz, _, _, _ := cache.StatsOld(); sz != 0 {
 		t.Errorf("cache.Size() = %v, expected %v", sz, 0)
 	}
 
 	someValue := &CacheValue{20}
 	cache.Set(key, someValue)
 	expected := int64(someValue.size)
-	if _, sz, _, _, _ := cache.Stats(); sz != expected {
+	if _, sz, _, _, _ := cache.StatsOld(); sz != expected {
 		t.Errorf("cache.Size() = %v, expected %v", sz, expected)
 	}
 }
@@ -195,7 +195,7 @@ func TestDelete(t *testing.T) {
 		t.Error("Expected item to be in cache.")
 	}
 
-	if _, sz, _, _, _ := cache.Stats(); sz != 0 {
+	if _, sz, _, _, _ := cache.StatsOld(); sz != 0 {
 		t.Errorf("cache.Size() = %v, expected 0", sz)
 	}
 
@@ -212,7 +212,7 @@ func TestClear(t *testing.T) {
 	cache.Set(key, value)
 	cache.Clear()
 
-	if _, sz, _, _, _ := cache.Stats(); sz != 0 {
+	if _, sz, _, _, _ := cache.StatsOld(); sz != 0 {
 		t.Errorf("cache.Size() = %v, expected 0 after Clear()", sz)
 	}
 }
@@ -227,12 +227,12 @@ func TestCapacityIsObeyed(t *testing.T) {
 	cache.Set("key1", value)
 	cache.Set("key2", value)
 	cache.Set("key3", value)
-	if _, sz, _, _, _ := cache.Stats(); sz != size {
+	if _, sz, _, _, _ := cache.StatsOld(); sz != size {
 		t.Errorf("cache.Size() = %v, expected %v", sz, size)
 	}
 	// Insert one more; something should be evicted to make room.
 	cache.Set("key4", value)
-	_, sz, _, evictions, _ := cache.Stats()
+	_, sz, _, evictions, _ := cache.StatsOld()
 	if sz != size {
 		t.Errorf("post-evict cache.Size() = %v, expected %v", sz, size)
 	}

@@ -116,8 +116,11 @@ func searchClientIndex(
 		options = OPTION_KEY
 	}
 
+	query := in.Query
+	query = strings.TrimSuffix(query, "*")
+
 	for client_id := range SearchIndexWithPrefix(
-		ctx, config_obj, in.Query, options) {
+		ctx, config_obj, query, options) {
 		if client_id == "" {
 			continue
 		}

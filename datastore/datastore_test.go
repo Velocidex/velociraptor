@@ -227,22 +227,28 @@ func (self BaseTestSuite) TestListChildrenSubdirs() {
 		"/Root/item"}, asStrings(children))
 }
 
+// This test is testing the deprecated index which is still used for
+// various things but not for clients any more. Eventually this test
+// will be removed.
 func (self BaseTestSuite) TestIndexes() {
 	client_id := "C.1234"
 	client_id_2 := "C.1235"
-	err := self.datastore.SetIndex(self.config_obj, paths.CLIENT_INDEX_URN,
+	err := self.datastore.SetIndex(self.config_obj,
+		paths.CLIENT_INDEX_URN_DEPRECATED,
 		client_id, []string{"all", client_id, "Hostname", "FQDN", "host:Foo"})
 	assert.NoError(self.T(), err)
-	err = self.datastore.SetIndex(self.config_obj, paths.CLIENT_INDEX_URN,
+	err = self.datastore.SetIndex(self.config_obj,
+		paths.CLIENT_INDEX_URN_DEPRECATED,
 		client_id_2, []string{"all", client_id_2, "Hostname2", "FQDN2", "host:Bar"})
 	assert.NoError(self.T(), err)
 
 	hits := self.datastore.SearchClients(self.config_obj,
-		paths.CLIENT_INDEX_URN, "all", "", 0, 100, SORT_UP)
+		paths.CLIENT_INDEX_URN_DEPRECATED, "all", "", 0, 100, SORT_UP)
 	sort.Strings(hits)
 	assert.Equal(self.T(), []string{client_id, client_id_2}, hits)
 
-	hits = self.datastore.SearchClients(self.config_obj, paths.CLIENT_INDEX_URN,
+	hits = self.datastore.SearchClients(self.config_obj,
+		paths.CLIENT_INDEX_URN_DEPRECATED,
 		"*foo", "", 0, 100, SORT_UP)
 	assert.Equal(self.T(), []string{client_id}, hits)
 }
