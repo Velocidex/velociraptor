@@ -75,7 +75,7 @@ sources:
       LET file_search = SELECT FullPath,
                get(item=Sys, field="mft") as Inode,
                Mode.String AS Mode, Size,
-               Mtime AS Mtime,
+               Mtime AS MTime,
                Atime AS ATime,
                Btime AS BTime,
                Ctime AS CTime, "" AS Keywords, IsDir
@@ -116,7 +116,7 @@ sources:
             })
         }, else=modified_before)
 
-      SELECT FullPath, Inode, Mode, Size, Mtime, ATime,
+      SELECT FullPath, Inode, Mode, Size, MTime, ATime,
              CTime, BTime, Keywords, IsDir,
                if(condition=Upload_File and NOT IsDir,
                   then=upload(file=FullPath, accessor=Accessor)) AS Upload,
