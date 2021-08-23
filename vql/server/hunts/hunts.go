@@ -98,6 +98,10 @@ func (self HuntsPlugin) Call(
 		}
 
 		for _, hunt_urn := range hunts {
+			if hunt_urn.IsDir() {
+				continue
+			}
+
 			hunt_id := hunt_urn.Base()
 			if !constants.HuntIdRegex.MatchString(hunt_id) {
 				continue

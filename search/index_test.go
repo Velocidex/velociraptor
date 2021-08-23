@@ -22,6 +22,7 @@ type TestSuite struct {
 
 // Make some clients in the index.
 func (self *TestSuite) populatedClients() {
+	search.ResetLRU()
 	self.clients = nil
 	bytes := []byte("00000000")
 	for i := 0; i < 4; i++ {
@@ -39,10 +40,65 @@ func (self *TestSuite) populatedClients() {
 	}
 }
 
-func (self *TestSuite) TestPrefixSearch() {
+func (self *TestSuite) TestMRU() {
+	var err error
+	// Make some clients
 	self.populatedClients()
 
-	// test_utils.GetMemoryDataStore(self.T(), self.ConfigObj).Debug()
+	full_walk := func() {
+		// Read all clients.
+		ctx := context.Background()
+		searched_clients := []string{}
+		for client_id := range search.SearchIndexWithPrefix(
+			ctx, self.ConfigObj, "", search.OPTION_ENTITY) {
+			if client_id != "" {
+				searched_clients = append(searched_clients, client_id)
+			}
+		}
+	}
+
+	// Walk once
+	full_walk()
+
+	stats := search.LRUStats()
+	assert.Equal(self.T(), int64(0), stats.Hits)
+
+	// Walk again
+	full_walk()
+
+	new_stats := search.LRUStats()
+	// No new looksups - everything should come from the cache.
+	assert.Equal(self.T(), stats.Misses, new_stats.Misses)
+
+	// All old misses come from cache this time.
+	assert.Equal(self.T(), stats.Misses, new_stats.Hits)
+
+	// Label two clients.
+	err = search.SetIndex(self.ConfigObj, "C.452", "label:foobar")
+	assert.NoError(self.T(), err)
+
+	err = search.SetIndex(self.ConfigObj, "C.123", "label:foobar")
+	assert.NoError(self.T(), err)
+
+	labels := []string{}
+	for item := range search.SearchIndexWithPrefix(
+		context.Background(), self.ConfigObj,
+		"label:foobar", search.OPTION_ENTITY) {
+		if item != "" {
+			labels = append(labels, item)
+		}
+	}
+
+	// We find the clients by label (Results are sorted)
+	assert.Equal(self.T(), []string{"C.123", "C.452"}, labels)
+
+	// Searching for the new label has increased cache misses.
+	stats = search.LRUStats()
+	assert.True(self.T(), stats.Misses > new_stats.Misses)
+}
+
+func (self *TestSuite) TestPrefixSearch() {
+	self.populatedClients()
 
 	initial_op_count := getIndexListings(self.T())
 
@@ -51,8 +107,10 @@ func (self *TestSuite) TestPrefixSearch() {
 	ctx := context.Background()
 	searched_clients := []string{}
 	for client_id := range search.SearchIndexWithPrefix(
-		ctx, self.ConfigObj, prefix) {
-		searched_clients = append(searched_clients, client_id)
+		ctx, self.ConfigObj, prefix, search.OPTION_ENTITY) {
+		if client_id != "" {
+			searched_clients = append(searched_clients, client_id)
+		}
 	}
 
 	prefixed_clients := []string{}
@@ -78,8 +136,11 @@ func (self *TestSuite) TestEnumerateIndex() {
 	// Read all clients.
 	ctx := context.Background()
 	searched_clients := []string{}
-	for client_id := range search.SearchIndexWithPrefix(ctx, self.ConfigObj, "") {
-		searched_clients = append(searched_clients, client_id)
+	for client_id := range search.SearchIndexWithPrefix(
+		ctx, self.ConfigObj, "", search.OPTION_ENTITY) {
+		if client_id != "" {
+			searched_clients = append(searched_clients, client_id)
+		}
 	}
 
 	assert.Equal(self.T(), self.clients, searched_clients)
@@ -94,10 +155,13 @@ func (self *TestSuite) TestEnumerateIndex() {
 
 	// Only read one client
 	ctx, cancel := context.WithCancel(context.Background())
-	for client_id := range search.SearchIndexWithPrefix(ctx, self.ConfigObj, "") {
-		assert.Equal(self.T(), "C.0030300030303000", client_id)
-		cancel()
-		break
+	for client_id := range search.SearchIndexWithPrefix(
+		ctx, self.ConfigObj, "", search.OPTION_ENTITY) {
+		if client_id != "" {
+			assert.Equal(self.T(), "C.0030300030303000", client_id)
+			cancel()
+			break
+		}
 	}
 
 	current_op_count = getIndexListings(self.T())

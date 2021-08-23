@@ -160,78 +160,6 @@
     type: string
     description: Separator to use (default /)
   category: basic
-- name: binary_parse
-  description: |
-    Parse a binary string with profile based parser.
-
-    This plugin extract binary data from strings. It works by applying
-    a profile to the binary string and generating an object from
-    that. Profiles are a json structure describing the binary format. For
-    example a profile might be:
-
-    ```json
-    [
-      ["StructName", 10, [
-         ["field1", 2, "unsigned int"],
-         ["field2", 6, "unsigned long long"],
-       ]]]
-    ]
-    ```
-
-    The profile is compiled and overlayed on top of the offset specified,
-    then the object is emitted with its required fields.
-
-    You can read more about profiles here https://github.com/Velocidex/vtypes
-  type: Function
-  args:
-  - name: offset
-    type: int64
-    description: Start parsing from this offset.
-  - name: string
-    type: string
-    description: The string to parse.
-    required: true
-  - name: profile
-    type: string
-    description: The profile to use.
-  - name: iterator
-    type: string
-    description: An iterator to begin with.
-  - name: target
-    type: string
-    description: The target type to fetch.
-  category: parsers
-- name: binary_parse
-  description: |
-    Parse binary files using a profile.
-
-    This is the plugin version of the `binary_parse()` function.
-  type: Plugin
-  args:
-  - name: offset
-    type: int64
-    description: Start parsing from this offset
-  - name: file
-    type: string
-    description: Filename to parse
-    required: true
-  - name: accessor
-    type: string
-    description: Accessor to use (e.g. ntfs, data)
-  - name: profile
-    type: string
-    description: Profile to use.
-  - name: target
-    type: string
-    description: The target to fetch.
-    required: true
-  - name: args
-    type: vfilter.Any
-    description: Args for the target class.
-  - name: start
-    type: string
-    description: The initial field in the target to fetch.
-  category: parsers
 - name: cache
   description: |
     Creates a cache object.
@@ -2403,7 +2331,27 @@
     description: The accessor to use.
   category: parsers
 - name: parse_binary
-  description: Parse a binary file into a datastructure using a profile.
+  description: |
+    Parse a binary file into a datastructure using a profile.
+
+    This plugin extract binary data from strings. It works by applying
+    a profile to the binary string and generating an object from
+    that. Profiles are a json structure describing the binary format. For
+    example a profile might be:
+
+    ```json
+    [
+      ["StructName", 10, [
+         ["field1", 2, "unsigned int"],
+         ["field2", 6, "unsigned long long"],
+       ]]]
+    ]
+    ```
+
+    The profile is compiled and overlayed on top of the offset specified,
+    then the object is emitted with its required fields.
+
+    You can read more about profiles here https://github.com/Velocidex/vtypes
   type: Function
   args:
   - name: filename
@@ -3063,7 +3011,8 @@
   args:
   - name: pid
     type: int64
-    description: A process ID to list. If not provided list all processes.
+    description: A pid to list. If this is provided we are able to operate much faster
+      by only opening a single process.
   category: plugin
 - name: query
   description: Launch a subquery and materialize it into a list of rows.
@@ -4025,6 +3974,9 @@
   - name: basic_auth_password
     type: string
     description: The password to use in HTTP basic auth
+  - name: noverifycert
+    type: bool
+    description: Skip TLS Verification
   category: basic
 - name: uploads
   description: Retrieve information about a flow's uploads.

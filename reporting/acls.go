@@ -101,6 +101,10 @@ func GetAllNotebooks(
 	}
 
 	for _, urn := range notebook_urns {
+		if urn.IsDir() {
+			continue
+		}
+
 		notebook := &api_proto.NotebookMetadata{}
 		err := db.GetSubject(config_obj, urn, notebook)
 		if err != nil || notebook.NotebookId == "" {

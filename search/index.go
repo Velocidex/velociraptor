@@ -29,7 +29,6 @@ package search
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sort"
 	"strings"
 	"time"
@@ -231,11 +230,13 @@ func walkIndexWithPrefix(ctx context.Context,
 			return children[i].Base() < children[j].Base()
 		})
 
-		fmt.Printf("Listing %v (%v items): %v\n", getMRUKey(root),
-			len(children),
-			path_specs.DebugPathSpecList(children))
+		/*
+			fmt.Printf("Listing %v (%v items): %v\n", getMRUKey(root),
+				len(children),
+				path_specs.DebugPathSpecList(children))
 
-		fmt.Printf("Partitions %v\n", partitions)
+			fmt.Printf("Partitions %v\n", partitions)
+		*/
 
 		// First add any non-directories that exist in this directory.
 		for _, child := range children {
@@ -297,4 +298,12 @@ func walkIndexWithPrefix(ctx context.Context,
 	}()
 
 	return output_chan
+}
+
+func ResetLRU() {
+	lru.Clear()
+}
+
+func LRUStats() cache.Stats {
+	return lru.Stats()
 }

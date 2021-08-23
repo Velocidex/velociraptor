@@ -89,6 +89,10 @@ func ListUsers(config_obj *config_proto.Config) ([]*api_proto.VelociraptorUser, 
 
 	result := make([]*api_proto.VelociraptorUser, 0, len(children))
 	for _, child := range children {
+		if child.IsDir() {
+			continue
+		}
+
 		username := child.Base()
 		user_record, err := GetUser(config_obj, username)
 		if err == nil {

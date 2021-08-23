@@ -61,6 +61,7 @@ func GetFlows(
 	if err != nil {
 		return nil, err
 	}
+
 	for _, urn := range all_flow_urns {
 		if !urn.IsDir() {
 			flow_urns = append(flow_urns, urn)
@@ -72,19 +73,16 @@ func GetFlows(
 		return result, nil
 	}
 
-	flow_ids := make([]string, 0, len(flow_urns))
-	for _, urn := range flow_urns {
-		flow_ids = append(flow_ids, urn.Base())
-	}
-
 	// Flow IDs represent timestamp so they are sortable. The UI
 	// relies on more recent flows being at the top.
-	sort.Strings(flow_ids)
+	sort.Slice(flow_urns, func(i, j int) bool {
+		return flow_urns[i].Base() >= flow_urns[j].Base()
+	})
 
 	// Page the flow urns
 	end := offset + length
-	if end > uint64(len(flow_urns))-1 {
-		end = uint64(len(flow_urns)) - 1
+	if end > uint64(len(flow_urns)) {
+		end = uint64(len(flow_urns))
 	}
 	flow_urns = flow_urns[offset:end]
 
