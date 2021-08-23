@@ -42,6 +42,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type SearchOptions int
@@ -56,6 +57,9 @@ var (
 
 	// LRU caches ListChildren
 	lru = cache.NewLRUCache(10000)
+
+	// Used to mock the clock
+	clock utils.Clock = &utils.RealClock{}
 
 	metricLRUHit = promauto.NewCounter(
 		prometheus.CounterOpts{
@@ -162,7 +166,7 @@ func getMRUKey(path api.DSPathSpec) string {
 func getChildren(
 	config_obj *config_proto.Config,
 	root api.DSPathSpec) ([]api.DSPathSpec, error) {
-	now := time.Now()
+	now := clock.Now()
 	key := getMRUKey(root)
 	cached_entry_any, pres := lru.Get(key)
 	if pres {
@@ -170,7 +174,7 @@ func getChildren(
 		cached_entry := cached_entry_any.(*lruEntry)
 
 		// Only use the entry if it is recent enough
-		if cached_entry.ts.Before(now.Add(60 * time.Second)) {
+		if now.Before(cached_entry.ts.Add(60 * time.Second)) {
 			cached_entry.ts = now
 			return cached_entry.children, nil
 		}
@@ -300,8 +304,13 @@ func walkIndexWithPrefix(ctx context.Context,
 	return output_chan
 }
 
+// Used for testing.
 func ResetLRU() {
 	lru.Clear()
+}
+
+func SetLRUClock(new_clock utils.Clock) {
+	clock = new_clock
 }
 
 func LRUStats() cache.Stats {

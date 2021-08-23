@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/alecthomas/assert"
 	"github.com/prometheus/client_golang/prometheus"
@@ -42,6 +43,7 @@ func (self *TestSuite) populatedClients() {
 
 func (self *TestSuite) TestMRU() {
 	var err error
+
 	// Make some clients
 	self.populatedClients()
 
@@ -95,6 +97,42 @@ func (self *TestSuite) TestMRU() {
 	// Searching for the new label has increased cache misses.
 	stats = search.LRUStats()
 	assert.True(self.T(), stats.Misses > new_stats.Misses)
+}
+
+func (self *TestSuite) TestMRUTimeExpiry() {
+	// Make some clients
+	self.populatedClients()
+
+	full_walk := func() {
+		// Read all clients.
+		ctx := context.Background()
+		searched_clients := []string{}
+		for client_id := range search.SearchIndexWithPrefix(
+			ctx, self.ConfigObj, "", search.OPTION_ENTITY) {
+			if client_id != "" {
+				searched_clients = append(searched_clients, client_id)
+			}
+		}
+	}
+
+	search.SetLRUClock(utils.MockClock{MockNow: time.Unix(100, 0)})
+	full_walk()
+
+	initial_miss_count := getLRUMissRate(self.T())
+
+	// Now advance the clock 10 seconds
+	search.SetLRUClock(utils.MockClock{MockNow: time.Unix(110, 0)})
+	full_walk()
+
+	// No misses - everything comes from cache within 60 seconds
+	assert.Equal(self.T(), initial_miss_count, getLRUMissRate(self.T()))
+
+	// Advance the clock 1 minute
+	search.SetLRUClock(utils.MockClock{MockNow: time.Unix(171, 0)})
+	full_walk()
+
+	new_miss_count := getLRUMissRate(self.T())
+	assert.True(self.T(), new_miss_count > initial_miss_count*2/3)
 }
 
 func (self *TestSuite) TestPrefixSearch() {
@@ -181,6 +219,20 @@ func getIndexListings(t *testing.T) uint64 {
 					*m.Label[1].Value == "Index" {
 					return *m.Histogram.SampleCount
 				}
+			}
+		}
+	}
+	return 0
+}
+
+func getLRUMissRate(t *testing.T) uint64 {
+	gathering, err := prometheus.DefaultGatherer.Gather()
+	assert.NoError(t, err)
+
+	for _, metric := range gathering {
+		if *metric.Name == "search_index_lru_miss" {
+			for _, m := range metric.Metric {
+				return uint64(*m.Counter.Value)
 			}
 		}
 	}
