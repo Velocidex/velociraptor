@@ -198,6 +198,54 @@ func (self BaseTestSuite) TestListChildren() {
 		asStrings(visited))
 }
 
+func (self BaseTestSuite) TestUnsafeListChildren() {
+	message := &crypto_proto.VeloMessage{Source: "Server"}
+
+	root := path_specs.NewSafeDatastorePath("a")
+	urn := root.AddUnsafeChild("b:b", "c:b")
+	err := self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("1"), message)
+	assert.NoError(self.T(), err)
+
+	time.Sleep(10 * time.Millisecond)
+
+	err = self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("2"), message)
+	assert.NoError(self.T(), err)
+
+	time.Sleep(10 * time.Millisecond)
+
+	err = self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("3"), message)
+	assert.NoError(self.T(), err)
+
+	time.Sleep(10 * time.Millisecond)
+
+	children, err := self.datastore.ListChildren(
+		self.config_obj, urn)
+	assert.NoError(self.T(), err)
+
+	// ListChildren gives the full path to all children
+	assert.Equal(self.T(), []string{
+		"/a/b:b/c:b/1",
+		"/a/b:b/c:b/2",
+		"/a/b:b/c:b/3"}, asStrings(children))
+
+	visited := []api.DSPathSpec{}
+	self.datastore.Walk(self.config_obj,
+		root,
+		func(path_name api.DSPathSpec) error {
+			visited = append(visited, path_name)
+			return nil
+		})
+
+	assert.Equal(self.T(), []string{
+		"/a/b:b/c:b/1",
+		"/a/b:b/c:b/2",
+		"/a/b:b/c:b/3"},
+		asStrings(visited))
+}
+
 func (self BaseTestSuite) TestListChildrenSubdirs() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
 

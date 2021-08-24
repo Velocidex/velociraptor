@@ -208,7 +208,7 @@ func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,
 		if child.IsDir() {
 			err := self.Walk(
 				config_obj,
-				root.AddChild(utils.UnsanitizeComponent(
+				root.AddUnsafeChild(utils.UnsanitizeComponent(
 					name)), walkFn)
 			if err != nil {
 				// Do not quit the walk early.
@@ -220,7 +220,7 @@ func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,
 			if strings.HasSuffix(name, ".db") {
 				name = strings.TrimSuffix(name, ".db")
 				name = strings.TrimSuffix(name, ".json")
-				err := walkFn(root.AddChild(
+				err := walkFn(root.AddUnsafeChild(
 					utils.UnsanitizeComponent(name)))
 				if err == StopIteration {
 					return nil

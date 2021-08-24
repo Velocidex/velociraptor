@@ -3261,23 +3261,6 @@
     ```
   type: Plugin
   category: plugin
-- name: search
-  description: Search the server client's index.
-  type: Plugin
-  args:
-  - name: query
-    type: string
-    description: The query string.
-  - name: offset
-    type: uint64
-    description: Skip this many results.
-  - name: limit
-    type: uint64
-    description: Only return limited results
-  - name: type
-    type: string
-    description: The type of search (e.g. 'key')
-  category: server
 - name: send_event
   description: |
     Sends an event to a server event monitoring queue.
@@ -4393,4 +4376,3 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
-

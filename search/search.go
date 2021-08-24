@@ -89,11 +89,12 @@ func SearchClients(
 
 	operator, term := splitIntoOperatorAndTerms(in.Query)
 	switch operator {
-	case "", "label":
+	case "", "label", "host":
 		return searchClientIndex(ctx, config_obj, in, limit)
 
 	case "recent":
 		return searchRecents(ctx, config_obj, in, principal, term, limit)
+
 	default:
 		return nil, errors.New("Invalid search operator " + operator)
 	}
