@@ -59,8 +59,7 @@ func (self *PathManagerTestSuite) getDatastorePath(path_spec api.DSPathSpec) str
 	assert.Equal(self.T(), 1, len(results))
 
 	// Check that ListChildren() returns the correct path.
-	children, err := ds.ListChildren(
-		self.config_obj, path_spec.Dir(), 0, 100)
+	children, err := ds.ListChildren(self.config_obj, path_spec.Dir())
 	assert.NoError(self.T(), err)
 
 	for _, child := range children {

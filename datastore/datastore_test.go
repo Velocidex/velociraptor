@@ -63,8 +63,7 @@ func (self BaseTestSuite) TestSetGetJSON() {
 
 	// Now test that ListChildren works properly.
 	children, err := self.datastore.ListChildren(
-		self.config_obj, path_specs.NewUnsafeDatastorePath("a", "b/c"),
-		0, 100)
+		self.config_obj, path_specs.NewUnsafeDatastorePath("a", "b/c"))
 	assert.NoError(self.T(), err)
 
 	results := []string{}
@@ -176,7 +175,7 @@ func (self BaseTestSuite) TestListChildren() {
 	time.Sleep(10 * time.Millisecond)
 
 	children, err := self.datastore.ListChildren(
-		self.config_obj, urn, 0, 100)
+		self.config_obj, urn)
 	assert.NoError(self.T(), err)
 
 	// ListChildren gives the full path to all children
@@ -184,20 +183,6 @@ func (self BaseTestSuite) TestListChildren() {
 		"/a/b/c/1",
 		"/a/b/c/2",
 		"/a/b/c/3"}, asStrings(children))
-
-	children, err = self.datastore.ListChildren(self.config_obj,
-		urn, 0, 2)
-	assert.NoError(self.T(), err)
-
-	assert.Equal(self.T(), []string{"/a/b/c/1", "/a/b/c/2"},
-		asStrings(children))
-
-	children, err = self.datastore.ListChildren(self.config_obj,
-		urn, 1, 2)
-	assert.NoError(self.T(), err)
-
-	assert.Equal(self.T(), []string{"/a/b/c/2", "/a/b/c/3"},
-		asStrings(children))
 
 	visited := []api.DSPathSpec{}
 	self.datastore.Walk(self.config_obj,
@@ -213,22 +198,105 @@ func (self BaseTestSuite) TestListChildren() {
 		asStrings(visited))
 }
 
+func (self BaseTestSuite) TestUnsafeListChildren() {
+	message := &crypto_proto.VeloMessage{Source: "Server"}
+
+	root := path_specs.NewSafeDatastorePath("a")
+	urn := root.AddUnsafeChild("b:b", "c:b")
+	err := self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("1"), message)
+	assert.NoError(self.T(), err)
+
+	time.Sleep(10 * time.Millisecond)
+
+	err = self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("2"), message)
+	assert.NoError(self.T(), err)
+
+	time.Sleep(10 * time.Millisecond)
+
+	err = self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("3"), message)
+	assert.NoError(self.T(), err)
+
+	time.Sleep(10 * time.Millisecond)
+
+	children, err := self.datastore.ListChildren(
+		self.config_obj, urn)
+	assert.NoError(self.T(), err)
+
+	// ListChildren gives the full path to all children
+	assert.Equal(self.T(), []string{
+		"/a/b:b/c:b/1",
+		"/a/b:b/c:b/2",
+		"/a/b:b/c:b/3"}, asStrings(children))
+
+	visited := []api.DSPathSpec{}
+	self.datastore.Walk(self.config_obj,
+		root,
+		func(path_name api.DSPathSpec) error {
+			visited = append(visited, path_name)
+			return nil
+		})
+
+	assert.Equal(self.T(), []string{
+		"/a/b:b/c:b/1",
+		"/a/b:b/c:b/2",
+		"/a/b:b/c:b/3"},
+		asStrings(visited))
+}
+
+func (self BaseTestSuite) TestListChildrenSubdirs() {
+	message := &crypto_proto.VeloMessage{Source: "Server"}
+
+	urn := path_specs.NewSafeDatastorePath("Root")
+
+	// Add a deep item with the same path as a shorter item.
+	err := self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("Subdir1", "item"), message)
+	assert.NoError(self.T(), err)
+
+	err = self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("Subdir1"), message)
+	assert.NoError(self.T(), err)
+
+	err = self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("item"), message)
+	assert.NoError(self.T(), err)
+
+	children, err := self.datastore.ListChildren(
+		self.config_obj, urn)
+	assert.NoError(self.T(), err)
+
+	// Get one file and one directory
+	assert.Equal(self.T(), []string{
+		"/Root/Subdir1",
+		"/Root/Subdir1:dir",
+		"/Root/item"}, asStrings(children))
+}
+
+// This test is testing the deprecated index which is still used for
+// various things but not for clients any more. Eventually this test
+// will be removed.
 func (self BaseTestSuite) TestIndexes() {
 	client_id := "C.1234"
 	client_id_2 := "C.1235"
-	err := self.datastore.SetIndex(self.config_obj, paths.CLIENT_INDEX_URN,
+	err := self.datastore.SetIndex(self.config_obj,
+		paths.CLIENT_INDEX_URN_DEPRECATED,
 		client_id, []string{"all", client_id, "Hostname", "FQDN", "host:Foo"})
 	assert.NoError(self.T(), err)
-	err = self.datastore.SetIndex(self.config_obj, paths.CLIENT_INDEX_URN,
+	err = self.datastore.SetIndex(self.config_obj,
+		paths.CLIENT_INDEX_URN_DEPRECATED,
 		client_id_2, []string{"all", client_id_2, "Hostname2", "FQDN2", "host:Bar"})
 	assert.NoError(self.T(), err)
 
 	hits := self.datastore.SearchClients(self.config_obj,
-		paths.CLIENT_INDEX_URN, "all", "", 0, 100, SORT_UP)
+		paths.CLIENT_INDEX_URN_DEPRECATED, "all", "", 0, 100, SORT_UP)
 	sort.Strings(hits)
 	assert.Equal(self.T(), []string{client_id, client_id_2}, hits)
 
-	hits = self.datastore.SearchClients(self.config_obj, paths.CLIENT_INDEX_URN,
+	hits = self.datastore.SearchClients(self.config_obj,
+		paths.CLIENT_INDEX_URN_DEPRECATED,
 		"*foo", "", 0, 100, SORT_UP)
 	assert.Equal(self.T(), []string{client_id}, hits)
 }
@@ -299,8 +367,12 @@ func benchmarkSearchClient(b *testing.B,
 func asStrings(in []api.DSPathSpec) []string {
 	children := make([]string, 0, len(in))
 	for _, i := range in {
-		children = append(children, utils.JoinComponents(
-			i.Components(), "/"))
+		name := utils.JoinComponents(i.Components(), "/")
+		if i.IsDir() {
+			name += ":dir"
+		}
+
+		children = append(children, name)
 	}
 	sort.Strings(children)
 

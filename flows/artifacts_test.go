@@ -19,7 +19,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -106,7 +105,7 @@ func (self *TestSuite) TestGetFlow() {
 		Artifacts: []string{"Generic.Client.Profile"},
 	}
 
-	// Schedule a new flow.
+	// Schedule new flows.
 	ctx := context.Background()
 	launcher, err := services.GetLauncher()
 	assert.NoError(self.T(), err)
@@ -157,40 +156,6 @@ func (self *TestSuite) TestGetFlow() {
 	for _, item := range api_response.Items {
 		assert.Equal(self.T(), "Generic.Client.Info", item.Request.Artifacts[0])
 	}
-
-	// Page the response now - only ask for first 10 flows.
-	api_response_subset, err := GetFlows(self.config_obj,
-		self.client_id, true,
-		func(flow *flows_proto.ArtifactCollectorContext) bool {
-			return flow.Request.Artifacts[0] == "Generic.Client.Info"
-		}, 0, 10)
-	assert.NoError(self.T(), err)
-
-	// These should be the same order as the entire result
-	assert.Equal(self.T(), api_response.Items[:10], api_response_subset.Items)
-
-	// Next page
-	api_response_subset, err = GetFlows(self.config_obj,
-		self.client_id, true,
-		func(flow *flows_proto.ArtifactCollectorContext) bool {
-			return flow.Request.Artifacts[0] == "Generic.Client.Info"
-		}, 10, 10)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), api_response.Items[10:20], api_response_subset.Items)
-
-	// Now test GetFlows's ability to stitch results from multiple
-	// calls to datastore ListChildren(). Set
-	// get_flows_sub_query_count to a small value.
-	get_flows_sub_query_count = 5
-
-	api_response_small_backend, err := GetFlows(self.config_obj,
-		self.client_id, true,
-		func(flow *flows_proto.ArtifactCollectorContext) bool {
-			return flow.Request.Artifacts[0] == "Generic.Client.Info"
-		}, 0, 100)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), json.StringIndent(api_response.Items),
-		json.StringIndent(api_response_small_backend.Items))
 }
 
 func (self *TestSuite) TestRetransmission() {
@@ -717,4 +682,12 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 
 func TestArtifactCollection(t *testing.T) {
 	suite.Run(t, &TestSuite{})
+}
+
+func getFlowIds(in []*flows_proto.ArtifactCollectorContext) []string {
+	res := []string{}
+	for _, i := range in {
+		res = append(res, i.SessionId)
+	}
+	return res
 }

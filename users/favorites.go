@@ -19,12 +19,16 @@ func GetFavorites(
 	}
 
 	components := path_manager.FavoriteDir(fav_type)
-	children, err := db.ListChildren(config_obj, components, 0, 1000)
+	children, err := db.ListChildren(config_obj, components)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, child := range children {
+		if child.IsDir() {
+			continue
+		}
+
 		fav := &api_proto.Favorite{}
 		err = db.GetSubject(config_obj,
 			path_manager.Favorites(child.Base(), fav_type), fav)

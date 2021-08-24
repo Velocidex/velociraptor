@@ -25,7 +25,7 @@ sources:
           "Physical Address[^:]+: (?P<MAC>.+)\r\n",
           "IPv4 Address[^:]+: (?P<IP>[0-9.]+)",
           "Default Gateway[^:]+: (?P<Gateway>.+)\r\n",
-          "DNS Servers[^:]+: (?P<DNS>.+)\r\n",
+          "DNS Servers[^:]+: (?P<DNS>.+)\r\n   [^ ]",
           "DHCP Server[^:]+: (?P<DHCP>.+)\r\n"
         ]
      ) As Details FROM interfaces

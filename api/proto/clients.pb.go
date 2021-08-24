@@ -983,6 +983,63 @@ func (x *Uname) GetArchitecture() string {
 	return ""
 }
 
+type IndexRecord struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Usually client id
+	Entity string `protobuf:"bytes,1,opt,name=entity,proto3" json:"entity,omitempty"`
+	// The term under which we indexed the entity.
+	Term string `protobuf:"bytes,2,opt,name=term,proto3" json:"term,omitempty"`
+}
+
+func (x *IndexRecord) Reset() {
+	*x = IndexRecord{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_clients_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *IndexRecord) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IndexRecord) ProtoMessage() {}
+
+func (x *IndexRecord) ProtoReflect() protoreflect.Message {
+	mi := &file_clients_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IndexRecord.ProtoReflect.Descriptor instead.
+func (*IndexRecord) Descriptor() ([]byte, []int) {
+	return file_clients_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *IndexRecord) GetEntity() string {
+	if x != nil {
+		return x.Entity
+	}
+	return ""
+}
+
+func (x *IndexRecord) GetTerm() string {
+	if x != nil {
+		return x.Term
+	}
+	return ""
+}
+
 var File_clients_proto protoreflect.FileDescriptor
 
 var file_clients_proto_rawDesc = []byte{
@@ -1178,10 +1235,14 @@ var file_clients_proto_rawDesc = []byte{
 	0x62, 0x69, 0x6e, 0x61, 0x72, 0x79, 0x20, 0x72, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x20, 0x6f,
 	0x6e, 0x20, 0x61, 0x20, 0x36, 0x34, 0x20, 0x62, 0x69, 0x74, 0x20, 0x73, 0x79, 0x73, 0x74, 0x65,
 	0x6d, 0x29, 0x52, 0x0c, 0x61, 0x72, 0x63, 0x68, 0x69, 0x74, 0x65, 0x63, 0x74, 0x75, 0x72, 0x65,
-	0x42, 0x31, 0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64, 0x65,
-	0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65, 0x6c,
-	0x6f, 0x63, 0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x39, 0x0a, 0x0b, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x12,
+	0x16, 0x0a, 0x06, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x06, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x65, 0x72, 0x6d, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x65, 0x72, 0x6d, 0x42, 0x31, 0x5a, 0x2f, 0x77,
+	0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61,
+	0x70, 0x74, 0x6f, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1197,7 +1258,7 @@ func file_clients_proto_rawDescGZIP() []byte {
 }
 
 var file_clients_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_clients_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_clients_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_clients_proto_goTypes = []interface{}{
 	(ApiClient_IPAddressClass)(0),          // 0: proto.ApiClient.IPAddressClass
 	(SearchClientsRequest_QueryType)(0),    // 1: proto.SearchClientsRequest.QueryType
@@ -1213,6 +1274,7 @@ var file_clients_proto_goTypes = []interface{}{
 	(*ClientMetadataItem)(nil),             // 11: proto.ClientMetadataItem
 	(*ClientMetadata)(nil),                 // 12: proto.ClientMetadata
 	(*Uname)(nil),                          // 13: proto.Uname
+	(*IndexRecord)(nil),                    // 14: proto.IndexRecord
 }
 var file_clients_proto_depIdxs = []int32{
 	4,  // 0: proto.ApiClient.agent_information:type_name -> proto.AgentInformation
@@ -1356,6 +1418,18 @@ func file_clients_proto_init() {
 				return nil
 			}
 		}
+		file_clients_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*IndexRecord); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1363,7 +1437,7 @@ func file_clients_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_clients_proto_rawDesc,
 			NumEnums:      4,
-			NumMessages:   10,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

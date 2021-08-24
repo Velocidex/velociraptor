@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -48,8 +49,8 @@ func (self *ServicesTestSuite) SetupTest() {
 	// Start essential services.
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
-	require.NoError(self.T(), self.sm.Start(client_info.StartClientInfoService))
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
+	require.NoError(self.T(), self.sm.Start(client_info.StartClientInfoService))
 	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
 	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
@@ -172,9 +173,16 @@ func (self *ServicesTestSuite) TestEnrollService() {
 		[]string{"Generic.Client.Info"})
 
 	// Make sure only one flow is generated
-	children, err := db.ListChildren(
-		self.config_obj, flow_path_manager.ContainerPath(), 0, 100)
+	all_children, err := db.ListChildren(
+		self.config_obj, flow_path_manager.ContainerPath())
 	assert.NoError(self.T(), err)
+
+	children := []api.DSPathSpec{}
+	for _, c := range all_children {
+		if !c.IsDir() {
+			children = append(children, c)
+		}
+	}
 
 	assert.Equal(self.T(), len(children), 1)
 	assert.Equal(self.T(), children[0].Base(),

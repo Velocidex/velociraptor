@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	datastoreHistorgram = promauto.NewHistogramVec(
+	DatastoreHistorgram = promauto.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "datastore_latency",
 			Help:    "Latency to access datastore.",
@@ -29,7 +29,7 @@ func Instrument(access_type string, path_spec api.DSPathSpec) func() time.Durati
 	}
 
 	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
-		datastoreHistorgram.WithLabelValues(tag, access_type).Observe(v)
+		DatastoreHistorgram.WithLabelValues(tag, access_type).Observe(v)
 	}))
 
 	// Instrument a delay in API calls.

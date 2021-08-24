@@ -2,6 +2,8 @@ package services
 
 import (
 	"sync"
+
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 )
 
 var (
@@ -35,6 +37,8 @@ func RegisterClientInfoManager(m ClientInfoManager) {
 type ClientInfo struct {
 	Hostname string
 	OS       ClientOS
+
+	Info *actions_proto.ClientInfo
 }
 
 func (self ClientInfo) OSString() string {

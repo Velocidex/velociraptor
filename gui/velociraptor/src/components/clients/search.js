@@ -54,9 +54,10 @@ class VeloClientSearch extends Component {
 
     showSuggestions = (query) => {
         api.get('v1/SearchClients', {
-            query: query + "*",
-            count: 10,
-            type:1,
+            query: query,
+            limit: 10,
+            type:  1,  // Key option search - retries indexed terms
+                       // rather than entities
 
         }, this.source.token).then(resp => {
             if (resp.data && resp.data.names) {

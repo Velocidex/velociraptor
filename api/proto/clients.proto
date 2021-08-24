@@ -177,3 +177,12 @@ message Uname {
       "running on a 64 bit system)",
     }];
 };
+
+
+message IndexRecord {
+    // Usually client id
+    string entity = 1;
+
+    // The term under which we indexed the entity.
+    string term = 2;
+}

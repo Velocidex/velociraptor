@@ -46,6 +46,9 @@ type LRUCache struct {
 	size      int64
 	capacity  int64
 	evictions int64
+
+	hits   int64
+	misses int64
 }
 
 // Value is the interface values that go into LRUCache need to satisfy
@@ -89,8 +92,10 @@ func (lru *LRUCache) Get(key string) (v Value, ok bool) {
 
 	element := lru.table[key]
 	if element == nil {
+		lru.misses++
 		return nil, false
 	}
+	lru.hits++
 	lru.moveToFront(element)
 	return element.Value.(*entry).value, true
 }
@@ -170,6 +175,9 @@ func (lru *LRUCache) Clear() {
 	lru.list.Init()
 	lru.table = make(map[string]*list.Element)
 	lru.size = 0
+	lru.hits = 0
+	lru.misses = 0
+	lru.evictions = 0
 }
 
 // SetCapacity will set the capacity of the cache. If the capacity is
@@ -183,8 +191,14 @@ func (lru *LRUCache) SetCapacity(capacity int64) {
 	lru.checkCapacity()
 }
 
-// Stats returns a few stats on the cache.
-func (lru *LRUCache) Stats() (length, size, capacity, evictions int64, oldest time.Time) {
+type Stats struct {
+	Length, Size, Capacity, Evictions int64
+	Hits, Misses                      int64
+	oldest                            time.Time
+}
+
+func (lru *LRUCache) StatsOld() (
+	length, size, capacity, evictions int64, oldest time.Time) {
 	lru.mu.Lock()
 	defer lru.mu.Unlock()
 	if lastElem := lru.list.Back(); lastElem != nil {
@@ -198,8 +212,21 @@ func (lru *LRUCache) StatsJSON() string {
 	if lru == nil {
 		return "{}"
 	}
-	l, s, c, e, o := lru.Stats()
+	l, s, c, e, o := lru.StatsOld()
 	return fmt.Sprintf("{\"Length\": %v, \"Size\": %v, \"Capacity\": %v, \"Evictions\": %v, \"OldestAccess\": \"%v\"}", l, s, c, e, o)
+}
+
+// Stats returns a few stats on the cache.
+func (lru *LRUCache) Stats() Stats {
+	lru.mu.Lock()
+	defer lru.mu.Unlock()
+	var oldest time.Time
+
+	if lastElem := lru.list.Back(); lastElem != nil {
+		oldest = lastElem.Value.(*entry).timeAccessed
+	}
+	return Stats{int64(lru.list.Len()), lru.size,
+		lru.capacity, lru.evictions, lru.hits, lru.misses, oldest}
 }
 
 // Length returns how many elements are in the cache

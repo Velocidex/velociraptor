@@ -75,10 +75,10 @@ sources:
       LET file_search = SELECT FullPath,
                get(item=Sys, field="mft") as Inode,
                Mode.String AS Mode, Size,
-               Mtime AS Modified,
+               Mtime AS MTime,
                Atime AS ATime,
-               Mtime AS MTime, "" AS Keywords,
-               Ctime AS CTime, IsDir
+               Btime AS BTime,
+               Ctime AS CTime, "" AS Keywords, IsDir
         FROM glob(globs=SearchFilesGlobTable.Glob + SearchFilesGlob,
                   accessor=Accessor)
 
@@ -106,7 +106,7 @@ sources:
             },
             query={
                SELECT FullPath, Inode, Mode,
-                      Size, Modified, ATime, MTime, CTime,
+                      Size, MTime, ATime, CTime, BTime,
                       str(str=String.Data) As Keywords, IsDir
 
                FROM yara(files=FullPath,
@@ -116,8 +116,8 @@ sources:
             })
         }, else=modified_before)
 
-      SELECT FullPath, Inode, Mode, Size, Modified, ATime,
-             MTime, CTime, Keywords, IsDir,
+      SELECT FullPath, Inode, Mode, Size, MTime, ATime,
+             CTime, BTime, Keywords, IsDir,
                if(condition=Upload_File and NOT IsDir,
                   then=upload(file=FullPath, accessor=Accessor)) AS Upload,
                if(condition=Calculate_Hash and NOT IsDir,

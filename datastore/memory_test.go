@@ -11,6 +11,10 @@ type MemoryTestSuite struct {
 	BaseTestSuite
 }
 
+func (self *MemoryTestSuite) SetupTest() {
+	self.datastore.(*TestDataStore).Clear()
+}
+
 func TestMemoryDatastore(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
 	config_obj.Datastore.Implementation = "Test"

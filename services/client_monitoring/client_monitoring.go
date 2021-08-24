@@ -171,6 +171,11 @@ func (self *ClientEventTable) compileState(
 		compiled, err := self.compileArtifactCollectorArgs(
 			ctx, config_obj, table.Artifacts)
 		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("Unable to start client monitoring service: Error "+
+				"compiling artifacts %v: %v", table.Artifacts, err)
+			logger.Error("Please correct client_monitoring config file at " +
+				"<datastore>/config/client_monitoring.json.db")
 			return err
 		}
 		table.Artifacts.CompiledCollectorArgs = compiled

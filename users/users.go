@@ -82,13 +82,17 @@ func ListUsers(config_obj *config_proto.Config) ([]*api_proto.VelociraptorUser, 
 		return nil, err
 	}
 
-	children, err := db.ListChildren(config_obj, paths.USERS_ROOT, 0, 500)
+	children, err := db.ListChildren(config_obj, paths.USERS_ROOT)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make([]*api_proto.VelociraptorUser, 0, len(children))
 	for _, child := range children {
+		if child.IsDir() {
+			continue
+		}
+
 		username := child.Base()
 		user_record, err := GetUser(config_obj, username)
 		if err == nil {

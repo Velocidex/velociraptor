@@ -86,8 +86,8 @@ func (self HuntsPlugin) Call(
 		var hunts []api.DSPathSpec
 		if arg.HuntId == "" {
 			hunt_path_manager := paths.NewHuntPathManager("")
-			hunts, err = db.ListChildren(config_obj,
-				hunt_path_manager.HuntDirectory(), 0, 10000)
+			hunts, err = db.ListChildren(
+				config_obj, hunt_path_manager.HuntDirectory())
 			if err != nil {
 				scope.Log("Error: %v", err)
 				return
@@ -98,6 +98,10 @@ func (self HuntsPlugin) Call(
 		}
 
 		for _, hunt_urn := range hunts {
+			if hunt_urn.IsDir() {
+				continue
+			}
+
 			hunt_id := hunt_urn.Base()
 			if !constants.HuntIdRegex.MatchString(hunt_id) {
 				continue
