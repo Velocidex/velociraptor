@@ -22,8 +22,18 @@ type DSPathSpec struct {
 	// If this is true we can avoid sanitizing the path on writing
 	// to the filestore.
 	is_safe bool
+	is_dir  bool
 
 	tag string
+}
+
+func (self DSPathSpec) IsDir() bool {
+	return self.is_dir
+}
+
+func (self DSPathSpec) SetDir() api.DSPathSpec {
+	self.is_dir = true
+	return self
 }
 
 func (self DSPathSpec) MarshalJSON() ([]byte, error) {

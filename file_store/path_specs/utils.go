@@ -43,3 +43,11 @@ func IsSubPath(parent api.FSPathSpec, child api.FSPathSpec) bool {
 	}
 	return true
 }
+
+func DebugPathSpecList(list []api.DSPathSpec) string {
+	result := []string{}
+	for _, i := range list {
+		result = append(result, i.AsClientPath())
+	}
+	return strings.Join(result, ", ")
+}

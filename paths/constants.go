@@ -6,9 +6,16 @@ import (
 )
 
 var (
+	// This is the old index it will be automatically upgraded to the
+	// new index.
+	CLIENT_INDEX_URN_DEPRECATED = path_specs.NewSafeDatastorePath("client_index").
+					SetType(api.PATH_TYPE_DATASTORE_PROTO).
+					SetTag("ClientIndex")
+
 	// The GUI uses this as the client index.
-	CLIENT_INDEX_URN = path_specs.NewSafeDatastorePath("client_index").
-				SetType(api.PATH_TYPE_DATASTORE_PROTO)
+	CLIENT_INDEX_URN = path_specs.NewUnsafeDatastorePath("client_idx").
+				SetType(api.PATH_TYPE_DATASTORE_PROTO).
+				SetTag("ClientIndex")
 
 	// An index of all the hunts and clients.
 	HUNT_INDEX = path_specs.NewSafeDatastorePath("hunt_index").

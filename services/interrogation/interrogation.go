@@ -33,6 +33,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -130,16 +131,15 @@ func (self *EnrollmentService) ProcessEnrollment(
 		return err
 	}
 
-	keywords := []string{
+	for _, term := range []string{
 		"all", // This is used for "." search
 		client_id,
-	}
-
-	err = db.SetIndex(config_obj,
-		paths.CLIENT_INDEX_URN,
-		client_id, keywords)
-	if err != nil {
-		return err
+	} {
+		err = search.SetIndex(config_obj, client_id, term)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("Unable to set index: %v", err)
+		}
 	}
 
 	// Notify the client
@@ -226,15 +226,17 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 
 	// Update the client indexes for the GUI. Add any keywords we
 	// wish to be searchable in the UI here.
-	keywords := []string{
+	for _, term := range []string{
 		client_info.Hostname,
 		client_info.Fqdn,
-		"host:" + client_info.Hostname,
+		"host:" + client_info.Hostname} {
+		err := search.SetIndex(config_obj, client_id, term)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("Unable to set index: %v", err)
+		}
 	}
-
-	return db.SetIndex(config_obj,
-		paths.CLIENT_INDEX_URN,
-		client_id, keywords)
+	return nil
 }
 
 func StartInterrogationService(

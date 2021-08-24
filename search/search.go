@@ -39,8 +39,7 @@ func searchRecents(
 	now := uint64(time.Now().UnixNano() / 1000)
 	result := &api_proto.SearchClientsResponse{}
 
-	children, err := db.ListChildren(
-		config_obj, path_manager.MRUIndex(), 0, 1000)
+	children, err := db.ListChildren(config_obj, path_manager.MRUIndex())
 	if err != nil {
 		return nil, err
 	}
@@ -90,59 +89,59 @@ func SearchClients(
 
 	operator, term := splitIntoOperatorAndTerms(in.Query)
 	switch operator {
-	case "", "label":
+	case "", "label", "host":
+		return searchClientIndex(ctx, config_obj, in, limit)
+
 	case "recent":
 		return searchRecents(ctx, config_obj, in, principal, term, limit)
+
 	default:
 		return nil, errors.New("Invalid search operator " + operator)
 	}
+}
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	query_type := ""
-	if in.Type == api_proto.SearchClientsRequest_KEY {
-		query_type = "key"
-	}
-
-	sort_direction := datastore.UNSORTED
-	switch in.Sort {
-	case api_proto.SearchClientsRequest_SORT_UP:
-		sort_direction = datastore.SORT_UP
-	case api_proto.SearchClientsRequest_SORT_DOWN:
-		sort_direction = datastore.SORT_DOWN
-	}
-
-	// If the output is filtered, we need to retrieve as many
-	// clients as possible because we may eliminate them with the
-	// filter.
-	if in.Filter != api_proto.SearchClientsRequest_UNFILTERED {
-		limit = 100000
-	}
+func searchClientIndex(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.SearchClientsRequest,
+	limit uint64) (*api_proto.SearchClientsResponse, error) {
 
 	// Microseconds
 	now := uint64(time.Now().UnixNano() / 1000)
 
+	seen := make(map[string]bool)
 	result := &api_proto.SearchClientsResponse{}
 	total_count := 0
-	children := db.SearchClients(
-		config_obj, paths.CLIENT_INDEX_URN,
-		in.Query, query_type, 0, 1000000, sort_direction)
+	options := OPTION_ENTITY
+	if in.Type == api_proto.SearchClientsRequest_KEY {
+		options = OPTION_KEY
+	}
 
-	for _, client_id := range children {
-		if in.NameOnly || query_type == "key" {
-			result.Names = append(result.Names, client_id)
-		} else {
-			api_client, err := GetApiClient(
-				ctx, config_obj, client_id, false /* detailed */)
+	query := in.Query
+	query = strings.TrimSuffix(query, "*")
+
+	for client_id := range SearchIndexWithPrefix(
+		ctx, config_obj, query, options) {
+		if client_id == "" {
+			continue
+		}
+
+		// Uniquify the client ID
+		_, pres := seen[client_id]
+		if pres {
+			continue
+		}
+		seen[client_id] = true
+
+		total_count++
+		if uint64(total_count) < in.Offset {
+			continue
+		}
+
+		switch options {
+		case OPTION_ENTITY:
+			api_client, err := FastGetApiClient(ctx, config_obj, client_id)
 			if err != nil {
-				continue
-			}
-
-			total_count++
-			if uint64(total_count) < in.Offset {
 				continue
 			}
 
@@ -154,11 +153,17 @@ func SearchClients(
 			}
 
 			result.Items = append(result.Items, api_client)
-
 			if uint64(len(result.Items)) > limit {
-				break
+				return result, nil
+			}
+
+		case OPTION_KEY:
+			result.Names = append(result.Names, client_id)
+			if uint64(len(result.Names)) > limit {
+				return result, nil
 			}
 		}
+
 	}
 
 	return result, nil

@@ -95,13 +95,16 @@ func GetAllNotebooks(
 	}
 
 	// List all available notebooks
-	notebook_urns, err := db.ListChildren(
-		config_obj, paths.NotebookDir(), 0, 1000000)
+	notebook_urns, err := db.ListChildren(config_obj, paths.NotebookDir())
 	if err != nil {
 		return nil, err
 	}
 
 	for _, urn := range notebook_urns {
+		if urn.IsDir() {
+			continue
+		}
+
 		notebook := &api_proto.NotebookMetadata{}
 		err := db.GetSubject(config_obj, urn, notebook)
 		if err != nil || notebook.NotebookId == "" {

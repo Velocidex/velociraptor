@@ -9,9 +9,9 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -246,7 +246,7 @@ func (self *Labeler) SetClientLabel(
 	}
 
 	// Also adjust the index so client searches work.
-	return self.adjustIndex(config_obj, client_id, new_label, db.SetIndex)
+	return search.SetIndex(config_obj, client_id, "label:"+new_label)
 }
 
 func (self *Labeler) RemoveClientLabel(
@@ -295,34 +295,7 @@ func (self *Labeler) RemoveClientLabel(
 	}
 
 	// Also adjust the index.
-	return self.adjustIndex(config_obj, client_id, new_label, db.UnsetIndex)
-}
-
-type indexManipulator func(config_obj *config_proto.Config,
-	index_urn api.DSPathSpec, entity string, keywords []string) error
-
-func (self *Labeler) adjustIndex(
-	config_obj *config_proto.Config,
-	client_id, label string,
-	index_func indexManipulator) error {
-	if !strings.HasPrefix(label, "label:") {
-		label = "label:" + label
-	}
-	err := index_func(
-		config_obj,
-		paths.CLIENT_INDEX_URN,
-		client_id, []string{label})
-	if err != nil {
-		return err
-	}
-	err = index_func(
-		config_obj,
-		paths.CLIENT_INDEX_URN,
-		label, []string{client_id})
-	if err != nil {
-		return err
-	}
-	return nil
+	return search.UnsetIndex(config_obj, client_id, "label:"+new_label)
 }
 
 func (self *Labeler) GetClientLabels(

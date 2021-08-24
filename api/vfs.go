@@ -117,8 +117,7 @@ func renderDBVFS(
 
 	// Figure out where the download info files are.
 	download_info_path := path_manager.VFSDownloadInfoPath(components)
-	downloaded_files, _ := db.ListChildren(
-		config_obj, download_info_path, 0, 1000)
+	downloaded_files, _ := db.ListChildren(config_obj, download_info_path)
 
 	result := &api_proto.VFSListResponse{}
 
