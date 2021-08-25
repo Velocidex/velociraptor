@@ -78,8 +78,6 @@ class VeloFileStats extends Component {
                     if (response.data.context.state !== "RUNNING") {
                         this.source.cancel("unmounted");
                         clearInterval(this.interval);
-                        this.source = undefined;
-                        this.interval = undefined;
 
                         // Force a tree refresh since this flow is done.
                         let node = this.props.node;
@@ -135,6 +133,10 @@ class VeloFileStats extends Component {
 
                       <dt className="col-4">Ctime</dt>
                       <dd className="col-8"> {selectedRow.ctime} </dd>
+
+                      <dt className="col-4">Btime</dt>
+                      <dd className="col-8"> {selectedRow.btime} </dd>
+
                       { selectedRow.Download && selectedRow.Download.mtime &&
                         <>
                           <dt className="col-4">

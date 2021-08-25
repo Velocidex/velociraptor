@@ -394,18 +394,30 @@ class VeloFileList extends Component {
 
         let columns = formatColumns([
             {dataField: "Download", text: "", formatter: (cell, row) => {
+                let result = [];
                 if (cell) {
-                    return <FontAwesomeIcon icon="save"/>;
+                    result.push( <FontAwesomeIcon
+                                   className="hint-icon"
+                                   key="1" icon="save"/>);
                 }
-                return <></>;
-            }, sort: true},
+                let fn_btime = row["_Data"] && row._Data["fn_btime"];
+                let btime = row["btime"];
+                if (btime < fn_btime) {
+                    result.push( <FontAwesomeIcon
+                                   key="2"
+                                   className="file-stomped hint-icon"
+                                   icon="clock"/>);
+                }
+                //return <FontAwesomeIcon icon="clock"/>;
+                return <span className="file-hints">{result}</span>;
+            }, sort: true, classes: "download-column"},
             {dataField: "Name", text: "Name", sort: true, filtered: true},
             {dataField: "Size", text: "Size", sort: true, type: "mb"},
             {dataField: "Mode", text: "Mode", sort: true},
-            {dataField: "mtime", text: "mtime", sort: true},
-            {dataField: "atime", text: "atime", sort: true},
-            {dataField: "ctime", text: "ctime", sort: true},
-            {dataField: "btime", text: "btime", sort: true}
+            {dataField: "mtime", text: "mtime", sort: true, type: "timestamp"},
+            {dataField: "atime", text: "atime", sort: true, type: "timestamp"},
+            {dataField: "ctime", text: "ctime", sort: true, type: "timestamp"},
+            {dataField: "btime", text: "btime", sort: true, type: "timestamp"}
         ]);
 
         return (

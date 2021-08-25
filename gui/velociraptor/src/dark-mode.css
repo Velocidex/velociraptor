@@ -71,6 +71,8 @@ body.dark-mode {
     --color-timeline-5: #bbb;
     --color-timeline-6: #008000;
     --color-timeline-7: #471ecb;
+
+    --vfs-files-timestomped: #0220af;
 }
 
 .dark-mode .btn {
