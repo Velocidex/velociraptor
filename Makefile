@@ -21,6 +21,12 @@ release:
 darwin:
 	go run make.go -v DarwinBase
 
+darwin_intel:
+	go run make.go -v Darwin
+
+darwin_m1:
+	go run make.go -v DarwinM1
+
 linux:
 	go run make.go -v linux
 
