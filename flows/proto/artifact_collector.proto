@@ -165,6 +165,13 @@ message LabelEvents {
     ArtifactCollectorArgs artifacts = 2;
 }
 
+
+message GetClientMonitoringStateRequest {
+    // Show the compiled monitoring table from the point of view of
+    // this client.
+    string client_id = 1;
+}
+
 // This is stored in the ArtifactCollector state.
 message ClientEventTable {
     uint64 version = 1;
@@ -173,6 +180,9 @@ message ClientEventTable {
     ArtifactCollectorArgs artifacts = 2;
 
     repeated LabelEvents label_events = 3;
+
+    // populated for GetClientMonitoringState()
+    VeloMessage client_message = 4;
 }
 
 

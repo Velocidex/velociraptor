@@ -72,7 +72,9 @@ class InspectRawJson extends React.PureComponent {
                     });
             return;
         }
-        api.get("v1/GetClientMonitoringState", {}, this.source.token).then(resp => {
+        api.get("v1/GetClientMonitoringState", {
+            client_id: client_id,
+        }, this.source.token).then(resp => {
             if (resp.cancel) return;
 
             let table = resp.data;
