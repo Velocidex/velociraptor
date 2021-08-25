@@ -31,7 +31,7 @@
 }
 
 table  tr.row_selected td,
-table  tr.row-selected td {
+table  tr.row-selected {
     background-color: var(--color-table-row-selected) !important;
   }
 
@@ -45,4 +45,26 @@ table  tr.highlighted td {
     font-size: 18px;
     -webkit-text-stroke: 1px #000;
     color: #fff;
+}
+
+
+.file-stomped {
+    color: var(--vfs-files-timestomped);
+}
+
+.file-hints {
+    position: absolute;
+}
+
+.file-hints .hint-icon {
+    padding: 1px;
+    margin: 2px;
+}
+
+td.download-column {
+    display: block;
+    border-bottom: none;
+    border-right: none;
+    border-left: none;
+    width: 45px;
 }
