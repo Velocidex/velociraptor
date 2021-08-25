@@ -117,7 +117,9 @@ func (self *NTFSFileInfo) Size() int64 {
 func (self *NTFSFileInfo) Data() interface{} {
 	result := ordereddict.NewDict().
 		Set("mft", self.info.MFTId).
-		Set("name_type", self.info.NameType)
+		Set("name_type", self.info.NameType).
+		Set("fn_btime", self.info.FNBtime).
+		Set("fn_mtime", self.info.FNMtime)
 	if self.info.ExtraNames != nil {
 		result.Set("extra_names", self.info.ExtraNames)
 	}
