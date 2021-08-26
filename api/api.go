@@ -781,7 +781,7 @@ func (self *ApiServer) SetServerMonitoringState(
 }
 
 func (self *ApiServer) GetClientMonitoringState(
-	ctx context.Context, in *empty.Empty) (
+	ctx context.Context, in *flows_proto.GetClientMonitoringStateRequest) (
 	*flows_proto.ClientEventTable, error) {
 
 	defer Instrument("GetClientMonitoringState")()
@@ -794,7 +794,14 @@ func (self *ApiServer) GetClientMonitoringState(
 			"User is not allowed to read monitoring artifacts (%v).", permissions))
 	}
 
-	result := services.ClientEventManager().GetClientMonitoringState()
+	manager := services.ClientEventManager()
+	result := manager.GetClientMonitoringState()
+	if in.ClientId != "" {
+		message := manager.GetClientUpdateEventTableMessage(self.config,
+			in.ClientId)
+		result.ClientMessage = message
+	}
+
 	return result, err
 }
 

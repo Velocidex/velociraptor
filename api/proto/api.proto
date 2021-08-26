@@ -353,7 +353,7 @@ service API {
 
     // Client Monitoring Artifacts - manage the Client Monitoring
     // Service.
-    rpc GetClientMonitoringState(google.protobuf.Empty) returns (ClientEventTable) {
+    rpc GetClientMonitoringState(GetClientMonitoringStateRequest) returns (ClientEventTable) {
         option (google.api.http) = {
             get: "/api/v1/GetClientMonitoringState",
         };

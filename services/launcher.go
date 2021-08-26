@@ -82,6 +82,9 @@ type CompilerOptions struct {
 
 	// Generate precondition queries.
 	DisablePrecondition bool
+
+	// Ignore Missing Artifacts without raising an error.
+	IgnoreMissingArtifacts bool
 }
 
 type Launcher interface {

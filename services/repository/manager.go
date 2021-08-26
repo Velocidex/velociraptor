@@ -128,6 +128,16 @@ func (self *RepositoryManager) DeleteArtifactFile(
 		return err
 	}
 
+	// If not there nothing to do...
+	_, pres := global_repository.Get(config_obj, name)
+	if !pres {
+		return nil
+	}
+
+	// Remove the artifact from the repository.
+	global_repository.Del(name)
+
+	// Now let interested parties know it is removed.
 	journal, err := services.GetJournal()
 	if err != nil {
 		return err
@@ -144,15 +154,9 @@ func (self *RepositoryManager) DeleteArtifactFile(
 		return err
 	}
 
-	_, pres := global_repository.Get(config_obj, name)
-	if !pres {
-		return nil
-	}
-
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	global_repository.Del(name)
-
+	// Delete it from the filestore.
 	vfs_path := paths.GetArtifactDefintionPath(name)
 	return file_store_factory.Delete(vfs_path)
 
