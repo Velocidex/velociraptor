@@ -156,7 +156,7 @@ func _MakeTempfile(ctx context.Context,
 	string, error) {
 
 	if arg.Accessor != "data" {
-		scope.Log("Will try to copy to temp file: %v", filename)
+		scope.Log("Will try to copy %v to temp file", filename)
 	}
 
 	tmpfile, err := ioutil.TempFile("", "tmp*.sqlite")
@@ -167,20 +167,29 @@ func _MakeTempfile(ctx context.Context,
 
 	// Make sure the file is removed when the query is done.
 	remove := func() {
+		// Try to remove it immediately
+		err := os.Remove(tmpfile.Name())
+		if err == nil || os.IsNotExist(err) {
+			scope.Log("sqlite: removing tempfile %v", tmpfile.Name())
+			return
+		}
+
 		// On windows especially we can not remove files that
 		// are opened by something else, so we keep trying for
 		// a while.
-		for i := 0; i < 100; i++ {
-			err := os.Remove(tmpfile.Name())
-			if err == nil || os.IsNotExist(err) {
-				scope.Log("sqlite: removing tempfile %v", tmpfile.Name())
-				return
+		go func() {
+			for i := 0; i < 100; i++ {
+				err := os.Remove(tmpfile.Name())
+				if err == nil || os.IsNotExist(err) {
+					scope.Log("sqlite: removing tempfile %v", tmpfile.Name())
+					return
+				}
+				time.Sleep(time.Second)
 			}
-			time.Sleep(time.Second)
-		}
-		scope.Log("Error removing file: %v", err)
+			scope.Log("Error removing file: %v", err)
+		}()
 	}
-	err = scope.AddDestructor(func() { go remove() })
+	err = scope.AddDestructor(remove)
 	if err != nil {
 		go remove()
 		return "", err

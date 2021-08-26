@@ -63,7 +63,13 @@ func (self ParseBinaryFunction) Call(
 	}
 
 	lru_size := vql_subsystem.GetIntFromRow(scope, scope, constants.BINARY_CACHE_SIZE)
-	paged_reader := readers.NewPagedReader(scope, arg.Accessor, arg.Filename, int(lru_size))
+	paged_reader, err := readers.NewPagedReader(
+		scope, arg.Accessor, arg.Filename, int(lru_size))
+	if err != nil {
+		scope.Log("parse_binary: %v", err)
+		return &vfilter.Null{}
+	}
+
 	obj, err := profile.Parse(scope, arg.Struct, paged_reader, arg.Offset)
 	if err != nil {
 		scope.Log("parse_binary: %v", err)

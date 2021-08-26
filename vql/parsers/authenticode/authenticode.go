@@ -64,7 +64,12 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 	}
 
 	lru_size := vql_subsystem.GetIntFromRow(scope, scope, constants.BINARY_CACHE_SIZE)
-	paged_reader := readers.NewPagedReader(scope, arg.Accessor, arg.Filename, int(lru_size))
+	paged_reader, err := readers.NewPagedReader(
+		scope, arg.Accessor, arg.Filename, int(lru_size))
+	if err != nil {
+		scope.Log("authenticode: %v", err)
+		return vfilter.Null{}
+	}
 	defer paged_reader.Close()
 
 	pe_file, err := pe.NewPEFile(paged_reader)

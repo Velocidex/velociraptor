@@ -411,9 +411,9 @@ func (self *NTFSFileSystemAccessor) openRawDevice(device string) (res glob.ReadS
 	}
 
 	lru_size := vql_subsystem.GetIntFromRow(self.scope, self.scope, constants.NTFS_CACHE_SIZE)
-	device_reader := vql_readers.NewPagedReader(
+	device_reader, err := vql_readers.NewPagedReader(
 		self.scope, "file", device, int(lru_size))
-	return &readSeekReaderAdapter{reader: device_reader, info: stat_info}, nil
+	return &readSeekReaderAdapter{reader: device_reader, info: stat_info}, err
 }
 
 func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, err error) {

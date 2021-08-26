@@ -267,7 +267,7 @@ func (self OSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) 
 	}
 
 	fileAccessorCurrentOpened.Inc()
-	return OSFileWrapper{file}, nil
+	return OSFileWrapper{file}, err
 }
 
 func (self *OSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
