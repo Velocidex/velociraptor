@@ -3,9 +3,10 @@ name: Windows.ActiveDirectory.PrivilegedUsers
 author: liteman @kevinfosec
 
 description: |
-   If on a Domain Controller, recursively enumerate membership of privileged groups, then
+   If on a Domain Controller (ProductType = 2), recursively enumerate membership of privileged groups, then
+   for each user, collect details relevant to an investigation: Create Date, Last Logon, Group Membership, SID
 
-   For each user, collect details relevant to an investigation: Create Date, Last Logon, Group Membership, SID
+   If not on a Domain Controller, return nothing
 
 type: CLIENT
 
@@ -37,7 +38,7 @@ sources:
                   }
 
                   $userdetails = @()
-                  foreach ($user in $users) {
+                  foreach ($user in ($users | Sort-Object | Get-Unique))
                     $userdetails += Get-ADUser -Identity $user -Properties *
                   }
 
