@@ -29,6 +29,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/jmoiron/sqlx"
@@ -166,15 +167,22 @@ func _MakeTempfile(ctx context.Context,
 
 	// Make sure the file is removed when the query is done.
 	remove := func() {
-		scope.Log("sqlite: removing tempfile %v", tmpfile.Name())
-		err = os.Remove(tmpfile.Name())
-		if err != nil {
-			scope.Log("Error removing file: %v", err)
+		// On windows especially we can not remove files that
+		// are opened by something else, so we keep trying for
+		// a while.
+		for i := 0; i < 100; i++ {
+			err := os.Remove(tmpfile.Name())
+			if err == nil || os.IsNotExist(err) {
+				scope.Log("sqlite: removing tempfile %v", tmpfile.Name())
+				return
+			}
+			time.Sleep(time.Second)
 		}
+		scope.Log("Error removing file: %v", err)
 	}
-	err = scope.AddDestructor(remove)
+	err = scope.AddDestructor(func() { go remove() })
 	if err != nil {
-		remove()
+		go remove()
 		return "", err
 	}
 

@@ -209,7 +209,7 @@ export default class VeloAce extends Component {
         // Merge the user's options into the options the component
         // specified.
         let options = this.getUserOptions();
-
+        let mode = this.props.mode || 'sql';
         return (
             <>
               <div className="col-12 velo-ace-editor">
@@ -218,7 +218,7 @@ export default class VeloAce extends Component {
                   className="full-height"
                   showGutter={true}
                   focus={true}
-                  mode='sql'
+                  mode={mode}
                   theme="github"
                   value={this.props.text || ''}
                   onChange={this.props.onChange}

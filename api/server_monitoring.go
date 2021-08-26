@@ -21,6 +21,7 @@ func getServerMonitoringState(config_obj *config_proto.Config) (
 		result,
 	)
 	_ = err // if an error we return an empty collector args.
+
 	return result, nil
 }
 

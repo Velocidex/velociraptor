@@ -5,9 +5,14 @@
 // This service maintains access to the global event table.
 
 // NOTE: The client's event table will be updated when the client's
-// table's version is after:
-// 1. The global event table state was modified.
-// 2. Any label was updated for that client.
+// table's version if one the following is changed:
+// 1. The global event table state was modified (eg. the user updated the GUI).
+
+// 2. Any label was updated for that client which may have caused the
+// client to be added into the label group.
+
+// 3. The artifact was deleted or updated.
+
 package client_monitoring
 
 import (
@@ -146,7 +151,8 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 	return launcher.CompileCollectorArgs(
 		ctx, config_obj, vql_subsystem.NullACLManager{},
 		repository, services.CompilerOptions{
-			ObfuscateNames: true,
+			ObfuscateNames:         true,
+			IgnoreMissingArtifacts: true,
 		}, artifact)
 }
 
@@ -294,6 +300,9 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(
 		return
 	}
 
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("Updating Client Event Table because %v was updated", modified_name)
+
 	setter, _ := event.GetString("setter")
 
 	// Determine if the modified artifact affects us.
@@ -303,12 +312,12 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(
 			return false
 		}
 
-		// We could try to figure out if the artifact actually
-		// changed anythign but this is hard to know - not
-		// only do we need to look at the artifact in the
-		// event table but all dependencies as well. So for
-		// now we just recompile the event table when any
-		// artifact is changed.
+		// We could try to figure out if the artifact actually changed
+		// anything but this is hard to know - not only do we need to
+		// look at the artifact in the event table but all
+		// dependencies as well. So for now we just recompile the
+		// event table when any artifact is changed. We dont expect
+		// this to be too frequent.
 		return true
 	}
 

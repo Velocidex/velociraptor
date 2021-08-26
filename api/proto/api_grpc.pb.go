@@ -74,7 +74,7 @@ type APIClient interface {
 	SetServerMonitoringState(ctx context.Context, in *proto.ArtifactCollectorArgs, opts ...grpc.CallOption) (*proto.ArtifactCollectorArgs, error)
 	// Client Monitoring Artifacts - manage the Client Monitoring
 	// Service.
-	GetClientMonitoringState(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*proto.ClientEventTable, error)
+	GetClientMonitoringState(ctx context.Context, in *proto.GetClientMonitoringStateRequest, opts ...grpc.CallOption) (*proto.ClientEventTable, error)
 	// Client Monitoring Artifacts - manage the Client Monitoring
 	// Service.
 	SetClientMonitoringState(ctx context.Context, in *proto.ClientEventTable, opts ...grpc.CallOption) (*empty.Empty, error)
@@ -445,7 +445,7 @@ func (c *aPIClient) SetServerMonitoringState(ctx context.Context, in *proto.Arti
 	return out, nil
 }
 
-func (c *aPIClient) GetClientMonitoringState(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*proto.ClientEventTable, error) {
+func (c *aPIClient) GetClientMonitoringState(ctx context.Context, in *proto.GetClientMonitoringStateRequest, opts ...grpc.CallOption) (*proto.ClientEventTable, error) {
 	out := new(proto.ClientEventTable)
 	err := c.cc.Invoke(ctx, "/proto.API/GetClientMonitoringState", in, out, opts...)
 	if err != nil {
@@ -718,7 +718,7 @@ type APIServer interface {
 	SetServerMonitoringState(context.Context, *proto.ArtifactCollectorArgs) (*proto.ArtifactCollectorArgs, error)
 	// Client Monitoring Artifacts - manage the Client Monitoring
 	// Service.
-	GetClientMonitoringState(context.Context, *empty.Empty) (*proto.ClientEventTable, error)
+	GetClientMonitoringState(context.Context, *proto.GetClientMonitoringStateRequest) (*proto.ClientEventTable, error)
 	// Client Monitoring Artifacts - manage the Client Monitoring
 	// Service.
 	SetClientMonitoringState(context.Context, *proto.ClientEventTable) (*empty.Empty, error)
@@ -864,7 +864,7 @@ func (UnimplementedAPIServer) GetServerMonitoringState(context.Context, *empty.E
 func (UnimplementedAPIServer) SetServerMonitoringState(context.Context, *proto.ArtifactCollectorArgs) (*proto.ArtifactCollectorArgs, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetServerMonitoringState not implemented")
 }
-func (UnimplementedAPIServer) GetClientMonitoringState(context.Context, *empty.Empty) (*proto.ClientEventTable, error) {
+func (UnimplementedAPIServer) GetClientMonitoringState(context.Context, *proto.GetClientMonitoringStateRequest) (*proto.ClientEventTable, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClientMonitoringState not implemented")
 }
 func (UnimplementedAPIServer) SetClientMonitoringState(context.Context, *proto.ClientEventTable) (*empty.Empty, error) {
@@ -1601,7 +1601,7 @@ func _API_SetServerMonitoringState_Handler(srv interface{}, ctx context.Context,
 }
 
 func _API_GetClientMonitoringState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(proto.GetClientMonitoringStateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1613,7 +1613,7 @@ func _API_GetClientMonitoringState_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/proto.API/GetClientMonitoringState",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).GetClientMonitoringState(ctx, req.(*empty.Empty))
+		return srv.(APIServer).GetClientMonitoringState(ctx, req.(*proto.GetClientMonitoringStateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

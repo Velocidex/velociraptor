@@ -45,8 +45,8 @@ func (self *TestSuite) SetupTest() {
 	require.NoError(self.T(), self.Sm.Start(journal.StartJournalService))
 	require.NoError(self.T(), self.Sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.Sm.Start(inventory.StartInventoryService))
-	require.NoError(self.T(), self.Sm.Start(repository.StartRepositoryManager))
 	require.NoError(self.T(), self.Sm.Start(launcher.StartLauncherService))
+	require.NoError(self.T(), self.Sm.Start(repository.StartRepositoryManager))
 	require.NoError(self.T(), self.Sm.Start(labels.StartLabelService))
 }
 

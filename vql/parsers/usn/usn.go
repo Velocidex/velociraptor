@@ -135,7 +135,7 @@ func init() {
 func makeUSNRecord(item *ntfs.USN_RECORD) *ordereddict.Dict {
 	return ordereddict.NewDict().
 		Set("Usn", item.Usn()).
-		Set("Timestamp", item.TimeStamp()).
+		Set("Timestamp", item.TimeStamp().Time).
 		Set("Filename", item.Filename()).
 		Set("FullPath", item.FullPath()).
 		Set("FileAttributes", item.FileAttributes()).

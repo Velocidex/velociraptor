@@ -207,6 +207,13 @@ func (self *Launcher) CompileCollectorArgs(
 		}
 
 		if artifact == nil {
+			// We have not found the artifact, should we ignore the error?
+			if options.IgnoreMissingArtifacts {
+				logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+				logger.Info("Ignoring artifact %v since it is not found",
+					spec.Artifact)
+				continue
+			}
 			return nil, errors.New("Unknown artifact " + spec.Artifact)
 		}
 
@@ -622,6 +629,9 @@ func StartLauncherService(
 		defer services.RegisterLauncher(nil)
 
 		<-ctx.Done()
+
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Info("Exiting Launcher Service")
 	}()
 
 	return nil
