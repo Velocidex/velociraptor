@@ -223,12 +223,16 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 		self.scope, self.scope, constants.RAW_REG_CACHE_SIZE)
 	hive, pres := self.hive_cache[cache_key]
 	if !pres {
-		paged_reader := readers.NewPagedReader(
+		paged_reader, err := readers.NewPagedReader(
 			self.scope,
 			base_url.Scheme, // Accessor
 			base_url.Path,   // Path to underlying file
 			int(lru_size),
 		)
+		if err != nil {
+			return nil, nil, err
+		}
+
 		hive, err = regparser.NewRegistry(paged_reader)
 		if err != nil {
 			paged_reader.Close()

@@ -221,7 +221,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 	}
 
 	key, err := registry.OpenKey(hive, key_path,
-		registry.READ|
+		registry.READ|registry.QUERY_VALUE|
 			registry.ENUMERATE_SUB_KEYS|
 			registry.WOW64_64KEY)
 	if err != nil {
@@ -237,7 +237,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 
 	for _, subkey_name := range subkeys {
 		subkey, err := registry.OpenKey(key, subkey_name,
-			registry.READ|
+			registry.READ|registry.QUERY_VALUE|
 				registry.ENUMERATE_SUB_KEYS|
 				registry.WOW64_64KEY)
 		if err != nil {
@@ -311,14 +311,16 @@ func (self *RegFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error)
 	}
 
 	key, err := registry.OpenKey(hive, key_path,
-		registry.READ|registry.WOW64_64KEY)
+		registry.READ|registry.QUERY_VALUE|
+			registry.WOW64_64KEY)
 	if err != nil && len(components) > 1 {
 		// Maybe its a value then - open the containing key
 		// and return a valueInfo
 		containing_key_name := strings.Join(
 			components[1:len(components)-1], "\\")
 		key, err := registry.OpenKey(hive, containing_key_name,
-			registry.READ|registry.WOW64_64KEY)
+			registry.READ|registry.QUERY_VALUE|
+				registry.WOW64_64KEY)
 		if err != nil {
 			return nil, err
 		}

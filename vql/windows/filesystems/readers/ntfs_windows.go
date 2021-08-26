@@ -56,7 +56,8 @@ type NTFSCachedContext struct {
 
 // Close the NTFS context every minute - this forces a refresh and
 // reparse of the NTFS device.
-func (self *NTFSCachedContext) Start(ctx context.Context, scope vfilter.Scope) {
+func (self *NTFSCachedContext) Start(
+	ctx context.Context, scope vfilter.Scope) (err error) {
 	cache_life := int64(0)
 	cache_life_any, pres := scope.Resolve(constants.NTFS_CACHE_TIME)
 	if pres {
@@ -78,8 +79,9 @@ func (self *NTFSCachedContext) Start(ctx context.Context, scope vfilter.Scope) {
 
 	done := self.done
 
-	lru_size := vql_subsystem.GetIntFromRow(self.scope, self.scope, constants.NTFS_CACHE_SIZE)
-	self.paged_reader = readers.NewPagedReader(
+	lru_size := vql_subsystem.GetIntFromRow(
+		self.scope, self.scope, constants.NTFS_CACHE_SIZE)
+	self.paged_reader, err = readers.NewPagedReader(
 		self.scope, "file", self.device, int(lru_size))
 
 	go func() {
@@ -93,6 +95,8 @@ func (self *NTFSCachedContext) Start(ctx context.Context, scope vfilter.Scope) {
 			}
 		}
 	}()
+
+	return err
 }
 
 // Close may be called multiple times and at any time.
@@ -146,10 +150,13 @@ func GetNTFSCache(scope vfilter.Scope, device string) (*NTFSCachedContext, error
 			device: device,
 			scope:  scope,
 		}
-		cache_ctx.Start(context.Background(), scope)
+		err := cache_ctx.Start(context.Background(), scope)
+		if err != nil {
+			return nil, err
+		}
 
 		// Destroy the context when the scope is done.
-		err := vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+		err = vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 			cache_ctx.mu.Lock()
 			if cache_ctx.done != nil {
 				close(cache_ctx.done)
