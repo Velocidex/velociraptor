@@ -4,6 +4,8 @@
 package filesystems
 
 import (
+	"fmt"
+
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -41,7 +43,12 @@ func (self *AutoFilesystemAccessor) ReadDir(path string) ([]glob.FileInfo, error
 func (self *AutoFilesystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
 	result, err := self.file_delegate.Open(path)
 	if err != nil {
-		return self.ntfs_delegate.Open(path)
+		result, err1 := self.ntfs_delegate.Open(path)
+		if err1 != nil {
+			return nil, fmt.Errorf(
+				"%v, unable to fall back to ntfs parsing: %w", err, err1)
+		}
+		return result, err1
 	}
 	return result, err
 }

@@ -238,7 +238,7 @@ func GetReaderPool(scope vfilter.Scope, lru_size int64) *ReaderPool {
 
 func NewPagedReader(scope vfilter.Scope,
 	accessor, filename string,
-	lru_size int) *AccessorReader {
+	lru_size int) (*AccessorReader, error) {
 
 	// Get the reader pool from the scope.
 	pool := GetReaderPool(scope, 50)
@@ -247,7 +247,7 @@ func NewPagedReader(scope vfilter.Scope,
 	key := accessor + "://" + filename
 	value, pres := pool.lru.Get(key)
 	if pres {
-		return value.(*AccessorReader)
+		return value.(*AccessorReader), nil
 	}
 
 	result := &AccessorReader{
@@ -265,5 +265,9 @@ func NewPagedReader(scope vfilter.Scope,
 	}
 
 	pool.lru.Set(key, result)
-	return result
+
+	// Read the header to make sure we can actually read this file.
+	header := make([]byte, 4)
+	_, err := result.ReadAt(header, 0)
+	return result, err
 }
