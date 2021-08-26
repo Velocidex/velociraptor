@@ -1,0 +1,72 @@
+name: Windows.ActiveDirectory.PrivilegedUsers
+
+author: liteman @kevinfosec
+
+description: |
+   If on a Domain Controller, recursively enumerate membership of privileged groups, then
+
+   For each user, collect details relevant to an investigation: Create Date, Last Logon, Group Membership, SID
+
+type: CLIENT
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+      LET info <= SELECT * from info()
+
+      LET script <= '
+
+                $prodtype = Get-WmiObject -Class Win32_OperatingSystem | Select -ExpandProperty ProductType
+
+                if ($prodType -eq 2) {
+                  import-module activedirectory
+
+                  $users = @()
+
+                  $groups = @("Domain Admins", "Enterprise Admins", "Administrators", "Schema Admins", "Account Operators", "Backup Operators", "Print Operators", "Server Operators", "Cert Publishers")
+
+                  foreach ($group in $groups) {
+                      foreach ($user in @(Get-AdGroupMember -Identity $group -Recursive)) {
+                          if (-Not $users.contains($user)) {
+                              $users += $user
+                          }
+                      }
+
+                  }
+
+                  $userdetails = @()
+                  foreach ($user in $users) {
+                    $userdetails += Get-ADUser -Identity $user -Properties *
+                  }
+
+                  ConvertTo-Json -InputObject $userdetails
+
+                }
+      '
+
+      LET out = SELECT parse_json_array(data=Stdout) AS Output
+          FROM execve(argv=["powershell",
+               "-ExecutionPolicy", "Unrestricted", "-encodedCommand",
+                  base64encode(string=utf16_encode(
+                  string=script))
+            ], length=1000000)
+      SELECT * FROM foreach(row=out.Output[0],
+      query={
+          SELECT
+            SamAccountName,
+            DistinguishedName,
+            SID.Value as UserSID,
+            SID.AccountDomainSid as DomainSID,
+            Enabled,
+            adminCount,
+            timestamp(epoch=grok(data=Created, grok="%{INT:timestamp}").timestamp) as created,
+            DisplayName,
+            timestamp(winfiletime=lastLogon) as last_logon,
+            timestamp(epoch=grok(data=Modified, grok="%{INT:timestamp}").timestamp) as modified,
+            MemberOf as Groups,
+            timestamp(winfiletime=pwdLastSet) as password_last_set
+
+          FROM scope()
+      })
