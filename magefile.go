@@ -304,6 +304,12 @@ func Darwin() error {
 		arch:       "amd64"}.Run()
 }
 
+func DarwinM1() error {
+	return Builder{goos: "darwin",
+		extra_tags: " release yara ",
+		arch:       "arm64"}.Run()
+}
+
 func DarwinBase() error {
 	return Builder{goos: "darwin",
 		extra_tags:  " release ",
