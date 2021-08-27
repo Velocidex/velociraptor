@@ -4,6 +4,11 @@ description: |
 
   This plugin is also used for tests.
 
+resources:
+  timeout: 20
+  ops_per_second: 60
+  max_rows: 213
+  max_upload_bytes: 545454
 
 parameters:
   - name: ChoiceSelector

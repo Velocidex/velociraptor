@@ -193,7 +193,8 @@ func (self *Launcher) CompileCollectorArgs(
 	// example if a collection specifies artifact A (with max_rows
 	// = 10) and artifact B (with max_rows = 20), then the
 	// collection will have max_rows = 20.
-	var max_rows, max_upload_bytes uint64
+	var max_rows, max_upload_bytes, timeout uint64
+	var ops_per_sec float32
 
 	for _, spec := range getCollectorSpecs(collector_request) {
 		var artifact *artifacts_proto.Artifact = nil
@@ -254,6 +255,9 @@ func (self *Launcher) CompileCollectorArgs(
 
 			vql_collector_args.MaxRow = 1000
 
+			timeout = vql_collector_args.Timeout
+			ops_per_sec = vql_collector_args.OpsPerSecond
+
 			result = append(result, vql_collector_args)
 		}
 	}
@@ -266,6 +270,14 @@ func (self *Launcher) CompileCollectorArgs(
 
 	if collector_request.MaxUploadBytes == 0 {
 		collector_request.MaxUploadBytes = max_upload_bytes
+	}
+
+	if collector_request.Timeout == 0 {
+		collector_request.Timeout = timeout
+	}
+
+	if collector_request.OpsPerSecond == 0 {
+		collector_request.OpsPerSecond = ops_per_sec
 	}
 
 	return result, nil

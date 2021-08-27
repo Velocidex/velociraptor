@@ -219,7 +219,8 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 		if artifact.Precondition != "" {
 			_, err := vfilter.Parse(artifact.Precondition)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf(
+					"While parsing artifact precondition: %w", err)
 			}
 		}
 
@@ -233,7 +234,7 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 
 				_, err := vfilter.Parse(source.Precondition)
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("While parsing precondition: %w", err)
 				}
 			}
 
@@ -246,7 +247,7 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 			// Check we can parse it properly.
 			queries, err := vfilter.MultiParse(source.Query)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("While parsing source query: %w", err)
 			}
 
 			// Make sure the source format is correct
@@ -412,7 +413,7 @@ func Parse(filename string) (*artifacts_proto.Artifact, error) {
 func splitQueryToQueries(query string) ([]string, error) {
 	vqls, err := vfilter.MultiParse(query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("While parsing query: %w", err)
 	}
 
 	scope := vql_subsystem.MakeScope()

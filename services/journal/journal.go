@@ -22,6 +22,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type JournalService struct {
@@ -32,6 +33,8 @@ type JournalService struct {
 	// process!
 	mu    sync.Mutex
 	locks map[string]*sync.Mutex
+
+	Clock utils.Clock
 }
 
 func (self *JournalService) Watch(
@@ -98,6 +101,7 @@ func (self *JournalService) PushRowsToArtifact(
 	if err != nil {
 		return err
 	}
+	path_manager.Clock = self.Clock
 
 	// Just a regular artifact, append to the existing result set.
 	if !path_manager.IsEvent() {
@@ -147,6 +151,7 @@ func StartJournalService(
 	service := &JournalService{
 		config_obj: config_obj,
 		locks:      make(map[string]*sync.Mutex),
+		Clock:      utils.RealClock{},
 	}
 	old_service, err := services.GetJournal()
 	if err == nil {
