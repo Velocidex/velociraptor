@@ -36,9 +36,16 @@ export default class ValidatedInteger extends React.Component {
                             onChange={ (event) => {
                                 const newValue = event.target.value;
                                 let invalid = true;
-                                if (regexp.test(newValue)) {
+
+                                // Value is allowed to be empty
+                                if (_.isEmpty(newValue)) {
+                                    invalid = false;
+                                    this.props.setValue(undefined);
+
+                                } else if (regexp.test(newValue)) {
                                     this.props.setValue(parseInt(newValue));
                                     invalid = false;
+
                                 } else {
                                     this.props.setValue(newValue);
                                     invalid = true;

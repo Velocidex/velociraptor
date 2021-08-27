@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type RepositoryManager struct {
@@ -51,23 +53,43 @@ func (self *RepositoryManager) SetGlobalRepositoryForTests(
 }
 
 func (self *RepositoryManager) SetArtifactFile(
-	config_obj *config_proto.Config, principal, data, required_prefix string) (
+	config_obj *config_proto.Config, principal, definition, required_prefix string) (
 	*artifacts_proto.Artifact, error) {
 
-	// First ensure that the artifact is correct.
+	// Use regexes to force the artifact into the correct prefix.
+	if required_prefix != "" {
+		definition = ensureArtifactPrefix(definition, required_prefix)
+	}
+
+	// Ensure that the artifact is correct by parsing it.
 	tmp_repository := self.NewRepository()
 	artifact_definition, err := tmp_repository.LoadYaml(
-		data, true /* validate */)
+		definition, true /* validate */)
 	if err != nil {
 		return nil, err
 	}
 
+	// This should only be triggered if something weird happened.
 	if !strings.HasPrefix(artifact_definition.Name, required_prefix) {
 		return nil, errors.New(
 			"Modified or custom artifacts must start with '" +
 				required_prefix + "'")
 	}
 
+	// Load the new artifact into the global repo so it is
+	// immediately available.
+	global_repository, err := self.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// Load the artifact into the currently running repository.
+	artifact, err := global_repository.LoadYaml(definition, true /* validate */)
+	if err != nil {
+		return nil, err
+	}
+
+	// Artifact should be valid now so we can write it on disk.
 	file_store_factory := file_store.GetFileStore(config_obj)
 	if file_store_factory != nil {
 		vfs_path := paths.GetArtifactDefintionPath(artifact_definition.Name)
@@ -85,26 +107,13 @@ func (self *RepositoryManager) SetArtifactFile(
 			return nil, err
 		}
 
-		_, err = fd.Write([]byte(data))
+		_, err = fd.Write([]byte(definition))
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	// Load the new artifact into the global repo so it is
-	// immediately available.
-	global_repository, err := self.GetGlobalRepository(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	// Load the artifact into the currently running repository.
-	// Artifact is already valid - no need to revalidate it again.
-	artifact, err := global_repository.LoadYaml(data, false /* validate */)
-	if err != nil {
-		return nil, err
-	}
-
+	// Tell interested parties that we modified this artifact.
 	journal, err := services.GetJournal()
 	if err != nil {
 		return nil, err
@@ -256,4 +265,19 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 	services.RegisterRepositoryManager(self)
 
 	return nil
+}
+
+var (
+	name_regex = regexp.MustCompile("(?sm)^(name: *)(.+)$")
+)
+
+func ensureArtifactPrefix(definition, prefix string) string {
+	return utils.ReplaceAllStringSubmatchFunc(
+		name_regex, definition,
+		func(matches []string) string {
+			if !strings.HasPrefix(matches[2], prefix) {
+				return matches[1] + prefix + matches[2]
+			}
+			return matches[1] + matches[2]
+		})
 }

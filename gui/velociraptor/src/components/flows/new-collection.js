@@ -450,6 +450,65 @@ class NewCollectionResources extends React.Component {
         return timeout + "s per artifact";
     }
 
+    getMaxUploadBytes = (artifacts) => {
+        let max_upload_bytes = 0;
+        _.each(artifacts, (definition) => {
+            let def_max_upload_bytes = definition.resources &&
+                definition.resources.max_upload_bytes;
+            def_max_upload_bytes = def_max_upload_bytes || 0;
+
+            if (def_max_upload_bytes > max_upload_bytes) {
+                max_upload_bytes = def_max_upload_bytes;
+            }
+
+        });
+
+        let max_mbytes = max_upload_bytes / 1024 / 1024;
+
+        if (max_mbytes === 0) {
+            return "1 Gb";
+        }
+        return max_mbytes.toFixed(2) + " Mb";
+    }
+
+
+    getMaxRows = (artifacts) => {
+        let max_rows = 0;
+        _.each(artifacts, (definition) => {
+            let def_max_rows = definition.resources && definition.resources.max_rows;
+            def_max_rows = def_max_rows || 0;
+
+            if (def_max_rows > max_rows) {
+                max_rows = def_max_rows;
+            }
+        });
+
+        if (max_rows === 0) {
+            return "1,000,000 rows";
+        }
+
+        return max_rows + " rows";
+    }
+
+    getOpsPerSecond = (artifacts) => {
+        let ops_per_second = 0;
+        _.each(artifacts, (definition) => {
+            let def_ops_per_sec = definition.resources &&
+                definition.resources.ops_per_second;
+            def_ops_per_sec = def_ops_per_sec || 0;
+
+            if (def_ops_per_sec > ops_per_second) {
+                ops_per_second = def_ops_per_sec;
+            }
+        });
+
+        if (ops_per_second === 0) {
+            ops_per_second = "unlimited";
+        }
+
+        return ops_per_second + " per second";
+    }
+
     render() {
         let resources = this.props.resources || {};
         return (
@@ -463,7 +522,7 @@ class NewCollectionResources extends React.Component {
                     <Form.Label column sm="3">Ops/Sec</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
-                        placeholder="Unlimited"
+                        placeholder={this.getOpsPerSecond(this.props.artifacts)}
                         value={resources.ops_per_second}
                         setInvalid={value => this.setState({invalid_1: value})}
                         setValue={value => this.props.setResources({ops_per_second: value})} />
@@ -485,7 +544,7 @@ class NewCollectionResources extends React.Component {
                     <Form.Label column sm="3">Max Rows</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
-                        placeholder="1,000,000 rows"
+                        placeholder={this.getMaxRows(this.props.artifacts)}
                         value={resources.max_rows}
                         setInvalid={value => this.setState({invalid_3: value})}
                         setValue={value => this.props.setResources({max_rows: value})} />
@@ -496,7 +555,7 @@ class NewCollectionResources extends React.Component {
                     <Form.Label column sm="3">Max Mb Uploaded</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
-                        placeholder="1Gb"
+                        placeholder={this.getMaxUploadBytes(this.props.artifacts)}
                         value={resources.max_mbytes}
                         setInvalid={value => this.setState({invalid_4: value})}
                         setValue={value => this.props.setResources({max_mbytes: value})} />
@@ -697,7 +756,8 @@ class NewCollectionWizard extends React.Component {
             ops_per_second: request.ops_per_second,
             timeout: request.timeout,
             max_rows: request.max_rows,
-            max_mbytes: (request.max_upload_bytes) / 1024 / 1024  || undefined,
+            max_mbytes: Math.round(
+                request.max_upload_bytes / 1024 / 1024 * 100) / 100  || undefined,
         };
 
         this.setState({

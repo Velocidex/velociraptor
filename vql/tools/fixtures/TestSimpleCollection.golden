@@ -45,7 +45,11 @@
      ]
     }
    }
-  ]
+  ],
+  "ops_per_second": 60,
+  "timeout": 20,
+  "max_rows": 213,
+  "max_upload_bytes": 545454
  },
  "vql_requests": [
   {
@@ -139,7 +143,9 @@
      "VQL": "SELECT * FROM Demo_Plugins_GUI_0_0"
     }
    ],
-   "max_row": 1000
+   "max_row": 1000,
+   "ops_per_second": 60,
+   "timeout": 20
   }
  ]
 }
