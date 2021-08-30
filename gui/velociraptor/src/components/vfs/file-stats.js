@@ -12,6 +12,9 @@ import api from '../core/api-service.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import utils from './utils.js';
 import axios from 'axios';
+import qs from 'qs';
+
+import { Join } from '../utils/paths.js';
 
 const POLL_TIME = 2000;
 
@@ -110,7 +113,6 @@ class VeloFileStats extends Component {
         }
 
         let client_id = this.props.client && this.props.client.client_id;
-
         return (
             <CardDeck>
               <Card>
@@ -145,9 +147,12 @@ class VeloFileStats extends Component {
                           <dd className="col-8">
                             <VeloTimestamp usec={ selectedRow.Download.mtime / 1000 } />
                             <Button variant="outline-default" title="Download"
-                                    href={api.base_path + "/api/v1/DownloadVFSFile?client_id=" +
-                                          client_id + "&vfs_path=" + encodeURIComponent(
-                                              selectedRow.Download.vfs_path) }>
+                                    href={api.base_path + "/api/v1/DownloadVFSFile?"+
+                                          qs.stringify({
+                                              client_id: client_id,
+                                              vfs_path: Join(
+                                                  selectedRow.Download.components),
+                                          }, {  arrayFormat: 'brackets' }) }>
                               <FontAwesomeIcon icon="download"/>
                             </Button>
                           </dd>
@@ -172,7 +177,8 @@ class VeloFileStats extends Component {
                                   onClick={this.updateFile}>
                             <FontAwesomeIcon icon="sync" />
                             <span className="button-label">
-                              {selectedRow.Download && selectedRow.Download.vfs_path ?
+                              {selectedRow.Download &&
+                               !_.isEmpty(selectedRow.Download.components) ?
                                'Re-Collect' : 'Collect'} from the client
                             </span>
                           </Button> }

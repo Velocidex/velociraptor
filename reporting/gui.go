@@ -498,7 +498,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 			for {
 				select {
 				case <-self.ctx.Done():
-					return nil
+					return result
 
 				case row, ok := <-eval_chan:
 					if !ok {

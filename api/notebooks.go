@@ -1143,8 +1143,9 @@ func updateCellContents(
 
 	// If an error occurs it is important to ensure the cell is
 	// still written with an error message.
-	make_error_cell := func(err error) (*api_proto.NotebookCell, error) {
-		notebook_cell := make_cell("")
+	make_error_cell := func(output string, err error) (
+		*api_proto.NotebookCell, error) {
+		notebook_cell := make_cell(output)
 		notebook_cell.Messages = append(notebook_cell.Messages,
 			fmt.Sprintf("Error: %v", err))
 		setCell(config_obj, notebook_id, notebook_cell)
@@ -1158,7 +1159,7 @@ func updateCellContents(
 		// template.
 		output, err = tmpl.Execute(&artifacts_proto.Report{Template: input})
 		if err != nil {
-			return make_error_cell(err)
+			return make_error_cell(output, err)
 		}
 
 	case "vql":
@@ -1191,14 +1192,14 @@ func updateCellContents(
 				}
 				fragment_output, err := tmpl.Execute(&artifacts_proto.Report{Template: input})
 				if err != nil {
-					return make_error_cell(err)
+					return make_error_cell(output, err)
 				}
 				output += fragment_output
 			}
 		}
 
 	default:
-		return make_error_cell(errors.New("Unsupported cell type."))
+		return make_error_cell(output, errors.New("Unsupported cell type."))
 	}
 
 	tmpl.Close()
