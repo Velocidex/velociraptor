@@ -310,7 +310,12 @@ export default class NotebookCellRenderer extends React.Component {
         api.post("v1/CancelNotebookCell", {
             notebook_id: this.props.notebook_id,
             cell_id: this.state.cell.cell_id,
-        }, this.source.token);
+        }, this.source.token).then(response=>{
+            if (response.cancel) {
+                return;
+            }
+            this.fetchCellContents();
+        });
     }
 
     pasteEvent = (e) => {
