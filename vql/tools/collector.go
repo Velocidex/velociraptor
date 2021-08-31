@@ -470,9 +470,14 @@ func AddSpecProtobuf(
 				}
 
 			case "timestamp":
-				value_time, err := functions.TimeFromAny(scope, value_any)
-				if err != nil {
-					value_str = value_time.String()
+				if !is_str {
+					value_time, err := functions.TimeFromAny(scope, value_any)
+					if err != nil {
+						scope.Log("Invalid timestamp for %v",
+							parameter_definition.Name)
+						continue
+					}
+					value_str = value_time.UTC().String()
 				}
 
 			case "csv":
