@@ -1,3 +1,27 @@
 Queries:
-  - SELECT timestamp(string='3rd March') < '4th March' from scope()
-  - SELECT timestamp(string='25/12/2019 5pm').Unix from scope()
+  # Make parsing timezone default to Brisbane time.
+  - LET PARSE_TZ <= "Australia/Brisbane"
+
+  # This setting causes logging of errors in timestamp parsing.
+  - LET DEBUG <= TRUE
+  - |
+    SELECT timestamp(string='March 3 2019'),
+           timestamp(string='March 3 2019') < '2021-10-01',
+           timestamp(string='07/25/2019 5pm'),
+
+           -- This is in Brisbane time since no timezone is specified.
+           timestamp(string="2021-10-01T10:53:32"),
+
+           -- This is in UTC time because timezone is specified.
+           timestamp(string="2021-10-01T10:53:32Z"),
+
+           -- Test epoch as second, ms and us
+           timestamp(epoch=1630414425) AS Time1,
+           timestamp(epoch=1630414425000) AS Time2,
+           timestamp(epoch=1630414425000000) AS Time3,
+
+           -- Test an explicit format specifier (Default timezone is +10)
+           timestamp(string="8/30/2021 6:01:28 PM",
+                     format="1/2/2006 3:04:05 PM") AS FormattedTime
+
+    FROM scope()

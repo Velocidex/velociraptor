@@ -1,7 +1,10 @@
 SELECT relpath(path=ConfigSource.FullPath, base=srcDir, sep="/") as TestPath,ConfigSource.Detection, Offset, Xor, DecodedConfig,DecodedData FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSDump.bin",DetectionYara=TestYara) WHERE Xor = "0x69"[
  {
   "TestPath": "artifacts/testdata/files/CSDump.bin",
-  "ConfigSource.Detection": null,
+  "ConfigSource.Detection": [
+   "CobaltStrike_v3",
+   "CobaltStrike_v3_2"
+  ],
   "Offset": 11001,
   "Xor": "0x69",
   "DecodedConfig": {

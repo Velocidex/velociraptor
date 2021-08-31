@@ -1,9 +1,33 @@
-SELECT timestamp(string='3rd March') < '4th March' from scope()[
+LET PARSE_TZ <= "Australia/Brisbane"[]LET DEBUG <= TRUE[]SELECT timestamp(string='March 3 2019'),
+       timestamp(string='March 3 2019') < '2021-10-01',
+       timestamp(string='07/25/2019 5pm'),
+
+       -- This is in Brisbane time since no timezone is specified.
+       timestamp(string="2021-10-01T10:53:32"),
+
+       -- This is in UTC time because timezone is specified.
+       timestamp(string="2021-10-01T10:53:32Z"),
+
+       -- Test epoch as second, ms and us
+       timestamp(epoch=1630414425) AS Time1,
+       timestamp(epoch=1630414425000) AS Time2,
+       timestamp(epoch=1630414425000000) AS Time3,
+
+       -- Test an explicit format specifier (Default timezone is +10)
+       timestamp(string="8/30/2021 6:01:28 PM",
+                 format="1/2/2006 3:04:05 PM") AS FormattedTime
+
+FROM scope()
+[
  {
-  "timestamp(string='3rd March') \u003c '4th March'": true
- }
-]SELECT timestamp(string='25/12/2019 5pm').Unix from scope()[
- {
-  "timestamp(string='25/12/2019 5pm').Unix": 1577293200
+  "timestamp(string='March 3 2019')": "2019-03-02T14:00:00Z",
+  "timestamp(string='March 3 2019') \u003c '2021-10-01'": true,
+  "timestamp(string='07/25/2019 5pm')": "2019-07-25T02:00:05Z",
+  "timestamp(string=\"2021-10-01T10:53:32\")": "2021-10-01T00:53:32Z",
+  "timestamp(string=\"2021-10-01T10:53:32Z\")": "2021-10-01T10:53:32Z",
+  "Time1": "2021-08-31T12:53:45Z",
+  "Time2": "2021-08-31T12:53:45Z",
+  "Time3": "2021-08-31T12:53:45Z",
+  "FormattedTime": "2021-08-30T08:01:28Z"
  }
 ]
