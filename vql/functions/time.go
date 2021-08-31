@@ -6,8 +6,10 @@ import (
 	"math"
 	"time"
 
+	"www.velocidex.com/golang/vfilter/types"
+
 	"github.com/Velocidex/ordereddict"
-	"github.com/kierdavis/dateparser"
+	"github.com/araddon/dateparse"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -15,9 +17,12 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
+const (
+	timecache_key = "$timestamp_cache"
+)
+
 var (
-	lru              *cache.LRUCache = cache.NewLRUCache(100)
-	invalidTimeError                 = errors.New("Invalid time")
+	invalidTimeError = errors.New("Invalid time")
 )
 
 type cachedTime struct {
@@ -28,13 +33,95 @@ func (self cachedTime) Size() int {
 	return 1
 }
 
+type TimestampCache struct {
+	lru   *cache.LRUCache
+	tz    string
+	loc   *time.Location
+	debug bool
+}
+
+func getDebug(scope types.Scope) bool {
+	_, pres := scope.Resolve("DEBUG")
+	return pres
+}
+
+func getTimezone(scope types.Scope) (*time.Location, string) {
+	// Is there a Parse TZ first?
+	tz, pres := scope.Resolve("PARSE_TZ")
+	if pres {
+		tz_str, ok := tz.(string)
+		if ok {
+			loc, err := time.LoadLocation(tz_str)
+			if err != nil {
+				// Unable to load location - maybe invalid.
+				scope.Log("Unable to load timezone from PARSE_TZ %v: %v, using UTC",
+					tz_str, err)
+				return time.UTC, ""
+			}
+			return loc, tz_str
+		}
+	}
+
+	// Otherwise the user may have specified a global timezone (which
+	// also affects output).
+	tz, pres = scope.Resolve("TZ")
+	if pres {
+		tz_str, ok := tz.(string)
+		if ok {
+			loc, err := time.LoadLocation(tz_str)
+			if err != nil {
+				// Unable to load location - maybe invalid.
+				scope.Log("Unable to load timezone from TZ %v: %v, using UTC",
+					tz_str, err)
+				return time.UTC, ""
+			}
+			return loc, tz_str
+		}
+	}
+
+	return time.UTC, ""
+}
+
+func (self *TimestampCache) Get(scope types.Scope, timestamp string) (
+	time.Time, bool) {
+
+	lru_key := self.tz + timestamp
+	time_value_any, pres := self.lru.Get(lru_key)
+	if pres {
+		return time_value_any.(cachedTime).Time, true
+	}
+	return time.Time{}, false
+}
+
+func (self *TimestampCache) Set(scope types.Scope,
+	timestamp string, value time.Time) {
+	lru_key := self.tz + timestamp
+	self.lru.Set(lru_key, cachedTime{value})
+}
+
+func GetTimeCache(scope types.Scope) *TimestampCache {
+	cache_ctx, ok := vql_subsystem.CacheGet(scope, timecache_key).(*TimestampCache)
+	if !ok {
+		loc, tz := getTimezone(scope)
+		cache_ctx = &TimestampCache{
+			lru:   cache.NewLRUCache(200),
+			loc:   loc,
+			tz:    tz,
+			debug: getDebug(scope),
+		}
+		vql_subsystem.CacheSet(scope, timecache_key, cache_ctx)
+	}
+	return cache_ctx
+}
+
 type _TimestampArg struct {
 	Epoch       vfilter.Any `vfilter:"optional,field=epoch"`
 	CocoaTime   int64       `vfilter:"optional,field=cocoatime"`
 	MacTime     int64       `vfilter:"optional,field=mactime,doc=HFS+"`
 	WinFileTime int64       `vfilter:"optional,field=winfiletime"`
 	String      string      `vfilter:"optional,field=string,doc=Guess a timestamp from a string"`
-	UsStyle     bool        `vfilter:"optional,field=us_style,doc=US Style Month/Day/Year"`
+	Timezone    string      `vfilter:"optional,field=timezone,doc=A default timezone (UTC)"`
+	Format      string      `vfilter:"optional,field=format,doc=A format specifier as per Golangs time.Parse"`
 }
 
 type _Timestamp struct{}
@@ -72,6 +159,18 @@ func (self _Timestamp) Call(ctx context.Context, scope vfilter.Scope,
 		arg.Epoch = arg.String
 	}
 
+	// Use traditional but limited golang time.Parse
+	if arg.Format != "" {
+		str, ok := arg.Epoch.(string)
+		if ok {
+			result, err := ParseTimeFromStringWithFormat(scope, arg.Format, str)
+			if err != nil {
+				return vfilter.Null{}
+			}
+			return result
+		}
+	}
+
 	result, err := TimeFromAny(scope, arg.Epoch)
 	if err != nil || result.Unix() == 0 {
 		return vfilter.Null{}
@@ -95,7 +194,7 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 		if t == "" {
 			return time.Time{}, nil
 		}
-		return parse_time_from_string(scope, t)
+		return ParseTimeFromString(scope, t)
 
 	case time.Time:
 		return t, nil
@@ -132,20 +231,54 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 	return time.Unix(int64(sec), int64(dec)), nil
 }
 
-func parse_time_from_string(scope vfilter.Scope, timestamp string) (
-	time.Time, error) {
-	time_value_any, pres := lru.Get(timestamp)
+func ParseTimeFromString(scope vfilter.Scope, timestamp string) (
+	time_value time.Time, err error) {
+
+	cache := GetTimeCache(scope)
+	cached_time_value, pres := cache.Get(scope, timestamp)
 	if pres {
-		return time_value_any.(cachedTime).Time, nil
+		return cached_time_value, nil
 	}
 
-	parser := dateparser.Parser{Fuzzy: true, DayFirst: true, IgnoreTZ: true}
-	time_value, err := parser.Parse(timestamp)
-	if err != nil {
-		return time_value, err
+	if cache.loc != nil {
+		time_value, err = dateparse.ParseIn(timestamp, cache.loc)
+	} else {
+		time_value, err = dateparse.ParseAny(timestamp)
 	}
-	lru.Set(timestamp, cachedTime{time_value})
-	return time_value, nil
+
+	if err != nil && cache.debug {
+		scope.Log("Parsing timestamp %v: %v", timestamp, err)
+	}
+
+	// Update the LRU
+	cache.Set(scope, timestamp, time_value)
+
+	return time_value, err
+}
+
+func ParseTimeFromStringWithFormat(scope vfilter.Scope, format, timestamp string) (
+	time_value time.Time, err error) {
+
+	cache := GetTimeCache(scope)
+	time_value, pres := cache.Get(scope, timestamp)
+	if pres {
+		return time_value, nil
+	}
+
+	if cache.loc != nil {
+		time_value, err = time.ParseInLocation(format, timestamp, cache.loc)
+	} else {
+		time_value, err = time.Parse(format, timestamp)
+	}
+
+	if err != nil && cache.debug {
+		scope.Log("Parsing timestamp %v: %v", timestamp, err)
+	}
+
+	// Update the LRU on return.
+	cache.Set(scope, timestamp, time_value)
+
+	return time_value, err
 }
 
 // Time aware operators.
@@ -247,19 +380,16 @@ func (self _TimeLtString) Lt(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) 
 	a_time, _ := utils.IsTime(a)
 	b_str, _ := b.(string)
 	var b_time time.Time
+	var err error
 
-	time_value_any, pres := lru.Get(b_str)
-	if pres {
-		b_time = time_value_any.(cachedTime).Time
-
-	} else {
-		parser := dateparser.Parser{Fuzzy: true,
-			DayFirst: true,
-			IgnoreTZ: true}
-		b_time_time, err := parser.Parse(b_str)
-		if err == nil {
-			b_time = b_time_time
-			lru.Set(b_str, cachedTime{b_time})
+	cache := GetTimeCache(scope)
+	b_time, pres := cache.Get(scope, b_str)
+	if !pres {
+		// If we can not parse the string properly return false.
+		b_time, err = ParseTimeFromString(scope, b_str)
+		cache.Set(scope, b_str, b_time)
+		if err != nil {
+			return false
 		}
 	}
 
@@ -279,19 +409,16 @@ func (self _TimeGtString) Gt(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) 
 	a_time, _ := utils.IsTime(a)
 	b_str, _ := b.(string)
 	var b_time time.Time
+	var err error
 
-	time_value_any, pres := lru.Get(b_str)
-	if pres {
-		b_time = time_value_any.(cachedTime).Time
-
-	} else {
-		parser := dateparser.Parser{Fuzzy: true,
-			DayFirst: true,
-			IgnoreTZ: true}
-		b_time_time, err := parser.Parse(b_str)
-		if err == nil {
-			b_time = b_time_time
-			lru.Set(b_str, cachedTime{b_time})
+	cache := GetTimeCache(scope)
+	b_time, pres := cache.Get(scope, b_str)
+	if !pres {
+		// If we can not parse the string properly return false.
+		b_time, err = ParseTimeFromString(scope, b_str)
+		cache.Set(scope, b_str, b_time)
+		if err != nil {
+			return false
 		}
 	}
 

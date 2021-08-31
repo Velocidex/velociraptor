@@ -18,8 +18,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -471,13 +471,13 @@ func AddSpecProtobuf(
 
 			case "timestamp":
 				if !is_str {
-					value_time, err := utils.AnyToTime(value_any)
+					value_time, err := functions.TimeFromAny(scope, value_any)
 					if err != nil {
-						scope.Log("Invalid CSV for %v",
+						scope.Log("Invalid timestamp for %v",
 							parameter_definition.Name)
 						continue
 					}
-					value_str = value_time.String()
+					value_str = value_time.UTC().String()
 				}
 
 			case "csv":

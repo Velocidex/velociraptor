@@ -51,33 +51,35 @@ sources:
       LET vsspaths(path) = SELECT FullPath
         FROM Artifact.Windows.Search.VSS(SearchFilesGlob=path)
 
+      LET parse_log(FullPath) = SELECT FullPath,
+          parse_string_with_regex(
+            string=Line,
+            regex="^(?P<TeamViewerID>^\\d+)\\s+"+
+              "(?P<SourceHost>.+)\\s" +
+              "(?P<StartTime>\\d{2}-\\d{2}-\\d{4}\\s\\d{2}:\\d{2}:\\d{2})\\s" +
+              "(?P<EndTime>\\d{2}-\\d{2}-\\d{4}\\s\\d{2}:\\d{2}:\\d{2})\\s" +
+              "(?P<User>.+)\\s+" +
+              "(?P<ConnectionType>[^\\s]+)\\s+" +
+              "(?P<ConnectionID>.+)$") as Record
+        FROM parse_lines(filename=FullPath)
+        WHERE Line
+          AND Record.TeamViewerID =~ TeamViewerIDRegex
+          AND Record.SourceHost =~ SourceHostRegex
+          AND Record.User =~ UserRegex
+
       -- function returning IOC hits
       LET logsearch(PathList) = SELECT * FROM foreach(
             row=PathList,
             query={
-                SELECT
-                    parse_string_with_regex(
-                        string=Line,
-                        regex=[
-                            "^(?P<TeamViewerID>^\\d+)\\s+"+
-                            "(?P<SourceHost>.+)\\s" +
-                            "(?P<StartTime>\\d{2}-\\d{2}-\\d{4}\\s\\d{2}:\\d{2}:\\d{2})\\s" +
-                            "(?P<EndTime>\\d{2}-\\d{2}-\\d{4}\\s\\d{2}:\\d{2}:\\d{2})\\s" +
-                            "(?P<User>.+)\\s+" +
-                            "(?P<ConnectionType>[^\\s]+)\\s+" +
-                            "(?P<ConnectionID>.+)$"
-                        ]) as Record,
-                        FullPath
-                FROM parse_lines(filename=FullPath)
-                WHERE Line
-                    AND Record.TeamViewerID =~ TeamViewerIDRegex
-                    AND Record.SourceHost =~ SourceHostRegex
-                    AND Record.User =~ UserRegex
-                    AND timestamp(epoch=Record.StartTime) < DateBeforeTime
-                    AND timestamp(epoch=Record.StartTime) > DateAfterTime
-                    AND timestamp(epoch=Record.EndTime) < DateBeforeTime
-                    AND timestamp(epoch=Record.EndTime) > DateAfterTime
-
+               SELECT *, timestamp(epoch=Record.StartTime,
+                                format="02-01-2006 15:04:05") AS StartTime,
+                      timestamp(epoch=Record.EndTime,
+                                format="02-01-2006 15:04:05") AS EndTime
+               FROM parse_log(FullPath=FullPath)
+               WHERE StartTime < DateBeforeTime
+                    AND StartTime > DateAfterTime
+                    AND EndTime < DateBeforeTime
+                    AND EndTime > DateAfterTime
             })
 
       -- include VSS in calculation and deduplicate with GROUP BY by file
@@ -98,8 +100,8 @@ sources:
       SELECT
         Record.TeamViewerID as TeamViewerID,
         Record.SourceHost as SourceHost,
-        timestamp(epoch=Record.StartTime) as StartTime,
-        timestamp(epoch=Record.EndTime) as EndTime,
+        StartTime,
+        EndTime,
         Record.User as User,
         Record.ConnectionType as ConnectionType,
         Record.ConnectionID as ConnectionID,
