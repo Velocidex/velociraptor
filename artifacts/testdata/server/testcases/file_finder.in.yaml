@@ -1,3 +1,5 @@
+# All *.Search.FileFinder are basically the same artifact with
+# different defaults, we just test one of them here.
 Queries:
   - SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] )
     FROM scope()
@@ -24,3 +26,9 @@ Queries:
     FROM Artifact.Windows.Search.FileFinder(
         YaraRule="wide nocase ascii:supercalifragilisticexpialidocious",
         SearchFilesGlob=srcDir + "/artifacts/testdata/**/*.in.yaml")
+
+# Search globs provided in a csv table
+  - |
+    SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords
+    FROM Artifact.Windows.Search.FileFinder(
+        SearchFilesGlobTable="Glob\n"+ srcDir + "/artifacts/testdata/files/*.zip\n")
