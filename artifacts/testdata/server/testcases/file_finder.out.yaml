@@ -35,4 +35,16 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "File": "file_finder.in.yaml",
   "Keywords": "supercalifragilisticexpialidocious"
  }
+]SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords
+FROM Artifact.Windows.Search.FileFinder(
+    SearchFilesGlob="",
+    SearchFilesGlobTable="Glob\n"+ srcDir + "/artifacts/testdata/files/*.zip\n")
+[
+ {
+  "File": "test.zip",
+  "Hash": null,
+  "Size": 1064,
+  "Upload": null,
+  "Keywords": ""
+ }
 ]

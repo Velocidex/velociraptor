@@ -1,4 +1,4 @@
-name: Linux.Search.FileFinder
+name: MacOS.Search.FileFinder
 description: |
   Find files on the filesystem using the filename or content.
 
@@ -31,18 +31,18 @@ description: |
 
 
 precondition:
-  SELECT * FROM info() where OS = 'linux'
+  SELECT * FROM info() where OS = 'darwin'
 
 parameters:
   - name: SearchFilesGlob
-    default: /home/*
-    description: Use a glob to define the files that will be searched.
+    default: /Users/*
+    description: Use a glob to define the files that will be searched (Use ** for recursive).
 
   - name: SearchFilesGlobTable
     type: csv
     default: |
       Glob
-      /home/someuser/*
+      /Users/someuser/*
     description: Alternative specify multiple globs in a table
 
   - name: YaraRule
