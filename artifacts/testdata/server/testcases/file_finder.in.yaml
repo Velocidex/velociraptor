@@ -31,4 +31,5 @@ Queries:
   - |
     SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords
     FROM Artifact.Windows.Search.FileFinder(
+        SearchFilesGlob="",
         SearchFilesGlobTable="Glob\n"+ srcDir + "/artifacts/testdata/files/*.zip\n")
