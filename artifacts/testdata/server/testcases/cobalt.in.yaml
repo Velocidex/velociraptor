@@ -1,12 +1,12 @@
 Parameters:
   TestYara: |
-      rule CobaltStrike_v3 {
+      rule CobaltStrike_all {
          strings:
             $a = { 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 2e 2e 2e }
             $b = { 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e 2e }
          condition: $a or $b
       }
-      rule CobaltStrike_v3_2 {
+      rule CobaltStrike_v3 {
          strings: $a = { 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 69 }
          condition: $a
       }
