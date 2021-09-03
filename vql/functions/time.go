@@ -172,7 +172,7 @@ func (self _Timestamp) Call(ctx context.Context, scope vfilter.Scope,
 	}
 
 	result, err := TimeFromAny(scope, arg.Epoch)
-	if err != nil || result.Unix() == 0 {
+	if err != nil || result.IsZero() {
 		return vfilter.Null{}
 	}
 
@@ -190,7 +190,7 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 
 	case string:
 		// If there is no input return an empty timestamp
-		// (unix epoch)
+		// (This is not the unix epoch!)
 		if t == "" {
 			return time.Time{}, nil
 		}
@@ -202,8 +202,13 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 	case *time.Time:
 		return *t, nil
 
+	case types.Null, *types.Null:
+		return time.Time{}, nil
+
 	default:
 		var ok bool
+
+		// Can we convert it to an int?
 		sec, ok = utils.ToInt64(timestamp)
 		if !ok {
 			return time.Time{}, invalidTimeError
@@ -224,8 +229,10 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 		}
 	}
 
+	// Empty times are allowed, they will just be set to the earliest
+	// time we have (Note this is not the epoch!).
 	if sec == 0 && dec == 0 {
-		return time.Time{}, invalidTimeError
+		return time.Time{}, nil
 	}
 
 	return time.Unix(int64(sec), int64(dec)), nil
