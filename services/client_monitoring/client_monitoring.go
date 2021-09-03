@@ -322,11 +322,11 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(
 	}
 
 	if is_relevant() {
-		err := self.load_from_file(ctx, config_obj)
+		err := self.setClientMonitoringState(ctx, config_obj, self.state)
 		if err != nil {
 			logger := logging.GetLogger(
 				config_obj, &logging.FrontendComponent)
-			logger.Error("compileState: %v", err)
+			logger.Error("self.setClientMonitoringState: %v", err)
 		}
 	}
 }

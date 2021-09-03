@@ -473,8 +473,8 @@
     Select columns from another query using regex.
 
     Sometimes a query produces a large number of columns or
-    unpredictable column names (eg. the read_reg_key() plugin produces
-    a column per value name).
+    unpredictable column names (eg. the `read_reg_key()` plugin
+    produces a column per value name).
 
     You can use the column_filter() plugin to select a subset of the
     columns to include or exclude from an underlying query. For example:
@@ -657,6 +657,10 @@
     SELECT dict(Foo="Bar", `Name.With.Dots`="Baz")
     FROM scope()
     ```
+
+    See the `to_dict()` function to create dicts from a query with
+    unpredictable key names.
+
   type: Function
   category: basic
 - name: diff
@@ -674,10 +678,11 @@
 
     {{% notice note %}}
 
-    There is only a single equivalence row specified by the `key`
+    There is only a single equivalence column specified by the `key`
     parameter, and it must be a string. If you need to watch multiple
-    columns you need to create a new column which is the concatenation of
-    other columns. For example `format(format="%s%d", args=[Name, Pid])`
+    columns you need to create a new column which is the concatenation
+    of other columns. For example `format(format="%s%d", args=[Name,
+    Pid])`
 
     {{% /notice %}}
 
@@ -3758,7 +3763,42 @@
 
   category: basic
 - name: to_dict
-  description: Construct a dict from another object.
+  description: |
+    Construct a dict from a query.
+
+    Sometimes we need to build a dict object where both the names of
+    the keys and their values are not known in advance - they are
+    calculated from another query. In this case we can use the
+    to_dict() function to build a dict from a query. The query needs
+    to emits as many rows as needed with a column called `_key` and
+    one called `_value`. The `to_dict()` will then construct a dict
+    from this query.
+
+    ### Notes
+
+    1. In VQL all dicts are ordered, so the order in which rows appear
+    in the query will determine the dict's key order.
+
+    2. VQL dicts always have string keys, if the `_key` value is not a
+    string the row will be ignored.
+
+    ### Example
+
+    The following (rather silly) example creates a dict mapping Pid to
+    ProcessNames in order to cache Pid->Name lookups. We then resolve
+    Pid to Name within other queries. Note the use of <= to
+    materialize the dict into memory once.
+
+    ```vql
+    LET PidLookup <= to_dict(item={
+        SELECT str(str=Pid) AS _key, Name AS _value
+        FROM pslist()
+    })
+
+    SELECT Pid, get(item=PidLookup, field=str(str=Pid))
+    FROM pslist()
+    ```
+
   type: Function
   args:
   - name: item
@@ -4362,23 +4402,37 @@
     The `yara()` plugin applies a signature consisting of multiple rules
     across files. You can read more about [yara rules](https://yara.readthedocs.io/en/v3.4.0/writingrules.html). The
     accessor is used to open the various files which allows this plugin to
-    work across raw ntfs, zip members etc.
+    work across raw ntfs, zip members or indeed process memory.
 
     Scanning proceeds by reading a block from the file, then applying the
     yara rule on the block. This will fail if the signature is split
     across block boundary. You can choose the block size to be
     appropriate.
 
-    Note that because we are just scanning the file data, yara plugins
-    like the pe plugin will not work. You can emulate all the yara plugins
-    with VQL anyway (e.g. to test for pe headers)
+    If the accessor is **not** specified we use the yara library to
+    directly open the file itself without Velociraptor's accessor
+    API. This allows Yara to mmap the file which has a number of
+    benefits including:
 
-    Typically the yara rule does not change for the life of the query, so
-    we cache it to avoid having to recompile it each time. The `key`
-    variable can be used to uniquely identify the cache key for the
-    rule. If the `key` variable is not specified, we use the rule text
-    itself to generate the cache key. It is recommended that the `key`
-    parameter be specified because it makes it more efficient.
+      1. The ability to scan without reading in blocks - so a
+         signature matching the file header as well as a string deep
+         within the file works.
+
+      2. Various Yara extensions like the `pe` extension work allowing
+         rules that use such extensions to work properly.
+
+    If we are not able to open the file (for example due to sharing
+    violations), Velociraptor will automatically fall back to the ntfs
+    accessor (on Windows) and will automatically switch to block by
+    block scanning.
+
+    Typically the yara rule does not change for the life of the query,
+    so Velociraptor caches it to avoid having to recompile it each
+    time. The `key` variable can be used to uniquely identify the
+    cache key for the rule. If the `key` variable is not specified, we
+    use the rule text itself to generate the cache key. It is
+    recommended that the `key` parameter be specified because it makes
+    it more efficient since we do not need to hash the rules each time.
 
     ### Shorthand rules
 
@@ -4404,6 +4458,7 @@
     scanning stops after one hit is found.
 
     {{% /notice %}}
+
   type: Plugin
   args:
   - name: rules

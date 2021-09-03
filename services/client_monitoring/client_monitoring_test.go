@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -64,8 +65,11 @@ sources:
 		})
 	assert.NoError(self.T(), err)
 
-	old_table := manager.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
-	assert.NotContains(self.T(), json.StringIndent(old_table), "Crib")
+	old_table_message := manager.GetClientUpdateEventTableMessage(
+		self.ConfigObj, self.client_id)
+	assert.NotContains(self.T(), json.StringIndent(old_table_message), "Crib")
+
+	table_version := old_table_message.UpdateEventTable.Version
 
 	// Now update the artifact.
 	repository_manager.SetArtifactFile(self.ConfigObj, "", `
@@ -75,11 +79,25 @@ sources:
     SELECT *, Crib FROM info()
 `, "")
 
+	var new_table_message *crypto_proto.VeloMessage
+
 	// The table should magically be updated!
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		table := manager.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
-		return strings.Contains(json.StringIndent(table), "Crib")
+		if !manager.CheckClientEventsVersion(
+			self.ConfigObj, self.client_id, table_version) {
+			return false
+		}
+
+		new_table_message = manager.GetClientUpdateEventTableMessage(
+			self.ConfigObj, self.client_id)
+		return strings.Contains(json.StringIndent(new_table_message), "Crib")
 	})
+
+	// Make sure the table version is updated
+	assert.True(self.T(),
+		table_version < new_table_message.UpdateEventTable.Version)
+
+	table_version = new_table_message.UpdateEventTable.Version
 
 	// Now delete the artifact completely
 	repository_manager.DeleteArtifactFile(self.ConfigObj, "", "TestArtifact")
@@ -87,7 +105,13 @@ sources:
 	// The table should magically be updated!
 	table_json := ""
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		table := manager.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
+		if !manager.CheckClientEventsVersion(
+			self.ConfigObj, self.client_id, table_version) {
+			return false
+		}
+
+		table := manager.GetClientUpdateEventTableMessage(
+			self.ConfigObj, self.client_id)
 		table_json = json.StringIndent(table)
 
 		// The table should not contain the Crib any more
@@ -96,7 +120,6 @@ sources:
 
 	// still contains the other artifacts
 	assert.Contains(self.T(), table_json, "SomethingElse")
-
 }
 
 func (self *ClientMonitoringTestSuite) TestUpdatingClientTable() {
