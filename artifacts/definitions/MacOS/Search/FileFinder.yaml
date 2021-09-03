@@ -71,7 +71,7 @@ parameters:
     description: If specified we are allowed to follow symlinks while globbing
 
 sources:
-  query: |
+- query: |
     LET file_search = SELECT FullPath,
                Sys.mft as Inode,
                Mode.String AS Mode, Size,

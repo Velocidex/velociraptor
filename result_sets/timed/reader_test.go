@@ -35,7 +35,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 	for i := int64(0); i < 50; i++ {
 		// Advance the clock by 1 hour.
 		now := 1587800000 + 10000*i
-		clock.MockNow = time.Unix(now, 0)
+		clock.MockNow = time.Unix(now, 0).UTC()
 
 		writer, err := result_sets.NewResultSetWriter(
 			file_store_factory, path_manager.Path(),

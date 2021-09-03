@@ -70,28 +70,34 @@ func (self *TestSuite) TestPagedReader() {
 	buff := make([]byte, 4)
 
 	for i := 0; i < 10; i++ {
-		reader := NewPagedReader(self.scope, "file", self.filenames[i], 100)
+		reader, err := NewPagedReader(self.scope, "file", self.filenames[i], 100)
+		assert.NoError(self.T(), err)
 		reader.ReadAt(buff, 0)
 		assert.Equal(self.T(), binary.LittleEndian.Uint32(buff), uint32(i))
 		readers = append(readers, reader)
 	}
 
 	for i := 0; i < 10; i++ {
-		reader := NewPagedReader(self.scope, "file", self.filenames[i], 100)
+		reader, err := NewPagedReader(self.scope, "file", self.filenames[i], 100)
+		assert.NoError(self.T(), err)
 		reader.ReadAt(buff, 0)
 		assert.Equal(self.T(), binary.LittleEndian.Uint32(buff), uint32(i))
 	}
 
 	// Open the same reader 10 time returns from the cache.
 	for i := 0; i < 10; i++ {
-		reader := NewPagedReader(self.scope, "file", self.filenames[1], 100)
+		reader, err := NewPagedReader(self.scope, "file", self.filenames[1], 100)
+		assert.NoError(self.T(), err)
+
 		reader.ReadAt(buff, 0)
 		assert.Equal(self.T(), binary.LittleEndian.Uint32(buff), uint32(1))
 	}
 
 	// Make sure that it is ok to close the reader at any time -
 	// the next read will be valid.
-	reader := NewPagedReader(self.scope, "file", self.filenames[1], 100)
+	reader, err := NewPagedReader(self.scope, "file", self.filenames[1], 100)
+	assert.NoError(self.T(), err)
+
 	for i := 0; i < 10; i++ {
 		reader.Close()
 		reader.ReadAt(buff, 0)

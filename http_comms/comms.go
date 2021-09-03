@@ -93,22 +93,6 @@ func (self *Enroller) MaybeEnrol() {
 	}
 }
 
-// Velociraptor's foreman is very quick (since we just compare the
-// last hunt timestamp the client provides to the server's last hunt
-// timestamp) so it is ok to send a foreman message in every receiver.
-func (self *Enroller) GetMessageList() *crypto_proto.MessageList {
-	if self.config_obj.Writeback == nil {
-		return &crypto_proto.MessageList{}
-	}
-	return &crypto_proto.MessageList{
-		Job: []*crypto_proto.VeloMessage{{
-			SessionId: constants.FOREMAN_WELL_KNOWN_FLOW,
-			ForemanCheckin: &actions_proto.ForemanCheckin{
-				LastHuntTimestamp: self.config_obj.Writeback.HuntLastTimestamp,
-			}}},
-	}
-}
-
 // Connectors abstract the http.Post() operation. Make an interface so
 // it can be mocked.
 type IConnector interface {
