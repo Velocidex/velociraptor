@@ -392,7 +392,7 @@ func hash() string {
 func fileb0x(asset string) error {
 	err := sh.Run("fileb0x", asset)
 	if err != nil {
-		err = sh.Run(mg.GoCmd(), "get", "github.com/Velocidex/fileb0x@d54f4040016051dd9657ce04d0ae6f31eab99bc6")
+		err = sh.Run(mg.GoCmd(), "install", "github.com/Velocidex/fileb0x@d54f4040016051dd9657ce04d0ae6f31eab99bc6")
 		if err != nil {
 			return err
 		}

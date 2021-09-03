@@ -122,7 +122,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 	for i := int64(0); i < 50; i++ {
 		// Advance the clock by 1 hour.
 		now := 1587800000 + 10000*i
-		clock.MockNow = time.Unix(now, 0)
+		clock.MockNow = time.Unix(now, 0).UTC()
 
 		writer.Write(ordereddict.NewDict().
 			Set("Time", clock.MockNow).
