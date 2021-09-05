@@ -4,6 +4,7 @@ package readers
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -83,6 +84,21 @@ func (self *NTFSCachedContext) Start(
 		self.scope, self.scope, constants.NTFS_CACHE_SIZE)
 	self.paged_reader, err = readers.NewPagedReader(
 		self.scope, "file", self.device, int(lru_size))
+
+	if err != nil {
+		return err
+	}
+
+	// Read the header to make sure we can actually read the raw device.
+	header := make([]byte, 8)
+	_, err = self.paged_reader.ReadAt(header, 3)
+	if err != nil {
+		return err
+	}
+
+	if string(header) != "NTFS    " {
+		return errors.New("No NTFS Magic")
+	}
 
 	go func() {
 		for {
