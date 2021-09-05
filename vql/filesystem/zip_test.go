@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/url"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
@@ -29,7 +30,7 @@ func (self *ZipTestSuite) TestReferenceCount() {
 	zip_file, _ := filepath.Abs("../../artifacts/testdata/files/hello.zip")
 	zip_file_url := url.URL{
 		Scheme:   "file",
-		Path:     zip_file,
+		Path:     "/" + strings.Replace(zip_file, "\\", "/", -1),
 		Fragment: "/**",
 	}
 	total_opened := getZipAccessorTotalOpened(self.T())
@@ -77,7 +78,11 @@ WHERE NOT IsDir
 // Make sure that reference counting works well
 func (self *ZipTestSuite) TestReferenceCountNested() {
 	zip_file, _ := filepath.Abs("../../artifacts/testdata/files/hello.zip")
-
+	zip_file_url := url.URL{
+		Scheme:   "file",
+		Path:     "/" + strings.Replace(zip_file, "\\", "/", -1),
+		Fragment: "/**",
+	}
 	total_opened := getZipAccessorTotalOpened(self.T())
 
 	builder := services.ScopeBuilder{
@@ -86,7 +91,7 @@ func (self *ZipTestSuite) TestReferenceCountNested() {
 		Logger: logging.NewPlainLogger(
 			self.ConfigObj, &logging.FrontendComponent),
 		Env: ordereddict.NewDict().
-			Set("Glob", zip_file+"#/**"),
+			Set("Glob", zip_file_url.String()),
 	}
 	manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)

@@ -351,12 +351,12 @@ type ZipFileSystemAccessor struct {
 // closed.
 func (self *ZipFileSystemAccessor) GetZipFile(
 	file_path string) (*ZipFileCache, *url.URL, error) {
-	url, err := url.Parse(file_path)
+	parsed_url, err := url.Parse(file_path)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	base_url := *url
+	base_url := *parsed_url
 	base_url.Fragment = ""
 
 	self.mu.Lock()
@@ -364,12 +364,12 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 	self.mu.Unlock()
 
 	if !pres || zip_file_cache.is_closed {
-		accessor, err := glob.GetAccessor(url.Scheme, self.scope)
+		accessor, err := glob.GetAccessor(base_url.Scheme, self.scope)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		fd, err := accessor.Open(url.Path)
+		fd, err := accessor.Open(base_url.Path)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -399,7 +399,7 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 
 			// One reference to the scope.
 			refs:          1,
-			zip_file_name: url.Path,
+			zip_file_name: base_url.Path,
 		}
 
 		self.scope.AddDestructor(func() {
@@ -419,12 +419,12 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 				})
 		}
 		self.mu.Lock()
-		self.fd_cache[url.String()] = zip_file_cache
+		self.fd_cache[parsed_url.String()] = zip_file_cache
 		self.mu.Unlock()
 	}
 
 	zip_file_cache.IncRef()
-	return zip_file_cache, url, nil
+	return zip_file_cache, parsed_url, nil
 }
 
 // This method splits the path string into a root component (which the
@@ -437,15 +437,15 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 //
 // so the root is file:///tmp/foo.zip# and the path is /dir/name.txt
 func (self *ZipFileSystemAccessor) GetRoot(path string) (string, string, error) {
-	url, err := url.Parse(path)
+	parsed_url, err := url.Parse(path)
 	if err != nil {
 		return "", "", err
 	}
 
-	Fragment := url.Fragment
-	url.Fragment = ""
+	Fragment := parsed_url.Fragment
+	parsed_url.Fragment = ""
 
-	return url.String() + "#", Fragment, nil
+	return parsed_url.String() + "#", Fragment, nil
 }
 
 func fragmentToComponents(fragment string) []string {
@@ -491,14 +491,14 @@ func (self *ZipFileSystemAccessor) PathSplit(path string) []string {
 // Example: root  is file://path/to/zip#subdir and stem is foo ->
 // file://path/to/zip#subdir/foo
 func (self *ZipFileSystemAccessor) PathJoin(root, stem string) string {
-	url, err := url.Parse(root)
+	parsed_url, err := url.Parse(root)
 	if err != nil {
 		path.Join(root, stem)
 	}
 
-	url.Fragment = path.Join(url.Fragment, stem)
+	parsed_url.Fragment = path.Join(parsed_url.Fragment, stem)
 
-	result := url.String()
+	result := parsed_url.String()
 
 	return result
 }
