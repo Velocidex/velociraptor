@@ -172,7 +172,7 @@ func (self _Timestamp) Call(ctx context.Context, scope vfilter.Scope,
 	}
 
 	result, err := TimeFromAny(scope, arg.Epoch)
-	if err != nil || result.IsZero() {
+	if err != nil {
 		return vfilter.Null{}
 	}
 
