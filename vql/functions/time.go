@@ -202,8 +202,8 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 	case *time.Time:
 		return *t, nil
 
-	case types.Null, *types.Null:
-		return time.Time{}, nil
+	case nil, types.Null, *types.Null:
+		return time.Time{}, invalidTimeError
 
 	default:
 		var ok bool
@@ -232,7 +232,7 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 	// Empty times are allowed, they will just be set to the earliest
 	// time we have (Note this is not the epoch!).
 	if sec == 0 && dec == 0 {
-		return time.Time{}, nil
+		return time.Time{}, invalidTimeError
 	}
 
 	return time.Unix(int64(sec), int64(dec)), nil
