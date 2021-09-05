@@ -166,8 +166,11 @@ class NewCollectionSelectArtifacts extends React.Component {
 
     doSearch = (value) => {
         this.setState({loading: true});
-        api.get("v1/GetArtifacts", {
+        api.post("v1/GetArtifacts", {
             type: this.props.artifactType,
+            fields: {
+                name: true,
+            },
             search_term: value}, this.source.token).then((response) => {
                 let items = response.data.items || [];
                 this.setState({matchingDescriptors: items, loading: false});
@@ -204,7 +207,7 @@ class NewCollectionSelectArtifacts extends React.Component {
         let artifacts = [];
         _.each(spec, x=>artifacts.push(x.artifact));
 
-        api.get("v1/GetArtifacts", {
+        api.post("v1/GetArtifacts", {
             type: this.props.artifactType,
             names: artifacts}, this.source.token).then((response) => {
                 let items = response.data.items || [];
@@ -767,7 +770,7 @@ class NewCollectionWizard extends React.Component {
         });
 
         // Resolve the artifacts from the request into a list of descriptors.
-        api.get("v1/GetArtifacts",
+        api.post("v1/GetArtifacts",
                 {names: request.artifacts}, this.source.token).then(response=>{
                 if (response && response.data &&
                     response.data.items && response.data.items.length) {

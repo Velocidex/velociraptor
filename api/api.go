@@ -601,7 +601,7 @@ func (self *ApiServer) GetArtifacts(
 
 	terms := strings.Split(in.SearchTerm, " ")
 	result, err := searchArtifact(
-		self.config, terms, in.Type, in.NumberOfResults)
+		self.config, terms, in.Type, in.NumberOfResults, in.Fields)
 	return result, err
 }
 

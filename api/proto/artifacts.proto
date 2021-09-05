@@ -8,6 +8,10 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
+message FieldSelector {
+    bool name = 1;
+}
+
 message GetArtifactsRequest {
     // Deprecated
     bool include_event_artifacts = 1;
@@ -19,11 +23,13 @@ message GetArtifactsRequest {
 
     string report_type = 7;
 
+    // Allow the caller to specify just the fields they want.
+    FieldSelector fields = 8;
+
     repeated string names = 6 [(sem_type) = {
        description: "A list of artifacts to fetch"
      }];
 }
-
 
 message GetArtifactRequest {
     // Deprecated.

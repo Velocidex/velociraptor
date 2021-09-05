@@ -43,7 +43,7 @@ class OfflineCollectorParameters  extends React.Component {
 
     componentDidMount = () => {
         this.source = axios.CancelToken.source();
-        api.get("v1/GetArtifacts", {report_type: "html"},
+        api.post("v1/GetArtifacts", {report_type: "html"},
                 this.source.token).then((response) => {
             let template_artifacts = [];
             for(var i = 0; i<response.data.items.length; i++) {

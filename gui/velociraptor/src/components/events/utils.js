@@ -66,7 +66,7 @@ function proto2tables(table, cb) {
 
     // Now lookup all the artifacts for their definitions and replace
     // in client_event_table.
-    api.get("v1/GetArtifacts", {names: all_artifacts}).then(response=>{
+    api.post("v1/GetArtifacts", {names: all_artifacts}).then(response=>{
         if (response && response.data && response.data.items) {
             // Create a big lookup table for all artifacts and their
             // definitions.

@@ -288,7 +288,8 @@ service API {
     // Artifacts
     rpc GetArtifacts(GetArtifactsRequest) returns (ArtifactDescriptors) {
         option (google.api.http) = {
-            get: "/api/v1/GetArtifacts",
+            post: "/api/v1/GetArtifacts",
+            body: "*",
         };
     }
 

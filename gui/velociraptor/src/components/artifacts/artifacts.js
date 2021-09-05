@@ -104,10 +104,13 @@ class ArtifactInspector extends React.Component {
         this.source.cancel();
         this.source = axios.CancelToken.source();
 
-        api.get("v1/GetArtifacts",
+        api.post("v1/GetArtifacts",
                 {
                     search_term: search_term || "...",
                     // This might be too many to fetch at once but we are still fast enough for now.
+                    fields: {
+                        name: true,
+                    },
                     number_of_results: 1000,
                 },
                 this.source.token).then((response) => {
