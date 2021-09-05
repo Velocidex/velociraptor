@@ -35,7 +35,7 @@ func (self *ZipTestSuite) TestReferenceCount() {
 		Logger: logging.NewPlainLogger(
 			self.ConfigObj, &logging.FrontendComponent),
 		Env: ordereddict.NewDict().
-			Set("Glob", zip_file+"#/**"),
+			Set("Glob", "file://"+zip_file+"#/**"),
 	}
 	manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)

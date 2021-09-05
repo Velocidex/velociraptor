@@ -1,6 +1,7 @@
 Queries:
   - LET zip_files = SELECT FullPath, Size FROM glob(
       globs=srcDir+"/artifacts/testdata/files/**/*.zip")
+    WHERE Name =~ "test"
 
   - SELECT basename(path=FullPath) as Name, Size FROM zip_files
 
