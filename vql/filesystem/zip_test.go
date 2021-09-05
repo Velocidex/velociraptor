@@ -2,6 +2,7 @@ package filesystem
 
 import (
 	"context"
+	"net/url"
 	"path/filepath"
 	"testing"
 
@@ -26,7 +27,11 @@ type ZipTestSuite struct {
 // Make sure that reference counting works well
 func (self *ZipTestSuite) TestReferenceCount() {
 	zip_file, _ := filepath.Abs("../../artifacts/testdata/files/hello.zip")
-
+	zip_file_url := url.URL{
+		Scheme:   "file",
+		Path:     zip_file,
+		Fragment: "/**",
+	}
 	total_opened := getZipAccessorTotalOpened(self.T())
 
 	builder := services.ScopeBuilder{
@@ -35,7 +40,7 @@ func (self *ZipTestSuite) TestReferenceCount() {
 		Logger: logging.NewPlainLogger(
 			self.ConfigObj, &logging.FrontendComponent),
 		Env: ordereddict.NewDict().
-			Set("Glob", "file://"+zip_file+"#/**"),
+			Set("Glob", zip_file_url.String()),
 	}
 	manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)
