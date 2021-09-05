@@ -268,6 +268,59 @@ func (self *PluginTestSuite) TestClientPluginMultipleSources() {
 	g.Assert(self.T(), "TestClientPluginMultipleSources", []byte(results))
 }
 
+var (
+	precondition_source_definitions = []string{`
+name: ArtifactWithSourcesAndPreconditions
+type: CLIENT
+sources:
+- name: Source1
+  precondition: SELECT * FROM info()
+  query: SELECT "A" AS Column FROM scope()
+
+- name: Source2
+  precondition: SELECT * FROM info()
+  query: SELECT "B" AS Column FROM scope()`}
+)
+
+// Test that calling a client artifact with multiple sources results
+// in all rows.
+func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtions() {
+	repository := self.LoadArtifacts(precondition_source_definitions)
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: vql_subsystem.NullACLManager{},
+		Repository: repository,
+		Logger: logging.NewPlainLogger(
+			self.ConfigObj, &logging.FrontendComponent),
+		Env: ordereddict.NewDict(),
+	}
+
+	manager, _ := services.GetRepositoryManager()
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	queries := []string{
+		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions()",
+		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions(precondition=TRUE)",
+	}
+
+	results := ordereddict.NewDict()
+	for _, query := range queries {
+		rows := []vfilter.Row{}
+		vql, err := vfilter.Parse(query)
+		assert.NoError(self.T(), err)
+
+		for row := range vql.Eval(self.Ctx, scope) {
+			rows = append(rows, row)
+		}
+		results.Set(query, rows)
+	}
+
+	g := goldie.New(self.T())
+	g.Assert(self.T(), "TestClientPluginMultipleSourcesAndPrecondtions", json.MustMarshalIndent(results))
+
+}
+
 func TestArtifactPlugin(t *testing.T) {
 	suite.Run(t, &PluginTestSuite{})
 }

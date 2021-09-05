@@ -150,7 +150,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 			return
 		}
 
-		request, err := launcher.CompileCollectorArgs(
+		requests, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, acl_manager, self.repository,
 			services.CompilerOptions{
 				DisablePrecondition: !precondition,
@@ -164,91 +164,86 @@ func (self *ArtifactRepositoryPlugin) Call(
 			return
 		}
 
-		if len(request) != 1 {
-			scope.Log("Artifact %s is an artifact with multiple sources, please specify a source",
-				strings.Join(self.prefix, "."))
-			return
-		}
-
-		// We create a child scope for evaluating the artifact.
-		child_scope, err := self.copyScope(
-			scope, self.leaf.Name)
-		if err != nil {
-			scope.Log("Error: %v", err)
-			return
-		}
-		defer child_scope.Close()
-
-		// Pass the args in the new scope.
-		env := ordereddict.NewDict()
-		for _, request_env := range request[0].Env {
-			env.Set(request_env.Key, request_env.Value)
-		}
-
-		// Allow the args to override the artifact defaults.
-		for _, k := range args.Keys() {
-			if k == "source" || k == "preconditions" {
-				continue
-			}
-
-			_, pres := env.Get(k)
-			if !pres {
-				scope.Log(fmt.Sprintf(
-					"Unknown parameter %s provided to artifact %v",
-					k, strings.Join(self.prefix, ".")))
-				return
-			}
-
-			v, _ := args.Get(k)
-
-			lazy_v, ok := v.(types.LazyExpr)
-			if ok {
-				v = lazy_v.Reduce(ctx)
-			}
-			env.Set(k, v)
-		}
-
-		// Add the scope args
-		child_scope.AppendVars(env)
-
-		ok, err = actions.CheckPreconditions(ctx, scope, request[0])
-		if err != nil {
-			scope.Log("While evaluating preconditions: %v", err)
-			return
-		}
-
-		if !ok {
-			scope.Log("Skipping query due to preconditions")
-			return
-		}
-
-		for _, query := range request[0].Query {
-			query_log := actions.QueryLog.AddQuery(query.VQL)
-			vql, err := vfilter.Parse(query.VQL)
+		for _, request := range requests {
+			// We create a child scope for evaluating the artifact.
+			child_scope, err := self.copyScope(
+				scope, self.leaf.Name)
 			if err != nil {
-				scope.Log("Artifact %s invalid: %s",
-					strings.Join(self.prefix, "."),
-					err.Error())
-				query_log.Close()
+				scope.Log("Error: %v", err)
+				return
+			}
+			defer child_scope.Close()
+
+			// Pass the args in the new scope.
+			env := ordereddict.NewDict()
+			for _, request_env := range request.Env {
+				env.Set(request_env.Key, request_env.Value)
+			}
+
+			// Allow the args to override the artifact defaults.
+			for _, k := range args.Keys() {
+				if k == "source" || k == "preconditions" {
+					continue
+				}
+
+				_, pres := env.Get(k)
+				if !pres {
+					scope.Log(fmt.Sprintf(
+						"Unknown parameter %s provided to artifact %v",
+						k, strings.Join(self.prefix, ".")))
+					return
+				}
+
+				v, _ := args.Get(k)
+
+				lazy_v, ok := v.(types.LazyExpr)
+				if ok {
+					v = lazy_v.Reduce(ctx)
+				}
+				env.Set(k, v)
+			}
+
+			// Add the scope args
+			child_scope.AppendVars(env)
+
+			ok, err = actions.CheckPreconditions(ctx, scope, request)
+			if err != nil {
+				scope.Log("While evaluating preconditions: %v", err)
 				return
 			}
 
-			for row := range vql.Eval(ctx, child_scope) {
-				dict_row := vfilter.RowToDict(ctx, child_scope, row)
-				if query.Name != "" {
-					dict_row.Set("_Source", query.Name)
-				}
-				select {
-				case <-ctx.Done():
+			if !ok {
+				scope.Log("Skipping query due to preconditions")
+				return
+			}
+
+			for _, query := range request.Query {
+				query_log := actions.QueryLog.AddQuery(query.VQL)
+				vql, err := vfilter.Parse(query.VQL)
+				if err != nil {
+					scope.Log("Artifact %s invalid: %s",
+						strings.Join(self.prefix, "."),
+						err.Error())
 					query_log.Close()
 					return
-
-				case output_chan <- dict_row:
 				}
-			}
-			query_log.Close()
-		}
 
+				for row := range vql.Eval(ctx, child_scope) {
+					dict_row := vfilter.RowToDict(ctx, child_scope, row)
+					if query.Name != "" {
+						dict_row.Set("_Source", query.Name)
+					}
+					select {
+					case <-ctx.Done():
+						query_log.Close()
+						return
+
+					case output_chan <- dict_row:
+					}
+				}
+				query_log.Close()
+			}
+		}
 	}()
 	return output_chan
 }
