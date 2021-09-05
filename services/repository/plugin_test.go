@@ -249,6 +249,12 @@ func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtions() {
 	queries := []string{
 		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions()",
 		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions(preconditions=TRUE)",
+
+		// Select a specific source.
+		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions(source='Source1')",
+
+		// Should return no results as preconditions is false.
+		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions(source='Source1', preconditions=TRUE)",
 	}
 
 	results := ordereddict.NewDict()

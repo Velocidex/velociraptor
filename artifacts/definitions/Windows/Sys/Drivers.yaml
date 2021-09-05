@@ -6,12 +6,14 @@ sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
     query: |
-       SELECT * from wmi(
+       SELECT *
+       FROM wmi(
           query="select * from Win32_PnPSignedDriver",
           namespace="ROOT\\CIMV2")
 
   - name: RunningDrivers
     query: |
-       SELECT * from wmi(
+       SELECT *
+       FROM wmi(
          query="select * from Win32_SystemDriver",
          namespace="ROOT\\CIMV2")
