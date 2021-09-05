@@ -191,7 +191,7 @@ func searchArtifact(
 	config_obj *config_proto.Config,
 	terms []string,
 	artifact_type string,
-	number_of_results uint64) (
+	number_of_results uint64, fields *api_proto.FieldSelector) (
 	*artifacts_proto.ArtifactDescriptors, error) {
 
 	if config_obj.GUI == nil {
@@ -207,7 +207,7 @@ func searchArtifact(
 	artifact_type = strings.ToLower(artifact_type)
 
 	if number_of_results == 0 {
-		number_of_results = 100
+		number_of_results = 1000
 	}
 
 	result := &artifacts_proto.ArtifactDescriptors{}
@@ -260,7 +260,16 @@ func searchArtifact(
 
 			if matcher(artifact.Description, regexes) ||
 				matcher(artifact.Name, regexes) {
-				result.Items = append(result.Items, artifact)
+				if fields == nil {
+					result.Items = append(result.Items, artifact)
+				} else {
+					new_item := &artifacts_proto.Artifact{}
+					if fields.Name {
+						new_item.Name = artifact.Name
+					}
+
+					result.Items = append(result.Items, new_item)
+				}
 			}
 		}
 

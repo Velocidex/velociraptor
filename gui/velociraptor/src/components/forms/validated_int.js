@@ -24,7 +24,7 @@ export default class ValidatedInteger extends React.Component {
 
         // Need to set the initial value to '' to tell React this is a
         // controlled component.
-        if (_.isUndefined(value)) {
+        if (_.isUndefined(value) || _.isNaN(value)) {
             value = '';
         }
 
