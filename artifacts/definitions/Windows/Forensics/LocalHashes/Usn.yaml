@@ -32,7 +32,9 @@ precondition: SELECT OS from info() where OS = "windows"
 
 sources:
   - query: |
-      LET NTFS_CACHE_TIME = 1
+      -- Dont be too aggressive on the USN watching to conserve CPU usage
+      LET NTFS_CACHE_TIME = 30
+      LET USN_FREQUENCY = 60
 
       LET hash_db <= SELECT FullPath
       FROM Artifact.Generic.Forensic.LocalHashes.Init(HashDb=HashDb)

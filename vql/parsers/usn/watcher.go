@@ -7,15 +7,19 @@ import (
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	"www.velocidex.com/golang/vfilter"
 )
 
 const (
-	FREQUENCY = 3 // Seconds
+	// This is the default frequency. You can override this frequency
+	// by setting the VQL environment variable USN_FREQUENCY
+	FREQUENCY = 30 // Seconds
 )
 
 var (
@@ -72,6 +76,15 @@ func (self *USNWatcherService) Register(
 		output_chan: output_chan,
 		scope:       scope}
 
+	frequency := vql_subsystem.GetIntFromRow(scope, scope,
+		constants.USN_FREQUENCY)
+	if frequency == 0 {
+		frequency = FREQUENCY
+	}
+
+	scope.Log("Registering USN log watcher for %v with handle %v and frequency %v seconds",
+		device, handle.id, frequency)
+
 	// Get existing registrations and append the new one to them.
 	registration, pres := self.registrations[device]
 	if !pres {
@@ -80,14 +93,11 @@ func (self *USNWatcherService) Register(
 
 		// There were no earlier registrations so launch the
 		// watcher on a new handle.
-		go self.StartMonitoring(config_obj, device, ntfs_ctx)
+		go self.StartMonitoring(config_obj, device, ntfs_ctx, frequency)
 	}
 
 	registration = append(registration, handle)
 	self.registrations[device] = registration
-
-	scope.Log("Registering USN log watcher for %v with handle %v",
-		device, handle.id)
 
 	// De-queue the handle from the registration map when the
 	// caller is done with it.
@@ -115,13 +125,17 @@ func (self *USNWatcherService) Register(
 // listeners. If no listeners exist we terminate the registration.
 func (self *USNWatcherService) StartMonitoring(
 	config_obj *config_proto.Config,
-	device string, ntfs_ctx *ntfs.NTFSContext) {
+	device string, ntfs_ctx *ntfs.NTFSContext, frequency uint64) {
 	defer utils.CheckForPanic("StartMonitoring")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	usn_chan := ntfs.WatchUSN(ctx, ntfs_ctx, FREQUENCY)
+	if frequency == 0 {
+		frequency = FREQUENCY
+	}
+
+	usn_chan := ntfs.WatchUSN(ctx, ntfs_ctx, int(frequency))
 
 	for {
 		select {

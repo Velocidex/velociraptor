@@ -7,6 +7,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/timelines"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
@@ -71,7 +72,7 @@ func (self TimelinePlugin) Call(
 		}
 		defer reader.Close()
 
-		if arg.StartTime != nil {
+		if !utils.IsNil(arg.StartTime) {
 			start, err := functions.TimeFromAny(scope, arg.StartTime)
 			if err != nil {
 				scope.Log("timeline: %v", err)
