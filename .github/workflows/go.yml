@@ -10,11 +10,17 @@ jobs:
   build:
     if: github.event.pull_request.merged
     name: Build
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-latest
     steps:
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
+
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.17'
+
+    - run: go version
 
     - name: Get dependencies
       run: |
@@ -28,10 +34,15 @@ jobs:
 
     - name: Cache node-modules
       uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
       with:
-        path: |
-          **/node_modules
-        key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+        path: ~/.npm
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
 
     - name: npm install gui
       run: |
