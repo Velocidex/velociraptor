@@ -3,8 +3,8 @@ name: Linux Build All Arches
 on:
   pull_request:
     types: [closed]
-    branches:
-      - master
+#    branches:
+#      - master
 
 jobs:
   build:
