@@ -250,9 +250,9 @@ export default class NewHuntWizard extends React.Component {
             state.hunt_parameters.expires = expiry;
 
             // Resolve the artifacts from the request into a list of descriptors.
-            api.get("v1/GetArtifacts",
-                    {names: request.artifacts},
-                    this.source.token).then(response=>{
+            api.post("v1/GetArtifacts", {
+                names: request.artifacts,
+            }, this.source.token).then(response=>{
                 if (response && response.data &&
                     response.data.items && response.data.items.length) {
 
