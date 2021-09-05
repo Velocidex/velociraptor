@@ -9,5 +9,10 @@
    "_Source": "ArtifactWithSourcesAndPreconditions/Source2"
   }
  ],
- "SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions(precondition=TRUE)": []
+ "SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions(preconditions=TRUE)": [
+  {
+   "Column": "B",
+   "_Source": "ArtifactWithSourcesAndPreconditions/Source2"
+  }
+ ]
 }
