@@ -165,59 +165,6 @@ func (self *PluginTestSuite) TestArtifactPluginWithPrecondition() {
 }
 
 var (
-	event_definitions = []string{`
-name: EventWithSources
-type: CLIENT_EVENT
-sources:
-- name: Source1
-  query: SELECT Unix FROM clock() LIMIT 1
-
-- name: Source2
-  query: SELECT Unix FROM clock() LIMIT 1`,
-		`
-name: Call
-sources:
-- query: SELECT * FROM Artifact.EventWithSources()
-`}
-)
-
-// Test that calling an event artifact with multiple sources results
-// in an error.
-func (self *PluginTestSuite) TestEventPluginMultipleSources() {
-	repository := self.LoadArtifacts(event_definitions)
-	request := &flows_proto.ArtifactCollectorArgs{
-		ClientId:  "C.1234",
-		Artifacts: []string{"Call"},
-	}
-
-	acl_manager := vql_subsystem.NullACLManager{}
-	launcher, err := services.GetLauncher()
-	assert.NoError(self.T(), err)
-
-	compiled, err := launcher.CompileCollectorArgs(
-		self.Ctx, self.ConfigObj, acl_manager, repository,
-		services.CompilerOptions{}, request)
-	assert.NoError(self.T(), err)
-
-	test_responder := responder.TestResponder()
-	for _, vql_request := range compiled {
-		actions.VQLClientAction{}.StartQuery(
-			self.ConfigObj, self.Ctx,
-			test_responder, vql_request)
-	}
-
-	logs := ""
-	for _, msg := range responder.GetTestResponses(test_responder) {
-		if msg.LogMessage != nil {
-			logs += msg.LogMessage.Message
-		}
-	}
-
-	assert.Contains(self.T(), logs,
-		"Artifact EventWithSources is an artifact with multiple sources, please specify a source")
-}
-
-var (
 	source_definitions = []string{`
 name: ClientWithSources
 type: CLIENT
@@ -328,11 +275,11 @@ type: CLIENT_EVENT
 sources:
 - name: Source1
   precondition: SELECT * FROM info() WHERE FALSE
-  query: SELECT "A" AS Column, count() FROM clock() LIMIT 2
+  query: SELECT "A" AS Column FROM clock(ms=100) LIMIT 2
 
 - name: Source2
   precondition: SELECT * FROM info()
-  query: SELECT "B" AS Column, count() FROM clock() LIMIT 2
+  query: SELECT "B" AS Column FROM clock(ms=100) LIMIT 2
 `}
 )
 
@@ -354,8 +301,8 @@ func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtionsEvent
 	defer scope.Close()
 
 	queries := []string{
-		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditionsEvent()",
-		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditionsEvent(preconditions=TRUE)",
+		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditionsEvent() ORDER BY Column",
+		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditionsEvent(preconditions=TRUE) ORDER BY Column",
 	}
 
 	results := ordereddict.NewDict()

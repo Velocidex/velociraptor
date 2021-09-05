@@ -1,35 +1,29 @@
 {
- "SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditionsEvent()": [
+ "SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditionsEvent() ORDER BY Column": [
   {
    "Column": "A",
-   "count()": 1,
+   "_Source": "ArtifactWithSourcesAndPreconditionsEvent/Source1"
+  },
+  {
+   "Column": "A",
    "_Source": "ArtifactWithSourcesAndPreconditionsEvent/Source1"
   },
   {
    "Column": "B",
-   "count()": 1,
    "_Source": "ArtifactWithSourcesAndPreconditionsEvent/Source2"
   },
   {
-   "Column": "A",
-   "count()": 2,
-   "_Source": "ArtifactWithSourcesAndPreconditionsEvent/Source1"
-  },
-  {
    "Column": "B",
-   "count()": 2,
    "_Source": "ArtifactWithSourcesAndPreconditionsEvent/Source2"
   }
  ],
- "SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditionsEvent(preconditions=TRUE)": [
+ "SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditionsEvent(preconditions=TRUE) ORDER BY Column": [
   {
    "Column": "B",
-   "count()": 1,
    "_Source": "ArtifactWithSourcesAndPreconditionsEvent/Source2"
   },
   {
    "Column": "B",
-   "count()": 2,
    "_Source": "ArtifactWithSourcesAndPreconditionsEvent/Source2"
   }
  ]
