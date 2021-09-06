@@ -128,6 +128,59 @@ require (
 	www.velocidex.com/golang/vtypes v0.0.0-20210728123451-f085971da113
 )
 
+require (
+	github.com/360EntSecGroup-Skylar/excelize v1.4.1 // indirect
+	github.com/PuerkitoBio/goquery v1.6.1 // indirect
+	github.com/Velocidex/yaml v2.1.0+incompatible // indirect
+	github.com/alecthomas/colour v0.1.0 // indirect
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
+	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
+	github.com/andybalholm/cascadia v1.1.0 // indirect
+	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/beevik/etree v1.1.0 // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cavaliercoder/go-cpio v0.0.0-20180626203310-925f9528c45e // indirect
+	github.com/cespare/xxhash/v2 v2.1.0 // indirect
+	github.com/crewjam/httperr v0.0.0-20190612203328-a946449404da // indirect
+	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+	github.com/dlclark/regexp2 v1.2.0 // indirect
+	github.com/dustmop/soup v1.1.2-0.20190516214245-38228baa104e // indirect
+	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
+	github.com/gorilla/css v1.0.0 // indirect
+	github.com/gorilla/securecookie v1.1.1 // indirect
+	github.com/hashicorp/go-multierror v1.1.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/jstemmer/go-junit-report v0.9.1 // indirect
+	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
+	github.com/kr/fs v0.1.0 // indirect
+	github.com/mattermost/xml-roundtrip-validator v0.0.0-20201213122252-bcd7e1b9601e // indirect
+	github.com/mattn/go-runewidth v0.0.10 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
+	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
+	github.com/paulmach/orb v0.1.5 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/prometheus/common v0.7.0 // indirect
+	github.com/prometheus/procfs v0.0.5 // indirect
+	github.com/rivo/uniseg v0.1.0 // indirect
+	github.com/russellhaering/goxmldsig v1.1.0 // indirect
+	github.com/tklauser/numcpus v0.2.3 // indirect
+	github.com/ulikunitz/xz v0.5.6 // indirect
+	go.opencensus.io v0.23.0 // indirect
+	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
+	golang.org/x/tools v0.1.5 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	www.velocidex.com/golang/binparsergen v0.1.0 // indirect
+)
+
 // replace www.velocidex.com/golang/go-pe => /home/mic/projects/go-pe
 // replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
