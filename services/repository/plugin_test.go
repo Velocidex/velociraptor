@@ -165,59 +165,6 @@ func (self *PluginTestSuite) TestArtifactPluginWithPrecondition() {
 }
 
 var (
-	event_definitions = []string{`
-name: EventWithSources
-type: CLIENT_EVENT
-sources:
-- name: Source1
-  query: SELECT Unix FROM clock() LIMIT 1
-
-- name: Source2
-  query: SELECT Unix FROM clock() LIMIT 1`,
-		`
-name: Call
-sources:
-- query: SELECT * FROM Artifact.EventWithSources()
-`}
-)
-
-// Test that calling an event artifact with multiple sources results
-// in an error.
-func (self *PluginTestSuite) TestEventPluginMultipleSources() {
-	repository := self.LoadArtifacts(event_definitions)
-	request := &flows_proto.ArtifactCollectorArgs{
-		ClientId:  "C.1234",
-		Artifacts: []string{"Call"},
-	}
-
-	acl_manager := vql_subsystem.NullACLManager{}
-	launcher, err := services.GetLauncher()
-	assert.NoError(self.T(), err)
-
-	compiled, err := launcher.CompileCollectorArgs(
-		self.Ctx, self.ConfigObj, acl_manager, repository,
-		services.CompilerOptions{}, request)
-	assert.NoError(self.T(), err)
-
-	test_responder := responder.TestResponder()
-	for _, vql_request := range compiled {
-		actions.VQLClientAction{}.StartQuery(
-			self.ConfigObj, self.Ctx,
-			test_responder, vql_request)
-	}
-
-	logs := ""
-	for _, msg := range responder.GetTestResponses(test_responder) {
-		if msg.LogMessage != nil {
-			logs += msg.LogMessage.Message
-		}
-	}
-
-	assert.Contains(self.T(), logs,
-		"Artifact EventWithSources is an artifact with multiple sources, please specify a source")
-}
-
-var (
 	source_definitions = []string{`
 name: ClientWithSources
 type: CLIENT
@@ -266,6 +213,119 @@ func (self *PluginTestSuite) TestClientPluginMultipleSources() {
 	}
 	g := goldie.New(self.T())
 	g.Assert(self.T(), "TestClientPluginMultipleSources", []byte(results))
+}
+
+var (
+	precondition_source_definitions = []string{`
+name: ArtifactWithSourcesAndPreconditions
+type: CLIENT
+sources:
+- name: Source1
+  precondition: SELECT * FROM info() WHERE FALSE
+  query: SELECT "A" AS Column FROM scope()
+
+- name: Source2
+  precondition: SELECT * FROM info()
+  query: SELECT "B" AS Column FROM scope()`}
+)
+
+// Test that calling a client artifact with multiple sources results
+// in all rows.
+func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtions() {
+	repository := self.LoadArtifacts(precondition_source_definitions)
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: vql_subsystem.NullACLManager{},
+		Repository: repository,
+		Logger: logging.NewPlainLogger(
+			self.ConfigObj, &logging.FrontendComponent),
+		Env: ordereddict.NewDict(),
+	}
+
+	manager, _ := services.GetRepositoryManager()
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	queries := []string{
+		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions()",
+		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions(preconditions=TRUE)",
+
+		// Select a specific source.
+		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions(source='Source1')",
+
+		// Should return no results as preconditions is false.
+		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions(source='Source1', preconditions=TRUE)",
+	}
+
+	results := ordereddict.NewDict()
+	for _, query := range queries {
+		rows := []vfilter.Row{}
+		vql, err := vfilter.Parse(query)
+		assert.NoError(self.T(), err)
+
+		for row := range vql.Eval(self.Ctx, scope) {
+			rows = append(rows, row)
+		}
+		results.Set(query, rows)
+	}
+
+	g := goldie.New(self.T())
+	g.Assert(self.T(), "TestClientPluginMultipleSourcesAndPrecondtions", json.MustMarshalIndent(results))
+
+}
+
+var (
+	precondition_source_events_definitions = []string{`
+name: ArtifactWithSourcesAndPreconditionsEvent
+type: CLIENT_EVENT
+sources:
+- name: Source1
+  precondition: SELECT * FROM info() WHERE FALSE
+  query: SELECT "A" AS Column FROM clock(ms=100) LIMIT 2
+
+- name: Source2
+  precondition: SELECT * FROM info()
+  query: SELECT "B" AS Column FROM clock(ms=100) LIMIT 2
+`}
+)
+
+// Test that calling a client artifact with multiple sources results
+// in all rows.
+func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtionsEvents() {
+	repository := self.LoadArtifacts(precondition_source_events_definitions)
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: vql_subsystem.NullACLManager{},
+		Repository: repository,
+		Logger: logging.NewPlainLogger(
+			self.ConfigObj, &logging.FrontendComponent),
+		Env: ordereddict.NewDict(),
+	}
+
+	manager, _ := services.GetRepositoryManager()
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	queries := []string{
+		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditionsEvent() ORDER BY Column",
+		"SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditionsEvent(preconditions=TRUE) ORDER BY Column",
+	}
+
+	results := ordereddict.NewDict()
+	for _, query := range queries {
+		rows := []vfilter.Row{}
+		vql, err := vfilter.Parse(query)
+		assert.NoError(self.T(), err)
+
+		for row := range vql.Eval(self.Ctx, scope) {
+			rows = append(rows, row)
+		}
+		results.Set(query, rows)
+	}
+
+	g := goldie.New(self.T())
+	g.Assert(self.T(), "TestClientPluginMultipleSourcesAndPrecondtionsEvents", json.MustMarshalIndent(results))
+
 }
 
 func TestArtifactPlugin(t *testing.T) {

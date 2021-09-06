@@ -1,0 +1,25 @@
+{
+ "SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions()": [
+  {
+   "Column": "A",
+   "_Source": "ArtifactWithSourcesAndPreconditions/Source1"
+  },
+  {
+   "Column": "B",
+   "_Source": "ArtifactWithSourcesAndPreconditions/Source2"
+  }
+ ],
+ "SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions(preconditions=TRUE)": [
+  {
+   "Column": "B",
+   "_Source": "ArtifactWithSourcesAndPreconditions/Source2"
+  }
+ ],
+ "SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions(source='Source1')": [
+  {
+   "Column": "A",
+   "_Source": "ArtifactWithSourcesAndPreconditions/Source1"
+  }
+ ],
+ "SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditions(source='Source1', preconditions=TRUE)": []
+}

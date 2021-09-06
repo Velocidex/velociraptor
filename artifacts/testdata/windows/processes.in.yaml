@@ -1,0 +1,5 @@
+Queries:
+  # Make sure we can parse the environment strings for the running process
+  - SELECT Name, Env.ComSpec
+    FROM Artifact.Windows.Forensics.ProcessInfo(ProcessNameRegex='velociraptor')
+    LIMIT 1

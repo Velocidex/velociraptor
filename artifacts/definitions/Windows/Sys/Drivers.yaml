@@ -2,16 +2,20 @@ name: Windows.Sys.Drivers
 description: |
   Details for in-use Windows device drivers. This does not display installed but unused drivers.
 
-sources:
-  - precondition:
+precondition:
       SELECT OS From info() where OS = 'windows'
+
+sources:
+  - name: SignedDrivers
     query: |
-       SELECT * from wmi(
+       SELECT *
+       FROM wmi(
           query="select * from Win32_PnPSignedDriver",
           namespace="ROOT\\CIMV2")
 
   - name: RunningDrivers
     query: |
-       SELECT * from wmi(
+       SELECT *
+       FROM wmi(
          query="select * from Win32_SystemDriver",
          namespace="ROOT\\CIMV2")

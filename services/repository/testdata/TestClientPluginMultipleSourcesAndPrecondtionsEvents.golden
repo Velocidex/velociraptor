@@ -1,0 +1,30 @@
+{
+ "SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditionsEvent() ORDER BY Column": [
+  {
+   "Column": "A",
+   "_Source": "ArtifactWithSourcesAndPreconditionsEvent/Source1"
+  },
+  {
+   "Column": "A",
+   "_Source": "ArtifactWithSourcesAndPreconditionsEvent/Source1"
+  },
+  {
+   "Column": "B",
+   "_Source": "ArtifactWithSourcesAndPreconditionsEvent/Source2"
+  },
+  {
+   "Column": "B",
+   "_Source": "ArtifactWithSourcesAndPreconditionsEvent/Source2"
+  }
+ ],
+ "SELECT * FROM Artifact.ArtifactWithSourcesAndPreconditionsEvent(preconditions=TRUE) ORDER BY Column": [
+  {
+   "Column": "B",
+   "_Source": "ArtifactWithSourcesAndPreconditionsEvent/Source2"
+  },
+  {
+   "Column": "B",
+   "_Source": "ArtifactWithSourcesAndPreconditionsEvent/Source2"
+  }
+ ]
+}
