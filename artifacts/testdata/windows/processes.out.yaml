@@ -1,0 +1,6 @@
+SELECT Name, Env.ComSpec FROM Artifact.Windows.Forensics.ProcessInfo(ProcessNameRegex='velociraptor') LIMIT 1[
+ {
+  "Name": "velociraptor.exe",
+  "Env.ComSpec": "C:\\Windows\\system32\\cmd.exe"
+ }
+]
