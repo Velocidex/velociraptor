@@ -88,6 +88,7 @@ class VeloHunts extends React.Component {
         api.get("v1/ListHunts", {
             count: 2000,
             offset: 0,
+            summary: true,
         }, this.list_hunts_source.token).then((response) => {
             if (response.cancel) return;
 

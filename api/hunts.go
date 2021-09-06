@@ -172,6 +172,25 @@ func (self *ApiServer) ListHunts(
 		return nil, err
 	}
 
+	// Provide only a summary for list hunts GUI
+	if in.Summary {
+		summary := &api_proto.ListHuntsResponse{}
+		for _, item := range result.Items {
+			summary.Items = append(summary.Items, &api_proto.Hunt{
+				HuntId:          item.HuntId,
+				HuntDescription: item.HuntDescription,
+				State:           item.State,
+				Creator:         item.Creator,
+				CreateTime:      item.CreateTime,
+				StartTime:       item.StartTime,
+				Stats:           item.Stats,
+				Expires:         item.Expires,
+			})
+		}
+
+		return summary, nil
+	}
+
 	return result, nil
 }
 

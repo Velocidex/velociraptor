@@ -56,6 +56,7 @@ class NewHuntConfigureHunt extends React.Component {
                     <Form.Label column sm="3">Description</Form.Label>
                     <Col sm="8">
                       <Form.Control as="textarea" rows={3}
+                                    id="hunt-description-text"
                                     placeholder="Hunt description"
                                     value={this.props.parameters.description}
                                     onChange={e => this.setParam("description", e.target.value)}
@@ -185,6 +186,12 @@ export default class NewHuntWizard extends React.Component {
         this.source = axios.CancelToken.source();
         let state = this.setStateFromBase(this.props.baseHunt || {});
         this.setState(state);
+
+        // A bit hacky but whatevs...
+        const el = document.getElementById("hunt-description-text");
+        if (el) {
+            setTimeout(()=>el.focus(), 100);
+        };
     }
 
     componentWillUnmount() {
