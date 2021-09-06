@@ -3,6 +3,7 @@
 package readers
 
 import (
+	"errors"
 	"sync"
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
@@ -42,6 +43,17 @@ func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, erro
 	paged_reader, err := NewPagedReader(scope, "file", device, int(lru_size))
 	if err != nil {
 		return nil, err
+	}
+
+	// Read the header to make sure we can actually read this file and
+	// it is an NTFS file.
+	header := make([]byte, 8)
+	_, err = paged_reader.ReadAt(header, 3)
+	if err != nil {
+		return nil, err
+	}
+	if string(header) != "NTFS    " {
+		return nil, errors.New("No NTFS Magic")
 	}
 
 	ntfs_ctx, err := ntfs.GetNTFSContext(paged_reader, 0)
