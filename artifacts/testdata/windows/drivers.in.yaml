@@ -1,5 +1,5 @@
 Queries:
   - SELECT PDO, DeviceName, Manufacturer, DriverProviderName
-    FROM Artifact.Windows.Sys.Drivers()
+    FROM Artifact.Windows.Sys.Drivers(source="SignedDrivers")
     WHERE "USB" in Description
     LIMIT 1

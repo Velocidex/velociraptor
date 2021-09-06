@@ -2,9 +2,11 @@ name: Windows.Sys.Drivers
 description: |
   Details for in-use Windows device drivers. This does not display installed but unused drivers.
 
-sources:
-  - precondition:
+precondition:
       SELECT OS From info() where OS = 'windows'
+
+sources:
+  - name: SignedDrivers
     query: |
        SELECT *
        FROM wmi(
