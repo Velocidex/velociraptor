@@ -49,11 +49,20 @@ func (self *SamlAuthenticator) AddHandlers(config_obj *config_proto.Config, mux 
 	if err != nil {
 		return err
 	}
+
+	idpMetadata, err := samlsp.FetchMetadata(
+		context.Background(),
+		http.DefaultClient,
+		*idpMetadataURL)
+	if err != nil {
+		return err
+	}
+
 	samlMiddleware, err = samlsp.New(samlsp.Options{
-		IDPMetadataURL: idpMetadataURL,
-		URL:            *rootURL,
-		Key:            key,
-		Certificate:    cert,
+		IDPMetadata: idpMetadata,
+		URL:         *rootURL,
+		Key:         key,
+		Certificate: cert,
 	})
 	if err != nil {
 		return err
