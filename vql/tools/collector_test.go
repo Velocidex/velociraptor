@@ -11,19 +11,11 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -118,47 +110,18 @@ sources:
 )
 
 type TestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
-}
-
-func (self *TestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().WithVerbose(true).
-		LoadAndValidate()
-	require.NoError(self.T(), err)
-
-	self.config_obj.Frontend.DoNotCompressArtifacts = true
-
-	// Start essential services.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
-	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
-	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
-	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-}
-
-func (self *TestSuite) TearDownTest() {
-	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+	test_utils.TestSuite
 }
 
 func (self *TestSuite) TestSimpleCollection() {
 	scope := vql_subsystem.MakeScope()
 
-	scope.SetLogger(logging.NewPlainLogger(self.config_obj, &logging.FrontendComponent))
+	scope.SetLogger(logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent))
 
-	repository, err := getRepository(self.config_obj, nil)
+	repository, err := getRepository(self.ConfigObj, nil)
 	assert.NoError(self.T(), err)
 
-	request, err := getArtifactCollectorArgs(self.config_obj,
+	request, err := getArtifactCollectorArgs(self.ConfigObj,
 		repository, scope, simpleCollectorArgs)
 	assert.NoError(self.T(), err)
 
@@ -167,7 +130,7 @@ func (self *TestSuite) TestSimpleCollection() {
 
 	acl_manager := vql_subsystem.NullACLManager{}
 	vql_requests, err := launcher.CompileCollectorArgs(
-		context.Background(), self.config_obj, acl_manager, repository,
+		context.Background(), self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 
 	serialized, err := json.MarshalIndent(ordereddict.NewDict().
@@ -191,9 +154,9 @@ func (self *TestSuite) TestCollectionWithArtifacts() {
 	defer os.Remove(report_file.Name())
 
 	builder := services.ScopeBuilder{
-		Config:     self.config_obj,
+		Config:     self.ConfigObj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     logging.NewPlainLogger(self.config_obj, &logging.FrontendComponent),
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
 
@@ -237,9 +200,9 @@ func (self *TestSuite) TestCollectionWithTypes() {
 	defer os.Remove(output_file.Name())
 
 	builder := services.ScopeBuilder{
-		Config:     self.config_obj,
+		Config:     self.ConfigObj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     logging.NewPlainLogger(self.config_obj, &logging.FrontendComponent),
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
 
@@ -277,9 +240,9 @@ func (self *TestSuite) TestCollectionWithUpload() {
 	defer os.Remove(output_file.Name())
 
 	builder := services.ScopeBuilder{
-		Config:     self.config_obj,
+		Config:     self.ConfigObj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     logging.NewPlainLogger(self.config_obj, &logging.FrontendComponent),
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
 
