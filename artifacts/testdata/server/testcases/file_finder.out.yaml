@@ -2,7 +2,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  {
   "mock(plugin='info', results= [dict(OS='windows'), dict(OS='windows')])": null
  }
-]SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords FROM Artifact.Windows.Search.FileFinder( SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")[
+]SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords FROM Artifact.Windows.Search.FileFinder( SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip") WHERE File =~ "test"[
  {
   "File": "test.zip",
   "Hash": null,
@@ -10,7 +10,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "Upload": null,
   "Keywords": ""
  }
-]SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords FROM Artifact.Windows.Search.FileFinder( Calculate_Hash="Y", SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")[
+]SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords FROM Artifact.Windows.Search.FileFinder( Calculate_Hash="Y", SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip") WHERE File =~ "test"[
  {
   "File": "test.zip",
   "Hash": {
@@ -22,7 +22,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "Upload": null,
   "Keywords": ""
  }
-]SELECT basename(path=FullPath) AS File, Hash, Size, Upload.md5, Keywords FROM Artifact.Windows.Search.FileFinder( Upload_File="Y", SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")[
+]SELECT basename(path=FullPath) AS File, Hash, Size, Upload.md5, Keywords FROM Artifact.Windows.Search.FileFinder( Upload_File="Y", SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip") WHERE File =~ "test"[
  {
   "File": "test.zip",
   "Hash": null,
@@ -39,6 +39,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
 FROM Artifact.Windows.Search.FileFinder(
     SearchFilesGlob="",
     SearchFilesGlobTable="Glob\n"+ srcDir + "/artifacts/testdata/files/*.zip\n")
+WHERE File =~ "test"
 [
  {
   "File": "test.zip",

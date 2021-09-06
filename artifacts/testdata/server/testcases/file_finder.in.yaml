@@ -8,18 +8,21 @@ Queries:
   - SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords
     FROM Artifact.Windows.Search.FileFinder(
         SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")
+    WHERE File =~ "test"
 
 # Calculate the hash.
   - SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords
     FROM Artifact.Windows.Search.FileFinder(
         Calculate_Hash="Y",
         SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")
+    WHERE File =~ "test"
 
 # Upload it.
   - SELECT basename(path=FullPath) AS File, Hash, Size, Upload.md5, Keywords
     FROM Artifact.Windows.Search.FileFinder(
         Upload_File="Y",
         SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")
+    WHERE File =~ "test"
 
 # Search for files that match a keyword
   - SELECT basename(path=FullPath) AS File, Keywords
@@ -33,3 +36,4 @@ Queries:
     FROM Artifact.Windows.Search.FileFinder(
         SearchFilesGlob="",
         SearchFilesGlobTable="Glob\n"+ srcDir + "/artifacts/testdata/files/*.zip\n")
+    WHERE File =~ "test"

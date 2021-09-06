@@ -266,8 +266,5 @@ func NewPagedReader(scope vfilter.Scope,
 
 	pool.lru.Set(key, result)
 
-	// Read the header to make sure we can actually read this file.
-	header := make([]byte, 4)
-	_, err := result.ReadAt(header, 0)
-	return result, err
+	return result, nil
 }
