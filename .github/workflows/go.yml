@@ -10,7 +10,7 @@ jobs:
   build:
     if: github.event.pull_request.merged
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
 
     - name: Check out code into the Go module directory
@@ -21,6 +21,22 @@ jobs:
         go-version: '^1.17'
 
     - run: go version
+
+    - uses: actions/cache@v2
+      with:
+        # In order:
+        # * Module download cache
+        # * Build cache (Linux)
+        # * Build cache (Mac)
+        # * Build cache (Windows)
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+          ~/Library/Caches/go-build
+          %LocalAppData%\go-build
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
 
     - name: Get dependencies
       run: |
@@ -44,22 +60,6 @@ jobs:
           ${{ runner.os }}-build-${{ env.cache-name }}-
           ${{ runner.os }}-build-
           ${{ runner.os }}-
-
-    - uses: actions/cache@v2
-      with:
-        # In order:
-        # * Module download cache
-        # * Build cache (Linux)
-        # * Build cache (Mac)
-        # * Build cache (Windows)
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-          ~/Library/Caches/go-build
-          %LocalAppData%\go-build
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
 
     - name: npm install gui
       run: |
