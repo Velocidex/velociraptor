@@ -144,6 +144,9 @@ message Hunt {
 message ListHuntsRequest {
     uint64 offset = 1;
     uint64 count = 2;
+
+    // If specified we return a partial structure.
+    bool summary = 4;
     bool include_archived = 3;
 }
 
