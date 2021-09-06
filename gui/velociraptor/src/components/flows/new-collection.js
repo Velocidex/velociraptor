@@ -129,10 +129,6 @@ class NewCollectionSelectArtifacts extends React.Component {
     componentDidMount = () => {
         this.source = axios.CancelToken.source();
         this.doSearch("...");
-        const el = document.getElementById("text-filter-column-name-search-for-artifact-input");
-        if (el) {
-            setTimeout(()=>el.focus(), 1000);
-        };
     }
 
     componentWillUnmount() {
@@ -140,14 +136,26 @@ class NewCollectionSelectArtifacts extends React.Component {
     }
 
     onSelect = (row, isSelect) => {
-        let new_artifacts = [];
-        if (isSelect) {
-            new_artifacts = add_artifact(this.props.artifacts, row);
-        } else {
-            new_artifacts = remove_artifact(this.props.artifacts, row.name);
-        }
-        this.props.setArtifacts(new_artifacts);
-        this.setState({selectedDescriptor: row});
+        // The row contains only the name so we need to make another
+        // request to fetch the full definition.
+        let name = row["name"];
+        api.post("v1/GetArtifacts", {
+            names: [name],
+        }, this.source.token).then(response=>{
+            let items = response.data.items || [];
+            if (_.isEmpty(items)) {
+                return;
+            }
+            let definition = items[0];;
+            let new_artifacts = [];
+            if (isSelect) {
+                new_artifacts = add_artifact(this.props.artifacts, definition);
+            } else {
+                new_artifacts = remove_artifact(this.props.artifacts, row.name);
+            }
+            this.props.setArtifacts(new_artifacts);
+            this.setState({selectedDescriptor: definition});
+        });
     }
 
     onSelectAll = (isSelect, rows) => {
@@ -737,6 +745,12 @@ class NewCollectionWizard extends React.Component {
     componentDidMount = () => {
         this.source = axios.CancelToken.source();
         this.initializeFromBaseFlow();
+
+        // A bit hacky but whatevs...
+        const el = document.getElementById("text-filter-column-name-search-for-artifact-input");
+        if (el) {
+            setTimeout(()=>el.focus(), 100);
+        };
     }
 
     componentWillUnmount() {

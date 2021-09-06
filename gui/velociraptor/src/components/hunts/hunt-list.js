@@ -388,7 +388,6 @@ export function getHuntColumns() {
         {dataField: "expires",
          text: "Expires", sort: true,
          type: "timestamp"},
-        {dataField: "client_limit", text: "Limit"},
         {dataField: "stats.total_clients_scheduled", text: "Scheduled"},
         {dataField: "creator", text: "Creator"},
     ]);
