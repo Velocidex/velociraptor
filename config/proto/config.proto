@@ -523,6 +523,12 @@ message FrontendConfig {
             description: "The initial set of client monitoring artifacts."
         }];
 
+    // We have the Server.Monitor.Health enabled always but these are
+    // any additional artifacts that should be installed by default.
+    repeated string default_server_monitoring_artifacts = 31 [(sem_type) ={
+            description: "Additional initial set of server monitoring artifacts."
+        }];
+
     string run_as_user = 16 [(sem_type) = {
             description: "The user that the frontend should run as. If set we refuse to run as a different user.",
         }];
