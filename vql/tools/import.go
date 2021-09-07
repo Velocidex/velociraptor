@@ -13,6 +13,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -71,7 +72,8 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	}
 
 	if arg.ClientId == "auto" {
-		arg.ClientId, err = makeNewClient(config_obj, arg.Hostname)
+		arg.ClientId, err = getExistingClientOrNewClient(
+			ctx, config_obj, arg.Hostname)
 		if err != nil {
 			scope.Log("import_collection: %v", err)
 			return vfilter.Null{}
@@ -254,7 +256,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 				}
 				defer out_fd.Close()
 
-				log("Copying file %v -> %v", file.Name, out_path)
+				log("Copying file %v -> %v", file.Name, out_path.AsClientPath())
 
 				_, err = utils.Copy(ctx, out_fd, fd)
 				if err != nil {
@@ -278,6 +280,14 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	}
 
 	err = db.SetSubject(config_obj, path_manager.Path(), new_flow)
+	if err != nil {
+		scope.Log("import_collection: %v", err)
+		return vfilter.Null{}
+	}
+
+	// Write an empty request so we can show something in the GUI
+	err = db.SetSubject(config_obj, path_manager.Task(),
+		&api_proto.ApiFlowRequestDetails{})
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}
@@ -324,6 +334,21 @@ func NewClientId() string {
 	return "C." + string(dst)
 }
 
+func getExistingClientOrNewClient(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	hostname string) (string, error) {
+
+	// Search for an existing client with the same hostname
+	search_resp, err := search.SearchClients(ctx, config_obj,
+		&api_proto.SearchClientsRequest{Query: hostname}, "")
+	if err == nil && len(search_resp.Items) > 0 {
+		return search_resp.Items[0].ClientId, nil
+	}
+
+	return makeNewClient(config_obj, hostname)
+}
+
 // Create a new client record
 func makeNewClient(
 	config_obj *config_proto.Config,
@@ -354,18 +379,20 @@ func makeNewClient(
 		return "", err
 	}
 	// Add the new client to the index.
-	keywords := []string{
+	for _, term := range []string{
 		"all", // This is used for "." search
 		client_id,
 		client_info.Hostname,
 		client_info.Fqdn,
 		"host:" + client_info.Hostname,
+	} {
+		err = search.SetIndex(config_obj, client_id, term)
+		if err != nil {
+			return client_id, err
+		}
 	}
 
-	return client_id, db.SetIndex(config_obj,
-		paths.CLIENT_INDEX_URN,
-		client_id, keywords,
-	)
+	return client_id, nil
 }
 
 func init() {
