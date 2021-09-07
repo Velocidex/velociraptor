@@ -88,7 +88,8 @@ func (self *TimedResultSetWriterImpl) getWriter(ts time.Time) (
 		return nil, ignoreRowError
 	}
 
-	if log_path.Base() == self.last_log_base {
+	// The old writer is still fine for this time, just use it.
+	if log_path.Base() == self.last_log_base && self.writer != nil {
 		return self.writer, nil
 	}
 
@@ -102,6 +103,8 @@ func (self *TimedResultSetWriterImpl) getWriter(ts time.Time) (
 
 	self.log_path = log_path
 	self.last_log_base = log_path.Base()
+
+	// Close the old writer and save the new one in its place.
 	if self.writer != nil {
 		self.writer.Close()
 	}
