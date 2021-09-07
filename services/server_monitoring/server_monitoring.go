@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -300,8 +299,10 @@ func StartServerMonitoringService(
 		config_obj, paths.ServerMonitoringFlowURN, artifacts)
 	if err != nil || artifacts.Artifacts == nil {
 		// No monitoring rules found, set defaults.
-		artifacts = proto.Clone(
-			&DefaultServerMonitoringTable).(*flows_proto.ArtifactCollectorArgs)
+		artifacts = &flows_proto.ArtifactCollectorArgs{
+			Artifacts: append([]string{"Server.Monitor.Health"},
+				config_obj.Frontend.DefaultServerMonitoringArtifacts...),
+		}
 	}
 
 	logger := logging.GetLogger(
