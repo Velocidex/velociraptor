@@ -437,6 +437,7 @@ export default class NewHuntWizard extends React.Component {
                       })}
                   artifacts={this.state.artifacts}
                   artifactType="CLIENT"
+                  setParameters={this.setParameters}
                   setArtifacts={this.setArtifacts}/>
 
                 <NewCollectionConfigParameters

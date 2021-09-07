@@ -555,6 +555,7 @@ export default class OfflineCollectorWizard extends React.Component {
                       })}
                   artifacts={this.state.artifacts}
                   artifactType="CLIENT"
+                  setParameters={this.setParameters}
                   setArtifacts={this.setArtifacts}/>
 
                 <NewCollectionConfigParameters
