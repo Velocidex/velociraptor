@@ -117,7 +117,7 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 	self.startServices()
 
 	// Wait here until we call all the watchers.
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
 		return vtesting.CompareStrings(watched, []string{
 			// Watch for ping requests from the
 			// master. This is used to let the master know
