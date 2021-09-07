@@ -225,7 +225,13 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 		}
 	}
 
-	grepository, err := InitializeGlobalRepositoryFromFilestore(
+	grepository, err := InitializeGlobalRepositoryFromFilesystem(
+		config_obj, self.global_repository)
+	if err != nil {
+		return err
+	}
+
+	grepository, err = InitializeGlobalRepositoryFromFilestore(
 		config_obj, self.global_repository)
 	if err != nil {
 		return err

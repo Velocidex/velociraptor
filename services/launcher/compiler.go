@@ -352,8 +352,9 @@ func PopulateArtifactsVQLCollectorArgs(
 			sources := []*artifacts_proto.ArtifactSource{}
 			for _, source := range artifact.Sources {
 				new_source := &artifacts_proto.ArtifactSource{
-					Name:    source.Name,
-					Queries: source.Queries,
+					Name:         source.Name,
+					Precondition: source.Precondition,
+					Queries:      source.Queries,
 				}
 				sources = append(sources, new_source)
 			}
@@ -402,10 +403,11 @@ func PopulateArtifactsVQLCollectorArgs(
 
 			request.Artifacts = append(request.Artifacts,
 				&artifacts_proto.Artifact{
-					Name:       artifact.Name,
-					Type:       artifact.Type,
-					Parameters: filtered_parameters,
-					Sources:    sources,
+					Name:         artifact.Name,
+					Type:         artifact.Type,
+					Precondition: artifact.Precondition,
+					Parameters:   filtered_parameters,
+					Sources:      sources,
 
 					// Do not pass tool
 					// definitions to the

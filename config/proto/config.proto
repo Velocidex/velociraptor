@@ -570,6 +570,9 @@ message FrontendConfig {
     // TLS handshake and network overheads due to frequent POST.
     uint64 client_event_max_wait = 23;
 
+    // Load artifacts from this directory at startup
+    string artifact_definitions_directory = 32;
+
     // DEPRECATED - ignored.
     bool do_not_redirect = 26;
 }

@@ -27,12 +27,6 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-var (
-	DefaultServerMonitoringTable = flows_proto.ArtifactCollectorArgs{
-		Artifacts: []string{"Server.Monitor.Health"},
-	}
-)
-
 type EventTable struct {
 	mu sync.Mutex
 
