@@ -1,0 +1,38 @@
+{
+ "CompiledRequest": [
+  {
+   "Query": [
+    {
+     "VQL": "LET Test_Artifact_Precondition_0_0 = SELECT * FROM Artifact.MultiSourceSerialMode(preconditions=TRUE)"
+    },
+    {
+     "Name": "Test.Artifact.Precondition",
+     "VQL": "SELECT * FROM Test_Artifact_Precondition_0_0"
+    }
+   ],
+   "max_row": 1000,
+   "artifacts": [
+    {
+     "name": "MultiSourceSerialMode",
+     "type": "client",
+     "sources": [
+      {
+       "name": "Source1",
+       "precondition": "SELECT * FROM info() WHERE FALSE",
+       "queries": [
+        "SELECT \"A\" AS Col FROM scope()"
+       ]
+      },
+      {
+       "name": "Source2",
+       "precondition": "SELECT * FROM info() WHERE TRUE\n",
+       "queries": [
+        "SELECT \"B\" AS Col FROM scope()"
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

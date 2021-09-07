@@ -885,6 +885,58 @@ sources:
 		json.MustMarshalIndent(fixture))
 }
 
+// Preconditions called recursively
+func (self *LauncherTestSuite) TestPreconditionRecursive() {
+	repository := self.LoadArtifacts([]string{`
+name: Test.Artifact.Precondition
+sources:
+- query: |
+    select * from Artifact.MultiSourceSerialMode(preconditions=TRUE)
+`, `
+name: MultiSourceSerialMode
+sources:
+- name: Source1
+  precondition: "SELECT * FROM info() WHERE FALSE"
+  query: SELECT "A" AS Col FROM scope()
+
+- name: Source2
+  precondition: |
+     SELECT * FROM info() WHERE TRUE
+  query: |
+    SELECT "B" AS Col FROM scope()
+`})
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Artifacts: []string{"Test.Artifact.Precondition"},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Compile the artifact request into VQL
+	acl_manager := vql_subsystem.NullACLManager{}
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.ConfigObj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	// Make sure the compiled artifacts also contain the precondition
+	// so the client can do the right thing with them.
+	assert.Equal(self.T(), compiled[0].Artifacts[0].Name, "MultiSourceSerialMode")
+	assert.Equal(self.T(), compiled[0].Artifacts[0].Sources[0].Name,
+		"Source1")
+	assert.Equal(self.T(), compiled[0].Artifacts[0].Sources[0].Precondition,
+		"SELECT * FROM info() WHERE FALSE")
+
+	fixture := ordereddict.NewDict().Set("CompiledRequest", compiled)
+	goldie.Assert(self.T(), "TestPreconditionRecursive",
+		json.MustMarshalIndent(fixture))
+}
+
 // Test that compiler rejects invalid artifacts
 func (self *LauncherTestSuite) TestInvalidArtifacts() {
 	artifact_definitions := []string{`
