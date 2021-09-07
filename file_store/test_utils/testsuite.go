@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
@@ -45,6 +46,7 @@ func (self *TestSuite) SetupTest() {
 	require.NoError(self.T(), self.Sm.Start(journal.StartJournalService))
 	require.NoError(self.T(), self.Sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.Sm.Start(inventory.StartInventoryService))
+	require.NoError(self.T(), self.Sm.Start(client_info.StartClientInfoService))
 	require.NoError(self.T(), self.Sm.Start(launcher.StartLauncherService))
 	require.NoError(self.T(), self.Sm.Start(repository.StartRepositoryManager))
 	require.NoError(self.T(), self.Sm.Start(labels.StartLabelService))
