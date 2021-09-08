@@ -100,7 +100,7 @@ func UnsanitizeComponent(component string) string {
 			return string(result[:j])
 		}
 
-		if component[i] == '%' {
+		if component[i] == '%' && i+2 < len(component) {
 			result[j] = unhex(component[i+1])<<4 | unhex(component[i+2])
 			i += 3
 			j++

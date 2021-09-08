@@ -134,14 +134,17 @@ func searchClientIndex(
 			continue
 		}
 
-		client_id := hit.Entity
+		key := hit.Entity
+		if options == OPTION_KEY {
+			key = hit.Term
+		}
 
 		// Uniquify the client ID
-		_, pres := seen[client_id]
+		_, pres := seen[key]
 		if pres {
 			continue
 		}
-		seen[client_id] = true
+		seen[key] = true
 
 		total_count++
 		if uint64(total_count) < in.Offset {
@@ -150,7 +153,7 @@ func searchClientIndex(
 
 		switch options {
 		case OPTION_ENTITY:
-			api_client, err := FastGetApiClient(ctx, config_obj, client_id)
+			api_client, err := FastGetApiClient(ctx, config_obj, hit.Entity)
 			if err != nil {
 				continue
 			}
@@ -168,7 +171,7 @@ func searchClientIndex(
 			}
 
 		case OPTION_KEY:
-			result.Names = append(result.Names, client_id)
+			result.Names = append(result.Names, hit.Term)
 			if uint64(len(result.Names)) > limit {
 				return result, nil
 			}

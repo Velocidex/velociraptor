@@ -71,6 +71,10 @@ func (self *RegSetValueFunction) Call(ctx context.Context,
 	}
 	defer key.Close()
 
+	if value_name == "@" {
+		value_name = ""
+	}
+
 	switch arg.Type {
 	case "SZ":
 		err = key.SetStringValue(value_name, utils.ToString(value))
