@@ -26,7 +26,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/search"
 	vsearch "www.velocidex.com/golang/velociraptor/search"
@@ -97,16 +96,14 @@ func (self ClientsPlugin) Call(
 			limit = 100000
 		}
 
-		search_response, err := search.SearchClients(ctx,
-			config_obj, &api_proto.SearchClientsRequest{
-				Query: search_term,
-			}, "")
+		search_chan, err := search.SearchClientsChan(ctx, scope,
+			config_obj, search_term, vql_subsystem.GetPrincipal(scope))
 		if err != nil {
 			scope.Log("clients: %v", err)
 			return
 		}
 
-		for _, api_client := range search_response.Items {
+		for api_client := range search_chan {
 			select {
 			case <-ctx.Done():
 				return

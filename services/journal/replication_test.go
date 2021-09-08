@@ -2,6 +2,7 @@ package journal_test
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -102,10 +104,20 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 
 	// Record the WatchEvents calls
 	watched := []string{}
+	var mu sync.Mutex
 	mock_watch_event_recorder := func(
 		ctx context.Context, in *api_proto.EventRequest, opts ...grpc.CallOption) (
 		api_proto.API_WatchEventClient, error) {
-		watched = append(watched, in.Queue)
+		mu.Lock()
+		defer mu.Unlock()
+
+		// only record unique listeners.
+		if !utils.InString(watched, in.Queue) {
+			watched = append(watched, in.Queue)
+		}
+
+		// Return an error stream - this will cause the service to
+		// retry connections.
 		return stream, nil
 	}
 
