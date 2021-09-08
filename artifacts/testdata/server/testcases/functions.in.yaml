@@ -33,8 +33,13 @@ Queries:
 
 
   # Test Xor stanard, multi character, hex
-  - SELECT  
+  - SELECT
       xor(string='test@velociraptor',key='$'),
       xor(string='test@velociraptor',key='test'),
       xor(string=unhex(string='000100010002'), key=unhex(string='2e'))
     FROM scope()
+
+  # Test the set function - Add a field to a dict.
+  - LET Foo <= dict(A=1)
+  - SELECT set(item=Foo, field="B", value=2) FROM scope()
+  - SELECT Foo FROM scope()

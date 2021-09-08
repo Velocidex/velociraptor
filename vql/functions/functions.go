@@ -32,6 +32,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type _Base64DecodeArgs struct {
@@ -384,10 +385,59 @@ func (self _GetFunction) Call(
 	return result
 }
 
+type _SetFunctionArgs struct {
+	Item  vfilter.Any `vfilter:"required,field=item,docs=A dict to set"`
+	Field string      `vfilter:"required,field=field,docs=The field to set"`
+	Value vfilter.Any `vfilter:"required,field=value"`
+}
+
+type _SetFunction struct{}
+
+func (self _SetFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "set",
+		Doc:     "Sets the member field of the item. If item is omitted sets the scope.",
+		ArgType: type_map.AddType(scope, _SetFunctionArgs{}),
+	}
+}
+
+func (self _SetFunction) Call(
+	ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	arg := &_SetFunctionArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("set: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	result := arg.Item
+	switch t := result.(type) {
+	case types.LazyExpr:
+		result = t.Reduce(ctx)
+	}
+
+	switch t := result.(type) {
+	case *ordereddict.Dict:
+		t.Set(arg.Field, arg.Value)
+		return t
+
+	case ordereddict.Dict:
+		t.Set(arg.Field, arg.Value)
+		return t
+
+	default:
+		scope.Log("set: Item type %T not supported. set() expects a dict", result)
+		return types.Null{}
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&_Base64Decode{})
 	vql_subsystem.RegisterFunction(&_Base64Encode{})
 	vql_subsystem.RegisterFunction(&_Scope{})
+	vql_subsystem.RegisterFunction(&_SetFunction{})
 	vql_subsystem.RegisterFunction(&_ToInt{})
 	vql_subsystem.RegisterFunction(&_ParseFloat{})
 	vql_subsystem.RegisterFunction(&_Now{})
