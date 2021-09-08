@@ -27,6 +27,7 @@ import (
 	"regexp"
 	"runtime/pprof"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -333,15 +334,22 @@ func init() {
 var log_writer *MemoryLogWriter
 
 type MemoryLogWriter struct {
+	mu         sync.Mutex
 	config_obj *config_proto.Config
 	logs       []string
 }
 
 func (self *MemoryLogWriter) Clear() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.logs = nil
 }
 
 func (self *MemoryLogWriter) Write(b []byte) (int, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.logs = append(self.logs, string(b))
 
 	logging.GetLogger(self.config_obj, &logging.ClientComponent).Info("%v", string(b))
@@ -349,6 +357,9 @@ func (self *MemoryLogWriter) Write(b []byte) (int, error) {
 }
 
 func (self *MemoryLogWriter) Matches(pattern string) (bool, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	re, err := regexp.Compile(pattern)
 	if err != nil {
 		return false, err
