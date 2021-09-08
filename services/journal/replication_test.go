@@ -2,6 +2,8 @@ package journal_test
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -102,10 +104,18 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 
 	// Record the WatchEvents calls
 	watched := []string{}
+	var mu sync.Mutex
 	mock_watch_event_recorder := func(
 		ctx context.Context, in *api_proto.EventRequest, opts ...grpc.CallOption) (
 		api_proto.API_WatchEventClient, error) {
+		mu.Lock()
+		defer mu.Unlock()
+
+		fmt.Printf("mock_watch_event_recorder: Got event %v\n", in.Queue)
 		watched = append(watched, in.Queue)
+
+		// Return an error stream - this will cause the service to
+		// retry connections.
 		return stream, nil
 	}
 
@@ -117,7 +127,7 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 	self.startServices()
 
 	// Wait here until we call all the watchers.
-	vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return vtesting.CompareStrings(watched, []string{
 			// Watch for ping requests from the
 			// master. This is used to let the master know

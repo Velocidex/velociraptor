@@ -48,8 +48,14 @@ import (
 type SearchOptions int
 
 const (
+	// Only return the entity being indexed (usually client_id).
 	OPTION_ENTITY SearchOptions = 0
-	OPTION_KEY    SearchOptions = 1
+
+	// Return the full index record read from disk. This also includes
+	// the term under which it was indexed. This is slightly more
+	// expensive but it is needed when further filtering is required
+	// on the index term because it is not a simple prefix match.
+	OPTION_KEY SearchOptions = 1
 )
 
 var (
@@ -139,9 +145,9 @@ func UnsetIndex(
 func SearchIndexWithPrefix(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	prefix string, options SearchOptions) <-chan string {
+	prefix string, options SearchOptions) <-chan *api_proto.IndexRecord {
 
-	output_chan := make(chan string)
+	output_chan := make(chan *api_proto.IndexRecord)
 	root := paths.CLIENT_INDEX_URN
 	partitions := paths.NewIndexPathManager().TermPartitions(prefix)
 
@@ -202,9 +208,9 @@ func walkIndexWithPrefix(ctx context.Context,
 	db datastore.DataStore,
 	config_obj *config_proto.Config,
 	root api.DSPathSpec,
-	partitions []string, options SearchOptions) chan string {
+	partitions []string, options SearchOptions) chan *api_proto.IndexRecord {
 
-	output_chan := make(chan string)
+	output_chan := make(chan *api_proto.IndexRecord)
 
 	go func() {
 		defer close(output_chan)
@@ -234,17 +240,9 @@ func walkIndexWithPrefix(ctx context.Context,
 			return children[i].Base() < children[j].Base()
 		})
 
-		/*
-			fmt.Printf("Listing %v (%v items): %v\n", getMRUKey(root),
-				len(children),
-				path_specs.DebugPathSpecList(children))
-
-			fmt.Printf("Partitions %v\n", partitions)
-		*/
-
 		// First add any non-directories that exist in this directory.
 		for _, child := range children {
-			var result string
+			var record *api_proto.IndexRecord
 
 			// For a directory just send an empty string. This will
 			// block this goroutine here until someone consumes the
@@ -254,17 +252,16 @@ func walkIndexWithPrefix(ctx context.Context,
 			if !child.IsDir() {
 				switch options {
 				case OPTION_ENTITY:
-					result = child.Base()
+					record = &api_proto.IndexRecord{
+						Entity: child.Base(),
+					}
 
 				case OPTION_KEY:
-					record := &api_proto.IndexRecord{}
+					record = &api_proto.IndexRecord{}
 					err = db.GetSubject(config_obj, child, record)
 					if err != nil {
 						continue
 					}
-
-					// Return the term
-					result = record.Term
 				}
 			}
 
@@ -272,12 +269,13 @@ func walkIndexWithPrefix(ctx context.Context,
 			case <-ctx.Done():
 				return
 
-			case output_chan <- result:
+				// Send nil for directories.
+			case output_chan <- record:
 			}
 		}
 
 		// Now descend the directories.
-		child_chans := []chan string{}
+		child_chans := []chan *api_proto.IndexRecord{}
 
 		// Spawn workers in parallel to read all child directories.
 		for _, child := range children {
