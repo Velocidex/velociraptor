@@ -12,6 +12,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 func splitIntoOperatorAndTerms(term string) (string, string) {
@@ -117,14 +118,23 @@ func searchClientIndex(
 		options = OPTION_KEY
 	}
 
-	query := in.Query
-	query = strings.TrimSuffix(query, "*")
+	scope := vql_subsystem.MakeScope()
+	prefix, filter := splitSearchTermIntoPrefixAndFilter(scope, in.Query)
+	if filter != nil {
+		options = OPTION_KEY
+	}
 
-	for client_id := range SearchIndexWithPrefix(
-		ctx, config_obj, query, options) {
-		if client_id == "" {
+	for hit := range SearchIndexWithPrefix(
+		ctx, config_obj, prefix, options) {
+		if hit == nil {
 			continue
 		}
+
+		if filter != nil && !filter.MatchString(hit.Term) {
+			continue
+		}
+
+		client_id := hit.Entity
 
 		// Uniquify the client ID
 		_, pres := seen[client_id]

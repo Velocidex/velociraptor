@@ -3,14 +3,16 @@ package search_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/alecthomas/assert"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/suite"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -25,6 +27,9 @@ type TestSuite struct {
 func (self *TestSuite) populatedClients() {
 	search.ResetLRU()
 	self.clients = nil
+	db, err := datastore.GetDB(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	bytes := []byte("00000000")
 	for i := 0; i < 4; i++ {
 		bytes[0] = byte(i)
@@ -35,6 +40,12 @@ func (self *TestSuite) populatedClients() {
 				client_id := fmt.Sprintf("C.%02x", bytes)
 				self.clients = append(self.clients, client_id)
 				err := search.SetIndex(self.ConfigObj, client_id, client_id)
+				assert.NoError(self.T(), err)
+
+				path_manager := paths.NewClientPathManager(client_id)
+				record := &actions_proto.ClientInfo{ClientId: client_id}
+				err = db.SetSubject(self.ConfigObj, path_manager.Path(),
+					record)
 				assert.NoError(self.T(), err)
 			}
 		}
@@ -51,9 +62,10 @@ func (self *TestSuite) TestMRU() {
 		// Read all clients.
 		ctx := context.Background()
 		searched_clients := []string{}
-		for client_id := range search.SearchIndexWithPrefix(
+		for hit := range search.SearchIndexWithPrefix(
 			ctx, self.ConfigObj, "", search.OPTION_ENTITY) {
-			if client_id != "" {
+			if hit != nil {
+				client_id := hit.Entity
 				searched_clients = append(searched_clients, client_id)
 			}
 		}
@@ -83,11 +95,12 @@ func (self *TestSuite) TestMRU() {
 	assert.NoError(self.T(), err)
 
 	labels := []string{}
-	for item := range search.SearchIndexWithPrefix(
+	for hit := range search.SearchIndexWithPrefix(
 		context.Background(), self.ConfigObj,
 		"label:foobar", search.OPTION_ENTITY) {
-		if item != "" {
-			labels = append(labels, item)
+		if hit != nil {
+			client_id := hit.Entity
+			labels = append(labels, client_id)
 		}
 	}
 
@@ -107,9 +120,10 @@ func (self *TestSuite) TestMRUTimeExpiry() {
 		// Read all clients.
 		ctx := context.Background()
 		searched_clients := []string{}
-		for client_id := range search.SearchIndexWithPrefix(
+		for hit := range search.SearchIndexWithPrefix(
 			ctx, self.ConfigObj, "", search.OPTION_ENTITY) {
-			if client_id != "" {
+			if hit != nil {
+				client_id := hit.Entity
 				searched_clients = append(searched_clients, client_id)
 			}
 		}
@@ -135,34 +149,6 @@ func (self *TestSuite) TestMRUTimeExpiry() {
 	assert.True(self.T(), new_miss_count > initial_miss_count*2/3)
 }
 
-func (self *TestSuite) TestPrefixSearch() {
-	self.populatedClients()
-
-	initial_op_count := getIndexListings(self.T())
-
-	// Read all clients.
-	prefix := "C.0230300330"
-	ctx := context.Background()
-	searched_clients := []string{}
-	for client_id := range search.SearchIndexWithPrefix(
-		ctx, self.ConfigObj, prefix, search.OPTION_ENTITY) {
-		if client_id != "" {
-			searched_clients = append(searched_clients, client_id)
-		}
-	}
-
-	prefixed_clients := []string{}
-	for _, client_id := range self.clients {
-		if strings.HasPrefix(client_id, prefix) {
-			prefixed_clients = append(prefixed_clients, client_id)
-		}
-	}
-	assert.Equal(self.T(), prefixed_clients, searched_clients)
-
-	current_op_count := getIndexListings(self.T())
-	assert.Equal(self.T(), uint64(34), current_op_count-initial_op_count)
-}
-
 func (self *TestSuite) TestEnumerateIndex() {
 	// Make some clients
 	self.populatedClients()
@@ -174,9 +160,10 @@ func (self *TestSuite) TestEnumerateIndex() {
 	// Read all clients.
 	ctx := context.Background()
 	searched_clients := []string{}
-	for client_id := range search.SearchIndexWithPrefix(
+	for hit := range search.SearchIndexWithPrefix(
 		ctx, self.ConfigObj, "", search.OPTION_ENTITY) {
-		if client_id != "" {
+		if hit != nil {
+			client_id := hit.Entity
 			searched_clients = append(searched_clients, client_id)
 		}
 	}
@@ -193,9 +180,10 @@ func (self *TestSuite) TestEnumerateIndex() {
 
 	// Only read one client
 	ctx, cancel := context.WithCancel(context.Background())
-	for client_id := range search.SearchIndexWithPrefix(
+	for hit := range search.SearchIndexWithPrefix(
 		ctx, self.ConfigObj, "", search.OPTION_ENTITY) {
-		if client_id != "" {
+		if hit != nil {
+			client_id := hit.Entity
 			assert.Equal(self.T(), "C.0030300030303000", client_id)
 			cancel()
 			break

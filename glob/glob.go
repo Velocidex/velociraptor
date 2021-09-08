@@ -421,7 +421,7 @@ func (self Globber) _expand_path_components(filter []_PathFilterer, depth int) e
 					}
 				}
 				middle = append(middle, &_RegexComponent{
-					regexp: fnmatch_translate("*"),
+					regexp: FNmatchTranslate("*"),
 				})
 			}
 
@@ -487,14 +487,14 @@ func convert_glob_into_path_components(pattern string, path_sep func(path string
 			}
 
 			result = append(result, _RecursiveComponent{
-				path: fnmatch_translate(strings.Replace(
+				path: FNmatchTranslate(strings.Replace(
 					path_component, groups[0], "*", 1)),
 				depth: depth,
 			})
 
 		} else if m := _GLOB_MAGIC_CHECK.FindString(path_component); len(m) > 0 {
 			result = append(result, &_RegexComponent{
-				regexp: fnmatch_translate(path_component),
+				regexp: FNmatchTranslate(path_component),
 			})
 		} else {
 			result = append(result, _LiteralComponent{
@@ -513,7 +513,7 @@ type unicode []rune
 
    There is no way to quote meta-characters.
 */
-func fnmatch_translate(pat string) string {
+func FNmatchTranslate(pat string) string {
 	unicode_pat := unicode(pat)
 	n := len(unicode_pat)
 	res := unicode("")
