@@ -63,6 +63,10 @@ func (self *AddLabels) Call(ctx context.Context,
 
 	labeler := services.GetLabeler()
 	for _, label := range arg.Labels {
+		if label == "" {
+			continue
+		}
+
 		switch arg.Op {
 		case "set":
 			err = labeler.SetClientLabel(config_obj, arg.ClientId, label)
