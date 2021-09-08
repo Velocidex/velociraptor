@@ -92,7 +92,7 @@ var fnmatchTranslateTypeFixture = []fnmatchTranslateType{
 
 func TestFnMatchTranslate(t *testing.T) {
 	for _, fixture := range fnmatchTranslateTypeFixture {
-		translated := fnmatch_translate(fixture.pattern)
+		translated := FNmatchTranslate(fixture.pattern)
 		if translated != fixture.expected {
 			t.Fatalf("Failed to parse %q: %q", translated,
 				fixture.expected)

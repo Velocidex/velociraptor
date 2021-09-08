@@ -302,16 +302,12 @@ func load_config_artifacts(config_obj *config_proto.Config) error {
 	}
 
 	for _, definition := range config_obj.Autoexec.ArtifactDefinitions {
-		definition.Raw = ""
 		serialized, err := yaml.Marshal(definition)
 		if err != nil {
 			return err
 		}
 
-		// Add the raw definition for inspection.
-		definition.Raw = string(serialized)
-
-		_, err = repository.LoadProto(definition, true /* validate */)
+		_, err = repository.LoadYaml(string(serialized), true /* validate */)
 		if err != nil {
 			return err
 		}

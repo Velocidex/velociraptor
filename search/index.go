@@ -31,6 +31,7 @@ import (
 	"errors"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -62,7 +63,8 @@ var (
 	stopIteration = errors.New("stopIteration")
 
 	// LRU caches ListChildren
-	lru = cache.NewLRUCache(10000)
+	lru    = cache.NewLRUCache(10000)
+	lru_mu sync.Mutex
 
 	// Used to mock the clock
 	clock utils.Clock = &utils.RealClock{}
@@ -121,6 +123,9 @@ func SetIndex(
 
 func invalidateLRU(path api.DSPathSpec) {
 	var tmp api.DSPathSpec = path_specs.NewUnsafeDatastorePath()
+	lru_mu.Lock()
+	defer lru_mu.Unlock()
+
 	for _, component := range path.Components() {
 		tmp = tmp.AddChild(component)
 		lru.Delete(getMRUKey(tmp))
@@ -147,22 +152,12 @@ func SearchIndexWithPrefix(
 	config_obj *config_proto.Config,
 	prefix string, options SearchOptions) <-chan *api_proto.IndexRecord {
 
-	output_chan := make(chan *api_proto.IndexRecord)
 	root := paths.CLIENT_INDEX_URN
 	partitions := paths.NewIndexPathManager().TermPartitions(prefix)
 
 	db, _ := datastore.GetDB(config_obj)
 
-	go func() {
-		defer close(output_chan)
-
-		for client_id := range walkIndexWithPrefix(
-			ctx, db, config_obj, root, partitions, options) {
-			output_chan <- client_id
-		}
-	}()
-
-	return output_chan
+	return walkIndexWithPrefix(ctx, db, config_obj, root, partitions, options)
 }
 
 func getMRUKey(path api.DSPathSpec) string {
@@ -172,6 +167,10 @@ func getMRUKey(path api.DSPathSpec) string {
 func getChildren(
 	config_obj *config_proto.Config,
 	root api.DSPathSpec) ([]api.DSPathSpec, error) {
+
+	lru_mu.Lock()
+	defer lru_mu.Unlock()
+
 	now := clock.Now()
 	key := getMRUKey(root)
 	cached_entry_any, pres := lru.Get(key)
@@ -244,10 +243,10 @@ func walkIndexWithPrefix(ctx context.Context,
 		for _, child := range children {
 			var record *api_proto.IndexRecord
 
-			// For a directory just send an empty string. This will
-			// block this goroutine here until someone consumes the
-			// string and stop us from listing our directories. If the
-			// consumer quits early we are able to avoid listing any
+			// For a directory just send a null. This will block this
+			// goroutine here until someone consumes the null and
+			// stop us from listing our directories. If the consumer
+			// quits early we are able to avoid listing any
 			// directories.
 			if !child.IsDir() {
 				switch options {
