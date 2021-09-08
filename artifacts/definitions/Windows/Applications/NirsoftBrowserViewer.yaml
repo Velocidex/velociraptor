@@ -28,6 +28,9 @@ parameters:
    - name: AlsoUpload
      type: bool
      description: Also upload BrowsingHistoryView produced CSV file.
+   - name: PARSE_TZ
+     default: LOCAL
+     description: Default timezone for parsing timestamps
 
 sources:
   - precondition:
@@ -65,7 +68,9 @@ sources:
       -- Filter the results by the user specs
       SELECT * FROM foreach(row=results,
       query={
-        SELECT *, timestamp(string=`Visit Time`) AS Visited
+        -- This timestamp is in US style time and local time... boo :-(
+        SELECT *, timestamp(string=`Visit Time`,
+           format="1/2/2006 3:04:05 PM") AS Visited
         FROM parse_csv(filename=CSVFile)
       })
       WHERE URL =~ URLRegex AND
