@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math"
+	"strings"
 	"time"
 
 	"www.velocidex.com/golang/vfilter/types"
@@ -15,6 +16,9 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+
+	// Force timezone database to be compiled in.
+	_ "time/tzdata"
 )
 
 const (
@@ -51,6 +55,11 @@ func getTimezone(scope types.Scope) (*time.Location, string) {
 	if pres {
 		tz_str, ok := tz.(string)
 		if ok {
+			// Get the local time whatever it might be
+			if strings.ToLower(tz_str) == "local" {
+				return time.Local, time.Local.String()
+			}
+
 			loc, err := time.LoadLocation(tz_str)
 			if err != nil {
 				// Unable to load location - maybe invalid.
