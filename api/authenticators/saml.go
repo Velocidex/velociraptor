@@ -87,7 +87,13 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 			return
 		}
 
-		username := samlsp.AttributeFromContext(r.Context(), userAttr(config_obj))
+		sa, ok := session.(samlsp.SessionWithAttributes)
+		if !ok {
+			reject_handler.ServeHTTP(w, r)
+			return
+		}
+
+		username := sa.GetAttributes().Get(userAttr(config_obj))
 		user_record, err := users.GetUser(config_obj, username)
 
 		perm, err2 := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
