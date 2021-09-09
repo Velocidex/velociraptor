@@ -28,4 +28,18 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
   "xor(string='test@velociraptor', key='test')": "\u0000\u0000\u0000\u00004\u0013\u0016\u0018\u001b\u0006\u001a\u0006\u0015\u0015\u0007\u001b\u0006",
   "xor(string=unhex(string='000100010002'), key=unhex(string='2e'))": "././.,"
  }
+]LET Foo <= dict(A=1)[]SELECT set(item=Foo, field="B", value=2) FROM scope()[
+ {
+  "set(item=Foo, field=\"B\", value=2)": {
+   "A": 1,
+   "B": 2
+  }
+ }
+]SELECT Foo FROM scope()[
+ {
+  "Foo": {
+   "A": 1,
+   "B": 2
+  }
+ }
 ]
