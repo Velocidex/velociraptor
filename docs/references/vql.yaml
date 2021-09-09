@@ -660,7 +660,6 @@
 
     See the `to_dict()` function to create dicts from a query with
     unpredictable key names.
-
   type: Function
   category: basic
 - name: diff
@@ -3313,6 +3312,19 @@
     type: string
     required: true
   category: server
+- name: set
+  description: Sets the member field of the item. If item is omitted sets the scope.
+  type: Function
+  args:
+  - name: item
+    type: Any
+    required: true
+  - name: field
+    type: string
+    required: true
+  - name: value
+    type: Any
+    required: true
 - name: set_client_monitoring
   description: Sets the current client monitoring state.
   type: Function
@@ -3735,7 +3747,6 @@
     SELECT timestamp(string="8/30/2021 6:01:28 PM",
                      format="1/2/2006 3:04:05 PM")
     ```
-
   type: Function
   args:
   - name: epoch
@@ -3750,16 +3761,12 @@
   - name: string
     type: string
     description: Guess a timestamp from a string
-  - name: us_style
-    type: bool
-    description: US Style Month/Day/Year
+  - name: timezone
+    type: string
+    description: A default timezone (UTC)
   - name: format
     type: string
-    description: |
-      A format specifier.
-
-      This format specifier is the same as golang's time.Parse.
-
+    description: A format specifier as per Golangs time.Parse
   category: basic
 - name: to_dict
   description: |
@@ -3797,7 +3804,6 @@
     SELECT Pid, get(item=PidLookup, field=str(str=Pid))
     FROM pslist()
     ```
-
   type: Function
   args:
   - name: item
@@ -4457,7 +4463,6 @@
     scanning stops after one hit is found.
 
     {{% /notice %}}
-
   type: Plugin
   args:
   - name: rules
@@ -4491,3 +4496,4 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
+
