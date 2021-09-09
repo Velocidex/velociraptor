@@ -168,6 +168,30 @@ class HuntList extends React.Component {
         }
     }
 
+    // this.props.selected_hunt is only a hunt summary so we need to
+    // fetch the full hunt so we can copy it.
+    copyHunt = () => {
+        let hunt_id = this.props.selected_hunt &&
+            this.props.selected_hunt.hunt_id;
+
+        if (!hunt_id) {
+            return;
+        }
+
+        api.get("v1/GetHunt", {
+            hunt_id: hunt_id,
+        }, this.source.token).then((response) => {
+            if (response.cancel) return;
+
+            if(!_.isEmpty(response.data)) {
+                this.setState({
+                    full_selected_hunt: response.data,
+                    showCopyWizard: true,
+                });
+            }
+        });
+    }
+
     render() {
         let columns = getHuntColumns();
         let selected_hunt = this.props.selected_hunt && this.props.selected_hunt.hunt_id;
@@ -199,7 +223,7 @@ class HuntList extends React.Component {
               }
               { this.state.showCopyWizard &&
                 <NewHuntWizard
-                  baseHunt={this.props.selected_hunt}
+                  baseHunt={this.state.full_selected_hunt}
                   onCancel={(e) => this.setState({showCopyWizard: false})}
                   onResolve={this.setCollectionRequest}
                 />
@@ -295,7 +319,7 @@ class HuntList extends React.Component {
                   </Button>
                   <Button title="Copy Hunt"
                           disabled={!selected_hunt}
-                          onClick={() => this.setState({showCopyWizard: true})}
+                          onClick={this.copyHunt}
                           variant="default">
                     <FontAwesomeIcon icon="copy"/>
                   </Button>
