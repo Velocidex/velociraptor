@@ -5,6 +5,8 @@ description: |
     Template injection is a form of defence evasion where a malicious macro 
     is loaded into an OOXML document via a resource file masquerading as 
     an office template.   
+    
+    The default artifact will also detect MSHTML RCE Vulnerability #CVE-2021-40444.  
 
 author: Matt Green - @mgreen27
 
@@ -20,7 +22,7 @@ parameters:
     default: C:\Users\**\*.{docx,dotx,xlsx,xltx,pptx,potx,ppsx,sldx}
   - name: TemplateRegex
     description: Regex to search inside resource section.
-    default: '^(https?|smb|\\\\|//)'
+    default: '^(https?|smb|\\\\|//|mhtml)'
   - name: UploadDocument
     type: bool
     description: Select to upload document on detection.
@@ -36,27 +38,21 @@ sources:
         FROM glob(globs=SearchGlob)
 
       -- select zip members inside the doc that have some content.
-      LET document_parts = SELECT 
-            OfficePath,
-            FullPath AS ZipMemberPath
-        FROM glob(globs=url(
-            scheme="file", path=OfficePath, fragment="/**").String,
-            accessor='zip')
-        WHERE not IsDir and Size > 0 and ZipMemberPath =~ '\\.rels$'
-            
-      -- select all settings.xml.rels files
-      LET settings = SELECT  *
-        FROM foreach(row=office_docs,
-                query={
-                    SELECT *
-                    FROM glob(globs=document_parts.ZipMemberPath,accessor='zip')
-                    WHERE Size > 0 AND Name = 'settings.xml.rels'
-                })
+      LET document_parts = SELECT * FROM foreach(row=office_docs,
+            query= {
+                SELECT *,
+                    FullPath AS ZipMemberPath,
+                    OfficePath
+                FROM glob(globs=url(
+                    scheme="file", path=OfficePath, fragment="/**").String,
+                    accessor='zip')
+                WHERE not IsDir and Size > 0 and ZipMemberPath =~ '(document|settings).xml.rels'
+            })
             
       -- parse settings file by line and extract config
-      LET template = SELECT * FROM foreach(row=settings,
+      LET template = SELECT * FROM foreach(row=document_parts,
         query={
-            SELECT
+            SELECT 
                 FullPath as SectionPath,
                 url(parse=FullPath).Path as Document,
                 url(parse=FullPath).Fragment as Section,
@@ -71,7 +67,7 @@ sources:
             WHERE TemplateTarget
         })
             
-      -- search settings for remote or file templates
+      -- search settings for remote or file templates, format mshtml entries
       LET hits = SELECT * FROM foreach(row=template,
             query={
                 SELECT
@@ -80,7 +76,7 @@ sources:
                     Mtime,
                     Size,
                     Section,
-                    TemplateTarget,
+                    regex_replace(source=TemplateTarget,re='.*Target="(mhtml)',replace='mhtml') as TemplateTarget,
                     SectionMtime,
                     hash(path=SectionPath,accessor='zip') as SectionHash
                 FROM stat(filename=Document)
@@ -105,4 +101,3 @@ sources:
       SELECT * FROM if(condition= UploadDocument,
             then= upload_hits,
             else= hits)
-            
