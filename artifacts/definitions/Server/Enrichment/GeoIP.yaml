@@ -15,7 +15,7 @@ description: |
 
 export: |
   LET DB = server_metadata().GeoIPDB
-  LET Country(IP) = geoip(db=DB, ip=IP).registered_country.names.en
+  LET Country(IP) = geoip(db=DB, ip=IP).country.names.en
   LET State(IP) = geoip(db=DB, ip=IP).subdivisions[0].names.en
   LET City(IP) = geoip(db=DB, ip=IP).city.names.en
 
