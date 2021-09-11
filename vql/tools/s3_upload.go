@@ -25,8 +25,8 @@ type S3UploadArgs struct {
 	Accessor             string `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	Bucket               string `vfilter:"required,field=bucket,doc=The bucket to upload to"`
 	Region               string `vfilter:"required,field=region,doc=The region the bucket is in"`
-	CredentialsKey       string `vfilter:"required,field=credentialskey,doc=The AWS key credentials to use"`
-	CredentialsSecret    string `vfilter:"required,field=credentialssecret,doc=The AWS secret credentials to use"`
+	CredentialsKey       string `vfilter:"optional,field=credentialskey,doc=The AWS key credentials to use"`
+	CredentialsSecret    string `vfilter:"optional,field=credentialssecret,doc=The AWS secret credentials to use"`
 	Endpoint             string `vfilter:"optional,field=endpoint,doc=The Endpoint to use"`
 	ServerSideEncryption string `vfilter:"optional,field=serversideencryption,doc=The server side encryption method to use"`
 	NoVerifyCert         bool   `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification"`
@@ -112,16 +112,20 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 
 	scope.Log("upload_S3: Uploading %v to %v", name, bucket)
 
-	token := ""
-	creds := credentials.NewStaticCredentials(credentialsKey, credentialsSecret, token)
-	_, err := creds.Get()
-	if err != nil {
-		return &api.UploadResponse{
-			Error: err.Error(),
-		}, err
+	conf := aws.NewConfig().WithRegion(region)
+	if credentialsKey != "" && credentialsSecret != "" {
+		token := ""
+		creds := credentials.NewStaticCredentials(credentialsKey, credentialsSecret, token)
+		_, err := creds.Get()
+		if err != nil {
+			return &api.UploadResponse{
+				Error: err.Error(),
+			}, err
+		}
+
+		conf = conf.WithCredentials(creds)
 	}
 
-	conf := aws.NewConfig().WithRegion(region).WithCredentials(creds)
 	if endpoint != "" {
 		conf = conf.WithEndpoint(endpoint).WithS3ForcePathStyle(true)
 		if NoVerifyCert {
