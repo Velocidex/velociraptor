@@ -83,7 +83,11 @@ func (self *Listener) Close() {
 		}
 
 		for _, item := range items {
-			self.output <- item
+			select {
+			case <-self.ctx.Done():
+				return
+			case self.output <- item:
+			}
 		}
 	}
 	self.file_buffer.Close()
