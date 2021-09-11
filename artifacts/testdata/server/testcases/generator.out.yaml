@@ -1,0 +1,62 @@
+LET Generator = generate(query={ SELECT * FROM range(start=0, end=10, step=1) })[]SELECT * FROM combine( a={ SELECT _value FROM Generator WHERE sleep(ms=100) }, b={ SELECT _value FROM Generator }) ORDER BY _value[
+ {
+  "_value": 0
+ },
+ {
+  "_value": 0
+ },
+ {
+  "_value": 1
+ },
+ {
+  "_value": 1
+ },
+ {
+  "_value": 2
+ },
+ {
+  "_value": 2
+ },
+ {
+  "_value": 3
+ },
+ {
+  "_value": 3
+ },
+ {
+  "_value": 4
+ },
+ {
+  "_value": 4
+ },
+ {
+  "_value": 5
+ },
+ {
+  "_value": 5
+ },
+ {
+  "_value": 6
+ },
+ {
+  "_value": 6
+ },
+ {
+  "_value": 7
+ },
+ {
+  "_value": 7
+ },
+ {
+  "_value": 8
+ },
+ {
+  "_value": 8
+ },
+ {
+  "_value": 9
+ },
+ {
+  "_value": 9
+ }
+]

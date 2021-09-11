@@ -75,6 +75,17 @@ func (self *Listener) Send(item *ordereddict.Dict) {
 }
 
 func (self *Listener) Close() {
+	// Get some messages from the file.
+	for {
+		items := self.file_buffer.Lease(100)
+		if len(items) == 0 {
+			break
+		}
+
+		for _, item := range items {
+			self.output <- item
+		}
+	}
 	self.file_buffer.Close()
 
 	os.Remove(self.tmpfile) // clean up file buffer
@@ -198,16 +209,17 @@ func (self *QueuePool) Register(
 	self.registrations[vfs_path] = registrations
 
 	return output_chan, func() {
-		close(output_chan)
-		cancel()
-
-		self.unregister(vfs_path, new_registration.id)
+		found := self.unregister(vfs_path, new_registration.id)
+		if found {
+			close(output_chan)
+			cancel()
+		}
 	}
 }
 
 // This holds a lock on the entire pool and it is used when the system
 // shuts down so not very often.
-func (self *QueuePool) unregister(vfs_path string, id int64) {
+func (self *QueuePool) unregister(vfs_path string, id int64) (found bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -217,14 +229,17 @@ func (self *QueuePool) unregister(vfs_path string, id int64) {
 		for _, item := range registrations {
 			if id == item.id {
 				item.Close()
+				found = true
+
 			} else {
-				new_registrations = append(new_registrations,
-					item)
+				new_registrations = append(new_registrations, item)
 			}
 		}
 
 		self.registrations[vfs_path] = new_registrations
 	}
+
+	return found
 }
 
 // Make a copy of the registrations under lock and then we can take

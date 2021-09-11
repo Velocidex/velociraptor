@@ -31,7 +31,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -787,7 +786,9 @@ func (self *ApiServer) updateNotebookCell(
 		}
 
 		// Update the response if we can.
-		notebook_cell = resp
+		if resp != nil {
+			notebook_cell = resp
+		}
 	}()
 
 	// Wait here up to 1 second for immediate response - but if
@@ -1107,13 +1108,9 @@ func updateCellContents(
 	currently_editing bool,
 	notebook_id, cell_id, cell_type string,
 	env []*api_proto.Env,
-	input, original_input string) (*api_proto.NotebookCell, error) {
-
-	// Do not let exceptions take down the server.
-	defer utils.RecoverVQL(tmpl.Scope)
+	input, original_input string) (res *api_proto.NotebookCell, err error) {
 
 	output := ""
-	var err error
 
 	cell_type = strings.ToLower(cell_type)
 
@@ -1151,6 +1148,14 @@ func updateCellContents(
 		setCell(config_obj, notebook_id, notebook_cell)
 		return notebook_cell, err
 	}
+
+	// Do not let exceptions take down the server.
+	defer func() {
+		r := recover()
+		if r != nil {
+			res, err = make_error_cell("", fmt.Errorf("PANIC: %v", r))
+		}
+	}()
 
 	switch cell_type {
 
