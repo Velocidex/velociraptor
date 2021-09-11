@@ -35,7 +35,10 @@ func (self GeoIPFunction) Call(
 	}
 
 	var db *maxminddb.Reader
-	cached := vql_subsystem.CacheGet(scope, geoIPHandle)
+
+	// Cache key based on the database name.
+	key := geoIPHandle + arg.Database
+	cached := vql_subsystem.CacheGet(scope, key)
 	switch t := cached.(type) {
 
 	case error:
@@ -46,14 +49,14 @@ func (self GeoIPFunction) Call(
 		if err != nil {
 			scope.Log("geoip: %v", err)
 			// Cache failures for next lookup.
-			vql_subsystem.CacheSet(scope, geoIPHandle, err)
+			vql_subsystem.CacheSet(scope, key, err)
 			return vfilter.Null{}
 		}
 		// Attach the database to the root destructor since it
 		// does not need to change very often.
 		vql_subsystem.GetRootScope(scope).
 			AddDestructor(func() { db.Close() })
-		vql_subsystem.CacheSet(scope, geoIPHandle, db)
+		vql_subsystem.CacheSet(scope, key, db)
 
 	case *maxminddb.Reader:
 		db = t
