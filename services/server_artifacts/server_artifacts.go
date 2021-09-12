@@ -20,6 +20,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
+	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -58,6 +59,13 @@ func NewCollectionContext(
 	}
 
 	return self, self.Load(self.context)
+}
+
+func (self *contextManager) GetContext() *flows_proto.ArtifactCollectorContext {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return proto.Clone(self.context).(*flows_proto.ArtifactCollectorContext)
 }
 
 // Starts a go routine which saves the context state so the GUI can monitor progress.
@@ -319,10 +327,11 @@ func (self *ServerArtifactsRunner) runQuery(
 		self.cancel(task.SessionId)
 
 		// Send a completion event when the query is finished..
+		flow_context := collection_context.GetContext()
 		row := ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
-			Set("Flow", collection_context.context).
-			Set("FlowId", collection_context.context.SessionId).
+			Set("Flow", flow_context).
+			Set("FlowId", flow_context.SessionId).
 			Set("ClientId", "server")
 
 		journal, err := services.GetJournal()
@@ -331,7 +340,7 @@ func (self *ServerArtifactsRunner) runQuery(
 		}
 		journal.PushRowsToArtifact(self.config_obj,
 			[]*ordereddict.Dict{row},
-			"System.Flow.Completion", "server", collection_context.context.SessionId,
+			"System.Flow.Completion", "server", flow_context.SessionId,
 		)
 	}()
 

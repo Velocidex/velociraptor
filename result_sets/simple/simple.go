@@ -32,6 +32,7 @@ import (
 	"encoding/binary"
 	"io"
 	"os"
+	"sync"
 
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
@@ -47,6 +48,7 @@ const (
 )
 
 type ResultSetWriterImpl struct {
+	mu       sync.Mutex
 	rows     []*ordereddict.Dict
 	opts     *json.EncOpts
 	fd       api.FileWriter
@@ -88,20 +90,27 @@ func (self *ResultSetWriterImpl) WriteJSONL(serialized []byte, total_rows uint64
 }
 
 func (self *ResultSetWriterImpl) Write(row *ordereddict.Dict) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.rows = append(self.rows, row)
 	if len(self.rows) > 10000 {
-		self.Flush()
+		self._Flush()
 	}
 }
 
 // Do not actually write the data until Close() or Flush() are called,
 // or until 10k rows are queued in memory.
 func (self *ResultSetWriterImpl) Flush() {
-	// Nothing to do...
-	if len(self.rows) == 0 {
-		return
-	}
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
+	if len(self.rows) > 0 {
+		self._Flush()
+	}
+}
+
+func (self *ResultSetWriterImpl) _Flush() {
 	offset, err := self.fd.Size()
 	if err != nil {
 		return
