@@ -213,10 +213,10 @@ func (self *QueuePool) Register(
 	self.registrations[vfs_path] = registrations
 
 	return output_chan, func() {
+		cancel()
 		found := self.unregister(vfs_path, new_registration.id)
 		if found {
 			close(output_chan)
-			cancel()
 		}
 	}
 }
