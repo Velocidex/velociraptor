@@ -5,5 +5,10 @@
    "_Source": "CallArtifactWithFalsePrecondition"
   }
  ],
- "SELECT * FROM Artifact.CallArtifactWithFalsePrecondition(precondition=TRUE)": []
+ "SELECT * FROM Artifact.CallArtifactWithFalsePrecondition(preconditions=TRUE)": [
+  {
+   "A": 1,
+   "_Source": "CallArtifactWithFalsePrecondition"
+  }
+ ]
 }

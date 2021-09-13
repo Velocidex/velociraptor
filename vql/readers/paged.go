@@ -99,6 +99,20 @@ type AccessorReader struct {
 	lru_size int
 }
 
+func (self *AccessorReader) SetLifetime(l time.Duration) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.Lifetime = l
+}
+
+func (self *AccessorReader) GetLifetime() time.Duration {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.Lifetime
+}
+
 func (self *AccessorReader) Size() int {
 	return 1
 }
@@ -180,7 +194,7 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 
 				// Close the file after its lifetime
 				// is exhausted.
-			case <-time.After(self.Lifetime):
+			case <-time.After(self.GetLifetime()):
 				self.Close()
 			}
 		}()

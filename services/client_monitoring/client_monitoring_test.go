@@ -22,6 +22,35 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
+var (
+	mock_definitions = []string{`
+name: Windows.Remediation.QuarantineMonitor
+type: CLIENT_EVENT
+`, `
+name: Server.Internal.Label
+type: INTERNAL
+`, `
+name: Windows.Events.ProcessCreation
+type: CLIENT_EVENT
+sources:
+- precondition: SELECT OS from info() where OS = "windows"
+  query: SELECT * FROM info()
+`, `
+name: Windows.Events.DNSQueries
+type: CLIENT_EVENT
+sources:
+- precondition: SELECT OS from info() where OS = "windows"
+  query: SELECT * FROM info()
+`, `
+name: Windows.Events.ServiceCreation
+type: CLIENT_EVENT
+sources:
+- precondition: SELECT OS from info() where OS = "windows"
+  query: SELECT * FROM info()
+`,
+	}
+)
+
 type ClientMonitoringTestSuite struct {
 	test_utils.TestSuite
 	client_id string
@@ -30,6 +59,7 @@ type ClientMonitoringTestSuite struct {
 
 func (self *ClientMonitoringTestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
+	self.LoadArtifacts(mock_definitions)
 	require.NoError(self.T(), self.Sm.Start(StartClientMonitoringService))
 
 	self.client_id = "C.12312"
@@ -40,22 +70,20 @@ func (self *ClientMonitoringTestSuite) SetupTest() {
 func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
-	repository_manager, _ := services.GetRepositoryManager()
-	repository_manager.SetArtifactFile(self.ConfigObj, "", `
+	self.LoadArtifacts([]string{`
 name: TestArtifact
 sources:
 - query:
     SELECT * FROM info()
-`, "")
-	repository_manager.SetArtifactFile(self.ConfigObj, "", `
+`, `
 name: SomethingElse
 sources:
 - query:
     SELECT * FROM info()
-`, "")
+`})
 
 	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.Clock = current_clock
+	manager.SetClock(current_clock)
 
 	err := manager.SetClientMonitoringState(context.Background(), self.ConfigObj,
 		&flows_proto.ClientEventTable{
@@ -72,6 +100,7 @@ sources:
 	table_version := old_table_message.UpdateEventTable.Version
 
 	// Now update the artifact.
+	repository_manager, _ := services.GetRepositoryManager()
 	repository_manager.SetArtifactFile(self.ConfigObj, "", `
 name: TestArtifact
 sources:
@@ -134,7 +163,7 @@ sources:
 `, "")
 
 	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.Clock = current_clock
+	manager.SetClock(current_clock)
 
 	// Set the initial table.
 	err := manager.SetClientMonitoringState(context.Background(), self.ConfigObj,
@@ -177,7 +206,7 @@ sources:
 `, "")
 
 	manager1 := services.ClientEventManager().(*ClientEventTable)
-	manager1.Clock = current_clock
+	manager1.SetClock(current_clock)
 
 	// Set the initial table.
 	err := manager1.SetClientMonitoringState(context.Background(),
@@ -194,7 +223,7 @@ sources:
 	// Now another frontend sets the client monitoring state
 	require.NoError(self.T(), self.Sm.Start(StartClientMonitoringService))
 	manager2 := services.ClientEventManager().(*ClientEventTable)
-	manager2.Clock = current_clock
+	manager2.SetClock(current_clock)
 
 	// Now update the monitoring state
 	err = manager2.SetClientMonitoringState(context.Background(),
@@ -219,11 +248,11 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
 	labeler := services.GetLabeler().(*labels.Labeler)
-	labeler.Clock = current_clock
+	labeler.SetClock(current_clock)
 
 	// If no table exists, we will get a default table.
 	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.Clock = current_clock
+	manager.SetClock(current_clock)
 
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
 	manager.SetClientMonitoringState(context.Background(),
@@ -334,11 +363,11 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompilingMultipleArti
 	current_clock := &utils.IncClock{NowTime: 10}
 
 	labeler := services.GetLabeler().(*labels.Labeler)
-	labeler.Clock = current_clock
+	labeler.SetClock(current_clock)
 
 	// If no table exists, we will get a default table.
 	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.Clock = current_clock
+	manager.SetClock(current_clock)
 
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
 	manager.SetClientMonitoringState(context.Background(),
@@ -387,11 +416,11 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoring() {
 	current_clock := &utils.MockClock{MockNow: time.Unix(10, 0)}
 
 	labeler := services.GetLabeler().(*labels.Labeler)
-	labeler.Clock = current_clock
+	labeler.SetClock(current_clock)
 
 	// If no table exists, we will get a default table.
 	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.Clock = current_clock
+	manager.SetClock(current_clock)
 
 	test_utils.GetMemoryDataStore(self.T(), self.ConfigObj).Clear()
 	assert.NoError(self.T(), manager.LoadFromFile(context.Background(), self.ConfigObj))

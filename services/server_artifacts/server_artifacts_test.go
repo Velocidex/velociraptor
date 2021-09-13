@@ -2,16 +2,15 @@ package server_artifacts
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -19,9 +18,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
@@ -30,48 +26,22 @@ import (
 )
 
 type ServerArtifactsTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
-	ctx        context.Context
+	test_utils.TestSuite
 }
 
 func (self *ServerArtifactsTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().
-		WithWriteback().
-		WithVerbose(true).
-		LoadAndValidate()
-	require.NoError(self.T(), err)
+	self.TestSuite.SetupTest()
 
-	// Start essential services.
-	self.ctx, _ = context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(self.ctx, self.config_obj)
-
-	t := self.T()
-	assert.NoError(t, self.sm.Start(journal.StartJournalService))
-	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
-	assert.NoError(t, self.sm.Start(launcher.StartLauncherService))
-	assert.NoError(t, self.sm.Start(repository.StartRepositoryManager))
-	assert.NoError(t, self.sm.Start(StartServerArtifactService))
+	assert.NoError(self.T(), self.Sm.Start(StartServerArtifactService))
 
 	// Create an administrator user
-	err = acls.GrantRoles(self.config_obj, "admin",
-		[]string{"administrator"})
+	err := acls.GrantRoles(self.ConfigObj, "admin", []string{"administrator"})
 	assert.NoError(self.T(), err)
-}
-
-func (self *ServerArtifactsTestSuite) TearDownTest() {
-	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
 }
 
 func (self *ServerArtifactsTestSuite) LoadArtifacts(definition string) services.Repository {
 	manager, _ := services.GetRepositoryManager()
-	repository, _ := manager.GetGlobalRepository(self.config_obj)
+	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
 
 	_, err := repository.LoadYaml(definition, false)
 	assert.NoError(self.T(), err)
@@ -83,18 +53,21 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 	name, user string) *api_proto.FlowDetails {
 
 	manager, _ := services.GetRepositoryManager()
-	repository, _ := manager.GetGlobalRepository(self.config_obj)
+	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
 
+	var mu sync.Mutex
 	complete_flow_id := ""
 
-	err := journal.WatchQueueWithCB(self.sm.Ctx, self.config_obj, self.sm.Wg,
+	err := journal.WatchQueueWithCB(self.Sm.Ctx, self.ConfigObj, self.Sm.Wg,
 		"System.Flow.Completion", func(
 			ctx context.Context,
-			config_obj *config_proto.Config,
+			ConfigObj *config_proto.Config,
 			row *ordereddict.Dict) error {
 			flow, pres := row.Get("Flow")
 			if pres {
+				mu.Lock()
 				complete_flow_id = flow.(*flows_proto.ArtifactCollectorContext).SessionId
+				mu.Unlock()
 			}
 			return nil
 		})
@@ -103,11 +76,11 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 	launcher, err := services.GetLauncher()
 	assert.NoError(self.T(), err)
 
-	acl_manager := vql_subsystem.NewServerACLManager(self.config_obj, user)
+	acl_manager := vql_subsystem.NewServerACLManager(self.ConfigObj, user)
 
 	// Schedule a job for the server runner.
 	flow_id, err := launcher.ScheduleArtifactCollection(
-		self.ctx, self.config_obj, acl_manager,
+		self.Sm.Ctx, self.ConfigObj, acl_manager,
 		repository, &flows_proto.ArtifactCollectorArgs{
 			Creator:   user,
 			ClientId:  "server",
@@ -117,20 +90,21 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 
 	// Notify it about the new job
 	notifier := services.GetNotifier()
-	err = notifier.NotifyListener(self.config_obj, "server")
+	err = notifier.NotifyListener(self.ConfigObj, "server")
 	assert.NoError(self.T(), err)
 
 	// Wait for the collection to complete
 	var details *api_proto.FlowDetails
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
-		details, err = flows.GetFlowDetails(self.config_obj,
-			"server", flow_id)
+		details, err = flows.GetFlowDetails(self.ConfigObj, "server", flow_id)
 		assert.NoError(self.T(), err)
 
 		return details.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
 	})
 
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
 		return complete_flow_id == flow_id
 	})
 
@@ -177,7 +151,7 @@ sources:
 
 	flow_path_manager := paths.NewFlowPathManager(
 		"server", details.Context.SessionId)
-	log_data := test_utils.FileReadAll(self.T(), self.config_obj,
+	log_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 		flow_path_manager.Log())
 	assert.Contains(self.T(), log_data, "Query timed out after ")
 }
@@ -203,7 +177,7 @@ sources:
 
 	// Create a reader user called gumby - reader role lacks the
 	// MACHINE_STATE permission.
-	err := acls.GrantRoles(self.config_obj, "gumby", []string{"reader"})
+	err := acls.GrantRoles(self.ConfigObj, "gumby", []string{"reader"})
 	assert.NoError(self.T(), err)
 
 	details = self.ScheduleAndWait("Test", "gumby")
@@ -213,7 +187,7 @@ sources:
 
 	flow_path_manager := paths.NewFlowPathManager(
 		"server", details.Context.SessionId)
-	log_data := test_utils.FileReadAll(self.T(), self.config_obj,
+	log_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 		flow_path_manager.Log())
 	assert.Contains(self.T(), log_data, "Permission denied: [MACHINE_STATE]")
 }

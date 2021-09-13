@@ -74,22 +74,29 @@ func (self *Listener) Send(item *ordereddict.Dict) {
 	}
 }
 
-func (self *Listener) Close() {
+// Flush the file buffer into the output channel.
+func (self *Listener) FlushFile() {
 	// Immediately drain the file.
 	for {
 		items := self.file_buffer.Lease(100)
 		if len(items) == 0 {
-			break
+			return
 		}
 		for _, item := range items {
 			select {
 			case <-self.ctx.Done():
 				return
+
 			case self.output <- item:
 				self.file_buffer.Wg.Done()
 			}
 		}
 	}
+}
+
+func (self *Listener) Close() {
+	self.FlushFile()
+
 	// Wait for all outstanding file buffer messages to be sent.
 	self.file_buffer.Wg.Wait()
 	self.file_buffer.Close()
@@ -147,7 +154,7 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 
 					// If we can immediately push
 					// to the output, do so
-				case self.output <- item:
+				case output <- item:
 
 					// Otherwise push to the file.
 				default:
@@ -173,7 +180,7 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 					select {
 					case <-ctx.Done():
 						return
-					case self.output <- item:
+					case output <- item:
 						self.file_buffer.Wg.Done()
 					}
 				}
@@ -326,8 +333,18 @@ func (self *DirectoryQueueManager) PushEventRows(
 }
 
 func (self *DirectoryQueueManager) Watch(ctx context.Context,
-	queue_name string) (output <-chan *ordereddict.Dict, cancel func()) {
-	return self.queue_pool.Register(ctx, queue_name)
+	queue_name string) (<-chan *ordereddict.Dict, func()) {
+
+	// If the caller of Watch no longer cares about watching the queue
+	// they will call the cancellation function. This must abandon the
+	// current queue listener and cause any outstanding events to be
+	// dropped on the floor.
+	subctx, cancel := context.WithCancel(ctx)
+	output_chan, pool_cancel := self.queue_pool.Register(subctx, queue_name)
+	return output_chan, func() {
+		cancel()
+		pool_cancel()
+	}
 }
 
 func NewDirectoryQueueManager(config_obj *config_proto.Config,

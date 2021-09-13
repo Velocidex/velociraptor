@@ -13,19 +13,12 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
@@ -47,70 +40,47 @@ sources:
 )
 
 type EventsTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	client_id  string
-	sm         *services.Service
-	responder  *responder.Responder
-	writeback  string
+	test_utils.TestSuite
+	client_id string
+	responder *responder.Responder
+	writeback string
 
 	Clock utils.Clock
 }
 
 func (self *EventsTestSuite) SetupTest() {
-	t := self.T()
+	self.TestSuite.SetupTest()
+
+	assert.NoError(
+		self.T(), self.Sm.Start(client_monitoring.StartClientMonitoringService))
 
 	self.client_id = "C.2232"
-	self.config_obj = config.GetDefaultConfig()
-	self.config_obj.Frontend.DoNotCompressArtifacts = true
-	self.config_obj.Datastore.Implementation = "Test"
 	self.Clock = &utils.IncClock{}
 
 	tmpfile, err := ioutil.TempFile("", "")
-	require.NoError(t, err)
+	assert.NoError(self.T(), err)
 	tmpfile.Close()
 
 	// Set a tempfile for the writeback we need to check that the
 	// new event query is written there.
 	self.writeback = tmpfile.Name()
-	self.config_obj.Client.WritebackLinux = self.writeback
-	self.config_obj.Client.WritebackWindows = self.writeback
-	self.config_obj.Client.WritebackDarwin = self.writeback
+	self.ConfigObj.Client.WritebackLinux = self.writeback
+	self.ConfigObj.Client.WritebackWindows = self.writeback
+	self.ConfigObj.Client.WritebackDarwin = self.writeback
 
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	// Start the journaling service manually for tests.
-	require.NoError(t, self.sm.Start(journal.StartJournalService))
-	require.NoError(t, self.sm.Start(launcher.StartLauncherService))
-	require.NoError(t, self.sm.Start(labels.StartLabelService))
-	require.NoError(t, self.sm.Start(notifications.StartNotificationService))
-	require.NoError(t, self.sm.Start(inventory.StartInventoryService))
-	require.NoError(t, self.sm.Start(repository.StartRepositoryManager))
-	require.NoError(t, self.sm.Start(client_monitoring.StartClientMonitoringService))
 	self.responder = responder.TestResponder()
 
 	actions.GlobalEventTable = actions.NewEventTable(
-		self.config_obj, self.responder,
+		self.ConfigObj, self.responder,
 		&actions_proto.VQLEventTable{})
 
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(t, err)
-	repository, err := manager.GetGlobalRepository(self.config_obj)
-	assert.NoError(t, err)
-
-	for _, definition := range artifact_definitions {
-		_, err := repository.LoadYaml(definition, true)
-		require.NoError(t, err)
-	}
+	self.LoadArtifacts(artifact_definitions)
 }
 
 func (self *EventsTestSuite) TearDownTest() {
-	self.sm.Close()
+	self.TestSuite.TearDownTest()
 
 	os.Remove(self.writeback) // clean up file buffer
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
 }
 
 var server_state = &flows_proto.ClientEventTable{
@@ -142,7 +112,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	defer wg.Wait()
 
 	require.NoError(self.T(), client_manager.SetClientMonitoringState(
-		ctx, self.config_obj, server_state))
+		ctx, self.ConfigObj, server_state))
 
 	// Check the version of the initial Event table it should be 0
 	version := actions.GlobalEventTableVersion()
@@ -151,11 +121,11 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// We definitely need to update the table on this client.
 	assert.True(self.T(),
 		client_manager.CheckClientEventsVersion(
-			self.config_obj, self.client_id, version))
+			self.ConfigObj, self.client_id, version))
 
 	// Get the new table
 	message := client_manager.GetClientUpdateEventTableMessage(
-		self.config_obj, self.client_id)
+		self.ConfigObj, self.client_id)
 
 	// Only one query will be selected now since no label is set
 	// on the client.
@@ -166,7 +136,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// Set the new table, this will execute the new queries and
 	// start the new table.
 	actions.QueryLog.Clear()
-	actions.UpdateEventTable{}.Run(self.config_obj, ctx, self.responder,
+	actions.UpdateEventTable{}.Run(self.ConfigObj, ctx, self.responder,
 		message.UpdateEventTable)
 
 	// Table version was upgraded
@@ -181,7 +151,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// We no longer need to update the event table - it is up to date.
 	assert.False(self.T(),
 		client_manager.CheckClientEventsVersion(
-			self.config_obj, self.client_id,
+			self.ConfigObj, self.client_id,
 			actions.GlobalEventTableVersion()))
 
 	// Now we set a label on the client. This should cause the
@@ -193,18 +163,18 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	label_manager.(*labels.Labeler).Clock = self.Clock
 
 	require.NoError(self.T(),
-		label_manager.SetClientLabel(self.config_obj, self.client_id,
+		label_manager.SetClientLabel(self.ConfigObj, self.client_id,
 			"Foobar"))
 
 	// Setting the label will cause the client_monitoring manager
 	// to want to upgrade the event table.
 	assert.True(self.T(),
 		client_manager.CheckClientEventsVersion(
-			self.config_obj, self.client_id,
+			self.ConfigObj, self.client_id,
 			actions.GlobalEventTableVersion()))
 
 	new_message := client_manager.GetClientUpdateEventTableMessage(
-		self.config_obj, self.client_id)
+		self.ConfigObj, self.client_id)
 
 	assert.True(self.T(), new_message.UpdateEventTable.Version >
 		message.UpdateEventTable.Version)
@@ -214,7 +184,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// Lets update the event table with the new version.
 	actions.QueryLog.Clear()
-	actions.UpdateEventTable{}.Run(self.config_obj, ctx, self.responder,
+	actions.UpdateEventTable{}.Run(self.ConfigObj, ctx, self.responder,
 		new_message.UpdateEventTable)
 
 	// Wait for the event table version to change
@@ -228,25 +198,25 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// Now lets set the label to Label1
 	require.NoError(self.T(),
-		label_manager.SetClientLabel(self.config_obj, self.client_id,
+		label_manager.SetClientLabel(self.ConfigObj, self.client_id,
 			"Label1"))
 
 	// We need to update the table again (takes a while for the
 	// client manager to notice the label change).
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return client_manager.CheckClientEventsVersion(
-			self.config_obj, self.client_id,
+			self.ConfigObj, self.client_id,
 			actions.GlobalEventTableVersion())
 	})
 
 	new_message = client_manager.GetClientUpdateEventTableMessage(
-		self.config_obj, self.client_id)
+		self.ConfigObj, self.client_id)
 
 	// The new table has 2 event queries - one for the All label
 	// and one for Label1 label.
 	assert.Equal(self.T(), len(new_message.UpdateEventTable.Event), 2)
 
-	actions.UpdateEventTable{}.Run(self.config_obj, ctx, self.responder,
+	actions.UpdateEventTable{}.Run(self.ConfigObj, ctx, self.responder,
 		new_message.UpdateEventTable)
 
 	// Wait for the event table to be swapped.

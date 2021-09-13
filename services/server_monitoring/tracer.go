@@ -22,6 +22,9 @@ func (self *QueryTracer) Clear(query string) {
 }
 
 func (self *QueryTracer) Dump() []string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	result := []string{}
 	for k := range self.current_queries {
 		result = append(result, k)

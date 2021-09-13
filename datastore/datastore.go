@@ -28,6 +28,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -144,11 +145,13 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 
 		// Sanitize the FilestoreDirectory parameter so we
 		// have a consistent filename in the test datastore.
-		config_obj.Datastore.Location = strings.TrimSuffix(
-			config_obj.Datastore.Location, "/")
-		config_obj.Datastore.Location = strings.TrimSuffix(
-			config_obj.Datastore.Location, "\\")
-
+		if config_obj.Datastore.Location != "" {
+			utils.Debug(config_obj.Datastore.Location)
+			config_obj.Datastore.Location = strings.TrimSuffix(
+				config_obj.Datastore.Location, "/")
+			config_obj.Datastore.Location = strings.TrimSuffix(
+				config_obj.Datastore.Location, "\\")
+		}
 		return gTestDatastore, nil
 
 	default:

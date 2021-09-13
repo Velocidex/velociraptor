@@ -224,7 +224,7 @@ func (self *TestDataStore) SetSubject(
 	filename := pathSpecToPath(urn, config_obj)
 	self.Trace("SetSubject", filename)
 
-	self.Subjects[filename] = message
+	self.Subjects[filename] = proto.Clone(message)
 	self.Components[filename] = urn.Components()
 
 	return nil
