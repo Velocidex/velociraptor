@@ -70,6 +70,11 @@ type FileBasedRingBuffer struct {
 	write_buf []byte
 
 	log_ctx *logging.LogContext
+
+	// Keep track of how many messages are leased. When we lease
+	// messages this wg is added, then callers can decrement it as
+	// needed.
+	Wg sync.WaitGroup
 }
 
 // Enqueue the item into the ring buffer and append to the end.
@@ -170,6 +175,7 @@ func (self *FileBasedRingBuffer) Lease(count int) []*ordereddict.Dict {
 		}
 	}
 
+	self.Wg.Add(len(result))
 	return result
 }
 

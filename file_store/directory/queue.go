@@ -75,21 +75,23 @@ func (self *Listener) Send(item *ordereddict.Dict) {
 }
 
 func (self *Listener) Close() {
-	// Get some messages from the file.
+	// Immediately drain the file.
 	for {
 		items := self.file_buffer.Lease(100)
 		if len(items) == 0 {
 			break
 		}
-
 		for _, item := range items {
 			select {
 			case <-self.ctx.Done():
 				return
 			case self.output <- item:
+				self.file_buffer.Wg.Done()
 			}
 		}
 	}
+	// Wait for all outstanding file buffer messages to be sent.
+	self.file_buffer.Wg.Wait()
 	self.file_buffer.Close()
 
 	os.Remove(self.tmpfile) // clean up file buffer
@@ -166,11 +168,13 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 
 			case <-time.After(time.Second):
 				// Get some messages from the file.
-				for _, item := range self.file_buffer.Lease(100) {
+				items := self.file_buffer.Lease(100)
+				for _, item := range items {
 					select {
 					case <-ctx.Done():
 						return
 					case self.output <- item:
+						self.file_buffer.Wg.Done()
 					}
 				}
 			}
@@ -213,9 +217,9 @@ func (self *QueuePool) Register(
 	self.registrations[vfs_path] = registrations
 
 	return output_chan, func() {
-		cancel()
 		found := self.unregister(vfs_path, new_registration.id)
 		if found {
+			cancel()
 			close(output_chan)
 		}
 	}
