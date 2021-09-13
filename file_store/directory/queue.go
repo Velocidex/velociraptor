@@ -85,7 +85,8 @@ func (self *Listener) FlushFile() {
 		for _, item := range items {
 			select {
 			case <-self.ctx.Done():
-				return
+				// We still need to release this item from the wg.
+				self.file_buffer.Wg.Done()
 
 			case self.output <- item:
 				self.file_buffer.Wg.Done()
@@ -179,7 +180,8 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 				for _, item := range items {
 					select {
 					case <-ctx.Done():
-						return
+						self.file_buffer.Wg.Done()
+
 					case output <- item:
 						self.file_buffer.Wg.Done()
 					}
