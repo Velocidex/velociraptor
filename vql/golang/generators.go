@@ -37,17 +37,20 @@ func (self Generator) Eval(ctx context.Context, scope types.Scope) <-chan types.
 		return result
 	}
 
-	scope.AddDestructor(func() {
-		cancel()
-	})
-
+	/*
+		scope.AddDestructor(func() {
+			cancel()
+		})
+	*/
 	go func() {
 		defer close(result)
+		defer cancel()
 
 		for item := range output_chan {
 			select {
 			case <-ctx.Done():
 				return
+
 			case result <- item:
 			}
 		}

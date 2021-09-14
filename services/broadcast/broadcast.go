@@ -57,6 +57,7 @@ func (self *BroadcastService) unregister(name string) {
 	fmt.Printf("unregister %v with %v closers\n", name, len(closers))
 	if ok {
 		for _, closer := range closers {
+			fmt.Printf("Closing\n")
 			closer()
 		}
 	}

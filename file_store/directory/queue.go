@@ -218,7 +218,7 @@ func (self *QueuePool) Register(
 		close(output_chan)
 		cancel()
 
-		return output_chan, func() {}
+		return output_chan, cancel
 	}
 
 	registrations = append(registrations, new_registration)
@@ -229,6 +229,8 @@ func (self *QueuePool) Register(
 		found := self.unregister(vfs_path, new_registration.id)
 		if found {
 			cancel()
+
+			fmt.Printf("QueuePool cancelling listener context\n")
 			close(output_chan)
 		}
 	}
@@ -239,6 +241,8 @@ func (self *QueuePool) Register(
 func (self *QueuePool) unregister(vfs_path string, id int64) (found bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	fmt.Printf("QueuePool unregistering listener id %v\n", id)
 
 	registrations, pres := self.registrations[vfs_path]
 	if pres {
