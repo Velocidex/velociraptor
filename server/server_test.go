@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/golang/mock/gomock"
@@ -168,6 +169,9 @@ func (self *ServerTestSuite) TestClientEventTable() {
 
 	// The version of the currently installed table.
 	version := services.ClientEventManager().GetClientMonitoringState().Version
+
+	// Wait a bit.
+	time.Sleep(time.Second)
 
 	// Send a foreman checkin message from client with old event
 	// table version.

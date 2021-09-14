@@ -191,7 +191,6 @@ func (self *TestSuite) TestEnumerateIndex() {
 	}
 
 	current_op_count = getIndexListings(self.T())
-	utils.Debug(current_op_count - initial_op_count)
 	assert.True(self.T(), 50 > current_op_count-initial_op_count)
 }
 
