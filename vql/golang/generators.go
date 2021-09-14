@@ -82,11 +82,12 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 		return types.Null{}
 	}
 
-	output_chan := make(chan *ordereddict.Dict)
+	// A channel to send our events on
+	generator_chan := make(chan *ordereddict.Dict)
 
 	// Try to register this generator but if it is already registered
 	// just wrap the existing one and return it.
-	err = b.RegisterGenerator(output_chan, arg.Name)
+	err = b.RegisterGenerator(generator_chan, arg.Name)
 	if err == services.AlreadyRegisteredError {
 		return Generator{arg.Name}
 	}
@@ -103,7 +104,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 	})
 
 	go func() {
-		defer close(output_chan)
+		defer close(generator_chan)
 
 		if arg.Delay > 0 {
 			select {
@@ -118,7 +119,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 			select {
 			case <-sub_ctx.Done():
 				return
-			case output_chan <- vfilter.MaterializedLazyRow(ctx, item, scope):
+			case generator_chan <- vfilter.MaterializedLazyRow(ctx, item, scope):
 			}
 		}
 	}()

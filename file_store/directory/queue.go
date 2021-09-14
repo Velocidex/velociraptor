@@ -49,10 +49,6 @@ type Listener struct {
 	// block arbitrarily.
 	output chan *ordereddict.Dict
 
-	// We receive events on this channel - we guarantee this does
-	// not block for long.
-	input chan *ordereddict.Dict
-
 	// A backup file to store extra messages.
 	file_buffer *FileBasedRingBuffer
 
@@ -70,7 +66,12 @@ func (self *Listener) Send(item *ordereddict.Dict) {
 	case <-self.ctx.Done():
 		return
 
-	case self.input <- item:
+		// If we can immediately push to the output, do so
+	case self.output <- item:
+
+		// Otherwise push to the file.
+	default:
+		self.file_buffer.Enqueue(item)
 	}
 }
 
@@ -95,12 +96,18 @@ func (self *Listener) FlushFile() {
 	}
 }
 
+func (self *Listener) Output() chan *ordereddict.Dict {
+	return self.output
+}
+
 func (self *Listener) Close() {
 	self.FlushFile()
 
 	// Wait for all outstanding file buffer messages to be sent.
 	self.file_buffer.Wg.Wait()
 	self.file_buffer.Close()
+
+	close(self.output)
 
 	os.Remove(self.tmpfile) // clean up file buffer
 }
@@ -113,8 +120,8 @@ func (self *Listener) Debug() *ordereddict.Dict {
 	return result
 }
 
-func NewListener(config_obj *config_proto.Config, ctx context.Context,
-	output chan *ordereddict.Dict) (*Listener, error) {
+func NewListener(
+	config_obj *config_proto.Config, ctx context.Context) (*Listener, error) {
 
 	tmpfile, err := ioutil.TempFile("", "journal")
 	if err != nil {
@@ -129,44 +136,13 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 	self := &Listener{
 		id:          utils.GetId(),
 		ctx:         ctx,
-		input:       make(chan *ordereddict.Dict),
-		output:      output,
+		output:      make(chan *ordereddict.Dict),
 		file_buffer: file_buffer,
 		tmpfile:     tmpfile.Name(),
 	}
 
-	// Pump messages from input channel and distribute to
-	// output. If output is busy we divert to the file buffer.
-	go func() {
-		defer self.Close()
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-
-			case item, ok := <-self.input:
-				if !ok {
-					return
-				}
-				select {
-				case <-ctx.Done():
-					return
-
-					// If we can immediately push
-					// to the output, do so
-				case output <- item:
-
-					// Otherwise push to the file.
-				default:
-					self.file_buffer.Enqueue(item)
-				}
-			}
-		}
-
-	}()
-
-	// Pump messages from the file_buffer to our listeners.
+	// Pump messages from the file_buffer to our listeners
+	// periodically.
 	go func() {
 		for {
 			// Wait here until the file has some data in it.
@@ -182,7 +158,7 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 					case <-ctx.Done():
 						self.file_buffer.Wg.Done()
 
-					case output <- item:
+					case self.output <- item:
 						self.file_buffer.Wg.Done()
 					}
 				}
@@ -208,16 +184,14 @@ func (self *QueuePool) Register(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	output_chan := make(chan *ordereddict.Dict)
-
 	registrations := self.registrations[vfs_path]
 
 	subctx, cancel := context.WithCancel(ctx)
-	new_registration, err := NewListener(self.config_obj, subctx, output_chan)
+	new_registration, err := NewListener(self.config_obj, subctx)
 	if err != nil {
-		close(output_chan)
 		cancel()
-
+		output_chan := make(chan *ordereddict.Dict)
+		close(output_chan)
 		return output_chan, cancel
 	}
 
@@ -225,14 +199,9 @@ func (self *QueuePool) Register(
 
 	self.registrations[vfs_path] = registrations
 
-	return output_chan, func() {
-		found := self.unregister(vfs_path, new_registration.id)
-		if found {
-			cancel()
-
-			fmt.Printf("QueuePool cancelling listener context\n")
-			close(output_chan)
-		}
+	return new_registration.Output(), func() {
+		self.unregister(vfs_path, new_registration.id)
+		cancel()
 	}
 }
 
@@ -241,8 +210,6 @@ func (self *QueuePool) Register(
 func (self *QueuePool) unregister(vfs_path string, id uint64) (found bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
-
-	fmt.Printf("QueuePool unregistering listener id %v\n", id)
 
 	registrations, pres := self.registrations[vfs_path]
 	if pres {
@@ -258,6 +225,9 @@ func (self *QueuePool) unregister(vfs_path string, id uint64) (found bool) {
 		}
 
 		self.registrations[vfs_path] = new_registrations
+		if len(new_registrations) == 0 {
+			delete(self.registrations, vfs_path)
+		}
 	}
 
 	return found

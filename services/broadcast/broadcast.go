@@ -55,7 +55,6 @@ func (self *BroadcastService) unregister(name string) {
 
 	if ok {
 		for _, closer := range closers {
-			fmt.Printf("Closing\n")
 			closer()
 		}
 	}
