@@ -43,15 +43,11 @@ import (
 // A listener wraps a channel that our client will listen on. We send
 // the message to each listener that is subscribed to the queue.
 type Listener struct {
-	id int64
+	id uint64
 
 	// The consumer interested in these events. The consumer may
 	// block arbitrarily.
 	output chan *ordereddict.Dict
-
-	// We receive events on this channel - we guarantee this does
-	// not block for long.
-	input chan *ordereddict.Dict
 
 	// A backup file to store extra messages.
 	file_buffer *FileBasedRingBuffer
@@ -70,12 +66,48 @@ func (self *Listener) Send(item *ordereddict.Dict) {
 	case <-self.ctx.Done():
 		return
 
-	case self.input <- item:
+		// If we can immediately push to the output, do so
+	case self.output <- item:
+
+		// Otherwise push to the file.
+	default:
+		self.file_buffer.Enqueue(item)
 	}
 }
 
+// Flush the file buffer into the output channel.
+func (self *Listener) FlushFile() {
+	// Immediately drain the file.
+	for {
+		items := self.file_buffer.Lease(100)
+		if len(items) == 0 {
+			return
+		}
+		for _, item := range items {
+			select {
+			case <-self.ctx.Done():
+				// We still need to release this item from the wg.
+				self.file_buffer.Wg.Done()
+
+			case self.output <- item:
+				self.file_buffer.Wg.Done()
+			}
+		}
+	}
+}
+
+func (self *Listener) Output() chan *ordereddict.Dict {
+	return self.output
+}
+
 func (self *Listener) Close() {
+	self.FlushFile()
+
+	// Wait for all outstanding file buffer messages to be sent.
+	self.file_buffer.Wg.Wait()
 	self.file_buffer.Close()
+
+	close(self.output)
 
 	os.Remove(self.tmpfile) // clean up file buffer
 }
@@ -88,8 +120,8 @@ func (self *Listener) Debug() *ordereddict.Dict {
 	return result
 }
 
-func NewListener(config_obj *config_proto.Config, ctx context.Context,
-	output chan *ordereddict.Dict) (*Listener, error) {
+func NewListener(
+	config_obj *config_proto.Config, ctx context.Context) (*Listener, error) {
 
 	tmpfile, err := ioutil.TempFile("", "journal")
 	if err != nil {
@@ -102,46 +134,15 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 	}
 
 	self := &Listener{
-		id:          time.Now().UnixNano(),
+		id:          utils.GetId(),
 		ctx:         ctx,
-		input:       make(chan *ordereddict.Dict),
-		output:      output,
+		output:      make(chan *ordereddict.Dict),
 		file_buffer: file_buffer,
 		tmpfile:     tmpfile.Name(),
 	}
 
-	// Pump messages from input channel and distribute to
-	// output. If output is busy we divert to the file buffer.
-	go func() {
-		defer self.Close()
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-
-			case item, ok := <-self.input:
-				if !ok {
-					return
-				}
-				select {
-				case <-ctx.Done():
-					return
-
-					// If we can immediately push
-					// to the output, do so
-				case self.output <- item:
-
-					// Otherwise push to the file.
-				default:
-					self.file_buffer.Enqueue(item)
-				}
-			}
-		}
-
-	}()
-
-	// Pump messages from the file_buffer to our listeners.
+	// Pump messages from the file_buffer to our listeners
+	// periodically.
 	go func() {
 		for {
 			// Wait here until the file has some data in it.
@@ -151,11 +152,14 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 
 			case <-time.After(time.Second):
 				// Get some messages from the file.
-				for _, item := range self.file_buffer.Lease(100) {
+				items := self.file_buffer.Lease(100)
+				for _, item := range items {
 					select {
 					case <-ctx.Done():
-						return
+						self.file_buffer.Wg.Done()
+
 					case self.output <- item:
+						self.file_buffer.Wg.Done()
 					}
 				}
 			}
@@ -180,34 +184,30 @@ func (self *QueuePool) Register(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	output_chan := make(chan *ordereddict.Dict)
-
 	registrations := self.registrations[vfs_path]
 
 	subctx, cancel := context.WithCancel(ctx)
-	new_registration, err := NewListener(self.config_obj, subctx, output_chan)
+	new_registration, err := NewListener(self.config_obj, subctx)
 	if err != nil {
-		close(output_chan)
 		cancel()
-
-		return output_chan, func() {}
+		output_chan := make(chan *ordereddict.Dict)
+		close(output_chan)
+		return output_chan, cancel
 	}
 
 	registrations = append(registrations, new_registration)
 
 	self.registrations[vfs_path] = registrations
 
-	return output_chan, func() {
-		close(output_chan)
-		cancel()
-
+	return new_registration.Output(), func() {
 		self.unregister(vfs_path, new_registration.id)
+		cancel()
 	}
 }
 
 // This holds a lock on the entire pool and it is used when the system
 // shuts down so not very often.
-func (self *QueuePool) unregister(vfs_path string, id int64) {
+func (self *QueuePool) unregister(vfs_path string, id uint64) (found bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -217,14 +217,20 @@ func (self *QueuePool) unregister(vfs_path string, id int64) {
 		for _, item := range registrations {
 			if id == item.id {
 				item.Close()
+				found = true
+
 			} else {
-				new_registrations = append(new_registrations,
-					item)
+				new_registrations = append(new_registrations, item)
 			}
 		}
 
 		self.registrations[vfs_path] = new_registrations
+		if len(new_registrations) == 0 {
+			delete(self.registrations, vfs_path)
+		}
 	}
+
+	return found
 }
 
 // Make a copy of the registrations under lock and then we can take
@@ -303,8 +309,18 @@ func (self *DirectoryQueueManager) PushEventRows(
 }
 
 func (self *DirectoryQueueManager) Watch(ctx context.Context,
-	queue_name string) (output <-chan *ordereddict.Dict, cancel func()) {
-	return self.queue_pool.Register(ctx, queue_name)
+	queue_name string) (<-chan *ordereddict.Dict, func()) {
+
+	// If the caller of Watch no longer cares about watching the queue
+	// they will call the cancellation function. This must abandon the
+	// current queue listener and cause any outstanding events to be
+	// dropped on the floor.
+	subctx, cancel := context.WithCancel(ctx)
+	output_chan, pool_cancel := self.queue_pool.Register(subctx, queue_name)
+	return output_chan, func() {
+		cancel()
+		pool_cancel()
+	}
 }
 
 func NewDirectoryQueueManager(config_obj *config_proto.Config,

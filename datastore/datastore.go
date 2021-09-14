@@ -144,11 +144,12 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 
 		// Sanitize the FilestoreDirectory parameter so we
 		// have a consistent filename in the test datastore.
-		config_obj.Datastore.Location = strings.TrimSuffix(
-			config_obj.Datastore.Location, "/")
-		config_obj.Datastore.Location = strings.TrimSuffix(
-			config_obj.Datastore.Location, "\\")
-
+		if config_obj.Datastore.Location != "" {
+			config_obj.Datastore.Location = strings.TrimSuffix(
+				config_obj.Datastore.Location, "/")
+			config_obj.Datastore.Location = strings.TrimSuffix(
+				config_obj.Datastore.Location, "\\")
+		}
 		return gTestDatastore, nil
 
 	default:

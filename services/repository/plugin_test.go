@@ -145,7 +145,12 @@ func (self *PluginTestSuite) TestArtifactPluginWithPrecondition() {
 
 	queries := []string{
 		"SELECT * FROM Artifact.CallArtifactWithFalsePrecondition()",
-		"SELECT * FROM Artifact.CallArtifactWithFalsePrecondition(precondition=TRUE)",
+
+		// Preconditions are **not** enforced on the sub artifact
+		// because we only ask the top artifact to honor them, but it
+		// is **not** also passing the preconditions requirement to
+		// its sub artifact.
+		"SELECT * FROM Artifact.CallArtifactWithFalsePrecondition(preconditions=TRUE)",
 	}
 
 	results := ordereddict.NewDict()

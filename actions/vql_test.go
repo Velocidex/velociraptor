@@ -1,63 +1,26 @@
 package actions_test
 
 import (
-	"context"
 	"testing"
-	"time"
 
 	"github.com/alecthomas/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/responder"
-	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 )
 
 type ClientVQLTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
-	ctx        context.Context
-}
-
-func (self *ClientVQLTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../http_comms/test_data/client.config.yaml").
-		WithRequiredClient().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
-
-	// Start essential services.
-	self.ctx, _ = context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(self.ctx, self.config_obj)
-
-	t := self.T()
-	assert.NoError(t, self.sm.Start(journal.StartJournalService))
-	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
-	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
-	assert.NoError(t, self.sm.Start(launcher.StartLauncherService))
-	assert.NoError(t, self.sm.Start(repository.StartRepositoryManager))
-}
-
-func (self *ClientVQLTestSuite) TearDownTest() {
-	self.sm.Close()
+	test_utils.TestSuite
 }
 
 // Make sure that dependent artifacts are properly used
 func (self *ClientVQLTestSuite) TestDependentArtifacts() {
 	resp := responder.TestResponder()
 
-	actions.VQLClientAction{}.StartQuery(self.config_obj, self.ctx, resp,
+	actions.VQLClientAction{}.StartQuery(self.ConfigObj, self.Sm.Ctx, resp,
 		&actions_proto.VQLCollectorArgs{
 			Query: []*actions_proto.VQLRequest{
 				{

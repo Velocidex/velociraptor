@@ -105,13 +105,16 @@ func (self *TestSuite) TestPagedReader() {
 	}
 
 	// Make the reader's timeout very short.
-	reader.Lifetime = 10 * time.Millisecond
+	reader.SetLifetime(10 * time.Millisecond)
 	reader.Close()
 	reader.ReadAt(buff, 0)
 	assert.Equal(self.T(), binary.LittleEndian.Uint32(buff), uint32(1))
 
 	// Wait here until the reader closes itself by itself.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		reader.mu.Lock()
+		defer reader.mu.Unlock()
+
 		return reader.reader == nil
 	})
 

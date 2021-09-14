@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -46,6 +47,10 @@ func (self _ChainPlugin) Call(
 		}
 
 		for _, member := range members {
+			if member == "async" {
+				continue
+			}
+
 			member_obj, pres := args.Get(member)
 			if pres {
 				queries = append(queries, arg_parser.ToStoredQuery(ctx, member_obj))
@@ -87,4 +92,29 @@ func (self _ChainPlugin) Call(
 
 	return output_chan
 
+}
+
+type _CombinePlugin struct{}
+
+func (self _CombinePlugin) Info(scope types.Scope, type_map *types.TypeMap) *types.PluginInfo {
+	return &types.PluginInfo{
+		Name: "combine",
+		Doc: "Combine the output of several queries into the same result set." +
+			"A convenience plugin acting like chain(async=TRUE).",
+		ArgType: type_map.AddType(scope, _CombinePlugin{}),
+	}
+}
+
+func (self _CombinePlugin) Call(
+	ctx context.Context,
+	scope types.Scope,
+	args *ordereddict.Dict) <-chan types.Row {
+
+	args.Set("async", true)
+	return _ChainPlugin{}.Call(ctx, scope, args)
+}
+
+func init() {
+	vql_subsystem.RegisterPlugin(&_CombinePlugin{})
+	vql_subsystem.RegisterPlugin(&_ChainPlugin{})
 }

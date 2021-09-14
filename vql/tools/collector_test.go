@@ -113,6 +113,14 @@ type TestSuite struct {
 	test_utils.TestSuite
 }
 
+func (self *TestSuite) SetupTest() {
+	self.TestSuite.SetupTest()
+	self.LoadArtifactFiles(
+		"../../artifacts/definitions/Demo/Plugins/GUI.yaml",
+		"../../artifacts/definitions/Reporting/Default.yaml",
+	)
+}
+
 func (self *TestSuite) TestSimpleCollection() {
 	scope := vql_subsystem.MakeScope()
 

@@ -1,7 +1,6 @@
 package server_monitoring
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -11,19 +10,12 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
@@ -32,7 +24,7 @@ import (
 )
 
 var (
-	monitoringArtifact = `
+	monitoringArtifacts = []string{`
 name: Server.Clock
 type: SERVER_EVENT
 parameters:
@@ -46,9 +38,7 @@ sources:
 - query: |
      SELECT Foo, Foo2, BoolFoo FROM clock(ms=10)
      LIMIT 5
-`
-
-	monitoringArtifact2 = `
+`, `
 name: Server.Clock2
 type: SERVER_EVENT
 parameters:
@@ -60,48 +50,24 @@ sources:
 - query: |
      SELECT Foo, Foo2 FROM clock(ms=10)
      LIMIT 5
-`
+`}
 )
 
 type ServerMonitoringTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
+	test_utils.TestSuite
 }
 
 func (self *ServerMonitoringTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().
-		WithWriteback().
-		WithVerbose(true).
-		LoadAndValidate()
-	require.NoError(self.T(), err)
+	self.TestSuite.SetupTest()
 
-	// Start essential services.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	t := self.T()
-	assert.NoError(t, self.sm.Start(journal.StartJournalService))
-	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
-	assert.NoError(t, self.sm.Start(launcher.StartLauncherService))
-	assert.NoError(t, self.sm.Start(repository.StartRepositoryManager))
-	assert.NoError(t, self.sm.Start(StartServerMonitoringService))
-}
-
-func (self *ServerMonitoringTestSuite) TearDownTest() {
-	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+	assert.NoError(self.T(), self.Sm.Start(StartServerMonitoringService))
 }
 
 func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
-	db := test_utils.GetMemoryDataStore(self.T(), self.config_obj)
+	db := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
 
 	event_table := services.GetServerEventManager().(*EventTable)
-	event_table.Clock = &utils.MockClock{MockNow: time.Unix(1602103388, 0)}
+	event_table.SetClock(&utils.MockClock{MockNow: time.Unix(1602103388, 0)})
 
 	// Initially Server.Monitor.Health should be created if no
 	// other config exists.
@@ -110,21 +76,10 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	assert.Equal(self.T(), 1, len(configuration.Artifacts))
 	assert.Equal(self.T(), "Server.Monitor.Health", configuration.Artifacts[0])
 
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	repository, err := manager.GetGlobalRepository(self.config_obj)
-	assert.NoError(self.T(), err)
-
-	// Add the new artifacts to the repository
-	_, err = repository.LoadYaml(monitoringArtifact, true /* validate */)
-	assert.NoError(self.T(), err)
-
-	_, err = repository.LoadYaml(monitoringArtifact2, true /* validate */)
-	assert.NoError(self.T(), err)
+	self.LoadArtifacts(monitoringArtifacts)
 
 	// Install the two event artifacts.
-	err = services.GetServerEventManager().Update(self.config_obj,
+	err := services.GetServerEventManager().Update(self.ConfigObj,
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"Server.Clock", "Server.Clock2"},
 			Specs: []*flows_proto.ArtifactSpec{
@@ -162,7 +117,7 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 
 	golden := ordereddict.NewDict()
 
-	fs := test_utils.GetMemoryFileStore(self.T(), self.config_obj)
+	fs := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
 	for _, path := range []string{
 		"/server_artifacts/Server.Clock/2020-10-07.json",
 		"/server_artifact_logs/Server.Clock/2020-10-07.json",
@@ -198,12 +153,12 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 
 func (self *ServerMonitoringTestSuite) TestEmptyTable() {
 	event_table := services.GetServerEventManager().(*EventTable)
-	event_table.Clock = &utils.MockClock{MockNow: time.Unix(1602103388, 0)}
+	event_table.SetClock(&utils.MockClock{MockNow: time.Unix(1602103388, 0)})
 
 	manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)
 
-	repository, err := manager.GetGlobalRepository(self.config_obj)
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Add the new artifacts to the repository
@@ -215,7 +170,7 @@ sources:
 	assert.NoError(self.T(), err)
 
 	// Install a table with a sleep artifact.
-	err = services.GetServerEventManager().Update(self.config_obj,
+	err = services.GetServerEventManager().Update(self.ConfigObj,
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"Sleep"},
 			Specs:     []*flows_proto.ArtifactSpec{},
@@ -228,7 +183,7 @@ sources:
 	})
 
 	// Now install an empty table - all queries should quit.
-	err = services.GetServerEventManager().Update(self.config_obj,
+	err = services.GetServerEventManager().Update(self.ConfigObj,
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{},
 			Specs:     []*flows_proto.ArtifactSpec{},

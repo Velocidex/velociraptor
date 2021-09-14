@@ -67,6 +67,13 @@ type Labeler struct {
 	Clock utils.Clock
 }
 
+func (self *Labeler) SetClock(c utils.Clock) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.Clock = c
+}
+
 // If an explicit record does not exist, we retrieve it from searching the index.
 func (self *Labeler) getRecordFromIndex(
 	config_obj *config_proto.Config, client_id string) (*CachedLabels, error) {

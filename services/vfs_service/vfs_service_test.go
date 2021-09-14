@@ -1,7 +1,6 @@
 package vfs_service
 
 import (
-	"context"
 	"path"
 	"testing"
 	"time"
@@ -12,74 +11,40 @@ import (
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
-type VFSServiceTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	ctx        context.Context
-	client_id  string
-	flow_id    string
-	sm         *services.Service
+var definitions = []string{`
+name: System.VFS.ListDirectory
+`, `
+name: System.VFS.DownloadFile
+`,
 }
 
-func (self *VFSServiceTestSuite) GetMemoryFileStore() *memory.MemoryFileStore {
-	file_store_factory, ok := file_store.GetFileStore(
-		self.config_obj).(*memory.MemoryFileStore)
-	require.True(self.T(), ok)
+type VFSServiceTestSuite struct {
+	test_utils.TestSuite
 
-	return file_store_factory
+	client_id string
+	flow_id   string
 }
 
 func (self *VFSServiceTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
+	self.TestSuite.SetupTest()
 
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
-	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
-	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
-	require.NoError(self.T(), self.sm.Start(StartVFSService))
+	require.NoError(self.T(), self.Sm.Start(StartVFSService))
+	self.LoadArtifacts(definitions)
 
 	self.client_id = "C.12312"
 	self.flow_id = "F.1232"
-}
-
-func (self *VFSServiceTestSuite) TearDownTest() {
-	// Reset the data store.
-	db, err := datastore.GetDB(self.config_obj)
-	require.NoError(self.T(), err)
-
-	db.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	self.sm.Close()
 }
 
 func (self *VFSServiceTestSuite) EmulateCollection(
@@ -90,11 +55,11 @@ func (self *VFSServiceTestSuite) EmulateCollection(
 	journal, err := services.GetJournal()
 	assert.NoError(self.T(), err)
 
-	journal.PushRowsToArtifact(self.config_obj, rows,
+	journal.PushRowsToArtifact(self.ConfigObj, rows,
 		artifact, self.client_id, self.flow_id)
 
 	// Emulate a flow completion message coming from the flow processor.
-	journal.PushRowsToArtifact(self.config_obj,
+	journal.PushRowsToArtifact(self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).
@@ -117,14 +82,14 @@ func (self *VFSServiceTestSuite) TestVFSListDirectory() {
 			makeStat("/a/b", "e"),
 		})
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	client_path_manager := paths.NewClientPathManager(self.client_id)
 	resp := &api_proto.VFSListResponse{}
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.config_obj,
+		db.GetSubject(self.ConfigObj,
 			client_path_manager.VFSPath([]string{"file", "a", "b"}),
 			resp)
 		return resp.TotalRows == 3
@@ -140,7 +105,7 @@ func (self *VFSServiceTestSuite) TestVFSListDirectoryEmpty() {
 
 	// Emulate a flow completion message coming from the flow processor.
 	artifact := "System.VFS.ListDirectory"
-	journal.PushRowsToArtifact(self.config_obj,
+	journal.PushRowsToArtifact(self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).
@@ -164,14 +129,14 @@ func (self *VFSServiceTestSuite) TestVFSListDirectoryEmpty() {
 				}}),
 		}, "System.Flow.Completion", "server", "")
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	client_path_manager := paths.NewClientPathManager(self.client_id)
 	resp := &api_proto.VFSListResponse{}
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.config_obj,
+		db.GetSubject(self.ConfigObj,
 			client_path_manager.VFSPath([]string{"file", "a", "b"}),
 			resp)
 		return resp.Timestamp > 0
@@ -188,7 +153,7 @@ func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectory() {
 			makeStat("/a/b/c", "CB"),
 		})
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	client_path_manager := paths.NewClientPathManager(self.client_id)
@@ -196,7 +161,7 @@ func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectory() {
 
 	// The response in VFS path /file/a/b
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.config_obj,
+		db.GetSubject(self.ConfigObj,
 			client_path_manager.VFSPath([]string{"file", "a", "b"}),
 			resp)
 		return resp.TotalRows == 2
@@ -210,7 +175,7 @@ func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectory() {
 
 	// The response in VFS path /file/a/b/c
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.config_obj,
+		db.GetSubject(self.ConfigObj,
 			client_path_manager.VFSPath([]string{"file", "a", "b", "c"}),
 			resp)
 		return resp.TotalRows == 2
@@ -232,7 +197,7 @@ func (self *VFSServiceTestSuite) TestVFSDownload() {
 		})
 
 	// Simulate an upload that was received by our System.VFS.DownloadFile collection.
-	file_store := self.GetMemoryFileStore()
+	file_store := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
 	fd, err := file_store.WriteFile(flow_path_manager.GetUploadsFile("file", "/a/b/B").Path())
 	assert.NoError(self.T(), err)
 	fd.Write([]byte("Data"))
@@ -246,7 +211,7 @@ func (self *VFSServiceTestSuite) TestVFSDownload() {
 				Set("Size", 10),
 		})
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// The VFS service stores a file in the VFS area of the
@@ -254,7 +219,7 @@ func (self *VFSServiceTestSuite) TestVFSDownload() {
 	// is stored in the collection's space.
 	resp := &proto.VFSDownloadInfo{}
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.config_obj,
+		db.GetSubject(self.ConfigObj,
 			client_path_manager.VFSDownloadInfoFromClientPath(
 				"file", "/a/b/B"),
 			resp)

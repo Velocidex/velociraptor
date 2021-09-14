@@ -37,8 +37,10 @@ func NewMemoryFileStore(config_obj *config_proto.Config) *MemoryFileStore {
 	}
 
 	// Sanitize the FilestoreDirectory
-	config_obj.Datastore.FilestoreDirectory = strings.TrimSuffix(
-		config_obj.Datastore.FilestoreDirectory, "/")
+	if config_obj.Datastore.FilestoreDirectory != "" {
+		config_obj.Datastore.FilestoreDirectory = strings.TrimSuffix(
+			config_obj.Datastore.FilestoreDirectory, "/")
+	}
 
 	return Test_memory_file_store
 }

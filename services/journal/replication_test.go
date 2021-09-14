@@ -67,7 +67,7 @@ func (self *ReplicationTestSuite) startServices() {
 	assert.NoError(self.T(), err)
 
 	replicator := journal_service.(*journal.ReplicationService)
-	replicator.RetryDuration = 100 * time.Millisecond
+	replicator.SetRetryDuration(100 * time.Millisecond)
 }
 
 func (self *ReplicationTestSuite) SetupTest() {
@@ -103,8 +103,9 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 	stream.EXPECT().Recv().AnyTimes().Return(nil, errors.New("Error"))
 
 	// Record the WatchEvents calls
-	watched := []string{}
 	var mu sync.Mutex
+	watched := []string{}
+
 	mock_watch_event_recorder := func(
 		ctx context.Context, in *api_proto.EventRequest, opts ...grpc.CallOption) (
 		api_proto.API_WatchEventClient, error) {
@@ -130,6 +131,9 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 
 	// Wait here until we call all the watchers.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
 		return vtesting.CompareStrings(watched, []string{
 			// Watch for ping requests from the
 			// master. This is used to let the master know
@@ -146,6 +150,7 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 func (self *ReplicationTestSuite) TestSendingEvents() {
 	self.TestReplicationServiceStandardWatchers()
 
+	var mu sync.Mutex
 	events := []*api_proto.PushEventRequest{}
 	var last_error error
 
@@ -153,6 +158,9 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 	record_push_event := func(ctx context.Context,
 		in *api_proto.PushEventRequest,
 		opts ...grpc.CallOption) (*emptypb.Empty, error) {
+		mu.Lock()
+		defer mu.Unlock()
+
 		// On error do not capture the request
 		if last_error != nil {
 			return nil, last_error
@@ -174,7 +182,7 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 	assert.NoError(self.T(), err)
 
 	replicator := journal_service.(*journal.ReplicationService)
-	replicator.RetryDuration = 100 * time.Millisecond
+	replicator.SetRetryDuration(100 * time.Millisecond)
 
 	events = nil
 	err = journal_service.PushRowsToArtifact(self.config_obj,
@@ -183,12 +191,17 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 
 	// Wait to see if the first event was properly delivered.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
 		return len(events) > 0
 	})
 	assert.Equal(self.T(), len(events), 1)
 
 	// Now emulate an RPC server error.
+	mu.Lock()
 	last_error = errors.New("Master is down!")
+	mu.Unlock()
 
 	events = nil
 
@@ -204,7 +217,7 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 	}
 
 	// Make sure we wrote something to the buffer file.
-	assert.True(self.T(), replicator.Buffer.Header.WritePointer > 2000)
+	assert.True(self.T(), replicator.Buffer.GetHeader().WritePointer > 2000)
 
 	// Wait a while to allow events to be delivered.
 	time.Sleep(time.Second)
@@ -215,8 +228,14 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 	// Now enable the server, it should just deliver all the
 	// messages from the buffer file after a while as the
 	// ReplicationService will retry.
+	mu.Lock()
 	last_error = nil
+	mu.Unlock()
+
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
 		return len(events) == 1000
 	})
 	assert.Equal(self.T(), len(events), 1000)

@@ -13,6 +13,7 @@ import (
 
 type SleepArgs struct {
 	Sleep int64 `vfilter:"optional,field=time,doc=The number of seconds to sleep"`
+	MS    int64 `vfilter:"optional,field=ms,doc=The number of ms to sleep"`
 }
 
 type SleepFunction struct{}
@@ -27,12 +28,17 @@ func (self *SleepFunction) Call(ctx context.Context,
 		return false
 	}
 
+	ms := arg.MS
+	if ms == 0 {
+		ms = arg.Sleep * 1000
+	}
+
 	select {
 	// Cancellation should abort the sleep.
 	case <-ctx.Done():
 		break
 
-	case <-time.After(time.Duration(arg.Sleep) * time.Second):
+	case <-time.After(time.Duration(ms) * time.Millisecond):
 		break
 	}
 

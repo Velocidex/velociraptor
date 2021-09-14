@@ -191,6 +191,15 @@ func getChildren(
 	metricLRUMiss.Inc()
 	db, _ := datastore.GetDB(config_obj)
 	children, err := db.ListChildren(config_obj, root.SetTag("Index"))
+	if err != nil {
+		return nil, err
+	}
+
+	// Keep the listing sorted in cache.
+	sort.Slice(children, func(i, j int) bool {
+		return children[i].Base() < children[j].Base()
+	})
+
 	cached_entry := &lruEntry{
 		ts:       now,
 		children: children,
@@ -234,10 +243,6 @@ func walkIndexWithPrefix(ctx context.Context,
 
 			next_partitions = partitions[1:]
 		}
-
-		sort.Slice(children, func(i, j int) bool {
-			return children[i].Base() < children[j].Base()
-		})
 
 		// First add any non-directories that exist in this directory.
 		for _, child := range children {

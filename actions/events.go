@@ -207,7 +207,11 @@ func (self UpdateEventTable) Run(
 
 	// Cancel the context when the cancel channel is closed.
 	go func() {
-		<-table.Done
+		mu.Lock()
+		done := table.Done
+		mu.Unlock()
+
+		<-done
 		logger.Info("UpdateEventTable: Closing all contexts")
 		cancel()
 	}()
@@ -253,7 +257,7 @@ func (self UpdateEventTable) Run(
 			if name != "" {
 				logger.Info("Finished monitoring query %s", name)
 			}
-		}(event)
+		}(proto.Clone(event).(*actions_proto.VQLCollectorArgs))
 	}
 
 	err = update_writeback(config_obj, arg)

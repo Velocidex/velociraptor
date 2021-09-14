@@ -75,6 +75,17 @@ type ClientEventTable struct {
 	id string
 }
 
+func (self *ClientEventTable) SetClock(clock utils.Clock) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.Clock = clock
+}
+
+func (self ClientEventTable) GetClock() utils.Clock {
+	return self.Clock
+}
+
 // Checks to see if we need to update the client event table. Each
 // client's table version is the timestamp when it received the event
 // table update. Clients need to renew their table if:
@@ -199,8 +210,8 @@ func (self *ClientEventTable) setClientMonitoringState(
 		state.Artifacts = &flows_proto.ArtifactCollectorArgs{}
 	}
 
-	self.state = state
-	state.Version = uint64(self.Clock.Now().UnixNano())
+	self.state = proto.Clone(state).(*flows_proto.ClientEventTable)
+	self.state.Version = uint64(self.Clock.Now().UnixNano())
 
 	// Store the new table in the data store.
 	db, err := datastore.GetDB(config_obj)

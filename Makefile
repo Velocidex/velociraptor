@@ -5,7 +5,7 @@ auto:
 	go run make.go -v auto
 
 test:
-	go test -v --tags server_vql ./...
+	go test -race -v --tags server_vql ./...
 
 golden:
 	./output/velociraptor -v --config artifacts/testdata/windows/test.config.yaml golden artifacts/testdata/server/testcases/ --env srcDir=`pwd` --filter=${GOLDEN}

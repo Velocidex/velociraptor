@@ -16,45 +16,16 @@ import (
 	"github.com/alecthomas/assert"
 	"github.com/jmoiron/sqlx"
 	"github.com/sebdah/goldie"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
 type TestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
-}
-
-func (self *TestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().WithVerbose(true).
-		LoadAndValidate()
-	require.NoError(self.T(), err)
-
-	self.config_obj.Frontend.DoNotCompressArtifacts = true
-
-	// Start essential services.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
-}
-
-func (self *TestSuite) TearDownTest() {
-	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+	test_utils.TestSuite
 }
 
 func (self *TestSuite) createSqliteFile(filename string) error {
@@ -88,7 +59,7 @@ func (self *TestSuite) TestSQLite() {
 	log_buffer := &strings.Builder{}
 
 	builder := services.ScopeBuilder{
-		Config:     self.config_obj,
+		Config:     self.ConfigObj,
 		ACLManager: vql_subsystem.NullACLManager{},
 		Logger:     log.New(log_buffer, "vql: ", 0),
 		Env:        ordereddict.NewDict(),

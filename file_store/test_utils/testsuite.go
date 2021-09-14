@@ -2,9 +2,11 @@ package test_utils
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 	"time"
 
+	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -17,6 +19,49 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
+)
+
+var (
+	// These artifacts are normally defined as assets but we define
+	// them separately for tests.
+	definitions = []string{`
+name: Server.Internal.HuntModification
+type: INTERNAL
+`, `
+name: Server.Internal.ClientDelete
+type: INTERNAL
+`, `
+name: Server.Internal.Label
+type: INTERNAL
+`, `
+name: Server.Internal.Notifications
+type: INTERNAL
+`, `
+name: Server.Internal.Ping
+type: INTERNAL
+`, `
+name: System.Flow.Completion
+type: CLIENT_EVENT
+`, `
+name: Server.Internal.ArtifactModification
+type: SERVER_EVENT
+`, `
+name: Server.Internal.FrontendMetrics
+type: INTERNAL
+`, `
+name: Server.Monitor.Health
+type: SERVER_EVENT
+`, `
+name: Generic.Client.Stats
+type: CLIENT_EVENT
+`, `
+name: System.Hunt.Participation
+type: CLIENT_EVENT
+`, `
+name: Generic.Client.Info
+type: CLIENT
+`,
+	}
 )
 
 type TestSuite struct {
@@ -48,8 +93,38 @@ func (self *TestSuite) SetupTest() {
 	require.NoError(self.T(), self.Sm.Start(inventory.StartInventoryService))
 	require.NoError(self.T(), self.Sm.Start(client_info.StartClientInfoService))
 	require.NoError(self.T(), self.Sm.Start(launcher.StartLauncherService))
-	require.NoError(self.T(), self.Sm.Start(repository.StartRepositoryManager))
+	require.NoError(self.T(), self.Sm.Start(repository.StartRepositoryManagerForTest))
 	require.NoError(self.T(), self.Sm.Start(labels.StartLabelService))
+
+	self.LoadArtifacts(definitions)
+}
+
+func (self *TestSuite) LoadArtifacts(definitions []string) {
+	manager, _ := services.GetRepositoryManager()
+	global_repo, err := manager.GetGlobalRepository(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	for _, def := range definitions {
+		_, err := global_repo.LoadYaml(def, true)
+		assert.NoError(self.T(), err)
+	}
+}
+
+func (self *TestSuite) LoadArtifactFiles(paths ...string) {
+	manager, _ := services.GetRepositoryManager()
+	global_repo, err := manager.GetGlobalRepository(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	for _, p := range paths {
+		fd, err := os.Open(p)
+		assert.NoError(self.T(), err)
+
+		def, err := ioutil.ReadAll(fd)
+		assert.NoError(self.T(), err)
+
+		_, err = global_repo.LoadYaml(string(def), true)
+		assert.NoError(self.T(), err)
+	}
 }
 
 func (self *TestSuite) TearDownTest() {

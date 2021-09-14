@@ -17,7 +17,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
@@ -36,25 +35,42 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/labels"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
+var (
+	mock_definitions = []string{`
+name: Windows.Remediation.QuarantineMonitor
+type: SERVER_EVENT
+`, `
+name: System.Hunt.Creation
+type: SERVER_EVENT
+`, `
+name: System.Flow.Archive
+type: SERVER
+`, `
+name: Server.Internal.Enrollment
+type: INTERNAL
+`, `
+name: Generic.Client.Info
+type: CLIENT
+sources:
+- name: BasicInformation
+  query: SELECT * FROM info()
+- name: Users
+  precondition: SELECT OS From info() where OS = 'windows'
+  query: SELECT * FROM info()
+`}
+)
+
 type ServerTestSuite struct {
-	suite.Suite
+	test_utils.TestSuite
 	server        *server.Server
 	client_crypto *crypto_client.ClientCryptoManager
-	config_obj    *config_proto.Config
 	client_id     string
-	sm            *services.Service
 }
 
 type MockAPIClientFactory struct {
@@ -69,56 +85,26 @@ func (self MockAPIClientFactory) GetAPIClient(
 
 func (self *ServerTestSuite) SetupTest() {
 	var err error
+	self.TestSuite.SetupTest()
+	self.LoadArtifacts(mock_definitions)
 
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../http_comms/test_data/server.config.yaml").
-		WithVerbose(true).
-		WithWriteback(). //  The writeback is actually embedded in the config above.
-		LoadAndValidate()
-	require.NoError(self.T(), err)
+	require.NoError(self.T(), self.Sm.Start(client_monitoring.StartClientMonitoringService))
+	require.NoError(self.T(), self.Sm.Start(hunt_dispatcher.StartHuntDispatcher))
+	require.NoError(self.T(), self.Sm.Start(interrogation.StartInterrogationService))
 
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
-	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
-	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
-	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-	require.NoError(self.T(), self.sm.Start(labels.StartLabelService))
-	require.NoError(self.T(), self.sm.Start(client_monitoring.StartClientMonitoringService))
-	require.NoError(self.T(), self.sm.Start(interrogation.StartInterrogationService))
-
-	// Load all the standard artifacts.
-	manager, err := services.GetRepositoryManager()
-	assert.NoError(self.T(), err)
-
-	manager.GetGlobalRepository(self.config_obj)
-
-	self.server, err = server.NewServer(self.sm.Ctx, self.config_obj, self.sm.Wg)
+	self.server, err = server.NewServer(self.Sm.Ctx, self.ConfigObj, self.Sm.Wg)
 	require.NoError(self.T(), err)
 
 	self.client_crypto, err = crypto_client.NewClientCryptoManager(
-		self.config_obj, []byte(self.config_obj.Writeback.PrivateKey))
+		self.ConfigObj, []byte(self.ConfigObj.Writeback.PrivateKey))
 	require.NoError(self.T(), err)
 
 	_, err = self.client_crypto.AddCertificate([]byte(
-		self.config_obj.Frontend.Certificate))
+		self.ConfigObj.Frontend.Certificate))
 
 	require.NoError(self.T(), err)
 
 	self.client_id = self.client_crypto.ClientId
-}
-
-func (self *ServerTestSuite) TearDownTest() {
-	// Reset the data store.
-	db, err := datastore.GetDB(self.config_obj)
-	require.NoError(self.T(), err)
-
-	db.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-
-	self.sm.Close()
 }
 
 func (self *ServerTestSuite) TestEnrollment() {
@@ -132,19 +118,19 @@ func (self *ServerTestSuite) TestEnrollment() {
 
 	wg.Add(1)
 	services.GetPublishedEvents(
-		self.config_obj, "Server.Internal.Enrollment", wg, 1, &messages)
+		self.ConfigObj, "Server.Internal.Enrollment", wg, 1, &messages)
 
 	self.server.ProcessSingleUnauthenticatedMessage(
 		context.Background(),
 		&crypto_proto.VeloMessage{
 			CSR: &crypto_proto.Certificate{Pem: csr_message}})
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(self.T(), err)
 
 	pub_key := &crypto_proto.PublicKey{}
 	err = db.GetSubject(
-		self.config_obj,
+		self.ConfigObj,
 		paths.NewClientPathManager(self.client_id).Key(),
 		pub_key)
 
@@ -165,19 +151,15 @@ func (self *ServerTestSuite) TestEnrollment() {
 func (self *ServerTestSuite) TestClientEventTable() {
 	t := self.T()
 
-	// Start some services.
-	require.NoError(t, self.sm.Start(client_monitoring.StartClientMonitoringService))
-	require.NoError(t, self.sm.Start(hunt_dispatcher.StartHuntDispatcher))
-
 	ctrl := gomock.NewController(self.T())
 	defer ctrl.Finish()
 
-	runner := flows.NewFlowRunner(self.config_obj)
+	runner := flows.NewFlowRunner(self.ConfigObj)
 	defer runner.Close()
 
 	// Set a new event monitoring table
 	err := services.ClientEventManager().SetClientMonitoringState(
-		context.Background(), self.config_obj,
+		context.Background(), self.ConfigObj,
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"Generic.Client.Stats"},
@@ -187,6 +169,9 @@ func (self *ServerTestSuite) TestClientEventTable() {
 
 	// The version of the currently installed table.
 	version := services.ClientEventManager().GetClientMonitoringState().Version
+
+	// Wait a bit.
+	time.Sleep(time.Second)
 
 	// Send a foreman checkin message from client with old event
 	// table version.
@@ -198,10 +183,10 @@ func (self *ServerTestSuite) TestClientEventTable() {
 				LastEventTableVersion: 0,
 			},
 		})
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(self.T(), err)
 
-	tasks, err := db.GetClientTasks(self.config_obj,
+	tasks, err := db.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
@@ -219,21 +204,18 @@ func (self *ServerTestSuite) TestClientEventTable() {
 // LastHuntTimestamp = 0 and will receive the UpdateForeman message.
 func (self *ServerTestSuite) TestForeman() {
 	t := self.T()
-	runner := flows.NewFlowRunner(self.config_obj)
+	runner := flows.NewFlowRunner(self.ConfigObj)
 	defer runner.Close()
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(self.T(), err)
-
-	err = self.sm.Start(hunt_dispatcher.StartHuntDispatcher)
-	require.NoError(t, err)
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	expected := api.MakeCollectorRequest(
 		self.client_id, "Generic.Client.Info")
 
 	hunt_id, err := flows.CreateHunt(
-		context.Background(), self.config_obj,
+		context.Background(), self.ConfigObj,
 		vql_subsystem.NullACLManager{},
 		&api_proto.Hunt{
 			State:        api_proto.Hunt_RUNNING,
@@ -244,7 +226,7 @@ func (self *ServerTestSuite) TestForeman() {
 	// Check for hunt object in the data store.
 	hunt := &api_proto.Hunt{}
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
-	err = db.GetSubject(self.config_obj, hunt_path_manager.Path(), hunt)
+	err = db.GetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt)
 	require.NoError(t, err)
 
 	assert.NotNil(t, hunt.StartRequest.CompiledCollectorArgs)
@@ -273,7 +255,7 @@ func (self *ServerTestSuite) TestForeman() {
 		})
 
 	// Server should schedule the new hunt on the client.
-	tasks, err := db.GetClientTasks(self.config_obj,
+	tasks, err := db.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
@@ -284,16 +266,16 @@ func (self *ServerTestSuite) TestForeman() {
 	assert.Equal(t, tasks[0].UpdateForeman.LastHuntTimestamp, services.GetHuntDispatcher().
 		GetLastTimestamp())
 
-	path_manager, err := artifacts.NewArtifactPathManager(self.config_obj,
+	path_manager, err := artifacts.NewArtifactPathManager(self.ConfigObj,
 		self.client_id, "", "System.Hunt.Participation")
 	assert.NoError(t, err)
 
 	rows := []*ordereddict.Dict{}
-	file_store_factory := file_store.GetFileStore(self.config_obj)
+	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	rs_reader, err := result_sets.NewResultSetReader(
 		file_store_factory, path_manager.Path())
 	assert.NoError(t, err)
-	for row := range rs_reader.Rows(self.sm.Ctx) {
+	for row := range rs_reader.Rows(self.Sm.Ctx) {
 		rows = append(rows, row)
 	}
 	assert.Equal(t, len(rows), 1)
@@ -302,10 +284,10 @@ func (self *ServerTestSuite) TestForeman() {
 func (self *ServerTestSuite) RequiredFilestoreContains(
 	filename file_store_api.FSPathSpec, regex string) {
 
-	file_store_factory := test_utils.GetMemoryFileStore(self.T(), self.config_obj)
+	file_store_factory := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
 
 	value, pres := file_store_factory.Get(filename.AsFilestoreFilename(
-		self.config_obj))
+		self.ConfigObj))
 	if !pres {
 		self.T().FailNow()
 	}
@@ -316,7 +298,7 @@ func (self *ServerTestSuite) RequiredFilestoreContains(
 // Receiving a response from the server to the monitoring flow will
 // write the rows into a csv file in the client's monitoring area.
 func (self *ServerTestSuite) TestMonitoring() {
-	runner := flows.NewFlowRunner(self.config_obj)
+	runner := flows.NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(
 		context.Background(),
 		&crypto_proto.VeloMessage{
@@ -335,18 +317,18 @@ func (self *ServerTestSuite) TestMonitoring() {
 		})
 	runner.Close()
 
-	path_manager, err := artifacts.NewArtifactPathManager(self.config_obj,
+	path_manager, err := artifacts.NewArtifactPathManager(self.ConfigObj,
 		self.client_id, constants.MONITORING_WELL_KNOWN_FLOW,
 		"System.Hunt.Participation")
 	assert.NoError(self.T(), err)
 
 	self.RequiredFilestoreContains(path_manager.Path(), self.client_id)
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
+	test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
 }
 
 // Monitoring queries which upload data.
 func (self *ServerTestSuite) TestMonitoringWithUpload() {
-	runner := flows.NewFlowRunner(self.config_obj)
+	runner := flows.NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(
 		context.Background(),
 		&crypto_proto.VeloMessage{
@@ -378,7 +360,7 @@ func (self *ServerTestSuite) TestLog() {
 
 	// Emulate log messages from client to flow delivered in
 	// separate POST.
-	runner := flows.NewFlowRunner(self.config_obj)
+	runner := flows.NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(
 		context.Background(),
 		&crypto_proto.VeloMessage{
@@ -410,7 +392,7 @@ func (self *ServerTestSuite) TestLog() {
 // gracefully.
 func (self *ServerTestSuite) TestLogToUnknownFlow() {
 	// Emulate a log message from client to flow.
-	runner := flows.NewFlowRunner(self.config_obj)
+	runner := flows.NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(
 		context.Background(),
 		&crypto_proto.VeloMessage{
@@ -423,16 +405,16 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 	runner.Close()
 
 	t := self.T()
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(t, err)
 
 	// Cancellation message should never be sent due to log.
-	tasks, err := db.GetClientTasks(self.config_obj,
+	tasks, err := db.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 0)
 
-	runner = flows.NewFlowRunner(self.config_obj)
+	runner = flows.NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(
 		context.Background(),
 		&crypto_proto.VeloMessage{
@@ -443,12 +425,12 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 	runner.Close()
 
 	// Cancellation message should never be sent due to status.
-	tasks, err = db.GetClientTasks(self.config_obj,
+	tasks, err = db.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 0)
 
-	runner = flows.NewFlowRunner(self.config_obj)
+	runner = flows.NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(
 		context.Background(),
 		&crypto_proto.VeloMessage{
@@ -460,7 +442,7 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 
 	// Cancellation message should be sent due to response
 	// messages.
-	tasks, err = db.GetClientTasks(self.config_obj,
+	tasks, err = db.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
@@ -476,7 +458,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)
 
-	repository, err := manager.GetGlobalRepository(self.config_obj)
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
 	require.NoError(t, err)
 
 	launcher, err := services.GetLauncher()
@@ -484,24 +466,24 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		context.Background(),
-		self.config_obj,
+		self.ConfigObj,
 		vql_subsystem.NullACLManager{},
 		repository,
 		request)
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(t, err)
 
 	// Launching the artifact will schedule one query on the client.
 	tasks, err := db.GetClientTasks(
-		self.config_obj, self.client_id,
+		self.ConfigObj, self.client_id,
 		true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 2)
 
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
-	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
+	err = db.GetSubject(self.ConfigObj, path_manager.Path(), collection_context)
 	require.NoError(t, err)
 
 	assert.Equal(t, collection_context.Request, request)
@@ -512,7 +494,7 @@ func (self *ServerTestSuite) createArtifactCollection() (string, error) {
 	manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)
 
-	repository, err := manager.GetGlobalRepository(self.config_obj)
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
 	require.NoError(self.T(), err)
 
 	// Schedule a flow in the database.
@@ -521,7 +503,7 @@ func (self *ServerTestSuite) createArtifactCollection() (string, error) {
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		context.Background(),
-		self.config_obj,
+		self.ConfigObj,
 		vql_subsystem.NullACLManager{},
 		repository,
 		&flows_proto.ArtifactCollectorArgs{
@@ -541,7 +523,7 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 	require.NoError(t, err)
 
 	// Emulate a response from this flow.
-	runner := flows.NewFlowRunner(self.config_obj)
+	runner := flows.NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(
 		context.Background(),
 		&crypto_proto.VeloMessage{
@@ -578,7 +560,7 @@ func (self *ServerTestSuite) TestVQLResponse() {
 	require.NoError(t, err)
 
 	// Emulate a response from this flow.
-	runner := flows.NewFlowRunner(self.config_obj)
+	runner := flows.NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(
 		context.Background(),
 		&crypto_proto.VeloMessage{
@@ -597,7 +579,7 @@ func (self *ServerTestSuite) TestVQLResponse() {
 		})
 	runner.Close()
 
-	flow_path_manager, err := artifacts.NewArtifactPathManager(self.config_obj,
+	flow_path_manager, err := artifacts.NewArtifactPathManager(self.ConfigObj,
 		self.client_id, flow_id, "Generic.Client.Info")
 	assert.NoError(self.T(), err)
 
@@ -613,7 +595,7 @@ func (self *ServerTestSuite) TestErrorMessage() {
 	require.NoError(t, err)
 
 	// Emulate a response from this flow.
-	runner := flows.NewFlowRunner(self.config_obj)
+	runner := flows.NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(
 		context.Background(),
 		&crypto_proto.VeloMessage{
@@ -628,7 +610,7 @@ func (self *ServerTestSuite) TestErrorMessage() {
 		})
 	runner.Close()
 
-	db, _ := datastore.GetDB(self.config_obj)
+	db, _ := datastore.GetDB(self.ConfigObj)
 
 	// A log is generated
 	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
@@ -636,7 +618,7 @@ func (self *ServerTestSuite) TestErrorMessage() {
 
 	// The collection_context is marked as errored.
 	collection_context := &flows_proto.ArtifactCollectorContext{}
-	err = db.GetSubject(self.config_obj, path_manager.Path(),
+	err = db.GetSubject(self.ConfigObj, path_manager.Path(),
 		collection_context)
 	require.NoError(t, err)
 
@@ -656,7 +638,7 @@ func (self *ServerTestSuite) TestCompletions() {
 	require.NoError(t, err)
 
 	// Emulate a response from this flow.
-	runner := flows.NewFlowRunner(self.config_obj)
+	runner := flows.NewFlowRunner(self.ConfigObj)
 
 	// Generic.Client.Info sends two requests, lets complete them both.
 	runner.ProcessSingleMessage(
@@ -671,12 +653,12 @@ func (self *ServerTestSuite) TestCompletions() {
 		})
 	runner.Close()
 
-	db, _ := datastore.GetDB(self.config_obj)
+	db, _ := datastore.GetDB(self.ConfigObj)
 
 	// The collection_context is marked as errored.
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
-	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
+	err = db.GetSubject(self.ConfigObj, path_manager.Path(), collection_context)
 	require.NoError(t, err)
 
 	// Flow not complete yet - still an outstanding request.
@@ -696,7 +678,7 @@ func (self *ServerTestSuite) TestCompletions() {
 	runner.Close()
 
 	// Flow should be complete now that second response arrived.
-	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
+	err = db.GetSubject(self.ConfigObj, path_manager.Path(), collection_context)
 	require.NoError(t, err)
 
 	require.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED,
@@ -711,7 +693,7 @@ func (self *ServerTestSuite) TestCancellation() {
 
 	t := self.T()
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(t, err)
 
 	// Schedule a flow in the database.
@@ -719,22 +701,23 @@ func (self *ServerTestSuite) TestCancellation() {
 	require.NoError(t, err)
 
 	// One task is scheduled for the client.
-	tasks, err := db.GetClientTasks(self.config_obj,
+	tasks, err := db.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
+
 	// Generic.Client.Info has two source preconditions in parallel
 	assert.Equal(t, len(tasks), 2)
 
 	// Cancelling the flow will notify the client immediately.
 	response, err := flows.CancelFlow(
 		context.Background(),
-		self.config_obj, self.client_id, flow_id, "username")
+		self.ConfigObj, self.client_id, flow_id, "username")
 	require.NoError(t, err)
 	require.Equal(t, response.FlowId, flow_id)
 
 	// Cancelling a flow simply schedules a cancel message for the
 	// client and removes all pending tasks.
-	tasks, err = db.GetClientTasks(self.config_obj,
+	tasks, err = db.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
@@ -747,7 +730,7 @@ func (self *ServerTestSuite) TestCancellation() {
 	// The flow must be marked as cancelled with an error.
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
-	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
+	err = db.GetSubject(self.ConfigObj, path_manager.Path(), collection_context)
 	require.NoError(t, err)
 
 	require.Regexp(t, regexp.MustCompile("Cancelled by username"),
@@ -762,10 +745,10 @@ func (self *ServerTestSuite) TestCancellation() {
 func (self *ServerTestSuite) TestUnknownFlow() {
 	t := self.T()
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(t, err)
 
-	runner := flows.NewFlowRunner(self.config_obj)
+	runner := flows.NewFlowRunner(self.ConfigObj)
 	defer runner.Close()
 
 	// Send a message to a random non-existant flow from client.
@@ -779,7 +762,7 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 		})
 
 	// This should send a cancellation message to the client.
-	tasks, err := db.GetClientTasks(self.config_obj,
+	tasks, err := db.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
@@ -792,7 +775,7 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 	// The flow does not exist - make sure it still does not.
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
-	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
+	err = db.GetSubject(self.ConfigObj, path_manager.Path(), collection_context)
 	require.Error(t, err, os.ErrNotExist)
 }
 
@@ -800,7 +783,7 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 func (self *ServerTestSuite) TestFlowArchives() {
 	t := self.T()
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(t, err)
 
 	// Schedule a flow in the database.
@@ -809,7 +792,7 @@ func (self *ServerTestSuite) TestFlowArchives() {
 
 	// Attempt to archive a running flow.
 	_, err = flows.ArchiveFlow(
-		self.config_obj, self.client_id, flow_id, "username")
+		self.ConfigObj, self.client_id, flow_id, "username")
 	require.Error(t, err)
 
 	// Cancelling the flow will notify the client immediately.
@@ -817,20 +800,20 @@ func (self *ServerTestSuite) TestFlowArchives() {
 	// Now cancel the same flow.
 	response, err := flows.CancelFlow(
 		context.Background(),
-		self.config_obj, self.client_id, flow_id, "username")
+		self.ConfigObj, self.client_id, flow_id, "username")
 	require.NoError(t, err)
 	require.Equal(t, response.FlowId, flow_id)
 
 	// Now archive the flow - should work because the flow is terminated.
 	res, err := flows.ArchiveFlow(
-		self.config_obj, self.client_id, flow_id, "username")
+		self.ConfigObj, self.client_id, flow_id, "username")
 	require.NoError(t, err)
 	require.Equal(t, res.FlowId, flow_id)
 
 	// The flow must be marked as archived.
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
-	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
+	err = db.GetSubject(self.ConfigObj, path_manager.Path(), collection_context)
 	require.NoError(t, err)
 
 	require.Regexp(t, regexp.MustCompile("Archived by username"),

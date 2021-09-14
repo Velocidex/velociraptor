@@ -215,7 +215,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 				// Add the scope args
 				child_scope.AppendVars(env)
 
-				ok, err = actions.CheckPreconditions(ctx, scope, request)
+				ok, err := actions.CheckPreconditions(ctx, scope, request)
 				if err != nil {
 					scope.Log("While evaluating preconditions: %v", err)
 					return

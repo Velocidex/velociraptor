@@ -5,22 +5,17 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/file_store/tests"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
@@ -40,76 +35,59 @@ func TestDirectoryQueueManager(t *testing.T) {
 
 	defer os.RemoveAll(dir) // clean up
 
-	config_obj := config.GetDefaultConfig()
-	config_obj.Datastore.Implementation = "FileBaseDataStore"
-	config_obj.Datastore.FilestoreDirectory = dir
-	config_obj.Datastore.Location = dir
+	ConfigObj := config.GetDefaultConfig()
+	ConfigObj.Datastore.Implementation = "FileBaseDataStore"
+	ConfigObj.Datastore.FilestoreDirectory = dir
+	ConfigObj.Datastore.Location = dir
 
-	file_store := memory.NewMemoryFileStore(config_obj)
-	manager := directory.NewDirectoryQueueManager(config_obj, file_store)
+	file_store := memory.NewMemoryFileStore(ConfigObj)
+	manager := directory.NewDirectoryQueueManager(ConfigObj, file_store)
 	suite.Run(t, tests.NewQueueManagerTestSuite(
-		config_obj, manager, file_store))
+		ConfigObj, manager, file_store))
 }
 
 type TestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	client_id  string
-	sm         *services.Service
-	dir        string
+	test_utils.TestSuite
+	client_id string
+	dir       string
 }
 
 func (self *TestSuite) SetupTest() {
+	self.TestSuite.SetupTest()
+
 	dir, err := ioutil.TempDir("", "file_store_test")
 	assert.NoError(self.T(), err)
 	self.dir = dir
 
 	os.Setenv("temp", dir)
-
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
-
-	// Start essential services.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
-
 	self.client_id = "C.12312"
 }
 
 func (self *TestSuite) TearDownTest() {
-	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+	self.TestSuite.TearDownTest()
 	os.RemoveAll(self.dir) // clean up
-
 }
 
 func (self *TestSuite) TestQueueManager() {
 	repo_manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)
 
-	repository, err := repo_manager.GetGlobalRepository(self.config_obj)
+	repository, err := repo_manager.GetGlobalRepository(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	_, err = repository.LoadYaml(monitoringArtifact, true)
 	assert.NoError(self.T(), err)
 
-	file_store := test_utils.GetMemoryFileStore(self.T(), self.config_obj)
+	file_store := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
 	manager := directory.NewDirectoryQueueManager(
-		self.config_obj, file_store).(*directory.DirectoryQueueManager)
+		self.ConfigObj, file_store).(*directory.DirectoryQueueManager)
 
 	// Push some rows to the queue manager
 	ctx := context.Background()
 
 	reader, cancel := manager.Watch(ctx, "TestQueue")
 
-	path_manager, err := artifacts.NewArtifactPathManager(self.config_obj,
+	path_manager, err := artifacts.NewArtifactPathManager(self.ConfigObj,
 		"C.123", "", "TestQueue")
 	assert.NoError(self.T(), err)
 

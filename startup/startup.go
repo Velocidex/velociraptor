@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/broadcast"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
@@ -60,6 +61,14 @@ func StartupEssentialServices(sm *services.Service) error {
 	j, _ := services.GetJournal()
 	if j == nil {
 		err := sm.Start(journal.StartJournalService)
+		if err != nil {
+			return err
+		}
+	}
+
+	b, _ := services.GetBroadcastService()
+	if b == nil {
+		err := sm.Start(broadcast.StartBroadcastService)
 		if err != nil {
 			return err
 		}

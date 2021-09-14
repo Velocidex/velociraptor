@@ -41,11 +41,10 @@ var (
 )
 
 type ReplicationService struct {
-	config_obj    *config_proto.Config
-	Buffer        *BufferFile
-	tmpfile       *os.File
-	ctx           context.Context
-	RetryDuration time.Duration
+	config_obj *config_proto.Config
+	Buffer     *BufferFile
+	tmpfile    *os.File
+	ctx        context.Context
 
 	sender chan *api_proto.PushEventRequest
 
@@ -54,8 +53,23 @@ type ReplicationService struct {
 
 	// Synchronizes access to files. NOTE: This only works within
 	// process!
-	mu    sync.Mutex
-	locks map[string]*sync.Mutex
+	mu            sync.Mutex
+	locks         map[string]*sync.Mutex
+	retryDuration time.Duration
+}
+
+func (self *ReplicationService) RetryDuration() time.Duration {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.retryDuration
+}
+
+func (self *ReplicationService) SetRetryDuration(duration time.Duration) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.retryDuration = duration
 }
 
 func (self *ReplicationService) pumpEventFromBufferFile() {
@@ -68,7 +82,7 @@ func (self *ReplicationService) pumpEventFromBufferFile() {
 			case <-self.ctx.Done():
 				return
 
-			case <-time.After(self.RetryDuration):
+			case <-time.After(self.RetryDuration()):
 				continue
 			}
 		}
@@ -85,7 +99,7 @@ func (self *ReplicationService) pumpEventFromBufferFile() {
 			case <-self.ctx.Done():
 				return
 
-			case <-time.After(self.RetryDuration):
+			case <-time.After(self.RetryDuration()):
 				continue
 			}
 		}
@@ -108,7 +122,7 @@ func (self *ReplicationService) Start(
 	self.closer = closer
 	self.ctx = ctx
 	self.sender = make(chan *api_proto.PushEventRequest, 100)
-	self.RetryDuration = time.Second
+	self.SetRetryDuration(time.Second)
 
 	self.tmpfile, err = ioutil.TempFile("", "replication")
 	if err != nil {
@@ -242,7 +256,7 @@ func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 			select {
 			case <-self.ctx.Done():
 				return
-			case <-time.After(self.RetryDuration):
+			case <-time.After(self.RetryDuration()):
 			}
 
 			logger := logging.GetLogger(self.config_obj,

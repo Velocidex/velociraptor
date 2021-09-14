@@ -247,6 +247,10 @@
       async=TRUE)
     ```
   type: Plugin
+  args:
+  - name: async
+    type: bool
+    description: If specified we run all queries asynchronously and combine the output.
   category: plugin
 - name: client_delete
   description: |
@@ -503,6 +507,10 @@
     type: string
     description: One of more regular expressions that will include columns.
     repeated: true
+- name: combine
+  description: Combine the output of several queries into the same result set.A convenience
+    plugin acting like chain(async=TRUE).
+  type: Plugin
 - name: compress
   description: |
     Compress a file.
@@ -1250,6 +1258,44 @@
     type: string
     description: The credentials to use
     required: true
+- name: generate
+  description: |
+    Create a named generator that receives rows from the query.
+
+    This plugin allow multiple queries to efficiently filter rows from
+    the same query. For example:
+
+    ```vql
+    LET SystemLog = generate(query={
+       SELECT * FROM parse_evtx(filename='''C:\Windows\system32\winevt\logs\System.evtx''')
+    })
+
+    SELECT timestamp(epoch=System.TimeCreated.SystemTime) AS Timestamp,
+       Type, EventData
+    FROM combine(
+    a={
+      SELECT *, "Kernel Driver Install" AS Type
+      FROM SystemLog
+      WHERE System.EventID.Value = 7045 AND EventData.ServiceType =~ "kernel"
+    }, b={
+      SELECT *, "Log File Cleared" AS Type,
+                UserData.LogFileCleared AS EventData
+      FROM SystemLog
+      WHERE System.EventID.Value = 104
+    })
+    ```
+
+  type: Function
+  args:
+  - name: name
+    type: string
+    description: Name to call the generator
+  - name: query
+    type: StoredQuery
+    description: Run this query to generator rows.
+  - name: delay
+    type: int64
+    description: Wait before starting the query
 - name: geoip
   description: |
     Lookup an IP Address using the MaxMind GeoIP database. You can get
@@ -3350,6 +3396,9 @@
   - name: time
     type: int64
     description: The number of seconds to sleep
+  - name: ms
+    type: int64
+    description: The number of ms to sleep
   category: basic
 - name: slice
   description: Slice an array.
@@ -3990,11 +4039,9 @@
   - name: credentialskey
     type: string
     description: The AWS key credentials to use
-    required: true
   - name: credentialssecret
     type: string
     description: The AWS secret credentials to use
-    required: true
   - name: endpoint
     type: string
     description: The Endpoint to use
@@ -4496,4 +4543,3 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
-

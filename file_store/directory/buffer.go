@@ -70,6 +70,11 @@ type FileBasedRingBuffer struct {
 	write_buf []byte
 
 	log_ctx *logging.LogContext
+
+	// Keep track of how many messages are leased. When we lease
+	// messages this wg is added, then callers can decrement it as
+	// needed.
+	Wg sync.WaitGroup
 }
 
 // Enqueue the item into the ring buffer and append to the end.
@@ -126,7 +131,9 @@ func (self *FileBasedRingBuffer) Lease(count int) []*ordereddict.Dict {
 		// Read the next chunk (length+value) from the current leased pointer.
 		n, err := self.fd.ReadAt(self.read_buf, self.header.ReadPointer)
 		if err != nil || n != len(self.read_buf) {
-			self.log_ctx.Error("Possible corruption detected: file too short.")
+			self.log_ctx.Error(
+				"Possible corruption detected: file too short Writer %v, Reader %v.",
+				self.header.WritePointer, self.header.ReadPointer)
 			self._Truncate()
 			return nil
 		}
@@ -168,6 +175,7 @@ func (self *FileBasedRingBuffer) Lease(count int) []*ordereddict.Dict {
 		}
 	}
 
+	self.Wg.Add(len(result))
 	return result
 }
 

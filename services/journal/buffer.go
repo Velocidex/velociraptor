@@ -77,6 +77,12 @@ type BufferFile struct {
 	log_ctx *logging.LogContext
 }
 
+func (self *BufferFile) GetHeader() Header {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	return *self.Header
+}
+
 // Enqueue the item into the ring buffer and append to the end.
 func (self *BufferFile) Enqueue(item *api_proto.PushEventRequest) error {
 	serialized, err := proto.Marshal(item)
