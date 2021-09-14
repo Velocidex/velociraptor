@@ -2,6 +2,7 @@ package golang
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -116,6 +117,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 		}
 
 		for item := range arg.Query.Eval(sub_ctx, scope) {
+			fmt.Printf("Pushing item %v\n", item)
 			select {
 			case <-sub_ctx.Done():
 				return
