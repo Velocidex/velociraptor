@@ -43,7 +43,7 @@ import (
 // A listener wraps a channel that our client will listen on. We send
 // the message to each listener that is subscribed to the queue.
 type Listener struct {
-	id int64
+	id uint64
 
 	// The consumer interested in these events. The consumer may
 	// block arbitrarily.
@@ -127,7 +127,7 @@ func NewListener(config_obj *config_proto.Config, ctx context.Context,
 	}
 
 	self := &Listener{
-		id:          time.Now().UnixNano(),
+		id:          utils.GetId(),
 		ctx:         ctx,
 		input:       make(chan *ordereddict.Dict),
 		output:      output,
@@ -238,7 +238,7 @@ func (self *QueuePool) Register(
 
 // This holds a lock on the entire pool and it is used when the system
 // shuts down so not very often.
-func (self *QueuePool) unregister(vfs_path string, id int64) (found bool) {
+func (self *QueuePool) unregister(vfs_path string, id uint64) (found bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 

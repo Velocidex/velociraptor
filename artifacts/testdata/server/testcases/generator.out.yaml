@@ -1,4 +1,4 @@
-LET Generator = generate(query={ SELECT * FROM range(start=0, end=10, step=1) })[]SELECT * FROM combine( a={ SELECT _value FROM Generator WHERE sleep(ms=100) }, b={ SELECT _value FROM Generator }) ORDER BY _value[
+LET Generator = generate(query={ SELECT * FROM range(start=0, end=10, step=1) })[]SELECT * FROM combine( a={ SELECT _value FROM Generator WHERE sleep(ms=500) }, b={ SELECT _value FROM Generator }) ORDER BY _value[
  {
   "_value": 0
  },
