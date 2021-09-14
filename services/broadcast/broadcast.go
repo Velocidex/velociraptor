@@ -38,7 +38,6 @@ func (self *BroadcastService) RegisterGenerator(
 		// Read items from the input channel and broadcast them to all
 		// listeners.
 		for item := range input {
-			fmt.Printf("Broadcasting item %v\n", item)
 			self.pool.Broadcast(name, item)
 		}
 	}()
@@ -54,10 +53,8 @@ func (self *BroadcastService) unregister(name string) {
 	delete(self.generators, name)
 	closers, ok := self.listener_closers[name]
 
-	fmt.Printf("unregister %v with %v closers\n", name, len(closers))
 	if ok {
 		for _, closer := range closers {
-			fmt.Printf("Closing\n")
 			closer()
 		}
 	}

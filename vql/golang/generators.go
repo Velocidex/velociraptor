@@ -2,7 +2,6 @@ package golang
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -37,13 +36,10 @@ func (self Generator) Eval(ctx context.Context, scope types.Scope) <-chan types.
 		return result
 	}
 
-	/*
-		scope.AddDestructor(func() {
-			cancel()
-		})
-	*/
 	go func() {
 		defer close(result)
+
+		// Remove the watcher when we are done.
 		defer cancel()
 
 		for item := range output_chan {
@@ -120,7 +116,6 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 		}
 
 		for item := range arg.Query.Eval(sub_ctx, scope) {
-			fmt.Printf("Pushing item %v\n", item)
 			select {
 			case <-sub_ctx.Done():
 				return
