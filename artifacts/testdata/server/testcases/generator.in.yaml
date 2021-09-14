@@ -6,7 +6,7 @@ Queries:
   - SELECT * FROM combine(
     a={
       SELECT _value FROM Generator
-      WHERE sleep(ms=100)
+      WHERE sleep(ms=500)
     }, b={
       SELECT _value FROM Generator
     })
