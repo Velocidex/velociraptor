@@ -36,8 +36,14 @@ func (self Generator) Eval(ctx context.Context, scope types.Scope) <-chan types.
 		return result
 	}
 
+	/*
+		scope.AddDestructor(func() {
+			cancel()
+		})
+	*/
 	go func() {
 		defer close(result)
+		defer cancel()
 
 		// Remove the watcher when we are done.
 		defer cancel()
