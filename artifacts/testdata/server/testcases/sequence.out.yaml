@@ -1,0 +1,6 @@
+SELECT * FROM sequence( a={ SELECT 1 AS A FROM scope() }, b={ SELECT 2 AS A FROM scope() }, c={ SELECT 3 AS A FROM scope() }, query={ SELECT A AS FoundA, { SELECT A FROM SEQUENCE WHERE  A = 2 } AS FoundB FROM SEQUENCE WHERE A = 1 AND FoundB })[
+ {
+  "FoundA": 1,
+  "FoundB": 2
+ }
+]
