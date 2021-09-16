@@ -61,6 +61,14 @@ type _FIFOCache struct {
 	max_rows int64
 }
 
+func (self *_FIFOCache) Clear() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.rows = list.New()
+	self.count = 0
+}
+
 func (self *_FIFOCache) Snapshot(flush bool) []vfilter.Row {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -84,6 +92,10 @@ func (self *_FIFOCache) Push(row vfilter.Row) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	self._Push(row)
+}
+
+func (self *_FIFOCache) _Push(row vfilter.Row) {
 	// First add the entry to the back.
 	self.count += 1
 	self.rows.PushBack(&_FIFOCacheEntry{
@@ -93,7 +105,6 @@ func (self *_FIFOCache) Push(row vfilter.Row) {
 
 	// expire any items which are too old or if we have too many
 	// items.
-
 	for e := self.rows.Front(); e != nil; e = e.Next() {
 		if self.count > self.max_rows {
 			self.rows.Remove(e)

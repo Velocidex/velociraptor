@@ -1,0 +1,28 @@
+# A sequence runs multiple queries and stores their rows in a memory
+# fifo buffer (expiring old rows). For each new row that is inserted,
+# the `query` is run to produce rows. If a row is found, the fifo is
+# reset.
+
+# The `sequence()` plugin is very useful to correlate temporally close
+# events from multiple queries - for example, say a process execution
+# query and a network query. The `query` can then search for relevant
+# network event closely followed by a process event.
+Queries:
+  - SELECT * FROM sequence(
+    a={
+     SELECT 1 AS A FROM scope()
+    },
+    b={
+     SELECT 2 AS A FROM scope()
+    },
+    c={
+     SELECT 3 AS A FROM scope()
+    },
+    query={
+      SELECT A AS FoundA, {
+        SELECT A FROM SEQUENCE
+        WHERE  A = 2
+      } AS FoundB
+      FROM SEQUENCE
+      WHERE A = 1 AND FoundB
+    })
