@@ -16,6 +16,8 @@ description: |
     hosting image files for canary files or abused for NetNTLM hash colleciton.  
     
     Change TemplateFileRegex to '\\.xml\\.rels$' for looser file selection.  
+    Change TemplateTargetRegex to '^(https?|smb|\\\\|//|mhtml|file)' for looser 
+    Target selection.  
 
 author: Matt Green - @mgreen27
 
@@ -34,7 +36,7 @@ parameters:
     default: '(document|settings)\.xml\.rels$'
   - name: TemplateTargetRegex
     description: Regex to search inside resource section.
-    default: '^(https?|smb|\\\\|//|mhtml|file)'
+    default: '^(https?|smb|\\\\|//|mhtml)'
   - name: UploadDocument
     type: bool
     description: Select to upload document on detection.
