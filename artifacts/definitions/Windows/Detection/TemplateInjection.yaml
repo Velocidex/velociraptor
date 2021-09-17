@@ -7,6 +7,15 @@ description: |
     an office template.   
     
     The default artifact will also detect MSHTML RCE Vulnerability #CVE-2021-40444.  
+      
+    This artifact can also be modified to search for other suspicious rels files:  
+    - document.xml.rels = macros, ole objects, images  
+    - settings.xml.rels = templates  
+    - websettings.xml.rels = frames  
+    - header#.xml.rels and footer#.xml.rels and others has also been observed 
+    hosting image files for canary files or abused for NetNTLM hash colleciton.  
+    
+    Change TemplateFileRegex to '\\.xml\\.rels$' for looser file selection.  
 
 author: Matt Green - @mgreen27
 
@@ -20,9 +29,12 @@ parameters:
   - name: SearchGlob
     description: Glob to search
     default: C:\Users\**\*.{docx,dotx,xlsx,xltx,pptx,potx,ppsx,sldx}
-  - name: TemplateRegex
+  - name: TemplateFileRegex
     description: Regex to search inside resource section.
-    default: '^(https?|smb|\\\\|//|mhtml)'
+    default: '(document|settings)\.xml\.rels$'
+  - name: TemplateTargetRegex
+    description: Regex to search inside resource section.
+    default: '^(https?|smb|\\\\|//|mhtml|file)'
   - name: UploadDocument
     type: bool
     description: Select to upload document on detection.
@@ -46,7 +58,7 @@ sources:
                 FROM glob(globs=url(
                     scheme="file", path=OfficePath, fragment="/**").String,
                     accessor='zip')
-                WHERE not IsDir and Size > 0 and ZipMemberPath =~ '(document|settings).xml.rels'
+                WHERE not IsDir and Size > 0 and ZipMemberPath =~ TemplateFileRegex
             })
             
       -- parse settings file by line and extract config
@@ -81,7 +93,7 @@ sources:
                     hash(path=SectionPath,accessor='zip') as SectionHash
                 FROM stat(filename=Document)
                 WHERE
-                    TemplateTarget =~ TemplateRegex
+                    TemplateTarget =~ TemplateTargetRegex
             })
 
       -- upload hits to server
