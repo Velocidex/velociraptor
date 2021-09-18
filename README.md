@@ -132,7 +132,9 @@ artifacts through the [Artifact Exchange](https://docs.velociraptor.app/exchange
 
 ## Getting help
 
-Questions and feedback are welcome at velociraptor-discuss@googlegroups.com
+Questions and feedback are welcome at
+velociraptor-discuss@googlegroups.com (or
+https://groups.google.com/g/velociraptor-discuss)
 
 You can also chat with us directly on discord https://docs.velociraptor.app/discord
 

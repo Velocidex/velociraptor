@@ -15,9 +15,11 @@ sources:
       - |
         LET results = SELECT FullPath, Size,
                Mtime As Modifed,
-               Type, {
-                 SELECT * FROM upload(files=FullPath, accessor=Accessor)
-               } AS FileDetails
+               Type,
+               upload(file=FullPath,
+                      mtime=Mtime,
+                      ctime=Ctime,
+                      accessor=Accessor) AS FileDetails
         FROM glob(globs=split(string=Glob, sep=","), accessor=Accessor)
         WHERE NOT IsDir
 
