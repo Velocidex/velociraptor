@@ -252,6 +252,28 @@
     type: bool
     description: If specified we run all queries asynchronously and combine the output.
   category: plugin
+- name: cidr_contains
+  type: Function
+  description: |
+    Calculates if an IP address falls within a range of CIDR specified
+    networks.
+
+    ```vql
+    SELECT cidr_contains(ip="192.168.0.132", ranges=[
+        "192.168.0.0/24", "127.0.0.1/8"])
+    FROM scope()
+    ```
+
+  args:
+  - name: ip
+    type: string
+    description: An IP address
+    required: true
+  - name: ranges
+    type: string
+    description: A list of CIDR notation network ranges
+    repeated: true
+    required: true
 - name: client_delete
   description: |
     Delete all information related to a client from the filestore.
@@ -3359,23 +3381,17 @@
       WHERE DNSInfo AND Name
     })
     ```
-
   type: Plugin
   args:
   - name: query
     type: StoredQuery
-    description: |
-      Run this query to generator rows. The query should select from
-      SEQUENCE which will contain the current set of rows in the
-      sequence. The query will be run on each new row that is pushed
-      to the sequence.
+    description: Run this query to generator rows. The query should select from SEQUENCE
+      which will contain the current set of rows in the sequence. The query will be
+      run on each new row that is pushed to the sequence.
     required: true
-
   - name: max_age
     type: int64
-    description: |
-      Maximum number of seconds to hold rows in the sequence (default 30).
-
+    description: Maximum number of seconds to hold rows in the sequence.
 - name: serialize
   description: Encode an object as a string (csv or json).
   type: Function
