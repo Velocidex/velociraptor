@@ -253,7 +253,6 @@
     description: If specified we run all queries asynchronously and combine the output.
   category: plugin
 - name: cidr_contains
-  type: Function
   description: |
     Calculates if an IP address falls within a range of CIDR specified
     networks.
@@ -263,7 +262,7 @@
         "192.168.0.0/24", "127.0.0.1/8"])
     FROM scope()
     ```
-
+  type: Function
   args:
   - name: ip
     type: string
@@ -533,6 +532,28 @@
   description: Combine the output of several queries into the same result set.A convenience
     plugin acting like chain(async=TRUE).
   type: Plugin
+- name: commandline_split
+  description: |
+    Split a commandline into separate components following the windows
+    convensions.
+
+    Example:
+    ```vql
+    SELECT
+      commandline_split(command='''"C:\Program Files\Velociraptor\Velociraptor.exe" service run'''),
+      commandline_split(command="/usr/bin/ls -l 'file with space.txt'", bash_style=TRUE)
+    FROM scope()
+    ```
+
+  type: Function
+  args:
+  - name: command
+    type: string
+    description: Commandline to split into components.
+    required: true
+  - name: bash_style
+    type: bool
+    description: Use bash rules (Uses Windows rules by default).
 - name: compress
   description: |
     Compress a file.
@@ -3267,6 +3288,31 @@
     description: A regex to apply
     required: true
   category: parsers
+- name: regex_transform
+  description: |
+    Search and replace a string with multiple regex. Note you can use $1
+    to replace the capture string.
+
+    ```vql
+    SELECT regex_transform(source="Hello world", map=dict(
+       `^Hello`="Goodbye",
+       `world`="Space"), key="A")
+    FROM scope()
+    ```
+
+  type: Function
+  args:
+  - name: source
+    type: string
+    description: The source string to replace.
+    required: true
+  - name: map
+    type: ordereddict.Dict
+    description: A dict with keys reg, values substitutions.
+    required: true
+  - name: key
+    type: string
+    description: A key for caching
 - name: relpath
   description: Return the relative path of .
   type: Function
@@ -3662,7 +3708,32 @@
     required: true
   category: windows
 - name: starl
-  description: Compile a starlark code block - returns a module usable in VQL
+  description: |
+    Compile a starlark code block - returns a module usable in VQL
+
+    Starl allows python like code to be used with VQL. This helps when
+    we need some small functions with more complex needs. We can use a
+    more powerful language to create small functions to transform
+    certain fields etc.
+
+    ## Example
+
+    In the following example we define a Starl code block and compile
+    it into a module. VQL code can then reference any functions
+    defined within it directly.
+
+    ```vql
+    LET MyCode <= starl(code='''
+    load("math.star", "math")
+
+    def Foo(X):
+      return math.sin(X)
+
+    ''')
+
+    SELECT MyCode.Foo(X=32)
+    FROM scope()
+    ```
   type: Function
   args:
   - name: code

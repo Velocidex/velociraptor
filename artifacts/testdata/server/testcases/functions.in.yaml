@@ -48,3 +48,15 @@ Queries:
   - SELECT cidr_contains(ip="192.168.0.132", ranges="192.168.0.0/24"),
            cidr_contains(ip="191.168.0.132", ranges="192.168.0.0/24")
     FROM scope()
+
+  # Test commandline_split function
+  - SELECT
+    commandline_split(command='''"C:\Program Files\Velociraptor\Velociraptor.exe" service run'''),
+    commandline_split(command="/usr/bin/ls -l 'file with space.txt'", bash_style=TRUE)
+    FROM scope()
+
+  # Test regex_transform
+  - SELECT regex_transform(source="Hello world", map=dict(
+       `^Hello`="Goodbye",
+       `world`="Space"), key="A")
+    FROM scope()
