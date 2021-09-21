@@ -221,7 +221,7 @@ class DeleteClients extends Component {
 
               <Modal.Body>
                 <Alert variant="danger">
-                  You are about to permanentsly delete the following clients
+                  You are about to permanently delete the following clients
                 </Alert>
                 <div className="deleted-client-list">
                 <BootstrapTable
