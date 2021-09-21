@@ -43,3 +43,8 @@ Queries:
   - LET Foo <= dict(A=1)
   - SELECT set(item=Foo, field="B", value=2) FROM scope()
   - SELECT Foo FROM scope()
+
+  # Test cidr function
+  - SELECT cidr_contains(ip="192.168.0.132", ranges="192.168.0.0/24"),
+           cidr_contains(ip="191.168.0.132", ranges="192.168.0.0/24")
+    FROM scope()

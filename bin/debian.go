@@ -92,6 +92,8 @@ Environment=LANG=en_US.UTF-8
 ExecStart=%s --config %s frontend
 User=velociraptor
 Group=velociraptor
+CapabilityBoundingSet=CAP_SYS_RESOURCE CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_SYS_RESOURCE CAP_NET_BIND_SERVICE
 
 [Install]
 WantedBy=multi-user.target
