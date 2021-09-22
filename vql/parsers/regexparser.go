@@ -282,8 +282,80 @@ func (self _RegexReplace) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 	}
 }
 
+type _RegexMapArg struct {
+	Source string            `vfilter:"required,field=source,doc=The source string to replace."`
+	Map    *ordereddict.Dict `vfilter:"required,field=map,doc=A dict with keys reg, values substitutions."`
+	Key    string            `vfilter:"optional,field=key,doc=A key for caching"`
+}
+
+type _Transform struct {
+	search  *regexp.Regexp
+	replace string
+}
+
+type _RegexMap struct{}
+
+func (self _RegexMap) Call(
+	ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	arg := &_RegexMapArg{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("regex_transform: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	key := "$regex_map_" + arg.Key
+	if key == "" {
+		key = arg.Map.String()
+	}
+
+	var transforms []*_Transform
+	regex_map := vql_subsystem.CacheGet(scope, key)
+	if utils.IsNil(regex_map) {
+		// Make a new set of transforms
+		for _, search := range arg.Map.Keys() {
+			replace, _ := arg.Map.GetString(search)
+
+			re, err := regexp.Compile("(?i)" + search)
+			if err != nil {
+				scope.Log("regex_transform: Unable to compile regex %s: %v", search, err)
+				return vfilter.Null{}
+			}
+
+			transforms = append(transforms, &_Transform{
+				search: re, replace: replace})
+		}
+		vql_subsystem.CacheSet(scope, key, transforms)
+	} else {
+		transforms, _ = regex_map.([]*_Transform)
+		if transforms == nil {
+			scope.Log("regex_transform: error recovering map from cache")
+			return vfilter.Null{}
+		}
+	}
+
+	source := arg.Source
+	for _, transform := range transforms {
+		source = transform.search.ReplaceAllString(source, transform.replace)
+	}
+
+	return source
+}
+
+func (self _RegexMap) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name: "regex_transform",
+		Doc: "Search and replace a string with multiple regex. " +
+			"Note you can use $1 to replace the capture string.",
+		ArgType: type_map.AddType(scope, &_RegexMapArg{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterPlugin(&_ParseFileWithRegex{})
 	vql_subsystem.RegisterFunction(&_ParseStringWithRegexFunction{})
 	vql_subsystem.RegisterFunction(&_RegexReplace{})
+	vql_subsystem.RegisterFunction(&_RegexMap{})
 }

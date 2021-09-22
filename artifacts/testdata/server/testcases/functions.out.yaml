@@ -47,4 +47,21 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
   "cidr_contains(ip=\"192.168.0.132\", ranges=\"192.168.0.0/24\")": true,
   "cidr_contains(ip=\"191.168.0.132\", ranges=\"192.168.0.0/24\")": false
  }
+]SELECT commandline_split(command='''"C:\Program Files\Velociraptor\Velociraptor.exe" service run'''), commandline_split(command="/usr/bin/ls -l 'file with space.txt'", bash_style=TRUE) FROM scope()[
+ {
+  "commandline_split(command='''\"C:\\Program Files\\Velociraptor\\Velociraptor.exe\" service run''')": [
+   "C:\\Program Files\\Velociraptor\\Velociraptor.exe",
+   "service",
+   "run"
+  ],
+  "commandline_split(command=\"/usr/bin/ls -l 'file with space.txt'\", bash_style=TRUE)": [
+   "/usr/bin/ls",
+   "-l",
+   "file with space.txt"
+  ]
+ }
+]SELECT regex_transform(source="Hello world", map=dict( `^Hello`="Goodbye", `world`="Space"), key="A") FROM scope()[
+ {
+  "regex_transform(source=\"Hello world\", map=dict(`^Hello`=\"Goodbye\", `world`=\"Space\"), key=\"A\")": "Goodbye Space"
+ }
 ]
