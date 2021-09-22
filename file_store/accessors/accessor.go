@@ -12,9 +12,8 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/paths"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -46,8 +45,7 @@ func (self FileStoreFileSystemAccessor) New(
 func (self FileStoreFileSystemAccessor) Lstat(
 	filename string) (glob.FileInfo, error) {
 
-	fullpath := path_specs.NewUnsafeFilestorePath(
-		utils.SplitComponents(filename)...)
+	fullpath := paths.FSPathSpecFromClientPath(filename)
 	lstat, err := self.file_store.StatFile(fullpath)
 	if err != nil {
 		return nil, err
@@ -60,9 +58,9 @@ func (self FileStoreFileSystemAccessor) Lstat(
 	}, nil
 }
 
-func (self FileStoreFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
-	fullpath := path_specs.NewUnsafeFilestorePath(
-		utils.SplitComponents(path)...)
+func (self FileStoreFileSystemAccessor) ReadDir(filename string) (
+	[]glob.FileInfo, error) {
+	fullpath := paths.FSPathSpecFromClientPath(filename)
 	files, err := self.file_store.ListDirectory(fullpath)
 	if err != nil {
 		return nil, err
@@ -73,7 +71,7 @@ func (self FileStoreFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, e
 		result = append(result,
 			&FileStoreFileInfo{
 				FileInfo:   f,
-				fullpath:   fullpath,
+				fullpath:   f.PathSpec(),
 				config_obj: self.config_obj,
 			})
 	}
@@ -81,10 +79,10 @@ func (self FileStoreFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, e
 	return result, nil
 }
 
-func (self FileStoreFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
-	components := path_specs.NewSafeFilestorePath(
-		utils.SplitComponents(path)...)
-	file, err := self.file_store.ReadFile(components)
+func (self FileStoreFileSystemAccessor) Open(filename string) (
+	glob.ReadSeekCloser, error) {
+	fullpath := paths.FSPathSpecFromClientPath(filename)
+	file, err := self.file_store.ReadFile(fullpath)
 	if err != nil {
 		return nil, err
 	}

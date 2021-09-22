@@ -1,6 +1,6 @@
 // +build server_vql
 
-package server
+package flows
 
 import (
 	"context"

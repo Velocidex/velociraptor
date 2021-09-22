@@ -1,6 +1,8 @@
 Queries:
-  - SELECT * FROM uploads(client_id='C.4f5e52adf0a337a9',
-                          flow_id='F.BN2HJCPOF5U7U')
+  # Check the extension on file_store()
+  - SELECT *, basename(path=file_store(path=vfs_path))
+    FROM uploads(client_id='C.4f5e52adf0a337a9',
+                 flow_id='F.BN2HJCPOF5U7U')
 
   # Schedule an artifact collection
   - SELECT collect_client(
@@ -23,3 +25,8 @@ Queries:
 
   # Make sure we can return all names
   - SELECT name FROM artifact_definitions() WHERE name =~ 'Windows.KapeFiles.Targets'
+
+  # Test the "fs" accessor
+  - SELECT FullPath FROM glob(
+     globs="/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/**",
+     accessor="fs")

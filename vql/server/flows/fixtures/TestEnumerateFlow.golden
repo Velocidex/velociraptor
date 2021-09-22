@@ -4,11 +4,15 @@
   "VFSPath": "/clients/C.123/collections/F.1234/uploads.json"
  },
  {
+  "Type": "UploadMetadataIndex",
+  "VFSPath": "/clients/C.123/collections/F.1234/uploads.json.index"
+ },
+ {
   "Type": "Log",
   "VFSPath": "/clients/C.123/collections/F.1234/logs"
  },
  {
-  "Type": "Log",
+  "Type": "LogIndex",
   "VFSPath": "/clients/C.123/collections/F.1234/logs.json.index"
  },
  {
