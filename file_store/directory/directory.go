@@ -186,7 +186,28 @@ func (self *DirectoryFileStore) WriteFile(
 
 func (self *DirectoryFileStore) Delete(filename api.FSPathSpec) error {
 	file_path := filename.AsFilestoreFilename(self.config_obj)
-	return os.Remove(file_path)
+	err := os.Remove(file_path)
+	if err != nil {
+		return err
+	}
+
+	dir_name := filepath.Dir(file_path)
+
+	// Exit as soon as directory is not empty
+	for err == nil {
+		// Remove all empty leading directories
+		err = os.Remove(dir_name)
+		if err == nil {
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Debug("Prunning empty directory %v", dir_name)
+		}
+
+		// Check if this is the last file in the directory.
+		dir_name = filepath.Dir(dir_name)
+	}
+
+	// At least we succeeded deleting the file
+	return nil
 }
 
 func (self *DirectoryFileStore) Walk(root api.FSPathSpec, walkFn api.WalkFunc) error {

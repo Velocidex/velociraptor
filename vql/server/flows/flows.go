@@ -1,4 +1,6 @@
-package server
+// +build server_vql
+
+package flows
 
 import (
 	"context"
@@ -9,11 +11,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -209,7 +213,12 @@ func (self EnumerateFlowPlugin) Call(
 			for row := range reader.Rows(ctx) {
 				upload, pres := row.GetString("vfs_path")
 				if pres {
-					r.emit("Upload", upload)
+					// Each row is the full filestore path of the upload.
+					pathspec := path_specs.NewUnsafeFilestorePath(
+						utils.SplitComponents(upload)...).
+						SetType(api.PATH_TYPE_FILESTORE_ANY)
+
+					r.emit_fs("Upload", pathspec)
 				}
 			}
 		}
@@ -217,6 +226,8 @@ func (self EnumerateFlowPlugin) Call(
 		// Order results to facilitate deletion - container deletion
 		// happens after we read its contents.
 		r.emit_fs("UploadMetadata", upload_metadata_path)
+		r.emit_fs("UploadMetadataIndex", upload_metadata_path.
+			SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
 
 		// Remove all result sets from artifacts.
 		for _, artifact_name := range collection_context.ArtifactsWithResults {
@@ -239,7 +250,7 @@ func (self EnumerateFlowPlugin) Call(
 		}
 
 		r.emit_fs("Log", flow_path_manager.Log())
-		r.emit_fs("Log", flow_path_manager.Log().
+		r.emit_fs("LogIndex", flow_path_manager.Log().
 			SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
 		r.emit_ds("CollectionContext", flow_path_manager.Path())
 		r.emit_ds("Task", flow_path_manager.Task())
@@ -288,7 +299,7 @@ func (self *reporter) emit_ds(
 		return
 	case self.output_chan <- ordereddict.NewDict().
 		Set("Type", item_type).
-		Set("VFSPath", client_path):
+		Set("VFSPath", target):
 	}
 }
 
@@ -300,21 +311,6 @@ func (self *reporter) emit_fs(
 		return
 	}
 	self.seen[client_path] = true
-
-	select {
-	case <-self.ctx.Done():
-		return
-	case self.output_chan <- ordereddict.NewDict().
-		Set("Type", item_type).
-		Set("VFSPath", client_path):
-	}
-}
-
-func (self *reporter) emit(item_type string, target string) {
-	if self.seen[target] {
-		return
-	}
-	self.seen[target] = true
 
 	select {
 	case <-self.ctx.Done():

@@ -1,6 +1,7 @@
 Queries:
-  - SELECT * FROM uploads(client_id='C.4f5e52adf0a337a9',
-                          flow_id='F.BN2HJCPOF5U7U')
+  - SELECT *, file_store(path=vfs_path)
+    FROM uploads(client_id='C.4f5e52adf0a337a9',
+                 flow_id='F.BN2HJCPOF5U7U')
 
   # Schedule an artifact collection
   - SELECT collect_client(

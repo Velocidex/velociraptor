@@ -21,7 +21,6 @@ package server
 
 import (
 	"context"
-	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -33,10 +32,11 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type DeleteFileStoreArgs struct {
-	VFSPath string `vfilter:"required,field=path,doc=A VFS path to remove"`
+	VFSPath types.LazyExpr `vfilter:"required,field=path,doc=A VFS path to remove"`
 }
 
 type DeleteFileStore struct{}
@@ -70,27 +70,32 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	if strings.HasSuffix(arg.VFSPath, "db") {
-		// This is a data store path
-		pathspec := path_specs.NewUnsafeDatastorePath(
-			utils.SplitComponents(
-				strings.TrimSuffix(arg.VFSPath, ".db"))...).
-			SetType(api.PATH_TYPE_DATASTORE_PROTO)
-		err = db.DeleteSubject(config_obj, pathspec)
-	} else {
 
-		// This is a file store path.
-		pathspec := path_specs.NewUnsafeFilestorePath(
-			utils.SplitComponents(arg.VFSPath)...).
-			SetType(api.PATH_TYPE_FILESTORE_ANY)
-		err = file_store_factory.Delete(pathspec)
+	vfs_path := arg.VFSPath.Reduce(ctx)
+	switch t := vfs_path.(type) {
+	case *path_specs.DSPathSpec:
+		err = db.DeleteSubject(config_obj, t)
+
+	case path_specs.DSPathSpec:
+		err = db.DeleteSubject(config_obj, t)
+
+	case *path_specs.FSPathSpec:
+		err = file_store_factory.Delete(t)
+
+	case path_specs.FSPathSpec:
+		err = file_store_factory.Delete(t)
+
+	default:
+		scope.Log("file_store_delete: Unsupported VFS path type %T", vfs_path)
+		return vfilter.Null{}
 	}
 
 	if err != nil {
-		scope.Log("file_store_delete: %s", err.Error())
+		scope.Log("file_store_delete: %v", err)
 		return vfilter.Null{}
 	}
-	return arg.VFSPath
+
+	return vfs_path
 }
 
 func (self DeleteFileStore) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -102,7 +107,7 @@ func (self DeleteFileStore) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 }
 
 type FileStoreArgs struct {
-	VFSPath []string `vfilter:"required,field=path,doc=A VFS path to convert"`
+	VFSPath types.LazyExpr `vfilter:"required,field=path,doc=A VFS path to convert"`
 }
 
 type FileStore struct{}
@@ -123,14 +128,31 @@ func (self *FileStore) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	result := []string{}
-	for _, path := range arg.VFSPath {
+	vfs_path := arg.VFSPath.Reduce(ctx)
+	switch t := vfs_path.(type) {
+	case *path_specs.FSPathSpec:
+		return t.AsFilestoreFilename(config_obj)
+
+	case path_specs.FSPathSpec:
+		return t.AsFilestoreFilename(config_obj)
+
+	case *path_specs.DSPathSpec:
+		return t.AsDatastoreFilename(config_obj)
+
+	case path_specs.DSPathSpec:
+		return t.AsDatastoreFilename(config_obj)
+
+	case string:
+		// This should not happen - ideally file_store() should only
+		// operate on FSPathSpec types.
 		pathspec := path_specs.NewUnsafeFilestorePath(
-			utils.SplitComponents(path)...)
-		result = append(result, pathspec.AsFilestoreFilename(config_obj))
+			utils.SplitComponents(t)...).
+			SetType(api.PATH_TYPE_FILESTORE_ANY)
+
+		return pathspec.AsFilestoreFilename(config_obj)
 	}
 
-	return result
+	return vfilter.Null{}
 }
 
 func (self FileStore) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

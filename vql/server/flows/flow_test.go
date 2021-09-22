@@ -1,4 +1,4 @@
-package server_test
+package flows_test
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/server"
+	"www.velocidex.com/golang/velociraptor/vql/server/flows"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -101,7 +101,7 @@ func (self *FilestoreTestSuite) TestEnumerateFlow() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 
-	result := vtesting.RunPlugin(server.EnumerateFlowPlugin{}.Call(ctx, scope,
+	result := vtesting.RunPlugin(flows.EnumerateFlowPlugin{}.Call(ctx, scope,
 		ordereddict.NewDict().
 			Set("flow_id", self.flow_id).
 			Set("client_id", self.client_id)))

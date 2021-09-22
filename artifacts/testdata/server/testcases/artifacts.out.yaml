@@ -1,9 +1,10 @@
-SELECT * FROM uploads(client_id='C.4f5e52adf0a337a9', flow_id='F.BN2HJCPOF5U7U')[
+SELECT *, file_store(path=vfs_path) FROM uploads(client_id='C.4f5e52adf0a337a9', flow_id='F.BN2HJCPOF5U7U')[
  {
   "Timestamp": 1573198259,
   "started": "2019-11-08 07:30:59.920512962 +0000 UTC",
   "vfs_path": "/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/file/C:/1.zip",
-  "expected_size": 1319
+  "expected_size": 1319,
+  "file_store(path=vfs_path)": "./artifacts/testdata/server/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/file/C%3A/1.zip"
  }
 ]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', env=dict(Device ='C:', VSSAnalysis='Y', KapeTriage='Y')).request AS Flow FROM scope()[
  {
