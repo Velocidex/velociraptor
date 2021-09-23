@@ -117,7 +117,11 @@ func (self *VFSService) ProcessDownloadFile(
 
 		// We store a place holder in the VFS pointing at the
 		// read vfs_path of the download.
-		db, _ := datastore.GetDB(config_obj)
+		db, err := datastore.GetDB(config_obj)
+		if err != nil {
+			return
+		}
+
 		err = db.SetSubject(config_obj,
 			client_path_manager.VFSDownloadInfoFromClientPath(
 				Accessor, Path),

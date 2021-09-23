@@ -112,7 +112,10 @@ func (self *ArtifactLogPathManager) GetAvailableFiles(
 	}
 
 	// List all daily files in the required directory.
-	children, _ := self.get_event_files(path_for_writing)
+	children, err := self.get_event_files(path_for_writing)
+	if err != nil {
+		return nil
+	}
 	return children
 }
 

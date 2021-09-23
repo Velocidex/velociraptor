@@ -110,7 +110,11 @@ func vfsFileDownloadHandler(
 			}
 
 		} else {
-			db, _ := datastore.GetDB(config_obj)
+			db, err := datastore.GetDB(config_obj)
+			if err != nil {
+				returnError(w, 404, err.Error())
+				return
+			}
 
 			info_path_spec := client_path_manager.VFSDownloadInfoPath(
 				request.Components)

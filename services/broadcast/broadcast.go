@@ -73,6 +73,7 @@ func (self *BroadcastService) Watch(ctx context.Context, name string) (
 	}
 
 	output_chan, cancel := self.pool.Register(ctx, name)
+	// If closers in nil we create a new slice.
 	closers, _ := self.listener_closers[name]
 	closers = append(closers, cancel)
 	self.listener_closers[name] = closers

@@ -284,7 +284,10 @@ func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int
 		return 0, err
 	}
 
-	repository, _ := manager.GetGlobalRepository(config_obj)
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return 0, err
+	}
 
 	artifact_type, err := repository.GetArtifactType(config_obj, artifact_name)
 	if err != nil {

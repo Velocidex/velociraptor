@@ -41,11 +41,10 @@ parameters:
 sources:
   - query: |
       LET FileStats = SELECT *,
-         regex_replace(
-            source=regex_replace(
-              source=SourceFile,
-              re='[:?]', replace=""),
-            re='\\\\', replace='/')  AS ZipPath
+         regex_transform(
+            key="A",
+            source=SourceFile,
+            map=dict(`[:?]`="", `\\\\`="/", `//./`="")) AS ZipPath
       FROM parse_jsonl(filename=url(scheme='file',
            path=ContainerPath,
            fragment=MetadataFile),

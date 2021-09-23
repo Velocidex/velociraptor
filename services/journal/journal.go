@@ -158,7 +158,11 @@ func StartJournalService(
 		service.qm = old_service.(*JournalService).qm
 	}
 
-	qm, _ := file_store.GetQueueManager(config_obj)
+	qm, err := file_store.GetQueueManager(config_obj)
+	if err != nil {
+		return err
+	}
+
 	if qm != nil {
 		service.qm = qm
 	}

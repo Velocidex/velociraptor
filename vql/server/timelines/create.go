@@ -103,7 +103,12 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 	}
 
 	// Now record the new timeline in the notebook if needed.
-	db, _ := datastore.GetDB(config_obj)
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		scope.Log("timeline_add: can only be used on the server: %v", err)
+		return vfilter.Null{}
+	}
+
 	notebook_metadata := &api_proto.NotebookMetadata{}
 	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook_metadata)
 	if err != nil {
