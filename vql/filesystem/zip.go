@@ -419,7 +419,7 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 				})
 		}
 		self.mu.Lock()
-		self.fd_cache[parsed_url.String()] = zip_file_cache
+		self.fd_cache[base_url.String()] = zip_file_cache
 		self.mu.Unlock()
 	}
 
