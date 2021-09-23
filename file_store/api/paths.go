@@ -96,6 +96,13 @@ const (
 	// Used for artifacts
 	PATH_TYPE_FILESTORE_YAML
 
+	// Used to read raw db paths with the file store.  FIXME: This
+	// only works when data store and file store share path - this is
+	// currently only needed to read data store items with the fs
+	// accessor.
+	PATH_TYPE_FILESTORE_DB
+	PATH_TYPE_FILESTORE_DB_JSON
+
 	// Arbitrary extensions.
 	PATH_TYPE_FILESTORE_ANY
 )

@@ -222,7 +222,6 @@ github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG
 github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
-github.com/go-test/deep v1.0.5 h1:AKODKU3pDH1RzZzm6YZu77YWtEAq6uh1rLIAQlay2qc=
 github.com/go-test/deep v1.0.5/go.mod h1:QV8Hv/iy04NyLBxAdO9njL0iVPN1S4d/A3NVv1V36o8=
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/gogo/protobuf v1.3.0/go.mod h1:SlYgWuQ5SjCEi6WLHjHCa1yvBfUnHcTbrrZtXPKa29o=
@@ -984,8 +983,6 @@ www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196/go.mod h1:i
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500 h1:XqZddiAbjPIsTZcEPbqqqABS/ZV5SB7j33eczNsqD60=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500/go.mod h1:DVzloLH8L+oF3zma1Jisaat5bGF+4VLggDcYlIp00ns=
 www.velocidex.com/golang/vfilter v0.0.0-20210515085940-25d96b94dafb/go.mod h1:KB724xBNYh4lgipyGwsvx0/5hXRqsKjmrMrkSjGESvU=
-www.velocidex.com/golang/vfilter v0.0.0-20210826152205-95ca08f5dfde h1:MBGxqavpHupcWdnKYeWK+LriJ99yrquoPaxoVT94j8U=
-www.velocidex.com/golang/vfilter v0.0.0-20210826152205-95ca08f5dfde/go.mod h1:KB724xBNYh4lgipyGwsvx0/5hXRqsKjmrMrkSjGESvU=
 www.velocidex.com/golang/vfilter v0.0.0-20210913135640-226d766334af h1:JVVzwj+2LdufD4bjwvkdKfhrtwxtO3c6en+8vFv/2tc=
 www.velocidex.com/golang/vfilter v0.0.0-20210913135640-226d766334af/go.mod h1:eEFMhAmoFHWGCKF39j+iOhTH8REpqBndc3OsdPsxqo8=
 www.velocidex.com/golang/vtypes v0.0.0-20210728123451-f085971da113 h1:IXya95AX2bUPIbgi4vEWeer6MoNdKC3nRRtxsulcAuQ=

@@ -67,7 +67,7 @@ func (self *HashFunction) Call(ctx context.Context,
 	arg := &HashFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("hash: %s", err.Error())
+		scope.Log("hash: %v", err)
 		return vfilter.Null{}
 	}
 

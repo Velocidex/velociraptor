@@ -53,6 +53,12 @@ func GetExtensionForFilestore(path_spec FSPathSpec, t PathType) string {
 	case PATH_TYPE_FILESTORE_YAML:
 		return ".yaml"
 
+	case PATH_TYPE_FILESTORE_DB:
+		return ".db"
+
+	case PATH_TYPE_FILESTORE_DB_JSON:
+		return ".json.db"
+
 	case PATH_TYPE_FILESTORE_ANY:
 		return ""
 	}
@@ -85,6 +91,10 @@ func GetFileStorePathTypeFromExtension(name string) (PathType, string) {
 		return PATH_TYPE_FILESTORE_JSON_TIME_INDEX, name[:len(name)-10]
 	}
 
+	if strings.HasSuffix(name, ".json.db") {
+		return PATH_TYPE_FILESTORE_DB_JSON, name[:len(name)-8]
+	}
+
 	if strings.HasSuffix(name, ".idx") {
 		return PATH_TYPE_FILESTORE_SPARSE_IDX, name[:len(name)-4]
 	}
@@ -107,6 +117,10 @@ func GetFileStorePathTypeFromExtension(name string) (PathType, string) {
 
 	if strings.HasSuffix(name, ".csv") {
 		return PATH_TYPE_FILESTORE_CSV, name[:len(name)-4]
+	}
+
+	if strings.HasSuffix(name, ".db") {
+		return PATH_TYPE_FILESTORE_DB, name[:len(name)-3]
 	}
 
 	if strings.HasSuffix(name, ".yaml") {

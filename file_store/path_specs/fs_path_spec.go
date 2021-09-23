@@ -12,6 +12,10 @@ type FSPathSpec struct {
 	DSPathSpec
 }
 
+func (self FSPathSpec) String() string {
+	return "fs:" + self.AsClientPath()
+}
+
 func (self FSPathSpec) Dir() api.FSPathSpec {
 	new_components := utils.CopySlice(self.components)
 	if len(new_components) > 0 {
@@ -24,7 +28,7 @@ func (self FSPathSpec) Dir() api.FSPathSpec {
 }
 
 func (self FSPathSpec) MarshalJSON() ([]byte, error) {
-	return []byte(strconv.Quote(self.AsClientPath())), nil
+	return []byte(strconv.Quote("fs:" + self.AsClientPath())), nil
 }
 
 // Adds an unsafe component to this path.
