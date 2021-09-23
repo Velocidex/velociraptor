@@ -1,37 +1,37 @@
 {
  "Available Files": [
   {
-   "Path": "/clients/C.12312/monitoring/Windows.Events.ProcessCreation/2020-04-25.json",
+   "Path": "fs:/clients/C.12312/monitoring/Windows.Events.ProcessCreation/2020-04-25.json",
    "StartTime": "2020-04-25T00:00:00Z",
    "EndTime": "2020-04-26T00:00:00Z",
    "Size": 294
   },
   {
-   "Path": "/clients/C.12312/monitoring/Windows.Events.ProcessCreation/2020-04-26.json",
+   "Path": "fs:/clients/C.12312/monitoring/Windows.Events.ProcessCreation/2020-04-26.json",
    "StartTime": "2020-04-26T00:00:00Z",
    "EndTime": "2020-04-27T00:00:00Z",
    "Size": 441
   },
   {
-   "Path": "/clients/C.12312/monitoring/Windows.Events.ProcessCreation/2020-04-27.json",
+   "Path": "fs:/clients/C.12312/monitoring/Windows.Events.ProcessCreation/2020-04-27.json",
    "StartTime": "2020-04-27T00:00:00Z",
    "EndTime": "2020-04-28T00:00:00Z",
    "Size": 441
   },
   {
-   "Path": "/clients/C.12312/monitoring/Windows.Events.ProcessCreation/2020-04-28.json",
+   "Path": "fs:/clients/C.12312/monitoring/Windows.Events.ProcessCreation/2020-04-28.json",
    "StartTime": "2020-04-28T00:00:00Z",
    "EndTime": "2020-04-29T00:00:00Z",
    "Size": 392
   },
   {
-   "Path": "/clients/C.12312/monitoring/Windows.Events.ProcessCreation/2020-04-29.json",
+   "Path": "fs:/clients/C.12312/monitoring/Windows.Events.ProcessCreation/2020-04-29.json",
    "StartTime": "2020-04-29T00:00:00Z",
    "EndTime": "2020-04-30T00:00:00Z",
    "Size": 441
   },
   {
-   "Path": "/clients/C.12312/monitoring/Windows.Events.ProcessCreation/2020-04-30.json",
+   "Path": "fs:/clients/C.12312/monitoring/Windows.Events.ProcessCreation/2020-04-30.json",
    "StartTime": "2020-04-30T00:00:00Z",
    "EndTime": "2020-05-01T00:00:00Z",
    "Size": 441
