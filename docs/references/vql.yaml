@@ -544,7 +544,6 @@
       commandline_split(command="/usr/bin/ls -l 'file with space.txt'", bash_style=TRUE)
     FROM scope()
     ```
-
   type: Function
   args:
   - name: command
@@ -1121,9 +1120,8 @@
   type: Function
   args:
   - name: path
-    type: string
+    type: LazyExpr
     description: A VFS path to convert
-    repeated: true
     required: true
   category: server
 - name: file_store_delete
@@ -1132,7 +1130,7 @@
   type: Function
   args:
   - name: path
-    type: string
+    type: LazyExpr
     description: A VFS path to remove
     required: true
   category: server
@@ -3299,7 +3297,6 @@
        `world`="Space"), key="A")
     FROM scope()
     ```
-
   type: Function
   args:
   - name: source
@@ -4678,3 +4675,4 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
+
