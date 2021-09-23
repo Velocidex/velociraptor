@@ -27,6 +27,10 @@ type DSPathSpec struct {
 	tag string
 }
 
+func (self DSPathSpec) String() string {
+	return "ds:" + self.AsClientPath()
+}
+
 func (self DSPathSpec) IsDir() bool {
 	return self.is_dir
 }
@@ -37,7 +41,7 @@ func (self DSPathSpec) SetDir() api.DSPathSpec {
 }
 
 func (self DSPathSpec) MarshalJSON() ([]byte, error) {
-	return []byte(strconv.Quote(self.AsClientPath())), nil
+	return []byte(strconv.Quote("ds:" + self.AsClientPath())), nil
 }
 
 func (self DSPathSpec) Base() string {

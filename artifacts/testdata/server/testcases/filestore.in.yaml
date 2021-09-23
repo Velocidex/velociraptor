@@ -1,0 +1,25 @@
+Queries:
+  # Test the fs accessor. Glob should return an `fs:/path` path. Hash
+  # should be able to read the data.
+  - SELECT FullPath,
+           hash(path=FullPath, accessor="fs")
+    FROM glob(
+        globs='/clients/C.4f5e52adf0a337a9/artifacts/**', accessor="fs")
+    WHERE NOT IsDir
+    ORDER BY FullPath
+
+  # We can read datastore files if the datastore and filestore
+  # overlap. We can not currently find datastore objects with glob,
+  # but we can open them using the fs accessor.
+  - SELECT hash(path='ds:/clients/C.4f5e52adf0a337a9/ping.db', accessor="fs")
+    FROM scope()
+
+  # enumerate_flow emits some fs paths and some ds paths. Here we test
+  # that we can read both these types. file_store operating on the
+  # string version should be same as directly.
+  - SELECT hash(path=VFSPath, accessor="fs"), VFSPath, Type,
+           format(format="%T should be FSPathSpec / DSPathSpec", args=VFSPath),
+           file_store(path=VFSPath) = file_store(path=str(str=VFSPath)),
+           basename(path=file_store(path=VFSPath))
+    FROM enumerate_flow(client_id="C.4f5e52adf0a337a9", flow_id="F.BN2HP3OSS3LK6")
+    WHERE Type IN ("Log", "CollectionContext", "Task", "Result")

@@ -21,14 +21,14 @@ package server
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -143,13 +143,18 @@ func (self *FileStore) Call(ctx context.Context,
 		return t.AsDatastoreFilename(config_obj)
 
 	case string:
-		// This should not happen - ideally file_store() should only
-		// operate on FSPathSpec types.
-		pathspec := path_specs.NewUnsafeFilestorePath(
-			utils.SplitComponents(t)...).
-			SetType(api.PATH_TYPE_FILESTORE_ANY)
+		// Things that produce strings normally encode the path spec
+		// with a prefix to let us know if this is a data store path
+		// or a filestore path..
+		if strings.HasPrefix(t, "ds:") {
+			return paths.DSPathSpecFromClientPath(
+				strings.TrimPrefix(t, "ds:")).
+				AsDatastoreFilename(config_obj)
+		}
 
-		return pathspec.AsFilestoreFilename(config_obj)
+		return paths.FSPathSpecFromClientPath(
+			strings.TrimPrefix(t, "fs:")).
+			AsFilestoreFilename(config_obj)
 	}
 
 	return vfilter.Null{}

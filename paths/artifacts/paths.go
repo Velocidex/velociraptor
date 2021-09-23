@@ -128,57 +128,73 @@ func (self *ArtifactPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 	switch self.mode {
 	case paths.MODE_CLIENT:
 		if self.source != "" {
-			return paths.CLIENTS_ROOT.AddChild(
-				self.client_id, "artifacts",
-				self.base_artifact_name, self.flow_id,
-				self.source).AsFilestorePath(), nil
+			return paths.CLIENTS_ROOT.AsFilestorePath().
+				SetType(api.PATH_TYPE_FILESTORE_JSON).
+				AddChild(
+					self.client_id, "artifacts",
+					self.base_artifact_name, self.flow_id,
+					self.source), nil
 		} else {
-			return paths.CLIENTS_ROOT.AddChild(
-				self.client_id, "artifacts",
-				self.base_artifact_name,
-				self.flow_id).AsFilestorePath(), nil
+			return paths.CLIENTS_ROOT.AsFilestorePath().
+				SetType(api.PATH_TYPE_FILESTORE_JSON).
+				AddChild(
+					self.client_id, "artifacts",
+					self.base_artifact_name,
+					self.flow_id), nil
 		}
 
 	case paths.MODE_SERVER:
 		if self.source != "" {
-			return paths.CLIENTS_ROOT.AddChild(
-				"server", "artifacts", self.base_artifact_name,
-				self.flow_id, self.source).AsFilestorePath(), nil
+			return paths.CLIENTS_ROOT.AsFilestorePath().
+				SetType(api.PATH_TYPE_FILESTORE_JSON).
+				AddChild(
+					"server", "artifacts", self.base_artifact_name,
+					self.flow_id, self.source), nil
 		} else {
-			return paths.CLIENTS_ROOT.AddChild(
-				"server", "artifacts", self.base_artifact_name,
-				self.flow_id).AsFilestorePath(), nil
+			return paths.CLIENTS_ROOT.AsFilestorePath().
+				SetType(api.PATH_TYPE_FILESTORE_JSON).
+				AddChild(
+					"server", "artifacts", self.base_artifact_name,
+					self.flow_id), nil
 		}
 
 	case paths.MODE_SERVER_EVENT:
 		if self.source != "" {
-			return paths.SERVER_MONITORING_ROOT.AddChild(
-				self.base_artifact_name, self.source,
-				self.getDayName()), nil
+			return paths.SERVER_MONITORING_ROOT.
+				AddChild(
+					self.base_artifact_name, self.source,
+					self.getDayName()), nil
 		} else {
-			return paths.SERVER_MONITORING_ROOT.AddChild(
-				self.base_artifact_name,
-				self.getDayName()), nil
+			return paths.SERVER_MONITORING_ROOT.
+				AddChild(
+					self.base_artifact_name,
+					self.getDayName()), nil
 		}
 
 	case paths.MODE_CLIENT_EVENT:
 		if self.client_id == "" {
 			// Should never normally happen.
-			return paths.CLIENTS_ROOT.AddChild(
-				"nobody", self.base_artifact_name,
-				self.getDayName()).AsFilestorePath(), nil
+			return paths.CLIENTS_ROOT.AsFilestorePath().
+				SetType(api.PATH_TYPE_FILESTORE_JSON).
+				AddChild(
+					"nobody", self.base_artifact_name,
+					self.getDayName()), nil
 
 		} else {
 			if self.source != "" {
-				return paths.CLIENTS_ROOT.AddChild(
-					self.client_id, "monitoring",
-					self.base_artifact_name, self.source,
-					self.getDayName()).AsFilestorePath(), nil
+				return paths.CLIENTS_ROOT.AsFilestorePath().
+					SetType(api.PATH_TYPE_FILESTORE_JSON).
+					AddChild(
+						self.client_id, "monitoring",
+						self.base_artifact_name, self.source,
+						self.getDayName()), nil
 			} else {
-				return paths.CLIENTS_ROOT.AddChild(
-					self.client_id, "monitoring",
-					self.base_artifact_name,
-					self.getDayName()).AsFilestorePath(), nil
+				return paths.CLIENTS_ROOT.AsFilestorePath().
+					SetType(api.PATH_TYPE_FILESTORE_JSON).
+					AddChild(
+						self.client_id, "monitoring",
+						self.base_artifact_name,
+						self.getDayName()), nil
 			}
 		}
 

@@ -181,7 +181,7 @@ func (self EnumerateFlowPlugin) Call(
 		arg := &FlowsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("enumerate_flow: %s", err.Error())
+			scope.Log("enumerate_flow: %v", err)
 			return
 		}
 

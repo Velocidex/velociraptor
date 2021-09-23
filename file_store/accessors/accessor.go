@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strings"
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -45,7 +46,7 @@ func (self FileStoreFileSystemAccessor) New(
 func (self FileStoreFileSystemAccessor) Lstat(
 	filename string) (glob.FileInfo, error) {
 
-	fullpath := paths.FSPathSpecFromClientPath(filename)
+	fullpath := getFSPathSpec(filename)
 	lstat, err := self.file_store.StatFile(fullpath)
 	if err != nil {
 		return nil, err
@@ -60,7 +61,7 @@ func (self FileStoreFileSystemAccessor) Lstat(
 
 func (self FileStoreFileSystemAccessor) ReadDir(filename string) (
 	[]glob.FileInfo, error) {
-	fullpath := paths.FSPathSpecFromClientPath(filename)
+	fullpath := getFSPathSpec(filename)
 	files, err := self.file_store.ListDirectory(fullpath)
 	if err != nil {
 		return nil, err
@@ -81,7 +82,20 @@ func (self FileStoreFileSystemAccessor) ReadDir(filename string) (
 
 func (self FileStoreFileSystemAccessor) Open(filename string) (
 	glob.ReadSeekCloser, error) {
-	fullpath := paths.FSPathSpecFromClientPath(filename)
+
+	fullpath := getFSPathSpec(filename)
+	if strings.HasPrefix(filename, "ds:") {
+		ds_path := getDSPathSpec(filename)
+		fullpath = ds_path.AsFilestorePath()
+		switch ds_path.Type() {
+		case api.PATH_TYPE_DATASTORE_JSON:
+			fullpath = fullpath.SetType(api.PATH_TYPE_FILESTORE_DB_JSON)
+
+		case api.PATH_TYPE_DATASTORE_PROTO:
+			fullpath = fullpath.SetType(api.PATH_TYPE_FILESTORE_DB)
+		}
+	}
+
 	file, err := self.file_store.ReadFile(fullpath)
 	if err != nil {
 		return nil, err
@@ -134,8 +148,9 @@ func (self *FileStoreFileInfo) Data() interface{} {
 	return self.Data_
 }
 
+// The FullPath contains the full URL to access the filestore.
 func (self *FileStoreFileInfo) FullPath() string {
-	return self.fullpath.AsClientPath()
+	return "fs:" + self.fullpath.AsClientPath()
 }
 
 func (self *FileStoreFileInfo) PathSpec() api.FSPathSpec {
@@ -208,4 +223,12 @@ type FileReaderAdapter struct {
 func (self *FileReaderAdapter) Stat() (os.FileInfo, error) {
 	stat, err := self.FileReader.Stat()
 	return stat, err
+}
+
+func getFSPathSpec(filename string) api.FSPathSpec {
+	return paths.FSPathSpecFromClientPath(strings.TrimPrefix(filename, "fs:"))
+}
+
+func getDSPathSpec(filename string) api.DSPathSpec {
+	return paths.DSPathSpecFromClientPath(strings.TrimPrefix(filename, "ds:"))
 }

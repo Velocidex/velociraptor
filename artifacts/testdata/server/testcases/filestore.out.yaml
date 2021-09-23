@@ -1,0 +1,83 @@
+SELECT FullPath, hash(path=FullPath, accessor="fs") FROM glob( globs='/clients/C.4f5e52adf0a337a9/artifacts/**', accessor="fs") WHERE NOT IsDir ORDER BY FullPath[
+ {
+  "FullPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Applications.ChocolateyPackages/F.BN2HP3OSS3LK6.csv",
+  "hash(path=FullPath, accessor=\"fs\")": {
+   "MD5": "33f3ec906865e66d534fcae4fee1c996",
+   "SHA1": "21144c3b7584023d13dbc21a5c2d822c3aa7b244",
+   "SHA256": "e873a36ac3339252083d3674a4415bc15985ef2dbbdaac2f9dc08899ea521e8e"
+  }
+ },
+ {
+  "FullPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Applications.ChocolateyPackages/F.BN2HP3OSS3LK6.json",
+  "hash(path=FullPath, accessor=\"fs\")": {
+   "MD5": "0cefcb74dd13a3f381cbbeb2f97902ce",
+   "SHA1": "5f045fe23af6698bc57e7213506e3d1d035d9e98",
+   "SHA256": "c7c9363e9732e9fff9eb10918e03cc70aab81d84955a2002777c3200a1c7290c"
+  }
+ },
+ {
+  "FullPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Network.NetstatEnriched/F.BSJMEJIPT6P9I/Netstat.json",
+  "hash(path=FullPath, accessor=\"fs\")": {
+   "MD5": "59db7963182782188a514202412e6794",
+   "SHA1": "ad0157feb3d77dd729799743ec6bfa273f36122a",
+   "SHA256": "8b39ee335f2f7dd7a68f57900a687fa2bcaae0b1e6d31f3ee91100f195835d9b"
+  }
+ }
+]SELECT hash(path='ds:/clients/C.4f5e52adf0a337a9/ping.db', accessor="fs") FROM scope()[
+ {
+  "hash(path='ds:/clients/C.4f5e52adf0a337a9/ping.db', accessor=\"fs\")": {
+   "MD5": "5b7248aacaf2f56e534fc06edf64d659",
+   "SHA1": "9e067d3c7391c46d1ed3cba50a0c8d2f37dd6d08",
+   "SHA256": "c3ddb6eac139a4fd2357e10d4166908033c87c8a7df997cc3632dfd6b958e187"
+  }
+ }
+]SELECT hash(path=VFSPath, accessor="fs"), VFSPath, Type, format(format="%T should be FSPathSpec / DSPathSpec", args=VFSPath), file_store(path=VFSPath) = file_store(path=str(str=VFSPath)), basename(path=file_store(path=VFSPath)) FROM enumerate_flow(client_id="C.4f5e52adf0a337a9", flow_id="F.BN2HP3OSS3LK6") WHERE Type IN ("Log", "CollectionContext", "Task", "Result")[
+ {
+  "hash(path=VFSPath, accessor=\"fs\")": {
+   "MD5": "0cefcb74dd13a3f381cbbeb2f97902ce",
+   "SHA1": "5f045fe23af6698bc57e7213506e3d1d035d9e98",
+   "SHA256": "c7c9363e9732e9fff9eb10918e03cc70aab81d84955a2002777c3200a1c7290c"
+  },
+  "VFSPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Applications.ChocolateyPackages/F.BN2HP3OSS3LK6.json",
+  "Type": "Result",
+  "format(format=\"%T should be FSPathSpec / DSPathSpec\", args=VFSPath)": "path_specs.FSPathSpec should be FSPathSpec / DSPathSpec",
+  "file_store(path=VFSPath) = file_store(path=str(str=VFSPath))": true,
+  "basename(path=file_store(path=VFSPath))": "F.BN2HP3OSS3LK6.json"
+ },
+ {
+  "hash(path=VFSPath, accessor=\"fs\")": {
+   "MD5": "61598760c4a34c344913f6525e618d6e",
+   "SHA1": "81228b522560849761b3b8d4addd83aae5ae94de",
+   "SHA256": "43b04dd30474cafdc3cd06ae632402a116ae636d65a14fcfb4a838f6338f1dad"
+  },
+  "VFSPath": "fs:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6/logs",
+  "Type": "Log",
+  "format(format=\"%T should be FSPathSpec / DSPathSpec\", args=VFSPath)": "path_specs.FSPathSpec should be FSPathSpec / DSPathSpec",
+  "file_store(path=VFSPath) = file_store(path=str(str=VFSPath))": true,
+  "basename(path=file_store(path=VFSPath))": "logs"
+ },
+ {
+  "hash(path=VFSPath, accessor=\"fs\")": {
+   "MD5": "1b79132257746e3ce295e45e50160521",
+   "SHA1": "6d83deb9d14457496bf9560dd6b87f2ed7b7ef92",
+   "SHA256": "c337a4c3885ed775b50994f8018bdc7b3fa885f2efb81a2b766f12e81ac85394"
+  },
+  "VFSPath": "ds:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6.db",
+  "Type": "CollectionContext",
+  "format(format=\"%T should be FSPathSpec / DSPathSpec\", args=VFSPath)": "path_specs.DSPathSpec should be FSPathSpec / DSPathSpec",
+  "file_store(path=VFSPath) = file_store(path=str(str=VFSPath))": true,
+  "basename(path=file_store(path=VFSPath))": "F.BN2HP3OSS3LK6.db"
+ },
+ {
+  "hash(path=VFSPath, accessor=\"fs\")": {
+   "MD5": "32f571cb37dcb9e9b3c3313919bd2426",
+   "SHA1": "e87f3065fad8d622194a5581e7b583cdd820217a",
+   "SHA256": "5888fe1c56fbc79e109f41441516d4b9ac061029f39e66f6f67b2e7f58285c90"
+  },
+  "VFSPath": "ds:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6/task.db",
+  "Type": "Task",
+  "format(format=\"%T should be FSPathSpec / DSPathSpec\", args=VFSPath)": "path_specs.DSPathSpec should be FSPathSpec / DSPathSpec",
+  "file_store(path=VFSPath) = file_store(path=str(str=VFSPath))": true,
+  "basename(path=file_store(path=VFSPath))": "task.db"
+ }
+]
