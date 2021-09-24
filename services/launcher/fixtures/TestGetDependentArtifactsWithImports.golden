@@ -1,0 +1,39 @@
+[
+ {
+  "Query": [
+   {
+    "VQL": "LET Custom_CallArtifactWithImports_0_0 = SELECT * FROM Artifact.Custom.TheOneWithTheImport()"
+   },
+   {
+    "Name": "Custom.CallArtifactWithImports",
+    "VQL": "SELECT * FROM Custom_CallArtifactWithImports_0_0"
+   }
+  ],
+  "max_row": 1000,
+  "artifacts": [
+   {
+    "name": "Custom.TheOneWithTheExport",
+    "type": "client",
+    "export": "LET X\u003c=SELECT * FROM Artifact.DependedArtifactInExport()"
+   },
+   {
+    "name": "Custom.TheOneWithTheImport",
+    "type": "client",
+    "sources": [
+     {
+      "queries": [
+       "SELECT * FROM X"
+      ]
+     }
+    ],
+    "imports": [
+     "Custom.TheOneWithTheExport"
+    ]
+   },
+   {
+    "name": "DependedArtifactInExport",
+    "type": "client"
+   }
+  ]
+ }
+]

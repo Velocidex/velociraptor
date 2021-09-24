@@ -25,7 +25,7 @@
       },
       {
        "name": "Source2",
-       "precondition": "SELECT * FROM info() WHERE TRUE\n",
+       "precondition": "SELECT * FROM info() WHERE TRUE",
        "queries": [
         "SELECT \"B\" AS Col FROM scope()"
        ]
