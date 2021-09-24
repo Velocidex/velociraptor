@@ -19,7 +19,11 @@ func maybeMigrateClientIndex(
 		return err
 	}
 
-	items, _ := db.ListChildren(config_obj, paths.CLIENT_INDEX_URN)
+	items, err := db.ListChildren(config_obj, paths.CLIENT_INDEX_URN)
+	if err != nil {
+		return err
+	}
+
 	if len(items) > 0 {
 		return nil
 	}

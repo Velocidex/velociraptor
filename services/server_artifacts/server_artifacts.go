@@ -230,7 +230,11 @@ func (self *ServerArtifactsRunner) processTask(
 		return err
 	}
 
-	db, _ := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
 	err = db.UnQueueMessageForClient(self.config_obj, "server", task)
 	if err != nil {
 		return err

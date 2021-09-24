@@ -57,15 +57,24 @@ func (self *SanityChecks) Check(
 				// password and salt
 				switch strings.ToLower(config_obj.GUI.Authenticator.Type) {
 				case "basic":
-					new_user.PasswordHash, _ = hex.DecodeString(user.PasswordHash)
-					new_user.PasswordSalt, _ = hex.DecodeString(user.PasswordSalt)
+					new_user.PasswordHash, err = hex.DecodeString(user.PasswordHash)
+					if err != nil {
+						return err
+					}
+					new_user.PasswordSalt, err = hex.DecodeString(user.PasswordSalt)
+					if err != nil {
+						return err
+					}
 
 					// All other auth methods do
 					// not need a password set, so
 					// generate a random one
 				default:
 					password := make([]byte, 100)
-					_, _ = rand.Read(password)
+					_, err = rand.Read(password)
+					if err != nil {
+						return err
+					}
 					users.SetPassword(new_user, string(password))
 				}
 

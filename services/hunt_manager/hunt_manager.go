@@ -262,7 +262,11 @@ func (self *HuntManager) ProcessFlowCompletion(
 	row *ordereddict.Dict) error {
 
 	flow := &flows_proto.ArtifactCollectorContext{}
-	flow_any, _ := row.Get("Flow")
+	flow_any, pres := row.Get("Flow")
+	if !pres {
+		return errors.New("Flow not found")
+	}
+
 	err := utils.ParseIntoProtobuf(flow_any, flow)
 	if err != nil {
 		return err

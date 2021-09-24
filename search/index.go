@@ -155,7 +155,12 @@ func SearchIndexWithPrefix(
 	root := paths.CLIENT_INDEX_URN
 	partitions := paths.NewIndexPathManager().TermPartitions(prefix)
 
-	db, _ := datastore.GetDB(config_obj)
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		output_chan := make(chan *api_proto.IndexRecord)
+		close(output_chan)
+		return output_chan
+	}
 
 	return walkIndexWithPrefix(ctx, db, config_obj, root, partitions, options)
 }
@@ -189,7 +194,11 @@ func getChildren(
 	}
 
 	metricLRUMiss.Inc()
-	db, _ := datastore.GetDB(config_obj)
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	children, err := db.ListChildren(config_obj, root.SetTag("Index"))
 	if err != nil {
 		return nil, err
