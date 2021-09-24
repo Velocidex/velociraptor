@@ -7,7 +7,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -108,8 +107,9 @@ func (self SetClientMonitoring) Call(
 		return vfilter.Null{}
 	}
 
+	principal := vql_subsystem.GetPrincipal(scope)
 	err = services.ClientEventManager().SetClientMonitoringState(
-		ctx, config_obj, value)
+		ctx, config_obj, principal, value)
 	if err != nil {
 		scope.Log("set_client_monitoring: %s", err.Error())
 		return vfilter.Null{}
@@ -234,20 +234,20 @@ func (self SetServerMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	server_manager := services.GetServerEventManager()
+	if server_manager == nil {
+		scope.Log("set_server_monitoring: server_manager not ready")
+		return vfilter.Null{}
+	}
+
+	principal := vql_subsystem.GetPrincipal(scope)
+	err = server_manager.Update(config_obj, principal, value)
 	if err != nil {
 		scope.Log("set_server_monitoring: %s", err.Error())
 		return vfilter.Null{}
 	}
-	defer func() { _ = closer() }()
 
-	response, err := client.SetServerMonitoringState(ctx, value)
-	if err != nil {
-		scope.Log("set_server_monitoring: %s", err.Error())
-		return vfilter.Null{}
-	}
-
-	return response
+	return value
 }
 
 func (self SetServerMonitoring) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

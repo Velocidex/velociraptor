@@ -16,6 +16,19 @@ SELECT * FROM items(item=[1,2])[
   "_key": "Y",
   "_value": 2
  }
+]LET ItemQuery = SELECT _value as Item FROM range(start=0, end=2, step=1)[]SELECT * FROM items(item=ItemQuery)[
+ {
+  "_key": 0,
+  "_value": {
+   "Item": 0
+  }
+ },
+ {
+  "_key": 1,
+  "_value": {
+   "Item": 1
+  }
+ }
 ]SELECT * FROM switch( zcase={ SELECT "First" FROM scope() }, acase={ SELECT "Second" FROM scope() })[
  {
   "\"First\"": "First"

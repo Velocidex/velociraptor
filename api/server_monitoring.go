@@ -27,13 +27,14 @@ func getServerMonitoringState(config_obj *config_proto.Config) (
 
 func setServerMonitoringState(
 	config_obj *config_proto.Config,
+	principal string,
 	args *flows_proto.ArtifactCollectorArgs) error {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
-	err = services.GetServerEventManager().Update(config_obj, args)
+	err = services.GetServerEventManager().Update(config_obj, principal, args)
 	if err != nil {
 		return err
 	}

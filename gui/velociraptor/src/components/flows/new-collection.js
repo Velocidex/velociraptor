@@ -27,7 +27,7 @@ import ValidatedInteger from "../forms/validated_int.js";
 import VeloAce from '../core/ace.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { HotKeys, ObserveKeys } from "react-hotkeys";
-import { requestToParameters } from "./utils.js";
+import { requestToParameters, runArtifact } from "./utils.js";
 
 import api from '../core/api-service.js';
 import axios from 'axios';
@@ -124,6 +124,8 @@ class NewCollectionSelectArtifacts extends React.Component {
         favorites: [],
         favorite_options: [],
         showFavoriteSelector: false,
+
+        current_favorite: null,
     }
 
     componentDidMount = () => {
@@ -210,6 +212,19 @@ class NewCollectionSelectArtifacts extends React.Component {
         });
     }
 
+    deleteFavorite = (name, type)=>{
+        this.setState({loading: true});
+        runArtifact("server",   // This collection happens on the server.
+                    "Server.Utils.DeleteFavoriteFlow",
+                    {
+                        Name: name,
+                        Type: type,
+                    }, ()=>{
+                        this.fetchFavorites();
+                        this.setState({loading: false});
+                    }, this.source.token);
+    }
+
     setFavorite = (spec) => {
         // First set all the artifacts in the spec.
         let artifacts = [];
@@ -236,6 +251,7 @@ class NewCollectionSelectArtifacts extends React.Component {
         _.each(this.state.favorites, fav=>{
             if(selection.value === fav.name) {
                 this.setFavorite(fav.spec);
+                this.setState({current_favorite: {name: fav.name, type: fav.type}});
             }
         });
         return true;
@@ -273,17 +289,34 @@ class NewCollectionSelectArtifacts extends React.Component {
                         options={this.state.favorite_options}
                         onChange={this.setFavorite_}
                         placeholder="Favorite Name"
-                      />}
-                    <Button variant="default"
-                            onClick={(e)=>{
-                                this.fetchFavorites();
-                                this.setState({
-                                    showFavoriteSelector: !this.state.showFavoriteSelector
-                                });
-                            }}
-                            className="favorite-button float-right">
-                    <FontAwesomeIcon icon="heart"/>
-                  </Button>
+                      />
+                    }
+                    { this.state.current_favorite ?
+                      <Button variant="default"
+                              onClick={(e)=>{
+                                  this.deleteFavorite(
+                                      this.state.current_favorite.name,
+                                      this.state.current_favorite.type,
+                                  );
+                                  this.setState({
+                                      current_favorite: null,
+                                  });
+                              }}
+                              className="favorite-button float-right">
+                        <FontAwesomeIcon icon="trash"/>
+                      </Button>
+                      :
+                      <Button variant="default"
+                              onClick={(e)=>{
+                                  this.fetchFavorites();
+                                  this.setState({
+                                      showFavoriteSelector: !this.state.showFavoriteSelector
+                                  });
+                              }}
+                              className="favorite-button float-right">
+                        <FontAwesomeIcon icon="heart"/>
+                      </Button>
+                    }
                   </ButtonGroup>
                 </Modal.Title>
               </Modal.Header>

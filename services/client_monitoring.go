@@ -68,5 +68,6 @@ type ClientEventTable interface {
 	SetClientMonitoringState(
 		ctx context.Context,
 		config_obj *config_proto.Config,
+		principal string,
 		state *flows_proto.ClientEventTable) error
 }

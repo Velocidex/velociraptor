@@ -23,6 +23,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -131,11 +132,12 @@ func (self *ClientEventTable) GetClientMonitoringState() *flows_proto.ClientEven
 func (self *ClientEventTable) SetClientMonitoringState(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	principal string,
 	state *flows_proto.ClientEventTable) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.setClientMonitoringState(ctx, config_obj, state)
+	return self.setClientMonitoringState(ctx, config_obj, principal, state)
 }
 
 func (self *ClientEventTable) compileArtifactCollectorArgs(
@@ -204,6 +206,7 @@ func (self *ClientEventTable) compileState(
 func (self *ClientEventTable) setClientMonitoringState(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	principal string,
 	state *flows_proto.ClientEventTable) error {
 
 	if state.Artifacts == nil {
@@ -237,10 +240,19 @@ func (self *ClientEventTable) setClientMonitoringState(
 		return err
 	}
 
+	if principal != "" {
+		logging.GetLogger(config_obj, &logging.Audit).
+			WithFields(logrus.Fields{
+				"user":  principal,
+				"state": self.state,
+			}).Info("SetClientMonitoringState")
+	}
+
 	return journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("setter", self.id).
+				Set("principal", principal).
 				Set("artifact", "ClientEventTable").
 				Set("op", "set"),
 		}, "Server.Internal.ArtifactModification", "", "")
@@ -333,7 +345,7 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(
 	}
 
 	if is_relevant() {
-		err := self.setClientMonitoringState(ctx, config_obj, self.state)
+		err := self.setClientMonitoringState(ctx, config_obj, "", self.state)
 		if err != nil {
 			logger := logging.GetLogger(
 				config_obj, &logging.FrontendComponent)
@@ -401,7 +413,7 @@ func (self *ClientEventTable) load_from_file(
 			return err
 		}
 
-		return self.setClientMonitoringState(ctx, config_obj, self.state)
+		return self.setClientMonitoringState(ctx, config_obj, "", self.state)
 	}
 
 	clear_caches(self.state)

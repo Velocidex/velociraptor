@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -84,6 +85,7 @@ func (self *EventTable) Close() {
 
 func (self *EventTable) Update(
 	config_obj *config_proto.Config,
+	principal string,
 	request *flows_proto.ArtifactCollectorArgs) error {
 	self.Close()
 
@@ -140,6 +142,14 @@ func (self *EventTable) Update(
 	err = db.SetSubject(config_obj, paths.ServerMonitoringFlowURN, request)
 	if err != nil {
 		return err
+	}
+
+	if principal != "" {
+		logging.GetLogger(config_obj, &logging.Audit).
+			WithFields(logrus.Fields{
+				"user":  principal,
+				"state": request,
+			}).Info("SetServerMonitoringState")
 	}
 
 	// Run each collection separately in parallel.
@@ -335,5 +345,5 @@ func StartServerMonitoringService(
 
 	services.RegisterServerEventManager(manager)
 
-	return manager.Update(config_obj, artifacts)
+	return manager.Update(config_obj, "", artifacts)
 }

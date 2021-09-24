@@ -33,6 +33,22 @@ func (self ItemsPlugin) Call(
 		}
 
 		switch t := arg.Item.(type) {
+
+		case vfilter.StoredQuery:
+			i := 0
+			for row := range t.Eval(ctx, scope) {
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- ordereddict.NewDict().
+					Set("_key", i).
+					Set("_value", row):
+					i++
+				}
+			}
+			return
+
 		case vfilter.LazyExpr:
 			arg.Item = t.Reduce(ctx)
 		}
