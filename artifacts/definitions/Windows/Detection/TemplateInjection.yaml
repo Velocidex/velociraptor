@@ -96,6 +96,8 @@ sources:
                 FROM stat(filename=Document)
                 WHERE
                     TemplateTarget =~ TemplateTargetRegex
+                     AND (( Section=~'/document.xml.rels$' AND TemplateTarget=~'^mhtml:' ) 
+                            OR NOT Section=~'/document.xml.rels$' )
             })
 
       -- upload hits to server
