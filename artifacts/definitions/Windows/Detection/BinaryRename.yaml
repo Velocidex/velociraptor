@@ -10,7 +10,7 @@ description: |
 
     Add additional entries to the VersionInfoTable parameter. For straight 
     detection on an Internal or Original name, the Filename entry can be set to
-    an unlikely value - e.g XXXXX.
+    an unlikely value - e.g XXXXX or left blank.
 
     
 reference:
@@ -56,13 +56,18 @@ parameters:
         XXXXX,rclone,rclone.exe,Rsync for cloud storage
         XXXXX,MEGAsync.exe,MEGAsync.exe,MEGAsync
         XXXXX,MEGAcmdShell.exe,MEGAcmdShell,MEGAcmdShell
+        XXXXX,pCloud.exe,pCloud.exe,pCloud cloud storage
+        XXXXX,,pCloud Drive.exe,pCloud setup
 
 sources:
   - query: |
       LET bins <= SELECT
-            lowcase(string=Filename) AS Filename,
-            lowcase(string=Internal) AS Internal,
-            lowcase(string=Original) AS Original
+            if(condition=Filename='',then='XXXXX', 
+                else=lowcase(string=Filename)) AS Filename,
+            if(condition=Internal='',then='XXXXX', 
+                else=lowcase(string=Internal)) AS Internal,
+            if(condition=Original='',then='XXXXX', 
+                else=lowcase(string=Original)) AS Original
         FROM VersionInfoTable
         
       SELECT
