@@ -84,7 +84,7 @@ func oauthAzureLogin(config_obj *config_proto.Config) http.Handler {
 			oauthState = generateStateOauthCookie(w)
 		}
 
-		u := azureOauthConfig.AuthCodeURL(oauthState.Value, oauth2.ApprovalForce)
+		u := azureOauthConfig.AuthCodeURL(oauthState.Value)
 		http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 	})
 }
