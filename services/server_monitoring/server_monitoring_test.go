@@ -79,7 +79,8 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	self.LoadArtifacts(monitoringArtifacts)
 
 	// Install the two event artifacts.
-	err := services.GetServerEventManager().Update(self.ConfigObj,
+	err := services.GetServerEventManager().Update(
+		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"Server.Clock", "Server.Clock2"},
 			Specs: []*flows_proto.ArtifactSpec{
@@ -170,7 +171,8 @@ sources:
 	assert.NoError(self.T(), err)
 
 	// Install a table with a sleep artifact.
-	err = services.GetServerEventManager().Update(self.ConfigObj,
+	err = services.GetServerEventManager().Update(
+		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"Sleep"},
 			Specs:     []*flows_proto.ArtifactSpec{},
@@ -183,7 +185,8 @@ sources:
 	})
 
 	// Now install an empty table - all queries should quit.
-	err = services.GetServerEventManager().Update(self.ConfigObj,
+	err = services.GetServerEventManager().Update(
+		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{},
 			Specs:     []*flows_proto.ArtifactSpec{},

@@ -34,6 +34,7 @@ func GetServerEventManager() serverEvent {
 type serverEvent interface {
 	// Update the server's event table.
 	Update(config_obj *config_proto.Config,
+		principal string,
 		arg *flows_proto.ArtifactCollectorArgs) error
 
 	// Close the event manager and cleanup.

@@ -2,6 +2,10 @@ Queries:
   - SELECT * FROM items(item=[1,2])
   - SELECT * FROM items(item=dict(X=1, Y=2))
 
+  # Items works on stored queries
+  - LET ItemQuery = SELECT _value as Item FROM range(start=0, end=2, step=1)
+  - SELECT * FROM items(item=ItemQuery)
+
   # Check that switch() evaluates clauses by definition order
   - SELECT * FROM switch(
       zcase={

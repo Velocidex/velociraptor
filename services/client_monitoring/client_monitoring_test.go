@@ -85,7 +85,8 @@ sources:
 	manager := services.ClientEventManager().(*ClientEventTable)
 	manager.SetClock(current_clock)
 
-	err := manager.SetClientMonitoringState(context.Background(), self.ConfigObj,
+	err := manager.SetClientMonitoringState(
+		context.Background(), self.ConfigObj, "",
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact", "SomethingElse"},
@@ -166,7 +167,8 @@ sources:
 	manager.SetClock(current_clock)
 
 	// Set the initial table.
-	err := manager.SetClientMonitoringState(context.Background(), self.ConfigObj,
+	err := manager.SetClientMonitoringState(
+		context.Background(), self.ConfigObj, "",
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact"},
@@ -178,7 +180,8 @@ sources:
 	old_table := manager.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
 
 	// Now update the monitoring state
-	err = manager.SetClientMonitoringState(context.Background(), self.ConfigObj,
+	err = manager.SetClientMonitoringState(
+		context.Background(), self.ConfigObj, "",
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact"},
@@ -209,8 +212,9 @@ sources:
 	manager1.SetClock(current_clock)
 
 	// Set the initial table.
-	err := manager1.SetClientMonitoringState(context.Background(),
-		self.ConfigObj, &flows_proto.ClientEventTable{
+	err := manager1.SetClientMonitoringState(
+		context.Background(), self.ConfigObj, "",
+		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact"},
 			},
@@ -226,8 +230,9 @@ sources:
 	manager2.SetClock(current_clock)
 
 	// Now update the monitoring state
-	err = manager2.SetClientMonitoringState(context.Background(),
-		self.ConfigObj, &flows_proto.ClientEventTable{
+	err = manager2.SetClientMonitoringState(
+		context.Background(), self.ConfigObj, "",
+		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact"},
 			},
@@ -255,8 +260,9 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	manager.SetClock(current_clock)
 
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
-	manager.SetClientMonitoringState(context.Background(),
-		self.ConfigObj, &flows_proto.ClientEventTable{
+	manager.SetClientMonitoringState(
+		context.Background(), self.ConfigObj, "",
+		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"Windows.Events.ServiceCreation"},
 			},
@@ -291,8 +297,9 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	version = table.UpdateEventTable.Version
 
 	// Now lets install a new label rule for this label and another label.
-	manager.SetClientMonitoringState(context.Background(),
-		self.ConfigObj, &flows_proto.ClientEventTable{
+	manager.SetClientMonitoringState(
+		context.Background(),
+		self.ConfigObj, "", &flows_proto.ClientEventTable{
 			// All clients should have ServiceCreation
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"Windows.Events.ServiceCreation"},
@@ -370,8 +377,9 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompilingMultipleArti
 	manager.SetClock(current_clock)
 
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
-	manager.SetClientMonitoringState(context.Background(),
-		self.ConfigObj, &flows_proto.ClientEventTable{
+	manager.SetClientMonitoringState(
+		context.Background(),
+		self.ConfigObj, "", &flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{
 					"Windows.Events.ServiceCreation",

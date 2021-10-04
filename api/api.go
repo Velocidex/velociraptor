@@ -776,7 +776,7 @@ func (self *ApiServer) SetServerMonitoringState(
 			"User is not allowed to modify artifacts (%v).", permissions))
 	}
 
-	err = setServerMonitoringState(self.config, in)
+	err = setServerMonitoringState(self.config, user_name, in)
 	return in, err
 }
 
@@ -820,7 +820,8 @@ func (self *ApiServer) SetClientMonitoringState(
 			"User is not allowed to modify monitoring artifacts (%v).", permissions))
 	}
 
-	err = services.ClientEventManager().SetClientMonitoringState(ctx, self.config, in)
+	err = services.ClientEventManager().SetClientMonitoringState(
+		ctx, self.config, user_name, in)
 	if err != nil {
 		return nil, err
 	}

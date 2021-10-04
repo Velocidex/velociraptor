@@ -3,7 +3,6 @@ package favorites
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -88,8 +87,13 @@ func validateSpec(
 		err := json.Unmarshal([]byte(t), &result)
 		return result, err
 
+		// Anything else try to parse it as a list of specs.
 	default:
-		return validateSpec(ctx, scope, fmt.Sprintf("%v", spec))
+		serialized, err := json.Marshal(spec)
+		if err != nil {
+			return nil, err
+		}
+		return validateSpec(ctx, scope, string(serialized))
 	}
 
 }

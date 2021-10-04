@@ -159,7 +159,7 @@ func (self *ServerTestSuite) TestClientEventTable() {
 
 	// Set a new event monitoring table
 	err := services.ClientEventManager().SetClientMonitoringState(
-		context.Background(), self.ConfigObj,
+		context.Background(), self.ConfigObj, "",
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"Generic.Client.Stats"},

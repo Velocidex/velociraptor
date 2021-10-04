@@ -112,7 +112,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	defer wg.Wait()
 
 	require.NoError(self.T(), client_manager.SetClientMonitoringState(
-		ctx, self.ConfigObj, server_state))
+		ctx, self.ConfigObj, "", server_state))
 
 	// Check the version of the initial Event table it should be 0
 	version := actions.GlobalEventTableVersion()
