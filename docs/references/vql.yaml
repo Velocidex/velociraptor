@@ -160,6 +160,34 @@
     type: string
     description: Separator to use (default /)
   category: basic
+- name: batch
+  description: |
+    Batches query rows into multiple arrays.
+
+    This is useful for batching multiple rows from a query into
+    another query (for example sending into an API endpoint). For
+    example:
+
+    ```vql
+    SELECT * FROM batch(query={
+      SELECT _value
+      FROM range(start=0, end=10, step=1)
+    }, batch_size=3)
+    ```
+  type: Plugin
+  args:
+  - name: batch_size
+    type: int64
+    description: Size of batch (defaults to 10).
+  - name: batch_func
+    type: string
+    description: |
+      A VQL Lambda that determines when a batch is ready. Example
+      'x=>len(list=x) >= 10'.
+  - name: query
+    type: StoredQuery
+    description: Run this query over the item.
+    required: true
 - name: cache
   description: |
     Creates a cache object.
@@ -4675,4 +4703,3 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
-

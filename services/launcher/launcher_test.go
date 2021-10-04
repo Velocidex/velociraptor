@@ -44,7 +44,7 @@ func (self *LauncherTestSuite) LoadArtifacts(artifact_definitions []string) serv
 	repository := manager.NewRepository()
 
 	for _, definition := range artifact_definitions {
-		_, err := repository.LoadYaml(definition, false)
+		_, err := repository.LoadYaml(definition, true)
 		assert.NoError(self.T(), err)
 	}
 
@@ -212,6 +212,62 @@ func (self *LauncherTestSuite) TestGetDependentArtifacts() {
 	sort.Strings(res)
 	assert.Equal(self.T(), []string{"Test.Artifact",
 		"Test.Artifact.Deps", "Test.Artifact.Deps2"}, res)
+}
+
+// https://github.com/Velocidex/velociraptor/issues/1287
+var DependentArtifactsWithImports = []string{`
+name: DependedArtifactInExport
+`, `
+name: Custom.TheOneWithTheExport
+export: |
+  // Call another artifact as part of the exported code.
+  LET X <= SELECT * FROM Artifact.DependedArtifactInExport()
+`, `
+name: Custom.TheOneWithTheImport
+imports:
+  - Custom.TheOneWithTheExport
+sources:
+  - query: |
+      SELECT * FROM X
+`, `
+name: Custom.CallArtifactWithImports
+type: CLIENT
+sources:
+  - query: |
+      // Call an artifact which has an import.
+      select * from Artifact.Custom.TheOneWithTheImport()
+`}
+
+func (self *LauncherTestSuite) TestGetDependentArtifactsWithImports() {
+	repository := self.LoadArtifacts(DependentArtifactsWithImports)
+
+	launcher, err := services.GetLauncher()
+	assert.NoError(self.T(), err)
+
+	res, err := launcher.GetDependentArtifacts(self.ConfigObj,
+		repository, []string{"Custom.CallArtifactWithImports"})
+	assert.NoError(self.T(), err)
+
+	sort.Strings(res)
+	assert.Equal(self.T(), []string{"Custom.CallArtifactWithImports",
+		"Custom.TheOneWithTheExport", "Custom.TheOneWithTheImport",
+		"DependedArtifactInExport"}, res)
+
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:   "UserX",
+		ClientId:  "C.1234",
+		Artifacts: []string{"Custom.CallArtifactWithImports"},
+	}
+	ctx := context.Background()
+	acl_manager := vql_subsystem.NullACLManager{}
+
+	// Compile the request.
+	compiled, err := launcher.CompileCollectorArgs(ctx, self.ConfigObj,
+		acl_manager, repository, services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	goldie.Assert(self.T(), "TestGetDependentArtifactsWithImports",
+		json.MustMarshalIndent(compiled))
 }
 
 func (self *LauncherTestSuite) TestGetDependentArtifactsWithTool() {

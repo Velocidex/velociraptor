@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"path"
 	"regexp"
+	"sort"
+	"strings"
 
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -302,6 +304,30 @@ func GetQueryDependencies(
 
 		dependency[artifact_name] = depth
 
+		// Add any artifact that this one imports as a dependency.
+		for _, imp := range dep.Imports {
+			_, pres = dependency[imp]
+			if pres {
+				continue
+			}
+
+			dependency[imp] = depth
+			imported_artifact, pres := repository.Get(config_obj, imp)
+			if !pres {
+				return fmt.Errorf(
+					"Imported Artifact %v not found (needed by %v)",
+					imp, artifact_name)
+			}
+
+			// If the exported section depends on other artifacts,
+			// then add them too.
+			err := GetQueryDependencies(config_obj, repository,
+				imported_artifact.Export, 0, dependency)
+			if err != nil {
+				return err
+			}
+		}
+
 		// Now search the referred to artifact's query for its
 		// own dependencies.
 		err := GetQueryDependencies(
@@ -344,7 +370,14 @@ func PopulateArtifactsVQLCollectorArgs(
 		}
 	}
 
+	// Sort dependencies for output stability.
+	dep_names := make([]string, 0, len(dependencies))
 	for k := range dependencies {
+		dep_names = append(dep_names, k)
+	}
+	sort.Strings(dep_names)
+
+	for _, k := range dep_names {
 		artifact, pres := repository.Get(config_obj, k)
 		if pres {
 			// Filter the artifact to contain only
@@ -353,7 +386,7 @@ func PopulateArtifactsVQLCollectorArgs(
 			for _, source := range artifact.Sources {
 				new_source := &artifacts_proto.ArtifactSource{
 					Name:         source.Name,
-					Precondition: source.Precondition,
+					Precondition: stripComments(source.Precondition),
 					Queries:      source.Queries,
 				}
 				sources = append(sources, new_source)
@@ -405,7 +438,9 @@ func PopulateArtifactsVQLCollectorArgs(
 				&artifacts_proto.Artifact{
 					Name:         artifact.Name,
 					Type:         artifact.Type,
-					Precondition: artifact.Precondition,
+					Precondition: stripComments(artifact.Precondition),
+					Export:       stripComments(artifact.Export),
+					Imports:      artifact.Imports,
 					Parameters:   filtered_parameters,
 					Sources:      sources,
 
@@ -423,6 +458,12 @@ func PopulateArtifactsVQLCollectorArgs(
 	return nil
 }
 
+// Given a set of artifacts, returns the wider set of these artifacts
+// and any other artifacts that may potentially be used by these. We
+// sending requests to the client we never use the client's embedded
+// artifacts. Instead the server must provide all dependencies in the
+// request. This function is used to fill in a copy of the dependent
+// artifacts in the client request.
 func (self *Launcher) GetDependentArtifacts(
 	config_obj *config_proto.Config,
 	repository services.Repository,
@@ -454,4 +495,23 @@ func (self *Launcher) GetDependentArtifacts(
 	}
 
 	return result, nil
+}
+
+// Reformat the VQL if possible to remove any comments.
+func stripComments(query string) string {
+	if query == "" {
+		return ""
+	}
+
+	scope := vql_subsystem.MakeScope()
+	vqls, err := vfilter.MultiParse(query)
+	if err != nil {
+		return query
+	}
+
+	result := []string{}
+	for _, vql := range vqls {
+		result = append(result, vql.ToString(scope))
+	}
+	return strings.Join(result, "\n")
 }

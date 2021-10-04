@@ -224,6 +224,15 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 			}
 		}
 
+		// Ensure export has correct syntax
+		if artifact.Export != "" {
+			_, err := vfilter.Parse(artifact.Export)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"While parsing artifact export: %w", err)
+			}
+		}
+
 		for _, source := range artifact.Sources {
 			if source.Precondition != "" {
 				if artifact.Precondition != "" {
