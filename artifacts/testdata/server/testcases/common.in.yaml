@@ -10,3 +10,15 @@ Queries:
       acase={
           SELECT "Second" FROM scope()
       })
+
+  # Test the batch plugin: Batch with constant size
+  - SELECT * FROM batch(query={
+      SELECT _value
+      FROM range(start=0, end=10, step=1)
+    }, batch_size=3)
+
+  # Batch based on a function.
+  - SELECT * FROM batch(query={
+      SELECT format(format="Step %v", args=_value) AS Item
+      FROM range(start=0, end=10, step=1)
+    }, batch_func="x=>x.Item =~ 'Step [25]'")

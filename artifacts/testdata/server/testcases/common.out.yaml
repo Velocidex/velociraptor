@@ -20,4 +20,94 @@ SELECT * FROM items(item=[1,2])[
  {
   "\"First\"": "First"
  }
+]SELECT * FROM batch(query={ SELECT _value FROM range(start=0, end=10, step=1) }, batch_size=3)[
+ {
+  "rows": [
+   {
+    "_value": 0
+   },
+   {
+    "_value": 1
+   },
+   {
+    "_value": 2
+   }
+  ]
+ },
+ {
+  "rows": [
+   {
+    "_value": 3
+   },
+   {
+    "_value": 4
+   },
+   {
+    "_value": 5
+   }
+  ]
+ },
+ {
+  "rows": [
+   {
+    "_value": 6
+   },
+   {
+    "_value": 7
+   },
+   {
+    "_value": 8
+   }
+  ]
+ },
+ {
+  "rows": [
+   {
+    "_value": 9
+   }
+  ]
+ }
+]SELECT * FROM batch(query={ SELECT format(format="Step %v", args=_value) AS Item FROM range(start=0, end=10, step=1) }, batch_func="x=>x.Item =~ 'Step [25]'")[
+ {
+  "rows": [
+   {
+    "Item": "Step 0"
+   },
+   {
+    "Item": "Step 1"
+   },
+   {
+    "Item": "Step 2"
+   }
+  ]
+ },
+ {
+  "rows": [
+   {
+    "Item": "Step 3"
+   },
+   {
+    "Item": "Step 4"
+   },
+   {
+    "Item": "Step 5"
+   }
+  ]
+ },
+ {
+  "rows": [
+   {
+    "Item": "Step 6"
+   },
+   {
+    "Item": "Step 7"
+   },
+   {
+    "Item": "Step 8"
+   },
+   {
+    "Item": "Step 9"
+   }
+  ]
+ }
 ]
