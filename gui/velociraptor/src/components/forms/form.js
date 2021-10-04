@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import moment from 'moment/moment.js';
 import _ from 'lodash';
 import DateTimePicker from 'react-datetime-picker';
 import Form from 'react-bootstrap/Form';
@@ -16,17 +15,23 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import cellEditFactory, { Type } from 'react-bootstrap-table2-editor';
-
 import { parseCSV, serializeCSV } from '../utils/csv.js';
-const numberRegex = RegExp("^[0-9]+$");
 
+const numberRegex = RegExp("^[0-9]+$");
 
 // Returns a date object in local timestamp which represents the UTC
 // date. This is needed because the date selector widget expects to
 // work in local time.
 function localTimeFromUTCTime(date) {
-    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),
-                    date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+    let msSinceEpoch = date.getTime();
+    let tzoffset = (new Date()).getTimezoneOffset();
+    return new Date(msSinceEpoch + tzoffset * 60000);
+}
+
+function utcTimeFromLocalTime(date) {
+    let msSinceEpoch = date.getTime();
+    let tzoffset = (new Date()).getTimezoneOffset();
+    return new Date(msSinceEpoch - tzoffset * 60000);
 }
 
 function convertToDate(x) {
@@ -183,6 +188,7 @@ export default class VeloForm extends React.Component {
             if(_.isDate(date) && this.state.isUTC) {
                 date = localTimeFromUTCTime(date);
             }
+
             return (
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
@@ -207,14 +213,15 @@ export default class VeloForm extends React.Component {
                               // local timezone) and force the same
                               // date into a serialized ISO in Z time.
                           } else if(this.state.isUTC) {
-                              let when = moment(value);
-                              this.props.setValue(when.format('YYYY-MM-DDTHH:mm:ss') + 'Z');
+                              let local_time = convertToDate(value);
+                              let utc_time = utcTimeFromLocalTime(local_time);
+                              this.props.setValue(utc_time.toISOString());
 
                           } else {
                               // When in local time we just set the
                               // time as it is.
-                              let when = moment(value);
-                              this.props.setValue(when.toISOString());
+                              let local_time = convertToDate(value);
+                              this.props.setValue(local_time.toISOString());
                           }
                       }}
                       value={date}
