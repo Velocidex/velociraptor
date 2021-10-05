@@ -250,15 +250,18 @@ func (self *scanReporter) scanFileByAccessor(
 }
 
 func (self *scanReporter) scanRange(start, end uint64, f glob.ReadSeekCloser) {
-	// Try to seek to the start offset - if it does not work then
-	// dont worry about it - just start from the beginning.
-	_, _ = f.Seek(int64(start), 0)
 	buf := make([]byte, self.blocksize)
 
 	// self.scope.Log("Scanning %v from %#0x to %#0x", self.filename, start, end)
 
 	// base_offset reflects the file offset where we scan.
 	for self.base_offset = start; self.base_offset < end; {
+		// Try to seek to the start offset - if it does not work then
+		// dont worry about it - just start from the beginning. This
+		// is needed for scanning devices which may not advance their
+		// own file pointer when read so we force a seek on each read.
+		_, _ = f.Seek(int64(self.base_offset), 0)
+
 		// Only read up to the end of the range
 		to_read := end - start
 		if to_read > self.blocksize {

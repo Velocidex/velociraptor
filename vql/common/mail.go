@@ -24,6 +24,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	gomail "gopkg.in/gomail.v2"
 	"www.velocidex.com/golang/velociraptor/acls"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -31,6 +32,7 @@ import (
 
 type MailPluginArgs struct {
 	To      []string `vfilter:"required,field=to,doc=Receipient of the mail"`
+	From    string   `vfilter:"optional,field=from,doc=The from email address."`
 	CC      []string `vfilter:"optional,field=cc,doc=A cc for the mail"`
 	Subject string   `vfilter:"optional,field=subject,doc=The subject."`
 	Body    string   `vfilter:"required,field=body,doc=The body of the mail."`
@@ -38,6 +40,11 @@ type MailPluginArgs struct {
 	// How long to wait before sending the next mail. Many mail
 	// servers throttle mails sent too quickly.
 	Period int64 `vfilter:"required,field=period,doc=How long to wait before sending the next mail - help to throttle mails."`
+
+	ServerPort   uint64 `vfilter:"optional,field=server_port,doc=The SMTP server port to use (default 587)."`
+	Server       string `vfilter:"optional,field=server,doc=The SMTP server to use (if not specified we try the config file)."`
+	AuthUsername string `vfilter:"optional,field=auth_username,doc=The SMTP username we authenticate to the server."`
+	AuthPassword string `vfilter:"optional,field=auth_password,doc=The SMTP username password we use to authenticate to the server."`
 }
 
 var (
@@ -84,14 +91,21 @@ func (self MailPlugin) Call(
 			return
 		}
 
-		if config_obj.Mail == nil {
-			scope.Log("mail: not configured")
-			return
+		// Allow global configuration override.
+		mail_config := config_obj.Mail
+		if mail_config == nil {
+			mail_config = &config_proto.MailConfig{}
 		}
 
-		from := config_obj.Mail.From
+		from := arg.From
 		if from == "" {
-			from = config_obj.Mail.AuthUsername
+			from = mail_config.From
+		}
+		if from == "" {
+			from = mail_config.AuthUsername
+		}
+		if from == "" {
+			from = "Velociraptor"
 		}
 
 		m := gomail.NewMessage()
@@ -103,16 +117,34 @@ func (self MailPlugin) Call(
 		m.SetHeader("Subject", arg.Subject)
 		m.SetBody("text/plain", arg.Body)
 
-		port := config_obj.Mail.ServerPort
+		port := arg.ServerPort
 		if port == 0 {
-			port = 587
+			port = mail_config.ServerPort
+		}
+		if port == 0 {
+			port = 587 // Default to TLS SMTP
 		}
 
-		d := gomail.NewDialer(
-			config_obj.Mail.Server,
-			int(port),
-			config_obj.Mail.AuthUsername,
-			config_obj.Mail.AuthPassword)
+		server := arg.Server
+		if server == "" {
+			server = mail_config.Server
+		}
+		if server == "" {
+			scope.Log("mail: server not configured")
+			return
+		}
+
+		auth_username := arg.AuthUsername
+		if auth_username == "" {
+			auth_username = mail_config.AuthUsername
+		}
+
+		auth_password := arg.AuthPassword
+		if auth_password == "" {
+			auth_password = mail_config.AuthPassword
+		}
+
+		d := gomail.NewDialer(server, int(port), auth_username, auth_password)
 
 		// Send the email to Bob, Cora and Dan.
 		err = d.DialAndSend(m)
