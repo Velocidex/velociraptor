@@ -56,7 +56,7 @@
         "react-treebeard": "^3.2.4",
         "recharts": "^2.0.9",
         "styled-components": "^5.2.0",
-        "url-parse": "^1.5.1",
+        "url-parse": "^1.5.2",
         "y18n": "^4.0.1"
     },
     "homepage": ".",
