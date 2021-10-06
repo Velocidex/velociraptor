@@ -19,6 +19,7 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Modal from 'react-bootstrap/Modal';
 import Navbar from 'react-bootstrap/Navbar';
 import VeloTimestamp from "../utils/time.js";
+import URLViewer from "../utils/url.js";
 import VeloNotImplemented from '../core/notimplemented.js';
 import VeloAce from '../core/ace.js';
 import VeloValueRenderer from '../utils/value.js';
@@ -28,6 +29,7 @@ import ClientLink from '../clients/client-link.js';
 import { HexViewPopup } from '../utils/hex.js';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
+
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
@@ -467,6 +469,20 @@ export function formatColumns(columns) {
         case "nano_timestamp":
             x.formatter= (cell, row) => {
                 return <VeloTimestamp usec={cell}/>;
+            };
+            x.type = null;
+            break;
+
+        case "url":
+            x.formatter = (cell, row) => {
+                return <URLViewer url={cell}/>;
+            };
+            x.type = null;
+            break;
+
+        case "safe_url":
+            x.formatter = (cell, row) => {
+                return <URLViewer url={cell} safe={true}/>;
             };
             x.type = null;
             break;
