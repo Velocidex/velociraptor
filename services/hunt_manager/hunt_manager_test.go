@@ -15,11 +15,13 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
@@ -513,6 +515,86 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 	// No flow should be launched on client_id_2 because it is a Linux client.
 	_, err = LoadCollectionContext(self.ConfigObj, client_id_2, "F.1234")
 	assert.Error(t, err)
+}
+
+// When interrogating for the first time, the initial client record
+// has no OS populated so might not trigger an OS condition hunt. This
+// test ensures that after interrogating the client gets another
+// change to run the hunt.
+func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
+	t := self.T()
+
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
+
+	db, err := datastore.GetDB(self.ConfigObj)
+	assert.NoError(t, err)
+
+	// Create initial client with no OS set.
+	self.client_id = "C.12326"
+
+	client_path_manager := paths.NewClientPathManager(self.client_id)
+	err = db.SetSubject(self.ConfigObj,
+		client_path_manager.Path(), &actions_proto.ClientInfo{})
+	assert.NoError(t, err)
+
+	launcher.SetFlowIdForTests("F.1234")
+
+	// The hunt will launch the Generic.Client.Info on the client.
+	hunt_obj := &api_proto.Hunt{
+		HuntId:       self.hunt_id,
+		StartRequest: self.expected,
+		State:        api_proto.Hunt_RUNNING,
+		Stats:        &api_proto.HuntStats{},
+		Expires:      uint64(time.Now().Add(7*24*time.Hour).UTC().UnixNano() / 1000),
+		Condition: &api_proto.HuntCondition{
+			UnionField: &api_proto.HuntCondition_Os{
+				Os: &api_proto.HuntOsCondition{
+					Os: api_proto.HuntOsCondition_WINDOWS,
+				},
+			},
+		},
+	}
+
+	acl_manager := vql_subsystem.NullACLManager{}
+	self.hunt_id, err = flows.CreateHunt(
+		self.Ctx, self.ConfigObj, acl_manager, hunt_obj)
+	assert.NoError(t, err)
+
+	// Force the hunt manager to process a participation row
+	err = HuntManagerForTests.ProcessParticipation(self.Ctx, self.ConfigObj,
+		ordereddict.NewDict().
+			Set("HuntId", self.hunt_id).
+			Set("ClientId", self.client_id))
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "does not match OS condition")
+
+	// Write a new OS to it
+	err = db.SetSubject(self.ConfigObj,
+		client_path_manager.Path(), &actions_proto.ClientInfo{
+			System: "windows",
+		})
+	assert.NoError(t, err)
+
+	client_info_manager := services.GetClientInfoManager()
+	client_info_manager.Flush(self.client_id)
+
+	journal, err := services.GetJournal()
+	assert.NoError(self.T(), err)
+
+	assert.NoError(self.T(), journal.PushRowsToArtifact(self.ConfigObj,
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("ClientId", self.client_id),
+		}, "Server.Internal.Interrogation", self.client_id, ""))
+
+	time.Sleep(time.Second)
+
+	// Ensure the hunt is collected on the client.
+	mdb := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		value := mdb.Get("/clients/C.12326/collections/F.1234/task.db")
+		return value != nil
+	})
 }
 
 // Hunt stats are only updated by the hunt manager by sending the

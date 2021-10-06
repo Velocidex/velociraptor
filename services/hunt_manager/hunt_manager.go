@@ -72,6 +72,10 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+var (
+	HuntManagerForTests *HuntManager
+)
+
 // This is the record that will be sent by the foreman to the hunt
 // manager.
 type ParticipationRecord struct {
@@ -117,6 +121,12 @@ func (self *HuntManager) Start(
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.Label", self.ProcessLabelChange)
+	if err != nil {
+		return err
+	}
+
+	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
+		"Server.Internal.Interrogation", self.ProcessInterrogation)
 	if err != nil {
 		return err
 	}
@@ -254,6 +264,28 @@ func (self *HuntManager) maybeDirectlyAssignFlow(
 	return nil
 }
 
+// Watch for an interrogate completion and check all the hunts on
+// this client in case the interrogate has more information (like
+// an OS condition).
+func (self *HuntManager) ProcessInterrogation(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	row *ordereddict.Dict) error {
+
+	client_id, pres := row.GetString("ClientId")
+	if !pres {
+		return errors.New("ClientId not found")
+	}
+
+	return self.participateInAllHunts(ctx, config_obj, client_id,
+		// When a new client is interrogated, it can only really
+		// affect hunts with OS conditions.
+		func(hunt *api_proto.Hunt) bool {
+			return hunt.Condition != nil &&
+				hunt.Condition.GetOs() != nil
+		})
+}
+
 // Watch for all flows created by a hunt and maintain the list of hunt
 // completions.
 func (self *HuntManager) ProcessFlowCompletion(
@@ -272,16 +304,20 @@ func (self *HuntManager) ProcessFlowCompletion(
 		return err
 	}
 
-	if flow.Request == nil {
+	if flow.Request == nil || len(flow.Request.Artifacts) == 0 {
 		return nil
 	}
 
+	// We only care about flows that were launched by hunts here. The
+	// flow creator is the hunt id.
 	hunt_id := flow.Request.Creator
 	if !strings.HasPrefix(hunt_id, constants.HUNT_PREFIX) {
 		return nil
 	}
 
-	// Flow is complete so add it to the hunt stats.
+	// Flow is complete so add it to the hunt stats. We send a
+	// mutation to the hunt dispatcher to mediate internal hunt state
+	// manipulation.
 	mutation := &api_proto.HuntMutation{
 		HuntId: hunt_id,
 		Stats:  &api_proto.HuntStats{},
@@ -333,6 +369,19 @@ func (self *HuntManager) ProcessLabelChange(
 		return nil
 	}
 
+	return self.participateInAllHunts(ctx, config_obj, client_id,
+		// When a label changes it can only really affect hunts with
+		// include label conditions.
+		func(hunt *api_proto.Hunt) bool {
+			return hunt.Condition != nil &&
+				hunt.Condition.GetLabels() != nil
+		})
+}
+
+func (self *HuntManager) participateInAllHunts(ctx context.Context,
+	config_obj *config_proto.Config, client_id string,
+	should_participate_cb func(hunt *api_proto.Hunt) bool) error {
+
 	journal, err := services.GetJournal()
 	if err != nil {
 		return err
@@ -345,6 +394,10 @@ func (self *HuntManager) ProcessLabelChange(
 	}
 
 	return dispatcher.ApplyFuncOnHunts(func(hunt *api_proto.Hunt) error {
+		if !should_participate_cb(hunt) {
+			return nil
+		}
+
 		return journal.PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("HuntId", hunt.HuntId).
@@ -462,6 +515,9 @@ func StartHuntManager(
 				Logger: logging.NewPlainLogger(config_obj, &logging.GenericComponent),
 			}),
 	}
+
+	HuntManagerForTests = result
+
 	return result.Start(ctx, config_obj, wg)
 }
 

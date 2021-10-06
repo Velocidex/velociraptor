@@ -46,9 +46,6 @@ const (
 
 	USER_AGENT = "Velociraptor - Dig Deeper!"
 
-	// Internal artifact names.
-	CLIENT_INFO_ARTIFACT = "Generic.Client.Info"
-
 	// Globals set in VQL scopes.
 	SCOPE_CONFIG        = "config"
 	SCOPE_SERVER_CONFIG = "server_config"

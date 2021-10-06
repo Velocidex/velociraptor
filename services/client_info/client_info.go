@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -41,16 +42,26 @@ func (self *ClientInfoManager) Start(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Client Info service.")
 
-	return journal.WatchForCollectionWithCB(ctx, config_obj, wg,
-		"Generic.Client.Info/BasicInformation",
-		self.ProcessInterrogateResults)
+	return journal.WatchQueueWithCB(ctx, config_obj, wg,
+		"Server.Internal.Interrogation", self.ProcessInterrogateResults)
 }
 
 func (self *ClientInfoManager) ProcessInterrogateResults(
 	ctx context.Context, config_obj *config_proto.Config,
-	client_id, flow_id string) error {
-	self.lru.Delete(client_id)
+	row *ordereddict.Dict) error {
+	client_id, pres := row.GetString("ClientId")
+	if pres {
+		self.lru.Delete(client_id)
+	}
 	return nil
+}
+
+func (self *ClientInfoManager) Flush(client_id string) {
+	self.lru.Delete(client_id)
+}
+
+func (self *ClientInfoManager) Clear() {
+	self.lru.Clear()
 }
 
 func (self *ClientInfoManager) Get(client_id string) (*services.ClientInfo, error) {
