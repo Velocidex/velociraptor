@@ -6,7 +6,8 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
     "Machine": "IMAGE_FILE_MACHINE_I386",
     "TimeDateStamp": "2019-03-15T09:32:39Z",
     "TimeDateStampRaw": 1552642359,
-    "Characteristics": 34
+    "Characteristics": 34,
+    "ImageBase": 4194304
    },
    "GUIDAge": "84068848695B4DFDA86ECCE04021A1A91",
    "PDB": "C:\\BA\\2821\\i\\obj\\resourceresolver.csproj__1458271508\\Release\\x64\\3DBuilder.ResourceResolver.pdb",
@@ -15,21 +16,24 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
      "Perm": "xr-",
      "Name": ".text",
      "FileOffset": 512,
-     "VMA": 8192,
+     "VMA": 4202496,
+     "RVA": 8192,
      "Size": 7168
     },
     {
      "Perm": "-r-",
      "Name": ".rsrc",
      "FileOffset": 7680,
-     "VMA": 16384,
+     "VMA": 4210688,
+     "RVA": 16384,
      "Size": 1536
     },
     {
      "Perm": "-r-",
      "Name": ".reloc",
      "FileOffset": 9216,
-     "VMA": 24576,
+     "VMA": 4218880,
+     "RVA": 24576,
      "Size": 512
     }
    ],
