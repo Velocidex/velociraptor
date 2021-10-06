@@ -55,6 +55,7 @@ func (self ClientInfo) OSString() string {
 
 type ClientInfoManager interface {
 	Get(client_id string) (*ClientInfo, error)
+	Flush(client_id string)
 }
 
 func GetHostname(client_id string) string {

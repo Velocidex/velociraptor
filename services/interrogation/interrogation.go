@@ -12,6 +12,14 @@
   Generic.Client.Info artifact on the endpoint. Note that this
   collection is done exactly once the first time we see the client -
   it is likely to become outdated.
+
+  Once the Generic.Client.Info collection is complete we process the
+  results, update indexes etc. When this is done we emit a
+  Server.Internal.Interrogation event. Queries that are interested in
+  new interrogation results need to watch for
+  Server.Internal.Interrogation to ensure they do not race with the
+  interrogation service.
+
 */
 
 package interrogation
@@ -25,7 +33,6 @@ import (
 	"golang.org/x/time/rate"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -109,7 +116,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 		repository,
 		&flows_proto.ArtifactCollectorArgs{
 			ClientId:  client_id,
-			Artifacts: []string{constants.CLIENT_INFO_ARTIFACT},
+			Artifacts: []string{"Generic.Client.Info"},
 		})
 	if err != nil {
 		return err
@@ -224,6 +231,9 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 		}
 	}
 
+	// Expire the client info manager to force it to fetch fresh data.
+	services.GetClientInfoManager().Flush(client_id)
+
 	// Update the client indexes for the GUI. Add any keywords we
 	// wish to be searchable in the UI here.
 	for _, term := range []string{
@@ -236,7 +246,17 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 			logger.Error("Unable to set index: %v", err)
 		}
 	}
-	return nil
+
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	return journal.PushRowsToArtifact(config_obj,
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("ClientId", client_id),
+		}, "Server.Internal.Interrogation", "server", "")
+
 }
 
 func StartInterrogationService(

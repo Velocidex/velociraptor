@@ -37,11 +37,17 @@ type: INTERNAL
 name: Server.Internal.Notifications
 type: INTERNAL
 `, `
+name: Server.Internal.Interrogation
+type: INTERNAL
+`, `
 name: Server.Internal.Ping
 type: INTERNAL
 `, `
 name: System.Flow.Completion
 type: CLIENT_EVENT
+`, `
+name: System.Hunt.Creation
+type: SERVER_EVENT
 `, `
 name: Server.Internal.ArtifactModification
 type: SERVER_EVENT
