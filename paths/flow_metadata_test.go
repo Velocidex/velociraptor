@@ -21,7 +21,7 @@ func (self *PathManagerTestSuite) TestFlowPathManager() {
 		self.getFilestorePath(manager.UploadMetadata()))
 
 	assert.Equal(self.T(), "/fs/downloads/C.123/F.1234/HostnameX-C.123-F.1234.zip",
-		self.getFilestorePath(manager.GetDownloadsFile("HostnameX")))
+		self.getFilestorePath(manager.GetDownloadsFile("HostnameX", false)))
 
 	assert.Equal(self.T(), "/fs/downloads/C.123/F.1234/Report HostnameX-C.123-F.1234.html",
 		self.getFilestorePath(manager.GetReportsFile("HostnameX")))

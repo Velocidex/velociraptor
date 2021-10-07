@@ -9,8 +9,12 @@ import ArtifactLink from '../artifacts/artifacts-link.js';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
 import Dropdown from 'react-bootstrap/Dropdown';
-
+import UserConfig from '../core/user.js';
 import BootstrapTable from 'react-bootstrap-table-next';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import Button from 'react-bootstrap/Button';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { formatColumns } from "../core/table.js";
@@ -20,16 +24,24 @@ import { requestToParameters } from "../flows/utils.js";
 
 
 export default class HuntOverview extends React.Component {
+    static contextType = UserConfig;
+
     static propTypes = {
         hunt: PropTypes.object,
     };
 
     state = {
         preparing: false,
+        lock: false,
     }
 
     componentDidMount = () => {
         this.source = axios.CancelToken.source();
+
+        // Default state of the lock is set by the user's preferences.
+        let lock_password = this.context.traits &&
+            this.context.traits.default_password;
+        this.setState({lock: lock_password});
     }
 
     componentWillUnmount() {
@@ -53,8 +65,15 @@ export default class HuntOverview extends React.Component {
     }
 
     prepareDownload = (download_type) => {
+        let lock_password = "";
+        if (this.state.lock) {
+            lock_password = this.context.traits &&
+                this.context.traits.default_password;
+        }
+
         var params = {
             hunt_id: this.props.hunt.hunt_id,
+            password: lock_password,
         };
 
         switch(download_type) {
@@ -100,6 +119,8 @@ export default class HuntOverview extends React.Component {
         let labels = hunt.condition && hunt.condition.labels && hunt.condition.labels.label;
         let start_request = hunt.start_request || {};
         let parameters = requestToParameters(start_request);
+        let lock_password = this.context.traits &&
+            this.context.traits.default_password;
 
         let stats = hunt.stats || {};
 
@@ -202,31 +223,61 @@ export default class HuntOverview extends React.Component {
 
                     <dt className="col-4">Download Results</dt>
                     <dd className="col-8">
-                      <Dropdown>
-                        <Dropdown.Toggle
-                          disabled={this.state.preparing}
-                          variant="default">
-                          <FontAwesomeIcon icon="archive"/>
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                          <Dropdown.Item
-                            onClick={() => this.prepareDownload("all")}>
-                            Full Download
-                          </Dropdown.Item>
-                          <Dropdown.Item
-                            onClick={() => this.prepareDownload('summary')}>
-                            Summary Download
-                          </Dropdown.Item>
-                          <Dropdown.Item
-                            onClick={() => this.prepareDownload('summary-csv')}>
-                            Summary (CSV Only)
-                          </Dropdown.Item>
-                          <Dropdown.Item
-                            onClick={() => this.prepareDownload('summary-json')}>
-                            Summary (JSON Only)
-                          </Dropdown.Item>
-                        </Dropdown.Menu>
-                      </Dropdown>
+                      <ButtonGroup>
+                        { lock_password ?
+                          <Button
+                            onClick={()=>this.setState({lock: !this.state.lock})}
+                            variant="default">
+                            {this.state.lock ?
+                             <FontAwesomeIcon icon="lock"/> :
+                             <FontAwesomeIcon icon="lock-open"/> }
+                          </Button>
+                          :
+                          <OverlayTrigger
+                            delay={{show: 250, hide: 400}}
+                            overlay={
+                                <Tooltip
+                                  id='download-tooltip'>
+                                  Set a password in user preferences
+                                  to lock the download file.
+                                </Tooltip>
+                            }>
+                            <span className="d-inline-block">
+                              <Button
+                                style={{ pointerEvents: "none"}}
+                                disabled={true}
+                                variant="default">
+                                <FontAwesomeIcon icon="lock-open"/>
+                              </Button>
+                            </span>
+                          </OverlayTrigger>
+                        }
+                        <Dropdown>
+                          <Dropdown.Toggle
+                            disabled={this.state.preparing}
+                            variant="default">
+                            <FontAwesomeIcon icon="archive"/>
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu>
+                            <Dropdown.Item
+                              onClick={() => this.prepareDownload("all")}>
+                              Full Download
+                            </Dropdown.Item>
+                            <Dropdown.Item
+                              onClick={() => this.prepareDownload('summary')}>
+                              Summary Download
+                            </Dropdown.Item>
+                            <Dropdown.Item
+                              onClick={() => this.prepareDownload('summary-csv')}>
+                              Summary (CSV Only)
+                            </Dropdown.Item>
+                            <Dropdown.Item
+                              onClick={() => this.prepareDownload('summary-json')}>
+                              Summary (JSON Only)
+                            </Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      </ButtonGroup>
                     </dd>
                   </dl>
                   <dl>

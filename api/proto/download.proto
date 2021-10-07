@@ -19,6 +19,9 @@ message CreateDownloadRequest {
 
     // Can be "report" for html report or "" for just files.
     string download_type = 7;
+
+    // If set we lock the file with this password.
+    string password = 8;
 }
 
 message CreateDownloadResponse {

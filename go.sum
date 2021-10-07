@@ -78,6 +78,8 @@ github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b h1:ZIf5
 github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c h1:ipQHX4FX5HKRAUA6n8EQGZK/ROLXHQ7tVwtoEwo57Hg=
 github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c/go.mod h1:sko8vR34/90zvl5QdcUdvzL3J8NKjAUx9va9jPuFNoM=
+github.com/Velocidex/cryptozip v0.0.0-20200812111814-37033c799bd9 h1:kRk0+/zIgoYGFw/yV4fWIteZSw6iKkseOdemQ9vCPjA=
+github.com/Velocidex/cryptozip v0.0.0-20200812111814-37033c799bd9/go.mod h1:z/ZN7w64rs3eg65wPtTzLS9qgZB8Gsdhu+gmnH6/FG0=
 github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22 h1:dDMLVs1Uj4xuKsYH1T/J6W+wJyWeyfmkT9RQq27WzTs=
 github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22/go.mod h1:F3/xFKE2Puol7bJKW5xcj/9H2O8n/sJN87Xgm66G6sc=
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b h1:XaAmLVXrqPv60nbiQtzj5Sch7lwz3XH8x5IocQwRPJg=

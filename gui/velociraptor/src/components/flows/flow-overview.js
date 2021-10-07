@@ -10,16 +10,23 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { formatColumns } from "../core/table.js";
 import { requestToParameters } from "./utils.js";
 import Spinner from '../utils/spinner.js';
+import Button from 'react-bootstrap/Button';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import Tooltip from 'react-bootstrap/Tooltip';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import _ from 'lodash';
 import axios from 'axios';
 
 import api from '../core/api-service.js';
+import UserConfig from '../core/user.js';
 
 const POLL_TIME = 5000;
 
 export default class FlowOverview extends React.Component {
+    static contextType = UserConfig;
+
     static propTypes = {
         flow: PropTypes.object,
     };
@@ -28,6 +35,11 @@ export default class FlowOverview extends React.Component {
         this.source = axios.CancelToken.source();
         this.interval = setInterval(this.getDetailedFlow, POLL_TIME);
         this.getDetailedFlow();
+
+        // Default state of the lock is set by the user's preferences.
+        let lock_password = this.context.traits &&
+            this.context.traits.default_password;
+        this.setState({lock: lock_password});
     }
 
     componentWillUnmount() {
@@ -46,10 +58,16 @@ export default class FlowOverview extends React.Component {
     }
 
     prepareDownload = (download_type) => {
+        let lock_password = "";
+        if (this.state.lock) {
+            lock_password = this.context.traits &&
+                this.context.traits.default_password;
+        }
         api.post("v1/CreateDownload", {
             flow_id: this.props.flow.session_id,
             client_id: this.props.flow.client_id,
             download_type: download_type || "",
+            password: lock_password,
         }, this.source.token);
     };
 
@@ -74,6 +92,7 @@ export default class FlowOverview extends React.Component {
     state = {
         loading: false,
         available_downloads: [],
+        lock: false,
     };
 
     render() {
@@ -92,6 +111,8 @@ export default class FlowOverview extends React.Component {
 
         let artifacts_with_results = flow.artifacts_with_results || [];
         let uploaded_files = flow.uploaded_files || [];
+        let lock_password = this.context.traits &&
+            this.context.traits.default_password;
 
         return (
             <>
@@ -209,21 +230,51 @@ export default class FlowOverview extends React.Component {
 
                     <dt className="col-4">Download Results</dt>
                     <dd className="col-8">
-                      <Dropdown>
-                        <Dropdown.Toggle variant="default">
-                          <FontAwesomeIcon icon="archive"/>
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                          <Dropdown.Item
-                            onClick={()=>this.prepareDownload()}>
-                            Prepare Download
-                          </Dropdown.Item>
-                          <Dropdown.Item
-                            onClick={()=>this.prepareDownload('report')}>
-                            Prepare Collection Report
-                          </Dropdown.Item>
-                        </Dropdown.Menu>
-                      </Dropdown>
+                      <ButtonGroup>
+                        { lock_password ?
+                          <Button
+                            onClick={()=>this.setState({lock: !this.state.lock})}
+                            variant="default">
+                            {this.state.lock ?
+                             <FontAwesomeIcon icon="lock"/> :
+                             <FontAwesomeIcon icon="lock-open"/> }
+                          </Button>
+                          :
+                          <OverlayTrigger
+                            delay={{show: 250, hide: 400}}
+                            overlay={
+                                <Tooltip
+                                  id='download-tooltip'>
+                                  Set a password in user preferences
+                                  to lock the download file.
+                                </Tooltip>
+                            }>
+                            <span className="d-inline-block">
+                              <Button
+                                style={{ pointerEvents: "none"}}
+                                disabled={true}
+                                variant="default">
+                                <FontAwesomeIcon icon="lock-open"/>
+                              </Button>
+                            </span>
+                          </OverlayTrigger>
+                        }
+                        <Dropdown>
+                          <Dropdown.Toggle variant="default">
+                            <FontAwesomeIcon icon="archive"/>
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu>
+                            <Dropdown.Item
+                              onClick={()=>this.prepareDownload()}>
+                              Prepare Download
+                            </Dropdown.Item>
+                            <Dropdown.Item
+                              onClick={()=>this.prepareDownload('report')}>
+                              Prepare Collection Report
+                            </Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      </ButtonGroup>
                     </dd>
                   </dl>
                   <dl>
