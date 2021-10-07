@@ -390,6 +390,8 @@ func (self *ApiServer) GetUserUITraits(
 	if err == nil {
 		result.InterfaceTraits.UiSettings = user_options.Options
 		result.InterfaceTraits.Theme = user_options.Theme
+		result.InterfaceTraits.DefaultPassword = user_options.DefaultPassword
+		result.InterfaceTraits.DefaultDownloadsLock = user_options.DefaultDownloadsLock
 	}
 
 	return result, nil
@@ -863,23 +865,24 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	query := ""
 	env := ordereddict.NewDict()
 	if in.FlowId != "" && in.ClientId != "" {
-		query = `SELECT create_flow_download(
+		query = `SELECT create_flow_download(password=Password,
       client_id=ClientId, flow_id=FlowId, type=DownloadType) AS VFSPath
       FROM scope()`
 
 		env.Set("ClientId", in.ClientId).
 			Set("FlowId", in.FlowId).
+			Set("Password", in.Password).
 			Set("DownloadType", in.DownloadType)
 
 	} else if in.HuntId != "" {
-		query = `SELECT create_hunt_download(
+		query = `SELECT create_hunt_download(password=Password,
       hunt_id=HuntId, only_combined=OnlyCombined, format=Format) AS VFSPath
       FROM scope()`
 
 		env.Set("HuntId", in.HuntId).
 			Set("Format", format).
+			Set("Password", in.Password).
 			Set("OnlyCombined", in.OnlyCombinedHunt)
-
 	}
 
 	manager, err := services.GetRepositoryManager()

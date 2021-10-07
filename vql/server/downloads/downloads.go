@@ -1,13 +1,14 @@
 package downloads
 
 import (
-	"archive/zip"
 	"context"
 	"io"
 	"io/ioutil"
 	"os"
 	"sync"
 	"time"
+
+	cryptozip "github.com/Velocidex/cryptozip"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
@@ -39,6 +40,7 @@ type CreateFlowDownloadArgs struct {
 	Wait     bool   `vfilter:"optional,field=wait,doc=If set we wait for the download to complete before returning."`
 	Type     string `vfilter:"optional,field=type,doc=Type of download to create (e.g. 'report') default a full zip file."`
 	Template string `vfilter:"optional,field=template,doc=Report template to use (defaults to Reporting.Default)."`
+	Password string `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
 }
 
 type CreateFlowDownload struct{}
@@ -82,7 +84,8 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 		return result
 
 	case "":
-		result, err := createDownloadFile(config_obj, arg.FlowId, arg.ClientId, arg.Wait)
+		result, err := createDownloadFile(config_obj,
+			arg.FlowId, arg.ClientId, arg.Password, arg.Wait)
 		if err != nil {
 			scope.Log("create_flow_download: %s", err)
 			return vfilter.Null{}
@@ -110,6 +113,7 @@ type CreateHuntDownloadArgs struct {
 	Wait         bool   `vfilter:"optional,field=wait,doc=If set we wait for the download to complete before returning."`
 	Format       string `vfilter:"optional,field=format,doc=Format to export (csv,json) defaults to both."`
 	Filename     string `vfilter:"optional,field=base,doc=Base filename to write to."`
+	Password     string `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
 }
 
 type CreateHuntDownload struct{}
@@ -158,7 +162,7 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 	result, err := createHuntDownloadFile(
 		ctx, config_obj, scope, arg.HuntId,
 		write_json, write_csv,
-		arg.Wait, arg.OnlyCombined, arg.Filename)
+		arg.Wait, arg.OnlyCombined, arg.Filename, arg.Password)
 	if err != nil {
 		scope.Log("create_hunt_download: %s", err)
 		return vfilter.Null{}
@@ -177,7 +181,7 @@ func (self CreateHuntDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 
 func createDownloadFile(
 	config_obj *config_proto.Config,
-	flow_id, client_id string,
+	flow_id, client_id, password string,
 	wait bool) (api.FSPathSpec, error) {
 	if client_id == "" || flow_id == "" {
 		return nil, errors.New("Client Id and Flow Id should be specified.")
@@ -185,7 +189,7 @@ func createDownloadFile(
 
 	hostname := services.GetHostname(client_id)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	download_file := flow_path_manager.GetDownloadsFile(hostname)
+	download_file := flow_path_manager.GetDownloadsFile(hostname, password != "")
 
 	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 	logger.WithFields(logrus.Fields{
@@ -219,8 +223,8 @@ func createDownloadFile(
 
 	// Do these first to ensure errors are returned if the zip file
 	// is not writable.
-	zip_writer := zip.NewWriter(fd)
-	f, err := zip_writer.Create("FlowDetails")
+	zip_writer := cryptozip.NewWriter(fd)
+	f, err := createZipMember(zip_writer, "FlowDetails", password)
 	if err != nil {
 		fd.Close()
 		return nil, err
@@ -249,7 +253,8 @@ func createDownloadFile(
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
 		defer cancel()
 
-		err := downloadFlowToZip(ctx, config_obj, client_id, hostname, flow_id, zip_writer)
+		err := downloadFlowToZip(ctx, config_obj, password,
+			client_id, hostname, flow_id, zip_writer)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 			logger.Error("downloadFlowToZip: %v", err)
@@ -266,10 +271,11 @@ func createDownloadFile(
 func downloadFlowToZip(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	password string,
 	client_id string,
 	hostname string,
 	flow_id string,
-	zip_writer *zip.Writer) error {
+	zip_writer *cryptozip.Writer) error {
 
 	flow_details, err := flows.GetFlowDetails(config_obj, client_id, flow_id)
 	if err != nil {
@@ -288,7 +294,7 @@ func downloadFlowToZip(
 		// Clean the name so it makes a reasonable zip member.
 		file_member_name := path_specs.CleanPathForZip(
 			upload_name, client_id, hostname)
-		f, err := zip_writer.Create(file_member_name)
+		f, err := createZipMember(zip_writer, file_member_name, password)
 		if err != nil {
 			return err
 		}
@@ -336,7 +342,7 @@ func downloadFlowToZip(
 		zip_file_name := path_specs.CleanPathForZip(rs_path.
 			SetType(api.PATH_TYPE_FILESTORE_CSV),
 			client_id, hostname)
-		f, err := zip_writer.Create(zip_file_name)
+		f, err := createZipMember(zip_writer, zip_file_name, password)
 		if err != nil {
 			continue
 		}
@@ -390,14 +396,14 @@ func createHuntDownloadFile(
 	hunt_id string,
 	write_json, write_csv bool,
 	wait, only_combined bool,
-	base_filename string) (api.FSPathSpec, error) {
+	base_filename, password string) (api.FSPathSpec, error) {
 	if hunt_id == "" {
 		return nil, errors.New("Hunt Id should be specified.")
 	}
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
 	download_file := hunt_path_manager.GetHuntDownloadsFile(
-		only_combined, base_filename)
+		only_combined, base_filename, password != "")
 
 	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 	logger.WithFields(logrus.Fields{
@@ -434,8 +440,8 @@ func createHuntDownloadFile(
 
 	// Do these first to ensure errors are returned if the zip file
 	// is not writable.
-	zip_writer := zip.NewWriter(fd)
-	f, err := zip_writer.Create("HuntDetails")
+	zip_writer := cryptozip.NewWriter(fd)
+	f, err := createZipMember(zip_writer, "HuntDetails", password)
 	if err != nil {
 		zip_writer.Close()
 		fd.Close()
@@ -533,9 +539,8 @@ func createHuntDownloadFile(
 				defer reader.Close()
 
 				// Clean the name so it makes a reasonable zip member.
-				f, err := zip_writer.Create(
-					path_specs.CleanPathForZip(output_name,
-						"", ""))
+				f, err := createZipMember(zip_writer,
+					path_specs.CleanPathForZip(output_name, "", ""), password)
 				if err != nil {
 					return err
 				}
@@ -596,7 +601,8 @@ func createHuntDownloadFile(
 
 			hostname := services.GetHostname(client_id)
 			err := downloadFlowToZip(
-				ctx, config_obj, client_id, hostname, flow_id, zip_writer)
+				ctx, config_obj, password, client_id, hostname,
+				flow_id, zip_writer)
 			if err != nil {
 				logging.GetLogger(config_obj, &logging.FrontendComponent).
 					WithFields(logrus.Fields{
@@ -661,6 +667,15 @@ func StoreVQLAsCSVAndJsonFile(
 	}
 
 	return nil
+}
+
+func createZipMember(zip_writer *cryptozip.Writer, file_member_name, password string) (
+	io.Writer, error) {
+	if password == "" {
+		return zip_writer.Create(file_member_name)
+	} else {
+		return zip_writer.Encrypt(file_member_name, password, cryptozip.AES256Encryption)
+	}
 }
 
 func init() {

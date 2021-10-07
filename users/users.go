@@ -164,6 +164,9 @@ func SetUserOptions(config_obj *config_proto.Config,
 		old_options.Options = options.Options
 	}
 
+	old_options.DefaultPassword = options.DefaultPassword
+	old_options.DefaultDownloadsLock = options.DefaultDownloadsLock
+
 	return db.SetSubject(config_obj, path_manager.GUIOptions(), old_options)
 }
 

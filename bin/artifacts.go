@@ -64,8 +64,16 @@ var (
 			"store all output in it.").
 		Default("").String()
 
+	artifact_command_collect_output_compression = artifact_command_collect.Flag(
+		"output_level", "Compression level for zip output.").
+		Default("5").Int64()
+
 	artifact_command_collect_report = artifact_command_collect.Flag(
 		"report", "When specified we create a report html file.").
+		Default("").String()
+
+	artifact_command_collect_report_template = artifact_command_collect.Flag(
+		"report_template", "Use this artifact to provide the report template.").
 		Default("").String()
 
 	artificat_command_collect_admin_flag = artifact_command_collect.Flag(
@@ -169,8 +177,10 @@ func doArtifactCollect() {
 		Env: ordereddict.NewDict().
 			Set("Artifacts", *artifact_command_collect_names).
 			Set("Output", *artifact_command_collect_output).
+			Set("Level", *artifact_command_collect_output_compression).
 			Set("Password", *artifact_command_collect_output_password).
 			Set("Report", *artifact_command_collect_report).
+			Set("Template", *artifact_command_collect_report_template).
 			Set("Args", spec).
 			Set("Format", *artifact_command_collect_format),
 	})
@@ -194,6 +204,7 @@ func doArtifactCollect() {
 
 	query := `
   SELECT * FROM collect(artifacts=Artifacts, output=Output, report=Report,
+                        level=Level, template=Template,
                         password=Password, args=Args, format=Format)`
 	eval_local_query(config_obj, *artifact_command_collect_format, query, scope)
 }

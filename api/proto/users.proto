@@ -73,6 +73,12 @@ message ApiGrrUserInterfaceTraits {
     // Get the user's preferred theme.
     string theme = 2;
 
+    // Downloads will be protected using this password.
+    string default_password = 3;
+
+    // Offer to protect download exports by default.
+    bool default_downloads_lock = 4;
+
     // An opaque setting object stored by the GUI.
     string ui_settings = 1;
 };
@@ -151,6 +157,12 @@ message GetUserNotificationsRequest {
 
 message SetGUIOptionsRequest {
     string theme = 2;
+
+    // Downloads will be protected using this password.
+    string default_password = 3;
+
+    // Offer to protect download exports by default.
+    bool default_downloads_lock = 4;
 
     string options = 1;
 }

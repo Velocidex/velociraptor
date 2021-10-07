@@ -15,15 +15,18 @@ func (self HuntPathManager) Path() api.DSPathSpec {
 
 // Get the file store path for placing the download zip for the flow.
 func (self HuntPathManager) GetHuntDownloadsFile(only_combined bool,
-	base_filename string) api.FSPathSpec {
+	base_filename string, locked bool) api.FSPathSpec {
 	suffix := ""
 	if only_combined {
 		suffix = "-summary"
 	}
+	filename := base_filename + self.hunt_id + suffix
+	if locked {
+		filename += "_locked"
+	}
 
 	return DOWNLOADS_ROOT.AddUnsafeChild(
-		"hunts", self.hunt_id,
-		base_filename+self.hunt_id+suffix).SetType(
+		"hunts", self.hunt_id, filename).SetType(
 		api.PATH_TYPE_FILESTORE_DOWNLOAD_ZIP)
 }
 

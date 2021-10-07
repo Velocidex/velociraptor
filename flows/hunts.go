@@ -312,7 +312,7 @@ func availableHuntDownloadFiles(config_obj *config_proto.Config,
 	hunt_id string) (*api_proto.AvailableDownloads, error) {
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
-	download_file := hunt_path_manager.GetHuntDownloadsFile(false, "")
+	download_file := hunt_path_manager.GetHuntDownloadsFile(false, "", false)
 	download_path := download_file.Dir()
 
 	return getAvailableDownloadFiles(config_obj, download_path)
