@@ -42,6 +42,14 @@ func (self *ClientInfoManager) Start(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Client Info service.")
 
+	// Watch for clients that are deleted and remove from local cache.
+	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
+		"Server.Internal.ClientDelete", self.ProcessInterrogateResults)
+
+	if err != nil {
+		return err
+	}
+
 	return journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.Interrogation", self.ProcessInterrogateResults)
 }
