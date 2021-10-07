@@ -113,11 +113,14 @@ sources:
             FlowId="flow",
             ClientId="client",
             Data="hex",
+            URL="url",
+            SafeURL="safe_url", // Present dialog before click.
             Base64Data="base64hex"
           )
 
           LET Data <= read_file(filename="/dev/urandom", length=100)
           LET Base64Data = base64encode(string=Data)
+          LET URL = "[Google](https://www.google.com)"
 
           SELECT 1628609690.1 AS Raw,
 
@@ -133,7 +136,7 @@ sources:
                  -- Standard string form
                  "2021-08-10T15:34:50Z" AS Time4,
 
-                 FlowId, ClientId, Data, Base64Data
+                 FlowId, ClientId, Data, URL, URL AS SafeURL, Base64Data
           FROM scope()
 
       - type: Markdown
