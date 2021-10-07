@@ -16,4 +16,8 @@ LET X <= SELECT mock(plugin="glob", results=[dict(FullPath='''\HKEY_LOCAL_MACHIN
   },
   "_Source": "Windows.System.RootCAStore"
  }
+]SELECT crypto_rc4(string=crypto_rc4(string='this is my plain text', key='yolo'), key='yolo') FROM scope()[
+ {
+  "crypto_rc4(string=crypto_rc4(string='this is my plain text', key='yolo'), key='yolo')": "this is my plain text"
+ }
 ]
