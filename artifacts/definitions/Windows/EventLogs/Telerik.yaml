@@ -81,6 +81,7 @@ sources:
                     AND NOT if(condition=WhitelistRegex,
                         then= format(format='%v',args=EventData.Data) =~ WhitelistRegex,
                         else= FALSE )
+                    AND EventTime >= DateAfterTime AND EventTime <= DateBeforeTime
             }
           )
 
