@@ -163,6 +163,7 @@ sources:
                     AND UserName =~ UserNameRegex
                     AND format(format='%v %v %v %v', args=[
                             EventData, UserData, Message, System]) =~ IocRegex
+                    AND EventTime >= DateAfterTime AND EventTime <= DateBeforeTime
             }
           )
 
