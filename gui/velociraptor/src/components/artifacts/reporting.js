@@ -8,7 +8,7 @@ import parse from 'html-react-parser';
 
 import api from '../core/api-service.js';
 import VeloTable from '../core/table.js';
-import VeloLineChart from './line-charts.js';
+import { VeloLineChart, VeloTimeChart } from './line-charts.js';
 import Spinner from '../utils/spinner.js';
 import ToolViewer from "../tools/tool-viewer.js";
 import Timeline from "../timeline/timeline.js";
@@ -181,6 +181,27 @@ export default class VeloReportViewer extends React.Component {
                         let params = JSON.parse(decodeURIComponent(domNode.attribs.params));
                         return (
                             <VeloLineChart data={rows}
+                                           columns={data.Columns}
+                                           params={params} />
+                        );
+
+                    } catch (e) {
+                        return domNode;
+                    }
+                }
+
+                if (domNode.name === "time-chart") {
+                    // Figure out where the data is: attribs.value is
+                    // something like data['table2']
+                    let re = /'([^']+)'/;
+                    let value = decodeURIComponent(domNode.attribs.value || "");
+                    let match = re.exec(value);
+                    let data = this.state.data[match[1]];
+                    try {
+                        let rows = JSON.parse(data.Response);
+                        let params = JSON.parse(decodeURIComponent(domNode.attribs.params));
+                        return (
+                            <VeloTimeChart data={rows}
                                            columns={data.Columns}
                                            params={params} />
                         );

@@ -244,9 +244,24 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 	}
 }
 
-// Currently supported line chart options:
-// 1) xaxis_mode: time - specifies x axis is time since epoch.
 func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
+	return self.genericChart("grr-line-chart", "notebook-line-chart", values...)
+}
+
+func (self *GuiTemplateEngine) TimeChart(values ...interface{}) string {
+	return self.genericChart("time-chart", "notebook-time-chart", values...)
+}
+
+func (self *GuiTemplateEngine) BarChart(values ...interface{}) string {
+	return self.genericChart("bar-chart", "notebook-bar-chart", values...)
+}
+
+func (self *GuiTemplateEngine) ScatterChart(values ...interface{}) string {
+	return self.genericChart("scatter-chart", "notebook-scatter-chart", values...)
+}
+
+func (self *GuiTemplateEngine) genericChart(
+	report_directive, notebook_directive string, values ...interface{}) string {
 	options, argv := parseOptions(values)
 	// Not enough args.
 	if len(argv) != 1 {
@@ -264,8 +279,9 @@ func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
 			params.MergeFrom(options)
 
 			result += fmt.Sprintf(
-				`<div class="panel"><notebook-line-chart base-url="'v1/GetTable'" `+
+				`<div class="panel"><%s base-url="'v1/GetTable'" `+
 					`params='%s' /></div>`,
+				notebook_directive,
 				utils.QueryEscape(params.String()))
 		}
 		return result
@@ -292,8 +308,8 @@ func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
 			Columns:  self.Scope.GetMembers(t[0]),
 		}
 		return fmt.Sprintf(
-			`<grr-line-chart value="data['%s']" params='%s' />`,
-			key, utils.QueryEscape(string(parameters)))
+			`<%s value="data['%s']" params='%s' />`,
+			report_directive, key, utils.QueryEscape(string(parameters)))
 	}
 }
 
@@ -628,15 +644,18 @@ func NewGuiTemplateEngine(
 	}
 	template_engine.tmpl = template.New("").Funcs(sprig.TxtFuncMap()).Funcs(
 		template.FuncMap{
-			"Query":     template_engine.Query,
-			"Scope":     template_engine.GetScope,
-			"Table":     template_engine.Table,
-			"LineChart": template_engine.LineChart,
-			"Timeline":  template_engine.Timeline,
-			"Get":       template_engine.getFunction,
-			"Expand":    template_engine.Expand,
-			"import":    template_engine.Import,
-			"str":       strval,
+			"Query":        template_engine.Query,
+			"Scope":        template_engine.GetScope,
+			"Table":        template_engine.Table,
+			"BarChart":     template_engine.BarChart,
+			"LineChart":    template_engine.LineChart,
+			"ScatterChart": template_engine.ScatterChart,
+			"TimeChart":    template_engine.TimeChart,
+			"Timeline":     template_engine.Timeline,
+			"Get":          template_engine.getFunction,
+			"Expand":       template_engine.Expand,
+			"import":       template_engine.Import,
+			"str":          strval,
 		})
 	return template_engine, nil
 }
@@ -646,11 +665,18 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 
 	p.AllowStandardURLs()
 
-	// Angular directives.
+	// Directives for the GUI.
 	p.AllowAttrs("value", "params").OnElements("grr-csv-viewer")
 	p.AllowAttrs("value", "params").OnElements("inline-table-viewer")
 	p.AllowAttrs("value", "params").OnElements("grr-line-chart")
+	p.AllowAttrs("value", "params").OnElements("bar-chart")
+	p.AllowAttrs("value", "params").OnElements("scatter-chart")
+	p.AllowAttrs("value", "params").OnElements("time-chart")
+
+	p.AllowAttrs("params").OnElements("notebook-bar-chart")
 	p.AllowAttrs("params").OnElements("notebook-line-chart")
+	p.AllowAttrs("params").OnElements("notebook-scatter-chart")
+	p.AllowAttrs("params").OnElements("notebook-time-chart")
 	p.AllowAttrs("name", "params").OnElements("grr-timeline")
 	p.AllowAttrs("name").OnElements("grr-tool-viewer")
 
