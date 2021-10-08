@@ -2,13 +2,14 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import VeloLineChart from '../artifacts/line-charts.js';
+import { VeloLineChart, VeloTimeChart,
+         VeloScatterChart, VeloBarChart } from '../artifacts/line-charts.js';
 import axios from 'axios';
 import api from '../core/api-service.js';
 import { PrepareData } from '../core/table.js';
 
 
-export default class NotebookChart extends React.Component {
+export class NotebookLineChart extends React.Component {
     static propTypes = {
         params: PropTypes.object,
     };
@@ -50,7 +51,7 @@ export default class NotebookChart extends React.Component {
             this.setState({loading: false,
                            rows: pageData.rows,
                            columns: columns });
-        }).catch(() => {
+        }).catch((e) => {
             this.setState({loading: false, rows: [], columns: []});
         });
     }
@@ -67,3 +68,45 @@ export default class NotebookChart extends React.Component {
                />;
     }
 };
+
+export class NotebookTimeChart extends NotebookLineChart {
+   render() {
+        if (_.isEmpty(this.state.rows)) {
+            return <></>;
+        }
+        return <VeloTimeChart
+                 className="col-12"
+                 params={this.props.params}
+                 columns={this.state.columns}
+                 data={this.state.rows}
+               />;
+    }
+}
+
+export class NotebookBarChart extends NotebookLineChart {
+   render() {
+        if (_.isEmpty(this.state.rows)) {
+            return <></>;
+        }
+        return <VeloBarChart
+                 className="col-12"
+                 params={this.props.params}
+                 columns={this.state.columns}
+                 data={this.state.rows}
+               />;
+    }
+}
+
+export class NotebookScatterChart extends NotebookLineChart {
+   render() {
+        if (_.isEmpty(this.state.rows)) {
+            return <></>;
+        }
+        return <VeloScatterChart
+                 className="col-12"
+                 params={this.props.params}
+                 columns={this.state.columns}
+                 data={this.state.rows}
+               />;
+    }
+}

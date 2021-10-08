@@ -62,7 +62,10 @@ class UserSettings extends React.PureComponent {
                                       this.setState({theme: e.currentTarget.value});
 
                                       // Change the theme instantly
-                                      this.saveSettings();
+                                      this.props.setSetting({
+                                          theme: e.currentTarget.value,
+                                          default_password: this.state.default_password,
+                                      });
                                   }}>
                       <option value="light-mode">Light Mode</option>
                       <option value="dark-mode">Dark Mode</option>
@@ -110,8 +113,6 @@ export default class UserLabel extends React.Component {
     }
 
     setSettings = (options) => {
-        console.log(options);
-
         // Set the ACE theme according to the theme so they match.
         let ace_options = JSON.parse(this.context.traits.ui_settings || "{}");
         if (options.theme === "dark-mode") {

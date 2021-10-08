@@ -11,7 +11,7 @@ export class MarkdownHighlightRules extends window.ace.acequire("ace/mode/markdo
         });
 
         var keywords = (
-            "query|table|LineChart"
+            "query|table|LineChart|BarChart|TimeChart|ScatterChart"
         );
 
         var keywordMapper = this.createKeywordMapper({

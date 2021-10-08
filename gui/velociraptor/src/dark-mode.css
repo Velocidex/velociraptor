@@ -389,3 +389,7 @@ body.dark-mode {
 .dark-mode .velo__option:hover, .dark-mode .velo__option--is-focused, .dark-mode .velo__multi-value:hover {
     background-color: var(--btn-default-background-hover);
 }
+
+.dark-mode hr {
+    background-color: var(--text-foreground);
+}

@@ -141,6 +141,64 @@ sources:
 
       - type: Markdown
         template: |
+          ## Scatter Chart with a named column
+
+          {{ define "ScatterTest" }}
+           SELECT X, Name, Y, Y3
+          FROM parse_csv(accessor="data", filename='''
+          X,Name,Y,Y3
+          1,Bob,2,3
+          2,Frank,4,6
+          3,Mike,6,8
+          4,Sally,3,2
+           ''')
+          {{ end }}
+          {{ Query "ScatterTest" | ScatterChart "name_column" "Name" }}
+
+          ## Stacked Bar Chart (Categories are first column)
+
+          {{ define "Test" }}
+          SELECT X, Y, Y3
+          FROM parse_csv(accessor="data", filename='''
+          X,Y,Y3
+          Bob,2,3
+          Bill,4,6
+          Foo,6,8
+          Bar,7,2
+          ''')
+          {{ end }}
+          {{ Query "Test" | BarChart "type" "stacked" }}
+
+          ## Time chart with timestamp in first column
+
+          {{ define "TimeTest" }}
+          SELECT Timestamp, Y, Y3
+          FROM parse_csv(accessor="data", filename='''
+          Timestamp,Y,Y3
+          2021-10-09,2,3
+          2021-10-10,4,6
+          2021-10-11,6,8
+          2021-10-12,7,2
+          ''')
+          {{ end }}
+          {{ Query "TimeTest" | TimeChart }}
+
+          ## Line chart
+
+          {{ define "LineTest" }}
+          SELECT X, Y, Y3
+          FROM parse_csv(accessor="data", filename='''
+          X,Y,Y3
+          1,2,3
+          2,4,6
+          3,6,8
+          4,7,2
+          ''')
+          {{ end }}
+          {{ Query "LineTest" | LineChart }}
+
+      - type: Markdown
+        template: |
           ## A Line Chart
 
           The following should show a CPU load chart of the last 10 min.
@@ -153,7 +211,7 @@ sources:
             LIMIT 100
           {{ end }}
 
-          {{ Query "Q" | LineChart "xaxis_mode" "time" }}
+          {{ Query "Q" | TimeChart }}
 
       - type: vql
         template: |
