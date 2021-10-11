@@ -19,7 +19,7 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
-type VMemeInfo struct {
+type VMemInfo struct {
 	Address     uint64
 	Size        uint64
 	MappingName string
@@ -139,8 +139,8 @@ func (self VADPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 	}
 }
 
-func GetVads(pid uint32) ([]*VMemeInfo, syscall.Handle, error) {
-	result := []*VMemeInfo{}
+func GetVads(pid uint32) ([]*VMemInfo, syscall.Handle, error) {
+	result := []*VMemInfo{}
 
 	proc_handle, err := windows.OpenProcess(
 		windows.PROCESS_QUERY_INFORMATION|windows.PROCESS_VM_READ,
@@ -176,7 +176,7 @@ func GetVads(pid uint32) ([]*VMemeInfo, syscall.Handle, error) {
 
 		// Ignore pages with no access.
 		if info.Protect != windows.PAGE_NOACCESS {
-			result = append(result, &VMemeInfo{
+			result = append(result, &VMemInfo{
 				Address:     info.BaseAddress,
 				Size:        info.RegionSize,
 				MappingName: filename,

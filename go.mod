@@ -13,6 +13,7 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/amsi v0.0.0-20200608120838-e5d93b76f119
+	github.com/Velocidex/cryptozip v0.0.0-20200812111814-37033c799bd9
 	github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.10-0.20210726130504-d5e402efc424
@@ -124,14 +125,13 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20210913135640-226d766334af
+	www.velocidex.com/golang/vfilter v0.0.0-20211011003933-3594b2d3597b
 	www.velocidex.com/golang/vtypes v0.0.0-20210728123451-f085971da113
 )
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1 // indirect
 	github.com/PuerkitoBio/goquery v1.6.1 // indirect
-	github.com/Velocidex/cryptozip v0.0.0-20200812111814-37033c799bd9 // indirect
 	github.com/Velocidex/yaml v2.1.0+incompatible // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
@@ -152,6 +152,7 @@ require (
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
+	github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jstemmer/go-junit-report v0.9.1 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect

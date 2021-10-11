@@ -1,22 +1,24 @@
-// +build windows,amd64,cgo
+// +build linux
 
 // An accessor for process address space.
 // Using this accessor it is possible to read directly from different processes, e.g.
 // read_file(filename="/434", accessor="process")
 
-package process
+package linux
 
 import (
+	"bufio"
 	"errors"
+	"fmt"
+	"io"
 	"os"
+	"regexp"
 	"strconv"
 	"sync"
-	"syscall"
 
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -24,46 +26,22 @@ const PAGE_SIZE = 0x1000
 
 type ProcessFileInfo struct {
 	utils.DataFileInfo
-	size uint64
+	size int64
 }
 
 func (self ProcessFileInfo) Size() int64 {
-	return int64(self.size)
+	return self.size
 }
 
 type ProcessReader struct {
-	mu         sync.Mutex
-	pid        uint64
-	offset     uint64
-	size       uint64
-	handle     syscall.Handle
-	ranges     []*VMemInfo
-	last_range *VMemInfo
-}
+	mu     sync.Mutex
+	pid    uint64
+	offset int64
+	size   int64
 
-func (self *ProcessReader) getRange(offset uint64) *VMemInfo {
-	if self.last_range != nil &&
-		self.last_range.Address <= offset &&
-		offset < self.last_range.Address+self.last_range.Size {
-		return self.last_range
-	}
-
-	// TODO: Is it worth to implement a binary search here?
-	for i := 0; i < len(self.ranges); i++ {
-		self.last_range = self.ranges[i]
-
-		// Does the range cover the require offset?
-		if self.last_range.Address <= offset &&
-			offset < self.last_range.Address+self.last_range.Size {
-			return self.last_range
-		}
-
-		// Use the fact that ranges are sorted to break early.
-		if offset < self.last_range.Address {
-			break
-		}
-	}
-	return nil
+	// A file handle to the /proc/pid/mem file.
+	handle *os.File
+	ranges []*uploads.Range
 }
 
 // Repeat the read operation one page at the time in order to retrieve
@@ -80,8 +58,7 @@ func (self *ProcessReader) readDistinctPages(buf []byte) (int, error) {
 		buf_end := buf_start + PAGE_SIZE
 
 		// Repeat the read with a single page at the time.
-		_, err := windows.ReadProcessMemory(
-			self.handle, self.offset, buf[buf_start:buf_end])
+		_, err := self.handle.ReadAt(buf[buf_start:buf_end], self.offset)
 		if err != nil {
 			// Error occured reading a single page, zero
 			// it out and skip the page.
@@ -99,35 +76,52 @@ func (self *ProcessReader) Read(buf []byte) (int, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	current_range := self.getRange(self.offset)
-	if current_range == nil {
-		return 0, errors.New("Invalid offset")
+	current_range, next_range := uploads.GetNextRange(self.offset, self.ranges)
+	// Current offset is inside the range.
+	if current_range != nil {
+		to_read := current_range.Offset + current_range.Length - self.offset
+		if to_read > int64(len(buf)) {
+			to_read = int64(len(buf))
+		}
+
+		// Read memory from process at specified offset.
+		_, err := self.handle.ReadAt(buf[:to_read], self.offset)
+
+		// A read error occured - split the read into multiple page
+		// size reads to get as much data as we can out of the
+		// region. Note: We always return as much data as was
+		// required, we simply null pad the missing data. Therefore if
+		// a reader askes to read from a memory region that contains
+		// no data, we never return an error - just zero pad those
+		// regions.
+		if err != nil {
+			return self.readDistinctPages(buf)
+		}
+
+		// Advance the read pointer.
+		self.offset += to_read
+
+		return int(to_read), nil
 	}
 
-	to_read := current_range.Address + current_range.Size - self.offset
-	if to_read > uint64(len(buf)) {
-		to_read = uint64(len(buf))
+	// The current offset is not inside any range so we null pad until
+	// the next range.
+	if next_range != nil {
+		to_read := next_range.Offset - self.offset
+		if to_read > int64(len(buf)) {
+			to_read = int64(len(buf))
+		}
+
+		// Clear the buffer
+		for i := range buf[:to_read] {
+			buf[i] = 0
+		}
+		self.offset += to_read
+		return int(to_read), nil
 	}
 
-	// Read memory from process at specified offset.
-	_, err := windows.ReadProcessMemory(
-		self.handle, self.offset, buf[:to_read])
-
-	// A read error occured - split the read into multiple page
-	// size reads to get as much data as we can out of the
-	// region. Note: We always return as much data as was
-	// required, we simply null pad the missing data. Therefore if
-	// a reader askes to read from a memory region that contains
-	// no data, we never return an error - just zero pad those
-	// regions.
-	if err != nil {
-		return self.readDistinctPages(buf)
-	}
-
-	// Advance the read pointer.
-	self.offset += to_read
-
-	return int(to_read), nil
+	// Range is past the end of file
+	return 0, io.EOF
 }
 
 func (self *ProcessReader) Ranges() []uploads.Range {
@@ -135,31 +129,22 @@ func (self *ProcessReader) Ranges() []uploads.Range {
 	defer self.mu.Unlock()
 
 	result := []uploads.Range{}
-	size := uint64(0)
+	size := int64(0)
 	for _, rng := range self.ranges {
-		// Only include readable ranges.
-		if len(rng.Protection) < 2 || rng.Protection[1] != 'r' {
-			continue
-		}
-
 		// Fill in a sparse range if needed
-		if rng.Address > size {
+		if rng.Offset > size {
 			result = append(result, uploads.Range{
-				Offset:   int64(size),
-				Length:   int64(rng.Address - size),
+				Offset:   size,
+				Length:   rng.Offset - size,
 				IsSparse: true,
 			})
 		}
 
 		// Move the pointer past the end of this range.
-		size = rng.Address + rng.Size
+		size = rng.Offset + rng.Length
 
 		// Add a real data run
-		result = append(result, uploads.Range{
-			Offset:   int64(rng.Address),
-			Length:   int64(rng.Size),
-			IsSparse: false,
-		})
+		result = append(result, *rng)
 	}
 	return result
 }
@@ -170,9 +155,9 @@ func (self *ProcessReader) Seek(offset int64, whence int) (int64, error) {
 
 	switch whence {
 	case 0:
-		self.offset = uint64(offset)
+		self.offset = offset
 	case 1:
-		self.offset += uint64(offset)
+		self.offset += offset
 	case 2:
 		self.offset = self.size
 	}
@@ -181,7 +166,7 @@ func (self *ProcessReader) Seek(offset int64, whence int) (int64, error) {
 }
 
 func (self ProcessReader) Close() error {
-	return windows.CloseHandle(self.handle)
+	return self.handle.Close()
 }
 
 func (self ProcessReader) Stat() (os.FileInfo, error) {
@@ -217,14 +202,20 @@ func (self *ProcessAccessor) Open(path string) (glob.ReadSeekCloser, error) {
 		return nil, errors.New("First directory path must be a process.")
 	}
 
+	// Open the device file for the process
+	fd, err := os.Open(fmt.Sprintf("/proc/%d/mem", pid))
+	if err != nil {
+		return nil, err
+	}
+
 	// Open the process and enumerate its ranges
-	ranges, proc_handle, err := GetVads(uint32(pid))
+	ranges, err := GetVads(pid)
 	if err != nil {
 		return nil, err
 	}
 	result := &ProcessReader{
 		pid:    pid,
-		handle: proc_handle,
+		handle: fd,
 	}
 
 	for _, r := range ranges {
@@ -236,4 +227,56 @@ func (self *ProcessAccessor) Open(path string) (glob.ReadSeekCloser, error) {
 
 func init() {
 	glob.Register("process", &ProcessAccessor{})
+}
+
+var (
+	maps_regexp = regexp.MustCompile("(?P<Start>^[^-]+)-(?P<End>[^\\s]+)\\s+(?P<Perm>[^\\s]+)\\s+(?P<Size>[^\\s]+)\\s+[^\\s]+\\s+(?P<PermInt>[^\\s]+)\\s+(?P<Filename>.+?)(?P<Deleted> \\(deleted\\))?$")
+)
+
+func GetVads(pid uint64) ([]*uploads.Range, error) {
+	maps_fd, err := os.Open(fmt.Sprintf("/proc/%d/maps", pid))
+	if err != nil {
+		return nil, err
+	}
+	defer maps_fd.Close()
+
+	var result []*uploads.Range
+
+	scanner := bufio.NewScanner(maps_fd)
+	for scanner.Scan() {
+		hits := maps_regexp.FindStringSubmatch(scanner.Text())
+		if len(hits) > 0 {
+			protection := hits[3]
+			// Only include readable ranges.
+			if len(protection) < 2 || protection[0] != 'r' {
+				continue
+			}
+
+			start, err := strconv.ParseInt(hits[1], 16, 64)
+			if err != nil {
+				continue
+			}
+
+			end, err := strconv.ParseInt(hits[2], 16, 64)
+			if err != nil {
+				continue
+			}
+
+			// We can not read kernel memory
+			if start < 0 || end < 0 {
+				continue
+			}
+
+			result = append(result, &uploads.Range{
+				Offset: start, Length: end - start,
+			})
+		}
+	}
+
+	err = scanner.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
