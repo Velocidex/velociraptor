@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import './App.css';
-import './dark-mode.css';
 
+import './App.css';
 import VeloNavigator from './components/sidebar/navigator.js';
+
 import VeloClientSearch from './components/clients/search.js';
 import VeloClientList from './components/clients/clients-list.js';
 import VeloHostInfo from './components/clients/host-info.js';
@@ -37,6 +37,11 @@ import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 
 import SidebarKeyNavigator from './components/sidebar/hotkeys.js';
+
+// Custom CSS should be highest priority
+import './dark-mode.css';
+import './light-pink.css';
+import './dark-pink.css';
 
 /* This is the main App page.
 

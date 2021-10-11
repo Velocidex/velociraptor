@@ -1,17 +1,17 @@
-.dark-mode .main-navbar, .dark-mode div#navigator {
-    background-color: #121212;
+.dark-pink .main-navbar, .dark-pink div#navigator {
+    background-color: #222222;
     border-color: var(--background-color);
 }
 
-body.dark-mode {
+body.dark-pink {
     background-color: var(--background-color);
 }
 
-.dark-mode .hamburger {
+.dark-pink .hamburger {
     color: var(--sidebar-icon-color);
 }
 
-.dark-mode #client-search-bar {
+.dark-pink #client-search-bar {
     background-color: var(--background-color);
     border: 0.655385px solid #485A5F;
     color: var(--text-foreground);
@@ -21,45 +21,45 @@ body.dark-mode {
     height: 25px;
 }
 
-.dark-mode .react-autosuggest__suggestions-container--open {
+.dark-pink .react-autosuggest__suggestions-container--open {
     margin-left: 5px;
     background-color: var(--background-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .react-autosuggest__suggestion--highlighted {
+.dark-pink .react-autosuggest__suggestion--highlighted {
   background-color: var(--sidebar-icon-color-hover);
 }
 
-.dark-mode {
+.dark-pink {
     --sidebar-icon-color: #bfbfbf;
     --sidebar-icon-color-hover: #9a9a9a;
     --sidebar-icon-color-disabled: #8f8f8f50;
-    --sidebar-icon-color-bg: #121212;
-    --sidebar-active-icon-background-color: #343434;
+    --sidebar-icon-color-bg: #222222;
+    --sidebar-active-icon-background-color: #8f8f8f;
 
-    --background-color: #121212;
-    --border-color: #222222;
+    --background-color: #222222;
+    --border-color: #333333;
     --text-foreground: #eeeeee;
-    --btn-default-background: #5cd00a80;
-    --color-default-background: #121212;
-    --btn-default-background-hover: #0c900a80;
-    --btn-outline-link: #5cd00a80;
-
+    --btn-default-background: #ec407a;
+    --color-default-background: #222222;
+    --btn-default-background-hover: #e91e63;
+    --btn-outline-link: #ec407a;
+    --btn-outline-link-hover: #40ed6e;
 
     --tab-color: #444444;
     --tab-active-color: #aaaaaa;
     --resizer-color: #444444;
 
-    --cell-toolbar-background-color: #121212;
-    --page-link-background-color: #121212;
+    --cell-toolbar-background-color: #222222;
+    --page-link-background-color: #222222;
     --page-link-active-background-color: #444444;
-    --form-background-color: #121212;
+    --form-background-color: #222222;
     --card-heading-background-color: #444444;
     --table-heading-background-color: #444444;
-    --color-table-row-selected: #8f8f8f50;
+    --color-table-row-selected: #a0a0a0a0;
     --color-monospace-color: #eeeeee;
-    --scrollbar-track: #121212;
+    --scrollbar-track: #222222;
     --app-footer-background-color: #444444;
     --color-infoline-success: #7aed40;
 
@@ -74,299 +74,310 @@ body.dark-mode {
     --color-timeline-6: #008000;
     --color-timeline-7: #471ecb;
 
-    --vfs-files-timestomped: #0220af;
+    --vfs-files-timestomped: #ed5d40;
 }
 
-.dark-mode .btn {
+.dark-pink .btn {
     color: var(--text-foreground);
     border-color: #2a2a2a;
 }
 
-.dark-mode .btn-default.active {
+.dark-pink .btn-default.active {
     box-shadow: none !important;
     color: var(--sidebar-icon-color-bg);
 }
 
 
-.dark-mode .btn-default:hover {
+.dark-pink .btn-default:hover {
     background: var(--btn-default-background-hover);
     color: var(--text-foreground);
 }
 
-.dark-mode .btn-default:focus {
+.dark-pink .btn-default:focus {
     background: var(--btn-default-background);
     color: var(--text-foreground);
 }
 
-
-.dark-mode .btn-primary {
+.dark-pink .btn-primary {
     background-image: none;
     text-shadow: none;
     background: none;
 }
 
-.dark-mode .btn-default {
+.dark-pink .btn-default {
     background-image: none;
     text-shadow: none;
     background: var(--btn-default-background);
 }
 
-.dark-mode .btn-outline-info, .btn-link {
+.dark-pink .btn-outline-info, .btn-link {
     color: var(--btn-outline-link);
 }
 
-.dark-mode .btn.btn-link {
+.dark-pink .btn-outline-info:hover {
+    background: var(--btn-outline-link-hover);
+}
+
+.dark-pink .btn.btn-link {
     border-color: transparent;
 }
 
-.dark-mode #content {
+.dark-pink #content {
     top: 49px;
 }
 
-
-.dark-mode h1, .dark-mode h2, .dark-mode h3 {
+.dark-pink h1, .dark-pink h2, .dark-pink h3 {
     color: var(--text-foreground);
 }
 
-.dark-mode .alert-secondary {
+.dark-pink .alert-secondary {
     color: var(--text-foreground);
     background-color: var(--table-heading-background-color);
 }
 
-.dark-mode .alert-secondary th {
+.dark-pink .alert-secondary th {
     border-color: #2a2a2a;
 }
 
 /* Tables */
 
-.dark-mode .table-bordered th, .table-bordered td {
+.dark-pink .table-bordered th, .table-bordered td {
     border: 1px solid var(--table-heading-background-color);
 }
 
-.dark-mode .table, .dark-mode .table-hover tr:hover {
+.dark-pink .table {
+    color: var(--text-foreground);
+}
+
+.dark-pink .table, .dark-pink .table-hover tr:hover {
+    color: var(--text-foreground);
+}
+
+.dark-pink table tr.row-selected, .dark-pink table tr.row_selected td {
+    background-color: var(--color-table-row-selected);
     color: var(--text-foreground);
 }
 
 /* Column search screen */
-.dark-mode th.sortable input {
+.dark-pink th.sortable input {
     background-color: var(--background-color);
     color: var(--text-foreground);
     border-color: var(--border-color);
 }
 
 /* Resider divider */
-.dark-mode .Resizer.horizontal {
+.dark-pink .Resizer.horizontal {
     border-top-color: var(--resizer-color);
     border-bottom-color: var(--resizer-color);
     background-color: var(--resizer-color);
 }
 
-.dark-mode .Resizer.vertical {
+.dark-pink .Resizer.vertical {
     border-left-color: var(--resizer-color);
     border-right-color: var(--resizer-color);
     background-color: var(--resizer-color);
 }
 
 
-.dark-mode .card {
+.dark-pink .card {
     background-color: var(--table-heading-background-color);
 }
 
-.dark-mode .card-header {
+.dark-pink .card-header {
     background-color: var(--card-heading-background-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .card-body {
+.dark-pink .card-body {
     background-color: var(--background-color);
     color: var(--text-foreground);
 }
 
 /* Json container */
-.dark-mode div.pretty-json-container {
+.dark-pink div.pretty-json-container {
     filter: invert(1);
 }
 
 /* Tabs */
-.dark-mode .tab-content {
+.dark-pink .tab-content {
     color: var(--text-foreground);
 }
 
-.dark-mode .nav-tabs > a {
+.dark-pink .nav-tabs > a {
     background-color: var(--tab-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .nav-tabs > a.active {
+.dark-pink .nav-tabs > a.active {
     background-color: var(--tab-active-color);
 }
 
 /* forms */
-.dark-mode .form-control,
-.dark-mode .custom-file-input {
+.dark-pink .form-control,
+.dark-pink .custom-file-input {
     background-color: var(--form-background-color);
     color: var(--text-foreground);
 }
 
 /* Pagination */
-.dark-mode .page-item .page-link {
-    background-color: var(--page-link-background-color);
+.dark-pink .page-item .page-link {
+    background-color: var(--btn-default-background);
     border-color: var(--border-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .page-item input {
+.dark-pink .page-item input {
     background-color: var(--form-background-color);
     color: var(--text-foreground);
     border: 1px solid var(--form-background-color);
 }
 
-.dark-mode .page-item.active .page-link {
+.dark-pink .page-item.active .page-link {
     background-color: var(--page-link-active-background-color);
     border-color: var(--border-color);
 }
 
-.dark-mode .react-bootstrap-table-pagination-total {
+.dark-pink .react-bootstrap-table-pagination-total {
     color: var(--text-foreground);
 }
 
 /* artifact viewer screen */
-.dark-mode .artifact-search-table a {
+.dark-pink .artifact-search-table a {
     color: var(--text-foreground);
 }
 
-.dark-mode .report-viewer {
+.dark-pink .report-viewer {
     color: var(--text-foreground);
 }
 
-.dark-mode .report-viewer pre {
+.dark-pink .report-viewer pre {
     filter: invert(1);
 }
 
 /* modal dialogs */
-.dark-mode .modal-content {
+.dark-pink .modal-content {
     background-color: var(--page-link-active-background-color);
     color: var(--text-foreground);
 }
 
 /* notebooks */
-.dark-mode .cell-toolbar,
-.dark-mode .notebook-input{
+.dark-pink .cell-toolbar,
+.dark-pink .notebook-input{
     background-color: var(--page-link-active-background-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .notebook-input pre {
+.dark-pink .notebook-input pre {
     background-color: var(--background-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .notebook-cell.selected {
+.dark-pink .notebook-cell.selected {
     border-color: var(--border-color);
 }
 
 /* react timelines */
-.dark-mode .react-calendar-timeline .rct-sidebar {
+.dark-pink .react-calendar-timeline .rct-sidebar {
     color: var(--text-foreground);
 }
 
 /* file tree */
-.dark-mode div.file-tree ul {
+.dark-pink div.file-tree ul {
     font-size: 16px;
     background-color: var(--background-color);
 }
 
 /* width */
-.dark-mode ::-webkit-scrollbar {
+.dark-pink ::-webkit-scrollbar {
     width: 10px;
 }
 
 /* Track */
-.dark-mode ::-webkit-scrollbar-track {
+.dark-pink ::-webkit-scrollbar-track {
     background: var(--scrollbar-track);
 }
 
 /* Handle */
-.dark-mode ::-webkit-scrollbar-thumb {
+.dark-pink ::-webkit-scrollbar-thumb {
     background: #888;
 }
 
 /* Handle on hover */
-.dark-mode ::-webkit-scrollbar-thumb:hover {
+.dark-pink ::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
 
 
 /* Table column selector */
-.dark-mode .dropdown-menu {
+.dark-pink .dropdown-menu {
     background-color: var(--background-color);
 }
 
-.dark-mode .dropdown-item {
+.dark-pink .dropdown-item {
     color: var(--text-foreground);
 }
 
-.dark-mode .dropdown-item:hover {
+.dark-pink .dropdown-item:hover {
     background-color: var(--btn-default-background-hover);
 }
 
-.dark-mode .dropdown-item.active {
+.dark-pink .dropdown-item.active {
     background-color: var(--color-table-row-selected);
 }
 
 
 /* Datepicker */
-.dark-mode .react-datepicker,
-.dark-mode .react-datetime-picker
+.dark-pink .react-datepicker,
+.dark-pink .react-datetime-picker
 {
     background-color: var(--background-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .react-datetime-picker__inputGroup__input,
-.dark-mode .react-datetime-picker__button
+.dark-pink .react-datetime-picker__inputGroup__input,
+.dark-pink .react-datetime-picker__button
 {
     filter: invert(1);
 }
 
-.dark-mode .react-datepicker-popper {
+.dark-pink .react-datepicker-popper {
     z-index: 10;
 }
 
-.dark-mode .react-datepicker__day {
+.dark-pink .react-datepicker__day {
     color: var(--text-foreground);
 }
 
-.dark-mode .react-datepicker__day[aria-disabled="false"] {
+.dark-pink .react-datepicker__day[aria-disabled="false"] {
     background-color: var(--color-table-row-selected);
     color: var(--text-foreground);
 }
 
 /* Footer */
-.dark-mode .app-footer.fixed-bottom {
+.dark-pink .app-footer.fixed-bottom {
     background-color: var(--app-footer-background-color);
     color: var(--text-foreground);
     z-index: 1000;
 }
 
 /* Spinner */
-.dark-mode .overlay .fa-spinner {
+.dark-pink .overlay .fa-spinner {
     filter: invert(1);
 }
 
 /* Shell output */
-.dark-mode .notebook-output pre {
+.dark-pink .notebook-output pre {
     filter: invert(1);
 }
 
 /* ACE things */
-.dark-mode .ace_tooltip {
+.dark-pink .ace_tooltip {
     background-color: var(--background-color);
     color: var(--text-foreground);
 }
 
 
-.dark-mode .custom-tooltip {
+.dark-pink .custom-tooltip {
     margin: 0;
     padding: 10px;
     background-color: var(--background-color);
@@ -376,27 +387,34 @@ body.dark-mode {
 }
 
 
-.dark-mode .file-hex-view td, .file-hex-view th {
+.dark-pink .file-hex-view td, .file-hex-view th {
     border: 0px;
 }
 
-.dark-mode .labels, .dark-mode .velo__control, .dark-mode .velo__menu {
+.dark-pink .labels, .dark-pink .velo__control, .dark-pink .velo__menu {
     background-color: var(--background-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .velo__multi-value {
+.dark-pink .velo__multi-value {
     background-color: var(--btn-default-background);
 }
 
-.dark-mode .velo__input {
+.dark-pink .velo__input {
     color: var(--text-foreground);
 }
 
-.dark-mode .velo__option:hover, .dark-mode .velo__option--is-focused, .dark-mode .velo__multi-value:hover {
+.dark-pink .velo__option:hover, .dark-pink .velo__option--is-focused, .dark-pink .velo__multi-value:hover {
     background-color: var(--btn-default-background-hover);
 }
 
-.dark-mode hr {
+.dark-pink hr {
     background-color: var(--text-foreground);
+}
+
+.dark-pink img.velo-logo {
+    height: 36px;
+    width: 29px;
+    margin: 5px;
+    filter: brightness(0) saturate(100%) invert(51%) sepia(59%) saturate(6816%) hue-rotate(318deg) brightness(98%) contrast(89%);
 }

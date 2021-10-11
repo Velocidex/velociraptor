@@ -1,19 +1,19 @@
-.dark-mode .main-navbar, .dark-mode div#navigator {
-    background-color: #121212;
+.light-pink .main-navbar, .light-pink div#navigator {
+    background-color: #FCE4EC;
     border-color: var(--background-color);
 }
 
-body.dark-mode {
+body.light-pink {
     background-color: var(--background-color);
 }
 
-.dark-mode .hamburger {
+.light-pink .hamburger {
     color: var(--sidebar-icon-color);
 }
 
-.dark-mode #client-search-bar {
-    background-color: var(--background-color);
-    border: 0.655385px solid #485A5F;
+.light-pink #client-search-bar {
+    background-color: #ffffff;
+    border: 0.655385px solid #C2185B;
     color: var(--text-foreground);
     padding-top: 5px;
     padding-bottom: 5px;
@@ -21,47 +21,47 @@ body.dark-mode {
     height: 25px;
 }
 
-.dark-mode .react-autosuggest__suggestions-container--open {
+.light-pink .react-autosuggest__suggestions-container--open {
     margin-left: 5px;
     background-color: var(--background-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .react-autosuggest__suggestion--highlighted {
+.light-pink .react-autosuggest__suggestion--highlighted {
   background-color: var(--sidebar-icon-color-hover);
 }
 
-.dark-mode {
-    --sidebar-icon-color: #bfbfbf;
-    --sidebar-icon-color-hover: #9a9a9a;
+.light-pink {
+    --sidebar-icon-color: #F06292;
+    --sidebar-icon-color-hover: #F06292;
     --sidebar-icon-color-disabled: #8f8f8f50;
-    --sidebar-icon-color-bg: #121212;
-    --sidebar-active-icon-background-color: #343434;
+    --sidebar-icon-color-bg: #F48FB1;
+    --sidebar-active-icon-background-color: #F06292;
 
-    --background-color: #121212;
-    --border-color: #222222;
-    --text-foreground: #eeeeee;
-    --btn-default-background: #5cd00a80;
-    --color-default-background: #121212;
-    --btn-default-background-hover: #0c900a80;
-    --btn-outline-link: #5cd00a80;
+    --background-color: #FCE4EC;
+    --border-color: #666666;
+    --text-foreground: #222222;
+    --btn-default-background: #F48FB1;
+    --color-default-background: #FFFFFF;
+    --btn-default-background-hover: #F06292;
+    --btn-outline-link: #C2185B;
+    --btn-outline-link-hover: #17c2c2;
 
+    --tab-color: #FCE4EC;
+    --tab-active-color: #F06292;
+    --resizer-color: #dedede;
 
-    --tab-color: #444444;
-    --tab-active-color: #aaaaaa;
-    --resizer-color: #444444;
-
-    --cell-toolbar-background-color: #121212;
-    --page-link-background-color: #121212;
-    --page-link-active-background-color: #444444;
-    --form-background-color: #121212;
-    --card-heading-background-color: #444444;
-    --table-heading-background-color: #444444;
-    --color-table-row-selected: #8f8f8f50;
+    --cell-toolbar-background-color: #222222;
+    --page-link-background-color: #F48FB1;
+    --page-link-active-background-color: #FCE4EC;
+    --form-background-color: #FCE4EC;
+    --card-heading-background-color: #F48FB1;
+    --table-heading-background-color: #F48FB1;
+    --color-table-row-selected: #FCE4EC;
     --color-monospace-color: #eeeeee;
-    --scrollbar-track: #121212;
-    --app-footer-background-color: #444444;
-    --color-infoline-success: #7aed40;
+    --scrollbar-track: #f48fb1;
+    --app-footer-background-color: #F8BBD0;
+    --color-infoline-success: #4CAF50;
 
     --color-default-font: #eeeeee;
     --color-timeline-header: #cdcdcd20;
@@ -74,299 +74,309 @@ body.dark-mode {
     --color-timeline-6: #008000;
     --color-timeline-7: #471ecb;
 
-    --vfs-files-timestomped: #0220af;
+    --vfs-files-timestomped: #ed5d40;
 }
 
-.dark-mode .btn {
+.light-pink .btn {
     color: var(--text-foreground);
-    border-color: #2a2a2a;
+    border-color: #222222;
+    background: var(--sidebar-active-icon-background-color);
 }
 
-.dark-mode .btn-default.active {
+.light-pink .btn-default.active {
     box-shadow: none !important;
-    color: var(--sidebar-icon-color-bg);
+    color: #ffffff;
 }
 
 
-.dark-mode .btn-default:hover {
+.light-pink .btn-default:hover {
     background: var(--btn-default-background-hover);
     color: var(--text-foreground);
 }
 
-.dark-mode .btn-default:focus {
+.light-pink .btn-default:focus {
     background: var(--btn-default-background);
     color: var(--text-foreground);
 }
 
-
-.dark-mode .btn-primary {
+.light-pink .btn-primary {
     background-image: none;
     text-shadow: none;
-    background: none;
+    background: var(--sidebar-active-icon-background-color);
 }
 
-.dark-mode .btn-default {
+.light-pink .btn-default {
     background-image: none;
     text-shadow: none;
     background: var(--btn-default-background);
 }
 
-.dark-mode .btn-outline-info, .btn-link {
-    color: var(--btn-outline-link);
+.light-pink .btn-outline-info, .btn-link {
+    color: #FFFFFF;
 }
 
-.dark-mode .btn.btn-link {
+.light-pink .btn-outline-info:hover {
+    background: var(--btn-outline-link-hover);
+}
+
+.light-pink .btn.btn-link {
     border-color: transparent;
 }
 
-.dark-mode #content {
+.light-pink #content {
     top: 49px;
 }
 
-
-.dark-mode h1, .dark-mode h2, .dark-mode h3 {
+.light-pink h1, .light-pink h2, .light-pink h3 {
     color: var(--text-foreground);
 }
 
-.dark-mode .alert-secondary {
+.light-pink .alert-secondary {
     color: var(--text-foreground);
     background-color: var(--table-heading-background-color);
 }
 
-.dark-mode .alert-secondary th {
+.light-pink .alert-secondary th {
     border-color: #2a2a2a;
 }
 
 /* Tables */
 
-.dark-mode .table-bordered th, .table-bordered td {
+.light-pink .table-bordered th, .table-bordered td {
     border: 1px solid var(--table-heading-background-color);
 }
 
-.dark-mode .table, .dark-mode .table-hover tr:hover {
+.light-pink .table {
+    color: var(--text-foreground);
+}
+
+.light-pink .table, .light-pink .table-hover tr:hover {
+    color: var(--text-foreground);
+}
+
+.light-pink table tr.row-selected, .light-pink table tr.row_selected td {
+    background-color: var(--color-table-row-selected);
     color: var(--text-foreground);
 }
 
 /* Column search screen */
-.dark-mode th.sortable input {
-    background-color: var(--background-color);
+.light-pink th.sortable input {
+    background-color: #ffffff;
     color: var(--text-foreground);
     border-color: var(--border-color);
 }
 
 /* Resider divider */
-.dark-mode .Resizer.horizontal {
+.light-pink .Resizer.horizontal {
     border-top-color: var(--resizer-color);
     border-bottom-color: var(--resizer-color);
     background-color: var(--resizer-color);
 }
 
-.dark-mode .Resizer.vertical {
+.light-pink .Resizer.vertical {
     border-left-color: var(--resizer-color);
     border-right-color: var(--resizer-color);
     background-color: var(--resizer-color);
 }
 
 
-.dark-mode .card {
+.light-pink .card {
     background-color: var(--table-heading-background-color);
 }
 
-.dark-mode .card-header {
+.light-pink .card-header {
     background-color: var(--card-heading-background-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .card-body {
+.light-pink .card-body {
     background-color: var(--background-color);
     color: var(--text-foreground);
 }
 
 /* Json container */
-.dark-mode div.pretty-json-container {
+.light-pink div.pretty-json-container {
     filter: invert(1);
 }
 
 /* Tabs */
-.dark-mode .tab-content {
+.light-pink .tab-content {
     color: var(--text-foreground);
 }
 
-.dark-mode .nav-tabs > a {
+.light-pink .nav-tabs > a {
     background-color: var(--tab-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .nav-tabs > a.active {
+.light-pink .nav-tabs > a.active {
     background-color: var(--tab-active-color);
 }
 
 /* forms */
-.dark-mode .form-control,
-.dark-mode .custom-file-input {
-    background-color: var(--form-background-color);
+.light-pink .form-control,
+.light-pink .custom-file-input {
+    background-color: #FFFFFF;
     color: var(--text-foreground);
 }
 
 /* Pagination */
-.dark-mode .page-item .page-link {
+.light-pink .page-item .page-link {
     background-color: var(--page-link-background-color);
     border-color: var(--border-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .page-item input {
-    background-color: var(--form-background-color);
+.light-pink .page-item input {
+    background-color: #FFFFFF;
     color: var(--text-foreground);
     border: 1px solid var(--form-background-color);
 }
 
-.dark-mode .page-item.active .page-link {
-    background-color: var(--page-link-active-background-color);
+.light-pink .page-item.active .page-link {
+    background-color: var(--sidebar-active-icon-background-color);
     border-color: var(--border-color);
 }
 
-.dark-mode .react-bootstrap-table-pagination-total {
+.light-pink .react-bootstrap-table-pagination-total {
     color: var(--text-foreground);
 }
 
 /* artifact viewer screen */
-.dark-mode .artifact-search-table a {
+.light-pink .artifact-search-table a {
     color: var(--text-foreground);
 }
 
-.dark-mode .report-viewer {
+.light-pink .report-viewer {
     color: var(--text-foreground);
-}
-
-.dark-mode .report-viewer pre {
-    filter: invert(1);
 }
 
 /* modal dialogs */
-.dark-mode .modal-content {
+.light-pink .modal-content {
     background-color: var(--page-link-active-background-color);
     color: var(--text-foreground);
 }
 
 /* notebooks */
-.dark-mode .cell-toolbar,
-.dark-mode .notebook-input{
+.light-pink .cell-toolbar,
+.light-pink .notebook-input{
     background-color: var(--page-link-active-background-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .notebook-input pre {
+.light-pink .notebook-input pre {
     background-color: var(--background-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .notebook-cell.selected {
+.light-pink .notebook-cell.selected {
     border-color: var(--border-color);
 }
 
 /* react timelines */
-.dark-mode .react-calendar-timeline .rct-sidebar {
+.light-pink .react-calendar-timeline .rct-sidebar {
     color: var(--text-foreground);
 }
 
 /* file tree */
-.dark-mode div.file-tree ul {
+.light-pink div.file-tree ul {
     font-size: 16px;
+    color: var(--sidebar-active-icon-background-color);
     background-color: var(--background-color);
 }
 
 /* width */
-.dark-mode ::-webkit-scrollbar {
+.light-pink ::-webkit-scrollbar {
     width: 10px;
 }
 
 /* Track */
-.dark-mode ::-webkit-scrollbar-track {
+.light-pink ::-webkit-scrollbar-track {
     background: var(--scrollbar-track);
 }
 
 /* Handle */
-.dark-mode ::-webkit-scrollbar-thumb {
+.light-pink ::-webkit-scrollbar-thumb {
     background: #888;
 }
 
 /* Handle on hover */
-.dark-mode ::-webkit-scrollbar-thumb:hover {
+.light-pink ::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
 
 
 /* Table column selector */
-.dark-mode .dropdown-menu {
+.light-pink .dropdown-menu {
     background-color: var(--background-color);
 }
 
-.dark-mode .dropdown-item {
+.light-pink .dropdown-item {
     color: var(--text-foreground);
+    background-color: #FFFFFF;
 }
 
-.dark-mode .dropdown-item:hover {
+.light-pink .dropdown-item:hover {
     background-color: var(--btn-default-background-hover);
 }
 
-.dark-mode .dropdown-item.active {
+.light-pink .dropdown-item.active {
     background-color: var(--color-table-row-selected);
 }
 
 
 /* Datepicker */
-.dark-mode .react-datepicker,
-.dark-mode .react-datetime-picker
+.light-pink .react-datepicker,
+.light-pink .react-datetime-picker
 {
     background-color: var(--background-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .react-datetime-picker__inputGroup__input,
-.dark-mode .react-datetime-picker__button
+.light-pink .react-datetime-picker__inputGroup__input,
+.light-pink .react-datetime-picker__button
 {
     filter: invert(1);
 }
 
-.dark-mode .react-datepicker-popper {
+.light-pink .react-datepicker-popper {
     z-index: 10;
 }
 
-.dark-mode .react-datepicker__day {
+.light-pink .react-datepicker__day {
     color: var(--text-foreground);
 }
 
-.dark-mode .react-datepicker__day[aria-disabled="false"] {
+.light-pink .react-datepicker__day[aria-disabled="false"] {
     background-color: var(--color-table-row-selected);
     color: var(--text-foreground);
 }
 
 /* Footer */
-.dark-mode .app-footer.fixed-bottom {
+.light-pink .app-footer.fixed-bottom {
     background-color: var(--app-footer-background-color);
     color: var(--text-foreground);
     z-index: 1000;
 }
 
 /* Spinner */
-.dark-mode .overlay .fa-spinner {
+.light-pink .overlay .fa-spinner {
     filter: invert(1);
 }
 
 /* Shell output */
-.dark-mode .notebook-output pre {
+.light-pink .notebook-output pre {
     filter: invert(1);
 }
 
 /* ACE things */
-.dark-mode .ace_tooltip {
+.light-pink .ace_tooltip {
     background-color: var(--background-color);
     color: var(--text-foreground);
 }
 
 
-.dark-mode .custom-tooltip {
+.light-pink .custom-tooltip {
     margin: 0;
     padding: 10px;
     background-color: var(--background-color);
@@ -376,27 +386,34 @@ body.dark-mode {
 }
 
 
-.dark-mode .file-hex-view td, .file-hex-view th {
+.light-pink .file-hex-view td, .file-hex-view th {
     border: 0px;
 }
 
-.dark-mode .labels, .dark-mode .velo__control, .dark-mode .velo__menu {
+.light-pink .labels, .light-pink .velo__control, .light-pink .velo__menu {
     background-color: var(--background-color);
     color: var(--text-foreground);
 }
 
-.dark-mode .velo__multi-value {
+.light-pink .velo__multi-value {
     background-color: var(--btn-default-background);
 }
 
-.dark-mode .velo__input {
+.light-pink .velo__input {
     color: var(--text-foreground);
 }
 
-.dark-mode .velo__option:hover, .dark-mode .velo__option--is-focused, .dark-mode .velo__multi-value:hover {
+.light-pink .velo__option:hover, .light-pink .velo__option--is-focused, .light-pink .velo__multi-value:hover {
     background-color: var(--btn-default-background-hover);
 }
 
-.dark-mode hr {
+.light-pink hr {
     background-color: var(--text-foreground);
+}
+
+.light-pink img.velo-logo {
+    height: 36px;
+    width: 29px;
+    margin: 5px;
+    filter: brightness(0) saturate(100%) invert(56%) sepia(51%) saturate(1301%) hue-rotate(302deg) brightness(94%) contrast(101%);
 }

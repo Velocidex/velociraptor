@@ -25,7 +25,7 @@ class UserSettings extends React.PureComponent {
     componentDidMount = () => {
         if (this.context.traits) {
             this.setState({
-                theme: this.context.traits.theme || "light-theme",
+                theme: this.context.traits.theme || "light-mode",
                 default_password: this.context.traits.default_password || "",
             });
         }
@@ -67,8 +67,10 @@ class UserSettings extends React.PureComponent {
                                           default_password: this.state.default_password,
                                       });
                                   }}>
-                      <option value="light-mode">Light Mode</option>
-                      <option value="dark-mode">Dark Mode</option>
+                      <option value="light-mode">Light (default)</option>
+                      <option value="dark-mode">Dark</option>
+                      <option value="light-pink">Strawberry Milkshake (light)</option>
+                      <option value="dark-pink">Electric Pink (dark)</option>
                     </Form.Control>
                   </Col>
                 </Form.Group>
