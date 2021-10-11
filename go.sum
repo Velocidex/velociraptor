@@ -333,6 +333,8 @@ github.com/hashicorp/go-multierror v1.1.0/go.mod h1:spPvp8C1qA32ftKqdAHm4hHTbPw+
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.3/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uGBxy+E8yxSoD4=
+github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44 h1:seZZ+imS3iv6i0op0cqgt9K6BETRkXwUV9e8inrF+ws=
+github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44/go.mod h1:xUc/S/HgVuP6lhDvD0Wqtu/Npwx93VSXzbdyEDbqBb8=
 github.com/hillu/go-ntdll v0.0.0-20210404124636-a6f426aa8d92 h1:y1G8/XEke8odil+t+Nf5ugXjUHPhZ3j6XVdorW72lEI=
 github.com/hillu/go-ntdll v0.0.0-20210404124636-a6f426aa8d92/go.mod h1:jsDwCq+VLI6qnVqFRAlfOC14FULjT1lt99vnszAZ6/Q=
 github.com/hinshun/vt10x v0.0.0-20180616224451-1954e6464174/go.mod h1:DqJ97dSdRW1W22yXSB90986pcOyQ7r45iio1KN2ez1A=
@@ -985,7 +987,7 @@ www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196/go.mod h1:i
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500 h1:XqZddiAbjPIsTZcEPbqqqABS/ZV5SB7j33eczNsqD60=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500/go.mod h1:DVzloLH8L+oF3zma1Jisaat5bGF+4VLggDcYlIp00ns=
 www.velocidex.com/golang/vfilter v0.0.0-20210515085940-25d96b94dafb/go.mod h1:KB724xBNYh4lgipyGwsvx0/5hXRqsKjmrMrkSjGESvU=
-www.velocidex.com/golang/vfilter v0.0.0-20210913135640-226d766334af h1:JVVzwj+2LdufD4bjwvkdKfhrtwxtO3c6en+8vFv/2tc=
-www.velocidex.com/golang/vfilter v0.0.0-20210913135640-226d766334af/go.mod h1:eEFMhAmoFHWGCKF39j+iOhTH8REpqBndc3OsdPsxqo8=
+www.velocidex.com/golang/vfilter v0.0.0-20211011003933-3594b2d3597b h1:PzJ44IK+VghSVCTkuHMhPzcoraLifaEhOqQqOiUl6tU=
+www.velocidex.com/golang/vfilter v0.0.0-20211011003933-3594b2d3597b/go.mod h1:eEFMhAmoFHWGCKF39j+iOhTH8REpqBndc3OsdPsxqo8=
 www.velocidex.com/golang/vtypes v0.0.0-20210728123451-f085971da113 h1:IXya95AX2bUPIbgi4vEWeer6MoNdKC3nRRtxsulcAuQ=
 www.velocidex.com/golang/vtypes v0.0.0-20210728123451-f085971da113/go.mod h1:PIG8uSY330pJd620KPksZpTaAsX3sIMiiNJQihZph6c=

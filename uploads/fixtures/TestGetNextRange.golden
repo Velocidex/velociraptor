@@ -1,0 +1,48 @@
+[
+ {
+  "TestCase": 0,
+  "current_range": null,
+  "next_range": {
+   "Offset": 10,
+   "Length": 10,
+   "IsSparse": false
+  }
+ },
+ {
+  "TestCase": 10,
+  "current_range": {
+   "Offset": 10,
+   "Length": 10,
+   "IsSparse": false
+  },
+  "next_range": null
+ },
+ {
+  "TestCase": 15,
+  "current_range": {
+   "Offset": 10,
+   "Length": 10,
+   "IsSparse": false
+  },
+  "next_range": null
+ },
+ {
+  "TestCase": 85,
+  "current_range": {
+   "Offset": 80,
+   "Length": 10,
+   "IsSparse": false
+  },
+  "next_range": null
+ },
+ {
+  "TestCase": 90,
+  "current_range": null,
+  "next_range": null
+ },
+ {
+  "TestCase": 100,
+  "current_range": null,
+  "next_range": null
+ }
+]
