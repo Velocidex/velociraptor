@@ -36,7 +36,7 @@ func readdir(f *os.File, n int) (fi []os.FileInfo, err error) {
 	if dirname == "" {
 		dirname = "."
 	}
-	names, err := f.Readdirnames(n)
+	names, err := readdirnames(f, n)
 	fi = make([]os.FileInfo, 0, len(names))
 	for _, filename := range names {
 		fip, lerr := os.Lstat(dirname + "/" + filename)
