@@ -55,7 +55,8 @@ func (self *EventLogWatcherService) Register(
 		registration = []*Handle{}
 		self.registrations[key] = registration
 
-		frequency := vql_subsystem.GetIntFromRow(scope, scope, constants.EVTX_FREQUENCY)
+		frequency := vql_subsystem.GetIntFromRow(
+			scope, scope, constants.EVTX_FREQUENCY)
 
 		go self.StartMonitoring(filename, accessor, frequency)
 	}
@@ -80,6 +81,9 @@ func (self *EventLogWatcherService) StartMonitoring(
 		frequency = 3
 	}
 
+	// A resolver for messages
+	resolver, _ := evtx.GetNativeResolver()
+
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
 
@@ -102,7 +106,7 @@ func (self *EventLogWatcherService) StartMonitoring(
 		}
 
 		last_event = self.monitorOnce(
-			filename, accessor_name, accessor, last_event)
+			filename, accessor_name, accessor, last_event, resolver)
 
 		time.Sleep(time.Duration(frequency) * time.Second)
 	}
@@ -171,7 +175,8 @@ func (self *EventLogWatcherService) monitorOnce(
 	filename string,
 	accessor_name string,
 	accessor glob.FileSystemAccessor,
-	last_event int) int {
+	last_event int,
+	resolver evtx.MessageResolver) int {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -213,23 +218,24 @@ func (self *EventLogWatcherService) monitorOnce(
 			if !ok {
 				continue
 			}
-			event, pres := event_map.Get("Event")
+
+			event, pres := ordereddict.GetMap(event_map, "Event")
 			if !pres {
 				continue
 			}
 
+			// Possibly enrich the event.
+			if resolver != nil {
+				event.Set("Message", evtx.ExpandMessage(event, resolver))
+			}
+
 			new_handles := make([]*Handle, 0, len(handles))
 			for _, handle := range handles {
-				// Pre-calculate this before the
-				// select below to make sure it does
-				// not race it.
-				enriched_event := maybeEnrichEvent(event.(*ordereddict.Dict))
-
 				select {
 				case <-handle.ctx.Done():
 					// If context is done, drop the event.
 
-				case handle.output_chan <- enriched_event:
+				case handle.output_chan <- event:
 					new_handles = append(new_handles, handle)
 				}
 			}
