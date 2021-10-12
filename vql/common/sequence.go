@@ -35,7 +35,7 @@ func (self *_FIFOCache) PushWithCallback(
 }
 
 type _SequencePluginArgs struct {
-	Query  types.StoredQuery `vfilter:"required,field=query,doc=Run this query to generator rows. The query should select from SEQUENCE which will contain the current set of rows in the sequence. The query will be run on each new row that is pushed to the sequence."`
+	Query  types.StoredQuery `vfilter:"required,field=query,doc=Run this query to generate rows. The query should select from SEQUENCE which will contain the current set of rows in the sequence. The query will be run on each new row that is pushed to the sequence."`
 	MaxAge int64             `vfilter:"optional,field=max_age,doc=Maximum number of seconds to hold rows in the sequence."`
 }
 

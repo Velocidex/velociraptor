@@ -21,6 +21,7 @@ package hunts
 
 import (
 	"context"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -28,7 +29,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 
@@ -36,17 +39,17 @@ import (
 )
 
 type ScheduleHuntFunctionArg struct {
-	Description   string      `vfilter:"required,field=description,doc=Description of the hunt"`
-	Artifacts     []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
-	Expires       uint64      `vfilter:"optional,field=expires,doc=Number of milliseconds since epoch for expiry"`
-	Spec          vfilter.Any `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
-	Timeout       uint64      `vfilter:"optional,field=timeout,doc=Set query timeout (default 10 min)"`
-	OpsPerSecond  float64     `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
-	MaxRows       uint64      `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
-	MaxBytes      uint64      `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
-	Pause         bool        `vfilter:"optional,field=pause,doc=If specified the new hunt will be in the paused state"`
-	IncludeLabels []string    `vfilter:"optional,field=include_labels,doc=If specified only include these labels"`
-	ExcludeLabels []string    `vfilter:"optional,field=exclude_labels,doc=If specified exclude these labels"`
+	Description   string           `vfilter:"required,field=description,doc=Description of the hunt"`
+	Artifacts     []string         `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
+	Expires       vfilter.LazyExpr `vfilter:"optional,field=expires,doc=Number of milliseconds since epoch for expiry"`
+	Spec          vfilter.Any      `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
+	Timeout       uint64           `vfilter:"optional,field=timeout,doc=Set query timeout (default 10 min)"`
+	OpsPerSecond  float64          `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
+	MaxRows       uint64           `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
+	MaxBytes      uint64           `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
+	Pause         bool             `vfilter:"optional,field=pause,doc=If specified the new hunt will be in the paused state"`
+	IncludeLabels []string         `vfilter:"optional,field=include_labels,doc=If specified only include these labels"`
+	ExcludeLabels []string         `vfilter:"optional,field=exclude_labels,doc=If specified exclude these labels"`
 }
 
 type ScheduleHuntFunction struct{}
@@ -66,6 +69,23 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("hunt: %s", err.Error())
 		return vfilter.Null{}
+	}
+
+	var expires uint64
+	if !utils.IsNil(arg.Expires) {
+		expiry_time, err := functions.TimeFromAny(scope, arg.Expires.Reduce(ctx))
+		if err != nil {
+			scope.Log("hunt: expiry time invalid: %v", err)
+			return vfilter.Null{}
+		}
+
+		// Check the time is in the future
+		if expiry_time.Before(time.Now()) {
+			scope.Log("hunt: expiry time %v in the past", expiry_time)
+			return vfilter.Null{}
+		}
+
+		expires = uint64(expiry_time.UnixNano() / 1000)
 	}
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
@@ -110,7 +130,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		HuntDescription: arg.Description,
 		Creator:         vql_subsystem.GetPrincipal(scope),
 		StartRequest:    request,
-		Expires:         arg.Expires,
+		Expires:         expires,
 		State:           state,
 	}
 
