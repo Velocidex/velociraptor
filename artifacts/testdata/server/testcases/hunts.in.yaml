@@ -8,4 +8,19 @@ Queries:
   - SELECT hunt_id, create_time FROM hunts(hunt_id="H.49ba8939")
 
   # List all hunts
-  - SELECT hunt_id, create_time FROM hunts() ORDER BY hunt_id
+  - SELECT hunt_id, create_time FROM hunts() ORDER BY hunt_id LIMIT 2
+
+  # Schedule a hunt with expiry in the future
+  - SELECT
+      hunt(description='Test Hunt1', artifacts='Generic.Client.Info',
+           pause=TRUE, expires=now() + 18000).Request.hunt_description,
+      hunt(description='Test Hunt2', artifacts='Generic.Client.Info',
+           pause=TRUE,
+           expires=timestamp(epoch=now() + 18000)).Request.hunt_description,
+      hunt(description='Test Hunt3', artifacts='Generic.Client.Info',
+           pause=TRUE,
+           expires=timestamp(epoch=now() + 18000).UnixNano).Request.hunt_description,
+       hunt(description='Test Hunt expires in past', artifacts='Generic.Client.Info',
+           pause=TRUE, expires=now() - 18000)
+
+      FROM scope()

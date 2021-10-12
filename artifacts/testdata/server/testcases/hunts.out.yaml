@@ -41,7 +41,7 @@ SELECT * FROM hunt_results(hunt_id='H.49ba8939', artifact='Windows.Network.Netst
   "hunt_id": "H.49ba8939",
   "create_time": 1593490948327828
  }
-]SELECT hunt_id, create_time FROM hunts() ORDER BY hunt_id[
+]SELECT hunt_id, create_time FROM hunts() ORDER BY hunt_id LIMIT 2[
  {
   "hunt_id": "H.19c0c0a2",
   "create_time": 1606270777529448
@@ -49,5 +49,13 @@ SELECT * FROM hunt_results(hunt_id='H.49ba8939', artifact='Windows.Network.Netst
  {
   "hunt_id": "H.49ba8939",
   "create_time": 1593490948327828
+ }
+]SELECT hunt(description='Test Hunt1', artifacts='Generic.Client.Info', pause=TRUE, expires=now() + 18000).Request.hunt_description, hunt(description='Test Hunt2', artifacts='Generic.Client.Info', pause=TRUE, expires=timestamp(epoch=now() + 18000)).Request.hunt_description, hunt(description='Test Hunt3', artifacts='Generic.Client.Info', pause=TRUE, expires=timestamp(epoch=now() + 18000).UnixNano).Request.hunt_description, hunt(description='Test Hunt expires in past', artifacts='Generic.Client.Info', pause=TRUE, expires=now() - 18000)
+FROM scope()[
+ {
+  "hunt(description='Test Hunt1', artifacts='Generic.Client.Info', pause=TRUE, expires=now() + 18000).Request.hunt_description": "Test Hunt1",
+  "hunt(description='Test Hunt2', artifacts='Generic.Client.Info', pause=TRUE, expires=timestamp(epoch=now() + 18000)).Request.hunt_description": "Test Hunt2",
+  "hunt(description='Test Hunt3', artifacts='Generic.Client.Info', pause=TRUE, expires=timestamp(epoch=now() + 18000).UnixNano).Request.hunt_description": "Test Hunt3",
+  "hunt(description='Test Hunt expires in past', artifacts='Generic.Client.Info', pause=TRUE, expires=now() - 18000)": null
  }
 ]

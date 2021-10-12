@@ -1,62 +1,62 @@
-LET Generator = generate(query={ SELECT * FROM range(start=0, end=10, step=1) })[]SELECT * FROM combine( a={ SELECT _value FROM Generator WHERE sleep(ms=500) }, b={ SELECT _value FROM Generator }) ORDER BY _value[
+LET Generator = generate(query={ SELECT * FROM range(start=0, end=10, step=1) }, delay=1)[]SELECT * FROM combine( a={ SELECT format(format="%v/%s", args=[_value, "A"]) AS Query FROM Generator }, b={ SELECT format(format="%v/%s", args=[_value, "B"]) AS Query FROM Generator }) ORDER BY Query[
  {
-  "_value": 0
+  "Query": "0/A"
  },
  {
-  "_value": 0
+  "Query": "0/B"
  },
  {
-  "_value": 1
+  "Query": "1/A"
  },
  {
-  "_value": 1
+  "Query": "1/B"
  },
  {
-  "_value": 2
+  "Query": "2/A"
  },
  {
-  "_value": 2
+  "Query": "2/B"
  },
  {
-  "_value": 3
+  "Query": "3/A"
  },
  {
-  "_value": 3
+  "Query": "3/B"
  },
  {
-  "_value": 4
+  "Query": "4/A"
  },
  {
-  "_value": 4
+  "Query": "4/B"
  },
  {
-  "_value": 5
+  "Query": "5/A"
  },
  {
-  "_value": 5
+  "Query": "5/B"
  },
  {
-  "_value": 6
+  "Query": "6/A"
  },
  {
-  "_value": 6
+  "Query": "6/B"
  },
  {
-  "_value": 7
+  "Query": "7/A"
  },
  {
-  "_value": 7
+  "Query": "7/B"
  },
  {
-  "_value": 8
+  "Query": "8/A"
  },
  {
-  "_value": 8
+  "Query": "8/B"
  },
  {
-  "_value": 9
+  "Query": "9/A"
  },
  {
-  "_value": 9
+  "Query": "9/B"
  }
 ]
