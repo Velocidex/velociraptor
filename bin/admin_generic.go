@@ -13,5 +13,6 @@ func checkAdmin() {
 		fmt.Println("Velociraptor requires administrator level access. Use a 'Run as administrator' command shell to launch the binary.")
 		os.Exit(-1)
 	}
-
 }
+
+func checkMutex() {}

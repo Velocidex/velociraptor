@@ -53,15 +53,22 @@ func (self _ParseEvtxPlugin) Call(
 			return
 		}
 
-		var database *DatabaseEnricher
+		var resolver evtx.MessageResolver
 		if arg.Database != "" {
-			database, err = NewDatabaseEnricher(arg.Database)
-			if err != nil {
-				scope.Log("parse_evtx: %s", err.Error())
-				return
-			}
-			defer database.Close()
+			resolver, err = evtx.NewDBResolver(arg.Database)
+		} else {
+			// If the plugin did not specify a database, use the local
+			// resolver - On windows this will search DLLs for the messages.
+			resolver, err = evtx.GetNativeResolver()
 		}
+
+		if err != nil {
+			scope.Log("parse_evtx: %s", err.Error())
+			return
+		}
+
+		// Close the db when we are done.
+		vql_subsystem.GetRootScope(scope).AddDestructor(resolver.Close)
 
 		for _, filename := range arg.Filenames {
 			func() {
@@ -100,28 +107,20 @@ func (self _ParseEvtxPlugin) Call(
 						if !ok {
 							continue
 						}
-						event, pres := event_map.Get("Event")
+						event, pres := ordereddict.GetMap(event_map, "Event")
 						if !pres {
 							continue
 						}
 
-						if database != nil {
-							select {
-							case <-ctx.Done():
-								return
+						if resolver != nil {
+							event.Set("Message", evtx.ExpandMessage(event, resolver))
+						}
 
-							case output_chan <- database.Enrich(
-								event.(*ordereddict.Dict)):
-							}
+						select {
+						case <-ctx.Done():
+							return
 
-						} else {
-							select {
-							case <-ctx.Done():
-								return
-
-							case output_chan <- maybeEnrichEvent(
-								event.(*ordereddict.Dict)):
-							}
+						case output_chan <- event:
 						}
 					}
 				}

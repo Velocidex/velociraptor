@@ -41,6 +41,8 @@ func RunClient(
 	wg *sync.WaitGroup,
 	config_path *string) {
 
+	checkMutex()
+
 	// Include the writeback in the client's configuration.
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredClient().

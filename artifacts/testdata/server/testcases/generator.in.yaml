@@ -1,13 +1,14 @@
 Queries:
   - LET Generator = generate(query={
       SELECT * FROM range(start=0, end=10, step=1)
-      })
+      }, delay=1)
 
   - SELECT * FROM combine(
     a={
-      SELECT _value FROM Generator
-      WHERE sleep(ms=500)
+      SELECT format(format="%v/%s", args=[_value, "A"]) AS Query
+      FROM Generator
     }, b={
-      SELECT _value FROM Generator
+      SELECT format(format="%v/%s", args=[_value, "B"]) AS Query
+      FROM Generator
     })
-    ORDER BY _value
+    ORDER BY Query
