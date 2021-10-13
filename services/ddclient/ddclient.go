@@ -15,6 +15,7 @@ import (
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
 var (
@@ -171,6 +172,9 @@ func UpdateDDNSRecord(config_obj *config_proto.Config,
 
 	client := &http.Client{
 		CheckRedirect: nil,
+		Transport: &http.Transport{
+			Proxy: networking.GetProxy(),
+		},
 	}
 
 	req, err := http.NewRequest("GET", url, nil)

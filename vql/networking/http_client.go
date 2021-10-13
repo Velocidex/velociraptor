@@ -52,6 +52,8 @@ var (
 	// keep TCP connections up etc.
 	http_client        *http.Client
 	http_client_no_ssl *http.Client
+
+	proxyHandler = http.ProxyFromEnvironment
 )
 
 type HttpPluginRequest struct {
@@ -146,7 +148,7 @@ func GetHttpClient(
 		return &http.Client{
 			Timeout: time.Second * 10000,
 			Transport: &http.Transport{
-				Proxy:               http.ProxyFromEnvironment,
+				Proxy:               proxyHandler,
 				MaxIdleConnsPerHost: 10,
 				DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
 					return net.Dial("unix", components[0])
@@ -166,7 +168,7 @@ func GetHttpClient(
 		http_client_no_ssl = &http.Client{
 			Timeout: time.Second * 10000,
 			Transport: &http.Transport{
-				Proxy:        http.ProxyFromEnvironment,
+				Proxy:        proxyHandler,
 				MaxIdleConns: 10,
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: true,
@@ -184,7 +186,7 @@ func GetHttpClient(
 	http_client = &http.Client{
 		Timeout: time.Second * 10000,
 		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
+			Proxy: proxyHandler,
 			Dial: (&net.Dialer{
 				KeepAlive: 600 * time.Second,
 			}).Dial,
@@ -436,6 +438,20 @@ func remove_tmpfile(tmpfile string, scope vfilter.Scope) {
 		scope.Log("tempfile: Error %v - will retry", err)
 		time.Sleep(time.Second)
 	}
+}
+
+func SetProxy(handler func(*http.Request) (*url.URL, error)) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	proxyHandler = handler
+}
+
+func GetProxy() func(*http.Request) (*url.URL, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return proxyHandler
 }
 
 func init() {

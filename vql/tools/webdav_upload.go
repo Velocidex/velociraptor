@@ -4,18 +4,19 @@ package tools
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"path"
 	"time"
-	"crypto/tls"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -78,9 +79,9 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 
 		upload_response, err := upload_webdav(
 			sub_ctx, scope, file, stat.Size(),
-			arg.Name, 
-			arg.Url, 
-			arg.BasicAuthUser, 
+			arg.Name,
+			arg.Url,
+			arg.BasicAuthUser,
 			arg.BasicAuthPassword,
 			arg.NoVerifyCert)
 		if err != nil {
@@ -94,11 +95,11 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 }
 
 func upload_webdav(ctx context.Context, scope vfilter.Scope,
-	reader io.Reader, 
+	reader io.Reader,
 	contentLength int64,
-	name string, 
+	name string,
 	webdavUrl string,
-	basicAuthUser string, 
+	basicAuthUser string,
 	basicAuthPassword string,
 	NoVerifyCert bool) (
 	*api.UploadResponse, error) {
@@ -118,12 +119,12 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 		tlsConfig.InsecureSkipVerify = true
 	}
 	var netTransport = &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
+		Proxy: networking.GetProxy(),
 		DialContext: (&net.Dialer{
 			Timeout: 30 * time.Second, // TCP connect timeout
 		}).DialContext,
 		TLSHandshakeTimeout: 30 * time.Second,
-		TLSClientConfig: tlsConfig,
+		TLSClientConfig:     tlsConfig,
 	}
 	client := &http.Client{
 		Transport: netTransport,

@@ -114,6 +114,9 @@ message ClientConfig {
             description: "A list of server URLs the client will try to connect to."
         }];
 
+    // A proxy setting to use.
+    string proxy = 32;
+
     string ca_certificate = 11 [(sem_type) = {
             description: "The CA's certificate encoded in PEM. The client will trust any server signed with this CA."
         }];
@@ -474,6 +477,12 @@ message FrontendConfig {
     // configured by the wizard - you will need to manually configure
     // it. You better know what you are doing here!
     bool use_plain_http = 24;
+
+    // A proxy setting to use - Velociraptor needs to connect to
+    // download tools. This setting will force it to go out over this
+    // proxy. NOTE- If you dont want to allow outbound connections,
+    // just set this to an non existant setting.
+    string proxy = 33;
 
     // These are used to secure the client/server communications -
     // Even when using external TLS certificates! This certificate

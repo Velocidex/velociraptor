@@ -33,6 +33,7 @@ import (
 	"github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -123,7 +124,7 @@ func _upload_rows(
 		&http.Client{
 			Timeout: time.Second * 20,
 			Transport: &http.Transport{
-				Proxy:           http.ProxyFromEnvironment,
+				Proxy:           networking.GetProxy(),
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: arg.SkipVerify},
 			},
 		}, // Optional HTTP Client objects
