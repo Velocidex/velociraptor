@@ -41,7 +41,7 @@ import (
 type ScheduleHuntFunctionArg struct {
 	Description   string           `vfilter:"required,field=description,doc=Description of the hunt"`
 	Artifacts     []string         `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
-	Expires       vfilter.LazyExpr `vfilter:"optional,field=expires,doc=Number of milliseconds since epoch for expiry"`
+	Expires       vfilter.LazyExpr `vfilter:"optional,field=expires,doc=A time for expiry (e.g. now() + 1800)"`
 	Spec          vfilter.Any      `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
 	Timeout       uint64           `vfilter:"optional,field=timeout,doc=Set query timeout (default 10 min)"`
 	OpsPerSecond  float64          `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`

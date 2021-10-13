@@ -70,7 +70,7 @@ require (
 	github.com/lib/pq v1.2.0
 	github.com/magefile/mage v1.11.0
 	github.com/mattn/go-colorable v0.1.7 // indirect
-	github.com/mattn/go-isatty v0.0.12
+	github.com/mattn/go-isatty v0.0.14
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
 	github.com/mattn/go-sqlite3 v1.14.8
 	github.com/microcosm-cc/bluemonday v1.0.15
@@ -90,7 +90,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/sebdah/goldie v1.0.0
 	github.com/sebdah/goldie/v2 v2.5.3
-	github.com/sergi/go-diff v1.1.0
+	github.com/sergi/go-diff v1.2.0
 	github.com/shirou/gopsutil v3.21.6+incompatible
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
@@ -119,11 +119,11 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	howett.net/plist v0.0.0-20201203080718-1454fab16a06
 	www.velocidex.com/golang/evtx v0.0.2-0.20211012122925-68592269b705
-	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
+	www.velocidex.com/golang/go-ese v0.1.1-0.20211014120951-14a5c1831296
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20210828125207-a1d0ee62467c
 	www.velocidex.com/golang/go-pe v0.1.1-0.20211006062218-8f6d1ad6b2d5
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
-	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
+	www.velocidex.com/golang/oleparse v0.0.0-20211013063943-0334d69593c1
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
 	www.velocidex.com/golang/vfilter v0.0.0-20211011003933-3594b2d3597b
 	www.velocidex.com/golang/vtypes v0.0.0-20210728123451-f085971da113

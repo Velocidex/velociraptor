@@ -49,12 +49,16 @@ reports:
       # Memory and CPU footprint over the past 24 hours
 
       {{ define "resources" }}
+       SELECT * FROM sample(
+         n=4,
+         query={
            SELECT Timestamp, rate(x=CPU, y=Timestamp) * 100 As CPUPercent,
                   RSS / 1000000 AS MemoryUse
            FROM source(artifact="Generic.Client.Stats",
                        client_id=ClientId,
                        start_time=now() - 86400)
            WHERE CPUPercent >= 0
+         })
       {{ end }}
 
       <div>

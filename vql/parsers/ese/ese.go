@@ -33,6 +33,10 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
+var (
+	STOP_ERROR = errors.New("Stop")
+)
+
 type SRUMId struct {
 	IdType  int64  `vfilter:"required,field=IdType"`
 	IdIndex int64  `vfilter:"required,field=IdIndex"`
@@ -96,7 +100,7 @@ func (self _SRUMLookupId) Call(
 		reader, err := ntfs.NewPagedReader(
 			utils.ReaderAtter{Reader: fd}, 1024, 10000)
 		if err != nil {
-			scope.Log("parse_mft: Unable to open file %s: %v",
+			scope.Log("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
 			return &vfilter.Null{}
 		}
@@ -223,7 +227,7 @@ func (self _ESEPlugin) Call(
 		reader, err := ntfs.NewPagedReader(
 			utils.ReaderAtter{Reader: fd}, 1024, 10000)
 		if err != nil {
-			scope.Log("parse_mft: Unable to open file %s: %v",
+			scope.Log("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
 			return
 		}
@@ -245,11 +249,15 @@ func (self _ESEPlugin) Call(
 		err = catalog.DumpTable(arg.Table, func(row *ordereddict.Dict) error {
 			select {
 			case <-ctx.Done():
-				return errors.New("Query is cancelled")
+				return STOP_ERROR
 			case output_chan <- row:
 			}
 			return nil
 		})
+		if err == nil || err == STOP_ERROR {
+			return
+		}
+
 		if err != nil {
 			scope.Log("parse_ese: Unable to dump file %s: %v",
 				arg.Filename, err)
@@ -268,7 +276,104 @@ func (self _ESEPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 	}
 }
 
+type _ESECatalogArgs struct {
+	Filename string `vfilter:"required,field=file"`
+	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use."`
+}
+
+type _ESECatalogPlugin struct{}
+
+func (self _ESECatalogPlugin) Call(
+	ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+	go func() {
+		defer close(output_chan)
+		defer utils.RecoverVQL(scope)
+
+		arg := &_ESECatalogArgs{}
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("parse_ese_catalog: %v", err)
+			return
+		}
+
+		if arg.Accessor == "" {
+			arg.Accessor = "file"
+		}
+
+		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+		if err != nil {
+			scope.Log("parse_ese_catalog: %s", err)
+			return
+		}
+
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
+		if err != nil {
+			scope.Log("parse_ese_catalog: %v", err)
+			return
+		}
+		fd, err := accessor.Open(arg.Filename)
+		if err != nil {
+			scope.Log("parse_ese_catalog: Unable to open file %s: %v",
+				arg.Filename, err)
+			return
+		}
+		defer fd.Close()
+
+		reader, err := ntfs.NewPagedReader(
+			utils.ReaderAtter{Reader: fd}, 1024, 10000)
+		if err != nil {
+			scope.Log("parse_ese_catalog: Unable to open file %s: %v",
+				arg.Filename, err)
+			return
+		}
+
+		ese_ctx, err := parser.NewESEContext(reader)
+		if err != nil {
+			scope.Log("parse_ese_catalog: Unable to open file %s: %v",
+				arg.Filename, err)
+			return
+		}
+
+		catalog, err := parser.ReadCatalog(ese_ctx)
+		if err != nil {
+			scope.Log("parse_ese_catalog: Unable to open file %s: %v",
+				arg.Filename, err)
+			return
+		}
+
+		for _, name := range catalog.Tables.Keys() {
+			table_any, _ := catalog.Tables.Get(name)
+			table := table_any.(*parser.Table)
+
+			for _, column := range table.Columns {
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- ordereddict.NewDict().
+					Set("Table", name).
+					Set("Column", column.Name).
+					Set("Type", column.Type):
+				}
+			}
+		}
+	}()
+
+	return output_chan
+}
+
+func (self _ESECatalogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "parse_ese_catalog",
+		Doc:     "Opens an ESE file and dump the schema.",
+		ArgType: type_map.AddType(scope, &_ESECatalogArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterPlugin(&_ESEPlugin{})
+	vql_subsystem.RegisterPlugin(&_ESECatalogPlugin{})
 	vql_subsystem.RegisterFunction(&_SRUMLookupId{})
 }
