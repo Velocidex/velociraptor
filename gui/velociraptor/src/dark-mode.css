@@ -60,6 +60,7 @@ body.dark-mode {
     --color-monospace-color: #eeeeee;
     --scrollbar-track: #121212;
     --app-footer-background-color: #444444;
+    --color-infoline-success: #7aed40;
 
     --color-default-font: #eeeeee;
     --color-timeline-header: #cdcdcd20;
@@ -247,7 +248,7 @@ body.dark-mode {
     color: var(--text-foreground);
 }
 
-/* notbooks */
+/* notebooks */
 .dark-mode .cell-toolbar,
 .dark-mode .notebook-input{
     background-color: var(--page-link-active-background-color);
@@ -263,9 +264,14 @@ body.dark-mode {
     border-color: var(--border-color);
 }
 
+/* react timelines */
+.dark-mode .react-calendar-timeline .rct-sidebar {
+    color: var(--text-foreground);
+}
 
 /* file tree */
 .dark-mode div.file-tree ul {
+    font-size: 16px;
     background-color: var(--background-color);
 }
 

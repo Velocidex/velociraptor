@@ -1,6 +1,6 @@
+import './_variables.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import './css/bootstrap-theme.css';
-import './_variables.css';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
