@@ -372,6 +372,55 @@ func (ClientCommunication_Status) EnumDescriptor() ([]byte, []int) {
 	return file_jobs_proto_rawDescGZIP(), []int{8, 0}
 }
 
+type LogMessage_Level int32
+
+const (
+	LogMessage_DEFAULT LogMessage_Level = 0 // INFO level
+	LogMessage_ERROR   LogMessage_Level = 1
+	LogMessage_DEBUG   LogMessage_Level = 2
+)
+
+// Enum value maps for LogMessage_Level.
+var (
+	LogMessage_Level_name = map[int32]string{
+		0: "DEFAULT",
+		1: "ERROR",
+		2: "DEBUG",
+	}
+	LogMessage_Level_value = map[string]int32{
+		"DEFAULT": 0,
+		"ERROR":   1,
+		"DEBUG":   2,
+	}
+)
+
+func (x LogMessage_Level) Enum() *LogMessage_Level {
+	p := new(LogMessage_Level)
+	*p = x
+	return p
+}
+
+func (x LogMessage_Level) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (LogMessage_Level) Descriptor() protoreflect.EnumDescriptor {
+	return file_jobs_proto_enumTypes[7].Descriptor()
+}
+
+func (LogMessage_Level) Type() protoreflect.EnumType {
+	return &file_jobs_proto_enumTypes[7]
+}
+
+func (x LogMessage_Level) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use LogMessage_Level.Descriptor instead.
+func (LogMessage_Level) EnumDescriptor() ([]byte, []int) {
+	return file_jobs_proto_rawDescGZIP(), []int{9, 0}
+}
+
 // This message is sent between the client and the server.
 // Next field: 24
 type VeloMessage struct {
@@ -1199,7 +1248,8 @@ type LogMessage struct {
 	Message   string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 	Timestamp uint64 `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	// The artifact name that we were running at the time.
-	Artifact string `protobuf:"bytes,3,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	Artifact string           `protobuf:"bytes,3,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	Level    LogMessage_Level `protobuf:"varint,4,opt,name=level,proto3,enum=proto.LogMessage_Level" json:"level,omitempty"`
 }
 
 func (x *LogMessage) Reset() {
@@ -1253,6 +1303,13 @@ func (x *LogMessage) GetArtifact() string {
 		return x.Artifact
 	}
 	return ""
+}
+
+func (x *LogMessage) GetLevel() LogMessage_Level {
+	if x != nil {
+		return x.Level
+	}
+	return LogMessage_DEFAULT
 }
 
 // Message written to the data store with the PEM of the client's
@@ -1549,8 +1606,8 @@ var file_jobs_proto_rawDesc = []byte{
 	0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x09, 0x0a, 0x05, 0x55, 0x4e, 0x53, 0x45, 0x54, 0x10, 0x00,
 	0x12, 0x07, 0x0a, 0x02, 0x4f, 0x4b, 0x10, 0xc8, 0x01, 0x12, 0x10, 0x0a, 0x0b, 0x42, 0x41, 0x44,
 	0x5f, 0x52, 0x45, 0x51, 0x55, 0x45, 0x53, 0x54, 0x10, 0x90, 0x03, 0x12, 0x11, 0x0a, 0x0c, 0x43,
-	0x49, 0x50, 0x48, 0x45, 0x52, 0x5f, 0x45, 0x52, 0x52, 0x4f, 0x52, 0x10, 0x96, 0x03, 0x22, 0xcb,
-	0x01, 0x0a, 0x0a, 0x4c, 0x6f, 0x67, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x44, 0x0a,
+	0x49, 0x50, 0x48, 0x45, 0x52, 0x5f, 0x45, 0x52, 0x52, 0x4f, 0x52, 0x10, 0x96, 0x03, 0x22, 0xa6,
+	0x02, 0x0a, 0x0a, 0x4c, 0x6f, 0x67, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x44, 0x0a,
 	0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2a,
 	0xe2, 0xfc, 0xe3, 0xc4, 0x01, 0x24, 0x12, 0x22, 0x54, 0x68, 0x65, 0x20, 0x6d, 0x65, 0x73, 0x73,
 	0x61, 0x67, 0x65, 0x20, 0x74, 0x6f, 0x20, 0x73, 0x65, 0x6e, 0x64, 0x20, 0x74, 0x6f, 0x20, 0x74,
@@ -1562,15 +1619,21 @@ var file_jobs_proto_rawDesc = []byte{
 	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x20, 0x77, 0x61, 0x73, 0x20, 0x67, 0x65, 0x6e, 0x65, 0x72,
 	0x61, 0x74, 0x65, 0x64, 0x2e, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
 	0x12, 0x1a, 0x0a, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x22, 0x3e, 0x0a, 0x09,
-	0x50, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x4b, 0x65, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x70, 0x65, 0x6d,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x03, 0x70, 0x65, 0x6d, 0x12, 0x1f, 0x0a, 0x0b, 0x65,
-	0x6e, 0x72, 0x6f, 0x6c, 0x6c, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04,
-	0x52, 0x0a, 0x65, 0x6e, 0x72, 0x6f, 0x6c, 0x6c, 0x54, 0x69, 0x6d, 0x65, 0x42, 0x34, 0x5a, 0x32,
-	0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f,
-	0x6d, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72,
-	0x61, 0x70, 0x74, 0x6f, 0x72, 0x2f, 0x63, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x2f, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x28, 0x09, 0x52, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x12, 0x2d, 0x0a, 0x05,
+	0x6c, 0x65, 0x76, 0x65, 0x6c, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x17, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x2e, 0x4c, 0x6f, 0x67, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x2e, 0x4c,
+	0x65, 0x76, 0x65, 0x6c, 0x52, 0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x22, 0x2a, 0x0a, 0x05, 0x4c,
+	0x65, 0x76, 0x65, 0x6c, 0x12, 0x0b, 0x0a, 0x07, 0x44, 0x45, 0x46, 0x41, 0x55, 0x4c, 0x54, 0x10,
+	0x00, 0x12, 0x09, 0x0a, 0x05, 0x45, 0x52, 0x52, 0x4f, 0x52, 0x10, 0x01, 0x12, 0x09, 0x0a, 0x05,
+	0x44, 0x45, 0x42, 0x55, 0x47, 0x10, 0x02, 0x22, 0x3e, 0x0a, 0x09, 0x50, 0x75, 0x62, 0x6c, 0x69,
+	0x63, 0x4b, 0x65, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x70, 0x65, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0c, 0x52, 0x03, 0x70, 0x65, 0x6d, 0x12, 0x1f, 0x0a, 0x0b, 0x65, 0x6e, 0x72, 0x6f, 0x6c, 0x6c,
+	0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x65, 0x6e, 0x72,
+	0x6f, 0x6c, 0x6c, 0x54, 0x69, 0x6d, 0x65, 0x42, 0x34, 0x5a, 0x32, 0x77, 0x77, 0x77, 0x2e, 0x76,
+	0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c,
+	0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72,
+	0x2f, 0x63, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1585,7 +1648,7 @@ func file_jobs_proto_rawDescGZIP() []byte {
 	return file_jobs_proto_rawDescData
 }
 
-var file_jobs_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
+var file_jobs_proto_enumTypes = make([]protoimpl.EnumInfo, 8)
 var file_jobs_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_jobs_proto_goTypes = []interface{}{
 	(VeloMessage_AuthorizationState)(0),    // 0: proto.VeloMessage.AuthorizationState
@@ -1595,48 +1658,50 @@ var file_jobs_proto_goTypes = []interface{}{
 	(PackedMessageList_CompressionType)(0), // 4: proto.PackedMessageList.CompressionType
 	(CipherProperties_HMACType)(0),         // 5: proto.CipherProperties.HMACType
 	(ClientCommunication_Status)(0),        // 6: proto.ClientCommunication.Status
-	(*VeloMessage)(nil),                    // 7: proto.VeloMessage
-	(*Cancel)(nil),                         // 8: proto.Cancel
-	(*Certificate)(nil),                    // 9: proto.Certificate
-	(*GrrStatus)(nil),                      // 10: proto.GrrStatus
-	(*MessageList)(nil),                    // 11: proto.MessageList
-	(*PackedMessageList)(nil),              // 12: proto.PackedMessageList
-	(*CipherProperties)(nil),               // 13: proto.CipherProperties
-	(*CipherMetadata)(nil),                 // 14: proto.CipherMetadata
-	(*ClientCommunication)(nil),            // 15: proto.ClientCommunication
-	(*LogMessage)(nil),                     // 16: proto.LogMessage
-	(*PublicKey)(nil),                      // 17: proto.PublicKey
-	(*proto.ForemanCheckin)(nil),           // 18: proto.ForemanCheckin
-	(*proto.FileBuffer)(nil),               // 19: proto.FileBuffer
-	(*proto.VQLResponse)(nil),              // 20: proto.VQLResponse
-	(*proto.VQLEventTable)(nil),            // 21: proto.VQLEventTable
-	(*proto.VQLCollectorArgs)(nil),         // 22: proto.VQLCollectorArgs
+	(LogMessage_Level)(0),                  // 7: proto.LogMessage.Level
+	(*VeloMessage)(nil),                    // 8: proto.VeloMessage
+	(*Cancel)(nil),                         // 9: proto.Cancel
+	(*Certificate)(nil),                    // 10: proto.Certificate
+	(*GrrStatus)(nil),                      // 11: proto.GrrStatus
+	(*MessageList)(nil),                    // 12: proto.MessageList
+	(*PackedMessageList)(nil),              // 13: proto.PackedMessageList
+	(*CipherProperties)(nil),               // 14: proto.CipherProperties
+	(*CipherMetadata)(nil),                 // 15: proto.CipherMetadata
+	(*ClientCommunication)(nil),            // 16: proto.ClientCommunication
+	(*LogMessage)(nil),                     // 17: proto.LogMessage
+	(*PublicKey)(nil),                      // 18: proto.PublicKey
+	(*proto.ForemanCheckin)(nil),           // 19: proto.ForemanCheckin
+	(*proto.FileBuffer)(nil),               // 20: proto.FileBuffer
+	(*proto.VQLResponse)(nil),              // 21: proto.VQLResponse
+	(*proto.VQLEventTable)(nil),            // 22: proto.VQLEventTable
+	(*proto.VQLCollectorArgs)(nil),         // 23: proto.VQLCollectorArgs
 }
 var file_jobs_proto_depIdxs = []int32{
 	0,  // 0: proto.VeloMessage.auth_state:type_name -> proto.VeloMessage.AuthorizationState
-	10, // 1: proto.VeloMessage.status:type_name -> proto.GrrStatus
-	18, // 2: proto.VeloMessage.ForemanCheckin:type_name -> proto.ForemanCheckin
-	19, // 3: proto.VeloMessage.FileBuffer:type_name -> proto.FileBuffer
-	9,  // 4: proto.VeloMessage.CSR:type_name -> proto.Certificate
-	20, // 5: proto.VeloMessage.VQLResponse:type_name -> proto.VQLResponse
-	16, // 6: proto.VeloMessage.LogMessage:type_name -> proto.LogMessage
-	21, // 7: proto.VeloMessage.UpdateEventTable:type_name -> proto.VQLEventTable
-	22, // 8: proto.VeloMessage.VQLClientAction:type_name -> proto.VQLCollectorArgs
-	8,  // 9: proto.VeloMessage.Cancel:type_name -> proto.Cancel
-	18, // 10: proto.VeloMessage.UpdateForeman:type_name -> proto.ForemanCheckin
-	8,  // 11: proto.VeloMessage.KillKillKill:type_name -> proto.Cancel
+	11, // 1: proto.VeloMessage.status:type_name -> proto.GrrStatus
+	19, // 2: proto.VeloMessage.ForemanCheckin:type_name -> proto.ForemanCheckin
+	20, // 3: proto.VeloMessage.FileBuffer:type_name -> proto.FileBuffer
+	10, // 4: proto.VeloMessage.CSR:type_name -> proto.Certificate
+	21, // 5: proto.VeloMessage.VQLResponse:type_name -> proto.VQLResponse
+	17, // 6: proto.VeloMessage.LogMessage:type_name -> proto.LogMessage
+	22, // 7: proto.VeloMessage.UpdateEventTable:type_name -> proto.VQLEventTable
+	23, // 8: proto.VeloMessage.VQLClientAction:type_name -> proto.VQLCollectorArgs
+	9,  // 9: proto.VeloMessage.Cancel:type_name -> proto.Cancel
+	19, // 10: proto.VeloMessage.UpdateForeman:type_name -> proto.ForemanCheckin
+	9,  // 11: proto.VeloMessage.KillKillKill:type_name -> proto.Cancel
 	1,  // 12: proto.VeloMessage.type:type_name -> proto.VeloMessage.Type
 	2,  // 13: proto.Certificate.type:type_name -> proto.Certificate.Type
 	3,  // 14: proto.GrrStatus.status:type_name -> proto.GrrStatus.ReturnedStatus
-	7,  // 15: proto.MessageList.job:type_name -> proto.VeloMessage
+	8,  // 15: proto.MessageList.job:type_name -> proto.VeloMessage
 	4,  // 16: proto.PackedMessageList.compression:type_name -> proto.PackedMessageList.CompressionType
 	5,  // 17: proto.CipherProperties.hmac_type:type_name -> proto.CipherProperties.HMACType
 	6,  // 18: proto.ClientCommunication.status:type_name -> proto.ClientCommunication.Status
-	19, // [19:19] is the sub-list for method output_type
-	19, // [19:19] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	7,  // 19: proto.LogMessage.level:type_name -> proto.LogMessage.Level
+	20, // [20:20] is the sub-list for method output_type
+	20, // [20:20] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_jobs_proto_init() }
@@ -1783,7 +1848,7 @@ func file_jobs_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_jobs_proto_rawDesc,
-			NumEnums:      7,
+			NumEnums:      8,
 			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,

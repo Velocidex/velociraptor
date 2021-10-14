@@ -1,0 +1,18 @@
+SELECT *, basename(path=_FullPath) AS _FullPath FROM Artifact.Windows.Forensics.UserAccessLogs( SUMGlob=srcDir+"/artifacts/testdata/files/*03A01CC5*.mdb") LIMIT 1[
+ {
+  "RoleGuid": "{ad495fc3-0eaa-413d-ba7d-8b13fa7ec598}",
+  "RoleName": "Active Directory Domain Services",
+  "TenantId": "{5e210c24-fb44-45c2-996d-4139d5b7fc4c}",
+  "TotalAccesses": 310,
+  "InsertDate": "2021-06-12T23:47:21Z",
+  "LastAccess": "2021-06-13T15:48:08Z",
+  "Address": ":01",
+  "AuthenticatedUserName": "lab\\dc-1$",
+  "Days": {
+   "Day163": 61,
+   "Day164": 249
+  },
+  "_Source": "Windows.Forensics.UserAccessLogs",
+  "_FullPath": "{03A01CC5-91BB-4936-B685-63697785D39E}.mdb"
+ }
+]
