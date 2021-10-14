@@ -5,3 +5,13 @@ Parameters:
 Queries:
   - SELECT grok(grok="%{COMMONAPACHELOG}", data=ApacheLogLine) FROM scope()
   - SELECT * FROM parse_lines(filename=srcDir + '/artifacts/testdata/files/access.log') LIMIT 1
+
+  # Max buffer size for parse_lines can be adjusted if needed. Should
+  # only return one line before quitting.
+  - SELECT Line FROM parse_lines(
+       buffer_size=25,
+       filename=srcDir + '/artifacts/testdata/files/lines.txt')
+
+  # parse_lines should error out
+  - SELECT * FROM test_read_logs()
+    WHERE Log =~ "parse_lines:"

@@ -32,35 +32,43 @@ parameters:
   - name: MetadataFile
     default: "Windows.KapeFiles.Targets/All File Metadata.json"
     description: Name of the KapeFile.Targets metadata file.
+  - name: UploadsFile
+    default: "Windows.KapeFiles.Targets/Uploads.json"
+    description: Name of the KapeFile.Targets uploads file.
   - name: OutputDirectory
     description: Directory to write on (must be set).
   - name: ContainerPath
     description: Path to container (zip file) to unpack.
 
-
 sources:
   - query: |
-      LET FileStats = SELECT *,
-         regex_transform(
-            key="A",
-            source=SourceFile,
-            map=dict(`[:?]`="", `\\\\`="/", `//./`="")) AS ZipPath
-      FROM parse_jsonl(filename=url(scheme='file',
-           path=ContainerPath,
-           fragment=MetadataFile),
-      accessor='zip')
+      // Read the uploads source into memory so we can translate
+      // between the original path to the zip path quickly.
+      LET Uploads <= memoize(key="SourceFile", query={
+        SELECT SourceFile, DestinationFile
+        FROM parse_jsonl(accessor="zip",
+                         filename=url(path=ContainerPath, fragment=UploadsFile))
+      })
 
+      // Walk over the Metadata source and resolve each file's container name.
+      LET FileStats = SELECT *, get(item=Uploads, field=SourceFile).DestinationFile AS ZipPath
+         FROM parse_jsonl(accessor="zip",
+                          filename=url(path=ContainerPath, fragment=MetadataFile))
+
+      // Copy the file from the container to the output directory
+      // preserving timestamps.
       LET doit = SELECT ZipPath, Created, LastAccessed, Modified,
          upload_directory(
            output=OutputDirectory, name=ZipPath,
            mtime=Modified, atime=LastAccessed, ctime=Created,
            accessor='zip',
            file=url(
-               scheme='file',
-               path=ContainerPath,
-               fragment=ZipPath)) AS CreatedFile
+             scheme='file',
+             path=ContainerPath,
+             fragment=ZipPath)) AS CreatedFile
       FROM FileStats
 
+      // Check that the user gave us all the require args.
       SELECT * FROM if(condition= OutputDirectory AND ContainerPath, then=doit,
          else={
            SELECT * FROM scope() WHERE

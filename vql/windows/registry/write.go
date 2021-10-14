@@ -221,8 +221,6 @@ func (self *RegDeleteKeyFunction) Call(ctx context.Context,
 	}
 	defer key.Close()
 
-	utils.Debug(subkey_path)
-
 	err = registry.DeleteKey(key, subkey_path)
 	if err != nil {
 		scope.Log("reg_rm_key:  %v", err)

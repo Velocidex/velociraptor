@@ -9,15 +9,12 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
 func ensureProxy(config_obj *config_proto.Config) error {
 	http_proxy := getEnvAny("HTTP_PROXY", "http_proxy")
 	https_proxy := getEnvAny("HTTPS_PROXY", "https_proxy")
-
-	utils.Debug(https_proxy)
 
 	// If neither environment variables are set, we look to the config file
 	if http_proxy == "" && https_proxy == "" {
