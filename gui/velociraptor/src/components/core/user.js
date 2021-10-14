@@ -24,6 +24,7 @@ export class UserSettings extends React.Component {
 
             document.body.classList.remove('dark-mode');
             document.body.classList.remove('light-mode');
+            document.body.classList.remove('light-pink');
             document.body.classList.add(traits.theme || "light-mode");
         });
     }

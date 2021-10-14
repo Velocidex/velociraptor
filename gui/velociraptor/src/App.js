@@ -39,6 +39,7 @@ import SidebarKeyNavigator from './components/sidebar/hotkeys.js';
 
 // Custom CSS should have highest priority
 import './dark-mode.css';
+import './light-pink.css';
 
 /* This is the main App page.
 
