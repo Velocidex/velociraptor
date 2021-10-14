@@ -21,10 +21,6 @@ type UploadResponse struct {
 	Sha256     string `json:"sha256,omitempty"`
 	Md5        string `json:"md5,omitempty"`
 	StoredName string `json:"StoredName,omitempty"`
-
-	// Added when we store to a container to indicate where in the zip
-	// file the upload ended up.
-	ContainerPath string `json:"ContainerPath,omitempty"`
 }
 
 // Provide an uploader capable of uploading any reader object.
