@@ -9,6 +9,7 @@ description: |
 reference:
   - https://advisory.kpmg.us/blog/2021/digital-forensics-incident-response.html
   - https://docs.microsoft.com/en-us/windows-server/administration/user-access-logging/manage-user-access-logging
+  - https://www.crowdstrike.com/blog/user-access-logging-ual-overview/
 
 parameters:
    - name: SUMGlob

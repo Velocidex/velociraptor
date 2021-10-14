@@ -28,6 +28,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"net/url"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -49,6 +50,9 @@ var (
 	RedirectError = errors.New("RedirectError")
 
 	Rand func(int) int = rand.Intn
+
+	mu           sync.Mutex
+	proxyHandler = http.ProxyFromEnvironment
 )
 
 // Responsible for maybe enrolling the client. Enrollments should not
@@ -202,7 +206,7 @@ func NewHTTPConnector(
 					KeepAlive: 300 * time.Second,
 					DualStack: true,
 				}).DialContext,
-				Proxy:                 http.ProxyFromEnvironment,
+				Proxy:                 proxyHandler,
 				MaxIdleConns:          100,
 				IdleConnTimeout:       300 * time.Second,
 				TLSHandshakeTimeout:   100 * time.Second,
@@ -798,6 +802,13 @@ func NewHTTPCommunicator(
 	}
 
 	return result, nil
+}
+
+func SetProxy(handler func(*http.Request) (*url.URL, error)) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	proxyHandler = handler
 }
 
 func init() {

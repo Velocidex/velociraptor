@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -130,7 +131,7 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 		conf = conf.WithEndpoint(endpoint).WithS3ForcePathStyle(true)
 		if NoVerifyCert {
 			tr := &http.Transport{
-				Proxy:           http.ProxyFromEnvironment,
+				Proxy:           networking.GetProxy(),
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			}
 

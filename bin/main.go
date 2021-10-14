@@ -203,5 +203,6 @@ func makeDefaultConfigLoader() *config.Loader {
 		WithOverride(*override_flag).
 		WithCustomValidator(func(config_obj *config_proto.Config) error {
 			return mergeFlagConfig(config_obj, default_config)
-		})
+		}).
+		WithCustomValidator(ensureProxy)
 }
