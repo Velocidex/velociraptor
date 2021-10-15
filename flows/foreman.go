@@ -40,12 +40,26 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+)
+
+var (
+	clientEventUpdateCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "client_event_update",
+		Help: "Total number of client Event Table Update messages sent.",
+	})
+
+	clientHuntTimestampUpdateCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "client_hunt_timestamp_update",
+		Help: "Total number of client Update Hunt Timestamp messages sent.",
+	})
 )
 
 // ForemanProcessMessage processes a ForemanCheckin message from the
@@ -66,6 +80,7 @@ func ForemanProcessMessage(
 		client_event_manager.CheckClientEventsVersion(
 			config_obj, client_id,
 			foreman_checkin.LastEventTableVersion) {
+		clientEventUpdateCounter.Inc()
 		err := QueueMessageForClient(
 			config_obj, client_id,
 			client_event_manager.GetClientUpdateEventTableMessage(
@@ -149,6 +164,7 @@ func ForemanProcessMessage(
 	// manager - this is ok since the hunt manager keeps hunt
 	// participation index and will automatically skip multiple
 	// messages.
+	clientHuntTimestampUpdateCounter.Inc()
 	return QueueMessageForClient(
 		config_obj, client_id,
 		&crypto_proto.VeloMessage{

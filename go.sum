@@ -977,8 +977,6 @@ www.velocidex.com/golang/binparsergen v0.1.1-0.20201101234514-bbdb29f9ee31 h1:/Q
 www.velocidex.com/golang/binparsergen v0.1.1-0.20201101234514-bbdb29f9ee31/go.mod h1:Ik7C4oJIs4h6c4WHYzkC0YS098WREL8qc8TqEmAOVHI=
 www.velocidex.com/golang/evtx v0.0.2-0.20211012122925-68592269b705 h1:zpaBlbLUbpCrhaS6f3RjOb9qZJpNQDQcWbXhj3vvObU=
 www.velocidex.com/golang/evtx v0.0.2-0.20211012122925-68592269b705/go.mod h1:9xB8AP1kAAkv31TJGLFsZiCjwmb85ClGh+kbbp8F8jU=
-www.velocidex.com/golang/go-ese v0.1.1-0.20211014025116-daeecae91fb3 h1:UaXoPHcb9WuRtWJVQzd4MepVKNhxdufVW3/LYWdVGzM=
-www.velocidex.com/golang/go-ese v0.1.1-0.20211014025116-daeecae91fb3/go.mod h1://dbIVDOCI4zvkl195Hw79lcAU+ar2zRgSUUsEViVPo=
 www.velocidex.com/golang/go-ese v0.1.1-0.20211014120951-14a5c1831296 h1:UFn8rG8o+gQGW6NzldpGL8vIGMwx5Dnve+qMzACvAMs=
 www.velocidex.com/golang/go-ese v0.1.1-0.20211014120951-14a5c1831296/go.mod h1://dbIVDOCI4zvkl195Hw79lcAU+ar2zRgSUUsEViVPo=
 www.velocidex.com/golang/go-ntfs v0.1.2-0.20210828125207-a1d0ee62467c h1:2jrB6dAHtcw9sTpbFrwY4vSHOvr7PeexbLU1FKAyF2Y=
@@ -992,7 +990,7 @@ www.velocidex.com/golang/oleparse v0.0.0-20211013063943-0334d69593c1/go.mod h1:4
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500 h1:XqZddiAbjPIsTZcEPbqqqABS/ZV5SB7j33eczNsqD60=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500/go.mod h1:DVzloLH8L+oF3zma1Jisaat5bGF+4VLggDcYlIp00ns=
 www.velocidex.com/golang/vfilter v0.0.0-20210515085940-25d96b94dafb/go.mod h1:KB724xBNYh4lgipyGwsvx0/5hXRqsKjmrMrkSjGESvU=
-www.velocidex.com/golang/vfilter v0.0.0-20211011003933-3594b2d3597b h1:PzJ44IK+VghSVCTkuHMhPzcoraLifaEhOqQqOiUl6tU=
-www.velocidex.com/golang/vfilter v0.0.0-20211011003933-3594b2d3597b/go.mod h1:eEFMhAmoFHWGCKF39j+iOhTH8REpqBndc3OsdPsxqo8=
+www.velocidex.com/golang/vfilter v0.0.0-20211015115938-d53447e1702b h1:m9yvV01dK+CwzRYb2WQm06b4b1wb1NuGBKJz8XDTww4=
+www.velocidex.com/golang/vfilter v0.0.0-20211015115938-d53447e1702b/go.mod h1:eEFMhAmoFHWGCKF39j+iOhTH8REpqBndc3OsdPsxqo8=
 www.velocidex.com/golang/vtypes v0.0.0-20210728123451-f085971da113 h1:IXya95AX2bUPIbgi4vEWeer6MoNdKC3nRRtxsulcAuQ=
 www.velocidex.com/golang/vtypes v0.0.0-20210728123451-f085971da113/go.mod h1:PIG8uSY330pJd620KPksZpTaAsX3sIMiiNJQihZph6c=
