@@ -69,7 +69,7 @@ func doFrontend() {
 	defer sm.Close()
 
 	server, err := startFrontend(sm)
-	kingpin.FatalIfError(err, "startFrontend %+vv", err)
+	kingpin.FatalIfError(err, "startFrontend %+v", err)
 	defer server.Close()
 
 	sm.Wg.Wait()

@@ -15,8 +15,9 @@ import (
 )
 
 type ScannerPluginArgs struct {
-	Filenames []string `vfilter:"required,field=filename,doc=A list of log files to parse."`
-	Accessor  string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Filenames  []string `vfilter:"required,field=filename,doc=A list of log files to parse."`
+	Accessor   string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	BufferSize int      `vfilter:"optional,field=buffer_size,doc=Maximum size of line buffer."`
 }
 
 type ScannerPlugin struct{}
@@ -59,8 +60,14 @@ func (self ScannerPlugin) Call(
 				}
 				defer fd.Close()
 
-				// Support a BOM just incase
+				// Support a BOM just in case
 				scanner := bufio.NewScanner(utfbom.SkipOnly(fd))
+
+				// Allow the user to increase buffer size (default 64kb)
+				if arg.BufferSize > 0 {
+					scanner.Buffer(make([]byte, arg.BufferSize), arg.BufferSize)
+				}
+
 				for scanner.Scan() {
 					select {
 					case <-ctx.Done():
@@ -69,7 +76,6 @@ func (self ScannerPlugin) Call(
 					case output_chan <- ordereddict.NewDict().
 						Set("Line", scanner.Text()):
 					}
-
 				}
 				err = scanner.Err()
 				if err != nil {

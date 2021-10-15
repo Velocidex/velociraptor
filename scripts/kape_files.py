@@ -24,7 +24,10 @@ import os
 import yaml
 from collections import OrderedDict
 
-BLACKLISTED = ["!ALL.tkape"]
+BLACKLISTED = ["!ALL.tkape",
+               "$SDS.tkape", # This one should be fetched via the
+                             # Windows.Triage.SDS
+               ]
 
 # The following paths are not NTFS files, so they can be read normally.
 NOT_NTFS = ["$Recycle.Bin"]
@@ -91,6 +94,11 @@ def read_targets(ctx, project_path):
         for name, data in ctx.kape_data.items():
             for target in data["Targets"]:
                 glob = target.get("Path", "")
+
+                # Ignore black listed dependency
+                if glob in BLACKLISTED:
+                    continue
+
                 if ".tkape" in glob:
                     deps = find_kape_dependency(ctx, glob)
                     if deps is None:

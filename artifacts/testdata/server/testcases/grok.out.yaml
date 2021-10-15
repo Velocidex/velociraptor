@@ -17,4 +17,15 @@ SELECT grok(grok="%{COMMONAPACHELOG}", data=ApacheLogLine) FROM scope()[
  {
   "Line": "170.238.36.21 - - [29/Dec/2019:00:09:47 +1000] \"GET / HTTP/1.0\" 401 691 \"-\" \"masscan/1.0 (https://github.com/robertdavidgraham/masscan)\""
  }
+]SELECT Line FROM parse_lines( buffer_size=25, filename=srcDir + '/artifacts/testdata/files/lines.txt')[
+ {
+  "Line": "11111111111111111111111"
+ }
+]SELECT * FROM test_read_logs() WHERE Log =~ "parse_lines:"[
+ {
+  "Log": "Velociraptor: parse_lines: bufio.Scanner: token too long\n"
+ },
+ {
+  "Log": "Velociraptor: Running query SELECT * FROM test_read_logs() WHERE Log =~ \"parse_lines:\"\n"
+ }
 ]

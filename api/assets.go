@@ -29,7 +29,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	gui_assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	users "www.velocidex.com/golang/velociraptor/users"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) {
@@ -48,8 +47,14 @@ func GetTemplateHandler(
 	config_obj *config_proto.Config, template_name string) (http.Handler, error) {
 	data, err := gui_assets.ReadFile(template_name)
 	if err != nil {
-		utils.Debug(err)
-		return nil, err
+		// It is possible that the binary was not built with the GUI
+		// app. This is not a fatal error but it is not very useful :-).
+		data = []byte(
+			`<html><body>
+  <h1>This binary was not build with GUI support!</h1>
+
+  Search for building instructions on https://docs.velociraptor.app/
+</body></html>`)
 	}
 
 	tmpl, err := template.New("").Parse(string(data))

@@ -1,5 +1,6 @@
 vendor/
 *~
+*.config.yaml
 ./velociraptor
 emacs.desktop
 /debian/debhelper-build-stamp

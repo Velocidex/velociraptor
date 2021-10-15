@@ -2532,6 +2532,9 @@
   - name: accessor
     type: string
     description: The accessor to use.
+  - name: buffer_size
+    type: int
+    description: Maximum size of line buffer.
   category: parsers
 - name: parse_binary
   description: |
@@ -2755,6 +2758,9 @@
   - name: accessor
     type: string
     description: The accessor to use.
+  - name: buffer_size
+    type: int
+    description: Maximum size of line buffer.
   category: parsers
 - name: parse_mft
   description: Scan the $MFT from an NTFS volume.
@@ -4517,6 +4523,9 @@
   - name: accessor
     type: string
     description: The accessor to use.
+  - name: buffer_size
+    type: int
+    description: Maximum size of line buffer.
   category: event
 - name: watch_csv
   description: |
@@ -4614,6 +4623,9 @@
   - name: accessor
     type: string
     description: The accessor to use.
+  - name: buffer_size
+    type: int
+    description: Maximum size of line buffer.
   category: event
 - name: watch_usn
   description: Watch the USN journal from a device.
