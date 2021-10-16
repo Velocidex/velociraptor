@@ -84,5 +84,6 @@ td.timeline-time {
 
 .timeline-marker {
     background-color: var(--color-default-font);
+    color: var(--text-foreground);
     width: 5px;
 }
