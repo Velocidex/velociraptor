@@ -1,4 +1,5 @@
-.dark-mode .main-navbar, .dark-mode div#navigator {
+.dark-mode .main-navbar,
+.dark-mode div#navigator {
     background-color: #121212;
     border-color: var(--background-color);
 }
@@ -110,7 +111,8 @@ body.dark-mode {
     background: var(--btn-default-background);
 }
 
-.dark-mode .btn-outline-info, .btn-link {
+.dark-mode .btn-outline-info,
+.dark-mode .btn-link {
     color: var(--btn-outline-link);
 }
 
@@ -123,7 +125,9 @@ body.dark-mode {
 }
 
 
-.dark-mode h1, .dark-mode h2, .dark-mode h3 {
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3 {
     color: var(--text-foreground);
 }
 
@@ -138,11 +142,13 @@ body.dark-mode {
 
 /* Tables */
 
-.dark-mode .table-bordered th, .table-bordered td {
+.dark-mode .table-bordered th,
+.dark-mode .table-bordered td {
     border: 1px solid var(--table-heading-background-color);
 }
 
-.dark-mode .table, .dark-mode .table-hover tr:hover {
+.dark-mode .table,
+.dark-mode .table-hover tr:hover {
     color: var(--text-foreground);
 }
 
@@ -375,11 +381,14 @@ body.dark-mode {
 }
 
 
-.dark-mode .file-hex-view td, .file-hex-view th {
+.dark-mode .file-hex-view td,
+.dark-mode .file-hex-view th {
     border: 0px;
 }
 
-.dark-mode .labels, .dark-mode .velo__control, .dark-mode .velo__menu {
+.dark-mode .labels,
+.dark-mode .velo__control,
+.dark-mode .velo__menu {
     background-color: var(--background-color);
     color: var(--text-foreground);
 }
@@ -392,7 +401,9 @@ body.dark-mode {
     color: var(--text-foreground);
 }
 
-.dark-mode .velo__option:hover, .dark-mode .velo__option--is-focused, .dark-mode .velo__multi-value:hover {
+.dark-mode .velo__option:hover,
+.dark-mode .velo__option--is-focused,
+.dark-mode .velo__multi-value:hover {
     background-color: var(--btn-default-background-hover);
 }
 

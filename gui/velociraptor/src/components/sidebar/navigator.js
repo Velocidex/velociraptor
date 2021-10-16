@@ -39,7 +39,7 @@ class VeloNavigator extends Component {
     };
 
     render() {
-        let disabled = "";
+        let disabled = null;
         if (!this.props.client || !this.props.client.client_id) {
             disabled = "disabled";
         };
@@ -118,54 +118,96 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      <NavLink className={disabled}
-                               to={"/host/" + this.props.client.client_id}>
-                        <ul className="nav nav-pills navigator">
-                          <li className={classNames({
-                              "nav-link": true,
-                              disabled: disabled})}>
-                            <i className="navicon"><FontAwesomeIcon icon="laptop"/> </i>
-                            Host Information
-                          </li>
-                        </ul>
-                      </NavLink>
+                      { disabled ?
+                        <>
+                          <ul className="nav nav-pills navigator">
+                            <li className={classNames({
+                                "nav-link": true,
+                                disabled: disabled})}>
+                              <i className="navicon"><FontAwesomeIcon icon="laptop"/> </i>
+                              Host Information
+                            </li>
+                          </ul>
 
-                      <NavLink className={disabled}
-                               to={"/vfs/" + EncodePathInURL(this.props.client.client_id + vfs_path) }>
-                        <ul className="nav nav-pills navigator">
-                          <li className={classNames({
-                              "nav-link": true,
-                              disabled: disabled})}>
-                            <i className="navicon"><FontAwesomeIcon icon="folder-open"/> </i>
-                            Virtual Filesystem
-                          </li>
-                        </ul>
-                      </NavLink>
+                          <ul className="nav nav-pills navigator">
+                            <li className={classNames({
+                                "nav-link": true,
+                                disabled: disabled})}>
+                              <i className="navicon"><FontAwesomeIcon icon="folder-open"/> </i>
+                              Virtual Filesystem
+                            </li>
+                          </ul>
+                          <ul className="nav nav-pills navigator">
+                            <li className={classNames({
+                                "nav-link": true,
+                                disabled: disabled})}>
+                              <i className="navicon"><FontAwesomeIcon icon="history"/></i>
+                              Collected Artifacts
+                            </li>
+                          </ul>
+                          <ul className="nav nav-pills navigator">
+                            <li className={classNames({
+                                "nav-link": true,
+                                disabled: disabled})}>
+                              <i className="navicon"><FontAwesomeIcon icon="binoculars"/></i>
+                              Client Events
+                            </li>
+                          </ul>
+                        </>
+                        :
+                        <>
+                          <NavLink className={disabled}
+                                   to={"/host/" + this.props.client.client_id}>
+                            <ul className="nav nav-pills navigator">
+                              <li className={classNames({
+                                  "nav-link": true,
+                                  disabled: disabled})}>
+                                <i className="navicon"><FontAwesomeIcon icon="laptop"/> </i>
+                                Host Information
+                              </li>
+                            </ul>
+                          </NavLink>
 
-                      <NavLink className={disabled}
-                               to={"/collected/" + this.props.client.client_id}>
-                        <ul className="nav nav-pills navigator">
-                          <li className={classNames({
-                              "nav-link": true,
-                              disabled: disabled})}>
-                            <i className="navicon"><FontAwesomeIcon icon="history"/></i>
-                            Collected Artifacts
-                          </li>
-                        </ul>
-                      </NavLink>
+                          <NavLink className={disabled}
+                                   disabled={disabled}
+                                   to={"/vfs/" + EncodePathInURL(this.props.client.client_id + vfs_path) }>
+                            <ul className="nav nav-pills navigator">
+                              <li className={classNames({
+                                  "nav-link": true,
+                                  disabled: disabled})}>
+                                <i className="navicon"><FontAwesomeIcon icon="folder-open"/> </i>
+                                Virtual Filesystem
+                              </li>
+                            </ul>
+                          </NavLink>
 
-                      <NavLink className={disabled}
-                               to={"/events/" + this.props.client.client_id}>
-                        <ul className="nav nav-pills navigator">
-                          <li className={classNames({
-                              "nav-link": true,
-                              disabled: disabled})}>
-                            <i className="navicon"><FontAwesomeIcon icon="binoculars"/></i>
-                            Client Events
-                          </li>
-                        </ul>
-                      </NavLink>
+                          <NavLink className={disabled}
+                                   disabled={disabled}
+                                   to={"/collected/" + this.props.client.client_id}>
+                            <ul className="nav nav-pills navigator">
+                              <li className={classNames({
+                                  "nav-link": true,
+                                  disabled: disabled})}>
+                                <i className="navicon"><FontAwesomeIcon icon="history"/></i>
+                                Collected Artifacts
+                              </li>
+                            </ul>
+                          </NavLink>
 
+                          <NavLink className={disabled}
+                                   disabled={disabled}
+                                   to={"/events/" + this.props.client.client_id}>
+                            <ul className="nav nav-pills navigator">
+                              <li className={classNames({
+                                  "nav-link": true,
+                                  disabled: disabled})}>
+                                <i className="navicon"><FontAwesomeIcon icon="binoculars"/></i>
+                                Client Events
+                              </li>
+                            </ul>
+                          </NavLink>
+                        </>
+                      }
                     </section>
                   </div>
                 </div>
