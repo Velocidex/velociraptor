@@ -33,8 +33,9 @@ body.light-pink {
 
 .light-pink {
     --app-footer-background-color: #FCE4EC;
-    --background-color: #FCEFF4;
+    --background-color: #FEF4F8;
     --color-default-background: #FFFFFF;
+    --no-content: #bbbbbb;
 
     --border-color: #F48FB1;
     --btn-default-border: #F48FB1;
@@ -42,10 +43,10 @@ body.light-pink {
     --btn-default-background-hover: #F48FB1;
     --btn-outline-link: #F06292;
     --btn-outline-link-hover: #81C784;
-    --card-heading-background-color: #F8BBD0;
+    --card-heading-background-color: #F8BBD080;
     --cell-toolbar-background-color: #222222;
     --color-monospace-color: #EEEEEE;
-    --color-table-row-selected: #FCEFF4;
+    --color-table-row-selected: #F8BBD060;
     --form-background-color: #FCEFF4;
     --page-link-active-background-color: #FCEFF4;
     --page-link-background-color: #F8BBD0;
@@ -53,16 +54,16 @@ body.light-pink {
     --scrollbar-track: #F8BBD0;
     --sidebar-active-icon-background-color: #F48FB1;
     --sidebar-icon-color-bg: #F8BBD0;
-    --sidebar-icon-color-disabled: #EEEEEE;
+    --sidebar-icon-color-disabled: #dddddd;
     --sidebar-icon-color-hover: #F06292;
     --sidebar-icon-color: #F48FB1;
     --tab-active-color: #F8BBD0;
     --tab-color: #FCEFF4;
-    --table-heading-background-color: #F8BBD0;
+    --table-heading-background-color: #F8BBD0a0;
     --text-foreground: #222222;
 
     --color-infoline-success: #4CAF50;
-    --color-default-font: #eeeeee;
+    --color-default-font: #222222;
     --color-timeline-header: #cdcdcd20;
     --color-timeline-table-shown: #dd4b3920;
     --color-timeline-1: #dff0d820;
@@ -123,7 +124,7 @@ body.light-pink {
     background: var(--btn-default-background);
 }
 
-.light-pink .btn-outline-info, .btn-link {
+.light-pink .btn-outline-info, .light-pink .btn-link {
     color: var(--color-default-background);
     background: var(--btn-outline-link);
     text-shadow: none;
@@ -136,6 +137,10 @@ body.light-pink {
 
 .light-pink .btn.btn-link {
     border-color: transparent;
+    width: 100%;
+    text-align: left;
+    background: none;
+    color: var(--text-foreground);
 }
 
 .light-pink #content {
@@ -162,7 +167,7 @@ body.light-pink {
 }
 
 .light-pink .table-bordered .notebook-filter td {
-    border: 1px solid var(--table-heading-background-color);
+    border: none;
 }
 
 .light-pink .table-bordered td {
@@ -231,13 +236,19 @@ body.light-pink {
     color: var(--text-foreground);
 }
 
-.light-pink .nav-tabs > a {
+.light-pink .nav-tabs > a,
+.light-pink .nav-tabs > a:hover {
     background-color: var(--tab-color);
     color: var(--text-foreground);
     border-top-color: var(--border-color);
     border-right-color: var(--border-color);
     border-bottom-color: #FFFFFF00;
     border-left-color: var(--border-color);
+}
+
+.light-pink .nav-tabs > a:hover {
+    background-color: var(--sidebar-icon-color-hover);
+    color: var(--background-color);
 }
 
 .light-pink .nav-tabs > a.active {
@@ -248,6 +259,8 @@ body.light-pink {
     border-bottom-color: #FFFFFF00;
     border-left-color: var(--border-color);
 }
+
+
 
 /* forms */
 .light-pink .form-control,
@@ -306,6 +319,10 @@ body.light-pink {
     background-color: var(--background-color);
     color: var(--text-foreground);
     border-color: #ffffff00
+}
+
+.light-pink .notebook-cell {
+    background-color: var(--background-color);
 }
 
 .light-pink .notebook-cell.selected {
@@ -431,11 +448,18 @@ body.light-pink {
 }
 
 
-.light-pink .file-hex-view td, .file-hex-view th {
+.light-pink .file-hex-view td,
+.light-pink .file-hex-view th {
     border: 0px;
 }
 
-.light-pink .labels, .light-pink .velo__control, .light-pink .velo__menu {
+.light-pink .monospace {
+    color: var(--text-foreground);
+}
+
+.light-pink .labels,
+.light-pink .velo__control,
+.light-pink .velo__menu {
     background-color: var(--color-default-background);
     color: var(--text-foreground);
 }
@@ -448,7 +472,9 @@ body.light-pink {
     color: var(--text-foreground);
 }
 
-.light-pink .velo__option:hover, .light-pink .velo__option--is-focused, .light-pink .velo__multi-value:hover {
+.light-pink .velo__option:hover,
+.light-pink .velo__option--is-focused,
+.light-pink .velo__multi-value:hover {
     background-color: var(--btn-default-background-hover);
 }
 
@@ -460,5 +486,8 @@ body.light-pink {
     height: 36px;
     width: 29px;
     margin: 5px;
-    filter: brightness(0) saturate(100%) invert(80%) sepia(10%) saturate(3160%) hue-rotate(293deg) brightness(97%) contrast(96%);
+}
+
+.light-pink .no-content {
+    color: var(--no-content);
 }

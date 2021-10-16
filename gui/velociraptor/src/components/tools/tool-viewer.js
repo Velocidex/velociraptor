@@ -352,7 +352,7 @@ export default class ToolViewer extends React.Component {
                   </dl>
                   <CardDeck>
                     <Card>
-                      <Card.Header className="text-center bg-success">Override Tool</Card.Header>
+                      <Card.Header className="text-center">Override Tool</Card.Header>
                       <Card.Body>
                         <Card.Text>
                           As an admin you can manually upload a
