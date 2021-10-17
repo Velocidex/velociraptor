@@ -1,0 +1,20 @@
+SELECT magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe'), magic(path=srcDir + '/artifacts/testdata/files/test.docx'), magic(path=srcDir + '/artifacts/testdata/files/access.log') FROM scope()[
+ {
+  "magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe')": "PE32 executable (console) Intel 80386, for MS Windows",
+  "magic(path=srcDir + '/artifacts/testdata/files/test.docx')": "Microsoft Word 2007+",
+  "magic(path=srcDir + '/artifacts/testdata/files/access.log')": "ASCII text"
+ }
+]SELECT magic(path=srcDir + '/artifacts/testdata/files/access.log', magic=ApacheMagic) FROM scope()[
+ {
+  "magic(path=srcDir + '/artifacts/testdata/files/access.log', magic=ApacheMagic)": "Apache Logs, ASCII text"
+ }
+]SELECT magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe', accessor="file"), magic(path=sampleLog, accessor="data", magic=ApacheMagic) FROM scope()[
+ {
+  "magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe', accessor=\"file\")": "PE32 executable (console) Intel 80386, for MS Windows",
+  "magic(path=sampleLog, accessor=\"data\", magic=ApacheMagic)": "Apache Logs, ASCII text"
+ }
+]SELECT magic(path=srcDir + '/artifacts/testdata/files/') FROM scope()[
+ {
+  "magic(path=srcDir + '/artifacts/testdata/files/')": "directory"
+ }
+]
