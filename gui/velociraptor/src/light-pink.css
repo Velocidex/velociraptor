@@ -427,7 +427,6 @@ body.light-pink {
 
 /* Shell output */
 .light-pink .notebook-output pre {
-    filter: invert(1);
     border-color: var(--border-color);
 }
 
