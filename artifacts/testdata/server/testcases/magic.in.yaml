@@ -1,0 +1,31 @@
+Parameters:
+  ApacheMagic: |
+    0 search/1024 "GET Apache Logs
+    !:strength + 100
+
+  sampleLog: |
+    127.0.0.1 - - [23/Apr/2014:22:58:32 +0200] "GET /index.php HTTP/1.1" 404 207
+    127.0.0.1 - - [23/Apr/2014:22:58:32 +0200] "GET /index.php HTTP/1.1" 404 207
+
+Queries:
+  # access.log should be just data here
+  - SELECT magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe'),
+           magic(path=srcDir + '/artifacts/testdata/files/test.docx'),
+           magic(path=srcDir + '/artifacts/testdata/files/access.log')
+    FROM scope()
+
+  # Add some custom definitions. This should trigger our magic now.
+  - SELECT magic(path=srcDir + '/artifacts/testdata/files/access.log',
+                 magic=ApacheMagic)
+    FROM scope()
+
+  # Using an accessor to get the data allows us to magic arbitrary strings.
+  - SELECT magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe',
+                 accessor="file"),
+           magic(path=sampleLog, accessor="data", magic=ApacheMagic)
+    FROM scope()
+
+  # When accessor is not specified we use libmagic itself to access
+  # files - this allows reporting on directories, symlinks etc.
+  - SELECT magic(path=srcDir + '/artifacts/testdata/files/')
+    FROM scope()

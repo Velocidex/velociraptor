@@ -18,3 +18,4 @@ logs text eol=lf
 *.csv binary
 *.zip binary
 *.index binary
+*.log binary

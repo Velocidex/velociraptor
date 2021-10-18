@@ -13,5 +13,3 @@ custom:
   - files:
       - "artifacts/definitions/**/*.yaml"
       - "docs/references/vql.yaml"
-
-init: Init
