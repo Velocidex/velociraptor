@@ -74,7 +74,7 @@ require (
 	github.com/mattn/go-isatty v0.0.14
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
 	github.com/mattn/go-sqlite3 v1.14.8
-	github.com/microcosm-cc/bluemonday v1.0.15
+	github.com/microcosm-cc/bluemonday v1.0.16
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/panicwrap v1.0.0
 	github.com/olekukonko/tablewriter v0.0.4
@@ -119,7 +119,7 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	howett.net/plist v0.0.0-20201203080718-1454fab16a06
-	www.velocidex.com/golang/evtx v0.0.2-0.20211012122925-68592269b705
+	www.velocidex.com/golang/evtx v0.0.2-0.20211019042143-b4f61df6d401
 	www.velocidex.com/golang/go-ese v0.1.1-0.20211014120951-14a5c1831296
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20210828125207-a1d0ee62467c
 	www.velocidex.com/golang/go-pe v0.1.1-0.20211006062218-8f6d1ad6b2d5

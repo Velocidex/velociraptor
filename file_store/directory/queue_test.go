@@ -67,7 +67,6 @@ func (self *TestSuite) TearDownTest() {
 	self.TestSuite.TearDownTest()
 	os.RemoveAll(self.dir) // clean up
 }
-
 func (self *TestSuite) TestQueueManager() {
 	repo_manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)
