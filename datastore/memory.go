@@ -204,7 +204,7 @@ func (self *TestDataStore) GetSubject(
 		result, pres = self.Subjects[fallback_path]
 		if !pres {
 			return errors.WithMessage(os.ErrNotExist,
-				fmt.Sprintf("While openning %v: not found",
+				fmt.Sprintf("While opening %v: not found",
 					urn.AsClientPath()))
 		}
 	}

@@ -168,7 +168,7 @@ func (self *FileBaseDataStore) GetSubject(
 		}
 		if err != nil {
 			return errors.WithMessage(os.ErrNotExist,
-				fmt.Sprintf("While openning %v: %v",
+				fmt.Sprintf("While opening %v: %v",
 					urn.AsClientPath(), err))
 		}
 	}
@@ -186,7 +186,7 @@ func (self *FileBaseDataStore) GetSubject(
 
 	if err != nil {
 		return errors.WithMessage(os.ErrNotExist,
-			fmt.Sprintf("While openning %v: %v",
+			fmt.Sprintf("While opening %v: %v",
 				urn.AsClientPath(), err))
 	}
 	return nil
