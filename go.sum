@@ -94,6 +94,8 @@ github.com/Velocidex/ordereddict v0.0.0-20191106020901-97c468e5e403/go.mod h1:px
 github.com/Velocidex/ordereddict v0.0.0-20200723153557-9460a6764ab8/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
 github.com/Velocidex/ordereddict v0.0.0-20210502082334-cf5d9045c0d1 h1:SssgTG84Ujch5Divx7AmqjbKQaQr7lrARQ51S1dAScA=
 github.com/Velocidex/ordereddict v0.0.0-20210502082334-cf5d9045c0d1/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
+github.com/Velocidex/ordereddict v0.0.0-20211021090706-c5d39d5aa33a h1:po9Vz/VDKMyplbGyawzXjv410FPAKxRUseF+urlCkSM=
+github.com/Velocidex/ordereddict v0.0.0-20211021090706-c5d39d5aa33a/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
 github.com/Velocidex/pkcs7 v0.0.0-20210524015001-8d1eee94a157 h1:cNRL6O5MZdKi4i0aQxW6+7RoT34QMHFuRKpigCIHBG8=
 github.com/Velocidex/pkcs7 v0.0.0-20210524015001-8d1eee94a157/go.mod h1:/fy/Eg4TQz9KkJduvZfGCnbWTQ/LKaknS2wYB52cU6c=
 github.com/Velocidex/sflags v0.3.1-0.20210402155316-b09f53df5162 h1:wcYgZ8Z8w0JNMqqOFcOYrucDGaNYeCMd8ScDDCo/p8w=

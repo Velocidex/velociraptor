@@ -7,7 +7,6 @@ package directory
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"io"
 	"os"
@@ -16,6 +15,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 

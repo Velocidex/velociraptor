@@ -40,13 +40,13 @@ func TestDataFile(t *testing.T) {
 
 	// Check the first row from the data_file
 	X, _ := data_file.Last().(*ordereddict.Dict).Get("X")
-	assert.Equal(t, X, int64(1))
+	assert.Equal(t, X, uint64(1))
 
 	// Consume this row
 	data_file.Consume()
 
 	X, _ = data_file.Last().(*ordereddict.Dict).Get("X")
-	assert.Equal(t, X, int64(8))
+	assert.Equal(t, X, uint64(8))
 
 	// Consume the end of file.
 	data_file.Consume()
@@ -62,7 +62,7 @@ func TestMergeSorter(t *testing.T) {
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
 	// Total of 8 rows
-	values := []int64{1, 8, 2, 7, 3, 9, 12, 4}
+	values := []uint64{1, 8, 2, 7, 3, 9, 12, 4}
 	ctx := context.Background()
 
 	input := make(chan types.Row)
@@ -95,7 +95,7 @@ func TestMergeSorterDesc(t *testing.T) {
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
 	// Total of 8 rows
-	values := []int64{1, 8, 2, 7, 3, 9, 12, 4}
+	values := []uint64{1, 8, 2, 7, 3, 9, 12, 4}
 	ctx := context.Background()
 
 	input := make(chan types.Row)
