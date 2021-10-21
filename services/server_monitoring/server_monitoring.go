@@ -340,6 +340,9 @@ func StartServerMonitoringService(
 		defer wg.Done()
 		defer services.RegisterServerEventManager(nil)
 
+		// Shut down all server queries in an orderly fasion
+		defer manager.Close()
+
 		<-ctx.Done()
 	}()
 

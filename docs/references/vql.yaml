@@ -1694,14 +1694,8 @@
         headers=dict(
             `Content-Type`="multipart/form-data;boundary=83fcda3640aca670"
         ),
-        data=regex_replace(re='\n', '\r\n', '''
-    --83fcda3640aca670
-    Content-Disposition: form-data; name="file";filename="ls"
-    Content-Type: application/octet-stream
-
-    ''' + file_bytes + '''
-    --83fcda3640aca670--
-    ''')
+        data='--83fcda3640aca670\r\nContent-Disposition: form-data; name="file";filename="ls"\r\nContent-Type: application/octet-stream\r\n\r\n' +
+             file_bytes + '\r\n--83fcda3640aca670--')
     ```
 
     Note how custom headers can be provided using a dict - note also

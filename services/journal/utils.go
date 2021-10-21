@@ -71,8 +71,8 @@ func WatchQueueWithCB(ctx context.Context,
 
 	wg.Add(1)
 	go func() {
-		defer cancel()
 		defer wg.Done()
+		defer cancel()
 
 		for {
 			select {
