@@ -1,6 +1,7 @@
 package directory_test
 
 import (
+	"reflect"
 	"sync"
 	"time"
 
@@ -54,4 +55,49 @@ func (self *TestSuite) TestListener() {
 
 	// Events must maintain their order
 	assert.Equal(self.T(), []int64{0, 1, 2, 3, 4}, events)
+}
+
+// Test that types are properly preserved as they get serialized into
+// the buffer file.
+func (self *TestSuite) TestListenerPreserveTypes() {
+	listener, err := directory.NewListener(
+		self.ConfigObj, self.Sm.Ctx, "TestListener")
+	assert.NoError(self.T(), err)
+
+	// TODO: Figure out how to preserve time.Time properly.
+	// Send an event to the listener.
+	event_source := ordereddict.NewDict().
+		Set("A", "String").
+		Set("B", uint64(9223372036854775808))
+	listener.Send(event_source)
+
+	// Make sure we wrote to the buffer file.
+	size, _ := listener.Debug().GetInt64("Size")
+	assert.True(self.T(), size > directory.FirstRecordOffset)
+
+	events := []*ordereddict.Dict{}
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	// Consume events
+	go func() {
+		defer wg.Done()
+
+		for {
+			event, ok := <-listener.Output()
+			if !ok {
+				return
+			}
+
+			events = append(events, event)
+		}
+	}()
+
+	// Close the listener - this should flush the file to the reader.
+	listener.Close()
+	wg.Wait()
+
+	assert.Equal(self.T(), 1, len(events))
+	assert.True(self.T(), reflect.DeepEqual(
+		events[0].ToDict(), event_source.ToDict()))
 }
