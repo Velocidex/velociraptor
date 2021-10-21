@@ -143,7 +143,7 @@ func (self *ResultSetTestSuite) TestResultSetWriter() {
 	// v := test_utils.GetMemoryFileStore(self.T(), self.config_obj)
 	// utils.Debug(v)
 
-	// Openning past the end of file should return an EOF error.
+	// Opening past the end of file should return an EOF error.
 	rs_reader, err := result_sets.NewResultSetReader(self.file_store, path_manager)
 	assert.NoError(self.T(), err)
 	defer rs_reader.Close()
