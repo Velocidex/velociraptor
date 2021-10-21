@@ -92,13 +92,13 @@ func (self *FileBasedRingBuffer) Enqueue(item interface{}) error {
 	_, err = self.fd.WriteAt(self.write_buf, int64(self.header.WritePointer))
 	if err != nil {
 		// File is corrupt now, reset it.
-		self.Reset()
+		self._Truncate()
 		return err
 	}
 
 	n, err := self.fd.WriteAt(serialized, int64(self.header.WritePointer+8))
 	if err != nil {
-		self.Reset()
+		self._Truncate()
 		return err
 	}
 
@@ -111,7 +111,7 @@ func (self *FileBasedRingBuffer) Enqueue(item interface{}) error {
 	}
 	_, err = self.fd.WriteAt(serialized, 0)
 	if err != nil {
-		self.Reset()
+		self._Truncate()
 		return err
 	}
 

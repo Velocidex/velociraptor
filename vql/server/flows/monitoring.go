@@ -202,7 +202,10 @@ func (self WatchMonitoringPlugin) Call(
 
 		// Ask the journal service to watch the event queue for us.
 		qm_chan, cancel := journal.Watch(ctx, arg.Artifact)
-		defer cancel()
+
+		// Make sure to call this at shutdown (defer is not guaranteed
+		// to run).
+		scope.AddDestructor(cancel)
 
 		for row := range qm_chan {
 			select {
