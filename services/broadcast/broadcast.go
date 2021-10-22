@@ -62,7 +62,8 @@ func (self *BroadcastService) unregister(name string) {
 	delete(self.listener_closers, name)
 }
 
-func (self *BroadcastService) Watch(ctx context.Context, name string) (
+func (self *BroadcastService) Watch(
+	ctx context.Context, name string, options directory.QueueOptions) (
 	output <-chan *ordereddict.Dict, cancel func(), err error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -72,7 +73,7 @@ func (self *BroadcastService) Watch(ctx context.Context, name string) (
 		return nil, nil, fmt.Errorf("No generator registered for %v", name)
 	}
 
-	output_chan, cancel := self.pool.Register(ctx, name)
+	output_chan, cancel := self.pool.Register(ctx, name, options)
 	// If closers in nil we create a new slice.
 	closers, _ := self.listener_closers[name]
 	closers = append(closers, cancel)

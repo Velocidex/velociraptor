@@ -12,7 +12,8 @@ import (
 
 func (self *TestSuite) TestListener() {
 	listener, err := directory.NewListener(
-		self.ConfigObj, self.Sm.Ctx, "TestListener")
+		self.ConfigObj, self.Sm.Ctx, "TestListener",
+		directory.QueueOptions{})
 	assert.NoError(self.T(), err)
 
 	events := []int64{}
@@ -61,7 +62,8 @@ func (self *TestSuite) TestListener() {
 // the buffer file.
 func (self *TestSuite) TestListenerPreserveTypes() {
 	listener, err := directory.NewListener(
-		self.ConfigObj, self.Sm.Ctx, "TestListener")
+		self.ConfigObj, self.Sm.Ctx, "TestListener",
+		directory.QueueOptions{})
 	assert.NoError(self.T(), err)
 
 	// TODO: Figure out how to preserve time.Time properly.

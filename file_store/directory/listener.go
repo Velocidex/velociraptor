@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sync"
+	"sync/atomic"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -29,6 +30,9 @@ type Listener struct {
 
 	// should new messages go directly to the file buffer?
 	file_buffer_active bool // Locked
+
+	// If set do not use the file buffer - this will block senders!
+	disable_file_buffering int32
 
 	// If we are closed we drop any new messages.
 	closed bool
@@ -58,6 +62,18 @@ type Listener struct {
 
 // Should not block - very fast.
 func (self *Listener) Send(item *ordereddict.Dict) {
+	// This will block senders until we can send output
+	if atomic.LoadInt32(&self.disable_file_buffering) > 0 {
+		select {
+		case <-self.ctx.Done():
+			return
+
+			// Try to deliver message immediately.
+		case self.output <- item:
+			return
+		}
+	}
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -142,30 +158,35 @@ func (self *Listener) Close() {
 	self.mu.Unlock()
 
 	// Wait for all outstanding file buffer messages to be sent.
-	self.file_buffer.Wg.Wait()
+	if self.file_buffer != nil {
+		self.file_buffer.Wg.Wait()
 
-	// Drain the file one last time.
-	items := self.file_buffer.Lease(100)
-	for _, item := range items {
-		select {
-		case <-self.ctx.Done():
-			return
+		// Drain the file one last time.
+		items := self.file_buffer.Lease(100)
+		for _, item := range items {
+			select {
+			case <-self.ctx.Done():
+				return
 
-			// As each message is delivered we can let the
-			// file buffer know it is delivered.
-		case self.output <- item:
-			self.file_buffer.Wg.Done()
+				// As each message is delivered we can let the
+				// file buffer know it is delivered.
+			case self.output <- item:
+				self.file_buffer.Wg.Done()
+			}
 		}
+		self.file_buffer.Wg.Wait()
+		self.file_buffer.Close()
 	}
-	self.file_buffer.Wg.Wait()
-	self.file_buffer.Close()
 
 	// Close the output to release our readers.
 	close(self.output)
 
 	// Done -  remove the tmp file.
 	self.cancel()
-	os.Remove(self.tmpfile) // clean up file buffer
+
+	if self.tmpfile != "" {
+		os.Remove(self.tmpfile) // clean up file buffer
+	}
 }
 
 func (self *Listener) Debug() *ordereddict.Dict {
@@ -186,29 +207,36 @@ func (self *Listener) Debug() *ordereddict.Dict {
 
 func NewListener(
 	config_obj *config_proto.Config,
-	ctx context.Context, name string) (*Listener, error) {
-
-	tmpfile, err := ioutil.TempFile("", "journal")
-	if err != nil {
-		return nil, err
-	}
-
-	file_buffer, err := NewFileBasedRingBuffer(config_obj, tmpfile)
-	if err != nil {
-		return nil, err
-	}
+	ctx context.Context, name string,
+	options QueueOptions) (*Listener, error) {
 
 	subctx, cancel := context.WithCancel(ctx)
 
 	self := &Listener{
-		id:                utils.GetId(),
-		name:              name,
-		output:            make(chan *ordereddict.Dict),
-		file_buffer:       file_buffer,
-		file_buffer_ready: make(chan bool),
-		tmpfile:           tmpfile.Name(),
-		ctx:               subctx,
-		cancel:            cancel,
+		id:     utils.GetId(),
+		name:   name,
+		output: make(chan *ordereddict.Dict),
+		ctx:    subctx,
+		cancel: cancel,
+	}
+
+	if options.DisableFileBuffering {
+		self.disable_file_buffering = 1
+
+	} else {
+		tmpfile, err := ioutil.TempFile("", "journal")
+		if err != nil {
+			return nil, err
+		}
+
+		file_buffer, err := NewFileBasedRingBuffer(config_obj, tmpfile)
+		if err != nil {
+			return nil, err
+		}
+
+		self.file_buffer = file_buffer
+		self.file_buffer_ready = make(chan bool)
+		self.tmpfile = tmpfile.Name()
 	}
 
 	// Pump messages from the file_buffer to our listeners.
