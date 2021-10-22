@@ -24,7 +24,7 @@ collect artifacts from the client (which is just running on your own
 machine) as normal.
 
 Once you are ready for a full deployment, check out the various deployment options at
-https://docs.velociraptor.app/docs/overview/deployment/
+https://docs.velociraptor.app/docs/deployment/
 
 ## Training
 
@@ -145,4 +145,4 @@ https://docs.velociraptor.app/blog/
 
 Hang out on Medium https://medium.com/velociraptor-ir
 
-Follow us on Twitter @velocidex
+Follow us on Twitter [@velocidex](https://twitter.com/velocidex)
