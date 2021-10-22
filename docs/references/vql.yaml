@@ -2130,7 +2130,7 @@
     required: true
   - name: sep
     type: string
-    description: The separator. Defaults to and empty string if not explicitly set.
+    description: The separator. Defaults to an empty string if not explicitly set.
   category: basic
 - name: js
   description: Compile and run javascript code.
