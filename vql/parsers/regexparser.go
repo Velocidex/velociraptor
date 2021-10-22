@@ -46,6 +46,7 @@ type _ParseFileWithRegexArgs struct {
 	Filenames       []string `vfilter:"required,field=file,doc=A list of files to parse."`
 	Regex           []string `vfilter:"required,field=regex,doc=A list of regex to apply to the file data."`
 	Accessor        string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	BufferSize      int      `vfilter:"optional,field=buffer_size,doc=Maximum size of line buffer."`
 	compiled_regexs []*regexp.Regexp
 	capture_vars    []string
 }
@@ -77,6 +78,14 @@ func _ParseFile(
 		return
 	}
 	defer file.Close()
+
+	if arg.BufferSize != 0 {
+		pool = sync.Pool{
+			New: func() interface{} {
+				buffer := make([]byte, arg.BufferSize)
+				return &buffer
+			}}
+	}
 
 	cached_buffer := pool.Get().(*[]byte)
 	defer pool.Put(cached_buffer)
@@ -179,8 +188,9 @@ func (self _ParseFileWithRegex) Info(scope vfilter.Scope, type_map *vfilter.Type
 }
 
 type _ParseStringWithRegexFunctionArgs struct {
-	String string   `vfilter:"required,field=string,doc=A string to parse."`
-	Regex  []string `vfilter:"required,field=regex,doc=The regex to apply."`
+	String     string   `vfilter:"required,field=string,doc=A string to parse."`
+	Regex      []string `vfilter:"required,field=regex,doc=The regex to apply."`
+	BufferSize int      `vfilter:"optional,field=buffer_size,doc=Maximum size of line buffer."`
 }
 
 type _ParseStringWithRegexFunction struct{}

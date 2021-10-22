@@ -117,10 +117,6 @@ func (self *JoinFunction) Call(ctx context.Context,
 		return false
 	}
 
-	if arg.Sep == "" {
-		arg.Sep = ","
-	}
-
 	return strings.Join(arg.Array, arg.Sep)
 }
 

@@ -2130,7 +2130,7 @@
     required: true
   - name: sep
     type: string
-    description: The separator
+    description: The separator. Defaults to null if not explicitly set.
   category: basic
 - name: js
   description: Compile and run javascript code.
@@ -2986,6 +2986,9 @@
     description: A list of regex to apply to the file data.
     repeated: true
     required: true
+  - name: buffer_size
+    type: int
+    description: Maximum size of line buffer.
   - name: accessor
     type: string
     description: The accessor to use.
@@ -3017,6 +3020,9 @@
     description: The regex to apply.
     repeated: true
     required: true
+  - name: buffer_size
+    type: int
+    description: Maximum size of line buffer.
   category: parsers
 - name: parse_usn
   description: Parse the USN journal from a device.
