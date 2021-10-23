@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -13,7 +14,8 @@ import (
 )
 
 type Generator struct {
-	name string
+	name                   string
+	disable_file_buffering bool
 }
 
 // Give Generator the vfilter.StoredQuery interface so it can return
@@ -29,7 +31,10 @@ func (self Generator) Eval(ctx context.Context, scope types.Scope) <-chan types.
 		return result
 	}
 
-	output_chan, cancel, err := b.Watch(ctx, self.name)
+	output_chan, cancel, err := b.Watch(ctx, self.name, directory.QueueOptions{
+		DisableFileBuffering: self.disable_file_buffering,
+	})
+
 	if err != nil {
 		scope.Log("generate: %v", err)
 		close(result)
@@ -55,9 +60,10 @@ func (self Generator) Eval(ctx context.Context, scope types.Scope) <-chan types.
 }
 
 type GeneratorArgs struct {
-	Name  string            `vfilter:"optional,field=name,doc=Name to call the generator"`
-	Query types.StoredQuery `vfilter:"optional,field=query,doc=Run this query to generator rows."`
-	Delay int64             `vfilter:"optional,field=delay,doc=Wait before starting the query"`
+	Name              string            `vfilter:"optional,field=name,doc=Name to call the generator"`
+	Query             types.StoredQuery `vfilter:"optional,field=query,doc=Run this query to generator rows."`
+	Delay             int64             `vfilter:"optional,field=delay,doc=Wait before starting the query"`
+	WithFileBuffering bool              `vfilter:"optional,field=with_file_buffer,doc=Enable file buffering"`
 }
 
 type GeneratorFunction struct{}
@@ -89,7 +95,10 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 	// just wrap the existing one and return it.
 	err = b.RegisterGenerator(generator_chan, arg.Name)
 	if err == services.AlreadyRegisteredError {
-		return Generator{arg.Name}
+		return Generator{
+			name:                   arg.Name,
+			disable_file_buffering: !arg.WithFileBuffering,
+		}
 	}
 
 	scope.Log("generate: registered new query for %v: %v",
@@ -124,7 +133,10 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 		}
 	}()
 
-	return Generator{arg.Name}
+	return Generator{
+		name:                   arg.Name,
+		disable_file_buffering: !arg.WithFileBuffering,
+	}
 }
 
 func (self GeneratorFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
