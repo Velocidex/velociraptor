@@ -37,6 +37,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+type QueueOptions struct {
+	DisableFileBuffering bool
+}
+
 // A Queue manages a set of registrations at a specific queue name
 // (artifact name).
 type QueuePool struct {
@@ -48,14 +52,15 @@ type QueuePool struct {
 }
 
 func (self *QueuePool) Register(
-	ctx context.Context, vfs_path string) (<-chan *ordereddict.Dict, func()) {
+	ctx context.Context, vfs_path string,
+	options QueueOptions) (<-chan *ordereddict.Dict, func()) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	registrations := self.registrations[vfs_path]
 
 	subctx, cancel := context.WithCancel(ctx)
-	new_registration, err := NewListener(self.config_obj, subctx, vfs_path)
+	new_registration, err := NewListener(self.config_obj, subctx, vfs_path, options)
 	if err != nil {
 		cancel()
 		output_chan := make(chan *ordereddict.Dict)
@@ -184,7 +189,8 @@ func (self *DirectoryQueueManager) Watch(ctx context.Context,
 	// current queue listener and cause any outstanding events to be
 	// dropped on the floor.
 	subctx, cancel := context.WithCancel(ctx)
-	output_chan, pool_cancel := self.queue_pool.Register(subctx, queue_name)
+	output_chan, pool_cancel := self.queue_pool.Register(
+		subctx, queue_name, QueueOptions{})
 	return output_chan, func() {
 		cancel()
 		pool_cancel()
