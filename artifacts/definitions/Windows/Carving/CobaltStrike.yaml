@@ -445,7 +445,7 @@ sources:
 
 
       -- generate results remove any without c2_server to remove FPs
-      LET results = SELECT *,
+      LET results <= SELECT *,
             format(format='0x%x',args=Xor) as Xor, 
             parse_binary(accessor="data",
                 filename=xor(string=_Data,key=Xor),
@@ -459,13 +459,12 @@ sources:
         WHERE DecodedConfig.c2_server
       
       -- add decoded data seperate to keep pretty output
-      LET WithDecodedData = SELECT *, 
-            if(condition=IncludeDecodedData,
-                then= format(format="% x", 
-                    args=xor(string=_Data,key=Xor))) as DecodedData
+      LET OutDecodedData = SELECT *, 
+            format(format="% x", 
+              args=xor(string=_Data,key=Xor)) as DecodedData
         FROM results
       
       -- output rows
       SELECT * FROM if(condition=IncludeDecodedData,
-            then=WithDecodedData,
+            then= OutDecodedData,
             else= results)
