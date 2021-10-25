@@ -2,6 +2,7 @@
  "zip_contents": {
   "Demo.Plugins.GUI.json": [
    {
+    "Hex": "VGhpcyBzaG91bGQgcG9wdXAgaW4gYSBoZXggZWRpdG9y",
     "ChoiceSelector": "InvalidChoice",
     "Flag": false,
     "Flag2": false,
