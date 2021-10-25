@@ -22,15 +22,18 @@ import (
 
 	errors "github.com/pkg/errors"
 	context "golang.org/x/net/context"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/timelines"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
@@ -45,7 +48,9 @@ func getTable(
 		in.Rows = 500
 	}
 
-	result := &api_proto.GetTableResponse{}
+	result := &api_proto.GetTableResponse{
+		ColumnTypes: getColumnTypes(config_obj, in),
+	}
 	path_spec, err := getPathSpec(config_obj, in)
 	if err != nil {
 		return result, err
@@ -100,6 +105,51 @@ func getTable(
 	}
 
 	return result, nil
+}
+
+// The GUI is requesting table data. This function tries to figure out
+// the column types.
+func getColumnTypes(
+	config_obj *config_proto.Config,
+	in *api_proto.GetTableRequest) []*artifacts_proto.ColumnType {
+
+	// For artifacts column types are specified in the `column_types`
+	// artifact definition.
+	if in.Artifact != "" {
+		manager, err := services.GetRepositoryManager()
+		if err != nil {
+			return nil
+		}
+
+		repository, err := manager.GetGlobalRepository(config_obj)
+		if err != nil {
+			return nil
+		}
+
+		artifact, pres := repository.Get(config_obj, in.Artifact)
+		if pres {
+			return artifact.ColumnTypes
+		}
+	}
+
+	// For notebooks, the column_types are set in the notebook metadata.
+	if in.NotebookId != "" {
+		notebook_path_manager := paths.NewNotebookPathManager(
+			in.NotebookId)
+
+		db, err := datastore.GetDB(config_obj)
+		if err != nil {
+			return nil
+		}
+
+		notebook := &api_proto.NotebookMetadata{}
+		err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
+		if err == nil {
+			return notebook.ColumnTypes
+		}
+	}
+
+	return nil
 }
 
 func getPathSpec(

@@ -517,6 +517,7 @@ export function formatColumns(columns) {
             break;
 
         case "client":
+        case "client_id":
             x.formatter = (cell, row) => {
                 return <ClientLink client_id={cell}/>;
             };
@@ -531,6 +532,7 @@ export function formatColumns(columns) {
             break;
 
         case "base64hex":
+        case "base64":
             x.formatter = (cell, row) => {
                 try {
                     cell = atob(cell);

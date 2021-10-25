@@ -136,7 +136,7 @@
      "VQL": "\nLET JSONData2 \u003c= if(\n    condition=format(format=\"%T\", args=JSONData2) =~ \"string\",\n    then=parse_json_array(data=JSONData2),\n    else=JSONData2)\n"
     },
     {
-     "VQL": "LET Demo_Plugins_GUI_0_0 = SELECT ChoiceSelector, Flag, Flag2, Flag3, OffFlag, StartDate, StartDate2, StartDate3, CSVData, CSVData2, JSONData, JSONData2 FROM scope()"
+     "VQL": "LET Demo_Plugins_GUI_0_0 = SELECT base64encode(string=\"This should popup in a hex editor\") AS Hex, ChoiceSelector, Flag, Flag2, Flag3, OffFlag, StartDate, StartDate2, StartDate3, CSVData, CSVData2, JSONData, JSONData2 FROM scope()"
     },
     {
      "Name": "Demo.Plugins.GUI",

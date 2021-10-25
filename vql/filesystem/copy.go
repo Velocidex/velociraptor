@@ -46,6 +46,12 @@ func (self *CopyFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
+	select {
+	case <-ctx.Done():
+		return vfilter.Null{}
+	default:
+	}
+
 	// Check the config if we are allowed to execve at all.
 	config_obj, ok := artifacts.GetConfig(scope)
 	if ok && config_obj.PreventExecve {

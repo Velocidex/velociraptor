@@ -227,7 +227,7 @@ export default class NewHuntWizard extends React.Component {
                 parameters: {},
                 resources: {
                     max_rows: request.max_rows,
-                    max_mbytes: request.max_upload_bytes / 1024/1024,
+                    max_mbytes: parseInt(request.max_upload_bytes / 1024/1024),
                     timeout: request.timeout,
                     ops_per_second: request.ops_per_second,
                 },

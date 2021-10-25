@@ -3,6 +3,8 @@ package functions
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
+	"encoding/hex"
 	"reflect"
 
 	"github.com/Velocidex/ordereddict"
@@ -55,6 +57,28 @@ func (self *EncodeFunction) Call(ctx context.Context,
 		}
 
 		return string(serialized_content)
+
+	case "hex":
+		switch t := result.(type) {
+		case []byte:
+			return hex.EncodeToString(t)
+		case string:
+			return hex.EncodeToString([]byte(t))
+		default:
+			scope.Log("serialize: Unsupported type for hex encoding %T", result)
+			return vfilter.Null{}
+		}
+
+	case "base64":
+		switch t := result.(type) {
+		case []byte:
+			return base64.RawStdEncoding.EncodeToString(t)
+		case string:
+			return base64.RawStdEncoding.EncodeToString([]byte(t))
+		default:
+			scope.Log("serialize: Unsupported type for base64 encoding %T", result)
+			return vfilter.Null{}
+		}
 
 	case "csv":
 		// Not actually a slice.

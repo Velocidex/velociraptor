@@ -894,7 +894,8 @@ class NewCollectionWizard extends React.Component {
         }
 
         if (this.state.resources.max_mbytes) {
-            result.max_upload_bytes = this.state.resources.max_mbytes * 1024 * 1024;
+            result.max_upload_bytes = parseInt(
+                this.state.resources.max_mbytes * 1024 * 1024);
         }
 
         return result;
