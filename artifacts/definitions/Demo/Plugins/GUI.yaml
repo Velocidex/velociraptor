@@ -66,9 +66,15 @@ parameters:
     default: |
       [{"foo": "bar"}]
 
+column_types:
+  - name: Hex
+    type: base64hex
+
 sources:
   - query: |
-      SELECT ChoiceSelector, Flag, Flag2, Flag3, OffFlag, StartDate, StartDate2, StartDate3,
+      SELECT base64encode(string="This should popup in a hex editor") AS Hex,
+             ChoiceSelector, Flag, Flag2, Flag3,
+             OffFlag, StartDate, StartDate2, StartDate3,
              CSVData, CSVData2, JSONData, JSONData2
       FROM scope()
 
@@ -118,8 +124,7 @@ sources:
             Base64Data="base64hex"
           )
 
-          LET Data <= read_file(filename="/dev/urandom", length=100)
-          LET Base64Data = base64encode(string=Data)
+          LET Base64Data = base64encode(string="\x00\x01\x20\x32\x12\x10")
           LET URL = "[Google](https://www.google.com)"
 
           SELECT 1628609690.1 AS Raw,
@@ -271,3 +276,18 @@ sources:
                  Test AS Test21, Test AS Test22,
                  Test AS Test23, Test AS Test24, Test AS Test25
           FROM range(start=0, end=100, step=1)
+
+      - type: VQL
+        template: |
+          /*
+          # Column types set in the artifact's `column_types` field
+
+          These apply to notebooks automatically without needing to
+          define them again.
+
+          */
+
+          LET ColumnTypes = dict(`StartDate`='timestamp')
+
+          SELECT Hex, StartDate
+          FROM source()

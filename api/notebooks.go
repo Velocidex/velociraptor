@@ -282,7 +282,7 @@ func getCellsForHunt(ctx context.Context,
 		}
 	}
 
-	return getDefaultCellsForSources(config_obj, sources)
+	return getDefaultCellsForSources(config_obj, sources, notebook_metadata)
 }
 
 func getCellsForFlow(ctx context.Context,
@@ -300,11 +300,13 @@ func getCellsForFlow(ctx context.Context,
 		sources = flow_context.Request.Artifacts
 	}
 
-	return getDefaultCellsForSources(config_obj, sources)
+	return getDefaultCellsForSources(config_obj, sources, notebook_metadata)
 }
 
-func getDefaultCellsForSources(config_obj *config_proto.Config,
-	sources []string) []*api_proto.NotebookCellRequest {
+func getDefaultCellsForSources(
+	config_obj *config_proto.Config,
+	sources []string,
+	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
 	manager, err := services.GetRepositoryManager()
 	if err != nil {
 		return nil
@@ -319,12 +321,20 @@ func getDefaultCellsForSources(config_obj *config_proto.Config,
 	var result []*api_proto.NotebookCellRequest
 
 	for _, source := range sources {
+		artifact, pres := repository.Get(config_obj, source)
+		if pres {
+			notebook_metadata.ColumnTypes = append(notebook_metadata.ColumnTypes,
+				artifact.ColumnTypes...)
+		}
+
 		// Check if the artifact has custom notebook cells defined.
 		artifact_source, pres := repository.GetSource(config_obj, source)
 		if !pres {
 			continue
 		}
-		env := []*api_proto.Env{{Key: "ArtifactName", Value: source}}
+		env := []*api_proto.Env{{
+			Key: "ArtifactName", Value: source,
+		}}
 
 		// If the artifact_source defines a notebook, let it do its own thing.
 		if len(artifact_source.Notebook) > 0 {
