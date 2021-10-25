@@ -268,7 +268,7 @@ class VeloPagedTable extends Component {
         let column_names = [];
         let columns = [{dataField: '_id', hidden: true}];
         for(var i=0;i<this.state.columns.length;i++) {
-            var name = this.state.columns[i];
+            let name = this.state.columns[i];
             let definition ={ dataField: name, text: name};
             if (this.props.renderers && this.props.renderers[name]) {
                 definition.formatter = this.props.renderers[name];
@@ -287,7 +287,17 @@ class VeloPagedTable extends Component {
             // rendering. This can be done in the notebook by simply
             // setting a VQL variable:
             // LET ColumnTypes = dict(BootTime="timestamp")
+            // Or in an artifact using the column_types field
             definition.type = table_options[name];
+
+            // If the user does not override the table options in VQL,
+            // the column types are set from the artifact's
+            // definition.
+            _.each(this.state.column_types, x=>{
+                if (x.name === name && !definition.type) {
+                    definition.type = x.type;
+                }
+            });
 
             columns.push(definition);
         }

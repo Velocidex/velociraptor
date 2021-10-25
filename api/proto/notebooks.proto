@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "artifacts/proto/artifact.proto";
 import "flows.proto";
 
 
@@ -73,6 +74,8 @@ message NotebookMetadata {
     repeated Env env = 14;
 
     repeated string timelines = 15;
+
+    repeated ColumnType column_types = 17;
 }
 
 message Notebooks {

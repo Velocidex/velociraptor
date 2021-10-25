@@ -129,7 +129,7 @@ export default class TimelineRenderer extends React.Component {
     static propTypes = {
         name: PropTypes.string,
         notebook_id: PropTypes.string,
-        params: PropTypes.string,
+        params: PropTypes.object,
     }
 
     componentDidMount = () => {
