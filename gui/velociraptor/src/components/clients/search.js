@@ -62,7 +62,6 @@ class VeloClientSearch extends Component {
         }, this.source.token).then(resp => {
             if (resp.data && resp.data.names) {
                 let options = resp.data.names;
-                options.push("recent:" + this.context.traits.username);
                 this.setState({
                     options: options,
                 });
