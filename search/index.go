@@ -186,6 +186,7 @@ func getChildren(
 		// Only use the entry if it is recent enough
 		if now.Before(cached_entry.ts.Add(60 * time.Second)) {
 			cached_entry.ts = now
+
 			return cached_entry.children, nil
 		}
 

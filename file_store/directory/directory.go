@@ -218,9 +218,8 @@ func (self *DirectoryFileStore) Walk(root api.FSPathSpec, walkFn api.WalkFunc) e
 	}
 
 	for _, child := range children {
-		child_spec := root.AddChild(child.Name())
 		if child.IsDir() {
-			err = self.Walk(child_spec, walkFn)
+			err = self.Walk(child.PathSpec(), walkFn)
 			if err != nil {
 				return err
 			}
@@ -231,7 +230,7 @@ func (self *DirectoryFileStore) Walk(root api.FSPathSpec, walkFn api.WalkFunc) e
 			continue
 		}
 
-		walkFn(child_spec, child)
+		walkFn(child.PathSpec(), child)
 	}
 	return nil
 }
