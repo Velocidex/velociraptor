@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -31,21 +30,11 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
-const BUFF_SIZE = 40960
-
-var (
-	pool = sync.Pool{
-		New: func() interface{} {
-			buffer := make([]byte, BUFF_SIZE)
-			return &buffer
-		},
-	}
-)
-
 type _ParseFileWithRegexArgs struct {
 	Filenames       []string `vfilter:"required,field=file,doc=A list of files to parse."`
 	Regex           []string `vfilter:"required,field=regex,doc=A list of regex to apply to the file data."`
 	Accessor        string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	BufferSize      int      `vfilter:"optional,field=buffer_size,doc=Maximum size of line buffer (default 64kb)."`
 	compiled_regexs []*regexp.Regexp
 	capture_vars    []string
 }
@@ -78,10 +67,11 @@ func _ParseFile(
 	}
 	defer file.Close()
 
-	cached_buffer := pool.Get().(*[]byte)
-	defer pool.Put(cached_buffer)
+	if arg.BufferSize == 0 {
+		arg.BufferSize = 64 * 1024
+	}
 
-	buffer := *cached_buffer
+	buffer := make([]byte, arg.BufferSize)
 
 	for {
 		n, _ := file.Read(buffer)

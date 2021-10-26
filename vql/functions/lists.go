@@ -101,7 +101,7 @@ func (self ArrayFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 
 type JoinFunctionArgs struct {
 	Array []string `vfilter:"required,field=array,doc=The array to join"`
-	Sep   string   `vfilter:"optional,field=sep,doc=The separator"`
+	Sep   string   `vfilter:"optional,field=sep,doc=The separator. Defaults to an empty string if not explicitly set"`
 }
 
 type JoinFunction struct{}
@@ -115,10 +115,6 @@ func (self *JoinFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("join: %s", err.Error())
 		return false
-	}
-
-	if arg.Sep == "" {
-		arg.Sep = ","
 	}
 
 	return strings.Join(arg.Array, arg.Sep)

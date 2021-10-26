@@ -1393,6 +1393,9 @@
   - name: delay
     type: int64
     description: Wait before starting the query
+  - name: with_file_buffer
+    type: bool
+    description: Enable file buffering
 - name: geoip
   description: |
     Lookup an IP Address using the MaxMind GeoIP database. You can get
@@ -2124,7 +2127,7 @@
     required: true
   - name: sep
     type: string
-    description: The separator
+    description: The separator. Defaults to an empty string if not explicitly set
   category: basic
 - name: js
   description: Compile and run javascript code.
@@ -2277,7 +2280,6 @@
     as Windows Defender "Realtime monitoring", applying magic() on
     many files (e.g. in a glob) may result in substantial load on the
     endpoint.
-
   type: Function
   args:
   - name: path
@@ -2983,6 +2985,9 @@
   - name: accessor
     type: string
     description: The accessor to use.
+  - name: buffer_size
+    type: int
+    description: Maximum size of line buffer (default 64kb).
   category: parsers
 - name: parse_recyclebin
   description: Parses a $I file found in the $Recycle.Bin
@@ -4188,7 +4193,6 @@
     ```vql
     format(format="%02x", args="Hello") -> "48656c6c6f"
     ```
-
   type: Function
   args:
   - name: string
@@ -4869,3 +4873,4 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
+
