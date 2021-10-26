@@ -126,7 +126,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20211013063943-0334d69593c1
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20211025142218-0da47fbeed51
+	www.velocidex.com/golang/vfilter v0.0.0-20211026092730-778640ab254d
 	www.velocidex.com/golang/vtypes v0.0.0-20211024171602-ee8e0200d5eb
 )
 
