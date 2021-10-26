@@ -237,8 +237,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	// Update the client indexes for the GUI. Add any keywords we
 	// wish to be searchable in the UI here.
 	for _, term := range []string{
-		client_info.Hostname,
-		client_info.Fqdn,
+		"host:" + client_info.Fqdn,
 		"host:" + client_info.Hostname} {
 		err := search.SetIndex(config_obj, client_id, term)
 		if err != nil {

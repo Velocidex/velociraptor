@@ -4,7 +4,6 @@ package search
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
 
@@ -15,9 +14,28 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
+var (
+	verbs = []string{
+		"label:",
+		"host:",
+		"client:",
+		"recent:",
+	}
+)
+
 func splitIntoOperatorAndTerms(term string) (string, string) {
+	if term == "all" {
+		return "all", ""
+	}
+
+	// Client IDs can be searched directly.
+	if strings.HasPrefix(term, "C.") || strings.HasPrefix(term, "c.") {
+		return "client", term
+	}
+
 	parts := strings.SplitN(term, ":", 2)
 	if len(parts) == 1 {
+		// Bare search terms mean hostname or fqdn
 		return "", parts[0]
 	}
 	return parts[0], parts[1]
@@ -90,14 +108,14 @@ func SearchClients(
 
 	operator, term := splitIntoOperatorAndTerms(in.Query)
 	switch operator {
-	case "", "label", "host":
+	case "label", "host", "client", "all":
 		return searchClientIndex(ctx, config_obj, in, limit)
 
 	case "recent":
 		return searchRecents(ctx, config_obj, in, principal, term, limit)
 
 	default:
-		return nil, errors.New("Invalid search operator " + operator)
+		return searchVerbs(ctx, config_obj, in, limit)
 	}
 }
 
@@ -180,4 +198,47 @@ func searchClientIndex(
 	}
 
 	return result, nil
+}
+
+// Free form search term, try to fill in as many suggestions as
+// possible.
+func searchVerbs(ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.SearchClientsRequest,
+	limit uint64) (*api_proto.SearchClientsResponse, error) {
+
+	terms := []string{}
+	term := strings.ToLower(in.Query)
+	for _, verb := range verbs {
+		if strings.HasPrefix(verb, term) {
+			terms = append(terms, verb)
+		}
+	}
+
+	// Not a verb maybe a hostname
+	if uint64(len(terms)) < in.Limit {
+		res, _ := searchClientIndex(ctx, config_obj,
+			&api_proto.SearchClientsRequest{
+				Type:   in.Type,
+				Offset: in.Offset,
+				Query:  "host:" + in.Query,
+				Limit:  in.Limit,
+			}, limit)
+		terms = append(terms, res.Names...)
+	}
+
+	if uint64(len(terms)) < in.Limit {
+		res, _ := searchClientIndex(ctx, config_obj,
+			&api_proto.SearchClientsRequest{
+				Type:   in.Type,
+				Offset: in.Offset,
+				Query:  "label:" + in.Query,
+				Limit:  in.Limit,
+			}, limit)
+		terms = append(terms, res.Names...)
+	}
+
+	return &api_proto.SearchClientsResponse{
+		Names: terms,
+	}, nil
 }

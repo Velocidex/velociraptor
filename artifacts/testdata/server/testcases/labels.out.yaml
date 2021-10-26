@@ -1,6 +1,36 @@
 LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id
 FROM clients(search='label:*') ORDER BY client_id
-[]SELECT * FROM clients(search='label:*') ORDER BY client_id[]SELECT * FROM foreach(
+[]SELECT * FROM clients(search='label:*') ORDER BY client_id[
+ {
+  "client_id": "C.4f5e52adf0a337a9",
+  "agent_information": {
+   "version": "2019-11-07T22:08:33+10:00",
+   "name": "velociraptor",
+   "build_time": ""
+  },
+  "os_info": {
+   "system": "windows",
+   "hostname": "DESKTOP-BP4S7TF",
+   "release": "Microsoft Windows 10 Enterprise Evaluation10.0.18362 Build 18362",
+   "version": "",
+   "machine": "amd64",
+   "kernel": "",
+   "fqdn": "DESKTOP-BP4S7TF",
+   "install_date": 0,
+   "libc_ver": "",
+   "architecture": ""
+  },
+  "first_seen_at": 0,
+  "last_seen_at": 1573215522537748,
+  "last_booted_at": 0,
+  "last_clock": 0,
+  "last_crash_at": 0,
+  "last_ip": "192.168.0.5:40933",
+  "last_interrogate_flow_id": "F.BN21C82J8DM8K",
+  "last_ip_class": "UNKNOWN",
+  "labels": []
+ }
+]SELECT * FROM foreach(
   row={
      SELECT * FROM clients()
      WHERE os_info.system = 'windows' ORDER BY client_id
@@ -80,4 +110,34 @@ FROM clients(search='label:*') ORDER BY client_id
   },
   "client_id": "C.4f5e52adf0a337a9"
  }
-]SELECT * FROM clients(search='label:*') ORDER BY client_id[]
+]SELECT * FROM clients(search='label:*') ORDER BY client_id[
+ {
+  "client_id": "C.4f5e52adf0a337a9",
+  "agent_information": {
+   "version": "2019-11-07T22:08:33+10:00",
+   "name": "velociraptor",
+   "build_time": ""
+  },
+  "os_info": {
+   "system": "windows",
+   "hostname": "DESKTOP-BP4S7TF",
+   "release": "Microsoft Windows 10 Enterprise Evaluation10.0.18362 Build 18362",
+   "version": "",
+   "machine": "amd64",
+   "kernel": "",
+   "fqdn": "DESKTOP-BP4S7TF",
+   "install_date": 0,
+   "libc_ver": "",
+   "architecture": ""
+  },
+  "first_seen_at": 0,
+  "last_seen_at": 1573215522537748,
+  "last_booted_at": 0,
+  "last_clock": 0,
+  "last_crash_at": 0,
+  "last_ip": "192.168.0.5:40933",
+  "last_interrogate_flow_id": "F.BN21C82J8DM8K",
+  "last_ip_class": "UNKNOWN",
+  "labels": []
+ }
+]

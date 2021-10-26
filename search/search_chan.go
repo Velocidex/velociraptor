@@ -68,10 +68,14 @@ func SearchClientsChan(
 	config_obj *config_proto.Config,
 	search_term string, principal string) (chan *api_proto.ApiClient, error) {
 
-	operator, _ := splitIntoOperatorAndTerms(search_term)
+	operator, term := splitIntoOperatorAndTerms(search_term)
 	switch operator {
-	case "", "label", "host":
-		return searchClientIndexChan(ctx, scope, config_obj, search_term)
+	case "label", "host", "client", "all":
+		return searchClientIndexChan(ctx, scope, config_obj, term)
+
+	case "":
+		return searchClientIndexChan(ctx, scope, config_obj, "host:"+term)
+
 	case "recent":
 		return searchRecentsChan(ctx, scope, config_obj, principal)
 

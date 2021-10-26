@@ -18,10 +18,10 @@ func (self *TestSuite) TestWildCardSearch() {
 	// Read all clients.
 	results := ordereddict.NewDict()
 	for _, search_term := range []string{
-		"C.023030003030*2",
-		"*.023030003030*2",
-		"*30003030*2",
-		"C.02303*2",
+		"client:C.023030003030*2",
+		"client:*.023030003030*2",
+		"client:*30003030*2",
+		"client:C.02303*2",
 	} {
 		ctx := context.Background()
 		scope := vql_subsystem.MakeScope()

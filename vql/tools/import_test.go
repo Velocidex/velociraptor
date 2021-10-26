@@ -60,7 +60,7 @@ func (self *TestSuite) TestImportCollection() {
 
 	// Check the indexes are correct for the new client_id
 	search_resp, err := search.SearchClients(ctx, self.ConfigObj,
-		&api_proto.SearchClientsRequest{Query: "MyNewHost"}, "")
+		&api_proto.SearchClientsRequest{Query: "host:MyNewHost"}, "")
 	assert.NoError(self.T(), err)
 
 	// There is one hit - a new client is added to the index.
