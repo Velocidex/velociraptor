@@ -591,8 +591,8 @@ export function getClientColumns() {
              return <VeloClientStatusIcon client={row}/>;
          }},
         {dataField: "client_id", text: "Client ID", type: "client"},
-        {dataField: "os_info.fqdn", text: "Hostname",
-         sort: true},
+        {dataField: "os_info.hostname", text: "Hostname", sort: true},
+        {dataField: "os_info.fqdn", text: "Fqdn", sort: true},
         {dataField: "os_info.release", text: "OS Version"},
     ]);
 }

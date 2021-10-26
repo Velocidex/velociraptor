@@ -37,6 +37,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 type MockHTTPConnector struct {
@@ -147,7 +148,9 @@ func testRingBuffer(
 
 	// The ring buffer is holding 14 bytes since none were
 	// successfully sent yet.
-	assert.Equal(t, sender.ring_buffer.AvailableBytes(), uint64(14))
+	vtesting.WaitUntil(time.Second, t, func() bool {
+		return sender.ring_buffer.AvailableBytes() == uint64(14)
+	})
 
 	// Turn the connector on - now sending will be successful. We
 	// need to wait for the communicator to retry sending.
