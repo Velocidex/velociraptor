@@ -73,7 +73,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 	if arg.ClientId == "auto" {
 		arg.ClientId, err = getExistingClientOrNewClient(
-			ctx, config_obj, arg.Hostname)
+			ctx, scope, config_obj, arg.Hostname)
 		if err != nil {
 			scope.Log("import_collection: %v", err)
 			return vfilter.Null{}
@@ -336,22 +336,28 @@ func NewClientId() string {
 
 func getExistingClientOrNewClient(
 	ctx context.Context,
+	scope vfilter.Scope,
 	config_obj *config_proto.Config,
 	hostname string) (string, error) {
 
+	scope.Log("Searching for a client id with name '%v'", hostname)
+
 	// Search for an existing client with the same hostname
 	search_resp, err := search.SearchClients(ctx, config_obj,
-		&api_proto.SearchClientsRequest{Query: hostname}, "")
+		&api_proto.SearchClientsRequest{Query: "host:" + hostname}, "")
 	if err == nil && len(search_resp.Items) > 0 {
-		return search_resp.Items[0].ClientId, nil
+		client_id := search_resp.Items[0].ClientId
+		scope.Log("client id found '%v'", client_id)
+		return client_id, nil
 	}
 
-	return makeNewClient(config_obj, hostname)
+	return makeNewClient(config_obj, scope, hostname)
 }
 
 // Create a new client record
 func makeNewClient(
 	config_obj *config_proto.Config,
+	scope vfilter.Scope,
 	hostname string) (string, error) {
 
 	if hostname == "" {
@@ -366,6 +372,8 @@ func makeNewClient(
 		Architecture: "Offline",
 		ClientName:   "OfflineVelociraptor",
 	}
+
+	scope.Log("Creating new client '%v'", client_id)
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -382,8 +390,7 @@ func makeNewClient(
 	for _, term := range []string{
 		"all", // This is used for "." search
 		client_id,
-		client_info.Hostname,
-		client_info.Fqdn,
+		"host:" + client_info.Fqdn,
 		"host:" + client_info.Hostname,
 	} {
 		err = search.SetIndex(config_obj, client_id, term)

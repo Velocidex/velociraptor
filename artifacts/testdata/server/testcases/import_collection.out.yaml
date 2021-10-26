@@ -1,0 +1,60 @@
+LET Sanitize(X) = regex_replace(re="[CF]\\.[0-9a-z]+", replace="C.ID", source=X)[]LET X <= SELECT * FROM Artifact.Server.Utils.ImportCollection( Hostname="FooBarHost", Path=srcDir+"/artifacts/testdata/files/Collection-DESKTOP-BTI2T9T-2021-10-25T19_30_52-07_00.zip")[]LET Y <= SELECT * FROM Artifact.Server.Utils.ImportCollection( Hostname="FooBarHost", Path=srcDir+"/artifacts/testdata/files/Collection-DESKTOP-BTI2T9T-2021-10-25T19_30_52-07_00.zip")[]SELECT X[0].ClientId = Y[0].ClientId AS ClientIdEqual FROM scope()[
+ {
+  "ClientIdEqual": true
+ }
+]SELECT Sanitize(X=vfs_path) AS vfs_path FROM Artifact.Server.Utils.DeleteClient( ClientIdList=[X[0].ClientId, Y[0].ClientId], ReallyDoIt=TRUE) WHERE NOT vfs_path =~ "monitoring" Order by vfs_path[
+ {
+  "vfs_path": "/clients/C.ID/artifacts/Windows.System.Pslist/C.ID.json"
+ },
+ {
+  "vfs_path": "/clients/C.ID/artifacts/Windows.System.Pslist/C.ID.json"
+ },
+ {
+  "vfs_path": "/clients/C.ID/artifacts/Windows.System.Pslist/C.ID.json.index"
+ },
+ {
+  "vfs_path": "/clients/C.ID/artifacts/Windows.System.Pslist/C.ID.json.index"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/C.ID.db"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/C.ID.db"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/C.ID/logs"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/C.ID/logs"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/C.ID/logs.json.index"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/C.ID/logs.json.index"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/C.ID/task.db"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/C.ID/task.db"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json.index"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json.index"
+ },
+ {
+  "vfs_path": "/clients/C.ID/labels.db"
+ },
+ {
+  "vfs_path": "/clients/C.ID/labels.db"
+ }
+]

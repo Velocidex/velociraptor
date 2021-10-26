@@ -40,8 +40,19 @@ func SanitizeString(component string) string {
 	// Escape components that start with . - these are illegal on
 	// windows and can be used for directory traversal. The . byte
 	// may appear anywhere else though.
-	if len(component) > 0 && component[0:1] == "." {
+	length := len(component)
+	if length == 0 {
+		return ""
+	}
+
+	if component[0] == '.' {
 		return "%2E" + SanitizeString(component[1:])
+	}
+
+	// Windows can not have a trailing "." instead swallowing it
+	// completely.
+	if component[length-1] == '.' {
+		return component[:length-1] + "%2E"
 	}
 
 	// Prevent components from creating names for files that are
@@ -52,7 +63,6 @@ func SanitizeString(component string) string {
 		component += "_"
 	}
 
-	length := len(component)
 	if length > 1024 {
 		length = 1024
 	}
@@ -100,10 +110,17 @@ func UnsanitizeComponent(component string) string {
 			return string(result[:j])
 		}
 
-		if component[i] == '%' && i+2 < len(component) {
-			result[j] = unhex(component[i+1])<<4 | unhex(component[i+2])
-			i += 3
-			j++
+		if component[i] == '%' {
+			// A % escape sequece (eg %0d)
+			if i+2 < len(component) {
+				result[j] = unhex(component[i+1])<<4 | unhex(component[i+2])
+				i += 3
+				j++
+			} else {
+				// Skip trailing % - sometimes this is added by
+				// windows for files with no extension (foo. -> foo.%)
+				i++
+			}
 		} else {
 			result[j] = component[i]
 			i += 1
