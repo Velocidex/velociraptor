@@ -279,10 +279,14 @@ export default class TimelineRenderer extends React.Component {
 
     render() {
         let super_timeline = {timelines:[]};
-        try {
-            super_timeline = JSON.parse(this.props.params);
-        } catch(e) {
-            return <></>;
+        if (_.isString(this.props.params)) {
+            try {
+                super_timeline = JSON.parse(this.props.params);
+            } catch(e) {
+                return <></>;
+            }
+        } else if(_.isObject(this.props.params)) {
+            super_timeline = this.props.params;
         }
 
         let groups = [{id: -1, title: "Table View"}];
