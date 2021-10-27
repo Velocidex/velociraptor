@@ -9,6 +9,7 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/Netflix/go-expect v0.0.0-20210722184520-ef0bf57d82b3 // indirect
+	github.com/ReneKroon/ttlcache/v2 v2.9.0
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
@@ -133,7 +134,6 @@ require (
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1 // indirect
 	github.com/PuerkitoBio/goquery v1.6.1 // indirect
-	github.com/ReneKroon/ttlcache v1.7.0 // indirect
 	github.com/Velocidex/yaml v2.1.0+incompatible // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
