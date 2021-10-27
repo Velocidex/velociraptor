@@ -79,7 +79,8 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 				if arg.ReallyDoIt {
 					err = db.DeleteSubject(config_obj, filename)
 					if err != nil && os.IsExist(err) {
-						return err
+						scope.Log("client_delete: while deleting %v: %s",
+							filename, err)
 					}
 				}
 				return nil
@@ -117,7 +118,8 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 				if arg.ReallyDoIt {
 					err := file_store_factory.Delete(filename)
 					if err != nil {
-						scope.Log("client_delete: %s", err)
+						scope.Log("client_delete: while deleting %v: %s",
+							filename, err)
 					}
 				}
 				return nil

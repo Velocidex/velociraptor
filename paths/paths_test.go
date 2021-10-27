@@ -57,7 +57,8 @@ func (self *PathManagerTestSuite) getDatastorePath(path_spec api.DSPathSpec) str
 		if k.IsDir() {
 			continue
 		}
-		results = append(results, k.AsDatastoreFilename(self.config_obj))
+		results = append(results, normalize_path(
+			k.AsDatastoreFilename(self.config_obj)))
 	}
 	assert.Equal(self.T(), 1, len(results))
 
@@ -72,6 +73,10 @@ func (self *PathManagerTestSuite) getDatastorePath(path_spec api.DSPathSpec) str
 	}
 
 	return results[0]
+}
+
+func normalize_path(filename string) string {
+	return strings.ReplaceAll(strings.TrimLeft(filename, "\\?"), "\\", "/")
 }
 
 // Gets the actual file store path written (including escapes)
