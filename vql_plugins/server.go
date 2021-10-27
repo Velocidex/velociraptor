@@ -30,6 +30,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/server/favorites"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/flows"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/hunts"
+	_ "www.velocidex.com/golang/velociraptor/vql/server/monitoring"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/notebooks"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/timelines"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/users"

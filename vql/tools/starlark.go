@@ -183,10 +183,13 @@ func interfaceAsStarlarkValue(ctx context.Context,
 		return starlark.MakeUint64(v), nil
 	case float32:
 		return tryIntegerOrFloat(float64(v))
+
 	case float64:
 		return tryIntegerOrFloat(v)
+
 	case string:
 		return starlark.String(v), nil
+
 	case []interface{}:
 		result := starlark.NewList([]starlark.Value{})
 
@@ -251,8 +254,6 @@ func interfaceAsStarlarkValue(ctx context.Context,
 
 	case *ordereddict.Dict:
 		// Most of the time we're here
-		result := map[string]starlark.Value{}
-
 		recurse_dict, err := reduceRecurse(v, ctx, scope)
 		if err != nil {
 			return nil, err
@@ -267,18 +268,20 @@ func interfaceAsStarlarkValue(ctx context.Context,
 		if err != nil {
 			return nil, err
 		}
+
+		result := starlark.NewDict(new_dict.Len())
 		for key, value := range *new_dict.ToDict() {
 			mapValueStarlarked, err := interfaceAsStarlarkValue(ctx, scope, value)
 			if err != nil {
 				return nil, err
 			}
 
-			result[key] = mapValueStarlarked
+			result.SetKey(starlark.String(key), mapValueStarlarked)
 		}
 
-		dict := starlarkstruct.FromStringDict(starlarkstruct.Default, result)
+		//dict := starlarkstruct.FromStringDict(starlarkstruct.Default, result)
 
-		return dict, nil
+		return result, nil
 
 	case vfilter.LazyExpr:
 		result, err := interfaceAsStarlarkValue(ctx, scope, v.Reduce(ctx))
@@ -392,6 +395,10 @@ func makeKwargsTuple(ctx context.Context, scope vfilter.Scope,
 	switch t := starlark_args.(type) {
 	case *starlarkstruct.Struct:
 		t.ToStringDict(new_string_dict)
+
+	case *starlark.Dict:
+		return t.Items(), nil
+
 	default:
 		return nil, errors.New(fmt.Sprintf("Unsupported Type %T", starlark_args))
 	}

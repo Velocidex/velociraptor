@@ -1,0 +1,40 @@
+{
+ "Add artifact to both table and All": {
+  "artifacts": {
+   "artifacts": [
+    "Generic.Client.Stats"
+   ]
+  },
+  "label_events": [
+   {
+    "label": "Quarantine",
+    "artifacts": {
+     "artifacts": [
+      "Windows.Remediation.QuarantineMonitor"
+     ]
+    }
+   }
+  ]
+ },
+ "Removing artifact from label": {
+  "artifacts": {
+   "artifacts": [
+    "Generic.Client.Stats"
+   ]
+  },
+  "label_events": [
+   {
+    "label": "Quarantine",
+    "artifacts": {
+     "artifacts": [
+      "Windows.Remediation.QuarantineMonitor"
+     ]
+    }
+   },
+   {
+    "label": "FooBar",
+    "artifacts": {}
+   }
+  ]
+ }
+}
