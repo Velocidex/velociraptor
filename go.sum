@@ -66,6 +66,8 @@ github.com/Netflix/go-expect v0.0.0-20210722184520-ef0bf57d82b3/go.mod h1:68ORG0
 github.com/PuerkitoBio/goquery v1.5.1/go.mod h1:GsLWisAFVj4WgDibEWF4pvYnkVQBpKBKeU+7zCJoLcc=
 github.com/PuerkitoBio/goquery v1.6.1 h1:FgjbQZKl5HTmcn4sKBgvx8vv63nhyhIpv7lJpFGCWpk=
 github.com/PuerkitoBio/goquery v1.6.1/go.mod h1:GsLWisAFVj4WgDibEWF4pvYnkVQBpKBKeU+7zCJoLcc=
+github.com/ReneKroon/ttlcache v1.7.0 h1:8BkjFfrzVFXyrqnMtezAaJ6AHPSsVV10m6w28N/Fgkk=
+github.com/ReneKroon/ttlcache v1.7.0/go.mod h1:8BGGzdumrIjWxdRx8zpK6L3oGMWvIXdvB2GD1cfvd+I=
 github.com/Showmax/go-fqdn v1.0.0 h1:0rG5IbmVliNT5O19Mfuvna9LL7zlHyRfsSvBPZmF9tM=
 github.com/Showmax/go-fqdn v1.0.0/go.mod h1:SfrFBzmDCtCGrnHhoDjuvFnKsWjEQX/Q9ARZvOrJAko=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 h1:fLjPD/aNc3UIOA6tDi6QXUemppXK3P9BI7mr2hd6gx8=
@@ -555,6 +557,7 @@ go.opentelemetry.io/proto/otlp v0.7.0/go.mod h1:PqfVotwruBrMGOCsRd/89rSnXhoiJIqe
 go.starlark.net v0.0.0-20210406145628-7a1108eaa012/go.mod h1:t3mmBBPzAVvK0L0n1drDmrQsJ8FoIx4INCqVMTr/Zo0=
 go.starlark.net v0.0.0-20210602144842-1cdb82c9e17a h1:wDtSCWGrX9tusypq2Qq9xzaA3Tf/+4D2KaWO+HQvGZE=
 go.starlark.net v0.0.0-20210602144842-1cdb82c9e17a/go.mod h1:t3mmBBPzAVvK0L0n1drDmrQsJ8FoIx4INCqVMTr/Zo0=
+go.uber.org/goleak v0.10.0/go.mod h1:VCZuO8V8mFPlL0F5J5GK1rtHV3DrFcQ1R8ryq7FK0aI=
 go.uber.org/goleak v1.1.10/go.mod h1:8a7PlsEVH3e/a/GLqe5IIrQx6GzcnRmZEufDUTk4A7A=
 golang.org/x/crypto v0.0.0-20180904163835-0709b304e793/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
