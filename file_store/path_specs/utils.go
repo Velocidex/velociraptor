@@ -21,8 +21,7 @@ func CleanPathForZip(path_spec api.FSPathSpec, client_id, hostname string) strin
 	}
 
 	// Zip files should not have absolute paths
-	return strings.Join(result, "/") + api.GetExtensionForFilestore(
-		path_spec, path_spec.Type())
+	return strings.Join(result, "/") + api.GetExtensionForFilestore(path_spec)
 }
 
 // If child_components are a subpath of parent_components (i.e. are

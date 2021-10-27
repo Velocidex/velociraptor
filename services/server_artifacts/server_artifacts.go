@@ -23,6 +23,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -183,12 +184,7 @@ func (self *ServerArtifactsRunner) process(
 	logger := logging.GetLogger(
 		self.config_obj, &logging.FrontendComponent)
 
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return err
-	}
-
-	tasks, err := db.GetClientTasks(self.config_obj, "server", true)
+	tasks, err := clients.GetClientTasks(self.config_obj, "server", true)
 	if err != nil {
 		return err
 	}
@@ -230,12 +226,7 @@ func (self *ServerArtifactsRunner) processTask(
 		return err
 	}
 
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return err
-	}
-
-	err = db.UnQueueMessageForClient(self.config_obj, "server", task)
+	err = clients.UnQueueMessageForClient(self.config_obj, "server", task)
 	if err != nil {
 		return err
 	}

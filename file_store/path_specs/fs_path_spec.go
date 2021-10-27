@@ -59,7 +59,7 @@ func (self FSPathSpec) SetType(ext api.PathType) api.FSPathSpec {
 func (self FSPathSpec) AsFilestoreFilename(
 	config_obj *config_proto.Config) string {
 	return self.AsFilestoreDirectory(config_obj) +
-		api.GetExtensionForFilestore(self, self.path_type)
+		api.GetExtensionForFilestore(self)
 }
 
 func (self FSPathSpec) AsFilestoreDirectory(
@@ -74,7 +74,7 @@ func (self FSPathSpec) AsFilestoreDirectory(
 
 func (self FSPathSpec) AsClientPath() string {
 	return utils.JoinComponents(self.components, "/") +
-		api.GetExtensionForFilestore(self, self.path_type)
+		api.GetExtensionForFilestore(self)
 }
 
 func NewUnsafeFilestorePath(path_components ...string) api.FSPathSpec {

@@ -1,7 +1,6 @@
 package datastore
 
 import (
-	"fmt"
 	"os"
 	"sort"
 	"testing"
@@ -9,12 +8,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -198,6 +195,47 @@ func (self BaseTestSuite) TestListChildren() {
 		asStrings(visited))
 }
 
+func (self BaseTestSuite) TestListChildrenTypes() {
+	message := &crypto_proto.VeloMessage{Source: "Server"}
+
+	urn := path_specs.NewSafeDatastorePath("a", "b", "c")
+
+	err := self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("1").SetType(api.PATH_TYPE_DATASTORE_JSON), message)
+	assert.NoError(self.T(), err)
+
+	err = self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("2").SetType(api.PATH_TYPE_DATASTORE_PROTO), message)
+	assert.NoError(self.T(), err)
+
+	err = self.datastore.SetSubject(self.config_obj,
+		urn.AddChild("3", "4"), message)
+	assert.NoError(self.T(), err)
+
+	children, err := self.datastore.ListChildren(
+		self.config_obj, urn)
+	assert.NoError(self.T(), err)
+
+	// ListChildren gives the full path to all children
+	assert.Equal(self.T(), []string{
+		"/a/b/c/1.json.db",
+		"/a/b/c/2.db",
+		"/a/b/c/3:dir"}, asStringsWithTypes(children))
+
+	visited := []api.DSPathSpec{}
+	self.datastore.Walk(self.config_obj,
+		path_specs.NewSafeDatastorePath("a", "b"),
+		func(path_name api.DSPathSpec) error {
+			visited = append(visited, path_name)
+			return nil
+		})
+	assert.Equal(self.T(), []string{
+		"/a/b/c/1.json.db",
+		"/a/b/c/2.db",
+		"/a/b/c/3/4.json.db"},
+		asStringsWithTypes(visited))
+}
+
 func (self BaseTestSuite) TestUnsafeListChildren() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
 
@@ -239,6 +277,8 @@ func (self BaseTestSuite) TestUnsafeListChildren() {
 			return nil
 		})
 
+	//self.datastore.Debug(self.config_obj)
+
 	assert.Equal(self.T(), []string{
 		"/a/b:b/c:b/1",
 		"/a/b:b/c:b/2",
@@ -275,89 +315,6 @@ func (self BaseTestSuite) TestListChildrenSubdirs() {
 		"/Root/item"}, asStrings(children))
 }
 
-// This test is testing the deprecated index which is still used for
-// various things but not for clients any more. Eventually this test
-// will be removed.
-func (self BaseTestSuite) TestIndexes() {
-	client_id := "C.1234"
-	client_id_2 := "C.1235"
-	err := self.datastore.SetIndex(self.config_obj,
-		paths.CLIENT_INDEX_URN_DEPRECATED,
-		client_id, []string{"all", client_id, "Hostname", "FQDN", "host:Foo"})
-	assert.NoError(self.T(), err)
-	err = self.datastore.SetIndex(self.config_obj,
-		paths.CLIENT_INDEX_URN_DEPRECATED,
-		client_id_2, []string{"all", client_id_2, "Hostname2", "FQDN2", "host:Bar"})
-	assert.NoError(self.T(), err)
-
-	hits := self.datastore.SearchClients(self.config_obj,
-		paths.CLIENT_INDEX_URN_DEPRECATED, "all", "", 0, 100, SORT_UP)
-	sort.Strings(hits)
-	assert.Equal(self.T(), []string{client_id, client_id_2}, hits)
-
-	hits = self.datastore.SearchClients(self.config_obj,
-		paths.CLIENT_INDEX_URN_DEPRECATED,
-		"*foo", "", 0, 100, SORT_UP)
-	assert.Equal(self.T(), []string{client_id}, hits)
-}
-
-func (self BaseTestSuite) TestQueueMessages() {
-	client_id := "C.1236"
-
-	message1 := &crypto_proto.VeloMessage{Source: "Server", SessionId: "1"}
-	err := self.datastore.QueueMessageForClient(self.config_obj, client_id, message1)
-	assert.NoError(self.T(), err)
-
-	// Now retrieve all messages.
-	tasks, err := self.datastore.GetClientTasks(
-		self.config_obj, client_id, true /* do_not_lease */)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), 1, len(tasks))
-	assert.True(self.T(), proto.Equal(tasks[0], message1))
-
-	// We did not lease, so the tasks are not removed, but this
-	// time we will lease.
-	tasks, err = self.datastore.GetClientTasks(
-		self.config_obj, client_id, false /* do_not_lease */)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), len(tasks), 1)
-
-	// No tasks available.
-	tasks, err = self.datastore.GetClientTasks(
-		self.config_obj, client_id, false /* do_not_lease */)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), len(tasks), 0)
-}
-
-func (self BaseTestSuite) TestFastQueueMessages() {
-	client_id := "C.1235"
-
-	written := []*crypto_proto.VeloMessage{}
-
-	for i := 0; i < 10; i++ {
-		message := &crypto_proto.VeloMessage{Source: "Server", SessionId: fmt.Sprintf("%d", i)}
-		err := self.datastore.QueueMessageForClient(self.config_obj, client_id, message)
-		assert.NoError(self.T(), err)
-
-		written = append(written, message)
-	}
-
-	// Now retrieve all messages.
-	tasks, err := self.datastore.GetClientTasks(
-		self.config_obj, client_id, true /* do_not_lease */)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), 10, len(tasks))
-
-	// Does not have to return in sorted form.
-	sort.Slice(tasks, func(i, j int) bool {
-		return tasks[i].SessionId < tasks[j].SessionId
-	})
-
-	for i := 0; i < 10; i++ {
-		assert.True(self.T(), proto.Equal(tasks[i], written[i]))
-	}
-}
-
 func benchmarkSearchClient(b *testing.B,
 	data_store DataStore,
 	config_obj *config_proto.Config) {
@@ -368,6 +325,22 @@ func asStrings(in []api.DSPathSpec) []string {
 	children := make([]string, 0, len(in))
 	for _, i := range in {
 		name := utils.JoinComponents(i.Components(), "/")
+		if i.IsDir() {
+			name += ":dir"
+		}
+
+		children = append(children, name)
+	}
+	sort.Strings(children)
+
+	return children
+}
+
+func asStringsWithTypes(in []api.DSPathSpec) []string {
+	children := make([]string, 0, len(in))
+	for _, i := range in {
+		name := utils.JoinComponents(i.Components(), "/") +
+			api.GetExtensionForDatastore(i)
 		if i.IsDir() {
 			name += ":dir"
 		}

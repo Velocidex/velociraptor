@@ -4,10 +4,10 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -61,11 +61,7 @@ func checkContextResourceLimits(config_obj *config_proto.Config,
 func cancelCollection(config_obj *config_proto.Config, client_id, flow_id string) error {
 	// Cancel the collection to stop the client from generating
 	// more data.
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-	err = db.QueueMessageForClient(config_obj, client_id,
+	err := clients.QueueMessageForClient(config_obj, client_id,
 		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},
 			SessionId: flow_id,

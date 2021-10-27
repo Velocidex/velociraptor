@@ -48,13 +48,16 @@ func (self *PathManagerTestSuite) TestAsClientPath() {
 // where the file will be created. Return this path - this includes
 // any file store escaping or path transformations.
 func (self *PathManagerTestSuite) getDatastorePath(path_spec api.DSPathSpec) string {
-	ds := datastore.NewTestDataStore()
+	ds := datastore.NewMemcacheDataStore(self.config_obj)
 	data := &crypto_proto.VeloMessage{}
 	ds.SetSubject(self.config_obj, path_spec, data)
 
 	results := []string{}
-	for k := range ds.Subjects {
-		results = append(results, k)
+	for _, k := range ds.Dump() {
+		if k.IsDir() {
+			continue
+		}
+		results = append(results, k.AsDatastoreFilename(self.config_obj))
 	}
 	assert.Equal(self.T(), 1, len(results))
 

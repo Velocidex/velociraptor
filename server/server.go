@@ -32,6 +32,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -59,7 +60,6 @@ type Server struct {
 	config  *config_proto.Config
 	manager *crypto_server.ServerCryptoManager
 	logger  *logging.LogContext
-	db      datastore.DataStore
 
 	// Limit concurrency for processing messages.
 	mu                  sync.Mutex
@@ -156,7 +156,9 @@ func (self *Server) ManageConcurrency(max_concurrency uint64, target_heap_size u
 
 func (self *Server) Close() {
 	close(self.done)
-	self.db.Close()
+	db, _ := datastore.GetDB(self.config)
+	db.Close()
+
 	if self.throttler != nil {
 		self.throttler.Close()
 	}
@@ -170,11 +172,6 @@ func NewServer(ctx context.Context,
 	}
 
 	manager, err := crypto_server.NewServerCryptoManager(ctx, config_obj, wg)
-	if err != nil {
-		return nil, err
-	}
-
-	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +194,6 @@ func NewServer(ctx context.Context,
 	result := Server{
 		config:              config_obj,
 		manager:             manager,
-		db:                  db,
 		logger:              logging.GetLogger(config_obj, &logging.FrontendComponent),
 		concurrency_timeout: time.Duration(concurrency) * time.Second,
 		done:                make(chan bool),
@@ -283,9 +279,13 @@ func (self *Server) Process(
 		Ping:      uint64(time.Now().UTC().UnixNano() / 1000),
 		IpAddress: message_info.RemoteAddr,
 	}
+	db, err := datastore.GetDB(self.config)
+	if err != nil {
+		return nil, 0, err
+	}
 
 	client_path_manager := paths.NewClientPathManager(message_info.Source)
-	err = self.db.SetSubject(
+	err = db.SetSubject(
 		self.config, client_path_manager.Ping(), client_info)
 	if err != nil {
 		return nil, 0, err
@@ -318,7 +318,7 @@ func (self *Server) Process(
 }
 
 func (self *Server) DrainRequestsForClient(client_id string) []*crypto_proto.VeloMessage {
-	result, err := self.db.GetClientTasks(self.config, client_id, false)
+	result, err := clients.GetClientTasks(self.config, client_id, false)
 	if err == nil {
 		return result
 	}

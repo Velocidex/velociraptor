@@ -18,12 +18,6 @@
  "Files deleted": [
   {
    "client_id": "C.123",
-   "type": "Datastore",
-   "vfs_path": "/clients/C.123.json.db",
-   "really_do_it": true
-  },
-  {
-   "client_id": "C.123",
    "type": "Filestore",
    "vfs_path": "/clients/C.123/artifacts/Generic.Client.Info/F.C49TC44OSO62E/BasicInformation.json",
    "really_do_it": true
@@ -91,7 +85,7 @@
   {
    "client_id": "C.123",
    "type": "Datastore",
-   "vfs_path": "/clients/C.123/collections/F.1234/task.json.db",
+   "vfs_path": "/clients/C.123/collections/F.1234/task.db",
    "really_do_it": true
   },
   {
@@ -133,37 +127,37 @@
   {
    "client_id": "C.123",
    "type": "Datastore",
-   "vfs_path": "/clients/C.123/ping.json.db",
+   "vfs_path": "/clients/C.123/ping.db",
    "really_do_it": true
   },
   {
    "client_id": "C.123",
    "type": "Datastore",
-   "vfs_path": "/clients/C.123/tasks/task1123.json.db",
+   "vfs_path": "/clients/C.123/tasks/task1123.db",
    "really_do_it": true
   },
   {
    "client_id": "C.123",
    "type": "Datastore",
-   "vfs_path": "/clients/C.123/vfs/file.json.db",
+   "vfs_path": "/clients/C.123/vfs/file.db",
    "really_do_it": true
   },
   {
    "client_id": "C.123",
    "type": "Datastore",
-   "vfs_path": "/clients/C.123/vfs/file/C%3A.json.db",
+   "vfs_path": "/clients/C.123/vfs/file/C%3A.db",
    "really_do_it": true
   },
   {
    "client_id": "C.123",
    "type": "Datastore",
-   "vfs_path": "/clients/C.123/vfs/file/C%3A/Users.json.db",
+   "vfs_path": "/clients/C.123/vfs/file/C%3A/Users.db",
    "really_do_it": true
   },
   {
    "client_id": "C.123",
    "type": "Datastore",
-   "vfs_path": "/clients/C.123/vfs_files/file/C%3A/Users/mike/test/1.txt.json.db",
+   "vfs_path": "/clients/C.123/vfs_files/file/C%3A/Users/mike/test/1.txt.db",
    "really_do_it": true
   }
  ]

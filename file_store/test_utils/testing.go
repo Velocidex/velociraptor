@@ -25,11 +25,11 @@ func GetMemoryFileStore(
 
 func GetMemoryDataStore(
 	t *testing.T,
-	config_obj *config_proto.Config) *datastore.TestDataStore {
+	config_obj *config_proto.Config) *datastore.MemcacheDatastore {
 	db, err := datastore.GetDB(config_obj)
 	require.NoError(t, err)
 
-	return db.(*datastore.TestDataStore)
+	return db.(*datastore.MemcacheDatastore)
 }
 
 func FileReadAll(t *testing.T, config_obj *config_proto.Config,

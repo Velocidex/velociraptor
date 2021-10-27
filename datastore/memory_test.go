@@ -1,3 +1,5 @@
+// +build XXX
+
 package datastore
 
 import (

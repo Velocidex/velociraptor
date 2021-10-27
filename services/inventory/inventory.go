@@ -343,7 +343,7 @@ func StartInventoryService(
 	inventory_service := &InventoryService{
 		Clock:    utils.RealClock{},
 		binaries: &artifacts_proto.ThirdParty{},
-		db:       datastore.NewTestDataStore(),
+		db:       datastore.NewMemcacheDataStore(config_obj),
 		// Use the VQL http client so it can accept the same certs.
 		Client: networking.GetHttpClient(config_obj.Client, nil),
 	}

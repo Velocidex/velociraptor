@@ -38,35 +38,6 @@ func (self *LabelsTestSuite) SetupTest() {
 	labeler.Clock = self.Clock
 }
 
-// Check that labels are properly populated from the index.
-func (self *LabelsTestSuite) TestPopulateFromIndex() {
-	db, err := datastore.GetDB(self.ConfigObj)
-	require.NoError(self.T(), err)
-
-	err = db.SetIndex(self.ConfigObj, paths.CLIENT_INDEX_URN,
-		"label:Label1", []string{self.client_id})
-	require.NoError(self.T(), err)
-
-	labeler := services.GetLabeler()
-	labels := labeler.GetClientLabels(self.ConfigObj, self.client_id)
-
-	require.Equal(self.T(), labels, []string{"Label1"})
-
-	last_change_ts := labeler.LastLabelTimestamp(self.ConfigObj, self.client_id)
-
-	// When we build from the index the timestamp is 0.
-	assert.Equal(self.T(), last_change_ts, uint64(0))
-
-	// Make sure the new record is created.
-	record := &api_proto.ClientLabels{}
-	client_path_manager := paths.NewClientPathManager(self.client_id)
-	err = db.GetSubject(self.ConfigObj,
-		client_path_manager.Labels(), record)
-	assert.NoError(self.T(), err)
-
-	assert.Equal(self.T(), record.Timestamp, last_change_ts)
-}
-
 func (self *LabelsTestSuite) TestAddLabel() {
 	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(self.T(), err)

@@ -87,6 +87,7 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 	client_info := &actions_proto.ClientInfo{
 		ClientId: self.client_id,
 	}
+
 	client_path_manager := paths.NewClientPathManager(self.client_id)
 	db.SetSubject(self.ConfigObj,
 		client_path_manager.Ping(), client_info)

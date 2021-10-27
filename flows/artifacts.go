@@ -29,6 +29,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -688,18 +689,16 @@ func (self *FlowRunner) ProcessSingleMessage(
 
 			logger.Error(fmt.Sprintf("Unable to load flow %s: %v", job.SessionId, err))
 
-			db, err := datastore.GetDB(self.config_obj)
-			if err == nil {
-				err := db.QueueMessageForClient(self.config_obj, job.Source,
-					&crypto_proto.VeloMessage{
-						Cancel:    &crypto_proto.Cancel{},
-						SessionId: job.SessionId,
-					})
-				if err != nil {
-					logger.Error("Queueing for client %v: %v",
-						job.Source, err)
-				}
+			err := clients.QueueMessageForClient(self.config_obj, job.Source,
+				&crypto_proto.VeloMessage{
+					Cancel:    &crypto_proto.Cancel{},
+					SessionId: job.SessionId,
+				})
+			if err != nil {
+				logger.Error("Queueing for client %v: %v",
+					job.Source, err)
 			}
+
 			return
 		}
 		self.context_map[job.SessionId] = collection_context

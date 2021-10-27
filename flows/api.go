@@ -25,6 +25,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -189,7 +190,7 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 
 		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
 			Name:     item.Name(),
-			Type:     api.GetExtensionForFilestore(ps, ps.Type()),
+			Type:     api.GetExtensionForFilestore(ps),
 			Path:     ps.AsClientPath(),
 			Size:     uint64(item.Size()),
 			Date:     item.ModTime().UTC().Format(time.RFC3339),
@@ -231,12 +232,7 @@ func CancelFlow(
 	}
 
 	// Get all queued tasks for the client and delete only those in this flow.
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	tasks, err := db.GetClientTasks(config_obj, client_id,
+	tasks, err := clients.GetClientTasks(config_obj, client_id,
 		true /* do_not_lease */)
 	if err != nil {
 		return nil, err
@@ -245,7 +241,7 @@ func CancelFlow(
 	// Cancel all the tasks
 	for _, task := range tasks {
 		if task.SessionId == flow_id {
-			err = db.UnQueueMessageForClient(config_obj, client_id, task)
+			err = clients.UnQueueMessageForClient(config_obj, client_id, task)
 			if err != nil {
 				return nil, err
 			}
@@ -254,7 +250,7 @@ func CancelFlow(
 
 	// Queue a cancellation message to the client for this flow
 	// id.
-	err = db.QueueMessageForClient(config_obj, client_id,
+	err = clients.QueueMessageForClient(config_obj, client_id,
 		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},
 			SessionId: flow_id,

@@ -78,7 +78,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 
 				if arg.ReallyDoIt {
 					err = db.DeleteSubject(config_obj, filename)
-					if err != nil {
+					if err != nil && os.IsExist(err) {
 						return err
 					}
 				}
@@ -153,7 +153,7 @@ func reallyDeleteClient(ctx context.Context,
 
 	client_path_manager := paths.NewClientPathManager(arg.ClientId)
 	err = db.DeleteSubject(config_obj, client_path_manager.Path())
-	if err != nil {
+	if err != nil && os.IsExist(err) {
 		return err
 	}
 
@@ -161,7 +161,7 @@ func reallyDeleteClient(ctx context.Context,
 	labeler := services.GetLabeler()
 	for _, label := range labeler.GetClientLabels(config_obj, arg.ClientId) {
 		err := labeler.RemoveClientLabel(config_obj, arg.ClientId, label)
-		if err != nil {
+		if err != nil && os.IsExist(err) {
 			return err
 		}
 	}
@@ -170,13 +170,14 @@ func reallyDeleteClient(ctx context.Context,
 	// interrogation service.
 	keywords := []string{"all", client_info.ClientId}
 	if client_info.OsInfo != nil && client_info.OsInfo.Fqdn != "" {
-		keywords = append(keywords, client_info.OsInfo.Fqdn)
+		keywords = append(keywords, "host:"+client_info.OsInfo.Hostname)
 		keywords = append(keywords, "host:"+client_info.OsInfo.Fqdn)
 	}
-	err = db.UnsetIndex(config_obj, paths.CLIENT_INDEX_URN,
-		arg.ClientId, keywords)
-	if err != nil {
-		return err
+	for _, keyword := range keywords {
+		err = search.UnsetIndex(config_obj, arg.ClientId, keyword)
+		if err != nil && os.IsExist(err) {
+			return err
+		}
 	}
 
 	// Send an event that the client was deleted.
