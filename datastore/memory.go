@@ -1,3 +1,5 @@
+// +build XXX
+
 package datastore
 
 /*
@@ -15,7 +17,6 @@ import (
 
 	errors "github.com/pkg/errors"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -34,7 +35,7 @@ type TestDataStore struct {
 
 	idx         uint64
 	Subjects    map[string]proto.Message
-	Components  map[string][]string
+	Components  map[string][]api.DSPathSpec
 	ClientTasks map[string][]*crypto_proto.VeloMessage
 
 	clock utils.Clock
@@ -43,7 +44,7 @@ type TestDataStore struct {
 func NewTestDataStore() *TestDataStore {
 	return &TestDataStore{
 		Subjects:    make(map[string]proto.Message),
-		Components:  make(map[string][]string),
+		Components:  make(map[string][]api.DSPathSpec),
 		ClientTasks: make(map[string][]*crypto_proto.VeloMessage),
 	}
 }
@@ -61,7 +62,7 @@ func (self *TestDataStore) Clear() {
 	defer self.mu.Unlock()
 
 	self.Subjects = make(map[string]proto.Message)
-	self.Components = make(map[string][]string)
+	self.Components = make(map[string][]api.DSPathSpec)
 	self.ClientTasks = make(map[string][]*crypto_proto.VeloMessage)
 }
 
@@ -74,19 +75,6 @@ func (self *TestDataStore) Debug() {
 	}
 
 	fmt.Println(strings.Join(result, "\n"))
-}
-
-func (self *TestDataStore) GetClientTasks(config_obj *config_proto.Config,
-	client_id string,
-	do_not_lease bool) ([]*crypto_proto.VeloMessage, error) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	result := self.ClientTasks[client_id]
-	if !do_not_lease {
-		delete(self.ClientTasks, client_id)
-	}
-	return result, nil
 }
 
 // If child_components are a subpath of parent_components (i.e. are
@@ -137,50 +125,6 @@ func (self *TestDataStore) Walk(
 	return nil
 }
 
-func (self *TestDataStore) QueueMessageForClient(
-	config_obj *config_proto.Config,
-	client_id string,
-	message *crypto_proto.VeloMessage) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	message.TaskId = self.idx + 1
-	self.idx++
-
-	result, pres := self.ClientTasks[client_id]
-	if !pres {
-		result = make([]*crypto_proto.VeloMessage, 0)
-	}
-
-	result = append(result, message)
-
-	self.ClientTasks[client_id] = result
-	return nil
-}
-
-func (self *TestDataStore) UnQueueMessageForClient(
-	config_obj *config_proto.Config,
-	client_id string,
-	message *crypto_proto.VeloMessage) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	old_queue, pres := self.ClientTasks[client_id]
-	if !pres {
-		old_queue = make([]*crypto_proto.VeloMessage, 0)
-	}
-
-	new_queue := make([]*crypto_proto.VeloMessage, 0, len(old_queue))
-	for _, item := range old_queue {
-		if message.TaskId != item.TaskId {
-			new_queue = append(new_queue, item)
-		}
-	}
-
-	self.ClientTasks[client_id] = new_queue
-	return nil
-}
-
 func (self *TestDataStore) Trace(name, filename string) {
 	return
 	fmt.Printf("Trace TestDataStore: %v: %v\n", name, filename)
@@ -225,7 +169,7 @@ func (self *TestDataStore) SetSubject(
 	self.Trace("SetSubject", filename)
 
 	self.Subjects[filename] = proto.Clone(message)
-	self.Components[filename] = urn.Components()
+	self.Components[filename] = urn
 
 	return nil
 }
@@ -295,72 +239,11 @@ func (self *TestDataStore) ListChildren(
 	}
 
 	for _, name := range file_names {
-		result = append(result, urn.AddChild(name))
+		spec_type, child_name := api.GetDataStorePathTypeFromExtension(name)
+		result = append(result, urn.AddChild(child_name).SetType(spec_type))
 	}
 
 	return result, nil
-}
-
-// Update the posting list index. Searching for any of the
-// keywords will return the entity urn.
-func (self *TestDataStore) SetIndex(
-	config_obj *config_proto.Config,
-	index_urn api.DSPathSpec,
-	entity string,
-	keywords []string) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	entity = utils.SanitizeString(entity)
-
-	for _, keyword := range keywords {
-		keyword = utils.SanitizeString(strings.ToLower(keyword))
-		components := index_urn.AddChild(keyword, entity)
-		subject := pathSpecToPath(components, config_obj)
-		self.Subjects[subject] = &empty.Empty{}
-		self.Components[subject] = components.Components()
-	}
-	return nil
-}
-
-func (self *TestDataStore) UnsetIndex(
-	config_obj *config_proto.Config,
-	index_urn api.DSPathSpec,
-	entity string,
-	keywords []string) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	entity = utils.SanitizeString(entity)
-	for _, keyword := range keywords {
-		keyword = utils.SanitizeString(strings.ToLower(keyword))
-		subject := pathSpecToPath(
-			index_urn.AddChild(keyword, entity), config_obj)
-		delete(self.Subjects, subject)
-		delete(self.Components, subject)
-	}
-	return nil
-}
-
-func (self *TestDataStore) CheckIndex(
-	config_obj *config_proto.Config,
-	index_urn api.DSPathSpec,
-	entity string,
-	keywords []string) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	entity = utils.SanitizeString(entity)
-	for _, keyword := range keywords {
-		keyword = utils.SanitizeString(strings.ToLower(keyword))
-		subject := pathSpecToPath(
-			index_urn.AddChild(keyword, entity), config_obj)
-		_, pres := self.Subjects[subject]
-		if pres {
-			return nil
-		}
-	}
-	return errors.New("Client does not have label")
 }
 
 // List all direct children
@@ -384,88 +267,6 @@ func (self *TestDataStore) listChildren(urn api.DSPathSpec) []string {
 		}
 	}
 	return result
-}
-
-func (self *TestDataStore) SearchClients(
-	config_obj *config_proto.Config,
-	index_urn api.DSPathSpec,
-	query string, query_type string,
-	offset uint64, limit uint64, sort_direction SortingSense) []string {
-	seen := make(map[string]bool)
-	result := []string{}
-
-	defer Instrument("SearchClients", index_urn)()
-
-	query = strings.ToLower(query)
-	if query == "." || query == "" {
-		query = "all"
-	}
-
-	add_func := func(key string) {
-		children := self.listChildren(
-			index_urn.AddChild(utils.SanitizeString(key)))
-		for _, child_name := range children {
-			name := utils.UnsanitizeComponent(child_name)
-			_, pres := seen[name]
-			if !pres {
-				seen[name] = true
-
-			}
-		}
-	}
-
-	// Query has a wildcard.
-	if strings.ContainsAny(query, "[]*?") {
-		// We could make it smarter in future but this is
-		// quick enough for now.
-		for _, name := range self.listChildren(index_urn) {
-			name = utils.UnsanitizeComponent(name)
-			matched, err := path.Match(query, name)
-			if err != nil {
-				// Can only happen if pattern is invalid.
-				return result
-			}
-			if matched {
-				if query_type == "key" {
-					seen[name] = true
-				} else {
-					add_func(name)
-				}
-			}
-
-			if uint64(len(seen)) > offset+limit {
-				break
-			}
-		}
-	} else {
-		add_func(query)
-	}
-
-	for k := range seen {
-		result = append(result, k)
-	}
-
-	if uint64(len(result)) < offset {
-		return []string{}
-	}
-
-	if uint64(len(result))-offset < limit {
-		limit = uint64(len(result)) - offset
-	}
-
-	// Sort the search results for stable pagination output.
-	switch sort_direction {
-	case SORT_DOWN:
-		sort.Slice(result, func(i, j int) bool {
-			return result[i] > result[j]
-		})
-	case SORT_UP:
-		sort.Slice(result, func(i, j int) bool {
-			return result[i] < result[j]
-		})
-	}
-
-	return result[offset : offset+limit]
 }
 
 // Called to close all db handles etc. Not thread safe.

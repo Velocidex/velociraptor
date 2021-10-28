@@ -11,12 +11,12 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
@@ -36,6 +36,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
@@ -183,10 +184,8 @@ func (self *ServerTestSuite) TestClientEventTable() {
 				LastEventTableVersion: 0,
 			},
 		})
-	db, err := datastore.GetDB(self.ConfigObj)
-	require.NoError(self.T(), err)
 
-	tasks, err := db.GetClientTasks(self.ConfigObj,
+	tasks, err := clients.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
@@ -255,7 +254,7 @@ func (self *ServerTestSuite) TestForeman() {
 		})
 
 	// Server should schedule the new hunt on the client.
-	tasks, err := db.GetClientTasks(self.ConfigObj,
+	tasks, err := clients.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
@@ -405,11 +404,9 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 	runner.Close()
 
 	t := self.T()
-	db, err := datastore.GetDB(self.ConfigObj)
-	require.NoError(t, err)
 
 	// Cancellation message should never be sent due to log.
-	tasks, err := db.GetClientTasks(self.ConfigObj,
+	tasks, err := clients.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 0)
@@ -425,7 +422,7 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 	runner.Close()
 
 	// Cancellation message should never be sent due to status.
-	tasks, err = db.GetClientTasks(self.ConfigObj,
+	tasks, err = clients.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 0)
@@ -442,7 +439,7 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 
 	// Cancellation message should be sent due to response
 	// messages.
-	tasks, err = db.GetClientTasks(self.ConfigObj,
+	tasks, err = clients.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
@@ -475,7 +472,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	require.NoError(t, err)
 
 	// Launching the artifact will schedule one query on the client.
-	tasks, err := db.GetClientTasks(
+	tasks, err := clients.GetClientTasks(
 		self.ConfigObj, self.client_id,
 		true /* do_not_lease */)
 	assert.NoError(t, err)
@@ -701,7 +698,7 @@ func (self *ServerTestSuite) TestCancellation() {
 	require.NoError(t, err)
 
 	// One task is scheduled for the client.
-	tasks, err := db.GetClientTasks(self.ConfigObj,
+	tasks, err := clients.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 
@@ -717,7 +714,7 @@ func (self *ServerTestSuite) TestCancellation() {
 
 	// Cancelling a flow simply schedules a cancel message for the
 	// client and removes all pending tasks.
-	tasks, err = db.GetClientTasks(self.ConfigObj,
+	tasks, err = clients.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
@@ -762,7 +759,7 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 		})
 
 	// This should send a cancellation message to the client.
-	tasks, err := db.GetClientTasks(self.ConfigObj,
+	tasks, err := clients.GetClientTasks(self.ConfigObj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)

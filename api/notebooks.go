@@ -1100,7 +1100,7 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 
 		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
 			Name:     item.Name(),
-			Type:     api.GetExtensionForFilestore(ps, ps.Type()),
+			Type:     api.GetExtensionForFilestore(ps),
 			Path:     ps.AsClientPath(),
 			Size:     uint64(item.Size()),
 			Date:     fmt.Sprintf("%v", item.ModTime()),

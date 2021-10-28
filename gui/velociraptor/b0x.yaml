@@ -1,4 +1,5 @@
 pkg: velociraptor
+tags: "!disable_gui"
 
 # We assume we are run from the toplevel directory:
 # fileb0x gui/velociraptor/b0x.yaml

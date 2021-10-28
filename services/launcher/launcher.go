@@ -130,6 +130,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -548,7 +549,7 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 			task.Urgent = true
 		}
 
-		err = db.QueueMessageForClient(
+		err = clients.QueueMessageForClient(
 			config_obj, client_id, task)
 		if err != nil {
 			return "", err

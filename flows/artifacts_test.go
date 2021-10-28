@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/clients"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -245,11 +245,8 @@ func (self *TestSuite) TestResourceLimits() {
 		repository, request)
 	assert.NoError(self.T(), err)
 
-	db, err := datastore.GetDB(self.config_obj)
-	assert.NoError(self.T(), err)
-
 	// Drain messages to the client.
-	messages, err := db.GetClientTasks(self.config_obj, self.client_id,
+	messages, err := clients.GetClientTasks(self.config_obj, self.client_id,
 		false /* do_not_lease */)
 	assert.NoError(self.T(), err)
 
@@ -323,7 +320,7 @@ func (self *TestSuite) TestResourceLimits() {
 	assert.Contains(self.T(), collection_context.Status, "Row count exceeded")
 
 	// Make sure a cancel message was sent to the client.
-	messages, err = db.GetClientTasks(self.config_obj, self.client_id,
+	messages, err = clients.GetClientTasks(self.config_obj, self.client_id,
 		false /* do_not_lease */)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(messages), 1)

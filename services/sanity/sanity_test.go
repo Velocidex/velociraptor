@@ -10,11 +10,14 @@ import (
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -97,8 +100,12 @@ tools:
 	require.NoError(self.T(), self.sm.Start(StartSanityCheckService))
 
 	db := test_utils.GetMemoryDataStore(self.T(), self.config_obj)
-	golden := ordereddict.NewDict().
-		Set("/config/inventory.json", db.Subjects["/config/inventory.json.db"])
+	inventory_config := &artifacts_proto.ThirdParty{}
+	err = db.GetSubject(self.config_obj,
+		paths.ThirdPartyInventory, inventory_config)
+	assert.NoError(self.T(), err)
+
+	golden := ordereddict.NewDict().Set("/config/inventory.json", inventory_config)
 
 	serialized, err := json.MarshalIndentNormalized(golden)
 	assert.NoError(self.T(), err)
@@ -120,9 +127,20 @@ func (self *ServicesTestSuite) TestCreateUser() {
 	require.NoError(self.T(), self.sm.Start(StartSanityCheckService))
 
 	db := test_utils.GetMemoryDataStore(self.T(), self.config_obj)
+
+	user1 := &api_proto.VelociraptorUser{}
+	user_path_manager := paths.NewUserPathManager("User1")
+	err := db.GetSubject(self.config_obj, user_path_manager.Path(), user1)
+	assert.NoError(self.T(), err)
+
+	acl_obj := &acl_proto.ApiClientACL{}
+	err = db.GetSubject(
+		self.config_obj, user_path_manager.ACL(), acl_obj)
+	assert.NoError(self.T(), err)
+
 	golden := ordereddict.NewDict().
-		Set("/users/User1", db.Subjects["/users/User1.db"]).
-		Set("/acl/User1.json", db.Subjects["/acl/User1.json.db"])
+		Set("/users/User1", user1).
+		Set("/acl/User1.json", acl_obj)
 
 	serialized, err := json.MarshalIndentNormalized(golden)
 	assert.NoError(self.T(), err)

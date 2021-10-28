@@ -223,6 +223,14 @@ func Linux() error {
 		arch:       "amd64"}.Run()
 }
 
+// A Linux binary without the GUI
+func LinuxBare() error {
+	return Builder{
+		extra_tags: " release yara disable_gui ",
+		goos:       "linux",
+		arch:       "amd64"}.Run()
+}
+
 func Freebsd() error {
 	return Builder{
 		extra_tags: " release yara ",
@@ -265,6 +273,13 @@ func Dev() error {
 func Windows() error {
 	return Builder{
 		extra_tags: " release yara ",
+		goos:       "windows",
+		arch:       "amd64"}.Run()
+}
+
+func WindowsBare() error {
+	return Builder{
+		extra_tags: " release yara disable_gui ",
 		goos:       "windows",
 		arch:       "amd64"}.Run()
 }

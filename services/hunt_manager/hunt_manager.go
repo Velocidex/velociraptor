@@ -60,11 +60,11 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -598,13 +598,9 @@ func huntMatchesOS(hunt_obj *api_proto.Hunt, client_info *services.ClientInfo) b
 func checkHuntRanOnClient(
 	config_obj *config_proto.Config,
 	client_id, hunt_id string) error {
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
 
 	hunt_ids := []string{hunt_id}
-	err = db.CheckIndex(
+	err := search.CheckSimpleIndex(
 		config_obj, paths.HUNT_INDEX, client_id, hunt_ids)
 	if err == nil {
 		return errors.New("Client already ran this hunt")
@@ -615,13 +611,9 @@ func checkHuntRanOnClient(
 
 func setHuntRanOnClient(config_obj *config_proto.Config,
 	client_id, hunt_id string) error {
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
 
 	hunt_ids := []string{hunt_id}
-	err = db.SetIndex(
+	err := search.SetSimpleIndex(
 		config_obj, paths.HUNT_INDEX, client_id, hunt_ids)
 	if err != nil {
 		return fmt.Errorf("Setting hunt index: %w", err)

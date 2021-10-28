@@ -20,13 +20,11 @@ package datastore
 
 import (
 	"errors"
-	"strings"
 	"sync"
 	"time"
 
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
@@ -53,22 +51,6 @@ type DatastoreInfo struct {
 type WalkFunc func(urn api.DSPathSpec) error
 
 type DataStore interface {
-	// Retrieve all the client's tasks.
-	GetClientTasks(
-		config_obj *config_proto.Config,
-		client_id string,
-		do_not_lease bool) ([]*crypto_proto.VeloMessage, error)
-
-	UnQueueMessageForClient(
-		config_obj *config_proto.Config,
-		client_id string,
-		message *crypto_proto.VeloMessage) error
-
-	QueueMessageForClient(
-		config_obj *config_proto.Config,
-		client_id string,
-		message *crypto_proto.VeloMessage) error
-
 	// Reads a stored message from the datastore. If there is no
 	// stored message at this URN, the function returns an
 	// os.ErrNotExist error.
@@ -94,31 +76,7 @@ type DataStore interface {
 	Walk(config_obj *config_proto.Config,
 		root api.DSPathSpec, walkFn WalkFunc) error
 
-	// Update the posting list index. Searching for any of the
-	// keywords will return the entity urn.
-	SetIndex(
-		config_obj *config_proto.Config,
-		index_urn api.DSPathSpec,
-		entity string,
-		keywords []string) error
-
-	UnsetIndex(
-		config_obj *config_proto.Config,
-		index_urn api.DSPathSpec,
-		entity string,
-		keywords []string) error
-
-	CheckIndex(
-		config_obj *config_proto.Config,
-		index_urn api.DSPathSpec,
-		entity string,
-		keywords []string) error
-
-	SearchClients(
-		config_obj *config_proto.Config,
-		index_urn api.DSPathSpec,
-		query string, query_type string,
-		offset uint64, limit uint64, sort SortingSense) []string
+	Debug(config_obj *config_proto.Config)
 
 	// Called to close all db handles etc. Not thread safe.
 	Close()
@@ -138,19 +96,25 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 
 		return file_based_imp, nil
 
-	case "Test":
-		mu.Lock()
-		defer mu.Unlock()
+	case "Memcache":
+		return memcache_imp, nil
 
-		// Sanitize the FilestoreDirectory parameter so we
-		// have a consistent filename in the test datastore.
-		if config_obj.Datastore.Location != "" {
-			config_obj.Datastore.Location = strings.TrimSuffix(
-				config_obj.Datastore.Location, "/")
-			config_obj.Datastore.Location = strings.TrimSuffix(
-				config_obj.Datastore.Location, "\\")
-		}
-		return gTestDatastore, nil
+	case "Test":
+		return memcache_imp, nil
+		/*
+			mu.Lock()
+			defer mu.Unlock()
+
+			// Sanitize the FilestoreDirectory parameter so we
+			// have a consistent filename in the test datastore.
+			if config_obj.Datastore.Location != "" {
+				config_obj.Datastore.Location = strings.TrimSuffix(
+					config_obj.Datastore.Location, "/")
+				config_obj.Datastore.Location = strings.TrimSuffix(
+					config_obj.Datastore.Location, "\\")
+			}
+			return gTestDatastore, nil
+		*/
 
 	default:
 		return nil, errors.New("no datastore implementation " +

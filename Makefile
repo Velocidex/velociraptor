@@ -30,11 +30,17 @@ darwin_m1:
 linux:
 	go run make.go -v linux
 
+linux_bare:
+	go run make.go -v linuxBare
+
 freebsd:
 	go run make.go -v freebsd
 
 windows:
 	go run make.go -v windowsDev
+
+windows_bare:
+	go run make.go -v windowsBare
 
 windowsx86:
 	go run make.go -v windowsx86

@@ -37,6 +37,8 @@ func (self DSPathSpec) IsDir() bool {
 
 func (self DSPathSpec) SetDir() api.DSPathSpec {
 	self.is_dir = true
+	self.path_type = api.PATH_TYPE_DATASTORE_DIRECTORY
+
 	return self
 }
 
@@ -67,7 +69,8 @@ func (self DSPathSpec) Dir() api.DSPathSpec {
 	}
 	return &DSPathSpec{
 		components: new_components,
-		path_type:  self.path_type,
+		is_dir:     true,
+		path_type:  api.PATH_TYPE_DATASTORE_DIRECTORY,
 	}
 }
 
@@ -106,7 +109,7 @@ func (self DSPathSpec) SetType(ext api.PathType) api.DSPathSpec {
 
 func (self DSPathSpec) AsClientPath() string {
 	return utils.JoinComponents(self.components, "/") +
-		api.GetExtensionForDatastore(self, self.path_type)
+		api.GetExtensionForDatastore(self)
 }
 
 func (self DSPathSpec) AsDatastoreDirectory(
@@ -141,7 +144,7 @@ func (self DSPathSpec) asUnsafeDirWithRoot(root string) string {
 func (self DSPathSpec) AsDatastoreFilename(
 	config_obj *config_proto.Config) string {
 	return self.AsDatastoreDirectory(config_obj) +
-		api.GetExtensionForDatastore(self, self.path_type)
+		api.GetExtensionForDatastore(self)
 }
 
 func (self DSPathSpec) AsFilestorePath() api.FSPathSpec {

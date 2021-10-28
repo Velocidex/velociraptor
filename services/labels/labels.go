@@ -74,43 +74,6 @@ func (self *Labeler) SetClock(c utils.Clock) {
 	self.Clock = c
 }
 
-// If an explicit record does not exist, we retrieve it from searching the index.
-func (self *Labeler) getRecordFromIndex(
-	config_obj *config_proto.Config, client_id string) (*CachedLabels, error) {
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	result := &CachedLabels{
-		record: &api_proto.ClientLabels{
-			// We treat index timestamps as 0 since they
-			// are legacy - new labeling operations should
-			// advance this.
-			Timestamp: 0,
-		},
-	}
-
-	for _, label := range db.SearchClients(
-		config_obj, paths.CLIENT_INDEX_URN,
-		client_id, "", 0, 1000, datastore.UNSORTED) {
-		if strings.HasPrefix(label, "label:") {
-			result.record.Label = append(result.record.Label,
-				strings.TrimPrefix(label, "label:"))
-		}
-	}
-
-	// Set the record for next time.
-	client_path_manager := paths.NewClientPathManager(client_id)
-	err = db.SetSubject(config_obj,
-		client_path_manager.Labels(), result.record)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
 func (self *Labeler) getRecord(
 	config_obj *config_proto.Config, client_id string) (*CachedLabels, error) {
 	cached_any, ok := self.lru.Get(client_id)
@@ -128,15 +91,10 @@ func (self *Labeler) getRecord(
 	err = db.GetSubject(config_obj,
 		client_path_manager.Labels(), cached.record)
 
-	// If there is no record, calculate a new record from the
-	// client index.
-	if err != nil || cached.record.Timestamp == 0 {
-		cached, err = self.getRecordFromIndex(config_obj, client_id)
-		if err != nil {
-			return nil, err
-		}
-	}
-
+	// In ancient versions we used to store labels in the client index
+	// instead of a dedicated record. This used to be migration code
+	// that populated labels from the index, but this is not necessary
+	// since the labels client record is the authoritative source.
 	self.preCalculatedLowCase(cached)
 
 	self.lru.Set(client_id, cached)
@@ -144,6 +102,8 @@ func (self *Labeler) getRecord(
 	return cached, nil
 }
 
+// Reset internal lower cased labels from the full labels. (Lower
+// cased labels are used for quick label comparisons).
 func (self *Labeler) preCalculatedLowCase(cached *CachedLabels) {
 	cached.lower_labels = nil
 	for _, label := range cached.record.Label {

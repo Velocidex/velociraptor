@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -71,15 +72,16 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 
 	// Initially Server.Monitor.Health should be created if no
 	// other config exists.
-	configuration, ok := db.Get("/config/server_monitoring.json.db").(*flows_proto.ArtifactCollectorArgs)
-	assert.True(self.T(), ok)
+	configuration := &flows_proto.ArtifactCollectorArgs{}
+	err := db.GetSubject(self.ConfigObj, paths.ServerMonitoringFlowURN, configuration)
+	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), 1, len(configuration.Artifacts))
 	assert.Equal(self.T(), "Server.Monitor.Health", configuration.Artifacts[0])
 
 	self.LoadArtifacts(monitoringArtifacts)
 
 	// Install the two event artifacts.
-	err := services.GetServerEventManager().Update(
+	err = services.GetServerEventManager().Update(
 		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"Server.Clock", "Server.Clock2"},
@@ -98,8 +100,8 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	assert.NoError(self.T(), err)
 
 	// Make sure the new configuration is written to disk
-	configuration, ok = db.Get("/config/server_monitoring.json.db").(*flows_proto.ArtifactCollectorArgs)
-	assert.True(self.T(), ok)
+	err = db.GetSubject(self.ConfigObj, paths.ServerMonitoringFlowURN, configuration)
+	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), 2, len(configuration.Artifacts))
 	assert.Equal(self.T(), "Server.Clock", configuration.Artifacts[0])
 
@@ -140,11 +142,7 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 		}
 	}
 
-	for _, path := range []string{
-		"/config/server_monitoring.json.db",
-	} {
-		golden.Set(path, db.Get(path))
-	}
+	golden.Set(paths.ServerMonitoringFlowURN.AsClientPath(), configuration)
 
 	golden_str := json.MustMarshalIndent(golden)
 	golden_str = regexp.MustCompile("Query Stats.+").ReplaceAll(golden_str, []byte{})

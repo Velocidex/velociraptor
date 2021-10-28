@@ -4,7 +4,9 @@ import (
 	"strings"
 )
 
-func GetExtensionForDatastore(path_spec DSPathSpec, t PathType) string {
+func GetExtensionForDatastore(path_spec DSPathSpec) string {
+	t := path_spec.Type()
+
 	switch t {
 	case PATH_TYPE_DATASTORE_PROTO:
 		return ".db"
@@ -12,12 +14,16 @@ func GetExtensionForDatastore(path_spec DSPathSpec, t PathType) string {
 	case PATH_TYPE_DATASTORE_JSON:
 		return ".json.db"
 
-	}
+	case PATH_TYPE_DATASTORE_DIRECTORY:
+		return ""
 
+	}
 	return ".db"
 }
 
-func GetExtensionForFilestore(path_spec FSPathSpec, t PathType) string {
+func GetExtensionForFilestore(path_spec FSPathSpec) string {
+	t := path_spec.Type()
+
 	switch t {
 	case PATH_TYPE_DATASTORE_PROTO, PATH_TYPE_DATASTORE_JSON:
 		panic("datastore path used for filestore for " +
@@ -75,7 +81,7 @@ func GetDataStorePathTypeFromExtension(name string) (PathType, string) {
 		return PATH_TYPE_DATASTORE_PROTO, name[:len(name)-3]
 	}
 
-	return PATH_TYPE_DATASTORE_PROTO, name
+	return PATH_TYPE_DATASTORE_UNKNOWN, name
 }
 
 func GetFileStorePathTypeFromExtension(name string) (PathType, string) {
