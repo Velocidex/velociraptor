@@ -44,16 +44,22 @@ def Foo(X):
 `},
 	{`Starlark types`, `
 LET X = starl(code=StarCode)
-SELECT X.Foo(X=2, Y="String", Z=[2, 3]) FROM scope()
+SELECT X.Foo(X=2, Y="String", Z=[2, 3], D=dict(foo=1)) FROM scope()
 `, `
-def Foo(X, Y, Z):
+def Foo(X, Y, Z, D):
+   D["Additional"] = 23
+
    return (X + 2, Y + "A", [1,] + Z,
 
            # Dict with weird keys should be converted to string.
            {"A":1, 2:3, 1.1: 1},
 
            # Other starlark types.
-           None, True, 1.1, "string", [1, 2])
+           None, True, 1.1, "string", [1, 2],
+
+           # Return A dict from a modified dict.
+           {"Result": D}
+        )
 `},
 }
 

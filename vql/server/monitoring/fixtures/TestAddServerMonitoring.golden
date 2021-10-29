@@ -1,0 +1,26 @@
+{
+ "Add artifact": {
+  "artifacts": [
+   "Server.Monitor.Health",
+   "System.Hunt.Creation"
+  ],
+  "specs": [
+   {
+    "artifact": "System.Hunt.Creation",
+    "parameters": {
+     "env": [
+      {
+       "key": "syslogAuthLogPath",
+       "value": "AppliesToAll"
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "Removing artifact from label": {
+  "artifacts": [
+   "Server.Monitor.Health"
+  ]
+ }
+}

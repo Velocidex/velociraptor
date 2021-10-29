@@ -12,6 +12,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -41,6 +42,8 @@ type EventTable struct {
 	clock  utils.Clock
 
 	tracer *QueryTracer
+
+	request *flows_proto.ArtifactCollectorArgs
 }
 
 func (self *EventTable) Clock() utils.Clock {
@@ -81,6 +84,13 @@ func (self *EventTable) Close() {
 
 	// Wait here until all the old queries are cancelled.
 	self.wg.Wait()
+}
+
+func (self *EventTable) Get() *flows_proto.ArtifactCollectorArgs {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return proto.Clone(self.request).(*flows_proto.ArtifactCollectorArgs)
 }
 
 func (self *EventTable) Update(
@@ -143,6 +153,8 @@ func (self *EventTable) Update(
 	if err != nil {
 		return err
 	}
+
+	self.request = request
 
 	if principal != "" {
 		logging.GetLogger(config_obj, &logging.Audit).

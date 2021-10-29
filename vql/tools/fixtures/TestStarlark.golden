@@ -18,9 +18,9 @@
   }
  ],
  "002/000 Starlark types: LET X=starl(code=StarCode)": null,
- "002/001 Starlark types: SELECT X.Foo(X=2, Y=\"String\", Z= [2, 3]) FROM scope()": [
+ "002/001 Starlark types: SELECT X.Foo(X=2, Y=\"String\", Z= [2, 3], D=dict(foo=1)) FROM scope()": [
   {
-   "X.Foo(X=2, Y=\"String\", Z= [2, 3])": [
+   "X.Foo(X=2, Y=\"String\", Z= [2, 3], D=dict(foo=1))": [
     4,
     "StringA",
     [
@@ -40,7 +40,13 @@
     [
      1,
      2
-    ]
+    ],
+    {
+     "Result": {
+      "foo": 1,
+      "Additional": 23
+     }
+    }
    ]
   }
  ]
