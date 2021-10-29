@@ -126,7 +126,7 @@ func (self *ClientEventTable) GetClientMonitoringState() *flows_proto.ClientEven
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.state
+	return proto.Clone(self.state).(*flows_proto.ClientEventTable)
 }
 
 func (self *ClientEventTable) SetClientMonitoringState(

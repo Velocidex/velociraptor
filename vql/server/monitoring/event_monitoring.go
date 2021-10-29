@@ -1,4 +1,4 @@
-package server
+package monitoring
 
 import (
 	"context"
@@ -253,7 +253,7 @@ func (self SetServerMonitoring) Call(
 func (self SetServerMonitoring) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "set_server_monitoring",
-		Doc:     "Sets the current server monitoring state.",
+		Doc:     "Sets the current server monitoring state (this function is deprecated, use add_server_monitoring and remove_server_monitoring).",
 		ArgType: type_map.AddType(scope, &SetServerMonitoringArgs{}),
 	}
 }

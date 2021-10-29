@@ -37,6 +37,8 @@ type serverEvent interface {
 		principal string,
 		arg *flows_proto.ArtifactCollectorArgs) error
 
+	Get() *flows_proto.ArtifactCollectorArgs
+
 	// Close the event manager and cleanup.
 	Close()
 }
