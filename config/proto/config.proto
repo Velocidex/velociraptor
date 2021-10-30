@@ -453,6 +453,11 @@ message FrontendResourceControl {
     // less latency to respond to client events but also means more
     // TLS handshake and network overheads due to frequent POST.
     uint64 client_event_max_wait = 23;
+
+
+    // Experimental settings for tuning the search index.
+    uint64 search_index_expiry_time = 25;
+    int64 search_index_cache_size = 26;
 }
 
 
@@ -589,6 +594,25 @@ message FrontendConfig {
 
 message DatastoreConfig {
     // The name of the datastore implementation to use.
+    // Currently the following implementations are supported:
+
+    // 1. FileBaseDataStore - The standard default - uses files on the
+    //    filesystem for both large result sets (File store) and small
+    //    files (Data store).
+
+    // 2. MemoryOnlyDataStore or Test - a non persistent in Memory
+    //    only data store for both large result sets and data
+    //    files. This is used mainly in Tests.
+
+    // 3. Memcache - a memory based cache with file backing. Large
+    //    files are written to disk while small files are memory
+    //    cached with disk backing.
+
+    // 4. FileBasedWithRPC - Large files are written to disk (File
+    //    store) but small files are accessed via RPC to a local
+    //    memcache server. This configuration is suitable for the
+    //    Minion node on a slow EFS backed filesystem. All data store
+    //    access will go through to the master memcache using gRPC.
     string implementation = 1;
 
     // For FileBaseDataStore

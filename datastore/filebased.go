@@ -59,9 +59,7 @@ import (
 )
 
 var (
-	file_based_imp = &FileBaseDataStore{
-		clock: utils.RealClock{},
-	}
+	file_based_imp = &FileBaseDataStore{}
 )
 
 const (
@@ -70,9 +68,7 @@ const (
 	WINDOWS_LFN_PREFIX = "\\\\?\\"
 )
 
-type FileBaseDataStore struct {
-	clock utils.Clock
-}
+type FileBaseDataStore struct{}
 
 /* Gets a protobuf encoded struct from the data store.  Objects are
    addressed by the urn which is a string (URNs are typically managed

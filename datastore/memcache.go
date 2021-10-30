@@ -13,22 +13,26 @@ import (
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
-	memcache_imp = &MemcacheDatastore{
-		clock:      utils.RealClock{},
-		data_cache: ttlcache.NewCache(),
-		dir_cache:  ttlcache.NewCache(),
-	}
+	memcache_imp = NewMemcacheDataStore()
 
 	internalError = errors.New("Internal datastore error")
 )
 
+// Stored in data_cache
+type BulkData struct {
+	mu    sync.Mutex
+	data  []byte
+	dirty bool
+}
+
+// Stored in dir_cache
 type DirectoryMetadata struct {
-	mu   sync.Mutex
-	data map[string]api.DSPathSpec
+	mu    sync.Mutex
+	data  map[string]api.DSPathSpec
+	dirty bool
 }
 
 func (self *DirectoryMetadata) Set(key string, value api.DSPathSpec) {
@@ -76,8 +80,6 @@ func NewDirectoryMetadata() *DirectoryMetadata {
 
 // This is a memory cached data store.
 type MemcacheDatastore struct {
-	clock utils.Clock
-
 	// Stores data like key value
 	data_cache *ttlcache.Cache
 
@@ -134,14 +136,14 @@ func (self *MemcacheDatastore) GetSubject(
 	defer Instrument("read", urn)()
 
 	path := urn.AsClientPath()
-	serialized_content_any, err := self.data_cache.Get(path)
+	bulk_data_any, err := self.data_cache.Get(path)
 	if err != nil {
 		// Second try the old DB without json. This supports
 		// migration from old protobuf based datastore files
 		// to newer json based blobs while still being able to
 		// read old files.
 		if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
-			serialized_content_any, err = self.data_cache.Get(
+			bulk_data_any, err = self.data_cache.Get(
 				urn.SetType(api.PATH_TYPE_DATASTORE_PROTO).AsClientPath())
 		}
 
@@ -152,11 +154,12 @@ func (self *MemcacheDatastore) GetSubject(
 	}
 
 	// TODO ensure caches are map[string][]byte)
-	serialized_content, ok := serialized_content_any.([]byte)
+	bulk_data, ok := bulk_data_any.(*BulkData)
 	if !ok {
 		return internalError
 	}
 
+	serialized_content := bulk_data.data
 	if len(serialized_content) == 0 {
 		return nil
 	}
@@ -218,7 +221,9 @@ func (self *MemcacheDatastore) SetSubject(
 	md_key := urn.Base() + api.GetExtensionForDatastore(urn)
 	md.Set(md_key, urn)
 
-	return self.data_cache.Set(urn.AsClientPath(), value)
+	return self.data_cache.Set(urn.AsClientPath(), &BulkData{
+		data: value,
+	})
 }
 
 func (self *MemcacheDatastore) DeleteSubject(
@@ -314,9 +319,8 @@ func (self *MemcacheDatastore) Dump() []api.DSPathSpec {
 	return result
 }
 
-func NewMemcacheDataStore(config_obj *config_proto.Config) *MemcacheDatastore {
+func NewMemcacheDataStore() *MemcacheDatastore {
 	return &MemcacheDatastore{
-		clock:      utils.RealClock{},
 		data_cache: ttlcache.NewCache(),
 		dir_cache:  ttlcache.NewCache(),
 	}

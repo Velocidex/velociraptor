@@ -20,7 +20,7 @@ func TestMemCacheDatastore(t *testing.T) {
 	config_obj.Datastore.Implementation = "Memcache"
 
 	suite.Run(t, &MemcacheTestSuite{BaseTestSuite{
-		datastore:  NewMemcacheDataStore(config_obj),
+		datastore:  NewMemcacheDataStore(),
 		config_obj: config_obj,
 	}})
 }

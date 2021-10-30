@@ -20,7 +20,6 @@ package datastore
 
 import (
 	"errors"
-	"sync"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -29,8 +28,6 @@ import (
 )
 
 var (
-	mu sync.Mutex
-
 	StopIteration = errors.New("StopIteration")
 )
 
@@ -99,22 +96,11 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 	case "Memcache":
 		return memcache_imp, nil
 
+	case "MemcacheFileDatastore":
+		return memcache_file_imp, nil
+
 	case "Test":
 		return memcache_imp, nil
-		/*
-			mu.Lock()
-			defer mu.Unlock()
-
-			// Sanitize the FilestoreDirectory parameter so we
-			// have a consistent filename in the test datastore.
-			if config_obj.Datastore.Location != "" {
-				config_obj.Datastore.Location = strings.TrimSuffix(
-					config_obj.Datastore.Location, "/")
-				config_obj.Datastore.Location = strings.TrimSuffix(
-					config_obj.Datastore.Location, "\\")
-			}
-			return gTestDatastore, nil
-		*/
 
 	default:
 		return nil, errors.New("no datastore implementation " +

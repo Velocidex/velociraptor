@@ -18,6 +18,8 @@ var (
 		[]string{"tag", "action"},
 	)
 
+	// Simulate running on a very slow filesystem (EFS)
+	//inject_time = 60
 	inject_time = 0
 )
 
