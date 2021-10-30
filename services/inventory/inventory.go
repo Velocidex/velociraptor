@@ -73,7 +73,6 @@ type InventoryService struct {
 	mu       sync.Mutex
 	binaries *artifacts_proto.ThirdParty
 	Client   HTTPClient
-	db       datastore.DataStore
 	Clock    utils.Clock
 }
 
@@ -225,7 +224,11 @@ func (self *InventoryService) materializeTool(
 		tool.ServeUrl = tool.Url
 	}
 
-	return self.db.SetSubject(config_obj, paths.ThirdPartyInventory, self.binaries)
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+	return db.SetSubject(config_obj, paths.ThirdPartyInventory, self.binaries)
 }
 
 func (self *InventoryService) RemoveTool(
@@ -246,7 +249,11 @@ func (self *InventoryService) RemoveTool(
 
 	self.binaries.Tools = tools
 
-	return self.db.SetSubject(config_obj, paths.ThirdPartyInventory, self.binaries)
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+	return db.SetSubject(config_obj, paths.ThirdPartyInventory, self.binaries)
 }
 
 func (self *InventoryService) AddTool(config_obj *config_proto.Config,
@@ -312,7 +319,11 @@ func (self *InventoryService) AddTool(config_obj *config_proto.Config,
 
 	self.binaries.Version = uint64(self.Clock.Now().UnixNano())
 
-	return self.db.SetSubject(config_obj, paths.ThirdPartyInventory, self.binaries)
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+	return db.SetSubject(config_obj, paths.ThirdPartyInventory, self.binaries)
 }
 
 func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) error {
@@ -320,7 +331,12 @@ func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) erro
 	defer self.mu.Unlock()
 
 	inventory := &artifacts_proto.ThirdParty{}
-	err := self.db.GetSubject(config_obj, paths.ThirdPartyInventory, inventory)
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+	err = db.GetSubject(config_obj, paths.ThirdPartyInventory, inventory)
 
 	// Ignore errors from reading the inventory file - it might be
 	// missing or corrupt but this is not an error - just try again later.
@@ -343,17 +359,10 @@ func StartInventoryService(
 	inventory_service := &InventoryService{
 		Clock:    utils.RealClock{},
 		binaries: &artifacts_proto.ThirdParty{},
-		db:       datastore.NewTestDataStore(),
 		// Use the VQL http client so it can accept the same certs.
 		Client: networking.GetHttpClient(config_obj.Client, nil),
 	}
 	services.RegisterInventory(inventory_service)
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-	inventory_service.db = db
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
@@ -384,7 +393,7 @@ func StartInventoryService(
 				}
 
 			case <-time.After(600 * time.Second):
-				err = inventory_service.LoadFromFile(config_obj)
+				err := inventory_service.LoadFromFile(config_obj)
 				if err != nil {
 					logger.Error("StartInventoryService: %v", err)
 				}

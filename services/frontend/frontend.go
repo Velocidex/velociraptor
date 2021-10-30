@@ -20,6 +20,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -333,6 +334,15 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 	if config_obj.Frontend == nil {
 		return errors.New("Frontend not configured")
+	}
+
+	if config_obj.Frontend.Resources != nil {
+		cache_size := config_obj.Frontend.Resources.SearchIndexCacheSize
+		if cache_size == 0 {
+			// Emperically max 100mb
+			cache_size = 100000
+		}
+		search.SetSearchIndexLRUSize(cache_size)
 	}
 
 	if config_obj.Frontend.IsMaster {
