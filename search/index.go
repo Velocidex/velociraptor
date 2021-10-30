@@ -62,8 +62,9 @@ const (
 var (
 	stopIteration = errors.New("stopIteration")
 
-	// LRU caches ListChildren
-	lru    = cache.NewLRUCache(10000)
+	// LRU caches ListChildren. Size is adjusted with
+	// config_obj.Frontend.Resources.SearchIndexCacheSize
+	lru    = cache.NewLRUCache(10)
 	lru_mu sync.Mutex
 
 	// Used to mock the clock
@@ -184,7 +185,17 @@ func getChildren(
 		cached_entry := cached_entry_any.(*lruEntry)
 
 		// Only use the entry if it is recent enough
-		if now.Before(cached_entry.ts.Add(60 * time.Second)) {
+		search_index_expiry_time := uint64(0)
+		if config_obj.Frontend != nil &&
+			config_obj.Frontend.Resources != nil {
+			search_index_expiry_time = config_obj.Frontend.Resources.SearchIndexExpiryTime
+		}
+		if search_index_expiry_time == 0 {
+			search_index_expiry_time = 600
+		}
+		if now.Before(
+			cached_entry.ts.Add(
+				time.Duration(search_index_expiry_time) * time.Second)) {
 			cached_entry.ts = now
 
 			return cached_entry.children, nil
@@ -212,8 +223,8 @@ func getChildren(
 
 	cached_entry := &lruEntry{
 		ts:       now,
-		children: children,
 		err:      err,
+		children: children,
 	}
 
 	metricLRUTotalChildren.Add(float64(len(children)))
@@ -258,11 +269,6 @@ func walkIndexWithPrefix(ctx context.Context,
 		for _, child := range children {
 			var record *api_proto.IndexRecord
 
-			// For a directory just send a null. This will block this
-			// goroutine here until someone consumes the null and
-			// stop us from listing our directories. If the consumer
-			// quits early we are able to avoid listing any
-			// directories.
 			if !child.IsDir() {
 				switch options {
 				case OPTION_ENTITY:
@@ -279,6 +285,11 @@ func walkIndexWithPrefix(ctx context.Context,
 				}
 			}
 
+			// For a directory just send a null. This will block this
+			// goroutine here until someone consumes the null and
+			// stop us from listing our directories. If the consumer
+			// quits early we are able to avoid listing any
+			// directories.
 			select {
 			case <-ctx.Done():
 				return
@@ -289,18 +300,9 @@ func walkIndexWithPrefix(ctx context.Context,
 		}
 
 		// Now descend the directories.
-		child_chans := []chan *api_proto.IndexRecord{}
-
-		// Spawn workers in parallel to read all child directories.
 		for _, child := range children {
-			if child.IsDir() {
-				child_chans = append(child_chans, walkIndexWithPrefix(
-					ctx, db, config_obj, child, next_partitions, options))
-			}
-		}
-
-		// Push out child directories first - depth first search
-		for _, child_chan := range child_chans {
+			child_chan := walkIndexWithPrefix(
+				ctx, db, config_obj, child, next_partitions, options)
 			for client_id := range child_chan {
 				select {
 				case <-ctx.Done():
@@ -310,7 +312,6 @@ func walkIndexWithPrefix(ctx context.Context,
 				}
 			}
 		}
-
 	}()
 
 	return output_chan
@@ -327,4 +328,18 @@ func SetLRUClock(new_clock utils.Clock) {
 
 func LRUStats() cache.Stats {
 	return lru.Stats()
+}
+
+func SetSearchIndexLRUSize(size int64) {
+	lru_mu.Lock()
+	defer lru_mu.Unlock()
+
+	if lru != nil {
+		lru.Clear()
+	}
+
+	if size == 0 {
+		size = 10000
+	}
+	lru = cache.NewLRUCache(size)
 }

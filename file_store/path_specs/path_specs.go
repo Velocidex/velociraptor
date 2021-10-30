@@ -61,7 +61,7 @@ func (self DSPathSpec) SetTag(tag string) api.DSPathSpec {
 }
 
 func (self DSPathSpec) Dir() api.DSPathSpec {
-	new_components := utils.CopySlice(self.components)
+	new_components := self.components
 	if len(new_components) > 0 {
 		new_components = new_components[:len(new_components)-1]
 	}

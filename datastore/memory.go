@@ -278,6 +278,10 @@ func (self *TestDataStore) ListChildren(
 			continue
 		}
 
+		if len(root_components) == len(components) {
+			return nil, nil
+		}
+
 		name := components[len(root_components)]
 		_, pres := seen_files[name]
 		if !pres {

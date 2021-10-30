@@ -25,6 +25,8 @@ type TestSuite struct {
 
 // Make some clients in the index.
 func (self *TestSuite) populatedClients() {
+	search.SetSearchIndexLRUSize(1000)
+
 	search.ResetLRU()
 	self.clients = nil
 	db, err := datastore.GetDB(self.ConfigObj)
@@ -55,6 +57,8 @@ func (self *TestSuite) populatedClients() {
 func (self *TestSuite) TestMRU() {
 	var err error
 
+	search.SetSearchIndexLRUSize(1000)
+
 	// Make some clients
 	self.populatedClients()
 
@@ -81,7 +85,7 @@ func (self *TestSuite) TestMRU() {
 	full_walk()
 
 	new_stats := search.LRUStats()
-	// No new looksups - everything should come from the cache.
+	// No new lookups - everything should come from the cache.
 	assert.Equal(self.T(), stats.Misses, new_stats.Misses)
 
 	// All old misses come from cache this time.
@@ -113,6 +117,8 @@ func (self *TestSuite) TestMRU() {
 }
 
 func (self *TestSuite) TestMRUTimeExpiry() {
+	search.SetSearchIndexLRUSize(1000)
+
 	// Make some clients
 	self.populatedClients()
 
@@ -150,6 +156,8 @@ func (self *TestSuite) TestMRUTimeExpiry() {
 }
 
 func (self *TestSuite) TestEnumerateIndex() {
+	search.SetSearchIndexLRUSize(1000)
+
 	// Make some clients
 	self.populatedClients()
 	// test_utils.GetMemoryDataStore(self.T(), self.ConfigObj).Debug()
@@ -172,7 +180,7 @@ func (self *TestSuite) TestEnumerateIndex() {
 
 	current_op_count := getIndexListings(self.T())
 	// These numbers depend on the partition size.
-	assert.Equal(self.T(), uint64(490), current_op_count-initial_op_count)
+	assert.Equal(self.T(), uint64(554), current_op_count-initial_op_count)
 
 	// Now test that early exit reduces the number of listing
 	// operations.
