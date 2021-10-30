@@ -13,6 +13,7 @@ import (
 )
 
 func (self *TestSuite) TestWildCardSearch() {
+	search.SetSearchIndexLRUSize(1000)
 	self.populatedClients()
 
 	// Read all clients.
@@ -44,6 +45,7 @@ func (self *TestSuite) TestWildCardSearch() {
 
 func (self *TestSuite) TestPrefixSearch() {
 	self.populatedClients()
+	search.SetSearchIndexLRUSize(1000)
 
 	initial_op_count := getIndexListings(self.T())
 
@@ -68,5 +70,5 @@ func (self *TestSuite) TestPrefixSearch() {
 	assert.Equal(self.T(), prefixed_clients, searched_clients)
 
 	current_op_count := getIndexListings(self.T())
-	assert.Equal(self.T(), uint64(34), current_op_count-initial_op_count)
+	assert.Equal(self.T(), uint64(38), current_op_count-initial_op_count)
 }
