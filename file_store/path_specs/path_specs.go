@@ -82,7 +82,7 @@ func (self DSPathSpec) Type() api.PathType {
 // Adds an unsafe component to this path.
 func (self DSPathSpec) AddChild(child ...string) api.DSPathSpec {
 	return DSPathSpec{
-		components: append(self.components, child...),
+		components: append(utils.CopySlice(self.components), child...),
 		path_type:  self.path_type,
 		is_safe:    self.is_safe,
 	}
@@ -90,7 +90,7 @@ func (self DSPathSpec) AddChild(child ...string) api.DSPathSpec {
 
 func (self DSPathSpec) AddUnsafeChild(child ...string) api.DSPathSpec {
 	return DSPathSpec{
-		components: append(self.components, child...),
+		components: append(utils.CopySlice(self.components), child...),
 		path_type:  self.path_type,
 		is_safe:    false,
 	}

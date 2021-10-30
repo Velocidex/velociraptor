@@ -90,9 +90,10 @@ var (
 )
 
 type lruEntry struct {
-	ts       time.Time
-	children []api.DSPathSpec
-	err      error
+	path_spec api.DSPathSpec
+	ts        time.Time
+	children  []string
+	err       error
 }
 
 func (self lruEntry) Size() int {
@@ -101,6 +102,14 @@ func (self lruEntry) Size() int {
 
 func (self lruEntry) Close() {
 	metricLRUTotalChildren.Sub(float64(len(self.children)))
+}
+
+func (self lruEntry) Children() []api.DSPathSpec {
+	result := make([]api.DSPathSpec, 0, len(self.children))
+	for _, i := range self.children {
+		result = append(result, self.path_spec.AddChild(i))
+	}
+	return result
 }
 
 // Set the index
@@ -198,7 +207,7 @@ func getChildren(
 				time.Duration(search_index_expiry_time) * time.Second)) {
 			cached_entry.ts = now
 
-			return cached_entry.children, nil
+			return cached_entry.Children(), nil
 		}
 
 		// Get rid of it and make a new entry
@@ -222,9 +231,13 @@ func getChildren(
 	})
 
 	cached_entry := &lruEntry{
-		ts:       now,
-		children: children,
-		err:      err,
+		path_spec: root,
+		ts:        now,
+		err:       err,
+	}
+
+	for _, i := range children {
+		cached_entry.children = append(cached_entry.children, i.Base())
 	}
 
 	metricLRUTotalChildren.Add(float64(len(children)))
