@@ -342,7 +342,7 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 			// Emperically max 100mb
 			cache_size = 100000
 		}
-		search.SetSearchIndexLRUSize(cache_size)
+		go search.LoadIndex(ctx, config_obj)
 	}
 
 	if config_obj.Frontend.IsMaster {

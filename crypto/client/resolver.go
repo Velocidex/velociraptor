@@ -19,7 +19,6 @@ package client
 
 import (
 	"crypto/rsa"
-	"strings"
 	"sync"
 )
 
@@ -59,9 +58,7 @@ func (self *inMemoryPublicKeyResolver) GetPublicKey(subject string) (*rsa.Public
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	// GRR sometimes prefixes common names with aff4:/ so strip it first.
-	normalized_subject := strings.TrimPrefix(subject, "aff4:/")
-	result, pres := self.public_keys[normalized_subject]
+	result, pres := self.public_keys[subject]
 	return result, pres
 }
 

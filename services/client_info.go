@@ -60,6 +60,9 @@ type ClientInfoManager interface {
 
 func GetHostname(client_id string) string {
 	client_info_manager := GetClientInfoManager()
+	if client_info_manager == nil {
+		return ""
+	}
 	info, err := client_info_manager.Get(client_id)
 	if err != nil {
 		return ""

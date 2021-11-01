@@ -5,6 +5,7 @@ package startup
 import (
 	"fmt"
 
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/broadcast"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
@@ -124,6 +125,11 @@ func StartupEssentialServices(sm *services.Service) error {
 // Start usual services that run on frontends only (i.e. not the client).
 func StartupFrontendServices(sm *services.Service) error {
 	spec := getServerServices(sm.Config)
+
+	err := sm.Start(datastore.StartMemcacheFileService)
+	if err != nil {
+		return err
+	}
 
 	// Check everything is ok before we can start.
 	if spec.ClientMonitoring {

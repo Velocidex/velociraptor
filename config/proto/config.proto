@@ -618,6 +618,11 @@ message DatastoreConfig {
     // For FileBaseDataStore
     string location = 2;
     string filestore_directory = 3;
+
+    // How long to expire the memcache (default 10 min)
+    uint64 memcache_expiration_sec = 4;
+
+    uint64 memcache_write_mutation_buffer = 5;
 }
 
 // Configuration for the mail server.

@@ -79,7 +79,7 @@ func (self *FileBaseDataStore) GetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
-	defer Instrument("read", urn)()
+	defer InstrumentWithDelay("read", urn)()
 
 	Trace(config_obj, "GetSubject", urn)
 	serialized_content, err := readContentFromFile(
@@ -153,7 +153,7 @@ func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,
 func (self *FileBaseDataStore) Debug(config_obj *config_proto.Config) {
 	filepath.Walk(config_obj.Datastore.Location,
 		func(path string, info fs.FileInfo, err error) error {
-			fmt.Printf("%v -> %v\n", path, info.Size())
+			fmt.Printf("%v -> %v %v\n", path, info.Size(), info.Mode())
 			return nil
 		})
 }
@@ -163,7 +163,7 @@ func (self *FileBaseDataStore) SetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
-	defer Instrument("write", urn)()
+	defer InstrumentWithDelay("write", urn)()
 
 	Trace(config_obj, "SetSubject", urn)
 
@@ -187,7 +187,7 @@ func (self *FileBaseDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) error {
 
-	defer Instrument("delete", urn)()
+	defer InstrumentWithDelay("delete", urn)()
 
 	Trace(config_obj, "DeleteSubject", urn)
 
@@ -206,7 +206,7 @@ func (self *FileBaseDataStore) DeleteSubject(
 func listChildNames(config_obj *config_proto.Config,
 	urn api.DSPathSpec) (
 	[]string, error) {
-	defer Instrument("list", urn)()
+	defer InstrumentWithDelay("list", urn)()
 
 	return utils.ReadDirNames(
 		urn.AsDatastoreDirectory(config_obj))
@@ -215,7 +215,7 @@ func listChildNames(config_obj *config_proto.Config,
 func listChildren(config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]os.FileInfo, error) {
 
-	defer Instrument("list", urn)()
+	defer InstrumentWithDelay("list", urn)()
 
 	children, err := utils.ReadDirUnsorted(
 		urn.AsDatastoreDirectory(config_obj))
@@ -262,6 +262,10 @@ func (self *FileBaseDataStore) ListChildren(
 		// Strip data store extensions
 		spec_type, name := api.GetDataStorePathTypeFromExtension(
 			utils.UnsanitizeComponent(child.Name()))
+		if name == "" {
+			continue
+		}
+
 		if child.IsDir() {
 			child_pathspec = urn.AddUnsafeChild(name).
 				SetType(api.PATH_TYPE_DATASTORE_DIRECTORY).SetDir()

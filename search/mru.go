@@ -1,6 +1,8 @@
 package search
 
 import (
+	"time"
+
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -16,7 +18,11 @@ func UpdateMRU(
 		return err
 	}
 
-	item := &api_proto.ApiClient{ClientId: client_id}
+	item := &api_proto.ApiClient{
+		ClientId:    client_id,
+		FirstSeenAt: uint64(time.Now().Unix()),
+	}
+
 	return db.SetSubject(
 		config_obj, path_manager.MRUClient(client_id), item)
 }

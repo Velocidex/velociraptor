@@ -3,6 +3,17 @@ package client
 import (
 	"container/list"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+)
+
+var (
+	metricLRUSize = promauto.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "cipher_lru_total_size",
+			Help: "LRU for client comms ciphers",
+		})
 )
 
 type entry struct {
@@ -128,6 +139,7 @@ func (self *CipherLRU) Set(source string, inbound_cipher, output_cipher *_Cipher
 		}
 
 		self.size++
+		metricLRUSize.Inc()
 		self.checkCapacity()
 	}
 }
@@ -156,6 +168,7 @@ func (self *CipherLRU) _delete(del_elem *list.Element) {
 			string(del_entry.inbound_cipher.encrypted_cipher))
 	}
 	self.size--
+	metricLRUSize.Dec()
 }
 
 func (self *CipherLRU) checkCapacity() {

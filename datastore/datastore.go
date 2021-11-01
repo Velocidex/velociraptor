@@ -96,7 +96,7 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 	case "Memcache":
 		return memcache_imp, nil
 
-	case "MemcacheFileDatastore":
+	case "MemcacheFileDataStore":
 		return memcache_file_imp, nil
 
 	case "Test":

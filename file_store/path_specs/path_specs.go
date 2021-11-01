@@ -63,7 +63,7 @@ func (self DSPathSpec) SetTag(tag string) api.DSPathSpec {
 }
 
 func (self DSPathSpec) Dir() api.DSPathSpec {
-	new_components := self.components
+	new_components := utils.CopySlice(self.components)
 	if len(new_components) > 0 {
 		new_components = new_components[:len(new_components)-1]
 	}
@@ -85,7 +85,7 @@ func (self DSPathSpec) Type() api.PathType {
 // Adds an unsafe component to this path.
 func (self DSPathSpec) AddChild(child ...string) api.DSPathSpec {
 	return DSPathSpec{
-		components: append(self.components, child...),
+		components: append(utils.CopySlice(self.components), child...),
 		path_type:  self.path_type,
 		is_safe:    self.is_safe,
 	}
@@ -93,7 +93,7 @@ func (self DSPathSpec) AddChild(child ...string) api.DSPathSpec {
 
 func (self DSPathSpec) AddUnsafeChild(child ...string) api.DSPathSpec {
 	return DSPathSpec{
-		components: append(self.components, child...),
+		components: append(utils.CopySlice(self.components), child...),
 		path_type:  self.path_type,
 		is_safe:    false,
 	}
