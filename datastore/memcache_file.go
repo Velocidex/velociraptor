@@ -13,6 +13,7 @@ package datastore
 import (
 	"context"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -72,22 +73,35 @@ func (self *MemcacheFileDataStore) invalidateDirCache(
 	}
 }
 
+func (self *MemcacheFileDataStore) ExpirationPolicy(
+	key string, value interface{}) bool {
+
+	// Do not expire ping
+	if strings.HasSuffix(key, "ping.db") {
+		return false
+	}
+
+	return true
+}
+
 // Starts the writer loop.
 func (self *MemcacheFileDataStore) StartWriter(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) {
 
 	var timeout uint64
-	var buffer_size int
+	var buffer_size, writers int
 
 	if config_obj.Datastore != nil {
 		timeout = config_obj.Datastore.MemcacheExpirationSec
 		buffer_size = int(config_obj.Datastore.MemcacheWriteMutationBuffer)
+		writers = int(config_obj.Datastore.MemcacheWriteMutationWriters)
 	}
 	if timeout == 0 {
 		timeout = 600
 	}
 	self.cache.SetTimeout(time.Duration(timeout) * time.Second)
+	self.cache.SetCheckExpirationCallback(self.ExpirationPolicy)
 
 	if buffer_size <= 0 {
 		buffer_size = 1000
@@ -95,8 +109,12 @@ func (self *MemcacheFileDataStore) StartWriter(
 	self.writer = make(chan *Mutation, buffer_size)
 	self.ctx = ctx
 
+	if writers == 0 {
+		writers = 5
+	}
+
 	// Start some writers.
-	for i := 0; i < 5; i++ {
+	for i := 0; i < writers; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

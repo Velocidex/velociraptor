@@ -618,6 +618,10 @@ message DatastoreConfig {
     uint64 memcache_expiration_sec = 4;
 
     int64 memcache_write_mutation_buffer = 5;
+
+    // Number of writing threads - increase for high latency
+    // filesystems.
+    int64 memcache_write_mutation_writers = 6;
 }
 
 // Configuration for the mail server.

@@ -174,6 +174,10 @@ func (self *Indexer) Load(
 						// info cache.
 						if strings.HasPrefix(record.Entity, "C.") {
 							services.GetHostname(record.Entity)
+
+							// Get the full record to warm up all
+							// client attributes.
+							GetApiClient(ctx, config_obj, record.Entity, true)
 						}
 						continue
 					}

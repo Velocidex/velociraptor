@@ -22,6 +22,7 @@ var (
 		"host:",
 		"client:",
 		"recent:",
+		"ip:",
 	}
 )
 
@@ -126,6 +127,9 @@ func SearchClients(
 
 	case "recent":
 		return searchRecents(ctx, config_obj, in, principal, term, limit)
+
+	case "ip":
+		return searchLastIP(ctx, config_obj, in, term, limit)
 
 	default:
 		return searchVerbs(ctx, config_obj, in, limit)

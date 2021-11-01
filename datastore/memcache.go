@@ -241,6 +241,12 @@ func (self *MemcacheDatastore) SetTimeout(duration time.Duration) {
 	self.dir_cache.SetTTL(duration)
 }
 
+func (self *MemcacheDatastore) SetCheckExpirationCallback(
+	callback ttlcache.CheckExpireCallback) {
+	self.data_cache.SetCheckExpirationCallback(callback)
+	self.dir_cache.SetCheckExpirationCallback(callback)
+}
+
 func (self *MemcacheDatastore) SetSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,

@@ -5,7 +5,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ReneKroon/ttlcache/v2"
 	"github.com/Velocidex/ordereddict"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -13,8 +16,15 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	metricLabelLRU = promauto.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "labeler_lru_total",
+			Help: "Total labels cached",
+		})
 )
 
 // When not running on the frontend we set a dummy labeler.
@@ -62,7 +72,7 @@ func (self CachedLabels) Size() int {
 
 type Labeler struct {
 	mu  sync.Mutex
-	lru *cache.LRUCache
+	lru *ttlcache.Cache
 
 	Clock utils.Clock
 }
@@ -76,8 +86,8 @@ func (self *Labeler) SetClock(c utils.Clock) {
 
 func (self *Labeler) getRecord(
 	config_obj *config_proto.Config, client_id string) (*CachedLabels, error) {
-	cached_any, ok := self.lru.Get(client_id)
-	if ok {
+	cached_any, err := self.lru.Get(client_id)
+	if err == nil {
 		return cached_any.(*CachedLabels), nil
 	}
 
@@ -291,7 +301,7 @@ func (self *Labeler) ProcessRow(
 
 	client_id, pres := row.GetString("client_id")
 	if pres {
-		self.lru.Delete(client_id)
+		self.lru.Remove(client_id)
 	}
 	return nil
 }
@@ -304,7 +314,15 @@ func (self *Labeler) Start(ctx context.Context,
 		expected_clients = config_obj.Frontend.Resources.ExpectedClients
 	}
 
-	self.lru = cache.NewLRUCache(expected_clients)
+	self.lru = ttlcache.NewCache()
+	self.lru.SetCacheSizeLimit(int(expected_clients))
+	self.lru.SetNewItemCallback(func(key string, value interface{}) {
+		metricLabelLRU.Inc()
+	})
+	self.lru.SetExpirationCallback(func(key string, value interface{}) {
+		metricLabelLRU.Dec()
+	})
+
 	journal, err := services.GetJournal()
 	if err != nil {
 		return err
