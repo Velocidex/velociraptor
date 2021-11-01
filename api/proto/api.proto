@@ -11,6 +11,7 @@ import "google/protobuf/empty.proto";
 // Files within the same directory must be imported relatively.
 import "artifacts.proto";
 import "clients.proto";
+import "datastore.proto";
 import "hunts.proto";
 import "flows.proto";
 import "notebooks.proto";
@@ -473,4 +474,10 @@ service API {
 
     // Push monitoring event to the server.
     rpc WriteEvent(VQLResponse) returns (google.protobuf.Empty) {}
+
+    // Remote data store access.
+    rpc GetSubject(DataRequest) returns (DataResponse) {}
+    rpc SetSubject(DataRequest) returns (DataResponse) {}
+    rpc DeleteSubject(DataRequest) returns (google.protobuf.Empty) {}
+    rpc ListChildren(DataRequest) returns (ListChildrenResponse) {}
 }

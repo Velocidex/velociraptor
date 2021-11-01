@@ -4,8 +4,9 @@ Queries:
     LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id
     FROM clients(search='label:*') ORDER BY client_id
 
-  # Make sure no labels exist.
-  - SELECT * FROM clients(search='label:*') ORDER BY client_id
+  # Make sure no labels exist. NOTE: label:* does not select clients
+  # with no labels.
+  - SELECT client_id, labels FROM clients(search='label:*')
 
   # Now set labels on windows clients.
   - |
@@ -21,7 +22,7 @@ Queries:
       })
 
   # Should be able to see our labels now.
-  - SELECT * FROM clients(search='label:*') ORDER BY client_id
+  - SELECT client_id, labels FROM clients(search='label:*')
 
   # Check for labels
   - SELECT label(client_id='C.4f5e52adf0a337a9',

@@ -111,10 +111,16 @@ func (self *Indexer) Ready() bool {
 
 func (self *Indexer) AscendGreaterOrEqual(
 	record Record, iterator btree.ItemIterator) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.btree.AscendGreaterOrEqual(record, iterator)
 }
 
 func (self *Indexer) Ascend(iterator btree.ItemIterator) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.btree.Ascend(iterator)
 }
 
@@ -166,8 +172,8 @@ func (self *Indexer) Load(
 					if !child.IsDir() {
 						record := &api_proto.IndexRecord{}
 						err := db.GetSubject(config_obj, child, record)
-						if err == nil {
-							indexer.Set(NewRecord(record))
+						if err != nil {
+							continue
 						}
 
 						// If it is a client also warm up the client
@@ -176,9 +182,19 @@ func (self *Indexer) Load(
 							services.GetHostname(record.Entity)
 
 							// Get the full record to warm up all
-							// client attributes.
-							GetApiClient(ctx, config_obj, record.Entity, true)
+							// client attributes. If the full record
+							// does not exist, then this index entry
+							// is stale - just ignore it. This can
+							// happen if the client records are
+							// removed but the index has not been
+							// updated.
+							_, err := GetApiClient(
+								ctx, config_obj, record.Entity, true)
+							if err != nil {
+								continue
+							}
 						}
+						indexer.Set(NewRecord(record))
 						continue
 					}
 
@@ -190,9 +206,11 @@ func (self *Indexer) Load(
 						return
 
 					case jobs <- child:
+
 					case <-time.After(time.Second):
 						// We failed to schedule recursively, give up
 						// and retry later.
+						wg.Done()
 						break
 					}
 				}

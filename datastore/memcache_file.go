@@ -359,8 +359,6 @@ func NewMemcacheFileDataStore() *MemcacheFileDataStore {
 	result := &MemcacheFileDataStore{
 		cache: NewMemcacheDataStore(),
 	}
-
-	result.cache.SetDirLoader(get_file_dir_metadata)
 	return result
 }
 

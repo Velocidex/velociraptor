@@ -122,7 +122,11 @@ func SearchClients(
 
 	operator, term := splitIntoOperatorAndTerms(in.Query)
 	switch operator {
-	case "label", "host", "client", "all":
+	case "label", "host", "all":
+		return searchClientIndex(ctx, config_obj, in, limit)
+
+	case "client":
+		in.Query = term
 		return searchClientIndex(ctx, config_obj, in, limit)
 
 	case "recent":
