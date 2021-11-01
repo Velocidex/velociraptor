@@ -45,8 +45,6 @@ func (self *TestSuite) TestWildCardSearch() {
 func (self *TestSuite) TestPrefixSearch() {
 	self.populatedClients()
 
-	initial_op_count := getIndexListings(self.T())
-
 	// Read all clients.
 	prefix := "C.0230300330"
 	ctx := context.Background()
@@ -66,7 +64,4 @@ func (self *TestSuite) TestPrefixSearch() {
 		}
 	}
 	assert.Equal(self.T(), prefixed_clients, searched_clients)
-
-	current_op_count := getIndexListings(self.T())
-	assert.Equal(self.T(), uint64(34), current_op_count-initial_op_count)
 }

@@ -453,11 +453,6 @@ message FrontendResourceControl {
     // less latency to respond to client events but also means more
     // TLS handshake and network overheads due to frequent POST.
     uint64 client_event_max_wait = 23;
-
-
-    // Experimental settings for tuning the search index.
-    uint64 search_index_expiry_time = 25;
-    int64 search_index_cache_size = 26;
 }
 
 
@@ -622,7 +617,7 @@ message DatastoreConfig {
     // How long to expire the memcache (default 10 min)
     uint64 memcache_expiration_sec = 4;
 
-    uint64 memcache_write_mutation_buffer = 5;
+    int64 memcache_write_mutation_buffer = 5;
 }
 
 // Configuration for the mail server.

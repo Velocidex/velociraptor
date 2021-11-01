@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
+	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -127,6 +128,11 @@ func StartupFrontendServices(sm *services.Service) error {
 	spec := getServerServices(sm.Config)
 
 	err := sm.Start(datastore.StartMemcacheFileService)
+	if err != nil {
+		return err
+	}
+
+	err = sm.Start(indexing.StartIndexingService)
 	if err != nil {
 		return err
 	}

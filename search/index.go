@@ -141,7 +141,7 @@ func (self *Indexer) Load(
 	config_obj *config_proto.Config) {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Started</> loading search index")
+	logger.Info("<green>Starting</> search index service... Please wait for index to load")
 
 	jobs := make(chan api.DSPathSpec, 20000)
 	defer close(jobs)
@@ -203,7 +203,7 @@ func (self *Indexer) Load(
 	jobs <- paths.CLIENT_INDEX_URN
 
 	wg.Wait()
-	logger.Info("<green>Loaded</> search index")
+	logger.Info("<green>Indexing service</> search index loaded successfully")
 
 	self.mu.Lock()
 	self.ready = true
@@ -295,7 +295,14 @@ func SearchIndexWithPrefix(
 // Loads the index lru quickly with many threads.
 func LoadIndex(
 	ctx context.Context,
-	config_obj *config_proto.Config) {
+	wg *sync.WaitGroup, config_obj *config_proto.Config) {
 
-	indexer.Load(ctx, config_obj)
+	// Load the index in the background until we are ready.
+	go indexer.Load(ctx, config_obj)
+}
+
+func WaitForIndex() {
+	for !indexer.Ready() {
+		time.Sleep(100 * time.Millisecond)
+	}
 }

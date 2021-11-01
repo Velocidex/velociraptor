@@ -37,18 +37,16 @@ var (
 		})
 )
 
-// Stored in data_cache
+// Stored in data_cache contains bulk data.
 type BulkData struct {
-	mu    sync.Mutex
-	data  []byte
-	dirty bool
+	mu   sync.Mutex
+	data []byte
 }
 
-// Stored in dir_cache
+// Stored in dir_cache - contains DirectoryMetadata
 type DirectoryMetadata struct {
-	mu    sync.Mutex
-	data  map[string]api.DSPathSpec
-	dirty bool
+	mu   sync.Mutex
+	data map[string]api.DSPathSpec
 }
 
 func (self *DirectoryMetadata) Set(key string, value api.DSPathSpec) {
@@ -136,14 +134,14 @@ type MemcacheDatastore struct {
 	dir_cache *DirectoryLRUCache
 
 	// A function to update directory caches
-	mkdirall func(
+	get_dir_metadata func(
 		dir_cache *DirectoryLRUCache,
 		config_obj *config_proto.Config,
 		urn api.DSPathSpec) (*DirectoryMetadata, error)
 }
 
 // Recursively makes sure the directories are created.
-func mkdirall(
+func get_dir_metadata(
 	dir_cache *DirectoryLRUCache,
 	config_obj *config_proto.Config, urn api.DSPathSpec) (
 	*DirectoryMetadata, error) {
@@ -156,21 +154,24 @@ func mkdirall(
 	}
 
 	// Create top level and every level under it.
-	dir_cache.Set(path, NewDirectoryMetadata())
+	md = NewDirectoryMetadata()
+	dir_cache.Set(path, md)
+
 	for len(urn.Components()) > 0 {
 		parent := urn.Dir()
 		path := parent.AsDatastoreDirectory(config_obj)
 
-		md, ok := dir_cache.Get(path)
+		intermediate_md, ok := dir_cache.Get(path)
 		if !ok {
-			md = NewDirectoryMetadata()
-			dir_cache.Set(path, md)
+			intermediate_md = NewDirectoryMetadata()
+			dir_cache.Set(path, intermediate_md)
 		}
 
-		_, pres := md.Get(urn.Base())
+		key := urn.Base() + api.GetExtensionForDatastore(urn)
+		_, pres := intermediate_md.Get(key)
 		if !pres {
 			// Walk up the directory path.
-			md.Set(urn.Base(), urn)
+			intermediate_md.Set(key, urn)
 			urn = parent
 
 		} else {
@@ -269,24 +270,25 @@ func (self *MemcacheDatastore) SetSubject(
 func (self *MemcacheDatastore) SetData(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,
-	data []byte) error {
+	data []byte) (err error) {
 
 	parent := urn.Dir()
 	parent_path := parent.AsDatastoreDirectory(config_obj)
 	md, pres := self.dir_cache.Get(parent_path)
 	if !pres {
-		var err error
-		// Make all intermediate directories.
-		md, err = self.mkdirall(self.dir_cache, config_obj, parent)
+		// Get new dir metadata
+		md, err = self.get_dir_metadata(self.dir_cache, config_obj, parent)
 		if err != nil {
 			return err
 		}
 	}
 
 	// Update the directory metadata.
-	md_key := urn.Base()
+	md_key := urn.Base() + api.GetExtensionForDatastore(urn)
 	md.Set(md_key, urn)
 
+	// Update the cache
+	self.dir_cache.Set(parent_path, md)
 	return self.data_cache.Set(urn.AsClientPath(), &BulkData{
 		data: data,
 	})
@@ -311,7 +313,8 @@ func (self *MemcacheDatastore) SetChildren(
 	}
 
 	for _, child := range children {
-		md.Set(child.Base(), child)
+		key := child.Base() + api.GetExtensionForDatastore(child)
+		md.Set(key, child)
 	}
 
 	self.dir_cache.Set(path, md)
@@ -327,11 +330,7 @@ func (self *MemcacheDatastore) ListChildren(
 	path := urn.AsDatastoreDirectory(config_obj)
 	md, pres := self.dir_cache.Get(path)
 	if !pres {
-		var err error
-		md, err = self.mkdirall(self.dir_cache, config_obj, urn)
-		if err != nil {
-			return nil, err
-		}
+		return nil, nil
 	}
 
 	result := make([]api.DSPathSpec, 0, md.Len())
@@ -398,18 +397,18 @@ func (self *MemcacheDatastore) Dump() []api.DSPathSpec {
 	return result
 }
 
-func (self *MemcacheDatastore) SetMkDirAll(cb func(
+func (self *MemcacheDatastore) SetDirLoader(cb func(
 	dir_cache *DirectoryLRUCache,
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) (*DirectoryMetadata, error)) {
-	self.mkdirall = cb
+	self.get_dir_metadata = cb
 }
 
 func NewMemcacheDataStore() *MemcacheDatastore {
 	result := &MemcacheDatastore{
-		data_cache: ttlcache.NewCache(),
-		dir_cache:  NewDirectoryLRUCache(),
-		mkdirall:   mkdirall,
+		data_cache:       ttlcache.NewCache(),
+		dir_cache:        NewDirectoryLRUCache(),
+		get_dir_metadata: get_dir_metadata,
 	}
 
 	result.data_cache.SetNewItemCallback(func(key string, value interface{}) {

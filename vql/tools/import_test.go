@@ -58,6 +58,8 @@ func (self *TestSuite) TestImportCollection() {
 	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED,
 		context.State)
 
+	search.WaitForIndex()
+
 	// Check the indexes are correct for the new client_id
 	search_resp, err := search.SearchClients(ctx, self.ConfigObj,
 		&api_proto.SearchClientsRequest{Query: "host:MyNewHost"}, "")

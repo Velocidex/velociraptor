@@ -38,6 +38,8 @@ func (self *MemcacheFileTestSuite) SetupTest() {
 	assert.NoError(self.T(), err)
 
 	self.config_obj = config.GetDefaultConfig()
+	self.config_obj.Datastore.Implementation = "MemcacheFileDataStore"
+	self.config_obj.Datastore.MemcacheWriteMutationBuffer = -1
 	self.config_obj.Datastore.FilestoreDirectory = self.dirname
 	self.config_obj.Datastore.Location = self.dirname
 	self.BaseTestSuite.config_obj = self.config_obj
@@ -134,11 +136,7 @@ func (self MemcacheFileTestSuite) TestListChildren() {
 }
 
 func TestMemCacheFileDatastore(t *testing.T) {
-	config_obj := config.GetDefaultConfig()
-	config_obj.Datastore.Implementation = "MemcacheFileDataStore"
-
 	suite.Run(t, &MemcacheFileTestSuite{BaseTestSuite: BaseTestSuite{
-		datastore:  NewMemcacheFileDataStore(),
-		config_obj: config_obj,
+		datastore: NewMemcacheFileDataStore(),
 	}})
 }

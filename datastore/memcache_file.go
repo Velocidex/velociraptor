@@ -51,15 +51,25 @@ const (
 type Mutation struct {
 	op   int
 	urn  api.DSPathSpec
+	wg   *sync.WaitGroup
 	data []byte
 }
 
 type MemcacheFileDataStore struct {
 	cache *MemcacheDatastore
 
-	writer chan Mutation
+	writer chan *Mutation
 	ctx    context.Context
 	cancel func()
+}
+
+func (self *MemcacheFileDataStore) invalidateDirCache(
+	config_obj *config_proto.Config, urn api.DSPathSpec) {
+	for len(urn.Components()) > 0 {
+		path := urn.AsDatastoreDirectory(config_obj)
+		self.cache.dir_cache.Remove(path)
+		urn = urn.Dir()
+	}
 }
 
 // Starts the writer loop.
@@ -79,10 +89,10 @@ func (self *MemcacheFileDataStore) StartWriter(
 	}
 	self.cache.SetTimeout(time.Duration(timeout) * time.Second)
 
-	if buffer_size == 0 {
+	if buffer_size <= 0 {
 		buffer_size = 1000
 	}
-	self.writer = make(chan Mutation, buffer_size)
+	self.writer = make(chan *Mutation, buffer_size)
 	self.ctx = ctx
 
 	// Start some writers.
@@ -104,10 +114,12 @@ func (self *MemcacheFileDataStore) StartWriter(
 					switch mutation.op {
 					case MUTATION_OP_SET_SUBJECT:
 						writeContentToFile(config_obj, mutation.urn, mutation.data)
+						self.invalidateDirCache(config_obj, mutation.urn)
 
 					case MUTATION_OP_DEL_SUBJECT:
 						file_based_imp.DeleteSubject(config_obj, mutation.urn)
 					}
+					mutation.wg.Done()
 				}
 			}
 		}()
@@ -172,14 +184,22 @@ func (self *MemcacheFileDataStore) SetSubject(
 	err = self.cache.SetSubject(config_obj, urn, message)
 
 	// Send a SetSubject mutation to the writer loop.
+	var wg sync.WaitGroup
+	wg.Add(1)
+
 	select {
 	case <-self.ctx.Done():
 		return nil
 
-	case self.writer <- Mutation{
+	case self.writer <- &Mutation{
 		op:   MUTATION_OP_SET_SUBJECT,
 		urn:  urn,
+		wg:   &wg,
 		data: serialized_content}:
+	}
+
+	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {
+		wg.Wait()
 	}
 
 	return err
@@ -193,13 +213,21 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 	err := self.cache.DeleteSubject(config_obj, urn)
 
 	// Send a DeleteSubject mutation to the writer loop.
+	var wg sync.WaitGroup
+	wg.Add(1)
+
 	select {
 	case <-self.ctx.Done():
 		break
 
-	case self.writer <- Mutation{
+	case self.writer <- &Mutation{
 		op:  MUTATION_OP_DEL_SUBJECT,
+		wg:  &wg,
 		urn: urn}:
+	}
+
+	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {
+		wg.Wait()
 	}
 
 	return err
@@ -211,6 +239,7 @@ func (self *MemcacheFileDataStore) ListChildren(
 	urn api.DSPathSpec) ([]api.DSPathSpec, error) {
 
 	defer Instrument("list", urn)()
+
 	children, err := self.cache.ListChildren(config_obj, urn)
 	if err != nil || len(children) == 0 {
 		children, err = file_based_imp.ListChildren(config_obj, urn)
@@ -275,7 +304,7 @@ func (self *MemcacheFileDataStore) Dump() []api.DSPathSpec {
 // Recursively makes sure the directories are added to the cache. We
 // treat the file backing as authoritative, so if the dir cache is not
 // present in cache we read intermediate paths from disk.
-func file_based_mkdirall(
+func get_file_dir_metadata(
 	dir_cache *DirectoryLRUCache,
 	config_obj *config_proto.Config, urn api.DSPathSpec) (
 	*DirectoryMetadata, error) {
@@ -283,58 +312,28 @@ func file_based_mkdirall(
 	// Check if the top level directory contains metadata.
 	path := urn.AsDatastoreDirectory(config_obj)
 
-	// Fast path - the directory exists in the cache.
+	// Fast path - the directory exists in the cache. NOTE: We dont
+	// need to maintain the directories on the filesystem as the
+	// FileBaseDataStore already does this.
 	md, pres := dir_cache.Get(path)
 	if pres {
 		return md, nil
 	}
 
-	// Fetch the directory listing from the filesystem
+	// DirectoryMetadata is not known, fetch the directory listing
+	// from the filesystem
 	children, err := file_based_imp.ListChildren(config_obj, urn)
 	if err == nil {
 		md = NewDirectoryMetadata()
 		for _, child := range children {
-			md.Set(child.Base(), child)
+			key := child.Base() + api.GetExtensionForDatastore(child)
+			md.Set(key, child)
 		}
 		dir_cache.Set(path, md)
 	}
 
-	// Create top level and every level under it.
+	// Cache this for next time.
 	dir_cache.Set(path, md)
-
-	for len(urn.Components()) > 0 {
-		parent := urn.Dir()
-		path := parent.AsDatastoreDirectory(config_obj)
-
-		// Retrace all parent directories - at some point we will hit
-		// a cache directory and stop making filesystem calls.
-		intermediate_md, pres := dir_cache.Get(path)
-		if !pres {
-			// Fetch the directory listing from the filesystem
-			children, err := file_based_imp.ListChildren(config_obj, parent)
-			if err == nil {
-				intermediate_md = NewDirectoryMetadata()
-				for _, child := range children {
-					intermediate_md.Set(child.Base(), child)
-				}
-				dir_cache.Set(path, intermediate_md)
-			}
-		}
-
-		// Make sure the current directory contains the current
-		// component. If it does not we need to add it as the new file
-		// will create the intermediate directory.
-		// If the intermediate directory already exists we can exit early.
-		base := urn.Base()
-		_, pres = intermediate_md.Get(base)
-		if pres {
-			return md, nil
-		}
-		intermediate_md.Set(urn.Base(), urn)
-
-		urn = parent
-	}
-
 	return md, nil
 }
 
@@ -343,7 +342,7 @@ func NewMemcacheFileDataStore() *MemcacheFileDataStore {
 		cache: NewMemcacheDataStore(),
 	}
 
-	result.cache.SetMkDirAll(file_based_mkdirall)
+	result.cache.SetDirLoader(get_file_dir_metadata)
 	return result
 }
 
