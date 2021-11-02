@@ -78,7 +78,7 @@ func (self *ApiServer) CancelFlow(
 
 	defer Instrument("CancelFlow")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 
 	permissions := acls.COLLECT_CLIENT
 	if in.ClientId == "server" {
@@ -112,7 +112,7 @@ func (self *ApiServer) CancelFlow(
 func (self *ApiServer) ArchiveFlow(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 
 	defer Instrument("ArchiveFlow")()
 
@@ -150,7 +150,7 @@ func (self *ApiServer) GetReport(
 
 	defer Instrument("GetReport")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -180,7 +180,7 @@ func (self *ApiServer) CollectArtifact(
 	defer Instrument("CollectArtifact")()
 
 	result := &flows_proto.ArtifactCollectorResponse{Request: in}
-	creator := GetGRPCUserInfo(self.config, ctx).Name
+	creator := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 
 	var acl_manager vql_subsystem.ACLManager = vql_subsystem.NullACLManager{}
 
@@ -248,7 +248,7 @@ func (self *ApiServer) ListClients(
 
 	defer Instrument("ListClients")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -266,7 +266,7 @@ func (self *ApiServer) NotifyClients(
 
 	defer Instrument("NotifyClients")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.COLLECT_CLIENT
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -299,7 +299,7 @@ func (self *ApiServer) LabelClients(
 
 	defer Instrument("LabelClients")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.LABEL_CLIENT
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -342,7 +342,7 @@ func (self *ApiServer) GetFlowDetails(
 
 	defer Instrument("GetFlowDetails")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -360,7 +360,7 @@ func (self *ApiServer) GetFlowRequests(
 
 	defer Instrument("GetFlowRequests")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -377,7 +377,7 @@ func (self *ApiServer) GetUserUITraits(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.ApiGrrUser, error) {
 	result := NewDefaultUserObject(self.config)
-	user_info := GetGRPCUserInfo(self.config, ctx)
+	user_info := GetGRPCUserInfo(self.config, ctx, self.ca_pool)
 
 	defer Instrument("GetUserUITraits")()
 
@@ -400,7 +400,7 @@ func (self *ApiServer) GetUserUITraits(
 func (self *ApiServer) SetGUIOptions(
 	ctx context.Context,
 	in *api_proto.SetGUIOptionsRequest) (*empty.Empty, error) {
-	user_info := GetGRPCUserInfo(self.config, ctx)
+	user_info := GetGRPCUserInfo(self.config, ctx, self.ca_pool)
 
 	defer Instrument("SetGUIOptions")()
 
@@ -413,7 +413,7 @@ func (self *ApiServer) VFSListDirectory(
 
 	defer Instrument("VFSListDirectory")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -432,7 +432,7 @@ func (self *ApiServer) VFSStatDirectory(
 
 	defer Instrument("VFSStatDirectory")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -451,7 +451,7 @@ func (self *ApiServer) VFSStatDownload(
 
 	defer Instrument("VFSStatDownload")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -471,7 +471,7 @@ func (self *ApiServer) VFSRefreshDirectory(
 
 	defer Instrument("VFSRefreshDirectory")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.COLLECT_CLIENT
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -491,7 +491,7 @@ func (self *ApiServer) VFSGetBuffer(
 
 	defer Instrument("VFSGetBuffer")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -513,7 +513,7 @@ func (self *ApiServer) GetTable(
 
 	defer Instrument("GetTable")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -567,7 +567,7 @@ func (self *ApiServer) GetArtifacts(
 
 	defer Instrument("GetArtifacts")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -614,7 +614,7 @@ func (self *ApiServer) GetArtifactFile(
 
 	defer Instrument("GetArtifactFile")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -640,7 +640,7 @@ func (self *ApiServer) SetArtifactFile(
 
 	defer Instrument("SetArtifactFile")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.ARTIFACT_WRITER
 
 	// First ensure that the artifact is correct.
@@ -751,7 +751,7 @@ func (self *ApiServer) GetServerMonitoringState(
 
 	defer Instrument("GetServerMonitoringState")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -770,7 +770,7 @@ func (self *ApiServer) SetServerMonitoringState(
 
 	defer Instrument("SetServerMonitoringState")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.SERVER_ADMIN
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -788,7 +788,7 @@ func (self *ApiServer) GetClientMonitoringState(
 
 	defer Instrument("GetClientMonitoringState")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.SERVER_ADMIN
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -814,7 +814,7 @@ func (self *ApiServer) SetClientMonitoringState(
 
 	defer Instrument("SetClientMonitoringState")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.SERVER_ADMIN
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -840,7 +840,7 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 
 	defer Instrument("CreateDownloadFile")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.PREPARE_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -952,9 +952,10 @@ func startAPIServer(
 
 	// Create the TLS credentials
 	creds := credentials.NewTLS(&tls.Config{
-		// We verify the cert ourselves in the handler.
-		ClientAuth:   tls.RequireAnyClientCert,
+		// Only accept certs signed by the CA
+		ClientAuth:   tls.RequireAndVerifyClientCert,
 		Certificates: []tls.Certificate{cert},
+		ClientCAs:    CA_Pool,
 	})
 
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
