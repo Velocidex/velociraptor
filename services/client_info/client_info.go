@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -14,6 +16,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
+)
+
+var (
+	metricLRUCount = promauto.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "client_info_lru_size",
+			Help: "Number of entries in client lru",
+		})
 )
 
 const (
@@ -66,6 +76,7 @@ func (self *ClientInfoManager) ProcessInterrogateResults(
 
 func (self *ClientInfoManager) Flush(client_id string) {
 	self.lru.Delete(client_id)
+	metricLRUCount.Dec()
 }
 
 func (self *ClientInfoManager) Clear() {
@@ -114,6 +125,8 @@ func (self *ClientInfoManager) Get(client_id string) (*services.ClientInfo, erro
 		record: client_info,
 		age:    time.Now(),
 	})
+	metricLRUCount.Inc()
+
 	return client_info, nil
 }
 

@@ -7,12 +7,10 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type FilebasedTestSuite struct {
@@ -58,9 +56,7 @@ func (self FilebasedTestSuite) TearDownTest() {
 func TestFilebasedDatabase(t *testing.T) {
 	suite.Run(t, &FilebasedTestSuite{
 		BaseTestSuite: BaseTestSuite{
-			datastore: &FileBaseDataStore{
-				clock: utils.MockClock{MockNow: time.Unix(100, 0)},
-			},
+			datastore: &FileBaseDataStore{},
 		},
 	})
 }

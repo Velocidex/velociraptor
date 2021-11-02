@@ -70,7 +70,11 @@ func SearchClientsChan(
 
 	operator, term := splitIntoOperatorAndTerms(search_term)
 	switch operator {
-	case "label", "host", "client", "all":
+	case "label", "host", "all":
+		// Include the operator in these search terms
+		return searchClientIndexChan(ctx, scope, config_obj, search_term)
+
+	case "client":
 		return searchClientIndexChan(ctx, scope, config_obj, term)
 
 	case "":

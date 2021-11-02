@@ -18,6 +18,8 @@ var (
 		[]string{"tag", "action"},
 	)
 
+	// Simulate running on a very slow filesystem (EFS)
+	//inject_time = 20
 	inject_time = 0
 )
 
@@ -32,10 +34,16 @@ func Instrument(access_type string, path_spec api.DSPathSpec) func() time.Durati
 		DatastoreHistorgram.WithLabelValues(tag, access_type).Observe(v)
 	}))
 
+	return timer.ObserveDuration
+}
+
+func InstrumentWithDelay(
+	access_type string, path_spec api.DSPathSpec) func() time.Duration {
+
 	// Instrument a delay in API calls.
 	if inject_time > 0 {
 		time.Sleep(time.Duration(inject_time) * time.Millisecond)
 	}
 
-	return timer.ObserveDuration
+	return Instrument(access_type, path_spec)
 }

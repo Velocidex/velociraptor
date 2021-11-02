@@ -5,27 +5,45 @@ import (
 	"os"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"github.com/ReneKroon/ttlcache/v2"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
-	memcache_imp = &MemcacheDatastore{
-		clock:      utils.RealClock{},
-		data_cache: ttlcache.NewCache(),
-		dir_cache:  ttlcache.NewCache(),
-	}
+	memcache_imp = NewMemcacheDataStore()
 
 	internalError = errors.New("Internal datastore error")
+	errorNotFound = errors.New("Not found")
+
+	metricDirLRU = promauto.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "memcache_dir_lru_total",
+			Help: "Total directories cached",
+		})
+
+	metricDataLRU = promauto.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "memcache_data_lru_total",
+			Help: "Total files cached",
+		})
 )
 
+// Stored in data_cache contains bulk data.
+type BulkData struct {
+	mu   sync.Mutex
+	data []byte
+}
+
+// Stored in dir_cache - contains DirectoryMetadata
 type DirectoryMetadata struct {
 	mu   sync.Mutex
 	data map[string]api.DSPathSpec
@@ -74,53 +92,94 @@ func NewDirectoryMetadata() *DirectoryMetadata {
 	}
 }
 
+type DirectoryLRUCache struct {
+	*ttlcache.Cache
+}
+
+func (self *DirectoryLRUCache) Get(path string) (*DirectoryMetadata, bool) {
+	md_any, err := self.Cache.Get(path)
+	if err != nil {
+		return nil, false
+	}
+
+	md, ok := md_any.(*DirectoryMetadata)
+	if !ok {
+		return nil, false
+	}
+	return md, true
+}
+
+func NewDirectoryLRUCache() *DirectoryLRUCache {
+	result := &DirectoryLRUCache{
+		Cache: ttlcache.NewCache(),
+	}
+
+	result.Cache.SetNewItemCallback(func(key string, value interface{}) {
+		metricDirLRU.Inc()
+	})
+
+	result.Cache.SetExpirationCallback(func(key string, value interface{}) {
+		metricDirLRU.Dec()
+	})
+
+	return result
+}
+
 // This is a memory cached data store.
 type MemcacheDatastore struct {
-	clock utils.Clock
-
 	// Stores data like key value
 	data_cache *ttlcache.Cache
 
 	// Stores directory metadata.
-	dir_cache *ttlcache.Cache
+	dir_cache *DirectoryLRUCache
+
+	// A function to update directory caches
+	get_dir_metadata func(
+		dir_cache *DirectoryLRUCache,
+		config_obj *config_proto.Config,
+		urn api.DSPathSpec) (*DirectoryMetadata, error)
 }
 
-// Recursively makes sure the directories are created
-func (self *MemcacheDatastore) mkdirall(
-	config_obj *config_proto.Config, urn api.DSPathSpec) {
+// Recursively makes sure the directories are created.
+func get_dir_metadata(
+	dir_cache *DirectoryLRUCache,
+	config_obj *config_proto.Config, urn api.DSPathSpec) (
+	*DirectoryMetadata, error) {
 
 	// Check if the top level directory contains metadata.
 	path := urn.AsDatastoreDirectory(config_obj)
-	_, err := self.dir_cache.Get(path)
-	if err == nil {
-		return
+	md, pres := dir_cache.Get(path)
+	if pres {
+		return md, nil
 	}
 
 	// Create top level and every level under it.
-	self.dir_cache.Set(path, NewDirectoryMetadata())
+	md = NewDirectoryMetadata()
+	dir_cache.Set(path, md)
+
 	for len(urn.Components()) > 0 {
 		parent := urn.Dir()
 		path := parent.AsDatastoreDirectory(config_obj)
 
-		md_any, err := self.dir_cache.Get(path)
-		if err != nil {
-			md_any = NewDirectoryMetadata()
-			self.dir_cache.Set(path, md_any)
+		intermediate_md, ok := dir_cache.Get(path)
+		if !ok {
+			intermediate_md = NewDirectoryMetadata()
+			dir_cache.Set(path, intermediate_md)
 		}
 
-		md := md_any.(*DirectoryMetadata)
-
-		_, pres := md.Get(urn.Base())
+		key := urn.Base() + api.GetExtensionForDatastore(urn)
+		_, pres := intermediate_md.Get(key)
 		if !pres {
 			// Walk up the directory path.
-			md.Set(urn.Base(), urn)
+			intermediate_md.Set(key, urn)
 			urn = parent
 
 		} else {
 			// Path is already set we can quit early.
-			return
+			return md, nil
 		}
 	}
+	return md, nil
 }
 
 // Reads a stored message from the datastore. If there is no
@@ -134,14 +193,14 @@ func (self *MemcacheDatastore) GetSubject(
 	defer Instrument("read", urn)()
 
 	path := urn.AsClientPath()
-	serialized_content_any, err := self.data_cache.Get(path)
+	bulk_data_any, err := self.data_cache.Get(path)
 	if err != nil {
 		// Second try the old DB without json. This supports
 		// migration from old protobuf based datastore files
 		// to newer json based blobs while still being able to
 		// read old files.
 		if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
-			serialized_content_any, err = self.data_cache.Get(
+			bulk_data_any, err = self.data_cache.Get(
 				urn.SetType(api.PATH_TYPE_DATASTORE_PROTO).AsClientPath())
 		}
 
@@ -152,11 +211,12 @@ func (self *MemcacheDatastore) GetSubject(
 	}
 
 	// TODO ensure caches are map[string][]byte)
-	serialized_content, ok := serialized_content_any.([]byte)
+	bulk_data, ok := bulk_data_any.(*BulkData)
 	if !ok {
 		return internalError
 	}
 
+	serialized_content := bulk_data.data
 	if len(serialized_content) == 0 {
 		return nil
 	}
@@ -174,6 +234,17 @@ func (self *MemcacheDatastore) GetSubject(
 				urn.AsClientPath(), err))
 	}
 	return nil
+}
+
+func (self *MemcacheDatastore) SetTimeout(duration time.Duration) {
+	self.data_cache.SetTTL(duration)
+	self.dir_cache.SetTTL(duration)
+}
+
+func (self *MemcacheDatastore) SetCheckExpirationCallback(
+	callback ttlcache.CheckExpireCallback) {
+	self.data_cache.SetCheckExpirationCallback(callback)
+	self.dir_cache.SetCheckExpirationCallback(callback)
 }
 
 func (self *MemcacheDatastore) SetSubject(
@@ -199,26 +270,34 @@ func (self *MemcacheDatastore) SetSubject(
 		return err
 	}
 
+	return self.SetData(config_obj, urn, value)
+}
+
+func (self *MemcacheDatastore) SetData(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec,
+	data []byte) (err error) {
+
 	parent := urn.Dir()
 	parent_path := parent.AsDatastoreDirectory(config_obj)
-	md_any, err := self.dir_cache.Get(parent_path)
-	if err != nil {
-		// Make all intermediate directories.
-		self.mkdirall(config_obj, parent)
-
-		// This time this should work.
-		md_any, err = self.dir_cache.Get(parent_path)
+	md, pres := self.dir_cache.Get(parent_path)
+	if !pres {
+		// Get new dir metadata
+		md, err = self.get_dir_metadata(self.dir_cache, config_obj, parent)
 		if err != nil {
 			return err
 		}
 	}
 
 	// Update the directory metadata.
-	md := md_any.(*DirectoryMetadata)
 	md_key := urn.Base() + api.GetExtensionForDatastore(urn)
 	md.Set(md_key, urn)
 
-	return self.data_cache.Set(urn.AsClientPath(), value)
+	// Update the cache
+	self.dir_cache.Set(parent_path, md)
+	return self.data_cache.Set(urn.AsClientPath(), &BulkData{
+		data: data,
+	})
 }
 
 func (self *MemcacheDatastore) DeleteSubject(
@@ -229,6 +308,24 @@ func (self *MemcacheDatastore) DeleteSubject(
 	return self.data_cache.Remove(urn.AsClientPath())
 }
 
+func (self *MemcacheDatastore) SetChildren(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec, children []api.DSPathSpec) {
+
+	path := urn.AsDatastoreDirectory(config_obj)
+
+	md := &DirectoryMetadata{
+		data: make(map[string]api.DSPathSpec),
+	}
+
+	for _, child := range children {
+		key := child.Base() + api.GetExtensionForDatastore(child)
+		md.Set(key, child)
+	}
+
+	self.dir_cache.Set(path, md)
+}
+
 // Lists all the children of a URN.
 func (self *MemcacheDatastore) ListChildren(
 	config_obj *config_proto.Config,
@@ -237,16 +334,10 @@ func (self *MemcacheDatastore) ListChildren(
 	defer Instrument("list", urn)()
 
 	path := urn.AsDatastoreDirectory(config_obj)
-	md_any, err := self.dir_cache.Get(path)
-	if err != nil {
-		self.mkdirall(config_obj, urn)
-		md_any, err = self.dir_cache.Get(path)
-		if err != nil {
-			return nil, err
-		}
+	md, pres := self.dir_cache.Get(path)
+	if !pres {
+		return nil, nil
 	}
-
-	md := md_any.(*DirectoryMetadata)
 
 	result := make([]api.DSPathSpec, 0, md.Len())
 	for _, v := range md.Items() {
@@ -293,8 +384,7 @@ func (self *MemcacheDatastore) Clear() {
 
 func (self *MemcacheDatastore) Debug(config_obj *config_proto.Config) {
 	for _, key := range self.dir_cache.GetKeys() {
-		md_any, _ := self.dir_cache.Get(key)
-		md := md_any.(*DirectoryMetadata)
+		md, _ := self.dir_cache.Get(key)
 		for _, spec := range md.Items() {
 			fmt.Printf("%v: %v\n", key, spec.AsClientPath())
 		}
@@ -305,8 +395,7 @@ func (self *MemcacheDatastore) Dump() []api.DSPathSpec {
 	result := make([]api.DSPathSpec, 0)
 
 	for _, key := range self.dir_cache.GetKeys() {
-		md_any, _ := self.dir_cache.Get(key)
-		md := md_any.(*DirectoryMetadata)
+		md, _ := self.dir_cache.Get(key)
 		for _, spec := range md.Items() {
 			result = append(result, spec)
 		}
@@ -314,10 +403,27 @@ func (self *MemcacheDatastore) Dump() []api.DSPathSpec {
 	return result
 }
 
-func NewMemcacheDataStore(config_obj *config_proto.Config) *MemcacheDatastore {
-	return &MemcacheDatastore{
-		clock:      utils.RealClock{},
-		data_cache: ttlcache.NewCache(),
-		dir_cache:  ttlcache.NewCache(),
+func (self *MemcacheDatastore) SetDirLoader(cb func(
+	dir_cache *DirectoryLRUCache,
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec) (*DirectoryMetadata, error)) {
+	self.get_dir_metadata = cb
+}
+
+func NewMemcacheDataStore() *MemcacheDatastore {
+	result := &MemcacheDatastore{
+		data_cache:       ttlcache.NewCache(),
+		dir_cache:        NewDirectoryLRUCache(),
+		get_dir_metadata: get_dir_metadata,
 	}
+
+	result.data_cache.SetNewItemCallback(func(key string, value interface{}) {
+		metricDataLRU.Inc()
+	})
+
+	result.data_cache.SetExpirationCallback(func(key string, value interface{}) {
+		metricDataLRU.Dec()
+	})
+
+	return result
 }

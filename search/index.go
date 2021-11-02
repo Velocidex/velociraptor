@@ -29,21 +29,20 @@ package search
 import (
 	"context"
 	"errors"
-	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/google/btree"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/third_party/cache"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 type SearchOptions int
@@ -62,44 +61,175 @@ const (
 var (
 	stopIteration = errors.New("stopIteration")
 
-	// LRU caches ListChildren
-	lru    = cache.NewLRUCache(10000)
-	lru_mu sync.Mutex
+	indexer = NewIndexer()
 
-	// Used to mock the clock
-	clock utils.Clock = &utils.RealClock{}
-
-	metricLRUHit = promauto.NewCounter(
-		prometheus.CounterOpts{
-			Name: "search_index_lru_hit",
-			Help: "LRU for search indexes",
-		})
-
-	metricLRUMiss = promauto.NewCounter(
-		prometheus.CounterOpts{
-			Name: "search_index_lru_miss",
-			Help: "LRU for search indexes",
-		})
-
-	metricLRUTotalChildren = promauto.NewGauge(
+	metricLRUTotalTerms = promauto.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "search_index_lru_total_terms",
 			Help: "LRU for search indexes: Total terms cached",
 		})
 )
 
-type lruEntry struct {
-	ts       time.Time
-	children []api.DSPathSpec
-	err      error
+type Record struct {
+	*api_proto.IndexRecord
+	IndexTerm string
 }
 
-func (self lruEntry) Size() int {
-	return 1
+func NewRecord(record *api_proto.IndexRecord) Record {
+	return Record{
+		IndexRecord: record,
+		IndexTerm: strings.ToLower(
+			record.Term + "/" + record.Entity),
+	}
 }
 
-func (self lruEntry) Close() {
-	metricLRUTotalChildren.Sub(float64(len(self.children)))
+func (self Record) Less(than btree.Item) bool {
+	than_record := than.(Record)
+	return self.IndexTerm < than_record.IndexTerm
+}
+
+type Indexer struct {
+	mu    sync.Mutex
+	btree *btree.BTree
+	items int
+
+	ready bool
+}
+
+func NewIndexer() *Indexer {
+	return &Indexer{
+		btree: btree.New(10),
+	}
+}
+
+func (self *Indexer) Ready() bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.ready
+}
+
+func (self *Indexer) AscendGreaterOrEqual(
+	record Record, iterator btree.ItemIterator) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.btree.AscendGreaterOrEqual(record, iterator)
+}
+
+func (self *Indexer) Ascend(iterator btree.ItemIterator) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.btree.Ascend(iterator)
+}
+
+func (self *Indexer) Set(record Record) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.btree.ReplaceOrInsert(record)
+	self.items++
+	metricLRUTotalTerms.Inc()
+}
+
+func (self *Indexer) Delete(record Record) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.btree.Delete(record)
+	self.items--
+	metricLRUTotalTerms.Dec()
+}
+
+func (self *Indexer) Load(
+	ctx context.Context,
+	config_obj *config_proto.Config) {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("<green>Starting</> search index service... Please wait for index to load")
+
+	jobs := make(chan api.DSPathSpec, 20000)
+	defer close(jobs)
+
+	var wg sync.WaitGroup
+
+	subctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return
+	}
+
+	// Start some workers - this needs to be large enough to avoid
+	// deadlock
+	for i := 0; i < 20; i++ {
+		go func() {
+			for urn := range jobs {
+				children, _ := db.ListChildren(config_obj, urn)
+				for _, child := range children {
+					if !child.IsDir() {
+						record := &api_proto.IndexRecord{}
+						err := db.GetSubject(config_obj, child, record)
+						if err != nil {
+							continue
+						}
+
+						// If it is a client also warm up the client
+						// info cache.
+						if strings.HasPrefix(record.Entity, "C.") {
+							services.GetHostname(record.Entity)
+
+							// Get the full record to warm up all
+							// client attributes. If the full record
+							// does not exist, then this index entry
+							// is stale - just ignore it. This can
+							// happen if the client records are
+							// removed but the index has not been
+							// updated.
+							_, err := GetApiClient(
+								ctx, config_obj, record.Entity, true)
+							if err != nil {
+								continue
+							}
+						}
+						indexer.Set(NewRecord(record))
+						continue
+					}
+
+					// Push another job
+					wg.Add(1)
+
+					select {
+					case <-subctx.Done():
+						return
+
+					case jobs <- child:
+
+					case <-time.After(time.Second):
+						// We failed to schedule recursively, give up
+						// and retry later.
+						wg.Done()
+						break
+					}
+				}
+				// Job done.
+				wg.Done()
+			}
+		}()
+	}
+
+	// Kick it off at the top level
+	wg.Add(1)
+	jobs <- paths.CLIENT_INDEX_URN
+
+	wg.Wait()
+	logger.Info("<green>Indexing service</> search index loaded successfully")
+
+	self.mu.Lock()
+	self.ready = true
+	self.mu.Unlock()
 }
 
 // Set the index
@@ -110,30 +240,32 @@ func SetIndex(
 		Term:   term,
 		Entity: client_id,
 	}
+
+	// Set in memory indexer
+	indexer.Set(NewRecord(record))
+
+	// An also write to filesystem
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
 	path := path_manager.IndexTerm(term, client_id)
-	invalidateLRU(path)
-
 	return db.SetSubject(config_obj, path, record)
-}
-
-func invalidateLRU(path api.DSPathSpec) {
-	var tmp api.DSPathSpec = path_specs.NewUnsafeDatastorePath()
-	lru_mu.Lock()
-	defer lru_mu.Unlock()
-
-	for _, component := range path.Components() {
-		tmp = tmp.AddChild(component)
-		lru.Delete(getMRUKey(tmp))
-	}
 }
 
 func UnsetIndex(
 	config_obj *config_proto.Config, client_id, term string) error {
+
+	record := &api_proto.IndexRecord{
+		Term:   term,
+		Entity: client_id,
+	}
+
+	// Remove from memory indexer
+	indexer.Delete(NewRecord(record))
+
+	// Also remove from file store
 	path_manager := paths.NewIndexPathManager()
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -141,9 +273,8 @@ func UnsetIndex(
 	}
 
 	path := path_manager.IndexTerm(term, client_id)
-	invalidateLRU(path)
-
-	return db.DeleteSubject(config_obj, path)
+	_ = db.DeleteSubject(config_obj, path)
+	return nil
 }
 
 // Returns all the clients that match the term
@@ -151,180 +282,49 @@ func SearchIndexWithPrefix(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	prefix string, options SearchOptions) <-chan *api_proto.IndexRecord {
-
-	root := paths.CLIENT_INDEX_URN
-	partitions := paths.NewIndexPathManager().TermPartitions(prefix)
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		output_chan := make(chan *api_proto.IndexRecord)
-		close(output_chan)
-		return output_chan
-	}
-
-	return walkIndexWithPrefix(ctx, db, config_obj, root, partitions, options)
-}
-
-func getMRUKey(path api.DSPathSpec) string {
-	return strings.Join(path.Components(), "/")
-}
-
-func getChildren(
-	config_obj *config_proto.Config,
-	root api.DSPathSpec) ([]api.DSPathSpec, error) {
-
-	lru_mu.Lock()
-	defer lru_mu.Unlock()
-
-	now := clock.Now()
-	key := getMRUKey(root)
-	cached_entry_any, pres := lru.Get(key)
-	if pres {
-		metricLRUHit.Inc()
-		cached_entry := cached_entry_any.(*lruEntry)
-
-		// Only use the entry if it is recent enough
-		if now.Before(cached_entry.ts.Add(60 * time.Second)) {
-			cached_entry.ts = now
-
-			return cached_entry.children, nil
-		}
-
-		// Get rid of it and make a new entry
-		cached_entry.Close()
-	}
-
-	metricLRUMiss.Inc()
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	children, err := db.ListChildren(config_obj, root.SetTag("Index"))
-	if err != nil {
-		return nil, err
-	}
-
-	// Keep the listing sorted in cache.
-	sort.Slice(children, func(i, j int) bool {
-		return children[i].Base() < children[j].Base()
-	})
-
-	cached_entry := &lruEntry{
-		ts:       now,
-		children: children,
-		err:      err,
-	}
-
-	metricLRUTotalChildren.Add(float64(len(children)))
-	lru.Set(key, cached_entry)
-
-	return children, err
-}
-
-func walkIndexWithPrefix(ctx context.Context,
-	db datastore.DataStore,
-	config_obj *config_proto.Config,
-	root api.DSPathSpec,
-	partitions []string, options SearchOptions) chan *api_proto.IndexRecord {
-
 	output_chan := make(chan *api_proto.IndexRecord)
+
+	prefix = strings.ToLower(prefix)
 
 	go func() {
 		defer close(output_chan)
 
-		children, err := getChildren(config_obj, root)
-		if err != nil {
-			return
-		}
+		// Walk the btree and get all prefixes
+		indexer.AscendGreaterOrEqual(Record{
+			IndexTerm: prefix,
+		}, func(i btree.Item) bool {
+			record := i.(Record)
 
-		var next_partitions []string
-
-		// Filter by the partition prefix.
-		if len(partitions) > 0 {
-			prefix := partitions[0]
-			new_children := []api.DSPathSpec{}
-			for _, child := range children {
-				if strings.HasPrefix(child.Base(), prefix) {
-					new_children = append(new_children, child)
-				}
-			}
-			children = new_children
-
-			next_partitions = partitions[1:]
-		}
-
-		// First add any non-directories that exist in this directory.
-		for _, child := range children {
-			var record *api_proto.IndexRecord
-
-			// For a directory just send a null. This will block this
-			// goroutine here until someone consumes the null and
-			// stop us from listing our directories. If the consumer
-			// quits early we are able to avoid listing any
-			// directories.
-			if !child.IsDir() {
-				switch options {
-				case OPTION_ENTITY:
-					record = &api_proto.IndexRecord{
-						Entity: child.Base(),
-					}
-
-				case OPTION_KEY:
-					record = &api_proto.IndexRecord{}
-					err = db.GetSubject(config_obj, child, record)
-					if err != nil {
-						continue
-					}
-				}
+			// Detect when we exceeded the prefix constraint to quit
+			// early.
+			if !strings.HasPrefix(record.IndexTerm, prefix) {
+				return false
 			}
 
 			select {
 			case <-ctx.Done():
-				return
+				return false
 
-				// Send nil for directories.
-			case output_chan <- record:
+			case output_chan <- record.IndexRecord:
+				return true
 			}
-		}
-
-		// Now descend the directories.
-		child_chans := []chan *api_proto.IndexRecord{}
-
-		// Spawn workers in parallel to read all child directories.
-		for _, child := range children {
-			if child.IsDir() {
-				child_chans = append(child_chans, walkIndexWithPrefix(
-					ctx, db, config_obj, child, next_partitions, options))
-			}
-		}
-
-		// Push out child directories first - depth first search
-		for _, child_chan := range child_chans {
-			for client_id := range child_chan {
-				select {
-				case <-ctx.Done():
-					return
-
-				case output_chan <- client_id:
-				}
-			}
-		}
-
+		})
 	}()
 
 	return output_chan
 }
 
-// Used for testing.
-func ResetLRU() {
-	lru.Clear()
+// Loads the index lru quickly with many threads.
+func LoadIndex(
+	ctx context.Context,
+	wg *sync.WaitGroup, config_obj *config_proto.Config) {
+
+	// Load the index in the background until we are ready.
+	go indexer.Load(ctx, config_obj)
 }
 
-func SetLRUClock(new_clock utils.Clock) {
-	clock = new_clock
-}
-
-func LRUStats() cache.Stats {
-	return lru.Stats()
+func WaitForIndex() {
+	for !indexer.Ready() {
+		time.Sleep(100 * time.Millisecond)
+	}
 }

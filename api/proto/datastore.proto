@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
+
+message DSPathSpec {
+    repeated string components = 1;
+
+    int64 path_type = 2;
+}
+
+message DataRequest {
+    DSPathSpec pathspec = 1;
+}
+
+message DataResponse {
+    bytes data = 2;
+}
+
+message ListChildrenResponse {
+    repeated DSPathSpec children = 1;
+}

@@ -4,6 +4,8 @@ package search
 
 import (
 	"context"
+	"errors"
+	"sort"
 	"strings"
 	"time"
 
@@ -20,6 +22,7 @@ var (
 		"host:",
 		"client:",
 		"recent:",
+		"ip:",
 	}
 )
 
@@ -65,10 +68,21 @@ func searchRecents(
 
 	// Sort the children in reverse order - most recent first.
 	total_count := 0
-	for i := len(children) - 1; i >= 0; i-- {
-		client_id := children[i].Base()
-		api_client, err := GetApiClient(
-			ctx, config_obj, client_id, false /* detailed */)
+
+	metadata := make([]api_proto.ApiClient, len(children))
+
+	for i, child := range children {
+		// Read the MRU ages
+		db.GetSubject(config_obj, child, &metadata[i])
+	}
+
+	sort.Slice(metadata, func(i, j int) bool {
+		return metadata[i].FirstSeenAt > metadata[j].FirstSeenAt
+	})
+
+	for _, md := range metadata {
+		client_id := md.ClientId
+		api_client, err := FastGetApiClient(ctx, config_obj, client_id)
 		if err != nil {
 			continue
 		}
@@ -108,11 +122,18 @@ func SearchClients(
 
 	operator, term := splitIntoOperatorAndTerms(in.Query)
 	switch operator {
-	case "label", "host", "client", "all":
+	case "label", "host", "all":
+		return searchClientIndex(ctx, config_obj, in, limit)
+
+	case "client":
+		in.Query = term
 		return searchClientIndex(ctx, config_obj, in, limit)
 
 	case "recent":
 		return searchRecents(ctx, config_obj, in, principal, term, limit)
+
+	case "ip":
+		return searchLastIP(ctx, config_obj, in, term, limit)
 
 	default:
 		return searchVerbs(ctx, config_obj, in, limit)
@@ -124,6 +145,10 @@ func searchClientIndex(
 	config_obj *config_proto.Config,
 	in *api_proto.SearchClientsRequest,
 	limit uint64) (*api_proto.SearchClientsResponse, error) {
+
+	if !indexer.Ready() {
+		return nil, errors.New("Indexer not ready")
+	}
 
 	// Microseconds
 	now := uint64(time.Now().UnixNano() / 1000)
@@ -208,6 +233,8 @@ func searchVerbs(ctx context.Context,
 	limit uint64) (*api_proto.SearchClientsResponse, error) {
 
 	terms := []string{}
+	items := []*api_proto.ApiClient{}
+
 	term := strings.ToLower(in.Query)
 	for _, verb := range verbs {
 		if strings.HasPrefix(verb, term) {
@@ -223,8 +250,10 @@ func searchVerbs(ctx context.Context,
 				Offset: in.Offset,
 				Query:  "host:" + in.Query,
 				Limit:  in.Limit,
+				Filter: in.Filter,
 			}, limit)
 		terms = append(terms, res.Names...)
+		items = append(items, res.Items...)
 	}
 
 	if uint64(len(terms)) < in.Limit {
@@ -233,12 +262,15 @@ func searchVerbs(ctx context.Context,
 				Type:   in.Type,
 				Offset: in.Offset,
 				Query:  "label:" + in.Query,
+				Filter: in.Filter,
 				Limit:  in.Limit,
 			}, limit)
 		terms = append(terms, res.Names...)
+		items = append(items, res.Items...)
 	}
 
 	return &api_proto.SearchClientsResponse{
 		Names: terms,
+		Items: items,
 	}, nil
 }

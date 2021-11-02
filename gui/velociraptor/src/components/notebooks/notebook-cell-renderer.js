@@ -241,6 +241,10 @@ export default class NotebookCellRenderer extends React.Component {
     };
 
     ace_type = (type) => {
+        if (!type) {
+            type = "vql";
+        }
+
         if (type.toLowerCase() === "vql") {
             return "vql";
         }

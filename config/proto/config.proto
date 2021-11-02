@@ -589,11 +589,39 @@ message FrontendConfig {
 
 message DatastoreConfig {
     // The name of the datastore implementation to use.
+    // Currently the following implementations are supported:
+
+    // 1. FileBaseDataStore - The standard default - uses files on the
+    //    filesystem for both large result sets (File store) and small
+    //    files (Data store).
+
+    // 2. MemoryOnlyDataStore or Test - a non persistent in Memory
+    //    only data store for both large result sets and data
+    //    files. This is used mainly in Tests.
+
+    // 3. Memcache - a memory based cache with file backing. Large
+    //    files are written to disk while small files are memory
+    //    cached with disk backing.
+
+    // 4. FileBasedWithRPC - Large files are written to disk (File
+    //    store) but small files are accessed via RPC to a local
+    //    memcache server. This configuration is suitable for the
+    //    Minion node on a slow EFS backed filesystem. All data store
+    //    access will go through to the master memcache using gRPC.
     string implementation = 1;
 
     // For FileBaseDataStore
     string location = 2;
     string filestore_directory = 3;
+
+    // How long to expire the memcache (default 10 min)
+    uint64 memcache_expiration_sec = 4;
+
+    int64 memcache_write_mutation_buffer = 5;
+
+    // Number of writing threads - increase for high latency
+    // filesystems.
+    int64 memcache_write_mutation_writers = 6;
 }
 
 // Configuration for the mail server.
