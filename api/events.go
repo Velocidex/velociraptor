@@ -168,7 +168,7 @@ func (self *ApiServer) ListAvailableEventResults(
 	in *api_proto.ListAvailableEventResultsRequest) (
 	*api_proto.ListAvailableEventResultsResponse, error) {
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err

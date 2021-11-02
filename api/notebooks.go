@@ -49,7 +49,7 @@ func (self *ApiServer) GetNotebooks(
 	defer Instrument("GetNotebooks")()
 
 	// Empty creators are called internally.
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
@@ -160,7 +160,7 @@ func (self *ApiServer) NewNotebook(
 
 	defer Instrument("NewNotebook")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
@@ -380,7 +380,7 @@ func (self *ApiServer) NewNotebookCell(
 		return nil, errors.New("Invalid NoteboookId")
 	}
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
@@ -477,7 +477,7 @@ func (self *ApiServer) UpdateNotebook(
 		return nil, errors.New("Invalid NoteboookId")
 	}
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
@@ -553,7 +553,7 @@ func (self *ApiServer) GetNotebookCell(
 		return nil, errors.New("Invalid NoteboookCellId")
 	}
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
@@ -621,7 +621,7 @@ func (self *ApiServer) UpdateNotebookCell(
 		return nil, errors.New("Invalid NoteboookCellId")
 	}
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
@@ -824,7 +824,7 @@ func (self *ApiServer) CancelNotebookCell(
 		return nil, errors.New("Invalid NoteboookCellId")
 	}
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
@@ -868,7 +868,7 @@ func (self *ApiServer) UploadNotebookAttachment(
 
 	defer Instrument("UploadNotebookAttachment")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
@@ -913,7 +913,7 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 
 	defer Instrument("CreateNotebookDownloadFile")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
