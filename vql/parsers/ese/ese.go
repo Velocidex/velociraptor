@@ -129,7 +129,7 @@ func (self _SRUMLookupId) Call(
 
 			// Its a GUID
 			if id_details.IdType == 3 {
-				id_details.IdBlob = formatGUI(id_details.IdBlob)
+				id_details.IdBlob = formatGUID(id_details.IdBlob)
 			} else {
 				id_details.IdBlob = formatString(id_details.IdBlob)
 			}
@@ -163,7 +163,7 @@ func formatString(hexencoded string) string {
 	return ParseTerminatedUTF16String(&utils.BufferReaderAt{Buffer: buffer}, 0)
 }
 
-func formatGUI(hexencoded string) string {
+func formatGUID(hexencoded string) string {
 	if len(hexencoded) == 0 {
 		return hexencoded
 	}

@@ -11,11 +11,14 @@ func (self *SID) String() string {
 	result := fmt.Sprintf("S-%d", uint64(bits.ReverseBytes16(self.Authority()))<<32+
 		uint64(bits.ReverseBytes32(self.Authority2())))
 
-	for _, sub := range self.Subauthority() {
-		if sub != 0 {
-			result += fmt.Sprintf("-%d", sub)
+	sub_authorities := self.Subauthority()
+	for i := 0; i < int(self.SubAuthCount()); i++ {
+		if i > len(sub_authorities) {
+			break
 		}
-	}
 
+		sub := sub_authorities[i]
+		result += fmt.Sprintf("-%d", sub)
+	}
 	return result
 }

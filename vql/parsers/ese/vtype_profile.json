@@ -6,7 +6,7 @@
         "Authority2": [4, ["unsigned long"]],
         "Subauthority": [8, ["Array", {
             "target": "unsigned long",
-            "count": 2
+            "count": 100
         }]]
     }],
 

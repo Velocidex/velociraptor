@@ -103,11 +103,11 @@ func (self *SID) Authority2() uint32 {
 }
 
 func (self *SID) Subauthority() []uint32 {
-   return ParseArray_uint32(self.Profile, self.Reader, self.Profile.Off_SID_Subauthority + self.Offset, 2)
+   return ParseArray_uint32(self.Profile, self.Reader, self.Profile.Off_SID_Subauthority + self.Offset, 100)
 }
 
 func ParseArray_uint32(profile *MiscProfile, reader io.ReaderAt, offset int64, count int) []uint32 {
-    result := []uint32{}
+    result := make([]uint32, 0, count)
     for i:=0; i<count; i++ {
       value := ParseUint32(reader, offset)
       result = append(result, value)
