@@ -952,9 +952,10 @@ func startAPIServer(
 
 	// Create the TLS credentials
 	creds := credentials.NewTLS(&tls.Config{
-		// We verify the cert ourselves in the handler.
-		ClientAuth:   tls.RequireAnyClientCert,
+		// Only accept certs signed by the CA
+		ClientAuth:   tls.RequireAndVerifyClientCert,
 		Certificates: []tls.Certificate{cert},
+		ClientCAs:    CA_Pool,
 	})
 
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
