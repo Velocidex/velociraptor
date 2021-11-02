@@ -13,7 +13,7 @@ import (
 
 func (self *ApiServer) GetToolInfo(ctx context.Context,
 	in *artifacts_proto.Tool) (*artifacts_proto.Tool, error) {
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (self *ApiServer) GetToolInfo(ctx context.Context,
 
 func (self *ApiServer) SetToolInfo(ctx context.Context,
 	in *artifacts_proto.Tool) (*artifacts_proto.Tool, error) {
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err

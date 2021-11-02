@@ -26,7 +26,7 @@ func (self *ApiServer) GetHuntFlows(
 	ctx context.Context,
 	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -90,7 +90,7 @@ func (self *ApiServer) CreateHunt(
 	defer Instrument("CreateHunt")()
 
 	// Log this event as an Audit event.
-	in.Creator = GetGRPCUserInfo(self.config, ctx).Name
+	in.Creator = GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	in.HuntId = flows.GetNewHuntId()
 
 	acl_manager := vql_subsystem.NewServerACLManager(self.config, in.Creator)
@@ -128,7 +128,7 @@ func (self *ApiServer) ModifyHunt(
 	defer Instrument("ModifyHunt")()
 
 	// Log this event as an Audit event.
-	in.Creator = GetGRPCUserInfo(self.config, ctx).Name
+	in.Creator = GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 
 	permissions := acls.COLLECT_CLIENT
 	perm, err := acls.CheckAccess(self.config, in.Creator, permissions)
@@ -159,7 +159,7 @@ func (self *ApiServer) ListHunts(
 
 	defer Instrument("ListHunts")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -203,7 +203,7 @@ func (self *ApiServer) GetHunt(
 
 	defer Instrument("GetHunt")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -225,7 +225,7 @@ func (self *ApiServer) GetHuntResults(
 
 	defer Instrument("GetHuntResults")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {

@@ -14,7 +14,7 @@ func (self *ApiServer) GetUsers(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.Users, error) {
 
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
@@ -44,6 +44,6 @@ func (self *ApiServer) GetUserFavorites(
 	in *api_proto.Favorite) (*api_proto.Favorites, error) {
 
 	// No special permission requires to view a user's own favorites.
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	return users.GetFavorites(self.config, user_name, in.Type)
 }
