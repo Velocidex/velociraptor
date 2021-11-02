@@ -120,7 +120,7 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	howett.net/plist v0.0.0-20201203080718-1454fab16a06
 	www.velocidex.com/golang/evtx v0.0.2-0.20211019042143-b4f61df6d401
-	www.velocidex.com/golang/go-ese v0.1.1-0.20211014120951-14a5c1831296
+	www.velocidex.com/golang/go-ese v0.1.1-0.20211102160226-14d45150c8e2
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20210828125207-a1d0ee62467c
 	www.velocidex.com/golang/go-pe v0.1.1-0.20211006062218-8f6d1ad6b2d5
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
