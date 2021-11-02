@@ -19,15 +19,27 @@ package functions
 
 import (
 	"context"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
+const (
+	LOG_TAG = "last_log"
+)
+
+type logCache struct {
+	message string
+	time    int64
+}
+
 type LogFunctionArgs struct {
-	Message string `vfilter:"required,field=message,doc=Message to log."`
+	Message   string `vfilter:"required,field=message,doc=Message to log."`
+	DedupTime int64  `vfilter:"optional,field=dedup,doc=Supporess same message in this many seconds (default 60 sec)."`
 }
 
 type LogFunction struct{}
@@ -42,16 +54,39 @@ func (self *LogFunction) Call(ctx context.Context,
 		return false
 	}
 
-	last_log_str, ok := scope.GetContext("last_log")
-	if ok {
-		last_log, ok := last_log_str.(string)
-		if ok && arg.Message == last_log {
-			return true
-		}
+	if arg.DedupTime == 0 {
+		arg.DedupTime = 60
 	}
 
+	now := time.Now().Unix()
+
+	last_log_any := vql_subsystem.CacheGet(scope, LOG_TAG)
+
+	// No previous message was set - log it and save it.
+	if utils.IsNil(last_log_any) {
+		last_log := &logCache{
+			message: arg.Message,
+			time:    now,
+		}
+		scope.Log("%v", arg.Message)
+		vql_subsystem.CacheSet(scope, LOG_TAG, last_log)
+		return true
+	}
+
+	last_log, ok := last_log_any.(*logCache)
+	// Message is identical to last and within the dedup time.
+	if ok && last_log.message == arg.Message &&
+		arg.DedupTime > 0 && // User can set dedup time negative to disable.
+		now < last_log.time+arg.DedupTime {
+		return true
+	}
+
+	// Log it and store for next time.
 	scope.Log("%v", arg.Message)
-	scope.SetContext("last_log", arg.Message)
+	vql_subsystem.CacheSet(scope, LOG_TAG, &logCache{
+		message: arg.Message,
+		time:    now,
+	})
 
 	return true
 }
