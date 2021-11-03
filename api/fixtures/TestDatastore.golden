@@ -1,0 +1,18 @@
+{
+ "children": [
+  {
+   "components": [
+    "A",
+    "B",
+    "C"
+   ]
+  },
+  {
+   "components": [
+    "A",
+    "B",
+    "D"
+   ]
+  }
+ ]
+}

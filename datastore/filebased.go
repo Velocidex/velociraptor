@@ -388,3 +388,19 @@ func TraceDirectory(config_obj *config_proto.Config,
 	fmt.Printf("Trace FileBaseDataStore: %v: %v\n", name,
 		filename.AsDatastoreDirectory(config_obj))
 }
+
+// Support RawDataStore interface
+func (self *FileBaseDataStore) GetBuffer(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec) ([]byte, error) {
+
+	return readContentFromFile(
+		config_obj, urn, true /* must exist */)
+}
+
+func (self *FileBaseDataStore) SetBuffer(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec, data []byte) error {
+
+	return writeContentToFile(config_obj, urn, data)
+}

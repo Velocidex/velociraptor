@@ -110,6 +110,9 @@ const (
 	// Allowed to create zip files.
 	PREPARE_RESULTS
 
+	// Allowed raw datastore access
+	DATASTORE_ACCESS
+
 	// When adding new permission - update CheckAccess,
 	// GetRolePermissions and acl.proto
 )
@@ -150,6 +153,8 @@ func (self ACL_PERMISSION) String() string {
 		return "MACHINE_STATE"
 	case PREPARE_RESULTS:
 		return "PREPARE_RESULTS"
+	case DATASTORE_ACCESS:
+		return "DATASTORE_ACCESS"
 
 	}
 	return fmt.Sprintf("%d", self)
@@ -192,6 +197,8 @@ func GetPermission(name string) ACL_PERMISSION {
 		return MACHINE_STATE
 	case "PREPARE_RESULTS":
 		return PREPARE_RESULTS
+	case "DATASTORE_ACCESS":
+		return DATASTORE_ACCESS
 
 	}
 	return NO_PERMISSIONS
@@ -344,6 +351,9 @@ func CheckAccessWithToken(
 
 	case PREPARE_RESULTS:
 		return token.PrepareResults, nil
+
+	case DATASTORE_ACCESS:
+		return token.DatastoreAccess, nil
 
 	}
 

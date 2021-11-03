@@ -56,6 +56,13 @@ func (self *DirectoryMetadata) Set(key string, value api.DSPathSpec) {
 	self.data[key] = value
 }
 
+func (self *DirectoryMetadata) Remove(key string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	delete(self.data, key)
+}
+
 func (self *DirectoryMetadata) Len() int {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -278,15 +285,10 @@ func (self *MemcacheDatastore) SetData(
 	urn api.DSPathSpec,
 	data []byte) (err error) {
 
-	parent := urn.Dir()
-	parent_path := parent.AsDatastoreDirectory(config_obj)
-	md, pres := self.dir_cache.Get(parent_path)
-	if !pres {
-		// Get new dir metadata
-		md, err = self.get_dir_metadata(self.dir_cache, config_obj, parent)
-		if err != nil {
-			return err
-		}
+	// Get new dir metadata
+	md, err := self.get_dir_metadata(self.dir_cache, config_obj, urn.Dir())
+	if err != nil {
+		return err
 	}
 
 	// Update the directory metadata.
@@ -294,7 +296,9 @@ func (self *MemcacheDatastore) SetData(
 	md.Set(md_key, urn)
 
 	// Update the cache
+	parent_path := urn.Dir().AsDatastoreDirectory(config_obj)
 	self.dir_cache.Set(parent_path, md)
+
 	return self.data_cache.Set(urn.AsClientPath(), &BulkData{
 		data: data,
 	})
@@ -305,7 +309,26 @@ func (self *MemcacheDatastore) DeleteSubject(
 	urn api.DSPathSpec) error {
 	defer Instrument("delete", urn)()
 
-	return self.data_cache.Remove(urn.AsClientPath())
+	err := self.data_cache.Remove(urn.AsClientPath())
+	if err != nil {
+		return err
+	}
+
+	// Get new dir metadata
+	md, err := self.get_dir_metadata(self.dir_cache, config_obj, urn.Dir())
+	if err != nil {
+		return err
+	}
+
+	// Update the directory metadata.
+	md_key := urn.Base() + api.GetExtensionForDatastore(urn)
+	md.Remove(md_key)
+
+	// Update the cache
+	parent_path := urn.Dir().AsClientPath()
+	self.dir_cache.Set(parent_path, md)
+
+	return nil
 }
 
 func (self *MemcacheDatastore) SetChildren(
@@ -380,6 +403,29 @@ func (self *MemcacheDatastore) Close() {}
 func (self *MemcacheDatastore) Clear() {
 	self.data_cache.Purge()
 	self.dir_cache.Purge()
+}
+
+// Support RawDataStore interface
+func (self *MemcacheDatastore) GetBuffer(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec) ([]byte, error) {
+	path := urn.AsClientPath()
+	bulk_data_any, err := self.data_cache.Get(path)
+	bulk_data, ok := bulk_data_any.(*BulkData)
+	if !ok {
+		return nil, internalError
+	}
+	bulk_data.mu.Lock()
+	defer bulk_data.mu.Unlock()
+
+	return bulk_data.data, err
+}
+
+func (self *MemcacheDatastore) SetBuffer(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec, data []byte) error {
+
+	return self.SetData(config_obj, urn, data)
 }
 
 func (self *MemcacheDatastore) Debug(config_obj *config_proto.Config) {

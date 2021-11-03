@@ -47,6 +47,12 @@ type DatastoreInfo struct {
 // When WalkFunc return StopIteration we exit the walk.
 type WalkFunc func(urn api.DSPathSpec) error
 
+// Raw level access only used internally rarely.
+type RawDataStore interface {
+	GetBuffer(config_obj *config_proto.Config, urn api.DSPathSpec) ([]byte, error)
+	SetBuffer(config_obj *config_proto.Config, urn api.DSPathSpec, data []byte) error
+}
+
 type DataStore interface {
 	// Reads a stored message from the datastore. If there is no
 	// stored message at this URN, the function returns an
@@ -92,6 +98,9 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 		}
 
 		return file_based_imp, nil
+
+	case "RemoteFileDataStore":
+		return remote_datastopre_imp, nil
 
 	case "Memcache":
 		return memcache_imp, nil
