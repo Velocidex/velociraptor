@@ -38,9 +38,11 @@ func (self SQLPlugin) GetHandleOther(scope vfilter.Scope, connstring string, dri
 	cacheKey := fmt.Sprintf("%s %s", driver, connstring)
 	client := vql_subsystem.CacheGet(scope, cacheKey)
 
-	if client == nil {
+	if utils.IsNil(client) {
 		client, err := sqlx.Open(driver, connstring)
 		if err != nil {
+			// Cache failure to connect.
+			vql_subsystem.CacheSet(scope, cacheKey, err)
 			return nil, err
 		}
 		if driver == "mysql" {
@@ -59,14 +61,17 @@ func (self SQLPlugin) GetHandleOther(scope vfilter.Scope, connstring string, dri
 			return nil, err
 		}
 
+		vql_subsystem.CacheSet(scope, cacheKey, client)
 		return client, nil
 
 	}
 	switch t := client.(type) {
 	case error:
 		return nil, t
+
 	case *sqlx.DB:
 		return t, nil
+
 	default:
 		return nil, errors.New("Error")
 	}

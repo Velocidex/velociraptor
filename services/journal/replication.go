@@ -17,6 +17,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -166,7 +167,8 @@ func (self *ReplicationService) Start(
 	}()
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Debug("<green>Starting</> Replication service to master frontend")
+	logger.Debug("<green>Starting</> Replication service to master frontend at %v",
+		grpc_client.GetAPIConnectionString(self.config_obj))
 
 	return nil
 }

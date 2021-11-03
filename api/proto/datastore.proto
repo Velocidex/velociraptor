@@ -8,10 +8,12 @@ message DSPathSpec {
     repeated string components = 1;
 
     int64 path_type = 2;
+    bool is_dir = 3;
 }
 
 message DataRequest {
     DSPathSpec pathspec = 1;
+    bytes data = 2;
 }
 
 message DataResponse {

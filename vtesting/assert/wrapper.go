@@ -30,20 +30,20 @@ func Equal(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) 
 		}
 	}
 
-	assert.Equal(t, expected, actual, msgAndArgs)
+	assert.Equal(t, expected, actual, msgAndArgs...)
 }
 
 func NoError(t TestingT, err error, msgAndArgs ...interface{}) {
-	assert.NoError(t, err, msgAndArgs)
+	assert.NoError(t, err, msgAndArgs...)
 }
 
 func Regexp(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) {
-	assert.Regexp(t, expected, actual, msgAndArgs)
+	assert.Regexp(t, expected, actual, msgAndArgs...)
 }
 func True(t TestingT, expected bool, msgAndArgs ...interface{}) {
-	assert.True(t, expected, msgAndArgs)
+	assert.True(t, expected, msgAndArgs...)
 }
 
 func NotNil(t TestingT, expected interface{}, msgAndArgs ...interface{}) {
-	assert.NotNil(t, expected, msgAndArgs)
+	assert.NotNil(t, expected, msgAndArgs...)
 }

@@ -136,6 +136,7 @@ func (self *MemcacheFileDataStore) StartWriter(
 
 					case MUTATION_OP_DEL_SUBJECT:
 						file_based_imp.DeleteSubject(config_obj, mutation.urn)
+						self.invalidateDirCache(config_obj, mutation.urn.Dir())
 					}
 					mutation.wg.Done()
 				}
@@ -317,6 +318,57 @@ func (self *MemcacheFileDataStore) Debug(config_obj *config_proto.Config) {
 
 func (self *MemcacheFileDataStore) Dump() []api.DSPathSpec {
 	return self.cache.Dump()
+}
+
+// Support RawDataStore interface
+func (self *MemcacheFileDataStore) GetBuffer(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec) ([]byte, error) {
+
+	bulk_data, err := self.cache.GetBuffer(config_obj, urn)
+	if err == nil {
+		metricLRUHit.Inc()
+		return bulk_data, err
+	}
+
+	bulk_data, err = readContentFromFile(
+		config_obj, urn, true /* must exist */)
+	if err != nil {
+		return nil, err
+	}
+
+	metricLRUMiss.Inc()
+	self.cache.SetData(config_obj, urn, bulk_data)
+
+	return bulk_data, nil
+}
+
+func (self *MemcacheFileDataStore) SetBuffer(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec, data []byte) error {
+
+	err := self.cache.SetData(config_obj, urn, data)
+	if err != nil {
+		return err
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	select {
+	case <-self.ctx.Done():
+		return nil
+
+	case self.writer <- &Mutation{
+		op:   MUTATION_OP_SET_SUBJECT,
+		urn:  urn,
+		wg:   &wg,
+		data: data}:
+	}
+
+	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {
+		wg.Wait()
+	}
+	return nil
 }
 
 // Recursively makes sure the directories are added to the cache. We

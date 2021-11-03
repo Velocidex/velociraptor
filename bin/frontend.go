@@ -101,6 +101,14 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 	// first so other services can contact the master node.
 
 	config_obj.Frontend.IsMaster = !*frontend_cmd_minion
+
+	// Minions use the RemoteFileDataStore to sync with the server.
+	if !config_obj.Frontend.IsMaster {
+		logger.Info("Frontend will run as a <green>minion</>.")
+		logger.Info("<green>Enabling remote datastore</> since we are a minion.")
+		config_obj.Datastore.Implementation = "RemoteFileDataStore"
+	}
+
 	err := sm.Start(frontend.StartFrontendService)
 	if err != nil {
 		return nil, err
