@@ -296,8 +296,9 @@ func (self *MemcacheDatastore) SetData(
 	md.Set(md_key, urn)
 
 	// Update the cache
-	parent_path := urn.Dir().AsClientPath()
+	parent_path := urn.Dir().AsDatastoreDirectory(config_obj)
 	self.dir_cache.Set(parent_path, md)
+
 	return self.data_cache.Set(urn.AsClientPath(), &BulkData{
 		data: data,
 	})
