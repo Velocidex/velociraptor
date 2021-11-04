@@ -59,6 +59,10 @@
      "value": "InvalidChoice"
     },
     {
+     "key": "RegularExpression",
+     "value": "."
+    },
+    {
      "key": "Flag"
     },
     {
