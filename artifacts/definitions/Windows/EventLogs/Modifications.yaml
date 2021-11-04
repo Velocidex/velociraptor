@@ -13,6 +13,7 @@ precondition:
 parameters:
   - name: ProviderRegex
     default: .
+    type: regex
   - name: DateAfter
     description: "search for modifications after this date. YYYY-MM-DDTmm:hh:ss Z"
     type: timestamp

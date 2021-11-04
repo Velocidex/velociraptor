@@ -14,9 +14,12 @@ parameters:
    - name: SignerExcludeRegex
      description: Exclude hashes from this Signer
      default: Microsoft
+     type: regex
+
    - name: SignerFilterRegex
      description: Only show hashes from this signer.
      default: .
+     type: regex
 
 sources:
   - precondition:

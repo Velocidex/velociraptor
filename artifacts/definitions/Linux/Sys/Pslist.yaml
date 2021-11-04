@@ -5,6 +5,7 @@ description: |
 parameters:
   - name: processRegex
     default: .
+    type: regex
 
 precondition: SELECT OS From info() where OS = 'linux'
 

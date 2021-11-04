@@ -5,6 +5,7 @@ description: |
 parameters:
   - name: ProcessNameRegex
     default: .
+    type: regex
 
 sources:
 - query: |

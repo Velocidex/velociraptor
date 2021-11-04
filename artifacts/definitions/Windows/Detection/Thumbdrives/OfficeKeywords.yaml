@@ -17,6 +17,8 @@ type: CLIENT_EVENT
 parameters:
   - name: officeExtensions
     default: "\\.(xls|xlsm|doc|docx|ppt|pptm)$"
+    type: regex
+
   - name: yaraRule
     description: This yara rule will be run on document contents.
     default: |

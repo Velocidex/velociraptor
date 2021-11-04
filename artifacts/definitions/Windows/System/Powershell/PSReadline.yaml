@@ -27,10 +27,13 @@ parameters:
     default: \AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
   - name: SearchStrings
     default: .
+    type: regex
   - name: StringWhiteList
     default:
+    type: regex
   - name: UserRegex
     default: .
+    type: regex
   - name: UploadFiles
     description: "Upload ConsoleHost_history.txt files in scope"
     type: bool

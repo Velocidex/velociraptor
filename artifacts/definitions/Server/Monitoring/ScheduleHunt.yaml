@@ -9,8 +9,10 @@ type: SERVER_EVENT
 parameters:
   - name: ScheduleDayRegex
     default: Tuesday
+    type: regex
   - name: ScheduleTimeRegex
     default: "01:28:"
+    type: regex
   - name: HuntDescription
     default:
 

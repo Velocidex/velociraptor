@@ -31,8 +31,10 @@ parameters:
     type: timestamp
   - name: targetUser
     description: "target user regex"
+    type: regex
   - name: regexValue
     description: "regex search over RunMRU values."
+    type: regex
   - name: groupResults
     description: "groups MRU entries to one message line"
     type: bool

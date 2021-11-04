@@ -19,6 +19,10 @@ parameters:
       - Second Choice
       - Third Choice
 
+  - name: RegularExpression
+    type: regex
+    default: "."
+
   - name: Flag
     type: bool
     default: Y

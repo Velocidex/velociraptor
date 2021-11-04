@@ -9,6 +9,7 @@ parameters:
     - name: nameRegex
       description: Only file names that match this regular expression will be scanned.
       default: "(exe|txt|dll|php)$"
+      type: regex
     - name: AlsoUpload
       type: bool
       description: Also upload matching files.

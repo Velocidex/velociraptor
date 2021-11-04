@@ -31,11 +31,14 @@ parameters:
   - name: HeaderRegex
     description: 'Regex of content headers.'
     default: '.'
+    type: regex
   - name: HeaderWhitelist
     description: 'Whitelist regex of content headers.'
     default: '^(MSCF|0|<|.<|----)'
+    type: regex
   - name: UrlWhitelist
     description: 'Regex to whitelist Url field'
+    type: regex
   - name: SearchVSS
     description: "Add VSS into query."
     type: bool

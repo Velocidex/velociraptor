@@ -2,38 +2,38 @@ name: Windows.EventLogs.Evtx
 
 description: |
   Parses and returns events from Windows evtx logs.
-  
-  Each event is returned in full, but results can be narrowed using a glob 
-  pattern for evtx files, a timespan, and regexes to match the evtx path, event 
+
+  Each event is returned in full, but results can be narrowed using a glob
+  pattern for evtx files, a timespan, and regexes to match the evtx path, event
   channel, and/or event ID:
-  
+
   - EvtxGlob: glob of event log files (evtx) to target
-  - StartDate: earliest event created timestamp to target 
+  - StartDate: earliest event created timestamp to target
   - EndDate: latest event created timestamp to target
   - PathRegex: a regex to match against paths returned from EvtxGlob
   - ChannelRegex: a regex to match against the event channel
-  - IDRegex: a regex to match against the event ID  
-  
+  - IDRegex: a regex to match against the event ID
+
   Gathering these logs enables VQL analysis (_e.g._, via notebooks) and bulk
-  export (_e.g._, to elasticsearch) for additional processing.  It can also be 
+  export (_e.g._, to elasticsearch) for additional processing.  It can also be
   used as the basis for custom artifacts with more in-depth filtering.
-  
-  **Note: This artifact can be resource intensive.**  
-  
+
+  **Note: This artifact can be resource intensive.**
+
   - Parsing and aggregating may use high amounts of CPU on the client. Consider
   reducing the ops/second or narrowing the glob/path regex if necessary.
   - Parsing may use significant memory and time when searching VSS volumes and
   deduplicating events. This is proportional to the evtx file size and number
   of VSS copies. Consider whether the extra events are worth the resources.
   - Parsing many event logs may take longer than the default timeout.  When
-  parsing all log files and searching VSS, consider doubling the default or 
-  more (especially with reduced ops/second, or if targets have high-volume 
+  parsing all log files and searching VSS, consider doubling the default or
+  more (especially with reduced ops/second, or if targets have high-volume
   3rd-party log sources such as Sysmon).
-  - The artifact routinely produces hundreds of thousands of rows per host. 
+  - The artifact routinely produces hundreds of thousands of rows per host.
   Consider filtering results using path, channel, and ID regexes if necessary.
 
   Inspired by others in `Windows.EventLogs.*`, many by Matt Green (@mgreen27).
-    
+
 author: Chris Hendricks (chris@counteractive.net)
 
 precondition: SELECT OS FROM info() WHERE OS = 'windows'
@@ -52,25 +52,28 @@ parameters:
     description: "Parse events on or before this date (YYYY-MM-DDTmm:hh:ssZ)"
   - name: PathRegex
     default: "."
+    type: regex
   - name: ChannelRegex
     default: "."
+    type: regex
   - name: IDRegex
     default: "."
+    type: regex
 
 sources:
   - queries:
       # expand provided glob into a list of paths on the file system (fs)
-      - LET fspaths <= 
+      - LET fspaths <=
           SELECT FullPath FROM glob(globs=expand(path=EvtxGlob))
           WHERE FullPath =~ PathRegex
-      
+
       # function returning list of VSS paths corresponding to path
-      - LET vsspaths(path) = 
+      - LET vsspaths(path) =
           SELECT FullPath FROM Artifact.Windows.Search.VSS(SearchFilesGlob=path)
           WHERE FullPath =~ PathRegex
-      
+
       # function returning parsed evtx from list of paths
-      - LET evtxsearch(pathList) = 
+      - LET evtxsearch(pathList) =
           SELECT * FROM foreach(
             row=pathList,
             query={
@@ -88,7 +91,7 @@ sources:
                 AND str(str=EventID) =~ IDRegex
             }
           )
-        
+
       # only de-duplicate using GROUP BY when searching VSS
       # de-duplicate file-by-file to reduce memory impact
       - SELECT * FROM if(condition=SearchVSS, then={

@@ -6,6 +6,7 @@ import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
+import RegEx from './regex.js';
 
 import Tooltip from 'react-bootstrap/Tooltip';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -79,6 +80,7 @@ export default class VeloForm extends React.Component {
         switch(param.type) {
         case "hidden":
             return <></>;
+
         case "csv":
             let data = parseCSV(this.props.value);
             let columns = [{
@@ -173,6 +175,27 @@ export default class VeloForm extends React.Component {
                           blurToSave: true,
                       }) }
                     />
+                  </Col>
+                </Form.Group>
+            );
+
+        case "regex":
+            return (
+                  <Form.Group as={Row}>
+                  <Form.Label column sm="3">
+                    <OverlayTrigger
+                      delay={{show: 250, hide: 400}}
+                      overlay={(props)=>renderToolTip(props, param)}>
+                      <div>
+                        {param.name}
+                      </div>
+                    </OverlayTrigger>
+                  </Form.Label>
+                    <Col sm="8">
+                      <RegEx
+                        value={this.props.value}
+                        setValue={this.props.setValue}
+                      />
                   </Col>
                 </Form.Group>
             );

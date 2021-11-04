@@ -12,6 +12,7 @@ parameters:
   - name: UserFilter
     default: ""
     description: If specified we filter by this user ID.
+    type: regex
 
   - name: ExecutionTimeAfter
     default: ""

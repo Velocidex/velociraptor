@@ -19,6 +19,7 @@ parameters:
     default: C:\windows\**\*.dll
   - name: ExcludeRegex
     default: WinSXS|Servicing
+    type: regex
 
 sources:
   - query: |

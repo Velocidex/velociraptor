@@ -1,0 +1,16 @@
+.regex-syntax-error .tooltip-inner {
+    background: var(--color-proto-error);
+}
+
+.regex-syntax-error .arrow::before {
+    border-top-color: var(--color-proto-error);
+}
+
+.velo-ace-editor.regex-form {
+    border-style: solid;
+    border-width: 1px;
+    padding: 4px;
+    border-color: var(--btn-default-border);
+    border-radius: 0.25rem;
+    resize: vertical;
+}

@@ -28,8 +28,10 @@ parameters:
       type: timestamp
     - name: binaryRegex
       description: "Regex of executable name."
+      type: regex
     - name: hashRegex
       description: "Regex of prefetch hash."
+      type: regex
     - name: IncludeFilesAccessed
       description: Include all accessed files
       type: bool

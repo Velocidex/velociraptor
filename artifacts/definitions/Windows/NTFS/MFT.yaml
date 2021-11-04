@@ -29,9 +29,11 @@ parameters:
   - name: PathRegex
     description: "Regex search over FullPath."
     default: "."
+    type: regex
   - name: FileRegex
     description: "Regex search over File Name"
     default: "."
+    type: regex
   - name: DateAfter
     type: timestamp
     description: "search for events after this date. YYYY-MM-DDTmm:hh:ssZ"

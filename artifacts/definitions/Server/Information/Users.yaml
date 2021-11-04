@@ -10,6 +10,7 @@ parameters:
   - name: StandardUserAccounts
     description: Well known SIDs to hide from the output.
     default: "(-5..$|S-1-5-18|S-1-5-19|S-1-5-20)"
+    type: regex
 
 sources:
   - query: |

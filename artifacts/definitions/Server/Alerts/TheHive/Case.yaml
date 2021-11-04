@@ -16,6 +16,7 @@ parameters:
     default: https://myvelo
   - name: ArtifactsToAlertOn
     default: .
+    type: regex
   - name: DisableSSLVerify
     type: bool
     default: true

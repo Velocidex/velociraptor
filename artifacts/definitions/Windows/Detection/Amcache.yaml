@@ -38,11 +38,13 @@ parameters:
   - name: SHA1Regex
     default: .
     description: Regex of SHA1s to filter
+    type: regex
   - name: PathRegex
     description: Regex of recorded path.
+    type: regex
   - name: NameRegex
     description: Regex of entry / binary name
-
+    type: regex
 
 sources:
   - queries:

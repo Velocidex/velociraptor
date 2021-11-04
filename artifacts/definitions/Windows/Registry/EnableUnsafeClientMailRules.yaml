@@ -16,6 +16,7 @@ parameters:
      default: Software\Microsoft\Office\*\Outlook\Security\
    - name: userRegex
      default: .
+     type: regex
 
 sources:
   - queries:

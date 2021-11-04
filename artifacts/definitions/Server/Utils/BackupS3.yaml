@@ -17,6 +17,8 @@ parameters:
    - name: ArtifactNameRegex
      default: "."
      description: A regular expression to select which artifacts to upload
+     type: regex
+
    - name: Bucket
    - name: Region
    - name: CredentialsKey

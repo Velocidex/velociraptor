@@ -25,12 +25,15 @@ parameters:
   - name: TeamViewerIDRegex
     description: "Regex of TeamViewer ID"
     default: .
+    type: regex
   - name: SourceHostRegex
     description: "Regex of source host"
     default: .
+    type: regex
   - name: UserRegex
     description: "Regex of user"
     default: .
+    type: regex
   - name: SearchVSS
     description: "Add VSS into query."
     type: bool

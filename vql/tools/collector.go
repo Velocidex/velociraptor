@@ -425,7 +425,7 @@ func AddSpecProtobuf(
 			// string according to the parameter
 			// type
 			switch parameter_definition.Type {
-			case "", "string":
+			case "", "string", "regex":
 				if !is_str {
 					scope.Log("Parameter %v should be a string",
 						parameter_definition.Name)

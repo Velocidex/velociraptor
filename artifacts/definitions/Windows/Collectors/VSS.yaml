@@ -33,6 +33,7 @@ parameters:
     default: lazy_ntfs
   - name: VSSDateRegex
     default: .
+    type: regex
 
 sources:
    - name: All Matches Metadata
