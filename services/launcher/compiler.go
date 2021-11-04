@@ -19,7 +19,7 @@ import (
 
 var (
 	artifact_in_query_regex = regexp.MustCompile(`Artifact\.([^\s\(]+)\(`)
-	escape_regex            = regexp.MustCompile("(^[0-9]|[\"' ])")
+	escape_regex            = regexp.MustCompile("(^[0-9]|[\"' .-])")
 )
 
 func escape_name(name string) string {

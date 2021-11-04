@@ -345,12 +345,15 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(
 	}
 
 	if is_relevant() {
-		err := self.setClientMonitoringState(ctx, config_obj, "", self.state)
+		err := self.load_from_file(ctx, config_obj)
 		if err != nil {
 			logger := logging.GetLogger(
 				config_obj, &logging.FrontendComponent)
 			logger.Error("self.setClientMonitoringState: %v", err)
 		}
+
+		// Update version to reflect the new time.
+		self.state.Version = uint64(self.Clock.Now().UnixNano())
 	}
 }
 
@@ -415,6 +418,9 @@ func (self *ClientEventTable) load_from_file(
 
 		return self.setClientMonitoringState(ctx, config_obj, "", self.state)
 	}
+
+	// Update the new version
+	self.state.Version = uint64(self.Clock.Now().UnixNano())
 
 	clear_caches(self.state)
 	return self.compileState(ctx, config_obj, self.state)

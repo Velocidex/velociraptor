@@ -76,6 +76,7 @@ export default class VeloForm extends React.Component {
 
     render() {
         let param = this.props.param;
+        let name = param.friendly_name || param.name;
 
         switch(param.type) {
         case "hidden":
@@ -154,7 +155,7 @@ export default class VeloForm extends React.Component {
                       delay={{show: 250, hide: 400}}
                       overlay={(props)=>renderToolTip(props, param)}>
                       <div>
-                        {param.name}
+                        {name}
                       </div>
                     </OverlayTrigger>
                   </Form.Label>
@@ -187,7 +188,7 @@ export default class VeloForm extends React.Component {
                       delay={{show: 250, hide: 400}}
                       overlay={(props)=>renderToolTip(props, param)}>
                       <div>
-                        {param.name}
+                        {name}
                       </div>
                     </OverlayTrigger>
                   </Form.Label>
@@ -219,7 +220,7 @@ export default class VeloForm extends React.Component {
                       delay={{show: 250, hide: 400}}
                       overlay={(props)=>renderToolTip(props, param)}>
                       <div>
-                        {param.name}
+                        {name}
                       </div>
                     </OverlayTrigger>
                   </Form.Label>
@@ -269,7 +270,7 @@ export default class VeloForm extends React.Component {
                       delay={{show: 250, hide: 400}}
                       overlay={(props)=>renderToolTip(props, param)}>
                       <div>
-                        {param.name}
+                        {name}
                       </div>
                     </OverlayTrigger>
                   </Form.Label>
@@ -295,7 +296,7 @@ export default class VeloForm extends React.Component {
                       delay={{show: 250, hide: 400}}
                       overlay={(props)=>renderToolTip(props, param)}>
                       <div>
-                        {param.name}
+                        {name}
                       </div>
                     </OverlayTrigger>
                   </Form.Label>
@@ -324,7 +325,7 @@ export default class VeloForm extends React.Component {
                       delay={{show: 250, hide: 400}}
                       overlay={(props)=>renderToolTip(props, param)}>
                       <div>
-                        {param.name}
+                        {name}
                       </div>
                     </OverlayTrigger>
                   </Form.Label>

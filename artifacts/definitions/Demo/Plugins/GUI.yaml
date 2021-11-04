@@ -24,6 +24,7 @@ parameters:
     default: "."
 
   - name: Flag
+    friendly_name: A Flag with a name
     type: bool
     default: Y
 
