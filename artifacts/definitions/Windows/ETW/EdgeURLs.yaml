@@ -16,6 +16,7 @@ parameters:
   - name: URLFilter
     default: .
     description: A regex that can be used to filter uninteresting URLs
+    type: regex
 
 sources:
   - query: |

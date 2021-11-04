@@ -22,7 +22,7 @@ sources:
           row={
             SELECT * from watch_monitoring(
               artifact='Windows.Events.ProcessCreation')
-            WHERE Name =~ '(?i)psexesvc'
+            WHERE Name =~ 'psexesvc'
           },
           query={
             SELECT * FROM mail(

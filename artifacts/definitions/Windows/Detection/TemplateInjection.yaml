@@ -1,23 +1,23 @@
 name: Windows.Detection.TemplateInjection
 description: |
-    This content will detect injected templates in Office documents.   
-    
-    Template injection is a form of defence evasion where a malicious macro 
-    is loaded into an OOXML document via a resource file masquerading as 
-    an office template.   
-    
-    The default artifact will also detect MSHTML RCE Vulnerability #CVE-2021-40444.  
-      
-    This artifact can also be modified to search for other suspicious rels files:  
-    - document.xml.rels = macros, ole objects, images  
-    - settings.xml.rels = templates  
-    - websettings.xml.rels = frames  
-    - header#.xml.rels and footer#.xml.rels and others has also been observed 
-    hosting image files for canary files or abused for NetNTLM hash colleciton.  
-    
-    Change TemplateFileRegex to '\\.xml\\.rels$' for looser file selection.  
-    Change TemplateTargetRegex to '^(https?|smb|\\\\|//|mhtml|file)' for looser 
-    Target selection.  
+    This content will detect injected templates in Office documents.
+
+    Template injection is a form of defence evasion where a malicious macro
+    is loaded into an OOXML document via a resource file masquerading as
+    an office template.
+
+    The default artifact will also detect MSHTML RCE Vulnerability #CVE-2021-40444.
+
+    This artifact can also be modified to search for other suspicious rels files:
+    - document.xml.rels = macros, ole objects, images
+    - settings.xml.rels = templates
+    - websettings.xml.rels = frames
+    - header#.xml.rels and footer#.xml.rels and others has also been observed
+    hosting image files for canary files or abused for NetNTLM hash colleciton.
+
+    Change TemplateFileRegex to '\\.xml\\.rels$' for looser file selection.
+    Change TemplateTargetRegex to '^(https?|smb|\\\\|//|mhtml|file)' for looser
+    Target selection.
 
 author: Matt Green - @mgreen27
 
@@ -34,13 +34,15 @@ parameters:
   - name: TemplateFileRegex
     description: Regex to search inside resource section.
     default: '(document|settings)\.xml\.rels$'
+    type: regex
   - name: TemplateTargetRegex
     description: Regex to search inside resource section.
     default: '^(https?|smb|\\\\|//|mhtml)'
+    type: regex
   - name: UploadDocument
     type: bool
     description: Select to upload document on detection.
-    
+
 
 sources:
   - precondition:
@@ -62,11 +64,11 @@ sources:
                     accessor='zip')
                 WHERE not IsDir and Size > 0 and ZipMemberPath =~ TemplateFileRegex
             })
-            
+
       -- parse settings file by line and extract config
       LET template = SELECT * FROM foreach(row=document_parts,
         query={
-            SELECT 
+            SELECT
                 FullPath as SectionPath,
                 url(parse=FullPath).Path as Document,
                 url(parse=FullPath).Fragment as Section,
@@ -80,7 +82,7 @@ sources:
             FROM parse_lines(filename=FullPath,accessor='zip')
             WHERE TemplateTarget
         })
-            
+
       -- search settings for remote or file templates, format mshtml entries
       LET hits = SELECT * FROM foreach(row=template,
             query={
@@ -96,12 +98,12 @@ sources:
                 FROM stat(filename=Document)
                 WHERE
                     TemplateTarget =~ TemplateTargetRegex
-                     AND (( Section=~'/document.xml.rels$' AND TemplateTarget=~'^mhtml:' ) 
+                     AND (( Section=~'/document.xml.rels$' AND TemplateTarget=~'^mhtml:' )
                             OR NOT Section=~'/document.xml.rels$' )
             })
 
       -- upload hits to server
-      LET upload_hits = SELECT 
+      LET upload_hits = SELECT
             FullPath,
             Hash,
             Mtime,
@@ -112,7 +114,7 @@ sources:
             SectionHash,
             upload(file=DocumentPath) as Upload
         FROM hits
-      
+
       -- output rows
       SELECT * FROM if(condition= UploadDocument,
             then= upload_hits,

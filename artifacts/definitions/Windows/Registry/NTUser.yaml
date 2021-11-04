@@ -34,6 +34,7 @@ parameters:
    default: Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\**
  - name: userRegex
    default: .
+   type: regex
 
 sources:
  - queries:

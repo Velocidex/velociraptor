@@ -5,13 +5,20 @@ description: |
 parameters:
    - name: ProcessNameRegex
      default: .
+     type: regex
+
    - name: EnvironmentVariableRegex
      default: COMSPEC|COR_PROFILER
+     type: regex
+
    - name: FilterValueRegex
      default: .
+     type: regex
+
    - name: WhitelistValueRegex
      description: Ignore these values
      default: ^C:\\Windows\\.+cmd.exe$
+     type: regex
 
 sources:
   - precondition:

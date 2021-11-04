@@ -1,18 +1,18 @@
 name: Windows.EventLogs.PowershellModule
 description: |
-  This Artifact will search and extract Module events (Event ID 4103) from 
+  This Artifact will search and extract Module events (Event ID 4103) from
   Powershell-Operational Event Logs.
-  
-  Powershell is commonly used by attackers across all stages of the attack 
+
+  Powershell is commonly used by attackers across all stages of the attack
   lifecycle. Although quite noisy Module logging can provide valuable insight.
-  
-  There are several parameter's available for search leveraging regex. 
-    - DateAfter enables search for events after this date.  
-    - DateBefore enables search for events before this date.   
-    - ContextRegex enables regex search over ContextInfo text field.  
-    - PayloadRegex enables a regex search over Payload text field.  
+
+  There are several parameter's available for search leveraging regex.
+    - DateAfter enables search for events after this date.
+    - DateBefore enables search for events before this date.
+    - ContextRegex enables regex search over ContextInfo text field.
+    - PayloadRegex enables a regex search over Payload text field.
     - SearchVSS enables VSS search
-  
+
 
 author: Matt Green - @mgreen27
 
@@ -31,20 +31,22 @@ parameters:
     type: timestamp
   - name: ContextRegex
     description: "regex search over Payload text field."
+    type: regex
   - name: PayloadRegex
     description: "regex search over Payload text field."
+    type: regex
   - name: SearchVSS
     description: "Add VSS into query."
-    type: bool     
-      
+    type: bool
+
 sources:
   - query: |
         -- Build time bounds
-        LET DateAfterTime <= if(condition=DateAfter, 
+        LET DateAfterTime <= if(condition=DateAfter,
             then=timestamp(epoch=DateAfter), else=timestamp(epoch="1600-01-01"))
-        LET DateBeforeTime <= if(condition=DateBefore, 
+        LET DateBeforeTime <= if(condition=DateBefore,
             then=timestamp(epoch=DateBefore), else=timestamp(epoch="2200-01-01"))
-            
+
         -- Determine target files
         LET files = SELECT *
           FROM if(condition=SearchVSS,
@@ -62,7 +64,7 @@ sources:
           FROM foreach(
             row=files,
             query={
-              SELECT 
+              SELECT
                 timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
                 System.EventID.Value as EventID,
                 System.Computer as Computer,
@@ -85,14 +87,14 @@ sources:
                     then=ContextInfo=~PayloadRegex,else=TRUE)
             })
           ORDER BY Source DESC
-          
+
         -- Group results for deduplication
         LET grouped = SELECT *
           FROM hits
           GROUP BY EventRecordID
 
         -- Output results
-        SELECT 
+        SELECT
             EventTime,
             EventID,
             Computer,

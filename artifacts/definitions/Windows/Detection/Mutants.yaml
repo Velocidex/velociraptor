@@ -8,9 +8,10 @@ parameters:
   - name: processRegex
     description: A regex applied to process names.
     default: .
+    type: regex
   - name: MutantNameRegex
     default: .+
-
+    type: regex
 sources:
   - name: Handles
     description: Open handles to mutants. This shows processes owning a handle open to the mutant.

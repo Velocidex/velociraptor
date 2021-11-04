@@ -13,6 +13,7 @@ type: SERVER_EVENT
 parameters:
   - name: ArtifactNameRegex
     default: .
+    type: regex
     description: Only upload these artifacts to elastic
   - name: elasticAddresses
     default: http://127.0.0.1:9200/

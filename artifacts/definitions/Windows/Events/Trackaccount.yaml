@@ -11,6 +11,7 @@ parameters:
     default: C:\Windows\system32\winevt\logs\Security.evtx
   - name: UserRegex
     default: 'admin|user'
+    type: regex
   - name: LogonTypeRegex
     type: json_array
     default: '[2,3,4,5,7,8,9,10,11]'

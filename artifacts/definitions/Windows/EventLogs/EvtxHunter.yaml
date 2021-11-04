@@ -38,14 +38,18 @@ parameters:
     default:
   - name: WhitelistRegex
     description: "Regex of string to witelist"
+    type: regex
   - name: PathRegex
     description: "Event log Regex to enable filtering on path"
     default: .
+    type: regex
   - name: ChannelRegex
     description: "Channel Regex to enable filtering on path"
     default: .
+    type: regex
   - name: IdRegex
     default: .
+    type: regex
   - name: SearchVSS
     description: "Add VSS into query."
     type: bool

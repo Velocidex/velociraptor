@@ -9,6 +9,7 @@ precondition: SELECT OS From info() where OS = 'windows'
 parameters:
   - name: SessionRegex
     default: "Velociraptor"
+    type: regex
   - name: KillMatching
     type: bool
     description: If set will kill the relevant sessions.

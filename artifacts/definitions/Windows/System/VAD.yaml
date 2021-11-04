@@ -6,6 +6,7 @@ parameters:
   - name: processRegex
     description: A regex applied to process names.
     default: .
+    type: regex
 
 sources:
   - queries:

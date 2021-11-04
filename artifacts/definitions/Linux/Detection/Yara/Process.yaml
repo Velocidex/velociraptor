@@ -20,8 +20,10 @@ type: CLIENT
 parameters:
   - name: ProcessRegex
     default: .
+    type: regex
   - name: PidRegex
     default: .
+    type: regex
   - name: UploadHits
     type: bool
   - name: YaraUrl

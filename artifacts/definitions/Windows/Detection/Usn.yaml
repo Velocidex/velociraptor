@@ -19,6 +19,7 @@ parameters:
   - name: PathRegex
     description: A regex to match the entire path (you can watch a directory or a file type).
     default: \.pf$
+    type: regex
   - name: Device
     description: The NTFS drive to watch
     default: C:\\

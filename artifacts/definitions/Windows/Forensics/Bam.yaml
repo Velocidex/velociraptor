@@ -15,6 +15,7 @@ parameters:
       default: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\bam\UserSettings\*\*,HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings\*\*
     - name: userRegex
       default: .
+      type: regex
 
 sources:
   - precondition:

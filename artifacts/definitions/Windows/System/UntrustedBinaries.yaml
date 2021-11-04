@@ -16,7 +16,8 @@ description: |
 parameters:
   - name: processNamesRegex
     description: A regex to select running processes which we consider should be trusted.
-    default: (?i)lsass|svchost|conhost|taskmgr|winlogon|wmiprv|dwm|csrss|velociraptor
+    default: "lsass|svchost|conhost|taskmgr|winlogon|wmiprv|dwm|csrss|velociraptor"
+    type: regex
 
 sources:
   - precondition: |

@@ -1,11 +1,11 @@
 name: Windows.Application.MegaSync
 description: |
-  This artifact will parse MEGASync logs and enables using regex to search for 
+  This artifact will parse MEGASync logs and enables using regex to search for
   entries of interest.
-  
+
   With UploadLogs selected a copy of the logs are uploaded to the server.
   SearchVSS enables search over VSS and dedup support.
-  
+
 author: "Matt Green - @mgreen27"
 
 reference:
@@ -19,17 +19,19 @@ parameters:
   - name: SearchRegex
     description: "Regex of strings to search in line."
     default: 'Transfer\s\(UPLOAD\)|upload\squeue|local\sfile\saddition\sdetected|Sync\s-\ssending\sfile|\"user\"'
+    type: regex
   - name: WhitelistRegex
     description: "Regex of strings to leave out of output."
     default:
+    type: regex
   - name: SearchVSS
     description: "Add VSS into query."
     type: bool
   - name: UploadLogs
     description: "Upload MEGASync logs."
     type: bool
-    
-    
+
+
 sources:
   - query: |
       -- Find target files
@@ -61,7 +63,7 @@ sources:
           })
         GROUP BY Line
 
-      SELECT 
+      SELECT
         Line as RawLine,
         FullPath
       FROM output
@@ -70,7 +72,7 @@ sources:
   - name: LogFiles
     queries:
       - |
-        SELECT 
+        SELECT
             FullPath,
             if(condition=UploadLogs,
                 then= upload(file=FullPath,accessor='ntfs')

@@ -21,6 +21,7 @@ parameters:
       FROM cookies
   - name: userRegex
     default: .
+    type: regex
 
 precondition: SELECT OS From info() where OS = 'windows'
 

@@ -21,6 +21,7 @@ parameters:
    - name: URLRegex
      default: .
      description: Filter URLs by this regex
+     type: regex
    - name: DateAfter
      type: timestamp
    - name: DateBefore

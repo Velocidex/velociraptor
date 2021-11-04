@@ -59,6 +59,9 @@ func (self *Launcher) CompileSingleArtifact(
 		escaped_name := maybeEscape(name)
 
 		switch parameter.Type {
+		case "", "string", "regex":
+			// Nothing to do with these types.
+
 		case "int", "int64":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf("LET %v <= int(int=%v)", escaped_name,

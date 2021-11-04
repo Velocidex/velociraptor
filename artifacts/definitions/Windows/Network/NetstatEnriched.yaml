@@ -14,10 +14,11 @@ parameters:
   - name: IPRegex
     description: "regex search over IP address fields."
     default:  ".*"
+    type: regex
   - name: PortRegex
     description: "regex search over port fields."
     default: ".*"
-
+    type: regex
   - name: Family
     description: "IP version family selection"
     type: choices
@@ -71,24 +72,31 @@ parameters:
   - name: ProcessNameRegex
     description: "regex search over source process name"
     default: ".*"
+    type: regex
   - name: ProcessPathRegex
     description: "regex search over source process path"
     default: ".*"
+    type: regex
   - name: CommandLineRegex
     description: "regex search over source process commandline"
     default: ".*"
+    type: regex
   - name: HashRegex
     description: "regex search over source process hash"
     default: ".*"
+    type: regex
   - name: UsernameRegex
     description: "regex search over source process user context"
     default: ".*"
+    type: regex
   - name: AuthenticodeSubjectRegex
     description: "regex search over source Authenticode Subject"
     default: ".*"
+    type: regex
   - name: AuthenticodeIssuerRegex
     description: "regex search over source Authenticode Issuer"
     default: ".*"
+    type: regex
   - name: AuthenticodeVerified
     description: "Authenticode signiture selection"
     type: choices

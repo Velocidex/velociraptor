@@ -24,8 +24,9 @@ type: SERVER_EVENT
 
 parameters:
   - name: blacklistCompressionFilename
+    type: regex
     description: Filenames which match this regex will be excluded from compression.
-    default: '(?i).+ntuser.dat'
+    default: 'ntuser.dat$'
 
 sources:
   - queries:

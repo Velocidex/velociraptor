@@ -19,6 +19,7 @@ parameters:
   - name: whitelistRegex
     description: We ignore DNS names that match this regex.
     default: wpad.home
+    type: regex
 
 sources:
  - precondition:

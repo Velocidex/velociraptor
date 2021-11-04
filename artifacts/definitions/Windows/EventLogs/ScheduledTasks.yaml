@@ -44,28 +44,36 @@ parameters:
     type: timestamp
   - name: TaskSchedulerEventRegex
     description: Regex of TaskScheduler log event ids.
+    type: regex
     default: ^(140|141)$
   - name: SecurityEventRegex
     description: regex of Security log event ids.
+    type: regex
     default: '^(4698|4699|4700|4701|4702)$'
   - name: TaskNameRegex
     description: regex of target task name.
     default: .
+    type: regex
   - name: TaskNameWhitelist
     description: regex of task names to exclude from results.
     default:
+    type: regex
   - name: TaskActionRegex
     description: regex of target task execution process / path.
     default: .
+    type: regex
   - name: TaskActionWhitelist
     description: regex of task processes to exclude from results.
     default:
+    type: regex
   - name: UserNameRegex
     description: regex of target user name.
     default: .
+    type: regex
   - name: IocRegex
     description: IOC regex to search for.
     default: .
+    type: regex
   - name: SearchVSS
     description: "add VSS into query."
     type: bool

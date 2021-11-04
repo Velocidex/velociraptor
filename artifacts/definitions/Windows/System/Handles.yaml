@@ -8,6 +8,8 @@ parameters:
   - name: processRegex
     description: A regex applied to process names.
     default: .
+    type: regex
+
   - name: Files
     description: Search for File Handles
     type: bool

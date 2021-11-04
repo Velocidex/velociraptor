@@ -32,6 +32,7 @@ precondition: SELECT OS From info() where OS = 'windows'
 parameters:
   - name: userRegex
     default: .
+    type: regex
 
   - name: UploadFiles
     description: "Select to Upload SBECmd Output files."

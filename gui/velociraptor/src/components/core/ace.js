@@ -82,6 +82,8 @@ import 'ace-builds/src-min-noconflict/mode-sql.js';
 import VqlMode from './mode-vql.js';
 import MarkdownMode from './mode-markdown.js';
 import YamlMode from './mode-yaml.js';
+import RegexMode from './mode-regex.js';
+import classNames from "classnames";
 
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -116,6 +118,7 @@ export default class VeloAce extends Component {
     static propTypes = {
         text: PropTypes.string,
         mode: PropTypes.string,
+        focus: PropTypes.bool,
         onChange: PropTypes.func,
         options: PropTypes.object,
 
@@ -131,6 +134,7 @@ export default class VeloAce extends Component {
         settingButtonRenderer: PropTypes.func,
 
         commands: PropTypes.array,
+        className: PropTypes.string,
     }
 
     // Remove options which are not settable by the user since they
@@ -201,6 +205,8 @@ export default class VeloAce extends Component {
                 this.refs.ace.editor.getSession().setMode(new MarkdownMode());
             } else if(this.props.mode === "yaml") {
                 this.refs.ace.editor.getSession().setMode(new YamlMode());
+            } else if(this.props.mode === "regex") {
+                this.refs.ace.editor.getSession().setMode(new RegexMode());
             }
         };
     }
@@ -210,14 +216,21 @@ export default class VeloAce extends Component {
         // specified.
         let options = this.getUserOptions();
         let mode = this.props.mode || 'sql';
+        let focus = this.props.focus;
+        if (_.isUndefined(focus)) {
+            focus = true;
+        }
         return (
             <>
-              <div className="col-12 velo-ace-editor">
+              <div className={classNames(
+                  "col-12",
+                  "velo-ace-editor",
+                  this.props.className)}>
                 <AceEditor
                   ref="ace"
                   className="full-height"
                   showGutter={true}
-                  focus={true}
+                  focus={focus}
                   mode={mode}
                   theme="github"
                   value={this.props.text || ''}

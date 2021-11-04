@@ -16,6 +16,7 @@ parameters:
     default: \AppData\Local\Google\Chrome\User Data\*\Extensions\*\*\manifest.json
   - name: userRegex
     default: .
+    type: regex
 
 sources:
   - precondition: |

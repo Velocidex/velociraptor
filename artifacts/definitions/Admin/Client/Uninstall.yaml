@@ -17,6 +17,7 @@ required_permissions:
 
 parameters:
   - name: DisplayNameRegex
+    type: regex
     default: Velociraptor
     description: A regex that will match the package to uninstall.
 

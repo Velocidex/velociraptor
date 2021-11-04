@@ -10,6 +10,7 @@ parameters:
         SELECT *,url as url_visited FROM moz_historyvisits, moz_places WHERE moz_historyvisits.place_id=moz_places.id
   - name: userRegex
     default: .
+    type: regex
 
 precondition: SELECT OS From info() where OS = 'windows'
 

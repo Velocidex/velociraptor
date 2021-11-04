@@ -13,6 +13,7 @@ parameters:
      default: HKEY_USERS\*\Software\Sysinternals\*
    - name: userRegex
      default: .
+     type: regex
 
 sources:
   - precondition:

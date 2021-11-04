@@ -17,8 +17,10 @@ parameters:
    default: c:/Windows/System32/Tasks/**
  - name: ArgumentRegex
    default: ThisIsAUniqueName
+   type: regex
  - name: CommandRegEx
    default: ThisIsAUniqueName
+   type: regex
  - name: ReallyDoIt
    type: bool
    default: N

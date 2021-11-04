@@ -1,24 +1,26 @@
 name: Linux.Sys.BashHistory
 author: "Matt Green - @mgreen27"
 description: |
-  This artifact enables grep of Bash and alternate shell history files.  
-  
-  It can also be used to target other files located in the user profile such as 
-  *_profile and *rc files.  
-  shell history: /{root,home/*}/.*_history  
-  profile: /{root,home/*}/.*_profile  
-  *rc file: /{root,home/*}/.*rc  
-  
+  This artifact enables grep of Bash and alternate shell history files.
+
+  It can also be used to target other files located in the user profile such as
+  *_profile and *rc files.
+  shell history: /{root,home/*}/.*_history
+  profile: /{root,home/*}/.*_profile
+  *rc file: /{root,home/*}/.*rc
+
   tags: .bash_history .bash_profile .bashrc
-  
-  
+
+
 parameters:
   - name: TargetGlob
     default: /{root,home/*}/.*_history
   - name: SearchRegex
+    type: regex
     description: "Regex of strings to search in line."
     default: '.'
   - name: WhitelistRegex
+    type: regex
     description: "Regex of strings to leave out of output."
     default:
 
@@ -29,7 +31,7 @@ sources:
       SELECT * FROM foreach(row=files,
           query={
               SELECT Line, FullPath FROM parse_lines(filename=FullPath)
-              WHERE 
+              WHERE
                 Line =~ SearchRegex
                 AND NOT if(condition= WhitelistRegex,
                     then= Line =~ WhitelistRegex,
