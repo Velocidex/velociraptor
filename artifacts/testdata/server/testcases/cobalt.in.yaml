@@ -7,3 +7,7 @@ Queries:
   - LET Encoded = SELECT Data FROM read_file(filenames=srcDir + "/artifacts/testdata/files/CSDump.bin")
   - SELECT Rule,Hash,Offset,Xor,DecodedConfig,DecodedData
     FROM Artifact.Windows.Carving.CobaltStrike(TargetBytes=Encoded.Data[0],BruteXor="T", IncludeDecodedData="Y")
+
+  # tests shellcode parsing
+  - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Offset,Xor,DecodedConfig
+    FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSShellcode.bin")
