@@ -35,8 +35,10 @@ parameters:
     default:
   - name: PidRegex
     default: .
+    type: regex
   - name: ProcessRegex
     default: .
+    type: regex
   - name: ExtractBytes
     type: int
     default: 10000
