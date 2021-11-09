@@ -150,7 +150,7 @@ func (self *MemcacheFileDataStore) GetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
-	defer Instrument("read", urn)()
+	defer Instrument("read", "MemcacheFileDataStore", urn)()
 
 	err := self.cache.GetSubject(config_obj, urn, message)
 	if os.IsNotExist(errors.Cause(err)) {
@@ -180,7 +180,7 @@ func (self *MemcacheFileDataStore) SetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
-	defer Instrument("write", urn)()
+	defer Instrument("write", "MemcacheFileDataStore", urn)()
 
 	// Encode as JSON
 	var serialized_content []byte
@@ -227,7 +227,7 @@ func (self *MemcacheFileDataStore) SetSubject(
 func (self *MemcacheFileDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) error {
-	defer Instrument("delete", urn)()
+	defer Instrument("delete", "MemcacheFileDataStore", urn)()
 
 	err := self.cache.DeleteSubject(config_obj, urn)
 
@@ -257,7 +257,7 @@ func (self *MemcacheFileDataStore) ListChildren(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]api.DSPathSpec, error) {
 
-	defer Instrument("list", urn)()
+	defer Instrument("list", "MemcacheFileDataStore", urn)()
 
 	children, err := self.cache.ListChildren(config_obj, urn)
 	if err != nil || len(children) == 0 {

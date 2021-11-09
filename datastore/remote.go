@@ -27,7 +27,7 @@ func (self *RemoteDataStore) GetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
-	defer Instrument("read", urn)()
+	defer Instrument("read", "RemoteDataStore", urn)()
 
 	ctx, cancel := context.WithTimeout(context.Background(),
 		time.Duration(RPC_TIMEOUT)*time.Second)
@@ -66,7 +66,7 @@ func (self *RemoteDataStore) SetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
-	defer Instrument("write", urn)()
+	defer Instrument("write", "RemoteDataStore", urn)()
 
 	var value []byte
 	var err error
@@ -104,7 +104,7 @@ func (self *RemoteDataStore) SetSubject(
 func (self *RemoteDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) error {
-	defer Instrument("delete", urn)()
+	defer Instrument("delete", "RemoteDataStore", urn)()
 
 	ctx, cancel := context.WithTimeout(context.Background(),
 		time.Duration(RPC_TIMEOUT)*time.Second)
@@ -127,7 +127,7 @@ func (self *RemoteDataStore) ListChildren(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]api.DSPathSpec, error) {
 
-	defer Instrument("list", urn)()
+	defer Instrument("list", "RemoteDataStore", urn)()
 
 	ctx, cancel := context.WithTimeout(context.Background(),
 		time.Duration(RPC_TIMEOUT)*time.Second)

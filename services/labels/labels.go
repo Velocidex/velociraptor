@@ -84,12 +84,17 @@ func (self *Labeler) SetClock(c utils.Clock) {
 	self.Clock = c
 }
 
+// Assumption: We hold the lock entering this function.
 func (self *Labeler) getRecord(
 	config_obj *config_proto.Config, client_id string) (*CachedLabels, error) {
 	cached_any, err := self.lru.Get(client_id)
 	if err == nil {
 		return cached_any.(*CachedLabels), nil
 	}
+
+	// We did not hit the lru - fetch from the datastore but we dont
+	// need to hold the lock for that.
+	self.mu.Unlock()
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -105,8 +110,10 @@ func (self *Labeler) getRecord(
 	// instead of a dedicated record. This used to be migration code
 	// that populated labels from the index, but this is not necessary
 	// since the labels client record is the authoritative source.
-	self.preCalculatedLowCase(cached)
+	preCalculatedLowCase(cached)
 
+	// Now set back to the lru with lock
+	self.mu.Lock()
 	self.lru.Set(client_id, cached)
 
 	return cached, nil
@@ -114,7 +121,7 @@ func (self *Labeler) getRecord(
 
 // Reset internal lower cased labels from the full labels. (Lower
 // cased labels are used for quick label comparisons).
-func (self *Labeler) preCalculatedLowCase(cached *CachedLabels) {
+func preCalculatedLowCase(cached *CachedLabels) {
 	cached.lower_labels = nil
 	for _, label := range cached.record.Label {
 		cached.lower_labels = append(cached.lower_labels,
@@ -248,7 +255,7 @@ func (self *Labeler) RemoveClientLabel(
 	cached.record.Timestamp = uint64(self.Clock.Now().UnixNano())
 	cached.record.Label = new_labels
 
-	self.preCalculatedLowCase(cached)
+	preCalculatedLowCase(cached)
 
 	// Store the label in the datastore.
 	db, err := datastore.GetDB(config_obj)
