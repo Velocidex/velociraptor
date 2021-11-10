@@ -79,7 +79,7 @@ func (self *FileBaseDataStore) GetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
-	defer InstrumentWithDelay("read", urn)()
+	defer InstrumentWithDelay("read", "FileBaseDataStore", urn)()
 
 	Trace(config_obj, "GetSubject", urn)
 	serialized_content, err := readContentFromFile(
@@ -163,7 +163,7 @@ func (self *FileBaseDataStore) SetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
-	defer InstrumentWithDelay("write", urn)()
+	defer InstrumentWithDelay("write", "FileBaseDataStore", urn)()
 
 	Trace(config_obj, "SetSubject", urn)
 
@@ -187,7 +187,7 @@ func (self *FileBaseDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) error {
 
-	defer InstrumentWithDelay("delete", urn)()
+	defer InstrumentWithDelay("delete", "FileBaseDataStore", urn)()
 
 	Trace(config_obj, "DeleteSubject", urn)
 
@@ -206,7 +206,7 @@ func (self *FileBaseDataStore) DeleteSubject(
 func listChildNames(config_obj *config_proto.Config,
 	urn api.DSPathSpec) (
 	[]string, error) {
-	defer InstrumentWithDelay("list", urn)()
+	defer InstrumentWithDelay("list", "FileBaseDataStore", urn)()
 
 	return utils.ReadDirNames(
 		urn.AsDatastoreDirectory(config_obj))
@@ -215,7 +215,7 @@ func listChildNames(config_obj *config_proto.Config,
 func listChildren(config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]os.FileInfo, error) {
 
-	defer InstrumentWithDelay("list", urn)()
+	defer InstrumentWithDelay("list", "FileBaseDataStore", urn)()
 
 	children, err := utils.ReadDirUnsorted(
 		urn.AsDatastoreDirectory(config_obj))

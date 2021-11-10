@@ -109,6 +109,13 @@ func (self *Indexer) Ready() bool {
 	return self.ready
 }
 
+func (self *Indexer) Items() int {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.items
+}
+
 func (self *Indexer) AscendGreaterOrEqual(
 	record Record, iterator btree.ItemIterator) {
 	self.mu.Lock()
@@ -149,7 +156,7 @@ func (self *Indexer) Load(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> search index service... Please wait for index to load")
 
-	jobs := make(chan api.DSPathSpec, 20000)
+	jobs := make(chan api.DSPathSpec)
 	defer close(jobs)
 
 	var wg sync.WaitGroup
@@ -164,68 +171,92 @@ func (self *Indexer) Load(
 
 	// Start some workers - this needs to be large enough to avoid
 	// deadlock
-	for i := 0; i < 20; i++ {
-		go func() {
-			for urn := range jobs {
-				children, _ := db.ListChildren(config_obj, urn)
-				for _, child := range children {
-					if !child.IsDir() {
-						record := &api_proto.IndexRecord{}
-						err := db.GetSubject(config_obj, child, record)
-						if err != nil {
-							continue
-						}
+	var worker func(urn api.DSPathSpec)
 
-						// If it is a client also warm up the client
-						// info cache.
-						if strings.HasPrefix(record.Entity, "C.") {
-							services.GetHostname(record.Entity)
+	worker = func(urn api.DSPathSpec) {
+		defer wg.Done()
 
-							// Get the full record to warm up all
-							// client attributes. If the full record
-							// does not exist, then this index entry
-							// is stale - just ignore it. This can
-							// happen if the client records are
-							// removed but the index has not been
-							// updated.
-							_, err := GetApiClient(
-								ctx, config_obj, record.Entity, true)
-							if err != nil {
-								continue
-							}
-						}
-						indexer.Set(NewRecord(record))
+		children, _ := db.ListChildren(config_obj, urn)
+		for _, child := range children {
+			if !child.IsDir() {
+				record := &api_proto.IndexRecord{}
+				err := db.GetSubject(config_obj, child, record)
+				if err != nil {
+					continue
+				}
+
+				// If it is a client also warm up the client
+				// info cache.
+				if strings.HasPrefix(record.Entity, "C.") {
+					services.GetHostname(record.Entity)
+
+					// Get the full record to warm up all
+					// client attributes. If the full record
+					// does not exist, then this index entry
+					// is stale - just ignore it. This can
+					// happen if the client records are
+					// removed but the index has not been
+					// updated.
+					_, err := GetApiClient(
+						ctx, config_obj, record.Entity, true)
+					if err != nil {
 						continue
 					}
-
-					// Push another job
-					wg.Add(1)
-
-					select {
-					case <-subctx.Done():
-						return
-
-					case jobs <- child:
-
-					case <-time.After(time.Second):
-						// We failed to schedule recursively, give up
-						// and retry later.
-						wg.Done()
-						break
-					}
 				}
-				// Job done.
+				indexer.Set(NewRecord(record))
+				continue
+			}
+
+			// Push another job to a worker
+			wg.Add(1)
+
+			select {
+			case <-subctx.Done():
 				wg.Done()
+				return
+
+				// If we can push it to a worker we are done here -
+				// move to the next worker.
+			case jobs <- child:
+
+				// We can not push to a different worker - i guess we
+				// just to it ourselves.
+			default:
+				worker(child)
+			}
+		}
+	}
+
+	// Start 20 workers
+	for i := 0; i < 200; i++ {
+		go func() {
+			for urn := range jobs {
+				worker(urn)
 			}
 		}()
 	}
 
+	go func() {
+		for {
+			select {
+			case <-subctx.Done():
+				return
+
+			case <-time.After(time.Second):
+				logger.Debug("Loaded %v index entries.", self.Items())
+			}
+		}
+	}()
+
 	// Kick it off at the top level
+	now := time.Now()
+
 	wg.Add(1)
 	jobs <- paths.CLIENT_INDEX_URN
 
 	wg.Wait()
-	logger.Info("<green>Indexing service</> search index loaded successfully")
+	logger.Info("<green>Indexing service</> search index loaded %v items in %v",
+		self.Items(), time.Now().Sub(now))
 
 	self.mu.Lock()
 	self.ready = true

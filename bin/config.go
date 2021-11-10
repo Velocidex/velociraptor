@@ -343,8 +343,12 @@ func doDumpApiClientConfig() {
 
 	switch config_obj.API.BindScheme {
 	case "tcp":
+		hostname := config_obj.API.Hostname
+		if hostname == "" {
+			hostname = config_obj.API.BindAddress
+		}
 		api_client_config.ApiConnectionString = fmt.Sprintf("%s:%v",
-			config_obj.API.BindAddress, config_obj.API.BindPort)
+			hostname, config_obj.API.BindPort)
 	case "unix":
 		api_client_config.ApiConnectionString = fmt.Sprintf("unix://%s",
 			config_obj.API.BindAddress)

@@ -197,7 +197,7 @@ func (self *MemcacheDatastore) GetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
-	defer Instrument("read", urn)()
+	defer Instrument("read", "MemcacheDatastore", urn)()
 
 	path := urn.AsClientPath()
 	bulk_data_any, err := self.data_cache.Get(path)
@@ -259,7 +259,7 @@ func (self *MemcacheDatastore) SetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
-	defer Instrument("write", urn)()
+	defer Instrument("write", "MemcacheDatastore", urn)()
 
 	var value []byte
 	var err error
@@ -307,7 +307,7 @@ func (self *MemcacheDatastore) SetData(
 func (self *MemcacheDatastore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) error {
-	defer Instrument("delete", urn)()
+	defer Instrument("delete", "MemcacheDatastore", urn)()
 
 	err := self.data_cache.Remove(urn.AsClientPath())
 	if err != nil {
@@ -354,7 +354,7 @@ func (self *MemcacheDatastore) ListChildren(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]api.DSPathSpec, error) {
 
-	defer Instrument("list", urn)()
+	defer Instrument("list", "MemcacheDatastore", urn)()
 
 	path := urn.AsDatastoreDirectory(config_obj)
 	md, pres := self.dir_cache.Get(path)
