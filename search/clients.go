@@ -108,21 +108,8 @@ func FastGetApiClient(
 		return nil, err
 	}
 
-	if client_info.Info == nil {
+	if client_info == nil {
 		return nil, errors.New("Invalid client_info")
-	}
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	ping_info := &actions_proto.ClientInfo{}
-	client_path_manager := paths.NewClientPathManager(client_id)
-	err = db.GetSubject(config_obj, client_path_manager.Ping(), ping_info)
-	if err != nil {
-		// Offline clients do not have ping files, so
-		// this is not actually an error.
 	}
 
 	labeler := services.GetLabeler()
@@ -134,18 +121,18 @@ func FastGetApiClient(
 		ClientId: client_id,
 		Labels:   labeler.GetClientLabels(config_obj, client_id),
 		AgentInformation: &api_proto.AgentInformation{
-			Version: client_info.Info.ClientVersion,
-			Name:    client_info.Info.ClientName,
+			Version: client_info.ClientVersion,
+			Name:    client_info.ClientName,
 		},
 		OsInfo: &api_proto.Uname{
-			System:   client_info.Info.System,
-			Hostname: client_info.Info.Hostname,
-			Release:  client_info.Info.Release,
-			Machine:  client_info.Info.Architecture,
-			Fqdn:     client_info.Info.Fqdn,
+			System:   client_info.System,
+			Hostname: client_info.Hostname,
+			Release:  client_info.Release,
+			Machine:  client_info.Architecture,
+			Fqdn:     client_info.Fqdn,
 		},
-		LastSeenAt:            ping_info.Ping,
-		LastIp:                ping_info.IpAddress,
-		LastInterrogateFlowId: client_info.Info.LastInterrogateFlowId,
+		LastSeenAt:            client_info.Ping,
+		LastIp:                client_info.IpAddress,
+		LastInterrogateFlowId: client_info.LastInterrogateFlowId,
 	}, nil
 }

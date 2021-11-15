@@ -153,6 +153,9 @@ type FSPathSpec interface {
 
 	SetType(t PathType) FSPathSpec
 
+	Tag() string
+	SetTag(string) FSPathSpec
+
 	// Adds a child maintaining safety (i.e. for a safe path keeps
 	// the path safe, and for unsafe paths keep them as unsafe).
 	AddChild(child ...string) FSPathSpec

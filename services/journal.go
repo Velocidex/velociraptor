@@ -64,4 +64,9 @@ type JournalService interface {
 	// Push the rows to the event artifact queue
 	PushRowsToArtifact(config_obj *config_proto.Config,
 		rows []*ordereddict.Dict, name, client_id, flows_id string) error
+
+	// Push the rows to the event artifact queue with a potential
+	// unspecified delay.
+	PushRowsToArtifactAsync(config_obj *config_proto.Config,
+		row *ordereddict.Dict, name string)
 }

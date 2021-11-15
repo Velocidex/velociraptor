@@ -1,6 +1,8 @@
 package datastore
 
 import (
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -19,7 +21,6 @@ var (
 	)
 
 	// Simulate running on a very slow filesystem (EFS)
-	//inject_time = 70
 	inject_time = 0
 )
 
@@ -56,4 +57,14 @@ func InstrumentWithDelay(
 	}
 
 	return timer.ObserveDuration
+}
+
+func init() {
+	delay_str, pres := os.LookupEnv("VELOCIRAPTOR_SLOW_FILESYSTEM")
+	if pres {
+		delay, err := strconv.Atoi(delay_str)
+		if err == nil {
+			inject_time = delay
+		}
+	}
 }

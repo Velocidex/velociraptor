@@ -148,7 +148,7 @@ func (self DSPathSpec) AsDatastoreFilename(
 }
 
 func (self DSPathSpec) AsFilestorePath() api.FSPathSpec {
-	return &FSPathSpec{DSPathSpec{
+	return &FSPathSpec{DSPathSpec: DSPathSpec{
 		components: self.components,
 		path_type:  api.PATH_TYPE_FILESTORE_JSON,
 		is_safe:    self.is_safe,

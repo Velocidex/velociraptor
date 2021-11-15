@@ -350,7 +350,7 @@ func control(server_obj *Server) http.Handler {
 				false, // drain_requests_for_client
 			)
 			if err != nil {
-				server_obj.Error("Error:", err)
+				server_obj.Error("Error: %v", err)
 			} else {
 				sync <- response
 			}
@@ -477,7 +477,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			true, // drain_requests_for_client
 		)
 		if err != nil {
-			server_obj.Error("Error:", err)
+			server_obj.Error("Error: %v", err)
 			return
 		}
 
@@ -509,7 +509,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 					true, // drain_requests_for_client
 				)
 				if err != nil {
-					server_obj.Error("Error:", err)
+					server_obj.Error("Error: %v", err)
 					return
 				}
 

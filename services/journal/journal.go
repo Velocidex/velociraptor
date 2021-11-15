@@ -92,6 +92,14 @@ func (self *JournalService) AppendToResultSet(
 	return nil
 }
 
+func (self *JournalService) PushRowsToArtifactAsync(
+	config_obj *config_proto.Config, row *ordereddict.Dict,
+	artifact string) {
+
+	self.PushRowsToArtifact(config_obj, []*ordereddict.Dict{row},
+		artifact, "server", "")
+}
+
 func (self *JournalService) PushRowsToArtifact(
 	config_obj *config_proto.Config, rows []*ordereddict.Dict,
 	artifact, client_id, flows_id string) error {
@@ -123,6 +131,7 @@ func (self *JournalService) PushRowsToArtifact(
 func (self *JournalService) Start(config_obj *config_proto.Config) error {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Journal service.")
+
 	return nil
 }
 
@@ -136,9 +145,10 @@ func StartJournalService(
 		service := &ReplicationService{
 			config_obj: config_obj,
 			locks:      make(map[string]*sync.Mutex),
+			batch:      make(map[string][]*ordereddict.Dict),
 		}
 
-		err := service.Start(ctx, wg)
+		err := service.Start(ctx, config_obj, wg)
 		if err == nil {
 			services.RegisterJournal(service)
 			return nil

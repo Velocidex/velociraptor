@@ -95,6 +95,7 @@ func (self *ApiServer) ListChildren(
 		result.Children = append(result.Children, &api_proto.DSPathSpec{
 			Components: child.Components(),
 			PathType:   int64(child.Type()),
+			Tag:        child.Tag(),
 			IsDir:      child.IsDir(),
 		})
 	}
@@ -128,5 +129,7 @@ func getURN(in *api_proto.DataRequest) api.DSPathSpec {
 	}
 
 	return path_specs.NewUnsafeDatastorePath(
-		path_spec.Components...).SetType(api.PathType(path_spec.PathType))
+		path_spec.Components...).
+		SetType(api.PathType(path_spec.PathType)).
+		SetTag(path_spec.Tag)
 }

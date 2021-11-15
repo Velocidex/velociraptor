@@ -26,7 +26,7 @@ var (
 // the collection is terminated and the client is notified that it is
 // cancelled.
 func checkContextResourceLimits(config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext) (err error) {
+	collection_context *CollectionContext) (err error) {
 
 	// There are no resource limits on event flows.
 	if collection_context.SessionId == constants.MONITORING_WELL_KNOWN_FLOW {

@@ -40,6 +40,7 @@ func (self *RemoteDataStore) GetSubject(
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),
+			Tag:        urn.Tag(),
 		}})
 
 	if err != nil {
@@ -96,6 +97,7 @@ func (self *RemoteDataStore) SetSubject(
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),
+			Tag:        urn.Tag(),
 		}})
 
 	return err
@@ -117,6 +119,7 @@ func (self *RemoteDataStore) DeleteSubject(
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),
+			Tag:        urn.Tag(),
 		}})
 
 	return err
@@ -140,6 +143,7 @@ func (self *RemoteDataStore) ListChildren(
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),
+			Tag:        urn.Tag(),
 		}})
 
 	if err != nil {

@@ -18,6 +18,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -27,16 +28,19 @@ import (
 )
 
 var (
-	debug_flag = app.Flag("debug", "Enables debug and profile server.").Bool()
+	debug_flag      = app.Flag("debug", "Enables debug and profile server.").Bool()
+	debug_flag_port = app.Flag("debug_port", "Port for the debug server.").
+			Default("6060").Int64()
 )
 
 func initDebugServer(config_obj *config_proto.Config) error {
 	if *debug_flag {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Info("<green>Starting</> debug server on <red>http://127.0.0.1:6060/debug/pprof")
+		logger.Info("<green>Starting</> debug server on <red>http://127.0.0.1:%v/debug/pprof", *debug_flag_port)
 
 		go func() {
-			log.Println(http.ListenAndServe("127.0.0.1:6060", nil))
+			log.Println(http.ListenAndServe(
+				fmt.Sprintf("127.0.0.1:%d", *debug_flag_port), nil))
 		}()
 	}
 	return nil

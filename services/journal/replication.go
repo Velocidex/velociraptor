@@ -5,6 +5,7 @@ package journal
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"sync"
@@ -57,6 +58,9 @@ type ReplicationService struct {
 	mu            sync.Mutex
 	locks         map[string]*sync.Mutex
 	retryDuration time.Duration
+
+	// Store rows for async push
+	batch map[string][]*ordereddict.Dict
 }
 
 func (self *ReplicationService) RetryDuration() time.Duration {
@@ -107,8 +111,46 @@ func (self *ReplicationService) pumpEventFromBufferFile() {
 	}
 }
 
+func (self *ReplicationService) startAsyncLoop(
+	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) {
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case <-time.After(time.Second):
+				// Take a copy to work on without a lock.
+				todo := make(map[string][]*ordereddict.Dict)
+				self.mu.Lock()
+				fmt.Printf("Checking async cache: %v\n", len(self.batch))
+
+				for k, v := range self.batch {
+					if len(v) > 0 {
+						todo[k] = v
+					}
+					delete(self.batch, k)
+				}
+				self.mu.Unlock()
+
+				for k, v := range todo {
+					// Ignore errors since there is no way to report
+					// to the caller.
+					fmt.Printf("Pushing %v rows to %v\n", len(v), k)
+					_ = self.PushRowsToArtifact(config_obj, v, k, "server", "")
+				}
+			}
+		}
+	}()
+}
+
 func (self *ReplicationService) Start(
-	ctx context.Context, wg *sync.WaitGroup) (err error) {
+	ctx context.Context,
+	config_obj *config_proto.Config, wg *sync.WaitGroup) (err error) {
 
 	// If we are the master node we do not replicate anywhere.
 	api_client, closer, err := services.GetFrontendManager().
@@ -137,34 +179,40 @@ func (self *ReplicationService) Start(
 
 	go self.pumpEventFromBufferFile()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer self.Close()
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			defer self.Close()
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
-
-				// Read events from the channel and
-				// try to send them
-			case request, ok := <-self.sender:
-				if !ok {
+			for {
+				select {
+				case <-ctx.Done():
 					return
-				}
-				_, err = self.api_client.PushEvents(ctx, request)
-				if err != nil {
-					replicationTotalSendErrors.Inc()
 
-					// Attempt to push the events
-					// to the buffer file instead
-					// for later delivery.
-					_ = self.Buffer.Enqueue(request)
+					// Read events from the channel and
+					// try to send them
+				case request, ok := <-self.sender:
+					if !ok {
+						return
+					}
+					_, err = self.api_client.PushEvents(ctx, request)
+					if err != nil {
+						replicationTotalSendErrors.Inc()
+
+						// Attempt to push the events
+						// to the buffer file instead
+						// for later delivery.
+						_ = self.Buffer.Enqueue(request)
+					}
 				}
 			}
-		}
-	}()
+		}()
+	}
+
+	// Startup the async writer. This is used to queue up multiple
+	// small events to write in larger chunks for gRPC efficiency.
+	self.startAsyncLoop(ctx, wg, config_obj)
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Debug("<green>Starting</> Replication service to master frontend at %v",
@@ -207,6 +255,21 @@ func (self *ReplicationService) AppendToResultSet(
 	rs_writer.Close()
 
 	return nil
+}
+
+func (self *ReplicationService) PushRowsToArtifactAsync(
+	config_obj *config_proto.Config, row *ordereddict.Dict,
+	artifact string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	queue, pres := self.batch[artifact]
+	if !pres {
+		queue = make([]*ordereddict.Dict, 0)
+	}
+
+	queue = append(queue, row)
+	self.batch[artifact] = queue
 }
 
 func (self *ReplicationService) PushRowsToArtifact(

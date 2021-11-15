@@ -37,6 +37,7 @@ package flows
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
@@ -141,15 +142,13 @@ func ForemanProcessMessage(
 	// Record the latest timestamp
 	latest_timestamp := uint64(0)
 	for _, hunt := range hunts {
+		fmt.Printf("Notifying %v\n", client_id)
 		// Notify the hunt manager that we need to hunt this client.
-		err = journal.PushRowsToArtifact(config_obj,
-			[]*ordereddict.Dict{ordereddict.NewDict().
+		journal.PushRowsToArtifactAsync(config_obj,
+			ordereddict.NewDict().
 				Set("HuntId", hunt.HuntId).
 				Set("ClientId", client_id),
-			}, "System.Hunt.Participation", client_id, "")
-		if err != nil {
-			return err
-		}
+			"System.Hunt.Participation")
 
 		if hunt.StartTime > latest_timestamp {
 			latest_timestamp = hunt.StartTime

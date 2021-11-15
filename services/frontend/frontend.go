@@ -264,6 +264,7 @@ func (self MasterFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
 			ApiServer:         true,
 			FrontendServer:    true,
 			GuiServer:         true,
+			IndexServer:       true,
 		}
 	}
 

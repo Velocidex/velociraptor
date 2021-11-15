@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/broadcast"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
@@ -60,6 +61,11 @@ func getServerServices(config_obj *config_proto.Config) *config_proto.ServerServ
 }
 
 func StartupEssentialServices(sm *services.Service) error {
+	err := grpc_client.Init(sm.Ctx, sm.Config)
+	if err != nil {
+		return err
+	}
+
 	j, _ := services.GetJournal()
 	if j == nil {
 		err := sm.Start(journal.StartJournalService)
@@ -132,9 +138,11 @@ func StartupFrontendServices(sm *services.Service) error {
 		return err
 	}
 
-	err = sm.Start(indexing.StartIndexingService)
-	if err != nil {
-		return err
+	if spec.IndexServer {
+		err = sm.Start(indexing.StartIndexingService)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Check everything is ok before we can start.

@@ -398,11 +398,12 @@ func (self *HuntManager) participateInAllHunts(ctx context.Context,
 			return nil
 		}
 
-		return journal.PushRowsToArtifact(config_obj,
-			[]*ordereddict.Dict{ordereddict.NewDict().
+		journal.PushRowsToArtifactAsync(config_obj,
+			ordereddict.NewDict().
 				Set("HuntId", hunt.HuntId).
-				Set("ClientId", client_id)},
-			"System.Hunt.Participation", "server", "")
+				Set("ClientId", client_id), "System.Hunt.Participation")
+
+		return nil
 	})
 }
 
@@ -462,10 +463,12 @@ func (self *HuntManager) ProcessParticipation(
 	// Ignore stopped hunts.
 	if hunt_obj.Stats.Stopped ||
 		hunt_obj.State != api_proto.Hunt_RUNNING {
-		return errors.New("hunt is stopped")
+		// Hunt is stopped.
+		return nil
 
 	} else if !huntMatchesOS(hunt_obj, client_info) {
-		return errors.New("Hunt does not match OS condition")
+		// Hunt does not match OS condition
+		return nil
 
 		// Ignore hunts with label conditions which
 		// exclude this client.
@@ -577,13 +580,14 @@ func huntMatchesOS(hunt_obj *api_proto.Hunt, client_info *services.ClientInfo) b
 		return true
 	}
 
+	os := client_info.OS()
 	switch os_condition.Os {
 	case api_proto.HuntOsCondition_WINDOWS:
-		return client_info.OS == services.Windows
+		return os == services.Windows
 	case api_proto.HuntOsCondition_LINUX:
-		return client_info.OS == services.Linux
+		return os == services.Linux
 	case api_proto.HuntOsCondition_OSX:
-		return client_info.OS == services.MacOS
+		return os == services.MacOS
 	}
 
 	return true
@@ -704,7 +708,7 @@ func scheduleHuntOnClient(
 	// Notify the client that the hunt applies to it.
 	notifier := services.GetNotifier()
 	if notifier != nil {
-		_ = notifier.NotifyListener(config_obj, client_id)
+		notifier.NotifyListenerAsync(config_obj, client_id)
 	}
 
 	return nil

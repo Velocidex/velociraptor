@@ -34,25 +34,11 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/accessors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
-)
-
-var (
-	openCounter = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "file_store_open",
-		Help: "Total number of filestore open operations.",
-	})
-
-	listCounter = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "file_store_list",
-		Help: "Total number of filestore list children operations.",
-	})
 )
 
 const (
@@ -70,6 +56,9 @@ func (self *DirectoryFileWriter) Size() (int64, error) {
 }
 
 func (self *DirectoryFileWriter) Write(data []byte) (int, error) {
+
+	defer api.InstrumentWithDelay("write", "DirectoryFileWriter", nil)()
+
 	_, err := self.Fd.Seek(0, os.SEEK_END)
 	if err != nil {
 		return 0, err
@@ -104,7 +93,7 @@ func (self *DirectoryFileStore) Move(src, dest api.FSPathSpec) error {
 func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 	[]api.FileInfo, error) {
 
-	listCounter.Inc()
+	defer api.InstrumentWithDelay("list", "DirectoryFileStore", dirname)()
 
 	file_path := dirname.AsFilestoreDirectory(self.config_obj)
 	files, err := utils.ReadDir(file_path)
@@ -138,7 +127,9 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 func (self *DirectoryFileStore) ReadFile(
 	filename api.FSPathSpec) (api.FileReader, error) {
 	file_path := filename.AsFilestoreFilename(self.config_obj)
-	openCounter.Inc()
+
+	defer api.InstrumentWithDelay("open_read", "DirectoryFileStore", filename)()
+
 	file, err := os.Open(file_path)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -151,6 +142,9 @@ func (self *DirectoryFileStore) ReadFile(
 
 func (self *DirectoryFileStore) StatFile(
 	filename api.FSPathSpec) (api.FileInfo, error) {
+
+	defer api.InstrumentWithDelay("stat", "DirectoryFileStore", filename)()
+
 	file_path := filename.AsFilestoreFilename(self.config_obj)
 	file, err := os.Stat(file_path)
 	if err != nil {
@@ -164,6 +158,9 @@ func (self *DirectoryFileStore) StatFile(
 
 func (self *DirectoryFileStore) WriteFile(
 	filename api.FSPathSpec) (api.FileWriter, error) {
+
+	defer api.InstrumentWithDelay("open_write", "DirectoryFileStore", filename)()
+
 	file_path := filename.AsFilestoreFilename(self.config_obj)
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {
@@ -172,7 +169,6 @@ func (self *DirectoryFileStore) WriteFile(
 		return nil, err
 	}
 
-	openCounter.Inc()
 	file, err := os.OpenFile(file_path, os.O_RDWR|os.O_CREATE, 0700)
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
@@ -185,6 +181,9 @@ func (self *DirectoryFileStore) WriteFile(
 }
 
 func (self *DirectoryFileStore) Delete(filename api.FSPathSpec) error {
+
+	defer api.InstrumentWithDelay("delete", "DirectoryFileStore", filename)()
+
 	file_path := filename.AsFilestoreFilename(self.config_obj)
 	err := os.Remove(file_path)
 	if err != nil {

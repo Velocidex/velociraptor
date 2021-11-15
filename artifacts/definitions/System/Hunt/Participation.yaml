@@ -5,7 +5,8 @@ description: |
 
      Note: This is an automated system artifact. You do not need to start it.
 
-type: CLIENT_EVENT
+#type: SERVER_EVENT
+type: INTERNAL
 
 reports:
   - type: MONITORING_DAILY

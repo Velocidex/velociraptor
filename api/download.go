@@ -248,7 +248,7 @@ func getTransformer(
 
 			flow, err := flows.LoadCollectionContext(config_obj, client_id, flow_id)
 			if err != nil {
-				flow = &flows_proto.ArtifactCollectorContext{}
+				flow = flows.NewCollectionContext()
 			}
 
 			return ordereddict.NewDict().

@@ -26,20 +26,23 @@ func (self RealClock) Now() time.Time {
 }
 
 type MockClock struct {
-	MockNow  time.Time
-	duration time.Duration
+	MockNow time.Time
 }
 
-func (self MockClock) Now() time.Time {
+func (self *MockClock) Now() time.Time {
 	return self.MockNow
 }
 
-func (self MockClock) After(d time.Duration) <-chan time.Time {
-	return time.After(self.duration)
+// Advance the time and return immediately for sleeps.
+func (self *MockClock) After(d time.Duration) <-chan time.Time {
+	self.MockNow = self.MockNow.Add(d)
+	res := make(chan time.Time)
+	close(res)
+	return res
 }
 
-func (self MockClock) Sleep(d time.Duration) {
-	time.Sleep(self.duration)
+func (self *MockClock) Sleep(d time.Duration) {
+	self.MockNow = self.MockNow.Add(d)
 }
 
 // A clock that increments each time someone calls Now()

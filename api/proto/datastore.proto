@@ -9,6 +9,7 @@ message DSPathSpec {
 
     int64 path_type = 2;
     bool is_dir = 3;
+    string tag = 4;
 }
 
 message DataRequest {

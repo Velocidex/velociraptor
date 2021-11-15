@@ -66,8 +66,8 @@ func doRebuildIndex() {
 			search.SetIndex(config_obj, client_id, "host:"+client_info.Hostname)
 		}
 
-		if client_info.Info.Fqdn != "" {
-			search.SetIndex(config_obj, client_id, "host:"+client_info.Info.Fqdn)
+		if client_info.Fqdn != "" {
+			search.SetIndex(config_obj, client_id, "host:"+client_info.Fqdn)
 		}
 
 		for _, label := range labels {

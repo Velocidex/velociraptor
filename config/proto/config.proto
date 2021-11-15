@@ -620,7 +620,7 @@ message DatastoreConfig {
     int64 memcache_write_mutation_buffer = 5;
 
     // Number of writing threads - increase for high latency
-    // filesystems.
+    // filesystems (default 100).
     int64 memcache_write_mutation_writers = 6;
 }
 
@@ -714,6 +714,7 @@ message ServerServicesConfig {
    bool api_server = 13;
    bool frontend_server = 14;
    bool gui_server = 15;
+   bool index_server = 16;
 }
 
 message Defaults {

@@ -60,6 +60,24 @@ var (
 	notModified = errors.New("Not modified")
 )
 
+type CollectionContext struct {
+	flows_proto.ArtifactCollectorContext
+	monitoring_batch map[string][]*ordereddict.Dict
+}
+
+func (self *CollectionContext) batchRows(flow_id string, rows []*ordereddict.Dict) {
+	batch, _ := self.monitoring_batch[flow_id]
+	batch = append(batch, rows...)
+	self.monitoring_batch[flow_id] = batch
+}
+
+func NewCollectionContext() *CollectionContext {
+	return &CollectionContext{
+		ArtifactCollectorContext: flows_proto.ArtifactCollectorContext{},
+		monitoring_batch:         make(map[string][]*ordereddict.Dict),
+	}
+}
+
 // closeContext is called after all messages from the clients are
 // processed in this group. Client messages are sent in groups inside
 // the same POST request. Most of the time they belong to the same
@@ -77,7 +95,7 @@ var (
 // once a status is received and not again.
 func closeContext(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext) error {
+	collection_context *CollectionContext) error {
 
 	// Context is not dirty - nothing to do.
 	if !collection_context.Dirty || collection_context.ClientId == "" {
@@ -107,6 +125,14 @@ func closeContext(
 	if len(collection_context.UploadedFiles) > 0 {
 		err := flushContextUploadedFiles(
 			config_obj, collection_context)
+		if err != nil {
+			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+			collection_context.Status = err.Error()
+		}
+	}
+
+	if len(collection_context.monitoring_batch) > 0 {
+		err = flushMonitoringLogs(config_obj, collection_context)
 		if err != nil {
 			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
 			collection_context.Status = err.Error()
@@ -167,7 +193,7 @@ func closeContext(
 // in memory and then flushes it all when done.
 func flushContextLogs(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext) error {
+	collection_context *CollectionContext) error {
 
 	// Handle monitoring flow specially.
 	if collection_context.SessionId == constants.MONITORING_WELL_KNOWN_FLOW {
@@ -203,7 +229,7 @@ func flushContextLogs(
 
 func flushContextUploadedFiles(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext) error {
+	collection_context *CollectionContext) error {
 
 	flow_path_manager := paths.NewFlowPathManager(
 		collection_context.ClientId,
@@ -234,17 +260,18 @@ func flushContextUploadedFiles(
 // Load the collector context from storage.
 func LoadCollectionContext(
 	config_obj *config_proto.Config,
-	client_id, flow_id string) (*flows_proto.ArtifactCollectorContext, error) {
+	client_id, flow_id string) (*CollectionContext, error) {
 
 	if flow_id == constants.MONITORING_WELL_KNOWN_FLOW {
-		return &flows_proto.ArtifactCollectorContext{
-			SessionId: flow_id,
-			ClientId:  client_id,
-		}, nil
+		result := NewCollectionContext()
+		result.SessionId = flow_id
+		result.ClientId = client_id
+
+		return result, nil
 	}
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	collection_context := &flows_proto.ArtifactCollectorContext{}
+	collection_context := NewCollectionContext()
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -268,7 +295,7 @@ func LoadCollectionContext(
 // Process an incoming message from the client.
 func ArtifactCollectorProcessOneMessage(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext,
+	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
 
 	err := FailIfError(config_obj, collection_context, message)
@@ -387,7 +414,7 @@ func ArtifactCollectorProcessOneMessage(
 
 func IsRequestComplete(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext,
+	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) (bool, error) {
 
 	// Nope request is not complete.
@@ -415,7 +442,7 @@ func IsRequestComplete(
 
 func FailIfError(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext,
+	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
 
 	// Not a status message
@@ -449,7 +476,7 @@ func FailIfError(
 
 func appendUploadDataToFile(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext,
+	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
 
 	file_buffer := message.FileBuffer
@@ -583,7 +610,7 @@ func appendUploadDataToFile(
 // Generate a flow log from a client LogMessage proto. Deobfuscates
 // the message.
 func LogMessage(config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext,
+	collection_context *CollectionContext,
 	msg *crypto_proto.LogMessage) {
 	log_msg := artifacts.DeobfuscateString(config_obj, msg.Message)
 	artifact_name := artifacts.DeobfuscateString(config_obj, msg.Artifact)
@@ -597,7 +624,7 @@ func LogMessage(config_obj *config_proto.Config,
 }
 
 func Log(config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext,
+	collection_context *CollectionContext,
 	log_msg string) {
 	log_msg = artifacts.DeobfuscateString(config_obj, log_msg)
 	collection_context.Logs = append(
@@ -611,14 +638,14 @@ func Log(config_obj *config_proto.Config,
 type FlowRunner struct {
 	mu sync.Mutex
 
-	context_map map[string]*flows_proto.ArtifactCollectorContext
+	context_map map[string]*CollectionContext
 	config_obj  *config_proto.Config
 }
 
 func NewFlowRunner(config_obj *config_proto.Config) *FlowRunner {
 	return &FlowRunner{
 		config_obj:  config_obj,
-		context_map: make(map[string]*flows_proto.ArtifactCollectorContext),
+		context_map: make(map[string]*CollectionContext),
 	}
 }
 

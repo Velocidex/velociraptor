@@ -13,6 +13,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
+	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
@@ -82,18 +83,22 @@ func (self *TestSuite) SetupTest() {
 	var err error
 	os.Setenv("VELOCIRAPTOR_CONFIG", SERVER_CONFIG)
 
-	self.ConfigObj, err = new(config.Loader).
-		WithEnvLiteralLoader("VELOCIRAPTOR_CONFIG").WithRequiredFrontend().
-		WithWriteback().WithVerbose(true).
-		LoadAndValidate()
-	require.NoError(self.T(), err)
+	if self.ConfigObj == nil {
+		self.ConfigObj, err = new(config.Loader).
+			WithEnvLiteralLoader("VELOCIRAPTOR_CONFIG").WithRequiredFrontend().
+			WithWriteback().WithVerbose(true).
+			LoadAndValidate()
+		require.NoError(self.T(), err)
 
-	self.ConfigObj.Frontend.DoNotCompressArtifacts = true
+		self.ConfigObj.Frontend.IsMaster = true
+		self.ConfigObj.Frontend.DoNotCompressArtifacts = true
+	}
 
 	// Start essential services.
 	self.Ctx, self.cancel = context.WithTimeout(context.Background(), time.Second*60)
 	self.Sm = services.NewServiceManager(self.Ctx, self.ConfigObj)
 
+	require.NoError(self.T(), self.Sm.Start(frontend.StartFrontendService))
 	require.NoError(self.T(), self.Sm.Start(journal.StartJournalService))
 	require.NoError(self.T(), self.Sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.Sm.Start(inventory.StartInventoryService))

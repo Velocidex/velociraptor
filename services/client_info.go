@@ -35,26 +35,28 @@ func RegisterClientInfoManager(m ClientInfoManager) {
 }
 
 type ClientInfo struct {
-	Hostname string
-	OS       ClientOS
-
-	Info *actions_proto.ClientInfo
+	// The original info from disk
+	actions_proto.ClientInfo
 }
 
-func (self ClientInfo) OSString() string {
-	switch self.OS {
-	case Windows:
-		return "windows"
-	case Linux:
-		return "Linux"
-	case MacOS:
-		return "MacOS"
+func (self ClientInfo) OS() ClientOS {
+	switch self.System {
+	case "windows":
+		return Windows
+	case "linux":
+		return Linux
+	case "darwin":
+		return MacOS
 	}
-	return "Unknown"
+	return Unknown
 }
 
 type ClientInfoManager interface {
+	UpdatePing(client_id, ip_address string) error
 	Get(client_id string) (*ClientInfo, error)
+
+	// Remove client id from the cache - this is needed when the
+	// record chages and we need to force a read from storage.
 	Flush(client_id string)
 }
 
