@@ -92,7 +92,7 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 			reject_handler.ServeHTTP(w, r)
 			return
 		}
-
+		json.Dump(sa.GetAttributes())
 		username := sa.GetAttributes().Get(userAttr(config_obj))
 		user_record, err := users.GetUser(config_obj, username)
 
