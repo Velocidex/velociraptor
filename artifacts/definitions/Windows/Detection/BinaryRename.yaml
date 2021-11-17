@@ -58,7 +58,9 @@ parameters:
         XXXXX,MEGAcmdShell.exe,MEGAcmdShell,MEGAcmdShell
         XXXXX,pCloud.exe,pCloud.exe,pCloud cloud storage
         XXXXX,,pCloud Drive.exe,pCloud setup
-
+        procdump.exe,ProcDump,procdump,Sysinternals process dump utility
+        procdump64.exe,ProcDump,procdump,Sysinternals process dump utility
+        
 sources:
   - query: |
       LET bins <= SELECT
