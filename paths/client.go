@@ -28,7 +28,9 @@ func NewClientPathManager(client_id string) *ClientPathManager {
 
 // We store the last time we saw the client in this location.
 func (self ClientPathManager) Ping() api.DSPathSpec {
-	return self.root.AddChild("ping").SetTag("ClientPing")
+	return self.root.AddChild("ping").
+		SetType(api.PATH_TYPE_DATASTORE_JSON).
+		SetTag("ClientPing")
 }
 
 // Keep a record of all the client's labels.

@@ -87,8 +87,10 @@ func (self *MemcacheFileWriter) Truncate() error {
 	return nil
 }
 
+// Closing the file does not trigger a flush - we just return a
+// success status and wait for the file to be written asynchronously.
 func (self *MemcacheFileWriter) Close() error {
-	return self.Flush()
+	return nil
 }
 
 func (self *MemcacheFileWriter) Flush() error {
@@ -98,6 +100,11 @@ func (self *MemcacheFileWriter) Flush() error {
 	// to the underlying filestore occur in order).
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	// Skip a noop action.
+	if !self.truncated && len(self.buffer.Bytes()) == 0 {
+		return nil
+	}
 
 	writer, err := self.delegate.WriteFile(self.filename)
 	if err != nil {
@@ -186,6 +193,7 @@ func (self *MemcacheFileStore) WriteFileWithCompletion(
 		}
 	} else {
 		result = result_any.(*MemcacheFileWriter)
+		result.completion = completion
 	}
 
 	// Always set it so the time can be extended.

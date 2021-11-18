@@ -259,6 +259,15 @@ func (self *MemcacheDatastore) SetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
+	return self.SetSubjectWithCompletion(config_obj, urn, message, nil)
+}
+
+func (self *MemcacheDatastore) SetSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec,
+	message proto.Message,
+	completion func()) error {
+
 	defer Instrument("write", "MemcacheDatastore", urn)()
 
 	var value []byte
@@ -277,13 +286,16 @@ func (self *MemcacheDatastore) SetSubject(
 		return err
 	}
 
-	return self.SetData(config_obj, urn, value)
+	err = self.SetData(config_obj, urn, value)
+	if completion != nil {
+		completion()
+	}
+	return err
 }
 
 func (self *MemcacheDatastore) SetData(
 	config_obj *config_proto.Config,
-	urn api.DSPathSpec,
-	data []byte) (err error) {
+	urn api.DSPathSpec, data []byte) (err error) {
 
 	// Get new dir metadata
 	md, err := self.get_dir_metadata(self.dir_cache, config_obj, urn.Dir())
@@ -299,9 +311,10 @@ func (self *MemcacheDatastore) SetData(
 	parent_path := urn.Dir().AsDatastoreDirectory(config_obj)
 	self.dir_cache.Set(parent_path, md)
 
-	return self.data_cache.Set(urn.AsClientPath(), &BulkData{
+	err = self.data_cache.Set(urn.AsClientPath(), &BulkData{
 		data: data,
 	})
+	return err
 }
 
 func (self *MemcacheDatastore) DeleteSubject(
@@ -423,9 +436,13 @@ func (self *MemcacheDatastore) GetBuffer(
 
 func (self *MemcacheDatastore) SetBuffer(
 	config_obj *config_proto.Config,
-	urn api.DSPathSpec, data []byte) error {
+	urn api.DSPathSpec, data []byte, completion func()) error {
 
-	return self.SetData(config_obj, urn, data)
+	err := self.SetData(config_obj, urn, data)
+	if completion != nil {
+		completion()
+	}
+	return err
 }
 
 func (self *MemcacheDatastore) Debug(config_obj *config_proto.Config) {

@@ -3,6 +3,7 @@ package services
 import (
 	"sync"
 
+	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 )
 
@@ -37,6 +38,12 @@ func RegisterClientInfoManager(m ClientInfoManager) {
 type ClientInfo struct {
 	// The original info from disk
 	actions_proto.ClientInfo
+}
+
+func (self ClientInfo) Copy() ClientInfo {
+	copy := proto.Clone(&self.ClientInfo).(*actions_proto.ClientInfo)
+	self.ClientInfo = *copy
+	return self
 }
 
 func (self ClientInfo) OS() ClientOS {

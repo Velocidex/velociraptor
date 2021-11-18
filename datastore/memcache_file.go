@@ -60,6 +60,9 @@ type Mutation struct {
 	urn  api.DSPathSpec
 	wg   *sync.WaitGroup
 	data []byte
+
+	// Will run when committed to disk.
+	completion func()
 }
 
 type MemcacheFileDataStore struct {
@@ -143,10 +146,17 @@ func (self *MemcacheFileDataStore) StartWriter(
 						writeContentToFile(config_obj, mutation.urn, mutation.data)
 						self.invalidateDirCache(config_obj, mutation.urn)
 
+						// Call the completion function once we hit
+						// the directory datastore.
+						if mutation.completion != nil {
+							mutation.completion()
+						}
+
 					case MUTATION_OP_DEL_SUBJECT:
 						file_based_imp.DeleteSubject(config_obj, mutation.urn)
 						self.invalidateDirCache(config_obj, mutation.urn.Dir())
 					}
+
 					metricIdleWriters.Inc()
 					mutation.wg.Done()
 				}
@@ -190,6 +200,15 @@ func (self *MemcacheFileDataStore) SetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
+	return self.SetSubjectWithCompletion(config_obj, urn, message, nil)
+}
+
+func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec,
+	message proto.Message,
+	completion func()) error {
+
 	defer Instrument("write", "MemcacheFileDataStore", urn)()
 
 	// Encode as JSON
@@ -221,10 +240,11 @@ func (self *MemcacheFileDataStore) SetSubject(
 		return nil
 
 	case self.writer <- &Mutation{
-		op:   MUTATION_OP_SET_SUBJECT,
-		urn:  urn,
-		wg:   &wg,
-		data: serialized_content}:
+		op:         MUTATION_OP_SET_SUBJECT,
+		urn:        urn,
+		wg:         &wg,
+		completion: completion,
+		data:       serialized_content}:
 	}
 
 	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {
@@ -355,7 +375,7 @@ func (self *MemcacheFileDataStore) GetBuffer(
 
 func (self *MemcacheFileDataStore) SetBuffer(
 	config_obj *config_proto.Config,
-	urn api.DSPathSpec, data []byte) error {
+	urn api.DSPathSpec, data []byte, completion func()) error {
 
 	err := self.cache.SetData(config_obj, urn, data)
 	if err != nil {
@@ -369,10 +389,12 @@ func (self *MemcacheFileDataStore) SetBuffer(
 		return nil
 
 	case self.writer <- &Mutation{
-		op:   MUTATION_OP_SET_SUBJECT,
-		urn:  urn,
-		wg:   &wg,
-		data: data}:
+		op:         MUTATION_OP_SET_SUBJECT,
+		urn:        urn,
+		wg:         &wg,
+		data:       data,
+		completion: completion,
+	}:
 	}
 
 	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {

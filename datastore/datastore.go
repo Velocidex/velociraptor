@@ -54,7 +54,8 @@ type WalkFunc func(urn api.DSPathSpec) error
 // Raw level access only used internally rarely.
 type RawDataStore interface {
 	GetBuffer(config_obj *config_proto.Config, urn api.DSPathSpec) ([]byte, error)
-	SetBuffer(config_obj *config_proto.Config, urn api.DSPathSpec, data []byte) error
+	SetBuffer(config_obj *config_proto.Config, urn api.DSPathSpec,
+		data []byte, completion func()) error
 }
 
 type DataStore interface {
@@ -70,6 +71,12 @@ type DataStore interface {
 		config_obj *config_proto.Config,
 		urn api.DSPathSpec,
 		message proto.Message) error
+
+	SetSubjectWithCompletion(
+		config_obj *config_proto.Config,
+		urn api.DSPathSpec,
+		message proto.Message,
+		completion func()) error
 
 	DeleteSubject(
 		config_obj *config_proto.Config,

@@ -162,6 +162,13 @@ func (self *FileBaseDataStore) SetSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,
 	message proto.Message) error {
+	return self.SetSubjectWithCompletion(config_obj, urn, message, nil)
+}
+
+func (self *FileBaseDataStore) SetSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec,
+	message proto.Message, completion func()) error {
 
 	defer InstrumentWithDelay("write", "FileBaseDataStore", urn)()
 
@@ -180,7 +187,11 @@ func (self *FileBaseDataStore) SetSubject(
 		return errors.WithStack(err)
 	}
 
-	return writeContentToFile(config_obj, urn, serialized_content)
+	err = writeContentToFile(config_obj, urn, serialized_content)
+	if completion != nil {
+		completion()
+	}
+	return err
 }
 
 func (self *FileBaseDataStore) DeleteSubject(
@@ -400,7 +411,12 @@ func (self *FileBaseDataStore) GetBuffer(
 
 func (self *FileBaseDataStore) SetBuffer(
 	config_obj *config_proto.Config,
-	urn api.DSPathSpec, data []byte) error {
+	urn api.DSPathSpec, data []byte, completion func()) error {
 
-	return writeContentToFile(config_obj, urn, data)
+	err := writeContentToFile(config_obj, urn, data)
+
+	if completion != nil {
+		completion()
+	}
+	return err
 }

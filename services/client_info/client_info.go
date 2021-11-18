@@ -101,12 +101,13 @@ func (self *CachedInfo) UpdatePingAndNotify(
 
 // Write ping record to data store
 func (self *CachedInfo) Flush() error {
+	self.mu.Lock()
+
 	// Nothing to do
 	if !self.dirty {
 		return nil
 	}
 
-	self.mu.Lock()
 	ping_client_info := &actions_proto.ClientInfo{
 		Ping:      self.record.Ping,
 		IpAddress: self.record.IpAddress,
@@ -295,7 +296,8 @@ func (self *ClientInfoManager) Get(client_id string) (*services.ClientInfo, erro
 		return nil, err
 	}
 
-	return cached_info.record, nil
+	copy := cached_info.record.Copy()
+	return &copy, nil
 }
 
 func (self *ClientInfoManager) getCacheInfo(client_id string) (*CachedInfo, error) {

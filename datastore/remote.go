@@ -67,6 +67,15 @@ func (self *RemoteDataStore) SetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
+	return self.SetSubjectWithCompletion(config_obj, urn, message, nil)
+}
+
+func (self *RemoteDataStore) SetSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec,
+	message proto.Message,
+	completion func()) error {
+
 	defer Instrument("write", "RemoteDataStore", urn)()
 
 	var value []byte
@@ -94,11 +103,16 @@ func (self *RemoteDataStore) SetSubject(
 
 	_, err = conn.SetSubject(ctx, &api_proto.DataRequest{
 		Data: value,
+		Sync: completion != nil,
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),
 			Tag:        urn.Tag(),
 		}})
+
+	if completion != nil {
+		completion()
+	}
 
 	return err
 }

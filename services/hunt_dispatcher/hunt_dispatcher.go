@@ -337,13 +337,13 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 	defer self.mu.Unlock()
 
 	for _, request := range requests {
-		if request.Err != nil {
-			continue
-		}
-
 		hunt_id := request.Data.(string)
 		hunt_obj, ok := request.Message.(*api_proto.Hunt)
 		if !ok {
+			continue
+		}
+
+		if request.Err != nil || hunt_obj.HuntId != hunt_id {
 			continue
 		}
 

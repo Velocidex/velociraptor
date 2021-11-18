@@ -196,7 +196,7 @@ func (self *ReplicationService) Start(
 					if !ok {
 						return
 					}
-					_, err = self.api_client.PushEvents(ctx, request)
+					_, err := self.api_client.PushEvents(ctx, request)
 					if err != nil {
 						replicationTotalSendErrors.Inc()
 
