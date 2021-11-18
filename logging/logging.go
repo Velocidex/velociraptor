@@ -25,7 +25,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"sync"
 	"time"
 
@@ -159,10 +158,6 @@ func (self *LogContext) Warn(format string, v ...interface{}) {
 }
 
 func (self *LogContext) Error(format string, v ...interface{}) {
-	if strings.Contains(fmt.Sprintf(format, v...), "no such file or dir") {
-		panic(1)
-	}
-
 	if self.Logger != nil {
 		self.Logger.Error(fmt.Sprintf(format, v...))
 	}

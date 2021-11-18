@@ -29,6 +29,7 @@ package directory
 */
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -48,7 +49,8 @@ const (
 )
 
 type DirectoryFileWriter struct {
-	Fd *os.File
+	Fd         *os.File
+	completion func()
 }
 
 func (self *DirectoryFileWriter) Size() (int64, error) {
@@ -58,6 +60,8 @@ func (self *DirectoryFileWriter) Size() (int64, error) {
 func (self *DirectoryFileWriter) Write(data []byte) (int, error) {
 
 	defer api.InstrumentWithDelay("write", "DirectoryFileWriter", nil)()
+
+	fmt.Printf("DirectoryFileWriter Write %v %v\n", self.Fd.Name(), len(data))
 
 	_, err := self.Fd.Seek(0, os.SEEK_END)
 	if err != nil {
@@ -72,7 +76,11 @@ func (self *DirectoryFileWriter) Truncate() error {
 }
 
 func (self *DirectoryFileWriter) Close() error {
-	return self.Fd.Close()
+	err := self.Fd.Close()
+	if self.completion != nil {
+		self.completion()
+	}
+	return err
 }
 
 type DirectoryFileStore struct {
@@ -143,7 +151,7 @@ func (self *DirectoryFileStore) ReadFile(
 func (self *DirectoryFileStore) StatFile(
 	filename api.FSPathSpec) (api.FileInfo, error) {
 
-	defer api.InstrumentWithDelay("stat", "DirectoryFileStore", filename)()
+	defer api.Instrument("stat", "DirectoryFileStore", filename)()
 
 	file_path := filename.AsFilestoreFilename(self.config_obj)
 	file, err := os.Stat(file_path)
@@ -158,8 +166,19 @@ func (self *DirectoryFileStore) StatFile(
 
 func (self *DirectoryFileStore) WriteFile(
 	filename api.FSPathSpec) (api.FileWriter, error) {
+	if strings.Contains(filename.AsClientPath(), "Generic.Client.Stats") {
+		utils.DlvBreak()
+	}
+
+	return self.WriteFileWithCompletion(filename, nil)
+}
+
+func (self *DirectoryFileStore) WriteFileWithCompletion(
+	filename api.FSPathSpec, completion func()) (api.FileWriter, error) {
 
 	defer api.InstrumentWithDelay("open_write", "DirectoryFileStore", filename)()
+
+	fmt.Printf("DirectoryFileStore WriteFile %v\n", filename.AsClientPath())
 
 	file_path := filename.AsFilestoreFilename(self.config_obj)
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
@@ -177,7 +196,10 @@ func (self *DirectoryFileStore) WriteFile(
 		return nil, errors.WithStack(err)
 	}
 
-	return &DirectoryFileWriter{file}, nil
+	return &DirectoryFileWriter{
+		Fd:         file,
+		completion: completion,
+	}, nil
 }
 
 func (self *DirectoryFileStore) Delete(filename api.FSPathSpec) error {
@@ -206,30 +228,5 @@ func (self *DirectoryFileStore) Delete(filename api.FSPathSpec) error {
 	}
 
 	// At least we succeeded deleting the file
-	return nil
-}
-
-func (self *DirectoryFileStore) Walk(root api.FSPathSpec, walkFn api.WalkFunc) error {
-	// Walking a non-existant directory just returns no results.
-	children, err := self.ListDirectory(root)
-	if err != nil {
-		return nil
-	}
-
-	for _, child := range children {
-		if child.IsDir() {
-			err = self.Walk(child.PathSpec(), walkFn)
-			if err != nil {
-				return err
-			}
-			continue
-		}
-
-		if strings.HasSuffix(child.Name(), ".db") {
-			continue
-		}
-
-		walkFn(child.PathSpec(), child)
-	}
 	return nil
 }

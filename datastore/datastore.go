@@ -20,6 +20,7 @@ package datastore
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -29,6 +30,9 @@ import (
 
 var (
 	StopIteration = errors.New("StopIteration")
+
+	ds_mu  sync.Mutex
+	g_impl DataStore
 )
 
 type SortingSense int
@@ -86,33 +90,59 @@ type DataStore interface {
 }
 
 func GetDB(config_obj *config_proto.Config) (DataStore, error) {
+	ds_mu.Lock()
+	defer ds_mu.Unlock()
+
+	if g_impl != nil {
+		return g_impl, nil
+	}
+
 	if config_obj.Datastore == nil {
 		return nil, errors.New("no datastore configured")
 	}
 
-	switch config_obj.Datastore.Implementation {
-	case "FileBaseDataStore":
-		if config_obj.Datastore.Location == "" {
-			return nil, errors.New(
-				"No Datastore_location is set in the config.")
-		}
+	return getImpl(config_obj.Datastore.Implementation, config_obj)
+}
 
+func getImpl(implementation string,
+	config_obj *config_proto.Config) (DataStore, error) {
+	switch implementation {
+	case "FileBaseDataStore":
 		return file_based_imp, nil
 
 	case "RemoteFileDataStore":
 		return remote_datastopre_imp, nil
 
 	case "Memcache":
+		if memcache_imp == nil {
+			memcache_imp = NewMemcacheDataStore()
+		}
 		return memcache_imp, nil
 
 	case "MemcacheFileDataStore":
+		if memcache_file_imp == nil {
+			memcache_file_imp = NewMemcacheFileDataStore()
+		}
 		return memcache_file_imp, nil
 
 	case "Test":
+		if memcache_imp == nil {
+			memcache_imp = NewMemcacheDataStore()
+		}
 		return memcache_imp, nil
 
 	default:
 		return nil, errors.New("no datastore implementation " +
 			config_obj.Datastore.Implementation)
 	}
+}
+
+func SetGlobalDatastore(
+	implementation string,
+	config_obj *config_proto.Config) (err error) {
+	ds_mu.Lock()
+	defer ds_mu.Unlock()
+
+	g_impl, err = getImpl(implementation, config_obj)
+	return err
 }

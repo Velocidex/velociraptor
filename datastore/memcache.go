@@ -11,7 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
-	"github.com/ReneKroon/ttlcache/v2"
+	"github.com/Velocidex/ttlcache/v2"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	memcache_imp = NewMemcacheDataStore()
+	memcache_imp DataStore
 
 	internalError = errors.New("Internal datastore error")
 	errorNotFound = errors.New("Not found")

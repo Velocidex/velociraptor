@@ -96,7 +96,7 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 		}
 
 		// Delete the filestore files.
-		err = file_store_factory.Walk(notebook_path_manager.Directory(),
+		err = api.Walk(file_store_factory, notebook_path_manager.Directory(),
 			func(filename api.FSPathSpec, info os.FileInfo) error {
 				select {
 				case <-ctx.Done():

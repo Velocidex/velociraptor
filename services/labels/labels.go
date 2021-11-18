@@ -5,8 +5,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ReneKroon/ttlcache/v2"
 	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/ttlcache/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"

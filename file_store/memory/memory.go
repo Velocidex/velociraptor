@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -114,6 +113,7 @@ type MemoryWriter struct {
 	memory_file_store *MemoryFileStore
 	filename          string
 	closed            bool
+	completion        func()
 }
 
 func (self *MemoryWriter) Size() (int64, error) {
@@ -137,6 +137,9 @@ func (self *MemoryWriter) Close() error {
 	defer self.memory_file_store.mu.Unlock()
 
 	self.memory_file_store.Data.Set(self.filename, self.buf)
+	if self.completion != nil {
+		self.completion()
+	}
 	return nil
 }
 
@@ -202,6 +205,12 @@ func (self *MemoryFileStore) ReadFile(path api.FSPathSpec) (api.FileReader, erro
 }
 
 func (self *MemoryFileStore) WriteFile(path api.FSPathSpec) (api.FileWriter, error) {
+	return self.WriteFileWithCompletion(path, nil)
+}
+
+func (self *MemoryFileStore) WriteFileWithCompletion(
+	path api.FSPathSpec, completion func()) (api.FileWriter, error) {
+
 	defer api.InstrumentWithDelay("write_open", "MemoryFileStore", nil)()
 
 	self.mu.Lock()
@@ -220,6 +229,7 @@ func (self *MemoryFileStore) WriteFile(path api.FSPathSpec) (api.FileWriter, err
 		buf:               buf.([]byte),
 		memory_file_store: self,
 		filename:          filename,
+		completion:        completion,
 	}, nil
 }
 
@@ -341,31 +351,6 @@ func (self *MemoryFileStore) ListDirectory(root_path api.FSPathSpec) ([]api.File
 	}
 
 	return result, nil
-}
-
-func (self *MemoryFileStore) Walk(
-	root api.FSPathSpec, walkFn api.WalkFunc) error {
-	children, err := self.ListDirectory(root)
-	if err != nil {
-		return err
-	}
-
-	for _, child_info := range children {
-		full_path := child_info.PathSpec()
-		if !child_info.IsDir() {
-			err := walkFn(full_path, child_info)
-			if err == filepath.SkipDir {
-				continue
-			}
-		}
-
-		err := self.Walk(full_path, walkFn)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (self *MemoryFileStore) Delete(path api.FSPathSpec) error {

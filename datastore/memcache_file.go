@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	memcache_file_imp = NewMemcacheFileDataStore()
+	memcache_file_imp *MemcacheFileDataStore
 
 	metricLRUHit = promauto.NewCounter(
 		prometheus.CounterOpts{
@@ -427,8 +427,8 @@ func NewMemcacheFileDataStore() *MemcacheFileDataStore {
 func StartMemcacheFileService(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
-	if config_obj.Datastore != nil &&
-		config_obj.Datastore.Implementation == "MemcacheFileDataStore" {
+
+	if memcache_file_imp != nil {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> memcache service")
 		memcache_file_imp.StartWriter(ctx, wg, config_obj)

@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -36,7 +37,8 @@ func (self *JournalTestSuite) SetupTest() {
 	dir, err := ioutil.TempDir("", "file_store_test")
 	assert.NoError(self.T(), err)
 
-	self.ConfigObj.Datastore.Implementation = "FileBaseDataStore"
+	self.ConfigObj.Datastore.Implementation = "MemcacheFileDataStore"
+	//self.ConfigObj.Datastore.Implementation = "FileBaseDataStore"
 	self.ConfigObj.Datastore.FilestoreDirectory = dir
 	self.ConfigObj.Datastore.Location = dir
 
@@ -81,8 +83,16 @@ func (self *JournalTestSuite) TestJournalWriting() {
 		assert.NoError(self.T(), err)
 	}
 
+	// Force the filestore to flush the data
+	file_store_factory := file_store.GetFileStore(self.ConfigObj)
+	flusher, ok := file_store_factory.(api.Flusher)
+	if ok {
+		flusher.Flush()
+	}
+
 	// See the filestore metrics
-	json.Dump(vtesting.GetMetricsDifference(self.T(), "^filestore_", snapshot))
+	//	json.Dump(vtesting.GetMetricsDifference(self.T(), "^filestore_", snapshot))
+	json.Dump(vtesting.GetMetricsDifference(self.T(), ".", snapshot))
 
 	// Get the total time.
 	fmt.Printf("Total time %v\n", api.Clock.Now().Sub(start).Seconds())

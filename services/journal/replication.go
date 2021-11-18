@@ -257,6 +257,13 @@ func (self *ReplicationService) AppendToResultSet(
 	return nil
 }
 
+func (self *ReplicationService) Broadcast(
+	config_obj *config_proto.Config, rows []*ordereddict.Dict,
+	artifact, client_id, flows_id string) error {
+
+	return notInitializedError
+}
+
 func (self *ReplicationService) PushRowsToArtifactAsync(
 	config_obj *config_proto.Config, row *ordereddict.Dict,
 	artifact string) {

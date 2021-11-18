@@ -20,6 +20,7 @@ package utils
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/davecgh/go-spew/spew"
 )
@@ -32,4 +33,15 @@ func DlvBreak() {
 	if false {
 		fmt.Printf("Break")
 	}
+}
+
+func DebugToFile(filename, format string, v ...interface{}) {
+	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
+	if err != nil {
+		panic(err)
+	}
+	defer fd.Close()
+
+	fd.Seek(0, os.SEEK_END)
+	fd.Write([]byte(fmt.Sprintf(format, v...) + "\n"))
 }

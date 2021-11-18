@@ -27,10 +27,15 @@ type IndexRecord struct {
 }
 
 type TimelineWriter struct {
-	last_time time.Time
-	opts      *json.EncOpts
-	fd        api.FileWriter
-	index_fd  api.FileWriter
+	last_time  time.Time
+	opts       *json.EncOpts
+	fd         api.FileWriter
+	index_fd   api.FileWriter
+	completion func()
+}
+
+func (self *TimelineWriter) SetCompletion(completion func()) {
+	self.completion = completion
 }
 
 func (self *TimelineWriter) Write(
@@ -85,8 +90,15 @@ func NewTimelineWriter(
 	file_store_factory api.FileStore,
 	path_manager paths.TimelinePathManagerInterface,
 	truncate bool) (*TimelineWriter, error) {
-	fd, err := file_store_factory.WriteFile(
-		path_manager.Path())
+
+	result := &TimelineWriter{}
+
+	fd, err := file_store_factory.WriteFileWithCompletion(
+		path_manager.Path(), func() {
+			if result.completion != nil {
+				result.completion()
+			}
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +115,9 @@ func NewTimelineWriter(
 		index_fd.Truncate()
 	}
 
-	return &TimelineWriter{fd: fd, index_fd: index_fd}, nil
+	result.fd = fd
+	result.index_fd = index_fd
+
+	return result, nil
 
 }

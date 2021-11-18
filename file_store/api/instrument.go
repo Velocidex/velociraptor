@@ -46,16 +46,25 @@ func InstallClockForTests(clock utils.Clock, delay int) func() {
 }
 
 func Instrument(access_type, datastore string, path_spec FSPathSpec) func() time.Duration {
-	tag := path_spec.Tag()
+	var tag string
+	if path_spec != nil {
+		tag = path_spec.Tag()
+	}
 	if tag == "" {
 		tag = "Generic"
 	}
 
-	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
-		FilestoreHistorgram.WithLabelValues(tag, access_type, datastore).Observe(v)
-	}))
+	// Mark the start of the time.
+	start := Clock.Now()
 
-	return timer.ObserveDuration
+	// When this func is called we calculate the time difference and
+	// observe it into the histogram.
+	return func() time.Duration {
+		d := Clock.Now().Sub(start)
+		FilestoreHistorgram.WithLabelValues(
+			tag, access_type, datastore).Observe(d.Seconds())
+		return d
+	}
 }
 
 func InstrumentWithDelay(
@@ -77,7 +86,7 @@ func InstrumentWithDelay(
 		Clock.Sleep(time.Duration(inject_time) * time.Millisecond)
 	}
 
-	// When this func is called we calculate the time different and
+	// When this func is called we calculate the time difference and
 	// observe it into the histogram.
 	return func() time.Duration {
 		d := Clock.Now().Sub(start)

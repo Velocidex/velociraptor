@@ -101,7 +101,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 		}
 
 		// Delete the filestore files.
-		err = file_store_factory.Walk(
+		err = api.Walk(file_store_factory,
 			client_path_manager.Path().AsFilestorePath(),
 			func(filename api.FSPathSpec, info os.FileInfo) error {
 				select {

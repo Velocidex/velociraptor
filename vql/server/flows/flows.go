@@ -268,7 +268,8 @@ func (self EnumerateFlowPlugin) Call(
 				return nil
 			})
 
-		file_store_factory.Walk(flow_path_manager.Notebook().Directory(),
+		api.Walk(file_store_factory,
+			flow_path_manager.Notebook().Directory(),
 			func(path api.FSPathSpec, info os.FileInfo) error {
 				r.emit_fs("NotebookItem", path)
 				return nil

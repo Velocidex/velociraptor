@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -65,6 +66,34 @@ type CollectionContext struct {
 	monitoring_batch map[string][]*ordereddict.Dict
 }
 
+// If we need to send a notification we should wait until all parts of
+// the collection are fully stored first to avoid a race with any
+// listeners on System.Flow.Completion.
+func (self *CollectionContext) getCompletion(
+	config_obj *config_proto.Config) *utils.Completer {
+	if self.Request != nil &&
+		self.State != flows_proto.ArtifactCollectorContext_RUNNING &&
+		!self.UserNotified {
+		self.UserNotified = true
+
+		return utils.NewCompleter(func() {
+			row := ordereddict.NewDict().
+				Set("Timestamp", time.Now().UTC().Unix()).
+				Set("Flow", proto.Clone(self)).
+				Set("FlowId", self.SessionId).
+				Set("ClientId", self.ClientId)
+
+			journal, err := services.GetJournal()
+			if err == nil {
+				journal.PushRowsToArtifactAsync(config_obj,
+					row, "System.Flow.Completion")
+			}
+		})
+	}
+
+	return utils.NewCompleter(func() {})
+}
+
 func (self *CollectionContext) batchRows(flow_id string, rows []*ordereddict.Dict) {
 	batch, _ := self.monitoring_batch[flow_id]
 	batch = append(batch, rows...)
@@ -97,6 +126,8 @@ func closeContext(
 	config_obj *config_proto.Config,
 	collection_context *CollectionContext) error {
 
+	completion := collection_context.getCompletion(config_obj)
+
 	// Context is not dirty - nothing to do.
 	if !collection_context.Dirty || collection_context.ClientId == "" {
 		return nil
@@ -115,7 +146,7 @@ func closeContext(
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
 
 	if len(collection_context.Logs) > 0 {
-		err := flushContextLogs(config_obj, collection_context)
+		err := flushContextLogs(config_obj, collection_context, completion)
 		if err != nil {
 			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
 			collection_context.Status = err.Error()
@@ -123,8 +154,7 @@ func closeContext(
 	}
 
 	if len(collection_context.UploadedFiles) > 0 {
-		err := flushContextUploadedFiles(
-			config_obj, collection_context)
+		err := flushContextUploadedFiles(config_obj, collection_context, completion)
 		if err != nil {
 			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
 			collection_context.Status = err.Error()
@@ -139,16 +169,6 @@ func closeContext(
 		}
 	}
 
-	// We need to send a notification but we should wait until the
-	// collection_context is stored first to avoid a race.
-	var will_notify bool
-
-	if collection_context.Request != nil &&
-		collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING &&
-		!collection_context.UserNotified {
-		collection_context.UserNotified = true
-		will_notify = true
-	}
 	collection_context.Dirty = false
 
 	// Write the data before we fire the event so the data is
@@ -161,39 +181,15 @@ func closeContext(
 
 	flow_path_manager := paths.NewFlowPathManager(
 		collection_context.ClientId, collection_context.SessionId)
-	err = db.SetSubject(config_obj, flow_path_manager.Path(), collection_context)
-	if err != nil {
-		return err
-	}
-
-	// This is the final time we update the context - send a
-	// journal message.
-	if will_notify {
-		row := ordereddict.NewDict().
-			Set("Timestamp", time.Now().UTC().Unix()).
-			Set("Flow", collection_context).
-			Set("FlowId", collection_context.SessionId).
-			Set("ClientId", collection_context.ClientId)
-
-		journal, err := services.GetJournal()
-		if err != nil {
-			return err
-		}
-		return journal.PushRowsToArtifact(config_obj,
-			[]*ordereddict.Dict{row},
-			"System.Flow.Completion", collection_context.ClientId,
-			collection_context.SessionId,
-		)
-	}
-
-	return nil
+	return db.SetSubject(config_obj, flow_path_manager.Path(), collection_context)
 }
 
 // Flush the logs to disk. During execution the flow collects the logs
 // in memory and then flushes it all when done.
 func flushContextLogs(
 	config_obj *config_proto.Config,
-	collection_context *CollectionContext) error {
+	collection_context *CollectionContext,
+	completion *utils.Completer) error {
 
 	// Handle monitoring flow specially.
 	if collection_context.SessionId == constants.MONITORING_WELL_KNOWN_FLOW {
@@ -229,7 +225,8 @@ func flushContextLogs(
 
 func flushContextUploadedFiles(
 	config_obj *config_proto.Config,
-	collection_context *CollectionContext) error {
+	collection_context *CollectionContext,
+	completion *utils.Completer) error {
 
 	flow_path_manager := paths.NewFlowPathManager(
 		collection_context.ClientId,
@@ -600,7 +597,8 @@ func appendUploadDataToFile(
 
 		return journal.PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{row},
-			"System.Upload.Completion", message.Source, collection_context.SessionId,
+			"System.Upload.Completion",
+			message.Source, collection_context.SessionId,
 		)
 	}
 

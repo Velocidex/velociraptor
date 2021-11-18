@@ -2,15 +2,13 @@ package client_info
 
 import (
 	"context"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"sync"
 	"time"
 
-	"github.com/ReneKroon/ttlcache/v2"
 	"github.com/Velocidex/ordereddict"
-	"github.com/google/uuid"
+	"github.com/Velocidex/ttlcache/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -179,7 +177,12 @@ func (self *ClientInfoManager) Start(
 	}
 
 	// The master will be informed when new clients appear.
-	if services.GetFrontendManager().IsMaster() {
+	frontend_manager := services.GetFrontendManager()
+	if frontend_manager == nil {
+		return errors.New("Frontend service is not ready")
+	}
+
+	if frontend_manager.IsMaster() {
 		err = journal.WatchQueueWithCB(ctx, config_obj, wg,
 			"Server.Internal.ClientPing", self.ProcessPing)
 		if err != nil {
@@ -350,10 +353,9 @@ func NewClientInfoManager(config_obj *config_proto.Config) *ClientInfoManager {
 	}
 
 	// Calculate a unique id for each service.
-	u := uuid.New()
 	service := &ClientInfoManager{
 		config_obj: config_obj,
-		uuid:       int64(binary.BigEndian.Uint64(u[0:8])),
+		uuid:       utils.GetGUID(),
 		lru:        ttlcache.NewCache(),
 		Clock:      &utils.RealClock{},
 	}

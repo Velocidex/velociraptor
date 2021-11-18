@@ -18,6 +18,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -271,8 +273,27 @@ func (self MasterFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Frontend:</> Server will be master.")
 
+	if config_obj.Datastore == nil {
+		return errors.New("Datastore must be specified")
+	}
+
+	implementation := config_obj.Datastore.MasterImplementation
+	if implementation == "" {
+		implementation = config_obj.Datastore.Implementation
+	}
+	logger.Info("<green>Filestore implementation</> %v.", implementation)
+	err := file_store.SetGlobalFilestore(implementation, config_obj)
+	if err != nil {
+		return err
+	}
+
+	err = datastore.SetGlobalDatastore(implementation, config_obj)
+	if err != nil {
+		return err
+	}
+
 	// Push our metrics to the master node.
-	err := PushMetrics(ctx, wg, config_obj, "master")
+	err = PushMetrics(ctx, wg, config_obj, "master")
 	if err != nil {
 		return err
 	}
@@ -322,6 +343,22 @@ func (self *MinionFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Frontend:</> Server will be a minion, with ID %v.", self.name)
+
+	implementation := config_obj.Datastore.MinionImplementation
+	if implementation == "" {
+		implementation = config_obj.Datastore.Implementation
+	}
+
+	logger.Info("<green>Filestore implementation</> %v.", implementation)
+	err := file_store.SetGlobalFilestore(implementation, config_obj)
+	if err != nil {
+		return err
+	}
+
+	err = datastore.SetGlobalDatastore(implementation, config_obj)
+	if err != nil {
+		return err
+	}
 
 	// Push our metrics to the master node.
 	return PushMetrics(ctx, wg, config_obj, self.name)

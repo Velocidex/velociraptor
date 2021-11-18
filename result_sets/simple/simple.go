@@ -53,6 +53,15 @@ type ResultSetWriterImpl struct {
 	opts     *json.EncOpts
 	fd       api.FileWriter
 	index_fd api.FileWriter
+
+	completion func()
+}
+
+func (self *ResultSetWriterImpl) SetCompletion(completion func()) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.completion = completion
 }
 
 // WriteJSONL writes an entire JSONL blob to the end of the result
@@ -155,12 +164,19 @@ func (self ResultSetFactory) NewResultSetWriter(
 	opts *json.EncOpts,
 	truncate bool) (result_sets.ResultSetWriter, error) {
 
+	result := &ResultSetWriterImpl{opts: opts}
+
 	// If no path is provided, we are just a log sink
 	if utils.IsNil(log_path) {
 		return &NullResultSetWriter{}, nil
 	}
 
-	fd, err := file_store_factory.WriteFile(log_path)
+	fd, err := file_store_factory.WriteFileWithCompletion(
+		log_path, func() {
+			if result.completion != nil {
+				result.completion()
+			}
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +205,10 @@ func (self ResultSetFactory) NewResultSetWriter(
 
 	}
 
-	return &ResultSetWriterImpl{fd: fd, opts: opts, index_fd: idx_fd}, nil
+	result.fd = fd
+	result.index_fd = idx_fd
+
+	return result, nil
 }
 
 // A ResultSetReader can produce rows from a result set.

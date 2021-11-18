@@ -47,10 +47,18 @@ func GetMetricsDifference(t *testing.T,
 					}
 					result.Set(*metric.Name, value)
 				} else if m.Histogram != nil {
+
+					label := ""
+					for _, l := range m.Label {
+						label += "_" + *l.Value
+					}
+
 					for idx, b := range m.Histogram.Bucket {
-						name := fmt.Sprintf("%v_%0.2f", *metric.Name, *b.UpperBound)
+						name := fmt.Sprintf("%v_%v_%0.2f", *metric.Name,
+							label, *b.UpperBound)
 						if idx == len(m.Histogram.Bucket)-1 {
-							name = fmt.Sprintf("%v_inf", *metric.Name)
+							name = fmt.Sprintf("%v_%v_inf", *metric.Name,
+								label)
 						}
 						value := int64(*b.CumulativeCount)
 						old_value, pres := snapshot.GetInt64(name)

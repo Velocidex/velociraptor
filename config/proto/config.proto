@@ -622,6 +622,10 @@ message DatastoreConfig {
     // Number of writing threads - increase for high latency
     // filesystems (default 100).
     int64 memcache_write_mutation_writers = 6;
+
+    // Experimental - do not set in configs yet!
+    string minion_implementation = 7;
+    string master_implementation = 8;
 }
 
 // Configuration for the mail server.

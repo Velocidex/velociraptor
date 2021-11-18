@@ -25,6 +25,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+var (
+	notInitializedError = errors.New("Not initialized")
+)
+
 type JournalService struct {
 	config_obj *config_proto.Config
 	qm         api.QueueManager
@@ -98,6 +102,23 @@ func (self *JournalService) PushRowsToArtifactAsync(
 
 	self.PushRowsToArtifact(config_obj, []*ordereddict.Dict{row},
 		artifact, "server", "")
+}
+
+func (self *JournalService) Broadcast(
+	config_obj *config_proto.Config, rows []*ordereddict.Dict,
+	artifact, client_id, flows_id string) error {
+	if self == nil || self.qm == nil {
+		return notInitializedError
+	}
+
+	path_manager, err := artifacts.NewArtifactPathManager(
+		config_obj, client_id, flows_id, artifact)
+	if err != nil {
+		return err
+	}
+
+	self.qm.Broadcast(path_manager, rows)
+	return nil
 }
 
 func (self *JournalService) PushRowsToArtifact(

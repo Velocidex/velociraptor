@@ -119,19 +119,19 @@ func StartupEssentialServices(sm *services.Service) error {
 		}
 	}
 
-	if services.GetClientInfoManager() == nil {
-		err := sm.Start(client_info.StartClientInfoService)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
 // Start usual services that run on frontends only (i.e. not the client).
 func StartupFrontendServices(sm *services.Service) error {
 	spec := getServerServices(sm.Config)
+
+	if services.GetClientInfoManager() == nil {
+		err := sm.Start(client_info.StartClientInfoService)
+		if err != nil {
+			return err
+		}
+	}
 
 	err := sm.Start(datastore.StartMemcacheFileService)
 	if err != nil {

@@ -158,20 +158,15 @@ func (self *HuntManager) ProcessMutation(
 		return err
 	}
 
-	// We notify all node's hunt dispatcher only when the hunt
-	// status is changed (started or stopped).
-	notifier := services.GetNotifier()
-	if notifier == nil {
-		return errors.New("Notifier not ready")
-	}
-
 	dispatcher := services.GetHuntDispatcher()
 	if dispatcher == nil {
 		return errors.New("Hunt Dispatcher not ready")
 	}
 
-	return dispatcher.ModifyHunt(mutation.HuntId,
-		func(hunt_obj *api_proto.Hunt) error {
+	dispatcher.ModifyHunt(mutation.HuntId,
+		func(hunt_obj *api_proto.Hunt) services.HuntModificationAction {
+			modification := services.HuntUnmodified
+
 			if hunt_obj.Stats == nil {
 				hunt_obj.Stats = &api_proto.HuntStats{}
 			}
@@ -180,44 +175,57 @@ func (self *HuntManager) ProcessMutation(
 				mutation.Stats = &api_proto.HuntStats{}
 			}
 
-			hunt_obj.Stats.TotalClientsScheduled +=
-				mutation.Stats.TotalClientsScheduled
+			// The following are very frequent modifications that
+			// other frontends dont care about.
+			if mutation.Stats.TotalClientsScheduled > 0 {
+				hunt_obj.Stats.TotalClientsScheduled +=
+					mutation.Stats.TotalClientsScheduled
 
-			hunt_obj.Stats.TotalClientsWithResults +=
-				mutation.Stats.TotalClientsWithResults
+				modification = services.HuntFlushToDatastoreAsync
+			}
+
+			if mutation.Stats.TotalClientsWithResults > 0 {
+				hunt_obj.Stats.TotalClientsWithResults +=
+					mutation.Stats.TotalClientsWithResults
+
+				modification = services.HuntFlushToDatastoreAsync
+			}
 
 			// Have we stopped the hunt?
 			if mutation.State == api_proto.Hunt_STOPPED ||
 				mutation.State == api_proto.Hunt_PAUSED {
 				hunt_obj.Stats.Stopped = true
 				hunt_obj.State = api_proto.Hunt_STOPPED
-				_ = notifier.NotifyListener(
-					config_obj, "HuntDispatcher")
-			}
 
-			if mutation.State == api_proto.Hunt_RUNNING {
+				modification = services.HuntPropagateChanges
+
+			} else if mutation.State == api_proto.Hunt_RUNNING {
 				hunt_obj.Stats.Stopped = false
 				hunt_obj.State = api_proto.Hunt_RUNNING
-				_ = notifier.NotifyListener(
-					config_obj, "HuntDispatcher")
-			}
 
-			if mutation.State == api_proto.Hunt_ARCHIVED {
+				modification = services.HuntPropagateChanges
+
+			} else if mutation.State == api_proto.Hunt_ARCHIVED {
 				hunt_obj.State = api_proto.Hunt_ARCHIVED
-				_ = notifier.NotifyListener(
-					config_obj, "HuntDispatcher")
+
+				modification = services.HuntPropagateChanges
 			}
 
 			if mutation.Description != "" {
 				hunt_obj.HuntDescription = mutation.Description
+
+				modification = services.HuntPropagateChanges
 			}
 
 			if mutation.StartTime > 0 {
 				hunt_obj.StartTime = mutation.StartTime
+
+				modification = services.HuntPropagateChanges
 			}
 
-			return nil
+			return modification
 		})
+	return nil
 }
 
 // Check if the mutation requests a flow to be added to the hunt.
@@ -419,6 +427,9 @@ func (self *HuntManager) ProcessParticipation(
 		logger.Debug("ProcessParticipation: %v", err)
 		return err
 	}
+
+	utils.DebugToFile("/tmp/2.txt", "Participation %v %v",
+		participation_row.HuntId, participation_row.ClientId)
 
 	// Get some info about the client
 	client_info_manager := services.GetClientInfoManager()

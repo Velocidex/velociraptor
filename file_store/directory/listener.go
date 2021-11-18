@@ -166,7 +166,8 @@ func (self *Listener) Close() {
 		for _, item := range items {
 			select {
 			case <-self.ctx.Done():
-				return
+				// Just drop all work items on the floor
+				self.file_buffer.Wg.Done()
 
 				// As each message is delivered we can let the
 				// file buffer know it is delivered.
@@ -267,7 +268,8 @@ func NewListener(
 				for _, item := range items {
 					select {
 					case <-self.ctx.Done():
-						return
+						// Just drain all work items so we can safely exit
+						self.file_buffer.Wg.Done()
 
 						// As each message is delivered we can let the
 						// file buffer know it is delivered.

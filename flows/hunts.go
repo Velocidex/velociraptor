@@ -190,15 +190,6 @@ func CreateHunt(
 		// set it started.
 	} else if hunt.State == api_proto.Hunt_RUNNING {
 		hunt.StartTime = hunt.CreateTime
-
-		// Notify all the clients.
-		notifier := services.GetNotifier()
-		if notifier != nil {
-			err = notifier.NotifyByRegex(config_obj, "^[Cc]\\.")
-			if err != nil {
-				return "", err
-			}
-		}
 	}
 
 	row := ordereddict.NewDict().
@@ -385,17 +376,5 @@ func ModifyHunt(
 	}
 
 	dispatcher := services.GetHuntDispatcher()
-	err := dispatcher.MutateHunt(config_obj, mutation)
-	if err != nil {
-		return err
-	}
-
-	// Notify all the clients about the new hunt. New hunts are
-	// not that common so notifying all the clients at once is
-	// probably ok.
-	notifier := services.GetNotifier()
-	if notifier == nil {
-		return errors.New("Notifier not ready")
-	}
-	return notifier.NotifyByRegex(config_obj, "^[Cc]\\.")
+	return dispatcher.MutateHunt(config_obj, mutation)
 }
