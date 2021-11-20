@@ -453,6 +453,11 @@ message FrontendResourceControl {
     // less latency to respond to client events but also means more
     // TLS handshake and network overheads due to frequent POST.
     uint64 client_event_max_wait = 23;
+
+    // Minions batch updates to the master so as to minimize RPC as
+    // much as possible, this controls how often these batches are
+    // flushed to the master (default 10 sec).
+    uint64 minion_batch_wait_time_ms = 25;
 }
 
 
@@ -552,7 +557,7 @@ message FrontendConfig {
     FrontendResourceControl resources = 27;
 
     // Used internally to tag this frontend as the master.
-    bool is_master = 30;
+    bool is_minion = 30;
 
     // DEPRECATED ****************************************************
 

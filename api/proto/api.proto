@@ -12,6 +12,7 @@ import "google/protobuf/empty.proto";
 import "artifacts.proto";
 import "clients.proto";
 import "datastore.proto";
+import "health.proto";
 import "hunts.proto";
 import "flows.proto";
 import "notebooks.proto";
@@ -480,4 +481,7 @@ service API {
     rpc SetSubject(DataRequest) returns (DataResponse) {}
     rpc DeleteSubject(DataRequest) returns (google.protobuf.Empty) {}
     rpc ListChildren(DataRequest) returns (ListChildrenResponse) {}
+
+    // Health check protocol as in https://github.com/grpc/grpc/blob/master/doc/health-checking.md
+    rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
 }

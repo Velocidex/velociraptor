@@ -14,7 +14,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -91,12 +90,24 @@ func (self *JournalTestSuite) TestJournalWriting() {
 	}
 
 	// See the filestore metrics
-	//	json.Dump(vtesting.GetMetricsDifference(self.T(), "^filestore_", snapshot))
-	json.Dump(vtesting.GetMetricsDifference(self.T(), ".", snapshot))
+	metrics := vtesting.GetMetricsDifference(self.T(), ".", snapshot)
 
-	// Get the total time.
-	fmt.Printf("Total time %v\n", api.Clock.Now().Sub(start).Seconds())
+	// Total number of writes on the memcache layer
+	memcache_total, _ := metrics.GetInt64(
+		"filestore_latency__write_MemcacheFileWriter_Generic_inf")
 
+	// Total number of writes on the directory layer
+	directory_total, _ := metrics.GetInt64(
+		"filestore_latency__write_DirectoryFileWriter_Generic_inf")
+
+	// Memcache should be combining many of the writes into larger
+	// writes.
+	assert.True(self.T(), directory_total*5 < memcache_total)
+
+	// Get the total time. It should be much less than 10 times 70ms
+	// (i.e. rows are not written serially).
+	total_time := api.Clock.Now().Sub(start).Seconds()
+	assert.True(self.T(), 0.07*10 > total_time)
 }
 
 func TestJournalTestSuite(t *testing.T) {

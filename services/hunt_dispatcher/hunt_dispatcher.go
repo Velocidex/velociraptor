@@ -141,7 +141,7 @@ func (self *HuntDispatcher) ProcessUpdate(
 	self.mu.Unlock()
 
 	// On the master we also write it to storage.
-	if services.GetFrontendManager().IsMaster() {
+	if services.IsMaster(config_obj) {
 		hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
 		db, err := datastore.GetDB(config_obj)
 		if err != nil {
@@ -222,7 +222,7 @@ func (self *HuntDispatcher) ModifyHunt(
 	cb func(hunt *api_proto.Hunt) services.HuntModificationAction) services.HuntModificationAction {
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	if !services.GetFrontendManager().IsMaster() {
+	if !services.IsMaster(self.config_obj) {
 		// This is really a critical error.
 		logger.Error("Unable to modify hunts on a minion node. Please use MutateHunt()")
 		return services.HuntUnmodified
@@ -351,7 +351,7 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 		if pres && old_hunt_obj.Version >= hunt_obj.Version {
 			// The in memory copy is newer than the stored version,
 			// Master node will synchronize
-			if services.GetFrontendManager().IsMaster() {
+			if services.IsMaster(config_obj) {
 				db.SetSubject(config_obj, request.Path, old_hunt_obj)
 			}
 			continue

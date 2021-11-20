@@ -434,7 +434,7 @@ func (self *HuntManager) ProcessParticipation(
 	// Get some info about the client
 	client_info_manager := services.GetClientInfoManager()
 	if client_info_manager == nil {
-		return nil
+		return errors.New("Client_info_manager not set")
 	}
 
 	client_info, err := client_info_manager.Get(participation_row.ClientId)
@@ -451,7 +451,8 @@ func (self *HuntManager) ProcessParticipation(
 	err = checkHuntRanOnClient(config_obj, participation_row.ClientId,
 		participation_row.HuntId)
 	if err != nil {
-		return nil
+		return fmt.Errorf("hunt_manager: %v already ran on client %v",
+			participation_row.HuntId, participation_row.ClientId)
 	}
 
 	// Get hunt information about this hunt.
@@ -475,18 +476,20 @@ func (self *HuntManager) ProcessParticipation(
 	if hunt_obj.Stats.Stopped ||
 		hunt_obj.State != api_proto.Hunt_RUNNING {
 		// Hunt is stopped.
-		return nil
+		return fmt.Errorf("Hunt %v is stopped", participation_row.HuntId)
 
 	} else if !huntMatchesOS(hunt_obj, client_info) {
 		// Hunt does not match OS condition
-		return nil
+		return fmt.Errorf("Hunt %v: %v does not match OS condition",
+			participation_row.HuntId, participation_row.ClientId)
 
 		// Ignore hunts with label conditions which
 		// exclude this client.
 
 	} else if !huntHasLabel(config_obj, hunt_obj,
 		participation_row.ClientId) {
-		return errors.New("hunt label does not match")
+		return fmt.Errorf("Hunt %v: hunt label does not match with %v",
+			participation_row.HuntId, participation_row.ClientId)
 	}
 
 	// Hunt limit exceeded or it expired - we stop it.

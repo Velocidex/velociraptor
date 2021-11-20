@@ -55,8 +55,6 @@ func (self *TestSuite) SetupTest() {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
 
-	self.config_obj.Frontend.IsMaster = true
-
 	// Start the journaling service manually for tests.
 	require.NoError(t, self.sm.Start(journal.StartJournalService))
 	require.NoError(t, self.sm.Start(notifications.StartNotificationService))

@@ -148,7 +148,7 @@ func testRingBuffer(
 
 	// The ring buffer is holding 14 bytes since none were
 	// successfully sent yet.
-	vtesting.WaitUntil(time.Second, t, func() bool {
+	vtesting.WaitUntil(5*time.Second, t, func() bool {
 		return sender.ring_buffer.AvailableBytes() == uint64(14)
 	})
 

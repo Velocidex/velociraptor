@@ -148,7 +148,6 @@ Frontend:
   hostname: localhost
   bind_address: 0.0.0.0
   bind_port: 8000
-  is_master: true
   certificate: |
     -----BEGIN CERTIFICATE-----
     MIIDVzCCAj+gAwIBAgIQTykoXOtft5rT1z1zV0fV9DANBgkqhkiG9w0BAQsFADAa

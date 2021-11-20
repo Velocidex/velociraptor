@@ -125,7 +125,7 @@ sources:
 
 	// How long we took to run - should be immediate
 	run_time := (details.Context.ActiveTime - details.Context.StartTime) / 1000000
-	assert.True(self.T(), run_time < 1)
+	assert.True(self.T(), run_time < 2)
 }
 
 // Collect a long lived artifact with specified timeout.

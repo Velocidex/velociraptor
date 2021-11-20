@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/frontend"
@@ -63,7 +65,7 @@ name: Generic.Client.Stats
 type: CLIENT_EVENT
 `, `
 name: System.Hunt.Participation
-type: CLIENT_EVENT
+type: INTERNAL
 `, `
 name: Generic.Client.Info
 type: CLIENT
@@ -79,19 +81,22 @@ type TestSuite struct {
 	Sm        *services.Service
 }
 
-func (self *TestSuite) SetupTest() {
-	var err error
+func (self *TestSuite) LoadConfig() *config_proto.Config {
 	os.Setenv("VELOCIRAPTOR_CONFIG", SERVER_CONFIG)
+	config_obj, err := new(config.Loader).
+		WithEnvLiteralLoader("VELOCIRAPTOR_CONFIG").WithRequiredFrontend().
+		WithWriteback().WithVerbose(true).
+		LoadAndValidate()
+	require.NoError(self.T(), err)
 
+	config_obj.Frontend.DoNotCompressArtifacts = true
+
+	return config_obj
+}
+
+func (self *TestSuite) SetupTest() {
 	if self.ConfigObj == nil {
-		self.ConfigObj, err = new(config.Loader).
-			WithEnvLiteralLoader("VELOCIRAPTOR_CONFIG").WithRequiredFrontend().
-			WithWriteback().WithVerbose(true).
-			LoadAndValidate()
-		require.NoError(self.T(), err)
-
-		self.ConfigObj.Frontend.IsMaster = true
-		self.ConfigObj.Frontend.DoNotCompressArtifacts = true
+		self.ConfigObj = self.LoadConfig()
 	}
 
 	// Start essential services.
@@ -139,8 +144,23 @@ func (self *TestSuite) LoadArtifactFiles(paths ...string) {
 }
 
 func (self *TestSuite) TearDownTest() {
-	self.cancel()
-	self.Sm.Close()
-	GetMemoryFileStore(self.T(), self.ConfigObj).Clear()
-	GetMemoryDataStore(self.T(), self.ConfigObj).Clear()
+	if self.cancel != nil {
+		self.cancel()
+	}
+	if self.Sm != nil {
+		self.Sm.Close()
+	}
+
+	// These may not be memory based in the test switched to other
+	// data stores.
+	file_store_factory, ok := file_store.GetFileStore(
+		self.ConfigObj).(*memory.MemoryFileStore)
+	if ok {
+		file_store_factory.Clear()
+	}
+
+	db := GetMemoryDataStore(self.T(), self.ConfigObj)
+	if db != nil {
+		db.Clear()
+	}
 }

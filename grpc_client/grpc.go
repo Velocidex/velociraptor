@@ -64,9 +64,6 @@ var (
 )
 
 func getCreds(config_obj *config_proto.Config) (credentials.TransportCredentials, error) {
-	mu.Lock()
-	defer mu.Unlock()
-
 	if creds == nil {
 		var certificate, private_key, ca_certificate, server_name string
 
@@ -186,6 +183,13 @@ func GetAPIConnectionString(config_obj *config_proto.Config) string {
 func Init(
 	ctx context.Context,
 	config_obj *config_proto.Config) error {
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	if pool != nil {
+		return nil
+	}
 
 	address = GetAPIConnectionString(config_obj)
 	creds, err := getCreds(config_obj)

@@ -20,6 +20,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
@@ -31,10 +32,6 @@ import (
 
 type MockFrontendService struct {
 	mock *mock_proto.MockAPIClient
-}
-
-func (self MockFrontendService) IsMaster() bool {
-	return false
 }
 
 // The minion replicates to the master node.
@@ -52,22 +49,22 @@ type ReplicationTestSuite struct {
 }
 
 func (self *ReplicationTestSuite) startServices() {
+	t := self.T()
+
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
 
-	t := self.T()
-	assert.NoError(t, self.sm.Start(journal.StartJournalService))
+	replicator, err := journal.NewReplicationService(
+		self.sm.Ctx, self.sm.Wg, self.config_obj)
+	assert.NoError(t, err)
+
+	replicator.SetRetryDuration(100 * time.Millisecond)
+
+	assert.NoError(t, self.sm.Start(frontend.StartFrontendService))
 	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
 	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
 	assert.NoError(t, self.sm.Start(launcher.StartLauncherService))
 	assert.NoError(t, self.sm.Start(repository.StartRepositoryManagerForTest))
-
-	// Set retry to be faster.
-	journal_service, err := services.GetJournal()
-	assert.NoError(self.T(), err)
-
-	replicator := journal_service.(*journal.ReplicationService)
-	replicator.SetRetryDuration(100 * time.Millisecond)
 }
 
 func (self *ReplicationTestSuite) SetupTest() {
@@ -77,6 +74,8 @@ func (self *ReplicationTestSuite) SetupTest() {
 		WithRequiredFrontend().WithWriteback().
 		LoadAndValidate()
 	require.NoError(self.T(), err)
+
+	self.config_obj.Frontend.IsMinion = true
 
 	self.ctrl = gomock.NewController(self.T())
 	self.mock = mock_proto.NewMockAPIClient(self.ctrl)

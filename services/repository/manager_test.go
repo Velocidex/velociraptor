@@ -24,7 +24,7 @@ func (self *ManagerTestSuite) SetupTest() {
 }
 
 func (self *ManagerTestSuite) TestSetArtifact() {
-	clock := utils.MockClock{MockNow: time.Unix(1000000000, 0)}
+	clock := &utils.MockClock{MockNow: time.Unix(1000000000, 0)}
 	journal_manager, err := services.GetJournal()
 	assert.NoError(self.T(), err)
 

@@ -42,8 +42,7 @@ type ClientInfo struct {
 
 func (self ClientInfo) Copy() ClientInfo {
 	copy := proto.Clone(&self.ClientInfo).(*actions_proto.ClientInfo)
-	self.ClientInfo = *copy
-	return self
+	return ClientInfo{*copy}
 }
 
 func (self ClientInfo) OS() ClientOS {

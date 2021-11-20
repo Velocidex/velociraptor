@@ -233,10 +233,6 @@ func (self *MasterFrontendManager) UpdateStats(ctx context.Context) {
 	}
 }
 
-func (self MasterFrontendManager) IsMaster() bool {
-	return true
-}
-
 // The master does not replicate anywhere.
 func (self MasterFrontendManager) GetMasterAPIClient(ctx context.Context) (
 	api_proto.APIClient, func() error, error) {
@@ -373,7 +369,13 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 		return errors.New("Frontend not configured")
 	}
 
-	if config_obj.Frontend.IsMaster {
+	// Start the grpc clients
+	err := grpc_client.Init(ctx, config_obj)
+	if err != nil {
+		return err
+	}
+
+	if services.IsMaster(config_obj) {
 		manager := &MasterFrontendManager{
 			config_obj: config_obj,
 			stats:      make(map[string]*FrontendMetrics),

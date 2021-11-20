@@ -68,12 +68,17 @@ type CollectionContext struct {
 	monitoring_batch map[string][]*ordereddict.Dict
 
 	completer *utils.Completer
+
+	send_update bool
 }
 
 func (self *CollectionContext) batchRows(flow_id string, rows []*ordereddict.Dict) {
 	batch, _ := self.monitoring_batch[flow_id]
 	batch = append(batch, rows...)
 	self.monitoring_batch[flow_id] = batch
+	if len(rows) > 0 {
+		self.Dirty = true
+	}
 }
 
 func NewCollectionContext(config_obj *config_proto.Config) *CollectionContext {
@@ -89,28 +94,25 @@ func NewCollectionContext(config_obj *config_proto.Config) *CollectionContext {
 		self.mu.Lock()
 		defer self.mu.Unlock()
 
+		if !self.send_update {
+			return
+		}
+
 		// If this is the final response (i.e. the flow is not running)
 		// and we have not yet sent an update, then we will notify a flow
 		// completion.
-		if self.Request != nil &&
-			self.State != flows_proto.ArtifactCollectorContext_RUNNING &&
-			!self.UserNotified {
+		row := ordereddict.NewDict().
+			Set("Timestamp", time.Now().UTC().Unix()).
+			Set("Flow", proto.Clone(&self.ArtifactCollectorContext)).
+			Set("FlowId", self.SessionId).
+			Set("ClientId", self.ClientId)
 
-			self.UserNotified = true
-
-			row := ordereddict.NewDict().
-				Set("Timestamp", time.Now().UTC().Unix()).
-				Set("Flow", proto.Clone(&self.ArtifactCollectorContext)).
-				Set("FlowId", self.SessionId).
-				Set("ClientId", self.ClientId)
-
-			journal, err := services.GetJournal()
-			if err == nil {
-				journal.PushRowsToArtifactAsync(
-					config_obj, row, "System.Flow.Completion")
-			}
-
+		journal, err := services.GetJournal()
+		if err == nil {
+			journal.PushRowsToArtifactAsync(
+				config_obj, row, "System.Flow.Completion")
 		}
+
 	})
 
 	return self
@@ -152,9 +154,28 @@ func closeContext(
 
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
 
+	// Figure out if we will send a System.Flow.Completion after
+	// this. This depends on:
+	// 1. The flow state is no longer running (error or finished).
+	// 2. We have not sent a System.Flow.Completion yet.
+	//
+	// Record that we sent it so we never send 2 completion messages
+	// for the same flow.
+	if collection_context.Request != nil &&
+		collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING &&
+		!collection_context.UserNotified {
+
+		// Record the message was sent - so we never resent the
+		// message, even with new data.
+		collection_context.UserNotified = true
+
+		// Instruct the completion function to send the message.
+		collection_context.send_update = true
+	}
+
 	if len(collection_context.Logs) > 0 {
-		err := flushContextLogs(config_obj, collection_context,
-			collection_context.completer)
+		err := flushContextLogs(
+			config_obj, collection_context, collection_context.completer)
 		if err != nil {
 			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
 			collection_context.Status = err.Error()
@@ -162,8 +183,8 @@ func closeContext(
 	}
 
 	if len(collection_context.UploadedFiles) > 0 {
-		err := flushContextUploadedFiles(config_obj, collection_context,
-			collection_context.completer)
+		err := flushContextUploadedFiles(
+			config_obj, collection_context, collection_context.completer)
 		if err != nil {
 			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
 			collection_context.Status = err.Error()
@@ -190,6 +211,7 @@ func closeContext(
 
 	flow_path_manager := paths.NewFlowPathManager(
 		collection_context.ClientId, collection_context.SessionId)
+
 	return db.SetSubjectWithCompletion(
 		config_obj, flow_path_manager.Path(),
 		collection_context, collection_context.completer.GetCompletionFunc())

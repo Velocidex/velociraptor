@@ -1,7 +1,6 @@
 package interrogation
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -10,62 +9,36 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/client_info"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/labels"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 type ServicesTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	client_id  string
-	flow_id    string
-	sm         *services.Service
+	test_utils.TestSuite
+	client_id string
+	flow_id   string
 }
 
 func (self *ServicesTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
+	self.TestSuite.SetupTest()
 
-	// Start essential services.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(client_info.StartClientInfoService))
-	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
-	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
-	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
-	require.NoError(self.T(), self.sm.Start(labels.StartLabelService))
-	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-	require.NoError(self.T(), self.sm.Start(StartInterrogationService))
+	require.NoError(self.T(), self.Sm.Start(StartInterrogationService))
+
+	self.LoadArtifacts([]string{`
+name: Server.Internal.Enrollment
+type: INTERNAL
+`,
+	})
 
 	self.client_id = "C.12312"
 	self.flow_id = "F.1232"
-}
-
-func (self *ServicesTestSuite) TearDownTest() {
-	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
 }
 
 func (self *ServicesTestSuite) EmulateCollection(
@@ -77,11 +50,11 @@ func (self *ServicesTestSuite) EmulateCollection(
 	journal, err := services.GetJournal()
 	assert.NoError(self.T(), err)
 
-	journal.PushRowsToArtifact(self.config_obj,
+	journal.PushRowsToArtifact(self.ConfigObj,
 		rows, artifact, self.client_id, self.flow_id)
 
 	// Emulate a flow completion message coming from the flow processor.
-	journal.PushRowsToArtifact(self.config_obj,
+	journal.PushRowsToArtifact(self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).
@@ -105,14 +78,14 @@ func (self *ServicesTestSuite) TestInterrogationService() {
 		})
 
 	// Wait here until the client is fully interrogated
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	client_path_manager := paths.NewClientPathManager(self.client_id)
 	client_info := &actions_proto.ClientInfo{}
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.config_obj, client_path_manager.Path(), client_info)
+		db.GetSubject(self.ConfigObj, client_path_manager.Path(), client_info)
 		return client_info.Hostname == hostname
 	})
 
@@ -124,19 +97,19 @@ func (self *ServicesTestSuite) TestInterrogationService() {
 
 	// Check the label is set on the client.
 	labeler := services.GetLabeler()
-	assert.True(self.T(), labeler.IsLabelSet(self.config_obj, self.client_id, "Foo"))
+	assert.True(self.T(), labeler.IsLabelSet(self.ConfigObj, self.client_id, "Foo"))
 	assert.NoError(self.T(), err)
 }
 
 func (self *ServicesTestSuite) TestEnrollService() {
 	enroll_message := ordereddict.NewDict().Set("ClientId", self.client_id)
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	client_path_manager := paths.NewClientPathManager(self.client_id)
 	client_info := &actions_proto.ClientInfo{}
-	db.GetSubject(self.config_obj, client_path_manager.Path(), client_info)
+	db.GetSubject(self.ConfigObj, client_path_manager.Path(), client_info)
 
 	assert.Equal(self.T(), client_info.ClientId, "")
 
@@ -150,7 +123,7 @@ func (self *ServicesTestSuite) TestEnrollService() {
 	journal, err := services.GetJournal()
 	assert.NoError(self.T(), err)
 
-	err = journal.PushRowsToArtifact(self.config_obj,
+	err = journal.PushRowsToArtifact(self.ConfigObj,
 		[]*ordereddict.Dict{
 			enroll_message, enroll_message, enroll_message, enroll_message,
 		},
@@ -160,7 +133,7 @@ func (self *ServicesTestSuite) TestEnrollService() {
 
 	// Wait here until the client is enrolled
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.config_obj, client_path_manager.Path(), client_info)
+		db.GetSubject(self.ConfigObj, client_path_manager.Path(), client_info)
 		return client_info.ClientId == self.client_id
 	})
 
@@ -168,13 +141,13 @@ func (self *ServicesTestSuite) TestEnrollService() {
 	flow_path_manager := paths.NewFlowPathManager(self.client_id,
 		client_info.LastInterrogateFlowId)
 	collection_context := &flows_proto.ArtifactCollectorContext{}
-	err = db.GetSubject(self.config_obj, flow_path_manager.Path(), collection_context)
+	err = db.GetSubject(self.ConfigObj, flow_path_manager.Path(), collection_context)
 	assert.Equal(self.T(), collection_context.Request.Artifacts,
 		[]string{"Generic.Client.Info"})
 
 	// Make sure only one flow is generated
 	all_children, err := db.ListChildren(
-		self.config_obj, flow_path_manager.ContainerPath())
+		self.ConfigObj, flow_path_manager.ContainerPath())
 	assert.NoError(self.T(), err)
 
 	children := []api.DSPathSpec{}

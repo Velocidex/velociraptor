@@ -29,7 +29,6 @@ package directory
 */
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -60,8 +59,6 @@ func (self *DirectoryFileWriter) Size() (int64, error) {
 func (self *DirectoryFileWriter) Write(data []byte) (int, error) {
 
 	defer api.InstrumentWithDelay("write", "DirectoryFileWriter", nil)()
-
-	fmt.Printf("DirectoryFileWriter Write %v %v\n", self.Fd.Name(), len(data))
 
 	_, err := self.Fd.Seek(0, os.SEEK_END)
 	if err != nil {
@@ -177,9 +174,6 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 	filename api.FSPathSpec, completion func()) (api.FileWriter, error) {
 
 	defer api.InstrumentWithDelay("open_write", "DirectoryFileStore", filename)()
-
-	fmt.Printf("DirectoryFileStore WriteFile %v\n", filename.AsClientPath())
-
 	file_path := filename.AsFilestoreFilename(self.config_obj)
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {

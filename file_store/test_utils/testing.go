@@ -29,7 +29,11 @@ func GetMemoryDataStore(
 	db, err := datastore.GetDB(config_obj)
 	require.NoError(t, err)
 
-	return db.(*datastore.MemcacheDatastore)
+	memory_db, ok := db.(*datastore.MemcacheDatastore)
+	if ok {
+		return memory_db
+	}
+	return nil
 }
 
 func FileReadAll(t *testing.T, config_obj *config_proto.Config,

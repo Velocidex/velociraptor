@@ -5,6 +5,7 @@ package journal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -153,8 +154,12 @@ func (self *ReplicationService) Start(
 	config_obj *config_proto.Config, wg *sync.WaitGroup) (err error) {
 
 	// If we are the master node we do not replicate anywhere.
-	api_client, closer, err := services.GetFrontendManager().
-		GetMasterAPIClient(ctx)
+	frontend_manager := services.GetFrontendManager()
+	if frontend_manager == nil {
+		return errors.New("Frontend not configured")
+	}
+
+	api_client, closer, err := frontend_manager.GetMasterAPIClient(ctx)
 	if err != nil {
 		return err
 	}
@@ -395,4 +400,23 @@ func (self *ReplicationService) Close() {
 	self.closer()
 	self.Buffer.Close()
 	os.Remove(self.tmpfile.Name()) // clean up file buffer
+}
+
+func NewReplicationService(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) (
+	*ReplicationService, error) {
+
+	service := &ReplicationService{
+		config_obj: config_obj,
+		locks:      make(map[string]*sync.Mutex),
+		batch:      make(map[string][]*ordereddict.Dict),
+	}
+
+	err := service.Start(ctx, config_obj, wg)
+	if err == nil {
+		services.RegisterJournal(service)
+	}
+	return service, err
 }

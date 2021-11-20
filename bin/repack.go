@@ -87,7 +87,8 @@ func validate_config(config_obj *config_proto.Config) error {
 }
 
 func doRepack() {
-	config_obj, err := new(config.Loader).WithFileLoader(*repack_command_config).
+	config_obj, err := new(config.Loader).
+		WithFileLoader(*repack_command_config).
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to open config file")
 

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
@@ -17,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
@@ -105,11 +107,12 @@ func (self *TestSuite) TestQueueManager() {
 		assert.NoError(self.T(), err)
 	}
 
-	// The file should contain all the rows now.
-	dbg = manager.Debug()
-
-	// File size is not accurate due to timestamps
-	assert.Greater(self.T(), utils.GetInt64(dbg, "TestQueue.0.Size"), int64(300))
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		// The file should contain all the rows now.  File size is not
+		// exact due to timestamps but it should be larger than 300.
+		dbg = manager.Debug()
+		return utils.GetInt64(dbg, "TestQueue.0.Size") > int64(300)
+	})
 
 	// Now read all the rows from the file.
 	count := 0

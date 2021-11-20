@@ -100,7 +100,7 @@ func (self *JournalService) PushRowsToArtifactAsync(
 	config_obj *config_proto.Config, row *ordereddict.Dict,
 	artifact string) {
 
-	self.PushRowsToArtifact(config_obj, []*ordereddict.Dict{row},
+	go self.PushRowsToArtifact(config_obj, []*ordereddict.Dict{row},
 		artifact, "server", "")
 }
 
@@ -161,19 +161,9 @@ func StartJournalService(
 
 	// Are we running on a minion frontend? If so we try to start
 	// our replication service.
-	fe_manager := services.GetFrontendManager()
-	if fe_manager != nil && !fe_manager.IsMaster() {
-		service := &ReplicationService{
-			config_obj: config_obj,
-			locks:      make(map[string]*sync.Mutex),
-			batch:      make(map[string][]*ordereddict.Dict),
-		}
-
-		err := service.Start(ctx, config_obj, wg)
-		if err == nil {
-			services.RegisterJournal(service)
-			return nil
-		}
+	if !services.IsMaster(config_obj) {
+		_, err := NewReplicationService(ctx, wg, config_obj)
+		return err
 	}
 
 	// It is valid to have a journal service with no configured datastore:

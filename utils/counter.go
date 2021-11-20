@@ -17,5 +17,5 @@ func GetId() uint64 {
 
 func GetGUID() int64 {
 	u := uuid.New()
-	return int64(binary.BigEndian.Uint64(u[0:8]))
+	return int64(binary.BigEndian.Uint64(u[0:8]) >> 2)
 }

@@ -10,7 +10,7 @@ import (
 
 func (self *PathManagerTestSuite) TestNotebookPathManager() {
 	manager := paths.NewNotebookPathManager("N.123")
-	manager.Clock = utils.MockClock{
+	manager.Clock = &utils.MockClock{
 		MockNow: time.Unix(1000000000, 0).UTC(),
 	}
 

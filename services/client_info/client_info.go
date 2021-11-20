@@ -153,7 +153,7 @@ func (self *ClientInfoManager) SendPing(client_id, ip_address string, ping uint6
 }
 
 func (self *ClientInfoManager) UpdatePing(client_id, ip string) error {
-	cached_info, err := self.getCacheInfo(client_id)
+	cached_info, err := self.GetCacheInfo(client_id)
 	if err != nil {
 		return err
 	}
@@ -178,18 +178,21 @@ func (self *ClientInfoManager) Start(
 	}
 
 	// The master will be informed when new clients appear.
-	frontend_manager := services.GetFrontendManager()
-	if frontend_manager == nil {
-		return errors.New("Frontend service is not ready")
-	}
-
-	if frontend_manager.IsMaster() {
+	is_master := services.IsMaster(config_obj)
+	if is_master {
 		err = journal.WatchQueueWithCB(ctx, config_obj, wg,
 			"Server.Internal.ClientPing", self.ProcessPing)
 		if err != nil {
 			return err
 		}
 	} else {
+		wait_time := uint64(10000) // 10 seconds
+		if config_obj.Frontend != nil &&
+			config_obj.Frontend.Resources != nil &&
+			config_obj.Frontend.Resources.MinionBatchWaitTimeMs > 0 {
+			wait_time = config_obj.Frontend.Resources.MinionBatchWaitTimeMs
+		}
+
 		journal_manager, err := services.GetJournal()
 		if err != nil {
 			return err
@@ -206,7 +209,7 @@ func (self *ClientInfoManager) Start(
 				case <-ctx.Done():
 					return
 
-				case <-time.After(10 * time.Second):
+				case <-time.After(time.Duration(wait_time) * time.Millisecond):
 					self.mu.Lock()
 					queue := self.queue
 					self.queue = nil
@@ -268,7 +271,7 @@ func (self *ClientInfoManager) ProcessPing(
 		return invalidError
 	}
 
-	cached_info, err := self.getCacheInfo(client_id)
+	cached_info, err := self.GetCacheInfo(client_id)
 	if err == nil {
 		// Update our internal cache but do not notify further (since
 		// this came from a notification anyway).
@@ -279,7 +282,7 @@ func (self *ClientInfoManager) ProcessPing(
 }
 
 func (self *ClientInfoManager) Flush(client_id string) {
-	cache_info, err := self.getCacheInfo(client_id)
+	cache_info, err := self.GetCacheInfo(client_id)
 	if err == nil {
 		cache_info.Flush()
 	}
@@ -291,23 +294,32 @@ func (self *ClientInfoManager) Clear() {
 }
 
 func (self *ClientInfoManager) Get(client_id string) (*services.ClientInfo, error) {
-	cached_info, err := self.getCacheInfo(client_id)
+	cached_info, err := self.GetCacheInfo(client_id)
 	if err != nil {
 		return nil, err
 	}
 
-	copy := cached_info.record.Copy()
-	return &copy, nil
+	// Return a copy so it can be read safely.
+	cached_info.mu.Lock()
+	res := cached_info.record.Copy()
+	cached_info.mu.Unlock()
+
+	return &res, nil
 }
 
-func (self *ClientInfoManager) getCacheInfo(client_id string) (*CachedInfo, error) {
+func (self *ClientInfoManager) GetCacheInfo(client_id string) (*CachedInfo, error) {
+	self.mu.Lock()
 	cached_any, err := self.lru.Get(client_id)
 	if err == nil {
 		cache_info, ok := cached_any.(*CachedInfo)
 		if ok {
+			self.mu.Unlock()
 			return cache_info, nil
 		}
 	}
+
+	// Unlock for potentially slow filesystem operations.
+	self.mu.Unlock()
 
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
@@ -321,9 +333,7 @@ func (self *ClientInfoManager) getCacheInfo(client_id string) (*CachedInfo, erro
 	err = db.GetSubject(self.config_obj, client_path_manager.Path(),
 		&client_info.ClientInfo)
 	if err != nil {
-		// Client record does not exist on disk - Make a fresh one
-		// because the client may not have been interrogated yet.
-		client_info.ClientId = client_id
+		return nil, err
 	}
 
 	cache_info := &CachedInfo{
@@ -340,7 +350,11 @@ func (self *ClientInfoManager) getCacheInfo(client_id string) (*CachedInfo, erro
 		cache_info.last_flush = ping_info.Ping
 	}
 
+	// Set the new cached info in the lru.
+	self.mu.Lock()
 	self.lru.Set(client_id, cache_info)
+	self.mu.Unlock()
+
 	metricLRUCount.Inc()
 
 	return cache_info, nil

@@ -11,7 +11,6 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
@@ -201,7 +200,7 @@ func (self *MemoryFileStore) ReadFile(path api.FSPathSpec) (api.FileReader, erro
 		}, nil
 	}
 
-	return nil, errors.New("Not found")
+	return nil, os.ErrNotExist
 }
 
 func (self *MemoryFileStore) WriteFile(path api.FSPathSpec) (api.FileWriter, error) {
