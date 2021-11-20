@@ -31,6 +31,9 @@ import (
 var (
 	StopIteration = errors.New("StopIteration")
 
+	// Cache the datastore implementations. The datastore is
+	// essentially a singleton determined by the configuration at
+	// start time.
 	ds_mu  sync.Mutex
 	g_impl DataStore
 )
@@ -67,17 +70,25 @@ type DataStore interface {
 		urn api.DSPathSpec,
 		message proto.Message) error
 
+	// SetSubject writes the data to the datastore. The data is
+	// written asynchronously and may not be immediately visible by
+	// other nodes.
 	SetSubject(
 		config_obj *config_proto.Config,
 		urn api.DSPathSpec,
 		message proto.Message) error
 
+	// Writes the data asynchronously and fires the completion
+	// callback when the data hits the disk and will become visibile
+	// to other nodes.
 	SetSubjectWithCompletion(
 		config_obj *config_proto.Config,
 		urn api.DSPathSpec,
 		message proto.Message,
 		completion func()) error
 
+	// DeleteSubject will asynchronously remove the item from the data
+	// store.
 	DeleteSubject(
 		config_obj *config_proto.Config,
 		urn api.DSPathSpec) error
@@ -86,9 +97,6 @@ type DataStore interface {
 	ListChildren(
 		config_obj *config_proto.Config,
 		urn api.DSPathSpec) ([]api.DSPathSpec, error)
-
-	Walk(config_obj *config_proto.Config,
-		root api.DSPathSpec, walkFn WalkFunc) error
 
 	Debug(config_obj *config_proto.Config)
 

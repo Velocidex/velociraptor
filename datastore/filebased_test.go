@@ -30,12 +30,12 @@ func (self FilebasedTestSuite) DumpDirectory() {
 
 func (self FilebasedTestSuite) TestSetGetSubjectWithEscaping() {
 	self.BaseTestSuite.TestSetGetSubjectWithEscaping()
-	self.DumpDirectory()
+	// self.DumpDirectory()
 }
 
 func (self FilebasedTestSuite) TestSetGetJSON() {
 	self.BaseTestSuite.TestSetGetJSON()
-	self.DumpDirectory()
+	// self.DumpDirectory()
 }
 
 func (self *FilebasedTestSuite) SetupTest() {

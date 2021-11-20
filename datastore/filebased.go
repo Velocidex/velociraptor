@@ -121,35 +121,6 @@ func (self *FileBaseDataStore) GetSubject(
 	return nil
 }
 
-func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,
-	root api.DSPathSpec, walkFn WalkFunc) error {
-
-	TraceDirectory(config_obj, "Walk", root)
-	all_children, err := self.ListChildren(config_obj, root)
-	if err != nil {
-		return err
-	}
-
-	for _, child := range all_children {
-		// Recurse into directories
-		if child.IsDir() {
-			err := self.Walk(config_obj, child, walkFn)
-			if err != nil {
-				// Do not quit the walk early.
-			}
-
-		} else {
-			err := walkFn(child)
-			if err == StopIteration {
-				return nil
-			}
-			continue
-		}
-	}
-
-	return nil
-}
-
 func (self *FileBaseDataStore) Debug(config_obj *config_proto.Config) {
 	filepath.Walk(config_obj.Datastore.Location,
 		func(path string, info fs.FileInfo, err error) error {

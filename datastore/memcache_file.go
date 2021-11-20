@@ -307,33 +307,6 @@ func (self *MemcacheFileDataStore) ListChildren(
 	return children, err
 }
 
-func (self *MemcacheFileDataStore) Walk(config_obj *config_proto.Config,
-	root api.DSPathSpec, walkFn WalkFunc) error {
-
-	all_children, err := self.ListChildren(config_obj, root)
-	if err != nil {
-		return err
-	}
-
-	for _, child := range all_children {
-		// Recurse into directories
-		if child.IsDir() {
-			err := self.Walk(config_obj, child, walkFn)
-			if err != nil {
-				// Do not quit the walk early.
-			}
-		} else {
-			err := walkFn(child)
-			if err == StopIteration {
-				return nil
-			}
-			continue
-		}
-	}
-
-	return nil
-}
-
 func (self *MemcacheFileDataStore) Close() {
 	self.cache.Close()
 }

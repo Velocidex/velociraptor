@@ -61,14 +61,30 @@ var (
 	notModified = errors.New("Not modified")
 )
 
+// The CollectionContext tracks collections as they are being
+// processed. The client send back a bunch of results consisting of
+// logs, monitoring results, status errors etc. As the server
+// processes these, it loads the CollectionContext from the datastore,
+// and updates the CollectionContext state. When the server completes
+// processing, the CollectionContext context is flushed by to the
+// filestore.
 type CollectionContext struct {
 	mu sync.Mutex
 
 	flows_proto.ArtifactCollectorContext
 	monitoring_batch map[string][]*ordereddict.Dict
 
+	// The completer keeps track of all asynchronous filesystem
+	// operations that will occur so that when everything is written
+	// to disk, the completer can send the System.Flow.Completion
+	// event. This is important as we dont want watchers of
+	// System.Flow.Completion to attempt to open the collection before
+	// everything is written.
 	completer *utils.Completer
 
+	// Indicate if the System.Flow.Completion should be sent. This
+	// only happens once the collection is complete and results are
+	// written. It only happens at most once per collection.
 	send_update bool
 }
 

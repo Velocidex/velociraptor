@@ -45,3 +45,32 @@ func MultiGetSubject(
 	wg.Wait()
 	return nil
 }
+
+func Walk(config_obj *config_proto.Config,
+	datastore DataStore, root api.DSPathSpec, walkFn WalkFunc) error {
+
+	TraceDirectory(config_obj, "Walk", root)
+	all_children, err := datastore.ListChildren(config_obj, root)
+	if err != nil {
+		return err
+	}
+
+	for _, child := range all_children {
+		// Recurse into directories
+		if child.IsDir() {
+			err := Walk(config_obj, datastore, child, walkFn)
+			if err != nil {
+				// Do not quit the walk early.
+			}
+
+		} else {
+			err := walkFn(child)
+			if err == StopIteration {
+				return nil
+			}
+			continue
+		}
+	}
+
+	return nil
+}

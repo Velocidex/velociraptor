@@ -177,33 +177,6 @@ func (self *RemoteDataStore) ListChildren(
 	return children, err
 }
 
-func (self *RemoteDataStore) Walk(config_obj *config_proto.Config,
-	root api.DSPathSpec, walkFn WalkFunc) error {
-
-	all_children, err := self.ListChildren(config_obj, root)
-	if err != nil {
-		return err
-	}
-
-	for _, child := range all_children {
-		// Recurse into directories
-		if child.IsDir() {
-			err := self.Walk(config_obj, child, walkFn)
-			if err != nil {
-				// Do not quit the walk early.
-			}
-		} else {
-			err := walkFn(child)
-			if err == StopIteration {
-				return nil
-			}
-			continue
-		}
-	}
-
-	return nil
-}
-
 // Called to close all db handles etc. Not thread safe.
 func (self *RemoteDataStore) Close() {}
 func (self *RemoteDataStore) Debug(config_obj *config_proto.Config) {
