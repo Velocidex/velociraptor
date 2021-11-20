@@ -428,9 +428,6 @@ func (self *HuntManager) ProcessParticipation(
 		return err
 	}
 
-	utils.DebugToFile("/tmp/2.txt", "Participation %v %v",
-		participation_row.HuntId, participation_row.ClientId)
-
 	// Get some info about the client
 	client_info_manager := services.GetClientInfoManager()
 	if client_info_manager == nil {

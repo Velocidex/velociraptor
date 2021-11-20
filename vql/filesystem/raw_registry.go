@@ -31,7 +31,6 @@ package filesystem
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"net/url"
 	"os"
 	"path"
@@ -331,8 +330,6 @@ func (self *RawRegFileSystemAccessor) PathSplit(path string) []string {
 func (self *RawRegFileSystemAccessor) PathJoin(root, stem string) string {
 	url, err := url.Parse(root)
 	if err != nil {
-		fmt.Printf("Error %v Joining %v and %v -> %v\n",
-			err, root, stem, path.Join(root, stem))
 		return path.Join(root, stem)
 	}
 

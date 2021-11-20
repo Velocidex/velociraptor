@@ -48,7 +48,6 @@ import (
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/services"
-	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -142,8 +141,6 @@ func ForemanProcessMessage(
 	// Record the latest timestamp
 	latest_timestamp := uint64(0)
 	for _, hunt := range hunts {
-		utils.DebugToFile("/tmp/3.txt", "Participation %v %v",
-			hunt.HuntId, client_id)
 		// Notify the hunt manager that we need to hunt this client.
 		journal.PushRowsToArtifactAsync(config_obj,
 			ordereddict.NewDict().

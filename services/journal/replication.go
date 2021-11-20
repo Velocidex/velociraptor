@@ -6,7 +6,6 @@ package journal
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"sync"
@@ -128,7 +127,6 @@ func (self *ReplicationService) startAsyncLoop(
 				// Take a copy to work on without a lock.
 				todo := make(map[string][]*ordereddict.Dict)
 				self.mu.Lock()
-				fmt.Printf("Checking async cache: %v\n", len(self.batch))
 
 				for k, v := range self.batch {
 					if len(v) > 0 {
@@ -141,7 +139,6 @@ func (self *ReplicationService) startAsyncLoop(
 				for k, v := range todo {
 					// Ignore errors since there is no way to report
 					// to the caller.
-					fmt.Printf("Pushing %v rows to %v\n", len(v), k)
 					_ = self.PushRowsToArtifact(config_obj, v, k, "server", "")
 				}
 			}

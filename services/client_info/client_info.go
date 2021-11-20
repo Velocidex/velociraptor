@@ -3,7 +3,6 @@ package client_info
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
@@ -221,7 +220,7 @@ func (self *ClientInfoManager) Start(
 							self.config_obj, queue,
 							"Server.Internal.ClientPing", "server", "")
 						if err != nil {
-							fmt.Printf("RPC Error: %v\n", err)
+							logger.Debug("RPC Error: %v\n", err)
 						}
 					}
 				}
