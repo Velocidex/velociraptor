@@ -120,7 +120,14 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 	if err == nil {
 		defer fd.Close()
 
-		cat_file, err := VerifyCatalogSignature(fd, normalized_path, output)
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
+		if !ok {
+			scope.Log("authenticode: %v", err)
+			return &vfilter.Null{}
+		}
+
+		cat_file, err := VerifyCatalogSignature(
+			config_obj, fd, normalized_path, output)
 		if err == nil {
 			_ = ParseCatFile(cat_file, output, arg.Verbose)
 		}

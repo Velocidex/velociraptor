@@ -34,7 +34,10 @@ var (
 		[8]byte{0x85, 0xe5, 0x0, 0xc0, 0x4f, 0xc2, 0x95, 0xee}}
 )
 
-func VerifyCatalogSignature(fd *os.File, normalized_path string, output *ordereddict.Dict) (string, error) {
+func VerifyCatalogSignature(
+	config_obj *config_proto.Config,
+	fd *os.File, normalized_path string,
+	output *ordereddict.Dict) (string, error) {
 	err := windows.HasWintrustDll()
 	if err != nil {
 		return "", err
