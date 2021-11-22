@@ -33,12 +33,12 @@ func MultiGetSubject(
 	mu.Lock()
 	for _, request := range requests {
 		wg.Add(1)
-		go func() {
+		go func(request *MultiGetSubjectRequest) {
 			mu.Lock()
 			defer mu.Unlock()
 			request.Err = db.GetSubject(config_obj, request.Path, request.Message)
 			wg.Done()
-		}()
+		}(request)
 	}
 	mu.Unlock()
 

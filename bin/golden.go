@@ -42,6 +42,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/startup"
@@ -254,6 +255,9 @@ func doGolden() {
 
 	// Start specific services needed for golden files
 	err = sm.Start(hunt_dispatcher.StartHuntDispatcher)
+	kingpin.FatalIfError(err, "Starting services")
+
+	err = sm.Start(client_info.StartClientInfoService)
 	kingpin.FatalIfError(err, "Starting services")
 
 	err = sm.Start(indexing.StartIndexingService)
