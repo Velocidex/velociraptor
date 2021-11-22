@@ -13,6 +13,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/pkcs7"
 	"www.velocidex.com/golang/go-pe"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	windows "www.velocidex.com/golang/velociraptor/vql/windows"
