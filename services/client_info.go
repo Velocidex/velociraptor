@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"sync"
 
 	"google.golang.org/protobuf/proto"
@@ -21,11 +22,15 @@ const (
 
 type ClientOS int
 
-func GetClientInfoManager() ClientInfoManager {
+func GetClientInfoManager() (ClientInfoManager, error) {
 	client_info_manager_mu.Lock()
 	defer client_info_manager_mu.Unlock()
 
-	return client_info_manager
+	if client_info_manager == nil {
+		return nil, errors.New("Client Info Manager not initialized")
+	}
+
+	return client_info_manager, nil
 }
 
 func RegisterClientInfoManager(m ClientInfoManager) {
@@ -67,8 +72,8 @@ type ClientInfoManager interface {
 }
 
 func GetHostname(client_id string) string {
-	client_info_manager := GetClientInfoManager()
-	if client_info_manager == nil {
+	client_info_manager, err := GetClientInfoManager()
+	if err != nil {
 		return ""
 	}
 	info, err := client_info_manager.Get(client_id)

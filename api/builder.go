@@ -364,7 +364,7 @@ func StartFrontendHttps(
 
 		err := server.Shutdown(time_ctx)
 		if err != nil {
-			server_obj.Error("Frontend server error %v", err)
+			server_obj.Error("Frontend server error during shutdown %v", err)
 		}
 	}()
 

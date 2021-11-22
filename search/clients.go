@@ -102,7 +102,11 @@ func FastGetApiClient(
 	config_obj *config_proto.Config,
 	client_id string) (*api_proto.ApiClient, error) {
 
-	client_info_manager := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return nil, err
+	}
+
 	client_info, err := client_info_manager.Get(client_id)
 	if err != nil {
 		return nil, err
