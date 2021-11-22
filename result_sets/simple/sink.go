@@ -11,3 +11,4 @@ func (self NullResultSetWriter) Write(row *ordereddict.Dict) {}
 func (self NullResultSetWriter) Flush()                      {}
 func (self NullResultSetWriter) Close()                      {}
 func (self NullResultSetWriter) SetCompletion(f func())      {}
+func (self NullResultSetWriter) SetSync()                    {}

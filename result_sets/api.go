@@ -16,6 +16,10 @@ type ResultSetWriter interface {
 
 	// Will be called when the result set is flushed to hard storage.
 	SetCompletion(fn func())
+
+	// Ensures that results are flushed to storage as soon as the
+	// writer is closed.
+	SetSync()
 }
 
 type TimedResultSetWriter interface {

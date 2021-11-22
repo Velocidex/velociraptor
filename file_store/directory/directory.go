@@ -72,6 +72,8 @@ func (self *DirectoryFileWriter) Truncate() error {
 	return self.Fd.Truncate(0)
 }
 
+func (self *DirectoryFileWriter) Flush() error { return nil }
+
 func (self *DirectoryFileWriter) Close() error {
 	err := self.Fd.Close()
 	if self.completion != nil {

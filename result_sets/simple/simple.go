@@ -55,6 +55,8 @@ type ResultSetWriterImpl struct {
 	index_fd api.FileWriter
 
 	completion func()
+
+	sync bool
 }
 
 func (self *ResultSetWriterImpl) SetCompletion(completion func()) {
@@ -62,6 +64,13 @@ func (self *ResultSetWriterImpl) SetCompletion(completion func()) {
 	defer self.mu.Unlock()
 
 	self.completion = completion
+}
+
+func (self *ResultSetWriterImpl) SetSync() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.sync = true
 }
 
 // WriteJSONL writes an entire JSONL blob to the end of the result
@@ -154,6 +163,11 @@ func (self *ResultSetWriterImpl) Close() {
 	self.Flush()
 	self.fd.Close()
 	self.index_fd.Close()
+
+	if self.sync {
+		self.fd.Flush()
+		self.index_fd.Flush()
+	}
 }
 
 type ResultSetFactory struct{}

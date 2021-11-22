@@ -126,6 +126,8 @@ func (self *MemoryWriter) Write(data []byte) (int, error) {
 	return len(data), nil
 }
 
+func (self *MemoryWriter) Flush() error { return nil }
+
 func (self *MemoryWriter) Close() error {
 	if self.closed {
 		panic("MemoryWriter already closed")

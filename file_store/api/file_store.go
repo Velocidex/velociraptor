@@ -37,6 +37,9 @@ type FileWriter interface {
 	Write(data []byte) (int, error)
 	Truncate() error
 	Close() error
+
+	// Force the writer to be flushed to disk immediately.
+	Flush() error
 }
 
 type FileInfo interface {
@@ -51,6 +54,7 @@ type FileStore interface {
 	// Completion function will be called when the file is committed.
 	WriteFileWithCompletion(
 		filename FSPathSpec, completion func()) (FileWriter, error)
+
 	StatFile(filename FSPathSpec) (FileInfo, error)
 	ListDirectory(dirname FSPathSpec) ([]FileInfo, error)
 	Delete(filename FSPathSpec) error
