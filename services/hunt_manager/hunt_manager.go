@@ -429,9 +429,9 @@ func (self *HuntManager) ProcessParticipation(
 	}
 
 	// Get some info about the client
-	client_info_manager := services.GetClientInfoManager()
-	if client_info_manager == nil {
-		return errors.New("Client_info_manager not set")
+	client_info_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return err
 	}
 
 	client_info, err := client_info_manager.Get(participation_row.ClientId)

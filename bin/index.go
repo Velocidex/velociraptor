@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/client_info"
 )
 
 var (
@@ -28,7 +29,16 @@ func doRebuildIndex() {
 	kingpin.FatalIfError(err, "Starting services.")
 	defer sm.Close()
 
-	client_info_manager := services.GetClientInfoManager()
+	err = sm.Start(client_info.StartClientInfoService)
+
+	kingpin.FatalIfError(err, "Starting services.")
+
+	err = sm.Start(datastore.StartMemcacheFileService)
+	kingpin.FatalIfError(err, "Starting services.")
+
+	client_info_manager, err := services.GetClientInfoManager()
+	kingpin.FatalIfError(err, "Starting services.")
+
 	labeler := services.GetLabeler()
 
 	db, err := datastore.GetDB(config_obj)

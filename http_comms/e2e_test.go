@@ -2,6 +2,7 @@ package http_comms
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"sync"
 	"testing"
@@ -40,6 +41,7 @@ type TestSuite struct {
 	config_obj *config_proto.Config
 	client_id  string
 	sm         *services.Service
+	port       int
 }
 
 func (self *TestSuite) SetupTest() {
@@ -119,7 +121,8 @@ func (self *TestSuite) makeServer(
 
 	// Wait for it to come up
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		req, err := http.Get("http://localhost:8000/server.pem")
+		url := fmt.Sprintf("http://localhost:%d/server.pem", self.port)
+		req, err := http.Get(url)
 		if err != nil || req.StatusCode != http.StatusOK {
 			return false
 		}
@@ -145,7 +148,7 @@ func (self *TestSuite) makeClient(
 		self.config_obj,
 		manager,
 		exe,
-		[]string{"http://localhost:8000/"},
+		[]string{fmt.Sprintf("http://localhost:%d/", self.port)},
 		on_error, utils.RealClock{},
 	)
 	assert.NoError(self.T(), err)
@@ -162,6 +165,11 @@ func (self *TestSuite) makeClient(
 
 func (self *TestSuite) TestServerRotateKeyE2E() {
 	logging.ClearMemoryLogs()
+
+	self.config_obj.Frontend.BindPort = uint32(self.port)
+	self.config_obj.Client.ServerUrls = []string{
+		fmt.Sprintf("http://localhost:%d", self.port),
+	}
 
 	server_ctx, server_cancel := context.WithCancel(self.sm.Ctx)
 	server_wg := &sync.WaitGroup{}
@@ -242,5 +250,6 @@ func TestClientServerComms(t *testing.T) {
 
 	suite.Run(t, &TestSuite{
 		config_obj: config_obj,
+		port:       8787,
 	})
 }

@@ -152,7 +152,10 @@ func (self *Notifier) ProcessPing(ctx context.Context,
 	// worth the extra ping updates to deliver fresh data to the GUI -
 	// there are not too many clients but we need to know accurate
 	// data.
-	client_info_manager := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return err
+	}
 	client_info_manager.UpdatePing(client_id, "")
 
 	notify_target, pres := row.GetString("NotifyTarget")

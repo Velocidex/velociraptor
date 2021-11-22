@@ -120,14 +120,15 @@ func StartupEssentialServices(sm *services.Service) error {
 func StartupFrontendServices(sm *services.Service) error {
 	spec := getServerServices(sm.Config)
 
-	if services.GetClientInfoManager() == nil {
+	_, err := services.GetClientInfoManager()
+	if err != nil {
 		err := sm.Start(client_info.StartClientInfoService)
 		if err != nil {
 			return err
 		}
 	}
 
-	err := sm.Start(datastore.StartMemcacheFileService)
+	err = sm.Start(datastore.StartMemcacheFileService)
 	if err != nil {
 		return err
 	}

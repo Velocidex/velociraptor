@@ -54,11 +54,13 @@ type: INTERNAL
 
 func (self *ClientInfoTestSuite) TestClientInfo() {
 	// Fetch the client from the manager
-	client_info_manager := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager()
+	assert.NoError(self.T(), err)
+
 	client_info_manager.(*client_info.ClientInfoManager).Clock = self.clock
 
 	// Get a non-existing client id - should return an error
-	_, err := client_info_manager.Get("C.DOESNOTEXIT")
+	_, err = client_info_manager.Get("C.DOESNOTEXIT")
 	assert.Error(self.T(), err)
 
 	info, err := client_info_manager.Get(self.client_id)
@@ -93,7 +95,8 @@ func (self *ClientInfoTestSuite) TestClientInfo() {
 // Check that master and minion update each other.
 func (self *ClientInfoTestSuite) TestMasterMinion() {
 	// Fetch the master client info manager
-	master_client_info_manager := services.GetClientInfoManager()
+	master_client_info_manager, err := services.GetClientInfoManager()
+	assert.NoError(self.T(), err)
 	master_client_info_manager.(*client_info.ClientInfoManager).Clock = self.clock
 
 	// Spin up a minion client_info manager
@@ -104,7 +107,7 @@ func (self *ClientInfoTestSuite) TestMasterMinion() {
 	minion_client_info_manager := client_info.NewClientInfoManager(minion_config)
 	minion_client_info_manager.Clock = self.clock
 
-	err := minion_client_info_manager.Start(
+	err = minion_client_info_manager.Start(
 		self.Sm.Ctx, minion_config, self.Sm.Wg)
 	assert.NoError(self.T(), err)
 

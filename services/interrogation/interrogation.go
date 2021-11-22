@@ -79,11 +79,11 @@ func (self *EnrollmentService) ProcessEnrollment(
 	}
 
 	// Get the client info from the client info manager.
-	client_info_manager := services.GetClientInfoManager()
-	if client_info_manager == nil {
-		return errors.New("Client info manager not started")
+	client_info_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return err
 	}
-	_, err := client_info_manager.Get(client_id)
+	_, err = client_info_manager.Get(client_id)
 
 	// If we have a valid client record we do not need to
 	// interrogate. Interrogation happens automatically only once
@@ -232,7 +232,11 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	}
 
 	// Expire the client info manager to force it to fetch fresh data.
-	services.GetClientInfoManager().Flush(client_id)
+	client_info_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return err
+	}
+	client_info_manager.Flush(client_id)
 
 	// Update the client indexes for the GUI. Add any keywords we
 	// wish to be searchable in the UI here.

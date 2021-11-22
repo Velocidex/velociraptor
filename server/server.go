@@ -273,7 +273,10 @@ func (self *Server) Process(
 		return nil, 0, err
 	}
 
-	client_info_manager := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return nil, 0, err
+	}
 	err = client_info_manager.UpdatePing(
 		message_info.Source, message_info.RemoteAddr)
 	if err != nil {

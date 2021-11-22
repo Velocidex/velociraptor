@@ -578,7 +578,9 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 		})
 	assert.NoError(t, err)
 
-	client_info_manager := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager()
+	assert.NoError(t, err)
+
 	client_info_manager.Flush(self.client_id)
 
 	journal, err := services.GetJournal()
