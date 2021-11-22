@@ -25,7 +25,7 @@ func InitializeGlobalRepositoryFromFilestore(
 
 	// Load artifacts from the custom file store.
 	file_store_factory := file_store.GetFileStore(config_obj)
-	err := file_store_factory.Walk(paths.ARTIFACT_DEFINITION_PREFIX,
+	err := api.Walk(file_store_factory, paths.ARTIFACT_DEFINITION_PREFIX,
 		func(path api.FSPathSpec, info os.FileInfo) error {
 			if path.Type() != api.PATH_TYPE_FILESTORE_YAML {
 				return nil

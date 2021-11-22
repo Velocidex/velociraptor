@@ -15,7 +15,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -130,9 +129,8 @@ func (self MemcacheFileTestSuite) TestListChildren() {
 	intermediate := path_specs.NewSafeDatastorePath("a")
 	children, err := self.datastore.ListChildren(self.config_obj, intermediate)
 	assert.NoError(self.T(), err)
-	utils.Debug(children)
-
-	file_based_imp.Debug(self.config_obj)
+	assert.Equal(self.T(), len(children), 1)
+	assert.Equal(self.T(), children[0].AsClientPath(), "/a/b")
 }
 
 func TestMemCacheFileDatastore(t *testing.T) {

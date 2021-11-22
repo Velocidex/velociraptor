@@ -262,13 +262,14 @@ func (self EnumerateFlowPlugin) Call(
 		}
 
 		r.emit_ds("Notebook", flow_path_manager.Notebook().Path())
-		db.Walk(config_obj, flow_path_manager.Notebook().DSDirectory(),
+		datastore.Walk(config_obj, db, flow_path_manager.Notebook().DSDirectory(),
 			func(path api.DSPathSpec) error {
 				r.emit_ds("NotebookData", path)
 				return nil
 			})
 
-		file_store_factory.Walk(flow_path_manager.Notebook().Directory(),
+		api.Walk(file_store_factory,
+			flow_path_manager.Notebook().Directory(),
 			func(path api.FSPathSpec, info os.FileInfo) error {
 				r.emit_fs("NotebookItem", path)
 				return nil

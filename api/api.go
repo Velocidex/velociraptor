@@ -257,7 +257,19 @@ func (self *ApiServer) ListClients(
 			"User is not allowed to view clients.")
 	}
 
-	return search.SearchClients(ctx, self.config, in, user_name)
+	result, err := search.SearchClients(ctx, self.config, in, user_name)
+	if err != nil {
+		return nil, err
+	}
+
+	// Warm up the cache pre-emptively so we have fresh connected
+	// status
+	notifier := services.GetNotifier()
+	for _, item := range result.Items {
+		notifier.IsClientConnected(
+			ctx, self.config, item.ClientId, 0 /* timeout */)
+	}
+	return result, nil
 }
 
 func (self *ApiServer) NotifyClients(

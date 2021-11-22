@@ -22,14 +22,12 @@ import (
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	file_store_api "www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
@@ -247,7 +245,7 @@ func (self *ServerTestSuite) TestForeman() {
 				// We do not want to trigger an event
 				// table update in this test so we
 				// pretend our version is later than
-				// the automatics table that will be
+				// the automatic table that will be
 				// created.
 				LastEventTableVersion: 10000000000000000000,
 			},
@@ -264,20 +262,6 @@ func (self *ServerTestSuite) TestForeman() {
 	require.NotNil(t, tasks[0].UpdateForeman)
 	assert.Equal(t, tasks[0].UpdateForeman.LastHuntTimestamp, services.GetHuntDispatcher().
 		GetLastTimestamp())
-
-	path_manager, err := artifacts.NewArtifactPathManager(self.ConfigObj,
-		self.client_id, "", "System.Hunt.Participation")
-	assert.NoError(t, err)
-
-	rows := []*ordereddict.Dict{}
-	file_store_factory := file_store.GetFileStore(self.ConfigObj)
-	rs_reader, err := result_sets.NewResultSetReader(
-		file_store_factory, path_manager.Path())
-	assert.NoError(t, err)
-	for row := range rs_reader.Rows(self.Sm.Ctx) {
-		rows = append(rows, row)
-	}
-	assert.Equal(t, len(rows), 1)
 }
 
 func (self *ServerTestSuite) RequiredFilestoreContains(
@@ -310,7 +294,7 @@ func (self *ServerTestSuite) TestMonitoring() {
 					`[{"ClientId": "%s", "HuntId": "H.123"}]`,
 					self.client_id),
 				Query: &actions_proto.VQLRequest{
-					Name: "System.Hunt.Participation",
+					Name: "Generic.Client.Stats",
 				},
 			},
 		})
@@ -318,11 +302,10 @@ func (self *ServerTestSuite) TestMonitoring() {
 
 	path_manager, err := artifacts.NewArtifactPathManager(self.ConfigObj,
 		self.client_id, constants.MONITORING_WELL_KNOWN_FLOW,
-		"System.Hunt.Participation")
+		"Generic.Client.Stats")
 	assert.NoError(self.T(), err)
 
 	self.RequiredFilestoreContains(path_manager.Path(), self.client_id)
-	test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
 }
 
 // Monitoring queries which upload data.

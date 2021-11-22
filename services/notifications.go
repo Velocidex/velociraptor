@@ -63,6 +63,9 @@ type Notifier interface {
 	// that was registered above.
 	NotifyListener(config_obj *config_proto.Config, id string) error
 
+	// Notify in the near future - no guarantee of delivery.
+	NotifyListenerAsync(config_obj *config_proto.Config, id string)
+
 	// Check if there is someone listening for the specified
 	// id. This method queries all nodes to check if the client is
 	// connected.

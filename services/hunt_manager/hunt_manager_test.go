@@ -43,8 +43,6 @@ func (self *HuntTestSuite) SetupTest() {
 	self.hunt_id += "A"
 	self.expected.Creator = self.hunt_id
 
-	self.ConfigObj.Frontend.IsMaster = true
-
 	require.NoError(self.T(), self.Sm.Start(frontend.StartFrontendService))
 	require.NoError(self.T(), self.Sm.Start(hunt_dispatcher.StartHuntDispatcher))
 	require.NoError(self.T(), self.Sm.Start(StartHuntManager))
@@ -537,7 +535,9 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 
 	client_path_manager := paths.NewClientPathManager(self.client_id)
 	err = db.SetSubject(self.ConfigObj,
-		client_path_manager.Path(), &actions_proto.ClientInfo{})
+		client_path_manager.Path(), &actions_proto.ClientInfo{
+			ClientId: self.client_id,
+		})
 	assert.NoError(t, err)
 
 	launcher.SetFlowIdForTests("F.1234")

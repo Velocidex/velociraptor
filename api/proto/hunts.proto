@@ -79,6 +79,8 @@ message Hunt {
             friendly_name: "Hunt ID",
         }];
 
+    int64 version = 20;
+
     uint64 create_time = 2 [(sem_type) = {
             description: "When this hunt was created.",
             friendly_name: "Creation Time",

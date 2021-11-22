@@ -69,7 +69,7 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 		}
 
 		// Indiscriminately delete all the client's datastore files.
-		err = db.Walk(config_obj, notebook_path_manager.DSDirectory(),
+		err = datastore.Walk(config_obj, db, notebook_path_manager.DSDirectory(),
 			func(filename api.DSPathSpec) error {
 				select {
 				case <-ctx.Done():
@@ -96,7 +96,7 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 		}
 
 		// Delete the filestore files.
-		err = file_store_factory.Walk(notebook_path_manager.Directory(),
+		err = api.Walk(file_store_factory, notebook_path_manager.Directory(),
 			func(filename api.FSPathSpec, info os.FileInfo) error {
 				select {
 				case <-ctx.Done():

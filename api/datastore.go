@@ -1,6 +1,8 @@
 package api
 
 import (
+	"sync"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -65,7 +67,21 @@ func (self *ApiServer) SetSubject(
 			"Datastore has no raw access.")
 	}
 
-	err = raw_db.SetBuffer(self.config, getURN(in), in.Data)
+	if in.Sync {
+		var wg sync.WaitGroup
+
+		// Wait for the data to hit the disk.
+		wg.Add(1)
+		err = raw_db.SetBuffer(self.config, getURN(in), in.Data, func() {
+			wg.Done()
+		})
+		wg.Wait()
+
+	} else {
+
+		// Just write quickly.
+		err = raw_db.SetBuffer(self.config, getURN(in), in.Data, nil)
+	}
 	return &api_proto.DataResponse{}, err
 }
 
@@ -95,6 +111,7 @@ func (self *ApiServer) ListChildren(
 		result.Children = append(result.Children, &api_proto.DSPathSpec{
 			Components: child.Components(),
 			PathType:   int64(child.Type()),
+			Tag:        child.Tag(),
 			IsDir:      child.IsDir(),
 		})
 	}
@@ -128,5 +145,7 @@ func getURN(in *api_proto.DataRequest) api.DSPathSpec {
 	}
 
 	return path_specs.NewUnsafeDatastorePath(
-		path_spec.Components...).SetType(api.PathType(path_spec.PathType))
+		path_spec.Components...).
+		SetType(api.PathType(path_spec.PathType)).
+		SetTag(path_spec.Tag)
 }

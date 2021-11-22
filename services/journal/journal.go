@@ -25,6 +25,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+var (
+	notInitializedError = errors.New("Not initialized")
+)
+
 type JournalService struct {
 	config_obj *config_proto.Config
 	qm         api.QueueManager
@@ -92,6 +96,31 @@ func (self *JournalService) AppendToResultSet(
 	return nil
 }
 
+func (self *JournalService) PushRowsToArtifactAsync(
+	config_obj *config_proto.Config, row *ordereddict.Dict,
+	artifact string) {
+
+	go self.PushRowsToArtifact(config_obj, []*ordereddict.Dict{row},
+		artifact, "server", "")
+}
+
+func (self *JournalService) Broadcast(
+	config_obj *config_proto.Config, rows []*ordereddict.Dict,
+	artifact, client_id, flows_id string) error {
+	if self == nil || self.qm == nil {
+		return notInitializedError
+	}
+
+	path_manager, err := artifacts.NewArtifactPathManager(
+		config_obj, client_id, flows_id, artifact)
+	if err != nil {
+		return err
+	}
+
+	self.qm.Broadcast(path_manager, rows)
+	return nil
+}
+
 func (self *JournalService) PushRowsToArtifact(
 	config_obj *config_proto.Config, rows []*ordereddict.Dict,
 	artifact, client_id, flows_id string) error {
@@ -123,6 +152,7 @@ func (self *JournalService) PushRowsToArtifact(
 func (self *JournalService) Start(config_obj *config_proto.Config) error {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Journal service.")
+
 	return nil
 }
 
@@ -131,18 +161,9 @@ func StartJournalService(
 
 	// Are we running on a minion frontend? If so we try to start
 	// our replication service.
-	fe_manager := services.GetFrontendManager()
-	if fe_manager != nil && !fe_manager.IsMaster() {
-		service := &ReplicationService{
-			config_obj: config_obj,
-			locks:      make(map[string]*sync.Mutex),
-		}
-
-		err := service.Start(ctx, wg)
-		if err == nil {
-			services.RegisterJournal(service)
-			return nil
-		}
+	if !services.IsMaster(config_obj) {
+		_, err := NewReplicationService(ctx, wg, config_obj)
+		return err
 	}
 
 	// It is valid to have a journal service with no configured datastore:

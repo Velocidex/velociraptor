@@ -162,6 +162,16 @@ func (self *DirectoryQueueManager) Debug() *ordereddict.Dict {
 	return self.queue_pool.Debug()
 }
 
+// Sends the events without writing them to the filestore.
+func (self *DirectoryQueueManager) Broadcast(
+	path_manager api.PathManager, dict_rows []*ordereddict.Dict) {
+	for _, row := range dict_rows {
+		// Set a timestamp per event for easier querying.
+		row.Set("_ts", int(self.Clock.Now().Unix()))
+		self.queue_pool.Broadcast(path_manager.GetQueueName(), row)
+	}
+}
+
 func (self *DirectoryQueueManager) PushEventRows(
 	path_manager api.PathManager, dict_rows []*ordereddict.Dict) error {
 

@@ -23,11 +23,20 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+)
+
+var (
+	timeoutClientPing = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "client_ping_timeout",
+		Help: "Number of times the client ping has timed out.",
+	})
 )
 
 type Notifier struct {
@@ -137,6 +146,15 @@ func (self *Notifier) ProcessPing(ctx context.Context,
 		return nil
 	}
 
+	// Client is directly connected - inform the client info
+	// manager. Normally the Ping is sent by the frontend to find out
+	// which clients are connected to a minion. In this case it is
+	// worth the extra ping updates to deliver fresh data to the GUI -
+	// there are not too many clients but we need to know accurate
+	// data.
+	client_info_manager := services.GetClientInfoManager()
+	client_info_manager.UpdatePing(client_id, "")
+
 	notify_target, pres := row.GetString("NotifyTarget")
 	if !pres {
 		return nil
@@ -195,6 +213,17 @@ func (self *Notifier) NotifyListener(config_obj *config_proto.Config, id string)
 	)
 }
 
+func (self *Notifier) NotifyListenerAsync(config_obj *config_proto.Config, id string) {
+	journal, err := services.GetJournal()
+	if err != nil {
+		return
+	}
+
+	journal.PushRowsToArtifactAsync(config_obj,
+		ordereddict.NewDict().Set("Target", id),
+		"Server.Internal.Notifications")
+}
+
 func (self *Notifier) IsClientDirectlyConnected(client_id string) bool {
 	return self.notification_pool.IsClientConnected(client_id)
 }
@@ -228,6 +257,10 @@ func (self *Notifier) IsClientConnected(
 		return false
 	}
 
+	if timeout == 0 {
+		return false
+	}
+
 	// Now wait here for the reply.
 	select {
 	case <-done:
@@ -235,6 +268,7 @@ func (self *Notifier) IsClientConnected(
 		return true
 
 	case <-time.After(time.Duration(timeout) * time.Second):
+		timeoutClientPing.Inc()
 		// Nope - not found within the timeout.
 		return false
 	}

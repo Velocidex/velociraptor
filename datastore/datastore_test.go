@@ -182,7 +182,7 @@ func (self BaseTestSuite) TestListChildren() {
 		"/a/b/c/3"}, asStrings(children))
 
 	visited := []api.DSPathSpec{}
-	self.datastore.Walk(self.config_obj,
+	Walk(self.config_obj, self.datastore,
 		path_specs.NewSafeDatastorePath("a", "b"),
 		func(path_name api.DSPathSpec) error {
 			visited = append(visited, path_name)
@@ -223,7 +223,7 @@ func (self BaseTestSuite) TestListChildrenTypes() {
 		"/a/b/c/3:dir"}, asStringsWithTypes(children))
 
 	visited := []api.DSPathSpec{}
-	self.datastore.Walk(self.config_obj,
+	Walk(self.config_obj, self.datastore,
 		path_specs.NewSafeDatastorePath("a", "b"),
 		func(path_name api.DSPathSpec) error {
 			visited = append(visited, path_name)
@@ -270,7 +270,7 @@ func (self BaseTestSuite) TestUnsafeListChildren() {
 		"/a/b:b/c:b/3"}, asStrings(children))
 
 	visited := []api.DSPathSpec{}
-	self.datastore.Walk(self.config_obj,
+	Walk(self.config_obj, self.datastore,
 		root,
 		func(path_name api.DSPathSpec) error {
 			visited = append(visited, path_name)

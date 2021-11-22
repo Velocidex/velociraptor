@@ -82,9 +82,11 @@ func WatchQueueWithCB(ctx context.Context,
 				}
 				err := processor(ctx, config_obj, row)
 				if err != nil {
+					// Processor errors are not generally serious so
+					// we just log them into the debug log.
 					logger := logging.GetLogger(config_obj,
 						&logging.FrontendComponent)
-					logger.Info("<red>Error:</> %v.", err)
+					logger.Debug("Debug: %v.", err)
 				}
 
 			case <-ctx.Done():

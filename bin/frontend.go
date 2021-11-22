@@ -97,13 +97,8 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 	// Increase resource limits.
 	server.IncreaseLimits(config_obj)
 
-	// Start the frontend service if needed. This must happen
-	// first so other services can contact the master node.
-
-	config_obj.Frontend.IsMaster = !*frontend_cmd_minion
-
 	// Minions use the RemoteFileDataStore to sync with the server.
-	if !config_obj.Frontend.IsMaster {
+	if !services.IsMaster(config_obj) {
 		logger.Info("Frontend will run as a <green>minion</>.")
 		logger.Info("<green>Enabling remote datastore</> since we are a minion.")
 		config_obj.Datastore.Implementation = "RemoteFileDataStore"

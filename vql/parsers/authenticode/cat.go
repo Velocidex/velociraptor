@@ -13,6 +13,8 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/pkcs7"
 	"www.velocidex.com/golang/go-pe"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	windows "www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems"
@@ -33,7 +35,10 @@ var (
 		[8]byte{0x85, 0xe5, 0x0, 0xc0, 0x4f, 0xc2, 0x95, 0xee}}
 )
 
-func VerifyCatalogSignature(fd *os.File, normalized_path string, output *ordereddict.Dict) (string, error) {
+func VerifyCatalogSignature(
+	config_obj *config_proto.Config,
+	fd *os.File, normalized_path string,
+	output *ordereddict.Dict) (string, error) {
 	err := windows.HasWintrustDll()
 	if err != nil {
 		return "", err
@@ -51,7 +56,8 @@ func VerifyCatalogSignature(fd *os.File, normalized_path string, output *ordered
 	var CatAdminHandle syscall.Handle
 	err = windows.CryptCATAdminAcquireContext2(&CatAdminHandle, nil, nil, nil, 0)
 	if err != nil {
-		fmt.Printf("CryptCATAdminAcquireContext2 %v\n", err)
+		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+		logger.Error("CryptCATAdminAcquireContext2 %v\n", err)
 		return "", err
 	}
 	defer windows.CryptCATAdminReleaseContext(CatAdminHandle, 0)
@@ -62,7 +68,8 @@ func VerifyCatalogSignature(fd *os.File, normalized_path string, output *ordered
 	err = windows.CryptCATAdminCalcHashFromFileHandle2(CatAdminHandle, fd.Fd(),
 		&hash_length, (*byte)(unsafe.Pointer(&hash[0])), 0)
 	if err != nil {
-		fmt.Printf("CryptCATAdminCalcHashFromFileHandle2 %v\n", err)
+		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+		logger.Error("CryptCATAdminCalcHashFromFileHandle2 %v\n", err)
 		return "", err
 	}
 

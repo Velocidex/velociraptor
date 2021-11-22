@@ -77,3 +77,8 @@ lint:
 
 KapeFilesSync:
 	python3 scripts/kape_files.py ~/projects/KapeFiles/ > artifacts/definitions/Windows/KapeFiles/Targets.yaml
+
+# Do this after fetching the build artifacts with `gh run download <RunID>`
+UpdateCIArtifacts:
+	mv artifact/server/* artifacts/testdata/server/testcases/
+	mv artifact/windows/* artifacts/testdata/windows/

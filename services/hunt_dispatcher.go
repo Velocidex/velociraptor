@@ -35,6 +35,26 @@ var (
 	global_hunt_dispatcher IHuntDispatcher
 )
 
+// How was the hunt modified and what should be done about it?
+type HuntModificationAction int
+
+const (
+	// No modifications made - just ignore the changes.
+	HuntUnmodified HuntModificationAction = iota
+
+	// Changes should be propagated to all other hunt dispatchers on
+	// all frontends.
+	HuntPropagateChanges
+
+	// Just write to data store but do not propagate (good for very
+	// frequent changes).
+	HuntFlushToDatastore
+
+	// Arrange for the change to be eventually written to the data
+	// store but not right away. Useful for very low priority events.
+	HuntFlushToDatastoreAsync
+)
+
 type IHuntDispatcher interface {
 	// Applies the function on all the hunts. Functions may not
 	// modify the hunt but will have read only access to the hunt
@@ -49,8 +69,10 @@ type IHuntDispatcher interface {
 	GetLastTimestamp() uint64
 
 	// Modify a hunt under lock. The hunt will be synchronized to
-	// all frontends.
-	ModifyHunt(hunt_id string, cb func(hunt *api_proto.Hunt) error) error
+	// all frontends. Return true to indicate the hunt was modified.
+	ModifyHunt(hunt_id string,
+		cb func(hunt *api_proto.Hunt) HuntModificationAction,
+	) HuntModificationAction
 
 	// Gets read only access to the hunt object.
 	GetHunt(hunt_id string) (*api_proto.Hunt, bool)

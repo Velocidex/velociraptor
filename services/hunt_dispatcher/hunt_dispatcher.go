@@ -1,6 +1,6 @@
 /*
-   Velociraptor - Hunting Evil
-   Copyright (C) 2019 Velocidex Innovations.
+   Velociraptor - Digging Deeper
+   Copyright (C) 2021 Velocidex.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Affero General Public License as published
@@ -23,17 +23,26 @@ package hunt_dispatcher
 // be in memory for quick access. The hunt dispatcher refreshes the
 // hunt list periodically from the data store to receive fresh data.
 
-// In multi frontend deployments, each node has its own hunt
-// dispatcher, initialized from the data store. On minion nodes, the
-// hunt dispatcher is not allowed to write updates to the data store,
-// only read them. The master's hunt dispatcher is responsible for
-// maintaining the hunt state across all nodes. In order to update a
-// hunt's property (e.g. TotalClientsScheduled etc), callers should
-// call MutateHunt() to pass a mutation to the master.
+// In multi frontend deployments, each node (master or minion) has its
+// own hunt dispatcher, initialized from the data store. On minion
+// nodes, the hunt dispatcher is not allowed to write updates to the
+// data store, only read them.
+
+// The master's hunt dispatcher is responsible for maintaining the
+// hunt state across all nodes. In order to update a hunt's property
+// (e.g. TotalClientsScheduled etc), callers should call MutateHunt()
+// on their local node to send a mutation to the master, which will
+// actually update the hunt state.
+
+// As the hunt manager (singleton running on the master) updates the
+// hunt record, it sends the new record to the
+// Server.Internal.HuntUpdate queue, where all hunt dispatchers will
+// receive it and update their internal state. The hunt dispatcher on
+// the master will also write the new record to the data store.
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -41,14 +50,18 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -58,6 +71,12 @@ var (
 	})
 )
 
+type HuntRecord struct {
+	*api_proto.Hunt
+
+	dirty bool
+}
+
 // The hunt dispatcher is a singlton which keeps hunt information in
 // memory under lock. We can modify hunt statistics, query for
 // applicable hunts etc. Hunts are flushed to disk periodically and
@@ -65,7 +84,7 @@ var (
 type HuntDispatcher struct {
 	// This is the last timestamp of the latest hunt. At steady
 	// state all clients will have run all hunts, therefore we can
-	// immediately serve their forman checks by simply comparing a
+	// immediately serve their foreman checks by simply comparing a
 	// single number.
 	// NOTE: This has to be aligned to 64 bits or 32 bit builds will break
 	// https://github.com/golang/go/issues/13868
@@ -73,18 +92,75 @@ type HuntDispatcher struct {
 	config_obj     *config_proto.Config
 
 	mu    sync.Mutex
-	hunts map[string]*api_proto.Hunt
-	dirty bool
+	hunts map[string]*HuntRecord
+
+	uuid int64
 }
 
 func (self *HuntDispatcher) GetLastTimestamp() uint64 {
 	return atomic.LoadUint64(&self.last_timestamp)
 }
 
+func (self *HuntDispatcher) ProcessUpdate(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	row *ordereddict.Dict) error {
+
+	// Ignore messages we sent ourselves.
+	from, pres := row.GetInt64("From")
+	if !pres || from == self.uuid {
+		return nil
+	}
+
+	hunt_any, pres := row.Get("Hunt")
+	if !pres {
+		return nil
+	}
+
+	serialized, err := json.Marshal(hunt_any)
+	if err != nil {
+		return err
+	}
+
+	hunt_obj := &api_proto.Hunt{}
+	err = protojson.Unmarshal(serialized, hunt_obj)
+	if err != nil {
+		return err
+	}
+
+	// The hunts start time could have been modified - we need to
+	// update ours then (and also the metrics).
+	if hunt_obj.StartTime > self.GetLastTimestamp() {
+		dispatcherCurrentTimestamp.Set(float64(hunt_obj.StartTime))
+		atomic.StoreUint64(&self.last_timestamp, hunt_obj.StartTime)
+	}
+
+	// Update the last time.
+	self.mu.Lock()
+	self.hunts[hunt_obj.HuntId] = &HuntRecord{Hunt: hunt_obj}
+	self.mu.Unlock()
+
+	// On the master we also write it to storage.
+	if services.IsMaster(config_obj) {
+		hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
+		db, err := datastore.GetDB(config_obj)
+		if err != nil {
+			return err
+		}
+
+		err = db.SetSubject(config_obj, hunt_path_manager.Path(), hunt_obj)
+		if err != nil {
+			return fmt.Errorf("Flushing hunt update %s to disk: %w", hunt_obj.HuntId, err)
+		}
+	}
+
+	return nil
+}
+
 func (self *HuntDispatcher) getHunts() []*api_proto.Hunt {
 	result := make([]*api_proto.Hunt, 0, len(self.hunts))
 	for _, hunt := range self.hunts {
-		result = append(result, hunt)
+		result = append(result, hunt.Hunt)
 	}
 
 	return result
@@ -116,7 +192,7 @@ func (self *HuntDispatcher) GetHunt(hunt_id string) (*api_proto.Hunt, bool) {
 
 	hunt_obj, pres := self.hunts[hunt_id]
 	if pres {
-		return proto.Clone(hunt_obj).(*api_proto.Hunt), true
+		return proto.Clone(hunt_obj.Hunt).(*api_proto.Hunt), true
 	}
 
 	return nil, false
@@ -130,116 +206,102 @@ func (self *HuntDispatcher) MutateHunt(
 		return err
 	}
 
-	return journal.PushRowsToArtifact(config_obj,
-		[]*ordereddict.Dict{ordereddict.NewDict().
+	journal.PushRowsToArtifactAsync(config_obj,
+		ordereddict.NewDict().
 			Set("hunt_id", mutation.HuntId).
-			Set("mutation", mutation)},
-		"Server.Internal.HuntModification", "server", "")
-}
-
-// Modify the hunt object under lock.
-func (self *HuntDispatcher) ModifyHunt(
-	hunt_id string, cb func(hunt *api_proto.Hunt) error) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	if !services.GetFrontendManager().IsMaster() {
-		// This is really a critical error.
-		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-		logger.Error("Unable to modify hunts on a minion node. Please use MutateHunt()")
-		return errors.New("Unable to modify hunts on a minion node. Please use MutateHunt()")
-	}
-
-	hunt_obj, pres := self.hunts[hunt_id]
-	if !pres {
-		return errors.New("not found")
-	}
-
-	err := cb(hunt_obj)
-
-	// Hunt is only modified if the cb return no error
-	if err == nil {
-		// The hunts start time could have been modified - we
-		// need to update ours then.
-		if hunt_obj.StartTime > self.GetLastTimestamp() {
-			dispatcherCurrentTimestamp.Set(float64(hunt_obj.StartTime))
-			atomic.StoreUint64(&self.last_timestamp, hunt_obj.StartTime)
-		}
-		self.dirty = true
-	}
-
-	return err
-}
-
-// Write the hunt stats to the data store. This is only called by the
-// hunt manager and so should be concurrently safe.
-func (self *HuntDispatcher) _flush_stats(config_obj *config_proto.Config) error {
-	// Already locked.
-	// Only do something if we are dirty.
-	if !self.dirty {
-		return nil
-	}
-
-	// If we are a minion frontend we never flush data - it is up
-	// to the master to sync the hunts
-	if !services.GetFrontendManager().IsMaster() {
-		return nil
-	}
-
-	self.dirty = false
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	// Update the hunt object
-	for _, hunt_obj := range self.hunts {
-		hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
-		err = db.SetSubject(config_obj, hunt_path_manager.Path(), hunt_obj)
-		if err != nil {
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Error("Flushing %s to disk: %v", hunt_obj.HuntId, err)
-			continue
-		}
-	}
+			Set("mutation", mutation),
+		"Server.Internal.HuntModification")
 
 	return nil
+}
+
+// Modify the hunt object under lock and also inform all other
+// dispatchers about the new state.
+func (self *HuntDispatcher) ModifyHunt(
+	hunt_id string,
+	cb func(hunt *api_proto.Hunt) services.HuntModificationAction) services.HuntModificationAction {
+
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	if !services.IsMaster(self.config_obj) {
+		// This is really a critical error.
+		logger.Error("Unable to modify hunts on a minion node. Please use MutateHunt()")
+		return services.HuntUnmodified
+	}
+
+	self.mu.Lock()
+	hunt_obj, pres := self.hunts[hunt_id]
+	if !pres {
+		return services.HuntUnmodified
+	}
+
+	hunt_obj.Hunt.Version = time.Now().UnixNano()
+
+	// Call the callback to see if we need to change this hunt.
+	modification := cb(hunt_obj.Hunt)
+	switch modification {
+	case services.HuntUnmodified:
+		self.mu.Unlock()
+
+	case services.HuntPropagateChanges:
+		// It is still modified so make sure to write it eventually.
+		hunt_obj.dirty = true
+
+		hunt_obj_copy := proto.Clone(hunt_obj.Hunt).(*api_proto.Hunt)
+		self.mu.Unlock()
+
+		// Relay the new update to all other hunt dispatchers.
+		journal, err := services.GetJournal()
+		if err == nil {
+			journal.PushRowsToArtifactAsync(self.config_obj,
+				ordereddict.NewDict().
+					Set("HuntId", hunt_id).
+					Set("From", self.uuid).
+					Set("Hunt", hunt_obj_copy),
+				"Server.Internal.HuntUpdate")
+		}
+
+	case services.HuntFlushToDatastore:
+		hunt_obj.dirty = true
+
+		hunt_obj_copy := proto.Clone(hunt_obj.Hunt).(*api_proto.Hunt)
+		self.mu.Unlock()
+
+		hunt_path_manager := paths.NewHuntPathManager(hunt_id)
+		db, err := datastore.GetDB(self.config_obj)
+		if err != nil {
+			return services.HuntUnmodified
+		}
+
+		err = db.SetSubject(self.config_obj,
+			hunt_path_manager.Path(), hunt_obj_copy)
+		if err != nil {
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Error("Flushing %s to disk: %v", hunt_obj_copy, err)
+			return services.HuntUnmodified
+		}
+
+	case services.HuntFlushToDatastoreAsync:
+		hunt_obj.dirty = true
+		self.mu.Unlock()
+
+	default:
+		self.mu.Unlock()
+	}
+
+	return modification
 }
 
 func (self *HuntDispatcher) Close(config_obj *config_proto.Config) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
-	atomic.SwapUint64(&self.last_timestamp, 0)
 
-	_ = self._flush_stats(config_obj)
+	atomic.SwapUint64(&self.last_timestamp, 0)
 }
 
-// Check for new hunts from the db. This could take a while and be
-// under lock. However, while we do this we do not block the foreman
-// checks.
+// Check for new hunts from the datastore. The master frontend will
+// also flush updated hunt records to the datastore.
 func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
-	// The foreman will now skip all hunts without blocking. This
-	// is OK because we will get those clients on the next foreman
-	// update - the important thing is that foreman checks are not
-	// blocked by this.
-	last_timestamp := atomic.SwapUint64(&self.last_timestamp, 0)
-
-	defer func() {
-		dispatcherCurrentTimestamp.Set(float64(last_timestamp))
-		atomic.StoreUint64(&self.last_timestamp, last_timestamp)
-	}()
-
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	// First flush all the stats to the data store.
-	err := self._flush_stats(config_obj)
-	if err != nil {
-		return err
-	}
-
-	// Now read all the data again.
+	// Now read all the data again from the data store.
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
@@ -251,41 +313,57 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 		return err
 	}
 
-	for _, hunt_urn := range hunts {
-		if hunt_urn.IsDir() {
-			continue
-		}
-
-		hunt_id := hunt_urn.Base()
+	requests := make([]*datastore.MultiGetSubjectRequest, 0, len(hunts))
+	for _, hunt_path := range hunts {
+		hunt_id := hunt_path.Base()
 		if !constants.HuntIdRegex.MatchString(hunt_id) {
 			continue
 		}
 
-		hunt_obj := &api_proto.Hunt{}
-		hunt_path_manager := paths.NewHuntPathManager(hunt_id)
-		err = db.GetSubject(
-			config_obj, hunt_path_manager.Path(), hunt_obj)
-		if err != nil || hunt_obj.HuntId == "" {
+		requests = append(requests, &datastore.MultiGetSubjectRequest{
+			Path:    paths.NewHuntPathManager(hunt_id).Path(),
+			Message: &api_proto.Hunt{},
+			Data:    hunt_id,
+		})
+	}
+
+	err = datastore.MultiGetSubject(config_obj, requests)
+	if err != nil {
+		return err
+	}
+
+	// Now merge the database entries with the current in memory set.
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for _, request := range requests {
+		hunt_id := request.Data.(string)
+		hunt_obj, ok := request.Message.(*api_proto.Hunt)
+		if !ok {
 			continue
 		}
 
-		if hunt_obj.Stats == nil {
-			hunt_obj.Stats = &api_proto.HuntStats{}
-		}
-
-		// Should not really happen but if the file is
-		// corrupted we skip it.
-		if hunt_obj.HuntId != hunt_id {
+		if request.Err != nil || hunt_obj.HuntId != hunt_id {
 			continue
 		}
 
-		// This hunt is newer than the last_timestamp, we need
-		// to update it.
-		if hunt_obj.StartTime > last_timestamp {
-			last_timestamp = hunt_obj.StartTime
+		old_hunt_obj, pres := self.hunts[hunt_id]
+		if pres && old_hunt_obj.Version >= hunt_obj.Version {
+			// The in memory copy is newer than the stored version,
+			// Master node will synchronize
+			if services.IsMaster(config_obj) {
+				db.SetSubject(config_obj, request.Path, old_hunt_obj)
+			}
+			continue
 		}
 
-		self.hunts[hunt_id] = hunt_obj
+		// Maintain the last timestamp as the latest hunt start time.
+		if hunt_obj.StartTime > self.last_timestamp {
+			self.last_timestamp = hunt_obj.StartTime
+			dispatcherCurrentTimestamp.Set(float64(self.last_timestamp))
+		}
+
+		self.hunts[hunt_id] = &HuntRecord{Hunt: hunt_obj}
 	}
 	return nil
 }
@@ -295,11 +373,12 @@ func StartHuntDispatcher(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	result := &HuntDispatcher{
+	service := &HuntDispatcher{
 		config_obj: config_obj,
-		hunts:      make(map[string]*api_proto.Hunt),
+		hunts:      make(map[string]*HuntRecord),
+		uuid:       utils.GetGUID(),
 	}
-	services.RegisterHuntDispatcher(result)
+	services.RegisterHuntDispatcher(service)
 
 	// flush the hunts every 10 seconds.
 	wg.Add(1)
@@ -317,32 +396,16 @@ func StartHuntDispatcher(
 		logger.Info("<green>Starting</> Hunt Dispatcher Service.")
 
 		for {
-			// Also listen for notifications so we can refresh as soon as
-			// the hunt is started.
-			notifier := services.GetNotifier()
-			// This only happens at shutdown so wait until
-			// we shutdown as well.
-			if notifier == nil {
-				<-ctx.Done()
-				return
-			}
-			notification, cancel := notifier.ListenForNotification(
-				"HuntDispatcher")
-			defer cancel()
-
 			select {
 			case <-ctx.Done():
-				result.Close(config_obj)
+				service.Close(config_obj)
 				return
 
-			case <-notification:
-				cancel()
-				_ = result.Refresh(config_obj)
-
 			case <-time.After(10 * time.Second):
-				err := result.Refresh(config_obj)
+				// Re-read the hunts from the data store.
+				err := service.Refresh(config_obj)
 				if err != nil {
-					logger.Error("Unable to flush hunts: %v", err)
+					logger.Error("Unable to sync hunts: %v", err)
 				}
 			}
 		}
@@ -350,11 +413,16 @@ func StartHuntDispatcher(
 
 	// Try to refresh the hunts table the first time. If we cant
 	// we will just keep trying anyway later.
-	err := result.Refresh(config_obj)
+	err := service.Refresh(config_obj)
 	if err != nil {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Error("Unable to Refresh hunt dispatcher: %v", err)
 	}
 
-	return nil
+	return journal.WatchQueueWithCB(ctx, config_obj, wg,
+		"Server.Internal.HuntUpdate", service.ProcessUpdate)
+}
+
+func init() {
+	json.RegisterCustomEncoder(&api_proto.Hunt{}, json.MarshalHuntProtobuf)
 }

@@ -2,6 +2,7 @@ package api
 
 import (
 	"testing"
+	"time"
 
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
@@ -13,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -23,11 +25,10 @@ type DatastoreAPITest struct {
 }
 
 func (self *DatastoreAPITest) SetupTest() {
-	self.TestSuite.SetupTest()
+	self.ConfigObj = self.LoadConfig()
+	self.ConfigObj.API.BindPort = 8787
 
-	// Now bring up an API server.
-	self.ConfigObj.Frontend.ServerServices = &config_proto.ServerServicesConfig{}
-	self.ConfigObj.API.BindPort = 8101
+	self.TestSuite.SetupTest()
 
 	server_builder, err := NewServerBuilder(
 		self.Sm.Ctx, self.ConfigObj, self.Sm.Wg)
@@ -36,6 +37,19 @@ func (self *DatastoreAPITest) SetupTest() {
 	err = server_builder.WithAPIServer(self.Sm.Ctx, self.Sm.Wg)
 	assert.NoError(self.T(), err)
 
+	// Now bring up an API server.
+	self.ConfigObj.Frontend.ServerServices = &config_proto.ServerServicesConfig{}
+
+	// Wait for the server to come up.
+	conn, closer, err := grpc_client.Factory.GetAPIClient(
+		self.Sm.Ctx, self.ConfigObj)
+	assert.NoError(self.T(), err)
+	defer closer()
+
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		res, err := conn.Check(self.Sm.Ctx, &api_proto.HealthCheckRequest{})
+		return err == nil && res.Status == api_proto.HealthCheckResponse_SERVING
+	})
 }
 
 func (self *DatastoreAPITest) TestDatastore() {
@@ -53,9 +67,12 @@ func (self *DatastoreAPITest) TestDatastore() {
 	assert.NoError(self.T(), err)
 	defer closer()
 
+	test_utils.GetMemoryDataStore(self.T(), self.ConfigObj).Debug(self.ConfigObj)
+
 	res, err := conn.GetSubject(self.Sm.Ctx, &api_proto.DataRequest{
 		Pathspec: &api_proto.DSPathSpec{
 			Components: path_spec.Components(),
+			PathType:   int64(path_spec.Type()),
 		}})
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), res.Data, []byte("{\"name\":\"Velociraptor\"}"))

@@ -31,7 +31,6 @@ import (
 	"github.com/juju/ratelimit"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -40,7 +39,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -274,19 +273,9 @@ func (self *Server) Process(
 		return nil, 0, err
 	}
 
-	// Record some stats about the client.
-	client_info := &actions_proto.ClientInfo{
-		Ping:      uint64(time.Now().UTC().UnixNano() / 1000),
-		IpAddress: message_info.RemoteAddr,
-	}
-	db, err := datastore.GetDB(self.config)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	client_path_manager := paths.NewClientPathManager(message_info.Source)
-	err = db.SetSubject(
-		self.config, client_path_manager.Ping(), client_info)
+	client_info_manager := services.GetClientInfoManager()
+	err = client_info_manager.UpdatePing(
+		message_info.Source, message_info.RemoteAddr)
 	if err != nil {
 		return nil, 0, err
 	}

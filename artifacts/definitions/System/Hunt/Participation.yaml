@@ -1,43 +1,7 @@
 name: System.Hunt.Participation
 description: |
-     Endpoints may participate in hunts. This artifact collects which hunt
-     each system participated in.
+     Endpoints may participate in hunts. This artifact collects which
+     hunt each system participated in.
 
-     Note: This is an automated system artifact. You do not need to start it.
-
-type: CLIENT_EVENT
-
-reports:
-  - type: MONITORING_DAILY
-    template: |
-      {{ define "all_hunts" }}LET allhunts <= SELECT * FROM hunts(){{ end }}
-      {{ define "hunts" }}
-           SELECT * FROM foreach(
-             row={ SELECT timestamp(epoch=Timestamp) AS Scheduled,
-                          HuntId as ParticipatedHuntId
-                   FROM source(client_id=ClientId,
-                       artifact='System.Hunt.Participation') },
-             query={
-                SELECT Scheduled,
-                       hunt_id,
-                       hunt_description,
-                       start_request.artifacts
-                FROM allhunts
-                WHERE hunt_id = ParticipatedHuntId
-             })
-      {{ end }}
-
-      {{ $client_info := Query "SELECT * FROM clients(client_id=ClientId) LIMIT 1" }}
-
-      # Hunt participation for {{ Get $client_info "0.os_info.fqdn" }}
-
-      The client with a client ID of {{ Get $client_info "0.client_id" }} participated in some hunts today.
-
-      {{ Query "all_hunts" "hunts" | Table }}
-
-      ## VQL Query
-      The following VQL query was used to plot the graph above.
-
-      ```sql
-      {{ template "hunts" }}
-      ```
+# Will not be written but will be relayed between minions and server.
+type: INTERNAL

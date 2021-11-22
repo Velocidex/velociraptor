@@ -40,6 +40,7 @@ func (self *RemoteDataStore) GetSubject(
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),
+			Tag:        urn.Tag(),
 		}})
 
 	if err != nil {
@@ -65,6 +66,15 @@ func (self *RemoteDataStore) SetSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,
 	message proto.Message) error {
+
+	return self.SetSubjectWithCompletion(config_obj, urn, message, nil)
+}
+
+func (self *RemoteDataStore) SetSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec,
+	message proto.Message,
+	completion func()) error {
 
 	defer Instrument("write", "RemoteDataStore", urn)()
 
@@ -93,10 +103,16 @@ func (self *RemoteDataStore) SetSubject(
 
 	_, err = conn.SetSubject(ctx, &api_proto.DataRequest{
 		Data: value,
+		Sync: completion != nil,
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),
+			Tag:        urn.Tag(),
 		}})
+
+	if completion != nil {
+		completion()
+	}
 
 	return err
 }
@@ -117,6 +133,7 @@ func (self *RemoteDataStore) DeleteSubject(
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),
+			Tag:        urn.Tag(),
 		}})
 
 	return err
@@ -140,6 +157,7 @@ func (self *RemoteDataStore) ListChildren(
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),
+			Tag:        urn.Tag(),
 		}})
 
 	if err != nil {
@@ -157,33 +175,6 @@ func (self *RemoteDataStore) ListChildren(
 	}
 
 	return children, err
-}
-
-func (self *RemoteDataStore) Walk(config_obj *config_proto.Config,
-	root api.DSPathSpec, walkFn WalkFunc) error {
-
-	all_children, err := self.ListChildren(config_obj, root)
-	if err != nil {
-		return err
-	}
-
-	for _, child := range all_children {
-		// Recurse into directories
-		if child.IsDir() {
-			err := self.Walk(config_obj, child, walkFn)
-			if err != nil {
-				// Do not quit the walk early.
-			}
-		} else {
-			err := walkFn(child)
-			if err == StopIteration {
-				return nil
-			}
-			continue
-		}
-	}
-
-	return nil
 }
 
 // Called to close all db handles etc. Not thread safe.

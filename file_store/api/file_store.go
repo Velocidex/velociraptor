@@ -37,6 +37,9 @@ type FileWriter interface {
 	Write(data []byte) (int, error)
 	Truncate() error
 	Close() error
+
+	// Force the writer to be flushed to disk immediately.
+	Flush() error
 }
 
 type FileInfo interface {
@@ -44,13 +47,20 @@ type FileInfo interface {
 	PathSpec() FSPathSpec
 }
 
-type WalkFunc func(urn FSPathSpec, info os.FileInfo) error
 type FileStore interface {
 	ReadFile(filename FSPathSpec) (FileReader, error)
 	WriteFile(filename FSPathSpec) (FileWriter, error)
+
+	// Completion function will be called when the file is committed.
+	WriteFileWithCompletion(
+		filename FSPathSpec, completion func()) (FileWriter, error)
+
 	StatFile(filename FSPathSpec) (FileInfo, error)
 	ListDirectory(dirname FSPathSpec) ([]FileInfo, error)
-	Walk(root FSPathSpec, cb WalkFunc) error
 	Delete(filename FSPathSpec) error
 	Move(src, dest FSPathSpec) error
+}
+
+type Flusher interface {
+	Flush()
 }

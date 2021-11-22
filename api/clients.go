@@ -102,6 +102,7 @@ func (self *ApiServer) GetClient(
 			"User is not allowed to view clients.")
 	}
 
+	// Update the user's MRU
 	if in.UpdateMru {
 		err = search.UpdateMRU(self.config, user_name, in.ClientId)
 		if err != nil {
@@ -109,20 +110,22 @@ func (self *ApiServer) GetClient(
 		}
 	}
 
-	api_client, err := search.GetApiClient(ctx,
-		self.config,
-		in.ClientId,
-		!in.Lightweight, // Detailed
-	)
+	api_client, err := search.FastGetApiClient(ctx, self.config, in.ClientId)
 	if err != nil {
 		return nil, err
 	}
 
-	if self.server_obj != nil && !in.Lightweight &&
-		// Wait up to 2 seconds to find out if clients are connected.
-		services.GetNotifier().IsClientConnected(ctx,
-			self.config, in.ClientId, 2) {
-		api_client.LastSeenAt = uint64(time.Now().UnixNano() / 1000)
+	if self.server_obj != nil {
+		if !in.Lightweight &&
+			// Wait up to 2 seconds to find out if clients are connected.
+			services.GetNotifier().IsClientConnected(ctx,
+				self.config, in.ClientId, 2) {
+			api_client.LastSeenAt = uint64(time.Now().UnixNano() / 1000)
+		} else {
+			// Warm up the cache anyway.
+			go services.GetNotifier().IsClientConnected(
+				ctx, self.config, in.ClientId, 2)
+		}
 	}
 
 	return api_client, nil

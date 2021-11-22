@@ -53,11 +53,14 @@ var (
 	// The node name of this node.
 	node_name = ""
 
+	// Lock for log manager.
+	mu      sync.Mutex
 	Manager *LogManager
 
-	mu          sync.Mutex
-	prelogs     []string
-	memory_logs []string
+	// Lock for memory logs and prelogs.
+	memory_log_mu sync.Mutex
+	prelogs       []string
+	memory_logs   []string
 
 	tag_regex         = regexp.MustCompile("<([^>/0]+)>")
 	closing_tag_regex = regexp.MustCompile("</>")
@@ -70,16 +73,8 @@ func GetNodeName() string {
 	return node_name
 }
 
-// Each node in a cluster stores logs in its own directory.
-func SetNodeName(config_obj *config_proto.Config, name string) error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	node_name = name
-	return InitLogging(config_obj)
-}
-
 func InitLogging(config_obj *config_proto.Config) error {
+	mu.Lock()
 	Manager = &LogManager{
 		contexts: make(map[*string]*LogContext),
 	}
@@ -94,6 +89,7 @@ func InitLogging(config_obj *config_proto.Config) error {
 		}
 		Manager.contexts[component] = logger
 	}
+	mu.Unlock()
 
 	FlushPrelogs(config_obj)
 
@@ -105,8 +101,8 @@ func ClearMemoryLogs() {
 }
 
 func GetMemoryLogs() []string {
-	mu.Lock()
-	defer mu.Unlock()
+	memory_log_mu.Lock()
+	defer memory_log_mu.Unlock()
 
 	return append([]string{}, memory_logs...)
 }
@@ -116,8 +112,8 @@ func GetMemoryLogs() []string {
 // load (because the config is not fully loaded yet). We therefore
 // queue these messages until we are able to flush them.
 func Prelog(format string, v ...interface{}) {
-	mu.Lock()
-	defer mu.Unlock()
+	memory_log_mu.Lock()
+	defer memory_log_mu.Unlock()
 
 	// Truncate too many logs
 	if len(prelogs) > 1000 {
@@ -129,7 +125,12 @@ func Prelog(format string, v ...interface{}) {
 
 func FlushPrelogs(config_obj *config_proto.Config) {
 	logger := GetLogger(config_obj, &GenericComponent)
-	for _, msg := range prelogs {
+
+	memory_log_mu.Lock()
+	lprelogs := append([]string{}, prelogs...)
+	memory_log_mu.Unlock()
+
+	for _, msg := range lprelogs {
 		logger.Info(msg)
 	}
 	prelogs = make([]string, 0)
@@ -179,8 +180,7 @@ func (self *LogManager) GetLogger(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if config_obj != nil &&
-		config_obj.Logging != nil &&
+	if config_obj.Logging != nil &&
 		!config_obj.Logging.SeparateLogsPerComponent {
 		component = &GenericComponent
 	}
@@ -353,7 +353,11 @@ func NewPlainLogger(
 }
 
 func GetLogger(config_obj *config_proto.Config, component *string) *LogContext {
-	if Manager == nil {
+	mu.Lock()
+	lManager := Manager
+	mu.Unlock()
+
+	if lManager == nil {
 		err := InitLogging(config_obj)
 		if err != nil {
 			panic(err)
@@ -384,8 +388,8 @@ func clearTag(message string) string {
 type inMemoryLogWriter struct{}
 
 func (self inMemoryLogWriter) Write(p []byte) (n int, err error) {
-	mu.Lock()
-	defer mu.Unlock()
+	memory_log_mu.Lock()
+	defer memory_log_mu.Unlock()
 
 	// Truncate too many logs
 	if len(memory_logs) > 1000 {

@@ -453,6 +453,11 @@ message FrontendResourceControl {
     // less latency to respond to client events but also means more
     // TLS handshake and network overheads due to frequent POST.
     uint64 client_event_max_wait = 23;
+
+    // Minions batch updates to the master so as to minimize RPC as
+    // much as possible, this controls how often these batches are
+    // flushed to the master (default 10 sec).
+    uint64 minion_batch_wait_time_ms = 25;
 }
 
 
@@ -552,7 +557,7 @@ message FrontendConfig {
     FrontendResourceControl resources = 27;
 
     // Used internally to tag this frontend as the master.
-    bool is_master = 30;
+    bool is_minion = 30;
 
     // DEPRECATED ****************************************************
 
@@ -620,8 +625,12 @@ message DatastoreConfig {
     int64 memcache_write_mutation_buffer = 5;
 
     // Number of writing threads - increase for high latency
-    // filesystems.
+    // filesystems (default 100).
     int64 memcache_write_mutation_writers = 6;
+
+    // Experimental - do not set in configs yet!
+    string minion_implementation = 7;
+    string master_implementation = 8;
 }
 
 // Configuration for the mail server.
@@ -714,6 +723,7 @@ message ServerServicesConfig {
    bool api_server = 13;
    bool frontend_server = 14;
    bool gui_server = 15;
+   bool index_server = 16;
 }
 
 message Defaults {

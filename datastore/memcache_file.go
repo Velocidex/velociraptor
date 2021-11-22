@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	memcache_file_imp = NewMemcacheFileDataStore()
+	memcache_file_imp *MemcacheFileDataStore
 
 	metricLRUHit = promauto.NewCounter(
 		prometheus.CounterOpts{
@@ -40,6 +40,12 @@ var (
 		prometheus.CounterOpts{
 			Name: "memcache_lru_miss",
 			Help: "LRU for memcache",
+		})
+
+	metricIdleWriters = promauto.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "memcache_idle_writers",
+			Help: "Total available writers ready right now",
 		})
 )
 
@@ -54,6 +60,9 @@ type Mutation struct {
 	urn  api.DSPathSpec
 	wg   *sync.WaitGroup
 	data []byte
+
+	// Will run when committed to disk.
+	completion func()
 }
 
 type MemcacheFileDataStore struct {
@@ -110,11 +119,13 @@ func (self *MemcacheFileDataStore) StartWriter(
 	self.ctx = ctx
 
 	if writers == 0 {
-		writers = 5
+		writers = 100
 	}
 
 	// Start some writers.
 	for i := 0; i < writers; i++ {
+		metricIdleWriters.Inc()
+
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -129,15 +140,24 @@ func (self *MemcacheFileDataStore) StartWriter(
 						return
 					}
 
+					metricIdleWriters.Dec()
 					switch mutation.op {
 					case MUTATION_OP_SET_SUBJECT:
 						writeContentToFile(config_obj, mutation.urn, mutation.data)
 						self.invalidateDirCache(config_obj, mutation.urn)
 
+						// Call the completion function once we hit
+						// the directory datastore.
+						if mutation.completion != nil {
+							mutation.completion()
+						}
+
 					case MUTATION_OP_DEL_SUBJECT:
 						file_based_imp.DeleteSubject(config_obj, mutation.urn)
 						self.invalidateDirCache(config_obj, mutation.urn.Dir())
 					}
+
+					metricIdleWriters.Inc()
 					mutation.wg.Done()
 				}
 			}
@@ -180,6 +200,15 @@ func (self *MemcacheFileDataStore) SetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
+	return self.SetSubjectWithCompletion(config_obj, urn, message, nil)
+}
+
+func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec,
+	message proto.Message,
+	completion func()) error {
+
 	defer Instrument("write", "MemcacheFileDataStore", urn)()
 
 	// Encode as JSON
@@ -211,10 +240,11 @@ func (self *MemcacheFileDataStore) SetSubject(
 		return nil
 
 	case self.writer <- &Mutation{
-		op:   MUTATION_OP_SET_SUBJECT,
-		urn:  urn,
-		wg:   &wg,
-		data: serialized_content}:
+		op:         MUTATION_OP_SET_SUBJECT,
+		urn:        urn,
+		wg:         &wg,
+		completion: completion,
+		data:       serialized_content}:
 	}
 
 	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {
@@ -277,33 +307,6 @@ func (self *MemcacheFileDataStore) ListChildren(
 	return children, err
 }
 
-func (self *MemcacheFileDataStore) Walk(config_obj *config_proto.Config,
-	root api.DSPathSpec, walkFn WalkFunc) error {
-
-	all_children, err := self.ListChildren(config_obj, root)
-	if err != nil {
-		return err
-	}
-
-	for _, child := range all_children {
-		// Recurse into directories
-		if child.IsDir() {
-			err := self.Walk(config_obj, child, walkFn)
-			if err != nil {
-				// Do not quit the walk early.
-			}
-		} else {
-			err := walkFn(child)
-			if err == StopIteration {
-				return nil
-			}
-			continue
-		}
-	}
-
-	return nil
-}
-
 func (self *MemcacheFileDataStore) Close() {
 	self.cache.Close()
 }
@@ -345,7 +348,7 @@ func (self *MemcacheFileDataStore) GetBuffer(
 
 func (self *MemcacheFileDataStore) SetBuffer(
 	config_obj *config_proto.Config,
-	urn api.DSPathSpec, data []byte) error {
+	urn api.DSPathSpec, data []byte, completion func()) error {
 
 	err := self.cache.SetData(config_obj, urn, data)
 	if err != nil {
@@ -359,10 +362,12 @@ func (self *MemcacheFileDataStore) SetBuffer(
 		return nil
 
 	case self.writer <- &Mutation{
-		op:   MUTATION_OP_SET_SUBJECT,
-		urn:  urn,
-		wg:   &wg,
-		data: data}:
+		op:         MUTATION_OP_SET_SUBJECT,
+		urn:        urn,
+		wg:         &wg,
+		data:       data,
+		completion: completion,
+	}:
 	}
 
 	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {
@@ -417,8 +422,8 @@ func NewMemcacheFileDataStore() *MemcacheFileDataStore {
 func StartMemcacheFileService(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
-	if config_obj.Datastore != nil &&
-		config_obj.Datastore.Implementation == "MemcacheFileDataStore" {
+
+	if memcache_file_imp != nil {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> memcache service")
 		memcache_file_imp.StartWriter(ctx, wg, config_obj)

@@ -101,6 +101,26 @@ func (mr *MockAPIClientMockRecorder) CancelNotebookCell(arg0, arg1 interface{}, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelNotebookCell", reflect.TypeOf((*MockAPIClient)(nil).CancelNotebookCell), varargs...)
 }
 
+// Check mocks base method.
+func (m *MockAPIClient) Check(arg0 context.Context, arg1 *proto0.HealthCheckRequest, arg2 ...grpc.CallOption) (*proto0.HealthCheckResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Check", varargs...)
+	ret0, _ := ret[0].(*proto0.HealthCheckResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Check indicates an expected call of Check.
+func (mr *MockAPIClientMockRecorder) Check(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockAPIClient)(nil).Check), varargs...)
+}
+
 // CollectArtifact mocks base method.
 func (m *MockAPIClient) CollectArtifact(arg0 context.Context, arg1 *proto2.ArtifactCollectorArgs, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorResponse, error) {
 	m.ctrl.T.Helper()

@@ -5,15 +5,11 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -22,12 +18,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/result_sets/simple"
-	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
+
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 var test_cases = []struct {
@@ -41,44 +33,23 @@ var test_cases = []struct {
 }
 
 type ResultSetTestSuite struct {
-	suite.Suite
+	test_utils.TestSuite
 
-	config_obj         *config_proto.Config
 	file_store         api.FileStore
 	client_id, flow_id string
-	sm                 *services.Service
 }
 
 func (self *ResultSetTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
+	self.TestSuite.SetupTest()
 
 	self.client_id = "C.12312"
 	self.flow_id = "F.1232"
-	self.file_store = file_store.GetFileStore(self.config_obj)
-
-	// Start essential services.
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
-	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
-	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
-}
-
-func (self *ResultSetTestSuite) TearDownTest() {
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
+	self.file_store = file_store.GetFileStore(self.ConfigObj)
 }
 
 func (self *ResultSetTestSuite) TestResultSetSimple() {
 	path_manager, err := artifacts.NewArtifactPathManager(
-		self.config_obj,
+		self.ConfigObj,
 		self.client_id,
 		self.flow_id,
 		"Generic.Client.Info/BasicInformation")
@@ -218,6 +189,9 @@ func (self *ResultSetTestSuite) TestResultSetWriterTruncate() {
 }
 
 func (self *ResultSetTestSuite) TestResultSetWriterWriteJSONL() {
+	// Use a new client id
+	self.client_id = "C.12313"
+
 	// WriteJSONL is supposed to optimize the write load by
 	// writing large JSON chunks into the result set. We
 	// deliberately do not want to parse it out so we just append
@@ -230,9 +204,6 @@ func (self *ResultSetTestSuite) TestResultSetWriterWriteJSONL() {
 	rs.Write(ordereddict.NewDict().Set("Foo", 1))
 	rs.WriteJSONL([]byte("{\"Foo\":2}\n{\"Foo\":3}\n"), 2)
 	rs.Close()
-
-	//v := test_utils.GetMemoryFileStore(self.T(), self.config_obj)
-	//utils.Debug(v)
 
 	rs_reader, err := result_sets.NewResultSetReader(self.file_store, path_manager)
 	assert.NoError(self.T(), err)
@@ -258,23 +229,21 @@ type ResultSetTestSuiteFileBased struct {
 }
 
 func (self *ResultSetTestSuiteFileBased) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
+	self.ConfigObj = self.LoadConfig()
 
+	var err error
 	self.dir, err = ioutil.TempDir("", "file_store_test")
 	assert.NoError(self.T(), err)
 
-	self.config_obj.Datastore.Implementation = "FileBaseDataStore"
-	self.config_obj.Datastore.FilestoreDirectory = self.dir
-	self.config_obj.Datastore.Location = self.dir
+	self.ConfigObj.Datastore.Implementation = "FileBaseDataStore"
+	self.ConfigObj.Datastore.FilestoreDirectory = self.dir
+	self.ConfigObj.Datastore.Location = self.dir
 
 	self.client_id = "C.12312"
 	self.flow_id = "F.1232"
-	self.file_store = file_store.GetFileStore(self.config_obj)
+	self.file_store = file_store.GetFileStore(self.ConfigObj)
+
+	self.TestSuite.SetupTest()
 }
 
 func (self *ResultSetTestSuiteFileBased) TearDownTest() {

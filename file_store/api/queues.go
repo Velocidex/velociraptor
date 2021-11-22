@@ -10,6 +10,10 @@ import (
 // A QueueManager writes query results into queues. The manager is
 // responsible for rotating the queue files as required.
 type QueueManager interface {
+	// Broadcast events only for local listeners without writing to
+	// storage.
+	Broadcast(path_manager PathManager, rows []*ordereddict.Dict)
+
 	PushEventRows(path_manager PathManager, rows []*ordereddict.Dict) error
 	Watch(ctx context.Context, queue_name string) (
 		output <-chan *ordereddict.Dict, cancel func())

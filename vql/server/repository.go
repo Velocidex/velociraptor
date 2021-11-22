@@ -228,7 +228,17 @@ func (self ArtifactsPlugin) Call(
 
 		// No args means just dump all artifacts
 		if len(arg.Names) == 0 {
-			arg.Names = repository.List()
+			for _, name := range repository.List() {
+				artifact, pres := repository.Get(config_obj, name)
+				if pres {
+					select {
+					case <-ctx.Done():
+						return
+					case output_chan <- json.ConvertProtoToOrderedDict(artifact):
+					}
+				}
+			}
+			return
 		}
 
 		seen := make(map[string]*artifacts_proto.Artifact)

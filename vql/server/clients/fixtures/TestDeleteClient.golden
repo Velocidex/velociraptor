@@ -133,6 +133,12 @@
   {
    "client_id": "C.123",
    "type": "Datastore",
+   "vfs_path": "/clients/C.123/ping.json.db",
+   "really_do_it": true
+  },
+  {
+   "client_id": "C.123",
+   "type": "Datastore",
    "vfs_path": "/clients/C.123/tasks/task1123.db",
    "really_do_it": true
   },

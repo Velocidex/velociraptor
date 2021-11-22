@@ -1,7 +1,6 @@
 package timed
 
 import (
-	"context"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -10,22 +9,12 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
-	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -62,40 +51,19 @@ var timed_result_set_tests = []struct {
 }
 
 type TimedResultSetTestSuite struct {
-	suite.Suite
-
-	config_obj         *config_proto.Config
-	file_store         api.FileStore
+	test_utils.TestSuite
 	client_id, flow_id string
-	sm                 *services.Service
-	ctx                context.Context
 }
 
 func (self *TimedResultSetTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
+	self.TestSuite.SetupTest()
+	self.LoadArtifacts([]string{`
+name: Windows.Events.ProcessCreation
+type: CLIENT_EVENT
+`})
 
 	self.client_id = "C.12312"
 	self.flow_id = "F.1232"
-	self.file_store = file_store.GetFileStore(self.config_obj)
-
-	// Start essential services.
-	self.ctx, _ = context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(self.ctx, self.config_obj)
-
-	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
-	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
-	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
-}
-
-func (self *TimedResultSetTestSuite) TearDownTest() {
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
 }
 
 func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
@@ -104,14 +72,14 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 
 	// Start off by writing some events on a queue.
 	path_manager, err := artifacts.NewArtifactPathManager(
-		self.config_obj,
+		self.ConfigObj,
 		self.client_id,
 		self.flow_id,
 		"Windows.Events.ProcessCreation")
 	assert.NoError(self.T(), err)
 	path_manager.Clock = clock
 
-	file_store_factory := file_store.GetFileStore(self.config_obj)
+	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	writer, err := NewTimedResultSetWriter(
 		file_store_factory, path_manager, nil)
 	assert.NoError(self.T(), err)
@@ -132,15 +100,13 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 
 	writer.Close()
 
-	// test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
-
 	result := ordereddict.NewDict()
 
 	rs_reader, err := result_sets.NewTimedResultSetReader(
-		self.ctx, self.file_store, path_manager)
+		self.Sm.Ctx, file_store_factory, path_manager)
 	assert.NoError(self.T(), err)
 
-	result.Set("Available Files", rs_reader.GetAvailableFiles(self.ctx))
+	result.Set("Available Files", rs_reader.GetAvailableFiles(self.Sm.Ctx))
 
 	for _, testcase := range timed_result_set_tests {
 		err = rs_reader.SeekToTime(time.Unix(int64(testcase.start_time), 0))
@@ -149,7 +115,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 		rs_reader.SetMaxTime(time.Unix(int64(testcase.end_time), 0))
 
 		rows := make([]*ordereddict.Dict, 0)
-		for row := range rs_reader.Rows(self.ctx) {
+		for row := range rs_reader.Rows(self.Sm.Ctx) {
 			rows = append(rows, row)
 		}
 		result.Set(testcase.name, rows)
@@ -170,26 +136,19 @@ type TimedResultSetTestSuiteFileBased struct {
 
 func (self *TimedResultSetTestSuiteFileBased) SetupTest() {
 	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
-
 	self.dir, err = ioutil.TempDir("", "file_store_test")
 	assert.NoError(self.T(), err)
 
-	self.ctx, _ = context.WithTimeout(context.Background(), time.Second*60)
-	self.config_obj.Datastore.Implementation = "FileBaseDataStore"
-	self.config_obj.Datastore.FilestoreDirectory = self.dir
-	self.config_obj.Datastore.Location = self.dir
+	self.ConfigObj = self.LoadConfig()
+	self.ConfigObj.Datastore.Implementation = "FileBaseDataStore"
+	self.ConfigObj.Datastore.FilestoreDirectory = self.dir
+	self.ConfigObj.Datastore.Location = self.dir
 
-	self.client_id = "C.12312"
-	self.flow_id = "F.1232"
-	self.file_store = file_store.GetFileStore(self.config_obj)
+	self.TimedResultSetTestSuite.SetupTest()
 }
 
 func (self *TimedResultSetTestSuiteFileBased) TearDownTest() {
+	self.TimedResultSetTestSuite.TearDownTest()
 	os.RemoveAll(self.dir)
 }
 

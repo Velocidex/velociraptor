@@ -42,8 +42,13 @@ type TimedResultSetWriterImpl struct {
 	log_path      api.FSPathSpec
 	last_log_base string
 	writer        *timelines.TimelineWriter
+	completion    func()
 
 	Clock utils.Clock
+}
+
+func (self *TimedResultSetWriterImpl) SetCompletion(completion func()) {
+	self.completion = completion
 }
 
 func (self *TimedResultSetWriterImpl) Write(row *ordereddict.Dict) {
@@ -100,6 +105,8 @@ func (self *TimedResultSetWriterImpl) getWriter(ts time.Time) (
 	if err != nil {
 		return nil, err
 	}
+
+	writer.SetCompletion(self.completion)
 
 	self.log_path = log_path
 	self.last_log_base = log_path.Base()

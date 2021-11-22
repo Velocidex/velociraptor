@@ -11,7 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
-	"github.com/ReneKroon/ttlcache/v2"
+	"github.com/Velocidex/ttlcache/v2"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	memcache_imp = NewMemcacheDataStore()
+	memcache_imp DataStore
 
 	internalError = errors.New("Internal datastore error")
 	errorNotFound = errors.New("Not found")
@@ -259,6 +259,15 @@ func (self *MemcacheDatastore) SetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
+	return self.SetSubjectWithCompletion(config_obj, urn, message, nil)
+}
+
+func (self *MemcacheDatastore) SetSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec,
+	message proto.Message,
+	completion func()) error {
+
 	defer Instrument("write", "MemcacheDatastore", urn)()
 
 	var value []byte
@@ -277,13 +286,16 @@ func (self *MemcacheDatastore) SetSubject(
 		return err
 	}
 
-	return self.SetData(config_obj, urn, value)
+	err = self.SetData(config_obj, urn, value)
+	if completion != nil {
+		completion()
+	}
+	return err
 }
 
 func (self *MemcacheDatastore) SetData(
 	config_obj *config_proto.Config,
-	urn api.DSPathSpec,
-	data []byte) (err error) {
+	urn api.DSPathSpec, data []byte) (err error) {
 
 	// Get new dir metadata
 	md, err := self.get_dir_metadata(self.dir_cache, config_obj, urn.Dir())
@@ -299,9 +311,10 @@ func (self *MemcacheDatastore) SetData(
 	parent_path := urn.Dir().AsDatastoreDirectory(config_obj)
 	self.dir_cache.Set(parent_path, md)
 
-	return self.data_cache.Set(urn.AsClientPath(), &BulkData{
+	err = self.data_cache.Set(urn.AsClientPath(), &BulkData{
 		data: data,
 	})
+	return err
 }
 
 func (self *MemcacheDatastore) DeleteSubject(
@@ -370,33 +383,6 @@ func (self *MemcacheDatastore) ListChildren(
 	return result, nil
 }
 
-func (self *MemcacheDatastore) Walk(config_obj *config_proto.Config,
-	root api.DSPathSpec, walkFn WalkFunc) error {
-
-	all_children, err := self.ListChildren(config_obj, root)
-	if err != nil {
-		return err
-	}
-
-	for _, child := range all_children {
-		// Recurse into directories
-		if child.IsDir() {
-			err := self.Walk(config_obj, child, walkFn)
-			if err != nil {
-				// Do not quit the walk early.
-			}
-		} else {
-			err := walkFn(child)
-			if err == StopIteration {
-				return nil
-			}
-			continue
-		}
-	}
-
-	return nil
-}
-
 // Called to close all db handles etc. Not thread safe.
 func (self *MemcacheDatastore) Close() {}
 
@@ -423,9 +409,13 @@ func (self *MemcacheDatastore) GetBuffer(
 
 func (self *MemcacheDatastore) SetBuffer(
 	config_obj *config_proto.Config,
-	urn api.DSPathSpec, data []byte) error {
+	urn api.DSPathSpec, data []byte, completion func()) error {
 
-	return self.SetData(config_obj, urn, data)
+	err := self.SetData(config_obj, urn, data)
+	if completion != nil {
+		completion()
+	}
+	return err
 }
 
 func (self *MemcacheDatastore) Debug(config_obj *config_proto.Config) {

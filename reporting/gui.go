@@ -500,6 +500,12 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 				self.Error("Error: %v\n", err)
 				return nil
 			}
+
+			// We must ensure results are visible immediately because
+			// the GUI will need to refresh the cell content as soon
+			// as we complete.
+			rs_writer.SetSync()
+
 			defer rs_writer.Close()
 
 			rs_writer.Flush()

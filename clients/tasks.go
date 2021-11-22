@@ -36,6 +36,8 @@ func GetClientTasks(
 	}
 
 	for _, task_urn := range tasks {
+		task_urn = task_urn.SetTag("ClientTask")
+
 		// Here we read the task from the task_urn and remove
 		// it from the queue.
 		message := &crypto_proto.VeloMessage{}

@@ -112,7 +112,7 @@ func (self *PathManageTestSuite) TestPathManager() {
 			testcase.full_artifact_name)
 		assert.NoError(self.T(), err)
 
-		path_manager.Clock = utils.MockClock{MockNow: time.Unix(ts, 0)}
+		path_manager.Clock = &utils.MockClock{MockNow: time.Unix(ts, 0)}
 		path, err := path_manager.GetPathForWriting()
 		assert.NoError(self.T(), err)
 		assert.Equal(self.T(),

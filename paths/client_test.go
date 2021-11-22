@@ -11,7 +11,7 @@ func (self *PathManagerTestSuite) TestClientPathManager() {
 	assert.Equal(self.T(), "/ds/clients/C.123.db",
 		self.getDatastorePath(manager.Path()))
 
-	assert.Equal(self.T(), "/ds/clients/C.123/ping.db",
+	assert.Equal(self.T(), "/ds/clients/C.123/ping.json.db",
 		self.getDatastorePath(manager.Ping()))
 
 	assert.Equal(self.T(), "/ds/clients/C.123/labels.json.db",

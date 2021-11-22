@@ -79,16 +79,17 @@ func (self *ApiServer) PushEvents(
 		}
 
 		// Only return the first row
-		if true {
-			journal, err := services.GetJournal()
-			if err != nil {
-				return nil, err
-			}
-
-			err = journal.PushRowsToArtifact(self.config,
-				rows, in.Artifact, in.ClientId, in.FlowId)
-			return &empty.Empty{}, err
+		journal, err := services.GetJournal()
+		if err != nil {
+			return nil, err
 		}
+
+		// only broadcast the events for local listeners. Minions
+		// write the events themselves, so we just need to broadcast
+		// for any server event artifacts that occur.
+		journal.Broadcast(self.config,
+			rows, in.Artifact, in.ClientId, in.FlowId)
+		return &empty.Empty{}, err
 	}
 
 	return nil, status.Error(codes.InvalidArgument, "no peer certs?")
@@ -282,7 +283,7 @@ func getAllArtifacts(
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	return file_store_factory.Walk(log_path,
+	return api.Walk(file_store_factory, log_path,
 		func(full_path api.FSPathSpec, info os.FileInfo) error {
 			// Walking the events directory will give us
 			// all the day json files. Each day json file

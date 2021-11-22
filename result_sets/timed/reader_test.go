@@ -20,7 +20,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 
 	// Start off by writing some events on a queue.
 	path_manager, err := artifacts.NewArtifactPathManager(
-		self.config_obj,
+		self.ConfigObj,
 		self.client_id,
 		self.flow_id,
 		"Windows.Events.ProcessCreation")
@@ -29,7 +29,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 
 	// Recreate events from older version. Previously we used the
 	// regular ResultSetWriter to write unindexed files.
-	file_store_factory := file_store.GetFileStore(self.config_obj)
+	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 
 	// Push an event every hour for 48 hours.
 	for i := int64(0); i < 50; i++ {
@@ -51,10 +51,10 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 	result := ordereddict.NewDict()
 
 	rs_reader, err := result_sets.NewTimedResultSetReader(
-		self.ctx, self.file_store, path_manager)
+		self.Sm.Ctx, file_store_factory, path_manager)
 	assert.NoError(self.T(), err)
 
-	result.Set("Available Files", rs_reader.GetAvailableFiles(self.ctx))
+	result.Set("Available Files", rs_reader.GetAvailableFiles(self.Sm.Ctx))
 
 	for _, testcase := range timed_result_set_tests {
 		err = rs_reader.SeekToTime(time.Unix(int64(testcase.start_time), 0))
@@ -63,7 +63,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 		rs_reader.SetMaxTime(time.Unix(int64(testcase.end_time), 0))
 
 		rows := make([]*ordereddict.Dict, 0)
-		for row := range rs_reader.Rows(self.ctx) {
+		for row := range rs_reader.Rows(self.Sm.Ctx) {
 			rows = append(rows, row)
 		}
 		result.Set(testcase.name, rows)

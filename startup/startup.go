@@ -113,13 +113,6 @@ func StartupEssentialServices(sm *services.Service) error {
 		}
 	}
 
-	if services.GetClientInfoManager() == nil {
-		err := sm.Start(client_info.StartClientInfoService)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -127,14 +120,23 @@ func StartupEssentialServices(sm *services.Service) error {
 func StartupFrontendServices(sm *services.Service) error {
 	spec := getServerServices(sm.Config)
 
+	if services.GetClientInfoManager() == nil {
+		err := sm.Start(client_info.StartClientInfoService)
+		if err != nil {
+			return err
+		}
+	}
+
 	err := sm.Start(datastore.StartMemcacheFileService)
 	if err != nil {
 		return err
 	}
 
-	err = sm.Start(indexing.StartIndexingService)
-	if err != nil {
-		return err
+	if spec.IndexServer {
+		err = sm.Start(indexing.StartIndexingService)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Check everything is ok before we can start.

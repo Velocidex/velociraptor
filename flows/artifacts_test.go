@@ -368,7 +368,8 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 		nilTime, nilTime, nilTime, nilTime, reader)
 
 	// Get a new collection context.
-	collection_context := &flows_proto.ArtifactCollectorContext{
+	collection_context := NewCollectionContext(self.config_obj)
+	collection_context.ArtifactCollectorContext = flows_proto.ArtifactCollectorContext{
 		SessionId:           self.flow_id,
 		ClientId:            self.client_id,
 		OutstandingRequests: 1,
@@ -470,7 +471,8 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 		nilTime, nilTime, nilTime, nilTime, reader)
 
 	// Get a new collection context.
-	collection_context := &flows_proto.ArtifactCollectorContext{
+	collection_context := NewCollectionContext(self.config_obj)
+	collection_context.ArtifactCollectorContext = flows_proto.ArtifactCollectorContext{
 		SessionId:           self.flow_id,
 		ClientId:            self.client_id,
 		OutstandingRequests: 1,
@@ -594,7 +596,8 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 		nilTime, nilTime, nilTime, nilTime, fd)
 
 	// Get a new collection context.
-	collection_context := &flows_proto.ArtifactCollectorContext{
+	collection_context := NewCollectionContext(self.config_obj)
+	collection_context.ArtifactCollectorContext = flows_proto.ArtifactCollectorContext{
 		SessionId: self.flow_id,
 		ClientId:  self.client_id,
 		Request:   &flows_proto.ArtifactCollectorArgs{},

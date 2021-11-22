@@ -2,13 +2,13 @@ package timelines
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -143,7 +143,8 @@ func NewSuperTimelineReader(
 		reader, err := NewTimelineReader(
 			file_store_factory, path_manager.GetChild(timeline.Id))
 		if err != nil {
-			fmt.Printf("NewSuperTimelineReader err: %v\n", err)
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Debug("NewSuperTimelineReader err: %v\n", err)
 			result.Close()
 			return nil, err
 		}

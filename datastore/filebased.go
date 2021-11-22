@@ -121,35 +121,6 @@ func (self *FileBaseDataStore) GetSubject(
 	return nil
 }
 
-func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,
-	root api.DSPathSpec, walkFn WalkFunc) error {
-
-	TraceDirectory(config_obj, "Walk", root)
-	all_children, err := self.ListChildren(config_obj, root)
-	if err != nil {
-		return err
-	}
-
-	for _, child := range all_children {
-		// Recurse into directories
-		if child.IsDir() {
-			err := self.Walk(config_obj, child, walkFn)
-			if err != nil {
-				// Do not quit the walk early.
-			}
-
-		} else {
-			err := walkFn(child)
-			if err == StopIteration {
-				return nil
-			}
-			continue
-		}
-	}
-
-	return nil
-}
-
 func (self *FileBaseDataStore) Debug(config_obj *config_proto.Config) {
 	filepath.Walk(config_obj.Datastore.Location,
 		func(path string, info fs.FileInfo, err error) error {
@@ -162,6 +133,13 @@ func (self *FileBaseDataStore) SetSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,
 	message proto.Message) error {
+	return self.SetSubjectWithCompletion(config_obj, urn, message, nil)
+}
+
+func (self *FileBaseDataStore) SetSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec,
+	message proto.Message, completion func()) error {
 
 	defer InstrumentWithDelay("write", "FileBaseDataStore", urn)()
 
@@ -180,7 +158,11 @@ func (self *FileBaseDataStore) SetSubject(
 		return errors.WithStack(err)
 	}
 
-	return writeContentToFile(config_obj, urn, serialized_content)
+	err = writeContentToFile(config_obj, urn, serialized_content)
+	if completion != nil {
+		completion()
+	}
+	return err
 }
 
 func (self *FileBaseDataStore) DeleteSubject(
@@ -400,7 +382,12 @@ func (self *FileBaseDataStore) GetBuffer(
 
 func (self *FileBaseDataStore) SetBuffer(
 	config_obj *config_proto.Config,
-	urn api.DSPathSpec, data []byte) error {
+	urn api.DSPathSpec, data []byte, completion func()) error {
 
-	return writeContentToFile(config_obj, urn, data)
+	err := writeContentToFile(config_obj, urn, data)
+
+	if completion != nil {
+		completion()
+	}
+	return err
 }

@@ -56,10 +56,14 @@ export default class UserForm extends React.Component {
     };
 
     render() {
+        let default_value = _.map(this.props.value, x=>{
+            return {value: x, label: x};});
+
         return (
             <CreatableSelect
               isMulti
               isClearable
+              value={default_value}
               className="users"
               classNamePrefix="velo"
               options={this.state.options}

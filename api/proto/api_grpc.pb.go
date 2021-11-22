@@ -107,6 +107,8 @@ type APIClient interface {
 	SetSubject(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*DataResponse, error)
 	DeleteSubject(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	ListChildren(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*ListChildrenResponse, error)
+	// Health check protocol as in https://github.com/grpc/grpc/blob/master/doc/health-checking.md
+	Check(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error)
 }
 
 type aPIClient struct {
@@ -703,6 +705,15 @@ func (c *aPIClient) ListChildren(ctx context.Context, in *DataRequest, opts ...g
 	return out, nil
 }
 
+func (c *aPIClient) Check(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error) {
+	out := new(HealthCheckResponse)
+	err := c.cc.Invoke(ctx, "/proto.API/Check", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // APIServer is the server API for API service.
 // All implementations must embed UnimplementedAPIServer
 // for forward compatibility
@@ -792,6 +803,8 @@ type APIServer interface {
 	SetSubject(context.Context, *DataRequest) (*DataResponse, error)
 	DeleteSubject(context.Context, *DataRequest) (*empty.Empty, error)
 	ListChildren(context.Context, *DataRequest) (*ListChildrenResponse, error)
+	// Health check protocol as in https://github.com/grpc/grpc/blob/master/doc/health-checking.md
+	Check(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error)
 	mustEmbedUnimplementedAPIServer()
 }
 
@@ -978,6 +991,9 @@ func (UnimplementedAPIServer) DeleteSubject(context.Context, *DataRequest) (*emp
 }
 func (UnimplementedAPIServer) ListChildren(context.Context, *DataRequest) (*ListChildrenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListChildren not implemented")
+}
+func (UnimplementedAPIServer) Check(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
 }
 func (UnimplementedAPIServer) mustEmbedUnimplementedAPIServer() {}
 
@@ -2078,6 +2094,24 @@ func _API_ListChildren_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _API_Check_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HealthCheckRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).Check(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/Check",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).Check(ctx, req.(*HealthCheckRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // API_ServiceDesc is the grpc.ServiceDesc for API service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -2316,6 +2350,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListChildren",
 			Handler:    _API_ListChildren_Handler,
+		},
+		{
+			MethodName: "Check",
+			Handler:    _API_Check_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

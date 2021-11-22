@@ -37,6 +37,10 @@ func NoError(t TestingT, err error, msgAndArgs ...interface{}) {
 	assert.NoError(t, err, msgAndArgs...)
 }
 
+func Error(t TestingT, err error, msgAndArgs ...interface{}) {
+	assert.Error(t, err, msgAndArgs...)
+}
+
 func Regexp(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) {
 	assert.Regexp(t, expected, actual, msgAndArgs...)
 }

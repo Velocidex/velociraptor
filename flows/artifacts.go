@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -60,6 +61,79 @@ var (
 	notModified = errors.New("Not modified")
 )
 
+// The CollectionContext tracks collections as they are being
+// processed. The client send back a bunch of results consisting of
+// logs, monitoring results, status errors etc. As the server
+// processes these, it loads the CollectionContext from the datastore,
+// and updates the CollectionContext state. When the server completes
+// processing, the CollectionContext context is flushed by to the
+// filestore.
+type CollectionContext struct {
+	mu sync.Mutex
+
+	flows_proto.ArtifactCollectorContext
+	monitoring_batch map[string][]*ordereddict.Dict
+
+	// The completer keeps track of all asynchronous filesystem
+	// operations that will occur so that when everything is written
+	// to disk, the completer can send the System.Flow.Completion
+	// event. This is important as we dont want watchers of
+	// System.Flow.Completion to attempt to open the collection before
+	// everything is written.
+	completer *utils.Completer
+
+	// Indicate if the System.Flow.Completion should be sent. This
+	// only happens once the collection is complete and results are
+	// written. It only happens at most once per collection.
+	send_update bool
+}
+
+func (self *CollectionContext) batchRows(flow_id string, rows []*ordereddict.Dict) {
+	batch, _ := self.monitoring_batch[flow_id]
+	batch = append(batch, rows...)
+	self.monitoring_batch[flow_id] = batch
+	if len(rows) > 0 {
+		self.Dirty = true
+	}
+}
+
+func NewCollectionContext(config_obj *config_proto.Config) *CollectionContext {
+	self := &CollectionContext{
+		ArtifactCollectorContext: flows_proto.ArtifactCollectorContext{},
+		monitoring_batch:         make(map[string][]*ordereddict.Dict),
+	}
+
+	// If we need to send a notification we should wait until all parts of
+	// the collection are fully stored first to avoid a race with any
+	// listeners on System.Flow.Completion.
+	self.completer = utils.NewCompleter(func() {
+		self.mu.Lock()
+		defer self.mu.Unlock()
+
+		if !self.send_update {
+			return
+		}
+
+		// If this is the final response (i.e. the flow is not running)
+		// and we have not yet sent an update, then we will notify a flow
+		// completion.
+		row := ordereddict.NewDict().
+			Set("Timestamp", time.Now().UTC().Unix()).
+			Set("Flow", proto.Clone(&self.ArtifactCollectorContext)).
+			Set("FlowId", self.SessionId).
+			Set("ClientId", self.ClientId)
+
+		journal, err := services.GetJournal()
+		if err == nil {
+			journal.PushRowsToArtifactAsync(
+				config_obj, row, "System.Flow.Completion")
+		}
+
+	})
+
+	return self
+}
+
 // closeContext is called after all messages from the clients are
 // processed in this group. Client messages are sent in groups inside
 // the same POST request. Most of the time they belong to the same
@@ -77,7 +151,7 @@ var (
 // once a status is received and not again.
 func closeContext(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext) error {
+	collection_context *CollectionContext) error {
 
 	// Context is not dirty - nothing to do.
 	if !collection_context.Dirty || collection_context.ClientId == "" {
@@ -96,8 +170,28 @@ func closeContext(
 
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
 
+	// Figure out if we will send a System.Flow.Completion after
+	// this. This depends on:
+	// 1. The flow state is no longer running (error or finished).
+	// 2. We have not sent a System.Flow.Completion yet.
+	//
+	// Record that we sent it so we never send 2 completion messages
+	// for the same flow.
+	if collection_context.Request != nil &&
+		collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING &&
+		!collection_context.UserNotified {
+
+		// Record the message was sent - so we never resent the
+		// message, even with new data.
+		collection_context.UserNotified = true
+
+		// Instruct the completion function to send the message.
+		collection_context.send_update = true
+	}
+
 	if len(collection_context.Logs) > 0 {
-		err := flushContextLogs(config_obj, collection_context)
+		err := flushContextLogs(
+			config_obj, collection_context, collection_context.completer)
 		if err != nil {
 			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
 			collection_context.Status = err.Error()
@@ -106,23 +200,21 @@ func closeContext(
 
 	if len(collection_context.UploadedFiles) > 0 {
 		err := flushContextUploadedFiles(
-			config_obj, collection_context)
+			config_obj, collection_context, collection_context.completer)
 		if err != nil {
 			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
 			collection_context.Status = err.Error()
 		}
 	}
 
-	// We need to send a notification but we should wait until the
-	// collection_context is stored first to avoid a race.
-	var will_notify bool
-
-	if collection_context.Request != nil &&
-		collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING &&
-		!collection_context.UserNotified {
-		collection_context.UserNotified = true
-		will_notify = true
+	if len(collection_context.monitoring_batch) > 0 {
+		err = flushMonitoringLogs(config_obj, collection_context)
+		if err != nil {
+			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+			collection_context.Status = err.Error()
+		}
 	}
+
 	collection_context.Dirty = false
 
 	// Write the data before we fire the event so the data is
@@ -135,39 +227,18 @@ func closeContext(
 
 	flow_path_manager := paths.NewFlowPathManager(
 		collection_context.ClientId, collection_context.SessionId)
-	err = db.SetSubject(config_obj, flow_path_manager.Path(), collection_context)
-	if err != nil {
-		return err
-	}
 
-	// This is the final time we update the context - send a
-	// journal message.
-	if will_notify {
-		row := ordereddict.NewDict().
-			Set("Timestamp", time.Now().UTC().Unix()).
-			Set("Flow", collection_context).
-			Set("FlowId", collection_context.SessionId).
-			Set("ClientId", collection_context.ClientId)
-
-		journal, err := services.GetJournal()
-		if err != nil {
-			return err
-		}
-		return journal.PushRowsToArtifact(config_obj,
-			[]*ordereddict.Dict{row},
-			"System.Flow.Completion", collection_context.ClientId,
-			collection_context.SessionId,
-		)
-	}
-
-	return nil
+	return db.SetSubjectWithCompletion(
+		config_obj, flow_path_manager.Path(),
+		collection_context, collection_context.completer.GetCompletionFunc())
 }
 
 // Flush the logs to disk. During execution the flow collects the logs
 // in memory and then flushes it all when done.
 func flushContextLogs(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext) error {
+	collection_context *CollectionContext,
+	completion *utils.Completer) error {
 
 	// Handle monitoring flow specially.
 	if collection_context.SessionId == constants.MONITORING_WELL_KNOWN_FLOW {
@@ -187,6 +258,8 @@ func flushContextLogs(
 	}
 	defer rs_writer.Close()
 
+	rs_writer.SetCompletion(completion.GetCompletionFunc())
+
 	for _, row := range collection_context.Logs {
 		collection_context.TotalLogs++
 		rs_writer.Write(ordereddict.NewDict().
@@ -203,7 +276,8 @@ func flushContextLogs(
 
 func flushContextUploadedFiles(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext) error {
+	collection_context *CollectionContext,
+	completion *utils.Completer) error {
 
 	flow_path_manager := paths.NewFlowPathManager(
 		collection_context.ClientId,
@@ -216,6 +290,8 @@ func flushContextUploadedFiles(
 		return err
 	}
 	defer rs_writer.Close()
+
+	rs_writer.SetCompletion(completion.GetCompletionFunc())
 
 	for _, row := range collection_context.UploadedFiles {
 		rs_writer.Write(ordereddict.NewDict().
@@ -234,24 +310,25 @@ func flushContextUploadedFiles(
 // Load the collector context from storage.
 func LoadCollectionContext(
 	config_obj *config_proto.Config,
-	client_id, flow_id string) (*flows_proto.ArtifactCollectorContext, error) {
+	client_id, flow_id string) (*CollectionContext, error) {
 
 	if flow_id == constants.MONITORING_WELL_KNOWN_FLOW {
-		return &flows_proto.ArtifactCollectorContext{
-			SessionId: flow_id,
-			ClientId:  client_id,
-		}, nil
+		result := NewCollectionContext(config_obj)
+		result.SessionId = flow_id
+		result.ClientId = client_id
+
+		return result, nil
 	}
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	collection_context := &flows_proto.ArtifactCollectorContext{}
+	collection_context := NewCollectionContext(config_obj)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	err = db.GetSubject(config_obj, flow_path_manager.Path(),
-		collection_context)
+		&collection_context.ArtifactCollectorContext)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +345,7 @@ func LoadCollectionContext(
 // Process an incoming message from the client.
 func ArtifactCollectorProcessOneMessage(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext,
+	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
 
 	err := FailIfError(config_obj, collection_context, message)
@@ -339,6 +416,9 @@ func ArtifactCollectorProcessOneMessage(
 			}
 			defer rs_writer.Close()
 
+			rs_writer.SetCompletion(
+				collection_context.completer.GetCompletionFunc())
+
 			// Support the old clients which send JSON
 			// array responses. We need to decode the JSON
 			// response, then re-encode it into JSONL for
@@ -387,7 +467,7 @@ func ArtifactCollectorProcessOneMessage(
 
 func IsRequestComplete(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext,
+	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) (bool, error) {
 
 	// Nope request is not complete.
@@ -415,7 +495,7 @@ func IsRequestComplete(
 
 func FailIfError(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext,
+	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
 
 	// Not a status message
@@ -449,7 +529,7 @@ func FailIfError(
 
 func appendUploadDataToFile(
 	config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext,
+	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
 
 	file_buffer := message.FileBuffer
@@ -573,7 +653,8 @@ func appendUploadDataToFile(
 
 		return journal.PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{row},
-			"System.Upload.Completion", message.Source, collection_context.SessionId,
+			"System.Upload.Completion",
+			message.Source, collection_context.SessionId,
 		)
 	}
 
@@ -583,7 +664,7 @@ func appendUploadDataToFile(
 // Generate a flow log from a client LogMessage proto. Deobfuscates
 // the message.
 func LogMessage(config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext,
+	collection_context *CollectionContext,
 	msg *crypto_proto.LogMessage) {
 	log_msg := artifacts.DeobfuscateString(config_obj, msg.Message)
 	artifact_name := artifacts.DeobfuscateString(config_obj, msg.Artifact)
@@ -597,7 +678,7 @@ func LogMessage(config_obj *config_proto.Config,
 }
 
 func Log(config_obj *config_proto.Config,
-	collection_context *flows_proto.ArtifactCollectorContext,
+	collection_context *CollectionContext,
 	log_msg string) {
 	log_msg = artifacts.DeobfuscateString(config_obj, log_msg)
 	collection_context.Logs = append(
@@ -611,14 +692,14 @@ func Log(config_obj *config_proto.Config,
 type FlowRunner struct {
 	mu sync.Mutex
 
-	context_map map[string]*flows_proto.ArtifactCollectorContext
+	context_map map[string]*CollectionContext
 	config_obj  *config_proto.Config
 }
 
 func NewFlowRunner(config_obj *config_proto.Config) *FlowRunner {
 	return &FlowRunner{
 		config_obj:  config_obj,
-		context_map: make(map[string]*flows_proto.ArtifactCollectorContext),
+		context_map: make(map[string]*CollectionContext),
 	}
 }
 
