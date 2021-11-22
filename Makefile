@@ -80,5 +80,5 @@ KapeFilesSync:
 
 # Do this after fetching the build artifacts with `gh run download <RunID>`
 UpdateCIArtifacts:
-	mv artifacts/testdata/*.out.yaml artifacts/testdata/server/testcases/
+	mv artifact/server/* artifacts/testdata/server/testcases/
 	mv artifact/windows/* artifacts/testdata/windows/

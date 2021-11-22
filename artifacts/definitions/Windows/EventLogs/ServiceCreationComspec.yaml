@@ -81,4 +81,3 @@ sources:
             EventRecordID,
             Source
         FROM grouped
-        ORDER BY Source DESC
