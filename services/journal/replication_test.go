@@ -2,6 +2,7 @@ package journal_test
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -215,8 +216,14 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 		assert.NoError(self.T(), err)
 	}
 
+	// Wait for events to move from the channel buffer in memory to
+	// the disk buffer.
+	time.Sleep(time.Second)
+
 	// Make sure we wrote something to the buffer file.
-	assert.True(self.T(), replicator.Buffer.GetHeader().WritePointer > 2000)
+	ptr := replicator.Buffer.GetHeader().WritePointer
+	assert.True(self.T(),
+		ptr > 2000, fmt.Sprintf("WritePointer %v", ptr))
 
 	// Wait a while to allow events to be delivered.
 	time.Sleep(time.Second)
