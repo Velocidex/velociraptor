@@ -135,7 +135,8 @@ func (self *contextManager) Save() error {
 	if err != nil {
 		return err
 	}
-	return db.SetSubject(self.config_obj, self.path_manager.Path(), self.context)
+	return db.SetSubjectWithCompletion(
+		self.config_obj, self.path_manager.Path(), self.context, nil)
 }
 
 type serverLogger struct {

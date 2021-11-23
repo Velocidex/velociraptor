@@ -46,6 +46,10 @@ const (
 	// all frontends.
 	HuntPropagateChanges
 
+	// Hunt was changed - all other hunt dispatchers should trigger
+	// participation for this hunt. Used when a hunt is started.
+	HuntTriggerParticipation
+
 	// Just write to data store but do not propagate (good for very
 	// frequent changes).
 	HuntFlushToDatastore

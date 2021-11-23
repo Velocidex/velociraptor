@@ -23,6 +23,6 @@ func UpdateMRU(
 		FirstSeenAt: uint64(time.Now().Unix()),
 	}
 
-	return db.SetSubject(
-		config_obj, path_manager.MRUClient(client_id), item)
+	return db.SetSubjectWithCompletion(
+		config_obj, path_manager.MRUClient(client_id), item, nil)
 }

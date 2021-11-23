@@ -166,7 +166,7 @@ func (self *ReplicationService) Start(
 	self.api_client = api_client
 	self.closer = closer
 	self.ctx = ctx
-	self.sender = make(chan *api_proto.PushEventRequest, 100)
+	self.sender = make(chan *api_proto.PushEventRequest, 10000)
 	self.SetRetryDuration(time.Second)
 
 	self.tmpfile, err = ioutil.TempFile("", "replication")

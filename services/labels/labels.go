@@ -179,13 +179,13 @@ func (self *Labeler) notifyClient(
 		return err
 	}
 
-	return journal.PushRowsToArtifact(config_obj,
-		[]*ordereddict.Dict{
-			ordereddict.NewDict().
-				Set("client_id", client_id).
-				Set("Operation", operation).
-				Set("Label", new_label),
-		}, "Server.Internal.Label", client_id, "")
+	journal.PushRowsToArtifactAsync(config_obj,
+		ordereddict.NewDict().
+			Set("client_id", client_id).
+			Set("Operation", operation).
+			Set("Label", new_label),
+		"Server.Internal.Label")
+	return nil
 }
 
 func (self *Labeler) SetClientLabel(
@@ -215,8 +215,8 @@ func (self *Labeler) SetClientLabel(
 	}
 
 	client_path_manager := paths.NewClientPathManager(client_id)
-	err = db.SetSubject(config_obj,
-		client_path_manager.Labels(), cached.record)
+	err = db.SetSubjectWithCompletion(config_obj,
+		client_path_manager.Labels(), cached.record, nil)
 	if err != nil {
 		return err
 	}
@@ -264,8 +264,8 @@ func (self *Labeler) RemoveClientLabel(
 	}
 
 	client_path_manager := paths.NewClientPathManager(client_id)
-	err = db.SetSubject(config_obj,
-		client_path_manager.Labels(), cached.record)
+	err = db.SetSubjectWithCompletion(config_obj,
+		client_path_manager.Labels(), cached.record, nil)
 	if err != nil {
 		return err
 	}

@@ -282,7 +282,7 @@ func SetIndex(
 	}
 
 	path := path_manager.IndexTerm(term, client_id)
-	return db.SetSubject(config_obj, path, record)
+	return db.SetSubjectWithCompletion(config_obj, path, record, nil)
 }
 
 func UnsetIndex(

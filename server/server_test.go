@@ -449,7 +449,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 		self.ConfigObj,
 		vql_subsystem.NullACLManager{},
 		repository,
-		request)
+		request, nil)
 
 	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(t, err)
@@ -489,7 +489,7 @@ func (self *ServerTestSuite) createArtifactCollection() (string, error) {
 		&flows_proto.ArtifactCollectorArgs{
 			ClientId:  self.client_id,
 			Artifacts: []string{"Generic.Client.Info"},
-		})
+		}, nil)
 
 	return flow_id, err
 }

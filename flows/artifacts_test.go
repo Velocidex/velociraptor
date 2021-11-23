@@ -117,7 +117,7 @@ func (self *TestSuite) TestGetFlow() {
 		flow_id, err := launcher.ScheduleArtifactCollection(
 			ctx, self.config_obj,
 			vql_subsystem.NullACLManager{},
-			repository, request1)
+			repository, request1, nil)
 		assert.NoError(self.T(), err)
 
 		flow_ids = append(flow_ids, flow_id)
@@ -125,7 +125,7 @@ func (self *TestSuite) TestGetFlow() {
 		flow_id, err = launcher.ScheduleArtifactCollection(
 			ctx, self.config_obj,
 			vql_subsystem.NullACLManager{},
-			repository, request2)
+			repository, request2, nil)
 		assert.NoError(self.T(), err)
 
 		flow_ids = append(flow_ids, flow_id)
@@ -179,7 +179,7 @@ func (self *TestSuite) TestRetransmission() {
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, self.config_obj,
 		vql_subsystem.NullACLManager{},
-		repository, request)
+		repository, request, nil)
 	assert.NoError(self.T(), err)
 
 	// Send one row.
@@ -242,7 +242,7 @@ func (self *TestSuite) TestResourceLimits() {
 		ctx,
 		self.config_obj,
 		vql_subsystem.NullACLManager{},
-		repository, request)
+		repository, request, nil)
 	assert.NoError(self.T(), err)
 
 	// Drain messages to the client.

@@ -79,7 +79,8 @@ func currentTaskId() uint64 {
 func QueueMessageForClient(
 	config_obj *config_proto.Config,
 	client_id string,
-	req *crypto_proto.VeloMessage) error {
+	req *crypto_proto.VeloMessage,
+	completion func()) error {
 
 	// Task ID is related to time.
 	req.TaskId = currentTaskId()
@@ -90,6 +91,7 @@ func QueueMessageForClient(
 	}
 
 	client_path_manager := paths.NewClientPathManager(client_id)
-	return db.SetSubject(config_obj,
-		client_path_manager.Task(req.TaskId), req)
+	return db.SetSubjectWithCompletion(config_obj,
+		client_path_manager.Task(req.TaskId),
+		req, completion)
 }

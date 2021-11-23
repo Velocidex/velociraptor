@@ -133,5 +133,6 @@ type Launcher interface {
 		config_obj *config_proto.Config,
 		acl_manager vql_subsystem.ACLManager,
 		repository Repository,
-		collector_request *flows_proto.ArtifactCollectorArgs) (string, error)
+		collector_request *flows_proto.ArtifactCollectorArgs,
+		completion func()) (string, error)
 }

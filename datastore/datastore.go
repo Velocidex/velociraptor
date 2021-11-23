@@ -70,9 +70,9 @@ type DataStore interface {
 		urn api.DSPathSpec,
 		message proto.Message) error
 
-	// SetSubject writes the data to the datastore. The data is
-	// written asynchronously and may not be immediately visible by
-	// other nodes.
+	// SetSubject writes the data to the datastore synchronously. The
+	// data is written synchronously and when complete will be visible
+	// to other nodes as long as the data is not in their caches.
 	SetSubject(
 		config_obj *config_proto.Config,
 		urn api.DSPathSpec,
@@ -80,7 +80,7 @@ type DataStore interface {
 
 	// Writes the data asynchronously and fires the completion
 	// callback when the data hits the disk and will become visibile
-	// to other nodes.
+	// to other nodes this may be a long time in the future.
 	SetSubjectWithCompletion(
 		config_obj *config_proto.Config,
 		urn api.DSPathSpec,

@@ -150,8 +150,8 @@ func (self *serverPublicKeyResolver) SetPublicKey(
 		Pem:        crypto_utils.PublicKeyToPem(key),
 		EnrollTime: uint64(time.Now().Unix()),
 	}
-	return db.SetSubject(self.config_obj,
-		client_path_manager.Key(), pem)
+	return db.SetSubjectWithCompletion(self.config_obj,
+		client_path_manager.Key(), pem, nil)
 }
 
 func (self *serverPublicKeyResolver) Clear() {}

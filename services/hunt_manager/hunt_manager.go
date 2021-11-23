@@ -176,7 +176,8 @@ func (self *HuntManager) ProcessMutation(
 			}
 
 			// The following are very frequent modifications that
-			// other frontends dont care about.
+			// other frontends dont care about so we write them lazily
+			// to the datastore.
 			if mutation.Stats.TotalClientsScheduled > 0 {
 				hunt_obj.Stats.TotalClientsScheduled +=
 					mutation.Stats.TotalClientsScheduled
@@ -191,19 +192,25 @@ func (self *HuntManager) ProcessMutation(
 				modification = services.HuntFlushToDatastoreAsync
 			}
 
-			// Have we stopped the hunt?
+			// These modifications affect the state of the hunt and so
+			// need to propagate to all minions
+			// immediately. Eventually they will also hit the
+			// filesystem too.
 			if mutation.State == api_proto.Hunt_STOPPED ||
 				mutation.State == api_proto.Hunt_PAUSED {
 				hunt_obj.Stats.Stopped = true
 				hunt_obj.State = api_proto.Hunt_STOPPED
 
+				// Let all dispatchers know this hunt is stopped.
 				modification = services.HuntPropagateChanges
 
 			} else if mutation.State == api_proto.Hunt_RUNNING {
 				hunt_obj.Stats.Stopped = false
 				hunt_obj.State = api_proto.Hunt_RUNNING
 
-				modification = services.HuntPropagateChanges
+				// This hunt is now started, let all dispatchers know
+				// to participate connected clients.
+				modification = services.HuntTriggerParticipation
 
 			} else if mutation.State == api_proto.Hunt_ARCHIVED {
 				hunt_obj.State = api_proto.Hunt_ARCHIVED
@@ -217,10 +224,11 @@ func (self *HuntManager) ProcessMutation(
 				modification = services.HuntPropagateChanges
 			}
 
+			// Hunt is restarted, notify all connected clients
 			if mutation.StartTime > 0 {
 				hunt_obj.StartTime = mutation.StartTime
 
-				modification = services.HuntPropagateChanges
+				modification = services.HuntTriggerParticipation
 			}
 
 			return modification
@@ -272,9 +280,13 @@ func (self *HuntManager) maybeDirectlyAssignFlow(
 	return nil
 }
 
-// Watch for an interrogate completion and check all the hunts on
-// this client in case the interrogate has more information (like
-// an OS condition).
+// Watch for an interrogate completion and re-check all the hunts on
+// this client in case the interrogate has more information (like an
+// OS condition). This is important if a new client appears the
+// foreman will attempt to participate it in the currrent hunt set but
+// since we have not interrogated it yet we do not know information
+// like OS, labels etc. Therefore we need to re-apply the hunts on the
+// client again once we learn these.
 func (self *HuntManager) ProcessInterrogation(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -415,6 +427,9 @@ func (self *HuntManager) participateInAllHunts(ctx context.Context,
 	})
 }
 
+// When a client is found to be missing a hunt, the format sends the
+// participation message. We can examine this message and decide if
+// the hunt really applies to this client.
 func (self *HuntManager) ProcessParticipation(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -448,6 +463,7 @@ func (self *HuntManager) ProcessParticipation(
 	err = checkHuntRanOnClient(config_obj, participation_row.ClientId,
 		participation_row.HuntId)
 	if err != nil {
+		return nil
 		return fmt.Errorf("hunt_manager: %v already ran on client %v",
 			participation_row.HuntId, participation_row.ClientId)
 	}
@@ -671,7 +687,14 @@ func scheduleHuntOnClient(
 	request.Creator = hunt_id
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
-		ctx, config_obj, vql_subsystem.NullACLManager{}, repository, request)
+		ctx, config_obj, vql_subsystem.NullACLManager{},
+		repository, request, func() {
+			// Notify the client that the hunt applies to it.
+			notifier := services.GetNotifier()
+			if notifier != nil {
+				notifier.NotifyListener(config_obj, client_id)
+			}
+		})
 	if err != nil {
 		return err
 	}
@@ -714,12 +737,6 @@ func scheduleHuntOnClient(
 	err = setHuntRanOnClient(config_obj, client_id, hunt_id)
 	if err != nil {
 		return err
-	}
-
-	// Notify the client that the hunt applies to it.
-	notifier := services.GetNotifier()
-	if notifier != nil {
-		notifier.NotifyListenerAsync(config_obj, client_id)
 	}
 
 	return nil

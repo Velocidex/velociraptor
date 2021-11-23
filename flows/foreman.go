@@ -84,7 +84,7 @@ func ForemanProcessMessage(
 		err := QueueMessageForClient(
 			config_obj, client_id,
 			client_event_manager.GetClientUpdateEventTableMessage(
-				config_obj, client_id))
+				config_obj, client_id), nil)
 		if err != nil {
 			return err
 		}
@@ -170,5 +170,5 @@ func ForemanProcessMessage(
 			UpdateForeman: &actions_proto.ForemanCheckin{
 				LastHuntTimestamp: latest_timestamp,
 			},
-		})
+		}, nil)
 }
