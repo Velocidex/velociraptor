@@ -42,7 +42,9 @@ package hunt_dispatcher
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -52,10 +54,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -69,6 +74,8 @@ var (
 		Name: "hunt_dispatcher_last_timestamp",
 		Help: "Last timestamp of most recent hunt.",
 	})
+
+	Clock utils.Clock = &utils.RealClock{}
 )
 
 type HuntRecord struct {
@@ -95,22 +102,65 @@ type HuntDispatcher struct {
 	hunts map[string]*HuntRecord
 
 	uuid int64
+
+	// Set to true for the master's hunt dispatcher. On the master
+	// node the dispatcher has more responsibility.
+	i_am_master bool
 }
 
 func (self *HuntDispatcher) GetLastTimestamp() uint64 {
 	return atomic.LoadUint64(&self.last_timestamp)
 }
 
+// When a new hunt is started, we need to inform the hunt manager
+// about all clients currently directly connected to us. The hunt
+// manager may decide to schedule the hunt on these clients.
+func (self *HuntDispatcher) participateAllConnectedClients(
+	ctx context.Context,
+	config_obj *config_proto.Config, hunt_id string) error {
+
+	hunt_obj, pres := self.GetHunt(hunt_id)
+	if !pres {
+		return errors.New("Unknown hunt id")
+	}
+
+	notifier := services.GetNotifier()
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	for _, c := range notifier.ListClients() {
+		if !strings.HasPrefix(c, "C.") {
+			continue
+		}
+
+		journal.PushRowsToArtifactAsync(config_obj,
+			ordereddict.NewDict().
+				Set("HuntId", hunt_id).
+				Set("ClientId", c),
+			"System.Hunt.Participation")
+
+		// Get the client to update the LastHuntTimestamp so it does
+		// not trigger the foreman again.
+		flows.QueueMessageForClient(
+			config_obj, c,
+			&crypto_proto.VeloMessage{
+				SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
+				RequestId: constants.IgnoreResponseState,
+				UpdateForeman: &actions_proto.ForemanCheckin{
+					LastHuntTimestamp: hunt_obj.StartTime,
+				},
+			}, nil)
+	}
+
+	return nil
+}
+
 func (self *HuntDispatcher) ProcessUpdate(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
-
-	// Ignore messages we sent ourselves.
-	from, pres := row.GetInt64("From")
-	if !pres || from == self.uuid {
-		return nil
-	}
 
 	hunt_any, pres := row.Get("Hunt")
 	if !pres {
@@ -135,20 +185,32 @@ func (self *HuntDispatcher) ProcessUpdate(
 		atomic.StoreUint64(&self.last_timestamp, hunt_obj.StartTime)
 	}
 
-	// Update the last time.
+	// Only update the version if it is ahead.
 	self.mu.Lock()
-	self.hunts[hunt_obj.HuntId] = &HuntRecord{Hunt: hunt_obj}
+	existing_hunt, pres := self.hunts[hunt_obj.HuntId]
+
+	if pres && existing_hunt.Version < hunt_obj.Version {
+		self.hunts[hunt_obj.HuntId] = &HuntRecord{Hunt: hunt_obj}
+	}
 	self.mu.Unlock()
 
+	// A hunt went into the running state - we need to participate all
+	// our currently connected clients.
+	_, pres = row.Get("TriggerParticipation")
+	if pres {
+		self.participateAllConnectedClients(ctx, config_obj, hunt_obj.HuntId)
+	}
+
 	// On the master we also write it to storage.
-	if services.IsMaster(config_obj) {
+	if self.i_am_master {
 		hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
 		db, err := datastore.GetDB(config_obj)
 		if err != nil {
 			return err
 		}
 
-		err = db.SetSubject(config_obj, hunt_path_manager.Path(), hunt_obj)
+		err = db.SetSubjectWithCompletion(
+			config_obj, hunt_path_manager.Path(), hunt_obj, nil)
 		if err != nil {
 			return fmt.Errorf("Flushing hunt update %s to disk: %w", hunt_obj.HuntId, err)
 		}
@@ -198,6 +260,15 @@ func (self *HuntDispatcher) GetHunt(hunt_id string) (*api_proto.Hunt, bool) {
 	return nil, false
 }
 
+// This is called by the local server to mutate the hunt
+// object. Mutations include increasing the number of clients
+// assigned, completed etc. These mutations may happen very frequently
+// and so we do not want to flush them to disk immediately. Instead we
+// push the mutations to the master node's hunt manager, where they
+// will be applied on the master node. Eventually these will end up in
+// the filesystem and possibly refreshed into this dispatcher.
+// Therefore, writers may write mutations and expect they take an
+// unspecified time to appear in the hunt details.
 func (self *HuntDispatcher) MutateHunt(
 	config_obj *config_proto.Config,
 	mutation *api_proto.HuntMutation) error {
@@ -222,7 +293,8 @@ func (self *HuntDispatcher) ModifyHunt(
 	cb func(hunt *api_proto.Hunt) services.HuntModificationAction) services.HuntModificationAction {
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	if !services.IsMaster(self.config_obj) {
+
+	if !self.i_am_master {
 		// This is really a critical error.
 		logger.Error("Unable to modify hunts on a minion node. Please use MutateHunt()")
 		return services.HuntUnmodified
@@ -234,13 +306,36 @@ func (self *HuntDispatcher) ModifyHunt(
 		return services.HuntUnmodified
 	}
 
-	hunt_obj.Hunt.Version = time.Now().UnixNano()
+	// Update the hunt version
+	hunt_obj.Hunt.Version = Clock.Now().UnixNano()
 
 	// Call the callback to see if we need to change this hunt.
 	modification := cb(hunt_obj.Hunt)
 	switch modification {
 	case services.HuntUnmodified:
 		self.mu.Unlock()
+
+	case services.HuntTriggerParticipation:
+		// It is still modified so make sure to write it eventually.
+		hunt_obj.dirty = true
+
+		hunt_obj_copy := proto.Clone(hunt_obj.Hunt).(*api_proto.Hunt)
+		self.mu.Unlock()
+
+		// Relay the new update to all other hunt dispatchers.
+		journal, err := services.GetJournal()
+		if err == nil {
+			// Make sure these are pushed out ASAP to the other
+			// dispatchers.
+			journal.PushRowsToArtifact(self.config_obj,
+				[]*ordereddict.Dict{
+					ordereddict.NewDict().
+						Set("HuntId", hunt_id).
+						Set("Hunt", hunt_obj_copy).
+						Set("TriggerParticipation", true),
+				},
+				"Server.Internal.HuntUpdate", "server", "")
+		}
 
 	case services.HuntPropagateChanges:
 		// It is still modified so make sure to write it eventually.
@@ -252,12 +347,15 @@ func (self *HuntDispatcher) ModifyHunt(
 		// Relay the new update to all other hunt dispatchers.
 		journal, err := services.GetJournal()
 		if err == nil {
-			journal.PushRowsToArtifactAsync(self.config_obj,
-				ordereddict.NewDict().
-					Set("HuntId", hunt_id).
-					Set("From", self.uuid).
-					Set("Hunt", hunt_obj_copy),
-				"Server.Internal.HuntUpdate")
+			// Make sure these are pushed out ASAP to the other
+			// dispatchers.
+			journal.PushRowsToArtifact(self.config_obj,
+				[]*ordereddict.Dict{
+					ordereddict.NewDict().
+						Set("HuntId", hunt_id).
+						Set("Hunt", hunt_obj_copy),
+				},
+				"Server.Internal.HuntUpdate", "server", "")
 		}
 
 	case services.HuntFlushToDatastore:
@@ -272,8 +370,8 @@ func (self *HuntDispatcher) ModifyHunt(
 			return services.HuntUnmodified
 		}
 
-		err = db.SetSubject(self.config_obj,
-			hunt_path_manager.Path(), hunt_obj_copy)
+		err = db.SetSubjectWithCompletion(self.config_obj,
+			hunt_path_manager.Path(), hunt_obj_copy, nil)
 		if err != nil {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			logger.Error("Flushing %s to disk: %v", hunt_obj_copy, err)
@@ -351,8 +449,9 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 		if pres && old_hunt_obj.Version >= hunt_obj.Version {
 			// The in memory copy is newer than the stored version,
 			// Master node will synchronize
-			if services.IsMaster(config_obj) {
-				db.SetSubject(config_obj, request.Path, old_hunt_obj)
+			if self.i_am_master {
+				db.SetSubjectWithCompletion(
+					config_obj, request.Path, old_hunt_obj, nil)
 			}
 			continue
 		}
@@ -374,9 +473,10 @@ func StartHuntDispatcher(
 	config_obj *config_proto.Config) error {
 
 	service := &HuntDispatcher{
-		config_obj: config_obj,
-		hunts:      make(map[string]*HuntRecord),
-		uuid:       utils.GetGUID(),
+		config_obj:  config_obj,
+		hunts:       make(map[string]*HuntRecord),
+		uuid:        utils.GetGUID(),
+		i_am_master: services.IsMaster(config_obj),
 	}
 	services.RegisterHuntDispatcher(service)
 

@@ -113,6 +113,8 @@ func NewCollectionContext(config_obj *config_proto.Config) *CollectionContext {
 		if !self.send_update {
 			return
 		}
+		// Do not send it again.
+		self.send_update = false
 
 		// If this is the final response (i.e. the flow is not running)
 		// and we have not yet sent an update, then we will notify a flow
@@ -152,6 +154,10 @@ func NewCollectionContext(config_obj *config_proto.Config) *CollectionContext {
 func closeContext(
 	config_obj *config_proto.Config,
 	collection_context *CollectionContext) error {
+
+	// Ensure the completion is not fired until we are done here
+	// completely.
+	defer collection_context.completer.GetCompletionFunc()()
 
 	// Context is not dirty - nothing to do.
 	if !collection_context.Dirty || collection_context.ClientId == "" {
@@ -774,12 +780,11 @@ func (self *FlowRunner) ProcessSingleMessage(
 				&crypto_proto.VeloMessage{
 					Cancel:    &crypto_proto.Cancel{},
 					SessionId: job.SessionId,
-				})
+				}, nil)
 			if err != nil {
 				logger.Error("Queueing for client %v: %v",
 					job.Source, err)
 			}
-
 			return
 		}
 		self.context_map[job.SessionId] = collection_context

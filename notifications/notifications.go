@@ -31,6 +31,17 @@ func NewNotificationPool() *NotificationPool {
 	}
 }
 
+func (self *NotificationPool) ListClients() []string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := make([]string, 0, len(self.clients))
+	for k := range self.clients {
+		result = append(result, k)
+	}
+	return result
+}
+
 func (self *NotificationPool) IsClientConnected(client_id string) bool {
 	self.mu.Lock()
 	_, pres := self.clients[client_id]

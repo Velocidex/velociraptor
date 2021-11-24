@@ -231,6 +231,10 @@ func (self *Notifier) IsClientDirectlyConnected(client_id string) bool {
 	return self.notification_pool.IsClientConnected(client_id)
 }
 
+func (self *Notifier) ListClients() []string {
+	return self.notification_pool.ListClients()
+}
+
 func (self *Notifier) IsClientConnected(
 	ctx context.Context,
 	config_obj *config_proto.Config,

@@ -65,7 +65,7 @@ func cancelCollection(config_obj *config_proto.Config, client_id, flow_id string
 		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},
 			SessionId: flow_id,
-		})
+		}, nil)
 	if err != nil {
 		return err
 	}

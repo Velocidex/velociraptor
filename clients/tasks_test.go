@@ -23,7 +23,7 @@ func (self *ClientTasksTestSuite) TestQueueMessages() {
 	client_id := "C.1236"
 
 	message1 := &crypto_proto.VeloMessage{Source: "Server", SessionId: "1"}
-	err := clients.QueueMessageForClient(self.ConfigObj, client_id, message1)
+	err := clients.QueueMessageForClient(self.ConfigObj, client_id, message1, nil)
 	assert.NoError(self.T(), err)
 
 	// Now retrieve all messages.
@@ -54,7 +54,8 @@ func (self *ClientTasksTestSuite) TestFastQueueMessages() {
 
 	for i := 0; i < 10; i++ {
 		message := &crypto_proto.VeloMessage{Source: "Server", SessionId: fmt.Sprintf("%d", i)}
-		err := clients.QueueMessageForClient(self.ConfigObj, client_id, message)
+		err := clients.QueueMessageForClient(
+			self.ConfigObj, client_id, message, nil)
 		assert.NoError(self.T(), err)
 
 		written = append(written, message)

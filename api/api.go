@@ -218,17 +218,18 @@ func (self *ApiServer) CollectArtifact(
 	}
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
-		ctx, self.config, acl_manager, repository, in)
+		ctx, self.config, acl_manager, repository, in,
+		func() {
+			notifier := services.GetNotifier()
+			if notifier != nil {
+				notifier.NotifyListener(self.config, in.ClientId)
+			}
+		})
 	if err != nil {
 		return nil, err
 	}
 
 	result.FlowId = flow_id
-
-	err = services.GetNotifier().NotifyListener(self.config, in.ClientId)
-	if err != nil {
-		return nil, err
-	}
 
 	// Log this event as an Audit event.
 	logging.GetLogger(self.config, &logging.Audit).

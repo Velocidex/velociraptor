@@ -69,8 +69,9 @@ func ProduceBackwardCompatibleVeloMessage(req *crypto_proto.VeloMessage) *crypto
 func QueueMessageForClient(
 	config_obj *config_proto.Config,
 	client_id string,
-	req *crypto_proto.VeloMessage) error {
+	req *crypto_proto.VeloMessage,
+	completion func()) error {
 
 	req = ProduceBackwardCompatibleVeloMessage(req)
-	return clients.QueueMessageForClient(config_obj, client_id, req)
+	return clients.QueueMessageForClient(config_obj, client_id, req, completion)
 }

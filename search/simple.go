@@ -34,7 +34,8 @@ func SetSimpleIndex(
 		// they are user provided.
 		keyword = strings.ToLower(keyword)
 		subject := index_urn.AddChild(keyword, entity)
-		err := db.SetSubject(config_obj, subject, &empty.Empty{})
+		err := db.SetSubjectWithCompletion(
+			config_obj, subject, &empty.Empty{}, nil)
 		if err != nil {
 			return err
 		}

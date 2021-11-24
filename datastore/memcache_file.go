@@ -195,14 +195,6 @@ func (self *MemcacheFileDataStore) GetSubject(
 	return err
 }
 
-func (self *MemcacheFileDataStore) SetSubject(
-	config_obj *config_proto.Config,
-	urn api.DSPathSpec,
-	message proto.Message) error {
-
-	return self.SetSubjectWithCompletion(config_obj, urn, message, nil)
-}
-
 func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,
@@ -251,6 +243,46 @@ func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 		wg.Wait()
 	}
 
+	return err
+}
+
+func (self *MemcacheFileDataStore) SetSubject(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec,
+	message proto.Message) error {
+
+	defer Instrument("write", "MemcacheFileDataStore", urn)()
+
+	// Encode as JSON
+	var serialized_content []byte
+	var err error
+
+	if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
+		serialized_content, err = protojson.Marshal(message)
+		if err != nil {
+			return err
+		}
+
+	} else {
+		serialized_content, err = proto.Marshal(message)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Add the data to the cache immediately.
+	err = self.cache.SetSubject(config_obj, urn, message)
+
+	if err != nil {
+		return err
+	}
+
+	err = writeContentToFile(config_obj, urn, serialized_content)
+	if err != nil {
+		return err
+	}
+
+	self.invalidateDirCache(config_obj, urn)
 	return err
 }
 

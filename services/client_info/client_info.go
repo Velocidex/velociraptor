@@ -104,6 +104,7 @@ func (self *CachedInfo) Flush() error {
 
 	// Nothing to do
 	if !self.dirty {
+		self.mu.Unlock()
 		return nil
 	}
 
@@ -122,9 +123,13 @@ func (self *CachedInfo) Flush() error {
 		return err
 	}
 
+	// A blind write will eventually hit the disk.
 	client_path_manager := paths.NewClientPathManager(client_id)
-	return db.SetSubject(
-		self.owner.config_obj, client_path_manager.Ping(), ping_client_info)
+	db.SetSubjectWithCompletion(
+		self.owner.config_obj, client_path_manager.Ping(),
+		ping_client_info, nil)
+
+	return nil
 }
 
 type ClientInfoManager struct {

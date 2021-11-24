@@ -164,7 +164,8 @@ func (self *SuperTimelineWriter) Close() {
 	if err != nil {
 		return
 	}
-	db.SetSubject(self.config_obj, self.path_manager.Path(), self.SuperTimeline)
+	db.SetSubjectWithCompletion(
+		self.config_obj, self.path_manager.Path(), self.SuperTimeline, nil)
 }
 
 func (self *SuperTimelineWriter) AddChild(name string) (*TimelineWriter, error) {

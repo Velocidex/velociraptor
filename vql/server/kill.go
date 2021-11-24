@@ -57,13 +57,12 @@ func (self *KillClientFunction) Call(ctx context.Context,
 		&crypto_proto.VeloMessage{
 			KillKillKill: &crypto_proto.Cancel{},
 			SessionId:    constants.MONITORING_WELL_KNOWN_FLOW,
+		}, func() {
+			notifier := services.GetNotifier()
+			if notifier != nil {
+				notifier.NotifyListener(config_obj, arg.ClientId)
+			}
 		})
-	if err != nil {
-		scope.Log("killkillkill: %s", err.Error())
-		return vfilter.Null{}
-	}
-
-	err = services.GetNotifier().NotifyListener(config_obj, arg.ClientId)
 	if err != nil {
 		scope.Log("killkillkill: %s", err.Error())
 		return vfilter.Null{}

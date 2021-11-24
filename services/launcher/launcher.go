@@ -139,6 +139,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -470,7 +471,8 @@ func (self *Launcher) ScheduleArtifactCollection(
 	config_obj *config_proto.Config,
 	acl_manager vql_subsystem.ACLManager,
 	repository services.Repository,
-	collector_request *flows_proto.ArtifactCollectorArgs) (string, error) {
+	collector_request *flows_proto.ArtifactCollectorArgs,
+	completion func()) (string, error) {
 
 	args := collector_request.CompiledCollectorArgs
 	if args == nil {
@@ -491,13 +493,17 @@ func (self *Launcher) ScheduleArtifactCollection(
 	}
 
 	return ScheduleArtifactCollectionFromCollectorArgs(
-		config_obj, collector_request, args)
+		config_obj, collector_request, args, completion)
 }
 
 func ScheduleArtifactCollectionFromCollectorArgs(
 	config_obj *config_proto.Config,
 	collector_request *flows_proto.ArtifactCollectorArgs,
-	vql_collector_args []*actions_proto.VQLCollectorArgs) (string, error) {
+	vql_collector_args []*actions_proto.VQLCollectorArgs,
+	completion func()) (string, error) {
+
+	completer := utils.NewCompleter(completion)
+	defer completer.GetCompletionFunc()()
 
 	client_id := collector_request.ClientId
 	if client_id == "" {
@@ -521,9 +527,9 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 	// Save the collection context.
 	flow_path_manager := paths.NewFlowPathManager(client_id,
 		collection_context.SessionId)
-	err = db.SetSubject(config_obj,
+	err = db.SetSubjectWithCompletion(config_obj,
 		flow_path_manager.Path(),
-		collection_context)
+		collection_context, completer.GetCompletionFunc())
 	if err != nil {
 		return "", err
 	}
@@ -550,7 +556,7 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 		}
 
 		err = clients.QueueMessageForClient(
-			config_obj, client_id, task)
+			config_obj, client_id, task, completer.GetCompletionFunc())
 		if err != nil {
 			return "", err
 		}
@@ -558,9 +564,10 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 	}
 
 	// Record the tasks for provenance of what we actually did.
-	err = db.SetSubject(config_obj,
+	err = db.SetSubjectWithCompletion(config_obj,
 		flow_path_manager.Task(),
-		&api_proto.ApiFlowRequestDetails{Items: tasks})
+		&api_proto.ApiFlowRequestDetails{Items: tasks},
+		completer.GetCompletionFunc())
 	if err != nil {
 		return "", err
 	}

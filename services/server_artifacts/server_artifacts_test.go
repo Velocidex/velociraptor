@@ -85,7 +85,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 			Creator:   user,
 			ClientId:  "server",
 			Artifacts: []string{name},
-		})
+		}, nil)
 	assert.NoError(self.T(), err)
 
 	// Notify it about the new job

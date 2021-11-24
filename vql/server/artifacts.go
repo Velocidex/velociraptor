@@ -142,14 +142,14 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	}
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
-		ctx, config_obj, acl_manager, repository, request)
-	if err != nil {
-		scope.Log("collect_client: %v", err)
-		return vfilter.Null{}
-	}
-
-	// Notify the client about it.
-	err = services.GetNotifier().NotifyListener(config_obj, arg.ClientId)
+		ctx, config_obj, acl_manager, repository, request,
+		func() {
+			// Notify the client about it.
+			notifier := services.GetNotifier()
+			if notifier != nil {
+				notifier.NotifyListener(config_obj, arg.ClientId)
+			}
+		})
 	if err != nil {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}

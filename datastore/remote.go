@@ -4,6 +4,7 @@ package datastore
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -62,12 +63,17 @@ func (self *RemoteDataStore) GetSubject(
 	return err
 }
 
+// Write the data synchronously.
 func (self *RemoteDataStore) SetSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
-	return self.SetSubjectWithCompletion(config_obj, urn, message, nil)
+	wg := sync.WaitGroup{}
+	defer wg.Wait()
+
+	wg.Add(1)
+	return self.SetSubjectWithCompletion(config_obj, urn, message, wg.Done)
 }
 
 func (self *RemoteDataStore) SetSubjectWithCompletion(
