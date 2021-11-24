@@ -88,6 +88,8 @@ sources:
                     System.Channel as Channel,
                     System.EventID.Value as EventID,
                     System.EventRecordID as EventRecordID,
+                    System.Security.UserID as UserSID,
+                    lookupSID(sid=System.Security.UserID) as Username,
                     get(field="EventData") as EventData,
                     get(field="UserData") as UserData,
                     get(field="Message") as Message,

@@ -144,6 +144,8 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Channel": "Microsoft-Windows-PowerShell/Operational",
   "EventID": 4104,
   "EventRecordID": 4092,
+  "UserSID": "S-1-5-21-2201333269-445358460-1233016754-1000",
+  "Username": null,
   "EventData": {
    "MessageNumber": "\u0001",
    "MessageTotal": "\u0001",
