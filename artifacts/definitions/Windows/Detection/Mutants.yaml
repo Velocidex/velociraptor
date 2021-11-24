@@ -12,6 +12,10 @@ parameters:
   - name: MutantNameRegex
     default: .+
     type: regex
+  - name: MutantWhitelistRegex
+    default:
+    type: regex
+
 sources:
   - name: Handles
     description: Open handles to mutants. This shows processes owning a handle open to the mutant.
@@ -27,9 +31,15 @@ sources:
             FROM handles(pid=ProcPid, types="Mutant")
           })
         WHERE Name =~ MutantNameRegex
+            AND if(condition= MutantWhitelistRegex,
+                then= NOT Name =~ MutantWhitelistRegex,
+                else= True )
 
   - name: ObjectTree
     description: Reveals all Mutant objects in the Windows Object Manager namespace.
     queries:
       - SELECT Name, Type FROM winobj()
         WHERE Type = 'Mutant' AND Name =~ MutantNameRegex
+            AND if(condition= MutantWhitelistRegex,
+                then= NOT Name =~ MutantWhitelistRegex,
+                else= True )
