@@ -8,10 +8,13 @@ parameters:
   - name: processRegex
     description: A regex applied to process names.
     default: .
+    type: regex
   - name: MutantNameRegex
     default: .+
+    type: regex
   - name: MutantWhitelistRegex
     default:
+    type: regex
 
 sources:
   - name: Handles
