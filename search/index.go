@@ -197,8 +197,8 @@ func (self *Indexer) Load(
 					// happen if the client records are
 					// removed but the index has not been
 					// updated.
-					_, err := GetApiClient(
-						ctx, config_obj, record.Entity, true)
+					_, err := FastGetApiClient(
+						ctx, config_obj, record.Entity)
 					if err != nil {
 						continue
 					}

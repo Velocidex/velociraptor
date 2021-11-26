@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -49,8 +48,12 @@ func GetApiClient(
 
 	result.Labels = labeler.GetClientLabels(config_obj, client_id)
 
-	client_info := &actions_proto.ClientInfo{}
-	err = db.GetSubject(config_obj, client_path_manager.Path(), client_info)
+	client_info_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return nil, err
+	}
+
+	client_info, err := client_info_manager.Get(client_id)
 	if err != nil {
 		return nil, err
 	}
@@ -78,14 +81,6 @@ func GetApiClient(
 	}
 
 	result.FirstSeenAt = public_key_info.EnrollTime
-
-	err = db.GetSubject(config_obj, client_path_manager.Ping(),
-		client_info)
-	if err != nil {
-		// Offline clients do not have ping files, so
-		// this is not actually an error.
-	}
-
 	result.LastSeenAt = client_info.Ping
 	result.LastIp = client_info.IpAddress
 

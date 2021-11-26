@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"io/ioutil"
@@ -15,7 +17,8 @@ import (
 // Loads the global repository with artifacts from the frontend path
 // and the file store.
 func InitializeGlobalRepositoryFromFilesystem(
-	config_obj *config_proto.Config, global_repository *Repository) (*Repository, error) {
+	ctx context.Context, config_obj *config_proto.Config,
+	global_repository *Repository) (*Repository, error) {
 	if config_obj.Frontend == nil ||
 		config_obj.Frontend.ArtifactDefinitionsDirectory == "" {
 		return global_repository, nil
@@ -32,6 +35,13 @@ func InitializeGlobalRepositoryFromFilesystem(
 			if !strings.HasSuffix(path, ".yaml") ||
 				finfo.IsDir() {
 				return nil
+			}
+
+			select {
+			case <-ctx.Done():
+				return errors.New("Cancelled")
+
+			default:
 			}
 
 			fd, err := os.Open(path)

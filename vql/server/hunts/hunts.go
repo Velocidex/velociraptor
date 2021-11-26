@@ -257,9 +257,8 @@ func (self HuntResultsPlugin) Call(
 				continue
 			}
 
-			api_client, err := search.GetApiClient(ctx,
-				config_obj, participation_row.ClientId,
-				false /* detailed */)
+			api_client, err := search.FastGetApiClient(ctx,
+				config_obj, participation_row.ClientId)
 			if err != nil {
 				scope.Log("hunt_results: %v", err)
 				continue

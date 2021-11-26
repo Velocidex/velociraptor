@@ -28,6 +28,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"net/http/httptrace"
 	"net/url"
 	"sync"
 	"sync/atomic"
@@ -35,6 +36,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -244,6 +246,19 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 		self.advanceToNextServer()
 		return nil, errors.WithStack(err)
 	}
+
+	trace := &httptrace.ClientTrace{
+		GotConn: func(connInfo httptrace.GotConnInfo) {
+			self.logger.WithFields(logrus.Fields{
+				"LocalAddr": connInfo.Conn.LocalAddr(),
+				"Reused":    connInfo.Reused,
+				"WasIdle":   connInfo.WasIdle,
+				"IdleTime":  connInfo.IdleTime,
+			}).Debug("Connection Info")
+		},
+	}
+	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
+
 	req.Header.Set("User-Agent", constants.USER_AGENT)
 	req.Header.Set("Content-Type", "application/binary")
 	if urgent {

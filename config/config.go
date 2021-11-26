@@ -157,8 +157,21 @@ func GetDefaultConfig() *config_proto.Config {
 			FilestoreDirectory: "/var/tmp/velociraptor/",
 		},
 		Writeback: &config_proto.Writeback{},
-		Mail:      &config_proto.MailConfig{},
-		Logging:   &config_proto.LoggingConfig{},
+		Logging: &config_proto.LoggingConfig{
+			// Disable debug logging by default.
+			Debug: &config_proto.LoggingRetentionConfig{
+				Disabled: true,
+			},
+			Info: &config_proto.LoggingRetentionConfig{
+				RotationTime: 7 * 24 * 60 * 60,   // 7 days
+				MaxAge:       365 * 24 * 60 * 60, // One year
+			},
+			Error: &config_proto.LoggingRetentionConfig{
+				RotationTime: 7 * 24 * 60 * 60,   // 7 days
+				MaxAge:       365 * 24 * 60 * 60, // One year
+			},
+			SeparateLogsPerComponent: true,
+		},
 		Monitoring: &config_proto.MonitoringConfig{
 			BindAddress: "127.0.0.1",
 			BindPort:    8003,

@@ -60,7 +60,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -130,6 +129,11 @@ func (self *HuntDispatcher) participateAllConnectedClients(
 		return err
 	}
 
+	client_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return err
+	}
+
 	for _, c := range notifier.ListClients() {
 		if !strings.HasPrefix(c, "C.") {
 			continue
@@ -143,8 +147,7 @@ func (self *HuntDispatcher) participateAllConnectedClients(
 
 		// Get the client to update the LastHuntTimestamp so it does
 		// not trigger the foreman again.
-		flows.QueueMessageForClient(
-			config_obj, c,
+		_ = client_manager.QueueMessageForClient(c,
 			&crypto_proto.VeloMessage{
 				SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
 				RequestId: constants.IgnoreResponseState,

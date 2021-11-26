@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
 var (
@@ -65,6 +66,21 @@ func (self ClientInfo) OS() ClientOS {
 type ClientInfoManager interface {
 	UpdatePing(client_id, ip_address string) error
 	Get(client_id string) (*ClientInfo, error)
+
+	// Get the client's tasks and remove them from the queue.
+	GetClientTasks(client_id string) ([]*crypto_proto.VeloMessage, error)
+
+	// Get all the tasks without de-queuing them.
+	PeekClientTasks(client_id string) ([]*crypto_proto.VeloMessage, error)
+
+	QueueMessageForClient(
+		client_id string,
+		req *crypto_proto.VeloMessage,
+		completion func()) error
+
+	UnQueueMessageForClient(
+		client_id string,
+		req *crypto_proto.VeloMessage) error
 
 	// Remove client id from the cache - this is needed when the
 	// record chages and we need to force a read from storage.

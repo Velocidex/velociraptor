@@ -44,8 +44,8 @@ func searchRecentsChan(
 		// Sort the children in reverse order - most recent first.
 		for i := len(children) - 1; i >= 0; i-- {
 			client_id := children[i].Base()
-			api_client, err := GetApiClient(
-				ctx, config_obj, client_id, false /* detailed */)
+			api_client, err := FastGetApiClient(
+				ctx, config_obj, client_id)
 			if err != nil {
 				continue
 			}

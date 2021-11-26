@@ -1,6 +1,14 @@
 package api
 
-import "os"
+import (
+	"os"
+
+	"github.com/pkg/errors"
+)
+
+var (
+	STOP_ITERATION = errors.New("Stop Iteration")
+)
 
 type WalkFunc func(urn FSPathSpec, info os.FileInfo) error
 
@@ -24,7 +32,10 @@ func Walk(
 			continue
 		}
 
-		walkFn(full_path, child_info)
+		err = walkFn(full_path, child_info)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

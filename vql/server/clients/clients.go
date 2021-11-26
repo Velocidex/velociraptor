@@ -73,9 +73,8 @@ func (self ClientsPlugin) Call(
 
 		// If a client id is specified we do not need to search at all.
 		if arg.ClientId != "" {
-			api_client, err := vsearch.GetApiClient(
-				ctx, config_obj,
-				arg.ClientId, false /* detailed */)
+			api_client, err := vsearch.FastGetApiClient(
+				ctx, config_obj, arg.ClientId)
 			if err == nil {
 				select {
 				case <-ctx.Done():
@@ -153,8 +152,8 @@ func (self *ClientInfoFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	api_client, err := search.GetApiClient(ctx,
-		config_obj, arg.ClientId, false /* detailed */)
+	api_client, err := search.FastGetApiClient(ctx,
+		config_obj, arg.ClientId)
 	if err != nil {
 		scope.Log("client_info: %s", err.Error())
 		return vfilter.Null{}

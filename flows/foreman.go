@@ -74,6 +74,11 @@ func ForemanProcessMessage(
 		return errors.New("Expected args of type ForemanCheckin")
 	}
 
+	client_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return err
+	}
+
 	// Update the client's event tables.
 	client_event_manager := services.ClientEventManager()
 	if client_event_manager != nil &&
@@ -81,8 +86,7 @@ func ForemanProcessMessage(
 			config_obj, client_id,
 			foreman_checkin.LastEventTableVersion) {
 		clientEventUpdateCounter.Inc()
-		err := QueueMessageForClient(
-			config_obj, client_id,
+		err := client_manager.QueueMessageForClient(client_id,
 			client_event_manager.GetClientUpdateEventTableMessage(
 				config_obj, client_id), nil)
 		if err != nil {
@@ -107,7 +111,7 @@ func ForemanProcessMessage(
 	// Take a snapshot of the hunts that we need to run on this
 	// client to reduce the time under lock.
 	hunts := make([]*api_proto.Hunt, 0)
-	err := dispatcher.ApplyFuncOnHunts(func(hunt *api_proto.Hunt) error {
+	err = dispatcher.ApplyFuncOnHunts(func(hunt *api_proto.Hunt) error {
 		// Hunt is stopped we dont care about it.
 		if hunt.State != api_proto.Hunt_RUNNING {
 			return nil
@@ -162,8 +166,7 @@ func ForemanProcessMessage(
 	// participation index and will automatically skip multiple
 	// messages.
 	clientHuntTimestampUpdateCounter.Inc()
-	return QueueMessageForClient(
-		config_obj, client_id,
+	return client_manager.QueueMessageForClient(client_id,
 		&crypto_proto.VeloMessage{
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
 			RequestId: constants.IgnoreResponseState,

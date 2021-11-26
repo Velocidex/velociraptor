@@ -69,6 +69,14 @@ type: INTERNAL
 `, `
 name: Generic.Client.Info
 type: CLIENT
+sources:
+- precondition: SELECT * FROM info()
+  query: SELECT * FROM info()
+  name: BasicInformation
+
+- precondition: SELECT * FROM info()
+  query: SELECT * FROM info()
+  name: Users
 `,
 	}
 )

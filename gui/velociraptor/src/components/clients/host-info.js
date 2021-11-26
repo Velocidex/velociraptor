@@ -396,7 +396,7 @@ class VeloHostInfo extends Component {
                     flow_id: this.state.interrogateOperationId,
                 }, this.source.token).then((response) => {
                     let context = response.data.context;
-                    if (context.state === "RUNNING") {
+                    if (!context || context.state === "RUNNING") {
                         return;
                     }
 

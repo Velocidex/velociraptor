@@ -46,7 +46,24 @@ type CachedInfo struct {
 	// Data on disk
 	record *services.ClientInfo
 
+	// Does this client have tasks outstanding?
+	has_tasks TASKS_AVAILABLE_STATUS
+
 	last_flush uint64
+}
+
+func (self *CachedInfo) SetHasTasks(status TASKS_AVAILABLE_STATUS) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.has_tasks = status
+}
+
+func (self *CachedInfo) GetHasTasks() TASKS_AVAILABLE_STATUS {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.has_tasks
 }
 
 // last seen is in uS
@@ -181,6 +198,14 @@ func (self *ClientInfoManager) Start(
 		return err
 	}
 
+	// When clients are notified they need to refresh their tasks list
+	// and invalidate the cache.
+	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
+		"Server.Internal.Notifications", self.ProcessNotification)
+	if err != nil {
+		return err
+	}
+
 	// The master will be informed when new clients appear.
 	is_master := services.IsMaster(config_obj)
 	if is_master {
@@ -311,6 +336,7 @@ func (self *ClientInfoManager) Get(client_id string) (*services.ClientInfo, erro
 	return &res, nil
 }
 
+// Load the cache info from cache or from storage.
 func (self *ClientInfoManager) GetCacheInfo(client_id string) (*CachedInfo, error) {
 	self.mu.Lock()
 	cached_any, err := self.lru.Get(client_id)
@@ -358,8 +384,6 @@ func (self *ClientInfoManager) GetCacheInfo(client_id string) (*CachedInfo, erro
 	self.mu.Lock()
 	self.lru.Set(client_id, cache_info)
 	self.mu.Unlock()
-
-	metricLRUCount.Inc()
 
 	return cache_info, nil
 }

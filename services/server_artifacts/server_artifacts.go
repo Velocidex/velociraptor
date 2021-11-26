@@ -23,7 +23,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -105,6 +104,11 @@ func (self *contextManager) Load(context *flows_proto.ArtifactCollectorContext) 
 }
 
 func (self *contextManager) load(context *flows_proto.ArtifactCollectorContext) error {
+	// Ignore monitoring sessions.
+	if self.path_manager.Path().Base() == "F.Monitoring" {
+		return nil
+	}
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -177,6 +181,42 @@ type ServerArtifactsRunner struct {
 	cancellationPool map[string]func()
 }
 
+func (self *ServerArtifactsRunner) getTasks(
+	config_obj *config_proto.Config) ([]*crypto_proto.VeloMessage, error) {
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	client_path_manager := paths.NewClientPathManager("server")
+	tasks, err := db.ListChildren(
+		config_obj, client_path_manager.TasksDirectory())
+	if err != nil {
+		return nil, err
+	}
+
+	result := []*crypto_proto.VeloMessage{}
+	for _, task_urn := range tasks {
+		task_urn = task_urn.SetTag("ServerTask")
+
+		// Here we read the task from the task_urn and remove
+		// it from the queue.
+		message := &crypto_proto.VeloMessage{}
+		err = db.GetSubject(config_obj, task_urn, message)
+		if err != nil {
+			continue
+		}
+
+		err = db.DeleteSubject(config_obj, task_urn)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, message)
+	}
+	return result, nil
+}
+
 func (self *ServerArtifactsRunner) process(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -185,7 +225,7 @@ func (self *ServerArtifactsRunner) process(
 	logger := logging.GetLogger(
 		self.config_obj, &logging.FrontendComponent)
 
-	tasks, err := clients.GetClientTasks(self.config_obj, "server", true)
+	tasks, err := self.getTasks(config_obj)
 	if err != nil {
 		return err
 	}
@@ -198,6 +238,7 @@ func (self *ServerArtifactsRunner) process(
 			err := self.processTask(ctx, config_obj, task)
 			if err != nil {
 				logger.Error("ServerArtifactsRunner: %v", err)
+
 			}
 		}
 	}()
@@ -223,11 +264,6 @@ func (self *ServerArtifactsRunner) processTask(
 
 	collection_context, err := NewCollectionContext(
 		self.config_obj, "server", task.SessionId)
-	if err != nil {
-		return err
-	}
-
-	err = clients.UnQueueMessageForClient(self.config_obj, "server", task)
 	if err != nil {
 		return err
 	}

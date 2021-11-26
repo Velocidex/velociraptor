@@ -25,7 +25,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -232,16 +231,22 @@ func CancelFlow(
 	}
 
 	// Get all queued tasks for the client and delete only those in this flow.
-	tasks, err := clients.GetClientTasks(config_obj, client_id,
-		true /* do_not_lease */)
+	client_manager, err := services.GetClientInfoManager()
 	if err != nil {
 		return nil, err
 	}
 
-	// Cancel all the tasks
+	// Get all the tasks but only dequeue the ones intended for the
+	// cancelled flow.
+	tasks, err := client_manager.PeekClientTasks(client_id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Cancel all the relevant tasks
 	for _, task := range tasks {
 		if task.SessionId == flow_id {
-			err = clients.UnQueueMessageForClient(config_obj, client_id, task)
+			err = client_manager.UnQueueMessageForClient(client_id, task)
 			if err != nil {
 				return nil, err
 			}
@@ -250,7 +255,7 @@ func CancelFlow(
 
 	// Queue a cancellation message to the client for this flow
 	// id.
-	err = clients.QueueMessageForClient(config_obj, client_id,
+	err = client_manager.QueueMessageForClient(client_id,
 		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},
 			SessionId: flow_id,

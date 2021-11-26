@@ -101,8 +101,17 @@ var (
 
 	concurrencyHistorgram = promauto.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "frontend_reader_latency",
+			Name:    "frontend_receiver_latency",
 			Help:    "Latency to receive client data in second.",
+			Buckets: prometheus.LinearBuckets(0.1, 1, 10),
+		},
+		[]string{"status"},
+	)
+
+	concurrencyWaitHistorgram = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "frontend_concurrency_wait_latency",
+			Help:    "Latency for clients waiting to get a concurrency slot (excludes actual serving time).",
 			Buckets: prometheus.LinearBuckets(0.1, 1, 10),
 		},
 		[]string{"status"},
@@ -275,6 +284,13 @@ func control(server_obj *Server) http.Handler {
 		// allows clients with urgent messages to always be
 		// processing even when the frontend are loaded.
 		if priority != "urgent" {
+			// Keep track of the average time the request spends
+			// waiting for a concurrency slot. If this time is too
+			// long it means concurrency may need to be increased.
+			timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+				concurrencyWaitHistorgram.WithLabelValues("").Observe(v)
+			}))
+
 			cancel, err := server_obj.Concurrency().StartConcurrencyControl(ctx)
 			if err != nil {
 				http.Error(w, "Timeout", http.StatusRequestTimeout)
@@ -282,6 +298,8 @@ func control(server_obj *Server) http.Handler {
 				return
 			}
 			defer cancel()
+
+			timer.ObserveDuration()
 
 		} else {
 			urgentCounter.Inc()

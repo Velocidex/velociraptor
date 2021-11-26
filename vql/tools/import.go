@@ -80,8 +80,8 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
-	api_client, err := search.GetApiClient(ctx,
-		config_obj, arg.ClientId, false /* detailed */)
+	api_client, err := search.FastGetApiClient(ctx,
+		config_obj, arg.ClientId)
 	if err != nil || api_client.AgentInformation == nil ||
 		api_client.AgentInformation.Name == "" {
 		scope.Log("import_collection: client_id not known")

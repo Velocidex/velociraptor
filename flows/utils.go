@@ -19,8 +19,6 @@ package flows
 
 import (
 	"github.com/golang/protobuf/proto"
-	"www.velocidex.com/golang/velociraptor/clients"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
@@ -64,14 +62,4 @@ func ProduceBackwardCompatibleVeloMessage(req *crypto_proto.VeloMessage) *crypto
 	}
 
 	return req
-}
-
-func QueueMessageForClient(
-	config_obj *config_proto.Config,
-	client_id string,
-	req *crypto_proto.VeloMessage,
-	completion func()) error {
-
-	req = ProduceBackwardCompatibleVeloMessage(req)
-	return clients.QueueMessageForClient(config_obj, client_id, req, completion)
 }

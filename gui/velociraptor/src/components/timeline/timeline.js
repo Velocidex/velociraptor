@@ -72,10 +72,12 @@ class TimelineTableRenderer  extends Component {
 
     getTimelineClass = (name) => {
         let timelines = this.props.timelines.timelines;
-        for(let i=0;i<timelines.length;i++) {
-            if (timelines[i].id === name) {
-                return "timeline-item-" + (i + 1);
-            };
+        if (_.isArray(timelines)) {
+            for(let i=0;i<timelines.length;i++) {
+                if (timelines[i].id === name) {
+                    return "timeline-item-" + (i + 1);
+                };
+            }
         }
         return "";
     }
