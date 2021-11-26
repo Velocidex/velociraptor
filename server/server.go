@@ -31,7 +31,6 @@ import (
 	"github.com/juju/ratelimit"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -285,9 +284,10 @@ func (self *Server) Process(
 
 	message_list := &crypto_proto.MessageList{}
 	if drain_requests_for_client {
-		message_list.Job = append(
-			message_list.Job,
-			self.DrainRequestsForClient(message_info.Source)...)
+		tasks, err := client_info_manager.GetClientTasks(message_info.Source)
+		if err == nil {
+			message_list.Job = append(message_list.Job, tasks...)
+		}
 	}
 
 	/*
@@ -307,15 +307,6 @@ func (self *Server) Process(
 	}
 
 	return response, len(message_list.Job), nil
-}
-
-func (self *Server) DrainRequestsForClient(client_id string) []*crypto_proto.VeloMessage {
-	result, err := clients.GetClientTasks(self.config, client_id, false)
-	if err == nil {
-		return result
-	}
-
-	return []*crypto_proto.VeloMessage{}
 }
 
 // Fatal error - terminate immediately.

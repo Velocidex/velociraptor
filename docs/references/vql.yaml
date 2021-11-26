@@ -32,6 +32,7 @@
     function submits the string to the AMSI system and receives a
     determination if it is malware.
   type: Function
+  category: windows
   args:
   - name: string
     type: string
@@ -105,6 +106,7 @@
     })
     ```
   type: Function
+  category: basic
   args:
   - name: query
     type: Any
@@ -202,6 +204,7 @@
     }, batch_size=3)
     ```
   type: Plugin
+  category: basic
   args:
   - name: batch_size
     type: int64
@@ -257,7 +260,7 @@
   description: |
     Cancels the flow.
 
-    This sends the client an immediate cacnellation message and stops
+    This sends the client an immediate cancellation message and stops
     the flow. It also removes any outstanding requests for the client
     if there are any.
   type: Function
@@ -273,7 +276,7 @@
     Collect certificate from the system trust store.
 
     This plugin uses the Windows APIs to fetch the certificates. You
-    migth also want to look at the `Windows.System.RootCAStore`
+    might also want to look at the `Windows.System.RootCAStore`
     artifact.
   type: Plugin
   category: windows
@@ -307,6 +310,7 @@
     description: If specified we run all queries asynchronously and combine the output.
   category: plugin
 - name: cidr_contains
+  category: server
   description: |
     Calculates if an IP address falls within a range of CIDR specified
     networks.
@@ -347,11 +351,11 @@
     Velociraptor maintains basic information about the client in the
     data store, such as its hostname, OS etc.
 
-    This information is refereshed each time the `Generic.Client.Info`
+    This information is refreshed each time the `Generic.Client.Info`
     artifact is collected from the endpoint so it can be out of
     date. This process is called "interrogation" of the endpoint.
 
-    You can refresh the entire fleet's datastore by schduling a
+    You can refresh the entire fleet's datastore by scheduling a
     `Generic.Client.Info` hunt.
   type: Function
   args:
@@ -390,7 +394,7 @@
   args:
   - name: search
     type: string
-    description: 'Client search string. Can have the following prefixes: ''lable:'',
+    description: 'Client search string. Can have the following prefixes: ''label:'',
       ''host:'''
   - name: start
     type: uint64
@@ -496,7 +500,7 @@
     FROM scope()
     ```
 
-    Sometimes we have a numebr of artifacts that use the same
+    Sometimes we have a number of artifacts that use the same
     parameter name for different purposes. In that case we wish to
     specify precisely which artifact receives which parameter. This
     more complex way of specifying the collection using the `spec`
@@ -548,6 +552,7 @@
     description: Max number of bytes to upload
   category: server
 - name: column_filter
+  category: basic
   description: |
     Select columns from another query using regex.
 
@@ -583,13 +588,15 @@
     description: One of more regular expressions that will include columns.
     repeated: true
 - name: combine
+  category: event
   description: Combine the output of several queries into the same result set.A convenience
     plugin acting like chain(async=TRUE).
   type: Plugin
 - name: commandline_split
+  category: client
   description: |
     Split a commandline into separate components following the windows
-    convensions.
+    conventions.
 
     Example:
     ```vql
@@ -756,6 +763,7 @@
   category: server
 - name: crypto_rc4
   description: Apply rc4 to the string and key.
+  category: client
   type: Function
   args:
   - name: string
@@ -890,7 +898,7 @@
     elastic. The query specified in `query` will be run and each row
     it emits will be uploaded as a separate event to Elastic.
 
-    You can either specify the elastic index explicitely using the
+    You can either specify the elastic index explicitly using the
     `index` parameter or provide an `_index` column in the query
     itself to send the row to a different index each time.
   type: Plugin
@@ -1033,7 +1041,7 @@
     required: true
   - name: sep
     type: string
-    description: The serparator that will be used to split the stdout into rows.
+    description: The separator that will be used to split the stdout into rows.
   - name: length
     type: int64
     description: Size of buffer to capture output per row.
@@ -1071,6 +1079,7 @@
     required: true
   category: basic
 - name: favorites_delete
+  category: server
   description: Delete a favorite.
   type: Function
   args:
@@ -1364,6 +1373,7 @@
     description: An array of elements to apply into the format string.
   category: basic
 - name: gcs_pubsub_publish
+  category: server
   description: Publish a message to Google PubSub.
   type: Function
   args:
@@ -1384,6 +1394,7 @@
     description: The credentials to use
     required: true
 - name: generate
+  category: basic
   description: |
     Create a named generator that receives rows from the query.
 
@@ -1424,6 +1435,7 @@
     type: bool
     description: Enable file buffering
 - name: geoip
+  category: server
   description: |
     Lookup an IP Address using the MaxMind GeoIP database. You can get
     a copy of the database from https://www.maxmind.com/. The database
@@ -1702,7 +1714,7 @@
 
     You can use this plugin to download file contents by passing the
     `tempfile_extension` parameter. In this case this plugin will
-    create a new temp file with the speicfied extension, write the
+    create a new temp file with the specified extension, write the
     content of the HTTP request into it and then emit a row with
     `Content` being the name of the file. The file will be
     automatically removed when the query ends.
@@ -1988,6 +2000,7 @@
     type: StoredQuery
   category: plugin
 - name: import_collection
+  category: server
   description: |
     Imports an offline collection zip file (experimental).
 
@@ -2212,7 +2225,7 @@
     description: If set use this key to cache the JS VM.
   category: plugin
 - name: killkillkill
-  description: Kills the client and forces a restart - this is very aggresive!
+  description: Kills the client and forces a restart - this is very aggressive!
   type: Function
   args:
   - name: client_id
@@ -2273,6 +2286,7 @@
     required: true
   category: basic
 - name: magic
+  category: client
   description: |
     Identify a file using magic rules.
 
@@ -2328,7 +2342,7 @@
   args:
   - name: to
     type: string
-    description: Receipient of the mail
+    description: Recipient of the mail
     repeated: true
     required: true
   - name: from
@@ -2491,10 +2505,10 @@
     description: Stop end events reach this time (event sources).
   - name: notebook_id
     type: string
-    description: The notebook to read from (shoud also include cell id)
+    description: The notebook to read from (should also include cell id)
   - name: notebook_cell_id
     type: string
-    description: The notebook cell read from (shoud also include notebook id)
+    description: The notebook cell read from (should also include notebook id)
   - name: notebook_cell_table
     type: int64
     description: A notebook cell can have multiple tables.)
@@ -2580,10 +2594,10 @@
     description: Stop end events reach this time (event sources).
   - name: notebook_id
     type: string
-    description: The notebook to read from (shoud also include cell id)
+    description: The notebook to read from (should also include cell id)
   - name: notebook_cell_id
     type: string
-    description: The notebook cell read from (shoud also include notebook id)
+    description: The notebook cell read from (should also include notebook id)
   - name: notebook_cell_table
     type: int64
     description: A notebook cell can have multiple tables.)
@@ -2612,7 +2626,7 @@
   category: parsers
 - name: parse_binary
   description: |
-    Parse a binary file into a datastructure using a profile.
+    Parse a binary file into a data structure using a profile.
 
     This plugin extract binary data from strings. It works by applying
     a profile to the binary string and generating an object from
@@ -2714,6 +2728,7 @@
     required: true
   category: parsers
 - name: parse_ese_catalog
+  category: parsers
   description: Opens an ESE file and dump the schema.
   type: Plugin
   args:
@@ -2972,7 +2987,7 @@
      /etc/update-motd.d/80-livepatch 1a3172ffaa815d12b58648f117ffb67e
     Description: management tools for Ubuntu Advantage
      Ubuntu Advantage is the professional package of tooling, technology
-     and expertise from Canonical, helping organisations around the world
+     and expertise from Canonical, helping organizations around the world
      manage their Ubuntu deployments.
      .
      Subscribers to Ubuntu Advantage will find helpful tools for accessing
@@ -3057,6 +3072,7 @@
     description: The starting offset of the first USN record to parse.
   category: parsers
 - name: parse_x509
+  category: parsers
   description: Parse a DER encoded x509 string into an object.
   type: Function
   args:
@@ -3078,6 +3094,7 @@
     description: The accessor to use
   category: parsers
 - name: parse_yaml
+  category: parsers
   description: Parse yaml into an object.
   type: Function
   args:
@@ -3089,7 +3106,7 @@
     type: string
     description: File accessor
 - name: partitions
-  description: List all partititions
+  description: List all partitions
   type: Plugin
   args:
   - name: all
@@ -3311,6 +3328,7 @@
       by only opening a single process.
   category: plugin
 - name: query
+  category: basic
   description: Launch a subquery and materialize it into a list of rows.
   type: Function
   args:
@@ -3338,6 +3356,7 @@
     description: Selects a random number up to this range.
   category: basic
 - name: range
+  category: basic
   description: Iterate over range.
   type: Plugin
   args:
@@ -3440,6 +3459,7 @@
     description: The accessor to use.
   category: windows
 - name: reg_rm_key
+  category: client
   description: Removes a key and all its values from the registry.
   type: Function
   args:
@@ -3448,6 +3468,7 @@
     description: Registry key path.
     required: true
 - name: reg_rm_value
+  category: client
   description: Removes a value in the registry.
   type: Function
   args:
@@ -3456,6 +3477,7 @@
     description: Registry value path.
     required: true
 - name: reg_set_value
+  category: client
   description: Set a value in the registry.
   type: Function
   args:
@@ -3493,6 +3515,7 @@
     required: true
   category: parsers
 - name: regex_transform
+  category: basic
   description: |
     Search and replace a string with multiple regex. Note you can use $1
     to replace the capture string.
@@ -3517,6 +3540,7 @@
     type: string
     description: A key for caching
 - name: relpath
+  category: basic
   description: Return the relative path of .
   type: Function
   args:
@@ -3532,6 +3556,7 @@
     type: string
     description: Separator to use (default native)
 - name: rm
+  category: client
   description: Remove a file from the filesystem using the API.
   type: Function
   args:
@@ -3609,6 +3634,7 @@
   type: Plugin
   category: plugin
 - name: send_event
+  category: event
   description: |
     Sends an event to a server event monitoring queue.
 
@@ -3626,6 +3652,7 @@
     description: The row to send to the artifact
     required: true
 - name: sequence
+  category: experimental
   description: |
     Combines the output of many queries into an in memory fifo. After
     each row is received from any subquery runs the query specified in
@@ -3699,6 +3726,7 @@
     required: true
   category: server
 - name: set
+  category: basic
   description: Sets the member field of the item. If item is omitted sets the scope.
   type: Function
   args:
@@ -3741,6 +3769,7 @@
     description: The number of ms to sleep
   category: basic
 - name: slice
+  category: basic
   description: Slice an array.
   type: Function
   args:
@@ -3793,10 +3822,10 @@
     description: Stop end events reach this time (event sources).
   - name: notebook_id
     type: string
-    description: The notebook to read from (shoud also include cell id)
+    description: The notebook to read from (should also include cell id)
   - name: notebook_cell_id
     type: string
-    description: The notebook cell read from (shoud also include notebook id)
+    description: The notebook cell read from (should also include notebook id)
   - name: notebook_cell_table
     type: int64
     description: A notebook cell can have multiple tables.)
@@ -3817,7 +3846,7 @@
     required: true
   - name: sep
     type: string
-    description: The serparator that will be used to split
+    description: The separator that will be used to split
     required: true
   category: basic
 - name: split_records
@@ -3886,6 +3915,7 @@
     description: Batch splunk upload this long (2 sec).
   category: server
 - name: sql
+  category: client
   description: Run queries against sqlite, mysql, and postgres databases
   type: Plugin
   args:
@@ -3938,6 +3968,7 @@
     required: true
   category: windows
 - name: starl
+  category: parsers
   description: |
     Compile a starlark code block - returns a module usable in VQL
 
@@ -4011,6 +4042,7 @@
     description: The prefix to strip
   category: basic
 - name: substr
+  category: basic
   description: Create a substring from a string
   type: Function
   args:
@@ -4025,6 +4057,7 @@
     type: int
     description: End index of substring
 - name: sum
+  category: basic
   description: Sums the items.
   type: Function
   args:
@@ -4066,6 +4099,7 @@
     description: If set we delay removal as much as possible.
   category: plugin
 - name: timeline
+  category: server
   description: Read a timeline. You can create a timeline with the timeline_add()
     function
   type: Plugin
@@ -4085,6 +4119,7 @@
     type: string
     description: The notebook ID the timeline is stored in.
 - name: timeline_add
+  category: server
   description: Add a new query to a timeline.
   type: Function
   args:
@@ -4180,7 +4215,7 @@
     description: A default timezone (UTC)
   - name: format
     type: string
-    description: A format specifier as per Golangs time.Parse
+    description: A format specifier as per Golang's time.Parse
   category: basic
 - name: to_dict
   description: |
@@ -4233,6 +4268,7 @@
     required: true
   category: windows
 - name: unhex
+  category: basic
   description: |
     Apply hex decoding to the string.
 
@@ -4253,6 +4289,7 @@
     type: string
     description: Hex string to decode
 - name: unzip
+  category: client
   description: Unzips a file into a directory
   type: Plugin
   args:
@@ -4335,6 +4372,7 @@
     description: Modified time to record
   category: plugin
 - name: upload_directory
+  category: server
   description: Upload a file to an upload directory. The final filename will be the
     output directory path followed by the filename path.
   type: Function
@@ -4546,6 +4584,7 @@
     description: A url to parse
   category: basic
 - name: user_create
+  category: server
   description: Creates a new user from the server, or updates their permissions or
     reset their password.
   type: Function
@@ -4560,6 +4599,7 @@
   - name: password
     type: string
 - name: user_delete
+  category: server
   description: Deletes a user from the server.
   type: Function
   args:
@@ -4754,6 +4794,7 @@
     required: true
   category: event
 - name: whoami
+  category: client
   description: Returns the username that is running the query.
   type: Function
 - name: winobj
@@ -4820,6 +4861,7 @@
     required: true
   category: plugin
 - name: xor
+  category: parsers
   description: Apply xor to the string and key.
   type: Function
   args:
@@ -4927,4 +4969,3 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
-

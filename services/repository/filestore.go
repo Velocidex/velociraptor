@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"context"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -16,7 +18,8 @@ import (
 // Loads the global repository with artifacts from the frontend path
 // and the file store.
 func InitializeGlobalRepositoryFromFilestore(
-	config_obj *config_proto.Config, global_repository *Repository) (*Repository, error) {
+	ctx context.Context, config_obj *config_proto.Config,
+	global_repository *Repository) (*Repository, error) {
 	if config_obj.Frontend == nil {
 		return global_repository, nil
 	}
@@ -31,6 +34,15 @@ func InitializeGlobalRepositoryFromFilestore(
 				return nil
 			}
 
+			select {
+			case <-ctx.Done():
+				return errors.New("GetGlobalRepository: Cancelled")
+
+			default:
+			}
+
+			// Failing to read a single file is not fatal - just keep
+			// going loading the other files.
 			fd, err := file_store_factory.ReadFile(path)
 			if err != nil {
 				logger.Error("GetGlobalRepository: %v", err)

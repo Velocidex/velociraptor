@@ -763,6 +763,7 @@ message Config {
             description: "Contents of the client's state as stored in the writeback file."
         }];
 
+    // Deprecated - Mail plugin setting are now provided by args.
     MailConfig Mail = 11;
 
     LoggingConfig Logging = 23;

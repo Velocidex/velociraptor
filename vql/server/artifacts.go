@@ -44,6 +44,7 @@ type ScheduleCollectionFunctionArg struct {
 	OpsPerSecond float64     `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
 	MaxRows      uint64      `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
 	MaxBytes     uint64      `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
+	Urgent       bool        `vfilter:"optional,field=urgent,doc=Set the collection as urgent - skips other queues collections on the client."`
 }
 
 type ScheduleCollectionFunction struct{}
@@ -107,6 +108,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		Timeout:        arg.Timeout,
 		MaxRows:        arg.MaxRows,
 		MaxUploadBytes: arg.MaxBytes,
+		Urgent:         arg.Urgent,
 	}
 
 	if arg.Spec == nil && arg.Env != nil {

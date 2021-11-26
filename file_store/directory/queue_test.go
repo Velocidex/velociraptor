@@ -107,7 +107,7 @@ func (self *TestSuite) TestQueueManager() {
 		assert.NoError(self.T(), err)
 	}
 
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The file should contain all the rows now.  File size is not
 		// exact due to timestamps but it should be larger than 300.
 		dbg = manager.Debug()

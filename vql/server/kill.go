@@ -13,7 +13,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/clients"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -53,7 +52,12 @@ func (self *KillClientFunction) Call(ctx context.Context,
 
 	// Queue a cancellation message to the client for this flow
 	// id.
-	err = clients.QueueMessageForClient(config_obj, arg.ClientId,
+	client_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		scope.Log("killkillkill: %s", err.Error())
+		return vfilter.Null{}
+	}
+	err = client_manager.QueueMessageForClient(arg.ClientId,
 		&crypto_proto.VeloMessage{
 			KillKillKill: &crypto_proto.Cancel{},
 			SessionId:    constants.MONITORING_WELL_KNOWN_FLOW,

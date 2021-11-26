@@ -16,7 +16,7 @@ type ClientPathManager struct {
 
 // Where we store client records in datastore.
 func (self ClientPathManager) Path() api.DSPathSpec {
-	return self.root
+	return self.root.SetTag("ClientInfo")
 }
 
 func NewClientPathManager(client_id string) *ClientPathManager {

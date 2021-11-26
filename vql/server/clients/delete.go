@@ -147,8 +147,8 @@ func reallyDeleteClient(ctx context.Context,
 	config_obj *config_proto.Config, scope vfilter.Scope,
 	db datastore.DataStore, arg *DeleteClientArgs) error {
 
-	client_info, err := search.GetApiClient(ctx,
-		config_obj, arg.ClientId, false /* detailed */)
+	client_info, err := search.FastGetApiClient(ctx,
+		config_obj, arg.ClientId)
 	if err != nil {
 		return err
 	}

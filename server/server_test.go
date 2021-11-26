@@ -16,7 +16,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
@@ -183,8 +182,10 @@ func (self *ServerTestSuite) TestClientEventTable() {
 			},
 		})
 
-	tasks, err := clients.GetClientTasks(self.ConfigObj,
-		self.client_id, true /* do_not_lease */)
+	client_info_manager, err := services.GetClientInfoManager()
+	assert.NoError(self.T(), err)
+
+	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 
@@ -252,8 +253,10 @@ func (self *ServerTestSuite) TestForeman() {
 		})
 
 	// Server should schedule the new hunt on the client.
-	tasks, err := clients.GetClientTasks(self.ConfigObj,
-		self.client_id, true /* do_not_lease */)
+	client_info_manager, err := services.GetClientInfoManager()
+	assert.NoError(t, err)
+
+	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 
@@ -389,8 +392,10 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 	t := self.T()
 
 	// Cancellation message should never be sent due to log.
-	tasks, err := clients.GetClientTasks(self.ConfigObj,
-		self.client_id, true /* do_not_lease */)
+	client_info_manager, err := services.GetClientInfoManager()
+	assert.NoError(self.T(), err)
+
+	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 0)
 
@@ -405,8 +410,7 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 	runner.Close()
 
 	// Cancellation message should never be sent due to status.
-	tasks, err = clients.GetClientTasks(self.ConfigObj,
-		self.client_id, true /* do_not_lease */)
+	tasks, err = client_info_manager.PeekClientTasks(self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 0)
 
@@ -422,8 +426,7 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 
 	// Cancellation message should be sent due to response
 	// messages.
-	tasks, err = clients.GetClientTasks(self.ConfigObj,
-		self.client_id, true /* do_not_lease */)
+	tasks, err = client_info_manager.PeekClientTasks(self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 }
@@ -455,9 +458,10 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	require.NoError(t, err)
 
 	// Launching the artifact will schedule one query on the client.
-	tasks, err := clients.GetClientTasks(
-		self.ConfigObj, self.client_id,
-		true /* do_not_lease */)
+	client_info_manager, err := services.GetClientInfoManager()
+	assert.NoError(self.T(), err)
+
+	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 2)
 
@@ -681,8 +685,10 @@ func (self *ServerTestSuite) TestCancellation() {
 	require.NoError(t, err)
 
 	// One task is scheduled for the client.
-	tasks, err := clients.GetClientTasks(self.ConfigObj,
-		self.client_id, true /* do_not_lease */)
+	client_info_manager, err := services.GetClientInfoManager()
+	assert.NoError(self.T(), err)
+
+	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
 	assert.NoError(t, err)
 
 	// Generic.Client.Info has two source preconditions in parallel
@@ -697,8 +703,7 @@ func (self *ServerTestSuite) TestCancellation() {
 
 	// Cancelling a flow simply schedules a cancel message for the
 	// client and removes all pending tasks.
-	tasks, err = clients.GetClientTasks(self.ConfigObj,
-		self.client_id, true /* do_not_lease */)
+	tasks, err = client_info_manager.PeekClientTasks(self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 
@@ -742,8 +747,10 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 		})
 
 	// This should send a cancellation message to the client.
-	tasks, err := clients.GetClientTasks(self.ConfigObj,
-		self.client_id, true /* do_not_lease */)
+	client_info_manager, err := services.GetClientInfoManager()
+	assert.NoError(t, err)
+
+	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 
