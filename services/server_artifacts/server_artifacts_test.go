@@ -88,7 +88,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 		}, func() {
 			// Notify it about the new job
 			notifier := services.GetNotifier()
-			err = notifier.NotifyListener(self.ConfigObj, "server")
+			err = notifier.NotifyListener(self.ConfigObj, "server", "")
 			assert.NoError(self.T(), err)
 		})
 	assert.NoError(self.T(), err)

@@ -132,11 +132,13 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 
 	// Changes are not visible in the data store immediately.
 	assert.Equal(self.T(), modification, services.HuntPropagateChanges)
-	hunt_path_manager := paths.NewHuntPathManager("H.2")
-	hunt_obj := &api_proto.Hunt{}
-	err = db.GetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_RUNNING)
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		hunt_path_manager := paths.NewHuntPathManager("H.2")
+		hunt_obj := &api_proto.Hunt{}
+		err = db.GetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
+		assert.NoError(self.T(), err)
+		return hunt_obj.State == api_proto.Hunt_RUNNING
+	})
 
 	// But they should be visible in master
 	hunt_obj, pres := self.master_dispatcher.GetHunt("H.2")

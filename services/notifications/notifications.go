@@ -17,7 +17,6 @@ package notifications
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -36,6 +35,16 @@ var (
 	timeoutClientPing = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "client_ping_timeout",
 		Help: "Number of times the client ping has timed out.",
+	})
+
+	notificationsSentCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "notifications_send_count",
+		Help: "Number of notification messages sent.",
+	})
+
+	notificationsReceivedCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "notifications_receive_count",
+		Help: "Number of notification messages received.",
 	})
 )
 
@@ -106,25 +115,8 @@ func StartNotificationService(
 				if !ok {
 					continue
 				}
-
-				if target == "Regex" {
-					regex_str, ok := event.GetString("Regex")
-					if ok {
-						regex, err := regexp.Compile(regex_str)
-						if err != nil {
-							logger.Error("Notification service: "+
-								"Unable to compiler regex '%v': %v\n",
-								regex_str, err)
-							continue
-						}
-						self.notification_pool.NotifyByRegex(config_obj, regex)
-					}
-
-				} else if target == "All" {
-					self.notification_pool.NotifyAll(config_obj)
-				} else {
-					self.notification_pool.Notify(target)
-				}
+				notificationsReceivedCounter.Inc()
+				self.notification_pool.Notify(target)
 			}
 		}
 	}()
@@ -146,25 +138,29 @@ func (self *Notifier) ProcessPing(ctx context.Context,
 		return nil
 	}
 
-	// Client is directly connected - inform the client info
-	// manager. Normally the Ping is sent by the frontend to find out
-	// which clients are connected to a minion. In this case it is
-	// worth the extra ping updates to deliver fresh data to the GUI -
-	// there are not too many clients but we need to know accurate
-	// data.
-	client_info_manager, err := services.GetClientInfoManager()
-	if err != nil {
-		return err
-	}
-	client_info_manager.UpdatePing(client_id, "")
+	/*
+		// Client is directly connected - inform the client info
+		// manager. Normally the Ping is sent by the frontend to find out
+		// which clients are connected to a minion. In this case it is
+		// worth the extra ping updates to deliver fresh data to the GUI -
+		// there are not too many clients but we need to know accurate
+		// data.
+		client_info_manager, err := services.GetClientInfoManager()
+		if err != nil {
+			return err
+		}
 
+		client_info_manager.UpdateStats(client_id, func(stats *services.Stats) {
+			stats.Ping =
+		})
+	*/
 	notify_target, pres := row.GetString("NotifyTarget")
 	if !pres {
 		return nil
 	}
 
 	// Notify the target of the Ping.
-	return self.NotifyListener(config_obj, notify_target)
+	return self.NotifyListener(config_obj, notify_target, "ClientPing")
 }
 
 func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()) {
@@ -178,52 +174,41 @@ func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()
 	return notification_pool.Listen(client_id)
 }
 
-func (self *Notifier) NotifyAllListeners(config_obj *config_proto.Config) error {
+func (self *Notifier) NotifyListener(config_obj *config_proto.Config,
+	id, tag string) error {
 	journal, err := services.GetJournal()
 	if err != nil {
 		return err
 	}
 
+	// We need to send this ASAP so we do not use an async send.
+	notificationsSentCounter.Inc()
 	return journal.PushRowsToArtifact(config_obj,
-		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", "All")},
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("Tag", tag).
+			Set("Target", id)},
 		"Server.Internal.Notifications", "server", "",
 	)
 }
 
-func (self *Notifier) NotifyByRegex(
-	config_obj *config_proto.Config, regex string) error {
-	journal, err := services.GetJournal()
-	if err != nil {
-		return err
+func (self *Notifier) NotifyDirectListener(client_id string) {
+	if self.notification_pool.IsClientConnected(client_id) {
+		self.notification_pool.Notify(client_id)
 	}
-
-	return journal.PushRowsToArtifact(config_obj,
-		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", "Regex").
-			Set("Regex", regex)},
-		"Server.Internal.Notifications", "server", "",
-	)
 }
 
-func (self *Notifier) NotifyListener(config_obj *config_proto.Config, id string) error {
-	journal, err := services.GetJournal()
-	if err != nil {
-		return err
-	}
-
-	return journal.PushRowsToArtifact(config_obj,
-		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", id)},
-		"Server.Internal.Notifications", "server", "",
-	)
-}
-
-func (self *Notifier) NotifyListenerAsync(config_obj *config_proto.Config, id string) {
+func (self *Notifier) NotifyListenerAsync(config_obj *config_proto.Config,
+	id, tag string) {
 	journal, err := services.GetJournal()
 	if err != nil {
 		return
 	}
 
+	notificationsSentCounter.Inc()
 	journal.PushRowsToArtifactAsync(config_obj,
-		ordereddict.NewDict().Set("Target", id),
+		ordereddict.NewDict().
+			Set("Tag", tag).
+			Set("Target", id),
 		"Server.Internal.Notifications")
 }
 

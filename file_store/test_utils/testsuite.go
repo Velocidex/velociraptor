@@ -67,6 +67,12 @@ type: CLIENT_EVENT
 name: System.Hunt.Participation
 type: INTERNAL
 `, `
+name: Server.Internal.MasterRegistrations
+type: INTERNAL
+`, `
+name: Server.Internal.ClientTasks
+type: INTERNAL
+`, `
 name: Generic.Client.Info
 type: CLIENT
 sources:

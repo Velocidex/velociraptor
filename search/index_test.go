@@ -14,6 +14,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services/indexing"
+
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 type TestSuite struct {

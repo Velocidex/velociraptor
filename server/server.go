@@ -276,8 +276,11 @@ func (self *Server) Process(
 	if err != nil {
 		return nil, 0, err
 	}
-	err = client_info_manager.UpdatePing(
-		message_info.Source, message_info.RemoteAddr)
+	err = client_info_manager.UpdateStats(message_info.Source,
+		func(s *services.Stats) {
+			s.Ping = uint64(time.Now().UnixNano() / 1000)
+			s.IpAddress = message_info.RemoteAddr
+		})
 	if err != nil {
 		return nil, 0, err
 	}

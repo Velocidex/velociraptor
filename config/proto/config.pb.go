@@ -2644,9 +2644,10 @@ type Config struct {
 	// A list of possible frontends to use. When deployed in
 	// multi-frontend configuration we select on those and populate
 	// the Frontend field above.
-	ExtraFrontends    []*FrontendConfig `protobuf:"bytes,31,rep,name=ExtraFrontends,proto3" json:"ExtraFrontends,omitempty"`
-	Datastore         *DatastoreConfig  `protobuf:"bytes,6,opt,name=Datastore,proto3" json:"Datastore,omitempty"`
-	Writeback         *Writeback        `protobuf:"bytes,9,opt,name=Writeback,proto3" json:"Writeback,omitempty"`
+	ExtraFrontends []*FrontendConfig `protobuf:"bytes,31,rep,name=ExtraFrontends,proto3" json:"ExtraFrontends,omitempty"`
+	Datastore      *DatastoreConfig  `protobuf:"bytes,6,opt,name=Datastore,proto3" json:"Datastore,omitempty"`
+	Writeback      *Writeback        `protobuf:"bytes,9,opt,name=Writeback,proto3" json:"Writeback,omitempty"`
+	// Deprecated - Mail plugin setting are now provided by args.
 	Mail              *MailConfig       `protobuf:"bytes,11,opt,name=Mail,proto3" json:"Mail,omitempty"`
 	Logging           *LoggingConfig    `protobuf:"bytes,23,opt,name=Logging,proto3" json:"Logging,omitempty"`
 	Verbose           bool              `protobuf:"varint,20,opt,name=verbose,proto3" json:"verbose,omitempty"`

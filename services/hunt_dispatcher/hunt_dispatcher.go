@@ -42,7 +42,6 @@ package hunt_dispatcher
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -54,11 +53,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -118,18 +115,8 @@ func (self *HuntDispatcher) participateAllConnectedClients(
 	ctx context.Context,
 	config_obj *config_proto.Config, hunt_id string) error {
 
-	hunt_obj, pres := self.GetHunt(hunt_id)
-	if !pres {
-		return errors.New("Unknown hunt id")
-	}
-
 	notifier := services.GetNotifier()
 	journal, err := services.GetJournal()
-	if err != nil {
-		return err
-	}
-
-	client_manager, err := services.GetClientInfoManager()
 	if err != nil {
 		return err
 	}
@@ -139,22 +126,12 @@ func (self *HuntDispatcher) participateAllConnectedClients(
 			continue
 		}
 
+		// Notify the hunt manager about the new client
 		journal.PushRowsToArtifactAsync(config_obj,
 			ordereddict.NewDict().
 				Set("HuntId", hunt_id).
 				Set("ClientId", c),
 			"System.Hunt.Participation")
-
-		// Get the client to update the LastHuntTimestamp so it does
-		// not trigger the foreman again.
-		_ = client_manager.QueueMessageForClient(c,
-			&crypto_proto.VeloMessage{
-				SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
-				RequestId: constants.IgnoreResponseState,
-				UpdateForeman: &actions_proto.ForemanCheckin{
-					LastHuntTimestamp: hunt_obj.StartTime,
-				},
-			}, nil)
 	}
 
 	return nil

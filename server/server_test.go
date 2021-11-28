@@ -18,6 +18,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -103,6 +104,13 @@ func (self *ServerTestSuite) SetupTest() {
 	require.NoError(self.T(), err)
 
 	self.client_id = self.client_crypto.ClientId
+	db, err := datastore.GetDB(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	client_path_manager := paths.NewClientPathManager(self.client_id)
+	err = db.SetSubject(self.ConfigObj, client_path_manager.Path(),
+		&actions_proto.ClientInfo{ClientId: self.client_id})
+	assert.NoError(self.T(), err)
 }
 
 func (self *ServerTestSuite) TestEnrollment() {
@@ -171,16 +179,10 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	// Wait a bit.
 	time.Sleep(time.Second)
 
-	// Send a foreman checkin message from client with old event
-	// table version.
-	runner.ProcessSingleMessage(
-		context.Background(),
-		&crypto_proto.VeloMessage{
-			Source: self.client_id,
-			ForemanCheckin: &actions_proto.ForemanCheckin{
-				LastEventTableVersion: 0,
-			},
-		})
+	// Send a message from client to trigger check
+	runner.ProcessMessages(context.Background(), &crypto.MessageInfo{
+		Source: self.client_id,
+	})
 
 	client_info_manager, err := services.GetClientInfoManager()
 	assert.NoError(self.T(), err)
@@ -234,23 +236,10 @@ func (self *ServerTestSuite) TestForeman() {
 
 	assert.Equal(t, hunt.StartRequest, expected)
 
-	// Send a foreman checkin message from client with old hunt
-	// timestamp.
-	runner.ProcessSingleMessage(
-		context.Background(),
-		&crypto_proto.VeloMessage{
-			Source: self.client_id,
-			ForemanCheckin: &actions_proto.ForemanCheckin{
-				LastHuntTimestamp: 0,
-
-				// We do not want to trigger an event
-				// table update in this test so we
-				// pretend our version is later than
-				// the automatic table that will be
-				// created.
-				LastEventTableVersion: 10000000000000000000,
-			},
-		})
+	// Send a message from client to trigger check
+	runner.ProcessMessages(context.Background(), &crypto.MessageInfo{
+		Source: self.client_id,
+	})
 
 	// Server should schedule the new hunt on the client.
 	client_info_manager, err := services.GetClientInfoManager()
@@ -260,11 +249,15 @@ func (self *ServerTestSuite) TestForeman() {
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 
-	// Task should be UpdateForeman message.
+	// Task should be UpdateEventTable message.
 	assert.Equal(t, tasks[0].SessionId, "F.Monitoring")
-	require.NotNil(t, tasks[0].UpdateForeman)
-	assert.Equal(t, tasks[0].UpdateForeman.LastHuntTimestamp, services.GetHuntDispatcher().
-		GetLastTimestamp())
+	require.NotNil(t, tasks[0].UpdateEventTable)
+
+	// The client_info_manager will remember the last hunt timestamp
+	stats, err := client_info_manager.GetStats(self.client_id)
+	assert.NoError(t, err)
+
+	assert.Equal(t, stats.LastHuntTimestamp, hunt.StartTime)
 }
 
 func (self *ServerTestSuite) RequiredFilestoreContains(

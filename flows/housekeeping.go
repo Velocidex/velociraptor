@@ -15,23 +15,6 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-// The foreman is a Well Known Flow for clients to check for hunt
-// memberships. Each client periodically informs the foreman of the
-// most recent hunt it executed, and the foreman launches the relevant
-// flow on the client.
-
-// The process goes like this:
-
-// 1. The client sends a message to the foreman periodically with the
-//    timestamp of the most recent hunt it ran (as well latest event
-//    table version).
-
-// 2. If a newer hunt exists, the foreman sends the hunt_condition
-//    query to the client with the response directed to the
-//    System.Hunt.Participation artifact monitoring queue.
-
-// 3. The hunt manager service scans the System.Hunt.Participation
-//    monitoring queue and launches the relevant flows on each client.
 
 package flows
 
@@ -42,11 +25,8 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	constants "www.velocidex.com/golang/velociraptor/constants"
-	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -55,56 +35,61 @@ var (
 		Name: "client_event_update",
 		Help: "Total number of client Event Table Update messages sent.",
 	})
-
-	clientHuntTimestampUpdateCounter = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "client_hunt_timestamp_update",
-		Help: "Total number of client Update Hunt Timestamp messages sent.",
-	})
 )
 
-// ForemanProcessMessage processes a ForemanCheckin message from the
-// client.
-func ForemanProcessMessage(
+func CheckClientStatus(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	client_id string,
-	foreman_checkin *actions_proto.ForemanCheckin) error {
-
-	if foreman_checkin == nil {
-		return errors.New("Expected args of type ForemanCheckin")
-	}
+	client_id string) error {
 
 	client_manager, err := services.GetClientInfoManager()
 	if err != nil {
 		return err
 	}
 
-	// Update the client's event tables.
+	stats, err := client_manager.GetStats(client_id)
+	if err != nil {
+		return err
+	}
+
+	// Check the client's event table for validity.
 	client_event_manager := services.ClientEventManager()
 	if client_event_manager != nil &&
 		client_event_manager.CheckClientEventsVersion(
-			config_obj, client_id,
-			foreman_checkin.LastEventTableVersion) {
+			config_obj, client_id, stats.LastEventTableVersion) {
+
+		update_message := client_event_manager.GetClientUpdateEventTableMessage(
+			config_obj, client_id)
+
+		if update_message.UpdateEventTable == nil {
+			return errors.New("Invalid event update")
+		}
+
+		// Inform the client manager that this client will now receive
+		// the latest event table.
+		client_manager.UpdateStats(client_id, func(s *services.Stats) {
+			s.LastEventTableVersion = update_message.UpdateEventTable.Version
+		})
+
 		clientEventUpdateCounter.Inc()
-		err := client_manager.QueueMessageForClient(client_id,
-			client_event_manager.GetClientUpdateEventTableMessage(
-				config_obj, client_id), nil)
+		err := client_manager.QueueMessageForClient(
+			client_id, update_message, true, nil)
 		if err != nil {
 			return err
 		}
 	}
 
+	// Check the client's hunt status
 	// Process any needed hunts.
 	dispatcher := services.GetHuntDispatcher()
 	if dispatcher == nil {
 		return nil
 	}
-	client_last_timestamp := foreman_checkin.LastHuntTimestamp
 
 	// Can we get away without a lock? If the client is already up
 	// to date we dont need to look further.
 	hunts_last_timestamp := dispatcher.GetLastTimestamp()
-	if client_last_timestamp >= hunts_last_timestamp {
+	if stats.LastHuntTimestamp >= hunts_last_timestamp {
 		return nil
 	}
 
@@ -118,7 +103,7 @@ func ForemanProcessMessage(
 		}
 
 		// This hunt is not relevant to this client.
-		if hunt.StartTime <= client_last_timestamp {
+		if hunt.StartTime <= stats.LastHuntTimestamp {
 			return nil
 		}
 
@@ -131,12 +116,16 @@ func ForemanProcessMessage(
 		return nil
 	})
 
-	// Nothing to do, return
-	if len(hunts) == 0 {
+	if err != nil {
 		return err
 	}
 
-	// Now schedule the client for all the hunts that it needs to run.
+	// This will now only contains hunts launched since the last hunt
+	// timestamp. If it is empty there is nothing to do, return
+	if len(hunts) == 0 {
+		return nil
+	}
+
 	journal, err := services.GetJournal()
 	if err != nil {
 		return err
@@ -157,21 +146,8 @@ func ForemanProcessMessage(
 		}
 	}
 
-	// Let the client know it needs to update its foreman state to
-	// the latest time. We schedule an UpdateForeman message for
-	// the client. Note that it is possible that the client does
-	// not update its timestamp immediately and therefore might
-	// end up sending multiple participation events to the hunt
-	// manager - this is ok since the hunt manager keeps hunt
-	// participation index and will automatically skip multiple
-	// messages.
-	clientHuntTimestampUpdateCounter.Inc()
-	return client_manager.QueueMessageForClient(client_id,
-		&crypto_proto.VeloMessage{
-			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
-			RequestId: constants.IgnoreResponseState,
-			UpdateForeman: &actions_proto.ForemanCheckin{
-				LastHuntTimestamp: latest_timestamp,
-			},
-		}, nil)
+	client_manager.UpdateStats(client_id, func(s *services.Stats) {
+		s.LastHuntTimestamp = latest_timestamp
+	})
+	return nil
 }

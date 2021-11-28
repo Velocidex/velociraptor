@@ -20,6 +20,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 type MockClient struct {

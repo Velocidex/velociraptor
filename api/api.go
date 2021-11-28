@@ -218,13 +218,7 @@ func (self *ApiServer) CollectArtifact(
 	}
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
-		ctx, self.config, acl_manager, repository, in,
-		func() {
-			notifier := services.GetNotifier()
-			if notifier != nil {
-				notifier.NotifyListener(self.config, in.ClientId)
-			}
-		})
+		ctx, self.config, acl_manager, repository, in, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -292,13 +286,10 @@ func (self *ApiServer) NotifyClients(
 		return nil, errors.New("Notifier not ready")
 	}
 
-	if in.NotifyAll {
-		self.server_obj.Info("sending notification to everyone")
-		err = notifier.NotifyAllListeners(self.config)
-
-	} else if in.ClientId != "" {
+	if in.ClientId != "" {
 		self.server_obj.Info("sending notification to %s", in.ClientId)
-		err = services.GetNotifier().NotifyListener(self.config, in.ClientId)
+		err = services.GetNotifier().NotifyListener(
+			self.config, in.ClientId, "API.NotifyClients")
 	} else {
 		return nil, status.Error(codes.InvalidArgument,
 			"client id should be specified")
@@ -840,10 +831,6 @@ func (self *ApiServer) SetClientMonitoringState(
 	if err != nil {
 		return nil, err
 	}
-
-	_, err = self.NotifyClients(ctx, &api_proto.NotificationRequest{
-		NotifyAll: true,
-	})
 
 	return &empty.Empty{}, err
 }

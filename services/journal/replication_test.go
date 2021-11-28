@@ -29,6 +29,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 type MockFrontendService struct {
@@ -66,6 +68,17 @@ func (self *ReplicationTestSuite) startServices() {
 	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
 	assert.NoError(t, self.sm.Start(launcher.StartLauncherService))
 	assert.NoError(t, self.sm.Start(repository.StartRepositoryManagerForTest))
+}
+
+func (self *ReplicationTestSuite) LoadArtifacts(definitions []string) {
+	manager, _ := services.GetRepositoryManager()
+	global_repo, err := manager.GetGlobalRepository(self.config_obj)
+	assert.NoError(self.T(), err)
+
+	for _, def := range definitions {
+		_, err := global_repo.LoadYaml(def, true)
+		assert.NoError(self.T(), err)
+	}
 }
 
 func (self *ReplicationTestSuite) SetupTest() {
@@ -129,6 +142,11 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 
 	self.startServices()
 
+	self.LoadArtifacts([]string{`
+name: Test.Artifact
+type: CLIENT_EVENT
+`})
+
 	// Wait here until we call all the watchers.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		mu.Lock()
@@ -139,6 +157,7 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 			// master. This is used to let the master know
 			// if a client is connected to us.
 			"Server.Internal.Ping",
+			"Server.Internal.MasterRegistrations",
 
 			// The notifications service will watch for
 			// notifications through us.
@@ -183,6 +202,8 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 
 	replicator := journal_service.(*journal.ReplicationService)
 	replicator.SetRetryDuration(100 * time.Millisecond)
+	replicator.ProcessMasterRegistrations(ordereddict.NewDict().
+		Set("Events", []interface{}{"Test.Artifact"}))
 
 	events = nil
 	err = journal_service.PushRowsToArtifact(self.config_obj,

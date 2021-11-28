@@ -23,6 +23,15 @@ const (
 
 type ClientOS int
 
+// Keep some stats about the client in the cache. These will be synced
+// to disk periodically.
+type Stats struct {
+	Ping                  uint64
+	LastHuntTimestamp     uint64
+	LastEventTableVersion uint64
+	IpAddress             string
+}
+
 func GetClientInfoManager() (ClientInfoManager, error) {
 	client_info_manager_mu.Lock()
 	defer client_info_manager_mu.Unlock()
@@ -64,8 +73,10 @@ func (self ClientInfo) OS() ClientOS {
 }
 
 type ClientInfoManager interface {
-	UpdatePing(client_id, ip_address string) error
 	Get(client_id string) (*ClientInfo, error)
+
+	GetStats(client_id string) (*Stats, error)
+	UpdateStats(client_id string, cb func(stats *Stats)) error
 
 	// Get the client's tasks and remove them from the queue.
 	GetClientTasks(client_id string) ([]*crypto_proto.VeloMessage, error)
@@ -73,9 +84,16 @@ type ClientInfoManager interface {
 	// Get all the tasks without de-queuing them.
 	PeekClientTasks(client_id string) ([]*crypto_proto.VeloMessage, error)
 
+	QueueMessagesForClient(
+		client_id string,
+		req []*crypto_proto.VeloMessage,
+		notify bool, /* Also notify the client about the new task */
+	) error
+
 	QueueMessageForClient(
 		client_id string,
 		req *crypto_proto.VeloMessage,
+		notify bool, /* Also notify the client about the new task */
 		completion func()) error
 
 	UnQueueMessageForClient(

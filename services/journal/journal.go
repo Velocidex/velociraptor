@@ -41,9 +41,19 @@ type JournalService struct {
 	Clock utils.Clock
 }
 
+func (self *JournalService) GetWatchers() []string {
+	return self.qm.GetWatchers()
+}
+
+func (self *JournalService) publishWatchers() {
+	self.PushRowsToArtifact(self.config_obj,
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("Events", self.GetWatchers())},
+		"Server.Internal.MasterRegistrations", "server", "")
+}
+
 func (self *JournalService) Watch(
-	ctx context.Context, queue_name string) (
-	output <-chan *ordereddict.Dict, cancel func()) {
+	ctx context.Context, queue_name string) (<-chan *ordereddict.Dict, func()) {
 
 	if self == nil || self.qm == nil {
 		// Readers block on nil channel.
@@ -52,7 +62,17 @@ func (self *JournalService) Watch(
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Watching for events from %v", queue_name)
-	return self.qm.Watch(ctx, queue_name)
+	res, cancel := self.qm.Watch(ctx, queue_name)
+
+	// Advertise new watchers
+	self.publishWatchers()
+
+	return res, func() {
+		cancel()
+
+		// Advertise that a watcher was removed.
+		self.publishWatchers()
+	}
 }
 
 // Write rows to a simple result set. This function manages concurrent

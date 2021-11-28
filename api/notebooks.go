@@ -853,13 +853,15 @@ func (self *ApiServer) CancelNotebookCell(
 	}
 
 	notebook_cell.Calculating = false
+	// Make sure we write the cancel message ASAP
 	err = db.SetSubject(self.config, notebook_cell_path_manager.Path(),
 		notebook_cell)
 	if err != nil {
 		return nil, err
 	}
 
-	return &empty.Empty{}, services.GetNotifier().NotifyListener(self.config, in.CellId)
+	return &empty.Empty{}, services.GetNotifier().NotifyListener(
+		self.config, in.CellId, "CancelNotebookCell")
 }
 
 func (self *ApiServer) UploadNotebookAttachment(

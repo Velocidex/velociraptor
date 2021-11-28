@@ -121,7 +121,8 @@ func (self *EnrollmentService) ProcessEnrollment(
 			// Notify the client
 			notifier := services.GetNotifier()
 			if notifier != nil {
-				notifier.NotifyListener(config_obj, client_id)
+				notifier.NotifyListener(
+					config_obj, client_id, "Interrogate")
 			}
 		})
 	if err != nil {

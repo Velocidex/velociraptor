@@ -53,6 +53,18 @@ type QueuePool struct {
 	registrations map[string][]*Listener
 }
 
+func (self *QueuePool) GetWatchers() []string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := make([]string, 0, len(self.registrations))
+	for name := range self.registrations {
+		result = append(result, name)
+	}
+
+	return result
+}
+
 func (self *QueuePool) Register(vfs_path string) (<-chan *ordereddict.Dict, func()) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -177,6 +189,10 @@ func (self *MemoryQueueManager) PushEventRows(
 			path_manager.GetQueueName(), row)
 	}
 	return nil
+}
+
+func (self *MemoryQueueManager) GetWatchers() []string {
+	return GlobalQueuePool(self.config_obj).GetWatchers()
 }
 
 func (self *MemoryQueueManager) Watch(

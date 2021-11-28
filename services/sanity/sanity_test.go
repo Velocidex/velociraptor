@@ -1,4 +1,4 @@
-package sanity
+package sanity_test
 
 import (
 	"testing"
@@ -18,7 +18,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
+	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/utils"
+
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 type ServicesTestSuite struct {
@@ -57,7 +60,7 @@ tools:
 		})
 	assert.NoError(self.T(), err)
 
-	require.NoError(self.T(), self.Sm.Start(StartSanityCheckService))
+	require.NoError(self.T(), self.Sm.Start(sanity.StartSanityCheckService))
 
 	db := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
 	inventory_config := &artifacts_proto.ThirdParty{}
@@ -84,7 +87,7 @@ func (self *ServicesTestSuite) TestCreateUser() {
 			PasswordSalt: "0f61ad0fd6391513021242efb9ac780245cc21527fa3f9c5e552d47223e383a2",
 		},
 	}
-	require.NoError(self.T(), self.Sm.Start(StartSanityCheckService))
+	require.NoError(self.T(), self.Sm.Start(sanity.StartSanityCheckService))
 
 	db := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
 

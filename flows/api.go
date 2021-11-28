@@ -259,12 +259,7 @@ func CancelFlow(
 		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},
 			SessionId: flow_id,
-		}, func() {
-			notifier := services.GetNotifier()
-			if notifier != nil {
-				notifier.NotifyListener(config_obj, client_id)
-			}
-		})
+		}, true /* notify */, nil)
 	if err != nil {
 		return nil, err
 	}

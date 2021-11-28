@@ -8,19 +8,27 @@ package client_info
 
 import (
 	"context"
-	"strings"
 	"sync/atomic"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
+	tasksClearCount = promauto.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "client_info_client_tasks_notifications",
+			Help: "Number of notifications received that clients have new tasks",
+		})
+
 	Clock utils.Clock = &utils.RealClock{}
 	g_id  uint64
 )
@@ -36,14 +44,21 @@ const (
 func (self *ClientInfoManager) ProcessNotification(
 	ctx context.Context, config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
-	client_id, pres := row.GetString("Target")
-	if pres && strings.HasPrefix(client_id, "C.") {
+	client_id, pres := row.GetString("ClientId")
+	if pres {
 		cached_info, err := self.GetCacheInfo(client_id)
 		if err != nil {
 			return err
 		}
+
 		// Next access will check for real.
-		cached_info.SetHasTasks(TASKS_AVAILABLE_STATUS_UNKNOWN)
+		tasksClearCount.Inc()
+		cached_info.SetHasTasks(TASKS_AVAILABLE_STATUS_YES)
+
+		notifier := services.GetNotifier()
+		if notifier != nil {
+			notifier.NotifyDirectListener(client_id)
+		}
 	}
 	return nil
 }
@@ -61,13 +76,58 @@ func (self *ClientInfoManager) UnQueueMessageForClient(
 		client_path_manager.Task(message.TaskId))
 }
 
+func (self *ClientInfoManager) QueueMessagesForClient(
+	client_id string,
+	req []*crypto_proto.VeloMessage,
+	/* Also notify the client about the new task */
+	notify bool) error {
+
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	// When the completer is done send a message to all the minions
+	// that the tasks are ready to be read.
+	completer := utils.NewCompleter(func() {
+		journal.PushRowsToArtifactAsync(self.config_obj,
+			ordereddict.NewDict().
+				Set("ClientId", client_id).
+				Set("Notify", notify),
+			"Server.Internal.ClientTasks")
+	})
+	defer completer.GetCompletionFunc()()
+
+	client_path_manager := paths.NewClientPathManager(client_id)
+
+	for _, r := range req {
+		// Task ID is related to time.
+		r.TaskId = currentTaskId()
+
+		err = db.SetSubjectWithCompletion(self.config_obj,
+			client_path_manager.Task(r.TaskId),
+			r, completer.GetCompletionFunc())
+	}
+	return nil
+}
+
 func (self *ClientInfoManager) QueueMessageForClient(
 	client_id string,
-	req *crypto_proto.VeloMessage,
+	req *crypto_proto.VeloMessage, notify bool,
 	completion func()) error {
 
 	// Task ID is related to time.
 	req.TaskId = currentTaskId()
+
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
 
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
@@ -77,7 +137,17 @@ func (self *ClientInfoManager) QueueMessageForClient(
 	client_path_manager := paths.NewClientPathManager(client_id)
 	return db.SetSubjectWithCompletion(self.config_obj,
 		client_path_manager.Task(req.TaskId),
-		req, completion)
+		req, func() {
+			if completion != nil {
+				completion()
+			}
+
+			journal.PushRowsToArtifactAsync(self.config_obj,
+				ordereddict.NewDict().
+					Set("ClientId", client_id).
+					Set("Notify", notify),
+				"Server.Internal.ClientTasks")
+		})
 }
 
 // Get the client tasks but do not dequeue them (Generally only called

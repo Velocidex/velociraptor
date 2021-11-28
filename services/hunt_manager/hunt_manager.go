@@ -676,8 +676,7 @@ func scheduleHuntOnClient(
 	}
 
 	// The request is pre-compiled into the hunt object.
-	request := &flows_proto.ArtifactCollectorArgs{}
-	proto.Merge(request, hunt_obj.StartRequest)
+	request := proto.Clone(hunt_obj.StartRequest).(*flows_proto.ArtifactCollectorArgs)
 
 	// Direct the request against our client and schedule it.
 	request.ClientId = client_id
@@ -688,13 +687,7 @@ func scheduleHuntOnClient(
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, config_obj, vql_subsystem.NullACLManager{},
-		repository, request, func() {
-			// Notify the client that the hunt applies to it.
-			notifier := services.GetNotifier()
-			if notifier != nil {
-				notifier.NotifyListener(config_obj, client_id)
-			}
-		})
+		repository, request, nil)
 	if err != nil {
 		return err
 	}
