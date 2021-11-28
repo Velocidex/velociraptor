@@ -522,7 +522,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 					logger.Info("reader: quit.")
 					return
 				}
-				response, count, err := server_obj.Process(
+				response, _, err := server_obj.Process(
 					req.Context(),
 					message_info,
 					true, // drain_requests_for_client

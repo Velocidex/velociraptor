@@ -111,8 +111,6 @@ func StartNotificationService(
 					return
 				}
 
-				tag, _ := event.GetString("Tag")
-
 				target, ok := event.GetString("Target")
 				if !ok {
 					continue
