@@ -149,7 +149,8 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 			// Notify the client about it.
 			notifier := services.GetNotifier()
 			if notifier != nil {
-				notifier.NotifyListener(config_obj, arg.ClientId)
+				notifier.NotifyListener(
+					config_obj, arg.ClientId, "collect_client")
 			}
 		})
 	if err != nil {

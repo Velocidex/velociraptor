@@ -19,6 +19,8 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
+
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 type ZipTestSuite struct {

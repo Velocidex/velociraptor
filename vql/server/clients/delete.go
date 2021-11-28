@@ -133,7 +133,8 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 		// it is already up.
 		notifier := services.GetNotifier()
 		if notifier != nil {
-			err = notifier.NotifyListener(config_obj, arg.ClientId)
+			err = notifier.NotifyListener(
+				config_obj, arg.ClientId, "DeleteClient")
 			if err != nil {
 				scope.Log("client_delete: %s", err)
 			}

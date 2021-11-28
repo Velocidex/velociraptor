@@ -159,10 +159,14 @@ message ClientInfo {
     string architecture = 7;
     string ip_address = 10;
     uint64 ping = 11;
+    string ping_time = 19;
     string client_version = 12;
     string client_name = 13;
 
     repeated string labels = 15;
 
     string last_interrogate_flow_id = 16;
+
+    uint64 last_hunt_timestamp = 17;
+    uint64 last_event_table_version = 18;
 }

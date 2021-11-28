@@ -56,6 +56,8 @@ type JournalService interface {
 	Watch(ctx context.Context,
 		queue_name string) (output <-chan *ordereddict.Dict, cancel func())
 
+	GetWatchers() []string
+
 	// Push the rows into the result set in the filestore. NOTE: This
 	// method synchronises access to the files within the process.
 	AppendToResultSet(config_obj *config_proto.Config,

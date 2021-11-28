@@ -25,7 +25,7 @@ func GetQueueManager(config_obj *config_proto.Config) (api.QueueManager, error) 
 	case "Test":
 		return memory.NewMemoryQueueManager(config_obj, file_store), nil
 
-	case "FileBaseDataStore", "MemcacheFileDataStore":
+	case "FileBaseDataStore", "MemcacheFileDataStore", "RemoteFileDataStore":
 		return directory.NewDirectoryQueueManager(config_obj, file_store), nil
 
 	default:

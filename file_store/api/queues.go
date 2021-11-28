@@ -13,6 +13,7 @@ type QueueManager interface {
 	// Broadcast events only for local listeners without writing to
 	// storage.
 	Broadcast(path_manager PathManager, rows []*ordereddict.Dict)
+	GetWatchers() []string
 
 	PushEventRows(path_manager PathManager, rows []*ordereddict.Dict) error
 	Watch(ctx context.Context, queue_name string) (

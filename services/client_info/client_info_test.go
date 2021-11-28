@@ -69,7 +69,10 @@ func (self *ClientInfoTestSuite) TestClientInfo() {
 	assert.Equal(self.T(), info.Ping, uint64(0))
 
 	// Update the IP address
-	client_info_manager.UpdatePing(self.client_id, "127.0.0.1")
+	client_info_manager.UpdateStats(self.client_id, func(s *services.Stats) {
+		s.Ping = uint64(100 * 1000000)
+		s.IpAddress = "127.0.0.1"
+	})
 
 	// Now get the client record and check that it is updated
 	info, err = client_info_manager.Get(self.client_id)
@@ -112,7 +115,9 @@ func (self *ClientInfoTestSuite) TestMasterMinion() {
 	assert.NoError(self.T(), err)
 
 	// Update the minion timestamp
-	minion_client_info_manager.UpdatePing(self.client_id, "127.0.0.1")
+	minion_client_info_manager.UpdateStats(self.client_id, func(s *services.Stats) {
+		s.IpAddress = "127.0.0.1"
+	})
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		client_info, err := master_client_info_manager.Get(self.client_id)

@@ -13,6 +13,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -66,52 +67,52 @@ func (self *CachedInfo) GetHasTasks() TASKS_AVAILABLE_STATUS {
 	return self.has_tasks
 }
 
-// last seen is in uS
-func (self *CachedInfo) UpdatePing(
-	last_seen uint64, ip_address string) {
+func (self *CachedInfo) GetStats() *services.Stats {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if last_seen == 0 {
-		self.record.Ping = uint64(self.owner.Clock.Now().UnixNano() / 1000)
-	} else {
-		self.record.Ping = last_seen
+	return &services.Stats{
+		Ping:                  self.record.Ping,
+		IpAddress:             self.record.IpAddress,
+		LastHuntTimestamp:     self.record.LastHuntTimestamp,
+		LastEventTableVersion: self.record.LastEventTableVersion,
 	}
-
-	if ip_address != "" {
-		self.record.IpAddress = ip_address
-	}
-	self.dirty = true
 }
 
-// Update the ping and notify other client info managers of the change.
-func (self *CachedInfo) UpdatePingAndNotify(
-	last_seen uint64, ip_address string) {
+func (self *CachedInfo) UpdateStats(cb func(stats *services.Stats)) {
 	self.mu.Lock()
 
-	if last_seen == 0 {
-		self.record.Ping = uint64(self.owner.Clock.Now().UnixNano() / 1000)
-	} else {
-		self.record.Ping = last_seen
-	}
+	stats := &services.Stats{}
 
-	if ip_address != "" {
-		self.record.IpAddress = ip_address
-	}
+	cb(stats)
 	self.dirty = true
 
-	// Notify of the ping.
-	if self.record.Ping > self.last_flush+1000000*MAX_PING_SYNC_SEC {
+	if stats.Ping > 0 {
+		self.record.Ping = stats.Ping
+	}
+
+	if stats.IpAddress != "" {
+		self.record.IpAddress = stats.IpAddress
+	}
+
+	if stats.LastHuntTimestamp > 0 {
+		self.record.LastHuntTimestamp = stats.LastHuntTimestamp
+	}
+
+	if stats.LastEventTableVersion > 0 {
+		self.record.LastEventTableVersion = stats.LastEventTableVersion
+	}
+
+	// Notify other minions of the stats update.
+	now := uint64(self.owner.Clock.Now().UnixNano() / 1000)
+	if now > self.last_flush+1000000*MAX_PING_SYNC_SEC {
 		self.mu.Unlock()
 
-		self.owner.SendPing(
-			self.record.ClientId, ip_address, self.record.Ping)
-		return
+		self.owner.SendStats(self.record.ClientId, stats)
 
 		self.Flush()
 		return
 	}
-
 	self.mu.Unlock()
 }
 
@@ -126,8 +127,11 @@ func (self *CachedInfo) Flush() error {
 	}
 
 	ping_client_info := &actions_proto.ClientInfo{
-		Ping:      self.record.Ping,
-		IpAddress: self.record.IpAddress,
+		Ping:                  self.record.Ping,
+		PingTime:              time.Unix(0, int64(self.record.Ping)*1000).String(),
+		IpAddress:             self.record.IpAddress,
+		LastHuntTimestamp:     self.record.LastHuntTimestamp,
+		LastEventTableVersion: self.record.LastEventTableVersion,
 	}
 	client_id := self.record.ClientId
 	self.dirty = false
@@ -163,23 +167,38 @@ type ClientInfoManager struct {
 	queue []*ordereddict.Dict
 }
 
-func (self *ClientInfoManager) SendPing(client_id, ip_address string, ping uint64) {
-	self.mu.Lock()
-	self.queue = append(self.queue, ordereddict.NewDict().
-		Set("ClientId", client_id).
-		Set("Ping", ping).
-		Set("IpAddress", ip_address).
-		Set("From", self.uuid))
-	self.mu.Unlock()
+func (self *ClientInfoManager) SendStats(client_id string, stats *services.Stats) {
+	journal, err := services.GetJournal()
+	if err != nil {
+		return
+	}
+
+	journal.PushRowsToArtifactAsync(self.config_obj,
+		ordereddict.NewDict().
+			Set("ClientId", client_id).
+			Set("Stats", json.MustMarshalString(stats)).
+			Set("From", self.uuid),
+		"Server.Internal.ClientPing")
 }
 
-func (self *ClientInfoManager) UpdatePing(client_id, ip string) error {
+func (self *ClientInfoManager) GetStats(client_id string) (*services.Stats, error) {
+	cached_info, err := self.GetCacheInfo(client_id)
+	if err != nil {
+		return nil, err
+	}
+
+	return cached_info.GetStats(), nil
+}
+
+func (self *ClientInfoManager) UpdateStats(
+	client_id string,
+	cb func(stats *services.Stats)) error {
 	cached_info, err := self.GetCacheInfo(client_id)
 	if err != nil {
 		return err
 	}
 
-	cached_info.UpdatePingAndNotify(0, ip)
+	cached_info.UpdateStats(cb)
 	return nil
 }
 
@@ -201,7 +220,7 @@ func (self *ClientInfoManager) Start(
 	// When clients are notified they need to refresh their tasks list
 	// and invalidate the cache.
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.Notifications", self.ProcessNotification)
+		"Server.Internal.ClientTasks", self.ProcessNotification)
 	if err != nil {
 		return err
 	}
@@ -214,49 +233,8 @@ func (self *ClientInfoManager) Start(
 		if err != nil {
 			return err
 		}
-	} else {
-		wait_time := uint64(10000) // 10 seconds
-		if config_obj.Frontend != nil &&
-			config_obj.Frontend.Resources != nil &&
-			config_obj.Frontend.Resources.MinionBatchWaitTimeMs > 0 {
-			wait_time = config_obj.Frontend.Resources.MinionBatchWaitTimeMs
-		}
-
-		journal_manager, err := services.GetJournal()
-		if err != nil {
-			return err
-		}
-
-		// Minions will push rows to the master to inform it about the
-		// new ping times.
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			for {
-				select {
-				case <-ctx.Done():
-					return
-
-				case <-time.After(time.Duration(wait_time) * time.Millisecond):
-					self.mu.Lock()
-					queue := self.queue
-					self.queue = nil
-					self.mu.Unlock()
-
-					// Push the rows to the master.
-					if len(queue) > 0 {
-						err = journal_manager.PushRowsToArtifact(
-							self.config_obj, queue,
-							"Server.Internal.ClientPing", "server", "")
-						if err != nil {
-							logger.Debug("RPC Error: %v\n", err)
-						}
-					}
-				}
-			}
-		}()
 	}
+
 	return journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.Interrogation", self.ProcessInterrogateResults)
 }
@@ -286,17 +264,18 @@ func (self *ClientInfoManager) ProcessPing(
 	}
 
 	client_id, pres := row.GetString("ClientId")
-	if !pres || client_id == "" {
-		return invalidError
-	}
-
-	ping, pres := row.GetInt64("Ping")
-	if !pres || ping == 0 {
-		return invalidError
-	}
-
-	ip_address, pres := row.GetString("IpAddress")
 	if !pres {
+		return invalidError
+	}
+
+	stats := &services.Stats{}
+	serialized, pres := row.GetString("Stats")
+	if !pres {
+		return invalidError
+	}
+
+	err := json.Unmarshal([]byte(serialized), &stats)
+	if err != nil {
 		return invalidError
 	}
 
@@ -304,7 +283,23 @@ func (self *ClientInfoManager) ProcessPing(
 	if err == nil {
 		// Update our internal cache but do not notify further (since
 		// this came from a notification anyway).
-		cached_info.UpdatePing(uint64(ping), ip_address)
+		cached_info.UpdateStats(func(cached_stats *services.Stats) {
+			if stats.Ping != 0 {
+				cached_stats.Ping = stats.Ping
+			}
+
+			if stats.IpAddress != "" {
+				cached_stats.IpAddress = stats.IpAddress
+			}
+
+			if stats.LastHuntTimestamp > 0 {
+				cached_stats.LastHuntTimestamp = stats.LastHuntTimestamp
+			}
+
+			if stats.LastEventTableVersion > 0 {
+				cached_stats.LastEventTableVersion = stats.LastEventTableVersion
+			}
+		})
 	}
 
 	return nil
@@ -362,7 +357,10 @@ func (self *ClientInfoManager) GetCacheInfo(client_id string) (*CachedInfo, erro
 	// Read the main client record
 	err = db.GetSubject(self.config_obj, client_path_manager.Path(),
 		&client_info.ClientInfo)
-	if err != nil {
+	// Special case the server - it is a special client that does not
+	// need to enrol. It actually does have a client record becuase it
+	// needs to schedule tasks for itself.
+	if err != nil && client_id != "server" {
 		return nil, err
 	}
 
@@ -377,6 +375,8 @@ func (self *ClientInfoManager) GetCacheInfo(client_id string) (*CachedInfo, erro
 	if err == nil {
 		client_info.Ping = ping_info.Ping
 		client_info.IpAddress = ping_info.IpAddress
+		client_info.LastHuntTimestamp = ping_info.LastHuntTimestamp
+		client_info.LastEventTableVersion = ping_info.LastEventTableVersion
 		cache_info.last_flush = ping_info.Ping
 	}
 

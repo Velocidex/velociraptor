@@ -4,6 +4,9 @@ import (
 	"crypto/x509"
 	"fmt"
 
+	"github.com/Velocidex/ordereddict"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -17,6 +20,17 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+)
+
+var (
+	replicationReceiveHistorgram = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "replication_master_send_latency",
+			Help:    "Latency for the master to send replication messages to the minion.",
+			Buckets: prometheus.LinearBuckets(0.1, 1, 10),
+		},
+		[]string{"status"},
+	)
 )
 
 func streamEvents(
@@ -37,6 +51,16 @@ func streamEvents(
 		return err
 	}
 
+	// Special case this so the caller can immediately initialize the
+	// watchers.
+	if in.Queue == "Server.Internal.MasterRegistrations" {
+		result := ordereddict.NewDict().Set("Events", journal.GetWatchers())
+		serialized, _ := result.MarshalJSON()
+		stream.Send(&api_proto.EventResponse{
+			Jsonl: serialized,
+		})
+	}
+
 	// The API service is running on the master only! This means
 	// the journal service is local.
 	output_chan, cancel := journal.Watch(ctx, in.Queue)
@@ -50,7 +74,15 @@ func streamEvents(
 		response := &api_proto.EventResponse{
 			Jsonl: serialized,
 		}
+
+		timer := prometheus.NewTimer(
+			prometheus.ObserverFunc(func(v float64) {
+				replicationReceiveHistorgram.WithLabelValues("").Observe(v)
+			}))
+
 		err = stream.Send(response)
+		timer.ObserveDuration()
+
 		if err != nil {
 			continue
 		}

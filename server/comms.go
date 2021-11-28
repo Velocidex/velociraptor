@@ -99,22 +99,20 @@ var (
 		Help: "Number of responses rejected due to concurrency timeouts.",
 	})
 
-	concurrencyHistorgram = promauto.NewHistogramVec(
+	concurrencyHistorgram = promauto.NewHistogram(
 		prometheus.HistogramOpts{
 			Name:    "frontend_receiver_latency",
 			Help:    "Latency to receive client data in second.",
 			Buckets: prometheus.LinearBuckets(0.1, 1, 10),
 		},
-		[]string{"status"},
 	)
 
-	concurrencyWaitHistorgram = promauto.NewHistogramVec(
+	concurrencyWaitHistorgram = promauto.NewHistogram(
 		prometheus.HistogramOpts{
 			Name:    "frontend_concurrency_wait_latency",
 			Help:    "Latency for clients waiting to get a concurrency slot (excludes actual serving time).",
 			Buckets: prometheus.LinearBuckets(0.1, 1, 10),
 		},
-		[]string{"status"},
 	)
 )
 
@@ -130,8 +128,8 @@ func PrepareFrontendMux(
 	base := config_obj.Frontend.BasePath
 	router.Handle(base+"/healthz", healthz(server_obj))
 	router.Handle(base+"/server.pem", server_pem(config_obj))
-	router.Handle(base+"/control", control(server_obj))
-	router.Handle(base+"/reader", reader(config_obj, server_obj))
+	router.Handle(base+"/control", RecordHTTPStats(control(server_obj)))
+	router.Handle(base+"/reader", RecordHTTPStats(reader(config_obj, server_obj)))
 
 	// Publicly accessible part of the filestore. NOTE: this
 	// does not have to be a physical directory - it is served
@@ -288,7 +286,7 @@ func control(server_obj *Server) http.Handler {
 			// waiting for a concurrency slot. If this time is too
 			// long it means concurrency may need to be increased.
 			timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
-				concurrencyWaitHistorgram.WithLabelValues("").Observe(v)
+				concurrencyWaitHistorgram.Observe(v)
 			}))
 
 			cancel, err := server_obj.Concurrency().StartConcurrencyControl(ctx)
@@ -306,9 +304,8 @@ func control(server_obj *Server) http.Handler {
 		}
 
 		// Measure the latency from this point on.
-		var status string
 		timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
-			concurrencyHistorgram.WithLabelValues(status).Observe(v)
+			concurrencyHistorgram.Observe(v)
 		}))
 		defer func() {
 			timer.ObserveDuration()
@@ -363,7 +360,8 @@ func control(server_obj *Server) http.Handler {
 
 		sync := make(chan []byte)
 		go func() {
-			defer cancel()
+			defer close(sync)
+
 			response, _, err := server_obj.Process(ctx, message_info,
 				false, // drain_requests_for_client
 			)
@@ -390,8 +388,11 @@ func control(server_obj *Server) http.Handler {
 			case <-ctx.Done():
 				return
 
-			case response := <-sync:
-				_, _ = w.Write(response)
+			case response, ok := <-sync:
+				if ok {
+					_, _ = w.Write(response)
+				}
+				return
 
 			case <-time.After(3 * time.Second):
 				_, _ = w.Write(serialized_pad)
@@ -521,7 +522,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 					logger.Info("reader: quit.")
 					return
 				}
-				response, _, err := server_obj.Process(
+				response, count, err := server_obj.Process(
 					req.Context(),
 					message_info,
 					true, // drain_requests_for_client
@@ -539,14 +540,21 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 				}
 
 				flusher.Flush()
+				utils.DebugToFile("/tmp/frontend_notify.txt", "Wrote %v messages from notification for %v", count, message_info.Source)
+
 				return
 
 			case <-deadline:
-				// Notify ourselves, this will trigger
-				// an empty response to be written and
-				// the connection to be terminated
-				// (case above).
-				cancel()
+				// Deadline exceeded - write an empty response and
+				// send it. The client will reconnect immediately.
+				_, err := w.Write(serialized_pad)
+				if err != nil {
+					logger.Info("reader: Error %v", err)
+					return
+				}
+
+				flusher.Flush()
+				return
 
 				// Write a pad message every 10 seconds
 				// to keep the conenction alive.

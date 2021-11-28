@@ -14,6 +14,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -21,11 +22,21 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
+	replicationSendHistorgram = promauto.NewHistogram(
+		prometheus.HistogramOpts{
+			Name:    "replication_minion_latency",
+			Help:    "Latency to send replication messages from minion to the master.",
+			Buckets: prometheus.LinearBuckets(0.1, 1, 10),
+		},
+	)
+
 	replicationTotalSent = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "replication_service_total_send",
 		Help: "Total number of PushRow rpc calls.",
@@ -48,6 +59,10 @@ type ReplicationService struct {
 	tmpfile    *os.File
 	ctx        context.Context
 
+	// Locally connected watchers.
+	qm    api.QueueManager
+	Clock utils.Clock
+
 	sender chan *api_proto.PushEventRequest
 
 	api_client api_proto.APIClient
@@ -58,6 +73,9 @@ type ReplicationService struct {
 	mu            sync.Mutex
 	locks         map[string]*sync.Mutex
 	retryDuration time.Duration
+
+	// The set of events the master is interested in.
+	masterRegistrations map[string]bool
 
 	// Store rows for async push
 	batch map[string][]*ordereddict.Dict
@@ -75,6 +93,14 @@ func (self *ReplicationService) SetRetryDuration(duration time.Duration) {
 	defer self.mu.Unlock()
 
 	self.retryDuration = duration
+}
+
+func (self *ReplicationService) isEventRegistered(artifact string) bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	ok, pres := self.masterRegistrations[artifact]
+	return pres && ok
 }
 
 func (self *ReplicationService) pumpEventFromBufferFile() {
@@ -111,8 +137,12 @@ func (self *ReplicationService) pumpEventFromBufferFile() {
 	}
 }
 
+// Periodically flush the batches built up during
+// PushRowsToArtifactAsync calls.
 func (self *ReplicationService) startAsyncLoop(
-	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) {
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) {
 
 	wg.Add(1)
 	go func() {
@@ -198,7 +228,15 @@ func (self *ReplicationService) Start(
 					if !ok {
 						return
 					}
+
+					timer := prometheus.NewTimer(
+						prometheus.ObserverFunc(func(v float64) {
+							replicationSendHistorgram.Observe(v)
+						}))
+
 					_, err := self.api_client.PushEvents(ctx, request)
+					timer.ObserveDuration()
+
 					if err != nil {
 						replicationTotalSendErrors.Inc()
 
@@ -207,6 +245,7 @@ func (self *ReplicationService) Start(
 						// for later delivery.
 						_ = self.Buffer.Enqueue(request)
 					}
+
 				}
 			}
 		}()
@@ -216,11 +255,64 @@ func (self *ReplicationService) Start(
 	// small events to write in larger chunks for gRPC efficiency.
 	self.startAsyncLoop(ctx, wg, config_obj)
 
+	self.startMasterRegistrationLoop(ctx, wg, config_obj)
+
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Debug("<green>Starting</> Replication service to master frontend at %v",
 		grpc_client.GetAPIConnectionString(self.config_obj))
 
 	return nil
+}
+
+func (self *ReplicationService) ProcessMasterRegistrations(event *ordereddict.Dict) {
+	names_any, pres := event.Get("Events")
+	if !pres {
+		return
+	}
+
+	names, ok := names_any.([]interface{})
+	if ok {
+		self.mu.Lock()
+		self.masterRegistrations = make(map[string]bool)
+
+		for _, name := range names {
+			name_str, ok := name.(string)
+			if ok {
+				self.masterRegistrations[name_str] = true
+			}
+		}
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.WithFields(logrus.Fields{
+			"events": names,
+		}).Info("Master event registrations")
+		self.mu.Unlock()
+	}
+}
+
+func (self *ReplicationService) startMasterRegistrationLoop(
+	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) {
+
+	events, cancel := self.Watch(ctx, "Server.Internal.MasterRegistrations")
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer cancel()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case event, ok := <-events:
+				if !ok {
+					return
+				}
+				self.ProcessMasterRegistrations(event)
+			}
+		}
+	}()
+
 }
 
 func (self *ReplicationService) AppendToResultSet(
@@ -281,9 +373,48 @@ func (self *ReplicationService) PushRowsToArtifactAsync(
 	self.batch[artifact] = queue
 }
 
+func (self *ReplicationService) pushRowsToLocalQueueManager(
+	config_obj *config_proto.Config, rows []*ordereddict.Dict,
+	artifact, client_id, flows_id string) error {
+
+	path_manager, err := artifacts.NewArtifactPathManager(
+		config_obj, client_id, flows_id, artifact)
+	if err != nil {
+		return err
+	}
+	path_manager.Clock = self.Clock
+
+	// Just a regular artifact, append to the existing result set.
+	if !path_manager.IsEvent() {
+		path, err := path_manager.GetPathForWriting()
+		if err != nil {
+			return err
+		}
+		return self.AppendToResultSet(config_obj, path, rows)
+	}
+
+	// The Queue manager will manage writing event artifacts to a
+	// timed result set, including multi frontend synchronisation.
+	if self != nil && self.qm != nil {
+		return self.qm.PushEventRows(path_manager, rows)
+	}
+	return errors.New("Filestore not initialized")
+}
+
 func (self *ReplicationService) PushRowsToArtifact(
 	config_obj *config_proto.Config,
 	rows []*ordereddict.Dict, artifact, client_id, flow_id string) error {
+
+	err := self.pushRowsToLocalQueueManager(
+		config_obj, rows, artifact, client_id, flow_id)
+	if err != nil {
+		return err
+	}
+
+	// Do not replicate the event if the master does not care about it.
+	if !self.isEventRegistered(artifact) {
+		return nil
+	}
 
 	replicationTotalSent.Inc()
 
@@ -313,6 +444,11 @@ func (self *ReplicationService) PushRowsToArtifact(
 	}
 }
 
+func (self *ReplicationService) GetWatchers() []string {
+	return nil
+}
+
+// Watch the master for new events
 func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 	<-chan *ordereddict.Dict, func()) {
 
@@ -406,12 +542,19 @@ func NewReplicationService(
 	*ReplicationService, error) {
 
 	service := &ReplicationService{
-		config_obj: config_obj,
-		locks:      make(map[string]*sync.Mutex),
-		batch:      make(map[string][]*ordereddict.Dict),
+		config_obj:          config_obj,
+		locks:               make(map[string]*sync.Mutex),
+		masterRegistrations: make(map[string]bool),
+		batch:               make(map[string][]*ordereddict.Dict),
+		Clock:               utils.RealClock{},
 	}
 
-	err := service.Start(ctx, config_obj, wg)
+	qm, err := file_store.GetQueueManager(config_obj)
+	if err != nil || qm != nil {
+		service.qm = qm
+	}
+
+	err = service.Start(ctx, config_obj, wg)
 	if err == nil {
 		services.RegisterJournal(service)
 	}

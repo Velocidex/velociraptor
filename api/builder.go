@@ -14,7 +14,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
-	"www.velocidex.com/golang/velociraptor/services"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -426,13 +425,6 @@ func StartFrontendPlainHttp(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		notifier := services.GetNotifier()
-		if notifier != nil {
-			err := notifier.NotifyAllListeners(config_obj)
-			if err != nil {
-				server_obj.Error("Frontend server error %v", err)
-			}
-		}
 		err := server.Shutdown(time_ctx)
 		if err != nil {
 			server_obj.Error("Frontend server error %v", err)
@@ -523,10 +515,6 @@ func StartFrontendWithAutocert(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		notifier := services.GetNotifier()
-		if notifier != nil {
-			_ = notifier.NotifyAllListeners(config_obj)
-		}
 		err := server.Shutdown(timeout_ctx)
 		if err != nil {
 			logger.Error("Frontend shutdown error: %v", err)

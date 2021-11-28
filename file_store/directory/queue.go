@@ -51,6 +51,18 @@ type QueuePool struct {
 	registrations map[string][]*Listener
 }
 
+func (self *QueuePool) GetWatchers() []string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := make([]string, 0, len(self.registrations))
+	for name := range self.registrations {
+		result = append(result, name)
+	}
+
+	return result
+}
+
 func (self *QueuePool) Register(
 	ctx context.Context, vfs_path string,
 	options QueueOptions) (<-chan *ordereddict.Dict, func()) {
@@ -189,6 +201,10 @@ func (self *DirectoryQueueManager) PushEventRows(
 		self.queue_pool.Broadcast(path_manager.GetQueueName(), row)
 	}
 	return nil
+}
+
+func (self *DirectoryQueueManager) GetWatchers() []string {
+	return self.queue_pool.GetWatchers()
 }
 
 func (self *DirectoryQueueManager) Watch(ctx context.Context,

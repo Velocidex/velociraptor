@@ -87,15 +87,6 @@ type CollectionContext struct {
 	send_update bool
 }
 
-func (self *CollectionContext) batchRows(flow_id string, rows []*ordereddict.Dict) {
-	batch, _ := self.monitoring_batch[flow_id]
-	batch = append(batch, rows...)
-	self.monitoring_batch[flow_id] = batch
-	if len(rows) > 0 {
-		self.Dirty = true
-	}
-}
-
 func NewCollectionContext(config_obj *config_proto.Config) *CollectionContext {
 	self := &CollectionContext{
 		ArtifactCollectorContext: flows_proto.ArtifactCollectorContext{},
@@ -726,19 +717,12 @@ func (self *FlowRunner) ProcessSingleMessage(
 	ctx context.Context,
 	job *crypto_proto.VeloMessage) {
 
-	// json.TraceMessage(job.Source+"_job", job)
-
-	// Foreman messages are related to hunts.
-	if job.ForemanCheckin != nil {
-		err := ForemanProcessMessage(
-			ctx, self.config_obj,
-			job.Source, job.ForemanCheckin)
-		if err != nil {
-			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-			logger.Error("ForemanCheckin for client %v: %v", job.Source, err)
-		}
+	// Only process real flows.
+	if !strings.HasPrefix(job.SessionId, "F.") {
 		return
 	}
+
+	// json.TraceMessage(job.Source+"_job", job)
 
 	// CSR messages are related to enrolment. By the time the
 	// message arrives here, it is authenticated and the client is
@@ -754,12 +738,6 @@ func (self *FlowRunner) ProcessSingleMessage(
 
 		if job.SessionId == "" {
 			logger.Error("Empty SessionId: %v", job)
-			return
-		}
-
-		// Only process real flows.
-		if !strings.HasPrefix(job.SessionId, "F.") {
-			logger.Error("Invalid job SessionId %v", job.SessionId)
 			return
 		}
 
@@ -784,7 +762,8 @@ func (self *FlowRunner) ProcessSingleMessage(
 				&crypto_proto.VeloMessage{
 					Cancel:    &crypto_proto.Cancel{},
 					SessionId: job.SessionId,
-				}, nil)
+				},
+				true /* notify */, nil)
 			if err != nil {
 				logger.Error("Queueing for client %v: %v",
 					job.Source, err)
@@ -821,10 +800,17 @@ func (self *FlowRunner) ProcessSingleMessage(
 }
 
 func (self *FlowRunner) ProcessMessages(ctx context.Context,
-	message_info *crypto.MessageInfo) (err error) {
+	message_info *crypto.MessageInfo) error {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	// Do some housekeeping with the client
+	err := CheckClientStatus(ctx, self.config_obj, message_info.Source)
+	if err != nil {
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Error("ForemanCheckin for client %v: %v", message_info.Source, err)
+	}
 
 	return message_info.IterateJobs(ctx, self.ProcessSingleMessage)
 }

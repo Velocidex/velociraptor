@@ -18,7 +18,8 @@ func (self *ClientInfoTestSuite) TestQueueMessages() {
 	assert.NoError(self.T(), err)
 
 	message1 := &crypto_proto.VeloMessage{Source: "Server", SessionId: "1"}
-	err = client_info_manager.QueueMessageForClient(self.client_id, message1, nil)
+	err = client_info_manager.QueueMessageForClient(
+		self.client_id, message1, true, nil)
 	assert.NoError(self.T(), err)
 
 	manager := client_info_manager.(*client_info.ClientInfoManager)
@@ -50,7 +51,7 @@ func (self *ClientInfoTestSuite) TestFastQueueMessages() {
 	for i := 0; i < 10; i++ {
 		message := &crypto_proto.VeloMessage{Source: "Server", SessionId: fmt.Sprintf("%d", i)}
 		err := client_info_manager.QueueMessageForClient(
-			self.client_id, message, nil)
+			self.client_id, message, true, nil)
 		assert.NoError(self.T(), err)
 
 		written = append(written, message)
@@ -105,10 +106,7 @@ func (self *ClientInfoTestSuite) TestGetClientTasksIsCached() {
 
 	// Schedule a new task for the client.
 	err = client_info_manager.QueueMessageForClient(self.client_id,
-		&crypto_proto.VeloMessage{}, func() {
-			notifier := services.GetNotifier()
-			notifier.NotifyListener(self.ConfigObj, self.client_id)
-		})
+		&crypto_proto.VeloMessage{}, true, nil)
 	assert.NoError(self.T(), err)
 
 	// Wait until we can see the new task

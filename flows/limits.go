@@ -65,15 +65,9 @@ func cancelCollection(config_obj *config_proto.Config, client_id, flow_id string
 		return err
 	}
 
-	err = client_manager.QueueMessageForClient(client_id,
+	return client_manager.QueueMessageForClient(client_id,
 		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},
 			SessionId: flow_id,
-		}, nil)
-	if err != nil {
-		return err
-	}
-
-	// Notify the client immediately.
-	return services.GetNotifier().NotifyListener(config_obj, client_id)
+		}, true /* notify */, nil)
 }

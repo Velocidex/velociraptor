@@ -44,12 +44,6 @@ func (self *KillClientFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	config_obj, ok := vql_subsystem.GetServerConfig(scope)
-	if !ok {
-		scope.Log("Command can only run on the server")
-		return vfilter.Null{}
-	}
-
 	// Queue a cancellation message to the client for this flow
 	// id.
 	client_manager, err := services.GetClientInfoManager()
@@ -61,12 +55,7 @@ func (self *KillClientFunction) Call(ctx context.Context,
 		&crypto_proto.VeloMessage{
 			KillKillKill: &crypto_proto.Cancel{},
 			SessionId:    constants.MONITORING_WELL_KNOWN_FLOW,
-		}, func() {
-			notifier := services.GetNotifier()
-			if notifier != nil {
-				notifier.NotifyListener(config_obj, arg.ClientId)
-			}
-		})
+		}, true, nil)
 	if err != nil {
 		scope.Log("killkillkill: %s", err.Error())
 		return vfilter.Null{}

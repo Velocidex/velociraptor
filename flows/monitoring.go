@@ -121,6 +121,16 @@ func flushContextLogsMonitoring(
 	return nil
 }
 
+func (self *CollectionContext) batchRows(
+	artifact_name string, rows []*ordereddict.Dict) {
+	batch, _ := self.monitoring_batch[artifact_name]
+	batch = append(batch, rows...)
+	self.monitoring_batch[artifact_name] = batch
+	if len(rows) > 0 {
+		self.Dirty = true
+	}
+}
+
 func flushMonitoringLogs(
 	config_obj *config_proto.Config,
 	collection_context *CollectionContext) error {

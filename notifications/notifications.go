@@ -1,14 +1,10 @@
 package notifications
 
 import (
-	"context"
-	"regexp"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"golang.org/x/time/rate"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 var (
@@ -94,47 +90,6 @@ func (self *NotificationPool) Notify(client_id string) {
 	self.mu.Unlock()
 }
 
-func (self *NotificationPool) NotifyByRegex(
-	config_obj *config_proto.Config, re *regexp.Regexp) {
-
-	// First take a snapshot of the current clients connected.
-	self.mu.Lock()
-	snapshot := make([]string, 0, len(self.clients))
-	for key := range self.clients {
-		if re.MatchString(key) {
-			snapshot = append(snapshot, key)
-		}
-	}
-	self.mu.Unlock()
-
-	// Now notify all these clients in the background if
-	// possible. Take it slow so as not to overwhelm the server.
-	limiter_rate := rate.Limit(config_obj.Frontend.Resources.NotificationsPerSecond)
-	subctx, cancel := context.WithCancel(context.Background())
-	limiter := rate.NewLimiter(limiter_rate, 1)
-
-	go func() {
-		select {
-		case <-self.done:
-			cancel()
-		}
-	}()
-
-	go func() {
-		for _, client_id := range snapshot {
-			self.mu.Lock()
-			c, pres := self.clients[client_id]
-			if pres {
-				notificationCounter.Inc()
-				close(c)
-				delete(self.clients, client_id)
-			}
-			self.mu.Unlock()
-			limiter.Wait(subctx)
-		}
-	}()
-}
-
 func (self *NotificationPool) Shutdown() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -148,8 +103,4 @@ func (self *NotificationPool) Shutdown() {
 	}
 
 	self.clients = make(map[string]chan bool)
-}
-
-func (self *NotificationPool) NotifyAll(config_obj *config_proto.Config) {
-	self.NotifyByRegex(config_obj, regexp.MustCompile("."))
 }
