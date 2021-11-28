@@ -540,8 +540,6 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 				}
 
 				flusher.Flush()
-				utils.DebugToFile("/tmp/frontend_notify.txt", "Wrote %v messages from notification for %v", count, message_info.Source)
-
 				return
 
 			case <-deadline:

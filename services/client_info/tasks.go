@@ -59,7 +59,6 @@ func (self *ClientInfoManager) ProcessNotification(
 		if notifier != nil {
 			notifier.NotifyDirectListener(client_id)
 		}
-		utils.DebugToFile("/tmp/frontend_notify.txt", "ClientInfoManager notification for %v", client_id)
 	}
 	return nil
 }

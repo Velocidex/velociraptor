@@ -29,7 +29,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -118,7 +117,6 @@ func StartNotificationService(
 				if !ok {
 					continue
 				}
-				utils.DebugToFile("/tmp/frontend_notify.txt", "Notifier notification for %v with tag %v", target, tag)
 				notificationsReceivedCounter.Inc()
 				self.notification_pool.Notify(target)
 			}
@@ -197,7 +195,6 @@ func (self *Notifier) NotifyListener(config_obj *config_proto.Config,
 
 func (self *Notifier) NotifyDirectListener(client_id string) {
 	if self.notification_pool.IsClientConnected(client_id) {
-		utils.DebugToFile("/tmp/frontend_notify.txt", "Notifier NotifyDirectListener for %v", client_id)
 		self.notification_pool.Notify(client_id)
 	}
 }
