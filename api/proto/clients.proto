@@ -68,13 +68,11 @@ message SearchClientsRequest {
     uint64 offset = 1;
     uint64 limit = 2;
     string query = 3;
-    bool name_only = 4;
 
-    enum QueryType {
-        VALUE = 0; // Returns all values that match query.
-        KEY = 1;   // Returns all keys that match query.
-    }
-    QueryType type = 5;
+    // Retrieves only the names of matching search terms (used for
+    // suggestion box). If this is false, we return the entire client
+    // record of matching clients.
+    bool name_only = 4;
 
     enum SortingSense {
         UNSORTED = 0;

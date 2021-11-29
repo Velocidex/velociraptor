@@ -50,7 +50,7 @@ func (self *TestSuite) TestPrefixSearch() {
 	ctx := context.Background()
 	searched_clients := []string{}
 	for hit := range search.SearchIndexWithPrefix(
-		ctx, self.ConfigObj, prefix, search.OPTION_ENTITY) {
+		ctx, self.ConfigObj, prefix, search.OPTION_CLIENT_RECORDS) {
 		if hit != nil {
 			client_id := hit.Entity
 			searched_clients = append(searched_clients, client_id)

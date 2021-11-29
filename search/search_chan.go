@@ -100,14 +100,6 @@ func searchClientIndexChan(
 	// on the full search term.
 	prefix, filter := splitSearchTermIntoPrefixAndFilter(scope, search_term)
 
-	// For compilcated search terms we bear an additional cost of
-	// reading the index record itself but try to avoid it if
-	// possible.
-	option := OPTION_ENTITY
-	if filter != nil {
-		option = OPTION_KEY
-	}
-
 	output_chan := make(chan *api_proto.ApiClient)
 
 	go func() {
@@ -115,7 +107,8 @@ func searchClientIndexChan(
 
 		// Microseconds
 		seen := make(map[string]bool)
-		for hit := range SearchIndexWithPrefix(ctx, config_obj, prefix, option) {
+		for hit := range SearchIndexWithPrefix(ctx, config_obj, prefix,
+			OPTION_CLIENT_RECORDS) {
 			if hit == nil {
 				continue
 			}
