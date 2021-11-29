@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -36,7 +36,7 @@ import (
 
 func (self *ApiServer) ExportNotebook(
 	ctx context.Context,
-	in *api_proto.NotebookExportRequest) (*empty.Empty, error) {
+	in *api_proto.NotebookExportRequest) (*emptypb.Empty, error) {
 	return nil, errors.New("not implementated")
 }
 
@@ -812,7 +812,7 @@ func (self *ApiServer) updateNotebookCell(
 
 func (self *ApiServer) CancelNotebookCell(
 	ctx context.Context,
-	in *api_proto.NotebookCellRequest) (*empty.Empty, error) {
+	in *api_proto.NotebookCellRequest) (*emptypb.Empty, error) {
 
 	defer Instrument("CancelNotebookCell")()
 
@@ -860,7 +860,7 @@ func (self *ApiServer) CancelNotebookCell(
 		return nil, err
 	}
 
-	return &empty.Empty{}, services.GetNotifier().NotifyListener(
+	return &emptypb.Empty{}, services.GetNotifier().NotifyListener(
 		self.config, in.CellId, "CancelNotebookCell")
 }
 
@@ -911,7 +911,7 @@ func (self *ApiServer) UploadNotebookAttachment(
 
 func (self *ApiServer) CreateNotebookDownloadFile(
 	ctx context.Context,
-	in *api_proto.NotebookExportRequest) (*empty.Empty, error) {
+	in *api_proto.NotebookExportRequest) (*emptypb.Empty, error) {
 
 	defer Instrument("CreateNotebookDownloadFile")()
 
@@ -930,10 +930,10 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 
 	switch in.Type {
 	case "zip":
-		return &empty.Empty{}, exportZipNotebook(
+		return &emptypb.Empty{}, exportZipNotebook(
 			self.config, in.NotebookId, user_record.Name)
 	default:
-		return &empty.Empty{}, exportHTMLNotebook(
+		return &emptypb.Empty{}, exportHTMLNotebook(
 			self.config, in.NotebookId, user_record.Name)
 	}
 }

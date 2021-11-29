@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"

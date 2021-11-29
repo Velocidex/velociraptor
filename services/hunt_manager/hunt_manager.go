@@ -55,8 +55,8 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/golang/protobuf/proto"
 	"golang.org/x/time/rate"
+	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"

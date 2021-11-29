@@ -437,9 +437,10 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 		}
 
 		// Maintain the last timestamp as the latest hunt start time.
-		if hunt_obj.StartTime > self.last_timestamp {
-			self.last_timestamp = hunt_obj.StartTime
-			dispatcherCurrentTimestamp.Set(float64(self.last_timestamp))
+		last_timestamp := self.GetLastTimestamp()
+		if hunt_obj.StartTime > last_timestamp {
+			atomic.StoreUint64(&self.last_timestamp, hunt_obj.StartTime)
+			dispatcherCurrentTimestamp.Set(float64(last_timestamp))
 		}
 
 		self.hunts[hunt_id] = &HuntRecord{Hunt: hunt_obj}

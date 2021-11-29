@@ -31,8 +31,8 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
+	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"

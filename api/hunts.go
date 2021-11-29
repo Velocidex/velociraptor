@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
@@ -123,7 +123,7 @@ func (self *ApiServer) CreateHunt(
 
 func (self *ApiServer) ModifyHunt(
 	ctx context.Context,
-	in *api_proto.Hunt) (*empty.Empty, error) {
+	in *api_proto.Hunt) (*emptypb.Empty, error) {
 
 	defer Instrument("ModifyHunt")()
 
@@ -149,7 +149,7 @@ func (self *ApiServer) ModifyHunt(
 		return nil, err
 	}
 
-	result := &empty.Empty{}
+	result := &emptypb.Empty{}
 	return result, nil
 }
 

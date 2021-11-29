@@ -1,10 +1,10 @@
 package api
 
 import (
-	"github.com/golang/protobuf/ptypes/empty"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	users "www.velocidex.com/golang/velociraptor/users"
@@ -12,7 +12,7 @@ import (
 
 func (self *ApiServer) GetUsers(
 	ctx context.Context,
-	in *empty.Empty) (*api_proto.Users, error) {
+	in *emptypb.Empty) (*api_proto.Users, error) {
 
 	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	user_record, err := users.GetUser(self.config, user_name)

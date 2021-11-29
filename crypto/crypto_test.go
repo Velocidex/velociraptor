@@ -23,11 +23,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"

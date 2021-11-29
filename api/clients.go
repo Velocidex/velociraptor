@@ -24,9 +24,9 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -70,7 +70,7 @@ func (self *ApiServer) GetClientMetadata(
 
 func (self *ApiServer) SetClientMetadata(
 	ctx context.Context,
-	in *api_proto.ClientMetadata) (*empty.Empty, error) {
+	in *api_proto.ClientMetadata) (*emptypb.Empty, error) {
 
 	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	permissions := acls.LABEL_CLIENT
@@ -87,7 +87,7 @@ func (self *ApiServer) SetClientMetadata(
 	}
 
 	err = db.SetSubject(self.config, client_path_manager.Metadata(), in)
-	return &empty.Empty{}, err
+	return &emptypb.Empty{}, err
 }
 
 func (self *ApiServer) GetClient(

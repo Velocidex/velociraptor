@@ -9,9 +9,9 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/types/known/emptypb"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -74,7 +74,7 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 		if strings.HasSuffix(line, ".db") {
 			db.SetSubject(self.ConfigObj,
 				paths.DSPathSpecFromClientPath(line),
-				&empty.Empty{})
+				&emptypb.Empty{})
 		} else {
 			path_spec := paths.FSPathSpecFromClientPath(line)
 			fd, err := file_store_factory.WriteFile(path_spec)

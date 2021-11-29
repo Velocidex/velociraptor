@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/types/known/emptypb"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -35,7 +35,7 @@ func SetSimpleIndex(
 		keyword = strings.ToLower(keyword)
 		subject := index_urn.AddChild(keyword, entity)
 		err := db.SetSubjectWithCompletion(
-			config_obj, subject, &empty.Empty{}, nil)
+			config_obj, subject, &emptypb.Empty{}, nil)
 		if err != nil {
 			return err
 		}
@@ -77,7 +77,7 @@ func CheckSimpleIndex(
 	}
 
 	for _, keyword := range keywords {
-		message := &empty.Empty{}
+		message := &emptypb.Empty{}
 		keyword = strings.ToLower(keyword)
 		subject := index_urn.AddChild(keyword, entity)
 		return db.GetSubject(config_obj, subject, message)

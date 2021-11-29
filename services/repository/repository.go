@@ -29,8 +29,8 @@ import (
 	"sync"
 
 	"github.com/Velocidex/yaml/v2"
-	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
+	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

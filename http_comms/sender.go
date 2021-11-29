@@ -30,8 +30,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
+	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"

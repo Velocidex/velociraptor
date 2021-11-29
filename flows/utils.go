@@ -18,7 +18,7 @@
 package flows
 
 import (
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 

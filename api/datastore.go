@@ -3,10 +3,10 @@ package api
 import (
 	"sync"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -121,7 +121,7 @@ func (self *ApiServer) ListChildren(
 
 func (self *ApiServer) DeleteSubject(
 	ctx context.Context,
-	in *api_proto.DataRequest) (*empty.Empty, error) {
+	in *api_proto.DataRequest) (*emptypb.Empty, error) {
 
 	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
 	perm, err := acls.CheckAccess(self.config, user_name, acls.DATASTORE_ACCESS)
@@ -135,7 +135,7 @@ func (self *ApiServer) DeleteSubject(
 		return nil, err
 	}
 
-	return &empty.Empty{}, db.DeleteSubject(self.config, getURN(in))
+	return &emptypb.Empty{}, db.DeleteSubject(self.config, getURN(in))
 }
 
 func getURN(in *api_proto.DataRequest) api.DSPathSpec {
