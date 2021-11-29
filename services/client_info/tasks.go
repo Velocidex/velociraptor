@@ -13,6 +13,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -106,12 +107,13 @@ func (self *ClientInfoManager) QueueMessagesForClient(
 	client_path_manager := paths.NewClientPathManager(client_id)
 
 	for _, r := range req {
+		task := proto.Clone(r).(*crypto_proto.VeloMessage)
 		// Task ID is related to time.
-		r.TaskId = currentTaskId()
+		task.TaskId = currentTaskId()
 
 		err = db.SetSubjectWithCompletion(self.config_obj,
-			client_path_manager.Task(r.TaskId),
-			r, completer.GetCompletionFunc())
+			client_path_manager.Task(task.TaskId),
+			task, completer.GetCompletionFunc())
 	}
 	return nil
 }

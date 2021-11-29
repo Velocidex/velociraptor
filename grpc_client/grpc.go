@@ -28,7 +28,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	grpcpool "github.com/processout/grpc-go-pool"
+	grpcpool "github.com/Velocidex/grpc-go-pool"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/grpc"

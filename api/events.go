@@ -6,12 +6,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -28,7 +28,7 @@ import (
 
 func (self *ApiServer) PushEvents(
 	ctx context.Context,
-	in *api_proto.PushEventRequest) (*empty.Empty, error) {
+	in *api_proto.PushEventRequest) (*emptypb.Empty, error) {
 
 	// Get the TLS context from the peer and verify its
 	// certificate.
@@ -89,7 +89,7 @@ func (self *ApiServer) PushEvents(
 		// for any server event artifacts that occur.
 		journal.Broadcast(self.config,
 			rows, in.Artifact, in.ClientId, in.FlowId)
-		return &empty.Empty{}, err
+		return &emptypb.Empty{}, err
 	}
 
 	return nil, status.Error(codes.InvalidArgument, "no peer certs?")
@@ -97,7 +97,7 @@ func (self *ApiServer) PushEvents(
 
 func (self *ApiServer) WriteEvent(
 	ctx context.Context,
-	in *actions_proto.VQLResponse) (*empty.Empty, error) {
+	in *actions_proto.VQLResponse) (*emptypb.Empty, error) {
 
 	// Get the TLS context from the peer and verify its
 	// certificate.
@@ -157,7 +157,7 @@ func (self *ApiServer) WriteEvent(
 
 			err = journal.PushRowsToArtifact(self.config,
 				rows, in.Query.Name, peer_name, "")
-			return &empty.Empty{}, err
+			return &emptypb.Empty{}, err
 		}
 	}
 

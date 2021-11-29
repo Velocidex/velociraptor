@@ -89,6 +89,8 @@ github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28 h1:3FMhXfGzZR4o
 github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28/go.mod h1:n9o/44DFcqU/E55pWoIt4sKkxBC3k4JVNqvTAb9kZlI=
 github.com/Velocidex/go-yara v1.1.10-0.20210726130504-d5e402efc424 h1:36GhJ1iRd/9yGgvlRWREcPRrWG2H4mF2lEpOvdYP55w=
 github.com/Velocidex/go-yara v1.1.10-0.20210726130504-d5e402efc424/go.mod h1:N1A2MzBKorQm3WixuPUSm4gmzGA6i5sYrwHyUBvY5lg=
+github.com/Velocidex/grpc-go-pool v1.2.2-0.20211129003310-ece3b3fe13f4 h1:EfgJNtG9KBbbT8fhWIs0E+PP5prHixSE5/tQ1yzk7jI=
+github.com/Velocidex/grpc-go-pool v1.2.2-0.20211129003310-ece3b3fe13f4/go.mod h1:rXXwht2ctScxF1tBYKG/9D0bT8mZXDlgTQPyypikbxc=
 github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0 h1:oMdYhZqDdZq0PpVFxGvjhhNhxNl6D7ycR0SuKkbEKac=
 github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0/go.mod h1:ukJBuruT9b24pdgZwWDvOaCYHeS03B7oQPCUWh25bwM=
 github.com/Velocidex/ordereddict v0.0.0-20191106020901-97c468e5e403/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
@@ -476,8 +478,6 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pquerna/cachecontrol v0.0.0-20200921180117-858c6e7e6b7e h1:BLqxdwZ6j771IpSCRx7s/GJjXHUE00Hmu7/YegCGdzA=
 github.com/pquerna/cachecontrol v0.0.0-20200921180117-858c6e7e6b7e/go.mod h1:hoLfEwdY11HjRfKFH6KqnPsfxlo3BP6bJehpDv8t6sQ=
-github.com/processout/grpc-go-pool v1.2.2-0.20200228131710-c0fcf3af0014 h1:ZBlVnM3IzLIMpdsq8aZNB9f6jPe61avIHNlfc4+HqJI=
-github.com/processout/grpc-go-pool v1.2.2-0.20200228131710-c0fcf3af0014/go.mod h1:F4hiNj96O6VQ87jv4rdz8R9tkHdelQQJ/J2B1a5VSt4=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v1.0.0/go.mod h1:db9x61etRT2tGnBNRi70OPL5FsnadC4Ky3P0J6CfImo=
 github.com/prometheus/client_golang v1.7.1/go.mod h1:PY5Wy2awLA44sXw4AOSfFBetzPP4j5+D6mVACh+pe2M=
@@ -924,8 +924,8 @@ google.golang.org/genproto v0.0.0-20210713002101-d411969a0d9a/go.mod h1:AxrInvYm
 google.golang.org/genproto v0.0.0-20210714021259-044028024a4f/go.mod h1:AxrInvYm1dci+enl5hChSFPOmmUF1+uAa/UsgNRWd7k=
 google.golang.org/genproto v0.0.0-20210716133855-ce7ef5c701ea/go.mod h1:AxrInvYm1dci+enl5hChSFPOmmUF1+uAa/UsgNRWd7k=
 google.golang.org/genproto v0.0.0-20210721163202-f1cecdd8b78a/go.mod h1:ob2IJxKrgPT52GcgX759i1sleT07tiKowYBGbczaW48=
-google.golang.org/genproto v0.0.0-20211112145013-271947fe86fd h1:8jqRgiTTWyKMDOM2AvhjA5dZLBSKXg1yFupPRBV/4fQ=
-google.golang.org/genproto v0.0.0-20211112145013-271947fe86fd/go.mod h1:5CzLGKJ67TSI2B9POpiiyGha0AjJvZIUgRMt1dSmuhc=
+google.golang.org/genproto v0.0.0-20211118181313-81c1377c94b1 h1:b9mVrqYfq3P4bCdaLg1qtBnPzUYgglsIdjZkL/fQVOE=
+google.golang.org/genproto v0.0.0-20211118181313-81c1377c94b1/go.mod h1:5CzLGKJ67TSI2B9POpiiyGha0AjJvZIUgRMt1dSmuhc=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
 google.golang.org/grpc v1.20.1/go.mod h1:10oTOabMzJvdu6/UiuZezV6QK5dSlG84ov/aaiqXj38=
 google.golang.org/grpc v1.21.1/go.mod h1:oYelfM1adQP15Ek0mdvEgi9Df8B9CZIaU1084ijfRaM=

@@ -24,9 +24,9 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
@@ -207,6 +207,5 @@ func ParseIntoProtobuf(source interface{}, destination proto.Message) error {
 		return err
 	}
 
-	return jsonpb.UnmarshalString(
-		string(serialized), destination)
+	return protojson.Unmarshal(serialized, destination)
 }

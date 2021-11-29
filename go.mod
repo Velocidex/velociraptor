@@ -18,6 +18,7 @@ require (
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28
 	github.com/Velocidex/go-yara v1.1.10-0.20210726130504-d5e402efc424
+	github.com/Velocidex/grpc-go-pool v1.2.2-0.20211129003310-ece3b3fe13f4
 	github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0
 	github.com/Velocidex/ordereddict v0.0.0-20211021090706-c5d39d5aa33a
 	github.com/Velocidex/pkcs7 v0.0.0-20210524015001-8d1eee94a157
@@ -84,7 +85,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.12.0
 	github.com/pquerna/cachecontrol v0.0.0-20200921180117-858c6e7e6b7e // indirect
-	github.com/processout/grpc-go-pool v1.2.2-0.20200228131710-c0fcf3af0014
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/client_model v0.2.0
 	github.com/qri-io/starlib v0.5.0
@@ -112,7 +112,7 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210611083556-38a9dc6acbc6
 	google.golang.org/api v0.51.0
-	google.golang.org/genproto v0.0.0-20211112145013-271947fe86fd
+	google.golang.org/genproto v0.0.0-20211118181313-81c1377c94b1
 	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
@@ -203,6 +203,7 @@ require (
 // replace github.com/Velocidex/zip => /home/mic/projects/zip
 // replace github.com/Velocidex/sflags => /home/mic/projects/sflags
 // replace github.com/Velocidex/etw => /home/mic/projects/etw
+// replace github.com/Velocidex/grpc-go-pool => /home/mic/projects/grpc-go-pool
 
 replace github.com/russross/blackfriday/v2 => github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b
 

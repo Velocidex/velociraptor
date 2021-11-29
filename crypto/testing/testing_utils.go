@@ -1,8 +1,8 @@
 package testing
 
 import (
-	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
+	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"

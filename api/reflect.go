@@ -22,8 +22,8 @@ import (
 	"strings"
 
 	"github.com/Velocidex/yaml/v2"
-	"github.com/golang/protobuf/ptypes/empty"
 	context "golang.org/x/net/context"
+	"google.golang.org/protobuf/types/known/emptypb"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -83,7 +83,7 @@ func IntrospectDescription() []*api_proto.Completion {
 
 func (self *ApiServer) GetKeywordCompletions(
 	ctx context.Context,
-	in *empty.Empty) (*api_proto.KeywordCompletions, error) {
+	in *emptypb.Empty) (*api_proto.KeywordCompletions, error) {
 
 	result := &api_proto.KeywordCompletions{
 		Items: []*api_proto.Completion{

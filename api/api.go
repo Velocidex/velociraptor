@@ -32,7 +32,6 @@ import (
 	errors "github.com/pkg/errors"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
@@ -42,6 +41,7 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api/proto"
@@ -269,7 +269,7 @@ func (self *ApiServer) ListClients(
 
 func (self *ApiServer) NotifyClients(
 	ctx context.Context,
-	in *api_proto.NotificationRequest) (*empty.Empty, error) {
+	in *api_proto.NotificationRequest) (*emptypb.Empty, error) {
 
 	defer Instrument("NotifyClients")()
 
@@ -294,7 +294,7 @@ func (self *ApiServer) NotifyClients(
 		return nil, status.Error(codes.InvalidArgument,
 			"client id should be specified")
 	}
-	return &empty.Empty{}, err
+	return &emptypb.Empty{}, err
 }
 
 func (self *ApiServer) LabelClients(
@@ -379,7 +379,7 @@ func (self *ApiServer) GetFlowRequests(
 
 func (self *ApiServer) GetUserUITraits(
 	ctx context.Context,
-	in *empty.Empty) (*api_proto.ApiGrrUser, error) {
+	in *emptypb.Empty) (*api_proto.ApiGrrUser, error) {
 	result := NewDefaultUserObject(self.config)
 	user_info := GetGRPCUserInfo(self.config, ctx, self.ca_pool)
 
@@ -403,12 +403,12 @@ func (self *ApiServer) GetUserUITraits(
 
 func (self *ApiServer) SetGUIOptions(
 	ctx context.Context,
-	in *api_proto.SetGUIOptionsRequest) (*empty.Empty, error) {
+	in *api_proto.SetGUIOptionsRequest) (*emptypb.Empty, error) {
 	user_info := GetGRPCUserInfo(self.config, ctx, self.ca_pool)
 
 	defer Instrument("SetGUIOptions")()
 
-	return &empty.Empty{}, users.SetUserOptions(self.config, user_info.Name, in)
+	return &emptypb.Empty{}, users.SetUserOptions(self.config, user_info.Name, in)
 }
 
 func (self *ApiServer) VFSListDirectory(
@@ -750,7 +750,7 @@ func (self *ApiServer) Query(
 
 func (self *ApiServer) GetServerMonitoringState(
 	ctx context.Context,
-	in *empty.Empty) (
+	in *emptypb.Empty) (
 	*flows_proto.ArtifactCollectorArgs, error) {
 
 	defer Instrument("GetServerMonitoringState")()
@@ -814,7 +814,7 @@ func (self *ApiServer) GetClientMonitoringState(
 func (self *ApiServer) SetClientMonitoringState(
 	ctx context.Context,
 	in *flows_proto.ClientEventTable) (
-	*empty.Empty, error) {
+	*emptypb.Empty, error) {
 
 	defer Instrument("SetClientMonitoringState")()
 
@@ -832,7 +832,7 @@ func (self *ApiServer) SetClientMonitoringState(
 		return nil, err
 	}
 
-	return &empty.Empty{}, err
+	return &emptypb.Empty{}, err
 }
 
 func (self *ApiServer) CreateDownloadFile(ctx context.Context,
