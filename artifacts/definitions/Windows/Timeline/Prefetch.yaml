@@ -55,7 +55,7 @@ sources:
                     // FilesAccessed,
                     FullPath,
                     Name AS PrefetchFileName,
-                    Ctime as CreationTime,
+                    Btime as CreationTime,
                     Mtime as ModificationTime
                  FROM prefetch(filename=FullPath)
                  WHERE
