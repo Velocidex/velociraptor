@@ -1,4 +1,5 @@
 name: Windows.Timeline.Prefetch
+author: Matt Green - @mgreen27
 description: |
   Windows keeps a cache of prefetch files. When an executable is run,
   the system records properties about the executable to make it faster
@@ -15,8 +16,6 @@ description: |
 
 reference:
   - https://www.forensicswiki.org/wiki/Prefetch
-
-author: matthew.green@cybereason.com
 
 parameters:
     - name: prefetchGlobs
@@ -37,11 +36,11 @@ parameters:
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
-  - queries:
-      - LET hostname <= SELECT Fqdn FROM info()
-      - |
-        // Parse prefetch files and apply non time filters
-        LET pf <= SELECT * FROM foreach(
+  - query: |
+      LET hostname <= SELECT Fqdn FROM info()
+
+      -- Parse prefetch files and apply non time filters
+      LET pf <= SELECT * FROM foreach(
               row={
                  SELECT * FROM glob(globs=prefetchGlobs)
               },
@@ -65,9 +64,8 @@ sources:
                     if(condition=hashRegex, then= Hash =~ hashRegex,
                     else=TRUE)
               })
-      - |
-        // Flattern and filter on time.
-        LET executionTimes = SELECT * FROM flatten(
+      -- Flattern and filter on time.
+      LET executionTimes = SELECT * FROM flatten(
                 query = {
                     SELECT *,
                         FullPath as FilteredPath,
@@ -80,8 +78,7 @@ sources:
                 if(condition=dateBefore, then=ExecutionTime < timestamp(string=dateBefore),
                     else=TRUE)
             GROUP BY ExecutionTime
-      - |
-        LET creationTimes = SELECT * FROM flatten(
+      LET creationTimes = SELECT * FROM flatten(
                 query = {
                     SELECT *,
                         FullPath as FilteredPath,
@@ -96,9 +93,8 @@ sources:
                         else=TRUE)
             GROUP BY ExecutionTime
 
-      - |
-        // Output results ready for timeline
-        LET flatOutput = SELECT
+      -- Output results ready for timeline
+      LET flatOutput = SELECT
                     ExecutionTime as event_time,
                     hostname.Fqdn[0] as hostname,
                     "Prefetch" as parser,
@@ -115,4 +111,5 @@ sources:
             FROM chain(
                     a = { SELECT * FROM executionTimes },
                     b = { SELECT * FROM creationTimes  })
-      - SELECT * FROM flatOutput
+      SELECT * FROM flatOutput
+
