@@ -1,22 +1,21 @@
 name: Windows.Timeline.Prefetch
+author: Matt Green - @mgreen27
 description: |
   Windows keeps a cache of prefetch files. When an executable is run,
   the system records properties about the executable to make it faster
   to run next time. By parsing this information we are able to
   determine when binaries are run in the past. On Windows10 we can see
-  the last 8 execution times and creation time (9 potential executions).
-
-  This artifact is a timelined output version of the standard Prefetch
-  artifact. There are several parameter's availible.
-    - dateAfter enables search for prefetch evidence after this date.
-    - dateBefore enables search for prefetch evidence before this date.
-    - binaryRegex enables to filter on binary name, e.g evil.exe.
-    - hashRegex enables to filter on prefetch hash.
+  the last 8 execution times and creation time (9 potential executions).  
+    
+  This artifact is a timelined output version of the standard Prefetch 
+  artifact. There are several parameter's availible.  
+    - dateAfter enables search for prefetch evidence after this date.  
+    - dateBefore enables search for prefetch evidence before this date.   
+    - binaryRegex enables to filter on binary name, e.g evil.exe.  
+    - hashRegex enables to filter on prefetch hash.     
 
 reference:
   - https://www.forensicswiki.org/wiki/Prefetch
-
-author: matthew.green@cybereason.com
 
 parameters:
     - name: prefetchGlobs
@@ -29,19 +28,17 @@ parameters:
       type: timestamp
     - name: binaryRegex
       description: "Regex of executable name."
-      type: regex
     - name: hashRegex
       description: "Regex of prefetch hash."
-      type: regex
-
+      
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
-  - queries:
-      - LET hostname <= SELECT Fqdn FROM info()
-      - |
-        // Parse prefetch files and apply non time filters
-        LET pf <= SELECT * FROM foreach(
+  - query: |
+      LET hostname <= SELECT Fqdn FROM info()
+      
+      -- Parse prefetch files and apply non time filters
+      LET pf <= SELECT * FROM foreach(
               row={
                  SELECT * FROM glob(globs=prefetchGlobs)
               },
@@ -53,40 +50,38 @@ sources:
                     Version,
                     LastRunTimes,
                     RunCount,
-                    // FilesAccessed,
-                    FullPath,
+                    // FilesAccessed, 
+                    FullPath, 
                     Name AS PrefetchFileName,
                     Ctime as CreationTime,
                     Mtime as ModificationTime
                  FROM prefetch(filename=FullPath)
-                 WHERE
+                 WHERE  
                     if(condition=binaryRegex, then= Executable =~ binaryRegex,
                     else=TRUE) AND
                     if(condition=hashRegex, then= Hash =~ hashRegex,
                     else=TRUE)
               })
-      - |
-        // Flattern and filter on time.
-        LET executionTimes = SELECT * FROM flatten(
-                query = {
+      -- Flattern and filter on time. 
+      LET executionTimes = SELECT * FROM flatten(
+                query = { 
                     SELECT *,
                         FullPath as FilteredPath,
                         LastRunTimes as ExecutionTime
-                    FROM pf
+                    FROM pf 
                 })
-            WHERE
+            WHERE 
                 if(condition=dateAfter, then=ExecutionTime > timestamp(string=dateAfter),
                     else=TRUE) AND
                 if(condition=dateBefore, then=ExecutionTime < timestamp(string=dateBefore),
                     else=TRUE)
             GROUP BY ExecutionTime
-      - |
-        LET creationTimes = SELECT * FROM flatten(
-                query = {
+      LET creationTimes = SELECT * FROM flatten(
+                query = { 
                     SELECT *,
                         FullPath as FilteredPath,
                         CreationTime as ExecutionTime
-                    FROM pf
+                    FROM pf 
                     WHERE RunCount > 8
                 })
             WHERE
@@ -95,10 +90,9 @@ sources:
                 if(condition=dateBefore, then=ExecutionTime < timestamp(string=dateBefore),
                         else=TRUE)
             GROUP BY ExecutionTime
-
-      - |
-        // Output results ready for timeline
-        LET flatOutput = SELECT
+                        
+      -- Output results ready for timeline
+      LET flatOutput = SELECT 
                     ExecutionTime as event_time,
                     hostname.Fqdn[0] as hostname,
                     "Prefetch" as parser,
@@ -109,10 +103,11 @@ sources:
                     ModificationTime as prefetch_mtime,
                     FileSize as prefetch_size,
                     Hash as prefetch_hash,
-                    Version as prefetch_version,
+                    Version as prefetch_version, 
                     PrefetchFileName as prefetch_file,
-                    RunCount as prefetch_count
+                    RunCount as prefetch_count 
             FROM chain(
                     a = { SELECT * FROM executionTimes },
                     b = { SELECT * FROM creationTimes  })
-      - SELECT * FROM flatOutput
+      SELECT * FROM flatOutput
+              
