@@ -48,14 +48,11 @@ import (
 type SearchOptions int
 
 const (
-	// Only return the entity being indexed (usually client_id).
-	OPTION_ENTITY SearchOptions = 0
+	// Return the entire client record for matching clients.
+	OPTION_CLIENT_RECORDS SearchOptions = 0
 
-	// Return the full index record read from disk. This also includes
-	// the term under which it was indexed. This is slightly more
-	// expensive but it is needed when further filtering is required
-	// on the index term because it is not a simple prefix match.
-	OPTION_KEY SearchOptions = 1
+	// Return only the matching search terms
+	OPTION_NAME_ONLY SearchOptions = 1
 )
 
 var (

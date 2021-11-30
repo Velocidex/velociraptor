@@ -374,6 +374,9 @@ class VeloClientList extends Component {
             offset: this.state.start_row,
             sort: this.state.sort,
             filter: this.state.filter,
+
+            // Return all the matching client records.
+            name_only: false,
         }, this.source.token).then(resp => {
             if (resp.cancel) return;
 

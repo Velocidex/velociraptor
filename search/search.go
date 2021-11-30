@@ -156,17 +156,13 @@ func searchClientIndex(
 	seen := make(map[string]bool)
 	result := &api_proto.SearchClientsResponse{}
 	total_count := 0
-	options := OPTION_ENTITY
-	if in.Type == api_proto.SearchClientsRequest_KEY {
-		options = OPTION_KEY
+	options := OPTION_CLIENT_RECORDS
+	if in.NameOnly {
+		options = OPTION_NAME_ONLY
 	}
 
 	scope := vql_subsystem.MakeScope()
 	prefix, filter := splitSearchTermIntoPrefixAndFilter(scope, in.Query)
-	if filter != nil {
-		options = OPTION_KEY
-	}
-
 	for hit := range SearchIndexWithPrefix(
 		ctx, config_obj, prefix, options) {
 		if hit == nil {
@@ -177,8 +173,9 @@ func searchClientIndex(
 			continue
 		}
 
+		// This is the client ID for the matching client.
 		key := hit.Entity
-		if options == OPTION_KEY {
+		if options == OPTION_NAME_ONLY {
 			key = hit.Term
 		}
 
@@ -195,7 +192,7 @@ func searchClientIndex(
 		}
 
 		switch options {
-		case OPTION_ENTITY:
+		case OPTION_CLIENT_RECORDS:
 			api_client, err := FastGetApiClient(ctx, config_obj, hit.Entity)
 			if err != nil {
 				continue
@@ -213,7 +210,7 @@ func searchClientIndex(
 				return result, nil
 			}
 
-		case OPTION_KEY:
+		case OPTION_NAME_ONLY:
 			result.Names = append(result.Names, hit.Term)
 			if uint64(len(result.Names)) > limit {
 				return result, nil
@@ -244,29 +241,33 @@ func searchVerbs(ctx context.Context,
 
 	// Not a verb maybe a hostname
 	if uint64(len(terms)) < in.Limit {
-		res, _ := searchClientIndex(ctx, config_obj,
+		res, err := searchClientIndex(ctx, config_obj,
 			&api_proto.SearchClientsRequest{
-				Type:   in.Type,
-				Offset: in.Offset,
-				Query:  "host:" + in.Query,
-				Limit:  in.Limit,
-				Filter: in.Filter,
+				NameOnly: in.NameOnly,
+				Offset:   in.Offset,
+				Query:    "host:" + in.Query,
+				Limit:    in.Limit,
+				Filter:   in.Filter,
 			}, limit)
-		terms = append(terms, res.Names...)
-		items = append(items, res.Items...)
+		if err == nil {
+			terms = append(terms, res.Names...)
+			items = append(items, res.Items...)
+		}
 	}
 
 	if uint64(len(terms)) < in.Limit {
-		res, _ := searchClientIndex(ctx, config_obj,
+		res, err := searchClientIndex(ctx, config_obj,
 			&api_proto.SearchClientsRequest{
-				Type:   in.Type,
-				Offset: in.Offset,
-				Query:  "label:" + in.Query,
-				Filter: in.Filter,
-				Limit:  in.Limit,
+				NameOnly: in.NameOnly,
+				Offset:   in.Offset,
+				Query:    "label:" + in.Query,
+				Filter:   in.Filter,
+				Limit:    in.Limit,
 			}, limit)
-		terms = append(terms, res.Names...)
-		items = append(items, res.Items...)
+		if err == nil {
+			terms = append(terms, res.Names...)
+			items = append(items, res.Items...)
+		}
 	}
 
 	return &api_proto.SearchClientsResponse{

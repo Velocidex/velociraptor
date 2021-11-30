@@ -17,7 +17,7 @@ func searchLastIP(
 	term string, limit uint64) (*api_proto.SearchClientsResponse, error) {
 
 	// It does not make sense to complete on names.
-	if in.Type == api_proto.SearchClientsRequest_KEY {
+	if in.NameOnly {
 		return &api_proto.SearchClientsResponse{}, nil
 	}
 
