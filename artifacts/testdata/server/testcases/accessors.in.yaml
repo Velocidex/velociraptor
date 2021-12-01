@@ -1,0 +1,7 @@
+Parameters:
+  FooBar: SomeData
+
+Queries:
+  - SELECT read_file(accessor="data", filename=FooBar),
+           read_file(accessor="scope", filename="FooBar")
+    FROM scope()

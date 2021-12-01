@@ -42,8 +42,6 @@ class ClientSetterFromRoute extends Component {
 
             api.get('/v1/SearchClients', {
                 query: client_id,
-                name_only: true,
-
             }, this.source.token).then(resp => {
                 if (resp.data && resp.data.items) {
                     this.props.setClient(resp.data.items[0]);

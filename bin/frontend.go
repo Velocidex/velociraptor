@@ -115,6 +115,13 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 		return nil, err
 	}
 
+	// Load any artifacts defined in the config file before the
+	// frontend services are started so they may use them.
+	err = load_config_artifacts(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	// These services must start only on the frontends.
 	err = startup.StartupFrontendServices(sm)
 	if err != nil {
