@@ -543,6 +543,10 @@ message FrontendConfig {
             description: "Additional initial set of server monitoring artifacts."
         }];
 
+    // If set this will cause the frontend to collect these artifacts
+    // the first time it is run after install.
+    repeated string initial_server_artifacts = 34;
+
     string run_as_user = 16 [(sem_type) = {
             description: "The user that the frontend should run as. If set we refuse to run as a different user.",
         }];
