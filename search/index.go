@@ -225,7 +225,7 @@ func (self *Indexer) Load(
 	}
 
 	// Start 20 workers
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 20; i++ {
 		go func() {
 			for urn := range jobs {
 				worker(urn)

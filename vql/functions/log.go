@@ -39,7 +39,7 @@ type logCache struct {
 
 type LogFunctionArgs struct {
 	Message   string `vfilter:"required,field=message,doc=Message to log."`
-	DedupTime int64  `vfilter:"optional,field=dedup,doc=Supporess same message in this many seconds (default 60 sec)."`
+	DedupTime int64  `vfilter:"optional,field=dedup,doc=Suppress same message in this many seconds (default 60 sec)."`
 }
 
 type LogFunction struct{}

@@ -15,3 +15,7 @@ Queries:
          HiveGlob=srcDir+"/artifacts/testdata/files/UsrClass.dat",
          KeyGlob='''\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\**'''),])
     ORDER BY KeyPath
+
+  # Test the SAM parsers
+  - SELECT ParsedF, ParsedV FROM Artifact.Windows.Forensics.SAM(
+       SAMPath=srcDir+"/artifacts/testdata/files/SAM")

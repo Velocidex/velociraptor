@@ -310,4 +310,141 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
    }
   }
  }
+]SELECT ParsedF, ParsedV FROM Artifact.Windows.Forensics.SAM( SAMPath=srcDir+"/artifacts/testdata/files/SAM")[
+ {
+  "ParsedF": {
+   "LastLoginDate": "1601-01-01T00:00:00Z",
+   "PasswordResetDate": "1601-01-01T00:00:00Z",
+   "PasswordFailDate": "1601-01-01T00:00:00Z",
+   "RID": 500,
+   "Flags": [
+    "Account Disabled",
+    "Normal user account",
+    "Password does not expire"
+   ],
+   "FailedLoginCount": 0,
+   "LoginCount": 0
+  },
+  "ParsedV": {
+   "AccountType": "0xf4",
+   "username": "Administrator",
+   "fullname": "",
+   "comment": "Built-in account for administering the computer/domain",
+   "driveletter": "",
+   "logon_script": "",
+   "profile_path": "",
+   "workstation": "",
+   "lmpwd_hash": "\u0002\u0002",
+   "ntpwd_hash": "\u0002\u0002"
+  }
+ },
+ {
+  "ParsedF": {
+   "LastLoginDate": "1601-01-01T00:00:00Z",
+   "PasswordResetDate": "1601-01-01T00:00:00Z",
+   "PasswordFailDate": "1601-01-01T00:00:00Z",
+   "RID": 501,
+   "Flags": [
+    "Account Disabled",
+    "Normal user account",
+    "Password does not expire",
+    "Password not required"
+   ],
+   "FailedLoginCount": 0,
+   "LoginCount": 0
+  },
+  "ParsedV": {
+   "AccountType": "0xe8",
+   "username": "Guest",
+   "fullname": "",
+   "comment": "Built-in account for guest access to the computer/domain",
+   "driveletter": "",
+   "logon_script": "",
+   "profile_path": "",
+   "workstation": "",
+   "lmpwd_hash": "\u0002\u0002",
+   "ntpwd_hash": "\u0002\u0002"
+  }
+ },
+ {
+  "ParsedF": {
+   "LastLoginDate": "1601-01-01T00:00:00Z",
+   "PasswordResetDate": "1601-01-01T00:00:00Z",
+   "PasswordFailDate": "1601-01-01T00:00:00Z",
+   "RID": 503,
+   "Flags": [
+    "Account Disabled",
+    "Normal user account",
+    "Password does not expire",
+    "Password not required"
+   ],
+   "FailedLoginCount": 0,
+   "LoginCount": 0
+  },
+  "ParsedV": {
+   "AccountType": "0x10c",
+   "username": "DefaultAccount",
+   "fullname": "",
+   "comment": "A user account managed by the system.",
+   "driveletter": "",
+   "logon_script": "",
+   "profile_path": "",
+   "workstation": "",
+   "lmpwd_hash": "\u0002\u0002",
+   "ntpwd_hash": "\u0002\u0002"
+  }
+ },
+ {
+  "ParsedF": {
+   "LastLoginDate": "1601-01-01T00:00:00Z",
+   "PasswordResetDate": "2021-10-08T00:50:53Z",
+   "PasswordFailDate": "1601-01-01T00:00:00Z",
+   "RID": 504,
+   "Flags": [
+    "Account Disabled",
+    "Normal user account"
+   ],
+   "FailedLoginCount": 0,
+   "LoginCount": 0
+  },
+  "ParsedV": {
+   "AccountType": "0x10c",
+   "username": "WDAGUtilityAccount",
+   "fullname": "",
+   "comment": "A user account managed and used by the system for Windows Defender Application Guard scenarios.",
+   "driveletter": "",
+   "logon_script": "",
+   "profile_path": "",
+   "workstation": "",
+   "lmpwd_hash": "\u0002\u0002",
+   "ntpwd_hash": "\u0002\u0002\u0010"
+  }
+ },
+ {
+  "ParsedF": {
+   "LastLoginDate": "2021-12-01T12:40:21Z",
+   "PasswordResetDate": "2021-10-07T08:07:32Z",
+   "PasswordFailDate": "2021-10-13T13:33:34Z",
+   "RID": 1001,
+   "Flags": [
+    "Normal user account",
+    "Password does not expire",
+    "Password not required"
+   ],
+   "FailedLoginCount": 0,
+   "LoginCount": 112
+  },
+  "ParsedV": {
+   "AccountType": "0xf4",
+   "username": "test",
+   "fullname": "",
+   "comment": "",
+   "driveletter": "",
+   "logon_script": "",
+   "profile_path": "",
+   "workstation": "",
+   "lmpwd_hash": "\u0002\u0002",
+   "ntpwd_hash": "\u0002\u0002\u0010"
+  }
+ }
 ]

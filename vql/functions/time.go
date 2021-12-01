@@ -130,7 +130,7 @@ type _TimestampArg struct {
 	WinFileTime int64       `vfilter:"optional,field=winfiletime"`
 	String      string      `vfilter:"optional,field=string,doc=Guess a timestamp from a string"`
 	Timezone    string      `vfilter:"optional,field=timezone,doc=A default timezone (UTC)"`
-	Format      string      `vfilter:"optional,field=format,doc=A format specifier as per Golangs time.Parse"`
+	Format      string      `vfilter:"optional,field=format,doc=A format specifier as per the Golang time.Parse"`
 }
 
 type _Timestamp struct{}
