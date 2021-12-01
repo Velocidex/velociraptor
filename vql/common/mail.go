@@ -31,7 +31,7 @@ import (
 )
 
 type MailPluginArgs struct {
-	To      []string `vfilter:"required,field=to,doc=Receipient of the mail"`
+	To      []string `vfilter:"required,field=to,doc=Recipient of the mail"`
 	From    string   `vfilter:"optional,field=from,doc=The from email address."`
 	CC      []string `vfilter:"optional,field=cc,doc=A cc for the mail"`
 	Subject string   `vfilter:"optional,field=subject,doc=The subject."`

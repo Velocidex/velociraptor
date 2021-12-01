@@ -35,7 +35,7 @@ import (
 )
 
 type ClientsPluginArgs struct {
-	Search   string `vfilter:"optional,field=search,doc=Client search string. Can have the following prefixes: 'lable:', 'host:'"`
+	Search   string `vfilter:"optional,field=search,doc=Client search string. Can have the following prefixes: 'label:', 'host:'"`
 	Start    uint64 `vfilter:"optional,field=start,doc=First client to fetch (0)'"`
 	Limit    uint64 `vfilter:"optional,field=count,doc=Maximum number of clients to fetch (1000)'"`
 	ClientId string `vfilter:"optional,field=client_id"`
