@@ -10,12 +10,11 @@ type: client
 
 parameters:
   - name: SRUMLocation
-    default: c:\windows\system32\sru\srudb.dat
+    default: c:/windows/system32/sru/srudb.dat
   - name: accessor
     default: auto
   - name: ExecutableRegex
-    default: .*
-    type: regex
+    default: .
   - name: NetworkConnectionsGUID
     default: "{DD6636C4-8929-4683-974E-22C046A43763}"
     type: hidden
@@ -25,17 +24,29 @@ parameters:
   - name: ExecutionGUID
     default: "{5C8CF1C7-7257-4F13-B223-970EF5939312}"
     type: hidden
-
-
+  - name: NetworkUsageGUID
+    default: "{973F5D5C-1D90-4944-BE8E-24B94231A174}"
+    type: hidden
+  - name: Upload 
+    description: Select to Upload the SRUM database file 'srudb.dat'
+    type: bool 
+    
 sources:
   - name: Upload
-    queries:
-      - SELECT upload(file=SRUMLocation, accessor=accessor) AS Upload
-        FROM scope()
+    query: |
+        SELECT * from if(condition=Upload,
+            then= {
+                SELECT upload(file=SRUMLocation, accessor=accessor) AS Upload
+                FROM scope()
+            },
+            else= {
+                SELECT "N/A" as Upload 
+                FROM scope()
+            })
 
   - name: Execution Stats
-    queries:
-      - SELECT  AutoIncId AS ID,
+    query: |
+        SELECT  AutoIncId AS ID,
                 TimeStamp,
                 srum_lookup_id(file=SRUMLocation, accessor=accessor, id=AppId) AS App,
                 srum_lookup_id(file=SRUMLocation, accessor=accessor, id=UserId) AS User,
@@ -46,8 +57,8 @@ sources:
         WHERE App =~ ExecutableRegex
 
   - name: Application Resource Usage
-    queries:
-      - SELECT AutoIncId as SRUMId,
+    query: |
+        SELECT AutoIncId as SRUMId,
                TimeStamp,
                srum_lookup_id(file=SRUMLocation, accessor=accessor, id=AppId) AS App,
                srum_lookup_id(file=SRUMLocation, accessor=accessor, id=UserId) AS User,
@@ -70,13 +81,30 @@ sources:
         WHERE App =~ ExecutableRegex
 
   - name: Network Connections
-    queries:
-    - SELECT AutoIncId as SRUMId,
+    query: |
+        SELECT AutoIncId as SRUMId,
              TimeStamp,
              srum_lookup_id(file=SRUMLocation, accessor=accessor, id=AppId) AS App,
              srum_lookup_id(file=SRUMLocation, accessor=accessor, id=UserId) AS User,
              InterfaceLuid,
              ConnectedTime,
              timestamp(winfiletime=ConnectStartTime) AS StartTime
-      FROM parse_ese(file=SRUMLocation, accessor=accessor, table=NetworkConnectionsGUID)
-      WHERE App =~ ExecutableRegex
+        FROM parse_ese(file=SRUMLocation, accessor=accessor, table=NetworkConnectionsGUID)
+        WHERE App =~ ExecutableRegex
+
+  - name: Network Usage
+    query: |
+        LET SRUMFile <= SELECT FullPath FROM glob(globs=SRUMLocation)
+        
+        SELECT AutoIncId as SRUMId,
+             TimeStamp,
+             srum_lookup_id(file=SRUMFile.FullPath, accessor=accessor, id=AppId) AS App,
+             srum_lookup_id(file=SRUMFile.FullPath, accessor=accessor, id=UserId) AS User,
+             UserId,
+             BytesSent,
+             BytesRecvd,
+             InterfaceLuid,
+             L2ProfileId,
+             L2ProfileFlags 
+        FROM parse_ese(file=SRUMFile.FullPath, accessor=accessor, table=NetworkUsageGUID)
+        WHERE App =~ ExecutableRegex
