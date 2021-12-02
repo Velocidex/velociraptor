@@ -1,3 +1,15 @@
+Parameters:
+  Data:  "03000000040000000500000000000000000"
+  Profile: |
+    [
+      ["MRU", 0, [
+        ["Items", 0, "Array", {
+           type: "uint32",
+           count: 3,
+       }]
+      ]]
+    ]
+
 Queries:
   - SELECT ModuleName, Timestamp, Functions[1]
     FROM Artifact.Windows.System.Powershell.ModuleAnalysisCache(GlobLookup=srcDir +
@@ -7,3 +19,10 @@ Queries:
   # Check the lnk parser
   - SELECT _Parsed FROM Artifact.Windows.Forensics.Lnk(
       Glob=srcDir + "/artifacts/testdata/files/1.lnk")
+
+  # Check that binary parser arrays and foreach interact correctly
+  # (array implement the iterator protocol properly).
+  - SELECT * FROM foreach(row=parse_binary(
+      accessor="data",
+      filename=unhex(string=Data),
+      profile=Profile, struct="MRU").Items)

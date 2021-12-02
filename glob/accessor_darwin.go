@@ -21,163 +21,25 @@
 package glob
 
 import (
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"regexp"
-	"syscall"
 	"time"
-
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/vfilter"
 )
-
-var (
-	fileAccessorCurrentOpened = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "accessor_file_current_open",
-		Help: "Number of currently opened files with the file accessor.",
-	})
-)
-
-type OSFileInfo struct {
-	os.FileInfo
-	_full_path string
-}
-
-func (self *OSFileInfo) FullPath() string {
-	return self._full_path
-}
 
 func (self *OSFileInfo) Btime() time.Time {
-	ts := self.sys().Birthtimespec
+	ts := self._Sys().Birthtimespec
 	return time.Unix(0, ts.Nsec+ts.Sec*1000000000)
 }
 
 func (self *OSFileInfo) Mtime() time.Time {
-	ts := self.sys().Mtimespec
+	ts := self._Sys().Mtimespec
 	return time.Unix(0, ts.Nsec+ts.Sec*1000000000)
 }
 
 func (self *OSFileInfo) Ctime() time.Time {
-	ts := self.sys().Ctimespec
+	ts := self._Sys().Ctimespec
 	return time.Unix(0, ts.Nsec+ts.Sec*1000000000)
 }
 
 func (self *OSFileInfo) Atime() time.Time {
-	ts := self.sys().Atimespec
+	ts := self._Sys().Atimespec
 	return time.Unix(0, ts.Nsec+ts.Sec*1000000000)
-}
-
-func (self *OSFileInfo) _Sys() *syscall.Stat_t {
-	return self.sys()
-}
-
-func (self *OSFileInfo) Data() interface{} {
-	return nil
-}
-
-func (self *OSFileInfo) sys() *syscall.Stat_t {
-	return self.Sys().(*syscall.Stat_t)
-}
-
-func (self *OSFileInfo) IsLink() bool {
-	return self.Mode()&os.ModeSymlink != 0
-}
-
-func (self *OSFileInfo) GetLink() (string, error) {
-	target, err := os.Readlink(self._full_path)
-	if err != nil {
-		return "", err
-	}
-	return target, nil
-}
-
-func (self *OSFileInfo) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(&struct {
-		FullPath string
-		Size     int64
-		Mode     os.FileMode
-		ModeStr  string
-		ModTime  time.Time
-		Sys      interface{}
-		Mtime    time.Time
-		Ctime    time.Time
-		Atime    time.Time
-	}{
-		FullPath: self.FullPath(),
-		Size:     self.Size(),
-		Mode:     self.Mode(),
-		ModeStr:  self.Mode().String(),
-		ModTime:  self.ModTime(),
-		Sys:      self.Sys(),
-		Mtime:    self.Mtime(),
-		Ctime:    self.Ctime(),
-		Atime:    self.Atime(),
-	})
-
-	return result, err
-}
-
-func (u *OSFileInfo) UnmarshalJSON(data []byte) error {
-	return nil
-}
-
-// Real implementation for non windows OSs:
-type OSFileSystemAccessor struct{}
-
-func (self OSFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, error) {
-	result := &OSFileSystemAccessor{}
-	return result, nil
-}
-
-func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
-	lstat, err := os.Lstat(GetPath(filename))
-	if err != nil {
-		return nil, err
-	}
-
-	return &OSFileInfo{lstat, filename}, nil
-}
-
-func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
-	files, err := ioutil.ReadDir(GetPath(path))
-	if err == nil {
-		var result []FileInfo
-		for _, f := range files {
-			result = append(result,
-				&OSFileInfo{f, filepath.Join(path, f.Name())})
-		}
-		return result, nil
-	}
-	return nil, err
-}
-
-func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
-	file, err := os.Open(GetPath(path))
-	return file, err
-}
-
-func GetPath(path string) string {
-	return filepath.Clean("/" + path)
-}
-
-var OSFileSystemAccessor_re = regexp.MustCompile("/")
-
-func (self OSFileSystemAccessor) PathSplit(path string) []string {
-	return OSFileSystemAccessor_re.Split(path, -1)
-}
-
-func (self OSFileSystemAccessor) PathJoin(root, stem string) string {
-	return filepath.Join(root, stem)
-}
-
-func (self OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
-	return "/", path, nil
-}
-
-func init() {
-	Register("file", &OSFileSystemAccessor{})
-	Register("auto", &OSFileSystemAccessor{})
 }

@@ -225,6 +225,11 @@ func (self *Notifier) IsClientConnected(
 	config_obj *config_proto.Config,
 	client_id string, timeout int) bool {
 
+	// Shotcut if the client is directly connected.
+	if self.IsClientDirectlyConnected(client_id) {
+		return true
+	}
+
 	// Get a unique ID
 	idx := atomic.AddUint64(&self.idx, 1)
 
