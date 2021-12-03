@@ -1,4 +1,4 @@
-// +build linux
+// +build linux darwin freebsd
 
 package utils
 
@@ -13,8 +13,8 @@ import (
 // Auxiliary information if the File describes a directory
 type dirInfo struct {
 	buf  []byte // buffer for directory I/O
-	nbuf int     // length of buf; return value from Getdirentries
-	bufp int     // location of next record in buf.
+	nbuf int    // length of buf; return value from Getdirentries
+	bufp int    // location of next record in buf.
 }
 
 const (

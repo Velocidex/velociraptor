@@ -201,4 +201,14 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
    }
   }
  }
+]SELECT * FROM foreach(row=parse_binary( accessor="data", filename=unhex(string=Data), profile=Profile, struct="MRU").Items)[
+ {
+  "_value": 3
+ },
+ {
+  "_value": 4
+ },
+ {
+  "_value": 5
+ }
 ]
