@@ -2,9 +2,9 @@ name: Windows.Forensics.SRUM
 description: |
   Process the SRUM database.
 
-  references:
-    * https://www.sans.org/cyber-security-summit/archives/file/summit-archive-1492184583.pdf
-    * https://cyberforensicator.com/2017/08/06/windows-srum-forensics/
+reference:
+  - https://www.sans.org/cyber-security-summit/archives/file/summit-archive-1492184583.pdf
+  - https://cyberforensicator.com/2017/08/06/windows-srum-forensics/
 
 type: client
 
@@ -33,35 +33,34 @@ parameters:
     
 sources:
   - name: Upload
+    precondition: 
+        SELECT * FROM scope() WHERE Upload 
     query: |
-        SELECT * from if(condition=Upload,
-            then= {
-                SELECT upload(file=SRUMLocation, accessor=accessor) AS Upload
-                FROM scope()
-            },
-            else= {
-                SELECT "N/A" as Upload 
-                FROM scope()
-            })
+        SELECT upload(file=SRUMLocation, accessor=accessor) AS Upload
+        FROM scope()
 
   - name: Execution Stats
     query: |
+        LET SRUMFiles <= SELECT FullPath FROM glob(globs=SRUMLocation)
+        
         SELECT  AutoIncId AS ID,
                 TimeStamp,
-                srum_lookup_id(file=SRUMLocation, accessor=accessor, id=AppId) AS App,
-                srum_lookup_id(file=SRUMLocation, accessor=accessor, id=UserId) AS User,
+                srum_lookup_id(file=SRUMFiles.FullPath, accessor=accessor, id=AppId) AS App,
+                srum_lookup_id(file=SRUMFiles.FullPath, accessor=accessor, id=UserId) AS User,
                 timestamp(winfiletime=EndTime) AS EndTime,
                 DurationMS,
                 NetworkBytesRaw
-        FROM parse_ese(file=SRUMLocation, accessor=accessor, table=ExecutionGUID)
+        FROM parse_ese(file=SRUMFiles.FullPath, accessor=accessor, table=ExecutionGUID)
         WHERE App =~ ExecutableRegex
 
   - name: Application Resource Usage
     query: |
+        LET SRUMFiles <= SELECT FullPath FROM glob(globs=SRUMLocation)
+        
         SELECT AutoIncId as SRUMId,
                TimeStamp,
-               srum_lookup_id(file=SRUMLocation, accessor=accessor, id=AppId) AS App,
-               srum_lookup_id(file=SRUMLocation, accessor=accessor, id=UserId) AS User,
+               srum_lookup_id(file=SRUMFiles.FullPath, accessor=accessor, id=AppId) AS App,
+               srum_lookup_id(file=SRUMFiles.FullPath, accessor=accessor, id=UserId) AS User,
                ForegroundCycleTime,
                BackgroundCycleTime,
                FaceTime,
@@ -77,34 +76,36 @@ sources:
                BackgroundNumReadOperations,
                BackgroundNumWriteOperations,
                BackgroundNumberOfFlushes
-        FROM parse_ese(file=SRUMLocation, accessor=accessor, table=ApplicationResourceUsageGUID)
+        FROM parse_ese(file=SRUMFiles.FullPath, accessor=accessor, table=ApplicationResourceUsageGUID)
         WHERE App =~ ExecutableRegex
 
   - name: Network Connections
     query: |
+        LET SRUMFiles <= SELECT FullPath FROM glob(globs=SRUMLocation)
+        
         SELECT AutoIncId as SRUMId,
              TimeStamp,
-             srum_lookup_id(file=SRUMLocation, accessor=accessor, id=AppId) AS App,
-             srum_lookup_id(file=SRUMLocation, accessor=accessor, id=UserId) AS User,
+             srum_lookup_id(file=SRUMFiles.FullPath, accessor=accessor, id=AppId) AS App,
+             srum_lookup_id(file=SRUMFiles.FullPath, accessor=accessor, id=UserId) AS User,
              InterfaceLuid,
              ConnectedTime,
              timestamp(winfiletime=ConnectStartTime) AS StartTime
-        FROM parse_ese(file=SRUMLocation, accessor=accessor, table=NetworkConnectionsGUID)
+        FROM parse_ese(file=SRUMFiles.FullPath, accessor=accessor, table=NetworkConnectionsGUID)
         WHERE App =~ ExecutableRegex
 
   - name: Network Usage
     query: |
-        LET SRUMFile <= SELECT FullPath FROM glob(globs=SRUMLocation)
+        LET SRUMFiles <= SELECT FullPath FROM glob(globs=SRUMLocation)
         
         SELECT AutoIncId as SRUMId,
              TimeStamp,
-             srum_lookup_id(file=SRUMFile.FullPath, accessor=accessor, id=AppId) AS App,
-             srum_lookup_id(file=SRUMFile.FullPath, accessor=accessor, id=UserId) AS User,
+             srum_lookup_id(file=SRUMFiles.FullPath, accessor=accessor, id=AppId) AS App,
+             srum_lookup_id(file=SRUMFiles.FullPath, accessor=accessor, id=UserId) AS User,
              UserId,
              BytesSent,
              BytesRecvd,
              InterfaceLuid,
              L2ProfileId,
              L2ProfileFlags 
-        FROM parse_ese(file=SRUMFile.FullPath, accessor=accessor, table=NetworkUsageGUID)
+        FROM parse_ese(file=SRUMFiles.FullPath, accessor=accessor, table=NetworkUsageGUID)
         WHERE App =~ ExecutableRegex
