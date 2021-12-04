@@ -113,12 +113,18 @@ func (self _WatchSyslogPlugin) Call(
 			return
 		}
 
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
+		if !ok {
+			scope.Log("watch_syslog: %s", err)
+			return
+		}
+
 		event_channel := make(chan vfilter.Row)
 
 		// Register the output channel as a listener to the
 		// global event.
 		for _, filename := range arg.Filenames {
-			cancel := GlobalSyslogService.Register(
+			cancel := GlobalSyslogService(config_obj).Register(
 				filename, arg.Accessor, ctx, scope,
 				event_channel)
 

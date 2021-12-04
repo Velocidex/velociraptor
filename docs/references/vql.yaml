@@ -2526,6 +2526,27 @@
     type: int64
     description: Maximum number of clients to fetch (default unlimited)'
   category: server
+- name: netcat
+  description: Make a tcp connection and read data from a socket.
+  type: Plugin
+  args:
+  - name: address
+    type: string
+    description: The address to connect to (can be a file in case of a unix domain
+      socket)
+    required: true
+  - name: type
+    type: string
+    description: Can be tcp or unix (default TCP)
+  - name: send
+    type: string
+    description: Data to send before reading
+  - name: sep
+    type: string
+    description: The separator that will be used to split (default - line feed)
+  - name: chunk_size
+    type: int
+    description: Read input with this chunk size (default 64kb)
 - name: netstat
   description: Collect network information.
   type: Plugin
@@ -2601,10 +2622,10 @@
     description: Stop end events reach this time (event sources).
   - name: notebook_id
     type: string
-    description: The notebook to read from (shoud also include cell id)
+    description: The notebook to read from (should also include cell id)
   - name: notebook_cell_id
     type: string
-    description: The notebook cell read from (shoud also include notebook id)
+    description: The notebook cell read from (should also include notebook id)
   - name: notebook_cell_table
     type: int64
     description: A notebook cell can have multiple tables.)
@@ -3318,7 +3339,7 @@
   - name: duration
     type: int64
     description: Duration of samples (default 30 sec)
-  category: plugins
+  category: plugin
 - name: pslist
   description: |
     Enumerate running processes.
@@ -3853,7 +3874,9 @@
   - name: sep
     type: string
     description: The serparator that will be used to split
-    required: true
+  - name: sep_string
+    type: string
+    description: The serparator as string that will be used to split
   category: basic
 - name: split_records
   description: Parses files by splitting lines into records.
@@ -4312,7 +4335,7 @@
     type: string
     description: Where to unzip to
     required: true
-  category: client
+  category: basic
 - name: upcase
   type: Function
   args:

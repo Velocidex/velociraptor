@@ -20,7 +20,6 @@
 package utils
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"sort"
@@ -33,19 +32,16 @@ import (
 
 // Copied and modified from os/dir_unix.go
 func readdir(f *os.File, n int) (fi []os.FileInfo, err error) {
-	fmt.Printf("Listing %s\n", f.Name())
 	dirname := f.Name()
 	if dirname == "" {
 		dirname = "."
 	}
 	names, err := readdirnames(f, n)
-	fmt.Printf("readdirnames error %s\n", err)
 
 	fi = make([]os.FileInfo, 0, len(names))
 	for _, filename := range names {
 		fip, lerr := os.Lstat(dirname + "/" + filename)
 		if lerr != nil {
-			fmt.Printf("Lstat error %s\n", lerr)
 			// Ignore Lstat errors but keep going.
 			continue
 		}
