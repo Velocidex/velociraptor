@@ -1,0 +1,7 @@
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2021-10-09 00:00:01
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2021-10-09 00:00:01 1.1.1.1 GET /Microsoft-Server-ActiveSync/default.eas &CorrelationID=<empty>;&cafeReqId=abc-123; 443 mailbox@example.com ::1 AMProbe/Local/ClientAccess - 200 0 0 42
+2021-10-09 00:00:01 1.1.1.1 GET /ecp/ &CorrelationID=<empty>;&cafeReqId=abc-123;&LogoffReason=NoCookiesGetOrE14AuthPost 443 - ::1 AMProbe/Local/ClientAccess - 302 0 0 33
+2021-10-09 02:24:04 1.1.1.1 GET /autodiscover/autodiscover.json @evil.corp/ews/exchange.asmx?&Email=autodiscover/autodiscover.json%3F@evil.corp&CorrelationID=<empty>;&cafeReqId=abc-123; 443 - 1.1.1.1 python-requests/2.26.0 - 200 0 0 332

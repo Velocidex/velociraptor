@@ -1,0 +1,7 @@
+Queries:
+  - LET MyPipe = pipe(query={
+        SELECT _value FROM range(start=0, end=10, step=1)
+    }, sep="\n")
+
+  - SELECT read_file(filename="MyPipe", accessor="pipe")
+    FROM scope()

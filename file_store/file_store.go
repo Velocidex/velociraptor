@@ -73,7 +73,7 @@ func getImpl(implementation string,
 		}
 		return memcache_imp, nil
 
-	case "FileBaseDataStore":
+	case "FileBaseDataStore", "ReadOnlyDataStore":
 		if directory_imp == nil {
 			directory_imp = directory.NewDirectoryFileStore(config_obj)
 		}
@@ -106,7 +106,7 @@ func GetFileStoreFileSystemAccessor(
 		return accessors.NewFileStoreFileSystemAccessor(
 			config_obj, memcache_imp), nil
 
-	case "FileBaseDataStore", "RemoteFileDataStore":
+	case "FileBaseDataStore", "RemoteFileDataStore", "ReadOnlyDataStore":
 		return accessors.NewFileStoreFileSystemAccessor(
 			config_obj, directory_imp), nil
 

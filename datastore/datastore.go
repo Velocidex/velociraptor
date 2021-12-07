@@ -125,6 +125,12 @@ func getImpl(implementation string,
 	case "FileBaseDataStore":
 		return file_based_imp, nil
 
+	case "ReadOnlyDataStore":
+		if read_only_imp == nil {
+			read_only_imp = NewReadOnlyDataStore()
+		}
+		return read_only_imp, nil
+
 	case "RemoteFileDataStore":
 		return remote_datastopre_imp, nil
 
