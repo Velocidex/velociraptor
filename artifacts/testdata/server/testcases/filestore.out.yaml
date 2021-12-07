@@ -23,12 +23,12 @@ SELECT FullPath, hash(path=FullPath, accessor="fs") FROM glob( globs='/clients/C
    "SHA256": "8b39ee335f2f7dd7a68f57900a687fa2bcaae0b1e6d31f3ee91100f195835d9b"
   }
  }
-]SELECT hash(path='ds:/clients/C.4f5e52adf0a337a9/ping.db', accessor="fs") FROM scope()[
+]SELECT hash(path='ds:/clients/C.4f5e52adf0a337a9/ping.json.db', accessor="fs") FROM scope()[
  {
-  "hash(path='ds:/clients/C.4f5e52adf0a337a9/ping.db', accessor=\"fs\")": {
-   "MD5": "5b7248aacaf2f56e534fc06edf64d659",
-   "SHA1": "9e067d3c7391c46d1ed3cba50a0c8d2f37dd6d08",
-   "SHA256": "c3ddb6eac139a4fd2357e10d4166908033c87c8a7df997cc3632dfd6b958e187"
+  "hash(path='ds:/clients/C.4f5e52adf0a337a9/ping.json.db', accessor=\"fs\")": {
+   "MD5": "e97dcefe1bb39617d1f8e9562d7944be",
+   "SHA1": "570b6c0eba2344b1b4091a6ad37ed2102edb2fe2",
+   "SHA256": "0b7a67d3cbc83cca1f9a7994bd9b22a1242c9930ddab5284e9a7d94f411235c9"
   }
  }
 ]SELECT hash(path=VFSPath, accessor="fs"), VFSPath, Type, format(format="%T should be FSPathSpec / DSPathSpec", args=VFSPath), file_store(path=VFSPath) = file_store(path=str(str=VFSPath)), basename(path=file_store(path=VFSPath)) FROM enumerate_flow(client_id="C.4f5e52adf0a337a9", flow_id="F.BN2HP3OSS3LK6") WHERE Type IN ("Log", "CollectionContext", "Task", "Result")[

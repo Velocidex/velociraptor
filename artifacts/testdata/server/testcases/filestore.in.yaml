@@ -11,7 +11,7 @@ Queries:
   # We can read datastore files if the datastore and filestore
   # overlap. We can not currently find datastore objects with glob,
   # but we can open them using the fs accessor.
-  - SELECT hash(path='ds:/clients/C.4f5e52adf0a337a9/ping.db', accessor="fs")
+  - SELECT hash(path='ds:/clients/C.4f5e52adf0a337a9/ping.json.db', accessor="fs")
     FROM scope()
 
   # enumerate_flow emits some fs paths and some ds paths. Here we test

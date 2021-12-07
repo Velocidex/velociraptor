@@ -378,36 +378,6 @@ func (self *MemcacheFileDataStore) GetBuffer(
 	return bulk_data, nil
 }
 
-func (self *MemcacheFileDataStore) SetBuffer(
-	config_obj *config_proto.Config,
-	urn api.DSPathSpec, data []byte, completion func()) error {
-
-	err := self.cache.SetData(config_obj, urn, data)
-	if err != nil {
-		return err
-	}
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-	select {
-	case <-self.ctx.Done():
-		return nil
-
-	case self.writer <- &Mutation{
-		op:         MUTATION_OP_SET_SUBJECT,
-		urn:        urn,
-		wg:         &wg,
-		data:       data,
-		completion: completion,
-	}:
-	}
-
-	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {
-		wg.Wait()
-	}
-	return nil
-}
-
 // Recursively makes sure the directories are added to the cache. We
 // treat the file backing as authoritative, so if the dir cache is not
 // present in cache we read intermediate paths from disk.
