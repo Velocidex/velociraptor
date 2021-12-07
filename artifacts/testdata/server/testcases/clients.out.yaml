@@ -2,7 +2,7 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
  {
   "Hostname": "DESKTOP-BP4S7TF",
   "client_id": "C.4f5e52adf0a337a9",
-  "LastSeen": 1573215522.537748
+  "LastSeen": 1638362977.493088
  }
 ]SELECT os_info.fqdn as Hostname, os_info.system as System, client_id FROM clients(search='host:testcomputer') order by client_id[]SELECT * from clients() order by client_id[
  {
@@ -25,11 +25,11 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
    "architecture": ""
   },
   "first_seen_at": 0,
-  "last_seen_at": 1573215522537748,
+  "last_seen_at": 1638362977493088,
   "last_booted_at": 0,
   "last_clock": 0,
   "last_crash_at": 0,
-  "last_ip": "192.168.0.5:40933",
+  "last_ip": "192.168.1.112:60239",
   "last_interrogate_flow_id": "F.BN21C82J8DM8K",
   "last_ip_class": "UNKNOWN",
   "labels": []

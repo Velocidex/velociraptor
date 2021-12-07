@@ -169,4 +169,37 @@ SELECT * FROM parse_csv( filename=srcDir + "/artifacts/testdata/files/csv/autoru
   "Foo": 3,
   "Bar": 4
  }
+]SELECT * FROM parse_csv(filename=Path, comment="#", columns=["Foo", "Bar"]) LIMIT 1[
+ {
+  "Foo": "2021-11-03T08:00:32.100Z",
+  "Bar": "1.1.1.1",
+  "Col2": "SERVER01",
+  "Col3": "",
+  "Col4": "",
+  "Col5": "MDB:abc-123, Mailbox:123-abc, Event:1, MessageClass:IPM.Schedule.Meeting.Resp.Pos, CreationTime:2021-11-03T08:00:32.005Z, ClientType:AirSync, SubmissionAssistant:MailboxTransportSubmissionEmailAssistant",
+  "Col6": "",
+  "Col7": "STOREDRIVER",
+  "Col8": "NOTIFYMAPI",
+  "Col9": "",
+  "Col10": "",
+  "Col11": "",
+  "Col12": "",
+  "Col13": "",
+  "Col14": "",
+  "Col15": "",
+  "Col16": "",
+  "Col17": "",
+  "Col18": "",
+  "Col19": "rec@example.com",
+  "Col20": "",
+  "Col21": "2021-11-03T08:00:32.005Z;LSRV=BRAUEX1.forest.example.com:TOTAL-SUB=0.095|SA=0.095|MTSS-PEN=0.000",
+  "Col22": "",
+  "Col23": "",
+  "Col24": "",
+  "Col25": "",
+  "Col26": "S:ItemEntryId=00-AB",
+  "Col27": "",
+  "Col28": "abc-123",
+  "Col29": "15.01.2176.009"
+ }
 ]

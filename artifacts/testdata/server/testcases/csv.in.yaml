@@ -43,3 +43,9 @@ Queries:
   # Parse bad CSV - should skip over illegal line and keep going
   - LET PathBad = srcDir + "/artifacts/testdata/files/csv/bad.csv"
   - SELECT * FROM parse_csv(filename=PathBad)
+
+  # Test automatic column name generation (file has more columns than
+  # specified).
+  - SELECT * FROM parse_csv(filename=Path,
+      comment="#", columns=["Foo", "Bar"])
+    LIMIT 1
