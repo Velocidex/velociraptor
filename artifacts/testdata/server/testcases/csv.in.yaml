@@ -1,2 +1,51 @@
 Queries:
-  - SELECT * FROM parse_csv(filename=srcDir + "/artifacts/testdata/files/autoruns.csv")
+  - SELECT * FROM parse_csv(
+        filename=srcDir + "/artifacts/testdata/files/csv/autoruns.csv")
+
+  # Some CSV files are difficult to process. Exchange logs have a
+  # comment with the fields headers in it.
+  - LET Path = srcDir + "/artifacts/testdata/files/csv/exchange.log"
+  - LET Columns = split(string=
+      parse_string_with_regex(string=read_file(filename=Path, length=1000),
+           regex='#Fields. (.+)\n').g1, sep=",")
+  - SELECT * FROM parse_csv(auto_headers=TRUE,
+        comment="#", columns=Columns, filename=Path)
+
+  # Parse a CSV with pre-processing using pipes - IIS splits date and
+  # time into separate columns - this (overly complicated) query uses
+  # regex to add a T between then so they get parsed as ISO times into
+  # a single date_time column.
+  - LET IISPath = srcDir + "/artifacts/testdata/files/csv/iis.log"
+
+  # Replace separate data time columns with one date_time
+  - LET Headers = regex_replace(source=read_file(filename=IISPath, length=1000),
+       re="date time", replace="date_time")
+
+  # Extract the column descriptions from the CSV header.
+  - LET Columns = split(string=parse_string_with_regex(string=Headers,
+       regex='#Fields. (.+)\n').g1, sep=" ")
+
+  # Create a pipe for pre-processing the file's lines - replace date
+  # space time with dateTtime. Drop comments using WHERE
+  - LET MyPipe = pipe(query={
+       SELECT regex_replace(
+         re='''^(\d{4}-\d{2}-\d{2}) (\d{2}:)''',
+         replace='''${1}T${2}''', source=Line) AS Line
+       FROM parse_lines(filename=IISPath)
+       WHERE NOT Line =~ "^#"
+    }, sep="\n")
+
+  # Parse the data from the pipe
+  - SELECT * FROM parse_csv(
+      columns=Columns, separator=" ",
+      filename="MyPipe", accessor="pipe")
+
+  # Parse bad CSV - should skip over illegal line and keep going
+  - LET PathBad = srcDir + "/artifacts/testdata/files/csv/bad.csv"
+  - SELECT * FROM parse_csv(filename=PathBad)
+
+  # Test automatic column name generation (file has more columns than
+  # specified).
+  - SELECT * FROM parse_csv(filename=Path,
+      comment="#", columns=["Foo", "Bar"])
+    LIMIT 1

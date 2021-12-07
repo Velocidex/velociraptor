@@ -2547,6 +2547,9 @@
   - name: chunk_size
     type: int
     description: Read input with this chunk size (default 64kb)
+  - name: retry
+    type: int
+    description: Seconds to wait before retry - default 0 - do not retry
 - name: netstat
   description: Collect network information.
   type: Plugin
@@ -2738,7 +2741,14 @@
     description: If unset the first row is headers
   - name: separator
     type: string
-    description: Comma separator
+    description: Comma separator (default ',')
+  - name: comment
+    type: string
+    description: The single character that should be considered a comment
+  - name: columns
+    type: string
+    description: The columns to use
+    repeated: true
   category: parsers
 - name: parse_ese
   description: Opens an ESE file and dump a table.
@@ -3216,6 +3226,47 @@
     description: Path to split into components.
     required: true
   category: basic
+- name: pipe
+  description: |
+    A pipe allows plugins that use files to read data from a vql
+    query. This is needed to be able to use the "pipe" accessor.
+
+    ### Example
+
+    In the following example we create a pipe from a query which
+    reads a log file line by line. Each line is being tranformed by
+    a regex and potentially filtered (perhaps to fix up buggy CSV
+    implementations that generated a bad CSV).
+
+    The pipe is then fed into the parse_csv() plugin to parse each
+    line as a csv file.
+
+    ```vql
+    LET MyPipe = pipe(query={
+        SELECT regex_replace(
+          re='''^(\d{4}-\d{2}-\d{2}) (\d{2}:)''',
+          replace='''${1}T${2}''', source=Line) AS Line
+        FROM parse_lines(filename=IISPath)
+        WHERE NOT Line =~ "^#"
+      }, sep="\n")
+
+    SELECT * FROM parse_csv(
+       columns=Columns, separator=" ",
+       filename="MyPipe", accessor="pipe")
+    ```
+  type: Function
+  args:
+  - name: name
+    type: string
+    description: Name to call the pipe
+  - name: query
+    type: StoredQuery
+    description: Run this query to generator data - the first column will be appended
+      to pipe data.
+  - name: sep
+    type: string
+    description: 'The separator that will be used to split each read (default: no
+      separator will be used)'
 - name: plist
   description: Parse plist file
   type: Function
@@ -4735,7 +4786,14 @@
     description: If unset the first row is headers
   - name: separator
     type: string
-    description: Comma separator
+    description: Comma separator (default ',')
+  - name: comment
+    type: string
+    description: The single character that should be considered a comment
+  - name: columns
+    type: string
+    description: The columns to use
+    repeated: true
   category: event
 - name: watch_etw
   description: Watch for events from an ETW provider.

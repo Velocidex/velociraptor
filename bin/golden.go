@@ -66,6 +66,11 @@ var (
 
 	testonly      = golden_command.Flag("testonly", "Do not update the fixture.").Bool()
 	disable_alarm = golden_command.Flag("disable_alarm", "Do not terminate when deadlocked.").Bool()
+
+	golden_update_datastore = golden_command.Flag("update_datastore",
+		"Normally golden tests run with the readonly datastore so as not to "+
+			"change the fixture. This flag allows updates to the fixtures.").
+		Bool()
 )
 
 type testFixture struct {
@@ -239,6 +244,12 @@ func doGolden() {
 
 	config_obj, err := makeDefaultConfigLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Can not load configuration.")
+
+	// Do not update the datastore - this allows golden tests to avoid
+	// modifying the fixtures.
+	if !*golden_update_datastore {
+		config_obj.Datastore.Implementation = "ReadOnlyDataStore"
+	}
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	logger.Info("Starting golden file test.")

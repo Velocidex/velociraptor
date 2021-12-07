@@ -261,7 +261,8 @@ func (self *LazyNTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInf
 	return result, nil
 }
 
-func (self *LazyNTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, err error) {
+func (self *LazyNTFSFileSystemAccessor) Open(path string) (
+	res glob.ReadSeekCloser, err error) {
 	defer func() {
 		r := recover()
 		if r != nil {

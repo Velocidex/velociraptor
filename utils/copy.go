@@ -82,6 +82,16 @@ func CopyN(ctx context.Context, dst io.Writer, src io.Reader, count int64) (
 	return offset, nil
 }
 
+func MemCpy(out []byte, in []byte) int {
+	length := len(in)
+	if length > len(out) {
+		length = len(out)
+
+	}
+	copy(out, in[:length])
+	return length
+}
+
 func CopySlice(in []string) []string {
 	result := make([]string, len(in))
 	copy(result, in)
