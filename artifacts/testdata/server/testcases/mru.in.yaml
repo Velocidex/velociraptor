@@ -124,8 +124,7 @@ Parameters:
 
 Queries:
   # Add recentfiles first
-  - SELECT LastWriteTime,Type,MruEntries,Key,
-      split(string=HiveName,sep="velociraptor/")[1] as HiveName
+  - SELECT LastWriteTime, Type, MruEntries, Key, basename(path=HiveName) as HiveName
     FROM Artifact.Windows.Registry.RecentDocs(HiveGlob=srcDir + "/artifacts/testdata/files/ntuser.dat")
 
   # Mock up test for Windows.Timeline.Registry.RunMRU
