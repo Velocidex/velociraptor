@@ -1,0 +1,163 @@
+name: Windows.Registry.RecentDocs
+author: Matt Green - @mgreen27
+description: |
+    This artifact extracts RecentDocs MRU from the target.
+
+    By default the artifact will target all users on the machine when run in
+    live mode but can be targeted dorectly againt a hive or folder using the 
+    HiveGlob parameter.
+
+    Available filters include:
+        - Time bounds to select LastWrite timestamp within time ranges.
+        - UserRegex to target specific users. Note: this filter does not work
+        when using HiveGlob.
+        - SidRegex to target a specific SID.
+
+    Note: both UserRegex and SidRegex does not work when using HiveGlob
+         and all MRU will be returned.
+
+parameters:
+  - name: KeyGlob
+    type: hidden
+    default: Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs\**
+  - name: HiveGlob
+    description: "optional hive glob to target for offline processing."
+  - name: DateAfter
+    description: "search for events after this date. YYYY-MM-DDTmm:hh:ssZ"
+    type: timestamp
+  - name: DateBefore
+    description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
+    type: timestamp
+  - name: UserRegex
+    default: .
+    description: "regex filter for username over standard query."
+  - name: SidRegex
+    default: .
+    description: "regex filter for user SID over standard query."
+  - name: Profile
+    type: hidden
+    default: |
+        [
+            ["Target", 0, [
+              ["Filename", 0, "String", {
+                  encoding: "utf16",
+              }],
+            ]]
+        ]
+
+sources:
+ - query: |
+      -- time testing
+      LET time_test(stamp) =
+            if(condition= DateBefore AND DateAfter,
+                then= stamp < DateBefore AND stamp > DateAfter,
+                else=
+            if(condition=DateBefore,
+                then= stamp < DateBefore,
+                else=
+            if(condition= DateAfter,
+                then= stamp > DateAfter,
+                else= True
+            )))
+
+
+      -- dynamic function to extract RecentDocs order from MRUListEx data value
+      LET find_order(value) = SELECT
+            parse_binary(accessor='data',filename=substr(str=value,start=_value,end=_value + 4),struct='uint32') as Int,
+           format(format='%x',args=substr(str=value,start=_value,end=_value + 4)) as Hex
+        FROM range(end=len(list=value),start=0,step=4)
+        WHERE NOT Hex =~ 'efbfbd' AND NOT Int = 4294967295
+
+
+      -- NTUser method is most accurate
+      LET NTUserValues = SELECT
+            Mtime,
+            basename(path=dirname(path=url(parse=FullPath).Fragment)) as Type,
+            basename(path=url(parse=FullPath).Fragment) as Name,
+            if(condition= basename(path=url(parse=FullPath).Fragment)='MRUListEx',
+                then= find_order(value=Data.value).Int,
+                else= parse_binary(accessor="data", filename=Data.value, profile=Profile, struct="Target").Filename ) as Value,
+            Data,
+            url(parse=FullPath).Path as HiveName,
+            FullPath,
+            Username,
+            UUID
+        FROM Artifact.Windows.Registry.NTUser(KeyGlob=KeyGlob)
+        WHERE Username =~ UserRegex
+            AND UUID =~ SidRegex
+            AND Data.type = 'REG_BINARY'
+
+
+      -- Glob method allows offline processing but can not filter by user
+      LET GlobValues = SELECT
+            Mtime,
+            basename(path=dirname(path=url(parse=FullPath).Fragment)) as Type,
+            basename(path=url(parse=FullPath).Fragment) as Name,
+            if(condition= basename(path=url(parse=FullPath).Fragment)='MRUListEx',
+                then= find_order(value=Data.value).Int,
+                else= parse_binary(accessor="data", filename=Data.value, profile=Profile, struct="Target").Filename ) as Value,
+            Data,
+            url(parse=FullPath).Path as HiveName,
+            FullPath
+        FROM glob(globs=url(path=HiveGlob, fragment=KeyGlob).String, accessor="raw_reg")
+        WHERE Data.type = 'REG_BINARY'
+
+
+      -- precalculate all hive values for performance
+      LET AllValues <= SELECT * FROM if(condition= HiveGlob,
+                                        then=GlobValues,
+                                        else= NTUserValues )
+            WHERE time_test(stamp=Mtime)
+
+
+      -- memorise for lookup / performance
+      LET Items <= memoize(query={
+            SELECT Type, Name, Value,
+                Type + ':' + Name + ':' + HiveName  AS Key
+            FROM AllValues
+        }, key="Key")
+
+
+      -- flattern output then add lookup of processed data
+      LET flat_data(type,hivename) = SELECT *,
+            str(str=Value) + ' := ' + get(item=Items, field=str(str=Type) + ':' + str(str=Value) + ':' + str(str=hivename) ).Value  AS Value
+        FROM flatten(query={
+            SELECT Mtime, Type, Name, Value,HiveName
+            FROM AllValues
+            WHERE Name = 'MRUListEx'
+            AND Type = type AND HiveName = hivename
+          })
+         GROUP BY Value
+
+
+      -- prep results
+      LET results = SELECT Mtime as LastWriteTime, Type,
+            flat_data(type=Type,hivename=HiveName).Value as MruEntries,
+            dirname(path=url(parse=FullPath).Fragment) as Key,
+            HiveName,
+            if(condition=HiveGlob,
+                then='', else=Username) as Username,
+            if(condition=HiveGlob,
+                then='', else=UUID) as UUID
+          FROM AllValues
+          WHERE Name = 'MRUListEx'
+
+
+      -- print rows, remove Username/SID from offline
+      SELECT * FROM if(condition=HiveGlob,
+        then = {
+            SELECT LastWriteTime, Type,
+                if(condition= NOT MruEntries[0],
+                    then= Null,
+                    else= MruEntries) as MruEntries,
+                Key, HiveName
+            FROM results
+        },
+        else={
+            SELECT LastWriteTime, Type,
+                if(condition= NOT MruEntries[0],
+                    then= Null,
+                    else= MruEntries) as MruEntries,
+                Key, HiveName, Username, UUID
+            FROM results
+        })
