@@ -16,6 +16,6 @@ sources:
               SELECT Filename, Data FROM read_file(
                   filenames=AppCompatKeys.FullPath, accessor='reg')
           }, query={
-              SELECT Filename AS Key, name as Name, epoch, time
+              SELECT Filename AS Key, name as Name, epoch, time AS ModificationTime
               FROM appcompatcache(value=Data)
         }) WHERE epoch < 2000000000
