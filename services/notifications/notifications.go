@@ -46,6 +46,14 @@ var (
 		Name: "notifications_receive_count",
 		Help: "Number of notification messages received.",
 	})
+
+	isClientConnectedHistorgram = promauto.NewHistogram(
+		prometheus.HistogramOpts{
+			Name:    "is_client_connected_latency",
+			Help:    "How long it takes to establish if a client is connected.",
+			Buckets: prometheus.LinearBuckets(0.1, 1, 10),
+		},
+	)
 )
 
 type Notifier struct {
@@ -224,6 +232,11 @@ func (self *Notifier) IsClientConnected(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string, timeout int) bool {
+
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+		isClientConnectedHistorgram.Observe(v)
+	}))
+	defer timer.ObserveDuration()
 
 	// Shotcut if the client is directly connected.
 	if self.IsClientDirectlyConnected(client_id) {
