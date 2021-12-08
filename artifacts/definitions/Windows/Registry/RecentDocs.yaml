@@ -66,10 +66,9 @@ sources:
 
       -- dynamic function to extract RecentDocs order from MRUListEx data value
       LET find_order(value) = SELECT
-            parse_binary(accessor='data',filename=substr(str=value,start=_value,end=_value + 4),struct='uint32') as Int,
-           format(format='%x',args=substr(str=value,start=_value,end=_value + 4)) as Hex
+            parse_binary(accessor='data',filename=substr(str=value,start=_value,end=_value + 4),struct='uint32') as Int
         FROM range(end=len(list=value),start=0,step=4)
-        WHERE NOT Hex =~ 'efbfbd' AND NOT Int = 4294967295
+        WHERE NOT Int = 4294967295
 
 
       -- NTUser method is most accurate
