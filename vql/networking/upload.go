@@ -134,6 +134,7 @@ func (self UploadFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 			"client this will upload the file into the flow and store " +
 			"it in the server's file store.",
 		ArgType: type_map.AddType(scope, &UploadFunctionArgs{}),
+		Version: 2,
 	}
 }
 
