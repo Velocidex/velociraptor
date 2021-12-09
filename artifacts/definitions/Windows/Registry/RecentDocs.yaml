@@ -4,14 +4,15 @@ description: |
     This artifact extracts RecentDocs MRU from the target.
 
     By default the artifact will target all users on the machine when run in
-    live mode but can be targeted dorectly using the HiveGlob parameter.
+    live mode but can be targeted directly using the HiveGlob parameter.
 
     Output includes LastWriteTime of key and a list of MRU items in the 
     order specified in the MRUListEx key value.  
     MruEntries has the format: [KeyName] := [Parsed Key value]   
 
     Available filters include:  
-        - Time bounds to select LastWrite timestamp within time ranges.  
+        - Time bounds to select LastWrite timestamp within time ranges.
+        - EntryRegex to target specific entry values  
         - UserRegex to target specific users. Note: this filter does not work
         when using HiveGlob.  
         - SidRegex to target a specific SID.  
@@ -31,6 +32,9 @@ parameters:
   - name: DateBefore
     description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
     type: timestamp
+  - name: EntryRegex
+    default: .
+    description: "regex filter for document/entry name."
   - name: UserRegex
     default: .
     description: "regex filter for username over standard query."
@@ -163,3 +167,4 @@ sources:
                 Key, HiveName, Username, UUID
             FROM results
         })
+      WHERE format(format='%v', args=MruEntries) =~ EntryRegex
