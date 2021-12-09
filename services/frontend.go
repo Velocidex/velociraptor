@@ -36,6 +36,8 @@ func GetFrontendManager() FrontendManager {
 }
 
 type FrontendManager interface {
+	GetMinionCount() int
+
 	// Establish a gRPC connection to the master node. If we are
 	// running on the master node already then returns a
 	// fs.ErrNotExist error. If we fail to connect returns another

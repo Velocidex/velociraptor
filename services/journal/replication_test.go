@@ -37,6 +37,10 @@ type MockFrontendService struct {
 	mock *mock_proto.MockAPIClient
 }
 
+func (self MockFrontendService) GetMinionCount() int {
+	return 0
+}
+
 // The minion replicates to the master node.
 func (self MockFrontendService) GetMasterAPIClient(ctx context.Context) (
 	api_proto.APIClient, func() error, error) {
@@ -152,11 +156,13 @@ type: CLIENT_EVENT
 		mu.Lock()
 		defer mu.Unlock()
 
+		// json.Dump(watched)
 		return vtesting.CompareStrings(watched, []string{
 			// Watch for ping requests from the
 			// master. This is used to let the master know
 			// if a client is connected to us.
 			"Server.Internal.Ping",
+			"Server.Internal.Pong",
 			"Server.Internal.MasterRegistrations",
 
 			// The notifications service will watch for
