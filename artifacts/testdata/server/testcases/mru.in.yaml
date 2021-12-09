@@ -126,6 +126,10 @@ Queries:
   # Add recentfiles first
   - SELECT LastWriteTime, Type, MruEntries, Key, basename(path=HiveName) as HiveName
     FROM Artifact.Windows.Registry.RecentDocs(HiveGlob=srcDir + "/artifacts/testdata/files/ntuser.dat")
+    ORDER BY Type
+  - SELECT LastWriteTime, Type, MruEntries, Key, basename(path=HiveName) as HiveName
+    FROM Artifact.Windows.Registry.RecentDocs(HiveGlob=srcDir + "/artifacts/testdata/files/ntuser.dat",EntryRegex="Very secret document.txt")
+    ORDER BY Type
 
   # Mock up test for Windows.Timeline.Registry.RunMRU
   - LET _ <= SELECT mock(plugin='info', results=[dict(Fqdn='DESKTOP-687T2NR', OS='windows')]),
