@@ -121,10 +121,6 @@ func (self *ApiServer) GetClient(
 			services.GetNotifier().IsClientConnected(ctx,
 				self.config, in.ClientId, 2) {
 			api_client.LastSeenAt = uint64(time.Now().UnixNano() / 1000)
-		} else {
-			// Warm up the cache anyway.
-			go services.GetNotifier().IsClientConnected(
-				ctx, self.config, in.ClientId, 2)
 		}
 	}
 

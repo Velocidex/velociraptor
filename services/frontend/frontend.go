@@ -180,6 +180,21 @@ func (self *MasterFrontendManager) processMetrics(ctx context.Context,
 	return nil
 }
 
+func (self *MasterFrontendManager) GetMinionCount() int {
+	res := 0
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for node_name, metric := range self.stats {
+		if node_name != "master" {
+			if time.Now().Sub(metric.Timestamp) < 60*time.Second {
+				res++
+			}
+		}
+	}
+	return res
+}
+
 // Every 10 seconds read the cummulative stats and update the
 // Server.Monitor.Health artifact.
 func (self *MasterFrontendManager) UpdateStats(ctx context.Context) {
@@ -307,6 +322,10 @@ func (self MasterFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
 type MinionFrontendManager struct {
 	config_obj *config_proto.Config
 	name       string
+}
+
+func (self MinionFrontendManager) GetMinionCount() int {
+	return 0
 }
 
 func (self MinionFrontendManager) IsMaster() bool {

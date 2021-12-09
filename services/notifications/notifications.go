@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -29,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -56,11 +56,20 @@ var (
 	)
 )
 
+type tracker struct {
+	count     int
+	connected bool
+	closed    bool
+	done      chan bool
+}
+
 type Notifier struct {
-	pool_mu           sync.Mutex
+	mu                sync.Mutex
 	notification_pool *notifications.NotificationPool
 
-	idx uint64
+	uuid int64
+
+	client_connection_tracker map[string]tracker
 }
 
 // The notifier service watches for events from
@@ -74,7 +83,9 @@ func StartNotificationService(
 	config_obj *config_proto.Config) error {
 
 	self := &Notifier{
-		notification_pool: notifications.NewNotificationPool(),
+		notification_pool:         notifications.NewNotificationPool(),
+		uuid:                      utils.GetGUID(),
+		client_connection_tracker: make(map[string]tracker),
 	}
 	services.RegisterNotifier(self)
 
@@ -83,6 +94,12 @@ func StartNotificationService(
 
 	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.Ping", self.ProcessPing)
+	if err != nil {
+		return err
+	}
+
+	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
+		"Server.Internal.Pong", self.ProcessPong)
 	if err != nil {
 		return err
 	}
@@ -101,8 +118,8 @@ func StartNotificationService(
 
 		defer services.RegisterNotifier(nil)
 		defer func() {
-			self.pool_mu.Lock()
-			defer self.pool_mu.Unlock()
+			self.mu.Lock()
+			defer self.mu.Unlock()
 
 			self.notification_pool.Shutdown()
 			self.notification_pool = nil
@@ -132,6 +149,40 @@ func StartNotificationService(
 	return nil
 }
 
+func (self *Notifier) ProcessPong(ctx context.Context,
+	config_obj *config_proto.Config,
+	row *ordereddict.Dict) error {
+
+	// Ignore messages coming from us.
+	from, pres := row.GetInt64("From")
+	if !pres || from == 0 || from == self.uuid {
+		return nil
+	}
+
+	notify_target, pres := row.GetString("NotifyTarget")
+	if !pres {
+		return nil
+	}
+
+	connected, pres := row.GetBool("Connected")
+	if !pres {
+		return nil
+	}
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	tracker, pres := self.client_connection_tracker[notify_target]
+	if pres && !tracker.closed {
+		tracker.connected = connected
+		tracker.count--
+		if tracker.count <= 0 {
+			close(tracker.done)
+			tracker.closed = true
+		}
+	}
+	return nil
+}
+
 // When receiving a Ping request, we simply notify the target if the
 // ClientId is currently connected to this server.
 func (self *Notifier) ProcessPing(ctx context.Context,
@@ -142,42 +193,32 @@ func (self *Notifier) ProcessPing(ctx context.Context,
 		return nil
 	}
 
-	if !self.notification_pool.IsClientConnected(client_id) {
-		return nil
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
 	}
 
-	/*
-		// Client is directly connected - inform the client info
-		// manager. Normally the Ping is sent by the frontend to find out
-		// which clients are connected to a minion. In this case it is
-		// worth the extra ping updates to deliver fresh data to the GUI -
-		// there are not too many clients but we need to know accurate
-		// data.
-		client_info_manager, err := services.GetClientInfoManager()
-		if err != nil {
-			return err
-		}
-
-		client_info_manager.UpdateStats(client_id, func(stats *services.Stats) {
-			stats.Ping =
-		})
-	*/
 	notify_target, pres := row.GetString("NotifyTarget")
 	if !pres {
 		return nil
 	}
 
-	// Notify the target of the Ping.
-	return self.NotifyListener(config_obj, notify_target, "ClientPing")
+	return journal.PushRowsToArtifact(config_obj,
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("ClientId", client_id).
+			Set("NotifyTarget", notify_target).
+			Set("From", self.uuid).
+			Set("Connected", self.notification_pool.IsClientConnected(client_id))},
+		"Server.Internal.Pong", "server", "")
 }
 
 func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()) {
-	self.pool_mu.Lock()
+	self.mu.Lock()
 	if self.notification_pool == nil {
 		self.notification_pool = notifications.NewNotificationPool()
 	}
 	notification_pool := self.notification_pool
-	self.pool_mu.Unlock()
+	self.mu.Unlock()
 
 	return notification_pool.Listen(client_id)
 }
@@ -243,13 +284,8 @@ func (self *Notifier) IsClientConnected(
 		return true
 	}
 
-	// Get a unique ID
-	idx := atomic.AddUint64(&self.idx, 1)
-
-	// Watch for Ping replies on this notification.
-	id := fmt.Sprintf("IsClientConnected%v", idx)
-	done, cancel := self.ListenForNotification(id)
-	defer cancel()
+	// Get a unique id for this request.
+	id := fmt.Sprintf("IsClientConnected%v", utils.GetId())
 
 	// Send ping to all nodes, they will reply with a
 	// notification.
@@ -258,6 +294,17 @@ func (self *Notifier) IsClientConnected(
 		return false
 	}
 
+	// Channel to be signalled when all responses come back.
+	done := make(chan bool)
+	self.mu.Lock()
+	// Install a tracker to keep track of this request.
+	self.client_connection_tracker[id] = tracker{
+		count: services.GetFrontendManager().GetMinionCount(),
+		done:  done,
+	}
+	self.mu.Unlock()
+
+	// Push request immediately for low latency.
 	err = journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", client_id).
@@ -267,19 +314,23 @@ func (self *Notifier) IsClientConnected(
 		return false
 	}
 
-	if timeout == 0 {
-		return false
-	}
-
 	// Now wait here for the reply.
 	select {
 	case <-done:
-		// Client is found!
-		return true
+		// Signal that all minions indicated if the client was found
+		// or not.
 
 	case <-time.After(time.Duration(timeout) * time.Second):
-		timeoutClientPing.Inc()
-		// Nope - not found within the timeout.
-		return false
+		if timeout > 0 {
+			timeoutClientPing.Inc()
+		}
+		// Nope - not found within the timeout just give up.
 	}
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	tracker := self.client_connection_tracker[id]
+	delete(self.client_connection_tracker, id)
+
+	return tracker.connected
 }
