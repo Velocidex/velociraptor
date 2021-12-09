@@ -7,7 +7,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -240,11 +239,14 @@ func (self AddServerMonitoringFunction) Call(
 		Parameters: &flows_proto.ArtifactParameters{},
 	}
 
-	params := arg.Parameters.Reduce(ctx)
-	params_dict, ok := params.(*ordereddict.Dict)
-	if !ok {
-		scope.Log("add_client_monitoring: parameters should be a dict")
-		return vfilter.Null{}
+	params_dict := ordereddict.NewDict()
+	if arg.Parameters != nil {
+		params := arg.Parameters.Reduce(ctx)
+		params_dict, ok = params.(*ordereddict.Dict)
+		if !ok {
+			scope.Log("add_client_monitoring: parameters should be a dict")
+			return vfilter.Null{}
+		}
 	}
 
 	for _, k := range params_dict.Keys() {
@@ -269,8 +271,6 @@ func (self AddServerMonitoringFunction) Call(
 		scope.Log("add_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
-
-	json.Dump(event_config)
 
 	return event_config
 }
