@@ -126,6 +126,7 @@ Queries:
   # Add recentfiles first
   - SELECT LastWriteTime, Type, MruEntries, Key, basename(path=HiveName) as HiveName
     FROM Artifact.Windows.Registry.RecentDocs(HiveGlob=srcDir + "/artifacts/testdata/files/ntuser.dat")
+    ORDER BY Type
 
   # Mock up test for Windows.Timeline.Registry.RunMRU
   - LET _ <= SELECT mock(plugin='info', results=[dict(Fqdn='DESKTOP-687T2NR', OS='windows')]),
@@ -133,5 +134,6 @@ Queries:
         mock(plugin="glob", results=parse_json_array(data=ArtifactRunMRUGlobMock))
       FROM scope()
   - SELECT * from Artifact.Windows.Timeline.Registry.RunMRU(groupResults=FALSE)
+    ORDER BY Type
   - SELECT * from Artifact.Windows.Timeline.Registry.RunMRU(groupResults=TRUE)
-    
+    ORDER BY Type

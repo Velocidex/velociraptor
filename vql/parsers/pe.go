@@ -81,6 +81,7 @@ func (self _PEFunction) Call(
 		Set("GUIDAge", pe_file.GUIDAge).
 		Set("PDB", pe_file.PDB).
 		Set("Sections", pe_file.Sections).
+		Set("Resources", pe_file.Resources()).
 		Set("VersionInformation", func() vfilter.Any {
 			return pe_file.VersionInformation()
 		}).

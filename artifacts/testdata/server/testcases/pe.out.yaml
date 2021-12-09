@@ -37,6 +37,15 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
      "Size": 512
     }
    ],
+   "Resources": [
+    {
+     "Type": "RT_VERSION",
+     "TypeId": 16,
+     "FileOffset": 7768,
+     "DataSize": 936,
+     "CodePage": 0
+    }
+   ],
    "VersionInformation": {
     "CompanyName": "Microsoft Corporation",
     "FileDescription": "3DBuilder.ResourceResolver.exe",
