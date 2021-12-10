@@ -115,6 +115,14 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 		return nil, err
 	}
 
+	// Parse extra artifacts from --definitions flag before we start
+	// any services just in case these services need to access these
+	// custom artifacts.
+	_, err = getRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	// Load any artifacts defined in the config file before the
 	// frontend services are started so they may use them.
 	err = load_config_artifacts(config_obj)
@@ -124,12 +132,6 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 
 	// These services must start only on the frontends.
 	err = startup.StartupFrontendServices(sm)
-	if err != nil {
-		return nil, err
-	}
-
-	// Parse the artifacts database to detect errors early.
-	_, err = getRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}

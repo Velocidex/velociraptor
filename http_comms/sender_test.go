@@ -21,7 +21,6 @@ import (
 	"bytes"
 	"context"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"sync"
 	"testing"
@@ -49,7 +48,8 @@ type MockHTTPConnector struct {
 }
 
 func (self *MockHTTPConnector) GetCurrentUrl(handler string) string { return "http://URL/" + handler }
-func (self *MockHTTPConnector) Post(handler string, data []byte, urgent bool) (*http.Response, error) {
+func (self *MockHTTPConnector) Post(ctx context.Context,
+	name, handler string, data []byte, urgent bool) (*bytes.Buffer, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -70,10 +70,7 @@ func (self *MockHTTPConnector) Post(handler string, data []byte, urgent bool) (*
 			self.received = append(self.received, item.Name)
 		})
 
-	return &http.Response{
-		Body:       ioutil.NopCloser(bytes.NewBufferString("")),
-		StatusCode: 200,
-	}, nil
+	return &bytes.Buffer{}, nil
 }
 func (self *MockHTTPConnector) ReKeyNextServer()   {}
 func (self *MockHTTPConnector) ServerName() string { return "VelociraptorServer" }

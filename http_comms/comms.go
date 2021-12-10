@@ -49,7 +49,12 @@ import (
 )
 
 var (
+	// Server sent a redirect message.
 	RedirectError = errors.New("RedirectError")
+
+	// Can be sent from connector's Post() when the server requires
+	// enrolment (sending HTTP 406 status).
+	EnrolError = errors.New("EnrolError")
 
 	Rand func(int) int = rand.Intn
 
@@ -103,7 +108,10 @@ func (self *Enroller) MaybeEnrol() {
 // it can be mocked.
 type IConnector interface {
 	GetCurrentUrl(handler string) string
-	Post(handler string, data []byte, priority bool) (*http.Response, error)
+	Post(ctx context.Context,
+		name string, // Name of the component calling Post (used for logging)
+		handler string, // The URL handler we post to
+		data []byte, priority bool) (*bytes.Buffer, error)
 	ReKeyNextServer()
 	ServerName() string
 }
@@ -235,11 +243,13 @@ func (self *HTTPConnector) GetCurrentUrl(handler string) string {
 	return self.urls[self.current_url_idx] + handler
 }
 
-func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
-	*http.Response, error) {
+func (self *HTTPConnector) Post(
+	ctx context.Context, name, handler string,
+	data []byte, urgent bool) (*bytes.Buffer, error) {
 
 	reader := bytes.NewReader(data)
-	req, err := http.NewRequest("POST", self.GetCurrentUrl(handler), reader)
+	req, err := http.NewRequestWithContext(ctx,
+		"POST", self.GetCurrentUrl(handler), reader)
 	if err != nil {
 		self.logger.Info("Post to %v returned %v - advancing to next server\n",
 			self.GetCurrentUrl(handler), err)
@@ -274,10 +284,16 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 		self.advanceToNextServer()
 		return nil, errors.WithStack(err)
 	}
+	// Must make sure to close the body or we leak sockets.
+	defer resp.Body.Close()
+
+	self.logger.Info("%s: sent %d bytes, response with status: %v",
+		name, len(data), resp.Status)
 
 	// Handle redirect. Frontends may redirect us to other
 	// frontends.
-	if resp.StatusCode == 301 {
+	switch resp.StatusCode {
+	case 301:
 		dest, pres := resp.Header["Location"]
 		if !pres || len(dest) == 0 {
 			self.logger.Info("Redirect without location header - advancing\n")
@@ -334,10 +350,29 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 
 		return nil, RedirectError
 
-	} else if resp.StatusCode == 406 {
-		return resp, nil
+	case 406:
+		return nil, EnrolError
 
-	} else if resp.StatusCode != 200 {
+	case 200:
+		encrypted := &bytes.Buffer{}
+
+		// We need to be able to cancel the read here so we do not use
+		// ioutil.ReadAll()
+		n, err := utils.Copy(ctx, encrypted, resp.Body)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		self.logger.Info("%s: received %d bytes", name, n)
+
+		// Remember the last successful index.
+		self.mu.Lock()
+		self.last_success_idx = self.current_url_idx
+		self.mu.Unlock()
+
+		return encrypted, nil
+
+	default:
 		self.logger.Info("Post to %v returned %v - advancing\n",
 			self.GetCurrentUrl(handler), resp.StatusCode)
 
@@ -345,15 +380,7 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 		self.advanceToNextServer()
 
 		return nil, errors.New(resp.Status)
-
 	}
-
-	// Remember the last successful index.
-	self.mu.Lock()
-	self.last_success_idx = self.current_url_idx
-	self.mu.Unlock()
-
-	return resp, nil
 }
 
 // When we have any failures contacting any server, we advance our url
@@ -601,37 +628,21 @@ func (self *NotificationReader) sendToURL(
 		return err
 	}
 
-	resp, err := self.connector.Post(self.handler, cipher_text, urgent)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+	encrypted, err := self.connector.Post(ctx, self.name,
+		self.handler, cipher_text, urgent)
 
 	// Enrollment is pretty quick so we need to retry sooner -
 	// return no error so the next poll happens in minPoll.
-	if resp.StatusCode == 406 {
+	if err == EnrolError {
 		if self.enroller != nil {
 			self.enroller.MaybeEnrol()
 		}
 		return nil
 	}
 
-	self.logger.Info("%s: sent %d bytes, response with status: %v",
-		self.name, len(cipher_text), resp.Status)
-	if resp.StatusCode != 200 {
-		return errors.New(resp.Status)
-	}
-
-	encrypted := &bytes.Buffer{}
-
-	// We need to be able to cancel the read here so we do not use
-	// ioutil.ReadAll()
-	n, err := utils.Copy(ctx, encrypted, resp.Body)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
-
-	self.logger.Info("%s: received %d bytes", self.name, n)
 
 	message_info, err := self.manager.Decrypt(encrypted.Bytes())
 	if err != nil {
