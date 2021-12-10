@@ -82,6 +82,7 @@ func (self ParseCSVPlugin) Call(
 
 				csv_reader := csv.NewReader(fd)
 				csv_reader.TrimLeadingSpace = true
+				csv_reader.LazyQuotes = true
 
 				if arg.Separator != "" {
 					if len(arg.Separator) != 1 {

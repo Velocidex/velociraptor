@@ -1,6 +1,6 @@
 Foo,Bar
 FirstColumn, SecondColumnWithLeadingSpace
 Second with trailing space      ,Some other field
-Line with illegal " quote should be skipped, "Field with proper quote"
+Line with illegal " quote will be parsed, "Field with proper quote"
 "field with "" quote", "other field "" with "" more "" quotes "
 3,4
