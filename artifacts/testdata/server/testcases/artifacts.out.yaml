@@ -84,7 +84,7 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
  }
 ]SELECT name FROM artifact_definitions(names='Windows.KapeFiles.Targets') ORDER BY name[
  {
-  "name": "Windows.Collectors.File"
+  "name": "Generic.Collectors.File"
  },
  {
   "name": "Windows.Collectors.VSS"
