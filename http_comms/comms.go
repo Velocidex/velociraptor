@@ -263,6 +263,8 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 	// Handle redirect. Frontends may redirect us to other
 	// frontends.
 	if resp.StatusCode == 301 {
+		defer resp.Body.Close()
+		
 		dest, pres := resp.Header["Location"]
 		if !pres || len(dest) == 0 {
 			self.logger.Info("Redirect without location header - advancing\n")
@@ -323,6 +325,8 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 		return resp, nil
 
 	} else if resp.StatusCode != 200 {
+		defer resp.Body.Close()
+		
 		self.logger.Info("Post to %v returned %v - advancing\n",
 			self.GetCurrentUrl(handler), resp.StatusCode)
 
