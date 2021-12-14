@@ -75,9 +75,8 @@ sources:
     LET file_search = SELECT FullPath,
                Sys.mft as Inode,
                Mode.String AS Mode, Size,
-               Mtime AS Modified,
-               Atime AS ATime,
                Mtime AS MTime,
+               Atime AS ATime,
                Ctime AS CTime,
                IsDir, Mode
         FROM glob(globs=SearchFilesGlobTable.Glob + SearchFilesGlob,
@@ -87,14 +86,14 @@ sources:
         condition=MoreRecentThan,
         then={
           SELECT * FROM file_search
-          WHERE Modified > parse_float(string=MoreRecentThan)
+          WHERE MTime > timestamp(string=MoreRecentThan)
         }, else=file_search)
 
     LET modified_before = SELECT * FROM if(
         condition=ModifiedBefore,
         then={
           SELECT * FROM more_recent
-          WHERE Modified < parse_float(string=ModifiedBefore)
+          WHERE MTime < timestamp(string=ModifiedBefore)
         }, else=more_recent)
 
     LET keyword_search = SELECT * FROM if(
