@@ -234,6 +234,7 @@ func GetBzip2File(file_path string, scope vfilter.Scope) (*SeekableGzip, error) 
 
 	accessor, err := glob.GetAccessor(url.Scheme, scope)
 	if err != nil {
+		scope.Log("%v: did you provide a URL?", err)
 		return nil, err
 	}
 
@@ -265,6 +266,7 @@ func GetGzipFile(file_path string, scope vfilter.Scope) (*SeekableGzip, error) {
 
 	accessor, err := glob.GetAccessor(url.Scheme, scope)
 	if err != nil {
+		scope.Log("%v: did you provide a URL?", err)
 		return nil, err
 	}
 

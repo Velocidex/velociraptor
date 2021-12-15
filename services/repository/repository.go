@@ -226,7 +226,7 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 
 		// Ensure export has correct syntax
 		if artifact.Export != "" {
-			_, err := vfilter.Parse(artifact.Export)
+			_, err := vfilter.MultiParse(artifact.Export)
 			if err != nil {
 				return nil, fmt.Errorf(
 					"While parsing artifact export: %w", err)
