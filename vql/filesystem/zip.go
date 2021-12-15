@@ -366,6 +366,7 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 	if !pres || zip_file_cache.is_closed {
 		accessor, err := glob.GetAccessor(base_url.Scheme, self.scope)
 		if err != nil {
+			self.scope.Log("%v: did you provide a URL?", err)
 			return nil, nil, err
 		}
 

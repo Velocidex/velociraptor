@@ -229,6 +229,7 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 			int(lru_size),
 		)
 		if err != nil {
+			self.scope.Log("%v: did you provide a URL?", err)
 			return nil, nil, err
 		}
 

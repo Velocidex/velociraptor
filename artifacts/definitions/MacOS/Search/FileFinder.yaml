@@ -86,14 +86,15 @@ sources:
         condition=MoreRecentThan,
         then={
           SELECT * FROM file_search
-          WHERE MTime > timestamp(string=MoreRecentThan)
+          WHERE MTime > MoreRecentThan
         }, else=file_search)
 
     LET modified_before = SELECT * FROM if(
         condition=ModifiedBefore,
         then={
           SELECT * FROM more_recent
-          WHERE MTime < timestamp(string=ModifiedBefore)
+          WHERE MTime < ModifiedBefore
+           AND  MTime > MoreRecentThan
         }, else=more_recent)
 
     LET keyword_search = SELECT * FROM if(

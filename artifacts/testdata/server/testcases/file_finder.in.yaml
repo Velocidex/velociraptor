@@ -1,3 +1,40 @@
+Parameters:
+  GlobMock: |
+    [
+      {
+        "FullPath": "Users/yolo/Desktop/file.txt",
+        "Mtime": 1588167507,
+        "Ctime": 1588167507,
+        "Atime": 1588167507,
+        "Btime": 1588167507,
+        "Mode": "rw-rw-rw",
+        "Size": 100,
+        "IsDir": false,
+        "Sys": {}
+      },
+      {
+        "FullPath": "Users/yolo/Desktop/file2.txt",
+        "Mtime": 1588167610,
+        "Ctime": 1588167507,
+        "Atime": 1588167507,
+        "Btime": 1588167507,
+        "Mode": "rw-rw-rw",
+        "Size": 100,
+        "IsDir": false,
+        "Sys": {}
+      },
+      {
+        "FullPath": "Users/yolo/Desktop/file3.txt",
+        "Mtime": 1588167710,
+        "Ctime": 1588167507,
+        "Atime": 1588167507,
+        "Btime": 1588167507,
+        "Mode": "rw-rw-rw",
+        "Size": 100,
+        "IsDir": false,
+        "Sys": {}
+      }
+    ]
 # All *.Search.FileFinder are basically the same artifact with
 # different defaults, we just test one of them here.
 Queries:
@@ -37,3 +74,24 @@ Queries:
         SearchFilesGlob="",
         SearchFilesGlobTable="Glob\n"+ srcDir + "/artifacts/testdata/files/*.zip\n")
     WHERE File =~ "test"
+
+# Test mtime limits.
+  - LET MockData <= SELECT *,
+       timestamp(epoch=Mtime) AS Mtime,
+       timestamp(epoch=Atime) AS Atime,
+       timestamp(epoch=Ctime) AS Ctime,
+       timestamp(epoch=Btime) AS Btime
+    FROM parse_json_array(data=GlobMock)
+  - LET _ <= mock(plugin="glob", results=MockData)
+  - SELECT FullPath, MTime
+    FROM Artifact.Windows.Search.FileFinder(
+        MoreRecentThan=timestamp(string="2020-04-29T13:39:00Z"))
+
+  - SELECT FullPath, MTime
+    FROM Artifact.Windows.Search.FileFinder(
+        ModifiedBefore=timestamp(string="2020-04-29T13:39:00Z"))
+
+  - SELECT FullPath, MTime
+    FROM Artifact.Windows.Search.FileFinder(
+        MoreRecentThan=timestamp(string="2020-04-29T13:39:00Z"),
+        ModifiedBefore=timestamp(string="2020-04-29T13:41:00Z"))

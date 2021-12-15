@@ -48,4 +48,23 @@ WHERE File =~ "test"
   "Upload": null,
   "Keywords": ""
  }
+]LET MockData <= SELECT *, timestamp(epoch=Mtime) AS Mtime, timestamp(epoch=Atime) AS Atime, timestamp(epoch=Ctime) AS Ctime, timestamp(epoch=Btime) AS Btime FROM parse_json_array(data=GlobMock)[]LET _ <= mock(plugin="glob", results=MockData)[]SELECT FullPath, MTime FROM Artifact.Windows.Search.FileFinder( MoreRecentThan=timestamp(string="2020-04-29T13:39:00Z"))[
+ {
+  "FullPath": "Users/yolo/Desktop/file2.txt",
+  "MTime": "2020-04-29T13:40:10Z"
+ },
+ {
+  "FullPath": "Users/yolo/Desktop/file3.txt",
+  "MTime": "2020-04-29T13:41:50Z"
+ }
+]SELECT FullPath, MTime FROM Artifact.Windows.Search.FileFinder( ModifiedBefore=timestamp(string="2020-04-29T13:39:00Z"))[
+ {
+  "FullPath": "Users/yolo/Desktop/file.txt",
+  "MTime": "2020-04-29T13:38:27Z"
+ }
+]SELECT FullPath, MTime FROM Artifact.Windows.Search.FileFinder( MoreRecentThan=timestamp(string="2020-04-29T13:39:00Z"), ModifiedBefore=timestamp(string="2020-04-29T13:41:00Z"))[
+ {
+  "FullPath": "Users/yolo/Desktop/file2.txt",
+  "MTime": "2020-04-29T13:40:10Z"
+ }
 ]
