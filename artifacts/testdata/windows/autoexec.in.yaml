@@ -1,15 +1,16 @@
 Queries:
   - SELECT inventory_add(tool='Autorun_amd64',
            url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe',
-           hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153',
+           hash='5f4cdd5cbc5aea49e007e35550eaac89a68efc409683730c722f6dd378ba81e9',
            filename='autorunsc_x64.exe'),
            inventory_add(tool='Autorun_x86',
            url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe',
-           hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153',
+           hash='5f4cdd5cbc5aea49e007e35550eaac89a68efc409683730c722f6dd378ba81e9',
            filename='autorunsc_x86.exe')
     FROM scope()
 
   - SELECT Company FROM  Artifact.Windows.Sysinternals.Autoruns(
+         All=FALSE, `Boot execute`=TRUE,
          ToolInfo=inventory_get(tool='Autorun_amd64'))
     WHERE Company =~ 'Microsoft'
     LIMIT 1
