@@ -15,19 +15,75 @@ tools:
 
 precondition: SELECT OS From info() where OS = 'windows'
 
-required_permissions:
-  - EXECVE
-
 parameters:
-  - name: AutorunArgs
-    description: |
-      A space separated list of args to run with.
-    default: '-nobanner -accepteula -t -a * -c *'
+  - name: All
+    type: bool
+    default: Y
+  - name: Boot execute
+    type: bool
+  - name: Codecs
+    type: bool
+  - name: Appinit DLLs
+    type: bool
+  - name: Explorer addons
+    type: bool
+  - name: Sidebar gadgets (Vista and higher)
+    type: bool
+  - name: Image hijacks
+    type: bool
+  - name: Internet Explorer addons
+    type: bool
+  - name: Known DLLs
+    type: bool
+  - name: Logon startups (this is the default)
+    type: bool
+  - name: WMI entries
+    type: bool
+  - name: Winsock protocol and network providers
+    type: bool
+  - name: Office addins
+    type: bool
+  - name: Printer monitor DLLs
+    type: bool
+  - name: LSA security providers
+    type: bool
+  - name: Autostart services and non-disabled drivers
+    type: bool
+  - name: Scheduled tasks
+    type: bool
+  - name: Winlogon entries
+    type: bool
   - name: ToolInfo
+    type: hidden
     description: Override Tool information.
 
 sources:
   - query: |
+      LET Flags = '''Option,Name
+      *,All
+      b,Boot execute
+      c,Codecs
+      d,Appinit DLLs
+      e,Explorer addons
+      g,Sidebar gadgets (Vista and higher)
+      h,Image hijacks
+      i,Internet Explorer addons
+      k,Known DLLs
+      l,Logon startups (this is the default)
+      m,WMI entries
+      n,Winsock protocol and network providers
+      o,Office addins
+      p,Printer monitor DLLs
+      r,LSA security providers
+      s,Autostart services and non-disabled drivers
+      t,Scheduled tasks
+      w,Winlogon entries
+      '''
+
+      -- The options actually selected
+      LET options = SELECT Option FROM parse_csv(accessor="data", filename=Flags)
+        WHERE get(field=Name)
+
       LET os_info <= SELECT Architecture FROM info()
 
       // Get the path to the binary.
@@ -36,9 +92,13 @@ sources:
               ToolInfo=ToolInfo)
 
       // Call the binary and return all its output in a single row.
-      LET output = SELECT * FROM execve(argv= bin[0].FullPath +
-           split(string=AutorunArgs, sep=" "),
-           length=10000000)
+      LET output = SELECT * FROM execve(argv=[bin[0].FullPath,
+            '-nobanner', '-accepteula', '-t', '-a',
+            join(array=options.Option, sep=""),
+            '-c', -- CSV output
+            '-h', -- Also calculate hashes
+            '*'   -- All user profiles.
+      ], length=10000000)
 
       // Parse the CSV output and return it as rows. We can filter this further.
       SELECT * FROM if(condition=bin,
