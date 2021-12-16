@@ -15,14 +15,7 @@ tools:
 
 precondition: SELECT OS From info() where OS = 'windows'
 
-required_permissions:
-  - EXECVE
-
 parameters:
-  - name: AutorunArgs
-    description: |
-      A space separated list of args to run with.
-    default: '-nobanner -accepteula -t -a * -c -h *'
   - name: ToolInfo
     description: Override Tool information.
 
@@ -36,9 +29,8 @@ sources:
               ToolInfo=ToolInfo)
 
       // Call the binary and return all its output in a single row.
-      LET output = SELECT * FROM execve(argv= bin[0].FullPath +
-           split(string=AutorunArgs, sep=" "),
-           length=10000000)
+      LET output = SELECT * FROM execve(argv=[bin[0].FullPath,
+            '-nobanner','-accepteula','-t','-a','*','-c','-h','*'], length=10000000)
 
       // Parse the CSV output and return it as rows. We can filter this further.
       SELECT * FROM if(condition=bin,
