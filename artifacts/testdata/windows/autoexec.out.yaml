@@ -29,7 +29,7 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
    "materialize": false
   }
  }
-]SELECT Company FROM  Artifact.Windows.Sysinternals.Autoruns( AutorunArgs='-nobanner -accepteula -a b -c *', ToolInfo=inventory_get(tool='Autorun_amd64')) WHERE Company =~ 'Microsoft' LIMIT 1[
+]SELECT Company FROM  Artifact.Windows.Sysinternals.Autoruns(ToolInfo=inventory_get(tool='Autorun_amd64')) WHERE Company =~ 'Microsoft' LIMIT 1[
  {
   "Company": "Microsoft Corporation"
  }
