@@ -9,6 +9,7 @@ Queries:
            filename='autorunsc_x86.exe')
     FROM scope()
 
-  - SELECT Company FROM  Artifact.Windows.Sysinternals.Autoruns(ToolInfo=inventory_get(tool='Autorun_amd64'))
+  - SELECT Company FROM  Artifact.Windows.Sysinternals.Autoruns(
+         ToolInfo=inventory_get(tool='Autorun_amd64'))
     WHERE Company =~ 'Microsoft'
     LIMIT 1
