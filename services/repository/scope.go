@@ -40,6 +40,12 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 		}
 	}
 
+	// Builder can contain only the client config if it is running on
+	// the client.
+	if self.ClientConfig != nil {
+		env.Set(constants.SCOPE_CONFIG, self.ClientConfig)
+	}
+
 	if self.ACLManager != nil {
 		env.Set(vql_subsystem.ACL_MANAGER_VAR, self.ACLManager)
 	}
