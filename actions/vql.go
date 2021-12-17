@@ -124,7 +124,9 @@ func (self VQLClientAction) StartQuery(
 	}
 
 	builder := services.ScopeBuilder{
-		Config: config_obj,
+		// Only provide the client config since we are running in
+		// client context.
+		ClientConfig: config_obj.Client,
 		// Disable ACLs on the client.
 		ACLManager: vql_subsystem.NullACLManager{},
 		Env:        ordereddict.NewDict(),

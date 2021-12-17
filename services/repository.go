@@ -65,12 +65,17 @@ func RegisterRepositoryManager(repository RepositoryManager) {
 // Make it easier to build a query scope using the aritfact
 // repository.
 type ScopeBuilder struct {
-	Config     *config_proto.Config
-	ACLManager vql_subsystem.ACLManager
-	Uploader   api.Uploader
-	Logger     *log.Logger
-	Env        *ordereddict.Dict
-	Repository Repository
+	// In server context this contains the full server config required
+	// for server plugins.
+	Config *config_proto.Config
+
+	// If running in client context we only present the client config.
+	ClientConfig *config_proto.ClientConfig
+	ACLManager   vql_subsystem.ACLManager
+	Uploader     api.Uploader
+	Logger       *log.Logger
+	Env          *ordereddict.Dict
+	Repository   Repository
 }
 
 // An artifact repository holds definitions for artifacts.
