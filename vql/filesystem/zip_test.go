@@ -209,8 +209,6 @@ j={ SELECT read_file(accessor="zip", filename=PathSpec10) AS Data FROM scope() }
 `, env)
 	assert.NoError(self.T(), err)
 
-	json.Dump(rows)
-
 	assert.Equal(self.T(), 10, len(rows))
 	for i := 0; i < 9; i++ {
 		data, _ := rows[i].Get("Data")
@@ -219,8 +217,6 @@ j={ SELECT read_file(accessor="zip", filename=PathSpec10) AS Data FROM scope() }
 
 	// Make sure we dont have any dangling references
 	state := vtesting.GetMetricsDifference(self.T(), "accessor_zip_", snapshot)
-
-	json.Dump(state)
 
 	// Scope is closed - no zip handles are leaking.
 	value, _ := state.GetInt64("accessor_zip_current_open")

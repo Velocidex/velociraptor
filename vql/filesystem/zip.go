@@ -41,7 +41,6 @@ package filesystem
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -52,7 +51,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/ttlcache/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -361,14 +359,50 @@ func (self *ZipFileCache) Close() {
 // files for quick access.
 type ZipFileSystemAccessor struct {
 	mu       sync.Mutex
-	fd_cache *ttlcache.Cache // LRU map[string]*ZipFileCache
+	fd_cache map[string]*ZipFileCache
 	scope    vfilter.Scope
+}
+
+// Try to remove any file caches with no references.
+func (self *ZipFileSystemAccessor) Trim() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	cache_size := vql_subsystem.GetIntFromRow(
+		self.scope, self.scope, constants.ZIP_FILE_CACHE_SIZE)
+	if cache_size == 0 {
+		cache_size = 5
+	}
+
+	// Grow the cache up to max 10 elements.
+	for key, fd := range self.fd_cache {
+		if uint64(len(self.fd_cache)) > cache_size {
+			fd.mu.Lock()
+			refs := fd.refs
+			fd.mu.Unlock()
+
+			if refs == 1 {
+				fd.Close()
+			}
+		}
+
+		// Trim closed fd from our cache.
+		if fd.is_closed {
+			delete(self.fd_cache, key)
+		}
+	}
 }
 
 // Close all the items - called when root scope destroys
 func (self *ZipFileSystemAccessor) CloseAll() {
-	fmt.Printf("Flusing cache\n")
-	self.fd_cache.Flush()
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Grow the cache up to 10 elements.
+	for key, fd := range self.fd_cache {
+		fd.Close()
+		delete(self.fd_cache, key)
+	}
 }
 
 // Returns a ZipFileCache wrapper around the zip.Reader. Be sure to
@@ -387,12 +421,11 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 	}
 	cache_key := base_pathspec.String()
 
-	var zip_file_cache *ZipFileCache
-	zip_file_cache_any, err := self.fd_cache.Get(cache_key)
-	if err == nil {
-		zip_file_cache = zip_file_cache_any.(*ZipFileCache)
-	}
-	if zip_file_cache == nil || zip_file_cache.is_closed {
+	self.mu.Lock()
+	zip_file_cache, pres := self.fd_cache[cache_key]
+	self.mu.Unlock()
+
+	if !pres || zip_file_cache.is_closed {
 		accessor, err := glob.GetAccessor(
 			pathspec.DelegateAccessor, self.scope)
 		if err != nil {
@@ -447,7 +480,9 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 					member_file: i,
 				})
 		}
-		self.fd_cache.Set(cache_key, zip_file_cache)
+		self.mu.Lock()
+		self.fd_cache[cache_key] = zip_file_cache
+		self.mu.Unlock()
 	}
 
 	// Leaking a zip file from this function, increase its reference -
@@ -564,44 +599,11 @@ func (self *ZipFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAcce
 	if result_any == nil {
 		// Create a new cache in the scope.
 		result := &ZipFileSystemAccessor{
-			fd_cache: ttlcache.NewCache(),
+			fd_cache: make(map[string]*ZipFileCache),
 			scope:    scope,
 		}
-
-		cache_size := vql_subsystem.GetIntFromRow(
-			scope, scope, constants.ZIP_FILE_CACHE_SIZE)
-		if cache_size == 0 {
-			cache_size = 5
-		}
-
-		result.fd_cache.SetCacheSizeLimit(int(cache_size))
-		result.fd_cache.SetExpirationCallback(
-			func(key string, value interface{}) {
-				zip_file_cache := value.(*ZipFileCache)
-
-				// Closing the zip file cache will decrease its reference
-				// count - it will stick around until all users are gone,
-				// but we wont be caching it any more.
-				zip_file_cache.Close()
-			})
-
-		result.fd_cache.SetCheckExpirationCallback(
-			func(key string, value interface{}) bool {
-				zip_file_cache := value.(*ZipFileCache)
-				return true
-
-				if zip_file_cache.refs == 1 {
-					return false
-				}
-
-				return true
-			})
-
-		// Store the cache in the root scope.
 		vql_subsystem.CacheSet(scope, ZipFileSystemAccessorTag, result)
 
-		// When root scope destroys we need to purge all the zip file
-		// so we can close any outstanding handles.
 		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 			result.CloseAll()
 		})
@@ -609,6 +611,8 @@ func (self *ZipFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAcce
 	}
 
 	res := result_any.(*ZipFileSystemAccessor)
+	res.Trim()
+
 	return res, nil
 }
 
