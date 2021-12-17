@@ -38,7 +38,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"path"
 	"regexp"
@@ -131,15 +130,15 @@ type GzipFileSystemAccessor struct {
 //
 // so the root is file:///tmp/foo.zip# and the path is /dir/name.txt
 func (self *GzipFileSystemAccessor) GetRoot(path string) (string, string, error) {
-	url, err := url.Parse(path)
+	pathspec, err := glob.PathSpecFromString(path)
 	if err != nil {
 		return "", "", err
 	}
 
-	Fragment := url.Fragment
-	url.Fragment = ""
+	Fragment := pathspec.Path
+	pathspec.Path = ""
 
-	return url.String() + "#", Fragment, nil
+	return pathspec.String(), Fragment, nil
 }
 
 func (self *GzipFileSystemAccessor) Lstat(file_path string) (glob.FileInfo, error) {
@@ -166,16 +165,14 @@ func (self *GzipFileSystemAccessor) PathSplit(path string) []string {
 // Example: root  is file://path/to/zip#subdir and stem is foo ->
 // file://path/to/zip#subdir/foo
 func (self *GzipFileSystemAccessor) PathJoin(root, stem string) string {
-	url, err := url.Parse(root)
+	pathspec, err := glob.PathSpecFromString(root)
 	if err != nil {
 		path.Join(root, stem)
 	}
 
-	url.Fragment = path.Join(url.Fragment, stem)
+	pathspec.Path = path.Join(pathspec.Path, stem)
 
-	result := url.String()
-
-	return result
+	return pathspec.String()
 }
 
 func (self *GzipFileSystemAccessor) ReadDir(file_path string) ([]glob.FileInfo, error) {
@@ -227,18 +224,18 @@ type FileGetter func(file_path string, scope vfilter.Scope) (
 	*SeekableGzip, error)
 
 func GetBzip2File(file_path string, scope vfilter.Scope) (*SeekableGzip, error) {
-	url, err := url.Parse(file_path)
+	pathspec, err := glob.PathSpecFromString(file_path)
 	if err != nil {
 		return nil, err
 	}
 
-	accessor, err := glob.GetAccessor(url.Scheme, scope)
+	accessor, err := glob.GetAccessor(pathspec.DelegateAccessor, scope)
 	if err != nil {
-		scope.Log("%v: did you provide a URL?", err)
+		scope.Log("%v: did you provide a URL or PathSpec?", err)
 		return nil, err
 	}
 
-	fd, err := accessor.Open(url.Path)
+	fd, err := accessor.Open(pathspec.GetDelegatePath())
 	if err != nil {
 		return nil, err
 	}
@@ -259,18 +256,18 @@ func GetBzip2File(file_path string, scope vfilter.Scope) (*SeekableGzip, error) 
 }
 
 func GetGzipFile(file_path string, scope vfilter.Scope) (*SeekableGzip, error) {
-	url, err := url.Parse(file_path)
+	pathspec, err := glob.PathSpecFromString(file_path)
 	if err != nil {
 		return nil, err
 	}
 
-	accessor, err := glob.GetAccessor(url.Scheme, scope)
+	accessor, err := glob.GetAccessor(pathspec.DelegateAccessor, scope)
 	if err != nil {
-		scope.Log("%v: did you provide a URL?", err)
+		scope.Log("%v: did you provide a URL or PathSpec?", err)
 		return nil, err
 	}
 
-	fd, err := accessor.Open(url.Path)
+	fd, err := accessor.Open(pathspec.GetDelegatePath())
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +284,7 @@ func GetGzipFile(file_path string, scope vfilter.Scope) (*SeekableGzip, error) {
 		if err != nil {
 			// If it does not work - reopen the file.
 			fd.Close()
-			fd, err = accessor.Open(url.Path)
+			fd, err = accessor.Open(pathspec.GetDelegatePath())
 			if err != nil {
 				return nil, err
 			}

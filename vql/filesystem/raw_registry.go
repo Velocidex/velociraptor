@@ -58,7 +58,7 @@ const (
 
 type RawRegKeyInfo struct {
 	key         *regparser.CM_KEY_NODE
-	_base       url.URL
+	_base       glob.PathSpec
 	_components []string
 }
 
@@ -79,7 +79,7 @@ func (self *RawRegKeyInfo) Sys() interface{} {
 }
 
 func (self *RawRegKeyInfo) FullPath() string {
-	self._base.Fragment = utils.JoinComponents(self._components, "\\")
+	self._base.Path = utils.JoinComponents(self._components, "\\")
 	return self._base.String()
 }
 
@@ -199,21 +199,23 @@ type RawRegFileSystemAccessor struct {
 }
 
 func (self *RawRegFileSystemAccessor) getRegHive(
-	file_path string) (*regparser.Registry, *url.URL, error) {
+	file_path string) (*regparser.Registry, *glob.PathSpec, error) {
 
 	// The file path is a url specifying the path to a key:
 	// Scheme is the underlying accessor
 	// Path is the path to be provided to the underlying accessor
 	// Fragment is the path within the reg hive that we need to open.
-	full_url, err := url.Parse(file_path)
+	pathspec, err := glob.PathSpecFromString(file_path)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// Cache the parsed hive under the underlying file.
-	base_url := *full_url
-	base_url.Fragment = ""
-	cache_key := base_url.String()
+	base_pathspec := glob.PathSpec{
+		DelegateAccessor: pathspec.DelegateAccessor,
+		DelegatePath:     pathspec.GetDelegatePath(),
+	}
+	cache_key := base_pathspec.String()
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -224,12 +226,12 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 	if !pres {
 		paged_reader, err := readers.NewPagedReader(
 			self.scope,
-			base_url.Scheme, // Accessor
-			base_url.Path,   // Path to underlying file
+			pathspec.DelegateAccessor,
+			pathspec.GetDelegatePath(),
 			int(lru_size),
 		)
 		if err != nil {
-			self.scope.Log("%v: did you provide a URL?", err)
+			self.scope.Log("%v: did you provide a URL or Pathspec?", err)
 			return nil, nil, err
 		}
 
@@ -242,7 +244,7 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 		self.hive_cache[cache_key] = hive
 	}
 
-	return hive, full_url, nil
+	return hive, pathspec, nil
 }
 
 const RawRegFileSystemTag = "_RawReg"
@@ -265,24 +267,24 @@ func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 
 func (self *RawRegFileSystemAccessor) ReadDir(key_path string) ([]glob.FileInfo, error) {
 	var result []glob.FileInfo
-	hive, url, err := self.getRegHive(key_path)
+	hive, pathspec, err := self.getRegHive(key_path)
 	if err != nil {
 		return nil, err
 	}
 
-	key := hive.OpenKey(url.Fragment)
+	key := hive.OpenKey(pathspec.Path)
 	if key == nil {
 		return nil, errors.New("Key not found")
 	}
 
-	components := utils.SplitComponents(url.Fragment)
+	components := utils.SplitComponents(pathspec.Path)
 
 	for _, subkey := range key.Subkeys() {
 		new_components := append([]string{}, components...)
 		result = append(result,
 			&RawRegKeyInfo{
 				key:         subkey,
-				_base:       *url,
+				_base:       *pathspec,
 				_components: append(new_components, subkey.Name()),
 			})
 	}
@@ -294,7 +296,7 @@ func (self *RawRegFileSystemAccessor) ReadDir(key_path string) ([]glob.FileInfo,
 			&RawRegValueInfo{
 				&RawRegKeyInfo{
 					key:         key,
-					_base:       *url,
+					_base:       *pathspec,
 					_components: append(new_components, value.ValueName()),
 				}, value,
 			})
@@ -329,16 +331,13 @@ func (self *RawRegFileSystemAccessor) PathSplit(path string) []string {
 }
 
 func (self *RawRegFileSystemAccessor) PathJoin(root, stem string) string {
-	url, err := url.Parse(root)
+	pathspec, err := glob.PathSpecFromString(root)
 	if err != nil {
 		return path.Join(root, stem)
 	}
 
-	url.Fragment = utils.PathJoin(url.Fragment, stem, "/")
-
-	result := url.String()
-
-	return result
+	pathspec.Path = utils.PathJoin(pathspec.Path, stem, "/")
+	return pathspec.String()
 }
 
 type ReadKeyValuesArgs struct {
