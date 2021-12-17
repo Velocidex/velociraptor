@@ -21,7 +21,7 @@
         "http-proxy-middleware": "^1.0.5",
         "humanize-duration": "^3.24.0",
         "interactjs": "^1.10.11",
-        "is-svg": "^4.2.2",
+        "is-svg": "^4.3.0",
         "lodash": "^4.17.21",
         "moment": "^2.28.0",
         "moment-timezone": "^0.5.33",
