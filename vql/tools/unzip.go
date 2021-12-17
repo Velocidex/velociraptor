@@ -119,7 +119,8 @@ func (self UnzipPlugin) Call(
 					return
 				}
 
-				out_fd, err := os.OpenFile(output_path, os.O_CREATE|os.O_WRONLY, 0700)
+				out_fd, err := os.OpenFile(output_path,
+					os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0700)
 				if err != nil {
 					scope.Log("unzip: %v", err)
 					return

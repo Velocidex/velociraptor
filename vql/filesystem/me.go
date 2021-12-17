@@ -1,5 +1,3 @@
-// +build windowsXX
-
 package filesystem
 
 import (
