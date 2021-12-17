@@ -124,6 +124,13 @@ func PathSpecFromString(parsed string) (*PathSpec, error) {
 		return nil, InvalidPathSpec
 	}
 
+	// It looks like a windows path not a URL
+	if len(parsed_url.Scheme) == 1 {
+		return &PathSpec{
+			DelegatePath: parsed,
+		}, nil
+	}
+
 	// Support urls for backwards compatibility.
 	return &PathSpec{
 		DelegateAccessor: parsed_url.Scheme,
