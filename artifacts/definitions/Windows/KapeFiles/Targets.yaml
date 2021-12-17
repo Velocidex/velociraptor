@@ -1736,6 +1736,18 @@ parameters:
       939,TorrentClients - qBittorrent,FileDownload,Users\*\AppData\Roaming\qBittorrent\*.ini,lazy_ntfs,
       940,TorrentClients - qBittorrent,FileDownload,Users\*\AppData\Local\qBittorrent\logs\*,lazy_ntfs,
       941,TorrentClients - uTorrent,FileDownload,Users\*\AppData\Roaming\uTorrent\*.dat,lazy_ntfs,
+      942,Windows Defender Quarantine,AntiVirus,ProgramData\Microsoft\Windows Defender\Quarantine\Entries\**10,lazy_ntfs,
+      943,G DATA AntiVirusKit Client Quarantine,AntiVirus,ProgramData\G Data\AntiVirusKit Client\Quarantine\**10,lazy_ntfs,
+      944,G DATA AntiVirusKit Client Quarantine,AntiVirus,ProgramData\GData\AVK\Quarantine\**10,lazy_ntfs,
+      945,McAfee AV Quarantine,AntiVirus,Quarantine\**10,lazy_ntfs,
+      946,McAfee AV Quarantine,AntiVirus,ProgramData\McAfee\VirusScan\Quarantine\**10,lazy_ntfs,
+      947,Sophos AV Quarantine,AntiVirus,ProgramData\Sophos\Sophos Anti-Virus\INFECTED\**10,lazy_ntfs,
+      948,Sophos AV Quarantine,AntiVirus,ProgramData\Sophos Anti-Virus\Safestore\**10,lazy_ntfs,
+      949,TrendMicro AV Quarantine,AntiVirus,ProgramData\**\Trend Micro\*\SUSPECT\**10,lazy_ntfs,
+      950,Symantec Endpoint Protection Quarantine,AntiVirus,ProgramData\Symantec\Symantec Endpoint Protection\*\SRTSP\Quarantine\**10,lazy_ntfs,
+      951,Avira AV Quarantine,AntiVirus,ProgramData\Avira\Antivirus\INFECTED\**10,lazy_ntfs,
+      952,Kaspersky AV Quarantine,AntiVirus,ProgramData\Kaspersky Lab\Kaspersky Security for Windows Server\*\Quarantine\**10,lazy_ntfs,
+      953,Malwarebytes AV Quarantine,AntiVirus,ProgramData\Malwarebytes\mbamservice\Quarantine\**10,lazy_ntfs,
   - name: KapeTargets
     type: hidden
     description: Each parameter above represents a group of rules to be triggered. This table specifies which rule IDs will be included when the parameter is checked.
@@ -1756,14 +1768,14 @@ parameters:
       AcronisTrueImage,"[223, 224, 225]"
       Amcache,"[686, 687, 688, 689]"
       Ammyy,[226]
-      Antivirus,"[139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 690, 691, 692, 693]"
+      Antivirus,"[139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 690, 691, 692, 693, 942, 943, 944, 945, 946, 947, 948, 949, 950, 951, 952, 953]"
       AnyDesk,"[227, 228, 229, 230, 231, 232]"
       ApacheAccessLog,[128]
       AppData,[205]
       ApplicationEvents,"[690, 691, 692, 693]"
       AsperaConnect,"[233, 234]"
       Avast,"[143, 144, 145, 146]"
-      AviraAVLogs,[147]
+      AviraAVLogs,"[147, 951]"
       BCD,"[694, 695]"
       BITS,[696]
       BitTorrent,[904]
@@ -1853,10 +1865,10 @@ parameters:
       MOF,[745]
       MSSQLErrorLog,"[134, 135]"
       MacriumReflect,"[329, 330, 331]"
-      Malwarebytes,"[164, 165, 166, 167]"
+      Malwarebytes,"[164, 165, 166, 167, 953]"
       ManageEngineLogs,[136]
       Mattermost,[332]
-      McAfee,"[168, 169, 170, 171, 172]"
+      McAfee,"[168, 169, 170, 171, 172, 945, 946]"
       McAfee_ePO,[173]
       MediaMonkey,"[333, 334]"
       MemoryFiles,"[746, 747, 748, 749, 750]"
@@ -1934,7 +1946,7 @@ parameters:
       SugarSync,"[421, 422, 423]"
       SumatraPDF,"[424, 425]"
       SupremoRemoteDesktop,"[426, 427]"
-      Symantec_AV_Logs,"[180, 181, 182, 183, 184, 185, 186, 187, 188, 690, 691, 692, 693]"
+      Symantec_AV_Logs,"[180, 181, 182, 183, 184, 185, 186, 187, 188, 690, 691, 692, 693, 950]"
       Syscache,"[873, 874]"
       TablacusExplorer,"[428, 429, 430]"
       TeamViewerLogs,"[431, 432, 433]"
@@ -1947,7 +1959,7 @@ parameters:
       TotalAV,"[189, 190]"
       TotalCommander,"[448, 449, 450, 451, 452, 453]"
       TreeSize,[454]
-      TrendMicro,"[191, 192, 193]"
+      TrendMicro,"[191, 192, 193, 949]"
       USBDetective,"[686, 687, 688, 689, 710, 711, 712, 732, 733, 734, 735, 736, 737, 738, 802, 803, 804, 805, 806, 807, 808, 809, 810, 811, 812, 813, 814, 815, 816, 817, 818, 819, 820, 821, 822, 823, 824, 825, 826, 827, 828, 829, 830, 831, 832, 833, 834, 835, 836, 837, 838, 839, 840, 841, 842, 843, 844, 845, 846, 847, 848, 849, 850, 851, 876, 877, 878]"
       USBDevicesLogs,"[876, 877, 878]"
       Ubuntu,"[642, 643, 644, 645, 646, 647, 648, 649, 650, 651, 652, 653, 654, 655, 656, 657]"
@@ -1973,7 +1985,7 @@ parameters:
       Webroot,[198]
       WhatsApp,"[473, 474]"
       WinSCP,[475]
-      WindowsDefender,"[199, 200, 201, 202, 203, 204]"
+      WindowsDefender,"[199, 200, 201, 202, 203, 204, 942]"
       WindowsFirewall,"[889, 890]"
       WindowsIndexSearch,[891]
       WindowsNotificationsDB,"[892, 893]"
