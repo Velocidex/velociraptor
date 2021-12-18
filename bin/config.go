@@ -361,7 +361,8 @@ func doDumpApiClientConfig() {
 		kingpin.FatalIfError(err, "Unable to encode config.")
 	}
 
-	fd, err := os.OpenFile(*config_api_client_output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	fd, err := os.OpenFile(*config_api_client_output,
+		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	kingpin.FatalIfError(err, "Unable to open output file: ")
 
 	_, err = fd.Write(res)

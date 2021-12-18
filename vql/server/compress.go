@@ -62,7 +62,8 @@ func (self *Compress) Call(ctx context.Context,
 	}
 	defer fd.Close()
 
-	out_fd, err := os.OpenFile(arg.Output, os.O_RDWR|os.O_CREATE, 0660)
+	out_fd, err := os.OpenFile(arg.Output,
+		os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 	if err != nil {
 		scope.Log("compress: %v", err)
 		return vfilter.Null{}

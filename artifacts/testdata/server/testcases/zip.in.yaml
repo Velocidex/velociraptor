@@ -5,17 +5,53 @@ Queries:
 
   - SELECT basename(path=FullPath) as Name, Size FROM zip_files
 
+  # The following use the deprecated url() notation which is still
+  # supported for now.
+
   # Find txt files inside the zip files.
   - LET hits = SELECT * from foreach(row=zip_files, query= {
-       select FullPath, Mtime, Size from glob(globs=url(scheme='file', path=FullPath, fragment='/**/*.txt').String, accessor='zip') } )
+       select FullPath, Mtime, Size from glob(
+          globs=url(
+            scheme='file',
+            path=FullPath,
+            fragment='/**/*.txt'), accessor='zip') } )
 
   - SELECT url(parse=FullPath).Fragment as Name, Size, Mtime from hits
 
   # Make sure we can read the contents of zip members.
   - SELECT Data, Offset, basename(path=FullPath) as Name FROM foreach(row=hits, query={ SELECT *, FullPath from read_file(filenames=FullPath, accessor='zip')})
 
-  - SELECT read_file(filename=url(path=srcDir+'/artifacts/testdata/files/hi.gz'), accessor='gzip') AS Hi,
-     read_file(filename=url(path=srcDir+'/artifacts/testdata/files/goodbye.bz2'), accessor='bzip2') AS Bye
+  - SELECT read_file(
+       filename=srcDir+'/artifacts/testdata/files/hi.gz',
+       accessor='gzip') AS Hi,
+     read_file(
+       filename=srcDir+'/artifacts/testdata/files/goodbye.bz2',
+       accessor='bzip2') AS Bye
+     FROM scope()
+
+  # Same as above but now we use the new pathspec() objects.
+  - LET hits = SELECT * from foreach(row=zip_files, query= {
+       select FullPath, Mtime, Size from glob(
+         globs=pathspec(DelegateAccessor='file',
+              DelegatePath=FullPath,
+              Path='/**/*.txt'),
+         accessor='zip')
+    } )
+
+  - SELECT pathspec(parse=FullPath).Path as Name, Size, Mtime from hits
+
+  # Make sure we can read the contents of zip members.
+  - SELECT Data, Offset, basename(path=FullPath) as Name
+    FROM foreach(row=hits, query={
+       SELECT *, FullPath from read_file(filenames=FullPath, accessor='zip')
+    })
+
+  - SELECT read_file(
+        filename=srcDir+'/artifacts/testdata/files/hi.gz',
+        accessor='gzip') AS Hi,
+     read_file(
+        filename=srcDir+'/artifacts/testdata/files/goodbye.bz2',
+        accessor='bzip2') AS Bye
      FROM scope()
 
   # Test the unzip() plugin

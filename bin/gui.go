@@ -116,7 +116,8 @@ func doGUI() {
 		serialized, err := yaml.Marshal(config_obj)
 		kingpin.FatalIfError(err, "Unable to create config.")
 
-		fd, err := os.OpenFile(server_config_path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		fd, err := os.OpenFile(server_config_path,
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		kingpin.FatalIfError(err, "Open file %s", server_config_path)
 		_, err = fd.Write(serialized)
 		kingpin.FatalIfError(err, "Write file %s", server_config_path)
@@ -129,7 +130,8 @@ func doGUI() {
 		serialized, err = yaml.Marshal(client_config)
 		kingpin.FatalIfError(err, "Unable to create config.")
 
-		fd, err = os.OpenFile(client_config_path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		fd, err = os.OpenFile(client_config_path,
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		kingpin.FatalIfError(err, "Open file %s", client_config_path)
 		_, err = fd.Write(serialized)
 		kingpin.FatalIfError(err, "Write file %s", client_config_path)

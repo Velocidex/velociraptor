@@ -107,7 +107,7 @@ func (self *FileBasedUploader) Upload(
 		return result, nil
 	}
 
-	file, err := os.OpenFile(file_path, os.O_RDWR|os.O_CREATE, 0700)
+	file, err := os.OpenFile(file_path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 	if err != nil {
 		scope.Log("Unable to open file %s: %s", file_path, err.Error())
 		return nil, err
@@ -217,7 +217,8 @@ func (self *FileBasedUploader) maybeCollectSparseFile(
 
 	// If there were any sparse runs, create an index.
 	if is_sparse {
-		writer, err := os.OpenFile(sanitized_name+".idx", os.O_RDWR|os.O_CREATE, 0700)
+		writer, err := os.OpenFile(sanitized_name+".idx",
+			os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 		if err != nil {
 			return nil, err
 		}
