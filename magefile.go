@@ -286,6 +286,7 @@ func Windows() error {
 		arch:       "amd64"}.Run()
 }
 
+// Windows client without a gui.
 func WindowsBare() error {
 	return Builder{
 		extra_tags: " release yara disable_gui ",
@@ -339,36 +340,6 @@ func DarwinBase() error {
 		extra_tags:  " release ",
 		disable_cgo: true,
 		arch:        "amd64"}.Run()
-}
-
-// Build step for Appveyor.
-func Appveyor() error {
-	err := build_gui_files()
-	if err != nil {
-		return err
-	}
-
-	err = Builder{
-		goos:       "windows",
-		arch:       "amd64",
-		extra_tags: " release ",
-		filename:   "velociraptor.exe"}.Run()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-
-	// Build a linux binary on Appveyor without cgo. This is
-	// typically OK because it is mostly used for the server. It
-	// will be missing yara etc.
-	return Builder{
-		goos:        "linux",
-		arch:        "amd64",
-		extra_tags:  " release ",
-		disable_cgo: true,
-		filename:    "velociraptor-linux.elf"}.Run()
 }
 
 func Clean() error {

@@ -17,7 +17,6 @@ import (
 	"github.com/Velocidex/yaml/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -26,7 +25,6 @@ import (
 )
 
 type CollectorTestSuite struct {
-	suite.Suite
 	binary      string
 	extension   string
 	tmpdir      string
@@ -35,7 +33,9 @@ type CollectorTestSuite struct {
 	test_server *httptest.Server
 }
 
-func (self *CollectorTestSuite) SetupTest() {
+func CollectorSetupTest(t *testing.T) *CollectorTestSuite {
+	self := &CollectorTestSuite{}
+
 	if runtime.GOOS == "windows" {
 		self.extension = ".exe"
 	}
@@ -44,7 +44,7 @@ func (self *CollectorTestSuite) SetupTest() {
 	binaries, err := filepath.Glob(
 		"../output/velociraptor*" + constants.VERSION + "-" + runtime.GOOS +
 			"-" + runtime.GOARCH + self.extension)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	if len(binaries) == 0 {
 		binaries, _ = filepath.Glob("../output/velociraptor*" +
@@ -55,17 +55,17 @@ func (self *CollectorTestSuite) SetupTest() {
 	fmt.Printf("Found binary %v\n", self.binary)
 
 	self.tmpdir, err = ioutil.TempDir("", "tmp")
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	self.config_file = filepath.Join(self.tmpdir, "server.config.yaml")
 	fd, err := os.OpenFile(
 		self.config_file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	self.config_obj, err = new(config.Loader).
 		WithFileLoader("../http_comms/test_data/server.config.yaml").
 		LoadAndValidate()
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	self.config_obj.Datastore.Implementation = "FileBaseDataStore"
 	self.config_obj.Datastore.Location = self.tmpdir
@@ -82,11 +82,12 @@ func (self *CollectorTestSuite) SetupTest() {
 	}
 
 	serialized, err := yaml.Marshal(self.config_obj)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	fd.Write(serialized)
 	fd.Close()
 
+	return self
 }
 
 func (self *CollectorTestSuite) TearDownTest() {
@@ -94,7 +95,10 @@ func (self *CollectorTestSuite) TearDownTest() {
 	self.test_server.Close()
 }
 
-func (self *CollectorTestSuite) TestCollector() {
+func TestCollector(t *testing.T) {
+	self := CollectorSetupTest(t)
+	defer self.TearDownTest()
+
 	OS_TYPE := "Linux"
 	if runtime.GOOS == "windows" {
 		OS_TYPE = "Windows"
@@ -113,7 +117,7 @@ func (self *CollectorTestSuite) TestCollector() {
 
 	fd, err := file_store_factory.WriteFile(paths.GetArtifactDefintionPath(
 		"Custom.TestArtifactDependent"))
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	fd.Truncate()
 	fd.Write([]byte(`name: Custom.TestArtifactDependent
@@ -132,7 +136,7 @@ sources:
 
 	fd, err = file_store_factory.WriteFile(
 		paths.GetArtifactDefintionPath("Custom.TestArtifact"))
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	fd.Truncate()
 	fd.Write([]byte(`name: Custom.TestArtifact
@@ -175,7 +179,7 @@ reports:
 		"artifacts", "show", "Custom.TestArtifact")
 	out, err := cmd.CombinedOutput()
 	fmt.Println(string(out))
-	require.NoError(self.T(), err)
+	require.NoError(t, err)
 
 	var os_name string
 	for _, os_name = range []string{"Windows", "Windows_x86", "Linux", "Darwin"} {
@@ -185,7 +189,7 @@ reports:
 			"--serve_remote")
 		out, err = cmd.CombinedOutput()
 		fmt.Println(string(out))
-		require.NoError(self.T(), err)
+		require.NoError(t, err)
 	}
 
 	switch runtime.GOOS {
@@ -203,15 +207,15 @@ reports:
 		"--serve_remote")
 	out, err = cmd.CombinedOutput()
 	fmt.Println(string(out))
-	require.NoError(self.T(), err)
+	require.NoError(t, err)
 
 	// Make sure the binary is proprly added.
-	assert.Regexp(self.T(), "name: Velociraptor", string(out))
+	assert.Regexp(t, "name: Velociraptor", string(out))
 
 	// Not served locally - download on demand should have no hash
 	// and serve_locally should be false.
-	assert.NotRegexp(self.T(), "serve_locally", string(out))
-	assert.NotRegexp(self.T(), "hash: .+", string(out))
+	assert.NotRegexp(t, "serve_locally", string(out))
+	assert.NotRegexp(t, "hash: .+", string(out))
 
 	cmd = exec.Command(self.binary, "--config", self.config_file,
 		"tools", "upload", "--name", "MyTool",
@@ -219,7 +223,7 @@ reports:
 		"--serve_remote")
 	out, err = cmd.CombinedOutput()
 	fmt.Println(string(out))
-	require.NoError(self.T(), err)
+	require.NoError(t, err)
 
 	output_zip := filepath.Join(self.tmpdir, "output.zip")
 
@@ -240,10 +244,10 @@ reports:
 	cmd = exec.Command(self.binary, cmdline...)
 	out, err = cmd.CombinedOutput()
 	fmt.Println(string(out))
-	require.NoError(self.T(), err)
+	require.NoError(t, err)
 
 	r, err := zip.OpenReader(output_zip)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	defer r.Close()
 
@@ -257,14 +261,14 @@ reports:
 			fmt.Printf("Extracting %v to %v\n", f.Name, output_executable)
 
 			rc, err := f.Open()
-			assert.NoError(self.T(), err)
+			assert.NoError(t, err)
 
 			out_fd, err := os.OpenFile(
 				output_executable, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
-			assert.NoError(self.T(), err)
+			assert.NoError(t, err)
 
 			n, err := io.Copy(out_fd, rc)
-			assert.NoError(self.T(), err)
+			assert.NoError(t, err)
 			rc.Close()
 			out_fd.Close()
 
@@ -277,71 +281,67 @@ reports:
 	cmd = exec.Command(output_executable, "config", "show")
 	out, err = cmd.CombinedOutput()
 	fmt.Println(string(out))
-	require.NoError(self.T(), err)
+	require.NoError(t, err)
 
 	// Now just run the executable.
 	cmd = exec.Command(output_executable)
 	out, err = cmd.CombinedOutput()
 	fmt.Println(string(out))
-	require.NoError(self.T(), err)
+	require.NoError(t, err)
 
 	// There should be a collection now.
 	zip_files, err := filepath.Glob("Collection-*.zip")
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), 1, len(zip_files))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(zip_files))
 
 	// Inspect the collection zip file - there should be a single
 	// artifact output from our custom artifact, and the data it
 	// produces should have the string Foobar in it.
 	r, err = zip.OpenReader(zip_files[0])
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
-	assert.True(self.T(), len(r.File) > 0)
+	assert.True(t, len(r.File) > 0)
 
 	for _, f := range r.File {
 		fmt.Printf("Contents of %s:\n", f.Name)
-		assert.Equal(self.T(), f.Name, "Custom.TestArtifact.json")
+		assert.Equal(t, f.Name, "Custom.TestArtifact.json")
 
 		rc, err := f.Open()
-		assert.NoError(self.T(), err)
+		assert.NoError(t, err)
 
 		data, err := ioutil.ReadAll(rc)
-		assert.NoError(self.T(), err)
-		assert.Contains(self.T(), string(data), "Foobar")
+		assert.NoError(t, err)
+		assert.Contains(t, string(data), "Foobar")
 	}
 
 	// Inspect the produced HTML report.
 	html_files, err := filepath.Glob("Collection-*.html")
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), 1, len(html_files))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(html_files))
 
 	html_fd, err := os.Open(html_files[0])
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	data, err := ioutil.ReadAll(html_fd)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	// Ensure the report contains the data that was passed.
-	assert.Contains(self.T(), string(data), "MyValue")
+	assert.Contains(t, string(data), "MyValue")
 
 	// And the default parameter is still there.
-	assert.Contains(self.T(), string(data), "DefaultMyDefaultParameter")
+	assert.Contains(t, string(data), "DefaultMyDefaultParameter")
 
-	assert.Contains(self.T(), string(data), "Foobar")
-	assert.Contains(self.T(), string(data), "This is the report")
+	assert.Contains(t, string(data), "Foobar")
+	assert.Contains(t, string(data), "This is the report")
 
 	// Make sure we found the artifact in the report
-	assert.Contains(self.T(), string(data), "Windows.System.TaskScheduler")
-	assert.Contains(self.T(), string(data), "Found a Scheduled Task")
+	assert.Contains(t, string(data), "Windows.System.TaskScheduler")
+	assert.Contains(t, string(data), "Found a Scheduled Task")
 
 	// Check that we used the default template from the
 	// Reporting.Default artifact:
-	assert.Contains(self.T(), string(data), "<html>")
-	assert.Contains(self.T(), string(data), "This is the html report template")
+	assert.Contains(t, string(data), "<html>")
+	assert.Contains(t, string(data), "This is the html report template")
 
 	// fmt.Println(string(data))
-}
-
-func TestCollector(t *testing.T) {
-	suite.Run(t, &CollectorTestSuite{})
 }
