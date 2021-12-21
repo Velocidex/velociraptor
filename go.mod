@@ -46,7 +46,7 @@ require (
 	github.com/elastic/go-libaudit v0.4.0
 	github.com/evanphx/json-patch v4.5.0+incompatible
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
-	github.com/go-ole/go-ole v1.2.4
+	github.com/go-ole/go-ole v1.2.6
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -70,7 +70,7 @@ require (
 	github.com/juju/ratelimit v1.0.1
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.2.0+incompatible
-	github.com/lestrrat-go/strftime v0.0.0-20190725011945-5c849dd2c51d // indirect
+	github.com/lestrrat-go/strftime v1.0.5 // indirect
 	github.com/lib/pq v1.2.0
 	github.com/magefile/mage v1.11.0
 	github.com/mattn/go-colorable v0.1.7 // indirect
@@ -99,7 +99,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tebeka/strftime v0.1.3 // indirect
 	github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a
-	github.com/tklauser/go-sysconf v0.3.7 // indirect
+	github.com/tklauser/go-sysconf v0.3.9 // indirect
 	github.com/vjeantet/grok v1.0.0
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v0.0.0-20181217150151-a0c70a3d4213
@@ -108,7 +108,7 @@ require (
 	golang.org/x/mod v0.4.2
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210611083556-38a9dc6acbc6
 	google.golang.org/api v0.51.0
@@ -137,6 +137,7 @@ require google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1 // indirect
 	github.com/PuerkitoBio/goquery v1.6.1 // indirect
+	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11 // indirect
 	github.com/Velocidex/yaml v2.1.0+incompatible // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
@@ -177,8 +178,10 @@ require (
 	github.com/prometheus/procfs v0.7.2 // indirect
 	github.com/rivo/uniseg v0.1.0 // indirect
 	github.com/russellhaering/goxmldsig v1.1.0 // indirect
-	github.com/tklauser/numcpus v0.2.3 // indirect
+	github.com/shirou/gopsutil/v3 v3.21.11 // indirect
+	github.com/tklauser/numcpus v0.3.0 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
+	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect

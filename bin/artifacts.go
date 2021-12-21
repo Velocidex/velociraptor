@@ -26,7 +26,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -109,10 +108,14 @@ func listArtifactsHint() []string {
 
 func getRepository(config_obj *config_proto.Config) (services.Repository, error) {
 	manager, err := services.GetRepositoryManager()
-	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
+	if err != nil {
+		return nil, err
+	}
 
 	repository, err := manager.GetGlobalRepository(config_obj)
-	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
+	if err != nil {
+		return nil, err
+	}
 
 	if *artifact_definitions_dir != "" {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
@@ -129,14 +132,22 @@ func getRepository(config_obj *config_proto.Config) (services.Repository, error)
 	return repository, nil
 }
 
-func doArtifactCollect() {
-	checkAdmin()
+func doArtifactCollect() error {
+	err := checkAdmin()
+	if err != nil {
+		return err
+	}
 
-	config_obj, err := makeDefaultConfigLoader().WithNullLoader().LoadAndValidate()
-	kingpin.FatalIfError(err, "Load Config ")
+	config_obj, err := makeDefaultConfigLoader().
+		WithNullLoader().LoadAndValidate()
+	if err != nil {
+		return fmt.Errorf("Unable to create config: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Load Config ")
+	if err != nil {
+		return fmt.Errorf("Can't load service: %w", err)
+	}
 	defer sm.Close()
 
 	spec := ordereddict.NewDict()
@@ -168,7 +179,9 @@ func doArtifactCollect() {
 	}
 
 	manager, err := services.GetRepositoryManager()
-	kingpin.FatalIfError(err, "GetRepositoryManager")
+	if err != nil {
+		return err
+	}
 
 	scope := manager.BuildScope(services.ScopeBuilder{
 		Config:     config_obj,
@@ -187,7 +200,9 @@ func doArtifactCollect() {
 	defer scope.Close()
 
 	_, err = getRepository(config_obj)
-	kingpin.FatalIfError(err, "Loading extra artifacts")
+	if err != nil {
+		return err
+	}
 
 	now := time.Now()
 	defer func() {
@@ -206,7 +221,8 @@ func doArtifactCollect() {
   SELECT * FROM collect(artifacts=Artifacts, output=Output, report=Report,
                         level=Level, template=Template,
                         password=Password, args=Args, format=Format)`
-	eval_local_query(config_obj, *artifact_command_collect_format, query, scope)
+	return eval_local_query(config_obj, *artifact_command_collect_format,
+		query, scope)
 }
 
 func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
@@ -215,45 +231,61 @@ func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
 	return regexp.Compile(pattern)
 }
 
-func doArtifactShow() {
-	config_obj, err := makeDefaultConfigLoader().WithNullLoader().LoadAndValidate()
-	kingpin.FatalIfError(err, "Load Config ")
+func doArtifactShow() error {
+	config_obj, err := makeDefaultConfigLoader().
+		WithNullLoader().LoadAndValidate()
+	if err != nil {
+		return fmt.Errorf("Unable to create config: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Can't load service: %w", err)
+	}
 	defer sm.Close()
 
-	kingpin.FatalIfError(err, "Load Config ")
 	repository, err := getRepository(config_obj)
-	kingpin.FatalIfError(err, "Loading extra artifacts")
+	if err != nil {
+		return fmt.Errorf("Loading extra artifacts: %w", err)
+	}
 
 	artifact, pres := repository.Get(config_obj, *artifact_command_show_name)
 	if !pres {
-		kingpin.Fatalf("Artifact %s not found",
+		return fmt.Errorf("Artifact %s not found",
 			*artifact_command_show_name)
 	}
 
 	fmt.Println(artifact.Raw)
+	return nil
 }
 
-func doArtifactList() {
-	config_obj, err := makeDefaultConfigLoader().WithNullLoader().LoadAndValidate()
-	kingpin.FatalIfError(err, "Load Config ")
+func doArtifactList() error {
+	config_obj, err := makeDefaultConfigLoader().
+		WithNullLoader().LoadAndValidate()
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
 	repository, err := getRepository(config_obj)
-	kingpin.FatalIfError(err, "Loading extra artifacts")
+	if err != nil {
+		return err
+	}
 
 	var name_regex *regexp.Regexp
 	if *artifact_command_list_name != "" {
 		re, err := getFilterRegEx(*artifact_command_list_name)
-		kingpin.FatalIfError(err, "Artifact name regex not valid")
+		if err != nil {
+			return fmt.Errorf("Artifact name regex not valid", err)
+		}
 
 		name_regex = re
 	}
@@ -271,7 +303,7 @@ func doArtifactList() {
 
 		artifact, pres := repository.Get(config_obj, name)
 		if !pres {
-			kingpin.Fatalf("Artifact %s not found", name)
+			return fmt.Errorf("Artifact %s not found", name)
 		}
 
 		fmt.Println(artifact.Raw)
@@ -281,7 +313,9 @@ func doArtifactList() {
 		}
 
 		launcher, err := services.GetLauncher()
-		kingpin.FatalIfError(err, "GetLauncher")
+		if err != nil {
+			return err
+		}
 
 		request, err := launcher.CompileCollectorArgs(
 			ctx, config_obj, vql_subsystem.NullACLManager{}, repository,
@@ -291,14 +325,19 @@ func doArtifactList() {
 			&flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{artifact.Name},
 			})
-		kingpin.FatalIfError(err, "Unable to compile artifact.")
+		if err != nil {
+			return fmt.Errorf("Unable to compile artifact: %w", err)
+		}
 
 		res, err := yaml.Marshal(request)
-		kingpin.FatalIfError(err, "Unable to encode artifact.")
+		if err != nil {
+			return fmt.Errorf("Unable to encode artifact: %w", err)
+		}
 
 		fmt.Printf("VQLCollectorArgs %s:\n***********\n%v\n",
 			artifact.Name, string(res))
 	}
+	return nil
 }
 
 // Load any artifacts defined inside the config file.
@@ -330,13 +369,13 @@ func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case artifact_command_list.FullCommand():
-			doArtifactList()
+			FatalIfError(artifact_command_list, doArtifactList)
 
 		case artifact_command_show.FullCommand():
-			doArtifactShow()
+			FatalIfError(artifact_command_show, doArtifactShow)
 
 		case artifact_command_collect.FullCommand():
-			doArtifactCollect()
+			FatalIfError(artifact_command_collect, doArtifactCollect)
 
 		default:
 			return false

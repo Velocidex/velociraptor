@@ -9,7 +9,6 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/google/rpmpack"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -162,48 +161,64 @@ exit $RETVAL
 )
 
 // Systemd based start up scripts (Centos 7, 8)
-func doClientRPM() {
+func doClientRPM() error {
 	// Disable logging when creating a deb - we may not create the
 	// deb on the same system where the logs should go.
 	_ = config.ValidateClientConfig(&config_proto.Config{})
 
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredClient().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	config_file_yaml, err := yaml.Marshal(getClientConfig(config_obj))
-	kingpin.FatalIfError(err, "marshal")
+	if err != nil {
+		return err
+	}
 
 	input := *client_rpm_command_binary
 
 	if input == "" {
 		input, err = os.Executable()
-		kingpin.FatalIfError(err, "Unable to open executable")
+		if err != nil {
+			return fmt.Errorf("Unable to open executable: %w", err)
+		}
 	}
 
 	fd, err := os.Open(input)
-	kingpin.FatalIfError(err, "Unable to open executable")
+	if err != nil {
+		return fmt.Errorf("Unable to open executable: %w", err)
+	}
 	defer fd.Close()
 
 	header := make([]byte, 4)
 	_, err = fd.Read(header)
-	kingpin.FatalIfError(err, "Unable to read executable")
+	if err != nil {
+		return fmt.Errorf("Unable to open executable: %w", err)
+	}
 
 	if binary.LittleEndian.Uint32(header) != 0x464c457f {
-		kingpin.Fatalf("Binary does not appear to be an " +
+		return fmt.Errorf("Binary does not appear to be an " +
 			"ELF binary. Please specify the linux binary " +
 			"using the --binary flag.")
 	}
 
 	_, err = fd.Seek(0, io.SeekStart)
-	kingpin.FatalIfError(err, "Unable to read executable")
+	if err != nil {
+		return fmt.Errorf("Unable to read executable: %w", err)
+	}
 
 	binary_text, err := ioutil.ReadAll(fd)
-	kingpin.FatalIfError(err, "Unable to open executable")
+	if err != nil {
+		return fmt.Errorf("Unable to read executable: %w", err)
+	}
 	fd.Close()
 
 	r, err := rpmpack.NewRPM(rpmpack.RPMMetaData{
@@ -212,7 +227,9 @@ func doClientRPM() {
 		Release: "A",
 		Arch:    "x86_64",
 	})
-	kingpin.FatalIfError(err, "Unable to create RPM")
+	if err != nil {
+		return fmt.Errorf("Unable to create RPM: %w", err)
+	}
 
 	r.AddFile(
 		rpmpack.RPMFile{
@@ -256,56 +273,73 @@ func doClientRPM() {
 
 	fd, err = os.OpenFile(*client_rpm_command_output,
 		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
-	kingpin.FatalIfError(err, "Unable to create output file")
+	if err != nil {
+		return fmt.Errorf("Unable to create output file: %w", err)
+	}
 	defer fd.Close()
 
-	err = r.Write(fd)
-	kingpin.FatalIfError(err, "Unable to write output file")
+	return r.Write(fd)
 }
 
 // Simple startup scripts for Sys V based systems (Centos 6)
-func doClientSysVRPM() {
+func doClientSysVRPM() error {
 	// Disable logging when creating a deb - we may not create the
 	// deb on the same system where the logs should go.
 	_ = config.ValidateClientConfig(&config_proto.Config{})
 
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredClient().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	config_file_yaml, err := yaml.Marshal(getClientConfig(config_obj))
-	kingpin.FatalIfError(err, "marshal")
+	if err != nil {
+		return err
+	}
 
 	input := *client_rpm_command_binary
 
 	if input == "" {
 		input, err = os.Executable()
-		kingpin.FatalIfError(err, "Unable to open executable")
+		if err != nil {
+			return fmt.Errorf("Unable to open executable: %w", err)
+		}
 	}
 
 	fd, err := os.Open(input)
-	kingpin.FatalIfError(err, "Unable to open executable")
+	if err != nil {
+		return fmt.Errorf("Unable to open executable: %w", err)
+	}
 	defer fd.Close()
 
 	header := make([]byte, 4)
 	_, err = fd.Read(header)
-	kingpin.FatalIfError(err, "Unable to open executable")
+	if err != nil {
+		return fmt.Errorf("Unable to read executable: %w", err)
+	}
 
 	if binary.LittleEndian.Uint32(header) != 0x464c457f {
-		kingpin.Fatalf("Binary does not appear to be an " +
+		return fmt.Errorf("Binary does not appear to be an " +
 			"ELF binary. Please specify the linux binary " +
 			"using the --binary flag.")
 	}
 
 	_, err = fd.Seek(0, io.SeekStart)
-	kingpin.FatalIfError(err, "Unable to read executable")
+	if err != nil {
+		return fmt.Errorf("Unable to read executable: %w", err)
+	}
 
 	binary_text, err := ioutil.ReadAll(fd)
-	kingpin.FatalIfError(err, "Unable to open executable")
+	if err != nil {
+		return fmt.Errorf("Unable to read executable: %w", err)
+	}
 	fd.Close()
 
 	r, err := rpmpack.NewRPM(rpmpack.RPMMetaData{
@@ -314,7 +348,9 @@ func doClientSysVRPM() {
 		Release: "A",
 		Arch:    "x86_64",
 	})
-	kingpin.FatalIfError(err, "Unable to create RPM")
+	if err != nil {
+		return fmt.Errorf("Unable to create RPM: %w", err)
+	}
 	r.AddFile(
 		rpmpack.RPMFile{
 			Name:  "/etc/velociraptor/client.config.yaml",
@@ -361,11 +397,12 @@ fi
 
 	fd, err = os.OpenFile(*client_rpm_command_output,
 		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
-	kingpin.FatalIfError(err, "Unable to create output file")
+	if err != nil {
+		return fmt.Errorf("Unable to  create output file: %w", err)
+	}
 	defer fd.Close()
 
-	err = r.Write(fd)
-	kingpin.FatalIfError(err, "Unable to write output file")
+	return r.Write(fd)
 }
 
 func init() {
@@ -373,9 +410,9 @@ func init() {
 		switch command {
 		case client_rpm_command.FullCommand():
 			if *client_rpm_command_use_sysv {
-				doClientSysVRPM()
+				FatalIfError(client_rpm_command, doClientSysVRPM)
 			} else {
-				doClientRPM()
+				FatalIfError(client_rpm_command, doClientRPM)
 			}
 
 		default:

@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/Velocidex/ordereddict"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -20,12 +19,17 @@ var (
 	csv_cmd_files = csv_cmd.Arg("files", "CSV files to parse").Required().Strings()
 )
 
-func doCSV() {
-	config_obj, err := makeDefaultConfigLoader().WithNullLoader().LoadAndValidate()
-	kingpin.FatalIfError(err, "Load Config ")
+func doCSV() error {
+	config_obj, err := makeDefaultConfigLoader().
+		WithNullLoader().LoadAndValidate()
+	if err != nil {
+		return err
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return err
+	}
 	defer sm.Close()
 
 	builder := services.ScopeBuilder{
@@ -39,7 +43,9 @@ func doCSV() {
 	}
 
 	manager, err := services.GetRepositoryManager()
-	kingpin.FatalIfError(err, "GetRepositoryManager")
+	if err != nil {
+		return err
+	}
 
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
@@ -51,7 +57,9 @@ func doCSV() {
 	}
 
 	vql, err := vfilter.Parse(query)
-	kingpin.FatalIfError(err, "Unable to parse VQL Query")
+	if err != nil {
+		return err
+	}
 
 	ctx := InstallSignalHandler(scope)
 
@@ -61,18 +69,19 @@ func doCSV() {
 		table.Render()
 
 	case "jsonl":
-		outputJSONL(ctx, scope, vql, os.Stdout)
+		return outputJSONL(ctx, scope, vql, os.Stdout)
 
 	case "json":
-		outputJSON(ctx, scope, vql, os.Stdout)
+		return outputJSON(ctx, scope, vql, os.Stdout)
 	}
+	return nil
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case csv_cmd.FullCommand():
-			doCSV()
+			FatalIfError(csv_cmd, doCSV)
 
 		default:
 			return false

@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/Velocidex/yaml/v2"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -30,16 +29,16 @@ var (
 		"noclient", "Do not bring up a client").Bool()
 )
 
-func doGUI() {
-	var err error
-
+func doGUI() error {
 	datastore_directory := *gui_command_datastore
 	if datastore_directory == "" {
 		datastore_directory = os.TempDir()
 	}
 
-	datastore_directory, err = filepath.Abs(datastore_directory)
-	kingpin.FatalIfError(err, "Unable find path.")
+	datastore_directory, err := filepath.Abs(datastore_directory)
+	if err != nil {
+		return fmt.Errorf("Unable find path: %w", err)
+	}
 
 	server_config_path := filepath.Join(datastore_directory, "server.config.yaml")
 	client_config_path := filepath.Join(datastore_directory, "client.config.yaml")
@@ -61,7 +60,9 @@ func doGUI() {
 
 		config_obj = config.GetDefaultConfig()
 		err := generateNewKeys(config_obj)
-		kingpin.FatalIfError(err, "Unable to create config.")
+		if err != nil {
+			return fmt.Errorf("Unable to create config: %w", err)
+		}
 
 		// GUI Configuration - hard coded username/password
 		// and no SSL are suitable for local deployment only!
@@ -91,7 +92,9 @@ func doGUI() {
 		// Make the client use the datastore_directory for tempfiles as well.
 		tmpdir := filepath.Join(datastore_directory, "temp")
 		err = os.MkdirAll(tmpdir, 0700)
-		kingpin.FatalIfError(err, "Unable to create temp directory.")
+		if err != nil {
+			return fmt.Errorf("Unable to create temp directory: %w", err)
+		}
 
 		config_obj.Client.TempdirLinux = tmpdir
 		config_obj.Client.TempdirWindows = tmpdir
@@ -102,7 +105,9 @@ func doGUI() {
 
 		// Create a user with default password
 		user_record, err := users.NewUserRecord("admin")
-		kingpin.FatalIfError(err, "Unable to create user.")
+		if err != nil {
+			return fmt.Errorf("Unable to create admin user: %w", err)
+		}
 
 		users.SetPassword(user_record, "password")
 		config_obj.GUI.InitialUsers = append(config_obj.GUI.InitialUsers,
@@ -114,13 +119,19 @@ func doGUI() {
 
 		// Write the config for next time
 		serialized, err := yaml.Marshal(config_obj)
-		kingpin.FatalIfError(err, "Unable to create config.")
+		if err != nil {
+			return err
+		}
 
 		fd, err := os.OpenFile(server_config_path,
 			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-		kingpin.FatalIfError(err, "Open file %s", server_config_path)
+		if err != nil {
+			return fmt.Errorf("Open file %s: %w", server_config_path, err)
+		}
 		_, err = fd.Write(serialized)
-		kingpin.FatalIfError(err, "Write file %s", server_config_path)
+		if err != nil {
+			return fmt.Errorf("Write file %s: %w", server_config_path, err)
+		}
 		fd.Close()
 
 		// Now also write a client config
@@ -128,15 +139,20 @@ func doGUI() {
 		client_config.Logging = config_obj.Logging
 
 		serialized, err = yaml.Marshal(client_config)
-		kingpin.FatalIfError(err, "Unable to create config.")
+		if err != nil {
+			return err
+		}
 
 		fd, err = os.OpenFile(client_config_path,
 			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-		kingpin.FatalIfError(err, "Open file %s", client_config_path)
+		if err != nil {
+			return fmt.Errorf("Open file %s: %w", client_config_path, err)
+		}
 		_, err = fd.Write(serialized)
-		kingpin.FatalIfError(err, "Write file %s", client_config_path)
+		if err != nil {
+			return fmt.Errorf("Write file %s: %w", client_config_path, err)
+		}
 		fd.Close()
-
 	}
 
 	// Now start the frontend
@@ -147,7 +163,9 @@ func doGUI() {
 	defer sm.Close()
 
 	server, err := startFrontend(sm)
-	kingpin.FatalIfError(err, "startFrontend")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer server.Close()
 
 	// Just try to open the browser in the background.
@@ -174,6 +192,8 @@ func doGUI() {
 	}
 
 	sm.Wg.Wait()
+
+	return nil
 }
 
 func init() {

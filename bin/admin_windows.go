@@ -4,16 +4,15 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"golang.org/x/sys/windows"
 )
 
-func checkAdmin() {
+func checkAdmin() error {
 	if *artificat_command_collect_admin_flag && !IsAdmin() {
-		fmt.Println("Velociraptor requires administrator level access. Use a 'Run as administrator' command shell to launch the binary.")
-		os.Exit(-1)
+		return fmt.Errorf("Velociraptor requires administrator level access. Use a 'Run as administrator' command shell to launch the binary.")
 	}
+	return nil
 }
 
 // https://github.com/golang/go/issues/28804

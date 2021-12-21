@@ -13,7 +13,6 @@ import (
 
 	"github.com/Velocidex/survey"
 	"github.com/Velocidex/yaml/v2"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -135,7 +134,7 @@ func regexValidator(re string) survey.Validator {
 	}
 }
 
-func configureDataStore(config_obj *config_proto.Config) {
+func configureDataStore(config_obj *config_proto.Config) error {
 	// For now the file based datastore is the only one supported.
 	config_obj.Datastore.Implementation = filebased_datastore
 
@@ -158,47 +157,68 @@ func configureDataStore(config_obj *config_proto.Config) {
 		},
 	}
 
-	kingpin.FatalIfError(
-		survey.Ask(data_store_file,
-			config_obj.Datastore,
-			survey.WithValidator(survey.Required)), "")
+	err := survey.Ask(data_store_file,
+		config_obj.Datastore,
+		survey.WithValidator(survey.Required))
+	if err != nil {
+		return err
+	}
 
 	config_obj.Datastore.FilestoreDirectory = config_obj.Datastore.Location
 	log_question.Default = path.Join(config_obj.Datastore.Location, "logs")
+
+	return nil
 }
 
-func configureDeploymentType(config_obj *config_proto.Config) {
+func configureDeploymentType(config_obj *config_proto.Config) error {
 	// What type of install do we need?
 	install_type := ""
-	kingpin.FatalIfError(survey.AskOne(&survey.Select{
+	err := survey.AskOne(&survey.Select{
 		Options: []string{self_signed, autocert, oauth_sso},
-	}, &install_type, nil), "")
+	}, &install_type, nil)
+	if err != nil {
+		return err
+	}
 
 	switch install_type {
 	case self_signed:
-		kingpin.FatalIfError(configSelfSigned(config_obj), "")
+		err = configSelfSigned(config_obj)
+		if err != nil {
+			return err
+		}
 
 	case autocert:
-		kingpin.FatalIfError(configAutocert(config_obj), "")
+		err = configAutocert(config_obj)
+		if err != nil {
+			return err
+		}
 
 	case oauth_sso:
-		kingpin.FatalIfError(configAutocert(config_obj), "")
+		err = configAutocert(config_obj)
+		if err != nil {
+			return err
+		}
 
 		config_obj.AutocertCertCache = config_obj.Datastore.Location
 		config_obj.GUI.Authenticator = &config_proto.Authenticator{}
-		configureSSO(config_obj)
+		err = configureSSO(config_obj)
+		if err != nil {
+			return err
+		}
 	}
-
+	return nil
 }
 
-func doGenerateConfigInteractive() {
+func doGenerateConfigInteractive() error {
 	config_obj := config.GetDefaultConfig()
 
 	// Figure out which type of server we have.
-	kingpin.FatalIfError(
-		survey.AskOne(server_type_question,
-			&config_obj.ServerType,
-			survey.WithValidator(survey.Required)), "")
+	err := survey.AskOne(server_type_question,
+		&config_obj.ServerType,
+		survey.WithValidator(survey.Required))
+	if err != nil {
+		return err
+	}
 
 	configureDataStore(config_obj)
 	configureDeploymentType(config_obj)
@@ -209,19 +229,31 @@ func doGenerateConfigInteractive() {
 	config_obj.API.BindAddress = "127.0.0.1"
 
 	// Setup dyndns
-	kingpin.FatalIfError(dynDNSConfig(config_obj.Frontend), "")
+	err = dynDNSConfig(config_obj.Frontend)
+	if err != nil {
+		return err
+	}
 
 	// Add users to the config file so the server can be
 	// initialized.
-	kingpin.FatalIfError(addUser(config_obj), "Add users")
+	err = addUser(config_obj)
+	if err != nil {
+		return fmt.Errorf("Add users: %w", err)
+	}
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	logger.Info("Generating keys please wait....")
-	kingpin.FatalIfError(generateNewKeys(config_obj), "")
+	err = generateNewKeys(config_obj)
+	if err != nil {
+		return err
+	}
 
-	kingpin.FatalIfError(survey.AskOne(log_question,
+	err = survey.AskOne(log_question,
 		&config_obj.Logging.OutputDirectory,
-		survey.WithValidator(survey.Required)), "")
+		survey.WithValidator(survey.Required))
+	if err != nil {
+		return err
+	}
 
 	config_obj.Logging.SeparateLogsPerComponent = true
 
@@ -233,46 +265,69 @@ func doGenerateConfigInteractive() {
 
 	storeServerConfig(config_obj)
 	storeClientConfig(config_obj)
+	return nil
 }
 
-func storeClientConfig(config_obj *config_proto.Config) {
+func storeClientConfig(config_obj *config_proto.Config) error {
 	path := ""
-	kingpin.FatalIfError(survey.AskOne(client_output_question, &path,
-		survey.WithValidator(survey.Required)), "")
+	err := survey.AskOne(client_output_question, &path,
+		survey.WithValidator(survey.Required))
+	if err != nil {
+		return err
+	}
 
 	client_config := getClientConfig(config_obj)
 	res, err := yaml.Marshal(client_config)
-	kingpin.FatalIfError(err, "Yaml Marshal")
+	if err != nil {
+		return fmt.Errorf("Yaml Marshal: %w", err)
+	}
 
 	fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	kingpin.FatalIfError(err, "Open file %s", path)
+	if err != nil {
+		return fmt.Errorf("Open file %s: %w", path, err)
+	}
 	_, err = fd.Write(res)
-	kingpin.FatalIfError(err, "Write file %s", path)
+	if err != nil {
+		return fmt.Errorf("Write file %s: %w", path, err)
+	}
 	fd.Close()
+
+	return nil
 }
 
-func storeServerConfig(config_obj *config_proto.Config) {
+func storeServerConfig(config_obj *config_proto.Config) error {
 	path := ""
-	kingpin.FatalIfError(
-		survey.AskOne(output_question, &path,
-			survey.WithValidator(survey.Required)), "")
+	err := survey.AskOne(output_question, &path,
+		survey.WithValidator(survey.Required))
+	if err != nil {
+		return err
+	}
 
 	res, err := yaml.Marshal(config_obj)
-	kingpin.FatalIfError(err, "Yaml Marshal")
+	if err != nil {
+		return fmt.Errorf("Yaml Marshal: %w", err)
+	}
 
 	fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	kingpin.FatalIfError(err, "Open file %s", path)
+	if err != nil {
+		return fmt.Errorf("Open file %s: %w", path, err)
+	}
 	_, err = fd.Write(res)
-	kingpin.FatalIfError(err, "Write file %s", path)
+	if err != nil {
+		return fmt.Errorf("Write file %s: %w", path, err)
+	}
 	fd.Close()
+	return nil
 }
 
-func configureSSO(config_obj *config_proto.Config) {
+func configureSSO(config_obj *config_proto.Config) error {
 	// Which flavor of SSO do we want?
-	kingpin.FatalIfError(
-		survey.AskOne(sso_type,
-			&config_obj.GUI.Authenticator.Type,
-			survey.WithValidator(survey.Required)), "")
+	err := survey.AskOne(sso_type,
+		&config_obj.GUI.Authenticator.Type,
+		survey.WithValidator(survey.Required))
+	if err != nil {
+		return err
+	}
 
 	// Provide the user with a hint about the redirect URL
 	redirect := ""
@@ -291,9 +346,12 @@ func configureSSO(config_obj *config_proto.Config) {
 
 	switch config_obj.GUI.Authenticator.Type {
 	case "Google", "GitHub":
-		kingpin.FatalIfError(survey.Ask(google_oauth,
+		err = survey.Ask(google_oauth,
 			config_obj.GUI.Authenticator,
-			survey.WithValidator(survey.Required)), "")
+			survey.WithValidator(survey.Required))
+		if err != nil {
+			return err
+		}
 
 	case "Azure":
 		// Azure also requires the tenant ID
@@ -304,9 +362,12 @@ func configureSSO(config_obj *config_proto.Config) {
 			},
 		})
 
-		kingpin.FatalIfError(survey.Ask(google_oauth,
+		err = survey.Ask(google_oauth,
 			config_obj.GUI.Authenticator,
-			survey.WithValidator(survey.Required)), "")
+			survey.WithValidator(survey.Required))
+		if err != nil {
+			return err
+		}
 	case "OIDC":
 		// OIDC require Issuer URL
 		google_oauth = append(google_oauth, &survey.Question{
@@ -324,10 +385,14 @@ func configureSSO(config_obj *config_proto.Config) {
 			},
 		})
 
-		kingpin.FatalIfError(survey.Ask(google_oauth,
+		err = survey.Ask(google_oauth,
 			config_obj.GUI.Authenticator,
-			survey.WithValidator(survey.Required)), "")
+			survey.WithValidator(survey.Required))
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func dynDNSConfig(frontend *config_proto.FrontendConfig) error {

@@ -30,6 +30,7 @@ func (self HardError) Error() string {
 }
 
 type loader_func func(self *Loader) (*config_proto.Config, error)
+type config_mutator_func func(self *config_proto.Config) error
 type validator func(self *Loader, config_obj *config_proto.Config) error
 
 type Loader struct {
@@ -37,8 +38,9 @@ type Loader struct {
 
 	write_back_path string
 
-	loaders    []loader_func
-	validators []validator
+	loaders         []loader_func
+	config_mutators []config_mutator_func
+	validators      []validator
 
 	logger *logging.LogContext
 }
@@ -212,6 +214,13 @@ func (self *Loader) WithCustomLoader(loader func(self *Loader) (*config_proto.Co
 	return self
 }
 
+func (self *Loader) WithConfigMutator(
+	mutator config_mutator_func) *Loader {
+	self = self.Copy()
+	self.config_mutators = append(self.config_mutators, mutator)
+	return self
+}
+
 func (self *Loader) WithCustomValidator(
 	validator func(config_obj *config_proto.Config) error) *Loader {
 	self = self.Copy()
@@ -332,6 +341,7 @@ func (self *Loader) Copy() *Loader {
 		write_back_path: self.write_back_path,
 		loaders:         append([]loader_func{}, self.loaders...),
 		validators:      append([]validator{}, self.validators...),
+		config_mutators: append([]config_mutator_func{}, self.config_mutators...),
 	}
 }
 
@@ -348,6 +358,14 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 
 	logging.Reset()
 	logging.SuppressLogging = !self.verbose
+
+	// Apply any configuration mutators
+	for _, mutator := range self.config_mutators {
+		err = mutator(config_obj)
+		if err != nil {
+			return err
+		}
+	}
 
 	// Initialize the logging and dump early messages into the
 	// correct log destination.

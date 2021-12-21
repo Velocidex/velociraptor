@@ -28,7 +28,7 @@ import (
 	"sync"
 	"time"
 
-	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	rotatelogs "github.com/Velocidex/file-rotatelogs"
 	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
@@ -208,7 +208,7 @@ func Reset() {
 func getRotator(
 	config_obj *config_proto.Config,
 	rotator_config *config_proto.LoggingRetentionConfig,
-	base_path string) io.Writer {
+	base_path string) (io.Writer, error) {
 
 	if rotator_config == nil {
 		rotator_config = &config_proto.LoggingRetentionConfig{
@@ -218,7 +218,7 @@ func getRotator(
 	}
 
 	if rotator_config.Disabled {
-		return ioutil.Discard
+		return ioutil.Discard, nil
 	}
 
 	max_age := rotator_config.MaxAge
@@ -239,12 +239,14 @@ func getRotator(
 		// 7 days.
 		rotatelogs.WithRotationTime(time.Duration(rotation)*time.Second),
 	)
-
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return result
+	// Make sure to write one message to confirm that we can actually
+	// write to the file.
+	_, err = result.Write([]byte("Starting...\n"))
+	return result, err
 }
 
 func (self *LogManager) makeNewComponent(
@@ -266,17 +268,31 @@ func (self *LogManager) makeNewComponent(
 		}
 
 		base_filename := filepath.Join(base_directory, *component)
-		pathMap := lfshook.WriterMap{
-			logrus.DebugLevel: getRotator(
-				config_obj, config_obj.Logging.Debug,
-				base_filename+"_debug.log"),
-			logrus.InfoLevel: getRotator(
-				config_obj, config_obj.Logging.Info,
-				base_filename+"_info.log"),
-			logrus.ErrorLevel: getRotator(
-				config_obj, config_obj.Logging.Error,
-				base_filename+"_error.log"),
+		pathMap := lfshook.WriterMap{}
+
+		rotator, err := getRotator(
+			config_obj, config_obj.Logging.Debug,
+			base_filename+"_debug.log")
+		if err != nil {
+			return nil, err
 		}
+		pathMap[logrus.DebugLevel] = rotator
+
+		rotator, err = getRotator(
+			config_obj, config_obj.Logging.Debug,
+			base_filename+"_info.log")
+		if err != nil {
+			return nil, err
+		}
+		pathMap[logrus.InfoLevel] = rotator
+
+		rotator, err = getRotator(
+			config_obj, config_obj.Logging.Debug,
+			base_filename+"_error.log")
+		if err != nil {
+			return nil, err
+		}
+		pathMap[logrus.ErrorLevel] = rotator
 
 		hook := lfshook.NewHook(
 			pathMap,

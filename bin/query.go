@@ -72,33 +72,39 @@ var (
 func outputJSON(ctx context.Context,
 	scope vfilter.Scope,
 	vql *vfilter.VQL,
-	out io.Writer) {
+	out io.Writer) error {
 	for result := range vfilter.GetResponseChannel(
 		vql, ctx, scope,
 		vql_subsystem.MarshalJsonIndent(scope),
 		10, *max_wait) {
 		_, err := out.Write(result.Payload)
-		kingpin.FatalIfError(err, "outputJSON")
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func outputJSONL(ctx context.Context,
 	scope vfilter.Scope,
 	vql *vfilter.VQL,
-	out io.Writer) {
+	out io.Writer) error {
 	for result := range vfilter.GetResponseChannel(
 		vql, ctx, scope,
 		vql_subsystem.MarshalJsonl(scope),
 		10, *max_wait) {
 		_, err := out.Write(result.Payload)
-		kingpin.FatalIfError(err, "outputJSONL")
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func outputCSV(ctx context.Context,
 	scope vfilter.Scope,
 	vql *vfilter.VQL,
-	out io.Writer) {
+	out io.Writer) error {
 	result_chan := vfilter.GetResponseChannel(vql, ctx, scope,
 		vql_subsystem.MarshalJson(scope),
 		10, *max_wait)
@@ -110,7 +116,9 @@ func outputCSV(ctx context.Context,
 	for result := range result_chan {
 		payload := []map[string]interface{}{}
 		err := json.Unmarshal(result.Payload, &payload)
-		kingpin.FatalIfError(err, "outputCSV")
+		if err != nil {
+			return err
+		}
 
 		for _, row := range payload {
 			row_dict := ordereddict.NewDict()
@@ -124,15 +132,17 @@ func outputCSV(ctx context.Context,
 			csv_writer.Write(row_dict)
 		}
 	}
-
+	return nil
 }
 
 func doRemoteQuery(
 	config_obj *config_proto.Config, format string,
-	queries []string, env *ordereddict.Dict) {
+	queries []string, env *ordereddict.Dict) error {
 	ctx := context.Background()
 	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
-	kingpin.FatalIfError(err, "GetAPIClient")
+	if err != nil {
+		return err
+	}
 	defer func() { _ = closer() }()
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
@@ -157,14 +167,18 @@ func doRemoteQuery(
 			&actions_proto.VQLRequest{VQL: query})
 	}
 	stream, err := client.Query(context.Background(), request)
-	kingpin.FatalIfError(err, "GetAPIClient")
+	if err != nil {
+		return err
+	}
 
 	for {
 		response, err := stream.Recv()
 		if response == nil && err == io.EOF {
 			break
 		}
-		kingpin.FatalIfError(err, "GetAPIClient")
+		if err != nil {
+			return err
+		}
 
 		if response.Log != "" {
 			logger.Info(response.Log)
@@ -177,7 +191,9 @@ func doRemoteQuery(
 		}
 
 		rows, err := utils.ParseJsonToDicts([]byte(json_response))
-		kingpin.FatalIfError(err, "GetAPIClient")
+		if err != nil {
+			return err
+		}
 
 		switch format {
 		case "text":
@@ -210,6 +226,7 @@ func doRemoteQuery(
 			}
 		}
 	}
+	return nil
 }
 
 func startEssentialServices(config_obj *config_proto.Config) (
@@ -227,12 +244,16 @@ func startEssentialServices(config_obj *config_proto.Config) (
 	return sm, err
 }
 
-func doQuery() {
+func doQuery() error {
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
-	kingpin.FatalIfError(err, "Load Config")
+	if err != nil {
+		return err
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	env := ordereddict.NewDict()
@@ -243,13 +264,14 @@ func doQuery() {
 	if config_obj.ApiConfig != nil && config_obj.ApiConfig.Name != "" {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
 			Info("API Client configuration loaded - will make gRPC connection.")
-		doRemoteQuery(config_obj, *format, *queries, env)
-		return
+		return doRemoteQuery(config_obj, *format, *queries, env)
 	}
 
 	// Initialize the repository in case the artifacts use it
 	_, err = getRepository(config_obj)
-	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
+	if err != nil {
+		return fmt.Errorf("Artifact GetGlobalRepository: %w ", err)
+	}
 
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
@@ -276,13 +298,17 @@ func doQuery() {
 	}
 
 	manager, err := services.GetRepositoryManager()
-	kingpin.FatalIfError(err, "GetRepositoryManager")
+	if err != nil {
+		return err
+	}
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	if *scope_file != "" {
 		scope, err = loadScopeFromFile(*scope_file, scope)
-		kingpin.FatalIfError(err, "loadScopeFromFile")
+		if err != nil {
+			return fmt.Errorf("loadScopeFromFile: %w", err)
+		}
 
 		// When the scope is destroyed store it in the file again.
 		if !*do_not_update {
@@ -315,23 +341,32 @@ func doQuery() {
 				table := reporting.EvalQueryToTable(ctx, scope, vql, os.Stdout)
 				table.Render()
 			case "json":
-				outputJSON(ctx, scope, vql, os.Stdout)
+				err = outputJSON(ctx, scope, vql, os.Stdout)
+				if err != nil {
+					return err
+				}
 
 			case "jsonl":
-				outputJSONL(ctx, scope, vql, os.Stdout)
-
+				err = outputJSONL(ctx, scope, vql, os.Stdout)
+				if err != nil {
+					return err
+				}
 			case "csv":
-				outputCSV(ctx, scope, vql, os.Stdout)
+				err = outputCSV(ctx, scope, vql, os.Stdout)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
+	return nil
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case query.FullCommand():
-			doQuery()
+			FatalIfError(query, doQuery)
 
 		default:
 			return false

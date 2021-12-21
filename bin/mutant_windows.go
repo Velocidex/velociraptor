@@ -3,10 +3,9 @@
 package main
 
 import (
+	"fmt"
 	"syscall"
 	"unsafe"
-
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
@@ -19,9 +18,9 @@ var (
 // This is useful when Velociraptor is run from GPO or another
 // mechanism that may start multiple copies of it. The first copy will
 // succeed and the other copied will exit.
-func checkMutex() {
+func checkMutex() error {
 	if *global_mutant_name == "" {
-		return
+		return nil
 	}
 
 	_, _, err := procCreateMutex.Call(
@@ -31,8 +30,8 @@ func checkMutex() {
 	)
 	switch int(err.(syscall.Errno)) {
 	case 0:
-		return
+		return nil
 	default:
-		kingpin.Fatalf("Unable to start because mutant is in use")
+		return fmt.Errorf("Unable to start because mutant is in use")
 	}
 }

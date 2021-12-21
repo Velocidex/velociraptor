@@ -46,7 +46,6 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/xor-gate/debpkg"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -126,38 +125,49 @@ WantedBy=multi-user.target
 `
 )
 
-func doServerDeb() {
+func doServerDeb() error {
 	// Disable logging when creating a deb - we may not create the
 	// deb on the same system where the logs should go.
 	_ = config.ValidateClientConfig(&config_proto.Config{})
 
-	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredFrontend().LoadAndValidate()
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	// Debian packages always use the "velociraptor" user.
 	config_obj.Frontend.RunAsUser = "velociraptor"
 	config_obj.ServerType = "linux"
 
 	res, err := yaml.Marshal(config_obj)
-	kingpin.FatalIfError(err, "marshal")
+	if err != nil {
+		return err
+	}
 
 	input := *server_debian_command_binary
 
 	if input == "" {
 		input, err = os.Executable()
-		kingpin.FatalIfError(err, "Unable to open executable")
+		if err != nil {
+			return fmt.Errorf("Unable to open executable: %w", err)
+		}
 	}
 
 	fd, err := os.Open(input)
-	kingpin.FatalIfError(err, "Unable to open executable")
+	if err != nil {
+		return fmt.Errorf("Unable to open executable: %w", err)
+	}
 	defer fd.Close()
 
 	header := make([]byte, 4)
 	_, err = fd.Read(header)
-	kingpin.FatalIfError(err, "Unable to read header")
+	if err != nil {
+		return fmt.Errorf("Unable to read header: %w", err)
+	}
 
 	if binary.LittleEndian.Uint32(header) != 0x464c457f {
-		kingpin.Fatalf("Binary does not appear to be an " +
+		return fmt.Errorf("Binary does not appear to be an " +
 			"ELF binary. Please specify the linux binary " +
 			"using the --binary flag.")
 	}
@@ -178,15 +188,23 @@ func doServerDeb() {
 	velociraptor_bin := "/usr/local/bin/velociraptor"
 
 	err = deb.AddFileString(string(res), config_path)
-	kingpin.FatalIfError(err, "Adding file")
+	if err != nil {
+		return fmt.Errorf("Adding file: %w", err)
+	}
 	err = deb.AddFileString(fmt.Sprintf(
 		server_service_definition, velociraptor_bin, config_path),
 		"/etc/systemd/system/velociraptor_server.service")
-	kingpin.FatalIfError(err, "Adding file")
+	if err != nil {
+		return fmt.Errorf("Adding file: %w", err)
+	}
 	err = deb.AddFile(input, velociraptor_bin+".bin")
-	kingpin.FatalIfError(err, "Adding file")
+	if err != nil {
+		return fmt.Errorf("Adding file: %w", err)
+	}
 	err = deb.AddFileString(server_launcher, velociraptor_bin)
-	kingpin.FatalIfError(err, "Adding file")
+	if err != nil {
+		return fmt.Errorf("Adding file: %w", err)
+	}
 
 	filestore_path := config_obj.Datastore.Location
 	err = deb.AddControlExtraString("postinst", fmt.Sprintf(`
@@ -218,47 +236,64 @@ setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bi
 /bin/systemctl enable velociraptor_server
 /bin/systemctl start velociraptor_server
 `, filestore_path, filestore_path, filestore_path))
-	kingpin.FatalIfError(err, "Adding file")
+	if err != nil {
+		return fmt.Errorf("Adding file: %w", err)
+	}
 
 	err = deb.AddControlExtraString("prerm", `
 /bin/systemctl disable velociraptor_server
 /bin/systemctl stop velociraptor_server
 `)
-	kingpin.FatalIfError(err, "Adding file")
+	if err != nil {
+		return fmt.Errorf("Adding file: %w", err)
+	}
 
 	err = deb.Write(*server_debian_command_output)
-	kingpin.FatalIfError(err, "Deb write")
+	if err != nil {
+		return fmt.Errorf("Deb write: %w", err)
+	}
+	return nil
 }
 
-func doClientDeb() {
+func doClientDeb() error {
 	// Disable logging when creating a deb - we may not create the
 	// deb on the same system where the logs should go.
 	_ = config.ValidateClientConfig(&config_proto.Config{})
 
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredClient().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	res, err := yaml.Marshal(getClientConfig(config_obj))
-	kingpin.FatalIfError(err, "marshal")
+	if err != nil {
+		return err
+	}
 
 	input := *client_debian_command_binary
 
 	if input == "" {
 		input, err = os.Executable()
-		kingpin.FatalIfError(err, "Unable to open executable")
+		if err != nil {
+			return fmt.Errorf("Unable to open executable: %w", err)
+		}
 	}
 
 	fd, err := os.Open(input)
-	kingpin.FatalIfError(err, "Unable to open executable")
+	if err != nil {
+		return fmt.Errorf("Unable to open executable: %w", err)
+	}
 	defer fd.Close()
 
 	header := make([]byte, 4)
 	_, err = fd.Read(header)
-	kingpin.FatalIfError(err, "Unable to open executable")
+	if err != nil {
+		return fmt.Errorf("Unable to open executable: %w", err)
+	}
 
 	if binary.LittleEndian.Uint32(header) != 0x464c457f {
-		kingpin.Fatalf("Binary does not appear to be an " +
+		return fmt.Errorf("Binary does not appear to be an " +
 			"ELF binary. Please specify the linux binary " +
 			"using the --binary flag.")
 	}
@@ -278,40 +313,54 @@ func doClientDeb() {
 	velociraptor_bin := "/usr/local/bin/velociraptor_client"
 
 	err = deb.AddFileString(string(res), config_path)
-	kingpin.FatalIfError(err, "Deb write")
+	if err != nil {
+		return fmt.Errorf("Deb write: %w", err)
+	}
 
 	err = deb.AddFileString(fmt.Sprintf(
 		client_service_definition, velociraptor_bin, config_path),
 		"/etc/systemd/system/velociraptor_client.service")
-	kingpin.FatalIfError(err, "Deb write")
+	if err != nil {
+		return fmt.Errorf("Deb write: %w", err)
+	}
 
 	err = deb.AddFile(input, velociraptor_bin)
-	kingpin.FatalIfError(err, "Deb write")
+	if err != nil {
+		return fmt.Errorf("Deb write: %w", err)
+	}
 
 	err = deb.AddControlExtraString("postinst", `
 /bin/systemctl enable velociraptor_client
 /bin/systemctl start velociraptor_client
 `)
-	kingpin.FatalIfError(err, "Deb write")
+	if err != nil {
+		return fmt.Errorf("Deb write: %w", err)
+	}
 
 	err = deb.AddControlExtraString("prerm", `
 /bin/systemctl disable velociraptor_client
 /bin/systemctl stop velociraptor_client
 `)
-	kingpin.FatalIfError(err, "Deb write")
+	if err != nil {
+		return fmt.Errorf("Deb write: %w", err)
+	}
 
 	err = deb.Write(*client_debian_command_output)
-	kingpin.FatalIfError(err, "Deb write")
+	if err != nil {
+		return fmt.Errorf("Deb write: %w", err)
+	}
+
+	return nil
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case server_debian_command.FullCommand():
-			doServerDeb()
+			FatalIfError(server_debian_command, doServerDeb)
 
 		case client_debian_command.FullCommand():
-			doClientDeb()
+			FatalIfError(client_debian_command, doClientDeb)
 
 		default:
 			return false

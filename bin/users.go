@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"golang.org/x/crypto/ssh/terminal"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -52,27 +51,35 @@ var (
 		"username", "Username to lock").Required().String()
 )
 
-func doAddUser() {
+func doAddUser() error {
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredUser().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	user_record, err := users.NewUserRecord(*user_add_name)
 	if err != nil {
-		kingpin.FatalIfError(err, "add user:")
+		return fmt.Errorf("add user: %s", err)
 	}
 
 	err = acls.GrantRoles(config_obj, *user_add_name,
 		strings.Split(*user_add_roles, ","))
-	kingpin.FatalIfError(err, "Granting roles: ")
+	if err != nil {
+		return err
+	}
 
 	authenticator, err := authenticators.NewAuthenticator(config_obj)
-	kingpin.FatalIfError(err, "Granting roles: ")
+	if err != nil {
+		return fmt.Errorf("Granting roles: %w", err)
+	}
 
 	if authenticator.IsPasswordLess() {
 		fmt.Printf("Authentication will occur via %v - "+
@@ -81,7 +88,9 @@ func doAddUser() {
 
 		password := make([]byte, 100)
 		_, err = rand.Read(password)
-		kingpin.FatalIfError(err, "rand")
+		if err != nil {
+			return err
+		}
 		password_str := string(password)
 		user_add_password = &password_str
 
@@ -89,8 +98,7 @@ func doAddUser() {
 		fmt.Printf("Enter user's password: ")
 		password, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
-			kingpin.FatalIfError(
-				err, "Unable to read password from terminal.")
+			return fmt.Errorf("Unable to read password from terminal: %w", err)
 		}
 		password_str := string(password)
 		user_add_password = &password_str
@@ -99,61 +107,77 @@ func doAddUser() {
 	users.SetPassword(user_record, *user_add_password)
 	err = users.SetUser(config_obj, user_record)
 	if err != nil {
-		kingpin.FatalIfError(
-			err, "Unable to set user account.")
+		return fmt.Errorf("Unable to set user account: %w", err)
 	}
 	fmt.Printf("\r\n")
+	return nil
 }
 
-func doShowUser() {
-	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+func doShowUser() error {
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredFrontend().LoadAndValidate()
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	user_record, err := users.GetUser(config_obj, *user_show_name)
-	kingpin.FatalIfError(err, "Unable to find user %s", *user_show_name)
+	if err != nil {
+		return fmt.Errorf("Unable to find user %s", *user_show_name)
+	}
 
 	s, err := json.MarshalIndent(user_record)
-	if err == nil {
-		os.Stdout.Write(s)
+	if err != nil {
+		return err
 	}
+	os.Stdout.Write(s)
+	return nil
 }
 
-func doLockUser() {
-	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+func doLockUser() error {
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredFrontend().LoadAndValidate()
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	user_record, err := users.GetUser(config_obj, *user_lock_name)
-	kingpin.FatalIfError(err, "Unable to find user %s", *user_lock_name)
+	if err != nil {
+		return fmt.Errorf("Unable to find user %s", *user_lock_name)
+	}
 
 	user_record.Locked = true
 
 	err = users.SetUser(config_obj, user_record)
 	if err != nil {
-		kingpin.FatalIfError(
-			err, "Unable to set user account.")
+		return fmt.Errorf("Unable to set user account: %w", err)
 	}
 	fmt.Printf("\r\n")
+	return nil
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case user_add.FullCommand():
-			doAddUser()
+			FatalIfError(user_add, doAddUser)
 
 		case user_lock.FullCommand():
-			doLockUser()
+			FatalIfError(user_lock, doLockUser)
 
 		case user_show.FullCommand():
-			doShowUser()
+			FatalIfError(user_show, doShowUser)
 
 		default:
 			return false

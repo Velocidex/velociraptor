@@ -18,8 +18,9 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/sirupsen/logrus"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
 	assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -42,37 +43,49 @@ var (
 		"Disabled the panic guard mechanism (not recommended)").Bool()
 )
 
-func doFrontendWithPanicGuard() {
+func doFrontendWithPanicGuard() error {
 	if !*frontend_disable_panic_guard {
-		writeLogOnPanic()
+		err := writeLogOnPanic()
+		if err != nil {
+			return err
+		}
 	}
-	doFrontend()
+	return doFrontend()
 }
 
-func doFrontend() {
+func doFrontend() error {
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredUser().
 		WithRequiredLogging().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+	if err != nil {
+		return fmt.Errorf("loading config file: %w", err)
+	}
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
 	if *frontend_cmd_node != "" {
-		kingpin.FatalIfError(frontend.SelectFrontend(
-			*frontend_cmd_node, config_obj),
-			"Selecting minion frontend")
+		err = frontend.SelectFrontend(
+			*frontend_cmd_node, config_obj)
+		if err != nil {
+			return fmt.Errorf("Selecting minion frontend: %w", err)
+		}
 	}
 
 	sm := services.NewServiceManager(ctx, config_obj)
 	defer sm.Close()
 
 	server, err := startFrontend(sm)
-	kingpin.FatalIfError(err, "startFrontend %+v", err)
+	if err != nil {
+		return fmt.Errorf("starting frontend: %w", err)
+	}
 	defer server.Close()
 
+	// Wait here for completion.
 	sm.Wg.Wait()
+
+	return nil
 }
 
 // Start the frontend service.
@@ -155,8 +168,7 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		if command == frontend_cmd.FullCommand() {
-			doFrontendWithPanicGuard()
-			return true
+			FatalIfError(frontend_cmd, doFrontendWithPanicGuard)
 		}
 		return false
 	})

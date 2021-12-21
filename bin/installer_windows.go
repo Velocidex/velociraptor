@@ -85,7 +85,9 @@ func doInstall(config_obj *config_proto.Config) (err error) {
 	target_path := os.ExpandEnv(config_obj.Client.WindowsInstaller.InstallPath)
 
 	executable, err := os.Executable()
-	kingpin.FatalIfError(err, "unable to determine executable path")
+	if err != nil {
+		return fmt.Errorf("unable to determine executable path: %w", err)
+	}
 	pres, err := checkServiceExists(service_name)
 	if err != nil {
 		logger.Info("checkServiceExists: %v", err)
@@ -293,9 +295,11 @@ func removeService(name string) error {
 	return nil
 }
 
-func doRemove() {
+func doRemove() error {
 	config_obj, err := makeDefaultConfigLoader().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	service_name := config_obj.Client.WindowsInstaller.ServiceName
@@ -309,8 +313,11 @@ func doRemove() {
 	}
 
 	err = removeService(service_name)
-	kingpin.FatalIfError(err, "Unable to remove service")
+	if err != nil {
+		return fmt.Errorf("Unable to remove service: %w", err)
+	}
 	logger.Info("Removed service %s", service_name)
+	return nil
 }
 
 func getLogger(name string) (debug.Log, error) {
@@ -566,7 +573,7 @@ func init() {
 			}
 
 		case remove_command.FullCommand():
-			doRemove()
+			FatalIfError(remove_command, doRemove)
 
 		case run_command.FullCommand():
 			name := "velociraptor"

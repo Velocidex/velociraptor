@@ -25,7 +25,6 @@ import (
 	"sync"
 
 	"github.com/Velocidex/yaml/v2"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
@@ -68,7 +67,7 @@ func (self *counter) Inc() {
 
 }
 
-func doPoolClient() {
+func doPoolClient() error {
 	number_of_clients := *pool_client_number
 	if number_of_clients <= 0 {
 		number_of_clients = 2
@@ -81,10 +80,14 @@ func doPoolClient() {
 		WithRequiredClient().
 		WithVerbose(*verbose_flag).
 		LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(client_config)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	server.IncreaseLimits(client_config)
@@ -96,14 +99,16 @@ func doPoolClient() {
 	for i := 0; i < number_of_clients; i++ {
 		client_config := &config_proto.Config{}
 		err := json.Unmarshal(serialized, &client_config)
-		kingpin.FatalIfError(err, "Copying configs.")
+		if err != nil {
+			return fmt.Errorf("Copying configs: %w", err)
+		}
 		configs = append(configs, client_config)
 	}
 
 	c := counter{}
 
 	for i := 0; i < number_of_clients; i++ {
-		go func(i int) {
+		go func(i int) error {
 			client_config := configs[i]
 			filename := fmt.Sprintf("pool_client.yaml.%d", i)
 			client_config.Client.WritebackLinux = path.Join(
@@ -117,8 +122,9 @@ func doPoolClient() {
 
 			existing_writeback := &config_proto.Writeback{}
 			writeback, err := config.WritebackLocation(client_config)
-			kingpin.FatalIfError(err, "Unable to load writeback file")
-
+			if err != nil {
+				return fmt.Errorf("Unable to load writeback file: %w", err)
+			}
 			data, err := ioutil.ReadFile(writeback)
 
 			// Failing to read the file is not an error - the file may not
@@ -140,15 +146,19 @@ func doPoolClient() {
 			// Make sure the config is ok.
 			err = crypto_utils.VerifyConfig(client_config)
 			if err != nil {
-				kingpin.FatalIfError(err, "Invalid config")
+				return fmt.Errorf("Invalid config: %w", err)
 			}
 
 			manager, err := crypto_client.NewClientCryptoManager(
 				client_config, []byte(client_config.Writeback.PrivateKey))
-			kingpin.FatalIfError(err, "Unable to parse config file")
+			if err != nil {
+				return fmt.Errorf("Unable to parse config file: %w", err)
+			}
 
 			exe, err := executor.NewPoolClientExecutor(ctx, client_config, i)
-			kingpin.FatalIfError(err, "Can not create executor.")
+			if err != nil {
+				return fmt.Errorf("Can not create executor: %w", err)
+			}
 
 			comm, err := http_comms.NewHTTPCommunicator(
 				client_config,
@@ -158,23 +168,27 @@ func doPoolClient() {
 				nil,
 				utils.RealClock{},
 			)
-			kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")
+			if err != nil {
+				return fmt.Errorf("Can not create HTTPCommunicator: %w", err)
+			}
 
 			c.Inc()
 			// Run the client in the background.
 			comm.Run(ctx)
+			return nil
 		}(i)
 	}
 
 	// Block forever.
 	<-ctx.Done()
+	return nil
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
-		case "pool_client":
-			doPoolClient()
+		case pool_client_command.FullCommand():
+			FatalIfError(pool_client_command, doPoolClient)
 		default:
 			return false
 		}

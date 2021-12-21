@@ -93,21 +93,28 @@ var (
 		"Reissue all certificates with the same keys.")
 )
 
-func doShowConfig() {
+func doShowConfig() error {
 	config_obj, err := makeDefaultConfigLoader().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config.")
+	if err != nil {
+		return err
+	}
 
 	if *config_show_command_json {
 		serialized, err := json.Marshal(config_obj)
-		kingpin.FatalIfError(err, "Unable to encode config.")
+		if err != nil {
+			return err
+		}
 		fmt.Printf("%v", string(serialized))
-		return
+		return nil
 	}
 
 	res, err := yaml.Marshal(config_obj)
-	kingpin.FatalIfError(err, "Unable to encode config.")
-
+	if err != nil {
+		return err
+	}
 	fmt.Printf("%v", string(res))
+
+	return nil
 }
 
 func generateNewKeys(config_obj *config_proto.Config) error {
@@ -158,64 +165,58 @@ func generateNewKeys(config_obj *config_proto.Config) error {
 	return nil
 }
 
-func doGenerateConfigNonInteractive() {
+func doGenerateConfigNonInteractive() error {
 	// We have to suppress writing to stdout so users can redirect
 	// output to a file.
 	logging.SuppressLogging = true
 	config_obj := config.GetDefaultConfig()
 
 	err := generateNewKeys(config_obj)
-
-	// Users have to updated the following fields.
-	config_obj.Client.ServerUrls = []string{"https://localhost:8000/"}
-
-	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	if err != nil {
-		logger.Error("Unable to create config: %v", err)
-		return
+		return fmt.Errorf("Unable to create config: %w", err)
 	}
+
+	// Users have to update the following fields.
+	config_obj.Client.ServerUrls = []string{"https://localhost:8000/"}
 
 	for _, merge_patch := range *config_generate_command_merge {
 		serialized, err := json.Marshal(config_obj)
 		if err != nil {
-			logger.Error("Marshal config_obj")
-			return
+			return fmt.Errorf("Marshal config_obj: %w", err)
 		}
 
 		patched, err := jsonpatch.MergePatch(
 			serialized, []byte(merge_patch))
 		if err != nil {
-			logger.Error("Invalid merge patch: %v", err)
-			return
+			return fmt.Errorf("Invalid merge patch: %w", err)
 		}
 
 		err = json.Unmarshal(patched, &config_obj)
 		if err != nil {
-			logger.Error("Patched object produces an invalid config: %v", err)
-			return
+			return fmt.Errorf("Patched object produces an invalid config: %w", err)
 		}
 	}
 
 	res, err := yaml.Marshal(config_obj)
 	if err != nil {
-		logger.Error("Unable to create config: %v", err)
-		return
+		return fmt.Errorf("Unable to create config: %w", err)
 	}
 	fmt.Printf("%v", string(res))
+	return nil
 }
 
-func doRotateKeyConfig() {
-	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config.")
-
-	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
+func doRotateKeyConfig() error {
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredFrontend().LoadAndValidate()
+	if err != nil {
+		return err
+	}
 
 	// Frontends must have a well known common name.
 	frontend_cert, err := crypto.GenerateServerCert(
 		config_obj, config_obj.Client.PinnedServerName)
 	if err != nil {
-		logger.Error("Unable to create Frontend cert: %v", err)
-		return
+		return fmt.Errorf("Unable to create Frontend cert: %w", err)
 	}
 
 	config_obj.Frontend.Certificate = frontend_cert.Cert
@@ -225,7 +226,7 @@ func doRotateKeyConfig() {
 	gw_certificate, err := crypto.GenerateServerCert(
 		config_obj, config_obj.API.PinnedGwName)
 	if err != nil {
-		kingpin.FatalIfError(err, "Unable to create gatewat cert")
+		return err
 	}
 
 	config_obj.GUI.GwCertificate = gw_certificate.Cert
@@ -233,14 +234,19 @@ func doRotateKeyConfig() {
 
 	res, err := yaml.Marshal(config_obj)
 	if err != nil {
-		kingpin.FatalIfError(err, "Unable to encode config.")
+		return err
 	}
 	fmt.Printf("%v", string(res))
+
+	return nil
 }
 
-func doReissueServerKeys() {
-	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config.")
+func doReissueServerKeys() error {
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredFrontend().LoadAndValidate()
+	if err != nil {
+		return err
+	}
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
@@ -250,7 +256,7 @@ func doReissueServerKeys() {
 		config_obj.Frontend.PrivateKey)
 	if err != nil {
 		logger.Error("Unable to create Frontend cert: %v", err)
-		return
+		return err
 	}
 
 	config_obj.Frontend.Certificate = frontend_cert.Cert
@@ -261,7 +267,7 @@ func doReissueServerKeys() {
 		config_obj, config_obj.GUI.GwCertificate,
 		config_obj.GUI.GwPrivateKey)
 	if err != nil {
-		kingpin.FatalIfError(err, "Unable to create gatewat cert")
+		return fmt.Errorf("Unable to create gatewat cert: %w", err)
 	}
 
 	config_obj.GUI.GwCertificate = gw_certificate.Cert
@@ -269,9 +275,10 @@ func doReissueServerKeys() {
 
 	res, err := yaml.Marshal(config_obj)
 	if err != nil {
-		kingpin.FatalIfError(err, "Unable to encode config.")
+		return fmt.Errorf("Unable to encode config: %w", err)
 	}
 	fmt.Printf("%v", string(res))
+	return nil
 }
 
 func getClientConfig(config_obj *config_proto.Config) *config_proto.Config {
@@ -285,23 +292,31 @@ func getClientConfig(config_obj *config_proto.Config) *config_proto.Config {
 	return client_config
 }
 
-func doDumpClientConfig() {
-	config_obj, err := makeDefaultConfigLoader().WithRequiredClient().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config.")
+func doDumpClientConfig() error {
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredClient().LoadAndValidate()
+	if err != nil {
+		return err
+	}
 
 	client_config := getClientConfig(config_obj)
 	res, err := yaml.Marshal(client_config)
 	if err != nil {
-		kingpin.FatalIfError(err, "Unable to encode config.")
+		return fmt.Errorf("Unable to encode config: %w", err)
 	}
+
 	fmt.Printf("%v", string(res))
+	return nil
 }
 
-func doDumpApiClientConfig() {
-	config_obj, err := makeDefaultConfigLoader().WithRequiredCA().
+func doDumpApiClientConfig() error {
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredCA().
 		WithRequiredUser().
 		LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config.")
+	if err != nil {
+		return err
+	}
 
 	if *config_api_client_common_name == config_obj.Client.PinnedServerName {
 		kingpin.Fatalf("Name reserved! You may not name your " +
@@ -310,7 +325,9 @@ func doDumpApiClientConfig() {
 
 	bundle, err := crypto.GenerateServerCert(
 		config_obj, *config_api_client_common_name)
-	kingpin.FatalIfError(err, "Unable to generate certificate.")
+	if err != nil {
+		return fmt.Errorf("Unable to generate certificate: %w", err)
+	}
 
 	if *config_api_client_password_protect {
 		password := ""
@@ -318,20 +335,24 @@ func doDumpApiClientConfig() {
 			&survey.Password{Message: "Password:"},
 			&password,
 			survey.WithValidator(survey.Required))
-		kingpin.FatalIfError(err, "Password.")
+		if err != nil {
+			return err
+		}
 
 		pem_block, _ := pem.Decode([]byte(bundle.PrivateKey))
 		if pem_block == nil {
-			kingpin.Fatalf("Unable to decode private key.")
-			return
+			return fmt.Errorf("Unable to decode private key")
 		}
 
 		block, err := x509.EncryptPEMBlock(
 			rand.Reader, "RSA PRIVATE KEY", pem_block.Bytes,
 			[]byte(password), x509.PEMCipherAES256)
-		kingpin.FatalIfError(err, "Password.")
+		if err != nil {
+			return fmt.Errorf("Password: %w", err)
+		}
 
 		bundle.PrivateKey = string(pem.EncodeToMemory(block))
+		return nil
 	}
 
 	api_client_config := &config_proto.ApiClientConfig{
@@ -353,59 +374,63 @@ func doDumpApiClientConfig() {
 		api_client_config.ApiConnectionString = fmt.Sprintf("unix://%s",
 			config_obj.API.BindAddress)
 	default:
-		kingpin.Fatalf("Unknown value for API.BindAddress")
+		return fmt.Errorf("Unknown value for API.BindAddress")
 	}
 
 	res, err := yaml.Marshal(api_client_config)
 	if err != nil {
-		kingpin.FatalIfError(err, "Unable to encode config.")
+		return fmt.Errorf("Unable to encode config: %w", err)
 	}
 
 	fd, err := os.OpenFile(*config_api_client_output,
 		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	kingpin.FatalIfError(err, "Unable to open output file: ")
+	if err != nil {
+		return fmt.Errorf("Unable to open output file: %w", err)
+	}
 
 	_, err = fd.Write(res)
-	kingpin.FatalIfError(err, "Unable to write output file: ")
+	if err != nil {
+		return fmt.Errorf("Unable to write output file: %w", err)
+	}
 	fd.Close()
 
 	fmt.Printf("Creating API client file on %v.\n", *config_api_client_output)
 	if *config_api_add_roles != "" {
 		err = acls.GrantRoles(config_obj, *config_api_client_common_name,
 			strings.Split(*config_api_add_roles, ","))
-		kingpin.FatalIfError(err, "Unable to set role ACL: ")
+		if err != nil {
+			return fmt.Errorf("Unable to set role ACL: %w", err)
+		}
 	} else {
 		fmt.Printf("No role added to user %v. You will need to do this later using the 'acl grant' command.", *config_api_client_common_name)
 	}
+	return nil
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case config_show_command.FullCommand():
-			doShowConfig()
+			FatalIfError(config_show_command, doShowConfig)
 
 		case config_generate_command.FullCommand():
 			if *config_generate_command_interactive {
-				doGenerateConfigInteractive()
+				FatalIfError(config_generate_command, doGenerateConfigInteractive)
 			} else {
-				doGenerateConfigNonInteractive()
+				FatalIfError(config_generate_command, doGenerateConfigNonInteractive)
 			}
 
 		case config_rotate_server_key.FullCommand():
-			doRotateKeyConfig()
+			FatalIfError(config_rotate_server_key, doRotateKeyConfig)
 
 		case config_reissue_server_key.FullCommand():
-			doReissueServerKeys()
+			FatalIfError(config_reissue_server_key, doReissueServerKeys)
 
 		case config_client_command.FullCommand():
-			doDumpClientConfig()
+			FatalIfError(config_client_command, doDumpClientConfig)
 
 		case config_api_client_command.FullCommand():
-			doDumpApiClientConfig()
-
-		case config_frontend_command.FullCommand():
-			doConfigFrontend()
+			FatalIfError(config_api_client_command, doDumpApiClientConfig)
 
 		default:
 			return false
