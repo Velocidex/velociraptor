@@ -34,6 +34,7 @@ parameters:
   - name: EvtxGlob
     default: '%SystemRoot%\System32\Winevt\Logs\*.evtx'
   - name: IocRegex
+    type: regex
     description: "IOC Regex"
     default:
   - name: WhitelistRegex

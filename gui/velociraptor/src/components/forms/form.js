@@ -7,6 +7,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import RegEx from './regex.js';
+import YaraEditor from './yara.js';
 
 import Tooltip from 'react-bootstrap/Tooltip';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -194,6 +195,27 @@ export default class VeloForm extends React.Component {
                   </Form.Label>
                     <Col sm="8">
                       <RegEx
+                        value={this.props.value}
+                        setValue={this.props.setValue}
+                      />
+                  </Col>
+                </Form.Group>
+            );
+
+        case "yara":
+            return (
+                  <Form.Group as={Row}>
+                  <Form.Label column sm="3">
+                    <OverlayTrigger
+                      delay={{show: 250, hide: 400}}
+                      overlay={(props)=>renderToolTip(props, param)}>
+                      <div>
+                        {name}
+                      </div>
+                    </OverlayTrigger>
+                  </Form.Label>
+                    <Col sm="8">
+                      <YaraEditor
                         value={this.props.value}
                         setValue={this.props.setValue}
                       />

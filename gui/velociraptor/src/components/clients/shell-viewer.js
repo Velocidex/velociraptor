@@ -296,6 +296,7 @@ class VeloVQLCell extends Component {
         ace.setOptions({
             autoScrollEditorIntoView: true,
             maxLines: 25,
+            placeholder: "Type VQL to run on the client",
             readOnly: true,
         });
 
@@ -593,6 +594,7 @@ class ShellViewer extends Component {
 
         ace.setOptions({
             autoScrollEditorIntoView: true,
+            placeholder: "Run VQL on client",
             maxLines: 25
         });
 
@@ -624,6 +626,7 @@ class ShellViewer extends Component {
                   { simple_textarea ?
                     <textarea focus-me="controller.focus" rows="1"
                               className="form-control"
+                              placeholder="Run command on client"
                               value={this.state.command}
                               onChange={(e) => this.setText(e)}>
                     </textarea> :

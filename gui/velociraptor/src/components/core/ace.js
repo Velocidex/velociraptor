@@ -83,6 +83,7 @@ import VqlMode from './mode-vql.js';
 import MarkdownMode from './mode-markdown.js';
 import YamlMode from './mode-yaml.js';
 import RegexMode from './mode-regex.js';
+import YaraMode from './mode-yara.js';
 import classNames from "classnames";
 
 import Button from 'react-bootstrap/Button';
@@ -207,6 +208,8 @@ export default class VeloAce extends Component {
                 this.refs.ace.editor.getSession().setMode(new YamlMode());
             } else if(this.props.mode === "regex") {
                 this.refs.ace.editor.getSession().setMode(new RegexMode());
+            } else if(this.props.mode === "yara") {
+                this.refs.ace.editor.getSession().setMode(new YaraMode());
             }
         };
     }

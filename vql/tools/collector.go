@@ -34,6 +34,7 @@ type CollectPluginArgs struct {
 	ArtifactDefinitions vfilter.Any `vfilter:"optional,field=artifact_definitions,doc=Optional additional custom artifacts."`
 	Template            string      `vfilter:"optional,field=template,doc=The name of a template artifact (i.e. one which has report of type HTML)."`
 	Level               int64       `vfilter:"optional,field=level,doc=Compression level between 0 (no compression) and 9."`
+	OpsPerSecond        int64       `vfilter:"optional,field=ops_per_sec,doc=Rate limiting for collections."`
 }
 
 type CollectPlugin struct{}
@@ -174,6 +175,12 @@ func (self CollectPlugin) Call(
 			subscope := manager.BuildScope(builder)
 			subscope.AppendVars(env)
 			defer subscope.Close()
+
+			// Install throttler into the scope.
+			if arg.OpsPerSecond > 0 {
+				vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(
+					float64(arg.OpsPerSecond)))
+			}
 
 			// Run each query and store the results in the container
 			for _, query := range vql_request.Query {

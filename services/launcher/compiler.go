@@ -59,7 +59,7 @@ func (self *Launcher) CompileSingleArtifact(
 		escaped_name := maybeEscape(name)
 
 		switch parameter.Type {
-		case "", "string", "regex":
+		case "", "string", "regex", "yara":
 			// Nothing to do with these types.
 
 		case "int", "int64":

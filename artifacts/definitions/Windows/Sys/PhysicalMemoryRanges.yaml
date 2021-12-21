@@ -7,8 +7,8 @@ parameters:
   - name: physicalMemoryKey
     default: HKEY_LOCAL_MACHINE\HARDWARE\RESOURCEMAP\System Resources\Physical Memory\.Translated
 
-  - name: Profile
-    default: |
+export:
+  LET Profile = '''
       [
         ["CM_RESOURCE_LIST", 0, [
           ["Count", 0, "uint32"],
@@ -36,6 +36,7 @@ parameters:
            ["Length",12, "uint32"]
         ]]
       ]
+  '''
 
 sources:
   - precondition:

@@ -28,9 +28,8 @@ parameters:
     type: bool
   - name: YaraUrl
     description: If configured will attempt to download Yara rules from Url
-  - name: ShortHandYara
-    description: Second option Yara choice is a Velociraptor shorthand Yara rule
   - name: YaraRule
+    type: yara
     description: Final Yara option and the default if no other options provided.
     default: |
       rule win_cobalt_strike_auto {
@@ -83,9 +82,7 @@ sources:
       -- check which Yara to use
       LET yara <= if(condition=YaraUrl,
             then= { SELECT Content FROM http_client( url=YaraUrl, method='GET') },
-            else= if(condition=ShortHandYara,
-                then= { SELECT ShortHandYara as Content FROM scope() },
-                else= { SELECT YaraRule as Content FROM scope() }))
+            else= { SELECT YaraRule as Content FROM scope() })
 
       -- find velociraptor process
       LET me = SELECT Pid FROM pslist(pid=getpid())

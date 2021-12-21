@@ -12,6 +12,7 @@ description: |
 
 parameters:
   - name: yaraRule
+    type: yara
     default: |
       rule PowerShell {
         strings:

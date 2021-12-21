@@ -1,20 +1,19 @@
 name: Generic.Detection.Yara.Glob
 author: Matt Green - @mgreen27
 description: |
-  This artifact returns a list of target files then runs Yara over the target 
-  list.  
+  This artifact returns a list of target files then runs Yara over the target
+  list.
 
-  There are 3 kinds of Yara rules that can be deployed:  
+  There are 2 kinds of Yara rules that can be deployed:
 
-  1. Url link to a yara rule.  
-  2. Shorthand yara in the format `wide nocase ascii:string1,string2,string3`.  
-  3. or a Standard Yara rule attached as a parameter.  
+  1. Url link to a yara rule.
+  2. or a Standard Yara rule attached as a parameter.
 
   Only one method of Yara will be applied and search order is as above.
 
   The artifact leverages Glob for search so relevant filters can be applied
-  including Glob, Size and date. Date filters will target files with a timestamp 
-  before LatestTime and after EarliestTime. The artifact also has an option to 
+  including Glob, Size and date. Date filters will target files with a timestamp
+  before LatestTime and after EarliestTime. The artifact also has an option to
   upload any files with Yara hits.
 
   Some examples of path glob may include:
@@ -24,11 +23,11 @@ description: |
   * More wildcards: `/var/www/**/*.js`
   * Multiple extentions: `/var/www/*\.{php,aspx,js,html}`
   * Windows: `C:/Users/**/*.{exe,dll,ps1,bat}`
-  
-  NOTE: this artifact runs the glob plugin with the nosymlink switch turned on. 
-  This will NOT follow any symlinks and may cause unexpected results if 
+
+  NOTE: this artifact runs the glob plugin with the nosymlink switch turned on.
+  This will NOT follow any symlinks and may cause unexpected results if
   unknowingly targeting a folder with symlinks.
-  
+
 
 type: CLIENT
 parameters:
@@ -50,10 +49,8 @@ parameters:
   - name: YaraUrl
     description: If configured will attempt to download Yara rules form Url
     default:
-  - name: ShortHandYara
-    description: Second option Yara choice is a Velociraptor shorthand Yara rule
-    default:
   - name: YaraRule
+    type: yara
     description: Final Yara option and the default if no other options provided.
     default: |
         rule IsELF:TestRule {
@@ -70,27 +67,25 @@ sources:
       -- check which Yara to use
       LET yara = SELECT * FROM if(condition=YaraUrl,
             then= { SELECT Content FROM http_client( url=YaraUrl, method='GET') },
-            else= if(condition=ShortHandYara,
-                then= { SELECT ShortHandYara as Content FROM scope() },
-                else= { SELECT YaraRule as Content FROM scope() }))
-                
+            else= { SELECT YaraRule as Content FROM scope() })
+
       -- time testing
-      LET time_test(stamp) = 
+      LET time_test(stamp) =
             if(condition= DateBefore AND DateAfter,
                 then= stamp < DateBefore AND stamp > DateAfter,
-                else= 
+                else=
             if(condition=DateBefore,
                 then= stamp < DateBefore,
-                else= 
+                else=
             if(condition= DateAfter,
                 then= stamp > DateAfter,
                 else= True
             )))
-      
+
       -- first find all matching glob
       LET files = SELECT FullPath, Name, Size, Mtime, Atime, Ctime, Btime
         FROM glob(globs=PathGlob,nosymlink='True')
-        WHERE 
+        WHERE
           NOT IsDir AND NOT IsLink
           AND if(condition=SizeMin,
             then= SizeMin < Size,
@@ -98,7 +93,7 @@ sources:
           AND if(condition=SizeMax,
             then=SizeMax > Size,
             else= True)
-          AND 
+          AND
              ( time_test(stamp=Mtime)
             OR time_test(stamp=Atime)
             OR time_test(stamp=Ctime)

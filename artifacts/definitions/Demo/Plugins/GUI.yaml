@@ -23,6 +23,9 @@ parameters:
     type: regex
     default: "."
 
+  - name: YaraRule
+    type: yara
+
   - name: Flag
     friendly_name: A Flag with a name
     type: bool
