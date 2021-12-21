@@ -284,7 +284,7 @@ func doArtifactList() error {
 	if *artifact_command_list_name != "" {
 		re, err := getFilterRegEx(*artifact_command_list_name)
 		if err != nil {
-			return fmt.Errorf("Artifact name regex not valid", err)
+			return fmt.Errorf("Artifact name regex not valid: %w", err)
 		}
 
 		name_regex = re
