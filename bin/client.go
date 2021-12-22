@@ -19,9 +19,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
@@ -39,9 +39,12 @@ var (
 func RunClient(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_path *string) {
+	config_path *string) error {
 
-	checkMutex()
+	err := checkMutex()
+	if err != nil {
+		return err
+	}
 
 	// Include the writeback in the client's configuration.
 	config_obj, err := makeDefaultConfigLoader().
@@ -49,12 +52,14 @@ func RunClient(
 		WithRequiredLogging().
 		WithFileLoader(*config_path).
 		WithWriteback().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	// Make sure the config crypto is ok.
 	err = crypto_utils.VerifyConfig(config_obj)
 	if err != nil {
-		kingpin.FatalIfError(err, "Invalid config")
+		return fmt.Errorf("Invalid config: %w", err)
 	}
 
 	executor.SetTempfile(config_obj)
@@ -62,7 +67,7 @@ func RunClient(
 	manager, err := crypto_client.NewClientCryptoManager(
 		config_obj, []byte(config_obj.Writeback.PrivateKey))
 	if err != nil {
-		kingpin.FatalIfError(err, "Unable to parse config file")
+		return err
 	}
 
 	// Start all the services
@@ -71,12 +76,12 @@ func RunClient(
 
 	exe, err := executor.NewClientExecutor(ctx, config_obj)
 	if err != nil {
-		kingpin.FatalIfError(err, "Can not create executor.")
+		return fmt.Errorf("Can not create executor: %w", err)
 	}
 
 	err = executor.StartServices(sm, manager.ClientId, exe)
 	if err != nil {
-		kingpin.FatalIfError(err, "Can not start services.")
+		return fmt.Errorf("Starting services: %w", err)
 	}
 
 	// Now start the communicator so we can talk with the server.
@@ -88,7 +93,9 @@ func RunClient(
 		func() { on_error(config_obj) },
 		utils.RealClock{},
 	)
-	kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")
+	if err != nil {
+		return fmt.Errorf("Can not create HTTPCommunicator: %w", err)
+	}
 
 	wg.Add(1)
 	go func() {
@@ -107,6 +114,8 @@ func RunClient(
 	}()
 
 	wg.Wait()
+
+	return nil
 }
 
 func init() {
@@ -116,7 +125,9 @@ func init() {
 			ctx, cancel := install_sig_handler()
 			defer cancel()
 
-			RunClient(ctx, wg, config_path)
+			FatalIfError(client, func() error {
+				return RunClient(ctx, wg, config_path)
+			})
 
 			return true
 		}

@@ -1,12 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
@@ -33,20 +33,26 @@ var (
 	unzip_cmd_member = unzip_cmd.Arg("members", "Members glob to extract").Default("/**").String()
 )
 
-func doUnzip() {
+func doUnzip() error {
 	config_obj, err := makeDefaultConfigLoader().WithNullLoader().LoadAndValidate()
-	kingpin.FatalIfError(err, "Load Config")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	filename, err := filepath.Abs(*unzip_cmd_file)
-	kingpin.FatalIfError(err, "File does not exist")
+	if err != nil {
+		return err
+	}
 
 	_, err = os.Stat(filename)
 	if os.IsNotExist(err) {
-		kingpin.FatalIfError(err, "File does not exist")
+		return err
 	}
 
 	builder := services.ScopeBuilder{
@@ -60,15 +66,15 @@ func doUnzip() {
 	}
 
 	if *unzip_cmd_list {
-		runUnzipList(builder)
+		return runUnzipList(builder)
 	} else if *unzip_cmd_print {
-		runUnzipPrint(builder)
+		return runUnzipPrint(builder)
 	} else {
-		runUnzipFiles(builder)
+		return runUnzipFiles(builder)
 	}
 }
 
-func runUnzipList(builder services.ScopeBuilder) {
+func runUnzipList(builder services.ScopeBuilder) error {
 	query := `
        SELECT url(parse=FullPath).Fragment AS Filename,
               Size
@@ -82,10 +88,10 @@ func runUnzipList(builder services.ScopeBuilder) {
 		query += " AND " + *unzip_cmd_filter
 	}
 
-	runQueryWithEnv(query, builder)
+	return runQueryWithEnv(query, builder)
 }
 
-func runUnzipFiles(builder services.ScopeBuilder) {
+func runUnzipFiles(builder services.ScopeBuilder) error {
 	builder.Uploader = &uploads.FileBasedUploader{
 		UploadDir: *unzip_path,
 	}
@@ -104,10 +110,10 @@ func runUnzipFiles(builder services.ScopeBuilder) {
 		query += " AND " + *unzip_cmd_filter
 	}
 
-	runQueryWithEnv(query, builder)
+	return runQueryWithEnv(query, builder)
 }
 
-func runUnzipPrint(builder services.ScopeBuilder) {
+func runUnzipPrint(builder services.ScopeBuilder) error {
 	query := `
        SELECT * FROM foreach(
        row={
@@ -122,18 +128,23 @@ func runUnzipPrint(builder services.ScopeBuilder) {
           FROM parse_jsonl(filename=FullPath, accessor='zip')
        })
     `
-	runQueryWithEnv(query, builder)
+	return runQueryWithEnv(query, builder)
 }
 
-func getAllStats(query string, builder services.ScopeBuilder) []*ordereddict.Dict {
+func getAllStats(query string, builder services.ScopeBuilder) (
+	[]*ordereddict.Dict, error) {
 	manager, err := services.GetRepositoryManager()
-	kingpin.FatalIfError(err, "GetRepositoryManager")
+	if err != nil {
+		return nil, err
+	}
 
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	vql, err := vfilter.Parse(query)
-	kingpin.FatalIfError(err, "Unable to parse VQL Query")
+	if err != nil {
+		return nil, fmt.Errorf("Unable to parse VQL Query: %w", err)
+	}
 
 	ctx := InstallSignalHandler(scope)
 
@@ -144,18 +155,22 @@ func getAllStats(query string, builder services.ScopeBuilder) []*ordereddict.Dic
 			result = append(result, d)
 		}
 	}
-	return result
+	return result, nil
 }
 
-func runQueryWithEnv(query string, builder services.ScopeBuilder) {
+func runQueryWithEnv(query string, builder services.ScopeBuilder) error {
 	manager, err := services.GetRepositoryManager()
-	kingpin.FatalIfError(err, "GetRepositoryManager")
+	if err != nil {
+		return err
+	}
 
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	vqls, err := vfilter.MultiParse(query)
-	kingpin.FatalIfError(err, "Unable to parse VQL Query")
+	if err != nil {
+		return fmt.Errorf("Unable to parse VQL Query: %w", err)
+	}
 
 	ctx := InstallSignalHandler(scope)
 
@@ -168,22 +183,32 @@ func runQueryWithEnv(query string, builder services.ScopeBuilder) {
 			table.Render()
 
 		case "jsonl":
-			outputJSONL(ctx, scope, vql, os.Stdout)
-
+			err := outputJSONL(ctx, scope, vql, os.Stdout)
+			if err != nil {
+				return err
+			}
 		case "json":
-			outputJSON(ctx, scope, vql, os.Stdout)
+			err = outputJSON(ctx, scope, vql, os.Stdout)
+			if err != nil {
+				return err
+			}
 
 		case "csv":
-			outputCSV(ctx, scope, vql, os.Stdout)
+			err = outputCSV(ctx, scope, vql, os.Stdout)
+			if err != nil {
+				return err
+			}
 		}
 	}
+
+	return nil
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case unzip_cmd.FullCommand():
-			doUnzip()
+			FatalIfError(unzip_cmd, doUnzip)
 
 		default:
 			return false

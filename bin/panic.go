@@ -12,14 +12,16 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 )
 
-func writeLogOnPanic() {
+func writeLogOnPanic() error {
 	// Figure out the log directory.
 	config_obj, err := new(config.Loader).
 		WithFileLoader(*config_path).
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
 		LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	if config_obj.Logging != nil &&
 		config_obj.Logging.OutputDirectory != "" {
@@ -54,4 +56,10 @@ func writeLogOnPanic() {
 		// Otherwise, exitStatus < 0 means we're the
 		// child. Continue executing as normal...
 	}
+	return nil
+}
+
+func FatalIfError(command *kingpin.CmdClause, cb func() error) {
+	err := cb()
+	kingpin.FatalIfError(err, command.FullCommand())
 }

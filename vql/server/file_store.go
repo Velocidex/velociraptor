@@ -48,13 +48,13 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("flows: %s", err)
+		scope.Log("file_store_delete: %v", err)
 		return vfilter.Null{}
 	}
 
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("file_store_delete: %s", err.Error())
+		scope.Log("file_store_delete: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -84,6 +84,20 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 
 	case path_specs.FSPathSpec:
 		err = file_store_factory.Delete(t)
+
+	case string:
+		// Things that produce strings normally encode the path spec
+		// with a prefix to let us know if this is a data store path
+		// or a filestore path..
+		if strings.HasPrefix(t, "ds:") {
+			path_spec := paths.DSPathSpecFromClientPath(
+				strings.TrimPrefix(t, "ds:"))
+			err = db.DeleteSubject(config_obj, path_spec)
+		} else {
+			path_spec := paths.FSPathSpecFromClientPath(
+				strings.TrimPrefix(t, "fs:"))
+			err = file_store_factory.Delete(path_spec)
+		}
 
 	default:
 		scope.Log("file_store_delete: Unsupported VFS path type %T", vfs_path)

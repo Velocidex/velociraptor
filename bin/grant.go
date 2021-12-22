@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	jsonpatch "github.com/evanphx/json-patch"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -48,23 +47,26 @@ var (
 		Bool()
 )
 
-func doGrant() {
+func doGrant() error {
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredUser().
 		LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config.")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	principal := *grant_command_principal
 
 	existing_policy, err := acls.GetPolicy(config_obj, principal)
 	if err != nil && err != io.EOF {
-		kingpin.FatalIfError(err, "Unable to load existing policy for %v",
-			principal)
+		return fmt.Errorf("Unable to load existing policy for %v", principal)
 	}
 
 	new_policy := &acl_proto.ApiClientACL{}
@@ -72,67 +74,87 @@ func doGrant() {
 	// Parse the policy object
 	if *grant_command_policy_merge {
 		serialized, err := json.Marshal(existing_policy)
-		kingpin.FatalIfError(err, "Invalid policy object")
+		if err != nil {
+			return fmt.Errorf("Invalid policy object: %w", err)
+		}
 
 		patched, err := jsonpatch.MergePatch(
 			serialized, []byte(*grant_command_policy_object))
-		kingpin.FatalIfError(err, "Applying patch")
+		if err != nil {
+			return fmt.Errorf("Applying patch: %w", err)
+		}
 
 		err = json.Unmarshal(patched, &new_policy)
-		kingpin.FatalIfError(err, "Invalid patched policy object")
+		if err != nil {
+			return fmt.Errorf("Invalid patched policy object: %w", err)
+		}
 	} else {
 		err = json.Unmarshal([]byte(*grant_command_policy_object),
 			&new_policy)
-		kingpin.FatalIfError(err, "Invalid policy object")
+		if err != nil {
+			return fmt.Errorf("Invalid policy object: %w", err)
+		}
 	}
 
 	if *grant_command_roles != "" {
 		for _, role := range strings.Split(*grant_command_roles, ",") {
 			if !utils.InString(new_policy.Roles, role) {
 				if !acls.ValidateRole(role) {
-					kingpin.Fatalf("Invalid role %v", role)
+					if err != nil {
+						return fmt.Errorf("Invalid role %v", role)
+					}
 				}
 				new_policy.Roles = append(new_policy.Roles, role)
 			}
 		}
 	}
 
-	err = acls.SetPolicy(config_obj, principal, new_policy)
-	kingpin.FatalIfError(err, "Setting policy object")
+	return acls.SetPolicy(config_obj, principal, new_policy)
 }
 
-func doShow() {
+func doShow() error {
 	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config.")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	principal := *show_command_principal
 	existing_policy, err := acls.GetPolicy(config_obj, principal)
-	kingpin.FatalIfError(err, "Unable to load existing policy for '%v' ",
-		principal)
-
-	if *show_command_effective {
-		existing_policy, err = acls.GetEffectivePolicy(config_obj, principal)
-		kingpin.FatalIfError(err, "Unable to load existing policy for '%v' ",
+	if err != nil {
+		return fmt.Errorf("Unable to load existing policy for '%v' ",
 			principal)
 	}
 
+	if *show_command_effective {
+		existing_policy, err = acls.GetEffectivePolicy(config_obj, principal)
+		if err != nil {
+			return fmt.Errorf("Unable to load existing policy for '%v' ",
+				principal)
+		}
+	}
+
 	serialized, err := json.Marshal(existing_policy)
-	kingpin.FatalIfError(err, "Unable to serialized policy ")
+	if err != nil {
+		return err
+	}
 	fmt.Println(string(serialized))
+	return nil
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case grant_command.FullCommand():
-			doGrant()
+			FatalIfError(grant_command, doGrant)
 
 		case show_command.FullCommand():
-			doShow()
+			FatalIfError(show_command, doShow)
 
 		default:
 			return false

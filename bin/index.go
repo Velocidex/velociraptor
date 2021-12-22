@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/search"
@@ -20,35 +19,48 @@ var (
 		"rebuild", "Rebuild client index")
 )
 
-func doRebuildIndex() {
+func doRebuildIndex() error {
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	err = sm.Start(client_info.StartClientInfoService)
-
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 
 	err = sm.Start(datastore.StartMemcacheFileService)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 
 	client_info_manager, err := services.GetClientInfoManager()
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 
 	labeler := services.GetLabeler()
 
 	db, err := datastore.GetDB(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return err
+	}
 
 	// This will be very slow on EFS or large directories but it is
 	// necessary.
 	clients, err := db.ListChildren(
 		config_obj, paths.NewClientPathManager("X").Path().Dir())
-	kingpin.FatalIfError(err, "Enumerating clients.")
+	if err != nil {
+		return fmt.Errorf("Enumerating clients: %w", err)
+	}
 
 	for _, client_urn := range clients {
 		if client_urn.IsDir() {
@@ -87,13 +99,14 @@ func doRebuildIndex() {
 			}
 		}
 	}
+	return nil
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case index_command_rebuild.FullCommand():
-			doRebuildIndex()
+			FatalIfError(index_command_rebuild, doRebuildIndex)
 
 		default:
 			return false

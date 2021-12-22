@@ -251,6 +251,15 @@ func Aix() error {
 	}.Run()
 }
 
+func PPCLinux() error {
+	return Builder{
+		extra_tags:  " release yara ",
+		goos:        "linux",
+		disable_cgo: true,
+		arch:        "ppc64le",
+	}.Run()
+}
+
 func Arm() error {
 	return Builder{
 		extra_tags:  " release yara ",

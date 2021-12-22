@@ -388,12 +388,6 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 		return errors.New("Frontend not configured")
 	}
 
-	// Start the grpc clients
-	err := grpc_client.Init(ctx, config_obj)
-	if err != nil {
-		return err
-	}
-
 	if services.IsMaster(config_obj) {
 		manager := &MasterFrontendManager{
 			config_obj: config_obj,

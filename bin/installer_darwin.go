@@ -30,7 +30,6 @@ import (
 	"strings"
 
 	errors "github.com/pkg/errors"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -59,8 +58,9 @@ func doRemove() error {
 	plist_path := "/Library/LaunchDaemons/" + service_name + ".plist"
 	err = exec.CommandContext(context.Background(),
 		"/bin/launchctl", "unload", "-w", plist_path).Run()
-	kingpin.FatalIfError(err, "Can't load service.")
-
+	if err != nil {
+		return fmt.Errorf("Can't load service: %w", err)
+	}
 	return nil
 }
 
@@ -72,7 +72,9 @@ func doInstall() error {
 	}
 
 	executable, err := os.Executable()
-	kingpin.FatalIfError(err, "Can't get executable path")
+	if err != nil {
+		return fmt.Errorf("Can't get executable path: %w", err)
+	}
 
 	service_name := config_obj.Client.DarwinInstaller.ServiceName
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
@@ -137,36 +139,38 @@ func doInstall() error {
 </plist>`, service_name, target_path, target_path)
 
 	err = ioutil.WriteFile(plist_path, []byte(plist), 0644)
-	kingpin.FatalIfError(err, "Can't write plist file.")
+	if err != nil {
+		return fmt.Errorf("Can't write plist file: %w", err)
+	}
 
 	err = exec.CommandContext(context.Background(),
 		"/bin/launchctl", "load", "-w", plist_path).Run()
-	kingpin.FatalIfError(err, "Can't load service.")
+	if err != nil {
+		return fmt.Errorf("Can't load service: %w", err)
+	}
 
 	// We need to kill the service so it can restart with the new
 	// settings. Use SIGINT to allow it to cleanup.
 	err = exec.CommandContext(context.Background(),
 		"/bin/launchctl", "kill", "SIGINT", "system/"+service_name).Run()
-	kingpin.FatalIfError(err, "Can't restart service.")
-
+	if err != nil {
+		return fmt.Errorf("Can't restart service: %w", err)
+	}
 	return nil
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
-		var err error
 		switch command {
 		case install_command.FullCommand():
-			err = doInstall()
+			FatalIfError(install_command, doInstall)
 
 		case remove_command.FullCommand():
-			err = doRemove()
+			FatalIfError(remove_command, doRemove)
 
 		default:
 			return false
 		}
-
-		kingpin.FatalIfError(err, "")
 		return true
 	})
 }

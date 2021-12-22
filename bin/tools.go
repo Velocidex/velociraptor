@@ -10,7 +10,6 @@ import (
 	"regexp"
 
 	"github.com/Velocidex/yaml/v2"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -52,50 +51,68 @@ var (
 	url_regexp = regexp.MustCompile("^https?://")
 )
 
-func doThirdPartyShow() {
+func doThirdPartyShow() error {
 	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().
 		LoadAndValidate()
-	kingpin.FatalIfError(err, "Load Config ")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	if *third_party_show_file == "" {
 		inventory := services.GetInventory().Get()
 		serialized, err := yaml.Marshal(inventory)
-		kingpin.FatalIfError(err, "Serialized ")
+		if err != nil {
+			return err
+		}
 		fmt.Println(string(serialized))
 	} else {
 		tool, err := services.GetInventory().ProbeToolInfo(*third_party_show_file)
-		kingpin.FatalIfError(err, "Tool not found ")
+		if err != nil {
+			return fmt.Errorf("Tool not found: %w", err)
+		}
 
 		serialized, err := yaml.Marshal(tool)
-		kingpin.FatalIfError(err, "Serialized ")
+		if err != nil {
+			return fmt.Errorf("Serialized: %w", err)
+		}
 		fmt.Println(string(serialized))
 	}
+	return nil
 }
 
-func doThirdPartyRm() {
+func doThirdPartyRm() error {
 	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().
 		LoadAndValidate()
-	kingpin.FatalIfError(err, "Load Config ")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
-	err = services.GetInventory().RemoveTool(config_obj, *third_party_rm_name)
-	kingpin.FatalIfError(err, "Removing tool ")
+	return services.GetInventory().RemoveTool(config_obj, *third_party_rm_name)
 }
 
-func doThirdPartyUpload() {
+func doThirdPartyUpload() error {
 	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().
 		LoadAndValidate()
-	kingpin.FatalIfError(err, "Load Config ")
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
 
 	sm, err := startEssentialServices(config_obj)
-	kingpin.FatalIfError(err, "Starting services.")
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	filename := *third_party_upload_filename
@@ -124,20 +141,28 @@ func doThirdPartyUpload() {
 		path_manager := paths.NewInventoryPathManager(config_obj, tool)
 		file_store_factory := file_store.GetFileStore(config_obj)
 		writer, err := file_store_factory.WriteFile(path_manager.Path())
-		kingpin.FatalIfError(err, "Unable to write to filestore ")
+		if err != nil {
+			return fmt.Errorf("Unable to write to filestore: %w ", err)
+		}
 		defer writer.Close()
 
 		err = writer.Truncate()
-		kingpin.FatalIfError(err, "Unable to write to filestore ")
+		if err != nil {
+			return fmt.Errorf("Unable to write to filestore: %w ", err)
+		}
 
 		sha_sum := sha256.New()
 
 		reader, err := os.Open(*third_party_upload_binary_path)
-		kingpin.FatalIfError(err, "Unable to read file ")
+		if err != nil {
+			return fmt.Errorf("Unable to read file: %w ", err)
+		}
 		defer reader.Close()
 
 		_, err = io.Copy(writer, io.TeeReader(reader, sha_sum))
-		kingpin.FatalIfError(err, "Uploading file ")
+		if err != nil {
+			return fmt.Errorf("Uploading file: %w", err)
+		}
 
 		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 	}
@@ -150,29 +175,31 @@ func doThirdPartyUpload() {
 		config_obj, tool, services.ToolOptions{
 			AdminOverride: true,
 		})
-	kingpin.FatalIfError(err, "Adding tool "+tool.Name)
+	if err != nil {
+		return fmt.Errorf("Adding tool %s: %w", tool.Name, err)
+	}
 
 	if *third_party_upload_download {
-		tool, err = services.GetInventory().GetToolInfo(ctx, config_obj, tool.Name)
-		kingpin.FatalIfError(err, "Fetching file ")
+		_, err = services.GetInventory().GetToolInfo(ctx, config_obj, tool.Name)
+		return err
 	}
 
 	serialized, err := yaml.Marshal(tool)
-	kingpin.FatalIfError(err, "Serialized ")
 	fmt.Println(string(serialized))
+	return err
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case third_party_upload.FullCommand():
-			doThirdPartyUpload()
+			FatalIfError(third_party_upload, doThirdPartyUpload)
 
 		case third_party_show.FullCommand():
-			doThirdPartyShow()
+			FatalIfError(third_party_show, doThirdPartyShow)
 
 		case third_party_rm.FullCommand():
-			doThirdPartyRm()
+			FatalIfError(third_party_rm, doThirdPartyRm)
 
 		default:
 			return false

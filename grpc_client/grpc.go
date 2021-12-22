@@ -141,6 +141,12 @@ func getChannel(
 	grpcPoolWaiters.Inc()
 	defer grpcPoolWaiters.Dec()
 
+	// Make sure pool is initialized.
+	err := EnsureInit(ctx, config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	for {
 		conn, err := pool.Get(ctx)
 		if err == grpcpool.ErrTimeout {
@@ -180,7 +186,7 @@ func GetAPIConnectionString(config_obj *config_proto.Config) string {
 	panic("Unknown API.BindScheme")
 }
 
-func Init(
+func EnsureInit(
 	ctx context.Context,
 	config_obj *config_proto.Config) error {
 
