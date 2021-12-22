@@ -49,157 +49,47 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
   "Timestamp": "2019-11-22T01:10:45.946586608Z",
   "Functions[1]": "Set-BitsTransfer"
  }
-]SELECT _Parsed FROM Artifact.Windows.Forensics.Lnk( Glob=srcDir + "/artifacts/testdata/files/1.lnk")[
+]SELECT * FROM column_filter(query={ SELECT * FROM Artifact.Windows.Forensics.Lnk( Glob=srcDir + "/artifacts/testdata/files/1.lnk") }, exclude="FullPath|time|_")[
  {
-  "_Parsed": {
-   "HeaderSize": 76,
-   "LinkClsID": "0114020000000000c000000000000046",
-   "LinkFlags": [
-    "DisableKnownFolderTracking",
-    "HasLinkInfo",
-    "HasLinkTargetIDList",
-    "HasWorkingDir",
-    "IsUnicode"
-   ],
-   "FileAttributes": [
-    "FILE_ATTRIBUTE_NORMAL"
-   ],
-   "CreationTime": "2020-11-12T01:43:21Z",
-   "AccessTime": "2020-11-12T01:43:21Z",
-   "WriteTime": "2020-11-12T01:43:21Z",
-   "FileSize": 1343,
-   "IconIndex": 0,
-   "ShowCommand": 1,
-   "HotKey": 0,
-   "LinkTargetIDList": {
-    "IDListSize": 205,
-    "IDList": [
-     {
-      "ItemIDSize": 20,
-      "Offset": 78,
-      "Type": 16,
-      "Subtype": 1,
-      "ShellBag": {
-       "Description": {
-        "ShortName": "My Computer",
-        "Type": "Root"
-       }
-      }
-     },
-     {
-      "ItemIDSize": 25,
-      "Offset": 98,
-      "Type": 32,
-      "Subtype": 1,
-      "ShellBag": {
-       "Name": "F:\\",
-       "Description": {
-        "LongName": "F:\\",
-        "ShortName": "F:\\",
-        "Type": "Volume"
-       }
-      }
-     },
-     {
-      "ItemIDSize": 74,
-      "Offset": 123,
-      "Type": 48,
-      "Subtype": 1,
-      "ShellBag": {
-       "Size": 74,
-       "Type": 49,
-       "SubType": [
-        "Directory",
-        "Unicode"
-       ],
-       "LastModificationTime": "2020-11-12T01:24:36Z",
-       "ShortName": "tmp",
-       "Extension": {
-        "Size": 56,
-        "Version": 9,
-        "Signature": "0xbeef0004",
-        "CreateDate": "2020-11-12T01:24:36Z",
-        "LastAccessed": "2020-11-12T01:24:36Z",
-        "MFTReference": {
-         "MFTID": 8651087,
-         "SequenceNumber": 0
-        },
-        "LongName": "tmp"
-       },
-       "Description": {
-        "Type": [
-         "Directory",
-         "Unicode"
-        ],
-        "Modified": "2020-11-12T01:24:36Z",
-        "LastAccessed": "2020-11-12T01:24:36Z",
-        "CreateDate": "2020-11-12T01:24:36Z",
-        "ShortName": "tmp",
-        "LongName": "tmp",
-        "MFTID": 8651087,
-        "MFTSeq": 0
-       }
-      }
-     },
-     {
-      "ItemIDSize": 84,
-      "Offset": 197,
-      "Type": 48,
-      "Subtype": 0,
-      "ShellBag": {
-       "Size": 84,
-       "Type": 50,
-       "SubType": [
-        "File",
-        "Unicode"
-       ],
-       "LastModificationTime": "1979-11-30T00:00:00Z",
-       "ShortName": "1.yaml",
-       "Extension": {
-        "Size": 62,
-        "Version": 9,
-        "Signature": "0xbeef0004",
-        "CreateDate": "1979-11-30T00:00:00Z",
-        "LastAccessed": "1979-11-30T00:00:00Z",
-        "MFTReference": {
-         "MFTID": 0,
-         "SequenceNumber": 0
-        },
-        "LongName": "1.yaml"
-       },
-       "Description": {
-        "Type": [
-         "File",
-         "Unicode"
-        ],
-        "Modified": null,
-        "LastAccessed": null,
-        "CreateDate": null,
-        "ShortName": "1.yaml",
-        "LongName": "1.yaml",
-        "MFTID": 0,
-        "MFTSeq": 0
-       }
-      }
-     }
-    ]
-   },
-   "LinkInfo": {
-    "Offset": 283,
-    "LinkInfoSize": 98,
-    "LinkInfoFlags": [
-     "CommonNetworkRelativeLinkAndPathSuffix"
-    ],
-    "Target": {
-     "path": "\\\\vmware-host\\Shared Folders\\shared\\tmp\\1.yaml",
-     "relative_link": {
-      "NetworkProviderType": "WNNC_NET_VMWARE",
-      "NetName": "\\\\vmware-host\\Shared Folders\\shared",
-      "DeviceName": "F:"
-     }
-    }
+  "HeaderCreationTime": "2020-11-12T01:43:21Z",
+  "HeaderAccessTime": "2020-11-12T01:43:21Z",
+  "HeaderWriteTime": "2020-11-12T01:43:21Z",
+  "FileSize": 1343,
+  "Target": {
+   "path": "\\\\vmware-host\\Shared Folders\\shared\\tmp\\1.yaml",
+   "relative_link": {
+    "NetworkProviderType": "WNNC_NET_VMWARE",
+    "NetName": "\\\\vmware-host\\Shared Folders\\shared",
+    "DeviceName": "F:"
    }
-  }
+  },
+  "Name": null,
+  "RelativePath": null,
+  "WorkingDir": "F:\\tmp",
+  "Arguments": null,
+  "Icons": null,
+  "Upload": null
+ }
+]SELECT * FROM column_filter(query={ SELECT * FROM Artifact.Windows.Forensics.Lnk( Glob=srcDir + "/artifacts/testdata/files/password.txt.lnk") }, exclude="FullPath|time|_")[
+ {
+  "HeaderCreationTime": "2021-06-05T12:05:12Z",
+  "HeaderAccessTime": "2021-12-22T09:47:57Z",
+  "HeaderWriteTime": "2021-06-05T12:05:12Z",
+  "FileSize": 331776,
+  "Target": {
+   "path": "C:\\Windows\\System32\\cmd.exe",
+   "volume_info": {
+    "DriveType": "DRIVE_FIXED",
+    "DriveSerialNumber": 134260411,
+    "VolumeLabel": ""
+   }
+  },
+  "Name": null,
+  "RelativePath": "..\\..\\..\\Windows\\System32\\cmd.exe",
+  "WorkingDir": "%windir%\\sYSteM32",
+  "Arguments": "/c \"echo HeLLO \u0026\u0026 pAuSe\"",
+  "Icons": "%sYsTemRooT%\\sYSteM32\\iMagEreS.dll",
+  "Upload": null
  }
 ]SELECT * FROM foreach(row=parse_binary( accessor="data", filename=unhex(string=Data), profile=Profile, struct="MRU").Items)[
  {

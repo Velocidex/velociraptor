@@ -31,7 +31,6 @@ package filesystem
 import (
 	"bytes"
 	"context"
-	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -201,10 +200,6 @@ type RawRegFileSystemAccessor struct {
 func (self *RawRegFileSystemAccessor) getRegHive(
 	file_path string) (*regparser.Registry, *glob.PathSpec, error) {
 
-	// The file path is a url specifying the path to a key:
-	// Scheme is the underlying accessor
-	// Path is the path to be provided to the underlying accessor
-	// Fragment is the path within the reg hive that we need to open.
 	pathspec, err := glob.PathSpecFromString(file_path)
 	if err != nil {
 		return nil, nil, err
@@ -314,15 +309,15 @@ func (self *RawRegFileSystemAccessor) Lstat(filename string) (glob.FileInfo, err
 }
 
 func (self *RawRegFileSystemAccessor) GetRoot(path string) (string, string, error) {
-	url, err := url.Parse(path)
+	pathspec, err := glob.PathSpecFromString(path)
 	if err != nil {
 		return "", "", err
 	}
 
-	fragment := url.Fragment
-	url.Fragment = ""
+	Fragment := pathspec.Path
+	pathspec.Path = ""
 
-	return url.String() + "#", fragment, nil
+	return pathspec.String(), Fragment, nil
 }
 
 // We accept both / and \ as a path separator
