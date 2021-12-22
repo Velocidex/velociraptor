@@ -145,7 +145,9 @@ sources:
 
       -- include all attached drives
       LET all_drives = SELECT * FROM foreach(row=ntfs_drives,
-        query=mftsearch(MFTPath=MFTFilename))
+        query={
+           SELECT *, MFTFilename FROM mftsearch(MFTPath=MFTFilename))
+        })
 
       -- return rows
       SELECT EntryNumber, InUse, ParentEntryNumber,
@@ -156,4 +158,6 @@ sources:
              LastAccess0x30
       FROM if(condition=AllDrives,
         then=all_drives,
-        else=mftsearch(MFTPath=MFTFilename))
+        else={
+          SELECT * FROM mftsearch(MFTPath=MFTFilename)
+        })

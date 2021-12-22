@@ -1,12 +1,12 @@
-name: Server.Utils.BackupS3
+name: Server.Utils.BackupGCS
 description: |
    This server monitoring artifact will automatically zip and backup
-   any collected artifacts to s3.
+   any collected artifacts to GCS.
 
    You will need to provide credentials to upload to the bucket. The
    credentials can be given as parameters or they will be taken from
-   the server metadata (as DefaultBucket, DefaultRegion,
-   S3AccessKeyId, S3AccessSecret)
+   the server metadata (as DefaultBucket, DefaultGCSProject,
+   DefaultGCSKey)
 
    Thanks to @shortxstack and @Recon_InfoSec
 
@@ -20,9 +20,8 @@ parameters:
 
    - name: Bucket
      description: The bucket to upload to (blank to use server metadata)
-   - name: Region
-   - name: CredentialsKey
-   - name: CredentialsSecret
+   - name: Project
+   - name: GCSKey
 
    - name: RemoveDownloads
      type: bool
@@ -33,12 +32,10 @@ sources:
       -- Allow these settings to be set by the artifact parameter or the server metadata.
       LET bucket <= if(condition=Bucket, then=Bucket,
            else=server_metadata().DefaultBucket)
-      LET credentialskey <= if(condition=CredentialsKey, then=CredentialsKey,
-           else=server_metadata().S3AccessKeyId)
-      LET region <= if(condition=Region, then=Region,
-           else=server_metadata().DefaultRegion)
-      LET credentialssecret <= if(condition=CredentialsSecret,
-              then=CredentialsSecret, else=server_metadata().S3AccessSecret)
+      LET project <= if(condition=Project, then=Project,
+           else=server_metadata().DefaultGCSProject)
+      LET gcskey <= if(condition=GCSKey, then=GCSKey,
+           else=server_metadata().DefaultGCSKey)
 
       LET completions = SELECT *,
          client_info(client_id=ClientId).os_info.fqdn AS Fqdn,
@@ -47,11 +44,10 @@ sources:
       FROM watch_monitoring(artifact="System.Flow.Completion")
       WHERE Flow.artifacts_with_results =~ ArtifactNameRegex
 
-      SELECT upload_s3(
+      SELECT upload_gcs(
          bucket=bucket,
-         credentialskey=credentialskey,
-         credentialssecret=credentialssecret,
-         region=region,
+         project=project,
+         credentials=gcskey,
          file=FlowDownload,
          accessor="fs",
          name=format(format="Host %v %v %v.zip",

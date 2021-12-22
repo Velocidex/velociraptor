@@ -35,6 +35,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/juju/ratelimit"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -454,6 +455,41 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		// Must be before the Process() call to prevent race.
 		source := message_info.Source
 
+		client_info_manager, err := services.GetClientInfoManager()
+		if err != nil {
+			http.Error(w, "", http.StatusServiceUnavailable)
+			return
+		}
+
+		// If client is not known, make it enrol. This can happen for
+		// example, when the client was just deleted, but we still
+		// have ciphers cached to it - the client is not know but we
+		// can still verify the comms as authenticated. NOTE: this
+		// check should be very quick since it is just a lookup in the
+		// client info manager's LRU.
+		_, err = client_info_manager.Get(source)
+		if err != nil {
+			journal, err := services.GetJournal()
+			if err != nil {
+				http.Error(w, "", http.StatusServiceUnavailable)
+				return
+			}
+
+			// This should triggen an enrollment flow.
+			err = journal.PushRowsToArtifact(config_obj,
+				[]*ordereddict.Dict{
+					ordereddict.NewDict().
+						Set("ClientId", source)},
+				"Server.Internal.Enrollment", source, "")
+			if err != nil {
+				http.Error(w, "", http.StatusServiceUnavailable)
+				return
+			}
+
+			// Do not serve the client until it has fully enrolled.
+			return
+		}
+
 		notifier := services.GetNotifier()
 		if notifier == nil {
 			http.Error(w, "Shutting down", http.StatusServiceUnavailable)
@@ -510,6 +546,8 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			return
 		}
 
+		// Nothing waiting for the client - wait here for new
+		// notification.
 		for {
 			select {
 			// Figure out when the client drops the
