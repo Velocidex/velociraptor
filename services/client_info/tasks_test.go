@@ -117,9 +117,11 @@ func (self *ClientInfoTestSuite) TestGetClientTasksIsCached() {
 
 	// Check the metrics that we only actually read once more.
 	metrics = vtesting.GetMetricsDifference(self.T(), metric_name, snapshot)
-	client_queue_list_ops, _ = metrics.GetInt64(
-		"datastore_latency__list_MemcacheDatastore_ClientTaskQueue_inf")
-	assert.Equal(self.T(), int64(2), client_queue_list_ops)
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		client_queue_list_ops, _ = metrics.GetInt64(
+			"datastore_latency__list_MemcacheDatastore_ClientTaskQueue_inf")
+		return 2 == client_queue_list_ops
+	})
 
 	// Further reads are coming from the cache.
 	for i := 0; i < 100; i++ {
