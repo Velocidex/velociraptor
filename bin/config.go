@@ -30,7 +30,6 @@ import (
 
 	"github.com/Velocidex/survey"
 	"github.com/Velocidex/yaml/v2"
-	jsonpatch "github.com/evanphx/json-patch"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -81,8 +80,20 @@ var (
 		Short('i').Bool()
 
 	config_generate_command_merge = config_generate_command.Flag(
-		"merge", "Merge this json config into the generated config").
+		"merge", "Merge this json config into the generated config (see https://datatracker.ietf.org/doc/html/rfc7396)").
 		Strings()
+
+	config_generate_command_merge_file = config_generate_command.Flag(
+		"merge_file", "Merge this file containing a json config into the generated config (see https://datatracker.ietf.org/doc/html/rfc7396)").
+		File()
+
+	config_generate_command_patch = config_generate_command.Flag(
+		"patch", "Patch this into the generated config (see http://jsonpatch.com/)").
+		Strings()
+
+	config_generate_command_patch_file = config_generate_command.Flag(
+		"patch_file", "Patch this file into the generated config (see http://jsonpatch.com/)").
+		File()
 
 	config_rotate_server_key = config_command.Command(
 		"rotate_key",
@@ -95,6 +106,15 @@ var (
 
 func doShowConfig() error {
 	config_obj, err := makeDefaultConfigLoader().LoadAndValidate()
+	if err != nil {
+		return err
+	}
+
+	err = applyMergesAndPatches(config_obj,
+		*config_show_command_merge_file,
+		*config_show_command_merge,
+		*config_show_command_patch_file,
+		*config_show_command_patch)
 	if err != nil {
 		return err
 	}
@@ -179,24 +199,14 @@ func doGenerateConfigNonInteractive() error {
 	// Users have to update the following fields.
 	config_obj.Client.ServerUrls = []string{"https://localhost:8000/"}
 
-	for _, merge_patch := range *config_generate_command_merge {
-		serialized, err := json.Marshal(config_obj)
-		if err != nil {
-			return fmt.Errorf("Marshal config_obj: %w", err)
-		}
-
-		patched, err := jsonpatch.MergePatch(
-			serialized, []byte(merge_patch))
-		if err != nil {
-			return fmt.Errorf("Invalid merge patch: %w", err)
-		}
-
-		err = json.Unmarshal(patched, &config_obj)
-		if err != nil {
-			return fmt.Errorf("Patched object produces an invalid config: %w", err)
-		}
+	err = applyMergesAndPatches(config_obj,
+		*config_generate_command_merge_file,
+		*config_generate_command_merge,
+		*config_generate_command_patch_file,
+		*config_generate_command_patch)
+	if err != nil {
+		return err
 	}
-
 	res, err := yaml.Marshal(config_obj)
 	if err != nil {
 		return fmt.Errorf("Unable to create config: %w", err)

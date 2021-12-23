@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/Velocidex/sflags"
@@ -27,7 +26,6 @@ func mergeFlagConfig(config_obj *config_proto.Config,
 		return err
 	}
 
-	fmt.Printf("Merging flags %v\n", string(serialized))
 	proto.Merge(config_obj, default_config)
 	return nil
 }

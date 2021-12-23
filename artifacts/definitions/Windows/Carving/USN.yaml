@@ -24,6 +24,10 @@ description: |
      the USN record. Bear in mind that this might be out of date and
      inaccurate.
 
+  4. If you need to carve from a standalone file (e.g. collection from
+     `Windows.KapeFiles.Targets`) you should use the
+     Windows.Carving.USNFiles artifact instead.
+
 parameters:
   - name: DriveToScan
     default: "C:"
