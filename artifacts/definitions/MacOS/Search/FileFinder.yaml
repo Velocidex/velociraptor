@@ -46,6 +46,7 @@ parameters:
     description: Alternative specify multiple globs in a table
 
   - name: YaraRule
+    type: yara
     default:
     description: A yara rule to search for matching files.
 

@@ -32,14 +32,15 @@ parameters:
   - name: UserAssistKey
     default: Software\Microsoft\Windows\CurrentVersion\Explorer\UserAssist\*\Count\*
 
-  - name: userAssistProfile
-    default: |
+export:
+  LET userAssistProfile = '''
       [
         ["Header", 0, [
           ["NumberOfExecutions", 4, "uint32"],
           ["LastExecution", 60, "uint64"]
         ]]
       ]
+    '''
 
 sources:
   - queries:

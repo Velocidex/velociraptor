@@ -50,6 +50,7 @@ parameters:
     description: The accessor to use
 
   - name: YaraRule
+    type: yara
     default:
     description: A yara rule to search for matching files.
 

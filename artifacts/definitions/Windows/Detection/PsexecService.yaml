@@ -13,6 +13,7 @@ type: CLIENT_EVENT
 
 parameters:
   - name: yaraRule
+    type: yara
     default: "wide nocase ascii: psexec"
 
 sources:

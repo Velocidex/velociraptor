@@ -63,6 +63,9 @@
      "value": "."
     },
     {
+     "key": "YaraRule"
+    },
+    {
      "key": "Flag"
     },
     {

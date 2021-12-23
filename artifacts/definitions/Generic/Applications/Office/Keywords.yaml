@@ -28,6 +28,7 @@ parameters:
   - name: searchGlob
     default: C:\Users\**
   - name: yaraRule
+    type: yara
     default: |
       rule Hit {
         strings:

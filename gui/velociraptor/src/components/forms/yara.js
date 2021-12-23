@@ -9,78 +9,11 @@ import "./regex.css";
 import _ from 'lodash';
 
 let gcompletions=[
-    {name: "\\s",
-     trigger: "\\",
-     description: "Match all spaces"},
-    {name: "\\w",
-     trigger: "\\",
-     description: "Match all words"},
-    {name: "\\S",
-     trigger: "\\",
-     description: "Match all non space"},
-    {name: "\\\\",
-     trigger: "\\",
-     value: "\\\\\\\\",
-     description: "Plain backslash"},
-
-    {name: "|",
-     trigger: "|",
-     description: "Alternatives"},
-
-    {name: "[]",
-     trigger: "[",
-     cursor_offset: 1,
-     description: "Character class (Matches any character inside the [])"},
-
-    {name: "[^]",
-     trigger: "[",
-     cursor_offset: 2,
-     description: "Negated character class (Matches any character not in [])"},
-
-    {name: "[0-9A-Z]",
-     trigger: "[",
-     description: "Letters and numbers"},
-
-    {name: "()",
-     value: "()",
-     trigger: "(",
-     cursor_offset: 1,
-     description: "Capture groups"},
-
-    {name: "(Alternate...|Alternate...)",
-     value: "(|)",
-     trigger: "(",
-     cursor_offset: 1,
-     description: "Capture with alternates"},
-
-    {name: "(?P<Name>...)",
-     value: "(?P<>)",
-     trigger: "(",
-     cursor_offset: 4,
-     description: "Named capture group"},
-
-    {name: "*?",
-     trigger: "*",
-     description: "zero or more matches, prefer fewer"},
-
-    {name: "+?",
-     trigger: "+",
-     description: "one or more matches, prefer fewer"},
-
-    {name: "*",
-     trigger: "*",
-     description: "zero or more matches"},
-
-    {name: "+",
-     trigger: "+",
-     description: "one or more matches"},
-
-    {name: "{min,max}",
-     value: "{,}",
-     cursor_offset: 1,
-     trigger: "{",
-     description: "Match between min number and max number"},
-
+    {name: "rule template",
+     trigger: "r",
+     value: "rule Hit {\n   strings:\n     $a = \"keyword\" nocase wide ascii\n    condition:\n      any of them\n}\n",
+     cursor_offset: 5,
+     description: "Yara Rule Template"},
 ];
 
 let Completer = {
@@ -138,7 +71,7 @@ let Completer = {
 };
 
 
-export default class RegEx extends React.Component {
+export default class YaraEditor extends React.Component {
     static propTypes = {
         value: PropTypes.string,
         setValue: PropTypes.func.isRequired,
@@ -156,32 +89,25 @@ export default class RegEx extends React.Component {
     aceConfig = (ace) => {
         language_tools.setCompleters();
         language_tools.addCompleter(Completer);
+        language_tools.addCompleter(language_tools.textCompleter);
 
         ace.setOptions({
-            maxLines: 5,
             enableLiveAutocompletion: true,
             enableBasicAutocompletion: true,
-            placeholder: "Regular Expression or ? for suggestions",
+            autoScrollEditorIntoView: true,
             showGutter: false,
+            maxLines: 25,
+            placeholder: "Paste Yara rule or type ? for template",
         });
 
         this.setState({ace: ace});
     };
 
     setValue = value=>{
-        let error = "";
-        try {
-            let sanitized_re = value.replace(/\(\?[^)]+\)/, "");
-            // This raises an exception
-            new RegExp(sanitized_re);
-        } catch(e) {
-            error = e.message;
-        }
-        if (this.state.error !== error) {
-            this.setState({error: error});
-        }
+        // Todo: Verify the yara rule somehow.
         this.props.setValue(value);
     }
+
     render() {
         return (
             <>
@@ -200,7 +126,7 @@ export default class RegEx extends React.Component {
                        className="regex-form"
                        aceConfig={this.aceConfig}
                        onChange={this.setValue}
-                       mode="regex" />
+                       mode="yara" />
               </div>
             </>
         );

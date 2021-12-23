@@ -71,6 +71,7 @@ export default class NewArtifactDialog extends React.Component {
             autoScrollEditorIntoView: true,
             minLines: 10,
             maxLines: 1000,
+            placeholder: "",
         });
 
         ace.resize();
