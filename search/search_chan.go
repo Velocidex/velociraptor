@@ -107,8 +107,7 @@ func searchClientIndexChan(
 
 		// Microseconds
 		seen := make(map[string]bool)
-		for hit := range SearchIndexWithPrefix(ctx, config_obj, prefix,
-			OPTION_CLIENT_RECORDS) {
+		for hit := range SearchIndexWithPrefix(ctx, config_obj, prefix) {
 			if hit == nil {
 				continue
 			}

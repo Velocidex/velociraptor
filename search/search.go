@@ -163,8 +163,7 @@ func searchClientIndex(
 
 	scope := vql_subsystem.MakeScope()
 	prefix, filter := splitSearchTermIntoPrefixAndFilter(scope, in.Query)
-	for hit := range SearchIndexWithPrefix(
-		ctx, config_obj, prefix, options) {
+	for hit := range SearchIndexWithPrefix(ctx, config_obj, prefix) {
 		if hit == nil {
 			continue
 		}

@@ -6,8 +6,16 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
-const (
-	partition = 3
+var (
+	// Since v0.6.3 we only store client id in the index. This is a
+	// hex encoded random value of the form "C.XXYYZZ"
+	partitions = []int{
+		// Partition 1: "C.XX" - first hex digit has density of < 256
+		// Partition 2: "YY" Has density of < 256
+		// Partition 3: Rest of digits are randomly distributed. With
+		//   density of 256 up to 1.6m clients.
+		4, 2, 100,
+	}
 )
 
 type IndexPathManager struct{}
@@ -37,13 +45,21 @@ func splitTermToParts(term string) []string {
 
 	// Partition the term into character groups
 	parts := []string{}
-	for i := 0; i < len(term); i += partition {
+	i := 0
+	for j := 0; j < len(partitions); j++ {
+		partition := partitions[j]
 		left := i
 		right := i + partition
 		if right > len(term) {
 			right = len(term)
 		}
 		parts = append(parts, term[left:right])
+
+		i += partition
+		if i >= len(term) {
+			break
+		}
+
 	}
 	return parts
 }

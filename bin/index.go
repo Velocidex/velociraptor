@@ -17,6 +17,9 @@ var (
 
 	index_command_rebuild = index_command.Command(
 		"rebuild", "Rebuild client index")
+
+	index_command_rebuild_full = index_command_rebuild.Flag(
+		"full", "Build a full index - not necessary after v0.6.3").Bool()
 )
 
 func doRebuildIndex() error {
@@ -83,19 +86,25 @@ func doRebuildIndex() error {
 
 		// Now write the new index.
 		search.SetIndex(config_obj, client_id, client_id)
-		search.SetIndex(config_obj, client_id, "all")
-		if client_info.Hostname != "" {
-			search.SetIndex(config_obj, client_id, "host:"+client_info.Hostname)
-		}
 
-		if client_info.Fqdn != "" {
-			search.SetIndex(config_obj, client_id, "host:"+client_info.Fqdn)
-		}
+		// Since version 0.6.3 we do not use the index directly from
+		// storage, and load it into memory completely. Therefore it
+		// is not necessary to include all these in the index.
+		if *index_command_rebuild_full {
+			search.SetIndex(config_obj, client_id, "all")
+			if client_info.Hostname != "" {
+				search.SetIndex(config_obj, client_id, "host:"+client_info.Hostname)
+			}
 
-		for _, label := range labels {
-			if label != "" {
-				search.SetIndex(config_obj,
-					client_id, "label:"+strings.ToLower(label))
+			if client_info.Fqdn != "" {
+				search.SetIndex(config_obj, client_id, "host:"+client_info.Fqdn)
+			}
+
+			for _, label := range labels {
+				if label != "" {
+					search.SetIndex(config_obj,
+						client_id, "label:"+strings.ToLower(label))
+				}
 			}
 		}
 	}

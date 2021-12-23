@@ -65,8 +65,7 @@ func (self *TestSuite) TestEnumerateIndex() {
 	// Read all clients.
 	ctx := context.Background()
 	searched_clients := []string{}
-	for hit := range search.SearchIndexWithPrefix(
-		ctx, self.ConfigObj, "", search.OPTION_CLIENT_RECORDS) {
+	for hit := range search.SearchIndexWithPrefix(ctx, self.ConfigObj, "") {
 		if hit != nil {
 			client_id := hit.Entity
 			searched_clients = append(searched_clients, client_id)

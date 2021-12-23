@@ -42,7 +42,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/services"
 )
 
 type SearchOptions int
@@ -182,25 +181,50 @@ func (self *Indexer) Load(
 					continue
 				}
 
-				// If it is a client also warm up the client
-				// info cache.
-				if strings.HasPrefix(record.Entity, "C.") {
-					services.GetHostname(record.Entity)
-
-					// Get the full record to warm up all
-					// client attributes. If the full record
-					// does not exist, then this index entry
-					// is stale - just ignore it. This can
-					// happen if the client records are
-					// removed but the index has not been
-					// updated.
-					_, err := FastGetApiClient(
-						ctx, config_obj, record.Entity)
-					if err != nil {
-						continue
-					}
+				// We only actually care about client index entries
+				// now.
+				if !strings.HasPrefix(record.Entity, "C.") {
+					continue
 				}
+
+				client_id := record.Entity
+
+				// The all item corresponds to the "." search term.
+				indexer.Set(NewRecord(&api_proto.IndexRecord{
+					Term:   "all",
+					Entity: client_id,
+				}))
+
+				// Get the full record to warm up all
+				// client attributes. If the full record
+				// does not exist, then this index entry
+				// is stale - just ignore it. This can
+				// happen if the client records are
+				// removed but the index has not been
+				// updated.
+				client_info, err := FastGetApiClient(
+					ctx, config_obj, record.Entity)
+				if err != nil {
+					continue
+				}
+
+				if client_info.OsInfo.Hostname != "" {
+					indexer.Set(NewRecord(&api_proto.IndexRecord{
+						Term:   "host:" + client_info.OsInfo.Hostname,
+						Entity: client_id,
+					}))
+				}
+
+				// Add labels to the index.
+				for _, label := range client_info.Labels {
+					indexer.Set(NewRecord(&api_proto.IndexRecord{
+						Term:   "label:" + strings.ToLower(label),
+						Entity: client_id,
+					}))
+				}
+
 				indexer.Set(NewRecord(record))
+
 				continue
 			}
 
@@ -309,7 +333,7 @@ func UnsetIndex(
 func SearchIndexWithPrefix(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	prefix string, options SearchOptions) <-chan *api_proto.IndexRecord {
+	prefix string) <-chan *api_proto.IndexRecord {
 	output_chan := make(chan *api_proto.IndexRecord)
 
 	prefix = strings.ToLower(prefix)

@@ -10,12 +10,13 @@ description: |
    that is not needed.
 
    For those cases you might want to run the following server
-   artifact. It cancels all currently in-flight collections
-   (stopping the hunt in the GUI only stops new machines
-   from joining but does not actively cancels existing collections).
+   artifact. It cancels all currently in-flight collections.
 
    Optionally you can also remove any files already collected if you
    do not need them.
+
+   This artifact is implicitly collected by the GUI when pressing the
+   "Delete Hunt" Button.
 
 type: SERVER
 
@@ -28,7 +29,8 @@ parameters:
     type: bool
 
 sources:
-  - query: |
+  - name: CancelFlows
+    query: |
       // Get the flows and their running state for this hunt.
       LET flows = SELECT ClientId, FlowId, HuntId, {
             SELECT state FROM flows(client_id=ClientId, flow_id=FlowId)
@@ -49,3 +51,7 @@ sources:
               FROM enumerate_flow(flow_id=FlowId, client_id=ClientId)
           })
       SELECT * FROM if(condition=DeleteAllFiles, then=files)
+
+  - name: HuntFiles
+    query: |
+      SELECT * FROM hunt_delete(hunt_id=HuntId, really_do_it=DeleteAllFiles)
