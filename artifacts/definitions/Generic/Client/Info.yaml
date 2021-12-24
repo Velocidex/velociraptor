@@ -26,7 +26,13 @@ sources:
                      then={
                          SELECT Domain FROM wmi(query='SELECT Domain FROM win32_computersystem')
                      })
-               } AS ADDomain
+               } AS ADDomain,
+                {
+                  SELECT IPAddress[0] FROM wmi(
+                    query="SELECT * from Win32_NetworkAdapterConfiguration" )
+                        WHERE DefaultIPGateway =~ ''
+               } AS HostIP
+               
         FROM info()
 
   - name: Users
