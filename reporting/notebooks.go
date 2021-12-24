@@ -8,6 +8,7 @@ import (
 	"html"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -331,7 +332,7 @@ func ExportNotebookToHTML(
 			})
 
 		// Expand tables
-		cell_output = csvViewerRegexp.ReplaceAllStringFunc(
+		new_cell_output := csvViewerRegexp.ReplaceAllStringFunc(
 			cell_output, func(in string) string {
 				result, err := convertCSVTags(ctx, config_obj, in, cell)
 				if err != nil {
@@ -342,7 +343,7 @@ func ExportNotebookToHTML(
 				return result
 			})
 
-		_, err := output.Write([]byte(cell_output))
+		_, err := output.Write([]byte(new_cell_output))
 		if err != nil {
 			return err
 		}
@@ -375,8 +376,13 @@ func convertCSVTags(
 		return "", errors.New("Unexpected regexp match")
 	}
 
+	unescaped, err := url.QueryUnescape(m[1])
+	if err != nil {
+		return "", errors.New("Unexpected regexp match")
+	}
+
 	params := &api_proto.GetTableRequest{}
-	err = json.Unmarshal([]byte(m[1]), params)
+	err = json.Unmarshal([]byte(unescaped), params)
 	if err != nil {
 		return "", err
 	}

@@ -27,12 +27,14 @@ package interrogation
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -130,7 +132,9 @@ func (self *EnrollmentService) ProcessEnrollment(
 	}
 
 	// Write an intermediate record while the interrogation is in
-	// flight.
+	// flight. We are here because the client_info_manager does not
+	// have the record in cache, so next Get() will just read it from
+	// disk on all minions.
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
@@ -139,6 +143,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 	client_path_manager := paths.NewClientPathManager(client_id)
 	client_info := &actions_proto.ClientInfo{
 		ClientId:              client_id,
+		FirstSeenAt:           uint64(time.Now().Unix()),
 		LastInterrogateFlowId: flow_id,
 	}
 
@@ -218,6 +223,15 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	if err != nil {
 		return err
 	}
+
+	public_key_info := &crypto_proto.PublicKey{}
+	err = db.GetSubject(config_obj, client_path_manager.Key(),
+		public_key_info)
+	if err != nil {
+		// Offline clients do not have public key files, so
+		// this is not actually an error.
+	}
+	client_info.FirstSeenAt = public_key_info.EnrollTime
 
 	// Expire the client info manager to force it to fetch fresh data.
 	client_info_manager, err := services.GetClientInfoManager()

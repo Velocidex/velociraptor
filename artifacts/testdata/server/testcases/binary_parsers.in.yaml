@@ -17,8 +17,15 @@ Queries:
     LIMIT 10
 
   # Check the lnk parser
-  - SELECT _Parsed FROM Artifact.Windows.Forensics.Lnk(
-      Glob=srcDir + "/artifacts/testdata/files/1.lnk")
+  - SELECT * FROM column_filter(query={
+      SELECT * FROM Artifact.Windows.Forensics.Lnk(
+        Glob=srcDir + "/artifacts/testdata/files/1.lnk")
+    }, exclude="FullPath|time|_")
+
+  - SELECT * FROM column_filter(query={
+      SELECT * FROM Artifact.Windows.Forensics.Lnk(
+        Glob=srcDir + "/artifacts/testdata/files/password.txt.lnk")
+    }, exclude="FullPath|time|_")
 
   # Check that binary parser arrays and foreach interact correctly
   # (array implement the iterator protocol properly).

@@ -16,7 +16,7 @@ GOOGLEAPIS_PATH=$CWD/googleapis/
 GOOGLEAPIS_COMMIT="82a542279"
 
 if [ ! -d "$GOOGLEAPIS_PATH" ]; then
-    git clone https://github.com/googleapis/googleapis/ $GOOGLEAPIS_PATH
+    git clone --shallow-since 2021-12-15  https://github.com/googleapis/googleapis/ $GOOGLEAPIS_PATH
     (cd googleapis && git checkout $GOOGLEAPIS_COMMIT)
 fi
 

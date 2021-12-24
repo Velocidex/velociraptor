@@ -162,6 +162,7 @@ message ClientInfo {
     string ping_time = 19;
     string client_version = 12;
     string client_name = 13;
+    uint64 first_seen_at = 20;
 
     repeated string labels = 15;
 

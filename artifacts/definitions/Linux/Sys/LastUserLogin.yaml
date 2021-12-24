@@ -17,7 +17,7 @@ parameters:
     default: 10000
     type: int64
 
-export:
+export: |
   LET wtmpProfile <= '''
        [
          ["Header", 0, [

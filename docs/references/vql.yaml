@@ -477,6 +477,9 @@
   - name: level
     type: int64
     description: Compression level between 0 (no compression) and 9.
+  - name: ops_per_sec
+    type: int64
+    description: Rate limiting for collections.
   category: plugin
 - name: collect_client
   description: |
@@ -3226,6 +3229,22 @@
     description: Path to split into components.
     required: true
   category: basic
+- name: pathspec
+  description: Create a structured path spec to pass to certain accessors.
+  type: Function
+  args:
+  - name: DelegateAccessor
+    type: string
+    description: An accessor to use.
+  - name: DelegatePath
+    type: string
+    description: A delegate to pass to the accessor.
+  - name: Path
+    type: string
+    description: A path to open.
+  - name: parse
+    type: string
+    description: Alternatively parse the pathspec from this string.
 - name: pipe
   description: |
     A pipe allows plugins that use files to read data from a vql
@@ -3783,7 +3802,7 @@
     required: true
   - name: format
     type: string
-    description: Encoding format (csv,json)
+    description: Encoding format (csv,json,yaml,hex,base64)
   category: basic
 - name: server_metadata
   description: Returns client metadata from the datastore. Client metadata is a set
@@ -4558,15 +4577,15 @@
     required: true
   - name: name
     type: string
-    description: The name of the file that should be stored on the server
+    description: The name of the file that should be stored on the server (may contain
+      the path)
   - name: user
     type: string
     description: The username to connect to the endpoint with
     required: true
   - name: path
     type: string
-    description: Path on server to upload file to
-    required: true
+    description: Path on server to upload file to (will be prepended to name)
   - name: accessor
     type: string
     description: The accessor to use
@@ -4576,7 +4595,7 @@
     required: true
   - name: endpoint
     type: string
-    description: The Endpoint to use
+    description: The Endpoint to use including port number (e.g. 192.168.1.1:22 )
     required: true
   - name: hostkey
     type: string

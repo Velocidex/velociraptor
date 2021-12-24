@@ -103,11 +103,49 @@ export: |
             }
          }],
 
-        # The LinkInfo only exists if the Link Flag is set otherwise it is empty.
-        ["LinkInfo", "x=>x.HeaderSize + x.LinkTargetIDList.SizeOf", "Union", {
+        ["LinkInfo", "x=>x.LinkTargetIDList.EndOf", "Union", {
             "selector": "x=>x.LinkFlags =~ 'HasLinkInfo'",
             "choices": {
                 "true": "LinkInfo",
+                "false": "Empty"
+            }
+        }],
+
+        ["NameInfo", "x=>x.LinkInfo.EndOf", "Union", {
+            "selector": "x=>x.LinkFlags =~ 'HasName'",
+            "choices": {
+                "true": "NameInfo",
+                "false": "Empty"
+            }
+        }],
+
+        ["RelativePathInfo", "x=>x.NameInfo.EndOf", "Union", {
+            "selector": "x=>x.LinkFlags =~ 'HasRelativePath'",
+            "choices": {
+                "true": "RelativePathInfo",
+                "false": "Empty"
+            }
+        }],
+
+        ["WorkingDirInfo", "x=>x.RelativePathInfo.EndOf", "Union", {
+            "selector": "x=>x.LinkFlags =~ 'HasWorkingDir'",
+            "choices": {
+                "true": "WorkingDirInfo",
+                "false": "Empty"
+            }
+        }],
+
+        ["ArgumentInfo", "x=>x.WorkingDirInfo.EndOf", "Union", {
+            "selector": "x=>x.LinkFlags =~ 'HasArguments'",
+            "choices": {
+                "true": "ArgumentInfo",
+                "false": "Empty"
+            }
+        }],
+        ["IconInfo", "x=>x.ArgumentInfo.EndOf", "Union", {
+            "selector": "x=>x.LinkFlags =~ 'HasIconLocation'",
+            "choices": {
+                "true": "IconInfo",
                 "false": "Empty"
             }
         }]
@@ -395,6 +433,65 @@ export: |
              "start_bit": 48,
              "end_bit": 64,
          }]
+       ]],
+
+       ["NameInfo", "x=>x.NameInfoSize + 2", [
+            ["Offset", 0, "Value", {"value": "x=>x.StartOf"}],
+            ["NameInfoSize", 0, "Value", {
+                "value": "x=>x.__NameInfoSize * 2"
+            }],
+            ["Name", 2, "String", {
+                "encoding": "utf16",
+                "length": "x=>x.NameInfoSize",
+            }],
+            ["__NameInfoSize", 0, "uint16"],
+       ]],
+
+       ["WorkingDirInfo", "x=>x.WorkingDirInfoSize + 2", [
+            ["Offset", 0, "Value", {"value": "x=>x.StartOf"}],
+            ["WorkingDirInfoSize", 0, "Value", {
+                "value": "x=>x.__WorkingDirInfoSize * 2"
+            }],
+            ["WorkingDir", 2, "String", {
+                "encoding": "utf16",
+                "length": "x=>x.WorkingDirInfoSize",
+            }],
+            ["__WorkingDirInfoSize", 0, "uint16"],
+       ]],
+
+       ["RelativePathInfo", "x=>x.RelativePathInfoSize + 2", [
+            ["Offset", 0, "Value", {"value": "x=>x.StartOf"}],
+            ["RelativePathInfoSize", 0, "Value", {
+                "value": "x=>x.__RelativePathInfoSize * 2"
+            }],
+            ["RelativePath", 2, "String", {
+                "encoding": "utf16",
+                "length": "x=>x.RelativePathInfoSize",
+            }],
+            ["__RelativePathInfoSize", 0, "uint16"],
+       ]],
+
+       ["ArgumentInfo", "x=>x.ArgumentInfoSize + 2", [
+            ["Offset", 0, "Value", {"value": "x=>x.StartOf"}],
+            ["ArgumentInfoSize", 0, "Value", {
+                "value": "x=>x.__ArgumentInfoSize * 2"
+            }],
+            ["Arguments", 2, "String", {
+                "encoding": "utf16",
+                "length": "x=>x.ArgumentInfoSize",
+            }],
+            ["__ArgumentInfoSize", 0, "uint16"],
+       ]],
+       ["IconInfo", "x=>x.IconInfoSize + 2", [
+            ["Offset", 0, "Value", {"value": "x=>x.StartOf"}],
+            ["IconInfoSize", 0, "Value", {
+                "value": "x=>x.__IconInfoSize * 2"
+            }],
+            ["IconLocations", 2, "String", {
+                "encoding": "utf16",
+                "length": "x=>x.IconInfoSize",
+            }],
+            ["__IconInfoSize", 0, "uint16"],
        ]]
      ]
      '''
@@ -414,6 +511,11 @@ sources:
             Parsed.WriteTime AS HeaderWriteTime,
             Parsed.FileSize AS FileSize,
             Parsed.LinkInfo.Target AS Target,
+            Parsed.NameInfo.Name AS Name,
+            Parsed.RelativePathInfo.RelativePath AS RelativePath,
+            Parsed.WorkingDirInfo.WorkingDir AS WorkingDir,
+            Parsed.ArgumentInfo.Arguments AS Arguments,
+            Parsed.IconInfo.IconLocations AS Icons,
             if(condition=AlsoUpload, then=upload(file=FullPath)) AS Upload
      FROM link_files
 
