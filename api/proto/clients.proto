@@ -51,6 +51,7 @@ message ApiClient {
         }];
 
     string last_interrogate_flow_id = 19;
+    string last_interrogate_artifact_name = 21;
 
     enum IPAddressClass {
         UNKNOWN = 0;

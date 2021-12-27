@@ -359,7 +359,8 @@ class VeloHostInfo extends Component {
         if (this.state.mode === 'detailed') {
             return <div className="client-details dashboard">
                      <VeloReportViewer
-                       artifact="Custom.Generic.Client.Info"
+                       artifact={this.props.client.last_interrogate_artifact_name ||
+                                 "Generic.Client.Info"}
                        client={this.props.client}
                        type="CLIENT"
                        flow_id={this.props.client.last_interrogate_flow_id} />
@@ -381,32 +382,49 @@ class VeloHostInfo extends Component {
         if (this.state.interrogateOperationId) {
             return;
         }
+        let interrogate_artifact = "Custom.Generic.Client.Info";
 
-        api.post("v1/CollectArtifact", {
-            urgent: true,
-            client_id: this.props.client.client_id,
-            artifacts: ["Generic.Client.Info"],
+        // 1. Check for custom interrogate artifact
+        // 2. Launch the correct interrogate artifact
+        // 3. Wait for the flow to complete.
+        api.post("v1/GetArtifacts", {
+            fields: {name: true},
+            name: true,
+            number_of_results: 1000,
+            search_term: interrogate_artifact,
         }, this.source.token).then((response) => {
-            this.setState({interrogateOperationId: response.data.flow_id});
+            if (_.isEmpty(response.data.items)) {
+                interrogate_artifact = "Generic.Client.Info";
+            }
 
-            // Start polling for flow completion.
-            this.interrogate_interval = setInterval(() => {
-                api.get("v1/GetFlowDetails", {
-                    client_id: this.props.client.client_id,
-                    flow_id: this.state.interrogateOperationId,
-                }, this.source.token).then((response) => {
-                    let context = response.data.context;
-                    if (!context || context.state === "RUNNING") {
-                        return;
-                    }
+            api.post("v1/CollectArtifact", {
+                urgent: true,
+                client_id: this.props.client.client_id,
+                allow_custom_overrides: true,
+                artifacts: [interrogate_artifact],
+            }, this.source.token).then((response) => {
+                this.setState({interrogateOperationId: response.data.flow_id});
 
-                    // The node is refreshed with the correct flow id, we can stop polling.
-                    clearInterval(this.interrogate_interval);
-                    this.interrogate_interval = undefined;
+                // Start polling for flow completion.
+                this.interrogate_interval = setInterval(() => {
+                    api.get("v1/GetFlowDetails", {
+                        client_id: this.props.client.client_id,
+                        flow_id: this.state.interrogateOperationId,
+                    }, this.source.token).then((response) => {
+                        let context = response.data.context;
+                        if (!context || context.state === "RUNNING") {
+                            return;
+                        }
 
-                    this.setState({interrogateOperationId: null});
-                });
-            }, INTERROGATE_POLL_TIME);
+                        // The node is refreshed with the correct flow id,
+                        // we can stop polling.
+                        clearInterval(this.interrogate_interval);
+                        this.interrogate_interval = undefined;
+
+                        this.setState({interrogateOperationId: null});
+                    });
+                }, INTERROGATE_POLL_TIME);
+            });
         });
     }
 

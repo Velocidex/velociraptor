@@ -59,6 +59,7 @@ func GetApiClient(
 	}
 
 	result.LastInterrogateFlowId = client_info.LastInterrogateFlowId
+	result.LastInterrogateArtifactName = client_info.LastInterrogateArtifactName
 	result.AgentInformation = &api_proto.AgentInformation{
 		Version: client_info.ClientVersion,
 		Name:    client_info.ClientName,
@@ -130,9 +131,10 @@ func FastGetApiClient(
 			Machine:  client_info.Architecture,
 			Fqdn:     client_info.Fqdn,
 		},
-		FirstSeenAt:           client_info.FirstSeenAt,
-		LastSeenAt:            client_info.Ping,
-		LastIp:                client_info.IpAddress,
-		LastInterrogateFlowId: client_info.LastInterrogateFlowId,
+		FirstSeenAt:                 client_info.FirstSeenAt,
+		LastSeenAt:                  client_info.Ping,
+		LastIp:                      client_info.IpAddress,
+		LastInterrogateFlowId:       client_info.LastInterrogateFlowId,
+		LastInterrogateArtifactName: client_info.LastInterrogateArtifactName,
 	}, nil
 }

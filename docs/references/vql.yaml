@@ -620,7 +620,7 @@
   - name: bash_style
     type: bool
     description: Use bash rules (Uses Windows rules by default).
-  category: client
+  category: plugin
 - name: compress
   description: |
     Compress a file.
@@ -643,7 +643,7 @@
 
     On windows this uses the API to list active sockets.
   type: Plugin
-  category: client
+  category: plugin
 - name: copy
   description: |
     Copy a file.
@@ -780,7 +780,7 @@
     type: string
     description: Rc4 key (1-256bytes).
     required: true
-  category: client
+  category: plugin
 - name: dict
   description: |
     Construct a dict from arbitrary keyword args.
@@ -2345,7 +2345,7 @@
   - name: magic
     type: string
     description: Additional magic to load
-  category: client
+  category: plugin
 - name: mail
   description: Send Email to a remote server.
   type: Plugin
@@ -2532,6 +2532,7 @@
 - name: netcat
   description: Make a tcp connection and read data from a socket.
   type: Plugin
+  category: plugin
   args:
   - name: address
     type: string
@@ -2974,6 +2975,7 @@
     description: The accessor to use.
   category: parsers
 - name: parse_pkcs7
+  category: parsers
   description: Parse a DER encoded pkcs7 string into an object.
   type: Function
   args:
@@ -3245,7 +3247,9 @@
   - name: parse
     type: string
     description: Alternatively parse the pathspec from this string.
+  category: plugin
 - name: pipe
+  category: plugin
   description: |
     A pipe allows plugins that use files to read data from a vql
     query. This is needed to be able to use the "pipe" accessor.
@@ -3563,7 +3567,7 @@
     type: string
     description: Registry key path.
     required: true
-  category: client
+  category: plugin
 - name: reg_rm_value
   description: Removes a value in the registry.
   type: Function
@@ -3572,7 +3576,7 @@
     type: string
     description: Registry value path.
     required: true
-  category: client
+  category: plugin
 - name: reg_set_value
   description: Set a value in the registry.
   type: Function
@@ -3592,7 +3596,7 @@
   - name: create
     type: bool
     description: Set to create missing intermediate keys
-  category: client
+  category: plugin
 - name: regex_replace
   description: Search and replace a string with a regexp. Note you can use $1 to replace
     the capture string.
@@ -3660,7 +3664,7 @@
     type: string
     description: Filename to remove.
     required: true
-  category: client
+  category: plugin
 - name: rm_client_monitoring
   description: Remove an artifact from the client monitoring table.
   type: Function
@@ -4035,7 +4039,7 @@
     required: true
   - name: args
     type: Any
-  category: client
+  category: plugin
 - name: sqlite
   description: Opens an SQLite file and run a query against it.
   type: Plugin
@@ -4902,7 +4906,7 @@
 - name: whoami
   description: Returns the username that is running the query.
   type: Function
-  category: client
+  category: plugin
 - name: winobj
   description: Enumerate The Windows Object Manager namespace.
   type: Plugin

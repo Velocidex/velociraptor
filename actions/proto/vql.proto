@@ -168,6 +168,10 @@ message ClientInfo {
 
     string last_interrogate_flow_id = 16;
 
+    // This can be a customized artifact that is compatible with
+    // Generic.Client.Info
+    string last_interrogate_artifact_name = 21;
+
     uint64 last_hunt_timestamp = 17;
     uint64 last_event_table_version = 18;
 }

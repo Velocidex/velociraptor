@@ -7,33 +7,48 @@ description: |
   internal indexes from this artifact as well.
 
   You can edit this artifact to enhance the client's interrogation
-  information as required.
+  information as required, by adding new sources.
+
+  NOTE: Do not modify the BasicInformation source since it is used to
+  interrogate the clients.
 
 sources:
   - name: BasicInformation
     description: |
       This source is used internally to populate agent info. Do not
-      remove this query.
+      modify or remove this query.
     query: |
         SELECT config.Version.Name AS Name,
                config.Version.BuildTime as BuildTime,
+               config.Version.Version as Version,
                config.Labels AS Labels,
                Hostname, OS, Architecture,
-               Platform, PlatformVersion, KernelVersion, Fqdn,
-               {
-                  SELECT * FROM if(
-                     condition=version(plugin='wmi') != NULL,
-                     then={
-                         SELECT Domain FROM wmi(query='SELECT Domain FROM win32_computersystem')
-                     })
-               } AS ADDomain,
-                {
-                  SELECT IPAddress[0] FROM wmi(
-                    query="SELECT * from Win32_NetworkAdapterConfiguration" )
-                        WHERE DefaultIPGateway =~ ''
-               } AS HostIP
-               
+               Platform, PlatformVersion, KernelVersion, Fqdn
         FROM info()
+
+  - name: WindowsInfo
+    description: Windows specific information about the host
+    precondition: SELECT OS From info() where OS = 'windows'
+    query: |
+      SELECT
+          {
+            SELECT DNSHostName,  Name, Domain, TotalPhysicalMemory
+            FROM wmi(
+               query='SELECT * FROM win32_computersystem')
+          } AS `Computer Info`,
+          {
+            SELECT Caption,
+               join(array=IPAddress, sep=", ") AS IPAddresses,
+               join(array=IPSubnet, sep=", ") AS IPSubnet,
+               MACAddress,
+               join(array=DefaultIPGateway, sep=", ") AS DefaultIPGateway,
+               DNSHostName,
+               join(array=DNSServerSearchOrder, sep=", ") AS DNSServerSearchOrder
+            FROM wmi(
+               query="SELECT * from Win32_NetworkAdapterConfiguration" )
+            WHERE IPAddress
+          } AS `Network Info`
+      FROM scope()
 
   - name: Users
     precondition: SELECT OS From info() where OS = 'windows'
@@ -71,8 +86,13 @@ reports:
       {{ Query "resources" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 }}
       </div>
 
-      # Active Users
+      {{ $windows_info := Query "SELECT * FROM source(source='WindowsInfo')" }}
+      {{ if $windows_info }}
+      # Windows agent information
+        {{ $windows_info | Table }}
+      {{ end }}
 
+      # Active Users
       {{ Query "SELECT * FROM source(source='Users')" | Table }}
 
 
