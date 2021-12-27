@@ -11,7 +11,7 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import { HotKeys, ObserveKeys } from "react-hotkeys";
 import DateTimePicker from 'react-datetime-picker';
-
+import EstimateHunt from './estimate.js';
 import LabelForm from '../utils/labels.js';
 import api from '../core/api-service.js';
 
@@ -141,6 +141,8 @@ class NewHuntConfigureHunt extends React.Component {
                       </Col>
                     </Form.Group>
                   }
+
+                  <EstimateHunt params={this.props.parameters}/>
 
                 </Form>
               </Modal.Body>

@@ -104,6 +104,15 @@ service API {
         };
     }
 
+    // Returns an estimate of the number of clients that might be
+    // affected by a hunt.
+    rpc EstimateHunt(Hunt) returns (HuntStats) {
+        option (google.api.http) = {
+            post: "/api/v1/EstimateHunt",
+            body: "*"
+        };
+    }
+
     rpc ListHunts(ListHuntsRequest) returns (ListHuntsResponse) {
         option (google.api.http) = {
             get: "/api/v1/ListHunts",

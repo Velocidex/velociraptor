@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -248,4 +249,123 @@ func (self *ApiServer) GetHuntResults(
 	}
 
 	return result, nil
+}
+
+func (self *ApiServer) EstimateHunt(
+	ctx context.Context,
+	in *api_proto.Hunt) (*api_proto.HuntStats, error) {
+
+	defer Instrument("EstimateHunt")()
+
+	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, status.Error(codes.PermissionDenied,
+			"User is not allowed to view hunt results.")
+	}
+
+	if in.Condition != nil {
+		labels := in.Condition.GetLabels()
+		if labels != nil && len(labels.Label) > 0 {
+			// Multiple labels imply an OR relationship - if a client
+			// has any of the labels set, it will be scheduled.
+			seen := make(map[string]bool)
+			for _, label := range labels.Label {
+				for entity := range search.SearchIndexWithPrefix(
+					ctx, self.config, "label:"+label) {
+					seen[entity.Entity] = true
+				}
+			}
+
+			// Remove any excluded labels.
+			if in.Condition.ExcludedLabels != nil {
+				for _, label := range in.Condition.ExcludedLabels.Label {
+					for entity := range search.SearchIndexWithPrefix(
+						ctx, self.config, "label:"+label) {
+						delete(seen, entity.Entity)
+					}
+				}
+			}
+
+			return &api_proto.HuntStats{
+				TotalClientsScheduled: uint64(len(seen)),
+			}, nil
+		}
+
+		os_condition := in.Condition.GetOs()
+		if os_condition != nil &&
+			os_condition.Os != api_proto.HuntOsCondition_ALL {
+			seen := make(map[string]bool)
+			os_name := ""
+			switch os_condition.Os {
+			case api_proto.HuntOsCondition_WINDOWS:
+				os_name = "windows"
+			case api_proto.HuntOsCondition_LINUX:
+				os_name = "linux"
+			case api_proto.HuntOsCondition_OSX:
+				os_name = "darwin"
+			}
+
+			client_info_manager, err := services.GetClientInfoManager()
+			if err != nil {
+				return nil, err
+			}
+
+			for hit := range search.SearchIndexWithPrefix(ctx,
+				self.config, "all") {
+				client_id := hit.Entity
+				client_info, err := client_info_manager.Get(client_id)
+				if err == nil {
+					if os_name == client_info.System {
+						seen[hit.Entity] = true
+					}
+				}
+			}
+
+			// Remove any excluded labels.
+			if in.Condition.ExcludedLabels != nil {
+				for _, label := range in.Condition.ExcludedLabels.Label {
+					for entity := range search.SearchIndexWithPrefix(
+						ctx, self.config, "label:"+label) {
+						delete(seen, entity.Entity)
+					}
+				}
+			}
+
+			return &api_proto.HuntStats{
+				TotalClientsScheduled: uint64(len(seen)),
+			}, nil
+		}
+
+		// No condition, just count all the clients.
+		seen := make(map[string]bool)
+		for hit := range search.SearchIndexWithPrefix(ctx, self.config, "all") {
+			seen[hit.Entity] = true
+		}
+
+		// Remove any excluded labels.
+		if in.Condition.ExcludedLabels != nil {
+			for _, label := range in.Condition.ExcludedLabels.Label {
+				for entity := range search.SearchIndexWithPrefix(
+					ctx, self.config, "label:"+label) {
+					delete(seen, entity.Entity)
+				}
+			}
+		}
+
+		return &api_proto.HuntStats{
+			TotalClientsScheduled: uint64(len(seen)),
+		}, nil
+	}
+
+	// No condition, just count all the clients.
+	seen := make(map[string]bool)
+	for hit := range search.SearchIndexWithPrefix(ctx, self.config, "all") {
+		seen[hit.Entity] = true
+	}
+
+	return &api_proto.HuntStats{
+		TotalClientsScheduled: uint64(len(seen)),
+	}, nil
 }

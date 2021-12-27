@@ -128,25 +128,27 @@ sources:
       LET mftsearch(MFTPath) = SELECT * FROM if(
        -- only need to do a filename comparison
        condition=NOT DateAfter AND NOT DateBefore AND NOT SizeMin AND NOT SizeMax,
-       then=mftsearch_with_filename(MFTPath=MFTPath),
+       then={ SELECT * FROM mftsearch_with_filename(MFTPath=MFTPath) },
        else={ SELECT * FROM if(
 
           -- Only DateAfter is set
           condition=NOT DateBefore AND NOT SizeMin AND NOT SizeMax,
-          then= mftsearch_after_date(MFTPath=MFTPath),
+          then={ SELECT * FROM mftsearch_after_date(MFTPath=MFTPath)},
           else={ SELECT * FROM if(
 
              -- Only Date Before is set
              condition=NOT DateAfter AND NOT SizeMin AND NOT SizeMax,
-             then=mftsearch_before_date(MFTPath=MFTPath),
-             else=mftsearch_full(MFTPath=MFTPath))
+             then={ SELECT * FROM mftsearch_before_date(MFTPath=MFTPath)},
+             else={ SELECT * FROM mftsearch_full(MFTPath=MFTPath)})
           })
        })
 
       -- include all attached drives
-      LET all_drives = SELECT * FROM foreach(row=ntfs_drives,
+      LET all_drives = SELECT * FROM foreach(row={
+           SELECT * FROM ntfs_drives
+        },
         query={
-           SELECT *, MFTFilename FROM mftsearch(MFTPath=MFTFilename))
+           SELECT *, MFTFilename FROM mftsearch(MFTPath=MFTFilename)
         })
 
       -- return rows
@@ -157,7 +159,9 @@ sources:
              LastRecordChange0x10, LastRecordChange0x30, LastAccess0x10,
              LastAccess0x30
       FROM if(condition=AllDrives,
-        then=all_drives,
+        then={
+          SELECT * FROM all_drives
+        },
         else={
           SELECT * FROM mftsearch(MFTPath=MFTFilename)
         })

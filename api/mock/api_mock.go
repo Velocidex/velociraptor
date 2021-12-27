@@ -221,6 +221,26 @@ func (mr *MockAPIClientMockRecorder) DeleteSubject(arg0, arg1 interface{}, arg2 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSubject", reflect.TypeOf((*MockAPIClient)(nil).DeleteSubject), varargs...)
 }
 
+// EstimateHunt mocks base method.
+func (m *MockAPIClient) EstimateHunt(arg0 context.Context, arg1 *proto0.Hunt, arg2 ...grpc.CallOption) (*proto0.HuntStats, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "EstimateHunt", varargs...)
+	ret0, _ := ret[0].(*proto0.HuntStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EstimateHunt indicates an expected call of EstimateHunt.
+func (mr *MockAPIClientMockRecorder) EstimateHunt(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EstimateHunt", reflect.TypeOf((*MockAPIClient)(nil).EstimateHunt), varargs...)
+}
+
 // ExportNotebook mocks base method.
 func (m *MockAPIClient) ExportNotebook(arg0 context.Context, arg1 *proto0.NotebookExportRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()

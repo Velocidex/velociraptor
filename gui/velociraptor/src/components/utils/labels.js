@@ -38,7 +38,7 @@ export default class LabelForm extends React.Component {
         api.get("v1/SearchClients", {
             query: "label:",
             limit: 100,
-            type: 1,
+            name_only: true,
         }, this.source.token).then((response) => {
             let labels = _.map(response.data.names, (x) => {
                 x = x.replace(/^label:/, "");
