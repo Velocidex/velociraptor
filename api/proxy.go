@@ -145,6 +145,10 @@ func PrepareGUIMux(
 		auther.AuthenticateUserHandler(
 			config_obj, toolUploadHandler(config_obj))))
 
+	mux.Handle(base+"/api/v1/UploadFormFile", csrfProtect(config_obj,
+		auther.AuthenticateUserHandler(
+			config_obj, formUploadHandler(config_obj))))
+
 	// Serve prepared zip files.
 	mux.Handle(base+"/downloads/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
