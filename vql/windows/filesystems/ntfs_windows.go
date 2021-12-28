@@ -621,7 +621,7 @@ func Open(scope vfilter.Scope, self *ntfs.MFT_ENTRY,
 }
 
 func init() {
-	glob.Register("ntfs", &NTFSFileSystemAccessor{})
+	glob.Register("ntfs", &NTFSFileSystemAccessor{}, `Access the NTFS filesystem by parsing NTFS structures.`)
 
 	json.RegisterCustomEncoder(&NTFSFileInfo{}, glob.MarshalGlobFileInfo)
 }

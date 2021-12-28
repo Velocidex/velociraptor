@@ -7,3 +7,7 @@ Queries:
 
   # Check to make sure the data accessor is able to read the Stdout field.
   - SELECT Stdout, hash(path=Stdout, accessor='data') as Hash FROM execve(argv=['cmd.exe', '/?'])
+
+  # We can pass env variables.
+  - SELECT * FROM execve(argv=["cmd.exe", "/c", "echo %HELLO%"],
+      env=dict(HELLO="hi"))

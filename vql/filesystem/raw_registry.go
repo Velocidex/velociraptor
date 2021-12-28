@@ -455,7 +455,7 @@ func (self ReadKeyValues) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 }
 
 func init() {
-	glob.Register("raw_reg", &RawRegFileSystemAccessor{})
+	glob.Register("raw_reg", &RawRegFileSystemAccessor{}, `Access keys and values by parsing the raw registry hive. Path is a pathspec having delegate opening the raw registry hive.`)
 	vql_subsystem.RegisterPlugin(&ReadKeyValues{})
 
 	json.RegisterCustomEncoder(&RawRegKeyInfo{}, glob.MarshalGlobFileInfo)

@@ -235,5 +235,5 @@ func (self *ProcessAccessor) Open(path string) (glob.ReadSeekCloser, error) {
 }
 
 func init() {
-	glob.Register("process", &ProcessAccessor{})
+	glob.Register("process", &ProcessAccessor{}, `Access process memory like a file. The Path is taken in the form "/<pid>", i.e. the pid appears as the top level file.`)
 }

@@ -181,6 +181,18 @@ func (self PipeFilesystemAccessor) GetRoot(path string) (string, string, error) 
 }
 
 func init() {
-	glob.Register("pipe", &PipeFilesystemAccessor{})
+	glob.Register("pipe", &PipeFilesystemAccessor{}, `Read from a VQL pipe.
+
+A VQL pipe allows data to be generated from a VQL query, as the pipe is read, the query proceeds to feed more data to it.
+
+Example:
+
+  LET MyPipe = pipe(query={
+        SELECT _value FROM range(start=0, end=10, step=1)
+  }, sep="\n")
+
+  SELECT read_file(filename="MyPipe", accessor="pipe")
+  FROM scope()
+`)
 	vql_subsystem.RegisterFunction(&PipeFunction{})
 }

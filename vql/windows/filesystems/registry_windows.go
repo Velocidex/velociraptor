@@ -487,8 +487,9 @@ func (self RegFileSystemAccessor) PathJoin(root, stem string) string {
 }
 
 func init() {
-	glob.Register("reg", &RegFileSystemAccessor{})
-	glob.Register("registry", &RegFileSystemAccessor{})
+	description := `Access the registery like a filesystem using the OS APIs.`
+	glob.Register("reg", &RegFileSystemAccessor{}, description)
+	glob.Register("registry", &RegFileSystemAccessor{}, description)
 
 	json.RegisterCustomEncoder(&RegKeyInfo{}, glob.MarshalGlobFileInfo)
 	json.RegisterCustomEncoder(&RegValueInfo{}, glob.MarshalGlobFileInfo)

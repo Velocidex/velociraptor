@@ -346,7 +346,10 @@ func (self FileStoreAccessorFactory) New(scope vfilter.Scope) (glob.FileSystemAc
 // Only register the filesystem accessor if we have a proper valid server config.
 func initFilestoreAccessor(config_obj *config_proto.Config) error {
 	if config_obj.Datastore != nil {
-		glob.Register("fs", &FileStoreAccessorFactory{config_obj})
+		glob.Register("fs", &FileStoreAccessorFactory{config_obj}, `Provide access the the server's filestore and datastore.
+
+Many VQL plugins produce references to files stored on the server. This accessor can be used to open those files and read them. Typically references to filestore or datastore files have the "fs:" or "ds:" prefix.
+`)
 	}
 	return nil
 }

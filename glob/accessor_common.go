@@ -258,13 +258,13 @@ func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
 }
 
 func init() {
-	Register("file", &OSFileSystemAccessor{})
+	Register("file", &OSFileSystemAccessor{}, `Access files using the operating system's API. Does not allow access to raw devices.`)
 	Register("raw_file", &OSFileSystemAccessor{
 		allow_raw_access: true,
-	})
+	}, `Access files using the operating system's API. Also allow access to raw devices.`)
 
 	// On Linux the auto accessor is the same as file.
-	Register("auto", &OSFileSystemAccessor{})
+	Register("auto", &OSFileSystemAccessor{}, `Access the file using the best accessor possible. On windows we fall back to NTFS parsing in case the file is locked or unreadable.`)
 
 	json.RegisterCustomEncoder(&OSFileInfo{}, MarshalGlobFileInfo)
 }

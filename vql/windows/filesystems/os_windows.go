@@ -296,7 +296,9 @@ func (self *OSFileSystemAccessor) PathJoin(x, y string) string {
 func init() {
 	// Register a variant which allows following links - be
 	// careful with it - it can get stuck on loops.
-	glob.Register("file_links", &OSFileSystemAccessor{follow_links: true})
+	glob.Register("file_links", &OSFileSystemAccessor{follow_links: true}, `Access the filesystem using the OS APIs.
+
+This Accessor also follows any symlinks - Note: Take care with this accessor because there may be circular links.`)
 
 	// We do not register the OSFileSystemAccessor directly - it
 	// is used through the AutoFilesystemAccessor: If we can not
