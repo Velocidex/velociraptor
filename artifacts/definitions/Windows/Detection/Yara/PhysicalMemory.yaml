@@ -27,6 +27,7 @@ parameters:
     default: "0"
   - name: YaraUrl
     description: If configured will attempt to download Yara rules from Url
+    type: upload
   - name: YaraRule
     type: yara
     description: Final Yara option and the default if no other options provided.
@@ -70,9 +71,7 @@ sources:
 
     query: |
       -- check which Yara to use
-      LET yara <= if(condition=YaraUrl,
-            then= { SELECT Content FROM http_client( url=YaraUrl, method='GET') },
-            else= { SELECT YaraRule as Content FROM scope() })
+      LET yara_rules = YaraUrl || YaraRule
 
       LET SparsePath = pathspec(DelegateAccessor='file', DelegatePath='''\\.\pmem''', Path={
         SELECT atoi(string=Start) AS Offset,
@@ -104,4 +103,4 @@ sources:
          String.Name as HitName,
          String.HexData as HitHexData
       FROM yara(files=SparsePath, accessor='sparse',
-                rules=yara.Content[0], context=Context)
+                rules=yara_rules, context=Context)
