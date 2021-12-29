@@ -1,0 +1,12 @@
+pkg: crypto
+
+dest: "crypto/"
+
+fmt: false
+output: "ab0x.go"
+compression:
+  compress: true
+
+custom:
+  - files:
+      - crypto/ca-certificates.crt

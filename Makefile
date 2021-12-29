@@ -83,3 +83,7 @@ KapeFilesSync:
 UpdateCIArtifacts:
 	mv artifact/server/* artifacts/testdata/server/testcases/
 	mv artifact/windows/* artifacts/testdata/windows/
+
+UpdateCerts:
+	cp /etc/ssl/certs/ca-certificates.crt crypto/ca-certificates.crt
+	fileb0x crypto/b0x.yaml

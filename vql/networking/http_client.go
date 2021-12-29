@@ -21,6 +21,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -38,6 +39,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -48,13 +50,22 @@ import (
 var (
 	mu sync.Mutex
 
-	// HTTP clients can be reused between goroutines. This should
-	// keep TCP connections up etc.
-	http_client        *http.Client
-	http_client_no_ssl *http.Client
-
 	proxyHandler = http.ProxyFromEnvironment
 )
+
+const (
+	HTTP_TAG = "$http_client_cache"
+)
+
+// Cache http clients in the scope to allow reuse.
+type HTTPClientCache struct {
+	mu    sync.Mutex
+	cache map[string]*http.Client
+}
+
+func (self *HTTPClientCache) getCacheKey(url *url.URL) string {
+	return url.Scheme + ":" + url.Hostname()
+}
 
 type HttpPluginRequest struct {
 	Url     string      `vfilter:"required,field=url,doc=The URL to fetch"`
@@ -68,6 +79,7 @@ type HttpPluginRequest struct {
 	DisableSSLSecurity bool   `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications."`
 	TempfileExtension  string `vfilter:"optional,field=tempfile_extension,doc=If specified we write to a tempfile. The content field will contain the full path to the tempfile."`
 	RemoveLast         bool   `vfilter:"optional,field=remove_last,doc=If set we delay removal as much as possible."`
+	RootCerts          string `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
 }
 
 type _HttpPluginResponse struct {
@@ -78,94 +90,62 @@ type _HttpPluginResponse struct {
 
 type _HttpPlugin struct{}
 
-func customVerifyPeerCert(
-	config_obj *config_proto.ClientConfig,
-	rawCerts [][]byte,
-	verifiedChains [][]*x509.Certificate) error {
-
-	certs := make([]*x509.Certificate, len(rawCerts))
-	for i, rawCert := range rawCerts {
-		cert, err := x509.ParseCertificate(rawCert)
-		if err != nil {
-			return err
-		}
-		certs[i] = cert
-	}
-
-	verify_certs := func(opts *x509.VerifyOptions) error {
-		for i, cert := range certs {
-			if i == 0 {
-				continue
-			}
-			opts.Intermediates.AddCert(cert)
-		}
-		_, err := certs[0].Verify(*opts)
-		return err
-	}
-
-	// First check if the certs come from our CA - ignore the name
-	// in that case.
-	if config_obj != nil {
-		opts := &x509.VerifyOptions{
-			CurrentTime:   time.Now(),
-			Intermediates: x509.NewCertPool(),
-			Roots:         x509.NewCertPool(),
-		}
-		opts.Roots.AppendCertsFromPEM([]byte(config_obj.CaCertificate))
-
-		// Yep its one of ours, just trust it.
-		if verify_certs(opts) == nil {
-			return nil
-		}
-	}
-
-	// Perform normal verification.
-	return verify_certs(&x509.VerifyOptions{
-		CurrentTime:   time.Now(),
-		Intermediates: x509.NewCertPool(),
-	})
-}
-
+// Get a potentially cached http client.
 func GetHttpClient(
 	config_obj *config_proto.ClientConfig,
-	arg *HttpPluginRequest) *http.Client {
+	scope vfilter.Scope,
+	arg *HttpPluginRequest) (*http.Client, error) {
 
-	// If we deployed Velociraptor using self signed certificates
-	// we want to be able to trust our own server. Our own server
-	// is signed by our own CA and also may have a different
-	// common name (not related to DNS). Therefore in the special
-	// case where the server cert is signed by our own CA we can
-	// ignore the server's Common Name.
+	cache, pres := vql_subsystem.CacheGet(scope, HTTP_TAG).(*HTTPClientCache)
+	if !pres {
+		cache = &HTTPClientCache{cache: make(map[string]*http.Client)}
+	}
+	defer vql_subsystem.CacheSet(scope, HTTP_TAG, cache)
 
-	// It is a unix domain socket.
-	if arg != nil && strings.HasPrefix(arg.Url, "/") {
-		components := strings.Split(arg.Url, ":")
-		if len(components) == 1 {
-			components = append(components, "/")
-		}
-		arg.Url = "http://unix" + components[1]
+	return cache.GetHttpClient(config_obj, arg)
+}
 
-		return &http.Client{
+func (self *HTTPClientCache) GetHttpClient(
+	config_obj *config_proto.ClientConfig,
+	arg *HttpPluginRequest) (*http.Client, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Check the cache for an existing http client.
+	url_obj, err := url.Parse(arg.Url)
+	if err != nil {
+		return nil, err
+	}
+
+	key := self.getCacheKey(url_obj)
+	result, pres := self.cache[key]
+	if pres {
+		return result, nil
+	}
+
+	// A Unix domain socket.
+	if url_obj.Hostname() == "unix" {
+		result = &http.Client{
 			Timeout: time.Second * 10000,
 			Transport: &http.Transport{
 				Proxy:               proxyHandler,
 				MaxIdleConnsPerHost: 10,
-				DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
-					return net.Dial("unix", components[0])
+				DialContext: func(_ context.Context, _, _ string) (
+					net.Conn, error) {
+					return net.Dial("unix", url_obj.Path)
 				},
 			},
 		}
+		self.cache[key] = result
+		return result, nil
 	}
 
-	mu.Lock()
-	defer mu.Unlock()
-
-	if arg != nil && arg.DisableSSLSecurity {
-		if http_client_no_ssl != nil {
-			return http_client_no_ssl
-		}
-
-		http_client_no_ssl = &http.Client{
+	// Create a http client without TLS security - this is sometimes
+	// needed to access self signed servers. Ideally we should
+	// add extra ca certs in arg.RootCerts.
+	if arg.DisableSSLSecurity {
+		result = &http.Client{
 			Timeout: time.Second * 10000,
 			Transport: &http.Transport{
 				Proxy:        proxyHandler,
@@ -175,15 +155,112 @@ func GetHttpClient(
 				},
 			},
 		}
-
-		return http_client_no_ssl
+		self.cache[key] = result
+		return result, nil
 	}
 
-	if http_client != nil {
-		return http_client
+	result, err = GetDefaultHTTPClient(config_obj, arg.RootCerts)
+	if err != nil {
+		return nil, err
 	}
 
-	http_client = &http.Client{
+	self.cache[key] = result
+	return result, nil
+}
+
+// If we deployed Velociraptor using self signed certificates we want
+// to be able to trust our own server. Our own server is signed by our
+// own CA and also may have a different common name (not related to
+// DNS). For example, in self signed mode, the server certificate is
+// signed for VelociraptorServer but may be served over
+// "localhost". Using the default TLS configuration this connection
+// will be rejected.
+
+// Therefore in the special case where the server cert is signed by
+// our own CA, and the Subject name is the pinned server name
+// (VelociraptorServer), we do not need to compare the server's common
+// name with the url.
+
+// This function is based on
+// https://go.dev/src/crypto/tls/handshake_client.go::verifyServerCertificate
+func customVerifyConnection(
+	CA_Pool *x509.CertPool,
+	config_obj *config_proto.ClientConfig) func(conn tls.ConnectionState) error {
+
+	// Check if the cert was signed by the Velociraptor CA
+	private_opts := x509.VerifyOptions{
+		CurrentTime:   time.Now(),
+		Intermediates: x509.NewCertPool(),
+		Roots:         x509.NewCertPool(),
+	}
+	private_opts.Roots.AppendCertsFromPEM([]byte(config_obj.CaCertificate))
+
+	return func(conn tls.ConnectionState) error {
+		// Used to verify certs using public roots
+		public_opts := x509.VerifyOptions{
+			CurrentTime:   time.Now(),
+			Intermediates: x509.NewCertPool(),
+			DNSName:       conn.ServerName,
+			Roots:         CA_Pool,
+		}
+
+		// First parse all the server certs so we can verify them. The
+		// server presents its main cert first, then any following
+		// intermediates.
+		var server_cert *x509.Certificate
+
+		for i, cert := range conn.PeerCertificates {
+			// First cert is server cert.
+			if i == 0 {
+				server_cert = cert
+
+				// Velociraptor does not allow intermediates so this
+				// should be sufficient to verify that the
+				// Velociraptor CA signed it.
+				_, err := server_cert.Verify(private_opts)
+				if err == nil {
+					// The Velociraptor CA signed it - we disregard
+					// the DNS name and allow it.
+					return nil
+				}
+
+			} else {
+				public_opts.Intermediates.AddCert(cert)
+			}
+		}
+
+		if server_cert == nil {
+			return errors.New("Unknown server cert")
+		}
+
+		// Perform normal verification.
+		_, err := server_cert.Verify(public_opts)
+		return err
+	}
+}
+
+func GetDefaultHTTPClient(
+	config_obj *config_proto.ClientConfig,
+	extra_roots string) (*http.Client, error) {
+
+	CA_Pool := x509.NewCertPool()
+	if config_obj != nil {
+		err := crypto.AddDefaultCerts(config_obj, CA_Pool)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Allow access to public servers.
+	crypto.AddPublicRoots(CA_Pool)
+
+	if extra_roots != "" {
+		if !CA_Pool.AppendCertsFromPEM([]byte(extra_roots)) {
+			return nil, errors.New("Unable to parse root CA")
+		}
+	}
+
+	return &http.Client{
 		Timeout: time.Second * 10000,
 		Transport: &http.Transport{
 			Proxy: proxyHandler,
@@ -193,22 +270,17 @@ func GetHttpClient(
 			MaxIdleConnsPerHost: 10,
 			MaxIdleConns:        10,
 			TLSClientConfig: &tls.Config{
+				MinVersion:         tls.VersionTLS12,
+				ClientSessionCache: tls.NewLRUClientSessionCache(100),
+				RootCAs:            CA_Pool,
+
 				// Not actually skipping, we check the
 				// cert in VerifyPeerCertificate
 				InsecureSkipVerify: true,
-				VerifyPeerCertificate: func(
-					rawCerts [][]byte,
-					verifiedChains [][]*x509.Certificate) error {
-					return customVerifyPeerCert(
-						config_obj,
-						rawCerts,
-						verifiedChains)
-				},
+				VerifyConnection:   customVerifyConnection(CA_Pool, config_obj),
 			},
 		},
-	}
-
-	return http_client
+	}, nil
 }
 
 func encodeParams(arg *HttpPluginRequest, scope vfilter.Scope) *url.Values {
@@ -268,10 +340,24 @@ func (self *_HttpPlugin) Call(
 			return
 		}
 
+		// Allow a unix path to be interpreted as simply a http over
+		// unix domain socket (used by e.g. docker)
+		if strings.HasPrefix(arg.Url, "/") {
+			components := strings.Split(arg.Url, ":")
+			if len(components) == 1 {
+				components = append(components, "/")
+			}
+			arg.Url = "http://unix" + components[1]
+		}
+
 		config_obj, _ := artifacts.GetConfig(scope)
 
 		params := encodeParams(arg, scope)
-		client := GetHttpClient(config_obj, arg)
+		client, err := GetHttpClient(config_obj, scope, arg)
+		if err != nil {
+			scope.Log("http_client: %v", err)
+			return
+		}
 
 		data := arg.Data
 		if data == "" {
@@ -281,7 +367,7 @@ func (self *_HttpPlugin) Call(
 		req, err := http.NewRequestWithContext(
 			ctx, arg.Method, arg.Url, strings.NewReader(data))
 		if err != nil {
-			scope.Log("%s: %s", self.Name(), err.Error())
+			scope.Log("%s: %v", self.Name(), err)
 			return
 		}
 

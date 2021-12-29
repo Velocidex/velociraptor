@@ -356,11 +356,16 @@ func StartInventoryService(
 		return StartInventoryDummyService(ctx, wg, config_obj)
 	}
 
+	default_client, err := networking.GetDefaultHTTPClient(config_obj.Client, "")
+	if err != nil {
+		return err
+	}
+
 	inventory_service := &InventoryService{
 		Clock:    utils.RealClock{},
 		binaries: &artifacts_proto.ThirdParty{},
 		// Use the VQL http client so it can accept the same certs.
-		Client: networking.GetHttpClient(config_obj.Client, nil),
+		Client: default_client,
 	}
 	services.RegisterInventory(inventory_service)
 
