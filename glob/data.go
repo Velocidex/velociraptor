@@ -64,5 +64,6 @@ func (self DataFilesystemAccessor) GetRoot(path string) (string, string, error) 
 }
 
 func init() {
-	Register("data", &DataFilesystemAccessor{})
+	Register("data", &DataFilesystemAccessor{},
+		`Makes a string appears as an in memory file. Path is taken as a literal string to use as the file's data`)
 }

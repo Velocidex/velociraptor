@@ -738,7 +738,19 @@ func (self *SeekableZip) Stat() (os.FileInfo, error) {
 }
 
 func init() {
-	glob.Register("zip", &ZipFileSystemAccessor{})
+	glob.Register("zip", &ZipFileSystemAccessor{}, `Open a zip file as if it was a directory.
+
+Filename is a pathspec with a delegate accessor opening the Zip file, and the Path representing the file within the zip file.
+
+Example:
+
+       select FullPath, Mtime, Size from glob(
+         globs=pathspec(DelegateAccessor='file',
+              DelegatePath="File.zip",
+              Path='/**/*.txt'),
+         accessor='zip')
+
+`)
 
 	json.RegisterCustomEncoder(&ZipFileInfo{}, glob.MarshalGlobFileInfo)
 }

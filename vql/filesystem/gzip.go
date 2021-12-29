@@ -115,6 +115,11 @@ func (self *GzipFileInfo) GetLink() (string, error) {
 	return "", errors.New("Not implemented")
 }
 
+type ReaderStat interface {
+	glob.ReadSeekCloser
+	LStat() (glob.FileInfo, error)
+}
+
 type GzipFileSystemAccessor struct {
 	scope  vfilter.Scope
 	getter FileGetter
@@ -148,7 +153,7 @@ func (self *GzipFileSystemAccessor) Lstat(file_path string) (glob.FileInfo, erro
 	}
 	defer seekablegzip.Close()
 
-	return seekablegzip.info, err
+	return seekablegzip.LStat()
 }
 
 func (self *GzipFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
@@ -219,11 +224,14 @@ func (self *SeekableGzip) Stat() (os.FileInfo, error) {
 	return self.info, nil
 }
 
-// Any getter that implements this can be used
-type FileGetter func(file_path string, scope vfilter.Scope) (
-	*SeekableGzip, error)
+func (self *SeekableGzip) LStat() (glob.FileInfo, error) {
+	return self.info, nil
+}
 
-func GetBzip2File(file_path string, scope vfilter.Scope) (*SeekableGzip, error) {
+// Any getter that implements this can be used
+type FileGetter func(file_path string, scope vfilter.Scope) (ReaderStat, error)
+
+func GetBzip2File(file_path string, scope vfilter.Scope) (ReaderStat, error) {
 	pathspec, err := glob.PathSpecFromString(file_path)
 	if err != nil {
 		return nil, err
@@ -255,7 +263,7 @@ func GetBzip2File(file_path string, scope vfilter.Scope) (*SeekableGzip, error) 
 		}}, nil
 }
 
-func GetGzipFile(file_path string, scope vfilter.Scope) (*SeekableGzip, error) {
+func GetGzipFile(file_path string, scope vfilter.Scope) (ReaderStat, error) {
 	pathspec, err := glob.PathSpecFromString(file_path)
 	if err != nil {
 		return nil, err
@@ -311,9 +319,9 @@ func GetGzipFile(file_path string, scope vfilter.Scope) (*SeekableGzip, error) {
 
 func init() {
 	glob.Register("gzip", &GzipFileSystemAccessor{
-		getter: GetGzipFile})
+		getter: GetGzipFile}, `Access the content of gzip files. The filename is a pathspec with a delegate accessor opening the actual gzip file.`)
 	glob.Register("bzip2", &GzipFileSystemAccessor{
-		getter: GetBzip2File})
+		getter: GetBzip2File}, `Access the content of gzip files. The filename is a pathspec with a delegate accessor opening the actual gzip file.`)
 
 	json.RegisterCustomEncoder(&GzipFileInfo{}, glob.MarshalGlobFileInfo)
 }

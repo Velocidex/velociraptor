@@ -22,13 +22,15 @@ import (
 	"regexp"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/vfilter"
 )
 
 var (
-	mu       sync.Mutex
-	handlers map[string]FileSystemAccessorFactory
+	mu           sync.Mutex
+	handlers     map[string]FileSystemAccessorFactory
+	descriptions *ordereddict.Dict
 )
 
 // Interface for accessing the filesystem.
@@ -110,13 +112,22 @@ type FileSystemAccessorFactory interface {
 	New(scope vfilter.Scope) (FileSystemAccessor, error)
 }
 
-func Register(scheme string, accessor FileSystemAccessorFactory) {
+func Register(scheme string, accessor FileSystemAccessorFactory, description string) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	if handlers == nil {
 		handlers = make(map[string]FileSystemAccessorFactory)
+		descriptions = ordereddict.NewDict()
 	}
 
 	handlers[scheme] = accessor
+	descriptions.Set(scheme, description)
+}
+
+func DescribeAccessors() *ordereddict.Dict {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return descriptions
 }

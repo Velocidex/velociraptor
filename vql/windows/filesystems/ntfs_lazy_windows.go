@@ -320,7 +320,9 @@ func (self *LazyNTFSFileSystemAccessor) Open(path string) (
 }
 
 func init() {
-	glob.Register("lazy_ntfs", &LazyNTFSFileSystemAccessor{})
+	glob.Register("lazy_ntfs", &LazyNTFSFileSystemAccessor{}, `Access the NTFS filesystem by parsing NTFS structures.
+
+This version is faster because it does not enumerate all the streams inside a directory - it only parses the $I30 stream of a directory to list it. This is faster but will miss any ADS present inside the directory.`)
 
 	json.RegisterCustomEncoder(&LazyNTFSFileInfo{}, glob.MarshalGlobFileInfo)
 }

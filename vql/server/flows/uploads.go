@@ -30,6 +30,7 @@ func (self UploadsPlugins) Call(
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
+
 		defer close(output_chan)
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)

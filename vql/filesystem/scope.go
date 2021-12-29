@@ -77,5 +77,5 @@ func (self ScopeFilesystemAccessor) GetRoot(path string) (string, string, error)
 }
 
 func init() {
-	glob.Register("scope", &ScopeFilesystemAccessor{})
+	glob.Register("scope", &ScopeFilesystemAccessor{}, `Similar to the "data" accessor, this makes a string appears as a file. However, instead of the Filename containing the file content itself, the Filename refers to the name of a variable in the current scope that contains the data. This is useful when the binary data is not unicode safe and can not be properly represented by JSON.`)
 }

@@ -1052,6 +1052,9 @@
   - name: length
     type: int64
     description: Size of buffer to capture output per row.
+  - name: env
+    type: LazyExpr
+    description: Environment variables to launch with.
   category: plugin
 - name: expand
   description: |
@@ -1906,6 +1909,15 @@
     description: If a flow id is specified we do not create a new flow, but instead
       add this flow_id to the hunt.
   category: server
+- name: hunt_delete
+  description: 'Delete a hunt. '
+  type: Plugin
+  args:
+  - name: hunt_id
+    type: string
+    required: true
+  - name: really_do_it
+    type: bool
 - name: hunt_flows
   description: |
     Retrieve the flows launched by a hunt.
@@ -2532,7 +2544,6 @@
 - name: netcat
   description: Make a tcp connection and read data from a socket.
   type: Plugin
-  category: plugin
   args:
   - name: address
     type: string
@@ -2554,6 +2565,7 @@
   - name: retry
     type: int
     description: Seconds to wait before retry - default 0 - do not retry
+  category: plugin
 - name: netstat
   description: Collect network information.
   type: Plugin
@@ -2975,7 +2987,6 @@
     description: The accessor to use.
   category: parsers
 - name: parse_pkcs7
-  category: parsers
   description: Parse a DER encoded pkcs7 string into an object.
   type: Function
   args:
@@ -2983,6 +2994,7 @@
     type: string
     description: PKCS7 DER encoded string.
     required: true
+  category: parsers
 - name: parse_records_with_regex
   description: |
     Parses a file with a set of regexp and yields matches as records.  The
@@ -3242,14 +3254,13 @@
     type: string
     description: A delegate to pass to the accessor.
   - name: Path
-    type: string
+    type: LazyExpr
     description: A path to open.
   - name: parse
     type: string
     description: Alternatively parse the pathspec from this string.
   category: plugin
 - name: pipe
-  category: plugin
   description: |
     A pipe allows plugins that use files to read data from a vql
     query. This is needed to be able to use the "pipe" accessor.
@@ -3290,6 +3301,7 @@
     type: string
     description: 'The separator that will be used to split each read (default: no
       separator will be used)'
+  category: plugin
 - name: plist
   description: Parse plist file
   type: Function

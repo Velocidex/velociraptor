@@ -147,5 +147,5 @@ func (self MEFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccess
 }
 
 func init() {
-	glob.Register("me", &MEFileSystemAccessor{})
+	glob.Register("me", &MEFileSystemAccessor{}, `Access files bundled inside the Velociraptor binary itself. This is used for unpacking extra files delivered by the Offline Collector`)
 }

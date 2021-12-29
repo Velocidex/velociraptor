@@ -1,0 +1,38 @@
+Parameters:
+  MyData: "this is a test with a long sentence"
+
+Queries:
+  # The FileName contains the Delegate details and the full sparse
+  # map as a path.
+  - LET FileName <= pathspec(
+      DelegateAccessor="data", DelegatePath=MyData,
+      Path=[dict(Offset=0,Length=5), dict(Offset=10,Length=5)])
+
+  # Test that reads work across the sparse regions
+  # TestCase1: large read across the full file
+  # TestCase2: read from parse region to data region
+  # TestCase3: read from data region to sparse region
+  - SELECT format(format="%x",
+      args=read_file(accessor="sparse",
+                     length=200, offset=0, filename=FileName)) AS TestCase1,
+           format(format="%x",
+      args=read_file(accessor="sparse",
+                     length=5, offset=8, filename=FileName)) AS TestCase2,
+           format(format="%x",
+      args=read_file(accessor="sparse",
+                     length=5, offset=3, filename=FileName)) AS TestCase3
+    FROM scope()
+
+  # Test that yara skips over sparse regions - should only find $b and
+  # not $a
+  - |
+    SELECT String.Name FROM yara(accessor="sparse", files=FileName, rules='''
+      rule X {
+      strings:
+        $a = "s a"
+        $b = "test"
+
+      condition:
+        any of them
+      }
+      ''')

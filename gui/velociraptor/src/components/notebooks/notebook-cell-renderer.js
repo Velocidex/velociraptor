@@ -227,6 +227,17 @@ export default class NotebookCellRenderer extends React.Component {
         this.setState({currently_editing: edit});
     };
 
+    getPlaceholder = () => {
+        let type = this.ace_type(this.state.cell && this.state.cell.type);
+        if (type === "vql") {
+            return "Type VQL to evaluate on the server (press ? for help)";
+        };
+        if (type === "markdown") {
+            return "Enter markdown text to render in the notebook";
+        };
+        return type;
+    }
+
     aceConfig = (ace) => {
         // Attach a completer to ACE.
         let completer = new Completer();
@@ -234,7 +245,8 @@ export default class NotebookCellRenderer extends React.Component {
 
         ace.setOptions({
             autoScrollEditorIntoView: true,
-            maxLines: 25
+            maxLines: 25,
+            placeholder: this.getPlaceholder(),
         });
 
         this.setState({ace: ace});

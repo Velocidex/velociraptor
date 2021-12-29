@@ -79,6 +79,9 @@ func (self *AutoFilesystemAccessor) PathSplit(path string) []string {
 }
 
 func init() {
-	glob.Register("file", &AutoFilesystemAccessor{})
-	glob.Register("auto", &AutoFilesystemAccessor{})
+	glob.Register("file", &AutoFilesystemAccessor{}, `Access the filesystem using the OS API.`)
+	glob.Register("auto", &AutoFilesystemAccessor{}, `Automatically access the filesystem using the best method.
+
+On Windows, we fallback to ntfs accessor if the file is not readable or locked.
+`)
 }

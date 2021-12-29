@@ -7,6 +7,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 )
 
+// Wrapper to provider io.ReaderAt
 type ReaderAtter struct {
 	Reader io.ReadSeeker
 }

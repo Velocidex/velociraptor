@@ -38,7 +38,7 @@ func (self AtExitFunction) Call(
 
 	switch t := arg.Query.(type) {
 	case types.StoredQuery:
-		scope.AddDestructor(func() {
+		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 			scope.Log("Running AtExit query")
 
 			// We need to create a new context to run the

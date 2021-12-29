@@ -1,0 +1,21 @@
+LET FileName <= pathspec( DelegateAccessor="data", DelegatePath=MyData, Path=[dict(Offset=0,Length=5), dict(Offset=10,Length=5)])[]SELECT format(format="%x", args=read_file(accessor="sparse", length=200, offset=0, filename=FileName)) AS TestCase1, format(format="%x", args=read_file(accessor="sparse", length=5, offset=8, filename=FileName)) AS TestCase2, format(format="%x", args=read_file(accessor="sparse", length=5, offset=3, filename=FileName)) AS TestCase3 FROM scope()[
+ {
+  "TestCase1": "746869732000000000007465737420",
+  "TestCase2": "0000746573",
+  "TestCase3": "7320000000"
+ }
+]SELECT String.Name FROM yara(accessor="sparse", files=FileName, rules='''
+  rule X {
+  strings:
+    $a = "s a"
+    $b = "test"
+
+  condition:
+    any of them
+  }
+  ''')
+[
+ {
+  "String.Name": "$b"
+ }
+]

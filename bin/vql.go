@@ -26,6 +26,7 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -165,6 +166,19 @@ func doVQLList() error {
 	fmt.Println("===========")
 	fmt.Println("")
 	fmt.Println(formatPlugins(scope, info, type_map))
+
+	fmt.Println("Accessors")
+	fmt.Println("===========")
+	fmt.Println("")
+	description := glob.DescribeAccessors()
+	keys := description.Keys()
+	sort.Strings(keys)
+	if description != nil {
+		for _, k := range keys {
+			v, _ := description.Get(k)
+			fmt.Printf("%s: %s\n", k, v)
+		}
+	}
 
 	return nil
 }
