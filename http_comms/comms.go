@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -168,7 +169,8 @@ func NewHTTPConnector(
 		maxPollDev = 30
 	}
 
-	CA_Pool, err := crypto.GetCertPool(config_obj.Client)
+	CA_Pool := x509.NewCertPool()
+	err := crypto.AddDefaultCerts(config_obj.Client, CA_Pool)
 	if err != nil {
 		return nil, err
 	}
@@ -190,6 +192,10 @@ func NewHTTPConnector(
 		// by e.g. localhost despite the certificate being issued to
 		// VelociraptorServer.
 		tls_config.ServerName = config_obj.Client.PinnedServerName
+	} else {
+
+		// Not self signed - add the public roots for verifications.
+		crypto.AddPublicRoots(tls_config.RootCAs)
 	}
 
 	self := &HTTPConnector{

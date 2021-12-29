@@ -29,23 +29,8 @@ import (
 // In either mode, Certs will be added from the configuration file's
 // Client.Crypto.root_certs setting.
 
-func GetCertPool(config_obj *config_proto.ClientConfig) (*x509.CertPool, error) {
-	CA_Pool := x509.NewCertPool()
-	err := AddDefaultCerts(config_obj, CA_Pool)
-	if err != nil {
-		return nil, err
-	}
-
-	// Load the standard root CA bundle.
-	if config_obj == nil || !config_obj.UseSelfSignedSsl {
-		AddPublicRoots(CA_Pool)
-	}
-
-	return CA_Pool, nil
-}
-
-// Add our own CA as a root because we always trust it. Also add any
-// additional roots specified in the config file.
+// Add Default roots: our own CA is a root because we always trust
+// it. Also add any additional roots specified in the config file.
 func AddDefaultCerts(
 	config_obj *config_proto.ClientConfig, CA_Pool *x509.CertPool) error {
 
