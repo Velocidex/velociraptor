@@ -51,6 +51,7 @@ parameters:
   - name: YaraUrl
     description: If configured will attempt to download Yara rules form Url
     default:
+    type: upload
   - name: YaraRule
     type: yara
     description: Final Yara option and the default if no other options provided.
@@ -71,9 +72,7 @@ sources:
 
     query: |
       -- check which Yara to use
-      LET yara = SELECT * FROM if(condition=YaraUrl,
-            then= { SELECT Content FROM http_client( url=YaraUrl, method='GET') },
-            else= { SELECT YaraRule as Content FROM scope() })
+      LET yara_rules = YaraUrl || YaraRule
 
       -- first find all matching files mft
       LET files = SELECT IsDir,
@@ -104,7 +103,7 @@ sources:
                     Rule, Tags, Meta,
                     str(str=String.Data) AS HitContext,
                     String.Offset AS HitOffset
-                FROM yara(rules=yara.Content[0],files=FullPath)
+                FROM yara(rules=yara_rules, files=FullPath)
                 LIMIT 1
             })
 

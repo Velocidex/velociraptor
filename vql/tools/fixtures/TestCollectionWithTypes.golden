@@ -45,7 +45,8 @@
      {
       "foo": "bar"
      }
-    ]
+    ],
+    "FileUpload1Length": 0
    }
   ]
  }

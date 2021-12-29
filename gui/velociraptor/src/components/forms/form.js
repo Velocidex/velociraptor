@@ -7,12 +7,14 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import RegEx from './regex.js';
+import UploadFileForm from './upload.js';
 import YaraEditor from './yara.js';
-
+import InputGroup from 'react-bootstrap/InputGroup';
+import classNames from "classnames";
 import Tooltip from 'react-bootstrap/Tooltip';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
-
+import api from '../core/api-service.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import BootstrapTable from 'react-bootstrap-table-next';
@@ -73,7 +75,6 @@ export default class VeloForm extends React.Component {
         // A Date() object that is parsed from value in local time.
         timestamp: null,
     }
-
 
     render() {
         let param = this.props.param;
@@ -339,6 +340,12 @@ export default class VeloForm extends React.Component {
                 </Form.Group>
             );
 
+        case "upload":
+            return <UploadFileForm
+                     param={this.props.param}
+                     value={this.props.value}
+                     setValue={this.props.setValue}
+                   />;
         default:
             return (
                   <Form.Group as={Row}>

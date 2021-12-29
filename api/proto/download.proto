@@ -27,3 +27,8 @@ message CreateDownloadRequest {
 message CreateDownloadResponse {
     string vfs_path = 1;
 }
+
+message FormUploadMetadata {
+    string filename = 1;
+    string url = 2;
+}

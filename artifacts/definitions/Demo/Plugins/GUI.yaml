@@ -74,6 +74,10 @@ parameters:
     default: |
       [{"foo": "bar"}]
 
+  - name: FileUpload1
+    type: upload
+    description: FileUpload1 can receive a file upload. The upload content will be available in this variable when executing on the client.
+
 column_types:
   - name: Hex
     type: base64hex
@@ -83,7 +87,8 @@ sources:
       SELECT base64encode(string="This should popup in a hex editor") AS Hex,
              ChoiceSelector, Flag, Flag2, Flag3,
              OffFlag, StartDate, StartDate2, StartDate3,
-             CSVData, CSVData2, JSONData, JSONData2
+             CSVData, CSVData2, JSONData, JSONData2,
+             len(list=FileUpload1) AS FileUpload1Length
       FROM scope()
 
     notebook:

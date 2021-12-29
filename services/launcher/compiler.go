@@ -62,6 +62,18 @@ func (self *Launcher) CompileSingleArtifact(
 		case "", "string", "regex", "yara":
 			// Nothing to do with these types.
 
+		case "upload":
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf(`LET %v <= if(condition=%v, then={
+   SELECT Content FROM http_client(url=%v)
+})`,
+					maybeEscape(name+"_"), escaped_name, escaped_name),
+			})
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf("LET %v <= %v.Content[0]",
+					escaped_name, maybeEscape(name+"_")),
+			})
+
 		case "int", "int64":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf("LET %v <= int(int=%v)", escaped_name,
