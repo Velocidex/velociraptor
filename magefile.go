@@ -39,6 +39,7 @@ var (
 		"artifacts/b0x.yaml":        "artifacts/assets/ab0x.go",
 		"config/b0x.yaml":           "config/ab0x.go",
 		"gui/velociraptor/b0x.yaml": "gui/velociraptor/ab0x.go",
+		"crypto/b0x.yaml":           "crypto/ab0x.go",
 	}
 
 	// apt-get install gcc-mingw-w64-x86-64
