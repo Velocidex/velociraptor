@@ -8,6 +8,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/dimchansky/utfbom"
+	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -103,21 +105,25 @@ func (self _WatchSyslogPlugin) Call(
 		arg := &ScannerPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("watch_syslog: %s", err.Error())
+			scope.Log("watch_syslog: %v", err)
 			return
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("watch_syslog: %s", err)
+			scope.Log("watch_syslog: %v", err)
 			return
 		}
 
-		config_obj, ok := vql_subsystem.GetServerConfig(scope)
+		// This plugin needs to be running on clients which have no
+		// server config object.
+		client_config_obj, ok := artifacts.GetConfig(scope)
 		if !ok {
-			scope.Log("watch_syslog: %s", err)
+			scope.Log("watch_syslog: unable to get config")
 			return
 		}
+
+		config_obj := &config_proto.Config{Client: client_config_obj}
 
 		event_channel := make(chan vfilter.Row)
 

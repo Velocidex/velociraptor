@@ -39,8 +39,11 @@ package server
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"regexp"
 	"strings"
 	"sync"
@@ -49,6 +52,9 @@ import (
 	elasticsearch "github.com/Velocidex/go-elasticsearch/v7"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -56,18 +62,20 @@ import (
 )
 
 type _ElasticPluginArgs struct {
-	Query     vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
-	Threads   int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
-	Index     string              `vfilter:"optional,field=index,doc=The name of the index to upload to. If not specified ensure a column is named '_index'."`
-	Type      string              `vfilter:"required,field=type,doc=The type of the index to upload to."`
-	ChunkSize int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
-	Addresses []string            `vfilter:"optional,field=addresses,doc=A list of Elasticsearch nodes to use."`
-	Username  string              `vfilter:"optional,field=username,doc=Username for HTTP Basic Authentication."`
-	Password  string              `vfilter:"optional,field=password,doc=Password for HTTP Basic Authentication."`
-	CloudID   string              `vfilter:"optional,field=cloud_id,doc=Endpoint for the Elastic Service (https://elastic.co/cloud)."`
-	APIKey    string              `vfilter:"optional,field=api_key,doc=Base64-encoded token for authorization; if set, overrides username and password."`
-	WaitTime  int64               `vfilter:"optional,field=wait_time,doc=Batch elastic upload this long (2 sec)."`
-	PipeLine  string              `vfilter:"optional,field=pipeline,doc=Pipeline for uploads"`
+	Query              vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
+	Threads            int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
+	Index              string              `vfilter:"optional,field=index,doc=The name of the index to upload to. If not specified ensure a column is named '_index'."`
+	Type               string              `vfilter:"required,field=type,doc=The type of the index to upload to."`
+	ChunkSize          int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
+	Addresses          []string            `vfilter:"optional,field=addresses,doc=A list of Elasticsearch nodes to use."`
+	Username           string              `vfilter:"optional,field=username,doc=Username for HTTP Basic Authentication."`
+	Password           string              `vfilter:"optional,field=password,doc=Password for HTTP Basic Authentication."`
+	CloudID            string              `vfilter:"optional,field=cloud_id,doc=Endpoint for the Elastic Service (https://elastic.co/cloud)."`
+	APIKey             string              `vfilter:"optional,field=api_key,doc=Base64-encoded token for authorization; if set, overrides username and password."`
+	WaitTime           int64               `vfilter:"optional,field=wait_time,doc=Batch elastic upload this long (2 sec)."`
+	PipeLine           string              `vfilter:"optional,field=pipeline,doc=Pipeline for uploads"`
+	DisableSSLSecurity bool                `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications."`
+	RootCerts          string              `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
 }
 
 type _ElasticPlugin struct{}
@@ -93,6 +101,8 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 			return
 		}
 
+		config_obj, _ := artifacts.GetConfig(scope)
+
 		if arg.Threads == 0 {
 			arg.Threads = 1
 		}
@@ -114,7 +124,7 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 			id := time.Now().UnixNano() + int64(i)*100000000
 
 			// Start an uploader on a thread.
-			go upload_rows(ctx, scope, output_chan,
+			go upload_rows(ctx, config_obj, scope, output_chan,
 				row_chan, id, &wg, &arg)
 		}
 
@@ -126,6 +136,7 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 // Copy rows from row_chan to a local buffer and push it up to elastic.
 func upload_rows(
 	ctx context.Context,
+	config_obj *config_proto.ClientConfig,
 	scope vfilter.Scope, output_chan chan vfilter.Row,
 	row_chan <-chan vfilter.Row,
 	id int64,
@@ -135,12 +146,36 @@ func upload_rows(
 
 	var buf bytes.Buffer
 
+	CA_Pool := x509.NewCertPool()
+	crypto.AddPublicRoots(CA_Pool)
+	err := crypto.AddDefaultCerts(config_obj, CA_Pool)
+	if err != nil {
+		scope.Log("elastic: %v", err)
+		return
+	}
+
+	if arg.RootCerts != "" &&
+		!CA_Pool.AppendCertsFromPEM([]byte(arg.RootCerts)) {
+		scope.Log("elastic: Unable to add root certs")
+		return
+	}
+
 	cfg := elasticsearch.Config{
 		Addresses: arg.Addresses,
 		Username:  arg.Username,
 		Password:  arg.Password,
 		CloudID:   arg.CloudID,
 		APIKey:    arg.APIKey,
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost:   10,
+			ResponseHeaderTimeout: time.Second,
+			TLSClientConfig: &tls.Config{
+				MinVersion:         tls.VersionTLS11,
+				ClientSessionCache: tls.NewLRUClientSessionCache(100),
+				RootCAs:            CA_Pool,
+				InsecureSkipVerify: arg.DisableSSLSecurity,
+			},
+		},
 	}
 
 	client, err := elasticsearch.NewClient(cfg)

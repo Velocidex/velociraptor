@@ -9,12 +9,9 @@ import Button from 'react-bootstrap/Button';
 import RegEx from './regex.js';
 import UploadFileForm from './upload.js';
 import YaraEditor from './yara.js';
-import InputGroup from 'react-bootstrap/InputGroup';
-import classNames from "classnames";
 import Tooltip from 'react-bootstrap/Tooltip';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
-import api from '../core/api-service.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import BootstrapTable from 'react-bootstrap-table-next';

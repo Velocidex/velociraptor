@@ -169,9 +169,16 @@ func NewHTTPConnector(
 		maxPollDev = 30
 	}
 
+	CA_Pool := x509.NewCertPool()
+	err := crypto.AddDefaultCerts(config_obj.Client, CA_Pool)
+	if err != nil {
+		return nil, err
+	}
+
 	tls_config := &tls.Config{
 		MinVersion:         tls.VersionTLS12,
 		ClientSessionCache: tls.NewLRUClientSessionCache(100),
+		RootCAs:            CA_Pool,
 	}
 
 	// For self signed certificates we must ignore the server name
@@ -179,13 +186,16 @@ func NewHTTPConnector(
 	if config_obj.Client.UseSelfSignedSsl {
 		logger.Info("Expecting self signed certificate for server.")
 
-		CA_Pool := x509.NewCertPool()
-		CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
-
+		// We only trust **our** pinned server name for HTTP comms.
+		// NOTE: This stops an api cert from being presented for the
+		// server. This setting also allows the server to be accessed
+		// by e.g. localhost despite the certificate being issued to
+		// VelociraptorServer.
 		tls_config.ServerName = config_obj.Client.PinnedServerName
+	} else {
 
-		// We only trust **our** root CA.
-		tls_config.RootCAs = CA_Pool
+		// Not self signed - add the public roots for verifications.
+		crypto.AddPublicRoots(tls_config.RootCAs)
 	}
 
 	self := &HTTPConnector{

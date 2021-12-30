@@ -198,6 +198,8 @@ message ClientConfig {
 
     // Maximum number of concurrent queries the client will allow (default 2).
     uint64 concurrency = 31;
+
+    CryptoConfig Crypto = 33;
 }
 
 message APIConfig {
@@ -735,6 +737,13 @@ message Defaults {
     int64 notebook_cell_timeout_min = 2;
 }
 
+// Configures crypto preferences
+message CryptoConfig {
+    // Include these root CA's to verify certificates (in addition to
+    // built in CA's). Certs should be concatenated in PEM format.
+    string root_certs = 1;
+}
+
 message Config {
     string autocert_domain = 21 [deprecated=true];
 
@@ -801,5 +810,6 @@ message Config {
     // If set we obfuscate VQL to the clients using this key.
     string obfuscation_nonce = 32;
 
+    // Various defaults can be changed here (usually not needed).
     Defaults defaults = 33;
 }
