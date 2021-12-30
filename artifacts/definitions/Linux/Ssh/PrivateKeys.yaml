@@ -1,4 +1,4 @@
-name: Custom.Linux.Ssh.PrivateKeys
+name: Linux.Ssh.PrivateKeys
 description: |
   SSH Private keys can be either encrypted or unencrypted. Unencrypted
   private keys are more risky because an attacker can use them without
@@ -16,13 +16,13 @@ description: |
 precondition: SELECT OS From info() where OS = 'linux'
 
 parameters:
-  - name: MyGlob
+  - name: KeyGlobs
     default: /*/*/.ssh/*
 
 sources:
   - queries:
       - LET Hits = SELECT FullPath, read_file(filename=FullPath, length=10240) AS Data
-        FROM glob(globs=MyGlob)
+        FROM glob(globs=KeyGlobs)
         WHERE Data =~ "BEGIN OPENSSH PRIVATE KEY"
         
       - LET DecodedFiles = SELECT FullPath,
