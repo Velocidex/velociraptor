@@ -4,6 +4,8 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -37,6 +39,10 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 
 		if self.Config.Client != nil {
 			env.Set(constants.SCOPE_CONFIG, self.Config.Client)
+		} else {
+			env.Set(constants.SCOPE_CONFIG, &config_proto.ClientConfig{
+				Version: config.GetVersion(),
+			})
 		}
 	}
 

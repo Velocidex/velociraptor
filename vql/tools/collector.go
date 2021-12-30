@@ -239,7 +239,8 @@ func makeContainer(
 
 	scope.Log("Setting compression level to %v", arg.Level)
 
-	container, err = reporting.NewContainer(arg.Output, arg.Password, arg.Level)
+	container, err = reporting.NewContainer(
+		config_obj, arg.Output, arg.Password, arg.Level)
 	if err != nil {
 		return nil, nil, err
 	}

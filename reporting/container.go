@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
+	"hash"
 	"io"
 	"os"
 	"path"
@@ -20,6 +21,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -30,8 +32,12 @@ import (
 )
 
 type Container struct {
+	config_obj *config_proto.Config
+
 	// The underlying file writer
-	fd io.WriteCloser
+	fd      io.WriteCloser
+	writer  io.Writer
+	sha_sum hash.Hash
 
 	level int
 
@@ -314,10 +320,14 @@ func (self *Container) Close() error {
 	if self.delegate_zip != nil {
 		self.delegate_zip.Close()
 	}
+	logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
+	logger.Info("Container hash %v", hex.EncodeToString(self.sha_sum.Sum(nil)))
 	return self.fd.Close()
 }
 
-func NewContainer(path string, password string, level int64) (*Container, error) {
+func NewContainer(
+	config_obj *config_proto.Config,
+	path string, password string, level int64) (*Container, error) {
 	fd, err := os.OpenFile(
 		path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
@@ -328,14 +338,19 @@ func NewContainer(path string, password string, level int64) (*Container, error)
 		level = 5
 	}
 
+	sha_sum := sha256.New()
+
 	result := &Container{
-		fd:    fd,
-		level: int(level),
+		config_obj: config_obj,
+		fd:         fd,
+		sha_sum:    sha_sum,
+		writer:     utils.NewTee(fd, sha_sum),
+		level:      int(level),
 	}
 
 	// We need to build a protected container.
 	if password != "" {
-		result.delegate_zip = zip.NewWriter(fd)
+		result.delegate_zip = zip.NewWriter(result.writer)
 
 		// We are writing a zip file into here - no need to
 		// compress.
@@ -351,7 +366,7 @@ func NewContainer(path string, password string, level int64) (*Container, error)
 
 		result.zip = concurrent_zip.NewWriter(result.delegate_fd)
 	} else {
-		result.zip = concurrent_zip.NewWriter(result.fd)
+		result.zip = concurrent_zip.NewWriter(result.writer)
 		result.zip.RegisterCompressor(
 			zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
 				return flate.NewWriter(out, int(level))

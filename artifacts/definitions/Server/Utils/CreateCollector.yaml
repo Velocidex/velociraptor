@@ -308,6 +308,8 @@ sources:
       )
 
       // Repack this binary.
+      LET _ <= log(message="Will get tool " + tool_name[0].Type)
+
       LET target_binary <= SELECT FullPath, Name
          FROM Artifact.Generic.Utils.FetchBinary(
             ToolName=tool_name[0].Type, SleepDuration="0",
@@ -395,6 +397,7 @@ sources:
       )
 
       LET me <= SELECT Exe FROM info()
+                WHERE log(message="My binary is " + Exe)
 
       // Copy the configuration to a temp file and shell out to our
       // binary to repack it.
