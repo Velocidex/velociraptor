@@ -159,7 +159,7 @@ class ArtifactInspector extends React.Component {
             return false;
         }
 
-        if (this.state.fullSelectedDescriptor.type != "client") {
+        if (this.state.fullSelectedDescriptor.type !== "client") {
             return false;
         }
         return true;
