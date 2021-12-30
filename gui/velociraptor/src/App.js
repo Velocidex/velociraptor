@@ -136,12 +136,11 @@ class App extends Component {
                        />
                      </Route>
                      <Route path="/artifacts/:artifact?">
-                       <ArtifactInspector/>
+                       <ArtifactInspector client={this.state.client}/>
                      </Route>
                      <Route path="/hunts/:hunt_id?/:tab?">
                        <VeloHunts/>
                      </Route>
-
                      <Route path="/host/:client_id(C[^/]+)/:action?">
                        <ClientSetterFromRoute
                          client={this.state.client}

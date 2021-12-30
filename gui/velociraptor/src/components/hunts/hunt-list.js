@@ -35,6 +35,23 @@ class HuntList extends React.Component {
 
     componentDidMount = () => {
         this.source = axios.CancelToken.source();
+
+        let action = this.props.match && this.props.match.params &&
+            this.props.match.params.hunt_id;
+        if (action==="new") {
+            let name = this.props.match && this.props.match.params &&
+                this.props.match.params.tab;
+
+            this.setState({
+                showCopyWizard: true,
+                full_selected_hunt: {
+                    start_request: {
+                        artifacts: [name],
+                    },
+                },
+            });
+            this.props.history.push("/hunts");
+        }
     }
 
     componentWillUnmount() {
@@ -174,7 +191,7 @@ class HuntList extends React.Component {
         let hunt_id = this.props.selected_hunt &&
             this.props.selected_hunt.hunt_id;
 
-        if (!hunt_id) {
+        if (!hunt_id || hunt_id[0] !== "H") {
             return;
         }
 

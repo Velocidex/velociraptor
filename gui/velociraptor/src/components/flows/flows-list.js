@@ -205,6 +205,37 @@ class FlowsList extends React.Component {
 
     componentDidMount = () => {
         this.source = axios.CancelToken.source();
+
+        let action = this.props.match && this.props.match.params &&
+            this.props.match.params.flow_id;
+
+        let client_id = this.props.match && this.props.match.params &&
+            this.props.match.params.client_id;
+
+        let name = this.props.match && this.props.match.params &&
+            this.props.match.params.tab;
+
+        if (_.isUndefined(client_id)) {
+            client_id = "server";
+        }
+
+        if (action === "new") {
+            let specs = {};
+            specs[name] = {};
+
+            let initial_flow = {
+                request: {
+                    client_id: client_id,
+                    artifacts: [name],
+                },
+            };
+            this.setState({
+                showNewFromRouterWizard: true,
+                client_id: client_id,
+                initial_flow: initial_flow,
+            });
+            this.props.history.push("/collected/" + client_id);
+        }
     }
 
     componentWillUnmount() {
@@ -240,6 +271,7 @@ class FlowsList extends React.Component {
             // Only disable wizards if the request was successful.
             this.setState({showWizard: false,
                            showOfflineWizard: false,
+                           showNewFromRouterWizard: false,
                            showCopyWizard: false});
         });
     }
@@ -399,6 +431,14 @@ class FlowsList extends React.Component {
                   client={this.props.client}
                   baseFlow={this.props.selected_flow}
                   onCancel={(e) => this.setState({showCopyWizard: false})}
+                  onResolve={this.setCollectionRequest} />
+        }
+
+              { this.state.showNewFromRouterWizard &&
+                <NewCollectionWizard
+                  client={this.state.client_id}
+                  baseFlow={this.state.initial_flow}
+                  onCancel={(e) => this.setState({showNewFromRouterWizard: false})}
                   onResolve={this.setCollectionRequest} />
               }
 

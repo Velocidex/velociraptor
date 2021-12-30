@@ -123,7 +123,7 @@ class VeloHunts extends React.Component {
         // Get the full hunt information from the server based on the
         // hunt metadata - this is done every poll interval to ensure
         // hunt stats are updated.
-        if (selected_hunt_id) {
+        if (selected_hunt_id && selected_hunt_id[0] === "H") {
             this.get_hunts_source.cancel();
             this.get_hunts_source = axios.CancelToken.source();
 
