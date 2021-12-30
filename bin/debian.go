@@ -22,7 +22,7 @@
 
 /*
    Velociraptor - Hunting Evil
-   Copyright (C) 2019 Velocidex Innovations.
+   Copyright (C) 2019 Velocidex Enterprises.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Affero General Public License as published
@@ -54,6 +54,10 @@ import (
 var (
 	debian_command = app.Command(
 		"debian", "Create a debian package")
+
+	debian_command_arch = debian_command.Flag("arch",
+		"Specify the debian package architecture (e.g. ppcle, amd64)").
+		Default("amd64").String()
 
 	server_debian_command = debian_command.Command(
 		"server", "Create a server package from a server config file.")
@@ -177,8 +181,8 @@ func doServerDeb() error {
 
 	deb.SetName("velociraptor-server")
 	deb.SetVersion(constants.VERSION)
-	deb.SetArchitecture("amd64")
-	deb.SetMaintainer("Velocidex Innovations")
+	deb.SetArchitecture(*debian_command_arch)
+	deb.SetMaintainer("Velocidex Enterprises")
 	deb.SetMaintainerEmail("support@velocidex.com")
 	deb.SetHomepage("https://www.velocidex.com/docs")
 	deb.SetShortDescription("Velociraptor server deployment.")
@@ -303,8 +307,8 @@ func doClientDeb() error {
 
 	deb.SetName("velociraptor-client")
 	deb.SetVersion(constants.VERSION)
-	deb.SetArchitecture("amd64")
-	deb.SetMaintainer("Velocidex Innovations")
+	deb.SetArchitecture(*debian_command_arch)
+	deb.SetMaintainer("Velocidex Enterprises")
 	deb.SetMaintainerEmail("support@velocidex.com")
 	deb.SetHomepage("https://www.velocidex.com")
 	deb.SetShortDescription("Velociraptor client package.")
