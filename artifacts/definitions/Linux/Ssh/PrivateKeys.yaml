@@ -1,4 +1,4 @@
-name: Linux.Ssh.PrivateKeys
+name: Custom.Linux.Ssh.PrivateKeys
 description: |
   SSH Private keys can be either encrypted or unencrypted. Unencrypted
   private keys are more risky because an attacker can use them without
@@ -6,6 +6,9 @@ description: |
 
   This artifact searches for private keys in the usual locations and
   also records if they are encrypted or not.
+  
+  Change the glob to /** if you would like to search the entire filesystem.
+  Be aware, this is an expensive operation.
 
   ## references
   - https://attack.mitre.org/techniques/T1145/
@@ -13,14 +16,21 @@ description: |
 precondition: SELECT OS From info() where OS = 'linux'
 
 parameters:
-  - name: KeyGlobs
-    default: /home/*/.ssh/id_{rsa,dsa}
+  - name: MyGlob
+    default: /*/*/.ssh/*
 
 sources:
   - queries:
-      - SELECT FullPath,
-               Mtime,
-               if(condition={
-                     SELECT * from yara(rules="wide ascii:ENCRYPTED", files=FullPath)
-                  }, then="Yes", else="No") AS Encrypted
-        FROM glob(globs=KeyGlobs)
+      - LET Hits = SELECT FullPath, read_file(filename=FullPath, length=10240) AS Data
+        FROM glob(globs=MyGlob)
+        WHERE Data =~ "BEGIN OPENSSH PRIVATE KEY"
+        
+      - LET DecodedFiles = SELECT FullPath,
+            base64decode(
+                string=parse_string_with_regex(
+                    string=read_file(filename=FullPath), 
+                    regex="(?sm)KEY-----(.+)-----END").g1) AS Decoded
+        FROM Hits
+
+      - SELECT FullPath, split(string=Decoded, sep="[\\x00\\s]+")[1] AS EncryptionType
+        FROM DecodedFiles
