@@ -2165,7 +2165,53 @@
     type: Any
   category: basic
 - name: items
-  description: Enumerate all members of the item (similar to Pythons items() method.
+  description: |
+    Enumerate all members of the item (similar to Python's items() method).
+
+    This plugin allows iteration over dicts or queries.
+
+    ### Iterating dicts
+
+    If the item is a dict, then this plugin will iterate over its keys
+    and values producing two columns:
+
+    * The `_key` column is the dictionary key
+    * The `_value` column is the dictionary value
+
+    ### Iterating queries
+
+    For queries or arrays, the `items()` plugin will produce two columns:
+
+    * The `_key` column is the row index starting from 0
+    * The `_value` column is the row itself as a dict.
+
+    The `items()` query is useful to treat the results of another
+    query as a dict instead of a row. This is useful when the query
+    produces unpredicatable columns or you need to operate over the
+    column names somehow.
+
+    For example:
+
+    ```vql
+    SELECT * FROM items(item={ SELECT * FROM info() })
+    ```
+
+    Produces:
+
+    ```json
+    [
+      {
+        "_key": 0,
+        "_value": {
+          "Hostname": "DESKTOP-BTI2T9T",
+          "Uptime": 20445,
+          "BootTime": 1641029930,
+          "Architecture": "amd64"
+        }
+      }
+    ]
+    ```
+
   type: Plugin
   args:
   - name: item
