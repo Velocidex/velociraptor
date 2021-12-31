@@ -63,6 +63,9 @@ var (
 	server_debian_command = debian_command.Command(
 		"server", "Create a server package from a server config file.")
 
+	server_debian_command_output = server_debian_command.Flag(
+		"output", "Filename to output").String()
+
 	server_debian_command_binary = server_debian_command.Flag(
 		"binary", "The binary to package").String()
 
@@ -277,6 +280,12 @@ setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bi
 
 	output_file := fmt.Sprintf("velociraptor_%s_server%s.deb",
 		constants.VERSION, variant)
+
+	if *server_debian_command_output != "" {
+		output_file = fmt.Sprintf("%s%s.deb",
+			strings.TrimSuffix(*server_debian_command_output, ".deb"),
+			variant)
+	}
 
 	err = deb.Write(output_file)
 	if err != nil {
