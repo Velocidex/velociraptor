@@ -87,6 +87,14 @@ func (self *OSFileInfo) Sys() interface{} {
 	return self._FileInfo.Sys()
 }
 
+func (self *OSFileInfo) Dev() uint64 {
+	sys, ok := self._FileInfo.Sys().(*syscall.Stat_t)
+	if !ok {
+		return 0
+	}
+	return sys.Dev
+}
+
 func (self *OSFileInfo) Data() interface{} {
 	if self.IsLink() {
 		path := self.FullPath()

@@ -26,7 +26,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -57,6 +56,10 @@ type FileInfo interface {
 	GetLink() (string, error)
 	Mode() os.FileMode
 	Sys() interface{}
+}
+
+type FileDev interface {
+	Dev() uint64
 }
 
 type ReadSeekCloser interface {
@@ -615,9 +618,9 @@ func escape_backslash(pattern unicode) unicode {
 }
 
 func DevOf(file_info FileInfo) (uint64, bool) {
-	sys, ok := file_info.Sys().(*syscall.Stat_t)
+	dev, ok := file_info.(FileDev)
 	if !ok {
 		return 0, false
 	}
-	return sys.Dev, true
+	return dev.Dev(), true
 }
