@@ -114,5 +114,5 @@ sources:
 
       -- return rows
       SELECT * FROM if(condition=UploadHits,
-        then=upload_hits,
-        else=hits)
+        then={ SELECT * FROM upload_hits},
+        else={ SELECT * FROM hits})

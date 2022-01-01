@@ -26,6 +26,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -130,6 +131,9 @@ type GlobOptions struct {
 
 	// Stay on the one filesystem
 	OneFilesystem bool
+
+	// Allow the user to control which directory we descend into.
+	RecursionCallback func(file_info FileInfo) bool
 }
 
 // A tree of filters - each filter branches to a subfilter.
@@ -240,10 +244,15 @@ func (self *Globber) is_dir_or_link(f FileInfo, accessor FileSystemAccessor, dep
 		return false
 	}
 
+	// Allow the callers to control our symlink behavior.
+	if self.options.RecursionCallback != nil &&
+		!self.options.RecursionCallback(f) {
+		return false
+	}
+
 	// If it is a link we need to determine if the target is a
 	// directory.
 	if f.IsLink() {
-
 		if self.options.DoNotFollowSymlinks {
 			return false
 		}
@@ -258,6 +267,18 @@ func (self *Globber) is_dir_or_link(f FileInfo, accessor FileSystemAccessor, dep
 
 			target_info, err := accessor.Lstat(target)
 			if err == nil {
+				// Check if the target is on a different filesystem
+				// than the current file
+				if self.options.OneFilesystem {
+					current_dev, ok := DevOf(f)
+					if ok {
+						target_dev, ok := DevOf(target_info)
+						if ok && current_dev != target_dev {
+							return false
+						}
+					}
+				}
+
 				return self.is_dir_or_link(target_info, accessor, depth+1)
 			}
 
@@ -591,4 +612,12 @@ func escape_backslash(pattern unicode) unicode {
 	}
 
 	return result
+}
+
+func DevOf(file_info FileInfo) (uint64, bool) {
+	sys, ok := file_info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return 0, false
+	}
+	return sys.Dev, true
 }

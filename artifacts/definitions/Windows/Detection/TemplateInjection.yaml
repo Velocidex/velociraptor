@@ -117,5 +117,5 @@ sources:
 
       -- output rows
       SELECT * FROM if(condition= UploadDocument,
-            then= upload_hits,
-            else= hits)
+            then= { SELECT * FROM upload_hits},
+            else= { SELECT * FROM hits})

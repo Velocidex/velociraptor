@@ -66,21 +66,74 @@ parameters:
     default: ""
     type: timestamp
 
+  - name: ExcludePathRegex
+    default: "^/(proc|sys|run|snap)"
+    type: regex
+    description: If this regex matches the path of any directory we do not even descend inside of it.
+
+  - name: LocalFilesystemOnly
+    default: Y
+    type: bool
+    description: When set we stay on local attached filesystems including loop, attached disk, cdrom, device mapper, and excluding proc, nfs etc.
+
+  - name: OneFilesystem
+    default: N
+    type: bool
+    description: When set we do not follow a link to go on to a different filesystem.
+
   - name: DoNotFollowSymlinks
     type: bool
-    default: Y
+    default: N
     description: If specified we are allowed to follow symlinks while globbing
 
 sources:
 - query: |
+    -- This list comes from cat /proc/devices and represents actual
+    -- devices. Most virtual devices like /proc, fuse and network
+    -- filesystems have a major number of 0.
+    LET LocalDeviceMajor <= (
+       253,
+       7,   -- loop
+       8,   -- sd
+       9,   -- md
+       11,  -- sr
+       65,  -- sd
+       66,  -- sd
+       67,  -- sd
+       68,  -- sd
+       69,  -- sd
+       70,  -- sd
+       71,  -- sd
+       128, -- sd
+       129, -- sd
+       130, -- sd
+       131, -- sd
+       132, -- sd
+       133, -- sd
+       134, -- sd
+       135, -- sd
+       253, -- device-mapper
+    )
+
+    LET RecursionCallback = if(
+       condition=LocalFilesystemOnly,
+         then=if(condition=ExcludePathRegex,
+                 then="x=>x.Data.DevMajor IN LocalDeviceMajor AND NOT x.FullPath =~ ExcludePathRegex",
+                 else="x=>x.Data.DevMajor IN LocalDeviceMajor"),
+         else=if(condition=ExcludePathRegex,
+                 then="x=>NOT x.FullPath =~ ExcludePathRegex",
+                 else=""))
+
     LET file_search = SELECT FullPath,
                Sys.mft as Inode,
                Mode.String AS Mode, Size,
                Mtime AS MTime,
                Atime AS ATime,
                Ctime AS CTime,
-               IsDir, Mode
+               IsDir, Mode, Data
         FROM glob(globs=SearchFilesGlobTable.Glob + SearchFilesGlob,
+                  recursion_callback=RecursionCallback,
+                  one_filesystem=OneFilesystem,
                   accessor="file", nosymlink=DoNotFollowSymlinks)
 
     LET more_recent = SELECT * FROM if(
@@ -88,7 +141,9 @@ sources:
         then={
           SELECT * FROM file_search
           WHERE MTime > MoreRecentThan
-        }, else=file_search)
+        }, else={
+          SELECT * FROM file_search
+        })
 
     LET modified_before = SELECT * FROM if(
         condition=ModifiedBefore,
@@ -96,7 +151,9 @@ sources:
           SELECT * FROM more_recent
           WHERE MTime < ModifiedBefore
             AND MTime > MoreRecentThan
-        }, else=more_recent)
+        }, else={
+          SELECT * FROM more_recent
+        })
 
     LET keyword_search = SELECT * FROM if(
         condition=YaraRule,
@@ -108,7 +165,7 @@ sources:
             },
             query={
                SELECT FullPath, Inode, Mode,
-                      Size, Modified, ATime, MTime, CTime,
+                      Size, ATime, MTime, CTime,
                       str(str=String.Data) As Keywords
 
                FROM yara(files=FullPath,
@@ -116,9 +173,11 @@ sources:
                          rules=YaraRule,
                          accessor="file")
             })
-        }, else=modified_before)
+        }, else={
+          SELECT *, NULL AS Keywords FROM modified_before
+        })
 
-    SELECT FullPath, Inode, Mode, Size, Modified, ATime,
+    SELECT FullPath, Inode, Mode, Size, ATime,
              MTime, CTime, Keywords,
                if(condition=Upload_File and Mode.IsRegular,
                   then=upload(file=FullPath,
@@ -129,8 +188,6 @@ sources:
     FROM keyword_search
 
 column_types:
-  - name: Modified
-    type: timestamp
   - name: ATime
     type: timestamp
   - name: MTime
