@@ -1,0 +1,4 @@
+Queries:
+  - SELECT basename(path=FullPath) AS Name, KeyType, Cipher, Header
+    FROM Artifact.Linux.Ssh.PrivateKeys(
+        KeyGlobs=srcDir+"/artifacts/testdata/files/**/*.pem")

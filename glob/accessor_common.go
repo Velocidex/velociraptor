@@ -92,7 +92,7 @@ func (self *OSFileInfo) Dev() uint64 {
 	if !ok {
 		return 0
 	}
-	return sys.Dev
+	return uint64(sys.Dev)
 }
 
 func (self *OSFileInfo) Data() interface{} {

@@ -1,0 +1,44 @@
+SELECT basename(path=FullPath) AS Name, KeyType, Cipher, Header FROM Artifact.Linux.Ssh.PrivateKeys( KeyGlobs=srcDir+"/artifacts/testdata/files/**/*.pem")[
+ {
+  "Name": "EncryptedRSAKeyPair.pem",
+  "KeyType": "PKCS8",
+  "Cipher": "DES-EDE3-CBC",
+  "Header": "BEGIN RSA PRIVATE KEY"
+ },
+ {
+  "Name": "UnencryptedED25519KeyPair.pem",
+  "KeyType": "openssh-key-v1",
+  "Cipher": "none",
+  "Header": "BEGIN OPENSSH PRIVATE KEY"
+ },
+ {
+  "Name": "UnencryptedRSAKeyPair.pem",
+  "KeyType": "PKCS8",
+  "Cipher": "none",
+  "Header": "BEGIN RSA PRIVATE KEY"
+ },
+ {
+  "Name": "encrypted.key.pem",
+  "KeyType": "openssh-key-v1",
+  "Cipher": "aes256-ctr",
+  "Header": "BEGIN OPENSSH PRIVATE KEY"
+ },
+ {
+  "Name": "pkcs8_encryped.pem",
+  "KeyType": "PKCS8",
+  "Cipher": "PKCS#5",
+  "Header": "BEGIN ENCRYPTED PRIVATE KEY"
+ },
+ {
+  "Name": "pkcs8_unencryped.pem",
+  "KeyType": "PKCS8",
+  "Cipher": "none",
+  "Header": "BEGIN PRIVATE KEY"
+ },
+ {
+  "Name": "unencrypted.key.pem",
+  "KeyType": "openssh-key-v1",
+  "Cipher": "none",
+  "Header": "BEGIN OPENSSH PRIVATE KEY"
+ }
+]
