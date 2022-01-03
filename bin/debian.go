@@ -43,6 +43,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/xor-gate/debpkg"
@@ -63,9 +64,7 @@ var (
 		"server", "Create a server package from a server config file.")
 
 	server_debian_command_output = server_debian_command.Flag(
-		"output", "Filename to output").Default(
-		fmt.Sprintf("velociraptor_%s_server.deb", constants.VERSION)).
-		String()
+		"output", "Filename to output").String()
 
 	server_debian_command_binary = server_debian_command.Flag(
 		"binary", "The binary to package").String()
@@ -92,7 +91,7 @@ Restart=always
 RestartSec=120
 LimitNOFILE=20000
 Environment=LANG=en_US.UTF-8
-ExecStart=%s --config %s frontend
+ExecStart=%s --config %s frontend %s
 User=velociraptor
 Group=velociraptor
 CapabilityBoundingSet=CAP_SYS_RESOURCE CAP_NET_BIND_SERVICE
@@ -140,6 +139,32 @@ func doServerDeb() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
+	if len(config_obj.ExtraFrontends) == 0 {
+		return doSingleServerDeb(config_obj, "", nil)
+	}
+
+	// Build the master node
+	node_name := GetNodeName(config_obj.Frontend)
+	err = doSingleServerDeb(config_obj, "_master_"+node_name, nil)
+	if err != nil {
+		return err
+	}
+
+	for _, fe := range config_obj.ExtraFrontends {
+		node_name := GetNodeName(fe)
+		err = doSingleServerDeb(config_obj, "_minion_"+node_name,
+			[]string{"--minion", "--node", node_name})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func doSingleServerDeb(
+	config_obj *config_proto.Config,
+	variant string, extra_args []string) error {
 	// Debian packages always use the "velociraptor" user.
 	config_obj.Frontend.RunAsUser = "velociraptor"
 	config_obj.ServerType = "linux"
@@ -196,7 +221,8 @@ func doServerDeb() error {
 		return fmt.Errorf("Adding file: %w", err)
 	}
 	err = deb.AddFileString(fmt.Sprintf(
-		server_service_definition, velociraptor_bin, config_path),
+		server_service_definition, velociraptor_bin, config_path,
+		strings.Join(extra_args, " ")),
 		"/etc/systemd/system/velociraptor_server.service")
 	if err != nil {
 		return fmt.Errorf("Adding file: %w", err)
@@ -252,7 +278,16 @@ setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bi
 		return fmt.Errorf("Adding file: %w", err)
 	}
 
-	err = deb.Write(*server_debian_command_output)
+	output_file := fmt.Sprintf("velociraptor_%s_server%s.deb",
+		constants.VERSION, variant)
+
+	if *server_debian_command_output != "" {
+		output_file = fmt.Sprintf("%s%s.deb",
+			strings.TrimSuffix(*server_debian_command_output, ".deb"),
+			variant)
+	}
+
+	err = deb.Write(output_file)
 	if err != nil {
 		return fmt.Errorf("Deb write: %w", err)
 	}

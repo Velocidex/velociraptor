@@ -408,6 +408,10 @@ func dynDNSConfig(frontend *config_proto.FrontendConfig) error {
 		return nil
 	}
 
+	if frontend.DynDns == nil {
+		frontend.DynDns = &config_proto.DynDNSConfig{}
+	}
+
 	return survey.Ask([]*survey.Question{
 		{Name: "DdnsUsername", Prompt: google_domains_username},
 		{Name: "DdnsPassword", Prompt: google_domains_password},
