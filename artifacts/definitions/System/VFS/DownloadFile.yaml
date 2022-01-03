@@ -36,5 +36,6 @@ sources:
              Upload.StoredSize AS StoredSize,
              Upload.Sha256 AS Sha256,
              Upload.Md5 AS Md5
-      FROM if(condition=Recursively, then=download_recursive,
-              else=download_one_file)
+      FROM if(condition=Recursively,
+        then={ SELECT * FROM download_recursive},
+        else={ SELECT * FROM download_one_file})

@@ -65,6 +65,6 @@ sources:
 
         SELECT * FROM if(
                 condition=StartTrace,
-                then=launch_trace,
-                else=end_trace
+                then={ SELECT * FROM launch_trace},
+                else={ SELECT * FROM end_trace }
         )

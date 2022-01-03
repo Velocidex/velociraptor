@@ -87,6 +87,14 @@ func (self *OSFileInfo) Sys() interface{} {
 	return self._FileInfo.Sys()
 }
 
+func (self *OSFileInfo) Dev() uint64 {
+	sys, ok := self._FileInfo.Sys().(*syscall.Stat_t)
+	if !ok {
+		return 0
+	}
+	return sys.Dev
+}
+
 func (self *OSFileInfo) Data() interface{} {
 	if self.IsLink() {
 		path := self.FullPath()
@@ -97,7 +105,14 @@ func (self *OSFileInfo) Data() interface{} {
 		}
 	}
 
-	return ordereddict.NewDict()
+	result := ordereddict.NewDict()
+	sys, ok := self._FileInfo.Sys().(*syscall.Stat_t)
+	if ok {
+		result.Set("DevMajor", (sys.Dev>>8)&0xff).
+			Set("DevMinor", sys.Dev&0xFF)
+	}
+
+	return result
 }
 
 func (self *OSFileInfo) FullPath() string {
@@ -174,11 +189,28 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	}
 
 	// Support symlinks and directories.
-	if lstat.Mode()&os.ModeSymlink == 0 && !lstat.IsDir() {
-		return nil, nil
+	if lstat.Mode()&os.ModeSymlink == 0 {
+		// Not a symlink
+		if !lstat.IsDir() {
+			return nil, nil
+		}
+	} else {
+		// If it is a symlink, we need to check the target of the
+		// symlink and make sure it is a directory.
+		target, err := os.Readlink(path)
+		if err == nil {
+			lstat, err := os.Lstat(target)
+			// Target of the link is not there or inaccessible or
+			// points to something that is not a directory - just
+			// ignore it with no errors.
+			if err != nil || !lstat.IsDir() {
+				return nil, nil
+			}
+		}
+
 	}
 
-	files, err := utils.ReadDir(GetPath(path))
+	files, err := utils.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}
@@ -259,6 +291,7 @@ func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
 
 func init() {
 	Register("file", &OSFileSystemAccessor{}, `Access files using the operating system's API. Does not allow access to raw devices.`)
+
 	Register("raw_file", &OSFileSystemAccessor{
 		allow_raw_access: true,
 	}, `Access files using the operating system's API. Also allow access to raw devices.`)

@@ -49,10 +49,10 @@ sources:
           condition=UserFilter,
           then={
             SELECT * FROM TMP WHERE User =~ UserFilter
-          }, else=TMP)
+          }, else={ SELECT * FROM TMP})
 
       - SELECT * FROM if(
           condition=ExecutionTimeAfter,
           then={
             SELECT * FROM A1 WHERE LastExecutionTS > ExecutionTimeAfter
-          }, else=A1)
+          }, else={ SELECT * FROM A1})

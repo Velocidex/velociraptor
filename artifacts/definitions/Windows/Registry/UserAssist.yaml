@@ -70,9 +70,12 @@ sources:
           condition=UserFilter,
           then={
             SELECT * FROM UserAssist WHERE User =~ UserFilter
-          }, else=UserAssist)
+          },
+          else={ SELECT * FROM UserAssist})
+
       - SELECT * FROM if(
           condition=ExecutionTimeAfter,
           then={
             SELECT * FROM A1 WHERE LastExecutionTS > ExecutionTimeAfter
-          }, else=A1)
+          },
+          else={ SELECT * FROM A1})

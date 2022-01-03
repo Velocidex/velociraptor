@@ -30,4 +30,6 @@ sources:
 
     SELECT * FROM if(condition={
       SELECT OS FROM info() WHERE OS =~ "windows"
-    }, then=Windows, else=NonWindows)
+    },
+    then={ SELECT * FROM Windows},
+    else={ SELECT * FROM NonWindows})

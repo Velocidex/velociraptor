@@ -951,6 +951,13 @@
   - name: pipeline
     type: string
     description: Pipeline for uploads
+  - name: disable_ssl_security
+    type: bool
+    description: Disable ssl certificate verifications.
+  - name: root_ca
+    type: string
+    description: As a better alternative to disable_ssl_security, allows root ca certs
+      to be added here.
   category: server
 - name: encode
   description: Encodes a string as as different type. Currently supported types include
@@ -1575,6 +1582,41 @@
     directory - i.e. the glob pattern is appended to the root
     parameter.  The `root` parameter is useful if the directory name
     itself may contain glob characters.
+
+    ## Following symlinks
+
+    On Unix like operating systems symlinks are used
+    extensively. Symlinks complicate the job of the glob() plugin
+    because they break the assumption that filesystems are
+    trees. Instead a symlink may form a cycle or create very deep
+    directories within the filesystem.
+
+    By default glob() follows symlinks but also checks for cycles by
+    checking that a target of a symlink has not been seen before. You
+    can disable this behavior with `nosymlink=TRUE`
+
+    ## Setting a recursion callback
+
+    Sometimes it is useful to prevent glob() from recursing into a
+    directory. For example, if we know a directory can not possibly
+    contain a hit we can avoid descending into it at all. This more
+    efficient than simply eliminating the matching rows in the WHERE
+    clause.
+
+    You can provide a recursion callback (in the form of a VQL lambda
+    function) to let glob() know if it should be recursing a
+    directory. The glob() plugin will call the lambda with current
+    directory entry and if the lambda returns a `true` value will
+    recurse into it.
+
+    For example consider the following query which searches for pem
+    files in all directories other than /proc, /sys or /snap
+
+    ```vql
+    SELECT * FROM glob(globs='/**/*.pem',
+        recursion_callback="x=>NOT x.Name =~ '^/(proc|sys|snap)'")
+    ```
+
   type: Plugin
   args:
   - name: globs
@@ -1591,6 +1633,13 @@
   - name: nosymlink
     type: bool
     description: If set we do not follow symlinks.
+  - name: recursion_callback
+    type: string
+    description: A VQL function that determines if a directory should be recursed
+      (e.g. "x=>NOT x.Name =~ 'proc'").
+  - name: one_filesystem
+    type: bool
+    description: If set we do not follow links to other filesystems.
   category: plugin
 - name: grep
   description: |
@@ -1785,6 +1834,10 @@
   - name: remove_last
     type: bool
     description: If set we delay removal as much as possible.
+  - name: root_ca
+    type: string
+    description: As a better alternative to disable_ssl_security, allows root ca certs
+      to be added here.
   category: plugin
 - name: humanize
   description: |
@@ -2211,7 +2264,6 @@
       }
     ]
     ```
-
   type: Plugin
   args:
   - name: item
@@ -3300,7 +3352,7 @@
     type: string
     description: A delegate to pass to the accessor.
   - name: Path
-    type: LazyExpr
+    type: Any
     description: A path to open.
   - name: parse
     type: string

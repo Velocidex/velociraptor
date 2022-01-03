@@ -68,7 +68,7 @@ sources:
       LET pstree(LookupPid) = SELECT * FROM if(
         condition=version(function="memoize") >= 0,
         then={ SELECT * FROM pstree_memoized(LookupPid=LookupPid, Depth=0) },
-        else=pstree_legacy)
+        else={ SELECT * FROM pstree_legacy})
 
       SELECT Name, Pid, Ppid,
              join(array=pstree(LookupPid=Pid).Name, sep=CallChainSep) AS CallChain

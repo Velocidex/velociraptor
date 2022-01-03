@@ -133,5 +133,6 @@ sources:
         // Print out chosen usecase
         SELECT *
         FROM if(condition=groupResults,
-            then=joinOut, else=splitOut)
+            then={ SELECT * FROM joinOut},
+            else={ SELECT * FROM splitOut})
         WHERE if(condition=regexValue, then=reg_runmru =~ regexValue, else=TRUE)

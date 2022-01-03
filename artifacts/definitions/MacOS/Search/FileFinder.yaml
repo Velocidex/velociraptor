@@ -88,7 +88,8 @@ sources:
         then={
           SELECT * FROM file_search
           WHERE MTime > MoreRecentThan
-        }, else=file_search)
+        },
+        else={ SELECT * FROM file_search})
 
     LET modified_before = SELECT * FROM if(
         condition=ModifiedBefore,
@@ -96,7 +97,8 @@ sources:
           SELECT * FROM more_recent
           WHERE MTime < ModifiedBefore
            AND  MTime > MoreRecentThan
-        }, else=more_recent)
+        },
+        else={SELECT * FROM more_recent})
 
     LET keyword_search = SELECT * FROM if(
         condition=YaraRule,
@@ -116,7 +118,8 @@ sources:
                          rules=YaraRule,
                          accessor="file")
             })
-        }, else=modified_before)
+        },
+        else={SELECT * FROM modified_before})
 
     SELECT FullPath, Inode, Mode, Size, Modified, ATime,
              MTime, CTime, Keywords,

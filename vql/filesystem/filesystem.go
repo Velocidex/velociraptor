@@ -37,6 +37,8 @@ type GlobPluginArgs struct {
 	Root                string   `vfilter:"optional,field=root,doc=The root directory to glob from (default '')."`
 	Accessor            string   `vfilter:"optional,field=accessor,doc=An accessor to use."`
 	DoNotFollowSymlinks bool     `vfilter:"optional,field=nosymlink,doc=If set we do not follow symlinks."`
+	RecursionCallback   string   `vfilter:"optional,field=recursion_callback,doc=A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."`
+	OneFilesystem       bool     `vfilter:"optional,field=one_filesystem,doc=If set we do not follow links to other filesystems."`
 }
 
 type GlobPlugin struct{}
@@ -76,9 +78,26 @@ func (self GlobPlugin) Call(
 
 		root := arg.Root
 
-		globber := glob.NewGlobber().WithOptions(glob.GlobOptions{
+		options := glob.GlobOptions{
 			DoNotFollowSymlinks: arg.DoNotFollowSymlinks,
-		})
+			OneFilesystem:       arg.OneFilesystem,
+		}
+
+		if arg.RecursionCallback != "" {
+			// Compile the callback
+			lambda, err := vfilter.ParseLambda(arg.RecursionCallback)
+			if err != nil {
+				scope.Log("glob: while parsing recursion_callback: %v", err)
+				return
+			}
+
+			options.RecursionCallback = func(file_info glob.FileInfo) bool {
+				result := lambda.Reduce(ctx, scope, []vfilter.Any{file_info})
+				return scope.Bool(result)
+			}
+		}
+
+		globber := glob.NewGlobber().WithOptions(options)
 
 		// If root is not specified we try to find a common
 		// root from the globs.

@@ -103,5 +103,5 @@ sources:
 
       -- return rows
       SELECT * FROM if(condition=SearchVSS,
-        then=include_vss,
-        else=exclude_vss)
+        then={ SELECT * FROM include_vss},
+        else={ SELECT * FROM exclude_vss})
