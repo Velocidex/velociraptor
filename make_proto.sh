@@ -7,6 +7,7 @@
 set -e
 
 CWD=$PWD
+PROTOC=${PROTOC:-"protoc"}
 QUIET=${QUIET:-}
 PROTOC=protoc
 
