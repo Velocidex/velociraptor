@@ -1,3 +1,4 @@
+//go:build linux || darwin || freebsd
 // +build linux darwin freebsd
 
 package glob
@@ -290,9 +291,9 @@ func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
 }
 
 func init() {
-	Register("file", &OSFileSystemAccessor{}, `Access files using the operating system's API. Does not allow access to raw devices.`)
+	Register("os_file", &OSFileSystemAccessor{}, `Access files using the operating system's API. Does not allow access to raw devices.`)
 
-	Register("raw_file", &OSFileSystemAccessor{
+	Register("os_raw_file", &OSFileSystemAccessor{
 		allow_raw_access: true,
 	}, `Access files using the operating system's API. Also allow access to raw devices.`)
 

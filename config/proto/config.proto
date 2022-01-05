@@ -812,4 +812,18 @@ message Config {
 
     // Various defaults can be changed here (usually not needed).
     Defaults defaults = 33;
+
+    // The device Velociraptor should use instead of the host's filesystem.
+    // Can be a disk image file or a raw device present on the host. Refer to
+    // `analysis_target' as well.
+    string device = 34;
+
+    // The accessor required to open `device'. Currently, only ntfs supported;
+    // other accessors might work additionally, though.
+    string deviceAccessor = 35;
+
+    // The Operating System of the analysis target. Only useful in conjunction
+    // with the `device' parameter in case the host's operating system differs
+    // from the operating system used on the device.
+    string analysis_target = 36;
 }
