@@ -146,7 +146,7 @@ func doArtifactCollect() error {
 
 	sm, err := startEssentialServices(config_obj)
 	if err != nil {
-		return fmt.Errorf("Can't load service: %w", err)
+		return fmt.Errorf("Start Essential Services: %w", err)
 	}
 	defer sm.Close()
 

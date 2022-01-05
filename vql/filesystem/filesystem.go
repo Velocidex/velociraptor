@@ -26,6 +26,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/v3/disk"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -70,6 +71,20 @@ func (self GlobPlugin) Call(
 			return
 		}
 
+		if config_obj.Device != "" {
+			// we only need to have the backing accessor once
+			if _, ok := scope.Resolve(constants.SCOPE_BACKING_ACCESSOR); !ok {
+				backingAccessor, err := glob.GetAccessor(config_obj.DeviceAccessor, scope)
+				if err != nil {
+					scope.Log("glob: cannot open backing accessor (%v)", err)
+					return
+				}
+
+				env := ordereddict.NewDict().Set(constants.SCOPE_BACKING_ACCESSOR, backingAccessor)
+				scope.AppendVars(env)
+			}
+		}
+
 		accessor, err := glob.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("glob: %v", err)
@@ -101,7 +116,10 @@ func (self GlobPlugin) Call(
 
 		// If root is not specified we try to find a common
 		// root from the globs.
-		if root == "" {
+		// We only need to find a common root if we are not
+		// doing dead disk analysis where we already have
+		// a common root which is the disk image file.
+		if root == "" && config_obj.Device == "" {
 			for _, item := range arg.Globs {
 				item_root, item_path, _ := accessor.GetRoot(item)
 				if root != "" && root != item_root {
