@@ -2,7 +2,6 @@ package glob
 
 import (
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -56,6 +55,4 @@ func (self PassthruAccessor) GetRoot(path string) (root, subpath string, err err
 func init() {
 	Register("file", &PassthruAccessor{}, `Access files using any backing accessor. Falls back to os_file if none provided.`)
 	Register("raw_file", &PassthruAccessor{raw_file: true}, `Access files using any backing accessor. Falls back to os_raw_file if none provided.`)
-
-	json.RegisterCustomEncoder(&OSFileInfo{}, MarshalGlobFileInfo)
 }

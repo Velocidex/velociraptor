@@ -1,6 +1,9 @@
 package filesystems
 
 import (
+	"os"
+	"strconv"
+	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 )
