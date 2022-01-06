@@ -20,7 +20,7 @@ sources:
   - queries:
       # Basic syslog parsing via GROK expressions.
       - SELECT timestamp(string=Event.Timestamp) AS Time,
-               Event.IP AS IP,
+               Event.ip AS IP,
                Event.event AS Result,
                Event.method AS Method,
                Event.user AS AttemptedUser,

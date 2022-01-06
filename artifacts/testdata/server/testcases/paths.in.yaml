@@ -15,3 +15,11 @@ Queries:
 
   # Make sure we handle overflow properly by wrapping
   - SELECT path_split(path="/a/b")[-20] FROM scope()
+
+  # Make sure pathspec parsing works.
+  - LET path_spec = pathspec(DelegateAccessor="file", DelegatePath="C:/Windows")
+  - SELECT path_spec, pathspec(parse=path_spec.String),
+           pathspec(parse="C:\\Windows"),
+           pathspec(parse="/usr/lib"),
+           pathspec(parse="file:///usr/lib#*")
+    FROM scope()

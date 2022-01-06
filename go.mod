@@ -123,7 +123,6 @@ require (
 	www.velocidex.com/golang/oleparse v0.0.0-20211013063943-0334d69593c1
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
 	www.velocidex.com/golang/vfilter v0.0.0-20220103082604-85bb38175cb7
-	www.velocidex.com/golang/vtypes v0.0.0-20211203065440-c0c4ffabf7ad
 )
 
 require (
@@ -131,6 +130,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/shirou/gopsutil/v3 v3.21.11
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
+	www.velocidex.com/golang/vtypes v0.0.0-20211203065440-c0c4ffabf7ad
 )
 
 require (
@@ -200,6 +200,7 @@ require (
 // replace www.velocidex.com/golang/go-ese => /home/mic/projects/go-ese
 // replace github.com/Velocidex/ordereddict => /home/mic/projects/ordereddict
 // replace github.com/Velocidex/yaml/v2 => /home/mic/projects/yaml
+
 // replace github.com/Velocidex/go-magic => /home/mic/projects/go-magic
 // replace github.com/Velocidex/go-yara => /home/mic/projects/go-yara
 // replace github.com/Velocidex/json => /home/mic/projects/json
