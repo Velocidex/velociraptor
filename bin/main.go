@@ -74,15 +74,6 @@ var (
 	tempdir_flag = app.Flag(
 		"tempdir", "Write all temp files to this directory").String()
 
-	device_flag = app.Flag(
-		"device", "Use this device as the analysis target instead of the local filesystem.").String()
-
-	device_accessor_flag = app.Flag(
-		"device_accessor", "The accessor type required to open `device'.").String()
-
-	analysis_target_flag = app.Flag(
-		"analysis_target", "The OS of the analysis subject.").String()
-
 	command_handlers []CommandHandler
 )
 
@@ -164,7 +155,6 @@ func main() {
 	// - first try the API config, then try a config.
 	APIConfigLoader = new(config.Loader).WithVerbose(*verbose_flag).
 		WithTempdir(*tempdir_flag).
-		WithCustomValidator(applyDiskAnalysisSettings).
 		WithApiLoader(*api_config_path).
 		WithEnvApiLoader("VELOCIRAPTOR_API_CONFIG").
 		WithCustomValidator(maybe_unlock_api_config).
@@ -177,6 +167,7 @@ func main() {
 		WithCustomValidator(initFilestoreAccessor).
 		WithCustomValidator(initDebugServer).
 		WithCustomValidator(applyMinionRole).
+		WithCustomValidator(verifyDiskAnalysisSettings).
 		WithLogFile(*logging_flag)
 
 	if *trace_flag != "" {
@@ -208,7 +199,6 @@ func makeDefaultConfigLoader() *config.Loader {
 	return new(config.Loader).
 		WithVerbose(*verbose_flag).
 		WithTempdir(*tempdir_flag).
-		WithCustomValidator(applyDiskAnalysisSettings).
 		WithFileLoader(*config_path).
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
@@ -220,5 +210,6 @@ func makeDefaultConfigLoader() *config.Loader {
 		WithLogFile(*logging_flag).
 		WithOverride(*override_flag).
 		WithCustomValidator(applyMinionRole).
-		WithCustomValidator(ensureProxy)
+		WithCustomValidator(ensureProxy).
+		WithCustomValidator(verifyDiskAnalysisSettings)
 }
