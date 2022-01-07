@@ -19,15 +19,14 @@ require (
 	github.com/Velocidex/go-yara v1.1.10-0.20210726130504-d5e402efc424
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20211129003310-ece3b3fe13f4
 	github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0
-	github.com/Velocidex/ordereddict v0.0.0-20211223082514-572009c595d0
 	github.com/Velocidex/pkcs7 v0.0.0-20210524015001-8d1eee94a157
 	github.com/Velocidex/sflags v0.3.1-0.20210402155316-b09f53df5162
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/ttlcache/v2 v2.9.1-0.20211116035050-ddd93fed62f5
-	github.com/Velocidex/yaml/v2 v2.2.5
+	github.com/Velocidex/yaml/v2 v2.2.8
 	github.com/Velocidex/zip v0.0.0-20210101070220-e7ecefb7aad7
 	github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2 v2.0.1
-	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
+	github.com/alecthomas/assert v1.0.0
 	github.com/alecthomas/chroma v0.7.2
 	github.com/alecthomas/participle v0.7.1
 	github.com/alecthomas/repr v0.0.0-20210801044451-80ca428c5142 // indirect
@@ -62,7 +61,7 @@ require (
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
-	github.com/jmoiron/sqlx v1.2.1-0.20190826204134-d7d95172beb5
+	github.com/jmoiron/sqlx v1.3.4
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/kr/pty v1.1.8 // indirect
@@ -72,7 +71,7 @@ require (
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-isatty v0.0.14
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
-	github.com/mattn/go-sqlite3 v1.14.8
+	github.com/mattn/go-sqlite3 v1.14.10
 	github.com/microcosm-cc/bluemonday v1.0.16
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/panicwrap v1.0.0
@@ -115,31 +114,31 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	howett.net/plist v0.0.0-20201203080718-1454fab16a06
-	www.velocidex.com/golang/evtx v0.0.2-0.20211019042143-b4f61df6d401
-	www.velocidex.com/golang/go-ese v0.1.1-0.20211014120951-14a5c1831296
+	www.velocidex.com/golang/evtx v0.2.1-0.20220107094629-ab487d5f06f1
+	www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20210828125207-a1d0ee62467c
-	www.velocidex.com/golang/go-pe v0.1.1-0.20211209062431-8794fd232acb
+	www.velocidex.com/golang/go-pe v0.1.1-0.20220107093716-e91743c801de
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20211013063943-0334d69593c1
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20220103082604-85bb38175cb7
+	www.velocidex.com/golang/vfilter v0.0.0-20220107100531-af82b98c3437
 )
 
 require (
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
+	github.com/Velocidex/ordereddict v0.0.0-20220107075049-3dbe58412844
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/shirou/gopsutil/v3 v3.21.11
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
-	www.velocidex.com/golang/vtypes v0.0.0-20211203065440-c0c4ffabf7ad
+	www.velocidex.com/golang/vtypes v0.0.0-20220107071957-49947f744c34
 )
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1 // indirect
 	github.com/PuerkitoBio/goquery v1.6.1 // indirect
-	github.com/Velocidex/yaml v2.1.0+incompatible // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a // indirect
+	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
@@ -190,7 +189,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	www.velocidex.com/golang/binparsergen v0.1.1-0.20201101234514-bbdb29f9ee31 // indirect
+	www.velocidex.com/golang/binparsergen v0.1.1-0.20220107080050-ae6122c5ed14 // indirect
 )
 
 // replace www.velocidex.com/golang/go-pe => /home/mic/projects/go-pe
