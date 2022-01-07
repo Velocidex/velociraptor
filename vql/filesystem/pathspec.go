@@ -2,10 +2,11 @@ package filesystem
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -53,19 +54,25 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 
 	case vfilter.LazyExpr:
 		path = t.Reduce(ctx)
+
+	default:
+		path = arg.Path
 	}
 
 	switch t := path.(type) {
 	case string:
 		path_str = t
-	default:
-		serialized, err := json.Marshal(path)
-		if err != nil {
-			scope.Log("pathspec: %v", err)
-			return vfilter.Null{}
-		}
 
-		path_str = string(serialized)
+	default:
+		if !utils.IsNil(path) {
+			serialized, err := json.Marshal(path)
+			if err != nil {
+				scope.Log("pathspec: %v", err)
+				return vfilter.Null{}
+			}
+
+			path_str = string(serialized)
+		}
 	}
 
 	result := &glob.PathSpec{

@@ -2240,7 +2240,7 @@
 
     The `items()` query is useful to treat the results of another
     query as a dict instead of a row. This is useful when the query
-    produces unpredicatable columns or you need to operate over the
+    produces unpredictable columns or you need to operate over the
     column names somehow.
 
     For example:
