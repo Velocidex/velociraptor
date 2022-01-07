@@ -29,7 +29,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -117,8 +116,6 @@ func (self ShellPlugin) Call(
 				}
 			}
 		}
-
-		utils.Debug(arg.Env)
 
 		stdout_pipe, err := command.StdoutPipe()
 		if err != nil {

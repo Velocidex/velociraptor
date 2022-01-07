@@ -38,4 +38,26 @@ SELECT basename(path="/foo/bar/baz") FROM scope()[
  {
   "path_split(path=\"/a/b\")[-20]": "a"
  }
+]LET path_spec = pathspec(DelegateAccessor="file", DelegatePath="C:/Windows")[]SELECT path_spec, pathspec(parse=path_spec.String), pathspec(parse="C:\\Windows"), pathspec(parse="/usr/lib"), pathspec(parse="file:///usr/lib#*") FROM scope()[
+ {
+  "path_spec": {
+   "DelegateAccessor": "file",
+   "DelegatePath": "C:/Windows"
+  },
+  "pathspec(parse=path_spec.String)": {
+   "DelegateAccessor": "file",
+   "DelegatePath": "C:/Windows"
+  },
+  "pathspec(parse=\"C:\\\\Windows\")": {
+   "DelegatePath": "C:\\Windows"
+  },
+  "pathspec(parse=\"/usr/lib\")": {
+   "DelegatePath": "/usr/lib"
+  },
+  "pathspec(parse=\"file:///usr/lib#*\")": {
+   "DelegateAccessor": "file",
+   "DelegatePath": "/usr/lib",
+   "Path": "*"
+  }
+ }
 ]
