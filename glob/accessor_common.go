@@ -158,6 +158,7 @@ type OSFileSystemAccessor struct {
 	context *AccessorContext
 
 	allow_raw_access bool
+	root             string
 }
 
 func (self OSFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, error) {
@@ -170,7 +171,7 @@ func (self OSFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, e
 }
 
 func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
-	lstat, err := os.Lstat(GetPath(filename))
+	lstat, err := os.Lstat(self.GetPath(filename))
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +184,7 @@ func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
 }
 
 func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
-	path = GetPath(path)
+	path = self.GetPath(path)
 	lstat, err := os.Lstat(path)
 	if err != nil {
 		return nil, err
@@ -229,6 +230,10 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	return result, nil
 }
 
+func (self *OSFileSystemAccessor) SetDataSource(dataSource string) {
+	self.root = dataSource
+}
+
 // Wrap the os.File object to keep track of open file handles.
 type OSFileWrapper struct {
 	*os.File
@@ -243,7 +248,7 @@ func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	var err error
 
 	// Eval any symlinks directly
-	path, err = filepath.EvalSymlinks(GetPath(path))
+	path, err = filepath.EvalSymlinks(self.GetPath(path))
 	if err != nil {
 		return nil, err
 	}
@@ -272,8 +277,12 @@ func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	return OSFileWrapper{file}, nil
 }
 
-func GetPath(path string) string {
-	return filepath.Clean("/" + path)
+func (self OSFileSystemAccessor) GetPath(path string) string {
+	root := "/"
+	if self.root != "" {
+		root = self.root
+	}
+	return filepath.Clean(root + path)
 }
 
 var OSFileSystemAccessor_re = regexp.MustCompile("/")
@@ -291,9 +300,9 @@ func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
 }
 
 func init() {
-	Register("os_file", &OSFileSystemAccessor{}, `Access files using the operating system's API. Does not allow access to raw devices.`)
+	Register("file", &OSFileSystemAccessor{}, `Access files using the operating system's API. Does not allow access to raw devices.`)
 
-	Register("os_raw_file", &OSFileSystemAccessor{
+	Register("raw_file", &OSFileSystemAccessor{
 		allow_raw_access: true,
 	}, `Access files using the operating system's API. Also allow access to raw devices.`)
 

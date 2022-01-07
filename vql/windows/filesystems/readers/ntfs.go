@@ -41,7 +41,7 @@ func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, erro
 	}
 
 	lru_size := vql_subsystem.GetIntFromRow(scope, scope, constants.NTFS_CACHE_SIZE)
-	paged_reader, err := readers.NewPagedReader(scope, "os_raw_file", device, int(lru_size))
+	paged_reader, err := readers.NewPagedReader(scope, "raw_file", device, int(lru_size))
 	if err != nil {
 		return nil, err
 	}

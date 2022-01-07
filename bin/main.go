@@ -167,7 +167,6 @@ func main() {
 		WithCustomValidator(initFilestoreAccessor).
 		WithCustomValidator(initDebugServer).
 		WithCustomValidator(applyMinionRole).
-		WithCustomValidator(verifyDiskAnalysisSettings).
 		WithConfigMutator(applyAnalysisTarget).
 		WithLogFile(*logging_flag)
 
@@ -212,6 +211,5 @@ func makeDefaultConfigLoader() *config.Loader {
 		WithOverride(*override_flag).
 		WithCustomValidator(applyMinionRole).
 		WithCustomValidator(ensureProxy).
-		WithCustomValidator(verifyDiskAnalysisSettings).
 		WithConfigMutator(applyAnalysisTarget)
 }

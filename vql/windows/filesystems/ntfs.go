@@ -38,6 +38,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -174,7 +175,8 @@ func (self *NTFSFileInfo) GetLink() (string, error) {
 }
 
 type NTFSFileSystemAccessor struct {
-	scope vfilter.Scope
+	scope  vfilter.Scope
+	device string
 }
 
 func (self NTFSFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
@@ -202,7 +204,15 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 
 	// The path must start with a valid device, otherwise we list
 	// the devices.
-	device, subpath, err := self.GetRoot(path) // hier muss /dev/nbd1p2 als device, err = nil raus kommen
+	var device, subpath string
+
+	if self.device != "" {
+		device = self.device
+		subpath = path
+	} else {
+		device, subpath, _ = self.GetRoot(path)
+	}
+
 	if err != nil {
 		vss, err := discoverVSS()
 		if err == nil {
@@ -270,6 +280,18 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 		}
 	}
 	return result, nil
+}
+
+func (self *NTFSFileSystemAccessor) SetDataSource(dataSource string) {
+	self.device = dataSource
+}
+
+func (self *NTFSFileSystemAccessor) GetRoot(path string) (
+	device string, subpath string, err error) {
+	if self.device != "" {
+		return self.device, path, nil
+	}
+	return paths.GetDeviceAndSubpath(path)
 }
 
 type readAdapter struct {
@@ -361,7 +383,7 @@ func (self *NTFSFileSystemAccessor) openRawDevice(device string) (res glob.ReadS
 
 	lru_size := vql_subsystem.GetIntFromRow(self.scope, self.scope, constants.NTFS_CACHE_SIZE)
 	device_reader, err := vql_readers.NewPagedReader(
-		self.scope, "os_raw_file", device, int(lru_size))
+		self.scope, "raw_file", device, int(lru_size))
 	return &readSeekReaderAdapter{reader: device_reader, info: stat_info}, err
 }
 

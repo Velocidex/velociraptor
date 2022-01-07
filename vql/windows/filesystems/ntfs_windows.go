@@ -55,8 +55,3 @@ func discoverLogicalDisks() ([]glob.FileInfo, error) {
 
 	return result, nil
 }
-
-func (self *NTFSFileSystemAccessor) GetRoot(path string) (
-	device string, subpath string, err error) {
-	return paths.GetDeviceAndSubpath(path)
-}
