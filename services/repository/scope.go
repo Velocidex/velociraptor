@@ -67,6 +67,11 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 		scope = vql_subsystem.MakeScope()
 	}
 
+	scope.SetLogger(self.Logger)
+
+	device_manager := vql_subsystem.MakeNewDeviceManager(scope, self.Config.Remappings)
+	env.Set(constants.SCOPE_DEVICE_MANAGER, device_manager)
+
 	// Use our own sorter
 	scope.SetSorter(sorter.MergeSorter{ChunkSize: 10000})
 
@@ -75,8 +80,6 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 
 	scope.AppendVars(env).AddProtocolImpl(
 		_ArtifactRepositoryPluginAssociativeProtocol{})
-
-	scope.SetLogger(self.Logger)
 
 	env.Set(constants.SCOPE_ROOT, scope)
 

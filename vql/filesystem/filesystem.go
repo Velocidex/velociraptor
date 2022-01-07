@@ -28,6 +28,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -71,26 +72,6 @@ func (self GlobPlugin) Call(
 			return
 		}
 
-		if config_obj.Device != "" {
-			// we only need to have the backing accessor once
-			if _, ok := scope.Resolve(constants.SCOPE_BACKING_ACCESSOR); !ok {
-				backingAccessor, err := glob.GetAccessor(config_obj.DeviceAccessor, scope)
-				if err != nil {
-					scope.Log("glob: cannot open backing accessor (%v)", err)
-					return
-				}
-
-				env := ordereddict.NewDict().Set(constants.SCOPE_BACKING_ACCESSOR, backingAccessor)
-				scope.AppendVars(env)
-			}
-		}
-
-		accessor, err := glob.GetAccessor(arg.Accessor, scope)
-		if err != nil {
-			scope.Log("glob: %v", err)
-			return
-		}
-
 		root := arg.Root
 
 		options := glob.GlobOptions{
@@ -112,49 +93,88 @@ func (self GlobPlugin) Call(
 			}
 		}
 
-		globber := glob.NewGlobber().WithOptions(options)
+		organizedGlobs := make(map[string][]string)
+		var globalGlobs []string
 
-		// If root is not specified we try to find a common
-		// root from the globs.
-		// We only need to find a common root if we are not
-		// doing dead disk analysis where we already have
-		// a common root which is the disk image file.
-		if root == "" && config_obj.Device == "" {
+		// If root is not specified we organize the globs by their root and evaluate
+		// them for their respective roots
+		if root == "" {
 			for _, item := range arg.Globs {
-				item_root, item_path, _ := accessor.GetRoot(item)
-				if root != "" && root != item_root {
-					scope.Log("glob: %s: Must use the same root for "+
-						"all globs. Skipping.", item)
+				item_root, item_path, _ := paths.ConvertPathToRemappedPath(item)
+
+				if item_root == "*" {
+					globalGlobs = append(globalGlobs, item_path)
 					continue
 				}
-				root = item_root
-				err = globber.Add(item_path, accessor.PathSplit)
-				if err != nil {
-					scope.Log("glob: %v", err)
-					return
+
+				globs, pres := organizedGlobs[item_root]
+				if !pres {
+					globs = make([]string, 0)
 				}
+				organizedGlobs[item_root] = append(globs, item_path)
+			}
+		} else {
+			organizedGlobs[root] = arg.Globs
+		}
+
+		var deviceManager *vql_subsystem.DeviceManager
+
+		if obj, ok := scope.Resolve(constants.SCOPE_DEVICE_MANAGER); ok {
+			deviceManager = obj.(*vql_subsystem.DeviceManager)
+		} else {
+			scope.Log("glob: cannot get device manager")
+			return
+		}
+
+		doGlob := func(device string, items []string) {
+			globber := glob.NewGlobber().WithOptions(options)
+
+			accessor, err := deviceManager.GetAccessor(device, scope)
+			if err != nil {
+				scope.Log("glob: cannot get accessor for device \"%s\" (%s)", device, err)
+				return
 			}
 
-		} else {
-			for _, item := range arg.Globs {
+			deviceSource, err := deviceManager.GetDeviceSource(device)
+			if err != nil {
+				scope.Log("glob: %s", err)
+				return
+			}
+
+			if acc, ok := accessor.(glob.SetDataSourcer); ok {
+				acc.SetDataSource(deviceSource)
+			}
+
+			for _, item := range items {
 				err = globber.Add(item, accessor.PathSplit)
 				if err != nil {
 					scope.Log("glob: %v", err)
+					continue
+				}
+			}
+
+			file_chan := globber.ExpandWithContext(
+				ctx, config_obj, "", accessor)
+			for f := range file_chan {
+				select {
+				case <-ctx.Done():
 					return
+
+				case output_chan <- f:
 				}
 			}
 		}
 
-		file_chan := globber.ExpandWithContext(
-			ctx, config_obj, root, accessor)
-		for f := range file_chan {
-			select {
-			case <-ctx.Done():
-				return
-
-			case output_chan <- f:
-			}
+		for device, items := range organizedGlobs {
+			// go doGlob(device, items)
+			doGlob(device, items)
 		}
+
+		for _, device := range deviceManager.GetDevices() {
+			// go doGlob(device, globalGlobs)
+			doGlob(device, globalGlobs)
+		}
+
 	}()
 
 	return output_chan
