@@ -97,7 +97,7 @@ func (self *AccessorLinuxTestSuite) TestSymlinks() {
 	}
 
 	assert.Equal(self.T(),
-		[]string{"/subdir/1.txt", "/subdir/dir_link/subdir/1.txt"},
+		[]string{"/subdir/1.txt"},
 		hits)
 
 }

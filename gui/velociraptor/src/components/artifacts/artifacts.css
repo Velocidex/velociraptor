@@ -49,3 +49,7 @@ pre {
     max-height: 400px;
     overflow-y: auto;
 }
+
+span.user-edit {
+    padding-right: 1ex;
+}

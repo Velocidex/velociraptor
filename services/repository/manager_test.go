@@ -109,6 +109,45 @@ sources:
 	assert.Contains(self.T(), err.Error(), "While parsing source query")
 }
 
+func (self *ManagerTestSuite) TestSetArtifactOverrideBuiltIn() {
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	// Try to override an existing artifact
+	_, err = manager.SetArtifactFile(self.ConfigObj, "User", `
+name: Generic.Client.Info
+`, "" /* required_prefix */)
+	assert.Error(self.T(), err)
+	assert.Contains(self.T(), err.Error(), "Unable to override built in artifact")
+
+	// Set Custom artifact
+	_, err = manager.SetArtifactFile(self.ConfigObj, "User", `
+name: Custom.Generic.Client.Info
+`, "" /* required_prefix */)
+	assert.NoError(self.T(), err)
+
+	// Override it again
+	_, err = manager.SetArtifactFile(self.ConfigObj, "User", `
+name: Custom.Generic.Client.Info
+`, "" /* required_prefix */)
+	assert.NoError(self.T(), err)
+
+	// Set Custom artifact with built_in in definition (this is a
+	// private field which should be ignored).
+	_, err = manager.SetArtifactFile(self.ConfigObj, "User", `
+name: Custom.Generic.Client.Info
+built_in: true
+`, "" /* required_prefix */)
+	assert.NoError(self.T(), err)
+
+	// Override it again
+	_, err = manager.SetArtifactFile(self.ConfigObj, "User", `
+name: Custom.Generic.Client.Info
+built_in: true
+`, "" /* required_prefix */)
+	assert.NoError(self.T(), err)
+}
+
 func TestManager(t *testing.T) {
 	suite.Run(t, &ManagerTestSuite{})
 }

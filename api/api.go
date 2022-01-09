@@ -48,7 +48,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -655,7 +654,7 @@ func (self *ApiServer) SetArtifactFile(
 
 	tmp_repository := manager.NewRepository()
 	artifact_definition, err := tmp_repository.LoadYaml(
-		in.Artifact, true /* validate */)
+		in.Artifact, true /* validate */, false /* built_in */)
 	if err != nil {
 		return nil, err
 	}
@@ -673,8 +672,7 @@ func (self *ApiServer) SetArtifactFile(
 			"User is not allowed to modify artifacts (%v).", permissions))
 	}
 
-	definition, err := setArtifactFile(self.config, user_name, in,
-		constants.ARTIFACT_CUSTOM_NAME_PREFIX /* required_prefix */)
+	definition, err := setArtifactFile(self.config, user_name, in, "")
 	if err != nil {
 		message := &api_proto.APIResponse{
 			Error:        true,

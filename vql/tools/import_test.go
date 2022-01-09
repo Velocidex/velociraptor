@@ -20,7 +20,7 @@ import (
 func (self *TestSuite) TestImportCollection() {
 	manager, _ := services.GetRepositoryManager()
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
-	_, err := repository.LoadYaml(CustomTestArtifactDependent, true)
+	_, err := repository.LoadYaml(CustomTestArtifactDependent, true, true)
 	assert.NoError(self.T(), err)
 
 	builder := services.ScopeBuilder{

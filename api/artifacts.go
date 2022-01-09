@@ -126,7 +126,7 @@ func setArtifactFile(config_obj *config_proto.Config, principal string,
 		// First ensure that the artifact is correct.
 		tmp_repository := manager.NewRepository()
 		artifact_definition, err := tmp_repository.LoadYaml(
-			in.Artifact, true /* validate */)
+			in.Artifact, true /* validate */, false /* built_in */)
 		if err != nil {
 			return nil, err
 		}
@@ -263,9 +263,12 @@ func searchArtifact(
 				if fields == nil {
 					result.Items = append(result.Items, artifact)
 				} else {
+					// Send back minimal information about the
+					// artifacts
 					new_item := &artifacts_proto.Artifact{}
 					if fields.Name {
 						new_item.Name = artifact.Name
+						new_item.BuiltIn = artifact.BuiltIn
 					}
 
 					result.Items = append(result.Items, new_item)

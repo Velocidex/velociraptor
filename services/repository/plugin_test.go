@@ -73,7 +73,7 @@ func (self *PluginTestSuite) LoadArtifacts(artifact_definitions []string) servic
 	repository := manager.NewRepository()
 
 	for _, definition := range artifact_definitions {
-		_, err := repository.LoadYaml(definition, false)
+		_, err := repository.LoadYaml(definition, false, true)
 		assert.NoError(self.T(), err)
 	}
 

@@ -147,7 +147,7 @@ func (self GlobPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 		Name:    "glob",
 		Doc:     "Retrieve files based on a list of glob expressions",
 		ArgType: type_map.AddType(scope, &GlobPluginArgs{}),
-		Version: 1,
+		Version: 2,
 	}
 }
 

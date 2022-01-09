@@ -165,7 +165,7 @@ func (self *ServerMonitoringTestSuite) TestEmptyTable() {
 name: Sleep
 sources:
 - query: SELECT sleep(time=1000) FROM scope()
-`, true /* validate */)
+`, true /* validate */, true)
 	assert.NoError(self.T(), err)
 
 	// Install a table with a sleep artifact.

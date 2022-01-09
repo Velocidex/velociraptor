@@ -357,7 +357,9 @@ func load_config_artifacts(config_obj *config_proto.Config) error {
 			return err
 		}
 
-		_, err = repository.LoadYaml(string(serialized), true /* validate */)
+		// Config artifacts are considered built in.
+		_, err = repository.LoadYaml(
+			string(serialized), true /* validate */, true /* built_in */)
 		if err != nil {
 			return err
 		}

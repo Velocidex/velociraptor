@@ -28,12 +28,8 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/Velocidex/yaml/v2"
-	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/services"
 )
 
 var (
@@ -58,33 +54,6 @@ var (
 	embedded_re = regexp.MustCompile(`#{3}<Begin Embedded Config>\r?\n`)
 )
 
-// Validate any embedded artifacts to make sure they compile properly.
-func validate_config(config_obj *config_proto.Config) error {
-	if config_obj.Autoexec != nil {
-		manager, err := services.GetRepositoryManager()
-		if err != nil {
-			return err
-		}
-		repository := manager.NewRepository()
-
-		for _, definition := range config_obj.Autoexec.ArtifactDefinitions {
-			serialized, err := yaml.Marshal(definition)
-			if err != nil {
-				return err
-			}
-
-			_, err = repository.LoadYaml(string(serialized), true /* validate */)
-			if err != nil {
-				return errors.New(
-					fmt.Sprintf("While parsing artifact: %s\n%s",
-						err, string(serialized)))
-			}
-		}
-	}
-
-	return nil
-}
-
 func doRepack() error {
 	config_obj, err := new(config.Loader).
 		WithFileLoader(*repack_command_config).
@@ -99,7 +68,8 @@ func doRepack() error {
 	}
 	defer sm.Close()
 
-	err = validate_config(config_obj)
+	// Load any embedded artifacts so we can identity syntax errors
+	err = load_config_artifacts(config_obj)
 	if err != nil {
 		return fmt.Errorf("Validating config: %w", err)
 	}
