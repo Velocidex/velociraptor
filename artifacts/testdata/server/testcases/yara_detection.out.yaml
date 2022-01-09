@@ -53,7 +53,7 @@ LET _ <= SELECT
           LastAccess0x30 = "2021-01-24T06:57:36.7073284Z")
       ])
 FROM scope()
-[]SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', ShortHandYara='wide ascii:MZ')[
+[]SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', YaraRule=MZRule)[
  {
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,

@@ -321,7 +321,8 @@ func getRepository(
 			return err
 		}
 
-		_, err = repository.LoadYaml(string(serialized), true /* validate */)
+		_, err = repository.LoadYaml(
+			string(serialized), true /* validate */, false)
 		if err != nil {
 			return err
 		}
@@ -345,14 +346,16 @@ func getRepository(
 
 	case []string:
 		for _, item := range t {
-			_, err := repository.LoadYaml(item, true /* validate */)
+			_, err := repository.LoadYaml(item,
+				true /* validate */, false /* built_in */)
 			if err != nil {
 				return nil, err
 			}
 		}
 
 	case string:
-		_, err := repository.LoadYaml(t, true /* validate */)
+		_, err := repository.LoadYaml(t,
+			true /* validate */, false /* built_in */)
 		if err != nil {
 			return nil, err
 		}

@@ -93,7 +93,9 @@ func (self *Repository) LoadDirectory(config_obj *config_proto.Config, dirname s
 					logger.Error("Could not load %s: %s", info.Name(), err)
 					return nil
 				}
-				_, err = self.LoadYaml(string(data), false)
+				_, err = self.LoadYaml(string(data),
+					false, /* validate */
+					false /* built_in */)
 				if err != nil {
 					logger.Error("Could not load %s: %s", info.Name(), err)
 					return nil
@@ -138,7 +140,7 @@ func sanitize_artifact_yaml(data string) string {
 	return result
 }
 
-func (self *Repository) LoadYaml(data string, validate bool) (
+func (self *Repository) LoadYaml(data string, validate, built_in bool) (
 	*artifacts_proto.Artifact, error) {
 	artifact := &artifacts_proto.Artifact{}
 	err := yaml.UnmarshalStrict([]byte(sanitize_artifact_yaml(data)), artifact)
@@ -147,6 +149,7 @@ func (self *Repository) LoadYaml(data string, validate bool) (
 	}
 
 	artifact.Raw = data
+	artifact.BuiltIn = built_in
 	artifact.Compiled = false
 	return self.LoadProto(artifact, validate)
 }
@@ -285,6 +288,14 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 
 	if artifact.Name == "" {
 		return nil, errors.New("No artifact name")
+	}
+
+	// Prevent artifact from being overridden.
+	if !artifact.BuiltIn {
+		existing_artifact, pres := self.Data[artifact.Name]
+		if pres && existing_artifact.BuiltIn {
+			return nil, errors.New("Unable to override built in artifact")
+		}
 	}
 
 	self.Data[artifact.Name] = artifact

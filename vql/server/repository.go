@@ -32,10 +32,6 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	if arg.Prefix == "" {
-		arg.Prefix = "Packs."
-	}
-
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("artifact_set: Command can only run on the server")
@@ -49,7 +45,8 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 	}
 
 	tmp_repository := manager.NewRepository()
-	definition, err := tmp_repository.LoadYaml(arg.Definition, true /* validate */)
+	definition, err := tmp_repository.LoadYaml(
+		arg.Definition, true /* validate */, false /* built_in */)
 	if err != nil {
 		scope.Log("artifact_set: %v", err)
 		return vfilter.Null{}

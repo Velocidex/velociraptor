@@ -76,7 +76,7 @@ func (self *TestSuite) TestQueueManager() {
 	repository, err := repo_manager.GetGlobalRepository(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	_, err = repository.LoadYaml(monitoringArtifact, true)
+	_, err = repository.LoadYaml(monitoringArtifact, true, true)
 	assert.NoError(self.T(), err)
 
 	file_store := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)

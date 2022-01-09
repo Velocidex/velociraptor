@@ -80,7 +80,7 @@ func (self *ReplicationTestSuite) LoadArtifacts(definitions []string) {
 	assert.NoError(self.T(), err)
 
 	for _, def := range definitions {
-		_, err := global_repo.LoadYaml(def, true)
+		_, err := global_repo.LoadYaml(def, true, true)
 		assert.NoError(self.T(), err)
 	}
 }

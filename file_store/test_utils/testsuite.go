@@ -135,7 +135,18 @@ func (self *TestSuite) LoadArtifacts(definitions []string) {
 	assert.NoError(self.T(), err)
 
 	for _, def := range definitions {
-		_, err := global_repo.LoadYaml(def, true)
+		_, err := global_repo.LoadYaml(def, true, true)
+		assert.NoError(self.T(), err)
+	}
+}
+
+func (self *TestSuite) LoadCustomArtifacts(definitions []string) {
+	manager, _ := services.GetRepositoryManager()
+	global_repo, err := manager.GetGlobalRepository(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	for _, def := range definitions {
+		_, err := global_repo.LoadYaml(def, true, false)
 		assert.NoError(self.T(), err)
 	}
 }
@@ -152,7 +163,7 @@ func (self *TestSuite) LoadArtifactFiles(paths ...string) {
 		def, err := ioutil.ReadAll(fd)
 		assert.NoError(self.T(), err)
 
-		_, err = global_repo.LoadYaml(string(def), true)
+		_, err = global_repo.LoadYaml(string(def), true, true)
 		assert.NoError(self.T(), err)
 	}
 }

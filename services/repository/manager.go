@@ -64,7 +64,7 @@ func (self *RepositoryManager) SetArtifactFile(
 	// Ensure that the artifact is correct by parsing it.
 	tmp_repository := self.NewRepository()
 	artifact_definition, err := tmp_repository.LoadYaml(
-		definition, true /* validate */)
+		definition, true /* validate */, false /* built_in */)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,8 @@ func (self *RepositoryManager) SetArtifactFile(
 	}
 
 	// Load the artifact into the currently running repository.
-	artifact, err := global_repository.LoadYaml(definition, true /* validate */)
+	artifact, err := global_repository.LoadYaml(
+		definition, true /* validate */, false /* built_in */)
 	if err != nil {
 		return nil, err
 	}
@@ -214,8 +215,11 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 				logger.Info("Cant read asset %s: %v", file, err)
 				continue
 			}
+
+			// Load the built in artifacts as built in. NOTE: Built in
+			// artifacts can not be overwritten!
 			_, err = self.global_repository.LoadYaml(
-				string(data), false /* Validate */)
+				string(data), false /* Validate */, true /* built_in */)
 			if err != nil {
 				logger.Info("Cant parse asset %s: %s", file, err)
 				continue

@@ -74,11 +74,11 @@ parameters:
 sources:
 - query:
     SELECT * FROM info()
-`, true)
+`, true, true)
 
 	repository.LoadYaml(`
 name: System.Hunt.Creation
-type: SERVER_EVENT`, true)
+type: SERVER_EVENT`, true, true)
 
 	repository.LoadYaml(`
 name: AnotherTestArtifact
@@ -89,7 +89,7 @@ parameters:
 sources:
 - query:
     SELECT * FROM scope()
-`, true)
+`, true, true)
 	request := &api_proto.Hunt{
 		HuntDescription: "My hunt",
 		StartRequest: &flows_proto.ArtifactCollectorArgs{

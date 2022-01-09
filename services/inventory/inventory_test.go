@@ -145,7 +145,7 @@ tools:
 	assert.NoError(self.T(), err)
 
 	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(test_artifact, true /* validate */)
+	_, err = repository.LoadYaml(test_artifact, true /* validate */, true)
 	assert.NoError(self.T(), err)
 
 	self.installGitHubMock()
@@ -242,7 +242,7 @@ tools:
 	assert.NoError(self.T(), err)
 
 	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(test_artifact, true /* validate */)
+	_, err = repository.LoadYaml(test_artifact, true /* validate */, true)
 	assert.NoError(self.T(), err)
 
 	self.installGitHubMock()
@@ -293,13 +293,13 @@ tools:
 	assert.NoError(self.T(), err)
 
 	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(test_artifact, true /* validate */)
+	_, err = repository.LoadYaml(test_artifact, true /* validate */, true)
 	assert.NoError(self.T(), err)
 
 	_, pres := repository.Get(self.ConfigObj, "TestArtifact")
 	assert.True(self.T(), pres)
 
-	_, err = repository.LoadYaml(test_artifact2, true /* validate */)
+	_, err = repository.LoadYaml(test_artifact2, true /* validate */, true)
 	assert.NoError(self.T(), err)
 
 	_, pres = repository.Get(self.ConfigObj, "TestArtifact2")
@@ -338,7 +338,7 @@ tools:
 	assert.NoError(self.T(), err)
 
 	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(test_artifact, true /* validate */)
+	_, err = repository.LoadYaml(test_artifact, true /* validate */, true)
 	assert.NoError(self.T(), err)
 
 	_, pres := repository.Get(self.ConfigObj, "TestArtifact")
@@ -368,7 +368,7 @@ tools:
 	assert.NoError(self.T(), err)
 
 	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(test_artifact, true /* validate */)
+	_, err = repository.LoadYaml(test_artifact, true /* validate */, true)
 	assert.NoError(self.T(), err)
 
 	_, pres := repository.Get(self.ConfigObj, "TestArtifact")

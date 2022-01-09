@@ -2,7 +2,7 @@ import './artifacts.css';
 import React from 'react';
 import PropTypes from 'prop-types';
 import api from '../core/api-service.js';
-
+import classNames from "classnames";
 import VeloReportViewer from "../artifacts/reporting.js";
 
 import _ from 'lodash';
@@ -212,7 +212,8 @@ class ArtifactInspector extends React.Component {
 
     render() {
         let selected = this.state.selectedDescriptor && this.state.selectedDescriptor.name;
-        let deletable = selected && selected.match(/^Custom/);
+        let deletable = this.state.selectedDescriptor &&
+            !this.state.selectedDescriptor.built_in;
 
         return (
             <div className="full-width-height">
@@ -348,6 +349,11 @@ class ArtifactInspector extends React.Component {
                                           onClick={(e) => this.onSelect(item, e)}>
                                          {item.name}
                                        </a>
+                                       <span className="user-edit">
+                                         <FontAwesomeIcon
+                                           className={classNames({"invisible": item.built_in})}
+                                           icon="user-edit" />
+                                       </span>
                                      </td>
                                    </tr>;
                         })}

@@ -70,7 +70,7 @@ func (self *ClientMonitoringTestSuite) SetupTest() {
 func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
-	self.LoadArtifacts([]string{`
+	self.LoadCustomArtifacts([]string{`
 name: TestArtifact
 sources:
 - query:
@@ -102,12 +102,13 @@ sources:
 
 	// Now update the artifact.
 	repository_manager, _ := services.GetRepositoryManager()
-	repository_manager.SetArtifactFile(self.ConfigObj, "", `
+	_, err = repository_manager.SetArtifactFile(self.ConfigObj, "", `
 name: TestArtifact
 sources:
 - query:
     SELECT *, Crib FROM info()
 `, "")
+	assert.NoError(self.T(), err)
 
 	var new_table_message *crypto_proto.VeloMessage
 
