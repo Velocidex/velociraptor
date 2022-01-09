@@ -24,7 +24,9 @@ var (
 
 func doRebuildIndex() error {
 	config_obj, err := makeDefaultConfigLoader().
-		WithRequiredFrontend().LoadAndValidate()
+		WithRequiredUser().
+		WithRequiredFrontend().
+		LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}

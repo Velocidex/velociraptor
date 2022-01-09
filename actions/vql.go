@@ -111,6 +111,7 @@ func (self VQLClientAction) StartQuery(
 
 	repository := manager.NewRepository()
 	for _, artifact := range arg.Artifacts {
+		artifact.BuiltIn = false
 		_, err := repository.LoadProto(artifact, true /* validate */)
 		if err != nil {
 			responder.RaiseError(ctx, fmt.Sprintf(

@@ -3,3 +3,4 @@ public
 server_artifacts
 *.json.db
 client_idx
+artifact_definitions

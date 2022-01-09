@@ -11,6 +11,11 @@ reports:
 
       #### Type: {{ $artifact.Type }}
 
+      {{ if $artifact.BuiltIn }}
+      {{ else }}
+      #### User Added
+      {{ end }}
+
       {{ if $artifact.Author }}
       ##### by {{ $artifact.Author }}
       {{end}}

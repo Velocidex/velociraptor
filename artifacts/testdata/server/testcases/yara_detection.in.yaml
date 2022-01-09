@@ -1,4 +1,6 @@
 Parameters:
+  MZRule: |
+      rule X { strings: $a = "MZ" condition: any of them }
   IsPE: |
       rule IsPE:TestRule {
         meta:
@@ -75,7 +77,7 @@ Queries:
            Size, Rule, HitContext, HitOffset
     FROM Artifact.Windows.Detection.Yara.NTFS(
        DriveLetter=srcDir,
-       PathRegex='wkscli.dll', ShortHandYara='wide ascii:MZ')
+       PathRegex='wkscli.dll', YaraRule=MZRule)
 
   - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,
            Size, Rule, HitContext, HitOffset
@@ -90,4 +92,3 @@ Queries:
     FROM Artifact.Generic.Detection.Yara.Glob(DateAfter='2021-03-01', DateBefore='2021-07-01',YaraRule=IsPE)
   - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime
     FROM Artifact.Generic.Detection.Yara.Glob(DateBefore='2021-04-01',YaraRule=IsPE)
-

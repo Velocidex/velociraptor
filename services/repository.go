@@ -87,7 +87,8 @@ type Repository interface {
 	Copy() Repository
 
 	// Load definition in yaml
-	LoadYaml(data string, validate bool) (*artifacts_proto.Artifact, error)
+	LoadYaml(data string, validate, built_in bool) (
+		*artifacts_proto.Artifact, error)
 
 	// Load an artifact protobuf.
 	LoadProto(artifact *artifacts_proto.Artifact, validate bool) (

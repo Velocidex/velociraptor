@@ -156,7 +156,7 @@ message Artifact {
     // Unfortunately we can not use enum due to limitations in
     // yaml->json->protobuf conversion.
     string type = 10 [(sem_type) = {
-            description: "The type of the query. Can be NORMAL, EVENT, SERVER",
+            description: "The type of the query. Can be CLIENT, CLIENT_EVENT, SERVER, SERVER_EVENT, INTERNAL",
         }];
 
     repeated ArtifactSource sources = 4 [(sem_type) = {
@@ -187,6 +187,9 @@ message Artifact {
 
     // Artifact was already compiled.
     bool compiled = 14;
+
+    // The artifact is built into the Velociraptor binary.
+    bool built_in = 20;
 }
 
 message ArtifactDescriptors {
