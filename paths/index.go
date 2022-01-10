@@ -31,6 +31,12 @@ func (self IndexPathManager) EnumerateTerms(term string) api.DSPathSpec {
 	return CLIENT_INDEX_URN.AddUnsafeChild(splitTermToParts(term)...)
 }
 
+func (self IndexPathManager) Snapshot() api.FSPathSpec {
+	return CLIENT_INDEX_URN.AddChild("snapshot").
+		AsFilestorePath().
+		SetType(api.PATH_TYPE_FILESTORE_JSON)
+}
+
 func (self IndexPathManager) TermPartitions(term string) []string {
 	return splitTermToParts(term)
 }
