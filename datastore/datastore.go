@@ -116,11 +116,15 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 		return nil, errors.New("no datastore configured")
 	}
 
-	return getImpl(config_obj.Datastore.Implementation, config_obj)
+	implementation, err := GetImplementationName(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	return getImpl(implementation)
 }
 
-func getImpl(implementation string,
-	config_obj *config_proto.Config) (DataStore, error) {
+func getImpl(implementation string) (DataStore, error) {
 	switch implementation {
 	case "FileBaseDataStore":
 		return file_based_imp, nil
@@ -154,7 +158,7 @@ func getImpl(implementation string,
 
 	default:
 		return nil, errors.New("no datastore implementation " +
-			config_obj.Datastore.Implementation)
+			implementation)
 	}
 }
 
@@ -164,6 +168,6 @@ func SetGlobalDatastore(
 	ds_mu.Lock()
 	defer ds_mu.Unlock()
 
-	g_impl, err = getImpl(implementation, config_obj)
+	g_impl, err = getImpl(implementation)
 	return err
 }

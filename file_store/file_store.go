@@ -23,6 +23,7 @@ import (
 	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/accessors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
@@ -54,7 +55,12 @@ func GetFileStore(config_obj *config_proto.Config) api.FileStore {
 		return nil
 	}
 
-	res, _ := getImpl(config_obj.Datastore.Implementation, config_obj)
+	implementation, err := datastore.GetImplementationName(config_obj)
+	if err != nil {
+		panic(err)
+	}
+
+	res, _ := getImpl(implementation, config_obj)
 	return res
 }
 
@@ -100,7 +106,12 @@ func GetFileStoreFileSystemAccessor(
 		return nil, errors.New("Datastore not configured")
 	}
 
-	switch config_obj.Datastore.Implementation {
+	implementation, err := datastore.GetImplementationName(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	switch implementation {
 
 	case "MemcacheFileDataStore":
 		return accessors.NewFileStoreFileSystemAccessor(

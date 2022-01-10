@@ -85,6 +85,15 @@ message ArtifactUploadedFileInfo {
     repeated string components = 5;
 }
 
+// Maintain this also outside the collector context. It will be
+// updated each time anyting about the collection is changed, without
+// having to race updating the main record. The read active_time is
+// the latest between this record and the one in
+// ArtifactCollectorContext
+message PingContext {
+    uint64 active_time = 1;
+}
+
 // This context is serialized into the data store.
 message ArtifactCollectorContext {
     string client_id = 27;
