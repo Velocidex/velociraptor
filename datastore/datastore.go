@@ -121,17 +121,17 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 		return nil, err
 	}
 
-	return getImpl(implementation)
+	return getImpl(config_obj, implementation)
 }
 
-func getImpl(implementation string) (DataStore, error) {
+func getImpl(config_obj *config_proto.Config, implementation string) (DataStore, error) {
 	switch implementation {
 	case "FileBaseDataStore":
 		return file_based_imp, nil
 
 	case "ReadOnlyDataStore":
 		if read_only_imp == nil {
-			read_only_imp = NewReadOnlyDataStore()
+			read_only_imp = NewReadOnlyDataStore(config_obj)
 		}
 		return read_only_imp, nil
 
@@ -140,19 +140,19 @@ func getImpl(implementation string) (DataStore, error) {
 
 	case "Memcache":
 		if memcache_imp == nil {
-			memcache_imp = NewMemcacheDataStore()
+			memcache_imp = NewMemcacheDataStore(config_obj)
 		}
 		return memcache_imp, nil
 
 	case "MemcacheFileDataStore":
 		if memcache_file_imp == nil {
-			memcache_file_imp = NewMemcacheFileDataStore()
+			memcache_file_imp = NewMemcacheFileDataStore(config_obj)
 		}
 		return memcache_file_imp, nil
 
 	case "Test":
 		if memcache_imp == nil {
-			memcache_imp = NewMemcacheDataStore()
+			memcache_imp = NewMemcacheDataStore(config_obj)
 		}
 		return memcache_imp, nil
 
@@ -168,6 +168,6 @@ func SetGlobalDatastore(
 	ds_mu.Lock()
 	defer ds_mu.Unlock()
 
-	g_impl, err = getImpl(implementation)
+	g_impl, err = getImpl(config_obj, implementation)
 	return err
 }

@@ -15,7 +15,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -29,9 +28,6 @@ type MemcacheFileTestSuite struct {
 }
 
 func (self *MemcacheFileTestSuite) SetupTest() {
-	// Clear the cache between runs
-	db := self.datastore.(*MemcacheFileDataStore)
-
 	// Make a tempdir
 	var err error
 	self.dirname, err = ioutil.TempDir("", "datastore_test")
@@ -45,6 +41,10 @@ func (self *MemcacheFileTestSuite) SetupTest() {
 	self.BaseTestSuite.config_obj = self.config_obj
 
 	self.ctx, self.cancel = context.WithCancel(context.Background())
+
+	// Clear the cache between runs
+	db := NewMemcacheFileDataStore(self.config_obj)
+	self.datastore = db
 
 	db.Clear()
 	db.StartWriter(self.ctx, &self.wg, self.config_obj)
@@ -154,7 +154,7 @@ func (self MemcacheFileTestSuite) TestSetSubjectAndListChildren() {
 	assert.NoError(self.T(), err)
 
 	// Now set a file in an existing directory.
-	intermediate := path_specs.NewSafeDatastorePath("a", "e")
+	intermediate := path_specs.NewSafeDatastorePath("a", "e", "f")
 	new_record := &api_proto.ClientMetadata{}
 	err = db.SetSubject(self.config_obj, intermediate, new_record)
 	assert.NoError(self.T(), err)
@@ -164,11 +164,8 @@ func (self MemcacheFileTestSuite) TestSetSubjectAndListChildren() {
 	children, err := db.ListChildren(self.config_obj, first_level)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(children), 3)
-	utils.Debug(children)
 }
 
 func TestMemCacheFileDatastore(t *testing.T) {
-	suite.Run(t, &MemcacheFileTestSuite{BaseTestSuite: BaseTestSuite{
-		datastore: NewMemcacheFileDataStore(),
-	}})
+	suite.Run(t, &MemcacheFileTestSuite{BaseTestSuite: BaseTestSuite{}})
 }
