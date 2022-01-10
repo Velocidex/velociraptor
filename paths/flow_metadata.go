@@ -36,6 +36,15 @@ func (self FlowPathManager) Path() api.DSPathSpec {
 		SetTag("FlowContext")
 }
 
+// Store the last update of the flow both in the flow itself, and an
+// external file. The real update is the latest of either.
+func (self FlowPathManager) Ping() api.DSPathSpec {
+	return CLIENTS_ROOT.AddChild(self.client_id,
+		"collections", self.flow_id, "ping").
+		SetType(api.PATH_TYPE_DATASTORE_JSON).
+		SetTag("FlowPing")
+}
+
 func (self FlowPathManager) ContainerPath() api.DSPathSpec {
 	return CLIENTS_ROOT.AddChild(self.client_id, "collections")
 }

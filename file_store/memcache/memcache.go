@@ -144,7 +144,11 @@ func NewMemcacheFileStore(config_obj *config_proto.Config) *MemcacheFileStore {
 		data_cache: ttlcache.NewCache(),
 	}
 
-	result.data_cache.SetTTL(5 * time.Second)
+	ttl := config_obj.Datastore.MemcacheWriteMutationMaxAge
+	if ttl == 0 {
+		ttl = 1
+	}
+	result.data_cache.SetTTL(time.Duration(ttl) * time.Second)
 
 	result.data_cache.SetNewItemCallback(func(key string, value interface{}) {
 		metricDataLRU.Inc()

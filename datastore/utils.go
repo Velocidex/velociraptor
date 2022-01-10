@@ -1,6 +1,7 @@
 package datastore
 
 import (
+	"errors"
 	"sync"
 
 	"google.golang.org/protobuf/proto"
@@ -73,4 +74,26 @@ func Walk(config_obj *config_proto.Config,
 	}
 
 	return nil
+}
+
+func GetImplementationName(
+	config_obj *config_proto.Config) (string, error) {
+	if config_obj.Datastore == nil {
+		return "", errors.New("Invalid datastore config")
+	}
+
+	if config_obj.Frontend == nil {
+		return config_obj.Datastore.Implementation, nil
+	}
+
+	if config_obj.Frontend.IsMinion &&
+		config_obj.Datastore.MinionImplementation != "" {
+		return config_obj.Datastore.MinionImplementation, nil
+	}
+
+	if config_obj.Datastore.MasterImplementation != "" {
+		return config_obj.Datastore.MasterImplementation, nil
+	}
+
+	return config_obj.Datastore.Implementation, nil
 }

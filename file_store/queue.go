@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
@@ -18,8 +19,12 @@ func GetQueueManager(config_obj *config_proto.Config) (api.QueueManager, error) 
 	}
 
 	file_store := GetFileStore(config_obj)
+	implementation, err := datastore.GetImplementationName(config_obj)
+	if err != nil {
+		return nil, err
+	}
 
-	switch config_obj.Datastore.Implementation {
+	switch implementation {
 
 	// For now everyone uses an in-memory queue manager.
 	case "Test":

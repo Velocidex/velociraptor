@@ -100,6 +100,9 @@ func NewCollectionContext(config_obj *config_proto.Config) *CollectionContext {
 		self.mu.Lock()
 		defer self.mu.Unlock()
 
+		// Mark the collection as updated.
+		updateContext(config_obj, self.ClientId, self.SessionId)
+
 		if !self.send_update {
 			return
 		}
@@ -120,10 +123,32 @@ func NewCollectionContext(config_obj *config_proto.Config) *CollectionContext {
 			journal.PushRowsToArtifactAsync(
 				config_obj, row, "System.Flow.Completion")
 		}
-
 	})
 
 	return self
+}
+
+// Flush the context object to disk. This must happen AFTER all data
+// is written
+func updateContext(
+	config_obj *config_proto.Config,
+	client_id, flow_id string) error {
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	ping_record := &flows_proto.PingContext{
+		ActiveTime: uint64(time.Now().UnixNano() / 1000),
+	}
+
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
+
+	// Just a blind write.
+	return db.SetSubjectWithCompletion(
+		config_obj, flow_path_manager.Ping(),
+		ping_record, nil)
 }
 
 // closeContext is called after all messages from the clients are
@@ -164,6 +189,7 @@ func closeContext(
 		collection_context.StartTime = uint64(time.Now().UnixNano() / 1000)
 	}
 
+	// Mark the flow as last active now.
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
 
 	// Figure out if we will send a System.Flow.Completion after
@@ -183,6 +209,7 @@ func closeContext(
 
 		// Instruct the completion function to send the message.
 		collection_context.send_update = true
+		collection_context.Dirty = true
 	}
 
 	if len(collection_context.Logs) > 0 {
@@ -191,6 +218,7 @@ func closeContext(
 		if err != nil {
 			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
 			collection_context.Status = err.Error()
+			collection_context.Dirty = true
 		}
 	}
 
@@ -200,6 +228,7 @@ func closeContext(
 		if err != nil {
 			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
 			collection_context.Status = err.Error()
+			collection_context.Dirty = true
 		}
 	}
 
@@ -208,6 +237,7 @@ func closeContext(
 		if err != nil {
 			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
 			collection_context.Status = err.Error()
+			collection_context.Dirty = true
 		}
 	}
 
