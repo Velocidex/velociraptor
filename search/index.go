@@ -93,6 +93,7 @@ type Indexer struct {
 	items int
 
 	ready bool
+	dirty bool
 }
 
 func NewIndexer() *Indexer {
@@ -103,6 +104,16 @@ func NewIndexer() *Indexer {
 
 // Flush the indexer from memory to disk.
 func (self *Indexer) Flush(config_obj *config_proto.Config) error {
+
+	// Check if we need to flush the index, if not we can skip it.
+	self.mu.Lock()
+	if !self.dirty {
+		self.mu.Unlock()
+		return nil
+	}
+	self.dirty = false
+	self.mu.Unlock()
+
 	start := time.Now()
 	path_manager := paths.NewIndexPathManager()
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -167,6 +178,7 @@ func (self *Indexer) Set(record Record) {
 
 	self.btree.ReplaceOrInsert(record)
 	self.items++
+	self.dirty = true
 	metricLRUTotalTerms.Inc()
 }
 
@@ -332,6 +344,7 @@ func (self *Indexer) LoadIndexFromSnapshot(
 	}
 	defer rs_reader.Close()
 
+	count := 0
 	for row := range rs_reader.Rows(ctx) {
 		entity, ok := row.GetString("Entity")
 		if !ok {
@@ -347,10 +360,19 @@ func (self *Indexer) LoadIndexFromSnapshot(
 			Term:   term,
 			Entity: entity,
 		}))
+		count++
+	}
+
+	if count == 0 {
+		return errors.New("No snapshot")
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Loaded index from snapshot in %v\n", time.Now().Sub(start))
+
+	self.mu.Lock()
+	self.ready = true
+	self.mu.Unlock()
 
 	return nil
 }
@@ -404,6 +426,11 @@ func SetIndex(
 
 	path := path_manager.IndexTerm(term, client_id)
 	return db.SetSubjectWithCompletion(config_obj, path, record, nil)
+}
+
+// Write an index snapshot
+func SnapshotIndex(config_obj *config_proto.Config) error {
+	return indexer.Flush(config_obj)
 }
 
 func UnsetIndex(
