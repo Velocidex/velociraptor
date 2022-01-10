@@ -139,6 +139,12 @@ func GetFlowDetails(
 		return nil, err
 	}
 
+	ping := &flows_proto.PingContext{}
+	err = db.GetSubject(config_obj, flow_path_manager.Ping(), ping)
+	if err == nil && ping.ActiveTime > collection_context.ActiveTime {
+		collection_context.ActiveTime = ping.ActiveTime
+	}
+
 	availableDownloads, _ := availableDownloadFiles(config_obj, client_id, flow_id)
 	return &api_proto.FlowDetails{
 		Context:            collection_context,

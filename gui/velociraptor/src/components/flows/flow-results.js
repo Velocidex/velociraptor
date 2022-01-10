@@ -8,6 +8,7 @@ import FormControl from 'react-bootstrap/FormControl';
 
 function getFlowState(flow) {
     return {flow_id: flow.session_id,
+            active_time: flow.active_time,
             total_collected_rows: flow.total_collected_rows};
 }
 
@@ -26,7 +27,7 @@ export default class FlowResults extends React.Component {
 
     // The table needs to render when:
     // 1. the flow id has changed.
-    // 2. The flow gained new rows
+    // 2. The flow active_time has changed.
     // 3. The user selected to view a different artifact result.
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (!_.isEqual(getFlowState(prevProps.flow), getFlowState(this.props.flow))) {

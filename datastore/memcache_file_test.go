@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -131,6 +132,39 @@ func (self MemcacheFileTestSuite) TestListChildren() {
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(children), 1)
 	assert.Equal(self.T(), children[0].AsClientPath(), "/a/b")
+}
+
+func (self MemcacheFileTestSuite) TestSetSubjectAndListChildren() {
+	db, ok := self.datastore.(*MemcacheFileDataStore)
+	assert.True(self.T(), ok)
+
+	// Setting the data ends up on the filesystem
+	client_id := "C.1234"
+	client_record := &api_proto.ClientMetadata{
+		ClientId: client_id,
+	}
+
+	// Write the file to the filesystem
+	urn := path_specs.NewSafeDatastorePath("a", "b")
+	err := file_based_imp.SetSubject(self.config_obj, urn, client_record)
+	assert.NoError(self.T(), err)
+
+	urn2 := path_specs.NewSafeDatastorePath("a", "d")
+	err = file_based_imp.SetSubject(self.config_obj, urn2, client_record)
+	assert.NoError(self.T(), err)
+
+	// Now set a file in an existing directory.
+	intermediate := path_specs.NewSafeDatastorePath("a", "e")
+	new_record := &api_proto.ClientMetadata{}
+	err = db.SetSubject(self.config_obj, intermediate, new_record)
+	assert.NoError(self.T(), err)
+
+	// Now list the memcache
+	first_level := path_specs.NewSafeDatastorePath("a")
+	children, err := db.ListChildren(self.config_obj, first_level)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(children), 3)
+	utils.Debug(children)
 }
 
 func TestMemCacheFileDatastore(t *testing.T) {
