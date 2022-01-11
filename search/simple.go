@@ -33,7 +33,7 @@ func SetSimpleIndex(
 		// The entity and keywords are not trusted because
 		// they are user provided.
 		keyword = strings.ToLower(keyword)
-		subject := index_urn.AddChild(keyword, entity)
+		subject := index_urn.AddUnsafeChild(keyword, entity)
 		err := db.SetSubjectWithCompletion(
 			config_obj, subject, &emptypb.Empty{}, nil)
 		if err != nil {
