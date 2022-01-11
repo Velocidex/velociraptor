@@ -33,15 +33,18 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/google/btree"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 )
 
 type SearchOptions int
@@ -90,12 +93,54 @@ type Indexer struct {
 	items int
 
 	ready bool
+	dirty bool
 }
 
 func NewIndexer() *Indexer {
 	return &Indexer{
 		btree: btree.New(10),
 	}
+}
+
+// Flush the indexer from memory to disk.
+func (self *Indexer) Flush(config_obj *config_proto.Config) error {
+
+	// Check if we need to flush the index, if not we can skip it.
+	self.mu.Lock()
+	if !self.dirty {
+		self.mu.Unlock()
+		return nil
+	}
+	self.dirty = false
+	self.mu.Unlock()
+
+	start := time.Now()
+	path_manager := paths.NewIndexPathManager()
+	file_store_factory := file_store.GetFileStore(config_obj)
+	rs_writer, err := result_sets.NewResultSetWriter(
+		file_store_factory, path_manager.Snapshot(),
+		nil, true /* truncate */)
+	if err != nil {
+		return err
+	}
+	defer rs_writer.Close()
+
+	// Just write them all down.
+	self.Ascend(func(i btree.Item) bool {
+		record := i.(Record)
+		row := ordereddict.NewDict().
+			Set("Entity", record.Entity).
+			Set("Term", record.Term)
+
+		rs_writer.Write(row)
+
+		return true
+	})
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Debug("Flushed index in %v.", time.Now().Sub(start))
+
+	return nil
 }
 
 func (self *Indexer) Ready() bool {
@@ -133,6 +178,7 @@ func (self *Indexer) Set(record Record) {
 
 	self.btree.ReplaceOrInsert(record)
 	self.items++
+	self.dirty = true
 	metricLRUTotalTerms.Inc()
 }
 
@@ -145,7 +191,7 @@ func (self *Indexer) Delete(record Record) {
 	metricLRUTotalTerms.Dec()
 }
 
-func (self *Indexer) Load(
+func (self *Indexer) LoadIndexFromDirectory(
 	ctx context.Context,
 	config_obj *config_proto.Config) {
 
@@ -284,6 +330,82 @@ func (self *Indexer) Load(
 	self.mu.Unlock()
 }
 
+func (self *Indexer) LoadIndexFromSnapshot(
+	ctx context.Context,
+	config_obj *config_proto.Config) error {
+
+	start := time.Now()
+	path_manager := paths.NewIndexPathManager()
+	file_store_factory := file_store.GetFileStore(config_obj)
+	rs_reader, err := result_sets.NewResultSetReader(
+		file_store_factory, path_manager.Snapshot())
+	if err != nil {
+		return err
+	}
+	defer rs_reader.Close()
+
+	count := 0
+	for row := range rs_reader.Rows(ctx) {
+		entity, ok := row.GetString("Entity")
+		if !ok {
+			continue
+		}
+
+		term, ok := row.GetString("Term")
+		if !ok {
+			continue
+		}
+
+		self.Set(NewRecord(&api_proto.IndexRecord{
+			Term:   term,
+			Entity: entity,
+		}))
+		count++
+	}
+
+	if count == 0 {
+		return errors.New("No snapshot")
+	}
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("Loaded index from snapshot in %v\n", time.Now().Sub(start))
+
+	self.mu.Lock()
+	self.ready = true
+	self.mu.Unlock()
+
+	return nil
+}
+
+func (self *Indexer) Load(
+	ctx context.Context,
+	config_obj *config_proto.Config) {
+
+	err := self.LoadIndexFromSnapshot(ctx, config_obj)
+	if err != nil {
+		self.LoadIndexFromDirectory(ctx, config_obj)
+	}
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
+	// Now flush the index periodically
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case <-time.After(10 * time.Second):
+				err := self.Flush(config_obj)
+				if err != nil {
+					logger.Info("Flushing index error: %v", err)
+				}
+			}
+		}
+	}()
+
+}
+
 // Set the index
 func SetIndex(
 	config_obj *config_proto.Config, client_id, term string) error {
@@ -304,6 +426,11 @@ func SetIndex(
 
 	path := path_manager.IndexTerm(term, client_id)
 	return db.SetSubjectWithCompletion(config_obj, path, record, nil)
+}
+
+// Write an index snapshot
+func SnapshotIndex(config_obj *config_proto.Config) error {
+	return indexer.Flush(config_obj)
 }
 
 func UnsetIndex(

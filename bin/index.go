@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
+	"www.velocidex.com/golang/velociraptor/services/indexing"
 )
 
 var (
@@ -47,9 +48,14 @@ func doRebuildIndex() error {
 		return fmt.Errorf("Starting services: %w", err)
 	}
 
+	err = sm.Start(indexing.StartIndexingService)
+	if err != nil {
+		return fmt.Errorf("Starting index service: %w", err)
+	}
+
 	client_info_manager, err := services.GetClientInfoManager()
 	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
+		return fmt.Errorf("Starting client info service: %w", err)
 	}
 
 	labeler := services.GetLabeler()
@@ -110,6 +116,7 @@ func doRebuildIndex() error {
 			}
 		}
 	}
+
 	return nil
 }
 

@@ -59,6 +59,9 @@ type FileStore interface {
 	ListDirectory(dirname FSPathSpec) ([]FileInfo, error)
 	Delete(filename FSPathSpec) error
 	Move(src, dest FSPathSpec) error
+
+	// Clean up any filestore connections
+	Close() error
 }
 
 type Flusher interface {
