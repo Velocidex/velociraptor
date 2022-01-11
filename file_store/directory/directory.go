@@ -97,6 +97,10 @@ func (self *DirectoryFileStore) Move(src, dest api.FSPathSpec) error {
 	return os.Rename(src_path, dest_path)
 }
 
+func (self *DirectoryFileStore) Close() error {
+	return nil
+}
+
 func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 	[]api.FileInfo, error) {
 

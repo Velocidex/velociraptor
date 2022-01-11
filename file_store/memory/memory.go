@@ -391,6 +391,11 @@ func (self *MemoryFileStore) Clear() {
 	self.Paths = ordereddict.NewDict()
 }
 
+func (self *MemoryFileStore) Close() error {
+	self.Clear()
+	return nil
+}
+
 func pathSpecToPath(
 	p api.FSPathSpec, config_obj *config_proto.Config) string {
 	return cleanPathForWindows(p.AsFilestoreFilename(config_obj))

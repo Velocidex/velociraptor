@@ -246,6 +246,11 @@ func (self *MemcacheFileStore) Flush() {
 	self.data_cache.Flush()
 }
 
+func (self *MemcacheFileStore) Close() error {
+	self.Flush()
+	return nil
+}
+
 func (self *MemcacheFileStore) Move(src, dest api.FSPathSpec) error {
 	defer api.Instrument("move", "MemcacheFileStore", src)()
 
