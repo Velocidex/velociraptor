@@ -637,6 +637,9 @@ message DatastoreConfig {
     // How long to delay writes so they can be combined (default 1 sec)
     int64 memcache_write_mutation_max_age = 9;
 
+    // Maximum size of memcache lru (default 10000)
+    int64 memcache_datastore_max_size = 10;
+
     // Experimental - do not set in configs yet!
     string minion_implementation = 7;
     string master_implementation = 8;

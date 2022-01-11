@@ -46,8 +46,8 @@ func (self *ReadOnlyDataStore) DeleteSubject(
 	return self.cache.DeleteSubject(config_obj, urn)
 }
 
-func NewReadOnlyDataStore() *ReadOnlyDataStore {
+func NewReadOnlyDataStore(config_obj *config_proto.Config) *ReadOnlyDataStore {
 	return &ReadOnlyDataStore{&MemcacheFileDataStore{
-		cache: NewMemcacheDataStore(),
+		cache: NewMemcacheDataStore(config_obj),
 	}}
 }

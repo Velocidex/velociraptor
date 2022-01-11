@@ -112,7 +112,10 @@ sources:
        133, -- sd
        134, -- sd
        135, -- sd
+       202, -- xvd
        253, -- device-mapper
+       254, -- mdp
+       259, -- blkext
     )
 
     LET RecursionCallback = if(

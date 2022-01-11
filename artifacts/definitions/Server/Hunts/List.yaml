@@ -6,7 +6,8 @@ type: SERVER
 
 sources:
   - query: |
-      SELECT HuntId, timestamp(epoch=create_time/1000000) as Created,
+      SELECT hunt_id,
+             timestamp(epoch=create_time) as Created,
              join(array=start_request.artifacts, sep=",") as Artifact,
-             State
+             state
       FROM hunts()

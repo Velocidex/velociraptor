@@ -31,10 +31,17 @@ type MemcacheFileWriter struct {
 	mu sync.Mutex
 
 	delegate  *directory.DirectoryFileStore
+	key       string
 	filename  api.FSPathSpec
 	truncated bool
-	buffer    bytes.Buffer
-	size      int64
+
+	// Is the writer currently closed? NOTE!!! There is an implicit
+	// assumption that there is only one concurrent writer to the same
+	// result set! Writers are all cached in the same data_cache keyed
+	// by the same key and are flushed separately.
+	closed bool
+	buffer bytes.Buffer
+	size   int64
 
 	completion func()
 }
@@ -89,7 +96,14 @@ func (self *MemcacheFileWriter) Truncate() error {
 
 // Closing the file does not trigger a flush - we just return a
 // success status and wait for the file to be written asynchronously.
+// We assume no concurrent writes to the same file but closing and
+// opening the same path (quicker than cache expiration time) will
+// usually give the same writer.
 func (self *MemcacheFileWriter) Close() error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.closed = true
 	return nil
 }
 
@@ -100,6 +114,11 @@ func (self *MemcacheFileWriter) Flush() error {
 	// to the underlying filestore occur in order).
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	return self._Flush()
+}
+
+func (self *MemcacheFileWriter) _Flush() error {
 
 	// Skip a noop action.
 	if !self.truncated && len(self.buffer.Bytes()) == 0 {
@@ -157,7 +176,15 @@ func NewMemcacheFileStore(config_obj *config_proto.Config) *MemcacheFileStore {
 	result.data_cache.SetExpirationCallback(func(key string, value interface{}) {
 		writer, ok := value.(*MemcacheFileWriter)
 		if ok {
-			writer.Flush()
+			writer.mu.Lock()
+			defer writer.mu.Unlock()
+
+			writer._Flush()
+
+			// We are not done with it yet - return it to the cache.
+			if !writer.closed {
+				result.data_cache.Set(writer.key, writer)
+			}
 		}
 
 		metricDataLRU.Dec()
@@ -191,6 +218,7 @@ func (self *MemcacheFileStore) WriteFileWithCompletion(
 	if err != nil {
 		result = &MemcacheFileWriter{
 			delegate:   self.delegate,
+			key:        key,
 			filename:   path,
 			size:       -1,
 			completion: completion,
@@ -198,6 +226,7 @@ func (self *MemcacheFileStore) WriteFileWithCompletion(
 	} else {
 		result = result_any.(*MemcacheFileWriter)
 		result.completion = completion
+		result.closed = false
 	}
 
 	// Always set it so the time can be extended.

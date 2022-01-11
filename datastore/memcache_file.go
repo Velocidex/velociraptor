@@ -66,6 +66,7 @@ type Mutation struct {
 }
 
 type MemcacheFileDataStore struct {
+	mu    sync.Mutex
 	cache *MemcacheDatastore
 
 	writer chan *Mutation
@@ -170,6 +171,9 @@ func (self *MemcacheFileDataStore) GetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	defer Instrument("read", "MemcacheFileDataStore", urn)()
 
 	err := self.cache.GetSubject(config_obj, urn, message)
@@ -271,8 +275,7 @@ func (self *MemcacheFileDataStore) SetSubject(
 	}
 
 	// Add the data to the cache immediately.
-	err = self.cache.SetSubject(config_obj, urn, message)
-
+	err = self.cache.SetData(config_obj, urn, serialized_content)
 	if err != nil {
 		return err
 	}
@@ -318,6 +321,9 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 func (self *MemcacheFileDataStore) ListChildren(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]api.DSPathSpec, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	defer Instrument("list", "MemcacheFileDataStore", urn)()
 
@@ -445,10 +451,11 @@ func get_file_dir_metadata(
 	return md, nil
 }
 
-func NewMemcacheFileDataStore() *MemcacheFileDataStore {
+func NewMemcacheFileDataStore(config_obj *config_proto.Config) *MemcacheFileDataStore {
 	result := &MemcacheFileDataStore{
-		cache: NewMemcacheDataStore(),
+		cache: NewMemcacheDataStore(config_obj),
 	}
+	//	result.cache.get_dir_metadata = get_file_dir_metadata
 	return result
 }
 
