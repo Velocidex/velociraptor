@@ -1,2 +1,3 @@
 Queries:
 - SELECT * FROM Artifact.MacOS.System.Users(UserPlistGlob=srcDir + '/artifacts/testdata/files/vagrant.plist')
+- SELECT * FROM Artifact.MacOS.Forensics.AppleDoubleZip(ZipGlob=srcDir + '/artifacts/testdata/files/logo*.zip')
