@@ -415,10 +415,9 @@ func (self *ZipFileCache) Close() {
 // root scope. We keep a list of most recently used cached of zip
 // files for quick access.
 type ZipFileSystemAccessor struct {
-	mu         sync.Mutex
-	fd_cache   map[string]*ZipFileCache
-	scope      vfilter.Scope
-	sourceFile string
+	mu       sync.Mutex
+	fd_cache map[string]*ZipFileCache
+	scope    vfilter.Scope
 }
 
 // Try to remove any file caches with no references.
@@ -603,10 +602,6 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 //
 // so the root is file:///tmp/foo.zip# and the path is /dir/name.txt
 func (self *ZipFileSystemAccessor) GetRoot(path string) (string, string, error) {
-	if self.sourceFile != "" {
-		return self.sourceFile, path, nil
-	}
-
 	pathspec, err := glob.PathSpecFromString(path)
 	if err != nil {
 		return "", "", err
@@ -616,10 +611,6 @@ func (self *ZipFileSystemAccessor) GetRoot(path string) (string, string, error) 
 	pathspec.Path = ""
 
 	return pathspec.String(), Fragment, nil
-}
-
-func (self *ZipFileSystemAccessor) SetDataSource(dataSource string) {
-	self.sourceFile = dataSource
 }
 
 func fragmentToComponents(fragment string) []string {

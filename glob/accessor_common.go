@@ -159,7 +159,6 @@ type OSFileSystemAccessor struct {
 	context *AccessorContext
 
 	allow_raw_access bool
-	root             string
 }
 
 func (self OSFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, error) {
@@ -242,10 +241,6 @@ func (self OSFileSystemAccessor) ReadDir(dir string) ([]FileInfo, error) {
 	}
 
 	return result, nil
-}
-
-func (self *OSFileSystemAccessor) SetDataSource(dataSource string) {
-	self.root = dataSource
 }
 
 // Wrap the os.File object to keep track of open file handles.
