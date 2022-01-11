@@ -52,10 +52,13 @@ func (self MFTFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 func (self *MFTFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
 	// The path must start with a valid device, otherwise we list
 	// the devices.
-	device, subpath, err := self.GetRoot(path)
+	pathSpec, err := glob.PathSpecFromString(path)
 	if err != nil {
-		return nil, errors.New("Unable to open raw device")
+		return nil, err
 	}
+
+	device := pathSpec.GetDelegatePath()
+	subpath := pathSpec.Path
 
 	subpath = strings.TrimLeft(subpath, "\\")
 	mft_idx, attr_type, attr_id, err := ntfs.ParseMFTId(subpath)
@@ -108,18 +111,18 @@ func (self *MFTFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error
 func (self *MFTFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
 	// The path must start with a valid device, otherwise we list
 	// the devices.
-	device, subpath, err := self.GetRoot(path)
+	pathSpec, err := glob.PathSpecFromString(path)
 	if err != nil {
-		return nil, errors.New("Unable to open raw device")
+		return nil, err
 	}
 
-	subpath = strings.TrimLeft(subpath, "\\")
+	subpath := strings.TrimLeft(pathSpec.Path, "\\")
 	mft_idx, _, _, err := ntfs.ParseMFTId(subpath)
 	if err != nil {
 		return nil, err
 	}
 
-	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device)
+	ntfs_ctx, err := readers.GetNTFSContext(self.scope, pathSpec.GetDelegatePath())
 	if err != nil {
 		return nil, err
 	}

@@ -563,7 +563,7 @@ func (self *ZipFileSystemAccessor) Open(filename string) (glob.ReadSeekCloser, e
 		fragmentToComponents(pathspec.Path), filename)
 }
 
-var ZipFileSystemAccessor_re = regexp.MustCompile("/")
+var ZipFileSystemAccessor_re = regexp.MustCompile(`[/\\]`)
 
 func (self *ZipFileSystemAccessor) PathSplit(path string) []string {
 	return ZipFileSystemAccessor_re.Split(path, -1)

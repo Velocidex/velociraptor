@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -202,18 +203,14 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 
 	result := []glob.FileInfo{}
 
-	// The path must start with a valid device, otherwise we list
-	// the devices.
-	var device, subpath string
-
-	if self.device != "" {
-		device = self.device
-		subpath = path
-	} else {
-		device, subpath, _ = self.GetRoot(path)
+	pathSpec, err := glob.PathSpecFromString(path)
+	if err != nil {
+		return nil, err
 	}
 
-	if err != nil {
+	// The path must habe a valid device, otherwise we list
+	// the devices.
+	if pathSpec.GetDelegatePath() == "" {
 		vss, err := discoverVSS()
 		if err == nil {
 			result = append(result, vss...)
@@ -227,7 +224,10 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 		return result, nil
 	}
 
-	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device)
+	device := pathSpec.GetDelegatePath()
+	subpath := pathSpec.Path
+
+	ntfs_ctx, err := readers.GetNTFSContext(self.scope, pathSpec.GetDelegatePath())
 	if err != nil {
 		return nil, err
 	}
@@ -272,10 +272,11 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 			if info == nil {
 				continue
 			}
-			full_path := device + subpath + "\\" + info.Name
+			child_pathspec := *pathSpec
+			child_pathspec.Path = filepath.Join(subpath, info.Name)
 			result = append(result, &NTFSFileInfo{
 				info:       info,
-				_full_path: full_path,
+				_full_path: child_pathspec.String(),
 			})
 		}
 	}
@@ -396,18 +397,22 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, 
 		}
 	}()
 
+	pathSpec, err := glob.PathSpecFromString(path)
+	if err != nil {
+		return nil, err
+	}
+
 	// The path must start with a valid device, otherwise we list
 	// the devices.
-	device, subpath, err := self.GetRoot(path)
-	if err != nil {
-		return nil, errors.New("Unable to open raw device")
-	}
+	subpath := pathSpec.Path
+
 	if subpath == "" {
-		return self.openRawDevice(device)
+		return self.openRawDevice(pathSpec.DelegatePath)
 	}
 
 	components := self.PathSplit(subpath)
 
+	device := pathSpec.GetDelegatePath()
 	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device)
 	if err != nil {
 		return nil, err
@@ -454,15 +459,17 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res glob.FileInfo, err e
 		}
 	}()
 
-	// The path must start with a valid device, otherwise we list
-	// the devices.
-	device, subpath, err := self.GetRoot(path)
+	pathSpec, err := glob.PathSpecFromString(path)
 	if err != nil {
-		return nil, errors.New("Unable to open raw device")
+		return nil, err
 	}
 
+	// The path must start with a valid device, otherwise we list
+	// the devices.
+	subpath := pathSpec.Path
 	components := self.PathSplit(subpath)
 
+	device := pathSpec.GetDelegatePath()
 	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device)
 	if err != nil {
 		return nil, err
@@ -500,8 +507,15 @@ func (self *NTFSFileSystemAccessor) PathSplit(path string) []string {
 	return NTFSFileSystemAccessor_re.Split(path, -1)
 }
 
-func (self NTFSFileSystemAccessor) PathJoin(x, y string) string {
-	return x + "\\" + strings.TrimLeft(y, "\\")
+func (self NTFSFileSystemAccessor) PathJoin(root, stem string) string {
+	pathSpec, err := glob.PathSpecFromString(root)
+	if err != nil {
+		return path.Join(root, stem)
+	}
+
+	pathSpec.Path = path.Join(pathSpec.Path, strings.TrimLeft(stem, "\\/"))
+
+	return pathSpec.String()
 }
 
 // We want to show the entire device as one name so we need to escape

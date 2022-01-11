@@ -5,6 +5,7 @@ package glob
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -171,21 +172,32 @@ func (self OSFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, e
 }
 
 func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
-	lstat, err := os.Lstat(self.GetPath(filename))
+	pathSpec, err := PathSpecFromString(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	lstat, err := os.Lstat(path.Join(pathSpec.DelegatePath, pathSpec.Path))
 	if err != nil {
 		return nil, err
 	}
 
 	return &OSFileInfo{
 		_FileInfo:     lstat,
-		_full_path:    filename,
+		_full_path:    pathSpec.String(),
 		_accessor_ctx: self.context,
 	}, nil
 }
 
-func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
-	path = self.GetPath(path)
-	lstat, err := os.Lstat(path)
+func (self OSFileSystemAccessor) ReadDir(dir string) ([]FileInfo, error) {
+	pathSpec, err := PathSpecFromString(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	fullpath := path.Join(pathSpec.DelegatePath, pathSpec.Path)
+
+	lstat, err := os.Lstat(fullpath)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +211,7 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	} else {
 		// If it is a symlink, we need to check the target of the
 		// symlink and make sure it is a directory.
-		target, err := os.Readlink(path)
+		target, err := os.Readlink(fullpath)
 		if err == nil {
 			lstat, err := os.Lstat(target)
 			// Target of the link is not there or inaccessible or
@@ -212,17 +224,19 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 
 	}
 
-	files, err := utils.ReadDir(path)
+	files, err := utils.ReadDir(fullpath)
 	if err != nil {
 		return nil, err
 	}
 
 	var result []FileInfo
 	for _, f := range files {
+		child_pathSpec := *pathSpec
+		child_pathSpec.Path = filepath.Join(child_pathSpec.Path, f.Name())
 		result = append(result,
 			&OSFileInfo{
 				_FileInfo:     f,
-				_full_path:    filepath.Join(path, f.Name()),
+				_full_path:    child_pathSpec.String(),
 				_accessor_ctx: self.context,
 			})
 	}
@@ -247,8 +261,13 @@ func (self OSFileWrapper) Close() error {
 func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	var err error
 
+	pathSpec, err := PathSpecFromString(path)
+	if err != nil {
+		return nil, err
+	}
+
 	// Eval any symlinks directly
-	path, err = filepath.EvalSymlinks(self.GetPath(path))
+	path, err = filepath.EvalSymlinks(filepath.Join(pathSpec.Path, path))
 	if err != nil {
 		return nil, err
 	}
@@ -277,22 +296,21 @@ func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	return OSFileWrapper{file}, nil
 }
 
-func (self OSFileSystemAccessor) GetPath(path string) string {
-	root := "/"
-	if self.root != "" {
-		root = self.root
-	}
-	return filepath.Clean(root + path)
-}
-
-var OSFileSystemAccessor_re = regexp.MustCompile("/")
+var OSFileSystemAccessor_re = regexp.MustCompile(`[\\/]`)
 
 func (self OSFileSystemAccessor) PathSplit(path string) []string {
 	return OSFileSystemAccessor_re.Split(path, -1)
 }
 
 func (self OSFileSystemAccessor) PathJoin(root, stem string) string {
-	return filepath.Join(root, stem)
+	pathSpec, err := PathSpecFromString(root)
+	if err != nil {
+		return path.Join(root, stem)
+	}
+
+	pathSpec.Path = path.Join(pathSpec.Path, strings.TrimLeft(stem, "\\/"))
+
+	return pathSpec.String()
 }
 
 func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
