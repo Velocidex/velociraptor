@@ -100,21 +100,25 @@ func (self GlobPlugin) Call(
 		// them for their respective roots
 		if root == "" {
 			for _, item := range arg.Globs {
-				item_root, item_path, _ := paths.ConvertPathToRemappedPath(item)
+				device, item_path, _ := paths.ConvertPathToRemappedPath(item)
 
-				if item_root == "*" {
+				if device == "*" {
 					globalGlobs = append(globalGlobs, item_path)
 					continue
 				}
 
-				globs, pres := organizedGlobs[item_root]
+				globs, pres := organizedGlobs[device]
 				if !pres {
 					globs = make([]string, 0)
 				}
-				organizedGlobs[item_root] = append(globs, item_path)
+				organizedGlobs[device] = append(globs, item_path)
 			}
 		} else {
-			organizedGlobs[root] = arg.Globs
+			globs := make([]string, len(arg.Globs))
+			for i, glob := range arg.Globs {
+				_, globs[i], _ = paths.ConvertPathToRemappedPath(glob)
+			}
+			organizedGlobs[root] = globs
 		}
 
 		var deviceManager *vql_subsystem.DeviceManager
@@ -141,8 +145,10 @@ func (self GlobPlugin) Call(
 				return
 			}
 
-			if acc, ok := accessor.(glob.SetDataSourcer); ok {
-				acc.SetDataSource(deviceSource)
+			rootPathSpec := glob.PathSpec{
+				DelegateAccessor: "file",
+				DelegatePath:     deviceSource,
+				Path:             "/",
 			}
 
 			for _, item := range items {
@@ -154,7 +160,7 @@ func (self GlobPlugin) Call(
 			}
 
 			file_chan := globber.ExpandWithContext(
-				ctx, config_obj, "", accessor)
+				ctx, config_obj, rootPathSpec.String(), accessor)
 			for f := range file_chan {
 				select {
 				case <-ctx.Done():
