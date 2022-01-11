@@ -59,6 +59,7 @@ sources:
                                 name="NirsoftBrowsingHistoryView.csv")) AS Upload
           FROM execve(argv=[
              BinPath,
+             "/VisitTimeFilterType", "1",
              "/HistorySource", HistorySource, "/LoadIE", "1",
              "/LoadFirefox", "1", "/LoadChrome", "1",
              "/LoadSafari", "1",
