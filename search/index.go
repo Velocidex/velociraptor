@@ -387,6 +387,13 @@ func (self *Indexer) Load(
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	snapshot_wait := 60 * time.Second
+	if config_obj.Frontend != nil &&
+		config_obj.Frontend.Resources != nil &&
+		config_obj.Frontend.Resources.IndexSnapshotFrequency > 0 {
+		snapshot_wait = time.Duration(config_obj.Frontend.Resources.
+			IndexSnapshotFrequency) * time.Second
+	}
 
 	// Now flush the index periodically
 	go func() {
@@ -395,7 +402,7 @@ func (self *Indexer) Load(
 			case <-ctx.Done():
 				return
 
-			case <-time.After(10 * time.Second):
+			case <-time.After(snapshot_wait):
 				err := self.Flush(config_obj)
 				if err != nil {
 					logger.Info("Flushing index error: %v", err)
