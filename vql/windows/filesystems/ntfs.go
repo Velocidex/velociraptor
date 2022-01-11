@@ -176,8 +176,7 @@ func (self *NTFSFileInfo) GetLink() (string, error) {
 }
 
 type NTFSFileSystemAccessor struct {
-	scope  vfilter.Scope
-	device string
+	scope vfilter.Scope
 }
 
 func (self NTFSFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
@@ -283,15 +282,8 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 	return result, nil
 }
 
-func (self *NTFSFileSystemAccessor) SetDataSource(dataSource string) {
-	self.device = dataSource
-}
-
 func (self *NTFSFileSystemAccessor) GetRoot(path string) (
 	device string, subpath string, err error) {
-	if self.device != "" {
-		return self.device, path, nil
-	}
 	return paths.GetDeviceAndSubpath(path)
 }
 

@@ -55,10 +55,6 @@ type FileSystemAccessor interface {
 	GetRoot(path string) (root, subpath string, err error)
 }
 
-type SetDataSourcer interface {
-	SetDataSource(dataSource string)
-}
-
 type NullFileSystemAccessor struct{}
 
 func (self NullFileSystemAccessor) New(scope vfilter.Scope) FileSystemAccessor {
