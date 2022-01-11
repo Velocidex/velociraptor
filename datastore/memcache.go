@@ -116,11 +116,12 @@ func (self *DirectoryLRUCache) Get(path string) (*DirectoryMetadata, bool) {
 	return md, true
 }
 
-func NewDirectoryLRUCache() *DirectoryLRUCache {
+func NewDirectoryLRUCache(size int) *DirectoryLRUCache {
 	result := &DirectoryLRUCache{
 		Cache: ttlcache.NewCache(),
 	}
 
+	result.Cache.SetCacheSizeLimit(size)
 	result.Cache.SetNewItemCallback(func(key string, value interface{}) {
 		metricDirLRU.Inc()
 	})
@@ -446,13 +447,20 @@ func (self *MemcacheDatastore) SetDirLoader(cb func(
 	self.get_dir_metadata = cb
 }
 
-func NewMemcacheDataStore() *MemcacheDatastore {
+func NewMemcacheDataStore(config_obj *config_proto.Config) *MemcacheDatastore {
+	size := int64(10000)
+	if config_obj.Datastore != nil &&
+		config_obj.Datastore.MemcacheDatastoreMaxSize > 0 {
+		size = config_obj.Datastore.MemcacheDatastoreMaxSize
+	}
+
 	result := &MemcacheDatastore{
 		data_cache:       ttlcache.NewCache(),
-		dir_cache:        NewDirectoryLRUCache(),
+		dir_cache:        NewDirectoryLRUCache(int(size)),
 		get_dir_metadata: get_dir_metadata,
 	}
 
+	result.data_cache.SetCacheSizeLimit(int(size))
 	result.data_cache.SetNewItemCallback(func(key string, value interface{}) {
 		metricDataLRU.Inc()
 	})

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
@@ -219,10 +220,13 @@ j={ SELECT read_file(accessor="zip", filename=PathSpec10) AS Data FROM scope() }
 	state := vtesting.GetMetricsDifference(self.T(), "accessor_zip_", snapshot)
 
 	// Scope is closed - no zip handles are leaking.
-	value, _ := state.GetInt64("accessor_zip_current_open")
-	assert.Equal(self.T(), int64(0), value)
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		state := vtesting.GetMetricsDifference(self.T(), "accessor_zip_", snapshot)
+		value, _ := state.GetInt64("accessor_zip_current_open")
+		return int64(0) == value
+	})
 
-	value, _ = state.GetInt64("accessor_zip_current_references")
+	value, _ := state.GetInt64("accessor_zip_current_references")
 	assert.Equal(self.T(), int64(0), value)
 
 	value, _ = state.GetInt64("accessor_zip_current_tmp_conversions")
