@@ -32,34 +32,33 @@ parameters:
 
 sources:
    - name: All Matches Metadata
-     queries:
-      # Generate the collection globs for each device
-      - LET specs = SELECT Root + Separator + Glob AS Glob
+     query: |
+      -- Generate the collection globs for each device
+      LET specs = SELECT Root + Separator + Glob AS Glob
             FROM collectionSpec
             WHERE log(message=format(format="Processing Device %v with %v: %v",
                       args=[Root, Accessor, Glob]))
 
-      # Join all the collection rules into a single Glob plugin. This ensure we
-      # only make one pass over the filesystem. We only want LFNs.
-      - |
-        LET hits = SELECT FullPath AS SourceFile, Size,
+      -- Join all the collection rules into a single Glob plugin. This ensure we
+      -- only make one pass over the filesystem. We only want LFNs.
+      LET hits = SELECT FullPath AS SourceFile, Size,
                Ctime AS Created,
                Mtime AS Modified,
                Atime AS LastAccessed
         FROM glob(globs=specs.Glob, accessor=Accessor)
         WHERE NOT IsDir AND log(message="Found " + SourceFile)
 
-      # Create a unique key to group by - modification time and path name.
-      - LET all_results <= SELECT Created, LastAccessed,
+      -- Create a unique key to group by - modification time and path name.
+      LET all_results <= SELECT Created, LastAccessed,
               Modified, Size, SourceFile
         FROM hits
 
-      - SELECT * FROM all_results
+      SELECT * FROM all_results
 
    - name: Uploads
-     queries:
-      # Upload the files
-      - LET uploaded_files = SELECT * FROM foreach(row=all_results,
+     query: |
+      -- Upload the files
+      LET uploaded_files = SELECT * FROM foreach(row=all_results,
         workers=30,
         query={
             SELECT Created, LastAccessed, Modified, SourceFile, Size,
@@ -68,8 +67,8 @@ sources:
             FROM scope()
         })
 
-      # Separate the hashes into their own column.
-      - SELECT now() AS CopiedOnTimestamp, SourceFile, Upload.Path AS DestinationFile,
+      -- Separate the hashes into their own column.
+      SELECT now() AS CopiedOnTimestamp, SourceFile, Upload.Path AS DestinationFile,
                Size AS FileSize, Upload.sha256 AS SourceFileSha256,
                Created, Modified, LastAccessed
         FROM uploaded_files
