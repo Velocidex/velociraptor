@@ -1,40 +1,60 @@
 name: Windows.Persistence.PermanentWMIEvents
+author: Matt Green - @mgreen27
 description: |
-   Malware often registers a permanent event listener within WMI. When
-   the event fires, the WMI system itself will invoke the consumer to
-   handle the event. The malware does not need to be running at the
-   time the event fires. Malware can use this mechanism to re-infect
-   the machine for example.
+    This artifact reports currently deployed permanent WMI Event Consumers. The 
+    artifact collects Binding information, then presents associated Filters 
+    and Consumers.
+    
+    NOTE: the artifact does not report on individual eventing classes. A seperate 
+    wmi query will need to be made for unlinked components that may reside in the 
+    WMI datastore.  
+
+    WMI Eventing components:  
+    
+    - __FilterToConsumerBinding - ties together Filter + Consumer
+    - __EventFilter - trigger condition
+    - __EventConsumer - payload
+
+reference:
+  - https://attack.mitre.org/techniques/T1546/003/
 
 parameters:
-   - name: namespaces
-     type: csv
-     default: |
+  - name: AllRootNamespaces
+    description: Select to scan all ROOT namespaces. This setting over rides specific namespaces configured below.
+    type: bool
+  - name: Namespaces
+    description: Add a list of target namespaces.
+    type: csv
+    default: |
        namespace
        root/subscription
        root/default
 
 sources:
- - precondition:
-     SELECT OS from info() where OS = "windows"
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
 
-   queries:
-     - LET FilterToConsumerBinding = SELECT * FROM foreach(
-        row={
-                SELECT * FROM namespaces
-        },
-        query={
+    query: |
+      LET namespaces <= SELECT * FROM if(condition=AllRootNamespaces, 
+            then= { 
+                SELECT 'root/' + Name as namespace 
+                FROM wmi(namespace='ROOT',query='SELECT * FROM __namespace' )
+                WHERE namespace
+            },
+            else= Namespaces )
+    
+      LET FilterToConsumerBinding <= SELECT * FROM foreach(
+            row=namespaces,
+            query={
                 SELECT parse_string_with_regex(string=Consumer,
                     regex=['((?P<namespace>^[^:]+):)?(?P<Type>.+?)\\.Name="(?P<Name>.+)"']) as Consumer,
                     parse_string_with_regex(string=Filter,regex=['((?P<namespace>^[^:]+):)?(?P<Type>.+?)\\.Name="(?P<Name>.+)"']) as Filter
                 FROM wmi(
                     query="SELECT * FROM __FilterToConsumerBinding",namespace=namespace)
-        })
-
-     - SELECT * FROM foreach(
-            row={
-                    SELECT * FROM namespaces
-            },
+        },workers=len(list=namespaces))
+        
+      SELECT * FROM foreach(
+            row=namespaces,
             query={
                  SELECT {
                      SELECT * FROM wmi(
@@ -52,5 +72,5 @@ sources:
                    } AS FilterDetails,
                    namespace as Namespace
                  FROM FilterToConsumerBinding
-                 WHERE (FilterDetails AND ConsumerDetails)
-            })
+                 WHERE (FilterDetails OR ConsumerDetails)
+            },workers=len(list=namespaces))
