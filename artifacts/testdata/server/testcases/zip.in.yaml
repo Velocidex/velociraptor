@@ -66,3 +66,12 @@ Queries:
        filename=read_file(filename=srcDir + '/artifacts/testdata/files/test.zip'),
        accessor="data",
        output_directory=tmpdir)
+
+  # We can pass a pathspec to zip accessor in glob root (root is on
+  # test directory inside the zip).
+  - SELECT pathspec(parse=FullPath).Path AS Member
+    FROM glob(globs="/*.txt", accessor="zip",
+     root=pathspec(
+         DelegateAccessor="file",
+         DelegatePath=srcDir + '/artifacts/testdata/files/test.zip',
+         Path="test"))

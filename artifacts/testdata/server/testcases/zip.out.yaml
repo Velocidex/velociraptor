@@ -49,4 +49,8 @@ LET zip_files = SELECT FullPath, Size FROM glob( globs=srcDir+"/artifacts/testda
   "relpath(path=NewPath, base=tmpdir, sep=\"/\")": "test/secret.txt",
   "Size": 1549
  }
+]SELECT pathspec(parse=FullPath).Path AS Member FROM glob(globs="/*.txt", accessor="zip", root=pathspec( DelegateAccessor="file", DelegatePath=srcDir + '/artifacts/testdata/files/test.zip', Path="test"))[
+ {
+  "Member": "test/secret.txt"
+ }
 ]
