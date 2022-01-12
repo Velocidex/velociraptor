@@ -89,8 +89,10 @@ func (self *PlistFunction) Call(ctx context.Context,
 
 	dicts, err := utils.ParseJsonToDicts(serialized)
 	if err != nil {
-		scope.Log("plist: %v", err)
-		return vfilter.Null{}
+		// We cant convert it to dicts, it might be something else,
+		// just pass it as is (e.g. this happens with an array of
+		// strings).
+		return val
 	}
 
 	if len(dicts) == 1 {
