@@ -1,5 +1,5 @@
-import parse from 'csv-parse/lib/sync';
-import stringify from 'csv-stringify/lib/sync';
+import parse from 'csv-parse/lib/browser/sync.js';
+import stringify from 'csv-stringify/lib/browser/sync.js';
 import api from '../core/api-service.js';
 import _ from 'lodash';
 
@@ -8,7 +8,6 @@ export function serializeCSV(data, columns) {
     _.each(columns, (k) => {
         spec.push({key: k});
     });
-
     return stringify(data, {columns: spec, header: true});
 }
 

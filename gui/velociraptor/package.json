@@ -1,19 +1,19 @@
 {
     "name": "velociraptor",
-    "version": "0.6.2",
+    "version": "0.6.3",
     "private": true,
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^1.2.30",
         "@fortawesome/free-solid-svg-icons": "^5.14.0",
         "@fortawesome/react-fontawesome": "^0.1.11",
         "ace-builds": "^1.4.12",
-        "axios": ">=0.21.2",
+        "axios": ">=0.21.3",
         "bootstrap": "^4.5.2",
         "cacache": "^15.0.6",
         "chokidar": "^3.5.1",
         "classnames": "^2.2.6",
-        "csv-parse": "^4.12.0",
-        "csv-stringify": "^5.5.1",
+        "csv-parse": "4.16.3",
+        "csv-stringify": "5.6.5",
         "dotenv": "^8.2.0",
         "env-cmd": "^10.1.0",
         "hosted-git-info": "^2.8.9",
@@ -25,6 +25,7 @@
         "lodash": "^4.17.21",
         "moment": "^2.28.0",
         "moment-timezone": "^0.5.33",
+        "node": "14.18.2",
         "npm-watch": "^0.7.0",
         "prop-types": "^15.7.2",
         "qs": "^6.9.4",
@@ -47,7 +48,7 @@
         "react-hotkeys": "^2.0.0",
         "react-json-view": "^1.19.1",
         "react-router-dom": "^5.2.0",
-        "react-scripts": "^4.0.3",
+        "react-scripts": "^5.0.0",
         "react-select": "^3.2.0",
         "react-simple-snackbar": "^1.1.10",
         "react-split-grid": "^1.0.3",
@@ -56,6 +57,7 @@
         "react-treebeard": "^3.2.4",
         "recharts": "^2.0.9",
         "styled-components": "^5.2.0",
+        "svgo": "2.8.0",
         "url-parse": "^1.5.2",
         "y18n": "^4.0.1"
     },
@@ -90,5 +92,8 @@
             "last 1 firefox version",
             "last 1 safari version"
         ]
+    },
+    "devDependencies": {
+        "@svgr/webpack": "^6.2.0"
     }
 }

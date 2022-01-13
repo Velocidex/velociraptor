@@ -3,7 +3,7 @@ import "./table.css";
 import _ from 'lodash';
 
 import 'react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css';
-import ToolkitProvider from 'react-bootstrap-table2-toolkit';
+import ToolkitProvider from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit.min';
 
 import axios from 'axios';
 
