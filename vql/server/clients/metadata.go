@@ -83,7 +83,8 @@ func (self ClientMetadataFunction) Info(
 }
 
 type ClientSetMetadataFunctionArgs struct {
-	ClientId string `vfilter:"required,field=client_id"`
+	ClientId string            `vfilter:"required,field=client_id"`
+	Metadata *ordereddict.Dict `vfilter:"optional,field=metadata,doc=A dict containing metadata. If not specified we use kwargs."`
 }
 
 type ClientSetMetadataFunction struct{}
@@ -98,6 +99,15 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 	if !pres {
 		scope.Log("client_set_metadata: client_id must be specified")
 		return vfilter.Null{}
+	}
+
+	// Allow the metadata to be set.
+	metadata_any, pres := expanded_args.Get("metadata")
+	if pres {
+		metadata := vfilter.RowToDict(ctx, scope, metadata_any)
+		if metadata != nil {
+			expanded_args.MergeFrom(metadata)
+		}
 	}
 
 	permission := acls.READ_RESULTS
@@ -127,7 +137,7 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 	result := &api_proto.ClientMetadata{ClientId: client_id}
 
 	for _, key := range expanded_args.Keys() {
-		if key == "client_id" {
+		if key == "client_id" || key == "metadata" {
 			continue
 		}
 
@@ -162,6 +172,9 @@ func (self ClientSetMetadataFunction) Info(
 	}
 }
 
+// No args
+type ServerMetadataFunctionArgs struct{}
+
 type ServerMetadataFunction struct{}
 
 func (self *ServerMetadataFunction) Call(ctx context.Context,
@@ -180,6 +193,10 @@ func (self ServerMetadataFunction) Info(
 	}
 }
 
+type ServerSetMetadataFunctionArgs struct {
+	Metadata *ordereddict.Dict `vfilter:"optional,field=metadata,doc=A dict containing metadata. If not specified we use kwargs."`
+}
+
 type ServerSetMetadataFunction struct{}
 
 func (self *ServerSetMetadataFunction) Call(ctx context.Context,
@@ -194,7 +211,7 @@ func (self ServerSetMetadataFunction) Info(
 	return &vfilter.FunctionInfo{
 		Name:    "server_set_metadata",
 		Doc:     "Sets server metadata. Server metadata is a set of free form key/value data",
-		ArgType: type_map.AddType(scope, &ClientSetMetadataFunctionArgs{}),
+		ArgType: type_map.AddType(scope, &ServerSetMetadataFunctionArgs{}),
 	}
 }
 
