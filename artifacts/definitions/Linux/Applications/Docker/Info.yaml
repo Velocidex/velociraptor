@@ -8,11 +8,10 @@ parameters:
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
-    queries:
-      - |
+    query: |
         LET data = SELECT parse_json(data=Content) as JSON
         FROM http_client(url=dockerSocket + ":unix/info")
-      - |
+
         SELECT JSON.ID as ID,
                JSON.Containers as Containers,
                JSON.ContainersRunning as ContainersRunning,

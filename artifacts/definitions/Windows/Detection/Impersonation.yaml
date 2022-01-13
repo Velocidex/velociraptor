@@ -42,14 +42,14 @@ reference:
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
-  - queries:
-      - LET processes = SELECT Pid AS ProcPid, Name AS ProcName,
+  - query: |
+      LET processes = SELECT Pid AS ProcPid, Name AS ProcName,
                Username, OwnerSid, TokenIsElevated,
                CommandLine, Exe
         FROM pslist()
         WHERE log(message=format(format="Inspecting %s (%v)", args=[ProcName, Pid]))
 
-      - SELECT * FROM foreach(row=processes,
+      SELECT * FROM foreach(row=processes,
           query={
              // List all the threads and check that their tokens are the
              // same as the process token.

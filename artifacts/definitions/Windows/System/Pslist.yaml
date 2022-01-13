@@ -10,8 +10,7 @@ parameters:
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
-  - queries:
-      - |
+  - query: |
         SELECT Pid, Ppid, TokenIsElevated, Name, CommandLine, Exe,
                hash(path=Exe) as Hash,
                authenticode(filename=Exe) AS Authenticode,

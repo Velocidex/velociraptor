@@ -57,8 +57,8 @@ class EventTableLabelGroup extends React.Component {
     loadLabels = () => {
         api.get("v1/SearchClients", {
             query: "label:*",
-            limit: 100,
-            type: 1,
+            limit: 1000,
+            name_only: true,
         }, this.source.token).then((response) => {
             let labels = _.map(response.data.names, (x) => {
                 x = x.replace(/^label:/, "");

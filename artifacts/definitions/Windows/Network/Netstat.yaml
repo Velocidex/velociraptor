@@ -5,9 +5,9 @@ description: |
 
 sources:
 - precondition: SELECT OS From info() where OS = 'windows'
-  queries:
-  - LET processes <= SELECT Name, Pid AS ProcPid FROM pslist()
-  - SELECT Pid, {
+  query: |
+    LET processes <= SELECT Name, Pid AS ProcPid FROM pslist()
+    SELECT Pid, {
         SELECT Name from processes
         WHERE Pid = ProcPid
       } AS Name, FamilyString as Family,

@@ -15,8 +15,8 @@ tools:
 precondition: SELECT OS From info() where OS = 'windows' AND Architecture = "amd64"
 
 sources:
-  - queries:
-      - SELECT * FROM foreach(
+  - query: |
+      SELECT * FROM foreach(
           row={
             SELECT FullPath, tempfile(extension=".raw", remove_last=TRUE) AS Tempfile
             FROM Artifact.Generic.Utils.FetchBinary(ToolName="WinPmem64")

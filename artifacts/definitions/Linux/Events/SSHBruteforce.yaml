@@ -28,25 +28,25 @@ parameters:
     default: 2
 
 sources:
-  - queries:
-      # Basic syslog parsing via GROK expressions.
-      - LET failed_login = SELECT grok(grok=SSHGrok, data=Line) AS FailedEvent,
+  - query: |
+      -- Basic syslog parsing via GROK expressions.
+      LET failed_login = SELECT grok(grok=SSHGrok, data=Line) AS FailedEvent,
             Line as FailedLine
         FROM watch_syslog(filename=syslogAuthLogPath)
         WHERE FailedEvent.program = "sshd" AND FailedEvent.event = "Failed"
               AND FailedEvent.method = "password"
 
-      - LET last_failed_events = SELECT * FROM fifo(
+      LET last_failed_events = SELECT * FROM fifo(
               query=failed_login, max_rows=50, max_age=3600)
 
-      - LET _ <= SELECT * FROM last_failed_events
+      LET _ <= SELECT * FROM last_failed_events
 
-      - LET success_login = SELECT grok(grok=SSHGrok, data=Line) AS Event, Line
+      LET success_login = SELECT grok(grok=SSHGrok, data=Line) AS Event, Line
         FROM watch_syslog(filename=syslogAuthLogPath)
         WHERE Event.program = "sshd" AND Event.event = "Accepted"
               AND Event.method = "password"
 
-      - SELECT Event, Line, {
+      SELECT Event, Line, {
            SELECT FailedLine FROM last_failed_events
            WHERE Event.user = FailedEvent.user
         } AS Failures

@@ -6,8 +6,7 @@ parameters:
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
-    queries:
-      - |
+    query: |
         // For each user on the system, search for known_hosts files.
         LET authorized_keys = SELECT * from foreach(
           row={
@@ -17,7 +16,7 @@ sources:
              SELECT FullPath, Mtime, Ctime, User, Uid from glob(
                globs=Homedir + '/' + sshKnownHostsFiles)
           })
-      - |
+
         // For each known_hosts file, extract each line on a different row.
         SELECT * from foreach(
           row=authorized_keys,

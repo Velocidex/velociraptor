@@ -10,16 +10,14 @@ sources:
     description: |
       {{ DocFrom "Windows.Persistence.PermanentWMIEvents" }}
 
-    queries:
-      - |
+    query: |
         SELECT * FROM Artifact.Windows.Persistence.PermanentWMIEvents()
 
   - name: Startup Items
     description: |
       {{ DocFrom "Windows.Sys.StartupItems" }}
 
-    queries:
-      - |
+    query: |
         SELECT * FROM Artifact.Windows.Sys.StartupItems()
 
   - name: Debug Bootstraping
@@ -30,5 +28,5 @@ sources:
       program will also launch the program listed under the Debugger
       column.
 
-    queries:
-      - SELECT * FROM Artifact.Windows.Persistence.Debug()
+    query: |
+      SELECT * FROM Artifact.Windows.Persistence.Debug()

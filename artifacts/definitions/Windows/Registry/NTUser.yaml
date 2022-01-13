@@ -37,9 +37,8 @@ parameters:
    type: regex
 
 sources:
- - queries:
-     - |
-        LET UserProfiles = SELECT Uid,
+ - query: |
+       LET UserProfiles = SELECT Uid,
             Gid,
             Name as Username,
             Description,
@@ -49,9 +48,9 @@ sources:
                    globs=expand(path=Directory) + "//NTUSER.DAT", accessor="file")
             } as FullPath,
             expand(path=Directory) as Directory
-        FROM Artifact.Windows.Sys.Users()
-        WHERE Directory and FullPath AND Name =~ userRegex
-     - |
+       FROM Artifact.Windows.Sys.Users()
+       WHERE Directory and FullPath AND Name =~ userRegex
+
        SELECT * FROM foreach(
             row={
                 SELECT * FROM UserProfiles

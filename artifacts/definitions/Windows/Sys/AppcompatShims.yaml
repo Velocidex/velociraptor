@@ -18,8 +18,7 @@ parameters:
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
-    queries:
-      - |
+    query: |
         LET installed_sdb <=
            SELECT Key, Key.Name as SdbGUID, DatabasePath,
                   DatabaseType, DatabaseDescription,
@@ -28,7 +27,7 @@ sources:
            FROM read_reg_key(
              globs=split(string=shimKeys, sep=",[\\s]*"),
              accessor="reg")
-      - |
+
         LET result = SELECT * from foreach(
           row={
             SELECT regex_replace(
@@ -49,5 +48,5 @@ sources:
             FROM installed_sdb
             WHERE SdbGUID = SdbGUIDRef
           })
-      - |
+
         SELECT * from result

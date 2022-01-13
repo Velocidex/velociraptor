@@ -18,8 +18,7 @@ parameters:
     description: The directory to search for office documents.
 
 sources:
-  - queries:
-      - |
+  - query: |
         SELECT * FROM foreach(
            row={
               SELECT FullPath FROM glob(globs=officeFileSearchGlob + officeExtensions)

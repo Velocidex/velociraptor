@@ -16,8 +16,7 @@ parameters:
       PsExec execution detected at %v: %v for client %v
 
 sources:
-  - queries:
-      - |
+  - query: |
         SELECT * FROM foreach(
           row={
             SELECT * from watch_monitoring(

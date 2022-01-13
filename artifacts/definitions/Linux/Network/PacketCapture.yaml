@@ -26,13 +26,12 @@ parameters:
       default:
 
 sources:
-    - queries:
-        - |
+    - query: |
             LET pcap <= tempfile(extension=".pcap")
-        - |
+
             LET record_pcap =
                     SELECT * FROM execve(argv=['bash', '-c',  '(tcpdump -nni ' + Interface + ' -w ' + pcap + ' ' + '\'' + BPF + '\') & sleep ' + Duration + '; kill $!'])
-        - |
+
             SELECT * FROM chain (
               a={SELECT * FROM record_pcap},
               b={SELECT upload(file=pcap) AS Upload FROM scope()}

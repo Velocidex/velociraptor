@@ -146,6 +146,7 @@ func oauthGithubCallback(config_obj *config_proto.Config) http.Handler {
 			Name:    "VelociraptorAuth",
 			Value:   tokenString,
 			Path:    "/",
+			Secure:  true,
 			Expires: time.Now().AddDate(0, 0, 1),
 		}
 		http.SetCookie(w, cookie)

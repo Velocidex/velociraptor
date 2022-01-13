@@ -16,11 +16,12 @@ parameters:
     type: regex
 
 sources:
-  - queries:
-      - LET processes = SELECT Pid, Name, Username
+  - query: |
+      LET processes = SELECT Pid, Name, Username
         FROM pslist()
         WHERE Name =~ processRegex
-      - SELECT Pid, Name, Username,
+
+      SELECT Pid, Name, Username,
                "0x" + Record.Start AS StartHex,
                "0x" + Record.End AS EndHex,
                Record.Perm AS Perm,
@@ -28,7 +29,7 @@ sources:
                "0x" + Record.Size AS SizeHex,
                Record.Filename AS Filename,
                if(condition=Record.Deleted, then=TRUE, else=FALSE) AS Deleted
-        FROM foreach(
+      FROM foreach(
           row=processes,
           query={
             SELECT parse_string_with_regex(

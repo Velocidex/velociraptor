@@ -29,20 +29,20 @@ sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
 
-    queries:
-    - LET task_paths = SELECT Name, FullPath
+    query: |
+      LET task_paths = SELECT Name, FullPath
         FROM glob(globs=TasksPath)
         WHERE NOT IsDir
 
-    - LET parse_task = select FullPath, Name, parse_xml(
+      LET parse_task = select FullPath, Name, parse_xml(
                accessor='data',
                file=regex_replace(
                     source=utf16(string=Data),
                     re='<[?].+?>',
                     replace='')) AS XML
-       FROM read_file(filenames=FullPath)
+      FROM read_file(filenames=FullPath)
 
-    - LET tasks = SELECT FullPath, Name,
+      LET tasks = SELECT FullPath, Name,
             XML.Task.Actions.Exec.Command as Command,
             XML.Task.Actions.Exec.Arguments as Arguments,
             XML.Task.Actions.ComHandler.ClassId as ComHandler,
@@ -52,7 +52,7 @@ sources:
       WHERE (Arguments =~ ArgumentRegex AND Command =~ CommandRegEx)  AND
       log(message="Removing task " + Name)
 
-    - SELECT * FROM foreach(row=tasks,
+      SELECT * FROM foreach(row=tasks,
         query={
           SELECT * FROM if(condition= ReallyDoIt='Y',
             then={

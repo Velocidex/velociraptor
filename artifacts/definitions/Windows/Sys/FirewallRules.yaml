@@ -10,8 +10,7 @@ parameters:
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
-    queries:
-      - |
+    query: |
         LET rules = SELECT Name as Value,
                parse_string_with_regex(string=Data,
                  regex=["Action=(?P<Action>[^|]+)",
@@ -26,7 +25,6 @@ sources:
                FullPath
         FROM glob(globs=regKey, accessor="reg")
 
-      - |
         SELECT Value,
                Record.Action as Action,
                Record.Name as Name,

@@ -67,8 +67,7 @@ sources:
         SELECT * FROM items
 
   - name: Upload
-    queries:
-      - |
+    query: |
         -- if configured upload ConsoleHost_history.txt in results
         SELECT * FROM if(condition=UploadFiles,
             then={

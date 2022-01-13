@@ -11,10 +11,9 @@ parameters:
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
-    queries:
-      - |
-        /* For each user on the system, search for extension files
-           in their home directory and upload them. */
+    query: |
+        -- For each user on the system, search for extension files
+        -- in their home directory and upload them.
         SELECT * from foreach(
           row={
              SELECT Uid, User, Homedir from Artifact.Linux.Sys.Users()

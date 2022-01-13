@@ -70,8 +70,7 @@ sources:
 
 
   - name: LogFiles
-    queries:
-      - |
+    query: |
         SELECT
             FullPath,
             if(condition=UploadLogs,

@@ -3,11 +3,9 @@ description: Processes with listening (bound) network sockets/ports.
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
-    queries:
-      - |
+    query: |
         LET process <= SELECT Name, Pid from pslist()
 
-      - |
         SELECT * from foreach(
           row={
             SELECT Pid AS PortPid, Laddr.Port AS Port,

@@ -170,7 +170,6 @@ func upload_rows(
 			MaxIdleConnsPerHost:   10,
 			ResponseHeaderTimeout: time.Second,
 			TLSClientConfig: &tls.Config{
-				MinVersion:         tls.VersionTLS11,
 				ClientSessionCache: tls.NewLRUClientSessionCache(100),
 				RootCAs:            CA_Pool,
 				InsecureSkipVerify: arg.DisableSSLSecurity,

@@ -25,13 +25,11 @@ parameters:
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
-    queries:
-      - |
+    query: |
         LET interfaces <=
           SELECT Index, HardwareAddr, IP
           FROM Artifact.Windows.Network.InterfaceAddresses()
 
-      - |
         LET arp_cache = SELECT if(condition=AddressFamily=23,
                     then="IPv6",
                   else=if(condition=AddressFamily=2,
@@ -49,7 +47,7 @@ sources:
                InterfaceIndex, IPAddress,
                InterfaceAlias, LinkLayerAddress
             FROM wmi(query=wmiQuery, namespace=wmiNamespace)
-      - |
+
         SELECT * FROM foreach(
           row=arp_cache,
           query={

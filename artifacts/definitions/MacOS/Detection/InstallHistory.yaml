@@ -14,21 +14,20 @@ parameters:
 
 sources:
 - name: Install History
-  queries:
-    - LET SWplist = SELECT FullPath FROM glob(globs=InstallHistoryGlob)
-    
-    - LET SoftwareDetails = 
+  query: |
+    LET SWplist = SELECT FullPath FROM glob(globs=InstallHistoryGlob)
+
+    LET SoftwareDetails =
             SELECT * FROM foreach(
                 row=plist(file=FullPath),
                 query={
-                    SELECT 
+                    SELECT
                         get(member="displayName", default="") AS DisplayName,
                         get(member="displayVersion", default="") AS DisplayVersion,
                         get(member="processName", default="") AS ProcessName,
                         get(member="date", default="") AS InstallDate,
                         get(member="contentType", default="") AS ContentType,
                         get(member="packageIdentifiers", default="") AS PackageIdentifiers
-                    FROM scope()              
+                    FROM scope()
             })
-    - SELECT * FROM foreach(row=SWplist, query=SoftwareDetails)
-
+    SELECT * FROM foreach(row=SWplist, query=SoftwareDetails)

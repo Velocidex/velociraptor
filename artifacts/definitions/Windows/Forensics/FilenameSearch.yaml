@@ -24,8 +24,7 @@ parameters:
       default: "\\\\.\\c:"
 
 sources:
-  - queries:
-      - |
+  - query: |
         SELECT String.Offset AS Offset,
                String.HexData AS HexData,
                parse_ntfs(device=Device,

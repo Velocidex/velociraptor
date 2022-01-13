@@ -3,8 +3,7 @@ description: Retrieve basic information about the physical disks of a system.
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
-    queries:
-      - |
+    query: |
         SELECT Partitions,
                Index as DiskIndex,
                InterfaceType as Type,

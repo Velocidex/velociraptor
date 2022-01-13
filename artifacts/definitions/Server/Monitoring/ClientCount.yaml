@@ -17,11 +17,9 @@ parameters:
      default: "3600"
 
 sources:
-  - queries:
-    - |
+  - query: |
       LET metrics = SELECT * FROM Artifact.Server.Monitor.VeloMetrics()
 
-    - |
       SELECT * FROM foreach(
         row={
             SELECT * FROM clock(period=atoi(string=Period))

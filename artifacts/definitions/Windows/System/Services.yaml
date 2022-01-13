@@ -16,8 +16,7 @@ sources:
   - precondition: |
       SELECT OS From info() where OS = 'windows'
 
-    queries:
-      - |
+    query: |
         LET service <= SELECT State, Name, DisplayName, Status,
                ProcessId as Pid, ExitCode, StartMode,
                PathName, ServiceType, StartName as UserAccount,
@@ -35,7 +34,7 @@ sources:
                  ['^"(?P<AbsoluteExePath>[^"]+)','(?P<AbsoluteExePath>^[^ "]+)'],
                  string=PathName).AbsoluteExePath) as AbsoluteExePath
         FROM wmi(query="SELECT * From Win32_service", namespace="root/CIMV2")
-      - |
+
         SELECT *,
                  if(condition=Calculate_hashes,
                     then=hash(path=AbsoluteExePath,

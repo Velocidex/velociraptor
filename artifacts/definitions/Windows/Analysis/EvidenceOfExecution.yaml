@@ -8,21 +8,21 @@ description: |
 
 sources:
   - name: UserAssist
-    queries:
-      - SELECT * FROM Artifact.Windows.Registry.UserAssist()
+    query: |
+      SELECT * FROM Artifact.Windows.Registry.UserAssist()
 
   - name: Timeline
-    queries:
-      - SELECT * FROM Artifact.Windows.Forensics.Timeline()
+    query: |
+      SELECT * FROM Artifact.Windows.Forensics.Timeline()
 
   - name: Recent Apps
-    queries:
-      - SELECT * FROM Artifact.Windows.Forensics.RecentApps()
+    query: |
+      SELECT * FROM Artifact.Windows.Forensics.RecentApps()
 
   - name: ShimCache
-    queries:
-      - SELECT * FROM Artifact.Windows.Registry.AppCompatCache()
+    query: |
+      SELECT * FROM Artifact.Windows.Registry.AppCompatCache()
 
   - name: Prefetch
-    queries:
-      - SELECT * FROM Artifact.Windows.Forensics.Prefetch()
+    query: |
+      SELECT * FROM Artifact.Windows.Forensics.Prefetch()

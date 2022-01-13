@@ -98,7 +98,11 @@ func generateStateOauthCookie(w http.ResponseWriter) *http.Cookie {
 	b := make([]byte, 16)
 	_, _ = rand.Read(b)
 	state := base64.URLEncoding.EncodeToString(b)
-	cookie := http.Cookie{Name: "oauthstate", Value: state, Expires: expiration}
+	cookie := http.Cookie{
+		Name:    "oauthstate",
+		Value:   state,
+		Secure:  true,
+		Expires: expiration}
 	http.SetCookie(w, &cookie)
 
 	return &cookie
@@ -164,6 +168,7 @@ func oauthGoogleCallback(config_obj *config_proto.Config) http.Handler {
 			Name:    "VelociraptorAuth",
 			Value:   tokenString,
 			Path:    "/",
+			Secure:  true,
 			Expires: time.Now().AddDate(0, 0, 1),
 		}
 		http.SetCookie(w, cookie)
@@ -216,6 +221,7 @@ func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
 			Name:    "VelociraptorAuth",
 			Path:    "/",
 			Value:   "",
+			Secure:  true,
 			Expires: time.Unix(0, 0),
 		})
 		fmt.Fprintf(w, `

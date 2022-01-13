@@ -20,8 +20,7 @@ sources:
  - precondition:
      SELECT OS from info() where OS = "windows"
 
-   queries:
-      - |
+   query: |
         SELECT System.TimeCreated.SystemTime as Timestamp,
                System.EventID.Value as EventID,
                EventData.ImagePath as ImagePath,
