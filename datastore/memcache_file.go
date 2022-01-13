@@ -322,8 +322,9 @@ func (self *MemcacheFileDataStore) ListChildren(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]api.DSPathSpec, error) {
 
-	self.mu.Lock()
-	defer self.mu.Unlock()
+	// No locking here!  This function encompases the fast memcache
+	// **and** the slow filesystem. Locking here will deadlock on the
+	// slow filesystem.
 
 	defer Instrument("list", "MemcacheFileDataStore", urn)()
 
