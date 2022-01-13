@@ -366,7 +366,7 @@ func build_gui_files() error {
 		return err
 	}
 
-	err = sh.RunV("npm", "install")
+	err = sh.RunV("npm", "ci")
 	if err != nil {
 		return err
 	}
