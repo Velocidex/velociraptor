@@ -11,8 +11,8 @@ precondition: SELECT OS From info() where OS = 'linux'
 
 sources:
   - name: CronTabs
-    queries:
-      - LET raw = SELECT * FROM foreach(
+    query: |
+      LET raw = SELECT * FROM foreach(
           row={
             SELECT FullPath from glob(globs=split(string=cronTabGlob, sep=","))
           },
@@ -38,7 +38,7 @@ sources:
                regex="\n", columns=["data"]) WHERE not data =~ "^\\s*#"
             }) WHERE Record.Command
 
-      - SELECT Record.Event AS Event,
+      SELECT Record.Event AS Event,
                Record.User AS User,
                Record.Minute AS Minute,
                Record.Hour AS Hour,
@@ -47,9 +47,9 @@ sources:
                Record.DayOfWeek AS DayOfWeek,
                Record.Command AS Command,
                FullPath AS Path
-        FROM raw
+      FROM raw
 
   - name: Uploaded
-    queries:
-      - SELECT FullPath, upload(filename=FullPath) AS Upload
-        FROM glob(globs=split(string=cronTabGlob + "," + cronTabScripts, sep=","))
+    query: |
+      SELECT FullPath, upload(filename=FullPath) AS Upload
+      FROM glob(globs=split(string=cronTabGlob + "," + cronTabScripts, sep=","))

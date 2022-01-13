@@ -13,8 +13,7 @@ parameters:
     default: admin@example.com
 
 sources:
-  - queries:
-      - |
+  - query: |
         SELECT * FROM foreach(
           row={
             SELECT * from watch_monitoring(

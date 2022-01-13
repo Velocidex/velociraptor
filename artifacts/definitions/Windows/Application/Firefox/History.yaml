@@ -15,8 +15,7 @@ parameters:
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
-  - queries:
-      - |
+  - query: |
         LET places_files = SELECT * from foreach(
           row={
              SELECT Uid, Name AS User, Directory
@@ -28,7 +27,6 @@ sources:
                globs=Directory + placesGlobs)
           })
 
-      - |
         SELECT * FROM foreach(row=places_files,
           query={
             SELECT User, FullPath,

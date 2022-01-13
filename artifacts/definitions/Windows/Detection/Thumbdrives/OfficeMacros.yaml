@@ -19,8 +19,7 @@ parameters:
     type: regex
 
 sources:
-  - queries:
-      - |
+  - query: |
         SELECT * FROM foreach(
           row = {
             SELECT * FROM Artifact.Windows.Detection.Thumbdrives.List()

@@ -19,13 +19,11 @@ parameters:
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'windows'
-    queries:
-      - |
+    query: |
         LET users = SELECT Name, Directory as HomeDir
             FROM Artifact.Windows.Sys.Users()
             WHERE Directory AND Name =~ userRegex
 
-      - |
         SELECT upload(file=expand(path=HomeDir) + "\\ntuser.dat",
                       accessor="file") as Upload
         FROM users

@@ -1,13 +1,13 @@
 name: MacOS.System.TCC
 description: |
    This artifact provides details around the TCC (Transparency, Consent, and Control) database, and can help reveal when access to system services has been added or modified for an application.
-   
+
    Note that this artifact has only been tested on macOS Big Sur, and that the `allowed`, and `prompt_count` columns will need to be used in place of the `auth_value`, `auth_reason`, and `auth_version` columns for Catalina and prior.
 
 type: CLIENT
 
 author: Wes Lambert - @therealwlambert
-   
+
 parameters:
 - name: TCCGlob
   default: /Library/Application Support/com.apple.TCC/TCC.db,/Users/*/Library/Application Support/com.apple.TCC/TCC.db
@@ -16,10 +16,14 @@ precondition:
       SELECT OS From info() where OS = 'darwin'
 
 sources:
-  - queries:
-     - LET TCCList = SELECT FullPath from glob(globs=split(string=TCCGlob, sep=","))
-     - LET TCCAccess = SELECT * FROM sqlite(file=FullPath, query="SELECT * from access")
-     - LET TCCAccessDetails = 
+  - query: |
+      LET TCCList = SELECT FullPath
+       FROM glob(globs=split(string=TCCGlob, sep=","))
+
+      LET TCCAccess = SELECT *
+       FROM sqlite(file=FullPath, query="SELECT * from access")
+
+      LET TCCAccessDetails =
           SELECT * FROM foreach(
               row=TCCAccess,
               query={ SELECT
@@ -41,4 +45,4 @@ sources:
                  FROM scope()
               }
           )
-     - SELECT * FROM foreach(row=TCCList, query=TCCAccessDetails)
+      SELECT * FROM foreach(row=TCCList, query=TCCAccessDetails)

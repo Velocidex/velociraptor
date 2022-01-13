@@ -8,8 +8,8 @@ type: CLIENT_EVENT
 
 sources:
   - precondition: SELECT OS From info() where OS = 'windows'
-    queries:
-      - SELECT * from foreach(
+    query: |
+      SELECT * from foreach(
          row={
            SELECT UnixNano FROM clock(period=atoi(string=Frequency))
          },
@@ -21,8 +21,8 @@ sources:
          })
 
   - precondition: SELECT OS From info() where OS != 'windows'
-    queries:
-      - SELECT * from foreach(
+    query: |
+      SELECT * from foreach(
          row={
            SELECT UnixNano FROM clock(period=atoi(string=Frequency))
          },

@@ -10,6 +10,5 @@ parameters:
 type: SERVER
 
 sources:
-  - queries:
-      - |
-        SELECT * FROM hunt_results(hunt_id=huntId, artifact=ArtifactName)
+  - query: |
+      SELECT * FROM hunt_results(hunt_id=huntId, artifact=ArtifactName)

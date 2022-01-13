@@ -20,9 +20,10 @@ parameters:
     type: bool
 
 sources:
-  - queries:
-      - LET Plists = SELECT FullPath FROM glob(globs=PlistGlob)
-      - LET PlistDetails =
+  - query: |
+       LET Plists = SELECT FullPath FROM glob(globs=PlistGlob)
+
+       LET PlistDetails =
             SELECT * FROM foreach(
                 row=plist(file=FullPath),
                 query={ SELECT
@@ -34,4 +35,5 @@ sources:
                     FROM scope()
                 }
             )
-      - SELECT * FROM foreach(row=Plists, query=PlistDetails)
+
+       SELECT * FROM foreach(row=Plists, query=PlistDetails)

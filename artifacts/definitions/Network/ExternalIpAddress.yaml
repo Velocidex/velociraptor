@@ -6,6 +6,5 @@ parameters:
     description: The URL of the external IP detection site.
 sources:
   - precondition: SELECT * from info()
-    queries:
-      - |
+    query: |
         SELECT Content as IP from http_client(url=externalUrl)

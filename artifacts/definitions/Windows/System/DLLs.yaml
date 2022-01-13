@@ -20,11 +20,12 @@ parameters:
     type: bool
 
 sources:
-  - queries:
-      - LET processes = SELECT Pid, Name
+  - query: |
+      LET processes = SELECT Pid, Name
         FROM pslist()
         WHERE Name =~ processRegex
-      - SELECT * FROM foreach(
+
+      SELECT * FROM foreach(
           row=processes,
           query={
             SELECT Pid, Name,

@@ -26,23 +26,25 @@ parameters:
        chrome.exe,explorer.exe
 
 sources:
-     - queries:
-       # Build up some cached queries for speed.
-       - LET processes <= SELECT Name, Pid, Ppid, CommandLine, CreateTime, Exe FROM pslist()
-       - LET processes_lookup <= SELECT Name As ProcessName, Pid As ProcID FROM processes
-       - |
+     - query: |
+         // Build up some cached queries for speed.
+         LET processes <= SELECT Name, Pid, Ppid, CommandLine, CreateTime, Exe
+         FROM pslist()
+
+         LET processes_lookup <= SELECT Name As ProcessName, Pid As ProcID
+         FROM processes
+
          // Resolve the Ppid into a parent name using our processes_lookup
          LET resolved_parent_name = SELECT * FROM foreach(
-         row={ SELECT * FROM processes},
-         query={
-           SELECT Name AS ActualProcessName,
+           row={ SELECT * FROM processes},
+           query={
+             SELECT Name AS ActualProcessName,
                   ProcessName AS ActualParentName,
                   Pid, Ppid, CommandLine, CreateTime, Exe
-           FROM processes_lookup
-           WHERE ProcID = Ppid LIMIT 1
-         })
+             FROM processes_lookup
+             WHERE ProcID = Ppid LIMIT 1
+           })
 
-       - |
          // Get the expected parent name from the table above.
          SELECT * FROM foreach(
            row=resolved_parent_name,
@@ -52,5 +54,6 @@ sources:
                     Pid, Ppid, CommandLine, CreateTime, Exe,
                     ParentRegex as ExpectedParentName
              FROM lookupTable
-             WHERE ActualProcessName =~ ProcessName AND NOT ActualParentName =~ ParentRegex
-         })
+             WHERE ActualProcessName =~ ProcessName
+               AND NOT ActualParentName =~ ParentRegex
+          })

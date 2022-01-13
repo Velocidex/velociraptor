@@ -6,13 +6,12 @@ description: |
 type: SERVER
 
 sources:
-  - queries:
-      - |
+  - query: |
         LET hunts = SELECT basename(path=hunt_id) as hunt_id,
             create_time,
             hunt_description
         FROM hunts() order by create_time desc limit 6
-      - |
+
         LET flows = select hunt_id,
           hunt_description,
           Fqdn,
@@ -23,5 +22,5 @@ sources:
           (Flow.active_time - Flow.create_time) / 1000000 as Duration,
           format(format='%v', args=[Flow.state]) as State
         FROM hunt_flows(hunt_id=hunt_id) order by create_time desc
-      - |
+
         SELECT * from foreach(row=hunts, query=flows)

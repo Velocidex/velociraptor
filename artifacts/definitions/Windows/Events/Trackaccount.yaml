@@ -19,10 +19,10 @@ parameters:
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
-    queries:
-      - LET files = SELECT * FROM glob(globs=eventLog)
+    query: |
+      LET files = SELECT * FROM glob(globs=eventLog)
 
-      - SELECT timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
+      SELECT timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
               System.EventRecordID as EventRecordID,
               System.EventID.Value as EventID,
               System.Computer as SourceComputer,

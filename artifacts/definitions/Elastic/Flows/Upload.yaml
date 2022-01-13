@@ -22,12 +22,12 @@ parameters:
   - name: APIKey
 
 sources:
-  - queries:
-      - LET completions = SELECT * FROM watch_monitoring(
+  - query: |
+      LET completions = SELECT * FROM watch_monitoring(
              artifact="System.Flow.Completion")
              WHERE Flow.artifacts_with_results =~ ArtifactNameRegex
 
-      - LET documents = SELECT * FROM foreach(row=completions,
+      LET documents = SELECT * FROM foreach(row=completions,
           query={
              SELECT * FROM foreach(
                  row=Flow.artifacts_with_results,
@@ -44,7 +44,7 @@ sources:
                  })
           })
 
-      - SELECT * FROM elastic_upload(
+      SELECT * FROM elastic_upload(
             query=documents,
             addresses=split(string=elasticAddresses, sep=","),
             index="velociraptor",

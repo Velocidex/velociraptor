@@ -52,9 +52,9 @@ sources:
 
   - name: Users
     precondition: SELECT OS From info() where OS = 'windows'
-    queries:
-      - SELECT Name, Description, Mtime AS LastLogin
-        FROM Artifact.Windows.Sys.Users()
+    query: |
+      SELECT Name, Description, Mtime AS LastLogin
+      FROM Artifact.Windows.Sys.Users()
 
 reports:
   - type: CLIENT

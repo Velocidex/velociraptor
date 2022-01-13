@@ -11,9 +11,9 @@ parameters:
     default: Y
 
 sources:
-  - queries:
-      - LET user_plist = SELECT FullPath FROM glob(globs=UserPlistGlob)
-      - LET UserDetails =
+  - query: |
+      LET user_plist = SELECT FullPath FROM glob(globs=UserPlistGlob)
+      LET UserDetails =
               SELECT get(member="name.0", default="") AS Name,
                      get(member="realname.0", default="") AS RealName,
                      get(member="shell.0", default="") AS UserShell,
@@ -24,11 +24,11 @@ sources:
                            accessor='data') AS AccountPolicyData
               FROM plist(file=FullPath)
 
-      - SELECT Name, RealName, UserShell, HomeDir,
+      SELECT Name, RealName, UserShell, HomeDir,
                get(item=AppleId, field="appleid.apple.com") AS AppleId,
                timestamp(epoch=AccountPolicyData.creationTime) AS CreationTime,
                AccountPolicyData.failedLoginCount AS FailedLoginCount,
                timestamp(epoch=AccountPolicyData.failedLoginTimestamp) AS FailedLoginTimestamp,
                timestamp(epoch=AccountPolicyData.passwordLastSetTime) AS PasswordLastSetTime
-        FROM foreach(row=user_plist, query=UserDetails)
-        WHERE NOT OnlyShowRealUsers OR NOT UserShell =~ 'false'
+      FROM foreach(row=user_plist, query=UserDetails)
+      WHERE NOT OnlyShowRealUsers OR NOT UserShell =~ 'false'

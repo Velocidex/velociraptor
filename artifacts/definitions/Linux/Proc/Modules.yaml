@@ -8,8 +8,7 @@ sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
 
-    queries:
-      - |
+    query: |
         SELECT Name,
           atoi(string=Size) As Size,
           atoi(string=UseCount) As UseCount,

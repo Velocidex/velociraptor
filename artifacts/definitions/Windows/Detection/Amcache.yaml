@@ -47,8 +47,7 @@ parameters:
     type: regex
 
 sources:
-  - queries:
-      - |
+  - query: |
         LET files <= SELECT FullPath FROM glob(globs=expand(path=AMCacheGlob))
 
         SELECT * FROM foreach(row=files,

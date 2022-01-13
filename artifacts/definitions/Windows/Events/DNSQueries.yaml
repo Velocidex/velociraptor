@@ -25,8 +25,7 @@ sources:
  - precondition:
      SELECT OS from info() where OS = "windows"
 
-   queries:
-      - |
+   query: |
         SELECT timestamp(epoch=Time) As Time, EventType, Name, CNAME, Answers
         FROM dns()
         WHERE not Name =~ whitelistRegex

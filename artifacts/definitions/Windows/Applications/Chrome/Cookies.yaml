@@ -26,8 +26,7 @@ parameters:
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
-  - queries:
-      - |
+  - query: |
         LET cookie_files = SELECT * from foreach(
           row={
              SELECT Uid, Name AS User, Directory
@@ -39,7 +38,6 @@ sources:
                globs=Directory + cookieGlobs)
           })
 
-      - |
         SELECT * FROM foreach(row=cookie_files,
           query={
             SELECT timestamp(winfiletime=creation_utc * 10) as Created,

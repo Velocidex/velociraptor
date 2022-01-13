@@ -18,16 +18,16 @@ parameters:
 
 sources:
   - name: Analysis
-    queries:
-      - LET Uploads = SELECT Name, FullPath, if(
+    query: |
+      LET Uploads = SELECT Name, FullPath, if(
            condition=AlsoUpload='Y',
            then=upload(file=FullPath)) as Upload
         FROM glob(globs=TasksPath)
         WHERE NOT IsDir
 
-      # Job files contain invalid XML which confuses the parser - we
-      # use regex to remove the invalid tags.
-      - LET parse_task = select FullPath, parse_xml(
+      // Job files contain invalid XML which confuses the parser - we
+      // use regex to remove the invalid tags.
+      LET parse_task = select FullPath, parse_xml(
                accessor='data',
                file=regex_replace(
                     source=utf16(string=Data),
@@ -35,7 +35,7 @@ sources:
                     replace='')) AS XML
         FROM read_file(filenames=FullPath)
 
-      - SELECT FullPath,
+      SELECT FullPath,
             XML.Task.Actions.Exec.Command as Command,
             XML.Task.Actions.Exec.Arguments as Arguments,
             XML.Task.Actions.ComHandler.ClassId as ComHandler,

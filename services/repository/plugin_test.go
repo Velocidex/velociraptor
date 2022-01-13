@@ -32,6 +32,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	repository_impl "www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -49,6 +50,11 @@ type PluginTestSuite struct {
 // syntax. This should catch syntax errors in built in artifacts.
 func (self *PluginTestSuite) TestArtifactsSyntax() {
 	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	err = repository.LoadBuiltInArtifacts(
+		self.Ctx, self.ConfigObj, manager.(*repository.RepositoryManager),
+		true /* validate */)
 	assert.NoError(self.T(), err)
 
 	ConfigObj := self.ConfigObj

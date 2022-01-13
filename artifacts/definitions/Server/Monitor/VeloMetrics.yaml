@@ -9,8 +9,7 @@ parameters:
     default: http://localhost:8003/metrics
 
 sources:
-  - queries:
-      - |
+  - query: |
         LET stats = SELECT parse_string_with_regex(string=Content,
            regex=[
              'client_comms_concurrency (?P<client_comms_concurrency>[^\\s]+)',
@@ -29,7 +28,6 @@ sources:
            } AS PslistStats
         FROM  http_client(url=MetricsURL, chunk_size=50000)
 
-      - |
         SELECT now() AS Timestamp,
                PslistStats.RSS AS process_resident_memory_bytes,
                parse_float(string=Stat.client_comms_concurrency)

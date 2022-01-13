@@ -43,8 +43,8 @@ export:
     '''
 
 sources:
-  - queries:
-      - LET TMP = SELECT parse_string_with_regex(
+  - query: |
+      LET TMP = SELECT parse_string_with_regex(
                 string=url(parse=FullPath).Fragment,
                 regex="^.+Count\\\\\"?(?P<Name>.+?)\"?$") AS Name, FullPath,
              parse_binary(
@@ -56,9 +56,9 @@ sources:
              parse_string_with_regex(
                string=FullPath,
                regex="Users/(?P<User>[^/]+)/NTUSER").User AS User
-        FROM Artifact.Windows.Registry.NTUser(KeyGlob=UserAssistKey)
+      FROM Artifact.Windows.Registry.NTUser(KeyGlob=UserAssistKey)
 
-      - LET UserAssist = SELECT if(condition=Name.Name,
+      LET UserAssist = SELECT if(condition=Name.Name,
                    then=rot13(string=Name.Name),
                    else=url(parse=FullPath).Fragment) AS Name,
                User,
@@ -66,14 +66,14 @@ sources:
                timestamp(winfiletime=ParsedUserAssist.LastExecution).Unix AS LastExecutionTS,
                ParsedUserAssist.NumberOfExecutions AS NumberOfExecutions
         FROM TMP
-      - LET A1 = SELECT * FROM if(
+      LET A1 = SELECT * FROM if(
           condition=UserFilter,
           then={
             SELECT * FROM UserAssist WHERE User =~ UserFilter
           },
           else={ SELECT * FROM UserAssist})
 
-      - SELECT * FROM if(
+      SELECT * FROM if(
           condition=ExecutionTimeAfter,
           then={
             SELECT * FROM A1 WHERE LastExecutionTS > ExecutionTimeAfter

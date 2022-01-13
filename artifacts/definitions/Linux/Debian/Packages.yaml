@@ -6,8 +6,7 @@ parameters:
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
-    queries:
-      - |
+    query: |
         /* First pass - split file into records start with
            Package and end with \n\n.
 
@@ -23,7 +22,7 @@ sources:
             FROM parse_records_with_regex(
                    file=linuxDpkgStatus,
                    regex='(?sm)^(?P<Record>Package:.+?)\\n\\n')
-      - |
+
         SELECT Record.Package as Package,
                atoi(string=Record.InstalledSize) as InstalledSize,
                Record.Version as Version,

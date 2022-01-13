@@ -24,9 +24,9 @@ parameters:
 
 sources:
   - name: ServiceCreation
-    queries:
-      # Extract all target paths from glob
-      - LET files = SELECT *
+    query: |
+      // Extract all target paths from glob
+      LET files = SELECT *
             FROM if(condition=SearchVSS,
                 then= {
                     SELECT *
@@ -37,8 +37,8 @@ sources:
                     FROM glob(globs=EventLog, accessor='file')
                 })
 
-      # Parse all target files, order by source and add dedupe string
-      - LET hits = SELECT *
+      // Parse all target files, order by source and add dedupe string
+      LET hits = SELECT *
             FROM foreach(
               row=files,
               query={
@@ -62,13 +62,13 @@ sources:
             })
             ORDER BY Source DESC
 
-      # Group results for deduplication
-      - LET grouped = SELECT *
+      // Group results for deduplication
+      LET grouped = SELECT *
           FROM hits
           GROUP BY EventRecordID
 
-      # Output results
-      - SELECT
+      // Output results
+      SELECT
             EventTime,
             EventID,
             Computer,

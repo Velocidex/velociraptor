@@ -28,8 +28,7 @@ parameters:
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
-    queries:
-      - |
+    query: |
         SELECT * from foreach(
         row={
           SELECT Name, Directory as HomeDir from Artifact.Windows.Sys.Users()

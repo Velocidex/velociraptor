@@ -61,19 +61,19 @@ parameters:
     type: regex
 
 sources:
-  - queries:
-      # expand provided glob into a list of paths on the file system (fs)
-      - LET fspaths <=
+  - query: |
+      // expand provided glob into a list of paths on the file system (fs)
+      LET fspaths <=
           SELECT FullPath FROM glob(globs=expand(path=EvtxGlob))
           WHERE FullPath =~ PathRegex
 
-      # function returning list of VSS paths corresponding to path
-      - LET vsspaths(path) =
+      // function returning list of VSS paths corresponding to path
+      LET vsspaths(path) =
           SELECT FullPath FROM Artifact.Windows.Search.VSS(SearchFilesGlob=path)
           WHERE FullPath =~ PathRegex
 
-      # function returning parsed evtx from list of paths
-      - LET evtxsearch(pathList) =
+      // function returning parsed evtx from list of paths
+      LET evtxsearch(pathList) =
           SELECT * FROM foreach(
             row=pathList,
             query={
@@ -85,18 +85,24 @@ sources:
                 FullPath
               FROM parse_evtx(filename=FullPath)
               WHERE
-                if(condition=StartDate, then=TimeCreated >= timestamp(string=StartDate), else=true)
-                AND if(condition=EndDate, then=TimeCreated <= timestamp(string=EndDate), else=true)
+                if(condition=StartDate,
+                   then=TimeCreated >= timestamp(string=StartDate),
+                   else=true)
+                AND if(condition=EndDate,
+                       then=TimeCreated <= timestamp(string=EndDate),
+                       else=true)
                 AND Channel =~ ChannelRegex
                 AND str(str=EventID) =~ IDRegex
             }
           )
 
-      # only de-duplicate using GROUP BY when searching VSS
-      # de-duplicate file-by-file to reduce memory impact
-      - SELECT * FROM if(condition=SearchVSS, then={
+      // only de-duplicate using GROUP BY when searching VSS
+      // de-duplicate file-by-file to reduce memory impact
+      SELECT * FROM if(condition=SearchVSS, then={
           SELECT * FROM foreach(row=fspaths, query={
-            SELECT * FROM evtxsearch(pathList={SELECT FullPath FROM vsspaths(path=FullPath)})
+            SELECT * FROM evtxsearch(pathList={
+                SELECT FullPath FROM vsspaths(path=FullPath)
+            })
             GROUP BY EventRecordID,Channel
           })
         }, else={

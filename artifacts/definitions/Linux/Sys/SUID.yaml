@@ -29,10 +29,10 @@ parameters:
     default: /usr/**
 
 sources:
-  - queries:
-      - SELECT Mode.String AS Mode,
+  - query: |
+      SELECT Mode.String AS Mode,
                FullPath, Size,
                Mtime,
                Sys.Uid AS OwnerID,
                Sys.Gid AS GroupID
-        FROM glob(globs=GlobExpression) WHERE Mode =~ '^u'
+      FROM glob(globs=GlobExpression) WHERE Mode =~ '^u'

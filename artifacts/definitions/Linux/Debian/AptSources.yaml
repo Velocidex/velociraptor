@@ -26,14 +26,12 @@ parameters:
 sources:
   - precondition:
       SELECT OS From info() where OS = 'linux'
-    queries:
-       - |
+    query: |
          /* Search for files which may contain apt sources. The user can
             pass new globs here. */
          LET files = SELECT FullPath from glob(
            globs=split(string=linuxAptSourcesGlobs, sep=","))
 
-       - |
          /* Read each line in the sources which is not commented.
             Deb lines look like:
             deb [arch=amd64] http://dl.google.com/linux/chrome-remote-desktop/deb/ stable main
@@ -46,7 +44,6 @@ sources:
                   "(?P<URL>https?://(?P<base_uri>[^ ]+))" +
                   " +(?P<components>.+)")
 
-       - |
          /* We try to get at the Release file in /var/lib/apt/ by munging
            the components and URL.
            Strip the last component off, convert / and space to _ and
@@ -65,7 +62,6 @@ sources:
               )  as cache_file
          FROM deb_sources
 
-       - |
          /* This runs if the file was found. Read the entire file into
             memory and parse the same record using multiple RegExps.
          */
@@ -79,7 +75,6 @@ sources:
                        "Components: (?P<Components>[^\\s]+)"]) as Record
            FROM parse_records_with_regex(file=cache_file, regex="(?sm)(?P<Record>.+)")
 
-       - |
          // Foreach row in the parsed cache file, collect the FileInfo too.
          LET add_stat_to_parsed_cache_file = SELECT * from foreach(
            query={
@@ -87,7 +82,6 @@ sources:
                Name, Arch, URL, Source from stat(filename=cache_file)
            }, row=parsed_cache_files)
 
-       - |
          /* For each row in the parsed file, run the appropriate query
             depending on if the cache file exists.
             If the cache file is not found, we just copy the lines we
@@ -105,7 +99,6 @@ sources:
                Null as Record, Arch, URL, Name from scope()
            })
 
-       - |
          -- For each parsed apt .list file line produce some output.
          SELECT * from foreach(
              row=parsed_apt_lines,

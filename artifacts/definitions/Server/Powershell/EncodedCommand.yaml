@@ -9,8 +9,7 @@ description: |
 type: SERVER_EVENT
 
 sources:
-  - queries:
-     - |
+  - query: |
        SELECT ClientId, ParentInfo, CommandLine, Timestamp, utf16(
           string=base64decode(
              string=parse_string_with_regex(

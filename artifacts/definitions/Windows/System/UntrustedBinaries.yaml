@@ -22,17 +22,15 @@ parameters:
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'windows'
-    queries:
-      - |
+    query: |
         LET binaries = SELECT lowcase(string=Exe) As Binary
           FROM pslist()
           WHERE Exe =~ processNamesRegex
           GROUP BY Binary
 
-      - |
         LET auth = SELECT authenticode(filename=Binary) As Authenticode
         FROM binaries
-      - |
+
         SELECT Authenticode.Filename As Filename,
                Authenticode.IssuerName as Issuer,
                Authenticode.SubjectName as Subject,

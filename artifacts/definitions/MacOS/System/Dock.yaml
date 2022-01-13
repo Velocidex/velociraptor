@@ -1,17 +1,21 @@
 name: MacOS.System.Dock
 description: |
+  This artifact examines the contents of the user's dock.  The
+  property list entry for each application represented within the dock
+  can be modified to point to a malcious application.
 
-  **Description**:
-  This artifact examines the contents of the user's dock.  The property list entry for each application represented within the dock can be modified to point to a malcious application.
-   By comparing the application name, CFURLString, and book, we can gather greater context to assist in determining if an adversary may have tampered with an entry, or if an entry has been added to emulate a legitimate application.
-   
+   By comparing the application name, CFURLString, and book, we can
+   gather greater context to assist in determining if an adversary may
+   have tampered with an entry, or if an entry has been added to
+   emulate a legitimate application.
+
   **ATT&CK**: [T1547.009/T1547.011 - Shortcut modification/Plist modification](https://attack.mitre.org/techniques/T1547/)
-  
-  **Reference**: https://specterops.io/so-con2020/event-758922
+
+reference:
+  - https://specterops.io/so-con2020/event-758922
 
 author: Wes Lambert - @therealwlambert
 
-# Can be CLIENT, CLIENT_EVENT, SERVER, SERVER_EVENT
 type: CLIENT
 
 parameters:
@@ -22,12 +26,25 @@ precondition:
       SELECT OS From info() where OS = 'darwin'
 
 sources:
-  - queries: 
-      - LET DockList = SELECT FullPath from glob(globs=DockGlob)
-      - LET PersistentApps = SELECT get(member="persistent-apps") as PA from plist(file=DockList.FullPath)
-      - LET TD = SELECT GUID, TileData from foreach(row=PersistentApps,query={SELECT get(item=PA, member="GUID") AS GUID, get(item=PA, member="tile-data") AS TileData from scope()})
-      - LET TDEach = SELECT GUID, TileData from foreach(row=TD, query={SELECT GUID, TileData from scope()})
-      - SELECT
+  - query: |
+       LET DockList = SELECT FullPath from glob(globs=DockGlob)
+
+       LET PersistentApps = SELECT get(member="persistent-apps") as PA
+         FROM plist(file=DockList.FullPath)
+
+       LET TD = SELECT GUID, TileData from foreach(row=PersistentApps,
+       query={
+          SELECT get(item=PA, member="GUID") AS GUID,
+                 get(item=PA, member="tile-data") AS TileData
+          FROM scope()
+       })
+
+       LET TDEach = SELECT GUID, TileData FROM foreach(row=TD,
+       query={
+           SELECT GUID, TileData from scope()
+       })
+
+       SELECT
           get(member="file-label") AS FileLabel,
           get(member="file-data._CFURLString") AS AppLocation,
           timestamp(mactime=get(member="file-mod-date")) AS FileModDate,
