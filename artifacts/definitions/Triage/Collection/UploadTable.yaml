@@ -11,8 +11,7 @@ parameters:
       Type,Accessor,Glob
 
 sources:
-  - queries:
-      - |
+  - query: |
         LET results = SELECT FullPath, Size,
                Mtime As Modifed,
                Type,
@@ -23,7 +22,6 @@ sources:
         FROM glob(globs=split(string=Glob, sep=","), accessor=Accessor)
         WHERE NOT IsDir
 
-      - |
         SELECT * FROM foreach(
          row=triageTable,
          query={

@@ -196,6 +196,15 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 		},
 	}
 
+	// Assume the built in artifacts are OK so we dont need to
+	// validate them at runtime.
+	return LoadBuiltInArtifacts(ctx, config_obj, self, false /* validate */)
+}
+
+func LoadBuiltInArtifacts(ctx context.Context,
+	config_obj *config_proto.Config,
+	self *RepositoryManager, validate bool) error {
+
 	now := time.Now()
 
 	assets.Init()
@@ -213,15 +222,21 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 			data, err := assets.ReadFile(file)
 			if err != nil {
 				logger.Info("Cant read asset %s: %v", file, err)
+				if validate {
+					return err
+				}
 				continue
 			}
 
 			// Load the built in artifacts as built in. NOTE: Built in
 			// artifacts can not be overwritten!
 			_, err = self.global_repository.LoadYaml(
-				string(data), false /* Validate */, true /* built_in */)
+				string(data), validate /* Validate */, true /* built_in */)
 			if err != nil {
 				logger.Info("Cant parse asset %s: %s", file, err)
+				if validate {
+					return err
+				}
 				continue
 			}
 
@@ -243,9 +258,9 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 
 	// Compile the artifacts in the background so they are ready
 	// to go when the GUI searches for them.
-	wg.Add(1)
+	self.wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer self.wg.Done()
 
 		for _, name := range grepository.List() {
 			select {
@@ -263,9 +278,9 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 		grepository.Del("")
 	}()
 
-	wg.Add(1)
+	self.wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer self.wg.Done()
 		defer services.RegisterRepositoryManager(nil)
 
 		<-ctx.Done()

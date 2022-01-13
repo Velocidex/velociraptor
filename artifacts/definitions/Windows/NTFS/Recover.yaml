@@ -22,10 +22,10 @@ precondition:
 
 sources:
   - name: Upload
-    queries:
-       - SELECT *, upload(accessor="mft", file=Drive + Inode,
-                          name=FullPath + "/" + Inode) AS IndexUpload
-         FROM foreach(
+    query: |
+       SELECT *, upload(accessor="mft", file=Drive + Inode,
+                        name=FullPath + "/" + Inode) AS IndexUpload
+       FROM foreach(
             row=parse_ntfs(device=Drive, inode=MFTId).Attributes,
             query={
               SELECT _value.Type AS Type,

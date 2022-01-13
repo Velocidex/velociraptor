@@ -14,8 +14,8 @@ parameters:
     default: C:/Windows/System32/Winevt/Logs/Security.evtx
 
 sources:
-  - queries:
-      - SELECT EventData.IpAddress AS IpAddress,
+  - query: |
+      SELECT EventData.IpAddress AS IpAddress,
                EventData.IpPort AS Port,
                EventData.ProcessName AS ProcessName,
                EventData.SubjectUserSid AS SubjectUserSid,
@@ -23,5 +23,5 @@ sources:
                EventData.TargetUserName AS TargetUserName,
                EventData.TargetServerName AS TargetServerName,
                System.TimeCreated.SystemTime AS LogonTime
-        FROM parse_evtx(filename=securityLogFile)
-        WHERE System.EventID.Value = 4648
+      FROM parse_evtx(filename=securityLogFile)
+      WHERE System.EventID.Value = 4648

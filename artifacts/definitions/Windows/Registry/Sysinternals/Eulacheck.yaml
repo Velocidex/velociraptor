@@ -19,12 +19,11 @@ sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
 
-    queries:
-    - |
+    query: |
       LET users <= SELECT Name, UUID
           FROM Artifact.Windows.Sys.Users()
           WHERE Name =~ userRegex
-    - |
+
       SELECT Key.Name as ProgramName,
              Key.FullPath as Key,
              Key.Mtime AS TimeAccepted,

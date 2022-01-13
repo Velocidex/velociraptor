@@ -10,8 +10,7 @@ parameters:
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
-    queries:
-      - |
+    query: |
         LET roaming_users <= SELECT "" as Uid, "" as Gid,
                lookupSID(
                  sid=basename(path=Key.FullPath)
@@ -22,21 +21,19 @@ sources:
                Key.Mtime as Mtime,
                "roaming" as Type
            FROM read_reg_key(globs=remoteRegKey, accessor="reg")
-      - |
+
         LET local_users <= select User_id as Uid, Primary_group_id as Gid, Name,
                Comment as Description, {
                  SELECT Directory from roaming_users WHERE User_sid = UUID
                } as Directory, User_sid as UUID, 0 AS Mtime, "local" AS Type
         FROM users()
 
-      - |
         LET local_users_with_mtime = SELECT Uid, Gid, Name, Description,
             Directory, UUID, {
                 SELECT Mtime FROM stat(filename=expand(path=Directory))
             } As Mtime, Type
         FROM local_users
 
-      - |
         SELECT * from chain(
          q1=local_users_with_mtime,
          q2={

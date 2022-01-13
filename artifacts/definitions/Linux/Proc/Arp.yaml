@@ -7,8 +7,7 @@ sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
 
-    queries:
-      - |
+    query: |
         SELECT * from split_records(
            filenames=ProcNetArp,
            regex='\\s{3,20}',

@@ -19,12 +19,12 @@ parameters:
 sources:
   - name: Handles
     description: Open handles to mutants. This shows processes owning a handle open to the mutant.
-    queries:
-      - LET processes = SELECT Pid AS ProcPid, Name AS ProcName, Exe
+    query: |
+        LET processes = SELECT Pid AS ProcPid, Name AS ProcName, Exe
         FROM pslist()
         WHERE ProcName =~ processRegex AND ProcPid > 0
 
-      - SELECT * FROM foreach(
+        SELECT * FROM foreach(
           row=processes,
           query={
             SELECT ProcPid, ProcName, Exe, Type, Name, Handle
@@ -37,8 +37,8 @@ sources:
 
   - name: ObjectTree
     description: Reveals all Mutant objects in the Windows Object Manager namespace.
-    queries:
-      - SELECT Name, Type FROM winobj()
+    query: |
+        SELECT Name, Type FROM winobj()
         WHERE Type = 'Mutant' AND Name =~ MutantNameRegex
             AND if(condition= MutantWhitelistRegex,
                 then= NOT Name =~ MutantWhitelistRegex,

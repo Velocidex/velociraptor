@@ -45,16 +45,16 @@ parameters:
 
 sources:
 - name: Sandboxed Loginitems
-  queries:
-  - SELECT FullPath,
+  query: |
+    SELECT FullPath,
            Mtime,
            plist(file=FullPath) AS Disabled,
            upload(file=FullPath) AS Upload
     FROM glob(globs=sandboxed_loginitems)
 
 - name: crontabs
-  queries:
-      - LET raw = SELECT * FROM foreach(
+  query: |
+    LET raw = SELECT * FROM foreach(
           row={
             SELECT FullPath, Name, Mtime,
                    upload(file=FullPath) AS Upload
@@ -82,7 +82,7 @@ sources:
                regex="\n", columns=["data"]) WHERE not data =~ "^\\s*#"
             }) WHERE Record.Command
 
-      - SELECT Record.Event AS Event,
+    SELECT Record.Event AS Event,
                Mtime,
                Name AS User,
                Record.Minute AS Minute,
@@ -93,49 +93,50 @@ sources:
                Record.Command AS Command,
                FullPath AS Path,
                Upload
-        FROM raw
+    FROM raw
 
 - name: LaunchAgentsDaemons
-  queries:
-  - LET launchd_config = SELECT FullPath, Mtime,
+  query: |
+
+    LET launchd_config = SELECT FullPath, Mtime,
            plist(file=FullPath) AS LaunchdConfig,
            upload(file=FullPath) AS Upload
     FROM glob(globs=parse_json_array(data=LaunchAgentsDaemonsGlob))
 
-  - LET programs = SELECT FullPath, Mtime, LaunchdConfig,
+    LET programs = SELECT FullPath, Mtime, LaunchdConfig,
            get(member="LaunchdConfig.Program",
                default=get(member="LaunchdConfig.ProgramArguments.0")) AS Program
     FROM launchd_config
 
-  - SELECT FullPath, Mtime, LaunchdConfig,
+    SELECT FullPath, Mtime, LaunchdConfig,
            Program, hash(path=Program) AS Hash,
            upload(file=FullPath) AS Upload
     FROM programs
 
 - name: ScriptingAdditions
-  queries:
-  - SELECT FullPath,
+  query: |
+    SELECT FullPath,
            Mtime,
            upload(file=FullPath) AS Upload
     FROM glob(globs=parse_json_array(data=ScriptingAdditionsGlobs))
 
 - name: StartupItems
-  queries:
-  - SELECT FullPath,
+  query: |
+    SELECT FullPath,
            Mtime,
            upload(file=FullPath) AS Upload
     FROM glob(globs=parse_json_array(data=StartupItemsGlobs))
 
 - name: MiscItems
-  queries:
-  - SELECT FullPath,
+  query: |
+    SELECT FullPath,
            Mtime,
            upload(file=FullPath) AS Upload
     FROM glob(globs=parse_json_array(data=MiscItemsGlobs))
 
 - name: LoginItems
-  queries:
-  - SELECT FullPath,
+  query: |
+    SELECT FullPath,
            Mtime,
            plist(file=FullPath) AS LoginItemConfig,
            upload(file=FullPath) AS Upload

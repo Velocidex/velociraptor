@@ -50,34 +50,29 @@ description: |
 type: CLIENT_EVENT
 
 sources:
-  - queries:
-      # This query simulates failed logon attempts.
-      - |
-        LET failed_logon = SELECT Unix as FailedTime from clock(period=1)
+  - query: |
+      // This query simulates failed logon attempts.
+      LET failed_logon = SELECT Unix as FailedTime from clock(period=1)
 
-      # This is the fifo which holds the last 5 failed logon attempts
-      # within the last hour.
-      - |
-        LET last_5_events = SELECT FailedTime
+      // This is the fifo which holds the last 5 failed logon attempts
+      // within the last hour.
+      LET last_5_events = SELECT FailedTime
             FROM fifo(query=failed_logon, max_rows=5, max_age=3600)
 
-      # We need to get it started collecting data immediately by
-      # materializing the cache contents. Otherwise the fifo wont
-      # start until it is first called (i.e. the first successful
-      # login and we will miss the failed events before hand).
-      - |
-        LET foo <= SELECT * FROM last_5_events
+      // We need to get it started collecting data immediately by
+      // materializing the cache contents. Otherwise the fifo wont
+      // start until it is first called (i.e. the first successful
+      // login and we will miss the failed events before hand).
+       LET foo <= SELECT * FROM last_5_events
 
-      # This simulates successful logon - we assume every 3 seonds.
-      - |
-        LET success_logon = SELECT Unix as SuccessTime from clock(period=3)
+      // This simulates successful logon - we assume every 3 seonds.
+      LET success_logon = SELECT Unix as SuccessTime from clock(period=3)
 
-      # For each successful logon, query the last failed logon
-      # attempts from the fifo(). We also count the total number of
-      # failed logons. We only actually emit results if there are more
-      # than 3 failed logon attempts before each successful one.
-      - |
-        SELECT * FROM foreach(
+      // For each successful logon, query the last failed logon
+      // attempts from the fifo(). We also count the total number of
+      // failed logons. We only actually emit results if there are more
+      // than 3 failed logon attempts before each successful one.
+      SELECT * FROM foreach(
           row=success_logon,
           query={
            SELECT SuccessTime,

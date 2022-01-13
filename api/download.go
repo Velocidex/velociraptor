@@ -26,6 +26,7 @@
 package api
 
 import (
+	"html"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -70,7 +71,7 @@ var (
 
 func returnError(w http.ResponseWriter, code int, message string) {
 	w.WriteHeader(code)
-	_, _ = w.Write([]byte(message))
+	_, _ = w.Write([]byte(html.EscapeString(message)))
 }
 
 type vfsFileDownloadRequest struct {

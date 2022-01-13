@@ -7,10 +7,9 @@ parameters:
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
-    queries:
-      - |
-        SELECT User, Description, Uid, Gid, Homedir, Shell
-          FROM parse_records_with_regex(
+    query: |
+      SELECT User, Description, Uid, Gid, Homedir, Shell
+      FROM parse_records_with_regex(
             file=PasswordFile,
             regex='(?m)^(?P<User>[^:]+):([^:]+):' +
                   '(?P<Uid>[^:]+):(?P<Gid>[^:]+):(?P<Description>[^:]*):' +

@@ -6,8 +6,8 @@ description: |
 type: SERVER_EVENT
 
 sources:
-  - queries:
-      - SELECT * FROM foreach(
+  - query: |
+      SELECT * FROM foreach(
           row={
              SELECT ClientId, Flow, FlowId
              FROM watch_monitoring(artifact='System.Flow.Completion')

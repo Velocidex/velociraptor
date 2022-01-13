@@ -12,8 +12,7 @@ sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
 
-    queries:
-    - |
+    query: |
       SELECT dirname(path=FullPath) as KeyPath,
         Name as KeyName,
         Data.value as Value,

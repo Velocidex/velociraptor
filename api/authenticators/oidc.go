@@ -133,6 +133,7 @@ func oauthOidcCallback(config_obj *config_proto.Config, provider *oidc.Provider)
 			Name:    "VelociraptorAuth",
 			Value:   tokenString,
 			Path:    "/",
+			Secure:  true,
 			Expires: time.Now().AddDate(0, 0, 1),
 		}
 		http.SetCookie(w, cookie)

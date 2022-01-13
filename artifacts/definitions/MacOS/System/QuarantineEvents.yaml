@@ -1,6 +1,8 @@
 name: MacOS.System.QuarantineEvents
-description: "This artifact parses the QuarantineEventsV2 database, which provides information
-on when a file was downloaded from the internet."
+description: |
+
+  This artifact parses the QuarantineEventsV2 database, which provides
+  information on when a file was downloaded from the internet.
 
 type: CLIENT
 
@@ -14,11 +16,18 @@ precondition:
       SELECT OS From info() where OS = 'darwin'
 
 sources:
-  - queries:
-     - LET QList = SELECT FullPath FROM glob(globs=QuarantineGlob)
-     - LET QEvents = SELECT * FROM sqlite(file=FullPath, query="SELECT * from LSQuarantineEvent")
-     #  Add delta (978307200 seconds between Cocoa timestamp (2020,1,1) and epoch timestamp (1970,1,1)) to provided Cocoa timestamp
-     - LET QEventsDetails = 
+  - query: |
+      LET QList = SELECT FullPath
+        FROM glob(globs=QuarantineGlob)
+
+      LET QEvents = SELECT *
+        FROM sqlite(file=FullPath, query="SELECT * from LSQuarantineEvent")
+
+      // Add delta (978307200 seconds between Cocoa timestamp
+      // (2020,1,1) and epoch timestamp (1970,1,1)) to provided Cocoa
+      // timestamp
+
+      LET QEventsDetails =
           SELECT * FROM foreach(
               row=QEvents,
               query={ SELECT
@@ -32,4 +41,5 @@ sources:
                  FROM scope()
               }
           )
-     - SELECT * FROM foreach(row=QList, query=QEventsDetails)
+
+      SELECT * FROM foreach(row=QList, query=QEventsDetails)

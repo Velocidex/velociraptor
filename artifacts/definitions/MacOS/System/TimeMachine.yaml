@@ -9,11 +9,11 @@ author: Wes Lambert - @therealwlambert
 parameters:
   - name: TimeMachineGlob
     default: /Library/Preferences/com.apple.TimeMachine.plist
-    
+
 sources:
-  - queries:
-    - LET TMPlist = SELECT FullPath FROM glob(globs=TimeMachineGlob)
-    - LET TMDetails = 
+  - query: |
+      LET TMPlist = SELECT FullPath FROM glob(globs=TimeMachineGlob)
+      LET TMDetails =
             SELECT * FROM foreach(
                 row=plist(file=FullPath),
                 query={ SELECT
@@ -25,4 +25,4 @@ sources:
                     FROM scope()
                 }
             )
-    - SELECT * FROM foreach(row=TMPlist, query=TMDetails)
+      SELECT * FROM foreach(row=TMPlist, query=TMDetails)

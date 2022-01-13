@@ -15,8 +15,7 @@ parameters:
     default: "wide nocase ascii: psexec"
 
 sources:
-  - queries:
-      - |
+  - query: |
         SELECT * FROM foreach(
           row={ SELECT * FROM Artifact.Windows.Detection.PsexecService() },
           query={

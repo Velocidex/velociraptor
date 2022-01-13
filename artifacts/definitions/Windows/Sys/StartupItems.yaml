@@ -24,8 +24,7 @@ parameters:
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
-    queries:
-      - |
+    query: |
         /* We need to search this multiple times so we materialize it
            into a variable (using the <= operator)
          */
@@ -37,7 +36,6 @@ sources:
                      accessor="reg")
            WHERE Enabled =~ "^0[0-9]0+$"
 
-      - |
         LET registry_runners = SELECT Name,
           FullPath, Data.value as Command,
           if(
@@ -50,7 +48,6 @@ sources:
            globs=split(string=runKeyGlobs, sep="[, ]+"),
            accessor="reg")
 
-      - |
         LET file_runners = SELECT * FROM foreach(
            row={
               SELECT Name, FullPath
@@ -63,7 +60,6 @@ sources:
               FROM read_file(filenames=FullPath)
            })
 
-      - |
         SELECT * from chain(
            first=registry_runners,
            second=file_runners)

@@ -117,21 +117,21 @@ parameters:
 
 sources:
   - name: Netstat
-    queries:
-      - LET VerifiedRegex <= SELECT Regex
+    query: |
+      LET VerifiedRegex <= SELECT Regex
             FROM parse_csv(filename=AuthenticodeVerifiedMap, accessor="data")
             WHERE Choice=AuthenticodeVerified LIMIT 1
-      - LET StatusRegex <= SELECT Regex
+      LET StatusRegex <= SELECT Regex
             FROM parse_csv(filename=StatusMap, accessor="data")
             WHERE Choice=Status LIMIT 1
-      - LET FamilyRegex <= SELECT Regex
+      LET FamilyRegex <= SELECT Regex
             FROM parse_csv(filename=FamilyMap, accessor="data")
             WHERE Choice=Family LIMIT 1
-      - LET TypeRegex <= SELECT Regex
+      LET TypeRegex <= SELECT Regex
             FROM parse_csv(filename=TypeMap, accessor="data")
             WHERE Choice=Type LIMIT 1
 
-      - LET process <= SELECT Pid as PsId,
+      LET process <= SELECT Pid as PsId,
             Ppid,
             Name,
             CommandLine,
@@ -142,7 +142,7 @@ sources:
         FROM Artifact.Windows.System.Pslist()
         WHERE Name =~ ProcessNameRegex
 
-      - SELECT Pid,
+      SELECT Pid,
             { SELECT Ppid FROM process WHERE PsId = Pid } as Ppid,
             { SELECT Name FROM process WHERE PsId = Pid } as Name,
             { SELECT Exe FROM process WHERE PsId = Pid } as Path,

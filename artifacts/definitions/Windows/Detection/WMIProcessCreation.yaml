@@ -13,8 +13,7 @@ description: |
 type: CLIENT_EVENT
 
 sources:
-  - queries:
-      - |
+  - query: |
         SELECT Parse from wmi_events(
           query="SELECT * FROM MSFT_WmiProvider_ExecMethodAsyncEvent_Pre WHERE ObjectPath=\"Win32_Process\" AND MethodName=\"Create\"",
           namespace="ROOT/CIMV2",

@@ -17,8 +17,7 @@ parameters:
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
-  - queries:
-      - |
+  - query: |
         LET history_files = SELECT * from foreach(
           row={
              SELECT Uid, Name AS User, Directory
@@ -30,7 +29,6 @@ sources:
                globs=Directory + historyGlobs)
           })
 
-      - |
         SELECT * FROM foreach(row=history_files,
           query={
             SELECT User, FullPath,

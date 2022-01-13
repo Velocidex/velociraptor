@@ -14,8 +14,7 @@ parameters:
     default: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\*
 
 sources:
-  - queries:
-      - |
+  - query: |
         SELECT Key.Name AS Program,
                Key.FullPath as Key,
                Debugger FROM read_reg_key(

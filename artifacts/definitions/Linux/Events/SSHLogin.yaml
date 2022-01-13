@@ -18,12 +18,13 @@ parameters:
       %{SYSLOGTIMESTAMP:timestamp} (?:%{SYSLOGFACILITY} )?%{SYSLOGHOST:logsource} %{SYSLOGPROG}: %{DATA:event} %{DATA:method} for (invalid user )?%{DATA:user} from %{IPORHOST:ip} port %{NUMBER:port} ssh2(: %{GREEDYDATA:system.auth.ssh.signature})?
 
 sources:
-  - queries:
-      # Basic syslog parsing via GROK expressions.
-      - LET success_login = SELECT grok(grok=SSHGrok, data=Line) AS Event, Line
+  - query: |
+      -- Basic syslog parsing via GROK expressions.
+      LET success_login = SELECT grok(grok=SSHGrok, data=Line) AS Event, Line
         FROM watch_syslog(filename=syslogAuthLogPath)
         WHERE Event.program = "sshd" AND Event.event = "Accepted"
-      - SELECT timestamp(string=Event.timestamp) AS Time,
+
+      SELECT timestamp(string=Event.timestamp) AS Time,
               Event.user AS User,
               Event.method AS Method,
               Event.IP AS SourceIP,

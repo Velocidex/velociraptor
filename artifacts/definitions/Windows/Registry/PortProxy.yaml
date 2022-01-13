@@ -24,8 +24,8 @@ parameters:
 
 sources:
  - name: PortProxy
-   queries:
-     - SELECT FullPath,
+   query: |
+     SELECT FullPath,
          basename(path=dirname(path=dirname(path=FullPath))) as ProxyType,
          basename(path=dirname(path=FullPath)) as Protocol,
          regex_replace(source=basename(path=FullPath),re="/",replace=":") as Listening,

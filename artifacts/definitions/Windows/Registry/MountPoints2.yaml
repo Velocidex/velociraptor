@@ -14,8 +14,7 @@ parameters:
    default: Software\Microsoft\Windows\CurrentVersion\Explorer\MountPoints2\*
 
 sources:
- - queries:
-     - |
+ - query: |
         SELECT regex_replace(source=basename(path=url(parse=FullPath).Fragment),
           re="#", replace="\\") as MountPoint,
           Mtime as ModifiedTime,

@@ -17,8 +17,7 @@ parameters:
    type: regex
 
 sources:
- - queries:
-      - |
+ - query: |
         LET UserProfiles = Select Name as Username,
             {
                 SELECT FullPath FROM glob(globs=expand(path=Directory) + "//NTUSER.DAT", accessor="file")
@@ -26,7 +25,7 @@ sources:
             expand(path=Directory) as Directory
         FROM Artifact.Windows.Sys.Users()
         WHERE Directory and NTUser and Name =~ userRegex
-      - |
+
         SELECT * FROM foreach(
           row={
             SELECT Username,NTUser FROM UserProfiles
@@ -42,5 +41,6 @@ sources:
                 path=NTUser,
                 fragment=KeyGlob).String,
               accessor="raw_reg")
-            WHERE Data.type = "REG_BINARY" and encode(string=Data.value, type="hex") =~ "ffffff7f$"
+            WHERE Data.type = "REG_BINARY"
+              and encode(string=Data.value, type="hex") =~ "ffffff7f$"
           })

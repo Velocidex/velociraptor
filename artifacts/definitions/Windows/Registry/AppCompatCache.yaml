@@ -9,9 +9,9 @@ parameters:
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
-  - queries:
-      - LET AppCompatKeys = SELECT * FROM glob(globs=AppCompatCacheKey, accessor='reg')
-      - SELECT * FROM foreach(
+  - query: |
+      LET AppCompatKeys = SELECT * FROM glob(globs=AppCompatCacheKey, accessor='reg')
+      SELECT * FROM foreach(
           row={
               SELECT Filename, Data FROM read_file(
                   filenames=AppCompatKeys.FullPath, accessor='reg')

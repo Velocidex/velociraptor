@@ -27,8 +27,7 @@ precondition: |
 
 sources:
   - name: InventoryApplicationFile
-    queries:
-      - |
+    query: |
         SELECT FileId,
                Key.FullPath as Key,
                Key.Mtime as LastModified,
@@ -52,8 +51,7 @@ sources:
         })
 
   - name: File
-    queries:
-      - |
+    query: |
         SELECT * FROM foreach(
           row={
             SELECT FullPath from glob(globs=expand(path=amCacheGlob))

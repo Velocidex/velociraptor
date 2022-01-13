@@ -9,21 +9,22 @@ reference:
 
 sources:
   - name: AlternateLogon
-    queries:
-      - SELECT * FROM Artifact.Windows.EventLogs.AlternateLogon()
+    query: |
+      SELECT * FROM Artifact.Windows.EventLogs.AlternateLogon()
+
   - name: WMIC
-    queries:
-      - SELECT * FROM Artifact.Windows.Forensics.Prefetch()
-        WHERE Executable =~ "wmic.exe"
+    query: |
+      SELECT * FROM Artifact.Windows.Forensics.Prefetch()
+      WHERE Executable =~ "wmic.exe"
   - name: ShimCache
-    queries:
-      - SELECT * FROM Artifact.Windows.Registry.AppCompatCache()
-        WHERE Name =~ "wmic.exe"
+    query: |
+      SELECT * FROM Artifact.Windows.Registry.AppCompatCache()
+      WHERE Name =~ "wmic.exe"
   - name: BAM
-    queries:
-      - SELECT * FROM Artifact.Windows.Forensics.Bam()
-        WHERE Binary =~ "wmic.exe"
+    query: |
+      SELECT * FROM Artifact.Windows.Forensics.Bam()
+      WHERE Binary =~ "wmic.exe"
   - name: AmCache
-    queries:
-      - SELECT * FROM Artifact.Windows.System.Amcache()
-        WHERE Binary =~ "wmic.exe"
+    query: |
+      SELECT * FROM Artifact.Windows.System.Amcache()
+      WHERE Binary =~ "wmic.exe"

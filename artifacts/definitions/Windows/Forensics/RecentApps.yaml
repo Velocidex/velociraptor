@@ -26,8 +26,8 @@ parameters:
     default: C:\Users\*\NTUSER.DAT
 
 sources:
-  - queries:
-      - LET TMP = SELECT * FROM foreach(
+  - query: |
+      LET TMP = SELECT * FROM foreach(
          row={
             SELECT FullPath FROM glob(globs=UserHomes)
          },
@@ -45,13 +45,13 @@ sources:
                accessor="raw_reg")
          })
 
-      - LET A1 = SELECT * FROM if(
+      LET A1 = SELECT * FROM if(
           condition=UserFilter,
           then={
             SELECT * FROM TMP WHERE User =~ UserFilter
           }, else={ SELECT * FROM TMP})
 
-      - SELECT * FROM if(
+      SELECT * FROM if(
           condition=ExecutionTimeAfter,
           then={
             SELECT * FROM A1 WHERE LastExecutionTS > ExecutionTimeAfter
