@@ -382,6 +382,14 @@
 
     Client metadata is a set of free form key/value data (see
     client_metadata() function).
+
+    Example:
+
+    ```vql
+    SELECT client_set_metadata(ClientId="C.1234", Foo="Bar")
+    FROM scope()
+    ```
+
   type: Function
   args:
   - name: client_id
@@ -3958,8 +3966,16 @@
     required: true
   category: server
 - name: server_set_metadata
-  description: Sets client metadata. Client metadata is a set of free form key/value
-    data
+  description: |
+    Sets server metadata. Server metadata is a set of free form
+    key/value data, usually used for configuration of artifacts.
+
+    Example:
+
+    ```vql
+    SELECT server_set_metadata(`Slack Token`="X12233")
+    FROM scope()
+    ```
   type: Function
   args:
   - name: client_id

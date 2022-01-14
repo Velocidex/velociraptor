@@ -18,13 +18,18 @@ parameters:
 
 sources:
   - query: |
-      LET schedule = SELECT UTC.String AS Now,
-      Weekday.String AS Today
+      LET schedule = SELECT
+           UTC.String AS Now,
+           Weekday.String AS Today
       FROM clock(period=60)
-      WHERE Now =~ ScheduleTimeRegex AND Today =~ ScheduleDayRegex AND
-          log(message="Launching at time " + Now)
+      WHERE Now =~ ScheduleTimeRegex
+        AND Today =~ ScheduleDayRegex
+        AND log(message="Launching at time " + Now)
 
-      SELECT hunt(artifacts=["Generic.Client.Info"],
+      SELECT * FROM foreach(row=schedule,
+      query={
+         SELECT hunt(artifacts=["Generic.Client.Info"],
                   spec=dict(`Generic.Client.Info`=dict()),
                   description="Periodic info hunt")
-      FROM schedule
+         FROM schedule
+      })

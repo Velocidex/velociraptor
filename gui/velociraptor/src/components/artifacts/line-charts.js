@@ -19,7 +19,6 @@ const shapes = [
     "star", "triangle", "circle",
 ];
 
-
 class CustomTooltip extends React.Component {
   static propTypes = {
       type: PropTypes.string,
@@ -101,7 +100,7 @@ class TimeTickRenderer extends React.Component {
 
     render() {
         let date = ToStandardTime(this.props.payload.value);
-        if (_.isNaN(date)) {
+        if (_.isNaN(date) || _.isUndefined(date.getUTCFullYear)) {
             return <></>;
         }
         let first_date = this.props.data[0][this.props.dataKey];
@@ -146,10 +145,26 @@ export class VeloLineChart extends React.Component {
 
     getAxisYDomain = (from, to, ref, offset) => {
         let x_column = this.props.columns[0];
+        let from_factor = 1;
+        if (from > 2042040202) {
+            from_factor = 1000;
+        }
+
+        let data_factor = 1;
+        if (this.props.data.length == 0) {
+            return [0, 0, 0, 0];
+        }
+        if (this.props.data[0][x_column] > 2042040202) {
+            data_factor = 1000;
+        }
+
+        let factor = from_factor / data_factor;
 
         // Find the index into data corresponding to the first and
         // last x_column value.
-        let refData = _.filter(this.props.data, x => x[x_column] >= from && x[x_column] <= to);
+        let refData = _.filter(this.props.data,
+                               x => x[x_column] >= from / factor &&
+                               x[x_column] <= to / factor);
         if (_.isEmpty(refData)) {
             return [0, 0, 0, 0];
         }
@@ -169,7 +184,8 @@ export class VeloLineChart extends React.Component {
 
         let range = top-bottom;
 
-        return [refData[0][x_column], refData[refData.length-1][x_column],
+        return [refData[0][x_column] * factor,
+                refData[refData.length-1][x_column] * factor,
                 bottom - 0.1 * range, top + 0.1 * range];
     };
 
