@@ -32,7 +32,6 @@ var (
 )
 
 const (
-	MAX_CACHE_AGE     = 3600
 	MAX_PING_SYNC_SEC = 10
 )
 
@@ -408,7 +407,14 @@ func NewClientInfoManager(config_obj *config_proto.Config) *ClientInfoManager {
 	defer service.lru.Purge()
 
 	service.lru.SetCacheSizeLimit(int(expected_clients))
-	service.lru.SetTTL(MAX_CACHE_AGE * time.Second)
+
+	if config_obj.Frontend != nil &&
+		config_obj.Frontend.Resources != nil &&
+		config_obj.Frontend.Resources.ClientInfoLruTtl > 0 {
+		service.lru.SetTTL(
+			time.Duration(config_obj.Frontend.Resources.ClientInfoLruTtl) *
+				time.Second)
+	}
 
 	// Keep track of the total number of items in the lru.
 	service.lru.SetNewItemCallback(func(key string, value interface{}) {

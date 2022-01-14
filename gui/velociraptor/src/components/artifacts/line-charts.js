@@ -151,7 +151,7 @@ export class VeloLineChart extends React.Component {
         }
 
         let data_factor = 1;
-        if (this.props.data.length == 0) {
+        if (this.props.data.length === 0) {
             return [0, 0, 0, 0];
         }
         if (this.props.data[0][x_column] > 2042040202) {

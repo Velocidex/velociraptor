@@ -344,11 +344,19 @@ func (self *Indexer) LoadIndexFromSnapshot(
 	}
 	defer rs_reader.Close()
 
+	clients := make(map[string]bool)
+
 	count := 0
 	for row := range rs_reader.Rows(ctx) {
 		entity, ok := row.GetString("Entity")
 		if !ok {
 			continue
+		}
+
+		// We only actually care about client index entries
+		//now.
+		if strings.HasPrefix(entity, "C.") {
+			clients[entity] = true
 		}
 
 		term, ok := row.GetString("Term")
@@ -373,6 +381,13 @@ func (self *Indexer) LoadIndexFromSnapshot(
 	self.mu.Lock()
 	self.ready = true
 	self.mu.Unlock()
+
+	go func() {
+		for c := range clients {
+			// Get the full record to warm up all client attributes.
+			_, _ = FastGetApiClient(ctx, config_obj, c)
+		}
+	}()
 
 	return nil
 }
