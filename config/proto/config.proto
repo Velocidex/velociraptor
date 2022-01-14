@@ -464,6 +464,10 @@ message FrontendResourceControl {
     // How often to save an index snapshot to storage (default 60
     // sec). Index files are typically 150kb / 1000 clients.
     uint64 index_snapshot_frequency = 26;
+
+    // Number of seconds before expiring client info cache
+    // entries. Default (0) means do not expire at all.
+    uint64 client_info_lru_ttl = 27;
 }
 
 
@@ -643,6 +647,7 @@ message DatastoreConfig {
 
     // Maximum size of memcache lru (default 10000)
     int64 memcache_datastore_max_size = 10;
+    int64 memcache_datastore_max_item_size = 11;
 
     // Experimental - do not set in configs yet!
     string minion_implementation = 7;

@@ -16,6 +16,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 var (
@@ -35,6 +36,18 @@ var (
 			Name: "memcache_data_lru_total",
 			Help: "Total files cached",
 		})
+
+	metricDirLRUBytes = promauto.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "memcache_dir_lru_total_bytes",
+			Help: "Total directories cached",
+		})
+
+	metricDataLRUBytes = promauto.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "memcache_data_lru_total_bytes",
+			Help: "Total files cached",
+		})
 )
 
 // Stored in data_cache contains bulk data.
@@ -43,10 +56,39 @@ type BulkData struct {
 	data []byte
 }
 
+func (self *BulkData) Len() int {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return len(self.data)
+}
+
 // Stored in dir_cache - contains DirectoryMetadata
 type DirectoryMetadata struct {
-	mu   sync.Mutex
-	data map[string]api.DSPathSpec
+	mu    sync.Mutex
+	data  map[string]api.DSPathSpec
+	bytes int
+}
+
+func (self *DirectoryMetadata) Debug() string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	first_item := ""
+	for k := range self.data {
+		first_item = k
+		break
+	}
+
+	return fmt.Sprintf("DirectoryMetadata len %d (%v)",
+		len(self.data), first_item)
+}
+
+func (self *DirectoryMetadata) Bytes() float64 {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return float64(self.bytes)
 }
 
 func (self *DirectoryMetadata) Set(key string, value api.DSPathSpec) {
@@ -54,6 +96,8 @@ func (self *DirectoryMetadata) Set(key string, value api.DSPathSpec) {
 	defer self.mu.Unlock()
 
 	self.data[key] = value
+	self.bytes += len(key)
+	metricDirLRUBytes.Add(float64(len(key)))
 }
 
 func (self *DirectoryMetadata) Remove(key string) {
@@ -61,6 +105,8 @@ func (self *DirectoryMetadata) Remove(key string) {
 	defer self.mu.Unlock()
 
 	delete(self.data, key)
+	self.bytes -= len(key)
+	metricDirLRUBytes.Sub(float64(len(key)))
 }
 
 func (self *DirectoryMetadata) Len() int {
@@ -116,7 +162,8 @@ func (self *DirectoryLRUCache) Get(path string) (*DirectoryMetadata, bool) {
 	return md, true
 }
 
-func NewDirectoryLRUCache(size int) *DirectoryLRUCache {
+func NewDirectoryLRUCache(
+	config_obj *config_proto.Config, size int) *DirectoryLRUCache {
 	result := &DirectoryLRUCache{
 		Cache: ttlcache.NewCache(),
 	}
@@ -124,10 +171,21 @@ func NewDirectoryLRUCache(size int) *DirectoryLRUCache {
 	result.Cache.SetCacheSizeLimit(size)
 	result.Cache.SetNewItemCallback(func(key string, value interface{}) {
 		metricDirLRU.Inc()
+		v, ok := value.(*DirectoryMetadata)
+		if ok {
+			if v.Len() > 1000 {
+				logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+				logger.Debug("Long directory: %v", v.Debug())
+			}
+		}
 	})
 
 	result.Cache.SetExpirationCallback(func(key string, value interface{}) {
 		metricDirLRU.Dec()
+		v, ok := value.(*DirectoryMetadata)
+		if ok {
+			metricDirLRUBytes.Sub(v.Bytes())
+		}
 	})
 
 	return result
@@ -146,6 +204,8 @@ type MemcacheDatastore struct {
 		dir_cache *DirectoryLRUCache,
 		config_obj *config_proto.Config,
 		urn api.DSPathSpec) (*DirectoryMetadata, error)
+
+	max_item_size int
 }
 
 // Recursively makes sure the directories are created.
@@ -312,6 +372,11 @@ func (self *MemcacheDatastore) SetData(
 	parent_path := urn.Dir().AsDatastoreDirectory(config_obj)
 	self.dir_cache.Set(parent_path, md)
 
+	// Skip caching very large bulk data.
+	if len(data) > self.max_item_size {
+		return nil
+	}
+
 	err = self.data_cache.Set(urn.AsClientPath(), &BulkData{
 		data: data,
 	})
@@ -456,17 +521,30 @@ func NewMemcacheDataStore(config_obj *config_proto.Config) *MemcacheDatastore {
 
 	result := &MemcacheDatastore{
 		data_cache:       ttlcache.NewCache(),
-		dir_cache:        NewDirectoryLRUCache(int(size)),
+		dir_cache:        NewDirectoryLRUCache(config_obj, int(size)),
 		get_dir_metadata: get_dir_metadata,
+		max_item_size:    64 * 1024,
+	}
+
+	if config_obj.Datastore.MemcacheDatastoreMaxItemSize > 0 {
+		result.max_item_size = int(config_obj.Datastore.MemcacheDatastoreMaxItemSize)
 	}
 
 	result.data_cache.SetCacheSizeLimit(int(size))
 	result.data_cache.SetNewItemCallback(func(key string, value interface{}) {
 		metricDataLRU.Inc()
+		v, ok := value.(*BulkData)
+		if ok {
+			metricDataLRUBytes.Add(float64(v.Len()))
+		}
 	})
 
 	result.data_cache.SetExpirationCallback(func(key string, value interface{}) {
 		metricDataLRU.Dec()
+		v, ok := value.(*BulkData)
+		if ok {
+			metricDataLRUBytes.Sub(float64(v.Len()))
+		}
 	})
 
 	return result
