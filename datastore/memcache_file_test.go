@@ -2,18 +2,24 @@ package datastore
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"sort"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
+	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
@@ -101,6 +107,69 @@ func (self MemcacheFileTestSuite) TestSetOnFileSystem() {
 	assert.Equal(self.T(), new_md.SessionId, md.SessionId)
 }
 
+// Check that the cache works even for very large directories.
+func (self MemcacheFileTestSuite) TestDirectoryOverflow() {
+
+	// Expire directories larger than 2 items.
+	self.config_obj.Datastore.MemcacheDatastoreMaxDirSize = 4
+
+	db := NewMemcacheFileDataStore(self.config_obj)
+	db.StartWriter(self.ctx, &self.wg, self.config_obj)
+
+	client_record := &api_proto.ClientMetadata{
+		ClientId: "C.1234",
+	}
+
+	snapshot := vtesting.GetMetrics(self.T(), "memcache_lru_dir_miss")
+
+	intermediate := path_specs.NewSafeDatastorePath("a", "b").
+		SetType(api.PATH_TYPE_DATASTORE_DIRECTORY)
+
+	getChildren := func() []string {
+		children, err := db.ListChildren(self.config_obj, intermediate)
+		assert.NoError(self.T(), err)
+
+		children_str := make([]string, 0, len(children))
+		for _, c := range children {
+			children_str = append(children_str, c.AsClientPath())
+		}
+
+		// Sort for comparison.
+		sort.Strings(children_str)
+		return children_str
+	}
+
+	result := []*ordereddict.Dict{}
+
+	for i := 0; i < 10; i++ {
+		urn := path_specs.NewSafeDatastorePath("a", "b", fmt.Sprintf(
+			"c%d", i))
+		err := db.SetSubject(self.config_obj, urn, client_record)
+		assert.NoError(self.T(), err)
+
+		// Make sure that list children is always correct.
+		children := getChildren()
+		assert.Equal(self.T(), len(children), i+1)
+
+		metrics := vtesting.GetMetricsDifference(
+			self.T(), "memcache_lru_dir_miss", snapshot)
+
+		result = append(result, ordereddict.NewDict().
+			Set("stats", db.Stats()).
+			Set("metrics", metrics))
+	}
+
+	// Directory will be cached until there are 4 items in
+	// it. DirItemSize is about 40. After that the directory will be
+	// marked as full and DirItemSize will be 0. Metrics indicate no
+	// misses until it becomes full (except for the first one).
+
+	// Once a directory is deemed too large, then we no longer cache
+	// it and every ListChildren() will hit the disk.
+	goldie.Assert(self.T(), "TestDirectoryOverflow",
+		json.MustMarshalIndent(result))
+}
+
 func (self MemcacheFileTestSuite) TestListChildren() {
 	_, ok := self.datastore.(*MemcacheFileDataStore)
 	assert.True(self.T(), ok)
@@ -130,8 +199,15 @@ func (self MemcacheFileTestSuite) TestListChildren() {
 	intermediate := path_specs.NewSafeDatastorePath("a")
 	children, err := self.datastore.ListChildren(self.config_obj, intermediate)
 	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), len(children), 1)
+	assert.Equal(self.T(), len(children), 2)
+
+	// Sort for comparison.
+	sort.Slice(children, func(i, j int) bool {
+		return children[i].AsClientPath() < children[j].AsClientPath()
+	})
+
 	assert.Equal(self.T(), children[0].AsClientPath(), "/a/b")
+	assert.Equal(self.T(), children[1].AsClientPath(), "/a/d")
 }
 
 func (self MemcacheFileTestSuite) TestSetSubjectAndListChildren() {
@@ -162,6 +238,46 @@ func (self MemcacheFileTestSuite) TestSetSubjectAndListChildren() {
 	// Now list the memcache
 	first_level := path_specs.NewSafeDatastorePath("a")
 	children, err := db.ListChildren(self.config_obj, first_level)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(children), 3)
+}
+
+// 1. ListChildren() of /a will cache dir entry
+// 2. SetSubject() of /a/e/f/ will implicitly invalidate /a/b/
+// 3. ListChildren() of /a will get fresh data.
+func (self MemcacheFileTestSuite) TestDeepSetSubjectAfterListChildren() {
+	db, ok := self.datastore.(*MemcacheFileDataStore)
+	assert.True(self.T(), ok)
+
+	// Setting the data ends up on the filesystem
+	client_id := "C.1234"
+	client_record := &api_proto.ClientMetadata{
+		ClientId: client_id,
+	}
+
+	// Write the file to the filesystem
+	urn := path_specs.NewSafeDatastorePath("a", "b")
+	err := file_based_imp.SetSubject(self.config_obj, urn, client_record)
+	assert.NoError(self.T(), err)
+
+	urn2 := path_specs.NewSafeDatastorePath("a", "d")
+	err = file_based_imp.SetSubject(self.config_obj, urn2, client_record)
+	assert.NoError(self.T(), err)
+
+	// ListChildren() of /a/ will retrieve from filestore
+	first_level := path_specs.NewSafeDatastorePath("a")
+	children, err := db.ListChildren(self.config_obj, first_level)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(children), 2)
+
+	// Now set a file in an intermediate directory.
+	intermediate := path_specs.NewSafeDatastorePath("a", "e", "f")
+	new_record := &api_proto.ClientMetadata{}
+	err = db.SetSubject(self.config_obj, intermediate, new_record)
+	assert.NoError(self.T(), err)
+
+	// Now list the memcache again should get fresh data.
+	children, err = db.ListChildren(self.config_obj, first_level)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(children), 3)
 }
