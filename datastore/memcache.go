@@ -526,7 +526,7 @@ func (self *MemcacheDatastore) ListChildren(
 	path := urn.AsDatastoreDirectory(config_obj)
 	md, pres := self.dir_cache.Get(path)
 	if !pres {
-		return nil, errorNotFound
+		return nil, nil
 	}
 
 	// Can not list very large directories - but we still cache the

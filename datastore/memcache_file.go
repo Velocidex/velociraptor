@@ -30,7 +30,8 @@
      * If present, we set a new member (c.json.db) in it.
 
      * Walk the tree back to adjust parent directories - here we have
-       to be careful to not read the filesystem unnecessarily:
+       to be careful to not read the filesystem unnecessarily so we
+       just invalidate every directory cache :
 
         - If a parent DirectoryMetadata exists, we directly add
           member.
@@ -379,7 +380,7 @@ func (self *MemcacheFileDataStore) ListChildren(
 	defer Instrument("list", "MemcacheFileDataStore", urn)()
 
 	children, err := self.cache.ListChildren(config_obj, urn)
-	if err != nil {
+	if err != nil || children == nil {
 		children, err = file_based_imp.ListChildren(config_obj, urn)
 		if err != nil {
 			return children, err
@@ -495,6 +496,17 @@ func get_file_dir_metadata(
 	// So the most logical thing to do here is to just not have a
 	// DirectoryMetadata at all - future calls for ListChildren() will
 	// perform a filesystem op and fill in the cache if needed.
+	urn = urn.Dir()
+	for len(urn.Components()) > 0 {
+		path := urn.AsDatastoreDirectory(config_obj)
+		md, pres := dir_cache.Get(path)
+		if pres && !md.IsFull() {
+			key_path := urn.AsDatastoreDirectory(config_obj)
+			dir_cache.Remove(key_path)
+		}
+		urn = urn.Dir()
+	}
+
 	return nil, errorNoDirectoryMetadata
 }
 

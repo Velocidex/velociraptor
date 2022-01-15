@@ -242,6 +242,46 @@ func (self MemcacheFileTestSuite) TestSetSubjectAndListChildren() {
 	assert.Equal(self.T(), len(children), 3)
 }
 
+// 1. ListChildren() of /a will cache dir entry
+// 2. SetSubject() of /a/e/f/ will implicitly invalidate /a/b/
+// 3. ListChildren() of /a will get fresh data.
+func (self MemcacheFileTestSuite) TestDeepSetSubjectAfterListChildren() {
+	db, ok := self.datastore.(*MemcacheFileDataStore)
+	assert.True(self.T(), ok)
+
+	// Setting the data ends up on the filesystem
+	client_id := "C.1234"
+	client_record := &api_proto.ClientMetadata{
+		ClientId: client_id,
+	}
+
+	// Write the file to the filesystem
+	urn := path_specs.NewSafeDatastorePath("a", "b")
+	err := file_based_imp.SetSubject(self.config_obj, urn, client_record)
+	assert.NoError(self.T(), err)
+
+	urn2 := path_specs.NewSafeDatastorePath("a", "d")
+	err = file_based_imp.SetSubject(self.config_obj, urn2, client_record)
+	assert.NoError(self.T(), err)
+
+	// ListChildren() of /a/ will retrieve from filestore
+	first_level := path_specs.NewSafeDatastorePath("a")
+	children, err := db.ListChildren(self.config_obj, first_level)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(children), 2)
+
+	// Now set a file in an intermediate directory.
+	intermediate := path_specs.NewSafeDatastorePath("a", "e", "f")
+	new_record := &api_proto.ClientMetadata{}
+	err = db.SetSubject(self.config_obj, intermediate, new_record)
+	assert.NoError(self.T(), err)
+
+	// Now list the memcache again should get fresh data.
+	children, err = db.ListChildren(self.config_obj, first_level)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(children), 3)
+}
+
 func TestMemCacheFileDatastore(t *testing.T) {
 	suite.Run(t, &MemcacheFileTestSuite{BaseTestSuite: BaseTestSuite{}})
 }
