@@ -205,7 +205,7 @@ require (
 // replace github.com/Velocidex/json => /home/mic/projects/json
 // replace github.com/russross/blackfriday/v2 => /home/mic/projects/blackfriday
 // replace www.velocidex.com/golang/vtypes => /home/mic/projects/vtypes
-// replace github.com/Velocidex/ttlcache => /home/mic/projects/ttlcache
+// replace github.com/Velocidex/ttlcache/v2 => /home/mic/projects/ttlcache
 
 // replace github.com/Velocidex/zip => /home/mic/projects/zip
 // replace github.com/Velocidex/sflags => /home/mic/projects/sflags

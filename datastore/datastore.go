@@ -140,13 +140,17 @@ func getImpl(config_obj *config_proto.Config, implementation string) (DataStore,
 
 	case "Memcache":
 		if memcache_imp == nil {
-			memcache_imp = NewMemcacheDataStore(config_obj)
+			memcache_imp_ := NewMemcacheDataStore(config_obj)
+			memcache_imp = memcache_imp_
+			RegisterMemcacheDatastoreMetrics(memcache_imp_)
 		}
 		return memcache_imp, nil
 
 	case "MemcacheFileDataStore":
 		if memcache_file_imp == nil {
-			memcache_file_imp = NewMemcacheFileDataStore(config_obj)
+			memcache_imp_ := NewMemcacheFileDataStore(config_obj)
+			memcache_file_imp = memcache_imp_
+			RegisterMemcacheDatastoreMetrics(memcache_imp_)
 		}
 		return memcache_file_imp, nil
 
