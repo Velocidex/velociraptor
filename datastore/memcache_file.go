@@ -8,6 +8,37 @@
 // * Reads are obtained from the memcache if possible, otherwise they
 //   fall through to the file backed data store.
 
+/*
+  ## A note about cache coherency for directory cache.
+
+  The directory cache stores an in memory list of paths that belong
+  inside a directory: Key: Datastore path -> Value: DirectoryMetadata
+
+  The directory cache is designed to service ListChildren() calls.
+
+  The filesystem is the ultimate source of truth for the cache.
+
+  1. ListChildren of an uncached directory: Deledate to the
+     FileBaseDataStore and cache the results.
+
+  2. SetData of a data file (e.g. /a/b/c.json.db):
+
+     * Find the containing directory (/a/b) and read the
+       DirectoryMetadata. If DirectoryMetadata is not cached fetch
+       from disk.
+
+     * If present, we set a new member (c.json.db) in it.
+
+     * Walk the tree back to adjust parent directories - here we have
+       to be careful to not read the filesystem unnecessarily so we
+       just invalidate every directory cache :
+
+        - If a parent DirectoryMetadata exists, we directly add
+          member.
+
+        - If there is not intermediate memory cache, then exit.
+*/
+
 package datastore
 
 import (
@@ -30,15 +61,27 @@ import (
 var (
 	memcache_file_imp *MemcacheFileDataStore
 
-	metricLRUHit = promauto.NewCounter(
+	metricDirLRUHit = promauto.NewCounter(
 		prometheus.CounterOpts{
-			Name: "memcache_lru_hit",
+			Name: "memcache_lru_dir_hit",
 			Help: "LRU for memcache",
 		})
 
-	metricLRUMiss = promauto.NewCounter(
+	metricDirLRUMiss = promauto.NewCounter(
 		prometheus.CounterOpts{
-			Name: "memcache_lru_miss",
+			Name: "memcache_lru_dir_miss",
+			Help: "LRU for memcache",
+		})
+
+	metricDataLRUHit = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "memcache_lru_data_hit",
+			Help: "LRU for memcache",
+		})
+
+	metricDataLRUMiss = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "memcache_lru_data_miss",
 			Help: "LRU for memcache",
 		})
 
@@ -74,11 +117,20 @@ type MemcacheFileDataStore struct {
 	cancel func()
 }
 
+func (self *MemcacheFileDataStore) Stats() *MemcacheStats {
+	return self.cache.Stats()
+}
+
 func (self *MemcacheFileDataStore) invalidateDirCache(
 	config_obj *config_proto.Config, urn api.DSPathSpec) {
+
 	for len(urn.Components()) > 0 {
 		path := urn.AsDatastoreDirectory(config_obj)
-		self.cache.dir_cache.Remove(path)
+		md, pres := self.cache.dir_cache.Get(path)
+		if pres && !md.IsFull() {
+			key_path := urn.AsDatastoreDirectory(config_obj)
+			self.cache.dir_cache.Remove(key_path)
+		}
 		urn = urn.Dir()
 	}
 }
@@ -186,7 +238,7 @@ func (self *MemcacheFileDataStore) GetSubject(
 			return err
 		}
 
-		metricLRUMiss.Inc()
+		metricDataLRUMiss.Inc()
 
 		// Store it in the cache now
 		self.cache.SetData(config_obj, urn, serialized_content)
@@ -194,7 +246,7 @@ func (self *MemcacheFileDataStore) GetSubject(
 		// This call should work because it is in cache.
 		return self.cache.GetSubject(config_obj, urn, message)
 	} else {
-		metricLRUHit.Inc()
+		metricDataLRUHit.Inc()
 	}
 	return err
 }
@@ -285,7 +337,6 @@ func (self *MemcacheFileDataStore) SetSubject(
 		return err
 	}
 
-	self.invalidateDirCache(config_obj, urn)
 	return err
 }
 
@@ -329,19 +380,19 @@ func (self *MemcacheFileDataStore) ListChildren(
 	defer Instrument("list", "MemcacheFileDataStore", urn)()
 
 	children, err := self.cache.ListChildren(config_obj, urn)
-	if err != nil || len(children) == 0 {
+	if err != nil || children == nil {
 		children, err = file_based_imp.ListChildren(config_obj, urn)
 		if err != nil {
 			return children, err
 		}
 
-		metricLRUMiss.Inc()
+		metricDirLRUMiss.Inc()
 
 		// Store in the memcache.
 		self.cache.SetChildren(config_obj, urn, children)
 
 	} else {
-		metricLRUHit.Inc()
+		metricDirLRUHit.Inc()
 	}
 	return children, err
 }
@@ -369,7 +420,7 @@ func (self *MemcacheFileDataStore) GetBuffer(
 
 	bulk_data, err := self.cache.GetBuffer(config_obj, urn)
 	if err == nil {
-		metricLRUHit.Inc()
+		metricDataLRUHit.Inc()
 		return bulk_data, err
 	}
 
@@ -379,7 +430,7 @@ func (self *MemcacheFileDataStore) GetBuffer(
 		return nil, err
 	}
 
-	metricLRUMiss.Inc()
+	metricDataLRUMiss.Inc()
 	self.cache.SetData(config_obj, urn, bulk_data)
 
 	return bulk_data, nil
@@ -416,9 +467,7 @@ func (self *MemcacheFileDataStore) SetBuffer(
 	return nil
 }
 
-// Recursively makes sure the directories are added to the cache. We
-// treat the file backing as authoritative, so if the dir cache is not
-// present in cache we read intermediate paths from disk.
+// Recursively makes sure the directories are added to the cache.
 func get_file_dir_metadata(
 	dir_cache *DirectoryLRUCache,
 	config_obj *config_proto.Config, urn api.DSPathSpec) (
@@ -429,34 +478,66 @@ func get_file_dir_metadata(
 
 	// Fast path - the directory exists in the cache. NOTE: We dont
 	// need to maintain the directories on the filesystem as the
-	// FileBaseDataStore already does this.
+	// FileBaseDataStore already does this. If DirectoryMetadata
+	// exists in the cache then it must reflect the current state of
+	// the filesystem.
 	md, pres := dir_cache.Get(path)
 	if pres {
 		return md, nil
 	}
 
-	// DirectoryMetadata is not known, fetch the directory listing
-	// from the filesystem
-	children, err := file_based_imp.ListChildren(config_obj, urn)
-	if err == nil {
-		md = NewDirectoryMetadata()
-		for _, child := range children {
-			key := child.Base() + api.GetExtensionForDatastore(child)
-			md.Set(key, child)
+	// We have no cached metadata object. We can create one but this
+	// will just cause more filesystem activity because we dont know
+	// what files exist in order to construct a new DirectoryMetadata.
+	// Since DirectoryMetadata caches are only used for ListChildren()
+	// calls, there is no point us filling the metadata in advance of
+	// a ListChildren() because that may not be required.
+
+	// So the most logical thing to do here is to just not have a
+	// DirectoryMetadata at all - future calls for ListChildren() will
+	// perform a filesystem op and fill in the cache if needed.
+	urn = urn.Dir()
+	for len(urn.Components()) > 0 {
+		path := urn.AsDatastoreDirectory(config_obj)
+		md, pres := dir_cache.Get(path)
+		if pres && !md.IsFull() {
+			key_path := urn.AsDatastoreDirectory(config_obj)
+			dir_cache.Remove(key_path)
 		}
-		dir_cache.Set(path, md)
+		urn = urn.Dir()
 	}
 
-	// Cache this for next time.
-	dir_cache.Set(path, md)
-	return md, nil
+	return nil, errorNoDirectoryMetadata
 }
 
 func NewMemcacheFileDataStore(config_obj *config_proto.Config) *MemcacheFileDataStore {
-	result := &MemcacheFileDataStore{
-		cache: NewMemcacheDataStore(config_obj),
+
+	data_max_size := 10000
+	if config_obj.Datastore != nil &&
+		config_obj.Datastore.MemcacheDatastoreMaxSize > 0 {
+		data_max_size = int(config_obj.Datastore.MemcacheDatastoreMaxSize)
 	}
-	//	result.cache.get_dir_metadata = get_file_dir_metadata
+
+	data_max_item_size := 64 * 1024
+	if config_obj.Datastore.MemcacheDatastoreMaxItemSize > 0 {
+		data_max_item_size = int(config_obj.Datastore.MemcacheDatastoreMaxItemSize)
+	}
+
+	dir_max_item_size := 1000
+	if config_obj.Datastore.MemcacheDatastoreMaxDirSize > 0 {
+		dir_max_item_size = int(config_obj.Datastore.MemcacheDatastoreMaxDirSize)
+	}
+
+	result := &MemcacheFileDataStore{
+		cache: &MemcacheDatastore{
+			data_cache: NewDataLRUCache(config_obj,
+				data_max_size, data_max_item_size),
+			dir_cache: NewDirectoryLRUCache(config_obj,
+				data_max_size, dir_max_item_size),
+			get_dir_metadata: get_file_dir_metadata,
+		},
+	}
+
 	return result
 }
 

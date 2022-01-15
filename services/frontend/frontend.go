@@ -405,10 +405,19 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 // Selects the node by name from the extra frontends configuration
 func SelectFrontend(node string, config_obj *config_proto.Config) error {
 	for _, fe := range config_obj.ExtraFrontends {
-		fe_name := fmt.Sprintf("%v-%v", fe.Hostname, fe.BindPort)
+		fe_name := fmt.Sprintf("%v:%v", fe.Hostname, fe.BindPort)
 		if fe_name == node {
 			proto.Merge(config_obj.Frontend, fe)
 			return nil
+		}
+	}
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Error("Frontend %v not found!", node)
+	if len(config_obj.ExtraFrontends) > 0 {
+		for _, fe := range config_obj.ExtraFrontends {
+			fe_name := fmt.Sprintf("%v:%v", fe.Hostname, fe.BindPort)
+			logger.Error("Available Frontend %v", fe_name)
 		}
 	}
 
