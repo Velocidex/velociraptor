@@ -14,7 +14,7 @@ logs text eol=lf
 *.css text eol=lf
 
 *.db binary
-*.json binary
+*.json -text
 *.csv binary
 *.zip binary
 *.index binary
