@@ -7,6 +7,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -69,7 +70,8 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 
 	scope.SetLogger(self.Logger)
 
-	device_manager := vql_subsystem.MakeNewDeviceManager(scope, self.Config.Remappings)
+	device_manager := glob.MakeNewDeviceManager(scope, self.Config.Remappings)
+	// device_manager.InjectRemapping(scope)
 	env.Set(constants.SCOPE_DEVICE_MANAGER, device_manager)
 
 	// Use our own sorter
