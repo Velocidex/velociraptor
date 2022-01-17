@@ -43,7 +43,6 @@ package datastore
 
 import (
 	"context"
-	"fmt"
 	"io/fs"
 	"strings"
 	"sync"
@@ -214,7 +213,6 @@ func (self *MemcacheFileDataStore) StartWriter(
 						// Call the completion function once we hit
 						// the directory datastore.
 						if mutation.completion != nil {
-							fmt.Printf("Calling completion\n")
 							mutation.completion()
 						}
 					}

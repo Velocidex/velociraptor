@@ -53,7 +53,6 @@ func (self *MemcacheFileTestSuite) SetupTest() {
 	self.datastore = db
 
 	db.Clear()
-	fmt.Printf("Starting writers\n")
 	db.StartWriter(self.ctx, &self.wg, self.config_obj)
 }
 
@@ -61,7 +60,6 @@ func (self *MemcacheFileTestSuite) TearDownTest() {
 	self.cancel()
 	self.wg.Wait()
 	os.RemoveAll(self.dirname) // clean up
-	fmt.Printf("Cleanup\n")
 }
 
 func (self MemcacheFileTestSuite) TestSetOnFileSystem() {
