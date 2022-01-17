@@ -371,7 +371,9 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 	defer Instrument("delete", "MemcacheFileDataStore", urn)()
 
 	// Remove immediately from the cache
-	err := self.cache.DeleteSubject(config_obj, urn)
+	completion := func() {
+		_ = self.cache.DeleteSubject(config_obj, urn)
+	}
 
 	// Send a DeleteSubject mutation to the writer loop.
 	var wg sync.WaitGroup
@@ -379,6 +381,7 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 
 	select {
 	case <-self.ctx.Done():
+		completion()
 		break
 
 	case self.writer <- &Mutation{
@@ -387,17 +390,15 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 
 		// When we complete make sure the cache is also invalidated to
 		// avoid racing with GetSubject().
-		completion: func() {
-			self.cache.DeleteSubject(config_obj, urn)
-		},
-		urn: urn}:
+		completion: completion,
+		urn:        urn}:
 	}
 
 	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {
 		wg.Wait()
 	}
 
-	return err
+	return nil
 }
 
 // Lists all the children of a URN.
