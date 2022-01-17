@@ -130,11 +130,12 @@ func oauthOidcCallback(config_obj *config_proto.Config, provider *oidc.Provider)
 		}
 
 		cookie := &http.Cookie{
-			Name:    "VelociraptorAuth",
-			Value:   tokenString,
-			Path:    "/",
-			Secure:  true,
-			Expires: time.Now().AddDate(0, 0, 1),
+			Name:     "VelociraptorAuth",
+			Value:    tokenString,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			Expires:  time.Now().AddDate(0, 0, 1),
 		}
 		http.SetCookie(w, cookie)
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)

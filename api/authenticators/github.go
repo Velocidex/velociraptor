@@ -143,11 +143,12 @@ func oauthGithubCallback(config_obj *config_proto.Config) http.Handler {
 
 		// Set the cookie and redirect.
 		cookie := &http.Cookie{
-			Name:    "VelociraptorAuth",
-			Value:   tokenString,
-			Path:    "/",
-			Secure:  true,
-			Expires: time.Now().AddDate(0, 0, 1),
+			Name:     "VelociraptorAuth",
+			Value:    tokenString,
+			Path:     "/",
+			Secure:   true,
+			HttpOnly: true,
+			Expires:  time.Now().AddDate(0, 0, 1),
 		}
 		http.SetCookie(w, cookie)
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
