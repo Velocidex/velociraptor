@@ -1,6 +1,7 @@
 package filesystem
 
 import (
+	"errors"
 	"path"
 	"regexp"
 
@@ -17,6 +18,9 @@ func (self MountFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAcc
 }
 
 func (self *MountFileSystemAccessor) ensureBackingAccessor(pathSpec *glob.PathSpec) (glob.FileSystemAccessor, error) {
+	if pathSpec.DelegateAccessor == "" {
+		return nil, errors.New("no delegate accessor specified")
+	}
 	accessor, err := glob.GetAccessor(pathSpec.DelegateAccessor, self.scope)
 	if err != nil {
 		return nil, err
@@ -76,7 +80,15 @@ func (self *MountFileSystemAccessor) PathSplit(path string) []string {
 
 	accessor, err := self.ensureBackingAccessor(pathSpec)
 	if err != nil {
-		return nil
+		return MountFileSystemAccessorSplit_re.Split(path, -1)
+	}
+
+	if pathSpec.Path != "" {
+		// we have a complete pathspec
+		path = pathSpec.Path
+	} else {
+		// we have a converted pathspec
+		path = pathSpec.DelegatePath
 	}
 
 	return accessor.PathSplit(path)
@@ -93,7 +105,15 @@ func (self *MountFileSystemAccessor) PathJoin(root, stem string) string {
 		return path.Join(root, stem)
 	}
 
-	return accessor.PathJoin(root, stem)
+	if pathSpec.Path != "" {
+		// we have a complete pathspec
+		pathSpec.Path = accessor.PathJoin(pathSpec.Path, stem)
+	} else {
+		// we have a converted pathspec
+		pathSpec.DelegatePath = accessor.PathJoin(pathSpec.DelegatePath, stem)
+	}
+
+	return pathSpec.String()
 }
 
 func (self *MountFileSystemAccessor) GetRoot(path string) (root, subpath string, err error) {
@@ -105,6 +125,14 @@ func (self *MountFileSystemAccessor) GetRoot(path string) (root, subpath string,
 	accessor, err := self.ensureBackingAccessor(pathSpec)
 	if err != nil {
 		return "", "", err
+	}
+
+	if pathSpec.Path != "" {
+		// we have a complete pathspec
+		path = pathSpec.Path
+	} else {
+		// we have a converted pathspec
+		path = pathSpec.DelegatePath
 	}
 
 	return accessor.GetRoot(path)
