@@ -500,14 +500,7 @@ func (self *NTFSFileSystemAccessor) PathSplit(path string) []string {
 }
 
 func (self NTFSFileSystemAccessor) PathJoin(root, stem string) string {
-	pathSpec, err := glob.PathSpecFromString(root)
-	if err != nil {
-		return path.Join(root, stem)
-	}
-
-	pathSpec.Path = path.Join(pathSpec.Path, strings.TrimLeft(stem, "\\/"))
-
-	return pathSpec.String()
+	return path.Join(root, strings.TrimLeft(stem, "\\/"))
 }
 
 // We want to show the entire device as one name so we need to escape

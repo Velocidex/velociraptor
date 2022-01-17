@@ -26,9 +26,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/v3/disk"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -72,6 +70,18 @@ func (self GlobPlugin) Call(
 			return
 		}
 
+		deviceManager, err := glob.GetDeviceManagerFromScope(scope)
+		if err != nil {
+			scope.Log("glob: %v", err)
+			return
+		}
+
+		accessor, err := deviceManager.GetAccessor(arg.Accessor, scope)
+		if err != nil {
+			scope.Log("glob: %v", err)
+			return
+		}
+
 		root := arg.Root
 
 		options := glob.GlobOptions{
@@ -93,94 +103,46 @@ func (self GlobPlugin) Call(
 			}
 		}
 
-		organizedGlobs := make(map[string][]string)
-		var globalGlobs []string
+		globber := glob.NewGlobber().WithOptions(options)
 
-		// If root is not specified we organize the globs by their root and evaluate
-		// them for their respective roots
+		// If root is not specified we try to find a common
+		// root from the globs.
 		if root == "" {
 			for _, item := range arg.Globs {
-				device, item_path, _ := paths.ConvertPathToRemappedPath(item)
-
-				if device == "*" {
-					globalGlobs = append(globalGlobs, item_path)
+				item_root, item_path, _ := accessor.GetRoot(item)
+				if root != "" && root != item_root {
+					scope.Log("glob: %s: Must use the same root for "+
+						"all globs. Skipping.", item)
 					continue
 				}
-
-				globs, pres := organizedGlobs[device]
-				if !pres {
-					globs = make([]string, 0)
+				root = item_root
+				err = globber.Add(item_path, accessor.PathSplit)
+				if err != nil {
+					scope.Log("glob: %v", err)
+					return
 				}
-				organizedGlobs[device] = append(globs, item_path)
 			}
+
 		} else {
-			globs := make([]string, len(arg.Globs))
-			for i, glob := range arg.Globs {
-				_, globs[i], _ = paths.ConvertPathToRemappedPath(glob)
-			}
-			organizedGlobs[root] = globs
-		}
-
-		var deviceManager *vql_subsystem.DeviceManager
-
-		if obj, ok := scope.Resolve(constants.SCOPE_DEVICE_MANAGER); ok {
-			deviceManager = obj.(*vql_subsystem.DeviceManager)
-		} else {
-			scope.Log("glob: cannot get device manager")
-			return
-		}
-
-		doGlob := func(device string, items []string) {
-			globber := glob.NewGlobber().WithOptions(options)
-
-			accessor, err := deviceManager.GetAccessor(device, scope)
-			if err != nil {
-				scope.Log("glob: cannot get accessor for device \"%s\" (%s)", device, err)
-				return
-			}
-
-			deviceSource, err := deviceManager.GetDeviceSource(device)
-			if err != nil {
-				scope.Log("glob: %s", err)
-				return
-			}
-
-			rootPathSpec := glob.PathSpec{
-				DelegateAccessor: "file",
-				DelegatePath:     deviceSource,
-				Path:             "/",
-			}
-
-			for _, item := range items {
+			for _, item := range arg.Globs {
 				err = globber.Add(item, accessor.PathSplit)
 				if err != nil {
 					scope.Log("glob: %v", err)
-					continue
-				}
-			}
-
-			file_chan := globber.ExpandWithContext(
-				ctx, config_obj, rootPathSpec.String(), accessor)
-			for f := range file_chan {
-				select {
-				case <-ctx.Done():
 					return
-
-				case output_chan <- f:
 				}
 			}
 		}
 
-		for device, items := range organizedGlobs {
-			// go doGlob(device, items)
-			doGlob(device, items)
-		}
+		file_chan := globber.ExpandWithContext(
+			ctx, config_obj, root, accessor)
+		for f := range file_chan {
+			select {
+			case <-ctx.Done():
+				return
 
-		for _, device := range deviceManager.GetDevices() {
-			// go doGlob(device, globalGlobs)
-			doGlob(device, globalGlobs)
+			case output_chan <- f:
+			}
 		}
-
 	}()
 
 	return output_chan
