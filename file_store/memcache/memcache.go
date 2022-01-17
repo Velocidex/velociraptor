@@ -111,9 +111,9 @@ func (self *MemcacheFileWriter) Close() error {
 
 	self.closed = true
 
-	// Wait for sync completion outside function lock!
+	// Convert all api.SyncCompleter calls to sync waits on return
+	// from Close(). The writer pool will release us when done.
 	wg := sync.WaitGroup{}
-
 	for idx, c := range self.completions {
 		if utils.CompareFuncs(c, api.SyncCompleter) {
 			wg.Add(1)

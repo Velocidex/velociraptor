@@ -1,8 +1,6 @@
 package server_monitoring
 
 import (
-	"sync"
-
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -23,12 +21,9 @@ type serverLogger struct {
 func (self *serverLogger) Write(b []byte) (int, error) {
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 
-	wg := sync.WaitGroup{}
-	defer wg.Wait()
-
-	wg.Add(1)
 	writer, err := timed.NewTimedResultSetWriterWithClock(
-		file_store_factory, self.path_manager, nil, wg.Done, self.Clock)
+		file_store_factory, self.path_manager, nil,
+		api.SyncCompleter, self.Clock)
 	if err != nil {
 		return 0, err
 	}
