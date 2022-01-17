@@ -279,9 +279,16 @@ func (self *Notifier) IsClientConnected(
 	}))
 	defer timer.ObserveDuration()
 
-	// Shotcut if the client is directly connected.
+	// Shortcut if the client is directly connected.
 	if self.IsClientDirectlyConnected(client_id) {
 		return true
+	}
+
+	// No directly connected minions right now, and the client is not
+	// connected to us - therefore the client is not available.
+	minion_count := services.GetFrontendManager().GetMinionCount()
+	if minion_count == 0 {
+		return false
 	}
 
 	// Get a unique id for this request.
@@ -299,7 +306,7 @@ func (self *Notifier) IsClientConnected(
 	self.mu.Lock()
 	// Install a tracker to keep track of this request.
 	self.client_connection_tracker[id] = tracker{
-		count: services.GetFrontendManager().GetMinionCount(),
+		count: minion_count,
 		done:  done,
 	}
 	self.mu.Unlock()

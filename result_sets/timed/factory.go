@@ -16,17 +16,19 @@ type TimedFactory struct{}
 func (self TimedFactory) NewTimedResultSetWriter(
 	file_store_factory api.FileStore,
 	path_manager api.PathManager,
-	opts *json.EncOpts) (result_sets.TimedResultSetWriter, error) {
+	opts *json.EncOpts,
+	completion func()) (result_sets.TimedResultSetWriter, error) {
 	return NewTimedResultSetWriter(
-		file_store_factory, path_manager, opts)
+		file_store_factory, path_manager, opts, completion)
 }
 
 func (self TimedFactory) NewTimedResultSetWriterWithClock(
 	file_store_factory api.FileStore,
 	path_manager api.PathManager,
-	opts *json.EncOpts, clock utils.Clock) (result_sets.TimedResultSetWriter, error) {
+	opts *json.EncOpts,
+	completion func(), clock utils.Clock) (result_sets.TimedResultSetWriter, error) {
 	return NewTimedResultSetWriterWithClock(
-		file_store_factory, path_manager, opts, clock)
+		file_store_factory, path_manager, opts, completion, clock)
 }
 
 func (self TimedFactory) NewTimedResultSetReader(

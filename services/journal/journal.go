@@ -102,7 +102,9 @@ func (self *JournalService) AppendToResultSet(
 
 	// Append the data to the end of the file.
 	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		path, nil, false /* truncate */)
+		path, nil,
+		nil, /* completion - async write */
+		false /* truncate */)
 	if err != nil {
 		return err
 	}

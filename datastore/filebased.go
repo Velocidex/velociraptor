@@ -133,6 +133,7 @@ func (self *FileBaseDataStore) SetSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,
 	message proto.Message) error {
+
 	return self.SetSubjectWithCompletion(config_obj, urn, message, nil)
 }
 
@@ -142,6 +143,14 @@ func (self *FileBaseDataStore) SetSubjectWithCompletion(
 	message proto.Message, completion func()) error {
 
 	defer InstrumentWithDelay("write", "FileBaseDataStore", urn)()
+
+	// Make sure to call the completer on all exit points
+	// (FileBaseDataStore is actually synchronous).
+	defer func() {
+		if completion != nil {
+			completion()
+		}
+	}()
 
 	Trace(config_obj, "SetSubject", urn)
 
@@ -158,11 +167,7 @@ func (self *FileBaseDataStore) SetSubjectWithCompletion(
 		return errors.WithStack(err)
 	}
 
-	err = writeContentToFile(config_obj, urn, serialized_content)
-	if completion != nil {
-		completion()
-	}
-	return err
+	return writeContentToFile(config_obj, urn, serialized_content)
 }
 
 func (self *FileBaseDataStore) DeleteSubject(

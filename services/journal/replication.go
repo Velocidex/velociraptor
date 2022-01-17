@@ -337,7 +337,10 @@ func (self *ReplicationService) AppendToResultSet(
 	file_store_factory := file_store.GetFileStore(config_obj)
 
 	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		path, nil, false /* truncate */)
+		path,
+		nil, /* opts */
+		nil, /* completion - async write */
+		false /* truncate */)
 	if err != nil {
 		return err
 	}

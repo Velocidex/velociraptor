@@ -1,7 +1,13 @@
 package utils
 
 import (
+	"fmt"
+	"runtime/debug"
 	"sync"
+)
+
+const (
+	DEBUG_COMPLETER = false
 )
 
 /*
@@ -45,15 +51,32 @@ func (self *Completer) GetCompletionFunc() func() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	id := self.count
 	self.count++
 
-	return func() {
-		self.mu.Lock()
-		defer self.mu.Unlock()
+	var stack string
 
-		self.count--
-		if self.count == 0 && self.completion != nil {
-			self.completion()
-		}
+	if DEBUG_COMPLETER {
+		stack = string(debug.Stack())
+		fmt.Printf("Adding completion %v: %v \n", id, stack)
 	}
+
+	return func(id int, stack string) func() {
+		return func() {
+			self.mu.Lock()
+			defer self.mu.Unlock()
+
+			if DEBUG_COMPLETER {
+				fmt.Printf("Removing completion %v: %v \n", id, stack)
+			}
+
+			self.count--
+			if self.count == 0 && self.completion != nil {
+				if DEBUG_COMPLETER {
+					fmt.Printf("Firing!!!!\n")
+				}
+				self.completion()
+			}
+		}
+	}(id, stack)
 }

@@ -41,7 +41,7 @@ func (self *MemcacheFileTestSuite) SetupTest() {
 
 	self.config_obj = config.GetDefaultConfig()
 	self.config_obj.Datastore.Implementation = "MemcacheFileDataStore"
-	self.config_obj.Datastore.MemcacheWriteMutationBuffer = -1
+	self.config_obj.Datastore.MemcacheWriteMutationBuffer = 1000
 	self.config_obj.Datastore.FilestoreDirectory = self.dirname
 	self.config_obj.Datastore.Location = self.dirname
 	self.BaseTestSuite.config_obj = self.config_obj

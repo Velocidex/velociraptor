@@ -457,7 +457,9 @@ func (self *ServerArtifactsRunner) runQuery(
 			file_store_factory := file_store.GetFileStore(self.config_obj)
 			rs_writer, err = result_sets.NewResultSetWriter(
 				file_store_factory, path_manager.Path(),
-				opts, false /* truncate */)
+				opts,
+				nil, /* completion */
+				false /* truncate */)
 			if err != nil {
 				return err
 			}

@@ -56,6 +56,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -223,6 +224,10 @@ func (self *MemcacheFileDataStore) GetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
+	if strings.Contains(urn.AsClientPath(), "vfs") {
+		utils.DlvBreak()
+	}
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -240,15 +245,21 @@ func (self *MemcacheFileDataStore) GetSubject(
 
 		metricDataLRUMiss.Inc()
 
-		// Store it in the cache now
+		// Store it in the cache for next time.
 		self.cache.SetData(config_obj, urn, serialized_content)
 
-		// This call should work because it is in cache.
-		return self.cache.GetSubject(config_obj, urn, message)
+		// Unmarshal the data into the message.
+		return unmarshalData(serialized_content, urn, message)
 	} else {
 		metricDataLRUHit.Inc()
 	}
 	return err
+}
+
+func (self *MemcacheFileDataStore) maybeComplete(c func()) {
+	if c != nil {
+		c()
+	}
 }
 
 func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
@@ -256,6 +267,9 @@ func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 	urn api.DSPathSpec,
 	message proto.Message,
 	completion func()) error {
+
+	// MemcacheFileDataStore is asynchronous: Only complete on errors,
+	// but pass completion function to the writer pool.
 
 	defer Instrument("write", "MemcacheFileDataStore", urn)()
 
@@ -266,18 +280,21 @@ func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 	if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
 		serialized_content, err = protojson.Marshal(message)
 		if err != nil {
+			self.maybeComplete(completion)
 			return err
 		}
 
 	} else {
 		serialized_content, err = proto.Marshal(message)
 		if err != nil {
+			self.maybeComplete(completion)
 			return err
 		}
 	}
 
-	// Add the data to the cache.
-	err = self.cache.SetSubject(config_obj, urn, message)
+	// Add the data to the memory cache (do not call completion yet
+	// until we sync the file based datastore).
+	err = self.cache.SetSubjectWithCompletion(config_obj, urn, message, nil)
 
 	// Send a SetSubject mutation to the writer loop.
 	var wg sync.WaitGroup
@@ -285,8 +302,13 @@ func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 
 	select {
 	case <-self.ctx.Done():
+		// If we exit this function we need to call the completion,
+		// otherwise let the writer call the completion.
+		self.maybeComplete(completion)
 		return nil
 
+		// After we send this to the channel, the writer will
+		// complete.
 	case self.writer <- &Mutation{
 		op:         MUTATION_OP_SET_SUBJECT,
 		urn:        urn,
@@ -295,6 +317,8 @@ func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 		data:       serialized_content}:
 	}
 
+	// Config file switches off asynchronous writes, wait here for
+	// completion.
 	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {
 		wg.Wait()
 	}

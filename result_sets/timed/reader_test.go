@@ -7,6 +7,7 @@ import (
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -39,7 +40,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 
 		writer, err := result_sets.NewResultSetWriter(
 			file_store_factory, path_manager.Path(),
-			nil, false /* truncate */)
+			nil, api.SyncCompleter, false /* truncate */)
 		assert.NoError(self.T(), err)
 
 		writer.Write(ordereddict.NewDict().

@@ -76,7 +76,10 @@ func (self *DirectoryFileWriter) Flush() error { return nil }
 
 func (self *DirectoryFileWriter) Close() error {
 	err := self.Fd.Close()
-	if self.completion != nil {
+
+	// DirectoryFileWriter is synchronous... complete on Close()
+	if self.completion != nil &&
+		!utils.CompareFuncs(self.completion, api.SyncCompleter) {
 		self.completion()
 	}
 	return err
@@ -180,6 +183,7 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 	filename api.FSPathSpec, completion func()) (api.FileWriter, error) {
 
 	defer api.InstrumentWithDelay("open_write", "DirectoryFileStore", filename)()
+
 	file_path := filename.AsFilestoreFilename(self.config_obj)
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {

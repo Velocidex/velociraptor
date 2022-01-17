@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -155,11 +156,15 @@ func (self *TimedResultSetReader) maybeUpgradeIndex(
 	// Read all the lines from the json and write them to a new
 	// tmp file.
 	ctx := context.Background()
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
 	new_path := path_manager.Path().
 		SetType(api.PATH_TYPE_FILESTORE_TMP)
 	tmp_path_manager := paths.NewTimelinePathManager("", new_path)
 	tmp_writer, err := timelines.NewTimelineWriter(
 		self.file_store_factory, tmp_path_manager,
+		wg.Done, /* completion */
 		true /* truncate */)
 	if err != nil {
 		return nil, err
@@ -173,6 +178,9 @@ func (self *TimedResultSetReader) maybeUpgradeIndex(
 	}
 
 	tmp_writer.Close()
+
+	// Wait until the tmp file is done.
+	wg.Wait()
 
 	// Update the json file itself, and leave the new index
 	// around.
