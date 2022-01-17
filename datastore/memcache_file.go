@@ -43,6 +43,7 @@ package datastore
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"strings"
 	"sync"
@@ -206,12 +207,14 @@ func (self *MemcacheFileDataStore) StartWriter(
 						}
 
 					case MUTATION_OP_DEL_SUBJECT:
+						time.Sleep(100 * time.Millisecond)
 						file_based_imp.DeleteSubject(config_obj, mutation.urn)
 						self.invalidateDirCache(config_obj, mutation.urn.Dir())
 
 						// Call the completion function once we hit
 						// the directory datastore.
 						if mutation.completion != nil {
+							fmt.Printf("Calling completion\n")
 							mutation.completion()
 						}
 					}
@@ -370,7 +373,8 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 	urn api.DSPathSpec) error {
 	defer Instrument("delete", "MemcacheFileDataStore", urn)()
 
-	// Remove immediately from the cache
+	// Remove immediately from the cache memcache as soon as the file
+	// is removed from disk.
 	completion := func() {
 		_ = self.cache.DeleteSubject(config_obj, urn)
 	}

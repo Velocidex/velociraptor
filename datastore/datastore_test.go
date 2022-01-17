@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"sort"
 	"sync"
@@ -179,6 +180,7 @@ func (self BaseTestSuite) TestSetGetSubject() {
 	vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
 		read_message := &crypto_proto.VeloMessage{}
 		err = self.datastore.GetSubject(self.config_obj, urn, read_message)
+		fmt.Printf("GetSubject %v: %v\n", urn.AsClientPath(), err)
 		return errors.Is(err, os.ErrNotExist)
 	})
 }
