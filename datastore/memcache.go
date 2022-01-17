@@ -362,8 +362,8 @@ func (self *MemcacheDatastore) GetSubject(
 		}
 
 		if err != nil {
-			return errors.WithMessage(os.ErrNotExist,
-				fmt.Sprintf("While opening %v: not found", urn.AsClientPath()))
+			return fmt.Errorf(
+				"While opening %v: %w", urn.AsClientPath(), os.ErrNotExist)
 		}
 	}
 

@@ -1,6 +1,7 @@
 package datastore
 
 import (
+	"errors"
 	"os"
 	"sort"
 	"sync"
@@ -174,9 +175,12 @@ func (self BaseTestSuite) TestSetGetSubject() {
 	err = self.datastore.DeleteSubject(self.config_obj, urn)
 	assert.NoError(self.T(), err)
 
-	// It should now be cleared
-	err = self.datastore.GetSubject(self.config_obj, urn, read_message)
-	assert.Error(self.T(), err, os.ErrNotExist)
+	// It should eventually be cleared
+	vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
+		read_message := &crypto_proto.VeloMessage{}
+		err = self.datastore.GetSubject(self.config_obj, urn, read_message)
+		return errors.Is(err, os.ErrNotExist)
+	})
 }
 
 func (self BaseTestSuite) TestListChildren() {

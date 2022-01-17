@@ -43,7 +43,7 @@ package datastore
 
 import (
 	"context"
-	"os"
+	"io/fs"
 	"strings"
 	"sync"
 	"time"
@@ -56,7 +56,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -209,6 +208,12 @@ func (self *MemcacheFileDataStore) StartWriter(
 					case MUTATION_OP_DEL_SUBJECT:
 						file_based_imp.DeleteSubject(config_obj, mutation.urn)
 						self.invalidateDirCache(config_obj, mutation.urn.Dir())
+
+						// Call the completion function once we hit
+						// the directory datastore.
+						if mutation.completion != nil {
+							mutation.completion()
+						}
 					}
 
 					metricIdleWriters.Inc()
@@ -224,17 +229,13 @@ func (self *MemcacheFileDataStore) GetSubject(
 	urn api.DSPathSpec,
 	message proto.Message) error {
 
-	if strings.Contains(urn.AsClientPath(), "vfs") {
-		utils.DlvBreak()
-	}
-
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	defer Instrument("read", "MemcacheFileDataStore", urn)()
 
 	err := self.cache.GetSubject(config_obj, urn, message)
-	if os.IsNotExist(errors.Cause(err)) {
+	if errors.Is(err, fs.ErrNotExist) {
 		// The file is not in the cache, read it from the file system
 		// instead.
 		serialized_content, err := readContentFromFile(
@@ -369,6 +370,7 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 	urn api.DSPathSpec) error {
 	defer Instrument("delete", "MemcacheFileDataStore", urn)()
 
+	// Remove immediately from the cache
 	err := self.cache.DeleteSubject(config_obj, urn)
 
 	// Send a DeleteSubject mutation to the writer loop.
@@ -380,8 +382,14 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 		break
 
 	case self.writer <- &Mutation{
-		op:  MUTATION_OP_DEL_SUBJECT,
-		wg:  &wg,
+		op: MUTATION_OP_DEL_SUBJECT,
+		wg: &wg,
+
+		// When we complete make sure the cache is also invalidated to
+		// avoid racing with GetSubject().
+		completion: func() {
+			self.cache.DeleteSubject(config_obj, urn)
+		},
 		urn: urn}:
 	}
 
