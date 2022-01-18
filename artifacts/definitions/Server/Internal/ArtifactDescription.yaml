@@ -59,6 +59,32 @@ reports:
 
       {{ end }}
 
+      {{ if $artifact.Imports }}
+
+      <table class="table table-striped table-hover">
+      <thead>
+         <tr>
+           <th>Imports</th>
+         </tr>
+      </thead>
+      <tbody>
+      {{- range $item := $artifact.Imports -}}
+        <tr>
+          <td>{{ $item }}</td>
+        </tr>
+      {{- end -}}
+      </tbody></table>
+
+      {{ end }}
+
+      {{ if $artifact.Export }}
+      ### Exports
+
+      ```vql
+      {{ $artifact.Export }}
+      ```
+      {{ end }}
+
       {{ range $source := $artifact.Sources }}
 
       ### Source {{ $source.Name }}

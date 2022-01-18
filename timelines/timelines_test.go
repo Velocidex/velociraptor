@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type TimelineTestSuite struct {
@@ -97,7 +98,7 @@ func (self *TimelineTestSuite) TestTimelineWriter() {
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	timeline, err := NewTimelineWriter(file_store_factory, path_manager,
-		api.SyncCompleter, true /* truncate */)
+		utils.SyncCompleter, result_sets.TruncateMode)
 	assert.NoError(self.T(), err)
 
 	for i := int64(0); i <= 10; i++ {

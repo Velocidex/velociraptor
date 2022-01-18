@@ -99,7 +99,7 @@ func (self *TimedResultSetWriterImpl) getWriter(ts time.Time) (
 		paths.NewTimelinePathManager(
 			log_path.Base(), log_path),
 		self.completer.GetCompletionFunc(),
-		false /* truncate */)
+		result_sets.AppendMode)
 	if err != nil {
 		return nil, err
 	}

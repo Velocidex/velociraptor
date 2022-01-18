@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -175,8 +176,8 @@ func (self *SuperTimelineWriter) AddChild(name string) (*TimelineWriter, error) 
 	writer, err := NewTimelineWriter(
 		file_store_factory,
 		new_timeline_path_manager,
-		nil, /* completion */
-		true /* truncate */)
+		utils.BackgroundWriter,
+		result_sets.TruncateMode)
 	if err != nil {
 		return nil, err
 	}

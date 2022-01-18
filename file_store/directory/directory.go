@@ -79,7 +79,7 @@ func (self *DirectoryFileWriter) Close() error {
 
 	// DirectoryFileWriter is synchronous... complete on Close()
 	if self.completion != nil &&
-		!utils.CompareFuncs(self.completion, api.SyncCompleter) {
+		!utils.CompareFuncs(self.completion, utils.SyncCompleter) {
 		self.completion()
 	}
 	return err

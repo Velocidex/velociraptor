@@ -49,11 +49,14 @@ type FileInfo interface {
 
 type FileStore interface {
 	ReadFile(filename FSPathSpec) (FileReader, error)
+
+	// Async write - same as WriteFileWithCompletion with BackgroundWriter
 	WriteFile(filename FSPathSpec) (FileWriter, error)
 
 	// Completion function will be called when the file is committed.
 	WriteFileWithCompletion(
-		filename FSPathSpec, completion func()) (FileWriter, error)
+		filename FSPathSpec,
+		completion func()) (FileWriter, error)
 
 	StatFile(filename FSPathSpec) (FileInfo, error)
 	ListDirectory(dirname FSPathSpec) ([]FileInfo, error)

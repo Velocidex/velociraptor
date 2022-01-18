@@ -54,7 +54,7 @@ parameters:
     description: Get recent queries logs
     type: bool
   - name: Metrics
-    description: Get client metrics
+    description: Get server metrics
     type: bool
   - name: Verbose
     description: Print more detail

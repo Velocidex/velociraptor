@@ -2,6 +2,7 @@ package golang
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"runtime/pprof"
@@ -14,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -57,9 +59,61 @@ func writeMetrics(scope vfilter.Scope, output_chan chan vfilter.Row) {
 	}
 
 	for _, metric := range gathering {
-		output_chan <- ordereddict.NewDict().
-			Set("Type", "metrics").
-			Set("Line", metric)
+		for _, m := range metric.Metric {
+			var value interface{}
+			if m.Gauge != nil {
+				value = int64(*m.Gauge.Value)
+			} else if m.Counter != nil {
+				value = int64(*m.Counter.Value)
+			} else if m.Histogram != nil {
+				// Histograms are buckets so we send a dict.
+				result := ordereddict.NewDict()
+				value = result
+
+				label := "_"
+				for _, l := range m.Label {
+					label += *l.Value + "_"
+				}
+
+				for idx, b := range m.Histogram.Bucket {
+					name := fmt.Sprintf("%v%v_%0.2f", *metric.Name,
+						label, *b.UpperBound)
+					if idx == len(m.Histogram.Bucket)-1 {
+						name = fmt.Sprintf("%v%v_inf", *metric.Name,
+							label)
+					}
+					result.Set(name, int64(*b.CumulativeCount))
+				}
+
+			} else if m.Summary != nil {
+				result := ordereddict.NewDict().
+					Set(fmt.Sprintf("%v_sample_count", *metric.Name),
+						m.Summary.SampleCount)
+				value = result
+
+				for _, b := range m.Summary.Quantile {
+					name := fmt.Sprintf("%v_%d", *metric.Name, *b.Quantile)
+					result.Set(name, int64(*b.Value))
+				}
+
+			} else if m.Untyped != nil {
+				value = int64(*m.Untyped.Value)
+
+			} else {
+				utils.Debug(m)
+				// Unknown type just send the raw metric
+				value = m
+			}
+
+			output_chan <- ordereddict.NewDict().
+				Set("Type", "metrics").
+				Set("Line", ordereddict.NewDict().
+					Set("name", metric.Name).
+					Set("help", metric.Help).
+					Set("value", value)).
+				Set("FullPath", "").
+				Set("_RawMetric", m)
+		}
 	}
 }
 
@@ -94,6 +148,7 @@ func writeProfile(scope vfilter.Scope,
 
 	output_chan <- ordereddict.NewDict().
 		Set("Type", name).
+		Set("Line", fmt.Sprintf("Generating profile %v", name)).
 		Set("FullPath", tmpfile.Name())
 }
 
@@ -128,6 +183,7 @@ func writeCPUProfile(
 
 	output_chan <- ordereddict.NewDict().
 		Set("Type", "profile").
+		Set("Line", "Generating CPU profile").
 		Set("FullPath", tmpfile.Name())
 }
 
@@ -158,6 +214,7 @@ func writeTraceProfile(
 
 	output_chan <- ordereddict.NewDict().
 		Set("Type", "trace").
+		Set("Line", "Generating Trace profile").
 		Set("FullPath", tmpfile.Name())
 }
 
@@ -228,8 +285,8 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 
 				case output_chan <- ordereddict.NewDict().
 					Set("Type", "logs").
-					Set("FullPath", "").
-					Set("Line", line):
+					Set("Line", line).
+					Set("FullPath", ""):
 				}
 			}
 		}
@@ -242,8 +299,8 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 
 				case output_chan <- ordereddict.NewDict().
 					Set("Type", "query").
-					Set("FullPath", "").
-					Set("Line", q):
+					Set("Line", q).
+					Set("FullPath", ""):
 				}
 			}
 		}

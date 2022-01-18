@@ -137,7 +137,7 @@ func (self *MemoryWriter) Close() error {
 
 	// MemoryWriter is actually synchronous... Complete on close.
 	if self.completion != nil &&
-		!utils.CompareFuncs(self.completion, api.SyncCompleter) {
+		!utils.CompareFuncs(self.completion, utils.SyncCompleter) {
 		defer self.completion()
 	}
 

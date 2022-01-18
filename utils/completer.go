@@ -6,6 +6,18 @@ import (
 	"sync"
 )
 
+var (
+	// Set this to convert completion functions to synchronous calls.
+	SyncCompleter = func() {
+		fmt.Printf("SyncCompleter should never be called! %v",
+			string(debug.Stack()))
+	}
+
+	// A NOOP completion that indicates background writing - improves
+	// readability in call sites.
+	BackgroundWriter = func() {}
+)
+
 const (
 	DEBUG_COMPLETER = false
 )
@@ -33,6 +45,9 @@ const (
     err := db.SetSubjectWithCompletion(...., completer.GetCompletionFunc())
   }
 
+  NOTE: As a special case, if the completer is created with
+  SyncCompleter it meands all completion functions will be
+  synchronous.
 */
 
 type Completer struct {
@@ -50,6 +65,12 @@ func NewCompleter(completion func()) *Completer {
 func (self *Completer) GetCompletionFunc() func() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	// If we wrap the SyncCompleter this means that **all** calls must
+	// be synchronous.
+	if CompareFuncs(self.completion, SyncCompleter) {
+		return self.completion
+	}
 
 	id := self.count
 	self.count++
