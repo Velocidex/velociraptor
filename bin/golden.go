@@ -358,10 +358,8 @@ func doGolden() error {
 	}
 
 	if len(failures) > 0 {
-		if err != nil {
-			return fmt.Errorf(
-				"Failed! Some golden files did not match: %s\n", failures)
-		}
+		return fmt.Errorf(
+			"Failed! Some golden files did not match: %s\n", failures)
 	}
 	return nil
 }
