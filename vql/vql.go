@@ -27,7 +27,6 @@
 package vql
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -46,21 +45,6 @@ var (
 		Help: "Total number of Scope objects constructed.",
 	})
 )
-
-func MakeNoopPlugin(name string) error {
-	if plugin := GetPlugin(name); plugin != nil {
-		OverridePlugin(&NoopPlugin{plugin})
-		return nil
-	}
-	return fmt.Errorf("cannot replace plugin %s: is not registered", name)
-}
-
-func GetPlugin(name string) vfilter.PluginGeneratorInterface {
-	if plugin, pres := exportedPlugins[name]; pres {
-		return plugin
-	}
-	return nil
-}
 
 func OverridePlugin(plugin vfilter.PluginGeneratorInterface) {
 	name := plugin.Info(nil, nil).Name
