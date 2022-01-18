@@ -15,7 +15,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -92,7 +91,7 @@ func writeMetrics(scope vfilter.Scope, output_chan chan vfilter.Row) {
 				value = result
 
 				for _, b := range m.Summary.Quantile {
-					name := fmt.Sprintf("%v_%d", *metric.Name, *b.Quantile)
+					name := fmt.Sprintf("%v_%v", *metric.Name, *b.Quantile)
 					result.Set(name, int64(*b.Value))
 				}
 
@@ -100,7 +99,6 @@ func writeMetrics(scope vfilter.Scope, output_chan chan vfilter.Row) {
 				value = int64(*m.Untyped.Value)
 
 			} else {
-				utils.Debug(m)
 				// Unknown type just send the raw metric
 				value = m
 			}
