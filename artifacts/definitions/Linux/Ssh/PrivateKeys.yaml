@@ -56,7 +56,7 @@ sources:
       '''
 
       -- Device major numbers considered local. See Linux.Search.FileFinder
-      LET LocalDeviceMajor <= (
+      LET LocalDeviceMajor <= (NULL,
           253, 7, 8, 9, 11, 65, 66, 67, 68, 69, 70,
           71, 128, 129, 130, 131, 132, 133, 134, 135, 202, 253, 254, 259)
 
