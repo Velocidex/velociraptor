@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import VeloAce from '../core/ace.js';
-import language_tools from 'ace-builds/src-min-noconflict/ext-language_tools.js';
 import Overlay from 'react-bootstrap/Overlay';
 import Tooltip from 'react-bootstrap/Tooltip';
 import "./regex.css";
@@ -154,17 +153,14 @@ export default class RegEx extends React.Component {
     }
 
     aceConfig = (ace) => {
-        language_tools.setCompleters();
-        language_tools.addCompleter(Completer);
-
+        ace.completers = [Completer];
         ace.setOptions({
             maxLines: 5,
             enableLiveAutocompletion: true,
             enableBasicAutocompletion: true,
-            placeholder: "Regular Expression or ? for suggestions",
             showGutter: false,
+            placeholder: "? for suggestions",
         });
-
         this.setState({ace: ace});
     };
 
