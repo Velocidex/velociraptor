@@ -1365,10 +1365,10 @@
     description: Run this query for each row.
   - name: async
     type: bool
-    description: If set we run all queries asyncronously (implies workers=1000).
+    description: If set we run all queries asynchronously (implies workers=1000).
   - name: workers
     type: int64
-    description: Total number of asyncronous workers.
+    description: Total number of asynchronous workers.
   - name: column
     type: string
     description: If set we only extract the column from row.
@@ -2825,7 +2825,7 @@
     ]
     ```
 
-    The profile is compiled and overlayed on top of the offset specified,
+    The profile is compiled and overlaid on top of the offset specified,
     then the object is emitted with its required fields.
 
     You can read more about profiles here https://github.com/Velocidex/vtypes
@@ -5192,8 +5192,8 @@
     When the rule is provided in the above form, the plugin will
     automatically generate a yara rule which matches any of the specified
     keywords. The specification before the `:` means the same thing as the
-    yara DSL and the following combinations are supported `wide`, `wide
-    ascii`, `wide nocase`, `wide nocase ascii`.
+    yara DSL and the following combinations are supported `wide`,
+    `wide ascii`, `wide nocase`, `wide nocase ascii`.
 
 
     {{% notice note %}}

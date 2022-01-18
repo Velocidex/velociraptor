@@ -154,7 +154,9 @@ sources:
                  -- Standard string form
                  "2021-08-10T15:34:50Z" AS Time4,
 
-                 FlowId, ClientId, Data, URL, URL AS SafeURL, Base64Data
+                 FlowId, ClientId, URL, URL AS SafeURL, Base64Data,
+
+                 "Hello" AS Data
           FROM scope()
 
       - type: Markdown
