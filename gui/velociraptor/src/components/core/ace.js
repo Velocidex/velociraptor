@@ -95,7 +95,6 @@ import api from '../core/api-service.js';
 import axios from 'axios';
 
 
-
 export class SettingsButton extends Component {
     static propTypes = {
         ace: PropTypes.object,
@@ -220,12 +219,14 @@ export default class VeloAce extends Component {
         let options = this.getUserOptions();
         let mode = this.props.mode || 'sql';
         let focus = this.props.focus;
+
         if (_.isUndefined(focus)) {
             focus = true;
         }
         return (
             <>
-              <div className={classNames(
+              <div
+                className={classNames(
                   "col-12",
                   "velo-ace-editor",
                   this.props.className)}>
@@ -236,6 +237,7 @@ export default class VeloAce extends Component {
                   focus={focus}
                   mode={mode}
                   theme="github"
+                  placeholder={this.props.placeholder}
                   value={this.props.text || ''}
                   onChange={this.props.onChange}
                   style={

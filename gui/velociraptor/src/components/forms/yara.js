@@ -2,8 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import VeloAce from '../core/ace.js';
 import language_tools from 'ace-builds/src-min-noconflict/ext-language_tools.js';
-import Overlay from 'react-bootstrap/Overlay';
-import Tooltip from 'react-bootstrap/Tooltip';
 import "./regex.css";
 
 import _ from 'lodash';
@@ -81,25 +79,16 @@ export default class YaraEditor extends React.Component {
         error: "",
     };
 
-    constructor(props) {
-        super(props);
-        this.myRef = React.createRef();
-    }
-
     aceConfig = (ace) => {
-        language_tools.setCompleters();
-        language_tools.addCompleter(Completer);
-        language_tools.addCompleter(language_tools.textCompleter);
-
+        ace.completers = [Completer, language_tools.textCompleter];
         ace.setOptions({
             enableLiveAutocompletion: true,
             enableBasicAutocompletion: true,
             autoScrollEditorIntoView: true,
+            placeholder: "? for suggestions",
             showGutter: false,
             maxLines: 25,
-            placeholder: "Paste Yara rule or type ? for template",
         });
-
         this.setState({ace: ace});
     };
 
@@ -111,22 +100,13 @@ export default class YaraEditor extends React.Component {
     render() {
         return (
             <>
-              <div ref={this.myRef}>
-                <Overlay target={this.myRef}
-                         show={!_.isEmpty(this.state.error)}
-                         placement="top">
-                {(props) => (
-                    <Tooltip className="regex-syntax-error" {...props}>
-                      {this.state.error}
-                    </Tooltip>
-                )}
-              </Overlay>
-              <VeloAce text={this.props.value}
-                       focus={false}
-                       className="regex-form"
-                       aceConfig={this.aceConfig}
-                       onChange={this.setValue}
-                       mode="yara" />
+              <div>
+                <VeloAce text={this.props.value}
+                         focus={false}
+                         className="regex-form"
+                         aceConfig={this.aceConfig}
+                         onChange={this.setValue}
+                         mode="yara" />
               </div>
             </>
         );
