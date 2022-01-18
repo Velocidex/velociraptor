@@ -212,6 +212,20 @@ func listChildren(config_obj *config_proto.Config,
 		}
 		return nil, errors.WithStack(err)
 	}
+
+	max_dir_size := int(config_obj.Datastore.MaxDirSize)
+	if max_dir_size == 0 {
+		max_dir_size = 50000
+	}
+
+	if len(children) > max_dir_size {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Error(
+			"listChildren: Encountered a large directory %v (%v files), "+
+				"truncating to %v", urn.AsClientPath(),
+			len(children), max_dir_size)
+		return children[:max_dir_size], nil
+	}
 	return children, nil
 }
 

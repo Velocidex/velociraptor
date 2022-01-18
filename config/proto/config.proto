@@ -633,6 +633,11 @@ message DatastoreConfig {
     string location = 2;
     string filestore_directory = 3;
 
+    // Cap directories to this size after reporting error - this
+    // should not happen normally but may happen if the deployment has
+    // been very active!
+    uint64 max_dir_size = 13;
+
     // How long to expire the memcache (default 10 min)
     uint64 memcache_expiration_sec = 4;
 
