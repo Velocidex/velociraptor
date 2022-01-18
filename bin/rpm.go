@@ -236,8 +236,8 @@ func doClientRPM() error {
 			Name:  "/etc/velociraptor/client.config.yaml",
 			Mode:  0600,
 			Body:  config_file_yaml,
-			Owner: "velociraptor",
-			Group: "velociraptor",
+			Owner: "root",
+			Group: "root",
 		})
 
 	r.AddFile(
@@ -356,8 +356,8 @@ func doClientSysVRPM() error {
 			Name:  "/etc/velociraptor/client.config.yaml",
 			Mode:  0600,
 			Body:  config_file_yaml,
-			Owner: "velociraptor",
-			Group: "velociraptor",
+			Owner: "root",
+			Group: "root",
 		})
 	r.AddFile(
 		rpmpack.RPMFile{

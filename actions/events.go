@@ -294,7 +294,9 @@ func InitializeEventTable(ctx context.Context, service_wg *sync.WaitGroup) {
 		<-ctx.Done()
 
 		mu.Lock()
-		close(GlobalEventTable.Done)
+		if GlobalEventTable.Done != nil {
+			close(GlobalEventTable.Done)
+		}
 		mu.Unlock()
 	}()
 

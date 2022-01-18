@@ -171,8 +171,12 @@ func (self *SuperTimelineWriter) Close() {
 func (self *SuperTimelineWriter) AddChild(name string) (*TimelineWriter, error) {
 	new_timeline_path_manager := self.path_manager.GetChild(name)
 	file_store_factory := file_store.GetFileStore(self.config_obj)
+
 	writer, err := NewTimelineWriter(
-		file_store_factory, new_timeline_path_manager, true /* truncate */)
+		file_store_factory,
+		new_timeline_path_manager,
+		nil, /* completion */
+		true /* truncate */)
 	if err != nil {
 		return nil, err
 	}

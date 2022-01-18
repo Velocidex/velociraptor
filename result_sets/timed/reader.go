@@ -158,8 +158,12 @@ func (self *TimedResultSetReader) maybeUpgradeIndex(
 	new_path := path_manager.Path().
 		SetType(api.PATH_TYPE_FILESTORE_TMP)
 	tmp_path_manager := paths.NewTimelinePathManager("", new_path)
+
+	// Write the tmp file synchronously and then read it again with
+	// the benefit of the index.
 	tmp_writer, err := timelines.NewTimelineWriter(
 		self.file_store_factory, tmp_path_manager,
+		api.SyncCompleter, /* completion */
 		true /* truncate */)
 	if err != nil {
 		return nil, err

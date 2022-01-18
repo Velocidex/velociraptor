@@ -22,7 +22,8 @@ func (self *serverLogger) Write(b []byte) (int, error) {
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 
 	writer, err := timed.NewTimedResultSetWriterWithClock(
-		file_store_factory, self.path_manager, nil, self.Clock)
+		file_store_factory, self.path_manager, nil,
+		api.SyncCompleter, self.Clock)
 	if err != nil {
 		return 0, err
 	}

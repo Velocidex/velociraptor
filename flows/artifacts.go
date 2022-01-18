@@ -172,7 +172,8 @@ func closeContext(
 
 	// Ensure the completion is not fired until we are done here
 	// completely.
-	defer collection_context.completer.GetCompletionFunc()()
+	completion_func := collection_context.completer.GetCompletionFunc()
+	defer completion_func()
 
 	// Context is not dirty - nothing to do.
 	if !collection_context.Dirty || collection_context.ClientId == "" {
@@ -278,13 +279,14 @@ func flushContextLogs(
 	// Append logs to messages from previous packets.
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
-		file_store_factory, flow_path_manager, nil, false /* truncate */)
+		file_store_factory, flow_path_manager,
+		nil, /* opts */
+		completion.GetCompletionFunc(),
+		false /* truncate */)
 	if err != nil {
 		return err
 	}
 	defer rs_writer.Close()
-
-	rs_writer.SetCompletion(completion.GetCompletionFunc())
 
 	for _, row := range collection_context.Logs {
 		collection_context.TotalLogs++
@@ -311,13 +313,14 @@ func flushContextUploadedFiles(
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
-		file_store_factory, flow_path_manager, nil, false /* truncate */)
+		file_store_factory, flow_path_manager,
+		nil, /* opts */
+		completion.GetCompletionFunc(),
+		false /* truncate */)
 	if err != nil {
 		return err
 	}
 	defer rs_writer.Close()
-
-	rs_writer.SetCompletion(completion.GetCompletionFunc())
 
 	for _, row := range collection_context.UploadedFiles {
 		rs_writer.Write(ordereddict.NewDict().
@@ -436,14 +439,13 @@ func ArtifactCollectorProcessOneMessage(
 			rs_writer, err := result_sets.NewResultSetWriter(
 				file_store_factory,
 				path_manager.Path(),
-				nil, false /* truncate */)
+				nil, /* opts */
+				collection_context.completer.GetCompletionFunc(),
+				false /* truncate */)
 			if err != nil {
 				return err
 			}
 			defer rs_writer.Close()
-
-			rs_writer.SetCompletion(
-				collection_context.completer.GetCompletionFunc())
 
 			// Support the old clients which send JSON
 			// array responses. We need to decode the JSON

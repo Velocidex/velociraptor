@@ -43,7 +43,7 @@ package datastore
 
 import (
 	"context"
-	"os"
+	"io/fs"
 	"strings"
 	"sync"
 	"time"
@@ -206,8 +206,15 @@ func (self *MemcacheFileDataStore) StartWriter(
 						}
 
 					case MUTATION_OP_DEL_SUBJECT:
+						time.Sleep(100 * time.Millisecond)
 						file_based_imp.DeleteSubject(config_obj, mutation.urn)
 						self.invalidateDirCache(config_obj, mutation.urn.Dir())
+
+						// Call the completion function once we hit
+						// the directory datastore.
+						if mutation.completion != nil {
+							mutation.completion()
+						}
 					}
 
 					metricIdleWriters.Inc()
@@ -229,7 +236,7 @@ func (self *MemcacheFileDataStore) GetSubject(
 	defer Instrument("read", "MemcacheFileDataStore", urn)()
 
 	err := self.cache.GetSubject(config_obj, urn, message)
-	if os.IsNotExist(errors.Cause(err)) {
+	if errors.Is(err, fs.ErrNotExist) {
 		// The file is not in the cache, read it from the file system
 		// instead.
 		serialized_content, err := readContentFromFile(
@@ -240,15 +247,21 @@ func (self *MemcacheFileDataStore) GetSubject(
 
 		metricDataLRUMiss.Inc()
 
-		// Store it in the cache now
+		// Store it in the cache for next time.
 		self.cache.SetData(config_obj, urn, serialized_content)
 
-		// This call should work because it is in cache.
-		return self.cache.GetSubject(config_obj, urn, message)
+		// Unmarshal the data into the message.
+		return unmarshalData(serialized_content, urn, message)
 	} else {
 		metricDataLRUHit.Inc()
 	}
 	return err
+}
+
+func (self *MemcacheFileDataStore) maybeComplete(c func()) {
+	if c != nil {
+		c()
+	}
 }
 
 func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
@@ -256,6 +269,9 @@ func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 	urn api.DSPathSpec,
 	message proto.Message,
 	completion func()) error {
+
+	// MemcacheFileDataStore is asynchronous: Only complete on errors,
+	// but pass completion function to the writer pool.
 
 	defer Instrument("write", "MemcacheFileDataStore", urn)()
 
@@ -266,18 +282,21 @@ func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 	if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
 		serialized_content, err = protojson.Marshal(message)
 		if err != nil {
+			self.maybeComplete(completion)
 			return err
 		}
 
 	} else {
 		serialized_content, err = proto.Marshal(message)
 		if err != nil {
+			self.maybeComplete(completion)
 			return err
 		}
 	}
 
-	// Add the data to the cache.
-	err = self.cache.SetSubject(config_obj, urn, message)
+	// Add the data to the memory cache (do not call completion yet
+	// until we sync the file based datastore).
+	err = self.cache.SetSubjectWithCompletion(config_obj, urn, message, nil)
 
 	// Send a SetSubject mutation to the writer loop.
 	var wg sync.WaitGroup
@@ -285,8 +304,13 @@ func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 
 	select {
 	case <-self.ctx.Done():
+		// If we exit this function we need to call the completion,
+		// otherwise let the writer call the completion.
+		self.maybeComplete(completion)
 		return nil
 
+		// After we send this to the channel, the writer will
+		// complete.
 	case self.writer <- &Mutation{
 		op:         MUTATION_OP_SET_SUBJECT,
 		urn:        urn,
@@ -295,6 +319,8 @@ func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 		data:       serialized_content}:
 	}
 
+	// Config file switches off asynchronous writes, wait here for
+	// completion.
 	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {
 		wg.Wait()
 	}
@@ -345,7 +371,11 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 	urn api.DSPathSpec) error {
 	defer Instrument("delete", "MemcacheFileDataStore", urn)()
 
-	err := self.cache.DeleteSubject(config_obj, urn)
+	// Remove immediately from the cache memcache as soon as the file
+	// is removed from disk.
+	completion := func() {
+		_ = self.cache.DeleteSubject(config_obj, urn)
+	}
 
 	// Send a DeleteSubject mutation to the writer loop.
 	var wg sync.WaitGroup
@@ -353,19 +383,24 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 
 	select {
 	case <-self.ctx.Done():
+		completion()
 		break
 
 	case self.writer <- &Mutation{
-		op:  MUTATION_OP_DEL_SUBJECT,
-		wg:  &wg,
-		urn: urn}:
+		op: MUTATION_OP_DEL_SUBJECT,
+		wg: &wg,
+
+		// When we complete make sure the cache is also invalidated to
+		// avoid racing with GetSubject().
+		completion: completion,
+		urn:        urn}:
 	}
 
 	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {
 		wg.Wait()
 	}
 
-	return err
+	return nil
 }
 
 // Lists all the children of a URN.

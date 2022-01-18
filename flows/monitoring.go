@@ -99,8 +99,10 @@ func flushContextLogsMonitoring(
 				return err
 			}
 
+			// Write the logs asynchronously
 			rs_writer, err = result_sets.NewTimedResultSetWriter(
-				file_store_factory, log_path_manager, nil)
+				file_store_factory, log_path_manager, nil,
+				nil /* completion */)
 			if err != nil {
 				return err
 			}

@@ -3,6 +3,7 @@ package timed
 import (
 	"io/ioutil"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 // We write files in the following ranges:
@@ -67,6 +69,9 @@ type: CLIENT_EVENT
 }
 
 func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
+	var mu sync.Mutex
+	completion_result := []string{}
+
 	now := time.Unix(1587800000, 0)
 	clock := &utils.MockClock{MockNow: now}
 
@@ -81,7 +86,11 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	writer, err := NewTimedResultSetWriter(
-		file_store_factory, path_manager, nil)
+		file_store_factory, path_manager, nil, func() {
+			mu.Lock()
+			completion_result = append(completion_result, "Done")
+			mu.Unlock()
+		})
 	assert.NoError(self.T(), err)
 
 	writer.(*TimedResultSetWriterImpl).Clock = clock
@@ -95,10 +104,21 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 		writer.Write(ordereddict.NewDict().
 			Set("Time", clock.MockNow).
 			Set("Now", now))
+
+		// Force the writer to flush to disk - next write will open
+		// the file and append data to the end.
 		writer.Flush()
 	}
 
+	// Completion does not run until we close the writer.
+	assert.Equal(self.T(), 0, len(completion_result))
 	writer.Close()
+
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		return 1 == len(completion_result)
+	})
+
+	assert.Equal(self.T(), "Done", completion_result[0])
 
 	result := ordereddict.NewDict()
 
@@ -123,6 +143,55 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 
 	goldie.Assert(self.T(), "TestTimedResultSetWriting",
 		json.MustMarshalIndent(result))
+}
+
+func (self *TimedResultSetTestSuite) TestTimedResultSetWritingNoFlushing() {
+	var mu sync.Mutex
+	completion_result := []string{}
+
+	now := time.Unix(1587800000, 0)
+	clock := &utils.MockClock{MockNow: now}
+
+	// Start off by writing some events on a queue.
+	path_manager, err := artifacts.NewArtifactPathManager(
+		self.ConfigObj,
+		self.client_id,
+		self.flow_id,
+		"Windows.Events.ProcessCreation")
+	assert.NoError(self.T(), err)
+	path_manager.Clock = clock
+
+	file_store_factory := file_store.GetFileStore(self.ConfigObj)
+	writer, err := NewTimedResultSetWriter(
+		file_store_factory, path_manager, nil, func() {
+			mu.Lock()
+			completion_result = append(completion_result, "Done")
+			mu.Unlock()
+		})
+	assert.NoError(self.T(), err)
+
+	writer.(*TimedResultSetWriterImpl).Clock = clock
+
+	// Push an event every hour for 48 hours.
+	for i := int64(0); i < 50; i++ {
+		// Advance the clock by 1 hour.
+		now := 1587800000 + 10000*i
+		clock.MockNow = time.Unix(now, 0).UTC()
+
+		writer.Write(ordereddict.NewDict().
+			Set("Time", clock.MockNow).
+			Set("Now", now))
+	}
+
+	// Completion does not run until we close the writer.
+	assert.Equal(self.T(), 0, len(completion_result))
+	writer.Close()
+
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		return 1 == len(completion_result)
+	})
+
+	assert.Equal(self.T(), "Done", completion_result[0])
 }
 
 func TestTimedResultSets(t *testing.T) {

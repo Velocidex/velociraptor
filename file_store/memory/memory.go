@@ -14,6 +14,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -134,13 +135,16 @@ func (self *MemoryWriter) Close() error {
 	}
 	self.closed = true
 
+	// MemoryWriter is actually synchronous... Complete on close.
+	if self.completion != nil &&
+		!utils.CompareFuncs(self.completion, api.SyncCompleter) {
+		defer self.completion()
+	}
+
 	self.memory_file_store.mu.Lock()
 	defer self.memory_file_store.mu.Unlock()
 
 	self.memory_file_store.Data.Set(self.filename, self.buf)
-	if self.completion != nil {
-		self.completion()
-	}
 	return nil
 }
 

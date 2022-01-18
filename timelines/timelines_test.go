@@ -96,7 +96,8 @@ func (self *TimelineTestSuite) TestTimelineWriter() {
 		SuperTimeline("T.1234").GetChild("Test")
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
-	timeline, err := NewTimelineWriter(file_store_factory, path_manager, true /* truncate */)
+	timeline, err := NewTimelineWriter(file_store_factory, path_manager,
+		api.SyncCompleter, true /* truncate */)
 	assert.NoError(self.T(), err)
 
 	for i := int64(0); i <= 10; i++ {

@@ -75,6 +75,12 @@ type Record struct {
 }
 
 func NewRecord(record *api_proto.IndexRecord) Record {
+	// The record is stored in the btree and searchable by the index
+	// term. The index term should be able to be used on multiple
+	// entities hence we add a combination of the record term to the
+	// entity to make a unique btree key.
+	// E.g Record is {Term: "all", Entity: "C.123"} -> btree key "all/C.123"
+	// So searching for all/* will give all clients with term "all".
 	return Record{
 		IndexRecord: record,
 		IndexTerm: strings.ToLower(
@@ -117,9 +123,28 @@ func (self *Indexer) Flush(config_obj *config_proto.Config) error {
 	start := time.Now()
 	path_manager := paths.NewIndexPathManager()
 	file_store_factory := file_store.GetFileStore(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
+	// We need to make sure the snapshot is always valid, so we write
+	// to a tmp file and then atomically move to its final place.
+	final_path_spec := path_manager.Snapshot()
+	tmp_path_spec := final_path_spec.SetType(api.PATH_TYPE_FILESTORE_TMP)
+
+	// When we finish writing the result set, move it to the final
+	// destination.
+	completion := func() {
+		err := file_store_factory.Move(tmp_path_spec, final_path_spec)
+		if err != nil {
+			logger.Error("Unable to update snapshot: %v", err)
+		} else {
+			logger.Debug("Flushed index in %v.", time.Now().Sub(start))
+		}
+	}
+
 	rs_writer, err := result_sets.NewResultSetWriter(
-		file_store_factory, path_manager.Snapshot(),
-		nil, true /* truncate */)
+		file_store_factory, tmp_path_spec, nil,
+		completion,
+		true /* truncate */)
 	if err != nil {
 		return err
 	}
@@ -136,9 +161,6 @@ func (self *Indexer) Flush(config_obj *config_proto.Config) error {
 
 		return true
 	})
-
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Debug("Flushed index in %v.", time.Now().Sub(start))
 
 	return nil
 }
@@ -330,6 +352,8 @@ func (self *Indexer) LoadIndexFromDirectory(
 	self.mu.Unlock()
 }
 
+// A much faster alternative - store all the client index in a single
+// file and read it at once.
 func (self *Indexer) LoadIndexFromSnapshot(
 	ctx context.Context,
 	config_obj *config_proto.Config) error {
@@ -363,6 +387,13 @@ func (self *Indexer) LoadIndexFromSnapshot(
 		if !ok {
 			continue
 		}
+
+		// We should be able to search for the client by client id
+		// directly.
+		self.Set(NewRecord(&api_proto.IndexRecord{
+			Term:   entity,
+			Entity: entity,
+		}))
 
 		self.Set(NewRecord(&api_proto.IndexRecord{
 			Term:   term,
@@ -399,6 +430,7 @@ func (self *Indexer) Load(
 	err := self.LoadIndexFromSnapshot(ctx, config_obj)
 	if err != nil {
 		self.LoadIndexFromDirectory(ctx, config_obj)
+		self.Flush(config_obj)
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)

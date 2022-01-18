@@ -42,13 +42,9 @@ type TimedResultSetWriterImpl struct {
 	log_path      api.FSPathSpec
 	last_log_base string
 	writer        *timelines.TimelineWriter
-	completion    func()
+	completer     *utils.Completer
 
 	Clock utils.Clock
-}
-
-func (self *TimedResultSetWriterImpl) SetCompletion(completion func()) {
-	self.completion = completion
 }
 
 func (self *TimedResultSetWriterImpl) Write(row *ordereddict.Dict) {
@@ -101,12 +97,12 @@ func (self *TimedResultSetWriterImpl) getWriter(ts time.Time) (
 	writer, err := timelines.NewTimelineWriter(
 		self.file_store_factory,
 		paths.NewTimelinePathManager(
-			log_path.Base(), log_path), false /* truncate */)
+			log_path.Base(), log_path),
+		self.completer.GetCompletionFunc(),
+		false /* truncate */)
 	if err != nil {
 		return nil, err
 	}
-
-	writer.SetCompletion(self.completion)
 
 	self.log_path = log_path
 	self.last_log_base = log_path.Base()
@@ -132,13 +128,18 @@ func (self *TimedResultSetWriterImpl) Close() {
 func NewTimedResultSetWriter(
 	file_store_factory api.FileStore,
 	path_manager api.PathManager,
-	opts *json.EncOpts) (result_sets.TimedResultSetWriter, error) {
+	opts *json.EncOpts,
+	completion func()) (result_sets.TimedResultSetWriter, error) {
 
 	return &TimedResultSetWriterImpl{
 		file_store_factory: file_store_factory,
 		path_manager:       path_manager,
 		opts:               opts,
-		Clock:              utils.RealClock{},
+
+		// Only call the completion function once all writes
+		// completed.
+		completer: utils.NewCompleter(completion),
+		Clock:     utils.RealClock{},
 	}, nil
 }
 
@@ -146,11 +147,13 @@ func NewTimedResultSetWriterWithClock(
 	file_store_factory api.FileStore,
 	path_manager api.PathManager,
 	opts *json.EncOpts,
+	completion func(),
 	clock utils.Clock) (result_sets.TimedResultSetWriter, error) {
 
 	return &TimedResultSetWriterImpl{
 		file_store_factory: file_store_factory,
 		path_manager:       path_manager,
+		completer:          utils.NewCompleter(completion),
 		opts:               opts,
 		Clock:              clock,
 	}, nil

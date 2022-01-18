@@ -14,9 +14,6 @@ type ResultSetWriter interface {
 	Flush()
 	Close()
 
-	// Will be called when the result set is flushed to hard storage.
-	SetCompletion(fn func())
-
 	// Ensures that results are flushed to storage as soon as the
 	// writer is closed.
 	SetSync()
@@ -26,9 +23,6 @@ type TimedResultSetWriter interface {
 	Write(row *ordereddict.Dict)
 	Flush()
 	Close()
-
-	// Will be called when the result set is flushed to hard storage.
-	SetCompletion(fn func())
 }
 
 type ResultSetReader interface {

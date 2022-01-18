@@ -495,7 +495,9 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 
 			rs_writer, err := result_sets.NewResultSetWriter(
 				file_store_factory, path.Path(),
-				opts, true /* truncate */)
+				opts,
+				nil, /* completion - async write */
+				true /* truncate */)
 			if err != nil {
 				self.Error("Error: %v\n", err)
 				return nil

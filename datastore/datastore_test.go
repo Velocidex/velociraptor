@@ -1,8 +1,10 @@
 package datastore
 
 import (
+	"errors"
 	"os"
 	"sort"
+	"sync"
 	"testing"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
@@ -112,6 +115,34 @@ func (self BaseTestSuite) TestSetGetSubjectWithEscaping() {
 	}
 }
 
+// Make sure completion functions are always called.
+func (self BaseTestSuite) TestSetSubjectWithCompletion() {
+	message := &crypto_proto.VeloMessage{Source: "Server"}
+
+	var mu sync.Mutex
+	result := []string{}
+
+	urn := path_specs.NewSafeDatastorePath("a", "b", "c").
+		SetType(api.PATH_TYPE_DATASTORE_PROTO)
+	err := self.datastore.SetSubjectWithCompletion(
+		self.config_obj, urn, message, func() {
+			mu.Lock()
+			defer mu.Unlock()
+
+			result = append(result, "Done")
+		})
+	assert.NoError(self.T(), err)
+
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
+		return len(result) == 1
+	})
+
+	assert.Equal(self.T(), result[0], "Done")
+}
+
 func (self BaseTestSuite) TestSetGetSubject() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
 
@@ -144,9 +175,12 @@ func (self BaseTestSuite) TestSetGetSubject() {
 	err = self.datastore.DeleteSubject(self.config_obj, urn)
 	assert.NoError(self.T(), err)
 
-	// It should now be cleared
-	err = self.datastore.GetSubject(self.config_obj, urn, read_message)
-	assert.Error(self.T(), err, os.ErrNotExist)
+	// It should eventually be cleared
+	vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
+		read_message := &crypto_proto.VeloMessage{}
+		err = self.datastore.GetSubject(self.config_obj, urn, read_message)
+		return errors.Is(err, os.ErrNotExist)
+	})
 }
 
 func (self BaseTestSuite) TestListChildren() {
