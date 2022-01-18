@@ -4,7 +4,9 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
@@ -18,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/result_sets/simple"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -57,7 +60,7 @@ func (self *ResultSetTestSuite) TestResultSetSimple() {
 
 	writer, err := result_sets.NewResultSetWriter(
 		self.file_store, path_manager.Path(),
-		nil, true /* truncate */)
+		nil, api.SyncCompleter, true /* truncate */)
 	assert.NoError(self.T(), err)
 
 	// Write 5 rows separately
@@ -102,7 +105,8 @@ func (self *ResultSetTestSuite) TestResultSetSimple() {
 func (self *ResultSetTestSuite) TestResultSetWriter() {
 	// Write some flow logs.
 	path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id).Log()
-	rs, err := result_sets.NewResultSetWriter(self.file_store, path_manager, nil, true)
+	rs, err := result_sets.NewResultSetWriter(
+		self.file_store, path_manager, nil, api.SyncCompleter, true)
 	assert.NoError(self.T(), err)
 	rs.Write(ordereddict.NewDict().Set("Foo", 1))
 	rs.Write(ordereddict.NewDict().Set("Foo", 2))
@@ -141,10 +145,44 @@ func (self *ResultSetTestSuite) TestResultSetWriter() {
 	assert.Equal(self.T(), value, int64(2))
 }
 
+// Make sure the ResultSetWriter completes properly.
+func (self *ResultSetTestSuite) TestResultSetWriterWithCompletion() {
+	// Write some flow logs.
+	var mu sync.Mutex
+	result := ordereddict.NewDict()
+
+	path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id).Log()
+	rs, err := result_sets.NewResultSetWriter(self.file_store, path_manager,
+		nil,
+		func() {
+			mu.Lock()
+			result.Set("Ran", true)
+			mu.Unlock()
+		},
+		true)
+	assert.NoError(self.T(), err)
+
+	rs.Write(ordereddict.NewDict().Set("Foo", 1))
+	rs.Write(ordereddict.NewDict().Set("Foo", 2))
+	rs.Write(ordereddict.NewDict().Set("Foo", 3))
+
+	// Writes may not occur until the Close()
+	rs.Close()
+
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
+		_, pres := result.Get("Ran")
+		return pres
+	})
+}
+
 func (self *ResultSetTestSuite) TestResultSetWriterTruncate() {
 	// Write some flow logs.
 	path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id).Log()
-	rs, err := result_sets.NewResultSetWriter(self.file_store, path_manager, nil, false /* truncate */)
+	rs, err := result_sets.NewResultSetWriter(self.file_store,
+		path_manager, nil, api.SyncCompleter, false /* truncate */)
 	assert.NoError(self.T(), err)
 	rs.Write(ordereddict.NewDict().Set("Foo", 1))
 	rs.Write(ordereddict.NewDict().Set("Foo", 2))
@@ -153,7 +191,8 @@ func (self *ResultSetTestSuite) TestResultSetWriterTruncate() {
 	// Writes may not occur until the Close()
 	rs.Close()
 
-	rs, err = result_sets.NewResultSetWriter(self.file_store, path_manager, nil, true /* truncate */)
+	rs, err = result_sets.NewResultSetWriter(self.file_store, path_manager,
+		nil, api.SyncCompleter, true /* truncate */)
 	assert.NoError(self.T(), err)
 	rs.Write(ordereddict.NewDict().Set("Foo", 4))
 	rs.Write(ordereddict.NewDict().Set("Foo", 5))
@@ -163,7 +202,8 @@ func (self *ResultSetTestSuite) TestResultSetWriterTruncate() {
 	rs.Close()
 
 	// Append some data
-	rs, err = result_sets.NewResultSetWriter(self.file_store, path_manager, nil, false /* truncate */)
+	rs, err = result_sets.NewResultSetWriter(self.file_store, path_manager,
+		nil, api.SyncCompleter, false /* truncate */)
 	assert.NoError(self.T(), err)
 	rs.Write(ordereddict.NewDict().Set("Foo", 7))
 	rs.Write(ordereddict.NewDict().Set("Foo", 8))
@@ -199,7 +239,8 @@ func (self *ResultSetTestSuite) TestResultSetWriterWriteJSONL() {
 	// indexes in the JSON blob, but we do know how many rows it
 	// is in total.
 	path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id).Log()
-	rs, err := result_sets.NewResultSetWriter(self.file_store, path_manager, nil, false /* truncate */)
+	rs, err := result_sets.NewResultSetWriter(self.file_store, path_manager,
+		nil, api.SyncCompleter, false /* truncate */)
 	assert.NoError(self.T(), err)
 	rs.Write(ordereddict.NewDict().Set("Foo", 1))
 	rs.WriteJSONL([]byte("{\"Foo\":2}\n{\"Foo\":3}\n"), 2)

@@ -362,8 +362,8 @@ func (self *MemcacheDatastore) GetSubject(
 		}
 
 		if err != nil {
-			return errors.WithMessage(os.ErrNotExist,
-				fmt.Sprintf("While opening %v: not found", urn.AsClientPath()))
+			return fmt.Errorf(
+				"While opening %v: %w", urn.AsClientPath(), os.ErrNotExist)
 		}
 	}
 
@@ -373,12 +373,17 @@ func (self *MemcacheDatastore) GetSubject(
 		return internalError
 	}
 
-	serialized_content := bulk_data.data
+	return unmarshalData(bulk_data.data, urn, message)
+}
+
+func unmarshalData(serialized_content []byte,
+	urn api.DSPathSpec, message proto.Message) error {
 	if len(serialized_content) == 0 {
 		return nil
 	}
 
 	// It is really a JSON blob
+	var err error
 	if serialized_content[0] == '{' {
 		err = protojson.Unmarshal(serialized_content, message)
 	} else {
@@ -387,7 +392,7 @@ func (self *MemcacheDatastore) GetSubject(
 
 	if err != nil {
 		return errors.WithMessage(os.ErrNotExist,
-			fmt.Sprintf("While opening %v: %v",
+			fmt.Sprintf("While decoding %v: %v",
 				urn.AsClientPath(), err))
 	}
 	return nil
@@ -420,6 +425,14 @@ func (self *MemcacheDatastore) SetSubjectWithCompletion(
 
 	defer Instrument("write", "MemcacheDatastore", urn)()
 
+	// Make sure to call the completer on all exit points
+	// (MemcacheDatastore is actually synchronous).
+	defer func() {
+		if completion != nil {
+			completion()
+		}
+	}()
+
 	var value []byte
 	var err error
 
@@ -436,11 +449,7 @@ func (self *MemcacheDatastore) SetSubjectWithCompletion(
 		return err
 	}
 
-	err = self.SetData(config_obj, urn, value)
-	if completion != nil {
-		completion()
-	}
-	return err
+	return self.SetData(config_obj, urn, value)
 }
 
 func (self *MemcacheDatastore) SetData(

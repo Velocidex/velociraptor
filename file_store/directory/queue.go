@@ -187,8 +187,9 @@ func (self *DirectoryQueueManager) Broadcast(
 func (self *DirectoryQueueManager) PushEventRows(
 	path_manager api.PathManager, dict_rows []*ordereddict.Dict) error {
 
+	// Writes are asyncronous.
 	rs_writer, err := result_sets.NewTimedResultSetWriter(
-		self.FileStore, path_manager, nil)
+		self.FileStore, path_manager, nil, nil)
 	if err != nil {
 		return err
 	}

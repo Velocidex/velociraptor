@@ -3,6 +3,7 @@ package memcache
 import (
 	"io/ioutil"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -46,6 +47,61 @@ func (self *MemcacheTestSuite) TestFileReadWrite() {
 	assert.Equal(self.T(), string(out), data)
 }
 
+func (self *MemcacheTestSuite) TestFileWriteCompletions() {
+	var mu sync.Mutex
+	result := []string{}
+
+	filename := path_specs.NewSafeFilestorePath("test", "foo")
+
+	fd, err := self.file_store.WriteFileWithCompletion(
+		filename, func() {
+			mu.Lock()
+			defer mu.Unlock()
+
+			result = append(result, "Done")
+		})
+	assert.NoError(self.T(), err)
+
+	// Write some data.
+	data := "Some data"
+	_, err = fd.Write([]byte(data))
+	assert.NoError(self.T(), err)
+
+	// Close the file.
+	fd.Close()
+
+	// File is not complete yet.
+	mu.Lock()
+	assert.Equal(self.T(), len(result), 0)
+	mu.Unlock()
+
+	// Write again to the file.
+	fd, err = self.file_store.WriteFileWithCompletion(
+		filename, func() {
+			mu.Lock()
+			result = append(result, "Done")
+			mu.Unlock()
+		})
+	assert.NoError(self.T(), err)
+
+	// Write some data.
+	_, err = fd.Write([]byte(data))
+	assert.NoError(self.T(), err)
+
+	// Close the file.
+	fd.Close()
+
+	// Make sure it is flushed now.
+	fd.Flush()
+
+	// Both completions are fired.
+	mu.Lock()
+	assert.Equal(self.T(), len(result), 2)
+	assert.Equal(self.T(), "Done", result[0])
+	assert.Equal(self.T(), "Done", result[1])
+	mu.Unlock()
+}
+
 func TestMemcacheFileStore(t *testing.T) {
 	// Make a tempdir
 	var err error
@@ -55,7 +111,7 @@ func TestMemcacheFileStore(t *testing.T) {
 
 	config_obj := config.GetDefaultConfig()
 	config_obj.Datastore.Implementation = "MemcacheFileDataStore"
-	config_obj.Datastore.MemcacheWriteMutationBuffer = -1
+	config_obj.Datastore.MemcacheWriteMutationBuffer = 100
 	config_obj.Datastore.FilestoreDirectory = dirname
 	config_obj.Datastore.Location = dirname
 

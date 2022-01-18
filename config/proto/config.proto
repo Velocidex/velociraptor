@@ -636,6 +636,10 @@ message DatastoreConfig {
     // How long to expire the memcache (default 10 min)
     uint64 memcache_expiration_sec = 4;
 
+    // How many mutations to queue up ahead of busy writers. By
+    // default 0 means writes will be blocked until they are handed
+    // off to a writer thread. Set to -1 to disable asynchronous
+    // writes.
     int64 memcache_write_mutation_buffer = 5;
 
     // Number of writing threads - increase for high latency

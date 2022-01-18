@@ -18,6 +18,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -255,7 +256,7 @@ func (self *EventTable) RunQuery(
 	scope.Log("server_monitoring: Collecting <green>%v</>", artifact_name)
 
 	rs_writer, err := result_sets.NewTimedResultSetWriterWithClock(
-		file_store_factory, path_manager, opts, self.clock)
+		file_store_factory, path_manager, opts, api.SyncCompleter, self.clock)
 	if err != nil {
 		scope.Close()
 		return err

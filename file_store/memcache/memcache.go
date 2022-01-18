@@ -17,6 +17,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -43,7 +44,12 @@ type MemcacheFileWriter struct {
 	buffer bytes.Buffer
 	size   int64
 
-	completion func()
+	// We keep a list of completions so we can call them all when a
+	// file is flushed to disk. We keep the file open for a short time
+	// to combine writes to the underlying storage, but if a file is
+	// opened, closed then opened again, we need to fire all the
+	// completions without losing any.
+	completions []func()
 }
 
 func (self *MemcacheFileWriter) Size() (int64, error) {
@@ -104,6 +110,19 @@ func (self *MemcacheFileWriter) Close() error {
 	defer self.mu.Unlock()
 
 	self.closed = true
+
+	// Convert all api.SyncCompleter calls to sync waits on return
+	// from Close(). The writer pool will release us when done.
+	wg := sync.WaitGroup{}
+	for idx, c := range self.completions {
+		if utils.CompareFuncs(c, api.SyncCompleter) {
+			wg.Add(1)
+
+			defer wg.Wait()
+			self.completions[idx] = wg.Done
+		}
+	}
+
 	return nil
 }
 
@@ -119,6 +138,11 @@ func (self *MemcacheFileWriter) Flush() error {
 }
 
 func (self *MemcacheFileWriter) _Flush() error {
+	defer func() {
+		for _, c := range self.completions {
+			c()
+		}
+	}()
 
 	// Skip a noop action.
 	if !self.truncated && len(self.buffer.Bytes()) == 0 {
@@ -140,10 +164,6 @@ func (self *MemcacheFileWriter) _Flush() error {
 	// Reset the writer for reuse
 	self.truncated = false
 	self.buffer.Truncate(0)
-
-	if self.completion != nil {
-		self.completion()
-	}
 
 	return err
 }
@@ -207,6 +227,7 @@ func (self *MemcacheFileStore) WriteFile(path api.FSPathSpec) (api.FileWriter, e
 func (self *MemcacheFileStore) WriteFileWithCompletion(
 	path api.FSPathSpec, completion func()) (api.FileWriter, error) {
 	defer api.Instrument("write_open", "MemcacheFileStore", path)()
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -217,16 +238,19 @@ func (self *MemcacheFileStore) WriteFileWithCompletion(
 	result_any, err := self.data_cache.Get(key)
 	if err != nil {
 		result = &MemcacheFileWriter{
-			delegate:   self.delegate,
-			key:        key,
-			filename:   path,
-			size:       -1,
-			completion: completion,
+			delegate: self.delegate,
+			key:      key,
+			filename: path,
+			size:     -1,
 		}
 	} else {
 		result = result_any.(*MemcacheFileWriter)
-		result.completion = completion
 		result.closed = false
+	}
+
+	// Add the completion to the writer.
+	if completion != nil {
+		result.completions = append(result.completions, completion)
 	}
 
 	// Always set it so the time can be extended.

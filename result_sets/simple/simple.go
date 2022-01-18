@@ -54,16 +54,7 @@ type ResultSetWriterImpl struct {
 	fd       api.FileWriter
 	index_fd api.FileWriter
 
-	completion func()
-
 	sync bool
-}
-
-func (self *ResultSetWriterImpl) SetCompletion(completion func()) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	self.completion = completion
 }
 
 func (self *ResultSetWriterImpl) SetSync() {
@@ -176,6 +167,7 @@ func (self ResultSetFactory) NewResultSetWriter(
 	file_store_factory api.FileStore,
 	log_path api.FSPathSpec,
 	opts *json.EncOpts,
+	completion func(),
 	truncate bool) (result_sets.ResultSetWriter, error) {
 
 	result := &ResultSetWriterImpl{opts: opts}
@@ -186,11 +178,7 @@ func (self ResultSetFactory) NewResultSetWriter(
 	}
 
 	fd, err := file_store_factory.WriteFileWithCompletion(
-		log_path, func() {
-			if result.completion != nil {
-				result.completion()
-			}
-		})
+		log_path, completion)
 	if err != nil {
 		return nil, err
 	}
