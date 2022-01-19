@@ -49,7 +49,7 @@ var (
 			"(number of clusters) is larger than this we determine "+
 			"the directory to be too large and move it to the attic. "+
 			"Usually somethign like 40000 is good and corresponds to "+
-			-"1000 files").Int()
+			"1000 files").Int()
 
 	vacuum_command_hard_directory_count = vacuum_command.
 						Flag("dir_size_count", "If the directory size "+
