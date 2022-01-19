@@ -341,6 +341,7 @@ func (self *Repository) Get(
 	self.mu.Lock()
 	cached_artifact, pres := self.get(name)
 	if !pres {
+		self.mu.Unlock()
 		return nil, false
 	}
 
