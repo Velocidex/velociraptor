@@ -29,7 +29,7 @@
         "npm-watch": "^0.7.0",
         "prop-types": "^15.7.2",
         "qs": "^6.9.4",
-        "query-string": "^6.13.2",
+        "query-string": "^6.14.1",
         "react": "^16.14.0",
         "react-ace": "^9.5.0",
         "react-autosuggest": "^10.0.2",
