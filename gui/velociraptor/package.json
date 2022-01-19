@@ -3,9 +3,9 @@
     "version": "0.6.3",
     "private": true,
     "dependencies": {
-        "@fortawesome/fontawesome-svg-core": "^1.2.30",
-        "@fortawesome/free-solid-svg-icons": "^5.14.0",
-        "@fortawesome/react-fontawesome": "^0.1.11",
+        "@fortawesome/fontawesome-svg-core": "^1.2.36",
+        "@fortawesome/free-solid-svg-icons": "^5.15.4",
+        "@fortawesome/react-fontawesome": "^0.1.16",
         "ace-builds": "^1.4.12",
         "axios": ">=0.21.3",
         "bootstrap": "^4.5.2",
