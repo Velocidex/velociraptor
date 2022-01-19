@@ -8,6 +8,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
+type WriteMode bool
+
+const (
+	// Constants to improve readability at call sites
+	AppendMode   = WriteMode(false)
+	TruncateMode = WriteMode(true)
+)
+
 type ResultSetWriter interface {
 	WriteJSONL(serialized []byte, total_rows uint64)
 	Write(row *ordereddict.Dict)

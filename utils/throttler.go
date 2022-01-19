@@ -22,7 +22,7 @@ func (self *Throttler) Close() {
 
 // This throttler is used to limit the number of connections per
 // second. When performing a hunt it may be possible that all clients
-// attempt to conenct to the server at the same time, significantly
+// attempt to connect to the server at the same time, significantly
 // increasing network load on the server and limiting processing
 // capacity. We use this throttler to control this and reject
 // connections as a load shedding strategy. The rejected clients will

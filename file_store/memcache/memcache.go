@@ -111,13 +111,14 @@ func (self *MemcacheFileWriter) Close() error {
 
 	self.closed = true
 
-	// Convert all api.SyncCompleter calls to sync waits on return
+	// Convert all utils.SyncCompleter calls to sync waits on return
 	// from Close(). The writer pool will release us when done.
 	wg := sync.WaitGroup{}
 	for idx, c := range self.completions {
-		if utils.CompareFuncs(c, api.SyncCompleter) {
+		if utils.CompareFuncs(c, utils.SyncCompleter) {
 			wg.Add(1)
 
+			// Wait for the flusher to close us.
 			defer wg.Wait()
 			self.completions[idx] = wg.Done
 		}
@@ -139,8 +140,13 @@ func (self *MemcacheFileWriter) Flush() error {
 
 func (self *MemcacheFileWriter) _Flush() error {
 	defer func() {
-		for _, c := range self.completions {
-			c()
+		// Only send completions once the file is actually closed. It
+		// is possible for the file to flush many times before it is
+		// being closed but this does not count as a completion.
+		if self.closed {
+			for _, c := range self.completions {
+				c()
+			}
 		}
 	}()
 
@@ -221,7 +227,7 @@ func (self *MemcacheFileStore) ReadFile(
 }
 
 func (self *MemcacheFileStore) WriteFile(path api.FSPathSpec) (api.FileWriter, error) {
-	return self.WriteFileWithCompletion(path, nil)
+	return self.WriteFileWithCompletion(path, utils.BackgroundWriter)
 }
 
 func (self *MemcacheFileStore) WriteFileWithCompletion(

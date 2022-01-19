@@ -18,6 +18,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -102,9 +103,7 @@ func (self *JournalService) AppendToResultSet(
 
 	// Append the data to the end of the file.
 	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		path, nil,
-		nil, /* completion - async write */
-		false /* truncate */)
+		path, json.NoEncOpts, utils.BackgroundWriter, result_sets.AppendMode)
 	if err != nil {
 		return err
 	}

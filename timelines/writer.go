@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 )
 
 const (
@@ -85,7 +86,7 @@ func NewTimelineWriter(
 	file_store_factory api.FileStore,
 	path_manager paths.TimelinePathManagerInterface,
 	completion func(),
-	truncate bool) (*TimelineWriter, error) {
+	truncate result_sets.WriteMode) (*TimelineWriter, error) {
 
 	result := &TimelineWriter{}
 

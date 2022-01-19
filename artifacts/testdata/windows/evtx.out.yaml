@@ -92,7 +92,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Path": "",
   "ScriptBlockId": "1029eba6-72bd-4b59-886d-4aea789bb6aa",
   "ScriptBlockText": "C:\\Users\\yolo\\Desktop\\Test.ps1",
-  "Message": "Creating Scriptblock text (\u0001 of \u0001):\nC:\\Users\\yolo\\Desktop\\Test.ps1\n\nScriptBlock ID: 1029eba6-72bd-4b59-886d-4aea789bb6aa\nPath: \r\n",
+  "Message": "Creating Scriptblock text (1 of 1):\nC:\\Users\\yolo\\Desktop\\Test.ps1\n\nScriptBlock ID: 1029eba6-72bd-4b59-886d-4aea789bb6aa\nPath: \r\n",
   "EventRecordID": 4090,
   "Level": 5,
   "Opcode": 15,
@@ -109,7 +109,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Path": "",
   "ScriptBlockId": "c434040f-afc8-4754-8d7e-b041dd6ad509",
   "ScriptBlockText": "Get-Service | select *",
-  "Message": "Creating Scriptblock text (\u0001 of \u0001):\nGet-Service | select *\n\nScriptBlock ID: c434040f-afc8-4754-8d7e-b041dd6ad509\nPath: \r\n",
+  "Message": "Creating Scriptblock text (1 of 1):\nGet-Service | select *\n\nScriptBlock ID: c434040f-afc8-4754-8d7e-b041dd6ad509\nPath: \r\n",
   "EventRecordID": 4092,
   "Level": 5,
   "Opcode": 15,
@@ -135,7 +135,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
  }
 ]SELECT Message FROM parse_evtx( filename=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx") LIMIT 1[
  {
-  "Message": "Creating Scriptblock text (\u0001 of \u0001):\nC:\\Users\\yolo\\Desktop\\Test.ps1\n\nScriptBlock ID: 1029eba6-72bd-4b59-886d-4aea789bb6aa\nPath: \r\n"
+  "Message": "Creating Scriptblock text (1 of 1):\nC:\\Users\\yolo\\Desktop\\Test.ps1\n\nScriptBlock ID: 1029eba6-72bd-4b59-886d-4aea789bb6aa\nPath: \r\n"
  }
 ]SELECT * FROM Artifact.Windows.EventLogs.EvtxHunter( EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx",IocRegex="Get-Service" )[
  {
@@ -147,14 +147,14 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "UserSID": "S-1-5-21-2201333269-445358460-1233016754-1000",
   "Username": null,
   "EventData": {
-   "MessageNumber": "\u0001",
-   "MessageTotal": "\u0001",
+   "MessageNumber": 1,
+   "MessageTotal": 1,
    "ScriptBlockText": "Get-Service | select *",
    "ScriptBlockId": "c434040f-afc8-4754-8d7e-b041dd6ad509",
    "Path": ""
   },
   "UserData": null,
-  "Message": "Creating Scriptblock text (\u0001 of \u0001):\nGet-Service | select *\n\nScriptBlock ID: c434040f-afc8-4754-8d7e-b041dd6ad509\nPath: \r\n",
+  "Message": "Creating Scriptblock text (1 of 1):\nGet-Service | select *\n\nScriptBlock ID: c434040f-afc8-4754-8d7e-b041dd6ad509\nPath: \r\n",
   "FullPath": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
   "_Source": "Windows.EventLogs.EvtxHunter"
  }

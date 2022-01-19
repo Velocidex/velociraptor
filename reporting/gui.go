@@ -495,9 +495,8 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 
 			rs_writer, err := result_sets.NewResultSetWriter(
 				file_store_factory, path.Path(),
-				opts,
-				nil, /* completion - async write */
-				true /* truncate */)
+				opts, utils.BackgroundWriter,
+				result_sets.TruncateMode)
 			if err != nil {
 				self.Error("Error: %v\n", err)
 				return nil
@@ -681,6 +680,7 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p.AllowAttrs("value", "params").OnElements("scatter-chart")
 	p.AllowAttrs("value", "params").OnElements("time-chart")
 
+	//p.AllowNoAttrs().OnElements("accordion")
 	p.AllowAttrs("params").OnElements("notebook-bar-chart")
 	p.AllowAttrs("params").OnElements("notebook-line-chart")
 	p.AllowAttrs("params").OnElements("notebook-scatter-chart")

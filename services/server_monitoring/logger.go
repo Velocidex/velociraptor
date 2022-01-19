@@ -16,14 +16,12 @@ type serverLogger struct {
 	Clock        utils.Clock
 }
 
-// Send each log message individually to avoid any buffering - logs
-// need to be available immediately.
 func (self *serverLogger) Write(b []byte) (int, error) {
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 
 	writer, err := timed.NewTimedResultSetWriterWithClock(
 		file_store_factory, self.path_manager, nil,
-		api.SyncCompleter, self.Clock)
+		utils.BackgroundWriter, self.Clock)
 	if err != nil {
 		return 0, err
 	}
