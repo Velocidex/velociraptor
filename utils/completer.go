@@ -13,9 +13,11 @@ var (
 			string(debug.Stack()))
 	}
 
-	// A NOOP completion that indicates background writing - improves
-	// readability in call sites.
-	BackgroundWriter = func() {}
+	// A nil completion that indicates background writing - improves
+	// readability in call sites. This indicates that we do not want
+	// to wait for a response, and can proceed writing in the
+	// background.
+	BackgroundWriter func()
 )
 
 const (

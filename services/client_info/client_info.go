@@ -147,7 +147,7 @@ func (self *CachedInfo) Flush() error {
 	client_path_manager := paths.NewClientPathManager(client_id)
 	db.SetSubjectWithCompletion(
 		self.owner.config_obj, client_path_manager.Ping(),
-		ping_client_info, nil)
+		ping_client_info, utils.BackgroundWriter)
 
 	return nil
 }
@@ -164,6 +164,10 @@ type ClientInfoManager struct {
 
 	mu    sync.Mutex
 	queue []*ordereddict.Dict
+}
+
+func (self *ClientInfoManager) GetCachedClients() []string {
+	return self.lru.GetKeys()
 }
 
 func (self *ClientInfoManager) SendStats(client_id string, stats *services.Stats) {
@@ -330,21 +334,36 @@ func (self *ClientInfoManager) Get(client_id string) (*services.ClientInfo, erro
 	return &res, nil
 }
 
-// Load the cache info from cache or from storage.
-func (self *ClientInfoManager) GetCacheInfo(client_id string) (*CachedInfo, error) {
+// Only look in the ttl cache - does not do any IO - best effort.
+func (self *ClientInfoManager) GetCacheInfoFromCache(
+	client_id string) (*CachedInfo, error) {
 	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	cached_any, err := self.lru.Get(client_id)
-	if err == nil {
-		cache_info, ok := cached_any.(*CachedInfo)
-		if ok {
-			self.mu.Unlock()
-			return cache_info, nil
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	// Unlock for potentially slow filesystem operations.
-	self.mu.Unlock()
+	cache_info, ok := cached_any.(*CachedInfo)
+	if !ok {
+		return nil, invalidError
+	}
 
+	return cache_info, nil
+}
+
+// Load the cache info from cache or from storage.
+func (self *ClientInfoManager) GetCacheInfo(client_id string) (*CachedInfo, error) {
+	cached_info, err := self.GetCacheInfoFromCache(client_id)
+	if err == nil {
+		return cached_info, nil
+	}
+	return self.GetCacheInfoFromStorage(client_id)
+}
+
+func (self *ClientInfoManager) GetCacheInfoFromStorage(
+	client_id string) (*CachedInfo, error) {
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err

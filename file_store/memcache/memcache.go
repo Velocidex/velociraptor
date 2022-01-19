@@ -181,6 +181,8 @@ type MemcacheFileStore struct {
 	delegate   *directory.DirectoryFileStore
 
 	data_cache *ttlcache.Cache // map[urn]*MemcacheFileWriter
+
+	closed bool
 }
 
 func NewMemcacheFileStore(config_obj *config_proto.Config) *MemcacheFileStore {
@@ -276,7 +278,18 @@ func (self *MemcacheFileStore) Flush() {
 	self.data_cache.Flush()
 }
 
+func (self *MemcacheFileStore) IsClosed() bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.closed
+}
+
 func (self *MemcacheFileStore) Close() error {
+	self.mu.Lock()
+	self.closed = true
+	self.mu.Unlock()
+
 	self.Flush()
 	return nil
 }

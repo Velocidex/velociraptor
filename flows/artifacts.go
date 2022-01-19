@@ -790,6 +790,7 @@ func (self *FlowRunner) ProcessSingleMessage(
 				return
 			}
 
+			clientCancellationCounter.Inc()
 			err = client_manager.QueueMessageForClient(job.Source,
 				&crypto_proto.VeloMessage{
 					Cancel:    &crypto_proto.Cancel{},

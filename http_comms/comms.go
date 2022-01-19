@@ -56,9 +56,9 @@ var (
 	// enrolment (sending HTTP 406 status).
 	EnrolError = errors.New("EnrolError")
 
+	mu   sync.Mutex
 	Rand func(int) int = rand.Intn
 
-	mu           sync.Mutex
 	proxyHandler = http.ProxyFromEnvironment
 )
 
@@ -207,7 +207,7 @@ func NewHTTPConnector(
 		// Start with a random URL from the set of
 		// preconfigured URLs. This should distribute clients
 		// randomly to all frontends.
-		current_url_idx: Rand(len(urls)),
+		current_url_idx: GetRand()(len(urls)),
 
 		minPoll:    time.Duration(1) * time.Second,
 		maxPoll:    time.Duration(max_poll) * time.Second,
@@ -353,7 +353,7 @@ func (self *HTTPConnector) Post(
 			// For safety we wait after redirect in case we end up
 			// in a redirect loop.
 			wait := self.maxPoll + time.Duration(
-				Rand(int(self.maxPollDev)))*time.Second
+				GetRand()(int(self.maxPollDev)))*time.Second
 			self.logger.Info("Waiting after redirect: %v", wait)
 			<-self.clock.After(wait)
 		}
@@ -423,6 +423,13 @@ func (self *HTTPConnector) advanceToNextServer() {
 		// synchronization of endpoints.
 		<-self.clock.After(wait)
 	}
+}
+
+func GetRand() func(int) int {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return Rand
 }
 
 func (self *HTTPConnector) String() string {
@@ -603,7 +610,7 @@ func (self *NotificationReader) sendMessageList(
 			// Add random wait between polls to avoid
 			// synchronization of endpoints.
 			wait := self.maxPoll + time.Duration(
-				Rand(int(self.maxPollDev)))*time.Second
+				GetRand()(int(self.maxPollDev)))*time.Second
 			self.logger.Info("Sleeping for %v", wait)
 
 			select {
