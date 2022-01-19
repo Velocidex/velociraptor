@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -50,6 +51,10 @@ type Container struct {
 	// it.
 	delegate_zip *zip.Writer
 	delegate_fd  io.Writer
+
+	// manage orderly shutdown of the container.
+	mu     sync.Mutex
+	closed bool
 }
 
 func (self *Container) Create(name string, mtime time.Time) (io.WriteCloser, error) {
@@ -314,7 +319,17 @@ func (self *Container) maybeCollectSparseFile(
 	}, nil
 }
 
+// Close the underlying container zip (and write central
+// directories). It is ok to call this multiple times.
 func (self *Container) Close() error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.closed {
+		return nil
+	}
+	self.closed = true
+
 	self.zip.Close()
 
 	if self.delegate_zip != nil {

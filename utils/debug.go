@@ -21,9 +21,14 @@ package utils
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"github.com/davecgh/go-spew/spew"
 )
+
+func PrintStack() {
+	debug.PrintStack()
+}
 
 func Debug(arg interface{}) {
 	spew.Dump(arg)
