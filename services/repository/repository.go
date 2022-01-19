@@ -339,11 +339,17 @@ func (self *Repository) GetSource(
 func (self *Repository) Get(
 	config_obj *config_proto.Config, name string) (*artifacts_proto.Artifact, bool) {
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	result, pres := self.get(name)
+	cached_artifact, pres := self.get(name)
 	if !pres {
 		return nil, false
+	}
+
+	// Return a copy to keep the repository pristine.
+	result := proto.Clone(cached_artifact).(*artifacts_proto.Artifact)
+	self.mu.Unlock()
+
+	if result.Compiled {
+		return result, true
 	}
 
 	// Delay processing until we need it. This means loading
@@ -355,8 +361,12 @@ func (self *Repository) Get(
 		return nil, false
 	}
 
-	// Return a copy to keep the repository pristine.
-	return proto.Clone(result).(*artifacts_proto.Artifact), true
+	// Store the compiled version in the repository for next time.
+	self.mu.Lock()
+	self.Data[result.Name] = result
+	self.mu.Unlock()
+
+	return result, true
 }
 
 func (self *Repository) get(name string) (*artifacts_proto.Artifact, bool) {
