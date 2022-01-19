@@ -33,6 +33,8 @@ message Version {
     string build_time = 5 [(sem_type) = {
             description: "When the client was built."
         }];
+
+    string ci_build_url = 6;
 }
 
 // The client's state which are persisted in the writeback file.

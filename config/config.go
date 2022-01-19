@@ -33,6 +33,7 @@ import (
 var (
 	build_time  string
 	commit_hash string
+	ci_run_url  string
 )
 
 // Return the location of the writeback file.
@@ -55,10 +56,11 @@ func WritebackLocation(self *config_proto.Config) (string, error) {
 
 func GetVersion() *config_proto.Version {
 	return &config_proto.Version{
-		Name:      "velociraptor",
-		Version:   constants.VERSION,
-		BuildTime: build_time,
-		Commit:    commit_hash,
+		Name:       "velociraptor",
+		Version:    constants.VERSION,
+		BuildTime:  build_time,
+		Commit:     commit_hash,
+		CiBuildUrl: ci_run_url,
 	}
 }
 
