@@ -74,7 +74,7 @@ type Factory interface {
 		log_path api.FSPathSpec,
 		opts *json.EncOpts,
 		completion func(),
-		truncate bool) (ResultSetWriter, error)
+		truncate WriteMode) (ResultSetWriter, error)
 
 	NewResultSetReader(
 		file_store_factory api.FileStore,
@@ -87,7 +87,7 @@ func NewResultSetWriter(
 	log_path api.FSPathSpec,
 	opts *json.EncOpts,
 	completion func(),
-	truncate bool) (ResultSetWriter, error) {
+	truncate WriteMode) (ResultSetWriter, error) {
 	if rs_factory == nil {
 		panic(errors.New("ResultSetFactory not initialized"))
 	}

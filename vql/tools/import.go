@@ -17,7 +17,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -147,7 +146,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 	uploaded_files_result_set, err := result_sets.NewResultSetWriter(
 		file_store_factory, path_manager.UploadMetadata(),
-		nil, api.SyncCompleter, true /* truncate */)
+		nil, utils.SyncCompleter, true /* truncate */)
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}
@@ -156,7 +155,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 	log_result_set, err := result_sets.NewResultSetWriter(
 		file_store_factory, path_manager.Log(),
-		nil, api.SyncCompleter, true /* truncate */)
+		nil, utils.SyncCompleter, true /* truncate */)
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}
@@ -219,7 +218,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 				rs_writer, err := result_sets.NewResultSetWriter(
 					file_store_factory,
 					artifact_path_manager.Path(),
-					nil, api.SyncCompleter, true /* truncate */)
+					nil, utils.SyncCompleter, true /* truncate */)
 				if err != nil {
 					log("Error copying %v", err)
 					return

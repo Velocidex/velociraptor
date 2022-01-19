@@ -168,7 +168,7 @@ func (self ResultSetFactory) NewResultSetWriter(
 	log_path api.FSPathSpec,
 	opts *json.EncOpts,
 	completion func(),
-	truncate bool) (result_sets.ResultSetWriter, error) {
+	truncate result_sets.WriteMode) (result_sets.ResultSetWriter, error) {
 
 	result := &ResultSetWriterImpl{opts: opts}
 

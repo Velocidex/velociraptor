@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/json"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -101,8 +102,8 @@ func flushContextLogsMonitoring(
 
 			// Write the logs asynchronously
 			rs_writer, err = result_sets.NewTimedResultSetWriter(
-				file_store_factory, log_path_manager, nil,
-				nil /* completion */)
+				file_store_factory, log_path_manager, json.NoEncOpts,
+				utils.BackgroundWriter)
 			if err != nil {
 				return err
 			}

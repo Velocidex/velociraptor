@@ -8,6 +8,10 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+var (
+	NoEncOpts *json.EncOpts = nil
+)
+
 type EncOpts = json.EncOpts
 
 func MarshalJSONDict(v interface{}, opts *json.EncOpts) ([]byte, error) {

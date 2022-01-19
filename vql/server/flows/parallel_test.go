@@ -11,7 +11,6 @@ import (
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -19,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
@@ -56,7 +56,7 @@ func (self *TestSuite) TestArtifactSource() {
 	// Append logs to messages from previous packets.
 	rs_writer, err := result_sets.NewResultSetWriter(
 		file_store_factory, path_manager.Path(),
-		nil, api.SyncCompleter, true /* truncate */)
+		nil, utils.SyncCompleter, true /* truncate */)
 	assert.NoError(self.T(), err)
 
 	for i := 0; i < 100; i++ {
@@ -130,7 +130,7 @@ func (self *TestSuite) TestHuntsSource() {
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id).Clients()
 	hunt_rs_writer, err := result_sets.NewResultSetWriter(
 		file_store_factory, hunt_path_manager, nil,
-		api.SyncCompleter, true /* truncate */)
+		utils.SyncCompleter, true /* truncate */)
 
 	// Write a bunch of flows in a hunt
 	for client_number := 0; client_number < 10; client_number++ {
@@ -151,7 +151,7 @@ func (self *TestSuite) TestHuntsSource() {
 		// Append logs to messages from previous packets.
 		rs_writer, err := result_sets.NewResultSetWriter(
 			file_store_factory, path_manager.Path(),
-			nil, api.SyncCompleter, true /* truncate */)
+			nil, utils.SyncCompleter, true /* truncate */)
 		assert.NoError(self.T(), err)
 
 		for i := 0; i < 100; i++ {

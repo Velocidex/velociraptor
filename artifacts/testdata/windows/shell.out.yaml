@@ -45,4 +45,11 @@ SELECT * FROM execve(argv=['cmd.exe', '/?'])[
    "SHA256": "d7f0ca6068dd7069f9b397a5db2e82871f752222e3d04c569207c4cf232aea24"
   }
  }
+]SELECT * FROM execve(argv=["cmd.exe", "/c", "echo %HELLO%"], env=dict(HELLO="hi"))[
+ {
+  "Stdout": "hi\r\n",
+  "Stderr": "",
+  "ReturnCode": 0,
+  "Complete": true
+ }
 ]
