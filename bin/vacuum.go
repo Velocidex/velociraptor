@@ -47,7 +47,9 @@ var (
 	vacuum_command_hard_directory_size = vacuum_command.
 						Flag("dir_size_clusters", "If the directory size "+
 			"(number of clusters) is larger than this we determine "+
-			"the directory to be too large and move it to the attic").Int()
+			"the directory to be too large and move it to the attic. "+
+			"Usually somethign like 40000 is good and corresponds to "+
+			-"1000 files").Int()
 
 	vacuum_command_hard_directory_count = vacuum_command.
 						Flag("dir_size_count", "If the directory size "+
@@ -264,7 +266,7 @@ func processTask(task_chan <-chan api.DSPathSpec, wg *sync.WaitGroup,
 	}
 }
 
-// On very slow filesystems we need to go low level to get any kinds
+// On very slow filesystems we need to go low level to get any kind
 // of performance.
 func doVacuumHarder(config_obj *config_proto.Config) error {
 
@@ -272,7 +274,8 @@ func doVacuumHarder(config_obj *config_proto.Config) error {
 	defer cancel()
 
 	filestore_root := config_obj.Datastore.Location
-	attic_path := filepath.Join(filestore_root, "attic")
+	attic_path := filepath.Join(filestore_root, "attic",
+		time.Now().Format("2006_01_02-15_04_05"))
 	err := os.MkdirAll(attic_path, 0700)
 	if err != nil {
 		return err
