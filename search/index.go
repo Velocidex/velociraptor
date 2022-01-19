@@ -143,8 +143,7 @@ func (self *Indexer) Flush(config_obj *config_proto.Config) error {
 
 	rs_writer, err := result_sets.NewResultSetWriter(
 		file_store_factory, tmp_path_spec, nil,
-		completion,
-		true /* truncate */)
+		completion, result_sets.TruncateMode)
 	if err != nil {
 		return err
 	}
@@ -204,6 +203,16 @@ func (self *Indexer) Set(record Record) {
 	metricLRUTotalTerms.Inc()
 }
 
+// Set the index but do not mark it as dirty. Used for loading index.
+func (self *Indexer) _Set(record Record) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.btree.ReplaceOrInsert(record)
+	self.items++
+	metricLRUTotalTerms.Inc()
+}
+
 func (self *Indexer) Delete(record Record) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -258,7 +267,7 @@ func (self *Indexer) LoadIndexFromDirectory(
 				client_id := record.Entity
 
 				// The all item corresponds to the "." search term.
-				indexer.Set(NewRecord(&api_proto.IndexRecord{
+				indexer._Set(NewRecord(&api_proto.IndexRecord{
 					Term:   "all",
 					Entity: client_id,
 				}))
@@ -277,7 +286,7 @@ func (self *Indexer) LoadIndexFromDirectory(
 				}
 
 				if client_info.OsInfo.Hostname != "" {
-					indexer.Set(NewRecord(&api_proto.IndexRecord{
+					indexer._Set(NewRecord(&api_proto.IndexRecord{
 						Term:   "host:" + client_info.OsInfo.Hostname,
 						Entity: client_id,
 					}))
@@ -285,13 +294,13 @@ func (self *Indexer) LoadIndexFromDirectory(
 
 				// Add labels to the index.
 				for _, label := range client_info.Labels {
-					indexer.Set(NewRecord(&api_proto.IndexRecord{
+					indexer._Set(NewRecord(&api_proto.IndexRecord{
 						Term:   "label:" + strings.ToLower(label),
 						Entity: client_id,
 					}))
 				}
 
-				indexer.Set(NewRecord(record))
+				indexer._Set(NewRecord(record))
 
 				continue
 			}
@@ -390,12 +399,12 @@ func (self *Indexer) LoadIndexFromSnapshot(
 
 		// We should be able to search for the client by client id
 		// directly.
-		self.Set(NewRecord(&api_proto.IndexRecord{
+		self._Set(NewRecord(&api_proto.IndexRecord{
 			Term:   entity,
 			Entity: entity,
 		}))
 
-		self.Set(NewRecord(&api_proto.IndexRecord{
+		self._Set(NewRecord(&api_proto.IndexRecord{
 			Term:   term,
 			Entity: entity,
 		}))
@@ -427,10 +436,15 @@ func (self *Indexer) Load(
 	ctx context.Context,
 	config_obj *config_proto.Config) {
 
+	// Loading from the snapshot is very fast, so we do this inline.
 	err := self.LoadIndexFromSnapshot(ctx, config_obj)
 	if err != nil {
-		self.LoadIndexFromDirectory(ctx, config_obj)
-		self.Flush(config_obj)
+		// If the snapshot is missing, we load from the directory and
+		// this can be very slow on EFS so we do it in the background.
+		go func() {
+			self.LoadIndexFromDirectory(ctx, config_obj)
+			self.Flush(config_obj)
+		}()
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -553,7 +567,7 @@ func LoadIndex(
 	wg *sync.WaitGroup, config_obj *config_proto.Config) {
 
 	// Load the index in the background until we are ready.
-	go indexer.Load(ctx, config_obj)
+	indexer.Load(ctx, config_obj)
 }
 
 func WaitForIndex() {

@@ -159,7 +159,9 @@ func (self *CommsTestSuite) SetupTest() {
 		&crypto_proto.MessageList{}, "C.1234")
 
 	// Disable randomness for the test.
+	mu.Lock()
 	Rand = func(int) int { return 0 }
+	mu.Unlock()
 }
 
 func (self *CommsTestSuite) TearDownTest() {

@@ -478,6 +478,18 @@ func (self *MemcacheDatastore) SetData(
 	return err
 }
 
+func (self *MemcacheDatastore) DeleteSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec, completion func()) error {
+
+	err := self.DeleteSubject(config_obj, urn)
+	if completion != nil {
+		completion()
+	}
+
+	return err
+}
+
 func (self *MemcacheDatastore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) error {

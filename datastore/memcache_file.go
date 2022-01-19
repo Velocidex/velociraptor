@@ -61,6 +61,8 @@ import (
 var (
 	memcache_file_imp *MemcacheFileDataStore
 
+	notInitializedError = errors.New("MemcacheFileDataStore not initialized!")
+
 	metricDirLRUHit = promauto.NewCounter(
 		prometheus.CounterOpts{
 			Name: "memcache_lru_dir_hit",
@@ -165,7 +167,7 @@ func (self *MemcacheFileDataStore) StartWriter(
 	self.cache.SetTimeout(time.Duration(timeout) * time.Second)
 	self.cache.SetCheckExpirationCallback(self.ExpirationPolicy)
 
-	if buffer_size <= 0 {
+	if buffer_size < 0 {
 		buffer_size = 1000
 	}
 	self.writer = make(chan *Mutation, buffer_size)
@@ -206,7 +208,6 @@ func (self *MemcacheFileDataStore) StartWriter(
 						}
 
 					case MUTATION_OP_DEL_SUBJECT:
-						time.Sleep(100 * time.Millisecond)
 						file_based_imp.DeleteSubject(config_obj, mutation.urn)
 						self.invalidateDirCache(config_obj, mutation.urn.Dir())
 
@@ -218,7 +219,9 @@ func (self *MemcacheFileDataStore) StartWriter(
 					}
 
 					metricIdleWriters.Inc()
-					mutation.wg.Done()
+					if mutation.wg != nil {
+						mutation.wg.Done()
+					}
 				}
 			}
 		}()
@@ -298,10 +301,13 @@ func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 	// until we sync the file based datastore).
 	err = self.cache.SetSubjectWithCompletion(config_obj, urn, message, nil)
 
+	if self.ctx == nil {
+		return notInitializedError
+	}
+
 	// Send a SetSubject mutation to the writer loop.
 	var wg sync.WaitGroup
 	wg.Add(1)
-
 	select {
 	case <-self.ctx.Done():
 		// If we exit this function we need to call the completion,
@@ -371,6 +377,10 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 	urn api.DSPathSpec) error {
 	defer Instrument("delete", "MemcacheFileDataStore", urn)()
 
+	if self.ctx == nil {
+		return notInitializedError
+	}
+
 	// Remove immediately from the cache memcache as soon as the file
 	// is removed from disk.
 	completion := func() {
@@ -378,7 +388,7 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 	}
 
 	// Send a DeleteSubject mutation to the writer loop.
-	var wg sync.WaitGroup
+	wg := &sync.WaitGroup{}
 	wg.Add(1)
 
 	select {
@@ -388,7 +398,7 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 
 	case self.writer <- &Mutation{
 		op: MUTATION_OP_DEL_SUBJECT,
-		wg: &wg,
+		wg: wg,
 
 		// When we complete make sure the cache is also invalidated to
 		// avoid racing with GetSubject().
@@ -398,6 +408,43 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 
 	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {
 		wg.Wait()
+	}
+
+	return nil
+}
+
+func (self *MemcacheFileDataStore) DeleteSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec, completion func()) error {
+	defer Instrument("delete", "MemcacheFileDataStore", urn)()
+
+	// Remove immediately from the cache memcache as soon as the file
+	// is removed from disk.
+	__completion := func() {
+		_ = self.cache.DeleteSubject(config_obj, urn)
+		if completion != nil {
+			completion()
+		}
+	}
+
+	if self.ctx == nil {
+		return notInitializedError
+	}
+
+	select {
+	case <-self.ctx.Done():
+		if completion != nil {
+			completion()
+		}
+		break
+
+	case self.writer <- &Mutation{
+		op: MUTATION_OP_DEL_SUBJECT,
+
+		// When we complete make sure the cache is also invalidated to
+		// avoid racing with GetSubject().
+		completion: __completion,
+		urn:        urn}:
 	}
 
 	return nil
@@ -479,6 +526,10 @@ func (self *MemcacheFileDataStore) SetBuffer(
 	err := self.cache.SetData(config_obj, urn, data)
 	if err != nil {
 		return err
+	}
+
+	if self.ctx == nil {
+		return notInitializedError
 	}
 
 	var wg sync.WaitGroup
@@ -579,6 +630,11 @@ func NewMemcacheFileDataStore(config_obj *config_proto.Config) *MemcacheFileData
 func StartMemcacheFileService(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
+
+	_, err := GetDB(config_obj)
+	if err != nil {
+		return err
+	}
 
 	if memcache_file_imp != nil {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)

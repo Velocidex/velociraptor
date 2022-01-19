@@ -24,6 +24,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
@@ -35,6 +37,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+)
+
+var (
+	clientCancellationCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "client_flow_cancellations",
+		Help: "Total number of client cancellation messages sent.",
+	})
 )
 
 // Filter will be applied on flows to remove those we dont care about.
@@ -261,6 +270,7 @@ func CancelFlow(
 
 	// Queue a cancellation message to the client for this flow
 	// id.
+	clientCancellationCounter.Inc()
 	err = client_manager.QueueMessageForClient(client_id,
 		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},
