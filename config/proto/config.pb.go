@@ -1486,6 +1486,7 @@ type FrontendResourceControl struct {
 	// Aim for this heap size (default 2Gb). If actual memory usage
 	// approaches this maximum, the frontend will begin to limit
 	// client connections.
+	// DEPRECATED
 	TargetHeapSize uint64 `protobuf:"varint,10,opt,name=target_heap_size,json=targetHeapSize,proto3" json:"target_heap_size,omitempty"`
 	// The maximum time a client will be waiting for a concurrency
 	// slot before timing out. A small value will result in many
@@ -1496,9 +1497,9 @@ type FrontendResourceControl struct {
 	// expense of more memory use.
 	MaxUploadSize uint64 `protobuf:"varint,11,opt,name=max_upload_size,json=maxUploadSize,proto3" json:"max_upload_size,omitempty"`
 	// This setting controls the size of various LRU caches in the
-	// fronend (e.g. the session key cache). This number should be
-	// larger than the number of actual clients or else the system
-	// will see high CPU load from cache misses.
+	// fronend (e.g. the session key cache, client info cache). This
+	// number should be larger than the number of actual clients or
+	// else the system will see high CPU load from cache misses.
 	ExpectedClients int64 `protobuf:"varint,15,opt,name=expected_clients,json=expectedClients,proto3" json:"expected_clients,omitempty"`
 	// Bandwidth control: Per client and global rates in bytes/sec
 	PerClientUploadRate int64 `protobuf:"varint,21,opt,name=per_client_upload_rate,json=perClientUploadRate,proto3" json:"per_client_upload_rate,omitempty"`
@@ -1515,7 +1516,9 @@ type FrontendResourceControl struct {
 	// sec). Index files are typically 150kb / 1000 clients.
 	IndexSnapshotFrequency uint64 `protobuf:"varint,26,opt,name=index_snapshot_frequency,json=indexSnapshotFrequency,proto3" json:"index_snapshot_frequency,omitempty"`
 	// Number of seconds before expiring client info cache
-	// entries. Default (0) means do not expire at all.
+	// entries. Default (0) means do not expire at all. Expiring
+	// client info from cache too frequently can result in a lot more
+	// IO. Default size of this cache is the expected_clients above.
 	ClientInfoLruTtl uint64 `protobuf:"varint,27,opt,name=client_info_lru_ttl,json=clientInfoLruTtl,proto3" json:"client_info_lru_ttl,omitempty"`
 }
 
@@ -1996,7 +1999,7 @@ type DatastoreConfig struct {
 	FilestoreDirectory string `protobuf:"bytes,3,opt,name=filestore_directory,json=filestoreDirectory,proto3" json:"filestore_directory,omitempty"`
 	// Cap directories to this size after reporting error - this
 	// should not happen normally but may happen if the deployment has
-	// been very active!
+	// been very active or due to a bug!
 	MaxDirSize uint64 `protobuf:"varint,13,opt,name=max_dir_size,json=maxDirSize,proto3" json:"max_dir_size,omitempty"`
 	// How long to expire the memcache (default 10 min)
 	MemcacheExpirationSec uint64 `protobuf:"varint,4,opt,name=memcache_expiration_sec,json=memcacheExpirationSec,proto3" json:"memcache_expiration_sec,omitempty"`

@@ -424,13 +424,13 @@ message FrontendResourceControl {
     // Aim for this heap size (default 2Gb). If actual memory usage
     // approaches this maximum, the frontend will begin to limit
     // client connections.
+    // DEPRECATED
     uint64 target_heap_size = 10;
 
     // The maximum time a client will be waiting for a concurrency
     // slot before timing out. A small value will result in many
     // reconnections under load.
     uint64 concurrency_timeout = 24;
-
 
     // Increasing this allows the frontend to receive larger POST
     // messages lowering crypto overheads but this comes at the
@@ -440,9 +440,9 @@ message FrontendResourceControl {
         }];
 
     // This setting controls the size of various LRU caches in the
-    // fronend (e.g. the session key cache). This number should be
-    // larger than the number of actual clients or else the system
-    // will see high CPU load from cache misses.
+    // frontend (e.g. the session key cache, client info cache). This
+    // number should be larger than the number of actual clients or
+    // else the system will see high CPU load from cache misses.
     int64 expected_clients = 15 [(sem_type) = {
             description: "Expected number of clients in this deployment (default 10000)",
         }];
@@ -466,7 +466,9 @@ message FrontendResourceControl {
     uint64 index_snapshot_frequency = 26;
 
     // Number of seconds before expiring client info cache
-    // entries. Default (0) means do not expire at all.
+    // entries. Default (0) means do not expire at all. Expiring
+    // client info from cache too frequently can result in a lot more
+    // IO. Default size of this cache is the expected_clients above.
     uint64 client_info_lru_ttl = 27;
 }
 
@@ -605,7 +607,6 @@ message FrontendConfig {
     bool do_not_redirect = 26;
 }
 
-
 message DatastoreConfig {
     // The name of the datastore implementation to use.
     // Currently the following implementations are supported:
@@ -635,7 +636,7 @@ message DatastoreConfig {
 
     // Cap directories to this size after reporting error - this
     // should not happen normally but may happen if the deployment has
-    // been very active!
+    // been very active or due to a bug!
     uint64 max_dir_size = 13;
 
     // How long to expire the memcache (default 10 min)

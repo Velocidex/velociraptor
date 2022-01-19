@@ -93,6 +93,10 @@ type DataStore interface {
 		config_obj *config_proto.Config,
 		urn api.DSPathSpec) error
 
+	DeleteSubjectWithCompletion(
+		config_obj *config_proto.Config,
+		urn api.DSPathSpec, completion func()) error
+
 	// Lists all the children of a URN.
 	ListChildren(
 		config_obj *config_proto.Config,

@@ -123,6 +123,34 @@ func (self *RemoteDataStore) SetSubjectWithCompletion(
 	return err
 }
 
+func (self *RemoteDataStore) DeleteSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec, completion func()) error {
+
+	defer Instrument("delete", "RemoteDataStore", urn)()
+
+	ctx, cancel := context.WithTimeout(context.Background(),
+		time.Duration(RPC_TIMEOUT)*time.Second)
+	defer cancel()
+
+	conn, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	defer closer()
+
+	_, err = conn.DeleteSubject(ctx, &api_proto.DataRequest{
+		Sync: completion != nil,
+		Pathspec: &api_proto.DSPathSpec{
+			Components: urn.Components(),
+			PathType:   int64(urn.Type()),
+			Tag:        urn.Tag(),
+		}})
+
+	if completion != nil {
+		completion()
+	}
+
+	return err
+}
+
 func (self *RemoteDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) error {
