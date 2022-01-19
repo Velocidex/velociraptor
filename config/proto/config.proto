@@ -461,7 +461,7 @@ message FrontendResourceControl {
     // flushed to the master (default 10 sec).
     uint64 minion_batch_wait_time_ms = 25;
 
-    // How often to save an index snapshot to storage (default 60
+    // How often to save an index snapshot to storage (default 600
     // sec). Index files are typically 150kb / 1000 clients.
     uint64 index_snapshot_frequency = 26;
 
