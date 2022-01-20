@@ -220,7 +220,7 @@ j={ SELECT read_file(accessor="zip", filename=PathSpec10) AS Data FROM scope() }
 	state := vtesting.GetMetricsDifference(self.T(), "accessor_zip_", snapshot)
 
 	// Scope is closed - no zip handles are leaking.
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		state := vtesting.GetMetricsDifference(self.T(), "accessor_zip_", snapshot)
 		value, _ := state.GetInt64("accessor_zip_current_open")
 		return int64(0) == value
