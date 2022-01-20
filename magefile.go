@@ -376,7 +376,18 @@ func build_gui_files() error {
 
 func flags() string {
 	timestamp := time.Now().Format(time.RFC3339)
-	return fmt.Sprintf(`-X "www.velocidex.com/golang/velociraptor/config.build_time=%s" -X "www.velocidex.com/golang/velociraptor/config.commit_hash=%s"`, timestamp, hash())
+	flags := fmt.Sprintf(` -X "www.velocidex.com/golang/velociraptor/config.build_time=%s"`, timestamp)
+
+	flags += fmt.Sprintf(` -X "www.velocidex.com/golang/velociraptor/config.commit_hash=%s"`, hash())
+
+	// If we are running on the CI pipeline we need to know the run
+	// number and URL so we can report them.
+	if os.Getenv("GITHUB_SERVER_URL") != "" {
+		flags += fmt.Sprintf(` -X "www.velocidex.com/golang/velociraptor/config.ci_run_url=%s"`,
+			os.ExpandEnv("$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"))
+	}
+
+	return flags
 }
 
 // hash returns the git hash for the current repo or "" if none.

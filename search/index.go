@@ -197,19 +197,11 @@ func (self *Indexer) Set(record Record) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.btree.ReplaceOrInsert(record)
-	self.items++
-	self.dirty = true
-	metricLRUTotalTerms.Inc()
-}
-
-// Set the index but do not mark it as dirty. Used for loading index.
-func (self *Indexer) _Set(record Record) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	self.btree.ReplaceOrInsert(record)
-	self.items++
+	old := self.btree.ReplaceOrInsert(record)
+	if old == nil {
+		self.items++
+		self.dirty = true
+	}
 	metricLRUTotalTerms.Inc()
 }
 
@@ -222,143 +214,70 @@ func (self *Indexer) Delete(record Record) {
 	metricLRUTotalTerms.Dec()
 }
 
-func (self *Indexer) LoadIndexFromDirectory(
-	ctx context.Context,
-	config_obj *config_proto.Config) {
-
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> search index service... Please wait for index to load")
-
-	jobs := make(chan api.DSPathSpec)
-	defer close(jobs)
-
-	var wg sync.WaitGroup
-
-	subctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+// Load all the client records slowly and rebuild the index.
+func (self *Indexer) LoadIndexFromDatastore(
+	ctx context.Context, config_obj *config_proto.Config) error {
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		return
+		return err
 	}
 
-	// Start some workers - this needs to be large enough to avoid
-	// deadlock
-	var worker func(urn api.DSPathSpec)
-
-	worker = func(urn api.DSPathSpec) {
-		defer wg.Done()
-
-		children, _ := db.ListChildren(config_obj, urn)
-		for _, child := range children {
-			if !child.IsDir() {
-				record := &api_proto.IndexRecord{}
-				err := db.GetSubject(config_obj, child, record)
-				if err != nil {
-					continue
-				}
-
-				// We only actually care about client index entries
-				// now.
-				if !strings.HasPrefix(record.Entity, "C.") {
-					continue
-				}
-
-				client_id := record.Entity
-
-				// The all item corresponds to the "." search term.
-				indexer._Set(NewRecord(&api_proto.IndexRecord{
-					Term:   "all",
-					Entity: client_id,
-				}))
-
-				// Get the full record to warm up all
-				// client attributes. If the full record
-				// does not exist, then this index entry
-				// is stale - just ignore it. This can
-				// happen if the client records are
-				// removed but the index has not been
-				// updated.
-				client_info, err := FastGetApiClient(
-					ctx, config_obj, record.Entity)
-				if err != nil {
-					continue
-				}
-
-				if client_info.OsInfo.Hostname != "" {
-					indexer._Set(NewRecord(&api_proto.IndexRecord{
-						Term:   "host:" + client_info.OsInfo.Hostname,
-						Entity: client_id,
-					}))
-				}
-
-				// Add labels to the index.
-				for _, label := range client_info.Labels {
-					indexer._Set(NewRecord(&api_proto.IndexRecord{
-						Term:   "label:" + strings.ToLower(label),
-						Entity: client_id,
-					}))
-				}
-
-				indexer._Set(NewRecord(record))
-
-				continue
-			}
-
-			// Push another job to a worker
-			wg.Add(1)
-
-			select {
-			case <-subctx.Done():
-				wg.Done()
-				return
-
-				// If we can push it to a worker we are done here -
-				// move to the next worker.
-			case jobs <- child:
-
-				// We can not push to a different worker - i guess we
-				// just to it ourselves.
-			default:
-				worker(child)
-			}
-		}
+	children, err := db.ListChildren(config_obj, paths.CLIENTS_ROOT)
+	if err != nil {
+		return err
 	}
 
-	// Start 20 workers
-	for i := 0; i < 20; i++ {
-		go func() {
-			for urn := range jobs {
-				worker(urn)
-			}
-		}()
-	}
-
-	go func() {
-		for {
-			select {
-			case <-subctx.Done():
-				return
-
-			case <-time.After(time.Second):
-				logger.Debug("Loaded %v index entries.", self.Items())
-			}
-		}
-	}()
-
-	// Kick it off at the top level
 	now := time.Now()
+	count := 0
+	for _, child := range children {
+		if child.IsDir() {
+			continue
+		}
 
-	wg.Add(1)
-	jobs <- paths.CLIENT_INDEX_URN
+		client_id := child.Base()
+		if !strings.HasPrefix(client_id, "C.") {
+			continue
+		}
 
-	wg.Wait()
+		client_info, err := FastGetApiClient(ctx, config_obj, child.Base())
+		if err != nil {
+			continue
+		}
+
+		count++
+
+		// The all item corresponds to the "." search term.
+		indexer.Set(NewRecord(&api_proto.IndexRecord{
+			Term:   "all",
+			Entity: client_id,
+		}))
+
+		if client_info.OsInfo.Hostname != "" {
+			indexer.Set(NewRecord(&api_proto.IndexRecord{
+				Term:   "host:" + client_info.OsInfo.Hostname,
+				Entity: client_id,
+			}))
+		}
+
+		// Add labels to the index.
+		for _, label := range client_info.Labels {
+			indexer.Set(NewRecord(&api_proto.IndexRecord{
+				Term:   "label:" + strings.ToLower(label),
+				Entity: client_id,
+			}))
+		}
+	}
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Indexing service</> search index loaded %v items in %v",
-		self.Items(), time.Now().Sub(now))
+		count, time.Now().Sub(now))
 
 	self.mu.Lock()
 	self.ready = true
 	self.mu.Unlock()
+
+	return nil
 }
 
 // A much faster alternative - store all the client index in a single
@@ -386,8 +305,7 @@ func (self *Indexer) LoadIndexFromSnapshot(
 			continue
 		}
 
-		// We only actually care about client index entries
-		//now.
+		// We only actually care about client index entries now.
 		if strings.HasPrefix(entity, "C.") {
 			clients[entity] = true
 		}
@@ -399,12 +317,12 @@ func (self *Indexer) LoadIndexFromSnapshot(
 
 		// We should be able to search for the client by client id
 		// directly.
-		self._Set(NewRecord(&api_proto.IndexRecord{
+		self.Set(NewRecord(&api_proto.IndexRecord{
 			Term:   entity,
 			Entity: entity,
 		}))
 
-		self._Set(NewRecord(&api_proto.IndexRecord{
+		self.Set(NewRecord(&api_proto.IndexRecord{
 			Term:   term,
 			Entity: entity,
 		}))
@@ -416,7 +334,8 @@ func (self *Indexer) LoadIndexFromSnapshot(
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Loaded index from snapshot in %v\n", time.Now().Sub(start))
+	logger.Info("<green>Loaded index from snapshot</> in %v\n",
+		time.Now().Sub(start))
 
 	self.mu.Lock()
 	self.ready = true
@@ -442,13 +361,15 @@ func (self *Indexer) Load(
 		// If the snapshot is missing, we load from the directory and
 		// this can be very slow on EFS so we do it in the background.
 		go func() {
-			self.LoadIndexFromDirectory(ctx, config_obj)
-			self.Flush(config_obj)
+			err := self.LoadIndexFromDatastore(ctx, config_obj)
+			if err == nil {
+				self.Flush(config_obj)
+			}
 		}()
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	snapshot_wait := 60 * time.Second
+	snapshot_wait := 600 * time.Second
 	if config_obj.Frontend != nil &&
 		config_obj.Frontend.Resources != nil &&
 		config_obj.Frontend.Resources.IndexSnapshotFrequency > 0 {
@@ -464,7 +385,14 @@ func (self *Indexer) Load(
 				return
 
 			case <-time.After(snapshot_wait):
-				err := self.Flush(config_obj)
+				err := self.LoadIndexFromDatastore(ctx, config_obj)
+				if err != nil {
+					logger.Error("LoadIndexFromDatastore: %v", err)
+					continue
+				}
+
+				// Write a snapshot
+				err = self.Flush(config_obj)
 				if err != nil {
 					logger.Info("Flushing index error: %v", err)
 				}

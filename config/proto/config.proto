@@ -33,6 +33,8 @@ message Version {
     string build_time = 5 [(sem_type) = {
             description: "When the client was built."
         }];
+
+    string ci_build_url = 6;
 }
 
 // The client's state which are persisted in the writeback file.
@@ -461,7 +463,7 @@ message FrontendResourceControl {
     // flushed to the master (default 10 sec).
     uint64 minion_batch_wait_time_ms = 25;
 
-    // How often to save an index snapshot to storage (default 60
+    // How often to save an index snapshot to storage (default 600
     // sec). Index files are typically 150kb / 1000 clients.
     uint64 index_snapshot_frequency = 26;
 
