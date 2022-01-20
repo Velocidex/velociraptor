@@ -45,26 +45,27 @@ sources:
     query: |
         -- First extract target ConsoleHost_history path for each user
         LET targets = SELECT Name as Username,
-            expand(path=Directory) + ConsoleHostHistory as FullPath
+           { SELECT Mtime, Atime, Ctime, Btime, Size, FullPath
+             FROM stat(filename=expand(path=Directory) + ConsoleHostHistory)
+           } AS Stat
         FROM Artifact.Windows.Sys.Users()
-        WHERE Directory and Username =~ UserRegex
+        WHERE Directory and Username =~ UserRegex AND Stat.FullPath
 
         -- Extract targets PSReadline entries
-        LET items = SELECT * FROM foreach(
-            row=targets,
-            query={
-                SELECT
-                    Line,
-                    Username,
-                    FullPath
-                FROM parse_lines(filename=FullPath)
-                WHERE Line =~ SearchStrings
-                    AND NOT if(condition=StringWhiteList,
-                            then=Line =~ StringWhiteList,
-                            else=FALSE)
-            })
-
-        SELECT * FROM items
+        SELECT * FROM foreach(
+        row=targets,
+        query={
+            SELECT Stat, count() AS LineNum,
+                   Line,
+                   Username,
+                   Stat.FullPath AS FullPath
+            FROM parse_lines(filename=Stat.FullPath)
+            WHERE LineNum
+             AND Line =~ SearchStrings
+             AND NOT if(condition=StringWhiteList,
+                        then=Line =~ StringWhiteList,
+                        else=FALSE)
+        })
 
   - name: Upload
     query: |
@@ -73,7 +74,6 @@ sources:
             then={
                 SELECT
                     Username,
-                    upload(file=FullPath) as ConsoleHost_history
-                FROM items
-                GROUP BY FullPath
+                    upload(file=Stat.FullPath) as ConsoleHost_history
+                FROM targets
             })

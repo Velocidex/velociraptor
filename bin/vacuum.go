@@ -3,7 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -22,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -34,7 +38,24 @@ var (
 
 	vacuum_command_age = vacuum_command.
 				Flag("age", "Remove tasks older than this many seconds").
-				Default("1000000").Int()
+				Default("10000000").Int()
+
+	vacuum_command_hard = vacuum_command.
+				Flag("hard", "Vacuum harder by aggresively moving "+
+			"items to the attic.").Bool()
+
+	vacuum_command_hard_directory_size = vacuum_command.
+						Flag("dir_size_clusters", "If the directory size "+
+			"(number of clusters) is larger than this we determine "+
+			"the directory to be too large and move it to the attic. "+
+			"Usually somethign like 40000 is good and corresponds to "+
+			"1000 files").Int()
+
+	vacuum_command_hard_directory_count = vacuum_command.
+						Flag("dir_size_count", "If the directory size "+
+			"(count of files) is larger than this we determine "+
+			"the directory to be too large and move it to the attic").
+		Default("10000").Int()
 )
 
 func doVacuum() error {
@@ -44,6 +65,10 @@ func doVacuum() error {
 		WithRequiredLogging().LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("loading config file: %w", err)
+	}
+
+	if *vacuum_command_hard {
+		return doVacuumHarder(config_obj)
 	}
 
 	ctx, cancel := install_sig_handler()
@@ -239,6 +264,90 @@ func processTask(task_chan <-chan api.DSPathSpec, wg *sync.WaitGroup,
 		wg.Add(1)
 		db.DeleteSubjectWithCompletion(config_obj, task, wg.Done)
 	}
+}
+
+// On very slow filesystems we need to go low level to get any kind
+// of performance.
+func doVacuumHarder(config_obj *config_proto.Config) error {
+
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	filestore_root := config_obj.Datastore.Location
+	attic_path := filepath.Join(filestore_root, "attic",
+		time.Now().Format("2006_01_02-15_04_05"))
+	err := os.MkdirAll(attic_path, 0700)
+	if err != nil {
+		return err
+	}
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("Vacuuming harder: Attic directory is %v", attic_path)
+
+	clients_path := filepath.Join(filestore_root, "clients")
+	logger.Info("Listing all clients... in %v", clients_path)
+
+	names, err := utils.ReadDirNames(clients_path)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range names {
+		if !strings.HasSuffix(name, ".db") {
+			continue
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+		}
+
+		client_id := strings.TrimSuffix(name, ".db")
+		tasks_dir := filepath.Join(
+			filestore_root, "clients", client_id, "tasks")
+
+		logger.Info("Checking %v\n", tasks_dir)
+
+		if *vacuum_command_hard_directory_size > 0 {
+			stat, err := os.Lstat(tasks_dir)
+			if err != nil {
+				continue
+			}
+
+			if stat.Size() > int64(*vacuum_command_hard_directory_size) {
+				// Move the directory to the attic.
+				dest_dir := filepath.Join(attic_path,
+					fmt.Sprintf("%s_tasks", client_id))
+				err := os.Rename(tasks_dir, dest_dir)
+				if err != nil {
+					logger.Error("Failed moving %v to %v: %v", tasks_dir, dest_dir, err)
+				} else {
+					logger.Info("Moved %v to attic %v", tasks_dir, dest_dir)
+				}
+				continue
+			}
+		}
+
+		names, err := utils.ReadDirNames(tasks_dir)
+		if err != nil {
+			logger.Error("Error listing %v %v", tasks_dir, err)
+			continue
+		}
+
+		if len(names) > *vacuum_command_hard_directory_count {
+			// Move the directory to the attic.
+			dest_dir := filepath.Join(attic_path,
+				fmt.Sprintf("%s_tasks", client_id))
+			err := os.Rename(tasks_dir, dest_dir)
+			if err != nil {
+				logger.Error("Failed moving %v to %v: %v", tasks_dir, dest_dir, err)
+			} else {
+				logger.Info("Moved %v to attic %v", tasks_dir, dest_dir)
+			}
+		}
+	}
+	return nil
 }
 
 func init() {
