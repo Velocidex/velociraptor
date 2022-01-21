@@ -65,6 +65,12 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("import_collection: %s", err)
+		return vfilter.Null{}
+	}
+
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		scope.Log("import_collection: %v", err)

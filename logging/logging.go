@@ -279,7 +279,7 @@ func (self *LogManager) makeNewComponent(
 		pathMap[logrus.DebugLevel] = rotator
 
 		rotator, err = getRotator(
-			config_obj, config_obj.Logging.Debug,
+			config_obj, config_obj.Logging.Info,
 			base_filename+"_info.log")
 		if err != nil {
 			return nil, err
@@ -287,7 +287,7 @@ func (self *LogManager) makeNewComponent(
 		pathMap[logrus.InfoLevel] = rotator
 
 		rotator, err = getRotator(
-			config_obj, config_obj.Logging.Debug,
+			config_obj, config_obj.Logging.Error,
 			base_filename+"_error.log")
 		if err != nil {
 			return nil, err

@@ -20,7 +20,7 @@ parameters:
     description: The client id that the collection was done on
     default:
   - name: ReallyDoIt
-    description: If you really want to delete the client, check this.
+    description: If you really want to delete the collection, check this.
     type: bool
 
 sources:

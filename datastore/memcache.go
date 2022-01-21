@@ -565,7 +565,10 @@ func (self *MemcacheDatastore) ListChildren(
 }
 
 // Called to close all db handles etc. Not thread safe.
-func (self *MemcacheDatastore) Close() {}
+func (self *MemcacheDatastore) Close() {
+	self.data_cache.Flush()
+	self.dir_cache.Flush()
+}
 
 func (self *MemcacheDatastore) Clear() {
 	self.data_cache.Purge()

@@ -91,7 +91,7 @@ func getArtifactFile(
 	// This is hacky but necessary since we can not reserialize
 	// the artifact - the yaml library is unable to properly round
 	// trip the raw yaml.
-	if !strings.HasPrefix(artifact.Name, constants.ARTIFACT_CUSTOM_NAME_PREFIX) {
+	if artifact.BuiltIn {
 		return ensureArtifactPrefix(artifact.Raw,
 			constants.ARTIFACT_CUSTOM_NAME_PREFIX), nil
 	}
