@@ -662,8 +662,8 @@ message DatastoreConfig {
     // forced. The aim is to keep combine separate writes as much as
     // possible into larger writes but at the same time keep
     // frequently written files from never flushing to disk.
-    int64 memcache_write_mutation_min_age = 14; // Default 1 sec
-    int64 memcache_write_mutation_max_age = 9;  // Default 5 sec
+    int64 memcache_write_mutation_min_age = 14; // Default 1000 msec
+    int64 memcache_write_mutation_max_age = 9;  // Default 5000 msec
 
     // Maximum size of memcache lru (default 10000)
     int64 memcache_datastore_max_size = 10;

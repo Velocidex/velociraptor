@@ -26,6 +26,8 @@ var (
 			Name: "memcache_filestore_lru_total",
 			Help: "Total files cached in the filestore lru",
 		})
+
+	Clock utils.Clock = utils.RealClock{}
 )
 
 type MemcacheFileWriter struct {
@@ -158,7 +160,7 @@ func (self *MemcacheFileWriter) _Flush() error {
 		}
 	}()
 
-	self.last_flush = time.Now()
+	self.last_flush = Clock.Now()
 
 	// Skip a noop action.
 	if !self.truncated && len(self.buffer.Bytes()) == 0 {
@@ -202,22 +204,23 @@ func NewMemcacheFileStore(config_obj *config_proto.Config) *MemcacheFileStore {
 	// Default 5 sec maximum write delay time.
 	max_age := config_obj.Datastore.MemcacheWriteMutationMaxAge
 	if max_age == 0 {
-		max_age = 5
+		max_age = 5000
 	}
 
 	ttl := config_obj.Datastore.MemcacheWriteMutationMinAge
 	if ttl == 0 {
-		ttl = 1
+		ttl = 1000
 	}
 
 	result := &MemcacheFileStore{
 		delegate:   directory.NewDirectoryFileStore(config_obj),
 		data_cache: ttlcache.NewCache(),
-		max_age:    time.Duration(max_age) * time.Second,
-		min_age:    time.Duration(ttl) * time.Second,
+		max_age:    time.Duration(max_age) * time.Millisecond,
+		min_age:    time.Duration(ttl) * time.Millisecond,
 	}
 
 	result.data_cache.SetTTL(result.min_age)
+	result.data_cache.SkipTTLExtensionOnHit(true)
 
 	result.data_cache.SetNewItemCallback(func(key string, value interface{}) {
 		metricDataLRU.Inc()
@@ -271,7 +274,7 @@ func (self *MemcacheFileStore) WriteFileWithCompletion(
 			delegate:   self.delegate,
 			key:        key,
 			filename:   path,
-			last_flush: time.Now(),
+			last_flush: Clock.Now(),
 			size:       -1,
 		}
 
@@ -285,8 +288,8 @@ func (self *MemcacheFileStore) WriteFileWithCompletion(
 		// If we have more time until the max_age, re-set it into the
 		// cache and extend ttl, otherwise, let it expire normally
 		// where it will be flushed.
-		if result.last_flush.Add(self.max_age).After(time.Now()) {
-			self.data_cache.Set(key, result)
+		if result.last_flush.Add(self.max_age).After(Clock.Now()) {
+			self.data_cache.Touch(key)
 		}
 	}
 
