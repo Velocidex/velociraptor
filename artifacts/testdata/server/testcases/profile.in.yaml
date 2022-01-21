@@ -1,0 +1,3 @@
+Queries:
+  - SELECT * FROM profile(metrics=TRUE)
+    WHERE Line.name =~ "client_comms_current_connections"

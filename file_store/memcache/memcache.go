@@ -26,6 +26,8 @@ var (
 			Name: "memcache_filestore_lru_total",
 			Help: "Total files cached in the filestore lru",
 		})
+
+	Clock utils.Clock = utils.RealClock{}
 )
 
 type MemcacheFileWriter struct {
@@ -43,6 +45,14 @@ type MemcacheFileWriter struct {
 	closed bool
 	buffer bytes.Buffer
 	size   int64
+
+	// Writers are kept in cache for memcache_write_mutation_min_age
+	// to combine writes. If another write occurs within this time,
+	// the cache TTL is extended. However once a write is
+	// memcache_write_mutation_max_age old, a flush is
+	// forced. Therefore we record the last flush time to determine if
+	// a flush should be forced.
+	last_flush time.Time
 
 	// We keep a list of completions so we can call them all when a
 	// file is flushed to disk. We keep the file open for a short time
@@ -150,6 +160,8 @@ func (self *MemcacheFileWriter) _Flush() error {
 		}
 	}()
 
+	self.last_flush = Clock.Now()
+
 	// Skip a noop action.
 	if !self.truncated && len(self.buffer.Bytes()) == 0 {
 		return nil
@@ -182,20 +194,33 @@ type MemcacheFileStore struct {
 
 	data_cache *ttlcache.Cache // map[urn]*MemcacheFileWriter
 
+	min_age time.Duration
+	max_age time.Duration
+
 	closed bool
 }
 
 func NewMemcacheFileStore(config_obj *config_proto.Config) *MemcacheFileStore {
+	// Default 5 sec maximum write delay time.
+	max_age := config_obj.Datastore.MemcacheWriteMutationMaxAge
+	if max_age == 0 {
+		max_age = 5000
+	}
+
+	ttl := config_obj.Datastore.MemcacheWriteMutationMinAge
+	if ttl == 0 {
+		ttl = 1000
+	}
+
 	result := &MemcacheFileStore{
 		delegate:   directory.NewDirectoryFileStore(config_obj),
 		data_cache: ttlcache.NewCache(),
+		max_age:    time.Duration(max_age) * time.Millisecond,
+		min_age:    time.Duration(ttl) * time.Millisecond,
 	}
 
-	ttl := config_obj.Datastore.MemcacheWriteMutationMaxAge
-	if ttl == 0 {
-		ttl = 1
-	}
-	result.data_cache.SetTTL(time.Duration(ttl) * time.Second)
+	result.data_cache.SetTTL(result.min_age)
+	result.data_cache.SkipTTLExtensionOnHit(true)
 
 	result.data_cache.SetNewItemCallback(func(key string, value interface{}) {
 		metricDataLRU.Inc()
@@ -246,23 +271,32 @@ func (self *MemcacheFileStore) WriteFileWithCompletion(
 	result_any, err := self.data_cache.Get(key)
 	if err != nil {
 		result = &MemcacheFileWriter{
-			delegate: self.delegate,
-			key:      key,
-			filename: path,
-			size:     -1,
+			delegate:   self.delegate,
+			key:        key,
+			filename:   path,
+			last_flush: Clock.Now(),
+			size:       -1,
 		}
+
+		// Item is new set it in the cache with default TTL.
+		self.data_cache.Set(key, result)
+
 	} else {
 		result = result_any.(*MemcacheFileWriter)
 		result.closed = false
+
+		// If we have more time until the max_age, re-set it into the
+		// cache and extend ttl, otherwise, let it expire normally
+		// where it will be flushed.
+		if result.last_flush.Add(self.max_age).After(Clock.Now()) {
+			self.data_cache.Touch(key)
+		}
 	}
 
 	// Add the completion to the writer.
 	if completion != nil {
 		result.completions = append(result.completions, completion)
 	}
-
-	// Always set it so the time can be extended.
-	self.data_cache.Set(key, result)
 
 	return result, nil
 }
