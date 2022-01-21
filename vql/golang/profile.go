@@ -106,8 +106,8 @@ func writeMetrics(scope vfilter.Scope, output_chan chan vfilter.Row) {
 			output_chan <- ordereddict.NewDict().
 				Set("Type", "metrics").
 				Set("Line", ordereddict.NewDict().
-					Set("name", metric.Name).
-					Set("help", metric.Help).
+					Set("name", *metric.Name).
+					Set("help", *metric.Help).
 					Set("value", value)).
 				Set("FullPath", "").
 				Set("_RawMetric", m)
