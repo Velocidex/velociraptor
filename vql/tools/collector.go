@@ -110,6 +110,12 @@ func (self CollectPlugin) Call(
 				return
 			}
 
+			// If the query is interrupted we may not get to run the
+			// closer function. Add to scope destructors to ensure it
+			// gets called at query wind-down and that we wait for it
+			// to actually close.
+			vql_subsystem.GetRootScope(scope).AddDestructor(closer)
+
 			// When we exit, close the container and flush the
 			// name to the output channel.
 			defer func() {
