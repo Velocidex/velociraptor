@@ -654,8 +654,16 @@ message DatastoreConfig {
     // filesystems (default 100).
     int64 memcache_write_mutation_writers = 6;
 
-    // How long to delay writes so they can be combined (default 1 sec)
-    int64 memcache_write_mutation_max_age = 9;
+    // How long to delay writes so they can be combined. This applies
+    // for writing result sets - we keep the writes in memory for
+    // min_age seconds in order to combine further writes. If another
+    // write occurs to the same result sets the TTL is extended and
+    // writes are delayed. However, once we read max_age, a write is
+    // forced. The aim is to keep combine separate writes as much as
+    // possible into larger writes but at the same time keep
+    // frequently written files from never flushing to disk.
+    int64 memcache_write_mutation_min_age = 14; // Default 1 sec
+    int64 memcache_write_mutation_max_age = 9;  // Default 5 sec
 
     // Maximum size of memcache lru (default 10000)
     int64 memcache_datastore_max_size = 10;

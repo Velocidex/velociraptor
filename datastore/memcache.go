@@ -62,7 +62,7 @@ func RegisterMemcacheDatastoreMetrics(db MemcacheStater) error {
 	_ = prometheus.Register(promauto.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: "memcache_data_lru_total_bytes",
-			Help: "Total files cached",
+			Help: "Total bytes cached",
 		}, func() float64 {
 			stats := db.Stats()
 			return float64(stats.DataItemSize)

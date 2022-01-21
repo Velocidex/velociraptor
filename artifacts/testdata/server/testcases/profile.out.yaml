@@ -1,0 +1,16 @@
+SELECT * FROM profile(metrics=TRUE) WHERE Line.name =~ "client_comms_current_connections"[
+ {
+  "Type": "metrics",
+  "Line": {
+   "name": "client_comms_current_connections",
+   "help": "Number of currently connected clients.",
+   "value": 0
+  },
+  "FullPath": "",
+  "_RawMetric": {
+   "gauge": {
+    "value": 0
+   }
+  }
+ }
+]
