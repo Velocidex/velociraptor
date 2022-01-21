@@ -1,6 +1,6 @@
 name: Windows.System.Services
 description: |
-  List all the installed services.
+  List Service details.
 
 parameters:
   - name: servicesKeyGlob
@@ -11,39 +11,89 @@ parameters:
   - name: CertificateInfo
     default: N
     type: bool
-
+  - name: NameRegex
+    default: .
+    type: regex
+  - name: DisplayNameRegex
+    default: .
+    type: regex
+  - name: PathNameRegex
+    default: .
+    type: regex
+  - name: ServiceDllRegex
+    default: .
+    type: regex
+  - name: FailureCommandRegex
+    default: .
+    type: regex
+    
+export: |
+    LET Profile = '''
+        [
+        ["ServiceFailureActions", 0, [
+          ["ResetPeriod", 0, "uint32"],
+          ["__ActionsCount", 12, "uint32"],
+          ["__lpsaActionsHeader", 16, "uint32"],
+          ["FailureAction", "x=>x.__lpsaActionsHeader", "Array", {
+              "type": "ServiceAction",
+              "count": "x=>x.__ActionsCount"
+          }]
+        ]],
+        ["ServiceAction", 8, [
+            ["Type", 0, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "SC_ACTION_NONE": 0,
+                    "SC_ACTION_RESTART": 1,
+                    "SC_ACTION_REBOOT": 2,
+                    "SC_ACTION_RUN_COMMAND": 3,
+                }}],
+            ["__DelayMsec", 4, "uint32"],
+            ["Delay", 4,"Value",{ "value": "x=>x.__DelayMsec/1000" }],
+        ]],
+      ]
+      '''
+      
 sources:
-  - precondition: |
+  - precondition:
       SELECT OS From info() where OS = 'windows'
 
     query: |
-        LET service <= SELECT State, Name, DisplayName, Status,
-               ProcessId as Pid, ExitCode, StartMode,
-               PathName, ServiceType, StartName as UserAccount,
-               {
-                 SELECT Mtime as Created
-                 FROM stat(filename=servicesKeyGlob + Name, accessor='reg')
-               } AS Created,
-               {
-                 SELECT expand(path=ServiceDll) FROM read_reg_key(globs=servicesKeyGlob + Name + "\\Parameters")
-               } AS ServiceDll,
-               {
-                 SELECT FailureCommand FROM read_reg_key(globs=servicesKeyGlob + Name)
-               } AS FailureCommand,
-               expand(path=parse_string_with_regex(regex=
-                 ['^"(?P<AbsoluteExePath>[^"]+)','(?P<AbsoluteExePath>^[^ "]+)'],
-                 string=PathName).AbsoluteExePath) as AbsoluteExePath
+      LET service <= SELECT State, Name, DisplayName, Status,
+            ProcessId as Pid, ExitCode, StartMode,
+            PathName, ServiceType, StartName as UserAccount,
+            {
+                SELECT Mtime as Created
+                FROM stat(filename=servicesKeyGlob + Name, accessor='reg')
+            } AS Created,
+            {
+                SELECT expand(path=ServiceDll) FROM read_reg_key(globs=servicesKeyGlob + Name + "\\Parameters")
+            } AS ServiceDll,
+            {
+                SELECT FailureCommand FROM read_reg_key(globs=servicesKeyGlob + Name)
+            } AS FailureCommand,
+            {
+                SELECT 
+                    parse_binary(accessor='data',filename=FailureActions,profile=Profile,struct='ServiceFailureActions') as FailureActions
+                FROM read_reg_key(globs=servicesKeyGlob + Name)
+            } AS FailureActions,
+            expand(path=parse_string_with_regex(regex=
+                ['^"(?P<AbsoluteExePath>[^"]+)','(?P<AbsoluteExePath>^[^ "]+)'],
+                string=PathName).AbsoluteExePath) as AbsoluteExePath
         FROM wmi(query="SELECT * From Win32_service", namespace="root/CIMV2")
+        WHERE Name =~ NameRegex
+            AND DisplayName =~ DisplayNameRegex
+            AND PathName =~ PathNameRegex
+            AND ServiceDll =~ ServiceDllRegex
+            AND FailureCommand =~ FailureCommandRegex
 
-        SELECT *,
-                 if(condition=Calculate_hashes,
-                    then=hash(path=AbsoluteExePath,
-                           accessor="file")) AS HashServiceExe,
+      SELECT *,
+        if(condition=Calculate_hashes,
+            then=hash(path=AbsoluteExePath, accessor="file")) AS HashServiceExe,
                  if(condition=CertificateInfo,
                     then=authenticode(filename=AbsoluteExePath)) AS CertinfoServiceExe,
                  if(condition=Calculate_hashes,
-                    then=hash(path=ServiceDll,
-                           accessor="file")) AS HashServiceDll,
+                    then=hash(path=ServiceDll,accessor="file")) AS HashServiceDll,
                  if(condition=CertificateInfo,
                     then=authenticode(filename=ServiceDll)) AS CertinfoServiceDll
-        FROM service
+      FROM service
