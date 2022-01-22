@@ -135,9 +135,7 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	// Same criteria as
-	// https://github.com/Velocidex/velociraptor/blob/3eddb529a0059a05c0a6c2c7057446f36c4e9a6a/gui/static/angular-components/artifact/artifact-viewer-directive.js#L62
-	if !strings.HasPrefix(definition.Name, "Custom.") {
+	if definition.BuiltIn {
 		scope.Log("artifact_delete: Can only delete custom artifacts.")
 		return vfilter.Null{}
 	}

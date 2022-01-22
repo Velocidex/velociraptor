@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -201,6 +202,12 @@ func (self SparseReader) LStat() (glob.FileInfo, error) {
 func GetSparseFile(file_path string, scope vfilter.Scope) (ReaderStat, error) {
 	pathspec, err := glob.PathSpecFromString(file_path)
 	if err != nil {
+		return nil, err
+	}
+
+	err = vql_subsystem.CheckFilesystemAccess(scope, pathspec.DelegateAccessor)
+	if err != nil {
+		scope.Log("%v: DelegateAccessor denied", err)
 		return nil, err
 	}
 

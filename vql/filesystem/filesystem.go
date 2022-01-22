@@ -294,6 +294,12 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 		arg.Length = 4 * 1024 * 1024
 	}
 
+	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("read_file: %s", err)
+		return vfilter.Null{}
+	}
+
 	accessor, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("read_file: %v", err)
