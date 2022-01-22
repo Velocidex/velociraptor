@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"sync"
 
@@ -52,4 +53,13 @@ func IsMaster(config_obj *config_proto.Config) bool {
 		return !config_obj.Frontend.IsMinion
 	}
 	return true
+}
+
+func GetNodeName(frontend_config *config_proto.FrontendConfig) string {
+	if !frontend_config.IsMinion {
+		return "master"
+	}
+
+	return fmt.Sprintf("%s-%d", frontend_config.Hostname,
+		frontend_config.BindPort)
 }

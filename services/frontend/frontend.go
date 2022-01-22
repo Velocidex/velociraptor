@@ -353,8 +353,7 @@ func (self *MinionFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup
 		}
 	}
 
-	self.name = fmt.Sprintf("%s:%d", config_obj.Frontend.Hostname,
-		config_obj.Frontend.BindPort)
+	self.name = services.GetNodeName(config_obj.Frontend)
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Frontend:</> Server will be a minion, with ID %v.", self.name)

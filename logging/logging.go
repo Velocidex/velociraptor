@@ -50,12 +50,10 @@ var (
 	// Used for high value audit related events.
 	Audit = "VelociraptorAudit"
 
-	// The node name of this node.
-	node_name = ""
-
 	// Lock for log manager.
-	mu      sync.Mutex
-	Manager *LogManager
+	mu        sync.Mutex
+	Manager   *LogManager
+	node_name = ""
 
 	// Lock for memory logs and prelogs.
 	memory_log_mu sync.Mutex
@@ -65,6 +63,13 @@ var (
 	tag_regex         = regexp.MustCompile("<([^>/0]+)>")
 	closing_tag_regex = regexp.MustCompile("</>")
 )
+
+func SetNodeName(name string) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	node_name = name
+}
 
 func GetNodeName() string {
 	mu.Lock()
@@ -261,7 +266,7 @@ func (self *LogManager) makeNewComponent(
 		config_obj.Logging.OutputDirectory != "" {
 
 		base_directory := filepath.Join(
-			config_obj.Logging.OutputDirectory, node_name)
+			config_obj.Logging.OutputDirectory, GetNodeName(node_name))
 		err := os.MkdirAll(base_directory, 0700)
 		if err != nil {
 			return nil, errors.New("Unable to create logging directory.")
