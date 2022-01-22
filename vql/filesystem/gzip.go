@@ -45,6 +45,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/json"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -237,6 +238,12 @@ func GetBzip2File(file_path string, scope vfilter.Scope) (ReaderStat, error) {
 		return nil, err
 	}
 
+	err = vql_subsystem.CheckFilesystemAccess(scope, pathspec.DelegateAccessor)
+	if err != nil {
+		scope.Log("GetBzip2File: %v", err)
+		return nil, err
+	}
+
 	accessor, err := glob.GetAccessor(pathspec.DelegateAccessor, scope)
 	if err != nil {
 		scope.Log("%v: did you provide a URL or PathSpec?", err)
@@ -266,6 +273,12 @@ func GetBzip2File(file_path string, scope vfilter.Scope) (ReaderStat, error) {
 func GetGzipFile(file_path string, scope vfilter.Scope) (ReaderStat, error) {
 	pathspec, err := glob.PathSpecFromString(file_path)
 	if err != nil {
+		return nil, err
+	}
+
+	err = vql_subsystem.CheckFilesystemAccess(scope, pathspec.DelegateAccessor)
+	if err != nil {
+		scope.Log("GetGzipFile: %v", err)
 		return nil, err
 	}
 

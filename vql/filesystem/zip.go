@@ -426,6 +426,13 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 	self.mu.Unlock()
 
 	if !pres || zip_file_cache.is_closed {
+		err := vql_subsystem.CheckFilesystemAccess(
+			self.scope, pathspec.DelegateAccessor)
+		if err != nil {
+			self.scope.Log("ZipFileSystemAccessor: %s", err)
+			return nil, nil, err
+		}
+
 		accessor, err := glob.GetAccessor(
 			pathspec.DelegateAccessor, self.scope)
 		if err != nil {
