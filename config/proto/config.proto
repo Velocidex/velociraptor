@@ -147,7 +147,6 @@ message ClientConfig {
     string tempdir_windows = 2;
     string tempdir_darwin = 3;
 
-
     uint64 max_poll = 15 [(sem_type) = {
             description: "The maximum number of seconds between server polls."
             default: "600",
@@ -200,6 +199,10 @@ message ClientConfig {
 
     // Maximum number of concurrent queries the client will allow (default 2).
     uint64 concurrency = 31;
+
+    // Maximum timeout for connection retry - the length of time we
+    // try a connection before restarting it (default 5 min).
+    uint64 connection_timeout = 35;
 
     CryptoConfig Crypto = 33;
 }

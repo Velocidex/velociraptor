@@ -14,16 +14,34 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
+	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
-	remote_datastopre_imp = NewRemoteDataStore()
+	remote_mu             sync.Mutex
+	remote_datastopre_imp = NewRemoteDataStore(context.Background())
 	RPC_TIMEOUT           = 100 // Seconds
 )
 
-type RemoteDataStore struct{}
+func Retry(ctx context.Context, cb func() error) error {
+	return utils.Retry(ctx, cb, 100, 10*time.Second)
+}
+
+type RemoteDataStore struct {
+	ctx context.Context
+}
 
 func (self *RemoteDataStore) GetSubject(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec,
+	message proto.Message) error {
+	return Retry(self.ctx, func() error {
+		return self._GetSubject(config_obj, urn, message)
+	})
+}
+
+func (self *RemoteDataStore) _GetSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,
 	message proto.Message) error {
@@ -81,6 +99,17 @@ func (self *RemoteDataStore) SetSubjectWithCompletion(
 	urn api.DSPathSpec,
 	message proto.Message,
 	completion func()) error {
+	return Retry(self.ctx, func() error {
+		return self._SetSubjectWithCompletion(
+			config_obj, urn, message, completion)
+	})
+}
+
+func (self *RemoteDataStore) _SetSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec,
+	message proto.Message,
+	completion func()) error {
 
 	defer Instrument("write", "RemoteDataStore", urn)()
 
@@ -126,6 +155,14 @@ func (self *RemoteDataStore) SetSubjectWithCompletion(
 func (self *RemoteDataStore) DeleteSubjectWithCompletion(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec, completion func()) error {
+	return Retry(self.ctx, func() error {
+		return self._DeleteSubjectWithCompletion(config_obj, urn, completion)
+	})
+}
+
+func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec, completion func()) error {
 
 	defer Instrument("delete", "RemoteDataStore", urn)()
 
@@ -154,6 +191,15 @@ func (self *RemoteDataStore) DeleteSubjectWithCompletion(
 func (self *RemoteDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) error {
+	return Retry(self.ctx, func() error {
+		return self._DeleteSubject(config_obj, urn)
+	})
+}
+
+func (self *RemoteDataStore) _DeleteSubject(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec) error {
+
 	defer Instrument("delete", "RemoteDataStore", urn)()
 
 	ctx, cancel := context.WithTimeout(context.Background(),
@@ -173,8 +219,23 @@ func (self *RemoteDataStore) DeleteSubject(
 	return err
 }
 
-// Lists all the children of a URN.
 func (self *RemoteDataStore) ListChildren(
+	config_obj *config_proto.Config,
+	urn api.DSPathSpec) ([]api.DSPathSpec, error) {
+
+	var result []api.DSPathSpec
+	var err error
+
+	err = Retry(self.ctx, func() error {
+		result, err = self._ListChildren(config_obj, urn)
+		return err
+	})
+
+	return result, err
+}
+
+// Lists all the children of a URN.
+func (self *RemoteDataStore) _ListChildren(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]api.DSPathSpec, error) {
 
@@ -216,7 +277,28 @@ func (self *RemoteDataStore) Close() {}
 func (self *RemoteDataStore) Debug(config_obj *config_proto.Config) {
 }
 
-func NewRemoteDataStore() *RemoteDataStore {
-	result := &RemoteDataStore{}
+func NewRemoteDataStore(ctx context.Context) *RemoteDataStore {
+	result := &RemoteDataStore{ctx: ctx}
 	return result
+}
+
+func StartRemoteDatastore(
+	ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
+
+	// Initialize the remote datastore if needed.
+	implementation, err := GetImplementationName(config_obj)
+	if err != nil {
+		return err
+	}
+
+	if implementation == "RemoteFileDataStore" {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Info("<green>Starting</> remote datastore service")
+		remote_mu.Lock()
+		remote_datastopre_imp = NewRemoteDataStore(ctx)
+		g_impl = nil
+		remote_mu.Unlock()
+	}
+	return nil
 }

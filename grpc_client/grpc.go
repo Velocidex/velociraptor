@@ -142,7 +142,7 @@ func getChannel(
 	defer grpcPoolWaiters.Dec()
 
 	// Make sure pool is initialized.
-	err := EnsureInit(ctx, config_obj)
+	err := EnsureInit(ctx, config_obj, false /* recreate */)
 	if err != nil {
 		return nil, err
 	}
@@ -152,6 +152,13 @@ func getChannel(
 		if err == grpcpool.ErrTimeout {
 			grpcTimeoutCounter.Inc()
 			time.Sleep(time.Second)
+
+			// Try to force a new connection pool in case the master
+			// changed it's DNS mapping.
+			err := EnsureInit(ctx, config_obj, true /* recreate */)
+			if err != nil {
+				return nil, err
+			}
 			continue
 		}
 
@@ -188,12 +195,13 @@ func GetAPIConnectionString(config_obj *config_proto.Config) string {
 
 func EnsureInit(
 	ctx context.Context,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config,
+	recreate bool) error {
 
 	mu.Lock()
 	defer mu.Unlock()
 
-	if pool != nil {
+	if !recreate && pool != nil {
 		return nil
 	}
 

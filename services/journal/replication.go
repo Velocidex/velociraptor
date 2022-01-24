@@ -196,8 +196,12 @@ func (self *ReplicationService) Start(
 	self.api_client = api_client
 	self.closer = closer
 	self.ctx = ctx
-	self.sender = make(chan *api_proto.PushEventRequest, 10000)
-	self.SetRetryDuration(time.Second)
+
+	// Do not have channel buffer because then we might lose events on
+	// restart. Events will flow on to the buffer file when the gRPC
+	// client is too busy.
+	self.sender = make(chan *api_proto.PushEventRequest)
+	self.SetRetryDuration(5 * time.Second)
 
 	self.tmpfile, err = ioutil.TempFile("", "replication")
 	if err != nil {

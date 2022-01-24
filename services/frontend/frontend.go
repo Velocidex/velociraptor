@@ -310,7 +310,7 @@ func (self MasterFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
 	}
 
 	go self.UpdateStats(ctx)
-	go utils.Retry(func() error {
+	go utils.Retry(ctx, func() error {
 		return journal.WatchQueueWithCB(ctx, config_obj, wg,
 			"Server.Internal.FrontendMetrics",
 			self.processMetrics)
