@@ -71,13 +71,6 @@ func SetNodeName(name string) {
 	node_name = name
 }
 
-func GetNodeName() string {
-	mu.Lock()
-	defer mu.Unlock()
-
-	return node_name
-}
-
 func InitLogging(config_obj *config_proto.Config) error {
 	mu.Lock()
 	Manager = &LogManager{
@@ -192,7 +185,14 @@ func (self *LogManager) GetLogger(
 
 	ctx, pres := self.contexts[component]
 	if !pres {
-		panic(fmt.Sprintf("Uninitialized logging for %v", *component))
+		return &LogContext{
+			Logger: &logrus.Logger{
+				Out:       os.Stderr,
+				Formatter: new(logrus.TextFormatter),
+				Hooks:     make(logrus.LevelHooks),
+				Level:     logrus.DebugLevel,
+			},
+		}
 	}
 	return ctx
 }
@@ -266,7 +266,7 @@ func (self *LogManager) makeNewComponent(
 		config_obj.Logging.OutputDirectory != "" {
 
 		base_directory := filepath.Join(
-			config_obj.Logging.OutputDirectory, GetNodeName(node_name))
+			config_obj.Logging.OutputDirectory, node_name)
 		err := os.MkdirAll(base_directory, 0700)
 		if err != nil {
 			return nil, errors.New("Unable to create logging directory.")
