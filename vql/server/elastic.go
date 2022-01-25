@@ -168,7 +168,7 @@ func upload_rows(
 		APIKey:    arg.APIKey,
 		Transport: &http.Transport{
 			MaxIdleConnsPerHost:   10,
-			ResponseHeaderTimeout: time.Second,
+			ResponseHeaderTimeout: 100 * time.Second,
 			TLSClientConfig: &tls.Config{
 				ClientSessionCache: tls.NewLRUClientSessionCache(100),
 				RootCAs:            CA_Pool,
