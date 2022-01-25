@@ -60,6 +60,17 @@ func getServerServices(config_obj *config_proto.Config) *config_proto.ServerServ
 }
 
 func StartupEssentialServices(sm *services.Service) error {
+	spec := getServerServices(sm.Config)
+
+	// Updates DynDNS records if needed. Frontends need to maintain
+	// their IP addresses.
+	if spec.DynDns {
+		err := sm.Start(ddclient.StartDynDNSService)
+		if err != nil {
+			return err
+		}
+	}
+
 	j, _ := services.GetJournal()
 	if j == nil {
 		err := sm.Start(journal.StartJournalService)
@@ -153,14 +164,6 @@ func StartupFrontendServices(sm *services.Service) error {
 
 	if spec.SanityChecker {
 		err := sm.Start(sanity.StartSanityCheckService)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Updates DynDNS records if needed. Frontends need to maintain their IP addresses.
-	if spec.DynDns {
-		err := sm.Start(ddclient.StartDynDNSService)
 		if err != nil {
 			return err
 		}

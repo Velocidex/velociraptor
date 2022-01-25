@@ -350,11 +350,11 @@ func (self *MinionFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup
 			ClientMonitoring: true,
 			SanityChecker:    true,
 			FrontendServer:   true,
+			DynDns:           true,
 		}
 	}
 
-	self.name = fmt.Sprintf("%s:%d", config_obj.Frontend.Hostname,
-		config_obj.Frontend.BindPort)
+	self.name = services.GetNodeName(config_obj.Frontend)
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Frontend:</> Server will be a minion, with ID %v.", self.name)
@@ -405,7 +405,7 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 // Selects the node by name from the extra frontends configuration
 func SelectFrontend(node string, config_obj *config_proto.Config) error {
 	for _, fe := range config_obj.ExtraFrontends {
-		fe_name := fmt.Sprintf("%v:%v", fe.Hostname, fe.BindPort)
+		fe_name := services.GetNodeName(fe)
 		if fe_name == node {
 			proto.Merge(config_obj.Frontend, fe)
 			return nil

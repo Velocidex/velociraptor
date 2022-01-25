@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -14,6 +16,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
+	"www.velocidex.com/golang/velociraptor/services"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -449,7 +452,17 @@ func StartFrontendWithAutocert(
 
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 
+	// Autocert directory must be unique since it is usually kept in
+	// shared storage.
 	cache_dir := config_obj.AutocertCertCache
+	if config_obj.Frontend.IsMinion {
+		cache_dir = filepath.Join(
+			cache_dir, services.GetNodeName(config_obj.Frontend))
+		err := os.MkdirAll(cache_dir, 0700)
+		if err != nil {
+			return err
+		}
+	}
 	certManager := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist(config_obj.Frontend.Hostname),

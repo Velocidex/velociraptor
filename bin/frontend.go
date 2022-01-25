@@ -65,14 +65,6 @@ func doFrontend() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	if *frontend_cmd_node != "" {
-		err = frontend.SelectFrontend(
-			*frontend_cmd_node, config_obj)
-		if err != nil {
-			return fmt.Errorf("Selecting minion frontend: %w", err)
-		}
-	}
-
 	sm := services.NewServiceManager(ctx, config_obj)
 	defer sm.Close()
 

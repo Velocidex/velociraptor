@@ -8,6 +8,7 @@ import (
 	"github.com/Velocidex/survey"
 	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -87,9 +88,14 @@ Do you wish to continue?`,
 		}
 
 		// Add the frontend into the client's configuration.
-		config_obj.Client.ServerUrls = append(config_obj.Client.ServerUrls,
-			fmt.Sprintf("https://%v:%v/", frontend_config.Hostname,
-				frontend_config.BindPort))
+		if frontend_config.BindPort != 443 {
+			config_obj.Client.ServerUrls = append(config_obj.Client.ServerUrls,
+				fmt.Sprintf("https://%v:%v/", frontend_config.Hostname,
+					frontend_config.BindPort))
+		} else {
+			config_obj.Client.ServerUrls = append(config_obj.Client.ServerUrls,
+				fmt.Sprintf("https://%v/", frontend_config.Hostname))
+		}
 
 	} else {
 		err = survey.AskOne(url_question, &frontend_config.Hostname,
@@ -97,15 +103,18 @@ Do you wish to continue?`,
 		if err != nil {
 			return err
 		}
+		frontend_config.BindPort = 443
 	}
 
 	// Check for validity
-	if GetNodeName(frontend_config) == GetNodeName(config_obj.Frontend) {
+	if services.GetNodeName(frontend_config) ==
+		services.GetNodeName(config_obj.Frontend) {
 		return errors.New("Node name is the same as existing master")
 	}
 
 	for _, fe := range config_obj.ExtraFrontends {
-		if GetNodeName(frontend_config) == GetNodeName(fe) {
+		if services.GetNodeName(frontend_config) ==
+			services.GetNodeName(fe) {
 			return errors.New("Node name is the same as an existing minion")
 		}
 	}
@@ -160,11 +169,6 @@ Do you wish to continue?`,
 	}
 
 	return storeClientConfig(config_obj)
-}
-
-func GetNodeName(frontend_config *config_proto.FrontendConfig) string {
-	return fmt.Sprintf("%s-%d", frontend_config.Hostname,
-		frontend_config.BindPort)
 }
 
 func init() {

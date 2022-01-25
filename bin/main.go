@@ -166,7 +166,7 @@ func main() {
 		}).
 		WithCustomValidator(initFilestoreAccessor).
 		WithCustomValidator(initDebugServer).
-		WithCustomValidator(applyMinionRole).
+		WithConfigMutator(applyMinionRole).
 		WithLogFile(*logging_flag)
 
 	if *trace_flag != "" {
@@ -208,6 +208,6 @@ func makeDefaultConfigLoader() *config.Loader {
 		WithCustomValidator(initDebugServer).
 		WithLogFile(*logging_flag).
 		WithOverride(*override_flag).
-		WithCustomValidator(applyMinionRole).
+		WithConfigMutator(applyMinionRole).
 		WithCustomValidator(ensureProxy)
 }

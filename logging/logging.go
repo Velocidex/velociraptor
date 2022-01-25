@@ -50,12 +50,10 @@ var (
 	// Used for high value audit related events.
 	Audit = "VelociraptorAudit"
 
-	// The node name of this node.
-	node_name = ""
-
 	// Lock for log manager.
-	mu      sync.Mutex
-	Manager *LogManager
+	mu        sync.Mutex
+	Manager   *LogManager
+	node_name = ""
 
 	// Lock for memory logs and prelogs.
 	memory_log_mu sync.Mutex
@@ -66,11 +64,11 @@ var (
 	closing_tag_regex = regexp.MustCompile("</>")
 )
 
-func GetNodeName() string {
+func SetNodeName(name string) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	return node_name
+	node_name = name
 }
 
 func InitLogging(config_obj *config_proto.Config) error {
@@ -187,7 +185,14 @@ func (self *LogManager) GetLogger(
 
 	ctx, pres := self.contexts[component]
 	if !pres {
-		panic(fmt.Sprintf("Uninitialized logging for %v", *component))
+		return &LogContext{
+			Logger: &logrus.Logger{
+				Out:       os.Stderr,
+				Formatter: new(logrus.TextFormatter),
+				Hooks:     make(logrus.LevelHooks),
+				Level:     logrus.DebugLevel,
+			},
+		}
 	}
 	return ctx
 }
