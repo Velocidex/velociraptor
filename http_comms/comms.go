@@ -198,6 +198,11 @@ func NewHTTPConnector(
 		crypto.AddPublicRoots(tls_config.RootCAs)
 	}
 
+	timeout := config_obj.Client.ConnectionTimeout
+	if timeout == 0 {
+		timeout = 300 // 5 Min default
+	}
+
 	self := &HTTPConnector{
 		config_obj: config_obj,
 		manager:    manager,
@@ -222,16 +227,16 @@ func NewHTTPConnector(
 			},
 			Transport: &http.Transport{
 				DialContext: (&net.Dialer{
-					Timeout:   300 * time.Second,
-					KeepAlive: 300 * time.Second,
+					Timeout:   time.Duration(timeout) * time.Second,
+					KeepAlive: time.Duration(timeout) * time.Second,
 					DualStack: true,
 				}).DialContext,
 				Proxy:                 proxyHandler,
 				MaxIdleConns:          100,
-				IdleConnTimeout:       300 * time.Second,
-				TLSHandshakeTimeout:   100 * time.Second,
-				ExpectContinueTimeout: 10 * time.Second,
-				ResponseHeaderTimeout: 100 * time.Second,
+				IdleConnTimeout:       time.Duration(timeout) * time.Second,
+				TLSHandshakeTimeout:   time.Duration(timeout) * time.Second,
+				ExpectContinueTimeout: time.Duration(timeout) * time.Second,
+				ResponseHeaderTimeout: time.Duration(timeout) * time.Second,
 				TLSClientConfig:       tls_config,
 			},
 		},

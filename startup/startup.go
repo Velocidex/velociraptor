@@ -62,6 +62,11 @@ func getServerServices(config_obj *config_proto.Config) *config_proto.ServerServ
 func StartupEssentialServices(sm *services.Service) error {
 	spec := getServerServices(sm.Config)
 
+	err := sm.Start(datastore.StartRemoteDatastore)
+	if err != nil {
+		return err
+	}
+
 	// Updates DynDNS records if needed. Frontends need to maintain
 	// their IP addresses.
 	if spec.DynDns {
@@ -131,17 +136,17 @@ func StartupEssentialServices(sm *services.Service) error {
 func StartupFrontendServices(sm *services.Service) error {
 	spec := getServerServices(sm.Config)
 
-	_, err := services.GetClientInfoManager()
+	err := sm.Start(datastore.StartMemcacheFileService)
+	if err != nil {
+		return err
+	}
+
+	_, err = services.GetClientInfoManager()
 	if err != nil {
 		err := sm.Start(client_info.StartClientInfoService)
 		if err != nil {
 			return err
 		}
-	}
-
-	err = sm.Start(datastore.StartMemcacheFileService)
-	if err != nil {
-		return err
 	}
 
 	if spec.IndexServer {

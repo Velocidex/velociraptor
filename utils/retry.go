@@ -1,15 +1,29 @@
 package utils
 
-import "time"
+import (
+	"context"
+	"time"
 
-func Retry(cb func() error, number int, sleep time.Duration) error {
+	errors "github.com/pkg/errors"
+)
+
+var (
+	timeoutError = errors.New("Timeout")
+)
+
+func Retry(ctx context.Context, cb func() error,
+	number int, sleep time.Duration) error {
 	var err error
 	for i := 0; i < number; i++ {
 		err = cb()
 		if err == nil {
 			return err
 		}
-		time.Sleep(sleep)
+		select {
+		case <-ctx.Done():
+			return timeoutError
+		case <-time.After(sleep):
+		}
 	}
 	return err
 }
