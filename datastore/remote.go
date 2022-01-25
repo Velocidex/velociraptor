@@ -289,7 +289,9 @@ func StartRemoteDatastore(
 	// Initialize the remote datastore if needed.
 	implementation, err := GetImplementationName(config_obj)
 	if err != nil {
-		return err
+		// Invalid datastore configuration is not an issue here - it
+		// just means we dont want to use the remote datastore.
+		return nil
 	}
 
 	if implementation == "RemoteFileDataStore" {
