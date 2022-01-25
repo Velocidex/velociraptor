@@ -50,6 +50,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 var (
@@ -144,14 +145,14 @@ func doServerDeb() error {
 	}
 
 	// Build the master node
-	node_name := GetNodeName(config_obj.Frontend)
+	node_name := services.GetNodeName(config_obj.Frontend)
 	err = doSingleServerDeb(config_obj, "_master_"+node_name, nil)
 	if err != nil {
 		return err
 	}
 
 	for _, fe := range config_obj.ExtraFrontends {
-		node_name := GetNodeName(fe)
+		node_name := services.GetNodeName(fe)
 		err = doSingleServerDeb(config_obj, "_minion_"+node_name,
 			[]string{"--minion", "--node", node_name})
 		if err != nil {
