@@ -19,11 +19,11 @@ package glob
 
 import (
 	"path/filepath"
-	"regexp"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -78,8 +78,7 @@ func (self NullFileSystemAccessor) GetRoot(path string) (string, string, error) 
 }
 
 func (self NullFileSystemAccessor) PathSplit(path string) []string {
-	re := regexp.MustCompile("/")
-	return re.Split(path, -1)
+	return paths.GenericPathSplit(path)
 }
 
 func (self NullFileSystemAccessor) PathJoin(root, stem string) string {

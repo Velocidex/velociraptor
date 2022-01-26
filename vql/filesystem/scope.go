@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -64,8 +64,7 @@ func (self ScopeFilesystemAccessor) Open(path string) (glob.ReadSeekCloser, erro
 }
 
 func (self ScopeFilesystemAccessor) PathSplit(path string) []string {
-	re := regexp.MustCompile("/")
-	return re.Split(path, -1)
+	return paths.GenericPathSplit(path)
 }
 
 func (self ScopeFilesystemAccessor) PathJoin(root, stem string) string {

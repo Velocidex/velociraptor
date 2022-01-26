@@ -123,7 +123,7 @@ func (self remappingAccessor) New(scope vfilter.Scope) (FileSystemAccessor, erro
 }
 
 func (self *remappingAccessor) EnsureBackingAccessor() error {
-	accessor, err := GetAccessor(self.pathSpec.DelegateAccessor, self.scope)
+	accessor, err := GetAccessor(self.pathSpec.GetDelegateAccessor(), self.scope)
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (self *remappingAccessor) ReadDir(path string) ([]FileInfo, error) {
 	}
 
 	spec := *self.pathSpec
-	spec.Path = pathSpec.DelegatePath
+	spec.Path = pathSpec.GetDelegatePath()
 
 	return self.backingAccessor.ReadDir(spec.String())
 }
@@ -151,7 +151,7 @@ func (self *remappingAccessor) Open(path string) (ReadSeekCloser, error) {
 	}
 
 	spec := *self.pathSpec
-	spec.Path = pathSpec.DelegatePath
+	spec.Path = pathSpec.GetDelegatePath()
 
 	return self.backingAccessor.Open(spec.String())
 }
@@ -163,7 +163,7 @@ func (self remappingAccessor) Lstat(filename string) (FileInfo, error) {
 	}
 
 	spec := *self.pathSpec
-	spec.Path = pathSpec.DelegatePath
+	spec.Path = pathSpec.GetDelegatePath()
 
 	return self.backingAccessor.Lstat(spec.String())
 }

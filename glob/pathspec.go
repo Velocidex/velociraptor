@@ -92,6 +92,25 @@ func (self PathSpec) GetDelegatePath() string {
 	return self.DelegatePath
 }
 
+func (self PathSpec) GetDelegateAccessor() string {
+	if self.Delegate != nil {
+		return self.Delegate.DelegateAccessor
+	}
+	return self.DelegateAccessor
+}
+
+func (self PathSpec) GetPath() string {
+	if self.Path != "" {
+		// we have this case, when the pathspec was unmarshalled
+		// from a "full" pathspec object or URL
+		return self.Path
+	}
+
+	// fallback case for when the pathspec was created from
+	// just a path
+	return self.DelegatePath
+}
+
 func (self PathSpec) String() string {
 	if self.url_based {
 		result := url.URL{

@@ -40,11 +40,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"regexp"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
@@ -161,10 +161,8 @@ func (self *GzipFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, erro
 	return self.getter(path, self.scope)
 }
 
-var GzipFileSystemAccessor_re = regexp.MustCompile("/")
-
 func (self *GzipFileSystemAccessor) PathSplit(path string) []string {
-	return GzipFileSystemAccessor_re.Split(path, -1)
+	return paths.GenericPathSplit(path)
 }
 
 // The root is a url for the parent node and the stem is the new subdir.

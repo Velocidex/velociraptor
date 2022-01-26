@@ -26,9 +26,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -492,15 +490,12 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res glob.FileInfo, err e
 	return nil, errors.New("File not found")
 }
 
-// We accept both / and \ as a path separator
-var NTFSFileSystemAccessor_re = regexp.MustCompile("[\\\\/]")
-
 func (self *NTFSFileSystemAccessor) PathSplit(path string) []string {
-	return NTFSFileSystemAccessor_re.Split(path, -1)
+	return paths.GenericPathSplit(path)
 }
 
 func (self NTFSFileSystemAccessor) PathJoin(root, stem string) string {
-	return path.Join(root, strings.TrimLeft(stem, "\\/"))
+	return filepath.Join(root, strings.TrimLeft(stem, "\\/"))
 }
 
 // We want to show the entire device as one name so we need to escape
