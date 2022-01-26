@@ -40,21 +40,20 @@ class ClientSetterFromRoute extends Component {
                 return;
             }
 
+            // We have no idea what this client is, just create an
+            // empty record so the GUI can show something. This could
+            // happen if the client is not in the index for some
+            // reason so SearchClients can not find it, but it really
+            // does exist.
+            this.props.setClient({
+                client_id: client_id,
+            });
+
             api.get('/v1/SearchClients', {
                 query: client_id,
             }, this.source.token).then(resp => {
                 if (resp.data && resp.data.items) {
                     this.props.setClient(resp.data.items[0]);
-                } else {
-                    // We have no idea what this client is, just
-                    // create an empty record so the GUI can show
-                    // shomething. This could happen if the client is
-                    // not in the index for some reason so
-                    // SearchClients can not find it, but it really
-                    // does exist.
-                    this.props.setClient({
-                        client_id: client_id,
-                    });
                 }
             });
         }
