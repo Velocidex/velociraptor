@@ -235,7 +235,7 @@ func NewMemcacheFileStore(config_obj *config_proto.Config) *MemcacheFileStore {
 			writer._Flush()
 
 			// We are not done with it yet - return it to the cache.
-			if !writer.closed {
+			if !result.IsClosed() && !writer.closed {
 				result.data_cache.Set(writer.key, writer)
 			}
 		}

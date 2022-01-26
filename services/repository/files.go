@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -26,7 +25,7 @@ func InitializeGlobalRepositoryFromFilesystem(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	err := filepath.Walk(config_obj.Frontend.ArtifactDefinitionsDirectory,
-		func(path string, finfo fs.FileInfo, err error) error {
+		func(path string, finfo os.FileInfo, err error) error {
 			if err != nil {
 				return fmt.Errorf(
 					"InitializeGlobalRepositoryFromFilesystem: %w", err)
