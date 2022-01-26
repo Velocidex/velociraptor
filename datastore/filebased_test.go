@@ -2,7 +2,6 @@ package datastore
 
 import (
 	"fmt"
-	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -20,7 +19,7 @@ type FilebasedTestSuite struct {
 
 func (self FilebasedTestSuite) DumpDirectory() {
 	filepath.Walk(self.dirname, func(path string,
-		info fs.FileInfo, err error) error {
+		info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			fmt.Printf("%v: %v\n", path, info.Size())
 		}

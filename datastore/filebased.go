@@ -39,7 +39,6 @@ package datastore
 import (
 	"fmt"
 	"io"
-	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -123,7 +122,7 @@ func (self *FileBaseDataStore) GetSubject(
 
 func (self *FileBaseDataStore) Debug(config_obj *config_proto.Config) {
 	filepath.Walk(config_obj.Datastore.Location,
-		func(path string, info fs.FileInfo, err error) error {
+		func(path string, info os.FileInfo, err error) error {
 			fmt.Printf("%v -> %v %v\n", path, info.Size(), info.Mode())
 			return nil
 		})

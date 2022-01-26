@@ -175,6 +175,9 @@ class VeloHostInfo extends Component {
     }
 
     fetchMetadata = () => {
+        if (_.isEmpty(this.props.client.client_id)) {
+            return;
+        }
         this.setState({metadata_loading: true});
 
         this.source.cancel();
