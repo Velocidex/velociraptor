@@ -7,10 +7,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -168,8 +168,7 @@ func (self PipeFilesystemAccessor) Open(variable string) (glob.ReadSeekCloser, e
 }
 
 func (self PipeFilesystemAccessor) PathSplit(path string) []string {
-	re := regexp.MustCompile("/")
-	return re.Split(path, -1)
+	return paths.GenericPathSplit(path)
 }
 
 func (self PipeFilesystemAccessor) PathJoin(root, stem string) string {

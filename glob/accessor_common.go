@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
 	"syscall"
@@ -18,6 +17,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -291,10 +291,8 @@ func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	return OSFileWrapper{file}, nil
 }
 
-var OSFileSystemAccessor_re = regexp.MustCompile(`[\\/]`)
-
 func (self OSFileSystemAccessor) PathSplit(path string) []string {
-	return OSFileSystemAccessor_re.Split(path, -1)
+	return paths.GenericPathSplit(path)
 }
 
 func (self OSFileSystemAccessor) PathJoin(root, stem string) string {
@@ -303,7 +301,13 @@ func (self OSFileSystemAccessor) PathJoin(root, stem string) string {
 		return path.Join(root, stem)
 	}
 
-	pathSpec.Path = path.Join(pathSpec.Path, strings.TrimLeft(stem, "\\/"))
+	if pathSpec.Path != "" {
+		// pathSpec was unmarshalled from JSON
+		pathSpec.Path = path.Join(pathSpec.Path, strings.TrimLeft(stem, "\\/"))
+	} else {
+		// pathSpec was generated from raw path
+		pathSpec.DelegatePath = path.Join(pathSpec.DelegatePath, strings.TrimLeft(stem, "\\/"))
+	}
 
 	return pathSpec.String()
 }

@@ -45,7 +45,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"regexp"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -55,6 +55,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -546,10 +547,8 @@ func (self *ZipFileSystemAccessor) Open(filename string) (glob.ReadSeekCloser, e
 		fragmentToComponents(pathspec.Path), filename)
 }
 
-var ZipFileSystemAccessor_re = regexp.MustCompile(`[/\\]`)
-
 func (self *ZipFileSystemAccessor) PathSplit(path string) []string {
-	return ZipFileSystemAccessor_re.Split(path, -1)
+	return paths.GenericPathSplit(path)
 }
 
 // The root is a url for the parent node and the stem is the new subdir.
@@ -558,10 +557,14 @@ func (self *ZipFileSystemAccessor) PathSplit(path string) []string {
 func (self *ZipFileSystemAccessor) PathJoin(root, stem string) string {
 	pathspec, err := glob.PathSpecFromString(root)
 	if err != nil {
-		path.Join(root, stem)
+		filepath.Join(root, stem)
 	}
 
-	pathspec.Path = path.Join(pathspec.Path, stem)
+	if pathspec.Path == "" {
+		pathspec.DelegatePath = path.Join(pathspec.DelegatePath, stem)
+	} else {
+		pathspec.Path = path.Join(pathspec.Path, stem)
+	}
 
 	return pathspec.String()
 }

@@ -21,10 +21,10 @@ package glob
 
 import (
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	errors "github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -51,8 +51,7 @@ func (self DataFilesystemAccessor) Open(path string) (ReadSeekCloser, error) {
 }
 
 func (self DataFilesystemAccessor) PathSplit(path string) []string {
-	re := regexp.MustCompile("/")
-	return re.Split(path, -1)
+	return paths.GenericPathSplit(path)
 }
 
 func (self DataFilesystemAccessor) PathJoin(root, stem string) string {

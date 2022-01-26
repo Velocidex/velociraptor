@@ -286,7 +286,7 @@ func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
 
 // We accept both / and \ as a path separator
 func (self *OSFileSystemAccessor) PathSplit(path string) []string {
-	return NTFSFileSystemAccessor_re.Split(path, -1)
+	return paths.GenericPathSplit(path)
 }
 
 func (self *OSFileSystemAccessor) PathJoin(x, y string) string {

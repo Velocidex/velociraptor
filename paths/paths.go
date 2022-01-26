@@ -78,3 +78,9 @@ func DayNameToTimestamp(name string) int64 {
 	}
 	return 0
 }
+
+var pathSplit_re = regexp.MustCompile(`[/\\]`)
+
+func GenericPathSplit(path string) []string {
+	return pathSplit_re.Split(path, -1)
+}

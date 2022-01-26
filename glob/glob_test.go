@@ -24,12 +24,12 @@ import (
 	"os"
 	"path"
 	"reflect"
-	"regexp"
 	"sort"
 	"strings"
 	"testing"
 
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
 
 	"github.com/sebdah/goldie"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -143,8 +143,7 @@ func (self MockFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 }
 
 func (self MockFileSystemAccessor) PathSplit(path string) []string {
-	re := regexp.MustCompile("/")
-	return re.Split(path, -1)
+	return paths.GenericPathSplit(path)
 }
 
 func (self MockFileSystemAccessor) PathJoin(x, y string) string {

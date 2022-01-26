@@ -2,10 +2,10 @@ package filesystem
 
 import (
 	"errors"
-	"path"
-	"regexp"
+	"path/filepath"
 
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -18,10 +18,10 @@ func (self MountFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAcc
 }
 
 func (self *MountFileSystemAccessor) ensureBackingAccessor(pathSpec *glob.PathSpec) (glob.FileSystemAccessor, error) {
-	if pathSpec.DelegateAccessor == "" {
+	if pathSpec.GetDelegateAccessor() == "" {
 		return nil, errors.New("no delegate accessor specified")
 	}
-	accessor, err := glob.GetAccessor(pathSpec.DelegateAccessor, self.scope)
+	accessor, err := glob.GetAccessor(pathSpec.GetDelegateAccessor(), self.scope)
 	if err != nil {
 		return nil, err
 	}
@@ -70,39 +70,29 @@ func (self MountFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error
 	return accessor.Lstat(filename)
 }
 
-var MountFileSystemAccessorSplit_re = regexp.MustCompile(`[\\/]`)
-
 func (self *MountFileSystemAccessor) PathSplit(path string) []string {
 	pathSpec, err := glob.PathSpecFromString(path)
 	if err != nil {
-		return MountFileSystemAccessorSplit_re.Split(path, -1)
+		return paths.GenericPathSplit(path)
 	}
 
 	accessor, err := self.ensureBackingAccessor(pathSpec)
 	if err != nil {
-		return MountFileSystemAccessorSplit_re.Split(path, -1)
+		return paths.GenericPathSplit(path)
 	}
 
-	if pathSpec.Path != "" {
-		// we have a complete pathspec
-		path = pathSpec.Path
-	} else {
-		// we have a converted pathspec
-		path = pathSpec.DelegatePath
-	}
-
-	return accessor.PathSplit(path)
+	return accessor.PathSplit(pathSpec.GetPath())
 }
 
 func (self *MountFileSystemAccessor) PathJoin(root, stem string) string {
 	pathSpec, err := glob.PathSpecFromString(root)
 	if err != nil {
-		return path.Join(root, stem)
+		return filepath.Join(root, stem)
 	}
 
 	accessor, err := self.ensureBackingAccessor(pathSpec)
 	if err != nil {
-		return path.Join(root, stem)
+		return filepath.Join(root, stem)
 	}
 
 	if pathSpec.Path != "" {
@@ -127,15 +117,7 @@ func (self *MountFileSystemAccessor) GetRoot(path string) (root, subpath string,
 		return "", "", err
 	}
 
-	if pathSpec.Path != "" {
-		// we have a complete pathspec
-		path = pathSpec.Path
-	} else {
-		// we have a converted pathspec
-		path = pathSpec.DelegatePath
-	}
-
-	return accessor.GetRoot(path)
+	return accessor.GetRoot(pathSpec.GetPath())
 }
 
 func init() {
