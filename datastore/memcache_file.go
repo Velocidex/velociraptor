@@ -43,7 +43,7 @@ package datastore
 
 import (
 	"context"
-	"io/fs"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -239,7 +239,7 @@ func (self *MemcacheFileDataStore) GetSubject(
 	defer Instrument("read", "MemcacheFileDataStore", urn)()
 
 	err := self.cache.GetSubject(config_obj, urn, message)
-	if errors.Is(err, fs.ErrNotExist) {
+	if errors.Is(err, os.ErrNotExist) {
 		// The file is not in the cache, read it from the file system
 		// instead.
 		serialized_content, err := readContentFromFile(

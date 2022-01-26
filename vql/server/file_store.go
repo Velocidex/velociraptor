@@ -22,7 +22,7 @@ package server
 import (
 	"context"
 	"errors"
-	"io/fs"
+	"os"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -106,7 +106,7 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		scope.Log("file_store_delete: %v", err)
 		return vfilter.Null{}
 	}
