@@ -332,6 +332,19 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 
 func (self *NTFSFileSystemAccessor) GetRoot(path string) (
 	device string, subpath string, err error) {
+	if strings.HasPrefix(path, "{") {
+		// apparently we have a PathSpec
+		pathspec, err := glob.PathSpecFromString(path)
+		if err != nil {
+			return "", "", err
+		}
+
+		Fragment := pathspec.Path
+		pathspec.Path = ""
+
+		return pathspec.String(), Fragment, nil
+	}
+
 	return paths.GetDeviceAndSubpath(path)
 }
 
@@ -545,6 +558,17 @@ func (self *NTFSFileSystemAccessor) PathSplit(path string) []string {
 }
 
 func (self NTFSFileSystemAccessor) PathJoin(root, stem string) string {
+	if strings.HasPrefix(root, "{") {
+		pathspec, err := glob.PathSpecFromString(root)
+		if err != nil {
+			filepath.Join(root, stem)
+		}
+
+		pathspec.Path = filepath.Join(pathspec.Path, strings.TrimLeft(stem, "\\/"))
+
+		return pathspec.String()
+	}
+
 	return filepath.Join(root, strings.TrimLeft(stem, "\\/"))
 }
 
