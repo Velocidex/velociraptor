@@ -169,6 +169,8 @@ j={ SELECT read_file(accessor="zip", filename=PathSpec) AS Data FROM scope() }
 }
 
 func (self *ZipTestSuite) TestCachedZipWithCacheTrim() {
+	tracker.Reset()
+
 	// Read nested ZIP files - the nested.zip contains another zip
 	// file, hello.zip which in turn contains some txt files.
 	zip_file, _ := filepath.Abs("../../artifacts/testdata/files/nested.zip")
@@ -223,6 +225,7 @@ j={ SELECT read_file(accessor="zip", filename=PathSpec10) AS Data FROM scope() }
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		state := vtesting.GetMetricsDifference(self.T(), "accessor_zip_", snapshot)
 		value, _ := state.GetInt64("accessor_zip_current_open")
+
 		return int64(0) == value
 	})
 
@@ -233,9 +236,12 @@ j={ SELECT read_file(accessor="zip", filename=PathSpec10) AS Data FROM scope() }
 	assert.Equal(self.T(), int64(0), value)
 
 	// All up we opened 11 zip files in total (the primary one and
-	// each embedded zip file
+	// each embedded zip file. Sometimes due to race conditions we may
+	// open a file more than once but this is ok as long as it is not
+	// too much.
 	value, _ = state.GetInt64("accessor_zip_total_open")
-	assert.Equal(self.T(), int64(11), value)
+	assert.True(self.T(), int64(11) <= value)
+	assert.True(self.T(), int64(15) > value)
 
 	// Each nested zip file was extracted to tmpfile.
 	value, _ = state.GetInt64("accessor_zip_total_tmp_conversions")
