@@ -660,12 +660,7 @@ func (self *ZipFileSystemAccessor) PathJoin(root, stem string) string {
 		return path.Join(root, stem)
 	}
 
-	if pathspec.Path == "" {
-		// shortcut if we have a pathspec generated from a raw path
-		return path.Join(pathspec.DelegatePath, stem)
-	} else {
-		pathspec.Path = path.Join(pathspec.Path, stem)
-	}
+	pathspec.Path = path.Join(pathspec.Path, stem)
 
 	return pathspec.String()
 }
