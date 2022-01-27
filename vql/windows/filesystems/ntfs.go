@@ -418,7 +418,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, 
 		return nil, err
 	}
 
-	dirname := filepath.Dir(subpath)
+	dirname := utils.Dir(subpath)
 	dir, err := Open(self.scope, root, ntfs_ctx, device, dirname)
 	if err != nil {
 		return nil, err
@@ -470,7 +470,7 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res glob.FileInfo, err e
 		return nil, err
 	}
 
-	dirname := filepath.Dir(subpath)
+	dirname := utils.Dir(subpath)
 	dir, err := Open(self.scope, root, ntfs_ctx, device, dirname)
 	if err != nil {
 		return nil, err
