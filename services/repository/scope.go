@@ -7,8 +7,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/remapping"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/sorter"
@@ -29,6 +29,15 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 		self.Repository, _ = manager.GetGlobalRepository(self.Config)
 	}
 
+	var scope vfilter.Scope
+	if from_scratch {
+		scope = vql_subsystem.MakeNewScope()
+	} else {
+		scope = vql_subsystem.MakeScope()
+	}
+
+	scope.SetLogger(self.Logger)
+
 	cache := vql_subsystem.NewScopeCache()
 	env.Set(vql_subsystem.CACHE_VAR, cache)
 
@@ -45,6 +54,13 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 				Version: config.GetVersion(),
 			})
 		}
+
+		device_manager, err := remapping.GetDeviceManager(self.Config)
+		if err == nil {
+			env.Set(constants.SCOPE_DEVICE_MANAGER, device_manager)
+		} else {
+			scope.Log("Invalid remapping config: %v", err)
+		}
 	}
 
 	// Builder can contain only the client config if it is running on
@@ -59,20 +75,6 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 
 	if self.Uploader != nil {
 		env.Set(constants.SCOPE_UPLOADER, self.Uploader)
-	}
-
-	var scope vfilter.Scope
-	if from_scratch {
-		scope = vql_subsystem.MakeNewScope()
-	} else {
-		scope = vql_subsystem.MakeScope()
-	}
-
-	scope.SetLogger(self.Logger)
-
-	if self.Config != nil {
-		device_manager := glob.MakeNewDeviceManager(scope, self.Config.Remappings)
-		env.Set(constants.SCOPE_DEVICE_MANAGER, device_manager)
 	}
 
 	// Use our own sorter

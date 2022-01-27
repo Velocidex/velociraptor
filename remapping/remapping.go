@@ -1,11 +1,12 @@
-package glob
+// +build XXXXX
+
+package remapping
 
 import (
 	"fmt"
 
-	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -13,7 +14,7 @@ type DeviceMapping struct {
 	Source   string
 	MapAs    string
 	Type     string
-	Accessor FileSystemAccessor
+	Accessor glob.FileSystemAccessor
 }
 
 type DeviceManager struct {
@@ -72,14 +73,6 @@ func (self DeviceManager) WrapPath(path string) string {
 		DelegatePath:     self.Mapping.Source,
 		Path:             path,
 	}.String()
-}
-
-func GetDeviceManagerFromScope(scope vfilter.Scope) (*DeviceManager, error) {
-	if manager, pres := scope.Resolve(constants.SCOPE_DEVICE_MANAGER); pres {
-		return manager.(*DeviceManager), nil
-	}
-
-	return nil, errors.New("cannot retrieve device manager from scope")
 }
 
 type remappingAccessor struct {

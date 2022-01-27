@@ -36,7 +36,13 @@ type _inode struct {
 type AccessorContext struct {
 	mu sync.Mutex
 
+	prefix string
+
 	links map[_inode]bool
+}
+
+func (self *AccessorContext) RealPathToVirtual(fullpath string) string {
+	return strings.TrimPrefix(fullpath, self.prefix)
 }
 
 func (self *AccessorContext) LinkVisited(dev, inode uint64) {
@@ -118,6 +124,7 @@ func (self *OSFileInfo) Data() interface{} {
 
 func (self *OSFileInfo) FullPath() string {
 	return self._full_path
+	//return self._accessor_ctx.RealPathToVirtual(self._full_path)
 }
 
 func (self *OSFileInfo) IsLink() bool {

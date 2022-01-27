@@ -19,18 +19,10 @@ package glob
 
 import (
 	"path/filepath"
-	"sync"
 
-	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/vfilter"
-)
-
-var (
-	mu           sync.Mutex
-	handlers     map[string]FileSystemAccessorFactory
-	descriptions *ordereddict.Dict
 )
 
 // Interface for accessing the filesystem.
@@ -85,48 +77,7 @@ func (self NullFileSystemAccessor) PathJoin(root, stem string) string {
 	return filepath.Join(root, stem)
 }
 
-func GetAccessor(scheme string, scope vfilter.Scope) (
-	FileSystemAccessor, error) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	// Fallback to the file handler - this should work
-	// because there needs to be at least a file handler
-	// registered.
-	if scheme == "" {
-		scheme = "file"
-	}
-
-	handler, pres := handlers[scheme]
-	if pres {
-		res, err := handler.New(scope)
-		return res, err
-	}
-
-	return nil, errors.New("Unknown filesystem accessor: " + scheme)
-}
-
 // A factory for new accessors
 type FileSystemAccessorFactory interface {
 	New(scope vfilter.Scope) (FileSystemAccessor, error)
-}
-
-func Register(scheme string, accessor FileSystemAccessorFactory, description string) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if handlers == nil {
-		handlers = make(map[string]FileSystemAccessorFactory)
-		descriptions = ordereddict.NewDict()
-	}
-
-	handlers[scheme] = accessor
-	descriptions.Set(scheme, description)
-}
-
-func DescribeAccessors() *ordereddict.Dict {
-	mu.Lock()
-	defer mu.Unlock()
-
-	return descriptions
 }

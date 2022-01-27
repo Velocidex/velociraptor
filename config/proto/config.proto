@@ -784,18 +784,14 @@ message CryptoConfig {
 }
 
 message RemappingConfig {
-    string source = 1 [(sem_type) = {
-        type: "path",
-        description: "The source path of the remapping."
-    }];
-    string map_as = 2 [(sem_type) = {
-        type: "strings",
-        description: "The device identifier under which the mapped source should be known."
-    }];
-    string type = 3 [(sem_type) = {
-        type: "strings"
-        description: "The type of the source. Must be the name of an available accessor."
-    }];
+    // Operation: Currently mount, identify
+    string type = 1;
+
+    // For mount options
+    string from_accessor = 2;
+    string from_prefix = 3;
+    string to_accessor = 4;
+    string to_prefix = 5;
 }
 
 message Config {
