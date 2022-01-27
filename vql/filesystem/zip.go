@@ -46,6 +46,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -645,6 +646,8 @@ func (self *ZipFileSystemAccessor) Open(filename string) (glob.ReadSeekCloser, e
 	return zip_file_cache.Open(
 		fragmentToComponents(pathspec.Path), filename)
 }
+
+var GzipFileSystemAccessor_re = regexp.MustCompile("/")
 
 func (self *ZipFileSystemAccessor) PathSplit(path string) []string {
 	return GzipFileSystemAccessor_re.Split(path, -1)

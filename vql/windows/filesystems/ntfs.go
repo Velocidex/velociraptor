@@ -437,7 +437,7 @@ func (self *NTFSFileSystemAccessor) openRawDevice(device string) (res glob.ReadS
 
 	lru_size := vql_subsystem.GetIntFromRow(self.scope, self.scope, constants.NTFS_CACHE_SIZE)
 	device_reader, err := vql_readers.NewPagedReader(
-		self.scope, "raw_file", device, int(lru_size))
+		self.scope, "file", device, int(lru_size))
 	return &readSeekReaderAdapter{reader: device_reader, info: stat_info}, err
 }
 

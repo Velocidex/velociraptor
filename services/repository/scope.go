@@ -70,8 +70,10 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 
 	scope.SetLogger(self.Logger)
 
-	device_manager := glob.MakeNewDeviceManager(scope, self.Config.Remappings)
-	env.Set(constants.SCOPE_DEVICE_MANAGER, device_manager)
+	if self.Config != nil {
+		device_manager := glob.MakeNewDeviceManager(scope, self.Config.Remappings)
+		env.Set(constants.SCOPE_DEVICE_MANAGER, device_manager)
+	}
 
 	// Use our own sorter
 	scope.SetSorter(sorter.MergeSorter{ChunkSize: 10000})

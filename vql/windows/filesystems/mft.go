@@ -147,7 +147,7 @@ func (self *MFTFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
 func init() {
 	glob.Register("mft", &MFTFileSystemAccessor{}, `Access arbitrary MFT streams as files.
 
-	The filename is taken as an MFT inode number in the
-	form <entry_id>-<stream_type>-<id>, e.g. 203-128-0
-	`)
+The filename is taken as an MFT inode number in the
+form <entry_id>-<stream_type>-<id>, e.g. 203-128-0
+`)
 }

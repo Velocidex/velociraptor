@@ -167,7 +167,6 @@ func main() {
 		WithCustomValidator(initFilestoreAccessor).
 		WithCustomValidator(initDebugServer).
 		WithConfigMutator(applyMinionRole).
-		WithCustomValidator(verifyDiskAnalysisSettings).
 		WithConfigMutator(applyAnalysisTarget).
 		WithLogFile(*logging_flag)
 

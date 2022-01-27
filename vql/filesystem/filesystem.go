@@ -70,13 +70,16 @@ func (self GlobPlugin) Call(
 			return
 		}
 
-		deviceManager, err := glob.GetDeviceManagerFromScope(scope)
-		if err != nil {
-			scope.Log("glob: %v", err)
-			return
-		}
+		/*
+			deviceManager, err := glob.GetDeviceManagerFromScope(scope)
+			if err != nil {
+				scope.Log("glob: %v", err)
+				return
+			}
 
-		accessor, err := deviceManager.GetAccessor(arg.Accessor, scope)
+			accessor, err := deviceManager.GetAccessor(arg.Accessor, scope)
+		*/
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("glob: %v", err)
 			return
@@ -105,20 +108,22 @@ func (self GlobPlugin) Call(
 
 		globber := glob.NewGlobber().WithOptions(options)
 
-		if deviceManager.Mapping != nil {
-			// in case we have a remapping, we forcibly remove the root
-			// from all globs to prevent issues with wrong paths later on
-			originalAccessor, err := glob.GetAccessor(arg.Accessor, scope)
-			if err != nil {
-				scope.Log("glob: %s", err.Error())
-				return
-			}
+		/*
+			if deviceManager.Mapping != nil {
+				// in case we have a remapping, we forcibly remove the root
+				// from all globs to prevent issues with wrong paths later on
+				originalAccessor, err := glob.GetAccessor(arg.Accessor, scope)
+				if err != nil {
+					scope.Log("glob: %s", err.Error())
+					return
+				}
 
-			for i, glob := range arg.Globs {
-				_, item_path, _ := originalAccessor.GetRoot(glob)
-				arg.Globs[i] = deviceManager.WrapPath(item_path)
+				for i, glob := range arg.Globs {
+					_, item_path, _ := originalAccessor.GetRoot(glob)
+					arg.Globs[i] = deviceManager.WrapPath(item_path)
+				}
 			}
-		}
+		*/
 
 		// If root is not specified we try to find a common
 		// root from the globs.
