@@ -95,12 +95,12 @@ func (self *MountFileSystemAccessor) PathJoin(root, stem string) string {
 		return filepath.Join(root, stem)
 	}
 
-	if pathSpec.Path != "" {
+	if pathSpec.Path == "" {
+		// shortcut if we have a converted pathspec
+		return accessor.PathJoin(pathSpec.DelegatePath, stem)
+	} else {
 		// we have a complete pathspec
 		pathSpec.Path = accessor.PathJoin(pathSpec.Path, stem)
-	} else {
-		// we have a converted pathspec
-		pathSpec.DelegatePath = accessor.PathJoin(pathSpec.DelegatePath, stem)
 	}
 
 	return pathSpec.String()

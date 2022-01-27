@@ -301,12 +301,12 @@ func (self OSFileSystemAccessor) PathJoin(root, stem string) string {
 		return path.Join(root, stem)
 	}
 
-	if pathSpec.Path != "" {
+	if pathSpec.Path == "" {
+		// shortcut if pathSpec was generated from raw path
+		return filepath.Join(pathSpec.DelegatePath, strings.TrimLeft(stem, "\\/"))
+	} else {
 		// pathSpec was unmarshalled from JSON
 		pathSpec.Path = path.Join(pathSpec.Path, strings.TrimLeft(stem, "\\/"))
-	} else {
-		// pathSpec was generated from raw path
-		pathSpec.DelegatePath = path.Join(pathSpec.DelegatePath, strings.TrimLeft(stem, "\\/"))
 	}
 
 	return pathSpec.String()
