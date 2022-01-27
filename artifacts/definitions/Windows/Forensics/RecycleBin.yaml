@@ -20,6 +20,8 @@ description: |
   The second file begins with `$I` and ends in the same string as the
   `$R` file – this file contains the metadata for that specific file
 
+  Limitations: This artifact uses the API to read available $I data. There may be additional unallocated but readable $I files referenced in the MFT that may be recoverable.
+  
 author: "Zach Stanford - @svch0st"
 
 reference:
