@@ -27,6 +27,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -44,6 +45,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vql_readers "www.velocidex.com/golang/velociraptor/vql/readers"
 	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
+	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -189,6 +191,54 @@ func (self *NTFSFileSystemAccessor) getRootMFTEntry(ntfs_ctx *ntfs.NTFSContext) 
 	return ntfs_ctx.GetMFT(5)
 }
 
+func discoverVSS() ([]glob.FileInfo, error) {
+	result := []glob.FileInfo{}
+
+	shadow_volumes, err := wmi.Query(
+		"SELECT DeviceObject, VolumeName, InstallDate, "+
+			"OriginatingMachine from Win32_ShadowCopy",
+		"ROOT\\CIMV2")
+	if err == nil {
+		for _, row := range shadow_volumes {
+			size_str, _ := row.GetString("Size")
+			size, _ := strconv.Atoi(size_str)
+			device_name, pres := row.GetString("DeviceObject")
+			if pres {
+				virtual_directory := glob.NewVirtualDirectoryPath(
+					device_name, row, int64(size), os.ModeDir)
+				result = append(result, virtual_directory)
+			}
+		}
+	}
+
+	return result, nil
+}
+
+func discoverLogicalDisks() ([]glob.FileInfo, error) {
+	result := []glob.FileInfo{}
+
+	shadow_volumes, err := wmi.Query(
+		"SELECT DeviceID, Description, VolumeName, FreeSpace, "+
+			"Size, SystemName, VolumeSerialNumber "+
+			"from Win32_LogicalDisk WHERE FileSystem = 'NTFS'",
+		"ROOT\\CIMV2")
+	if err == nil {
+		for _, row := range shadow_volumes {
+			size_str, _ := row.GetString("Size")
+			size, _ := strconv.Atoi(size_str)
+
+			device_name, pres := row.GetString("DeviceID")
+			if pres {
+				virtual_directory := glob.NewVirtualDirectoryPath(
+					"\\\\.\\"+device_name, row, int64(size), os.ModeDir)
+				result = append(result, virtual_directory)
+			}
+		}
+	}
+
+	return result, nil
+}
+
 func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, err error) {
 	defer func() {
 		r := recover()
@@ -205,7 +255,7 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 		return nil, err
 	}
 
-	// The path must habe a valid device, otherwise we list
+	// The path must have a valid device, otherwise we list
 	// the devices.
 	if pathSpec.GetDelegatePath() == "" {
 		vss, err := discoverVSS()
@@ -224,7 +274,7 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 	device := pathSpec.GetDelegatePath()
 	subpath := pathSpec.Path
 
-	ntfs_ctx, err := readers.GetNTFSContext(self.scope, pathSpec.GetDelegatePath())
+	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device)
 	if err != nil {
 		return nil, err
 	}
