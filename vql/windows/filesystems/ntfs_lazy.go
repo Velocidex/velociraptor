@@ -224,10 +224,14 @@ func (self *LazyNTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInf
 
 	result := []glob.FileInfo{}
 
+	pathSpec, err := glob.PathSpecFromString(path)
+	if err != nil {
+		return nil, err
+	}
+
 	// The path must start with a valid device, otherwise we list
 	// the devices.
-	device, subpath, err := self.GetRoot(path)
-	if err != nil {
+	if pathSpec.GetDelegatePath() == "" {
 		vss, err := discoverVSS()
 		if err == nil {
 			result = append(result, vss...)
@@ -240,6 +244,9 @@ func (self *LazyNTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInf
 
 		return result, nil
 	}
+
+	device := pathSpec.GetDelegatePath()
+	subpath := pathSpec.Path
 
 	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device)
 	if err != nil {
@@ -271,14 +278,21 @@ func (self *LazyNTFSFileSystemAccessor) Open(path string) (
 		}
 	}()
 
+	pathSpec, err := glob.PathSpecFromString(path)
+	if err != nil {
+		return nil, err
+	}
+
 	// The path must start with a valid device, otherwise we list
 	// the devices.
-	device, subpath, err := self.GetRoot(path)
-	if err != nil {
+	subpath := pathSpec.Path
+	if subpath == "" {
 		return nil, errors.New("Unable to open raw device")
 	}
 
 	components := self.PathSplit(subpath)
+
+	device := pathSpec.GetDelegatePath()
 
 	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device)
 	if err != nil {
