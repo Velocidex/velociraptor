@@ -105,6 +105,14 @@ func (self GlobPlugin) Call(
 
 		globber := glob.NewGlobber().WithOptions(options)
 
+		if deviceManager.Mapping != nil {
+			// in case we have a remapping, we forcibly remove the root
+			// from all globs to prevent issues with wrong paths later on
+			for i, glob := range arg.Globs {
+				_, arg.Globs[i], _ = accessor.GetRoot(glob)
+			}
+		}
+
 		// If root is not specified we try to find a common
 		// root from the globs.
 		if root == "" {
