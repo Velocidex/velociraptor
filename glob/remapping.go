@@ -20,50 +20,6 @@ type DeviceManager struct {
 	Mapping *DeviceMapping
 }
 
-func getDescription(accessorName string, scope vfilter.Scope) string {
-	if desc, pres := DescribeAccessors().Get(accessorName); pres {
-		return desc.(string)
-	}
-
-	return ""
-}
-
-func (self DeviceManager) InjectRemapping(scope vfilter.Scope) {
-	if self.Mapping == nil {
-		return
-	}
-
-	if _, err := GetAccessor("file", scope); err == nil {
-		accessor := remappingAccessor{
-			pathSpec: &PathSpec{
-				DelegateAccessor: self.Mapping.Type,
-				DelegatePath:     self.Mapping.Source,
-			},
-		}
-
-		if err := accessor.EnsureBackingAccessor(); err != nil {
-			scope.Log("remapping: cannot re-register file accessor (%v)", err)
-		} else {
-			Register("file", accessor, getDescription("file", scope))
-		}
-	}
-
-	if _, err := GetAccessor("raw_file", scope); err == nil {
-		accessor := remappingAccessor{
-			pathSpec: &PathSpec{
-				DelegateAccessor: self.Mapping.Type,
-				DelegatePath:     self.Mapping.Source,
-			},
-		}
-
-		if err := accessor.EnsureBackingAccessor(); err != nil {
-			scope.Log("remapping: cannot re-register raw_file accessor (%v)", err)
-		} else {
-			Register("raw_file", accessor, getDescription("raw_file", scope))
-		}
-	}
-}
-
 func MakeNewDeviceManager(scope vfilter.Scope, remappings []*config_proto.RemappingConfig) *DeviceManager {
 	if len(remappings) == 0 {
 		return &DeviceManager{}

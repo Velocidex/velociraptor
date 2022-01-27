@@ -71,7 +71,6 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 	scope.SetLogger(self.Logger)
 
 	device_manager := glob.MakeNewDeviceManager(scope, self.Config.Remappings)
-	// device_manager.InjectRemapping(scope)
 	env.Set(constants.SCOPE_DEVICE_MANAGER, device_manager)
 
 	// Use our own sorter
