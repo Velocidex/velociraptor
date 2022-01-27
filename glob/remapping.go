@@ -87,13 +87,10 @@ func MakeNewDeviceManager(scope vfilter.Scope, remappings []*config_proto.Remapp
 
 func (self DeviceManager) GetAccessor(scheme string, scope vfilter.Scope) (FileSystemAccessor, error) {
 	if self.Mapping != nil {
-		pathSpec := &PathSpec{
-			DelegateAccessor: self.Mapping.Type,
-			DelegatePath:     self.Mapping.Source,
-		}
 		accessor := &remappingAccessor{
-			scope:    scope,
-			pathSpec: pathSpec,
+			backingAccessorType: self.Mapping.Type,
+			backingFile:         self.Mapping.Source,
+			scope:               scope,
 		}
 		if err := accessor.EnsureBackingAccessor(); err != nil {
 			return nil, fmt.Errorf("cannot create backing accessor for mapping (%v)", err)
@@ -102,6 +99,23 @@ func (self DeviceManager) GetAccessor(scheme string, scope vfilter.Scope) (FileS
 	}
 
 	return GetAccessor(scheme, scope)
+}
+
+// WrapPath expects a raw path and wraps it into a PathSpec so that
+// subsequent accessors evaluate paths properly
+func (self DeviceManager) WrapPath(path string) string {
+	if self.Mapping == nil {
+		return path
+	}
+
+	return PathSpec{
+		// this is super bad but sacrifices have to be made; forcing a file
+		// accessor here basically stops us from using chained accessors in
+		// remappings but for the time being this should be ok
+		DelegateAccessor: "raw_file",
+		DelegatePath:     self.Mapping.Source,
+		Path:             path,
+	}.String()
 }
 
 func GetDeviceManagerFromScope(scope vfilter.Scope) (*DeviceManager, error) {
@@ -113,17 +127,23 @@ func GetDeviceManagerFromScope(scope vfilter.Scope) (*DeviceManager, error) {
 }
 
 type remappingAccessor struct {
-	scope           vfilter.Scope
-	pathSpec        *PathSpec
-	backingAccessor FileSystemAccessor
+	scope               vfilter.Scope
+	backingAccessor     FileSystemAccessor
+	backingAccessorType string
+	backingFile         string
 }
 
 func (self remappingAccessor) New(scope vfilter.Scope) (FileSystemAccessor, error) {
-	return &remappingAccessor{scope: scope, pathSpec: self.pathSpec, backingAccessor: self.backingAccessor}, nil
+	return &remappingAccessor{
+		scope:               scope,
+		backingAccessor:     self.backingAccessor,
+		backingAccessorType: self.backingAccessorType,
+		backingFile:         self.backingFile,
+	}, nil
 }
 
 func (self *remappingAccessor) EnsureBackingAccessor() error {
-	accessor, err := GetAccessor(self.pathSpec.GetDelegateAccessor(), self.scope)
+	accessor, err := GetAccessor(self.backingAccessorType, self.scope)
 	if err != nil {
 		return err
 	}
@@ -133,39 +153,15 @@ func (self *remappingAccessor) EnsureBackingAccessor() error {
 }
 
 func (self *remappingAccessor) ReadDir(path string) ([]FileInfo, error) {
-	pathSpec, err := PathSpecFromString(path)
-	if err != nil {
-		return nil, err
-	}
-
-	spec := *self.pathSpec
-	spec.Path = pathSpec.GetDelegatePath()
-
-	return self.backingAccessor.ReadDir(spec.String())
+	return self.backingAccessor.ReadDir(path)
 }
 
 func (self *remappingAccessor) Open(path string) (ReadSeekCloser, error) {
-	pathSpec, err := PathSpecFromString(path)
-	if err != nil {
-		return nil, err
-	}
-
-	spec := *self.pathSpec
-	spec.Path = pathSpec.GetDelegatePath()
-
-	return self.backingAccessor.Open(spec.String())
+	return self.backingAccessor.Open(path)
 }
 
 func (self remappingAccessor) Lstat(filename string) (FileInfo, error) {
-	pathSpec, err := PathSpecFromString(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	spec := *self.pathSpec
-	spec.Path = pathSpec.GetDelegatePath()
-
-	return self.backingAccessor.Lstat(spec.String())
+	return self.backingAccessor.Lstat(filename)
 }
 
 func (self *remappingAccessor) PathSplit(path string) []string {

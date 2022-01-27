@@ -108,8 +108,15 @@ func (self GlobPlugin) Call(
 		if deviceManager.Mapping != nil {
 			// in case we have a remapping, we forcibly remove the root
 			// from all globs to prevent issues with wrong paths later on
+			originalAccessor, err := glob.GetAccessor(arg.Accessor, scope)
+			if err != nil {
+				scope.Log("glob: %s", err.Error())
+				return
+			}
+
 			for i, glob := range arg.Globs {
-				_, arg.Globs[i], _ = accessor.GetRoot(glob)
+				_, item_path, _ := originalAccessor.GetRoot(glob)
+				arg.Globs[i] = deviceManager.WrapPath(item_path)
 			}
 		}
 
