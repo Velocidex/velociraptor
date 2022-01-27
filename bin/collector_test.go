@@ -148,6 +148,8 @@ sources:
               ToolName="MyDataFile", SleepDuration='0',
               IsExecutable=FALSE)
 
+     LET _ <= sleep(time=1)
+
      SELECT "Foobar", Stdout, binary[0].Name,
             data_file[0].FullPath AS DataFilePath,
             data_file[0].FullPath =~ ".yar$" AS HasYarExtension,

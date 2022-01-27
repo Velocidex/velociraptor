@@ -265,7 +265,7 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 	last_error = nil
 	mu.Unlock()
 
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		mu.Lock()
 		defer mu.Unlock()
 
