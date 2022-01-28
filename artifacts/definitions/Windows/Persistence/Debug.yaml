@@ -1,4 +1,4 @@
-name: Custom.Windows.Persistence.Debug
+name: Windows.Persistence.Debug
 description: |
   Windows allows specific configuration of various executables via a
   registry key. Some keys allow defining a debugger to attach to a
