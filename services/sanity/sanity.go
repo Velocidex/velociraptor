@@ -9,8 +9,10 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -234,6 +236,9 @@ func checkForServerUpgrade(
 					logger.WithFields(logrus.Fields{
 						"Tool": tool_definition,
 					}).Info("Upgrading tool <red>" + tool_definition.Name)
+
+					tool_definition = proto.Clone(
+						tool_definition).(*artifacts_proto.Tool)
 
 					// Re-add the tool to force
 					// hashes to be taken when the
