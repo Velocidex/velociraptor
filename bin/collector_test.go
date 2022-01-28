@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -22,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type CollectorTestSuite struct {
@@ -57,6 +59,13 @@ func CollectorSetupTest(t *testing.T) *CollectorTestSuite {
 	self.tmpdir, err = ioutil.TempDir("", "tmp")
 	assert.NoError(t, err)
 
+	// Copy the binary into the tmpdir
+	dest_file := filepath.Join(self.tmpdir, filepath.Base(self.binary))
+	err = utils.CopyFile(context.Background(), self.binary, dest_file, 0644)
+	assert.NoError(t, err)
+
+	self.binary = dest_file
+
 	self.config_file = filepath.Join(self.tmpdir, "server.config.yaml")
 	fd, err := os.OpenFile(
 		self.config_file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
@@ -72,9 +81,12 @@ func CollectorSetupTest(t *testing.T) *CollectorTestSuite {
 	self.config_obj.Datastore.FilestoreDirectory = self.tmpdir
 	self.config_obj.Frontend.DoNotCompressArtifacts = true
 
-	// Start a web server that serves the filesystem
+	// Start a web server that serves the filesystem - NOTE: Normally
+	// this would be served from the Velociraptor server itself but
+	// here we dont want to start it so we serve simple HTTP server
+	// and require all tools to be served remotes from these URL.
 	self.test_server = httptest.NewServer(
-		http.FileServer(http.Dir(filepath.Dir(self.binary))))
+		http.FileServer(http.Dir(self.tmpdir)))
 
 	// Set the server URL correctly.
 	self.config_obj.Client.ServerUrls = []string{
@@ -123,13 +135,25 @@ func TestCollector(t *testing.T) {
 	fd.Write([]byte(`name: Custom.TestArtifactDependent
 tools:
   - name: MyTool
+  - name: MyDataFile
 
 sources:
  - query: |
      LET binary <= SELECT FullPath, Name
          FROM Artifact.Generic.Utils.FetchBinary(
               ToolName="MyTool", SleepDuration='0')
-     SELECT "Foobar", Stdout, binary[0].Name
+
+     LET data_file <= SELECT FullPath, Name
+         FROM Artifact.Generic.Utils.FetchBinary(
+              ToolName="MyDataFile", SleepDuration='0',
+              IsExecutable=FALSE)
+
+     LET _ <= sleep(time=1)
+
+     SELECT "Foobar", Stdout, binary[0].Name,
+            data_file[0].FullPath AS DataFilePath,
+            data_file[0].FullPath =~ ".yar$" AS HasYarExtension,
+            read_file(filename=data_file[0].FullPath) AS Data
      FROM execve(argv=[binary[0].FullPath, "artifacts", "list"])
 `))
 	fd.Close()
@@ -225,6 +249,24 @@ reports:
 	fmt.Println(string(out))
 	require.NoError(t, err)
 
+	// Create an embedded data file
+	data_file_name := filepath.Join(self.tmpdir, "test.yar")
+	{
+		fd, err := os.OpenFile(data_file_name,
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		assert.NoError(t, err)
+		fd.Write([]byte("Hello world"))
+		fd.Close()
+	}
+
+	cmd = exec.Command(self.binary, "--config", self.config_file,
+		"tools", "upload", "--name", "MyDataFile",
+		self.test_server.URL+"/test.yar",
+		"--serve_remote")
+	out, err = cmd.CombinedOutput()
+	fmt.Println(string(out))
+	require.NoError(t, err)
+
 	output_zip := filepath.Join(self.tmpdir, "output.zip")
 
 	// Now we want to create a stand alone collector. We do this
@@ -311,7 +353,17 @@ reports:
 
 		data, err := ioutil.ReadAll(rc)
 		assert.NoError(t, err)
+
+		// Make sure the data from the artifact contains the following
+		// strings:
+		// Foobar column:
 		assert.Contains(t, string(data), "Foobar")
+
+		// Content of packed data file
+		assert.Contains(t, string(data), `"Data":"Hello world"`)
+
+		// Make sure the data file has the .yar extension
+		assert.Contains(t, string(data), `"HasYarExtension":true`)
 	}
 
 	// Inspect the produced HTML report.

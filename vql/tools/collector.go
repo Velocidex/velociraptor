@@ -255,6 +255,9 @@ func makeContainer(
 
 	// On exit we create a report.
 	closer = func() {
+		if container.IsClosed() {
+			return
+		}
 		container.Close()
 
 		if arg.Report != "" {

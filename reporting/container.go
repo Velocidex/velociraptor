@@ -319,6 +319,13 @@ func (self *Container) maybeCollectSparseFile(
 	}, nil
 }
 
+func (self *Container) IsClosed() bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.closed
+}
+
 // Close the underlying container zip (and write central
 // directories). It is ok to call this multiple times.
 func (self *Container) Close() error {

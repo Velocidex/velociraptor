@@ -267,18 +267,24 @@ parameters:
        grabs files from the local archive.
 
     default: |
-       LET temp_binary <= tempfile(extension=".exe",
-                remove_last=TRUE, permissions="x")
+       LET RequiredTool <= ToolName
 
-       LET matching_tools = SELECT ToolName AS ArchiveTool, Filename
+       LET matching_tools <= SELECT ToolName, Filename
        FROM parse_csv(filename="/inventory.csv", accessor="me")
+       WHERE RequiredTool = ToolName
 
-       SELECT * FROM foreach(row=matching_tools, query={
-         SELECT copy(filename=Filename, accessor="me", dest=temp_binary) AS FullPath,
-                     Filename AS Name
-         FROM scope()
-         WHERE ToolName = ArchiveTool
-       })
+       LET get_ext(filename) = parse_string_with_regex(
+             regex="(\\.[a-z0-9]+)$", string=filename).g1
+
+       LET temp_binary <= if(condition=matching_tools,
+       then=tempfile(
+                extension=get_ext(filename=matching_tools[0].Filename),
+                remove_last=TRUE,
+                permissions=if(condition=IsExecutable, then="x")))
+
+       SELECT copy(filename=Filename, accessor="me", dest=temp_binary) AS FullPath,
+              Filename AS Name
+       FROM matching_tools
 
 sources:
   - query: |
@@ -372,7 +378,7 @@ sources:
                dict(name="SleepDuration", type="int", default="0"),
                dict(name="ToolName"),
                dict(name="ToolInfo"),
-               dict(name="IsExecutable", type="bool"),
+               dict(name="IsExecutable", type="bool", default="Y"),
             ) AS parameters,
             (
                dict(query=FetchBinaryOverride),
