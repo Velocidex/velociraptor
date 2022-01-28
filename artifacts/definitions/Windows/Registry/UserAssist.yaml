@@ -12,6 +12,13 @@ description: |
 
   From a forensics perspective, being able to decode this information
   can be very useful.
+  
+  Limitations: Additional data not parsed by Velociraptor is the FocusTime 
+  and FocusCount however these are not reliable. 
+  Also please note that some methods of viewing an executable will update 
+  the associated UserAssist key, and some methods of accessing an executable 
+  will not update the execution counter or time. Therefore there may be 
+  some executions that have a 0 time and 0 runcount.
 
 reference:
   - https://www.aldeid.com/wiki/Windows-userassist-keys
@@ -21,7 +28,7 @@ precondition: SELECT OS From info() where OS = 'windows'
 parameters:
   - name: UserFilter
     default: ""
-    description: If specified we filter by this user ID.
+    description: If specified we filter by this username.
     type: regex
 
   - name: ExecutionTimeAfter
@@ -44,7 +51,7 @@ export:
 
 sources:
   - query: |
-      LET TMP = SELECT parse_string_with_regex(
+      LET TMP = SELECT url(parse=FullPath).Fragment as _KeyPath,parse_string_with_regex(
                 string=url(parse=FullPath).Fragment,
                 regex="^.+Count\\\\\"?(?P<Name>.+?)\"?$") AS Name, FullPath,
              parse_binary(
@@ -58,7 +65,7 @@ sources:
                regex="Users/(?P<User>[^/]+)/NTUSER").User AS User
       FROM Artifact.Windows.Registry.NTUser(KeyGlob=UserAssistKey)
 
-      LET UserAssist = SELECT if(condition=Name.Name,
+      LET UserAssist = SELECT _KeyPath,if(condition=Name.Name,
                    then=rot13(string=Name.Name),
                    else=url(parse=FullPath).Fragment) AS Name,
                User,
@@ -66,6 +73,7 @@ sources:
                timestamp(winfiletime=ParsedUserAssist.LastExecution).Unix AS LastExecutionTS,
                ParsedUserAssist.NumberOfExecutions AS NumberOfExecutions
         FROM TMP
+        ORDER BY LastExecution
       LET A1 = SELECT * FROM if(
           condition=UserFilter,
           then={
