@@ -1,0 +1,28 @@
+name: Windows.Persistence.SilentProcessExit
+description: |
+  Windows allows specific configuration of various executables via a
+  registry key. The silent exit monitoring key allows a user to attach
+  a program that executes when another program exits.
+
+  Limitations: This queries the live registry and therefore does not 
+  parse data in Windows.old or Regback folders, or VSS.
+  An additional modification is required to 'Image File Execution Options'
+  however this data isn't collected in this artifact.
+
+author: "Phill Moore - @phillmoore"
+
+reference:
+  - https://attack.mitre.org/techniques/T1546/012/
+
+parameters:
+  - name: SilentProcessExit
+    default: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SilentProcessExit\*
+
+sources:
+  - query: |
+        SELECT Key.ModTime as KeyLastWriteTimestamp,
+               Key.FullPath as _Key,
+               Key.Name AS Program,
+               MonitorProcess
+        FROM read_reg_key(globs=SilentProcessExit)
+        Order By KeyLastWriteTimestamp
