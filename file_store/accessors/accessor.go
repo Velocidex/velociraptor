@@ -7,7 +7,6 @@ package accessors
 
 import (
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -101,18 +100,6 @@ func (self FileStoreFileSystemAccessor) Open(filename string) (
 	}
 
 	return &FileReaderAdapter{file}, nil
-}
-
-func (self FileStoreFileSystemAccessor) PathSplit(path string) []string {
-	return paths.GenericPathSplit(path)
-}
-
-func (self FileStoreFileSystemAccessor) PathJoin(root, stem string) string {
-	return filepath.Join(root, stem)
-}
-
-func (self *FileStoreFileSystemAccessor) GetRoot(path string) (string, string, error) {
-	return "/", path, nil
 }
 
 func NewFileStoreFileInfo(

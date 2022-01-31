@@ -4,16 +4,23 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
+
+type VirtualReadSeekCloser struct {
+	io.ReadSeeker
+}
+
+func (self VirtualReadSeekCloser) Close() error {
+	return nil
+}
 
 type VirtualFileInfo struct {
 	// Only valid when this is not a directory
@@ -188,21 +195,9 @@ func (self VirtualFilesystemAccessor) Open(path string) (
 		return nil, os.ErrNotExist
 	}
 
-	return utils.DataReadSeekCloser{
+	return VirtualReadSeekCloser{
 		ReadSeeker: bytes.NewReader(node.file_info.RawData),
 	}, nil
-}
-
-func (self VirtualFilesystemAccessor) PathSplit(path string) []string {
-	return paths.GenericPathSplit(path)
-}
-
-func (self VirtualFilesystemAccessor) PathJoin(root, stem string) string {
-	return filepath.Join(root, stem)
-}
-
-func (self VirtualFilesystemAccessor) GetRoot(path string) (string, string, error) {
-	return "/", path, nil
 }
 
 func (self VirtualFilesystemAccessor) getNode(path string) (*directory_node, error) {

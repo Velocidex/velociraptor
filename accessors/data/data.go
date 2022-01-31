@@ -20,13 +20,10 @@
 package data
 
 import (
-	"path/filepath"
 	"strings"
 
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
-	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -37,7 +34,7 @@ func (self DataFilesystemAccessor) New(scope vfilter.Scope) (accessors.FileSyste
 }
 
 func (self DataFilesystemAccessor) Lstat(filename string) (accessors.FileInfo, error) {
-	return utils.NewDataFileInfo(filename), nil
+	return nil, errors.New("Not implemented")
 }
 
 func (self DataFilesystemAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {
@@ -45,25 +42,12 @@ func (self DataFilesystemAccessor) ReadDir(path string) ([]accessors.FileInfo, e
 }
 
 func (self DataFilesystemAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
-	return utils.DataReadSeekCloser{
+	return accessors.VirtualReadSeekCloser{
 		ReadSeeker: strings.NewReader(path),
-		Data:       path,
 	}, nil
 }
 
-func (self DataFilesystemAccessor) PathSplit(path string) []string {
-	return paths.GenericPathSplit(path)
-}
-
-func (self DataFilesystemAccessor) PathJoin(root, stem string) string {
-	return filepath.Join(root, stem)
-}
-
-func (self DataFilesystemAccessor) GetRoot(path string) (string, string, error) {
-	return "/", path, nil
-}
-
 func init() {
-	Register("data", &DataFilesystemAccessor{},
+	accessors.Register("data", &DataFilesystemAccessor{},
 		`Makes a string appears as an in memory file. Path is taken as a literal string to use as the file's data`)
 }

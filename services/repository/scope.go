@@ -4,11 +4,11 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/remapping"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/sorter"
@@ -55,7 +55,7 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 			})
 		}
 
-		device_manager, err := remapping.GetDeviceManager(self.Config)
+		device_manager, err := accessors.GetDeviceManager(self.Config)
 		if err == nil {
 			env.Set(constants.SCOPE_DEVICE_MANAGER, device_manager)
 		} else {

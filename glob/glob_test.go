@@ -21,10 +21,12 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
@@ -123,24 +125,25 @@ func GetMockFileSystemAccessor() accessors.FileSystemAccessor {
 		"/usr/bin/X11/diff",
 		"/usr/bin/X11/X11/diff",
 		"/usr/bin/X11/X11/X11/diff",
-		"/tmp/1",
+		"/tmp/1/",
 		"/tmp/1/1.txt",
-		"/tmp/1/5",
-		"/tmp/1/4",
-		"/tmp/1/3",
-		"/tmp/1/2",
-		"/tmp/1/2/23",
-		"/tmp/1/2/21",
+		"/tmp/1/5/",
+		"/tmp/1/4/",
+		"/tmp/1/3/",
+		"/tmp/1/2/",
+		"/tmp/1/2/23/",
+		"/tmp/1/2/21/",
 		"/tmp/1/2/21/1.txt",
-		"/tmp/1/2/21/213",
-		"/tmp/1/2/21/212",
+		"/tmp/1/2/21/213/",
+		"/tmp/1/2/21/212/",
 		"/tmp/1/2/21/212/1.txt",
-		"/tmp/1/2/21/211",
-		"/tmp/1/2/20",
+		"/tmp/1/2/21/211/",
+		"/tmp/1/2/20/",
 	} {
 		result.SetVirtualFileInfo(&accessors.VirtualFileInfo{
 			Path:    accessors.NewLinuxOSPath(path),
 			RawData: []byte("A"),
+			IsDir_:  strings.HasSuffix(path, "/"),
 		})
 	}
 
@@ -172,29 +175,27 @@ func TestGlobWithContext(t *testing.T) {
 			returned = append(returned, row.FullPath())
 		}
 
-		result.Set(fmt.Sprintf("%03d %s", idx, fixture.name), returned)
+		result.Set(fmt.Sprintf("%03d %s %s", idx, fixture.name,
+			strings.Join(fixture.patterns, " , ")), returned)
 	}
 
 	result_json, _ := json.MarshalIndent(result)
 	goldie.Assert(t, "TestGlobWithContext", result_json)
 }
 
-/*
 func TestBraceExpansion(t *testing.T) {
-	var result []string
 	globber := NewGlobber()
-	globber._brace_expansion("{/bin/{a,b},/usr/bin/{c,d}}/*.exe", &result)
-	sort.Strings(result)
-
+	result := globber._brace_expansion(
+		accessors.NewLinuxOSPath("/{bin*,usr}/{ls*,top}"))
 	expected := []string{
-		"/bin/a/*.exe",
-		"/bin/b/*.exe",
-		"/usr/bin/c/*.exe",
-		"/usr/bin/d/*.exe",
+		"/bin*/ls*",
+		"/bin*/top",
+		"/usr/ls*",
+		"/usr/top",
 	}
 
-	if !reflect.DeepEqual(result, expected) {
-		t.Fatalf("Failed %v: %v", result, expected)
+	assert.Equal(t, 4, len(result))
+	for idx, e := range result {
+		assert.Equal(t, e.String(), expected[idx])
 	}
 }
-*/

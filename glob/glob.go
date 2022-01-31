@@ -148,19 +148,16 @@ func (self Globber) _DebugString(indent string) string {
 
 // Add a new pattern to the filter tree.
 func (self *Globber) Add(pattern *accessors.OSPath) error {
-	/*
-		var brace_expanded []*accessors.OSPath
-		self._brace_expansion(pattern, &brace_expanded)
+	brace_expanded := self._brace_expansion(pattern)
 
-		for _, expanded := range brace_expanded {
-			err := self._add_brace_expanded(expanded)
-			if err != nil {
-				return err
-			}
+	for _, expanded := range brace_expanded {
+		err := self._add_brace_expanded(expanded)
+		if err != nil {
+			return err
 		}
-	*/
+	}
 
-	return self._add_brace_expanded(pattern)
+	return nil
 }
 
 func (self *Globber) _add_brace_expanded(pattern *accessors.OSPath) error {
@@ -175,29 +172,53 @@ func (self *Globber) _add_brace_expanded(pattern *accessors.OSPath) error {
 	}
 }
 
-/*
-
 // Duplicate brace expansions into multiple globs:
 // /usr/bin/*.{exe,dll} -> /usr/bin/*.exe, /usr/bin/*.dll
 func (self *Globber) _brace_expansion(
 	pattern *accessors.OSPath) []*accessors.OSPath {
 
-	result := []*accessors.OSPath{}
+	if len(pattern.Components) == 0 {
+		return nil
+	}
 
-	groups := _GROUPING_PATTERN.FindStringSubmatch(pattern)
+	result := []*accessors.OSPath{}
+	first_component := pattern.Components[0]
+
+	for _, expansion := range _expand_brace_in_component(first_component) {
+		prefix := pattern.Clear().Append(expansion)
+		next_pattern := &accessors.OSPath{
+			Components: pattern.Components[1:],
+		}
+		next_expansions := self._brace_expansion(next_pattern)
+		if len(next_expansions) == 0 {
+			result = append(result, prefix)
+		} else {
+			for _, e := range next_expansions {
+				result = append(result, prefix.Append(e.Components...))
+			}
+		}
+	}
+	return result
+}
+
+func _expand_brace_in_component(component string) []string {
+	result := []string{}
+
+	groups := _GROUPING_PATTERN.FindStringSubmatch(component)
 	if len(groups) > 0 {
 		left := groups[1]
 		middle := strings.Split(groups[2], ",")
 		right := groups[3]
 
 		for _, item := range middle {
-			self._brace_expansion(left+item+right, result)
+			result = append(result, left+item+right)
 		}
-	} else if !utils.InString(*result, pattern) {
-		*result = append(*result, pattern)
+	} else {
+		result = append(result, component)
 	}
+
+	return result
 }
-*/
 
 // Adds the raw filter into the Globber tree. This is called
 // after any expansion.
@@ -321,13 +342,13 @@ func (self *Globber) ExpandWithContext(
 
 				// Only recurse into directories.
 				if self.is_dir_or_link(f, accessor, 0) {
-					next_path := f.FullPath()
+					name := f.Name()
 					item := []*Globber{next}
-					prev_item, pres := children[next_path]
+					prev_item, pres := children[name]
 					if pres {
 						item = append(prev_item, next)
 					}
-					children[next_path] = item
+					children[name] = item
 				}
 			}
 		}
@@ -347,8 +368,8 @@ func (self *Globber) ExpandWithContext(
 			}
 		}
 
-		for next_os_path, nexts := range children {
-			next_path := root.Parse(next_os_path)
+		for name, nexts := range children {
+			next_path := root.Append(name)
 			for _, next := range nexts {
 				// There is no point expanding this
 				// node if it is just a sentinal -
