@@ -43,7 +43,7 @@ func (self USNPlugin) Call(
 			return
 		}
 
-		ntfs_ctx, err := readers.GetNTFSContext(scope, device)
+		ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
 		if err != nil {
 			scope.Log("parse_usn: %v", err)
 			return

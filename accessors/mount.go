@@ -1,0 +1,309 @@
+package accessors
+
+/*
+  The mount accessor represents a filesystem built by combining other
+  filesystems in the same tree - i.e. "mounting" them.
+
+  It is used to redirect various directories into multiple different
+  accessors.
+
+  NOTE: Currently it is required that filesystems are mounted on
+  directories that exist within the containing filesystem: For example
+  if mounting an accessor on /usr/bin it is required that /usr/bin
+  exist in the root filesystem.
+*/
+
+import (
+	"fmt"
+	"strings"
+	"sync"
+
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/vfilter"
+)
+
+// Mount tree is very sparse so we dont really need a map here -
+// linear search is fast enough.
+
+// The mount accessor is essentially a redirector - it needs to find a
+// delegate accessor to forward all requests to. In order to determine
+// the correct delegate we walk the mount tree from the root. At each
+// point in the tree we have an accessor and a prefix to prepend to
+// the delegate path.
+
+// For example, supposed a /bin/ filesystem is mounted on /usr/. We
+// have the following tree:
+// root -> children = [{node: name="bin", prefix="", accessor=bin_fs_accessor]
+
+// To find the path /usr/bin/ls, we walk the tree from the root, find /usr/
+// as the top most delegate. However the path we need is /usr/bin/ls,
+// therefore we need to access the delegate with prefix + /bin/ls
+type node struct {
+	// The name of this node in the directory tree.
+	name string
+
+	// Components of the full path in the tree from the root.
+	path *OSPath
+
+	// A path prefix to apply when accessing the accessor. This allows
+	// us to attach a sub directory of the mounted filesystem (like a
+	// bind mount).
+	prefix *OSPath
+
+	// The accessor to use to access.
+	accessor FileSystemAccessor
+
+	// A pointer to the last mount point with an accessor. Used to
+	// pre-calculate the prefix and accessor for fast access.
+	last_mount_point *node
+
+	// Child nodes
+	children []*node
+}
+
+func (self *node) Debug() string {
+	res := fmt.Sprintf("node: %v, prefix: %v, accessor: %T\n",
+		self.name, self.prefix.String(), self.accessor)
+	for _, c := range self.children {
+		res += fmt.Sprintf("  %v\n", strings.Replace(c.Debug(), "\n", "  \n", -1))
+	}
+	return res
+}
+
+// Lookup a child by name. If not found returns nil
+func (self *node) GetChild(name string) *node {
+	for _, c := range self.children {
+		if c.name == name {
+			return c
+		}
+	}
+
+	return nil
+}
+
+// Get the child node for the given name. If the node is not found, we
+// create a new node based on our last mount point.
+func (self *node) MakeChild(name string) *node {
+	for _, c := range self.children {
+		if c.name == name {
+			return c
+		}
+	}
+
+	// If we get here there is no child of this name - make it based
+	// on the last_mount_point.
+
+	// The full path of the new node can be derived from our own full path
+	new_node := &node{
+		name: name,
+		path: self.path.Append(name),
+
+		// This is a link up the directory tree to the last mounted
+		// accessor.
+		last_mount_point: self.last_mount_point,
+		accessor:         self.last_mount_point.accessor,
+
+		// The prefix to prepend to the mounted accessor is derived
+		// from our own prefix.
+		prefix: self.prefix.Append(name),
+	}
+	self.children = append(self.children, new_node)
+	return new_node
+}
+
+// Our delegate accessors deal with real full paths but we want to
+// pretend they are mounted inside their respective prefixes,
+// therefore we need to wrap them to return the correct virtual
+// fullpath.
+type FileInfoWrapper struct {
+	FileInfo
+
+	// This prefix will be added to all children - it reflects the
+	// mount path.
+	prefix        *OSPath
+	remove_prefix *OSPath
+}
+
+func (self FileInfoWrapper) FullPath() string {
+	return self.OSPath().String()
+}
+
+func (self FileInfoWrapper) OSPath() *OSPath {
+	trimmed_path := self.FileInfo.OSPath().Trim(self.remove_prefix)
+	return self.prefix.Append(trimmed_path.Components...)
+}
+
+// A mount accessor maps several delegate accessors inside the same
+// filesystem tree emulating mount points.
+type MountFileSystemAccessor struct {
+	mu    sync.Mutex
+	scope vfilter.Scope
+
+	// The root filesystem is the one registered
+	root *node
+}
+
+// Walk the tree and return the last valid node that can be used to
+// access the delegates as well as the residual path.
+// Example:
+// /usr is mounted on /mnt/ - therefore node tree will look like:
+// root -> prefix: /, accessor: file, children: [
+//   node: name: usr, accessor: file, prefix: /mnt/data,
+// ]
+//
+// Now assume we access /usr/bin/ls -> We walk the tree from root:
+// 1. First component is usr -> next node is child root's child.
+// 2. The residual is the rest of the path which is not consumed yet
+//    -> i.e. "bin/ls"
+// 3. Now, we can access the file as node.prefix + residual -> /mnt/data/bin/ls
+func (self *MountFileSystemAccessor) getDelegateNode(path string) (
+	*node, []string) {
+	node := self.root
+
+	// Parse the path into an OSPath
+	os_path := node.path.Parse(path)
+
+	for idx, c := range os_path.Components {
+		if c != "" {
+			next_node := node.GetChild(c)
+
+			// There is no internal mount point, use the last known
+			// mounted filesystem.
+			if next_node == nil {
+				residual := os_path.Components[idx:]
+				return node, residual
+			}
+
+			// Search deeper for a better mount point.
+			node = next_node
+		}
+	}
+	return node, nil
+}
+
+func (self *MountFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, error) {
+	return &MountFileSystemAccessor{
+		scope: scope,
+		root:  self.root,
+	}, nil
+}
+
+func (self *MountFileSystemAccessor) ReadDir(path string) (
+	[]FileInfo, error) {
+	delegate_node, delegate_path := self.getDelegatePath(path)
+	children, err := delegate_node.accessor.ReadDir(delegate_path)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]FileInfo, 0, len(children))
+	for _, c := range children {
+		res = append(res, &FileInfoWrapper{
+			FileInfo:      c,
+			prefix:        delegate_node.path,
+			remove_prefix: delegate_node.prefix,
+		})
+	}
+
+	return res, nil
+}
+
+func (self *MountFileSystemAccessor) getDelegatePath(path string) (*node, string) {
+	delegate_node, residual := self.getDelegateNode(path)
+	deep_delegate_path := delegate_node.prefix.Append(residual...)
+	return delegate_node, deep_delegate_path.String()
+}
+func (self *MountFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
+	delegate_node, delegate_path := self.getDelegatePath(path)
+	return delegate_node.accessor.Open(delegate_path)
+}
+
+func (self MountFileSystemAccessor) Lstat(path string) (FileInfo, error) {
+	delegate_node, delegate_path := self.getDelegatePath(path)
+	return delegate_node.accessor.Lstat(delegate_path)
+}
+
+// Install a mapping from the source to the target. This means that
+// operating on paths below the target will act on the
+// source. Examples:
+//
+// source = /mnt/bin, target = /bin, accessor = file
+// means Open(/bin/foo) redirects to /mnt/bin/foo with accessor "file".
+
+func (self *MountFileSystemAccessor) AddMapping(
+	source *OSPath,
+	target *OSPath,
+	source_accessor FileSystemAccessor) {
+
+	// Walk the tree and create the sentinal node. NOTE: split the
+	// path according to the target accessor we are emulating.
+	node := self.root
+
+	for _, c := range target.Components {
+		if c != "" {
+			node = node.MakeChild(c)
+		}
+	}
+
+	// Install the node in the tree - this is where we read from.
+	node.prefix = source
+	node.accessor = source_accessor
+	node.last_mount_point = node
+}
+
+func NewMountFileSystemAccessor(
+	root FileSystemAccessor) *MountFileSystemAccessor {
+
+	result := &MountFileSystemAccessor{
+		root: &node{
+			accessor: root,
+			path:     NewLinuxOSPath(""),
+			prefix:   NewLinuxOSPath(""),
+		},
+	}
+	result.root.last_mount_point = result.root
+
+	return result
+}
+
+func InstallMountPoint(manager DeviceManager,
+	remapping *config_proto.RemappingConfig) error {
+
+	target_accessor_any, err := manager.GetAccessor(remapping.ToAccessor, nil)
+	if err != nil {
+		return err
+	}
+
+	target_accessor, ok := target_accessor_any.(*MountFileSystemAccessor)
+	if !ok {
+		// The target accessor is not a MountFileSystemAccessor, we
+		// neeed to wrap it and in one.
+		target_accessor = &MountFileSystemAccessor{
+			root: &node{
+				accessor: target_accessor_any,
+			},
+		}
+	}
+
+	// We need to get the source accessor from the unmodified device
+	// manager (otherwise we will get into a loop here). For example,
+	// if we read from "file" and map "file" then the source is the
+	// unmodified original file.
+	source_accessor, err := GlobalDeviceManager.GetAccessor(
+		remapping.FromAccessor, nil)
+	if err != nil {
+		return err
+	}
+
+	// Now target_accessor is valid and of type
+	// MountFileSystemAccessor - we can add the mapping
+	target_accessor.AddMapping(
+		NewLinuxOSPath(remapping.FromPrefix),
+		NewLinuxOSPath(remapping.ToPrefix),
+		source_accessor)
+
+	// Replace the target accessor with the remapped one.
+	manager.Register(remapping.ToAccessor, target_accessor, "")
+
+	return nil
+}

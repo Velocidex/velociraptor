@@ -1,3 +1,5 @@
+// +build XXXXX
+
 // Implements an automatic fallback to NTFS accessor when
 // OSFileSystemAccessor does not work.
 

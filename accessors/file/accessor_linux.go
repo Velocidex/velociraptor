@@ -1,4 +1,4 @@
-// +build freebsd
+// +build linux
 
 /*
    Velociraptor - Hunting Evil
@@ -18,10 +18,12 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package glob
+package file
 
 import (
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/accessors"
 )
 
 // On Linux we need xstat() support to get birth time.
@@ -30,16 +32,32 @@ func (self *OSFileInfo) Btime() time.Time {
 }
 
 func (self *OSFileInfo) Mtime() time.Time {
-	ts := int64(self._Sys().Mtimespec.Sec)
+	ts := int64(self._Sys().Mtim.Sec)
 	return time.Unix(ts, 0)
 }
 
 func (self *OSFileInfo) Ctime() time.Time {
-	ts := int64(self._Sys().Ctimespec.Sec)
+	ts := int64(self._Sys().Ctim.Sec)
 	return time.Unix(ts, 0)
 }
 
 func (self *OSFileInfo) Atime() time.Time {
-	ts := int64(self._Sys().Atimespec.Sec)
+	ts := int64(self._Sys().Atim.Sec)
 	return time.Unix(ts, 0)
+}
+
+func init() {
+	accessors.Register("file", &OSFileSystemAccessor{
+		root: accessors.NewLinuxOSPath(""),
+	}, `Access files using the operating system's API. Does not allow access to raw devices.`)
+
+	accessors.Register("raw_file", &OSFileSystemAccessor{
+		root:             accessors.NewLinuxOSPath(""),
+		allow_raw_access: true,
+	}, `Access files using the operating system's API. Also allow access to raw devices.`)
+
+	// On Linux the auto accessor is the same as file.
+	accessors.Register("auto", &OSFileSystemAccessor{
+		root: accessors.NewLinuxOSPath(""),
+	}, `Access the file using the best accessor possible. On windows we fall back to NTFS parsing in case the file is locked or unreadable.`)
 }

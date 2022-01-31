@@ -60,7 +60,7 @@ func (self *USNWatcherService) Register(
 		return func() {}
 	}
 
-	ntfs_ctx, err := readers.GetNTFSContext(scope, device)
+	ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
 	if err != nil {
 		scope.Log("watch_usn: %v", err)
 		return func() {}

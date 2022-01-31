@@ -1,14 +1,15 @@
-package glob
+package file
 
 import (
 	"os"
 	"time"
 
-	"github.com/Velocidex/json"
+	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/json"
 )
 
 func MarshalGlobFileInfo(v interface{}, opts *json.EncOpts) ([]byte, error) {
-	self, ok := v.(FileInfo)
+	self, ok := v.(accessors.FileInfo)
 	if !ok {
 		return nil, json.EncoderCallbackSkip
 	}
@@ -29,9 +30,12 @@ func MarshalGlobFileInfo(v interface{}, opts *json.EncOpts) ([]byte, error) {
 		Mode:     self.Mode(),
 		ModeStr:  self.Mode().String(),
 		ModTime:  self.ModTime(),
-		Sys:      self.Sys(),
 		Mtime:    self.Mtime(),
 		Ctime:    self.Ctime(),
 		Atime:    self.Atime(),
 	}, opts)
+}
+
+func init() {
+	json.RegisterCustomEncoder(&OSFileInfo{}, MarshalGlobFileInfo)
 }

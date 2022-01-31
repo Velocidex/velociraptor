@@ -1,4 +1,4 @@
-package filesystems
+package ntfs
 
 import (
 	"strings"
@@ -81,8 +81,8 @@ func (self *NTFSPathCache) GetDirLRU(dirpath string) (map[string]*CacheMFT, bool
 	return res.(cacheElement).children, true
 }
 
-func GetNTFSPathCache(scope vfilter.Scope, device string) *NTFSPathCache {
-	key := "ntfs_path_cache" + device
+func GetNTFSPathCache(scope vfilter.Scope, device, accessor string) *NTFSPathCache {
+	key := "ntfs_path_cache" + device + accessor
 
 	// Get the cache context from the root scope's cache
 	cache_ctx, ok := vql_subsystem.CacheGet(scope, key).(*NTFSPathCache)

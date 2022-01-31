@@ -1,4 +1,4 @@
-package glob
+package accessors
 
 import (
 	"sync"

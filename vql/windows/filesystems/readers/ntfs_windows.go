@@ -44,6 +44,7 @@ import (
 type NTFSCachedContext struct {
 	mu sync.Mutex
 
+	accessor     string
 	device       string
 	scope        vfilter.Scope
 	paged_reader *readers.AccessorReader
@@ -83,13 +84,14 @@ func (self *NTFSCachedContext) Start(
 	lru_size := vql_subsystem.GetIntFromRow(
 		self.scope, self.scope, constants.NTFS_CACHE_SIZE)
 	self.paged_reader, err = readers.NewPagedReader(
-		self.scope, "file", self.device, int(lru_size))
+		self.scope, self.accessor, self.device, int(lru_size))
 
 	if err != nil {
 		return err
 	}
 
-	// Read the header to make sure we can actually read the raw device.
+	// Read the header to make sure we can actually read the raw
+	// device.
 	header := make([]byte, 8)
 	_, err = self.paged_reader.ReadAt(header, 3)
 	if err != nil {
@@ -147,8 +149,8 @@ func (self *NTFSCachedContext) GetNTFSContext() (*ntfs.NTFSContext, error) {
 	return self.ntfs_ctx, nil
 }
 
-func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, error) {
-	result, err := GetNTFSCache(scope, device)
+func GetNTFSContext(scope vfilter.Scope, device, accessor string) (*ntfs.NTFSContext, error) {
+	result, err := GetNTFSCache(scope, device, accessor)
 	if err != nil {
 		return nil, err
 	}
@@ -156,15 +158,16 @@ func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, erro
 	return result.GetNTFSContext()
 }
 
-func GetNTFSCache(scope vfilter.Scope, device string) (*NTFSCachedContext, error) {
-	key := "ntfsctx_cache" + device
+func GetNTFSCache(scope vfilter.Scope, device, accessor string) (*NTFSCachedContext, error) {
+	key := "ntfsctx_cache" + device + accessor
 
 	// Get the cache context from the root scope's cache
 	cache_ctx, ok := vql_subsystem.CacheGet(scope, key).(*NTFSCachedContext)
 	if !ok {
 		cache_ctx = &NTFSCachedContext{
-			device: device,
-			scope:  scope,
+			accessor: accessor,
+			device:   device,
+			scope:    scope,
 		}
 		err := cache_ctx.Start(context.Background(), scope)
 		if err != nil {

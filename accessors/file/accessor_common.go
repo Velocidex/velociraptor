@@ -1,12 +1,10 @@
-//go:build linux || darwin || freebsd
 // +build linux darwin freebsd
 
-package glob
+package file
 
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -15,8 +13,7 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -36,13 +33,7 @@ type _inode struct {
 type AccessorContext struct {
 	mu sync.Mutex
 
-	prefix string
-
 	links map[_inode]bool
-}
-
-func (self *AccessorContext) RealPathToVirtual(fullpath string) string {
-	return strings.TrimPrefix(fullpath, self.prefix)
 }
 
 func (self *AccessorContext) LinkVisited(dev, inode uint64) {
@@ -66,8 +57,12 @@ func (self *AccessorContext) WasLinkVisited(dev, inode uint64) bool {
 
 type OSFileInfo struct {
 	_FileInfo     os.FileInfo
-	_full_path    string
+	_full_path    *accessors.OSPath
 	_accessor_ctx *AccessorContext
+}
+
+func (self *OSFileInfo) OSPath() *accessors.OSPath {
+	return self._full_path
 }
 
 func (self *OSFileInfo) Size() int64 {
@@ -102,7 +97,7 @@ func (self *OSFileInfo) Dev() uint64 {
 	return uint64(sys.Dev)
 }
 
-func (self *OSFileInfo) Data() interface{} {
+func (self *OSFileInfo) Data() *ordereddict.Dict {
 	if self.IsLink() {
 		path := self.FullPath()
 		target, err := os.Readlink(path)
@@ -123,37 +118,32 @@ func (self *OSFileInfo) Data() interface{} {
 }
 
 func (self *OSFileInfo) FullPath() string {
-	return self._full_path
-	//return self._accessor_ctx.RealPathToVirtual(self._full_path)
+	return self._full_path.String()
 }
 
 func (self *OSFileInfo) IsLink() bool {
 	return self.Mode()&os.ModeSymlink != 0
 }
 
-func (self *OSFileInfo) GetLink() (string, error) {
+func (self *OSFileInfo) GetLink() (*accessors.OSPath, error) {
 	sys, ok := self._FileInfo.Sys().(*syscall.Stat_t)
 	if !ok {
-		return "", errors.New("Symlink not supported")
+		return nil, errors.New("Symlink not supported")
 	}
 
 	if self._accessor_ctx.WasLinkVisited(uint64(sys.Dev), sys.Ino) {
-		return "", errors.New("Symlink cycle detected")
+		return nil, errors.New("Symlink cycle detected")
 	}
 	self._accessor_ctx.LinkVisited(uint64(sys.Dev), sys.Ino)
 
 	// For now we dont support links so we dont get stuck in a
 	// cycle.
-	ret, err := os.Readlink(strings.TrimRight(self._full_path, "/"))
+	ret, err := os.Readlink(self._full_path.String())
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	if !strings.HasPrefix(ret, "/") {
-		ret = "/" + ret
-	}
-
-	return ret, nil
+	return self._full_path.Parse(ret), nil
 }
 
 func (self *OSFileInfo) _Sys() *syscall.Stat_t {
@@ -165,33 +155,39 @@ type OSFileSystemAccessor struct {
 	context *AccessorContext
 
 	allow_raw_access bool
+
+	root *accessors.OSPath
 }
 
-func (self OSFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, error) {
+func (self OSFileSystemAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
 	return &OSFileSystemAccessor{
 		context: &AccessorContext{
 			links: make(map[_inode]bool),
 		},
 		allow_raw_access: self.allow_raw_access,
+		root:             self.root,
 	}, nil
 }
 
-func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
-	lstat, err := os.Lstat(GetPath(filename))
+func (self OSFileSystemAccessor) Lstat(filename string) (accessors.FileInfo, error) {
+	full_path := self.root.Parse(filename)
+	lstat, err := os.Lstat(filename)
 	if err != nil {
 		return nil, err
 	}
 
 	return &OSFileInfo{
 		_FileInfo:     lstat,
-		_full_path:    filename,
+		_full_path:    full_path,
 		_accessor_ctx: self.context,
 	}, nil
 }
 
-func (self OSFileSystemAccessor) ReadDir(dir string) ([]FileInfo, error) {
-	path := GetPath(dir)
-	lstat, err := os.Lstat(path)
+func (self OSFileSystemAccessor) ReadDir(dir string) ([]accessors.FileInfo, error) {
+	full_path := self.root.Parse(dir)
+	dir = full_path.String()
+
+	lstat, err := os.Lstat(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +201,7 @@ func (self OSFileSystemAccessor) ReadDir(dir string) ([]FileInfo, error) {
 	} else {
 		// If it is a symlink, we need to check the target of the
 		// symlink and make sure it is a directory.
-		target, err := os.Readlink(path)
+		target, err := os.Readlink(dir)
 		if err == nil {
 			lstat, err := os.Lstat(target)
 			// Target of the link is not there or inaccessible or
@@ -215,20 +211,19 @@ func (self OSFileSystemAccessor) ReadDir(dir string) ([]FileInfo, error) {
 				return nil, nil
 			}
 		}
-
 	}
 
-	files, err := utils.ReadDir(path)
+	files, err := utils.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
 
-	var result []FileInfo
+	var result []accessors.FileInfo
 	for _, f := range files {
 		result = append(result,
 			&OSFileInfo{
 				_FileInfo:     f,
-				_full_path:    filepath.Join(path, f.Name()),
+				_full_path:    full_path.Append(f.Name()),
 				_accessor_ctx: self.context,
 			})
 	}
@@ -246,11 +241,15 @@ func (self OSFileWrapper) Close() error {
 	return self.File.Close()
 }
 
-func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
+func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
 	var err error
 
+	// Clean the path
+	full_path := self.root.Parse(path)
+	path = full_path.String()
+
 	// Eval any symlinks directly
-	path, err = filepath.EvalSymlinks(GetPath(path))
+	path, err = filepath.EvalSymlinks(path)
 	if err != nil {
 		return nil, err
 	}
@@ -277,33 +276,4 @@ func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 
 	fileAccessorCurrentOpened.Inc()
 	return OSFileWrapper{file}, nil
-}
-
-func GetPath(path string) string {
-	return filepath.Clean("/" + path)
-}
-
-func (self OSFileSystemAccessor) PathSplit(path string) []string {
-	return paths.GenericPathSplit(path)
-}
-
-func (self OSFileSystemAccessor) PathJoin(root, stem string) string {
-	return filepath.Join(root, stem)
-}
-
-func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
-	return "/", path, nil
-}
-
-func init() {
-	Register("file", &OSFileSystemAccessor{}, `Access files using the operating system's API. Does not allow access to raw devices.`)
-
-	Register("raw_file", &OSFileSystemAccessor{
-		allow_raw_access: true,
-	}, `Access files using the operating system's API. Also allow access to raw devices.`)
-
-	// On Linux the auto accessor is the same as file.
-	Register("auto", &OSFileSystemAccessor{}, `Access the file using the best accessor possible. On windows we fall back to NTFS parsing in case the file is locked or unreadable.`)
-
-	json.RegisterCustomEncoder(&OSFileInfo{}, MarshalGlobFileInfo)
 }

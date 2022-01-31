@@ -1,19 +1,18 @@
-package remapping
+package accessors
 
 import (
 	"fmt"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/glob"
 )
 
-func GetDeviceManager(config_obj *config_proto.Config) (glob.DeviceManager, error) {
+func GetDeviceManager(config_obj *config_proto.Config) (DeviceManager, error) {
 	if config_obj.Remappings == nil {
-		return glob.GlobalDeviceManager, nil
+		return GlobalDeviceManager, nil
 	}
 
 	// Build the device manager according to the remapping configuration.
-	manager := glob.GlobalDeviceManager.Copy()
+	manager := GlobalDeviceManager.Copy()
 	for _, remapping := range config_obj.Remappings {
 		switch remapping.Type {
 		case "mount":

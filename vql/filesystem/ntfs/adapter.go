@@ -1,4 +1,4 @@
-package filesystems
+package ntfs
 
 import (
 	"errors"

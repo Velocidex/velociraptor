@@ -82,7 +82,7 @@ func (self NTFSFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	ntfs_ctx, err := readers.GetNTFSContext(scope, device)
+	ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
 	if err != nil {
 		scope.Log("parse_ntfs: GetNTFSContext %v", err)
 		return &vfilter.Null{}
@@ -226,7 +226,7 @@ func (self NTFSI30ScanPlugin) Call(
 			return
 		}
 
-		ntfs_ctx, err := readers.GetNTFSContext(scope, device)
+		ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
 		if err != nil {
 			scope.Log("parse_ntfs_i30: %v", err)
 			return
@@ -302,7 +302,7 @@ func (self NTFSRangesPlugin) Call(
 			return
 		}
 
-		ntfs_ctx, err := readers.GetNTFSContext(scope, device)
+		ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
 		if err != nil {
 			scope.Log("parse_ntfs_ranges: %v", err)
 			return

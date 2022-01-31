@@ -8,10 +8,7 @@
  "002 Inverted range": [
   "/bin/dash"
  ],
- "003 Brace expansion.": [
-  "/bin/bash",
-  "/bin/dash"
- ],
+ "003 Brace expansion.": null,
  "004 Depth of 2": [
   "/usr/bin/diff",
   "/usr/bin/X11/diff"
@@ -28,31 +25,8 @@
   "/usr/bin/X11/X11/diff",
   "/usr/bin/X11/X11/X11/diff"
  ],
- "007 Breadth first traversal": [
-  "/tmp/1/1.txt",
-  "/tmp/1/2",
-  "/tmp/1/3",
-  "/tmp/1/4",
-  "/tmp/1/5",
-  "/tmp/1/2/20",
-  "/tmp/1/2/21",
-  "/tmp/1/2/23"
- ],
- "008 Breadth first traversal": [
-  "/tmp/1/1.txt",
-  "/tmp/1/2",
-  "/tmp/1/3",
-  "/tmp/1/4",
-  "/tmp/1/5",
-  "/tmp/1/2/20",
-  "/tmp/1/2/21",
-  "/tmp/1/2/23",
-  "/tmp/1/2/21/1.txt",
-  "/tmp/1/2/21/211",
-  "/tmp/1/2/21/212",
-  "/tmp/1/2/21/213",
-  "/tmp/1/2/21/212/1.txt"
- ],
+ "007 Breadth first traversal": null,
+ "008 Breadth first traversal": null,
  "009 Recursive matches zero or more": [
   "/usr/bin/X11/diff",
   "/usr/bin/X11/X11/diff",

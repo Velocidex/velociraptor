@@ -1,6 +1,6 @@
 // +build linux
 
-package glob
+package file_test
 
 import (
 	"context"
@@ -12,7 +12,9 @@ import (
 
 	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/suite"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -65,7 +67,7 @@ func (self *AccessorLinuxTestSuite) TestSymlinks() {
 	assert.NoError(self.T(), err)
 
 	scope := vfilter.NewScope()
-	accessor, err := GetAccessor("file", scope)
+	accessor, err := accessors.GetAccessor("file", scope)
 	assert.NoError(self.T(), err)
 
 	// Open through the link.
@@ -87,12 +89,12 @@ func (self *AccessorLinuxTestSuite) TestSymlinks() {
 
 	// Now glob through the files - this should not lock up since
 	// the cycle should be detected.
-	globber := NewGlobber()
-	globber.Add("**/*.txt", accessor.PathSplit)
+	globber := glob.NewGlobber()
+	globber.Add(accessors.NewLinuxOSPath("**/*.txt"))
 
 	hits := []string{}
 	for hit := range globber.ExpandWithContext(context.Background(),
-		config_obj, self.tmpdir, accessor) {
+		config_obj, accessors.NewLinuxOSPath(self.tmpdir), accessor) {
 		hits = append(hits, strings.TrimPrefix(hit.FullPath(), self.tmpdir))
 	}
 

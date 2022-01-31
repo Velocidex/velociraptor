@@ -1,4 +1,4 @@
-// +build linux
+// +build freebsd
 
 /*
    Velociraptor - Hunting Evil
@@ -18,7 +18,7 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package glob
+package file
 
 import (
 	"time"
@@ -30,16 +30,16 @@ func (self *OSFileInfo) Btime() time.Time {
 }
 
 func (self *OSFileInfo) Mtime() time.Time {
-	ts := int64(self._Sys().Mtim.Sec)
+	ts := int64(self._Sys().Mtimespec.Sec)
 	return time.Unix(ts, 0)
 }
 
 func (self *OSFileInfo) Ctime() time.Time {
-	ts := int64(self._Sys().Ctim.Sec)
+	ts := int64(self._Sys().Ctimespec.Sec)
 	return time.Unix(ts, 0)
 }
 
 func (self *OSFileInfo) Atime() time.Time {
-	ts := int64(self._Sys().Atim.Sec)
+	ts := int64(self._Sys().Atimespec.Sec)
 	return time.Unix(ts, 0)
 }

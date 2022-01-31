@@ -17,13 +17,14 @@
 */
 // A data filesystem accessor - allows data to be read as a file.
 
-package glob
+package data
 
 import (
 	"path/filepath"
 	"strings"
 
 	errors "github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -31,19 +32,19 @@ import (
 
 type DataFilesystemAccessor struct{}
 
-func (self DataFilesystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, error) {
+func (self DataFilesystemAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
 	return DataFilesystemAccessor{}, nil
 }
 
-func (self DataFilesystemAccessor) Lstat(filename string) (FileInfo, error) {
+func (self DataFilesystemAccessor) Lstat(filename string) (accessors.FileInfo, error) {
 	return utils.NewDataFileInfo(filename), nil
 }
 
-func (self DataFilesystemAccessor) ReadDir(path string) ([]FileInfo, error) {
+func (self DataFilesystemAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {
 	return nil, errors.New("Not implemented")
 }
 
-func (self DataFilesystemAccessor) Open(path string) (ReadSeekCloser, error) {
+func (self DataFilesystemAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
 	return utils.DataReadSeekCloser{
 		ReadSeeker: strings.NewReader(path),
 		Data:       path,
