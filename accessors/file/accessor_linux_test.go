@@ -6,17 +6,19 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/vfilter"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 type AccessorLinuxTestSuite struct {
@@ -33,6 +35,26 @@ func (self *AccessorLinuxTestSuite) SetupTest() {
 
 func (self *AccessorLinuxTestSuite) TearDownTest() {
 	os.RemoveAll(self.tmpdir) // clean up
+}
+
+func (self *AccessorLinuxTestSuite) TestACL() {
+	scope := vql_subsystem.MakeScope()
+	scope.SetLogger(log.New(os.Stderr, " ", 0))
+
+	accessor, err := accessors.GetAccessor("file", scope)
+	// Permission denied!
+	assert.Error(self.T(), err)
+
+	// Try again with more premissions.
+	scope = vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+	scope.SetLogger(log.New(os.Stderr, " ", 0))
+
+	accessor, err = accessors.GetAccessor("file", scope)
+	assert.NoError(self.T(), err)
+
+	_, err = accessor.ReadDir("/")
+	assert.NoError(self.T(), err)
 }
 
 // This looks like
@@ -67,7 +89,9 @@ func (self *AccessorLinuxTestSuite) TestSymlinks() {
 	err = os.Symlink(parent_link_path, dir_link_path)
 	assert.NoError(self.T(), err)
 
-	scope := vfilter.NewScope()
+	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+	scope.SetLogger(log.New(os.Stderr, " ", 0))
 	accessor, err := accessors.GetAccessor("file", scope)
 	assert.NoError(self.T(), err)
 

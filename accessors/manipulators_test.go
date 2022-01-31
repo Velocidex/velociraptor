@@ -66,9 +66,12 @@ func TestWindowsManipulators(t *testing.T) {
 	}
 }
 
+// Raw Pathspec OSPath do not interpret the Path parameter in a
+// special way - it is just being preserved. This is only used for
+// accessors that use it to represent non-hierarchical data.
 var pathspec_testcases = []testcase{
 	{"{\"DelegateAccessor\":\"zip\",\"DelegatePath\":\"Foo\",\"Path\":\"/bin/ls\"}",
-		[]string{"bin", "ls"},
+		[]string{"/bin/ls"},
 		"{\"DelegateAccessor\":\"zip\",\"DelegatePath\":\"Foo\",\"Path\":\"/bin/ls\"}"},
 }
 

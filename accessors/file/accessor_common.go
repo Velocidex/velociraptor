@@ -14,7 +14,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -159,7 +161,15 @@ type OSFileSystemAccessor struct {
 	root *accessors.OSPath
 }
 
-func (self OSFileSystemAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
+func (self OSFileSystemAccessor) New(scope vfilter.Scope) (
+	accessors.FileSystemAccessor, error) {
+
+	// Check we have permission to open files.
+	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+	if err != nil {
+		return nil, err
+	}
+
 	return &OSFileSystemAccessor{
 		context: &AccessorContext{
 			links: make(map[_inode]bool),

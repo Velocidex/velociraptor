@@ -29,7 +29,7 @@
 // Refers to the file opened by the accessor "ntfs" (The URL Scheme)
 // with a path (URL Path) of c:\\Windows\File.gz.
 
-package filesystem
+package zip
 
 import (
 	"compress/bzip2"
@@ -44,7 +44,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -151,8 +150,12 @@ func (self GzipFileSystemAccessor) New(scope vfilter.Scope) (
 	return &GzipFileSystemAccessor{
 		scope:  scope,
 		getter: self.getter,
-		root:   accessors.NewPathspecOSPath("{}"),
+		root:   accessors.NewLinuxOSPath(""),
 	}, nil
+}
+
+func NewGzipFileSystemAccessor(getter FileGetter) *GzipFileSystemAccessor {
+	return &GzipFileSystemAccessor{getter: getter}
 }
 
 type SeekableGzip struct {
@@ -194,13 +197,15 @@ func (self *SeekableGzip) LStat() (accessors.FileInfo, error) {
 type FileGetter func(file_path string, scope vfilter.Scope) (ReaderStat, error)
 
 func GetBzip2File(serialized_path string, scope vfilter.Scope) (ReaderStat, error) {
-	full_path := accessors.NewPathspecOSPath(serialized_path)
-	pathspec := full_path.PathSpec
+	full_path := accessors.NewLinuxOSPath(serialized_path)
+	pathspec := full_path.PathSpec()
 
-	err := vql_subsystem.CheckFilesystemAccess(scope, pathspec.DelegateAccessor)
-	if err != nil {
-		scope.Log("GetBzip2File: %v", err)
-		return nil, err
+	// The gzip accessor must use a delegate but if one is not
+	// provided we use the "auto" accessor, to open the underlying
+	// file.
+	if pathspec.DelegateAccessor == "" && pathspec.DelegatePath == "" {
+		pathspec.DelegatePath = pathspec.Path
+		pathspec.DelegateAccessor = "auto"
 	}
 
 	accessor, err := accessors.GetAccessor(pathspec.DelegateAccessor, scope)
@@ -231,13 +236,15 @@ func GetBzip2File(serialized_path string, scope vfilter.Scope) (ReaderStat, erro
 }
 
 func GetGzipFile(serialized_path string, scope vfilter.Scope) (ReaderStat, error) {
-	full_path := accessors.NewPathspecOSPath(serialized_path)
-	pathspec := full_path.PathSpec
+	full_path := accessors.NewLinuxOSPath(serialized_path)
+	pathspec := full_path.PathSpec()
 
-	err := vql_subsystem.CheckFilesystemAccess(scope, pathspec.DelegateAccessor)
-	if err != nil {
-		scope.Log("GetGzipFile: %v", err)
-		return nil, err
+	// The gzip accessor must use a delegate but if one is not
+	// provided we use the "auto" accessor, to open the underlying
+	// file.
+	if pathspec.DelegateAccessor == "" && pathspec.DelegatePath == "" {
+		pathspec.DelegatePath = pathspec.Path
+		pathspec.DelegateAccessor = "auto"
 	}
 
 	accessor, err := accessors.GetAccessor(pathspec.DelegateAccessor, scope)

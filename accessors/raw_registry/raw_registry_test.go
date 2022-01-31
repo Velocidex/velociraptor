@@ -2,18 +2,21 @@ package raw_registry
 
 import (
 	"context"
-	"log"
-	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"testing"
 
+	"github.com/Velocidex/ordereddict"
+	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
 )
@@ -21,26 +24,48 @@ import (
 func TestAccessorRawReg(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
 	scope := vql_subsystem.MakeScope()
-	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
-	reg_accessor, err := accessors.GetAccessor("raw_reg", scope)
+	runtest := func(scope vfilter.Scope) ([]string, error) {
+		reg_accessor, err := accessors.GetAccessor("raw_reg", scope)
+		if err != nil {
+			return nil, err
+		}
+
+		abs_path, _ := filepath.Abs("../../artifacts/testdata/files/SAM")
+		root := &accessors.PathSpec{
+			DelegateAccessor: "file",
+			DelegatePath:     abs_path,
+		}
+		root_path := accessors.NewWindowsOSPath(root.String())
+
+		globber := glob.NewGlobber()
+		globber.Add(accessors.NewLinuxOSPath("/SAM/Domains/*/*"))
+
+		hits := []string{}
+		for hit := range globber.ExpandWithContext(
+			context.Background(), config_obj, root_path, reg_accessor) {
+			hits = append(hits, hit.OSPath().PathSpec().Path)
+		}
+
+		sort.Strings(hits)
+		return hits, nil
+	}
+
+	// Check the logs - permission should be denied.
+	logging.ClearMemoryLogs()
+
+	_, err := runtest(scope)
 	assert.NoError(t, err)
 
-	abs_path, _ := filepath.Abs("../../artifacts/testdata/files/SAM")
-	root := &accessors.PathSpec{
-		DelegateAccessor: "file",
-		DelegatePath:     abs_path,
-	}
-	root_path := accessors.NewPathspecOSPath(root.String())
+	assert.Contains(t, strings.Join(logging.GetMemoryLogs(), ""),
+		"Permission denied: [FILESYSTEM_READ]")
 
-	globber := glob.NewGlobber()
-	globber.Add(accessors.NewLinuxOSPath("/SAM/Domains/*/*"))
+	// Now repeat with proper access
+	scope = vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
 
-	hits := []string{}
-	for hit := range globber.ExpandWithContext(
-		context.Background(), config_obj, root_path, reg_accessor) {
-		hits = append(hits, hit.OSPath().PathSpec().Path)
-	}
+	hits, err := runtest(scope)
+	assert.NoError(t, err)
 
 	goldie.Assert(t, "TestAccessorRawReg", json.MustMarshalIndent(hits))
 }

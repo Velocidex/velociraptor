@@ -1,4 +1,4 @@
-package filesystem
+package sparse
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors/zip"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -182,27 +182,30 @@ func (self SparseReader) Close() error {
 	return self.handle.Close()
 }
 
-func (self SparseReader) Stat() (os.FileInfo, error) {
-	return &SparseFileInfo{size: self.size}, nil
-}
-
 func (self SparseReader) LStat() (accessors.FileInfo, error) {
 	return &SparseFileInfo{size: self.size}, nil
 }
 
-func GetSparseFile(file_path string, scope vfilter.Scope) (ReaderStat, error) {
-	pathspec, err := glob.PathSpecFromString(file_path)
-	if err != nil {
-		return nil, err
-	}
+type SparseFileInfo struct {
+	accessors.VirtualFileInfo
+	size int64
+}
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, pathspec.DelegateAccessor)
+func (self SparseFileInfo) Size() int64 {
+	return self.size
+}
+
+func GetSparseFile(file_path string, scope vfilter.Scope) (zip.ReaderStat, error) {
+	full_path := accessors.NewPathspecOSPath(file_path)
+	pathspec := full_path.PathSpec()
+
+	err := vql_subsystem.CheckFilesystemAccess(scope, pathspec.DelegateAccessor)
 	if err != nil {
 		scope.Log("%v: DelegateAccessor denied", err)
 		return nil, err
 	}
 
-	accessor, err := glob.GetAccessor(pathspec.DelegateAccessor, scope)
+	accessor, err := accessors.GetAccessor(pathspec.DelegateAccessor, scope)
 	if err != nil {
 		scope.Log("%v: did you provide a URL or PathSpec?", err)
 		return nil, err
@@ -216,7 +219,7 @@ func GetSparseFile(file_path string, scope vfilter.Scope) (ReaderStat, error) {
 
 	// Devices can not be stat'ed
 	size := int64(0)
-	stat, err := fd.Stat()
+	stat, err := accessor.Lstat(pathspec.GetDelegatePath())
 	if err == nil {
 		size = int64(stat.Size())
 	}
@@ -241,8 +244,8 @@ func GetSparseFile(file_path string, scope vfilter.Scope) (ReaderStat, error) {
 }
 
 func init() {
-	glob.Register("sparse", &GzipFileSystemAccessor{
-		getter: GetSparseFile}, `Allow reading another file by overlaying a sparse map on top of it.
+	accessors.Register("sparse", zip.NewGzipFileSystemAccessor(GetSparseFile),
+		`Allow reading another file by overlaying a sparse map on top of it.
 
 The map excludes reading from certain areas which are considered sparse.
 

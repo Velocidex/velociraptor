@@ -6,11 +6,17 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
+
+type ReadKeyValuesArgs struct {
+	Globs    []string `vfilter:"required,field=globs,doc=Glob expressions to apply."`
+	Accessor string   `vfilter:"optional,field=accessor,default=reg,doc=The accessor to use."`
+	Root     string   `vfilter:"optional,field=root,doc=The root directory to glob from (default '/')."`
+}
 
 type ReadKeyValues struct{}
 
@@ -52,16 +58,17 @@ func (self ReadKeyValues) Call(
 			scope.Log("read_reg_key: %v", err)
 			return
 		}
-		root := ""
+
+		// Get the root of the accessor - we start searching from
+		// there.
+		root_stat, err := accessor.Lstat(arg.Root)
+		if err != nil {
+			scope.Log("read_reg_key: %v", err)
+			return
+		}
+
 		for _, item := range arg.Globs {
-			item_root, item_path, _ := accessor.GetRoot(item)
-			if root != "" && root != item_root {
-				scope.Log("glob: %s: Must use the same root for "+
-					"all globs. Skipping.", item)
-				continue
-			}
-			root = item_root
-			err = globber.Add(item_path, accessor.PathSplit)
+			err = globber.Add(root_stat.OSPath().Parse(item))
 			if err != nil {
 				scope.Log("glob: %v", err)
 				return
@@ -69,7 +76,7 @@ func (self ReadKeyValues) Call(
 		}
 
 		file_chan := globber.ExpandWithContext(
-			ctx, config_obj, root, accessor)
+			ctx, config_obj, root_stat.OSPath(), accessor)
 		for {
 			select {
 			case <-ctx.Done():
@@ -90,10 +97,10 @@ func (self ReadKeyValues) Call(
 					}
 
 					for _, item := range values {
-						value_info, ok := item.(glob.FileInfo)
+						value_info, ok := item.(accessors.FileInfo)
 						if ok {
-							value_data, ok := value_info.Data().(*ordereddict.Dict)
-							if ok && value_data != nil {
+							value_data := value_info.Data()
+							if value_data != nil {
 								value, pres := value_data.Get("value")
 								if pres {
 									res.Set(item.Name(), value)
@@ -128,7 +135,4 @@ func (self ReadKeyValues) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 
 func init() {
 	vql_subsystem.RegisterPlugin(&ReadKeyValues{})
-
-	json.RegisterCustomEncoder(&RawRegKeyInfo{}, glob.MarshalGlobFileInfo)
-	json.RegisterCustomEncoder(&RawRegValueInfo{}, glob.MarshalGlobFileInfo)
 }

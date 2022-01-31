@@ -36,7 +36,11 @@ func (self LinuxPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 }
 
 func (self LinuxPathManipulator) PathJoin(path *OSPath) string {
-	return self.AsPathSpec(path).Path
+	result := self.AsPathSpec(path)
+	if result.DelegateAccessor == "" && result.DelegatePath == "" {
+		return result.Path
+	}
+	return result.String()
 }
 
 func NewLinuxOSPath(path string) *OSPath {
@@ -101,21 +105,24 @@ func (self WindowsPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 		result = &PathSpec{}
 		path.pathspec = result
 	}
-	result.Path = self.PathJoin(path)
-	return result
-}
 
-func (self WindowsPathManipulator) PathJoin(path *OSPath) string {
 	// The first component is usually the drive letter or device and
 	// although it can contain path separators it must not be quoted
 	components := path.Components
 
-	if len(components) == 0 {
-		return ""
+	if len(components) > 0 {
+		// No leading \\ as first component is drive letter
+		result.Path = components[0] + utils.JoinComponents(components[1:], "\\")
 	}
+	return result
+}
 
-	// No leading \\ as first component is drive letter
-	return components[0] + utils.JoinComponents(components[1:], "\\")
+func (self WindowsPathManipulator) PathJoin(path *OSPath) string {
+	result := self.AsPathSpec(path)
+	if result.DelegateAccessor == "" && result.DelegatePath == "" {
+		return result.Path
+	}
+	return result.String()
 }
 
 func NewWindowsOSPath(path string) *OSPath {
@@ -128,18 +135,22 @@ func NewWindowsOSPath(path string) *OSPath {
 	return result
 }
 
+// Raw pathspec paths expect the path to be a json encoded PathSpec
+// object. They do not have any special interpretation of the Path
+// parameter and so they do not break it up at all. These are used in
+// very limited situations when we do not want to represent
+// hierarchical data at all.
 type PathSpecPathManipulator int
 
 func (self PathSpecPathManipulator) PathParse(path string, result *OSPath) {
 	pathspec, err := PathSpecFromString(path)
 	if err == nil {
 		result.pathspec = pathspec
-		// Break the path into components
-		result.Components = utils.SplitComponents(pathspec.Path)
-		return
+	} else {
+		result.pathspec = &PathSpec{Path: path}
 	}
 
-	result.pathspec = &PathSpec{Path: path}
+	result.Components = []string{pathspec.Path}
 }
 
 func (self PathSpecPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
@@ -148,18 +159,15 @@ func (self PathSpecPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 		result = &PathSpec{}
 		path.pathspec = result
 	}
-	result.Path = "/" + strings.Join(path.Components, "/")
 	return result
 }
 
 func (self PathSpecPathManipulator) PathJoin(path *OSPath) string {
-	result := "/" + strings.Join(path.Components, "/")
 	if path.pathspec != nil {
-		path.pathspec.Path = result
 		return path.pathspec.String()
 	}
 
-	return result
+	return ""
 }
 
 func NewPathspecOSPath(path string) *OSPath {

@@ -40,6 +40,7 @@ import (
 	"www.velocidex.com/golang/regparser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	"www.velocidex.com/golang/vfilter"
@@ -210,6 +211,15 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 			return nil, err
 		}
 
+		// Make sure we can read the header so we can propagate errors
+		// properly.
+		header := make([]byte, 4)
+		_, err = paged_reader.ReadAt(header, 0)
+		if err != nil {
+			paged_reader.Close()
+			return nil, err
+		}
+
 		hive, err = regparser.NewRegistry(paged_reader)
 		if err != nil {
 			paged_reader.Close()
@@ -243,7 +253,7 @@ func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 func (self *RawRegFileSystemAccessor) ReadDir(key_path string) (
 	[]accessors.FileInfo, error) {
 
-	full_path := accessors.NewPathspecOSPath(key_path)
+	full_path := accessors.NewWindowsOSPath(key_path)
 
 	var result []accessors.FileInfo
 	hive, err := self.getRegHive(full_path)
@@ -287,12 +297,10 @@ func (self *RawRegFileSystemAccessor) Lstat(filename string) (
 	return nil, errors.New("Not implemented")
 }
 
-type ReadKeyValuesArgs struct {
-	Globs    []string `vfilter:"required,field=globs,doc=Glob expressions to apply."`
-	Accessor string   `vfilter:"optional,field=accessor,default=reg,doc=The accessor to use."`
-}
-
 func init() {
 	accessors.Register("raw_reg", &RawRegFileSystemAccessor{},
 		`Access keys and values by parsing the raw registry hive. Path is a pathspec having delegate opening the raw registry hive.`)
+
+	json.RegisterCustomEncoder(&RawRegKeyInfo{}, accessors.MarshalGlobFileInfo)
+	json.RegisterCustomEncoder(&RawRegValueInfo{}, accessors.MarshalGlobFileInfo)
 }

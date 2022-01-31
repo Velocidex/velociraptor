@@ -1,15 +1,12 @@
-package filesystem
+package data
 
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
-	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -38,16 +35,11 @@ func (self ScopeFilesystemAccessor) getData(variable string) (string, error) {
 	default:
 		return fmt.Sprintf("%v", variable_data), nil
 	}
-
 }
 
 func (self ScopeFilesystemAccessor) Lstat(variable string) (
 	accessors.FileInfo, error) {
-	str, err := self.getData(variable)
-	if err != nil {
-		return nil, err
-	}
-	return utils.NewDataFileInfo(str), err
+	return nil, errors.New("Not implemented")
 }
 
 func (self ScopeFilesystemAccessor) ReadDir(path string) (
@@ -61,24 +53,12 @@ func (self ScopeFilesystemAccessor) Open(path string) (
 	if err != nil {
 		return nil, err
 	}
-	return utils.DataReadSeekCloser{
+	return accessors.VirtualReadSeekCloser{
 		ReadSeeker: strings.NewReader(str),
-		Data:       path,
 	}, nil
 }
 
-func (self ScopeFilesystemAccessor) PathSplit(path string) []string {
-	return paths.GenericPathSplit(path)
-}
-
-func (self ScopeFilesystemAccessor) PathJoin(root, stem string) string {
-	return filepath.Join(root, stem)
-}
-
-func (self ScopeFilesystemAccessor) GetRoot(path string) (string, string, error) {
-	return "/", path, nil
-}
-
 func init() {
-	accessors.Register("scope", &ScopeFilesystemAccessor{}, `Similar to the "data" accessor, this makes a string appears as a file. However, instead of the Filename containing the file content itself, the Filename refers to the name of a variable in the current scope that contains the data. This is useful when the binary data is not unicode safe and can not be properly represented by JSON.`)
+	accessors.Register("scope", &ScopeFilesystemAccessor{},
+		`Similar to the "data" accessor, this makes a string appears as a file. However, instead of the Filename containing the file content itself, the Filename refers to the name of a variable in the current scope that contains the data. This is useful when the binary data is not unicode safe and can not be properly represented by JSON.`)
 }
