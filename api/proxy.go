@@ -32,13 +32,13 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/encoding/protojson"
+	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/accessors"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -153,7 +153,7 @@ func PrepareGUIMux(
 	mux.Handle(base+"/downloads/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, http.StripPrefix(base, forceMime(http.FileServer(
-				accessors.NewFileSystem(
+				file_store_accessor.NewFileSystem(
 					config_obj,
 					file_store.GetFileStore(config_obj),
 					"/downloads/")))))))
@@ -162,7 +162,7 @@ func PrepareGUIMux(
 	mux.Handle(base+"/notebooks/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, http.StripPrefix(base, forceMime(http.FileServer(
-				accessors.NewFileSystem(
+				file_store_accessor.NewFileSystem(
 					config_obj,
 					file_store.GetFileStore(config_obj),
 					"/notebooks/")))))))

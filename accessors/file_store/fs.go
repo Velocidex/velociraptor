@@ -1,4 +1,4 @@
-package accessors
+package file_store
 
 import (
 	"net/http"

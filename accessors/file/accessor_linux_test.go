@@ -4,6 +4,7 @@ package file_test
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -72,10 +73,14 @@ func (self *AccessorLinuxTestSuite) TestSymlinks() {
 
 	// Open through the link.
 	for _, filename := range []string{
-		"subdir/1.txt",
-		"subdir/parent_link/subdir/1.txt",
-		"subdir/dir_link/subdir/1.txt"} {
-		reader, err := accessor.Open(filepath.Join(self.tmpdir, filename))
+		"%s/subdir/1.txt",
+		"%s/subdir/parent_link/subdir/1.txt",
+		"%s/subdir/dir_link/subdir/1.txt",
+
+		// Accept a pathspec as well.
+		`{"Path":"%s/subdir/1.txt"}`,
+	} {
+		reader, err := accessor.Open(fmt.Sprintf(filename, self.tmpdir))
 		assert.NoError(self.T(), err)
 		defer fd.Close()
 

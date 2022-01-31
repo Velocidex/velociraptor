@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -33,12 +32,11 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/uploads"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -96,7 +94,7 @@ func (self *AccessorContext) Close() {
 
 type NTFSFileInfo struct {
 	info       *ntfs.FileInfo
-	_full_path string
+	_full_path *accessors.OSPath
 }
 
 func (self *NTFSFileInfo) IsDir() bool {
@@ -107,7 +105,7 @@ func (self *NTFSFileInfo) Size() int64 {
 	return self.info.Size
 }
 
-func (self *NTFSFileInfo) Data() interface{} {
+func (self *NTFSFileInfo) Data() *ordereddict.Dict {
 	result := ordereddict.NewDict().
 		Set("mft", self.info.MFTId).
 		Set("name_type", self.info.NameType).
@@ -141,6 +139,10 @@ func (self *NTFSFileInfo) ModTime() time.Time {
 }
 
 func (self *NTFSFileInfo) FullPath() string {
+	return self._full_path.String()
+}
+
+func (self *NTFSFileInfo) OSPath() *accessors.OSPath {
 	return self._full_path
 }
 
@@ -165,8 +167,8 @@ func (self *NTFSFileInfo) IsLink() bool {
 	return false
 }
 
-func (self *NTFSFileInfo) GetLink() (string, error) {
-	return "", errors.New("Not implemented")
+func (self *NTFSFileInfo) GetLink() (*accessors.OSPath, error) {
+	return nil, errors.New("Not implemented")
 }
 
 type NTFSFileSystemAccessor struct {
@@ -175,6 +177,8 @@ type NTFSFileSystemAccessor struct {
 	// The delegate accessor we use to open the underlying volume.
 	accessor string
 	device   string
+
+	root *accessors.OSPath
 }
 
 func NewNTFSFileSystemAccessor(
@@ -183,13 +187,16 @@ func NewNTFSFileSystemAccessor(
 		scope:    scope,
 		accessor: accessor,
 		device:   device,
+		root:     accessors.NewWindowsOSPath(""),
 	}
 }
 
-func (self NTFSFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self NTFSFileSystemAccessor) New(scope vfilter.Scope) (
+	accessors.FileSystemAccessor, error) {
 	// Create a new cache in the scope.
 	return &NTFSFileSystemAccessor{
 		scope: scope,
+		root:  self.root,
 	}, nil
 }
 
@@ -198,7 +205,8 @@ func (self *NTFSFileSystemAccessor) getRootMFTEntry(ntfs_ctx *ntfs.NTFSContext) 
 	return ntfs_ctx.GetMFT(5)
 }
 
-func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, err error) {
+func (self *NTFSFileSystemAccessor) ReadDir(path string) (
+	res []accessors.FileInfo, err error) {
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -207,7 +215,11 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 		}
 	}()
 
-	result := []glob.FileInfo{}
+	// Normalize the path
+	fullpath := self.root.Parse(path)
+	path = fullpath.String()
+
+	result := []accessors.FileInfo{}
 
 	ntfs_ctx, err := readers.GetNTFSContext(
 		self.scope, self.device, self.accessor)
@@ -222,7 +234,7 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 
 	// Open the device path from the root.
 	dir, err := Open(self.scope, root, ntfs_ctx,
-		self.device, self.accessor, path)
+		self.device, self.accessor, fullpath)
 	if err != nil {
 		return nil, err
 	}
@@ -256,10 +268,9 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 			if info == nil {
 				continue
 			}
-			full_path := path + "\\" + info.Name
 			result = append(result, &NTFSFileInfo{
 				info:       info,
-				_full_path: full_path,
+				_full_path: fullpath.Append(info.Name),
 			})
 		}
 	}
@@ -269,7 +280,7 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 type readAdapter struct {
 	sync.Mutex
 
-	info   glob.FileInfo
+	info   accessors.FileInfo
 	reader ntfs.RangeReaderAt
 	pos    int64
 }
@@ -321,13 +332,6 @@ func (self *readAdapter) Close() error {
 	return nil
 }
 
-func (self *readAdapter) Stat() (os.FileInfo, error) {
-	self.Lock()
-	defer self.Unlock()
-
-	return self.info, nil
-}
-
 func (self *readAdapter) Seek(offset int64, whence int) (int64, error) {
 	self.Lock()
 	defer self.Unlock()
@@ -336,7 +340,7 @@ func (self *readAdapter) Seek(offset int64, whence int) (int64, error) {
 	return self.pos, nil
 }
 
-func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, err error) {
+func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekCloser, err error) {
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -345,7 +349,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, 
 		}
 	}()
 
-	components := self.PathSplit(path)
+	fullpath := self.root.Parse(path)
 
 	ntfs_ctx, err := readers.GetNTFSContext(
 		self.scope, self.device, self.accessor)
@@ -358,12 +362,14 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, 
 		return nil, err
 	}
 
-	data, err := ntfs.GetDataForPath(ntfs_ctx, path)
+	data, err := ntfs.GetDataForPath(ntfs_ctx, fullpath.String())
 	if err != nil {
 		return nil, err
 	}
 
-	dirname := filepath.Dir(path)
+	dirname := fullpath.Dirname()
+	basename := strings.ToLower(fullpath.Basename())
+
 	dir, err := Open(self.scope, root, ntfs_ctx,
 		self.device, self.accessor, dirname)
 	if err != nil {
@@ -371,12 +377,11 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, 
 	}
 
 	for _, info := range ntfs.ListDir(ntfs_ctx, dir) {
-		if strings.ToLower(info.Name) == strings.ToLower(
-			components[len(components)-1]) {
+		if strings.ToLower(info.Name) == basename {
 			return &readAdapter{
 				info: &NTFSFileInfo{
 					info:       info,
-					_full_path: dirname + "\\" + info.Name,
+					_full_path: dirname.Append(info.Name),
 				},
 				reader: data,
 			}, nil
@@ -386,7 +391,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, 
 	return nil, errors.New("File not found")
 }
 
-func (self *NTFSFileSystemAccessor) Lstat(path string) (res glob.FileInfo, err error) {
+func (self *NTFSFileSystemAccessor) Lstat(path string) (res accessors.FileInfo, err error) {
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -395,7 +400,7 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res glob.FileInfo, err e
 		}
 	}()
 
-	components := self.PathSplit(path)
+	fullpath := self.root.Parse(path)
 
 	ntfs_ctx, err := readers.GetNTFSContext(
 		self.scope, self.device, self.accessor)
@@ -408,18 +413,18 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res glob.FileInfo, err e
 		return nil, err
 	}
 
-	dirname := filepath.Dir(path)
+	dirname := fullpath.Dirname()
+	basename := strings.ToLower(fullpath.Basename())
 	dir, err := Open(self.scope, root, ntfs_ctx, self.device,
 		self.accessor, dirname)
 	if err != nil {
 		return nil, err
 	}
 	for _, info := range ntfs.ListDir(ntfs_ctx, dir) {
-		if strings.ToLower(info.Name) == strings.ToLower(
-			components[len(components)-1]) {
+		if strings.ToLower(info.Name) == basename {
 			res := &NTFSFileInfo{
 				info:       info,
-				_full_path: dirname + "\\" + info.Name,
+				_full_path: dirname.Append(info.Name),
 			}
 			return res, nil
 
@@ -460,10 +465,10 @@ func unescape(path string) string {
 // Open the MFT entry specified by a path name. Walks all directory
 // indexes in the path to find the right MFT entry.
 func Open(scope vfilter.Scope, self *ntfs.MFT_ENTRY,
-	ntfs_ctx *ntfs.NTFSContext, device, accessor, filename string) (
-	*ntfs.MFT_ENTRY, error) {
+	ntfs_ctx *ntfs.NTFSContext, device, accessor string,
+	filename *accessors.OSPath) (*ntfs.MFT_ENTRY, error) {
 
-	components := utils.SplitComponents(filename)
+	components := filename.Components
 
 	// Path is the relative path from the root of the device we want to list
 	// component: The name of the file we want (case insensitive)
@@ -528,5 +533,5 @@ func Open(scope vfilter.Scope, self *ntfs.MFT_ENTRY,
 }
 
 func init() {
-	json.RegisterCustomEncoder(&NTFSFileInfo{}, glob.MarshalGlobFileInfo)
+	json.RegisterCustomEncoder(&NTFSFileInfo{}, accessors.MarshalGlobFileInfo)
 }

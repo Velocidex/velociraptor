@@ -28,6 +28,7 @@ type VirtualFileInfo struct {
 
 	Data_  *ordereddict.Dict
 	IsDir_ bool
+	Size_  int64
 
 	Path   *OSPath
 	Atime_ time.Time
@@ -45,6 +46,10 @@ func (self *VirtualFileInfo) OSPath() *OSPath {
 }
 
 func (self *VirtualFileInfo) Size() int64 {
+	if self.Size_ > 0 {
+		return self.Size_
+	}
+
 	return int64(len(self.RawData))
 }
 

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -96,7 +96,7 @@ func (self *SyslogWatcherService) StartMonitoring(
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
 
-	accessor, err := glob.GetAccessor(accessor_name, scope)
+	accessor, err := accessors.GetAccessor(accessor_name, scope)
 	if err != nil {
 		//scope.Log("Registering watcher error: %v", err)
 		return
@@ -122,7 +122,7 @@ func (self *SyslogWatcherService) StartMonitoring(
 
 func (self *SyslogWatcherService) findLastLineOffset(
 	filename string,
-	accessor glob.FileSystemAccessor) *Cursor {
+	accessor accessors.FileSystemAccessor) *Cursor {
 
 	cursor := &Cursor{}
 
@@ -168,7 +168,7 @@ func (self *SyslogWatcherService) findLastLineOffset(
 func (self *SyslogWatcherService) monitorOnce(
 	filename string,
 	accessor_name string,
-	accessor glob.FileSystemAccessor,
+	accessor accessors.FileSystemAccessor,
 	cursor *Cursor) *Cursor {
 
 	self.mu.Lock()

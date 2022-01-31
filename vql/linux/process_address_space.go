@@ -16,22 +16,13 @@ import (
 	"strconv"
 	"sync"
 
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
 const PAGE_SIZE = 0x1000
-
-type ProcessFileInfo struct {
-	utils.DataFileInfo
-	size int64
-}
-
-func (self ProcessFileInfo) Size() int64 {
-	return self.size
-}
 
 type ProcessReader struct {
 	mu     sync.Mutex
@@ -170,28 +161,29 @@ func (self ProcessReader) Close() error {
 }
 
 func (self ProcessReader) Stat() (os.FileInfo, error) {
-	return &ProcessFileInfo{size: self.size}, nil
+	return &accessors.VirtualFileInfo{
+		Path:  accessors.NewLinuxOSPath(fmt.Sprintf("%v", self.pid)),
+		Size_: self.size,
+	}, nil
 }
 
-type ProcessAccessor struct {
-	glob.DataFilesystemAccessor
-}
+type ProcessAccessor struct{}
 
 const _ProcessAccessorTag = "_ProcessAccessor"
 
-func (self ProcessAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self ProcessAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
 	return &ProcessAccessor{}, nil
 }
 
-func (self ProcessAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
+func (self ProcessAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {
 	return nil, errors.New("Unable to list all processes, use the pslist() plugin.")
 }
 
-func (self ProcessAccessor) Lstat(filename string) (glob.FileInfo, error) {
-	return utils.NewDataFileInfo(""), nil
+func (self ProcessAccessor) Lstat(filename string) (accessors.FileInfo, error) {
+	return nil, errors.New("Not implemented")
 }
 
-func (self *ProcessAccessor) Open(path string) (glob.ReadSeekCloser, error) {
+func (self *ProcessAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
 	components := utils.SplitComponents(path)
 	if len(components) == 0 {
 		return nil, errors.New("Unable to list all processes, use the pslist() plugin.")
@@ -226,7 +218,9 @@ func (self *ProcessAccessor) Open(path string) (glob.ReadSeekCloser, error) {
 }
 
 func init() {
-	glob.Register("process", &ProcessAccessor{}, `Access process memory like a file. The Path is taken in the form "/<pid>", i.e. the pid appears as the top level file.`)
+	accessors.Register("process",
+		&ProcessAccessor{},
+		`Access process memory like a file. The Path is taken in the form "/<pid>", i.e. the pid appears as the top level file.`)
 }
 
 var (

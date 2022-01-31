@@ -30,24 +30,36 @@ import (
 // possible and only serialize to OS representation when necessary.
 
 type PathManipulator interface {
-	PathSplit(path string) []string
-	PathJoin(components []string) string
+	PathParse(path string, result *OSPath)
+	PathJoin(path *OSPath) string
+	AsPathSpec(path *OSPath) *PathSpec
 }
 
 type OSPath struct {
-	Components  []string
+	Components []string
+
+	// Some paths need more information. They store an additional path
+	// spec here.
+	pathspec    *PathSpec
 	Manipulator PathManipulator
 }
 
-func (self OSPath) String() string {
-	return self.Manipulator.PathJoin(self.Components)
+func (self *OSPath) PathSpec() *PathSpec {
+	return self.Manipulator.AsPathSpec(self)
+}
+
+func (self *OSPath) String() string {
+	return self.Manipulator.PathJoin(self)
 }
 
 func (self *OSPath) Parse(path string) *OSPath {
-	return &OSPath{
-		Components:  self.Manipulator.PathSplit(path),
+	result := &OSPath{
 		Manipulator: self.Manipulator,
 	}
+
+	self.Manipulator.PathParse(path, result)
+
+	return result
 }
 
 func (self *OSPath) Basename() string {
@@ -57,6 +69,7 @@ func (self *OSPath) Basename() string {
 func (self *OSPath) Dirname() *OSPath {
 	return &OSPath{
 		Components:  utils.CopySlice(self.Components[:len(self.Components)-1]),
+		pathspec:    self.pathspec,
 		Manipulator: self.Manipulator,
 	}
 }
@@ -70,6 +83,7 @@ func (self *OSPath) Trim(prefix *OSPath) *OSPath {
 		if idx >= len(prefix.Components) || c != prefix.Components[idx] {
 			return &OSPath{
 				Components:  utils.CopySlice(self.Components[idx:]),
+				pathspec:    self.pathspec,
 				Manipulator: self.Manipulator,
 			}
 		}
@@ -80,6 +94,7 @@ func (self *OSPath) Trim(prefix *OSPath) *OSPath {
 func (self *OSPath) Append(children ...string) *OSPath {
 	return &OSPath{
 		Components:  utils.CopySlice(append(self.Components, children...)),
+		pathspec:    self.pathspec,
 		Manipulator: self.Manipulator,
 	}
 }

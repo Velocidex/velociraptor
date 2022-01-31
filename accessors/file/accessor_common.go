@@ -171,6 +171,8 @@ func (self OSFileSystemAccessor) New(scope vfilter.Scope) (accessors.FileSystemA
 
 func (self OSFileSystemAccessor) Lstat(filename string) (accessors.FileInfo, error) {
 	full_path := self.root.Parse(filename)
+	filename = full_path.PathSpec().Path
+
 	lstat, err := os.Lstat(filename)
 	if err != nil {
 		return nil, err
@@ -185,7 +187,7 @@ func (self OSFileSystemAccessor) Lstat(filename string) (accessors.FileInfo, err
 
 func (self OSFileSystemAccessor) ReadDir(dir string) ([]accessors.FileInfo, error) {
 	full_path := self.root.Parse(dir)
-	dir = full_path.String()
+	dir = full_path.PathSpec().Path
 
 	lstat, err := os.Lstat(dir)
 	if err != nil {
@@ -246,7 +248,7 @@ func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, er
 
 	// Clean the path
 	full_path := self.root.Parse(path)
-	path = full_path.String()
+	path = full_path.PathSpec().Path
 
 	// Eval any symlinks directly
 	path, err = filepath.EvalSymlinks(path)

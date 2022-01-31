@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -134,20 +134,23 @@ type PipeFilesystemAccessor struct {
 	scope vfilter.Scope
 }
 
-func (self PipeFilesystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self PipeFilesystemAccessor) New(scope vfilter.Scope) (
+	accessors.FileSystemAccessor, error) {
 	return PipeFilesystemAccessor{scope}, nil
 }
 
-func (self PipeFilesystemAccessor) Lstat(variable string) (glob.FileInfo, error) {
-	return utils.NewDataFileInfo(""), nil
+func (self PipeFilesystemAccessor) Lstat(variable string) (
+	accessors.FileInfo, error) {
+	return nil, errors.New("Not implemented")
 }
 
-func (self PipeFilesystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
+func (self PipeFilesystemAccessor) ReadDir(path string) (
+	[]accessors.FileInfo, error) {
 	return nil, errors.New("Not implemented")
 }
 
 // The path is the name of the scope variable that holds the pipe object
-func (self PipeFilesystemAccessor) Open(variable string) (glob.ReadSeekCloser, error) {
+func (self PipeFilesystemAccessor) Open(variable string) (accessors.ReadSeekCloser, error) {
 	variable_data, pres := self.scope.Resolve(variable)
 	if !pres {
 		return nil, os.ErrNotExist
@@ -180,7 +183,8 @@ func (self PipeFilesystemAccessor) GetRoot(path string) (string, string, error) 
 }
 
 func init() {
-	glob.Register("pipe", &PipeFilesystemAccessor{}, `Read from a VQL pipe.
+	accessors.Register("pipe", &PipeFilesystemAccessor{},
+		`Read from a VQL pipe.
 
 A VQL pipe allows data to be generated from a VQL query, as the pipe is read, the query proceeds to feed more data to it.
 

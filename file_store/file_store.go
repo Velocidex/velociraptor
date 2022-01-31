@@ -22,14 +22,14 @@ import (
 	"fmt"
 	"sync"
 
+	"www.velocidex.com/golang/velociraptor/accessors"
+	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store/accessors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memcache"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
-	"www.velocidex.com/golang/velociraptor/glob"
 )
 
 var (
@@ -92,13 +92,13 @@ func getImpl(implementation string,
 
 // Gets an accessor that can access the file store.
 func GetFileStoreFileSystemAccessor(
-	config_obj *config_proto.Config) (glob.FileSystemAccessor, error) {
+	config_obj *config_proto.Config) (accessors.FileSystemAccessor, error) {
 
 	fs_mu.Lock()
 	defer fs_mu.Unlock()
 
 	if g_impl != nil {
-		return accessors.NewFileStoreFileSystemAccessor(
+		return file_store_accessor.NewFileStoreFileSystemAccessor(
 			config_obj, g_impl), nil
 	}
 
@@ -114,15 +114,15 @@ func GetFileStoreFileSystemAccessor(
 	switch implementation {
 
 	case "MemcacheFileDataStore":
-		return accessors.NewFileStoreFileSystemAccessor(
+		return file_store_accessor.NewFileStoreFileSystemAccessor(
 			config_obj, memcache_imp), nil
 
 	case "FileBaseDataStore", "RemoteFileDataStore", "ReadOnlyDataStore":
-		return accessors.NewFileStoreFileSystemAccessor(
+		return file_store_accessor.NewFileStoreFileSystemAccessor(
 			config_obj, directory_imp), nil
 
 	case "Test":
-		return accessors.NewFileStoreFileSystemAccessor(
+		return file_store_accessor.NewFileStoreFileSystemAccessor(
 			config_obj, memory_imp), nil
 
 	}

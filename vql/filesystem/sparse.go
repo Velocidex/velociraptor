@@ -6,9 +6,9 @@ import (
 	"os"
 	"sync"
 
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/uploads"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -39,22 +39,13 @@ func parseRanges(serialized []byte) ([]*uploads.Range, error) {
 	return result, nil
 }
 
-type SparseFileInfo struct {
-	utils.DataFileInfo
-	size int64
-}
-
-func (self SparseFileInfo) Size() int64 {
-	return self.size
-}
-
 type SparseReader struct {
 	mu     sync.Mutex
 	offset int64
 	size   int64
 
 	// A file handle to the /proc/pid/mem file.
-	handle glob.ReadSeekCloser
+	handle accessors.ReadSeekCloser
 	ranges []*uploads.Range
 }
 
@@ -195,7 +186,7 @@ func (self SparseReader) Stat() (os.FileInfo, error) {
 	return &SparseFileInfo{size: self.size}, nil
 }
 
-func (self SparseReader) LStat() (glob.FileInfo, error) {
+func (self SparseReader) LStat() (accessors.FileInfo, error) {
 	return &SparseFileInfo{size: self.size}, nil
 }
 

@@ -31,7 +31,7 @@ func (self *NTFSCachedContext) Close() {
 }
 
 // For non -windows we just create a regular caching context
-func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, error) {
+func GetNTFSContext(scope vfilter.Scope, device, accessor string) (*ntfs.NTFSContext, error) {
 	key := "ntfsctx_cache" + device
 
 	// Get the cache context from the root scope's cache
@@ -41,7 +41,8 @@ func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, erro
 	}
 
 	lru_size := vql_subsystem.GetIntFromRow(scope, scope, constants.NTFS_CACHE_SIZE)
-	paged_reader, err := readers.NewPagedReader(scope, "file", device, int(lru_size))
+	paged_reader, err := readers.NewPagedReader(
+		scope, accessor, device, int(lru_size))
 	if err != nil {
 		return nil, err
 	}

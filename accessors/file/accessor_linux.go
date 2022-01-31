@@ -46,6 +46,12 @@ func (self *OSFileInfo) Atime() time.Time {
 	return time.Unix(ts, 0)
 }
 
+func NewOSFileSystemAccessor() *OSFileSystemAccessor {
+	return &OSFileSystemAccessor{
+		root: accessors.NewLinuxOSPath(""),
+	}
+}
+
 func init() {
 	accessors.Register("file", &OSFileSystemAccessor{
 		root: accessors.NewLinuxOSPath(""),

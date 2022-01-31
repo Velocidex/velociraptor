@@ -19,6 +19,9 @@ var linux_testcases = []testcase{
 
 	// Ignore and dont support directory traversal at all
 	{"/bin/../../../.././../../ls", []string{"bin", "ls"}, "/bin/ls"},
+
+	// Can accept paths in pathspec format
+	{"{\"Path\":\"/bin/ls\"}", []string{"bin", "ls"}, "/bin/ls"},
 }
 
 func TestLinuxManipulators(t *testing.T) {
@@ -58,6 +61,20 @@ var windows_testcases = []testcase{
 func TestWindowsManipulators(t *testing.T) {
 	for _, testcase := range windows_testcases {
 		path := NewWindowsOSPath(testcase.serialized_path)
+		assert.Equal(t, testcase.components, path.Components)
+		assert.Equal(t, testcase.expected_path, path.String())
+	}
+}
+
+var pathspec_testcases = []testcase{
+	{"{\"DelegateAccessor\":\"zip\",\"DelegatePath\":\"Foo\",\"Path\":\"/bin/ls\"}",
+		[]string{"bin", "ls"},
+		"{\"DelegateAccessor\":\"zip\",\"DelegatePath\":\"Foo\",\"Path\":\"/bin/ls\"}"},
+}
+
+func TestPathspecManipulators(t *testing.T) {
+	for _, testcase := range pathspec_testcases {
+		path := NewPathspecOSPath(testcase.serialized_path)
 		assert.Equal(t, testcase.components, path.Components)
 		assert.Equal(t, testcase.expected_path, path.String())
 	}

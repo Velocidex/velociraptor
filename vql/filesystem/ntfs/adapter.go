@@ -3,16 +3,14 @@ package ntfs
 import (
 	"errors"
 	"io"
-	"os"
 
-	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/accessors"
 )
 
 type readSeekReaderAdapter struct {
 	reader io.ReaderAt
 	offset int64
-	info   glob.FileInfo
+	info   accessors.FileInfo
 }
 
 func (self readSeekReaderAdapter) Close() error {
@@ -34,9 +32,12 @@ func (self *readSeekReaderAdapter) Seek(offset int64, whence int) (int64, error)
 	return offset, nil
 }
 
+/*
 func (self *readSeekReaderAdapter) Stat() (os.FileInfo, error) {
 	if utils.IsNil(self.info) {
 		return nil, errors.New("Not supported")
 	}
 	return self.info, nil
 }
+
+*/

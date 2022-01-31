@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -17,7 +17,8 @@ type ScopeFilesystemAccessor struct {
 	scope vfilter.Scope
 }
 
-func (self ScopeFilesystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self ScopeFilesystemAccessor) New(scope vfilter.Scope) (
+	accessors.FileSystemAccessor, error) {
 	return ScopeFilesystemAccessor{scope}, nil
 }
 
@@ -40,7 +41,8 @@ func (self ScopeFilesystemAccessor) getData(variable string) (string, error) {
 
 }
 
-func (self ScopeFilesystemAccessor) Lstat(variable string) (glob.FileInfo, error) {
+func (self ScopeFilesystemAccessor) Lstat(variable string) (
+	accessors.FileInfo, error) {
 	str, err := self.getData(variable)
 	if err != nil {
 		return nil, err
@@ -48,11 +50,13 @@ func (self ScopeFilesystemAccessor) Lstat(variable string) (glob.FileInfo, error
 	return utils.NewDataFileInfo(str), err
 }
 
-func (self ScopeFilesystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
+func (self ScopeFilesystemAccessor) ReadDir(path string) (
+	[]accessors.FileInfo, error) {
 	return nil, errors.New("Not implemented")
 }
 
-func (self ScopeFilesystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
+func (self ScopeFilesystemAccessor) Open(path string) (
+	accessors.ReadSeekCloser, error) {
 	str, err := self.getData(path)
 	if err != nil {
 		return nil, err
@@ -76,5 +80,5 @@ func (self ScopeFilesystemAccessor) GetRoot(path string) (string, string, error)
 }
 
 func init() {
-	glob.Register("scope", &ScopeFilesystemAccessor{}, `Similar to the "data" accessor, this makes a string appears as a file. However, instead of the Filename containing the file content itself, the Filename refers to the name of a variable in the current scope that contains the data. This is useful when the binary data is not unicode safe and can not be properly represented by JSON.`)
+	accessors.Register("scope", &ScopeFilesystemAccessor{}, `Similar to the "data" accessor, this makes a string appears as a file. However, instead of the Filename containing the file content itself, the Filename refers to the name of a variable in the current scope that contains the data. This is useful when the binary data is not unicode safe and can not be properly represented by JSON.`)
 }

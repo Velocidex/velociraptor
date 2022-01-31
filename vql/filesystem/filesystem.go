@@ -21,10 +21,12 @@ import (
 	"context"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/v3/disk"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -70,22 +72,19 @@ func (self GlobPlugin) Call(
 			return
 		}
 
-		/*
-			deviceManager, err := glob.GetDeviceManagerFromScope(scope)
-			if err != nil {
-				scope.Log("glob: %v", err)
-				return
-			}
-
-			accessor, err := deviceManager.GetAccessor(arg.Accessor, scope)
-		*/
-		accessor, err := glob.GetAccessor(arg.Accessor, scope)
+		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("glob: %v", err)
 			return
 		}
 
-		root := arg.Root
+		root_path, err := accessor.Lstat("")
+		if err != nil {
+			scope.Log("glob: %v", err)
+			return
+		}
+
+		root := root_path.OSPath().Parse(arg.Root)
 
 		options := glob.GlobOptions{
 			DoNotFollowSymlinks: arg.DoNotFollowSymlinks,
@@ -100,7 +99,7 @@ func (self GlobPlugin) Call(
 				return
 			}
 
-			options.RecursionCallback = func(file_info glob.FileInfo) bool {
+			options.RecursionCallback = func(file_info accessors.FileInfo) bool {
 				result := lambda.Reduce(ctx, scope, []vfilter.Any{file_info})
 				return scope.Bool(result)
 			}
@@ -108,48 +107,19 @@ func (self GlobPlugin) Call(
 
 		globber := glob.NewGlobber().WithOptions(options)
 
-		/*
-			if deviceManager.Mapping != nil {
-				// in case we have a remapping, we forcibly remove the root
-				// from all globs to prevent issues with wrong paths later on
-				originalAccessor, err := glob.GetAccessor(arg.Accessor, scope)
-				if err != nil {
-					scope.Log("glob: %s", err.Error())
-					return
-				}
-
-				for i, glob := range arg.Globs {
-					_, item_path, _ := originalAccessor.GetRoot(glob)
-					arg.Globs[i] = deviceManager.WrapPath(item_path)
-				}
-			}
-		*/
-
 		// If root is not specified we try to find a common
 		// root from the globs.
-		if root == "" {
-			for _, item := range arg.Globs {
-				item_root, item_path, _ := accessor.GetRoot(item)
-				if root != "" && root != item_root {
-					scope.Log("glob: %s: Must use the same root for "+
-						"all globs. Skipping.", item)
-					continue
-				}
-				root = item_root
-				err = globber.Add(item_path, accessor.PathSplit)
-				if err != nil {
-					scope.Log("glob: %v", err)
-					return
-				}
+		for _, item := range arg.Globs {
+			if strings.HasPrefix(item, "{") {
+				scope.Log("glob: Glob item appears to be a pathspec. This is not supported, please use the root arg instead.")
+				continue
 			}
 
-		} else {
-			for _, item := range arg.Globs {
-				err = globber.Add(item, accessor.PathSplit)
-				if err != nil {
-					scope.Log("glob: %v", err)
-					return
-				}
+			item_path := root.Parse(item)
+			err = globber.Add(item_path)
+			if err != nil {
+				scope.Log("glob: %v", err)
+				return
 			}
 		}
 
@@ -196,7 +166,7 @@ func (self ReadFilePlugin) processFile(
 	ctx context.Context,
 	scope vfilter.Scope,
 	arg *ReadFileArgs,
-	accessor glob.FileSystemAccessor,
+	accessor accessors.FileSystemAccessor,
 	file string,
 	output_chan chan vfilter.Row) {
 	total_len := int64(0)
@@ -269,7 +239,7 @@ func (self ReadFilePlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, scope)
+		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("read_file: %v", err)
 			return
@@ -326,7 +296,7 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, scope)
+	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("read_file: %v", err)
 		return ""
@@ -390,7 +360,7 @@ func (self *StatPlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, scope)
+		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("stat: %s", err.Error())
 			return

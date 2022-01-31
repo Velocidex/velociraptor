@@ -34,7 +34,7 @@ import (
 
 	yara "github.com/Velocidex/go-yara"
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -198,7 +198,7 @@ func (self *scanReporter) scanFileByAccessor(
 	start, end uint64,
 	output_chan chan vfilter.Row) {
 
-	accessor, err := glob.GetAccessor(accessor_name, self.scope)
+	accessor, err := accessors.GetAccessor(accessor_name, self.scope)
 	if err != nil {
 		self.scope.Log("yara: %v", err)
 		return
@@ -249,7 +249,7 @@ func (self *scanReporter) scanFileByAccessor(
 	}
 }
 
-func (self *scanReporter) scanRange(start, end uint64, f glob.ReadSeekCloser) {
+func (self *scanReporter) scanRange(start, end uint64, f accessors.ReadSeekCloser) {
 	buf := make([]byte, self.blocksize)
 
 	// self.scope.Log("Scanning %v from %#0x to %#0x", self.filename, start, end)

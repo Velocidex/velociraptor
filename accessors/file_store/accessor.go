@@ -1,22 +1,21 @@
-package accessors
+package file_store
 
 // This implements a filesystem accessor which can be used to access
 // the generic filestore. This allows us to run globs on the file
-// store regardless of the specific filestore implementation.  This
-// accessor is for DirectoryFileStore
-
+// store regardless of the specific filestore implementation.
 import (
+	"errors"
 	"os"
 	"strings"
 	"time"
 
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -34,15 +33,15 @@ func NewFileStoreFileSystemAccessor(
 }
 
 func (self FileStoreFileSystemAccessor) New(
-	scope vfilter.Scope) glob.FileSystemAccessor {
+	scope vfilter.Scope) accessors.FileSystemAccessor {
 	return &FileStoreFileSystemAccessor{
 		file_store: self.file_store,
 		config_obj: self.config_obj,
 	}
 }
 
-func (self FileStoreFileSystemAccessor) Lstat(
-	filename string) (glob.FileInfo, error) {
+func (self FileStoreFileSystemAccessor) Lstat(filename string) (
+	accessors.FileInfo, error) {
 
 	fullpath := getFSPathSpec(filename)
 	lstat, err := self.file_store.StatFile(fullpath)
@@ -58,14 +57,14 @@ func (self FileStoreFileSystemAccessor) Lstat(
 }
 
 func (self FileStoreFileSystemAccessor) ReadDir(filename string) (
-	[]glob.FileInfo, error) {
+	[]accessors.FileInfo, error) {
 	fullpath := getFSPathSpec(filename)
 	files, err := self.file_store.ListDirectory(fullpath)
 	if err != nil {
 		return nil, err
 	}
 
-	var result []glob.FileInfo
+	var result []accessors.FileInfo
 	for _, f := range files {
 		result = append(result,
 			&FileStoreFileInfo{
@@ -79,7 +78,7 @@ func (self FileStoreFileSystemAccessor) ReadDir(filename string) (
 }
 
 func (self FileStoreFileSystemAccessor) Open(filename string) (
-	glob.ReadSeekCloser, error) {
+	accessors.ReadSeekCloser, error) {
 
 	fullpath := getFSPathSpec(filename)
 	if strings.HasPrefix(filename, "ds:") {
@@ -117,14 +116,14 @@ type FileStoreFileInfo struct {
 	os.FileInfo
 	fullpath   api.FSPathSpec
 	config_obj *config_proto.Config
-	Data_      interface{}
+	Data_      *ordereddict.Dict
 }
 
 func (self FileStoreFileInfo) Name() string {
 	return self.fullpath.Base()
 }
 
-func (self *FileStoreFileInfo) Data() interface{} {
+func (self *FileStoreFileInfo) Data() *ordereddict.Dict {
 	if self.Data_ == nil {
 		return ordereddict.NewDict()
 	}
@@ -135,6 +134,14 @@ func (self *FileStoreFileInfo) Data() interface{} {
 // The FullPath contains the full URL to access the filestore.
 func (self *FileStoreFileInfo) FullPath() string {
 	return "fs:" + self.fullpath.AsClientPath()
+}
+
+func (self *FileStoreFileInfo) OSPath() *accessors.OSPath {
+	manipulator := accessors.LinuxPathManipulator(0)
+	return &accessors.OSPath{
+		Components:  self.fullpath.Components(),
+		Manipulator: manipulator,
+	}
 }
 
 func (self *FileStoreFileInfo) PathSpec() api.FSPathSpec {
@@ -161,13 +168,9 @@ func (self *FileStoreFileInfo) IsLink() bool {
 	return self.Mode()&os.ModeSymlink != 0
 }
 
-func (self *FileStoreFileInfo) GetLink() (string, error) {
-	filename := self.fullpath.AsFilestoreFilename(self.config_obj)
-	target, err := os.Readlink(filename)
-	if err != nil {
-		return "", err
-	}
-	return target, nil
+// Filestores do not implementat links
+func (self *FileStoreFileInfo) GetLink() (*accessors.OSPath, error) {
+	return nil, errors.New("Not implemented")
 }
 
 func (self *FileStoreFileInfo) MarshalJSON() ([]byte, error) {
@@ -177,7 +180,7 @@ func (self *FileStoreFileInfo) MarshalJSON() ([]byte, error) {
 		Mode     os.FileMode
 		ModeStr  string
 		ModTime  time.Time
-		Sys      interface{}
+		Btime    time.Time
 		Mtime    time.Time
 		Ctime    time.Time
 		Atime    time.Time
@@ -187,7 +190,7 @@ func (self *FileStoreFileInfo) MarshalJSON() ([]byte, error) {
 		Mode:     self.Mode(),
 		ModeStr:  self.Mode().String(),
 		ModTime:  self.ModTime(),
-		Sys:      self.Sys(),
+		Btime:    self.Btime(),
 		Mtime:    self.Mtime(),
 		Ctime:    self.Ctime(),
 		Atime:    self.Atime(),

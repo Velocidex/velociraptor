@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/protocols"
 	"www.velocidex.com/golang/vfilter/types"
@@ -103,7 +103,7 @@ type _GlobFileInfoAssociative struct{}
 
 func (self _GlobFileInfoAssociative) Applicable(
 	a vfilter.Any, b vfilter.Any) bool {
-	_, a_ok := a.(glob.FileInfo)
+	_, a_ok := a.(accessors.FileInfo)
 	if !a_ok {
 		return false
 	}

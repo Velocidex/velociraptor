@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -32,7 +32,7 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 	}
 
 	if arg.Parse != "" {
-		result, err := glob.PathSpecFromString(arg.Parse)
+		result, err := accessors.PathSpecFromString(arg.Parse)
 		if err != nil {
 			scope.Log("pathspec: %v", err)
 			return vfilter.Null{}
@@ -75,7 +75,7 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 		}
 	}
 
-	result := &glob.PathSpec{
+	result := &accessors.PathSpec{
 		DelegateAccessor: arg.DelegateAccessor,
 		DelegatePath:     arg.DelegatePath,
 		Path:             path_str,

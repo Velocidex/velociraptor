@@ -28,7 +28,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	glob "www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -86,7 +86,7 @@ func (self *HashFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	fs, err := glob.GetAccessor(arg.Accessor, scope)
+	fs, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("hash: %v", err)
 		return vfilter.Null{}
