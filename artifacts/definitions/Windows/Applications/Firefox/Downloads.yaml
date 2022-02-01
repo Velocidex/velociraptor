@@ -1,0 +1,67 @@
+name: Custom.Windows.Application.Firefox.Downloads
+description: |
+  Enumerate the users Firefox downloads.
+author: Angry-Bender @angry-bender, based on Custom.Windows.Application.Firefox.History by Zach Stanford @svch0st
+parameters:
+  - name: placesGlobs
+    default: \AppData\Roaming\Mozilla\Firefox\Profiles\*\places.sqlite
+  - name: urlSQLQuery
+    default: |
+        SELECT * FROM moz_annos,moz_anno_attributes,moz_places WHERE moz_annos.place_id=moz_places.id AND moz_annos.anno_attribute_id=moz_anno_attributes.id 
+  - name: userRegex
+    default: .
+    type: regex
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - query: |
+        LET places_files = SELECT * from foreach(
+          row={
+             SELECT Uid, Name AS User, Directory
+             FROM Artifact.Windows.Sys.Users()
+             WHERE Name =~ userRegex
+          },
+          query={
+             SELECT User, FullPath, Mtime from glob(
+               globs=Directory + placesGlobs)
+          })
+          
+        LET metadata = SELECT * FROM foreach(row=places_files,
+          query={
+            SELECT parse_json(data=content)
+            FROM sqlite(
+              file=FullPath,
+              query=urlSQLQuery)
+             WHERE name = 'downloads/metaData'
+          })
+          
+        SELECT * FROM foreach(row=places_files,
+          query={
+            SELECT User,
+                   timestamp(epoch=dateAdded) as startTime,
+                   if(condition=name=~'metaData',
+                    then=timestamp(epoch=parse_json(data=content).endTime)
+                    ) AS endTime,
+                   timestamp(epoch=lastModified) as last_modified,
+                   id,
+                   name,
+                   url,
+                   place_id,
+                   if(condition=name=~'metaData',
+                    then=parse_json(data=content).fileSize
+                    ) AS fileSize,
+                   if(condition=name=~'metaData',
+                    then=parse_json(data=content).state
+                    ) AS state,
+                   if(condition=name=~'destinationFileURI',
+                    then=content
+                    ) AS localDirectory,
+                   flags,
+                   expiration,
+                   type
+            FROM sqlite(
+              file=FullPath,
+              query=urlSQLQuery)
+            ORDER BY last_modified DESC
+          })
