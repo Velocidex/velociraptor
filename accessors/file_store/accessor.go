@@ -56,6 +56,10 @@ func (self FileStoreFileSystemAccessor) Lstat(filename string) (
 	}, nil
 }
 
+func (self FileStoreFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+	return accessors.NewLinuxOSPath(path)
+}
+
 func (self FileStoreFileSystemAccessor) ReadDir(filename string) (
 	[]accessors.FileInfo, error) {
 	fullpath := getFSPathSpec(filename)

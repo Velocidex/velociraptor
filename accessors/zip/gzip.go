@@ -145,6 +145,10 @@ func (self *GzipFileSystemAccessor) ReadDir(file_path string) (
 	return nil, nil
 }
 
+func (self GzipFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+	return accessors.NewLinuxOSPath(path)
+}
+
 func (self GzipFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 	return &GzipFileSystemAccessor{

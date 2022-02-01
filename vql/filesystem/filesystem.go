@@ -78,14 +78,7 @@ func (self GlobPlugin) Call(
 			return
 		}
 
-		root_path, err := accessor.Lstat("")
-		if err != nil {
-			scope.Log("glob: %v", err)
-			return
-		}
-
-		root := root_path.OSPath().Parse(arg.Root)
-
+		root := accessor.ParsePath(arg.Root)
 		options := glob.GlobOptions{
 			DoNotFollowSymlinks: arg.DoNotFollowSymlinks,
 			OneFilesystem:       arg.OneFilesystem,
@@ -111,8 +104,15 @@ func (self GlobPlugin) Call(
 		// root from the globs.
 		for _, item := range arg.Globs {
 			if strings.HasPrefix(item, "{") {
-				scope.Log("glob: Glob item appears to be a pathspec. This is not supported, please use the root arg instead.")
-				continue
+				scope.Log("glob: Glob item appears to be a pathspec. This is deprecated, please use the root arg instead.")
+
+				// This code attempts to emulate the old behavior for
+				// backwards compatibility: The root is taken to be
+				// the base pathspec and the glob is the Path
+				// component.
+				root = root.Parse(item)
+				item = root.PathSpec().Path
+				root.Components = nil
 			}
 
 			item_path := root.Parse(item)

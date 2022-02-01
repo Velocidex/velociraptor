@@ -170,6 +170,10 @@ func (self VirtualFilesystemAccessor) New(scope vfilter.Scope) (
 	return VirtualFilesystemAccessor{}, nil
 }
 
+func (self VirtualFilesystemAccessor) ParsePath(path string) *OSPath {
+	return self.root.file_info.OSPath().Parse(path)
+}
+
 func (self VirtualFilesystemAccessor) Lstat(filename string) (FileInfo, error) {
 	node, err := self.getNode(filename)
 	if err != nil {

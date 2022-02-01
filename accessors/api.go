@@ -151,6 +151,8 @@ type FileSystemAccessor interface {
 	// Open a file for reading
 	Open(path string) (ReadSeekCloser, error)
 	Lstat(filename string) (FileInfo, error)
+
+	ParsePath(filename string) *OSPath
 }
 
 // A factory for new accessors

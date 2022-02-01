@@ -1,10 +1,8 @@
-package filesystem
+package zip
 
 import (
 	"io"
 	"os"
-	"path"
-	"strings"
 
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -66,10 +64,9 @@ func (self *MEFileSystemAccessor) GetZipFile(file_path *accessors.OSPath) (
 		self.fd_cache[me] = zip_file_cache
 
 		for _, i := range zip_file.File {
-			file_path := path.Clean(i.Name)
 			zip_file_cache.lookup = append(zip_file_cache.lookup,
 				_CDLookup{
-					components:  strings.Split(file_path, "/"),
+					full_path:   accessors.NewLinuxOSPath(i.Name),
 					member_file: i,
 				})
 		}
@@ -83,7 +80,7 @@ func (self *MEFileSystemAccessor) GetZipFile(file_path *accessors.OSPath) (
 
 func (self *MEFileSystemAccessor) Lstat(serialized_path string) (
 	accessors.FileInfo, error) {
-	full_path := accessors.NewPathspecOSPath(serialized_path)
+	full_path := accessors.NewLinuxOSPath(serialized_path)
 	root, err := self.GetZipFile(full_path)
 	if err != nil {
 		return nil, err
@@ -95,7 +92,7 @@ func (self *MEFileSystemAccessor) Lstat(serialized_path string) (
 func (self *MEFileSystemAccessor) Open(serialized_path string) (
 	accessors.ReadSeekCloser, error) {
 	// Fetch the zip file from cache again.
-	full_path := accessors.NewPathspecOSPath(serialized_path)
+	full_path := accessors.NewLinuxOSPath(serialized_path)
 	zip_file_cache, err := self.GetZipFile(full_path)
 	if err != nil {
 		return nil, err
@@ -119,26 +116,21 @@ func (self *MEFileSystemAccessor) ReadDir(serialized_path string) (
 		return nil, err
 	}
 
-	children, err := root.GetChildren(full_path.Components)
+	children, err := root.GetChildren(full_path)
 	if err != nil {
 		return nil, err
 	}
 
 	result := []accessors.FileInfo{}
 	for _, item := range children {
-		item.SetFullPath(full_path.Append(item.Name()))
 		result = append(result, item)
 	}
 
 	return result, nil
 }
 
-func (self *MEFileSystemAccessor) GetRoot(path string) (string, string, error) {
-	return "/", path, nil
-}
-
-func (self MEFileSystemAccessor) PathJoin(root, stem string) string {
-	return path.Join(root, stem)
+func (self MEFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+	return accessors.NewLinuxOSPath(path)
 }
 
 func (self MEFileSystemAccessor) New(scope vfilter.Scope) (

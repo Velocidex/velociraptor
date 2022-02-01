@@ -143,6 +143,10 @@ type MountFileSystemAccessor struct {
 	root *node
 }
 
+func (self *MountFileSystemAccessor) ParsePath(path string) *OSPath {
+	return self.root.path.Parse(path)
+}
+
 // Walk the tree and return the last valid node that can be used to
 // access the delegates as well as the residual path.
 // Example:

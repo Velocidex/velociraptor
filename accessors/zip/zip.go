@@ -37,7 +37,7 @@
 // Refers to the file /foo/bar stored within a zip file nested.zip
 // which is itself stored on the filesystem at c:\foo\bar\nested.zip
 
-package filesystem
+package zip
 
 import (
 	"errors"
@@ -45,8 +45,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -61,8 +59,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
-
-	"www.velocidex.com/golang/velociraptor/glob"
 )
 
 var (
@@ -144,7 +140,6 @@ func (self *Tracker) Dec(filename string) {
 // also increase references to ZipFileCache to manage its references
 type ZipFileInfo struct {
 	member_file *zip.File
-	_name       string
 	_full_path  *accessors.OSPath
 }
 
@@ -178,7 +173,7 @@ func (self *ZipFileInfo) Data() *ordereddict.Dict {
 }
 
 func (self *ZipFileInfo) Name() string {
-	return self._name
+	return self._full_path.Basename()
 }
 
 func (self *ZipFileInfo) Mode() os.FileMode {
@@ -234,11 +229,11 @@ func (self *ZipFileInfo) IsLink() bool {
 }
 
 func (self *ZipFileInfo) GetLink() (*accessors.OSPath, error) {
-	return "", errors.New("Not implemented")
+	return nil, errors.New("Not implemented")
 }
 
 type _CDLookup struct {
-	components  []string
+	full_path   *accessors.OSPath
 	member_file *zip.File
 }
 
@@ -322,19 +317,18 @@ func (self *ZipFileCache) _GetZipInfo(full_path *accessors.OSPath) (
 	// very fast.
 loop:
 	for _, cd_cache := range self.lookup {
-		if len(full_path.Components) != len(cd_cache.components) {
+		if len(full_path.Components) != len(cd_cache.full_path.Components) {
 			continue
 		}
 
-		for j := range full_path.Continue {
-			if full_path.Components[j] != cd_cache.components[j] {
+		for j := range full_path.Components {
+			if full_path.Components[j] != cd_cache.full_path.Components[j] {
 				continue loop
 			}
 		}
 
 		return &ZipFileInfo{
 			member_file: cd_cache.member_file,
-			_name:       full_path.Basename(),
 			_full_path:  full_path,
 		}, nil
 	}
@@ -342,7 +336,8 @@ loop:
 	return nil, errors.New("Not found.")
 }
 
-func (self *ZipFileCache) GetChildren(components []string) ([]*ZipFileInfo, error) {
+func (self *ZipFileCache) GetChildren(
+	full_path *accessors.OSPath) ([]*ZipFileInfo, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -352,22 +347,20 @@ func (self *ZipFileCache) GetChildren(components []string) ([]*ZipFileInfo, erro
 	result := []*ZipFileInfo{}
 loop:
 	for _, cd_cache := range self.lookup {
-		for j := range components {
-			if components[j] != cd_cache.components[j] {
+		for j, component := range full_path.Components {
+			if component != cd_cache.full_path.Components[j] {
 				continue loop
 			}
 		}
 
-		if len(cd_cache.components) > len(components) {
-			// member is either a directory or a file.
-			member_name := cd_cache.components[len(components)]
-
+		if len(cd_cache.full_path.Components) > len(full_path.Components) {
+			member_name := cd_cache.full_path.Basename()
 			member := &ZipFileInfo{
-				_name: member_name,
+				_full_path: cd_cache.full_path,
 			}
 
 			// It is a file if the components are an exact match.
-			if len(cd_cache.components) == len(components)+1 {
+			if len(cd_cache.full_path.Components) == len(full_path.Components)+1 {
 				member.member_file = cd_cache.member_file
 			}
 
@@ -462,7 +455,9 @@ func (self *ZipFileSystemAccessor) CloseAll() {
 
 	// Close all elements
 	for key, fd := range self.fd_cache {
-		fd.Close()
+		if fd != nil {
+			fd.Close()
+		}
 		delete(self.fd_cache, key)
 	}
 }
@@ -471,14 +466,13 @@ func (self *ZipFileSystemAccessor) CloseAll() {
 // close it when done. When the query completes, the zip file will be
 // closed.
 func (self *ZipFileSystemAccessor) GetZipFile(
-	file_path string) (*ZipFileCache, *glob.PathSpec, error) {
+	file_path string) (*ZipFileCache, *accessors.OSPath, error) {
 
-	pathspec, err := glob.PathSpecFromString(file_path)
-	if err != nil {
-		return nil, nil, err
-	}
+	// Zip files typically use standard / path separators.
+	full_path := accessors.NewLinuxOSPath(file_path)
+	pathspec := full_path.PathSpec()
 
-	base_pathspec := glob.PathSpec{
+	base_pathspec := accessors.PathSpec{
 		DelegateAccessor: pathspec.DelegateAccessor,
 		DelegatePath:     pathspec.GetDelegatePath(),
 	}
@@ -494,7 +488,8 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 			!zip_file_cache.IsClosed() {
 			zip_file_cache.IncRef()
 			self.mu.Unlock()
-			return zip_file_cache, pathspec, nil
+
+			return zip_file_cache, full_path, nil
 		}
 
 		if !pres {
@@ -510,38 +505,39 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 		time.Sleep(time.Millisecond)
 	}
 
-	err = vql_subsystem.CheckFilesystemAccess(
-		self.scope, pathspec.DelegateAccessor)
-	if err != nil {
-		self.scope.Log("ZipFileSystemAccessor: %s", err)
-		return nil, nil, err
-	}
-
 	accessor, err := accessors.GetAccessor(
 		pathspec.DelegateAccessor, self.scope)
 	if err != nil {
 		self.scope.Log("%v: did you provide a URL or PathSpec?", err)
+		delete(self.fd_cache, cache_key)
 		return nil, nil, err
 	}
 
 	filename := pathspec.GetDelegatePath()
 	fd, err := accessor.Open(filename)
 	if err != nil {
+		delete(self.fd_cache, cache_key)
 		return nil, nil, err
 	}
 
 	reader, ok := fd.(io.ReaderAt)
 	if !ok {
+		self.scope.Log("file is not seekable")
+		delete(self.fd_cache, cache_key)
 		return nil, nil, errors.New("file is not seekable")
 	}
 
-	stat, err := fd.Stat()
+	stat, err := accessor.Lstat(filename)
 	if err != nil {
+		self.scope.Log("Lstat: %v", err)
+		delete(self.fd_cache, cache_key)
 		return nil, nil, err
 	}
 
 	zip_file, err := zip.NewReader(reader, stat.Size())
 	if err != nil {
+		self.scope.Log("zip.NewReader: %v", err)
+		delete(self.fd_cache, cache_key)
 		return nil, nil, err
 	}
 
@@ -567,19 +563,21 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 		if strings.HasSuffix(i.Name, "/") && i.UncompressedSize64 == 0 {
 			continue
 		}
-		zip_file_cache.lookup = append(zip_file_cache.lookup,
-			_CDLookup{
-				components:  fragmentToComponents(i.Name),
-				member_file: i,
-			})
+
+		// Prepare the pathspec for each zip member. In order to
+		// access the members, we need to open the currect zipfile (in
+		// full_path) and open i.Name as the path.
+		next_pathspec := full_path.PathSpec()
+		next_pathspec.Path = i.Name
+
+		next_item := _CDLookup{
+			full_path:   full_path.Parse(next_pathspec.String()),
+			member_file: i,
+		}
+		zip_file_cache.lookup = append(zip_file_cache.lookup, next_item)
 	}
 
-	// Set the new zip cache tracker in the fd cache. Sometimes
-	// between the time we check the cache and here another thread
-	// will race us and create another cache object. If this
-	// happened we just throw away our cache and return the
-	// previously cached object so there is only a single cached
-	// copy of the zip file in flight at once.
+	// Set the new zip cache tracker in the fd cache.
 	self.mu.Lock()
 
 	// Leaking a zip file from this function, increase its reference -
@@ -590,103 +588,50 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 	self.fd_cache[cache_key] = zip_file_cache
 	self.mu.Unlock()
 
-	return zip_file_cache, pathspec, nil
+	return zip_file_cache, full_path, nil
 }
 
-// This method splits the path string into a root component (which the
-// glob should start from) and a path component (Which is used by the
-// glob algorithm).
-
-// In our case the path string looks something like:
-//
-// file:///tmp/foo.zip#/dir/name.txt
-//
-// so the root is file:///tmp/foo.zip# and the path is /dir/name.txt
-func (self *ZipFileSystemAccessor) GetRoot(path string) (string, string, error) {
-	pathspec, err := glob.PathSpecFromString(path)
-	if err != nil {
-		return "", "", err
+func (self *ZipFileSystemAccessor) Lstat(file_path string) (
+	accessors.FileInfo, error) {
+	if file_path == "" {
+		utils.DlvBreak()
 	}
 
-	Fragment := pathspec.Path
-	pathspec.Path = ""
-
-	return pathspec.String(), Fragment, nil
-}
-
-func fragmentToComponents(fragment string) []string {
-	components := []string{}
-	for _, i := range strings.Split(fragment, "/") {
-		if i != "" {
-			components = append(components, i)
-		}
-	}
-	return components
-}
-
-func (self *ZipFileSystemAccessor) Lstat(file_path string) (accessors.FileInfo, error) {
-	root, pathspec, err := self.GetZipFile(file_path)
+	root, full_path, err := self.GetZipFile(file_path)
 	if err != nil {
 		return nil, err
 	}
-	defer root.CloseFile(file_path)
+	defer root.Close()
 
-	return root.GetZipInfo(fragmentToComponents(pathspec.Path), file_path)
+	return root.GetZipInfo(full_path)
 }
 
 func (self *ZipFileSystemAccessor) Open(filename string) (accessors.ReadSeekCloser, error) {
 	// Fetch the zip file from cache again.
-	zip_file_cache, pathspec, err := self.GetZipFile(filename)
+	zip_file_cache, full_path, err := self.GetZipFile(filename)
 	if err != nil {
 		return nil, err
 	}
-	defer zip_file_cache.CloseFile(filename)
+	defer zip_file_cache.Close()
 
 	// Get the zip member from the zip file.
-	return zip_file_cache.Open(
-		fragmentToComponents(pathspec.Path), filename)
-}
-
-var GzipFileSystemAccessor_re = regexp.MustCompile("/")
-
-func (self *ZipFileSystemAccessor) PathSplit(path string) []string {
-	return GzipFileSystemAccessor_re.Split(path, -1)
-}
-
-// The root is a url for the parent node and the stem is the new subdir.
-// Example: root  is file://path/to/zip#subdir and stem is foo ->
-// file://path/to/zip#subdir/foo
-func (self *ZipFileSystemAccessor) PathJoin(root, stem string) string {
-	pathspec, err := glob.PathSpecFromString(root)
-	if err != nil {
-		// Zip files do not always support \ as a path sep.
-		return path.Join(root, stem)
-	}
-
-	pathspec.Path = path.Join(pathspec.Path, stem)
-
-	return pathspec.String()
+	return zip_file_cache.Open(full_path)
 }
 
 func (self *ZipFileSystemAccessor) ReadDir(file_path string) ([]accessors.FileInfo, error) {
-	root, pathspec, err := self.GetZipFile(file_path)
+	root, full_path, err := self.GetZipFile(file_path)
 	if err != nil {
 		return nil, err
 	}
-	defer root.CloseFile(file_path)
+	defer root.Close()
 
-	children, err := root.GetChildren(
-		fragmentToComponents(pathspec.Path))
+	children, err := root.GetChildren(full_path)
 	if err != nil {
 		return nil, err
 	}
 
 	result := []accessors.FileInfo{}
 	for _, item := range children {
-		// Make a copy
-		child_pathspec := *pathspec
-		child_pathspec.Path = path.Join(child_pathspec.Path, item.Name())
-		item.SetFullPath(child_pathspec.String())
 		result = append(result, item)
 	}
 
@@ -696,6 +641,10 @@ func (self *ZipFileSystemAccessor) ReadDir(file_path string) ([]accessors.FileIn
 const (
 	ZipFileSystemAccessorTag = "_ZipFS"
 )
+
+func (self ZipFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+	return accessors.NewLinuxOSPath(path)
+}
 
 func (self *ZipFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
@@ -753,7 +702,7 @@ func (self *SeekableZip) Close() error {
 	}
 
 	err := self.ReadCloser.Close()
-	self.zip_file.CloseFile(self.full_path)
+	self.zip_file.Close()
 	return err
 }
 
@@ -780,7 +729,7 @@ func (self *SeekableZip) ReadAt(buf []byte, offset int64) (int, error) {
 func (self *SeekableZip) createTmpBackup() (err error) {
 	// Make a fresh reader to the member so we are seeked to the
 	// start of it.
-	reader, err := self.zip_file.Open(self.components, self.full_path)
+	reader, err := self.zip_file.Open(self.full_path)
 	if err != nil {
 		return err
 	}
@@ -834,10 +783,6 @@ func (self *SeekableZip) Seek(offset int64, whence int) (int64, error) {
 	}
 
 	return self.Seek(offset, whence)
-}
-
-func (self *SeekableZip) Stat() (os.FileInfo, error) {
-	return self.info, nil
 }
 
 func init() {

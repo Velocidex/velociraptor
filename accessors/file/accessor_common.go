@@ -161,6 +161,10 @@ type OSFileSystemAccessor struct {
 	root *accessors.OSPath
 }
 
+func (self OSFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+	return self.root.Parse(path)
+}
+
 func (self OSFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 
