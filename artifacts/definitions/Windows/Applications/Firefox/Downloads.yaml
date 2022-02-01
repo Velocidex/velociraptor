@@ -1,4 +1,4 @@
-name: Custom.Windows.Application.Firefox.Downloads
+name: Windows.Application.Firefox.Downloads
 description: |
   Enumerate the users Firefox downloads.
 author: Angry-Bender @angry-bender, based on Custom.Windows.Application.Firefox.History by Zach Stanford @svch0st
