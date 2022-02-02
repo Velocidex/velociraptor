@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -62,7 +62,7 @@ func (self UnzipPlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, scope)
+		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("unzip: %v", err)
 			return

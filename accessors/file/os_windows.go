@@ -1,3 +1,5 @@
+// +build windows
+
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -19,7 +21,7 @@
 // virtual root directory which contains all the drives as if they are
 // subdirs. For example list dir "\\" yields c:, d:, e: then we access
 // each file as an absolute path: \\c:\\Windows -> c:\Windows.
-package filesystems
+package file
 
 import (
 	"os"
@@ -33,7 +35,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/shirou/gopsutil/v3/disk"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -155,13 +157,18 @@ type OSFileSystemAccessor struct {
 	follow_links bool
 }
 
-func (self OSFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self OSFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+	return accessors.NewWindowsOSPath(path)
+}
+
+func (self OSFileSystemAccessor) New(scope vfilter.Scope) (
+	accessors.FileSystemAccessor, error) {
 	result := &OSFileSystemAccessor{follow_links: self.follow_links}
 	return result, nil
 }
 
-func discoverDriveLetters() ([]glob.FileInfo, error) {
-	result := []glob.FileInfo{}
+func discoverDriveLetters() ([]accessors.FileInfo, error) {
+	result := []accessors.FileInfo{}
 
 	shadow_volumes, err := wmi.Query(
 		"SELECT DeviceID, Description, VolumeName, FreeSpace, "+
@@ -173,7 +180,7 @@ func discoverDriveLetters() ([]glob.FileInfo, error) {
 			size, _ := row.GetInt64("Size")
 			device_name, pres := row.GetString("DeviceID")
 			if pres {
-				virtual_directory := glob.NewVirtualDirectoryPath(
+				virtual_directory := accessors.NewVirtualDirectoryPath(
 					escape(device_name), row, size, os.ModeDir)
 				result = append(result, virtual_directory)
 			}
@@ -183,12 +190,12 @@ func discoverDriveLetters() ([]glob.FileInfo, error) {
 	return result, nil
 }
 
-func (self OSFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
+func (self OSFileSystemAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {
 	return self.readDir(path, 0)
 }
 
-func (self OSFileSystemAccessor) readDir(path string, depth int) ([]glob.FileInfo, error) {
-	var result []glob.FileInfo
+func (self OSFileSystemAccessor) readDir(path string, depth int) ([]accessors.FileInfo, error) {
+	var result []accessors.FileInfo
 
 	if depth > 10 {
 		return nil, errors.New("Too many symlinks.")
@@ -260,7 +267,7 @@ func (self OSFileWrapper) Close() error {
 	return self.File.Close()
 }
 
-func (self OSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
+func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
 	path = GetPath(path)
 	file, err := os.Open(path)
 	if err != nil {
@@ -271,7 +278,7 @@ func (self OSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) 
 	return OSFileWrapper{file}, err
 }
 
-func (self *OSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
+func (self *OSFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error) {
 
 	stat, err := os.Lstat(GetPath(path))
 	return &OSFileInfo{
@@ -297,7 +304,9 @@ func (self *OSFileSystemAccessor) PathJoin(x, y string) string {
 func init() {
 	// Register a variant which allows following links - be
 	// careful with it - it can get stuck on loops.
-	glob.Register("file_links", &OSFileSystemAccessor{follow_links: true}, `Access the filesystem using the OS APIs.
+	accessors.Register("file_links", &OSFileSystemAccessor{
+		follow_links: true,
+	}, `Access the filesystem using the OS APIs.
 
 This Accessor also follows any symlinks - Note: Take care with this accessor because there may be circular links.`)
 
@@ -305,6 +314,5 @@ This Accessor also follows any symlinks - Note: Take care with this accessor bec
 	// is used through the AutoFilesystemAccessor: If we can not
 	// open the file with regular OS APIs we fallback to raw NTFS
 	// access. This is usually what we want.
-
-	json.RegisterCustomEncoder(&OSFileInfo{}, glob.MarshalGlobFileInfo)
+	json.RegisterCustomEncoder(&OSFileInfo{}, accessor.MarshalGlobFileInfo)
 }

@@ -54,7 +54,7 @@ type YaraResult struct {
 	Meta     map[string]interface{}
 	Tags     []string
 	String   *YaraHit
-	File     os.FileInfo
+	File     accessors.FileInfo
 	FileName string
 }
 
@@ -212,7 +212,7 @@ func (self *scanReporter) scanFileByAccessor(
 	}
 	defer f.Close()
 
-	self.file_info, _ = f.Stat()
+	self.file_info, _ = accessor.Lstat(self.filename)
 	self.reader = utils.ReaderAtter{f}
 
 	// Support sparse file scanning
@@ -307,7 +307,10 @@ func (self *scanReporter) scanFile(
 	defer fd.Close()
 
 	// Fill in the file stat if possible.
-	self.file_info, _ = fd.Stat()
+	file_accessor, err := accessors.GetAccessor("file", self.scope)
+	if err == nil {
+		self.file_info, _ = file_accessor.Lstat(self.filename)
+	}
 	self.reader = fd
 
 	err = self.rules.ScanFileWithCallback(
@@ -333,7 +336,7 @@ type scanReporter struct {
 	number_of_hits int64
 	blocksize      uint64
 	context        int
-	file_info      os.FileInfo
+	file_info      accessors.FileInfo
 	filename       string
 	base_offset    uint64
 	end            uint64

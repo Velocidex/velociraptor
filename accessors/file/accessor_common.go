@@ -15,6 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -292,4 +293,8 @@ func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, er
 
 	fileAccessorCurrentOpened.Inc()
 	return OSFileWrapper{file}, nil
+}
+
+func init() {
+	json.RegisterCustomEncoder(&OSFileInfo{}, accessors.MarshalGlobFileInfo)
 }

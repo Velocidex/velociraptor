@@ -1,3 +1,5 @@
+// +build windows
+
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -22,7 +24,7 @@
 // 2. Map the root path to a virtual directory containing all the root keys.
 // 3. Normalized paths contain / for directory separators.
 // 4. Normalized paths have reg: prefix.
-package filesystems
+package registry
 
 import (
 	"bytes"
@@ -35,7 +37,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"golang.org/x/sys/windows/registry"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -168,10 +170,10 @@ func (self *RegValueInfo) Size() int64 {
 
 type ValueBuffer struct {
 	io.ReadSeeker
-	info glob.FileInfo
+	info accessors.FileInfo
 }
 
-func (self *ValueBuffer) Stat() (os.FileInfo, error) {
+func (self *ValueBuffer) Stat() (accessors.FileInfo, error) {
 	return self.info, nil
 }
 
@@ -179,7 +181,7 @@ func (self *ValueBuffer) Close() error {
 	return nil
 }
 
-func NewValueBuffer(buf []byte, stat glob.FileInfo) *ValueBuffer {
+func NewValueBuffer(buf []byte, stat accessors.FileInfo) *ValueBuffer {
 	return &ValueBuffer{
 		bytes.NewReader(buf),
 		stat,
@@ -188,12 +190,18 @@ func NewValueBuffer(buf []byte, stat glob.FileInfo) *ValueBuffer {
 
 type RegFileSystemAccessor struct{}
 
-func (self *RegFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self *RegFileSystemAccessor) New(scope vfilter.Scope) (
+	accessors.FileSystemAccessor, error) {
 	return self, nil
 }
 
-func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
-	var result []glob.FileInfo
+func (self RegFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+	return accessors.NewWindowsRegistryPath(path)
+}
+
+func (self RegFileSystemAccessor) ReadDir(path string) (
+	[]accessors.FileInfo, error) {
+	var result []accessors.FileInfo
 
 	components := utils.SplitComponents(path)
 
@@ -201,7 +209,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 	if len(components) == 0 {
 		for k, _ := range root_keys {
 			result = append(result,
-				glob.NewVirtualDirectoryPath(k, nil, 0, os.ModeDir))
+				accessors.NewVirtualDirectoryPath(k, nil, 0, os.ModeDir))
 		}
 		return result, nil
 	}
@@ -275,7 +283,8 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 	return result, nil
 }
 
-func (self RegFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
+func (self RegFileSystemAccessor) Open(path string) (
+	accessors.ReadSeekCloser, error) {
 	stat, err := self.Lstat(path)
 	if err != nil {
 		return nil, err
@@ -290,7 +299,8 @@ func (self RegFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error)
 	return NewValueBuffer([]byte{}, stat), nil
 }
 
-func (self *RegFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error) {
+func (self *RegFileSystemAccessor) Lstat(filename string) (
+	accessors.FileInfo, error) {
 	components := utils.SplitComponents(filename)
 	if len(components) == 0 {
 		return nil, errors.New("No filename given")
@@ -488,9 +498,9 @@ func (self RegFileSystemAccessor) PathJoin(root, stem string) string {
 
 func init() {
 	description := `Access the registery like a filesystem using the OS APIs.`
-	glob.Register("reg", &RegFileSystemAccessor{}, description)
-	glob.Register("registry", &RegFileSystemAccessor{}, description)
+	accessors.Register("reg", &RegFileSystemAccessor{}, description)
+	accessors.Register("registry", &RegFileSystemAccessor{}, description)
 
-	json.RegisterCustomEncoder(&RegKeyInfo{}, glob.MarshalGlobFileInfo)
-	json.RegisterCustomEncoder(&RegValueInfo{}, glob.MarshalGlobFileInfo)
+	json.RegisterCustomEncoder(&RegKeyInfo{}, accessors.MarshalGlobFileInfo)
+	json.RegisterCustomEncoder(&RegValueInfo{}, accessors.MarshalGlobFileInfo)
 }

@@ -1,4 +1,4 @@
-package golang
+package pipe
 
 import (
 	"context"
@@ -132,6 +132,10 @@ func (self PipeFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 
 type PipeFilesystemAccessor struct {
 	scope vfilter.Scope
+}
+
+func (self PipeFilesystemAccessor) ParsePath(path string) *accessors.OSPath {
+	return accessors.NewLinuxOSPath(path)
 }
 
 func (self PipeFilesystemAccessor) New(scope vfilter.Scope) (

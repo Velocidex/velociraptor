@@ -27,7 +27,7 @@ import (
 	"regexp"
 
 	"github.com/Velocidex/ordereddict"
-	glob "www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -62,7 +62,7 @@ func processFile(
 		return
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, scope)
+	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("split_records: %v", err)
 		return

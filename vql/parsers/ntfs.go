@@ -22,7 +22,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/paths"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -142,7 +142,7 @@ func (self MFTScanPlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, scope)
+		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("parse_mft: %v", err)
 			return
@@ -163,7 +163,7 @@ func (self MFTScanPlugin) Call(
 			return
 		}
 
-		st, err := fd.Stat()
+		st, err := accessor.Lstat(arg.Filename)
 		if err != nil {
 			scope.Log("parse_mft: Unable to open file %s: %v",
 				arg.Filename, err)

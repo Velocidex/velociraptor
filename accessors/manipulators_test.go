@@ -51,16 +51,31 @@ var windows_testcases = []testcase{
 	{"C:\\Windows\\System32\\..\\..\\..\\..\\ls",
 		[]string{"C:", "Windows", "System32", "ls"},
 		"C:\\Windows\\System32\\ls"},
-
-	// Registry keys can contain slashes
-	{"HKEY_LOCAL_MACHINE\\\"http://www.google.com\"\\Foo",
-		[]string{"HKEY_LOCAL_MACHINE", "http://www.google.com", "Foo"},
-		"HKEY_LOCAL_MACHINE\\\"http://www.google.com\"\\Foo"},
 }
 
 func TestWindowsManipulators(t *testing.T) {
 	for _, testcase := range windows_testcases {
 		path := NewWindowsOSPath(testcase.serialized_path)
+		assert.Equal(t, testcase.components, path.Components)
+		assert.Equal(t, testcase.expected_path, path.String())
+	}
+}
+
+var registry_testcases = []testcase{
+	// Registry keys can contain slashes
+	{"HKEY_LOCAL_MACHINE\\\"http://www.google.com\"\\Foo",
+		[]string{"HKEY_LOCAL_MACHINE", "http://www.google.com", "Foo"},
+		"HKEY_LOCAL_MACHINE\\\"http://www.google.com\"\\Foo"},
+
+	// Registry keys can use shortcuts
+	{"HKLM\\\"http://www.google.com\"\\Foo",
+		[]string{"HKEY_LOCAL_MACHINE", "http://www.google.com", "Foo"},
+		"HKEY_LOCAL_MACHINE\\\"http://www.google.com\"\\Foo"},
+}
+
+func TestRegistryManipulators(t *testing.T) {
+	for _, testcase := range registry_testcases {
+		path := NewWindowsRegistryPath(testcase.serialized_path)
 		assert.Equal(t, testcase.components, path.Components)
 		assert.Equal(t, testcase.expected_path, path.String())
 	}

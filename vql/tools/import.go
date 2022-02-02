@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -18,7 +19,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -108,7 +108,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	}
 
 	// Open the zip file we are importing.
-	accessor, err := glob.GetAccessor(arg.Accessor, scope)
+	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}

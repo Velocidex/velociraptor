@@ -180,6 +180,62 @@ func NewGenericOSPath(path string) *OSPath {
 	return result
 }
 
+// Windows registry paths begin with a hive name. There are a number
+// of abbreviations for the hive names and we want to standardize.
+type WindowsRegistryPathManipulator int
+
+func (self WindowsRegistryPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
+	result := path.pathspec
+	if result == nil {
+		result = &PathSpec{}
+		path.pathspec = result
+	}
+
+	// The first component is usually the drive letter or device and
+	// although it can contain path separators it must not be quoted
+	components := path.Components
+
+	result.Path = strings.TrimPrefix(utils.JoinComponents(components, "\\"), "\\")
+	return result
+}
+
+func (self WindowsRegistryPathManipulator) PathJoin(path *OSPath) string {
+	result := self.AsPathSpec(path)
+	if result.DelegateAccessor == "" && result.DelegatePath == "" {
+		return result.Path
+	}
+	return result.String()
+}
+
+func (self WindowsRegistryPathManipulator) PathParse(path string, result *OSPath) {
+	maybeParsePathSpec(path, result)
+	result.Components = utils.SplitComponents(result.pathspec.Path)
+
+	if len(result.Components) > 0 {
+		// First component is always a hive name in upper case.
+		hive_name := strings.ToUpper(result.Components[0])
+		switch hive_name {
+		case "HKCU":
+			hive_name = "HKEY_CURRENT_USER"
+		case "HKLM":
+			hive_name = "HKEY_LOCAL_MACHINE"
+		case "HKU":
+			hive_name = "HKEY_USERS"
+		}
+		result.Components[0] = hive_name
+	}
+}
+
+func NewWindowsRegistryPath(path string) *OSPath {
+	manipulator := WindowsRegistryPathManipulator(0)
+	result := &OSPath{
+		Manipulator: manipulator,
+	}
+	manipulator.PathParse(path, result)
+
+	return result
+}
+
 // Raw pathspec paths expect the path to be a json encoded PathSpec
 // object. They do not have any special interpretation of the Path
 // parameter and so they do not break it up at all. These are used in

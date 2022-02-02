@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
@@ -50,7 +50,7 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, scope)
+	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("upload_webdav: %v", err)
 		return vfilter.Null{}
@@ -68,7 +68,7 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 		arg.Name = arg.File
 	}
 
-	stat, err := file.Stat()
+	stat, err := accessor.Lstat(arg.File)
 	if err != nil {
 		scope.Log("upload_webdav: Unable to stat %s: %v",
 			arg.File, err)

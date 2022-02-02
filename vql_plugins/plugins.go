@@ -24,7 +24,6 @@ package plugins
 import (
 	_ "www.velocidex.com/golang/velociraptor/vql/common"
 	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
-	_ "www.velocidex.com/golang/velociraptor/vql/filesystem/ntfs"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 	_ "www.velocidex.com/golang/velociraptor/vql/golang"
 	_ "www.velocidex.com/golang/velociraptor/vql/networking"

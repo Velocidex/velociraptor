@@ -10,12 +10,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -561,7 +561,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	cmd.CombinedOutput()
 
 	scope := vql_subsystem.MakeScope()
-	accessor, err := glob.GetAccessor("ntfs", scope)
+	accessor, err := accessors.GetAccessor("ntfs", scope)
 	assert.NoError(self.T(), err)
 
 	fd, err := accessor.Open(filename)

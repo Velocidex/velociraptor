@@ -1,11 +1,11 @@
-package filesystems
+// +build XXX
+
+package ntfs
 
 import (
 	"strings"
 
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/velociraptor/remapping"
-	"www.velocidex.com/golang/velociraptor/vql/filesystem/ntfs"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
 )
