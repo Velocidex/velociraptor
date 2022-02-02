@@ -1,5 +1,3 @@
-// +build linux
-
 package file_test
 
 import (
@@ -21,23 +19,23 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
-type AccessorLinuxTestSuite struct {
+type AccessorWindowsTestSuite struct {
 	suite.Suite
 	tmpdir string
 }
 
-func (self *AccessorLinuxTestSuite) SetupTest() {
+func (self *AccessorWindowsTestSuite) SetupTest() {
 	tmpdir, err := ioutil.TempDir("", "accessor_test")
 	assert.NoError(self.T(), err)
 
 	self.tmpdir = tmpdir
 }
 
-func (self *AccessorLinuxTestSuite) TearDownTest() {
+func (self *AccessorWindowsTestSuite) TearDownTest() {
 	os.RemoveAll(self.tmpdir) // clean up
 }
 
-func (self *AccessorLinuxTestSuite) TestACL() {
+func (self *AccessorWindowsTestSuite) TestACL() {
 	scope := vql_subsystem.MakeScope()
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
@@ -62,7 +60,7 @@ func (self *AccessorLinuxTestSuite) TestACL() {
 // tmpdir/subdir/link1 -> tmpdir/subdir/1.txt
 // tmpdir/subdir/parent_link -> tmpdir/subdir
 // tmpdir/subdir/dir_link -> tmpdir/subdir/parent_link
-func (self *AccessorLinuxTestSuite) TestSymlinks() {
+func (self *AccessorWindowsTestSuite) TestSymlinks() {
 	dirname := filepath.Join(self.tmpdir, "subdir")
 	err := os.Mkdir(dirname, 0777)
 	assert.NoError(self.T(), err)
@@ -104,7 +102,9 @@ func (self *AccessorLinuxTestSuite) TestSymlinks() {
 		// Accept a pathspec as well.
 		`{"Path":"%s/subdir/1.txt"}`,
 	} {
-		reader, err := accessor.Open(fmt.Sprintf(filename, self.tmpdir))
+		interpolated_path := strings.ReplaceAll(
+			fmt.Sprintf(filename, self.tmpdir), "\\", "\\\\")
+		reader, err := accessor.Open(interpolated_path)
 		assert.NoError(self.T(), err)
 		defer fd.Close()
 
@@ -124,7 +124,8 @@ func (self *AccessorLinuxTestSuite) TestSymlinks() {
 	hits := []string{}
 	for hit := range globber.ExpandWithContext(context.Background(),
 		config_obj, accessors.NewLinuxOSPath(self.tmpdir), accessor) {
-		hits = append(hits, strings.TrimPrefix(hit.FullPath(), self.tmpdir))
+		hits = append(hits, strings.ReplaceAll(
+			strings.TrimPrefix(hit.FullPath(), self.tmpdir), "\\", "/"))
 	}
 
 	assert.Equal(self.T(),
@@ -133,6 +134,6 @@ func (self *AccessorLinuxTestSuite) TestSymlinks() {
 
 }
 
-func TestAccessorLinux(t *testing.T) {
-	suite.Run(t, &AccessorLinuxTestSuite{})
+func TestWindowsLinux(t *testing.T) {
+	suite.Run(t, &AccessorWindowsTestSuite{})
 }

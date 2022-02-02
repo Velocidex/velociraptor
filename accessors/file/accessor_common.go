@@ -262,7 +262,7 @@ func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, er
 	var err error
 
 	// Clean the path
-	full_path := self.root.Parse(path)
+	full_path := self.ParsePath(path)
 	path = full_path.PathSpec().Path
 
 	// Eval any symlinks directly

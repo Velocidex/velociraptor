@@ -39,7 +39,6 @@ import (
 	"golang.org/x/sys/windows/registry"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -48,11 +47,8 @@ var (
 	root_keys = map[string]registry.Key{
 		"HKEY_CLASSES_ROOT":     registry.CLASSES_ROOT,
 		"HKEY_CURRENT_USER":     registry.CURRENT_USER,
-		"HKCU":                  registry.CURRENT_USER,
 		"HKEY_LOCAL_MACHINE":    registry.LOCAL_MACHINE,
-		"HKLM":                  registry.LOCAL_MACHINE,
 		"HKEY_USERS":            registry.USERS,
-		"HKU":                   registry.USERS,
 		"HKEY_CURRENT_CONFIG":   registry.CURRENT_CONFIG,
 		"HKEY_PERFORMANCE_DATA": registry.PERFORMANCE_DATA,
 	}
@@ -68,16 +64,19 @@ func GetHiveFromName(name string) (registry.Key, bool) {
 }
 
 type RegKeyInfo struct {
-	_modtime    time.Time
-	_components []string
-	_data       *ordereddict.Dict
+	_modtime   time.Time
+	_full_path *accessors.OSPath
+	_data      *ordereddict.Dict
 }
 
 func (self *RegKeyInfo) IsDir() bool {
 	return true
 }
 
-func (self *RegKeyInfo) Data() interface{} {
+func (self *RegKeyInfo) Data() *ordereddict.Dict {
+	if self._data == nil {
+		return ordereddict.NewDict()
+	}
 	return self._data
 }
 
@@ -85,12 +84,12 @@ func (self *RegKeyInfo) Size() int64 {
 	return 0
 }
 
-func (self *RegKeyInfo) Sys() interface{} {
-	return nil
+func (self *RegKeyInfo) FullPath() string {
+	return self._full_path.String()
 }
 
-func (self *RegKeyInfo) FullPath() string {
-	return utils.JoinComponents(self._components, "\\")
+func (self *RegKeyInfo) OSPath() *accessors.OSPath {
+	return self._full_path
 }
 
 func (self *RegKeyInfo) Mode() os.FileMode {
@@ -98,10 +97,7 @@ func (self *RegKeyInfo) Mode() os.FileMode {
 }
 
 func (self *RegKeyInfo) Name() string {
-	if len(self._components) > 0 {
-		return self._components[len(self._components)-1]
-	}
-	return ""
+	return self._full_path.Basename()
 }
 
 func (self *RegKeyInfo) ModTime() time.Time {
@@ -129,8 +125,8 @@ func (self *RegKeyInfo) IsLink() bool {
 	return false
 }
 
-func (self *RegKeyInfo) GetLink() (string, error) {
-	return "", errors.New("Not implemented")
+func (self *RegKeyInfo) GetLink() (*accessors.OSPath, error) {
+	return nil, errors.New("Not implemented")
 }
 
 func (u *RegKeyInfo) UnmarshalJSON(data []byte) error {
@@ -150,10 +146,6 @@ type RegValueInfo struct {
 	// _binary_data field. We can then return the buffer for an
 	// Open() call.
 	_binary_data []byte
-}
-
-func (self *RegValueInfo) Sys() interface{} {
-	return self._data
 }
 
 func (self *RegValueInfo) IsDir() bool {
@@ -203,18 +195,23 @@ func (self RegFileSystemAccessor) ReadDir(path string) (
 	[]accessors.FileInfo, error) {
 	var result []accessors.FileInfo
 
-	components := utils.SplitComponents(path)
+	full_path := self.ParsePath(path)
+	path = full_path.PathSpec().Path
 
 	// Root directory is just the name of the hives.
-	if len(components) == 0 {
+	if len(full_path.Components) == 0 {
 		for k, _ := range root_keys {
-			result = append(result,
-				accessors.NewVirtualDirectoryPath(k, nil, 0, os.ModeDir))
+			result = append(result, &accessors.VirtualFileInfo{
+				IsDir_: true,
+				Path:   full_path.Append(k),
+				Data_: ordereddict.NewDict().
+					Set("type", "hive"),
+			})
 		}
 		return result, nil
 	}
 
-	hive_name := components[0]
+	hive_name := full_path.Components[0]
 	hive, pres := root_keys[hive_name]
 	if !pres {
 		// Not a real hive
@@ -224,8 +221,8 @@ func (self RegFileSystemAccessor) ReadDir(path string) (
 	key_path := ""
 	// e.g. HKEY_PERFORMANCE_DATA
 	// Add a final \ to turn path into a directory path.
-	if len(components) > 1 {
-		key_path = strings.Join(components[1:], "\\")
+	if len(full_path.Components) > 1 {
+		key_path = strings.Join(full_path.Components[1:], "\\")
 	}
 
 	key, err := registry.OpenKey(hive, key_path,
@@ -254,8 +251,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) (
 		defer subkey.Close()
 
 		// Make a local copy.
-		full_path := append([]string{}, components...)
-		key_info, err := getKeyInfo(subkey, append(full_path, subkey_name))
+		key_info, err := getKeyInfo(subkey, full_path.Append(subkey_name))
 		if err != nil {
 			continue
 		}
@@ -269,11 +265,11 @@ func (self RegFileSystemAccessor) ReadDir(path string) (
 	}
 
 	for _, value_name := range values {
-		// Make a local copy.
-		full_path := append([]string{}, components...)
-
-		value_info, err := getValueInfo(key,
-			append(full_path, value_name))
+		if value_name == "" {
+			value_name = "@"
+		}
+		value_info, err := getValueInfo(
+			key, full_path.Append(value_name))
 		if err != nil {
 			continue
 		}
@@ -301,33 +297,38 @@ func (self RegFileSystemAccessor) Open(path string) (
 
 func (self *RegFileSystemAccessor) Lstat(filename string) (
 	accessors.FileInfo, error) {
-	components := utils.SplitComponents(filename)
-	if len(components) == 0 {
+
+	// Clean the path
+	full_path := accessors.NewWindowsRegistryPath(filename)
+	if len(full_path.Components) == 0 {
 		return nil, errors.New("No filename given")
 	}
 
-	hive_name := components[0]
+	hive_name := full_path.Components[0]
 	hive, pres := root_keys[hive_name]
 	if !pres {
 		// Not a real hive
 		return nil, errors.New("Unknown hive")
 	}
 
-	key_path := ""
-	// e.g. HKEY_PERFORMANCE_DATA
-	// Add a final \ to turn path into a directory path.
-	if len(components) > 1 {
-		key_path = strings.Join(components[1:], "\\")
+	// The key path inside the hive
+	key_path := full_path.TrimComponents(hive_name)
+
+	hive_key_path := ""
+	// Convert the path into an OS specific string
+	if len(full_path.Components) > 1 {
+		hive_key_path = strings.Join(full_path.Components, "\\")
 	}
 
-	key, err := registry.OpenKey(hive, key_path,
+	key, err := registry.OpenKey(hive, hive_key_path,
 		registry.READ|registry.QUERY_VALUE|
 			registry.WOW64_64KEY)
-	if err != nil && len(components) > 1 {
+	if err != nil && len(key_path.Components) > 0 {
+
 		// Maybe its a value then - open the containing key
 		// and return a valueInfo
-		containing_key_name := strings.Join(
-			components[1:len(components)-1], "\\")
+		containing_key := key_path.Dirname()
+		containing_key_name := strings.Join(containing_key.Components, "\\")
 		key, err := registry.OpenKey(hive, containing_key_name,
 			registry.READ|registry.QUERY_VALUE|
 				registry.WOW64_64KEY)
@@ -336,34 +337,32 @@ func (self *RegFileSystemAccessor) Lstat(filename string) (
 		}
 		defer key.Close()
 
-		return getValueInfo(key, components)
+		return getValueInfo(key, full_path)
 	}
 	defer key.Close()
 
-	return getKeyInfo(key, components)
+	return getKeyInfo(key, full_path)
 }
 
-func getKeyInfo(key registry.Key, components []string) (*RegKeyInfo, error) {
+func getKeyInfo(key registry.Key, full_path *accessors.OSPath) (
+	*RegKeyInfo, error) {
+
 	stat, err := key.Stat()
 	if err != nil {
 		return nil, err
 	}
 	return &RegKeyInfo{
-		_modtime:    stat.ModTime(),
-		_components: components,
-		_data:       ordereddict.NewDict().Set("type", "key"),
+		_modtime:   stat.ModTime(),
+		_full_path: full_path,
+		_data:      ordereddict.NewDict().Set("type", "key"),
 	}, nil
 }
 
-func getValueInfo(key registry.Key, components []string) (*RegValueInfo, error) {
-	// Last component is the value name
-	value_name := components[len(components)-1]
+func getValueInfo(key registry.Key, full_path *accessors.OSPath) (
+	*RegValueInfo, error) {
 
-	// Represent the default value as different from the
-	// actual key name.
-	if value_name == "" {
-		components[len(components)-1] = "@"
-	}
+	// Last component is the value name
+	value_name := full_path.Basename()
 
 	var key_modtime time.Time
 	key_stat, err := key.Stat()
@@ -379,10 +378,12 @@ func getValueInfo(key registry.Key, components []string) (*RegValueInfo, error) 
 			// any of the values does so we just
 			// copy the key's timestamp to each
 			// value.
-			_modtime:    key_modtime,
-			_components: components,
+			_modtime:   key_modtime,
+			_full_path: full_path,
 		}}
 
+	// Internally we represent the default value of a key as the name
+	// '@'
 	if value_name == "@" {
 		value_name = ""
 	}
@@ -481,19 +482,6 @@ func getValueInfo(key registry.Key, components []string) (*RegValueInfo, error) 
 		}
 	}
 	return value_info, nil
-}
-
-func (self RegFileSystemAccessor) GetRoot(path string) (string, string, error) {
-	return "", path, nil
-}
-
-// We accept both / and \ as a path separator
-func (self RegFileSystemAccessor) PathSplit(path string) []string {
-	return utils.SplitComponents(path)
-}
-
-func (self RegFileSystemAccessor) PathJoin(root, stem string) string {
-	return utils.PathJoin(root, stem, "\\")
 }
 
 func init() {

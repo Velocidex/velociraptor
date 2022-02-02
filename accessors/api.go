@@ -74,13 +74,13 @@ func (self *OSPath) Dirname() *OSPath {
 	}
 }
 
-func (self *OSPath) Trim(prefix *OSPath) *OSPath {
-	if prefix == nil {
+func (self *OSPath) TrimComponents(components ...string) *OSPath {
+	if components == nil {
 		return self
 	}
 
 	for idx, c := range self.Components {
-		if idx >= len(prefix.Components) || c != prefix.Components[idx] {
+		if idx >= len(components) || c != components[idx] {
 			return &OSPath{
 				Components:  utils.CopySlice(self.Components[idx:]),
 				pathspec:    self.pathspec,

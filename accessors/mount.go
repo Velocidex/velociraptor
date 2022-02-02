@@ -129,7 +129,8 @@ func (self FileInfoWrapper) FullPath() string {
 }
 
 func (self FileInfoWrapper) OSPath() *OSPath {
-	trimmed_path := self.FileInfo.OSPath().Trim(self.remove_prefix)
+	trimmed_path := self.FileInfo.OSPath().TrimComponents(
+		self.remove_prefix.Components...)
 	return self.prefix.Append(trimmed_path.Components...)
 }
 

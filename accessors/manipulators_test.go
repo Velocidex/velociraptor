@@ -51,6 +51,10 @@ var windows_testcases = []testcase{
 	{"C:\\Windows\\System32\\..\\..\\..\\..\\ls",
 		[]string{"C:", "Windows", "System32", "ls"},
 		"C:\\Windows\\System32\\ls"},
+
+	// Can accept paths in pathspec format
+	{`{"Path":"C:\\Windows\\System32"}`, []string{
+		"C:", "Windows", "System32"}, "C:\\Windows\\System32"},
 }
 
 func TestWindowsManipulators(t *testing.T) {
