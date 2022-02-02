@@ -1,4 +1,4 @@
-name: Windows.Application.IISLogs
+name: Windows.Applications.IISLogs
 description: |
   This artifact enables grep of IISLogs.
   Parameters include SearchRegex and WhitelistRegex as regex terms.

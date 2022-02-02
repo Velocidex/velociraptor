@@ -1,4 +1,4 @@
-name: Windows.Application.MegaSync
+name: Windows.Applications.MegaSync
 description: |
   This artifact will parse MEGASync logs and enables using regex to search for
   entries of interest.

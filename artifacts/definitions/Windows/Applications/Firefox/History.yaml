@@ -1,4 +1,4 @@
-name: Windows.Application.Firefox.History
+name: Windows.Applications.Firefox.History
 description: |
   Enumerate the users Firefox history.
 author: Zach Stanford @svch0st
