@@ -47,6 +47,14 @@ func GetNTFSContext(scope vfilter.Scope, device, accessor string) (*ntfs.NTFSCon
 		return nil, err
 	}
 
+	// Try to read the header to trap read errors.
+	buffer := make([]byte, 4)
+	_, err = paged_reader.ReadAt(buffer, 0)
+	if err != nil {
+		paged_reader.Close()
+		return nil, err
+	}
+
 	ntfs_ctx, err := ntfs.GetNTFSContext(paged_reader, 0)
 	if err != nil {
 		paged_reader.Close()
@@ -56,8 +64,10 @@ func GetNTFSContext(scope vfilter.Scope, device, accessor string) (*ntfs.NTFSCon
 	// Destroy the context when the scope is done.
 	err = vql_subsystem.GetRootScope(scope).AddDestructor(paged_reader.Close)
 	if err != nil {
+		paged_reader.Close()
 		return nil, err
 	}
+
 	vql_subsystem.CacheSet(scope, key, ntfs_ctx)
 	return ntfs_ctx, nil
 }

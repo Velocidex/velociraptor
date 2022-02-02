@@ -135,6 +135,51 @@ func NewWindowsOSPath(path string) *OSPath {
 	return result
 }
 
+// This is a generic Path manipulator that implements the escaping
+// standard as used by Velociraptor:
+// 1. Path separators are / but will be able to use \\ to parse.
+// 2. Each component is optionally quoted if it contains special
+//    characters (like path separators).
+type GenericPathManipulator int
+
+func (self GenericPathManipulator) PathParse(path string, result *OSPath) {
+	maybeParsePathSpec(path, result)
+	result.Components = utils.SplitComponents(result.pathspec.Path)
+}
+
+func (self GenericPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
+	result := path.pathspec
+	if result == nil {
+		result = &PathSpec{}
+		path.pathspec = result
+	}
+
+	// The first component is usually the drive letter or device and
+	// although it can contain path separators it must not be quoted
+	components := path.Components
+
+	result.Path = utils.JoinComponents(components, "/")
+	return result
+}
+
+func (self GenericPathManipulator) PathJoin(path *OSPath) string {
+	result := self.AsPathSpec(path)
+	if result.DelegateAccessor == "" && result.DelegatePath == "" {
+		return result.Path
+	}
+	return result.String()
+}
+
+func NewGenericOSPath(path string) *OSPath {
+	manipulator := GenericPathManipulator(0)
+	result := &OSPath{
+		Manipulator: manipulator,
+	}
+	manipulator.PathParse(path, result)
+
+	return result
+}
+
 // Raw pathspec paths expect the path to be a json encoded PathSpec
 // object. They do not have any special interpretation of the Path
 // parameter and so they do not break it up at all. These are used in

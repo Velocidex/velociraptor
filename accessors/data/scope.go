@@ -37,6 +37,10 @@ func (self ScopeFilesystemAccessor) getData(variable string) (string, error) {
 	}
 }
 
+func (self ScopeFilesystemAccessor) ParsePath(path string) *accessors.OSPath {
+	return accessors.NewLinuxOSPath(path)
+}
+
 func (self ScopeFilesystemAccessor) Lstat(variable string) (
 	accessors.FileInfo, error) {
 	return nil, errors.New("Not implemented")

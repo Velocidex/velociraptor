@@ -256,13 +256,13 @@ func (self *MountFileSystemAccessor) AddMapping(
 }
 
 func NewMountFileSystemAccessor(
-	root FileSystemAccessor) *MountFileSystemAccessor {
+	root_path *OSPath, root FileSystemAccessor) *MountFileSystemAccessor {
 
 	result := &MountFileSystemAccessor{
 		root: &node{
 			accessor: root,
-			path:     NewLinuxOSPath(""),
-			prefix:   NewLinuxOSPath(""),
+			path:     root_path,
+			prefix:   root_path,
 		},
 	}
 	result.root.last_mount_point = result.root

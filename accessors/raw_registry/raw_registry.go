@@ -250,6 +250,10 @@ func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 	return result_any.(accessors.FileSystemAccessor), nil
 }
 
+func (self RawRegFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+	return accessors.NewWindowsOSPath(path)
+}
+
 func (self *RawRegFileSystemAccessor) ReadDir(key_path string) (
 	[]accessors.FileInfo, error) {
 

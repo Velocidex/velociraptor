@@ -33,6 +33,10 @@ func (self DataFilesystemAccessor) New(scope vfilter.Scope) (accessors.FileSyste
 	return DataFilesystemAccessor{}, nil
 }
 
+func (self DataFilesystemAccessor) ParsePath(path string) *accessors.OSPath {
+	return accessors.NewLinuxOSPath(path)
+}
+
 func (self DataFilesystemAccessor) Lstat(filename string) (accessors.FileInfo, error) {
 	return nil, errors.New("Not implemented")
 }

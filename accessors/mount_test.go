@@ -52,8 +52,9 @@ func TestMountFilesystemAccessor(t *testing.T) {
 		})
 
 	// Create a mount filesystem to organize the different
-	// filesystems.
-	mount_fs := NewMountFileSystemAccessor(root_fs_accessor)
+	// filesystems. Use Linux path convensions.
+	mount_fs := NewMountFileSystemAccessor(
+		NewLinuxOSPath(""), root_fs_accessor)
 
 	// This means the root of the bin_fs_accessor is mounted at /usr
 	mount_fs.AddMapping(
