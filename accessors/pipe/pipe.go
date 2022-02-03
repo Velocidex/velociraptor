@@ -145,7 +145,9 @@ func (self PipeFilesystemAccessor) New(scope vfilter.Scope) (
 
 func (self PipeFilesystemAccessor) Lstat(variable string) (
 	accessors.FileInfo, error) {
-	return nil, errors.New("Not implemented")
+	return &accessors.VirtualFileInfo{
+		Path: self.ParsePath(variable),
+	}, nil
 }
 
 func (self PipeFilesystemAccessor) ReadDir(path string) (

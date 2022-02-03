@@ -342,35 +342,61 @@ func (self *ZipFileCache) GetChildren(
 	defer self.mu.Unlock()
 
 	// Determine if we already emitted this file.
-	seen := make(map[string]bool)
+	seen := make(map[string]*ZipFileInfo)
 
-	result := []*ZipFileInfo{}
 loop:
 	for _, cd_cache := range self.lookup {
+		// This breaks if the cd component does not have the same
+		// prefix as required.
 		for j, component := range full_path.Components {
 			if component != cd_cache.full_path.Components[j] {
 				continue loop
 			}
 		}
 
-		if len(cd_cache.full_path.Components) > len(full_path.Components) {
-			member_name := cd_cache.full_path.Basename()
-			member := &ZipFileInfo{
-				_full_path: cd_cache.full_path,
+		// The required directory depth we need.
+		depth := len(full_path.Components)
+		if len(cd_cache.full_path.Components) < depth {
+			continue
+		}
+
+		// Get the part of the path that is at the required depth.
+		member_name := cd_cache.full_path.Components[depth]
+
+		// Have we seen this before?
+		old_result, pres := seen[member_name]
+		if pres {
+			// Only show the first real file (Zip files can have many
+			// data files with the same name).
+			if old_result.member_file != nil {
+				continue
 			}
 
-			// It is a file if the components are an exact match.
-			if len(cd_cache.full_path.Components) == len(full_path.Components)+1 {
-				member.member_file = cd_cache.member_file
+			if len(cd_cache.full_path.Components) != depth+1 {
+				continue
+			}
+		}
+
+		// It is a file if the components are an exact match.
+		if len(cd_cache.full_path.Components) == depth+1 {
+			seen[member_name] = &ZipFileInfo{
+				_full_path:  cd_cache.full_path,
+				member_file: cd_cache.member_file,
 			}
 
-			_, pres := seen[member_name]
-			if !pres {
-				result = append(result, member)
-				seen[member_name] = true
+			// A directory has no member file
+		} else {
+			seen[member_name] = &ZipFileInfo{
+				_full_path: full_path.Append(member_name),
 			}
 		}
 	}
+
+	result := make([]*ZipFileInfo, 0, len(seen))
+	for _, v := range seen {
+		result = append(result, v)
+	}
+
 	return result, nil
 }
 
@@ -469,7 +495,7 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 	file_path string) (*ZipFileCache, *accessors.OSPath, error) {
 
 	// Zip files typically use standard / path separators.
-	full_path := accessors.NewLinuxOSPath(file_path)
+	full_path := self.ParsePath(file_path)
 	pathspec := full_path.PathSpec()
 
 	base_pathspec := accessors.PathSpec{
@@ -643,7 +669,7 @@ const (
 )
 
 func (self ZipFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
-	return accessors.NewLinuxOSPath(path)
+	return accessors.NewGenericOSPath(path)
 }
 
 func (self *ZipFileSystemAccessor) New(scope vfilter.Scope) (

@@ -1,6 +1,7 @@
 package accessors
 
 import (
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -21,10 +22,10 @@ func (self GenericPathManipulator) PathParse(path string, result *OSPath) {
 }
 
 func (self GenericPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
-	result := path.pathspec
-	if result == nil {
-		result = &PathSpec{}
-		path.pathspec = result
+	// Make a copy of the pathspec.
+	var result PathSpec
+	if path.pathspec != nil {
+		result = *path.pathspec
 	}
 
 	// The first component is usually the drive letter or device and
@@ -32,7 +33,7 @@ func (self GenericPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	components := path.Components
 
 	result.Path = utils.JoinComponents(components, "/")
-	return result
+	return &result
 }
 
 func (self GenericPathManipulator) PathJoin(path *OSPath) string {
@@ -344,6 +345,23 @@ func maybeParsePathSpec(path string, result *OSPath) {
 		err := json.Unmarshal([]byte(path), pathspec)
 		if err == nil {
 			result.pathspec = pathspec
+			return
+		}
+	}
+
+	// This is a hack to support old URL based pathspecs.
+
+	// TODO: deprecate them completely in future.
+	if strings.Contains(path, "#") {
+		parsed_url, err := url.Parse(path)
+		if err == nil {
+			// Support urls for backwards compatibility.
+			result.pathspec = &PathSpec{
+				DelegateAccessor: parsed_url.Scheme,
+				DelegatePath:     parsed_url.Path,
+				Path:             parsed_url.Fragment,
+				url_based:        true,
+			}
 			return
 		}
 	}

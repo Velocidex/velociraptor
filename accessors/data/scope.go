@@ -43,7 +43,14 @@ func (self ScopeFilesystemAccessor) ParsePath(path string) *accessors.OSPath {
 
 func (self ScopeFilesystemAccessor) Lstat(variable string) (
 	accessors.FileInfo, error) {
-	return nil, errors.New("Not implemented")
+	str, err := self.getData(variable)
+	if err != nil {
+		return nil, err
+	}
+	return &accessors.VirtualFileInfo{
+		RawData: []byte(str),
+		Path:    self.ParsePath(variable),
+	}, nil
 }
 
 func (self ScopeFilesystemAccessor) ReadDir(path string) (

@@ -250,14 +250,19 @@ func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 	return result_any.(accessors.FileSystemAccessor), nil
 }
 
+// Raw Registry paths a just just generic paths:
+// 1. Separator can be / or \ when specified.
+// 2. Path are always serialized with /
+// 3. No required hive at first element.
+// 4. Paths start with / since they refer to the root of the raw hive file.
 func (self RawRegFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
-	return accessors.NewWindowsOSPath(path)
+	return accessors.NewGenericOSPath(path)
 }
 
 func (self *RawRegFileSystemAccessor) ReadDir(key_path string) (
 	[]accessors.FileInfo, error) {
 
-	full_path := accessors.NewWindowsOSPath(key_path)
+	full_path := self.ParsePath(key_path)
 
 	var result []accessors.FileInfo
 	hive, err := self.getRegHive(full_path)
@@ -298,7 +303,9 @@ func (self *RawRegFileSystemAccessor) Open(path string) (
 
 func (self *RawRegFileSystemAccessor) Lstat(filename string) (
 	accessors.FileInfo, error) {
-	return nil, errors.New("Not implemented")
+	return &accessors.VirtualFileInfo{
+		Path: self.ParsePath(filename),
+	}, nil
 }
 
 func init() {

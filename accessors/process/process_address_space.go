@@ -180,7 +180,9 @@ func (self ProcessAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {
 }
 
 func (self ProcessAccessor) Lstat(filename string) (accessors.FileInfo, error) {
-	return nil, errors.New("Not implemented")
+	return &accessors.VirtualFileInfo{
+		Path: self.ParsePath(filename),
+	}, nil
 }
 
 func (self ProcessAccessor) ParsePath(path string) *accessors.OSPath {

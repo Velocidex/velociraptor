@@ -14,13 +14,13 @@ SELECT * FROM Artifact.MacOS.System.Users(UserPlistGlob=srcDir + '/artifacts/tes
 ]SELECT basename(path=ZipFile), Member, Key, Value FROM Artifact.MacOS.Forensics.AppleDoubleZip(ZipGlob=srcDir + '/artifacts/testdata/files/logo*.zip')[
  {
   "basename(path=ZipFile)": "logo.zip",
-  "Member": "__MACOSX/._logo.svg",
+  "Member": "/__MACOSX/._logo.svg",
   "Key": "com.apple.macl",
   "Value": "\u0004\u0000\ufffd\u003cd\ufffd\ufffd\ufffdK\ufffd\ufffdE5\ufffd0\ufffd\ufffdX\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
  },
  {
   "basename(path=ZipFile)": "logo.zip",
-  "Member": "__MACOSX/._logo.svg",
+  "Member": "/__MACOSX/._logo.svg",
   "Key": "com.apple.metadata:kMDItemWhereFroms",
   "Value": [
    "https://docs.velociraptor.app//images/logo.svg",
@@ -29,7 +29,7 @@ SELECT * FROM Artifact.MacOS.System.Users(UserPlistGlob=srcDir + '/artifacts/tes
  },
  {
   "basename(path=ZipFile)": "logo.zip",
-  "Member": "__MACOSX/._logo.svg",
+  "Member": "/__MACOSX/._logo.svg",
   "Key": "com.apple.quarantine",
   "Value": "q/0081;61def1a8;Chrome;A3B40CE4-C08F-450D-88AB-C618C472337F\u0000"
  }

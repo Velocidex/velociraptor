@@ -45,7 +45,7 @@ func (self UnzipPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 		if err != nil {
-			scope.Log("tempdir: %s", err)
+			scope.Log("unzip: %s", err)
 			return
 		}
 

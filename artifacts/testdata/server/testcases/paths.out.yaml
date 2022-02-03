@@ -69,13 +69,11 @@ SELECT basename(path="/foo/bar/baz") FROM scope()[
    ]
   },
   "pathspec(parse=\"file:///usr/lib#*\")": {
-   "DelegateAccessor": "",
-   "DelegatePath": "",
-   "Path": "/file:/usr/lib#*",
+   "DelegateAccessor": "file",
+   "DelegatePath": "/usr/lib",
+   "Path": "/*",
    "Components": [
-    "file:",
-    "usr",
-    "lib#*"
+    "*"
    ]
   }
  }

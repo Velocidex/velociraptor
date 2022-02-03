@@ -3,6 +3,7 @@ package accessors
 import (
 	"testing"
 
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -98,11 +99,18 @@ var registry_testcases = []testcase{
 	{"HKLM\\\"http://www.google.com\"\\Foo",
 		[]string{"HKEY_LOCAL_MACHINE", "http://www.google.com", "Foo"},
 		"HKEY_LOCAL_MACHINE\\\"http://www.google.com\"\\Foo"},
+
+	// Support backwards compatible paths based on URLs.
+	{"/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList",
+		[]string{"SOFTWARE", "Microsoft", "Windows", "CurrentVersion", "Explorer",
+			"RunMRU", "MRUList"},
+		"/C:/Users/yolo/NTUSER.DAT#SOFTWARE%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList"},
 }
 
 func TestRegistryManipulators(t *testing.T) {
 	for _, testcase := range registry_testcases {
 		path := NewWindowsRegistryPath(testcase.serialized_path)
+		json.Dump(path.PathSpec())
 		assert.Equal(t, testcase.components, path.Components)
 		assert.Equal(t, testcase.expected_path, path.String())
 	}

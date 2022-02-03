@@ -38,7 +38,10 @@ func (self DataFilesystemAccessor) ParsePath(path string) *accessors.OSPath {
 }
 
 func (self DataFilesystemAccessor) Lstat(filename string) (accessors.FileInfo, error) {
-	return nil, errors.New("Not implemented")
+	return &accessors.VirtualFileInfo{
+		RawData: []byte(filename),
+		Path:    self.ParsePath(filename),
+	}, nil
 }
 
 func (self DataFilesystemAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {

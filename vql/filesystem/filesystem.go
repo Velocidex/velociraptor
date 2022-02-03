@@ -103,6 +103,7 @@ func (self GlobPlugin) Call(
 		// If root is not specified we try to find a common
 		// root from the globs.
 		for _, item := range arg.Globs {
+
 			if strings.HasPrefix(item, "{") {
 				scope.Log("glob: Glob item appears to be a pathspec. This is deprecated, please use the root arg instead.")
 
@@ -111,8 +112,22 @@ func (self GlobPlugin) Call(
 				// the base pathspec and the glob is the Path
 				// component.
 				root = root.Parse(item)
-				item = root.PathSpec().Path
-				root.Components = nil
+				pathspec := root.PathSpec()
+				item = pathspec.Path
+				pathspec.Path = ""
+				root.SetPathSpec(pathspec)
+
+				// URL based pathspec. TODO: Remove support for this
+				// type of path.
+			} else if strings.Contains(item, "#") {
+
+				pathspec, err := accessors.PathSpecFromString(item)
+				if err == nil {
+					scope.Log("glob: Glob item appears to be a url. This is deprecated, please use the root arg instead.")
+					item = pathspec.Path
+					pathspec.Path = ""
+					root.SetPathSpec(pathspec)
+				}
 			}
 
 			item_path := root.Parse(item)

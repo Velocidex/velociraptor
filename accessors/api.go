@@ -44,6 +44,11 @@ type OSPath struct {
 	Manipulator PathManipulator
 }
 
+func (self *OSPath) SetPathSpec(pathspec *PathSpec) {
+	self.Manipulator.PathParse(pathspec.Path, self)
+	self.pathspec = pathspec
+}
+
 func (self *OSPath) PathSpec() *PathSpec {
 	return self.Manipulator.AsPathSpec(self)
 }
@@ -93,11 +98,12 @@ func (self *OSPath) TrimComponents(components ...string) *OSPath {
 
 	for idx, c := range self.Components {
 		if idx >= len(components) || c != components[idx] {
-			return &OSPath{
+			result := &OSPath{
 				Components:  utils.CopySlice(self.Components[idx:]),
 				pathspec:    self.pathspec,
 				Manipulator: self.Manipulator,
 			}
+			return result
 		}
 	}
 	return self
