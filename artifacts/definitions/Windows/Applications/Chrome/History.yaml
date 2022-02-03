@@ -1,15 +1,17 @@
 name: Windows.Applications.Chrome.History
 description: |
   Enumerate the users chrome history.
-
+author: Angry-Bender @angry-bender
 parameters:
   - name: historyGlobs
     default: \AppData\Local\Google\Chrome\User Data\*\History
   - name: urlSQLQuery
     default: |
-      SELECT url as visited_url, title, visit_count,
-             typed_count, last_visit_time
-      FROM urls
+      SELECT  U.id, U.url, V.visit_time, U.title, U.visit_count, U.typed_count, U.last_visit_time, U.hidden, V.from_visit, 
+      strftime('%H:%M:%f', V.visit_duration/1000000.0, 'unixepoch') as visit_duration,
+      V.transition
+      FROM urls AS U JOIN visits AS V
+      ON U.id = V.url 
   - name: userRegex
     default: .
     type: regex
@@ -31,11 +33,16 @@ sources:
 
         SELECT * FROM foreach(row=history_files,
           query={
-            SELECT User, FullPath,
-                   Mtime,
-                   visited_url,
-                   title, visit_count, typed_count,
-                   timestamp(winfiletime=last_visit_time * 10) as last_visit_time
+            SELECT User, 
+                   id AS url_id,
+                   timestamp(winfiletime=visit_time) AS visit_time,
+                   url as visted_url,                   
+                   title,visit_count,typed_count,
+                   timestamp(last_visit_time=visit_time) AS last_visit_time,
+                   hidden,
+                   from_visit AS from_url_id,
+                   visit_duration,transition,
+                   timestamp(winfiletime=last_visit_time * 10) as _SourceLastModificationTimestamp 
             FROM sqlite(
               file=FullPath,
               query=urlSQLQuery)
