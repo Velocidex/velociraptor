@@ -36,7 +36,7 @@ sources:
             SELECT User, 
                    id AS url_id,
                    timestamp(epoch=((visit_time / 1000000) - 11644473600)) AS visit_time,
-                   url,                   
+                   url as visted_url,                   
                    title,visit_count,typed_count,
                    timestamp(epoch=((last_visit_time / 1000000) - 11644473600)) AS last_visit_time,
                    hidden,
