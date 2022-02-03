@@ -4,7 +4,6 @@ package tools
 
 import (
 	"fmt"
-	"math/rand"
 
 	"github.com/Velocidex/json"
 
@@ -19,10 +18,11 @@ import (
 )
 
 type GCSPubsubPublishArgs struct {
-	Topic       string      `vfilter:"required,field=topic,doc=The topic to publish to"`
-	ProjectId   string      `vfilter:"required,field=project_id,doc=The project id to publish to"`
-	Msg         vfilter.Any `vfilter:"required,field=msg,doc=Message to publish to Pubsub"`
-	Credentials string      `vfilter:"required,field=credentials,doc=The credentials to use"`
+	Topic       string            `vfilter:"required,field=topic,doc=The topic to publish to"`
+	ProjectId   string            `vfilter:"required,field=project_id,doc=The project id to publish to"`
+	Msg         vfilter.Any       `vfilter:"required,field=msg,doc=Message to publish to Pubsub"`
+	Credentials string            `vfilter:"required,field=credentials,doc=The credentials to use"`
+	Attributes  *ordereddict.Dict `vfilter:"required,field=attributes,doc=The publish attributes"`
 }
 
 type GCSPubsubPublishFunction struct{}
@@ -57,11 +57,18 @@ func (self *GCSPubsubPublishFunction) Call(ctx context.Context,
 		return fmt.Errorf("gcs_pubsub_publish: %v", err)
 	}
 
+	attributesOrderedDict := arg.Attributes
+	attributesInterfaceMap := attributesOrderedDict.ToDict()
+	attributesStringMap := make(map[string]string)
+
+	for key, value := range *attributesInterfaceMap {
+		strValue := fmt.Sprintf("%v", value)
+		attributesStringMap[key] = strValue
+	}
+
 	result := t.Publish(ctx, &pubsub.Message{
 		Data: []byte(serialized),
-		Attributes: map[string]string{
-			"messageId": fmt.Sprintf("VRAPTOR-%d", rand.Intn(100000)),
-		},
+		Attributes: attributesStringMap,
 	})
 
 	id, err := result.Get(ctx)
