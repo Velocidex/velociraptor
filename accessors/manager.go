@@ -63,7 +63,7 @@ func (self *DefaultDeviceManager) GetAccessor(
 		return res, err
 	}
 	scope.Log("Unknown filesystem accessor: " + scheme)
-	return nil, errors.New("Unknown filesystem accessor")
+	return nil, errors.New("Unknown filesystem accessor " + scheme)
 }
 
 func (self *DefaultDeviceManager) Register(

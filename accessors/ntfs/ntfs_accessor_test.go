@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
@@ -104,6 +105,8 @@ func TestNTFSFilesystemAccessorRemapping(t *testing.T) {
 		context.Background(), config_obj, root_path, mount_fs) {
 		hits = append(hits, hit.FullPath())
 	}
+
+	sort.Strings(hits)
 
 	goldie.Assert(t, "TestNTFSFilesystemAccessorRemapping",
 		json.MustMarshalIndent(hits))

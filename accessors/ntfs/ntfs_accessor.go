@@ -177,6 +177,7 @@ type NTFSFileSystemAccessor struct {
 
 func NewNTFSFileSystemAccessor(
 	scope vfilter.Scope, device, accessor string) *NTFSFileSystemAccessor {
+	device = strings.TrimSuffix(device, "\\")
 	return &NTFSFileSystemAccessor{
 		scope:    scope,
 		accessor: accessor,
@@ -349,7 +350,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekClo
 		}
 	}()
 
-	fullpath := self.root.Parse(path)
+	fullpath := self.ParsePath(path)
 
 	ntfs_ctx, err := readers.GetNTFSContext(
 		self.scope, self.device, self.accessor)

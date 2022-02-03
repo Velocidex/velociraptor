@@ -29,6 +29,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/go-pe"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -79,7 +80,7 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	normalized_path := GetNativePath(arg.Filename)
+	normalized_path := accessors.NewWindowsOSPath(arg.Filename).String()
 
 	output := ordereddict.NewDict().
 		Set("Filename", normalized_path).

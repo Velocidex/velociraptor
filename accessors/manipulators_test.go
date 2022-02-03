@@ -42,10 +42,9 @@ var windows_testcases = []testcase{
 		[]string{"C:", "Windows", "System32"},
 		"C:\\Windows\\System32"},
 
-	// Devices can contain \\ but it is preserved
-	{"\\\\.\\C:\\Windows\\System32",
-		[]string{"\\\\.\\C:", "Windows", "System32"},
-		"\\\\.\\C:\\Windows\\System32"},
+	// The drive letter must have a trailing \ otherwise the API uses
+	// the current directory (e.g. dir C: vs dir C:\ )
+	{"C:", []string{"C:"}, "C:\\"},
 
 	// Ignore and dont support directory traversal at all
 	{"C:\\Windows\\System32\\..\\..\\..\\..\\ls",
@@ -60,6 +59,30 @@ var windows_testcases = []testcase{
 func TestWindowsManipulators(t *testing.T) {
 	for _, testcase := range windows_testcases {
 		path := NewWindowsOSPath(testcase.serialized_path)
+		assert.Equal(t, testcase.components, path.Components)
+		assert.Equal(t, testcase.expected_path, path.String())
+	}
+}
+
+var ntfs_testcases = []testcase{
+	// Devices can contain \\ but it is preserved
+	{"\\\\.\\C:\\Windows\\System32",
+		[]string{"\\\\.\\C:", "Windows", "System32"},
+		"\\\\.\\C:\\Windows\\System32"},
+
+	// Devices should not have final \\ - the API requires to open
+	// them without a trailing \
+	{"\\\\.\\C:", []string{"\\\\.\\C:"}, "\\\\.\\C:"},
+
+	// Handle VSS paths
+	{"\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows",
+		[]string{"\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1", "Windows"},
+		"\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows"},
+}
+
+func TestWindowsNTFSManipulators(t *testing.T) {
+	for _, testcase := range ntfs_testcases {
+		path := NewWindowsNTFSPath(testcase.serialized_path)
 		assert.Equal(t, testcase.components, path.Components)
 		assert.Equal(t, testcase.expected_path, path.String())
 	}

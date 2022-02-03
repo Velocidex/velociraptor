@@ -25,6 +25,7 @@ package file
 
 import (
 	"os"
+	"strings"
 	"syscall"
 	"time"
 
@@ -238,7 +239,11 @@ func (self OSFileWrapper) Close() error {
 
 func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
 	full_path := self.ParsePath(path)
-	file, err := os.Open(full_path.String())
+	filename := full_path.String()
+
+	// The API does not accept filenames with trailing \\ for an open call.
+	filename = strings.TrimSuffix(filename, "\\")
+	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -275,4 +280,8 @@ This Accessor also follows any symlinks - Note: Take care with this accessor bec
 	// open the file with regular OS APIs we fallback to raw NTFS
 	// access. This is usually what we want.
 	json.RegisterCustomEncoder(&OSFileInfo{}, accessors.MarshalGlobFileInfo)
+
+	// On Linux the auto accessor is the same as file.
+	accessors.Register("auto", &OSFileSystemAccessor{},
+		`Access the file using the best accessor possible. On windows we fall back to NTFS parsing in case the file is locked or unreadable.`)
 }

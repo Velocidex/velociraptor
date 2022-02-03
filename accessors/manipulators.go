@@ -8,8 +8,53 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+// This is a generic Path manipulator that implements the escaping
+// standard as used by Velociraptor:
+// 1. Path separators are / but will be able to use \\ to parse.
+// 2. Each component is optionally quoted if it contains special
+//    characters (like path separators).
+type GenericPathManipulator struct{}
+
+func (self GenericPathManipulator) PathParse(path string, result *OSPath) {
+	maybeParsePathSpec(path, result)
+	result.Components = utils.SplitComponents(result.pathspec.Path)
+}
+
+func (self GenericPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
+	result := path.pathspec
+	if result == nil {
+		result = &PathSpec{}
+		path.pathspec = result
+	}
+
+	// The first component is usually the drive letter or device and
+	// although it can contain path separators it must not be quoted
+	components := path.Components
+
+	result.Path = utils.JoinComponents(components, "/")
+	return result
+}
+
+func (self GenericPathManipulator) PathJoin(path *OSPath) string {
+	result := self.AsPathSpec(path)
+	if result.DelegateAccessor == "" && result.DelegatePath == "" {
+		return result.Path
+	}
+	return result.String()
+}
+
+func NewGenericOSPath(path string) *OSPath {
+	manipulator := GenericPathManipulator{}
+	result := &OSPath{
+		Manipulator: manipulator,
+	}
+	manipulator.PathParse(path, result)
+
+	return result
+}
+
 // Responsible for serialization of linux paths
-type LinuxPathManipulator int
+type LinuxPathManipulator struct{ GenericPathManipulator }
 
 func (self LinuxPathManipulator) PathParse(path string, result *OSPath) {
 	maybeParsePathSpec(path, result)
@@ -35,16 +80,8 @@ func (self LinuxPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	return result
 }
 
-func (self LinuxPathManipulator) PathJoin(path *OSPath) string {
-	result := self.AsPathSpec(path)
-	if result.DelegateAccessor == "" && result.DelegatePath == "" {
-		return result.Path
-	}
-	return result.String()
-}
-
 func NewLinuxOSPath(path string) *OSPath {
-	manipulator := LinuxPathManipulator(0)
+	manipulator := LinuxPathManipulator{}
 	result := &OSPath{
 		pathspec:    &PathSpec{},
 		Manipulator: manipulator,
@@ -78,7 +115,7 @@ var (
 // HKEY_LOCAL_MACHINE\Software\Microsoft\"http://www.google.com"\Foo ->
 // "HKEY_LOCAL_MACHINE", "Software", "Microsoft", "http://www.google.com", "Foo"
 
-type WindowsPathManipulator int
+type WindowsPathManipulator struct{ GenericPathManipulator }
 
 func (self WindowsPathManipulator) PathParse(path string, result *OSPath) {
 	maybeParsePathSpec(path, result)
@@ -99,6 +136,14 @@ func (self WindowsPathManipulator) PathParse(path string, result *OSPath) {
 	result.Components = utils.SplitComponents(path)
 }
 
+func (self WindowsPathManipulator) PathJoin(path *OSPath) string {
+	result := self.AsPathSpec(path)
+	if result.DelegateAccessor == "" && result.DelegatePath == "" {
+		return result.Path
+	}
+	return result.String()
+}
+
 func (self WindowsPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	result := path.pathspec
 	if result == nil {
@@ -117,16 +162,8 @@ func (self WindowsPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	return result
 }
 
-func (self WindowsPathManipulator) PathJoin(path *OSPath) string {
-	result := self.AsPathSpec(path)
-	if result.DelegateAccessor == "" && result.DelegatePath == "" {
-		return result.Path
-	}
-	return result.String()
-}
-
 func NewWindowsOSPath(path string) *OSPath {
-	manipulator := WindowsPathManipulator(0)
+	manipulator := WindowsPathManipulator{}
 	result := &OSPath{
 		Manipulator: manipulator,
 	}
@@ -135,19 +172,22 @@ func NewWindowsOSPath(path string) *OSPath {
 	return result
 }
 
-// This is a generic Path manipulator that implements the escaping
-// standard as used by Velociraptor:
-// 1. Path separators are / but will be able to use \\ to parse.
-// 2. Each component is optionally quoted if it contains special
-//    characters (like path separators).
-type GenericPathManipulator int
+// Handle device paths especially.
+type WindowsNTFSManipulator struct{ WindowsPathManipulator }
 
-func (self GenericPathManipulator) PathParse(path string, result *OSPath) {
-	maybeParsePathSpec(path, result)
-	result.Components = utils.SplitComponents(result.pathspec.Path)
+func (self WindowsNTFSManipulator) PathParse(path string, result *OSPath) {
+	self.WindowsPathManipulator.PathParse(path, result)
+
+	// Drive names are stored as devices in the ntfs accessors.  So if
+	// a user specifies open C:\Windows, we automatically open the
+	// \\.\C: device
+	if len(result.Components) > 0 &&
+		driveRegex.MatchString(result.Components[0]) {
+		result.Components[0] = "\\\\.\\" + result.Components[0]
+	}
 }
 
-func (self GenericPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
+func (self WindowsNTFSManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	result := path.pathspec
 	if result == nil {
 		result = &PathSpec{}
@@ -158,11 +198,21 @@ func (self GenericPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	// although it can contain path separators it must not be quoted
 	components := path.Components
 
-	result.Path = utils.JoinComponents(components, "/")
+	switch len(components) {
+	case 0:
+		return result
+
+	case 1:
+		result.Path = components[0]
+
+	default:
+		// No leading \\ as first component is drive letter
+		result.Path = components[0] + utils.JoinComponents(components[1:], "\\")
+	}
 	return result
 }
 
-func (self GenericPathManipulator) PathJoin(path *OSPath) string {
+func (self WindowsNTFSManipulator) PathJoin(path *OSPath) string {
 	result := self.AsPathSpec(path)
 	if result.DelegateAccessor == "" && result.DelegatePath == "" {
 		return result.Path
@@ -170,8 +220,8 @@ func (self GenericPathManipulator) PathJoin(path *OSPath) string {
 	return result.String()
 }
 
-func NewGenericOSPath(path string) *OSPath {
-	manipulator := GenericPathManipulator(0)
+func NewWindowsNTFSPath(path string) *OSPath {
+	manipulator := WindowsNTFSManipulator{}
 	result := &OSPath{
 		Manipulator: manipulator,
 	}
@@ -182,7 +232,7 @@ func NewGenericOSPath(path string) *OSPath {
 
 // Windows registry paths begin with a hive name. There are a number
 // of abbreviations for the hive names and we want to standardize.
-type WindowsRegistryPathManipulator int
+type WindowsRegistryPathManipulator struct{ GenericPathManipulator }
 
 func (self WindowsRegistryPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	result := path.pathspec
@@ -227,7 +277,7 @@ func (self WindowsRegistryPathManipulator) PathParse(path string, result *OSPath
 }
 
 func NewWindowsRegistryPath(path string) *OSPath {
-	manipulator := WindowsRegistryPathManipulator(0)
+	manipulator := WindowsRegistryPathManipulator{}
 	result := &OSPath{
 		Manipulator: manipulator,
 	}
@@ -241,7 +291,7 @@ func NewWindowsRegistryPath(path string) *OSPath {
 // parameter and so they do not break it up at all. These are used in
 // very limited situations when we do not want to represent
 // hierarchical data at all.
-type PathSpecPathManipulator int
+type PathSpecPathManipulator struct{ GenericPathManipulator }
 
 func (self PathSpecPathManipulator) PathParse(path string, result *OSPath) {
 	pathspec, err := PathSpecFromString(path)
@@ -272,7 +322,7 @@ func (self PathSpecPathManipulator) PathJoin(path *OSPath) string {
 }
 
 func NewPathspecOSPath(path string) *OSPath {
-	manipulator := PathSpecPathManipulator(0)
+	manipulator := PathSpecPathManipulator{}
 	result := &OSPath{
 		Manipulator: manipulator,
 	}

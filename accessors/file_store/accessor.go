@@ -141,7 +141,7 @@ func (self *FileStoreFileInfo) FullPath() string {
 }
 
 func (self *FileStoreFileInfo) OSPath() *accessors.OSPath {
-	manipulator := accessors.LinuxPathManipulator(0)
+	manipulator := accessors.LinuxPathManipulator{}
 	return &accessors.OSPath{
 		Components:  self.fullpath.Components(),
 		Manipulator: manipulator,

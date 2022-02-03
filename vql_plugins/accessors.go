@@ -9,6 +9,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/accessors/pipe"
 	_ "www.velocidex.com/golang/velociraptor/accessors/process"
 	_ "www.velocidex.com/golang/velociraptor/accessors/raw_registry"
+	_ "www.velocidex.com/golang/velociraptor/accessors/registry"
 	_ "www.velocidex.com/golang/velociraptor/accessors/sparse"
 	_ "www.velocidex.com/golang/velociraptor/accessors/zip"
 )

@@ -1,26 +1,26 @@
-// +build XXX
+// +build windows
 
 package ntfs
 
 import (
-	"strings"
+	"time"
 
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
 )
 
+const (
+	NTFS_TAG = "__NTFS_Accessor"
+)
+
 type WindowsNTFSFileSystemAccessor struct {
-	*remapping.MountFileSystemAccessor
-
-	root_fs *remapping.VirtualFilesystemAccessor
+	accessors.MountFileSystemAccessor
+	age time.Time
 }
 
-func (self WindowsNTFSFileSystemAccessor) PathJoin(x, y string) string {
-	return x + "\\" + strings.TrimLeft(y, "\\")
-}
-
-func discoverVSS() ([]*remapping.VirtualFileInfo, error) {
+func discoverVSS() ([]*accessors.VirtualFileInfo, error) {
 	shadow_volumes, err := wmi.Query(
 		"SELECT DeviceObject, VolumeName, InstallDate, "+
 			"OriginatingMachine from Win32_ShadowCopy",
@@ -29,15 +29,14 @@ func discoverVSS() ([]*remapping.VirtualFileInfo, error) {
 		return nil, err
 	}
 
-	result := []*remapping.VirtualFileInfo{}
+	result := []*accessors.VirtualFileInfo{}
 	for _, row := range shadow_volumes {
 		device_name, pres := row.GetString("DeviceObject")
 		if pres {
-			virtual_directory := &remapping.VirtualFileInfo{
-				IsDir_:      true,
-				Components_: []string{device_name},
-				FullPath_:   device_name,
-				Data_:       row,
+			virtual_directory := &accessors.VirtualFileInfo{
+				IsDir_: true,
+				Path:   accessors.NewWindowsNTFSPath(device_name),
+				Data_:  row,
 			}
 			result = append(result, virtual_directory)
 		}
@@ -46,7 +45,7 @@ func discoverVSS() ([]*remapping.VirtualFileInfo, error) {
 	return result, nil
 }
 
-func discoverLogicalDisks() ([]*remapping.VirtualFileInfo, error) {
+func discoverLogicalDisks() ([]*accessors.VirtualFileInfo, error) {
 	shadow_volumes, err := wmi.Query(
 		"SELECT DeviceID, Description, VolumeName, FreeSpace, "+
 			"Size, SystemName, VolumeSerialNumber "+
@@ -56,15 +55,14 @@ func discoverLogicalDisks() ([]*remapping.VirtualFileInfo, error) {
 		return nil, err
 	}
 
-	result := []*remapping.VirtualFileInfo{}
+	result := []*accessors.VirtualFileInfo{}
 	for _, row := range shadow_volumes {
 		device_name, pres := row.GetString("DeviceID")
 		if pres {
-			virtual_directory := &remapping.VirtualFileInfo{
-				IsDir_:      true,
-				Components_: []string{"\\\\.\\" + device_name},
-				FullPath_:   "\\\\.\\" + device_name,
-				Data_:       row,
+			virtual_directory := &accessors.VirtualFileInfo{
+				IsDir_: true,
+				Path:   accessors.NewWindowsNTFSPath("\\\\.\\" + device_name),
+				Data_:  row,
 			}
 			result = append(result, virtual_directory)
 		}
@@ -74,17 +72,27 @@ func discoverLogicalDisks() ([]*remapping.VirtualFileInfo, error) {
 }
 
 func (self *WindowsNTFSFileSystemAccessor) New(
-	scope vfilter.Scope) (glob.FileSystemAccessor, error) {
-	root_fs := remapping.NewVirtualFilesystemAccessor()
-	result := &WindowsNTFSFileSystemAccessor{
-		MountFileSystemAccessor: remapping.NewMountFileSystemAccessor(root_fs),
-		root_fs:                 root_fs,
+	scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
+
+	cached_accessor, ok := vql_subsystem.CacheGet(
+		scope, NTFS_TAG).(accessors.FileSystemAccessor)
+	if ok {
+		return cached_accessor, nil
 	}
+
+	// Build a virtual filesystem that mounts the various NTFS volumes on it.
+	root_fs := accessors.NewVirtualFilesystemAccessor()
+	result := accessors.NewMountFileSystemAccessor(
+		accessors.NewWindowsNTFSPath(""), root_fs)
 
 	vss, err := discoverVSS()
 	if err == nil {
 		for _, fi := range vss {
 			root_fs.SetVirtualFileInfo(fi)
+			result.AddMapping(
+				accessors.NewWindowsNTFSPath(""), // Mount at the root of the filesystem
+				fi.OSPath(),
+				NewNTFSFileSystemAccessor(scope, fi.FullPath(), "file"))
 		}
 	}
 
@@ -92,16 +100,19 @@ func (self *WindowsNTFSFileSystemAccessor) New(
 	if err == nil {
 		for _, fi := range logical {
 			root_fs.SetVirtualFileInfo(fi)
-			result.AddMappingComponents(
-				[]string{}, fi.Components_,
-				ntfs.NewNTFSFileSystemAccessor(scope, fi.Name(), "file"))
+			result.AddMapping(
+				accessors.NewWindowsNTFSPath(""),
+				fi.OSPath(),
+				NewNTFSFileSystemAccessor(scope, fi.FullPath(), "file"))
 		}
 	}
+
+	vql_subsystem.CacheSet(scope, NTFS_TAG, result)
 
 	return result, nil
 }
 
 func init() {
-	glob.Register("ntfs", &WindowsNTFSFileSystemAccessor{},
+	accessors.Register("ntfs", &WindowsNTFSFileSystemAccessor{},
 		`Access the NTFS filesystem by parsing NTFS structures.`)
 }
