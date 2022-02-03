@@ -48,6 +48,18 @@ func (self *OSPath) PathSpec() *PathSpec {
 	return self.Manipulator.AsPathSpec(self)
 }
 
+func (self *OSPath) DelegatePath() string {
+	return self.Manipulator.AsPathSpec(self).DelegatePath
+}
+
+func (self *OSPath) DelegateAccessor() string {
+	return self.Manipulator.AsPathSpec(self).DelegateAccessor
+}
+
+func (self *OSPath) Path() string {
+	return self.Manipulator.AsPathSpec(self).Path
+}
+
 func (self *OSPath) String() string {
 	return self.Manipulator.PathJoin(self)
 }

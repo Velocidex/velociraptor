@@ -1,5 +1,3 @@
-// +build XXXXX
-
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -18,57 +16,91 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 // A Raw NTFS accessor for disks. This accessor allows navigating the
-// filesystem by MFT ids e.g. X/Y/Z
+// filesystem by MFT ids e.g. C:/X-Y-Z
 
 // The First level is the MFT ID (X)
 // The Second level is the Attribute type (Y)
 // The Third level is the Attribute ID.
 
-package filesystems
+package ntfs
 
 import (
 	"errors"
-	"strings"
+	"os"
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	"www.velocidex.com/golang/vfilter"
 )
 
 type MFTFileSystemAccessor struct {
-	*NTFSFileSystemAccessor
+	scope vfilter.Scope
 }
 
-func (self MFTFileSystemAccessor) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
-	ntfs_accessor, err := NTFSFileSystemAccessor{}.New(scope)
-	if err != nil {
-		return nil, err
-	}
-	return &MFTFileSystemAccessor{ntfs_accessor.(*NTFSFileSystemAccessor)}, nil
+func (self MFTFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+	return accessors.NewWindowsNTFSPath(path)
 }
 
-func (self MFTFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
+func (self MFTFileSystemAccessor) New(scope vfilter.Scope) (
+	accessors.FileSystemAccessor, error) {
+	return &MFTFileSystemAccessor{scope: scope}, nil
+}
+
+func (self MFTFileSystemAccessor) ReadDir(path string) (
+	[]accessors.FileInfo, error) {
 	return nil, errors.New("Unable to list all MFT entries.")
 }
-func (self *MFTFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
-	// The path must start with a valid device, otherwise we list
-	// the devices.
-	pathSpec, err := glob.PathSpecFromString(path)
+
+func (self MFTFileSystemAccessor) parseMFTPath(path string) (
+	delegate_device, delegate_accessor, subpath string,
+	full_path *accessors.OSPath, err error) {
+
+	full_path = self.ParsePath(path)
+	if len(full_path.Components) == 0 {
+		return "", "", "", nil, os.ErrNotExist
+	}
+
+	// There are two ways to use this accessor:
+
+	// 1. Using a pathspec we can delegate to an external file to
+	//    parse the ntfs. Eg. {Path: "43-128-0", DelegatePath: "\\\\.\\C:"}
+	// 2. If a delegate is not specified, we take the device from the
+	//    first component of the Path.
+
+	delegate_device = full_path.Components[0]
+	delegate_accessor = "file"
+
+	// If the user provided a full pathspec we use that instead.
+	pathSpec := full_path.PathSpec()
+	if pathSpec.DelegatePath != "" {
+		delegate_device = accessors.ConvertToDevice(pathSpec.DelegatePath)
+		delegate_accessor = pathSpec.DelegateAccessor
+		subpath = full_path.Components[0]
+	} else if len(full_path.Components) < 2 {
+		return "", "", "", nil, os.ErrNotExist
+	} else {
+		subpath = full_path.Components[1]
+	}
+	return delegate_device, delegate_accessor, subpath, full_path, nil
+}
+
+func (self *MFTFileSystemAccessor) Open(path string) (
+	accessors.ReadSeekCloser, error) {
+	delegate_device, delegate_accessor,
+		subpath, full_path, err := self.parseMFTPath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	device := pathSpec.GetDelegatePath()
-	subpath := pathSpec.Path
-
-	subpath = strings.TrimLeft(subpath, "\\")
+	// Check that the subpath is correctly specified.
 	mft_idx, attr_type, attr_id, err := ntfs.ParseMFTId(subpath)
 	if err != nil {
 		return nil, err
 	}
 
-	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device)
+	ntfs_ctx, err := readers.GetNTFSContext(
+		self.scope, delegate_device, delegate_accessor)
 	if err != nil {
 		return nil, err
 	}
@@ -103,28 +135,29 @@ func (self *MFTFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error
 	result := &readAdapter{
 		info: &NTFSFileInfo{
 			info:       info,
-			_full_path: device + subpath,
+			_full_path: full_path,
 		},
 		reader: reader,
 	}
 	return result, nil
 }
 
-func (self *MFTFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
-	// The path must start with a valid device, otherwise we list
-	// the devices.
-	pathSpec, err := glob.PathSpecFromString(path)
+func (self *MFTFileSystemAccessor) Lstat(path string) (
+	accessors.FileInfo, error) {
+	delegate_device, delegate_accessor,
+		subpath, full_path, err := self.parseMFTPath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	subpath := strings.TrimLeft(pathSpec.Path, "\\")
+	// Check that the subpath is correctly specified.
 	mft_idx, _, _, err := ntfs.ParseMFTId(subpath)
 	if err != nil {
 		return nil, err
 	}
 
-	ntfs_ctx, err := readers.GetNTFSContext(self.scope, pathSpec.GetDelegatePath())
+	ntfs_ctx, err := readers.GetNTFSContext(
+		self.scope, delegate_device, delegate_accessor)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +167,7 @@ func (self *MFTFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
 		return nil, err
 	}
 
-	var info *ntfs.FileInfo
+	info := &ntfs.FileInfo{}
 	stat := ntfs.Stat(ntfs_ctx, mft_entry)
 	if len(stat) > 0 {
 		info = stat[0]
@@ -142,14 +175,21 @@ func (self *MFTFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
 
 	return &NTFSFileInfo{
 		info:       info,
-		_full_path: path,
+		_full_path: full_path,
 	}, nil
 }
 
 func init() {
-	glob.Register("mft", &MFTFileSystemAccessor{}, `Access arbitrary MFT streams as files.
+	accessors.Register("mft", &MFTFileSystemAccessor{},
+		`Access arbitrary MFT streams as files.
 
 The filename is taken as an MFT inode number in the
 form <entry_id>-<stream_type>-<id>, e.g. 203-128-0
+
+An example of using this artifact:
+
+SELECT upload(accessor="mft", filename="C:/203-128-0")
+FROM scope()
+
 `)
 }

@@ -187,6 +187,13 @@ func (self WindowsNTFSManipulator) PathParse(path string, result *OSPath) {
 	}
 }
 
+func ConvertToDevice(component string) string {
+	if driveRegex.MatchString(component) {
+		return "\\\\.\\" + component
+	}
+	return component
+}
+
 func (self WindowsNTFSManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	result := path.pathspec
 	if result == nil {

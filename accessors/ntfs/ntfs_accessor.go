@@ -203,7 +203,7 @@ func (self *NTFSFileSystemAccessor) getRootMFTEntry(ntfs_ctx *ntfs.NTFSContext) 
 }
 
 func (self NTFSFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
-	return accessors.NewGenericOSPath(path)
+	return accessors.NewWindowsNTFSPath(path)
 }
 
 func (self *NTFSFileSystemAccessor) ReadDir(path string) (

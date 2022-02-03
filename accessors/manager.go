@@ -54,10 +54,11 @@ func NewDefaultDeviceManager() *DefaultDeviceManager {
 
 func (self *DefaultDeviceManager) GetAccessor(
 	scheme string, scope vfilter.Scope) (FileSystemAccessor, error) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
 
+	self.mu.Lock()
 	handler, pres := self.handlers[scheme]
+	self.mu.Unlock()
+
 	if pres {
 		res, err := handler.New(scope)
 		return res, err

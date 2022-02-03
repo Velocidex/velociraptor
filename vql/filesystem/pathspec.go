@@ -17,6 +17,7 @@ type PathSpecArgs struct {
 	DelegatePath     string      `vfilter:"optional,field=DelegatePath,doc=A delegate to pass to the accessor."`
 	Path             vfilter.Any `vfilter:"optional,field=Path,doc=A path to open."`
 	Parse            string      `vfilter:"optional,field=parse,doc=Alternatively parse the pathspec from this string."`
+	Type             string      `vfilter:"optional,field=type,doc=Type of path this is (windows,linux,registry,ntfs)."`
 }
 
 type PathSpecFunction struct{}
@@ -32,12 +33,20 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 	}
 
 	if arg.Parse != "" {
-		result, err := accessors.PathSpecFromString(arg.Parse)
-		if err != nil {
-			scope.Log("pathspec: %v", err)
-			return vfilter.Null{}
+		switch arg.Type {
+		case "linux":
+			return parseOSPath(accessors.NewLinuxOSPath(arg.Parse))
+
+		case "windows":
+			return parseOSPath(accessors.NewWindowsOSPath(arg.Parse))
+
+		case "":
+			return parseOSPath(accessors.NewGenericOSPath(arg.Parse))
+
+		default:
+			scope.Log("Unknown path type")
+			return &vfilter.Null{}
 		}
-		return result
 	}
 
 	// The path can be a more complex type
@@ -82,6 +91,15 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 	}
 
 	return result
+}
+
+func parseOSPath(path *accessors.OSPath) *ordereddict.Dict {
+	pathspec := path.PathSpec()
+	return ordereddict.NewDict().
+		Set("DelegateAccessor", pathspec.DelegateAccessor).
+		Set("DelegatePath", pathspec.DelegatePath).
+		Set("Path", pathspec.Path).
+		Set("Components", path.Components)
 }
 
 func (self *PathSpecFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

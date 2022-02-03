@@ -264,9 +264,6 @@ func (self *OSFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error)
 }
 
 func init() {
-	accessors.Register("file", &OSFileSystemAccessor{},
-		`Access the filesystem using the OS APIs.`)
-
 	// Register a variant which allows following links - be
 	// careful with it - it can get stuck on loops.
 	accessors.Register("file_links", &OSFileSystemAccessor{
@@ -280,8 +277,4 @@ This Accessor also follows any symlinks - Note: Take care with this accessor bec
 	// open the file with regular OS APIs we fallback to raw NTFS
 	// access. This is usually what we want.
 	json.RegisterCustomEncoder(&OSFileInfo{}, accessors.MarshalGlobFileInfo)
-
-	// On Linux the auto accessor is the same as file.
-	accessors.Register("auto", &OSFileSystemAccessor{},
-		`Access the file using the best accessor possible. On windows we fall back to NTFS parsing in case the file is locked or unreadable.`)
 }
