@@ -131,7 +131,7 @@ sources:
                         `32769` = 'DLV'),
                     member=str(str=EventData.QueryType)) AS Type,
                EventData.QueryResults AS Answer,
-               GetProcessInfo(TargetPid=System.ProcessID,ThreadId=System.ThreadID)[0] as Process
+               GetProcessInfo(TargetPid=System.ProcessID,ThreadId=System.ThreadID)[0] as Process 
         FROM watch_etw(guid="{1C95126E-7EEA-49A9-A3FE-A378B03DDB4D}")
         WHERE System.ID = 3008
             AND Query AND Process AND Answer 
