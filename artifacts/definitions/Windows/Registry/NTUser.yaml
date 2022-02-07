@@ -45,7 +45,8 @@ sources:
             UUID,
             {
                 SELECT FullPath FROM glob(
-                   globs=expand(path=Directory) + "//NTUSER.DAT", accessor="file")
+                   globs=expand(path=Directory) + "//NTUSER.DAT",
+                   accessor="auto")
             } as FullPath,
             expand(path=Directory) as Directory
        FROM Artifact.Windows.Sys.Users()

@@ -25,5 +25,5 @@ sources:
             WHERE Directory AND Name =~ userRegex
 
         SELECT upload(file=expand(path=HomeDir) + "\\ntuser.dat",
-                      accessor="file") as Upload
+                      accessor="auto") as Upload
         FROM users

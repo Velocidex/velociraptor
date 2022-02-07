@@ -2,6 +2,7 @@ package hunts
 
 import (
 	"context"
+	"errors"
 	"os"
 
 	"github.com/Velocidex/ordereddict"
@@ -96,7 +97,7 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 
 				if arg.ReallyDoIt {
 					err = db.DeleteSubject(config_obj, filename)
-					if err != nil && os.IsExist(err) {
+					if err != nil && errors.Is(err, os.ErrNotExist) {
 						scope.Log("hunt_delete: while deleting %v: %s",
 							filename, err)
 					}

@@ -127,7 +127,7 @@ sources:
                         profile=Profile, struct="V") AS ParsedV
         FROM read_reg_key(
            globs=pathspec(
-              DelegateAccessor="file",
+              DelegateAccessor="auto",
               DelegatePath=SAMPath,
               Path='SAM\\Domains\\Account\\Users\\0*'),
            accessor="raw_reg")

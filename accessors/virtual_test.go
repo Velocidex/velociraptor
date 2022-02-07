@@ -1,6 +1,7 @@
 package accessors
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -65,5 +66,5 @@ func TestVirtualFilesystemAccessor(t *testing.T) {
 
 	// Missing files
 	_, err := fs_accessor.ReadDir("/nosuchfile")
-	assert.True(t, os.IsNotExist(err))
+	assert.True(t, errors.Is(err, os.ErrNotExist))
 }

@@ -24,7 +24,7 @@ func GetAccessor(scheme string, scope vfilter.Scope) (FileSystemAccessor, error)
 	// because there needs to be at least a file handler
 	// registered.
 	if scheme == "" {
-		scheme = "file"
+		scheme = "auto"
 	}
 
 	manager_any, pres := scope.Resolve(constants.SCOPE_DEVICE_MANAGER)

@@ -68,8 +68,6 @@ func (self *AutoFilesystemAccessor) Lstat(path string) (accessors.FileInfo, erro
 }
 
 func init() {
-	accessors.Register("file", &AutoFilesystemAccessor{},
-		`Access the filesystem using the OS API.`)
 	accessors.Register("auto", &AutoFilesystemAccessor{},
 		`Automatically access the filesystem using the best method.
 

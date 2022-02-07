@@ -169,7 +169,7 @@ func _MakeTempfile(ctx context.Context,
 	remove := func() {
 		// Try to remove it immediately
 		err := os.Remove(tmpfile.Name())
-		if err == nil || os.IsNotExist(err) {
+		if err == nil || errors.Is(err, os.ErrNotExist) {
 			scope.Log("sqlite: removing tempfile %v", tmpfile.Name())
 			return
 		}
@@ -180,7 +180,7 @@ func _MakeTempfile(ctx context.Context,
 		go func() {
 			for i := 0; i < 100; i++ {
 				err := os.Remove(tmpfile.Name())
-				if err == nil || os.IsNotExist(err) {
+				if err == nil || errors.Is(err, os.ErrNotExist) {
 					scope.Log("sqlite: removing tempfile %v", tmpfile.Name())
 					return
 				}

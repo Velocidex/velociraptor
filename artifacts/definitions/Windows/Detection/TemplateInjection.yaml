@@ -60,7 +60,7 @@ sources:
                     FullPath AS ZipMemberPath,
                     OfficePath
                 FROM glob(globs=url(
-                    scheme="file", path=OfficePath, fragment="/**").String,
+                    scheme="auto", path=OfficePath, fragment="/**").String,
                     accessor='zip')
                 WHERE not IsDir and Size > 0 and ZipMemberPath =~ TemplateFileRegex
             })

@@ -264,6 +264,9 @@ func (self *OSFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error)
 }
 
 func init() {
+	accessors.Register("file", &OSFileSystemAccessor{},
+		`Access the filesystem using the OS API.`)
+
 	// Register a variant which allows following links - be
 	// careful with it - it can get stuck on loops.
 	accessors.Register("file_links", &OSFileSystemAccessor{

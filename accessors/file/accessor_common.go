@@ -296,5 +296,19 @@ func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, er
 }
 
 func init() {
+	accessors.Register("file", &OSFileSystemAccessor{
+		root: accessors.NewLinuxOSPath(""),
+	}, `Access files using the operating system's API. Does not allow access to raw devices.`)
+
+	accessors.Register("raw_file", &OSFileSystemAccessor{
+		root:             accessors.NewLinuxOSPath(""),
+		allow_raw_access: true,
+	}, `Access files using the operating system's API. Also allow access to raw devices.`)
+
+	// On Linux the auto accessor is the same as file.
+	accessors.Register("auto", &OSFileSystemAccessor{
+		root: accessors.NewLinuxOSPath(""),
+	}, `Access the file using the best accessor possible. On windows we fall back to NTFS parsing in case the file is locked or unreadable.`)
+
 	json.RegisterCustomEncoder(&OSFileInfo{}, accessors.MarshalGlobFileInfo)
 }

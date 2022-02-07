@@ -20,7 +20,8 @@ sources:
  - query: |
         LET UserProfiles = Select Name as Username,
             {
-                SELECT FullPath FROM glob(globs=expand(path=Directory) + "//NTUSER.DAT", accessor="file")
+                SELECT FullPath FROM glob(root=expand(path=Directory),
+                   globs="/NTUSER.DAT", accessor="auto")
             } as NTUser,
             expand(path=Directory) as Directory
         FROM Artifact.Windows.Sys.Users()
@@ -37,7 +38,7 @@ sources:
               dirname(path=url(parse=FullPath).fragment) as Key,
               Mtime AS LastModified
             FROM glob(
-              globs=url(scheme="file",
+              globs=url(scheme="auto",
                 path=NTUser,
                 fragment=KeyGlob).String,
               accessor="raw_reg")
