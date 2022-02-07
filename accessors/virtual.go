@@ -184,13 +184,6 @@ func (self VirtualFilesystemAccessor) Lstat(filename string) (FileInfo, error) {
 }
 
 func (self VirtualFilesystemAccessor) ReadDir(path string) ([]FileInfo, error) {
-	if path == "" {
-		fmt.Printf("VirtualFilesystemAccessor: ReadDir of empty string: %s\n",
-			self.root.Debug())
-
-		utils.PrintStack()
-	}
-
 	node, err := self.getNode(path)
 	if err != nil {
 		return nil, err
@@ -199,6 +192,13 @@ func (self VirtualFilesystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	result := make([]FileInfo, 0, len(node.children))
 	for _, c := range node.children {
 		result = append(result, c.file_info)
+	}
+
+	if path == "" {
+		fmt.Printf("VirtualFilesystemAccessor: ReadDir of empty string: %s\n %v\n",
+			self.root.Debug(), result)
+
+		utils.PrintStack()
 	}
 
 	return result, nil
@@ -223,7 +223,8 @@ func (self VirtualFilesystemAccessor) getNode(path string) (*directory_node, err
 		if c != "" {
 			next_node := node.GetChild(c)
 			if next_node == nil {
-				return nil, os.ErrNotExist
+				return nil, fmt.Errorf("While finding %v: Can not find %v: %w",
+					path, c, os.ErrNotExist)
 			}
 			node = next_node
 		}
