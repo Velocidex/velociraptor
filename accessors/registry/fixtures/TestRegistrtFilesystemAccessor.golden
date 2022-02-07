@@ -8,10 +8,7 @@
   "HKEY_PERFORMANCE_DATA - -rwxr-xr-x {\"type\":\"hive\"}"
  ],
  "Deep key": [
-  "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\CMF\\BaseFolder - drwxr-xr-x {\"type\":\"key\"}",
-  "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\CMF\\Config - drwxr-xr-x {\"type\":\"key\"}",
   "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\CMF\\LatestIndex - drwxr-xr-x {\"type\":\"key\"}",
-  "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\CMF\\CompressedSegments - -rwxr-xr-x {\"type\":\"DWORD\",\"value\":1}",
-  "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\CMF\\MuiInit - -rwxr-xr-x {\"type\":\"QWORD\",\"value\":132829059801161627}"
+  "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\CMF\\CompressedSegments - -rwxr-xr-x {\"type\":\"DWORD\",\"value\":1}"
  ]
 }
