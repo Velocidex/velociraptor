@@ -3,20 +3,22 @@
 package ntfs
 
 import (
+	"context"
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/constants"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
 )
 
 const (
-	NTFS_TAG = "__NTFS_Accessor"
+	NTFS_TAG = "$__NTFS_Accessor"
 )
 
 type WindowsNTFSFileSystemAccessor struct {
-	accessors.MountFileSystemAccessor
+	*accessors.MountFileSystemAccessor
 	age time.Time
 }
 
@@ -74,16 +76,25 @@ func discoverLogicalDisks() ([]*accessors.VirtualFileInfo, error) {
 func (self *WindowsNTFSFileSystemAccessor) New(
 	scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
 
+	// Cache the ntfs accessor for the life of the query.
+	cache_time := constants.GetNTFSCacheTime(context.Background(), scope)
+	root_scope := vql_subsystem.GetRootScope(scope)
 	cached_accessor, ok := vql_subsystem.CacheGet(
-		scope, NTFS_TAG).(accessors.FileSystemAccessor)
-	if ok {
+		root_scope, NTFS_TAG).(*WindowsNTFSFileSystemAccessor)
+
+	// Ignore the filesystem if it is too old - drives may have been
+	// added or removed.
+	if ok && cached_accessor.age.Add(cache_time).After(time.Now()) {
 		return cached_accessor, nil
 	}
 
 	// Build a virtual filesystem that mounts the various NTFS volumes on it.
 	root_fs := accessors.NewVirtualFilesystemAccessor()
-	result := accessors.NewMountFileSystemAccessor(
-		accessors.NewWindowsNTFSPath(""), root_fs)
+	result := &WindowsNTFSFileSystemAccessor{
+		MountFileSystemAccessor: accessors.NewMountFileSystemAccessor(
+			accessors.NewWindowsNTFSPath(""), root_fs),
+		age: time.Now(),
+	}
 
 	vss, err := discoverVSS()
 	if err == nil {
@@ -92,7 +103,7 @@ func (self *WindowsNTFSFileSystemAccessor) New(
 			result.AddMapping(
 				accessors.NewWindowsNTFSPath(""), // Mount at the root of the filesystem
 				fi.OSPath(),
-				NewNTFSFileSystemAccessor(scope, fi.FullPath(), "file"))
+				NewNTFSFileSystemAccessor(root_scope, fi.FullPath(), "file"))
 		}
 	}
 
@@ -103,12 +114,11 @@ func (self *WindowsNTFSFileSystemAccessor) New(
 			result.AddMapping(
 				accessors.NewWindowsNTFSPath(""),
 				fi.OSPath(),
-				NewNTFSFileSystemAccessor(scope, fi.FullPath(), "file"))
+				NewNTFSFileSystemAccessor(root_scope, fi.FullPath(), "file"))
 		}
 	}
 
-	vql_subsystem.CacheSet(scope, NTFS_TAG, result)
-
+	vql_subsystem.CacheSet(root_scope, NTFS_TAG, result)
 	return result, nil
 }
 

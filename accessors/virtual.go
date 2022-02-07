@@ -194,13 +194,6 @@ func (self VirtualFilesystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 		result = append(result, c.file_info)
 	}
 
-	if path == "" {
-		fmt.Printf("VirtualFilesystemAccessor: ReadDir of empty string: %s\n %v\n",
-			self.root.Debug(), result)
-
-		utils.PrintStack()
-	}
-
 	return result, nil
 }
 
@@ -241,7 +234,7 @@ func (self *VirtualFilesystemAccessor) SetVirtualDirectory(
 		node = node.MakeChild(c)
 	}
 
-	file_info.Path = dir_path
+	file_info.Path = dir_path.Copy()
 	node.file_info = file_info
 }
 

@@ -19,7 +19,6 @@ import (
 	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -196,11 +195,6 @@ func (self *MountFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccesso
 
 func (self *MountFileSystemAccessor) ReadDir(path string) (
 	[]FileInfo, error) {
-	if path == "" {
-		fmt.Printf("MountFileSystemAccessor: ReadDir of empty string:\n")
-		utils.PrintStack()
-	}
-
 	delegate_node, delegate_path := self.getDelegatePath(path)
 	children, err := delegate_node.accessor.ReadDir(delegate_path)
 	if err != nil {
@@ -211,8 +205,8 @@ func (self *MountFileSystemAccessor) ReadDir(path string) (
 	for _, c := range children {
 		res = append(res, &FileInfoWrapper{
 			FileInfo:      c,
-			prefix:        delegate_node.path,
-			remove_prefix: delegate_node.prefix,
+			prefix:        delegate_node.path.Copy(),
+			remove_prefix: delegate_node.prefix.Copy(),
 		})
 	}
 
@@ -257,7 +251,7 @@ func (self *MountFileSystemAccessor) AddMapping(
 	}
 
 	// Install the node in the tree - this is where we read from.
-	node.prefix = source
+	node.prefix = source.Copy()
 	node.accessor = source_accessor
 	node.last_mount_point = node
 }
@@ -268,8 +262,8 @@ func NewMountFileSystemAccessor(
 	result := &MountFileSystemAccessor{
 		root: &node{
 			accessor: root,
-			path:     root_path,
-			prefix:   root_path,
+			path:     root_path.Copy(),
+			prefix:   root_path.Copy(),
 		},
 	}
 	result.root.last_mount_point = result.root
