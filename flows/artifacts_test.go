@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -346,7 +347,8 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 		},
 	}
 
-	scope := vql_subsystem.MakeScope()
+	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
 	uploader.Upload(context.Background(), scope,
 		"foo", "ntfs", "", 1000,
 		nilTime, nilTime, nilTime, nilTime, reader)
@@ -449,7 +451,8 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 		},
 	}
 
-	scope := vql_subsystem.MakeScope()
+	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
 	uploader.Upload(context.Background(), scope,
 		"sparse", "ntfs", "", 1000,
 		nilTime, nilTime, nilTime, nilTime, reader)
@@ -562,7 +565,8 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	cmd = exec.Command("FSUtil", "Sparse", "SetRange", filename, "0", "0x100000")
 	cmd.CombinedOutput()
 
-	scope := vql_subsystem.MakeScope()
+	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
 	accessor, err := accessors.GetAccessor("ntfs", scope)
 	assert.NoError(self.T(), err)
 
