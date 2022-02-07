@@ -85,18 +85,18 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("collect_client: Command can only run on the server")
 		return vfilter.Null{}
 	}
 
 	manager, err := services.GetRepositoryManager()
 	if err != nil {
-		scope.Log("Command can only run on the server")
+		scope.Log("collect_client: Command can only run on the server")
 		return vfilter.Null{}
 	}
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
-		scope.Log("Command can only run on the server")
+		scope.Log("collect_client: Command can only run on the server")
 		return vfilter.Null{}
 	}
 
@@ -121,14 +121,14 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	}
 
 	if arg.Spec == nil {
-		scope.Log("Either spec or env must be provided.")
+		scope.Log("collect_client: Either spec or env must be provided.")
 		return vfilter.Null{}
 	}
 
 	err = tools.AddSpecProtobuf(config_obj, repository, scope,
 		arg.Spec, request)
 	if err != nil {
-		scope.Log("Command can only run on the server")
+		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}
 	}
 

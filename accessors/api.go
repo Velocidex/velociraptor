@@ -44,9 +44,17 @@ type OSPath struct {
 	Manipulator PathManipulator
 }
 
+// Make a copy of the OSPath
 func (self OSPath) Copy() *OSPath {
-	self.pathspec = self.pathspec.Copy()
-	return &self
+	pathspec := self.pathspec
+	if pathspec != nil {
+		pathspec = pathspec.Copy()
+	}
+	return &OSPath{
+		Components:  utils.CopySlice(self.Components),
+		pathspec:    pathspec,
+		Manipulator: self.Manipulator,
+	}
 }
 
 func (self *OSPath) SetPathSpec(pathspec *PathSpec) {
@@ -89,22 +97,22 @@ func (self *OSPath) Basename() string {
 }
 
 func (self *OSPath) Dirname() *OSPath {
-	return &OSPath{
-		Components:  utils.CopySlice(self.Components[:len(self.Components)-1]),
-		pathspec:    self.pathspec,
-		Manipulator: self.Manipulator,
-	}
+	result := self.Copy()
+	result.Components = result.Components[:len(self.Components)-1]
+
+	return result
 }
 
 func (self *OSPath) TrimComponents(components ...string) *OSPath {
 	if components == nil {
-		return self
+		return self.Copy()
 	}
 
-	for idx, c := range self.Components {
+	result := self.Copy()
+	for idx, c := range result.Components {
 		if idx >= len(components) || c != components[idx] {
 			result := &OSPath{
-				Components:  utils.CopySlice(self.Components[idx:]),
+				Components:  self.Components[idx:],
 				pathspec:    self.pathspec,
 				Manipulator: self.Manipulator,
 			}
@@ -114,12 +122,12 @@ func (self *OSPath) TrimComponents(components ...string) *OSPath {
 	return self
 }
 
+// Make a copy
 func (self *OSPath) Append(children ...string) *OSPath {
-	return &OSPath{
-		Components:  utils.CopySlice(append(self.Components, children...)),
-		pathspec:    self.pathspec,
-		Manipulator: self.Manipulator,
-	}
+	result := self.Copy()
+	result.Components = append(result.Components, children...)
+
+	return result
 }
 
 func (self *OSPath) Clear() *OSPath {

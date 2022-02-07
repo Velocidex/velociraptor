@@ -166,9 +166,10 @@ func (self *MountFileSystemAccessor) getDelegateNode(path string) (
 	node := self.root
 
 	// Parse the path into an OSPath
-	os_path := node.path.Parse(path)
+	os_path := self.ParsePath(path)
 
 	for idx, c := range os_path.Components {
+
 		if c != "" {
 			next_node := node.GetChild(c)
 
@@ -209,7 +210,6 @@ func (self *MountFileSystemAccessor) ReadDir(path string) (
 			remove_prefix: delegate_node.prefix.Copy(),
 		})
 	}
-
 	return res, nil
 }
 
