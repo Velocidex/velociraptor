@@ -25,32 +25,32 @@ sources:
       LET extract_path(FullPath) = parse_string_with_regex(string=FullPath,
          regex="^(?P<Device>\\\\\\\\.\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy[^\\\\]+\\\\|\\\\\\\\.\\\\.:\\\\|.:\\\\)(?P<Path>.+)$")
 
-      LET extract_vss(FullPath) = parse_string_with_regex(string=FullPath,
-         regex="^(?P<Device>(\\\\\\\\.\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy[^\\\\]+\\\\|\\\\\\\\.\\\\.:\\\\))")
+      -- Remove possible drive or device from the glob path - we will
+      -- apply the glob to all devices.
+      LET StrippedGlob <= extract_path(FullPath=SearchFilesGlob).Path
 
-      -- Build a SearchGlob for all logical disks and VSS
-      LET globs = SELECT FullPath,
-            FullPath + '/' + extract_path(FullPath=SearchFilesGlob).Path as SearchGlob
-        FROM glob(globs='/*', accessor='ntfs')
-        ORDER BY FullPath  DESC
+      -- Get all logical disks and VSS
+      LET roots = SELECT FullPath AS Root
+        FROM glob(globs='*', accessor='ntfs')
+        ORDER BY Root  DESC
 
       -- Glob for all files in SearchGlob and calculate their hash.
-      LET globvss(SearchGlob) = SELECT *,
-            extract_path(FullPath=FullPath).Path AS Path,
-            basename(path=extract_vss(FullPath=FullPath).Device) AS Source,
+      LET globvss(SearchGlob, Root) = SELECT *,
+            FullPath AS Path,
+            Root AS Source,
             hash(path=FullPath, accessor='ntfs').SHA1 as SHA1
-         FROM glob(globs=SearchGlob, accessor='ntfs')
+         FROM glob(globs=SearchGlob, accessor='ntfs', root=Root)
          WHERE NOT IsDir
 
       -- For each full glob (including VSS device) extract all files
       -- and hashes.
-      LET results = SELECT * FROM foreach(row=globs,
+      LET results = SELECT * FROM foreach(row=roots,
       query={
         -- Prepend VSS with _ to make them sort last.
         SELECT *, if(condition=Source =~ '^HarddiskVolumeShadowCopy',
                      then='_' + Source,
                      else=Source) AS Source
-        FROM globvss(SearchGlob=SearchGlob)
+        FROM globvss(SearchGlob=StrippedGlob, Root=Root)
       })
 
       -- We want to see natural drives after VSS because group by

@@ -14,12 +14,12 @@ SELECT * FROM collect(artifacts='Windows.Search.FileFinder', report="C:/1.html",
  }
 ]SELECT FullPath from glob(globs="file:///c:/1.zip#/**", accessor='zip') WHERE not IsDir[
  {
-  "FullPath": "file:///c:/1.zip#Windows.Search.FileFinder.csv"
+  "FullPath": "file:///c:/1.zip#/Windows.Search.FileFinder.csv"
  },
  {
-  "FullPath": "file:///c:/1.zip#Windows.Search.FileFinder.json"
+  "FullPath": "file:///c:/1.zip#/Windows.Search.FileFinder.json"
  },
  {
-  "FullPath": "file:///c:/1.zip#auto/C/Windows/notepad.exe"
+  "FullPath": "file:///c:/1.zip#/auto/C/Windows/notepad.exe"
  }
 ]

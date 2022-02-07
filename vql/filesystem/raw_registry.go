@@ -59,16 +59,9 @@ func (self ReadKeyValues) Call(
 			return
 		}
 
-		// Get the root of the accessor - we start searching from
-		// there.
-		root_stat, err := accessor.Lstat(arg.Root)
-		if err != nil {
-			scope.Log("read_reg_key: %v", err)
-			return
-		}
-
+		root := accessor.ParsePath(arg.Root)
 		for _, item := range arg.Globs {
-			err = globber.Add(root_stat.OSPath().Parse(item))
+			err = globber.Add(root.Parse(item))
 			if err != nil {
 				scope.Log("glob: %v", err)
 				return
@@ -76,7 +69,7 @@ func (self ReadKeyValues) Call(
 		}
 
 		file_chan := globber.ExpandWithContext(
-			ctx, config_obj, root_stat.OSPath(), accessor)
+			ctx, config_obj, root, accessor)
 		for {
 			select {
 			case <-ctx.Done():
