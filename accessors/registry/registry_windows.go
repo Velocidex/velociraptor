@@ -44,14 +44,13 @@ import (
 
 var (
 	// Include some common aliases.
-	root_keys = map[string]registry.Key{
-		"HKEY_CLASSES_ROOT":     registry.CLASSES_ROOT,
-		"HKEY_CURRENT_USER":     registry.CURRENT_USER,
-		"HKEY_LOCAL_MACHINE":    registry.LOCAL_MACHINE,
-		"HKEY_USERS":            registry.USERS,
-		"HKEY_CURRENT_CONFIG":   registry.CURRENT_CONFIG,
-		"HKEY_PERFORMANCE_DATA": registry.PERFORMANCE_DATA,
-	}
+	root_keys = ordereddict.NewDict(). //  map[string]registry.Key{
+			Set("HKEY_CLASSES_ROOT", registry.CLASSES_ROOT).
+			Set("HKEY_CURRENT_USER", registry.CURRENT_USER).
+			Set("HKEY_LOCAL_MACHINE", registry.LOCAL_MACHINE).
+			Set("HKEY_USERS", registry.USERS).
+			Set("HKEY_CURRENT_CONFIG", registry.CURRENT_CONFIG).
+			Set("HKEY_PERFORMANCE_DATA", registry.PERFORMANCE_DATA)
 
 	// Values smaller than this will be included in the stat entry
 	// itself.
@@ -59,7 +58,7 @@ var (
 )
 
 func GetHiveFromName(name string) (registry.Key, bool) {
-	hive, pres := root_keys[name]
+	hive, pres := root_keys.Get(name)
 	return hive, pres
 }
 
@@ -200,7 +199,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) (
 
 	// Root directory is just the name of the hives.
 	if len(full_path.Components) == 0 {
-		for k, _ := range root_keys {
+		for k, _ := range root_keys.Keys() {
 			result = append(result, &accessors.VirtualFileInfo{
 				IsDir_: true,
 				Path:   full_path.Append(k),
@@ -212,7 +211,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) (
 	}
 
 	hive_name := full_path.Components[0]
-	hive, pres := root_keys[hive_name]
+	hive, pres := root_keys.Get(hive_name)
 	if !pres {
 		// Not a real hive
 		return nil, errors.New("Unknown hive")
@@ -305,7 +304,7 @@ func (self *RegFileSystemAccessor) Lstat(filename string) (
 	}
 
 	hive_name := full_path.Components[0]
-	hive, pres := root_keys[hive_name]
+	hive, pres := root_keys.Get(hive_name)
 	if !pres {
 		// Not a real hive
 		return nil, errors.New("Unknown hive")

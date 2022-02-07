@@ -4,7 +4,7 @@
 // Using this accessor it is possible to read directly from different processes, e.g.
 // read_file(filename="/434", accessor="process")
 
-package linux
+package process
 
 import (
 	"bufio"

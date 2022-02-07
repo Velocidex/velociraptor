@@ -3,7 +3,6 @@ package accessors
 import (
 	"testing"
 
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -110,7 +109,6 @@ var registry_testcases = []testcase{
 func TestRegistryManipulators(t *testing.T) {
 	for _, testcase := range registry_testcases {
 		path := NewWindowsRegistryPath(testcase.serialized_path)
-		json.Dump(path.PathSpec())
 		assert.Equal(t, testcase.components, path.Components)
 		assert.Equal(t, testcase.expected_path, path.String())
 	}

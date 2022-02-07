@@ -17,6 +17,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+
+	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 )
 
 type AccessorWindowsTestSuite struct {
