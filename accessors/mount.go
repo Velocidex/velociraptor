@@ -19,6 +19,7 @@ import (
 	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -195,6 +196,11 @@ func (self *MountFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccesso
 
 func (self *MountFileSystemAccessor) ReadDir(path string) (
 	[]FileInfo, error) {
+	if path == "" {
+		fmt.Printf("MountFileSystemAccessor: ReadDir of empty string:\n")
+		utils.PrintStack()
+	}
+
 	delegate_node, delegate_path := self.getDelegatePath(path)
 	children, err := delegate_node.accessor.ReadDir(delegate_path)
 	if err != nil {

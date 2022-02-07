@@ -184,6 +184,13 @@ func (self VirtualFilesystemAccessor) Lstat(filename string) (FileInfo, error) {
 }
 
 func (self VirtualFilesystemAccessor) ReadDir(path string) ([]FileInfo, error) {
+	if path == "" {
+		fmt.Printf("VirtualFilesystemAccessor: ReadDir of empty string: %s\n",
+			self.root.Debug())
+
+		utils.PrintStack()
+	}
+
 	node, err := self.getNode(path)
 	if err != nil {
 		return nil, err

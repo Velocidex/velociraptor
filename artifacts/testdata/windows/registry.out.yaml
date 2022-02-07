@@ -94,7 +94,16 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "basename(path=FullPath)": "%USERPROFILE%/Desktop/test.docx",
   "dirname(path=FullPath)": "/HKEY_CURRENT_USER/Software/Microsoft/Office/16.0/Word/Security/Trusted Documents/TrustRecords"
  }
-]SELECT User, ProgramName FROM Artifact.Windows.Registry.Sysinternals.Eulacheck()[]SELECT FullPath FROM glob(globs='HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\services\\PortProxy\\**', accessor='reg') WHERE Type ORDER BY FullPath[
+]SELECT User, ProgramName FROM Artifact.Windows.Registry.Sysinternals.Eulacheck()[
+ {
+  "User": "runneradmin",
+  "ProgramName": "AutoRuns"
+ },
+ {
+  "User": "runneradmin",
+  "ProgramName": "PsExec"
+ }
+]SELECT FullPath FROM glob(globs='HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\services\\PortProxy\\**', accessor='reg') WHERE Type ORDER BY FullPath[
  {
   "FullPath": "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\PortProxy\\v4tov4\\tcp\\\"0.0.0.0/3389\""
  },
