@@ -62,7 +62,7 @@ func GetHiveFromName(name string) (registry.Key, bool) {
 	if pres {
 		return hive.(registry.Key), pres
 	}
-	return nil, false
+	return registry.CLASSES_ROOT, false
 }
 
 type RegKeyInfo struct {
