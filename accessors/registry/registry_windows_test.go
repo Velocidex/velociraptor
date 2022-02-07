@@ -4,7 +4,7 @@ package registry
 
 import (
 	"fmt"
-	"strings"
+	"regexp"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
@@ -17,6 +17,8 @@ func TestRegistrtFilesystemAccessor(t *testing.T) {
 	accessor := &RegFileSystemAccessor{}
 
 	ls := func(path string, filter string) []string {
+		filter_re := regexp.MustCompile(filter)
+
 		children, err := accessor.ReadDir(path)
 		assert.NoError(t, err)
 
@@ -24,7 +26,7 @@ func TestRegistrtFilesystemAccessor(t *testing.T) {
 		for _, c := range children {
 			path := fmt.Sprintf("%v - %v %v", c.FullPath(),
 				c.Mode(), c.Data())
-			if filter != "" && !strings.Contains(filter, path) {
+			if filter != "" && !filter_re.MatchString(path) {
 				continue
 			}
 			results = append(results, path)
@@ -33,8 +35,8 @@ func TestRegistrtFilesystemAccessor(t *testing.T) {
 	}
 
 	results := ordereddict.NewDict()
-	results.Set("Root listing", ls("/", ""))
-	results.Set("Deep key", ls("HKLM/SYSTEM/CurrentControlSet/Control/CMF", ""))
+	results.Set("Root listing", ls("/", "."))
+	results.Set("Deep key", ls("HKLM/SYSTEM/CurrentControlSet/Control/CMF", "CompressedSegments|LatestIndex"))
 
 	goldie.Assert(t, "TestRegistrtFilesystemAccessor",
 		json.MustMarshalIndent(results))
