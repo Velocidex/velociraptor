@@ -135,7 +135,7 @@ func (self *MFTFileSystemAccessor) Open(path string) (
 	result := &readAdapter{
 		info: &NTFSFileInfo{
 			info:       info,
-			_full_path: full_path,
+			_full_path: full_path.Copy(),
 		},
 		reader: reader,
 	}
@@ -175,7 +175,7 @@ func (self *MFTFileSystemAccessor) Lstat(path string) (
 
 	return &NTFSFileInfo{
 		info:       info,
-		_full_path: full_path,
+		_full_path: full_path.Copy(),
 	}, nil
 }
 

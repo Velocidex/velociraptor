@@ -113,6 +113,10 @@ func (self *WindowsNTFSFileSystemAccessor) New(
 }
 
 func init() {
+	// For backwards compatibility.
+	accessors.Register("lazy_ntfs", &WindowsNTFSFileSystemAccessor{},
+		`Access the NTFS filesystem by parsing NTFS structures.`)
+
 	accessors.Register("ntfs", &WindowsNTFSFileSystemAccessor{},
 		`Access the NTFS filesystem by parsing NTFS structures.`)
 }

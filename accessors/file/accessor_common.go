@@ -185,7 +185,7 @@ func (self OSFileSystemAccessor) New(scope vfilter.Scope) (
 }
 
 func (self OSFileSystemAccessor) Lstat(filename string) (accessors.FileInfo, error) {
-	full_path := self.root.Parse(filename)
+	full_path := self.ParsePath(filename)
 	filename = full_path.PathSpec().Path
 
 	lstat, err := os.Lstat(filename)
@@ -195,7 +195,7 @@ func (self OSFileSystemAccessor) Lstat(filename string) (accessors.FileInfo, err
 
 	return &OSFileInfo{
 		_FileInfo:     lstat,
-		_full_path:    full_path,
+		_full_path:    full_path.Copy(),
 		_accessor_ctx: self.context,
 	}, nil
 }

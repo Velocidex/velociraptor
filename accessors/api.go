@@ -44,6 +44,11 @@ type OSPath struct {
 	Manipulator PathManipulator
 }
 
+func (self OSPath) Copy() *OSPath {
+	self.pathspec = self.pathspec.Copy()
+	return &self
+}
+
 func (self *OSPath) SetPathSpec(pathspec *PathSpec) {
 	self.Manipulator.PathParse(pathspec.Path, self)
 	self.pathspec = pathspec

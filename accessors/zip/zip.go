@@ -191,7 +191,7 @@ func (self *ZipFileInfo) FullPath() string {
 }
 
 func (self *ZipFileInfo) OSPath() *accessors.OSPath {
-	return self._full_path
+	return self._full_path.Copy()
 }
 
 func (self *ZipFileInfo) SetFullPath(full_path *accessors.OSPath) {
@@ -324,7 +324,7 @@ loop:
 
 		return &ZipFileInfo{
 			member_file: cd_cache.member_file,
-			_full_path:  full_path,
+			_full_path:  full_path.Copy(),
 		}, nil
 	}
 
@@ -375,7 +375,7 @@ loop:
 		// It is a file if the components are an exact match.
 		if len(cd_cache.full_path.Components) == depth+1 {
 			seen[member_name] = &ZipFileInfo{
-				_full_path:  cd_cache.full_path,
+				_full_path:  cd_cache.full_path.Copy(),
 				member_file: cd_cache.member_file,
 			}
 

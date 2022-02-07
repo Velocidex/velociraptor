@@ -36,7 +36,7 @@ sources:
 
       -- Glob for all files in SearchGlob and calculate their hash.
       LET globvss(SearchGlob, Root) = SELECT *,
-            FullPath AS Path,
+            extract_path(FullPath=FullPath).Path AS Path,
             Root AS Source,
             hash(path=FullPath, accessor='ntfs').SHA1 as SHA1
          FROM glob(globs=SearchGlob, accessor='ntfs', root=Root)
@@ -47,9 +47,10 @@ sources:
       LET results = SELECT * FROM foreach(row=roots,
       query={
         -- Prepend VSS with _ to make them sort last.
-        SELECT *, if(condition=Source =~ '^HarddiskVolumeShadowCopy',
-                     then='_' + Source,
-                     else=Source) AS Source
+        SELECT *,
+           if(condition=Source =~ '^HarddiskVolumeShadowCopy',
+              then='_' + Source,
+              else=Source) AS Source
         FROM globvss(SearchGlob=StrippedGlob, Root=Root)
       })
 

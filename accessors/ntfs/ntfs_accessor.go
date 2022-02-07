@@ -217,9 +217,7 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (
 	}()
 
 	// Normalize the path
-	fullpath := self.root.Parse(path)
-	path = fullpath.String()
-
+	fullpath := self.ParsePath(path)
 	result := []accessors.FileInfo{}
 
 	ntfs_ctx, err := readers.GetNTFSContext(

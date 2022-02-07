@@ -89,7 +89,7 @@ func (self *RegKeyInfo) FullPath() string {
 }
 
 func (self *RegKeyInfo) OSPath() *accessors.OSPath {
-	return self._full_path
+	return self._full_path.Copy()
 }
 
 func (self *RegKeyInfo) Mode() os.FileMode {
@@ -353,7 +353,7 @@ func getKeyInfo(key registry.Key, full_path *accessors.OSPath) (
 	}
 	return &RegKeyInfo{
 		_modtime:   stat.ModTime(),
-		_full_path: full_path,
+		_full_path: full_path.Copy(),
 		_data:      ordereddict.NewDict().Set("type", "key"),
 	}, nil
 }
@@ -379,7 +379,7 @@ func getValueInfo(key registry.Key, full_path *accessors.OSPath) (
 			// copy the key's timestamp to each
 			// value.
 			_modtime:   key_modtime,
-			_full_path: full_path,
+			_full_path: full_path.Copy(),
 		}}
 
 	// Internally we represent the default value of a key as the name

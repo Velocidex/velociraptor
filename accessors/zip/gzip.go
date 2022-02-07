@@ -84,7 +84,7 @@ func (self *GzipFileInfo) FullPath() string {
 }
 
 func (self *GzipFileInfo) OSPath() *accessors.OSPath {
-	return self._full_path
+	return self._full_path.Copy()
 }
 
 func (self *GzipFileInfo) Mtime() time.Time {
@@ -235,7 +235,7 @@ func GetBzip2File(serialized_path string, scope vfilter.Scope) (ReaderStat, erro
 		info: &GzipFileInfo{
 			_modtime:   stat.ModTime(),
 			_name:      stat.Name(),
-			_full_path: full_path,
+			_full_path: full_path.Copy(),
 		}}, nil
 }
 
@@ -287,7 +287,7 @@ func GetGzipFile(serialized_path string, scope vfilter.Scope) (ReaderStat, error
 			info: &GzipFileInfo{
 				_modtime:   stat.ModTime(),
 				_name:      stat.Name(),
-				_full_path: full_path,
+				_full_path: full_path.Copy(),
 			}}, nil
 	}
 
@@ -296,7 +296,7 @@ func GetGzipFile(serialized_path string, scope vfilter.Scope) (ReaderStat, error
 		info: &GzipFileInfo{
 			_modtime:   zr.ModTime,
 			_name:      stat.Name(),
-			_full_path: full_path,
+			_full_path: full_path.Copy(),
 		}}, nil
 }
 

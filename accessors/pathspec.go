@@ -85,6 +85,10 @@ type PathSpec struct {
 	url_based bool
 }
 
+func (self PathSpec) Copy() *PathSpec {
+	return &self
+}
+
 func (self PathSpec) GetDelegatePath() string {
 	if self.Delegate != nil {
 		return self.Delegate.String()
