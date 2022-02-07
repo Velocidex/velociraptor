@@ -23,6 +23,7 @@ import (
 	"www.velocidex.com/golang/vfilter"
 
 	// Load all needed plugins
+	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 	_ "www.velocidex.com/golang/velociraptor/vql/networking"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers"

@@ -31,10 +31,10 @@ import (
 	"www.velocidex.com/golang/vfilter"
 
 	// Load plugins (timestamp, parse_csv)
+	_ "www.velocidex.com/golang/velociraptor/accessors/data"
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/csv"
-
-	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 type LauncherTestSuite struct {

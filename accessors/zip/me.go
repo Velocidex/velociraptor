@@ -24,9 +24,9 @@ func (self *MEFileSystemAccessor) GetZipFile(file_path *accessors.OSPath) (
 		return nil, err
 	}
 
-	self.mu.Lock()
+	mu.Lock()
 	zip_file_cache, pres := self.fd_cache[me]
-	self.mu.Unlock()
+	mu.Unlock()
 
 	if !pres {
 		accessor, err := accessors.GetAccessor("file", self.scope)
@@ -60,7 +60,7 @@ func (self *MEFileSystemAccessor) GetZipFile(file_path *accessors.OSPath) (
 			refs:     1,
 		}
 
-		self.mu.Lock()
+		mu.Lock()
 		self.fd_cache[me] = zip_file_cache
 
 		for _, i := range zip_file.File {
@@ -70,7 +70,7 @@ func (self *MEFileSystemAccessor) GetZipFile(file_path *accessors.OSPath) (
 					member_file: i,
 				})
 		}
-		self.mu.Unlock()
+		mu.Unlock()
 	}
 
 	zip_file_cache.IncRef()

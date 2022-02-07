@@ -156,6 +156,14 @@ func (self *Repository) LoadYaml(data string, validate, built_in bool) (
 
 func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate bool) (
 	*artifacts_proto.Artifact, error) {
+
+	if artifact == nil {
+		return nil, errors.New("Invalid artifact")
+	}
+
+	// Make a copy of the artifact to store in the repository.
+	artifact = proto.Clone(artifact).(*artifacts_proto.Artifact)
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -322,8 +330,10 @@ func (self *Repository) GetArtifactType(
 func (self *Repository) GetSource(
 	config_obj *config_proto.Config, name string) (*artifacts_proto.ArtifactSource, bool) {
 	artifact_name, source_name := paths.SplitFullSourceName(name)
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
-	artifact, pres := self.Get(config_obj, artifact_name)
+	artifact, pres := self.get(artifact_name)
 	if !pres {
 		return nil, false
 	}

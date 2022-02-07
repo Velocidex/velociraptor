@@ -13,6 +13,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter/types"
+
+	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 )
 
 type CSVParserTestSuite struct {

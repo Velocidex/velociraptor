@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+
+	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 )
 
 type ParserTestSuite struct {
