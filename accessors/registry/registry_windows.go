@@ -59,7 +59,10 @@ var (
 
 func GetHiveFromName(name string) (registry.Key, bool) {
 	hive, pres := root_keys.Get(name)
-	return hive, pres
+	if pres {
+		return hive.(registry.Key), pres
+	}
+	return nil, false
 }
 
 type RegKeyInfo struct {
@@ -199,7 +202,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) (
 
 	// Root directory is just the name of the hives.
 	if len(full_path.Components) == 0 {
-		for k, _ := range root_keys.Keys() {
+		for _, k := range root_keys.Keys() {
 			result = append(result, &accessors.VirtualFileInfo{
 				IsDir_: true,
 				Path:   full_path.Append(k),
@@ -211,11 +214,13 @@ func (self RegFileSystemAccessor) ReadDir(path string) (
 	}
 
 	hive_name := full_path.Components[0]
-	hive, pres := root_keys.Get(hive_name)
+	hive_any, pres := root_keys.Get(hive_name)
 	if !pres {
 		// Not a real hive
 		return nil, errors.New("Unknown hive")
 	}
+
+	hive := hive_any.(registry.Key)
 
 	key_path := ""
 	// e.g. HKEY_PERFORMANCE_DATA
@@ -304,11 +309,13 @@ func (self *RegFileSystemAccessor) Lstat(filename string) (
 	}
 
 	hive_name := full_path.Components[0]
-	hive, pres := root_keys.Get(hive_name)
+	hive_any, pres := root_keys.Get(hive_name)
 	if !pres {
 		// Not a real hive
 		return nil, errors.New("Unknown hive")
 	}
+
+	hive := hive_any.(registry.Key)
 
 	// The key path inside the hive
 	key_path := full_path.TrimComponents(hive_name)
