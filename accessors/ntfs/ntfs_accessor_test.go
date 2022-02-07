@@ -18,7 +18,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
-	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 )
 
 func TestNTFSFilesystemAccessor(t *testing.T) {
