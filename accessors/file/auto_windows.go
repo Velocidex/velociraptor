@@ -10,6 +10,8 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/vfilter"
+
+	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 )
 
 type AutoFilesystemAccessor struct {
