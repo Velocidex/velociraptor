@@ -5,7 +5,7 @@ LET zip_files = SELECT FullPath, Size FROM glob( globs=srcDir+"/artifacts/testda
  }
 ]LET hits = SELECT * from foreach(row=zip_files, query= { select FullPath, Mtime, Size from glob( globs=url( scheme='file', path=FullPath, fragment='/**/*.txt'), accessor='zip') } )[]SELECT url(parse=FullPath).Fragment as Name, Size, Mtime from hits[
  {
-  "Name": "test/secret.txt",
+  "Name": "/test/secret.txt",
   "Size": 1549,
   "Mtime": "2019-02-12T11:47:10Z"
  }
@@ -22,7 +22,7 @@ LET zip_files = SELECT FullPath, Size FROM glob( globs=srcDir+"/artifacts/testda
  }
 ]LET hits = SELECT * from foreach(row=zip_files, query= { select FullPath, Mtime, Size from glob( globs=pathspec(DelegateAccessor='file', DelegatePath=FullPath, Path='/**/*.txt'), accessor='zip') } )[]SELECT pathspec(parse=FullPath).Path as Name, Size, Mtime from hits[
  {
-  "Name": "test/secret.txt",
+  "Name": "/test/secret.txt",
   "Size": 1549,
   "Mtime": "2019-02-12T11:47:10Z"
  }
@@ -51,6 +51,6 @@ LET zip_files = SELECT FullPath, Size FROM glob( globs=srcDir+"/artifacts/testda
  }
 ]SELECT pathspec(parse=FullPath).Path AS Member FROM glob(globs="/*.txt", accessor="zip", root=pathspec( DelegateAccessor="file", DelegatePath=srcDir + '/artifacts/testdata/files/test.zip', Path="test"))[
  {
-  "Member": "test/secret.txt"
+  "Member": "/test/secret.txt"
  }
 ]

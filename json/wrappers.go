@@ -7,6 +7,10 @@ import (
 	"github.com/Velocidex/json"
 )
 
+var (
+	EncoderCallbackSkip = json.EncoderCallbackSkip
+)
+
 func MarshalWithOptions(v interface{}, opts *json.EncOpts) ([]byte, error) {
 	if opts == nil {
 		return json.Marshal(v)

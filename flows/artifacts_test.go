@@ -8,14 +8,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -23,6 +24,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
+	_ "www.velocidex.com/golang/velociraptor/accessors/file"
+	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
 	_ "www.velocidex.com/golang/velociraptor/vql/networking"
@@ -344,7 +347,8 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 		},
 	}
 
-	scope := vql_subsystem.MakeScope()
+	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
 	uploader.Upload(context.Background(), scope,
 		"foo", "ntfs", "", 1000,
 		nilTime, nilTime, nilTime, nilTime, reader)
@@ -447,7 +451,8 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 		},
 	}
 
-	scope := vql_subsystem.MakeScope()
+	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
 	uploader.Upload(context.Background(), scope,
 		"sparse", "ntfs", "", 1000,
 		nilTime, nilTime, nilTime, nilTime, reader)
@@ -560,8 +565,9 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	cmd = exec.Command("FSUtil", "Sparse", "SetRange", filename, "0", "0x100000")
 	cmd.CombinedOutput()
 
-	scope := vql_subsystem.MakeScope()
-	accessor, err := glob.GetAccessor("ntfs", scope)
+	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+	accessor, err := accessors.GetAccessor("ntfs", scope)
 	assert.NoError(self.T(), err)
 
 	fd, err := accessor.Open(filename)

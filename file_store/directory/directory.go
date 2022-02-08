@@ -9,7 +9,6 @@
 package directory
 
 /*
-
   This file store implementation stores files on disk. All of these
   functions receive serialized Velociraptor's VFS paths.
 
@@ -34,8 +33,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store/accessors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -127,7 +126,7 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 		}
 
 		name_type, name := api.GetFileStorePathTypeFromExtension(name)
-		result = append(result, accessors.NewFileStoreFileInfo(
+		result = append(result, file_store_accessor.NewFileStoreFileInfo(
 			self.config_obj,
 			dirname.AddChild(
 				utils.UnsanitizeComponent(name)).
@@ -165,7 +164,7 @@ func (self *DirectoryFileStore) StatFile(
 		return nil, err
 	}
 
-	return &accessors.FileStoreFileInfo{
+	return &file_store_accessor.FileStoreFileInfo{
 		FileInfo: file,
 	}, nil
 }

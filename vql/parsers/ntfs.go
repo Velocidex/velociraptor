@@ -22,7 +22,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/paths"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -82,7 +82,7 @@ func (self NTFSFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	ntfs_ctx, err := readers.GetNTFSContext(scope, device)
+	ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
 	if err != nil {
 		scope.Log("parse_ntfs: GetNTFSContext %v", err)
 		return &vfilter.Null{}
@@ -142,7 +142,7 @@ func (self MFTScanPlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, scope)
+		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("parse_mft: %v", err)
 			return
@@ -163,7 +163,7 @@ func (self MFTScanPlugin) Call(
 			return
 		}
 
-		st, err := fd.Stat()
+		st, err := accessor.Lstat(arg.Filename)
 		if err != nil {
 			scope.Log("parse_mft: Unable to open file %s: %v",
 				arg.Filename, err)
@@ -226,7 +226,7 @@ func (self NTFSI30ScanPlugin) Call(
 			return
 		}
 
-		ntfs_ctx, err := readers.GetNTFSContext(scope, device)
+		ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
 		if err != nil {
 			scope.Log("parse_ntfs_i30: %v", err)
 			return
@@ -302,7 +302,7 @@ func (self NTFSRangesPlugin) Call(
 			return
 		}
 
-		ntfs_ctx, err := readers.GetNTFSContext(scope, device)
+		ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
 		if err != nil {
 			scope.Log("parse_ntfs_ranges: %v", err)
 			return

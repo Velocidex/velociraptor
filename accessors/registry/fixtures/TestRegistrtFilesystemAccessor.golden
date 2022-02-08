@@ -1,0 +1,14 @@
+{
+ "Root listing": [
+  "HKEY_CLASSES_ROOT - -rwxr-xr-x {\"type\":\"hive\"}",
+  "HKEY_CURRENT_USER - -rwxr-xr-x {\"type\":\"hive\"}",
+  "HKEY_LOCAL_MACHINE - -rwxr-xr-x {\"type\":\"hive\"}",
+  "HKEY_USERS - -rwxr-xr-x {\"type\":\"hive\"}",
+  "HKEY_CURRENT_CONFIG - -rwxr-xr-x {\"type\":\"hive\"}",
+  "HKEY_PERFORMANCE_DATA - -rwxr-xr-x {\"type\":\"hive\"}"
+ ],
+ "Deep key": [
+  "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\CMF\\LatestIndex - drwxr-xr-x {\"type\":\"key\"}",
+  "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\CMF\\CompressedSegments - -rwxr-xr-x {\"type\":\"DWORD\",\"value\":1}"
+ ]
+}

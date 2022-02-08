@@ -6,7 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -37,7 +37,7 @@ func (self ParseYamlFunction) Call(
 		return nil
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, scope)
+	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("parse_yaml: %v", err)
 		return nil

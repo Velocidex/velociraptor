@@ -46,18 +46,47 @@ SELECT basename(path="/foo/bar/baz") FROM scope()[
   },
   "pathspec(parse=path_spec.String)": {
    "DelegateAccessor": "file",
-   "DelegatePath": "C:/Windows"
+   "DelegatePath": "C:/Windows",
+   "Path": "/",
+   "Components": null
   },
   "pathspec(parse=\"C:\\\\Windows\")": {
-   "DelegatePath": "C:\\Windows"
+   "DelegateAccessor": "",
+   "DelegatePath": "",
+   "Path": "C:/Windows",
+   "Components": [
+    "C:",
+    "Windows"
+   ]
   },
   "pathspec(parse=\"/usr/lib\")": {
-   "DelegatePath": "/usr/lib"
+   "DelegateAccessor": "",
+   "DelegatePath": "",
+   "Path": "/usr/lib",
+   "Components": [
+    "usr",
+    "lib"
+   ]
   },
   "pathspec(parse=\"file:///usr/lib#*\")": {
    "DelegateAccessor": "file",
    "DelegatePath": "/usr/lib",
-   "Path": "*"
+   "Path": "/*",
+   "Components": [
+    "*"
+   ]
+  }
+ }
+]SELECT pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows", type="windows") FROM scope()[
+ {
+  "pathspec(parse=\"\\\\\\\\?\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy1\\\\Windows\", type=\"windows\")": {
+   "DelegateAccessor": "",
+   "DelegatePath": "",
+   "Path": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows",
+   "Components": [
+    "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1",
+    "Windows"
+   ]
   }
  }
 ]

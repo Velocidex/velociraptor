@@ -29,9 +29,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/accessors"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 
@@ -137,7 +137,7 @@ func PrepareFrontendMux(
 	// from the filestore.
 	router.Handle(base+"/public/", GetLoggingHandler(config_obj, "/public")(
 		http.StripPrefix(base, forceMime(http.FileServer(
-			accessors.NewFileSystem(config_obj,
+			file_store_accessor.NewFileSystem(config_obj,
 				file_store.GetFileStore(config_obj),
 				"/public/"))))))
 

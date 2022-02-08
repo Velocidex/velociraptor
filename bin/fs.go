@@ -27,11 +27,11 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
-	"www.velocidex.com/golang/velociraptor/glob"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -319,7 +319,7 @@ func doCat(path, accessor_name string) error {
 	}
 
 	scope := vql_subsystem.MakeScope()
-	accessor, err := glob.GetAccessor(accessor_name, scope)
+	accessor, err := accessors.GetAccessor(accessor_name, scope)
 	if err != nil {
 		return err
 	}
@@ -339,14 +339,16 @@ type FileStoreAccessorFactory struct {
 	config_obj *config_proto.Config
 }
 
-func (self FileStoreAccessorFactory) New(scope vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self FileStoreAccessorFactory) New(scope vfilter.Scope) (
+	accessors.FileSystemAccessor, error) {
 	return file_store.GetFileStoreFileSystemAccessor(self.config_obj)
 }
 
 // Only register the filesystem accessor if we have a proper valid server config.
 func initFilestoreAccessor(config_obj *config_proto.Config) error {
 	if config_obj.Datastore != nil {
-		glob.Register("fs", &FileStoreAccessorFactory{config_obj}, `Provide access the the server's filestore and datastore.
+		accessors.Register("fs", &FileStoreAccessorFactory{config_obj},
+			`Provide access the the server's filestore and datastore.
 
 Many VQL plugins produce references to files stored on the server. This accessor can be used to open those files and read them. Typically references to filestore or datastore files have the "fs:" or "ds:" prefix.
 `)

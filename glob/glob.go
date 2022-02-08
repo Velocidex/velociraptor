@@ -20,57 +20,24 @@ package glob
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
+	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // The algorithm in this file is based on the Rekall algorithm here:
 // https://github.com/google/rekall/blob/master/rekall-core/rekall/plugins/response/files.py#L255
-
-type FileInfo interface {
-	Name() string
-	ModTime() time.Time
-	FullPath() string
-
-	// Time the file was birthed (initially created)
-	Btime() time.Time
-	Mtime() time.Time
-
-	// Time the inode was changed.
-	Ctime() time.Time
-	Atime() time.Time
-	Data() interface{}
-	Size() int64
-
-	IsDir() bool
-	IsLink() bool
-	GetLink() (string, error)
-	Mode() os.FileMode
-	Sys() interface{}
-}
-
 type FileDev interface {
 	Dev() uint64
 }
 
-type ReadSeekCloser interface {
-	io.ReadSeeker
-	io.Closer
-
-	Stat() (os.FileInfo, error)
-}
-
 type _PathFilterer interface {
-	Match(f FileInfo) bool
+	Match(f accessors.FileInfo) bool
 }
 
 // A sentinel is used to determine if we should report this file. At
@@ -78,7 +45,7 @@ type _PathFilterer interface {
 // present at this level. If it is then we need to report this.
 type _Sentinel struct{}
 
-func (self _Sentinel) Match(f FileInfo) bool {
+func (self _Sentinel) Match(f accessors.FileInfo) bool {
 	return true
 }
 
@@ -95,7 +62,7 @@ type _RecursiveComponent struct {
 	depth int
 }
 
-func (self _RecursiveComponent) Match(f FileInfo) bool {
+func (self _RecursiveComponent) Match(f accessors.FileInfo) bool {
 	return false
 }
 
@@ -104,7 +71,7 @@ type _RegexComponent struct {
 	compiled *regexp.Regexp
 }
 
-func (self *_RegexComponent) Match(f FileInfo) bool {
+func (self *_RegexComponent) Match(f accessors.FileInfo) bool {
 	if self.compiled == nil {
 		self.compiled = regexp.MustCompile("^(?msi)" + self.regexp)
 	}
@@ -124,7 +91,7 @@ func (self _LiteralComponent) String() string {
 	return self.path
 }
 
-func (self _LiteralComponent) Match(f FileInfo) bool {
+func (self _LiteralComponent) Match(f accessors.FileInfo) bool {
 	return strings.EqualFold(self.path, f.Name())
 }
 
@@ -136,7 +103,7 @@ type GlobOptions struct {
 	OneFilesystem bool
 
 	// Allow the user to control which directory we descend into.
-	RecursionCallback func(file_info FileInfo) bool
+	RecursionCallback func(file_info accessors.FileInfo) bool
 }
 
 // A tree of filters - each filter branches to a subfilter.
@@ -151,8 +118,9 @@ func (self *Globber) WithOptions(options GlobOptions) *Globber {
 	return self
 }
 
-// A factory for a new Globber. To use the globber simply Add()
-// any patterns and call Expand() using a suitable FileSystemAccessor.
+// A factory for a new Globber. To use the globber simply Add() any
+// patterns and call ExpandWithContext() using a suitable
+// FileSystemAccessor.
 func NewGlobber() *Globber {
 	return &Globber{
 		filters: make(map[_PathFilterer]*Globber),
@@ -179,12 +147,11 @@ func (self Globber) _DebugString(indent string) string {
 }
 
 // Add a new pattern to the filter tree.
-func (self *Globber) Add(pattern string, pathsep func(path string) []string) error {
-	var brace_expanded []string
-	self._brace_expansion(pattern, &brace_expanded)
+func (self *Globber) Add(pattern *accessors.OSPath) error {
+	brace_expanded := self._brace_expansion(pattern)
 
 	for _, expanded := range brace_expanded {
-		err := self._add_brace_expanded(expanded, pathsep)
+		err := self._add_brace_expanded(expanded)
 		if err != nil {
 			return err
 		}
@@ -193,9 +160,9 @@ func (self *Globber) Add(pattern string, pathsep func(path string) []string) err
 	return nil
 }
 
-func (self *Globber) _add_brace_expanded(pattern string, pathsep func(path string) []string) error {
+func (self *Globber) _add_brace_expanded(pattern *accessors.OSPath) error {
 	// Convert the pattern into path components.
-	filter, err := convert_glob_into_path_components(pattern, pathsep)
+	filter, err := convert_glob_into_path_components(pattern)
 	if err == nil {
 		// Expand path components into alternatives
 		return self._expand_path_components(filter, 0)
@@ -205,19 +172,52 @@ func (self *Globber) _add_brace_expanded(pattern string, pathsep func(path strin
 	}
 }
 
-func (self *Globber) _brace_expansion(pattern string, result *[]string) {
-	groups := _GROUPING_PATTERN.FindStringSubmatch(pattern)
+// Duplicate brace expansions into multiple globs:
+// /usr/bin/*.{exe,dll} -> /usr/bin/*.exe, /usr/bin/*.dll
+func (self *Globber) _brace_expansion(
+	pattern *accessors.OSPath) []*accessors.OSPath {
+
+	if len(pattern.Components) == 0 {
+		return nil
+	}
+
+	result := []*accessors.OSPath{}
+	first_component := pattern.Components[0]
+
+	for _, expansion := range _expand_brace_in_component(first_component) {
+		prefix := pattern.Clear().Append(expansion)
+		next_pattern := &accessors.OSPath{
+			Components: pattern.Components[1:],
+		}
+		next_expansions := self._brace_expansion(next_pattern)
+		if len(next_expansions) == 0 {
+			result = append(result, prefix)
+		} else {
+			for _, e := range next_expansions {
+				result = append(result, prefix.Append(e.Components...))
+			}
+		}
+	}
+	return result
+}
+
+func _expand_brace_in_component(component string) []string {
+	result := []string{}
+
+	groups := _GROUPING_PATTERN.FindStringSubmatch(component)
 	if len(groups) > 0 {
 		left := groups[1]
 		middle := strings.Split(groups[2], ",")
 		right := groups[3]
 
 		for _, item := range middle {
-			self._brace_expansion(left+item+right, result)
+			result = append(result, left+item+right)
 		}
-	} else if !utils.InString(*result, pattern) {
-		*result = append(*result, pattern)
+	} else {
+		result = append(result, component)
 	}
+
+	return result
 }
 
 // Adds the raw filter into the Globber tree. This is called
@@ -241,7 +241,8 @@ func (self *Globber) _add_filter(components []_PathFilterer) error {
 	return nil
 }
 
-func (self *Globber) is_dir_or_link(f FileInfo, accessor FileSystemAccessor, depth int) bool {
+func (self *Globber) is_dir_or_link(
+	f accessors.FileInfo, accessor accessors.FileSystemAccessor, depth int) bool {
 	// Do not follow symlinks to symlinks deeply.
 	if depth > 10 {
 		return false
@@ -262,13 +263,7 @@ func (self *Globber) is_dir_or_link(f FileInfo, accessor FileSystemAccessor, dep
 
 		target, err := f.GetLink()
 		if err == nil {
-			// This is a link to a network share or
-			// something else we might not have access to.
-			if strings.HasPrefix(target, "\\\\") {
-				return true
-			}
-
-			target_info, err := accessor.Lstat(target)
+			target_info, err := accessor.Lstat(target.String())
 			if err == nil {
 				// Check if the target is on a different filesystem
 				// than the current file
@@ -304,9 +299,9 @@ func (self *Globber) is_dir_or_link(f FileInfo, accessor FileSystemAccessor, dep
 func (self *Globber) ExpandWithContext(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	root string,
-	accessor FileSystemAccessor) <-chan FileInfo {
-	output_chan := make(chan FileInfo)
+	root *accessors.OSPath,
+	accessor accessors.FileSystemAccessor) <-chan accessors.FileInfo {
+	output_chan := make(chan accessors.FileInfo)
 
 	go func() {
 		defer close(output_chan)
@@ -320,15 +315,15 @@ func (self *Globber) ExpandWithContext(
 		// Walk the filter tree. List the directory and for each file
 		// that matches a filter at this level, recurse into the next
 		// level.
-		files, err := accessor.ReadDir(root)
+		files, err := accessor.ReadDir(root.String())
 		if err != nil {
 			logging.GetLogger(config_obj, &logging.GenericComponent).
 				Debug("Globber.ExpandWithContext: %v while processing %v",
-					err, root)
+					err, root.String())
 			return
 		}
 
-		result := []FileInfo{}
+		result := []accessors.FileInfo{}
 
 		// For each file that matched, we check which component
 		// would match it.
@@ -347,13 +342,13 @@ func (self *Globber) ExpandWithContext(
 
 				// Only recurse into directories.
 				if self.is_dir_or_link(f, accessor, 0) {
-					next_path := accessor.PathJoin(root, f.Name())
+					name := f.Name()
 					item := []*Globber{next}
-					prev_item, pres := children[next_path]
+					prev_item, pres := children[name]
 					if pres {
 						item = append(prev_item, next)
 					}
-					children[next_path] = item
+					children[name] = item
 				}
 			}
 		}
@@ -373,7 +368,8 @@ func (self *Globber) ExpandWithContext(
 			}
 		}
 
-		for next_path, nexts := range children {
+		for name, nexts := range children {
+			next_path := root.Append(name)
 			for _, next := range nexts {
 				// There is no point expanding this
 				// node if it is just a sentinal -
@@ -411,7 +407,9 @@ func is_sentinal(globber *Globber) bool {
 	return false
 }
 
-func (self Globber) _expand_path_components(filter []_PathFilterer, depth int) error {
+func (self Globber) _expand_path_components(
+	filter []_PathFilterer, depth int) error {
+
 	// Create a new filter with simplified elements.
 	var new_filter []_PathFilterer
 	for idx, item := range filter {
@@ -422,7 +420,8 @@ func (self Globber) _expand_path_components(filter []_PathFilterer, depth int) e
 		//                         "foo/*/bar",
 		//                         "foo/*/*/bar",
 		//                         "foo/*/*/*/bar"}
-		if t, pres := item.(_RecursiveComponent); pres {
+		switch t := item.(type) {
+		case _RecursiveComponent:
 			left := new_filter
 			right := filter[idx+1:]
 			var middle []_PathFilterer
@@ -450,7 +449,8 @@ func (self Globber) _expand_path_components(filter []_PathFilterer, depth int) e
 			}
 
 			return nil
-		} else {
+
+		default:
 			new_filter = append(new_filter, item)
 		}
 	}
@@ -482,11 +482,11 @@ var (
 // /home/test**/*exe -> [{path: 'home', type: "LITERAL",
 //                       {path: 'test.*\\Z(?ms)', type: "RECURSIVE",
 // 			 {path: '.*exe\\Z(?ms)', type="REGEX"}]]
-func convert_glob_into_path_components(pattern string, path_sep func(path string) []string) (
+func convert_glob_into_path_components(pattern *accessors.OSPath) (
 	[]_PathFilterer, error) {
 	var result []_PathFilterer
 
-	for _, path_component := range path_sep(pattern) {
+	for _, path_component := range pattern.Components {
 		if len(path_component) == 0 {
 			continue
 		}
@@ -617,7 +617,7 @@ func escape_backslash(pattern unicode) unicode {
 	return result
 }
 
-func DevOf(file_info FileInfo) (uint64, bool) {
+func DevOf(file_info accessors.FileInfo) (uint64, bool) {
 	dev, ok := file_info.(FileDev)
 	if !ok {
 		return 0, false

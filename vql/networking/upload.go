@@ -21,10 +21,10 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
@@ -74,7 +74,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, scope)
+	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("upload: %v", err)
 		return &api.UploadResponse{
@@ -92,7 +92,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 	}
 	defer file.Close()
 
-	stat, err := file.Stat()
+	stat, err := accessor.Lstat(arg.File)
 	if err != nil {
 		scope.Log("upload: Unable to stat %s: %v",
 			arg.File, err)
@@ -188,7 +188,7 @@ func (self *UploadDirectoryFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, scope)
+	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("upload_directory: %v", err)
 		return &api.UploadResponse{
@@ -206,7 +206,7 @@ func (self *UploadDirectoryFunction) Call(ctx context.Context,
 	}
 	defer file.Close()
 
-	stat, err := file.Stat()
+	stat, err := accessor.Lstat(arg.File)
 	if err != nil {
 		scope.Log("upload_directory: Unable to stat %s: %v", arg.File, err)
 		return vfilter.Null{}

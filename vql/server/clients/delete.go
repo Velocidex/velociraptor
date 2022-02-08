@@ -2,6 +2,7 @@ package clients
 
 import (
 	"context"
+	"errors"
 	"os"
 
 	"github.com/Velocidex/ordereddict"
@@ -78,7 +79,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 
 				if arg.ReallyDoIt {
 					err = db.DeleteSubject(config_obj, filename)
-					if err != nil && os.IsExist(err) {
+					if err != nil && errors.Is(err, os.ErrNotExist) {
 						scope.Log("client_delete: while deleting %v: %s",
 							filename, err)
 					}
@@ -156,7 +157,7 @@ func reallyDeleteClient(ctx context.Context,
 
 	client_path_manager := paths.NewClientPathManager(arg.ClientId)
 	err = db.DeleteSubject(config_obj, client_path_manager.Path())
-	if err != nil && os.IsExist(err) {
+	if err != nil && errors.Is(err, os.ErrNotExist) {
 		return err
 	}
 
@@ -164,7 +165,7 @@ func reallyDeleteClient(ctx context.Context,
 	labeler := services.GetLabeler()
 	for _, label := range labeler.GetClientLabels(config_obj, arg.ClientId) {
 		err := labeler.RemoveClientLabel(config_obj, arg.ClientId, label)
-		if err != nil && os.IsExist(err) {
+		if err != nil && errors.Is(err, os.ErrNotExist) {
 			return err
 		}
 	}
@@ -178,7 +179,7 @@ func reallyDeleteClient(ctx context.Context,
 	}
 	for _, keyword := range keywords {
 		err = search.UnsetIndex(config_obj, arg.ClientId, keyword)
-		if err != nil && os.IsExist(err) {
+		if err != nil && errors.Is(err, os.ErrNotExist) {
 			return err
 		}
 	}

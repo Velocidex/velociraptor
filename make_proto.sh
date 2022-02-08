@@ -7,6 +7,9 @@
 set -e
 
 CWD=$PWD
+PROTOC=${PROTOC:-"protoc"}
+QUIET=${QUIET:-}
+PROTOC=protoc
 
 if [ -z "$GOPATH" ]; then
     GOPATH="$HOME/go"
@@ -14,6 +17,12 @@ fi
 
 GOOGLEAPIS_PATH=$CWD/googleapis/
 GOOGLEAPIS_COMMIT="82a542279"
+
+function debug() {
+    if [ -z "$QUIET" ]; then
+        echo "$@"
+    fi
+}
 
 if [ ! -d "$GOOGLEAPIS_PATH" ]; then
     git clone --shallow-since 2021-12-15  https://github.com/googleapis/googleapis/ $GOOGLEAPIS_PATH
@@ -40,28 +49,28 @@ for i in $CWD/proto/ $CWD/crypto/proto/ \
                      $CWD/timelines/proto/ \
                      $CWD/acls/proto/ \
                      $CWD/flows/proto/ ; do
-    echo Building protos in $i
-    echo protoc -I$i -I$GOPATH/src/ -I/usr/local/include/ -I$GOOGLEAPIS_PATH -I$CWD --go_out=paths=source_relative:$i $i/*.proto
-    protoc -I$i -I$GOPATH/src/ -I/usr/local/include/ -I$GOOGLEAPIS_PATH -I$CWD --go_out=paths=source_relative:$i $i/*.proto
+    debug Building protos in $i
+    debug $PROTOC -I$i -I$GOPATH/src/ -I/usr/include/ -I/usr/local/include/ -I$GOOGLEAPIS_PATH -I$CWD --go_out=paths=source_relative:$i $i/*.proto
+    $PROTOC -I$i -I$GOPATH/src/ -I/usr/include/ -I/usr/local/include/ -I$GOOGLEAPIS_PATH -I$CWD --go_out=paths=source_relative:$i $i/*.proto
 done
 
 # Build GRPC servers.
 for i in  $CWD/api/proto/ ; do
-    echo Building protos in $i
-    echo protoc -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
-           -I$GOOGLEAPIS_PATH \
+    debug Building protos in $i
+    debug $PROTOC -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
+           -I$GOOGLEAPIS_PATH -I/usr/include/ \
            -I$CWD $i/*.proto --go-grpc_out=paths=source_relative:$i --go_out=paths=source_relative:$i
 
-    protoc -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
-           -I$GOOGLEAPIS_PATH \
+    $PROTOC -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
+           -I$GOOGLEAPIS_PATH -I/usr/include/ \
            -I$CWD $i/*.proto --go-grpc_out=paths=source_relative:$i --go_out=paths=source_relative:$i
 
-    echo protoc -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
-           -I$GOOGLEAPIS_PATH \
+    debug $PROTOC -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
+           -I$GOOGLEAPIS_PATH -I/usr/include/ \
            --grpc-gateway_out=paths=source_relative,logtostderr=true:$i $i/*.proto
 
-    protoc -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
-           -I$GOOGLEAPIS_PATH \
+    $PROTOC -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
+           -I$GOOGLEAPIS_PATH -I/usr/include/ \
            --grpc-gateway_out=paths=source_relative,logtostderr=true:$i $i/*.proto
 
 done

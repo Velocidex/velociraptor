@@ -52,7 +52,7 @@ func doRebuildIndex() error {
 
 	client_info_manager, err := services.GetClientInfoManager()
 	if err != nil {
-		return fmt.Errorf("Starting client info service: %w", err)
+		return fmt.Errorf("Get client info manager: %w", err)
 	}
 
 	labeler := services.GetLabeler()

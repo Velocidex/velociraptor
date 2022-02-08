@@ -8,9 +8,9 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/dimchansky/utfbom"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -167,7 +167,7 @@ func (self _WatchSyslogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 
 func maybeOpenGzip(scope vfilter.Scope,
 	accessor_name, filename string) (io.ReadCloser, error) {
-	accessor, err := glob.GetAccessor(accessor_name, scope)
+	accessor, err := accessors.GetAccessor(accessor_name, scope)
 	if err != nil {
 		return nil, err
 	}

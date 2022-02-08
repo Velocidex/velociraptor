@@ -47,14 +47,15 @@ const (
 	USER_AGENT = "Velociraptor - Dig Deeper!"
 
 	// Globals set in VQL scopes.
-	SCOPE_CONFIG        = "config"
-	SCOPE_SERVER_CONFIG = "server_config"
-	SCOPE_THROTTLE      = "$throttle"
-	SCOPE_UPLOADER      = "$uploader"
-	SCOPE_RESPONDER     = "$responder"
-	SCOPE_MOCK          = "$mock"
-	SCOPE_ROOT          = "$root"
-	SCOPE_STACK         = "$stack"
+	SCOPE_CONFIG         = "config"
+	SCOPE_SERVER_CONFIG  = "server_config"
+	SCOPE_THROTTLE       = "$throttle"
+	SCOPE_UPLOADER       = "$uploader"
+	SCOPE_RESPONDER      = "$responder"
+	SCOPE_MOCK           = "$mock"
+	SCOPE_ROOT           = "$root"
+	SCOPE_STACK          = "$stack"
+	SCOPE_DEVICE_MANAGER = "$device_manager"
 
 	// Artifact names from packs should start with this
 	ARTIFACT_PACK_NAME_PREFIX   = "Packs."

@@ -7,8 +7,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/evtx"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -87,7 +87,7 @@ func (self *EventLogWatcherService) StartMonitoring(
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
 
-	accessor, err := glob.GetAccessor(accessor_name, scope)
+	accessor, err := accessors.GetAccessor(accessor_name, scope)
 	if err != nil {
 		//scope.Log("Registering watcher error: %v", err)
 		return
@@ -114,7 +114,7 @@ func (self *EventLogWatcherService) StartMonitoring(
 
 func (self *EventLogWatcherService) findLastEvent(
 	filename string,
-	accessor glob.FileSystemAccessor) int {
+	accessor accessors.FileSystemAccessor) int {
 	last_event := 0
 
 	fd, err := accessor.Open(filename)
@@ -174,7 +174,7 @@ func (self *EventLogWatcherService) getActiveHandles(key string) []*Handle {
 func (self *EventLogWatcherService) monitorOnce(
 	filename string,
 	accessor_name string,
-	accessor glob.FileSystemAccessor,
+	accessor accessors.FileSystemAccessor,
 	last_event int,
 	resolver evtx.MessageResolver) int {
 

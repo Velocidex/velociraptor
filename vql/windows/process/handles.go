@@ -108,7 +108,7 @@ func (self HandlesPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 	return &vfilter.PluginInfo{
 		Name:    "handles",
 		Doc:     "Enumerate process handles.",
-		ArgType: type_map.AddType(scope, &PidArgs{}),
+		ArgType: type_map.AddType(scope, &HandlesPluginArgs{}),
 	}
 }
 

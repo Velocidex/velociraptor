@@ -34,7 +34,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -169,7 +169,7 @@ func _MakeTempfile(ctx context.Context,
 	remove := func() {
 		// Try to remove it immediately
 		err := os.Remove(tmpfile.Name())
-		if err == nil || os.IsNotExist(err) {
+		if err == nil || errors.Is(err, os.ErrNotExist) {
 			scope.Log("sqlite: removing tempfile %v", tmpfile.Name())
 			return
 		}
@@ -180,7 +180,7 @@ func _MakeTempfile(ctx context.Context,
 		go func() {
 			for i := 0; i < 100; i++ {
 				err := os.Remove(tmpfile.Name())
-				if err == nil || os.IsNotExist(err) {
+				if err == nil || errors.Is(err, os.ErrNotExist) {
 					scope.Log("sqlite: removing tempfile %v", tmpfile.Name())
 					return
 				}
@@ -195,7 +195,7 @@ func _MakeTempfile(ctx context.Context,
 		return "", err
 	}
 
-	fs, err := glob.GetAccessor(arg.Accessor, scope)
+	fs, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		return "", err
 	}

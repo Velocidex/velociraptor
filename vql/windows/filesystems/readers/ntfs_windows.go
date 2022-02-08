@@ -10,11 +10,10 @@ import (
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	vql_constants "www.velocidex.com/golang/velociraptor/vql/constants"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	"www.velocidex.com/golang/vfilter"
-	"www.velocidex.com/golang/vfilter/types"
 )
 
 // The NTFS parser is responsible for extracting artifacts from
@@ -44,6 +43,7 @@ import (
 type NTFSCachedContext struct {
 	mu sync.Mutex
 
+	accessor     string
 	device       string
 	scope        vfilter.Scope
 	paged_reader *readers.AccessorReader
@@ -59,37 +59,21 @@ type NTFSCachedContext struct {
 // reparse of the NTFS device.
 func (self *NTFSCachedContext) Start(
 	ctx context.Context, scope vfilter.Scope) (err error) {
-	cache_life := int64(0)
-	cache_life_any, pres := scope.Resolve(constants.NTFS_CACHE_TIME)
-	if pres {
-		switch t := cache_life_any.(type) {
-		case *vfilter.StoredExpression:
-			cache_life_any = t.Reduce(ctx, scope)
 
-		case types.LazyExpr:
-			cache_life_any = t.Reduce(ctx)
-		}
-
-		cache_life, _ = utils.ToInt64(cache_life_any)
-	}
-	if cache_life == 0 {
-		cache_life = 60
-	} else {
-		scope.Log("Will expire NTFS cache every %v sec\n", cache_life)
-	}
-
+	cache_life := vql_constants.GetNTFSCacheTime(ctx, scope)
 	done := self.done
 
 	lru_size := vql_subsystem.GetIntFromRow(
 		self.scope, self.scope, constants.NTFS_CACHE_SIZE)
 	self.paged_reader, err = readers.NewPagedReader(
-		self.scope, "file", self.device, int(lru_size))
+		self.scope, self.accessor, self.device, int(lru_size))
 
 	if err != nil {
 		return err
 	}
 
-	// Read the header to make sure we can actually read the raw device.
+	// Read the header to make sure we can actually read the raw
+	// device.
 	header := make([]byte, 8)
 	_, err = self.paged_reader.ReadAt(header, 3)
 	if err != nil {
@@ -106,7 +90,7 @@ func (self *NTFSCachedContext) Start(
 			case <-done:
 				return
 
-			case <-time.After(time.Duration(cache_life) * time.Second):
+			case <-time.After(cache_life):
 				self.Close()
 			}
 		}
@@ -147,8 +131,8 @@ func (self *NTFSCachedContext) GetNTFSContext() (*ntfs.NTFSContext, error) {
 	return self.ntfs_ctx, nil
 }
 
-func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, error) {
-	result, err := GetNTFSCache(scope, device)
+func GetNTFSContext(scope vfilter.Scope, device, accessor string) (*ntfs.NTFSContext, error) {
+	result, err := GetNTFSCache(scope, device, accessor)
 	if err != nil {
 		return nil, err
 	}
@@ -156,15 +140,16 @@ func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, erro
 	return result.GetNTFSContext()
 }
 
-func GetNTFSCache(scope vfilter.Scope, device string) (*NTFSCachedContext, error) {
-	key := "ntfsctx_cache" + device
+func GetNTFSCache(scope vfilter.Scope, device, accessor string) (*NTFSCachedContext, error) {
+	key := "ntfsctx_cache" + device + accessor
 
 	// Get the cache context from the root scope's cache
 	cache_ctx, ok := vql_subsystem.CacheGet(scope, key).(*NTFSCachedContext)
 	if !ok {
 		cache_ctx = &NTFSCachedContext{
-			device: device,
-			scope:  scope,
+			accessor: accessor,
+			device:   device,
+			scope:    scope,
 		}
 		err := cache_ctx.Start(context.Background(), scope)
 		if err != nil {

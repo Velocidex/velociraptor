@@ -1,10 +1,10 @@
 SELECT FullPath FROM glob(globs="/*", accessor="file") WHERE Name =~ "C"[
  {
-  "FullPath": "C:"
+  "FullPath": "C:\\"
  }
 ]SELECT FullPath FROM glob(globs="\\*", accessor="file") WHERE Name =~ "C"[
  {
-  "FullPath": "C:"
+  "FullPath": "C:\\"
  }
 ]SELECT FullPath FROM glob(globs="c:\\*", accessor="file") WHERE Name =~ "Windows"[
  {

@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -28,6 +29,15 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 		self.Repository, _ = manager.GetGlobalRepository(self.Config)
 	}
 
+	var scope vfilter.Scope
+	if from_scratch {
+		scope = vql_subsystem.MakeNewScope()
+	} else {
+		scope = vql_subsystem.MakeScope()
+	}
+
+	scope.SetLogger(self.Logger)
+
 	cache := vql_subsystem.NewScopeCache()
 	env.Set(vql_subsystem.CACHE_VAR, cache)
 
@@ -43,6 +53,13 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 			env.Set(constants.SCOPE_CONFIG, &config_proto.ClientConfig{
 				Version: config.GetVersion(),
 			})
+		}
+
+		device_manager, err := accessors.GetDeviceManager(self.Config)
+		if err == nil {
+			env.Set(constants.SCOPE_DEVICE_MANAGER, device_manager)
+		} else {
+			scope.Log("Invalid remapping config: %v", err)
 		}
 	}
 
@@ -60,13 +77,6 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 		env.Set(constants.SCOPE_UPLOADER, self.Uploader)
 	}
 
-	var scope vfilter.Scope
-	if from_scratch {
-		scope = vql_subsystem.MakeNewScope()
-	} else {
-		scope = vql_subsystem.MakeScope()
-	}
-
 	// Use our own sorter
 	scope.SetSorter(sorter.MergeSorter{ChunkSize: 10000})
 
@@ -75,8 +85,6 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 
 	scope.AppendVars(env).AddProtocolImpl(
 		_ArtifactRepositoryPluginAssociativeProtocol{})
-
-	scope.SetLogger(self.Logger)
 
 	env.Set(constants.SCOPE_ROOT, scope)
 

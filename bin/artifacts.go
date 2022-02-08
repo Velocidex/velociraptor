@@ -146,7 +146,7 @@ func doArtifactCollect() error {
 
 	sm, err := startEssentialServices(config_obj)
 	if err != nil {
-		return fmt.Errorf("Can't load service: %w", err)
+		return fmt.Errorf("Start Essential Services: %w", err)
 	}
 	defer sm.Close()
 
@@ -358,11 +358,15 @@ func load_config_artifacts(config_obj *config_proto.Config) error {
 		}
 
 		// Config artifacts are considered built in.
-		_, err = repository.LoadYaml(
+		artifact, err := repository.LoadYaml(
 			string(serialized), true /* validate */, true /* built_in */)
 		if err != nil {
+			fmt.Printf("<red>Error Loading config artifact %v</>: %v",
+				artifact.Name, err)
 			return err
 		}
+		fmt.Printf("Loading config artifact: %v", artifact.Name)
+
 	}
 	return nil
 }

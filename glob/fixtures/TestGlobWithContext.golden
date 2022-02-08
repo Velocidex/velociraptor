@@ -1,34 +1,34 @@
 {
- "000 Case insensitive": [
+ "000 Case insensitive /bin/Bash": [
   "/bin/bash"
  ],
- "001 Character class": [
+ "001 Character class /bin/[a-b]ash": [
   "/bin/bash"
  ],
- "002 Inverted range": [
+ "002 Inverted range /bin/[!a-b]ash": [
   "/bin/dash"
  ],
- "003 Brace expansion.": [
+ "003 Brace expansion. /bin/{b,d}ash": [
   "/bin/bash",
   "/bin/dash"
  ],
- "004 Depth of 2": [
+ "004 Depth of 2 /usr/**2/diff": [
   "/usr/bin/diff",
   "/usr/bin/X11/diff"
  ],
- "005 Depth of 30": [
+ "005 Depth of 30 /usr/**/diff": [
   "/usr/bin/diff",
   "/usr/bin/X11/diff",
   "/usr/bin/X11/X11/diff",
   "/usr/bin/X11/X11/X11/diff"
  ],
- "006 Depth of 4": [
+ "006 Depth of 4 /usr/**4/diff": [
   "/usr/bin/diff",
   "/usr/bin/X11/diff",
   "/usr/bin/X11/X11/diff",
   "/usr/bin/X11/X11/X11/diff"
  ],
- "007 Breadth first traversal": [
+ "007 Breadth first traversal /tmp/1/* , /tmp/1/*/*": [
   "/tmp/1/1.txt",
   "/tmp/1/2",
   "/tmp/1/3",
@@ -38,7 +38,7 @@
   "/tmp/1/2/21",
   "/tmp/1/2/23"
  ],
- "008 Breadth first traversal": [
+ "008 Breadth first traversal /tmp/1/**5": [
   "/tmp/1/1.txt",
   "/tmp/1/2",
   "/tmp/1/3",
@@ -53,13 +53,13 @@
   "/tmp/1/2/21/213",
   "/tmp/1/2/21/212/1.txt"
  ],
- "009 Recursive matches zero or more": [
+ "009 Recursive matches zero or more /usr/bin/X11/**/diff": [
   "/usr/bin/X11/diff",
   "/usr/bin/X11/X11/diff",
   "/usr/bin/X11/X11/X11/diff"
  ],
- "010 Recursive matches none at end": null,
- "011 Match masked by two matches": [
+ "010 Recursive matches none at end /bin/bash/**": null,
+ "011 Match masked by two matches /usr/bin , /usr/*/diff": [
   "/usr/bin",
   "/usr/bin/diff"
  ]

@@ -783,6 +783,17 @@ message CryptoConfig {
     string root_certs = 1;
 }
 
+message RemappingConfig {
+    // Operation: Currently mount, identify
+    string type = 1;
+
+    // For mount options
+    string from_accessor = 2;
+    string from_prefix = 3;
+    string to_accessor = 4;
+    string to_prefix = 5;
+}
+
 message Config {
     string autocert_domain = 21 [deprecated=true];
 
@@ -851,4 +862,13 @@ message Config {
 
     // Various defaults can be changed here (usually not needed).
     Defaults defaults = 33;
+
+    // The Operating System of the analysis target. Only useful in conjunction
+    // with the `device' parameter in case the host's operating system differs
+    // from the operating system used on the device.
+    string analysis_target = 34;
+
+    // The list of data sources which Velociraptor should map instead of the
+    // host's own file system.
+    repeated RemappingConfig remappings = 35;
 }

@@ -2,62 +2,62 @@ SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFi
  {
   "FullPath": "\\\\.\\C:\\Users\\test.txt",
   "SHA1": "a21a26a9716d20649484110d939d90864fba9948",
-  "Source": "C:",
+  "Source": "\\\\.\\C:",
   "Deduped": true
  }
 ]SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test2.txt')[
  {
   "FullPath": "\\\\.\\C:\\Users\\test2.txt",
   "SHA1": "de23e5237d8b6c785cf2cbde1924e081aa66b674",
-  "Source": "C:",
+  "Source": "\\\\.\\C:",
   "Deduped": true
  },
  {
   "FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Users\\test2.txt",
   "SHA1": "1896ab50888c9c3d4150f5044b2568cea317a8e8",
-  "Source": "_HarddiskVolumeShadowCopy1",
+  "Source": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1",
   "Deduped": false
  }
 ]SELECT EventID,ServiceName,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec( EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx", SearchVSS=True)[
  {
   "EventID": 7045,
   "ServiceName": "TestingDetection2",
-  "Source": "C:"
+  "Source": "\\\\.\\C:"
  },
  {
   "EventID": 7045,
   "ServiceName": "TestingDetection1",
-  "Source": "_HarddiskVolumeShadowCopy1"
+  "Source": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
  }
 ]SELECT EventID, Channel, Message=~ 'Clear',Source FROM Artifact.Windows.EventLogs.Cleared( SearchVSS=True)[
  {
   "EventID": 104,
   "Channel": "System",
   "Message =~ 'Clear'": true,
-  "Source": "C:"
+  "Source": "\\\\.\\C:"
  },
  {
   "EventID": 1102,
   "Channel": "Security",
   "Message =~ 'Clear'": true,
-  "Source": "C:"
+  "Source": "\\\\.\\C:"
  },
  {
   "EventID": 104,
   "Channel": "Setup",
   "Message =~ 'Clear'": true,
-  "Source": "_HarddiskVolumeShadowCopy1"
+  "Source": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
  },
  {
   "EventID": 104,
   "Channel": "Application",
   "Message =~ 'Clear'": true,
-  "Source": "_HarddiskVolumeShadowCopy1"
+  "Source": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
  },
  {
   "EventID": 104,
   "Channel": "System",
   "Message =~ 'Clear'": true,
-  "Source": "_HarddiskVolumeShadowCopy1"
+  "Source": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
  }
 ]

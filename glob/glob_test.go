@@ -19,23 +19,18 @@ package glob
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"os"
-	"path"
 	"reflect"
-	"regexp"
-	"sort"
 	"strings"
 	"testing"
 
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vtesting"
-	"www.velocidex.com/golang/vfilter"
 )
 
 type pathComponentsTestFixtureType struct {
@@ -66,8 +61,9 @@ var pathComponentsTestFixture = []pathComponentsTestFixtureType{
 
 func TestConvertToPathComponent(t *testing.T) {
 	for _, fixture := range pathComponentsTestFixture {
-		if components, err := convert_glob_into_path_components(
-			fixture.pattern, MockFileSystemAccessor{}.PathSplit); err == nil {
+		components, err := convert_glob_into_path_components(
+			accessors.NewLinuxOSPath(fixture.pattern))
+		if err == nil {
 			if reflect.DeepEqual(fixture.components, components) {
 				continue
 			}
@@ -100,61 +96,6 @@ func TestFnMatchTranslate(t *testing.T) {
 	}
 }
 
-type MockFileSystemAccessor []string
-
-func (self MockFileSystemAccessor) New(scope vfilter.Scope) FileSystemAccessor {
-	return self
-}
-
-func (self MockFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
-	return nil, errors.New("Not implemented")
-}
-
-func (self MockFileSystemAccessor) ReadDir(filepath string) ([]FileInfo, error) {
-	seen := []string{}
-	_, subpath, _ := self.GetRoot(filepath)
-	if !strings.HasSuffix(subpath, "/") {
-		subpath = subpath + "/"
-	}
-
-	for _, mock_path := range self {
-		if strings.HasPrefix(mock_path, subpath) {
-			suffix := mock_path[len(subpath):]
-			mock_path_components := strings.Split(suffix, "/")
-			if !utils.InString(seen, mock_path_components[0]) {
-				seen = append(seen, mock_path_components[0])
-			}
-		}
-	}
-
-	var result []FileInfo
-	for _, k := range seen {
-		result = append(result, vtesting.MockFileInfo{
-			Name_:     k,
-			FullPath_: path.Join(subpath, k),
-			Mode_:     os.ModeDir,
-		})
-	}
-	return result, nil
-}
-
-func (self MockFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
-	return nil, errors.New("Not implemented")
-}
-
-func (self MockFileSystemAccessor) PathSplit(path string) []string {
-	re := regexp.MustCompile("/")
-	return re.Split(path, -1)
-}
-
-func (self MockFileSystemAccessor) PathJoin(x, y string) string {
-	return path.Join(x, y)
-}
-
-func (self MockFileSystemAccessor) GetRoot(filepath string) (string, string, error) {
-	return "/", path.Clean(filepath), nil
-}
-
 var _GlobFixture = []struct {
 	name     string
 	patterns []string
@@ -173,40 +114,54 @@ var _GlobFixture = []struct {
 	{"Match masked by two matches", []string{"/usr/bin", "/usr/*/diff"}},
 }
 
-var fs_accessor = MockFileSystemAccessor{
-	"/bin/bash",
-	"/bin/dash",
-	"/bin/rm",
-	"/usr/bin/diff",
-	"/usr/sbin/X",
-	"/usr/bin/X11/diff",
-	"/usr/bin/X11/X11/diff",
-	"/usr/bin/X11/X11/X11/diff",
-	"/tmp/1",
-	"/tmp/1/1.txt",
-	"/tmp/1/5",
-	"/tmp/1/4",
-	"/tmp/1/3",
-	"/tmp/1/2",
-	"/tmp/1/2/23",
-	"/tmp/1/2/21",
-	"/tmp/1/2/21/1.txt",
-	"/tmp/1/2/21/213",
-	"/tmp/1/2/21/212",
-	"/tmp/1/2/21/212/1.txt",
-	"/tmp/1/2/21/211",
-	"/tmp/1/2/20",
+func GetMockFileSystemAccessor() accessors.FileSystemAccessor {
+	result := accessors.NewVirtualFilesystemAccessor()
+	for _, path := range []string{
+		"/bin/bash",
+		"/bin/dash",
+		"/bin/rm",
+		"/usr/bin/diff",
+		"/usr/sbin/X",
+		"/usr/bin/X11/diff",
+		"/usr/bin/X11/X11/diff",
+		"/usr/bin/X11/X11/X11/diff",
+		"/tmp/1/",
+		"/tmp/1/1.txt",
+		"/tmp/1/5/",
+		"/tmp/1/4/",
+		"/tmp/1/3/",
+		"/tmp/1/2/",
+		"/tmp/1/2/23/",
+		"/tmp/1/2/21/",
+		"/tmp/1/2/21/1.txt",
+		"/tmp/1/2/21/213/",
+		"/tmp/1/2/21/212/",
+		"/tmp/1/2/21/212/1.txt",
+		"/tmp/1/2/21/211/",
+		"/tmp/1/2/20/",
+	} {
+		result.SetVirtualFileInfo(&accessors.VirtualFileInfo{
+			Path:    accessors.NewLinuxOSPath(path),
+			RawData: []byte("A"),
+			IsDir_:  strings.HasSuffix(path, "/"),
+		})
+	}
+
+	return result
 }
 
 func TestGlobWithContext(t *testing.T) {
 	ctx := context.Background()
-	result := make(map[string]interface{})
+
+	fs_accessor := GetMockFileSystemAccessor()
+
+	result := ordereddict.NewDict()
 	for idx, fixture := range _GlobFixture {
 		var returned []string
 
 		globber := NewGlobber()
 		for _, pattern := range fixture.patterns {
-			err := globber.Add(pattern, MockFileSystemAccessor{}.PathSplit)
+			err := globber.Add(accessors.NewLinuxOSPath(pattern))
 			if err != nil {
 				t.Fatalf("Failed %v", err)
 			}
@@ -214,12 +169,14 @@ func TestGlobWithContext(t *testing.T) {
 
 		output_chan := globber.ExpandWithContext(
 			ctx, config.GetDefaultConfig(),
-			"/", fs_accessor)
+			accessors.NewLinuxOSPath("/"), // root
+			fs_accessor)
 		for row := range output_chan {
 			returned = append(returned, row.FullPath())
 		}
 
-		result[fmt.Sprintf("%03d %s", idx, fixture.name)] = returned
+		result.Set(fmt.Sprintf("%03d %s %s", idx, fixture.name,
+			strings.Join(fixture.patterns, " , ")), returned)
 	}
 
 	result_json, _ := json.MarshalIndent(result)
@@ -227,19 +184,18 @@ func TestGlobWithContext(t *testing.T) {
 }
 
 func TestBraceExpansion(t *testing.T) {
-	var result []string
 	globber := NewGlobber()
-	globber._brace_expansion("{/bin/{a,b},/usr/bin/{c,d}}/*.exe", &result)
-	sort.Strings(result)
-
+	result := globber._brace_expansion(
+		accessors.NewLinuxOSPath("/{bin*,usr}/{ls*,top}"))
 	expected := []string{
-		"/bin/a/*.exe",
-		"/bin/b/*.exe",
-		"/usr/bin/c/*.exe",
-		"/usr/bin/d/*.exe",
+		"/bin*/ls*",
+		"/bin*/top",
+		"/usr/ls*",
+		"/usr/top",
 	}
 
-	if !reflect.DeepEqual(result, expected) {
-		t.Fatalf("Failed %v: %v", result, expected)
+	assert.Equal(t, 4, len(result))
+	for idx, e := range result {
+		assert.Equal(t, e.String(), expected[idx])
 	}
 }

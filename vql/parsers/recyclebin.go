@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	recyclebin "www.velocidex.com/golang/velociraptor/vql/parsers/recyclebin"
@@ -69,7 +69,7 @@ func (self _RecycleBinPlugin) Call(
 			func() {
 				defer utils.RecoverVQL(scope)
 
-				accessor, err := glob.GetAccessor(arg.Accessor, scope)
+				accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 				if err != nil {
 					scope.Log("parse_recyclebin: %v", err)
 					return

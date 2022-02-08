@@ -24,7 +24,7 @@ import (
 
 	"github.com/Velocidex/ahocorasick"
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -83,7 +83,7 @@ func (self *GrepFunction) Call(ctx context.Context,
 		return false
 	}
 
-	fs, err := glob.GetAccessor(arg.Accessor, scope)
+	fs, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log(err.Error())
 		return false

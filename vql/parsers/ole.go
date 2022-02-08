@@ -25,8 +25,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/oleparse"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -56,7 +56,7 @@ func _OLEVBAPlugin_ParseFile(
 		return nil, err
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, scope)
+	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func _OLEVBAPlugin_ParseFile(
 	}
 	defer fd.Close()
 
-	stat, err := fd.Stat()
+	stat, err := accessor.Lstat(filename)
 	if err != nil {
 		return nil, err
 	}

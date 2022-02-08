@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
-	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -71,7 +71,7 @@ func (self *CSVWatcherService) StartMonitoring(
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
 
-	accessor, err := glob.GetAccessor(accessor_name, scope)
+	accessor, err := accessors.GetAccessor(accessor_name, scope)
 	if err != nil {
 		return
 	}
@@ -92,7 +92,7 @@ func (self *CSVWatcherService) StartMonitoring(
 
 func (self *CSVWatcherService) findLastEvent(
 	filename string,
-	accessor glob.FileSystemAccessor) int {
+	accessor accessors.FileSystemAccessor) int {
 
 	fd, err := accessor.Open(filename)
 	if err != nil {
@@ -115,7 +115,7 @@ func (self *CSVWatcherService) findLastEvent(
 func (self *CSVWatcherService) monitorOnce(
 	filename string,
 	accessor_name string,
-	accessor glob.FileSystemAccessor,
+	accessor accessors.FileSystemAccessor,
 	last_event int) (int, bool) {
 
 	self.mu.Lock()

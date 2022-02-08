@@ -17,7 +17,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	windows "www.velocidex.com/golang/velociraptor/vql/windows"
-	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems"
 )
 
 const (
@@ -195,8 +194,4 @@ func WinVerifyTrustErrors(ret uint32) string {
 		return "TRUST_E_ACTION_UNKNOWN"
 	}
 
-}
-
-func GetNativePath(path string) string {
-	return filesystems.GetPath(path)
 }

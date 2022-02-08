@@ -23,3 +23,7 @@ Queries:
            pathspec(parse="/usr/lib"),
            pathspec(parse="file:///usr/lib#*")
     FROM scope()
+
+  # Parsing paths depends on the type of environment
+  - SELECT pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows", type="windows")
+    FROM scope()

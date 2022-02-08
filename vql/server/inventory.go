@@ -8,10 +8,10 @@ import (
 	"path"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -66,7 +66,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 	}
 
 	if arg.File != "" {
-		accessor, err := glob.GetAccessor(arg.Accessor, scope)
+		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("inventory_add: %s", err)
 			return vfilter.Null{}

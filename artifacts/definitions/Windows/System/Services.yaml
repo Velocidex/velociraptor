@@ -26,7 +26,7 @@ parameters:
   - name: FailureCommandRegex
     default: .
     type: regex
-    
+
 export: |
     LET Profile = '''
         [
@@ -53,7 +53,7 @@ export: |
         ]],
       ]
       '''
-      
+
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
@@ -73,7 +73,7 @@ sources:
                 SELECT FailureCommand FROM read_reg_key(globs=servicesKeyGlob + Name)
             } AS FailureCommand,
             {
-                SELECT 
+                SELECT
                     parse_binary(accessor='data',filename=FailureActions,profile=Profile,struct='ServiceFailureActions') as FailureActions
                 FROM read_reg_key(globs=servicesKeyGlob + Name)
             } AS FailureActions,
@@ -89,11 +89,11 @@ sources:
 
       SELECT *,
         if(condition=Calculate_hashes,
-            then=hash(path=AbsoluteExePath, accessor="file")) AS HashServiceExe,
+            then=hash(path=AbsoluteExePath, accessor="auto")) AS HashServiceExe,
                  if(condition=CertificateInfo,
                     then=authenticode(filename=AbsoluteExePath)) AS CertinfoServiceExe,
                  if(condition=Calculate_hashes,
-                    then=hash(path=ServiceDll,accessor="file")) AS HashServiceDll,
+                    then=hash(path=ServiceDll,accessor="auto")) AS HashServiceDll,
                  if(condition=CertificateInfo,
                     then=authenticode(filename=ServiceDll)) AS CertinfoServiceDll
       FROM service

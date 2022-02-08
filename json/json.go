@@ -3,6 +3,8 @@
 package json
 
 import (
+	"reflect"
+
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/vfilter"
@@ -15,6 +17,11 @@ var (
 type EncOpts = json.EncOpts
 
 func MarshalJSONDict(v interface{}, opts *json.EncOpts) ([]byte, error) {
+	if v == nil || (reflect.ValueOf(v).Kind() == reflect.Ptr &&
+		reflect.ValueOf(v).IsNil()) {
+		return []byte("{}"), nil
+	}
+
 	self, ok := v.(*ordereddict.Dict)
 	if !ok || self == nil {
 		return nil, json.EncoderCallbackSkip

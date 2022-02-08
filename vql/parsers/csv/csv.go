@@ -24,9 +24,9 @@ import (
 	"os"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
-	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -67,7 +67,7 @@ func (self ParseCSVPlugin) Call(
 
 		for _, filename := range arg.Filenames {
 			func() {
-				accessor, err := glob.GetAccessor(arg.Accessor, scope)
+				accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 				if err != nil {
 					scope.Log("parse_csv: %v", err)
 					return

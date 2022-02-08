@@ -34,7 +34,7 @@ import (
 
 	yara "github.com/Velocidex/go-yara"
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -54,7 +54,7 @@ type YaraResult struct {
 	Meta     map[string]interface{}
 	Tags     []string
 	String   *YaraHit
-	File     os.FileInfo
+	File     accessors.FileInfo
 	FileName string
 }
 
@@ -198,7 +198,7 @@ func (self *scanReporter) scanFileByAccessor(
 	start, end uint64,
 	output_chan chan vfilter.Row) {
 
-	accessor, err := glob.GetAccessor(accessor_name, self.scope)
+	accessor, err := accessors.GetAccessor(accessor_name, self.scope)
 	if err != nil {
 		self.scope.Log("yara: %v", err)
 		return
@@ -212,7 +212,7 @@ func (self *scanReporter) scanFileByAccessor(
 	}
 	defer f.Close()
 
-	self.file_info, _ = f.Stat()
+	self.file_info, _ = accessor.Lstat(self.filename)
 	self.reader = utils.ReaderAtter{f}
 
 	// Support sparse file scanning
@@ -249,7 +249,7 @@ func (self *scanReporter) scanFileByAccessor(
 	}
 }
 
-func (self *scanReporter) scanRange(start, end uint64, f glob.ReadSeekCloser) {
+func (self *scanReporter) scanRange(start, end uint64, f accessors.ReadSeekCloser) {
 	buf := make([]byte, self.blocksize)
 
 	// self.scope.Log("Scanning %v from %#0x to %#0x", self.filename, start, end)
@@ -307,7 +307,10 @@ func (self *scanReporter) scanFile(
 	defer fd.Close()
 
 	// Fill in the file stat if possible.
-	self.file_info, _ = fd.Stat()
+	file_accessor, err := accessors.GetAccessor("file", self.scope)
+	if err == nil {
+		self.file_info, _ = file_accessor.Lstat(self.filename)
+	}
 	self.reader = fd
 
 	err = self.rules.ScanFileWithCallback(
@@ -333,7 +336,7 @@ type scanReporter struct {
 	number_of_hits int64
 	blocksize      uint64
 	context        int
-	file_info      os.FileInfo
+	file_info      accessors.FileInfo
 	filename       string
 	base_offset    uint64
 	end            uint64

@@ -35,7 +35,7 @@ import (
 	"time"
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -82,7 +82,7 @@ type AccessorReader struct {
 
 	key string
 
-	reader       glob.ReadSeekCloser
+	reader       accessors.ReadSeekCloser
 	paged_reader *ntfs.PagedReader
 
 	created     time.Time
@@ -148,7 +148,7 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 	// It is ok to close the reader at any time. We expect this
 	// and just re-open the underlying file when needed.
 	if self.reader == nil {
-		accessor, err := glob.GetAccessor(self.Accessor, self.Scope)
+		accessor, err := accessors.GetAccessor(self.Accessor, self.Scope)
 		if err != nil {
 			self.mu.Unlock()
 			return 0, err

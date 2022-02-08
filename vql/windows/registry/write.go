@@ -8,9 +8,9 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows/registry"
+	registry_accessor "www.velocidex.com/golang/velociraptor/accessors/registry"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
@@ -46,7 +46,7 @@ func (self *RegSetValueFunction) Call(ctx context.Context,
 	value_name := components[last_idx]
 	subkey_path := strings.Join(components[1:last_idx], "\\")
 
-	root_hive, ok := filesystems.GetHiveFromName(components[0])
+	root_hive, ok := registry_accessor.GetHiveFromName(components[0])
 	if !ok {
 		scope.Log("reg_set_value: Unknown root hive name %s", components[0])
 		return vfilter.Null{}
@@ -146,7 +146,7 @@ func (self *RegDeleteValueFunction) Call(ctx context.Context,
 	value_name := components[last_idx]
 	subkey_path := strings.Join(components[1:last_idx], "\\")
 
-	root_hive, ok := filesystems.GetHiveFromName(components[0])
+	root_hive, ok := registry_accessor.GetHiveFromName(components[0])
 	if !ok {
 		scope.Log("reg_rm_value: Unknown root hive name %s", components[0])
 		return vfilter.Null{}
@@ -204,7 +204,7 @@ func (self *RegDeleteKeyFunction) Call(ctx context.Context,
 
 	subkey_path := strings.Join(components[1:], "\\")
 
-	root_hive, ok := filesystems.GetHiveFromName(components[0])
+	root_hive, ok := registry_accessor.GetHiveFromName(components[0])
 	if !ok {
 		scope.Log("reg_rm_key: Unknown root hive name %s", components[0])
 		return vfilter.Null{}

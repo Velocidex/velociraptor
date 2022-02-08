@@ -263,6 +263,7 @@ func LoadBuiltInArtifacts(ctx context.Context,
 		defer self.wg.Done()
 
 		for _, name := range grepository.List() {
+			time.Sleep(100 * time.Millisecond)
 			select {
 			case <-ctx.Done():
 				return

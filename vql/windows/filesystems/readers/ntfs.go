@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 package readers
@@ -30,7 +31,7 @@ func (self *NTFSCachedContext) Close() {
 }
 
 // For non -windows we just create a regular caching context
-func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, error) {
+func GetNTFSContext(scope vfilter.Scope, device, accessor string) (*ntfs.NTFSContext, error) {
 	key := "ntfsctx_cache" + device
 
 	// Get the cache context from the root scope's cache
@@ -40,8 +41,17 @@ func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, erro
 	}
 
 	lru_size := vql_subsystem.GetIntFromRow(scope, scope, constants.NTFS_CACHE_SIZE)
-	paged_reader, err := readers.NewPagedReader(scope, "file", device, int(lru_size))
+	paged_reader, err := readers.NewPagedReader(
+		scope, accessor, device, int(lru_size))
 	if err != nil {
+		return nil, err
+	}
+
+	// Try to read the header to trap read errors.
+	buffer := make([]byte, 4)
+	_, err = paged_reader.ReadAt(buffer, 0)
+	if err != nil {
+		paged_reader.Close()
 		return nil, err
 	}
 
@@ -54,8 +64,10 @@ func GetNTFSContext(scope vfilter.Scope, device string) (*ntfs.NTFSContext, erro
 	// Destroy the context when the scope is done.
 	err = vql_subsystem.GetRootScope(scope).AddDestructor(paged_reader.Close)
 	if err != nil {
+		paged_reader.Close()
 		return nil, err
 	}
+
 	vql_subsystem.CacheSet(scope, key, ntfs_ctx)
 	return ntfs_ctx, nil
 }

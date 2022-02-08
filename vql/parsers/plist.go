@@ -6,7 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"howett.net/plist"
-	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -59,7 +59,7 @@ func (self *PlistFunction) Call(ctx context.Context,
 		return
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, scope)
+	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("plist: %v", err)
 		return vfilter.Null{}
@@ -143,7 +143,7 @@ func (self _PlistPlugin) Call(
 			func() {
 				defer utils.RecoverVQL(scope)
 
-				accessor, err := glob.GetAccessor(arg.Accessor, scope)
+				accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 				if err != nil {
 					scope.Log("plist: %v", err)
 					return
