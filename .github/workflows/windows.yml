@@ -36,6 +36,7 @@ jobs:
       run: |
         echo %PATH%
         echo %GOPATH%
+        subst X: %CD%
         mklink c:\Users\link c:\Windows
         mkdir "C:\Program Files\Velociraptor"
         mkdir c:\tmp
@@ -99,14 +100,14 @@ jobs:
         vssadmin create shadow /for=c:
 
         echo Running OS generic tests.
-        output\velociraptor.exe -v golden D:\a\velociraptor\velociraptor\artifacts\testdata\server\testcases\ --env srcDir=d:\a\velociraptor\velociraptor\ --config D:\a\velociraptor\velociraptor\artifacts\testdata\windows\github_actions.config.yaml
+        output\velociraptor.exe -v golden X:\artifacts\testdata\server\testcases\ --env srcDir=X:\ --config X:\artifacts\testdata\windows\github_actions.config.yaml
 
     - name: Test Golden Windows
       shell: cmd
       if: always()
       run: |
         echo Running windows specific tests.
-        output\velociraptor.exe -v golden D:\a\velociraptor\velociraptor\artifacts\testdata\windows\ --env srcDir=d:\a\velociraptor\velociraptor\ --config D:\a\velociraptor\velociraptor\artifacts\testdata\windows\github_actions.config.yaml
+        output\velociraptor.exe -v golden X:\artifacts\testdata\windows\ --env srcDir=X:\ --config X:\artifacts\testdata\windows\github_actions.config.yaml
 
     - name: Upload Build Artifacts
       if: always()

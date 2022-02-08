@@ -6,6 +6,9 @@ SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
   "FullPath": "\\\\.\\D:"
  },
  {
+  "FullPath": "\\\\.\\X:"
+ },
+ {
   "FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
  },
  {
@@ -17,6 +20,9 @@ SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
  },
  {
   "FullPath": "\\\\.\\D:"
+ },
+ {
+  "FullPath": "\\\\.\\X:"
  },
  {
   "FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
@@ -65,6 +71,9 @@ SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
   "FullPath": "\\\\.\\D:"
  },
  {
+  "FullPath": "\\\\.\\X:"
+ },
+ {
   "FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
  },
  {
@@ -76,6 +85,9 @@ SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
  },
  {
   "FullPath": "\\\\.\\D:"
+ },
+ {
+  "FullPath": "\\\\.\\X:"
  },
  {
   "FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"

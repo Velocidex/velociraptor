@@ -141,4 +141,4 @@ Frontend:
 
 Datastore:
   implementation: FileBaseDataStore
-  filestore_directory: d:\a\velociraptor\velociraptor\artifacts\testdata\server
+  filestore_directory: x:\artifacts\testdata\server

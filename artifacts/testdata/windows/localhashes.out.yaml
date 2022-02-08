@@ -6,13 +6,13 @@ SELECT basename(path=FullPath) AS Name, Size, Hash FROM Artifact.Generic.Forensi
  }
 ]SELECT Path, MD5, Size FROM Artifact.Generic.Forensic.LocalHashes.Query( CommaDelimitedHashes="39985be74b8bb4ee716ab55b5f6dfbd4")[
  {
-  "Path": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\Security_1_record.evtx",
+  "Path": "X:\\artifacts\\testdata\\files\\Security_1_record.evtx",
   "MD5": "39985be74b8bb4ee716ab55b5f6dfbd4",
   "Size": 69632
  }
 ]SELECT Path, MD5, Size FROM Artifact.Generic.Forensic.LocalHashes.Query( Hashes="Hash\n39985be74b8bb4ee716ab55b5f6dfbd4")[
  {
-  "Path": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\Security_1_record.evtx",
+  "Path": "X:\\artifacts\\testdata\\files\\Security_1_record.evtx",
   "MD5": "39985be74b8bb4ee716ab55b5f6dfbd4",
   "Size": 69632
  }
