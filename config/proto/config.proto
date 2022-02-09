@@ -783,15 +783,19 @@ message CryptoConfig {
     string root_certs = 1;
 }
 
+message MountPoint {
+    string accessor = 1;
+    string prefix = 2;
+    string path_type = 3;
+}
+
 message RemappingConfig {
     // Operation: Currently mount, identify
     string type = 1;
 
     // For mount options
-    string from_accessor = 2;
-    string from_prefix = 3;
-    string to_accessor = 4;
-    string to_prefix = 5;
+    MountPoint from = 2;
+    MountPoint on = 3;
 }
 
 message Config {

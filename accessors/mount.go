@@ -18,7 +18,7 @@ import (
 	"strings"
 	"sync"
 
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -271,44 +271,6 @@ func NewMountFileSystemAccessor(
 	return result
 }
 
-func InstallMountPoint(manager DeviceManager,
-	remapping *config_proto.RemappingConfig) error {
-
-	target_accessor_any, err := manager.GetAccessor(remapping.ToAccessor, nil)
-	if err != nil {
-		return err
-	}
-
-	target_accessor, ok := target_accessor_any.(*MountFileSystemAccessor)
-	if !ok {
-		// The target accessor is not a MountFileSystemAccessor, we
-		// neeed to wrap it and in one.
-		target_accessor = &MountFileSystemAccessor{
-			root: &node{
-				accessor: target_accessor_any,
-			},
-		}
-	}
-
-	// We need to get the source accessor from the unmodified device
-	// manager (otherwise we will get into a loop here). For example,
-	// if we read from "file" and map "file" then the source is the
-	// unmodified original file.
-	source_accessor, err := GlobalDeviceManager.GetAccessor(
-		remapping.FromAccessor, nil)
-	if err != nil {
-		return err
-	}
-
-	// Now target_accessor is valid and of type
-	// MountFileSystemAccessor - we can add the mapping
-	target_accessor.AddMapping(
-		NewLinuxOSPath(remapping.FromPrefix),
-		NewLinuxOSPath(remapping.ToPrefix),
-		source_accessor)
-
-	// Replace the target accessor with the remapped one.
-	manager.Register(remapping.ToAccessor, target_accessor, "")
-
-	return nil
+func init() {
+	json.RegisterCustomEncoder(&FileInfoWrapper{}, MarshalGlobFileInfo)
 }

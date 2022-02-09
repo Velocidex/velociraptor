@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -41,6 +42,9 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 	cache := vql_subsystem.NewScopeCache()
 	env.Set(vql_subsystem.CACHE_VAR, cache)
 
+	device_manager := accessors.GlobalDeviceManager.Copy()
+	env.Set(constants.SCOPE_DEVICE_MANAGER, device_manager)
+
 	if self.Config != nil {
 		// Server config contains secrets - they are stored in
 		// a way that VQL can not directly access them but
@@ -55,11 +59,15 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 			})
 		}
 
-		device_manager, err := accessors.GetDeviceManager(self.Config)
-		if err == nil {
-			env.Set(constants.SCOPE_DEVICE_MANAGER, device_manager)
-		} else {
-			scope.Log("Invalid remapping config: %v", err)
+		// If there are remappings in the config file, we apply them to
+		// all scopes.
+		if self.Config.Remappings != nil {
+			device_manager.Clear()
+			err := accessors.ApplyRemappingOnScope(
+				context.Background(), device_manager, self.Config.Remappings)
+			if err != nil {
+				scope.Log("Applying remapping: %v", err)
+			}
 		}
 	}
 
