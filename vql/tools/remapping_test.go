@@ -91,6 +91,7 @@ func (self *RemapTestSuite) TestConfigFileRemap() {
 	// HKCU shorthand.
 	vql, err := vfilter.Parse(`
 SELECT * FROM glob(globs='/HKCU/Software/Classes/windows*', accessor='registry')
+ORDER BY FullPath
 `)
 	assert.NoError(self.T(), err)
 
@@ -104,6 +105,7 @@ SELECT * FROM glob(globs='/HKCU/Software/Classes/windows*', accessor='registry')
 	// Default accessor is the auto accessor.
 	vql, err = vfilter.Parse(`
 SELECT * FROM glob(globs='D:\\ntuser*')
+ORDER BY FullPath
 `)
 	assert.NoError(self.T(), err)
 
@@ -152,6 +154,7 @@ LET _ <= remap(config=RemappingConfig, clear=TRUE)
 	// HKCU shorthand.
 	vql, err = vfilter.Parse(`
 SELECT * FROM glob(globs='/HKCU/Software/Classes/windows*', accessor='registry')
+ORDER BY FullPath
 `)
 	assert.NoError(self.T(), err)
 
@@ -165,6 +168,7 @@ SELECT * FROM glob(globs='/HKCU/Software/Classes/windows*', accessor='registry')
 	// Default accessor is the auto accessor.
 	vql, err = vfilter.Parse(`
 SELECT * FROM glob(globs='D:\\ntuser*')
+ORDER BY FullPath
 `)
 	assert.NoError(self.T(), err)
 
