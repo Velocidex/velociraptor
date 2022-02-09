@@ -35,6 +35,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/csv"
+	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
 
 type LauncherTestSuite struct {

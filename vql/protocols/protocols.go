@@ -1,4 +1,4 @@
-package vql
+package protocols
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/protocols"
 	"www.velocidex.com/golang/vfilter/types"
@@ -133,8 +134,8 @@ func (self _GlobFileInfoAssociative) GetMembers(
 }
 
 func init() {
-	RegisterProtocol(&_BoolDict{})
-	RegisterProtocol(&_BoolTime{})
-	RegisterProtocol(&_BoolEq{})
-	RegisterProtocol(&_GlobFileInfoAssociative{})
+	vql_subsystem.RegisterProtocol(&_BoolDict{})
+	vql_subsystem.RegisterProtocol(&_BoolTime{})
+	vql_subsystem.RegisterProtocol(&_BoolEq{})
+	vql_subsystem.RegisterProtocol(&_GlobFileInfoAssociative{})
 }

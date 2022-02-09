@@ -16,7 +16,21 @@ var (
 // A device manager is a factory for creating accessors.
 type DeviceManager interface {
 	GetAccessor(scheme string, scope vfilter.Scope) (FileSystemAccessor, error)
+	Copy() DeviceManager
+	Clear()
 	Register(scheme string, accessor FileSystemAccessorFactory, description string)
+}
+
+func GetManager(scope vfilter.Scope) DeviceManager {
+	manager_any, pres := scope.Resolve(constants.SCOPE_DEVICE_MANAGER)
+	if pres {
+		manager, ok := manager_any.(DeviceManager)
+		if ok {
+			return manager
+		}
+	}
+
+	return GlobalDeviceManager
 }
 
 func GetAccessor(scheme string, scope vfilter.Scope) (FileSystemAccessor, error) {
@@ -27,15 +41,7 @@ func GetAccessor(scheme string, scope vfilter.Scope) (FileSystemAccessor, error)
 		scheme = "auto"
 	}
 
-	manager_any, pres := scope.Resolve(constants.SCOPE_DEVICE_MANAGER)
-	if pres {
-		manager, ok := manager_any.(DeviceManager)
-		if ok {
-			return manager.GetAccessor(scheme, scope)
-		}
-	}
-
-	return GlobalDeviceManager.GetAccessor(scheme, scope)
+	return GetManager(scope).GetAccessor(scheme, scope)
 }
 
 // The default device manager is global and uses the
@@ -63,7 +69,6 @@ func (self *DefaultDeviceManager) GetAccessor(
 		res, err := handler.New(scope)
 		return res, err
 	}
-	scope.Log("Unknown filesystem accessor: " + scheme)
 	return nil, errors.New("Unknown filesystem accessor " + scheme)
 }
 
@@ -83,7 +88,15 @@ func (self *DefaultDeviceManager) DescribeAccessors() *ordereddict.Dict {
 	return self.descriptions
 }
 
-func (self *DefaultDeviceManager) Copy() *DefaultDeviceManager {
+func (self *DefaultDeviceManager) Clear() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.handlers = make(map[string]FileSystemAccessorFactory)
+	self.descriptions = ordereddict.NewDict()
+}
+
+func (self *DefaultDeviceManager) Copy() DeviceManager {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 

@@ -261,3 +261,7 @@ func NewVirtualFilesystemAccessor() *VirtualFilesystemAccessor {
 		},
 	}
 }
+
+func init() {
+	json.RegisterCustomEncoder(&VirtualFileInfo{}, MarshalGlobFileInfo)
+}

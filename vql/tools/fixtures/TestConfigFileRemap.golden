@@ -1,0 +1,41 @@
+{
+ "Registry Glob": [
+  {
+   "Name": "windows-feedback",
+   "ModTime": "2021-06-01T06:29:02Z",
+   "FullPath": "HKEY_CURRENT_USER\\Software\\Classes\\windows-feedback",
+   "Mtime": "2021-06-01T06:29:02Z",
+   "Btime": "2021-06-01T06:29:02Z",
+   "Ctime": "2021-06-01T06:29:02Z",
+   "Atime": "2021-06-01T06:29:02Z",
+   "Data": {
+    "type": "Key"
+   },
+   "Size": 0,
+   "IsDir": true,
+   "IsLink": false,
+   "Mode": 2147484141
+  },
+  {
+   "Name": "windowsdefender",
+   "ModTime": "2021-06-01T06:27:34Z",
+   "FullPath": "HKEY_CURRENT_USER\\Software\\Classes\\windowsdefender",
+   "Mtime": "2021-06-01T06:27:34Z",
+   "Btime": "2021-06-01T06:27:34Z",
+   "Ctime": "2021-06-01T06:27:34Z",
+   "Atime": "2021-06-01T06:27:34Z",
+   "Data": {
+    "type": "Key"
+   },
+   "Size": 0,
+   "IsDir": true,
+   "IsLink": false,
+   "Mode": 2147484141
+  }
+ ],
+ "D drive Glob": [
+  {
+   "FullPath": "D:\\ntuser.dat"
+  }
+ ]
+}
