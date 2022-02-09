@@ -85,6 +85,11 @@ func (self *RemapTestSuite) TestConfigFileRemap() {
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
+	self.checkQueries(scope)
+}
+
+func (self *RemapTestSuite) checkQueries(scope vfilter.Scope) {
+
 	golden_fixture := ordereddict.NewDict()
 
 	// Because the path_type is set to "registry", glob understands
@@ -104,7 +109,7 @@ ORDER BY FullPath
 
 	// Default accessor is the auto accessor.
 	vql, err = vfilter.Parse(`
-SELECT * FROM glob(globs='D:\\ntuser*')
+SELECT FullPath FROM glob(globs='D:\\ntuser*')
 ORDER BY FullPath
 `)
 	assert.NoError(self.T(), err)
@@ -142,46 +147,13 @@ func (self *RemapTestSuite) TestRemapByPlugin() {
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
-	golden_fixture := ordereddict.NewDict()
-
 	vql, err := vfilter.Parse(`
 LET _ <= remap(config=RemappingConfig, clear=TRUE)
 `)
 	for _ = range vql.Eval(self.Ctx, scope) {
 	}
 
-	// Because the path_type is set to "registry", glob understands
-	// HKCU shorthand.
-	vql, err = vfilter.Parse(`
-SELECT * FROM glob(globs='/HKCU/Software/Classes/windows*', accessor='registry')
-ORDER BY FullPath
-`)
-	assert.NoError(self.T(), err)
-
-	rows := []vfilter.Row{}
-	for row := range vql.Eval(self.Ctx, scope) {
-		rows = append(rows, row)
-	}
-
-	golden_fixture.Set("Registry Glob", rows)
-
-	// Default accessor is the auto accessor.
-	vql, err = vfilter.Parse(`
-SELECT * FROM glob(globs='D:\\ntuser*')
-ORDER BY FullPath
-`)
-	assert.NoError(self.T(), err)
-
-	rows = []vfilter.Row{}
-	for row := range vql.Eval(self.Ctx, scope) {
-		rows = append(rows, row)
-	}
-
-	golden_fixture.Set("D drive Glob", rows)
-
-	goldie.Assert(self.T(), "TestConfigFileRemap",
-		json.MustMarshalIndent(golden_fixture))
-
+	self.checkQueries(scope)
 }
 
 func TestRemapPlugin(t *testing.T) {

@@ -35,21 +35,7 @@
  ],
  "D drive Glob": [
   {
-   "Name": "ntuser.dat",
-   "ModTime": "2022-01-19T06:47:19.582829809Z",
-   "FullPath": "D:\\ntuser.dat",
-   "Mtime": "2022-01-19T06:47:19Z",
-   "Btime": "0001-01-01T00:00:00Z",
-   "Ctime": "2022-01-19T06:47:19Z",
-   "Atime": "2022-02-03T03:27:52Z",
-   "Data": {
-    "DevMajor": 253,
-    "DevMinor": 0
-   },
-   "Size": 786432,
-   "IsDir": false,
-   "IsLink": false,
-   "Mode": 436
+   "FullPath": "D:\\ntuser.dat"
   }
  ]
 }
