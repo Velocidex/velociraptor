@@ -29,8 +29,10 @@ parameters:
       http://ocsp.comodoca.com
       http://cacerts.digicert.com
       http://ocsp.digicert.com
-  - name: MetadataGlob
-    default: C:/{Users/*,Windows/*/config/systemprofile}/AppData/LocalLow/Microsoft/CryptnetUrlCache/MetaData/*
+  - name: MetadataGlobUser
+    default: C:/Users/*/AppData/LocalLow/Microsoft/CryptnetUrlCache/MetaData/*
+  - name: MetadataGlobSystem
+    default: C:/Windows/*/config/systemprofile/AppData/LocalLow/Microsoft/CryptnetUrlCache/MetaData/*
   - name: AlsoUpload
     type: bool
 
@@ -66,7 +68,7 @@ sources:
                        regex_replace(re="MetaData",
                                      replace="Content",
                                      source=FullPath) AS Content
-      FROM glob(globs=MetadataGlob)
+      FROM glob(globs=[MetadataGlobUser,MetadataGlobSystem])
 
       SELECT * FROM foreach(row=Files,
       query={
