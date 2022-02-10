@@ -30,7 +30,7 @@ parameters:
       http://cacerts.digicert.com
       http://ocsp.digicert.com
   - name: MetadataGlob
-    default: C:/Users/*/AppData/LocalLow/Microsoft/CryptnetUrlCache/MetaData/*
+    default: C:/{Users/*,Windows/*/config/systemprofile}/AppData/LocalLow/Microsoft/CryptnetUrlCache/MetaData/*
   - name: AlsoUpload
     type: bool
 
