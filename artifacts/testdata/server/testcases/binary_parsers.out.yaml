@@ -51,6 +51,8 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
  }
 ]SELECT * FROM column_filter(query={ SELECT * FROM Artifact.Windows.Forensics.Lnk( Glob=srcDir + "/artifacts/testdata/files/1.lnk") }, exclude="FullPath|time|_")[
  {
+  "SourceCreated": "2022-02-08T06:08:17.3059115Z",
+  "SourceModified": "2022-02-08T06:08:17.3059115Z",
   "HeaderCreationTime": "2020-11-12T01:43:21Z",
   "HeaderAccessTime": "2020-11-12T01:43:21Z",
   "HeaderWriteTime": "2020-11-12T01:43:21Z",
@@ -72,6 +74,8 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
  }
 ]SELECT * FROM column_filter(query={ SELECT * FROM Artifact.Windows.Forensics.Lnk( Glob=srcDir + "/artifacts/testdata/files/password.txt.lnk") }, exclude="FullPath|time|_")[
  {
+  "SourceCreated": "2022-02-08T06:08:17.3489081Z",
+  "SourceModified": "2022-02-08T06:08:17.3499084Z",
   "HeaderCreationTime": "2021-06-05T12:05:12Z",
   "HeaderAccessTime": "2021-12-22T09:47:57Z",
   "HeaderWriteTime": "2021-06-05T12:05:12Z",
