@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // The algorithm in this file is based on the Rekall algorithm here:
@@ -148,19 +149,6 @@ func (self Globber) _DebugString(indent string) string {
 
 // Add a new pattern to the filter tree.
 func (self *Globber) Add(pattern *accessors.OSPath) error {
-	brace_expanded := self._brace_expansion(pattern)
-
-	for _, expanded := range brace_expanded {
-		err := self._add_brace_expanded(expanded)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (self *Globber) _add_brace_expanded(pattern *accessors.OSPath) error {
 	// Convert the pattern into path components.
 	filter, err := convert_glob_into_path_components(pattern)
 	if err == nil {
@@ -170,54 +158,6 @@ func (self *Globber) _add_brace_expanded(pattern *accessors.OSPath) error {
 	} else {
 		return err
 	}
-}
-
-// Duplicate brace expansions into multiple globs:
-// /usr/bin/*.{exe,dll} -> /usr/bin/*.exe, /usr/bin/*.dll
-func (self *Globber) _brace_expansion(
-	pattern *accessors.OSPath) []*accessors.OSPath {
-
-	if len(pattern.Components) == 0 {
-		return nil
-	}
-
-	result := []*accessors.OSPath{}
-	first_component := pattern.Components[0]
-
-	for _, expansion := range _expand_brace_in_component(first_component) {
-		prefix := pattern.Clear().Append(expansion)
-		next_pattern := &accessors.OSPath{
-			Components: pattern.Components[1:],
-		}
-		next_expansions := self._brace_expansion(next_pattern)
-		if len(next_expansions) == 0 {
-			result = append(result, prefix)
-		} else {
-			for _, e := range next_expansions {
-				result = append(result, prefix.Append(e.Components...))
-			}
-		}
-	}
-	return result
-}
-
-func _expand_brace_in_component(component string) []string {
-	result := []string{}
-
-	groups := _GROUPING_PATTERN.FindStringSubmatch(component)
-	if len(groups) > 0 {
-		left := groups[1]
-		middle := strings.Split(groups[2], ",")
-		right := groups[3]
-
-		for _, item := range middle {
-			result = append(result, left+item+right)
-		}
-	} else {
-		result = append(result, component)
-	}
-
-	return result
 }
 
 // Adds the raw filter into the Globber tree. This is called
@@ -462,8 +402,15 @@ func (self Globber) _expand_path_components(
 
 var (
 	// Support Brace Expansion {a,b}. NOTE: This happens before wild card
-	// expansions so you can do /foo/bar/{*.exe,*.dll}
-	_GROUPING_PATTERN = regexp.MustCompile("^(.*){([^}]+)}(.*)$")
+	// expansions so you can do /foo/bar/{*.exe,*.dll}.
+
+	// Note: Since alternate syntax is similar to Pathspecs (which are
+	// plain JSON dicts) we need to tell them apart. Therefore we do
+	// not accept an alternate group at the first character. A path
+	// separator can always be added to disambiguate. For example:
+	// This is ok: /{/bin/ls,/bin/rm}
+	// This is not ok: {/bin/ls,/bin/rm}
+	_GROUPING_PATTERN = regexp.MustCompile("^(.+)[{]([^{}]+)[}](.*)$")
 	_RECURSION_REGEX  = regexp.MustCompile(`\*\*(\d*)`)
 
 	// A regex indicating if there are shell globs in this path.
@@ -623,4 +570,32 @@ func DevOf(file_info accessors.FileInfo) (uint64, bool) {
 		return 0, false
 	}
 	return dev.Dev(), true
+}
+
+// Duplicate brace expansions into multiple globs:
+// /usr/bin/*.{exe,dll} -> /usr/bin/*.exe, /usr/bin/*.dll
+func ExpandBraces(patterns []string) []string {
+	result := make([]string, 0, len(patterns))
+
+	for _, pattern := range patterns {
+		_brace_expansion(pattern, &result)
+	}
+
+	return result
+}
+
+func _brace_expansion(pattern string, result *[]string) {
+	groups := _GROUPING_PATTERN.FindStringSubmatch(pattern)
+	if len(groups) > 0 {
+		left := groups[1]
+		middle := strings.Split(groups[2], ",")
+		right := groups[3]
+
+		for _, item := range middle {
+			_brace_expansion(left+item+right, result)
+		}
+	} else if !utils.InString(*result, pattern) {
+		*result = append(*result, pattern)
+	}
+
 }

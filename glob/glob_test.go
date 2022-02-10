@@ -160,7 +160,9 @@ func TestGlobWithContext(t *testing.T) {
 		var returned []string
 
 		globber := NewGlobber()
-		for _, pattern := range fixture.patterns {
+		patterns := ExpandBraces(fixture.patterns)
+
+		for _, pattern := range patterns {
 			err := globber.Add(accessors.NewLinuxOSPath(pattern))
 			if err != nil {
 				t.Fatalf("Failed %v", err)
@@ -184,18 +186,14 @@ func TestGlobWithContext(t *testing.T) {
 }
 
 func TestBraceExpansion(t *testing.T) {
-	globber := NewGlobber()
-	result := globber._brace_expansion(
-		accessors.NewLinuxOSPath("/{bin*,usr}/{ls*,top}"))
+	result := ExpandBraces([]string{"/{bin/ls*,usr*/top}"})
 	expected := []string{
-		"/bin*/ls*",
-		"/bin*/top",
-		"/usr/ls*",
-		"/usr/top",
+		"/bin/ls*",
+		"/usr*/top",
 	}
 
-	assert.Equal(t, 4, len(result))
+	assert.Equal(t, 2, len(result))
 	for idx, e := range result {
-		assert.Equal(t, e.String(), expected[idx])
+		assert.Equal(t, e, expected[idx])
 	}
 }
