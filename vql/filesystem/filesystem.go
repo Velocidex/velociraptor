@@ -78,6 +78,10 @@ func (self GlobPlugin) Call(
 			return
 		}
 
+		// Expand glob braces over the entire expression - this allows
+		// the alternatives to cover entire paths.
+		globs := glob.ExpandBraces(arg.Globs)
+
 		root := accessor.ParsePath(arg.Root)
 		options := glob.GlobOptions{
 			DoNotFollowSymlinks: arg.DoNotFollowSymlinks,
@@ -102,7 +106,7 @@ func (self GlobPlugin) Call(
 
 		// If root is not specified we try to find a common
 		// root from the globs.
-		for _, item := range arg.Globs {
+		for _, item := range globs {
 
 			if strings.HasPrefix(item, "{") {
 				scope.Log("glob: Glob item appears to be a pathspec. This is deprecated, please use the root arg instead.")

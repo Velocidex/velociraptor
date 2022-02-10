@@ -59,8 +59,9 @@ func (self ReadKeyValues) Call(
 			return
 		}
 
+		globs := glob.ExpandBraces(arg.Globs)
 		root := accessor.ParsePath(arg.Root)
-		for _, item := range arg.Globs {
+		for _, item := range globs {
 			err = globber.Add(root.Parse(item))
 			if err != nil {
 				scope.Log("glob: %v", err)
