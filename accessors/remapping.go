@@ -85,12 +85,19 @@ func getTypedOSPath(path_type string, path string) *OSPath {
 	switch path_type {
 	case "", "generic":
 		return NewGenericOSPath(path)
+
 	case "windows":
 		return NewWindowsOSPath(path)
+
 	case "registry":
 		return NewWindowsRegistryPath(path)
+
 	case "pathspec":
 		return NewPathspecOSPath(path)
+
+	case "ntfs":
+		return NewWindowsNTFSPath(path)
+
 	default:
 		return NewGenericOSPath(path)
 	}

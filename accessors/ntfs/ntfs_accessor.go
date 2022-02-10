@@ -49,11 +49,10 @@ type AccessorContext struct {
 
 	// The context is reference counted and will only be destroyed
 	// when all users have closed it.
-	refs          int
-	cached_reader *ntfs.PagedReader
-	cached_fd     *os.File
-	is_closed     bool // Keep track if the file needs to be re-opened.
-	ntfs_ctx      *ntfs.NTFSContext
+	refs      int
+	cached_fd *os.File
+	is_closed bool // Keep track if the file needs to be re-opened.
+	ntfs_ctx  *ntfs.NTFSContext
 
 	path_listing *cache.LRUCache
 }
@@ -220,8 +219,15 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (
 	fullpath := self.ParsePath(path)
 	result := []accessors.FileInfo{}
 
-	ntfs_ctx, err := readers.GetNTFSContext(
-		self.scope, self.device, self.accessor)
+	device := self.device
+	accessor := self.accessor
+	if device == "" {
+		pathspec := fullpath.PathSpec()
+		device = pathspec.GetDelegatePath()
+		accessor = pathspec.GetDelegateAccessor()
+	}
+
+	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device, accessor)
 	if err != nil {
 		return nil, err
 	}
@@ -232,8 +238,7 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (
 	}
 
 	// Open the device path from the root.
-	dir, err := Open(self.scope, root, ntfs_ctx,
-		self.device, self.accessor, fullpath)
+	dir, err := Open(self.scope, root, ntfs_ctx, device, accessor, fullpath)
 	if err != nil {
 		return nil, err
 	}
@@ -350,8 +355,15 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekClo
 
 	fullpath := self.ParsePath(path)
 
-	ntfs_ctx, err := readers.GetNTFSContext(
-		self.scope, self.device, self.accessor)
+	device := self.device
+	accessor := self.accessor
+	if device == "" {
+		pathspec := fullpath.PathSpec()
+		device = pathspec.GetDelegatePath()
+		accessor = pathspec.GetDelegateAccessor()
+	}
+
+	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device, accessor)
 	if err != nil {
 		return nil, err
 	}
@@ -369,8 +381,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekClo
 	dirname := fullpath.Dirname()
 	basename := strings.ToLower(fullpath.Basename())
 
-	dir, err := Open(self.scope, root, ntfs_ctx,
-		self.device, self.accessor, dirname)
+	dir, err := Open(self.scope, root, ntfs_ctx, device, accessor, dirname)
 	if err != nil {
 		return nil, err
 	}
@@ -400,9 +411,15 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res accessors.FileInfo, 
 	}()
 
 	fullpath := self.root.Parse(path)
+	device := self.device
+	accessor := self.accessor
+	if device == "" {
+		pathspec := fullpath.PathSpec()
+		device = pathspec.GetDelegatePath()
+		accessor = pathspec.GetDelegateAccessor()
+	}
 
-	ntfs_ctx, err := readers.GetNTFSContext(
-		self.scope, self.device, self.accessor)
+	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device, accessor)
 	if err != nil {
 		return nil, err
 	}
@@ -414,8 +431,7 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res accessors.FileInfo, 
 
 	dirname := fullpath.Dirname()
 	basename := strings.ToLower(fullpath.Basename())
-	dir, err := Open(self.scope, root, ntfs_ctx, self.device,
-		self.accessor, dirname)
+	dir, err := Open(self.scope, root, ntfs_ctx, device, accessor, dirname)
 	if err != nil {
 		return nil, err
 	}
@@ -504,5 +520,8 @@ func Open(scope vfilter.Scope, self *ntfs.MFT_ENTRY,
 }
 
 func init() {
+	accessors.Register("raw_ntfs", &NTFSFileSystemAccessor{},
+		`Access the NTFS filesystem by parsing NTFS structures.`)
+
 	json.RegisterCustomEncoder(&NTFSFileInfo{}, accessors.MarshalGlobFileInfo)
 }

@@ -75,10 +75,13 @@ var (
   deprecated but still supported - it will eventually be dropped.
 */
 type PathSpec struct {
-	DelegateAccessor string    `json:"DelegateAccessor,omitempty"`
-	DelegatePath     string    `json:"DelegatePath,omitempty"`
-	Delegate         *PathSpec `json:"Delegate,omitempty"`
-	Path             string    `json:"Path,omitempty"`
+	DelegateAccessor string `json:"DelegateAccessor,omitempty"`
+	DelegatePath     string `json:"DelegatePath,omitempty"`
+
+	// This standard for DelegatePath above and allows a more
+	// convenient way to pass recursive pathspecs down.
+	Delegate *PathSpec `json:"Delegate,omitempty"`
+	Path     string    `json:"Path,omitempty"`
 
 	// Keep track of if the pathspec came from a URL based for
 	// backwards compatibility.
@@ -86,10 +89,17 @@ type PathSpec struct {
 }
 
 func (self PathSpec) Copy() *PathSpec {
-	return &self
+	result := self
+	if result.Delegate != nil {
+		result.Delegate = result.Delegate.Copy()
+	}
+
+	return &result
 }
 
 func (self PathSpec) GetDelegatePath() string {
+	// We allow the delegate path to be encoded as a nested pathspec
+	// for covenience.
 	if self.Delegate != nil {
 		return self.Delegate.String()
 	}
@@ -97,9 +107,6 @@ func (self PathSpec) GetDelegatePath() string {
 }
 
 func (self PathSpec) GetDelegateAccessor() string {
-	if self.Delegate != nil {
-		return self.Delegate.DelegateAccessor
-	}
 	return self.DelegateAccessor
 }
 
