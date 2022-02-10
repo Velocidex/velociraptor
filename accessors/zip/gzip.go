@@ -246,7 +246,7 @@ func GetGzipFile(serialized_path string, scope vfilter.Scope) (ReaderStat, error
 	// The gzip accessor must use a delegate but if one is not
 	// provided we use the "auto" accessor, to open the underlying
 	// file.
-	if pathspec.DelegateAccessor == "" && pathspec.DelegatePath == "" {
+	if pathspec.DelegateAccessor == "" && pathspec.GetDelegatePath() == "" {
 		pathspec.DelegatePath = pathspec.Path
 		pathspec.DelegateAccessor = "auto"
 	}

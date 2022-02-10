@@ -68,6 +68,9 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 			if err != nil {
 				scope.Log("Applying remapping: %v", err)
 			}
+
+			self.ACLManager = accessors.GetRemappingACLManager(
+				self.Config.Remappings)
 		}
 	}
 

@@ -44,7 +44,7 @@ type SparseReader struct {
 	offset int64
 	size   int64
 
-	// A file handle to the /proc/pid/mem file.
+	// A file handle to the underlying file.
 	handle accessors.ReadSeekCloser
 	ranges []*uploads.Range
 }

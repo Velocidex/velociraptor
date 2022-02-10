@@ -38,7 +38,7 @@ func (self GenericPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 
 func (self GenericPathManipulator) PathJoin(path *OSPath) string {
 	result := self.AsPathSpec(path)
-	if result.DelegateAccessor == "" && result.DelegatePath == "" {
+	if result.GetDelegateAccessor() == "" && result.GetDelegatePath() == "" {
 		return result.Path
 	}
 	return result.String()
@@ -139,7 +139,7 @@ func (self WindowsPathManipulator) PathParse(path string, result *OSPath) {
 
 func (self WindowsPathManipulator) PathJoin(path *OSPath) string {
 	result := self.AsPathSpec(path)
-	if result.DelegateAccessor == "" && result.DelegatePath == "" {
+	if result.GetDelegateAccessor() == "" && result.GetDelegatePath() == "" {
 		return result.Path
 	}
 	return result.String()
@@ -222,7 +222,7 @@ func (self WindowsNTFSManipulator) AsPathSpec(path *OSPath) *PathSpec {
 
 func (self WindowsNTFSManipulator) PathJoin(path *OSPath) string {
 	result := self.AsPathSpec(path)
-	if result.DelegateAccessor == "" && result.DelegatePath == "" {
+	if result.GetDelegateAccessor() == "" && result.GetDelegatePath() == "" {
 		return result.Path
 	}
 	return result.String()
@@ -259,7 +259,7 @@ func (self WindowsRegistryPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 
 func (self WindowsRegistryPathManipulator) PathJoin(path *OSPath) string {
 	result := self.AsPathSpec(path)
-	if result.DelegateAccessor == "" && result.DelegatePath == "" {
+	if result.GetDelegateAccessor() == "" && result.GetDelegatePath() == "" {
 		return result.Path
 	}
 	return result.String()
