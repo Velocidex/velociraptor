@@ -146,13 +146,31 @@ func (self *PathJoinFunction) Call(ctx context.Context,
 		return false
 	}
 
-	os_path, err := parsePath("", arg.Sep, arg.PathType)
-	if err != nil {
-		scope.Log("dirname: %v", err)
-		return false
+	components := []string{}
+
+	var os_path *accessors.OSPath
+
+	// Parse each component as a path. This allows callers to provide
+	// entire paths to path_join instead of a strict component list.
+	for _, c := range arg.Components {
+		os_path, err = parsePath(c, arg.Sep, arg.PathType)
+		if err != nil {
+			scope.Log("dirname: %v", err)
+			return false
+		}
+
+		components = append(components, os_path.Components...)
 	}
 
-	os_path.Components = arg.Components
+	if os_path == nil {
+		os_path, err = parsePath("", arg.Sep, arg.PathType)
+		if err != nil {
+			scope.Log("dirname: %v", err)
+			return false
+		}
+	}
+
+	os_path.Components = components
 	return os_path
 }
 
