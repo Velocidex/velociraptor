@@ -1,29 +1,29 @@
 Queries:
-  - SELECT basename(path="/foo/bar/baz") FROM scope()
-  - SELECT dirname(path="/foo/bar/baz") FROM scope()
+  - SELECT basename(path="/foo/bar/baz", path_type='linux') FROM scope()
+  - SELECT dirname(path="/foo/bar/baz", path_type='linux') FROM scope()
 
   # Test we handle proper escaping
-  - SELECT basename(path='/foo/bar/"http://www.google.com/"') FROM scope()
-  - SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"') FROM scope()
-  - SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar') FROM scope()
-  - SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar') FROM scope()
-  - SELECT basename(path='c:\\foo\\bar\\"F:\\foobar.txt"') FROM scope()
-  - SELECT basename(path='c:\\foo\\bar\\"F:\\foo/bar.txt"') FROM scope()
+  - SELECT basename(path='/foo/bar/"http://www.google.com/"', path_type='generic') FROM scope()
+  - SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"', path_type='windows') FROM scope()
+  - SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path='windows') FROM scope()
+  - SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path='windows') FROM scope()
+  - SELECT basename(path='c:\\foo\\bar\\"F:\\foobar.txt"', path='windows') FROM scope()
+  - SELECT basename(path='c:\\foo\\bar\\"F:\\foo/bar.txt"', path='windows') FROM scope()
 
   # Get second last path component
-  - SELECT path_split(path="/a/b/c/d/e")[-2] FROM scope()
+  - SELECT path_split(path="/a/b/c/d/e", path_type='linux')[-2] FROM scope()
 
   # Make sure we handle overflow properly by wrapping
-  - SELECT path_split(path="/a/b")[-20] FROM scope()
+  - SELECT path_split(path="/a/b", path_type='linux')[-20] FROM scope()
 
   # Make sure pathspec parsing works.
   - LET path_spec = pathspec(DelegateAccessor="file", DelegatePath="C:/Windows")
   - SELECT path_spec, pathspec(parse=path_spec.String),
-           pathspec(parse="C:\\Windows"),
-           pathspec(parse="/usr/lib"),
-           pathspec(parse="file:///usr/lib#*")
+           pathspec(parse="C:\\Windows", path_type='windows'),
+           pathspec(parse="/usr/lib", path_type='linux'),
+           pathspec(parse="file:///usr/lib#*", path_type='generic')
     FROM scope()
 
   # Parsing paths depends on the type of environment
-  - SELECT pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows", type="windows")
+  - SELECT pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows", path_type="windows")
     FROM scope()

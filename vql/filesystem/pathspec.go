@@ -17,7 +17,7 @@ type PathSpecArgs struct {
 	DelegatePath     string      `vfilter:"optional,field=DelegatePath,doc=A delegate to pass to the accessor."`
 	Path             vfilter.Any `vfilter:"optional,field=Path,doc=A path to open."`
 	Parse            string      `vfilter:"optional,field=parse,doc=Alternatively parse the pathspec from this string."`
-	Type             string      `vfilter:"optional,field=type,doc=Type of path this is (windows,linux,registry,ntfs)."`
+	Type             string      `vfilter:"optional,field=path_type,doc=Type of path this is (windows,linux,registry,ntfs)."`
 }
 
 type PathSpecFunction struct{}
@@ -28,7 +28,7 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 	arg := &PathSpecArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("pathspec: %s", err.Error())
+		scope.Log("pathspec: %v", err)
 		return false
 	}
 

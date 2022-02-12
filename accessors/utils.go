@@ -8,6 +8,10 @@ func ParsePath(path, path_type string) (res *OSPath, err error) {
 		res, err = NewLinuxOSPath(path)
 	case "windows":
 		res, err = NewWindowsOSPath(path)
+	case "registry":
+		res, err = NewWindowsRegistryPath(path)
+	case "ntfs":
+		res, err = NewWindowsNTFSPath(path)
 	case "", "generic":
 		res, err = NewGenericOSPath(path)
 	default:
