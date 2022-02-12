@@ -5,8 +5,8 @@ Queries:
   # Test we handle proper escaping
   - SELECT basename(path='/foo/bar/"http://www.google.com/"', path_type='generic') FROM scope()
   - SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"', path_type='windows') FROM scope()
-  - SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path='windows') FROM scope()
-  - SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path='windows') FROM scope()
+  - SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path_type='windows') FROM scope()
+  - SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path_type='windows') FROM scope()
   - SELECT basename(path='c:\\foo\\bar\\"F:\\foobar.txt"', path='windows') FROM scope()
   - SELECT basename(path='c:\\foo\\bar\\"F:\\foo/bar.txt"', path='windows') FROM scope()
 

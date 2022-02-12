@@ -14,13 +14,13 @@ SELECT basename(path="/foo/bar/baz", path_type='linux') FROM scope()[
  {
   "basename(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"', path_type='windows')": "http://www.google.com/"
  }
-]SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path='windows') FROM scope()[
+]SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path_type='windows') FROM scope()[
  {
-  "basename(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"/Foobar', path='windows')": "windows"
+  "basename(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"/Foobar', path_type='windows')": "Foobar"
  }
-]SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path='windows') FROM scope()[
+]SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path_type='windows') FROM scope()[
  {
-  "dirname(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"/Foobar', path='windows')": "/"
+  "dirname(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"/Foobar', path_type='windows')": "c:\\foo\\bar\\\"http://www.google.com/\""
  }
 ]SELECT basename(path='c:\\foo\\bar\\"F:\\foobar.txt"', path='windows') FROM scope()[
  {

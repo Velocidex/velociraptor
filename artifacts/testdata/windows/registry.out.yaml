@@ -97,6 +97,10 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
 ]SELECT User, ProgramName FROM Artifact.Windows.Registry.Sysinternals.Eulacheck()[
  {
   "User": "runneradmin",
+  "ProgramName": "AutoRuns"
+ },
+ {
+  "User": "runneradmin",
   "ProgramName": "PsExec"
  }
 ]SELECT FullPath FROM glob(globs='HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\services\\PortProxy\\**', accessor='reg') WHERE Type ORDER BY FullPath[
