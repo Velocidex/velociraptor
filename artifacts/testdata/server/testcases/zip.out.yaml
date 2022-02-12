@@ -9,17 +9,6 @@ LET zip_files = SELECT FullPath, Size FROM glob( globs=srcDir+"/artifacts/testda
   "Size": 1549,
   "Mtime": "2019-02-12T11:47:10Z"
  }
-]SELECT Data, Offset, basename(path=FullPath) as Name FROM foreach(row=hits, query={ SELECT *, FullPath from read_file(filenames=FullPath, accessor='zip')})[
- {
-  "Data": "Just some text:\n\n                    GNU AFFERO GENERAL PUBLIC LICENSE\n                       Version 3, 19 November 2007\n\n Copyright (C) 2007 Free Software Foundation, Inc. \u003chttps://fsf.org/\u003e\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n                            Preamble\n\n  The GNU Affero General Public License is a free, copyleft license for\nsoftware and other kinds of works, specifically designed to ensure\ncooperation with the community in the case of network server software.\n  \n  The licenses for most software and other practical works are designed\nto take away your freedom to share and change the works.  By contrast,\nour General Public Licenses are intended to guarantee your freedom to\nshare and change all versions of a program--to make sure it remains free\nsoftware for all its users.\n  \n  When we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthem if you wish), that you receive source code or can get it if you\nwant it, that you can change the software or use pieces of it in new\nfree programs, and that you know you can do these things.\n\n  Developers that use our General Public Licenses protect your rights\nwith two steps: (1) assert copyright on the software, and (2) offer\nyou this License which gives you legal permission to copy, distribute\nand/or modify the software.\n  \n\n\nThis is my secret.\n",
-  "Offset": 0,
-  "Name": "secret.txt"
- }
-]SELECT read_file( filename=srcDir+'/artifacts/testdata/files/hi.gz', accessor='gzip') AS Hi, read_file( filename=srcDir+'/artifacts/testdata/files/goodbye.bz2', accessor='bzip2') AS Bye FROM scope()[
- {
-  "Hi": "hello world\n",
-  "Bye": "goodbye world\n"
- }
 ]LET hits = SELECT * from foreach(row=zip_files, query= { select FullPath, Mtime, Size from glob( globs=pathspec(DelegateAccessor='file', DelegatePath=FullPath, Path='/**/*.txt'), accessor='zip') } )[]SELECT pathspec(parse=FullPath).Path as Name, Size, Mtime from hits[
  {
   "Name": "/test/secret.txt",
@@ -31,6 +20,11 @@ LET zip_files = SELECT FullPath, Size FROM glob( globs=srcDir+"/artifacts/testda
   "Data": "Just some text:\n\n                    GNU AFFERO GENERAL PUBLIC LICENSE\n                       Version 3, 19 November 2007\n\n Copyright (C) 2007 Free Software Foundation, Inc. \u003chttps://fsf.org/\u003e\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n                            Preamble\n\n  The GNU Affero General Public License is a free, copyleft license for\nsoftware and other kinds of works, specifically designed to ensure\ncooperation with the community in the case of network server software.\n  \n  The licenses for most software and other practical works are designed\nto take away your freedom to share and change the works.  By contrast,\nour General Public Licenses are intended to guarantee your freedom to\nshare and change all versions of a program--to make sure it remains free\nsoftware for all its users.\n  \n  When we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthem if you wish), that you receive source code or can get it if you\nwant it, that you can change the software or use pieces of it in new\nfree programs, and that you know you can do these things.\n\n  Developers that use our General Public Licenses protect your rights\nwith two steps: (1) assert copyright on the software, and (2) offer\nyou this License which gives you legal permission to copy, distribute\nand/or modify the software.\n  \n\n\nThis is my secret.\n",
   "Offset": 0,
   "Name": "secret.txt"
+ }
+]SELECT read_file( filename=srcDir+'/artifacts/testdata/files/hi.gz', accessor='gzip') AS Hi, read_file( filename=srcDir+'/artifacts/testdata/files/goodbye.bz2', accessor='bzip2') AS Bye FROM scope()[
+ {
+  "Hi": "hello world\n",
+  "Bye": "goodbye world\n"
  }
 ]SELECT read_file( filename=srcDir+'/artifacts/testdata/files/hi.gz', accessor='gzip') AS Hi, read_file( filename=srcDir+'/artifacts/testdata/files/goodbye.bz2', accessor='bzip2') AS Bye FROM scope()[
  {
