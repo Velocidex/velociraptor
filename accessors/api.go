@@ -1,6 +1,7 @@
 package accessors
 
 import (
+	"encoding/json"
 	"io"
 	"os"
 	"time"
@@ -133,6 +134,10 @@ func (self *OSPath) Clear() *OSPath {
 	return &OSPath{
 		Manipulator: self.Manipulator,
 	}
+}
+
+func (self *OSPath) MarshalJSON() ([]byte, error) {
+	return json.Marshal(self.String())
 }
 
 // A FileInfo represents information about a file. It is similar to

@@ -23,15 +23,16 @@ import (
 	"runtime"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type DirnameArgs struct {
-	Path string `vfilter:"required,field=path,doc=Extract directory name of path"`
-	Sep  string `vfilter:"optional,field=sep,doc=Separator to use (default /)"`
+	Path     string `vfilter:"required,field=path,doc=Extract directory name of path"`
+	Sep      string `vfilter:"optional,field=sep,doc=Separator to use (default /)"`
+	PathType string `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windpws)"`
 }
 
 type DirnameFunction struct{}
@@ -46,17 +47,13 @@ func (self *DirnameFunction) Call(ctx context.Context,
 		return false
 	}
 
-	sep := arg.Sep
-	if sep == "" {
-		sep = "/"
+	os_path, err := parsePath(arg.Path, arg.Sep, arg.PathType)
+	if err != nil {
+		scope.Log("dirname: %v", err)
+		return false
 	}
 
-	components := utils.SplitComponents(arg.Path)
-	if len(components) > 0 {
-		result := utils.JoinComponents(components[:len(components)-1], sep)
-		return result
-	}
-	return vfilter.Null{}
+	return os_path.Dirname()
 }
 
 func (self DirnameFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -75,16 +72,17 @@ func (self *BasenameFunction) Call(ctx context.Context,
 	arg := &DirnameArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("basename: %s", err.Error())
+		scope.Log("basename: %v", err)
 		return false
 	}
 
-	components := utils.SplitComponents(arg.Path)
-	if len(components) > 0 {
-		return components[len(components)-1]
+	os_path, err := parsePath(arg.Path, arg.Sep, arg.PathType)
+	if err != nil {
+		scope.Log("basename: %v", err)
+		return false
 	}
 
-	return vfilter.Null{}
+	return os_path.Basename()
 }
 
 func (self BasenameFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -133,6 +131,7 @@ func (self RelnameFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 type PathJoinArgs struct {
 	Components []string `vfilter:"required,field=components,doc=Path components to join."`
 	Sep        string   `vfilter:"optional,field=sep,doc=Separator to use (default /)"`
+	PathType   string   `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windpws)"`
 }
 
 type PathJoinFunction struct{}
@@ -147,22 +146,14 @@ func (self *PathJoinFunction) Call(ctx context.Context,
 		return false
 	}
 
-	sep := arg.Sep
-	if sep == "" {
-		if runtime.GOOS == "windows" {
-			sep = "\\"
-		} else {
-			sep = "/"
-		}
+	os_path, err := parsePath("", arg.Sep, arg.PathType)
+	if err != nil {
+		scope.Log("dirname: %v", err)
+		return false
 	}
 
-	var components []string
-	for _, x := range arg.Components {
-		components = append(components, utils.SplitComponents(x)...)
-	}
-
-	result := utils.JoinComponents(components, sep)
-	return result
+	os_path.Components = arg.Components
+	return os_path
 }
 
 func (self PathJoinFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -174,7 +165,8 @@ func (self PathJoinFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 }
 
 type PathSplitArgs struct {
-	Path string `vfilter:"required,field=path,doc=Path to split into components."`
+	Path     string `vfilter:"required,field=path,doc=Path to split into components."`
+	PathType string `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windpws)"`
 }
 
 type PathSplitFunction struct{}
@@ -189,7 +181,13 @@ func (self *PathSplitFunction) Call(ctx context.Context,
 		return []string{}
 	}
 
-	return utils.SplitComponents(arg.Path)
+	os_path, err := parsePath(arg.Path, "", arg.PathType)
+	if err != nil {
+		scope.Log("path_split: %v", err)
+		return false
+	}
+
+	return os_path.Components
 }
 
 func (self PathSplitFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -198,6 +196,27 @@ func (self PathSplitFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Doc:     "Split a path into components. Note this is more complex than just split() because it takes into account path escaping.",
 		ArgType: type_map.AddType(scope, &PathSplitArgs{}),
 	}
+}
+
+func parsePath(path, sep, path_type string) (*accessors.OSPath, error) {
+	if path_type == "" {
+		switch sep {
+		case "":
+			if runtime.GOOS == "windows" {
+				path_type = "windows"
+			} else {
+				path_type = "generic"
+			}
+
+		case "\\":
+			path_type = "windows"
+
+		default:
+			path_type = "generic"
+		}
+	}
+
+	return accessors.ParsePath(path, path_type)
 }
 
 func init() {
