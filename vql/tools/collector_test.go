@@ -131,7 +131,7 @@ func (self *TestSuite) TestSimpleCollection() {
 
 	scope.SetLogger(logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent))
 
-	repository, err := getRepository(self.ConfigObj, nil)
+	repository, err := getRepository(scope, self.ConfigObj, nil)
 	assert.NoError(self.T(), err)
 
 	request, err := getArtifactCollectorArgs(self.ConfigObj,

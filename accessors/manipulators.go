@@ -1,6 +1,7 @@
 package accessors
 
 import (
+	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -14,11 +15,17 @@ import (
 // 1. Path separators are / but will be able to use \\ to parse.
 // 2. Each component is optionally quoted if it contains special
 //    characters (like path separators).
-type GenericPathManipulator struct{}
+type GenericPathManipulator struct {
+	Sep string
+}
 
-func (self GenericPathManipulator) PathParse(path string, result *OSPath) {
-	maybeParsePathSpec(path, result)
+func (self GenericPathManipulator) PathParse(path string, result *OSPath) error {
+	err := maybeParsePathSpec(path, result)
+	if err != nil {
+		return err
+	}
 	result.Components = utils.SplitComponents(result.pathspec.Path)
+	return nil
 }
 
 func (self GenericPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
@@ -32,7 +39,11 @@ func (self GenericPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	// although it can contain path separators it must not be quoted
 	components := path.Components
 
-	result.Path = utils.JoinComponents(components, "/")
+	sep := self.Sep
+	if sep == "" {
+		sep = "/"
+	}
+	result.Path = utils.JoinComponents(components, sep)
 	return &result
 }
 
@@ -44,21 +55,46 @@ func (self GenericPathManipulator) PathJoin(path *OSPath) string {
 	return result.String()
 }
 
-func NewGenericOSPath(path string) *OSPath {
+// Like NewGenericOSPath but panics if an error
+func MustNewGenericOSPath(path string) *OSPath {
+	res, err := NewGenericOSPath(path)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func MustNewGenericOSPathWithBackslashSeparator(path string) *OSPath {
+	manipulator := GenericPathManipulator{Sep: "\\"}
+	result := &OSPath{
+		Manipulator: manipulator,
+	}
+
+	err := manipulator.PathParse(path, result)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+func NewGenericOSPath(path string) (*OSPath, error) {
 	manipulator := GenericPathManipulator{}
 	result := &OSPath{
 		Manipulator: manipulator,
 	}
-	manipulator.PathParse(path, result)
 
-	return result
+	err := manipulator.PathParse(path, result)
+	return result, err
 }
 
 // Responsible for serialization of linux paths
 type LinuxPathManipulator struct{ GenericPathManipulator }
 
-func (self LinuxPathManipulator) PathParse(path string, result *OSPath) {
-	maybeParsePathSpec(path, result)
+func (self LinuxPathManipulator) PathParse(path string, result *OSPath) error {
+	err := maybeParsePathSpec(path, result)
+	if err != nil {
+		return err
+	}
 	path = result.pathspec.Path
 
 	components := strings.Split(path, "/")
@@ -69,6 +105,7 @@ func (self LinuxPathManipulator) PathParse(path string, result *OSPath) {
 		}
 		result.Components = append(result.Components, c)
 	}
+	return nil
 }
 
 func (self LinuxPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
@@ -81,16 +118,23 @@ func (self LinuxPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	return result
 }
 
-func NewLinuxOSPath(path string) *OSPath {
+func MustNewLinuxOSPath(path string) *OSPath {
+	res, err := NewLinuxOSPath(path)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func NewLinuxOSPath(path string) (*OSPath, error) {
 	manipulator := LinuxPathManipulator{}
 	result := &OSPath{
 		pathspec:    &PathSpec{},
 		Manipulator: manipulator,
 	}
 
-	manipulator.PathParse(path, result)
-
-	return result
+	err := manipulator.PathParse(path, result)
+	return result, err
 }
 
 var (
@@ -118,23 +162,27 @@ var (
 
 type WindowsPathManipulator struct{ GenericPathManipulator }
 
-func (self WindowsPathManipulator) PathParse(path string, result *OSPath) {
-	maybeParsePathSpec(path, result)
+func (self WindowsPathManipulator) PathParse(path string, result *OSPath) error {
+	err := maybeParsePathSpec(path, result)
+	if err != nil {
+		return err
+	}
 	path = result.pathspec.Path
 
 	m := deviceDriveRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
 		result.Components = append([]string{m[1]}, utils.SplitComponents(m[2])...)
-		return
+		return nil
 	}
 
 	m = deviceDirectoryRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
 		result.Components = append([]string{m[1]}, utils.SplitComponents(m[2])...)
-		return
+		return nil
 	}
 
 	result.Components = utils.SplitComponents(path)
+	return nil
 }
 
 func (self WindowsPathManipulator) PathJoin(path *OSPath) string {
@@ -163,29 +211,41 @@ func (self WindowsPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	return result
 }
 
-func NewWindowsOSPath(path string) *OSPath {
+func MustNewWindowsOSPath(path string) *OSPath {
+	res, err := NewWindowsOSPath(path)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func NewWindowsOSPath(path string) (*OSPath, error) {
 	manipulator := WindowsPathManipulator{}
 	result := &OSPath{
 		Manipulator: manipulator,
 	}
-	manipulator.PathParse(path, result)
-
-	return result
+	err := manipulator.PathParse(path, result)
+	return result, err
 }
 
 // Handle device paths especially.
 type WindowsNTFSManipulator struct{ WindowsPathManipulator }
 
-func (self WindowsNTFSManipulator) PathParse(path string, result *OSPath) {
-	self.WindowsPathManipulator.PathParse(path, result)
+func (self WindowsNTFSManipulator) PathParse(path string, result *OSPath) error {
+	err := self.WindowsPathManipulator.PathParse(path, result)
+	if err != nil {
+		return err
+	}
 
 	// Drive names are stored as devices in the ntfs accessors.  So if
 	// a user specifies open C:\Windows, we automatically open the
 	// \\.\C: device
 	if len(result.Components) > 0 &&
 		driveRegex.MatchString(result.Components[0]) {
-		result.Components[0] = "\\\\.\\" + result.Components[0]
+		// Drive names should be uppercased
+		result.Components[0] = "\\\\.\\" + strings.ToUpper(result.Components[0])
 	}
+	return nil
 }
 
 func ConvertToDevice(component string) string {
@@ -228,14 +288,21 @@ func (self WindowsNTFSManipulator) PathJoin(path *OSPath) string {
 	return result.String()
 }
 
-func NewWindowsNTFSPath(path string) *OSPath {
+func MustNewWindowsNTFSPath(path string) *OSPath {
+	res, err := NewWindowsNTFSPath(path)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func NewWindowsNTFSPath(path string) (*OSPath, error) {
 	manipulator := WindowsNTFSManipulator{}
 	result := &OSPath{
 		Manipulator: manipulator,
 	}
-	manipulator.PathParse(path, result)
-
-	return result
+	err := manipulator.PathParse(path, result)
+	return result, err
 }
 
 // Windows registry paths begin with a hive name. There are a number
@@ -265,8 +332,12 @@ func (self WindowsRegistryPathManipulator) PathJoin(path *OSPath) string {
 	return result.String()
 }
 
-func (self WindowsRegistryPathManipulator) PathParse(path string, result *OSPath) {
-	maybeParsePathSpec(path, result)
+func (self WindowsRegistryPathManipulator) PathParse(
+	path string, result *OSPath) error {
+	err := maybeParsePathSpec(path, result)
+	if err != nil {
+		return err
+	}
 	result.Components = utils.SplitComponents(result.pathspec.Path)
 
 	if len(result.Components) > 0 {
@@ -282,16 +353,24 @@ func (self WindowsRegistryPathManipulator) PathParse(path string, result *OSPath
 		}
 		result.Components[0] = hive_name
 	}
+	return nil
 }
 
-func NewWindowsRegistryPath(path string) *OSPath {
+func MustNewWindowsRegistryPath(path string) *OSPath {
+	res, err := NewWindowsRegistryPath(path)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func NewWindowsRegistryPath(path string) (*OSPath, error) {
 	manipulator := WindowsRegistryPathManipulator{}
 	result := &OSPath{
 		Manipulator: manipulator,
 	}
-	manipulator.PathParse(path, result)
-
-	return result
+	err := manipulator.PathParse(path, result)
+	return result, err
 }
 
 // Raw pathspec paths expect the path to be a json encoded PathSpec
@@ -301,15 +380,14 @@ func NewWindowsRegistryPath(path string) *OSPath {
 // hierarchical data at all.
 type PathSpecPathManipulator struct{ GenericPathManipulator }
 
-func (self PathSpecPathManipulator) PathParse(path string, result *OSPath) {
+func (self PathSpecPathManipulator) PathParse(path string, result *OSPath) error {
 	pathspec, err := PathSpecFromString(path)
-	if err == nil {
-		result.pathspec = pathspec
-	} else {
-		result.pathspec = &PathSpec{Path: path}
+	if err != nil {
+		return err
 	}
-
+	result.pathspec = pathspec
 	result.Components = []string{pathspec.Path}
+	return nil
 }
 
 func (self PathSpecPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
@@ -329,24 +407,33 @@ func (self PathSpecPathManipulator) PathJoin(path *OSPath) string {
 	return ""
 }
 
-func NewPathspecOSPath(path string) *OSPath {
+func MustNewPathspecOSPath(path string) *OSPath {
+	res, err := NewPathspecOSPath(path)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func NewPathspecOSPath(path string) (*OSPath, error) {
 	manipulator := PathSpecPathManipulator{}
 	result := &OSPath{
 		Manipulator: manipulator,
 	}
 
-	manipulator.PathParse(path, result)
-	return result
+	err := manipulator.PathParse(path, result)
+	return result, err
 }
 
-func maybeParsePathSpec(path string, result *OSPath) {
+func maybeParsePathSpec(path string, result *OSPath) error {
 	if strings.HasPrefix(path, "{") {
 		pathspec := &PathSpec{}
 		err := json.Unmarshal([]byte(path), pathspec)
-		if err == nil {
-			result.pathspec = pathspec
-			return
+		if err != nil {
+			return fmt.Errorf("While decoding pathspec: %w", err)
 		}
+		result.pathspec = pathspec
+		return nil
 	}
 
 	// This is a hack to support old URL based pathspecs.
@@ -362,11 +449,12 @@ func maybeParsePathSpec(path string, result *OSPath) {
 				Path:             parsed_url.Fragment,
 				url_based:        true,
 			}
-			return
+			return nil
 		}
 	}
 
 	result.pathspec = &PathSpec{
 		Path: path,
 	}
+	return nil
 }

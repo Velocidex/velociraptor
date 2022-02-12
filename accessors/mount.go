@@ -144,7 +144,7 @@ type MountFileSystemAccessor struct {
 	root *node
 }
 
-func (self *MountFileSystemAccessor) ParsePath(path string) *OSPath {
+func (self *MountFileSystemAccessor) ParsePath(path string) (*OSPath, error) {
 	return self.root.path.Parse(path)
 }
 
@@ -162,14 +162,16 @@ func (self *MountFileSystemAccessor) ParsePath(path string) *OSPath {
 //    -> i.e. "bin/ls"
 // 3. Now, we can access the file as node.prefix + residual -> /mnt/data/bin/ls
 func (self *MountFileSystemAccessor) getDelegateNode(path string) (
-	*node, []string) {
+	*node, []string, error) {
 	node := self.root
 
 	// Parse the path into an OSPath
-	os_path := self.ParsePath(path)
+	os_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	for idx, c := range os_path.Components {
-
 		if c != "" {
 			next_node := node.GetChild(c)
 
@@ -177,14 +179,14 @@ func (self *MountFileSystemAccessor) getDelegateNode(path string) (
 			// mounted filesystem.
 			if next_node == nil {
 				residual := os_path.Components[idx:]
-				return node, residual
+				return node, residual, nil
 			}
 
 			// Search deeper for a better mount point.
 			node = next_node
 		}
 	}
-	return node, nil
+	return node, nil, nil
 }
 
 func (self *MountFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, error) {
@@ -196,7 +198,10 @@ func (self *MountFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccesso
 
 func (self *MountFileSystemAccessor) ReadDir(path string) (
 	[]FileInfo, error) {
-	delegate_node, delegate_path := self.getDelegatePath(path)
+	delegate_node, delegate_path, err := self.getDelegatePath(path)
+	if err != nil {
+		return nil, err
+	}
 	children, err := delegate_node.accessor.ReadDir(delegate_path)
 	if err != nil {
 		return nil, err
@@ -213,18 +218,28 @@ func (self *MountFileSystemAccessor) ReadDir(path string) (
 	return res, nil
 }
 
-func (self *MountFileSystemAccessor) getDelegatePath(path string) (*node, string) {
-	delegate_node, residual := self.getDelegateNode(path)
+func (self *MountFileSystemAccessor) getDelegatePath(path string) (
+	*node, string, error) {
+	delegate_node, residual, err := self.getDelegateNode(path)
+	if err != nil {
+		return nil, "", err
+	}
 	deep_delegate_path := delegate_node.prefix.Append(residual...)
-	return delegate_node, deep_delegate_path.String()
+	return delegate_node, deep_delegate_path.String(), nil
 }
 func (self *MountFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
-	delegate_node, delegate_path := self.getDelegatePath(path)
+	delegate_node, delegate_path, err := self.getDelegatePath(path)
+	if err != nil {
+		return nil, err
+	}
 	return delegate_node.accessor.Open(delegate_path)
 }
 
 func (self MountFileSystemAccessor) Lstat(path string) (FileInfo, error) {
-	delegate_node, delegate_path := self.getDelegatePath(path)
+	delegate_node, delegate_path, err := self.getDelegatePath(path)
+	if err != nil {
+		return nil, err
+	}
 	return delegate_node.accessor.Lstat(delegate_path)
 }
 

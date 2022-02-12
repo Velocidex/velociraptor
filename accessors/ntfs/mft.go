@@ -30,7 +30,7 @@ import (
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
-	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
+	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -38,7 +38,8 @@ type MFTFileSystemAccessor struct {
 	scope vfilter.Scope
 }
 
-func (self MFTFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+func (self MFTFileSystemAccessor) ParsePath(path string) (
+	*accessors.OSPath, error) {
 	return accessors.NewWindowsNTFSPath(path)
 }
 
@@ -56,8 +57,8 @@ func (self MFTFileSystemAccessor) parseMFTPath(path string) (
 	delegate_device, delegate_accessor, subpath string,
 	full_path *accessors.OSPath, err error) {
 
-	full_path = self.ParsePath(path)
-	if len(full_path.Components) == 0 {
+	full_path, err = self.ParsePath(path)
+	if err != nil || len(full_path.Components) == 0 {
 		return "", "", "", nil, os.ErrNotExist
 	}
 

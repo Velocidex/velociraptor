@@ -35,13 +35,19 @@ sources:
 
       LET ShellValues = SELECT * FROM foreach(row=AllHives,
         query={
-           SELECT url(parse=FullPath) AS URL, Data, ModTime
-           FROM glob(globs=url(path=HivePath, fragment=KeyGlob).String, accessor="raw_reg")
-           WHERE Data.type = "REG_BINARY" AND URL.Fragment =~ "[0-9]$"
+           SELECT pathspec(parse=FullPath, path_type='registry') AS PathSpec,
+                  Data, ModTime
+           FROM glob(
+              root=pathspec(DelegatePath=HivePath),
+              globs=KeyGlob,
+              accessor="raw_reg")
+           WHERE Data.type = "REG_BINARY" AND PathSpec.Path =~ "[0-9]$"
         })
 
-      LET ParsedValues = SELECT URL.Path AS Hive, URL.Fragment AS KeyPath,
-          parse_binary(profile=Profile, filename=Data.value, accessor="data", struct="ItemIDList") as _Parsed,
+      LET ParsedValues = SELECT PathSpec.DelegatePath AS Hive,
+          PathSpec.Path AS KeyPath,
+          parse_binary(profile=Profile, filename=Data.value,
+                       accessor="data", struct="ItemIDList") as _Parsed,
           base64encode(string=Data.value) AS _RawData, ModTime
       FROM ShellValues
 
@@ -52,7 +58,8 @@ sources:
 
       // Recursive function to join path components together. Limit recursion depth just in case.
       LET FormPath(MRUPath, MRUHive, Description, Depth) = SELECT * FROM if(
-        condition=Depth < 20, then={SELECT * FROM chain(
+        condition=Depth < 20,
+        then={SELECT * FROM chain(
           b={
             SELECT MRUPath, MRUHive, Description,
               -- Signify unknown component as ?
@@ -63,7 +70,8 @@ sources:
             SELECT * FROM foreach(row={
               SELECT KeyPath, MRUHive, Description
               FROM AllResults
-              WHERE Hive = MRUHive AND KeyPath = dirname(path=MRUPath, sep="\\")
+              WHERE Hive = MRUHive AND
+                  KeyPath = dirname(path=MRUPath, path_type='registry').Path
               LIMIT 1
             }, query={
               SELECT * FROM FormPath(MRUPath=KeyPath, MRUHive=MRUHive,

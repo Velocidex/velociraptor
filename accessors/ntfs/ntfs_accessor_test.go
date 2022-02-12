@@ -29,10 +29,10 @@ func TestNTFSFilesystemAccessor(t *testing.T) {
 	abs_path, _ := filepath.Abs("../../artifacts/testdata/files/test.ntfs.dd")
 	fs_accessor := NewNTFSFileSystemAccessor(scope, abs_path, "file")
 
-	root_path := accessors.NewWindowsOSPath("")
+	root_path := accessors.MustNewWindowsOSPath("")
 
 	globber := glob.NewGlobber()
-	globber.Add(accessors.NewWindowsOSPath("/*"))
+	globber.Add(accessors.MustNewWindowsOSPath("/*"))
 
 	hits := []string{}
 	for hit := range globber.ExpandWithContext(
@@ -59,12 +59,12 @@ func TestNTFSFilesystemAccessorRemapping(t *testing.T) {
 	// Create the two mount point directories in the VirtualFilesystemAccessor
 	root_fs_accessor := accessors.NewVirtualFilesystemAccessor()
 	root_fs_accessor.SetVirtualFileInfo(&accessors.VirtualFileInfo{
-		Path:   accessors.NewWindowsOSPath("\\\\.\\C:"),
+		Path:   accessors.MustNewWindowsOSPath("\\\\.\\C:"),
 		IsDir_: true,
 	})
 
 	root_fs_accessor.SetVirtualFileInfo(&accessors.VirtualFileInfo{
-		Path:   accessors.NewWindowsOSPath("\\\\.\\D:"),
+		Path:   accessors.MustNewWindowsOSPath("\\\\.\\D:"),
 		IsDir_: true,
 	})
 
@@ -72,7 +72,7 @@ func TestNTFSFilesystemAccessorRemapping(t *testing.T) {
 	// VirtualFilesystemAccessor. We will use Windows path
 	// convensions so it looks like a real windows system.
 	mount_fs := accessors.NewMountFileSystemAccessor(
-		accessors.NewWindowsOSPath(""), root_fs_accessor)
+		accessors.MustNewWindowsOSPath(""), root_fs_accessor)
 
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
 		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
@@ -84,25 +84,24 @@ func TestNTFSFilesystemAccessorRemapping(t *testing.T) {
 
 	// Mount the ntfs accessors on the C and D devices
 	mount_fs.AddMapping(
-		accessors.NewWindowsOSPath(""), // Mount at the root of the filesystem
-		accessors.NewWindowsOSPath("\\\\.\\C:"),
+		accessors.MustNewWindowsOSPath(""), // Mount at the root of the filesystem
+		accessors.MustNewWindowsOSPath("\\\\.\\C:"),
 		c_fs_accessor)
 
 	mount_fs.AddMapping(
-		accessors.NewWindowsOSPath(""),
-		accessors.NewWindowsOSPath("\\\\.\\D:"),
+		accessors.MustNewWindowsOSPath(""),
+		accessors.MustNewWindowsOSPath("\\\\.\\D:"),
 		d_fs_accessor)
 
 	// Start globbing from the top level.
-	root_path := accessors.NewWindowsOSPath("")
-
 	// Find all $MFT files
 	globber := glob.NewGlobber()
-	globber.Add(accessors.NewWindowsOSPath("/*/$MFT"))
+	globber.Add(accessors.MustNewWindowsOSPath("/*/$MFT"))
 
 	hits := []string{}
 	for hit := range globber.ExpandWithContext(
-		context.Background(), config_obj, root_path, mount_fs) {
+		context.Background(), config_obj, accessors.MustNewWindowsOSPath(""),
+		mount_fs) {
 		hits = append(hits, hit.FullPath())
 	}
 

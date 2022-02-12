@@ -1,13 +1,13 @@
 [
- "/SAM/Domains/Account/Aliases",
- "/SAM/Domains/Account/F",
- "/SAM/Domains/Account/Groups",
- "/SAM/Domains/Account/Users",
- "/SAM/Domains/Account/V",
- "/SAM/Domains/Builtin/Aliases",
- "/SAM/Domains/Builtin/F",
- "/SAM/Domains/Builtin/Groups",
- "/SAM/Domains/Builtin/PerComponentWellKnownAccountAppliedUpdates",
- "/SAM/Domains/Builtin/Users",
- "/SAM/Domains/Builtin/V"
+ "\\SAM\\Domains\\Account\\Aliases",
+ "\\SAM\\Domains\\Account\\F",
+ "\\SAM\\Domains\\Account\\Groups",
+ "\\SAM\\Domains\\Account\\Users",
+ "\\SAM\\Domains\\Account\\V",
+ "\\SAM\\Domains\\Builtin\\Aliases",
+ "\\SAM\\Domains\\Builtin\\F",
+ "\\SAM\\Domains\\Builtin\\Groups",
+ "\\SAM\\Domains\\Builtin\\PerComponentWellKnownAccountAppliedUpdates",
+ "\\SAM\\Domains\\Builtin\\Users",
+ "\\SAM\\Domains\\Builtin\\V"
 ]

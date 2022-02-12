@@ -66,7 +66,10 @@ func (self *OffsetReader) LStat() (accessors.FileInfo, error) {
 
 func GetOffsetFile(serialized_path string, scope vfilter.Scope) (
 	zip.ReaderStat, error) {
-	full_path := accessors.NewPathspecOSPath(serialized_path)
+	full_path, err := accessors.NewPathspecOSPath(serialized_path)
+	if err != nil {
+		return nil, err
+	}
 	pathspec := full_path.PathSpec()
 
 	// The gzip accessor must use a delegate but if one is not

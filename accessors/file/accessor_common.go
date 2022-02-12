@@ -146,7 +146,7 @@ func (self *OSFileInfo) GetLink() (*accessors.OSPath, error) {
 		return nil, err
 	}
 
-	return self._full_path.Parse(ret), nil
+	return self._full_path.Parse(ret)
 }
 
 func (self *OSFileInfo) _Sys() *syscall.Stat_t {
@@ -162,7 +162,7 @@ type OSFileSystemAccessor struct {
 	root *accessors.OSPath
 }
 
-func (self OSFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+func (self OSFileSystemAccessor) ParsePath(path string) (*accessors.OSPath, error) {
 	return self.root.Parse(path)
 }
 
@@ -185,7 +185,10 @@ func (self OSFileSystemAccessor) New(scope vfilter.Scope) (
 }
 
 func (self OSFileSystemAccessor) Lstat(filename string) (accessors.FileInfo, error) {
-	full_path := self.ParsePath(filename)
+	full_path, err := self.ParsePath(filename)
+	if err != nil {
+		return nil, err
+	}
 	filename = full_path.PathSpec().Path
 
 	lstat, err := os.Lstat(filename)
@@ -201,7 +204,10 @@ func (self OSFileSystemAccessor) Lstat(filename string) (accessors.FileInfo, err
 }
 
 func (self OSFileSystemAccessor) ReadDir(dir string) ([]accessors.FileInfo, error) {
-	full_path := self.root.Parse(dir)
+	full_path, err := self.root.Parse(dir)
+	if err != nil {
+		return nil, err
+	}
 	dir = full_path.PathSpec().Path
 
 	lstat, err := os.Lstat(dir)
@@ -262,7 +268,10 @@ func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, er
 	var err error
 
 	// Clean the path
-	full_path := self.ParsePath(path)
+	full_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
 	path = full_path.PathSpec().Path
 
 	// Eval any symlinks directly
@@ -296,13 +305,14 @@ func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, er
 }
 
 func init() {
+	root_path, _ := accessors.NewLinuxOSPath("")
 	accessors.Register("file", &OSFileSystemAccessor{
-		root: accessors.NewLinuxOSPath(""),
+		root: root_path,
 	}, `Access files using the operating system's API. Does not allow access to raw devices.`)
 
 	// On Linux the auto accessor is the same as file.
 	accessors.Register("auto", &OSFileSystemAccessor{
-		root: accessors.NewLinuxOSPath(""),
+		root: root_path,
 	}, `Access the file using the best accessor possible. On windows we fall back to NTFS parsing in case the file is locked or unreadable.`)
 
 	json.RegisterCustomEncoder(&OSFileInfo{}, accessors.MarshalGlobFileInfo)

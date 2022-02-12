@@ -23,16 +23,16 @@ import (
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type NTFSFunctionArgs struct {
 	Device    string `vfilter:"required,field=device,doc=The device file to open. This may be a full path - we will figure out the device automatically."`
+	Accessor  string `vfilter:"optional,field=accessor,doc=The accessor to use."`
 	Inode     string `vfilter:"optional,field=inode,doc=The MFT entry to parse in inode notation (5-144-1)."`
 	MFT       int64  `vfilter:"optional,field=mft,doc=The MFT entry to parse."`
 	MFTOffset int64  `vfilter:"optional,field=mft_offset,doc=The offset to the MFT entry to parse."`
@@ -76,13 +76,14 @@ func (self NTFSFunction) Call(
 		arg.MFT = mft_idx
 	}
 
-	device, _, err := paths.GetDeviceAndSubpath(arg.Device)
+	device, accessor, err := readers.GetRawDeviceAndAccessor(
+		arg.Device, arg.Accessor)
 	if err != nil {
 		scope.Log("parse_ntfs: %v", err)
 		return &vfilter.Null{}
 	}
 
-	ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
+	ntfs_ctx, err := readers.GetNTFSContext(scope, device, accessor)
 	if err != nil {
 		scope.Log("parse_ntfs: GetNTFSContext %v", err)
 		return &vfilter.Null{}
@@ -109,7 +110,7 @@ func (self NTFSFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	return &NTFSModel{NTFSFileInformation: result, Device: device}
+	return &NTFSModel{NTFSFileInformation: result, Device: arg.Device}
 }
 
 type MFTScanPluginArgs struct {
@@ -220,13 +221,14 @@ func (self NTFSI30ScanPlugin) Call(
 			arg.MFT = mft_idx
 		}
 
-		device, _, err := paths.GetDeviceAndSubpath(arg.Device)
+		device, accessor, err := readers.GetRawDeviceAndAccessor(
+			arg.Device, arg.Accessor)
 		if err != nil {
 			scope.Log("parse_ntfs_i30: %v", err)
 			return
 		}
 
-		ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
+		ntfs_ctx, err := readers.GetNTFSContext(scope, device, accessor)
 		if err != nil {
 			scope.Log("parse_ntfs_i30: %v", err)
 			return
@@ -296,13 +298,14 @@ func (self NTFSRangesPlugin) Call(
 			attr_type = 128
 		}
 
-		device, _, err := paths.GetDeviceAndSubpath(arg.Device)
+		device, accessor, err := readers.GetRawDeviceAndAccessor(
+			arg.Device, arg.Accessor)
 		if err != nil {
 			scope.Log("parse_ntfs_ranges: %v", err)
 			return
 		}
 
-		ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
+		ntfs_ctx, err := readers.GetNTFSContext(scope, device, accessor)
 		if err != nil {
 			scope.Log("parse_ntfs_ranges: %v", err)
 			return

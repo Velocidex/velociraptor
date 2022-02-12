@@ -189,7 +189,8 @@ func (self *RegFileSystemAccessor) New(scope vfilter.Scope) (
 	return self, nil
 }
 
-func (self RegFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+func (self RegFileSystemAccessor) ParsePath(path string) (
+	*accessors.OSPath, error) {
 	return accessors.NewWindowsRegistryPath(path)
 }
 
@@ -197,7 +198,10 @@ func (self RegFileSystemAccessor) ReadDir(path string) (
 	[]accessors.FileInfo, error) {
 	var result []accessors.FileInfo
 
-	full_path := self.ParsePath(path)
+	full_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
 	path = full_path.PathSpec().Path
 
 	// Root directory is just the name of the hives.
@@ -303,7 +307,10 @@ func (self *RegFileSystemAccessor) Lstat(filename string) (
 	accessors.FileInfo, error) {
 
 	// Clean the path
-	full_path := accessors.NewWindowsRegistryPath(filename)
+	full_path, err := accessors.NewWindowsRegistryPath(filename)
+	if err != nil {
+		return nil, err
+	}
 	if len(full_path.Components) == 0 {
 		return nil, errors.New("No filename given")
 	}

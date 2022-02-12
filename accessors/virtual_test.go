@@ -12,15 +12,15 @@ import (
 func TestVirtualFilesystemAccessor(t *testing.T) {
 	fs_accessor := NewVirtualFilesystemAccessor()
 	fs_accessor.SetVirtualDirectory(
-		NewLinuxOSPath("/foo/bar/baz"), &VirtualFileInfo{
+		MustNewLinuxOSPath("/foo/bar/baz"), &VirtualFileInfo{
 			IsDir_: true,
 		})
 	fs_accessor.SetVirtualDirectory(
-		NewLinuxOSPath("/foo/bar2/x"), &VirtualFileInfo{
+		MustNewLinuxOSPath("/foo/bar2/x"), &VirtualFileInfo{
 			RawData: []byte("Hello"),
 		})
 	fs_accessor.SetVirtualDirectory(
-		NewLinuxOSPath("/foo/bar2/y"), &VirtualFileInfo{
+		MustNewLinuxOSPath("/foo/bar2/y"), &VirtualFileInfo{
 			RawData: []byte("Goodbye"),
 		})
 

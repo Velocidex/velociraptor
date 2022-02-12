@@ -2,6 +2,7 @@ package acls
 
 import (
 	"errors"
+	"strings"
 
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -14,6 +15,51 @@ func ValidateRole(role string) bool {
 	}
 
 	return false
+}
+
+func SetTokenPermission(
+	token *acl_proto.ApiClientACL, permissions ...string) error {
+	for _, perm := range permissions {
+		switch strings.ToUpper(perm) {
+		case "ALL_QUERY":
+			token.AllQuery = true
+		case "ANY_QUERY":
+			token.AnyQuery = true
+		case "READ_RESULTS":
+			token.ReadResults = true
+		case "LABEL_CLIENT":
+			token.LabelClients = true
+		case "COLLECT_CLIENT":
+			token.CollectClient = true
+		case "COLLECT_SERVER":
+			token.CollectServer = true
+		case "ARTIFACT_WRITER":
+			token.ArtifactWriter = true
+		case "SERVER_ARTIFACT_WRITER":
+			token.ServerArtifactWriter = true
+		case "EXECVE":
+			token.Execve = true
+		case "NOTEBOOK_EDITOR":
+			token.NotebookEditor = true
+		case "SERVER_ADMIN":
+			token.ServerAdmin = true
+		case "FILESYSTEM_READ":
+			token.FilesystemRead = true
+		case "FILESYSTEM_WRITE":
+			token.FilesystemWrite = true
+		case "MACHINE_STATE":
+			token.MachineState = true
+		case "PREPARE_RESULTS":
+			token.PrepareResults = true
+		case "DATASTORE_ACCESS":
+			token.DatastoreAccess = true
+
+		default:
+			return errors.New("Unknown permission")
+		}
+	}
+
+	return nil
 }
 
 func GetRolePermissions(

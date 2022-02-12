@@ -78,8 +78,14 @@ func init() {
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 
+				err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+				if err != nil {
+					scope.Log("environ: %s", err)
+					return result
+				}
+
 				arg := &EnvPluginArgs{}
-				err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+				err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 				if err != nil {
 					scope.Log("%s: %s", "environ", err.Error())
 					return result

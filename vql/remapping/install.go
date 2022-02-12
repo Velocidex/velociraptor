@@ -1,4 +1,4 @@
-package accessors
+package remapping
 
 import (
 	"context"
@@ -6,8 +6,11 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
 )
 
 // Process a "mount" type remapping directive.
@@ -24,7 +27,7 @@ import (
 // This reads like "mount directory from file:/mnt/data on file:/
 // Means when VQL opens a path using accessor "file" in all paths
 // below "/", the "file" accessor will be used on "/mnt/data" instead.
-func InstallMountPoints(manager DeviceManager,
+func InstallMountPoints(manager accessors.DeviceManager,
 	remappings []*config_proto.RemappingConfig,
 	on_accessor string) error {
 
@@ -47,9 +50,12 @@ func InstallMountPoints(manager DeviceManager,
 		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
 
 	// Build a mount filesystem
-	root_fs := NewVirtualFilesystemAccessor()
-	mount_fs := NewMountFileSystemAccessor(
-		getTypedOSPath(on_path_type, ""), root_fs)
+	root_fs := accessors.NewVirtualFilesystemAccessor()
+	root_path, err := getTypedOSPath(on_path_type, "")
+	if err != nil {
+		return err
+	}
+	mount_fs := accessors.NewMountFileSystemAccessor(root_path, root_fs)
 
 	// Apply all the mappings specified.
 	for _, remapping := range remappings {
@@ -58,20 +64,28 @@ func InstallMountPoints(manager DeviceManager,
 			from_accessor = "file"
 		}
 
-		from_fs, err := GlobalDeviceManager.GetAccessor(from_accessor, scope)
+		from_fs, err := accessors.GlobalDeviceManager.GetAccessor(
+			from_accessor, scope)
 		if err != nil {
 			return err
 		}
 
 		// Where we mount the volume.
-		mount_directory := &VirtualFileInfo{
+		on_path, err := getTypedOSPath(on_path_type, remapping.On.Prefix)
+		if err != nil {
+			return err
+		}
+		mount_directory := &accessors.VirtualFileInfo{
 			IsDir_: true,
-			Path:   getTypedOSPath(on_path_type, remapping.On.Prefix),
+			Path:   on_path,
 		}
 		root_fs.SetVirtualFileInfo(mount_directory)
-		mount_fs.AddMapping(
-			getTypedOSPath(remapping.From.PathType, remapping.From.Prefix),
-			mount_directory.OSPath(), from_fs)
+		from_path, err := getTypedOSPath(remapping.From.PathType,
+			remapping.From.Prefix)
+		if err != nil {
+			return err
+		}
+		mount_fs.AddMapping(from_path, mount_directory.OSPath(), from_fs)
 	}
 
 	// Register the new accessor.
@@ -81,38 +95,41 @@ func InstallMountPoints(manager DeviceManager,
 	return nil
 }
 
-func getTypedOSPath(path_type string, path string) *OSPath {
+func getTypedOSPath(path_type string, path string) (*accessors.OSPath, error) {
 	switch path_type {
 	case "", "generic":
-		return NewGenericOSPath(path)
+		return accessors.NewGenericOSPath(path)
 
 	case "windows":
-		return NewWindowsOSPath(path)
+		return accessors.NewWindowsOSPath(path)
 
 	case "registry":
-		return NewWindowsRegistryPath(path)
+		return accessors.NewWindowsRegistryPath(path)
 
 	case "pathspec":
-		return NewPathspecOSPath(path)
+		return accessors.NewPathspecOSPath(path)
 
 	case "ntfs":
-		return NewWindowsNTFSPath(path)
+		return accessors.NewWindowsNTFSPath(path)
 
 	default:
-		return NewGenericOSPath(path)
+		return accessors.NewGenericOSPath(path)
 	}
 }
 
 // Update the scope with the new device manager.
 func ApplyRemappingOnScope(
 	ctx context.Context,
-	manager DeviceManager,
+	scope vfilter.Scope,
+	manager accessors.DeviceManager,
+	env *ordereddict.Dict,
 	remappings []*config_proto.RemappingConfig) error {
 
 	mounts := make(map[string][]*config_proto.RemappingConfig)
 
 	for _, remapping := range remappings {
-		if remapping.Type == "mount" {
+		switch remapping.Type {
+		case "mount":
 			if remapping.From == nil || remapping.On == nil {
 				return errors.New(
 					"Invalid mount mapping - both from and on " +
@@ -122,10 +139,32 @@ func ApplyRemappingOnScope(
 			target_group := mounts[remapping.On.Accessor]
 			target_group = append(target_group, remapping)
 			mounts[remapping.On.Accessor] = target_group
-			continue
-		}
 
-		return fmt.Errorf("Unknown remapping type: %v", remapping.Type)
+		case "permissions":
+
+		case "impersonation":
+			var mocker_ctx *MockingScopeContext
+			mocker_ctx_any, pres := env.Get(constants.SCOPE_MOCK)
+			if pres {
+				mocker_ctx, _ = mocker_ctx_any.(*MockingScopeContext)
+			}
+			if mocker_ctx == nil {
+				mocker_ctx = &MockingScopeContext{}
+			}
+			env.Set(constants.SCOPE_MOCK, mocker_ctx)
+			mock_plugin := NewMockerPlugin(
+				"info", []*ordereddict.Dict{
+					ordereddict.NewDict().
+						Set("OS", remapping.Os).
+						Set("Hostname", remapping.Hostname),
+				})
+
+			mocker_ctx.AddPlugin(mock_plugin)
+			scope.AppendPlugins(mock_plugin)
+
+		default:
+			return fmt.Errorf("Unknown remapping type: %v", remapping.Type)
+		}
 	}
 
 	for to_accessor, remappings := range mounts {

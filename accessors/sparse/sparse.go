@@ -196,10 +196,13 @@ func (self SparseFileInfo) Size() int64 {
 }
 
 func GetSparseFile(file_path string, scope vfilter.Scope) (zip.ReaderStat, error) {
-	full_path := accessors.NewPathspecOSPath(file_path)
+	full_path, err := accessors.NewPathspecOSPath(file_path)
+	if err != nil {
+		return nil, err
+	}
 	pathspec := full_path.PathSpec()
 
-	err := vql_subsystem.CheckFilesystemAccess(scope, pathspec.DelegateAccessor)
+	err = vql_subsystem.CheckFilesystemAccess(scope, pathspec.DelegateAccessor)
 	if err != nil {
 		scope.Log("%v: DelegateAccessor denied", err)
 		return nil, err

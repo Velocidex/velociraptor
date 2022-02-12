@@ -1,44 +1,44 @@
-SELECT basename(path="/foo/bar/baz") FROM scope()[
+SELECT basename(path="/foo/bar/baz", path_type='linux') FROM scope()[
  {
-  "basename(path=\"/foo/bar/baz\")": "baz"
+  "basename(path=\"/foo/bar/baz\", path_type='linux')": "baz"
  }
-]SELECT dirname(path="/foo/bar/baz") FROM scope()[
+]SELECT dirname(path="/foo/bar/baz", path_type='linux') FROM scope()[
  {
-  "dirname(path=\"/foo/bar/baz\")": "/foo/bar"
+  "dirname(path=\"/foo/bar/baz\", path_type='linux')": "/foo/bar"
  }
-]SELECT basename(path='/foo/bar/"http://www.google.com/"') FROM scope()[
+]SELECT basename(path='/foo/bar/"http://www.google.com/"', path_type='generic') FROM scope()[
  {
-  "basename(path='/foo/bar/\"http://www.google.com/\"')": "http://www.google.com/"
+  "basename(path='/foo/bar/\"http://www.google.com/\"', path_type='generic')": "http://www.google.com/"
  }
-]SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"') FROM scope()[
+]SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"', path_type='windows') FROM scope()[
  {
-  "basename(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"')": "http://www.google.com/"
+  "basename(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"', path_type='windows')": "http://www.google.com/"
  }
-]SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar') FROM scope()[
+]SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path_type='windows') FROM scope()[
  {
-  "basename(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"/Foobar')": "Foobar"
+  "basename(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"/Foobar', path_type='windows')": "Foobar"
  }
-]SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar') FROM scope()[
+]SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path_type='windows') FROM scope()[
  {
-  "dirname(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"/Foobar')": "c:/foo/bar/\"http://www.google.com/\""
+  "dirname(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"/Foobar', path_type='windows')": "c:\\foo\\bar\\\"http://www.google.com/\""
  }
-]SELECT basename(path='c:\\foo\\bar\\"F:\\foobar.txt"') FROM scope()[
+]SELECT basename(path='c:\\foo\\bar\\"F:\\foobar.txt"', path='windows') FROM scope()[
  {
-  "basename(path='c:\\\\foo\\\\bar\\\\\"F:\\\\foobar.txt\"')": "F:\\foobar.txt"
+  "basename(path='c:\\\\foo\\\\bar\\\\\"F:\\\\foobar.txt\"', path='windows')": "windows"
  }
-]SELECT basename(path='c:\\foo\\bar\\"F:\\foo/bar.txt"') FROM scope()[
+]SELECT basename(path='c:\\foo\\bar\\"F:\\foo/bar.txt"', path='windows') FROM scope()[
  {
-  "basename(path='c:\\\\foo\\\\bar\\\\\"F:\\\\foo/bar.txt\"')": "F:\\foo/bar.txt"
+  "basename(path='c:\\\\foo\\\\bar\\\\\"F:\\\\foo/bar.txt\"', path='windows')": "windows"
  }
-]SELECT path_split(path="/a/b/c/d/e")[-2] FROM scope()[
+]SELECT path_split(path="/a/b/c/d/e", path_type='linux')[-2] FROM scope()[
  {
-  "path_split(path=\"/a/b/c/d/e\")[-2]": "d"
+  "path_split(path=\"/a/b/c/d/e\", path_type='linux')[-2]": "d"
  }
-]SELECT path_split(path="/a/b")[-20] FROM scope()[
+]SELECT path_split(path="/a/b", path_type='linux')[-20] FROM scope()[
  {
-  "path_split(path=\"/a/b\")[-20]": "a"
+  "path_split(path=\"/a/b\", path_type='linux')[-20]": "a"
  }
-]LET path_spec = pathspec(DelegateAccessor="file", DelegatePath="C:/Windows")[]SELECT path_spec, pathspec(parse=path_spec.String), pathspec(parse="C:\\Windows"), pathspec(parse="/usr/lib"), pathspec(parse="file:///usr/lib#*") FROM scope()[
+]LET path_spec = pathspec(DelegateAccessor="file", DelegatePath="C:/Windows")[]SELECT path_spec, pathspec(parse=path_spec.String), pathspec(parse="C:\\Windows", path_type='windows'), pathspec(parse="/usr/lib", path_type='linux'), pathspec(parse="file:///usr/lib#*", path_type='generic') FROM scope()[
  {
   "path_spec": {
    "DelegateAccessor": "file",
@@ -50,16 +50,16 @@ SELECT basename(path="/foo/bar/baz") FROM scope()[
    "Path": "/",
    "Components": null
   },
-  "pathspec(parse=\"C:\\\\Windows\")": {
+  "pathspec(parse=\"C:\\\\Windows\", path_type='windows')": {
    "DelegateAccessor": "",
    "DelegatePath": "",
-   "Path": "C:/Windows",
+   "Path": "C:\\Windows",
    "Components": [
     "C:",
     "Windows"
    ]
   },
-  "pathspec(parse=\"/usr/lib\")": {
+  "pathspec(parse=\"/usr/lib\", path_type='linux')": {
    "DelegateAccessor": "",
    "DelegatePath": "",
    "Path": "/usr/lib",
@@ -68,7 +68,7 @@ SELECT basename(path="/foo/bar/baz") FROM scope()[
     "lib"
    ]
   },
-  "pathspec(parse=\"file:///usr/lib#*\")": {
+  "pathspec(parse=\"file:///usr/lib#*\", path_type='generic')": {
    "DelegateAccessor": "file",
    "DelegatePath": "/usr/lib",
    "Path": "/*",
@@ -77,9 +77,9 @@ SELECT basename(path="/foo/bar/baz") FROM scope()[
    ]
   }
  }
-]SELECT pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows", type="windows") FROM scope()[
+]SELECT pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows", path_type="windows") FROM scope()[
  {
-  "pathspec(parse=\"\\\\\\\\?\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy1\\\\Windows\", type=\"windows\")": {
+  "pathspec(parse=\"\\\\\\\\?\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy1\\\\Windows\", path_type=\"windows\")": {
    "DelegateAccessor": "",
    "DelegatePath": "",
    "Path": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows",

@@ -35,9 +35,13 @@ func discoverVSS() ([]*accessors.VirtualFileInfo, error) {
 	for _, row := range shadow_volumes {
 		device_name, pres := row.GetString("DeviceObject")
 		if pres {
+			device_path, err := accessors.NewWindowsNTFSPath(device_name)
+			if err != nil {
+				return nil, err
+			}
 			virtual_directory := &accessors.VirtualFileInfo{
 				IsDir_: true,
-				Path:   accessors.NewWindowsNTFSPath(device_name),
+				Path:   device_path,
 				Data_:  row,
 			}
 			result = append(result, virtual_directory)
@@ -61,9 +65,13 @@ func discoverLogicalDisks() ([]*accessors.VirtualFileInfo, error) {
 	for _, row := range shadow_volumes {
 		device_name, pres := row.GetString("DeviceID")
 		if pres {
+			device_path, err := accessors.NewWindowsNTFSPath("\\\\.\\" + device_name)
+			if err != nil {
+				return nil, err
+			}
 			virtual_directory := &accessors.VirtualFileInfo{
 				IsDir_: true,
-				Path:   accessors.NewWindowsNTFSPath("\\\\.\\" + device_name),
+				Path:   device_path,
 				Data_:  row,
 			}
 			result = append(result, virtual_directory)
@@ -90,9 +98,10 @@ func (self *WindowsNTFSFileSystemAccessor) New(
 
 	// Build a virtual filesystem that mounts the various NTFS volumes on it.
 	root_fs := accessors.NewVirtualFilesystemAccessor()
+	root_path, _ := accessors.NewWindowsNTFSPath("")
 	result := &WindowsNTFSFileSystemAccessor{
 		MountFileSystemAccessor: accessors.NewMountFileSystemAccessor(
-			accessors.NewWindowsNTFSPath(""), root_fs),
+			root_path, root_fs),
 		age: time.Now(),
 	}
 
@@ -101,7 +110,7 @@ func (self *WindowsNTFSFileSystemAccessor) New(
 		for _, fi := range vss {
 			root_fs.SetVirtualFileInfo(fi)
 			result.AddMapping(
-				accessors.NewWindowsNTFSPath(""), // Mount at the root of the filesystem
+				root_path, // Mount at the root of the filesystem
 				fi.OSPath(),
 				NewNTFSFileSystemAccessor(root_scope, fi.FullPath(), "file"))
 		}
@@ -112,7 +121,7 @@ func (self *WindowsNTFSFileSystemAccessor) New(
 		for _, fi := range logical {
 			root_fs.SetVirtualFileInfo(fi)
 			result.AddMapping(
-				accessors.NewWindowsNTFSPath(""),
+				root_path,
 				fi.OSPath(),
 				NewNTFSFileSystemAccessor(root_scope, fi.FullPath(), "file"))
 		}

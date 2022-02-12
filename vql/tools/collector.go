@@ -2,8 +2,10 @@ package tools
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -51,13 +53,9 @@ func (self CollectPlugin) Call(
 		var container *reporting.Container
 		var closer func()
 
-		// This plugin allows one to create files, collect
-		// artifacts and also define new artifacts. It is very
-		// privileged.
-		err := vql_subsystem.CheckAccess(scope,
-			acls.COLLECT_SERVER, acls.ARTIFACT_WRITER,
-			acls.FILESYSTEM_WRITE,
-			acls.SERVER_ARTIFACT_WRITER)
+		// This plugin allows one to create files (for the output
+		// zip), It is very privileged.
+		err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 		if err != nil {
 			scope.Log("collect: %s", err)
 			return
@@ -89,7 +87,7 @@ func (self CollectPlugin) Call(
 		}
 
 		// Get a new artifact repository with extra definitions added.
-		repository, err := getRepository(config_obj, arg.ArtifactDefinitions)
+		repository, err := getRepository(scope, config_obj, arg.ArtifactDefinitions)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return
@@ -306,6 +304,7 @@ func makeContainer(
 }
 
 func getRepository(
+	scope vfilter.Scope,
 	config_obj *config_proto.Config,
 	extra_artifacts vfilter.Any) (services.Repository, error) {
 	manager, err := services.GetRepositoryManager()
@@ -330,11 +329,18 @@ func getRepository(
 			return err
 		}
 
-		_, err = repository.LoadYaml(
+		artifact, err := repository.LoadYaml(
 			string(serialized), true /* validate */, false)
 		if err != nil {
 			return err
 		}
+
+		// Check if we are allows to add these artifacts
+		err = CheckArtifactModification(scope, artifact)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	}
 
@@ -355,16 +361,26 @@ func getRepository(
 
 	case []string:
 		for _, item := range t {
-			_, err := repository.LoadYaml(item,
+			artifact, err := repository.LoadYaml(item,
 				true /* validate */, false /* built_in */)
+			if err != nil {
+				return nil, err
+			}
+
+			err = CheckArtifactModification(scope, artifact)
 			if err != nil {
 				return nil, err
 			}
 		}
 
 	case string:
-		_, err := repository.LoadYaml(t,
+		artifact, err := repository.LoadYaml(t,
 			true /* validate */, false /* built_in */)
+		if err != nil {
+			return nil, err
+		}
+
+		err = CheckArtifactModification(scope, artifact)
 		if err != nil {
 			return nil, err
 		}
@@ -382,7 +398,8 @@ func (self CollectPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 	}
 }
 
-// Parse the plugin arg into an artifact collector arg that can be compiled into VQL requests
+// Parse the plugin arg into an artifact collector arg that can be
+// compiled into VQL requests
 func getArtifactCollectorArgs(
 	config_obj *config_proto.Config,
 	repository services.Repository,
@@ -405,15 +422,20 @@ func getArtifactCollectorArgs(
 func AddSpecProtobuf(
 	config_obj *config_proto.Config,
 	repository services.Repository,
-	scope vfilter.Scope, spec vfilter.Any, request *flows_proto.ArtifactCollectorArgs) error {
-
-	var err error
+	scope vfilter.Scope, spec vfilter.Any,
+	request *flows_proto.ArtifactCollectorArgs) error {
 
 	for _, name := range scope.GetMembers(spec) {
 		artifact_definitions, pres := repository.Get(config_obj, name)
 		if !pres {
 			// Artifact not known
 			return fmt.Errorf(`Parameter 'args' refers to an unknown artifact (%v). The 'args' parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`, name)
+		}
+
+		// Check that we are allowed to collect this artifact
+		err := CheckArtifactCollection(scope, artifact_definitions)
+		if err != nil {
+			return err
 		}
 
 		spec_proto := &flows_proto.ArtifactSpec{
@@ -527,6 +549,72 @@ func AddSpecProtobuf(
 	}
 
 	return nil
+}
+
+// Check if the artifact can be added or modified.
+func CheckArtifactModification(
+	scope vfilter.Scope,
+	artifact *artifacts_proto.Artifact) error {
+
+	var ok bool
+	var err error
+
+	acl_manager, ok := artifacts.GetACLManager(scope)
+	if !ok {
+		return nil
+	}
+
+	switch strings.ToUpper(artifact.Type) {
+	case "CLIENT", "CLIENT_EVENT":
+		ok, err = acl_manager.CheckAccess(acls.ARTIFACT_WRITER)
+		if !ok {
+			return errors.New("Permission denied: ARTIFACT_WRITER")
+		}
+
+	case "SERVER", "SERVER_EVENT", "INTERNAL":
+		ok, err = acl_manager.CheckAccess(acls.SERVER_ARTIFACT_WRITER)
+		if !ok {
+			return errors.New("Permission denied: SERVER_ARTIFACT_WRITER")
+		}
+
+	default:
+		return errors.New("Unknown artifact type for permission check")
+	}
+
+	return err
+}
+
+// Check if the artifact can be added or modified.
+func CheckArtifactCollection(
+	scope vfilter.Scope,
+	artifact *artifacts_proto.Artifact) error {
+
+	var ok bool
+	var err error
+
+	acl_manager, ok := artifacts.GetACLManager(scope)
+	if !ok {
+		return nil
+	}
+
+	switch strings.ToUpper(artifact.Type) {
+	case "CLIENT", "CLIENT_EVENT":
+		ok, err = acl_manager.CheckAccess(acls.COLLECT_CLIENT)
+		if !ok {
+			return errors.New("Permission denied: COLLECT_CLIENT")
+		}
+
+	case "SERVER", "SERVER_EVENT", "INTERNAL":
+		ok, err = acl_manager.CheckAccess(acls.COLLECT_SERVER)
+		if !ok {
+			return errors.New("Permission denied: COLLECT_SERVER")
+		}
+
+	default:
+		return errors.New("Unknown artifact type for permission check")
+	}
+
+	return err
 }
 
 func init() {

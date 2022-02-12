@@ -82,7 +82,11 @@ func (self GlobPlugin) Call(
 		// the alternatives to cover entire paths.
 		globs := glob.ExpandBraces(arg.Globs)
 
-		root := accessor.ParsePath(arg.Root)
+		root, err := accessor.ParsePath(arg.Root)
+		if err != nil {
+			scope.Log("glob: %v", err)
+			return
+		}
 		options := glob.GlobOptions{
 			DoNotFollowSymlinks: arg.DoNotFollowSymlinks,
 			OneFilesystem:       arg.OneFilesystem,
@@ -115,7 +119,12 @@ func (self GlobPlugin) Call(
 				// backwards compatibility: The root is taken to be
 				// the base pathspec and the glob is the Path
 				// component.
-				root = root.Parse(item)
+				root, err = root.Parse(item)
+				if err != nil {
+					scope.Log("glob: %v", err)
+					return
+				}
+
 				pathspec := root.PathSpec()
 				item = pathspec.Path
 				pathspec.Path = ""
@@ -134,7 +143,11 @@ func (self GlobPlugin) Call(
 				}
 			}
 
-			item_path := root.Parse(item)
+			item_path, err := root.Parse(item)
+			if err != nil {
+				scope.Log("glob: %v", err)
+				return
+			}
 			err = globber.Add(item_path)
 			if err != nil {
 				scope.Log("glob: %v", err)
@@ -325,11 +338,14 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 
 	fd, err := accessor.Open(arg.Filename)
 	if err != nil {
+		scope.Log("read_file: %v", err)
 		return ""
 	}
 	defer fd.Close()
 
-	_, _ = fd.Seek(arg.Offset, os.SEEK_SET)
+	if arg.Offset > 0 {
+		_, _ = fd.Seek(arg.Offset, os.SEEK_SET)
+	}
 
 	n, err := io.ReadAtLeast(fd, buf, len(buf))
 	if err != nil &&

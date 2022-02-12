@@ -1,0 +1,56 @@
+Parameters:
+  RemappingTemplate: |
+    remappings:
+      - type: mount
+        from:
+          accessor: raw_ntfs
+          prefix: |
+            {
+               "DelegateAccessor": "file",
+               "DelegatePath": %q,
+               "Path": "/"
+            }
+        on:
+          accessor: "ntfs"
+          prefix: '\\\\.\\C:'
+          path_type: ntfs
+
+      - type: mount
+        from:
+          accessor: raw_reg
+          prefix: |
+            {
+              "DelegateAccessor": "file",
+              "DelegatePath": %q,
+              "Path": "/"
+            }
+          path_type: "pathspec"
+        on:
+          accessor: "registry"
+          prefix: "/HKEY_LOCAL_MACHINE/Classes"
+          path_type: "registry"
+
+Queries:
+  - LET _ <= remap(config=format(format=RemappingTemplate,
+       args=[
+          srcDir+'/artifacts/testdata/files/test.ntfs.dd',
+          srcDir+'/artifacts/testdata/files/UsrClass.dat'
+      ]), clear=TRUE)
+
+  - SELECT FullPath FROM glob(globs="**", accessor='ntfs')
+    ORDER BY FullPath
+
+  # Make sure we can parse the mft as normal.
+  - SELECT * FROM parse_mft(filename="C:/$MFT", accessor="ntfs")
+    WHERE FullPath =~ 'Hello world'
+
+  - SELECT parse_ntfs(device="C:/$MFT", inode="46-128-0", accessor="ntfs")
+    FROM scope()
+
+  - SELECT * FROM parse_ntfs_i30(
+      accessor='ntfs', device='c:/$MFT', inode="41-144-1")
+
+  - SELECT * FROM parse_ntfs_ranges(accessor='ntfs', device='c:/$MFT',
+           inode="46-128-5")
+
+  - SELECT FullPath FROM glob(accessor='registry', globs="/HKLM/*/xbox*")

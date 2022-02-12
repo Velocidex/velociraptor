@@ -1,4 +1,4 @@
-package tools
+package remapping
 
 import (
 	"context"
@@ -43,7 +43,8 @@ func (self RemappingFunc) Call(ctx context.Context,
 	if arg.Clear {
 		manager.Clear()
 	}
-	err = accessors.ApplyRemappingOnScope(ctx, manager, remapping_config)
+	err = ApplyRemappingOnScope(ctx, scope, manager,
+		ordereddict.NewDict(), remapping_config)
 	if err != nil {
 		scope.Log("remap: %v", err)
 		return vfilter.Null{}

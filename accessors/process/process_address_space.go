@@ -161,8 +161,9 @@ func (self ProcessReader) Close() error {
 }
 
 func (self ProcessReader) Stat() (os.FileInfo, error) {
+	full_path, _ := accessors.NewLinuxOSPath(fmt.Sprintf("%v", self.pid))
 	return &accessors.VirtualFileInfo{
-		Path:  accessors.NewLinuxOSPath(fmt.Sprintf("%v", self.pid)),
+		Path:  full_path,
 		Size_: self.size,
 	}, nil
 }
@@ -180,12 +181,17 @@ func (self ProcessAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {
 }
 
 func (self ProcessAccessor) Lstat(filename string) (accessors.FileInfo, error) {
+	full_path, err := self.ParsePath(filename)
+	if err != nil {
+		return nil, err
+	}
+
 	return &accessors.VirtualFileInfo{
-		Path: self.ParsePath(filename),
+		Path: full_path,
 	}, nil
 }
 
-func (self ProcessAccessor) ParsePath(path string) *accessors.OSPath {
+func (self ProcessAccessor) ParsePath(path string) (*accessors.OSPath, error) {
 	return accessors.NewLinuxOSPath(path)
 }
 

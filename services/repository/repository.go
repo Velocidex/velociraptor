@@ -72,6 +72,7 @@ func (self *Repository) LoadDirectory(config_obj *config_proto.Config, dirname s
 
 	count := 0
 	if utils.InString(self.loaded_dirs, dirname) {
+		self.mu.Unlock()
 		return count, nil
 	}
 	dirname = filepath.Clean(dirname)

@@ -37,7 +37,8 @@ func (self ScopeFilesystemAccessor) getData(variable string) (string, error) {
 	}
 }
 
-func (self ScopeFilesystemAccessor) ParsePath(path string) *accessors.OSPath {
+func (self ScopeFilesystemAccessor) ParsePath(path string) (
+	*accessors.OSPath, error) {
 	return accessors.NewLinuxOSPath(path)
 }
 
@@ -47,9 +48,15 @@ func (self ScopeFilesystemAccessor) Lstat(variable string) (
 	if err != nil {
 		return nil, err
 	}
+
+	full_path, err := self.ParsePath(variable)
+	if err != nil {
+		return nil, err
+	}
+
 	return &accessors.VirtualFileInfo{
 		RawData: []byte(str),
-		Path:    self.ParsePath(variable),
+		Path:    full_path,
 	}, nil
 }
 

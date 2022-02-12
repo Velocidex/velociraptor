@@ -1,0 +1,264 @@
+LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/UsrClass.dat' ]), clear=TRUE)[]SELECT FullPath FROM glob(globs="**", accessor='ntfs') ORDER BY FullPath[
+ {
+  "FullPath": "\\\\.\\C:"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$AttrDef"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$BadClus"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$BadClus:$Bad"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Bitmap"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Boot"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Extend"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Extend\\$Deleted"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Extend\\$ObjId"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Extend\\$Quota"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Extend\\$Reparse"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$Repair"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$Repair:$Config"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$Txf"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$TxfLog"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$TxfLog\\$Tops"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$TxfLog\\$Tops:$T"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$TxfLog\\$TxfLog.blf"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$LogFile"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$MFT"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$MFTMirr"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$RECYCLE.BIN"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$RECYCLE.BIN\\S-1-5-21-2378245050-552909339-522783033-1001"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$RECYCLE.BIN\\S-1-5-21-2378245050-552909339-522783033-1001\\desktop.ini"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Secure"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Secure:$SDS"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$UpCase"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$UpCase:$Info"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$Volume"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\Folder A"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\Folder A\\Folder B"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\Folder A\\Folder B\\Hello world text document.txt"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\Folder A\\Folder B\\Hello world text document.txt:goodbye.txt"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\System Volume Information"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\System Volume Information\\IndexerVolumeGuid"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\System Volume Information\\WPSettings.dat"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\ones.bin"
+ }
+]SELECT * FROM parse_mft(filename="C:/$MFT", accessor="ntfs") WHERE FullPath =~ 'Hello world'[
+ {
+  "EntryNumber": 46,
+  "InUse": true,
+  "ParentEntryNumber": 45,
+  "FullPath": "Folder A/Folder B/Hello world text document.txt",
+  "FileName": "Hello world text document.txt",
+  "FileSize": 12,
+  "ReferenceCount": 1,
+  "IsDir": false,
+  "Created0x10": "2018-09-24T07:55:29.7664719Z",
+  "Created0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastModified0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastModified0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastRecordChange0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastRecordChange0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastAccess0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastAccess0x30": "2018-09-24T07:55:29.7664719Z"
+ }
+]SELECT parse_ntfs(device="C:/$MFT", inode="46-128-0", accessor="ntfs") FROM scope()[
+ {
+  "parse_ntfs(device=\"C:/$MFT\", inode=\"46-128-0\", accessor=\"ntfs\")": {
+   "FullPath": "Folder A/Folder B/Hello world text document.txt",
+   "MFTID": 46,
+   "Size": 12,
+   "Allocated": true,
+   "IsDir": false,
+   "SI_Times": {
+    "CreateTime": "2018-09-24T07:55:29.7664719Z",
+    "FileModifiedTime": "2018-09-24T07:56:35.3135567Z",
+    "MFTModifiedTime": "2018-09-24T07:56:35.3135567Z",
+    "AccessedTime": "2018-09-24T07:56:35.3135567Z"
+   },
+   "Filenames": [
+    {
+     "Times": {
+      "CreateTime": "2018-09-24T07:55:29.7664719Z",
+      "FileModifiedTime": "2018-09-24T07:55:29.7664719Z",
+      "MFTModifiedTime": "2018-09-24T07:55:29.7664719Z",
+      "AccessedTime": "2018-09-24T07:55:29.7664719Z"
+     },
+     "Type": "POSIX",
+     "Name": "Hello world text document.txt"
+    }
+   ],
+   "Attributes": [
+    {
+     "Type": "$STANDARD_INFORMATION",
+     "TypeId": 16,
+     "Id": 0,
+     "Inode": "46-16-0",
+     "Size": 72,
+     "Name": ""
+    },
+    {
+     "Type": "$FILE_NAME",
+     "TypeId": 48,
+     "Id": 3,
+     "Inode": "46-48-3",
+     "Size": 124,
+     "Name": ""
+    },
+    {
+     "Type": "$OBJECT_ID",
+     "TypeId": 64,
+     "Id": 4,
+     "Inode": "46-64-4",
+     "Size": 16,
+     "Name": ""
+    },
+    {
+     "Type": "$DATA",
+     "TypeId": 128,
+     "Id": 1,
+     "Inode": "46-128-1",
+     "Size": 12,
+     "Name": ""
+    },
+    {
+     "Type": "$DATA",
+     "TypeId": 128,
+     "Id": 5,
+     "Inode": "46-128-5",
+     "Size": 20,
+     "Name": "goodbye.txt"
+    }
+   ],
+   "Device": "C:/$MFT"
+  }
+ }
+]SELECT * FROM parse_ntfs_i30( accessor='ntfs', device='c:/$MFT', inode="41-144-1")[
+ {
+  "MFTId": "45",
+  "Mtime": "2018-09-24T07:55:44.4592119Z",
+  "Atime": "2018-09-24T07:55:44.4592119Z",
+  "Ctime": "2018-09-24T07:55:20.6489276Z",
+  "Btime": "2018-09-24T07:55:44.4592119Z",
+  "FNBtime": "0001-01-01T00:00:00Z",
+  "FNMtime": "0001-01-01T00:00:00Z",
+  "Name": "Folder B",
+  "NameType": "POSIX",
+  "ExtraNames": null,
+  "IsDir": false,
+  "Size": 0,
+  "AllocatedSize": 0,
+  "IsSlack": false,
+  "SlackOffset": 0
+ }
+]SELECT * FROM parse_ntfs_ranges(accessor='ntfs', device='c:/$MFT', inode="46-128-5")[
+ {
+  "Offset": 0,
+  "Length": 20,
+  "IsSparse": false
+ }
+]SELECT FullPath FROM glob(accessor='registry', globs="/HKLM/*/xbox*")[
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\Classes\\xbox"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\Classes\\xbox-captures"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\Classes\\xbox-friendfinder"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\Classes\\xbox-gamehub"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\Classes\\xbox-lfg"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\Classes\\xbox-network"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\Classes\\xbox-profile"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\Classes\\xbox-settings"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\Classes\\xbox-store"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\Classes\\xbox-tcui"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\Classes\\xboxgames"
+ }
+]

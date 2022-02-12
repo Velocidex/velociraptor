@@ -180,6 +180,8 @@ type RawRegFileSystemAccessor struct {
 	// Maintain a cache of already parsed hives
 	hive_cache map[string]*regparser.Registry
 	scope      vfilter.Scope
+
+	root *accessors.OSPath
 }
 
 func (self *RawRegFileSystemAccessor) getRegHive(
@@ -242,6 +244,7 @@ func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 		result := &RawRegFileSystemAccessor{
 			hive_cache: make(map[string]*regparser.Registry),
 			scope:      scope,
+			root:       self.root,
 		}
 		vql_subsystem.CacheSet(scope, RawRegFileSystemTag, result)
 		return result, nil
@@ -255,14 +258,17 @@ func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 // 2. Path are always serialized with /
 // 3. No required hive at first element.
 // 4. Paths start with / since they refer to the root of the raw hive file.
-func (self RawRegFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
-	return accessors.NewGenericOSPath(path)
+func (self RawRegFileSystemAccessor) ParsePath(path string) (*accessors.OSPath, error) {
+	return self.root.Parse(path)
 }
 
 func (self *RawRegFileSystemAccessor) ReadDir(key_path string) (
 	[]accessors.FileInfo, error) {
 
-	full_path := self.ParsePath(key_path)
+	full_path, err := self.ParsePath(key_path)
+	if err != nil {
+		return nil, err
+	}
 
 	var result []accessors.FileInfo
 	hive, err := self.getRegHive(full_path)
@@ -303,13 +309,20 @@ func (self *RawRegFileSystemAccessor) Open(path string) (
 
 func (self *RawRegFileSystemAccessor) Lstat(filename string) (
 	accessors.FileInfo, error) {
+	full_path, err := self.ParsePath(filename)
+	if err != nil {
+		return nil, err
+	}
+
 	return &accessors.VirtualFileInfo{
-		Path: self.ParsePath(filename),
+		Path: full_path,
 	}, nil
 }
 
 func init() {
-	accessors.Register("raw_reg", &RawRegFileSystemAccessor{},
+	accessors.Register("raw_reg", &RawRegFileSystemAccessor{
+		root: accessors.MustNewGenericOSPathWithBackslashSeparator(""),
+	},
 		`Access keys and values by parsing the raw registry hive. Path is a pathspec having delegate opening the raw registry hive.`)
 
 	json.RegisterCustomEncoder(&RawRegKeyInfo{}, accessors.MarshalGlobFileInfo)
