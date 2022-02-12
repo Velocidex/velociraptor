@@ -67,10 +67,13 @@ sources:
                 FROM stat(filename=servicesKeyGlob + Name, accessor='reg')
             } AS Created,
             {
-                SELECT expand(path=ServiceDll) FROM read_reg_key(globs=servicesKeyGlob + Name + "\\Parameters")
+                SELECT expand(path=ServiceDll) AS ServiceDll
+                FROM read_reg_key(globs=servicesKeyGlob + Name + "\\Parameters")
+                LIMIT 1
             } AS ServiceDll,
             {
                 SELECT FailureCommand FROM read_reg_key(globs=servicesKeyGlob + Name)
+                LIMIT 1
             } AS FailureCommand,
             {
                 SELECT
@@ -84,8 +87,8 @@ sources:
         WHERE Name =~ NameRegex
             AND DisplayName =~ DisplayNameRegex
             AND PathName =~ PathNameRegex
-            AND ServiceDll =~ ServiceDllRegex
-            AND FailureCommand =~ FailureCommandRegex
+            AND if(condition=ServiceDll, then=ServiceDll =~ ServiceDllRegex, else=TRUE)
+            AND if(condition=FailureCommand, then=FailureCommand =~ FailureCommandRegex, else=TRUE)
 
       SELECT *,
         if(condition=Calculate_hashes,
