@@ -37,7 +37,7 @@ type Container struct {
 
 	// The underlying file writer
 	fd      io.WriteCloser
-	writer  io.Writer
+	writer  *utils.TeeWriter
 	sha_sum hash.Hash
 
 	level int
@@ -342,8 +342,13 @@ func (self *Container) Close() error {
 	if self.delegate_zip != nil {
 		self.delegate_zip.Close()
 	}
-	logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
-	logger.Info("Container hash %v", hex.EncodeToString(self.sha_sum.Sum(nil)))
+
+	// Only report the hash if we actually wrote something (few bytes
+	// are always written for the zip header).
+	if self.writer.Count() > 50 {
+		logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
+		logger.Info("Container hash %v", hex.EncodeToString(self.sha_sum.Sum(nil)))
+	}
 	return self.fd.Close()
 }
 

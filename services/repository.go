@@ -149,6 +149,10 @@ type RepositoryManager interface {
 		principal, name string) error
 }
 
+type MockablePlugin interface {
+	SetMock(rows []vfilter.Row)
+}
+
 // A helper function to build a new scope from an existing scope. This
 // is needed in order to isolate the existing scope from the new scope
 // (e.g. when running a sub-artifact)

@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	"www.velocidex.com/golang/velociraptor/vql/sorter"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -31,7 +32,7 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 	}
 
 	var scope vfilter.Scope
-	if from_scratch {
+	if from_scratch || self.Config != nil && self.Config.Remappings != nil {
 		scope = vql_subsystem.MakeNewScope()
 	} else {
 		scope = vql_subsystem.MakeScope()
@@ -57,20 +58,6 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 			env.Set(constants.SCOPE_CONFIG, &config_proto.ClientConfig{
 				Version: config.GetVersion(),
 			})
-		}
-
-		// If there are remappings in the config file, we apply them to
-		// all scopes.
-		if self.Config.Remappings != nil {
-			device_manager.Clear()
-			err := accessors.ApplyRemappingOnScope(
-				context.Background(), device_manager, self.Config.Remappings)
-			if err != nil {
-				scope.Log("Applying remapping: %v", err)
-			}
-
-			self.ACLManager = accessors.GetRemappingACLManager(
-				self.Config.Remappings)
 		}
 	}
 
@@ -98,6 +85,30 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 		_ArtifactRepositoryPluginAssociativeProtocol{})
 
 	env.Set(constants.SCOPE_ROOT, scope)
+
+	// If there are remappings in the config file, we apply them to
+	// all scopes.
+	if self.Config != nil && self.Config.Remappings != nil {
+		device_manager.Clear()
+
+		err := remapping.ApplyRemappingOnScope(
+			context.Background(), scope, device_manager,
+			env, self.Config.Remappings)
+		if err != nil {
+			scope.Log("Applying remapping: %v", err)
+		}
+
+		// Reduce permissions based on the configuration.
+		if self.ACLManager != nil {
+			new_acl_manager, err := accessors.GetRemappingACLManager(
+				self.ACLManager, self.Config.Remappings)
+			if err != nil {
+				scope.Log("Applying remapping: %v", err)
+			}
+
+			env.Set(vql_subsystem.ACL_MANAGER_VAR, new_acl_manager)
+		}
+	}
 
 	_ = scope.AddDestructor(func() {
 		scope.Log("Query Stats: %v", json.MustMarshalString(

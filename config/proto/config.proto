@@ -796,6 +796,13 @@ message RemappingConfig {
     // For mount options
     MountPoint from = 2;
     MountPoint on = 3;
+
+    // For type=permissions - permissions come from acls/acls.go
+    repeated string permissions = 4;
+
+    // For type=impersonation - can be windows, linux, darwin
+    string os = 5;
+    string hostname = 6;
 }
 
 message Config {

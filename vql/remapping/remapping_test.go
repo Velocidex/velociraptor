@@ -1,4 +1,4 @@
-package tools
+package remapping_test
 
 import (
 	"fmt"
@@ -20,6 +20,7 @@ import (
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
 	_ "www.velocidex.com/golang/velociraptor/accessors/raw_registry"
+	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
@@ -42,6 +43,9 @@ func (self *RemapTestSuite) buildRemapConfig() *config_proto.Config {
 	// We also map the test data directory on D: drive
 	remap_config := fmt.Sprintf(`
 remappings:
+- type: permissions
+  permissions:
+     - FILESYSTEM_READ
 - type: mount
   from:
     accessor: "raw_reg"

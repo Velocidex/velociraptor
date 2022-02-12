@@ -64,9 +64,14 @@ func (self *MEFileSystemAccessor) GetZipFile(file_path *accessors.OSPath) (
 		self.fd_cache[me] = zip_file_cache
 
 		for _, i := range zip_file.File {
+			full_path, err := accessors.NewLinuxOSPath(i.Name)
+			if err != nil {
+				continue
+			}
+
 			zip_file_cache.lookup = append(zip_file_cache.lookup,
 				_CDLookup{
-					full_path:   accessors.NewLinuxOSPath(i.Name),
+					full_path:   full_path,
 					member_file: i,
 				})
 		}
@@ -80,7 +85,10 @@ func (self *MEFileSystemAccessor) GetZipFile(file_path *accessors.OSPath) (
 
 func (self *MEFileSystemAccessor) Lstat(serialized_path string) (
 	accessors.FileInfo, error) {
-	full_path := accessors.NewLinuxOSPath(serialized_path)
+	full_path, err := accessors.NewLinuxOSPath(serialized_path)
+	if err != nil {
+		return nil, err
+	}
 	root, err := self.GetZipFile(full_path)
 	if err != nil {
 		return nil, err
@@ -92,7 +100,10 @@ func (self *MEFileSystemAccessor) Lstat(serialized_path string) (
 func (self *MEFileSystemAccessor) Open(serialized_path string) (
 	accessors.ReadSeekCloser, error) {
 	// Fetch the zip file from cache again.
-	full_path := accessors.NewLinuxOSPath(serialized_path)
+	full_path, err := accessors.NewLinuxOSPath(serialized_path)
+	if err != nil {
+		return nil, err
+	}
 	zip_file_cache, err := self.GetZipFile(full_path)
 	if err != nil {
 		return nil, err
@@ -110,7 +121,10 @@ func (self *MEFileSystemAccessor) Open(serialized_path string) (
 func (self *MEFileSystemAccessor) ReadDir(serialized_path string) (
 	[]accessors.FileInfo, error) {
 
-	full_path := accessors.NewPathspecOSPath(serialized_path)
+	full_path, err := accessors.NewPathspecOSPath(serialized_path)
+	if err != nil {
+		return nil, err
+	}
 	root, err := self.GetZipFile(full_path)
 	if err != nil {
 		return nil, err
@@ -129,7 +143,8 @@ func (self *MEFileSystemAccessor) ReadDir(serialized_path string) (
 	return result, nil
 }
 
-func (self MEFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+func (self MEFileSystemAccessor) ParsePath(path string) (
+	*accessors.OSPath, error) {
 	return accessors.NewLinuxOSPath(path)
 }
 

@@ -62,7 +62,7 @@ var pathComponentsTestFixture = []pathComponentsTestFixtureType{
 func TestConvertToPathComponent(t *testing.T) {
 	for _, fixture := range pathComponentsTestFixture {
 		components, err := convert_glob_into_path_components(
-			accessors.NewLinuxOSPath(fixture.pattern))
+			accessors.MustNewLinuxOSPath(fixture.pattern))
 		if err == nil {
 			if reflect.DeepEqual(fixture.components, components) {
 				continue
@@ -141,7 +141,7 @@ func GetMockFileSystemAccessor() accessors.FileSystemAccessor {
 		"/tmp/1/2/20/",
 	} {
 		result.SetVirtualFileInfo(&accessors.VirtualFileInfo{
-			Path:    accessors.NewLinuxOSPath(path),
+			Path:    accessors.MustNewLinuxOSPath(path),
 			RawData: []byte("A"),
 			IsDir_:  strings.HasSuffix(path, "/"),
 		})
@@ -163,7 +163,7 @@ func TestGlobWithContext(t *testing.T) {
 		patterns := ExpandBraces(fixture.patterns)
 
 		for _, pattern := range patterns {
-			err := globber.Add(accessors.NewLinuxOSPath(pattern))
+			err := globber.Add(accessors.MustNewLinuxOSPath(pattern))
 			if err != nil {
 				t.Fatalf("Failed %v", err)
 			}
@@ -171,7 +171,7 @@ func TestGlobWithContext(t *testing.T) {
 
 		output_chan := globber.ExpandWithContext(
 			ctx, config.GetDefaultConfig(),
-			accessors.NewLinuxOSPath("/"), // root
+			accessors.MustNewLinuxOSPath("/"), // root
 			fs_accessor)
 		for row := range output_chan {
 			returned = append(returned, row.FullPath())

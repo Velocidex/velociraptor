@@ -134,7 +134,7 @@ type PipeFilesystemAccessor struct {
 	scope vfilter.Scope
 }
 
-func (self PipeFilesystemAccessor) ParsePath(path string) *accessors.OSPath {
+func (self PipeFilesystemAccessor) ParsePath(path string) (*accessors.OSPath, error) {
 	return accessors.NewLinuxOSPath(path)
 }
 
@@ -143,10 +143,15 @@ func (self PipeFilesystemAccessor) New(scope vfilter.Scope) (
 	return PipeFilesystemAccessor{scope}, nil
 }
 
-func (self PipeFilesystemAccessor) Lstat(variable string) (
+func (self PipeFilesystemAccessor) Lstat(filename string) (
 	accessors.FileInfo, error) {
+	full_path, err := self.ParsePath(filename)
+	if err != nil {
+		return nil, err
+	}
+
 	return &accessors.VirtualFileInfo{
-		Path: self.ParsePath(variable),
+		Path: full_path,
 	}, nil
 }
 

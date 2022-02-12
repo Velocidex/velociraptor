@@ -32,10 +32,11 @@ import (
 	errors "github.com/pkg/errors"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/uploads"
-	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -176,12 +177,13 @@ type NTFSFileSystemAccessor struct {
 
 func NewNTFSFileSystemAccessor(
 	scope vfilter.Scope, device, accessor string) *NTFSFileSystemAccessor {
+	root_path, _ := accessors.NewGenericOSPath("")
 	device = strings.TrimSuffix(device, "\\")
 	return &NTFSFileSystemAccessor{
 		scope:    scope,
 		accessor: accessor,
 		device:   device,
-		root:     accessors.NewGenericOSPath(""),
+		root:     root_path,
 	}
 }
 
@@ -201,7 +203,8 @@ func (self *NTFSFileSystemAccessor) getRootMFTEntry(ntfs_ctx *ntfs.NTFSContext) 
 	return ntfs_ctx.GetMFT(5)
 }
 
-func (self NTFSFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+func (self NTFSFileSystemAccessor) ParsePath(path string) (
+	*accessors.OSPath, error) {
 	return accessors.NewWindowsNTFSPath(path)
 }
 
@@ -216,7 +219,10 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (
 	}()
 
 	// Normalize the path
-	fullpath := self.ParsePath(path)
+	fullpath, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
 	result := []accessors.FileInfo{}
 
 	device := self.device
@@ -269,7 +275,8 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (
 		}
 		// Emit a result for each filename
 		for _, info := range ntfs.Stat(ntfs_ctx, node_mft) {
-			if info == nil {
+			// Skip . files - they are pretty useless.
+			if info == nil || info.Name == "." || info.Name == ".." {
 				continue
 			}
 			result = append(result, &NTFSFileInfo{
@@ -353,7 +360,10 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekClo
 		}
 	}()
 
-	fullpath := self.ParsePath(path)
+	fullpath, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
 
 	device := self.device
 	accessor := self.accessor
@@ -361,6 +371,29 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekClo
 		pathspec := fullpath.PathSpec()
 		device = pathspec.GetDelegatePath()
 		accessor = pathspec.GetDelegateAccessor()
+	}
+
+	// We dont want to open a subpath of the filesyste, instead we
+	// special case this as openning the raw device.
+	if len(fullpath.Components) == 0 {
+		accessor, err := accessors.GetAccessor(accessor, self.scope)
+		if err != nil {
+			return nil, err
+		}
+
+		file, err := accessor.Open(device)
+		if err != nil {
+			return nil, err
+		}
+
+		reader, err := ntfs.NewPagedReader(
+			utils.ReaderAtter{file}, 0x1000, 10000)
+		if err != nil {
+			return nil, err
+		}
+
+		return utils.NewReadSeekReaderAdapter(reader), nil
+
 	}
 
 	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device, accessor)
@@ -373,7 +406,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekClo
 		return nil, err
 	}
 
-	data, err := ntfs.GetDataForPath(ntfs_ctx, fullpath.String())
+	data, err := ntfs.GetDataForPath(ntfs_ctx, fullpath.Path())
 	if err != nil {
 		return nil, err
 	}
@@ -410,7 +443,10 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res accessors.FileInfo, 
 		}
 	}()
 
-	fullpath := self.root.Parse(path)
+	fullpath, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
 	device := self.device
 	accessor := self.accessor
 	if device == "" {

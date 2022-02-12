@@ -30,7 +30,7 @@ import (
 // possible and only serialize to OS representation when necessary.
 
 type PathManipulator interface {
-	PathParse(path string, result *OSPath)
+	PathParse(path string, result *OSPath) error
 	PathJoin(path *OSPath) string
 	AsPathSpec(path *OSPath) *PathSpec
 }
@@ -82,14 +82,13 @@ func (self *OSPath) String() string {
 	return self.Manipulator.PathJoin(self)
 }
 
-func (self *OSPath) Parse(path string) *OSPath {
+func (self *OSPath) Parse(path string) (*OSPath, error) {
 	result := &OSPath{
 		Manipulator: self.Manipulator,
 	}
 
-	self.Manipulator.PathParse(path, result)
-
-	return result
+	err := self.Manipulator.PathParse(path, result)
+	return result, err
 }
 
 func (self *OSPath) Basename() string {
@@ -183,7 +182,7 @@ type FileSystemAccessor interface {
 	Open(path string) (ReadSeekCloser, error)
 	Lstat(filename string) (FileInfo, error)
 
-	ParsePath(filename string) *OSPath
+	ParsePath(filename string) (*OSPath, error)
 }
 
 // A factory for new accessors

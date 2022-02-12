@@ -6,13 +6,12 @@ import (
 	"time"
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
+	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -53,12 +52,6 @@ func (self *USNWatcherService) Register(
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
-
-	device, _, err := paths.GetDeviceAndSubpath(device)
-	if err != nil {
-		scope.Log("watch_usn: %v", err)
-		return func() {}
-	}
 
 	ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
 	if err != nil {

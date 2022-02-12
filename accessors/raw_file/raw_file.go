@@ -25,7 +25,7 @@ import (
 
 type RawFileSystemAccessor struct{}
 
-func (self RawFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+func (self RawFileSystemAccessor) ParsePath(path string) (*accessors.OSPath, error) {
 	return accessors.NewPathspecOSPath(path)
 }
 

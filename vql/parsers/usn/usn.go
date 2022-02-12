@@ -5,16 +5,16 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type USNPluginArgs struct {
 	Device   string `vfilter:"required,field=device,doc=The device file to open."`
+	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use."`
 	StartUSN int64  `vfilter:"optional,field=start_offset,doc=The starting offset of the first USN record to parse."`
 }
 
@@ -37,13 +37,14 @@ func (self USNPlugin) Call(
 			return
 		}
 
-		device, _, err := paths.GetDeviceAndSubpath(arg.Device)
+		device, accessor, err := readers.GetRawDeviceAndAccessor(
+			arg.Device, arg.Accessor)
 		if err != nil {
 			scope.Log("parse_usn: %v", err)
 			return
 		}
 
-		ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
+		ntfs_ctx, err := readers.GetNTFSContext(scope, device, accessor)
 		if err != nil {
 			scope.Log("parse_usn: %v", err)
 			return

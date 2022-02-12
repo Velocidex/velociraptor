@@ -109,7 +109,10 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 	file_path string) (*ZipFileCache, *accessors.OSPath, error) {
 
 	// Zip files typically use standard / path separators.
-	full_path := self.ParsePath(file_path)
+	full_path, err := self.ParsePath(file_path)
+	if err != nil {
+		return nil, nil, err
+	}
 	pathspec := full_path.PathSpec()
 
 	base_pathspec := accessors.PathSpec{
@@ -194,8 +197,13 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 		next_pathspec := full_path.PathSpec()
 		next_pathspec.Path = i.Name
 
+		next_path, err := full_path.Parse(next_pathspec.String())
+		if err != nil {
+			continue
+		}
+
 		next_item := _CDLookup{
-			full_path:   full_path.Parse(next_pathspec.String()),
+			full_path:   next_path,
 			member_file: i,
 		}
 		zip_file_cache.lookup = append(zip_file_cache.lookup, next_item)
@@ -266,7 +274,8 @@ const (
 	ZipFileSystemAccessorTag = "_ZipFS"
 )
 
-func (self ZipFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+func (self ZipFileSystemAccessor) ParsePath(path string) (
+	*accessors.OSPath, error) {
 	return accessors.NewGenericOSPath(path)
 }
 

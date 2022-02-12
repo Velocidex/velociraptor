@@ -1,4 +1,4 @@
-package tools
+package remapping
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -69,6 +69,18 @@ type _MockerCtx struct {
 type MockerPlugin struct {
 	name string
 	ctx  *_MockerCtx
+}
+
+func NewMockerPlugin(name string, results []*ordereddict.Dict) *MockerPlugin {
+	result := &MockerPlugin{
+		name: name,
+		ctx:  &_MockerCtx{},
+	}
+
+	for _, item := range results {
+		result.ctx.results = append(result.ctx.results, item)
+	}
+	return result
 }
 
 func (self MockerPlugin) Call(ctx context.Context,
@@ -228,7 +240,7 @@ func (self *MockFunction) Call(ctx context.Context,
 			item = item_lazy.Reduce(ctx)
 		}
 
-		artifact_plugin, ok := item.(*repository.ArtifactRepositoryPlugin)
+		artifact_plugin, ok := item.(services.MockablePlugin)
 		if !ok {
 			scope.Log("mock: artifact is not defined")
 			return vfilter.Null{}

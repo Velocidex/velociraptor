@@ -113,7 +113,7 @@ func (self *OSFileInfo) GetLink() (*accessors.OSPath, error) {
 	if err != nil {
 		return nil, err
 	}
-	return self._full_path.Parse(target), nil
+	return self._full_path.Parse(target)
 }
 
 func (self *OSFileInfo) sys() *syscall.Win32FileAttributeData {
@@ -124,7 +124,8 @@ type OSFileSystemAccessor struct {
 	follow_links bool
 }
 
-func (self OSFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+func (self OSFileSystemAccessor) ParsePath(path string) (
+	*accessors.OSPath, error) {
 	return accessors.NewWindowsOSPath(path)
 }
 
@@ -154,11 +155,16 @@ func discoverDriveLetters() ([]accessors.FileInfo, error) {
 			size, _ := row.GetInt64("Size")
 			device_name, pres := row.GetString("DeviceID")
 			if pres {
+				device_path, err := accessors.NewWindowsOSPath(device_name)
+				if err != nil {
+					return nil, err
+				}
+
 				result = append(result, &accessors.VirtualFileInfo{
 					IsDir_: true,
 					Size_:  size,
 					Data_:  row,
-					Path:   accessors.NewWindowsOSPath(device_name),
+					Path:   device_path,
 				})
 			}
 		}
@@ -169,7 +175,10 @@ func discoverDriveLetters() ([]accessors.FileInfo, error) {
 
 func (self OSFileSystemAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {
 	var result []accessors.FileInfo
-	full_path := self.ParsePath(path)
+	full_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
 
 	// No drive part, so list all drives.
 	if len(full_path.Components) == 0 {
@@ -238,7 +247,10 @@ func (self OSFileWrapper) Close() error {
 }
 
 func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
-	full_path := self.ParsePath(path)
+	full_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
 	filename := full_path.String()
 
 	// The API does not accept filenames with trailing \\ for an open call.
@@ -254,7 +266,10 @@ func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, er
 
 func (self *OSFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error) {
 
-	full_path := self.ParsePath(path)
+	full_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
 	stat, err := os.Lstat(full_path.String())
 	return &OSFileInfo{
 		follow_links: self.follow_links,

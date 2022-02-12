@@ -37,15 +37,19 @@ func TestAccessorRawReg(t *testing.T) {
 			DelegateAccessor: "file",
 			DelegatePath:     abs_path,
 		}
-		root_path := accessors.NewWindowsOSPath(root.String())
+		root_path, err := accessors.NewWindowsOSPath(root.String())
+		assert.NoError(t, err)
 
 		globber := glob.NewGlobber()
-		globber.Add(accessors.NewLinuxOSPath("/SAM/Domains/*/*"))
+		glob_path, err := accessors.NewLinuxOSPath("/SAM/Domains/*/*")
+		assert.NoError(t, err)
+
+		globber.Add(glob_path)
 
 		hits := []string{}
 		for hit := range globber.ExpandWithContext(
 			context.Background(), config_obj, root_path, reg_accessor) {
-			hits = append(hits, hit.OSPath().PathSpec().Path)
+			hits = append(hits, hit.OSPath().Path())
 		}
 
 		sort.Strings(hits)

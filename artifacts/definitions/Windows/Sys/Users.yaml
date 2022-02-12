@@ -2,7 +2,7 @@ name: Windows.Sys.Users
 description: |
   List User accounts. We combine two data sources - the output from
   the NetUserEnum() call and the list of SIDs in the registry.
-  
+
   On Domain Controllers the API will return the contents of the ActiveDirectory as a list of 'local' users, however this does not mean that the users have logged into the DC locally.
 
 parameters:
@@ -22,7 +22,7 @@ sources:
                basename(path=Key.FullPath) as UUID,
                Key.Mtime as Mtime,
                "roaming" as Type
-           FROM read_reg_key(globs=remoteRegKey, accessor="reg")
+           FROM read_reg_key(globs=remoteRegKey, accessor="registry")
 
         LET local_users <= select User_id as Uid, Primary_group_id as Gid, Name,
                Comment as Description, {

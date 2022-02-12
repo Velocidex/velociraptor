@@ -35,13 +35,28 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 	if arg.Parse != "" {
 		switch arg.Type {
 		case "linux":
-			return parseOSPath(accessors.NewLinuxOSPath(arg.Parse))
+			res, err := accessors.NewLinuxOSPath(arg.Parse)
+			if err != nil {
+				scope.Log("pathspec: %v", err)
+				return false
+			}
+			return parseOSPath(res)
 
 		case "windows":
-			return parseOSPath(accessors.NewWindowsOSPath(arg.Parse))
+			res, err := accessors.NewWindowsOSPath(arg.Parse)
+			if err != nil {
+				scope.Log("pathspec: %v", err)
+				return false
+			}
+			return parseOSPath(res)
 
 		case "":
-			return parseOSPath(accessors.NewGenericOSPath(arg.Parse))
+			res, err := accessors.NewGenericOSPath(arg.Parse)
+			if err != nil {
+				scope.Log("pathspec: %v", err)
+				return false
+			}
+			return parseOSPath(res)
 
 		default:
 			scope.Log("Unknown path type")

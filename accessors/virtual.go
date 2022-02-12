@@ -170,7 +170,7 @@ func (self VirtualFilesystemAccessor) New(scope vfilter.Scope) (
 	return VirtualFilesystemAccessor{}, nil
 }
 
-func (self VirtualFilesystemAccessor) ParsePath(path string) *OSPath {
+func (self VirtualFilesystemAccessor) ParsePath(path string) (*OSPath, error) {
 	return self.root.file_info.OSPath().Parse(path)
 }
 
@@ -252,10 +252,11 @@ func (self *VirtualFilesystemAccessor) SetVirtualFileInfo(
 }
 
 func NewVirtualFilesystemAccessor() *VirtualFilesystemAccessor {
+	root_path, _ := NewLinuxOSPath("")
 	return &VirtualFilesystemAccessor{
 		root: directory_node{
 			file_info: &VirtualFileInfo{
-				Path:   NewLinuxOSPath(""),
+				Path:   root_path,
 				IsDir_: true,
 			},
 		},

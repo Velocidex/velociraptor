@@ -46,7 +46,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/startup"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/tools"
+	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -175,7 +175,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 		Uploader:   container,
 		Env: ordereddict.NewDict().
 			Set("GoldenOutput", tmpfile.Name()).
-			Set(constants.SCOPE_MOCK, &tools.MockingScopeContext{}),
+			Set(constants.SCOPE_MOCK, &remapping.MockingScopeContext{}),
 	}
 
 	if golden_env_map != nil {

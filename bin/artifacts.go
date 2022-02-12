@@ -346,7 +346,12 @@ func load_config_artifacts(config_obj *config_proto.Config) error {
 		return nil
 	}
 
-	repository, err := getRepository(config_obj)
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
@@ -361,11 +366,11 @@ func load_config_artifacts(config_obj *config_proto.Config) error {
 		artifact, err := repository.LoadYaml(
 			string(serialized), true /* validate */, true /* built_in */)
 		if err != nil {
-			fmt.Printf("<red>Error Loading config artifact %v</>: %v",
+			logging.Prelog("<red>Error Loading config artifact %v</>: %v",
 				artifact.Name, err)
 			return err
 		}
-		fmt.Printf("Loading config artifact: %v", artifact.Name)
+		logging.Prelog("Loading config artifact: %v", artifact.Name)
 
 	}
 	return nil

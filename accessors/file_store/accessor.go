@@ -56,7 +56,8 @@ func (self FileStoreFileSystemAccessor) Lstat(filename string) (
 	}, nil
 }
 
-func (self FileStoreFileSystemAccessor) ParsePath(path string) *accessors.OSPath {
+func (self FileStoreFileSystemAccessor) ParsePath(path string) (
+	*accessors.OSPath, error) {
 	return accessors.NewLinuxOSPath(path)
 }
 

@@ -189,7 +189,8 @@ func (self ProcessAccessor) New(scope vfilter.Scope) (
 	return &ProcessAccessor{}, nil
 }
 
-func (self ProcessAccessor) ParsePath(path string) *accessors.OSPath {
+func (self ProcessAccessor) ParsePath(path string) (
+	*accessors.OSPath, error) {
 	return accessors.NewLinuxOSPath(path)
 }
 
@@ -198,8 +199,13 @@ func (self ProcessAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {
 }
 
 func (self ProcessAccessor) Lstat(filename string) (accessors.FileInfo, error) {
+	full_path, err := self.ParsePath(filename)
+	if err != nil {
+		return nil, err
+	}
+
 	return &accessors.VirtualFileInfo{
-		Path: self.ParsePath(filename),
+		Path: full_path,
 	}, nil
 }
 

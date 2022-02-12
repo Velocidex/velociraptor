@@ -17,7 +17,8 @@ type AutoFilesystemAccessor struct {
 	file_delegate accessors.FileSystemAccessor
 }
 
-func (self AutoFilesystemAccessor) ParsePath(path string) *accessors.OSPath {
+func (self AutoFilesystemAccessor) ParsePath(path string) (
+	*accessors.OSPath, error) {
 	return accessors.NewWindowsOSPath(path)
 }
 

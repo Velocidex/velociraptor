@@ -33,14 +33,18 @@ func (self DataFilesystemAccessor) New(scope vfilter.Scope) (accessors.FileSyste
 	return DataFilesystemAccessor{}, nil
 }
 
-func (self DataFilesystemAccessor) ParsePath(path string) *accessors.OSPath {
+func (self DataFilesystemAccessor) ParsePath(path string) (*accessors.OSPath, error) {
 	return accessors.NewLinuxOSPath(path)
 }
 
 func (self DataFilesystemAccessor) Lstat(filename string) (accessors.FileInfo, error) {
+	full_path, err := self.ParsePath(filename)
+	if err != nil {
+		return nil, err
+	}
 	return &accessors.VirtualFileInfo{
 		RawData: []byte(filename),
-		Path:    self.ParsePath(filename),
+		Path:    full_path,
 	}, nil
 }
 

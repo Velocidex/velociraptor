@@ -80,7 +80,12 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	normalized_path := accessors.NewWindowsOSPath(arg.Filename).String()
+	normalized_os_path, err := accessors.NewWindowsOSPath(arg.Filename)
+	if err != nil {
+		return &vfilter.Null{}
+	}
+
+	normalized_path := normalized_os_path.String()
 
 	output := ordereddict.NewDict().
 		Set("Filename", normalized_path).

@@ -26,7 +26,8 @@ var linux_testcases = []testcase{
 
 func TestLinuxManipulators(t *testing.T) {
 	for _, testcase := range linux_testcases {
-		path := NewLinuxOSPath(testcase.serialized_path)
+		path, err := NewLinuxOSPath(testcase.serialized_path)
+		assert.NoError(t, err)
 		assert.Equal(t, testcase.components, path.Components)
 		assert.Equal(t, testcase.expected_path, path.String())
 	}
@@ -58,7 +59,8 @@ var windows_testcases = []testcase{
 
 func TestWindowsManipulators(t *testing.T) {
 	for _, testcase := range windows_testcases {
-		path := NewWindowsOSPath(testcase.serialized_path)
+		path, err := NewWindowsOSPath(testcase.serialized_path)
+		assert.NoError(t, err)
 		assert.Equal(t, testcase.components, path.Components)
 		assert.Equal(t, testcase.expected_path, path.String())
 	}
@@ -82,7 +84,8 @@ var ntfs_testcases = []testcase{
 
 func TestWindowsNTFSManipulators(t *testing.T) {
 	for _, testcase := range ntfs_testcases {
-		path := NewWindowsNTFSPath(testcase.serialized_path)
+		path, err := NewWindowsNTFSPath(testcase.serialized_path)
+		assert.NoError(t, err)
 		assert.Equal(t, testcase.components, path.Components)
 		assert.Equal(t, testcase.expected_path, path.String())
 	}
@@ -108,7 +111,8 @@ var registry_testcases = []testcase{
 
 func TestRegistryManipulators(t *testing.T) {
 	for _, testcase := range registry_testcases {
-		path := NewWindowsRegistryPath(testcase.serialized_path)
+		path, err := NewWindowsRegistryPath(testcase.serialized_path)
+		assert.NoError(t, err)
 		assert.Equal(t, testcase.components, path.Components)
 		assert.Equal(t, testcase.expected_path, path.String())
 	}
@@ -125,7 +129,8 @@ var pathspec_testcases = []testcase{
 
 func TestPathspecManipulators(t *testing.T) {
 	for _, testcase := range pathspec_testcases {
-		path := NewPathspecOSPath(testcase.serialized_path)
+		path, err := NewPathspecOSPath(testcase.serialized_path)
+		assert.NoError(t, err)
 		assert.Equal(t, testcase.components, path.Components)
 		assert.Equal(t, testcase.expected_path, path.String())
 	}
