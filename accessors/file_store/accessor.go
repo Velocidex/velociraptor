@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -147,7 +148,7 @@ func NewFileStoreFileInfo(
 	// Create an OSPath to represent the abstract filestore path.
 	// Restore the file extension from the filestore abstract
 	// pathspec.
-	components := fullpath.Components()
+	components := utils.CopySlice(fullpath.Components())
 	if len(components) > 0 {
 		last_idx := len(components) - 1
 		components[last_idx] += api.GetExtensionForFilestore(fullpath)

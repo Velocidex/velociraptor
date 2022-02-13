@@ -4,16 +4,16 @@ LET Sanitize(X) = regex_replace(re="[CF]\\.[0-9a-z]+", replace="C.ID", source=X)
  }
 ]SELECT Sanitize(X=vfs_path) AS vfs_path FROM Artifact.Server.Utils.DeleteClient( ClientIdList=[X[0].ClientId, Y[0].ClientId], ReallyDoIt=TRUE) WHERE NOT vfs_path =~ "monitoring" Order by vfs_path[
  {
-  "vfs_path": "/clients/C.ID/artifacts/Windows.System.Pslist/C.ID.json.index.json.index"
+  "vfs_path": "/clients/C.ID/artifacts/Windows.System.Pslist/C.ID.json"
  },
  {
-  "vfs_path": "/clients/C.ID/artifacts/Windows.System.Pslist/C.ID.json.index.json.index"
+  "vfs_path": "/clients/C.ID/artifacts/Windows.System.Pslist/C.ID.json"
  },
  {
-  "vfs_path": "/clients/C.ID/artifacts/Windows.System.Pslist/C.ID.json.json"
+  "vfs_path": "/clients/C.ID/artifacts/Windows.System.Pslist/C.ID.json.index"
  },
  {
-  "vfs_path": "/clients/C.ID/artifacts/Windows.System.Pslist/C.ID.json.json"
+  "vfs_path": "/clients/C.ID/artifacts/Windows.System.Pslist/C.ID.json.index"
  },
  {
   "vfs_path": "/clients/C.ID/collections/C.ID.db"
@@ -28,27 +28,27 @@ LET Sanitize(X) = regex_replace(re="[CF]\\.[0-9a-z]+", replace="C.ID", source=X)
   "vfs_path": "/clients/C.ID/collections/C.ID/logs"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/logs.json.index.json.index"
+  "vfs_path": "/clients/C.ID/collections/C.ID/logs.json.index"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/logs.json.index.json.index"
- },
- {
-  "vfs_path": "/clients/C.ID/collections/C.ID/task.db"
+  "vfs_path": "/clients/C.ID/collections/C.ID/logs.json.index"
  },
  {
   "vfs_path": "/clients/C.ID/collections/C.ID/task.db"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json.index.json.index"
+  "vfs_path": "/clients/C.ID/collections/C.ID/task.db"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json.index.json.index"
+  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json.json"
+  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json.json"
+  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json.index"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json.index"
  }
 ]

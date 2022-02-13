@@ -1,15 +1,27 @@
 SELECT FullPath, hash(path=FullPath, accessor="fs") FROM glob( globs='/clients/C.4f5e52adf0a337a9/artifacts/**', accessor="fs") WHERE NOT IsDir ORDER BY FullPath[
  {
-  "FullPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Applications.ChocolateyPackages/F.BN2HP3OSS3LK6.csv.csv",
-  "hash(path=FullPath, accessor=\"fs\")": null
+  "FullPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Applications.ChocolateyPackages/F.BN2HP3OSS3LK6.csv",
+  "hash(path=FullPath, accessor=\"fs\")": {
+   "MD5": "33f3ec906865e66d534fcae4fee1c996",
+   "SHA1": "21144c3b7584023d13dbc21a5c2d822c3aa7b244",
+   "SHA256": "e873a36ac3339252083d3674a4415bc15985ef2dbbdaac2f9dc08899ea521e8e"
+  }
  },
  {
-  "FullPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Applications.ChocolateyPackages/F.BN2HP3OSS3LK6.json.json",
-  "hash(path=FullPath, accessor=\"fs\")": null
+  "FullPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Applications.ChocolateyPackages/F.BN2HP3OSS3LK6.json",
+  "hash(path=FullPath, accessor=\"fs\")": {
+   "MD5": "0cefcb74dd13a3f381cbbeb2f97902ce",
+   "SHA1": "5f045fe23af6698bc57e7213506e3d1d035d9e98",
+   "SHA256": "c7c9363e9732e9fff9eb10918e03cc70aab81d84955a2002777c3200a1c7290c"
+  }
  },
  {
-  "FullPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Network.NetstatEnriched/F.BSJMEJIPT6P9I/Netstat.json.json",
-  "hash(path=FullPath, accessor=\"fs\")": null
+  "FullPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Network.NetstatEnriched/F.BSJMEJIPT6P9I/Netstat.json",
+  "hash(path=FullPath, accessor=\"fs\")": {
+   "MD5": "59db7963182782188a514202412e6794",
+   "SHA1": "ad0157feb3d77dd729799743ec6bfa273f36122a",
+   "SHA256": "8b39ee335f2f7dd7a68f57900a687fa2bcaae0b1e6d31f3ee91100f195835d9b"
+  }
  }
 ]SELECT hash(path='ds:/clients/C.4f5e52adf0a337a9/ping.json.db', accessor="fs") FROM scope()[
  {
