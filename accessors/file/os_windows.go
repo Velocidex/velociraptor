@@ -173,12 +173,19 @@ func discoverDriveLetters() ([]accessors.FileInfo, error) {
 	return result, nil
 }
 
-func (self OSFileSystemAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {
-	var result []accessors.FileInfo
+func (self OSFileSystemAccessor) ReadDir(path string) (
+	[]accessors.FileInfo, error) {
 	full_path, err := self.ParsePath(path)
 	if err != nil {
 		return nil, err
 	}
+
+	return self.ReadDirWithOSPath(full_path)
+}
+
+func (self OSFileSystemAccessor) ReadDirWithOSPath(
+	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
+	var result []accessors.FileInfo
 
 	// No drive part, so list all drives.
 	if len(full_path.Components) == 0 {
@@ -251,6 +258,11 @@ func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, er
 	if err != nil {
 		return nil, err
 	}
+	return self.OpenWithOSPath(full_path)
+}
+
+func (self OSFileSystemAccessor) OpenWithOSPath(full_path *accessors.OSPath) (
+	accessors.ReadSeekCloser, error) {
 	filename := full_path.String()
 
 	// The API does not accept filenames with trailing \\ for an open call.
@@ -270,6 +282,17 @@ func (self *OSFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error)
 	if err != nil {
 		return nil, err
 	}
+	stat, err := os.Lstat(full_path.String())
+	return &OSFileInfo{
+		follow_links: self.follow_links,
+		FileInfo:     stat,
+		_full_path:   full_path,
+	}, err
+}
+
+func (self *OSFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) (
+	accessors.FileInfo, error) {
+
 	stat, err := os.Lstat(full_path.String())
 	return &OSFileInfo{
 		follow_links: self.follow_links,

@@ -29,15 +29,18 @@ import (
 
 type DataFilesystemAccessor struct{}
 
-func (self DataFilesystemAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
+func (self DataFilesystemAccessor) New(
+	scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
 	return DataFilesystemAccessor{}, nil
 }
 
-func (self DataFilesystemAccessor) ParsePath(path string) (*accessors.OSPath, error) {
+func (self DataFilesystemAccessor) ParsePath(
+	path string) (*accessors.OSPath, error) {
 	return accessors.NewLinuxOSPath(path)
 }
 
-func (self DataFilesystemAccessor) Lstat(filename string) (accessors.FileInfo, error) {
+func (self DataFilesystemAccessor) Lstat(
+	filename string) (accessors.FileInfo, error) {
 	full_path, err := self.ParsePath(filename)
 	if err != nil {
 		return nil, err
@@ -48,13 +51,35 @@ func (self DataFilesystemAccessor) Lstat(filename string) (accessors.FileInfo, e
 	}, nil
 }
 
-func (self DataFilesystemAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {
+func (self DataFilesystemAccessor) LstatWithOSPath(
+	full_path *accessors.OSPath) (accessors.FileInfo, error) {
+	return &accessors.VirtualFileInfo{
+		RawData: []byte(full_path.String()),
+		Path:    full_path,
+	}, nil
+}
+
+func (self DataFilesystemAccessor) ReadDir(
+	path string) ([]accessors.FileInfo, error) {
 	return nil, errors.New("Not implemented")
 }
 
-func (self DataFilesystemAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
+func (self DataFilesystemAccessor) ReadDirWithOSPath(
+	path *accessors.OSPath) ([]accessors.FileInfo, error) {
+	return nil, errors.New("Not implemented")
+}
+
+func (self DataFilesystemAccessor) Open(
+	path string) (accessors.ReadSeekCloser, error) {
 	return accessors.VirtualReadSeekCloser{
 		ReadSeeker: strings.NewReader(path),
+	}, nil
+}
+
+func (self DataFilesystemAccessor) OpenWithOSPath(
+	path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
+	return accessors.VirtualReadSeekCloser{
+		ReadSeeker: strings.NewReader(path.String()),
 	}, nil
 }
 

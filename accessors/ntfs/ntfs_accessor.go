@@ -210,6 +210,17 @@ func (self NTFSFileSystemAccessor) ParsePath(path string) (
 
 func (self *NTFSFileSystemAccessor) ReadDir(path string) (
 	res []accessors.FileInfo, err error) {
+	// Normalize the path
+	fullpath, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.ReadDirWithOSPath(fullpath)
+}
+
+func (self *NTFSFileSystemAccessor) ReadDirWithOSPath(
+	fullpath *accessors.OSPath) (res []accessors.FileInfo, err error) {
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -218,11 +229,6 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (
 		}
 	}()
 
-	// Normalize the path
-	fullpath, err := self.ParsePath(path)
-	if err != nil {
-		return nil, err
-	}
 	result := []accessors.FileInfo{}
 
 	device := self.device
@@ -351,7 +357,20 @@ func (self *readAdapter) Seek(offset int64, whence int) (int64, error) {
 	return self.pos, nil
 }
 
-func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekCloser, err error) {
+func (self *NTFSFileSystemAccessor) Open(
+	path string) (res accessors.ReadSeekCloser, err error) {
+
+	full_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.OpenWithOSPath(full_path)
+}
+
+func (self *NTFSFileSystemAccessor) OpenWithOSPath(
+	fullpath *accessors.OSPath) (res accessors.ReadSeekCloser, err error) {
+
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -359,11 +378,6 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekClo
 			err, _ = r.(error)
 		}
 	}()
-
-	fullpath, err := self.ParsePath(path)
-	if err != nil {
-		return nil, err
-	}
 
 	device := self.device
 	accessor := self.accessor
@@ -434,7 +448,19 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekClo
 	return nil, errors.New("File not found")
 }
 
-func (self *NTFSFileSystemAccessor) Lstat(path string) (res accessors.FileInfo, err error) {
+func (self *NTFSFileSystemAccessor) Lstat(
+	path string) (res accessors.FileInfo, err error) {
+
+	fullpath, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.LstatWithOSPath(fullpath)
+}
+
+func (self *NTFSFileSystemAccessor) LstatWithOSPath(
+	fullpath *accessors.OSPath) (res accessors.FileInfo, err error) {
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -443,10 +469,6 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res accessors.FileInfo, 
 		}
 	}()
 
-	fullpath, err := self.ParsePath(path)
-	if err != nil {
-		return nil, err
-	}
 	device := self.device
 	accessor := self.accessor
 	if device == "" {

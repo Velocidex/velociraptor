@@ -40,53 +40,14 @@ SELECT basename(path="/foo/bar/baz", path_type='linux') FROM scope()[
  }
 ]LET path_spec = pathspec(DelegateAccessor="file", DelegatePath="C:/Windows")[]SELECT path_spec, pathspec(parse=path_spec.String), pathspec(parse="C:\\Windows", path_type='windows'), pathspec(parse="/usr/lib", path_type='linux'), pathspec(parse="file:///usr/lib#*", path_type='generic') FROM scope()[
  {
-  "path_spec": {
-   "DelegateAccessor": "file",
-   "DelegatePath": "C:/Windows"
-  },
-  "pathspec(parse=path_spec.String)": {
-   "DelegateAccessor": "file",
-   "DelegatePath": "C:/Windows",
-   "Path": "/",
-   "Components": null
-  },
-  "pathspec(parse=\"C:\\\\Windows\", path_type='windows')": {
-   "DelegateAccessor": "",
-   "DelegatePath": "",
-   "Path": "C:\\Windows",
-   "Components": [
-    "C:",
-    "Windows"
-   ]
-  },
-  "pathspec(parse=\"/usr/lib\", path_type='linux')": {
-   "DelegateAccessor": "",
-   "DelegatePath": "",
-   "Path": "/usr/lib",
-   "Components": [
-    "usr",
-    "lib"
-   ]
-  },
-  "pathspec(parse=\"file:///usr/lib#*\", path_type='generic')": {
-   "DelegateAccessor": "file",
-   "DelegatePath": "/usr/lib",
-   "Path": "/*",
-   "Components": [
-    "*"
-   ]
-  }
+  "path_spec": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\",\"Path\":\"/\"}",
+  "pathspec(parse=path_spec.String)": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\",\"Path\":\"/\"}",
+  "pathspec(parse=\"C:\\\\Windows\", path_type='windows')": "C:\\Windows",
+  "pathspec(parse=\"/usr/lib\", path_type='linux')": "/usr/lib",
+  "pathspec(parse=\"file:///usr/lib#*\", path_type='generic')": "file:///usr/lib#/*"
  }
 ]SELECT pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows", path_type="windows") FROM scope()[
  {
-  "pathspec(parse=\"\\\\\\\\?\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy1\\\\Windows\", path_type=\"windows\")": {
-   "DelegateAccessor": "",
-   "DelegatePath": "",
-   "Path": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows",
-   "Components": [
-    "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1",
-    "Windows"
-   ]
-  }
+  "pathspec(parse=\"\\\\\\\\?\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy1\\\\Windows\", path_type=\"windows\")": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows"
  }
 ]

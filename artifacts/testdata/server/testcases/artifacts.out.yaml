@@ -104,7 +104,7 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
   "FullPath": "fs:/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/file/C:"
  },
  {
-  "FullPath": "fs:/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/file/C:/1.zip"
+  "FullPath": "fs:/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/file/C:/1.zip.zip"
  }
 ]SELECT artifact_set(definition=_value).name FROM items(item={ SELECT * FROM artifact_definitions(names="Generic.Client.Info") WHERE name =~ "Generic.Client.Info" })[
  {

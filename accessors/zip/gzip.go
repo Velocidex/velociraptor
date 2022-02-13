@@ -126,6 +126,18 @@ type GzipFileSystemAccessor struct {
 
 func (self *GzipFileSystemAccessor) Lstat(file_path string) (
 	accessors.FileInfo, error) {
+
+	full_path, err := self.ParsePath(file_path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.LstatWithOSPath(full_path)
+}
+
+func (self *GzipFileSystemAccessor) LstatWithOSPath(
+	file_path *accessors.OSPath) (
+	accessors.FileInfo, error) {
 	seekablegzip, err := self.getter(file_path, self.scope)
 	if err != nil {
 		return nil, err
@@ -135,13 +147,28 @@ func (self *GzipFileSystemAccessor) Lstat(file_path string) (
 	return seekablegzip.LStat()
 }
 
-func (self *GzipFileSystemAccessor) Open(path string) (
+func (self *GzipFileSystemAccessor) Open(file_path string) (
+	accessors.ReadSeekCloser, error) {
+	full_path, err := self.ParsePath(file_path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.OpenWithOSPath(full_path)
+}
+
+func (self *GzipFileSystemAccessor) OpenWithOSPath(path *accessors.OSPath) (
 	accessors.ReadSeekCloser, error) {
 	return self.getter(path, self.scope)
 }
 
 func (self *GzipFileSystemAccessor) ReadDir(file_path string) (
 	[]accessors.FileInfo, error) {
+	return nil, nil
+}
+
+func (self *GzipFileSystemAccessor) ReadDirWithOSPath(
+	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
 	return nil, nil
 }
 
@@ -200,13 +227,11 @@ func (self *SeekableGzip) LStat() (accessors.FileInfo, error) {
 }
 
 // Any getter that implements this can be used
-type FileGetter func(file_path string, scope vfilter.Scope) (ReaderStat, error)
+type FileGetter func(full_path *accessors.OSPath,
+	scope vfilter.Scope) (ReaderStat, error)
 
-func GetBzip2File(serialized_path string, scope vfilter.Scope) (ReaderStat, error) {
-	full_path, err := accessors.NewLinuxOSPath(serialized_path)
-	if err != nil {
-		return nil, err
-	}
+func GetBzip2File(full_path *accessors.OSPath, scope vfilter.Scope) (
+	ReaderStat, error) {
 	pathspec := full_path.PathSpec()
 
 	// The gzip accessor must use a delegate but if one is not
@@ -244,11 +269,7 @@ func GetBzip2File(serialized_path string, scope vfilter.Scope) (ReaderStat, erro
 		}}, nil
 }
 
-func GetGzipFile(serialized_path string, scope vfilter.Scope) (ReaderStat, error) {
-	full_path, err := accessors.NewLinuxOSPath(serialized_path)
-	if err != nil {
-		return nil, err
-	}
+func GetGzipFile(full_path *accessors.OSPath, scope vfilter.Scope) (ReaderStat, error) {
 	pathspec := full_path.PathSpec()
 
 	// The gzip accessor must use a delegate but if one is not

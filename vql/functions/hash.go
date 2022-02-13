@@ -53,8 +53,8 @@ type HashResult struct {
 }
 
 type HashFunctionArgs struct {
-	Path     string `vfilter:"required,field=path,doc=Path to open and hash."`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Path     *accessors.OSPath `vfilter:"required,field=path,doc=Path to open and hash."`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
 }
 
 // The hash fuction calculates a hash of a file. It may be expensive
@@ -68,10 +68,6 @@ func (self *HashFunction) Call(ctx context.Context,
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("hash: %v", err)
-		return vfilter.Null{}
-	}
-
-	if arg.Path == "" {
 		return vfilter.Null{}
 	}
 
@@ -92,9 +88,9 @@ func (self *HashFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	file, err := fs.Open(arg.Path)
+	file, err := fs.Open(arg.Path.String())
 	if err != nil {
-		scope.Log("hash %s: %v", arg.Path, err.Error())
+		scope.Log("hash %s: %v", arg.Path.String(), err.Error())
 		return vfilter.Null{}
 	}
 	defer file.Close()

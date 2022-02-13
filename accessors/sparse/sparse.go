@@ -2,6 +2,7 @@ package sparse
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -9,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/zip"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -195,11 +197,21 @@ func (self SparseFileInfo) Size() int64 {
 	return self.size
 }
 
-func GetSparseFile(file_path string, scope vfilter.Scope) (zip.ReaderStat, error) {
-	full_path, err := accessors.NewPathspecOSPath(file_path)
+func GetSparseFile(full_path *accessors.OSPath, scope vfilter.Scope) (
+	zip.ReaderStat, error) {
+	if len(full_path.Components) == 0 {
+		return nil, fmt.Errorf("Sparse accessor expects a JSON sparse definition.")
+	}
+
+	// The Path is a serialized ranges map.
+	ranges, err := parseRanges([]byte(full_path.Components[0]))
 	if err != nil {
+		scope.Log("Sparse accessor expects ranges as path, for example: '[{Offset:0, Length: 10},{Offset:10,length:20}]'")
 		return nil, err
 	}
+
+	utils.Debug(full_path.Components)
+
 	pathspec := full_path.PathSpec()
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, pathspec.DelegateAccessor)
@@ -225,13 +237,6 @@ func GetSparseFile(file_path string, scope vfilter.Scope) (zip.ReaderStat, error
 	stat, err := accessor.Lstat(pathspec.GetDelegatePath())
 	if err == nil {
 		size = int64(stat.Size())
-	}
-
-	// The Path is a serialized ranges map.
-	ranges, err := parseRanges([]byte(pathspec.Path))
-	if err != nil {
-		scope.Log("Sparse accessor expects ranges as path, for example: '[{Offset:0, Length: 10},{Offset:10,length:20}]'")
-		return nil, err
 	}
 
 	if size == 0 && len(ranges) > 0 {

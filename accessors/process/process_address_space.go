@@ -18,7 +18,6 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/uploads"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -180,6 +179,11 @@ func (self ProcessAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {
 	return nil, errors.New("Unable to list all processes, use the pslist() plugin.")
 }
 
+func (self ProcessAccessor) ReadDirWithOSPath(
+	path *accessors.OSPath) ([]accessors.FileInfo, error) {
+	return nil, errors.New("Unable to list all processes, use the pslist() plugin.")
+}
+
 func (self ProcessAccessor) Lstat(filename string) (accessors.FileInfo, error) {
 	full_path, err := self.ParsePath(filename)
 	if err != nil {
@@ -191,17 +195,34 @@ func (self ProcessAccessor) Lstat(filename string) (accessors.FileInfo, error) {
 	}, nil
 }
 
+func (self ProcessAccessor) LstatWithOSPath(
+	full_path *accessors.OSPath) (accessors.FileInfo, error) {
+	return &accessors.VirtualFileInfo{
+		Path: full_path,
+	}, nil
+}
+
 func (self ProcessAccessor) ParsePath(path string) (*accessors.OSPath, error) {
 	return accessors.NewLinuxOSPath(path)
 }
 
-func (self *ProcessAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
-	components := utils.SplitComponents(path)
-	if len(components) == 0 {
+func (self *ProcessAccessor) Open(
+	filename string) (accessors.ReadSeekCloser, error) {
+	full_path, err := self.ParsePath(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.OpenWithOSPath(full_path)
+}
+
+func (self *ProcessAccessor) OpenWithOSPath(
+	path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
+	if len(path.Components) == 0 {
 		return nil, errors.New("Unable to list all processes, use the pslist() plugin.")
 	}
 
-	pid, err := strconv.ParseUint(components[0], 0, 64)
+	pid, err := strconv.ParseUint(path.Components[0], 0, 64)
 	if err != nil {
 		return nil, errors.New("First directory path must be a process.")
 	}

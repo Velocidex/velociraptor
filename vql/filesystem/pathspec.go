@@ -39,7 +39,7 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 			return false
 		}
 
-		return parseOSPath(os_path)
+		return os_path
 	}
 
 	// The path can be a more complex type
@@ -77,11 +77,13 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 		}
 	}
 
-	result := &accessors.PathSpec{
-		DelegateAccessor: arg.DelegateAccessor,
-		DelegatePath:     arg.DelegatePath,
-		Path:             path_str,
-	}
+	result, _ := accessors.ParsePath(path_str, arg.Type)
+	result.SetPathSpec(
+		&accessors.PathSpec{
+			DelegateAccessor: arg.DelegateAccessor,
+			DelegatePath:     arg.DelegatePath,
+			Path:             path_str,
+		})
 
 	return result
 }

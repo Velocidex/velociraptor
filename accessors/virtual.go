@@ -10,7 +10,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -174,8 +173,18 @@ func (self VirtualFilesystemAccessor) ParsePath(path string) (*OSPath, error) {
 	return self.root.file_info.OSPath().Parse(path)
 }
 
-func (self VirtualFilesystemAccessor) Lstat(filename string) (FileInfo, error) {
-	node, err := self.getNode(filename)
+func (self VirtualFilesystemAccessor) Lstat(path string) (FileInfo, error) {
+	os_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.LstatWithOSPath(os_path)
+}
+
+func (self VirtualFilesystemAccessor) LstatWithOSPath(
+	path *OSPath) (FileInfo, error) {
+	node, err := self.getNode(path)
 	if err != nil {
 		return nil, err
 	}
@@ -184,6 +193,17 @@ func (self VirtualFilesystemAccessor) Lstat(filename string) (FileInfo, error) {
 }
 
 func (self VirtualFilesystemAccessor) ReadDir(path string) ([]FileInfo, error) {
+	os_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.ReadDirWithOSPath(os_path)
+}
+
+func (self VirtualFilesystemAccessor) ReadDirWithOSPath(
+	path *OSPath) ([]FileInfo, error) {
+
 	node, err := self.getNode(path)
 	if err != nil {
 		return nil, err
@@ -199,6 +219,16 @@ func (self VirtualFilesystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 
 func (self VirtualFilesystemAccessor) Open(path string) (
 	ReadSeekCloser, error) {
+	os_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.OpenWithOSPath(os_path)
+}
+
+func (self VirtualFilesystemAccessor) OpenWithOSPath(path *OSPath) (
+	ReadSeekCloser, error) {
 	node, err := self.getNode(path)
 	if err != nil {
 		return nil, os.ErrNotExist
@@ -209,10 +239,10 @@ func (self VirtualFilesystemAccessor) Open(path string) (
 	}, nil
 }
 
-func (self VirtualFilesystemAccessor) getNode(path string) (*directory_node, error) {
+func (self VirtualFilesystemAccessor) getNode(path *OSPath) (*directory_node, error) {
 	node := &self.root
 
-	for _, c := range utils.SplitComponents(path) {
+	for _, c := range path.Components {
 		if c != "" {
 			next_node := node.GetChild(c)
 			if next_node == nil {

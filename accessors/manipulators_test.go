@@ -135,3 +135,21 @@ func TestPathspecManipulators(t *testing.T) {
 		assert.Equal(t, testcase.expected_path, path.String())
 	}
 }
+
+// Raw Pathspec OSPath do not interpret the Path parameter in a
+// special way - it is just being preserved. This is only used for
+// accessors that use it to represent non-hierarchical data.
+var filestore_testcases = []testcase{
+	{"/clients/", []string{"clients"}, "fs:/clients"},
+	{"ds:/clients/", []string{"clients"}, "ds:/clients"},
+	{"fs:/clients/", []string{"clients"}, "fs:/clients"},
+}
+
+func TestFileStoreManipulators(t *testing.T) {
+	for _, testcase := range filestore_testcases {
+		path, err := NewFileStorePath(testcase.serialized_path)
+		assert.NoError(t, err)
+		assert.Equal(t, testcase.components, path.Components)
+		assert.Equal(t, testcase.expected_path, path.String())
+	}
+}

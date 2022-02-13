@@ -270,6 +270,13 @@ func (self *RawRegFileSystemAccessor) ReadDir(key_path string) (
 		return nil, err
 	}
 
+	return self.ReadDirWithOSPath(full_path)
+}
+
+func (self *RawRegFileSystemAccessor) ReadDirWithOSPath(
+	full_path *accessors.OSPath) (
+	[]accessors.FileInfo, error) {
+
 	var result []accessors.FileInfo
 	hive, err := self.getRegHive(full_path)
 	if err != nil {
@@ -307,12 +314,24 @@ func (self *RawRegFileSystemAccessor) Open(path string) (
 	return nil, errors.New("Not implemented")
 }
 
+func (self *RawRegFileSystemAccessor) OpenWithOSPath(path *accessors.OSPath) (
+	accessors.ReadSeekCloser, error) {
+	return nil, errors.New("Not implemented")
+}
+
 func (self *RawRegFileSystemAccessor) Lstat(filename string) (
 	accessors.FileInfo, error) {
 	full_path, err := self.ParsePath(filename)
 	if err != nil {
 		return nil, err
 	}
+
+	return self.LstatWithOSPath(full_path)
+}
+
+func (self *RawRegFileSystemAccessor) LstatWithOSPath(
+	full_path *accessors.OSPath) (
+	accessors.FileInfo, error) {
 
 	return &accessors.VirtualFileInfo{
 		Path: full_path,

@@ -49,6 +49,26 @@ func (self _EqualOSPath) Eq(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) b
 	return a_os_path.String() == b_os_path.String()
 }
 
+type _RegexOSPath struct{}
+
+func (self _RegexOSPath) Applicable(a vfilter.Any, b vfilter.Any) bool {
+	_, ok := b.(*OSPath)
+	if !ok {
+		return false
+	}
+	_, ok = a.(string)
+	return ok
+}
+
+func (self _RegexOSPath) Match(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+	b_os_path, ok := b.(*OSPath)
+	if !ok {
+		return false
+	}
+
+	return scope.Match(a, b_os_path.String())
+}
+
 type _AddOSPath struct{}
 
 func (self _AddOSPath) Applicable(a vfilter.Any, b vfilter.Any) bool {
@@ -88,4 +108,5 @@ func init() {
 	vql_subsystem.RegisterProtocol(&_BoolOSPath{})
 	vql_subsystem.RegisterProtocol(&_EqualOSPath{})
 	vql_subsystem.RegisterProtocol(&_AddOSPath{})
+	vql_subsystem.RegisterProtocol(&_RegexOSPath{})
 }

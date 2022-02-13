@@ -53,14 +53,13 @@ func (self MFTFileSystemAccessor) ReadDir(path string) (
 	return nil, errors.New("Unable to list all MFT entries.")
 }
 
-func (self MFTFileSystemAccessor) parseMFTPath(path string) (
-	delegate_device, delegate_accessor, subpath string,
-	full_path *accessors.OSPath, err error) {
+func (self MFTFileSystemAccessor) ReadDirWithOSPath(path *accessors.OSPath) (
+	[]accessors.FileInfo, error) {
+	return nil, errors.New("Unable to list all MFT entries.")
+}
 
-	full_path, err = self.ParsePath(path)
-	if err != nil || len(full_path.Components) == 0 {
-		return "", "", "", nil, os.ErrNotExist
-	}
+func (self MFTFileSystemAccessor) parseMFTPath(full_path *accessors.OSPath) (
+	delegate_device, delegate_accessor, subpath string, err error) {
 
 	// There are two ways to use this accessor:
 
@@ -79,17 +78,29 @@ func (self MFTFileSystemAccessor) parseMFTPath(path string) (
 		delegate_accessor = pathSpec.DelegateAccessor
 		subpath = full_path.Components[0]
 	} else if len(full_path.Components) < 2 {
-		return "", "", "", nil, os.ErrNotExist
+		return "", "", "", os.ErrNotExist
 	} else {
 		subpath = full_path.Components[1]
 	}
-	return delegate_device, delegate_accessor, subpath, full_path, nil
+	return delegate_device, delegate_accessor, subpath, nil
 }
 
 func (self *MFTFileSystemAccessor) Open(path string) (
 	accessors.ReadSeekCloser, error) {
-	delegate_device, delegate_accessor,
-		subpath, full_path, err := self.parseMFTPath(path)
+
+	full_path, err := self.ParsePath(path)
+	if err != nil || len(full_path.Components) == 0 {
+		return nil, os.ErrNotExist
+	}
+
+	return self.OpenWithOSPath(full_path)
+}
+
+func (self *MFTFileSystemAccessor) OpenWithOSPath(full_path *accessors.OSPath) (
+	accessors.ReadSeekCloser, error) {
+
+	delegate_device, delegate_accessor, subpath, err := self.parseMFTPath(
+		full_path)
 	if err != nil {
 		return nil, err
 	}
@@ -145,8 +156,17 @@ func (self *MFTFileSystemAccessor) Open(path string) (
 
 func (self *MFTFileSystemAccessor) Lstat(path string) (
 	accessors.FileInfo, error) {
-	delegate_device, delegate_accessor,
-		subpath, full_path, err := self.parseMFTPath(path)
+	full_path, err := self.ParsePath(path)
+	if err != nil || len(full_path.Components) == 0 {
+		return nil, os.ErrNotExist
+	}
+
+	return self.LstatWithOSPath(full_path)
+}
+
+func (self *MFTFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) (
+	accessors.FileInfo, error) {
+	delegate_device, delegate_accessor, subpath, err := self.parseMFTPath(full_path)
 	if err != nil {
 		return nil, err
 	}

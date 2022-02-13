@@ -19,6 +19,7 @@ package functions
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"runtime"
 
@@ -30,9 +31,9 @@ import (
 )
 
 type DirnameArgs struct {
-	Path     string `vfilter:"required,field=path,doc=Extract directory name of path"`
-	Sep      string `vfilter:"optional,field=sep,doc=Separator to use (default /)"`
-	PathType string `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windpws)"`
+	Path     vfilter.Any `vfilter:"required,field=path,doc=Extract directory name of path"`
+	Sep      string      `vfilter:"optional,field=sep,doc=Separator to use (default /)"`
+	PathType string      `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windpws)"`
 }
 
 type DirnameFunction struct{}
@@ -47,7 +48,7 @@ func (self *DirnameFunction) Call(ctx context.Context,
 		return false
 	}
 
-	os_path, err := parsePath(arg.Path, arg.Sep, arg.PathType)
+	os_path, err := parsePath(ctx, scope, arg.Path, arg.Sep, arg.PathType)
 	if err != nil {
 		scope.Log("dirname: %v", err)
 		return false
@@ -76,7 +77,7 @@ func (self *BasenameFunction) Call(ctx context.Context,
 		return false
 	}
 
-	os_path, err := parsePath(arg.Path, arg.Sep, arg.PathType)
+	os_path, err := parsePath(ctx, scope, arg.Path, arg.Sep, arg.PathType)
 	if err != nil {
 		scope.Log("basename: %v", err)
 		return false
@@ -129,9 +130,9 @@ func (self RelnameFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 }
 
 type PathJoinArgs struct {
-	Components []string `vfilter:"required,field=components,doc=Path components to join."`
-	Sep        string   `vfilter:"optional,field=sep,doc=Separator to use (default /)"`
-	PathType   string   `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windpws)"`
+	Components []vfilter.Any `vfilter:"required,field=components,doc=Path components to join."`
+	Sep        string        `vfilter:"optional,field=sep,doc=Separator to use (default /)"`
+	PathType   string        `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windpws)"`
 }
 
 type PathJoinFunction struct{}
@@ -153,7 +154,7 @@ func (self *PathJoinFunction) Call(ctx context.Context,
 	// Parse each component as a path. This allows callers to provide
 	// entire paths to path_join instead of a strict component list.
 	for _, c := range arg.Components {
-		os_path, err = parsePath(c, arg.Sep, arg.PathType)
+		os_path, err = parsePath(ctx, scope, c, arg.Sep, arg.PathType)
 		if err != nil {
 			scope.Log("dirname: %v", err)
 			return false
@@ -163,7 +164,7 @@ func (self *PathJoinFunction) Call(ctx context.Context,
 	}
 
 	if os_path == nil {
-		os_path, err = parsePath("", arg.Sep, arg.PathType)
+		os_path, err = parsePath(ctx, scope, "", arg.Sep, arg.PathType)
 		if err != nil {
 			scope.Log("dirname: %v", err)
 			return false
@@ -183,8 +184,8 @@ func (self PathJoinFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 }
 
 type PathSplitArgs struct {
-	Path     string `vfilter:"required,field=path,doc=Path to split into components."`
-	PathType string `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windpws)"`
+	Path     vfilter.Any `vfilter:"required,field=path,doc=Path to split into components."`
+	PathType string      `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windpws)"`
 }
 
 type PathSplitFunction struct{}
@@ -199,7 +200,7 @@ func (self *PathSplitFunction) Call(ctx context.Context,
 		return []string{}
 	}
 
-	os_path, err := parsePath(arg.Path, "", arg.PathType)
+	os_path, err := parsePath(ctx, scope, arg.Path, "", arg.PathType)
 	if err != nil {
 		scope.Log("path_split: %v", err)
 		return false
@@ -216,25 +217,44 @@ func (self PathSplitFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 	}
 }
 
-func parsePath(path, sep, path_type string) (*accessors.OSPath, error) {
-	if path_type == "" {
-		switch sep {
-		case "":
-			if runtime.GOOS == "windows" {
+func parsePath(
+	ctx context.Context,
+	scope vfilter.Scope,
+	path vfilter.Any, sep, path_type string) (
+	*accessors.OSPath, error) {
+
+	switch t := path.(type) {
+	case vfilter.LazyExpr:
+		return parsePath(ctx, scope, t.ReduceWithScope(ctx, scope), sep, path_type)
+
+		// Noop if it is already an OSPath
+	case *accessors.OSPath:
+		return t, nil
+
+	case string:
+		if path_type == "" {
+			switch sep {
+			case "":
+				if runtime.GOOS == "windows" {
+					path_type = "windows"
+				} else {
+					path_type = "generic"
+				}
+
+			case "\\":
 				path_type = "windows"
-			} else {
+
+			default:
 				path_type = "generic"
 			}
-
-		case "\\":
-			path_type = "windows"
-
-		default:
-			path_type = "generic"
 		}
-	}
 
-	return accessors.ParsePath(path, path_type)
+		return accessors.ParsePath(t, path_type)
+
+	default:
+		return nil, fmt.Errorf(
+			"Path should be an OSPath or string, not %T", path)
+	}
 }
 
 func init() {
