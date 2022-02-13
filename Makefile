@@ -70,7 +70,7 @@ debug_client:
 	dlv debug --build-flags="-tags 'server_vql extras'" ./bin/ -- client -v
 
 debug_golden:
-	dlv debug --build-flags="-tags 'server_vql extras'" ./bin/ -- --config artifacts/testdata/windows/test.config.yaml golden artifacts/testdata/server/testcases/ --env srcDir=`pwd` --disable_alarm --filter=${GOLDEN}
+	dlv debug --build-flags="-tags 'server_vql extras'" ./bin/ -- --config artifacts/testdata/windows/test.config.yaml golden artifacts/testdata/server/testcases/ --env srcDir=`pwd` --disable_alarm -v --filter=${GOLDEN}
 
 lint:
 	golangci-lint run

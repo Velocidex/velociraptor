@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -23,6 +25,28 @@ func parseOSPath(ctx context.Context,
 
 	case *OSPath:
 		return t, nil
+
+	case api.FSPathSpec:
+		// Create an OSPath to represent the abstract filestore path.
+		// Restore the file extension from the filestore abstract
+		// pathspec.
+		components := utils.CopySlice(t.Components())
+		if len(components) > 0 {
+			last_idx := len(components) - 1
+			components[last_idx] += api.GetExtensionForFilestore(t)
+		}
+		return MustNewFileStorePath("fs:").Append(components...), nil
+
+	case api.DSPathSpec:
+		// Create an OSPath to represent the abstract filestore path.
+		// Restore the file extension from the filestore abstract
+		// pathspec.
+		components := utils.CopySlice(t.Components())
+		if len(components) > 0 {
+			last_idx := len(components) - 1
+			components[last_idx] += api.GetExtensionForDatastore(t)
+		}
+		return MustNewFileStorePath("ds:").Append(components...), nil
 
 	case string:
 		return NewGenericOSPath(t)

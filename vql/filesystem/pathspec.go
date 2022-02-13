@@ -74,10 +74,23 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 			}
 
 			path_str = string(serialized)
+			result := accessors.MustNewPathspecOSPath("")
+			result.SetPathSpec(
+				&accessors.PathSpec{
+					DelegateAccessor: arg.DelegateAccessor,
+					DelegatePath:     arg.DelegatePath,
+					Path:             path_str,
+				})
+			return result
 		}
 	}
 
-	result, _ := accessors.ParsePath(path_str, arg.Type)
+	result, err := accessors.ParsePath(path_str, arg.Type)
+	if err != nil {
+		scope.Log("pathspec: %v", err)
+		return vfilter.Null{}
+	}
+
 	result.SetPathSpec(
 		&accessors.PathSpec{
 			DelegateAccessor: arg.DelegateAccessor,

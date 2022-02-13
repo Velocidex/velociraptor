@@ -33,7 +33,11 @@ SELECT FullPath, hash(path=FullPath, accessor="fs") FROM glob( globs='/clients/C
  }
 ]SELECT hash(path=VFSPath, accessor="fs"), VFSPath, Type, format(format="%T should be FSPathSpec / DSPathSpec", args=VFSPath), file_store(path=VFSPath) = file_store(path=str(str=VFSPath)), basename(path=file_store(path=VFSPath)) FROM enumerate_flow(client_id="C.4f5e52adf0a337a9", flow_id="F.BN2HP3OSS3LK6") WHERE Type IN ("Log", "CollectionContext", "Task", "Result")[
  {
-  "hash(path=VFSPath, accessor=\"fs\")": null,
+  "hash(path=VFSPath, accessor=\"fs\")": {
+   "MD5": "0cefcb74dd13a3f381cbbeb2f97902ce",
+   "SHA1": "5f045fe23af6698bc57e7213506e3d1d035d9e98",
+   "SHA256": "c7c9363e9732e9fff9eb10918e03cc70aab81d84955a2002777c3200a1c7290c"
+  },
   "VFSPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Applications.ChocolateyPackages/F.BN2HP3OSS3LK6.json",
   "Type": "Result",
   "format(format=\"%T should be FSPathSpec / DSPathSpec\", args=VFSPath)": "path_specs.FSPathSpec should be FSPathSpec / DSPathSpec",
@@ -41,7 +45,11 @@ SELECT FullPath, hash(path=FullPath, accessor="fs") FROM glob( globs='/clients/C
   "basename(path=file_store(path=VFSPath))": "F.BN2HP3OSS3LK6.json"
  },
  {
-  "hash(path=VFSPath, accessor=\"fs\")": null,
+  "hash(path=VFSPath, accessor=\"fs\")": {
+   "MD5": "61598760c4a34c344913f6525e618d6e",
+   "SHA1": "81228b522560849761b3b8d4addd83aae5ae94de",
+   "SHA256": "43b04dd30474cafdc3cd06ae632402a116ae636d65a14fcfb4a838f6338f1dad"
+  },
   "VFSPath": "fs:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6/logs",
   "Type": "Log",
   "format(format=\"%T should be FSPathSpec / DSPathSpec\", args=VFSPath)": "path_specs.FSPathSpec should be FSPathSpec / DSPathSpec",
@@ -49,7 +57,11 @@ SELECT FullPath, hash(path=FullPath, accessor="fs") FROM glob( globs='/clients/C
   "basename(path=file_store(path=VFSPath))": "logs"
  },
  {
-  "hash(path=VFSPath, accessor=\"fs\")": null,
+  "hash(path=VFSPath, accessor=\"fs\")": {
+   "MD5": "1b79132257746e3ce295e45e50160521",
+   "SHA1": "6d83deb9d14457496bf9560dd6b87f2ed7b7ef92",
+   "SHA256": "c337a4c3885ed775b50994f8018bdc7b3fa885f2efb81a2b766f12e81ac85394"
+  },
   "VFSPath": "ds:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6.db",
   "Type": "CollectionContext",
   "format(format=\"%T should be FSPathSpec / DSPathSpec\", args=VFSPath)": "path_specs.DSPathSpec should be FSPathSpec / DSPathSpec",
@@ -57,7 +69,11 @@ SELECT FullPath, hash(path=FullPath, accessor="fs") FROM glob( globs='/clients/C
   "basename(path=file_store(path=VFSPath))": "F.BN2HP3OSS3LK6.db"
  },
  {
-  "hash(path=VFSPath, accessor=\"fs\")": null,
+  "hash(path=VFSPath, accessor=\"fs\")": {
+   "MD5": "32f571cb37dcb9e9b3c3313919bd2426",
+   "SHA1": "e87f3065fad8d622194a5581e7b583cdd820217a",
+   "SHA256": "5888fe1c56fbc79e109f41441516d4b9ac061029f39e66f6f67b2e7f58285c90"
+  },
   "VFSPath": "ds:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6/task.db",
   "Type": "Task",
   "format(format=\"%T should be FSPathSpec / DSPathSpec\", args=VFSPath)": "path_specs.DSPathSpec should be FSPathSpec / DSPathSpec",

@@ -10,7 +10,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/zip"
 	"www.velocidex.com/golang/velociraptor/uploads"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -209,8 +208,6 @@ func GetSparseFile(full_path *accessors.OSPath, scope vfilter.Scope) (
 		scope.Log("Sparse accessor expects ranges as path, for example: '[{Offset:0, Length: 10},{Offset:10,length:20}]'")
 		return nil, err
 	}
-
-	utils.Debug(full_path.Components)
 
 	pathspec := full_path.PathSpec()
 
