@@ -8,16 +8,18 @@ sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
     query: |
-      LET files = SELECT FullPath,
-              parse_xml(file=FullPath) AS Metadata
-              -- Use the ChocolateyInstall parameter if it is set.
-
-          FROM glob(globs=if(
+      LET SearchGlob = if(
              condition=ChocolateyInstall,
              then=ChocolateyInstall,
 
              -- Otherwise just use the environment.
-             else=environ(var='ChocolateyInstall')) + '/lib/*/*.nuspec')
+             else=environ(var='ChocolateyInstall')) + '/lib/*/*.nuspec'
+
+      LET files = SELECT FullPath,
+              parse_xml(file=FullPath) AS Metadata
+              -- Use the ChocolateyInstall parameter if it is set.
+
+          FROM glob(globs=SearchGlob)
 
       SELECT * FROM if(
         condition=if(condition=ChocolateyInstall,

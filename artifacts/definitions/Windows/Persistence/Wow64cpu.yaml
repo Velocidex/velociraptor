@@ -17,6 +17,6 @@ sources:
         Name as KeyName,
         Data.value as Value,
         Mtime AS LastModified
-      FROM glob(globs=split(string=TargetRegKey, sep=","), accessor="reg")
+      FROM glob(globs=split(string=TargetRegKey, sep=","), accessor="registry")
       WHERE Data.value and
         not (Name = "@" and (Data.value =~ "(wow64cpu.dll|wowarmhw.dll|xtajit.dll)"))

@@ -7,7 +7,7 @@ parameters:
     default: \AppData\Roaming\Mozilla\Firefox\Profiles\*\places.sqlite
   - name: urlSQLQuery
     default: |
-        SELECT * FROM moz_annos,moz_anno_attributes,moz_places WHERE moz_annos.place_id=moz_places.id AND moz_annos.anno_attribute_id=moz_anno_attributes.id 
+        SELECT * FROM moz_annos,moz_anno_attributes,moz_places WHERE moz_annos.place_id=moz_places.id AND moz_annos.anno_attribute_id=moz_anno_attributes.id
   - name: userRegex
     default: .
     type: regex
@@ -23,10 +23,10 @@ sources:
              WHERE Name =~ userRegex
           },
           query={
-             SELECT User, FullPath, Mtime from glob(
-               globs=Directory + placesGlobs)
+             SELECT User, FullPath, Mtime
+             FROM glob(root=Directory, globs=placesGlobs)
           })
-          
+
         LET metadata = SELECT * FROM foreach(row=places_files,
           query={
             SELECT parse_json(data=content)
@@ -35,7 +35,7 @@ sources:
               query=urlSQLQuery)
              WHERE name = 'downloads/metaData'
           })
-          
+
         SELECT * FROM foreach(row=places_files,
           query={
             SELECT User,

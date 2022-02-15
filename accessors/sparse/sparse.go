@@ -225,7 +225,8 @@ func GetSparseFile(full_path *accessors.OSPath, scope vfilter.Scope) (
 
 	fd, err := accessor.Open(pathspec.GetDelegatePath())
 	if err != nil {
-		scope.Log("%v: Failed to open delegate", err)
+		scope.Log("sparse: Failed to open delegate %v: %v",
+			pathspec.GetDelegatePath(), err)
 		return nil, err
 	}
 
@@ -249,7 +250,8 @@ func GetSparseFile(full_path *accessors.OSPath, scope vfilter.Scope) (
 }
 
 func init() {
-	accessors.Register("sparse", zip.NewGzipFileSystemAccessor(GetSparseFile),
+	accessors.Register("sparse", zip.NewGzipFileSystemAccessor(
+		accessors.MustNewPathspecOSPath(""), GetSparseFile),
 		`Allow reading another file by overlaying a sparse map on top of it.
 
 The map excludes reading from certain areas which are considered sparse.

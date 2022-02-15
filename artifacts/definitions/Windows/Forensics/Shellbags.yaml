@@ -35,17 +35,17 @@ sources:
 
       LET ShellValues = SELECT * FROM foreach(row=AllHives,
         query={
-           SELECT pathspec(parse=FullPath, path_type='registry') AS PathSpec,
-                  Data, ModTime
+           SELECT OSPath, Data, ModTime
            FROM glob(
               root=pathspec(DelegatePath=HivePath),
               globs=KeyGlob,
               accessor="raw_reg")
-           WHERE Data.type = "REG_BINARY" AND PathSpec.Path =~ "[0-9]$"
+           WHERE Data.type = "REG_BINARY" AND OSPath.Path =~ "[0-9]$"
         })
 
-      LET ParsedValues = SELECT PathSpec.DelegatePath AS Hive,
-          PathSpec.Path AS KeyPath,
+      LET ParsedValues = SELECT
+          OSPath.DelegatePath AS Hive,
+          OSPath.Path AS KeyPath,
           parse_binary(profile=Profile, filename=Data.value,
                        accessor="data", struct="ItemIDList") as _Parsed,
           base64encode(string=Data.value) AS _RawData, ModTime

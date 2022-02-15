@@ -38,9 +38,10 @@ sources:
                source=Name,
                replace="$1",
                re="(\\{[^}]+\\}).*$") as SdbGUIDRef,
-               Name as ExeName from glob(
+               Name as ExeName
+            FROM glob(
               globs=split(string=customKeys, sep=",[\\s]*"),
-              accessor="reg")
+              accessor="registry")
           },
           query={
             SELECT Executable, DatabasePath, DatabaseType,

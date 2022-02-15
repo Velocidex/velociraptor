@@ -34,7 +34,7 @@ sources:
                 },
                 else= {
                     SELECT *, FullPath as Source
-                    FROM glob(globs=EventLog, accessor='file')
+                    FROM glob(globs=EventLog)
                 })
 
       // Parse all target files, order by source and add dedupe string

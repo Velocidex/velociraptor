@@ -59,6 +59,13 @@ type OSFileInfo struct {
 	follow_links bool
 }
 
+func NewOSFileInfo(base os.FileInfo, path *accessors.OSPath) *OSFileInfo {
+	return &OSFileInfo{
+		FileInfo:   base,
+		_full_path: path,
+	}
+}
+
 func (self *OSFileInfo) FullPath() string {
 	return self._full_path.String()
 }

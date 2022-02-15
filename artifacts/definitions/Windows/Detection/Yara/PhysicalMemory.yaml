@@ -73,12 +73,15 @@ sources:
       -- check which Yara to use
       LET yara_rules = YaraUrl || YaraRule
 
-      LET SparsePath = pathspec(DelegateAccessor='file', DelegatePath='''\\.\pmem''', Path={
-        SELECT atoi(string=Start) AS Offset,
-               atoi(string=Length) AS Length
-        FROM Artifact.Windows.Sys.PhysicalMemoryRanges()
-        WHERE Type = 3
-        })
+      LET SparsePath = pathspec(
+           DelegateAccessor='raw_file',
+           DelegatePath='''\\.\pmem''',
+           Path={
+              SELECT atoi(string=Start) AS Offset,
+                   atoi(string=Length) AS Length
+              FROM Artifact.Windows.Sys.PhysicalMemoryRanges()
+              WHERE Type = 3
+           })
 
       -- Load the winpmem binary
       LET WinpmemBinary = SELECT FullPath

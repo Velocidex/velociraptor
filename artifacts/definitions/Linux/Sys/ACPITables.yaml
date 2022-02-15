@@ -10,6 +10,6 @@ sources:
       SELECT OS From info() where OS = 'linux'
     query: |
         LET hashes = SELECT Name, Size, hash(path=FullPath) as Hash
-                     FROM glob(globs=kLinuxACPIPath + '/*')
+                     FROM glob(globs="*", root=kLinuxACPIPath)
 
         SELECT Name, Size, Hash.MD5, Hash.SHA1, Hash.SHA256 from hashes

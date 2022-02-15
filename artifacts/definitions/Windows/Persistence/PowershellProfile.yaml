@@ -2,15 +2,15 @@ name: Windows.Persistence.PowershellProfile
 author: Matt Green - @mgreen27
 description: |
   This Artifact will search and parse Powershell profile scripts.
-  
-  PowerShell supports several profiles depending on the user or host program. 
-  Adversaries may create or modify these profiles to include arbitrary commands, 
-  functions, modules, and/or PowerShell drives to gain persistence. When a 
-  backdoored PowerShell session is opened the modified script will be executed 
+
+  PowerShell supports several profiles depending on the user or host program.
+  Adversaries may create or modify these profiles to include arbitrary commands,
+  functions, modules, and/or PowerShell drives to gain persistence. When a
+  backdoored PowerShell session is opened the modified script will be executed
   unless the -NoProfile flag is used when it is launched.
-  
-  The artifact will by default search both User profiles and System-wide 
-  configured profiles. The user can also targert and exclude specific content 
+
+  The artifact will by default search both User profiles and System-wide
+  configured profiles. The user can also targert and exclude specific content
   with relevant regex filters
 
 reference:
@@ -40,13 +40,13 @@ sources:
 
     query: |
         -- First extract potential glob path for each user
-        LET UserTargets = SELECT Name as Username, 
+        LET UserTargets = SELECT Name as Username,
             expand(path=Directory) + UserProfileGlob as ProfileGlob
         FROM Artifact.Windows.Sys.Users()
         WHERE Directory
-        
-        -- Search for both Powershell System and User profiles.  
-        SELECT FullPath, Size, 
+
+        -- Search for both Powershell System and User profiles.
+        SELECT FullPath, Size,
             read_file(filename=FullPath) as Content,
             dict(   Mtime=Mtime,
                     Atime=Atime,
@@ -54,7 +54,7 @@ sources:
                     Btime=Btime ) as Timestamps,
             hash(path=FullPath) as Hash
         FROM glob(globs=UserTargets.ProfileGlob + PSHomeProfileGlob)
-        WHERE 
+        WHERE
             Content =~ SearchStrings
             AND NOT if(condition=StringWhiteList,
                         then= Content=~StringWhiteList,

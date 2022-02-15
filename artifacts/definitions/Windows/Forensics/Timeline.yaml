@@ -24,7 +24,8 @@ sources:
   - query: |
       LET timeline = SELECT * FROM foreach(
          row={
-            SELECT FullPath FROM glob(globs=Win10TimelineGlob)
+            SELECT FullPath
+            FROM glob(globs=Win10TimelineGlob)
          },
          query={
             SELECT AppId, FullPath, LastModifiedTime

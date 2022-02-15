@@ -431,7 +431,8 @@ sources:
 
 
       -- find target files
-      LET TargetFiles = SELECT FullPath,Size FROM glob(globs=TargetFileGlob) WHERE NOT IsDir
+      LET TargetFiles = SELECT FullPath,Size
+        FROM glob(globs=TargetFileGlob) WHERE NOT IsDir
 
 
       -- scan files in scope with our rule

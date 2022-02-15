@@ -36,14 +36,13 @@ sources:
            query={
               SELECT Username,
                 NTUser as Userhive,
-                url(parse=key.FullPath).fragment as Key,
+                OSPath.Path as Key,
                 key.Mtime AS LastModified,
                 EnableUnsafeClientMailRules,
                 OutlookSecureTempFolder
               FROM read_reg_key(
-                 globs=url(scheme="auto",
-                    path=FullPath,
-                    fragment=KeyGlob).String,
+                 globs=KeyGlob,
+                 root=pathspec(DelegatePath=FullPath),
                  accessor="raw_reg")
               WHERE EnableUnsafeClientMailRules = 1
            })

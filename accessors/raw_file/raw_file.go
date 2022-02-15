@@ -73,12 +73,21 @@ func (self RawFileSystemAccessor) Open(filename string) (accessors.ReadSeekClose
 }
 
 func (self RawFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error) {
-	return &file.OSFileInfo{}, nil
+	full_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	stat, err := os.Lstat(path)
+	return file.NewOSFileInfo(stat, full_path), err
 }
 
 func (self RawFileSystemAccessor) LstatWithOSPath(
-	path *accessors.OSPath) (accessors.FileInfo, error) {
-	return &file.OSFileInfo{}, nil
+	full_path *accessors.OSPath) (accessors.FileInfo, error) {
+
+	path := full_path.String()
+	stat, err := os.Lstat(path)
+	return file.NewOSFileInfo(stat, full_path), err
 }
 
 func init() {

@@ -174,21 +174,21 @@ func (self *GzipFileSystemAccessor) ReadDirWithOSPath(
 
 func (self GzipFileSystemAccessor) ParsePath(path string) (
 	*accessors.OSPath, error) {
-	return accessors.NewLinuxOSPath(path)
+	return self.root.Parse(path)
 }
 
 func (self GzipFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
-	root_path, _ := accessors.NewLinuxOSPath("")
 	return &GzipFileSystemAccessor{
 		scope:  scope,
 		getter: self.getter,
-		root:   root_path,
+		root:   self.root,
 	}, nil
 }
 
-func NewGzipFileSystemAccessor(getter FileGetter) *GzipFileSystemAccessor {
-	return &GzipFileSystemAccessor{getter: getter}
+func NewGzipFileSystemAccessor(
+	root *accessors.OSPath, getter FileGetter) *GzipFileSystemAccessor {
+	return &GzipFileSystemAccessor{root: root, getter: getter}
 }
 
 type SeekableGzip struct {

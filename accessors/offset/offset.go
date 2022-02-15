@@ -113,7 +113,8 @@ func GetOffsetFile(full_path *accessors.OSPath, scope vfilter.Scope) (
 }
 
 func init() {
-	accessors.Register("offset", zip.NewGzipFileSystemAccessor(GetOffsetFile),
+	accessors.Register("offset", zip.NewGzipFileSystemAccessor(
+		accessors.MustNewLinuxOSPath(""), GetOffsetFile),
 		`Allow reading another file from a specific offset.
 
 For Example

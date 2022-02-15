@@ -31,8 +31,8 @@ sources:
              WHERE Name =~ userRegex
           },
           query={
-             SELECT FullPath, Mtime, Ctime, User, Uid from glob(
-               globs=Directory + extensionGlobs)
+             SELECT FullPath, Mtime, Ctime, User, Uid
+             FROM glob(root=Directory, globs=extensionGlobs)
           })
 
         /* If the Manifest declares a default_locale then we

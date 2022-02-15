@@ -29,7 +29,8 @@ sources:
   - name: InventoryApplicationFile
     query: |
         SELECT FileId,
-               Key.FullPath as Key,
+               Key.OSPath.Path as Key,
+               Key.OSPath.DelegatePath AS Hive,
                Key.Mtime as LastModified,
                LowerCaseLongPath as Binary,
                Name,
@@ -44,8 +45,8 @@ sources:
             WHERE log(message="Processing "+FullPath)
           }, query={
             SELECT * from read_reg_key(
-               globs=url(scheme='file', path=FullPath,
-                         fragment=amCacheRegPath).String,
+               globs=amCacheRegPath,
+               root=pathspec(DelegatePath=FullPath),
                accessor='raw_reg'
             )
         })
@@ -61,8 +62,8 @@ sources:
                    get(item=scope(), member="15") As FullPath,
                    Key.Mtime as LastModifiedKey
             FROM read_reg_key(
-               globs=url(scheme='file', path=FullPath,
-                         fragment='/Root/File/*/*').String,
+               root=pathspec(DelegatePath=FullPath),
+               globs='/Root/File/*/*',
                accessor='raw_reg'
             )
         })
