@@ -161,7 +161,8 @@ func (self *directory_node) MakeChild(name string) *directory_node {
 
 // A Virtual Filsystem stores files and directories in memory.
 type VirtualFilesystemAccessor struct {
-	root directory_node
+	root_path *OSPath
+	root      directory_node
 }
 
 func (self VirtualFilesystemAccessor) New(scope vfilter.Scope) (
@@ -281,8 +282,7 @@ func (self *VirtualFilesystemAccessor) SetVirtualFileInfo(
 	node.file_info = file_info
 }
 
-func NewVirtualFilesystemAccessor() *VirtualFilesystemAccessor {
-	root_path, _ := NewLinuxOSPath("")
+func NewVirtualFilesystemAccessor(root_path *OSPath) *VirtualFilesystemAccessor {
 	return &VirtualFilesystemAccessor{
 		root: directory_node{
 			file_info: &VirtualFileInfo{

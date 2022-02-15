@@ -27,9 +27,9 @@ func TestNTFSFilesystemAccessor(t *testing.T) {
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
 	abs_path, _ := filepath.Abs("../../artifacts/testdata/files/test.ntfs.dd")
-	fs_accessor := NewNTFSFileSystemAccessor(scope, abs_path, "file")
-
 	root_path := accessors.MustNewWindowsOSPath("")
+
+	fs_accessor := NewNTFSFileSystemAccessor(scope, root_path, abs_path, "file")
 
 	globber := glob.NewGlobber()
 	globber.Add(accessors.MustNewWindowsOSPath("/*"))
@@ -37,7 +37,7 @@ func TestNTFSFilesystemAccessor(t *testing.T) {
 	hits := []string{}
 	for hit := range globber.ExpandWithContext(
 		context.Background(), config_obj, root_path, fs_accessor) {
-		hits = append(hits, hit.OSPath().PathSpec().Path)
+		hits = append(hits, hit.OSPath().String())
 	}
 
 	goldie.Assert(t, "TestNTFSFilesystemAccessor", json.MustMarshalIndent(hits))
@@ -57,7 +57,8 @@ func TestNTFSFilesystemAccessorRemapping(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
 
 	// Create the two mount point directories in the VirtualFilesystemAccessor
-	root_fs_accessor := accessors.NewVirtualFilesystemAccessor()
+	root_path := accessors.MustNewWindowsOSPath("")
+	root_fs_accessor := accessors.NewVirtualFilesystemAccessor(root_path)
 	root_fs_accessor.SetVirtualFileInfo(&accessors.VirtualFileInfo{
 		Path:   accessors.MustNewWindowsOSPath("\\\\.\\C:"),
 		IsDir_: true,
@@ -79,8 +80,8 @@ func TestNTFSFilesystemAccessorRemapping(t *testing.T) {
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
 	abs_path, _ := filepath.Abs("../../artifacts/testdata/files/test.ntfs.dd")
-	c_fs_accessor := NewNTFSFileSystemAccessor(scope, abs_path, "file")
-	d_fs_accessor := NewNTFSFileSystemAccessor(scope, abs_path, "file")
+	c_fs_accessor := NewNTFSFileSystemAccessor(scope, root_path, abs_path, "file")
+	d_fs_accessor := NewNTFSFileSystemAccessor(scope, root_path, abs_path, "file")
 
 	// Mount the ntfs accessors on the C and D devices
 	mount_fs.AddMapping(

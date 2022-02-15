@@ -48,16 +48,18 @@ parameters:
 
 sources:
   - query: |
-        LET files <= SELECT FullPath FROM glob(globs=expand(path=AMCacheGlob))
+        LET files <= SELECT OSPath
+           FROM glob(globs=expand(path=AMCacheGlob))
 
         SELECT * FROM foreach(row=files,
                 query={
                     SELECT
-                      url(parse=Key.FullPath).Path As HivePath,
-                      url(parse=Key.FullPath).Fragment as EntryKey,
+                      Key.OSPath.DelegatePath As HivePath,
+                      Key.OSPath.Path as EntryKey,
                       Key.ModTime as KeyMTime,
-                      parse_string_with_regex(string=Key.FullPath,
-                          regex='%5CRoot%5C(\\w+)%5C').g1 as EntryType,
+
+                      -- Key is like \Root\InventoryDriverBinary\"c:/windows/system32/drivers/1394ohci.sys"
+                      Key.OSPath.Components[1] as EntryType,
 
                       if(condition=get(member="FileId"),
                          then=strip(string=FileId, prefix='0000'),
@@ -100,8 +102,10 @@ sources:
                       else=if(condition=Key.FullPath =~ 'InventoryDriverBinary',
                          then='DriverBinary')))) as BinaryType
 
-                    FROM read_reg_key(globs=url(scheme='file', path=FullPath,
-                                 fragment=KeyPathGlob).String,accessor='raw_reg')
+                    FROM read_reg_key(
+                        globs=KeyPathGlob,
+                        root=pathspec(DelegatePath=FullPath),
+                        accessor='raw_reg')
                     WHERE SHA1
                         AND SHA1 =~ SHA1Regex
                         AND if(condition= NameRegex,

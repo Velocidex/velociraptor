@@ -419,7 +419,7 @@ func (self *HTTPConnector) advanceToNextServer() {
 	// sleep to back off.
 	if self.current_url_idx == self.last_success_idx {
 		wait := self.maxPoll + time.Duration(
-			Rand(int(self.maxPollDev)))*time.Second
+			GetRand()(int(self.maxPollDev)))*time.Second
 
 		self.logger.Info(
 			"Waiting for a reachable server: %v", wait)

@@ -208,7 +208,7 @@ func (self *MountFileSystemAccessor) ReadDirWithOSPath(os_path *OSPath) (
 	if err != nil {
 		return nil, err
 	}
-	children, err := delegate_node.accessor.ReadDir(delegate_path)
+	children, err := delegate_node.accessor.ReadDirWithOSPath(delegate_path)
 	if err != nil {
 		return nil, err
 	}
@@ -225,13 +225,13 @@ func (self *MountFileSystemAccessor) ReadDirWithOSPath(os_path *OSPath) (
 }
 
 func (self *MountFileSystemAccessor) getDelegatePath(path *OSPath) (
-	*node, string, error) {
+	*node, *OSPath, error) {
 	delegate_node, residual, err := self.getDelegateNode(path)
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 	deep_delegate_path := delegate_node.prefix.Append(residual...)
-	return delegate_node, deep_delegate_path.String(), nil
+	return delegate_node, deep_delegate_path, nil
 }
 
 func (self *MountFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
@@ -250,7 +250,7 @@ func (self *MountFileSystemAccessor) OpenWithOSPath(
 	if err != nil {
 		return nil, err
 	}
-	return delegate_node.accessor.Open(delegate_path)
+	return delegate_node.accessor.OpenWithOSPath(delegate_path)
 }
 
 func (self MountFileSystemAccessor) Lstat(path string) (FileInfo, error) {
@@ -268,7 +268,7 @@ func (self MountFileSystemAccessor) LstatWithOSPath(os_path *OSPath) (FileInfo, 
 	if err != nil {
 		return nil, err
 	}
-	return delegate_node.accessor.Lstat(delegate_path)
+	return delegate_node.accessor.LstatWithOSPath(delegate_path)
 }
 
 // Install a mapping from the source to the target. This means that

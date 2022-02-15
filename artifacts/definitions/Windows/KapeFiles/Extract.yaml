@@ -47,13 +47,14 @@ sources:
       LET Uploads <= memoize(key="SourceFile", query={
         SELECT SourceFile, DestinationFile
         FROM parse_jsonl(accessor="zip",
-                         filename=url(path=ContainerPath, fragment=UploadsFile))
+                         filename=pathspec(DelegatePath=ContainerPath, Path=UploadsFile))
       })
 
       // Walk over the Metadata source and resolve each file's container name.
       LET FileStats = SELECT *, get(item=Uploads, field=SourceFile).DestinationFile AS ZipPath
-         FROM parse_jsonl(accessor="zip",
-                          filename=url(path=ContainerPath, fragment=MetadataFile))
+         FROM parse_jsonl(
+           accessor="zip",
+           filename=pathspec(DelegatePath=ContainerPath, Path=MetadataFile))
 
       // Copy the file from the container to the output directory
       // preserving timestamps.
@@ -62,10 +63,9 @@ sources:
            output=OutputDirectory, name=ZipPath,
            mtime=Modified, atime=LastAccessed, ctime=Created,
            accessor='zip',
-           file=url(
-             scheme='file',
-             path=ContainerPath,
-             fragment=ZipPath)) AS CreatedFile
+           file=pathspec(
+             DelegatePath=ContainerPath,
+             Path=ZipPath)) AS CreatedFile
       FROM FileStats
 
       // Check that the user gave us all the require args.

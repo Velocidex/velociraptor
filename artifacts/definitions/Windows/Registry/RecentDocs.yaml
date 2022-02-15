@@ -70,22 +70,26 @@ sources:
 
       -- dynamic function to extract RecentDocs order from MRUListEx data value
       LET find_order(value) = SELECT
-            parse_binary(accessor='data',filename=substr(str=value,start=_value,end=_value + 4),struct='uint32') as Int
+            parse_binary(accessor='data',
+                filename=substr(str=value,start=_value,end=_value + 4),
+                struct='uint32') as Int
         FROM range(end=len(list=value),start=0,step=4)
         WHERE NOT Int = 4294967295
-
 
       -- NTUser method is most accurate
       LET NTUserValues = SELECT
             Mtime,
-            basename(path=dirname(path=url(parse=FullPath).Fragment)) as Type,
-            basename(path=url(parse=FullPath).Fragment) as Name,
-            if(condition= basename(path=url(parse=FullPath).Fragment)='MRUListEx',
-                then= find_order(value=Data.value).Int,
-                else= parse_binary(accessor="data", filename=Data.value, profile=Profile, struct="Target").Filename ) as Value,
+            OSPath.Components[-2] AS Type,
+            OSPath.Components[-1] AS Name,
+            if(condition= OSPath.Basename = 'MRUListEx',
+               then= find_order(value=Data.value).Int,
+               else= parse_binary(
+                  accessor="data",
+                  filename=Data.value,
+                  profile=Profile, struct="Target").Filename ) as Value,
             Data,
-            url(parse=FullPath).Path as HiveName,
-            FullPath,
+            OSPath.DelegatePath as HiveName,
+            OSPath,
             Username,
             UUID
         FROM Artifact.Windows.Registry.NTUser(KeyGlob=KeyGlob)
@@ -97,17 +101,23 @@ sources:
       -- Glob method allows offline processing but can not filter by user
       LET GlobValues = SELECT
             Mtime,
-            basename(path=dirname(path=url(parse=FullPath).Fragment)) as Type,
-            basename(path=url(parse=FullPath).Fragment) as Name,
-            if(condition= basename(path=url(parse=FullPath).Fragment)='MRUListEx',
-                then= find_order(value=Data.value).Int,
-                else= parse_binary(accessor="data", filename=Data.value, profile=Profile, struct="Target").Filename ) as Value,
+            OSPath.Components[-2] AS Type,
+            OSPath.Components[-1] AS Name,
+            if(condition= OSPath.Basename = 'MRUListEx',
+               then= find_order(value=Data.value).Int,
+               else= parse_binary(
+                  accessor="data",
+                  filename=Data.value,
+                  profile=Profile,
+                  struct="Target").Filename ) as Value,
             Data,
-            url(parse=FullPath).Path as HiveName,
-            FullPath
-        FROM glob(globs=url(path=HiveGlob, fragment=KeyGlob).String, accessor="raw_reg")
+            OSPath.DelegatePath as HiveName,
+            OSPath
+        FROM glob(
+           globs=KeyGlob,
+           root=pathspec(DelegatePath=HiveGlob),
+           accessor="raw_reg")
         WHERE Data.type = 'REG_BINARY'
-
 
       -- precalculate all hive values for performance
       LET AllValues <= SELECT * FROM if(condition= HiveGlob,
@@ -126,7 +136,9 @@ sources:
 
       -- flattern output then add lookup of processed data
       LET flat_data(type,hivename) = SELECT *,
-            str(str=Value) + ' := ' + get(item=Items, field=str(str=Type) + ':' + str(str=Value) + ':' + str(str=hivename) ).Value  AS Value
+            str(str=Value) + ' := ' +
+              get(item=Items, field=str(str=Type) + ':' +
+              str(str=Value) + ':' + str(str=hivename) ).Value  AS Value
         FROM flatten(query={
             SELECT Mtime, Type, Name, Value,HiveName
             FROM AllValues
@@ -138,8 +150,8 @@ sources:
 
       -- prep results
       LET results = SELECT Mtime as LastWriteTime, Type,
-            flat_data(type=Type,hivename=HiveName).Value as MruEntries,
-            dirname(path=url(parse=FullPath).Fragment) as Key,
+            flat_data(type=Type, hivename=HiveName).Value as MruEntries,
+            OSPath.Path as Key,
             HiveName,
             if(condition=HiveGlob,
                 then='', else=Username) as Username,

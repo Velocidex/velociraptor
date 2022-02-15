@@ -215,10 +215,12 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 	}
 
 	self.last_active = time.Now()
-	result, err := self.paged_reader.ReadAt(buf, offset)
-
+	paged_reader := self.paged_reader
 	self.mu.Unlock()
-	return result, err
+
+	// Reading from the pages reader may trigger another reader due to
+	// LRU so we release the lock before we do it.
+	return paged_reader.ReadAt(buf, offset)
 }
 
 func GetReaderPool(scope vfilter.Scope, lru_size int64) *ReaderPool {

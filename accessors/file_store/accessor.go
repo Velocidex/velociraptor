@@ -172,7 +172,7 @@ type FileStoreFileInfo struct {
 }
 
 func (self FileStoreFileInfo) Name() string {
-	return self.ospath.Basename()
+	return self.fullpath.Base()
 }
 
 func (self *FileStoreFileInfo) Data() *ordereddict.Dict {

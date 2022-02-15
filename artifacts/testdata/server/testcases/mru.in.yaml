@@ -19,15 +19,6 @@ Parameters:
 
   ArtifactRunMRUGlobMock: |
     [{
-      "RawRegKeyInfo": {
-      "FullPath": "/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList",
-      "Data": {
-        "type": "Key"
-      },
-      "Mtime": "2020-04-30T01:59:37Z",
-      "Ctime": "2020-04-30T01:59:37Z",
-      "Atime": "2020-04-30T01:59:37Z"
-      },
       "Atime": "2020-04-30T01:59:37Z",
       "Ctime": "2020-04-30T01:59:37Z",
       "Data": {
@@ -43,25 +34,9 @@ Parameters:
       "Mode": 493,
       "Mtime": "2020-04-30T01:59:37Z",
       "Name": "MRUList",
-      "Size": 6,
-      "Sys": {
-      "Type": 1,
-       "String": "ab\u0000",
-       "Uint64": 0,
-       "Data": "YQBiAAAA",
-       "Error": null
-      }
+      "Size": 6
      },
      {
-      "RawRegKeyInfo": {
-       "FullPath": "/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5Ca",
-       "Data": {
-        "type": "Key"
-       },
-       "Mtime": "2020-04-30T01:46:57Z",
-       "Ctime": "2020-04-30T01:59:37Z",
-       "Atime": "2020-04-30T01:59:37Z"
-      },
       "Atime": "2020-04-30T01:59:37Z",
       "Ctime": "2020-04-30T01:59:37Z",
       "Data": {
@@ -77,25 +52,9 @@ Parameters:
       "Mode": 493,
       "Mtime": "2020-04-30T01:46:57Z",
       "Name": "a",
-      "Size": 22,
-      "Sys": {
-       "Type": 1,
-       "String": "powershell\u0000",
-       "Uint64": 0,
-       "Data": "cABvAHcAZQByAHMAaABlAGwAbAAAAA==",
-       "Error": null
-      }
+      "Size": 22
      },
      {
-      "RawRegKeyInfo": {
-       "FullPath": "/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5Cb",
-       "Data": {
-        "type": "Key"
-       },
-       "Mtime": "2020-04-30T01:46:57Z",
-       "Ctime": "2020-04-30T01:59:37Z",
-       "Atime": "2020-04-30T01:59:37Z"
-      },
       "Atime": "2020-04-30T01:59:37Z",
       "Ctime": "2020-04-30T01:59:37Z",
       "Data": {
@@ -111,14 +70,7 @@ Parameters:
       "Mode": 493,
       "Mtime": "2020-04-30T01:46:57Z",
       "Name": "b",
-      "Size": 44,
-      "Sys": {
-       "Type": 1,
-       "String": "\\\\criticalserver\\c$\\1\u0000",
-       "Uint64": 0,
-       "Data": "XABcAGMAcgBpAHQAaQBjAGEAbABzAGUAcgB2AGUAcgBcAGMAJABcADEAAAA=",
-       "Error": null
-      }
+      "Size": 44
     }]
 
 
@@ -133,8 +85,14 @@ Queries:
 
   # Mock up test for Windows.Timeline.Registry.RunMRU
   - LET _ <= SELECT mock(plugin='info', results=[dict(Fqdn='DESKTOP-687T2NR', OS='windows')]),
-        mock(artifact=Artifact.Windows.Registry.NTUser, results=parse_json_array(data=NTUserRunMRU)),
-        mock(plugin="glob", results=parse_json_array(data=ArtifactRunMRUGlobMock))
+        mock(artifact=Artifact.Windows.Registry.NTUser, results={
+           SELECT *, pathspec(parse=FullPath) AS OSPath
+           FROM parse_json_array(data=NTUserRunMRU)
+        }),
+        mock(plugin="glob", results={
+           SELECT *, pathspec(parse=FullPath) AS OSPath
+           FROM parse_json_array(data=ArtifactRunMRUGlobMock)
+        })
       FROM scope()
   - SELECT * from Artifact.Windows.Timeline.Registry.RunMRU(groupResults=FALSE)
   - SELECT * from Artifact.Windows.Timeline.Registry.RunMRU(groupResults=TRUE)

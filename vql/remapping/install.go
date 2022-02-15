@@ -50,11 +50,11 @@ func InstallMountPoints(manager accessors.DeviceManager,
 		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
 
 	// Build a mount filesystem
-	root_fs := accessors.NewVirtualFilesystemAccessor()
 	root_path, err := getTypedOSPath(on_path_type, "")
 	if err != nil {
 		return err
 	}
+	root_fs := accessors.NewVirtualFilesystemAccessor(root_path)
 	mount_fs := accessors.NewMountFileSystemAccessor(root_path, root_fs)
 
 	// Apply all the mappings specified.

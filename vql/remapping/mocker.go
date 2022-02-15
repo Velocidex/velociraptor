@@ -129,10 +129,10 @@ func (self *MockerPlugin) Info(scope vfilter.Scope,
 
 // Replace a VQL function with a mock
 type MockerFunctionArgs struct {
-	Plugin   string      `vfilter:"optional,field=plugin,doc=The plugin to mock"`
-	Function string      `vfilter:"optional,field=function,doc=The function to mock"`
-	Artifact vfilter.Any `vfilter:"optional,field=artifact,doc=The artifact to mock"`
-	Results  vfilter.Any `vfilter:"required,field=results,doc=The result to return"`
+	Plugin   string           `vfilter:"optional,field=plugin,doc=The plugin to mock"`
+	Function string           `vfilter:"optional,field=function,doc=The function to mock"`
+	Artifact vfilter.Any      `vfilter:"optional,field=artifact,doc=The artifact to mock"`
+	Results  vfilter.LazyExpr `vfilter:"required,field=results,doc=The result to return"`
 }
 
 type MockerFunction struct {
@@ -180,22 +180,23 @@ func (self *MockFunction) Call(ctx context.Context,
 	}
 
 	rows := []vfilter.Row{}
+	results := arg.Results.Reduce(ctx)
 
-	results_lazy, ok := arg.Results.(types.LazyExpr)
+	results_query, ok := results.(vfilter.StoredQuery)
 	if ok {
-		arg.Results = results_lazy.Reduce(ctx)
+		results = types.Materialize(ctx, scope, results_query)
 	}
 
-	rt := reflect.TypeOf(arg.Results)
+	rt := reflect.TypeOf(results)
 	if rt == nil {
 		scope.Log("mock: results should be a list")
 		return vfilter.Null{}
 	}
 
 	if rt.Kind() != reflect.Slice {
-		rows = append(rows, arg.Results)
+		rows = append(rows, results)
 	} else {
-		value := reflect.ValueOf(arg.Results)
+		value := reflect.ValueOf(results)
 		for i := 0; i < value.Len(); i++ {
 			item := value.Index(i).Interface()
 			item_lazy, ok := item.(types.LazyExpr)
@@ -219,7 +220,7 @@ func (self *MockFunction) Call(ctx context.Context,
 			mock_plugin = &MockerPlugin{name: arg.Plugin, ctx: &_MockerCtx{}}
 			scope_context.AddPlugin(mock_plugin)
 		}
-		mock_plugin.ctx.results = append(mock_plugin.ctx.results, arg.Results)
+		mock_plugin.ctx.results = append(mock_plugin.ctx.results, results)
 
 		scope.AppendPlugins(mock_plugin)
 
@@ -230,7 +231,7 @@ func (self *MockFunction) Call(ctx context.Context,
 			scope_context.AddFunction(mock_plugin)
 		}
 
-		mock_plugin.ctx.results = append(mock_plugin.ctx.results, arg.Results)
+		mock_plugin.ctx.results = append(mock_plugin.ctx.results, results)
 		scope.AppendFunctions(mock_plugin)
 
 	} else if arg.Artifact != nil {

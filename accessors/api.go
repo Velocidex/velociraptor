@@ -107,8 +107,9 @@ func (self *OSPath) Basename() string {
 
 func (self *OSPath) Dirname() *OSPath {
 	result := self.Copy()
-	result.Components = result.Components[:len(self.Components)-1]
-
+	if len(result.Components) > 0 {
+		result.Components = result.Components[:len(self.Components)-1]
+	}
 	return result
 }
 

@@ -176,8 +176,9 @@ type NTFSFileSystemAccessor struct {
 }
 
 func NewNTFSFileSystemAccessor(
-	scope vfilter.Scope, device, accessor string) *NTFSFileSystemAccessor {
-	root_path, _ := accessors.NewGenericOSPath("")
+	scope vfilter.Scope,
+	root_path *accessors.OSPath,
+	device, accessor string) *NTFSFileSystemAccessor {
 	device = strings.TrimSuffix(device, "\\")
 	return &NTFSFileSystemAccessor{
 		scope:    scope,

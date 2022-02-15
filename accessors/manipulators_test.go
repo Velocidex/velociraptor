@@ -45,7 +45,7 @@ var windows_testcases = []testcase{
 
 	// The drive letter must have a trailing \ otherwise the API uses
 	// the current directory (e.g. dir C: vs dir C:\ )
-	{"C:", []string{"C:"}, "C:\\"},
+	{"C:", []string{"C:"}, "C:"},
 
 	// Ignore and dont support directory traversal at all
 	{"C:\\Windows\\System32\\..\\..\\..\\..\\ls",
