@@ -56,8 +56,10 @@ sources:
       -- select zip members inside the doc that have some content.
       LET document_parts = SELECT * FROM foreach(row=office_docs,
             query= {
-                SELECT *,
-                    OSPath AS ZipMemberPath,
+                SELECT
+                    Mtime, Atime, Ctime,
+                    OSPath,
+                    OSPath.Path AS ZipMemberPath,
                     OfficePath
                 FROM glob(
                   globs="/**",
@@ -88,14 +90,17 @@ sources:
       LET hits = SELECT * FROM foreach(row=template,
             query={
                 SELECT
-                    OSPath AS FullPath,
-                    hash(path=OSPath, accessor='zip') as Hash,
+                    OSPath AS DocumentPath,
+                    hash(path=Document) as DocumentHash,
                     Mtime,
                     Size,
                     Section,
-                    regex_replace(source=TemplateTarget,re='.*Target="(mhtml)',replace='mhtml') as TemplateTarget,
+                    regex_replace(
+                       source=TemplateTarget,
+                       re='.*Target="(mhtml)',
+                       replace='mhtml') as TemplateTarget,
                     SectionMtime,
-                    hash(path=SectionPath,accessor='zip') as SectionHash
+                    hash(path=SectionPath, accessor='zip') as SectionHash
                 FROM stat(filename=Document)
                 WHERE
                     TemplateTarget =~ TemplateTargetRegex
@@ -105,7 +110,7 @@ sources:
 
       -- upload hits to server
       LET upload_hits = SELECT
-            FullPath,
+            OSPath,
             Hash,
             Mtime,
             Size,

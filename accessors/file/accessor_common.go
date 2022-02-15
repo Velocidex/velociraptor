@@ -64,6 +64,16 @@ type OSFileInfo struct {
 	_accessor_ctx *AccessorContext
 }
 
+func NewOSFileInfo(base os.FileInfo, path *accessors.OSPath) *OSFileInfo {
+	return &OSFileInfo{
+		_FileInfo:  base,
+		_full_path: path,
+		_accessor_ctx: &AccessorContext{
+			links: make(map[_inode]bool),
+		},
+	}
+}
+
 func (self *OSFileInfo) OSPath() *accessors.OSPath {
 	return self._full_path
 }

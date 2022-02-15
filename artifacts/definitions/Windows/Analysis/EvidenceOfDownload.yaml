@@ -23,8 +23,8 @@ author: M.Soheem @msoheem
 type: CLIENT
 
 parameters:
- - name: DirectoryPath
-   default: "/C:/Users/*/Downloads/"
+ - name: DirectoryPathGlob
+   default: "C:/Users/*/Downloads/"
 
  - name: ZoneIdRegex
    description: A Regular expression to match the required zone (default Internet and Restricted Zones).
@@ -39,8 +39,7 @@ sources:
                     Mtime,
                     read_file(filename=OSPath, accessor="ntfs") as _ZoneIdentifierContent
              FROM glob(
-               globs="/**/*:Zone.Identifier",
-               root=DirectoryPath,
+               globs=DirectoryPathGlob + "/**/*:Zone.Identifier",
                accessor="ntfs")
 
       SELECT *,

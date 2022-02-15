@@ -1,8 +1,6 @@
 package zip
 
 import (
-	"errors"
-	"io"
 	"os"
 	"strings"
 	"sync"
@@ -142,13 +140,6 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 		return nil, err
 	}
 
-	reader, ok := fd.(io.ReaderAt)
-	if !ok {
-		self.scope.Log("file is not seekable")
-		delete(self.fd_cache, cache_key)
-		return nil, errors.New("file is not seekable")
-	}
-
 	stat, err := accessor.Lstat(filename)
 	if err != nil {
 		self.scope.Log("Lstat: %v", err)
@@ -156,7 +147,7 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 		return nil, err
 	}
 
-	zip_file, err := zip.NewReader(reader, stat.Size())
+	zip_file, err := zip.NewReader(utils.ReaderAtter{fd}, stat.Size())
 	if err != nil {
 		self.scope.Log("zip.NewReader: %v", err)
 		delete(self.fd_cache, cache_key)

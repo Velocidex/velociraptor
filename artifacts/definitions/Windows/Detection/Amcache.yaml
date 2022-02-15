@@ -97,14 +97,14 @@ sources:
                          then=BinaryType,
                       else=if(condition=get(member="AddInType"),
                          then=AddinType + ' ' + OfficeArchitecture,
-                      else=if(condition=Key.FullPath =~ 'InventoryDevicePnp',
+                      else=if(condition=Key.OSPath.Path =~ 'InventoryDevicePnp',
                          then='DevicePnp',
-                      else=if(condition=Key.FullPath =~ 'InventoryDriverBinary',
+                      else=if(condition=Key.OSPath.Path =~ 'InventoryDriverBinary',
                          then='DriverBinary')))) as BinaryType
 
                     FROM read_reg_key(
                         globs=KeyPathGlob,
-                        root=pathspec(DelegatePath=FullPath),
+                        root=pathspec(DelegatePath=OSPath),
                         accessor='raw_reg')
                     WHERE SHA1
                         AND SHA1 =~ SHA1Regex

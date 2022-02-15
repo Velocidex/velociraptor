@@ -9,7 +9,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -27,7 +26,9 @@ import (
 // This reads like "mount directory from file:/mnt/data on file:/
 // Means when VQL opens a path using accessor "file" in all paths
 // below "/", the "file" accessor will be used on "/mnt/data" instead.
-func InstallMountPoints(manager accessors.DeviceManager,
+func InstallMountPoints(
+	scope vfilter.Scope,
+	manager accessors.DeviceManager,
 	remappings []*config_proto.RemappingConfig,
 	on_accessor string) error {
 
@@ -45,9 +46,6 @@ func InstallMountPoints(manager accessors.DeviceManager,
 			on_path_type = remapping.On.PathType
 		}
 	}
-
-	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
 
 	// Build a mount filesystem
 	root_path, err := getTypedOSPath(on_path_type, "")
@@ -168,7 +166,7 @@ func ApplyRemappingOnScope(
 	}
 
 	for to_accessor, remappings := range mounts {
-		err := InstallMountPoints(manager, remappings, to_accessor)
+		err := InstallMountPoints(scope, manager, remappings, to_accessor)
 		if err != nil {
 			return err
 		}

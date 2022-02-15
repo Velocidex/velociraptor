@@ -35,10 +35,10 @@ sources:
           query={
             SELECT User,
                    id AS url_id,
-                   timestamp(winfiletime=visit_time) AS visit_time,
+                   timestamp(winfiletime=visit_time * 10) AS visit_time,
                    url as visted_url,
                    title,visit_count,typed_count,
-                   timestamp(last_visit_time=visit_time) AS last_visit_time,
+                   timestamp(epoch=last_visit_time) AS last_visit_time,
                    hidden,
                    from_visit AS from_url_id,
                    visit_duration,transition,
