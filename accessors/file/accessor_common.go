@@ -3,6 +3,7 @@
 package file
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -280,14 +281,20 @@ func (self OSFileSystemAccessor) ReadDirWithOSPath(
 // Wrap the os.File object to keep track of open file handles.
 type OSFileWrapper struct {
 	*os.File
+	closed bool
 }
 
-func (self OSFileWrapper) Close() error {
+func (self *OSFileWrapper) DebugString() string {
+	return fmt.Sprintf("OSFileWrapper %v (closed %v)", self.Name(), self.closed)
+}
+
+func (self *OSFileWrapper) Close() error {
 	fileAccessorCurrentOpened.Dec()
+	self.closed = true
 	return self.File.Close()
 }
 
-func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
+func (self *OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
 	// Clean the path
 	full_path, err := self.ParsePath(path)
 	if err != nil {
@@ -331,7 +338,7 @@ func (self OSFileSystemAccessor) OpenWithOSPath(
 	}
 
 	fileAccessorCurrentOpened.Inc()
-	return OSFileWrapper{file}, nil
+	return &OSFileWrapper{File: file}, nil
 }
 
 func init() {

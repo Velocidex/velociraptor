@@ -33,11 +33,11 @@ func NewFileStoreFileSystemAccessor(
 }
 
 func (self FileStoreFileSystemAccessor) New(
-	scope vfilter.Scope) accessors.FileSystemAccessor {
+	scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
 	return &FileStoreFileSystemAccessor{
 		file_store: self.file_store,
 		config_obj: self.config_obj,
-	}
+	}, nil
 }
 
 func (self FileStoreFileSystemAccessor) Lstat(filename string) (

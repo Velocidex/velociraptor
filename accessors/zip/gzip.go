@@ -330,12 +330,13 @@ func GetGzipFile(full_path *accessors.OSPath, scope vfilter.Scope) (ReaderStat, 
 }
 
 func init() {
-	accessors.Register("gzip", &GzipFileSystemAccessor{getter: GetGzipFile},
+	accessors.Register("gzip", NewGzipFileSystemAccessor(
+		accessors.MustNewLinuxOSPath(""), GetGzipFile),
 		`Access the content of gzip files. The filename is a pathspec with a delegate accessor opening the actual gzip file.`)
 
-	accessors.Register("bzip2", &GzipFileSystemAccessor{
-		getter: GetBzip2File,
-	}, `Access the content of gzip files. The filename is a pathspec with a delegate accessor opening the actual gzip file.`)
+	accessors.Register("bzip2", NewGzipFileSystemAccessor(
+		accessors.MustNewLinuxOSPath(""), GetBzip2File),
+		`Access the content of gzip files. The filename is a pathspec with a delegate accessor opening the actual gzip file.`)
 
 	json.RegisterCustomEncoder(&GzipFileInfo{}, accessors.MarshalGlobFileInfo)
 }

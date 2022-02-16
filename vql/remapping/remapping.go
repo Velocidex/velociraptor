@@ -7,14 +7,16 @@ import (
 	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type RemappingArgs struct {
-	Configuration string `vfilter:"required,field=config,doc=A Valid remapping configuration in YAML format"`
-	Clear         bool   `vfilter:"optional,field=clear,doc=If set we clear all accessors from the device manager"`
+	Configuration string   `vfilter:"required,field=config,doc=A Valid remapping configuration in YAML format"`
+	Copy          []string `vfilter:"optional,field=copy,doc=Accessors to copy to the new scope"`
+	Clear         bool     `vfilter:"optional,field=clear,doc=If set we clear all accessors from the device manager"`
 }
 
 type RemappingFunc struct{}
@@ -43,7 +45,25 @@ func (self RemappingFunc) Call(ctx context.Context,
 	if arg.Clear {
 		manager.Clear()
 	}
-	err = ApplyRemappingOnScope(ctx, scope, manager,
+
+	global_device_manager := accessors.GlobalDeviceManager.Copy()
+	for _, cp := range arg.Copy {
+		accessor, err := global_device_manager.GetAccessor(cp, scope)
+		if err != nil {
+			scope.Log("remap: %v", err)
+			return vfilter.Null{}
+		}
+
+		manager.Register(cp, accessor, "")
+	}
+
+	// Reset the scope to default for remapping accessors.
+	subscope := scope.Copy()
+	subscope.AppendVars(ordereddict.NewDict().
+		Set(constants.SCOPE_DEVICE_MANAGER,
+			accessors.GlobalDeviceManager.Copy()))
+
+	err = ApplyRemappingOnScope(ctx, subscope, manager,
 		ordereddict.NewDict(), remapping_config)
 	if err != nil {
 		scope.Log("remap: %v", err)

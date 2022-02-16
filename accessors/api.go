@@ -203,9 +203,5 @@ type FileSystemAccessor interface {
 	ReadDirWithOSPath(path *OSPath) ([]FileInfo, error)
 	OpenWithOSPath(path *OSPath) (ReadSeekCloser, error)
 	LstatWithOSPath(path *OSPath) (FileInfo, error)
-}
-
-// A factory for new accessors
-type FileSystemAccessorFactory interface {
 	New(scope vfilter.Scope) (FileSystemAccessor, error)
 }

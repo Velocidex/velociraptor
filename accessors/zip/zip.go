@@ -54,6 +54,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -278,7 +279,9 @@ func (self *ZipFileCache) Open(full_path *accessors.OSPath) (
 
 	fd, err := info.member_file.Open()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("While reading %v %s: %w",
+			utils.DebugString(info.member_file),
+			full_path.String(), err)
 	}
 
 	// We are leaking a zip.File out of our cache so we need to
@@ -286,9 +289,9 @@ func (self *ZipFileCache) Open(full_path *accessors.OSPath) (
 	self.refs++
 	zipAccessorCurrentReferences.Inc()
 	return &SeekableZip{
-		ReadCloser: fd,
-		info:       info,
-		full_path:  full_path,
+		delegate:  fd,
+		info:      info,
+		full_path: full_path,
 
 		// We will be closed when done - Leak a reference.
 		zip_file: self,
@@ -436,9 +439,11 @@ func (self *ZipFileCache) Close() {
    unpacking to a tmpfile automatically depending on usage patterns.
 */
 type SeekableZip struct {
-	io.ReadCloser
-	info   *ZipFileInfo
-	offset int64
+	mu sync.Mutex
+
+	delegate io.ReadCloser
+	info     *ZipFileInfo
+	offset   int64
 
 	full_path *accessors.OSPath
 
@@ -447,9 +452,14 @@ type SeekableZip struct {
 
 	// If there is a tmp file backing the file, divert all IO to it.
 	tmp_file_backing *os.File
+
+	closed bool
 }
 
 func (self *SeekableZip) Close() error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	// Remove the tmpfile now.
 	if self.tmp_file_backing != nil {
 		self.tmp_file_backing.Close()
@@ -458,28 +468,51 @@ func (self *SeekableZip) Close() error {
 		os.Remove(self.tmp_file_backing.Name())
 	}
 
-	err := self.ReadCloser.Close()
+	err := self.delegate.Close()
 	self.zip_file.Close()
+	self.closed = true
 	return err
 }
 
-func (self *SeekableZip) Read(buff []byte) (int, error) {
+func (self *SeekableZip) DebugString() string {
 	if self.tmp_file_backing != nil {
-		return self.tmp_file_backing.Read(buff)
+		return fmt.Sprintf("SeekableZip of %v backed on %v",
+			self.full_path.String(), self.tmp_file_backing.Name())
+	}
+	return fmt.Sprintf("SeekableZip of %v, closed: %v",
+		self.full_path.String(), self.closed)
+}
+
+func (self *SeekableZip) Read(buff []byte) (int, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.read(buff)
+}
+
+func (self *SeekableZip) read(buff []byte) (int, error) {
+	if self.tmp_file_backing != nil {
+		nn, err := self.tmp_file_backing.Read(buff)
+		self.offset += int64(nn)
+		return nn, err
 	}
 
-	n, err := self.ReadCloser.Read(buff)
+	n, err := self.delegate.Read(buff)
 	self.offset += int64(n)
 	return n, err
 }
 
 // Comply with the ReadAt interface.
 func (self *SeekableZip) ReadAt(buf []byte, offset int64) (int, error) {
-	_, err := self.Seek(offset, 0)
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	_, err := self.seek(offset, 0)
 	if err != nil {
 		return 0, err
 	}
-	return self.Read(buf)
+	n, err := self.read(buf)
+	return n, err
 }
 
 // Copy the member into a tmpfile.
@@ -522,8 +555,19 @@ func (self *SeekableZip) createTmpBackup() (err error) {
 }
 
 func (self *SeekableZip) Seek(offset int64, whence int) (int64, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.seek(offset, whence)
+}
+
+func (self *SeekableZip) seek(offset int64, whence int) (int64, error) {
 	if self.tmp_file_backing != nil {
-		return self.tmp_file_backing.Seek(offset, whence)
+		current_offset, err := self.tmp_file_backing.Seek(offset, whence)
+		if err != nil {
+			self.offset = current_offset
+		}
+		return current_offset, err
 	}
 
 	switch whence {
@@ -539,7 +583,11 @@ func (self *SeekableZip) Seek(offset int64, whence int) (int64, error) {
 		return 0, err
 	}
 
-	return self.Seek(offset, whence)
+	current_offset, err := self.tmp_file_backing.Seek(offset, whence)
+	if err != nil {
+		self.offset = current_offset
+	}
+	return current_offset, err
 }
 
 func init() {

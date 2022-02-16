@@ -8,7 +8,8 @@ Parameters:
           prefix: |
             {
               "DelegateAccessor": "scope",
-              "DelegatePath": "Content"
+              "DelegatePath": "Content",
+              "Path": "/"
             }
         on:
           accessor: "auto"
@@ -22,6 +23,7 @@ Queries:
   # dest="F:/malware/infected.zip.xor") FROM scope()
   - LET Content <= xor(key="infected", string=read_file(
         filename=srcDir+"/artifacts/testdata/files/infected.zip.xor"))
-  - LET _ <= remap(config=RemappingTemplate)
+  - LET _ <= remap(config=RemappingTemplate, copy=["zip", "scope"], clear=TRUE)
+
   - SELECT * FROM Artifact.Windows.Detection.TemplateInjection(
         SearchGlob='/**')

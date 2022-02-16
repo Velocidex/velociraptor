@@ -1,4 +1,4 @@
-This is a fork on archive/zip from the standard library with a number
+This is a fork of archive/zip from the standard library with a number
 of bugfixes:
 
 * Support extra bytes before zip file (see issue https://github.com/golang/go/issues/10464)

@@ -14,6 +14,8 @@ import (
 	"io"
 	"os"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -40,6 +42,11 @@ type File struct {
 	zipr         io.ReaderAt
 	zipsize      int64
 	headerOffset int64
+}
+
+func (f *File) DebugString() string {
+	return fmt.Sprintf("ZipFile %v of reader %v", f.FileHeader.Name,
+		utils.DebugString(f.zipr))
 }
 
 func (f *File) hasDataDescriptor() bool {
@@ -178,6 +185,7 @@ func (f *File) Open() (io.ReadCloser, error) {
 		hash: crc32.NewIEEE(),
 		f:    f,
 		desr: desr,
+		zipr: f.zipr,
 	}
 	return rc, nil
 }
@@ -189,6 +197,11 @@ type checksumReader struct {
 	f     *File
 	desr  io.Reader // if non-nil, where to read the data descriptor
 	err   error     // sticky error
+	zipr  io.ReaderAt
+}
+
+func (r *checksumReader) DebugString() string {
+	return fmt.Sprintf("checksumReader of %v", utils.DebugString(r.zipr))
 }
 
 func (r *checksumReader) Read(b []byte) (n int, err error) {
@@ -239,7 +252,7 @@ func (f *File) findBodyOffset() (int64, error) {
 	}
 	b := readBuf(buf[:])
 	if sig := b.uint32(); sig != fileHeaderSignature {
-		return 0, ErrFormat
+		return 0, fmt.Errorf("findBodyOffset: %w", ErrFormat)
 	}
 	b = b[22:] // skip over most of the header
 	filenameLen := int(b.uint16())
@@ -257,7 +270,7 @@ func readDirectoryHeader(f *File, r io.Reader, startOfArchive int64) error {
 	}
 	b := readBuf(buf[:])
 	if sig := b.uint32(); sig != directoryHeaderSignature {
-		return ErrFormat
+		return fmt.Errorf("readDirectoryHeader: %w", ErrFormat)
 	}
 	f.CreatorVersion = b.uint16()
 	f.ReaderVersion = b.uint16()

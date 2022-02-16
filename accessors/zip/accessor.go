@@ -14,6 +14,10 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+const (
+	ZipFileSystemAccessorTag = "_ZipFS"
+)
+
 var (
 	mu sync.Mutex
 )
@@ -22,6 +26,7 @@ var (
 // root scope. We keep a list of most recently used caches of zip
 // files for quick access.
 type ZipFileSystemAccessor struct {
+	mu       sync.Mutex
 	fd_cache map[string]*ZipFileCache
 	scope    vfilter.Scope
 }
@@ -76,9 +81,8 @@ func (self *ZipFileSystemAccessor) CloseAll() {
 
 func (self *ZipFileSystemAccessor) getCachedZipFile(cache_key string) (
 	*ZipFileCache, error) {
-	mu.Lock()
+
 	zip_file_cache, pres := self.fd_cache[cache_key]
-	mu.Unlock()
 
 	// The cached value is valid and ready - return it
 	if pres &&
@@ -91,9 +95,7 @@ func (self *ZipFileSystemAccessor) getCachedZipFile(cache_key string) (
 	// Store a nil in the map as a place holder, while we
 	// build something.
 	if !pres {
-		mu.Lock()
 		self.fd_cache[cache_key] = nil
-		mu.Unlock()
 		return nil, nil
 	}
 
@@ -104,7 +106,7 @@ func (self *ZipFileSystemAccessor) getCachedZipFile(cache_key string) (
 // close it when done. When the query completes, the zip file will be
 // closed.
 func _GetZipFile(self *ZipFileSystemAccessor,
-	full_path *accessors.OSPath) (*ZipFileCache, error) {
+	full_path *accessors.OSPath) (result *ZipFileCache, err error) {
 
 	pathspec := full_path.PathSpec()
 
@@ -115,42 +117,52 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 	cache_key := base_pathspec.String()
 
 	for {
+		mu.Lock()
 		zip_file_cache, err := self.getCachedZipFile(cache_key)
 		if err == nil {
+			// This means the zip file cache needs to be built - we
+			// are still holding the lock and will release it below.
 			if zip_file_cache == nil {
+				mu.Unlock()
 				break
 			}
+			mu.Unlock()
 			return zip_file_cache, nil
 		}
+		mu.Unlock()
 		time.Sleep(time.Millisecond)
 	}
+
+	defer func() {
+		if err != nil {
+			mu.Lock()
+			defer mu.Unlock()
+			delete(self.fd_cache, cache_key)
+		}
+	}()
 
 	accessor, err := accessors.GetAccessor(
 		pathspec.DelegateAccessor, self.scope)
 	if err != nil {
 		self.scope.Log("%v: did you provide a URL or PathSpec?", err)
-		delete(self.fd_cache, cache_key)
 		return nil, err
 	}
 
 	filename := pathspec.GetDelegatePath()
 	fd, err := accessor.Open(filename)
 	if err != nil {
-		delete(self.fd_cache, cache_key)
 		return nil, err
 	}
 
 	stat, err := accessor.Lstat(filename)
 	if err != nil {
 		self.scope.Log("Lstat: %v", err)
-		delete(self.fd_cache, cache_key)
 		return nil, err
 	}
 
-	zip_file, err := zip.NewReader(utils.ReaderAtter{fd}, stat.Size())
+	reader_atter := utils.MakeReaderAtter(fd)
+	zip_file, err := zip.NewReader(reader_atter, stat.Size())
 	if err != nil {
-		self.scope.Log("zip.NewReader: %v", err)
-		delete(self.fd_cache, cache_key)
 		return nil, err
 	}
 
@@ -196,13 +208,13 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 	}
 
 	// Set the new zip cache tracker in the fd cache.
-	mu.Lock()
 
 	// Leaking a zip file from this function, increase its reference -
 	// callers have to close it.
 	zip_file_cache.IncRef()
 
 	// Replace the nil in the fd_cache with the real fd cache.
+	mu.Lock()
 	self.fd_cache[cache_key] = zip_file_cache
 	mu.Unlock()
 
@@ -288,10 +300,6 @@ func (self *ZipFileSystemAccessor) ReadDirWithOSPath(
 
 	return result, nil
 }
-
-const (
-	ZipFileSystemAccessorTag = "_ZipFS"
-)
 
 // Zip files typically use standard / path separators.
 func (self ZipFileSystemAccessor) ParsePath(path string) (

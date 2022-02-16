@@ -166,7 +166,7 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 		}
 
 		paged_reader, err := ntfs.NewPagedReader(
-			utils.ReaderAtter{reader}, 1024*8, lru_size)
+			utils.ReaderAtter{Reader: reader}, 1024*8, lru_size)
 		if err != nil {
 			self.mu.Unlock()
 			return 0, err
