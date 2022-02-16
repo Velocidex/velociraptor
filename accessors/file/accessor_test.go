@@ -30,7 +30,7 @@ func (self *AccessorWindowsTestSuite) SetupTest() {
 	tmpdir, err := ioutil.TempDir("", "accessor_test")
 	assert.NoError(self.T(), err)
 
-	self.tmpdir = tmpdir
+	self.tmpdir = strings.ReplaceAll(tmpdir, "\\", "/")
 }
 
 func (self *AccessorWindowsTestSuite) TearDownTest() {
