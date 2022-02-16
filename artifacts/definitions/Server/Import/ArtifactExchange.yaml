@@ -23,7 +23,7 @@ sources:
              remove_last=TRUE,
              tempfile_extension=".zip", url=ExchangeURL)
         }, query={
-          SELECT read_file(accessor="zip", filename=FullPath) AS Definition
+          SELECT read_file(accessor="zip", filename=OSPath) AS Definition
           FROM glob(
              globs='/**/*.yaml',
              root=pathspec(

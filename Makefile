@@ -88,5 +88,7 @@ UpdateCerts:
 	cp /etc/ssl/certs/ca-certificates.crt crypto/ca-certificates.crt
 	fileb0x crypto/b0x.yaml
 
+# Use this to propare artifact packs at specific versions:
+# First git checkout origin/v0.6.3
 archive_artifacts:
-	zip -r release_artifacts_$(basename $(git rev-parse --abbrev-ref HEAD)).zip artifacts/definitions/ -i \*.yaml
+	zip -r release_artifacts_$(basename "$(git status | head -1)").zip artifacts/definitions/ -i \*.yaml

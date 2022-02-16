@@ -1,0 +1,62 @@
+name: Server.Import.PreviousReleases
+description: |
+  When upgrading the Velociraptor server the built in artifacts may
+  change using newer VQL features that are not present on older
+  clients.
+
+  If you have some older clients that can not be upgraded, sometimes
+  collecting standard built-in artifacts will fail. In this case it is
+  handy to import older VQL artifacts that work with these older
+  clients.
+
+  This server artifact allows you to automatically import all
+  artifacts that came bundled with previous versions. These should be
+  compatible with older clients.
+
+type: SERVER
+
+required_permissions:
+- SERVER_ADMIN
+
+parameters:
+  - name: VelociraptorRelease
+    description: |
+      The Velociraptor Release to import.
+    type: choices
+    choices:
+      - v0.6.0
+      - v0.6.1
+      - v0.6.2
+      - v0.6.3
+
+sources:
+  - query: |
+      LET Prefix <= regex_replace(source=VelociraptorRelease, re='\\.', replace="") + "."
+      LET ExchangeURL = "https://docs.velociraptor.app/release_artifacts/release_artifacts_" + VelociraptorRelease + ".zip"
+
+      LET X = SELECT artifact_set(
+           prefix=Prefix,
+           definition=Definition) AS Definition
+        FROM foreach(row={
+          SELECT Content FROM http_client(
+             remove_last=TRUE,
+             tempfile_extension=".zip", url=ExchangeURL)
+        }, query={
+          -- Replace internal references to use the same version so
+          -- artifacts are still internally consistent.
+          SELECT regex_replace(source=read_file(accessor="zip", filename=OSPath),
+             re='''(?sm) Artifact\.([a-z0-9._]+?[(])''',
+             replace=" Artifact." + Prefix + "$1") AS Definition
+          FROM glob(
+             globs='/**/*.yaml',
+             root=pathspec(
+                DelegateAccessor="auto",
+                DelegatePath=Content),
+             accessor="zip")
+          WHERE NOT Definition =~ "(?ms)type: +INTERNAL"
+        })
+
+        SELECT Definition.name AS Name,
+               Definition.description AS Description,
+               Definition.author AS Author
+        FROM X
