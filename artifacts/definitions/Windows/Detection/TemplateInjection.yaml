@@ -1,25 +1,33 @@
 name: Windows.Detection.TemplateInjection
+author: Matt Green - @mgreen27
 description: |
-    This content will detect injected templates in Office documents.
+    This content will detect injected templates in Office and RTF documents.
 
-    Template injection is a form of defence evasion where a malicious macro
-    is loaded into an OOXML document via a resource file masquerading as
-    an office template.
+    Template injection is a form of defence evasion.
+    For office documents a malicious macro is loaded into an OOXML document
+    via a resource file masquerading as an office template. The OOXML artifact structure
+    will also detect MSHTML RCE Vulnerability #CVE-2021-40444 which has a similar payload technique.
+    For RTF documents a malicious payload can be delivered by modifying document
+    formatting control via the "\\\*\template" structure.
 
-    The default artifact will also detect MSHTML RCE Vulnerability #CVE-2021-40444.
 
-    This artifact can also be modified to search for other suspicious rels files:
-    - document.xml.rels = macros, ole objects, images
-    - settings.xml.rels = templates
-    - websettings.xml.rels = frames
+    This artifact can be modified to search for other suspicious rels files:
+
+    - document.xml.rels = macros, ole objects, images.
+    - settings.xml.rels = templates.
+    - websettings.xml.rels = frames.
     - header#.xml.rels and footer#.xml.rels and others has also been observed
-    hosting image files for canary files or abused for NetNTLM hash colleciton.
+    hosting image files for canary files or abused for NetNTLM hash collection.
 
     Change TemplateFileRegex to '\\.xml\\.rels$' for looser file selection.
     Change TemplateTargetRegex to '^(https?|smb|\\\\|//|mhtml|file)' for looser
     Target selection.
 
-author: Matt Green - @mgreen27
+    This artifact can also be modified to quickly deploy yara based detections on
+    other documents. Simply replace RtfYara with yara of interest and modify glob
+    for targeting.
+
+
 
 reference:
   - https://attack.mitre.org/techniques/T1221/
@@ -30,7 +38,7 @@ type: CLIENT
 parameters:
   - name: SearchGlob
     description: Glob to search
-    default: C:\Users\**\*.{docx,dotx,xlsx,xltx,pptx,potx,ppsx,sldx}
+    default: C:\Users\**\*.{rtf,doc,dot,docx,docm,dotx,dotm,docb,xls,xlt,xlm,xlsx,xlsm,xltx,xltm,xlsb,ppt,pptx,pptm,potx,potm}
   - name: TemplateFileRegex
     description: Regex to search inside resource section.
     default: '(document|settings)\.xml\.rels$'
@@ -42,7 +50,22 @@ parameters:
   - name: UploadDocument
     type: bool
     description: Select to upload document on detection.
+  - name: RtfYara
+    default: |
+        rule RTF_TemplateInjection {
+            meta:
+                author = "Matt Green - @mgreen27"
+                description = "Yara for RTF template injection. Using regex match to extract template information"
 
+            strings:
+                $regex1 = /\{\\\*\\template\s+http[^\}]+\}/ nocase
+                $regex2 = /\{\\\*\\templates\s+\\u-[^\}]+\}/ nocase
+                $regex3 = /\{\\\*\\template\s+file[^\}]+\}/ nocase
+
+            condition:
+              // header is {\rt only to also flag on malformed rtf heders
+              uint32be(0) == 0x7B5C7274 and 1 of them
+        }
 
 sources:
   - precondition:
@@ -50,11 +73,37 @@ sources:
 
     query: |
       -- Find target docs
-      LET office_docs = SELECT OSPath AS OfficePath
+      LET office_docs = SELECT OSPath, FullPath, Mtime, Size
         FROM glob(globs=SearchGlob)
+        WHERE NOT IsDir and Size > 0
+
+      LET rtf_injection <= SELECT * FROM foreach(
+         row=office_docs,
+         query={
+                SELECT
+                    OSPath AS DocumentPath,
+                    hash(path=OSPath) as DocumentHash,
+                    Mtime,
+                    Size,
+                    'YaraHit: ' + Rule  as Section,
+                    regex_replace(
+                      source=String.Data,
+                      re='\{...template\s*|\}',replace='') as TemplateTarget
+                FROM yara(files=OSPath, rules=RtfYara)
+                WHERE NOT TemplateTarget =~ '^http(s|)://schemas\.microsoft\.com/'
+
+            })
 
       -- select zip members inside the doc that have some content.
-      LET document_parts = SELECT * FROM foreach(row=office_docs,
+      LET document_parts = SELECT * FROM foreach(
+            row={
+                SELECT
+                    OSPath AS OfficePath,
+                    Mtime as OfficeMtime,
+                    Size as OfficeSize
+                FROM office_docs
+                WHERE NOT FullPath in rtf_injection.Fullpath
+            },
             query= {
                 SELECT
                     Mtime, Atime, Ctime,
@@ -65,7 +114,9 @@ sources:
                   globs="/**",
                   root=pathspec(DelegatePath=OfficePath),
                   accessor='zip')
-                WHERE not IsDir and Size > 0 and ZipMemberPath =~ TemplateFileRegex
+                WHERE not IsDir
+                  AND Size > 0
+                  AND ZipMemberPath =~ TemplateFileRegex
             })
 
       -- parse settings file by line and extract config
@@ -87,38 +138,32 @@ sources:
         })
 
       -- search settings for remote or file templates, format mshtml entries
-      LET hits = SELECT * FROM foreach(row=template,
-            query={
-                SELECT
-                    OSPath AS DocumentPath,
-                    hash(path=Document) as DocumentHash,
-                    Mtime,
-                    Size,
-                    Section,
-                    regex_replace(
-                       source=TemplateTarget,
-                       re='.*Target="(mhtml)',
-                       replace='mhtml') as TemplateTarget,
-                    SectionMtime,
-                    hash(path=SectionPath, accessor='zip') as SectionHash
-                FROM stat(filename=Document)
-                WHERE
-                    TemplateTarget =~ TemplateTargetRegex
-                     AND (( Section=~'/document.xml.rels$' AND TemplateTarget=~'^mhtml:' )
-                            OR NOT Section=~'/document.xml.rels$' )
-            })
+      LET hits = SELECT * FROM chain(
+        rtf = { SELECT * FROM rtf_injection },
+        office = {
+            SELECT * FROM foreach(row=template,
+                query={
+                    SELECT
+                        OSPath AS DocumentPath,
+                        hash(path=FullPath) as DocumentHash,
+                        Mtime,
+                        Size,
+                        Section,
+                        regex_replace(source=TemplateTarget,
+                            re='.*Target="(mhtml)',
+                            replace='mhtml') as TemplateTarget,
+                        SectionMtime,
+                        hash(path=SectionPath,accessor='zip') as SectionHash
+                    FROM stat(filename=Document)
+                    WHERE
+                        TemplateTarget =~ TemplateTargetRegex
+                         AND (( Section=~'/document.xml.rels$' AND TemplateTarget=~'^mhtml:' )
+                                OR NOT Section=~'/document.xml.rels$' )
+                })
+        })
 
       -- upload hits to server
-      LET upload_hits = SELECT
-            OSPath,
-            Hash,
-            Mtime,
-            Size,
-            Section,
-            TemplateTarget,
-            SectionMtime,
-            SectionHash,
-            upload(file=DocumentPath) as Upload
+      LET upload_hits = SELECT *, upload(file=FullPath) as Upload
         FROM hits
 
       -- output rows
