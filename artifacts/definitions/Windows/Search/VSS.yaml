@@ -37,7 +37,7 @@ sources:
       -- Glob for all files in SearchGlob and calculate their hash.
       LET globvss(SearchGlob, Root) = SELECT *,
             extract_path(FullPath=OSPath).Path AS Path,
-            Root AS Source,
+            Root.String AS Source,
             hash(path=OSPath, accessor='ntfs').SHA1 as SHA1
          FROM glob(globs=SearchGlob, accessor='ntfs', root=Root)
          WHERE NOT IsDir
