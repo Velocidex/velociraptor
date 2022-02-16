@@ -63,7 +63,7 @@ sources:
                 OSPath.Basename as reg_name,
                 path_join(components=[
                    "HKEY_USERS", UUID, OSPath.Dirname.Path
-                ]) as reg_key,
+                ], path_type="registry") as reg_key,
 
                 -- Value data is similar to 'cmd.exe\1' so we just need the bit before the \
                 regex_replace(source=Data.value, re="\\\\1$", replace="") as reg_value,
