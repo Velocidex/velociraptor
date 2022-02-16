@@ -9,7 +9,7 @@ import (
 )
 
 func TestReaderAt(t *testing.T) {
-	flat_file := ReaderAtter{bytes.NewReader([]byte("Hello world"))}
+	flat_file := MakeReaderAtter(bytes.NewReader([]byte("Hello world")))
 	// Gap between words of 10 sparse bytes
 	index := &actions_proto.Index{
 		// First range "hello "

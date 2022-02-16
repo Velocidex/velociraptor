@@ -28,7 +28,7 @@ sources:
   - query: |
       LET AllHives = SELECT * FROM foreach(row=SearchSpecs,
         query={
-            SELECT FullPath AS HivePath, KeyGlob
+            SELECT OSPath AS HivePath, KeyGlob
             FROM glob(globs=HiveGlob)
             WHERE log(message="Inspecting hive " + HivePath)
         })
@@ -44,54 +44,58 @@ sources:
         })
 
       LET ParsedValues = SELECT
-          OSPath.DelegatePath AS Hive,
-          OSPath.Path AS KeyPath,
+          OSPath AS KeyPath,
           parse_binary(profile=Profile, filename=Data.value,
                        accessor="data", struct="ItemIDList") as _Parsed,
           base64encode(string=Data.value) AS _RawData, ModTime
       FROM ShellValues
 
-      LET AllResults <= SELECT Hive, KeyPath,
+      LET AllResults <= SELECT KeyPath,
         _Parsed.ShellBag.Description AS Description,
         _Parsed, _RawData, ModTime
       FROM ParsedValues
 
-      // Recursive function to join path components together. Limit recursion depth just in case.
-      LET FormPath(MRUPath, MRUHive, Description, Depth) = SELECT * FROM if(
+      // Recursive function to join path components together.
+      // Limit recursion depth just in case.
+      LET FormPath(MRUPath, Description, Depth) = SELECT * FROM if(
         condition=Depth < 20,
         then={SELECT * FROM chain(
           b={
-            SELECT MRUPath, MRUHive, Description,
+            SELECT MRUPath, Description, Depth,
               -- Signify unknown component as ?
               Description.LongName || Description.ShortName || "?" AS Name
             FROM scope()
           },
           c={
             SELECT * FROM foreach(row={
-              SELECT KeyPath, MRUHive, Description
+              SELECT KeyPath, Description, Depth
               FROM AllResults
-              WHERE Hive = MRUHive AND
-                  KeyPath = dirname(path=MRUPath, path_type='registry').Path
+              WHERE KeyPath = MRUPath.Dirname
               LIMIT 1
             }, query={
-              SELECT * FROM FormPath(MRUPath=KeyPath, MRUHive=MRUHive,
+              SELECT * FROM FormPath(MRUPath=KeyPath,
                                      Description=Description, Depth=Depth + 1)
             })
           })
-          ORDER BY MRUPath
+          ORDER BY Depth DESC
           LIMIT 10
         })
 
         // Now display all hits and their reconstructed path
-        LET ReconstructedPath = SELECT ModTime, Hive, KeyPath, Description, {
-           SELECT * FROM FormPath(MRUPath=KeyPath, MRUHive=Hive, Description=Description, Depth=0)
+        LET ReconstructedPath = SELECT ModTime, KeyPath, Description, {
+           SELECT * FROM FormPath(
+                MRUPath=KeyPath, Description=Description, Depth=0)
         } AS Chain, _RawData, _Parsed
         FROM AllResults
 
-        SELECT ModTime, Hive, KeyPath, Description,
+        SELECT ModTime,
+           KeyPath AS _OSPath,
+           KeyPath.DelegatePath AS Hive,
+           KeyPath.Path AS KeyPath, Description,
                join(array=Chain.Name, sep=" -> ") AS Path,
                _RawData, _Parsed
         FROM ReconstructedPath
+        ORDER BY Path
 
 column_types:
   - name: _RawData

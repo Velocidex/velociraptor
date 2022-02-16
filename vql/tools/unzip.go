@@ -97,7 +97,7 @@ func (self UnzipPlugin) Call(
 			return
 		}
 
-		zip, err := zip.NewReader(utils.ReaderAtter{fd}, s.Size())
+		zip, err := zip.NewReader(utils.MakeReaderAtter(fd), s.Size())
 		if err != nil {
 			scope.Log("unzip: %v", err)
 			return

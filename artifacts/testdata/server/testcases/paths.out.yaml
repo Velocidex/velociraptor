@@ -73,9 +73,9 @@ SELECT basename(path="/foo/bar/baz", path_type='linux') FROM scope()[
 FROM scope()
 [
  {
-  "path_spec": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\",\"Path\":\"/\"}",
-  "pathspec(parse=path_spec.String)": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\",\"Path\":\"/\"}",
-  "pathspec(parse=path_spec)": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\",\"Path\":\"/\"}",
+  "path_spec": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\"}",
+  "pathspec(parse=path_spec.String)": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\"}",
+  "pathspec(parse=path_spec)": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\"}",
   "pathspec(parse=\"C:\\\\Windows\", path_type='windows')": "C:\\Windows",
   "pathspec(parse=\"/usr/lib\", path_type='linux')": "/usr/lib",
   "pathspec(parse=\"HKU/Software\", path_type='registry')": "HKEY_USERS\\Software",

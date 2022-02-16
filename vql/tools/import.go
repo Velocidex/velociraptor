@@ -127,7 +127,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	zipfile, err := zip.NewReader(utils.ReaderAtter{fd}, st.Size())
+	zipfile, err := zip.NewReader(utils.MakeReaderAtter(fd), st.Size())
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}
