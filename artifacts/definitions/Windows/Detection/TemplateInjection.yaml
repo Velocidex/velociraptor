@@ -73,7 +73,7 @@ sources:
 
     query: |
       -- Find target docs
-      LET office_docs = SELECT OSPath, FullPath, Mtime, Size
+      LET office_docs = SELECT OSPath, Mtime, Size
         FROM glob(globs=SearchGlob)
         WHERE NOT IsDir and Size > 0
 
@@ -102,7 +102,7 @@ sources:
                     Mtime as OfficeMtime,
                     Size as OfficeSize
                 FROM office_docs
-                WHERE NOT FullPath in rtf_injection.Fullpath
+                WHERE NOT OSPath in rtf_injection.OSPath
             },
             query= {
                 SELECT
@@ -145,7 +145,7 @@ sources:
                 query={
                     SELECT
                         OSPath AS DocumentPath,
-                        hash(path=FullPath) as DocumentHash,
+                        hash(path=OSPath) as DocumentHash,
                         Mtime,
                         Size,
                         Section,
@@ -163,7 +163,7 @@ sources:
         })
 
       -- upload hits to server
-      LET upload_hits = SELECT *, upload(file=FullPath) as Upload
+      LET upload_hits = SELECT *, upload(file=DocumentPath) as Upload
         FROM hits
 
       -- output rows
