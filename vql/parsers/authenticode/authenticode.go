@@ -40,9 +40,9 @@ import (
 )
 
 type AuthenticodeArgs struct {
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	Filename string `vfilter:"required,field=filename,doc=The filename to parse."`
-	Verbose  bool   `vfilter:"optional,field=verbose,doc=Set to receive verbose information about all the certs."`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Filename *accessors.OSPath `vfilter:"required,field=filename,doc=The filename to parse."`
+	Verbose  bool              `vfilter:"optional,field=verbose,doc=Set to receive verbose information about all the certs."`
 }
 
 type AuthenticodeFunction struct{}
@@ -80,12 +80,7 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	normalized_os_path, err := accessors.NewWindowsOSPath(arg.Filename)
-	if err != nil {
-		return &vfilter.Null{}
-	}
-
-	normalized_path := normalized_os_path.String()
+	normalized_path := arg.Filename.String()
 
 	output := ordereddict.NewDict().
 		Set("Filename", normalized_path).

@@ -151,7 +151,7 @@
     type: string
     description: The accessor to use.
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: The filename to parse.
     required: true
   - name: verbose
@@ -182,12 +182,15 @@
   type: Function
   args:
   - name: path
-    type: string
+    type: Any
     description: Extract directory name of path
     required: true
   - name: sep
     type: string
     description: Separator to use (default /)
+  - name: path_type
+    type: string
+    description: Type of path (e.g. 'windows,linux)
   category: basic
 - name: batch
   description: |
@@ -389,7 +392,6 @@
     SELECT client_set_metadata(ClientId="C.1234", Foo="Bar")
     FROM scope()
     ```
-
   type: Function
   args:
   - name: client_id
@@ -874,12 +876,15 @@
   type: Function
   args:
   - name: path
-    type: string
+    type: Any
     description: Extract directory name of path
     required: true
   - name: sep
     type: string
     description: Separator to use (default /)
+  - name: path_type
+    type: string
+    description: Type of path (e.g. 'windows,linux)
   category: basic
 - name: dns
   description: |
@@ -1417,6 +1422,10 @@
     type: string
     description: The credentials to use
     required: true
+  - name: attributes
+    type: ordereddict.Dict
+    description: The publish attributes
+    required: true
   category: server
 - name: generate
   description: |
@@ -1624,7 +1633,6 @@
     SELECT * FROM glob(globs='/**/*.pem',
         recursion_callback="x=>NOT x.Name =~ '^/(proc|sys|snap)'")
     ```
-
   type: Plugin
   args:
   - name: globs
@@ -1720,7 +1728,7 @@
   type: Function
   args:
   - name: path
-    type: string
+    type: accessors.OSPath
     description: Path to open and hash.
     required: true
   - name: accessor
@@ -2371,7 +2379,6 @@
     SELECT *, label(labels='MyLabel', op='set', client_id=client_id)
     FROM clients() WHERE  last_ip =~ "127.+"
     ```
-
   type: Function
   args:
   - name: client_id
@@ -2581,7 +2588,6 @@
     SELECT get(item=m, field=str(str=Pid)).Name AS ProcessName
     FROM source()
     ```
-
   type: Function
   args:
   - name: query
@@ -2630,7 +2636,7 @@
     type: Any
     description: The artifact to mock
   - name: results
-    type: Any
+    type: LazyExpr
     description: The result to return
     required: true
   category: utils
@@ -2802,7 +2808,6 @@
        WHERE FullPath =~ "XYZ"
     })
     ```
-
   type: Plugin
   args:
   - name: query
@@ -2887,7 +2892,7 @@
   type: Function
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: Binary file to open.
     required: true
   - name: accessor
@@ -3113,10 +3118,13 @@
   type: Function
   args:
   - name: device
-    type: string
+    type: accessors.OSPath
     description: The device file to open. This may be a full path - we will figure
       out the device automatically.
     required: true
+  - name: accessor
+    type: string
+    description: The accessor to use.
   - name: inode
     type: string
     description: The MFT entry to parse in inode notation (5-144-1).
@@ -3132,10 +3140,13 @@
   type: Plugin
   args:
   - name: device
-    type: string
+    type: accessors.OSPath
     description: The device file to open. This may be a full path - we will figure
       out the device automatically.
     required: true
+  - name: accessor
+    type: string
+    description: The accessor to use.
   - name: inode
     type: string
     description: The MFT entry to parse in inode notation (5-144-1).
@@ -3151,10 +3162,13 @@
   type: Plugin
   args:
   - name: device
-    type: string
+    type: accessors.OSPath
     description: The device file to open. This may be a full path - we will figure
       out the device automatically.
     required: true
+  - name: accessor
+    type: string
+    description: The accessor to use.
   - name: inode
     type: string
     description: The MFT entry to parse in inode notation (5-144-1).
@@ -3170,7 +3184,7 @@
   type: Function
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     description: The PE file to open.
     required: true
   - name: accessor
@@ -3310,9 +3324,12 @@
   type: Plugin
   args:
   - name: device
-    type: string
+    type: accessors.OSPath
     description: The device file to open.
     required: true
+  - name: accessor
+    type: string
+    description: The accessor to use.
   - name: start_offset
     type: int64
     description: The starting offset of the first USN record to parse.
@@ -3416,13 +3433,16 @@
   type: Function
   args:
   - name: components
-    type: string
+    type: Any
     description: Path components to join.
     repeated: true
     required: true
   - name: sep
     type: string
     description: Separator to use (default /)
+  - name: path_type
+    type: string
+    description: Type of path (e.g. 'windpws)
   category: basic
 - name: path_split
   description: Split a path into components. Note this is more complex than just split()
@@ -3430,9 +3450,12 @@
   type: Function
   args:
   - name: path
-    type: string
+    type: Any
     description: Path to split into components.
     required: true
+  - name: path_type
+    type: string
+    description: Type of path (e.g. 'windpws)
   category: basic
 - name: pathspec
   description: Create a structured path spec to pass to certain accessors.
@@ -3450,6 +3473,9 @@
   - name: parse
     type: string
     description: Alternatively parse the pathspec from this string.
+  - name: path_type
+    type: string
+    description: Type of path this is (windows,linux,registry,ntfs).
   category: plugin
 - name: pipe
   description: |
@@ -3761,6 +3787,9 @@
   - name: accessor
     type: string
     description: The accessor to use.
+  - name: root
+    type: string
+    description: The root directory to glob from (default '/').
   category: windows
 - name: reg_rm_key
   description: Removes a key and all its values from the registry.
@@ -3859,6 +3888,21 @@
     type: string
     description: Separator to use (default native)
   category: basic
+- name: remap
+  description: Apply a remapping configuration to the root scope.
+  type: Function
+  args:
+  - name: config
+    type: string
+    description: A Valid remapping configuration in YAML format
+    required: true
+  - name: copy
+    type: string
+    description: Accessors to copy to the new scope
+    repeated: true
+  - name: clear
+    type: bool
+    description: If set we clear all accessors from the device manager
 - name: rm
   description: Remove a file from the filesystem using the API.
   type: Function
@@ -4033,9 +4077,9 @@
     ```
   type: Function
   args:
-  - name: client_id
-    type: string
-    required: true
+  - name: metadata
+    type: ordereddict.Dict
+    description: A dict containing metadata. If not specified we use kwargs.
   category: server
 - name: set
   description: Sets the member field of the item. If item is omitted sets the scope.
@@ -5110,7 +5154,7 @@
   type: Plugin
   args:
   - name: device
-    type: string
+    type: accessors.OSPath
     description: The device file to open.
     required: true
   category: event
@@ -5270,7 +5314,7 @@
     required: true
   - name: accessor
     type: string
-    description: Accessor (e.g. NTFS)
+    description: Accessor (e.g. ntfs,file)
   - name: context
     type: int
     description: How many bytes to include around each hit
@@ -5290,3 +5334,4 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
+

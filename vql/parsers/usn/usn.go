@@ -5,6 +5,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -13,9 +14,9 @@ import (
 )
 
 type USNPluginArgs struct {
-	Device   string `vfilter:"required,field=device,doc=The device file to open."`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	StartUSN int64  `vfilter:"optional,field=start_offset,doc=The starting offset of the first USN record to parse."`
+	Device   *accessors.OSPath `vfilter:"required,field=device,doc=The device file to open."`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	StartUSN int64             `vfilter:"optional,field=start_offset,doc=The starting offset of the first USN record to parse."`
 }
 
 type USNPlugin struct{}
@@ -38,7 +39,7 @@ func (self USNPlugin) Call(
 		}
 
 		device, accessor, err := readers.GetRawDeviceAndAccessor(
-			arg.Device, arg.Accessor)
+			scope, arg.Device, arg.Accessor)
 		if err != nil {
 			scope.Log("parse_usn: %v", err)
 			return
@@ -67,7 +68,7 @@ func (self USNPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 }
 
 type WatchUSNPluginArgs struct {
-	Device string `vfilter:"required,field=device,doc=The device file to open."`
+	Device *accessors.OSPath `vfilter:"required,field=device,doc=The device file to open."`
 }
 
 type WatchUSNPlugin struct{}

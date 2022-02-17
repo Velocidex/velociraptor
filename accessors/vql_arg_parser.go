@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -17,11 +18,18 @@ import (
 // same thing. We also accept a string path and automatically convert
 // it to an OSPath.
 func parseOSPath(ctx context.Context,
-	scope types.Scope, value interface{}) (interface{}, error) {
+	scope types.Scope, args *ordereddict.Dict,
+	value interface{}) (interface{}, error) {
+
+	accessor_name := arg_parser.GetStringArg(ctx, scope, args, "accessor")
+	accessor, err := GetAccessor(accessor_name, scope)
+	if err != nil {
+		return nil, err
+	}
 
 	switch t := value.(type) {
 	case types.LazyExpr:
-		return parseOSPath(ctx, scope, t.ReduceWithScope(ctx, scope))
+		return parseOSPath(ctx, scope, args, t.ReduceWithScope(ctx, scope))
 
 	case *OSPath:
 		return t, nil
@@ -49,7 +57,10 @@ func parseOSPath(ctx context.Context,
 		return MustNewFileStorePath("ds:").Append(components...), nil
 
 	case string:
-		return NewGenericOSPath(t)
+		return accessor.ParsePath(t)
+
+	case []uint8:
+		return accessor.ParsePath(string(t))
 
 	default:
 		return nil, fmt.Errorf("Expecting a path arg type, not %T", t)

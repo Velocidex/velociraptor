@@ -15,6 +15,10 @@ Queries:
            -- This is in UTC time because timezone is specified.
            timestamp(string="2021-10-01T10:53:32Z"),
 
+           -- Formatting time as String produced RFC3339 encoding.
+           format(format="The time is %s",
+                  args=timestamp(string='March 3 2019').String),
+
            -- Test epoch as second, ms and us
            timestamp(epoch=1630414425) AS Time1,
            timestamp(epoch=1630414425000) AS Time2,

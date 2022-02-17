@@ -200,7 +200,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Name": "goodbye.txt"
     }
    ],
-   "Device": "C:/$MFT"
+   "Device": "\\\\.\\C:\\$MFT"
   }
  }
 ]SELECT * FROM parse_ntfs_i30( accessor='ntfs', device='c:/$MFT', inode="41-144-1")[

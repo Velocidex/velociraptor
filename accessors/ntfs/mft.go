@@ -59,7 +59,8 @@ func (self MFTFileSystemAccessor) ReadDirWithOSPath(path *accessors.OSPath) (
 }
 
 func (self MFTFileSystemAccessor) parseMFTPath(full_path *accessors.OSPath) (
-	delegate_device, delegate_accessor, subpath string, err error) {
+	delegate_device *accessors.OSPath, delegate_accessor string,
+	subpath string, err error) {
 
 	// There are two ways to use this accessor:
 
@@ -68,17 +69,19 @@ func (self MFTFileSystemAccessor) parseMFTPath(full_path *accessors.OSPath) (
 	// 2. If a delegate is not specified, we take the device from the
 	//    first component of the Path.
 
-	delegate_device = full_path.Components[0]
+	delegate_device = full_path.Clear().Append(full_path.Components[0])
 	delegate_accessor = "file"
 
 	// If the user provided a full pathspec we use that instead.
-	pathSpec := full_path.PathSpec()
-	if pathSpec.DelegatePath != "" {
-		delegate_device = accessors.ConvertToDevice(pathSpec.DelegatePath)
-		delegate_accessor = pathSpec.DelegateAccessor
+	if full_path.DelegatePath() != "" {
+		delegate_device, err = full_path.Delegate(self.scope)
+		if err != nil {
+			return nil, "", "", err
+		}
+		delegate_accessor = full_path.DelegateAccessor()
 		subpath = full_path.Components[0]
 	} else if len(full_path.Components) < 2 {
-		return "", "", "", os.ErrNotExist
+		return nil, "", "", os.ErrNotExist
 	} else {
 		subpath = full_path.Components[1]
 	}
