@@ -36,6 +36,7 @@ jobs:
       run: |
         echo %PATH%
         echo %GOPATH%
+        wevtutil.exe cl System
         subst X: %CD%
         mklink c:\Users\link c:\Windows
         mkdir "C:\Program Files\Velociraptor"
@@ -76,6 +77,7 @@ jobs:
 
         echo Create second service.
         sc.exe create TestingDetection2 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 2"
+        vssadmin list shadows
 
     - name: Test
       shell: bash
