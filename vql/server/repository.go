@@ -48,7 +48,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 	definition, err := tmp_repository.LoadYaml(
 		arg.Definition, true /* validate */, false /* built_in */)
 	if err != nil {
-		scope.Log("artifact_set: %v", err)
+		scope.Log("artifact_set: %v: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -63,7 +63,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 	case "server", "server_event":
 		permission = acls.SERVER_ARTIFACT_WRITER
 	default:
-		scope.Log("artifact_set: artifact type invalid")
+		scope.Log("artifact_set: artifact type %v invalid", definition.Type)
 		return vfilter.Null{}
 	}
 

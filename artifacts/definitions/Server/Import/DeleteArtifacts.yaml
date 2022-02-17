@@ -1,0 +1,27 @@
+name: Server.Import.DeleteArtifacts
+description: |
+  This artifact will remove customized artifacts from the Velociraptor
+  server based on a regex.
+
+  NOTE: It is impossible to remove built in artifacts.
+
+type: SERVER
+
+required_permissions:
+- SERVER_ADMIN
+
+parameters:
+  - name: ArtifactRegex
+    type: regex
+    description: A regex to select artifacts to delete.
+    default: ^(Exchange|Custom)
+  - name: ReallyDoIt
+    type: bool
+
+sources:
+  - query: |
+      SELECT name, description,
+         if(condition=ReallyDoIt, then=artifact_delete(name=name)) AS ReallyDoIt
+      FROM artifact_definitions()
+      WHERE NOT built_in
+        AND name =~ ArtifactRegex
