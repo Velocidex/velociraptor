@@ -36,7 +36,6 @@ jobs:
       run: |
         echo %PATH%
         echo %GOPATH%
-        wevtutil.exe cl System
         subst X: %CD%
         mklink c:\Users\link c:\Windows
         mkdir "C:\Program Files\Velociraptor"
