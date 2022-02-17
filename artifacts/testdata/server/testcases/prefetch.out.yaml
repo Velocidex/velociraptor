@@ -1,0 +1,390 @@
+SELECT _SCCAHeader, Executable, FileSize, Hash, Version, LastRunTimes, RunCount, Binary, FilesAccessed, VolumeInfo FROM Artifact.Windows.Forensics.Prefetch( prefetchGlobs=srcDir+"/artifacts/testdata/files/*.pf", IncludeFilesAccessed=TRUE)[
+ {
+  "_SCCAHeader": {
+   "Version": "Win10 (30)",
+   "Signature": "SCCA",
+   "FileSize": 32730,
+   "Executable": "VELOCIRAPTOR.EXE",
+   "Hash": 3683984477,
+   "Info": {
+    "LastRunTimes": [
+     {
+      "Date": "2022-02-21T01:03:45Z",
+      "Int": 132898790250183773
+     },
+     {
+      "Date": "2022-02-21T00:45:24Z",
+      "Int": 132898779242433517
+     },
+     {
+      "Date": "2022-02-21T00:12:14Z",
+      "Int": 132898759349549647
+     },
+     {
+      "Date": "2022-02-18T06:55:37Z",
+      "Int": 132896409370707899
+     },
+     {
+      "Date": "2022-02-18T05:43:21Z",
+      "Int": 132896366011257044
+     },
+     {
+      "Date": "2022-02-18T05:41:13Z",
+      "Int": 132896364738500344
+     },
+     {
+      "Date": "2022-02-18T05:18:52Z",
+      "Int": 132896351325767879
+     },
+     {
+      "Date": "2022-02-18T01:40:35Z",
+      "Int": 132896220356158289
+     }
+    ],
+    "RunCount": 30,
+    "Metrics": [
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\NTDLL.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\C_1252.NLS"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\C_437.NLS"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\L_INTL.NLS"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\KERNEL32.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\KERNELBASE.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\LOCALE.NLS"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\ADVAPI32.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\MSVCRT.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\SECHOST.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\RPCRT4.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\CRYPT32.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\UCRTBASE.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\OLE32.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\MSVCP_WIN.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\DBGHELP.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\GDI32.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WIN32U.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\GDI32FULL.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\USER32.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\COMBASE.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\OLEAUT32.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\TDH.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\DBGCORE.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\IMM32.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\CRYPTBASE.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WINMM.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WS2_32.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\BCRYPTPRIMITIVES.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\POWRPROF.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\UMPDC.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\MSWSOCK.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US\\MSWSOCK.DLL.MUI"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WSHQOS.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US\\WSHQOS.DLL.MUI"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\AMSI.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\TZRES.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US\\TZRES.DLL.MUI"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\$MFT"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US\\KERNELBASE.DLL.MUI"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\PSAPI.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\DNSAPI.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\IPHLPAPI.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\NSI.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\GLOBALIZATION\\SORTING\\SORTDEFAULT.NLS"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\RASADHLP.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\FWPUCLNT.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\DHCPCSVC6.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\DHCPCSVC.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\RPCSS.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\KERNEL.APPCORE.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\CLBCATQ.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\REGISTRATION\\R000000000006.CLB"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEM\\WBEMPROX.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEMCOMN.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEM\\WBEMSVC.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEM\\FASTPROX.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\USERENV.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\PROFAPI.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\PROGRAMDATA\\MICROSOFT\\WINDOWS DEFENDER\\PLATFORM\\4.18.2201.10-0\\MPOAV.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\VERSION.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\DSPARSE.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\UXTHEME.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEM\\WBEMDISP.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\SXS.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEM\\WBEMDISP.TLB"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEM\\WMIUTILS.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\STDOLE2.TLB"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US\\DNSAPI.DLL.MUI"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\MICROSOFT-WINDOWS-SYSTEM-EVENTS.DLL"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US\\MICROSOFT-WINDOWS-SYSTEM-EVENTS.DLL.MUI"
+     },
+     {
+      "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\APPPATCH\\SYSMAIN.SDB"
+     }
+    ],
+    "VolumeInfo": [
+     {
+      "DeviceName": "\\VOLUME{01d8236a6bef56c6-006c4c5d}",
+      "DeviceCreationTime": "2022-02-16T19:21:39Z",
+      "VolumeSerialNumber": 30942058,
+      "VolumeSerialNumberHex": "0x1d8236a",
+      "Directories": [
+       "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\USERS",
+       "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\USERS\\TEST",
+       "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\USERS\\TEST\\APPDATA",
+       "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\USERS\\TEST\\APPDATA\\LOCAL",
+       "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS",
+       "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32",
+       "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US"
+      ]
+     }
+    ]
+   }
+  },
+  "Executable": "VELOCIRAPTOR.EXE",
+  "FileSize": 32730,
+  "Hash": "0XDB95245D",
+  "Version": "Win10 (30)",
+  "LastRunTimes": [
+   "2022-02-21T01:03:45Z",
+   "2022-02-21T00:45:24Z",
+   "2022-02-21T00:12:14Z",
+   "2022-02-18T06:55:37Z",
+   "2022-02-18T05:43:21Z",
+   "2022-02-18T05:41:13Z",
+   "2022-02-18T05:18:52Z",
+   "2022-02-18T01:40:35Z"
+  ],
+  "RunCount": 30,
+  "Binary": null,
+  "FilesAccessed": [
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\NTDLL.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\C_1252.NLS",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\C_437.NLS",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\L_INTL.NLS",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\KERNEL32.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\KERNELBASE.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\LOCALE.NLS",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\ADVAPI32.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\MSVCRT.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\SECHOST.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\RPCRT4.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\CRYPT32.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\UCRTBASE.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\OLE32.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\MSVCP_WIN.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\DBGHELP.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\GDI32.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WIN32U.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\GDI32FULL.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\USER32.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\COMBASE.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\OLEAUT32.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\TDH.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\DBGCORE.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\IMM32.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\CRYPTBASE.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WINMM.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WS2_32.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\BCRYPTPRIMITIVES.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\POWRPROF.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\UMPDC.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\MSWSOCK.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US\\MSWSOCK.DLL.MUI",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WSHQOS.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US\\WSHQOS.DLL.MUI",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\AMSI.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\TZRES.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US\\TZRES.DLL.MUI",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\$MFT",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US\\KERNELBASE.DLL.MUI",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\PSAPI.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\DNSAPI.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\IPHLPAPI.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\NSI.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\GLOBALIZATION\\SORTING\\SORTDEFAULT.NLS",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\RASADHLP.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\FWPUCLNT.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\DHCPCSVC6.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\DHCPCSVC.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\RPCSS.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\KERNEL.APPCORE.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\CLBCATQ.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\REGISTRATION\\R000000000006.CLB",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEM\\WBEMPROX.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEMCOMN.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEM\\WBEMSVC.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEM\\FASTPROX.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\USERENV.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\PROFAPI.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\PROGRAMDATA\\MICROSOFT\\WINDOWS DEFENDER\\PLATFORM\\4.18.2201.10-0\\MPOAV.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\VERSION.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\DSPARSE.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\UXTHEME.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEM\\WBEMDISP.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\SXS.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEM\\WBEMDISP.TLB",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\WBEM\\WMIUTILS.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\STDOLE2.TLB",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US\\DNSAPI.DLL.MUI",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\MICROSOFT-WINDOWS-SYSTEM-EVENTS.DLL",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US\\MICROSOFT-WINDOWS-SYSTEM-EVENTS.DLL.MUI",
+   "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\APPPATCH\\SYSMAIN.SDB"
+  ],
+  "VolumeInfo": [
+   {
+    "DeviceName": "\\VOLUME{01d8236a6bef56c6-006c4c5d}",
+    "DeviceCreationTime": "2022-02-16T19:21:39Z",
+    "VolumeSerialNumber": 30942058,
+    "VolumeSerialNumberHex": "0x1d8236a",
+    "Directories": [
+     "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\USERS",
+     "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\USERS\\TEST",
+     "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\USERS\\TEST\\APPDATA",
+     "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\USERS\\TEST\\APPDATA\\LOCAL",
+     "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS",
+     "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32",
+     "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\EN-US"
+    ]
+   }
+  ]
+ }
+]

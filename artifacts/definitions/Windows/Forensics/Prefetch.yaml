@@ -12,10 +12,12 @@ description: |
     - binaryRegex enables to filter on binary name, e.g evil.exe.
     - hashRegex enables to filter on prefetch hash.
 
+  NOTE: The Prefetch file format is described extensively in libscca
+  and painstakingly reversed by Joachim Metz (Shouts and Thank you!).
+
 reference:
   - https://www.forensicswiki.org/wiki/Prefetch
-
-author: matthew.green@cybereason.com
+  - https://github.com/libyal/libscca/blob/main/documentation/Windows%20Prefetch%20File%20(PF)%20format.asciidoc
 
 parameters:
     - name: prefetchGlobs
@@ -36,7 +38,271 @@ parameters:
       description: Include all accessed files
       type: bool
 
-precondition: SELECT OS From info() where OS = 'windows'
+export: |
+        LET PrefetchProfile = '''[
+        ["Header", 8, [
+          ["Signature", 0, "String", {"length": 3}],
+          ["UncompressedSize", 4, "unsigned long"],
+          ["Data", 8, String, {
+              length: "x=>x.UncompressedSize",
+              term: "",
+              max_length: 10000000,
+          }],
+          ["Decompressed", 0, "Value", {
+              value: "x=>lzxpress_decompress(data=x.Data)"
+          }],
+        ]],
+        ["SCCAHeader", 84, [
+         ["Version", 0, "Enumeration", {
+             type: "unsigned int",
+             choices: {
+               "17": "WinXP (17)",
+               "23": "Vista (23)",
+               "26": "Win8.1 (26)",
+               "30": "Win10 (30)"
+             }
+         }],
+         ["Signature", 4, "String", {"length": 4}],
+         ["FileSize", 12, "unsigned long"],
+         ["Executable", 16, "String", {
+             encoding: "utf16",
+         }],
+         ["Hash", 76, "unsigned long"],
+
+         # Hash is followed by a version specific info struct.
+         ["Info", 84, "Union", {
+             selector: "x=>x.Version",
+             choices: {
+                 "WinXP (17)": "FileInformationWinXP",
+                 "Vista (23)": "FileInformationVista",
+                 "Win8.1 (26)": "FileInformationWin81",
+                 "Win10 (30)": "FileInformationWin10",
+             }
+         }]
+        ]],
+
+        ["FileInformationWinXP", 68, [
+         ["__FileMetricsOffset", 0, "unsigned long"],
+         ["__NumberOfFileMetrics", 4, "unsigned long"],
+         ["__TraceChainsArrayOffset", 8, "unsigned long"],
+         ["__NumberOfTraceChains", 12, "unsigned long"],
+         ["__FilenameOffset", 16, "unsigned long"],
+         ["__FilenameSize", 20, "unsigned long"],
+         ["__VolumesInformationOffset", 24, "unsigned long"],
+         ["__NumberOfVolumes", 28, "unsigned long"],
+         ["__VolumesInformationSize", 32, "unsigned long"],
+
+         # This is realy just one time but we make it an
+         # array to be compatible with the others.
+         ["LastRunTimes", 36, "Array", {
+              "type": "Timestamp",
+              "count": 1
+           }],
+         ["RunCount", 60, "unsigned long"],
+
+         # Metrics offset is absolute.
+         ["Metrics", "x=>x.__FileMetricsOffset - x.StartOf", "Array", {
+             type: "FileMetricsEntryV17",
+             count: "x=>x.__NumberOfFileMetrics",
+         }],
+         ["VolumeInfo", "x=>x.__VolumesInformationOffset - x.StartOf", "Array", {
+             type: "VolumeInformation",
+             count: "x=>x.__NumberOfVolumes",
+          }],
+        ]],
+
+        ["FileInformationVista", 156, [
+         ["__FileMetricsOffset", 0, "unsigned long"],
+         ["__NumberOfFileMetrics", 4, "unsigned long"],
+         ["__TraceChainsArrayOffset", 8, "unsigned long"],
+         ["__NumberOfTraceChains", 12, "unsigned long"],
+         ["__FilenameOffset", 16, "unsigned long"],
+         ["__FilenameSize", 20, "unsigned long"],
+         ["__VolumesInformationOffset", 24, "unsigned long"],
+         ["__NumberOfVolumes", 28, "unsigned long"],
+         ["__VolumesInformationSize", 32, "unsigned long"],
+
+         # This is realy just one time but we make it an
+         # array to be compatible with the others.
+         ["LastRunTimes", 44, "Array", {
+              "type": "Timestamp",
+              "count": 1
+           }],
+         ["RunCount", 68, "unsigned long"],
+
+         # Metrics offset is absolute.
+         ["Metrics", "x=>x.__FileMetricsOffset - x.StartOf", "Array", {
+             type: "FileMetricsEntryV23",
+             count: "x=>x.__NumberOfFileMetrics",
+         }],
+         ["VolumeInfo", "x=>x.__VolumesInformationOffset - x.StartOf", "Array", {
+             type: "VolumeInformation",
+             count: "x=>x.__NumberOfVolumes",
+          }],
+        ]],
+
+
+        ["FileInformationWin81", 224, [
+         ["__FileMetricsOffset", 0, "unsigned long"],
+         ["__NumberOfFileMetrics", 4, "unsigned long"],
+         ["__TraceChainsArrayOffset", 8, "unsigned long"],
+         ["__NumberOfTraceChains", 12, "unsigned long"],
+         ["__FilenameOffset", 16, "unsigned long"],
+         ["__FilenameSize", 20, "unsigned long"],
+         ["__VolumesInformationOffset", 24, "unsigned long"],
+         ["__NumberOfVolumes", 28, "unsigned long"],
+         ["__VolumesInformationSize", 32, "unsigned long"],
+
+         # This is realy just one time but we make it an
+         # array to be compatible with the others.
+         ["LastRunTimes", 44, "Array", {
+              "type": "Timestamp",
+              "count": 8,
+           }],
+         ["RunCount", 124, "unsigned long"],
+
+         # Metrics offset is absolute.
+         ["Metrics", "x=>x.__FileMetricsOffset - x.StartOf", "Array", {
+             type: "FileMetricsEntryV23",
+             count: "x=>x.__NumberOfFileMetrics",
+         }],
+         ["VolumeInfo", "x=>x.__VolumesInformationOffset - x.StartOf", "Array", {
+             type: "VolumeInformation",
+             count: "x=>x.__NumberOfVolumes",
+          }],
+        ]],
+
+        ["FileInformationWin10", 224, [
+         ["__FileMetricsOffset", 0, "unsigned long"],
+         ["__NumberOfFileMetrics", 4, "unsigned long"],
+         ["__TraceChainsArrayOffset", 8, "unsigned long"],
+         ["__NumberOfTraceChains", 12, "unsigned long"],
+         ["__FilenameOffset", 16, "unsigned long"],
+         ["__FilenameSize", 20, "unsigned long"],
+         ["__VolumesInformationOffset", 24, "unsigned long"],
+         ["__NumberOfVolumes", 28, "unsigned long"],
+         ["__VolumesInformationSize", 32, "unsigned long"],
+         ["__TotalDirectoryCount", 36, "unsigned long"],
+         ["LastRunTimes", 44, "Array", {
+              "type": "Timestamp",
+              "count": 8
+           }],
+         ["__RunCount1", 124, "unsigned long"],
+         ["__RunCountPre", 120, "unsigned long"],
+         ["__RunCount2", 116, "unsigned long"],
+         ["RunCount", 0, Value, {
+            value: "x=>if(condition=x.__RunCountPre=0, then=x.__RunCount1, else=x.__RunCount2)",
+         }],
+
+         # Metrics offset is absolute.
+         ["Metrics", "x=>x.__FileMetricsOffset - x.StartOf", "Array", {
+             type: "FileMetricsEntryV30",
+             count: "x=>x.__NumberOfFileMetrics",
+         }],
+         ["VolumeInfo", "x=>x.__VolumesInformationOffset - x.StartOf", "Array", {
+             type: "VolumeInformation",
+             count: "x=>x.__NumberOfVolumes",
+          }],
+        ]],
+
+        ["Timestamp", 8, [
+          ["Date", 0, "WinFileTime"],
+          ["Int", 0, "unsigned long long"]
+        ]],
+
+        ["FileMetricsEntryV17", 20, [
+          ["__FilenameOffset", 8, "unsigned long"],
+           ["__FilenameLength", 12, "unsigned long"],
+           ["Filename", 0, "Profile", {
+               offset: "x=>x.ParentOf.__FilenameOffset + x.__FilenameOffset",
+               type: "String",
+               type_options: {
+                   encoding: "utf16",
+                   length: 1024,
+               }
+           }]
+        ]],
+
+
+        ["FileMetricsEntryV23", 32, [
+          ["__FilenameOffset", 12, "unsigned long"],
+          ["__FilenameLength", 16, "unsigned long"],
+          ["__MFTFileReference", 24, "unsigned long"],
+          ["Filename", 0, "Profile", {
+               offset: "x=>x.ParentOf.__FilenameOffset + x.__FilenameOffset",
+               type: "String",
+               type_options: {
+                   encoding: "utf16",
+                   length: 1024,
+               }
+           }]
+        ]],
+
+        ["FileMetricsEntryV30", 32, [
+           ["__FilenameOffset", 12, "unsigned long"],
+           ["__FilenameLength", 16, "unsigned long"],
+           ["__MFTFileReference", 24, "unsigned long"],
+           ["Filename", 0, "Profile", {
+               offset: "x=>x.ParentOf.__FilenameOffset + x.__FilenameOffset",
+               type: "String",
+               type_options: {
+                   encoding: "utf16",
+                   length: 1024,
+               }
+           }]
+        ]],
+
+        ["VolumeInformation", 40, [
+          ["__DeviceOffset", 0, "unsigned long"],
+          ["DeviceName", "x=>x.__DeviceOffset", "String", {
+              encoding: utf16,
+              length: "x=>x.__DeviceSize * 2",
+          }],
+          ["__DeviceSize", 4, "unsigned long"],
+          ["DeviceCreationTime", 8, "WinFileTime"],
+          ["VolumeSerialNumber", 12, "unsigned long"],
+          ["VolumeSerialNumberHex", 0, Value, {
+              value: "x=>format(format='%#x', args=x.VolumeSerialNumber)",
+          }],
+          ["__FileReferenceOffset", 20, "unsigned long"],
+          ["__FileReferenceDataSize", 24, "unsigned long"],
+          ["__DirectoryStringsOffset", 28, "unsigned long"],
+          ["__NumDirectoryStrings", 32, "unsigned long"],
+          ["__Directories", "x=>x.__DirectoryStringsOffset", "Array", {
+              type: "DirectoryName",
+              count: "x=>x.__NumDirectoryStrings",
+          }],
+          ["Directories", 0, Value, {
+              value: "x=>x.__Directories.Name"
+          }],
+        ]],
+        ["DirectoryName", "x=>x.Size * 2 + 4", [
+          ["Size", 0, "uint8"],
+          ["Name", 2, "String", {
+              encoding: "utf16",
+              length: "x=>x.Size * 2"
+          }]
+        ]]
+        ]
+        '''
+
+        LET ParsePrefetch(PrefetchFile) = SELECT
+          parse_binary(accessor="data", filename=Data,
+            profile=PrefetchProfile, struct="SCCAHeader") AS SCCAHeader
+        FROM switch(a={
+            -- Handle compressed MAM prefetch files.
+            SELECT
+              parse_binary(filename=PrefetchFile, profile=PrefetchProfile, struct="Header") AS Header,
+              parse_binary(filename=PrefetchFile, profile=PrefetchProfile, struct="Header").Decompressed AS Data
+            FROM scope()
+            WHERE Header.Signature = "MAM"
+        },
+        b={
+            -- Handle uncompressed files
+            SELECT read_file(filename=PrefetchFile, length=1024*1024) AS Data
+            FROM scope()
+        })
+        WHERE SCCAHeader.Signature = "SCCA"
 
 sources:
   - query: |
@@ -46,25 +312,24 @@ sources:
                  SELECT * FROM glob(globs=prefetchGlobs)
               },
               query={
-                SELECT
-                    Executable,
-                    FileSize,
-                    Hash,
-                    Version,
-                    LastRunTimes,
-                    RunCount,
-                    FullPath,
-                    Name AS PrefetchFileName,
-                    Btime as CreationTime,
-                    Mtime as ModificationTime,
-                    filter(list=FilesAccessed, regex=".exe$")[0] AS Binary,
-                    if(condition= IncludeFilesAccessed, then=FilesAccessed) AS FilesAccessed
-                 FROM prefetch(filename=FullPath)
-                 WHERE
-                    if(condition=binaryRegex, then= Executable =~ binaryRegex,
-                    else=TRUE) AND
-                    if(condition=hashRegex, then= Hash =~ hashRegex,
-                    else=TRUE)
+                SELECT SCCAHeader AS _SCCAHeader,
+                  SCCAHeader.Executable AS Executable,
+                  SCCAHeader.FileSize AS FileSize,
+                  format(format="%#X", args=SCCAHeader.Hash) AS Hash,
+                  SCCAHeader.Version AS Version,
+                  filter(list=SCCAHeader.Info.LastRunTimes.Date, condition="x=>x.Unix > 0") AS LastRunTimes,
+                  SCCAHeader.Info.RunCount AS RunCount,
+                  FullPath,
+                  Name AS PrefetchFileName,
+                  Btime as CreationTime,
+                  Mtime as ModificationTime,
+                  filter(list=SCCAHeader.Info.Metrics.Filename, regex=".exe$")[0] AS Binary,
+                  if(condition= IncludeFilesAccessed, then=SCCAHeader.Info.Metrics.Filename) AS FilesAccessed,
+                  if(condition= IncludeFilesAccessed, then=SCCAHeader.Info.VolumeInfo) AS VolumeInfo
+                FROM ParsePrefetch(PrefetchFile=FullPath)
+                WHERE
+                    if(condition=binaryRegex, then= Executable =~ binaryRegex, else=TRUE) AND
+                    if(condition=hashRegex, then= Hash =~ hashRegex, else=TRUE)
               })
 
         // Flattern to enable time filters. Remember VQL is lazy.
