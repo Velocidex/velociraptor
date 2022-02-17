@@ -15,11 +15,13 @@ parameters:
 
 sources:
  - query: |
-        SELECT regex_replace(source=basename(path=url(parse=FullPath).Fragment),
-          re="#", replace="\\") as MountPoint,
+        SELECT regex_replace(
+            source=OSPath.Path,
+            re="#",
+            replace="\\") as MountPoint,
           Mtime as ModifiedTime,
           Username,
-          url(parse=FullPath).Path as Hive,
-          url(parse=FullPath).Fragment as Key
+          OSPath.DelegatePath as Hive,
+          OSPath.Path as Key
         FROM Artifact.Windows.Registry.NTUser(KeyGlob=KeyGlob)
         WHERE FullPath =~ "\\$"

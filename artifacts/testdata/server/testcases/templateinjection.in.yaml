@@ -1,0 +1,29 @@
+Parameters:
+  RemappingTemplate: |
+    remappings:
+      - type: mount
+        from:
+          accessor: zip
+          path_type: linux
+          prefix: |
+            {
+              "DelegateAccessor": "scope",
+              "DelegatePath": "Content",
+              "Path": "/"
+            }
+        on:
+          accessor: "auto"
+          prefix: "/"
+          path_type: "windows"
+
+Queries:
+  # Generate this file with
+  # SELECT copy(accessor="data", filename=xor(key="infected",
+  # string=read_file(filename="F:/malware/infected.zip")),
+  # dest="F:/malware/infected.zip.xor") FROM scope()
+  - LET Content <= xor(key="infected", string=read_file(
+        filename=srcDir+"/artifacts/testdata/files/infected.zip.xor"))
+  - LET _ <= remap(config=RemappingTemplate, copy=["zip", "scope"], clear=TRUE)
+
+  - SELECT * FROM Artifact.Windows.Detection.TemplateInjection(
+        SearchGlob='/**')

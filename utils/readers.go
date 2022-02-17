@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"fmt"
 	"io"
+	"sync"
 
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -9,15 +11,31 @@ import (
 
 // Wrapper to provider io.ReaderAt
 type ReaderAtter struct {
+	mu     sync.Mutex
 	Reader io.ReadSeeker
 }
 
+func (self ReaderAtter) DebugString() string {
+	return fmt.Sprintf("ReaderAtter of %v", DebugString(self.Reader))
+}
+
 func (self ReaderAtter) ReadAt(buf []byte, offset int64) (int, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	_, err := self.Reader.Seek(offset, 0)
 	if err != nil {
 		return 0, err
 	}
 	return self.Reader.Read(buf)
+}
+
+func MakeReaderAtter(fd io.ReadSeeker) io.ReaderAt {
+	reader, ok := fd.(io.ReaderAt)
+	if ok {
+		return reader
+	}
+	return &ReaderAtter{Reader: fd}
 }
 
 type BufferReaderAt struct {

@@ -10,7 +10,8 @@ import (
 )
 
 func TestVirtualFilesystemAccessor(t *testing.T) {
-	fs_accessor := NewVirtualFilesystemAccessor()
+	root_path := MustNewLinuxOSPath("")
+	fs_accessor := NewVirtualFilesystemAccessor(root_path)
 	fs_accessor.SetVirtualDirectory(
 		MustNewLinuxOSPath("/foo/bar/baz"), &VirtualFileInfo{
 			IsDir_: true,

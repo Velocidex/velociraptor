@@ -39,8 +39,10 @@ parameters:
 sources:
   - name: RejectedDHCP
     query: |
-        LET files = SELECT * FROM glob(
-            globs=eventDirGlob + adminLog,
+        LET files = SELECT *
+          FROM glob(
+            root=eventDirGlob,
+            globs=adminLog,
             accessor=accessor)
 
         SELECT Time AS _Time,

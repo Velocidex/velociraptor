@@ -39,7 +39,7 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 			return false
 		}
 
-		return parseOSPath(os_path)
+		return os_path
 	}
 
 	// The path can be a more complex type
@@ -74,14 +74,29 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 			}
 
 			path_str = string(serialized)
+			result := accessors.MustNewPathspecOSPath("")
+			result.SetPathSpec(
+				&accessors.PathSpec{
+					DelegateAccessor: arg.DelegateAccessor,
+					DelegatePath:     arg.DelegatePath,
+					Path:             path_str,
+				})
+			return result
 		}
 	}
 
-	result := &accessors.PathSpec{
-		DelegateAccessor: arg.DelegateAccessor,
-		DelegatePath:     arg.DelegatePath,
-		Path:             path_str,
+	result, err := accessors.ParsePath(path_str, arg.Type)
+	if err != nil {
+		scope.Log("pathspec: %v", err)
+		return vfilter.Null{}
 	}
+
+	result.SetPathSpec(
+		&accessors.PathSpec{
+			DelegateAccessor: arg.DelegateAccessor,
+			DelegatePath:     arg.DelegatePath,
+			Path:             path_str,
+		})
 
 	return result
 }

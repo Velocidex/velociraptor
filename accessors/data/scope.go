@@ -42,6 +42,11 @@ func (self ScopeFilesystemAccessor) ParsePath(path string) (
 	return accessors.NewLinuxOSPath(path)
 }
 
+func (self ScopeFilesystemAccessor) LstatWithOSPath(path *accessors.OSPath) (
+	accessors.FileInfo, error) {
+	return self.Lstat(path.Path())
+}
+
 func (self ScopeFilesystemAccessor) Lstat(variable string) (
 	accessors.FileInfo, error) {
 	str, err := self.getData(variable)
@@ -63,6 +68,16 @@ func (self ScopeFilesystemAccessor) Lstat(variable string) (
 func (self ScopeFilesystemAccessor) ReadDir(path string) (
 	[]accessors.FileInfo, error) {
 	return nil, errors.New("Not implemented")
+}
+
+func (self ScopeFilesystemAccessor) ReadDirWithOSPath(path *accessors.OSPath) (
+	[]accessors.FileInfo, error) {
+	return nil, errors.New("Not implemented")
+}
+
+func (self ScopeFilesystemAccessor) OpenWithOSPath(path *accessors.OSPath) (
+	accessors.ReadSeekCloser, error) {
+	return self.Open(path.Path())
 }
 
 func (self ScopeFilesystemAccessor) Open(path string) (

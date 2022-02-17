@@ -18,12 +18,46 @@ Queries:
 
   # Make sure pathspec parsing works.
   - LET path_spec = pathspec(DelegateAccessor="file", DelegatePath="C:/Windows")
-  - SELECT path_spec, pathspec(parse=path_spec.String),
-           pathspec(parse="C:\\Windows", path_type='windows'),
-           pathspec(parse="/usr/lib", path_type='linux'),
-           pathspec(parse="file:///usr/lib#*", path_type='generic')
+  - |
+    SELECT
+       -- Serialize to JSON string
+       path_spec,
+
+       -- Parse from string
+       pathspec(parse=path_spec.String),
+
+       -- Parse from OSPath
+       pathspec(parse=path_spec),
+
+       -- Parse a windows path
+       pathspec(parse="C:\\Windows", path_type='windows'),
+
+       -- Parse a linux path
+       pathspec(parse="/usr/lib", path_type='linux'),
+
+       -- Parse a registry path (Expand hive)
+       pathspec(parse="HKU/Software", path_type='registry'),
+
+       -- Parse a URL based path - serialize back to URL
+       pathspec(parse="file:///usr/lib#*", path_type='generic'),
+
+       -- Access a field from a URL based path
+       pathspec(parse="file:///usr/lib#*", path_type='generic').DelegatePath,
+
+       -- Add subpaths to a complex pathspec
+       pathspec(parse="file:///usr/lib#foo", path_type='generic') + "bar",
+       pathspec(parse="HKU/Software", path_type='registry') + "Microsoft",
+
+       -- Access components from an OSPath
+       pathspec(parse="HKU/Software", path_type='registry').Components
+
     FROM scope()
 
-  # Parsing paths depends on the type of environment
-  - SELECT pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows", path_type="windows")
+  # Complex Windows Paths
+  - LET shadow_path <= pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows\\System32\\Notepad.exe", path_type="windows")
+  - SELECT shadow_path,
+     shadow_path.Dirname,
+     shadow_path.Dirname.Basename,
+     shadow_path.Basename,
+     shadow_path.Components
     FROM scope()

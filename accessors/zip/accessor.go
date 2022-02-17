@@ -1,8 +1,6 @@
 package zip
 
 import (
-	"errors"
-	"io"
 	"os"
 	"strings"
 	"sync"
@@ -16,6 +14,10 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+const (
+	ZipFileSystemAccessorTag = "_ZipFS"
+)
+
 var (
 	mu sync.Mutex
 )
@@ -24,6 +26,7 @@ var (
 // root scope. We keep a list of most recently used caches of zip
 // files for quick access.
 type ZipFileSystemAccessor struct {
+	mu       sync.Mutex
 	fd_cache map[string]*ZipFileCache
 	scope    vfilter.Scope
 }
@@ -78,9 +81,8 @@ func (self *ZipFileSystemAccessor) CloseAll() {
 
 func (self *ZipFileSystemAccessor) getCachedZipFile(cache_key string) (
 	*ZipFileCache, error) {
-	mu.Lock()
+
 	zip_file_cache, pres := self.fd_cache[cache_key]
-	mu.Unlock()
 
 	// The cached value is valid and ready - return it
 	if pres &&
@@ -93,9 +95,7 @@ func (self *ZipFileSystemAccessor) getCachedZipFile(cache_key string) (
 	// Store a nil in the map as a place holder, while we
 	// build something.
 	if !pres {
-		mu.Lock()
 		self.fd_cache[cache_key] = nil
-		mu.Unlock()
 		return nil, nil
 	}
 
@@ -106,13 +106,8 @@ func (self *ZipFileSystemAccessor) getCachedZipFile(cache_key string) (
 // close it when done. When the query completes, the zip file will be
 // closed.
 func _GetZipFile(self *ZipFileSystemAccessor,
-	file_path string) (*ZipFileCache, *accessors.OSPath, error) {
+	full_path *accessors.OSPath) (result *ZipFileCache, err error) {
 
-	// Zip files typically use standard / path separators.
-	full_path, err := self.ParsePath(file_path)
-	if err != nil {
-		return nil, nil, err
-	}
 	pathspec := full_path.PathSpec()
 
 	base_pathspec := accessors.PathSpec{
@@ -122,50 +117,53 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 	cache_key := base_pathspec.String()
 
 	for {
+		mu.Lock()
 		zip_file_cache, err := self.getCachedZipFile(cache_key)
 		if err == nil {
+			// This means the zip file cache needs to be built - we
+			// are still holding the lock and will release it below.
 			if zip_file_cache == nil {
+				mu.Unlock()
 				break
 			}
-			return zip_file_cache, full_path, nil
+			mu.Unlock()
+			return zip_file_cache, nil
 		}
+		mu.Unlock()
 		time.Sleep(time.Millisecond)
 	}
+
+	defer func() {
+		if err != nil {
+			mu.Lock()
+			defer mu.Unlock()
+			delete(self.fd_cache, cache_key)
+		}
+	}()
 
 	accessor, err := accessors.GetAccessor(
 		pathspec.DelegateAccessor, self.scope)
 	if err != nil {
 		self.scope.Log("%v: did you provide a URL or PathSpec?", err)
-		delete(self.fd_cache, cache_key)
-		return nil, nil, err
+		return nil, err
 	}
 
 	filename := pathspec.GetDelegatePath()
 	fd, err := accessor.Open(filename)
 	if err != nil {
-		delete(self.fd_cache, cache_key)
-		return nil, nil, err
-	}
-
-	reader, ok := fd.(io.ReaderAt)
-	if !ok {
-		self.scope.Log("file is not seekable")
-		delete(self.fd_cache, cache_key)
-		return nil, nil, errors.New("file is not seekable")
+		return nil, err
 	}
 
 	stat, err := accessor.Lstat(filename)
 	if err != nil {
 		self.scope.Log("Lstat: %v", err)
-		delete(self.fd_cache, cache_key)
-		return nil, nil, err
+		return nil, err
 	}
 
-	zip_file, err := zip.NewReader(reader, stat.Size())
+	reader_atter := utils.MakeReaderAtter(fd)
+	zip_file, err := zip.NewReader(reader_atter, stat.Size())
 	if err != nil {
-		self.scope.Log("zip.NewReader: %v", err)
-		delete(self.fd_cache, cache_key)
-		return nil, nil, err
+		return nil, err
 	}
 
 	zipAccessorCurrentOpened.Inc()
@@ -210,26 +208,33 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 	}
 
 	// Set the new zip cache tracker in the fd cache.
-	mu.Lock()
 
 	// Leaking a zip file from this function, increase its reference -
 	// callers have to close it.
 	zip_file_cache.IncRef()
 
 	// Replace the nil in the fd_cache with the real fd cache.
+	mu.Lock()
 	self.fd_cache[cache_key] = zip_file_cache
 	mu.Unlock()
 
-	return zip_file_cache, full_path, nil
+	return zip_file_cache, nil
 }
 
 func (self *ZipFileSystemAccessor) Lstat(file_path string) (
 	accessors.FileInfo, error) {
-	if file_path == "" {
-		utils.DlvBreak()
+	full_path, err := self.ParsePath(file_path)
+	if err != nil {
+		return nil, err
 	}
 
-	root, full_path, err := _GetZipFile(self, file_path)
+	return self.LstatWithOSPath(full_path)
+}
+
+func (self *ZipFileSystemAccessor) LstatWithOSPath(
+	full_path *accessors.OSPath) (accessors.FileInfo, error) {
+
+	root, err := _GetZipFile(self, full_path)
 	if err != nil {
 		return nil, err
 	}
@@ -238,9 +243,22 @@ func (self *ZipFileSystemAccessor) Lstat(file_path string) (
 	return root.GetZipInfo(full_path)
 }
 
-func (self *ZipFileSystemAccessor) Open(filename string) (accessors.ReadSeekCloser, error) {
+func (self *ZipFileSystemAccessor) Open(
+	filename string) (accessors.ReadSeekCloser, error) {
+
+	full_path, err := self.ParsePath(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.OpenWithOSPath(full_path)
+}
+
+func (self *ZipFileSystemAccessor) OpenWithOSPath(
+	full_path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
+
 	// Fetch the zip file from cache again.
-	zip_file_cache, full_path, err := _GetZipFile(self, filename)
+	zip_file_cache, err := _GetZipFile(self, full_path)
 	if err != nil {
 		return nil, err
 	}
@@ -250,8 +268,21 @@ func (self *ZipFileSystemAccessor) Open(filename string) (accessors.ReadSeekClos
 	return zip_file_cache.Open(full_path)
 }
 
-func (self *ZipFileSystemAccessor) ReadDir(file_path string) ([]accessors.FileInfo, error) {
-	root, full_path, err := _GetZipFile(self, file_path)
+func (self *ZipFileSystemAccessor) ReadDir(
+	file_path string) ([]accessors.FileInfo, error) {
+
+	full_path, err := self.ParsePath(file_path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.ReadDirWithOSPath(full_path)
+}
+
+func (self *ZipFileSystemAccessor) ReadDirWithOSPath(
+	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
+
+	root, err := _GetZipFile(self, full_path)
 	if err != nil {
 		return nil, err
 	}
@@ -270,10 +301,7 @@ func (self *ZipFileSystemAccessor) ReadDir(file_path string) ([]accessors.FileIn
 	return result, nil
 }
 
-const (
-	ZipFileSystemAccessorTag = "_ZipFS"
-)
-
+// Zip files typically use standard / path separators.
 func (self ZipFileSystemAccessor) ParsePath(path string) (
 	*accessors.OSPath, error) {
 	return accessors.NewGenericOSPath(path)

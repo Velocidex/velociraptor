@@ -23,8 +23,8 @@ author: M.Soheem @msoheem
 type: CLIENT
 
 parameters:
- - name: DirectoryPath
-   default: "/C:/Users/*/Downloads/"
+ - name: DirectoryPathGlob
+   default: "C:/Users/*/Downloads/"
 
  - name: ZoneIdRegex
    description: A Regular expression to match the required zone (default Internet and Restricted Zones).
@@ -37,8 +37,10 @@ sources:
    query: |
       LET X = SELECT split(string=FullPath, sep=":Zone.Identifier")[0] as DownloadedFilePath,
                     Mtime,
-                    read_file(filename=FullPath, accessor="ntfs") as _ZoneIdentifierContent
-             FROM glob(globs=DirectoryPath + "/**/*:Zone.Identifier", accessor="ntfs")
+                    read_file(filename=OSPath, accessor="ntfs") as _ZoneIdentifierContent
+             FROM glob(
+               globs=DirectoryPathGlob + "/**/*:Zone.Identifier",
+               accessor="ntfs")
 
       SELECT *,
              if(condition=DownloadedFilePath, then=hash(path=DownloadedFilePath)) as FileHash,

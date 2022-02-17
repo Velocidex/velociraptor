@@ -10,7 +10,9 @@ import (
 func TestMountFilesystemAccessor(t *testing.T) {
 	// The root filesystem contains some directories where the other
 	// filesystems are mounted.
-	root_fs_accessor := NewVirtualFilesystemAccessor()
+	root_path := MustNewLinuxOSPath("")
+
+	root_fs_accessor := NewVirtualFilesystemAccessor(root_path)
 	root_fs_accessor.SetVirtualDirectory(
 		MustNewLinuxOSPath("/usr"),
 		&VirtualFileInfo{
@@ -27,7 +29,7 @@ func TestMountFilesystemAccessor(t *testing.T) {
 		})
 
 	// Child filesystem contains some files.
-	bin_fs_accessor := NewVirtualFilesystemAccessor()
+	bin_fs_accessor := NewVirtualFilesystemAccessor(root_path)
 	bin_fs_accessor.SetVirtualDirectory(
 		MustNewLinuxOSPath("/bin/ls"), &VirtualFileInfo{
 			RawData: []byte("bin ls file"),
@@ -45,7 +47,7 @@ func TestMountFilesystemAccessor(t *testing.T) {
 		})
 
 	// Another filesystem will be mounted deeper again
-	deep_fs := NewVirtualFilesystemAccessor()
+	deep_fs := NewVirtualFilesystemAccessor(root_path)
 	deep_fs.SetVirtualDirectory(
 		MustNewLinuxOSPath("/Users/mic/test.txt"), &VirtualFileInfo{
 			RawData: []byte("text"),

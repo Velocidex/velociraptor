@@ -12,12 +12,12 @@ description: |
 
   From a forensics perspective, being able to decode this information
   can be very useful.
-  
-  Limitations: Additional data not parsed by Velociraptor is the FocusTime 
-  and FocusCount however these are not reliable. 
-  Also please note that some methods of viewing an executable will update 
-  the associated UserAssist key, and some methods of accessing an executable 
-  will not update the execution counter or time. Therefore there may be 
+
+  Limitations: Additional data not parsed by Velociraptor is the FocusTime
+  and FocusCount however these are not reliable.
+  Also please note that some methods of viewing an executable will update
+  the associated UserAssist key, and some methods of accessing an executable
+  will not update the execution counter or time. Therefore there may be
   some executions that have a 0 time and 0 runcount.
 
 reference:
@@ -51,27 +51,29 @@ export:
 
 sources:
   - query: |
-      LET TMP = SELECT url(parse=FullPath).Fragment as _KeyPath,parse_string_with_regex(
-                string=url(parse=FullPath).Fragment,
-                regex="^.+Count\\\\\"?(?P<Name>.+?)\"?$") AS Name, FullPath,
-             parse_binary(
+      LET TMP = SELECT OSPath.Path AS _KeyPath,
+          parse_string_with_regex(
+                string=OSPath.Path,
+                regex="^.+Count\\\\\"?(?P<Name>.+?)\"?$") AS Name,
+            OSPath,
+            parse_binary(
                filename=Data.value,
                accessor="data",
                profile=userAssistProfile,
                struct="Header"
              ) As ParsedUserAssist,
-             parse_string_with_regex(
-               string=FullPath,
-               regex="Users/(?P<User>[^/]+)/NTUSER").User AS User
+             -- Path is like /Users/<user>/NTUSER
+             OSPath.Components[1] AS User
       FROM Artifact.Windows.Registry.NTUser(KeyGlob=UserAssistKey)
 
-      LET UserAssist = SELECT _KeyPath,if(condition=Name.Name,
-                   then=rot13(string=Name.Name),
-                   else=url(parse=FullPath).Fragment) AS Name,
-               User,
-               timestamp(winfiletime=ParsedUserAssist.LastExecution) As LastExecution,
-               timestamp(winfiletime=ParsedUserAssist.LastExecution).Unix AS LastExecutionTS,
-               ParsedUserAssist.NumberOfExecutions AS NumberOfExecutions
+      LET UserAssist = SELECT _KeyPath,
+          if(condition=Name.Name,
+             then=rot13(string=Name.Name),
+             else=OSPath.Path) AS Name,
+          User,
+          timestamp(winfiletime=ParsedUserAssist.LastExecution) As LastExecution,
+          timestamp(winfiletime=ParsedUserAssist.LastExecution).Unix AS LastExecutionTS,
+          ParsedUserAssist.NumberOfExecutions AS NumberOfExecutions
         FROM TMP
         ORDER BY LastExecution
       LET A1 = SELECT * FROM if(

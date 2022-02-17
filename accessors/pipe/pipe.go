@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -150,12 +148,23 @@ func (self PipeFilesystemAccessor) Lstat(filename string) (
 		return nil, err
 	}
 
+	return self.LstatWithOSPath(full_path)
+}
+
+func (self PipeFilesystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) (
+	accessors.FileInfo, error) {
+
 	return &accessors.VirtualFileInfo{
 		Path: full_path,
 	}, nil
 }
 
 func (self PipeFilesystemAccessor) ReadDir(path string) (
+	[]accessors.FileInfo, error) {
+	return nil, errors.New("Not implemented")
+}
+
+func (self PipeFilesystemAccessor) ReadDirWithOSPath(path *accessors.OSPath) (
 	[]accessors.FileInfo, error) {
 	return nil, errors.New("Not implemented")
 }
@@ -181,16 +190,9 @@ func (self PipeFilesystemAccessor) Open(variable string) (accessors.ReadSeekClos
 	return pipe, nil
 }
 
-func (self PipeFilesystemAccessor) PathSplit(path string) []string {
-	return paths.GenericPathSplit(path)
-}
-
-func (self PipeFilesystemAccessor) PathJoin(root, stem string) string {
-	return filepath.Join(root, stem)
-}
-
-func (self PipeFilesystemAccessor) GetRoot(path string) (string, string, error) {
-	return "/", path, nil
+func (self PipeFilesystemAccessor) OpenWithOSPath(
+	path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
+	return self.Open(path.Path())
 }
 
 func init() {

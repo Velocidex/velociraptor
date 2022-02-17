@@ -15,8 +15,8 @@ sources:
              SELECT Uid, User, Homedir from Artifact.Linux.Sys.Users()
           },
           query={
-             SELECT FullPath, Mtime, Ctime, User, Uid from glob(
-               globs=Homedir + '/' + sshKeyFiles)
+             SELECT FullPath, Mtime, Ctime, User, Uid
+             FROM glob(root=Homedir, globs=sshKeyFiles)
           })
 
       SELECT * from foreach(

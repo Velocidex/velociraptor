@@ -3,6 +3,7 @@
 package file
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -62,6 +63,16 @@ type OSFileInfo struct {
 	_FileInfo     os.FileInfo
 	_full_path    *accessors.OSPath
 	_accessor_ctx *AccessorContext
+}
+
+func NewOSFileInfo(base os.FileInfo, path *accessors.OSPath) *OSFileInfo {
+	return &OSFileInfo{
+		_FileInfo:  base,
+		_full_path: path,
+		_accessor_ctx: &AccessorContext{
+			links: make(map[_inode]bool),
+		},
+	}
 }
 
 func (self *OSFileInfo) OSPath() *accessors.OSPath {
@@ -189,7 +200,14 @@ func (self OSFileSystemAccessor) Lstat(filename string) (accessors.FileInfo, err
 	if err != nil {
 		return nil, err
 	}
-	filename = full_path.PathSpec().Path
+
+	return self.LstatWithOSPath(full_path)
+}
+
+func (self OSFileSystemAccessor) LstatWithOSPath(
+	full_path *accessors.OSPath) (accessors.FileInfo, error) {
+
+	filename := full_path.PathSpec().Path
 
 	lstat, err := os.Lstat(filename)
 	if err != nil {
@@ -208,7 +226,13 @@ func (self OSFileSystemAccessor) ReadDir(dir string) ([]accessors.FileInfo, erro
 	if err != nil {
 		return nil, err
 	}
-	dir = full_path.PathSpec().Path
+
+	return self.ReadDirWithOSPath(full_path)
+}
+
+func (self OSFileSystemAccessor) ReadDirWithOSPath(
+	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
+	dir := full_path.PathSpec().Path
 
 	lstat, err := os.Lstat(dir)
 	if err != nil {
@@ -257,22 +281,35 @@ func (self OSFileSystemAccessor) ReadDir(dir string) ([]accessors.FileInfo, erro
 // Wrap the os.File object to keep track of open file handles.
 type OSFileWrapper struct {
 	*os.File
+	closed bool
 }
 
-func (self OSFileWrapper) Close() error {
+func (self *OSFileWrapper) DebugString() string {
+	return fmt.Sprintf("OSFileWrapper %v (closed %v)", self.Name(), self.closed)
+}
+
+func (self *OSFileWrapper) Close() error {
 	fileAccessorCurrentOpened.Dec()
+	self.closed = true
 	return self.File.Close()
 }
 
-func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
-	var err error
-
+func (self *OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
 	// Clean the path
 	full_path, err := self.ParsePath(path)
 	if err != nil {
 		return nil, err
 	}
-	path = full_path.PathSpec().Path
+
+	return self.OpenWithOSPath(full_path)
+}
+
+func (self OSFileSystemAccessor) OpenWithOSPath(
+	full_path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
+
+	var err error
+
+	path := full_path.PathSpec().Path
 
 	// Eval any symlinks directly
 	path, err = filepath.EvalSymlinks(path)
@@ -301,7 +338,7 @@ func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, er
 	}
 
 	fileAccessorCurrentOpened.Inc()
-	return OSFileWrapper{file}, nil
+	return &OSFileWrapper{File: file}, nil
 }
 
 func init() {

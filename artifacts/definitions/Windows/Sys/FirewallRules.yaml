@@ -23,7 +23,7 @@ sources:
                         "App=(?P<App>[^|]+)"]) as Record,
                Data,
                FullPath
-        FROM glob(globs=regKey, accessor="reg")
+        FROM glob(globs=regKey, accessor="registry")
 
         SELECT Value,
                Record.Action as Action,

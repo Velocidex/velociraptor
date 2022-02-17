@@ -196,13 +196,18 @@ func (self RegFileSystemAccessor) ParsePath(path string) (
 
 func (self RegFileSystemAccessor) ReadDir(path string) (
 	[]accessors.FileInfo, error) {
-	var result []accessors.FileInfo
 
 	full_path, err := self.ParsePath(path)
 	if err != nil {
 		return nil, err
 	}
-	path = full_path.PathSpec().Path
+
+	return self.ReadDirWithOSPath(full_path)
+}
+
+func (self RegFileSystemAccessor) ReadDirWithOSPath(
+	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
+	var result []accessors.FileInfo
 
 	// Root directory is just the name of the hives.
 	if len(full_path.Components) == 0 {
@@ -287,6 +292,22 @@ func (self RegFileSystemAccessor) ReadDir(path string) (
 	return result, nil
 }
 
+func (self RegFileSystemAccessor) OpenWithOSPath(path *accessors.OSPath) (
+	accessors.ReadSeekCloser, error) {
+	stat, err := self.LstatWithOSPath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	value_info, ok := stat.(*RegValueInfo)
+	if ok {
+		return NewValueBuffer(value_info._binary_data, stat), nil
+	}
+
+	// Keys do not have any data.
+	return NewValueBuffer([]byte{}, stat), nil
+}
+
 func (self RegFileSystemAccessor) Open(path string) (
 	accessors.ReadSeekCloser, error) {
 	stat, err := self.Lstat(path)
@@ -305,12 +326,17 @@ func (self RegFileSystemAccessor) Open(path string) (
 
 func (self *RegFileSystemAccessor) Lstat(filename string) (
 	accessors.FileInfo, error) {
-
-	// Clean the path
-	full_path, err := accessors.NewWindowsRegistryPath(filename)
+	full_path, err := self.ParsePath(filename)
 	if err != nil {
 		return nil, err
 	}
+
+	return self.LstatWithOSPath(full_path)
+}
+
+func (self *RegFileSystemAccessor) LstatWithOSPath(
+	full_path *accessors.OSPath) (accessors.FileInfo, error) {
+
 	if len(full_path.Components) == 0 {
 		return nil, errors.New("No filename given")
 	}

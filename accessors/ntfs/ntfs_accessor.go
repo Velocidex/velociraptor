@@ -176,8 +176,9 @@ type NTFSFileSystemAccessor struct {
 }
 
 func NewNTFSFileSystemAccessor(
-	scope vfilter.Scope, device, accessor string) *NTFSFileSystemAccessor {
-	root_path, _ := accessors.NewGenericOSPath("")
+	scope vfilter.Scope,
+	root_path *accessors.OSPath,
+	device, accessor string) *NTFSFileSystemAccessor {
 	device = strings.TrimSuffix(device, "\\")
 	return &NTFSFileSystemAccessor{
 		scope:    scope,
@@ -210,6 +211,17 @@ func (self NTFSFileSystemAccessor) ParsePath(path string) (
 
 func (self *NTFSFileSystemAccessor) ReadDir(path string) (
 	res []accessors.FileInfo, err error) {
+	// Normalize the path
+	fullpath, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.ReadDirWithOSPath(fullpath)
+}
+
+func (self *NTFSFileSystemAccessor) ReadDirWithOSPath(
+	fullpath *accessors.OSPath) (res []accessors.FileInfo, err error) {
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -218,11 +230,6 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (
 		}
 	}()
 
-	// Normalize the path
-	fullpath, err := self.ParsePath(path)
-	if err != nil {
-		return nil, err
-	}
 	result := []accessors.FileInfo{}
 
 	device := self.device
@@ -351,7 +358,20 @@ func (self *readAdapter) Seek(offset int64, whence int) (int64, error) {
 	return self.pos, nil
 }
 
-func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekCloser, err error) {
+func (self *NTFSFileSystemAccessor) Open(
+	path string) (res accessors.ReadSeekCloser, err error) {
+
+	full_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.OpenWithOSPath(full_path)
+}
+
+func (self *NTFSFileSystemAccessor) OpenWithOSPath(
+	fullpath *accessors.OSPath) (res accessors.ReadSeekCloser, err error) {
+
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -359,11 +379,6 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekClo
 			err, _ = r.(error)
 		}
 	}()
-
-	fullpath, err := self.ParsePath(path)
-	if err != nil {
-		return nil, err
-	}
 
 	device := self.device
 	accessor := self.accessor
@@ -387,7 +402,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekClo
 		}
 
 		reader, err := ntfs.NewPagedReader(
-			utils.ReaderAtter{file}, 0x1000, 10000)
+			utils.ReaderAtter{Reader: file}, 0x1000, 10000)
 		if err != nil {
 			return nil, err
 		}
@@ -434,7 +449,19 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res accessors.ReadSeekClo
 	return nil, errors.New("File not found")
 }
 
-func (self *NTFSFileSystemAccessor) Lstat(path string) (res accessors.FileInfo, err error) {
+func (self *NTFSFileSystemAccessor) Lstat(
+	path string) (res accessors.FileInfo, err error) {
+
+	fullpath, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.LstatWithOSPath(fullpath)
+}
+
+func (self *NTFSFileSystemAccessor) LstatWithOSPath(
+	fullpath *accessors.OSPath) (res accessors.FileInfo, err error) {
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -443,10 +470,6 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res accessors.FileInfo, 
 		}
 	}()
 
-	fullpath, err := self.ParsePath(path)
-	if err != nil {
-		return nil, err
-	}
 	device := self.device
 	accessor := self.accessor
 	if device == "" {

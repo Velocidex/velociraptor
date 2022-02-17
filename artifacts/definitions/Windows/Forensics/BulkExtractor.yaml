@@ -78,10 +78,12 @@ sources:
       LET tempfolder <= tempdir()
       LET ExePath <= tempfile(extension=".exe")
       LET zip_file <= SELECT
-            copy(filename=url(path=bin[0].FullPath,
-                fragment="bulk_extractor.exe").String,
-                dest=ExePath,
-                accessor='zip') AS Payload
+            copy(
+              filename=pathspec(
+                 DelegatePath=bin[0].FullPath,
+                 Path="bulk_extractor.exe"),
+              dest=ExePath,
+              accessor='zip') AS Payload
         FROM scope()
 
       LET target = SELECT
@@ -156,7 +158,9 @@ sources:
   - name: FindResults
     query: |
       SELECT * FROM foreach(
-        row={SELECT * FROM glob(globs=tempfolder + '/*/find.txt')},
+        row={  SELECT *
+               FROM glob(globs='/*/find.txt', root=tempfolder)
+        },
         query={
             SELECT *
             FROM split_records(filenames=FullPath,first_row_is_headers=false,
@@ -169,5 +173,5 @@ sources:
     query: |
       SELECT upload(file=FullPath,
                     name=strip(string=FullPath,prefix=tempfolder)) AS Upload
-      FROM glob(globs=tempfolder + "/**")
+      FROM glob(globs="/**", root=tempfolder)
       WHERE Upload

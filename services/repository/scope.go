@@ -89,10 +89,15 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 	// If there are remappings in the config file, we apply them to
 	// all scopes.
 	if self.Config != nil && self.Config.Remappings != nil {
+		subscope := scope.Copy()
+		subscope.AppendVars(ordereddict.NewDict().
+			Set(constants.SCOPE_DEVICE_MANAGER,
+				accessors.GlobalDeviceManager.Copy()))
+
 		device_manager.Clear()
 
 		err := remapping.ApplyRemappingOnScope(
-			context.Background(), scope, device_manager,
+			context.Background(), subscope, device_manager,
 			env, self.Config.Remappings)
 		if err != nil {
 			scope.Log("Applying remapping: %v", err)

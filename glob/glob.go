@@ -255,7 +255,7 @@ func (self *Globber) ExpandWithContext(
 		// Walk the filter tree. List the directory and for each file
 		// that matches a filter at this level, recurse into the next
 		// level.
-		files, err := accessor.ReadDir(root.String())
+		files, err := accessor.ReadDirWithOSPath(root)
 		if err != nil {
 			logging.GetLogger(config_obj, &logging.GenericComponent).
 				Debug("Globber.ExpandWithContext: %v while processing %v",
@@ -296,8 +296,8 @@ func (self *Globber) ExpandWithContext(
 		// Sort the results alphabetically.
 		sort.Slice(result, func(i, j int) bool {
 			return -1 == strings.Compare(
-				result[i].FullPath(),
-				result[j].FullPath())
+				result[i].OSPath().Basename(),
+				result[j].OSPath().Basename())
 		})
 		for _, f := range result {
 			select {

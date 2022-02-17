@@ -42,8 +42,19 @@ func (self RawFileSystemAccessor) New(scope vfilter.Scope) (
 	return result, nil
 }
 
-func (self RawFileSystemAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {
+func (self RawFileSystemAccessor) ReadDir(
+	path string) ([]accessors.FileInfo, error) {
 	return nil, errors.New("Not Implemented")
+}
+
+func (self RawFileSystemAccessor) ReadDirWithOSPath(
+	path *accessors.OSPath) ([]accessors.FileInfo, error) {
+	return nil, errors.New("Not Implemented")
+}
+
+func (self RawFileSystemAccessor) OpenWithOSPath(
+	filename *accessors.OSPath) (accessors.ReadSeekCloser, error) {
+	return self.Open(filename.Path())
 }
 
 func (self RawFileSystemAccessor) Open(filename string) (accessors.ReadSeekCloser, error) {
@@ -62,7 +73,21 @@ func (self RawFileSystemAccessor) Open(filename string) (accessors.ReadSeekClose
 }
 
 func (self RawFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error) {
-	return &file.OSFileInfo{}, nil
+	full_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	stat, err := os.Lstat(path)
+	return file.NewOSFileInfo(stat, full_path), err
+}
+
+func (self RawFileSystemAccessor) LstatWithOSPath(
+	full_path *accessors.OSPath) (accessors.FileInfo, error) {
+
+	path := full_path.String()
+	stat, err := os.Lstat(path)
+	return file.NewOSFileInfo(stat, full_path), err
 }
 
 func init() {

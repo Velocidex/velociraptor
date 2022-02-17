@@ -30,7 +30,7 @@ func (self *AccessorWindowsTestSuite) SetupTest() {
 	tmpdir, err := ioutil.TempDir("", "accessor_test")
 	assert.NoError(self.T(), err)
 
-	self.tmpdir = tmpdir
+	self.tmpdir = strings.ReplaceAll(tmpdir, "\\", "/")
 }
 
 func (self *AccessorWindowsTestSuite) TearDownTest() {
@@ -121,11 +121,11 @@ func (self *AccessorWindowsTestSuite) TestSymlinks() {
 	// Now glob through the files - this should not lock up since
 	// the cycle should be detected.
 	globber := glob.NewGlobber()
-	glob_path, _ := accessors.NewLinuxOSPath("**/*.txt")
+	glob_path, _ := accessors.NewGenericOSPath("**/*.txt")
 	globber.Add(glob_path)
 
 	hits := []string{}
-	tmp_path, _ := accessors.NewLinuxOSPath(self.tmpdir)
+	tmp_path, _ := accessors.NewGenericOSPath(self.tmpdir)
 	for hit := range globber.ExpandWithContext(context.Background(),
 		config_obj, tmp_path, accessor) {
 		hits = append(hits, strings.ReplaceAll(

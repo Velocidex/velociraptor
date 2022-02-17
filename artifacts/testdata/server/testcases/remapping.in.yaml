@@ -24,7 +24,7 @@ Parameters:
               "DelegatePath": %q,
               "Path": "/"
             }
-          path_type: "pathspec"
+          path_type: "registry"
         on:
           accessor: "registry"
           prefix: "/HKEY_LOCAL_MACHINE/Classes"

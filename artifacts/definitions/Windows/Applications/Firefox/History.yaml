@@ -23,8 +23,8 @@ sources:
              WHERE Name =~ userRegex
           },
           query={
-             SELECT User, FullPath, Mtime from glob(
-               globs=Directory + placesGlobs)
+             SELECT User, FullPath, Mtime
+             FROM glob(root=Directory, globs=placesGlobs)
           })
 
         SELECT * FROM foreach(row=places_files,

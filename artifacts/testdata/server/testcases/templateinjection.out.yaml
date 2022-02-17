@@ -1,0 +1,21 @@
+LET Content <= xor(key="infected", string=read_file( filename=srcDir+"/artifacts/testdata/files/infected.zip.xor"))[]LET _ <= remap(config=RemappingTemplate, copy=["zip", "scope"], clear=TRUE)[]SELECT * FROM Artifact.Windows.Detection.TemplateInjection( SearchGlob='/**')[
+ {
+  "DocumentPath": "{\"DelegateAccessor\":\"scope\",\"DelegatePath\":\"Content\",\"Path\":\"/b81717cbb23f0c6ced66a63e65356b344b85636a8ba114b3e12a14fd1a7ddb0f.docx\"}",
+  "DocumentHash": {
+   "MD5": "504bb9c52b283f4a0399cf14c6f74105",
+   "SHA1": "2e03706703be503d1642e32ddd6dcafb9d478353",
+   "SHA256": "b81717cbb23f0c6ced66a63e65356b344b85636a8ba114b3e12a14fd1a7ddb0f"
+  },
+  "Mtime": "2022-02-15T19:16:21Z",
+  "Size": 93798,
+  "Section": "/word/_rels/settings.xml.rels",
+  "TemplateTarget": "\\\\storage.red-lab.tech\\template.dotx",
+  "SectionMtime": "2021-04-05T16:45:17Z",
+  "SectionHash": {
+   "MD5": "4e64d80377951228cb4cf704524b7a88",
+   "SHA1": "91e85d7fb7a9747fdabb77071f4cabab47fdf18f",
+   "SHA256": "dc324e7caf00f8b4ad853de8282b6b4bff4c0b1e930f22b4b9a47afcf31160b1"
+  },
+  "_Source": "Windows.Detection.TemplateInjection"
+ }
+]

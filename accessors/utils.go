@@ -14,6 +14,8 @@ func ParsePath(path, path_type string) (res *OSPath, err error) {
 		res, err = NewWindowsNTFSPath(path)
 	case "", "generic":
 		res, err = NewGenericOSPath(path)
+	case "pathspec":
+		res, err = NewPathspecOSPath(path)
 	default:
 		err = fmt.Errorf("Unknown path type: %v (should be one of windows,linux,generic)", path_type)
 	}

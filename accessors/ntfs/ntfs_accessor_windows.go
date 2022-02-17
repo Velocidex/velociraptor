@@ -97,8 +97,9 @@ func (self *WindowsNTFSFileSystemAccessor) New(
 	}
 
 	// Build a virtual filesystem that mounts the various NTFS volumes on it.
-	root_fs := accessors.NewVirtualFilesystemAccessor()
 	root_path, _ := accessors.NewWindowsNTFSPath("")
+	root_fs := accessors.NewVirtualFilesystemAccessor(root_path)
+
 	result := &WindowsNTFSFileSystemAccessor{
 		MountFileSystemAccessor: accessors.NewMountFileSystemAccessor(
 			root_path, root_fs),
@@ -112,7 +113,8 @@ func (self *WindowsNTFSFileSystemAccessor) New(
 			result.AddMapping(
 				root_path, // Mount at the root of the filesystem
 				fi.OSPath(),
-				NewNTFSFileSystemAccessor(root_scope, fi.FullPath(), "file"))
+				NewNTFSFileSystemAccessor(root_scope, root_path,
+					fi.FullPath(), "file"))
 		}
 	}
 
@@ -123,7 +125,8 @@ func (self *WindowsNTFSFileSystemAccessor) New(
 			result.AddMapping(
 				root_path,
 				fi.OSPath(),
-				NewNTFSFileSystemAccessor(root_scope, fi.FullPath(), "file"))
+				NewNTFSFileSystemAccessor(root_scope, root_path,
+					fi.FullPath(), "file"))
 		}
 	}
 

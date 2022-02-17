@@ -336,6 +336,7 @@ func doCat(path, accessor_name string) error {
 // Install a fs accessor to enable access to the file store. But make
 // it lazy - no need to connect to the file store un-neccesarily.
 type FileStoreAccessorFactory struct {
+	accessors.VirtualFilesystemAccessor
 	config_obj *config_proto.Config
 }
 
@@ -347,7 +348,9 @@ func (self FileStoreAccessorFactory) New(scope vfilter.Scope) (
 // Only register the filesystem accessor if we have a proper valid server config.
 func initFilestoreAccessor(config_obj *config_proto.Config) error {
 	if config_obj.Datastore != nil {
-		accessors.Register("fs", &FileStoreAccessorFactory{config_obj},
+		accessors.Register("fs", &FileStoreAccessorFactory{
+			config_obj: config_obj,
+		},
 			`Provide access the the server's filestore and datastore.
 
 Many VQL plugins produce references to files stored on the server. This accessor can be used to open those files and read them. Typically references to filestore or datastore files have the "fs:" or "ds:" prefix.

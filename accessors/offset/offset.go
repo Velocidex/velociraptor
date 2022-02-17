@@ -64,12 +64,19 @@ func (self *OffsetReader) LStat() (accessors.FileInfo, error) {
 	return self.info, nil
 }
 
-func GetOffsetFile(serialized_path string, scope vfilter.Scope) (
+func GetOffsetFile(full_path *accessors.OSPath, scope vfilter.Scope) (
 	zip.ReaderStat, error) {
-	full_path, err := accessors.NewPathspecOSPath(serialized_path)
-	if err != nil {
-		return nil, err
+
+	if len(full_path.Components) == 0 {
+		return nil, fmt.Errorf("Offset accessor expects an offset at root path")
+
 	}
+
+	offset, err := strconv.ParseInt(full_path.Components[0], 0, 64)
+	if err != nil {
+		return nil, fmt.Errorf("Offset accessor expects an offset path: %w", err)
+	}
+
 	pathspec := full_path.PathSpec()
 
 	// The gzip accessor must use a delegate but if one is not
@@ -97,11 +104,6 @@ func GetOffsetFile(serialized_path string, scope vfilter.Scope) (
 		return nil, err
 	}
 
-	offset, err := strconv.ParseInt(pathspec.Path, 0, 64)
-	if err != nil {
-		return nil, fmt.Errorf("Offset accessor expects an offset path: %w", err)
-	}
-
 	return &OffsetReader{
 		reader:      fd,
 		info:        stat,
@@ -111,7 +113,8 @@ func GetOffsetFile(serialized_path string, scope vfilter.Scope) (
 }
 
 func init() {
-	accessors.Register("offset", zip.NewGzipFileSystemAccessor(GetOffsetFile),
+	accessors.Register("offset", zip.NewGzipFileSystemAccessor(
+		accessors.MustNewLinuxOSPath(""), GetOffsetFile),
 		`Allow reading another file from a specific offset.
 
 For Example

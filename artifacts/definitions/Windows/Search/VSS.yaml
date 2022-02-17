@@ -30,15 +30,15 @@ sources:
       LET StrippedGlob <= extract_path(FullPath=SearchFilesGlob).Path
 
       -- Get all logical disks and VSS
-      LET roots = SELECT FullPath AS Root
+      LET roots = SELECT OSPath AS Root
         FROM glob(globs='*', accessor='ntfs')
         ORDER BY Root  DESC
 
       -- Glob for all files in SearchGlob and calculate their hash.
       LET globvss(SearchGlob, Root) = SELECT *,
-            extract_path(FullPath=FullPath).Path AS Path,
-            Root AS Source,
-            hash(path=FullPath, accessor='ntfs').SHA1 as SHA1
+            extract_path(FullPath=OSPath).Path AS Path,
+            Root.String AS Source,
+            hash(path=OSPath, accessor='ntfs').SHA1 as SHA1
          FROM glob(globs=SearchGlob, accessor='ntfs', root=Root)
          WHERE NOT IsDir
 

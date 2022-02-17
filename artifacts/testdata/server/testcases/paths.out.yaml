@@ -38,55 +38,67 @@ SELECT basename(path="/foo/bar/baz", path_type='linux') FROM scope()[
  {
   "path_split(path=\"/a/b\", path_type='linux')[-20]": "a"
  }
-]LET path_spec = pathspec(DelegateAccessor="file", DelegatePath="C:/Windows")[]SELECT path_spec, pathspec(parse=path_spec.String), pathspec(parse="C:\\Windows", path_type='windows'), pathspec(parse="/usr/lib", path_type='linux'), pathspec(parse="file:///usr/lib#*", path_type='generic') FROM scope()[
+]LET path_spec = pathspec(DelegateAccessor="file", DelegatePath="C:/Windows")[]SELECT
+   -- Serialize to JSON string
+   path_spec,
+
+   -- Parse from string
+   pathspec(parse=path_spec.String),
+
+   -- Parse from OSPath
+   pathspec(parse=path_spec),
+
+   -- Parse a windows path
+   pathspec(parse="C:\\Windows", path_type='windows'),
+
+   -- Parse a linux path
+   pathspec(parse="/usr/lib", path_type='linux'),
+
+   -- Parse a registry path (Expand hive)
+   pathspec(parse="HKU/Software", path_type='registry'),
+
+   -- Parse a URL based path - serialize back to URL
+   pathspec(parse="file:///usr/lib#*", path_type='generic'),
+
+   -- Access a field from a URL based path
+   pathspec(parse="file:///usr/lib#*", path_type='generic').DelegatePath,
+
+   -- Add subpaths to a complex pathspec
+   pathspec(parse="file:///usr/lib#foo", path_type='generic') + "bar",
+   pathspec(parse="HKU/Software", path_type='registry') + "Microsoft",
+
+   -- Access components from an OSPath
+   pathspec(parse="HKU/Software", path_type='registry').Components
+
+FROM scope()
+[
  {
-  "path_spec": {
-   "DelegateAccessor": "file",
-   "DelegatePath": "C:/Windows"
-  },
-  "pathspec(parse=path_spec.String)": {
-   "DelegateAccessor": "file",
-   "DelegatePath": "C:/Windows",
-   "Path": "/",
-   "Components": null
-  },
-  "pathspec(parse=\"C:\\\\Windows\", path_type='windows')": {
-   "DelegateAccessor": "",
-   "DelegatePath": "",
-   "Path": "C:\\Windows",
-   "Components": [
-    "C:",
-    "Windows"
-   ]
-  },
-  "pathspec(parse=\"/usr/lib\", path_type='linux')": {
-   "DelegateAccessor": "",
-   "DelegatePath": "",
-   "Path": "/usr/lib",
-   "Components": [
-    "usr",
-    "lib"
-   ]
-  },
-  "pathspec(parse=\"file:///usr/lib#*\", path_type='generic')": {
-   "DelegateAccessor": "file",
-   "DelegatePath": "/usr/lib",
-   "Path": "/*",
-   "Components": [
-    "*"
-   ]
-  }
+  "path_spec": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\"}",
+  "pathspec(parse=path_spec.String)": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\"}",
+  "pathspec(parse=path_spec)": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\"}",
+  "pathspec(parse=\"C:\\\\Windows\", path_type='windows')": "C:\\Windows",
+  "pathspec(parse=\"/usr/lib\", path_type='linux')": "/usr/lib",
+  "pathspec(parse=\"HKU/Software\", path_type='registry')": "HKEY_USERS\\Software",
+  "pathspec(parse=\"file:///usr/lib#*\", path_type='generic')": "file:///usr/lib#/*",
+  "pathspec(parse=\"file:///usr/lib#*\", path_type='generic').DelegatePath": "/usr/lib",
+  "pathspec(parse=\"file:///usr/lib#foo\", path_type='generic') + \"bar\"": "file:///usr/lib#/foo/bar",
+  "pathspec(parse=\"HKU/Software\", path_type='registry') + \"Microsoft\"": "HKEY_USERS\\Software\\Microsoft",
+  "pathspec(parse=\"HKU/Software\", path_type='registry').Components": [
+   "HKEY_USERS",
+   "Software"
+  ]
  }
-]SELECT pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows", path_type="windows") FROM scope()[
+]LET shadow_path <= pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows\\System32\\Notepad.exe", path_type="windows")[]SELECT shadow_path, shadow_path.Dirname, shadow_path.Dirname.Basename, shadow_path.Basename, shadow_path.Components FROM scope()[
  {
-  "pathspec(parse=\"\\\\\\\\?\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy1\\\\Windows\", path_type=\"windows\")": {
-   "DelegateAccessor": "",
-   "DelegatePath": "",
-   "Path": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows",
-   "Components": [
-    "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1",
-    "Windows"
-   ]
-  }
+  "shadow_path": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows\\System32\\Notepad.exe",
+  "shadow_path.Dirname": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows\\System32",
+  "shadow_path.Dirname.Basename": "System32",
+  "shadow_path.Basename": "Notepad.exe",
+  "shadow_path.Components": [
+   "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1",
+   "Windows",
+   "System32",
+   "Notepad.exe"
+  ]
  }
 ]

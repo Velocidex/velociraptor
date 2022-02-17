@@ -24,7 +24,12 @@ sources:
              tempfile_extension=".zip", url=ExchangeURL)
         }, query={
           SELECT read_file(accessor="zip", filename=FullPath) AS Definition
-          FROM glob(globs=url(path=Content, fragment='/**/*.yaml'), accessor="zip")
+          FROM glob(
+             globs='/**/*.yaml',
+             root=pathspec(
+                DelegateAccessor="auto",
+                DelegatePath=Content),
+             accessor="zip")
         })
 
         SELECT Definition.name AS Name,

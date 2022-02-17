@@ -6,8 +6,22 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	osPathSerializations = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "ospath_serialization_count",
+		Help: "Number of times an os path is serialized.",
+	})
+
+	osPathUnserializations = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "ospath_unserialization_count",
+		Help: "Number of times an os path is unserialized.",
+	})
 )
 
 // This is a generic Path manipulator that implements the escaping
@@ -20,6 +34,8 @@ type GenericPathManipulator struct {
 }
 
 func (self GenericPathManipulator) PathParse(path string, result *OSPath) error {
+	osPathUnserializations.Inc()
+
 	err := maybeParsePathSpec(path, result)
 	if err != nil {
 		return err
@@ -48,6 +64,8 @@ func (self GenericPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 }
 
 func (self GenericPathManipulator) PathJoin(path *OSPath) string {
+	osPathSerializations.Inc()
+
 	result := self.AsPathSpec(path)
 	if result.GetDelegateAccessor() == "" && result.GetDelegatePath() == "" {
 		return result.Path
@@ -91,6 +109,8 @@ func NewGenericOSPath(path string) (*OSPath, error) {
 type LinuxPathManipulator struct{ GenericPathManipulator }
 
 func (self LinuxPathManipulator) PathParse(path string, result *OSPath) error {
+	osPathUnserializations.Inc()
+
 	err := maybeParsePathSpec(path, result)
 	if err != nil {
 		return err
@@ -163,6 +183,8 @@ var (
 type WindowsPathManipulator struct{ GenericPathManipulator }
 
 func (self WindowsPathManipulator) PathParse(path string, result *OSPath) error {
+	osPathUnserializations.Inc()
+
 	err := maybeParsePathSpec(path, result)
 	if err != nil {
 		return err
@@ -186,6 +208,8 @@ func (self WindowsPathManipulator) PathParse(path string, result *OSPath) error 
 }
 
 func (self WindowsPathManipulator) PathJoin(path *OSPath) string {
+	osPathSerializations.Inc()
+
 	result := self.AsPathSpec(path)
 	if result.GetDelegateAccessor() == "" && result.GetDelegatePath() == "" {
 		return result.Path
@@ -281,6 +305,8 @@ func (self WindowsNTFSManipulator) AsPathSpec(path *OSPath) *PathSpec {
 }
 
 func (self WindowsNTFSManipulator) PathJoin(path *OSPath) string {
+	osPathSerializations.Inc()
+
 	result := self.AsPathSpec(path)
 	if result.GetDelegateAccessor() == "" && result.GetDelegatePath() == "" {
 		return result.Path
@@ -325,6 +351,8 @@ func (self WindowsRegistryPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 }
 
 func (self WindowsRegistryPathManipulator) PathJoin(path *OSPath) string {
+	osPathSerializations.Inc()
+
 	result := self.AsPathSpec(path)
 	if result.GetDelegateAccessor() == "" && result.GetDelegatePath() == "" {
 		return result.Path
@@ -334,6 +362,8 @@ func (self WindowsRegistryPathManipulator) PathJoin(path *OSPath) string {
 
 func (self WindowsRegistryPathManipulator) PathParse(
 	path string, result *OSPath) error {
+	osPathUnserializations.Inc()
+
 	err := maybeParsePathSpec(path, result)
 	if err != nil {
 		return err
@@ -381,6 +411,8 @@ func NewWindowsRegistryPath(path string) (*OSPath, error) {
 type PathSpecPathManipulator struct{ GenericPathManipulator }
 
 func (self PathSpecPathManipulator) PathParse(path string, result *OSPath) error {
+	osPathUnserializations.Inc()
+
 	pathspec, err := PathSpecFromString(path)
 	if err != nil {
 		return err
@@ -400,6 +432,8 @@ func (self PathSpecPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 }
 
 func (self PathSpecPathManipulator) PathJoin(path *OSPath) string {
+	osPathSerializations.Inc()
+
 	if path.pathspec != nil {
 		return path.pathspec.String()
 	}
@@ -457,4 +491,83 @@ func maybeParsePathSpec(path string, result *OSPath) error {
 		Path: path,
 	}
 	return nil
+}
+
+// Windows registry paths begin with a hive name. There are a number
+// of abbreviations for the hive names and we want to standardize.
+type FileStorePathManipulator struct{}
+
+func (self FileStorePathManipulator) AsPathSpec(path *OSPath) *PathSpec {
+	result := path.pathspec
+	if result == nil {
+		result = &PathSpec{}
+		path.pathspec = result
+	}
+
+	// The first component is usually the drive letter or device and
+	// although it can contain path separators it must not be quoted
+	components := path.Components
+
+	result.Path = strings.TrimPrefix(utils.JoinComponents(components, "/"), "/")
+	return result
+}
+
+func (self FileStorePathManipulator) PathJoin(path *OSPath) string {
+	osPathSerializations.Inc()
+
+	return path.pathspec.DelegatePath + utils.JoinComponents(path.Components, "/")
+}
+
+func (self FileStorePathManipulator) PathParse(
+	path string, result *OSPath) error {
+	osPathUnserializations.Inc()
+
+	err := maybeParsePathSpec(path, result)
+	if err != nil {
+		return err
+	}
+	result.Components = utils.SplitComponents(result.pathspec.Path)
+	if len(result.Components) > 0 {
+		if result.Components[0] == "fs:" {
+			result.Components = result.Components[1:]
+			result.pathspec = &PathSpec{
+				DelegateAccessor: "fs",
+				DelegatePath:     "fs:",
+			}
+			return nil
+		}
+		if result.Components[0] == "ds:" {
+			result.Components = result.Components[1:]
+			result.pathspec = &PathSpec{
+				DelegateAccessor: "fs",
+				DelegatePath:     "ds:",
+			}
+			return nil
+		}
+	}
+
+	result.pathspec = &PathSpec{
+		DelegateAccessor: "fs",
+		DelegatePath:     "fs:",
+	}
+	return nil
+}
+
+// Like NewGenericOSPath but panics if an error
+func MustNewFileStorePath(path string) *OSPath {
+	res, err := NewFileStorePath(path)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func NewFileStorePath(path string) (*OSPath, error) {
+	manipulator := &FileStorePathManipulator{}
+	result := &OSPath{
+		Manipulator: manipulator,
+	}
+
+	err := manipulator.PathParse(path, result)
+	return result, err
 }

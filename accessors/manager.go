@@ -18,7 +18,7 @@ type DeviceManager interface {
 	GetAccessor(scheme string, scope vfilter.Scope) (FileSystemAccessor, error)
 	Copy() DeviceManager
 	Clear()
-	Register(scheme string, accessor FileSystemAccessorFactory, description string)
+	Register(scheme string, accessor FileSystemAccessor, description string)
 }
 
 func GetManager(scope vfilter.Scope) DeviceManager {
@@ -47,13 +47,13 @@ func GetAccessor(scheme string, scope vfilter.Scope) (FileSystemAccessor, error)
 // The default device manager is global and uses the
 type DefaultDeviceManager struct {
 	mu           sync.Mutex
-	handlers     map[string]FileSystemAccessorFactory
+	handlers     map[string]FileSystemAccessor
 	descriptions *ordereddict.Dict
 }
 
 func NewDefaultDeviceManager() *DefaultDeviceManager {
 	return &DefaultDeviceManager{
-		handlers:     make(map[string]FileSystemAccessorFactory),
+		handlers:     make(map[string]FileSystemAccessor),
 		descriptions: ordereddict.NewDict(),
 	}
 }
@@ -73,7 +73,7 @@ func (self *DefaultDeviceManager) GetAccessor(
 }
 
 func (self *DefaultDeviceManager) Register(
-	scheme string, accessor FileSystemAccessorFactory, description string) {
+	scheme string, accessor FileSystemAccessor, description string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -92,7 +92,7 @@ func (self *DefaultDeviceManager) Clear() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.handlers = make(map[string]FileSystemAccessorFactory)
+	self.handlers = make(map[string]FileSystemAccessor)
 	self.descriptions = ordereddict.NewDict()
 }
 
@@ -111,7 +111,7 @@ func (self *DefaultDeviceManager) Copy() DeviceManager {
 }
 
 func Register(
-	scheme string, accessor FileSystemAccessorFactory, description string) {
+	scheme string, accessor FileSystemAccessor, description string) {
 	GlobalDeviceManager.Register(scheme, accessor, description)
 }
 

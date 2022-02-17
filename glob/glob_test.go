@@ -115,7 +115,8 @@ var _GlobFixture = []struct {
 }
 
 func GetMockFileSystemAccessor() accessors.FileSystemAccessor {
-	result := accessors.NewVirtualFilesystemAccessor()
+	root_path := accessors.MustNewLinuxOSPath("")
+	result := accessors.NewVirtualFilesystemAccessor(root_path)
 	for _, path := range []string{
 		"/bin/bash",
 		"/bin/dash",

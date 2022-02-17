@@ -96,7 +96,7 @@ sources:
 
       -- expand provided glob into a list of paths on the file system (fs)
       LET fspaths <= SELECT FullPath
-        FROM glob(globs=[expand(path=Security),expand(path=TaskScheduler)])
+        FROM glob(globs=[expand(path=Security), expand(path=TaskScheduler)])
 
       -- function returning list of VSS paths corresponding to path
       LET vsspaths(path) = SELECT FullPath

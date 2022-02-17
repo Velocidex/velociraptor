@@ -193,7 +193,7 @@ func escapeComponent(component string) string {
 // The opposite of SplitComponents above.
 func JoinComponents(components []string, sep string) string {
 	if len(components) == 0 {
-		return sep
+		return ""
 	}
 
 	result := []string{}

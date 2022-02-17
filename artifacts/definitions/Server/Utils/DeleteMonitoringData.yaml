@@ -42,7 +42,8 @@ sources:
                 timestamp(epoch=
                  split(string=basename(path=FullPath), sep="\\.")[0]) AS Timestamp,
                  if(condition=ReallyDoIt, then=file_store_delete(path=FullPath)) AS ReallyDoIt
-            FROM glob(globs="/**.json*", accessor="fs",
+            FROM glob(
+               globs="/**.json*", accessor="fs",
                root="/clients/"+ client_id + "/monitoring")
             WHERE ArtifactName =~ ArtifactRegex
               AND Timestamp < DateBefore

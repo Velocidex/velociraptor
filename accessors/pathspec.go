@@ -130,7 +130,7 @@ func (self PathSpec) String() string {
 
 func PathSpecFromString(parsed string) (*PathSpec, error) {
 	if len(parsed) == 0 {
-		return nil, InvalidPathSpec
+		return &PathSpec{}, nil
 	}
 
 	// It is a serialized JSON object.

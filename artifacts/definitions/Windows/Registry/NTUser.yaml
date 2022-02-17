@@ -44,25 +44,27 @@ sources:
             Description,
             UUID,
             {
-                SELECT FullPath FROM glob(
+                SELECT OSPath FROM glob(
                    root=expand(path=Directory),
                    globs="/NTUSER.DAT",
                    accessor="auto")
-            } as FullPath,
+            } as OSPath,
             expand(path=Directory) as Directory
        FROM Artifact.Windows.Sys.Users()
-       WHERE Directory and FullPath AND Name =~ userRegex
+       WHERE Directory and OSPath AND Name =~ userRegex
 
        SELECT * FROM foreach(
             row={
                 SELECT * FROM UserProfiles
             },
             query={
-                SELECT FullPath, Data, Mtime AS Mtime,
+                SELECT FullPath, OSPath, Data, Mtime AS Mtime,
                        Username, Description, Uid, Gid, UUID, Directory
                 FROM glob(
-                    globs=url(scheme="ntfs",
-                    path=FullPath,
-                    fragment=KeyGlob).String,
+                    globs=KeyGlob,
+                    root=pathspec(
+                       DelegateAccessor="ntfs",
+                       DelegatePath=OSPath,
+                       Path="/"),
                     accessor="raw_reg")
             })

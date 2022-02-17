@@ -42,6 +42,7 @@ type OSPath struct {
 	// Some paths need more information. They store an additional path
 	// spec here.
 	pathspec    *PathSpec
+	serialized  *string
 	Manipulator PathManipulator
 }
 
@@ -80,7 +81,15 @@ func (self *OSPath) Path() string {
 }
 
 func (self *OSPath) String() string {
-	return self.Manipulator.PathJoin(self)
+	// Cache it if we need to.
+	if self.serialized != nil {
+		return *self.serialized
+	}
+
+	res := self.Manipulator.PathJoin(self)
+	self.serialized = &res
+
+	return res
 }
 
 func (self *OSPath) Parse(path string) (*OSPath, error) {
@@ -98,8 +107,9 @@ func (self *OSPath) Basename() string {
 
 func (self *OSPath) Dirname() *OSPath {
 	result := self.Copy()
-	result.Components = result.Components[:len(self.Components)-1]
-
+	if len(result.Components) > 0 {
+		result.Components = result.Components[:len(self.Components)-1]
+	}
 	return result
 }
 
@@ -188,9 +198,10 @@ type FileSystemAccessor interface {
 	Lstat(filename string) (FileInfo, error)
 
 	ParsePath(filename string) (*OSPath, error)
-}
 
-// A factory for new accessors
-type FileSystemAccessorFactory interface {
+	// The new more efficient API
+	ReadDirWithOSPath(path *OSPath) ([]FileInfo, error)
+	OpenWithOSPath(path *OSPath) (ReadSeekCloser, error)
+	LstatWithOSPath(path *OSPath) (FileInfo, error)
 	New(scope vfilter.Scope) (FileSystemAccessor, error)
 }

@@ -117,7 +117,8 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
     query: |
-        SELECT pathspec(parse=Key.FullPath).Path AS Key,
+        SELECT OSPath.Path AS Key,
+           OSPath.DelegatePath AS Hive,
            get(field="F") AS _F,
            get(field="V") AS _V,
            get(field="SupplementalCredentials") AS _SupplementalCredentials,
@@ -126,10 +127,8 @@ sources:
            parse_binary(accessor="data", filename=V,
                         profile=Profile, struct="V") AS ParsedV
         FROM read_reg_key(
-           globs=pathspec(
-              DelegateAccessor="auto",
-              DelegatePath=SAMPath,
-              Path='SAM\\Domains\\Account\\Users\\0*'),
+           globs='SAM\\Domains\\Account\\Users\\0*',
+           root=pathspec(DelegatePath=SAMPath),
            accessor="raw_reg")
         WHERE _F AND _V
 

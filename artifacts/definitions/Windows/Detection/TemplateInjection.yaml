@@ -50,18 +50,21 @@ sources:
 
     query: |
       -- Find target docs
-      LET office_docs = SELECT FullPath AS OfficePath
+      LET office_docs = SELECT OSPath AS OfficePath
         FROM glob(globs=SearchGlob)
 
       -- select zip members inside the doc that have some content.
       LET document_parts = SELECT * FROM foreach(row=office_docs,
             query= {
-                SELECT *,
-                    FullPath AS ZipMemberPath,
+                SELECT
+                    Mtime, Atime, Ctime,
+                    OSPath,
+                    OSPath.Path AS ZipMemberPath,
                     OfficePath
-                FROM glob(globs=url(
-                    scheme="auto", path=OfficePath, fragment="/**").String,
-                    accessor='zip')
+                FROM glob(
+                  globs="/**",
+                  root=pathspec(DelegatePath=OfficePath),
+                  accessor='zip')
                 WHERE not IsDir and Size > 0 and ZipMemberPath =~ TemplateFileRegex
             })
 
@@ -69,9 +72,9 @@ sources:
       LET template = SELECT * FROM foreach(row=document_parts,
         query={
             SELECT
-                FullPath as SectionPath,
-                url(parse=FullPath).Path as Document,
-                url(parse=FullPath).Fragment as Section,
+                OSPath as SectionPath,
+                OSPath.DelegatePath as Document,
+                OSPath.Path as Section,
                 parse_string_with_regex(
                     string=Line,
                     regex=['\\s+Target="(?P<Target>.+)"\\s+TargetMode='
@@ -79,7 +82,7 @@ sources:
                 Mtime as SectionMtime,
                 Atime as SectionAtime,
                 Ctime as SectionCtime
-            FROM parse_lines(filename=FullPath,accessor='zip')
+            FROM parse_lines(filename=OSPath, accessor='zip')
             WHERE TemplateTarget
         })
 
@@ -87,14 +90,17 @@ sources:
       LET hits = SELECT * FROM foreach(row=template,
             query={
                 SELECT
-                    FullPath,
-                    hash(path=FullPath) as Hash,
+                    OSPath AS DocumentPath,
+                    hash(path=Document) as DocumentHash,
                     Mtime,
                     Size,
                     Section,
-                    regex_replace(source=TemplateTarget,re='.*Target="(mhtml)',replace='mhtml') as TemplateTarget,
+                    regex_replace(
+                       source=TemplateTarget,
+                       re='.*Target="(mhtml)',
+                       replace='mhtml') as TemplateTarget,
                     SectionMtime,
-                    hash(path=SectionPath,accessor='zip') as SectionHash
+                    hash(path=SectionPath, accessor='zip') as SectionHash
                 FROM stat(filename=Document)
                 WHERE
                     TemplateTarget =~ TemplateTargetRegex
@@ -104,7 +110,7 @@ sources:
 
       -- upload hits to server
       LET upload_hits = SELECT
-            FullPath,
+            OSPath,
             Hash,
             Mtime,
             Size,

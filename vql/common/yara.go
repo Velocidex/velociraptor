@@ -213,7 +213,7 @@ func (self *scanReporter) scanFileByAccessor(
 	defer f.Close()
 
 	self.file_info, _ = accessor.Lstat(self.filename)
-	self.reader = utils.ReaderAtter{f}
+	self.reader = utils.MakeReaderAtter(f)
 
 	// Support sparse file scanning
 	range_reader, ok := f.(uploads.RangeReader)
