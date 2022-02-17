@@ -789,6 +789,15 @@
     description: Rc4 key (1-256bytes).
     required: true
   category: plugin
+- name: entropy
+  description: Calculates shannon scale entropy of a string.
+  type: Function
+  args:
+  - name: String
+    type: string
+    description: String to perform entropy calculation on.
+    required: true
+  catagory: plugin
 - name: dict
   description: |
     Construct a dict from arbitrary keyword args.
