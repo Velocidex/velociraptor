@@ -155,7 +155,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 
 	ctx := context.Background()
 	if !*disable_alarm {
-		sub_ctx, cancel := makeCtxWithTimeout(30)
+		sub_ctx, cancel := makeCtxWithTimeout(60)
 		defer cancel()
 
 		ctx = sub_ctx
