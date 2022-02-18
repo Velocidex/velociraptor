@@ -73,13 +73,45 @@ sources:
 
       -- function returning MFT entries
       -- Only check the filename - should be very quick
-      LET mftsearch_with_filename(MFTPath) = SELECT *
+      LET mftsearch_with_filename(MFTPath) = SELECT
+           EntryNumber,
+           InUse,
+           ParentEntryNumber,
+           FullPath,
+           FileName,
+           FileSize,
+           ReferenceCount,
+           IsDir,
+           Created0x10,
+           Created0x30,
+           LastModified0x10,
+           LastModified0x30,
+           LastRecordChange0x10,
+           LastRecordChange0x30,
+           LastAccess0x10,
+           LastAccess0x30
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE FullPath =~ PathRegex
             AND FileName =~ FileRegex
 
       -- Check only one date bound
-      LET mftsearch_after_date(MFTPath) = SELECT *
+      LET mftsearch_after_date(MFTPath) = SELECT
+           EntryNumber,
+           InUse,
+           ParentEntryNumber,
+           FullPath,
+           FileName,
+           FileSize,
+           ReferenceCount,
+           IsDir,
+           Created0x10,
+           Created0x30,
+           LastModified0x10,
+           LastModified0x30,
+           LastRecordChange0x10,
+           LastRecordChange0x30,
+           LastAccess0x10,
+           LastAccess0x30
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE
              ( Created0x10 > DateAfter
@@ -91,7 +123,23 @@ sources:
             AND FullPath =~ PathRegex
             AND FileName =~ FileRegex
 
-      LET mftsearch_before_date(MFTPath) = SELECT *
+      LET mftsearch_before_date(MFTPath) = SELECT
+           EntryNumber,
+           InUse,
+           ParentEntryNumber,
+           FullPath,
+           FileName,
+           FileSize,
+           ReferenceCount,
+           IsDir,
+           Created0x10,
+           Created0x30,
+           LastModified0x10,
+           LastModified0x30,
+           LastRecordChange0x10,
+           LastRecordChange0x30,
+           LastAccess0x10,
+           LastAccess0x30
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE
              ( Created0x10 < DateBefore
@@ -104,7 +152,23 @@ sources:
             AND FileName =~ FileRegex
 
       -- Check everything can be slow.
-      LET mftsearch_full(MFTPath) = SELECT *
+      LET mftsearch_full(MFTPath) = SELECT
+           EntryNumber,
+           InUse,
+           ParentEntryNumber,
+           FullPath,
+           FileName,
+           FileSize,
+           ReferenceCount,
+           IsDir,
+           Created0x10,
+           Created0x30,
+           LastModified0x10,
+           LastModified0x30,
+           LastRecordChange0x10,
+           LastRecordChange0x30,
+           LastAccess0x10,
+           LastAccess0x30
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE FullPath =~ PathRegex
             AND FileName =~ FileRegex

@@ -156,14 +156,6 @@ func (self MFTScanPlugin) Call(
 		}
 		defer fd.Close()
 
-		reader, err := ntfs.NewPagedReader(
-			utils.ReaderAtter{Reader: fd}, 1024, 10000)
-		if err != nil {
-			scope.Log("parse_mft: Unable to open file %s: %v",
-				arg.Filename, err)
-			return
-		}
-
 		st, err := accessor.Lstat(arg.Filename)
 		if err != nil {
 			scope.Log("parse_mft: Unable to open file %s: %v",
@@ -172,7 +164,7 @@ func (self MFTScanPlugin) Call(
 		}
 
 		for item := range ntfs.ParseMFTFile(
-			ctx, reader, st.Size(), 0x1000, 0x400) {
+			ctx, utils.ReaderAtter{Reader: fd}, st.Size(), 0x1000, 0x400) {
 			select {
 			case <-ctx.Done():
 				return
