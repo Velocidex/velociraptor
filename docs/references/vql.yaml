@@ -151,7 +151,7 @@
     type: string
     description: The accessor to use.
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: The filename to parse.
     required: true
   - name: verbose
@@ -190,7 +190,7 @@
     description: Separator to use (default /)
   - name: path_type
     type: string
-    description: Type of path (e.g. 'windpws)
+    description: Type of path (e.g. 'windows,linux)
   category: basic
 - name: batch
   description: |
@@ -884,7 +884,7 @@
     description: Separator to use (default /)
   - name: path_type
     type: string
-    description: Type of path (e.g. 'windpws)
+    description: Type of path (e.g. 'windows,linux)
   category: basic
 - name: dns
   description: |
@@ -2899,7 +2899,7 @@
   type: Function
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: Binary file to open.
     required: true
   - name: accessor
@@ -3125,7 +3125,7 @@
   type: Function
   args:
   - name: device
-    type: string
+    type: accessors.OSPath
     description: The device file to open. This may be a full path - we will figure
       out the device automatically.
     required: true
@@ -3147,7 +3147,7 @@
   type: Plugin
   args:
   - name: device
-    type: string
+    type: accessors.OSPath
     description: The device file to open. This may be a full path - we will figure
       out the device automatically.
     required: true
@@ -3169,7 +3169,7 @@
   type: Plugin
   args:
   - name: device
-    type: string
+    type: accessors.OSPath
     description: The device file to open. This may be a full path - we will figure
       out the device automatically.
     required: true
@@ -3191,7 +3191,7 @@
   type: Function
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     description: The PE file to open.
     required: true
   - name: accessor
@@ -3331,7 +3331,7 @@
   type: Plugin
   args:
   - name: device
-    type: string
+    type: accessors.OSPath
     description: The device file to open.
     required: true
   - name: accessor
@@ -5161,7 +5161,7 @@
   type: Plugin
   args:
   - name: device
-    type: string
+    type: accessors.OSPath
     description: The device file to open.
     required: true
   category: event
@@ -5321,7 +5321,7 @@
     required: true
   - name: accessor
     type: string
-    description: Accessor (e.g. NTFS)
+    description: Accessor (e.g. ntfs,file)
   - name: context
     type: int
     description: How many bytes to include around each hit

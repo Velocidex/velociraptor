@@ -6,6 +6,7 @@ import (
 	"time"
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -44,7 +45,7 @@ func NewUSNWatcherService() *USNWatcherService {
 }
 
 func (self *USNWatcherService) Register(
-	device string,
+	device *accessors.OSPath,
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
@@ -79,10 +80,11 @@ func (self *USNWatcherService) Register(
 		device, handle.id, frequency)
 
 	// Get existing registrations and append the new one to them.
-	registration, pres := self.registrations[device]
+	key := device.String()
+	registration, pres := self.registrations[key]
 	if !pres {
 		registration = []*Handle{}
-		self.registrations[device] = registration
+		self.registrations[key] = registration
 
 		// There were no earlier registrations so launch the
 		// watcher on a new handle.
@@ -90,7 +92,7 @@ func (self *USNWatcherService) Register(
 	}
 
 	registration = append(registration, handle)
-	self.registrations[device] = registration
+	self.registrations[key] = registration
 
 	// De-queue the handle from the registration map when the
 	// caller is done with it.
@@ -98,7 +100,7 @@ func (self *USNWatcherService) Register(
 		self.mu.Lock()
 		defer self.mu.Unlock()
 
-		handles, pres := self.registrations[device]
+		handles, pres := self.registrations[key]
 		if pres {
 			scope.Log("Unregistering USN log watcher for %v with handle %v",
 				device, handle.id)
@@ -108,7 +110,7 @@ func (self *USNWatcherService) Register(
 					new_handles = append(new_handles, old_handle)
 				}
 			}
-			self.registrations[device] = new_handles
+			self.registrations[key] = new_handles
 		}
 		cancel()
 	}
@@ -118,7 +120,7 @@ func (self *USNWatcherService) Register(
 // listeners. If no listeners exist we terminate the registration.
 func (self *USNWatcherService) StartMonitoring(
 	config_obj *config_proto.Config,
-	device string, ntfs_ctx *ntfs.NTFSContext, frequency uint64) {
+	device *accessors.OSPath, ntfs_ctx *ntfs.NTFSContext, frequency uint64) {
 	defer utils.CheckForPanic("StartMonitoring")
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -129,7 +131,7 @@ func (self *USNWatcherService) StartMonitoring(
 	}
 
 	usn_chan := ntfs.WatchUSN(ctx, ntfs_ctx, int(frequency))
-
+	key := device.String()
 	for {
 		select {
 
@@ -137,11 +139,11 @@ func (self *USNWatcherService) StartMonitoring(
 		// allows us to de-register with go-ntfs ASAP
 		case <-time.After(time.Second):
 			self.mu.Lock()
-			handlers, pres := self.registrations[device]
+			handlers, pres := self.registrations[key]
 
 			// No more registrations, we dont care any more.
 			if !pres || len(handlers) == 0 {
-				delete(self.registrations, device)
+				delete(self.registrations, key)
 				logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 				logger.Info("Unregistering USN log watcher for %v", device)
 
@@ -157,7 +159,7 @@ func (self *USNWatcherService) StartMonitoring(
 
 			self.mu.Lock()
 
-			handlers, pres := self.registrations[device]
+			handlers, pres := self.registrations[key]
 			if pres {
 				// Distribute to all listeners
 				enriched_event := makeUSNRecord(event)

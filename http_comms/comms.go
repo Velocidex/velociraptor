@@ -30,6 +30,7 @@ import (
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -483,6 +484,13 @@ func (self *HTTPConnector) rekeyNextServer() error {
 	resp, err := self.client.Do(req)
 	if err != nil {
 		self.logger.Info("While getting %v: %v", url, err)
+		if strings.Contains(err.Error(), "cannot validate certificate") {
+			self.logger.Info("If you intend to connect to a self signed " +
+				"VelociraptorServer, make sure Client.use_self_signed_ssl " +
+				"is set to true in the client config. If you want to use " +
+				"external CAs, make sure to include all X509 root " +
+				"certificates in Client.Crypto.root_certs.")
+		}
 		self.server_name = ""
 		return err
 	}

@@ -438,6 +438,10 @@ func (self PathSpecPathManipulator) PathJoin(path *OSPath) string {
 		return path.pathspec.String()
 	}
 
+	if len(path.Components) == 1 {
+		return path.Components[0]
+	}
+
 	return ""
 }
 

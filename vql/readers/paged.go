@@ -77,8 +77,9 @@ func (self *ReaderPool) Close() {
 type AccessorReader struct {
 	mu sync.Mutex
 
-	Accessor, File string
-	Scope          vfilter.Scope
+	Accessor string
+	File     *accessors.OSPath
+	Scope    vfilter.Scope
 
 	key string
 
@@ -154,7 +155,7 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 			return 0, err
 		}
 
-		reader, err := accessor.Open(self.File)
+		reader, err := accessor.OpenWithOSPath(self.File)
 		if err != nil {
 			self.mu.Unlock()
 			return 0, err
@@ -253,14 +254,15 @@ func GetReaderPool(scope vfilter.Scope, lru_size int64) *ReaderPool {
 }
 
 func NewPagedReader(scope vfilter.Scope,
-	accessor, filename string,
+	accessor string,
+	filename *accessors.OSPath,
 	lru_size int) (*AccessorReader, error) {
 
 	// Get the reader pool from the scope.
 	pool := GetReaderPool(scope, 50)
 
 	// Try to get the reader from the pool
-	key := accessor + "://" + filename
+	key := accessor + "://" + filename.String()
 	value, pres := pool.lru.Get(key)
 	if pres {
 		return value.(*AccessorReader), nil

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vql_constants "www.velocidex.com/golang/velociraptor/vql/constants"
@@ -42,7 +43,7 @@ type NTFSCachedContext struct {
 	mu sync.Mutex
 
 	accessor     string
-	device       string
+	device       *accessors.OSPath
 	scope        vfilter.Scope
 	paged_reader *readers.AccessorReader
 	ntfs_ctx     *ntfs.NTFSContext
@@ -129,7 +130,8 @@ func (self *NTFSCachedContext) GetNTFSContext() (*ntfs.NTFSContext, error) {
 	return self.ntfs_ctx, nil
 }
 
-func GetNTFSContext(scope vfilter.Scope, device, accessor string) (*ntfs.NTFSContext, error) {
+func GetNTFSContext(scope vfilter.Scope,
+	device *accessors.OSPath, accessor string) (*ntfs.NTFSContext, error) {
 	result, err := GetNTFSCache(scope, device, accessor)
 	if err != nil {
 		return nil, err
@@ -138,8 +140,9 @@ func GetNTFSContext(scope vfilter.Scope, device, accessor string) (*ntfs.NTFSCon
 	return result.GetNTFSContext()
 }
 
-func GetNTFSCache(scope vfilter.Scope, device, accessor string) (*NTFSCachedContext, error) {
-	key := "ntfsctx_cache" + device + accessor
+func GetNTFSCache(scope vfilter.Scope,
+	device *accessors.OSPath, accessor string) (*NTFSCachedContext, error) {
+	key := "ntfsctx_cache" + device.String() + accessor
 
 	// Get the cache context from the root scope's cache
 	cache_ctx, ok := vql_subsystem.CacheGet(scope, key).(*NTFSCachedContext)

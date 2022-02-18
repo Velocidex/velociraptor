@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -81,8 +82,9 @@ func (self *NTFSPathCache) GetDirLRU(dirpath string) (map[string]*CacheMFT, bool
 	return res.(cacheElement).children, true
 }
 
-func GetNTFSPathCache(scope vfilter.Scope, device, accessor string) *NTFSPathCache {
-	key := "ntfs_path_cache" + device + accessor
+func GetNTFSPathCache(scope vfilter.Scope,
+	device *accessors.OSPath, accessor string) *NTFSPathCache {
+	key := "ntfs_path_cache" + device.String() + accessor
 
 	// Get the cache context from the root scope's cache
 	cache_ctx, ok := vql_subsystem.CacheGet(scope, key).(*NTFSPathCache)

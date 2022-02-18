@@ -113,8 +113,8 @@ func (self *WindowsNTFSFileSystemAccessor) New(
 			result.AddMapping(
 				root_path, // Mount at the root of the filesystem
 				fi.OSPath(),
-				NewNTFSFileSystemAccessor(root_scope, root_path,
-					fi.FullPath(), "file"))
+				NewNTFSFileSystemAccessor(
+					root_scope, root_path, fi.OSPath(), "file"))
 		}
 	}
 
@@ -125,8 +125,8 @@ func (self *WindowsNTFSFileSystemAccessor) New(
 			result.AddMapping(
 				root_path,
 				fi.OSPath(),
-				NewNTFSFileSystemAccessor(root_scope, root_path,
-					fi.FullPath(), "file"))
+				NewNTFSFileSystemAccessor(
+					root_scope, root_path, fi.OSPath(), "file"))
 		}
 	}
 

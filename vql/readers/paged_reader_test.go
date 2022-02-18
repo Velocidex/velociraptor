@@ -13,6 +13,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/suite"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -25,7 +26,7 @@ type TestSuite struct {
 	suite.Suite
 	scope     vfilter.Scope
 	tmp_dir   string
-	filenames []string
+	filenames []*accessors.OSPath
 	pool      *ReaderPool
 }
 
@@ -45,14 +46,19 @@ func (self *TestSuite) SetupTest() {
 
 	// Create 10 files with data
 	buff := make([]byte, 4)
-	self.filenames = make([]string, 0, 10)
+	self.filenames = make([]*accessors.OSPath, 0, 10)
+	accessor, err := accessors.GetAccessor("file", self.scope)
+	assert.NoError(self.T(), err)
 
 	for i := 0; i < 10; i++ {
-		filename := fmt.Sprintf("%s/Test%x.txt", self.tmp_dir, i)
-		self.filenames = append(self.filenames, filename)
+		filename, err := accessor.ParsePath(self.tmp_dir)
+		assert.NoError(self.T(), err)
+
+		file := filename.Append(fmt.Sprintf("Test%x.txt", i))
+		self.filenames = append(self.filenames, file)
 
 		out_fd, err := os.OpenFile(
-			filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+			file.String(), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 		assert.NoError(self.T(), err)
 
 		binary.LittleEndian.PutUint32(buff, uint32(i))
@@ -73,7 +79,8 @@ func (self *TestSuite) TestPagedReader() {
 	buff := make([]byte, 4)
 
 	for i := 0; i < 10; i++ {
-		reader, err := NewPagedReader(self.scope, "file", self.filenames[i], 100)
+		reader, err := NewPagedReader(
+			self.scope, "file", self.filenames[i], 100)
 		assert.NoError(self.T(), err)
 		_, err = reader.ReadAt(buff, 0)
 		assert.NoError(self.T(), err)

@@ -170,7 +170,7 @@ type NTFSFileSystemAccessor struct {
 
 	// The delegate accessor we use to open the underlying volume.
 	accessor string
-	device   string
+	device   *accessors.OSPath
 
 	root *accessors.OSPath
 }
@@ -178,8 +178,7 @@ type NTFSFileSystemAccessor struct {
 func NewNTFSFileSystemAccessor(
 	scope vfilter.Scope,
 	root_path *accessors.OSPath,
-	device, accessor string) *NTFSFileSystemAccessor {
-	device = strings.TrimSuffix(device, "\\")
+	device *accessors.OSPath, accessor string) *NTFSFileSystemAccessor {
 	return &NTFSFileSystemAccessor{
 		scope:    scope,
 		accessor: accessor,
@@ -234,10 +233,12 @@ func (self *NTFSFileSystemAccessor) ReadDirWithOSPath(
 
 	device := self.device
 	accessor := self.accessor
-	if device == "" {
-		pathspec := fullpath.PathSpec()
-		device = pathspec.GetDelegatePath()
-		accessor = pathspec.GetDelegateAccessor()
+	if device == nil {
+		device, err = fullpath.Delegate(self.scope)
+		if err != nil {
+			return nil, err
+		}
+		accessor = fullpath.DelegateAccessor()
 	}
 
 	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device, accessor)
@@ -382,10 +383,12 @@ func (self *NTFSFileSystemAccessor) OpenWithOSPath(
 
 	device := self.device
 	accessor := self.accessor
-	if device == "" {
-		pathspec := fullpath.PathSpec()
-		device = pathspec.GetDelegatePath()
-		accessor = pathspec.GetDelegateAccessor()
+	if device == nil {
+		device, err = fullpath.Delegate(self.scope)
+		if err != nil {
+			return nil, err
+		}
+		accessor = fullpath.DelegateAccessor()
 	}
 
 	// We dont want to open a subpath of the filesyste, instead we
@@ -396,7 +399,7 @@ func (self *NTFSFileSystemAccessor) OpenWithOSPath(
 			return nil, err
 		}
 
-		file, err := accessor.Open(device)
+		file, err := accessor.OpenWithOSPath(device)
 		if err != nil {
 			return nil, err
 		}
@@ -472,10 +475,12 @@ func (self *NTFSFileSystemAccessor) LstatWithOSPath(
 
 	device := self.device
 	accessor := self.accessor
-	if device == "" {
-		pathspec := fullpath.PathSpec()
-		device = pathspec.GetDelegatePath()
-		accessor = pathspec.GetDelegateAccessor()
+	if device == nil {
+		device, err = fullpath.Delegate(self.scope)
+		if err != nil {
+			return nil, err
+		}
+		accessor = fullpath.DelegateAccessor()
 	}
 
 	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device, accessor)
@@ -511,7 +516,8 @@ func (self *NTFSFileSystemAccessor) LstatWithOSPath(
 // Open the MFT entry specified by a path name. Walks all directory
 // indexes in the path to find the right MFT entry.
 func Open(scope vfilter.Scope, self *ntfs.MFT_ENTRY,
-	ntfs_ctx *ntfs.NTFSContext, device, accessor string,
+	ntfs_ctx *ntfs.NTFSContext,
+	device *accessors.OSPath, accessor string,
 	filename *accessors.OSPath) (*ntfs.MFT_ENTRY, error) {
 
 	components := filename.Components
@@ -522,7 +528,7 @@ func Open(scope vfilter.Scope, self *ntfs.MFT_ENTRY,
 	get_path_in_dir := func(path string, component string, dir *ntfs.MFT_ENTRY) (
 		*ntfs.MFT_ENTRY, error) {
 
-		key := device + path
+		key := device.String() + path
 		path_cache := GetNTFSPathCache(scope, device, accessor)
 		item, pres := path_cache.GetComponentMetadata(key, component)
 		if pres {

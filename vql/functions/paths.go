@@ -33,7 +33,7 @@ import (
 type DirnameArgs struct {
 	Path     vfilter.Any `vfilter:"required,field=path,doc=Extract directory name of path"`
 	Sep      string      `vfilter:"optional,field=sep,doc=Separator to use (default /)"`
-	PathType string      `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windpws)"`
+	PathType string      `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windows,linux)"`
 }
 
 type DirnameFunction struct{}

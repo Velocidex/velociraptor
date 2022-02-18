@@ -202,12 +202,13 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 		self.scope, self.scope, constants.RAW_REG_CACHE_SIZE)
 	hive, pres := self.hive_cache[cache_key]
 	if !pres {
+		delegate, err := file_path.Delegate(self.scope)
+		if err != nil {
+			return nil, err
+		}
+
 		paged_reader, err := readers.NewPagedReader(
-			self.scope,
-			pathspec.DelegateAccessor,
-			pathspec.GetDelegatePath(),
-			int(lru_size),
-		)
+			self.scope, pathspec.DelegateAccessor, delegate, int(lru_size))
 		if err != nil {
 			self.scope.Log("%v: did you provide a URL or Pathspec?", err)
 			return nil, err

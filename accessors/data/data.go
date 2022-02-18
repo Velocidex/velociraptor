@@ -34,9 +34,11 @@ func (self DataFilesystemAccessor) New(
 	return DataFilesystemAccessor{}, nil
 }
 
+// The path represent actual literal data so we parse it as a single
+// component (It can not contain delegates for this accessor).
 func (self DataFilesystemAccessor) ParsePath(
 	path string) (*accessors.OSPath, error) {
-	return accessors.NewLinuxOSPath(path)
+	return accessors.MustNewPathspecOSPath("").Clear().Append(path), nil
 }
 
 func (self DataFilesystemAccessor) Lstat(

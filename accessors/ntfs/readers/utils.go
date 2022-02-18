@@ -4,24 +4,20 @@ import (
 	"errors"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/vfilter"
 )
 
 // Figure out the raw device that holds the requested NTFS filesystem.
 func GetRawDeviceAndAccessor(
-	device, accessor string) (string, string, error) {
+	scope vfilter.Scope,
+	device *accessors.OSPath, accessor string) (*accessors.OSPath, string, error) {
 
 	switch accessor {
 	case "ntfs":
-		fullpath, err := accessors.NewWindowsNTFSPath(device)
-		if err != nil {
-			return "", "", err
+		if len(device.Components) == 0 {
+			return nil, "", errors.New("Invalid device string")
 		}
-
-		if len(fullpath.Components) == 0 {
-			return "", "", errors.New("Invalid device string")
-		}
-		fullpath.Components = []string{fullpath.Components[0]}
-		return fullpath.String(), "ntfs", nil
+		return device.Clear().Append(device.Components[0]), "ntfs", nil
 
 		// It is just an image already
 	case "file":
@@ -29,12 +25,8 @@ func GetRawDeviceAndAccessor(
 
 		// For raw_ntfs, the delegate contains the actual device
 	case "raw_ntfs":
-		fullpath, err := accessors.NewPathspecOSPath(device)
-		if err != nil {
-			return "", "", err
-		}
-		pathspec := fullpath.PathSpec()
-		return pathspec.GetDelegatePath(), pathspec.GetDelegateAccessor(), nil
+		delegate, err := device.Delegate(scope)
+		return delegate, device.DelegateAccessor(), err
 
 	default:
 		return device, accessor, nil
