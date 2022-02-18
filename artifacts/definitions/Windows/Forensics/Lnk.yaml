@@ -501,10 +501,10 @@ sources:
      LET link_files = SELECT parse_binary(
          filename=FullPath,
          profile=Profile, struct="ShellLinkHeader")  AS Parsed,
-         FullPath, Mtime, Atime, Ctime
+         FullPath, Mtime as SourceModified, Btime as SourceCreated
      FROM glob(globs=Glob)
 
-     SELECT FullPath, Parsed AS _Parsed, Mtime, Atime, Ctime,
+     SELECT FullPath, Parsed AS _Parsed, SourceCreated, SourceModified,
             Parsed.LinkTargetIDList.IDList.ShellBag.Description AS _TargetIDInfo,
             Parsed.CreationTime AS HeaderCreationTime,
             Parsed.AccessTime AS HeaderAccessTime,
@@ -524,7 +524,7 @@ column_types:
     type: timestamp
   - name: Atime
     type: timestamp
-  - name: Ctime
+  - name: Btime
     type: timestamp
   - name: HeaderCreationTime
     type: timestamp
