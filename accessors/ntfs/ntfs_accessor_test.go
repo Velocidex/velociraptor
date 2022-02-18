@@ -29,7 +29,8 @@ func TestNTFSFilesystemAccessor(t *testing.T) {
 	abs_path, _ := filepath.Abs("../../artifacts/testdata/files/test.ntfs.dd")
 	root_path := accessors.MustNewWindowsOSPath("")
 
-	fs_accessor := NewNTFSFileSystemAccessor(scope, root_path, abs_path, "file")
+	fs_accessor := NewNTFSFileSystemAccessor(
+		scope, root_path, accessors.MustNewGenericOSPath(abs_path), "file")
 
 	globber := glob.NewGlobber()
 	globber.Add(accessors.MustNewWindowsOSPath("/*"))
@@ -80,8 +81,10 @@ func TestNTFSFilesystemAccessorRemapping(t *testing.T) {
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
 	abs_path, _ := filepath.Abs("../../artifacts/testdata/files/test.ntfs.dd")
-	c_fs_accessor := NewNTFSFileSystemAccessor(scope, root_path, abs_path, "file")
-	d_fs_accessor := NewNTFSFileSystemAccessor(scope, root_path, abs_path, "file")
+	c_fs_accessor := NewNTFSFileSystemAccessor(
+		scope, root_path, accessors.MustNewGenericOSPath(abs_path), "file")
+	d_fs_accessor := NewNTFSFileSystemAccessor(
+		scope, root_path, accessors.MustNewGenericOSPath(abs_path), "file")
 
 	// Mount the ntfs accessors on the C and D devices
 	mount_fs.AddMapping(

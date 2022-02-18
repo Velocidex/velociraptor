@@ -22,6 +22,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	pe "www.velocidex.com/golang/go-pe"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
@@ -30,8 +31,8 @@ import (
 )
 
 type _PEFunctionArgs struct {
-	Filename string `vfilter:"required,field=file,doc=The PE file to open."`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Filename *accessors.OSPath `vfilter:"required,field=file,doc=The PE file to open."`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
 }
 
 type _PEFunction struct{}

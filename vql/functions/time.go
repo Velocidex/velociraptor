@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"www.velocidex.com/golang/vfilter/protocols"
 	"www.velocidex.com/golang/vfilter/types"
 
 	"github.com/Velocidex/ordereddict"
@@ -493,6 +494,41 @@ func (self _TimeEqInt) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return ok
 }
 
+type _TimeAssociative struct{}
+
+// Filter some method calls to be more useful.
+func (self _TimeAssociative) Associative(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
+	a_time, ok := utils.IsTime(a)
+	if !ok {
+		return &vfilter.Null{}, false
+	}
+
+	method, ok := b.(string)
+	if !ok {
+		return &vfilter.Null{}, false
+	}
+
+	if method == "String" {
+		return a_time.UTC().Format(time.RFC3339), true
+	}
+
+	return protocols.DefaultAssociative{}.Associative(scope, a, method)
+}
+
+func (self _TimeAssociative) Applicable(a vfilter.Any, b vfilter.Any) bool {
+	_, a_ok := utils.IsTime(a)
+	if !a_ok {
+		return false
+	}
+
+	_, ok := b.(string)
+	return ok
+}
+
+func (self _TimeAssociative) GetMembers(scope vfilter.Scope, a vfilter.Any) []string {
+	return protocols.DefaultAssociative{}.GetMembers(scope, a)
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&_Timestamp{})
 	vql_subsystem.RegisterProtocol(&_TimeLt{})
@@ -502,5 +538,6 @@ func init() {
 	vql_subsystem.RegisterProtocol(&_TimeLtString{})
 	vql_subsystem.RegisterProtocol(&_TimeGtString{})
 	vql_subsystem.RegisterProtocol(&_TimeEq{})
+	vql_subsystem.RegisterProtocol(&_TimeAssociative{})
 	vql_subsystem.RegisterProtocol(&_TimeEqInt{})
 }

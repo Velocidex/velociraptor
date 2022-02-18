@@ -146,6 +146,15 @@ func (self *OSPath) Clear() *OSPath {
 	}
 }
 
+func (self *OSPath) Delegate(scope vfilter.Scope) (*OSPath, error) {
+	accessor, err := GetAccessor(self.DelegateAccessor(), scope)
+	if err != nil {
+		return nil, err
+	}
+
+	return accessor.ParsePath(self.DelegatePath())
+}
+
 func (self *OSPath) MarshalJSON() ([]byte, error) {
 	return json.Marshal(self.String())
 }

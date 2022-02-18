@@ -101,4 +101,12 @@ FROM scope()
    "Notepad.exe"
   ]
  }
+]LET OSPath = pathspec(parse='''C:\Users\test\desktop.ini''', path_type="windows")[]SELECT OSPath, OSPath.Components[0] AS Drive, OSPath.Components[-2] AS UserName, OSPath[:-1] AS HomeDirectory, OSPath[1:] AS DriveRelative FROM scope()[
+ {
+  "OSPath": "C:\\Users\\test\\desktop.ini",
+  "Drive": "C:",
+  "UserName": "test",
+  "HomeDirectory": "C:\\Users\\test",
+  "DriveRelative": "Users\\test\\desktop.ini"
+ }
 ]

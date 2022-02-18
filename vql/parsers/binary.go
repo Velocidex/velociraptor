@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
@@ -15,11 +16,11 @@ import (
 // VQL bindings to binary parsing.
 
 type ParseBinaryFunctionArg struct {
-	Filename string `vfilter:"required,field=filename,doc=Binary file to open."`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	Profile  string `vfilter:"optional,field=profile,doc=Profile to use (see https://github.com/Velocidex/vtypes)."`
-	Struct   string `vfilter:"required,field=struct,doc=Name of the struct in the profile to instantiate."`
-	Offset   int64  `vfilter:"optional,field=offset,doc=Start parsing from this offset"`
+	Filename *accessors.OSPath `vfilter:"required,field=filename,doc=Binary file to open."`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Profile  string            `vfilter:"optional,field=profile,doc=Profile to use (see https://github.com/Velocidex/vtypes)."`
+	Struct   string            `vfilter:"required,field=struct,doc=Name of the struct in the profile to instantiate."`
+	Offset   int64             `vfilter:"optional,field=offset,doc=Start parsing from this offset"`
 }
 type ParseBinaryFunction struct{}
 

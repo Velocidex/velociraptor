@@ -31,17 +31,17 @@ import (
 )
 
 type NTFSFunctionArgs struct {
-	Device    string `vfilter:"required,field=device,doc=The device file to open. This may be a full path - we will figure out the device automatically."`
-	Accessor  string `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	Inode     string `vfilter:"optional,field=inode,doc=The MFT entry to parse in inode notation (5-144-1)."`
-	MFT       int64  `vfilter:"optional,field=mft,doc=The MFT entry to parse."`
-	MFTOffset int64  `vfilter:"optional,field=mft_offset,doc=The offset to the MFT entry to parse."`
+	Device    *accessors.OSPath `vfilter:"required,field=device,doc=The device file to open. This may be a full path - we will figure out the device automatically."`
+	Accessor  string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Inode     string            `vfilter:"optional,field=inode,doc=The MFT entry to parse in inode notation (5-144-1)."`
+	MFT       int64             `vfilter:"optional,field=mft,doc=The MFT entry to parse."`
+	MFTOffset int64             `vfilter:"optional,field=mft_offset,doc=The offset to the MFT entry to parse."`
 }
 
 type NTFSModel struct {
 	*ntfs.NTFSFileInformation
 
-	Device string
+	Device *accessors.OSPath
 }
 
 type NTFSFunction struct{}
@@ -77,7 +77,7 @@ func (self NTFSFunction) Call(
 	}
 
 	device, accessor, err := readers.GetRawDeviceAndAccessor(
-		arg.Device, arg.Accessor)
+		scope, arg.Device, arg.Accessor)
 	if err != nil {
 		scope.Log("parse_ntfs: %v", err)
 		return &vfilter.Null{}
@@ -222,7 +222,7 @@ func (self NTFSI30ScanPlugin) Call(
 		}
 
 		device, accessor, err := readers.GetRawDeviceAndAccessor(
-			arg.Device, arg.Accessor)
+			scope, arg.Device, arg.Accessor)
 		if err != nil {
 			scope.Log("parse_ntfs_i30: %v", err)
 			return
@@ -299,7 +299,7 @@ func (self NTFSRangesPlugin) Call(
 		}
 
 		device, accessor, err := readers.GetRawDeviceAndAccessor(
-			arg.Device, arg.Accessor)
+			scope, arg.Device, arg.Accessor)
 		if err != nil {
 			scope.Log("parse_ntfs_ranges: %v", err)
 			return

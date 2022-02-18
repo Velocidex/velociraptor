@@ -8,6 +8,10 @@ LET PARSE_TZ <= "Australia/Brisbane"[]LET DEBUG <= TRUE[]SELECT timestamp(string
        -- This is in UTC time because timezone is specified.
        timestamp(string="2021-10-01T10:53:32Z"),
 
+       -- Formatting time as String produced RFC3339 encoding.
+       format(format="The time is %s",
+              args=timestamp(string='March 3 2019').String),
+
        -- Test epoch as second, ms and us
        timestamp(epoch=1630414425) AS Time1,
        timestamp(epoch=1630414425000) AS Time2,
@@ -25,6 +29,7 @@ FROM scope()
   "timestamp(string='07/25/2019 5pm')": "2019-07-25T02:00:05Z",
   "timestamp(string=\"2021-10-01T10:53:32\")": "2021-10-01T00:53:32Z",
   "timestamp(string=\"2021-10-01T10:53:32Z\")": "2021-10-01T10:53:32Z",
+  "format(format=\"The time is %s\", args=timestamp(string='March 3 2019').String)": "The time is 2019-03-02T14:00:00Z",
   "Time1": "2021-08-31T12:53:45Z",
   "Time2": "2021-08-31T12:53:45Z",
   "Time3": "2021-08-31T12:53:45Z",

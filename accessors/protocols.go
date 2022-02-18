@@ -6,6 +6,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/protocols"
 )
 
 type _BoolOSPath struct{}
@@ -104,9 +105,79 @@ func (self _AddOSPath) Add(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) vf
 	return a_os_path.Append(b_os_path.Components...)
 }
 
+type _AssociativeOSPath struct{}
+
+// Filter some method calls to be more useful.
+func (self _AssociativeOSPath) Applicable(a vfilter.Any, b vfilter.Any) bool {
+	_, ok := a.(*OSPath)
+	if !ok {
+		return false
+	}
+	switch b.(type) {
+	case []*int64, string, int64:
+		return true
+	}
+	return false
+}
+
+func (self _AssociativeOSPath) Associative(
+	scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
+	a_os_path, ok := a.(*OSPath)
+	if !ok {
+		return &vfilter.Null{}, false
+	}
+
+	length := int64(len(a_os_path.Components))
+
+	switch t := b.(type) {
+	case []*int64:
+		first_item := int64(0)
+		if t[0] != nil {
+			first_item = *t[0]
+		}
+
+		second_item := length
+		if t[1] != nil {
+			second_item = *t[1]
+		}
+
+		if first_item < 0 {
+			first_item += length
+		}
+
+		if second_item < 0 {
+			second_item += length
+		}
+
+		if second_item <= first_item {
+			return a_os_path.Clear(), true
+		}
+
+		return a_os_path.Clear().Append(
+			a_os_path.Components[first_item:second_item]...), true
+
+	case int64:
+		if t < 0 {
+			t += length
+		}
+		if t < 0 || t > length {
+			return &vfilter.Null{}, true
+		}
+		return a_os_path.Components[t], true
+
+	default:
+		return protocols.DefaultAssociative{}.Associative(scope, a, b)
+	}
+}
+
+func (self _AssociativeOSPath) GetMembers(scope vfilter.Scope, a vfilter.Any) []string {
+	return protocols.DefaultAssociative{}.GetMembers(scope, a)
+}
+
 func init() {
 	vql_subsystem.RegisterProtocol(&_BoolOSPath{})
 	vql_subsystem.RegisterProtocol(&_EqualOSPath{})
 	vql_subsystem.RegisterProtocol(&_AddOSPath{})
 	vql_subsystem.RegisterProtocol(&_RegexOSPath{})
+	vql_subsystem.RegisterProtocol(&_AssociativeOSPath{})
 }

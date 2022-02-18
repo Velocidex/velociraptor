@@ -61,3 +61,12 @@ Queries:
      shadow_path.Basename,
      shadow_path.Components
     FROM scope()
+
+  # Handle paths with subscripts
+  - LET OSPath = pathspec(parse='''C:\Users\test\desktop.ini''', path_type="windows")
+  - SELECT OSPath,
+      OSPath.Components[0] AS Drive,
+      OSPath.Components[-2] AS UserName,
+      OSPath[:-1] AS HomeDirectory,
+      OSPath[1:] AS DriveRelative
+    FROM scope()

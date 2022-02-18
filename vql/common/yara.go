@@ -61,7 +61,7 @@ type YaraResult struct {
 type YaraScanPluginArgs struct {
 	Rules        string   `vfilter:"required,field=rules,doc=Yara rules in the yara DSL."`
 	Files        []string `vfilter:"required,field=files,doc=The list of files to scan."`
-	Accessor     string   `vfilter:"optional,field=accessor,doc=Accessor (e.g. NTFS)"`
+	Accessor     string   `vfilter:"optional,field=accessor,doc=Accessor (e.g. ntfs,file)"`
 	Context      int      `vfilter:"optional,field=context,doc=How many bytes to include around each hit"`
 	Start        uint64   `vfilter:"optional,field=start,doc=The start offset to scan"`
 	End          uint64   `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`

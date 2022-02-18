@@ -133,9 +133,9 @@ SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Offse
  {
   "Rule": "cobalt_strike_beacon",
   "Hash": {
-   "MD5": "22f974419db4a1efb8be91077a747f97",
-   "SHA1": "45a9490a7437c44d6ad8ec33bdac3b16c51818fc",
-   "SHA256": "ab7bb34cc47c33a6d302c56da83d145406c73da6c671beefbbd49b3afc6eea07"
+   "MD5": "81d9b0a5308f6e46e06567ef9b889496",
+   "SHA1": "ba4a435cff1897ac653b4c6af43c40b4d01c154c",
+   "SHA256": "2227d7bd3c7a36a4d1d103e41df9a18798bf0d22b3e6357ee689d320fd318a24"
   },
   "Offset": 0,
   "Xor": "0x2e",
@@ -198,9 +198,9 @@ SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Offse
  {
   "Rule": "cobalt_strike_beacon",
   "Hash": {
-   "MD5": "22f974419db4a1efb8be91077a747f97",
-   "SHA1": "45a9490a7437c44d6ad8ec33bdac3b16c51818fc",
-   "SHA256": "ab7bb34cc47c33a6d302c56da83d145406c73da6c671beefbbd49b3afc6eea07"
+   "MD5": "81d9b0a5308f6e46e06567ef9b889496",
+   "SHA1": "ba4a435cff1897ac653b4c6af43c40b4d01c154c",
+   "SHA256": "2227d7bd3c7a36a4d1d103e41df9a18798bf0d22b3e6357ee689d320fd318a24"
   },
   "Offset": 11001,
   "Xor": "0x69",
