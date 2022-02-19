@@ -9,7 +9,7 @@
         "ace-builds": "^1.4.12",
         "axios": ">=0.25.0",
         "bootstrap": "^4.5.2",
-        "cacache": "^15.0.6",
+        "cacache": "^15.3.0",
         "chokidar": "^3.5.1",
         "classnames": "^2.2.6",
         "csv-parse": "4.16.3",
