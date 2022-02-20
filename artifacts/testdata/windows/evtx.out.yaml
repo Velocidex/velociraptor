@@ -356,13 +356,13 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "SourceIP": "null",
   "Description": "LOGOFF_DISCONNECT"
  }
-]SELECT ClearedLog,Message FROM Artifact.Windows.EventLogs.Cleared()[
+]SELECT ClearedLog, Message =~ "The audit log was cleared." FROM Artifact.Windows.EventLogs.Cleared()[
  {
   "ClearedLog": "Security",
-  "Message": "The audit log was cleared.\nSubject:\n\tSecurity ID:\tS-1-5-21-3005360995-2679786526-1014945790-500\n\tAccount Name:\tpacker\n\tDomain Name:\tpkrvmuu4t59clup\n\tLogon ID:\t173272\r\n"
+  "Message =~ \"The audit log was cleared.\"": true
  },
  {
   "ClearedLog": "System",
-  "Message": "Log clear\r\n"
+  "Message =~ \"The audit log was cleared.\"": false
  }
 ]
