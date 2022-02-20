@@ -113,14 +113,14 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
  {
   "FullPath": "\\\\.\\C:\\ones.bin"
  }
-]SELECT * FROM parse_mft(filename="C:/$MFT", accessor="ntfs") WHERE FullPath =~ 'Hello world'[
+]SELECT * FROM parse_mft(filename="C:/$MFT", accessor="ntfs") WHERE FullPath =~ 'Hello world' ORDER BY FullPath[
  {
   "EntryNumber": 46,
   "SequenceNumber": 1,
   "InUse": true,
   "ParentEntryNumber": 45,
   "ParentSequenceNumber": 1,
-  "FullPath": "/Folder A/Folder B/Hello world text document.txt:goodbye.txt",
+  "FullPath": "/Folder A/Folder B/Hello world text document.txt",
   "FileName": "Hello world text document.txt",
   "FileNames": [
    "Hello world text document.txt"
@@ -149,7 +149,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "InUse": true,
   "ParentEntryNumber": 45,
   "ParentSequenceNumber": 1,
-  "FullPath": "/Folder A/Folder B/Hello world text document.txt",
+  "FullPath": "/Folder A/Folder B/Hello world text document.txt:goodbye.txt",
   "FileName": "Hello world text document.txt",
   "FileNames": [
    "Hello world text document.txt:goodbye.txt"
