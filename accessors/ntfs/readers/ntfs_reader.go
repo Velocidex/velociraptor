@@ -115,6 +115,9 @@ func (self *NTFSCachedContext) Close() {
 }
 
 func (self *NTFSCachedContext) _CloseWithLock() {
+	if self.ntfs_ctx != nil {
+		self.ntfs_ctx.Close()
+	}
 	self.paged_reader.Close()
 }
 

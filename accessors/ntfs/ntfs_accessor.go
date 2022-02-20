@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -225,6 +226,7 @@ func (self *NTFSFileSystemAccessor) ReadDirWithOSPath(
 		r := recover()
 		if r != nil {
 			fmt.Printf("PANIC %v\n", r)
+			debug.PrintStack()
 			err, _ = r.(error)
 		}
 	}()
@@ -324,6 +326,7 @@ func (self *readAdapter) Read(buf []byte) (res int, err error) {
 		r := recover()
 		if r != nil {
 			fmt.Printf("PANIC %v\n", r)
+			debug.PrintStack()
 			err, _ = r.(error)
 		}
 	}()
@@ -377,6 +380,7 @@ func (self *NTFSFileSystemAccessor) OpenWithOSPath(
 		r := recover()
 		if r != nil {
 			fmt.Printf("PANIC %v\n", r)
+			debug.PrintStack()
 			err, _ = r.(error)
 		}
 	}()
@@ -469,6 +473,7 @@ func (self *NTFSFileSystemAccessor) LstatWithOSPath(
 		r := recover()
 		if r != nil {
 			fmt.Printf("PANIC %v\n", r)
+			debug.PrintStack()
 			err, _ = r.(error)
 		}
 	}()

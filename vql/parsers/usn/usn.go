@@ -50,6 +50,7 @@ func (self USNPlugin) Call(
 			scope.Log("parse_usn: %v", err)
 			return
 		}
+		defer ntfs_ctx.Close()
 
 		for item := range ntfs.ParseUSN(ctx, ntfs_ctx, arg.StartUSN) {
 			output_chan <- makeUSNRecord(item)

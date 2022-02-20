@@ -88,6 +88,7 @@ func (self NTFSFunction) Call(
 		scope.Log("parse_ntfs: GetNTFSContext %v", err)
 		return &vfilter.Null{}
 	}
+	defer ntfs_ctx.Close()
 
 	if ntfs_ctx == nil || ntfs_ctx.Boot == nil {
 		scope.Log("parse_ntfs: invalid context")
@@ -225,6 +226,7 @@ func (self NTFSI30ScanPlugin) Call(
 			scope.Log("parse_ntfs_i30: %v", err)
 			return
 		}
+		defer ntfs_ctx.Close()
 
 		if arg.MFTOffset > 0 {
 			arg.MFT = arg.MFTOffset / ntfs_ctx.Boot.ClusterSize()
@@ -302,6 +304,7 @@ func (self NTFSRangesPlugin) Call(
 			scope.Log("parse_ntfs_ranges: %v", err)
 			return
 		}
+		defer ntfs_ctx.Close()
 
 		if arg.MFTOffset > 0 {
 			mft_idx = arg.MFTOffset / ntfs_ctx.Boot.ClusterSize()
