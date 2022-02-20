@@ -359,7 +359,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
 ]SELECT ClearedLog,Message FROM Artifact.Windows.EventLogs.Cleared()[
  {
   "ClearedLog": "Security",
-  "Message": "The audit log was cleared.\nSubject:\n\tSecurity ID:\tS-1-5-21-1247236853-2529277569-3862203895-500\n\tAccount Name:\tpacker\n\tDomain Name:\tpkrvmur49jbaxn8\n\tLogon ID:\t544611\r\n"
+  "Message": "The audit log was cleared.\nSubject:\n\tSecurity ID:\tS-1-5-21-3005360995-2679786526-1014945790-500\n\tAccount Name:\tpacker\n\tDomain Name:\tpkrvmuu4t59clup\n\tLogon ID:\t173272\r\n"
  },
  {
   "ClearedLog": "System",
