@@ -116,13 +116,23 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
 ]SELECT * FROM parse_mft(filename="C:/$MFT", accessor="ntfs") WHERE FullPath =~ 'Hello world'[
  {
   "EntryNumber": 46,
+  "SequenceNumber": 1,
   "InUse": true,
   "ParentEntryNumber": 45,
-  "FullPath": "Folder A/Folder B/Hello world text document.txt",
+  "ParentSequenceNumber": 1,
+  "FullPath": "/Folder A/Folder B/Hello world text document.txt:goodbye.txt",
   "FileName": "Hello world text document.txt",
+  "FileNames": [
+   "Hello world text document.txt"
+  ],
+  "FileNameTypes": "POSIX",
   "FileSize": 12,
   "ReferenceCount": 1,
   "IsDir": false,
+  "HasADS": true,
+  "SI_Lt_FN": false,
+  "Copied": false,
+  "SIFlags": "2080 (ARCHIVE,COMPRESSED)",
   "Created0x10": "2018-09-24T07:55:29.7664719Z",
   "Created0x30": "2018-09-24T07:55:29.7664719Z",
   "LastModified0x10": "2018-09-24T07:56:35.3135567Z",
@@ -130,12 +140,42 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "LastRecordChange0x10": "2018-09-24T07:56:35.3135567Z",
   "LastRecordChange0x30": "2018-09-24T07:55:29.7664719Z",
   "LastAccess0x10": "2018-09-24T07:56:35.3135567Z",
-  "LastAccess0x30": "2018-09-24T07:55:29.7664719Z"
+  "LastAccess0x30": "2018-09-24T07:55:29.7664719Z",
+  "LogFileSeqNum": 1096672
+ },
+ {
+  "EntryNumber": 46,
+  "SequenceNumber": 1,
+  "InUse": true,
+  "ParentEntryNumber": 45,
+  "ParentSequenceNumber": 1,
+  "FullPath": "/Folder A/Folder B/Hello world text document.txt",
+  "FileName": "Hello world text document.txt",
+  "FileNames": [
+   "Hello world text document.txt:goodbye.txt"
+  ],
+  "FileNameTypes": "POSIX",
+  "FileSize": 12,
+  "ReferenceCount": 1,
+  "IsDir": false,
+  "HasADS": true,
+  "SI_Lt_FN": false,
+  "Copied": false,
+  "SIFlags": "2080 (ARCHIVE,COMPRESSED)",
+  "Created0x10": "2018-09-24T07:55:29.7664719Z",
+  "Created0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastModified0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastModified0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastRecordChange0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastRecordChange0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastAccess0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastAccess0x30": "2018-09-24T07:55:29.7664719Z",
+  "LogFileSeqNum": 1096672
  }
 ]SELECT parse_ntfs(device="C:/$MFT", inode="46-128-0", accessor="ntfs") FROM scope()[
  {
   "parse_ntfs(device=\"C:/$MFT\", inode=\"46-128-0\", accessor=\"ntfs\")": {
-   "FullPath": "Folder A/Folder B/Hello world text document.txt",
+   "FullPath": "/Folder A/Folder B/Hello world text document.txt",
    "MFTID": 46,
    "Size": 12,
    "Allocated": true,
