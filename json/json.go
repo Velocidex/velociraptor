@@ -4,11 +4,14 @@ package json
 
 import (
 	"bytes"
+	"context"
 	"reflect"
 
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/protocols"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 var (
@@ -69,6 +72,16 @@ func MarshalJSONDict(v interface{}, opts *json.EncOpts) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func MarshalLazyFunctions(v interface{}, opts *json.EncOpts) ([]byte, error) {
+	lazy_expr, ok := v.(types.LazyExpr)
+	if ok {
+		return json.MarshalWithOptions(
+			lazy_expr.Reduce(context.Background()), opts)
+	}
+	return nil, json.EncoderCallbackSkip
+}
+
 func init() {
 	RegisterCustomEncoder(ordereddict.NewDict(), MarshalJSONDict)
+	RegisterCustomEncoder(&protocols.LazyFunctionWrapper{}, MarshalLazyFunctions)
 }
