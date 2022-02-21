@@ -29,35 +29,4 @@ SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFi
   "ServiceName": "TestingDetection1",
   "Source": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
  }
-]SELECT EventID, Channel, Message=~ 'Clear',Source FROM Artifact.Windows.EventLogs.Cleared( SearchVSS=True)[
- {
-  "EventID": 104,
-  "Channel": "System",
-  "Message =~ 'Clear'": true,
-  "Source": "\\\\.\\C:"
- },
- {
-  "EventID": 1102,
-  "Channel": "Security",
-  "Message =~ 'Clear'": true,
-  "Source": "\\\\.\\C:"
- },
- {
-  "EventID": 104,
-  "Channel": "Setup",
-  "Message =~ 'Clear'": true,
-  "Source": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
- },
- {
-  "EventID": 104,
-  "Channel": "Application",
-  "Message =~ 'Clear'": true,
-  "Source": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
- },
- {
-  "EventID": 104,
-  "Channel": "System",
-  "Message =~ 'Clear'": true,
-  "Source": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
- }
 ]

@@ -10,9 +10,5 @@ Queries:
   # Find COMSPEC service VSS test - should show two services created,
   # even though the logs were cleared.
   - SELECT EventID,ServiceName,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec(
-       EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx",
-       SearchVSS=True)
-
-  # Find cleared event logs - should show 2 times.
-  - SELECT EventID, Channel, Message=~ 'Clear',Source FROM Artifact.Windows.EventLogs.Cleared(
-       SearchVSS=True)
+          EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx",
+          SearchVSS=True)
