@@ -984,6 +984,13 @@
     type: string
     required: true
   category: basic
+- name: entropy
+  description: Calculates shannon scale entropy of a string.
+  type: Function
+  args:
+  - name: string
+    type: string
+    required: true
 - name: enumerate
   description: |
     Collect all the items in each group by bin.

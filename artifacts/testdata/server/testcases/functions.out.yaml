@@ -64,4 +64,8 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
  {
   "regex_transform(source=\"Hello world\", map=dict(`^Hello`=\"Goodbye\", `world`=\"Space\"), key=\"A\")": "Goodbye Space"
  }
+]SELECT entropy(string="Hello world") FROM scope()[
+ {
+  "entropy(string=\"Hello world\")": 2.84
+ }
 ]
