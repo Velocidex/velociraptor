@@ -31,3 +31,6 @@ Queries:
         RemoteConnectionManager= srcDir + '/artifacts/testdata/files/RDPAuth_RemoteConnectionManager.evtx')
     WHERE NOT LogonType = 3
     GROUP BY EventID
+
+  # Add test for event log clearing and move from VSS test for improved speed
+  - SELECT ClearedLog,Message FROM Artifact.Windows.EventLogs.Cleared()

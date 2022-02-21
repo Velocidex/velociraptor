@@ -45,6 +45,7 @@ jobs:
         echo Hello > C:\hello.txt
         echo HelloADS > C:\hello.txt:myads
         fsutil file setshortname C:\hello.txt hi.txt
+        wevtutil.exe cl System
         sc.exe create TestingDetection1 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 1"
         echo "VSStest" > c:\Users\test.txt
         echo "VSStest2" > c:\Users\test2.txt
