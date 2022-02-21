@@ -199,6 +199,7 @@ require (
 // replace www.velocidex.com/golang/go-ese => /home/mic/projects/go-ese
 // replace github.com/Velocidex/ordereddict => /home/mic/projects/ordereddict
 // replace github.com/Velocidex/yaml/v2 => /home/mic/projects/yaml
+// replace www.velocidex.com/golang/go-prefetch => /home/mic/projects/go-prefetch
 
 // replace github.com/Velocidex/go-magic => /home/mic/projects/go-magic
 // replace github.com/Velocidex/go-yara => /home/mic/projects/go-yara
