@@ -1,0 +1,91 @@
+name: Windows.NTFS.ADSHunter
+author: "Matt Green - @mgreen27"
+description: |
+   This artifact hunts
+   for Alternate Data Streams on NTFS file systems. 
+   Adversaries may use NTFS file attributes for covert storage in order to evade 
+   detection. 
+   Alternate Data Streams (ADS) are additional $DATA attributes for an MFT entry in 
+   NTFS file systems. In NTFS, the primary $DATA attribute is 
+   never named but subsequent $DATA attributes must be named.
+   
+   Targetting is via mix of path globs and include / exclude regex. 
+   
+   - TargetFolder is a folder glob: e.g C:\, C:\Users\*\Downloads that the user wishes 
+   to recursively search.  
+   - AdsName is name in glob format: e.g *, Zone.Identifier or Zone.*. 
+   - AdsNameExclusion - A regex value, common ADS added to exclusions have been 
+   added by default. The artifact also exlcudes NTFS system files by default.    
+   
+reference:
+  - https://attack.mitre.org/techniques/T1564/004/
+  
+type: CLIENT
+
+parameters:
+ - name: TargetFolder
+   description: Target folder to add to a glob path to recursively search for ADS. e.g C:\Users will convert to C:\Users\**\*
+   default: C:\Users
+ - name: AdsNameGlob
+   description: AdsName in glob format. e.g *, Zone.Identifier or Zone.*
+   default: '*'
+ - name: AdsNameExclusion
+   description: Regex of ADS name to exclude.
+   default: 'Zone\.Identifier|SmartScreen|WofCompressedData|encryptable|favicon|AFP_AfpInfo|OECustomProperty|Win32App_1|com\.dropbox|icasource|\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}\.(MetaData|SyncRootIdentity)'
+   type: regex
+ - name: AdsContentRegex
+   description: ADS content to search for by regex.
+   default: .
+   type: regex
+ - name: AdsContentExclusion
+   description: ADS content to exclude by regex.
+   type: regex
+ - name: MinSize
+   description: Optional - only include alternate data streams above this size in bytes.
+   type: int
+ - name: MaxSize
+   description: Optional - only include alternate data streams below this size in bytes.
+   type: int
+ - name: UploadDataStream
+   description: If selected wil upload non-resident data streams.
+   type: bool
+   
+
+sources:
+ - query: |
+      -- Collect ADS entries using glob but exclude ntfs objects that contain ads
+      LET hits = SELECT
+            split(string=Name,sep=':')[1] as AdsName,
+            Data.mft as Inode,
+            Size,
+            regex_replace(source=FullPath,re=':'+ split(string=Name,sep=':')[1] + '$',replace='') as HostObject,
+            IsDir as HostIsDir,
+            dict(Mtime=Mtime,Atime=Atime,Ctime=Ctime,Btime=Btime) as HostTimestampsSI,
+            read_file(filename=FullPath, accessor="ntfs",length=10240) as AdsContent, -- only upload first 10k of each hit
+            FullPath
+        FROM glob(globs=TargetFolder + "/**/*:" + AdsNameGlob, accessor="ntfs")
+        WHERE 
+            NOT FullPath =~ '\\$Secure|\\$Extend|\\$BadClus|\\$Bitmap|\\$UpCase'
+            AND NOT if(condition=AdsNameExclusion,
+                        then= AdsName =~ AdsNameExclusion,
+                        else= False )
+                AND if(condition=MinSize,
+                        then= Size > MinSize,
+                        else= True )
+                AND if(condition= MaxSize,
+                        then= Size < MaxSize,
+                        else= True )
+                AND AdsContent =~ AdsContentRegex
+                AND NOT if(condition=AdsContentExclusion,
+                        then= AdsContent =~ AdsContentExclusion,
+                        else= False )
+        
+      -- upload hits
+      LET upload_hits = SELECT *, 
+            upload(file=FullPath,accessor='ntfs') as Upload
+        FROM hits
+      
+      -- output rows 
+      SELECT * FROM if(condition=UploadDataStream,
+                        then= upload_hits,
+                        else= hits)
