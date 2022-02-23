@@ -59,6 +59,7 @@ parameters:
         XXXXX,MEGAcmdShell.exe,MEGAcmdShell,MEGAcmdShell
         XXXXX,pCloud.exe,pCloud.exe,pCloud cloud storage
         XXXXX,,pCloud Drive.exe,pCloud setup
+        XXXXX,mimikatz,mimikatz.exe,Top 5 tool: Mimikatz
         procdump.exe,ProcDump,procdump,Sysinternals process dump utility
         procdump64.exe,ProcDump,procdump,Sysinternals process dump utility
 
