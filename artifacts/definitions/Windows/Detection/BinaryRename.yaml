@@ -81,6 +81,10 @@ sources:
       FROM glob(globs=TargetGlob)
       WHERE
         NOT IsDir AND NOT IsLink
-        AND ( lowcase(string=VersionInformation.OriginalFilename) in bins.Original
-            OR lowcase(string=VersionInformation.OriginalFilename) in bins.Internal )
-        AND NOT lowcase(string=Name) in bins.Filename
+        AND (
+            (( lowcase(string=VersionInformation.OriginalFilename) in bins.Original
+                OR lowcase(string=VersionInformation.InternalName) in bins.Internal )
+                AND NOT lowcase(string=Name) in bins.Filename )
+        OR FullPath =~ 'C:\\\\Windows\\\\System32\\\\(osk|Magnify|Narrator|DisplaySwitch).exe$'
+            AND NOT VersionInformation.OriginalFilename =~ '^(osk|SR|ScreenMagnifier|DisplaySwitch)\.exe$'
+        )
