@@ -27,6 +27,9 @@ darwin_intel:
 darwin_m1:
 	go run make.go -v DarwinM1
 
+linux_m1:
+	go run make.go -v LinuxM1
+
 linux:
 	go run make.go -v linux
 
