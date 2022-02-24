@@ -87,5 +87,5 @@ sources:
                 OR lowcase(string=VersionInformation.InternalName) in bins.Internal )
                 AND NOT lowcase(string=Name) in bins.Filename )
         OR FullPath =~ 'C:\\\\Windows\\\\System32\\\\(osk|Magnify|Narrator|DisplaySwitch).exe$'
-            AND NOT VersionInformation.OriginalFilename =~ '^(osk|SR|ScreenMagnifier|DisplaySwitch)\.exe$'
+            AND NOT VersionInformation.OriginalFilename =~ '^(osk|SR|Narrator|ScreenMagnifier|DisplaySwitch)\.exe$'
         )
