@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -13,6 +15,13 @@ import (
 	vql_constants "www.velocidex.com/golang/velociraptor/vql/constants"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	"www.velocidex.com/golang/vfilter"
+)
+
+var (
+	ntfsCacheTotalOpened = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "ntfs_cache_total_open",
+		Help: "Total Number of times we opened the ntfs cache",
+	})
 )
 
 // The NTFS parser is responsible for extracting artifacts from
@@ -47,7 +56,6 @@ type NTFSCachedContext struct {
 	scope        vfilter.Scope
 	paged_reader *readers.AccessorReader
 	ntfs_ctx     *ntfs.NTFSContext
-	lru_size     int
 
 	// When this is closed we stop refreshing the cache. Normally
 	// only closed when the scope is destroyed.
@@ -107,6 +115,9 @@ func (self *NTFSCachedContext) Close() {
 }
 
 func (self *NTFSCachedContext) _CloseWithLock() {
+	if self.ntfs_ctx != nil {
+		self.ntfs_ctx.Close()
+	}
 	self.paged_reader.Close()
 }
 
@@ -170,6 +181,7 @@ func GetNTFSCache(scope vfilter.Scope,
 			return nil, err
 		}
 		vql_subsystem.CacheSet(scope, key, cache_ctx)
+		ntfsCacheTotalOpened.Inc()
 	}
 
 	return cache_ctx, nil

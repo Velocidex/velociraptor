@@ -5,6 +5,7 @@ Queries:
   # The FileName contains the Delegate details and the full sparse
   # map as a path.
   - LET FileName <= pathspec(
+      path_type="pathspec",
       DelegateAccessor="data", DelegatePath=MyData,
       Path=[dict(Offset=0,Length=5), dict(Offset=10,Length=5)])
 

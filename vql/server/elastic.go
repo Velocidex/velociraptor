@@ -190,6 +190,8 @@ func upload_rows(
 	// Flush any remaining rows
 	defer send_to_elastic(ctx, scope, output_chan, client, &buf)
 
+	opts := vql_subsystem.EncOptsFromScope(scope)
+
 	// Batch sending to elastic: Either
 	// when we get to chuncksize or wait
 	// time whichever comes first.
@@ -203,7 +205,7 @@ func upload_rows(
 			// FIXME: Find a better way to interleave id's
 			// to avoid collisions.
 			id = id + 3
-			err := append_row_to_buffer(ctx, scope, row, id, &buf, arg)
+			err := append_row_to_buffer(ctx, scope, row, id, &buf, arg, opts)
 			if err != nil {
 				scope.Log("elastic: %v", err)
 				continue
@@ -229,7 +231,7 @@ func append_row_to_buffer(
 	ctx context.Context,
 	scope vfilter.Scope,
 	row vfilter.Row, id int64, buf *bytes.Buffer,
-	arg *_ElasticPluginArgs) error {
+	arg *_ElasticPluginArgs, opts *json.EncOpts) error {
 
 	row_dict := vfilter.RowToDict(ctx, scope, row)
 	index := arg.Index
@@ -250,7 +252,6 @@ func append_row_to_buffer(
 			id, arg.Type, index, "\n"))
 	}
 
-	opts := vql_subsystem.EncOptsFromScope(scope)
 	data, err := json.MarshalWithOptions(row_dict, opts)
 	if err != nil {
 		return err

@@ -10,8 +10,19 @@ import (
 )
 
 func EncOptsFromScope(scope vfilter.Scope) *json.EncOpts {
-	// Default timezone is UTC
-	location := time.UTC
+	// Default formatter should be very fast.
+	cb := func(v interface{}, opts *json.EncOpts) ([]byte, error) {
+		switch t := v.(type) {
+		case time.Time:
+			// Marshal the time in the UTC timezone by default.
+			return t.UTC().MarshalJSON()
+
+		case *time.Time:
+			return t.UTC().MarshalJSON()
+
+		}
+		return nil, json.EncoderCallbackSkip
+	}
 
 	// If the scope contains a TZ variable, then we will use that
 	// instead.
@@ -23,39 +34,40 @@ func EncOptsFromScope(scope vfilter.Scope) *json.EncOpts {
 			// ignore it.
 			l, err := time.LoadLocation(location_str)
 			if err == nil {
-				location = l
+				cb = func(v interface{}, opts *json.EncOpts) ([]byte, error) {
+					switch t := v.(type) {
+					case time.Time:
+						// Marshal the time in the desired timezone.
+						return t.In(l).MarshalJSON()
+
+					case *time.Time:
+						return t.In(l).MarshalJSON()
+
+					}
+					return nil, json.EncoderCallbackSkip
+				}
 			}
 		}
 	}
 
-	cb := func(v interface{}, opts *json.EncOpts) ([]byte, error) {
-		switch t := v.(type) {
-		case time.Time:
-			// Marshal the time in the desired timezone.
-			return t.In(location).MarshalJSON()
-
-		case *time.Time:
-			return t.In(location).MarshalJSON()
-
-		}
-		return nil, json.EncoderCallbackSkip
-	}
-
 	// Override time handling to support scope timezones
 	return vjson.NewEncOpts().
-		WithCallback(time.Time{}, cb)
+		WithCallback(time.Time{}, cb).
+		WithCallback(&time.Time{}, cb)
 }
 
 // Utilities for encoding json via the vfilter API.
 func MarshalJson(scope vfilter.Scope) vfilter.RowEncoder {
+	opts := EncOptsFromScope(scope)
 	return func(rows []vfilter.Row) ([]byte, error) {
-		return json.MarshalWithOptions(rows, EncOptsFromScope(scope))
+		return json.MarshalWithOptions(rows, opts)
 	}
 }
 
 func MarshalJsonIndent(scope vfilter.Scope) vfilter.RowEncoder {
+	opts := EncOptsFromScope(scope)
 	return func(rows []vfilter.Row) ([]byte, error) {
-		b, err := json.MarshalWithOptions(rows, EncOptsFromScope(scope))
+		b, err := json.MarshalWithOptions(rows, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -74,8 +86,7 @@ func MarshalJsonl(scope vfilter.Scope) vfilter.RowEncoder {
 	return func(rows []vfilter.Row) ([]byte, error) {
 		out := bytes.Buffer{}
 		for _, row := range rows {
-			serialized, err := json.MarshalWithOptions(
-				row, options)
+			serialized, err := json.MarshalWithOptions(row, options)
 			if err != nil {
 				return nil, err
 			}

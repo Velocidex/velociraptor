@@ -67,6 +67,28 @@ func parseOSPath(ctx context.Context,
 	}
 }
 
+func ParseOSPath(ctx context.Context,
+	scope types.Scope, accessor FileSystemAccessor,
+	value interface{}) (*OSPath, error) {
+
+	switch t := value.(type) {
+	case types.LazyExpr:
+		return ParseOSPath(ctx, scope, accessor, t.ReduceWithScope(ctx, scope))
+
+	case *OSPath:
+		return t, nil
+
+	case string:
+		return accessor.ParsePath(t)
+
+	case []uint8:
+		return accessor.ParsePath(string(t))
+
+	default:
+		return nil, fmt.Errorf("Expecting a path arg type, not %T", t)
+	}
+}
+
 func init() {
 	arg_parser.RegisterParser(&OSPath{}, parseOSPath)
 }

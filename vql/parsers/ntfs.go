@@ -88,6 +88,7 @@ func (self NTFSFunction) Call(
 		scope.Log("parse_ntfs: GetNTFSContext %v", err)
 		return &vfilter.Null{}
 	}
+	defer ntfs_ctx.Close()
 
 	if ntfs_ctx == nil || ntfs_ctx.Boot == nil {
 		scope.Log("parse_ntfs: invalid context")
@@ -156,14 +157,6 @@ func (self MFTScanPlugin) Call(
 		}
 		defer fd.Close()
 
-		reader, err := ntfs.NewPagedReader(
-			utils.ReaderAtter{Reader: fd}, 1024, 10000)
-		if err != nil {
-			scope.Log("parse_mft: Unable to open file %s: %v",
-				arg.Filename, err)
-			return
-		}
-
 		st, err := accessor.Lstat(arg.Filename)
 		if err != nil {
 			scope.Log("parse_mft: Unable to open file %s: %v",
@@ -172,7 +165,7 @@ func (self MFTScanPlugin) Call(
 		}
 
 		for item := range ntfs.ParseMFTFile(
-			ctx, reader, st.Size(), 0x1000, 0x400) {
+			ctx, utils.ReaderAtter{Reader: fd}, st.Size(), 0x1000, 0x400) {
 			select {
 			case <-ctx.Done():
 				return
@@ -233,6 +226,7 @@ func (self NTFSI30ScanPlugin) Call(
 			scope.Log("parse_ntfs_i30: %v", err)
 			return
 		}
+		defer ntfs_ctx.Close()
 
 		if arg.MFTOffset > 0 {
 			arg.MFT = arg.MFTOffset / ntfs_ctx.Boot.ClusterSize()
@@ -310,6 +304,7 @@ func (self NTFSRangesPlugin) Call(
 			scope.Log("parse_ntfs_ranges: %v", err)
 			return
 		}
+		defer ntfs_ctx.Close()
 
 		if arg.MFTOffset > 0 {
 			mft_idx = arg.MFTOffset / ntfs_ctx.Boot.ClusterSize()

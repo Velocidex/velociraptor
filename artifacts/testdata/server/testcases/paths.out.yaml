@@ -6,6 +6,10 @@ SELECT basename(path="/foo/bar/baz", path_type='linux') FROM scope()[
  {
   "dirname(path=\"/foo/bar/baz\", path_type='linux')": "/foo/bar"
  }
+]SELECT relpath(path=pathspec(parse="/foo/bar"), base="/foo", sep="/") FROM scope()[
+ {
+  "relpath(path=pathspec(parse=\"/foo/bar\"), base=\"/foo\", sep=\"/\")": "bar"
+ }
 ]SELECT basename(path='/foo/bar/"http://www.google.com/"', path_type='generic') FROM scope()[
  {
   "basename(path='/foo/bar/\"http://www.google.com/\"', path_type='generic')": "http://www.google.com/"

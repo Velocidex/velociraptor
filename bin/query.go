@@ -23,6 +23,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -53,6 +54,9 @@ var (
 		Default("json").Enum("text", "json", "csv", "jsonl")
 
 	dump_dir = query.Flag("dump_dir", "Directory to dump output files.").
+			Default("").String()
+
+	output_file = query.Flag("output", "A file to store the output.").
 			Default("").String()
 
 	env_map = query.Flag("env", "Environment for the query.").
@@ -328,6 +332,21 @@ func doQuery() error {
 
 	ctx := InstallSignalHandler(scope)
 
+	out_fd := os.Stdout
+	if *output_file != "" {
+		out_fd, err = os.OpenFile(*output_file,
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		if err != nil {
+			return err
+		}
+		defer out_fd.Close()
+	}
+
+	start_time := time.Now()
+	defer func() {
+		scope.Log("Completed query in %v", time.Now().Sub(start_time))
+	}()
+
 	if *trace_vql_flag {
 		scope.SetTracer(log.New(os.Stderr, "VQL Trace: ", 0))
 	}
@@ -338,21 +357,21 @@ func doQuery() error {
 		for _, vql := range statements {
 			switch *format {
 			case "text":
-				table := reporting.EvalQueryToTable(ctx, scope, vql, os.Stdout)
+				table := reporting.EvalQueryToTable(ctx, scope, vql, out_fd)
 				table.Render()
 			case "json":
-				err = outputJSON(ctx, scope, vql, os.Stdout)
+				err = outputJSON(ctx, scope, vql, out_fd)
 				if err != nil {
 					return err
 				}
 
 			case "jsonl":
-				err = outputJSONL(ctx, scope, vql, os.Stdout)
+				err = outputJSONL(ctx, scope, vql, out_fd)
 				if err != nil {
 					return err
 				}
 			case "csv":
-				err = outputCSV(ctx, scope, vql, os.Stdout)
+				err = outputCSV(ctx, scope, vql, out_fd)
 				if err != nil {
 					return err
 				}

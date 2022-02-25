@@ -27,7 +27,12 @@ const (
 )
 
 var (
-	invalidTimeError = errors.New("Invalid time")
+	invalidTimeError     = errors.New("Invalid time")
+	exported_time_fields = []string{
+		"Day", "Hour", "ISOWeek", "IsDST", "IsZero", "Minute",
+		"Month", "Nanosecond", "Second", "String", "UTC",
+		"Unix", "UnixMicro", "UnixMilli", "UnixNano",
+		"Weekday", "Year", "YearDay", "Zone"}
 )
 
 type cachedTime struct {
@@ -526,7 +531,7 @@ func (self _TimeAssociative) Applicable(a vfilter.Any, b vfilter.Any) bool {
 }
 
 func (self _TimeAssociative) GetMembers(scope vfilter.Scope, a vfilter.Any) []string {
-	return protocols.DefaultAssociative{}.GetMembers(scope, a)
+	return exported_time_fields
 }
 
 func init() {

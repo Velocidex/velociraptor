@@ -95,7 +95,9 @@ func InitLogging(config_obj *config_proto.Config) error {
 }
 
 func ClearMemoryLogs() {
+	memory_log_mu.Lock()
 	memory_logs = nil
+	memory_log_mu.Unlock()
 }
 
 func GetMemoryLogs() []string {
