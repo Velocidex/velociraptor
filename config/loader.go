@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
-	"path/filepath"
 	"runtime"
 
 	"github.com/Velocidex/yaml/v2"
@@ -35,8 +34,6 @@ type validator func(self *Loader, config_obj *config_proto.Config) error
 
 type Loader struct {
 	verbose, use_writeback, required_logging bool
-
-	write_back_path string
 
 	loaders         []loader_func
 	config_mutators []config_mutator_func
@@ -338,7 +335,6 @@ func (self *Loader) Copy() *Loader {
 	return &Loader{
 		verbose:         self.verbose,
 		logger:          self.logger,
-		write_back_path: self.write_back_path,
 		loaders:         append([]loader_func{}, self.loaders...),
 		validators:      append([]validator{}, self.validators...),
 		config_mutators: append([]config_mutator_func{}, self.config_mutators...),
@@ -425,42 +421,6 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 		}
 	}
 
-	return nil
-}
-
-func (self *Loader) loadWriteback(config_obj *config_proto.Config) error {
-	// Writeback already loaded - just reuse it.
-	if config_obj.Writeback != nil {
-		return nil
-	}
-
-	existing_writeback := &config_proto.Writeback{}
-
-	filename, err := WritebackLocation(config_obj)
-	if err != nil {
-		return err
-	}
-	if !filepath.IsAbs(filename) && self.write_back_path != "" {
-		filename = filepath.Join(self.write_back_path, filename)
-	}
-
-	self.Log("Loading writeback from %v", filename)
-	data, err := ioutil.ReadFile(filename)
-
-	// Failing to read the file is not an error - the file may not
-	// exist yet.
-	if err == nil {
-		err = yaml.Unmarshal(data, existing_writeback)
-		// writeback file is invalid... Log an error and reset
-		// it otherwise the client will fail to start and
-		// break.
-		if err != nil {
-			self.Log("Writeback file is corrupt - resetting: %v", err)
-		}
-	}
-
-	// Merge the writeback with the config.
-	config_obj.Writeback = existing_writeback
 	return nil
 }
 

@@ -57,9 +57,20 @@ type Sender struct {
 	clock utils.Clock
 }
 
+func (self *Sender) CleanOnExit(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	<-ctx.Done()
+	self.urgent_buffer.Close()
+	self.ring_buffer.Close()
+}
+
 // Persistent loop to pump messages from the executor to the ring
 // buffer. This function should never exit in a real client.
-func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
+func (self *Sender) PumpExecutorToRingBuffer(
+	ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	// We should never exit from this.
 	defer self.maybeCallOnExit()
 
@@ -69,8 +80,12 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 
 	for {
 		if atomic.LoadInt32(&self.IsPaused) != 0 {
-			self.clock.Sleep(self.minPoll)
-			continue
+			select {
+			case <-ctx.Done():
+				return
+			case <-self.clock.After(self.minPoll):
+				continue
+			}
 		}
 
 		select {
@@ -149,7 +164,10 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 // to send. This also manages timing and retransmissions - blocks if
 // the server is not available. This function should never exit in a
 // real client.
-func (self *Sender) PumpRingBufferToSendMessage(ctx context.Context) {
+func (self *Sender) PumpRingBufferToSendMessage(
+	ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	// We should never exit from this.
 	defer self.maybeCallOnExit()
 
@@ -174,8 +192,7 @@ func (self *Sender) PumpRingBufferToSendMessage(ctx context.Context) {
 				// know the messages are sent so we
 				// can commit them from the ring
 				// buffer.
-				self.sendMessageList(ctx, compressed_messages,
-					false /* urgent */)
+				self.sendMessageList(ctx, compressed_messages, false /* urgent */)
 				self.ring_buffer.Commit()
 
 				// We need to make sure our memory
@@ -211,9 +228,17 @@ func (self *Sender) PumpRingBufferToSendMessage(ctx context.Context) {
 
 // The sender simply sends any server bound messages to the server. We
 // only send messages when responses are pending.
-func (self *Sender) Start(ctx context.Context) {
-	go self.PumpExecutorToRingBuffer(ctx)
-	go self.PumpRingBufferToSendMessage(ctx)
+func (self *Sender) Start(
+	ctx context.Context, wg *sync.WaitGroup) {
+
+	wg.Add(1)
+	go self.PumpExecutorToRingBuffer(ctx, wg)
+
+	wg.Add(1)
+	go self.PumpRingBufferToSendMessage(ctx, wg)
+
+	wg.Add(1)
+	go self.CleanOnExit(ctx, wg)
 }
 
 func NewSender(

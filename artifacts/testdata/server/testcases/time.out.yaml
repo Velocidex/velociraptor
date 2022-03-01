@@ -35,4 +35,8 @@ FROM scope()
   "Time3": "2021-08-31T12:53:45Z",
   "FormattedTime": "2021-08-30T08:01:28Z"
  }
+]SELECT Unix > 1630414425 FROM clock(period=60, start=0) LIMIT 1[
+ {
+  "Unix \u003e 1630414425": true
+ }
 ]

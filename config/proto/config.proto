@@ -833,9 +833,9 @@ message Config {
 
     DatastoreConfig Datastore = 6;
 
-    Writeback Writeback = 9 [(sem_type) = {
-            description: "Contents of the client's state as stored in the writeback file."
-        }];
+    // Deprecated - Should not appear in new configs and will be
+    // ignored. It is only here for backwards compatibility.
+    Writeback Writeback = 9 [deprecated=true];
 
     // Deprecated - Mail plugin setting are now provided by args.
     MailConfig Mail = 11;

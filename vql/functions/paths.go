@@ -135,7 +135,7 @@ func (self RelnameFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 type PathJoinArgs struct {
 	Components []vfilter.Any `vfilter:"required,field=components,doc=Path components to join."`
 	Sep        string        `vfilter:"optional,field=sep,doc=Separator to use (default /)"`
-	PathType   string        `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windpws)"`
+	PathType   string        `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windows')"`
 }
 
 type PathJoinFunction struct{}
@@ -188,7 +188,7 @@ func (self PathJoinFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 
 type PathSplitArgs struct {
 	Path     vfilter.Any `vfilter:"required,field=path,doc=Path to split into components."`
-	PathType string      `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windpws)"`
+	PathType string      `vfilter:"optional,field=path_type,doc=Type of path (e.g. 'windows')"`
 }
 
 type PathSplitFunction struct{}

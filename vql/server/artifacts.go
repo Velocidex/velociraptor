@@ -111,18 +111,14 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		Urgent:         arg.Urgent,
 	}
 
-	if arg.Spec == nil && arg.Env != nil {
-		spec := ordereddict.NewDict()
-		for _, name := range arg.Artifacts {
-			spec.Set(name, arg.Env)
-		}
-
-		arg.Spec = spec
-	}
-
 	if arg.Spec == nil {
-		scope.Log("collect_client: Either spec or env must be provided.")
-		return vfilter.Null{}
+		spec := ordereddict.NewDict()
+		if arg.Env != nil {
+			for _, name := range arg.Artifacts {
+				spec.Set(name, arg.Env)
+			}
+		}
+		arg.Spec = spec
 	}
 
 	err = tools.AddSpecProtobuf(config_obj, repository, scope,

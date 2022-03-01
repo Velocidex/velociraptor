@@ -838,7 +838,7 @@
     newly inserted drives, or files that have been added to removable
     drives.
 
-    ```sql
+    ```vql
     LET removable_disks = SELECT Name AS Drive, Size
     FROM glob(globs="/*", accessor="file")
     WHERE Data.Description =~ "Removable"
@@ -852,6 +852,36 @@
       period=10)
       WHERE Diff = "added"
     ```
+
+    ### Example - waiting for process exit
+
+    Although `diff()` is primarily an event query it can also be
+    useful in regular client side VQL. For example we might need to
+    wait for a process to exit before continuing. The following query
+    blocks until the process list does not contain a process matching
+    the regex.
+
+    ```vql
+    SELECT * FROM diff(key="Name", period=1, query={
+       SELECT Name FROM pslist()
+       WHERE Name =~ ProcessRegex
+    })
+    WHERE Diff =~ "removed"
+    LIMIT 1
+    ```
+
+    This query:
+
+    1. Diff will list processes every second looking for process name
+       matching the regex.
+    2. When a process is added or removed, the diff plugin will emit a
+       row
+    3. The query is only interested in a removed process
+    4. After a single removed process is found the limit is reached
+       and the query exits.
+
+    Sometimes we need to wait for a subprocess to exist if it detaches
+    from the teminal immediately but does some work in the background.
   type: Plugin
   args:
   - name: query
@@ -1275,7 +1305,7 @@
   type: Function
   args:
   - name: list
-    type: string
+    type: Any
     description: A list of items to filter
     repeated: true
     required: true
@@ -1283,7 +1313,9 @@
     type: string
     description: A regex to test each item
     repeated: true
-    required: true
+  - name: condition
+    type: string
+    description: A VQL lambda to use to filter elements
   category: basic
 - name: flatten
   description: Flatten the columns in query. If any column repeats then we repeat
@@ -2439,6 +2471,17 @@
     description: A string to lower
     required: true
   category: basic
+- name: lzxpress_decompress
+  description: |
+    Decompress an lzxpress blob.
+
+    This function is most useful when decoding prefetch files.
+  type: Function
+  args:
+  - name: data
+    type: string
+    description: The lzxpress stream (bytes)
+    required: true
 - name: magic
   description: |
     Identify a file using magic rules.
@@ -3449,7 +3492,7 @@
     description: Separator to use (default /)
   - name: path_type
     type: string
-    description: Type of path (e.g. 'windpws)
+    description: Type of path (e.g. 'windows')
   category: basic
 - name: path_split
   description: Split a path into components. Note this is more complex than just split()
@@ -3462,7 +3505,7 @@
     required: true
   - name: path_type
     type: string
-    description: Type of path (e.g. 'windpws)
+    description: Type of path (e.g. 'windows')
   category: basic
 - name: pathspec
   description: Create a structured path spec to pass to certain accessors.
@@ -3879,6 +3922,15 @@
     type: string
     description: A key for caching
   category: basic
+- name: rekey
+  description: Causes the client to rekey and regenerate a new client ID. DANGEROUS!
+    This will change the client's identity and it will appear as a new client in the
+    GUI.
+  type: Function
+  args:
+  - name: wait
+    type: int64
+    description: Wait this long before rekeying the client.
 - name: relpath
   description: Return the relative path of .
   type: Function
@@ -5315,7 +5367,7 @@
     description: Yara rules in the yara DSL.
     required: true
   - name: files
-    type: string
+    type: Any
     description: The list of files to scan.
     repeated: true
     required: true

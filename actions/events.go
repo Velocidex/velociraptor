@@ -274,12 +274,12 @@ func update_writeback(
 	config_obj *config_proto.Config,
 	event_table *actions_proto.VQLEventTable) error {
 
-	// Store the event table in the Writeback file.
-	config_copy := proto.Clone(config_obj).(*config_proto.Config)
-	event_copy := proto.Clone(event_table).(*actions_proto.VQLEventTable)
-	config_copy.Writeback.EventQueries = event_copy
+	// Read the existing writeback file - it is ok if it does not
+	// exist yet.
+	writeback, _ := config.GetWriteback(config_obj.Client)
+	writeback.EventQueries = event_table
 
-	return config.UpdateWriteback(config_copy)
+	return config.UpdateWriteback(config_obj.Client, writeback)
 }
 
 func InitializeEventTable(ctx context.Context, service_wg *sync.WaitGroup) {
