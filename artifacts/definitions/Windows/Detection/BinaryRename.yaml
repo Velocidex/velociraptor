@@ -59,6 +59,7 @@ parameters:
         XXXXX,MEGAcmdShell.exe,MEGAcmdShell,MEGAcmdShell
         XXXXX,pCloud.exe,pCloud.exe,pCloud cloud storage
         XXXXX,,pCloud Drive.exe,pCloud setup
+        XXXXX,mimikatz,mimikatz.exe,Top 5 tool: Mimikatz
         procdump.exe,ProcDump,procdump,Sysinternals process dump utility
         procdump64.exe,ProcDump,procdump,Sysinternals process dump utility
 
@@ -81,6 +82,10 @@ sources:
       FROM glob(globs=TargetGlob)
       WHERE
         NOT IsDir AND NOT IsLink
-        AND ( lowcase(string=VersionInformation.OriginalFilename) in bins.Original
-            OR lowcase(string=VersionInformation.OriginalFilename) in bins.Internal )
-        AND NOT lowcase(string=Name) in bins.Filename
+        AND (
+            (( lowcase(string=VersionInformation.OriginalFilename) in bins.Original
+                OR lowcase(string=VersionInformation.InternalName) in bins.Internal )
+                AND NOT lowcase(string=Name) in bins.Filename )
+        OR FullPath =~ 'C:\\\\Windows\\\\System32\\\\(osk|Magnify|Narrator|DisplaySwitch).exe$'
+            AND NOT VersionInformation.OriginalFilename =~ '^(osk|SR|Narrator|ScreenMagnifier|DisplaySwitch)\.exe$'
+        )

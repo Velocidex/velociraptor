@@ -3,11 +3,15 @@
 package json
 
 import (
+	"bytes"
+	"context"
 	"reflect"
 
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/protocols"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 var (
@@ -27,7 +31,9 @@ func MarshalJSONDict(v interface{}, opts *json.EncOpts) ([]byte, error) {
 		return nil, json.EncoderCallbackSkip
 	}
 
-	result := "{"
+	buf := &bytes.Buffer{}
+
+	buf.Write([]byte("{"))
 	for _, k := range self.Keys() {
 
 		// add key
@@ -36,7 +42,8 @@ func MarshalJSONDict(v interface{}, opts *json.EncOpts) ([]byte, error) {
 			continue
 		}
 
-		result += string(kEscaped) + ":"
+		buf.Write(kEscaped)
+		buf.Write([]byte(":"))
 
 		// add value
 		v, ok := self.Get(k)
@@ -52,18 +59,29 @@ func MarshalJSONDict(v interface{}, opts *json.EncOpts) ([]byte, error) {
 
 		vBytes, err := json.MarshalWithOptions(v, opts)
 		if err == nil {
-			result += string(vBytes) + ","
+			buf.Write(vBytes)
+			buf.Write([]byte(","))
 		} else {
-			result += "null,"
+			buf.Write([]byte("null,"))
 		}
 	}
 	if len(self.Keys()) > 0 {
-		result = result[0 : len(result)-1]
+		buf.Truncate(buf.Len() - 1)
 	}
-	result = result + "}"
-	return []byte(result), nil
+	buf.Write([]byte("}"))
+	return buf.Bytes(), nil
+}
+
+func MarshalLazyFunctions(v interface{}, opts *json.EncOpts) ([]byte, error) {
+	lazy_expr, ok := v.(types.LazyExpr)
+	if ok {
+		return json.MarshalWithOptions(
+			lazy_expr.Reduce(context.Background()), opts)
+	}
+	return nil, json.EncoderCallbackSkip
 }
 
 func init() {
 	RegisterCustomEncoder(ordereddict.NewDict(), MarshalJSONDict)
+	RegisterCustomEncoder(&protocols.LazyFunctionWrapper{}, MarshalLazyFunctions)
 }

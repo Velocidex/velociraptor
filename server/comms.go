@@ -497,6 +497,15 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		}
 
 		if notifier.IsClientDirectlyConnected(source) {
+
+			// Send a message that there is a client conflict.
+			journal, err := services.GetJournal()
+			if err == nil {
+				journal.PushRowsToArtifactAsync(config_obj,
+					ordereddict.NewDict().Set("ClientId", source),
+					"Server.Internal.ClientConflict")
+			}
+
 			http.Error(w, "Another Client connection exists. "+
 				"Only a single instance of the client is "+
 				"allowed to connect at the same time.",

@@ -60,3 +60,8 @@ Queries:
        `^Hello`="Goodbye",
        `world`="Space"), key="A")
     FROM scope()
+
+  # Test entropy function
+  - SELECT 
+    entropy(string="Hello world")
+    FROM scope()

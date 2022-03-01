@@ -74,13 +74,13 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 			}
 
 			path_str = string(serialized)
-			result := accessors.MustNewPathspecOSPath("")
-			result.SetPathSpec(
-				&accessors.PathSpec{
-					DelegateAccessor: arg.DelegateAccessor,
-					DelegatePath:     arg.DelegatePath,
-					Path:             path_str,
-				})
+			p := &accessors.PathSpec{
+				DelegateAccessor: arg.DelegateAccessor,
+				DelegatePath:     arg.DelegatePath,
+				Path:             path_str,
+			}
+
+			result := accessors.MustNewPathspecOSPath(p.String())
 			return result
 		}
 	}

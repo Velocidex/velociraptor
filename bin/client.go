@@ -20,8 +20,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 
+	"www.velocidex.com/golang/velociraptor/config"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
@@ -29,11 +31,14 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/tools"
 )
 
 var (
 	// Run the client.
-	client = app.Command("client", "Run the velociraptor client")
+	client            = app.Command("client", "Run the velociraptor client")
+	client_quiet_flag = client.Flag("quiet",
+		"Do not output anything to stdout/stderr").Bool()
 )
 
 func RunClient(
@@ -41,10 +46,41 @@ func RunClient(
 	wg *sync.WaitGroup,
 	config_path *string) error {
 
+	defer wg.Done()
+
 	err := checkMutex()
 	if err != nil {
 		return err
 	}
+
+	for {
+		subctx, cancel := context.WithCancel(ctx)
+		lwg := &sync.WaitGroup{}
+		lwg.Add(1)
+		go runClientOnce(subctx, lwg, config_path)
+
+		select {
+		case <-ctx.Done():
+			// Wait for the client to shutdown before we exit.
+			cancel()
+			lwg.Wait()
+			return nil
+
+		case <-tools.ClientRestart:
+			cancel()
+			// Wait for the client to shutdown before we restart it.
+			lwg.Wait()
+		}
+	}
+}
+
+func runClientOnce(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_path *string) error {
+	defer wg.Done()
+
+	lwg := &sync.WaitGroup{}
 
 	// Include the writeback in the client's configuration.
 	config_obj, err := makeDefaultConfigLoader().
@@ -64,8 +100,13 @@ func RunClient(
 
 	executor.SetTempfile(config_obj)
 
+	writeback, err := config.GetWriteback(config_obj.Client)
+	if err != nil {
+		return err
+	}
+
 	manager, err := crypto_client.NewClientCryptoManager(
-		config_obj, []byte(config_obj.Writeback.PrivateKey))
+		config_obj, []byte(writeback.PrivateKey))
 	if err != nil {
 		return err
 	}
@@ -86,46 +127,53 @@ func RunClient(
 
 	// Now start the communicator so we can talk with the server.
 	comm, err := http_comms.NewHTTPCommunicator(
+		ctx,
 		config_obj,
 		manager,
 		exe,
 		config_obj.Client.ServerUrls,
-		func() { on_error(config_obj) },
+		func() { on_error(ctx, config_obj) },
 		utils.RealClock{},
 	)
 	if err != nil {
 		return fmt.Errorf("Can not create HTTPCommunicator: %w", err)
 	}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	lwg.Add(1)
+	go comm.Run(ctx, lwg)
 
-		comm.Run(ctx)
-	}()
-
-	wg.Add(1)
+	lwg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer lwg.Done()
 		<-ctx.Done()
 
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 		logger.Info("<cyan>Interrupted!</> Shutting down\n")
 	}()
 
-	wg.Wait()
+	lwg.Wait()
 
 	return nil
+}
+
+func maybeCloseOutput() {
+	if *client_quiet_flag {
+		os.Stdout.Close()
+		os.Stderr.Close()
+	}
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		if command == client.FullCommand() {
+			maybeCloseOutput()
+
 			wg := &sync.WaitGroup{}
 			ctx, cancel := install_sig_handler()
 			defer cancel()
 
 			FatalIfError(client, func() error {
+				wg.Add(1)
 				return RunClient(ctx, wg, config_path)
 			})
 

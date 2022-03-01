@@ -29,3 +29,6 @@ Queries:
                      format="1/2/2006 3:04:05 PM") AS FormattedTime
 
     FROM scope()
+
+  # Start the clock immediately - this should not block due to LIMIT 1
+  - SELECT Unix > 1630414425 FROM clock(period=60, start=0) LIMIT 1

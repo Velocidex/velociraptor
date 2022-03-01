@@ -27,7 +27,12 @@ const (
 )
 
 var (
-	invalidTimeError = errors.New("Invalid time")
+	invalidTimeError     = errors.New("Invalid time")
+	exported_time_fields = []string{
+		"Day", "Hour", "ISOWeek", "IsDST", "IsZero", "Minute",
+		"Month", "Nanosecond", "Second", "String", "UTC",
+		"Unix", "UnixMicro", "UnixMilli", "UnixNano",
+		"Weekday", "Year", "YearDay", "Zone"}
 )
 
 type cachedTime struct {
@@ -242,7 +247,7 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 	// Empty times are allowed, they will just be set to the earliest
 	// time we have (Note this is not the epoch!).
 	if sec == 0 && dec == 0 {
-		return time.Time{}, invalidTimeError
+		return time.Time{}, nil
 	}
 
 	return time.Unix(int64(sec), int64(dec)), nil
@@ -526,7 +531,7 @@ func (self _TimeAssociative) Applicable(a vfilter.Any, b vfilter.Any) bool {
 }
 
 func (self _TimeAssociative) GetMembers(scope vfilter.Scope, a vfilter.Any) []string {
-	return protocols.DefaultAssociative{}.GetMembers(scope, a)
+	return exported_time_fields
 }
 
 func init() {

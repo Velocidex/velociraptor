@@ -101,25 +101,24 @@ func (wc WriteCounter) PrintProgress() {
 	fmt.Printf("\rDownloading %s ... %s complete", wc.name, humanize.Bytes(wc.Total))
 }
 
-var (
-	// Set to true when the client gracefully exits.
-	exiting = false
-)
-
 // This is only called when there is something very wrong! If the
 // executor loop somehow exits due to panic or a bug we will not be
 // able to communicate with the endpoint. We have to hard exit here to
 // ensure the process can be restarted. This is a last resort!
-func on_error(config_obj *config_proto.Config) {
+func on_error(ctx context.Context, config_obj *config_proto.Config) {
+	select {
+
 	// It's ok we are supposed to exit.
-	if exiting {
+	case <-ctx.Done():
 		return
+
+	default:
+		// Log the error.
+		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+		logger.Error("Exiting hard due to bug or KillKillKill! This should not happen!")
+
+		os.Exit(-1)
 	}
-
-	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-	logger.Error("Exiting hard due to bug or KillKillKill! This should not happen!")
-
-	os.Exit(-1)
 }
 
 func install_sig_handler() (context.Context, context.CancelFunc) {
@@ -135,7 +134,6 @@ func install_sig_handler() (context.Context, context.CancelFunc) {
 		select {
 		case <-quit:
 			// Ordered shutdown now.
-			exiting = true
 			cancel()
 
 		case <-ctx.Done():

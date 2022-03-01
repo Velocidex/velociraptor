@@ -274,9 +274,8 @@ func (self *ClientExecutor) processRequestPlugin(
 		return
 	}
 
+	// This action is deprecated now.
 	if req.UpdateForeman != nil {
-		actions.UpdateForeman{}.Run(
-			config_obj, ctx, responder, req.UpdateForeman)
 		return
 	}
 

@@ -97,7 +97,9 @@ func (self *ServicesTestSuite) TestInterrogationService() {
 
 	// Check the label is set on the client.
 	labeler := services.GetLabeler()
-	assert.True(self.T(), labeler.IsLabelSet(self.ConfigObj, self.client_id, "Foo"))
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		return labeler.IsLabelSet(self.ConfigObj, self.client_id, "Foo")
+	})
 	assert.NoError(self.T(), err)
 }
 

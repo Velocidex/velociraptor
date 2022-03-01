@@ -1,0 +1,7 @@
+Queries:
+  - SELECT _SCCAHeader, Executable, FileSize, Hash,
+           Version, LastRunTimes, RunCount, Binary,
+           FilesAccessed, VolumeInfo
+    FROM Artifact.Windows.Forensics.Prefetch(
+      prefetchGlobs=srcDir+"/artifacts/testdata/files/*.pf",
+      IncludeFilesAccessed=TRUE)

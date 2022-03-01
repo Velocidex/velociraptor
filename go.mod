@@ -18,7 +18,7 @@ require (
 	github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28
 	github.com/Velocidex/go-yara v1.1.10-0.20210726130504-d5e402efc424
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20211129003310-ece3b3fe13f4
-	github.com/Velocidex/json v0.0.0-20210402154432-68206e1293d0
+	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
 	github.com/Velocidex/pkcs7 v0.0.0-20210524015001-8d1eee94a157
 	github.com/Velocidex/sflags v0.3.1-0.20210402155316-b09f53df5162
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
@@ -116,12 +116,12 @@ require (
 	howett.net/plist v0.0.0-20201203080718-1454fab16a06
 	www.velocidex.com/golang/evtx v0.2.1-0.20220107094629-ab487d5f06f1
 	www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671
-	www.velocidex.com/golang/go-ntfs v0.1.2-0.20210828125207-a1d0ee62467c
+	www.velocidex.com/golang/go-ntfs v0.1.2-0.20220302003443-3181ea878abf
 	www.velocidex.com/golang/go-pe v0.1.1-0.20220107093716-e91743c801de
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20211013063943-0334d69593c1
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20220218023544-ca893ba8c146
+	www.velocidex.com/golang/vfilter v0.0.0-20220225062654-3e98e6ee9fe0
 )
 
 require (
@@ -192,21 +192,20 @@ require (
 	www.velocidex.com/golang/binparsergen v0.1.1-0.20220107080050-ae6122c5ed14 // indirect
 )
 
-// replace www.velocidex.com/golang/go-pe => /home/mic/projects/go-pe
 // replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
+// replace www.velocidex.com/golang/go-pe => /home/mic/projects/go-pe
 // replace www.velocidex.com/golang/evtx => /home/mic/projects/evtx
 // replace www.velocidex.com/golang/go-ese => /home/mic/projects/go-ese
 // replace github.com/Velocidex/ordereddict => /home/mic/projects/ordereddict
 // replace github.com/Velocidex/yaml/v2 => /home/mic/projects/yaml
-
+// replace www.velocidex.com/golang/go-prefetch => /home/mic/projects/go-prefetch
 // replace github.com/Velocidex/go-magic => /home/mic/projects/go-magic
 // replace github.com/Velocidex/go-yara => /home/mic/projects/go-yara
 // replace github.com/Velocidex/json => /home/mic/projects/json
 // replace github.com/russross/blackfriday/v2 => /home/mic/projects/blackfriday
 // replace www.velocidex.com/golang/vtypes => /home/mic/projects/vtypes
 // replace github.com/Velocidex/ttlcache/v2 => /home/mic/projects/ttlcache
-
 // replace github.com/Velocidex/zip => /home/mic/projects/zip
 // replace github.com/Velocidex/sflags => /home/mic/projects/sflags
 // replace github.com/Velocidex/etw => /home/mic/projects/etw

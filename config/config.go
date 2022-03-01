@@ -37,20 +37,20 @@ var (
 )
 
 // Return the location of the writeback file.
-func WritebackLocation(self *config_proto.Config) (string, error) {
-	if self.Client == nil {
+func WritebackLocation(self *config_proto.ClientConfig) (string, error) {
+	if self == nil {
 		return "", errors.New("Client not configured")
 	}
 
 	switch runtime.GOOS {
 	case "darwin":
-		return os.ExpandEnv(self.Client.WritebackDarwin), nil
+		return os.ExpandEnv(self.WritebackDarwin), nil
 	case "linux":
-		return os.ExpandEnv(self.Client.WritebackLinux), nil
+		return os.ExpandEnv(self.WritebackLinux), nil
 	case "windows":
-		return os.ExpandEnv(self.Client.WritebackWindows), nil
+		return os.ExpandEnv(self.WritebackWindows), nil
 	default:
-		return os.ExpandEnv(self.Client.WritebackLinux), nil
+		return os.ExpandEnv(self.WritebackLinux), nil
 	}
 }
 
@@ -158,7 +158,6 @@ func GetDefaultConfig() *config_proto.Config {
 			Location:           "/var/tmp/velociraptor/",
 			FilestoreDirectory: "/var/tmp/velociraptor/",
 		},
-		Writeback: &config_proto.Writeback{},
 		Logging: &config_proto.LoggingConfig{
 			// Disable debug logging by default.
 			Debug: &config_proto.LoggingRetentionConfig{
@@ -206,27 +205,6 @@ func WriteConfigToFile(filename string, config *config_proto.Config) error {
 	}
 	// Make sure the new file is only readable by root.
 	err = ioutil.WriteFile(filename, bytes, 0600)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	return nil
-}
-
-// Update the client's writeback file.
-func UpdateWriteback(config_obj *config_proto.Config) error {
-	location, err := WritebackLocation(config_obj)
-	if err != nil {
-		return err
-	}
-
-	bytes, err := yaml.Marshal(config_obj.Writeback)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	// Make sure the new file is only readable by root.
-	err = ioutil.WriteFile(location, bytes, 0600)
 	if err != nil {
 		return errors.WithStack(err)
 	}
