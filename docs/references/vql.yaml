@@ -3152,26 +3152,69 @@
     description: Maximum size of line buffer.
   category: parsers
 - name: parse_mft
-  description: Scan the $MFT from an NTFS volume.
+  description: |
+    Scan the $MFT from an NTFS volume.
+
+    This plugin expect an $MFT file to operate on. For example, it is
+    commonly used with the 'ntfs' accessor which opens the local raw
+    device to provide access to the $MFT
+
+    ```vql
+    SELECT * FROM parse_mft(filename="C:/$MFT", accessor="ntfs")
+    ```
+
+    For parsing from an image file, you can extract the $MFT file
+    using the raw_ntfs accessor (which operates on images).
+
+    ```vql
+    SELECT * FROM parse_mft(
+         filename=pathspec(
+           Path="$MFT",
+           DelegateAccessor="file",
+           DelegatePath='ntfs_image.dd'),
+         accessor="raw_ntfs")
+    ```
   type: Plugin
   args:
   - name: filename
     type: string
-    description: A list of event log files to parse.
+    description: The MFT file.
     required: true
   - name: accessor
     type: string
     description: The accessor to use.
   category: parsers
 - name: parse_ntfs
-  description: Parse an NTFS image file.
+  description: |
+    Parse specific inodes from an NTFS image file or the raw device.
+
+    This function retrieves more information about a specific MFT
+    entry including listing all its attributes.
+
+    It can either operate on an image file or the raw device (on
+    windows).
+
+    ## Example:
+
+    ```vql
+    SELECT parse_ntfs(
+        filename='ntfs_image.dd',
+        inode="46-128-0")
+    FROM scope()
+    ```
+
+    You can get the MFT entry number from `parse_mft()` or from the
+    Data attribute of a `glob()` using the `ntfs` accessor.
   type: Function
   args:
   - name: device
+    type: string
+    description: The device file to open. This may be a full path for example C:\Windows
+      - we will figure out the device automatically.
+  - name: filename
     type: accessors.OSPath
-    description: The device file to open. This may be a full path - we will figure
-      out the device automatically.
-    required: true
+    description: A raw image to open. You can also provide the accessor if using a
+      raw image file.
   - name: accessor
     type: string
     description: The accessor to use.
@@ -3186,14 +3229,21 @@
     description: The offset to the MFT entry to parse.
   category: parsers
 - name: parse_ntfs_i30
-  description: Scan the $I30 stream from an NTFS MFT entry.
+  description: |
+    Scan the $I30 stream from an NTFS MFT entry.
+
+    This is similar in use to the parse_ntfs() function but parses the
+    $I30 stream.
   type: Plugin
   args:
   - name: device
+    type: string
+    description: The device file to open. This may be a full path for example C:\Windows
+      - we will figure out the device automatically.
+  - name: filename
     type: accessors.OSPath
-    description: The device file to open. This may be a full path - we will figure
-      out the device automatically.
-    required: true
+    description: A raw image to open. You can also provide the accessor if using a
+      raw image file.
   - name: accessor
     type: string
     description: The accessor to use.
@@ -3212,10 +3262,13 @@
   type: Plugin
   args:
   - name: device
+    type: string
+    description: The device file to open. This may be a full path for example C:\Windows
+      - we will figure out the device automatically.
+  - name: filename
     type: accessors.OSPath
-    description: The device file to open. This may be a full path - we will figure
-      out the device automatically.
-    required: true
+    description: A raw image to open. You can also provide the accessor if using a
+      raw image file.
   - name: accessor
     type: string
     description: The accessor to use.
