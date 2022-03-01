@@ -1,6 +1,6 @@
 SELECT parse_ntfs( filename=srcDir+'/artifacts/testdata/files/test.ntfs.dd', inode="46-128-0").FullPath AS FullPath FROM scope()[
  {
-  "FullPath": null
+  "FullPath": "/Folder A/Folder B/Hello world text document.txt"
  }
 ]SELECT * FROM parse_mft( filename=pathspec( Path="$MFT", DelegateAccessor="file", DelegatePath=srcDir+'/artifacts/testdata/files/test.ntfs.dd'), accessor="raw_ntfs") WHERE FullPath =~ "document.txt:goodbye.txt"[
  {
