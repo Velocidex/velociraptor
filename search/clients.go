@@ -66,11 +66,12 @@ func GetApiClient(
 	}
 
 	result.OsInfo = &api_proto.Uname{
-		System:   client_info.System,
-		Hostname: client_info.Hostname,
-		Release:  client_info.Release,
-		Machine:  client_info.Architecture,
-		Fqdn:     client_info.Fqdn,
+		System:       client_info.System,
+		Hostname:     client_info.Hostname,
+		Release:      client_info.Release,
+		Machine:      client_info.Architecture,
+		Fqdn:         client_info.Fqdn,
+		MacAddresses: client_info.MacAddresses,
 	}
 
 	public_key_info := &crypto_proto.PublicKey{}
@@ -125,11 +126,12 @@ func FastGetApiClient(
 			Name:    client_info.ClientName,
 		},
 		OsInfo: &api_proto.Uname{
-			System:   client_info.System,
-			Hostname: client_info.Hostname,
-			Release:  client_info.Release,
-			Machine:  client_info.Architecture,
-			Fqdn:     client_info.Fqdn,
+			System:       client_info.System,
+			Hostname:     client_info.Hostname,
+			Release:      client_info.Release,
+			Machine:      client_info.Architecture,
+			Fqdn:         client_info.Fqdn,
+			MacAddresses: client_info.MacAddresses,
 		},
 		FirstSeenAt:                 client_info.FirstSeenAt,
 		LastSeenAt:                  client_info.Ping,

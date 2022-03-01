@@ -18,13 +18,19 @@ sources:
       This source is used internally to populate agent info. Do not
       modify or remove this query.
     query: |
+        LET Interfaces = SELECT format(format='%02x:%02x:%02x:%02x:%02x:%02x',
+            args=HardwareAddr) AS MAC
+        FROM interfaces()
+        WHERE HardwareAddr
+
         SELECT config.Version.Name AS Name,
                config.Version.BuildTime as BuildTime,
                config.Version.Version as Version,
                config.Version.ci_build_url AS build_url,
                config.Labels AS Labels,
                Hostname, OS, Architecture,
-               Platform, PlatformVersion, KernelVersion, Fqdn
+               Platform, PlatformVersion, KernelVersion, Fqdn,
+               Interfaces.MAC AS MACAddresses
         FROM info()
 
   - name: WindowsInfo
@@ -32,7 +38,7 @@ sources:
     precondition: SELECT OS From info() where OS = 'windows'
     query: |
       SELECT
-          {
+      {
             SELECT DNSHostName,  Name, Domain, TotalPhysicalMemory
             FROM wmi(
                query='SELECT * FROM win32_computersystem')

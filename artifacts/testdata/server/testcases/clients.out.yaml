@@ -16,23 +16,15 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
    "system": "windows",
    "hostname": "DESKTOP-BP4S7TF",
    "release": "Microsoft Windows 10 Enterprise Evaluation10.0.18362 Build 18362",
-   "version": "",
    "machine": "amd64",
-   "kernel": "",
    "fqdn": "DESKTOP-BP4S7TF",
-   "install_date": 0,
-   "libc_ver": "",
-   "architecture": ""
+   "mac_addresses": []
   },
   "first_seen_at": 0,
   "last_seen_at": 1638362977493088,
-  "last_booted_at": 0,
-  "last_clock": 0,
-  "last_crash_at": 0,
   "last_ip": "192.168.1.112:60239",
   "last_interrogate_flow_id": "F.BN21C82J8DM8K",
   "last_interrogate_artifact_name": "",
-  "last_ip_class": "UNKNOWN",
   "labels": []
  }
 ]SELECT client_id, timestamp(epoch=create_time/1000000) as CreateTime, request.artifacts as Artifacts, session_id as Flow FROM flows(client_id='C.4f5e52adf0a337a9') WHERE Artifacts =~ "Netstat"[

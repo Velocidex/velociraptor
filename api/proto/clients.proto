@@ -33,18 +33,6 @@ message ApiClient {
             type: "RDFDatetime",
             description: "Last time when client checked in."
         }];
-    uint64 last_booted_at = 8 [(sem_type) = {
-            type: "RDFDatetime",
-            description: "Last boot time."
-        }];
-    uint64 last_clock = 9 [(sem_type) = {
-            type: "RDFDatetime",
-            description: "Client clocks value during latest checkin."
-        }];
-    uint64 last_crash_at = 10 [(sem_type) = {
-            type: "RDFDatetime",
-            description: "Last crash time."
-        }];
 
     string last_ip = 16 [(sem_type) = {
             description: "The last seen remote API address"
@@ -52,15 +40,6 @@ message ApiClient {
 
     string last_interrogate_flow_id = 19;
     string last_interrogate_artifact_name = 21;
-
-    enum IPAddressClass {
-        UNKNOWN = 0;
-        INTERNAL = 1;
-        EXTERNAL = 2;
-        VPN = 3;
-    }
-
-    IPAddressClass last_ip_class = 17;
 
     repeated string labels = 18;
 }
@@ -148,33 +127,14 @@ message Uname {
    string release = 3 [(sem_type) = {
       description: "The OS release identifier e.g. 7, OSX, debian.",
     }];
-   string version = 4 [(sem_type) = {
-      description: "The OS version ID e.g. 6.1.7601SP1, 10.9.2, 14.04.",
-    }];
    string machine = 5 [(sem_type) = {
       description: "The system architecture e.g. AMD64, x86_64.",
-    }];
-   string kernel = 6 [(sem_type) = {
-      description: "The kernel version string e.g. 6.1.7601, 13.1.0, 3.15-rc2.",
     }];
    string fqdn = 7 [(sem_type) = {
       description: "The system's fully qualified domain name.",
     }];
 
-   uint64 install_date = 8 [(sem_type) = {
-      type: "RDFDatetime",
-      description: "When system was installed."
-    }];
-
-   string libc_ver = 9 [(sem_type) = {
-      description: "The C library version",
-    }];
-
-   string architecture = 10 [(sem_type) = {
-      description: "The architecture of this binary. (Note this can be "
-      "different from the machine architecture in the case of a 32 bit binary "
-      "running on a 64 bit system)",
-    }];
+    repeated string mac_addresses = 11;
 };
 
 
