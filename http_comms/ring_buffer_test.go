@@ -218,7 +218,7 @@ func TestRingBufferCorruption(t *testing.T) {
 	// Create a very short file.
 	os.Remove(filename)
 
-	fd, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
+	fd, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 	assert.NoError(t, err)
 	n, err = fd.Write([]byte{20, 0, 0, 0, 0, 0, 0, 0})
 	assert.NoError(t, err)
@@ -227,13 +227,13 @@ func TestRingBufferCorruption(t *testing.T) {
 
 	ring_buffer = createRB(t, filename)
 
-	assert.Equal(t, checkLogMessage(hook,
-		"Possible corruption detected: file too short."), true)
+	assert.Equal(t, true, checkLogMessage(hook,
+		"Possible corruption detected: file too short."))
 
 	assert.Equal(t, int64(FirstRecordOffset), ring_buffer.header.WritePointer)
 
 	// Invalid header.
-	fd, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
+	fd, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 	assert.NoError(t, err)
 	fd.Seek(0, 0)
 	n, err = fd.Write([]byte{20, 0, 0, 0, 0, 0, 0, 0})
