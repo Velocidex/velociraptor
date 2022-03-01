@@ -1,0 +1,43 @@
+#!/bin/sh
+#
+# PROVIDE: velociraptor
+# REQUIRE: networking
+# KEYWORD: 
+ 
+. /etc/rc.subr
+ 
+name="velociraptor"
+rcvar="velociraptor_enable"
+command="/usr/local/bin/velociraptor --config /etc/velociraptor.client.config.yaml client -v"
+velociraptor_user="velociraptor"
+pidfile="/var/run/${name}.pid"
+ 
+start_cmd="velociraptor_start"
+stop_cmd="velociraptor_stop"
+status_cmd="velociraptor_status"
+
+velociraptor_start() {
+        /usr/sbin/daemon -P ${pidfile} -r -f -u root $command
+}
+
+velociraptor_stop() {
+        if [ -e "${pidfile}" ]; then
+                kill -s TERM `cat ${pidfile}`
+        else
+                echo "${name} is not running"
+        fi
+
+}
+
+velociraptor_status() {
+        if [ -e "${pidfile}" ]; then
+                echo "${name} is running as pid `cat ${pidfile}`"
+        else
+                echo "${name} is not running"
+        fi
+}
+ 
+load_rc_config $name
+: ${velociraptor_enable:=no}
+ 
+run_rc_command "$1"
