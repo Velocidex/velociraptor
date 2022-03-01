@@ -26,15 +26,15 @@ parameters:
 
 sources:
   - precondition:
-      SELECT OS From info() where OS = 'windows'
+            SELECT OS From info() where OS = 'windows'
 
     query:  |
-      LET packages = SELECT Name, DisplayName FROM Artifact.Windows.Sys.Programs()
+      LET packages = SELECT Name, DisplayName,UninstallString FROM Artifact.Windows.Sys.Programs()
       WHERE DisplayName =~ DisplayNameRegex AND
         log(message="Will uninstall " + DisplayName)
+      
+      LET uninstall(DisplayName) = SELECT * FROM execve(argv=[commandline_split(command=UninstallString) + "/quiet"])
 
-      LET uninstall(Name) = SELECT * FROM execve(argv=['msiexec', '/quiet', '/x', Name])
-
-      SELECT Name, DisplayName,
-          if(condition=ReallyDoIt, then=uninstall(Name=Name).Stdout) AS UninstallLog
+      SELECT Name, DisplayName, UninstallString,
+          if(condition=ReallyDoIt, then=uninstall(Name=DisplayName).Stdout) AS UninstallLog
       FROM packages
