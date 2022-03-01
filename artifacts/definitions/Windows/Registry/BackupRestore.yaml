@@ -2,15 +2,15 @@ name: Windows.Registry.BackupRestore
 author: Matt Green - @mgreen27
 description: |
     This artifact will return BackupRestore configuration.
-    
-    Applications that request or perform backup and restore operations can use 
-    these keys to communicate with each other or with features such as the 
+
+    Applications that request or perform backup and restore operations can use
+    these keys to communicate with each other or with features such as the
     Volume Shadow Copy Service (VSS) and Windows Backup.
 
 reference:
   - https://andreafortuna.org/2017/10/02/volume-shadow-copies-in-forensic-analysis/
   - https://docs.microsoft.com/en-us/windows/win32/backup/registry-keys-for-backup-and-restore
-  
+
 parameters:
  - name: KeyGlob
    default: HKEY_LOCAL_MACHINE\SYSTEM\*ControlSet*\Control\BackupRestore\**
@@ -28,4 +28,3 @@ sources:
       FROM glob(globs=KeyGlob, accessor="reg")
       WHERE NOT KeyType ='key'
       GROUP BY ModTime, KeyName,KeyValue,KeyType
-
