@@ -733,7 +733,10 @@ func (self *NotificationReader) Start(
 		defer wg.Done()
 		defer self.maybeCallOnExit()
 
+		// Periodically read from executor and push to ring buffer.
 		for {
+			executor.Nanny.UpdateReadFromServer()
+
 			// The Reader does not send any server bound
 			// messages - it is blocked reading server
 			// responses.
@@ -751,6 +754,7 @@ func (self *NotificationReader) Start(
 			case <-ctx.Done():
 				return
 
+				// Reconnect quickly for low latency.
 			case <-self.clock.After(self.minPoll):
 				continue
 			}

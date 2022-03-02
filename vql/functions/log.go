@@ -19,6 +19,8 @@ package functions
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -38,8 +40,9 @@ type logCache struct {
 }
 
 type LogFunctionArgs struct {
-	Message   string `vfilter:"required,field=message,doc=Message to log."`
-	DedupTime int64  `vfilter:"optional,field=dedup,doc=Suppress same message in this many seconds (default 60 sec)."`
+	Message   string      `vfilter:"required,field=message,doc=Message to log."`
+	DedupTime int64       `vfilter:"optional,field=dedup,doc=Suppress same message in this many seconds (default 60 sec)."`
+	Args      vfilter.Any `vfilter:"optional,field=args,doc=An array of elements to apply into the format string."`
 }
 
 type LogFunction struct{}
@@ -60,6 +63,24 @@ func (self *LogFunction) Call(ctx context.Context,
 
 	now := time.Now().Unix()
 
+	message := arg.Message
+	var format_args []interface{}
+
+	if arg.Args != nil {
+		slice := reflect.ValueOf(arg.Args)
+
+		// A slice of strings.
+		if slice.Type().Kind() != reflect.Slice {
+			format_args = append(format_args, arg.Args)
+		} else {
+			for i := 0; i < slice.Len(); i++ {
+				value := slice.Index(i).Interface()
+				format_args = append(format_args, value)
+			}
+		}
+		message = fmt.Sprintf(message, format_args...)
+	}
+
 	last_log_any := vql_subsystem.CacheGet(scope, LOG_TAG)
 
 	// No previous message was set - log it and save it.
@@ -68,7 +89,7 @@ func (self *LogFunction) Call(ctx context.Context,
 			message: arg.Message,
 			time:    now,
 		}
-		scope.Log("%v", arg.Message)
+		scope.Log("%v", message)
 		vql_subsystem.CacheSet(scope, LOG_TAG, last_log)
 		return true
 	}
