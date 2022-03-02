@@ -49,6 +49,8 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -502,10 +504,28 @@ func (self *ApiServer) VFSGetBuffer(
 			"User is not allowed to view the VFS.")
 	}
 
-	path_spec := paths.NewClientPathManager(
-		in.ClientId).FSItem(in.Components)
+	// If a client id is specified, the path is relative to the
+	// client's storage directory, otherwise it is relative to the
+	// root of the filestore.
+	var pathspec api.FSPathSpec
+	if in.ClientId != "" {
+		pathspec = paths.NewClientPathManager(
+			in.ClientId).FSItem(in.Components)
+
+	} else if len(in.Components) > 0 {
+		last_idx := len(in.Components) - 1
+		fs_type, name := api.GetFileStorePathTypeFromExtension(
+			in.Components[last_idx])
+		in.Components[last_idx] = name
+		pathspec = path_specs.NewUnsafeFilestorePath(in.Components...).
+			SetType(fs_type)
+
+	} else {
+		return nil, status.Error(codes.InvalidArgument,
+			"Invalid pathspec")
+	}
 	result, err := vfsGetBuffer(
-		self.config, in.ClientId, path_spec, in.Offset, in.Length)
+		self.config, in.ClientId, pathspec, in.Offset, in.Length)
 
 	return result, err
 }
