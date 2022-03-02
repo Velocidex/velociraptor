@@ -1,0 +1,35 @@
+SELECT parse_ntfs( filename=srcDir+'/artifacts/testdata/files/test.ntfs.dd', inode="46-128-0").FullPath AS FullPath FROM scope()[
+ {
+  "FullPath": "/Folder A/Folder B/Hello world text document.txt"
+ }
+]SELECT * FROM parse_mft( filename=pathspec( Path="$MFT", DelegateAccessor="file", DelegatePath=srcDir+'/artifacts/testdata/files/test.ntfs.dd'), accessor="raw_ntfs") WHERE FullPath =~ "document.txt:goodbye.txt"[
+ {
+  "EntryNumber": 46,
+  "SequenceNumber": 1,
+  "InUse": true,
+  "ParentEntryNumber": 45,
+  "ParentSequenceNumber": 1,
+  "FullPath": "/Folder A/Folder B/Hello world text document.txt:goodbye.txt",
+  "FileName": "Hello world text document.txt",
+  "FileNames": [
+   "Hello world text document.txt:goodbye.txt"
+  ],
+  "FileNameTypes": "POSIX",
+  "FileSize": 12,
+  "ReferenceCount": 1,
+  "IsDir": false,
+  "HasADS": true,
+  "SI_Lt_FN": false,
+  "Copied": false,
+  "SIFlags": "2080 (ARCHIVE,COMPRESSED)",
+  "Created0x10": "2018-09-24T07:55:29.7664719Z",
+  "Created0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastModified0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastModified0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastRecordChange0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastRecordChange0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastAccess0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastAccess0x30": "2018-09-24T07:55:29.7664719Z",
+  "LogFileSeqNum": 1096672
+ }
+]
