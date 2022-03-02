@@ -56,6 +56,7 @@ func RunClient(
 	for {
 		subctx, cancel := context.WithCancel(ctx)
 		lwg := &sync.WaitGroup{}
+
 		lwg.Add(1)
 		go runClientOnce(subctx, lwg, config_path)
 
@@ -120,11 +121,6 @@ func runClientOnce(
 		return fmt.Errorf("Can not create executor: %w", err)
 	}
 
-	err = executor.StartServices(sm, manager.ClientId, exe)
-	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
-	}
-
 	// Now start the communicator so we can talk with the server.
 	comm, err := http_comms.NewHTTPCommunicator(
 		ctx,
@@ -141,6 +137,13 @@ func runClientOnce(
 
 	lwg.Add(1)
 	go comm.Run(ctx, lwg)
+
+	// Start services **after** the communicator is up in case
+	// services need to send messages.
+	err = executor.StartServices(sm, manager.ClientId, exe)
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 
 	lwg.Add(1)
 	go func() {

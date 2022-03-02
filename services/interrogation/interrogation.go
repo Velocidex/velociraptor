@@ -244,6 +244,12 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 		if ok {
 			client_info.Labels = append(client_info.Labels, label_array...)
 		}
+
+		mac_addresses, ok := row.GetStrings("MACAddresses")
+		if ok {
+			client_info.MacAddresses = append(
+				client_info.MacAddresses, mac_addresses...)
+		}
 		break
 	}
 
@@ -301,6 +307,15 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	// Add MAC addresses to the index.
+	for _, mac := range client_info.MacAddresses {
+		err := search.SetIndex(config_obj, client_id, "mac:"+mac)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("Unable to set index: %v", err)
 		}
 	}
 

@@ -497,12 +497,11 @@ func SearchIndexWithPrefix(
 	return output_chan
 }
 
-// Loads the index lru quickly with many threads.
+// Loads the index lru
 func LoadIndex(
 	ctx context.Context,
 	wg *sync.WaitGroup, config_obj *config_proto.Config) {
 
-	// Load the index in the background until we are ready.
 	indexer.Load(ctx, config_obj)
 }
 

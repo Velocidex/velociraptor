@@ -20,6 +20,7 @@ var (
 	verbs = []string{
 		"label:",
 		"host:",
+		"mac:",
 		"client:",
 		"recent:",
 		"ip:",
@@ -122,7 +123,7 @@ func SearchClients(
 
 	operator, term := splitIntoOperatorAndTerms(in.Query)
 	switch operator {
-	case "label", "host", "all":
+	case "label", "host", "all", "mac":
 		return searchClientIndex(ctx, config_obj, in, limit)
 
 	case "client":

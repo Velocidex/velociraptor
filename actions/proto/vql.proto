@@ -165,6 +165,7 @@ message ClientInfo {
     uint64 first_seen_at = 20;
 
     repeated string labels = 15;
+    repeated string mac_addresses = 22;
 
     string last_interrogate_flow_id = 16;
 

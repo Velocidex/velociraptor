@@ -213,9 +213,9 @@ func (self *TestSuite) TestServerRotateKeyE2E() {
 	server_ctx, server_cancel = context.WithCancel(self.sm.Ctx)
 	server_wg = &sync.WaitGroup{}
 
-	self.makeServer(server_ctx, server_wg)
-
 	logging.ClearMemoryLogs()
+
+	self.makeServer(server_ctx, server_wg)
 
 	// Sending another one will produce an error.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
