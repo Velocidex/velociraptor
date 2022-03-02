@@ -238,7 +238,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 		communications.EncryptedCipher,
 		[]byte(""))
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 
 	cipher_properties := &crypto_proto.CipherProperties{}

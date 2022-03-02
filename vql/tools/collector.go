@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
@@ -512,7 +513,7 @@ func AddSpecProtobuf(
 				}
 
 			case "timestamp":
-				if !is_str {
+				if !is_str && !utils.IsNil(value_any) {
 					value_time, err := functions.TimeFromAny(scope, value_any)
 					if err != nil {
 						scope.Log("Invalid timestamp for %v",

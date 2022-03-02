@@ -157,19 +157,20 @@ func VerifyConfig(config_obj *config_proto.Config) error {
 		return errors.New("No server URLs configured!")
 	}
 
-	if config_obj.Writeback == nil {
-		config_obj.Writeback = &config_proto.Writeback{}
+	writeback, err := config.GetWriteback(config_obj.Client)
+	if err != nil {
+		writeback = &config_proto.Writeback{}
 	}
 
-	if config_obj.Writeback.PrivateKey == "" {
+	if writeback.PrivateKey == "" {
 		fmt.Println("Generating new private key....")
 		pem, err := GeneratePrivateKey()
 		if err != nil {
 			return errors.WithStack(err)
 		}
 
-		config_obj.Writeback.PrivateKey = string(pem)
-		err = config.UpdateWriteback(config_obj)
+		writeback.PrivateKey = string(pem)
+		err = config.UpdateWriteback(config_obj.Client, writeback)
 		if err != nil {
 			return err
 		}

@@ -30,7 +30,7 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 		return errors.New("No Client.server_urls configured")
 	}
 
-	_, err := WritebackLocation(config_obj)
+	_, err := WritebackLocation(config_obj.Client)
 	if err != nil {
 		return err
 	}

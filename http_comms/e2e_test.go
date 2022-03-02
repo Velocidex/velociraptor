@@ -49,7 +49,11 @@ func (self *TestSuite) SetupTest() {
 
 	config_obj, err := new(config.Loader).WithFileLoader(
 		"../http_comms/test_data/server.config.yaml").
-		WithRequiredClient().WithWriteback().LoadAndValidate()
+		WithRequiredClient().WithVerbose(true).
+		WithWriteback().LoadAndValidate()
+	assert.NoError(t, err)
+
+	self.port, err = vtesting.GetFreePort()
 	assert.NoError(t, err)
 
 	self.config_obj = config_obj
@@ -145,6 +149,7 @@ func (self *TestSuite) makeClient(
 
 	on_error := func() {}
 	comm, err := NewHTTPCommunicator(
+		client_ctx,
 		self.config_obj,
 		manager,
 		exe,
@@ -154,11 +159,7 @@ func (self *TestSuite) makeClient(
 	assert.NoError(self.T(), err)
 
 	client_wg.Add(1)
-	go func() {
-		defer client_wg.Done()
-
-		comm.Run(client_ctx)
-	}()
+	go comm.Run(client_ctx, client_wg)
 
 	return comm
 }
@@ -181,16 +182,18 @@ func (self *TestSuite) TestServerRotateKeyE2E() {
 
 	comm := self.makeClient(client_ctx, client_wg)
 
-	// Stop the receive and send loops to prevent race with direct post
-	comm.SetPause(true)
-
 	// Make sure the client is properly enrolled
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		err := comm.sender.sendToURL(client_ctx, [][]byte{}, false)
 		assert.NoError(self.T(), err)
 
-		return vtesting.ContainsString("response with status: 200", logging.GetMemoryLogs())
+		return vtesting.ContainsString("response with status: 200",
+			logging.GetMemoryLogs())
 	})
+
+	// Stop the receive and send loops to prevent race with direct post
+	comm.SetPause(true)
+
 	//	json.Dump(logging.GetMemoryLogs())
 	logging.ClearMemoryLogs()
 
@@ -250,6 +253,5 @@ func TestClientServerComms(t *testing.T) {
 
 	suite.Run(t, &TestSuite{
 		config_obj: config_obj,
-		port:       8787,
 	})
 }

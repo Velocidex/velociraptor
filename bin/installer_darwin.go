@@ -132,6 +132,7 @@ func doInstall() error {
                 <string>client</string>
                 <string>--config</string>
                 <string>%v.config.yaml</string>
+                <string>--quiet</string>
         </array>
         <key>KeepAlive</key>
         <true/>

@@ -423,15 +423,8 @@ func StartFrontendPlainHttp(
 		server_obj.Info("<red>Shutting down</> frontend")
 		atomic.StoreInt32(&server_obj.Healthy, 0)
 
-		time_ctx, cancel := context.WithTimeout(
-			context.Background(), 10*time.Second)
-		defer cancel()
-
 		server.SetKeepAlivesEnabled(false)
-		err := server.Shutdown(time_ctx)
-		if err != nil {
-			server_obj.Error("Frontend server error %v", err)
-		}
+		_ = server.Shutdown(ctx)
 	}()
 
 	return nil

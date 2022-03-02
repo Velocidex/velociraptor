@@ -1,6 +1,7 @@
 package http_comms
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -37,7 +38,10 @@ func createRB(t *testing.T, filename string) *FileBasedRingBuffer {
 	logger := &logging.LogContext{null_logger}
 	hook = new_hook
 
-	ring_buffer, err := NewFileBasedRingBuffer(config_obj, logger)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ring_buffer, err := NewFileBasedRingBuffer(ctx, config_obj, logger)
 	assert.NoError(t, err)
 
 	return ring_buffer
@@ -52,7 +56,6 @@ func TestRingBuffer(t *testing.T) {
 
 	ring_buffer := createRB(t, filename)
 	ring_buffer.Enqueue([]byte(test_string))
-	ring_buffer.Close()
 
 	st, err := os.Stat(filename)
 	assert.NoError(t, err)
@@ -73,7 +76,6 @@ func TestRingBuffer(t *testing.T) {
 
 	// Enqueue another message.
 	ring_buffer.Enqueue([]byte(test_string2))
-	ring_buffer.Close()
 
 	// The file contains two messages.
 	st, err = os.Stat(filename)
@@ -106,8 +108,6 @@ func TestRingBuffer(t *testing.T) {
 	assert.Equal(t, ring_buffer.header.LeasedBytes,
 		int64(len(test_string)))
 
-	ring_buffer.Close()
-
 	// Since we did not commit the last message - opening again
 	// will replay that same one.
 	ring_buffer = createRB(t, filename)
@@ -122,15 +122,12 @@ func TestRingBuffer(t *testing.T) {
 
 	// Commit the message this time and close the file.
 	ring_buffer.Commit()
-	ring_buffer.Close()
 
 	ring_buffer = createRB(t, filename)
 
 	// Now only the second message is available.
 	assert.Equal(t, ring_buffer.header.AvailableBytes,
 		int64(len(test_string2)))
-
-	ring_buffer.Close()
 
 	// But the file contains both messages still.
 	st, err = os.Stat(filename)
@@ -177,8 +174,6 @@ func TestRingBuffer(t *testing.T) {
 	assert.Equal(t, ring_buffer.header.AvailableBytes, int64(0))
 	assert.Equal(t, ring_buffer.header.LeasedBytes, int64(0))
 
-	ring_buffer.Close()
-
 	st, err = os.Stat(filename)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(FirstRecordOffset), st.Size())
@@ -196,7 +191,6 @@ func TestRingBufferCorruption(t *testing.T) {
 
 	ring_buffer := createRB(t, filename)
 	ring_buffer.Enqueue([]byte(test_string))
-	ring_buffer.Close()
 
 	// Corrupt the file.
 	fd, err := os.OpenFile(filename, os.O_RDWR, 0700)
@@ -217,8 +211,6 @@ func TestRingBufferCorruption(t *testing.T) {
 	assert.Equal(t, checkLogMessage(hook,
 		"Possible corruption detected - expected item of length 20 received 5."), true)
 
-	ring_buffer.Close()
-
 	st, err := os.Stat(filename)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(FirstRecordOffset), st.Size())
@@ -226,7 +218,7 @@ func TestRingBufferCorruption(t *testing.T) {
 	// Create a very short file.
 	os.Remove(filename)
 
-	fd, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
+	fd, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 	assert.NoError(t, err)
 	n, err = fd.Write([]byte{20, 0, 0, 0, 0, 0, 0, 0})
 	assert.NoError(t, err)
@@ -235,14 +227,13 @@ func TestRingBufferCorruption(t *testing.T) {
 
 	ring_buffer = createRB(t, filename)
 
-	assert.Equal(t, checkLogMessage(hook,
-		"Possible corruption detected: file too short."), true)
+	assert.Equal(t, true, checkLogMessage(hook,
+		"Possible corruption detected: file too short."))
 
 	assert.Equal(t, int64(FirstRecordOffset), ring_buffer.header.WritePointer)
-	ring_buffer.Close()
 
 	// Invalid header.
-	fd, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
+	fd, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 	assert.NoError(t, err)
 	fd.Seek(0, 0)
 	n, err = fd.Write([]byte{20, 0, 0, 0, 0, 0, 0, 0})
@@ -257,7 +248,6 @@ func TestRingBufferCorruption(t *testing.T) {
 
 	assert.Equal(t, int64(FirstRecordOffset), ring_buffer.header.WritePointer)
 	ring_buffer.Enqueue([]byte(test_string))
-	ring_buffer.Close()
 
 	// Create a very large items length.
 	fd, err = os.OpenFile(filename, os.O_RDWR, 0700)
@@ -278,7 +268,6 @@ func TestRingBufferCorruption(t *testing.T) {
 		"Possible corruption detected - item length is too large."), true)
 
 	assert.Equal(t, int64(FirstRecordOffset), ring_buffer.header.WritePointer)
-	ring_buffer.Close()
 }
 
 func checkLogMessage(hook *test.Hook, msg string) bool {
@@ -297,9 +286,10 @@ func TestRingBufferCancellation(t *testing.T) {
 	filename := getTempFile(t)
 	defer os.Remove(filename)
 
+	// Make SessionId unique for each test run
 	message_list := &crypto_proto.MessageList{
 		Job: []*crypto_proto.VeloMessage{{
-			SessionId: "F.1234",
+			SessionId: "F.1234" + filename,
 		}},
 	}
 
@@ -309,18 +299,16 @@ func TestRingBufferCancellation(t *testing.T) {
 	// Queue the message
 	ring_buffer := createRB(t, filename)
 	ring_buffer.Enqueue([]byte(serialized_message_list))
-	ring_buffer.Close()
 
 	// Try to lease the message.
 	ring_buffer = createRB(t, filename)
 	lease := ring_buffer.Lease(1)
 	assert.NotNil(t, lease)
 
-	assert.Equal(t, lease, serialized_message_list)
+	assert.Equal(t, serialized_message_list, lease)
 
 	// Queue the message
 	ring_buffer.Enqueue([]byte(serialized_message_list))
-	ring_buffer.Close()
 
 	// Now cancel this flow ID.
 	executor.Canceller.Cancel(message_list.Job[0].SessionId)

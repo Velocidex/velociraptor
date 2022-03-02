@@ -1,6 +1,7 @@
 package http_comms
 
 import (
+	"context"
 	"encoding/binary"
 	"io"
 	"os"
@@ -25,10 +26,21 @@ const (
 
 type IRingBuffer interface {
 	Enqueue(item []byte)
+
+	// How many bytes are currently available to be sent.
 	AvailableBytes() uint64
+
+	// Lease this much data from the buffer - the data is not deleted,
+	// but it is kept in the file until it is committed.
 	Lease(size uint64) []byte
+
+	// The total size of data in the ring buffer - sum of
+	// AvailableBytes and LeasedBytes
+	TotalSize() uint64
+
 	Commit()
 	Reset()
+	Close()
 }
 
 type Header struct {
@@ -88,6 +100,7 @@ type FileBasedRingBuffer struct {
 
 	fd     *os.File
 	header *Header
+	closed bool
 
 	read_buf  []byte
 	write_buf []byte
@@ -101,6 +114,10 @@ type FileBasedRingBuffer struct {
 func (self *FileBasedRingBuffer) Enqueue(item []byte) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if self.closed {
+		return
+	}
 
 	binary.LittleEndian.PutUint64(self.write_buf, uint64(len(item)))
 	_, err := self.fd.WriteAt(self.write_buf, int64(self.header.WritePointer))
@@ -136,9 +153,16 @@ func (self *FileBasedRingBuffer) Enqueue(item []byte) {
 	// the server, and enough room is available. This has the
 	// effect of blocking the executor and stopping the query
 	// until we return.
-	for self.header.WritePointer > self.header.MaxSize {
+	for self.header.WritePointer > self.header.MaxSize && !self.closed {
 		self.c.Wait()
 	}
+}
+
+func (self *FileBasedRingBuffer) TotalSize() uint64 {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return uint64(self.header.AvailableBytes + self.header.LeasedBytes)
 }
 
 func (self *FileBasedRingBuffer) AvailableBytes() uint64 {
@@ -211,16 +235,16 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 		n, err := self.fd.ReadAt(self.read_buf, self.leased_pointer)
 		if err == nil && n == len(self.read_buf) {
 			length := int64(binary.LittleEndian.Uint64(self.read_buf))
-			// File might be corrupt - just reset the
-			// entire file.
+
+			// File might be corrupt - just reset the entire file.
 			if length > constants.MAX_MEMORY*2 || length <= 0 {
 				self.log_ctx.Error("Possible corruption detected - item length is too large.")
 				self._Truncate()
 				return nil
 			}
 			item := make([]byte, length)
-			n, _ := self.fd.ReadAt(item, self.leased_pointer+8)
-			if int64(n) != length {
+			n, err := self.fd.ReadAt(item, self.leased_pointer+8)
+			if err != nil || int64(n) != length {
 				self.log_ctx.Errorf(
 					"Possible corruption detected - expected item of length %v received %v.",
 					length, n)
@@ -260,6 +284,9 @@ func (self *FileBasedRingBuffer) _Truncate() {
 	self.leased_pointer = FirstRecordOffset
 	serialized, _ := self.header.MarshalBinary()
 	_, _ = self.fd.WriteAt(serialized, 0)
+
+	// Unblock any blocked writers to let them know there is now room
+	// in the file.
 	self.c.Broadcast()
 }
 
@@ -271,7 +298,16 @@ func (self *FileBasedRingBuffer) Reset() {
 }
 
 func (self *FileBasedRingBuffer) Close() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.closed = true
 	self.fd.Close()
+	os.Remove(self.fd.Name())
+
+	// Unblock any blocked writers to let them know this file is now
+	// closed.
+	self.c.Broadcast()
 }
 
 func (self *FileBasedRingBuffer) Commit() {
@@ -298,6 +334,7 @@ func (self *FileBasedRingBuffer) Commit() {
 }
 
 func NewFileBasedRingBuffer(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
 
@@ -382,6 +419,7 @@ type RingBuffer struct {
 	// arrive.
 	mu       sync.Mutex
 	messages [][]byte
+	closed   bool
 
 	// The index in the messages array where messages before it
 	// are leased.
@@ -404,12 +442,18 @@ func (self *RingBuffer) Reset() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	self.total_length = 0
 	self.messages = nil
+	self.c.Broadcast()
 }
 
 func (self *RingBuffer) Enqueue(item []byte) {
 	self.c.L.Lock()
 	defer self.c.L.Unlock()
+
+	if self.closed {
+		return
+	}
 
 	// Write the message immediately into the ring buffer. If we
 	// crash, the message will be written to disk and
@@ -429,16 +473,23 @@ func (self *RingBuffer) Enqueue(item []byte) {
 	// the server, and enough room is available. This has the
 	// effect of blocking the executor and stopping the query
 	// until we return.
-	for self.total_length > self.Size {
+	for self.total_length > self.Size && !self.closed {
 		self.c.Wait()
 	}
+}
+
+func (self *RingBuffer) TotalSize() uint64 {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.total_length
 }
 
 func (self *RingBuffer) AvailableBytes() uint64 {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.total_length
+	return self.total_length - self.leased_length
 }
 
 // Determine if the item is blacklisted. Items are blacklisted when
@@ -516,6 +567,16 @@ func (self *RingBuffer) Rollback() {
 	}).Info("Ring Buffer: Rollback")
 }
 
+func (self *RingBuffer) Close() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.closed = true
+	self.total_length = 0
+	self.messages = nil
+	self.c.Broadcast()
+}
+
 // Commits by removing the read messages from the ring buffer.
 func (self *RingBuffer) Commit() {
 	self.mu.Lock()
@@ -566,12 +627,14 @@ func getLocalBufferName(config_obj *config_proto.Config) string {
 	}
 }
 
-func NewLocalBuffer(config_obj *config_proto.Config) IRingBuffer {
+func NewLocalBuffer(
+	ctx context.Context,
+	config_obj *config_proto.Config) IRingBuffer {
 	if config_obj.Client.LocalBuffer.DiskSize > 0 &&
 		getLocalBufferName(config_obj) != "" {
 
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-		rb, err := NewFileBasedRingBuffer(config_obj, logger)
+		rb, err := NewFileBasedRingBuffer(ctx, config_obj, logger)
 		if err == nil {
 			return rb
 		}

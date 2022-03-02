@@ -36,6 +36,7 @@ import (
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
@@ -44,6 +45,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/tools"
 )
 
 var (
@@ -357,7 +359,6 @@ func loadClientConfig() (*config_proto.Config, error) {
 		// log anything since we dont know where to send it so
 		// prelog instead.
 		logging.Prelog("Failed to load %v will try again soon.\n", *config_path)
-
 		return nil, err
 	}
 
@@ -378,7 +379,9 @@ func doRun() error {
 	if err == nil {
 		name = config_obj.Client.WindowsInstaller.ServiceName
 	}
-	service, err := NewVelociraptorService(name)
+
+	ctx := context.Background()
+	service, err := NewVelociraptorService(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -476,20 +479,28 @@ func (self *VelociraptorService) Close() {
 	}
 }
 
-func runOnce(result *VelociraptorService, elog debug.Log) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+func runOnce(ctx context.Context,
+	wg *sync.WaitGroup, result *VelociraptorService, elog debug.Log) {
+	defer wg.Done()
 
 	// Spin forever waiting for a config file to be
 	// dropped into place.
 	config_obj, err := loadClientConfig()
 	if err != nil {
-		time.Sleep(10 * time.Second)
+		select {
+		case <-ctx.Done():
+		case <-time.After(10 * time.Second):
+		}
+		return
+	}
+
+	writeback, err := config.GetWriteback(config_obj.Client)
+	if err != nil {
 		return
 	}
 
 	manager, err := crypto_client.NewClientCryptoManager(
-		config_obj, []byte(config_obj.Writeback.PrivateKey))
+		config_obj, []byte(writeback.PrivateKey))
 	if err != nil {
 		elog.Error(1, fmt.Sprintf(
 			"Can not create crypto: %v", err))
@@ -506,11 +517,12 @@ func runOnce(result *VelociraptorService, elog debug.Log) {
 	}
 
 	comm, err := http_comms.NewHTTPCommunicator(
+		ctx,
 		config_obj,
 		manager,
 		exe,
 		config_obj.Client.ServerUrls,
-		func() { on_error(config_obj) },
+		func() { on_error(ctx, config_obj) },
 		utils.RealClock{},
 	)
 	if err != nil {
@@ -532,10 +544,11 @@ func runOnce(result *VelociraptorService, elog debug.Log) {
 	if err != nil {
 		return
 	}
-	comm.Run(ctx)
+	comm.Run(ctx, wg)
 }
 
-func NewVelociraptorService(name string) (*VelociraptorService, error) {
+func NewVelociraptorService(
+	ctx context.Context, name string) (*VelociraptorService, error) {
 	elog, err := getLogger(name)
 	if err != nil {
 		return nil, err
@@ -545,8 +558,22 @@ func NewVelociraptorService(name string) (*VelociraptorService, error) {
 
 	go func() {
 		for {
-			runOnce(result, elog)
-			time.Sleep(10 * time.Second)
+			subctx, cancel := context.WithCancel(ctx)
+			lwg := &sync.WaitGroup{}
+			lwg.Add(1)
+			go runOnce(subctx, lwg, result, elog)
+
+			select {
+			case <-ctx.Done():
+				// Wait for the client to shutdown.
+				cancel()
+				lwg.Wait()
+				return
+
+			case <-tools.ClientRestart:
+				cancel()
+				lwg.Wait()
+			}
 		}
 	}()
 

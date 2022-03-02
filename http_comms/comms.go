@@ -113,7 +113,7 @@ type IConnector interface {
 		name string, // Name of the component calling Post (used for logging)
 		handler string, // The URL handler we post to
 		data []byte, priority bool) (*bytes.Buffer, error)
-	ReKeyNextServer()
+	ReKeyNextServer(ctx context.Context)
 	ServerName() string
 }
 
@@ -269,7 +269,7 @@ func (self *HTTPConnector) Post(
 	if err != nil {
 		self.logger.Info("Post to %v returned %v - advancing to next server\n",
 			self.GetCurrentUrl(handler), err)
-		self.advanceToNextServer()
+		self.advanceToNextServer(ctx)
 		return nil, errors.WithStack(err)
 	}
 
@@ -297,7 +297,7 @@ func (self *HTTPConnector) Post(
 			self.GetCurrentUrl(handler), err)
 
 		// POST error - rotate to next URL
-		self.advanceToNextServer()
+		self.advanceToNextServer(ctx)
 		return nil, errors.WithStack(err)
 	}
 	// Must make sure to close the body or we leak sockets.
@@ -314,7 +314,7 @@ func (self *HTTPConnector) Post(
 		if !pres || len(dest) == 0 {
 			self.logger.Info("Redirect without location header - advancing\n")
 
-			self.advanceToNextServer()
+			self.advanceToNextServer(ctx)
 			return nil, errors.New("Redirect without a Location header?")
 		}
 
@@ -393,7 +393,7 @@ func (self *HTTPConnector) Post(
 			self.GetCurrentUrl(handler), resp.StatusCode)
 
 		// POST error - rotate to next URL
-		self.advanceToNextServer()
+		self.advanceToNextServer(ctx)
 
 		return nil, errors.New(resp.Status)
 	}
@@ -404,7 +404,7 @@ func (self *HTTPConnector) Post(
 // loop we wait to backoff.  Therefore when switching from one FE to
 // another we wont necessarily wait but if all frontends are down we
 // wait once per loop.
-func (self *HTTPConnector) advanceToNextServer() {
+func (self *HTTPConnector) advanceToNextServer(ctx context.Context) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -427,7 +427,11 @@ func (self *HTTPConnector) advanceToNextServer() {
 
 		// Add random wait between polls to avoid
 		// synchronization of endpoints.
-		<-self.clock.After(wait)
+		select {
+		case <-self.clock.After(wait):
+		case <-ctx.Done():
+			return
+		}
 	}
 }
 
@@ -445,18 +449,24 @@ func (self *HTTPConnector) String() string {
 // Contact the server and verify its public key. May block
 // indefinitely until a valid trusted server is found. After this
 // function completes the current URL is pointed at a valid server
-// which should be used for all further Post() optations.  Note that
+// which should be used for all further Post() operations.  Note that
 // this function holds a lock on the connector for the duration of the
 // call. All other POST operations will be blocked until a valid
 // server is found.
-func (self *HTTPConnector) ReKeyNextServer() {
+func (self *HTTPConnector) ReKeyNextServer(ctx context.Context) {
 	for {
-		err := self.rekeyNextServer()
-		if err == nil {
+		select {
+		case <-ctx.Done():
 			return
-		}
 
-		self.advanceToNextServer()
+		default:
+			err := self.rekeyNextServer(ctx)
+			if err == nil {
+				return
+			}
+
+			self.advanceToNextServer(ctx)
+		}
 	}
 }
 
@@ -467,7 +477,7 @@ func (self *HTTPConnector) ServerName() string {
 	return self.server_name
 }
 
-func (self *HTTPConnector) rekeyNextServer() error {
+func (self *HTTPConnector) rekeyNextServer(ctx context.Context) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -543,7 +553,11 @@ type NotificationReader struct {
 	minPoll, maxPoll      time.Duration
 	maxPollDev            uint64
 	current_poll_duration time.Duration
-	IsPaused              int32
+
+	// Pause the PumpRingBufferToSendMessage loop - stops transmitting
+	// data to the server temporarily. New data will still be queued
+	// in the ring buffer if there is room.
+	IsPaused int32
 
 	// A callback that will be notified when the reader
 	// completes. In the real client this is a fatal error since
@@ -616,24 +630,22 @@ func (self *NotificationReader) sendMessageList(
 			// POST again.
 			self.logger.Info("Failed to fetch URL %v: %v",
 				self.connector.GetCurrentUrl(self.handler), err)
-
-		} else {
-			// If we are paused we need to wait a bit before trying again
-
-			// Add random wait between polls to avoid
-			// synchronization of endpoints.
-			wait := self.maxPoll + time.Duration(
-				GetRand()(int(self.maxPollDev)))*time.Second
-			self.logger.Info("Sleeping for %v", wait)
-
-			select {
-			case <-ctx.Done():
-				return
-
-			case <-self.clock.After(wait):
-			}
 		}
 
+		// If we are paused we need to wait a bit before trying again
+
+		// Add random wait between polls to avoid
+		// synchronization of endpoints.
+		wait := self.maxPoll + time.Duration(
+			GetRand()(int(self.maxPollDev)))*time.Second
+		self.logger.Info("Sleeping for %v", wait)
+
+		select {
+		case <-ctx.Done():
+			return
+
+		case <-self.clock.After(wait):
+		}
 	}
 
 }
@@ -644,7 +656,7 @@ func (self *NotificationReader) sendToURL(
 	urgent bool) (err error) {
 
 	if self.connector.ServerName() == "" {
-		self.connector.ReKeyNextServer()
+		self.connector.ReKeyNextServer(ctx)
 	}
 
 	self.logger.Info("%s: Connected to %s", self.name,
@@ -713,8 +725,12 @@ func (self *NotificationReader) maybeCallOnExit() {
 // 3. Any received messages will be processed automatically by
 //    self.sendMessageList()
 // 4. If there are errors, we back off and wait for self.maxPoll.
-func (self *NotificationReader) Start(ctx context.Context) {
+func (self *NotificationReader) Start(
+	ctx context.Context, wg *sync.WaitGroup) {
+
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		defer self.maybeCallOnExit()
 
 		for {
@@ -752,7 +768,6 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 			SessionId: constants.FOREMAN_WELL_KNOWN_FLOW,
 			ForemanCheckin: &actions_proto.ForemanCheckin{
 				LastEventTableVersion: actions.GlobalEventTableVersion(),
-				LastHuntTimestamp:     self.config_obj.Writeback.HuntLastTimestamp,
 			}},
 		},
 	}
@@ -786,16 +801,19 @@ func (self *HTTPCommunicator) SetPause(is_paused bool) {
 }
 
 // Run forever.
-func (self *HTTPCommunicator) Run(ctx context.Context) {
+func (self *HTTPCommunicator) Run(
+	ctx context.Context, wg *sync.WaitGroup) {
 	self.logger.Info("Starting HTTPCommunicator: %v", self.receiver.connector)
+	defer wg.Done()
 
-	self.receiver.Start(ctx)
-	self.sender.Start(ctx)
+	self.receiver.Start(ctx, wg)
+	self.sender.Start(ctx, wg)
 
 	<-ctx.Done()
 }
 
 func NewHTTPCommunicator(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	manager crypto.IClientCryptoManager,
 	executor executor.Executor,
@@ -816,7 +834,7 @@ func NewHTTPCommunicator(
 		return nil, err
 	}
 
-	rb := NewLocalBuffer(config_obj)
+	rb := NewLocalBuffer(ctx, config_obj)
 
 	// Truncate the file to ensure we always start with a clean
 	// slate. This avoids a situation where the client fills up

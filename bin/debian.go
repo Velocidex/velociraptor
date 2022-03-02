@@ -122,7 +122,7 @@ Restart=always
 RestartSec=120
 LimitNOFILE=20000
 Environment=LANG=en_US.UTF-8
-ExecStart=%s --config %s client
+ExecStart=%s --config %s client --quiet
 
 [Install]
 WantedBy=multi-user.target

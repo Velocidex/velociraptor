@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/timelines"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/sorter"
@@ -96,9 +97,11 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 
-		ts, err := functions.TimeFromAny(scope, key)
-		if err == nil {
-			writer.Write(ts, vfilter.RowToDict(sub_ctx, subscope, row))
+		if !utils.IsNil(key) {
+			ts, err := functions.TimeFromAny(scope, key)
+			if err == nil {
+				writer.Write(ts, vfilter.RowToDict(sub_ctx, subscope, row))
+			}
 		}
 	}
 

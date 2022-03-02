@@ -7,7 +7,7 @@ SELECT * FROM Artifact.MacOS.System.Users(UserPlistGlob=srcDir + '/artifacts/tes
   "AppleId": null,
   "CreationTime": null,
   "FailedLoginCount": 0,
-  "FailedLoginTimestamp": null,
+  "FailedLoginTimestamp": "0001-01-01T00:00:00Z",
   "PasswordLastSetTime": "2017-11-25T00:36:29.728411912Z",
   "_Source": "MacOS.System.Users"
  }
