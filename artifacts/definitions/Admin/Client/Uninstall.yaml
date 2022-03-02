@@ -33,8 +33,8 @@ sources:
       WHERE DisplayName =~ DisplayNameRegex AND
         log(message="Will uninstall " + DisplayName)
       
-      LET uninstall(DisplayName) = SELECT * FROM execve(argv=[commandline_split(command=UninstallString) + "/quiet"])
+      LET uninstall(UninstallString) = SELECT * FROM execve(argv=[commandline_split(command=UninstallString) + "/quiet"])
 
       SELECT Name, DisplayName, UninstallString,
-          if(condition=ReallyDoIt, then=uninstall(Name=DisplayName).Stdout) AS UninstallLog
+          if(condition=ReallyDoIt, then=uninstall(Name=UninstallString).Stdout) AS UninstallLog
       FROM packages
