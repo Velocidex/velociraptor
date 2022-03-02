@@ -194,7 +194,7 @@ func (self *Launcher) CompileCollectorArgs(
 	// = 10) and artifact B (with max_rows = 20), then the
 	// collection will have max_rows = 20.
 	var max_rows, max_upload_bytes, timeout uint64
-	var ops_per_sec float32
+	var ops_per_sec, cpu_limit, iops_limit float32
 
 	for _, spec := range getCollectorSpecs(collector_request) {
 		var artifact *artifacts_proto.Artifact = nil
@@ -249,6 +249,14 @@ func (self *Launcher) CompileCollectorArgs(
 				vql_collector_args.OpsPerSecond = collector_request.OpsPerSecond
 			}
 
+			if collector_request.CpuLimit > 0 {
+				vql_collector_args.CpuLimit = collector_request.CpuLimit
+			}
+
+			if collector_request.IopsLimit > 0 {
+				vql_collector_args.IopsLimit = collector_request.IopsLimit
+			}
+
 			if collector_request.Timeout > 0 {
 				vql_collector_args.Timeout = collector_request.Timeout
 			}
@@ -257,6 +265,8 @@ func (self *Launcher) CompileCollectorArgs(
 
 			timeout = vql_collector_args.Timeout
 			ops_per_sec = vql_collector_args.OpsPerSecond
+			cpu_limit = vql_collector_args.CpuLimit
+			iops_limit = vql_collector_args.IopsLimit
 
 			result = append(result, vql_collector_args)
 		}
@@ -278,6 +288,14 @@ func (self *Launcher) CompileCollectorArgs(
 
 	if collector_request.OpsPerSecond == 0 {
 		collector_request.OpsPerSecond = ops_per_sec
+	}
+
+	if collector_request.CpuLimit == 0 {
+		collector_request.CpuLimit = cpu_limit
+	}
+
+	if collector_request.IopsLimit == 0 {
+		collector_request.IopsLimit = iops_limit
 	}
 
 	return result, nil

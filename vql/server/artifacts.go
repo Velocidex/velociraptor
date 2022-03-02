@@ -42,6 +42,8 @@ type ScheduleCollectionFunctionArg struct {
 	Spec         vfilter.Any `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
 	Timeout      uint64      `vfilter:"optional,field=timeout,doc=Set query timeout (default 10 min)"`
 	OpsPerSecond float64     `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
+	CpuLimit     float64     `vfilter:"optional,field=cpu_limit,doc=Set query cpu_limit value"`
+	IopsLimit    float64     `vfilter:"optional,field=iops_limit,doc=Set query iops_limit value"`
 	MaxRows      uint64      `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
 	MaxBytes     uint64      `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
 	Urgent       bool        `vfilter:"optional,field=urgent,doc=Set the collection as urgent - skips other queues collections on the client."`
@@ -105,6 +107,8 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		Artifacts:      arg.Artifacts,
 		Creator:        vql_subsystem.GetPrincipal(scope),
 		OpsPerSecond:   float32(arg.OpsPerSecond),
+		CpuLimit:       float32(arg.CpuLimit),
+		IopsLimit:      float32(arg.IopsLimit),
 		Timeout:        arg.Timeout,
 		MaxRows:        arg.MaxRows,
 		MaxUploadBytes: arg.MaxBytes,

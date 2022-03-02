@@ -239,8 +239,6 @@ func (self *EventTable) RunQuery(
 	}
 
 	scope := manager.BuildScope(builder)
-	vfilter.InstallThrottler(
-		scope, vfilter.NewTimeThrottler(float64(50)))
 
 	// Log a heartbeat so we know something is happening.
 	heartbeat := vql_request.Heartbeat

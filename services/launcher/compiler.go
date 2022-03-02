@@ -133,6 +133,8 @@ LET %v <= if(
 	if artifact.Resources != nil {
 		result.Timeout = artifact.Resources.Timeout
 		result.OpsPerSecond = artifact.Resources.OpsPerSecond
+		result.CpuLimit = artifact.Resources.CpuLimit
+		result.IopsLimit = artifact.Resources.IopsLimit
 	}
 
 	err := resolveImports(config_obj, artifact, result)

@@ -303,7 +303,7 @@ func (self *scanReporter) scanRange(start, end uint64, f accessors.ReadSeekClose
 		self.base_offset += uint64(n)
 
 		// We count an op as one MB scanned.
-		vfilter.ChargeOp(self.scope)
+		self.scope.ChargeOp()
 	}
 }
 
@@ -333,7 +333,7 @@ func (self *scanReporter) scanFile(
 	}
 
 	// We count an op as one MB scanned.
-	vfilter.ChargeOp(self.scope)
+	self.scope.ChargeOp()
 
 	return nil
 }
@@ -528,7 +528,7 @@ func (self YaraProcPlugin) Call(
 			}
 		}
 
-		vfilter.ChargeOp(scope)
+		scope.ChargeOp()
 	}()
 
 	return output_chan

@@ -80,6 +80,9 @@ func (self VQLClientAction) StartQuery(
 		rate = 1000000
 	}
 
+	cpu_limit := arg.CpuLimit
+	iops_limit := arg.IopsLimit
+
 	timeout := arg.Timeout
 	if timeout == 0 {
 		timeout = 600
@@ -152,7 +155,8 @@ func (self VQLClientAction) StartQuery(
 
 	scope.Log("Starting query execution.")
 
-	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(rate)))
+	scope.SetThrottler(NewThrottler(ctx, float64(rate),
+		float64(cpu_limit), float64(iops_limit)))
 
 	start := time.Now()
 

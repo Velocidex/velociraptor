@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -11,8 +12,9 @@ import (
 )
 
 type QueryPluginArgs struct {
-	Query string            `vfilter:"required,field=query,doc=A VQL Query to parse and execute."`
-	Env   *ordereddict.Dict `vfilter:"optional,field=env,doc=A dict of args to insert into the scope."`
+	Query    vfilter.Any       `vfilter:"required,field=query,doc=A VQL Query to parse and execute."`
+	Env      *ordereddict.Dict `vfilter:"optional,field=env,doc=A dict of args to insert into the scope."`
+	CpuLimit float64           `vfilter:"optional,field=cpu_limit,doc=Average CPU usage in percent of a core."`
 }
 
 type QueryPlugin struct{}
@@ -51,34 +53,89 @@ func (self QueryPlugin) Call(
 		subscope := manager.BuildScope(builder).AppendVars(arg.Env)
 		defer subscope.Close()
 
-		// Parse and compile the query
-		scope.Log("query: running query %v", arg.Query)
-		statements, err := vfilter.MultiParse(arg.Query)
-		if err != nil {
-			scope.Log("query: %v", err)
-			return
-		}
+		subscope.SetThrottler(actions.NewThrottler(ctx, 0, arg.CpuLimit, 0))
 
-		for _, vql := range statements {
-			row_chan := vql.Eval(ctx, subscope)
-		get_rows:
-			for {
-				select {
-				case <-ctx.Done():
-					return
-
-				case row, ok := <-row_chan:
-					if !ok {
-						break get_rows
-					}
-
-					output_chan <- row
-				}
-			}
-		}
+		runQuery(ctx, subscope, output_chan, arg.Query)
 	}()
 
 	return output_chan
+
+}
+
+func runQuery(
+	ctx context.Context,
+	scope vfilter.Scope,
+	output_chan chan vfilter.Row,
+	query vfilter.Any) {
+
+	switch t := query.(type) {
+	case string:
+		runStringQuery(ctx, scope, output_chan, t)
+
+	case vfilter.StoredQuery:
+		runStoredQuery(ctx, scope, output_chan, t)
+
+	case vfilter.LazyExpr:
+		runQuery(ctx, scope, output_chan, t.ReduceWithScope(ctx, scope))
+
+	default:
+		scope.Log("query: query should be a string or subquery")
+		return
+	}
+}
+
+func runStoredQuery(
+	ctx context.Context,
+	scope vfilter.Scope,
+	output_chan chan vfilter.Row,
+	query vfilter.StoredQuery) {
+
+	row_chan := query.Eval(ctx, scope)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case row, ok := <-row_chan:
+			if !ok {
+				return
+			}
+			output_chan <- row
+		}
+	}
+}
+
+func runStringQuery(
+	ctx context.Context,
+	scope vfilter.Scope,
+	output_chan chan vfilter.Row,
+	query_string string) {
+
+	// Parse and compile the query
+	scope.Log("query: running query %v", query_string)
+	statements, err := vfilter.MultiParse(query_string)
+	if err != nil {
+		scope.Log("query: %v", err)
+		return
+	}
+
+	for _, vql := range statements {
+		row_chan := vql.Eval(ctx, scope)
+	get_rows:
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case row, ok := <-row_chan:
+				if !ok {
+					break get_rows
+				}
+
+				output_chan <- row
+			}
+		}
+	}
 }
 
 func (self QueryPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {

@@ -51,7 +51,6 @@ func EvalQueryToTable(ctx context.Context,
 		}
 
 		table.Append(string_row)
-		vfilter.ChargeOp(scope)
 	}
 
 	return table

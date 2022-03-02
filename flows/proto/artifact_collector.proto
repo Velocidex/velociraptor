@@ -44,6 +44,9 @@ message ArtifactCollectorArgs {
             default: "1000000",
         }];
 
+    float cpu_limit = 25;
+    float iops_limit = 26;
+
     // Resource limits on this collection.
     uint64 timeout = 7 [(sem_type) = {
             description: "Number of seconds to run before cancelling the query.",

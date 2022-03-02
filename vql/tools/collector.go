@@ -38,6 +38,8 @@ type CollectPluginArgs struct {
 	Template            string      `vfilter:"optional,field=template,doc=The name of a template artifact (i.e. one which has report of type HTML)."`
 	Level               int64       `vfilter:"optional,field=level,doc=Compression level between 0 (no compression) and 9."`
 	OpsPerSecond        int64       `vfilter:"optional,field=ops_per_sec,doc=Rate limiting for collections."`
+	CpuLimit            float64     `vfilter:"optional,field=cpu_limit,doc=Set query cpu_limit value"`
+	IopsLimit           float64     `vfilter:"optional,field=iops_limit,doc=Set query iops_limit value"`
 }
 
 type CollectPlugin struct{}
@@ -182,9 +184,10 @@ func (self CollectPlugin) Call(
 			defer subscope.Close()
 
 			// Install throttler into the scope.
-			if arg.OpsPerSecond > 0 {
-				vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(
-					float64(arg.OpsPerSecond)))
+			if arg.OpsPerSecond > 0 || arg.CpuLimit > 0 || arg.IopsLimit > 0 {
+				scope.SetThrottler(actions.NewThrottler(ctx,
+					float64(arg.OpsPerSecond), float64(arg.CpuLimit),
+					float64(arg.IopsLimit)))
 			}
 
 			// Run each query and store the results in the container

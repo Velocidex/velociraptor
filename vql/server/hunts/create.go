@@ -45,6 +45,8 @@ type ScheduleHuntFunctionArg struct {
 	Spec          vfilter.Any      `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
 	Timeout       uint64           `vfilter:"optional,field=timeout,doc=Set query timeout (default 10 min)"`
 	OpsPerSecond  float64          `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
+	CpuLimit      float64          `vfilter:"optional,field=cpu_limit,doc=Set query ops_per_sec value"`
+	IopsLimit     float64          `vfilter:"optional,field=iops_limit,doc=Set query ops_per_sec value"`
 	MaxRows       uint64           `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
 	MaxBytes      uint64           `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
 	Pause         bool             `vfilter:"optional,field=pause,doc=If specified the new hunt will be in the paused state"`
@@ -109,6 +111,8 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		Creator:        vql_subsystem.GetPrincipal(scope),
 		Artifacts:      arg.Artifacts,
 		OpsPerSecond:   float32(arg.OpsPerSecond),
+		CpuLimit:       float32(arg.CpuLimit),
+		IopsLimit:      float32(arg.IopsLimit),
 		Timeout:        arg.Timeout,
 		MaxRows:        arg.MaxRows,
 		MaxUploadBytes: arg.MaxBytes,

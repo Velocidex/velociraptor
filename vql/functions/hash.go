@@ -131,7 +131,8 @@ func (self *HashFunction) Call(ctx context.Context,
 			_, _ = result.sha1.Write(buf[:n])
 			_, _ = result.sha256.Write(buf[:n])
 
-			vfilter.ChargeOp(scope)
+			// Charge an op for each buffer we read
+			scope.ChargeOp()
 		}
 	}
 }

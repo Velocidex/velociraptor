@@ -268,6 +268,8 @@ message Resources {
     // Default timeout for this artifact
     uint64 timeout = 1;
     float ops_per_second = 4;
+    float cpu_limit = 5;
+    float iops_limit = 6;
 
     // Default resource use for the entire collection.
     uint64 max_rows = 2;
