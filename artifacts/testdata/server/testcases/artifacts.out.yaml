@@ -37,6 +37,8 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
     }
    ],
    "ops_per_second": 0,
+   "cpu_limit": 0,
+   "iops_limit": 0,
    "timeout": 0,
    "max_rows": 0,
    "max_upload_bytes": 0,
@@ -75,6 +77,8 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
     }
    ],
    "ops_per_second": 0,
+   "cpu_limit": 0,
+   "iops_limit": 0,
    "timeout": 0,
    "max_rows": 0,
    "max_upload_bytes": 0,
