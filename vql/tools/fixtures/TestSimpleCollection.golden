@@ -59,6 +59,9 @@
      "value": "InvalidChoice"
     },
     {
+     "key": "Hashes"
+    },
+    {
      "key": "RegularExpression",
      "value": "."
     },
