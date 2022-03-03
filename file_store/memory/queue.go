@@ -197,7 +197,8 @@ func (self *MemoryQueueManager) GetWatchers() []string {
 }
 
 func (self *MemoryQueueManager) Watch(
-	ctx context.Context, queue_name string) (output <-chan *ordereddict.Dict, cancel func()) {
+	ctx context.Context, queue_name string,
+	queue_options *api.QueueOptions) (output <-chan *ordereddict.Dict, cancel func()) {
 	return GlobalQueuePool(self.config_obj).Register(queue_name)
 }
 

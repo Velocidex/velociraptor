@@ -127,7 +127,6 @@ func (self *FileBasedRingBuffer) Lease(count int) []*ordereddict.Dict {
 
 	// The file contains more data.
 	for self.header.WritePointer > self.header.ReadPointer {
-
 		// Read the next chunk (length+value) from the current leased pointer.
 		n, err := self.fd.ReadAt(self.read_buf, self.header.ReadPointer)
 		if err != nil || n != len(self.read_buf) {
@@ -165,6 +164,7 @@ func (self *FileBasedRingBuffer) Lease(count int) []*ordereddict.Dict {
 		}
 
 		self.header.ReadPointer += 8 + int64(n)
+
 		// We read up to the write pointer, we may truncate the file now.
 		if self.header.ReadPointer == self.header.WritePointer {
 			self._Truncate()
@@ -205,7 +205,6 @@ func NewFileBasedRingBuffer(
 	config_obj *config_proto.Config, fd *os.File) (*FileBasedRingBuffer, error) {
 
 	log_ctx := logging.GetLogger(config_obj, &logging.FrontendComponent)
-
 	header := &Header{
 		// Pad the header a bit to allow for extensions.
 		WritePointer: FirstRecordOffset,
@@ -242,6 +241,5 @@ func NewFileBasedRingBuffer(
 		write_buf:  make([]byte, 8),
 		log_ctx:    log_ctx,
 	}
-
 	return result, nil
 }

@@ -40,7 +40,9 @@ var (
 
 type sample struct {
 	total_cpu_usage  float64
+	total_iops       float64
 	average_cpu_load float64
+	average_iops     float64
 	timestamp_ms     float64
 }
 
@@ -119,15 +121,27 @@ func (self *statsCollector) GetAverageCPULoad() float64 {
 	return self.samples[1].average_cpu_load
 }
 
+func (self *statsCollector) GetAverageIOPS() float64 {
+	return self.samples[1].average_iops
+}
+
 // This returns the total number of CPU seconds used in total for the
 // process. This is called not that frequently in order to minimize
 // the overheads of making a system call.
-func (self *statsCollector) getCpuTime(ctx context.Context) (float64, error) {
+func (self *statsCollector) getCpuTime(ctx context.Context) float64 {
 	cpu_time, err := self.proc.TimesWithContext(ctx)
 	if err != nil {
-		return 0, err
+		return 0
 	}
-	return cpu_time.Total(), nil
+	return cpu_time.Total()
+}
+
+func (self *statsCollector) getIops(ctx context.Context) float64 {
+	counters, err := self.proc.IOCountersWithContext(ctx)
+	if err != nil {
+		return 0
+	}
+	return float64(counters.ReadCount + counters.WriteCount)
 }
 
 // This is called frequently to estimate the current CPU load.
@@ -141,10 +155,9 @@ func (self *statsCollector) updateStats(ctx context.Context) {
 
 	throttlerUpdateStatsCounter.Inc()
 
-	total_cpu_time, err := self.getCpuTime(ctx)
-	if err != nil {
-		return
-	}
+	total_cpu_time := self.getCpuTime(ctx)
+	iops := self.getIops(ctx)
+
 	now := float64(time.Now().UnixNano()) / 1000000
 
 	last_sample := self.samples[1]
@@ -154,13 +167,21 @@ func (self *statsCollector) updateStats(ctx context.Context) {
 	avg_cpu := (total_cpu_time - last_sample.total_cpu_usage) /
 		(duration_msec / 1000) * 100 / self.number_of_cores
 
-	// 100 point SMA of avg_cpu
+	// 30 point SMA of avg_cpu
 	next_avg_cpu := last_sample.average_cpu_load +
 		(avg_cpu-last_sample.average_cpu_load)/30
 
+	avg_iops := (iops - last_sample.total_iops) /
+		(duration_msec / 1000)
+
+	next_avg_iops := last_sample.average_iops +
+		(avg_iops-last_sample.average_iops)/30
+
 	next_sample := sample{
 		total_cpu_usage:  total_cpu_time,
+		total_iops:       iops,
 		average_cpu_load: next_avg_cpu,
+		average_iops:     next_avg_iops,
 		timestamp_ms:     now,
 	}
 
@@ -176,6 +197,7 @@ func (self *statsCollector) updateStats(ctx context.Context) {
 type Throttler struct {
 	// If the query allowed to run yet?
 	cpu_load_limit float64
+	iops_limit     float64
 	stats          *statsCollector
 }
 
@@ -193,6 +215,10 @@ func (self *Throttler) ChargeOp() {
 		self.stats.cond.Wait()
 	}
 
+	for self.iops_limit > 0 &&
+		self.stats.GetAverageIOPS() > self.iops_limit {
+		self.stats.cond.Wait()
+	}
 }
 
 func (self *Throttler) Close() {}
@@ -204,9 +230,18 @@ func (self DummyThrottler) Close()    {}
 
 func NewThrottler(
 	ctx context.Context,
-	ops_per_sec, cpu_percent, iop_percent float64) types.Throttler {
+	ops_per_sec, cpu_percent, iops_limit float64) types.Throttler {
 
-	if cpu_percent == 0 {
+	if ops_per_sec > 0 {
+		cpu_percent = ops_per_sec
+	}
+
+	// cpu throttler can only work from 0 to 100%
+	if cpu_percent <= 0 || cpu_percent > 100 {
+		cpu_percent = 0
+	}
+
+	if cpu_percent == 0 && iops_limit == 0 {
 		return &DummyThrottler{}
 	}
 
@@ -234,5 +269,58 @@ func NewThrottler(
 		stats.mu.Unlock()
 	}()
 
-	return &Throttler{cpu_load_limit: cpu_percent, stats: stats}
+	return &Throttler{
+		cpu_load_limit: cpu_percent,
+		iops_limit:     iops_limit,
+		stats:          stats,
+	}
+}
+
+func init() {
+	_ = prometheus.Register(promauto.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: "process_iops_count",
+			Help: "Current IOPs level",
+		}, func() float64 {
+			if stats != nil {
+				return stats.GetAverageIOPS()
+			}
+
+			proc, err := process.NewProcess(int32(os.Getpid()))
+			if err != nil || proc == nil {
+				return 0
+			}
+
+			counters, err := proc.IOCounters()
+			if err != nil {
+				return 0
+			}
+			return float64(counters.ReadCount + counters.WriteCount)
+		}))
+
+	_ = prometheus.Register(promauto.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: "process_cpu_used",
+			Help: "Current CPU utilization by this process",
+		}, func() float64 {
+			if stats != nil {
+				return stats.GetAverageCPULoad()
+			}
+
+			proc, err := process.NewProcess(int32(os.Getpid()))
+			if err != nil || proc == nil {
+				return 0
+			}
+
+			number_of_cores, err := cpu.Counts(true)
+			if err != nil || number_of_cores <= 0 {
+				return 0
+			}
+
+			cpu_time, err := proc.CPUPercent()
+			if err != nil {
+				return 0
+			}
+			return cpu_time / float64(number_of_cores)
+		}))
 }

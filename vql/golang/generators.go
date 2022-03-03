@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/file_store/directory"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -31,7 +31,7 @@ func (self Generator) Eval(ctx context.Context, scope types.Scope) <-chan types.
 		return result
 	}
 
-	output_chan, cancel, err := b.Watch(ctx, self.name, directory.QueueOptions{
+	output_chan, cancel, err := b.Watch(ctx, self.name, api.QueueOptions{
 		DisableFileBuffering: self.disable_file_buffering,
 	})
 

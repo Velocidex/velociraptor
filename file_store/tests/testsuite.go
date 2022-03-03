@@ -348,7 +348,7 @@ func (self *QueueManagerTestSuite) TestPush() {
 		ordereddict.NewDict().Set("foo", 2)}
 
 	ctx := context.Background()
-	output, cancel := self.manager.Watch(ctx, artifact_name)
+	output, cancel := self.manager.Watch(ctx, artifact_name, nil)
 	defer cancel()
 
 	log_path := path_specs.NewUnsafeFilestorePath("log_path")

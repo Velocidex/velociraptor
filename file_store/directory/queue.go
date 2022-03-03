@@ -37,10 +37,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-type QueueOptions struct {
-	DisableFileBuffering bool
-}
-
 // A Queue manages a set of registrations at a specific queue name
 // (artifact name).
 type QueuePool struct {
@@ -65,7 +61,7 @@ func (self *QueuePool) GetWatchers() []string {
 
 func (self *QueuePool) Register(
 	ctx context.Context, vfs_path string,
-	options QueueOptions) (<-chan *ordereddict.Dict, func()) {
+	options api.QueueOptions) (<-chan *ordereddict.Dict, func()) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -208,8 +204,13 @@ func (self *DirectoryQueueManager) GetWatchers() []string {
 	return self.queue_pool.GetWatchers()
 }
 
-func (self *DirectoryQueueManager) Watch(ctx context.Context,
-	queue_name string) (<-chan *ordereddict.Dict, func()) {
+func (self *DirectoryQueueManager) Watch(
+	ctx context.Context, queue_name string,
+	queue_options *api.QueueOptions) (<-chan *ordereddict.Dict, func()) {
+
+	if queue_options == nil {
+		queue_options = &api.QueueOptions{}
+	}
 
 	// If the caller of Watch no longer cares about watching the queue
 	// they will call the cancellation function. This must abandon the
@@ -217,7 +218,7 @@ func (self *DirectoryQueueManager) Watch(ctx context.Context,
 	// dropped on the floor.
 	subctx, cancel := context.WithCancel(ctx)
 	output_chan, pool_cancel := self.queue_pool.Register(
-		subctx, queue_name, QueueOptions{})
+		subctx, queue_name, *queue_options)
 	return output_chan, func() {
 		cancel()
 		pool_cancel()

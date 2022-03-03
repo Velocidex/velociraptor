@@ -6,15 +6,17 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type QueryPluginArgs struct {
-	Query    vfilter.Any       `vfilter:"required,field=query,doc=A VQL Query to parse and execute."`
-	Env      *ordereddict.Dict `vfilter:"optional,field=env,doc=A dict of args to insert into the scope."`
-	CpuLimit float64           `vfilter:"optional,field=cpu_limit,doc=Average CPU usage in percent of a core."`
+	Query     vfilter.Any       `vfilter:"required,field=query,doc=A VQL Query to parse and execute."`
+	Env       *ordereddict.Dict `vfilter:"optional,field=env,doc=A dict of args to insert into the scope."`
+	CpuLimit  float64           `vfilter:"optional,field=cpu_limit,doc=Average CPU usage in percent of a core."`
+	IopsLimit float64           `vfilter:"optional,field=iops_limit,doc=Average IOPs to target."`
 }
 
 type QueryPlugin struct{}
@@ -53,7 +55,10 @@ func (self QueryPlugin) Call(
 		subscope := manager.BuildScope(builder).AppendVars(arg.Env)
 		defer subscope.Close()
 
-		subscope.SetThrottler(actions.NewThrottler(ctx, 0, arg.CpuLimit, 0))
+		utils.Debug(arg)
+
+		subscope.SetThrottler(actions.NewThrottler(
+			ctx, 0, arg.CpuLimit, arg.IopsLimit))
 
 		runQuery(ctx, subscope, output_chan, arg.Query)
 	}()
