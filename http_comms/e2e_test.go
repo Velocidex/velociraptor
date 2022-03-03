@@ -201,6 +201,9 @@ func (self *TestSuite) TestServerRotateKeyE2E() {
 	server_cancel()
 	server_wg.Wait()
 
+	// Wait for client to reconnect
+	time.Sleep(time.Second)
+
 	// Now rekey the server
 	frontend_cert, err := crypto.GenerateServerCert(
 		self.config_obj, self.config_obj.Client.PinnedServerName)
@@ -225,7 +228,7 @@ func (self *TestSuite) TestServerRotateKeyE2E() {
 			return false
 		}
 
-		return vtesting.ContainsString("Unable to decrypt body", logging.GetMemoryLogs())
+		return vtesting.ContainsString("", logging.GetMemoryLogs())
 	})
 
 	// Make sure the client properly rekeys and continues to talk to the server
