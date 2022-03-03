@@ -17,6 +17,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BootstrapTable from 'react-bootstrap-table-next';
 import cellEditFactory, { Type } from 'react-bootstrap-table2-editor';
 import { parseCSV, serializeCSV } from '../utils/csv.js';
+import "./validated.css";
 
 const numberRegex = RegExp("^[0-9]+$");
 
@@ -71,6 +72,27 @@ export default class VeloForm extends React.Component {
 
         // A Date() object that is parsed from value in local time.
         timestamp: null,
+    }
+
+    setValueWithValidator = (value, validator)=>{
+        let invalid = false;
+        if (validator) {
+            try {
+                const regexp = new RegExp(validator, 'ism');
+                if (_.isEmpty(value)) {
+                    invalid = false;
+                } else if (regexp.test(value)) {
+                    invalid = false;
+                } else {
+                    invalid = true;
+                }
+
+                this.setState({invalid: invalid});
+            } catch(e){
+                console.log(e);
+            }
+        }
+        this.props.setValue(value);
     }
 
     render() {
@@ -357,9 +379,13 @@ export default class VeloForm extends React.Component {
                   </Form.Label>
                   <Col sm="8">
                     <Form.Control as="textarea"
+                                  placeholder={this.props.param.description}
+                                  className={ this.state.invalid && 'invalid' }
                                   rows={1}
                                   onChange={(e) => {
-                                      this.props.setValue(e.currentTarget.value);
+                                      this.setValueWithValidator(
+                                          e.currentTarget.value,
+                                          this.props.param.validating_regex);
                                   }}
                                   value={this.props.value} />
                   </Col>

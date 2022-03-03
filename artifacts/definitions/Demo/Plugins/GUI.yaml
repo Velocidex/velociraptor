@@ -19,6 +19,10 @@ parameters:
       - Second Choice
       - Third Choice
 
+  - name: Hashes
+    validating_regex: '^\s*([A-F0-9]+\s*)+$'
+    description: One or more hashes in hex separated by white space.
+
   - name: RegularExpression
     type: regex
     default: "."

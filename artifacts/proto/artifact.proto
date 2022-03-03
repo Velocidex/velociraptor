@@ -37,6 +37,9 @@ message ArtifactParameter {
     repeated string choices = 6;
 
     string friendly_name = 5;
+
+    // For type = string
+    string validating_regex = 7;
 }
 
 message NotebookSourceCell {
