@@ -19,7 +19,7 @@ description: |
 parameters:
   - name: TargetGlob
     description: Glob to target.
-    default: "**/*"
+    default: "C:/Users/**/*"
   - name: Accessor
     description: Velociraptor accessor to use. Changing to ntfs will increase scan time.
     default: file
