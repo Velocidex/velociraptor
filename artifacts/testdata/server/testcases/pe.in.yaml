@@ -56,3 +56,6 @@ Queries:
   # Test the extraction of cat files.
   - SELECT * FROM Artifact.Windows.System.CatFiles(SignerExcludeRegex="DoNotExclude",
         CatGlobs=srcDir + "/artifacts/**/*.cat")
+
+  # Test Windows.Detection.BinaryHunter
+  - SELECT File.FullPath, File.Name, File.Size, Hash.SHA1 FROM Artifact.Windows.Detection.BinaryHunter(TargetGlob=srcDir + "artifacts/**/*.dll",SHA1List='8645c878966239afe44df0593288c7c59a7878eb')

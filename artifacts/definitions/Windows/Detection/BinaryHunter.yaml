@@ -1,0 +1,141 @@
+name: Windows.Detection.BinaryHunter
+author: "Matt Green - @mgreen27"
+description: |
+    This artifact enables hunting for binary attributes.
+    
+    The artifact takes a glob targetting input, then checks each file in scope for an MZ header. 
+    The artifact also queries Authenticode details and parses out PE attributes.
+    
+    Both PE and Authenticode output can be queried for relevant strings using a regex filter and whitelist to hunt with. 
+    This enables unique capability to hunt for specific things such as PE imports, exports or other attributes.
+    
+    Note: this artifacts filters are cumulative so a hash based hit will return 
+    no results if the file is filtered out by other filters.
+    
+    For most performant searches leverage path, size and and date filters. By default 
+    the artifact leverages the 'file' data accessor, some users 
+    may decide to set to ntfs.
+
+parameters:
+  - name: TargetGlob
+    description: Glob to target.
+    default: "**/*"
+  - name: Accessor
+    description: Velociraptor accessor to use. Changing to ntfs will increase scan time.
+    default: file
+  - name: UnexpectedExtension
+    description: "Exclude binaries with expected extension: com|cpl|dll|drv|exe|mui|scr|sfx|sys|winmd"
+    type: bool
+  - name: ExcludeTrusted
+    description: Exclude binaries with Trusted Authenticode certificates.
+    type: bool
+  - name: AuthenticodeRegex
+    description: Regex to search through all authenrticode data.
+    default: .
+    type: regex
+  - name: AuthenticodeWhitelistRegex
+    description: Regex to whitelist in all Authenticode data.
+    default:
+    type: regex
+  - name: PEInformationRegex
+    description: Regex to filter for PE information. e.g VersionInformation, exports etc
+    default: .
+    type: regex
+  - name: PEInformationWhitelistRegex
+    description: Regex to whitelist for PE information. e.g VersionInformation, exports etc
+    default:
+    type: regex
+  - name: DateAfter
+    description: Search for binaries with timestamps after this date. YYYY-MM-DDTmm:hh:ssZ
+    type: timestamp
+  - name: DateBefore
+    description: Search for binaries with timestamps before this date. YYYY-MM-DDTmm:hh:ssZ
+    type: timestamp
+  - name: SizeMax
+    description: Return binaries only under this size in bytes.
+    type: int64
+  - name: SizeMin
+    description: Return binaries only over this size in bytes.
+    type: int64
+  - name: MD5List
+    description: SHA1 hash list to hunt for. New MD5 hash on each line
+    default:
+  - name: SHA1List
+    description: SHA1 hash list to hunt for. New SHA1 hash on each line
+    default:
+  - name: SHA256List
+    description: SHA256 hash list to hunt for. New SHA256 hash on each line
+    default:
+    
+export: |
+  LET Profile = '''[
+    ["FileType", 0, [
+        ["Magic", 0, "String", {
+            "length": 2 
+        }],
+        ["MagicHex",0,"Value",{ 
+            "value": "x=>format(format='% x', args=x.Magic)" 
+        }],
+    ]]]'''
+
+
+sources:
+  - query: |
+      -- time testing
+      LET time_test(stamp) =
+            if(condition= DateBefore AND DateAfter,
+                then= stamp < DateBefore AND stamp > DateAfter,
+                else=
+            if(condition=DateBefore,
+                then= stamp < DateBefore,
+                else=
+            if(condition= DateAfter,
+                then= stamp > DateAfter,
+                else= True
+            )))
+            
+      SELECT
+        dict(FullPath=FullPath,Name=Name,Size=Size,
+            Timestamps=dict(Mtime=Mtime,Atime=Atime,Ctime=Ctime,Btime=Btime)
+                ) as File,
+        authenticode(filename=FullPath) as Authenticode,
+        parse_binary(filename=FullPath,profile=Profile,struct="FileType").MagicHex as _MagixHex,
+        read_file(filename=FullPath,offset=0,length=2) as _Header,
+        parse_pe(file=FullPath) as PE,
+        hash(path=FullPath) as Hash
+      FROM glob(globs=TargetGlob,accessor=Accessor)
+      WHERE 
+        NOT IsDir AND NOT IsLink AND _MagixHex = '4d 5a'
+        AND if(condition= UnexpectedExtension,
+                then= NOT Name =~ '\.(com|cpl|dll|drv|exe|mui|scr|sfx|sys|winmd)$',
+                else= True)
+        AND if(condition=SizeMax,
+                then=FileSize < atoi(string=SizeMax),
+                else=TRUE)
+            AND if(condition=SizeMin,
+                then=FileSize > atoi(string=SizeMin),
+                else=TRUE)
+            AND
+             ( time_test(stamp=Mtime)
+            OR time_test(stamp=Ctime)
+            OR time_test(stamp=Btime))
+        AND format(format='%s',args=Authenticode) =~ AuthenticodeRegex
+        AND NOT if(condition=WhitelistRegex,
+            then= format(format='%s',args=Authenticode) =~ AuthenticodeWhitelistRegex,
+            else= False)
+        AND format(format='%s',args=PE) =~ PEInformationRegex
+        AND NOT if(condition=PEInformationWhitelistRegex,
+            then= format(format='%s',args=PE) =~ PEInformationWhitelistRegex,
+            else= False)
+        AND if(condition= ExcludeTrusted,
+                then= NOT Authenticode.Trusted = "trusted",
+                else= True)
+        AND if(condition= MD5List OR SHA1List OR SHA256List,
+            then=(
+                    if(condition= MD5List, 
+                    then= Hash.MD5 in split(sep='\\s+',string=MD5List))
+                 OR if(condition= SHA1List, 
+                        then= Hash.SHA1 in split(sep='\\s+',string=SHA1List))
+                 OR if(condition= SHA256List, 
+                        then= Hash.SHA256 in split(sep='\\s+',string=SHA256List))
+            ), else = True )
