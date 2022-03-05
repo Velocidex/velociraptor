@@ -29,6 +29,7 @@ import (
 	"runtime/debug"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	errors "github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
@@ -88,9 +89,16 @@ func (self *Sender) PumpExecutorToRingBuffer(
 			}
 		}
 
+		executor.Nanny.UpdatePumpToRb()
+
 		select {
 		case <-ctx.Done():
 			return
+
+			// Keep the nanny alive to ensure we are still inside this
+			// loop.
+		case <-time.After(self.maxPoll):
+			continue
 
 		case msg, ok := <-executor_chan:
 			// Executor closed the channel.
@@ -172,6 +180,8 @@ func (self *Sender) PumpRingBufferToSendMessage(
 	defer self.maybeCallOnExit()
 
 	for {
+		executor.Nanny.UpdatePumpRbToServer()
+
 		if atomic.LoadInt32(&self.IsPaused) == 0 {
 			// Grab some messages from the urgent ring buffer.
 			compressed_messages := LeaseAndCompress(self.urgent_buffer,

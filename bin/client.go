@@ -116,6 +116,12 @@ func runClientOnce(
 	sm := services.NewServiceManager(ctx, config_obj)
 	defer sm.Close()
 
+	// Start the nanny first so we are covered from here on.
+	err = sm.Start(executor.StartNannyService)
+	if err != nil {
+		return err
+	}
+
 	exe, err := executor.NewClientExecutor(ctx, config_obj)
 	if err != nil {
 		return fmt.Errorf("Can not create executor: %w", err)

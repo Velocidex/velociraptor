@@ -540,6 +540,13 @@ func runOnce(ctx context.Context,
 	// before we begin the comms.
 	sm := services.NewServiceManager(ctx, config_obj)
 	defer sm.Close()
+
+	// Start the nanny first so we are covered from here on.
+	err = sm.Start(executor.StartNannyService)
+	if err != nil {
+		return
+	}
+
 	err = executor.StartServices(sm, manager.ClientId, exe)
 	if err != nil {
 		return

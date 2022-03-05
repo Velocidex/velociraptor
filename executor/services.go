@@ -27,16 +27,11 @@ func StartServices(
 	}
 
 	// Now start client specific services.
-	err = sm.Start(func(ctx context.Context,
+	return sm.Start(func(ctx context.Context,
 		wg *sync.WaitGroup,
 		config_obj *config_proto.Config) error {
 		return StartEventTableService(ctx, wg, config_obj, exe)
 	})
-	if err != nil {
-		return err
-	}
-
-	return sm.Start(StartNannyService)
 }
 
 func StartEventTableService(
