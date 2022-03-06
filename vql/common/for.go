@@ -65,56 +65,6 @@ func (self ForPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 	}
 }
 
-type RangePluginArgs struct {
-	Start int64 `vfilter:"required,field=start,doc=Start index (0 based)"`
-	End   int64 `vfilter:"required,field=end,doc=End index (0 based)"`
-	Step  int64 `vfilter:"required,field=step,doc=End index (0 based)"`
-}
-
-type RangePlugin struct{}
-
-func (self RangePlugin) Call(
-	ctx context.Context,
-	scope vfilter.Scope,
-	args *ordereddict.Dict) <-chan vfilter.Row {
-	output_chan := make(chan vfilter.Row)
-
-	go func() {
-		defer close(output_chan)
-
-		arg := &RangePluginArgs{}
-		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
-		if err != nil {
-			scope.Log("range: %v", err)
-			return
-		}
-
-		if arg.Step == 0 {
-			arg.Step = 1
-		}
-
-		for i := arg.Start; i < arg.End; i += arg.Step {
-			select {
-			case <-ctx.Done():
-				return
-
-			case output_chan <- ordereddict.NewDict().Set("_value", i):
-			}
-		}
-	}()
-
-	return output_chan
-}
-
-func (self RangePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
-	return &vfilter.PluginInfo{
-		Name:    "range",
-		Doc:     "Iterate over range.",
-		ArgType: type_map.AddType(scope, &RangePluginArgs{}),
-	}
-}
-
 func init() {
-	vql_subsystem.RegisterPlugin(&RangePlugin{})
 	vql_subsystem.RegisterPlugin(&ForPlugin{})
 }

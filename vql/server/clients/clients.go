@@ -108,7 +108,6 @@ func (self ClientsPlugin) Call(
 				return
 			case output_chan <- json.ConvertProtoToOrderedDict(api_client):
 			}
-			vfilter.ChargeOp(scope)
 		}
 	}()
 

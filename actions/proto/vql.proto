@@ -60,9 +60,13 @@ message VQLCollectorArgs {
             default: "10",
         }];
 
-   float ops_per_second = 24 [(sem_type) = {
+    // This is deprecated.
+    float ops_per_second = 24 [(sem_type) = {
       description: "An Op is defined as some arbitrary unit of work. This allows work to be limited. Typically VQL plugins will count ops towards the query as appropriate."
     }];
+
+    float cpu_limit = 30;
+    float iops_limit = 31;
 
     repeated Artifact artifacts = 5 [(sem_type) = {
             description: "Artifacts sent from the server to help with this query."

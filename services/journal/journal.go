@@ -63,7 +63,7 @@ func (self *JournalService) Watch(
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Watching for events from %v", queue_name)
-	res, cancel := self.qm.Watch(ctx, queue_name)
+	res, cancel := self.qm.Watch(ctx, queue_name, nil)
 
 	// Advertise new watchers
 	self.publishWatchers()

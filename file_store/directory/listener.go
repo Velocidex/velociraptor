@@ -9,6 +9,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -39,7 +40,8 @@ type Listener struct {
 
 	id uint64
 
-	name string
+	name    string
+	options api.QueueOptions
 
 	// The consumer interested in these events. The consumer may
 	// block arbitrarily.
@@ -209,16 +211,17 @@ func (self *Listener) Debug() *ordereddict.Dict {
 func NewListener(
 	config_obj *config_proto.Config,
 	ctx context.Context, name string,
-	options QueueOptions) (*Listener, error) {
+	options api.QueueOptions) (*Listener, error) {
 
 	subctx, cancel := context.WithCancel(ctx)
 
 	self := &Listener{
-		id:     utils.GetId(),
-		name:   name,
-		output: make(chan *ordereddict.Dict),
-		ctx:    subctx,
-		cancel: cancel,
+		id:      utils.GetId(),
+		name:    name,
+		output:  make(chan *ordereddict.Dict),
+		ctx:     subctx,
+		cancel:  cancel,
+		options: options,
 	}
 
 	if options.DisableFileBuffering {
@@ -252,8 +255,13 @@ func NewListener(
 				// messages were enqueued.
 			case <-self._file_buffer_ready():
 				// Get some messages from the buffer file.
+				lease_size := self.options.FileBufferLeaseSize
+				if lease_size == 0 {
+					lease_size = 100
+				}
+
 				self.mu.Lock()
-				items := self.file_buffer.Lease(100)
+				items := self.file_buffer.Lease(lease_size)
 				if len(items) == 0 {
 					// Buffer file is empty - reset the trigger and
 					// signal to the Send() function that direct

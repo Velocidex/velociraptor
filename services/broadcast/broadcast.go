@@ -7,6 +7,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -63,7 +64,7 @@ func (self *BroadcastService) unregister(name string) {
 }
 
 func (self *BroadcastService) Watch(
-	ctx context.Context, name string, options directory.QueueOptions) (
+	ctx context.Context, name string, options api.QueueOptions) (
 	output <-chan *ordereddict.Dict, cancel func(), err error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()

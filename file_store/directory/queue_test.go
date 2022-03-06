@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -86,7 +87,9 @@ func (self *TestSuite) TestQueueManager() {
 	// Push some rows to the queue manager
 	ctx := context.Background()
 
-	reader, cancel := manager.Watch(ctx, "TestQueue")
+	reader, cancel := manager.Watch(ctx, "TestQueue", &api.QueueOptions{
+		FileBufferLeaseSize: 1,
+	})
 
 	path_manager, err := artifacts.NewArtifactPathManager(self.ConfigObj,
 		"C.123", "", "TestQueue")

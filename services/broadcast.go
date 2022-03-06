@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/file_store/directory"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
 // The broadcast service allows VQL to implement fan out
@@ -66,6 +66,6 @@ func GetBroadcastService() (BroadcastService, error) {
 
 type BroadcastService interface {
 	RegisterGenerator(input <-chan *ordereddict.Dict, name string) error
-	Watch(ctx context.Context, name string, options directory.QueueOptions) (
+	Watch(ctx context.Context, name string, options api.QueueOptions) (
 		output <-chan *ordereddict.Dict, cancel func(), err error)
 }

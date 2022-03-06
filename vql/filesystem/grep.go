@@ -1,3 +1,5 @@
+// +build deprecated
+
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -134,7 +136,9 @@ func (self *GrepFunction) Call(ctx context.Context,
 			}
 
 			offset += n
-			vfilter.ChargeOp(scope)
+
+			// Charge an op because we may not emit anything here
+			scope.ChargeOp()
 		}
 	}
 }

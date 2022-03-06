@@ -490,6 +490,12 @@
   - name: ops_per_sec
     type: int64
     description: Rate limiting for collections.
+  - name: cpu_limit
+    type: float64
+    description: Set query cpu_limit value
+  - name: iops_limit
+    type: float64
+    description: Set query iops_limit value
   category: plugin
 - name: collect_client
   description: |
@@ -557,6 +563,12 @@
   - name: ops_per_sec
     type: float64
     description: Set query ops_per_sec value
+  - name: cpu_limit
+    type: float64
+    description: Set query cpu_limit value
+  - name: iops_limit
+    type: float64
+    description: Set query iops_limit value
   - name: max_rows
     type: uint64
     description: Max number of rows to fetch
@@ -1958,6 +1970,12 @@
   - name: ops_per_sec
     type: float64
     description: Set query ops_per_sec value
+  - name: cpu_limit
+    type: float64
+    description: Set query ops_per_sec value
+  - name: iops_limit
+    type: float64
+    description: Set query ops_per_sec value
   - name: max_rows
     type: uint64
     description: Max number of rows to fetch
@@ -2453,6 +2471,9 @@
   - name: dedup
     type: int64
     description: Suppress same message in this many seconds (default 60 sec).
+  - name: args
+    type: Any
+    description: An array of elements to apply into the format string.
   category: basic
 - name: lookupSID
   description: Get information about the SID.
@@ -3774,12 +3795,15 @@
   type: Plugin
   args:
   - name: query
-    type: string
+    type: Any
     description: A VQL Query to parse and execute.
     required: true
   - name: env
     type: ordereddict.Dict
     description: A dict of args to insert into the scope.
+  - name: cpu_limit
+    type: float64
+    description: Average CPU usage in percent of a core.
 - name: rand
   description: Selects a random number.
   type: Function
@@ -3794,16 +3818,14 @@
   args:
   - name: start
     type: int64
-    description: Start index (0 based)
-    required: true
+    description: Start index (0 based - default 0)
   - name: end
     type: int64
     description: End index (0 based)
     required: true
   - name: step
     type: int64
-    description: End index (0 based)
-    required: true
+    description: Step (default 1)
   category: basic
 - name: rate
   description: |

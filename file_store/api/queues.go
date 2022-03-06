@@ -7,6 +7,13 @@ import (
 	"github.com/Velocidex/ordereddict"
 )
 
+type QueueOptions struct {
+	DisableFileBuffering bool
+
+	// How many items to lease at once from the file buffer.
+	FileBufferLeaseSize int
+}
+
 // A QueueManager writes query results into queues. The manager is
 // responsible for rotating the queue files as required.
 type QueueManager interface {
@@ -16,7 +23,7 @@ type QueueManager interface {
 	GetWatchers() []string
 
 	PushEventRows(path_manager PathManager, rows []*ordereddict.Dict) error
-	Watch(ctx context.Context, queue_name string) (
+	Watch(ctx context.Context, queue_name string, queue_options *QueueOptions) (
 		output <-chan *ordereddict.Dict, cancel func())
 }
 

@@ -328,7 +328,7 @@ func doQuery() error {
 	}
 
 	// Install throttler into the scope.
-	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(*rate)))
+	scope.SetThrottler(vfilter.NewTimeThrottler(float64(*rate)))
 
 	ctx := InstallSignalHandler(scope)
 

@@ -101,7 +101,7 @@ func streamQuery(
 	scope := manager.BuildScope(builder)
 
 	// Throttle the query if required.
-	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(rate)))
+	scope.SetThrottler(vfilter.NewTimeThrottler(float64(rate)))
 
 	go func() {
 		defer close(response_channel)

@@ -82,7 +82,7 @@ func (self FlowsPlugin) Call(
 
 		if arg.FlowId != "" {
 			sender(arg.FlowId, arg.ClientId)
-			vfilter.ChargeOp(scope)
+			scope.ChargeOp()
 			return
 		}
 
@@ -97,7 +97,7 @@ func (self FlowsPlugin) Call(
 		for _, child_urn := range flow_urns {
 			if !child_urn.IsDir() {
 				sender(child_urn.Base(), arg.ClientId)
-				vfilter.ChargeOp(scope)
+				scope.ChargeOp()
 			}
 		}
 	}()
