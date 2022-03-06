@@ -44,7 +44,7 @@
         "react-calendar-timeline": "^0.27.0",
         "react-datepicker": "^3.8.0",
         "react-datetime-picker": "^3.4.3",
-        "react-dom": "^16.13.1",
+        "react-dom": "^16.14.0",
         "react-hotkeys": "^2.0.0",
         "react-json-view": "^1.19.1",
         "react-overlays": "5.1.1",
