@@ -10,7 +10,7 @@
         "axios": ">=0.25.0",
         "bootstrap": "^4.6.1",
         "cacache": "^15.0.6",
-        "chokidar": "^3.5.1",
+        "chokidar": "^3.5.3",
         "classnames": "^2.2.6",
         "csv-parse": "4.16.3",
         "csv-stringify": "5.6.5",
