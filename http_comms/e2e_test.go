@@ -217,17 +217,6 @@ func (self *TestSuite) TestServerRotateKeyE2E() {
 
 	self.makeServer(server_ctx, server_wg)
 
-	// Sending another one will produce an error.
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		err := comm.sender.sendToURL(client_ctx, [][]byte{}, false)
-		if err == nil {
-			// No error yet - retry
-			return false
-		}
-
-		return vtesting.ContainsString("Unable to decrypt body", logging.GetMemoryLogs())
-	})
-
 	// Make sure the client properly rekeys and continues to talk to the server
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		err := comm.sender.sendToURL(client_ctx, [][]byte{}, false)
@@ -235,7 +224,11 @@ func (self *TestSuite) TestServerRotateKeyE2E() {
 			return false
 		}
 
-		return vtesting.ContainsString("response with status: 200", logging.GetMemoryLogs())
+		// Make sure the client rekeys and connects successfully.
+		return vtesting.ContainsString("response with status: 200",
+			logging.GetMemoryLogs()) &&
+			vtesting.ContainsString("Received PEM for VelociraptorServer",
+				logging.GetMemoryLogs())
 	})
 
 	// Done
