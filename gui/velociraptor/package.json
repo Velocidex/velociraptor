@@ -60,7 +60,7 @@
         "styled-components": "^5.3.3",
         "svgo": "2.8.0",
         "url-parse": "^1.5.9",
-        "y18n": "^4.0.1"
+        "y18n": "^4.0.3"
     },
     "homepage": ".",
     "scripts": {
