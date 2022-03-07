@@ -416,9 +416,8 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
   "Hash": "e67fad2d8818d31e9ea4ad95b9bac49bf7c490d0",
   "_Source": "Windows.System.CatFiles"
  }
-]SELECT File.FullPath, File.Name, File.Size, Hash.SHA1, PE FROM Artifact.Windows.Detection.BinaryHunter(TargetGlob=srcDir + "artifacts/**/*.dll",PEInformationRegex='NetUseEnum',SHA1List='8645c878966239afe44df0593288c7c59a7878eb')[
+]SELECT File.Name, File.Size, Hash.SHA1, PE FROM Artifact.Windows.Detection.BinaryHunter(TargetGlob=srcDir + "artifacts/**/*.dll",PEInformationRegex='NetUseEnum',SHA1List='8645c878966239afe44df0593288c7c59a7878eb')[
  {
-  "File.FullPath": "X:\\artifacts\\testdata\\files\\wkscli.dll",
   "File.Name": "wkscli.dll",
   "File.Size": 9728,
   "Hash.SHA1": "8645c878966239afe44df0593288c7c59a7878eb",
