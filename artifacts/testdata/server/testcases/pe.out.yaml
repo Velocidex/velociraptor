@@ -416,4 +416,117 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
   "Hash": "e67fad2d8818d31e9ea4ad95b9bac49bf7c490d0",
   "_Source": "Windows.System.CatFiles"
  }
+]SELECT File.Name, File.Size, Hash.SHA1, PE FROM Artifact.Windows.Detection.BinaryHunter(TargetGlob=srcDir + "artifacts/**/*.dll",PEInformationRegex='NetUseEnum',SHA1List='8645c878966239afe44df0593288c7c59a7878eb')[
+ {
+  "File.Name": "wkscli.dll",
+  "File.Size": 9728,
+  "Hash.SHA1": "8645c878966239afe44df0593288c7c59a7878eb",
+  "PE": {
+   "FileHeader": {
+    "Machine": "IMAGE_FILE_MACHINE_AMD64",
+    "TimeDateStamp": "2057-04-04T20:34:35Z",
+    "TimeDateStampRaw": 2753642075,
+    "Characteristics": 8226,
+    "ImageBase": 6442450944
+   },
+   "GUIDAge": "826CCB588B6F8694BD32758FEDBC98451",
+   "PDB": "kbdth0.pdb",
+   "Sections": [
+    {
+     "Perm": "xr-",
+     "Name": ".text",
+     "FileOffset": 1024,
+     "VMA": 6442455040,
+     "RVA": 4096,
+     "Size": 512
+    },
+    {
+     "Perm": "-r-",
+     "Name": ".data",
+     "FileOffset": 1536,
+     "VMA": 6442459136,
+     "RVA": 8192,
+     "Size": 4096
+    },
+    {
+     "Perm": "-r-",
+     "Name": ".rsrc",
+     "FileOffset": 5632,
+     "VMA": 6442463232,
+     "RVA": 12288,
+     "Size": 1536
+    },
+    {
+     "Perm": "-r-",
+     "Name": ".reloc",
+     "FileOffset": 7168,
+     "VMA": 6442467328,
+     "RVA": 16384,
+     "Size": 512
+    },
+    {
+     "Perm": "-r-",
+     "Name": ".rdata2",
+     "FileOffset": 7680,
+     "VMA": 6442471424,
+     "RVA": 20480,
+     "Size": 2048
+    }
+   ],
+   "Resources": [
+    {
+     "Type": "RT_VERSION",
+     "TypeId": 16,
+     "FileOffset": 5728,
+     "DataSize": 940,
+     "CodePage": 0
+    }
+   ],
+   "VersionInformation": {
+    "CompanyName": "Microsoft Corporation",
+    "FileDescription": "Thai Kedmanee Keyboard Layout",
+    "FileVersion": "10.0.19041.1 (WinBuild.160101.0800)",
+    "InternalName": "kbdth0 (3.13)",
+    "LegalCopyright": "© Microsoft Corporation. All rights reserved.",
+    "OriginalFilename": "kbdth0.dll",
+    "ProductName": "Microsoft® Windows® Operating System",
+    "ProductVersion": "10.0.19041.1"
+   },
+   "Imports": [],
+   "Exports": [],
+   "Forwards": [
+    "C:\\windows\\system32\\wkscli.NetAddAlternateComputerName",
+    "C:\\windows\\system32\\wkscli.NetEnumerateComputerNames",
+    "C:\\windows\\system32\\wkscli.NetGetJoinInformation",
+    "C:\\windows\\system32\\wkscli.NetGetJoinableOUs",
+    "C:\\windows\\system32\\wkscli.NetJoinDomain",
+    "C:\\windows\\system32\\wkscli.NetRemoveAlternateComputerName",
+    "C:\\windows\\system32\\wkscli.NetRenameMachineInDomain",
+    "C:\\windows\\system32\\wkscli.NetSetPrimaryComputerName",
+    "C:\\windows\\system32\\wkscli.NetUnjoinDomain",
+    "C:\\windows\\system32\\wkscli.NetUseAdd",
+    "C:\\windows\\system32\\wkscli.NetUseDel",
+    "C:\\windows\\system32\\wkscli.NetUseEnum",
+    "C:\\windows\\system32\\wkscli.NetUseGetInfo",
+    "C:\\windows\\system32\\wkscli.NetValidateName",
+    "C:\\windows\\system32\\wkscli.NetWkstaGetInfo",
+    "C:\\windows\\system32\\wkscli.NetWkstaSetInfo",
+    "C:\\windows\\system32\\wkscli.NetWkstaStatisticsGet",
+    "C:\\windows\\system32\\wkscli.NetWkstaTransportAdd",
+    "C:\\windows\\system32\\wkscli.NetWkstaTransportDel",
+    "C:\\windows\\system32\\wkscli.NetWkstaTransportEnum",
+    "C:\\windows\\system32\\wkscli.NetWkstaUserEnum",
+    "C:\\windows\\system32\\wkscli.NetWkstaUserGetInfo",
+    "C:\\windows\\system32\\wkscli.NetWkstaUserSetInfo"
+   ],
+   "ImpHash": "d41d8cd98f00b204e9800998ecf8427e",
+   "Authenticode": null,
+   "AuthenticodeHash": {
+    "MD5": "410c09669a699f8dc783a5cd82d286fb",
+    "SHA1": "5add7101fc98f658ecbdbb191799d001a605d5f9",
+    "SHA256": "e7b8ab1c21505d850fcb4118f79ce222b195edb6eaae1f3b032a5dd4c5556a42",
+    "HashMatches": false
+   }
+  }
+ }
 ]
