@@ -28,7 +28,7 @@ Queries:
       })
 
   # Test the Generic.Collectors.SQLECmd artifact
-  - SELECT *, OSPath.Basename AS OSPath
+  - SELECT ID, URLTitle, URL, VisitCount, _Source, OSPath.Basename AS OSPath
     FROM Artifact.Generic.Collectors.SQLECmd(
       GlobExpr=srcDir + "/artifacts/testdata/files/**")
     WHERE _Source =~ "Chromium Browser History"
