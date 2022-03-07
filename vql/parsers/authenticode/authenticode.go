@@ -123,7 +123,6 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("authenticode: %v", err)
 			return &vfilter.Null{}
 		}
 

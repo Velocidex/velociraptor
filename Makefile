@@ -74,6 +74,9 @@ KapeFilesSync:
 	python3 scripts/kape_files.py -t win ~/projects/KapeFiles/ > artifacts/definitions/Windows/KapeFiles/Targets.yaml
 	python3 scripts/kape_files.py -t nix ~/projects/KapeFiles/ > artifacts/definitions/Linux/KapeFiles/CollectFromDirectory.yaml
 
+SQLECmdSync:
+	python3 scripts/sqlecmd_convert.py ~/projects/SQLECmd/ > artifacts/definitions/Generic/Collectors/SQLECmd.yaml
+
 # Do this after fetching the build artifacts with `gh run download <RunID>`
 UpdateCIArtifacts:
 	mv artifact/server/* artifacts/testdata/server/testcases/

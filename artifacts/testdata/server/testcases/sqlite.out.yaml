@@ -56,4 +56,35 @@ SELECT * FROM sqlite( file=srcDir + "/artifacts/testdata/files/history.sqlite", 
   "last_visit_time": 13205513380758164,
   "hidden": 0
  }
+]SELECT *, OSPath.Basename AS OSPath FROM Artifact.Generic.Collectors.SQLECmd( GlobExpr=srcDir + "/artifacts/testdata/files/**") WHERE _Source =~ "Chromium Browser History"[
+ {
+  "ID": 1,
+  "VisitTime (Local)": "2022-02-16 12:58:39",
+  "LastVisitedTime (Local)": "2022-02-16 12:58:40",
+  "URLTitle": "Google",
+  "URL": "https://www.google.com/",
+  "VisitCount": 2,
+  "TypedCount": 1,
+  "Hidden": "No",
+  "VisitID": 1,
+  "FromVisitID": 0,
+  "VisitDurationInSeconds": 0,
+  "_Source": "Generic.Collectors.SQLECmd/Chromium Browser History",
+  "OSPath": "ChromeHistory.sqlite"
+ },
+ {
+  "ID": 1,
+  "VisitTime (Local)": "2022-02-16 12:58:40",
+  "LastVisitedTime (Local)": "2022-02-16 12:58:40",
+  "URLTitle": "Google",
+  "URL": "https://www.google.com/",
+  "VisitCount": 2,
+  "TypedCount": 1,
+  "Hidden": "No",
+  "VisitID": 2,
+  "FromVisitID": 0,
+  "VisitDurationInSeconds": 7542.763783,
+  "_Source": "Generic.Collectors.SQLECmd/Chromium Browser History",
+  "OSPath": "ChromeHistory.sqlite"
+ }
 ]
