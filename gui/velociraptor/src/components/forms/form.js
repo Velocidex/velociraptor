@@ -78,7 +78,10 @@ export default class VeloForm extends React.Component {
         let invalid = false;
         if (validator) {
             try {
-                const regexp = new RegExp(validator, 'ism');
+                // Not multi line match because the regex would
+                // typically anchor to the start and end of the entire
+                // string.
+                const regexp = new RegExp(validator, 'is');
                 if (_.isEmpty(value)) {
                     invalid = false;
                 } else if (regexp.test(value)) {

@@ -170,6 +170,10 @@ export default class FlowOverview extends React.Component {
 
                     <dt className="col-4">Ops/Sec</dt>
                     <dd className="col-8"> {flow.request.ops_per_second || 'Unlimited'} </dd>
+                    <dt className="col-4">CPU Limit</dt>
+                    <dd className="col-8"> {flow.request.cpu_limit || 'Unlimited'} </dd>
+                    <dt className="col-4">IOPS Limit</dt>
+                    <dd className="col-8"> {flow.request.iops_limit || 'Unlimited'} </dd>
                     <dt className="col-4">Timeout</dt>
                     <dd className="col-8"> {flow.request.timeout || '600' } seconds</dd>
                     <dt className="col-4">Max Rows</dt>

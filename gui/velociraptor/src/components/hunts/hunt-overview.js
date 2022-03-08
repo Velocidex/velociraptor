@@ -159,6 +159,10 @@ export default class HuntOverview extends React.Component {
 
                     <dt className="col-4">Ops/Sec</dt>
                     <dd className="col-8">{start_request.ops_per_second || 'Unlimited'}</dd>
+                    <dt className="col-4">CPU Limit</dt>
+                    <dd className="col-8">{start_request.cpu_limit || 'Unlimited'}</dd>
+                    <dt className="col-4">IOPS Limit</dt>
+                    <dd className="col-8">{start_request.iops_limit || 'Unlimited'}</dd>
                     { labels && <>
                                   <dt className="col-4">Include Labels</dt>
                                   <dd className="col-8">

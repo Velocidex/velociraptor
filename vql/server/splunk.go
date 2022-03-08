@@ -25,6 +25,7 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"net/http"
 	"sync"
 	"time"
@@ -32,6 +33,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/crypto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -48,8 +52,8 @@ type _SplunkPluginArgs struct {
 	Sourcetype string              `vfilter:"optional,field=sourcetype,doc=The sourcetype field for splunk. If not specified this will 'vql'"`
 	ChunkSize  int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
 	SkipVerify bool                `vfilter:"optional,field=skip_verify,doc=Skip SSL verification(default: False)."`
-
-	WaitTime int64 `vfilter:"optional,field=wait_time,doc=Batch splunk upload this long (2 sec)."`
+	RootCerts  string              `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
+	WaitTime   int64               `vfilter:"optional,field=wait_time,doc=Batch splunk upload this long (2 sec)."`
 }
 
 type _SplunkPlugin struct{}
@@ -93,13 +97,15 @@ func (self _SplunkPlugin) Call(ctx context.Context,
 			arg.Source = "velociraptor"
 		}
 
+		config_obj, _ := artifacts.GetConfig(scope)
+
 		wg := sync.WaitGroup{}
 		row_chan := arg.Query.Eval(ctx, scope)
 		for i := 0; i < int(arg.Threads); i++ {
 			wg.Add(1)
 
 			// Start an uploader on a thread.
-			go _upload_rows(ctx, scope, output_chan,
+			go _upload_rows(ctx, scope, config_obj, output_chan,
 				row_chan, &wg, &arg)
 		}
 
@@ -111,7 +117,9 @@ func (self _SplunkPlugin) Call(ctx context.Context,
 // Copy rows from row_chan to a local buffer and push it up to splunk.
 func _upload_rows(
 	ctx context.Context,
-	scope vfilter.Scope, output_chan chan vfilter.Row,
+	scope vfilter.Scope,
+	config_obj *config_proto.ClientConfig,
+	output_chan chan vfilter.Row,
 	row_chan <-chan vfilter.Row,
 	wg *sync.WaitGroup,
 	arg *_SplunkPluginArgs) {
@@ -120,12 +128,31 @@ func _upload_rows(
 	// var buf []*ordereddict.Dict
 	var buf = make([]vfilter.Row, 0, arg.ChunkSize)
 
+	CA_Pool := x509.NewCertPool()
+	crypto.AddPublicRoots(CA_Pool)
+	if config_obj != nil {
+		err := crypto.AddDefaultCerts(config_obj, CA_Pool)
+		if err != nil {
+			scope.Log("splunk_upload: %v", err)
+			return
+		}
+	}
+	if arg.RootCerts != "" &&
+		!CA_Pool.AppendCertsFromPEM([]byte(arg.RootCerts)) {
+		scope.Log("splunk_upload: Unable to add root certs")
+		return
+	}
+
 	client := splunk.NewClient(
 		&http.Client{
 			Timeout: time.Second * 20,
 			Transport: &http.Transport{
-				Proxy:           networking.GetProxy(),
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: arg.SkipVerify},
+				Proxy: networking.GetProxy(),
+				TLSClientConfig: &tls.Config{
+					ClientSessionCache: tls.NewLRUClientSessionCache(100),
+					RootCAs:            CA_Pool,
+					InsecureSkipVerify: arg.SkipVerify,
+				},
 			},
 		}, // Optional HTTP Client objects
 		arg.URL,
@@ -138,27 +165,27 @@ func _upload_rows(
 	wait_time := time.Duration(arg.WaitTime) * time.Second
 	next_send_time := time.After(wait_time)
 
-	// Flush any remaining rows
-	defer send_to_splunk(ctx, scope, output_chan, client, &buf, arg)
-
-	// Batch sending to splunk: Either
-	// when we get to chuncksize or wait
-	// time whichever comes first.
+	// Batch sending to splunk: Either when we get to chuncksize or
+	// wait time whichever comes first.
 	for {
 		select {
 		case row, ok := <-row_chan:
 			if !ok {
+				// Flush any remaining rows
+				send_to_splunk(ctx, scope, output_chan, client, buf, arg)
 				return
 			}
-
-			//
 			buf = append(buf, row)
 
+			// Do not allow the buffer to get too large.
+			if int64(len(buf)) > arg.ChunkSize {
+				send_to_splunk(ctx, scope, output_chan, client, buf, arg)
+				buf = buf[:0]
+			}
+
 		case <-next_send_time:
-
-			send_to_splunk(ctx, scope, output_chan,
-				client, &buf, arg)
-
+			send_to_splunk(ctx, scope, output_chan, client, buf, arg)
+			buf = buf[:0]
 			next_send_time = time.After(wait_time)
 		}
 	}
@@ -168,17 +195,15 @@ func send_to_splunk(
 	ctx context.Context,
 	scope vfilter.Scope,
 	output_chan chan vfilter.Row,
-	client *splunk.Client, buf *[]vfilter.Row, arg *_SplunkPluginArgs) {
+	client *splunk.Client, buf []vfilter.Row, arg *_SplunkPluginArgs) {
 
-	_buf := *buf
-
-	if len(_buf) == 0 {
+	if len(buf) == 0 {
 		return
 	}
 
 	var events []*splunk.Event
 
-	for _, event := range _buf {
+	for _, event := range buf {
 		events = append(
 			events,
 			client.NewEvent(
@@ -204,13 +229,9 @@ func send_to_splunk(
 		case <-ctx.Done():
 			return
 		case output_chan <- ordereddict.NewDict().
-			Set("Response", len(_buf)):
+			Set("Response", len(buf)):
 		}
 	}
-
-	// clear the slice
-	*buf = _buf[:0]
-
 }
 
 func (self _SplunkPlugin) Info(
