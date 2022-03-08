@@ -187,6 +187,14 @@ func (self *NotebookExportPathManager) CellMetadata(cell_id string) api.DSPathSp
 	return self.root.AddChild(self.notebook_id, cell_id)
 }
 
+func (self *NotebookExportPathManager) UploadPath(upload string) api.FSPathSpec {
+	return self.root.
+		AsFilestorePath().
+		AddChild(self.notebook_id, "uploads").
+		AddUnsafeChild(utils.SplitComponents(upload)...).
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
+}
+
 func (self *NotebookExportPathManager) CellItem(cell_id, name string) api.DSPathSpec {
 	return self.root.AddChild(self.notebook_id, cell_id, name)
 }
