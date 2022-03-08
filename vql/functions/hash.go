@@ -53,11 +53,12 @@ type HashResult struct {
 }
 
 type HashFunctionArgs struct {
-	Path     *accessors.OSPath `vfilter:"required,field=path,doc=Path to open and hash."`
-	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Path       *accessors.OSPath `vfilter:"required,field=path,doc=Path to open and hash."`
+	Accessor   string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	HashSelect []string          `vfilter:"optional,field=hashselect,doc=The hash function to use (MD5,SHA1,SHA256)"`
 }
 
-// The hash fuction calculates a hash of a file. It may be expensive
+// HashFunction calculates a hash of a file. It may be expensive
 // so we make it cancelllable.
 type HashFunction struct{}
 
@@ -95,6 +96,28 @@ func (self *HashFunction) Call(ctx context.Context,
 	}
 	defer file.Close()
 
+	s1 := false
+	s256 := false
+	m5 := false
+
+	l := len(arg.HashSelect)
+	if l != 0 {
+		for i := 0; i < l; i++ {
+			if arg.HashSelect[i] == "sha256" || arg.HashSelect[i] == "SHA256" {
+				s256 = true
+			}
+			if arg.HashSelect[i] == "sha1" || arg.HashSelect[i] == "SHA1" {
+				s1 = true
+			}
+			if arg.HashSelect[i] == "md5" || arg.HashSelect[i] == "MD5" {
+				m5 = true
+			}
+		}
+		if !m5 && !s1 && !s256 {
+			scope.Log("hashselect %s not recognized", arg.HashSelect)
+			return vfilter.Null{}
+		}
+	}
 	result := HashResult{
 		md5:    md5.New(),
 		sha1:   sha1.New(),
@@ -112,13 +135,26 @@ func (self *HashFunction) Call(ctx context.Context,
 			// We are done!
 			if n == 0 || err == io.EOF {
 				if n == 0 {
-					result.MD5 = fmt.Sprintf(
-						"%x", result.md5.Sum(nil))
-					result.SHA1 = fmt.Sprintf(
-						"%x", result.sha1.Sum(nil))
-					result.SHA256 = fmt.Sprintf(
-						"%x", result.sha256.Sum(nil))
-
+					if m5 {
+						result.MD5 = fmt.Sprintf(
+							"%x", result.md5.Sum(nil))
+					}
+					if s1 {
+						result.SHA1 = fmt.Sprintf(
+							"%x", result.sha1.Sum(nil))
+					}
+					if s256 {
+						result.SHA256 = fmt.Sprintf(
+							"%x", result.sha256.Sum(nil))
+					}
+					if !m5 && !s1 && !s256 {
+						result.MD5 = fmt.Sprintf(
+							"%x", result.md5.Sum(nil))
+						result.SHA1 = fmt.Sprintf(
+							"%x", result.sha1.Sum(nil))
+						result.SHA256 = fmt.Sprintf(
+							"%x", result.sha256.Sum(nil))
+					}
 					return result
 				}
 
@@ -126,11 +162,21 @@ func (self *HashFunction) Call(ctx context.Context,
 				scope.Log(err.Error())
 				return vfilter.Null{}
 			}
-
-			_, _ = result.md5.Write(buf[:n])
-			_, _ = result.sha1.Write(buf[:n])
-			_, _ = result.sha256.Write(buf[:n])
-
+			if m5 {
+				_, _ = result.md5.Write(buf[:n])
+			}
+			if s1 {
+				_, _ = result.sha1.Write(buf[:n])
+			}
+			if s256 {
+				_, _ = result.sha256.Write(buf[:n])
+			}
+			// No Hashselect arg included defaults to all
+			if !m5 && !s1 && !s256 {
+				_, _ = result.md5.Write(buf[:n])
+				_, _ = result.sha1.Write(buf[:n])
+				_, _ = result.sha256.Write(buf[:n])
+			}
 			// Charge an op for each buffer we read
 			scope.ChargeOp()
 		}

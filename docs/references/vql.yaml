@@ -1785,6 +1785,9 @@
   - name: accessor
     type: string
     description: The accessor to use
+  - name: hashselect
+    type: []string
+    description: The hash function to use (MD5,SHA1,SHA256)
   category: plugin
 - name: http_client
   description: |
