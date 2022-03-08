@@ -10,7 +10,7 @@ Parameters:
         "Mode": "rw-rw-rw",
         "Size": 100,
         "IsDir": false,
-        "Sys": {}
+        "Data": {}
       },
       {
         "FullPath": "Users/yolo/Desktop/file2.txt",
@@ -21,7 +21,7 @@ Parameters:
         "Mode": "rw-rw-rw",
         "Size": 100,
         "IsDir": false,
-        "Sys": {}
+        "Data": {}
       },
       {
         "FullPath": "Users/yolo/Desktop/file3.txt",
@@ -32,7 +32,7 @@ Parameters:
         "Mode": "rw-rw-rw",
         "Size": 100,
         "IsDir": false,
-        "Sys": {}
+        "Data": {}
       }
     ]
 # All *.Search.FileFinder are basically the same artifact with
