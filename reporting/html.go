@@ -333,7 +333,7 @@ func NewHTMLTemplateEngine(
 	*HTMLTemplateEngine, error) {
 
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, scope, acl_manager, repository,
+		config_obj, scope, acl_manager, nil, repository,
 		artifact_name)
 	if err != nil {
 		return nil, err

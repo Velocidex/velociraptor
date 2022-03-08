@@ -167,6 +167,24 @@ func PrepareGUIMux(
 					file_store.GetFileStore(config_obj),
 					"/notebooks/")))))))
 
+	// Serve files from hunt notebooks
+	mux.Handle(base+"/hunts/", csrfProtect(config_obj,
+		auther.AuthenticateUserHandler(
+			config_obj, http.StripPrefix(base, forceMime(http.FileServer(
+				file_store_accessor.NewFileSystem(
+					config_obj,
+					file_store.GetFileStore(config_obj),
+					"/hunts/")))))))
+
+	// Serve files from client notebooks
+	mux.Handle(base+"/clients/", csrfProtect(config_obj,
+		auther.AuthenticateUserHandler(
+			config_obj, http.StripPrefix(base, forceMime(http.FileServer(
+				file_store_accessor.NewFileSystem(
+					config_obj,
+					file_store.GetFileStore(config_obj),
+					"/clients/")))))))
+
 	// Assets etc do not need auth.
 	install_static_assets(config_obj, mux)
 

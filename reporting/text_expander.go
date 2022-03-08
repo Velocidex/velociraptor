@@ -126,7 +126,7 @@ func NewTextTemplateEngine(
 	repository services.Repository,
 	artifact_name string) (*TextTemplateEngine, error) {
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, scope, acl_manager, repository, artifact_name)
+		config_obj, scope, acl_manager, nil, repository, artifact_name)
 	if err != nil {
 		return nil, err
 	}

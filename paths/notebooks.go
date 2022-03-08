@@ -30,6 +30,12 @@ func (self *NotebookPathManager) Path() api.DSPathSpec {
 	return self.root.AddChild(self.notebook_id).SetTag("Notebook")
 }
 
+func (self *NotebookPathManager) UploadsDir() api.FSPathSpec {
+	return self.root.AsFilestorePath().
+		AddUnsafeChild(self.notebook_id, "uploads").
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
+}
+
 func (self *NotebookPathManager) Cell(cell_id string) *NotebookCellPathManager {
 	return &NotebookCellPathManager{
 		notebook_id: self.notebook_id,
@@ -146,6 +152,12 @@ func (self *NotebookCellPathManager) QueryStorage(id int64) *NotebookCellQuery {
 		id:          id,
 		root:        self.root.AsFilestorePath(),
 	}
+}
+
+func (self *NotebookCellPathManager) GetUploadsFile(filename string) api.FSPathSpec {
+	return self.root.AsFilestorePath().
+		AddUnsafeChild(self.notebook_id, "uploads", filename).
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
 type NotebookCellQuery struct {

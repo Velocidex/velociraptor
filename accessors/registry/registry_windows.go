@@ -305,7 +305,8 @@ func (self RegFileSystemAccessor) OpenWithOSPath(path *accessors.OSPath) (
 	}
 
 	// Keys do not have any data.
-	return NewValueBuffer([]byte{}, stat), nil
+	serialized, _ := json.Marshal(stat.Data)
+	return NewValueBuffer(serialized, stat), nil
 }
 
 func (self RegFileSystemAccessor) Open(path string) (
