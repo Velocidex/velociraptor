@@ -51,7 +51,7 @@
         "react-router-dom": "^5.3.0",
         "react-scripts": "^5.0.0",
         "react-select": "^3.2.0",
-        "react-simple-snackbar": "^1.1.10",
+        "react-simple-snackbar": "^1.1.11",
         "react-split-grid": "^1.0.4",
         "react-split-pane": "^0.1.92",
         "react-step-wizard": "^5.3.11",
