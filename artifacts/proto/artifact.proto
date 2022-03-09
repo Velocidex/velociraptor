@@ -45,6 +45,7 @@ message ArtifactParameter {
 message NotebookSourceCell {
     string template = 1;
     string type = 2;
+    string name = 4;
     repeated ArtifactEnv env = 3;
 }
 

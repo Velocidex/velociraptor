@@ -167,6 +167,8 @@ export default class NotebookCellRenderer extends React.Component {
         showAddCellFromHunt: false,
         showAddCellFromFlow: false,
         showCreateArtifactFromCell: false,
+
+        showSuggestionSubmenu: false,
     }
 
     componentDidMount() {
@@ -396,6 +398,43 @@ export default class NotebookCellRenderer extends React.Component {
                            this.state.cell.env);
     }
 
+    showSuggestions = ()=>{
+        let suggestions = this.props.notebook_metadata &&
+            this.props.notebook_metadata.suggestions;
+        if (!suggestions) {
+            return <></>;
+        }
+
+        return <>
+                 <Dropdown
+                   title="Suggestion"
+                   drop="right"
+                   variant="default-outline">
+                   <Dropdown.Toggle
+                     className="dropdown-item"
+                     variant="default-outline">
+                     Suggestions
+                   </Dropdown.Toggle>
+                   <Dropdown.Menu>
+                     { _.map(suggestions, x=>{
+                         return <Dropdown.Item
+                                  key={x.name}
+                                  onClick={()=>{
+                                      this.props.addCell(
+                                          this.state.cell.cell_id,
+                                          x.type,
+                                          x.input,
+                                          x.env);
+                                  }}
+                                  title="{x.name}">
+                                  {x.name}
+                                </Dropdown.Item>;
+                     })}
+                   </Dropdown.Menu>
+                 </Dropdown>
+                 <hr/>
+               </>;
+    }
 
     render() {
         let selected = this.state.cell.cell_id === this.props.selected_cell_id;
@@ -491,6 +530,7 @@ export default class NotebookCellRenderer extends React.Component {
                     VQL
                   </Dropdown.Item>
                   <hr/>
+                  { this.showSuggestions() }
                   <Dropdown.Item
                     title="Add Timeline"
                     onClick={()=>this.setState({showAddTimeline: true})}>

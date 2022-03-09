@@ -287,6 +287,46 @@ func getCellsForHunt(ctx context.Context,
 		}
 	}
 
+	// Add a default hunt suggestion
+	notebook_metadata.Suggestions = append(notebook_metadata.Suggestions,
+		&api_proto.NotebookCellRequest{
+			Name: "Hunt Progress",
+			Type: "vql",
+			Input: `
+/*
+# Flows with ERROR status
+*/
+SELECT ClientId, FlowId, Flow.start_time As StartedTime,
+       Flow.state AS FlowState, Flow.status as FlowStatus,
+       Flow.execution_duration as Duration,
+       Flow.total_collected_bytes as TotalBytes,
+       Flow.total_collected_rows as TotalRows
+FROM hunt_flows(hunt_id=HuntId)
+WHERE FlowState =~ 'ERROR'
+
+/*
+## Flows with RUNNING status
+*/
+SELECT ClientId, FlowId, Flow.start_time As StartedTime,
+       Flow.state AS FlowState, Flow.status as FlowStatus,
+       Flow.execution_duration as Duration,
+       Flow.total_collected_bytes as TotalBytes,
+       Flow.total_collected_rows as TotalRows
+FROM hunt_flows(hunt_id=HuntId)
+WHERE FlowState =~ 'RUNNING'
+
+/*
+## Flows with FINISHED status
+*/
+SELECT ClientId, FlowId, Flow.start_time As StartedTime,
+       Flow.state AS FlowState, Flow.status as FlowStatus,
+       Flow.execution_duration as Duration,
+       Flow.total_collected_bytes as TotalBytes,
+       Flow.total_collected_rows as TotalRows
+FROM hunt_flows(hunt_id=HuntId)
+WHERE FlowState =~ 'Finished'
+`})
+
 	return getDefaultCellsForSources(config_obj, sources, notebook_metadata)
 }
 
@@ -342,32 +382,49 @@ func getDefaultCellsForSources(
 		}}
 
 		// If the artifact_source defines a notebook, let it do its own thing.
-		if len(artifact_source.Notebook) > 0 {
-			for _, cell := range artifact_source.Notebook {
-				for _, i := range cell.Env {
-					env = append(env, &api_proto.Env{
-						Key:   i.Key,
-						Value: i.Value,
-					})
-				}
-
-				result = append(result, &api_proto.NotebookCellRequest{
-					Type:  cell.Type,
-					Env:   env,
-					Input: cell.Template})
+		for _, cell := range artifact_source.Notebook {
+			for _, i := range cell.Env {
+				env = append(env, &api_proto.Env{
+					Key:   i.Key,
+					Value: i.Value,
+				})
 			}
 
-		} else {
-			// Otherwise build a default notebook.
-			result = append(result, &api_proto.NotebookCellRequest{
-				Type:  "Markdown",
+			request := &api_proto.NotebookCellRequest{
+				Type:  cell.Type,
 				Env:   env,
-				Input: "# " + source})
+				Input: cell.Template}
 
+			switch cell.Type {
+			case "vql", "md":
+				result = append(result, request)
+
+			case "vql_suggestion":
+				request.Type = "vql"
+				request.Name = cell.Name
+				notebook_metadata.Suggestions = append(
+					notebook_metadata.Suggestions, request)
+
+			default:
+				logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+				logger.Error("getDefaultCellsForSources: Cell type %v invalid",
+					cell.Type)
+			}
+		}
+
+		// Build a default empty notebook that shows off all the
+		// results.
+		if len(result) == 0 {
 			result = append(result, &api_proto.NotebookCellRequest{
-				Type:  "VQL",
-				Env:   env,
-				Input: "\nSELECT * FROM source()\nLIMIT 50\n",
+				Type: "VQL",
+				Env:  env,
+				Input: fmt.Sprintf(`
+/*
+# %v
+*/
+SELECT * FROM source()
+LIMIT 50
+`, source),
 			})
 		}
 	}
@@ -422,12 +479,13 @@ func (self *ApiServer) NewNotebookCell(
 
 	for _, cell_md := range notebook.CellMetadata {
 		if cell_md.CellId == in.CellId {
+			// New cell goes above existing cell.
 			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
-				CellId:    cell_md.CellId,
+				CellId:    notebook.LatestCellId,
 				Timestamp: time.Now().Unix(),
 			})
 			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
-				CellId:    notebook.LatestCellId,
+				CellId:    cell_md.CellId,
 				Timestamp: time.Now().Unix(),
 			})
 			added = true
@@ -1203,6 +1261,9 @@ func updateCellContents(
 	}()
 
 	switch cell_type {
+
+	case "vql_suggestion":
+		// noop
 
 	case "markdown", "md":
 		// A Markdown cell just feeds directly into the

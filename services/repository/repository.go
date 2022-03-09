@@ -221,15 +221,17 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 	// VQL. We do not need to validate embedded artifacts since we
 	// assume they are ok if they passed CI.
 	if validate {
+		// Check RequiredPermissions
 		for _, perm := range artifact.RequiredPermissions {
 			if acls.GetPermission(perm) == acls.NO_PERMISSIONS {
 				return nil, errors.New("Invalid artifact permission")
 			}
 		}
 
-		// Ensure precodition has correct syntax
+		// Ensure precodition has correct syntax - it should be a VQL
+		// query.
 		if artifact.Precondition != "" {
-			_, err := vfilter.Parse(artifact.Precondition)
+			_, err := vfilter.MultiParse(artifact.Precondition)
 			if err != nil {
 				return nil, fmt.Errorf(
 					"While parsing artifact precondition: %w", err)
@@ -245,6 +247,7 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 			}
 		}
 
+		// Check each source for validity
 		for _, source := range artifact.Sources {
 			if source.Precondition != "" {
 				if artifact.Precondition != "" {
@@ -253,7 +256,7 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 							"and a source precondition.", artifact.Name)
 				}
 
-				_, err := vfilter.Parse(source.Precondition)
+				_, err := vfilter.MultiParse(source.Precondition)
 				if err != nil {
 					return nil, fmt.Errorf("While parsing precondition: %w", err)
 				}
@@ -292,6 +295,18 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 				}
 			}
 
+			// If the source defines any notebook cells check they are
+			// valid.
+			for _, cell := range source.Notebook {
+				cell.Type = strings.ToLower(cell.Type)
+				switch cell.Type {
+				case "md", "vql", "vql_suggestion":
+				default:
+					return nil, fmt.Errorf(
+						"Artifact %s contains an invalid notebook cell type: %v",
+						artifact.Name, cell.Type)
+				}
+			}
 		}
 	}
 
