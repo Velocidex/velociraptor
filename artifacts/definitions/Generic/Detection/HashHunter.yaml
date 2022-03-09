@@ -1,0 +1,95 @@
+name: Generic.Detection.HashHunter
+author: "Matt Green - @mgreen27"
+description: |
+    This artifact enables searching for hashes.
+    
+    The artifact takes a glob targetting input, then generates a hash for each 
+    file in scope to compare to several types of hash lists provided by the user.
+    
+    Note: this artifacts filters are cumulative so a hash based hit will return 
+    no results if the file is filtered out by other filters.  
+    For most performant searches leverage path, size and and date filters. By default 
+    the artifact leverages the 'auto' data accessor but can also be changed as desired.  
+
+parameters:
+  - name: TargetGlob
+    description: Glob to target.
+    default: "C:/Users/**/*"
+  - name: Accessor
+    description: Velociraptor accessor to use. Changing to ntfs will increase scan time.
+    default: auto
+  - name: DateAfter
+    description: Search for binaries with timestamps after this date. YYYY-MM-DDTmm:hh:ssZ
+    type: timestamp
+  - name: DateBefore
+    description: Search for binaries with timestamps before this date. YYYY-MM-DDTmm:hh:ssZ
+    type: timestamp
+  - name: SizeMax
+    description: Return binaries only under this size in bytes.
+    type: int64
+    default: 4294967296
+  - name: SizeMin
+    description: Return binaries only over this size in bytes.
+    type: int64
+    default: 0
+  - name: MD5List
+    description: MD5 hash list to hunt for. New MD5 hash on each line
+    default:
+  - name: SHA1List
+    description: SHA1 hash list to hunt for. New SHA1 hash on each line
+    default:
+  - name: SHA256List
+    description: SHA256 hash list to hunt for. New SHA256 hash on each line
+    default:
+
+sources:
+  - query: |
+      -- setup hash lists
+      LET MD5Array <= split(sep='\\s+',string=MD5List)
+      LET SHA1Array <=  split(sep='\\s+',string=SHA1List)
+      LET SHA256Array <= split(sep='\\s+',string=SHA256List)
+      
+      -- firstly find files in scope with performance
+      LET find_files = SELECT * FROM if(condition=DateBefore AND DateAfter,
+            then={
+                SELECT FullPath, Name, Size,Mtime,Atime,Ctime,Btime
+                FROM glob(globs=TargetGlob,accessor=Accessor,nosymlink='True')
+                WHERE NOT IsDir AND NOT IsLink
+                    AND Size > SizeMin AND Size < SizeMax
+                    AND ( Mtime < DateBefore OR Ctime < DateBefore OR Btime < DateBefore )
+                    AND ( Mtime > DateAfter OR Ctime > DateAfter OR Btime > DateAfter )
+            }, 
+            else={ SELECT * FROM  if(condition=DateBefore,
+                then={
+                    SELECT FullPath, Name, Size,Mtime,Atime,Ctime,Btime
+                    FROM glob(globs=FullPath,accessor=Accessor)
+                    WHERE NOT IsDir AND NOT IsLink
+                        AND Size > SizeMin AND Size < SizeMax
+                        AND ( Mtime < DateBefore OR Ctime < DateBefore OR Btime < DateBefore )
+                },
+                else={ SELECT * FROM  if(condition=DateAfter,
+                then={
+                    SELECT FullPath, Name, Size,Mtime,Atime,Ctime,Btime
+                    FROM glob(globs=TargetGlob,accessor=Accessor)
+                    WHERE NOT IsDir AND NOT IsLink
+                        AND Size > SizeMin AND Size < SizeMax
+                        AND ( Mtime > DateAfter OR Ctime > DateAfter OR Btime > DateAfter )
+                },
+                else={
+                    SELECT FullPath, Name, Size,Mtime,Atime,Ctime,Btime
+                    FROM glob(globs=TargetGlob,accessor=Accessor)
+                    WHERE NOT IsDir AND NOT IsLink
+                        AND Size > SizeMin AND Size < SizeMax
+                })})})
+      
+      
+      -- lookup hash and run finl filters
+      SELECT FullPath,Name,Size,
+        dict(Mtime=Mtime,Atime=Atime,Ctime=Ctime,Btime=Btime) as Timestamps,
+        hash(path=FullPath) as Hash
+      FROM if(condition= MD5List OR SHA1List OR SHA256List, then= find_files)
+      WHERE 
+        (   if(condition= MD5List,then= Hash.MD5 in MD5Array)
+         OR if(condition= SHA1List,then= Hash.SHA1 in SHA1Array)
+         OR if(condition= SHA256List, then= Hash.SHA256 in SHA256Array)
+        )

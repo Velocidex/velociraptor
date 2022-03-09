@@ -1,0 +1,58 @@
+SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcDir + "/artifacts/testdata/files/*", SHA1List=SHA1s,SizeMax=30000)[
+ {
+  "Name": "1.lnk",
+  "Size": 399,
+  "Hash": {
+   "MD5": "533091d08258bf618871bf5d51858566",
+   "SHA1": "c7ccf7f7c65e24137798b2af967620896bdc032c",
+   "SHA256": "162e56481955b032cd7b146e0fb08f943dc6bb5ec135a47714de77604b3e032d"
+  }
+ },
+ {
+  "Name": "CSDump.bin",
+  "Size": 22000,
+  "Hash": {
+   "MD5": "81d9b0a5308f6e46e06567ef9b889496",
+   "SHA1": "ba4a435cff1897ac653b4c6af43c40b4d01c154c",
+   "SHA256": "2227d7bd3c7a36a4d1d103e41df9a18798bf0d22b3e6357ee689d320fd318a24"
+  }
+ },
+ {
+  "Name": "CSShellcode.bin",
+  "Size": 888,
+  "Hash": {
+   "MD5": "b173bd1934797444b0f8658495ab0765",
+   "SHA1": "75082bb8c6c3529a298b5e3432a2769362efe451",
+   "SHA256": "771e8bef3711e8327b5ddb9c6109bd23e494488cccd31097e91033a427e413ef"
+  }
+ }
+]SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcDir + "/artifacts/testdata/files/*", MD5List=MD5s,SizeMin=20000,SizeMax=30000)[
+ {
+  "Name": "CSDump.bin",
+  "Size": 22000,
+  "Hash": {
+   "MD5": "81d9b0a5308f6e46e06567ef9b889496",
+   "SHA1": "ba4a435cff1897ac653b4c6af43c40b4d01c154c",
+   "SHA256": "2227d7bd3c7a36a4d1d103e41df9a18798bf0d22b3e6357ee689d320fd318a24"
+  }
+ }
+]SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcDir + "/artifacts/testdata/files/*", SHA256List=SHA256s,SizeMax=1000)[
+ {
+  "Name": "1.lnk",
+  "Size": 399,
+  "Hash": {
+   "MD5": "533091d08258bf618871bf5d51858566",
+   "SHA1": "c7ccf7f7c65e24137798b2af967620896bdc032c",
+   "SHA256": "162e56481955b032cd7b146e0fb08f943dc6bb5ec135a47714de77604b3e032d"
+  }
+ },
+ {
+  "Name": "CSShellcode.bin",
+  "Size": 888,
+  "Hash": {
+   "MD5": "b173bd1934797444b0f8658495ab0765",
+   "SHA1": "75082bb8c6c3529a298b5e3432a2769362efe451",
+   "SHA256": "771e8bef3711e8327b5ddb9c6109bd23e494488cccd31097e91033a427e413ef"
+  }
+ }
+]
