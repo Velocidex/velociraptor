@@ -19,8 +19,9 @@ class Authenticator extends Component {
         param: PropTypes.object,
     }
 
-    getIcon = provider=>{
-        switch(provider) {
+    getIcon = ()=>{
+        let provider_name = this.props.param.ProviderName;
+        switch(provider_name) {
         case "Google":
             return <img className="logo" alt='google logo'
                         src={google_logo}/>;
@@ -30,10 +31,11 @@ class Authenticator extends Component {
         case "Microsoft":
             return <img className="logo" alt='microsoft logo'
                         src={azure_logo}/>;
-        case "Generic OIDC connector":
-            return <img className="logo" alt='oidc logo'
-                        src={openid_logo}/>;
         default:
+            if (this.props.param.ProviderAvatar) {
+                return <img className="logo" alt='oidc logo'
+                            src={this.props.param.ProviderAvatar}/>;
+            }
             return <div/>;
         }
     }
@@ -48,7 +50,7 @@ class Authenticator extends Component {
                   <a href={this.props.param.LoginURL}>
                     <Row>
                     <Col sm="1">
-                      {this.getIcon(this.props.param.ProviderName)}
+                      {this.getIcon()}
                     </Col>
                       <Col sm="9" className="provider">
                         <span>

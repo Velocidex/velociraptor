@@ -14,11 +14,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
-const (
-	oidcLoginURI    = "/auth/oidc/login"
-	oidcCallbackURI = "/auth/oidc/callback"
-)
-
 type OidcAuthenticator struct {
 	config_obj    *config_proto.Config
 	authenticator *config_proto.Authenticator
@@ -28,8 +23,41 @@ func (self *OidcAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
-func (self *OidcAuthenticator) AddHandlers(mux *http.ServeMux) error {
+func (self *OidcAuthenticator) Name() string {
+	name := self.authenticator.OidcName
+	if name == "" {
+		return "Genric OIDC Connector"
+	}
+	return name
+}
 
+func (self *OidcAuthenticator) LoginHandler() string {
+	name := self.authenticator.OidcName
+	if name != "" {
+		return "/auth/oidc/" + name + "/login"
+	}
+	return "/auth/oidc/login"
+}
+
+func (self *OidcAuthenticator) LoginURL() string {
+	return self.config_obj.GUI.PublicUrl +
+		strings.TrimPrefix(self.LoginHandler(), "/")
+}
+
+func (self *OidcAuthenticator) CallbackHandler() string {
+	name := self.authenticator.OidcName
+	if name == "" {
+		return "/auth/oidc/" + name + "/callback"
+	}
+	return "/auth/oidc/callback"
+}
+
+func (self *OidcAuthenticator) CallbackURL() string {
+	return self.config_obj.GUI.PublicUrl +
+		strings.TrimPrefix(self.LoginHandler(), "/")
+}
+
+func (self *OidcAuthenticator) AddHandlers(mux *http.ServeMux) error {
 	provider, err := oidc.NewProvider(
 		context.Background(), self.authenticator.OidcIssuer)
 	if err != nil {
@@ -40,8 +68,8 @@ func (self *OidcAuthenticator) AddHandlers(mux *http.ServeMux) error {
 		return err
 	}
 
-	mux.Handle(oidcLoginURI, self.oauthOidcLogin(provider))
-	mux.Handle(oidcCallbackURI, self.oauthOidcCallback(provider))
+	mux.Handle(self.LoginHandler(), self.oauthOidcLogin(provider))
+	mux.Handle(self.CallbackHandler(), self.oauthOidcCallback(provider))
 	return nil
 }
 
@@ -56,7 +84,7 @@ func (self *OidcAuthenticator) AuthenticateUserHandler(
 		self.config_obj,
 		func(w http.ResponseWriter, r *http.Request, err error, username string) {
 			reject_with_username(self.config_obj, w, r, err, username,
-				oidcLoginURI, "Genenric OIDC provider")
+				self.LoginURL(), self.Name())
 		},
 		parent)
 }
@@ -83,7 +111,7 @@ func (self *OidcAuthenticator) oauthOidcLogin(
 	provider *oidc.Provider) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		oidcOauthConfig := self.getGenOauthConfig(
-			provider.Endpoint(), oidcCallbackURI)
+			provider.Endpoint(), self.CallbackHandler())
 
 		// Create oauthState cookie
 		oauthState, err := r.Cookie("oauthstate")
@@ -109,8 +137,8 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 			return
 		}
 
-		oidcOauthConfig := self.getGenOauthConfig(provider.Endpoint(),
-			oidcCallbackURI)
+		oidcOauthConfig := self.getGenOauthConfig(
+			provider.Endpoint(), self.CallbackHandler())
 		oauthToken, err := oidcOauthConfig.Exchange(r.Context(), r.FormValue("code"))
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).

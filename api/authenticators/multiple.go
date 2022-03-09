@@ -102,8 +102,9 @@ func NewMultiAuthenticator(
 		case *OidcAuthenticator:
 			result.delegate_info = append(result.delegate_info,
 				velociraptor.AuthenticatorInfo{
-					LoginURL:     oidcLoginURI,
-					ProviderName: `Generic OIDC connector`,
+					LoginURL:       t.LoginURL(),
+					ProviderName:   t.authenticator.OidcName,
+					ProviderAvatar: t.authenticator.Avatar,
 				})
 
 		default:
