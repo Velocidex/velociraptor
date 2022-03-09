@@ -1,0 +1,19 @@
+SELECT hash(path=srcDir+"/artifacts/testdata/files/hello.zip") AS AllHashes, hash(path=srcDir+"/artifacts/testdata/files/hello.zip", hashselect="md5") AS MD5HashOnly, hash(path=srcDir+"/artifacts/testdata/files/hello.zip", hashselect=["md5", "sha256"]) AS MDHashAndSha256 FROM scope()[
+ {
+  "AllHashes": {
+   "MD5": "cf2b61489d0564ec415caaa298c5cdd4",
+   "SHA1": "1f7e03e2b3b3225a2e3a9f54daef7d3799f2a4d6",
+   "SHA256": "3726e4d9af228eb0506913c15e0d2db20ec9c0b584d9d698a2254ef537dcf674"
+  },
+  "MD5HashOnly": {
+   "MD5": "cf2b61489d0564ec415caaa298c5cdd4",
+   "SHA1": "",
+   "SHA256": ""
+  },
+  "MDHashAndSha256": {
+   "MD5": "cf2b61489d0564ec415caaa298c5cdd4",
+   "SHA1": "",
+   "SHA256": "3726e4d9af228eb0506913c15e0d2db20ec9c0b584d9d698a2254ef537dcf674"
+  }
+ }
+]

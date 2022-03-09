@@ -1,0 +1,7 @@
+Queries:
+  - SELECT hash(path=srcDir+"/artifacts/testdata/files/hello.zip") AS AllHashes,
+     hash(path=srcDir+"/artifacts/testdata/files/hello.zip",
+          hashselect="md5") AS MD5HashOnly,
+     hash(path=srcDir+"/artifacts/testdata/files/hello.zip",
+          hashselect=["md5", "sha256"]) AS MDHashAndSha256
+    FROM scope()
