@@ -9,9 +9,11 @@ type: CLIENT_EVENT
 sources:
   - precondition: SELECT OS From info() where OS = 'windows'
     query: |
-      SELECT * from foreach(
+      SELECT *, rate(x=CPU, y=Timestamp) AS CPUPercent
+      FROM foreach(
          row={
-           SELECT UnixNano FROM clock(period=atoi(string=Frequency))
+           SELECT UnixNano
+           FROM clock(period=atoi(string=Frequency))
          },
          query={
            SELECT UnixNano / 1000000000 as Timestamp,
@@ -22,9 +24,11 @@ sources:
 
   - precondition: SELECT OS From info() where OS != 'windows'
     query: |
-      SELECT * from foreach(
+      SELECT *, rate(x=CPU, y=Timestamp) AS CPUPercent
+      FROM foreach(
          row={
-           SELECT UnixNano FROM clock(period=atoi(string=Frequency))
+           SELECT UnixNano
+           FROM clock(period=atoi(string=Frequency))
          },
          query={
            SELECT UnixNano / 1000000000 as Timestamp,

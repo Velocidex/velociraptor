@@ -25,6 +25,8 @@ import EventMonitoring from './components/events/events.js';
 import SnackbarProvider from 'react-simple-snackbar';
 import Snackbar from './components/core/snackbar.js';
 import Welcome from './components/welcome/welcome.js';
+import LoginPage from './components/welcome/login.js';
+import LogoffPage from './components/welcome/logoff.js';
 import KeyboardHelp from './components/core/keyboard-help.js';
 import { UserSettings } from './components/core/user.js';
 
@@ -194,7 +196,7 @@ class App extends Component {
                </div>;
     }
 
-    render() {
+    renderMainPage() {
         return (
             <div>
               <UserSettings>
@@ -219,6 +221,22 @@ class App extends Component {
               </UserSettings>
             </div>
         );
+    };
+
+    render() {
+        // This is an error injected into the main page by the server
+        // template renderer. We pick it up from here and override
+        // rendering the main page with this special login page.
+        if (window.ErrorState) {
+            if (window.ErrorState.Type === "Login") {
+                return <LoginPage/>;
+            }
+            if (window.ErrorState.Type === "Logoff") {
+                return <LogoffPage/>;
+            }
+        }
+
+        return this.renderMainPage();
     };
 }
 

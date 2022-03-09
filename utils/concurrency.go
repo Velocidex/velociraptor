@@ -30,10 +30,10 @@ func (self *Concurrency) StartConcurrencyControl(ctx context.Context) (func(), e
 		return self.EndConcurrencyControl, nil
 
 	case <-ctx.Done():
-		return nil, errors.New("Timed out")
+		return nil, errors.New("Concurrency: Timed out due to cancellation")
 
 	case <-time.After(self.timeout):
-		return nil, errors.New("Timed out")
+		return nil, errors.New("Timed out in concurrency control")
 	}
 }
 

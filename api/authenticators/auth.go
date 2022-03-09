@@ -10,10 +10,9 @@ import (
 
 // All SSO Authenticators implement this interface.
 type Authenticator interface {
-	AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error
-	AuthenticateUserHandler(
-		config_obj *config_proto.Config,
-		parent http.Handler) http.Handler
+	AddHandlers(mux *http.ServeMux) error
+	AddLogoff(mux *http.ServeMux) error
+	AuthenticateUserHandler(parent http.Handler) http.Handler
 
 	IsPasswordLess() bool
 }
@@ -25,19 +24,44 @@ func NewAuthenticator(config_obj *config_proto.Config) (Authenticator, error) {
 		return nil, errors.New("GUI not configured")
 	}
 
-	switch strings.ToLower(config_obj.GUI.Authenticator.Type) {
+	return getAuthenticatorByType(config_obj, config_obj.GUI.Authenticator)
+}
+
+func getAuthenticatorByType(
+	config_obj *config_proto.Config,
+	auth_config *config_proto.Authenticator) (Authenticator, error) {
+	auth_type := strings.ToLower(auth_config.Type)
+	switch auth_type {
 	case "azure":
-		return &AzureAuthenticator{}, nil
+		return &AzureAuthenticator{
+			config_obj:    config_obj,
+			authenticator: auth_config,
+		}, nil
 	case "github":
-		return &GitHubAuthenticator{}, nil
+		return &GitHubAuthenticator{
+			config_obj:    config_obj,
+			authenticator: auth_config,
+		}, nil
 	case "google":
-		return &GoogleAuthenticator{}, nil
+		return &GoogleAuthenticator{
+			config_obj:    config_obj,
+			authenticator: auth_config,
+		}, nil
 	case "saml":
-		return &SamlAuthenticator{}, nil
+		return NewSamlAuthenticator(config_obj, auth_config)
+
 	case "basic":
-		return &BasicAuthenticator{}, nil
+		return &BasicAuthenticator{
+			config_obj: config_obj,
+		}, nil
 	case "oidc":
-		return &OidcAuthenticator{}, nil
+		return &OidcAuthenticator{
+			config_obj:    config_obj,
+			authenticator: auth_config,
+		}, nil
+
+	case "multi":
+		return NewMultiAuthenticator(config_obj, auth_config)
 	}
 	return nil, errors.New("No valid authenticator found")
 }

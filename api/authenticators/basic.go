@@ -16,11 +16,17 @@ import (
 )
 
 // Implement basic authentication.
-type BasicAuthenticator struct{}
+type BasicAuthenticator struct {
+	config_obj *config_proto.Config
+}
 
 // Basic auth does not need any special handlers.
-func (self *BasicAuthenticator) AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
-	base := config_obj.GUI.BasePath
+func (self *BasicAuthenticator) AddHandlers(mux *http.ServeMux) error {
+	return nil
+}
+
+func (self *BasicAuthenticator) AddLogoff(mux *http.ServeMux) error {
+	base := self.config_obj.GUI.BasePath
 	mux.Handle(base+"/logoff", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username, _, ok := r.BasicAuth()
 		if !ok {
@@ -49,7 +55,6 @@ func (self *BasicAuthenticator) IsPasswordLess() bool {
 }
 
 func (self *BasicAuthenticator) AuthenticateUserHandler(
-	config_obj *config_proto.Config,
 	parent http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-CSRF-Token", csrf.Token(r))
@@ -63,9 +68,9 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 
 		// Get the full user record with hashes so we can
 		// verify it below.
-		user_record, err := users.GetUserWithHashes(config_obj, username)
+		user_record, err := users.GetUserWithHashes(self.config_obj, username)
 		if err != nil {
-			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger := logging.GetLogger(self.config_obj, &logging.Audit)
 			logger.WithFields(logrus.Fields{
 				"username": username,
 				"status":   http.StatusUnauthorized,
@@ -76,9 +81,9 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		}
 
 		// Must have at least reader.
-		perm, err := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
+		perm, err := acls.CheckAccess(self.config_obj, username, acls.READ_RESULTS)
 		if !perm || err != nil || user_record.Locked || user_record.Name != username {
-			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger := logging.GetLogger(self.config_obj, &logging.Audit)
 			logger.WithFields(logrus.Fields{
 				"username": username,
 				"status":   http.StatusUnauthorized,
@@ -89,7 +94,7 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		}
 
 		if !users.VerifyPassword(user_record, password) {
-			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger := logging.GetLogger(self.config_obj, &logging.Audit)
 			logger.WithFields(logrus.Fields{
 				"username": username,
 				"status":   http.StatusUnauthorized,
@@ -114,7 +119,7 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 
 		// Need to call logging after auth so it can access
 		// the USER value in the context.
-		GetLoggingHandler(config_obj)(parent).ServeHTTP(
+		GetLoggingHandler(self.config_obj)(parent).ServeHTTP(
 			w, r.WithContext(ctx))
 	})
 }

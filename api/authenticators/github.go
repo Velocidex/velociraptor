@@ -40,37 +40,50 @@ type GitHubUser struct {
 	AvatarUrl string `json:"avatar_url"`
 }
 
-type GitHubAuthenticator struct{}
+type GitHubAuthenticator struct {
+	config_obj    *config_proto.Config
+	authenticator *config_proto.Authenticator
+}
+
+// The URL that will be used to log in.
+func (self *GitHubAuthenticator) LoginURL() string {
+	return self.config_obj.GUI.PublicUrl + "auth/github/login"
+}
 
 func (self *GitHubAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
-func (self *GitHubAuthenticator) AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
-	mux.Handle("/auth/github/login", oauthGithubLogin(config_obj))
-	mux.Handle("/auth/github/callback", oauthGithubCallback(config_obj))
+func (self *GitHubAuthenticator) AddHandlers(mux *http.ServeMux) error {
+	mux.Handle("/auth/github/login", self.oauthGithubLogin())
+	mux.Handle("/auth/github/callback", self.oauthGithubCallback())
+	return nil
+}
 
-	installLogoff(config_obj, mux)
+func (self *GitHubAuthenticator) AddLogoff(mux *http.ServeMux) error {
+	installLogoff(self.config_obj, mux)
 	return nil
 }
 
 // Check that the user is proerly authenticated.
 func (self *GitHubAuthenticator) AuthenticateUserHandler(
-	config_obj *config_proto.Config,
 	parent http.Handler) http.Handler {
 
 	return authenticateUserHandle(
-		config_obj, parent, "/auth/github/login", "GitHub")
+		self.config_obj,
+		func(w http.ResponseWriter, r *http.Request, err error, username string) {
+			reject_with_username(self.config_obj, w, r, err, username,
+				"/auth/github/login", "Github")
+		},
+		parent)
 }
 
-func oauthGithubLogin(config_obj *config_proto.Config) http.Handler {
-	authenticator := config_obj.GUI.Authenticator
-
+func (self *GitHubAuthenticator) oauthGithubLogin() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var githubOauthConfig = &oauth2.Config{
-			RedirectURL:  config_obj.GUI.PublicUrl + "auth/github/callback",
-			ClientID:     authenticator.OauthClientId,
-			ClientSecret: authenticator.OauthClientSecret,
+			RedirectURL:  self.config_obj.GUI.PublicUrl + "auth/github/callback",
+			ClientID:     self.authenticator.OauthClientId,
+			ClientSecret: self.authenticator.OauthClientSecret,
 			Scopes:       []string{"user:email"},
 			Endpoint:     github.Endpoint,
 		}
@@ -86,22 +99,22 @@ func oauthGithubLogin(config_obj *config_proto.Config) http.Handler {
 	})
 }
 
-func oauthGithubCallback(config_obj *config_proto.Config) http.Handler {
+func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Read oauthState from Cookie
 		oauthState, _ := r.Cookie("oauthstate")
 
 		if r.FormValue("state") != oauthState.Value {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("invalid oauth github state")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
 		}
 
-		data, err := getUserDataFromGithub(
-			r.Context(), config_obj, r.FormValue("code"))
+		data, err := self.getUserDataFromGithub(r.Context(), r.FormValue("code"))
 		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
 					"err": err,
 				}).Error("getUserDataFromGithub")
@@ -112,7 +125,7 @@ func oauthGithubCallback(config_obj *config_proto.Config) http.Handler {
 		user_info := &GitHubUser{}
 		err = json.Unmarshal(data, &user_info)
 		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
 					"err": err,
 				}).Error("getUserDataFromGithub")
@@ -131,9 +144,9 @@ func oauthGithubCallback(config_obj *config_proto.Config) http.Handler {
 
 		// Sign and get the complete encoded token as a string using the secret
 		tokenString, err := token.SignedString(
-			[]byte(config_obj.Frontend.PrivateKey))
+			[]byte(self.config_obj.Frontend.PrivateKey))
 		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
 					"err": err,
 				}).Error("getUserDataFromGithub")
@@ -155,16 +168,14 @@ func oauthGithubCallback(config_obj *config_proto.Config) http.Handler {
 	})
 }
 
-func getUserDataFromGithub(
-	ctx context.Context,
-	config_obj *config_proto.Config, code string) ([]byte, error) {
-	authenticator := config_obj.GUI.Authenticator
+func (self *GitHubAuthenticator) getUserDataFromGithub(
+	ctx context.Context, code string) ([]byte, error) {
 
 	// Use code to get token and get user info from GitHub.
 	var githubOauthConfig = &oauth2.Config{
-		RedirectURL:  config_obj.GUI.PublicUrl + "auth/github/callback",
-		ClientID:     authenticator.OauthClientId,
-		ClientSecret: authenticator.OauthClientSecret,
+		RedirectURL:  self.config_obj.GUI.PublicUrl + "auth/github/callback",
+		ClientID:     self.authenticator.OauthClientId,
+		ClientSecret: self.authenticator.OauthClientSecret,
 		Scopes:       []string{},
 		Endpoint:     github.Endpoint,
 	}
