@@ -9,6 +9,7 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import filterFactory from 'react-bootstrap-table2-filter';
 import cellEditFactory from 'react-bootstrap-table2-editor';
+import NotebookUploads from '../notebooks/notebook-uploads.js';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter } from "react-router-dom";
@@ -66,6 +67,7 @@ class HuntList extends React.Component {
         showExportNotebook: false,
         showDeleteNotebook: false,
         showCopyWizard: false,
+        showNotebookUploadsDialog: false,
     }
 
     // Launch the hunt.
@@ -278,6 +280,13 @@ class HuntList extends React.Component {
                   }}/>
               }
 
+              { this.state.showNotebookUploadsDialog &&
+                <NotebookUploads
+                  notebook={{notebook_id: "N." + selected_hunt}}
+                  closeDialog={() => this.setState({showNotebookUploadsDialog: false})}
+                />
+              }
+
               { this.state.showExportNotebook &&
                 <ExportNotebook
                   notebook={{notebook_id: "N." + selected_hunt}}
@@ -359,6 +368,12 @@ class HuntList extends React.Component {
                             onClick={() => this.setState({showDeleteNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="trash"/>
+                    </Button>
+
+                    <Button title="Notebook Uploads"
+                            onClick={() => this.setState({showNotebookUploadsDialog: true})}
+                            variant="default">
+                      <FontAwesomeIcon icon="fa-file-download"/>
                     </Button>
 
                     <Button title="Export Notebook"

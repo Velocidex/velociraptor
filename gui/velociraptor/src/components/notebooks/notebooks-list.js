@@ -8,6 +8,7 @@ import filterFactory from 'react-bootstrap-table2-filter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BootstrapTable from 'react-bootstrap-table-next';
 import ExportNotebook from './export-notebook.js';
+import NotebookUploads from './notebook-uploads.js';
 
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
@@ -204,6 +205,7 @@ class NotebooksList extends React.Component {
         showDeleteNotebookDialog: false,
         showEditNotebookDialog: false,
         showExportNotebookDialog: false,
+        showNotebookUploadsDialog: false,
     }
 
     setFullScreen = () => {
@@ -290,6 +292,13 @@ class NotebooksList extends React.Component {
                 />
               }
 
+              { this.state.showNotebookUploadsDialog &&
+                <NotebookUploads
+                  notebook={this.props.selected_notebook}
+                  closeDialog={() => this.setState({showNotebookUploadsDialog: false})}
+                />
+              }
+
               <Navbar className="toolbar">
                 <ButtonGroup>
                   <Button title="Full Screen"
@@ -316,6 +325,12 @@ class NotebooksList extends React.Component {
                           onClick={()=>this.setState({showEditNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="wrench"/>
+                  </Button>
+                  <Button title="NotebookUploads"
+                          disabled={_.isEmpty(this.props.selected_notebook)}
+                          onClick={()=>this.setState({showNotebookUploadsDialog: true})}
+                          variant="default">
+                    <FontAwesomeIcon icon="fa-file-download"/>
                   </Button>
                   <Button title="ExportNotebook"
                           disabled={_.isEmpty(this.props.selected_notebook)}

@@ -50,7 +50,7 @@ func (self FileSystem) Open(path string) (http.File, error) {
 		return nil, os.ErrNotExist
 	}
 
-	components := path_specs.NewSafeFilestorePath(
+	components := path_specs.NewUnsafeFilestorePath(
 		utils.SplitComponents(path)...).
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
 	fd, err := self.file_store.ReadFile(components)

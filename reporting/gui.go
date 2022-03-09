@@ -633,8 +633,13 @@ func NewGuiTemplateEngine(
 	artifact_name string) (
 	*GuiTemplateEngine, error) {
 
+	uploader := &NotebookUploader{
+		config_obj:  config_obj,
+		PathManager: notebook_cell_path_manager,
+	}
+
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, scope, acl_manager, repository, artifact_name)
+		config_obj, scope, acl_manager, uploader, repository, artifact_name)
 	if err != nil {
 		return nil, err
 	}

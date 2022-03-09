@@ -10,6 +10,8 @@ module.exports = function(app) {
     app.use('/api', mw);
     app.use('/notebooks', mw);
     app.use('/downloads', mw);
+    app.use('/hunts', mw);
+    app.use('/clients', mw);
 
     let appHandlers = createProxyMiddleware({
         target: 'https://0.0.0.0:8889/app',

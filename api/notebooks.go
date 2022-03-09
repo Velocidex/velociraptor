@@ -93,6 +93,11 @@ func (self *ApiServer) GetNotebooks(
 		notebook.AvailableDownloads, _ = getAvailableDownloadFiles(self.config,
 			notebook_path_manager.HtmlExport().Dir())
 
+		if in.IncludeUploads {
+			notebook.AvailableUploads, _ = getAvailableUploadFiles(self.config,
+				notebook_path_manager)
+		}
+
 		notebook.Timelines = getAvailableTimelines(
 			self.config, notebook_path_manager)
 
@@ -1105,8 +1110,36 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 			Type:     api.GetExtensionForFilestore(ps),
 			Path:     ps.AsClientPath(),
 			Size:     uint64(item.Size()),
-			Date:     fmt.Sprintf("%v", item.ModTime()),
+			Date:     item.ModTime().UTC().Format(time.RFC3339),
 			Complete: is_complete(ps.Base()),
+		})
+	}
+
+	return result, nil
+}
+
+func getAvailableUploadFiles(config_obj *config_proto.Config,
+	notebook_path_manager *paths.NotebookPathManager) (
+	*api_proto.AvailableDownloads, error) {
+	result := &api_proto.AvailableDownloads{}
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	files, err := file_store_factory.ListDirectory(
+		notebook_path_manager.UploadsDir())
+	if err != nil {
+		return nil, err
+	}
+
+	for _, item := range files {
+		ps := item.PathSpec()
+
+		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
+			Name:     item.Name(),
+			Type:     api.GetExtensionForFilestore(ps),
+			Path:     ps.AsClientPath(),
+			Size:     uint64(item.Size()),
+			Date:     item.ModTime().UTC().Format(time.RFC3339),
+			Complete: true,
 		})
 	}
 

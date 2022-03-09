@@ -30,6 +30,8 @@ message NotebookCellRequest {
     bool currently_editing = 8;
 
     repeated Env env = 9;
+
+    bool include_uploads = 10;
 }
 
 message NotebookContext {
@@ -68,6 +70,8 @@ message NotebookMetadata {
     bool hidden = 9;
 
     AvailableDownloads available_downloads = 10;
+
+    AvailableDownloads available_uploads = 18;
 
     // These environment variables will be populated into each
     // notebook cell in this notebook.
