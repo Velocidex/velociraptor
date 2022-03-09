@@ -16,6 +16,12 @@ parameters:
     description: |
       WMI namespace used to query DNS cache entries
     default: root/StandardCimv2
+
+  - name: mapDecimals
+    description: |
+      Indicates whether to map decimals to human-readable strings
+    type: bool
+    default: "N"
   
   - name: kMapOfRecordType
     description: |
@@ -142,12 +148,24 @@ sources:
     queries: 
       - |
         LET dns_cache_entries = SELECT 
-          Entry AS dns_query,
-          Data AS dns_record,  
-          get(item=parse_json(data=kMapOfRecordType), member=encode(string=Type, type='string')) AS dns_record_type,
-          TimeToLive AS ttl, 
-          get(item=parse_json(data=kMapOfStatus), member=encode(string=Status, type='string')) AS status,
-          get(item=parse_json(data=kMapOfSection), member=encode(string=Section, type='string')) AS section
+          Entry AS Name,
+          Data AS Record,  
+          if(
+            condition=mapDecimals,
+            then=get(item=parse_json(data=kMapOfRecordType), member=encode(string=Type, type='string')),
+            else=atoi(string=Type)
+          ) AS RecordType,
+          atoi(string=TimeToLive) AS TTL, 
+          if(
+            condition=mapDecimals,
+            then=get(item=parse_json(data=kMapOfStatus), member=encode(string=Status, type='string')),
+            else=atoi(string=Status)
+          ) AS Status,
+          if(
+            condition=mapDecimals,
+            then=get(item=parse_json(data=kMapOfSection), member=encode(string=Section, type='string')),
+            else=atoi(string=Section)
+          ) AS Type
         FROM wmi(query=wmiQuery, namespace=wmiNamespace)
       - |
         SELECT * FROM dns_cache_entries
