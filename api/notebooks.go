@@ -396,7 +396,7 @@ func getDefaultCellsForSources(
 				Input: cell.Template}
 
 			switch cell.Type {
-			case "vql", "md":
+			case "vql", "md", "markdown":
 				result = append(result, request)
 
 			case "vql_suggestion":
