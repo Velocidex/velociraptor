@@ -54,9 +54,9 @@ sources:
       
       -- set hash selector for optimised hash calculation
       LET HashSelector <= SELECT * FROM chain(
-            a={SELECT "MD5" AS Hash FROM scope() WHERE MD5List},
-            b={SELECT "SHA1" AS Hash FROM scope() WHERE SHA1List},
-            c={SELECT "SHA256" AS Hash FROM scope() WHERE SHA256List})
+          a={ SELECT "MD5" AS Hash FROM scope() WHERE MD5List },
+          b={ SELECT "SHA1" AS Hash FROM scope() WHERE SHA1List },
+          c={ SELECT "SHA256" AS Hash FROM scope() WHERE SHA256List })
       
       -- firstly find files in scope with performance
       LET find_files = SELECT * FROM if(condition=DateBefore AND DateAfter,
@@ -98,7 +98,4 @@ sources:
             hash(path=OSPath,hashselect=HashSelector.Hash) as Hash
         FROM if(condition= HashSelector.Hash, then= find_files)
         WHERE 
-            (   if(condition= MD5List,then= Hash.MD5 in MD5List)
-             OR if(condition= SHA1List,then= Hash.SHA1 in SHA1List)
-             OR if(condition= SHA256List, then= Hash.SHA256 in SHA256List)
-            )
+            ( Hash.MD5 in MD5List OR Hash.SHA1 in SHA1List OR Hash.SHA256 in SHA256List )
