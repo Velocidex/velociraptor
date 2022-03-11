@@ -45,14 +45,28 @@ parameters:
 sources:
   - query: |
       -- setup hash lists
-      LET MD5Array <= split(sep='\\s+',string=MD5List)
-      LET SHA1Array <=  split(sep='\\s+',string=SHA1List)
-      LET SHA256Array <= split(sep='\\s+',string=SHA256List)
+      LET MD5List <= if(condition= MD5List,
+                        then= split(sep='\\s+',string=MD5List), else=Null)
+      LET SHA1List <= if(condition= SHA1List,
+                        then= split(sep='\\s+',string=SHA1List), else=Null)
+      LET SHA256List <= if(condition= SHA256List,
+                        then= split(sep='\\s+',string=SHA256List), else=Null)
+      
+      -- set hash selector for optimised hash calculation
+      LET HashSelector <= split(string=
+              if(condition= MD5List AND SHA1List AND SHA256List, then= 'MD5 SHA1 SHA256',
+        else= if(condition= MD5List AND SHA1List, then= 'MD5 SHA1',
+        else= if(condition= SHA1List AND SHA256List, then= 'SHA1 SHA256',
+        else= if(condition= MD5List AND SHA256List, then= 'MD5 SHA256',
+        else= if(condition= MD5List, then= 'MD5',
+        else= if(condition= SHA1List, then= 'SHA1',
+        else= if(condition= SHA256List, then= 'SHA256',
+        else= Null ))))))), sep=' ')
       
       -- firstly find files in scope with performance
       LET find_files = SELECT * FROM if(condition=DateBefore AND DateAfter,
             then={
-                SELECT FullPath, Name, Size,Mtime,Atime,Ctime,Btime
+                SELECT OSPath, Name, Size,Mtime,Atime,Ctime,Btime
                 FROM glob(globs=TargetGlob,accessor=Accessor,nosymlink='True')
                 WHERE NOT IsDir AND NOT IsLink
                     AND Size > SizeMin AND Size < SizeMax
@@ -61,22 +75,22 @@ sources:
             }, 
             else={ SELECT * FROM  if(condition=DateBefore,
                 then={
-                    SELECT FullPath, Name, Size,Mtime,Atime,Ctime,Btime
-                    FROM glob(globs=FullPath,accessor=Accessor)
+                    SELECT OSPath, Name, Size,Mtime,Atime,Ctime,Btime
+                    FROM glob(globs=OSPath,accessor=Accessor)
                     WHERE NOT IsDir AND NOT IsLink
                         AND Size > SizeMin AND Size < SizeMax
                         AND ( Mtime < DateBefore OR Ctime < DateBefore OR Btime < DateBefore )
                 },
                 else={ SELECT * FROM  if(condition=DateAfter,
                 then={
-                    SELECT FullPath, Name, Size,Mtime,Atime,Ctime,Btime
+                    SELECT OSPath, Name, Size,Mtime,Atime,Ctime,Btime
                     FROM glob(globs=TargetGlob,accessor=Accessor)
                     WHERE NOT IsDir AND NOT IsLink
                         AND Size > SizeMin AND Size < SizeMax
                         AND ( Mtime > DateAfter OR Ctime > DateAfter OR Btime > DateAfter )
                 },
                 else={
-                    SELECT FullPath, Name, Size,Mtime,Atime,Ctime,Btime
+                    SELECT OSPath, Name, Size,Mtime,Atime,Ctime,Btime
                     FROM glob(globs=TargetGlob,accessor=Accessor)
                     WHERE NOT IsDir AND NOT IsLink
                         AND Size > SizeMin AND Size < SizeMax
@@ -84,12 +98,12 @@ sources:
       
       
       -- lookup hash and run finl filters
-      SELECT FullPath,Name,Size,
-        dict(Mtime=Mtime,Atime=Atime,Ctime=Ctime,Btime=Btime) as Timestamps,
-        hash(path=FullPath) as Hash
-      FROM if(condition= MD5List OR SHA1List OR SHA256List, then= find_files)
-      WHERE 
-        (   if(condition= MD5List,then= Hash.MD5 in MD5Array)
-         OR if(condition= SHA1List,then= Hash.SHA1 in SHA1Array)
-         OR if(condition= SHA256List, then= Hash.SHA256 in SHA256Array)
-        )
+      SELECT OSPath,Name,Size,
+            dict(Mtime=Mtime,Atime=Atime,Ctime=Ctime,Btime=Btime) as Timestamps,
+            hash(path=OSPath,hashselect=HashSelector) as Hash
+        FROM if(condition= HashSelector, then= find_files)
+        WHERE 
+            (   if(condition= MD5List,then= Hash.MD5 in MD5List)
+             OR if(condition= SHA1List,then= Hash.SHA1 in SHA1List)
+             OR if(condition= SHA256List, then= Hash.SHA256 in SHA256List)
+            )
