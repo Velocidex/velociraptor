@@ -1,36 +1,171 @@
 name: Windows.System.DNSCache
 description: |
-  Windows maintains DNS lookups for a short time in the dns cache.
+  Windows maintains DNS lookups for a short time in the DNS cache.
 
-  This artifact uses the ipconfig binary to collect dns cache entries.
+  This artifact collects DNS cache entries using the WMI class MSFT_DNSClientCache.
 
-precondition:
-  SELECT OS from info() where OS = "windows"
+parameters:
+  - name: wmiQuery
+    description: |
+      WMI query used to query DNS cache entries
+    default: |
+      SELECT Data, Entry, Status, TimeToLive, Type, Section 
+      FROM MSFT_DNSClientCache
+  
+  - name: wmiNamespace
+    description: |
+      WMI namespace used to query DNS cache entries
+    default: root/StandardCimv2
+
+  - name: mapDecimals
+    description: |
+      Indicates whether to map decimals to human-readable strings
+    type: bool
+    default: "N"
+  
+  - name: kMapOfRecordType
+    description: |
+      Mapping of decimal DNS record types to human-readable types
+    default: |
+      {
+      "0": "Reserved",
+      "1": "A",
+      "2": "NS",
+      "3": "MD",
+      "4": "MF",
+      "5": "CNAME",
+      "6": "SOA",
+      "7": "MB",
+      "8": "MG",
+      "9": "MR",
+      "10": "NULL",
+      "11": "WKS",
+      "12": "PTR",
+      "13": "HINFO",
+      "14": "MINFO",
+      "15": "MX",
+      "16": "TXT",
+      "17": "RP",
+      "18": "AFSDB",
+      "19": "X25",
+      "20": "ISDN",
+      "21": "RT",
+      "22": "NSAP",
+      "23": "NSAP-PTR",
+      "24": "SIG",
+      "25": "KEY",
+      "26": "PX",
+      "27": "GPOS",
+      "28": "AAAA",
+      "29": "LOC",
+      "30": "NXT",
+      "31": "EID",
+      "32": "NIMLOC",
+      "33": "SRV",
+      "34": "ATMA",
+      "35": "NAPTR",
+      "36": "KX",
+      "37": "CERT",
+      "38": "A6",
+      "39": "DNAME",
+      "40": "SINK",
+      "41": "OPT",
+      "42": "APL",
+      "43": "DS",
+      "44": "SSHFP",
+      "45": "IPSECKEY",
+      "46": "RRSIG",
+      "47": "NSEC",
+      "48": "DNSKEY",
+      "49": "DHCID",
+      "50": "NSEC3",
+      "51": "NSEC3PARAM",
+      "52": "TLSA",
+      "53": "SMIMEA",
+      "54": "Unassigned",
+      "55": "HIP",
+      "56": "NINFO",
+      "57": "RKEY",
+      "58": "TALINK",
+      "59": "CDS",
+      "60": "CDNSKEY",
+      "61": "OPENPGPKEY",
+      "62": "CSYNC",
+      "63": "ZONEMD",
+      "64": "SVCB",
+      "65": "HTTPS",
+      "99": "SPF",
+      "100": "UINFO",
+      "101": "UID",
+      "102": "GID",
+      "103": "UNSPEC",
+      "104": "NID",
+      "105": "L32",
+      "106": "L64",
+      "107": "LP",
+      "108": "EUI48",
+      "109": "EUI64",
+      "249": "TKEY",
+      "250": "TSIG",
+      "251": "IXFR",
+      "252": "AXFR",
+      "253": "MAILB",
+      "254": "MAILA",
+      "255": "*",
+      "256": "URI",
+      "257": "CAA",
+      "258": "AVC",
+      "259": "DOA",
+      "260": "AMTRELAY",
+      "32768": "TA",
+      "32769": "DLV",
+      "65535": "Reserved"
+      }
+  
+  - name: kMapOfStatus
+    description: |
+      Mapping of decimal status to human-readable status
+    default: |
+      {
+      "0": "Success",
+      "9003": "NotExist",
+      "9701": "NoRecords"
+      }
+  
+  - name: kMapOfSection
+    description: |
+      Mapping of decimal section to human-readable section
+    default: |
+      {
+      "1": "Answer",
+      "2": "Authority",
+      "3": "Additional"
+      }
 
 sources:
-  - query: |
-      LET parsed = SELECT * FROM foreach(
-      row={
-         SELECT Stdout FROM execve(argv=["ipconfig", "/displaydns"])
-      },
-      query={
-        SELECT parse_string_with_regex(string=Record, regex=[
-              "Record Name[^:]+: (?P<Name>.+)\r",
-              "Record Type[^:]+: (?P<RecordType>.+)\r",
-              "Time To Live[^:]+: (?P<TTL>.+)\r",
-              "Section[^:]+: (?P<Type>.+)\r",
-              "A.+Record[^:]+: (?P<A>.+)",
-            ]) AS Parsed, Record FROM parse_records_with_regex(
-               accessor="data", file=Stdout,
-               regex="(?sm)-----------(?P<Record>.+?)\r\n\r\n")
-      })
-
-      SELECT * FROM foreach(row=parsed,
-      query={
-          SELECT Parsed.Name AS Name,
-              atoi(string=Parsed.RecordType) AS RecordType,
-              atoi(string=Parsed.TTL) AS TTL,
-              Parsed.Type AS Type,
-              Parsed.A AS A
-          FROM scope()
-      })
+  - precondition: |
+      SELECT OS from info() where OS = "windows"
+    queries: 
+      - |
+        LET dns_cache_entries = SELECT 
+          Entry AS Name,
+          Data AS Record,  
+          if(
+            condition=mapDecimals,
+            then=get(item=parse_json(data=kMapOfRecordType), member=encode(string=Type, type='string')),
+            else=atoi(string=Type)
+          ) AS RecordType,
+          atoi(string=TimeToLive) AS TTL, 
+          if(
+            condition=mapDecimals,
+            then=get(item=parse_json(data=kMapOfStatus), member=encode(string=Status, type='string')),
+            else=atoi(string=Status)
+          ) AS Status,
+          if(
+            condition=mapDecimals,
+            then=get(item=parse_json(data=kMapOfSection), member=encode(string=Section, type='string')),
+            else=atoi(string=Section)
+          ) AS Type
+        FROM wmi(query=wmiQuery, namespace=wmiNamespace)
+      - |
+        SELECT * FROM dns_cache_entries
