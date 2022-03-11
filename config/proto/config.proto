@@ -269,6 +269,10 @@ message Authenticator {
     string oidc_issuer = 4 [(sem_type) = {
             description: "URL to OIDC Configuration Document. The configuration should be available in the 'oidc_issuer + /.well-known/openid-configuration' endpoint. ",
         }];
+    string oidc_name = 18;
+
+    // Can be an img src for the avatar
+    string avatar = 19;
     string oauth_client_id = 5 [(sem_type) = {
             description: "If set we use oauth authentication flow.",
         }];

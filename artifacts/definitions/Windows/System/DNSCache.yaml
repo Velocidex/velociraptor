@@ -5,27 +5,10 @@ description: |
   This artifact collects DNS cache entries using the WMI class MSFT_DNSClientCache.
 
 parameters:
-  - name: wmiQuery
-    description: |
-      WMI query used to query DNS cache entries
-    default: |
-      SELECT Data, Entry, Status, TimeToLive, Type, Section 
-      FROM MSFT_DNSClientCache
-  
-  - name: wmiNamespace
-    description: |
-      WMI namespace used to query DNS cache entries
-    default: root/StandardCimv2
-
-  - name: mapDecimals
-    description: |
-      Indicates whether to map decimals to human-readable strings
-    type: bool
-    default: "N"
-  
   - name: kMapOfRecordType
     description: |
       Mapping of decimal DNS record types to human-readable types
+    type: hidden
     default: |
       {
       "0": "Reserved",
@@ -121,20 +104,22 @@ parameters:
       "32769": "DLV",
       "65535": "Reserved"
       }
-  
+
   - name: kMapOfStatus
     description: |
       Mapping of decimal status to human-readable status
+    type: hidden
     default: |
       {
       "0": "Success",
       "9003": "NotExist",
       "9701": "NoRecords"
       }
-  
+
   - name: kMapOfSection
     description: |
       Mapping of decimal section to human-readable section
+    type: hidden
     default: |
       {
       "1": "Answer",
@@ -145,27 +130,29 @@ parameters:
 sources:
   - precondition: |
       SELECT OS from info() where OS = "windows"
-    queries: 
-      - |
-        LET dns_cache_entries = SELECT 
+    query: |
+      LET wmiQuery <= '''
+         SELECT Data, Entry, Status, TimeToLive, Type, Section
+         FROM MSFT_DNSClientCache
+      '''
+      LET wmiNamespace <= "root/StandardCimv2"
+      LET MapOfRecordType <= parse_json(data=kMapOfRecordType)
+      LET MapOfStatus <= parse_json(data=kMapOfStatus)
+      LET MapOfSection <= parse_json(data=kMapOfSection)
+
+      LET dns_cache_entries = SELECT
           Entry AS Name,
-          Data AS Record,  
-          if(
-            condition=mapDecimals,
-            then=get(item=parse_json(data=kMapOfRecordType), member=encode(string=Type, type='string')),
-            else=atoi(string=Type)
-          ) AS RecordType,
-          atoi(string=TimeToLive) AS TTL, 
-          if(
-            condition=mapDecimals,
-            then=get(item=parse_json(data=kMapOfStatus), member=encode(string=Status, type='string')),
-            else=atoi(string=Status)
-          ) AS Status,
-          if(
-            condition=mapDecimals,
-            then=get(item=parse_json(data=kMapOfSection), member=encode(string=Section, type='string')),
-            else=atoi(string=Section)
-          ) AS Type
-        FROM wmi(query=wmiQuery, namespace=wmiNamespace)
-      - |
-        SELECT * FROM dns_cache_entries
+          Data AS Record,
+          get(item=MapOfRecordType,
+              member=str(str=Type), default=Type) AS RecordType,
+          Type AS _RecordType,
+          atoi(string=TimeToLive) AS TTL,
+          get(item=MapOfStatus,
+              member=str(str=Status), default=Status) AS QueryStatus,
+          Status AS _QueryStatus,
+          get(item=MapOfSection,
+              member=str(str=Section), default=Section) AS SectionType,
+          Section AS _SectionType
+      FROM wmi(query=wmiQuery, namespace=wmiNamespace)
+
+      SELECT * FROM dns_cache_entries
