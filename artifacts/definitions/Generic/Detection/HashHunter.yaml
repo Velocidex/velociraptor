@@ -53,15 +53,10 @@ sources:
                         then= split(sep='\\s+',string=SHA256List), else=Null)
       
       -- set hash selector for optimised hash calculation
-      LET HashSelector <= split(string=
-              if(condition= MD5List AND SHA1List AND SHA256List, then= 'MD5 SHA1 SHA256',
-        else= if(condition= MD5List AND SHA1List, then= 'MD5 SHA1',
-        else= if(condition= SHA1List AND SHA256List, then= 'SHA1 SHA256',
-        else= if(condition= MD5List AND SHA256List, then= 'MD5 SHA256',
-        else= if(condition= MD5List, then= 'MD5',
-        else= if(condition= SHA1List, then= 'SHA1',
-        else= if(condition= SHA256List, then= 'SHA256',
-        else= Null ))))))), sep=' ')
+      LET HashSelector = SELECT * FROM chain(
+            a={SELECT "MD5" AS Hash FROM scope() WHERE MD5List},
+            b={SELECT "SHA1" AS Hash FROM scope() WHERE SHA1List},
+            c={SELECT "SHA256" AS Hash FROM scope() WHERE SHA256List})
       
       -- firstly find files in scope with performance
       LET find_files = SELECT * FROM if(condition=DateBefore AND DateAfter,
@@ -100,8 +95,8 @@ sources:
       -- lookup hash and run finl filters
       SELECT OSPath,Name,Size,
             dict(Mtime=Mtime,Atime=Atime,Ctime=Ctime,Btime=Btime) as Timestamps,
-            hash(path=OSPath,hashselect=HashSelector) as Hash
-        FROM if(condition= HashSelector, then= find_files)
+            hash(path=OSPath,hashselect=HashSelector.Hash) as Hash
+        FROM if(condition= HashSelector.Hash, then= find_files)
         WHERE 
             (   if(condition= MD5List,then= Hash.MD5 in MD5List)
              OR if(condition= SHA1List,then= Hash.SHA1 in SHA1List)
