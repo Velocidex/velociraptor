@@ -42,40 +42,53 @@ type AzureUser struct {
 	Token string `json:"token"`
 }
 
-type AzureAuthenticator struct{}
+type AzureAuthenticator struct {
+	config_obj    *config_proto.Config
+	authenticator *config_proto.Authenticator
+}
+
+// The URL that will be used to log in.
+func (self *AzureAuthenticator) LoginURL() string {
+	return self.config_obj.GUI.PublicUrl + "auth/azure/login"
+}
 
 func (self *AzureAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
-func (self *AzureAuthenticator) AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
-	mux.Handle("/auth/azure/login", oauthAzureLogin(config_obj))
-	mux.Handle("/auth/azure/callback", oauthAzureCallback(config_obj))
-	mux.Handle("/auth/azure/picture", oauthAzurePicture(config_obj))
+func (self *AzureAuthenticator) AddHandlers(mux *http.ServeMux) error {
+	mux.Handle("/auth/azure/login", self.oauthAzureLogin())
+	mux.Handle("/auth/azure/callback", self.oauthAzureCallback())
+	mux.Handle("/auth/azure/picture", self.oauthAzurePicture())
+	return nil
+}
 
-	installLogoff(config_obj, mux)
+func (self *AzureAuthenticator) AddLogoff(mux *http.ServeMux) error {
+	installLogoff(self.config_obj, mux)
 	return nil
 }
 
 // Check that the user is proerly authenticated.
 func (self *AzureAuthenticator) AuthenticateUserHandler(
-	config_obj *config_proto.Config,
 	parent http.Handler) http.Handler {
 
 	return authenticateUserHandle(
-		config_obj, parent, "/auth/azure/login", "Microsoft O365/Azure AD")
+		self.config_obj,
+		func(w http.ResponseWriter, r *http.Request, err error, username string) {
+			reject_with_username(self.config_obj, w, r, err, username,
+				"/auth/azure/login", "Microsoft O365/Azure AD")
+		},
+		parent)
 }
 
-func oauthAzureLogin(config_obj *config_proto.Config) http.Handler {
-	authenticator := config_obj.GUI.Authenticator
-
+func (self *AzureAuthenticator) oauthAzureLogin() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var azureOauthConfig = &oauth2.Config{
-			RedirectURL:  config_obj.GUI.PublicUrl + "auth/azure/callback",
-			ClientID:     authenticator.OauthClientId,
-			ClientSecret: authenticator.OauthClientSecret,
+			RedirectURL:  self.config_obj.GUI.PublicUrl + "auth/azure/callback",
+			ClientID:     self.authenticator.OauthClientId,
+			ClientSecret: self.authenticator.OauthClientSecret,
 			Scopes:       []string{"User.Read"},
-			Endpoint:     microsoft.AzureADEndpoint(authenticator.Tenant),
+			Endpoint:     microsoft.AzureADEndpoint(self.authenticator.Tenant),
 		}
 
 		// Create oauthState cookie
@@ -89,22 +102,22 @@ func oauthAzureLogin(config_obj *config_proto.Config) http.Handler {
 	})
 }
 
-func oauthAzureCallback(config_obj *config_proto.Config) http.Handler {
+func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Read oauthState from Cookie
 		oauthState, _ := r.Cookie("oauthstate")
 
 		if r.FormValue("state") != oauthState.Value {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("invalid oauth azure state")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
 		}
 
-		user_info, err := getUserDataFromAzure(
-			r.Context(), config_obj, r.FormValue("code"))
+		user_info, err := self.getUserDataFromAzure(
+			r.Context(), r.FormValue("code"))
 		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
 					"err": err,
 				}).Error("getUserDataFromAzure")
@@ -125,9 +138,9 @@ func oauthAzureCallback(config_obj *config_proto.Config) http.Handler {
 
 		// Sign and get the complete encoded token as a string using the secret
 		tokenString, err := token.SignedString(
-			[]byte(config_obj.Frontend.PrivateKey))
+			[]byte(self.config_obj.Frontend.PrivateKey))
 		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
 					"err": err,
 				}).Error("getUserDataFromAzure")
@@ -149,22 +162,21 @@ func oauthAzureCallback(config_obj *config_proto.Config) http.Handler {
 	})
 }
 
-func getAzureOauthConfig(config_obj *config_proto.Config) *oauth2.Config {
-	authenticator := config_obj.GUI.Authenticator
+func (self *AzureAuthenticator) getAzureOauthConfig() *oauth2.Config {
 	return &oauth2.Config{
-		RedirectURL:  config_obj.GUI.PublicUrl + "auth/azure/callback",
-		ClientID:     authenticator.OauthClientId,
-		ClientSecret: authenticator.OauthClientSecret,
+		RedirectURL:  self.config_obj.GUI.PublicUrl + "auth/azure/callback",
+		ClientID:     self.authenticator.OauthClientId,
+		ClientSecret: self.authenticator.OauthClientSecret,
 		Scopes:       []string{"User.Read"},
-		Endpoint:     microsoft.AzureADEndpoint(authenticator.Tenant),
+		Endpoint:     microsoft.AzureADEndpoint(self.authenticator.Tenant),
 	}
 }
 
-func getUserDataFromAzure(ctx context.Context,
-	config_obj *config_proto.Config, code string) (*AzureUser, error) {
+func (self *AzureAuthenticator) getUserDataFromAzure(
+	ctx context.Context, code string) (*AzureUser, error) {
 
 	// Use code to get token and get user info from Azure.
-	azureOauthConfig := getAzureOauthConfig(config_obj)
+	azureOauthConfig := self.getAzureOauthConfig()
 
 	token, err := azureOauthConfig.Exchange(ctx, code)
 	if err != nil {
@@ -204,7 +216,8 @@ func getUserDataFromAzure(ctx context.Context,
 }
 
 // Get the token from the cookie and request the picture from Azure
-func oauthAzurePicture(config_obj *config_proto.Config) http.Handler {
+func (self *AzureAuthenticator) oauthAzurePicture() http.Handler {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		reject := func(err error) {
@@ -226,7 +239,7 @@ func oauthAzurePicture(config_obj *config_proto.Config) http.Handler {
 				if !ok {
 					return nil, errors.New("invalid signing method")
 				}
-				return []byte(config_obj.Frontend.PrivateKey), nil
+				return []byte(self.config_obj.Frontend.PrivateKey), nil
 			})
 		if err != nil {
 			reject(err)
@@ -254,7 +267,7 @@ func oauthAzurePicture(config_obj *config_proto.Config) http.Handler {
 			return
 		}
 
-		azureOauthConfig := getAzureOauthConfig(config_obj)
+		azureOauthConfig := self.getAzureOauthConfig()
 		response, err := azureOauthConfig.Client(r.Context(), oauth_token).Get(
 			"https://graph.microsoft.com/v1.0/me/photos/48x48/$value")
 		if err != nil {

@@ -1,4 +1,4 @@
-// These are the messages used in client actions.
+// This file represents the configuration file schema.
 syntax = "proto3";
 
 import "proto/semantic.proto";
@@ -295,6 +295,9 @@ message Authenticator {
     string saml_user_attribute = 16 [(sem_type) = {
             description: "SAML attribute containing value for user identification."
         }];
+
+    // MultiAuthenticator delegates to multiple other authenticators.
+    repeated Authenticator sub_authenticators = 17;
 }
 
 message GUIConfig {

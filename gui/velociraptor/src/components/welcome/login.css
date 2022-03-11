@@ -1,0 +1,31 @@
+button.login {
+    border-style: solid;
+    border-radius: 1000px;
+    border-width: 1px;
+    border-color: black;
+    width: 100%;
+    margin-bottom: 12px;
+    margin-top: 12px;
+}
+
+
+.login img.logo {
+    height: 3ex;
+    margin: 10px;
+}
+
+.provider {
+    text-align: left;
+    width: 200px;
+    margin-left: 20px;
+}
+
+.provider span {
+    line-height: 50px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.login-options {
+    margin-top: 50px;
+}

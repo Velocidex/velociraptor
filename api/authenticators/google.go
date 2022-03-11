@@ -37,6 +37,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	users "www.velocidex.com/golang/velociraptor/users"
@@ -44,14 +45,40 @@ import (
 
 const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
-type GoogleAuthenticator struct{}
+type GoogleAuthenticator struct {
+	config_obj    *config_proto.Config
+	authenticator *config_proto.Authenticator
+}
 
-func (self *GoogleAuthenticator) AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
-	mux.Handle("/auth/google/login", oauthGoogleLogin(config_obj))
-	mux.Handle("/auth/google/callback", oauthGoogleCallback(config_obj))
+func (self *GoogleAuthenticator) LoginHandler() string {
+	return "/auth/google/login"
+}
 
-	installLogoff(config_obj, mux)
+// The URL that will be used to log in.
+func (self *GoogleAuthenticator) LoginURL() string {
+	return self.config_obj.GUI.PublicUrl + "auth/google/login"
+}
 
+func (self *GoogleAuthenticator) CallbackHandler() string {
+	return "/auth/google/callback"
+}
+
+func (self *GoogleAuthenticator) CallbackURL() string {
+	return self.config_obj.GUI.PublicUrl + "auth/google/callback"
+}
+
+func (self *GoogleAuthenticator) ProviderName() string {
+	return "Google"
+}
+
+func (self *GoogleAuthenticator) AddHandlers(mux *http.ServeMux) error {
+	mux.Handle(self.LoginHandler(), self.oauthGoogleLogin())
+	mux.Handle(self.CallbackHandler(), self.oauthGoogleCallback())
+	return nil
+}
+
+func (self *GoogleAuthenticator) AddLogoff(mux *http.ServeMux) error {
+	installLogoff(self.config_obj, mux)
 	return nil
 }
 
@@ -61,21 +88,24 @@ func (self *GoogleAuthenticator) IsPasswordLess() bool {
 
 // Check that the user is proerly authenticated.
 func (self *GoogleAuthenticator) AuthenticateUserHandler(
-	config_obj *config_proto.Config,
 	parent http.Handler) http.Handler {
 
 	return authenticateUserHandle(
-		config_obj, parent, "/auth/google/login", "Google")
+		self.config_obj,
+		func(w http.ResponseWriter, r *http.Request, err error, username string) {
+			reject_with_username(self.config_obj, w, r, err, username,
+				self.LoginURL(), self.ProviderName())
+		},
+		parent)
 }
 
-func oauthGoogleLogin(config_obj *config_proto.Config) http.Handler {
-	authenticator := config_obj.GUI.Authenticator
+func (self *GoogleAuthenticator) oauthGoogleLogin() http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var googleOauthConfig = &oauth2.Config{
-			RedirectURL:  config_obj.GUI.PublicUrl + "auth/google/callback",
-			ClientID:     authenticator.OauthClientId,
-			ClientSecret: authenticator.OauthClientSecret,
+			RedirectURL:  self.CallbackURL(),
+			ClientID:     self.authenticator.OauthClientId,
+			ClientSecret: self.authenticator.OauthClientSecret,
 			Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 			Endpoint:     google.Endpoint,
 		}
@@ -109,22 +139,22 @@ func generateStateOauthCookie(w http.ResponseWriter) *http.Cookie {
 	return &cookie
 }
 
-func oauthGoogleCallback(config_obj *config_proto.Config) http.Handler {
+func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Read oauthState from Cookie
 		oauthState, _ := r.Cookie("oauthstate")
 
 		if r.FormValue("state") != oauthState.Value {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("invalid oauth google state")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
 		}
 
-		data, err := getUserDataFromGoogle(
-			r.Context(), config_obj, r.FormValue("code"))
+		data, err := self.getUserDataFromGoogle(r.Context(), r.FormValue("code"))
 		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
 					"err": err,
 				}).Error("getUserDataFromGoogle")
@@ -135,7 +165,7 @@ func oauthGoogleCallback(config_obj *config_proto.Config) http.Handler {
 		user_info := &api_proto.VelociraptorUser{}
 		err = json.Unmarshal(data, &user_info)
 		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
 					"err": err,
 				}).Error("getUserDataFromGoogle")
@@ -154,9 +184,9 @@ func oauthGoogleCallback(config_obj *config_proto.Config) http.Handler {
 
 		// Sign and get the complete encoded token as a string using the secret
 		tokenString, err := token.SignedString(
-			[]byte(config_obj.Frontend.PrivateKey))
+			[]byte(self.config_obj.Frontend.PrivateKey))
 		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
 					"err": err,
 				}).Error("getUserDataFromGoogle")
@@ -178,16 +208,14 @@ func oauthGoogleCallback(config_obj *config_proto.Config) http.Handler {
 	})
 }
 
-func getUserDataFromGoogle(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	code string) ([]byte, error) {
-	authenticator := config_obj.GUI.Authenticator
+func (self *GoogleAuthenticator) getUserDataFromGoogle(
+	ctx context.Context, code string) ([]byte, error) {
+
 	// Use code to get token and get user info from Google.
 	var googleOauthConfig = &oauth2.Config{
-		RedirectURL:  config_obj.GUI.PublicUrl + "auth/google/callback",
-		ClientID:     authenticator.OauthClientId,
-		ClientSecret: authenticator.OauthClientSecret,
+		RedirectURL:  self.CallbackURL(),
+		ClientID:     self.authenticator.OauthClientId,
+		ClientSecret: self.authenticator.OauthClientSecret,
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint:     google.Endpoint,
 	}
@@ -211,69 +239,46 @@ func getUserDataFromGoogle(
 }
 
 func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
-	// On logoff just clear the cookie and redirect.
-	mux.Handle("/logoff", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		params := r.URL.Query()
-		old_username, ok := params["username"]
-		if ok && len(old_username) == 1 {
-			logger := logging.GetLogger(config_obj, &logging.Audit)
-			logger.Info("Logging off %v", old_username[0])
-		}
-		http.SetCookie(w, &http.Cookie{
-			Name:     "VelociraptorAuth",
-			Path:     "/",
-			Value:    "",
-			Secure:   true,
-			HttpOnly: true,
-			Expires:  time.Unix(0, 0),
-		})
-		fmt.Fprintf(w, `
-			<html><body>
-			You have successfully logged off!
-			</body></html>
-		`)
-	}))
+	base := config_obj.GUI.BasePath
+	mux.Handle(base+"/app/logoff.html",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			params := r.URL.Query()
+			old_username, ok := params["username"]
+			username := ""
+			if ok && len(old_username) == 1 {
+				logger := logging.GetLogger(config_obj, &logging.Audit)
+				logger.Info("Logging off %v", old_username[0])
+				username = old_username[0]
+			}
+
+			// Clear the cookie
+			http.SetCookie(w, &http.Cookie{
+				Name:     "VelociraptorAuth",
+				Path:     "/",
+				Value:    "",
+				Secure:   true,
+				HttpOnly: true,
+				Expires:  time.Unix(0, 0),
+			})
+
+			//w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			//w.WriteHeader(http.StatusUnauthorized)
+
+			renderLogoffMessage(w, username)
+		}))
 }
 
-func authenticateUserHandle(config_obj *config_proto.Config,
-	parent http.Handler, login_url string, provider string) http.Handler {
+func authenticateUserHandle(
+	config_obj *config_proto.Config,
+	reject_cb func(w http.ResponseWriter, r *http.Request,
+		err error, username string),
+	parent http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-CSRF-Token", csrf.Token(r))
 
-		// Reject by redirecting to the login handler.
-		reject_with_username := func(err error, username string) {
-			logger := logging.GetLogger(config_obj, &logging.Audit)
-			logger.WithFields(logrus.Fields{
-				"remote": r.RemoteAddr,
-				"error":  err.Error(),
-			}).Error("OAuth2 Redirect")
-
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			w.WriteHeader(http.StatusUnauthorized)
-
-			fmt.Fprintf(w, `
-<html><body>
-Authorization failed. You are not registered on this system as %v.
-Contact your system administrator to get an account, or click here
-to log in again:
-
-      <a href="%s" style="text-transform:none">
-        Login with %s
-      </a>
-</body></html>
-`, username, login_url, provider)
-
-			logging.GetLogger(config_obj, &logging.Audit).
-				WithFields(logrus.Fields{
-					"user":   username,
-					"remote": r.RemoteAddr,
-					"method": r.Method,
-				}).Error("User rejected by GUI")
-		}
-
 		reject := func(err error) {
-			reject_with_username(err, "")
+			reject_cb(w, r, err, "")
 		}
 
 		// We store the user name and their details in a local
@@ -316,13 +321,15 @@ to log in again:
 		// Check if the claim is too old.
 		expires, pres := claims["expires"].(float64)
 		if !pres {
-			reject_with_username(errors.New("expires field not present in JWT"),
+			reject_cb(w, r,
+				errors.New("expires field not present in JWT"),
 				username)
 			return
 		}
 
 		if expires < float64(time.Now().Unix()) {
-			reject_with_username(errors.New("the JWT is expired - reauthenticate"),
+			reject_cb(w, r,
+				errors.New("the JWT is expired - reauthenticate"),
 				username)
 			return
 		}
@@ -332,14 +339,14 @@ to log in again:
 		// Now check if the user is allowed to log in.
 		user_record, err := users.GetUser(config_obj, username)
 		if err != nil {
-			reject_with_username(errors.New("Invalid user"), username)
+			reject_cb(w, r, errors.New("Invalid user"), username)
 			return
 		}
 
 		// Must have at least reader permission.
 		perm, err := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
 		if !perm || err != nil || user_record.Locked || user_record.Name != username {
-			reject_with_username(errors.New("Insufficient permissions"), username)
+			reject_cb(w, r, errors.New("Insufficient permissions"), username)
 			return
 		}
 
@@ -361,5 +368,30 @@ to log in again:
 		// the contextKeyUser value in the context.
 		GetLoggingHandler(config_obj)(parent).ServeHTTP(
 			w, r.WithContext(ctx))
+	})
+}
+
+func reject_with_username(
+	config_obj *config_proto.Config,
+	w http.ResponseWriter, r *http.Request,
+	err error, username, login_url, provider string) {
+	logger := logging.GetLogger(config_obj, &logging.Audit)
+	// Log into the audit log.
+	logger.WithFields(logrus.Fields{
+		"user":   username,
+		"remote": r.RemoteAddr,
+		"method": r.Method,
+		"url":    r.URL,
+		"err":    err,
+	}).Error("User rejected by GUI")
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusUnauthorized)
+
+	renderRejectionMessage(w, username, []velociraptor.AuthenticatorInfo{
+		{
+			LoginURL:     login_url,
+			ProviderName: provider,
+		},
 	})
 }

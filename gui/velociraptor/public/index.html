@@ -9,6 +9,10 @@
       };
       window.CsrfToken = "{{.CsrfToken}}";
       window.base_path = "{{.BasePath}}";
+
+      // Used to launch the application in an error state - allows the
+      // user to interact with the react web app without being logged in.
+      window.ErrorState = {{ if .ErrState }}{{.ErrState}}{{else}}[]{{end}};
     </script>
 
     <title>Velociraptor Response and Monitoring</title>

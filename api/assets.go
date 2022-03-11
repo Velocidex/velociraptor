@@ -27,6 +27,7 @@ import (
 	"github.com/gorilla/csrf"
 	"www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	gui_assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	users "www.velocidex.com/golang/velociraptor/users"
 )
@@ -79,7 +80,7 @@ func GetTemplateHandler(
 			user_options = &proto.SetGUIOptionsRequest{}
 		}
 
-		args := _templateArgs{
+		args := velociraptor.HTMLtemplateArgs{
 			Timestamp: time.Now().UTC().UnixNano() / 1000,
 			CsrfToken: csrf.Token(r),
 			BasePath:  base,

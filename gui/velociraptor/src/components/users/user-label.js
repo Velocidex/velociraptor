@@ -138,7 +138,7 @@ export default class UserLabel extends React.Component {
                   setSetting={this.setSettings}
                   onClose={()=>this.setState({showUserSettings: false})} /> }
               <ButtonGroup className="user-label">
-                <Button href={api.base_path + "/logoff?username="+
+                <Button href={api.base_path + "/app/logoff.html?username="+
                               this.context.traits.username } >
                   <FontAwesomeIcon icon="sign-out-alt" />
                 </Button>

@@ -91,7 +91,7 @@ func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 			if err != nil {
 				return err
 			}
-			handler = auther.AuthenticateUserHandler(config_obj, handler)
+			handler = auther.AuthenticateUserHandler(handler)
 		}
 
 		mux.Handle(reverse_proxy_config.Route, handler)
@@ -123,7 +123,14 @@ func PrepareGUIMux(
 		return nil, err
 	}
 
-	err = auther.AddHandlers(config_obj, mux)
+	// Add the authenticator specific handlers.
+	err = auther.AddHandlers(mux)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add the logout handlers
+	err = auther.AddLogoff(mux)
 	if err != nil {
 		return nil, err
 	}
@@ -131,28 +138,28 @@ func PrepareGUIMux(
 	base := config_obj.GUI.BasePath
 
 	mux.Handle(base+"/api/", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(config_obj, h)))
+		auther.AuthenticateUserHandler(h)))
 
 	mux.Handle(base+"/api/v1/DownloadTable", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			config_obj, downloadTable(config_obj))))
+			downloadTable(config_obj))))
 
 	mux.Handle(base+"/api/v1/DownloadVFSFile", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			config_obj, vfsFileDownloadHandler(config_obj))))
+			vfsFileDownloadHandler(config_obj))))
 
 	mux.Handle(base+"/api/v1/UploadTool", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			config_obj, toolUploadHandler(config_obj))))
+			toolUploadHandler(config_obj))))
 
 	mux.Handle(base+"/api/v1/UploadFormFile", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			config_obj, formUploadHandler(config_obj))))
+			formUploadHandler(config_obj))))
 
 	// Serve prepared zip files.
 	mux.Handle(base+"/downloads/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			config_obj, http.StripPrefix(base, forceMime(http.FileServer(
+			http.StripPrefix(base, forceMime(http.FileServer(
 				file_store_accessor.NewFileSystem(
 					config_obj,
 					file_store.GetFileStore(config_obj),
@@ -161,7 +168,7 @@ func PrepareGUIMux(
 	// Serve notebook items
 	mux.Handle(base+"/notebooks/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			config_obj, http.StripPrefix(base, forceMime(http.FileServer(
+			http.StripPrefix(base, forceMime(http.FileServer(
 				file_store_accessor.NewFileSystem(
 					config_obj,
 					file_store.GetFileStore(config_obj),
@@ -170,7 +177,7 @@ func PrepareGUIMux(
 	// Serve files from hunt notebooks
 	mux.Handle(base+"/hunts/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			config_obj, http.StripPrefix(base, forceMime(http.FileServer(
+			http.StripPrefix(base, forceMime(http.FileServer(
 				file_store_accessor.NewFileSystem(
 					config_obj,
 					file_store.GetFileStore(config_obj),
@@ -179,7 +186,7 @@ func PrepareGUIMux(
 	// Serve files from client notebooks
 	mux.Handle(base+"/clients/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			config_obj, http.StripPrefix(base, forceMime(http.FileServer(
+			http.StripPrefix(base, forceMime(http.FileServer(
 				file_store_accessor.NewFileSystem(
 					config_obj,
 					file_store.GetFileStore(config_obj),
@@ -199,24 +206,13 @@ func PrepareGUIMux(
 		return nil, err
 	}
 	mux.Handle(base+"/app/index.html", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(config_obj, h)))
+		auther.AuthenticateUserHandler(h)))
 
 	mux.Handle(base+"/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, base+"/app/index.html", 302)
 	}))
 
 	return mux, nil
-}
-
-type _templateArgs struct {
-	Timestamp  int64
-	Heading    string
-	Help_url   string
-	Report_url string
-	Version    string
-	CsrfToken  string
-	BasePath   string
-	UserTheme  string
 }
 
 // An api handler which connects to the gRPC service (i.e. it is a
