@@ -22,6 +22,7 @@ message NotebookCellRequest {
     string notebook_id = 1;
     string cell_id = 2;
     string input = 3;
+    string name = 11;
 
     uint64 offset = 4;
     uint64 count = 5;
@@ -80,6 +81,10 @@ message NotebookMetadata {
     repeated string timelines = 15;
 
     repeated ColumnType column_types = 17;
+
+    // Cells that are not immediately included but may be included by
+    // the GUI as suggestions.
+    repeated NotebookCellRequest suggestions = 19;
 }
 
 message Notebooks {

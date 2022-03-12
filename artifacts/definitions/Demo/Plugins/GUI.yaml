@@ -96,6 +96,16 @@ sources:
       FROM scope()
 
     notebook:
+      - type: vql_suggestion
+        name: Test Suggestion
+        template: |
+          /*
+          # This is a suggestion notebook cell.
+
+          It should be available from the suggestions list.
+          */
+          SELECT * FROM info()
+
       - type: md
         template: |
           # GUI Notebook tests
