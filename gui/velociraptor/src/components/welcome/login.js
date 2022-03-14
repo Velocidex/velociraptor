@@ -36,7 +36,8 @@ class Authenticator extends Component {
                 return <img className="logo" alt='oidc logo'
                             src={this.props.param.ProviderAvatar}/>;
             }
-            return <div/>;
+            return <img className="logo" alt='oidc logo'
+                        src={openid_logo}/>;
         }
     }
 
