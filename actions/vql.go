@@ -155,7 +155,7 @@ func (self VQLClientAction) StartQuery(
 
 	scope.Log("Starting query execution.")
 
-	scope.SetThrottler(NewThrottler(ctx, float64(rate),
+	scope.SetThrottler(NewThrottler(ctx, scope, float64(rate),
 		float64(cpu_limit), float64(iops_limit)))
 
 	start := time.Now()

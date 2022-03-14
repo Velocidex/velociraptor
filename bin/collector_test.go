@@ -108,6 +108,8 @@ func (self *CollectorTestSuite) TearDownTest() {
 }
 
 func TestCollector(t *testing.T) {
+	t.Parallel()
+
 	self := CollectorSetupTest(t)
 	defer self.TearDownTest()
 

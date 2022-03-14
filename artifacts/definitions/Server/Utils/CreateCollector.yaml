@@ -110,6 +110,26 @@ parameters:
     default: ""
     description: An optional output directory prefix
 
+  - name: opt_cpu_limit
+    default: "0"
+    type: int
+    description: A number between 0 to 100 representing the target maximum CPU utilization during running of this artifact.
+
+  - name: opt_progress_timeout
+    default: "1800"
+    type: int
+    description: |
+      If specified the collector is terminated if it made no progress
+      in this long. Note: Execution time may be a lot longer since
+      each time any result is produced this counter is reset.
+
+  - name: opt_timeout
+    default: "0"
+    type: int
+    description: |
+      If specified the collection must complete in the given time. It
+      will be cancelled if the collection exceeds this time.
+
   - name: StandardCollection
     type: hidden
     default: |
@@ -131,6 +151,9 @@ parameters:
       LET report_filename <= if(condition=Template, then=filename + ".html")
       SELECT * FROM collect(artifacts=Artifacts, report=report_filename,
           args=Parameters, output=filename + ".zip", template=Template,
+          cpu_limit=CpuLimit,
+          progress_timeout=ProgressTimeout,
+          timeout=Timeout,
           password=Password, level=Level, format=Format)
 
   - name: S3Collection
@@ -221,6 +244,9 @@ parameters:
           format=Format,
           output=tempfile(extension=".zip"),
           template=Template,
+          cpu_limit=CpuLimit,
+          progress_timeout=ProgressTimeout,
+          timeout=Timeout,
           password=Password,
           level=Level)
 
@@ -365,6 +391,11 @@ sources:
                     dict(name="Level", default=opt_level, type="int"),
                     dict(name="Format", default=opt_format),
                     dict(name="OutputPrefix", default=opt_output_directory),
+                    dict(name="CpuLimit", type="int",
+                         default=opt_cpu_limit),
+                    dict(name="ProgressTimeout", type="int",
+                         default=opt_progress_timeout),
+                    dict(name="Timeout", default=opt_timeout, type="int"),
                     dict(name="target_args",
                          default=serialize(format='json', item=target_args),
                          type="json"),

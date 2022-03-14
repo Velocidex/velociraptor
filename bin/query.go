@@ -27,6 +27,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
@@ -48,8 +49,14 @@ var (
 	queries = query.Arg("queries", "The VQL Query to run.").
 		Required().Strings()
 
-	rate = app.Flag("ops_per_second", "Rate of execution").
-		Default("1000000").Float64()
+	query_command_collect_timeout = query.Flag(
+		"timeout", "Time collection out after this many seconds.").
+		Default("0").Float64()
+
+	query_command_collect_cpu_limit = query.Flag(
+		"cpu_limit", "A number between 0 to 100 representing maximum CPU utilization.").
+		Default("0").Float64()
+
 	format = query.Flag("format", "Output format to use (text,json,csv,jsonl).").
 		Default("json").Enum("text", "json", "csv", "jsonl")
 
@@ -142,7 +149,10 @@ func outputCSV(ctx context.Context,
 func doRemoteQuery(
 	config_obj *config_proto.Config, format string,
 	queries []string, env *ordereddict.Dict) error {
-	ctx := context.Background()
+
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
 	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
 	if err != nil {
 		return err
@@ -152,8 +162,10 @@ func doRemoteQuery(
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
 	request := &actions_proto.VQLCollectorArgs{
-		MaxRow:  1000,
-		MaxWait: 1,
+		MaxRow:   1000,
+		MaxWait:  1,
+		CpuLimit: float32(*query_command_collect_cpu_limit),
+		Timeout:  uint64(*query_command_collect_timeout),
 	}
 
 	if env != nil {
@@ -327,10 +339,31 @@ func doQuery() error {
 
 	}
 
-	// Install throttler into the scope.
-	scope.SetThrottler(vfilter.NewTimeThrottler(float64(*rate)))
+	ctx, cancel := context.WithCancel(InstallSignalHandler(scope))
+	defer cancel()
 
-	ctx := InstallSignalHandler(scope)
+	if *query_command_collect_timeout > 0 {
+		start := time.Now()
+		timed_ctx, timed_cancel := context.WithTimeout(ctx,
+			time.Second*time.Duration(*query_command_collect_timeout))
+
+		go func() {
+			select {
+			case <-ctx.Done():
+				timed_cancel()
+			case <-timed_ctx.Done():
+				scope.Log("collect: <red>Timeout Error:</> Collection timed out after %v",
+					time.Now().Sub(start))
+				// Cancel the main context.
+				cancel()
+				timed_cancel()
+			}
+		}()
+	}
+
+	// Install throttler into the scope.
+	scope.SetThrottler(actions.NewThrottler(ctx, scope,
+		0, *query_command_collect_cpu_limit, 0))
 
 	out_fd := os.Stdout
 	if *output_file != "" {

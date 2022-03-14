@@ -26,7 +26,7 @@ import {
 // wizard with some extra steps.
 class OfflinePaginator extends PaginationBuilder {
     PaginationSteps = ["Select Artifacts", "Configure Parameters",
-                       "Configure Collection",
+                       "Configure Collection", "Specify Resources",
                        "Review", "Launch"];
 }
 
@@ -421,6 +421,122 @@ class OfflineCollectorParameters  extends React.Component {
     }
 }
 
+// The Offline collector has fewer resource controls than
+// NewCollectionResources
+class OfflineCollectionResources extends React.Component {
+    static propTypes = {
+        artifacts: PropTypes.array,
+        resources: PropTypes.object,
+        setResources: PropTypes.func,
+        paginator: PropTypes.object,
+    }
+
+    state = {}
+
+    isInvalid = () => {
+        return this.state.invalid_1 || this.state.invalid_2 ||
+            this.state.invalid_3 || this.state.invalid_4 ||
+            this.state.invalid_5;
+    }
+
+    getTimeout = (artifacts) => {
+        let timeout = 0;
+        _.each(artifacts, (definition) => {
+            let def_timeout = definition.resources && definition.resources.timeout;
+            def_timeout = def_timeout || 0;
+
+            if (def_timeout > timeout) {
+                timeout = def_timeout;
+            }
+        });
+
+        if (timeout === 0) {
+            timeout = 600;
+        }
+
+        return timeout + " seconds";
+    }
+
+    getCpuLimit = (artifacts) => {
+        let cpu_limit = 0;
+        _.each(artifacts, (definition) => {
+            let def_cpu_limit = definition.resources &&
+                definition.resources.cpu_limit;
+            def_cpu_limit = def_cpu_limit || 0;
+
+            if (def_cpu_limit > cpu_limit) {
+                cpu_limit = def_cpu_limit;
+            }
+        });
+
+        if (cpu_limit === 0) {
+            cpu_limit = "100";
+        }
+
+        return cpu_limit + "%";
+    }
+
+    render() {
+        let resources = this.props.resources || {};
+        return (
+            <>
+              <Modal.Header closeButton>
+                <Modal.Title>{ this.props.paginator.title }</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <Form>
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">CPU Limit Percent</Form.Label>
+                    <Col sm="8">
+                      <ValidatedInteger
+                        placeholder={this.getCpuLimit(this.props.artifacts)}
+                        value={resources.cpu_limit}
+                        setInvalid={value => this.setState({
+                            invalid_1: value})}
+                        valid_func={value=>value >= 0 && value <=100}
+                        setValue={value => {
+                            this.props.setResources({cpu_limit: value});
+                        }} />
+                    </Col>
+                  </Form.Group>
+
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">Max Execution Time in Seconds</Form.Label>
+                    <Col sm="8">
+                      <ValidatedInteger
+                        placeholder={this.getTimeout(this.props.artifacts)}
+                        value={resources.timeout}
+                        setInvalid={value => this.setState({invalid_2: value})}
+                        setValue={value => this.props.setResources({timeout: value})} />
+                    </Col>
+                  </Form.Group>
+
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">Max Idle Time in Seconds</Form.Label>
+                    <Col sm="8">
+                      <ValidatedInteger
+                        placeholder="If set collection will be terminated after this many seconds with no progress."
+                        value={resources.progress_timeout}
+                        setInvalid={value => this.setState({invalid_3: value})}
+                        setValue={value => this.props.setResources({
+                            progress_timeout: value})} />
+                    </Col>
+                  </Form.Group>
+
+                </Form>
+              </Modal.Body>
+              <Modal.Footer>
+            { this.props.paginator.makePaginator({
+                    props: this.props,
+                    isFocused: this.isInvalid(),
+                }) }
+              </Modal.Footer>
+            </>
+        );
+    }
+}
+
+
 
 export default class OfflineCollectorWizard extends React.Component {
     static propTypes = {
@@ -454,6 +570,7 @@ export default class OfflineCollectorWizard extends React.Component {
             opt_output_directory: "",
             opt_format: "jsonl",
         },
+        resources: {},
     }
 
     setArtifacts = (artifacts) => {
@@ -489,6 +606,12 @@ export default class OfflineCollectorWizard extends React.Component {
         env.push({key: "opt_tempdir", value: this.state.collector_parameters.opt_tempdir});
         env.push({key: "opt_level", value: this.state.collector_parameters.opt_level.toString()});
         env.push({key: "opt_output_directory", value: this.state.collector_parameters.opt_output_directory});
+        env.push({key: "opt_progress_timeout", value: JSON.stringify(
+            this.state.resources.progress_timeout)});
+        env.push({key: "opt_timeout", value: JSON.stringify(
+            this.state.resources.timeout)});
+        env.push({key: "opt_cpu_limit", value: JSON.stringify(
+            this.state.resources.cpu_limit)});
         env.push({key: "opt_format", value: this.state.collector_parameters.opt_format});
 
         return request;
@@ -516,6 +639,11 @@ export default class OfflineCollectorWizard extends React.Component {
             this.step.previousStep();
             e.preventDefault();
         };
+    }
+
+    setResources = (resources) => {
+        let new_resources = Object.assign(this.state.resources, resources);
+        this.setState({resources: new_resources});
     }
 
     render() {
@@ -575,6 +703,14 @@ export default class OfflineCollectorWizard extends React.Component {
                       "Configure Collection",
                       "Create Offline Collector: Configure collector")}
                 />
+
+                <OfflineCollectionResources
+                  artifacts={this.state.artifacts}
+                  resources={this.state.resources}
+                  paginator={new OfflinePaginator(
+                      "Specify Resources",
+                      "New Collection: Specify Resources")}
+                  setResources={this.setResources} />
 
                 <NewCollectionRequest
                   paginator={new OfflinePaginator(

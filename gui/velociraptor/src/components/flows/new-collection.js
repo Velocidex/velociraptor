@@ -473,7 +473,8 @@ class NewCollectionResources extends React.Component {
 
     isInvalid = () => {
         return this.state.invalid_1 || this.state.invalid_2 ||
-            this.state.invalid_3 || this.state.invalid_4;
+            this.state.invalid_3 || this.state.invalid_4 ||
+            this.state.invalid_5;
     }
 
     getTimeout = (artifacts) => {
@@ -566,7 +567,7 @@ class NewCollectionResources extends React.Component {
         });
 
         if (cpu_limit === 0) {
-            cpu_limit = "unlimited";
+            cpu_limit = "100";
         }
 
         return cpu_limit + "%";
@@ -601,21 +602,12 @@ class NewCollectionResources extends React.Component {
               <Modal.Body>
                 <Form>
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Ops/Sec</Form.Label>
-                    <Col sm="8">
-                      <ValidatedInteger
-                        placeholder={this.getOpsPerSecond(this.props.artifacts)}
-                        value={resources.ops_per_second}
-                        setInvalid={value => this.setState({invalid_1: value})}
-                        setValue={value => this.props.setResources({ops_per_second: value})} />
-                    </Col>
-                  </Form.Group>
-                  <Form.Group as={Row}>
-                    <Form.Label column sm="3">CPU Limit</Form.Label>
+                    <Form.Label column sm="3">CPU Limit Percent</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getCpuLimit(this.props.artifacts)}
                         value={resources.cpu_limit}
+                        valid_func={value=>value >= 0 && value <=100}
                         setInvalid={value => this.setState({
                             invalid_1: value})}
                         setValue={value => this.props.setResources({
@@ -636,7 +628,6 @@ class NewCollectionResources extends React.Component {
                     </Col>
                   </Form.Group>
 
-
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">Max Execution Time in Seconds</Form.Label>
                     <Col sm="8">
@@ -649,12 +640,24 @@ class NewCollectionResources extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
+                    <Form.Label column sm="3">Max Idle Time in Seconds</Form.Label>
+                    <Col sm="8">
+                      <ValidatedInteger
+                        placeholder="If set collection will be terminated after this many seconds with no progress."
+                        value={resources.progress_timeout}
+                        setInvalid={value => this.setState({invalid_3: value})}
+                        setValue={value => this.props.setResources({
+                            progress_timeout: value})} />
+                    </Col>
+                  </Form.Group>
+
+                  <Form.Group as={Row}>
                     <Form.Label column sm="3">Max Rows</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getMaxRows(this.props.artifacts)}
                         value={resources.max_rows}
-                        setInvalid={value => this.setState({invalid_3: value})}
+                        setInvalid={value => this.setState({invalid_4: value})}
                         setValue={value => this.props.setResources({max_rows: value})} />
                     </Col>
                   </Form.Group>
@@ -665,7 +668,7 @@ class NewCollectionResources extends React.Component {
                       <ValidatedInteger
                         placeholder={this.getMaxUploadBytes(this.props.artifacts)}
                         value={resources.max_mbytes}
-                        setInvalid={value => this.setState({invalid_4: value})}
+                        setInvalid={value => this.setState({invalid_5: value})}
                         setValue={value => this.props.setResources({max_mbytes: value})} />
                     </Col>
                   </Form.Group>

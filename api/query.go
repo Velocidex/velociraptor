@@ -29,6 +29,7 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -53,11 +54,6 @@ func streamQuery(
 
 	if arg.MaxWait == 0 {
 		arg.MaxWait = 10
-	}
-
-	rate := arg.OpsPerSecond
-	if rate == 0 {
-		rate = 1000000
 	}
 
 	if arg.Query == nil {
@@ -100,8 +96,32 @@ func streamQuery(
 	// Now execute the query.
 	scope := manager.BuildScope(builder)
 
+	subctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// Implement timeout
+	if arg.Timeout > 0 {
+		start := time.Now()
+		timed_ctx, timed_cancel := context.WithTimeout(subctx,
+			time.Second*time.Duration(arg.Timeout))
+
+		go func() {
+			select {
+			case <-ctx.Done():
+				timed_cancel()
+			case <-timed_ctx.Done():
+				scope.Log("collect: <red>Timeout Error:</> Collection timed out after %v",
+					time.Now().Sub(start))
+				// Cancel the main context.
+				cancel()
+				timed_cancel()
+			}
+		}()
+	}
+
 	// Throttle the query if required.
-	scope.SetThrottler(vfilter.NewTimeThrottler(float64(rate)))
+	scope.SetThrottler(
+		actions.NewThrottler(subctx, scope, 0, float64(arg.CpuLimit), 0))
 
 	go func() {
 		defer close(response_channel)
@@ -124,7 +144,7 @@ func streamQuery(
 				logger.Info("Query: Running %v\n", vql.ToString(scope))
 
 				result_chan := vfilter.GetResponseChannel(
-					vql, stream.Context(), scope,
+					vql, subctx, scope,
 					vql_subsystem.MarshalJson(scope),
 					int(arg.MaxRow), int(arg.MaxWait))
 

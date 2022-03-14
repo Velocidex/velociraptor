@@ -1,0 +1,87 @@
+package actions
+
+import (
+	"bytes"
+	"context"
+	"runtime/pprof"
+	"sync"
+	"time"
+
+	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
+)
+
+type ProgressThrottler struct {
+	mu               sync.Mutex
+	delegate         types.Throttler
+	progress_timeout time.Duration
+	heartbeat        time.Time
+
+	// Will be called when an alarm is fired.
+	cancel func()
+}
+
+func (self *ProgressThrottler) ChargeOp() {
+	self.mu.Lock()
+	self.heartbeat = time.Now()
+	self.mu.Unlock()
+	self.delegate.ChargeOp()
+}
+
+func (self *ProgressThrottler) Close() {
+	self.delegate.Close()
+}
+
+func (self *ProgressThrottler) Start(
+	ctx context.Context, scope vfilter.Scope) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case <-time.After(self.progress_timeout):
+			now := time.Now()
+			if self.progress_timeout.Nanoseconds() > 0 &&
+				now.After(self.heartbeat.Add(self.progress_timeout)) {
+				self.exitWithError(scope)
+				return
+			}
+		}
+	}
+}
+
+func (self *ProgressThrottler) exitWithError(scope vfilter.Scope) {
+	buf := bytes.Buffer{}
+	p := pprof.Lookup("goroutine")
+	if p != nil {
+		p.WriteTo(&buf, 1)
+		scope.Log("Goroutine dump: %v", buf.String())
+	}
+
+	buf = bytes.Buffer{}
+	p = pprof.Lookup("mutex")
+	if p != nil {
+		p.WriteTo(&buf, 1)
+		scope.Log("Mutex dump: %v", buf.String())
+	}
+
+	for _, q := range QueryLog.Get() {
+		scope.Log("Recent Query: %v", q)
+	}
+	self.cancel()
+}
+
+func NewProgressThrottler(
+	ctx context.Context, scope vfilter.Scope,
+	cancel func(),
+	throttler types.Throttler,
+	progress_timeout time.Duration) types.Throttler {
+	result := &ProgressThrottler{
+		cancel:           cancel,
+		delegate:         throttler,
+		progress_timeout: progress_timeout,
+	}
+
+	go result.Start(ctx, scope)
+	return result
+}

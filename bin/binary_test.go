@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/stretchr/testify/assert"
@@ -26,9 +27,12 @@ var (
 	mu        sync.Mutex
 	binary    string
 	extension string
+	cwd       string
 )
 
 func SetupTest(t *testing.T) (string, string) {
+	t.Parallel()
+
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -42,8 +46,9 @@ func SetupTest(t *testing.T) (string, string) {
 
 	// Search for a valid binary to run.
 	binaries, err := filepath.Glob(
-		"../output/velociraptor*" + constants.VERSION + "-" + runtime.GOOS +
-			"-" + runtime.GOARCH + extension)
+		filepath.Join(cwd,
+			"../output/velociraptor*"+constants.VERSION+"-"+runtime.GOOS+
+				"-"+runtime.GOARCH+extension))
 	assert.NoError(t, err)
 
 	if len(binaries) == 0 {
@@ -123,6 +128,106 @@ func TestAutoexec(t *testing.T) {
 
 	// Config artifacts override built in artifacts.
 	require.Contains(t, string(out), "MySpecialInterface")
+}
+
+const sleepDefinitions = `
+autoexec:
+  artifact_definitions:
+  - name: Sleep
+    sources:
+    - query: SELECT sleep(time=10) FROM scope()
+`
+
+func TestTimeout(t *testing.T) {
+	binary, _ := SetupTest(t)
+
+	// A temp file for the config.
+	config_file, err := ioutil.TempFile("", "config")
+	assert.NoError(t, err)
+
+	defer os.Remove(config_file.Name())
+	config_file.Write([]byte(sleepDefinitions))
+	config_file.Close()
+
+	// Repack the config in the binary.
+	cmd := exec.Command(binary,
+		"--config", config_file.Name(),
+		"artifacts", "collect", "Sleep", "-v", "--timeout", "0.1")
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err, string(out))
+	assert.Regexp(t, "Starting collection of Sleep", string(out))
+
+	// Make sure the collection timed out.
+	assert.Regexp(t, "Timeout Error: Collection timed out after", string(out))
+}
+
+func TestProgressTimeout(t *testing.T) {
+	binary, _ := SetupTest(t)
+
+	// A temp file for the config.
+	config_file, err := ioutil.TempFile("", "config")
+	assert.NoError(t, err)
+
+	defer os.Remove(config_file.Name())
+	config_file.Write([]byte(sleepDefinitions))
+	config_file.Close()
+
+	// Repack the config in the binary.
+	start := time.Now()
+	cmd := exec.Command(binary,
+		"--config", config_file.Name(),
+		"artifacts", "collect", "Sleep", "-v", "--progress_timeout", "0.1")
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err, string(out))
+	assert.Regexp(t, "Starting collection of Sleep", string(out))
+
+	// Make sure the collection timed out and dumped the goroutines.
+	assert.Regexp(t, "Goroutine dump: goroutine profile", string(out))
+	assert.Regexp(t, "Mutex dump:", string(out))
+
+	// Make sure the query was cancelled quickly without running the
+	// full length of the sleep.
+	assert.True(t, time.Now().Unix()-start.Unix() < 2)
+}
+
+const cpulimitDefinitions = `
+autoexec:
+  artifact_definitions:
+  - name: GoHard
+    sources:
+    - query: |
+        SELECT * FROM foreach(
+          row={ SELECT * FROM range(start=0, end=100000, step=1) },
+          query={
+              SELECT * FROM range(start=0, end=100000, step=1)
+              WHERE FALSE
+          }, workers=20)
+`
+
+func TestCPULimit(t *testing.T) {
+	binary, _ := SetupTest(t)
+
+	// A temp file for the config.
+	config_file, err := ioutil.TempFile("", "config")
+	assert.NoError(t, err)
+
+	defer os.Remove(config_file.Name())
+	config_file.Write([]byte(cpulimitDefinitions))
+	config_file.Close()
+
+	// Run the test with cpu limiting. For this test we timeout
+	// immediately but you can increase the timeout manually to
+	// observe the cpu limiting in action.
+	cmd := exec.Command(binary,
+		"--config", config_file.Name(),
+		"artifacts", "collect", "GoHard",
+		"-v", "--cpu_limit", "5", "--timeout", "0.1")
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err, string(out))
+	assert.Regexp(t, "Starting collection of GoHard", string(out))
+
+	// Make sure the collection timed out and dumped the goroutines.
+	assert.Regexp(t, "Will throttle query to 5% of", string(out))
 }
 
 func TestBuildDeb(t *testing.T) {
@@ -359,4 +464,8 @@ func TestShowConfigWithMergePatch(t *testing.T) {
 	require.Equal(t, 2, len(new_config.Client.ServerUrls))
 	require.Equal(t, "https://SomeServer/", new_config.Client.ServerUrls[0])
 	require.Equal(t, "https://192.168.1.11:8000/", new_config.Client.ServerUrls[1])
+}
+
+func init() {
+	cwd, _ = os.Getwd()
 }
