@@ -46,14 +46,14 @@ func SetupTest(t *testing.T) (string, string) {
 
 	// Search for a valid binary to run.
 	binaries, err := filepath.Glob(
-		filepath.Join(cwd,
-			"../output/velociraptor*"+constants.VERSION+"-"+runtime.GOOS+
+		filepath.Join(cwd, "..", "output",
+			"velociraptor*"+constants.VERSION+"-"+runtime.GOOS+
 				"-"+runtime.GOARCH+extension))
 	assert.NoError(t, err)
 
 	if len(binaries) == 0 {
 		binaries, _ = filepath.Glob(
-			filepath.Join(cwd, "../output/velociraptor*"+extension))
+			filepath.Join(cwd, "..", "output", "velociraptor*"+extension))
 	}
 
 	binary = binaries[0]
