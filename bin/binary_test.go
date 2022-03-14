@@ -52,7 +52,8 @@ func SetupTest(t *testing.T) (string, string) {
 	assert.NoError(t, err)
 
 	if len(binaries) == 0 {
-		binaries, _ = filepath.Glob("../output/velociraptor*" + extension)
+		binaries, _ = filepath.Glob(
+			filepath.Join(cwd, "../output/velociraptor*"+extension))
 	}
 
 	binary = binaries[0]
