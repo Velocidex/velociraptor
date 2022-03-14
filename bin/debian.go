@@ -102,6 +102,36 @@ AmbientCapabilities=CAP_SYS_RESOURCE CAP_NET_BIND_SERVICE
 WantedBy=multi-user.target
 `
 
+	server_post_install_template = `
+if ! getent group velociraptor >/dev/null; then
+   addgroup --system velociraptor
+fi
+
+if ! getent passwd velociraptor >/dev/null; then
+   adduser --system --home /etc/velociraptor/ --no-create-home \
+     --ingroup velociraptor velociraptor --shell /bin/false \
+     --gecos "Velociraptor Server"
+fi
+
+# Make the filestore path accessible to the user.
+mkdir -p '%s'/config
+
+# Only chown two levels of the filestore directory in case
+# this is an upgrade and there are many files already there.
+# otherwise chown -R takes too long.
+chown velociraptor:velociraptor '%s' '%s'/*
+chown velociraptor:velociraptor -R /etc/velociraptor/
+
+# Lock down permissions on the config file.
+chmod -R go-r /etc/velociraptor/
+chmod o+x /usr/local/bin/velociraptor /usr/local/bin/velociraptor.bin
+
+# Allow the server to bind to low ports and increase its fd limit.
+setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bin
+/bin/systemctl enable velociraptor_server
+/bin/systemctl start velociraptor_server
+`
+
 	server_launcher = `#!/bin/bash
 
 export VELOCIRAPTOR_CONFIG=/etc/velociraptor/server.config.yaml
@@ -238,35 +268,9 @@ func doSingleServerDeb(
 	}
 
 	filestore_path := config_obj.Datastore.Location
-	err = deb.AddControlExtraString("postinst", fmt.Sprintf(`
-if ! getent group velociraptor >/dev/null; then
-   addgroup --system velociraptor
-fi
-
-if ! getent passwd velociraptor >/dev/null; then
-   adduser --system --home /etc/velociraptor/ --no-create-home \
-     --ingroup velociraptor velociraptor --shell /bin/false \
-     --gecos "Velociraptor Server"
-fi
-
-# Make the filestore path accessible to the user.
-mkdir -p '%s'/config
-
-# Only chown two levels of the filestore directory in case
-# this is an upgrade and there are many files already there.
-# otherwise chown -R takes too long.
-chown velociraptor:velociraptor '%s' '%s'/*
-chown velociraptor:velociraptor -R /etc/velociraptor/
-
-# Lock down permissions on the config file.
-chmod -R go-r /etc/velociraptor/
-chmod o+x /usr/local/bin/velociraptor /usr/local/bin/velociraptor.bin
-
-# Allow the server to bind to low ports and increase its fd limit.
-setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bin
-/bin/systemctl enable velociraptor_server
-/bin/systemctl start velociraptor_server
-`, filestore_path, filestore_path, filestore_path))
+	err = deb.AddControlExtraString("postinst", fmt.Sprintf(
+		server_post_install_template,
+		filestore_path, filestore_path, filestore_path))
 	if err != nil {
 		return fmt.Errorf("Adding file: %w", err)
 	}
