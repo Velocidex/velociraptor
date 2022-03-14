@@ -6,12 +6,14 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/google/rpmpack"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 var (
@@ -20,6 +22,17 @@ var (
 
 	client_rpm_command = rpm_command.Command(
 		"client", "Create a client package from a server config file.")
+
+	server_rpm_command = rpm_command.Command(
+		"server", "Create a server package from a server config file.")
+
+	server_rpm_command_output = server_rpm_command.Flag(
+		"output", "Filename to output").Default(
+		fmt.Sprintf("velociraptor_%s_server.rpm", constants.VERSION)).
+		String()
+
+	server_rpm_command_binary = server_rpm_command.Flag(
+		"binary", "The binary to package").String()
 
 	client_rpm_command_use_sysv = client_rpm_command.Flag(
 		"use_sysv", "Use sys V style services (Centos 6)").Bool()
@@ -32,7 +45,39 @@ var (
 	client_rpm_command_binary = client_rpm_command.Flag(
 		"binary", "The binary to package").String()
 
-	rpm_client_service_definition = `
+	server_rpm_post_install_template = `
+getent group velociraptor >/dev/null 2>&1 || groupadd \
+        -r \
+        velociraptor
+getent passwd velociraptor >/dev/null 2>&1 || useradd \
+        -r -l \
+        -g velociraptor \
+        -d /proc \
+        -s /sbin/nologin \
+        -c "Velociraptor Server" \
+        velociraptor
+:;
+
+# Make the filestore path accessible to the user.
+mkdir -p '%s'/config
+
+# Only chown two levels of the filestore directory in case
+# this is an upgrade and there are many files already there.
+# otherwise chown -R takes too long.
+chown velociraptor:velociraptor '%s' '%s'/*
+chown velociraptor:velociraptor -R /etc/velociraptor/
+
+# Lock down permissions on the config file.
+chmod -R go-r /etc/velociraptor/
+chmod o+x /usr/local/bin/velociraptor /usr/local/bin/velociraptor
+
+# Allow the server to bind to low ports and increase its fd limit.
+setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor
+/bin/systemctl enable velociraptor_server.service
+/bin/systemctl start velociraptor_server.service
+`
+
+	rpm_sysv_client_service_definition = `
 #!/bin/bash
 #
 # velociraptor		Start up the Velociraptor client daemon
@@ -257,21 +302,158 @@ func doClientRPM() error {
 			Name: "/etc/systemd/system/velociraptor_client.service",
 			Body: []byte(fmt.Sprintf(
 				client_service_definition, velociraptor_bin, config_path)),
+			Mode:  0644,
+			Owner: "root",
+			Group: "root",
+		})
+
+	r.AddPostin(`/bin/systemctl enable velociraptor_client.service
+/bin/systemctl start velociraptor_client.service
+`)
+
+	r.AddPreun(`
+/bin/systemctl disable velociraptor_client.service
+/bin/systemctl stop velociraptor_client.service
+`)
+
+	fd, err = os.OpenFile(*client_rpm_command_output,
+		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		return fmt.Errorf("Unable to create output file: %w", err)
+	}
+	defer fd.Close()
+
+	return r.Write(fd)
+}
+
+// Systemd based start up scripts (Centos 7, 8)
+func doServerRPM() error {
+	// Disable logging when creating a deb - we may not create the
+	// deb on the same system where the logs should go.
+	_ = config.ValidateClientConfig(&config_proto.Config{})
+
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredFrontend().LoadAndValidate()
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
+
+	if len(config_obj.ExtraFrontends) == 0 {
+		return doSingleServerRPM(config_obj, "", nil)
+	}
+
+	// Build the master node
+	node_name := services.GetNodeName(config_obj.Frontend)
+	err = doSingleServerRPM(config_obj, "_master_"+node_name, nil)
+	if err != nil {
+		return err
+	}
+
+	for _, fe := range config_obj.ExtraFrontends {
+		node_name := services.GetNodeName(fe)
+		err = doSingleServerRPM(config_obj, "_minion_"+node_name,
+			[]string{"--minion", "--node", node_name})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func doSingleServerRPM(
+	config_obj *config_proto.Config,
+	variant string, extra_args []string) error {
+	// Debian packages always use the "velociraptor" user.
+	config_obj.Frontend.RunAsUser = "velociraptor"
+	config_obj.ServerType = "linux"
+
+	var err error
+
+	input := *server_rpm_command_binary
+	if input == "" {
+		input, err = os.Executable()
+		if err != nil {
+			return fmt.Errorf("Unable to open executable: %w", err)
+		}
+	}
+
+	fd, err := os.Open(input)
+	if err != nil {
+		return fmt.Errorf("Unable to open executable: %w", err)
+	}
+	defer fd.Close()
+
+	binary_text, err := ioutil.ReadAll(fd)
+	if err != nil {
+		return fmt.Errorf("Unable to read executable: %w", err)
+	}
+	fd.Close()
+
+	if len(binary_text) < 4 ||
+		binary.LittleEndian.Uint32(binary_text[:4]) != 0x464c457f {
+		return fmt.Errorf("Binary does not appear to be an " +
+			"ELF binary. Please specify the linux binary " +
+			"using the --binary flag.")
+	}
+
+	config_file_yaml, err := yaml.Marshal(config_obj)
+	if err != nil {
+		return err
+	}
+
+	r, err := rpmpack.NewRPM(rpmpack.RPMMetaData{
+		Name:    "velociraptor-server",
+		Version: constants.VERSION,
+		Release: "A",
+		Arch:    "x86_64",
+	})
+	if err != nil {
+		return fmt.Errorf("Unable to create RPM: %w", err)
+	}
+
+	r.AddFile(
+		rpmpack.RPMFile{
+			Name:  "/etc/velociraptor/server.config.yaml",
+			Mode:  0600,
+			Body:  config_file_yaml,
+			Owner: "root",
+			Group: "root",
+		})
+
+	r.AddFile(
+		rpmpack.RPMFile{
+			Name:  "/usr/local/bin/velociraptor",
+			Body:  binary_text,
 			Mode:  0755,
 			Owner: "root",
 			Group: "root",
 		})
 
-	r.AddPostin(`/bin/systemctl enable velociraptor_client
-/bin/systemctl start velociraptor_client
-`)
+	config_path := "/etc/velociraptor/server.config.yaml"
+	velociraptor_bin := "/usr/local/bin/velociraptor"
+
+	r.AddFile(
+		rpmpack.RPMFile{
+			Name: "/etc/systemd/system/velociraptor_server.service",
+			Body: []byte(fmt.Sprintf(
+				server_service_definition, velociraptor_bin, config_path,
+				strings.Join(extra_args, " "))),
+			Mode:  0644,
+			Owner: "root",
+			Group: "root",
+		})
+
+	filestore_path := config_obj.Datastore.Location
+	r.AddPostin(fmt.Sprintf(server_rpm_post_install_template,
+		filestore_path, filestore_path, filestore_path))
 
 	r.AddPreun(`
-/bin/systemctl disable velociraptor_client
-/bin/systemctl stop velociraptor_client
+/bin/systemctl disable velociraptor_server.service
+/bin/systemctl stop velociraptor_server.service
 `)
 
-	fd, err = os.OpenFile(*client_rpm_command_output,
+	fd, err = os.OpenFile(*server_rpm_command_output,
 		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return fmt.Errorf("Unable to create output file: %w", err)
@@ -370,7 +552,7 @@ func doClientSysVRPM() error {
 	r.AddFile(
 		rpmpack.RPMFile{
 			Name:  "/etc/rc.d/init.d/velociraptor",
-			Body:  []byte(rpm_client_service_definition),
+			Body:  []byte(rpm_sysv_client_service_definition),
 			Mode:  0755,
 			Owner: "root",
 			Group: "root",
@@ -414,6 +596,9 @@ func init() {
 			} else {
 				FatalIfError(client_rpm_command, doClientRPM)
 			}
+
+		case server_rpm_command.FullCommand():
+			FatalIfError(server_rpm_command, doServerRPM)
 
 		default:
 			return false
