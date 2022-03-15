@@ -26,6 +26,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+var (
+	cwd string
+)
+
+func init() {
+	cwd, _ = os.Getwd()
+}
+
 type CollectorTestSuite struct {
 	binary      string
 	extension   string
@@ -44,13 +52,14 @@ func CollectorSetupTest(t *testing.T) *CollectorTestSuite {
 
 	// Search for a valid binary to run.
 	binaries, err := filepath.Glob(
-		"../output/velociraptor*" + constants.VERSION + "-" + runtime.GOOS +
-			"-" + runtime.GOARCH + self.extension)
+		filepath.Join(cwd,
+			"..", "output", "velociraptor*"+constants.VERSION+"-"+runtime.GOOS+
+				"-"+runtime.GOARCH+self.extension))
 	assert.NoError(t, err)
 
 	if len(binaries) == 0 {
-		binaries, _ = filepath.Glob("../output/velociraptor*" +
-			self.extension)
+		binaries, _ = filepath.Glob(
+			filepath.Join(cwd, "..", "output", "velociraptor*"+self.extension))
 	}
 
 	self.binary, _ = filepath.Abs(binaries[0])
@@ -108,6 +117,8 @@ func (self *CollectorTestSuite) TearDownTest() {
 }
 
 func TestCollector(t *testing.T) {
+	t.Parallel()
+
 	self := CollectorSetupTest(t)
 	defer self.TearDownTest()
 

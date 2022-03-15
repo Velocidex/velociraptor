@@ -17,6 +17,7 @@ var (
 )
 
 type NannyService struct {
+	mu                             sync.Mutex
 	last_pump_to_rb_attempt        time.Time
 	last_pump_rb_to_server_attempt time.Time
 	last_read_from_server          time.Time
@@ -30,18 +31,27 @@ type NannyService struct {
 }
 
 func (self *NannyService) UpdatePumpToRb() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.last_pump_to_rb_attempt = Clock.Now()
 }
 
 func (self *NannyService) UpdatePumpRbToServer() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.last_pump_rb_to_server_attempt = Clock.Now()
 }
 
 func (self *NannyService) UpdateReadFromServer() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.last_read_from_server = Clock.Now()
 }
 
-func (self *NannyService) CheckTime(t time.Time, message string) {
+func (self *NannyService) _CheckTime(t time.Time, message string) {
 	now := Clock.Now()
 	if t.Add(self.MaxConnectionDelay).Before(now) {
 		self.logger.Error(
@@ -51,10 +61,14 @@ func (self *NannyService) CheckTime(t time.Time, message string) {
 }
 
 func (self *NannyService) Exit() {
+	self.mu.Lock()
 	if self.on_exit == nil {
 		os.Exit(-1)
 	}
-	self.on_exit()
+	on_exit := self.on_exit
+	self.mu.Unlock()
+
+	on_exit()
 }
 
 func (self *NannyService) Start(
@@ -74,9 +88,11 @@ func (self *NannyService) Start(
 				return
 
 			case <-Clock.After(10 * time.Second):
-				self.CheckTime(self.last_pump_to_rb_attempt, "Pump to Ring Buffer")
-				self.CheckTime(self.last_pump_rb_to_server_attempt, "Pump Ring Buffer to Server")
-				self.CheckTime(self.last_read_from_server, "Read From Server")
+				self.mu.Lock()
+				self._CheckTime(self.last_pump_to_rb_attempt, "Pump to Ring Buffer")
+				self._CheckTime(self.last_pump_rb_to_server_attempt, "Pump Ring Buffer to Server")
+				self._CheckTime(self.last_read_from_server, "Read From Server")
+				self.mu.Unlock()
 			}
 		}
 	}()

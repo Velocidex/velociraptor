@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -37,9 +38,11 @@ type CollectPluginArgs struct {
 	ArtifactDefinitions vfilter.Any `vfilter:"optional,field=artifact_definitions,doc=Optional additional custom artifacts."`
 	Template            string      `vfilter:"optional,field=template,doc=The name of a template artifact (i.e. one which has report of type HTML)."`
 	Level               int64       `vfilter:"optional,field=level,doc=Compression level between 0 (no compression) and 9."`
-	OpsPerSecond        int64       `vfilter:"optional,field=ops_per_sec,doc=Rate limiting for collections."`
+	OpsPerSecond        int64       `vfilter:"optional,field=ops_per_sec,doc=Rate limiting for collections (deprecated)."`
 	CpuLimit            float64     `vfilter:"optional,field=cpu_limit,doc=Set query cpu_limit value"`
 	IopsLimit           float64     `vfilter:"optional,field=iops_limit,doc=Set query iops_limit value"`
+	ProgressTimeout     float64     `vfilter:"optional,field=progress_timeout,doc=If no progress is detected in this many seconds, we terminate the query and output debugging information"`
+	Timeout             float64     `vfilter:"optional,field=timeout,doc=Total amount of time in seconds, this collection will take. Collection is cancelled when timeout is exceeded."`
 }
 
 type CollectPlugin struct{}
@@ -103,6 +106,32 @@ func (self CollectPlugin) Call(
 			return
 		}
 
+		// Run the query with a potential subctx with timeout and
+		// cancellation different than our own.
+		subctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+
+		// Apply a timeout if requested.
+		if arg.Timeout > 0 {
+			start := time.Now()
+			timed_ctx, timed_cancel := context.WithTimeout(
+				ctx, time.Duration(arg.Timeout*1e9)*time.Nanosecond)
+
+			go func() {
+				select {
+				case <-ctx.Done():
+					timed_cancel()
+
+				case <-timed_ctx.Done():
+					scope.Log("collect: <red>Timeout Error:</> Collection timed out after %v",
+						time.Now().Sub(start))
+					// Cancel the main context.
+					cancel()
+					timed_cancel()
+				}
+			}()
+		}
+
 		// Create the output container
 		if arg.Output != "" {
 			container, closer, err = makeContainer(config_obj, scope, repository, arg)
@@ -126,8 +155,9 @@ func (self CollectPlugin) Call(
 				// Emit the result set for consumption by the
 				// rest of the query.
 				select {
-				case <-ctx.Done():
+				case <-subctx.Done():
 					return
+
 				case output_chan <- ordereddict.NewDict().
 					Set("Container", arg.Output).
 					Set("Report", arg.Report):
@@ -156,7 +186,7 @@ func (self CollectPlugin) Call(
 		}
 
 		vql_requests, err := launcher.CompileCollectorArgs(
-			ctx, config_obj, acl_manager, repository,
+			subctx, config_obj, acl_manager, repository,
 			services.CompilerOptions{}, request)
 		if err != nil {
 			scope.Log("collect: %v", err)
@@ -184,11 +214,18 @@ func (self CollectPlugin) Call(
 			defer subscope.Close()
 
 			// Install throttler into the scope.
-			if arg.OpsPerSecond > 0 || arg.CpuLimit > 0 || arg.IopsLimit > 0 {
-				scope.SetThrottler(actions.NewThrottler(ctx,
-					float64(arg.OpsPerSecond), float64(arg.CpuLimit),
-					float64(arg.IopsLimit)))
+			throttler := actions.NewThrottler(subctx, scope,
+				float64(arg.OpsPerSecond),
+				float64(arg.CpuLimit),
+				float64(arg.IopsLimit))
+
+			if arg.ProgressTimeout > 0 {
+				throttler = actions.NewProgressThrottler(
+					subctx, scope, cancel, throttler,
+					time.Duration(arg.ProgressTimeout*1e9)*time.Nanosecond)
 			}
+
+			subscope.SetThrottler(throttler)
 
 			// Run each query and store the results in the container
 			for _, query := range vql_request.Query {
@@ -204,10 +241,10 @@ func (self CollectPlugin) Call(
 
 					vql, err := vfilter.Parse(query.VQL)
 					if err != nil {
-						scope.Log("collect: %v", err)
+						subscope.Log("collect: %v", err)
 						return
 					}
-					for row := range vql.Eval(ctx, subscope) {
+					for row := range vql.Eval(subctx, subscope) {
 						output_chan <- row
 					}
 					query_log.Close()
@@ -216,7 +253,7 @@ func (self CollectPlugin) Call(
 				}
 
 				err = container.StoreArtifact(
-					config_obj, ctx, subscope, query, arg.Format)
+					config_obj, subctx, subscope, query, arg.Format)
 				if err != nil {
 					subscope.Log("collect: %v", err)
 					return

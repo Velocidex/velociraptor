@@ -13,10 +13,19 @@ export default class ValidatedInteger extends React.Component {
         setValue: PropTypes.func.isRequired,
         value: PropTypes.any,
         placeholder: PropTypes.string,
+        valid_func: PropTypes.func,
     };
 
     state = {
         invalid: false,
+    }
+
+    checkValue = value=>{
+        let res = regexp.test(value);
+        if (this.props.valid_func) {
+            return res && this.props.valid_func(value);
+        }
+        return res;
     }
 
     render() {
@@ -42,7 +51,7 @@ export default class ValidatedInteger extends React.Component {
                                     invalid = false;
                                     this.props.setValue(undefined);
 
-                                } else if (regexp.test(newValue)) {
+                                } else if (this.checkValue(newValue)) {
                                     this.props.setValue(parseInt(newValue));
                                     invalid = false;
 

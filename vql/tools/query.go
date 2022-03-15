@@ -2,21 +2,22 @@ package tools
 
 import (
 	"context"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type QueryPluginArgs struct {
-	Query     vfilter.Any       `vfilter:"required,field=query,doc=A VQL Query to parse and execute."`
-	Env       *ordereddict.Dict `vfilter:"optional,field=env,doc=A dict of args to insert into the scope."`
-	CpuLimit  float64           `vfilter:"optional,field=cpu_limit,doc=Average CPU usage in percent of a core."`
-	IopsLimit float64           `vfilter:"optional,field=iops_limit,doc=Average IOPs to target."`
+	Query           vfilter.Any       `vfilter:"required,field=query,doc=A VQL Query to parse and execute."`
+	Env             *ordereddict.Dict `vfilter:"optional,field=env,doc=A dict of args to insert into the scope."`
+	CpuLimit        float64           `vfilter:"optional,field=cpu_limit,doc=Average CPU usage in percent of a core."`
+	IopsLimit       float64           `vfilter:"optional,field=iops_limit,doc=Average IOPs to target."`
+	ProgressTimeout float64           `vfilter:"optional,field=progress_timeout,doc=If no progress is detected in this many seconds, we terminate the query and output debugging information"`
 }
 
 type QueryPlugin struct{}
@@ -55,10 +56,18 @@ func (self QueryPlugin) Call(
 		subscope := manager.BuildScope(builder).AppendVars(arg.Env)
 		defer subscope.Close()
 
-		utils.Debug(arg)
+		throttler := actions.NewThrottler(
+			ctx, subscope, 0, arg.CpuLimit, arg.IopsLimit)
+		if arg.ProgressTimeout > 0 {
+			subctx, cancel := context.WithCancel(ctx)
+			ctx = subctx
 
-		subscope.SetThrottler(actions.NewThrottler(
-			ctx, 0, arg.CpuLimit, arg.IopsLimit))
+			duration := time.Duration(arg.ProgressTimeout) * time.Second
+			throttler = actions.NewProgressThrottler(
+				subctx, scope, cancel, throttler, duration)
+			scope.Log("query: Installing a progress alarm for %v", duration)
+		}
+		subscope.SetThrottler(throttler)
 
 		runQuery(ctx, subscope, output_chan, arg.Query)
 	}()

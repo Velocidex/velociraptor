@@ -62,7 +62,7 @@ body.light-pink {
     --table-heading-background-color: #F8BBD0a0;
     --text-foreground: #222222;
     --color-proto-error: #F06292;
-
+    --color-pagination-disabled: #888;
     --color-infoline-success: #4CAF50;
     --color-default-font: #222222;
     --color-timeline-header: #cdcdcd20;
@@ -276,6 +276,10 @@ body.light-pink {
     background-color: var(--page-link-background-color);
     border-color: var(--btn-default-border);
     color: var(--text-foreground);
+}
+
+.light-pink .page-item.disabled span {
+    color: var(--color-pagination-disabled);
 }
 
 .light-pink .page-item input {

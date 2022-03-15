@@ -63,6 +63,18 @@ var (
 			"store all output in it.").
 		Default("").String()
 
+	artifact_command_collect_timeout = artifact_command_collect.Flag(
+		"timeout", "Time collection out after this many seconds.").
+		Default("0").Float64()
+
+	artifact_command_collect_progress_timeout = artifact_command_collect.Flag(
+		"progress_timeout", "If specified we terminate the colleciton if no progress is made in this many seconds.").
+		Default("0").Float64()
+
+	artifact_command_collect_cpu_limit = artifact_command_collect.Flag(
+		"cpu_limit", "A number between 0 to 100 representing maximum CPU utilization.").
+		Default("0").Int64()
+
 	artifact_command_collect_output_compression = artifact_command_collect.Flag(
 		"output_level", "Compression level for zip output.").
 		Default("5").Int64()
@@ -195,7 +207,10 @@ func doArtifactCollect() error {
 			Set("Report", *artifact_command_collect_report).
 			Set("Template", *artifact_command_collect_report_template).
 			Set("Args", spec).
-			Set("Format", *artifact_command_collect_format),
+			Set("Format", *artifact_command_collect_format).
+			Set("Timeout", *artifact_command_collect_timeout).
+			Set("ProgressTimeout", *artifact_command_collect_progress_timeout).
+			Set("CpuLimit", *artifact_command_collect_cpu_limit),
 	})
 	defer scope.Close()
 
@@ -220,6 +235,8 @@ func doArtifactCollect() error {
 	query := `
   SELECT * FROM collect(artifacts=Artifacts, output=Output, report=Report,
                         level=Level, template=Template,
+                        timeout=Timeout, progress_timeout=ProgressTimeout,
+                        cpu_limit=CpuLimit,
                         password=Password, args=Args, format=Format)`
 	return eval_local_query(config_obj, *artifact_command_collect_format,
 		query, scope)

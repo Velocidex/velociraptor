@@ -16,6 +16,7 @@ import (
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/process"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
@@ -35,6 +36,8 @@ var (
 		Help: "Counts the number of throttlers currently available.",
 	})
 
+	// A Global stats collector is always running. When throttlers
+	// register with it they can read the data.
 	stats *statsCollector
 )
 
@@ -103,6 +106,8 @@ func (self *statsCollector) Start() {
 		self.mu.Unlock()
 	}()
 
+	// Stats collector is a global which is always running - use
+	// background thread.
 	ctx := context.Background()
 	for {
 		select {
@@ -149,6 +154,7 @@ func (self *statsCollector) updateStats(ctx context.Context) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	// No waiters we do not need to update the stats
 	if self.waiters <= 0 {
 		return
 	}
@@ -229,7 +235,7 @@ func (self DummyThrottler) ChargeOp() {}
 func (self DummyThrottler) Close()    {}
 
 func NewThrottler(
-	ctx context.Context,
+	ctx context.Context, scope vfilter.Scope,
 	ops_per_sec, cpu_percent, iops_limit float64) types.Throttler {
 
 	if ops_per_sec > 0 {
@@ -259,6 +265,9 @@ func NewThrottler(
 	stats.mu.Lock()
 	throttlerCurrentGauge.Inc()
 	stats.waiters++
+	scope.Log("Will throttle query to %v%% of %v available CPU resources (%v cores long term average).",
+		cpu_percent, stats.number_of_cores,
+		cpu_percent*stats.number_of_cores/100)
 	stats.mu.Unlock()
 
 	go func() {
