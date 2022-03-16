@@ -62,14 +62,14 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
 	if err != nil {
-		scope.Log("hunt: %s", err)
+		scope.Log("hunt: %v", err)
 		return vfilter.Null{}
 	}
 
 	arg := &ScheduleHuntFunctionArg{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("hunt: %s", err.Error())
+		scope.Log("hunt: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -98,12 +98,12 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 	manager, err := services.GetRepositoryManager()
 	if err != nil {
-		scope.Log("Command can only run on the server")
+		scope.Log("hunt: %v", err)
 		return vfilter.Null{}
 	}
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
-		scope.Log("Command can only run on the server")
+		scope.Log("hunt: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -121,7 +121,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	err = tools.AddSpecProtobuf(config_obj, repository, scope,
 		arg.Spec, request)
 	if err != nil {
-		scope.Log("Command can only run on the server")
+		scope.Log("hunt: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -159,7 +159,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		config_obj, vql_subsystem.GetPrincipal(scope))
 	hunt_id, err := flows.CreateHunt(ctx, config_obj, acl_manager, hunt_request)
 	if err != nil {
-		scope.Log("hunt: %s", err.Error())
+		scope.Log("hunt: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -190,14 +190,14 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
 	if err != nil {
-		scope.Log("hunt_add: %s", err)
+		scope.Log("hunt_add: %v", err)
 		return vfilter.Null{}
 	}
 
 	arg := &AddToHuntFunctionArg{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("hunt_add: %s", err.Error())
+		scope.Log("hunt_add: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -235,7 +235,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 	}
 
 	if err != nil {
-		scope.Log("hunt_add: %s", err.Error())
+		scope.Log("hunt_add: %v", err)
 		return vfilter.Null{}
 	}
 
