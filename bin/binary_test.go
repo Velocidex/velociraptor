@@ -136,7 +136,7 @@ autoexec:
   artifact_definitions:
   - name: Sleep
     sources:
-    - query: SELECT sleep(time=10) FROM scope()
+    - query: SELECT sleep(time=100) FROM scope()
 `
 
 func TestTimeout(t *testing.T) {
@@ -188,7 +188,7 @@ func TestProgressTimeout(t *testing.T) {
 
 	// Make sure the query was cancelled quickly without running the
 	// full length of the sleep.
-	assert.True(t, time.Now().Unix()-start.Unix() < 2)
+	assert.True(t, time.Now().Unix()-start.Unix() < 10)
 }
 
 const cpulimitDefinitions = `

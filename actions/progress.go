@@ -40,12 +40,15 @@ func (self *ProgressThrottler) Start(
 			return
 
 		case <-time.After(self.progress_timeout):
+			self.mu.Lock()
 			now := time.Now()
 			if self.progress_timeout.Nanoseconds() > 0 &&
 				now.After(self.heartbeat.Add(self.progress_timeout)) {
+				self.mu.Unlock()
 				self.exitWithError(scope)
 				return
 			}
+			self.mu.Unlock()
 		}
 	}
 }
