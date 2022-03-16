@@ -1,0 +1,35 @@
+name: Windows.System.WMIQuery
+author: Matt Green - @mgreen27
+description: |
+    This artifact enables querying Windows Management Instrumentation (WMI).
+
+    Windows Management Instrumentation (WMI) is the Microsoft implementation of
+    Web-Based Enterprise Management (WBEM), which is an industry initiative to
+    develop a standard technology for accessing management information in an
+    enterprise environment. WMI uses the Common Information Model (CIM) industry
+    standard to represent systems, applications, networks, devices, and other
+    managed components. CIM is developed and maintained by the Distributed
+    Management Task Force (DMTF).
+
+    Please see the second reference link for an Example of built in system classes.
+
+
+reference:
+    - https://docs.microsoft.com/en-us/windows/win32/wmisdk/wmi-start-page
+    - https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/operating-system-classes
+
+parameters:
+  - name: WMIQuery
+    description: "Add target WMI query: e.g SELECT * FROM <CLASSNAME>"
+    default: "SELECT * FROM Win32_Process"
+
+  - name: Namespace
+    description: Add target Namespace: e.g root/cimv2
+    default: root/cimv2
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+       SELECT * FROM wmi(namespace=Namespace,query=WMIQuery)
