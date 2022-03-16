@@ -18,6 +18,9 @@ reference:
     - https://docs.microsoft.com/en-us/windows/win32/wmisdk/wmi-start-page
     - https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/operating-system-classes
 
+required_permissions:
+  - EXECVE
+  
 parameters:
   - name: WMIQuery
     description: "Add target WMI query: e.g SELECT * FROM <CLASSNAME>"
