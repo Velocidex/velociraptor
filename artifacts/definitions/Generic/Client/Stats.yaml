@@ -3,6 +3,7 @@ description: An Event artifact which generates client's CPU and memory statistic
 parameters:
   - name: Frequency
     description: Return stats every this many seconds.
+    type: int
     default: "10"
 type: CLIENT_EVENT
 
@@ -13,7 +14,7 @@ sources:
       FROM foreach(
          row={
            SELECT UnixNano
-           FROM clock(period=atoi(string=Frequency))
+           FROM clock(period=Frequency)
          },
          query={
            SELECT UnixNano / 1000000000 as Timestamp,
@@ -28,7 +29,7 @@ sources:
       FROM foreach(
          row={
            SELECT UnixNano
-           FROM clock(period=atoi(string=Frequency))
+           FROM clock(period=Frequency)
          },
          query={
            SELECT UnixNano / 1000000000 as Timestamp,

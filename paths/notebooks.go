@@ -84,7 +84,9 @@ func (self *NotebookPathManager) SuperTimeline(
 	}
 }
 
-var notebook_regex = regexp.MustCompile(`N\.(F\.[^-]+?)-(C\..+|server)`)
+// A notebook id for clients flows
+var client_notebook_regex = regexp.MustCompile(`^N\.(F\.[^-]+?)-(C\..+|server)$`)
+var event_notebook_regex = regexp.MustCompile(`^N\.E\.([^-]+?)-(C\..+|server)$`)
 
 func rootPathFromNotebookID(notebook_id string) api.DSPathSpec {
 	if strings.HasPrefix(notebook_id, "N.H.") {
@@ -94,13 +96,23 @@ func rootPathFromNotebookID(notebook_id string) api.DSPathSpec {
 			SetType(api.PATH_TYPE_DATASTORE_JSON)
 	}
 
-	matches := notebook_regex.FindStringSubmatch(notebook_id)
+	matches := client_notebook_regex.FindStringSubmatch(notebook_id)
 	if len(matches) == 3 {
 		// For collections notebooks store them in the hunt itself.
 		return CLIENTS_ROOT.AddChild(matches[2],
 			"collections", matches[1], "notebook").
 			SetType(api.PATH_TYPE_DATASTORE_JSON)
 	}
+
+	matches = event_notebook_regex.FindStringSubmatch(notebook_id)
+	if len(matches) == 3 {
+		// For event notebooks, store them in the client's monitoring
+		// area.
+		return CLIENTS_ROOT.AddUnsafeChild(matches[2],
+			"monitoring_notebooks", matches[1]).
+			SetType(api.PATH_TYPE_DATASTORE_JSON)
+	}
+
 	return NOTEBOOK_ROOT
 }
 

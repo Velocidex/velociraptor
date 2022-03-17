@@ -109,6 +109,7 @@ export default class EventTimelineViewer extends React.Component {
         mode: PropTypes.string,
         renderers: PropTypes.object,
         column_types: PropTypes.array,
+        time_range_setter: PropTypes.func,
     };
 
     componentDidMount = () => {
@@ -274,11 +275,14 @@ export default class EventTimelineViewer extends React.Component {
         if (page_size === 0) {
             page_size = 60*60*24*1000;
         }
+        let visibleTimeStart = this.state.table_start - page_size/2;
+        let visibleTimeEnd = this.state.table_start + page_size/2;
         this.setState({
             start_time: this.state.table_start,
-            visibleTimeStart: this.state.table_start - page_size/2,
-            visibleTimeEnd: this.state.table_start + page_size/2,
+            visibleTimeStart: visibleTimeStart,
+            visibleTimeEnd: visibleTimeEnd,
         });
+        this.props.time_range_setter(visibleTimeStart, visibleTimeEnd);
     }
 
     // Jump to the previous page.
@@ -298,10 +302,13 @@ export default class EventTimelineViewer extends React.Component {
 
             // Only scroll the timeline once we go past the view port.
             if (this.state.table_end > this.state.visibleTimeEnd) {
+                let visibleTimeStart = this.state.table_end + 1;
+                let visibleTimeEnd = this.state.table_end + page_size;
                 this.setState({
-                    visibleTimeStart: this.state.table_end + 1,
-                    visibleTimeEnd: this.state.table_end + page_size,
+                    visibleTimeStart: visibleTimeStart,
+                    visibleTimeEnd: visibleTimeEnd,
                 });
+                this.props.time_range_setter(visibleTimeStart, visibleTimeEnd);
             }
 
             this.fetchRows();
@@ -396,6 +403,7 @@ export default class EventTimelineViewer extends React.Component {
             visibleTimeEnd,
             scrolling: true
         });
+        this.props.time_range_setter(visibleTimeStart, visibleTimeEnd);
     };
 
     state = {

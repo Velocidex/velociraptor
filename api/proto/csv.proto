@@ -19,8 +19,8 @@ message GetTableRequest {
     // artifacts should specify the artifact name with client_id being
     // either "server" for server events or the client id for the
     // client events. Number of seconds since epoch.
-    uint64 start_time = 13;
-    uint64 end_time = 14;
+    int64 start_time = 13;
+    int64 end_time = 14;
 
     // For collected artifacts tables.
     string client_id = 4;

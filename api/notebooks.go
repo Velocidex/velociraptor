@@ -184,7 +184,8 @@ func (self *ApiServer) NewNotebook(
 
 	// Allow hunt notebooks to be created with a specified hunt ID.
 	if !strings.HasPrefix(in.NotebookId, "N.H.") &&
-		!strings.HasPrefix(in.NotebookId, "N.F.") {
+		!strings.HasPrefix(in.NotebookId, "N.F.") &&
+		!strings.HasPrefix(in.NotebookId, "N.E.") {
 		in.NotebookId = NewNotebookId()
 	}
 
@@ -242,6 +243,11 @@ func (self *ApiServer) createInitialNotebook(
 			new_cells = getCellsForFlow(ctx, self.config,
 				notebook_metadata.Context.ClientId,
 				notebook_metadata.Context.FlowId, notebook_metadata)
+		} else if notebook_metadata.Context.EventArtifact != "" &&
+			notebook_metadata.Context.ClientId != "" {
+			new_cells = getCellsForEvents(ctx, self.config,
+				notebook_metadata.Context.ClientId,
+				notebook_metadata.Context.EventArtifact, notebook_metadata)
 		}
 	}
 
@@ -262,6 +268,104 @@ func (self *ApiServer) createInitialNotebook(
 		}
 	}
 	return nil
+}
+
+func getCellsForEvents(ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id string, artifact_name string,
+	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
+
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return nil
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil
+	}
+
+	result := getCustomCells(config_obj, repository,
+		artifact_name, notebook_metadata)
+
+	// If there are no custom cells, add the default cell.
+	if len(result) == 0 {
+		// Start the event display 1 day ago.
+		start_time := time.Now().AddDate(0, 0, -1).UTC().Format(time.RFC3339)
+		end_time := time.Now().UTC().Format(time.RFC3339)
+
+		result = append(result, &api_proto.NotebookCellRequest{
+			Type: "VQL",
+
+			// This env dict overlays on top of the global
+			// notebook env where we can find hunt_id, flow_id
+			// etc.
+			Env: []*api_proto.Env{{
+				Key: "ArtifactName", Value: artifact_name,
+			}},
+			Input: fmt.Sprintf(`/*
+# Events from %v
+*/
+LET StartTime <= "%s"
+LET EndTime <= "%s"
+
+SELECT *, timestamp(epoch=_ts) AS ServerTime
+ FROM source(start_time=StartTime, end_time=EndTime)
+LIMIT 50
+`, artifact_name, start_time, end_time),
+		})
+	}
+
+	return result
+}
+
+func getCustomCells(
+	config_obj *config_proto.Config,
+	repository services.Repository,
+	source string,
+	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
+	var result []*api_proto.NotebookCellRequest
+
+	// Check if the artifact has custom notebook cells defined.
+	artifact_source, pres := repository.GetSource(config_obj, source)
+	if !pres {
+		return nil
+	}
+	env := []*api_proto.Env{{
+		Key: "ArtifactName", Value: source,
+	}}
+
+	// If the artifact_source defines a notebook, let it do its own thing.
+	for _, cell := range artifact_source.Notebook {
+		for _, i := range cell.Env {
+			env = append(env, &api_proto.Env{
+				Key:   i.Key,
+				Value: i.Value,
+			})
+		}
+
+		request := &api_proto.NotebookCellRequest{
+			Type:  cell.Type,
+			Env:   env,
+			Input: cell.Template}
+
+		switch cell.Type {
+		case "vql", "md", "markdown":
+			result = append(result, request)
+
+		case "vql_suggestion":
+			request.Type = "vql"
+			request.Name = cell.Name
+			notebook_metadata.Suggestions = append(
+				notebook_metadata.Suggestions, request)
+
+		default:
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+			logger.Error("getDefaultCellsForSources: Cell type %v invalid",
+				cell.Type)
+		}
+	}
+	return result
 }
 
 func getCellsForHunt(ctx context.Context,
@@ -372,52 +476,22 @@ func getDefaultCellsForSources(
 				artifact.ColumnTypes...)
 		}
 
-		// Check if the artifact has custom notebook cells defined.
-		artifact_source, pres := repository.GetSource(config_obj, source)
-		if !pres {
-			continue
-		}
-		env := []*api_proto.Env{{
-			Key: "ArtifactName", Value: source,
-		}}
-
-		// If the artifact_source defines a notebook, let it do its own thing.
-		for _, cell := range artifact_source.Notebook {
-			for _, i := range cell.Env {
-				env = append(env, &api_proto.Env{
-					Key:   i.Key,
-					Value: i.Value,
-				})
-			}
-
-			request := &api_proto.NotebookCellRequest{
-				Type:  cell.Type,
-				Env:   env,
-				Input: cell.Template}
-
-			switch cell.Type {
-			case "vql", "md", "markdown":
-				result = append(result, request)
-
-			case "vql_suggestion":
-				request.Type = "vql"
-				request.Name = cell.Name
-				notebook_metadata.Suggestions = append(
-					notebook_metadata.Suggestions, request)
-
-			default:
-				logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-				logger.Error("getDefaultCellsForSources: Cell type %v invalid",
-					cell.Type)
-			}
-		}
+		new_cells := getCustomCells(config_obj, repository,
+			source, notebook_metadata)
+		result = append(result, new_cells...)
 
 		// Build a default empty notebook that shows off all the
 		// results.
 		if len(result) == 0 {
 			result = append(result, &api_proto.NotebookCellRequest{
 				Type: "VQL",
-				Env:  env,
+
+				// This env dict overlays on top of the global
+				// notebook env where we can find hunt_id, flow_id
+				// etc.
+				Env: []*api_proto.Env{{
+					Key: "ArtifactName", Value: source,
+				}},
 				Input: fmt.Sprintf(`
 /*
 # %v

@@ -39,10 +39,10 @@ sources:
                       string=Key.FullPath,
                       regex="/Users/(?P<User>[^/]+)/ntuser.dat").User AS User
             FROM read_reg_key(
-               globs=pathspec(
+               globs=RecentAppsKey,
+               root=pathspec(
                  DelegateAccessor="ntfs",
-                 DelegatePath=FullPath,
-                 Path=RecentAppsKey),
+                 DelegatePath=FullPath),
                accessor="raw_reg")
          })
 

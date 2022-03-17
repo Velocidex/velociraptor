@@ -55,7 +55,8 @@ func (self MonitoringPlugin) Call(
 
 		arg := &SourcePluginArgs{}
 
-		// Allow the plugin to be filled in from the environment
+		// Allow the plugin to be filled in from the environment. Arg
+		// parser will override the environment with the actual args.
 		ParseSourceArgsFromScope(arg, scope)
 
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

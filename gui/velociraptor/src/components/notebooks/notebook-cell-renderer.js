@@ -406,15 +406,6 @@ export default class NotebookCellRenderer extends React.Component {
         }
 
         return <>
-                 <Dropdown
-                   title="Suggestion"
-                   drop="right"
-                   variant="default-outline">
-                   <Dropdown.Toggle
-                     className="dropdown-item"
-                     variant="default-outline">
-                     Suggestions
-                   </Dropdown.Toggle>
                    <Dropdown.Menu>
                      { _.map(suggestions, x=>{
                          return <Dropdown.Item
@@ -431,8 +422,6 @@ export default class NotebookCellRenderer extends React.Component {
                                 </Dropdown.Item>;
                      })}
                    </Dropdown.Menu>
-                 </Dropdown>
-                 <hr/>
                </>;
     }
 
@@ -530,7 +519,20 @@ export default class NotebookCellRenderer extends React.Component {
                     VQL
                   </Dropdown.Item>
                   <hr/>
-                  { this.showSuggestions() }
+
+                  <Dropdown
+                    title="Suggestion"
+                    drop="right"
+                    variant="default-outline">
+                    <Dropdown.Toggle
+                      className="dropdown-item"
+                      variant="default-outline">
+                      Suggestions
+                    </Dropdown.Toggle>
+                    { this.showSuggestions() }
+                  </Dropdown>
+                  <hr/>
+
                   <Dropdown.Item
                     title="Add Timeline"
                     onClick={()=>this.setState({showAddTimeline: true})}>

@@ -35,7 +35,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -45,51 +44,6 @@ const (
 	// Scope cache tag for the NTFS parser
 	NTFSFileSystemTag = "_NTFS"
 )
-
-type AccessorContext struct {
-	mu sync.Mutex
-
-	// The context is reference counted and will only be destroyed
-	// when all users have closed it.
-	refs      int
-	cached_fd *os.File
-	is_closed bool // Keep track if the file needs to be re-opened.
-	ntfs_ctx  *ntfs.NTFSContext
-
-	path_listing *cache.LRUCache
-}
-
-func (self *AccessorContext) GetNTFSContext() *ntfs.NTFSContext {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self.ntfs_ctx
-}
-
-func (self *AccessorContext) IsClosed() bool {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self.is_closed
-}
-
-func (self *AccessorContext) IncRef() {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	self.refs++
-}
-
-func (self *AccessorContext) Close() {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	self.refs--
-	if self.refs <= 0 {
-		self.cached_fd.Close()
-		self.is_closed = true
-	}
-}
 
 type NTFSFileInfo struct {
 	info       *ntfs.FileInfo

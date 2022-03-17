@@ -41,7 +41,7 @@ func (self _RateFunction) Call(
 	arg := &_RateFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("count: %s", err.Error())
+		scope.Log("rate: %s", err.Error())
 		return vfilter.Null{}
 	}
 

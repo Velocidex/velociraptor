@@ -209,6 +209,12 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 		if t == "" {
 			return time.Time{}, nil
 		}
+		// It might really be an int encoded as a string.
+		int_time, ok := utils.ToInt64(t)
+		if ok {
+			return TimeFromAny(scope, int_time)
+		}
+
 		return ParseTimeFromString(scope, t)
 
 	case time.Time:
