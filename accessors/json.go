@@ -19,7 +19,7 @@ func MarshalGlobFileInfo(v interface{}, opts *json.EncOpts) ([]byte, error) {
 		Mode     os.FileMode
 		ModeStr  string
 		ModTime  time.Time
-		Sys      interface{}
+		Data     interface{}
 		Mtime    time.Time
 		Ctime    time.Time
 		Atime    time.Time
@@ -32,5 +32,6 @@ func MarshalGlobFileInfo(v interface{}, opts *json.EncOpts) ([]byte, error) {
 		Mtime:    self.Mtime(),
 		Ctime:    self.Ctime(),
 		Atime:    self.Atime(),
+		Data:     self.Data(),
 	}, opts)
 }
