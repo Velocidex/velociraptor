@@ -87,7 +87,7 @@ jobs:
         CGO_ENABLED: "0"
 
       run: |
-        go test -v ./... --tags server_vql
+        go test -v ./... --tags server_vql -p 2
 
     - name: Test Golden Generic
       shell: cmd

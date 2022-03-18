@@ -188,6 +188,7 @@ func TestProgressTimeout(t *testing.T) {
 
 	// Make sure the query was cancelled quickly without running the
 	// full length of the sleep.
+	fmt.Printf("Now is %v started at %v\n", time.Now(), start)
 	assert.True(t, time.Now().Unix()-start.Unix() < 10)
 }
 
