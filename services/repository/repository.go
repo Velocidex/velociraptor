@@ -67,7 +67,9 @@ func (self *Repository) Copy() services.Repository {
 	return result
 }
 
-func (self *Repository) LoadDirectory(config_obj *config_proto.Config, dirname string) (int, error) {
+func (self *Repository) LoadDirectory(
+	config_obj *config_proto.Config, dirname string,
+	override_builtins bool) (int, error) {
 	self.mu.Lock()
 
 	count := 0
@@ -96,7 +98,7 @@ func (self *Repository) LoadDirectory(config_obj *config_proto.Config, dirname s
 				}
 				_, err = self.LoadYaml(string(data),
 					false, /* validate */
-					false /* built_in */)
+					override_builtins)
 				if err != nil {
 					logger.Error("Could not load %s: %s", info.Name(), err)
 					return nil

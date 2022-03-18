@@ -217,10 +217,11 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 
 	self.last_active = time.Now()
 	paged_reader := self.paged_reader
+
+	// Reading from the paged reader may trigger another reader due to
+	// LRU so we release the lock before we do it.
 	self.mu.Unlock()
 
-	// Reading from the pages reader may trigger another reader due to
-	// LRU so we release the lock before we do it.
 	return paged_reader.ReadAt(buf, offset)
 }
 

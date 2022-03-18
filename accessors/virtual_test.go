@@ -6,6 +6,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/sebdah/goldie"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -68,4 +70,25 @@ func TestVirtualFilesystemAccessor(t *testing.T) {
 	// Missing files
 	_, err := fs_accessor.ReadDir("/nosuchfile")
 	assert.True(t, errors.Is(err, os.ErrNotExist))
+}
+
+func TestVirtualFileInfo(t *testing.T) {
+	root_path := MustNewLinuxOSPath("")
+	fs_accessor := NewVirtualFilesystemAccessor(root_path)
+	fs_accessor.SetVirtualDirectory(
+		MustNewLinuxOSPath("/foo/bar/baz"), &VirtualFileInfo{
+			IsDir_: true,
+		})
+
+	children, err := fs_accessor.ReadDir("/")
+	assert.NoError(t, err)
+
+	for _, child := range children {
+		assert.Equal(t, child.Mode().String(), "drwxr-xr-x")
+	}
+
+	// Check that json marshal works well - there should be some
+	// additional fields like ModeStr.
+	goldie.Assert(t, "TestVirtualFileInfo",
+		json.MustMarshalIndent(children))
 }

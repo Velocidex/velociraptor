@@ -123,6 +123,13 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
+	// Check the hunt is running in the data store.
+	hunt_path_manager := paths.NewHuntPathManager("H.2")
+	hunt_obj := &api_proto.Hunt{}
+	err = db.GetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_RUNNING)
+
 	// Now modify a hunt with services.HuntPropagateChanges
 	modification := self.master_dispatcher.ModifyHunt("H.2",
 		func(hunt *api_proto.Hunt) services.HuntModificationAction {
@@ -130,15 +137,8 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 			return services.HuntPropagateChanges
 		})
 
-	// Changes are not visible in the data store immediately.
+	// Changes may not visible in the data store immediately.
 	assert.Equal(self.T(), modification, services.HuntPropagateChanges)
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		hunt_path_manager := paths.NewHuntPathManager("H.2")
-		hunt_obj := &api_proto.Hunt{}
-		err = db.GetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
-		assert.NoError(self.T(), err)
-		return hunt_obj.State == api_proto.Hunt_RUNNING
-	})
 
 	// But they should be visible in master
 	hunt_obj, pres := self.master_dispatcher.GetHunt("H.2")
@@ -149,6 +149,15 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		hunt_obj, pres = self.minion_dispatcher.GetHunt("H.2")
 		return pres && hunt_obj.State == api_proto.Hunt_STOPPED
+	})
+
+	// And eventually also be visible in the filestore
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		hunt_path_manager := paths.NewHuntPathManager("H.2")
+		hunt_obj := &api_proto.Hunt{}
+		err = db.GetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
+		assert.NoError(self.T(), err)
+		return hunt_obj.State == api_proto.Hunt_STOPPED
 	})
 }
 

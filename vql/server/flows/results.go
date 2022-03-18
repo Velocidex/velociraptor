@@ -298,12 +298,12 @@ func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope vfilter.Scope) {
 
 	start_time, pres := scope.Resolve("StartTime")
 	if pres {
-		arg.StartTime, _ = start_time.(int64)
+		arg.StartTime = start_time
 	}
 
 	end_time, pres := scope.Resolve("EndTime")
 	if pres {
-		arg.EndTime, _ = end_time.(int64)
+		arg.EndTime = end_time
 	}
 
 	notebook_id, pres := scope.Resolve("NotebookId")

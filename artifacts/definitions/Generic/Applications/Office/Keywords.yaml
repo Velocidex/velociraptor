@@ -49,9 +49,10 @@ sources:
         // A list of zip members inside the doc that have some content.
         LET document_parts = SELECT OfficePath,
              FullPath AS ZipMemberPath
-        FROM glob(globs=url(
-             scheme="file", path=OfficePath, fragment="/**").String,
-             accessor='zip')
+        FROM glob(
+           globs="/**",
+           root=pathspec(DelegatePath=OfficePath),
+           accessor='zip')
         WHERE not IsDir and Size > 0
 
         // For each document, scan all its parts for the keyword.

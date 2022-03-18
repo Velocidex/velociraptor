@@ -20,14 +20,14 @@ reference:
 
 required_permissions:
   - EXECVE
-  
+
 parameters:
   - name: WMIQuery
     description: "Add target WMI query: e.g SELECT * FROM <CLASSNAME>"
     default: "SELECT * FROM Win32_Process"
 
   - name: Namespace
-    description: Add target Namespace: e.g root/cimv2
+    description: "Add target Namespace: e.g root/cimv2"
     default: root/cimv2
 
 sources:

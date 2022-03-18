@@ -1,0 +1,3 @@
+Queries:
+  # Test Windows.Detection.BinaryHunter
+  - SELECT File.Name, File.Size, Hash.SHA1, PE FROM Artifact.Windows.Detection.BinaryHunter(TargetGlob=srcDir + "/artifacts/**/*.dll",PEInformationRegex='NetUseEnum',SHA1List='8645c878966239afe44df0593288c7c59a7878eb')

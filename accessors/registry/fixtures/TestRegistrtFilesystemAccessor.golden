@@ -1,11 +1,11 @@
 {
  "Root listing": [
-  "HKEY_CLASSES_ROOT - -rwxr-xr-x {\"type\":\"hive\"}",
-  "HKEY_CURRENT_USER - -rwxr-xr-x {\"type\":\"hive\"}",
-  "HKEY_LOCAL_MACHINE - -rwxr-xr-x {\"type\":\"hive\"}",
-  "HKEY_USERS - -rwxr-xr-x {\"type\":\"hive\"}",
-  "HKEY_CURRENT_CONFIG - -rwxr-xr-x {\"type\":\"hive\"}",
-  "HKEY_PERFORMANCE_DATA - -rwxr-xr-x {\"type\":\"hive\"}"
+  "HKEY_CLASSES_ROOT - drwxr-xr-x {\"type\":\"hive\"}",
+  "HKEY_CURRENT_USER - drwxr-xr-x {\"type\":\"hive\"}",
+  "HKEY_LOCAL_MACHINE - drwxr-xr-x {\"type\":\"hive\"}",
+  "HKEY_USERS - drwxr-xr-x {\"type\":\"hive\"}",
+  "HKEY_CURRENT_CONFIG - drwxr-xr-x {\"type\":\"hive\"}",
+  "HKEY_PERFORMANCE_DATA - drwxr-xr-x {\"type\":\"hive\"}"
  ],
  "Deep key": [
   "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\CMF\\LatestIndex - drwxr-xr-x {\"type\":\"key\"}",

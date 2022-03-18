@@ -19,6 +19,9 @@ import VeloAce from '../core/ace.js';
 import { SettingsButton } from '../core/ace.js';
 import VeloTimestamp from "../utils/time.js";
 import EventTimelineViewer from "./timeline-viewer.js";
+import EventNotebook from "./event-notebook.js";
+import { get_notebook_id} from "./event-notebook.js";
+import DeleteNotebookDialog from '../notebooks/notebook-delete.js';
 
 import { withRouter }  from "react-router-dom";
 
@@ -28,6 +31,7 @@ import api from '../core/api-service.js';
 const mode_raw_data = "Raw Data";
 const mode_logs = "Logs";
 const mode_report = "Report";
+const mode_notebook = "Notebook";
 
 
 class InspectRawJson extends React.PureComponent {
@@ -172,6 +176,8 @@ class EventMonitoring extends React.Component {
 
         showDateSelector: false,
         showEventTableWizard: false,
+        showExportNotebook: false,
+        showDeleteNotebook: false,
 
         // Refreshed from the server
         event_monitoring_table: {},
@@ -183,7 +189,15 @@ class EventMonitoring extends React.Component {
         // A callback for child components to add toolbar buttons in
         // this component.
         buttonsRenderer: ()=>{},
+
+
+        start_time: 0,
+        end_time: 0,
     }
+
+    setTimeRange = (start_time, end_time) => this.setState({
+        start_time: start_time, end_time: end_time
+    });
 
     fetchEventResults = () => {
         // Cancel any in flight calls.
@@ -210,10 +224,6 @@ class EventMonitoring extends React.Component {
 
             this.setState({available_artifacts: resp.data.logs});
         });
-    }
-
-    setDay = (date) => {
-        this.setState({current_time: date});
     }
 
     setArtifact = (artifact) => {
@@ -328,6 +338,13 @@ class EventMonitoring extends React.Component {
                 </ButtonGroup>
 
                 <ButtonGroup className="float-right">
+                  { this.state.mode === mode_notebook &&
+                    <Button title="Delete Notebook"
+                            onClick={() => this.setState({showDeleteNotebook: true})}
+                            variant="default">
+                      <FontAwesomeIcon icon="trash"/>
+                    </Button>
+                  }
                   <Dropdown title="mode" variant="default">
                     <Dropdown.Toggle variant="default">
                       <FontAwesomeIcon icon="book"/>
@@ -352,6 +369,12 @@ class EventMonitoring extends React.Component {
                         onClick={() => this.setState({mode: mode_report})}>
                         {mode_report}
                       </Dropdown.Item>
+                      <Dropdown.Item
+                        title={mode_notebook}
+                        active={this.state.mode === mode_notebook}
+                        onClick={() => this.setState({mode: mode_notebook})}>
+                        {mode_notebook}
+                      </Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
                 </ButtonGroup>
@@ -366,6 +389,7 @@ class EventMonitoring extends React.Component {
                   mode={this.state.mode}
                   renderers={renderers}
                   column_types={column_types}
+                  time_range_setter={this.setTimeRange}
                  />
                 </Container> }
 
@@ -381,6 +405,27 @@ class EventMonitoring extends React.Component {
                 }
               </Container>
             }
+
+            { this.state.mode === mode_notebook &&
+              <Container className="event-report-viewer">
+                { this.state.artifact.artifact ?
+                  <EventNotebook
+                    artifact={this.state.artifact.artifact}
+                    client_id={this.props.client.client_id}
+                    start_time={this.state.start_time}
+                  /> :
+                  <div className="no-content">Please select an artifact to view above.</div>
+                }
+              </Container>
+            }
+              { this.state.showDeleteNotebook &&
+                <DeleteNotebookDialog
+                  notebook_id={get_notebook_id(
+                      this.state.artifact.artifact, client_id)}
+                  onClose={e=>{
+                      this.setState({showDeleteNotebook: false});
+                  }}/>
+              }
             </>
         );
     }

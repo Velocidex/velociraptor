@@ -66,7 +66,7 @@ func (self *VirtualFileInfo) Sys() interface{} {
 
 func (self *VirtualFileInfo) Mode() os.FileMode {
 	if self.IsDir_ {
-		return 0755
+		return 0755 | os.ModeDir
 	}
 	return 0644
 }
