@@ -128,9 +128,7 @@ func ApplyRemappingOnScope(
 	for _, remapping := range remappings {
 		switch remapping.Type {
 		case "shadow":
-			if remapping.From == nil || remapping.On == nil ||
-				remapping.From.Accessor == "" ||
-				remapping.On.Accessor == "" {
+			if remapping.From == nil || remapping.On == nil {
 				return errors.New(
 					"Invalid shadow mapping - both from and on " +
 						"mount points should be specified.")
@@ -146,9 +144,7 @@ func ApplyRemappingOnScope(
 			manager.Register(remapping.On.Accessor, from_fs, "Shadowed")
 
 		case "mount":
-			if remapping.From == nil || remapping.On == nil ||
-				remapping.From.Accessor == "" ||
-				remapping.On.Accessor == "" {
+			if remapping.From == nil || remapping.On == nil {
 				return errors.New(
 					"Invalid mount mapping - both from and on " +
 						"mount points should be specified.")
