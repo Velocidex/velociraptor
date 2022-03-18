@@ -15,6 +15,30 @@ Parameters:
           prefix: '\\\\.\\C:'
           path_type: ntfs
 
+      # Shadow remapping just copy accessors into the remapped
+      # set. This is appropriate for accessors that do not use the
+      # path as a directory structure so they are not going through
+      # the mounting system.
+      - type: shadow
+        from:
+          accessor: data
+        on:
+          accessor: data
+
+      - type: mount
+        from:
+          accessor: mft
+          prefix: |
+            {
+               "DelegateAccessor": "file",
+               "DelegatePath": %q,
+               "Path": "/"
+            }
+        on:
+          accessor: mft
+          prefix: '\\\\.\\C:'
+          path_type: ntfs
+
       - type: mount
         from:
           accessor: raw_reg
@@ -33,6 +57,7 @@ Parameters:
 Queries:
   - LET _ <= remap(config=format(format=RemappingTemplate,
        args=[
+          srcDir+'/artifacts/testdata/files/test.ntfs.dd',
           srcDir+'/artifacts/testdata/files/test.ntfs.dd',
           srcDir+'/artifacts/testdata/files/UsrClass.dat'
       ]), clear=TRUE)
@@ -55,3 +80,11 @@ Queries:
            inode="46-128-5")
 
   - SELECT FullPath FROM glob(accessor='registry', globs="/HKLM/*/xbox*")
+
+  # Test data remapping
+  - SELECT read_file(filename="hello world", accessor="data")
+    FROM scope()
+
+  # Test MFT remapping
+  - SELECT read_file(filename="C:/46", accessor="mft", length=10)
+    FROM scope()
