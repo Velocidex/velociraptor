@@ -1,0 +1,43 @@
+Parameters:
+  RemappingTemplate: |
+    remappings:
+      - type: mount
+        from:
+          accessor: raw_ntfs
+          prefix: |
+            {
+               "DelegateAccessor": "file",
+               "DelegatePath": %q,
+               "Path": "/"
+            }
+        on:
+          accessor: "ntfs"
+          prefix: '\\\\.\\C:'
+          path_type: ntfs
+
+
+      - type: mount
+        from:
+          accessor: mft
+          prefix: |
+            {
+               "DelegateAccessor": "file",
+               "DelegatePath": %q,
+               "Path": "/"
+            }
+        on:
+          accessor: mft
+          prefix: '\\\\.\\C:'
+          path_type: ntfs
+
+
+Queries:
+  - LET _ <= remap(config=format(format=RemappingTemplate,
+       args=[
+          srcDir+'/artifacts/testdata/files/test.ntfs.dd',
+          srcDir+'/artifacts/testdata/files/test.ntfs.dd'
+        ]), clear=TRUE)
+
+  # EA test
+  - SELECT * FROM Artifact.Windows.NTFS.ExtendedAttributes(SizeMax=256)
+  - SELECT * FROM Artifact.Windows.NTFS.ExtendedAttributes(SizeMin=5000,SizeMax=20000)
