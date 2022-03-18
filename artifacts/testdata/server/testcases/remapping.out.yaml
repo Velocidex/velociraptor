@@ -1,4 +1,4 @@
-LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/UsrClass.dat' ]), clear=TRUE)[]SELECT FullPath FROM glob(globs="**", accessor='ntfs') ORDER BY FullPath[
+LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/UsrClass.dat' ]), clear=TRUE)[]SELECT FullPath FROM glob(globs="**", accessor='ntfs') ORDER BY FullPath[
  {
   "FullPath": "\\\\.\\C:"
  },
@@ -300,5 +300,13 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
  },
  {
   "FullPath": "HKEY_LOCAL_MACHINE\\Classes\\xboxgames"
+ }
+]SELECT read_file(filename="hello world", accessor="data") FROM scope()[
+ {
+  "read_file(filename=\"hello world\", accessor=\"data\")": "hello world"
+ }
+]SELECT read_file(filename="C:/46", accessor="mft", length=10) FROM scope()[
+ {
+  "read_file(filename=\"C:/46\", accessor=\"mft\", length=10)": "Hello worl"
  }
 ]

@@ -127,6 +127,22 @@ func ApplyRemappingOnScope(
 
 	for _, remapping := range remappings {
 		switch remapping.Type {
+		case "shadow":
+			if remapping.From == nil || remapping.On == nil {
+				return errors.New(
+					"Invalid shadow mapping - both from and on " +
+						"mount points should be specified.")
+			}
+
+			from_fs, err := accessors.GlobalDeviceManager.GetAccessor(
+				remapping.From.Accessor, scope)
+			if err != nil {
+				return err
+			}
+
+			// Install on top of the manager
+			manager.Register(remapping.On.Accessor, from_fs, "Shadowed")
+
 		case "mount":
 			if remapping.From == nil || remapping.On == nil {
 				return errors.New(
