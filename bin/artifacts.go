@@ -129,11 +129,13 @@ func getRepository(config_obj *config_proto.Config) (services.Repository, error)
 		return nil, err
 	}
 
+	// Artifacts specified with the --definitions flag take priority
+	// and can override built in artifacts
 	if *artifact_definitions_dir != "" {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
-			Info("Loading artifacts from %s",
-				*artifact_definitions_dir)
-		_, err := repository.LoadDirectory(config_obj, *artifact_definitions_dir)
+			Info("Loading artifacts from %s", *artifact_definitions_dir)
+		_, err := repository.LoadDirectory(
+			config_obj, *artifact_definitions_dir, true /* override_builtins */)
 		if err != nil {
 			logging.GetLogger(config_obj, &logging.ToolComponent).
 				Error("Artifact LoadDirectory: %v ", err)

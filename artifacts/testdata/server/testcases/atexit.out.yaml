@@ -18,7 +18,7 @@ SELECT * FROM query(query=''' LET Foo = SELECT log(message="I Ran at the end") F
   "Log": "Velociraptor: I Ran at the end\n"
  },
  {
-  "Log": "Velociraptor: Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":5,\"ProtocolSearch\":0,\"ScopeCopy\":5}\n"
+  "Log": "Velociraptor: Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":5,\"ProtocolSearch\":0,\"ScopeCopy\":4}\n"
  },
  {
   "Log": "Velociraptor: Running query SELECT * FROM test_read_logs()\n"

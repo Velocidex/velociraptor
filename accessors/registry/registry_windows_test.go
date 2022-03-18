@@ -13,7 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
-func TestRegistrtFilesystemAccessor(t *testing.T) {
+func TestRegistryFilesystemAccessor(t *testing.T) {
 	accessor := &RegFileSystemAccessor{}
 
 	ls := func(path string, filter string) []string {
