@@ -16,5 +16,7 @@
  "$Volume",
  "Folder A",
  "System Volume Information",
+ "another_file.txt",
+ "just_a_file.txt",
  "ones.bin"
 ]
