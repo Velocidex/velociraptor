@@ -69,6 +69,12 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "FullPath": "\\\\.\\C:\\$RECYCLE.BIN"
  },
  {
+  "FullPath": "\\\\.\\C:\\$RECYCLE.BIN\\S-1-5-21-128822557-2730879828-3162054034-1000"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\$RECYCLE.BIN\\S-1-5-21-128822557-2730879828-3162054034-1000\\desktop.ini"
+ },
+ {
   "FullPath": "\\\\.\\C:\\$RECYCLE.BIN\\S-1-5-21-2378245050-552909339-522783033-1001"
  },
  {
@@ -109,6 +115,12 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
  },
  {
   "FullPath": "\\\\.\\C:\\System Volume Information\\WPSettings.dat"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\another_file.txt"
+ },
+ {
+  "FullPath": "\\\\.\\C:\\just_a_file.txt"
  },
  {
   "FullPath": "\\\\.\\C:\\ones.bin"
@@ -247,7 +259,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
  {
   "MFTId": "45",
   "Mtime": "2018-09-24T07:55:44.4592119Z",
-  "Atime": "2018-09-24T07:55:44.4592119Z",
+  "Atime": "2022-03-18T04:09:07.2885951Z",
   "Ctime": "2018-09-24T07:55:20.6489276Z",
   "Btime": "2018-09-24T07:55:44.4592119Z",
   "FNBtime": "0001-01-01T00:00:00Z",
