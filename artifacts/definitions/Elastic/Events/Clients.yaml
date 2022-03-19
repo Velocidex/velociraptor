@@ -24,6 +24,9 @@ parameters:
     type: bool
   - name: ElasticAddresses
     default: http://127.0.0.1:9200/
+  - name: Username
+  - name: Password
+  - name: Apikey
   - name: artifactParameterMap
     type: hidden
     default: |
@@ -52,5 +55,9 @@ sources:
 
       SELECT * FROM elastic_upload(
           query=events,
-          type="ClientEvents",
-          addresses=split(string=ElasticAddresses, sep=","))
+          addresses=split(string=ElasticAddresses, sep=","),
+          index="velociraptor",
+          password=Password,
+          username=Username,
+          api_key=APIKey,
+          type="ClientEvents")
