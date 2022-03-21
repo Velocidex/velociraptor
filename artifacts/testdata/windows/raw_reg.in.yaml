@@ -1,0 +1,27 @@
+Queries:
+  # Make sure we can access the raw registry using the auto accessor
+  - SELECT OSPath.Components, OSPath
+    FROM glob(
+        globs='/*',
+        root=pathspec(
+           DelegateAccessor="auto",
+           DelegatePath='C:/Windows/System32/Config/SAM'),
+           accessor="raw_reg")
+
+  # And the NTFS accessor
+  - SELECT OSPath.Components, OSPath
+    FROM glob(
+        globs='/*',
+        root=pathspec(
+           DelegateAccessor="ntfs",
+           DelegatePath='C:/Windows/System32/Config/SAM'),
+           accessor="raw_reg")
+
+  # But file accessor should fail because it is locked
+  - SELECT OSPath.Components, OSPath
+    FROM glob(
+        globs='/*',
+        root=pathspec(
+           DelegateAccessor="file",
+           DelegatePath='C:/Windows/System32/Config/SAM'),
+           accessor="raw_reg")

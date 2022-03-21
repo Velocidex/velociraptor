@@ -274,7 +274,7 @@ func (self WindowsNTFSManipulator) PathParse(path string, result *OSPath) error 
 
 func ConvertToDevice(component string) string {
 	if driveRegex.MatchString(component) {
-		return "\\\\.\\" + component
+		return "\\\\.\\" + strings.ToUpper(component)
 	}
 	return component
 }
@@ -329,6 +329,24 @@ func NewWindowsNTFSPath(path string) (*OSPath, error) {
 	}
 	err := manipulator.PathParse(path, result)
 	return result, err
+}
+
+func WindowsNTFSPathFromOSPath(path *OSPath) *OSPath {
+	result := &OSPath{
+		Manipulator: WindowsNTFSManipulator{},
+		Components:  make([]string, 0, len(path.Components)),
+	}
+
+	for i, component := range path.Components {
+		if i == 0 {
+			result.Components = append(result.Components,
+				ConvertToDevice(component))
+		} else {
+			result.Components = append(result.Components, component)
+		}
+	}
+
+	return result
 }
 
 // Windows registry paths begin with a hive name. There are a number

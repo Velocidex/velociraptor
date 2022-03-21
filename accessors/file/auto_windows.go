@@ -43,7 +43,8 @@ func (self *AutoFilesystemAccessor) ReadDirWithOSPath(
 	path *accessors.OSPath) ([]accessors.FileInfo, error) {
 	result, err := self.file_delegate.ReadDirWithOSPath(path)
 	if err != nil {
-		return self.ntfs_delegate.ReadDirWithOSPath(path)
+		ntfs_path := accessors.WindowsNTFSPathFromOSPath(path)
+		return self.ntfs_delegate.ReadDirWithOSPath(ntfs_path)
 	}
 	return result, err
 }
@@ -72,7 +73,8 @@ func (self *AutoFilesystemAccessor) Open(path string) (accessors.ReadSeekCloser,
 func (self *AutoFilesystemAccessor) OpenWithOSPath(path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
 	result, err := self.file_delegate.OpenWithOSPath(path)
 	if err != nil {
-		result, err1 := self.ntfs_delegate.OpenWithOSPath(path)
+		ntfs_path := accessors.WindowsNTFSPathFromOSPath(path)
+		result, err1 := self.ntfs_delegate.OpenWithOSPath(ntfs_path)
 		if err1 != nil {
 			return nil, fmt.Errorf(
 				"%v, unable to fall back to ntfs parsing: %w", err, err1)
@@ -94,7 +96,8 @@ func (self *AutoFilesystemAccessor) LstatWithOSPath(
 	path *accessors.OSPath) (accessors.FileInfo, error) {
 	result, err := self.file_delegate.LstatWithOSPath(path)
 	if err != nil {
-		return self.ntfs_delegate.LstatWithOSPath(path)
+		ntfs_path := accessors.WindowsNTFSPathFromOSPath(path)
+		return self.ntfs_delegate.LstatWithOSPath(ntfs_path)
 	}
 	return result, err
 }
