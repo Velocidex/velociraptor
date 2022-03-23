@@ -95,7 +95,7 @@ sources:
         FROM Artifact.Windows.Registry.NTUser(KeyGlob=KeyGlob)
         WHERE Username =~ UserRegex
             AND UUID =~ SidRegex
-            AND Data.type = 'REG_BINARY'
+            AND Data.type =~ 'BINARY'
 
 
       -- Glob method allows offline processing but can not filter by user
@@ -117,7 +117,7 @@ sources:
            globs=KeyGlob,
            root=pathspec(DelegatePath=HiveGlob),
            accessor="raw_reg")
-        WHERE Data.type = 'REG_BINARY'
+        WHERE Data.type =~ 'BINARY'
 
       -- precalculate all hive values for performance
       LET AllValues <= SELECT * FROM if(condition= HiveGlob,

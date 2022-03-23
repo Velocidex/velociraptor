@@ -58,12 +58,12 @@ func (self RemappingFunc) Call(ctx context.Context,
 	}
 
 	// Reset the scope to default for remapping accessors.
-	subscope := scope.Copy()
-	subscope.AppendVars(ordereddict.NewDict().
+	pristine_scope := scope.Copy()
+	pristine_scope.AppendVars(ordereddict.NewDict().
 		Set(constants.SCOPE_DEVICE_MANAGER,
 			accessors.GlobalDeviceManager.Copy()))
 
-	err = ApplyRemappingOnScope(ctx, subscope, manager,
+	err = ApplyRemappingOnScope(ctx, pristine_scope, scope, manager,
 		ordereddict.NewDict(), remapping_config)
 	if err != nil {
 		scope.Log("remap: %v", err)

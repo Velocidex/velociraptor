@@ -30,6 +30,9 @@ var (
 )
 
 func doGUI() error {
+	// Start from a clean slate
+	os.Setenv("VELOCIRAPTOR_CONFIG", "")
+
 	datastore_directory := *gui_command_datastore
 	if datastore_directory == "" {
 		datastore_directory = os.TempDir()
@@ -48,6 +51,11 @@ func doGUI() error {
 		WithVerbose(true).
 		WithFileLoader(server_config_path).LoadAndValidate()
 	if err != nil || config_obj.Frontend == nil {
+		// Stop on hard errors.
+		_, ok := err.(config.HardError)
+		if ok {
+			return err
+		}
 
 		// Need to generate a new config. This config is not
 		// really suitable for use in a proper deployment but
@@ -200,7 +208,7 @@ func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case gui_command.FullCommand():
-			doGUI()
+			FatalIfError(gui_command, doGUI)
 			return true
 		}
 		return false

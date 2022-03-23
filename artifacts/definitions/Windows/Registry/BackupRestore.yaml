@@ -25,6 +25,6 @@ sources:
         Name as KeyName,
         Data.value as KeyValue,
         Data.type as KeyType
-      FROM glob(globs=KeyGlob, accessor="reg")
+      FROM glob(globs=KeyGlob, accessor="registry")
       WHERE NOT KeyType ='key'
       GROUP BY ModTime, KeyName,KeyValue,KeyType

@@ -268,7 +268,17 @@ func (self MountFileSystemAccessor) LstatWithOSPath(os_path *OSPath) (FileInfo, 
 	if err != nil {
 		return nil, err
 	}
-	return delegate_node.accessor.LstatWithOSPath(delegate_path)
+	file_info, err := delegate_node.accessor.LstatWithOSPath(delegate_path)
+	if err != nil {
+		return nil, err
+	}
+
+	// Wrap the file info before returning it.
+	return &FileInfoWrapper{
+		FileInfo:      file_info,
+		prefix:        delegate_node.path.Copy(),
+		remove_prefix: delegate_node.prefix.Copy(),
+	}, nil
 }
 
 // Install a mapping from the source to the target. This means that

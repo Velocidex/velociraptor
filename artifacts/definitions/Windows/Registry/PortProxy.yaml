@@ -32,7 +32,7 @@ sources:
          regex_replace(source=Data.value,re="/",replace=":") as Destination,
          Mtime as ModifiedTime,
          Type
-       FROM glob(globs=KeyGlob, accessor="reg")
+       FROM glob(globs=KeyGlob, accessor="registry")
        WHERE Type
 
 

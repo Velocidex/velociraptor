@@ -60,8 +60,7 @@ func (self *MockingScopeContext) Reset() {
 
 type _MockerCtx struct {
 	mu      sync.Mutex
-	results []vfilter.Any
-	args    []*ordereddict.Dict
+	results []types.Any
 
 	call_count int
 }
@@ -84,14 +83,16 @@ func NewMockerPlugin(name string, results []*ordereddict.Dict) *MockerPlugin {
 }
 
 func (self MockerPlugin) Call(ctx context.Context,
-	scope vfilter.Scope, args *ordereddict.Dict) <-chan vfilter.Row {
-	output_chan := make(chan vfilter.Row)
+	scope types.Scope, args *ordereddict.Dict) <-chan types.Row {
+	output_chan := make(chan types.Row)
 	go func() {
 		defer close(output_chan)
 
 		self.ctx.mu.Lock()
-		self.ctx.args = append(self.ctx.args, args)
-
+		if len(self.ctx.results) == 0 {
+			self.ctx.mu.Unlock()
+			return
+		}
 		result := self.ctx.results[self.ctx.call_count%len(self.ctx.results)]
 		self.ctx.call_count += 1
 		self.ctx.mu.Unlock()
@@ -120,19 +121,19 @@ func (self MockerPlugin) Call(ctx context.Context,
 	return output_chan
 }
 
-func (self *MockerPlugin) Info(scope vfilter.Scope,
-	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
-	return &vfilter.PluginInfo{
+func (self *MockerPlugin) Info(scope types.Scope,
+	type_map *types.TypeMap) *types.PluginInfo {
+	return &types.PluginInfo{
 		Name: self.name,
 	}
 }
 
 // Replace a VQL function with a mock
 type MockerFunctionArgs struct {
-	Plugin   string           `vfilter:"optional,field=plugin,doc=The plugin to mock"`
-	Function string           `vfilter:"optional,field=function,doc=The function to mock"`
-	Artifact vfilter.Any      `vfilter:"optional,field=artifact,doc=The artifact to mock"`
-	Results  vfilter.LazyExpr `vfilter:"required,field=results,doc=The result to return"`
+	Plugin   string         `vfilter:"optional,field=plugin,doc=The plugin to mock"`
+	Function string         `vfilter:"optional,field=function,doc=The function to mock"`
+	Artifact types.Any      `vfilter:"optional,field=artifact,doc=The artifact to mock"`
+	Results  types.LazyExpr `vfilter:"required,field=results,doc=The result to return"`
 }
 
 type MockerFunction struct {
@@ -148,8 +149,8 @@ func (self *MockerFunction) Copy() types.FunctionInterface {
 }
 
 func (self *MockerFunction) Call(ctx context.Context,
-	scope vfilter.Scope,
-	args *ordereddict.Dict) vfilter.Any {
+	scope types.Scope,
+	args *ordereddict.Dict) types.Any {
 
 	self.ctx.mu.Lock()
 	result := self.ctx.results[self.ctx.call_count%len(self.ctx.results)]
@@ -159,30 +160,39 @@ func (self *MockerFunction) Call(ctx context.Context,
 	return result
 }
 
-func (self *MockerFunction) Info(scope vfilter.Scope,
-	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
-	return &vfilter.FunctionInfo{
+func (self *MockerFunction) Info(scope types.Scope,
+	type_map *types.TypeMap) *types.FunctionInfo {
+	return &types.FunctionInfo{
 		Name: self.name,
+	}
+}
+
+func NewMockerFunction(name string, result []types.Any) *MockerFunction {
+	return &MockerFunction{
+		name: name,
+		ctx: &_MockerCtx{
+			results: result,
+		},
 	}
 }
 
 type MockFunction struct{}
 
 func (self *MockFunction) Call(ctx context.Context,
-	scope vfilter.Scope,
-	args *ordereddict.Dict) vfilter.Any {
+	scope types.Scope,
+	args *ordereddict.Dict) types.Any {
 
 	arg := &MockerFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("mock: %s", err.Error())
-		return vfilter.Null{}
+		return types.Null{}
 	}
 
-	rows := []vfilter.Row{}
+	rows := []types.Row{}
 	results := arg.Results.Reduce(ctx)
 
-	results_query, ok := results.(vfilter.StoredQuery)
+	results_query, ok := results.(types.StoredQuery)
 	if ok {
 		results = types.Materialize(ctx, scope, results_query)
 	}
@@ -190,7 +200,7 @@ func (self *MockFunction) Call(ctx context.Context,
 	rt := reflect.TypeOf(results)
 	if rt == nil {
 		scope.Log("mock: results should be a list")
-		return vfilter.Null{}
+		return types.Null{}
 	}
 
 	if rt.Kind() != reflect.Slice {
@@ -211,7 +221,7 @@ func (self *MockFunction) Call(ctx context.Context,
 	scope_context, ok := GetMockContext(scope)
 	if !ok {
 		scope.Log("mock_check: Not running in test.")
-		return vfilter.Null{}
+		return types.Null{}
 	}
 
 	if arg.Plugin != "" {
@@ -244,19 +254,19 @@ func (self *MockFunction) Call(ctx context.Context,
 		artifact_plugin, ok := item.(services.MockablePlugin)
 		if !ok {
 			scope.Log("mock: artifact is not defined")
-			return vfilter.Null{}
+			return types.Null{}
 		}
 		artifact_plugin.SetMock(rows)
 	} else {
 		scope.Log("mock: either plugin or artifact should be specified")
-		return vfilter.Null{}
+		return types.Null{}
 	}
 
-	return vfilter.Null{}
+	return types.Null{}
 }
 
 func (self MockFunction) Info(
-	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	scope types.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "mock",
 		Doc:     "Mock a plugin.",

@@ -810,6 +810,14 @@ message RemappingConfig {
     // For type=impersonation - can be windows, linux, darwin
     string os = 5;
     string hostname = 6;
+
+    // Variables to be added to environment strings.
+    repeated VQLEnv env = 7;
+
+    // Disable these plugins and functions (usually for OS specific
+    // things that make no sense on an image).
+    repeated string disabled_functions = 8;
+    repeated string disabled_plugins = 9;
 }
 
 message Config {

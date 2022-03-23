@@ -128,6 +128,9 @@ func (self VQLClientAction) StartQuery(
 	}
 
 	builder := services.ScopeBuilder{
+		Config: &config_proto.Config{
+			Remappings: config_obj.Remappings,
+		},
 		// Only provide the client config since we are running in
 		// client context.
 		ClientConfig: config_obj.Client,

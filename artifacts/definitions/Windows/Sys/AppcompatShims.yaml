@@ -26,7 +26,7 @@ sources:
                   (DatabaseInstallTimeStamp / 10000000) - 11644473600 AS DatabaseInstallTimeStamp
            FROM read_reg_key(
              globs=split(string=shimKeys, sep=",[\\s]*"),
-             accessor="reg")
+             accessor="registry")
 
         LET result = SELECT * from foreach(
           row={
