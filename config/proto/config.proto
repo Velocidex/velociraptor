@@ -800,6 +800,10 @@ message RemappingConfig {
     // Operation: Currently mount, identify
     string type = 1;
 
+    // Human readable description of what this mapping rule should
+    // produce.
+    string description = 10;
+
     // For mount options
     MountPoint from = 2;
     MountPoint on = 3;

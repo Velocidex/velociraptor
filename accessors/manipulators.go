@@ -231,6 +231,8 @@ func (self WindowsPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	if len(components) > 0 {
 		// No leading \\ as first component is drive letter
 		result.Path = components[0] + utils.JoinComponents(components[1:], "\\")
+	} else {
+		result.Path = ""
 	}
 	return result
 }
@@ -390,8 +392,9 @@ func (self WindowsRegistryPathManipulator) PathParse(
 
 	if len(result.Components) > 0 {
 		// First component is always a hive name in upper case.
-		hive_name := strings.ToUpper(result.Components[0])
-		switch hive_name {
+		hive_name := result.Components[0]
+		hive_name_caps := strings.ToUpper(result.Components[0])
+		switch hive_name_caps {
 		case "HKCU":
 			hive_name = "HKEY_CURRENT_USER"
 		case "HKLM":
@@ -399,6 +402,11 @@ func (self WindowsRegistryPathManipulator) PathParse(
 		case "HKU":
 			hive_name = "HKEY_USERS"
 		}
+
+		if strings.HasPrefix(hive_name, "HKEY_") {
+			hive_name = hive_name_caps
+		}
+
 		result.Components[0] = hive_name
 	}
 	return nil
