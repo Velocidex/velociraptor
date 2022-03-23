@@ -8,7 +8,6 @@ import (
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -27,7 +26,7 @@ import (
 // Means when VQL opens a path using accessor "file" in all paths
 // below "/", the "file" accessor will be used on "/mnt/data" instead.
 func InstallMountPoints(
-	scope vfilter.Scope,
+	pristine_scope vfilter.Scope,
 	manager accessors.DeviceManager,
 	remappings []*config_proto.RemappingConfig,
 	on_accessor string) error {
@@ -63,7 +62,7 @@ func InstallMountPoints(
 		}
 
 		from_fs, err := accessors.GlobalDeviceManager.GetAccessor(
-			from_accessor, scope)
+			from_accessor, pristine_scope)
 		if err != nil {
 			return err
 		}
@@ -118,7 +117,8 @@ func getTypedOSPath(path_type string, path string) (*accessors.OSPath, error) {
 // Update the scope with the new device manager.
 func ApplyRemappingOnScope(
 	ctx context.Context,
-	scope vfilter.Scope,
+	pristine_scope vfilter.Scope,
+	remapped_scope vfilter.Scope,
 	manager accessors.DeviceManager,
 	env *ordereddict.Dict,
 	remappings []*config_proto.RemappingConfig) error {
@@ -135,13 +135,20 @@ func ApplyRemappingOnScope(
 			}
 
 			from_fs, err := accessors.GlobalDeviceManager.GetAccessor(
-				remapping.From.Accessor, scope)
+				remapping.From.Accessor, pristine_scope)
+			if err != nil {
+				return err
+			}
+
+			// make a copy of the accessor that works on the remapped
+			// scope.
+			to_fs, err := from_fs.New(remapped_scope)
 			if err != nil {
 				return err
 			}
 
 			// Install on top of the manager
-			manager.Register(remapping.On.Accessor, from_fs, "Shadowed")
+			manager.Register(remapping.On.Accessor, to_fs, "Shadowed")
 
 		case "mount":
 			if remapping.From == nil || remapping.On == nil {
@@ -157,24 +164,26 @@ func ApplyRemappingOnScope(
 		case "permissions":
 
 		case "impersonation":
-			var mocker_ctx *MockingScopeContext
-			mocker_ctx_any, pres := env.Get(constants.SCOPE_MOCK)
-			if pres {
-				mocker_ctx, _ = mocker_ctx_any.(*MockingScopeContext)
-			}
-			if mocker_ctx == nil {
-				mocker_ctx = &MockingScopeContext{}
-			}
-			env.Set(constants.SCOPE_MOCK, mocker_ctx)
-			mock_plugin := NewMockerPlugin(
+			remapped_scope.AppendPlugins(NewMockerPlugin(
 				"info", []*ordereddict.Dict{
 					ordereddict.NewDict().
+						Set("Hostname", remapping.Hostname).
+						Set("Fqdn", remapping.Hostname).
+						Set("Uptime", "").
+						Set("BootTime", "").
+						Set("Procs", "").
 						Set("OS", remapping.Os).
-						Set("Hostname", remapping.Hostname),
-				})
-
-			mocker_ctx.AddPlugin(mock_plugin)
-			scope.AppendPlugins(mock_plugin)
+						Set("Platform", "").
+						Set("PlatformFamily", "").
+						Set("PlatformVersion", "").
+						Set("KernelVersion", "").
+						Set("VirtualizationSystem", "").
+						Set("VirtualizationRole", "").
+						Set("HostID", "").
+						Set("Exe", "").
+						Set("IsAdmin", true),
+				}))
+			disablePlugins(remapped_scope, remapping)
 
 		default:
 			return fmt.Errorf("Unknown remapping type: %v", remapping.Type)
@@ -182,11 +191,13 @@ func ApplyRemappingOnScope(
 	}
 
 	for to_accessor, remappings := range mounts {
-		err := InstallMountPoints(scope, manager, remappings, to_accessor)
+		err := InstallMountPoints(pristine_scope, manager, remappings, to_accessor)
 		if err != nil {
 			return err
 		}
 	}
+
+	installExpandMock(pristine_scope, remappings)
 
 	return nil
 }

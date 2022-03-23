@@ -1,12 +1,12 @@
 package accessors
 
 import (
-	"encoding/json"
 	"io"
 	"os"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -69,7 +69,11 @@ func (self *OSPath) PathSpec() *PathSpec {
 }
 
 func (self *OSPath) DelegatePath() string {
-	return self.Manipulator.AsPathSpec(self).DelegatePath
+	pathspec := self.Manipulator.AsPathSpec(self)
+	if pathspec.DelegatePath == "" && pathspec.Delegate != nil {
+		pathspec.DelegatePath = json.MustMarshalString(pathspec.Delegate)
+	}
+	return pathspec.DelegatePath
 }
 
 func (self *OSPath) DelegateAccessor() string {

@@ -1,129 +1,28 @@
-LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/UsrClass.dat' ]), clear=TRUE)[]SELECT FullPath FROM glob(globs="**", accessor='ntfs') ORDER BY FullPath[
+LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/UsrClass.dat' ]), clear=TRUE)[]SELECT Hostname, Fqdn, OS, expand(path="%SystemRoot%\\System32") FROM info()[
  {
-  "FullPath": "\\\\.\\C:"
+  "Hostname": "Virtual Host",
+  "Fqdn": "Virtual Host",
+  "OS": "windows",
+  "expand(path=\"%SystemRoot%\\\\System32\")": "D:\\Windows\\System32"
+ }
+]SELECT OSPath FROM glob(globs="*", accessor='ntfs') ORDER BY OSPath[
+ {
+  "OSPath": "\\\\.\\C:"
+ }
+]SELECT OSPath FROM glob(globs="*", accessor='file') ORDER BY OSPath[
+ {
+  "OSPath": "D:"
  },
  {
-  "FullPath": "\\\\.\\C:\\$AttrDef"
- },
+  "OSPath": "E:"
+ }
+]SELECT OSPath FROM glob(globs="C:/Folder *", accessor='ntfs') ORDER BY OSPath[
  {
-  "FullPath": "\\\\.\\C:\\$BadClus"
- },
+  "OSPath": "\\\\.\\C:\\Folder A"
+ }
+]SELECT OSPath FROM glob(globs="D:/Folder *", accessor='file') ORDER BY OSPath[
  {
-  "FullPath": "\\\\.\\C:\\$BadClus:$Bad"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Bitmap"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Boot"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Extend"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Extend\\$Deleted"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Extend\\$ObjId"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Extend\\$Quota"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Extend\\$Reparse"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$Repair"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$Repair:$Config"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$Txf"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$TxfLog"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$TxfLog\\$Tops"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$TxfLog\\$Tops:$T"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Extend\\$RmMetadata\\$TxfLog\\$TxfLog.blf"
- },
- {
-  "FullPath": "\\\\.\\C:\\$LogFile"
- },
- {
-  "FullPath": "\\\\.\\C:\\$MFT"
- },
- {
-  "FullPath": "\\\\.\\C:\\$MFTMirr"
- },
- {
-  "FullPath": "\\\\.\\C:\\$RECYCLE.BIN"
- },
- {
-  "FullPath": "\\\\.\\C:\\$RECYCLE.BIN\\S-1-5-21-128822557-2730879828-3162054034-1000"
- },
- {
-  "FullPath": "\\\\.\\C:\\$RECYCLE.BIN\\S-1-5-21-128822557-2730879828-3162054034-1000\\desktop.ini"
- },
- {
-  "FullPath": "\\\\.\\C:\\$RECYCLE.BIN\\S-1-5-21-2378245050-552909339-522783033-1001"
- },
- {
-  "FullPath": "\\\\.\\C:\\$RECYCLE.BIN\\S-1-5-21-2378245050-552909339-522783033-1001\\desktop.ini"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Secure"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Secure:$SDS"
- },
- {
-  "FullPath": "\\\\.\\C:\\$UpCase"
- },
- {
-  "FullPath": "\\\\.\\C:\\$UpCase:$Info"
- },
- {
-  "FullPath": "\\\\.\\C:\\$Volume"
- },
- {
-  "FullPath": "\\\\.\\C:\\Folder A"
- },
- {
-  "FullPath": "\\\\.\\C:\\Folder A\\Folder B"
- },
- {
-  "FullPath": "\\\\.\\C:\\Folder A\\Folder B\\Hello world text document.txt"
- },
- {
-  "FullPath": "\\\\.\\C:\\Folder A\\Folder B\\Hello world text document.txt:goodbye.txt"
- },
- {
-  "FullPath": "\\\\.\\C:\\System Volume Information"
- },
- {
-  "FullPath": "\\\\.\\C:\\System Volume Information\\IndexerVolumeGuid"
- },
- {
-  "FullPath": "\\\\.\\C:\\System Volume Information\\WPSettings.dat"
- },
- {
-  "FullPath": "\\\\.\\C:\\another_file.txt"
- },
- {
-  "FullPath": "\\\\.\\C:\\just_a_file.txt"
- },
- {
-  "FullPath": "\\\\.\\C:\\ones.bin"
+  "OSPath": "D:\\Folder A"
  }
 ]SELECT * FROM parse_mft(filename="C:/$MFT", accessor="ntfs") WHERE FullPath =~ 'Hello world' ORDER BY FullPath[
  {
@@ -320,5 +219,29 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
 ]SELECT read_file(filename="C:/46", accessor="mft", length=10) FROM scope()[
  {
   "read_file(filename=\"C:/46\", accessor=\"mft\", length=10)": "Hello worl"
+ }
+]SELECT OSPath FROM glob(accessor="file", globs="E:/ntuser.dat")[
+ {
+  "OSPath": "E:\\ntuser.dat"
+ }
+]SELECT OSPath FROM glob(accessor="raw_reg", globs="/Environ*/*", root=pathspec( DelegateAccessor="file", DelegatePath="E:\\ntuser.dat"))[
+ {
+  "OSPath": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"E:\\\\ntuser.dat\",\"Path\":\"\\\\Environment\\\\TEMP\"}"
+ },
+ {
+  "OSPath": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"E:\\\\ntuser.dat\",\"Path\":\"\\\\Environment\\\\TMP\"}"
+ }
+]SELECT OSPath, read_file(filename=OSPath, accessor="zip", length=10) FROM glob(accessor="zip", globs="/*", root=pathspec( DelegateAccessor="file", DelegatePath="E:\\hello.zip")) LIMIT 2[
+ {
+  "OSPath": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"E:\\\\hello.zip\",\"Path\":\"/hello.txt\"}",
+  "read_file(filename=OSPath, accessor=\"zip\", length=10)": "hello\n"
+ },
+ {
+  "OSPath": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"E:\\\\hello.zip\",\"Path\":\"/hello1.txt\"}",
+  "read_file(filename=OSPath, accessor=\"zip\", length=10)": "hello1\n"
+ }
+]SELECT * FROM disabled_plugin()[]SELECT disabled_function() FROM scope()[
+ {
+  "disabled_function()": null
  }
 ]

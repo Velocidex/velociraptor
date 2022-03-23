@@ -54,7 +54,7 @@ func (self RawFileSystemAccessor) ReadDirWithOSPath(
 
 func (self RawFileSystemAccessor) OpenWithOSPath(
 	filename *accessors.OSPath) (accessors.ReadSeekCloser, error) {
-	return self.Open(filename.Path())
+	return self.Open(filename.String())
 }
 
 func (self RawFileSystemAccessor) Open(filename string) (accessors.ReadSeekCloser, error) {

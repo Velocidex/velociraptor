@@ -17,7 +17,9 @@ import (
 )
 
 var (
-	nonIndexingRegex = regexp.MustCompile(`^N\.[FH]\.`)
+	// Notebook ids that are not indexed. These are flow, hunt and
+	// event notebooks.
+	nonIndexingRegex = regexp.MustCompile(`^N\.[EFH]\.`)
 )
 
 func CheckNotebookAccess(

@@ -26,9 +26,19 @@ var (
 // root scope. We keep a list of most recently used caches of zip
 // files for quick access.
 type ZipFileSystemAccessor struct {
-	mu       sync.Mutex
 	fd_cache map[string]*ZipFileCache
 	scope    vfilter.Scope
+}
+
+func (self *ZipFileSystemAccessor) Copy(
+	scope vfilter.Scope) *ZipFileSystemAccessor {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return &ZipFileSystemAccessor{
+		fd_cache: self.fd_cache,
+		scope:    scope,
+	}
 }
 
 // Try to remove any file caches with no references.
@@ -324,8 +334,9 @@ func (self *ZipFileSystemAccessor) New(scope vfilter.Scope) (
 		return result, nil
 	}
 
+	// Make a copy of the filesystem capturing the new scope.
 	res := result_any.(*ZipFileSystemAccessor)
 	res.Trim()
 
-	return res, nil
+	return res.Copy(scope), nil
 }

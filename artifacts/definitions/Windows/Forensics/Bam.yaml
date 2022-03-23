@@ -11,11 +11,15 @@ reference:
   - https://www.andreafortuna.org/dfir/forensic-artifacts-evidences-of-program-execution-on-windows-systems/
 
 parameters:
-    - name: bamKeys
-      default: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\bam\UserSettings\*\*,HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings\*\*
-    - name: userRegex
-      default: .
-      type: regex
+  - name: bamKeys
+    type: csv
+    default: |
+      KeyGlob
+      HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\bam\UserSettings\*\*
+      HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings\*\*
+  - name: userRegex
+    default: .
+    type: regex
 
 sources:
   - precondition:
@@ -25,13 +29,13 @@ sources:
             FROM Artifact.Windows.Sys.Users()
             WHERE Name =~ userRegex
 
-        SELECT basename(path=dirname(path=FullPath)) as SID, {
+        SELECT OSPath.Components[-2] as SID, {
             SELECT Name FROM users
-            WHERE UUID = basename(path=dirname(path=FullPath))
+            WHERE UUID = OSPath.Components[-2]
           } As UserName,
           Name as Binary,
           timestamp(winfiletime=parse_binary(
                filename=Data.value, accessor="data",
-               profile="[]", struct="int64")) as Bam_time
-        FROM glob(globs=split(string=bamKeys, sep=","), accessor="reg")
-        WHERE Data.type = "BINARY"
+               profile="[]", struct="int64")) AS Bam_time
+        FROM glob(globs=bamKeys.KeyGlob, accessor="registry")
+        WHERE Data.type =~ "BINARY"

@@ -1,19 +1,73 @@
 Parameters:
   RemappingTemplate: |
     remappings:
+      # Mount the files directory as E: drive
+      - type: mount
+        from:
+          accessor: file
+          prefix: %q
+        on:
+          accessor: file
+          prefix: "E:/"
+          path_type: windows
+
+      # Impersonate a windows machine.
+      - type: impersonation
+        os: windows
+        hostname: Virtual Host
+        env:
+          - key: SystemRoot
+            value: "D:\\Windows"
+          - key: WinDir
+            value: "D:\\Windows"
+        disabled_plugins:
+          - disabled_plugin
+        disabled_functions:
+          - disabled_function
+
+      # Mount the image under the ntfs accessor.
       - type: mount
         from:
           accessor: raw_ntfs
+
+          # Go through the offset accessor to access a subset of the
+          # file.
           prefix: |
             {
-               "DelegateAccessor": "file",
-               "DelegatePath": %q,
-               "Path": "/"
+               "DelegateAccessor": "offset",
+               "Delegate": {
+                  "DelegateAccessor": "file",
+                  "DelegatePath": %q,
+                  "Path": "0"
+                },
+                "Path": "/"
             }
         on:
           accessor: "ntfs"
           prefix: '\\\\.\\C:'
           path_type: ntfs
+
+      # Mount the same image also the file accessor as D: drive.
+      - type: mount
+        from:
+          accessor: raw_ntfs
+
+          # Go through the offset accessor to access a subset of the
+          # file.
+          prefix: |
+            {
+               "DelegateAccessor": "offset",
+               "Delegate": {
+                  "DelegateAccessor": "file",
+                  "DelegatePath": %q,
+                  "Path": "0"
+                },
+                "Path": "/"
+            }
+        on:
+          accessor: "file"
+          prefix: 'D:'
+          path_type: windows
 
       # Shadow remapping just copy accessors into the remapped
       # set. This is appropriate for accessors that do not use the
@@ -24,6 +78,18 @@ Parameters:
           accessor: data
         on:
           accessor: data
+
+      - type: shadow
+        from:
+          accessor: zip
+        on:
+          accessor: zip
+
+      - type: shadow
+        from:
+          accessor: raw_reg
+        on:
+          accessor: raw_reg
 
       - type: mount
         from:
@@ -57,13 +123,33 @@ Parameters:
 Queries:
   - LET _ <= remap(config=format(format=RemappingTemplate,
        args=[
+          srcDir+'/artifacts/testdata/files/',
+          srcDir+'/artifacts/testdata/files/test.ntfs.dd',
           srcDir+'/artifacts/testdata/files/test.ntfs.dd',
           srcDir+'/artifacts/testdata/files/test.ntfs.dd',
           srcDir+'/artifacts/testdata/files/UsrClass.dat'
       ]), clear=TRUE)
 
-  - SELECT FullPath FROM glob(globs="**", accessor='ntfs')
-    ORDER BY FullPath
+  # Check we are impersonating a windows machine with appropriate
+  # environment variables
+  - SELECT Hostname, Fqdn, OS, expand(path="%SystemRoot%\\System32")
+    FROM info()
+
+  # Only C drive is mapped to the ntfs accessor
+  - SELECT OSPath FROM glob(globs="*", accessor='ntfs')
+    ORDER BY OSPath
+
+  # Only D and E drives are mapped to the file accessor
+  - SELECT OSPath FROM glob(globs="*", accessor='file')
+    ORDER BY OSPath
+
+  # Image is mapped as C: drive using ntfs accessor
+  - SELECT OSPath FROM glob(globs="C:/Folder *", accessor='ntfs')
+    ORDER BY OSPath
+
+  # Image is mapped as D: drive using file accessor
+  - SELECT OSPath FROM glob(globs="D:/Folder *", accessor='file')
+    ORDER BY OSPath
 
   # Make sure we can parse the mft as normal.
   - SELECT * FROM parse_mft(filename="C:/$MFT", accessor="ntfs")
@@ -88,3 +174,28 @@ Queries:
   # Test MFT remapping
   - SELECT read_file(filename="C:/46", accessor="mft", length=10)
     FROM scope()
+
+  # Test raw reg accessor reading files from the remapped file
+  # accessor
+  - SELECT OSPath
+    FROM glob(accessor="file", globs="E:/ntuser.dat")
+
+  # Parse the actual ntuser file - the OSPath is a complex pathspec
+  # based path.
+  - SELECT OSPath
+    FROM glob(accessor="raw_reg", globs="/Environ*/*",
+      root=pathspec(
+        DelegateAccessor="file",
+        DelegatePath="E:\\ntuser.dat"))
+
+  # Test zip file handling reading from mapped "file" accessor
+  - SELECT OSPath, read_file(filename=OSPath, accessor="zip", length=10)
+    FROM glob(accessor="zip", globs="/*",
+      root=pathspec(
+        DelegateAccessor="file",
+        DelegatePath="E:\\hello.zip"))
+    LIMIT 2
+
+  # Make sure that plugins are mocked away
+  - SELECT * FROM disabled_plugin()
+  - SELECT disabled_function() FROM scope()

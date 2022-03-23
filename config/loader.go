@@ -12,7 +12,6 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	errors "github.com/pkg/errors"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -152,22 +151,22 @@ func (self *Loader) WithRequiredUser() *Loader {
 	return self
 }
 
-func (self *Loader) WithOverride(json_data string) *Loader {
+func (self *Loader) WithOverride(filename string) *Loader {
+	if filename == "" {
+		return self
+	}
+
 	self = self.Copy()
-	self.validators = append(self.validators,
-		func(self *Loader, config_obj *config_proto.Config) error {
-			if json_data == "" {
-				return nil
+	self.config_mutators = append(self.config_mutators,
+		func(config_obj *config_proto.Config) error {
+			self.Log("Loading override config from file %v", filename)
+			override, err := read_config_from_file(filename)
+			if err != nil {
+				return HardError{err}
 			}
 
 			// Merge the json blob with the config
-			src := &config_proto.Config{}
-			err := protojson.Unmarshal([]byte(json_data), src)
-			if err != nil {
-				return err
-			}
-
-			proto.Merge(config_obj, src)
+			proto.Merge(config_obj, override)
 			return nil
 		})
 	return self

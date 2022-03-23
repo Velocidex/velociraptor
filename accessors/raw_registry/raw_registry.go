@@ -251,7 +251,19 @@ func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 		return result, nil
 	}
 
-	return result_any.(accessors.FileSystemAccessor), nil
+	cached, ok := result_any.(*RawRegFileSystemAccessor)
+	if !ok {
+		return nil, errors.New("Cached RawRegFileSystemAccessor invalid")
+	}
+
+	cached.mu.Lock()
+	defer cached.mu.Unlock()
+
+	return &RawRegFileSystemAccessor{
+		hive_cache: cached.hive_cache,
+		scope:      scope,
+		root:       cached.root,
+	}, nil
 }
 
 // Raw Registry paths a just just generic paths:

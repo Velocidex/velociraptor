@@ -39,7 +39,7 @@ func applyAnalysisTarget(config_obj *config_proto.Config) error {
 	device_manager := accessors.NewDefaultDeviceManager()
 	scope := vql_subsystem.MakeScope()
 	err := remapping.ApplyRemappingOnScope(
-		context.Background(), scope, device_manager,
+		context.Background(), scope, scope, device_manager,
 		ordereddict.NewDict(),
 		config_obj.Remappings)
 	if err != nil {
