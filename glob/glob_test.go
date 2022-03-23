@@ -31,6 +31,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
 	"www.velocidex.com/golang/velociraptor/config"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 type pathComponentsTestFixtureType struct {
@@ -153,6 +154,7 @@ func GetMockFileSystemAccessor() accessors.FileSystemAccessor {
 
 func TestGlobWithContext(t *testing.T) {
 	ctx := context.Background()
+	scope := vql_subsystem.MakeScope()
 
 	fs_accessor := GetMockFileSystemAccessor()
 
@@ -171,7 +173,7 @@ func TestGlobWithContext(t *testing.T) {
 		}
 
 		output_chan := globber.ExpandWithContext(
-			ctx, config.GetDefaultConfig(),
+			ctx, scope, config.GetDefaultConfig(),
 			accessors.MustNewLinuxOSPath("/"), // root
 			fs_accessor)
 		for row := range output_chan {
