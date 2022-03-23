@@ -8,7 +8,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
@@ -17,6 +16,10 @@ import (
 var (
 	expand_regex = regexp.MustCompile("%([a-zA-Z0-9]+)%")
 )
+
+type ExpandPathArgs struct {
+	Path string `vfilter:"required,field=path,doc=A path with environment escapes"`
+}
 
 type ImpersonatedExpand struct {
 	Env *ordereddict.Dict
@@ -30,7 +33,7 @@ func (self ImpersonatedExpand) Call(
 	ctx context.Context,
 	scope vfilter.Scope, args *ordereddict.Dict) vfilter.Any {
 
-	arg := &functions.ExpandPathArgs{}
+	arg := &ExpandPathArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("expand: %s", err.Error())
@@ -56,7 +59,7 @@ func (self ImpersonatedExpand) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 	return &vfilter.FunctionInfo{
 		Name:    "expand",
 		Doc:     "Expand the path using the environment.",
-		ArgType: type_map.AddType(scope, &functions.ExpandPathArgs{}),
+		ArgType: type_map.AddType(scope, &ExpandPathArgs{}),
 	}
 }
 
