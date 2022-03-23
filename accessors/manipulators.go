@@ -391,7 +391,7 @@ func (self WindowsRegistryPathManipulator) PathParse(
 	result.Components = utils.SplitComponents(result.pathspec.Path)
 
 	if len(result.Components) > 0 {
-		// First component is always a hive name in upper case.
+		// First component is usually a hive name in upper case.
 		hive_name := result.Components[0]
 		hive_name_caps := strings.ToUpper(result.Components[0])
 		switch hive_name_caps {
@@ -401,10 +401,10 @@ func (self WindowsRegistryPathManipulator) PathParse(
 			hive_name = "HKEY_LOCAL_MACHINE"
 		case "HKU":
 			hive_name = "HKEY_USERS"
-		}
-
-		if strings.HasPrefix(hive_name, "HKEY_") {
-			hive_name = hive_name_caps
+		default:
+			if strings.HasPrefix(hive_name, "HKEY_") {
+				hive_name = hive_name_caps
+			}
 		}
 
 		result.Components[0] = hive_name

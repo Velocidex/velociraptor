@@ -27,8 +27,8 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 // The algorithm in this file is based on the Rekall algorithm here:
@@ -238,6 +238,7 @@ func (self *Globber) is_dir_or_link(
 // into the output channel.
 func (self *Globber) ExpandWithContext(
 	ctx context.Context,
+	scope vfilter.Scope,
 	config_obj *config_proto.Config,
 	root *accessors.OSPath,
 	accessor accessors.FileSystemAccessor) <-chan accessors.FileInfo {
@@ -257,9 +258,8 @@ func (self *Globber) ExpandWithContext(
 		// level.
 		files, err := accessor.ReadDirWithOSPath(root)
 		if err != nil {
-			logging.GetLogger(config_obj, &logging.GenericComponent).
-				Debug("Globber.ExpandWithContext: %v while processing %v",
-					err, root.String())
+			scope.Log("Globber: %v while processing %v",
+				err, root.String())
 			return
 		}
 
@@ -318,7 +318,7 @@ func (self *Globber) ExpandWithContext(
 					continue
 				}
 				for f := range next.ExpandWithContext(
-					ctx, config_obj, next_path, accessor) {
+					ctx, scope, config_obj, next_path, accessor) {
 					select {
 					case <-ctx.Done():
 						return
