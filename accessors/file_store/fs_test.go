@@ -52,7 +52,7 @@ func (self *FileStoreAccessorTestSuite) TestGlob() {
 	var returned []string
 
 	output_chan := globber.ExpandWithContext(
-		self.Ctx, self.ConfigObj,
+		self.Ctx, scope, self.ConfigObj,
 		root_path, fs_accessor)
 	for row := range output_chan {
 		returned = append(returned, row.FullPath())
