@@ -1,14 +1,10 @@
-// +build !windows
-
-// This is the non windows version. We only support go style
-// expansions (i.e. $Temp - on non windows systems we do not support
-// windows style expands (e.g. %TEMP%)
 package functions
 
 import (
 	"context"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -18,7 +14,7 @@ import (
 )
 
 var (
-	expand_regex = regexp.MustCompile("%([a-zA-Z0-9]+)%")
+	expand_regex = regexp.MustCompile("%([a-zA-Z_0-9]+)%")
 )
 
 type ExpandPathArgs struct {
@@ -46,13 +42,17 @@ func (self ExpandPath) Call(
 	}
 
 	// Support windows style expansion on all platforms.
-	return os.Expand(expand_regex.ReplaceAllString(
-		arg.Path, "$${$1}"), getenv)
+	return expand_env(arg.Path)
+}
+
+func expand_env(v string) string {
+	return os.Expand(expand_regex.ReplaceAllString(v, "$${$1}"), getenv)
 }
 
 func getenv(v string) string {
 	// Allow $ to be escaped (#850) by doubling up $
-	if v == "$" {
+	switch strings.ToLower(v) {
+	case "$":
 		return "$"
 	}
 	return os.Getenv(v)

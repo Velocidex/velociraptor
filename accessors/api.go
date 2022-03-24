@@ -106,7 +106,10 @@ func (self *OSPath) Parse(path string) (*OSPath, error) {
 }
 
 func (self *OSPath) Basename() string {
-	return self.Components[len(self.Components)-1]
+	if len(self.Components) > 0 {
+		return self.Components[len(self.Components)-1]
+	}
+	return ""
 }
 
 func (self *OSPath) Dirname() *OSPath {
@@ -117,6 +120,10 @@ func (self *OSPath) Dirname() *OSPath {
 	return result
 }
 
+// TrimComponents removes the specified components from the start of
+// our own components.
+// For example if self = ["C:", "Windows", "System32"]
+// then TrimComponents("C:") -> ["Windows", "System32"]
 func (self *OSPath) TrimComponents(components ...string) *OSPath {
 	if components == nil {
 		return self.Copy()
@@ -133,7 +140,8 @@ func (self *OSPath) TrimComponents(components ...string) *OSPath {
 			return result
 		}
 	}
-	return self
+	result.Components = nil
+	return result
 }
 
 // Make a copy

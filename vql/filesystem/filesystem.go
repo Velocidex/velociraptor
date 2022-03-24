@@ -156,7 +156,7 @@ func (self GlobPlugin) Call(
 		}
 
 		file_chan := globber.ExpandWithContext(
-			ctx, config_obj, root, accessor)
+			ctx, scope, config_obj, root, accessor)
 		for f := range file_chan {
 			select {
 			case <-ctx.Done():

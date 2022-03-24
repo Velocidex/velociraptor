@@ -16,6 +16,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	file_store_api "www.velocidex.com/golang/velociraptor/file_store"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 type FileStoreAccessorTestSuite struct {
@@ -51,8 +52,9 @@ func (self *FileStoreAccessorTestSuite) TestGlob() {
 	assert.NoError(self.T(), err)
 	var returned []string
 
+	scope := vql_subsystem.MakeScope()
 	output_chan := globber.ExpandWithContext(
-		self.Ctx, self.ConfigObj,
+		self.Ctx, scope, self.ConfigObj,
 		root_path, fs_accessor)
 	for row := range output_chan {
 		returned = append(returned, row.FullPath())

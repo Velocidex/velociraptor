@@ -1,0 +1,6 @@
+{
+ "Simple Path": "Windows\\System32",
+ "Simple Path Deep": "System32",
+ "Complex Pathspec": "{\"DelegateAccessor\":\"raw_ntfs\",\"Delegate\":{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"/mnt/flat\",\"Path\":\"/Windows/System32/Config/SYSTEM\"}}",
+ "Complex Pathspec Deep": "{\"DelegateAccessor\":\"raw_ntfs\",\"Delegate\":{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"/mnt/flat\",\"Path\":\"/Windows/System32/Config/SYSTEM\"},\"Path\":\"Foo\\\\Bar\"}"
+}

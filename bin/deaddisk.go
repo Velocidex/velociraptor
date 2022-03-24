@@ -36,10 +36,12 @@ var (
 		"add_windows_directory", "Add a Windows mounted directory").String()
 
 	standardRegistryMounts = []struct {
-		prefix, path string
+		prefix, path, key_path string
 	}{
-		{"HKEY_LOCAL_MACHINE\\Software", "/Windows/System32/Config/SOFTWARE"},
-		{"HKEY_LOCAL_MACHINE\\System", "/Windows/System32/Config/SYSTEM"},
+		{"HKEY_LOCAL_MACHINE\\Software", "/Windows/System32/Config/SOFTWARE", "/"},
+		{"HKEY_LOCAL_MACHINE\\System", "/Windows/System32/Config/SYSTEM", "/"},
+		{"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet",
+			"/Windows/System32/Config/SYSTEM", "/ControlSet001"},
 	}
 )
 
@@ -69,6 +71,9 @@ func addWindowsDirectory(
 	config_obj.Remappings = append(config_obj.Remappings,
 		&config_proto.RemappingConfig{
 			Type: "mount",
+			Description: fmt.Sprintf(
+				"Mount the directory %v on the C: drive (NTFS)",
+				directory_path),
 			From: &config_proto.MountPoint{
 				Accessor: "file",
 				Prefix:   directory_path,
@@ -83,6 +88,9 @@ func addWindowsDirectory(
 	config_obj.Remappings = append(config_obj.Remappings,
 		&config_proto.RemappingConfig{
 			Type: "mount",
+			Description: fmt.Sprintf(
+				"Mount the directory %v on the C: drive (FILE Accessor)",
+				directory_path),
 			From: &config_proto.MountPoint{
 				Accessor: "file",
 				Prefix:   directory_path,
@@ -97,6 +105,9 @@ func addWindowsDirectory(
 	config_obj.Remappings = append(config_obj.Remappings,
 		&config_proto.RemappingConfig{
 			Type: "mount",
+			Description: fmt.Sprintf(
+				"Mount the directory %v on the C: drive (Auto Accessor)",
+				directory_path),
 			From: &config_proto.MountPoint{
 				Accessor: "file",
 				Prefix:   directory_path,
@@ -120,13 +131,16 @@ func addWindowsDirectory(
 		config_obj.Remappings = append(config_obj.Remappings,
 			&config_proto.RemappingConfig{
 				Type: "mount",
+				Description: fmt.Sprintf(
+					"Map the %s Registry hive on %s (Prefixed at %v)",
+					hive_path, definition.prefix, definition.key_path),
 				From: &config_proto.MountPoint{
 					Accessor: "raw_reg",
 					Prefix: fmt.Sprintf(`{
-  "Path": "/",
+  "Path": %q,
   "DelegateAccessor": "file",
   "DelegatePath": %q,
-}`, hive_path),
+}`, definition.key_path, hive_path),
 					PathType: "registry",
 				},
 				On: &config_proto.MountPoint{
@@ -389,6 +403,9 @@ func addWindowsPartition(
 	config_obj.Remappings = append(config_obj.Remappings,
 		&config_proto.RemappingConfig{
 			Type: "mount",
+			Description: fmt.Sprintf(
+				"Mount the partition %v (offset %v) on the C: drive (NTFS)",
+				image, partition_start),
 			From: mount_point,
 			On: &config_proto.MountPoint{
 				Accessor: "ntfs",
@@ -402,6 +419,9 @@ func addWindowsPartition(
 	config_obj.Remappings = append(config_obj.Remappings,
 		&config_proto.RemappingConfig{
 			Type: "mount",
+			Description: fmt.Sprintf(
+				"Mount the partition %v (offset %v) on the C: drive (File Accessor)",
+				image, partition_start),
 			From: mount_point,
 			On: &config_proto.MountPoint{
 				Accessor: "file",
@@ -414,6 +434,9 @@ func addWindowsPartition(
 	config_obj.Remappings = append(config_obj.Remappings,
 		&config_proto.RemappingConfig{
 			Type: "mount",
+			Description: fmt.Sprintf(
+				"Mount the partition %v (offset %v) on the C: drive (Auto Accessor)",
+				image, partition_start),
 			From: mount_point,
 			On: &config_proto.MountPoint{
 				Accessor: "auto",
@@ -427,10 +450,13 @@ func addWindowsPartition(
 		config_obj.Remappings = append(config_obj.Remappings,
 			&config_proto.RemappingConfig{
 				Type: "mount",
+				Description: fmt.Sprintf(
+					"Map the %s Registry hive on %s (Prefixed at %v)",
+					definition.path, definition.prefix, definition.key_path),
 				From: &config_proto.MountPoint{
 					Accessor: "raw_reg",
 					Prefix: fmt.Sprintf(`{
-  "Path": "/",
+  "Path": %q,
   "DelegateAccessor": "raw_ntfs",
   "Delegate": {
     "DelegateAccessor":"offset",
@@ -441,7 +467,7 @@ func addWindowsPartition(
     },
     "Path":%q
   }
-}`, image, partition_start, definition.path),
+}`, definition.key_path, image, partition_start, definition.path),
 					PathType: "registry",
 				},
 				On: &config_proto.MountPoint{

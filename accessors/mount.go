@@ -19,6 +19,7 @@ import (
 	"sync"
 
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -128,8 +129,13 @@ func (self FileInfoWrapper) FullPath() string {
 	return self.OSPath().String()
 }
 
+func (self FileInfoWrapper) Name() string {
+	return self.OSPath().Basename()
+}
+
 func (self FileInfoWrapper) OSPath() *OSPath {
-	trimmed_path := self.FileInfo.OSPath().TrimComponents(
+	delegate_path := self.FileInfo.OSPath()
+	trimmed_path := delegate_path.TrimComponents(
 		self.remove_prefix.Components...)
 	return self.prefix.Append(trimmed_path.Components...)
 }
@@ -214,13 +220,38 @@ func (self *MountFileSystemAccessor) ReadDirWithOSPath(os_path *OSPath) (
 	}
 
 	res := make([]FileInfo, 0, len(children))
+	names := make([]string, 0, len(children))
 	for _, c := range children {
+		names = append(names, c.Name())
 		res = append(res, &FileInfoWrapper{
 			FileInfo:      c,
 			prefix:        delegate_node.path.Copy(),
 			remove_prefix: delegate_node.prefix.Copy(),
 		})
 	}
+
+	// Add any additional mounted children if needed.
+	for _, child_node := range delegate_node.children {
+		if utils.InString(names, child_node.name) {
+			continue
+		}
+
+		// The child node represents a new filesystem mounted at the
+		// current point in the mount tree. We need to request it to
+		// do a stat of the prefix within its own namespace.
+		child_stat, err := child_node.accessor.LstatWithOSPath(
+			child_node.prefix)
+		if err == nil {
+			child_name := child_stat.Name()
+			names = append(names, child_name)
+			res = append(res, &FileInfoWrapper{
+				FileInfo:      child_stat,
+				prefix:        child_node.path.Copy(),
+				remove_prefix: child_node.prefix.Copy(),
+			})
+		}
+	}
+
 	return res, nil
 }
 

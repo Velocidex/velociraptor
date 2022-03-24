@@ -25,6 +25,8 @@ import (
 func TestAccessorRawReg(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
 	scope := vql_subsystem.MakeScope()
+	scope.SetLogger(logging.NewPlainLogger(
+		config_obj, &logging.FrontendComponent))
 
 	runtest := func(scope vfilter.Scope) ([]string, error) {
 		reg_accessor, err := accessors.GetAccessor("raw_reg", scope)
@@ -48,7 +50,7 @@ func TestAccessorRawReg(t *testing.T) {
 
 		hits := []string{}
 		for hit := range globber.ExpandWithContext(
-			context.Background(), config_obj, root_path, reg_accessor) {
+			context.Background(), scope, config_obj, root_path, reg_accessor) {
 			hits = append(hits, hit.OSPath().Path())
 		}
 

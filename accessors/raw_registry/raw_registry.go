@@ -346,9 +346,25 @@ func (self *RawRegFileSystemAccessor) LstatWithOSPath(
 	full_path *accessors.OSPath) (
 	accessors.FileInfo, error) {
 
-	return &accessors.VirtualFileInfo{
-		Path: full_path,
-	}, nil
+	if len(full_path.Components) == 0 {
+		return &accessors.VirtualFileInfo{
+			Path: full_path,
+		}, nil
+	}
+
+	children, err := self.ReadDirWithOSPath(full_path.Dirname())
+	if err != nil {
+		return nil, err
+	}
+
+	name := full_path.Basename()
+	for _, child := range children {
+		if child.Name() == name {
+			return child, nil
+		}
+	}
+
+	return nil, errors.New("Key not found")
 }
 
 func init() {

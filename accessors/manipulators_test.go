@@ -104,9 +104,9 @@ var registry_testcases = []testcase{
 
 	// Support backwards compatible paths based on URLs.
 	{"/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList",
-		[]string{"SOFTWARE", "Microsoft", "Windows", "CurrentVersion", "Explorer",
+		[]string{"Software", "Microsoft", "Windows", "CurrentVersion", "Explorer",
 			"RunMRU", "MRUList"},
-		"/C:/Users/yolo/NTUSER.DAT#SOFTWARE%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList"},
+		"/C:/Users/yolo/NTUSER.DAT#Software%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList"},
 }
 
 func TestRegistryManipulators(t *testing.T) {

@@ -37,7 +37,7 @@ func TestNTFSFilesystemAccessor(t *testing.T) {
 
 	hits := []string{}
 	for hit := range globber.ExpandWithContext(
-		context.Background(), config_obj, root_path, fs_accessor) {
+		context.Background(), scope, config_obj, root_path, fs_accessor) {
 		hits = append(hits, hit.OSPath().String())
 	}
 
@@ -104,7 +104,7 @@ func TestNTFSFilesystemAccessorRemapping(t *testing.T) {
 
 	hits := []string{}
 	for hit := range globber.ExpandWithContext(
-		context.Background(), config_obj, accessors.MustNewWindowsOSPath(""),
+		context.Background(), scope, config_obj, accessors.MustNewWindowsOSPath(""),
 		mount_fs) {
 		hits = append(hits, hit.FullPath())
 	}

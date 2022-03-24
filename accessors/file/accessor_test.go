@@ -126,7 +126,8 @@ func (self *AccessorWindowsTestSuite) TestSymlinks() {
 
 	hits := []string{}
 	tmp_path, _ := accessors.NewGenericOSPath(self.tmpdir)
-	for hit := range globber.ExpandWithContext(context.Background(),
+	for hit := range globber.ExpandWithContext(
+		context.Background(), scope,
 		config_obj, tmp_path, accessor) {
 		hits = append(hits, strings.ReplaceAll(
 			strings.TrimPrefix(hit.FullPath(), self.tmpdir), "\\", "/"))

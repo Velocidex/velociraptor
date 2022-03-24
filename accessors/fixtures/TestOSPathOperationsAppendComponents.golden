@@ -1,0 +1,4 @@
+{
+ "Simple Path": "C:\\Windows\\System32\\notepad.exe",
+ "Complex Pathspec": "{\"DelegateAccessor\":\"raw_ntfs\",\"Delegate\":{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"/mnt/flat\",\"Path\":\"/Windows/System32/Config/SYSTEM\"},\"Path\":\"ControlSet001\\\\Foo\\\\Bar\"}"
+}
