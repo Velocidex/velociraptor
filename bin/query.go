@@ -245,7 +245,8 @@ func doRemoteQuery(
 	return nil
 }
 
-func startEssentialServices(config_obj *config_proto.Config) (
+func startEssentialServices(
+	config_obj *config_proto.Config) (
 	*services.Service, error) {
 
 	sm := services.NewServiceManager(context.Background(), config_obj)
@@ -339,7 +340,7 @@ func doQuery() error {
 
 	}
 
-	ctx, cancel := context.WithCancel(InstallSignalHandler(scope))
+	ctx, cancel := InstallSignalHandler(sm.Ctx, scope)
 	defer cancel()
 
 	if *query_command_collect_timeout > 0 {

@@ -134,7 +134,8 @@ func (self CollectPlugin) Call(
 
 		// Create the output container
 		if arg.Output != "" {
-			container, closer, err = makeContainer(config_obj, scope, repository, arg)
+			container, closer, err = makeContainer(ctx,
+				config_obj, scope, repository, arg)
 			if err != nil {
 				scope.Log("collect: %v", err)
 				return
@@ -272,6 +273,7 @@ func (self CollectPlugin) Call(
 // Creates a container to write the results on. Results are completed
 // when container is closed.
 func makeContainer(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
 	repository services.Repository,
@@ -330,7 +332,8 @@ func makeContainer(
 			}
 			defer fd.Close()
 
-			err = produceReport(config_obj, archive,
+			err = produceReport(ctx,
+				config_obj, archive,
 				arg.Template,
 				repository, fd,
 				definitions,

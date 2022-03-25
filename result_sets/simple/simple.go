@@ -329,7 +329,7 @@ func (self *ResultSetReaderImpl) Rows(ctx context.Context) <-chan *ordereddict.D
 	return output
 }
 
-// Only used in tests - not safe for generate use.
+// Only used in tests - not safe for general use.
 func (self *ResultSetReaderImpl) GetAllResults() []*ordereddict.Dict {
 	result := []*ordereddict.Dict{}
 	for row := range self.Rows(context.Background()) {

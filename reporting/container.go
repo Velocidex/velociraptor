@@ -32,6 +32,19 @@ import (
 	concurrent_zip "github.com/Velocidex/zip"
 )
 
+type MemberWriter struct {
+	io.WriteCloser
+	writer_wg *sync.WaitGroup
+}
+
+// Keep track of all members that are closed to allow the zip to be
+// written properly.
+func (self *MemberWriter) Close() error {
+	err := self.WriteCloser.Close()
+	self.writer_wg.Done()
+	return err
+}
+
 type Container struct {
 	config_obj *config_proto.Config
 
@@ -53,11 +66,15 @@ type Container struct {
 	delegate_fd  io.Writer
 
 	// manage orderly shutdown of the container.
-	mu     sync.Mutex
-	closed bool
+	mu sync.Mutex
+
+	// Keep track of all writers so we can safely close the container.
+	writer_wg sync.WaitGroup
+	closed    bool
 }
 
 func (self *Container) Create(name string, mtime time.Time) (io.WriteCloser, error) {
+	self.writer_wg.Add(1)
 	header := &concurrent_zip.FileHeader{
 		Name:     name,
 		Method:   concurrent_zip.Deflate,
@@ -68,7 +85,15 @@ func (self *Container) Create(name string, mtime time.Time) (io.WriteCloser, err
 		header.Method = concurrent_zip.Store
 	}
 
-	return self.zip.CreateHeader(header)
+	writer, err := self.zip.CreateHeader(header)
+	if err != nil {
+		return nil, err
+	}
+
+	return &MemberWriter{
+		WriteCloser: writer,
+		writer_wg:   &self.writer_wg,
+	}, nil
 }
 
 func (self *Container) StoreArtifact(
@@ -134,19 +159,25 @@ func (self *Container) StoreArtifact(
 	// Store as line delimited JSON
 	marshaler := vql_subsystem.MarshalJsonl(scope)
 	for row := range vql.Eval(ctx, scope) {
-		// Re-serialize it as compact json.
-		serialized, err := marshaler([]vfilter.Row{row})
-		if err != nil {
-			continue
-		}
+		select {
+		case <-ctx.Done():
+			return
 
-		_, err = fd.Write(serialized)
-		if err != nil {
-			return errors.WithStack(err)
-		}
+		default:
+			// Re-serialize it as compact json.
+			serialized, err := marshaler([]vfilter.Row{row})
+			if err != nil {
+				continue
+			}
 
-		if csv_writer != nil {
-			csv_writer.Write(row)
+			_, err = fd.Write(serialized)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			if csv_writer != nil {
+				csv_writer.Write(row)
+			}
 		}
 	}
 
@@ -336,6 +367,10 @@ func (self *Container) Close() error {
 		return nil
 	}
 	self.closed = true
+
+	// Wait for all outstanding writers to finish before we close the
+	// zip file.
+	self.writer_wg.Wait()
 
 	self.zip.Close()
 

@@ -39,6 +39,7 @@ func getHTMLTemplate(
 
 // Produce a collector report.
 func produceReport(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	archive *reporting.Archive,
 	template string,
@@ -83,7 +84,7 @@ func produceReport(
 			// stand along HTML file - artifacts may
 			// generate arbitrary HTML.
 			template_engine, err := reporting.NewHTMLTemplateEngine(
-				config_obj, context.Background(), subscope,
+				config_obj, ctx, subscope,
 				vql_subsystem.NullACLManager{}, repository,
 				definition.Name, false /* sanitize_html */)
 			if err != nil {
@@ -108,7 +109,7 @@ func produceReport(
 	}
 
 	template_engine, err := reporting.NewHTMLTemplateEngine(
-		config_obj, context.Background(), subscope,
+		config_obj, ctx, subscope,
 		vql_subsystem.NullACLManager{}, repository,
 		template, false /* sanitize_html */)
 	if err != nil {

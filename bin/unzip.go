@@ -146,7 +146,8 @@ func getAllStats(query string, builder services.ScopeBuilder) (
 		return nil, fmt.Errorf("Unable to parse VQL Query: %w", err)
 	}
 
-	ctx := InstallSignalHandler(scope)
+	ctx, cancel := InstallSignalHandler(nil, scope)
+	defer cancel()
 
 	result := []*ordereddict.Dict{}
 	for row := range vql.Eval(ctx, scope) {
@@ -172,7 +173,8 @@ func runQueryWithEnv(query string, builder services.ScopeBuilder) error {
 		return fmt.Errorf("Unable to parse VQL Query: %w", err)
 	}
 
-	ctx := InstallSignalHandler(scope)
+	ctx, cancel := InstallSignalHandler(nil, scope)
+	defer cancel()
 
 	for _, vql := range vqls {
 		scope.Log("Running query %v", query)
