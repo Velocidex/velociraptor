@@ -18,19 +18,23 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/executor"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/startup"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -104,6 +108,9 @@ var (
 
 	artifact_command_collect_args = artifact_command_collect.Flag(
 		"args", "Artifact args.").Strings()
+
+	artifact_command_collect_hardmemory = artifact_command_collect.Flag(
+		"hard_memory_limit", "If we reach this memory limit in bytes we exit.").Uint64()
 )
 
 func listArtifactsHint() []string {
@@ -158,11 +165,26 @@ func doArtifactCollect() error {
 		return fmt.Errorf("Unable to create config: %w", err)
 	}
 
-	sm, err := startEssentialServices(config_obj)
-	if err != nil {
-		return fmt.Errorf("Start Essential Services: %w", err)
-	}
+	top_ctx, top_cancel := install_sig_handler()
+	defer top_cancel()
+
+	ctx, cancel := context.WithCancel(top_ctx)
+	defer cancel()
+
+	sm := services.NewServiceManager(ctx, config_obj)
 	defer sm.Close()
+
+	err = startup.StartupEssentialServices(sm)
+	if err != nil {
+		return err
+	}
+
+	// Load any artifacts defined in the config file after all the
+	// services are up.
+	err = load_config_artifacts(config_obj)
+	if err != nil {
+		return err
+	}
 
 	spec := ordereddict.NewDict()
 	for _, name := range *artifact_command_collect_names {
@@ -197,10 +219,12 @@ func doArtifactCollect() error {
 		return err
 	}
 
+	logger := log.New(&LogWriter{config_obj}, " ", 0)
+
 	scope := manager.BuildScope(services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, " ", 0),
+		Logger:     logger,
 		Env: ordereddict.NewDict().
 			Set("Artifacts", *artifact_command_collect_names).
 			Set("Output", *artifact_command_collect_output).
@@ -215,6 +239,28 @@ func doArtifactCollect() error {
 			Set("CpuLimit", *artifact_command_collect_cpu_limit),
 	})
 	defer scope.Close()
+
+	// Stick around until the query completes so it gets a chance to
+	// close the collection zip.
+	sm.Wg.Add(1)
+	scope.AddDestructor(func() {
+		sm.Wg.Done()
+	})
+
+	if *artifact_command_collect_hardmemory > 0 {
+		scope.Log("Installing hard memory limit of %v bytes",
+			*artifact_command_collect_hardmemory)
+		Nanny := &executor.NannyService{
+			MaxMemoryHardLimit: *artifact_command_collect_hardmemory,
+			Logger: logging.GetLogger(
+				config_obj, &logging.ToolComponent),
+			OnExit: cancel,
+		}
+
+		// Keep the nanny running after the query is done so it can
+		// hard kill the process if cancellation is not enough.
+		Nanny.Start(top_ctx, &sync.WaitGroup{})
+	}
 
 	_, err = getRepository(config_obj)
 	if err != nil {
@@ -240,8 +286,9 @@ func doArtifactCollect() error {
                         timeout=Timeout, progress_timeout=ProgressTimeout,
                         cpu_limit=CpuLimit,
                         password=Password, args=Args, format=Format)`
-	return eval_local_query(config_obj, *artifact_command_collect_format,
-		query, scope)
+	return eval_local_query(
+		ctx, config_obj,
+		*artifact_command_collect_format, query, scope)
 }
 
 func getFilterRegEx(pattern string) (*regexp.Regexp, error) {

@@ -18,6 +18,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -74,7 +75,9 @@ var (
 )
 
 func eval_query(
-	config_obj *config_proto.Config, format, query string, scope vfilter.Scope,
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	format, query string, scope vfilter.Scope,
 	env *ordereddict.Dict) error {
 	if config_obj.ApiConfig != nil && config_obj.ApiConfig.Name != "" {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
@@ -82,10 +85,11 @@ func eval_query(
 		return doRemoteQuery(config_obj, format, []string{query}, env)
 	}
 
-	return eval_local_query(config_obj, *fs_command_format, query, scope)
+	return eval_local_query(ctx, config_obj, *fs_command_format, query, scope)
 }
 
 func eval_local_query(
+	top_ctx context.Context,
 	config_obj *config_proto.Config, format string,
 	query string, scope vfilter.Scope) error {
 
@@ -94,7 +98,8 @@ func eval_local_query(
 		return fmt.Errorf("Unable to parse VQL Query: %w", err)
 	}
 
-	ctx := InstallSignalHandler(scope)
+	ctx, cancel := InstallSignalHandler(top_ctx, scope)
+	defer cancel()
 
 	for _, vql := range vqls {
 		switch format {
@@ -167,7 +172,8 @@ func doLS(path, accessor string) error {
 		query += " WHERE Sys.name_type != 'DOS' "
 	}
 
-	return eval_query(config_obj, *fs_command_format, query, scope, builder.Env)
+	return eval_query(sm.Ctx, config_obj,
+		*fs_command_format, query, scope, builder.Env)
 }
 
 func doRM(path, accessor string) error {
@@ -216,7 +222,8 @@ func doRM(path, accessor string) error {
 		"file_store_delete(path=FullPath) AS Deletion " +
 		"FROM glob(globs=path, accessor=accessor) "
 
-	return eval_query(config_obj, *fs_command_format, query, scope, builder.Env)
+	return eval_query(sm.Ctx,
+		config_obj, *fs_command_format, query, scope, builder.Env)
 }
 
 func doCp(path, accessor string, dump_dir string) error {
@@ -292,7 +299,7 @@ func doCp(path, accessor string, dump_dir string) error {
 	scope.Log("Copy from %v (%v) to %v (%v)",
 		path, accessor, output_path, output_accessor)
 
-	return eval_query(config_obj, *fs_command_format, `
+	return eval_query(sm.Ctx, config_obj, *fs_command_format, `
 SELECT * from foreach(
   row={
     SELECT Name, Size, Mode.String AS Mode,

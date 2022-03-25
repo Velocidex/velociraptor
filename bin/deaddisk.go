@@ -181,7 +181,8 @@ FROM Artifact.Windows.Forensics.PartitionTable(ImagePath=ImagePath)
 		return fmt.Errorf("Unable to parse VQL Query: %w", err)
 	}
 
-	ctx := InstallSignalHandler(scope)
+	ctx, cancel := InstallSignalHandler(nil, scope)
+	defer cancel()
 
 	for _, vql := range vqls {
 		for row := range vql.Eval(ctx, scope) {

@@ -32,7 +32,8 @@ import (
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
-func InstallSignalHandler(scope vfilter.Scope) context.Context {
+func InstallSignalHandler(
+	top_ctx context.Context, scope vfilter.Scope) (context.Context, func()) {
 
 	// Wait for signal. When signal is received we shut down the
 	// server.
@@ -42,20 +43,27 @@ func InstallSignalHandler(scope vfilter.Scope) context.Context {
 		syscall.SIGTERM,
 		syscall.SIGQUIT)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		// Wait for the signal on this channel.
-		<-quit
-		scope.Log("Shutting down due to interrupt.")
+	if top_ctx == nil {
+		top_ctx = context.Background()
+	}
 
-		scope.Close()
-		// Only cancel the context once the scope is fully
-		// destroyed. This ensures all the destructors have
-		// enougb time to finish when we exit the program
-		cancel()
+	subctx, cancel := context.WithCancel(top_ctx)
+	go func() {
+		select {
+		// Wait for the signal on this channel.
+		case <-quit:
+			scope.Log("Shutting down due to interrupt.")
+
+			scope.Close()
+			// Only cancel the context once the scope is fully
+			// destroyed. This ensures all the destructors have
+			// enougb time to finish when we exit the program
+			cancel()
+		case <-subctx.Done():
+		}
 	}()
 
-	return ctx
+	return subctx, cancel
 }
 
 // Turns os.Stdout into into file_store.WriteSeekCloser

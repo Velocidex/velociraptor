@@ -61,7 +61,8 @@ func doCSV() error {
 		return err
 	}
 
-	ctx := InstallSignalHandler(scope)
+	ctx, cancel := InstallSignalHandler(sm.Ctx, scope)
+	defer cancel()
 
 	switch *csv_format {
 	case "text":
