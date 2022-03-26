@@ -52,10 +52,10 @@ Velociraptor is also useful as a local triage tool. You can create a self contai
 ## Building from source
 
 To build from source, make sure you have a recent Golang installed
-from https://golang.org/dl/ (Currently at least Go 1.14) and the go
-binary is on your path. In addition make sure the GOBIN directory is
-also on your path (Defaults are: on linux and mac `~/go/bin`, on
-Windows `c:\\Users\\<username>\\go\\bin`) :
+from https://golang.org/dl/ (Currently Go 1.17) and the go binary is
+on your path. In addition make sure the GOBIN directory is also on
+your path (Defaults are: on linux and mac `~/go/bin`, on Windows
+`c:\\Users\\<username>\\go\\bin`):
 
 ```bash
     $ git clone https://github.com/Velocidex/velociraptor.git
@@ -79,6 +79,12 @@ Windows `c:\\Users\\<username>\\go\\bin`) :
     # To build production binaries
     $ make linux
     $ make windows
+```
+
+In order to build Windows binaries on Linux you need the mingw
+tools. On Ubuntu this is simply:
+```bash
+$ sudo apt-get install mingw-w64-x86-64-dev gcc-mingw-w64-x86-64 gcc-mingw-w64
 ```
 
 ## Getting the latest version
@@ -129,6 +135,13 @@ capabilities to collect many types of data from endpoints.
 Velociraptor comes with many built in `Artifacts` for the most common
 use cases. The community also maintains a large number of additional
 artifacts through the [Artifact Exchange](https://docs.velociraptor.app/exchange/).
+
+## Knowledge Base
+
+If you need help performing a task such as deployment, VQL queries
+etc. Your first port of call should be the Velociraptor Knowledge Base
+at https://docs.velociraptor.app/knowledge_base/ where you will find
+helpful tips and hints.
 
 ## Getting help
 

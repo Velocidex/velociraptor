@@ -615,6 +615,10 @@ message FrontendConfig {
     // Load artifacts from this directory at startup
     string artifact_definitions_directory = 32;
 
+    // A regular expression that if matches any log messages from the
+    // client's query represent a failure of the collection.
+    string collection_error_regex = 35;
+
     // DEPRECATED - ignored.
     bool do_not_redirect = 26;
 }

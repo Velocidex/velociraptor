@@ -30,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 )
@@ -118,6 +119,12 @@ func runClientOnce(
 
 	// Start the nanny first so we are covered from here on.
 	err = sm.Start(executor.StartNannyService)
+	if err != nil {
+		return err
+	}
+
+	// Start the repository manager before we can handle any VQL
+	err = sm.Start(repository.StartRepositoryManager)
 	if err != nil {
 		return err
 	}

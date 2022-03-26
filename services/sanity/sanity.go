@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -68,6 +69,14 @@ func (self *SanityChecks) Check(
 			config_obj.Frontend.DynDns != nil &&
 			config_obj.Frontend.DynDns.Hostname != "" {
 			config_obj.Frontend.Hostname = config_obj.Frontend.DynDns.Hostname
+		}
+
+		if config_obj.Frontend.CollectionErrorRegex != "" {
+			_, err := regexp.Compile(config_obj.Frontend.CollectionErrorRegex)
+			if err != nil {
+				return fmt.Errorf(
+					"Frontend.collection_error_regex is invalid: %w", err)
+			}
 		}
 	}
 

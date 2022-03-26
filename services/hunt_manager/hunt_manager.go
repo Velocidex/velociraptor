@@ -158,6 +158,12 @@ func (self *HuntManager) ProcessMutation(
 		return err
 	}
 
+	return self.processMutation(mutation)
+}
+
+func (self *HuntManager) processMutation(
+	mutation *api_proto.HuntMutation) error {
+
 	dispatcher := services.GetHuntDispatcher()
 	if dispatcher == nil {
 		return errors.New("Hunt Dispatcher not ready")
@@ -188,6 +194,13 @@ func (self *HuntManager) ProcessMutation(
 			if mutation.Stats.TotalClientsWithResults > 0 {
 				hunt_obj.Stats.TotalClientsWithResults +=
 					mutation.Stats.TotalClientsWithResults
+
+				modification = services.HuntFlushToDatastoreAsync
+			}
+
+			if mutation.Stats.TotalClientsWithErrors > 0 {
+				hunt_obj.Stats.TotalClientsWithErrors +=
+					mutation.Stats.TotalClientsWithErrors
 
 				modification = services.HuntFlushToDatastoreAsync
 			}
@@ -343,14 +356,19 @@ func (self *HuntManager) ProcessFlowCompletion(
 		Stats:  &api_proto.HuntStats{},
 	}
 
-	if flow.State == flows_proto.ArtifactCollectorContext_FINISHED {
+	if len(flow.ArtifactsWithResults) > 0 {
 		mutation.Stats.TotalClientsWithResults = 1
-	} else {
+	}
+
+	if flow.State == flows_proto.ArtifactCollectorContext_ERROR {
 		mutation.Stats.TotalClientsWithErrors = 1
 	}
 
-	dispatcher := services.GetHuntDispatcher()
-	err = dispatcher.MutateHunt(config_obj, mutation)
+	// The minion hunt dispatcher does not actually care about flow
+	// status, so we dont bother broadcasting a mutation for them. We
+	// only need to update the local hunt dispatcher on the master
+	// node which will flush to disk eventually.
+	err = self.processMutation(mutation)
 	if err != nil {
 		return err
 	}
