@@ -124,9 +124,12 @@ func runClientOnce(
 	}
 
 	// Start the repository manager before we can handle any VQL
-	err = sm.Start(repository.StartRepositoryManager)
-	if err != nil {
-		return err
+	repo_manager, _ := services.GetRepositoryManager()
+	if repo_manager == nil {
+		err = sm.Start(repository.StartRepositoryManager)
+		if err != nil {
+			return err
+		}
 	}
 
 	exe, err := executor.NewClientExecutor(ctx, config_obj)

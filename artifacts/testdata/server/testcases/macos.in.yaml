@@ -1,0 +1,4 @@
+Queries:
+  - SELECT OSPath.Basename, Content.home
+    FROM Artifact.MacOS.System.Plist(
+       PlistGlob=srcDir+"/artifacts/testdata/files/vag*.plist")
