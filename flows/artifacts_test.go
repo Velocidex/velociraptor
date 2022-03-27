@@ -5,6 +5,7 @@ import (
 	"context"
 	"os/exec"
 	"runtime"
+	"sync"
 	"testing"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -21,8 +23,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
 	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
@@ -429,6 +433,246 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 
 	uploaded_size, _ = event_rows[0].GetInt64("UploadedSize")
 	assert.Equal(self.T(), uploaded_size, int64(12))
+}
+
+// Just a normal collection with error log - receive some rows and an
+// ok status but an error log. An error does not stop the server from
+// receiving more rows - all an error does is mark the collection as
+// errored.
+func (self *TestSuite) TestCollectionCompletionErrorLogWithOkStatus() {
+	flow := self.testCollectionCompletion(1, []*crypto_proto.VeloMessage{
+		{
+			SessionId: self.flow_id,
+			RequestId: 1,
+			LogMessage: &crypto_proto.LogMessage{
+				Message: "Error: This is an error",
+			},
+		},
+		{
+			SessionId: self.flow_id,
+			RequestId: 1,
+			VQLResponse: &actions_proto.VQLResponse{
+				JSONLResponse: "{}",
+				TotalRows:     1,
+				Query: &actions_proto.VQLRequest{
+					Name: "Generic.Client.Info/BasicInformation",
+				},
+			},
+		},
+		{
+			SessionId: self.flow_id,
+			RequestId: 1,
+			Status: &crypto_proto.GrrStatus{
+				Status:   crypto_proto.GrrStatus_OK,
+				Duration: 100,
+			},
+		},
+	})
+
+	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR, flow.State)
+	assert.Contains(self.T(), flow.Status, "Error:")
+	assert.Equal(self.T(), uint64(1), flow.TotalCollectedRows)
+	assert.Equal(self.T(), []string{"Generic.Client.Info/BasicInformation"},
+		flow.ArtifactsWithResults)
+
+	// Records the correct execution duration.
+	assert.Equal(self.T(), int64(100), flow.ExecutionDuration)
+}
+
+// Just a normal collection - receive some rows and an ok status
+func (self *TestSuite) TestCollectionCompletionOkStatus() {
+	flow := self.testCollectionCompletion(1, []*crypto_proto.VeloMessage{
+		{
+			SessionId: self.flow_id,
+			RequestId: 1,
+			VQLResponse: &actions_proto.VQLResponse{
+				JSONLResponse: "{}",
+				TotalRows:     1,
+				Query: &actions_proto.VQLRequest{
+					Name: "Generic.Client.Info/BasicInformation",
+				},
+			},
+		},
+		{
+			SessionId: self.flow_id,
+			RequestId: 1,
+			Status: &crypto_proto.GrrStatus{
+				Status:   crypto_proto.GrrStatus_OK,
+				Duration: 100,
+			},
+		},
+	})
+
+	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED,
+		flow.State)
+
+	// Records the correct execution duration.
+	assert.Equal(self.T(), int64(100), flow.ExecutionDuration)
+	assert.Equal(self.T(), uint64(1), flow.TotalCollectedRows)
+	assert.Equal(self.T(), []string{"Generic.Client.Info/BasicInformation"},
+		flow.ArtifactsWithResults)
+}
+
+// Emulate an artifact with 2 sources - both responses come one after
+// the other but second query failed - this means the entire
+// collection is failed but we get all the results.
+func (self *TestSuite) TestCollectionCompletionSuccessFollowedByErrLog() {
+	flow := self.testCollectionCompletion(2,
+		[]*crypto_proto.VeloMessage{
+			{
+				SessionId: self.flow_id,
+				RequestId: 1,
+				VQLResponse: &actions_proto.VQLResponse{
+					JSONLResponse: "{}",
+					TotalRows:     1,
+					Query: &actions_proto.VQLRequest{
+						Name: "Generic.Client.Info/BasicInformation",
+					},
+				},
+			},
+			{
+				SessionId: self.flow_id,
+				RequestId: 1,
+				Status: &crypto_proto.GrrStatus{
+					Status:   crypto_proto.GrrStatus_OK,
+					Duration: 100,
+				},
+			},
+			{
+				SessionId: self.flow_id,
+				RequestId: 1,
+				VQLResponse: &actions_proto.VQLResponse{
+					JSONLResponse: "{}",
+					TotalRows:     1,
+					Query: &actions_proto.VQLRequest{
+						Name: "Generic.Client.Info/Users",
+					},
+				},
+			},
+			{
+				SessionId: self.flow_id,
+				RequestId: 1,
+				LogMessage: &crypto_proto.LogMessage{
+					Message: "Error: This is an error",
+				},
+			},
+			{
+				SessionId: self.flow_id,
+				RequestId: 1,
+				Status: &crypto_proto.GrrStatus{
+					Status:   crypto_proto.GrrStatus_OK,
+					Duration: 200,
+				},
+			},
+		})
+
+	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR, flow.State)
+	assert.Contains(self.T(), flow.Status, "Error:")
+	assert.Equal(self.T(), uint64(2), flow.TotalCollectedRows)
+	assert.Equal(self.T(), []string{
+		"Generic.Client.Info/BasicInformation",
+		"Generic.Client.Info/Users",
+	}, flow.ArtifactsWithResults)
+
+	// Records the correct execution duration.
+	assert.Equal(self.T(), int64(300), flow.ExecutionDuration)
+}
+
+// Emulate an artifact with 2 sources - a single response arrives with
+// error - error flow is sent immediately before second response
+// arrives.
+func (self *TestSuite) TestCollectionCompletionTwoSourcesIncomplete() {
+	flow := self.testCollectionCompletion(2,
+		[]*crypto_proto.VeloMessage{
+			{
+				SessionId: self.flow_id,
+				RequestId: 1,
+				VQLResponse: &actions_proto.VQLResponse{
+					JSONLResponse: "{}",
+					TotalRows:     1,
+					Query: &actions_proto.VQLRequest{
+						Name: "Generic.Client.Info/BasicInformation",
+					},
+				},
+			},
+			{
+				SessionId: self.flow_id,
+				RequestId: 1,
+				Status: &crypto_proto.GrrStatus{
+					Status:   crypto_proto.GrrStatus_GENERIC_ERROR,
+					Duration: 100,
+				},
+			},
+		})
+
+	// Collection is still running
+	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR, flow.State)
+	assert.Equal(self.T(), uint64(1), flow.TotalCollectedRows)
+	assert.Equal(self.T(), []string{
+		"Generic.Client.Info/BasicInformation",
+	}, flow.ArtifactsWithResults)
+
+	// Records the correct execution duration.
+	assert.Equal(self.T(), int64(100), flow.ExecutionDuration)
+}
+
+func (self *TestSuite) testCollectionCompletion(
+	outstanding_requests int64,
+	requests []*crypto_proto.VeloMessage) *flows_proto.ArtifactCollectorContext {
+	// Get a new collection context.
+	collection_context := NewCollectionContext(self.ConfigObj)
+	collection_context.ArtifactCollectorContext = flows_proto.ArtifactCollectorContext{
+		SessionId:           self.flow_id,
+		ClientId:            self.client_id,
+		State:               flows_proto.ArtifactCollectorContext_RUNNING,
+		OutstandingRequests: outstanding_requests,
+		Request: &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"Generic.Client.Info"},
+		},
+	}
+
+	runner := NewFlowRunner(self.ConfigObj)
+	runner.context_map[self.flow_id] = collection_context
+
+	wg := &sync.WaitGroup{}
+	mu := &sync.Mutex{}
+	rows := []*ordereddict.Dict{}
+
+	err := journal.WatchQueueWithCB(self.Ctx, self.ConfigObj, wg,
+		"System.Flow.Completion", func(ctx context.Context,
+			config_obj *config_proto.Config,
+			row *ordereddict.Dict) error {
+			mu.Lock()
+			defer mu.Unlock()
+
+			rows = append(rows, row)
+			return nil
+		})
+	assert.NoError(self.T(), err)
+
+	// Emulate sending an error log followed by a success status. This
+	// should still be detected as an error and the flow should be
+	// marked as errored.
+	for _, resp := range requests {
+		runner.ProcessSingleMessage(self.Ctx, resp)
+	}
+
+	runner.Close()
+
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
+		return len(rows) > 0
+	})
+
+	flow_any, pres := rows[0].Get("Flow")
+	assert.True(self.T(), pres)
+
+	flow, ok := flow_any.(*flows_proto.ArtifactCollectorContext)
+	assert.True(self.T(), ok)
+
+	return flow
 }
 
 func (self *TestSuite) TestClientUploaderStoreSparseFile() {

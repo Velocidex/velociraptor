@@ -489,13 +489,21 @@
     description: Compression level between 0 (no compression) and 9.
   - name: ops_per_sec
     type: int64
-    description: Rate limiting for collections.
+    description: Rate limiting for collections (deprecated).
   - name: cpu_limit
     type: float64
     description: Set query cpu_limit value
   - name: iops_limit
     type: float64
     description: Set query iops_limit value
+  - name: progress_timeout
+    type: float64
+    description: If no progress is detected in this many seconds, we terminate the
+      query and output debugging information
+  - name: timeout
+    type: float64
+    description: Total amount of time in seconds, this collection will take. Collection
+      is cancelled when timeout is exceeded.
   category: plugin
 - name: collect_client
   description: |
@@ -1786,8 +1794,9 @@
     type: string
     description: The accessor to use
   - name: hashselect
-    type: []string
+    type: string
     description: The hash function to use (MD5,SHA1,SHA256)
+    repeated: true
   category: plugin
 - name: http_client
   description: |
@@ -2120,9 +2129,9 @@
     type: Any
     required: true
   - name: then
-    type: LazyExpr
+    type: types.LazyAny
   - name: else
-    type: LazyExpr
+    type: types.LazyAny
   category: basic
 - name: if
   description: |
@@ -3807,6 +3816,13 @@
   - name: cpu_limit
     type: float64
     description: Average CPU usage in percent of a core.
+  - name: iops_limit
+    type: float64
+    description: Average IOPs to target.
+  - name: progress_timeout
+    type: float64
+    description: If no progress is detected in this many seconds, we terminate the
+      query and output debugging information
 - name: rand
   description: Selects a random number.
   type: Function
@@ -4405,6 +4421,10 @@
   - name: skip_verify
     type: bool
     description: 'Skip SSL verification(default: False).'
+  - name: root_ca
+    type: string
+    description: As a better alternative to disable_ssl_security, allows root ca certs
+      to be added here.
   - name: wait_time
     type: int64
     description: Batch splunk upload this long (2 sec).
@@ -5471,3 +5491,4 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
+

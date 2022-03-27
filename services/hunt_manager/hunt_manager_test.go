@@ -688,6 +688,66 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 	assert.True(self.T(), h.Stats.Stopped)
 }
 
+// Make sure the hunt manager updates total error count
+func (self *HuntTestSuite) TestHuntManagerErrors() {
+	hunt_obj := &api_proto.Hunt{
+		HuntId:       self.hunt_id,
+		StartRequest: self.expected,
+		State:        api_proto.Hunt_RUNNING,
+		Stats:        &api_proto.HuntStats{},
+		Expires:      uint64(time.Now().Add(7*24*time.Hour).UTC().UnixNano() / 1000),
+	}
+
+	db, err := datastore.GetDB(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
+	err = db.SetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
+	assert.NoError(self.T(), err)
+
+	dispatcher := services.GetHuntDispatcher()
+	dispatcher.Refresh(self.ConfigObj)
+
+	// Schedule a new hunt on this client if we receive a
+	// participation event.
+	journal, err := services.GetJournal()
+	assert.NoError(self.T(), err)
+
+	assert.NoError(self.T(), journal.PushRowsToArtifact(self.ConfigObj,
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("HuntId", hunt_obj.HuntId).
+			Set("ClientId", self.client_id),
+		}, "System.Hunt.Participation", self.client_id, ""))
+
+	// This will schedule a hunt on this client.
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		h, _ := dispatcher.GetHunt(hunt_obj.HuntId)
+		return h.Stats.TotalClientsScheduled == 1
+	})
+
+	// Send an error response - collection failed.
+	flow_obj := &flows_proto.ArtifactCollectorContext{
+		Request:              proto.Clone(hunt_obj.StartRequest).(*flows_proto.ArtifactCollectorArgs),
+		ArtifactsWithResults: hunt_obj.StartRequest.Artifacts,
+		State:                flows_proto.ArtifactCollectorContext_ERROR,
+	}
+
+	assert.NoError(self.T(), journal.PushRowsToArtifact(self.ConfigObj,
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("Timestamp", time.Now().UTC().Unix()).
+			Set("Flow", flow_obj).
+			Set("ClientId", self.client_id),
+		}, "System.Flow.Completion", self.client_id, ""))
+
+	// Both TotalClientsWithResults and TotalClientsWithErrors should
+	// increase.
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		h, _ := dispatcher.GetHunt(hunt_obj.HuntId)
+		return h.Stats.TotalClientsWithResults == 1 &&
+			h.Stats.TotalClientsWithErrors == 1
+	})
+}
+
 func TestHuntTestSuite(t *testing.T) {
 	suite.Run(t, &HuntTestSuite{
 		client_id: "C.234",

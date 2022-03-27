@@ -22,7 +22,7 @@ func MonitoringProcessMessage(
 	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
 
-	err := FailIfError(config_obj, collection_context, message)
+	err := CheckForStatus(config_obj, collection_context, message)
 	if err != nil {
 		return err
 	}

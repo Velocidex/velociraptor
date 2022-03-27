@@ -260,48 +260,6 @@ func closeContext(
 		collection_context, collection_context.completer.GetCompletionFunc())
 }
 
-// Flush the logs to disk. During execution the flow collects the logs
-// in memory and then flushes it all when done.
-func flushContextLogs(
-	config_obj *config_proto.Config,
-	collection_context *CollectionContext,
-	completion *utils.Completer) error {
-
-	// Handle monitoring flow specially.
-	if collection_context.SessionId == constants.MONITORING_WELL_KNOWN_FLOW {
-		return flushContextLogsMonitoring(config_obj, collection_context)
-	}
-
-	flow_path_manager := paths.NewFlowPathManager(
-		collection_context.ClientId,
-		collection_context.SessionId).Log()
-
-	// Append logs to messages from previous packets.
-	file_store_factory := file_store.GetFileStore(config_obj)
-	rs_writer, err := result_sets.NewResultSetWriter(
-		file_store_factory, flow_path_manager,
-		nil, /* opts */
-		completion.GetCompletionFunc(),
-		false /* truncate */)
-	if err != nil {
-		return err
-	}
-	defer rs_writer.Close()
-
-	for _, row := range collection_context.Logs {
-		collection_context.TotalLogs++
-		rs_writer.Write(ordereddict.NewDict().
-			Set("_ts", int(time.Now().Unix())).
-			Set("client_time", int64(row.Timestamp)/1000000).
-			Set("level", row.Level).
-			Set("message", row.Message))
-	}
-
-	// Clear the logs from the flow object.
-	collection_context.Logs = nil
-	return nil
-}
-
 func flushContextUploadedFiles(
 	config_obj *config_proto.Config,
 	collection_context *CollectionContext,
@@ -377,7 +335,7 @@ func ArtifactCollectorProcessOneMessage(
 	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
 
-	err := FailIfError(config_obj, collection_context, message)
+	err := CheckForStatus(config_obj, collection_context, message)
 	if err != nil {
 		return err
 	}
@@ -400,16 +358,6 @@ func ArtifactCollectorProcessOneMessage(
 			config_obj, collection_context, message)
 
 	case constants.ProcessVQLResponses:
-		completed, err := IsRequestComplete(
-			config_obj, collection_context, message)
-		if err != nil {
-			return err
-		}
-
-		if completed {
-			return nil
-		}
-
 		response := message.VQLResponse
 		if response == nil || response.Query == nil {
 			return errors.New("Expected args of type VQLResponse")
@@ -521,7 +469,7 @@ func IsRequestComplete(
 	return true, nil
 }
 
-func FailIfError(
+func CheckForStatus(
 	config_obj *config_proto.Config,
 	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
@@ -531,27 +479,37 @@ func FailIfError(
 		return nil
 	}
 
-	// If the status is OK then we do not fail the flow.
-	if message.Status.Status == crypto_proto.GrrStatus_OK {
-		return nil
-	}
-
 	if collection_context == nil || collection_context.Request == nil {
 		return errors.New("Invalid collection context")
 	}
 
-	// Only terminate a running flows.
-	if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
-		return errors.New(message.Status.ErrorMessage)
+	// Only record the first error.
+	if message.Status.Status != crypto_proto.GrrStatus_OK &&
+		(collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING ||
+			collection_context.State == flows_proto.ArtifactCollectorContext_FINISHED) {
+		collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+		collection_context.Status = message.Status.ErrorMessage
+		collection_context.Backtrace = message.Status.Backtrace
 	}
 
-	collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+	// But these are updated for each response.
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
-	collection_context.Status = message.Status.ErrorMessage
-	collection_context.Backtrace = message.Status.Backtrace
-	collection_context.ExecutionDuration = message.Status.Duration
+	collection_context.ExecutionDuration += message.Status.Duration
+
+	// Each status message decreases outstanding_requests by one -
+	// when we hit 0 we can mark the flow as finished.
+	collection_context.OutstandingRequests--
+	if collection_context.OutstandingRequests <= 0 &&
+		collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
+		collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED
+	}
+
 	collection_context.Dirty = true
 
+	// If the status is OK then we do not fail the flow.
+	if message.Status.Status == crypto_proto.GrrStatus_OK {
+		return nil
+	}
 	return errors.New(message.Status.ErrorMessage)
 }
 
