@@ -1,0 +1,8 @@
+SELECT OSPath.Basename, Content.home FROM Artifact.MacOS.System.Plist( PlistGlob=srcDir+"/artifacts/testdata/files/vag*.plist")[
+ {
+  "OSPath.Basename": "vagrant.plist",
+  "Content.home": [
+   "/Users/vagrant"
+  ]
+ }
+]

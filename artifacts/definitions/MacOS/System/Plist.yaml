@@ -21,19 +21,14 @@ parameters:
 
 sources:
   - query: |
-       LET Plists = SELECT FullPath FROM glob(globs=PlistGlob)
-
-       LET PlistDetails =
-            SELECT * FROM foreach(
-                row=plist(file=FullPath),
-                query={ SELECT
-                    FullPath AS FullPath,
-                    Mtime,
-                    plist(file=FullPath) AS Content,
-                    if(condition=Upload_File,
-                      then=upload(file=FullPath)) AS Upload
-                    FROM scope()
-                }
-            )
-
-       SELECT * FROM foreach(row=Plists, query=PlistDetails)
+      SELECT
+        OSPath,
+        Mtime,
+        plist(file=OSPath) AS Content,
+        if(condition=Upload_File,
+           then=upload(file=OSPath,
+                       mtime=Mtime,
+                       atime=Atime,
+                       ctime=Ctime,
+                       btime=Btime)) AS Upload
+      FROM glob(globs=PlistGlob)
