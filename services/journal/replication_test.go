@@ -3,7 +3,6 @@ package journal_test
 import (
 	"context"
 	"fmt"
-	"sort"
 	"sync"
 	"testing"
 	"time"
@@ -157,9 +156,8 @@ type: CLIENT_EVENT
 		mu.Lock()
 		defer mu.Unlock()
 
-		sort.Strings(watched)
-
 		return vtesting.CompareStrings(watched, []string{
+			"Server.Internal.ArtifactModification",
 			"Server.Internal.MasterRegistrations",
 
 			// The notifications service will watch for
