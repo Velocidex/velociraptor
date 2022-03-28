@@ -7,10 +7,106 @@ package file
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"sync"
 
+	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/vfilter"
 )
+
+// Sometimes, we can open a file with the API ok, but we just can not
+// read from it. This wrapper allows for switching to the ntfs parser
+// after open, but if the file is not readable.  The following Python
+// program creates a lock for testing. The following query will force
+// a re-open with the ntfs accessor:
+// SELECT read_file(filename='''C:\test.exe''',
+//     accessor='auto', length=15)
+// FROM scope()
+/*
+import win32file
+import win32con
+import win32security
+import win32api
+import pywintypes
+
+highbits=0xffff0000 #high-order 32 bits of byte range to lock
+
+file="C:\\test.exe"
+
+secur_att = win32security.SECURITY_ATTRIBUTES()
+secur_att.Initialize()
+
+hfile=win32file.CreateFile(
+    file,
+    win32con.GENERIC_READ|win32con.GENERIC_WRITE,
+    win32con.FILE_SHARE_READ|win32con.FILE_SHARE_WRITE,
+    secur_att,
+    win32con.OPEN_ALWAYS,
+    win32con.FILE_ATTRIBUTE_NORMAL , 0 )
+
+ov=pywintypes.OVERLAPPED()
+win32file.LockFileEx(hfile,win32con.LOCKFILE_EXCLUSIVE_LOCK,10,highbits,ov)
+win32api.Sleep(40000)
+win32file.UnlockFileEx(hfile,0,highbits,ov)
+hfile.Close()
+*/
+type FileReaderWrapper struct {
+	readatter_mu sync.Mutex
+	accessors.ReadSeekCloser
+
+	mu sync.Mutex
+
+	// If set, the reader is really an ntfs reader.
+	switched_to_ntfs bool
+	path             *accessors.OSPath
+
+	owner *AutoFilesystemAccessor
+}
+
+func (self *FileReaderWrapper) ReadAt(buf []byte, offset int64) (int, error) {
+	self.readatter_mu.Lock()
+	defer self.readatter_mu.Unlock()
+
+	_, err := self.Seek(offset, os.SEEK_SET)
+	if err != nil {
+		return 0, err
+	}
+
+	return self.Read(buf)
+}
+
+func (self *FileReaderWrapper) Read(buf []byte) (int, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	n, err := self.ReadSeekCloser.Read(buf)
+	if err != nil &&
+		errors.Cause(err) != io.ErrUnexpectedEOF &&
+		errors.Cause(err) != io.EOF &&
+		!self.switched_to_ntfs {
+
+		// Reopen as an ntfs parsed file.
+		self.path = accessors.WindowsNTFSPathFromOSPath(self.path)
+		fd, err1 := self.owner.ntfs_delegate.OpenWithOSPath(self.path)
+		if err1 != nil {
+			return n, err
+		}
+
+		// Close the old reader and substitude a new one
+		self.switched_to_ntfs = true
+		current_offset, _ := self.ReadSeekCloser.Seek(0, os.SEEK_CUR)
+		self.ReadSeekCloser.Close()
+
+		fd.Seek(current_offset, os.SEEK_SET)
+		self.ReadSeekCloser = fd
+
+		// Try again with the new buffer.
+		return fd.Read(buf)
+	}
+	return n, err
+}
 
 type AutoFilesystemAccessor struct {
 	ntfs_delegate accessors.FileSystemAccessor
@@ -58,16 +154,11 @@ func (self *AutoFilesystemAccessor) ReadDir(path string) ([]accessors.FileInfo, 
 }
 
 func (self *AutoFilesystemAccessor) Open(path string) (accessors.ReadSeekCloser, error) {
-	result, err := self.file_delegate.Open(path)
+	pathspec, err := self.ParsePath(path)
 	if err != nil {
-		result, err1 := self.ntfs_delegate.Open(path)
-		if err1 != nil {
-			return nil, fmt.Errorf(
-				"%v, unable to fall back to ntfs parsing: %w", err, err1)
-		}
-		return result, err1
+		return nil, err
 	}
-	return result, err
+	return self.OpenWithOSPath(pathspec)
 }
 
 func (self *AutoFilesystemAccessor) OpenWithOSPath(path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
@@ -81,7 +172,13 @@ func (self *AutoFilesystemAccessor) OpenWithOSPath(path *accessors.OSPath) (acce
 		}
 		return result, err1
 	}
-	return result, err
+
+	// Wrap the API handle in case we need to upgrade it in future
+	return &FileReaderWrapper{
+		ReadSeekCloser: result,
+		path:           path,
+		owner:          self,
+	}, err
 }
 
 func (self *AutoFilesystemAccessor) Lstat(path string) (accessors.FileInfo, error) {

@@ -267,7 +267,7 @@ func (self ReadFilePlugin) Call(
 
 		err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("read_file: %s", err.Error())
+			scope.Log("read_file: %v", err)
 			return
 		}
 
