@@ -1,16 +1,22 @@
 package repository_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/proto"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -61,6 +67,79 @@ name: TestArtifact
 	assert.True(self.T(), pres)
 
 	assert.Contains(self.T(), string(data), `"op":"set"`)
+}
+
+// On the minion the repository manager needs to be aware when new
+// artifacts are created.
+func (self *ManagerTestSuite) TestSetArtifactDetectedByMinion() {
+	self.ConfigObj.Autoexec = &config_proto.AutoExecConfig{
+		ArtifactDefinitions: []*artifacts_proto.Artifact{
+			{
+				Name: "Server.Internal.ArtifactModification",
+				Type: "SERVER_EVENT",
+			},
+		},
+	}
+
+	clock := &utils.MockClock{MockNow: time.Unix(1000000000, 0)}
+	journal_manager, err := services.GetJournal()
+	assert.NoError(self.T(), err)
+
+	// Install a mock clock for this test.
+	journal_manager.(*journal.JournalService).Clock = clock
+
+	// The global repository manager.
+	err = repository.StartRepositoryManagerForTest(
+		self.Sm.Ctx, self.Sm.Wg, self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	master_manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	// Start another manager for the minion.
+
+	// Spin up a minion client_info manager
+	minion_config := proto.Clone(self.ConfigObj).(*config_proto.Config)
+	minion_config.Frontend.IsMinion = true
+
+	err = repository.StartRepositoryManagerForTest(
+		self.Sm.Ctx, self.Sm.Wg, self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	minion_manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	// Make sure they are not actually the same object.
+	assert.NotEqual(self.T(),
+		fmt.Sprintf("%p", minion_manager),
+		fmt.Sprintf("%p", master_manager))
+
+	// Coerce artifact into a prefix.
+	artifact, err := master_manager.SetArtifactFile(self.ConfigObj, "User", `
+name: TestArtifact
+`, "")
+
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), artifact.Name, "TestArtifact")
+
+	minion_repository, err := minion_manager.GetGlobalRepository(minion_config)
+	assert.NoError(self.T(), err)
+
+	// Wait until the minion knows about the new artifact.
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		_, ok := minion_repository.Get(minion_config, artifact.Name)
+		return ok
+	})
+
+	// Now delete the artifact.
+	err = master_manager.DeleteArtifactFile(self.ConfigObj, "User", "TestArtifact")
+	assert.NoError(self.T(), err)
+
+	// Wait until the minion removes it from its repository.
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		_, found := minion_repository.Get(minion_config, artifact.Name)
+		return !found
+	})
 }
 
 // If the artifact name already contains the prefix then prefix is not
