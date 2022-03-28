@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -52,7 +53,10 @@ win32file.UnlockFileEx(hfile,0,highbits,ov)
 hfile.Close()
 */
 type FileReaderWrapper struct {
+	readatter_mu sync.Mutex
 	accessors.ReadSeekCloser
+
+	mu sync.Mutex
 
 	// If set, the reader is really an ntfs reader.
 	switched_to_ntfs bool
@@ -61,7 +65,22 @@ type FileReaderWrapper struct {
 	owner *AutoFilesystemAccessor
 }
 
+func (self *FileReaderWrapper) ReadAt(buf []byte, offset int64) (int, error) {
+	self.readatter_mu.Lock()
+	defer self.readatter_mu.Unlock()
+
+	_, err := self.Seek(offset, os.SEEK_SET)
+	if err != nil {
+		return 0, err
+	}
+
+	return self.Read(buf)
+}
+
 func (self *FileReaderWrapper) Read(buf []byte) (int, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	n, err := self.ReadSeekCloser.Read(buf)
 	if err != nil &&
 		errors.Cause(err) != io.ErrUnexpectedEOF &&
