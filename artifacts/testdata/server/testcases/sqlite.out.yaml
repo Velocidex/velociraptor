@@ -56,7 +56,7 @@ SELECT * FROM sqlite( file=srcDir + "/artifacts/testdata/files/history.sqlite", 
   "last_visit_time": 13205513380758164,
   "hidden": 0
  }
-]SELECT ID, URLTitle, URL, VisitCount, _Source, OSPath.Basename AS OSPath FROM Artifact.Generic.Collectors.SQLECmd( GlobExpr=srcDir + "/artifacts/testdata/files/**") WHERE _Source =~ "Chromium Browser History"[
+]SELECT ID, URLTitle, URL, VisitCount, _Source, OSPath.Basename AS OSPath FROM Artifact.Generic.Collectors.SQLECmd( UseFilenames=FALSE, GlobExpr=[dict(Name="X", Glob=srcDir + "/artifacts/testdata/files/**")]) WHERE _Source =~ "Chromium Browser History"[
  {
   "ID": 1,
   "URLTitle": "Google",
