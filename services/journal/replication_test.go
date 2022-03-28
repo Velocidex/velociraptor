@@ -3,6 +3,7 @@ package journal_test
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"testing"
 	"time"
@@ -156,18 +157,20 @@ type: CLIENT_EVENT
 		mu.Lock()
 		defer mu.Unlock()
 
-		// json.Dump(watched)
+		sort.Strings(watched)
+
 		return vtesting.CompareStrings(watched, []string{
-			// Watch for ping requests from the
-			// master. This is used to let the master know
-			// if a client is connected to us.
-			"Server.Internal.Ping",
-			"Server.Internal.Pong",
 			"Server.Internal.MasterRegistrations",
 
 			// The notifications service will watch for
 			// notifications through us.
 			"Server.Internal.Notifications",
+
+			// Watch for ping requests from the
+			// master. This is used to let the master know
+			// if a client is connected to us.
+			"Server.Internal.Ping",
+			"Server.Internal.Pong",
 		})
 	})
 }

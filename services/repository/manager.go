@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 	"sync"
@@ -21,6 +22,7 @@ import (
 
 type RepositoryManager struct {
 	mu                sync.Mutex
+	id                uint64
 	global_repository *Repository
 	wg                *sync.WaitGroup
 }
@@ -28,6 +30,85 @@ type RepositoryManager struct {
 func (self *RepositoryManager) NewRepository() services.Repository {
 	return &Repository{
 		Data: make(map[string]*artifacts_proto.Artifact)}
+}
+
+// Watch for updates from other nodes to the repository manager.
+func (self *RepositoryManager) StartWatchingForUpdates(
+	ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
+
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+
+	row_chan, cancel := journal.Watch(ctx, "Server.Internal.ArtifactModification")
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer cancel()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case row, ok := <-row_chan:
+				if !ok {
+					return
+				}
+
+				// Only watch for events from other nodes.
+				id, pres := row.GetInt64("id")
+				if !pres || uint64(id) == self.id {
+					continue
+				}
+
+				op, _ := row.GetString("op")
+				switch op {
+				case "delete":
+					artifact_name, _ := row.GetString("artifact")
+
+					global_repository, err := self.GetGlobalRepository(
+						config_obj)
+					if err != nil {
+						continue
+					}
+
+					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+					logger.Info("Removing artifact %v from local repository",
+						artifact_name)
+					global_repository.Del(artifact_name)
+
+				case "set":
+					// Refresh the artifact from the filestore.
+					definition, pres := row.GetString("definition")
+					if !pres {
+						continue
+					}
+
+					global_repository, err := self.GetGlobalRepository(
+						config_obj)
+					if err != nil {
+						continue
+					}
+
+					artifact, err := global_repository.LoadYaml(definition,
+						false, /* validate */
+						false /* built_in */)
+
+					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+					logger.Info("Updating artifact %v in local repository", artifact.Name)
+
+				default:
+					fmt.Printf("Unknown op %v\n", op)
+				}
+			}
+		}
+	}()
+
+	return nil
 }
 
 func (self *RepositoryManager) GetGlobalRepository(
@@ -125,7 +206,9 @@ func (self *RepositoryManager) SetArtifactFile(
 			ordereddict.NewDict().
 				Set("setter", principal).
 				Set("artifact", artifact.Name).
-				Set("op", "set"),
+				Set("op", "set").
+				Set("definition", definition).
+				Set("id", self.id),
 		}, "Server.Internal.ArtifactModification", "server", "")
 
 	return artifact, err
@@ -158,7 +241,8 @@ func (self *RepositoryManager) DeleteArtifactFile(
 			ordereddict.NewDict().
 				Set("setter", principal).
 				Set("artifact", name).
-				Set("op", "delete"),
+				Set("op", "delete").
+				Set("id", self.id),
 		}, "Server.Internal.ArtifactModification", "server", "")
 	if err != nil {
 		return err
@@ -169,36 +253,53 @@ func (self *RepositoryManager) DeleteArtifactFile(
 	// Delete it from the filestore.
 	vfs_path := paths.GetArtifactDefintionPath(name)
 	return file_store_factory.Delete(vfs_path)
-
 }
 
-// Start an empty repository manager without loading built in artifacts
-func StartRepositoryManagerForTest(ctx context.Context, wg *sync.WaitGroup,
+// Start a mostly empty repository manager without loading built in
+// artifacts.
+func StartRepositoryManagerForTest(
+	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
-	self := &RepositoryManager{
+	self := NewRepositoryManager(wg)
+
+	if config_obj.Autoexec != nil {
+		for _, def := range config_obj.Autoexec.ArtifactDefinitions {
+			_, err := self.global_repository.LoadProto(def, true)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	services.RegisterRepositoryManager(self)
+
+	return self.StartWatchingForUpdates(ctx, wg, config_obj)
+}
+
+func NewRepositoryManager(wg *sync.WaitGroup) *RepositoryManager {
+	return &RepositoryManager{
 		wg: wg,
+		id: utils.GetId(),
 		global_repository: &Repository{
 			Data: make(map[string]*artifacts_proto.Artifact),
 		},
 	}
-	services.RegisterRepositoryManager(self)
-	return nil
 }
 
 func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
 	// Load all the artifacts in the repository and compile them in the background.
-	self := &RepositoryManager{
-		wg: wg,
-		global_repository: &Repository{
-			Data: make(map[string]*artifacts_proto.Artifact),
-		},
-	}
+	self := NewRepositoryManager(wg)
 
 	// Assume the built in artifacts are OK so we dont need to
 	// validate them at runtime.
-	return LoadBuiltInArtifacts(ctx, config_obj, self, false /* validate */)
+	err := LoadBuiltInArtifacts(ctx, config_obj, self, false /* validate */)
+	if err != nil {
+		return err
+	}
+
+	return self.StartWatchingForUpdates(ctx, wg, config_obj)
 }
 
 func LoadBuiltInArtifacts(ctx context.Context,

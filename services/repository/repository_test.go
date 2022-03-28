@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 	repository_impl "www.velocidex.com/golang/velociraptor/services/repository"
 )
 
@@ -44,6 +45,7 @@ func TestLoadingFromFilestore(t *testing.T) {
 	sm := services.NewServiceManager(ctx, config_obj)
 	defer sm.Close()
 
+	require.NoError(t, sm.Start(journal.StartJournalService))
 	require.NoError(t, sm.Start(repository_impl.StartRepositoryManager))
 
 	manager, err := services.GetRepositoryManager()
