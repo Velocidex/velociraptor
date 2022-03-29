@@ -7,11 +7,13 @@ import (
 	"path/filepath"
 
 	"github.com/Velocidex/yaml/v2"
+	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -51,9 +53,11 @@ func doGUI() error {
 		WithVerbose(true).
 		WithFileLoader(server_config_path).LoadAndValidate()
 	if err != nil || config_obj.Frontend == nil {
-		// Stop on hard errors.
-		_, ok := err.(config.HardError)
-		if ok {
+		// Stop on hard errors but if the file does not exist we need
+		// to create it below..
+		hard_err, ok := err.(config.HardError)
+		if ok && !os.IsNotExist(errors.Cause(hard_err.Err)) {
+			utils.Debug(hard_err.Err)
 			return err
 		}
 

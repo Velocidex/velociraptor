@@ -45,7 +45,7 @@ sources:
 
       SELECT * FROM foreach(
         row={
-           SELECT * FROM clock(period=ReloadPeriod)
+           SELECT * FROM clock(period=ReloadPeriod, start=now())
            WHERE log(message="Setting quarantine policy")
         },
         query={
