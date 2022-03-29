@@ -30,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
@@ -59,10 +60,13 @@ func RunClient(
 		lwg := &sync.WaitGroup{}
 
 		lwg.Add(1)
-		go runClientOnce(subctx, lwg, config_path)
+		go func() {
+			runClientOnce(subctx, lwg, config_path)
+			cancel()
+		}()
 
 		select {
-		case <-ctx.Done():
+		case <-subctx.Done():
 			// Wait for the client to shutdown before we exit.
 			cancel()
 			lwg.Wait()
@@ -79,7 +83,7 @@ func RunClient(
 func runClientOnce(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_path *string) error {
+	config_path *string) (err error) {
 	defer wg.Done()
 
 	lwg := &sync.WaitGroup{}
@@ -93,6 +97,14 @@ func runClientOnce(
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
+
+	// Report any errors from this function.
+	defer func() {
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+			logger.Error("<red>runClientOnce Error:</> %v", err)
+		}
+	}()
 
 	// Make sure the config crypto is ok.
 	err = crypto_utils.VerifyConfig(config_obj)
@@ -121,6 +133,14 @@ func runClientOnce(
 	err = sm.Start(executor.StartNannyService)
 	if err != nil {
 		return err
+	}
+
+	j, _ := services.GetJournal()
+	if j == nil {
+		err := sm.Start(journal.StartJournalService)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Start the repository manager before we can handle any VQL

@@ -20,11 +20,11 @@ import (
 
 // A hard error causes the loader to stop immediately.
 type HardError struct {
-	err error
+	Err error
 }
 
 func (self HardError) Error() string {
-	return self.err.Error()
+	return self.Err.Error()
 }
 
 type loader_func func(self *Loader) (*config_proto.Config, error)
