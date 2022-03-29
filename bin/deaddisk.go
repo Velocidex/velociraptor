@@ -47,6 +47,7 @@ var (
 
 func addWindowsDirectory(
 	directory_path string, config_obj *config_proto.Config) error {
+	addCommonPermissions(config_obj)
 
 	builder := services.ScopeBuilder{
 		Config:     config_obj,

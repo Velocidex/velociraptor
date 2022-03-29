@@ -37,7 +37,15 @@ func applyAnalysisTarget(config_obj *config_proto.Config) error {
 	// Apply the remapping once to check for syntax errors so we can
 	// fail early.
 	device_manager := accessors.NewDefaultDeviceManager()
+
+	// Create a scope without an ACL manager for verification. This is
+	// too early in the startup process to initialize the proper
+	// repository manager so we just make it up.
 	scope := vql_subsystem.MakeScope()
+	scope.AppendVars(ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+	defer scope.Close()
+
 	err := remapping.ApplyRemappingOnScope(
 		context.Background(), scope, scope, device_manager,
 		ordereddict.NewDict(),
