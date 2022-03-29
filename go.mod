@@ -116,7 +116,7 @@ require (
 	howett.net/plist v0.0.0-20201203080718-1454fab16a06
 	www.velocidex.com/golang/evtx v0.2.1-0.20220107094629-ab487d5f06f1
 	www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671
-	www.velocidex.com/golang/go-ntfs v0.1.2-0.20220323054118-6892625a4932
+	www.velocidex.com/golang/go-ntfs v0.1.2-0.20220329014629-34cea011f703
 	www.velocidex.com/golang/go-pe v0.1.1-0.20220107093716-e91743c801de
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20211013063943-0334d69593c1
