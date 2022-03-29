@@ -72,7 +72,7 @@ def read_targets(ctx, project_path):
         for target in data["Targets"]:
             glob = target.get("Path", "")
 
-            if target.get("Recursive"):
+            if target.get("Recursive") or ctx.kape_data.get("RecreateDirectories"):
                 glob = glob.rstrip("\\") + "/**10"
 
             mask = target.get("FileMask")

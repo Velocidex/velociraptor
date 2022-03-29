@@ -195,11 +195,6 @@ func StartJournalService(
 		locks:      make(map[string]*sync.Mutex),
 		Clock:      utils.RealClock{},
 	}
-	old_service, err := services.GetJournal()
-	if err == nil {
-		service.qm = old_service.(*JournalService).qm
-	}
-
 	qm, err := file_store.GetQueueManager(config_obj)
 	if err != nil || qm != nil {
 		service.qm = qm

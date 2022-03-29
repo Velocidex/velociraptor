@@ -10,6 +10,13 @@ description: |
   2. This artifact uses the SQLite library, since the library does not
      support accurate CPU limits, this artifact can use a lot of CPU
      despite a CPU limit specified.
+  3. Locked or in use SQLite files will be copied to a tempfile and
+     then queried.
+
+  4. If UseFilenames is enabled we only look at known
+     filenames. Disabling it will try to identify all sqlite files
+     within the search glob. This is slower but may find more
+     potential files (e.g. renamed).
 
 reference:
   - https://github.com/EricZimmerman/SQLECmd
@@ -35,24 +42,91 @@ export: |
 parameters:
 - name: GlobExpr
   description: A glob to search for SQLite files.
-  default: "C:/Users/*/AppData/Local/Google/Chrome/User Data/**"
+  type: csv
+  default: |
+    Name,Glob
+    "Bitdefender:Bitdefender Endpoint Security Logs","C:\ProgramData\Bitdefender\Endpoint Security\Logs/**10"
+    "Bitdefender:Bitdefender Internet Security Logs","C:\ProgramData\Bitdefender\Desktop\Profiles\Logs/**10"
+    "Chrome:Chrome bookmarks","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Bookmarks*"
+    "Chrome:Chrome Cookies","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Cookies*"
+    "Chrome:Chrome Current Session","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Current Session"
+    "Chrome:Chrome Current Tabs","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Current Tabs"
+    "Chrome:Chrome Download Metadata","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Download Metadata"
+    "Chrome:Chrome Extension Cookies","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Extension Cookies"
+    "Chrome:Chrome Favicons","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Favicons*"
+    "Chrome:Chrome History","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/History*"
+    "Chrome:Chrome Last Session","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Last Session"
+    "Chrome:Chrome Last Tabs","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Last Tabs"
+    "Chrome:Chrome Sessions Folder","C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Sessions/**10"
+    "Chrome:Chrome Login Data","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Login Data"
+    "Chrome:Chrome Media History","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Media History*"
+    "Chrome:Chrome Network Action Predictor","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Network Action Predictor"
+    "Chrome:Chrome Network Persistent State","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Network Persistent State"
+    "Chrome:Chrome Preferences","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Preferences"
+    "Chrome:Chrome Quota Manager","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/QuotaManager"
+    "Chrome:Chrome Reporting and NEL","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Reporting and NEL"
+    "Chrome:Chrome Shortcuts","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Shortcuts*"
+    "Chrome:Chrome Top Sites","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Top Sites*"
+    "Chrome:Chrome Trust Tokens","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Trust Tokens*"
+    "Chrome:Chrome SyncData Database","C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Sync Data/**10/SyncData.sqlite3"
+    "Chrome:Chrome Visited Links","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Visited Links"
+    "Chrome:Chrome Web Data","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Web Data*"
+    "Chrome:Windows Protect Folder","C:\Users\*\AppData\Roaming\Microsoft\Protect\*/**10"
+    "Firefox:Addons","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/addons.sqlite*"
+    "Firefox:Bookmarks","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\weave/**10/bookmarks.sqlite*"
+    "Firefox:Cookies","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/cookies.sqlite*"
+    "Firefox:Downloads","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/downloads.sqlite*"
+    "Firefox:Extensions","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/extensions.json"
+    "Firefox:Favicons","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/favicons.sqlite*"
+    "Firefox:Form history","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/formhistory.sqlite*"
+    "Firefox:Permissions","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/permissions.sqlite*"
+    "Firefox:Places","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/places.sqlite*"
+    "Firefox:Protections","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/protections.sqlite*"
+    "Firefox:Search","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/search.sqlite*"
+    "Firefox:Signons","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/signons.sqlite*"
+    "Firefox:Storage Sync","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/storage-sync.sqlite*"
+    "Firefox:Webappstore","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/webappstore.sqlite*"
+    "Firefox:Password","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/key*.db"
+    "Firefox:Preferences","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/prefs.js"
+    "Firefox:Sessionstore","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*/**10/sessionstore*"
+    "Firefox:Sessionstore Folder","C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\sessionstore-backups/**10"
+    "MicrosoftStickyNotes:Microsoft Sticky Notes - Windows 7, 8, and 10 version 1511 and earlier","C:\Users\*\AppData\Roaming\Microsoft\StickyNotes/**10/StickyNotes.snt"
+    "MicrosoftStickyNotes:Microsoft Sticky Notes - 1607 and later","C:\Users\*\AppData\Local\Packages\Microsoft.MicrosoftStickyNotes*\LocalState/**10/plum.sqlite*"
+    "TeraCopy:TeraCopy","C:\Users\*\AppData\Roaming\TeraCopy/**10"
+    "WindowsNotificationsDB:Windows 10 Notification DB","C:\Users\*\AppData\Local\Microsoft\Windows\Notifications/**10/wpndatabase.db"
+    "WindowsOSUpgradeArtifacts:Update Store.db","C:\ProgramData\USOPrivate\UpdateStore/**10/store.db"
+    "WindowsYourPhone:Windows Your Phone - All Databases","C:\Users\*\AppData\Local\Packages\Microsoft.YourPhone_8wekyb3d8bbwe\LocalCache\Indexed/**10"
+    "pCloudDatabase:pCloud Database","C:\Users\*\AppData\Local\pCloud/**10/*.db"
+    "pCloudDatabase:pCloud Database WAL File","C:\Users\*\AppData\Local\pCloud/**10/*.db-wal"
+    "pCloudDatabase:pCloud Database Shared Memory File","C:\Users\*\AppData\Local\pCloud/**10/*.db-shm"
 - name: Accessor
   default: auto
+- name: UseFilenames
+  default: Y
+  type: bool
+  description: When set use filenames to optimize identification of files.
 - name: AlsoUpload
   description: Also upload the raw sqlite files
   type: bool
 
 sources:
 - query: |
+   LET AllFilenamesRegex <= '''^(CarsDB.db|Contacts.db|random.sqlite|ActivitiesCache.db|Antiphishing.db|RansomwareRecover.db|cache.db|es.db|Web Data|Web Data|Cookies|History|Favicons|History|History|Web Data|Media History|Media History|Network Action Predictor|Shortcuts|Top Sites|aggregation.dbx|config.db|filecache.db|icon.db|instance.dbx|home.db|home.db|home.db|home.db|sync_history.db|tray-thumbnails.db|EventTranscript.db|EventTranscript.db|queue.sqlite3|places.sqlite|cookies.sqlite|downloads.sqlite|places.sqlite|favicons.sqlite|formhistory.sqlite|places.sqlite|random.db|cloud_graph.db|snapshot.db|sync_config.db|metadata_sqlite_db|plum.sqlite|nessusd.db|random.db|Main.db|wpndatabase.db|wpndatabase.db|Store.db|contacts.db|Notifications.db|Phone.db|photos.db|settings.db|accounts4.db|callhistory.storedata)$'''
    LET SQLiteFiles <=
    SELECT OSPath,
     read_file(filename=OSPath, length=15, accessor=Accessor) AS Magic,
-    if(condition=AlsoUpload, then=upload(file=OSPath)) AS Upload
-   FROM glob(globs=GlobExpr, accessor=Accessor)
-   WHERE NOT IsDir AND Magic =~ "SQLite format 3"
+    if(condition=AlsoUpload,
+       then=upload(file=OSPath,
+                   mtime=Mtime,
+                   atime=Atime,
+                   ctime=Ctime,
+                   btime=Btime)) AS Upload
+   FROM glob(globs=GlobExpr.Glob, accessor=Accessor)
+   WHERE NOT IsDir
+     AND if(condition=UseFilenames, then=Name =~ AllFilenamesRegex, else=TRUE)
+     AND Magic =~ "SQLite format 3"
 
    SELECT * FROM SQLiteFiles
-
 
 - name: 4K Video Downloader
   query: |
@@ -67,14 +141,14 @@ sources:
     media_item_description.duration / 1000 / 60 AS 'Duration (Minutes)',
     audio_info.bitrate / 1000 AS 'Bitrate (kbps)',
     CASE
-    
+
     WHEN video_info.video_360 = 0 THEN
     'No'
     WHEN video_info.video_360 = 1 THEN
     'Yes'
     END AS Video360,
     CASE
-    
+
     WHEN video_info.hdr = 0 THEN
     'No'
     WHEN video_info.hdr = 1 THEN
@@ -90,10 +164,10 @@ sources:
     AND url_description.id = video_info.id
     ORDER BY
     ID ASC'''
+    LET FileName = '''random.sqlite'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Activity Package Id
   query: |
@@ -105,10 +179,10 @@ sources:
     || '-' || substr(hex(ActivityId), 17, 4)
     || '-' || substr(hex(ActivityId), 21, 12) as ActivityId,Platform,PackageName,
     datetime(ExpirationTime,'unixepoch','localtime') as ExpirationTime from Activity_PackageId'''
+    LET FileName = '''ActivitiesCache.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Activity Operation
   query: |
@@ -120,10 +194,10 @@ sources:
     datetime(CreatedTime,'unixepoch','localtime') as CreatedTime,
     datetime(EndTime,'unixepoch','localtime') as EndTime,
     datetime(LastModifiedOnClient,'unixepoch','localtime') as LastModifiedOnClient,PlatformDeviceId from ActivityOperation;'''
+    LET FileName = '''ActivitiesCache.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Activity
   query: |
@@ -141,105 +215,10 @@ sources:
     datetime(LastModifiedOnClient,'unixepoch','localtime') as LastModifiedOnClient,
     datetime(OriginalLastModifiedOnClient,'unixepoch','localtime') as OriginalLastModifiedOnClient,
     ActivityType,IsLocalOnly,ETag,PackageIdHash,PlatformDeviceId from Activity'''
+    LET FileName = '''ActivitiesCache.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
-
-- name: Calls
-  query: |
-    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='calls');'''
-    LET IdentifyValue = 1
-    LET SQLQuery = '''select
-    _id,
-    number,
-    name,
-    datetime(date/1000,'UNIXEPOCH','localtime') AS "date",
-    duration,
-    case
-    when type = 2 then "outgoing"
-    when type = 1 then "incoming"
-    when type = 4 then "voicemail"
-    end AS "Call Type",
-    subscription_id,
-    phone_account_address,
-    geocoded_location,
-    formatted_number,
-    datetime(last_modified/1000,'UNIXEPOCH','localtime') AS "modified date",
-    case
-    when deleted = 1 then "deleted"
-    else "N/A"
-    end AS "Deleted",
-    case
-    when dirty = 1 then "Dirty"
-    else "N/A"
-    end AS "Valid Entry" --most voicemail calls will get a status of dirty with a type of "4"
-    from calls'''
-
-    SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
-
-- name: Localappstate
-  query: |
-    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='appstate' OR name='android_metadata');'''
-    LET IdentifyValue = 2
-    LET SQLQuery = '''SELECT
-    package_name,
-    case
-    when auto_update = 1 then "AutoUpdate Set"
-    else "No AutoUpdate"
-    end AS "AutoUpdate Status",
-    delivery_data,
-    DateTime(delivery_data_timestamp_ms / 1000, 'UNIXEPOCH') As "Delivery Date",
-    DateTime(first_download_ms / 1000, 'UNIXEPOCH') As "First Download Date",
-    account,
-    title,
-    last_notified_version,
-    datetime(last_update_timestamp_ms/ 1000, 'UNIXEPOCH') As "Last Update",
-    datetime(install_request_timestamp_ms/ 1000, 'UNIXEPOCH') As "Install Request Date"
-    From appstate'''
-
-    SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
-
-- name: Frosting
-  query: |
-    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='frosting');'''
-    LET IdentifyValue = 1
-    LET SQLQuery = '''select
-    pk,
-    apk_path,
-    datetime(last_updated/1000,'UNIXEPOCH','localtime') AS "Last Updated",
-    data
-    from frosting'''
-
-    SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
-
-- name: SMS
-  query: |
-    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='SMS' or name='part' or name='addr' OR name='mmssms');'''
-    LET IdentifyValue = 4
-    LET SQLQuery = '''select
-       mmssms._id,
-       mmssms.msg_type,
-       case
-       when mmssms.type = 2 then "incoming"
-       when mmssms.type = 1 then "outgoing"
-       end AS "message status",
-       mmssms.address,
-       datetime(mmssms.date/1000,'UNIXEPOCH','localtime') AS "date",
-       mmssms.body AS "message",
-       mmssms_tag.tag AS "unread"
-       from mmssms
-       left join mmssms_tag on mmssms_tag._id=mmssms._id'''
-
-    SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Bitdefender Antiphishing DB
   query: |
@@ -253,10 +232,10 @@ sources:
     aph_cache
     ORDER BY
     ExpireTime ASC;'''
+    LET FileName = '''Antiphishing.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Bitdefender es DB
   query: |
@@ -271,10 +250,32 @@ sources:
     es_cache
     ORDER BY
     ExpireTime ASC;'''
+    LET FileName = '''es.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
 
+- name: Bitdefender cache DB
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='entries');'''
+    LET IdentifyValue = 1
+    LET SQLQuery = '''SELECT
+    quarId AS QuarantineID,
+    path AS FilePath,
+    threat AS Threat,
+    size AS Size,
+    datetime( quartime, 'unixepoch', 'localtime' ) AS QuarantineTime,
+    datetime( acctime, 'unixepoch', 'localtime' ) AS LastAccessedTime,
+    datetime( modtime, 'unixepoch', 'localtime' ) AS LastModifiedTime,
+    usersid AS UserSID
+    FROM
+    entries
+    ORDER BY
+    QuarantineTime ASC;'''
+    LET FileName = '''cache.db'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
 
 - name: Bitdefender RansomwareRecover DB Files
   query: |
@@ -295,25 +296,10 @@ sources:
     files INNER JOIN packs ON files.packid = packs.uuid
     ORDER BY
     LastOperationTime ASC;'''
+    LET FileName = '''RansomwareRecover.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
-
-- name: CellularUsage
-  query: |
-    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='subscriber_info');'''
-    LET IdentifyValue = 1
-    LET SQLQuery = '''SELECT
-    ROWID,
-    subscriber_id AS "ICCID",
-    subscriber_mdn AS "Phone Number",
-    datetime(last_update_time+978307200,'UNIXEPOCH','localtime') AS "Last Updated"
-    FROM subscriber_info'''
-
-    SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Chromium Browser Autofill Entries
   query: |
@@ -330,10 +316,10 @@ sources:
     autofill
     ORDER BY
     autofill.name ASC'''
+    LET FileName = '''Web Data'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Chromium Browser Autofill Profiles
   query: |
@@ -361,10 +347,10 @@ sources:
     INNER JOIN autofill_profile_names ON autofill_profile_phones.guid = autofill_profile_names.guid
     ORDER BY
     autofill_profiles.guid ASC'''
+    LET FileName = '''Web Data'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Chromium Browser Cookies
   query: |
@@ -378,28 +364,28 @@ sources:
     cookies.name AS Name,
     cookies.path AS Path,
     CASE
-    
+
     WHEN cookies.is_secure = 1 THEN
     'Yes'
     WHEN cookies.is_secure = 0 THEN
     'No'
     END AS IsSecure,
     CASE
-    
+
     WHEN cookies.is_httponly = 1 THEN
     'Yes'
     WHEN cookies.is_httponly = 0 THEN
     'No'
     END AS IsHttpOnly,
     CASE
-    
+
     WHEN cookies.has_expires = 1 THEN
     'Yes'
     WHEN cookies.has_expires = 0 THEN
     'No'
     END AS HasExpiration,
     CASE
-    
+
     WHEN cookies.is_persistent = 1 THEN
     'Yes'
     WHEN cookies.is_persistent = 0 THEN
@@ -411,10 +397,10 @@ sources:
     cookies
     ORDER BY
     cookies.creation_utc ASC'''
+    LET FileName = '''Cookies'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Chromium Browser Downloads
   query: |
@@ -434,7 +420,7 @@ sources:
     datetime( downloads.last_access_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS LastAccessTime,
     downloads.last_modified AS LastModified,
     CASE
-    
+
     WHEN downloads.state = 0 THEN
     'In Progress'
     WHEN downloads.state = 1 THEN
@@ -447,7 +433,7 @@ sources:
     'Interrupted'
     END AS State,
     CASE
-    
+
     WHEN downloads.danger_type = 0 THEN
     'Not Dangerous'
     WHEN downloads.danger_type = 1 THEN
@@ -470,7 +456,7 @@ sources:
     'Whitelisted by Policy'
     END AS DangerType,
     CASE
-    
+
     WHEN downloads.interrupt_reason = 0 THEN
     'No Interrupt'
     WHEN downloads.interrupt_reason = 1 THEN
@@ -538,10 +524,10 @@ sources:
     INNER JOIN downloads_url_chains AS DownloadURL ON downloads.id = DownloadURL.id
     ORDER BY
     downloads.id ASC'''
+    LET FileName = '''History'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Chromium Browser Favicons
   query: |
@@ -563,10 +549,10 @@ sources:
     AND favicons.id = favicon_bitmaps.icon_id
     ORDER BY
     favicons.id ASC'''
+    LET FileName = '''Favicons'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Chromium Browser History
   query: |
@@ -581,7 +567,7 @@ sources:
     urls.visit_count AS VisitCount,
     urls.typed_count AS TypedCount,
     CASE
-    
+
     WHEN urls.hidden = 1 THEN
     'Yes'
     WHEN urls.hidden = 0 THEN
@@ -595,10 +581,10 @@ sources:
     LEFT JOIN visits ON urls.id = visits.url
     ORDER BY
     visits.visit_time ASC;'''
+    LET FileName = '''History'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Chromium Browser Keyword Searches
   query: |
@@ -616,10 +602,10 @@ sources:
     INNER JOIN urls ON keyword_search_terms.url_id = urls.id
     ORDER BY
     keyword_search_terms.keyword_id ASC'''
+    LET FileName = '''History'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Chromium Browser Masked Credit Cards
   query: |
@@ -641,10 +627,10 @@ sources:
     masked_credit_cards
     ORDER BY
     masked_credit_cards.id ASC'''
+    LET FileName = '''Web Data'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Chromium Browser Media History Playback
   query: |
@@ -655,14 +641,14 @@ sources:
     playback.url AS URL,
     playback.watch_time_s AS WatchTimeSeconds,
     CASE
-    
+
     WHEN playback.has_video = 1 THEN
     'Yes'
     WHEN playback.has_video = 0 THEN
     'No'
     END AS HasVideo,
     CASE
-    
+
     WHEN playback.has_audio = 1 THEN
     'Yes'
     WHEN playback.has_audio = 0 THEN
@@ -674,34 +660,34 @@ sources:
     playback
     ORDER BY
     playback.id ASC'''
+    LET FileName = '''Media History'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Chromium Browser Media History Playback Session
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='origin' OR name='playback' OR name='playbackSession');'''
     LET IdentifyValue = 3
     LET SQLQuery = '''SELECT
-    	playbackSession.id AS ID,
-    	datetime( playbackSession.last_updated_time_s + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS LastUpdated,
-    	playbackSession.url AS URL,
-    	CAST ( playbackSession.duration_ms AS FLOAT ) / 1000 AS DurationInSeconds,
-    	CAST ( playbackSession.position_ms AS FLOAT ) / 1000 AS PositionInSeconds,
-    	playbackSession.title AS Title,
-    	playbackSession.artist AS Artist,
-    	playbackSession.album AS Album,
-    	playbackSession.source_title AS SourceTitle,
-    	playbackSession.origin_id AS OriginID
+        playbackSession.id AS ID,
+        datetime( playbackSession.last_updated_time_s + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS LastUpdated,
+        playbackSession.url AS URL,
+        CAST ( playbackSession.duration_ms AS FLOAT ) / 1000 AS DurationInSeconds,
+        CAST ( playbackSession.position_ms AS FLOAT ) / 1000 AS PositionInSeconds,
+        playbackSession.title AS Title,
+        playbackSession.artist AS Artist,
+        playbackSession.album AS Album,
+        playbackSession.source_title AS SourceTitle,
+        playbackSession.origin_id AS OriginID
     FROM
-    	playbackSession
+        playbackSession
     ORDER BY
-    	playbackSession.id'''
+        playbackSession.id'''
+    LET FileName = '''Media History'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Chromium Browser Network Action Predictor
   query: |
@@ -718,10 +704,10 @@ sources:
     resource_prefetch_predictor_host_redirect
     ORDER BY
     network_action_predictor.id ASC'''
+    LET FileName = '''Network Action Predictor'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Chromium Browser Shortcuts
   query: |
@@ -742,10 +728,10 @@ sources:
     omni_box_shortcuts
     ORDER BY
     omni_box_shortcuts.last_access_time ASC'''
+    LET FileName = '''Shortcuts'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Chromium Browser Top Sites
   query: |
@@ -760,10 +746,10 @@ sources:
     top_sites
     ORDER BY
     top_sites.url_rank ASC'''
+    LET FileName = '''Top Sites'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Dropbox Aggregation database
   query: |
@@ -776,10 +762,10 @@ sources:
     snapshot
     ORDER BY
     snapshot."key" ASC'''
+    LET FileName = '''aggregation.dbx'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Drobpox
   query: |
@@ -809,10 +795,10 @@ sources:
     updated_sync_type
     from file_journal
     order by "local created time" desc'''
+    LET FileName = '''filecache.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Dropbox Icon DB
   query: |
@@ -826,10 +812,10 @@ sources:
     path_icon_table
     ORDER BY
     path_icon_table.created_time ASC'''
+    LET FileName = '''icon.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Dropbox
   query: |
@@ -845,10 +831,10 @@ sources:
     uid,
     host_id
     from instance'''
+    LET FileName = '''instance.dbx'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Dropbox Non-Local Resources
   query: |
@@ -861,14 +847,14 @@ sources:
     nonlocal_resources.url AS URL,
     nonlocal_resources.server_path AS ServerPath,
     CASE
-    
+
     WHEN nonlocal_resources.is_dir = 0 THEN
     'No'
     WHEN nonlocal_resources.is_dir = 1 THEN
     'Yes'
     END AS IsDirectory,
     CASE
-    
+
     WHEN nonlocal_resources.is_share = 0 THEN
     'No'
     WHEN nonlocal_resources.is_share = 1 THEN
@@ -878,10 +864,10 @@ sources:
     nonlocal_resources.resource_id AS ResourceID
     FROM
     nonlocal_resources'''
+    LET FileName = '''home.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Dropbox Recent Items
   query: |
@@ -895,7 +881,7 @@ sources:
     recents.batch_key AS BatchKey,
     recents.event_type AS EventType,
     CASE
-    
+
     WHEN recents.is_local = 0 THEN
     'No'
     WHEN recents.is_local = 1 THEN
@@ -908,10 +894,10 @@ sources:
     recents
     ORDER BY
     recents.timestamp ASC'''
+    LET FileName = '''home.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Dropbox SFJ Resources
   query: |
@@ -929,10 +915,10 @@ sources:
     sfj_resources
     ORDER BY
     sfj_resources.server_fetch_timestamp ASC'''
+    LET FileName = '''home.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Dropbox Starred Items
   query: |
@@ -943,7 +929,7 @@ sources:
     starred_items.account_id AS AccountID,
     starred_items.server_path AS ServerPath,
     CASE
-    
+
     WHEN starred_items.is_starred = 0 THEN
     'No'
     WHEN starred_items.is_starred = 1 THEN
@@ -958,10 +944,10 @@ sources:
     starred_items
     ORDER BY
     starred_items.timestamp ASC'''
+    LET FileName = '''home.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Dropbox Sync History
   query: |
@@ -978,10 +964,10 @@ sources:
     sync_history
     ORDER BY
     sync_history.timestamp ASC'''
+    LET FileName = '''sync_history.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Dropbox Tray Thumbnails
   query: |
@@ -995,10 +981,10 @@ sources:
     cached_thumbnail_table
     ORDER BY
     cached_thumbnail_table.timestamp ASC'''
+    LET FileName = '''tray-thumbnails.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Drobpox
   query: |
@@ -1008,10 +994,10 @@ sources:
        key,
        VALUE
        from config'''
+    LET FileName = '''config.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows EventTranscript.db BrowsingHistory
   query: |
@@ -1019,7 +1005,7 @@ sources:
     LET IdentifyValue = 7
     LET SQLQuery = '''SELECT
     CASE
-    
+
     WHEN
     events_persisted.sid = 'S-1-0' THEN
     'S-1-0 (Null Authority)'
@@ -1229,7 +1215,7 @@ sources:
     events_persisted.event_keywords AS Keywords,
     provider_groups.group_guid AS GroupGUID,
     CASE
-    
+
     WHEN events_persisted.is_core = 0 THEN
     'No'
     WHEN events_persisted.is_core = 1 THEN
@@ -1247,10 +1233,10 @@ sources:
     TagName = 'Browsing History'
     ORDER BY
     events_persisted.timestamp ASC'''
+    LET FileName = '''EventTranscript.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows EventTranscript.db Device Connectivity and Configuration
   query: |
@@ -1258,7 +1244,7 @@ sources:
     LET IdentifyValue = 7
     LET SQLQuery = '''SELECT
     CASE
-    
+
     WHEN
     events_persisted.sid = 'S-1-0' THEN
     'S-1-0 (Null Authority)'
@@ -1468,7 +1454,7 @@ sources:
     events_persisted.event_keywords AS Keywords,
     provider_groups.group_guid AS GroupGUID,
     CASE
-    
+
     WHEN events_persisted.is_core = 0 THEN
     'No'
     WHEN events_persisted.is_core = 1 THEN
@@ -1486,10 +1472,10 @@ sources:
     TagName = 'Device Connectivity and Configuration'
     ORDER BY
     events_persisted.timestamp ASC'''
+    LET FileName = '''EventTranscript.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows EventTranscript.db Inking Typing and Speech Utterance
   query: |
@@ -1497,7 +1483,7 @@ sources:
     LET IdentifyValue = 7
     LET SQLQuery = '''SELECT
     CASE
-    
+
     WHEN
     events_persisted.sid = 'S-1-0' THEN
     'S-1-0 (Null Authority)'
@@ -1707,7 +1693,7 @@ sources:
     events_persisted.event_keywords AS Keywords,
     provider_groups.group_guid AS GroupGUID,
     CASE
-    
+
     WHEN events_persisted.is_core = 0 THEN
     'No'
     WHEN events_persisted.is_core = 1 THEN
@@ -1725,10 +1711,10 @@ sources:
     TagName = 'Inking Typing and Speech Utterance'
     ORDER BY
     events_persisted.timestamp ASC'''
+    LET FileName = '''EventTranscript.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows EventTranscript.db_ProductandServicePerformance
   query: |
@@ -1736,7 +1722,7 @@ sources:
     LET IdentifyValue = 7
     LET SQLQuery = '''SELECT
     CASE
-    
+
     WHEN
     events_persisted.sid = 'S-1-0' THEN
     'S-1-0 (Null Authority)'
@@ -1946,7 +1932,7 @@ sources:
     events_persisted.event_keywords AS Keywords,
     provider_groups.group_guid AS GroupGUID,
     CASE
-    
+
     WHEN events_persisted.is_core = 0 THEN
     'No'
     WHEN events_persisted.is_core = 1 THEN
@@ -1964,10 +1950,10 @@ sources:
     TagName = 'Product and Service Performance'
     ORDER BY
     events_persisted.timestamp ASC'''
+    LET FileName = '''EventTranscript.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows EventTranscript.db Product and Service Usage
   query: |
@@ -1975,7 +1961,7 @@ sources:
     LET IdentifyValue = 7
     LET SQLQuery = '''SELECT
     CASE
-    
+
     WHEN
     events_persisted.sid = 'S-1-0' THEN
     'S-1-0 (Null Authority)'
@@ -2185,7 +2171,7 @@ sources:
     events_persisted.event_keywords AS Keywords,
     provider_groups.group_guid AS GroupGUID,
     CASE
-    
+
     WHEN events_persisted.is_core = 0 THEN
     'No'
     WHEN events_persisted.is_core = 1 THEN
@@ -2203,10 +2189,10 @@ sources:
     TagName = 'Product and Service Usage'
     ORDER BY
     events_persisted.timestamp ASC'''
+    LET FileName = '''EventTranscript.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows EventTranscript.db Software Setup and Inventory
   query: |
@@ -2214,7 +2200,7 @@ sources:
     LET IdentifyValue = 7
     LET SQLQuery = '''SELECT
     CASE
-    
+
     WHEN
     events_persisted.sid = 'S-1-0' THEN
     'S-1-0 (Null Authority)'
@@ -2424,7 +2410,7 @@ sources:
     events_persisted.event_keywords AS Keywords,
     provider_groups.group_guid AS GroupGUID,
     CASE
-    
+
     WHEN events_persisted.is_core = 0 THEN
     'No'
     WHEN events_persisted.is_core = 1 THEN
@@ -2442,10 +2428,10 @@ sources:
     TagName = 'Software Setup and Inventory'
     ORDER BY
     events_persisted.timestamp ASC'''
+    LET FileName = '''EventTranscript.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows EventTranscript.db BrowsingHistory
   query: |
@@ -2453,7 +2439,7 @@ sources:
     LET IdentifyValue = 4
     LET SQLQuery = '''SELECT
     CASE
-    
+
     WHEN
     events_persisted.sid = 'S-1-0' THEN
     'S-1-0 (Null Authority)'
@@ -2662,7 +2648,7 @@ sources:
     events_persisted.event_keywords AS Keywords,
     provider_groups.group_guid AS GroupGUID,
     CASE
-    
+
     WHEN events_persisted.is_core = 0 THEN
     'No'
     WHEN events_persisted.is_core = 1 THEN
@@ -2679,10 +2665,10 @@ sources:
     TagName = 'Browsing History'
     ORDER BY
     events_persisted.timestamp ASC'''
+    LET FileName = '''EventTranscript.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows EventTranscript.db Device Connectivity and Configuration
   query: |
@@ -2690,7 +2676,7 @@ sources:
     LET IdentifyValue = 4
     LET SQLQuery = '''SELECT
     CASE
-    
+
     WHEN
     events_persisted.sid = 'S-1-0' THEN
     'S-1-0 (Null Authority)'
@@ -2899,7 +2885,7 @@ sources:
     events_persisted.event_keywords AS Keywords,
     provider_groups.group_guid AS GroupGUID,
     CASE
-    
+
     WHEN events_persisted.is_core = 0 THEN
     'No'
     WHEN events_persisted.is_core = 1 THEN
@@ -2916,10 +2902,10 @@ sources:
     TagName = 'Device Connectivity and Configuration'
     ORDER BY
     events_persisted.timestamp ASC'''
+    LET FileName = '''EventTranscript.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows EventTranscript.db Inking Typing and Speech Utterance
   query: |
@@ -2927,7 +2913,7 @@ sources:
     LET IdentifyValue = 4
     LET SQLQuery = '''SELECT
     CASE
-    
+
     WHEN
     events_persisted.sid = 'S-1-0' THEN
     'S-1-0 (Null Authority)'
@@ -3136,7 +3122,7 @@ sources:
     events_persisted.event_keywords AS Keywords,
     provider_groups.group_guid AS GroupGUID,
     CASE
-    
+
     WHEN events_persisted.is_core = 0 THEN
     'No'
     WHEN events_persisted.is_core = 1 THEN
@@ -3153,10 +3139,10 @@ sources:
     TagName = 'Inking Typing and Speech Utterance'
     ORDER BY
     events_persisted.timestamp ASC'''
+    LET FileName = '''EventTranscript.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows EventTranscript.db_ProductandServicePerformance
   query: |
@@ -3164,7 +3150,7 @@ sources:
     LET IdentifyValue = 4
     LET SQLQuery = '''SELECT
     CASE
-    
+
     WHEN
     events_persisted.sid = 'S-1-0' THEN
     'S-1-0 (Null Authority)'
@@ -3373,7 +3359,7 @@ sources:
     events_persisted.event_keywords AS Keywords,
     provider_groups.group_guid AS GroupGUID,
     CASE
-    
+
     WHEN events_persisted.is_core = 0 THEN
     'No'
     WHEN events_persisted.is_core = 1 THEN
@@ -3390,10 +3376,10 @@ sources:
     TagName = 'Product and Service Performance'
     ORDER BY
     events_persisted.timestamp ASC'''
+    LET FileName = '''EventTranscript.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows EventTranscript.db Product and Service Usage
   query: |
@@ -3401,7 +3387,7 @@ sources:
     LET IdentifyValue = 4
     LET SQLQuery = '''SELECT
     CASE
-    
+
     WHEN
     events_persisted.sid = 'S-1-0' THEN
     'S-1-0 (Null Authority)'
@@ -3610,7 +3596,7 @@ sources:
     events_persisted.event_keywords AS Keywords,
     provider_groups.group_guid AS GroupGUID,
     CASE
-    
+
     WHEN events_persisted.is_core = 0 THEN
     'No'
     WHEN events_persisted.is_core = 1 THEN
@@ -3627,10 +3613,10 @@ sources:
     TagName = 'Product and Service Usage'
     ORDER BY
     events_persisted.timestamp ASC'''
+    LET FileName = '''EventTranscript.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows EventTranscript.db Software Setup and Inventory
   query: |
@@ -3638,7 +3624,7 @@ sources:
     LET IdentifyValue = 4
     LET SQLQuery = '''SELECT
     CASE
-    
+
     WHEN
     events_persisted.sid = 'S-1-0' THEN
     'S-1-0 (Null Authority)'
@@ -3847,7 +3833,7 @@ sources:
     events_persisted.event_keywords AS Keywords,
     provider_groups.group_guid AS GroupGUID,
     CASE
-    
+
     WHEN events_persisted.is_core = 0 THEN
     'No'
     WHEN events_persisted.is_core = 1 THEN
@@ -3864,10 +3850,10 @@ sources:
     TagName = 'Software Setup and Inventory'
     ORDER BY
     events_persisted.timestamp ASC'''
+    LET FileName = '''EventTranscript.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: FileZilla Client Queue
   query: |
@@ -3893,10 +3879,10 @@ sources:
      INNER JOIN servers s ON f.server = s.id
      INNER JOIN remote_paths r ON f.local_path = r.id
      INNER JOIN local_paths l ON f.remote_path = l.id'''
+    LET FileName = '''queue.sqlite3'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Bookmarks
   query: |
@@ -3906,7 +3892,7 @@ sources:
     Bookmarks.id AS ID,
     Bookmarks.parent AS ParentID,
     CASE
-    
+
     WHEN Bookmarks.type = 1 THEN
     'URL'
     WHEN Bookmarks.type = 2 THEN
@@ -3925,10 +3911,10 @@ sources:
     LEFT JOIN moz_places ON Bookmarks.fk = moz_places.id
     ORDER BY
     Bookmarks.id ASC'''
+    LET FileName = '''places.sqlite'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Firefox Cookies
   query: |
@@ -3943,14 +3929,14 @@ sources:
     datetime( moz_cookies.lastAccessed / 1000000, 'UNIXEPOCH', 'localtime' ) AS "Last Accessed Time",
     datetime( moz_cookies.expiry, 'UNIXEPOCH', 'localtime' ) AS Expiration,
     CASE
-    
+
     WHEN moz_cookies.isSecure = 0 THEN
     'No'
     WHEN moz_cookies.isSecure = 1 THEN
     'Yes'
     END AS IsSecure,
     CASE
-    
+
     WHEN moz_cookies.isHttpOnly = 0 THEN
     'No'
     WHEN moz_cookies.isHttpOnly = 1 THEN
@@ -3960,30 +3946,30 @@ sources:
     moz_cookies
     ORDER BY
     moz_cookies.id ASC'''
+    LET FileName = '''cookies.sqlite'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Firefox Downloads
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='moz_historyvisits' OR name='moz_bookmarks' OR name='moz_places' OR name='moz_inputhistory');'''
     LET IdentifyValue = 4
     LET SQLQuery = '''SELECT
-    	moz_annos.place_id AS PlaceID,
-    	moz_annos.content AS Content,
-    	datetime( dateAdded / 1000000, 'unixepoch', 'localtime' ) AS DateAdded,
-    	datetime( lastModified / 1000000, 'unixepoch', 'localtime' ) AS LastModified
+        moz_annos.place_id AS PlaceID,
+        moz_annos.content AS Content,
+        datetime( dateAdded / 1000000, 'unixepoch', 'localtime' ) AS DateAdded,
+        datetime( lastModified / 1000000, 'unixepoch', 'localtime' ) AS LastModified
     FROM
-    	moz_annos
+        moz_annos
     WHERE
-    	anno_attribute_id IN (1,2)
+        anno_attribute_id IN (1,2)
     ORDER BY
-    	moz_annos.dateAdded ASC'''
+        moz_annos.dateAdded ASC'''
+    LET FileName = '''places.sqlite'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Firefox Downloads
   query: |
@@ -4003,10 +3989,10 @@ sources:
     moz_downloads
     ORDER BY
     moz_downloads.id ASC'''
+    LET FileName = '''downloads.sqlite'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Firefox Favicons
   query: |
@@ -4023,10 +4009,10 @@ sources:
     INNER JOIN moz_pages_w_icons ON moz_icons_to_pages.page_id = moz_pages_w_icons.id
     ORDER BY
     moz_icons.expire_ms ASC'''
+    LET FileName = '''favicons.sqlite'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Firefox Form History
   query: |
@@ -4044,10 +4030,10 @@ sources:
      moz_formhistory
     ORDER BY
      id ASC'''
+    LET FileName = '''formhistory.sqlite'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: History
   query: |
@@ -4062,7 +4048,7 @@ sources:
     moz_places.title AS Title,
     moz_places.description AS Description,
     CASE
-    
+
     WHEN moz_historyvisits.visit_type = 1 THEN
     'TRANSITION_LINK'
     WHEN moz_historyvisits.visit_type = 2 THEN
@@ -4083,14 +4069,14 @@ sources:
     'TRANSITION_RELOAD'
     END AS VisitType,
     CASE
-    
+
     WHEN moz_places.hidden = 0 THEN
     'No'
     WHEN moz_places.hidden = 1 THEN
     'Yes'
     END AS Hidden,
     CASE
-    
+
     WHEN moz_places.typed = 0 THEN
     'No'
     WHEN moz_places.typed = 1 THEN
@@ -4103,10 +4089,10 @@ sources:
     INNER JOIN moz_historyvisits ON moz_places.origin_id = moz_historyvisits.id
     ORDER BY
     moz_places.last_visit_date ASC'''
+    LET FileName = '''places.sqlite'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Google Drive FS Changes
   query: |
@@ -4124,14 +4110,14 @@ sources:
     fschanges.path AS Path,
     fschanges.name AS Name,
     CASE
-    
+
     WHEN fschanges.is_folder = 0 THEN
     'No'
     WHEN fschanges.is_folder = 1 THEN
     'Yes'
     END AS IsFolder,
     CASE
-    
+
     WHEN fschanges.affects_gdoc = 0 THEN
     'No'
     WHEN fschanges.affects_gdoc = 1 THEN
@@ -4140,14 +4126,14 @@ sources:
     datetime( modified, 'unixepoch' ) AS ModifiedTime,
     fschanges.size AS SizeInBytes,
     CASE
-    
+
     WHEN fschanges.shared = 0 THEN
     'No'
     WHEN fschanges.shared = 1 THEN
     'Yes'
     END AS Shared,
     CASE
-    
+
     WHEN doc_type = 0 THEN
     'Folder'
     WHEN doc_type = 1 THEN
@@ -4176,10 +4162,10 @@ sources:
     sqlite_sequence
     ORDER BY
     fschanges.identifier ASC'''
+    LET FileName = '''random.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Google Drive CloudGraphDB
   query: |
@@ -4189,7 +4175,7 @@ sources:
     filename AS 'Filename',
     datetime( modified, 'unixepoch' ) AS 'ModifiedTime',
     CASE
-    
+
     WHEN acl_role = 0 THEN
     'Private/Google Drive Owner'
     WHEN acl_role = 1 THEN
@@ -4198,7 +4184,7 @@ sources:
     'Can View' ELSE 'From Elsewhere'
     END AS 'ACL Role',
     CASE
-    
+
     WHEN doc_type = 0 THEN
     'Folder'
     WHEN doc_type = 1 THEN
@@ -4219,14 +4205,14 @@ sources:
     size AS 'Size in bytes',
     checksum AS 'MD5 Hash',
     CASE
-    
+
     WHEN shared = 1 THEN
     'Shared'
     WHEN shared = 0 THEN
     'Not Shared'
     END AS 'Shared Status',
     CASE
-    
+
     WHEN removed = 0 THEN
     'Not Removed'
     WHEN removed = 1 THEN
@@ -4234,10 +4220,10 @@ sources:
     END AS 'Cloud Status'
     FROM
     cloud_graph_entry'''
+    LET FileName = '''cloud_graph.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Google Drive SnapshotDB - Cloud Files
   query: |
@@ -4249,12 +4235,12 @@ sources:
     filename AS Filename,
     datetime( modified, 'unixepoch' ) AS ModifiedTime,
     CASE
-    
+
     WHEN acl_role = 0 THEN
     'Google Drive Owner' ELSE 'From Elsewhere'
     END AS ACLRole,
     CASE
-    
+
     WHEN doc_type = 0 THEN
     'Folder'
     WHEN doc_type = 1 THEN
@@ -4275,14 +4261,14 @@ sources:
     size AS 'SizeInBytes',
     checksum AS Checksum,
     CASE
-    
+
     WHEN shared = 1 THEN
     'Shared'
     WHEN shared = 0 THEN
     'Not Shared'
     END AS SharedStatus,
     CASE
-    
+
     WHEN removed = 1 THEN
     'Yes'
     WHEN removed = 0 THEN
@@ -4293,10 +4279,10 @@ sources:
     LEFT JOIN cloud_relations ON cloud_relations.child_doc_id = cloud_entry.doc_id
     ORDER BY
     cloud_entry.modified ASC'''
+    LET FileName = '''snapshot.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Google Drive SnapshotDB - Local Files
   query: |
@@ -4311,7 +4297,7 @@ sources:
     local_entry.checksum AS Checksum,
     local_entry.size AS SizeInBytes,
     CASE
-    
+
     WHEN is_folder = 0 THEN
     'No'
     WHEN is_folder = 1 THEN
@@ -4322,10 +4308,10 @@ sources:
     LEFT JOIN local_relations ON local_relations.child_inode = local_entry.inode
     ORDER BY
     local_entry.inode ASC'''
+    LET FileName = '''snapshot.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Google Drive SnapshotDB - Volume Info
   query: |
@@ -4346,10 +4332,10 @@ sources:
     main.volume_info
     ORDER BY
     main.volume_info.full_path ASC'''
+    LET FileName = '''snapshot.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Google Drive Sync Config Database
   query: |
@@ -4361,10 +4347,10 @@ sources:
     data.data_value AS DataValue
     FROM
     data'''
+    LET FileName = '''sync_config.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Google Drive for Desktop Metadata
   query: |
@@ -4396,72 +4382,10 @@ sources:
     items.id AS "CloudIdentifier"
     FROM
     items'''
+    LET FileName = '''metadata_sqlite_db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
-
-- name: Device history
-  query: |
-    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='workout_sessions' OR name='alarm_events' OR name='workout_builders' OR name='sources' OR name='sync_stores' OR name='source_devices');'''
-    LET IdentifyValue = 6
-    LET SQLQuery = '''SELECT
-    manufacturer,
-    hardware,
-    software,
-    datetime(source_devices.creation_date+978307200,'unixepoch') AS "iOS_Install_or_Upgrade_Date"
-    FROM
-    source_devices'''
-
-    SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
-
-- name: Samples
-  query: |
-    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='workouts' OR name='workout_events' OR name='medical_records' OR name='clinical accounts' OR name='data_provences' OR name='devices' OR name='fitness_friend_activity_snapshots' OR name='vaccination_record_samples' or name='samples');'''
-    LET IdentifyValue = 7
-    LET SQLQuery = '''Select
-    datetime(samples.start_date+978307200,'unixepoch','localtime') as "Start Date",
-    datetime(samples.end_date+978307200,'unixepoch','localtime') as "End Date",
-    samples.data_id,
-    case
-    when samples.data_type = 3 then "weight"
-    when samples.data_type = 7 then "steps"
-    when samples.data_type = 8 then "dist in m"
-    when samples.data_type = 9 then "resting energy"
-    when samples.data_type = 10 then "active energy"
-    when samples.data_type = 12 then "flights climbed"
-    when samples.data_type = 67 then "weekly calorie goal"
-    when samples.data_type = 70 then "watch on"
-    when samples.data_type = 75 then "stand"
-    when samples.data_type = 76 then "activity"
-    when samples.data_type = 79 then "workout"
-    when samples.data_type = 83 then "some workouts"
-    end as "activity type",
-    quantity,
-    original_quantity,
-    unit_strings.unit_string,
-    original_unit,
-    correlations.correlation,
-    correlations.object,
-    correlations.provenance
-    string_value,
-    metadata_values.data_value,
-    metadata_values.numerical_value,
-    metadata_values.value_type,
-    metadata_keys.key
-    from samples
-    left outer join quantity_samples on samples.data_id = quantity_samples.data_id
-    left outer join unit_strings on quantity_samples.original_unit = unit_strings.RowID
-    left outer join correlations on samples.data_id = correlations.object
-    left outer join metadata_values on metadata_values.object_id = samples.data_id
-    left outer join metadata_keys on metadata_keys.ROWID = metadata_values.key_id
-    order by "Start Date" desc'''
-
-    SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Microsoft Sticky Notes
   query: |
@@ -4491,10 +4415,10 @@ sources:
     Note
     ORDER BY
     Note.CreatedAt ASC'''
+    LET FileName = '''plum.sqlite'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Nessus Preferences Database
   query: |
@@ -4505,107 +4429,90 @@ sources:
     PREFERENCES.value AS Value
     FROM
     PREFERENCES'''
+    LET FileName = '''nessusd.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
-
-- name: Log Snippets
-  query: |
-    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='logs');'''
-    LET IdentifyValue = 1
-    LET SQLQuery = '''SELECT
-    _id,
-    number,
-    DateTime(date / 1000, 'UNIXEPOCH') AS "Date",
-    name,
-    account_name,
-    m_content
-    FROM logs'''
-
-    SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Company names
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='Cars' OR name='CarScheduling' OR name='Customers');'''
     LET IdentifyValue = 3
     LET SQLQuery = '''select Company from Customers;'''
+    LET FileName = '''CarsDB.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Order payment type and amount, ordered
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='Cars' OR name='CarScheduling' OR name='Customers');'''
     LET IdentifyValue = 3
     LET SQLQuery = '''select CustomerID,PaymentType,PaymentAmount from Orders ORDER BY PaymentAmount,PaymentType;'''
+    LET FileName = '''CarsDB.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Distinct descriptions
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='Cars' OR name='CarScheduling' OR name='Customers');'''
     LET IdentifyValue = 3
     LET SQLQuery = '''select distinct Description from CarScheduling'''
+    LET FileName = '''CarsDB.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Make and model
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='Cars' OR name='CarScheduling' OR name='Customers');'''
     LET IdentifyValue = 3
     LET SQLQuery = '''select Trademark,Model from cars ORDER BY Trademark'''
+    LET FileName = '''CarsDB.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Customers table users
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='Customers' OR name='Total');'''
     LET IdentifyValue = 2
     LET SQLQuery = '''SELECT FirstName,LastName from Customers'''
+    LET FileName = '''Contacts.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Another Customers table query
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='Customers' OR name='Total');'''
     LET IdentifyValue = 2
     LET SQLQuery = '''SELECT Id,State as Wizzo from Customers'''
+    LET FileName = '''Contacts.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: JoinExample
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='Customers' OR name='Total');'''
     LET IdentifyValue = 2
     LET SQLQuery = '''SELECT Total.ID, Customers.FirstName || ' ' || Customers.LastName AS CustomerName, Total.Year, Total.January, Total.February, Total.March, Total.April, Total.May, Total.June, Total.July, Total.August, Total.September, Total.October, Total.November, Total.December FROM         Customers INNER JOIN Total ON Customers.ID = Total.CustomerID'''
+    LET FileName = '''Contacts.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: SomeThingElse
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='Customers' OR name='Total');'''
     LET IdentifyValue = 2
     LET SQLQuery = '''SELECT Id,State as Wizzo froM Customers'''
+    LET FileName = '''Contacts.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: TeraCopy MainDB
   query: |
@@ -4620,64 +4527,64 @@ sources:
      Files AS "Number of Files",
      size AS "Size (Bytes)"
      from list'''
+    LET FileName = '''Main.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: TeraCopy History
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='Files');'''
     LET IdentifyValue = 1
     LET SQLQuery = '''SELECT
-    	Source,
-    	size AS "Size (Bytes)",
+        Source,
+        size AS "Size (Bytes)",
     CASE
-    
-    		WHEN IsFolder = 0 THEN
-    		'No'
-    		WHEN IsFolder = 1 THEN
-    		'Yes'
-    	END AS IsFolder,
+
+            WHEN IsFolder = 0 THEN
+            'No'
+            WHEN IsFolder = 1 THEN
+            'Yes'
+        END AS IsFolder,
     CASE
-    
-    		WHEN Marked = 0 THEN
-    		'No'
-    		WHEN Marked = 1 THEN
-    		'Yes'
-    	END AS Marked,
+
+            WHEN Marked = 0 THEN
+            'No'
+            WHEN Marked = 1 THEN
+            'Yes'
+        END AS Marked,
     CASE
-    
-    		WHEN Hidden = 0 THEN
-    		'No'
-    		WHEN Hidden = 1 THEN
-    		'Yes'
-    	END AS Hidden,
-    	datetime( julianday( Creation ) ) AS Creation,
-    	datetime( julianday( Access ) ) AS Access,
-    	datetime( julianday( Write ) ) AS Write
+
+            WHEN Hidden = 0 THEN
+            'No'
+            WHEN Hidden = 1 THEN
+            'Yes'
+        END AS Hidden,
+        datetime( julianday( Creation ) ) AS Creation,
+        datetime( julianday( Access ) ) AS Access,
+        datetime( julianday( Write ) ) AS Write
     FROM
-    	Files'''
+        Files'''
+    LET FileName = '''random.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: TeraCopy History Log
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='Files');'''
     LET IdentifyValue = 1
     LET SQLQuery = '''SELECT
-    	Log.Timestamp AS Timestamp,
-    	Log.Message AS Message
+        Log.Timestamp AS Timestamp,
+        Log.Message AS Message
     FROM
-    	Log
+        Log
     ORDER BY
-    	Timestamp'''
+        Timestamp'''
+    LET FileName = '''random.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows Update Store.db
   query: |
@@ -4696,10 +4603,10 @@ sources:
     COMPLETEDUPDATES
     ORDER BY
     COMPLETEDUPDATES.TIME ASC'''
+    LET FileName = '''Store.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows Notifications
   query: |
@@ -4711,7 +4618,7 @@ sources:
     Notification.HandlerId AS HandlerId,
     NotificationHandler.PrimaryId AS Application,
     CASE
-    
+
     WHEN NotificationHandler.ParentId THEN
     NotificationHandler.ParentId ELSE ''
     END AS Parent,
@@ -4723,44 +4630,44 @@ sources:
     Notification."Group" AS "Group",
     datetime( ( Notification.ArrivalTime - 116444736000000000 ) / 10000000, 'unixepoch' ) AS ArrivalTime,
     CASE
-    
+
     WHEN Notification.ExpiryTime = 0 THEN
     'Expired' ELSE datetime( ( Notification.ExpiryTime - 116444736000000000 ) / 10000000, 'unixepoch' )
     END AS ExpirationTime,
     NotificationHandler.CreatedTime AS HandlerCreated,
     NotificationHandler.ModifiedTime AS HandlerModified,
     CASE
-    
+
     WHEN NotificationHandler.WNSId NOTNULL THEN
     NotificationHandler.WNSId ELSE ''
     END AS WNSId,
     CASE
-    
+
     WHEN NotificationHandler.WNFEventName NOTNULL THEN
     NotificationHandler.WNFEventName ELSE ''
     END AS WNFEventName,
     CASE
-    
+
     WHEN WNSPushChannel.ChannelId NOTNULL THEN
     WNSPushChannel.ChannelId ELSE ''
     END AS ChannelID,
     CASE
-    
+
     WHEN WNSPushChannel.Uri NOTNULL THEN
     WNSPushChannel.Uri ELSE ''
     END AS URI,
     CASE
-    
+
     WHEN WNSPushChannel.CreatedTime NOTNULL THEN
     datetime( ( WNSPushChannel.CreatedTime - 116444736000000000 ) / 10000000, 'unixepoch' ) ELSE ''
     END AS WNSCreatedTime,
     CASE
-    
+
     WHEN WNSPushChannel.ExpiryTime NOTNULL THEN
     datetime( ( WNSPushChannel.ExpiryTime - 116444736000000000 ) / 10000000, 'unixepoch' ) ELSE ''
     END AS WNSExpirationTime,
     CASE
-    
+
     WHEN hex( Notification.ActivityId ) = '00000000000000000000000000000000' THEN
     '' ELSE hex( Notification.ActivityId )
     END AS ActivityId
@@ -4770,10 +4677,10 @@ sources:
     LEFT JOIN WNSPushChannel ON WNSPushChannel.HandlerId = NotificationHandler.RecordId
     ORDER BY
     Id DESC'''
+    LET FileName = '''wpndatabase.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows Notifications
   query: |
@@ -4791,10 +4698,10 @@ sources:
     JOIN NotificationHandler ON NotificationHandler.RecordId = WNSPushChannel.HandlerId
     ORDER BY
     CreatedTime ASC'''
+    LET FileName = '''wpndatabase.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows Your Phone Contacts Database
   query: |
@@ -4813,7 +4720,7 @@ sources:
     contact.family_name AS FamilyName,
     contact.name_suffix AS Suffix,
     CASE
-    
+
     WHEN contactdate.date_type = 1 THEN
     'Birthday'
     WHEN contactdate.date_type = 2 THEN
@@ -4824,7 +4731,7 @@ sources:
     contactdate.label AS DateLabel,
     contactdate.display_date AS DisplayDate,
     CASE
-    
+
     WHEN contacturl.type = 1 THEN
     'HomePage'
     WHEN contacturl.type = 3 THEN
@@ -4837,7 +4744,7 @@ sources:
     contacturl.label AS URLLabel,
     contacturl.url_address AS URLAddress,
     CASE
-    
+
     WHEN emailaddress.type = 1 THEN
     'Home'
     WHEN emailaddress.type = 2 THEN
@@ -4852,7 +4759,7 @@ sources:
     phonenumber.phone_number AS PhoneNumber,
     phonenumber.display_phone_number AS DisplayPhoneNumber,
     CASE
-    
+
     WHEN phonenumber.phone_number_type = 1 THEN
     'Home'
     WHEN phonenumber.phone_number_type = 2 THEN
@@ -4870,7 +4777,7 @@ sources:
     END AS PhoneNumberType,
     phonenumber.label AS PhoneNumberLabel,
     CASE
-    
+
     WHEN postaladdress.type = 1 THEN
     'Home'
     WHEN postaladdress.type = 2 THEN
@@ -4896,10 +4803,10 @@ sources:
     LEFT JOIN postaladdress ON contact.contact_id = postaladdress.contact_id
     ORDER BY
     contact.display_name ASC'''
+    LET FileName = '''contacts.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows Your Phone Notifications Database
   query: |
@@ -4916,21 +4823,21 @@ sources:
     json_extract ( json, '$.text' ) AS 'Text',
     json_extract ( json, '$.subText' ) AS 'SubText',
     CASE
-    
+
     WHEN json_extract ( json, '$.isClearable' ) = 0 THEN
     'No'
     WHEN json_extract ( json, '$.isClearable' ) = 1 THEN
     'Yes'
     END AS 'IsClearable',
     CASE
-    
+
     WHEN json_extract ( json, '$.isGroup' ) = 0 THEN
     'No'
     WHEN json_extract ( json, '$.isGroup' ) = 1 THEN
     'Yes'
     END AS 'IsGroup',
     CASE
-    
+
     WHEN json_extract ( json, '$.isOngoing' ) = 0 THEN
     'No'
     WHEN json_extract ( json, '$.isOngoing' ) = 1 THEN
@@ -4943,10 +4850,10 @@ sources:
     notifications
     ORDER BY
     notifications.id ASC'''
+    LET FileName = '''Notifications.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows Your Phone Photos Database
   query: |
@@ -4968,37 +4875,37 @@ sources:
     media
     ORDER BY
     media.id ASC'''
+    LET FileName = '''photos.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows Your Phone Phone Database SMS Messages
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='message' OR name='mms' OR name='rcs_chat' OR name='sync' OR name='subscription');'''
     LET IdentifyValue = 5
     LET SQLQuery = '''SELECT
-    	message.message_id AS MessageID,
-    	message.thread_id AS ThreadID,
-    	datetime( ( "timestamp" / 10000000 ) - 11644473600, 'unixepoch' ) AS Timestamp,
-    	message.from_address AS "From",
+        message.message_id AS MessageID,
+        message.thread_id AS ThreadID,
+        datetime( ( "timestamp" / 10000000 ) - 11644473600, 'unixepoch' ) AS Timestamp,
+        message.from_address AS "From",
     CASE
-    
-    		WHEN message.type = 1 THEN
-    		'Received'
-    		WHEN message.type = 2 THEN
-    		'Sent' ELSE 'Unknown'
-    	END AS Type,
-    	message.body AS Body
+
+            WHEN message.type = 1 THEN
+            'Received'
+            WHEN message.type = 2 THEN
+            'Sent' ELSE 'Unknown'
+        END AS Type,
+        message.body AS Body
     FROM
-    	message
+        message
     ORDER BY
-    	message.thread_id ASC,
-    	message.timestamp ASC'''
+        message.thread_id ASC,
+        message.timestamp ASC'''
+    LET FileName = '''Phone.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows Your Phone Subscription Info
   query: |
@@ -5010,7 +4917,7 @@ sources:
     subscription.country_iso AS CountryISO,
     subscription.name AS WirelessProviderName,
     CASE
-    
+
     WHEN subscription.is_roaming = 0 THEN
     'No'
     WHEN subscription.is_roaming = 1 THEN
@@ -5018,35 +4925,35 @@ sources:
     END AS IsRoaming,
     subscription.number AS PhoneNumber,
     CASE
-    
+
     WHEN subscription.is_mms_enabled = 0 THEN
     'No'
     WHEN subscription.is_mms_enabled = 1 THEN
     'Yes' ELSE 'Unknown'
     END AS IsMMSEnabled,
     CASE
-    
+
     WHEN subscription.is_audio_attachment_allowed = 0 THEN
     'No'
     WHEN subscription.is_audio_attachment_allowed = 1 THEN
     'Yes' ELSE 'Unknown'
     END AS IsAudioAttachmentAllowed,
     CASE
-    
+
     WHEN subscription.is_multipart_sms_enabled = 0 THEN
     'No'
     WHEN subscription.is_multipart_sms_enabled = 1 THEN
     'Yes' ELSE 'Unknown'
     END AS IsMultiPartSMSEnabled,
     CASE
-    
+
     WHEN subscription.is_group_mms_enabled = 0 THEN
     'No'
     WHEN subscription.is_group_mms_enabled = 1 THEN
     'Yes' ELSE 'Unknown'
     END AS IsGroupMMSEnabled,
     CASE
-    
+
     WHEN subscription.should_send_multipart_sms_as_separate_messages = 0 THEN
     'No'
     WHEN subscription.should_send_multipart_sms_as_separate_messages = 1 THEN
@@ -5061,35 +4968,35 @@ sources:
     subscription.max_message_text_length AS MaxMessageTextLength,
     subscription.max_subject_length AS MaxSubjectLength,
     CASE
-    
+
     WHEN subscription.is_default_data_subscription = 0 THEN
     'No'
     WHEN subscription.is_default_data_subscription = 1 THEN
     'Yes' ELSE 'Unknown'
     END AS IsDefaultDataSubscription,
     CASE
-    
+
     WHEN subscription.is_default_sms_subscription = 0 THEN
     'No'
     WHEN subscription.is_default_sms_subscription = 1 THEN
     'Yes' ELSE 'Unknown'
     END AS IsDefaultSMSSubscription,
     CASE
-    
+
     WHEN subscription.is_default_subscription = 0 THEN
     'No'
     WHEN subscription.is_default_subscription = 1 THEN
     'Yes' ELSE 'Unknown'
     END AS IsDefaultSubscription,
     CASE
-    
+
     WHEN subscription.is_default_voice_subscription = 0 THEN
     'No'
     WHEN subscription.is_default_voice_subscription = 1 THEN
     'Yes' ELSE 'Unknown'
     END AS IsDefaultVoiceSubscription,
     CASE
-    
+
     WHEN subscription.is_rcs_supported = 0 THEN
     'No'
     WHEN subscription.is_rcs_supported = 1 THEN
@@ -5099,10 +5006,10 @@ sources:
     subscription.max_rcs_file_size AS "MaxRCSFileSize (Bytes)"
     FROM
     subscription'''
+    LET FileName = '''Phone.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Windows Your Phone Settings Database
   query: |
@@ -5114,7 +5021,7 @@ sources:
     phone_apps.version AS 'Version',
     settings.setting_group_id AS 'GroupID',
     CASE
-    
+
     WHEN settings.setting_value = 1 THEN
     'On' ELSE 'Off'
     END AS 'Settings Value',
@@ -5126,10 +5033,10 @@ sources:
     LEFT JOIN settings ON settings.setting_key = phone_apps.package_name
     ORDER BY
     phone_apps.app_name ASC'''
+    LET FileName = '''settings.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Calls
   query: |
@@ -5149,10 +5056,10 @@ sources:
     end as "Call Status",
     datetime(zdate+978307200,'unixepoch','localtime') AS "Timestamp"
     from zcallrecord'''
+    LET FileName = '''callhistory.storedata'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
 
 - name: Accounts
   query: |
@@ -5168,157 +5075,7 @@ sources:
     ZIDENTIFIER AS "Identifier",
     ZOWNINGBUNDLEID AS "Bundle ID"
     FROM ZACCOUNT'''
+    LET FileName = '''accounts4.db'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
-
-- name: Accounts
-  query: |
-    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='ZACCOUNT');'''
-    LET IdentifyValue = 1
-    LET SQLQuery = '''SELECT
-    Z_PK,
-    ZACCOUNTTYPE AS "Account Type",
-    ZPARENTACCOUNT AS "Parent Account",
-    ZUSERNAME AS "Username",
-    DATETIME(ZDATE+978307200,'UNIXEPOCH') AS "TIMESTAMP",
-    ZACCOUNTDESCRIPTION AS "Account Description",
-    ZIDENTIFIER AS "Identifier",
-    ZOWNINGBUNDLEID AS "Bundle ID"
-    FROM ZACCOUNT'''
-
-    SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
-
-- name: Moments
-  query: |
-    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='ZALBUMLIST' OR name='ZMOMENT' OR name='Z_PRIMARYKEY' OR name='ZCODEC' OR name='ZGENERICASSET');'''
-    LET IdentifyValue = 5
-    LET SQLQuery = '''Select
-    ZGENERICASSET.Z_PK,
-    CASE
-    when ZGENERICASSET.ZTRASHEDSTATE = 1 then "Deleted"
-    when ZGENERICASSET.ZTRASHEDSTATE = 0 then "Not Deleted"
-    end AS "State" ,
-    datetime(ZGENERICASSET.ZADDEDDATE+978307200,'UNIXEPOCH') AS "Added",
-    datetime(ZGENERICASSET.ZLASTSHAREDDATE+978307200,'UNIXEPOCH') AS "Last Shared",
-    ZGENERICASSET.ZLATITUDE AS "Latitude",
-    ZGENERICASSET.ZLONGITUDE AS "Longitude",
-    datetime(ZGENERICASSET.ZMODIFICATIONDATE+978307200,'UNIXEPOCH') AS "Modified",
-    datetime(ZGENERICASSET.ZTRASHEDDATE+978307200,'UNIXEPOCH') AS "Deleted Date",
-    ZGENERICASSET.ZDIRECTORY AS "Directory",
-    ZGENERICASSET.ZFILENAME AS "Filename",
-    ZGENERICASSET.ZLOCATIONDATA AS "Blob Location",
-    ZMOMENT.ZAPPROXIMATELATITUDE AS "Approximate Latitude",
-    ZMOMENT.ZAPPROXIMATELONGITUDE AS "Approximate Longitude",
-    datetime(ZMOMENT.ZSTARTDATE+978307200,'UNIXEPOCH') AS "Moment Start Date",
-    datetime(ZMOMENT.ZENDDATE+978307200,'UNIXEPOCH') AS "Moment End Date"
-    From ZGENERICASSET
-    left join zmoment on zmoment.z_pk=zgenericasset.zmoment'''
-
-    SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
-
-- name: SMS and iMessage
-  query: |
-    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='attachment' OR name='chat' OR name='deleted_messages' OR name='handle' OR name='sync_deleted_chats' OR name='sync_deleted_attachments' OR name='sync_deleted_messages' oR name='message');'''
-    LET IdentifyValue = 8
-    LET SQLQuery = '''SELECT message.rowid,
-    chat_message_join.chat_id,
-    message.handle_id,
-    message.text,
-    message.service,
-    message.account,
-    chat.account_login,
-    chat.chat_identifier,
-    case when LENGTH(chat_message_join.message_date)=18 then
-    datetime(chat_message_join.message_date/1000000000 + 978307200,'unixepoch','localtime')
-    when LENGTH(chat_message_join.message_date)=9 then
-    datetime(chat_message_join.message_date + 978307200,'unixepoch','localtime')
-    else 'NA'
-    END as "Message Date",
-    case when LENGTH(message.date_read)=18 then
-    datetime(message.date_read/1000000000 + 978307200,'unixepoch','localtime')
-    when LENGTH(message.date_read)=9 then
-    datetime(message.date_read+978307200,'unixepoch','localtime')
-    else 'NA'
-    END as "Date Read",
-    case when message.is_read=1
-    then 'Incoming'
-    when message.is_read=0
-    then 'Outgoing'
-    end as "Message Direction",
-    case when LENGTH(chat.last_read_message_timestamp)=18 then
-    datetime(chat.last_read_message_timestamp/1000000000+978307200,'unixepoch','localtime')
-    when LENGTH(chat.last_read_message_timestamp)=9 then
-    datetime(chat.last_read_message_timestamp + 978307200,'unixepoch','localtime')
-    else 'NA'
-    END as "Last Read",
-    attachment.filename,
-    datetime(attachment.created_date+978307200,'unixepoch','localtime') AS "Attachment Date",
-    attachment.mime_type,
-    attachment.total_bytes
-    FROM message
-    left join chat_message_join on chat_message_join.message_id=message.ROWID
-    left join chat on chat.ROWID=chat_message_join.chat_id
-    left join attachment on attachment.ROWID=chat_message_join.chat_id
-    order by message.date_read desc;'''
-
-    SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
-
-- name: pCloud Settings
-  query: |
-    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='task' OR name='syncfolderdelayed' OR name='syncfolder' OR name='syncedfolder' OR name='sqlite_stat1' OR name='sqlite_sequence' OR name='sharerequest' OR name='sharedfolder' OR name='setting' OR name='resolver' OR name='pagecachetask' OR name='pagecache' OR name='myteams' OR name='localfolder' OR name='localfileupload' OR name='localfile' OR name='links' OR name='hashchecksum' OR name='fsxattr' OR name='fstaskupload' OR name='fstaskfileid' OR name='fstaskdepend' OR name='fstask' OR name='folder' OR name='filerevision' OR name='file' OR name='devices' OR name='cryptofolderkey' OR name='cryptofilekey' OR name='contacts' OR name='bsharedfolder' OR name='baccountteam' OR NAME='baccountemail');'''
-    LET IdentifyValue = 33
-    LET SQLQuery = '''SELECT
-    setting.id,
-    setting.value
-    FROM
-    setting'''
-
-    SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
-
-- name: pCloud
-  query: |
-    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='task' OR name='syncfolderdelayed' OR name='syncfolder' OR name='syncedfolder' OR name='sqlite_stat1' OR name='sqlite_sequence' OR name='sharerequest' OR name='sharedfolder' OR name='setting' OR name='resolver' OR name='pagecachetask' OR name='pagecache' OR name='myteams' OR name='localfolder' OR name='localfileupload' OR name='localfile' OR name='links' OR name='hashchecksum' OR name='fsxattr' OR name='fstaskupload' OR name='fstaskfileid' OR name='fstaskdepend' OR name='fstask' OR name='folder' OR name='filerevision' OR name='file' OR name='devices' OR name='cryptofolderkey' OR name='cryptofilekey' OR name='contacts' OR name='bsharedfolder' OR name='baccountteam' OR NAME='baccountemail');'''
-    LET IdentifyValue = 33
-    LET SQLQuery = '''WITH RECURSIVE folder_lookup ( folder_id, parent_folder_id, full_path ) AS (
-    VALUES
-    ( '0', '', '' ) UNION
-    SELECT
-    id,
-    folder.parentfolderid,
-    full_path || '\' || name
-    FROM
-    folder,
-    folder_lookup
-    WHERE
-    folder_lookup.folder_id = folder.parentfolderid
-    ) SELECT
-    folder_id AS FolderID,
-    parent_folder_id AS ParentFolderID,
-    file.id AS FileId,
-    full_path || '\' || file.name AS FilePath,
-    file.size AS FileSizeBytes,
-    ( file.size / 1048576.0 ) AS FileSizeMB,
-    icon AS FileType,
-    file.ctime AS FileCTime,
-    datetime( file.ctime, 'unixepoch', 'utc' ) AS FileCTimeConvertedUTC,
-    file.mtime AS FileMtime,
-    datetime( file.mtime, 'unixepoch', 'utc' ) AS FileMTimeConvertedUTC
-    FROM
-    folder_lookup,
-    file
-    WHERE
-    file.parentfolderid = folder_id'''
-
-    SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
-
