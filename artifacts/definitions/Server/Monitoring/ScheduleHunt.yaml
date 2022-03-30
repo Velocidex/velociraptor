@@ -26,10 +26,7 @@ sources:
         AND Today =~ ScheduleDayRegex
         AND log(message="Launching at time " + Now)
 
-      SELECT * FROM foreach(row=schedule,
-      query={
-         SELECT hunt(artifacts=["Generic.Client.Info"],
+      SELECT hunt(artifacts=["Generic.Client.Info"],
                   spec=dict(`Generic.Client.Info`=dict()),
                   description="Periodic info hunt")
-         FROM schedule
-      })
+      FROM schedule
