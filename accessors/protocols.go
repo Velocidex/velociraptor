@@ -77,8 +77,9 @@ func (self _AddOSPath) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	if !ok {
 		return false
 	}
+
 	switch b.(type) {
-	case *OSPath, string:
+	case *OSPath, string, []vfilter.Any:
 		return true
 	}
 	return false
@@ -95,12 +96,25 @@ func (self _AddOSPath) Add(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) vf
 	switch t := b.(type) {
 	case *OSPath:
 		b_os_path = t
+
 	case string:
 		parsed, err := ParsePath(t, "")
 		if err != nil {
 			return vfilter.Null{}
 		}
 		b_os_path = parsed
+
+		// Support OSPath("/root") + ["foo", "bar"] -> OSPath("/root/foo/bar")
+	case []vfilter.Any:
+		components := make([]string, 0, len(t))
+		for _, item := range t {
+			str_item, ok := item.(string)
+			if ok {
+				components = append(components, str_item)
+			}
+		}
+
+		return a_os_path.Append(components...)
 	}
 	return a_os_path.Append(b_os_path.Components...)
 }
