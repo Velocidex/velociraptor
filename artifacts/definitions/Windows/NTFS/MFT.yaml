@@ -22,8 +22,11 @@ description: |
 
 
 parameters:
-  - name: MFTFilename
-    default: "C:/$MFT"
+  - name: MFTDrive
+    description: |
+      The path to to the drive that holds the MFT file (can be a
+      pathspec).
+    default: "C:"
   - name: Accessor
     default: ntfs
   - name: PathRegex
@@ -50,9 +53,11 @@ parameters:
     type: bool
     description: "Select MFT search on all attached ntfs drives."
 
-
 sources:
   - query: |
+      -- The path to to the drive that holds the MFT file (can be a pathspec)
+      LET Drive <= pathspec(parse=MFTDrive, path_type="windows")
+
       -- time testing
       LET time_test(stamp) =
             if(condition= DateBefore AND DateAfter,
@@ -67,19 +72,23 @@ sources:
             )))
 
       -- find all ntfs drives
-      LET ntfs_drives = SELECT FullPath + '/$MFT'as MFTFilename
-        FROM glob(globs="/*", accessor="ntfs")
-        WHERE log(message="Processing " + MFTFilename)
+      LET ntfs_drives = SELECT
+        OSPath AS Drive,
+        OSPath + '$MFT' AS MFTFilename
+      FROM glob(globs="/*", accessor="ntfs")
+      WHERE log(message="Processing " + MFTFilename)
 
       -- function returning MFT entries
       -- Only check the filename - should be very quick
-      LET mftsearch_with_filename(MFTPath) = SELECT *
+      LET mftsearch_with_filename(Drive, MFTPath) =
+        SELECT *, Drive + OSPath AS OSPath
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
-        WHERE FullPath =~ PathRegex
-            AND FileName =~ FileRegex
+        WHERE FileName =~ FileRegex
+          AND OSPath =~ PathRegex
 
       -- Check only one date bound
-      LET mftsearch_after_date(MFTPath) = SELECT *
+      LET mftsearch_after_date(Drive, MFTPath) =
+        SELECT *, Drive + OSPath AS OSPath
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE
              ( Created0x10 > DateAfter
@@ -88,10 +97,11 @@ sources:
               OR LastModified0x30 > DateAfter
               OR LastRecordChange0x10 > DateAfter
               OR LastRecordChange0x30 > DateAfter)
-            AND FullPath =~ PathRegex
             AND FileName =~ FileRegex
+            AND OSPath =~ PathRegex
 
-      LET mftsearch_before_date(MFTPath) = SELECT *
+      LET mftsearch_before_date(Drive, MFTPath) =
+        SELECT *, Drive + OSPath AS OSPath
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE
              ( Created0x10 < DateBefore
@@ -100,14 +110,15 @@ sources:
               OR LastModified0x30 < DateBefore
               OR LastRecordChange0x10 < DateBefore
               OR LastRecordChange0x30 < DateBefore)
-            AND FullPath =~ PathRegex
             AND FileName =~ FileRegex
+            AND OSPath =~ PathRegex
 
       -- Check everything can be slow.
-      LET mftsearch_full(MFTPath) = SELECT *
+      LET mftsearch_full(Drive, MFTPath) =
+        SELECT *, Drive + OSPath AS OSPath
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
-        WHERE FullPath =~ PathRegex
-            AND FileName =~ FileRegex
+        WHERE FileName =~ FileRegex
+            AND OSPath =~ PathRegex
             AND if(condition=SizeMax,
                 then=FileSize < atoi(string=SizeMax),
                 else=TRUE)
@@ -125,21 +136,25 @@ sources:
             OR time_test(stamp=LastAccess0x30))
 
       -- Choose a query to run depending on the user's choices.
-      LET mftsearch(MFTPath) = SELECT * FROM if(
+      LET mftsearch(Drive, MFTPath) = SELECT * FROM if(
        -- only need to do a filename comparison
        condition=NOT DateAfter AND NOT DateBefore AND NOT SizeMin AND NOT SizeMax,
-       then={ SELECT * FROM mftsearch_with_filename(MFTPath=MFTPath) },
+       then={ SELECT *
+              FROM mftsearch_with_filename(Drive=Drive, MFTPath=MFTPath) },
        else={ SELECT * FROM if(
 
           -- Only DateAfter is set
           condition=NOT DateBefore AND NOT SizeMin AND NOT SizeMax,
-          then={ SELECT * FROM mftsearch_after_date(MFTPath=MFTPath)},
+          then={ SELECT *
+                 FROM mftsearch_after_date(Drive=Drive, MFTPath=MFTPath)},
           else={ SELECT * FROM if(
 
              -- Only Date Before is set
              condition=NOT DateAfter AND NOT SizeMin AND NOT SizeMax,
-             then={ SELECT * FROM mftsearch_before_date(MFTPath=MFTPath)},
-             else={ SELECT * FROM mftsearch_full(MFTPath=MFTPath)})
+             then={ SELECT *
+                    FROM mftsearch_before_date(Drive=Drive, MFTPath=MFTPath)},
+             else={ SELECT *
+                    FROM mftsearch_full(Drive=Drive, MFTPath=MFTPath)})
           })
        })
 
@@ -148,13 +163,15 @@ sources:
            SELECT * FROM ntfs_drives
         },
         query={
-           SELECT *, MFTFilename FROM mftsearch(MFTPath=MFTFilename)
+           SELECT *, Drive
+           FROM mftsearch(
+              Drive=Drive,
+              MFTPath=MFTFilename)
         })
 
       -- return rows
       SELECT EntryNumber, InUse, ParentEntryNumber,
-             MFTFilename AS MFTPath,
-             FullPath, FileName, FileSize, ReferenceCount, IsDir,
+             OSPath, FileName, FileSize, ReferenceCount, IsDir,
              Created0x10, Created0x30, LastModified0x10, LastModified0x30,
              LastRecordChange0x10, LastRecordChange0x30, LastAccess0x10,
              LastAccess0x30
@@ -163,5 +180,5 @@ sources:
           SELECT * FROM all_drives
         },
         else={
-          SELECT * FROM mftsearch(MFTPath=MFTFilename)
+          SELECT * FROM mftsearch(Drive=Drive, MFTPath=Drive + "$MFT")
         })

@@ -6,7 +6,10 @@ Queries:
           mock(plugin='parse_mft', results=[
             dict(
               EntryNumber=287634,InUse=true,ParentEntryNumber=287637,
-              FullPath='Program Files/Velociraptor/client.config.yaml',FileName='client.config.yaml',
+              OSPath=pathspec(
+                 path_type="windows",
+                 parse='Program Files/Velociraptor/client.config.yaml'),
+              FileName='client.config.yaml',
               FileSize=2512,ReferenceCount=2,IsDir=false,
               Created0x10=timestamp(string='2021-06-21T01:39:11.6812434Z'),Created0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
               LastModified0x10=timestamp(string='2021-08-01T01:39:48.8960671Z'),LastModified0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
@@ -15,7 +18,10 @@ Queries:
             ),
             dict(
               EntryNumber=287639,InUse=true,ParentEntryNumber=287637,
-              FullPath='ProgramFiles/Velociraptor/Velociraptor.exe',FileName='Velociraptor.exe',
+              OSPath=pathspec(
+                 path_type="windows",
+                 parse='ProgramFiles/Velociraptor/Velociraptor.exe'),
+              FileName='Velociraptor.exe',
               FileSize=41810344,ReferenceCount=2,IsDir=false,
               Created0x10=timestamp(string='2021-06-01T01:39:11.6812434Z'),Created0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
               LastModified0x10=timestamp(string='2021-06-25T01:39:48.8960671Z'),LastModified0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
@@ -24,7 +30,10 @@ Queries:
             ),
             dict(
               EntryNumber=287649,InUse=true,ParentEntryNumber=287637,
-              FullPath='ProgramFiles/Velociraptor/velociraptor.writeback.yaml',FileName='velociraptor.writeback.yaml',
+              OSPath=pathspec(
+                 path_type="windows",
+                 parse='ProgramFiles/Velociraptor/velociraptor.writeback.yaml'),
+              FileName='velociraptor.writeback.yaml',
               FileSize=3520,ReferenceCount=2,IsDir=false,
               Created0x10=timestamp(string='2021-06-21T01:39:11.6812434Z'),Created0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),
               LastModified0x10=timestamp(string='2021-02-02T01:39:48.8960671Z'),LastModified0x30=timestamp(string='2021-06-21T01:39:11.6812434Z'),

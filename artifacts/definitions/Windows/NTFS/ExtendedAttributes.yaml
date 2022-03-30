@@ -1,27 +1,27 @@
 name: Windows.NTFS.ExtendedAttributes
 author: "Matt Green - @mgreen27"
 description: |
-  Adversaries may use NTFS file attributes for defence evasion to hide malicious 
+  Adversaries may use NTFS file attributes for defence evasion to hide malicious
   data. This artifact parses NTFS Extended attributes ($EA).
-  The artifact firstly queries the MFT, then enriches NTFS data to check for 
-  Extended Attributes. Several filters can be applied such as file search, 
+  The artifact firstly queries the MFT, then enriches NTFS data to check for
+  Extended Attributes. Several filters can be applied such as file search,
   Extended Attribute size, name or content.
-  
-  NOTE:  
-  By default an EAName exclusion has been applied to filter some common $EA names 
-  found on Windows System. Recommended hunt would be by rare name or $EA size.  
-  By default we only parse $EA and discard $EA_INFORMATION. $EA_INFORMATION 
+
+  NOTE:
+  By default an EAName exclusion has been applied to filter some common $EA names
+  found on Windows System. Recommended hunt would be by rare name or $EA size.
+  By default we only parse $EA and discard $EA_INFORMATION. $EA_INFORMATION
   typically is very small and available in NtfsMetadata field of output.
-  
-  
+
+
 reference:
   - https://attack.mitre.org/techniques/T1564/004/
   - https://posts.specterops.io/host-based-threat-modeling-indicator-design-a9dbbb53d5ea
   - http://inform.pucp.edu.pe/~inf232/Ntfs/ntfs_doc_v0.5/attributes/ea.html
-     
+
 parameters:
-  - name: MFTFilename
-    default: "C:/$MFT"
+  - name: MFTDrive
+    default: "C:"
   - name: HostPathRegex
     description: "Regex search over FullPath."
     default: "."
@@ -81,34 +81,40 @@ sources:
                 max_length: 10000 }],
        ]]
        ]'''
-      
+
       -- find all MFT entries with an $EA - ignore VSS
       LET mft_entries = SELECT *,
-            parse_ntfs(mft=EntryNumber, device=dirname(path=MFTPath) ) as NtfsMetadata
-        FROM Artifact.Windows.NTFS.MFT(MFTFilename=MFTFilename,Accessor='ntfs',PathRegex=HostPathRegex,DateAfter=DateAfter,DateBefore=DateBefore,AllDrives=AllDrives)
-        WHERE NOT FullPath =~ 'HarddiskVolumeShadowCopy'
-         AND NtfsMetadata.Attributes.Type =~ '^\\$EA'
-        
+            parse_ntfs(mft=EntryNumber, device=MFTDrive ) as NtfsMetadata
+        FROM Artifact.Windows.NTFS.MFT(
+           MFTDrive=MFTDrive,
+           Accessor='ntfs',
+           PathRegex=HostPathRegex,
+           DateAfter=DateAfter,
+           DateBefore=DateBefore,
+           AllDrives=AllDrives)
+        WHERE -- NOT FullPath =~ 'HarddiskVolumeShadowCopy' AND
+          NtfsMetadata.Attributes.Type =~ '^\\$EA'
+
       -- enrich results for size filter, dropping metadata field output as this attribute is viewable in Ntfs field.
       LET enriched_results = SELECT *,
             --{ SELECT * FROM NtfsMetadata.Attributes WHERE Type = '$EA_INFORMATION'} as _EA_INFORMATION_Metadata,
             { SELECT * FROM NtfsMetadata.Attributes WHERE Type = '$EA'} as _EA_Metadata
         FROM mft_entries
         WHERE _EA_Metadata.Size > SizeMin AND _EA_Metadata.Size < SizeMax
-        
+
       -- parse EA attribute
       LET parse_ea = SELECT *,
-            parse_binary(accessor="mft", 
+            parse_binary(accessor="mft",
                 filename=NtfsMetadata.Device + _EA_Metadata.Inode,
                 profile=Profile, struct="EAData").Entries AS EA
         FROM enriched_results
-    
+
       -- flattern results and output a row for each EA parsed
-      LET flatten_results = SELECT  FullPath, NtfsMetadata, EA,_EA_Metadata
+      LET flatten_results = SELECT  OSPath, NtfsMetadata, EA,_EA_Metadata
         FROM flatten(
             query={
                 SELECT *
-                    { 
+                    {
                         SELECT Name,Value,Flags,ValueLength
                         FROM foreach(row=EA) } as EA
                 FROM parse_ea
@@ -117,11 +123,11 @@ sources:
                             then= EA.Name =~ EANameExclusion,
                             else= False )
                     AND EA.Value =~ EAContentRegex
-                    
+
             })
-      
+
       -- upload extended EA data
-      LET upload_hits=SELECT FullPath, NtfsMetadata, EA,
+      LET upload_hits=SELECT OSPath, NtfsMetadata, EA,
             upload(file=NtfsMetadata.Device + _EA_Metadata.Inode,accessor='mft') AS Upload
             --upload(file=Ntfs.Device + _EA_INFORMATION_Metadata.Inode,accessor='mft') AS EA_INFORMATION_Upload
         FROM flatten_results

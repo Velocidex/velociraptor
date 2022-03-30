@@ -1,6 +1,6 @@
 LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd' ]), clear=TRUE)[]SELECT * FROM Artifact.Windows.NTFS.ExtendedAttributes(SizeMax=256)[
  {
-  "FullPath": "/another_file.txt",
+  "OSPath": "C:\\another_file.txt",
   "NtfsMetadata": {
    "FullPath": "/another_file.txt",
    "MFTID": 37,
@@ -86,7 +86,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "_Source": "Windows.NTFS.ExtendedAttributes"
  },
  {
-  "FullPath": "/another_file.txt",
+  "OSPath": "C:\\another_file.txt",
   "NtfsMetadata": {
    "FullPath": "/another_file.txt",
    "MFTID": 37,
@@ -173,7 +173,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
  }
 ]SELECT * FROM Artifact.Windows.NTFS.ExtendedAttributes(SizeMin=5000,SizeMax=20000)[
  {
-  "FullPath": "/just_a_file.txt",
+  "OSPath": "C:\\just_a_file.txt",
   "NtfsMetadata": {
    "FullPath": "/just_a_file.txt",
    "MFTID": 49,

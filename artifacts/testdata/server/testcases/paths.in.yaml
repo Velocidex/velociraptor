@@ -67,9 +67,12 @@ Queries:
 
   # Handle paths with subscripts
   - LET OSPath = pathspec(parse='''C:\Users\test\desktop.ini''', path_type="windows")
-  - SELECT OSPath,
+  - |
+    SELECT OSPath,
       OSPath.Components[0] AS Drive,
       OSPath.Components[-2] AS UserName,
       OSPath[:-1] AS HomeDirectory,
-      OSPath[1:] AS DriveRelative
+      OSPath[1:] AS DriveRelative,
+      -- Adding components to an OSPath extends it into a new path.
+      pathspec(parse="D:", path_type="windows") + OSPath.Components[1:] AS PathOnDDrive
     FROM scope()
