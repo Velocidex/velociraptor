@@ -1,0 +1,19 @@
+name: Linux.RHEL.Packages
+description: Parse packages installed from dnf
+
+parameters:
+  - name: command 
+    default: dnf list installed | tail -n +2
+sources:
+  - precondition: |
+      SELECT OS From info() where OS = 'linux'
+    queries:
+      - |
+        LET packages = SELECT * FROM execve(argv=["/bin/bash", "-c", command])
+        
+        LET all_packages = SELECT grok(grok="%{DATA:Package}%{SPACE} %{DATA:Version}%{SPACE} %{GREEDYDATA:Repository}", data=Line) AS Parsed
+        FROM parse_lines(accessor="data", filename=packages.Stdout)
+        
+        SELECT * FROM foreach(row=all_packages, column="Parsed")
+        
+        
