@@ -46,7 +46,7 @@ func (self *OidcAuthenticator) LoginURL() string {
 
 func (self *OidcAuthenticator) CallbackHandler() string {
 	name := self.authenticator.OidcName
-	if name == "" {
+	if name != "" {
 		return "/auth/oidc/" + name + "/callback"
 	}
 	return "/auth/oidc/callback"

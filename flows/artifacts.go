@@ -335,9 +335,8 @@ func ArtifactCollectorProcessOneMessage(
 	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
 
-	err := CheckForStatus(config_obj, collection_context, message)
-	if err != nil {
-		return err
+	if message.Status != nil {
+		return CheckForStatus(config_obj, collection_context, message)
 	}
 
 	// Check that this is not a retransmission - if it is we drop
@@ -360,14 +359,14 @@ func ArtifactCollectorProcessOneMessage(
 	case constants.ProcessVQLResponses:
 		response := message.VQLResponse
 		if response == nil || response.Query == nil {
-			return errors.New("Expected args of type VQLResponse")
+			return fmt.Errorf("Expected args of type VQLResponse not %v", message)
 		}
 
 		if collection_context == nil || collection_context.Request == nil {
 			return errors.New("Invalid collection context")
 		}
 
-		err = artifacts.Deobfuscate(config_obj, response)
+		err := artifacts.Deobfuscate(config_obj, response)
 		if err != nil {
 			return err
 		}

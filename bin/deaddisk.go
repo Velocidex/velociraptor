@@ -140,7 +140,7 @@ func addWindowsDirectory(
 					Prefix: fmt.Sprintf(`{
   "Path": %q,
   "DelegateAccessor": "file",
-  "DelegatePath": %q,
+  "DelegatePath": %q
 }`, definition.key_path, hive_path),
 					PathType: "registry",
 				},

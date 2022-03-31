@@ -3,11 +3,20 @@ package parsers
 import (
 	"strings"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/protocols"
+)
+
+var (
+	mftComponentsCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "mft_components_count",
+		Help: "Number of times we trace an MFT entry's parents.",
+	})
 )
 
 type _MFTHighlightAssociative struct{}
@@ -43,19 +52,17 @@ func (self _MFTHighlightAssociative) Associative(
 
 	switch member {
 	case "OSPath":
-		return accessors.MustNewWindowsNTFSPath("").Append(hl.Components...), true
+		mftComponentsCounter.Inc()
+		return accessors.MustNewWindowsNTFSPath("").Append(hl.Components()...), true
 
 		// This is for backwards compatibility with older VQL but we
 		// do not advertize this field.
 	case "FullPath":
-		return strings.Join(hl.Components, "\\"), true
+		mftComponentsCounter.Inc()
+		return strings.Join(hl.Components(), "\\"), true
 
 	case "FileName":
-		last := len(hl.Components) - 1
-		if last >= 0 {
-			return hl.Components[last], true
-		}
-		return "", true
+		return hl.FileName(), true
 
 	default:
 		return protocols.DefaultAssociative{}.Associative(scope, a, b)

@@ -387,8 +387,8 @@ func (self *ServerArtifactsRunner) runQuery(
 	}
 
 	principal := arg.Principal
-	if principal == "" {
-		principal = "administrator"
+	if principal == "" && self.config_obj.Client != nil {
+		principal = self.config_obj.Client.PinnedServerName
 	}
 
 	scope := manager.BuildScope(services.ScopeBuilder{

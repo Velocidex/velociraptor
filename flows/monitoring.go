@@ -22,9 +22,8 @@ func MonitoringProcessMessage(
 	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
 
-	err := CheckForStatus(config_obj, collection_context, message)
-	if err != nil {
-		return err
+	if message.Status != nil {
+		return CheckForStatus(config_obj, collection_context, message)
 	}
 
 	switch message.RequestId {

@@ -227,8 +227,12 @@ func (self *EventTable) RunQuery(
 
 	builder := services.ScopeBuilder{
 		Config: config_obj,
-		// Disable ACLs on the client.
-		ACLManager: vql_subsystem.NullACLManager{},
+		// Run the monitoring queries as the server account. If the
+		// artifact launches other artifacts then it will indicate the
+		// creator was the server.
+		ACLManager: vql_subsystem.NewServerACLManager(
+			self.config_obj,
+			self.config_obj.Client.PinnedServerName),
 		Env:        ordereddict.NewDict(),
 		Repository: repository,
 		Logger:     log.New(self.logger, "", 0),

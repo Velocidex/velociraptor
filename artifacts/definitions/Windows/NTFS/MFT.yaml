@@ -81,14 +81,24 @@ sources:
       -- function returning MFT entries
       -- Only check the filename - should be very quick
       LET mftsearch_with_filename(Drive, MFTPath) =
-        SELECT *, Drive + OSPath AS OSPath
+        SELECT EntryNumber, InUse, ParentEntryNumber,
+               Drive + OSPath AS OSPath,
+               FileName, FileSize, ReferenceCount, IsDir,
+               Created0x10, Created0x30, LastModified0x10, LastModified0x30,
+               LastRecordChange0x10, LastRecordChange0x30, LastAccess0x10,
+               LastAccess0x30
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE FileName =~ FileRegex
           AND OSPath =~ PathRegex
 
       -- Check only one date bound
       LET mftsearch_after_date(Drive, MFTPath) =
-        SELECT *, Drive + OSPath AS OSPath
+        SELECT EntryNumber, InUse, ParentEntryNumber,
+               Drive + OSPath AS OSPath,
+               FileName, FileSize, ReferenceCount, IsDir,
+               Created0x10, Created0x30, LastModified0x10, LastModified0x30,
+               LastRecordChange0x10, LastRecordChange0x30, LastAccess0x10,
+               LastAccess0x30
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE
              ( Created0x10 > DateAfter
@@ -101,7 +111,12 @@ sources:
             AND OSPath =~ PathRegex
 
       LET mftsearch_before_date(Drive, MFTPath) =
-        SELECT *, Drive + OSPath AS OSPath
+        SELECT EntryNumber, InUse, ParentEntryNumber,
+               Drive + OSPath AS OSPath,
+               FileName, FileSize, ReferenceCount, IsDir,
+               Created0x10, Created0x30, LastModified0x10, LastModified0x30,
+               LastRecordChange0x10, LastRecordChange0x30, LastAccess0x10,
+               LastAccess0x30
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE
              ( Created0x10 < DateBefore
@@ -115,7 +130,12 @@ sources:
 
       -- Check everything can be slow.
       LET mftsearch_full(Drive, MFTPath) =
-        SELECT *, Drive + OSPath AS OSPath
+        SELECT EntryNumber, InUse, ParentEntryNumber,
+               Drive + OSPath AS OSPath,
+               FileName, FileSize, ReferenceCount, IsDir,
+               Created0x10, Created0x30, LastModified0x10, LastModified0x30,
+               LastRecordChange0x10, LastRecordChange0x30, LastAccess0x10,
+               LastAccess0x30
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE FileName =~ FileRegex
             AND OSPath =~ PathRegex
@@ -170,11 +190,7 @@ sources:
         })
 
       -- return rows
-      SELECT EntryNumber, InUse, ParentEntryNumber,
-             OSPath, FileName, FileSize, ReferenceCount, IsDir,
-             Created0x10, Created0x30, LastModified0x10, LastModified0x30,
-             LastRecordChange0x10, LastRecordChange0x30, LastAccess0x10,
-             LastAccess0x30
+      SELECT *
       FROM if(condition=AllDrives,
         then={
           SELECT * FROM all_drives
