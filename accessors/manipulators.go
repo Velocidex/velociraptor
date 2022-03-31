@@ -51,10 +51,7 @@ func (self GenericPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 		result = *path.pathspec
 	}
 
-	// The first component is usually the drive letter or device and
-	// although it can contain path separators it must not be quoted
 	components := path.Components
-
 	sep := self.Sep
 	if sep == "" {
 		sep = "/"
