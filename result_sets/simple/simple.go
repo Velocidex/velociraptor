@@ -49,7 +49,7 @@ const (
 
 type ResultSetWriterImpl struct {
 	mu       sync.Mutex
-	rows     []*ordereddict.Dict
+	rows     [][]byte
 	opts     *json.EncOpts
 	fd       api.FileWriter
 	index_fd api.FileWriter
@@ -102,7 +102,14 @@ func (self *ResultSetWriterImpl) Write(row *ordereddict.Dict) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.rows = append(self.rows, row)
+	// Encode each row ASAP but then store the raw json for combined
+	// writes. This allows us to get rid of memory ASAP.
+	serialized, err := vjson.MarshalWithOptions(row, self.opts)
+	if err != nil {
+		return
+	}
+
+	self.rows = append(self.rows, serialized)
 	if len(self.rows) > 10000 {
 		self._Flush()
 	}
@@ -128,13 +135,9 @@ func (self *ResultSetWriterImpl) _Flush() {
 	out := &bytes.Buffer{}
 	offsets := new(bytes.Buffer)
 	for _, row := range self.rows {
-		serialized, err := vjson.MarshalWithOptions(row, self.opts)
-		if err != nil {
-			return
-		}
 
 		// Write line delimited JSON
-		out.Write(serialized)
+		out.Write(row)
 		out.Write([]byte{'\n'})
 		err = binary.Write(offsets, binary.LittleEndian, offset)
 		if err != nil {
@@ -142,12 +145,14 @@ func (self *ResultSetWriterImpl) _Flush() {
 		}
 
 		// Include the line feed in the count.
-		offset += int64(len(serialized) + 1)
+		offset += int64(len(row) + 1)
 	}
 
 	_, _ = self.fd.Write(out.Bytes())
 	_, _ = self.index_fd.Write(offsets.Bytes())
-	self.rows = nil
+
+	// Reset the slice but keep the capacity.
+	self.rows = self.rows[:0]
 }
 
 func (self *ResultSetWriterImpl) Close() {

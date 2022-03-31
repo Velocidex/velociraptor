@@ -7,14 +7,13 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/accessors/zip"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
-	_ "www.velocidex.com/golang/velociraptor/accessors/file"
 	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 	_ "www.velocidex.com/golang/velociraptor/accessors/offset"
-	_ "www.velocidex.com/golang/velociraptor/accessors/zip"
 )
 
 type api_tests struct {
@@ -140,4 +139,10 @@ func TestOSPathHumanString(t *testing.T) {
 	}
 	goldie.Assert(t, "TestOSPathHumanString",
 		json.MustMarshalIndent(result))
+}
+
+func init() {
+	// Override the file accessor with something that uses Generic
+	// ospath so tests are the same on windows and linux.
+	accessors.Register("file", &zip.ZipFileSystemAccessor{}, "")
 }
