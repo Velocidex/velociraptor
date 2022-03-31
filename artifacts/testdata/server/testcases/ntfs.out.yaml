@@ -20,6 +20,7 @@ SELECT parse_ntfs( filename=srcDir+'/artifacts/testdata/files/test.ntfs.dd', ino
   "IsDir": false,
   "HasADS": true,
   "SI_Lt_FN": false,
+  "uSecZeros": false,
   "Copied": false,
   "SIFlags": "2080 (ARCHIVE,COMPRESSED)",
   "Created0x10": "2018-09-24T07:55:29.7664719Z",
