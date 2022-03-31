@@ -12,6 +12,8 @@ sources:
       SELECT OS From info() where OS = 'linux'
 
     query: |
-        SELECT grok(grok=DNFGrokExpression, data=Stdout) AS Parsed
-        FROM execve(argv=["dnf", "list", "installed"], sep="\n")
-        WHERE count() > 2
+        SELECT * FROM foreach(row={
+          SELECT grok(grok=DNFGrokExpression, data=Stdout) AS Parsed
+          FROM execve(argv=["dnf", "list", "installed"], sep="\n")
+          WHERE count() > 2
+        }, column="Parsed")

@@ -1,26 +1,20 @@
 LET X <= SELECT mock(plugin='execve', results={ SELECT Line AS Stdout FROM parse_lines(filename=DNFMock, accessor="data") }) FROM scope()[]SELECT * FROM Artifact.Linux.RHEL.Packages()[
  {
-  "Parsed": {
-   "Package": "acl.x86_64",
-   "Repository": "@anaconda",
-   "Version": "2.2.53-1.el8"
-  },
+  "Package": "acl.x86_64",
+  "Repository": "@anaconda",
+  "Version": "2.2.53-1.el8",
   "_Source": "Linux.RHEL.Packages"
  },
  {
-  "Parsed": {
-   "Package": "audit.x86_64",
-   "Repository": "@anaconda",
-   "Version": "3.0-0.10.20180831git0047a6c.el8"
-  },
+  "Package": "audit.x86_64",
+  "Repository": "@anaconda",
+  "Version": "3.0-0.10.20180831git0047a6c.el8",
   "_Source": "Linux.RHEL.Packages"
  },
  {
-  "Parsed": {
-   "Package": "audit-libs.x86_64",
-   "Repository": "@anaconda",
-   "Version": "3.0-0.10.20180831git0047a6c.el8"
-  },
+  "Package": "audit-libs.x86_64",
+  "Repository": "@anaconda",
+  "Version": "3.0-0.10.20180831git0047a6c.el8",
   "_Source": "Linux.RHEL.Packages"
  }
 ]
