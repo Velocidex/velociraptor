@@ -77,7 +77,8 @@ Queries:
       pathspec(parse="D:", path_type="windows") + OSPath.Components[1:] AS PathOnDDrive
     FROM scope()
 
-  # Complex nested pathspec
+  # Complex nested pathspec. Use zip here instead of file to get
+  # consistant slash behavior on Linux and Windows.
   - LET ComplexOSPath <= pathspec(
       Path="ControlSet001",
       DelegateAccessor="raw_ntfs",
@@ -86,7 +87,7 @@ Queries:
          DelegateAccessor="offset",
          DelegatePath=pathspec(
             Path="122683392",
-            DelegateAccessor="file",
+            DelegateAccessor="zip",
             DelegatePath="/shared/mnt/flat")))
 
   - SELECT ComplexOSPath, ComplexOSPath.HumanString
