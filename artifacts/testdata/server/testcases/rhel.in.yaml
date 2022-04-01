@@ -1,0 +1,14 @@
+Parameters:
+  DNFMock: |
+    # dnf list installed
+    Installed Packages
+    acl.x86_64                           2.2.53-1.el8                          @anaconda
+    audit.x86_64                         3.0-0.10.20180831git0047a6c.el8       @anaconda
+    audit-libs.x86_64                    3.0-0.10.20180831git0047a6c.el8       @anaconda
+
+Queries:
+  - LET X <= SELECT mock(plugin='execve', results={
+      SELECT Line AS Stdout FROM parse_lines(filename=DNFMock, accessor="data")
+    }) FROM scope()
+
+  - SELECT * FROM Artifact.Linux.RHEL.Packages()
