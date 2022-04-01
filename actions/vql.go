@@ -18,6 +18,7 @@
 package actions
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -38,6 +39,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type LogWriter struct {
@@ -202,9 +204,8 @@ func (self VQLClientAction) StartQuery(
 			return
 		}
 
-		result_chan := vfilter.GetResponseChannel(
+		result_chan := EncodeIntoResponsePackets(
 			vql, sub_ctx, scope,
-			vql_subsystem.MarshalJsonl(scope),
 			int(max_row),
 			int(max_wait))
 	run_query:
@@ -298,4 +299,96 @@ func CheckPreconditions(
 		}
 	}
 	return false, nil
+}
+
+func EncodeIntoResponsePackets(
+	vql *vfilter.VQL,
+	ctx context.Context,
+	scope types.Scope,
+	maxrows int,
+	// Max time to wait before returning some results.
+	max_wait int) <-chan *vfilter.VFilterJsonResult {
+	result_chan := make(chan *vfilter.VFilterJsonResult)
+
+	encoder := vql_subsystem.MarshalJsonl(scope)
+
+	go func() {
+		defer close(result_chan)
+
+		part := 0
+		row_chan := vql.Eval(ctx, scope)
+		buffer := bytes.Buffer{}
+		var first_row types.Any
+		var columns []string
+		var total_rows int
+
+		ship_payload := func() {
+			result := &vfilter.VFilterJsonResult{
+				Part:      part,
+				TotalRows: total_rows,
+				Payload:   buffer.Bytes(),
+			}
+			total_rows = 0
+			buffer.Reset()
+
+			// We dont know the columns but we have at
+			// least one row. Set the columns from this
+			// row.
+			if len(columns) == 0 && first_row != nil {
+				columns = scope.GetMembers(first_row)
+			}
+			result.Columns = columns
+
+			result_chan <- result
+			part += 1
+		}
+		// Send the last payload outstanding.
+		defer ship_payload()
+		deadline := time.After(time.Duration(max_wait) * time.Second)
+
+		for {
+
+			select {
+			case <-ctx.Done():
+				return
+
+			// If the query takes too long, send what we
+			// have.
+			case <-deadline:
+				if total_rows > 0 {
+					ship_payload()
+				}
+				// Update the deadline to re-fire next.
+				deadline = time.After(time.Duration(max_wait) * time.Second)
+
+			case row, ok := <-row_chan:
+				if !ok {
+					return
+				}
+
+				// Materialize all elements if needed.
+				value := vfilter.RowToDict(ctx, scope, row)
+
+				// Encode the row into bytes ASAP so we can reclaim
+				// memory.
+				s, err := encoder([]types.Row{value})
+				if err != nil {
+					scope.Log("Unable to serialize: %v", err)
+					return
+				}
+				// Accumulate the jsonl into the buffer
+				total_rows++
+				buffer.Write(s)
+
+				// Send the payload if it is too full.
+				if total_rows >= maxrows {
+					ship_payload()
+					deadline = time.After(time.Duration(max_wait) *
+						time.Second)
+				}
+			}
+		}
+	}()
+
+	return result_chan
 }

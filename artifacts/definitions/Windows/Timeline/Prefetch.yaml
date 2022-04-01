@@ -40,7 +40,7 @@ sources:
       LET hostname <= SELECT Fqdn FROM info()
 
       -- Parse prefetch files and apply non time filters
-      LET pf <= SELECT * FROM foreach(
+      LET pf = SELECT * FROM foreach(
               row={
                  SELECT * FROM glob(globs=prefetchGlobs)
               },
@@ -112,4 +112,3 @@ sources:
                     a = { SELECT * FROM executionTimes },
                     b = { SELECT * FROM creationTimes  })
       SELECT * FROM flatOutput
-

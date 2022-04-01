@@ -3,12 +3,14 @@ package accessors
 import (
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 // An OS Path can be thought of as a sequence of components. The OS
@@ -142,6 +144,33 @@ func (self *OSPath) TrimComponents(components ...string) *OSPath {
 	}
 	result.Components = nil
 	return result
+}
+
+// Produce a human readable string - this is a one way conversion: It
+// is not possible to go back to a proper OSPath from this.
+func (self *OSPath) HumanString(scope types.Scope) string {
+	result := []string{self.Path()}
+	delegate := self
+
+	for {
+		next_delegate, err := delegate.Delegate(scope)
+		if err != nil {
+			break
+		}
+		delegate = next_delegate
+		if len(delegate.Components) == 0 {
+			break
+		}
+		result = append(result, delegate.Path())
+	}
+
+	// Reverse the slice
+	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+		result[i], result[j] = result[j], result[i]
+	}
+
+	// As an alternative form we can use maybe? return path.Join(result...)
+	return strings.Join(result, " -> ")
 }
 
 // Make a copy

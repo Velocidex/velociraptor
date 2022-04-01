@@ -307,7 +307,7 @@ export: |
 sources:
   - query: |
         // Parse prefetch files and apply non time filters
-        LET pf <= SELECT * FROM foreach(
+        LET pf = SELECT * FROM foreach(
               row={
                  SELECT * FROM glob(globs=prefetchGlobs)
               },

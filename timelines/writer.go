@@ -36,6 +36,17 @@ type TimelineWriter struct {
 
 func (self *TimelineWriter) Write(
 	timestamp time.Time, row *ordereddict.Dict) error {
+	serialized, err := vjson.MarshalWithOptions(row, self.opts)
+	if err != nil {
+		return err
+	}
+
+	return self.WriteBuffer(timestamp, serialized)
+}
+
+func (self *TimelineWriter) WriteBuffer(
+	timestamp time.Time, serialized []byte) error {
+
 	offset, err := self.fd.Size()
 	if err != nil {
 		return err
@@ -43,10 +54,6 @@ func (self *TimelineWriter) Write(
 
 	out := &bytes.Buffer{}
 	offsets := &bytes.Buffer{}
-	serialized, err := vjson.MarshalWithOptions(row, self.opts)
-	if err != nil {
-		return err
-	}
 
 	// Write line delimited JSON
 	out.Write(serialized)

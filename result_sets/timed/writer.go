@@ -12,9 +12,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/timelines"
@@ -26,8 +26,8 @@ var (
 )
 
 type rowContainer struct {
-	ts  time.Time
-	row *ordereddict.Dict
+	ts         time.Time
+	serialized []byte
 }
 
 type TimedResultSetWriterImpl struct {
@@ -48,9 +48,17 @@ type TimedResultSetWriterImpl struct {
 }
 
 func (self *TimedResultSetWriterImpl) Write(row *ordereddict.Dict) {
+	// Encode each row ASAP but then store the raw json for combined
+	// writes. This allows us to get rid of memory from the query
+	// ASAP.
+	serialized, err := json.MarshalWithOptions(row, self.opts)
+	if err != nil {
+		return
+	}
+
 	self.rows = append(self.rows, rowContainer{
-		row: row,
-		ts:  self.Clock.Now(),
+		serialized: serialized,
+		ts:         self.Clock.Now(),
 	})
 
 	if len(self.rows) > 10000 {
@@ -69,7 +77,7 @@ func (self *TimedResultSetWriterImpl) Flush() {
 	for _, row := range self.rows {
 		writer, err := self.getWriter(row.ts)
 		if err == nil {
-			writer.Write(row.ts, row.row)
+			writer.WriteBuffer(row.ts, row.serialized)
 		}
 	}
 

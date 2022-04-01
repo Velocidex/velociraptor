@@ -354,7 +354,7 @@ loop:
 
 		// The required directory depth we need.
 		depth := len(full_path.Components)
-		if len(cd_cache.full_path.Components) < depth {
+		if len(cd_cache.full_path.Components) <= depth {
 			continue
 		}
 
