@@ -179,13 +179,24 @@ func (self _AssociativeOSPath) Associative(
 		}
 		return a_os_path.Components[t], true
 
+	case string:
+		switch t {
+		case "HumanString":
+			return a_os_path.HumanString(scope), true
+
+		default:
+			return protocols.DefaultAssociative{}.Associative(scope, a, b)
+		}
+
 	default:
 		return protocols.DefaultAssociative{}.Associative(scope, a, b)
 	}
 }
 
 func (self _AssociativeOSPath) GetMembers(scope vfilter.Scope, a vfilter.Any) []string {
-	return protocols.DefaultAssociative{}.GetMembers(scope, a)
+	result := protocols.DefaultAssociative{}.GetMembers(scope, a)
+	result = append(result, "HumanString")
+	return result
 }
 
 func init() {

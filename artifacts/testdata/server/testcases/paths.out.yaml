@@ -122,4 +122,9 @@ FROM scope()
   "DriveRelative": "Users\\test\\desktop.ini",
   "PathOnDDrive": "D:\\Users\\test\\desktop.ini"
  }
+]LET ComplexOSPath <= pathspec( Path="ControlSet001", DelegateAccessor="raw_ntfs", DelegatePath=pathspec( Path="/Windows/System32/Config/SYSTEM", DelegateAccessor="offset", DelegatePath=pathspec( Path="122683392", DelegateAccessor="zip", DelegatePath="/shared/mnt/flat")))[]SELECT ComplexOSPath, ComplexOSPath.HumanString FROM scope()[
+ {
+  "ComplexOSPath": "{\"DelegateAccessor\":\"raw_ntfs\",\"DelegatePath\":\"{\\\"DelegateAccessor\\\":\\\"offset\\\",\\\"DelegatePath\\\":\\\"{\\\\\\\"DelegateAccessor\\\\\\\":\\\\\\\"zip\\\\\\\",\\\\\\\"DelegatePath\\\\\\\":\\\\\\\"/shared/mnt/flat\\\\\\\",\\\\\\\"Path\\\\\\\":\\\\\\\"/122683392\\\\\\\"}\\\",\\\"Path\\\":\\\"/Windows/System32/Config/SYSTEM\\\"}\",\"Path\":\"/ControlSet001\"}",
+  "ComplexOSPath.HumanString": "/shared/mnt/flat -\u003e /122683392 -\u003e Windows\\System32\\Config\\SYSTEM -\u003e /ControlSet001"
+ }
 ]
