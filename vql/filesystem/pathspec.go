@@ -13,11 +13,11 @@ import (
 )
 
 type PathSpecArgs struct {
-	DelegateAccessor string            `vfilter:"optional,field=DelegateAccessor,doc=An accessor to use."`
-	DelegatePath     *accessors.OSPath `vfilter:"optional,field=DelegatePath,doc=A delegate to pass to the accessor."`
-	Path             vfilter.Any       `vfilter:"optional,field=Path,doc=A path to open."`
-	Parse            string            `vfilter:"optional,field=parse,doc=Alternatively parse the pathspec from this string."`
-	Type             string            `vfilter:"optional,field=path_type,doc=Type of path this is (windows,linux,registry,ntfs)."`
+	DelegateAccessor string      `vfilter:"optional,field=DelegateAccessor,doc=An accessor to use."`
+	DelegatePath     string      `vfilter:"optional,field=DelegatePath,doc=A delegate to pass to the accessor."`
+	Path             vfilter.Any `vfilter:"optional,field=Path,doc=A path to open."`
+	Parse            string      `vfilter:"optional,field=parse,doc=Alternatively parse the pathspec from this string."`
+	Type             string      `vfilter:"optional,field=path_type,doc=Type of path this is (windows,linux,registry,ntfs)."`
 }
 
 type PathSpecFunction struct{}
@@ -45,8 +45,6 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 	// The path can be a more complex type
 	var path vfilter.Any
 	var path_str string
-
-	delegate := arg.DelegatePath.PathSpec()
 
 	switch t := arg.Path.(type) {
 	case vfilter.StoredQuery:
@@ -78,7 +76,7 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 			path_str = string(serialized)
 			p := &accessors.PathSpec{
 				DelegateAccessor: arg.DelegateAccessor,
-				Delegate:         delegate,
+				DelegatePath:     arg.DelegatePath,
 				Path:             path_str,
 			}
 
@@ -96,7 +94,7 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 	result.SetPathSpec(
 		&accessors.PathSpec{
 			DelegateAccessor: arg.DelegateAccessor,
-			Delegate:         delegate,
+			DelegatePath:     arg.DelegatePath,
 			Path:             path_str,
 		})
 

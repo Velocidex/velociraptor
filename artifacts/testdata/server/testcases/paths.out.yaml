@@ -77,9 +77,9 @@ SELECT basename(path="/foo/bar/baz", path_type='linux') FROM scope()[
 FROM scope()
 [
  {
-  "path_spec": "{\"DelegateAccessor\":\"file\",\"Delegate\":{\"Path\":\"/C:/Windows\"}}",
-  "pathspec(parse=path_spec.String)": "{\"DelegateAccessor\":\"file\",\"Delegate\":{\"Path\":\"/C:/Windows\"}}",
-  "pathspec(parse=path_spec)": "{\"DelegateAccessor\":\"file\",\"Delegate\":{\"Path\":\"/C:/Windows\"}}",
+  "path_spec": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\"}",
+  "pathspec(parse=path_spec.String)": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\"}",
+  "pathspec(parse=path_spec)": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\"}",
   "pathspec(parse=\"C:\\\\Windows\", path_type='windows')": "C:\\Windows",
   "pathspec(parse=\"/usr/lib\", path_type='linux')": "/usr/lib",
   "pathspec(parse=\"HKU/Software\", path_type='registry')": "HKEY_USERS\\Software",
@@ -124,7 +124,7 @@ FROM scope()
  }
 ]LET ComplexOSPath <= pathspec( Path="ControlSet001", DelegateAccessor="raw_ntfs", DelegatePath=pathspec( Path="/Windows/System32/Config/SYSTEM", DelegateAccessor="offset", DelegatePath=pathspec( Path="122683392", DelegateAccessor="file", DelegatePath="/shared/mnt/flat")))[]SELECT ComplexOSPath, ComplexOSPath.HumanString FROM scope()[
  {
-  "ComplexOSPath": "{\"DelegateAccessor\":\"raw_ntfs\",\"Delegate\":{\"DelegateAccessor\":\"offset\",\"Delegate\":{\"DelegateAccessor\":\"file\",\"Delegate\":{\"Path\":\"/shared/mnt/flat\"},\"Path\":\"/122683392\"},\"Path\":\"/Windows/System32/Config/SYSTEM\"},\"Path\":\"/ControlSet001\"}",
+  "ComplexOSPath": "{\"DelegateAccessor\":\"raw_ntfs\",\"DelegatePath\":\"{\\\"DelegateAccessor\\\":\\\"offset\\\",\\\"DelegatePath\\\":\\\"{\\\\\\\"DelegateAccessor\\\\\\\":\\\\\\\"file\\\\\\\",\\\\\\\"DelegatePath\\\\\\\":\\\\\\\"/shared/mnt/flat\\\\\\\",\\\\\\\"Path\\\\\\\":\\\\\\\"/122683392\\\\\\\"}\\\",\\\"Path\\\":\\\"/Windows/System32/Config/SYSTEM\\\"}\",\"Path\":\"/ControlSet001\"}",
   "ComplexOSPath.HumanString": "/shared/mnt/flat -\u003e /122683392 -\u003e Windows\\System32\\Config\\SYSTEM -\u003e /ControlSet001"
  }
 ]
