@@ -17,10 +17,10 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alexmullins/zip"
 	"github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -208,7 +208,7 @@ func sanitize(component string) string {
 func (self *Container) Upload(
 	ctx context.Context,
 	scope vfilter.Scope,
-	filename string,
+	filename *accessors.OSPath,
 	accessor string,
 	store_as_name string,
 	expected_size int64,
@@ -216,16 +216,16 @@ func (self *Container) Upload(
 	atime time.Time,
 	ctime time.Time,
 	btime time.Time,
-	reader io.Reader) (*api.UploadResponse, error) {
+	reader io.Reader) (*uploads.UploadResponse, error) {
 
 	if store_as_name == "" {
-		store_as_name = accessor + "/" + filename
+		store_as_name = accessor + filename.String()
 	}
 
 	sanitized_name := sanitize_upload_name(store_as_name)
 
 	scope.Log("Collecting file %s into %s (%v bytes)",
-		filename, store_as_name, expected_size)
+		filename.String(), store_as_name, expected_size)
 
 	// Try to collect sparse files if possible
 	result, err := self.maybeCollectSparseFile(
@@ -245,12 +245,12 @@ func (self *Container) Upload(
 
 	n, err := utils.Copy(ctx, utils.NewTee(writer, sha_sum, md5_sum), reader)
 	if err != nil {
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
 
-	return &api.UploadResponse{
+	return &uploads.UploadResponse{
 		Path:   sanitized_name,
 		Size:   uint64(n),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
@@ -261,7 +261,7 @@ func (self *Container) Upload(
 func (self *Container) maybeCollectSparseFile(
 	ctx context.Context,
 	reader io.Reader, store_as_name, sanitized_name string, mtime time.Time) (
-	*api.UploadResponse, error) {
+	*uploads.UploadResponse, error) {
 
 	// Can the reader produce ranges?
 	range_reader, ok := reader.(uploads.RangeReader)
@@ -304,7 +304,7 @@ func (self *Container) maybeCollectSparseFile(
 
 		_, err = range_reader.Seek(rng.Offset, io.SeekStart)
 		if err != nil {
-			return &api.UploadResponse{
+			return &uploads.UploadResponse{
 				Error: err.Error(),
 			}, err
 		}
@@ -312,7 +312,7 @@ func (self *Container) maybeCollectSparseFile(
 		n, err := utils.CopyN(ctx, utils.NewTee(writer, sha_sum, md5_sum),
 			range_reader, rng.Length)
 		if err != nil {
-			return &api.UploadResponse{
+			return &uploads.UploadResponse{
 				Error: err.Error(),
 			}, err
 		}
@@ -329,20 +329,20 @@ func (self *Container) maybeCollectSparseFile(
 
 		serialized, err := utils.DictsToJson(index, nil)
 		if err != nil {
-			return &api.UploadResponse{
+			return &uploads.UploadResponse{
 				Error: err.Error(),
 			}, err
 		}
 
 		_, err = writer.Write(serialized)
 		if err != nil {
-			return &api.UploadResponse{
+			return &uploads.UploadResponse{
 				Error: err.Error(),
 			}, err
 		}
 	}
 
-	return &api.UploadResponse{
+	return &uploads.UploadResponse{
 		Path:   sanitized_name,
 		Size:   uint64(count),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),

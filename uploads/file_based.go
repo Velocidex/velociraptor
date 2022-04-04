@@ -31,7 +31,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -72,7 +72,7 @@ func (self *FileBasedUploader) sanitize_path(path string) string {
 func (self *FileBasedUploader) Upload(
 	ctx context.Context,
 	scope vfilter.Scope,
-	filename string,
+	filename *accessors.OSPath,
 	accessor string,
 	store_as_name string,
 	expected_size int64,
@@ -81,7 +81,7 @@ func (self *FileBasedUploader) Upload(
 	ctime time.Time,
 	btime time.Time,
 	reader io.Reader) (
-	*api.UploadResponse, error) {
+	*UploadResponse, error) {
 
 	if self.UploadDir == "" {
 		scope.Log("UploadDir is not set")
@@ -89,7 +89,7 @@ func (self *FileBasedUploader) Upload(
 	}
 
 	if store_as_name == "" {
-		store_as_name = filename
+		store_as_name = filename.String()
 	}
 
 	file_path := self.sanitize_path(store_as_name)
@@ -148,7 +148,7 @@ func (self *FileBasedUploader) Upload(
 	_ = setFileTimestamps(file_path, mtime, atime, ctime)
 
 	scope.Log("Uploaded %v (%v bytes)", file_path, offset)
-	return &api.UploadResponse{
+	return &UploadResponse{
 		Path:   file_path,
 		Size:   uint64(offset),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
@@ -159,7 +159,7 @@ func (self *FileBasedUploader) Upload(
 func (self *FileBasedUploader) maybeCollectSparseFile(
 	ctx context.Context,
 	reader io.Reader, store_as_name, sanitized_name string) (
-	*api.UploadResponse, error) {
+	*UploadResponse, error) {
 
 	// Can the reader produce ranges?
 	range_reader, ok := reader.(RangeReader)
@@ -208,7 +208,7 @@ func (self *FileBasedUploader) maybeCollectSparseFile(
 		n, err := utils.CopyN(ctx, utils.NewTee(writer, sha_sum, md5_sum),
 			range_reader, rng.Length)
 		if err != nil {
-			return &api.UploadResponse{
+			return &UploadResponse{
 				Error: err.Error(),
 			}, err
 		}
@@ -226,7 +226,7 @@ func (self *FileBasedUploader) maybeCollectSparseFile(
 
 		serialized, err := utils.DictsToJson(index, nil)
 		if err != nil {
-			return &api.UploadResponse{
+			return &UploadResponse{
 				Error: err.Error(),
 			}, err
 		}
@@ -237,7 +237,7 @@ func (self *FileBasedUploader) maybeCollectSparseFile(
 
 	}
 
-	return &api.UploadResponse{
+	return &UploadResponse{
 		Path:   sanitized_name,
 		Size:   uint64(count),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),

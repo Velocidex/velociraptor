@@ -24,7 +24,6 @@ parameters:
     default: ntfs
   - name: PathRegex
     description: "regex search over FullPath."
-    default: .
     type: regex
   - name: NameRegex
     default: .
@@ -88,8 +87,8 @@ sources:
                 ( LastAccess0x10 > LastModified0x10 AND LastAccess0x10 > Created0x10 ) as VolumeCopy
             FROM parse_mft(filename=MFTFilename, accessor=Accessor)
             WHERE
-                FullPath =~ PathRegex AND
                 FileName =~ NameRegex AND
+                OSPath =~ PathRegex AND
                 if(condition=Inode, then= EntryNumber=atoi(string=Inode)
                     OR ParentEntryNumber=atoi(string=Inode),
                     else=TRUE) AND
@@ -117,7 +116,7 @@ sources:
                 ((LastAccess0x30 > DateAfterTime) AND (LastAccess0x30 < DateBeforeTime)))
 
         LET common_fields = SELECT EntryNumber, ParentEntryNumber,
-                FullPath, FileName, FileSize, IsDir,InUse,
+                OSPath, FileName, FileSize, IsDir,InUse,
                 Created0x10, Created0x30,
                 LastModified0x10, LastModified0x30,
                 LastRecordChange0x10, LastRecordChange0x30,
@@ -190,7 +189,7 @@ sources:
             "MFT" as parser,
             MFTFilename as source,
             message,
-            FullPath as path,
+            OSPath as path,
             { SELECT EntryNumber,ParentEntryNumber,FileSize,
                      IsDir, InUse
               FROM scope() } as optional_1,

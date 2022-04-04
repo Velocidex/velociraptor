@@ -5,11 +5,13 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"testing"
 	"time"
 
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -18,7 +20,8 @@ import (
 )
 
 var (
-	nilTime = time.Unix(0, 0)
+	nilTime  = time.Unix(0, 0)
+	filename = accessors.MustNewLinuxOSPath("foo")
 )
 
 type TestRangeReader struct {
@@ -69,7 +72,7 @@ func TestClientUploaderSparse(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		"foo", "ntfs", "", 1000, nilTime, range_reader)
+		filename, "ntfs", "", 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
 
 	// Expected size is the combined sum of all ranges with data
@@ -77,7 +80,7 @@ func TestClientUploaderSparse(t *testing.T) {
 	assert.Equal(t, responses[0].FileBuffer.StoredSize, uint64(12))
 	assert.Equal(t, responses[0].FileBuffer.Size, uint64(18))
 
-	assert.Equal(t, CombineOutput("foo", responses), "Hello hello ")
+	assert.Equal(t, CombineOutput("/foo", responses), "Hello hello ")
 	for _, response := range responses {
 		response.ResponseId = 0
 	}
@@ -109,14 +112,14 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		"foo", "ntfs", "", 1000, nilTime, range_reader)
+		filename, "ntfs", "", 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
 
 	// Expected size is the combined sum of all ranges with data
 	// in them
 	assert.Equal(t, responses[0].FileBuffer.StoredSize, uint64(12))
 	assert.Equal(t, responses[0].FileBuffer.Size, uint64(18))
-	assert.Equal(t, CombineOutput("foo", responses), "Hello hi")
+	assert.Equal(t, CombineOutput("/foo", responses), "Hello hi")
 }
 
 func TestClientUploader(t *testing.T) {
@@ -144,7 +147,8 @@ func TestClientUploader(t *testing.T) {
 	scope := vql_subsystem.MakeScope()
 
 	resp, err := uploader.Upload(
-		ctx, scope, name, "file", "", 1000,
+		ctx, scope, getOSPath(name),
+		"file", "", 1000,
 		nilTime, nilTime, nilTime, nilTime, fd)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.Path, name)
@@ -173,8 +177,9 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 	assert.Equal(t, ok, true)
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
+
 	uploader.maybeUploadSparse(ctx, scope,
-		"foo", "ntfs", "", 1000, nilTime, range_reader)
+		filename, "ntfs", "", 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
 
 	// Expected size is the combined sum of all ranges with data
@@ -205,9 +210,9 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		"foo", "ntfs", "", 1000, nilTime, range_reader)
+		filename, "ntfs", "", 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
-	assert.Equal(t, CombineOutput("foo", responses), "Hello hello ")
+	assert.Equal(t, CombineOutput("/foo", responses), "Hello hello ")
 	for _, response := range responses {
 		response.ResponseId = 0
 	}
@@ -237,10 +242,18 @@ func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		"foo", "ntfs", "", 1000, nilTime, range_reader)
+		filename, "ntfs", "", 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
-	assert.Equal(t, CombineOutput("foo", responses), "Hello hello ")
+	assert.Equal(t, CombineOutput("/foo", responses), "Hello hello ")
 
 	// No idx written when there are no sparse ranges.
-	assert.Equal(t, CombineOutput("foo.idx", responses), "")
+	assert.Equal(t, CombineOutput("/foo.idx", responses), "")
+}
+
+func getOSPath(filename string) *accessors.OSPath {
+	if runtime.GOOS == "windows" {
+		return accessors.MustNewWindowsOSPath(filename)
+	} else {
+		return accessors.MustNewLinuxOSPath(filename)
+	}
 }

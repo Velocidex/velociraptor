@@ -8,10 +8,10 @@ import (
 	"github.com/Velocidex/ordereddict"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -322,7 +322,7 @@ func newBaseTemplateEngine(
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
-	uploader api.Uploader,
+	uploader uploads.Uploader,
 	repository services.Repository,
 	artifact_name string) (
 	*BaseTemplateEngine, error) {

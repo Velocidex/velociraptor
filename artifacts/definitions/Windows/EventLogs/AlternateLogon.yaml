@@ -25,3 +25,4 @@ sources:
                System.TimeCreated.SystemTime AS LogonTime
       FROM parse_evtx(filename=securityLogFile)
       WHERE System.EventID.Value = 4648
+        AND EventData

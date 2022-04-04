@@ -6,17 +6,19 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/uploader"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/vfilter"
 )
 
 type ServerUploader struct {
-	*api.FileStoreUploader
+	*uploader.FileStoreUploader
 	path_manager       *paths.FlowPathManager
 	collection_context *contextManager
 	config_obj         *config_proto.Config
@@ -25,7 +27,7 @@ type ServerUploader struct {
 func (self *ServerUploader) Upload(
 	ctx context.Context,
 	scope vfilter.Scope,
-	filename string,
+	filename *accessors.OSPath,
 	accessor string,
 	store_as_name string,
 	expected_size int64,
@@ -33,7 +35,7 @@ func (self *ServerUploader) Upload(
 	atime time.Time,
 	ctime time.Time,
 	btime time.Time,
-	reader io.Reader) (*api.UploadResponse, error) {
+	reader io.Reader) (*uploads.UploadResponse, error) {
 
 	result, err := self.FileStoreUploader.Upload(ctx, scope, filename,
 		accessor, store_as_name, expected_size,
@@ -72,9 +74,9 @@ func (self *ServerUploader) Upload(
 func NewServerUploader(
 	config_obj *config_proto.Config,
 	path_manager *paths.FlowPathManager,
-	collection_context *contextManager) api.Uploader {
+	collection_context *contextManager) uploads.Uploader {
 	return &ServerUploader{
-		FileStoreUploader: api.NewFileStoreUploader(config_obj,
+		FileStoreUploader: uploader.NewFileStoreUploader(config_obj,
 			file_store.GetFileStore(config_obj),
 			path_manager.UploadContainer()),
 		path_manager:       path_manager,

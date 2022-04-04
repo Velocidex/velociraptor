@@ -69,7 +69,8 @@ func (self MFTFileSystemAccessor) parseMFTPath(full_path *accessors.OSPath) (
 	// 2. If a delegate is not specified, we take the device from the
 	//    first component of the Path.
 
-	delegate_device = full_path.Clear().Append(full_path.Components[0])
+	delegate_device = accessors.MustNewWindowsNTFSPath(
+		full_path.Components[0])
 	delegate_accessor = "file"
 
 	// If the user provided a full pathspec we use that instead.
@@ -196,6 +197,10 @@ func (self *MFTFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) 
 	if len(stat) > 0 {
 		info = stat[0]
 	}
+
+	// Attributes are never directories
+	// since they always have some data.
+	info.IsDir = false
 
 	return &NTFSFileInfo{
 		info:       info,

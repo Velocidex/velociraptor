@@ -20,10 +20,12 @@ sources:
   - precondition: |
       SELECT OS From info() where OS = 'windows'
     query: |
-        LET users = SELECT Name, Directory as HomeDir
-            FROM Artifact.Windows.Sys.Users()
-            WHERE Directory AND Name =~ userRegex
+        LET users = SELECT
+            Name,
+            expand(path=Directory) AS HomeDir
+        FROM Artifact.Windows.Sys.Users()
+        WHERE HomeDir AND Name =~ userRegex
 
-        SELECT upload(file=expand(path=HomeDir) + "\\ntuser.dat",
+        SELECT upload(file=HomeDir + "\\ntuser.dat",
                       accessor="auto") as Upload
         FROM users

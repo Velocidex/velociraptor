@@ -18,20 +18,21 @@ sources:
   - query: |
         LET places_files = SELECT * from foreach(
           row={
-             SELECT Uid, Name AS User, Directory
+             SELECT Uid, Name AS User,
+                    expand(path=Directory) AS HomeDirectory
              FROM Artifact.Windows.Sys.Users()
              WHERE Name =~ userRegex
           },
           query={
-             SELECT User, FullPath, Mtime
-             FROM glob(root=Directory, globs=placesGlobs)
+             SELECT User, OSPath, Mtime
+             FROM glob(root=HomeDirectory, globs=placesGlobs)
           })
 
         LET metadata = SELECT * FROM foreach(row=places_files,
           query={
             SELECT parse_json(data=content)
             FROM sqlite(
-              file=FullPath,
+              file=OSPath,
               query=urlSQLQuery)
              WHERE name = 'downloads/metaData'
           })

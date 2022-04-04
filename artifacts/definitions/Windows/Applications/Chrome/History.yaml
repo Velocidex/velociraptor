@@ -7,11 +7,11 @@ parameters:
     default: \AppData\Local\Google\Chrome\User Data\*\History
   - name: urlSQLQuery
     default: |
-      SELECT  U.id, U.url, V.visit_time, U.title, U.visit_count, U.typed_count, U.last_visit_time, U.hidden, V.from_visit,
-      strftime('%H:%M:%f', V.visit_duration/1000000.0, 'unixepoch') as visit_duration,
-      V.transition
-      FROM urls AS U JOIN visits AS V
-      ON U.id = V.url
+      SELECT U.id AS id, U.url AS url, V.visit_time as visit_time,
+      U.title AS title, U.visit_count, U.typed_count,
+      U.last_visit_time, U.hidden, V.from_visit, strftime('%H:%M:%f',
+      V.visit_duration/1000000.0, 'unixepoch') as visit_duration,
+      V.transition FROM urls AS U JOIN visits AS V ON U.id = V.url
   - name: userRegex
     default: .
     type: regex
@@ -22,13 +22,14 @@ sources:
   - query: |
         LET history_files = SELECT * from foreach(
           row={
-             SELECT Uid, Name AS User, Directory
+             SELECT Uid, Name AS User,
+                    expand(path=Directory) AS HomeDirectory
              FROM Artifact.Windows.Sys.Users()
              WHERE Name =~ userRegex
           },
           query={
-             SELECT User, FullPath, Mtime
-             FROM glob(globs=historyGlobs, root=Directory)
+             SELECT User, OSPath, Mtime
+             FROM glob(globs=historyGlobs, root=HomeDirectory)
           })
 
         SELECT * FROM foreach(row=history_files,
@@ -44,6 +45,6 @@ sources:
                    visit_duration,transition,
                    timestamp(winfiletime=last_visit_time * 10) as _SourceLastModificationTimestamp
             FROM sqlite(
-              file=FullPath,
+              file=OSPath,
               query=urlSQLQuery)
           })

@@ -101,7 +101,7 @@ require (
 	golang.org/x/mod v0.4.2
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9
+	golang.org/x/sys v0.0.0-20220403205710-6acee93ad0eb
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210611083556-38a9dc6acbc6
 	google.golang.org/api v0.51.0
@@ -114,7 +114,7 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	howett.net/plist v0.0.0-20201203080718-1454fab16a06
-	www.velocidex.com/golang/evtx v0.2.1-0.20220107094629-ab487d5f06f1
+	www.velocidex.com/golang/evtx v0.2.1-0.20220404074406-b70d5b10c2a9
 	www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20220331021141-fef06bdbc816
 	www.velocidex.com/golang/go-pe v0.1.1-0.20220107093716-e91743c801de
