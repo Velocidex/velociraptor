@@ -34,12 +34,14 @@ Parameters:
 Queries:
   - LET _ <= remap(config=format(format=RemappingTemplate,
        args=[
-          srcDir+'/artifacts/testdata/files/test.ntfs.dd'
+          srcDir+'/artifacts/testdata/files/test.ntfs.dd',
+          srcDir+'/artifacts/testdata/files/test.ntfs.dd',
         ]), clear=TRUE)
 
   # Test MFT output
-  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='just_a_file\.txt')
+  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='just_a_file\\.txt')
+
   # Test time contraints
-  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\.txt',DateBefore='2018-12-31')
-  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\.txt',DateAfter='2021-07-01')
-  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\.txt',DateAfter='2021-07-01',DateBefore='2022-02-01')
+  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateBefore='2018-12-31')
+  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateAfter='2021-07-01')
+  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateAfter='2021-07-01',DateBefore='2022-02-01')
