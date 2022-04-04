@@ -114,7 +114,7 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	howett.net/plist v0.0.0-20201203080718-1454fab16a06
-	www.velocidex.com/golang/evtx v0.2.1-0.20220404074406-b70d5b10c2a9
+	www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e
 	www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20220331021141-fef06bdbc816
 	www.velocidex.com/golang/go-pe v0.1.1-0.20220107093716-e91743c801de
