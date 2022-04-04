@@ -219,7 +219,7 @@ func (self *Container) Upload(
 	reader io.Reader) (*uploads.UploadResponse, error) {
 
 	if store_as_name == "" {
-		store_as_name = accessor + filename.String()
+		store_as_name = accessor + "/" + strings.TrimPrefix(filename.String(), "/")
 	}
 
 	sanitized_name := sanitize_upload_name(store_as_name)
