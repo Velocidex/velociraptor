@@ -24,7 +24,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
@@ -36,13 +35,13 @@ import (
 // Example: select upload(file=FullPath) from glob(globs="/bin/*")
 
 type UploadFunctionArgs struct {
-	File     string      `vfilter:"required,field=file,doc=The file to upload"`
-	Name     string      `vfilter:"optional,field=name,doc=The name of the file that should be stored on the server"`
-	Accessor string      `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	Mtime    vfilter.Any `vfilter:"optional,field=mtime,doc=Modified time to record"`
-	Atime    vfilter.Any `vfilter:"optional,field=atime,doc=Access time to record"`
-	Ctime    vfilter.Any `vfilter:"optional,field=ctime,doc=Change time to record"`
-	Btime    vfilter.Any `vfilter:"optional,field=btime,doc=Birth time to record"`
+	File     *accessors.OSPath `vfilter:"required,field=file,doc=The file to upload"`
+	Name     string            `vfilter:"optional,field=name,doc=The name of the file that should be stored on the server"`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Mtime    vfilter.Any       `vfilter:"optional,field=mtime,doc=Modified time to record"`
+	Atime    vfilter.Any       `vfilter:"optional,field=atime,doc=Access time to record"`
+	Ctime    vfilter.Any       `vfilter:"optional,field=ctime,doc=Change time to record"`
+	Btime    vfilter.Any       `vfilter:"optional,field=btime,doc=Birth time to record"`
 }
 
 type UploadFunction struct{}
@@ -60,46 +59,42 @@ func (self *UploadFunction) Call(ctx context.Context,
 	arg := &UploadFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("upload: %s", err.Error())
+		scope.Log("upload: %v", err)
 		return vfilter.Null{}
 	}
 
-	if arg.File == "" {
+	if arg.File == nil {
 		return vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("upload: %s", err)
+		scope.Log("upload: %v", err)
 		return vfilter.Null{}
 	}
 
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("upload: %v", err)
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}
 	}
 
-	file, err := accessor.Open(arg.File)
+	file, err := accessor.OpenWithOSPath(arg.File)
 	if err != nil {
 		scope.Log("upload: Unable to open %s: %s",
 			arg.File, err.Error())
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}
 	}
 	defer file.Close()
 
-	stat, err := accessor.Lstat(arg.File)
+	stat, err := accessor.LstatWithOSPath(arg.File)
 	if err != nil {
 		scope.Log("upload: Unable to stat %s: %v",
 			arg.File, err)
-		return vfilter.Null{}
-	}
-
-	if stat.IsDir() {
 		return vfilter.Null{}
 	}
 
@@ -120,7 +115,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 		mtime, atime, ctime, btime,
 		file)
 	if err != nil {
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}
 	}
@@ -138,10 +133,10 @@ func (self UploadFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 }
 
 type UploadDirectoryFunctionArgs struct {
-	File       string `vfilter:"required,field=file,doc=The file to upload"`
-	Name       string `vfilter:"optional,field=name,doc=Filename to be stored within the output directory"`
-	Accessor   string `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	OutputPath string `vfilter:"required,field=output,doc=An output directory to store files in."`
+	File       *accessors.OSPath `vfilter:"required,field=file,doc=The file to upload"`
+	Name       string            `vfilter:"optional,field=name,doc=Filename to be stored within the output directory"`
+	Accessor   string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	OutputPath string            `vfilter:"required,field=output,doc=An output directory to store files in."`
 
 	Mtime vfilter.Any `vfilter:"optional,field=mtime,doc=Modified time to set the output file."`
 	Atime vfilter.Any `vfilter:"optional,field=atime,doc=Access time to set the output file."`
@@ -162,15 +157,11 @@ func (self *UploadDirectoryFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	if arg.File == "" {
-		return vfilter.Null{}
-	}
-
 	uploader := &uploads.FileBasedUploader{
 		UploadDir: arg.OutputPath,
 	}
 
-	if arg.File == "" {
+	if arg.File == nil {
 		return vfilter.Null{}
 	}
 
@@ -191,24 +182,25 @@ func (self *UploadDirectoryFunction) Call(ctx context.Context,
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("upload_directory: %v", err)
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}
 	}
 
-	file, err := accessor.Open(arg.File)
+	file, err := accessor.OpenWithOSPath(arg.File)
 	if err != nil {
 		scope.Log("upload_directory: Unable to open %s: %s",
-			arg.File, err.Error())
-		return &api.UploadResponse{
+			arg.File.String(), err.Error())
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}
 	}
 	defer file.Close()
 
-	stat, err := accessor.Lstat(arg.File)
+	stat, err := accessor.LstatWithOSPath(arg.File)
 	if err != nil {
-		scope.Log("upload_directory: Unable to stat %s: %v", arg.File, err)
+		scope.Log("upload_directory: Unable to stat %s: %v",
+			arg.File.String(), err)
 		return vfilter.Null{}
 	}
 
@@ -234,7 +226,7 @@ func (self *UploadDirectoryFunction) Call(ctx context.Context,
 		mtime, atime, ctime, btime,
 		file)
 	if err != nil {
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}
 	}

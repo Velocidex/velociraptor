@@ -1,4 +1,4 @@
-package api
+package uploader
 
 import (
 	"context"
@@ -8,46 +8,23 @@ import (
 	"io"
 	"time"
 
+	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/vfilter"
 )
 
-// Returned as the result of the query.
-type UploadResponse struct {
-	Path       string `json:"Path"`
-	Size       uint64 `json:"Size"`
-	StoredSize uint64 `json:"StoredSize,omitempty"`
-	Error      string `json:"Error,omitempty"`
-	Sha256     string `json:"sha256,omitempty"`
-	Md5        string `json:"md5,omitempty"`
-	StoredName string `json:"StoredName,omitempty"`
-}
-
-// Provide an uploader capable of uploading any reader object.
-type Uploader interface {
-	Upload(ctx context.Context,
-		scope vfilter.Scope,
-		filename string,
-		accessor string,
-		store_as_name string,
-		expected_size int64,
-		mtime time.Time,
-		atime time.Time,
-		ctime time.Time,
-		btime time.Time,
-		reader io.Reader) (*UploadResponse, error)
-}
-
 // An uploader into the filestore.
 type FileStoreUploader struct {
-	file_store FileStore
-	root_path  FSPathSpec
+	file_store api.FileStore
+	root_path  api.FSPathSpec
 }
 
 func (self *FileStoreUploader) Upload(
 	ctx context.Context,
 	scope vfilter.Scope,
-	filename string,
+	filename *accessors.OSPath,
 	accessor string,
 	store_as_name string,
 	expected_size int64,
@@ -56,10 +33,10 @@ func (self *FileStoreUploader) Upload(
 	ctime time.Time,
 	btime time.Time,
 	reader io.Reader) (
-	*UploadResponse, error) {
+	*uploads.UploadResponse, error) {
 
 	if store_as_name == "" {
-		store_as_name = filename
+		store_as_name = filename.String()
 	}
 
 	output_path := self.root_path.AddUnsafeChild(store_as_name)
@@ -107,7 +84,7 @@ loop:
 	}
 
 	scope.Log("Uploaded %v (%v bytes)", output_path.AsClientPath(), offset)
-	return &UploadResponse{
+	return &uploads.UploadResponse{
 		Path:   output_path.AsClientPath(),
 		Size:   uint64(offset),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
@@ -117,7 +94,7 @@ loop:
 
 func NewFileStoreUploader(
 	config_obj *config_proto.Config,
-	fs FileStore,
-	root_path FSPathSpec) *FileStoreUploader {
+	fs api.FileStore,
+	root_path api.FSPathSpec) *FileStoreUploader {
 	return &FileStoreUploader{fs, root_path}
 }

@@ -1,11 +1,11 @@
-LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestamp(epoch=Created0x30s) AS Created0x30, timestamp(epoch=LastModified0x10s) AS LastModified0x10, timestamp(epoch=LastModified0x30s) AS LastModified0x30, timestamp(epoch=LastRecordChange0x10s) AS LastRecordChange0x10, timestamp(epoch=LastRecordChange0x30s) AS LastRecordChange0x30, timestamp(epoch=LastAccess0x10s) AS LastAccess0x10, timestamp(epoch=LastAccess0x30s) AS LastAccess0x30 FROM parse_json_array(data=ParseMFTMock)[]LET _ <= SELECT mock(plugin='info', results=[dict(Fqdn='DESKTOP-687T2NR', OS='windows')]), mock(plugin="parse_mft", results=my_mocks) FROM scope()[]SELECT * FROM Artifact.Windows.Timeline.MFT(Inode="64560")[
+LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestamp(epoch=Created0x30s) AS Created0x30, timestamp(epoch=LastModified0x10s) AS LastModified0x10, timestamp(epoch=LastModified0x30s) AS LastModified0x30, timestamp(epoch=LastRecordChange0x10s) AS LastRecordChange0x10, timestamp(epoch=LastRecordChange0x30s) AS LastRecordChange0x30, timestamp(epoch=LastAccess0x10s) AS LastAccess0x10, timestamp(epoch=LastAccess0x30s) AS LastAccess0x30, pathspec(parse=FullPath, path_type="windows") AS OSPath FROM parse_json_array(data=ParseMFTMock)[]LET _ <= SELECT mock(plugin='info', results=[dict(Fqdn='DESKTOP-687T2NR', OS='windows')]), mock(plugin="parse_mft", results=my_mocks) FROM scope()[]SELECT * FROM Artifact.Windows.Timeline.MFT(Inode="64560")[
  {
   "event_time": "2017-01-26T00:21:12Z",
   "hostname": "DESKTOP-687T2NR",
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) LastAccess time",
-  "path": "Users/yolo/Desktop/evil.txt",
+  "path": "Users\\yolo\\Desktop\\evil.txt",
   "optional_1": {
    "EntryNumber": 64560,
    "ParentEntryNumber": 95295,
@@ -39,7 +39,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) Created time",
-  "path": "Users/yolo/Desktop/evil.txt",
+  "path": "Users\\yolo\\Desktop\\evil.txt",
   "optional_1": {
    "EntryNumber": 64560,
    "ParentEntryNumber": 95295,
@@ -73,7 +73,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) LastRecordChange time",
-  "path": "Users/yolo/Desktop/evil.txt",
+  "path": "Users\\yolo\\Desktop\\evil.txt",
   "optional_1": {
    "EntryNumber": 64560,
    "ParentEntryNumber": 95295,
@@ -107,7 +107,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) LastModified time",
-  "path": "Users/yolo/Desktop/evil.txt",
+  "path": "Users\\yolo\\Desktop\\evil.txt",
   "optional_1": {
    "EntryNumber": 64560,
    "ParentEntryNumber": 95295,
@@ -142,7 +142,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) LastAccess time",
-  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "path": "Users\\yolo\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\evil.txt.lnk",
   "optional_1": {
    "EntryNumber": 187444,
    "ParentEntryNumber": 95309,
@@ -176,7 +176,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) Created time",
-  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "path": "Users\\yolo\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\evil.txt.lnk",
   "optional_1": {
    "EntryNumber": 187444,
    "ParentEntryNumber": 95309,
@@ -210,7 +210,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) LastRecordChange time",
-  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "path": "Users\\yolo\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\evil.txt.lnk",
   "optional_1": {
    "EntryNumber": 187444,
    "ParentEntryNumber": 95309,
@@ -244,7 +244,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) LastModified time",
-  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "path": "Users\\yolo\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\evil.txt.lnk",
   "optional_1": {
    "EntryNumber": 187444,
    "ParentEntryNumber": 95309,
@@ -279,7 +279,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) LastAccess time",
-  "path": "Users/yolo/Desktop/evil.txt",
+  "path": "Users\\yolo\\Desktop\\evil.txt",
   "optional_1": {
    "EntryNumber": 64560,
    "ParentEntryNumber": 95295,
@@ -313,7 +313,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) Created time",
-  "path": "Users/yolo/Desktop/evil.txt",
+  "path": "Users\\yolo\\Desktop\\evil.txt",
   "optional_1": {
    "EntryNumber": 64560,
    "ParentEntryNumber": 95295,
@@ -347,7 +347,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) LastRecordChange time",
-  "path": "Users/yolo/Desktop/evil.txt",
+  "path": "Users\\yolo\\Desktop\\evil.txt",
   "optional_1": {
    "EntryNumber": 64560,
    "ParentEntryNumber": 95295,
@@ -381,7 +381,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) LastModified time",
-  "path": "Users/yolo/Desktop/evil.txt",
+  "path": "Users\\yolo\\Desktop\\evil.txt",
   "optional_1": {
    "EntryNumber": 64560,
    "ParentEntryNumber": 95295,
@@ -415,7 +415,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) LastAccess time",
-  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "path": "Users\\yolo\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\evil.txt.lnk",
   "optional_1": {
    "EntryNumber": 187444,
    "ParentEntryNumber": 95309,
@@ -449,7 +449,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) Created time",
-  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "path": "Users\\yolo\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\evil.txt.lnk",
   "optional_1": {
    "EntryNumber": 187444,
    "ParentEntryNumber": 95309,
@@ -483,7 +483,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) LastRecordChange time",
-  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "path": "Users\\yolo\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\evil.txt.lnk",
   "optional_1": {
    "EntryNumber": 187444,
    "ParentEntryNumber": 95309,
@@ -517,7 +517,7 @@ LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestam
   "parser": "MFT",
   "source": "C:/$MFT",
   "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) LastModified time",
-  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "path": "Users\\yolo\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\evil.txt.lnk",
   "optional_1": {
    "EntryNumber": 187444,
    "ParentEntryNumber": 95309,

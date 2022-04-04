@@ -1,0 +1,14 @@
+Queries:
+  # RDPAuth testing to ensure field parsing working as expected
+  - SELECT EventID, DomainName, UserName, LogonType, SourceIP, Description
+    FROM Artifact.Windows.EventLogs.RDPAuth(
+        Security=srcDir + '/artifacts/testdata/files/RDPAuth_Security.evtx',
+        System= srcDir + '/artifacts/testdata/files/RDPAuth_System.evtx',
+        LocalSessionManager= srcDir + '/artifacts/testdata/files/RDPAuth_LocalSessionManager.evtx',
+        RemoteConnectionManager= srcDir + '/artifacts/testdata/files/RDPAuth_RemoteConnectionManager.evtx')
+    WHERE NOT LogonType = 3
+    GROUP BY EventID
+
+  # Add test for event log clearing and move from VSS test for improved speed
+  - SELECT ClearedLog, Message =~ "The audit log was cleared."
+    FROM Artifact.Windows.EventLogs.Cleared()

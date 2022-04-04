@@ -3,7 +3,7 @@ package artifacts
 import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -23,13 +23,13 @@ func GetConfig(scope vfilter.Scope) (*config_proto.ClientConfig, bool) {
 	return config, ok
 }
 
-func GetUploader(scope vfilter.Scope) (api.Uploader, bool) {
+func GetUploader(scope vfilter.Scope) (uploads.Uploader, bool) {
 	scope_uploader, pres := scope.Resolve(constants.SCOPE_UPLOADER)
 	if !pres {
 		return nil, false
 	}
 
-	config, ok := scope_uploader.(api.Uploader)
+	config, ok := scope_uploader.(uploads.Uploader)
 	if utils.IsNil(config) {
 		return nil, false
 	}

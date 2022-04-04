@@ -21,14 +21,14 @@ func TestMFTFilesystemAccessor(t *testing.T) {
 	fs_accessor, err := MFTFileSystemAccessor{}.New(scope)
 	assert.NoError(t, err)
 
-	pathspec := &accessors.PathSpec{
+	pathspec := accessors.MustNewPathspecOSPath(accessors.PathSpec{
 		Path:             "38-128-0",
 		DelegateAccessor: "file",
 		DelegatePath:     abs_path,
-	}
+	}.String())
 
 	buffer := make([]byte, 40)
-	fd, err := fs_accessor.Open(pathspec.String())
+	fd, err := fs_accessor.OpenWithOSPath(pathspec)
 	assert.NoError(t, err)
 
 	_, err = fd.Read(buffer)

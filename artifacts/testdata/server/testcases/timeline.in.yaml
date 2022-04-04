@@ -49,7 +49,8 @@ Queries:
           timestamp(epoch=LastRecordChange0x10s) AS LastRecordChange0x10,
           timestamp(epoch=LastRecordChange0x30s) AS LastRecordChange0x30,
           timestamp(epoch=LastAccess0x10s) AS LastAccess0x10,
-          timestamp(epoch=LastAccess0x30s) AS LastAccess0x30
+          timestamp(epoch=LastAccess0x30s) AS LastAccess0x30,
+          pathspec(parse=FullPath, path_type="windows") AS OSPath
        FROM parse_json_array(data=ParseMFTMock)
   - LET _ <= SELECT mock(plugin='info', results=[dict(Fqdn='DESKTOP-687T2NR', OS='windows')]),
         mock(plugin="parse_mft", results=my_mocks)

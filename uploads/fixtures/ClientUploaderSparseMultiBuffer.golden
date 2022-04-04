@@ -3,7 +3,7 @@
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
-    "path": "foo",
+    "path": "/foo",
     "accessor": "ntfs"
    },
    "size": 18,
@@ -16,7 +16,7 @@
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
-    "path": "foo",
+    "path": "/foo",
     "accessor": "ntfs"
    },
    "offset": 2,
@@ -30,7 +30,7 @@
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
-    "path": "foo",
+    "path": "/foo",
     "accessor": "ntfs"
    },
    "offset": 4,
@@ -44,7 +44,7 @@
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
-    "path": "foo",
+    "path": "/foo",
     "accessor": "ntfs"
    },
    "offset": 6,
@@ -58,7 +58,7 @@
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
-    "path": "foo",
+    "path": "/foo",
     "accessor": "ntfs"
    },
    "offset": 8,
@@ -72,7 +72,7 @@
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
-    "path": "foo",
+    "path": "/foo",
     "accessor": "ntfs"
    },
    "offset": 10,
@@ -86,7 +86,7 @@
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
-    "path": "foo",
+    "path": "/foo",
     "accessor": "ntfs"
    },
    "offset": 12,

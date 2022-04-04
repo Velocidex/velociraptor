@@ -67,6 +67,13 @@ func (self _RegexOSPath) Match(scope vfilter.Scope, a vfilter.Any, b vfilter.Any
 		return false
 	}
 
+	// Shortcut for matches against "." or an empty string will match
+	// anything - we do not need to expand the OSPath
+	a_str, ok := a.(string)
+	if !ok || a_str == "" || a_str == "." {
+		return true
+	}
+
 	return scope.Match(a, b_os_path.String())
 }
 

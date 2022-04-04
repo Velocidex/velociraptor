@@ -34,7 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -72,7 +72,7 @@ type ScopeBuilder struct {
 	// If running in client context we only present the client config.
 	ClientConfig *config_proto.ClientConfig
 	ACLManager   vql_subsystem.ACLManager
-	Uploader     api.Uploader
+	Uploader     uploads.Uploader
 	Logger       *log.Logger
 	Env          *ordereddict.Dict
 	Repository   Repository

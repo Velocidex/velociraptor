@@ -488,7 +488,7 @@ class FlowsList extends React.Component {
                     <FontAwesomeIcon icon="trash-alt"/>
                   </Button>
 
-                  { this.props.selected_flow.state === "RUNNING" &&
+                  { this.props.selected_flow.state !== "FINISHED" &&
                     <Button title="Cancel Artifact Collection"
                             onClick={this.cancelButtonClicked}
                             variant="default">

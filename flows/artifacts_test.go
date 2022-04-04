@@ -37,7 +37,11 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/windows/filesystems"
 )
 
-var nilTime = time.Unix(0, 0)
+var (
+	nilTime         = time.Unix(0, 0)
+	filename        = accessors.MustNewWindowsNTFSPath("foo")
+	sparse_filename = accessors.MustNewWindowsNTFSPath("sparse")
+)
 
 type TestRangeReader struct {
 	*bytes.Reader
@@ -354,7 +358,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
 		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
 	uploader.Upload(context.Background(), scope,
-		"foo", "ntfs", "", 1000,
+		filename, "ntfs", "", 1000,
 		nilTime, nilTime, nilTime, nilTime, reader)
 
 	// Get a new collection context.
@@ -698,7 +702,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
 		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
 	uploader.Upload(context.Background(), scope,
-		"sparse", "ntfs", "", 1000,
+		sparse_filename, "ntfs", "", 1000,
 		nilTime, nilTime, nilTime, nilTime, reader)
 
 	// Get a new collection context.
@@ -824,7 +828,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 
 	// Upload the file to the responder.
 	uploader.Upload(context.Background(), scope,
-		"sparse", "ntfs", "", 1000,
+		sparse_filename, "ntfs", "", 1000,
 		nilTime, nilTime, nilTime, nilTime, fd)
 
 	// Get a new collection context.

@@ -13,8 +13,8 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 	"www.velocidex.com/golang/velociraptor/accessors"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -90,7 +90,7 @@ func upload_gcs(ctx context.Context, scope vfilter.Scope,
 	reader io.Reader,
 	projectID, bucket, name string,
 	credentials string) (
-	*api.UploadResponse, error) {
+	*uploads.UploadResponse, error) {
 
 	// Cache the bucket handle between invocations.
 	var bucket_handle *storage.BucketHandle
@@ -142,12 +142,12 @@ func upload_gcs(ctx context.Context, scope vfilter.Scope,
 	n, err := utils.Copy(ctx, utils.NewTee(
 		writer, sha_sum, md5_sum, log_writer), reader)
 	if err != nil {
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
 
-	return &api.UploadResponse{
+	return &uploads.UploadResponse{
 		Path:   name,
 		Size:   uint64(n),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),

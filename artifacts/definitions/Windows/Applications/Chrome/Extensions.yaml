@@ -26,7 +26,8 @@ sources:
            in their home directory. */
         LET extension_manifests = SELECT * from foreach(
           row={
-             SELECT Uid, Name AS User, Directory
+             SELECT Uid, Name AS User,
+                    expand(path=Directory) as Directory
              FROM Artifact.Windows.Sys.Users()
              WHERE Name =~ userRegex
           },

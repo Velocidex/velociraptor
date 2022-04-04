@@ -8,10 +8,11 @@ import (
 	"io"
 	"time"
 
+	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -24,7 +25,7 @@ type NotebookUploader struct {
 func (self *NotebookUploader) Upload(
 	ctx context.Context,
 	scope vfilter.Scope,
-	filename string,
+	filename *accessors.OSPath,
 	accessor string,
 	store_as_name string,
 	expected_size int64,
@@ -33,10 +34,10 @@ func (self *NotebookUploader) Upload(
 	ctime time.Time,
 	btime time.Time,
 	reader io.Reader) (
-	*api.UploadResponse, error) {
+	*uploads.UploadResponse, error) {
 
 	if store_as_name == "" {
-		store_as_name = filename
+		store_as_name = filename.String()
 	}
 	dest_path_spec := self.PathManager.GetUploadsFile(store_as_name)
 
@@ -52,7 +53,7 @@ func (self *NotebookUploader) Upload(
 
 	n, err := utils.Copy(ctx, writer, io.TeeReader(
 		io.TeeReader(reader, sha_sum), md5_sum))
-	return &api.UploadResponse{
+	return &uploads.UploadResponse{
 		Path:   store_as_name,
 		Size:   uint64(n),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),

@@ -14,7 +14,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
@@ -102,13 +102,13 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 	basicAuthUser string,
 	basicAuthPassword string,
 	NoVerifyCert bool) (
-	*api.UploadResponse, error) {
+	*uploads.UploadResponse, error) {
 
 	scope.Log("upload_webdav: Uploading %v to %v", name, webdavUrl)
 
 	parsedUrl, err := url.Parse(webdavUrl)
 	if err != nil {
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
@@ -132,7 +132,7 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 
 	req, err := http.NewRequest(http.MethodPut, parsedUrl.String(), reader)
 	if err != nil {
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
@@ -142,14 +142,14 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
 
 	scope.Log("upload_webdav: HTTP status %v", resp.StatusCode)
 
-	return &api.UploadResponse{
+	return &uploads.UploadResponse{
 		Path: name,
 		Size: uint64(contentLength),
 	}, nil

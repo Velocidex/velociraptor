@@ -29,13 +29,14 @@ sources:
   - query: |
         LET cookie_files = SELECT * from foreach(
           row={
-             SELECT Uid, Name AS User, Directory
+             SELECT Uid, Name AS User,
+                    expand(path=Directory) AS HomeDirectory
              FROM Artifact.Windows.Sys.Users()
              WHERE Name =~ userRegex
           },
           query={
-             SELECT User, FullPath, Mtime
-             FROM glob(root=Directory, globs=cookieGlobs)
+             SELECT User, OSPath, Mtime
+             FROM glob(root=HomeDirectory, globs=cookieGlobs)
           })
 
         SELECT * FROM foreach(row=cookie_files,

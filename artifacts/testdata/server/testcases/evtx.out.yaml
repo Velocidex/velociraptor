@@ -1,0 +1,91 @@
+SELECT EventID, DomainName, UserName, LogonType, SourceIP, Description FROM Artifact.Windows.EventLogs.RDPAuth( Security=srcDir + '/artifacts/testdata/files/RDPAuth_Security.evtx', System= srcDir + '/artifacts/testdata/files/RDPAuth_System.evtx', LocalSessionManager= srcDir + '/artifacts/testdata/files/RDPAuth_LocalSessionManager.evtx', RemoteConnectionManager= srcDir + '/artifacts/testdata/files/RDPAuth_RemoteConnectionManager.evtx') WHERE NOT LogonType = 3 GROUP BY EventID[
+ {
+  "EventID": 23,
+  "DomainName": "WINDOMAIN",
+  "UserName": "vagrant",
+  "LogonType": "null",
+  "SourceIP": "null",
+  "Description": "RDP_SESSION_LOGOFF"
+ },
+ {
+  "EventID": 21,
+  "DomainName": "WINDOMAIN",
+  "UserName": "vagrant",
+  "LogonType": "null",
+  "SourceIP": "LOCAL",
+  "Description": "RDP_LOCAL_CONNECTED"
+ },
+ {
+  "EventID": 22,
+  "DomainName": "WINDOMAIN",
+  "UserName": "vagrant",
+  "LogonType": "null",
+  "SourceIP": "LOCAL",
+  "Description": "RDP_REMOTE_CONNECTED"
+ },
+ {
+  "EventID": 40,
+  "DomainName": "null",
+  "UserName": "null",
+  "LogonType": "null",
+  "SourceIP": "null",
+  "Description": "RDP_REMOTE_DISCONNECTED_REASON"
+ },
+ {
+  "EventID": 24,
+  "DomainName": "WINDOMAIN",
+  "UserName": "vagrant",
+  "LogonType": "null",
+  "SourceIP": "192.168.38.1",
+  "Description": "RDP_LOCAL_DISCONNECTED"
+ },
+ {
+  "EventID": 25,
+  "DomainName": "WINDOMAIN",
+  "UserName": "vagrant",
+  "LogonType": "null",
+  "SourceIP": "192.168.38.1",
+  "Description": "RDP_REMOTE_RECONNECTION"
+ },
+ {
+  "EventID": 1149,
+  "DomainName": "null",
+  "UserName": "vagrant",
+  "LogonType": "null",
+  "SourceIP": "192.168.38.1",
+  "Description": "RDP_INITIATION_SUCCESSFUL"
+ },
+ {
+  "EventID": 4647,
+  "DomainName": "WINDOMAIN",
+  "UserName": "vagrant",
+  "LogonType": "null",
+  "SourceIP": "null",
+  "Description": "USER_INITIATED_LOGOFF"
+ },
+ {
+  "EventID": 4624,
+  "DomainName": "WINDOMAIN",
+  "UserName": "vagrant",
+  "LogonType": 10,
+  "SourceIP": "192.168.38.1",
+  "Description": "RDP_LOGON_SUCCESSFUL_NEW"
+ },
+ {
+  "EventID": 4634,
+  "DomainName": "WINDOMAIN",
+  "UserName": "vagrant",
+  "LogonType": 10,
+  "SourceIP": "null",
+  "Description": "LOGOFF_DISCONNECT"
+ }
+]SELECT ClearedLog, Message =~ "The audit log was cleared." FROM Artifact.Windows.EventLogs.Cleared()[
+ {
+  "ClearedLog": "Security",
+  "Message =~ \"The audit log was cleared.\"": true
+ },
+ {
+  "ClearedLog": "System",
+  "Message =~ \"The audit log was cleared.\"": false
+ }
+]

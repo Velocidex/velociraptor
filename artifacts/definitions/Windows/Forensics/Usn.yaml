@@ -20,12 +20,33 @@ parameters:
     type: regex
 
   - name: Device
-    description: The NTFS drive to watch
+    description: The NTFS drive to parse
     default: C:\\
+
+  - name: AllDrives
+    description: Dump USN from all drives and VSC
+    type: bool
 
 precondition: SELECT OS from info() where OS = "windows"
 
 sources:
   - query: |
-      SELECT * FROM parse_usn(device=Device)
-      WHERE FullPath =~ PathRegex
+      LET all_drives = SELECT
+        OSPath.Components[0] AS Drive
+      FROM glob(globs="/*/$Extend/$UsnJrnl:$J", accessor="ntfs")
+      WHERE log(message="Processing " + Drive)
+
+      SELECT * FROM if(condition=AllDrives,
+      then={
+        SELECT * FROM foreach(row=all_drives,
+        query={
+          SELECT *, Drive AS Device
+          FROM parse_usn(
+             device=Drive, accessor="ntfs")
+          WHERE FullPath =~ PathRegex
+        })
+      }, else={
+        SELECT *, Device
+        FROM parse_usn(device=Device, accessor="ntfs")
+        WHERE FullPath =~ PathRegex
+      })

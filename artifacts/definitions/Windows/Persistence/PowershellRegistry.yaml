@@ -31,8 +31,10 @@ sources:
     query: |
         SELECT * from foreach(
         row={
-          SELECT Name, Directory as HomeDir from Artifact.Windows.Sys.Users()
-          WHERE Directory and Gid AND Name =~ userRegex
+          SELECT Name,
+                 expand(path=Directory) AS HomeDir
+          FROM Artifact.Windows.Sys.Users()
+          WHERE HomeDir and Gid AND Name =~ userRegex
         },
         query={
           SELECT File.FullPath As FullPath,

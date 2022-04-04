@@ -1,6 +1,8 @@
 name: Windows.Applications.SBECmd
 description: |
-    Execute Eric Zimmerman's SBECmd and return output for analysis
+    Execute Eric Zimmerman's SBECmd and return output for analysis.
+
+    SBECmd is a CLI for analyzing shellbags data.
 
     Objective:
 
@@ -13,6 +15,9 @@ description: |
 
     - Stores information about which folders were most recently
       browsed by the user.
+
+    NOTE: Velociraptor can now parse Shellbags natively with the
+    Windows.Forensics.Shellbags artifact.
 
     MITRE ATT&CK ID: TA0009 - Collection
 
@@ -53,9 +58,11 @@ sources:
       LET tempfolder <= tempdir(remove_last=TRUE)
 
       -- get users with profiles
-      LET UserProfiles = SELECT Uid, Name, Directory, UUID, Mtime
-                        FROM Artifact.Windows.Sys.Users()
-                        WHERE Name =~ userRegex and Directory =~ "Users"
+      LET UserProfiles = SELECT
+         Uid, Name,
+         expand(path=Directory) AS HomeDirectory, UUID, Mtime
+      FROM Artifact.Windows.Sys.Users()
+      WHERE Name =~ userRegex and HomeDirectory =~ "Users"
 
       -- execute payload
       LET deploy <= SELECT * FROM foreach(row=UserProfiles,
@@ -63,7 +70,7 @@ sources:
                         SELECT *, Name
                         FROM execve(argv=[
                             payload.FullPath[0],
-                            "-d", Directory,
+                            "-d", HomeDirectory,
                             "--csv", tempfolder + "\\" + Name,
                             "--dedupe"])
                     })

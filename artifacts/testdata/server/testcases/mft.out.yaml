@@ -1,4 +1,4 @@
-LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd' ]), clear=TRUE)[]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='just_a_file\.txt')[
+LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', ]), clear=TRUE)[]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='just_a_file\\.txt')[
  {
   "EntryNumber": 49,
   "InUse": true,
@@ -25,7 +25,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "FileNameTypes": "POSIX",
   "_Source": "Windows.NTFS.MFT"
  }
-]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\.txt',DateBefore='2018-12-31')[
+]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateBefore='2018-12-31')[
  {
   "EntryNumber": 46,
   "InUse": true,
@@ -78,7 +78,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "FileNameTypes": "POSIX",
   "_Source": "Windows.NTFS.MFT"
  }
-]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\.txt',DateAfter='2021-07-01')[
+]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateAfter='2021-07-01')[
  {
   "EntryNumber": 37,
   "InUse": true,
@@ -131,7 +131,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "FileNameTypes": "POSIX",
   "_Source": "Windows.NTFS.MFT"
  }
-]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\.txt',DateAfter='2021-07-01',DateBefore='2022-02-01')[
+]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateAfter='2021-07-01',DateBefore='2022-02-01')[
  {
   "EntryNumber": 49,
   "InUse": true,

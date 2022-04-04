@@ -7,16 +7,17 @@ description: |
   $SDS stream.
 
 parameters:
-  - name: SDSPath
-    default: "C:/$SECURE:$SDS"
+  - name: Drive
+    description: The Drive letter to analyze
+    default: "C:"
 
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
 
     query: |
-      LET SDSPath = "C:/$SECURE:$SDS"
+      LET Device <= pathspec(parse=Drive)
 
-      SELECT FullPath, Mtime, Btime, Ctime, Atime,
-             upload(accessor="ntfs", file=SDSPath) AS Upload
-      FROM stat(accessor="ntfs", filename=SDSPath)
+      SELECT *, upload(accessor="mft", file=Device + Inode, name=Name) AS Upload
+      FROM foreach(row=parse_ntfs(device=Device, mft=9).Attributes, column="_value")
+      WHERE Name =~ "\\$S" AND TypeId IN (128, 160)

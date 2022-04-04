@@ -9,10 +9,10 @@ import (
 	"io"
 	"time"
 
+	"www.velocidex.com/golang/velociraptor/accessors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -30,7 +30,7 @@ type VelociraptorUploader struct {
 func (self *VelociraptorUploader) Upload(
 	ctx context.Context,
 	scope vfilter.Scope,
-	filename string,
+	filename *accessors.OSPath,
 	accessor string,
 	store_as_name string,
 	expected_size int64,
@@ -39,7 +39,7 @@ func (self *VelociraptorUploader) Upload(
 	ctime time.Time,
 	btime time.Time,
 	reader io.Reader) (
-	*api.UploadResponse, error) {
+	*UploadResponse, error) {
 
 	// Try to collect sparse files if possible
 	result, err := self.maybeUploadSparse(
@@ -50,11 +50,11 @@ func (self *VelociraptorUploader) Upload(
 	}
 
 	if store_as_name == "" {
-		store_as_name = filename
+		store_as_name = filename.String()
 	}
 
-	result = &api.UploadResponse{
-		Path:       filename,
+	result = &UploadResponse{
+		Path:       filename.String(),
 		StoredName: store_as_name,
 	}
 
@@ -128,13 +128,13 @@ func (self *VelociraptorUploader) Upload(
 func (self *VelociraptorUploader) maybeUploadSparse(
 	ctx context.Context,
 	scope vfilter.Scope,
-	filename string,
+	filename *accessors.OSPath,
 	accessor string,
 	store_as_name string,
 	ignored_expected_size int64,
 	mtime time.Time,
 	reader io.Reader) (
-	*api.UploadResponse, error) {
+	*UploadResponse, error) {
 
 	// Can the reader produce ranges?
 	range_reader, ok := reader.(RangeReader)
@@ -146,12 +146,12 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 
 	// This is the response that will be passed into the VQL
 	// engine.
-	result := &api.UploadResponse{
-		Path: filename,
+	result := &UploadResponse{
+		Path: filename.String(),
 	}
 
 	if store_as_name == "" {
-		store_as_name = filename
+		store_as_name = filename.String()
 	}
 
 	self.Count += 1

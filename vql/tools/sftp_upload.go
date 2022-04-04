@@ -16,7 +16,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/accessors"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -179,12 +179,12 @@ func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 	reader io.Reader,
 	user, filepath, name string,
 	privateKey string, endpoint string, hostKey string) (
-	*api.UploadResponse, error) {
+	*uploads.UploadResponse, error) {
 
 	scope.Log("upload_SFTP: Uploading %v to %v", name, endpoint)
 	client, err := getSFTPClient(scope, user, privateKey, endpoint, hostKey)
 	if err != nil {
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
@@ -195,12 +195,12 @@ func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 	fpath := path.Join(filepath, name)
 	file, err := client.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC)
 	if err != nil {
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
 	if _, err := file.ReadFrom(reader); err != nil {
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
@@ -209,17 +209,17 @@ func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 	check, err := client.Lstat(fpath)
 	if e, ok := err.(*sftp.StatusError); ok && e.FxCode() == sftp.ErrSSHFxPermissionDenied {
 		scope.Log("upload_SFTP: Unable to verify size of uploaded file due to insufficient read permissions.")
-		response := &api.UploadResponse{
+		response := &uploads.UploadResponse{
 			Path: fpath,
 		}
 		return response, nil
 	} else if err != nil {
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
 
-	response := &api.UploadResponse{
+	response := &uploads.UploadResponse{
 		Path: fpath,
 		Size: uint64(check.Size()),
 	}

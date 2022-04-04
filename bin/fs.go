@@ -31,8 +31,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/file_store/uploader"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -280,7 +280,7 @@ func doCp(path, accessor string, dump_dir string) error {
 
 	case "fs":
 		output_path_spec := path_specs.NewSafeFilestorePath(output_path)
-		builder.Uploader = api.NewFileStoreUploader(
+		builder.Uploader = uploader.NewFileStoreUploader(
 			config_obj,
 			file_store.GetFileStore(config_obj),
 			output_path_spec)

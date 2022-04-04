@@ -54,7 +54,7 @@ func (self *USNWatcherService) Register(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	ntfs_ctx, err := readers.GetNTFSContext(scope, device, "file")
+	ntfs_ctx, err := readers.GetNTFSContext(scope, device, "ntfs")
 	if err != nil {
 		scope.Log("watch_usn: %v", err)
 		return func() {}

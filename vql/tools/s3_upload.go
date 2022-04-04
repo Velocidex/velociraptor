@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/accessors"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
@@ -111,7 +111,7 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 	serverSideEncryption string,
 	NoVerifyCert bool,
 	size uint64) (
-	*api.UploadResponse, error) {
+	*uploads.UploadResponse, error) {
 
 	scope.Log("upload_S3: Uploading %v to %v", name, bucket)
 
@@ -121,7 +121,7 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 		creds := credentials.NewStaticCredentials(credentialsKey, credentialsSecret, token)
 		_, err := creds.Get()
 		if err != nil {
-			return &api.UploadResponse{
+			return &uploads.UploadResponse{
 				Error: err.Error(),
 			}, err
 		}
@@ -145,7 +145,7 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 	}
 	sess, err := session.NewSession(conf)
 	if err != nil {
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
@@ -169,13 +169,13 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 			})
 	}
 	if err != nil {
-		return &api.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
 
 	// All good! report the outcome.
-	response := &api.UploadResponse{
+	response := &uploads.UploadResponse{
 		Path: result.Location,
 	}
 
