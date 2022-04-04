@@ -79,4 +79,13 @@ SELECT EventID, DomainName, UserName, LogonType, SourceIP, Description FROM Arti
   "SourceIP": "null",
   "Description": "LOGOFF_DISCONNECT"
  }
-]SELECT ClearedLog, Message =~ "The audit log was cleared." FROM Artifact.Windows.EventLogs.Cleared()[]
+]SELECT ClearedLog, Message =~ "The audit log was cleared." FROM Artifact.Windows.EventLogs.Cleared()[
+ {
+  "ClearedLog": "Security",
+  "Message =~ \"The audit log was cleared.\"": true
+ },
+ {
+  "ClearedLog": "System",
+  "Message =~ \"The audit log was cleared.\"": false
+ }
+]
