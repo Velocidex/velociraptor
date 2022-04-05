@@ -108,31 +108,38 @@ func (self *HuntManager) Start(
 		config_obj.Frontend.Resources.NotificationsPerSecond)
 
 	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.HuntModification", self.ProcessMutation)
+		"Server.Internal.HuntModification",
+		"HuntManager",
+		self.ProcessMutation)
 	if err != nil {
 		return err
 	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"System.Hunt.Participation", self.ProcessParticipation)
+		"System.Hunt.Participation",
+		"HuntManager",
+		self.ProcessParticipation)
 	if err != nil {
 		return err
 	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.Label", self.ProcessLabelChange)
+		"Server.Internal.Label", "HuntManager",
+		self.ProcessLabelChange)
 	if err != nil {
 		return err
 	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.Interrogation", self.ProcessInterrogation)
+		"Server.Internal.Interrogation", "HuntManager",
+		self.ProcessInterrogation)
 	if err != nil {
 		return err
 	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"System.Flow.Completion", self.ProcessFlowCompletion)
+		"System.Flow.Completion", "HuntManager",
+		self.ProcessFlowCompletion)
 	return err
 }
 

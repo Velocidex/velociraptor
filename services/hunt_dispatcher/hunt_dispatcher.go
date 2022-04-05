@@ -501,7 +501,8 @@ func StartHuntDispatcher(
 	}
 
 	return journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.HuntUpdate", service.ProcessUpdate)
+		"Server.Internal.HuntUpdate", "HuntDispatcher",
+		service.ProcessUpdate)
 }
 
 func init() {

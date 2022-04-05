@@ -58,7 +58,9 @@ func (self *ClientInfoManager) ProcessNotification(
 	if pres {
 		cached_info, err := self.GetCacheInfo(client_id)
 		if err != nil {
-			return err
+			// There is no client record - this is not an error as a
+			// client record may not exist yet
+			return nil
 		}
 
 		// Next access will check for real.

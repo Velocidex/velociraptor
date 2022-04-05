@@ -40,6 +40,7 @@ func (self *VFSService) Start(
 
 	err := watchForFlowCompletion(
 		ctx, wg, config_obj, "System.VFS.ListDirectory",
+		"VFSService",
 		self.ProcessListDirectory)
 	if err != nil {
 		return err
@@ -47,6 +48,7 @@ func (self *VFSService) Start(
 
 	err = watchForFlowCompletion(
 		ctx, wg, config_obj, "System.VFS.DownloadFile",
+		"VFSService",
 		self.ProcessDownloadFile)
 	if err != nil {
 		return err

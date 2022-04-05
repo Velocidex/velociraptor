@@ -67,8 +67,8 @@ func CheckClientStatus(
 
 		// Inform the client manager that this client will now receive
 		// the latest event table.
-		client_manager.UpdateStats(client_id, func(s *services.Stats) {
-			s.LastEventTableVersion = update_message.UpdateEventTable.Version
+		client_manager.UpdateStats(client_id, &services.Stats{
+			LastEventTableVersion: update_message.UpdateEventTable.Version,
 		})
 
 		clientEventUpdateCounter.Inc()
@@ -146,8 +146,8 @@ func CheckClientStatus(
 		}
 	}
 
-	client_manager.UpdateStats(client_id, func(s *services.Stats) {
-		s.LastHuntTimestamp = latest_timestamp
+	client_manager.UpdateStats(client_id, &services.Stats{
+		LastHuntTimestamp: latest_timestamp,
 	})
 	return nil
 }

@@ -12,6 +12,9 @@ type QueueOptions struct {
 
 	// How many items to lease at once from the file buffer.
 	FileBufferLeaseSize int
+
+	// Who is listening to this queue
+	OwnerName string
 }
 
 // A QueueManager writes query results into queues. The manager is

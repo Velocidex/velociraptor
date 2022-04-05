@@ -22,7 +22,7 @@ func watchForFlowCompletion(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
-	artifact_name string,
+	artifact_name, watcher_name string,
 	handler func(ctx context.Context,
 		config_obj *config_proto.Config,
 		scope vfilter.Scope, row *ordereddict.Dict,
@@ -33,7 +33,8 @@ func watchForFlowCompletion(
 		return err
 	}
 
-	events, cancel := journal.Watch(ctx, "System.Flow.Completion")
+	events, cancel := journal.Watch(
+		ctx, "System.Flow.Completion", watcher_name)
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 

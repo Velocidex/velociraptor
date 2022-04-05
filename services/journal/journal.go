@@ -54,7 +54,8 @@ func (self *JournalService) publishWatchers() {
 }
 
 func (self *JournalService) Watch(
-	ctx context.Context, queue_name string) (<-chan *ordereddict.Dict, func()) {
+	ctx context.Context, queue_name string,
+	watcher_name string) (<-chan *ordereddict.Dict, func()) {
 
 	if self == nil || self.qm == nil {
 		// Readers block on nil channel.
@@ -63,7 +64,9 @@ func (self *JournalService) Watch(
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Watching for events from %v", queue_name)
-	res, cancel := self.qm.Watch(ctx, queue_name, nil)
+	res, cancel := self.qm.Watch(ctx, queue_name, &api.QueueOptions{
+		OwnerName: watcher_name,
+	})
 
 	// Advertise new watchers
 	self.publishWatchers()

@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -18,13 +19,14 @@ import (
 func WatchForCollectionWithCB(ctx context.Context,
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup,
-	artifact string,
+	artifact, watcher_name string,
 
 	processor func(ctx context.Context,
 		config_obj *config_proto.Config,
 		client_id, flow_id string) error) error {
 
 	return WatchQueueWithCB(ctx, config_obj, wg, "System.Flow.Completion",
+		watcher_name,
 		func(ctx context.Context, config_obj *config_proto.Config,
 			row *ordereddict.Dict) error {
 
@@ -56,7 +58,7 @@ func WatchForCollectionWithCB(ctx context.Context,
 func WatchQueueWithCB(ctx context.Context,
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup,
-	artifact string,
+	artifact, watcher_name string,
 
 	// A processor for rows from the queue
 	processor func(ctx context.Context,
@@ -67,7 +69,7 @@ func WatchQueueWithCB(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	qm_chan, cancel := journal.Watch(ctx, artifact)
+	qm_chan, cancel := journal.Watch(ctx, artifact, watcher_name)
 
 	wg.Add(1)
 	go func() {
@@ -86,7 +88,11 @@ func WatchQueueWithCB(ctx context.Context,
 					// we just log them into the debug log.
 					logger := logging.GetLogger(config_obj,
 						&logging.FrontendComponent)
-					logger.Debug("Debug: %v.", err)
+					logger.WithFields(logrus.Fields{
+						"Owner":    watcher_name,
+						"Artifact": artifact,
+						"Error":    err,
+					}).Debug("Event Processor Error")
 				}
 
 			case <-ctx.Done():

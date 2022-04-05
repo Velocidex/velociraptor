@@ -26,10 +26,10 @@ type ClientOS int
 // Keep some stats about the client in the cache. These will be synced
 // to disk periodically.
 type Stats struct {
-	Ping                  uint64
-	LastHuntTimestamp     uint64
-	LastEventTableVersion uint64
-	IpAddress             string
+	Ping                  uint64 `json:"Ping,omitempty"`
+	LastHuntTimestamp     uint64 `json:"LastHuntTimestamp,omitempty"`
+	LastEventTableVersion uint64 `json:"LastEventTableVersion,omitempty"`
+	IpAddress             string `json:"IpAddress,omitempty"`
 }
 
 func GetClientInfoManager() (ClientInfoManager, error) {
@@ -76,7 +76,7 @@ type ClientInfoManager interface {
 	Get(client_id string) (*ClientInfo, error)
 
 	GetStats(client_id string) (*Stats, error)
-	UpdateStats(client_id string, cb func(stats *Stats)) error
+	UpdateStats(client_id string, stats *Stats) error
 
 	// Get the client's tasks and remove them from the queue.
 	GetClientTasks(client_id string) ([]*crypto_proto.VeloMessage, error)

@@ -42,7 +42,9 @@ func (self *RepositoryManager) StartWatchingForUpdates(
 		return err
 	}
 
-	row_chan, cancel := journal.Watch(ctx, "Server.Internal.ArtifactModification")
+	row_chan, cancel := journal.Watch(ctx,
+		"Server.Internal.ArtifactModification",
+		"RepositoryManager")
 
 	wg.Add(1)
 	go func() {

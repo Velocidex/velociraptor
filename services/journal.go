@@ -50,11 +50,14 @@ func RegisterJournal(journal JournalService) {
 }
 
 type JournalService interface {
-	// Watch the artifact named by queue_name for new rows. This
-	// only makes sense for artifacts of type CLIENT_EVENT and
-	// SERVER_EVENT
-	Watch(ctx context.Context,
-		queue_name string) (output <-chan *ordereddict.Dict, cancel func())
+	// Watch the artifact named by queue_name for new rows. This only
+	// makes sense for artifacts of type CLIENT_EVENT and
+	// SERVER_EVENT. The watcher_name is a description of who is
+	// watching this particular queue.
+	Watch(
+		ctx context.Context,
+		queue_name string,
+		watcher_name string) (output <-chan *ordereddict.Dict, cancel func())
 
 	GetWatchers() []string
 

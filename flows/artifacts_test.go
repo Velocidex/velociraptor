@@ -643,7 +643,7 @@ func (self *TestSuite) testCollectionCompletion(
 	rows := []*ordereddict.Dict{}
 
 	err := journal.WatchQueueWithCB(self.Ctx, self.ConfigObj, wg,
-		"System.Flow.Completion", func(ctx context.Context,
+		"System.Flow.Completion", "", func(ctx context.Context,
 			config_obj *config_proto.Config,
 			row *ordereddict.Dict) error {
 			mu.Lock()

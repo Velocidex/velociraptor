@@ -75,6 +75,8 @@ message EventRequest {
 
     // The node who is requesting the event stream.
     string node = 2;
+
+    string watcher_name = 3;
 }
 
 message EventResponse {

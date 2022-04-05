@@ -63,6 +63,7 @@ func (self *EnrollmentService) Start(
 	// Also watch for customized interrogation artifacts.
 	err := journal.WatchForCollectionWithCB(ctx, config_obj, wg,
 		"Generic.Client.Info/BasicInformation",
+		"InterrogationService",
 		func(ctx context.Context,
 			config_obj *config_proto.Config,
 			client_id, flow_id string) error {
@@ -77,6 +78,7 @@ func (self *EnrollmentService) Start(
 	// Also watch for customized interrogation artifacts.
 	err = journal.WatchForCollectionWithCB(ctx, config_obj, wg,
 		"Custom.Generic.Client.Info/BasicInformation",
+		"InterrogationService",
 		func(ctx context.Context,
 			config_obj *config_proto.Config,
 			client_id, flow_id string) error {
@@ -89,7 +91,8 @@ func (self *EnrollmentService) Start(
 	}
 
 	return journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.Enrollment", self.ProcessEnrollment)
+		"Server.Internal.Enrollment", "InterrogationService",
+		self.ProcessEnrollment)
 }
 
 func (self *EnrollmentService) ProcessEnrollment(
