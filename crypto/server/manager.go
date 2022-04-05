@@ -93,7 +93,9 @@ func NewServerCryptoManager(
 	server_manager := &ServerCryptoManager{base}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.ClientDelete", func(ctx context.Context,
+		"Server.Internal.ClientDelete",
+		"CryptoServerManager",
+		func(ctx context.Context,
 			config_obj *config_proto.Config,
 			row *ordereddict.Dict) error {
 

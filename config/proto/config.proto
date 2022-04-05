@@ -482,6 +482,16 @@ message FrontendResourceControl {
     // client info from cache too frequently can result in a lot more
     // IO. Default size of this cache is the expected_clients above.
     uint64 client_info_lru_ttl = 27;
+
+    // How often to sync client info records (ms)
+    uint64 client_info_sync_time = 29;
+
+    // The journal files are used to queue messages between event
+    // generators and event consumers when the consumer is unable to
+    // drain these quickly enough. The setting specifies the maximum
+    // size of the file - when it is exceeded, the file will be
+    // truncated and events will be lost. Default is 1gb
+    int64 max_journal_buffer_size = 28;
 }
 
 

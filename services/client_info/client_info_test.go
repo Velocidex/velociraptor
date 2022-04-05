@@ -27,6 +27,9 @@ type ClientInfoTestSuite struct {
 }
 
 func (self *ClientInfoTestSuite) SetupTest() {
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Frontend.Resources.ClientInfoSyncTime = 1
+
 	self.TestSuite.SetupTest()
 
 	// Create a client in the datastore
@@ -69,9 +72,9 @@ func (self *ClientInfoTestSuite) TestClientInfo() {
 	assert.Equal(self.T(), info.Ping, uint64(0))
 
 	// Update the IP address
-	client_info_manager.UpdateStats(self.client_id, func(s *services.Stats) {
-		s.Ping = uint64(100 * 1000000)
-		s.IpAddress = "127.0.0.1"
+	client_info_manager.UpdateStats(self.client_id, &services.Stats{
+		Ping:      uint64(100 * 1000000),
+		IpAddress: "127.0.0.1",
 	})
 
 	// Now get the client record and check that it is updated
@@ -106,6 +109,7 @@ func (self *ClientInfoTestSuite) TestMasterMinion() {
 	minion_config := proto.Clone(self.ConfigObj).(*config_proto.Config)
 	minion_config.Frontend.IsMinion = true
 	minion_config.Frontend.Resources.MinionBatchWaitTimeMs = 1
+	minion_config.Frontend.Resources.ClientInfoSyncTime = 1
 
 	minion_client_info_manager := client_info.NewClientInfoManager(minion_config)
 	minion_client_info_manager.Clock = self.clock
@@ -115,14 +119,29 @@ func (self *ClientInfoTestSuite) TestMasterMinion() {
 	assert.NoError(self.T(), err)
 
 	// Update the minion timestamp
-	minion_client_info_manager.UpdateStats(self.client_id, func(s *services.Stats) {
-		s.IpAddress = "127.0.0.1"
+	minion_client_info_manager.UpdateStats(self.client_id, &services.Stats{
+		IpAddress: "127.0.0.1",
 	})
 
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		client_info, err := master_client_info_manager.Get(self.client_id)
 		assert.NoError(self.T(), err)
 		return client_info.IpAddress == "127.0.0.1"
+	})
+
+	// Make sure we actually write the result in the datastore.
+	client_path_manager := paths.NewClientPathManager(self.client_id)
+
+	// Read the main client record
+	db, err := datastore.GetDB(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		ping_info := &services.ClientInfo{}
+		db.GetSubject(self.ConfigObj, client_path_manager.Ping(),
+			ping_info)
+		utils.Debug(ping_info)
+		return ping_info.IpAddress == "127.0.0.1"
 	})
 }
 

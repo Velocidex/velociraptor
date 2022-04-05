@@ -23,6 +23,7 @@ parameters:
     description: |
       The Velociraptor Release to import.
     type: choices
+    default: v0.6.3
     choices:
       - v0.6.0
       - v0.6.1

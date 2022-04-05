@@ -296,7 +296,8 @@ func (self *ReplicationService) ProcessMasterRegistrations(event *ordereddict.Di
 func (self *ReplicationService) startMasterRegistrationLoop(
 	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) {
 
-	events, cancel := self.Watch(ctx, "Server.Internal.MasterRegistrations")
+	events, cancel := self.Watch(ctx,
+		"Server.Internal.MasterRegistrations", "ReplicationService")
 
 	wg.Add(1)
 	go func() {
@@ -453,7 +454,8 @@ func (self *ReplicationService) GetWatchers() []string {
 }
 
 // Watch the master for new events
-func (self *ReplicationService) Watch(ctx context.Context, queue string) (
+func (self *ReplicationService) Watch(
+	ctx context.Context, queue, watcher_name string) (
 	<-chan *ordereddict.Dict, func()) {
 
 	output_chan := make(chan *ordereddict.Dict)
@@ -463,7 +465,8 @@ func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 		for {
 			// Keep retrying to reconnect in case the
 			// connection dropped.
-			for event := range self.watchOnce(subctx, queue) {
+			for event := range self.watchOnce(
+				subctx, queue, watcher_name) {
 				output_chan <- event
 			}
 
@@ -475,8 +478,8 @@ func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 
 			logger := logging.GetLogger(self.config_obj,
 				&logging.FrontendComponent)
-			logger.Info("<green>ReplicationService Reconnect</>: "+
-				"Watch for events from %v", queue)
+			logger.Info("<green>ReplicationService Reconnect</>%s: "+
+				"Watch for events from %v", watcher_name, queue)
 		}
 	}()
 
@@ -485,17 +488,22 @@ func (self *ReplicationService) Watch(ctx context.Context, queue string) (
 
 // Try to connect to the API handler once and return in case of
 // failure.
-func (self *ReplicationService) watchOnce(ctx context.Context, queue string) <-chan *ordereddict.Dict {
+func (self *ReplicationService) watchOnce(
+	ctx context.Context,
+	queue, watcher_name string) <-chan *ordereddict.Dict {
 
 	output_chan := make(chan *ordereddict.Dict)
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("<green>ReplicationService</>: Watching for events from %v", queue)
+	logger.Info("<green>ReplicationService</>%s: Watching for events from %v",
+		watcher_name, queue)
 
 	subctx, cancel := context.WithCancel(ctx)
 
 	stream, err := self.api_client.WatchEvent(subctx, &api_proto.EventRequest{
 		Queue: queue,
+		WatcherName: watcher_name + "_" +
+			services.GetNodeName(self.config_obj.Frontend),
 	})
 	if err != nil {
 		close(output_chan)
@@ -526,7 +534,6 @@ func (self *ReplicationService) watchOnce(ctx context.Context, queue string) <-c
 					logger.Debug("<green>ReplicationService</>: Received event on %v: %v\n", queue, dict)
 				}
 			}
-
 		}
 	}()
 

@@ -93,13 +93,15 @@ func StartNotificationService(
 	logger.Info("<green>Starting</> the notification service.")
 
 	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.Ping", self.ProcessPing)
+		"Server.Internal.Ping", "NotificationService",
+		self.ProcessPing)
 	if err != nil {
 		return err
 	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.Pong", self.ProcessPong)
+		"Server.Internal.Pong", "NotificationService",
+		self.ProcessPong)
 	if err != nil {
 		return err
 	}
@@ -109,7 +111,8 @@ func StartNotificationService(
 	if err != nil {
 		return err
 	}
-	events, cancel := journal_service.Watch(ctx, "Server.Internal.Notifications")
+	events, cancel := journal_service.Watch(ctx,
+		"Server.Internal.Notifications", "NotificationService")
 
 	wg.Add(1)
 	go func() {

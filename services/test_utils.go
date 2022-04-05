@@ -30,7 +30,7 @@ func GetPublishedEvents(
 			return
 		}
 		ctx := context.Background()
-		events, cancel := journal.Watch(ctx, artifact)
+		events, cancel := journal.Watch(ctx, artifact, "")
 		defer cancel()
 
 		// Wait here until we are set up.

@@ -66,10 +66,10 @@ import (
 
 type ApiServer struct {
 	proto.UnimplementedAPIServer
-	config     *config_proto.Config
-	server_obj *server.Server
-	ca_pool    *x509.CertPool
-
+	config             *config_proto.Config
+	server_obj         *server.Server
+	ca_pool            *x509.CertPool
+	wg                 *sync.WaitGroup
 	api_client_factory grpc_client.APIClientFactory
 }
 
@@ -984,6 +984,7 @@ func startAPIServer(
 			server_obj:         server_obj,
 			ca_pool:            CA_Pool,
 			api_client_factory: grpc_client.GRPCAPIClient{},
+			wg:                 wg,
 		},
 	)
 	// Register reflection service.

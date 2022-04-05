@@ -277,9 +277,9 @@ func (self *Server) Process(
 		return nil, 0, err
 	}
 	err = client_info_manager.UpdateStats(message_info.Source,
-		func(s *services.Stats) {
-			s.Ping = uint64(time.Now().UnixNano() / 1000)
-			s.IpAddress = message_info.RemoteAddr
+		&services.Stats{
+			Ping:      uint64(time.Now().UnixNano() / 1000),
+			IpAddress: message_info.RemoteAddr,
 		})
 	if err != nil {
 		return nil, 0, err

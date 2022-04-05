@@ -63,28 +63,35 @@ func streamEvents(
 
 	// The API service is running on the master only! This means
 	// the journal service is local.
-	output_chan, cancel := journal.Watch(ctx, in.Queue)
+	output_chan, cancel := journal.Watch(
+		ctx, in.Queue, "replication-"+in.WatcherName)
 	defer cancel()
 
-	for event := range output_chan {
-		serialized, err := json.Marshal(event)
-		if err != nil {
-			continue
-		}
-		response := &api_proto.EventResponse{
-			Jsonl: serialized,
-		}
+	for {
+		select {
+		case <-ctx.Done():
+			return
 
-		timer := prometheus.NewTimer(
-			prometheus.ObserverFunc(func(v float64) {
-				replicationReceiveHistorgram.WithLabelValues("").Observe(v)
-			}))
+		case event := <-output_chan:
+			serialized, err := json.Marshal(event)
+			if err != nil {
+				continue
+			}
+			response := &api_proto.EventResponse{
+				Jsonl: serialized,
+			}
 
-		err = stream.Send(response)
-		timer.ObserveDuration()
+			timer := prometheus.NewTimer(
+				prometheus.ObserverFunc(func(v float64) {
+					replicationReceiveHistorgram.WithLabelValues("").Observe(v)
+				}))
 
-		if err != nil {
-			continue
+			err = stream.Send(response)
+			timer.ObserveDuration()
+
+			if err != nil {
+				continue
+			}
 		}
 	}
 
@@ -140,8 +147,13 @@ func (self *ApiServer) WatchEvent(
 
 		// return the first good match
 		if true {
+			// Wait here for orderly shutdown of event streams.
+			self.wg.Add(1)
+			defer self.wg.Done()
+
 			// Cert is good enough for us, run the query.
-			return streamEvents(ctx, self.config, in, stream, peer_name)
+			return streamEvents(
+				ctx, self.config, in, stream, peer_name)
 		}
 	}
 

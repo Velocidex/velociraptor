@@ -2,6 +2,7 @@ package directory
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"sync"
@@ -10,6 +11,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -228,7 +230,16 @@ func NewListener(
 		self.disable_file_buffering = 1
 
 	} else {
-		tmpfile, err := ioutil.TempFile("", "journal")
+		node_name := services.GetNodeName(config_obj.Frontend)
+		if services.IsMaster(config_obj) {
+			node_name = "master"
+		}
+		if options.OwnerName != "" {
+			node_name = options.OwnerName
+		}
+
+		base_name := fmt.Sprintf("journal_%s_%s_", name, node_name)
+		tmpfile, err := ioutil.TempFile("", base_name)
 		if err != nil {
 			return nil, err
 		}

@@ -335,7 +335,8 @@ func (self *Labeler) Start(ctx context.Context,
 		return err
 	}
 
-	events, cancel := journal.Watch(ctx, "Server.Internal.Label")
+	events, cancel := journal.Watch(
+		ctx, "Server.Internal.Label", "Labeler")
 
 	wg.Add(1)
 	go func() {
