@@ -30,7 +30,7 @@ description: |
 parameters:
   - name: MFTDrive
     description: |
-      The path to to the drive that holds the MFT file (can be apathspec). This 
+      The path to to the drive that holds the MFT file (can be a pathspec). This 
       drive is also used for results for offline processing.
     default: "C:"
   - name: MFTPath
