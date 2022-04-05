@@ -18,6 +18,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "LastAccess0x30": "2022-03-18T04:15:18.5166156Z",
   "HasADS": false,
   "SI_Lt_FN": false,
+  "uSecZeros": false,
   "Copied": true,
   "FileNames": [
    "just_a_file.txt"
@@ -45,6 +46,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "LastAccess0x30": "2018-09-24T07:55:29.7664719Z",
   "HasADS": true,
   "SI_Lt_FN": false,
+  "uSecZeros": false,
   "Copied": false,
   "FileNames": [
    "Hello world text document.txt"
@@ -71,6 +73,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "LastAccess0x30": "2018-09-24T07:55:29.7664719Z",
   "HasADS": true,
   "SI_Lt_FN": false,
+  "uSecZeros": false,
   "Copied": false,
   "FileNames": [
    "Hello world text document.txt:goodbye.txt"
@@ -98,6 +101,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "LastAccess0x30": "2022-03-18T04:22:20.4341459Z",
   "HasADS": false,
   "SI_Lt_FN": false,
+  "uSecZeros": false,
   "Copied": false,
   "FileNames": [
    "another_file.txt"
@@ -124,6 +128,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "LastAccess0x30": "2022-03-18T04:15:18.5166156Z",
   "HasADS": false,
   "SI_Lt_FN": false,
+  "uSecZeros": false,
   "Copied": true,
   "FileNames": [
    "just_a_file.txt"
@@ -151,6 +156,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "LastAccess0x30": "2022-03-18T04:15:18.5166156Z",
   "HasADS": false,
   "SI_Lt_FN": false,
+  "uSecZeros": false,
   "Copied": true,
   "FileNames": [
    "just_a_file.txt"
