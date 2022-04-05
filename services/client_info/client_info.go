@@ -38,7 +38,6 @@ package client_info
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
@@ -201,7 +200,6 @@ func (self *CachedInfo) Flush() error {
 		return err
 	}
 
-	fmt.Printf("Writing client info for %v\n", client_id)
 	// A blind write will eventually hit the disk.
 	client_path_manager := paths.NewClientPathManager(client_id)
 	db.SetSubjectWithCompletion(
@@ -307,7 +305,7 @@ func (self *ClientInfoManager) MutationSync(
 	sync_time := time.Duration(10) * time.Second
 	if config_obj.Frontend != nil && config_obj.Frontend.Resources != nil &&
 		config_obj.Frontend.Resources.ClientInfoSyncTime > 0 {
-		sync_time = time.Duration(config_obj.Frontend.Resources.ClientInfoSyncTime) * time.Second
+		sync_time = time.Duration(config_obj.Frontend.Resources.ClientInfoSyncTime) * time.Millisecond
 	}
 
 	journal, err := services.GetJournal()

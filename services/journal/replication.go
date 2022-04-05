@@ -501,8 +501,9 @@ func (self *ReplicationService) watchOnce(
 	subctx, cancel := context.WithCancel(ctx)
 
 	stream, err := self.api_client.WatchEvent(subctx, &api_proto.EventRequest{
-		Queue:       queue,
-		WatcherName: watcher_name,
+		Queue: queue,
+		WatcherName: watcher_name + "_" +
+			services.GetNodeName(self.config_obj.Frontend),
 	})
 	if err != nil {
 		close(output_chan)

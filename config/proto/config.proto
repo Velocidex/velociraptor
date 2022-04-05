@@ -482,6 +482,8 @@ message FrontendResourceControl {
     // client info from cache too frequently can result in a lot more
     // IO. Default size of this cache is the expected_clients above.
     uint64 client_info_lru_ttl = 27;
+
+    // How often to sync client info records (ms)
     uint64 client_info_sync_time = 29;
 
     // The journal files are used to queue messages between event

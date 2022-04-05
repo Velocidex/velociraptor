@@ -27,6 +27,9 @@ type ClientInfoTestSuite struct {
 }
 
 func (self *ClientInfoTestSuite) SetupTest() {
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Frontend.Resources.ClientInfoSyncTime = 1
+
 	self.TestSuite.SetupTest()
 
 	// Create a client in the datastore
@@ -124,6 +127,21 @@ func (self *ClientInfoTestSuite) TestMasterMinion() {
 		client_info, err := master_client_info_manager.Get(self.client_id)
 		assert.NoError(self.T(), err)
 		return client_info.IpAddress == "127.0.0.1"
+	})
+
+	// Make sure we actually write the result in the datastore.
+	client_path_manager := paths.NewClientPathManager(self.client_id)
+
+	// Read the main client record
+	db, err := datastore.GetDB(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		ping_info := &services.ClientInfo{}
+		db.GetSubject(self.ConfigObj, client_path_manager.Ping(),
+			ping_info)
+		utils.Debug(ping_info)
+		return ping_info.IpAddress == "127.0.0.1"
 	})
 }
 
