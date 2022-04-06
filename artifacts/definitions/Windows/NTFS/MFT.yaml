@@ -30,7 +30,7 @@ description: |
 parameters:
   - name: MFTDrive
     description: |
-      The path to to the drive that holds the MFT file (can be apathspec). This 
+      The path to to the drive that holds the MFT file (can be a pathspec). This 
       drive is also used for results for offline processing.
     default: "C:"
   - name: MFTPath
@@ -97,7 +97,7 @@ sources:
             LastModified0x10, LastModified0x30,
             LastRecordChange0x10, LastRecordChange0x30, 
             LastAccess0x10,LastAccess0x30,
-            HasADS, SI_Lt_FN, Copied,
+            HasADS, SI_Lt_FN, uSecZeros, Copied,
             FileNames, FileNameTypes
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE FileName =~ FileRegex
@@ -113,7 +113,7 @@ sources:
             LastModified0x10, LastModified0x30,
             LastRecordChange0x10, LastRecordChange0x30, 
             LastAccess0x10,LastAccess0x30,
-            HasADS, SI_Lt_FN, Copied,
+            HasADS, SI_Lt_FN, uSecZeros, Copied,
             FileNames, FileNameTypes
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE
@@ -134,7 +134,7 @@ sources:
             LastModified0x10, LastModified0x30,
             LastRecordChange0x10, LastRecordChange0x30, 
             LastAccess0x10,LastAccess0x30,
-            HasADS, SI_Lt_FN, Copied,
+            HasADS, SI_Lt_FN, uSecZeros, Copied,
             FileNames, FileNameTypes
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE
@@ -156,7 +156,7 @@ sources:
             LastModified0x10, LastModified0x30,
             LastRecordChange0x10, LastRecordChange0x30, 
             LastAccess0x10,LastAccess0x30,
-            HasADS, SI_Lt_FN, Copied,
+            HasADS, SI_Lt_FN, uSecZeros, Copied,
             FileNames, FileNameTypes
         FROM parse_mft(filename=MFTPath, accessor=Accessor)
         WHERE FileName =~ FileRegex
