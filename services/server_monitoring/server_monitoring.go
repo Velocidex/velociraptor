@@ -34,8 +34,11 @@ type EventTable struct {
 
 	config_obj *config_proto.Config
 
+	parent_ctx context.Context
+
 	cancel func()
 
+	// Wait for all subqueries to finish using this wg
 	wg *sync.WaitGroup
 
 	logger *serverLogger
@@ -74,11 +77,11 @@ func (self *EventTable) Close() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("Closing Server Monitoring Event table")
-
 	// Close the old table.
 	if self.cancel != nil {
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Info("Closing Server Monitoring Event table")
+
 		self.cancel()
 	}
 
@@ -93,20 +96,73 @@ func (self *EventTable) Get() *flows_proto.ArtifactCollectorArgs {
 	return proto.Clone(self.request).(*flows_proto.ArtifactCollectorArgs)
 }
 
+func (self *EventTable) ProcessArtifactModificationEvent(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	event *ordereddict.Dict) {
+
+	modified_name, pres := event.GetString("artifact")
+	if !pres || modified_name == "" {
+		return
+	}
+
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Info("server_monitoring: Reloading table because artifact %v was updated",
+		modified_name)
+
+	// We could try to figure out if the artifact actually changed
+	// anything but this is hard to know - not only do we need to
+	// look at the artifact in the event table but all
+	// dependencies as well. So for now we just recompile the
+	// event table when any artifact is changed. We dont expect
+	// this to be too frequent.
+	request := self.Get()
+	self.StartQueries(config_obj, request)
+
+}
+
 func (self *EventTable) Update(
 	config_obj *config_proto.Config,
 	principal string,
 	request *flows_proto.ArtifactCollectorArgs) error {
+
+	if principal != "" {
+		logging.GetLogger(config_obj, &logging.Audit).
+			WithFields(logrus.Fields{
+				"user":  principal,
+				"state": request,
+			}).Info("SetServerMonitoringState")
+	}
+
 	self.Close()
+
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Info("server_monitoring: Updating monitoring table")
+
+	// Now store the monitoring table on disk.
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	err = db.SetSubject(config_obj, paths.ServerMonitoringFlowURN, request)
+	if err != nil {
+		return err
+	}
+
+	return self.StartQueries(config_obj, request)
+}
+
+// Start the queries in the requewst
+func (self *EventTable) StartQueries(
+	config_obj *config_proto.Config,
+	request *flows_proto.ArtifactCollectorArgs) error {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	self.wg = &sync.WaitGroup{}
 	self.cancel = nil
-
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("server_monitoring: Updating monitoring table")
 
 	// Compile the ArtifactCollectorArgs into a list of requests.
 	launcher, err := services.GetLauncher()
@@ -128,7 +184,7 @@ func (self *EventTable) Update(
 	acl_manager := vql_subsystem.NullACLManager{}
 
 	// Make a context for all the VQL queries.
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(self.parent_ctx)
 	self.cancel = cancel
 
 	// Compile the collection request into multiple
@@ -143,26 +199,7 @@ func (self *EventTable) Update(
 		return err
 	}
 
-	// Now store the monitoring table on disk.
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	err = db.SetSubject(config_obj, paths.ServerMonitoringFlowURN, request)
-	if err != nil {
-		return err
-	}
-
 	self.request = request
-
-	if principal != "" {
-		logging.GetLogger(config_obj, &logging.Audit).
-			WithFields(logrus.Fields{
-				"user":  principal,
-				"state": request,
-			}).Info("SetServerMonitoringState")
-	}
 
 	// Run each collection separately in parallel.
 	for _, vql_request := range vql_requests {
@@ -174,6 +211,7 @@ func (self *EventTable) Update(
 	}
 
 	return nil
+
 }
 
 // Scan the VQLCollectorArgs for a name.
@@ -346,20 +384,42 @@ func StartServerMonitoringService(
 
 	manager := &EventTable{
 		config_obj: config_obj,
+		parent_ctx: ctx,
 		wg:         &sync.WaitGroup{},
 		clock:      utils.RealClock{},
 		tracer:     NewQueryTracer(),
 	}
 
+	journal, err := services.GetJournal()
+	if err != nil {
+		return err
+	}
+	events, cancel := journal.Watch(
+		ctx, "Server.Internal.ArtifactModification",
+		"server_monitoring_service")
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer cancel()
 		defer services.RegisterServerEventManager(nil)
 
 		// Shut down all server queries in an orderly fasion
 		defer manager.Close()
 
-		<-ctx.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case event, ok := <-events:
+				if !ok {
+					return
+				}
+				manager.ProcessArtifactModificationEvent(
+					ctx, config_obj, event)
+			}
+		}
 	}()
 
 	services.RegisterServerEventManager(manager)

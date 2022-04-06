@@ -59,7 +59,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 	complete_flow_id := ""
 
 	err := journal.WatchQueueWithCB(self.Sm.Ctx, self.ConfigObj, self.Sm.Wg,
-		"System.Flow.Completion", "", func(
+		"System.Flow.Completion", "ServerArtifactsTestSuite", func(
 			ctx context.Context,
 			ConfigObj *config_proto.Config,
 			row *ordereddict.Dict) error {

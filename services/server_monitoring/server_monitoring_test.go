@@ -2,6 +2,9 @@ package server_monitoring
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -20,8 +23,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
+	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 	_ "www.velocidex.com/golang/velociraptor/vql/common"
+	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
 )
 
 var (
@@ -197,6 +202,92 @@ sources:
 	})
 }
 
+func (self *ServerMonitoringTestSuite) TestUpdateWhenArtifactModified() {
+	tempdir, err := ioutil.TempDir("", "server_monitoring_test")
+	assert.NoError(self.T(), err)
+
+	defer os.RemoveAll(tempdir)
+
+	event_table := services.GetServerEventManager().(*EventTable)
+	event_table.SetClock(&utils.MockClock{MockNow: time.Unix(1602103388, 0)})
+
+	manager, err := services.GetRepositoryManager()
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Add the new custom artifacts to the repository
+	_, err = repository.LoadYaml(`
+name: TestArtifact
+type: SERVER_EVENT
+parameters:
+- name: Filename
+sources:
+- query: |
+   SELECT copy(accessor='data', filename='hello', dest=Filename)
+   FROM scope()
+`, true /* validate */, false /* built in */)
+	assert.NoError(self.T(), err)
+
+	// Install a table with an initial artifact
+	filename := filepath.Join(tempdir, "testfile1.txt")
+	err = services.GetServerEventManager().Update(
+		self.ConfigObj, "VelociraptorServer",
+		&flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"TestArtifact"},
+			Specs: []*flows_proto.ArtifactSpec{{
+				Artifact: "TestArtifact",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{{
+						Key:   "Filename",
+						Value: filename,
+					}},
+				}},
+			},
+		})
+	assert.NoError(self.T(), err)
+
+	// Wait until the query is actually run - the file should be
+	// created with the text "hello" in it.
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		return readAll(filename) == "hello"
+	})
+
+	// Now we update the artifact definition and the monitoring table
+	// should magically be updated and the new artifact run instead.
+	_, err = manager.SetArtifactFile(self.ConfigObj, "user", `
+name: TestArtifact
+type: SERVER_EVENT
+parameters:
+- name: Filename
+sources:
+- query: |
+   SELECT copy(accessor='data', filename='goodbye', dest=Filename)
+   FROM scope()
+`, "")
+	assert.NoError(self.T(), err)
+
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		return readAll(filename) == "goodbye"
+	})
+}
+
 func TestServerMonitoring(t *testing.T) {
 	suite.Run(t, &ServerMonitoringTestSuite{})
+}
+
+func readAll(filename string) string {
+	fd, err := os.Open(filename)
+	if err != nil {
+		return ""
+	}
+	defer fd.Close()
+
+	data, err := ioutil.ReadAll(fd)
+	if err != nil {
+		return ""
+	}
+
+	return string(data)
 }

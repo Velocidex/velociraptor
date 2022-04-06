@@ -235,6 +235,18 @@ func GetEffectivePolicy(
 	}
 
 	acl_obj := &acl_proto.ApiClientACL{}
+
+	// The server identity is special - it means the user is an admin.
+	if config_obj != nil && config_obj.Client != nil &&
+		config_obj.Client.PinnedServerName == principal {
+		err = GetRolePermissions(config_obj,
+			[]string{"administrator"}, acl_obj)
+		if err != nil {
+			return nil, err
+		}
+		return acl_obj, nil
+	}
+
 	user_path_manager := paths.UserPathManager{Name: principal}
 	err = db.GetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 	if err != nil {
