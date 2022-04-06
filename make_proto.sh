@@ -15,19 +15,23 @@ if [ -z "$GOPATH" ]; then
     GOPATH="$HOME/go"
 fi
 
-GOOGLEAPIS_PATH=$CWD/googleapis/
-GOOGLEAPIS_COMMIT="82a542279"
-
 function debug() {
     if [ -z "$QUIET" ]; then
         echo "$@"
     fi
 }
 
-if [ ! -d "$GOOGLEAPIS_PATH" ]; then
-    git clone --shallow-since 2021-12-15  https://github.com/googleapis/googleapis/ $GOOGLEAPIS_PATH
-    (cd googleapis && git checkout $GOOGLEAPIS_COMMIT)
-fi
+#GOOGLEAPIS_PATH=$CWD/googleapis/
+#GOOGLEAPIS_COMMIT="82a542279"
+
+#if [ ! -d "$GOOGLEAPIS_PATH" ]; then
+#    git clone --shallow-since 2021-12-15  https://github.com/googleapis/googleapis/ $GOOGLEAPIS_PATH
+#    (cd googleapis && git checkout $GOOGLEAPIS_COMMIT)
+#fi
+
+# Instead of checking out the latest git project, we just manually
+# copy the few files we actually need into third party.
+GOOGLEAPIS_PATH=$CWD/third_party/googleapis/
 
 if ! command -v protoc-gen-go > /dev/null; then
     go install google.golang.org/protobuf/cmd/protoc-gen-go
