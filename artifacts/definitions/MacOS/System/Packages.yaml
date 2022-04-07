@@ -1,18 +1,16 @@
 name: MacOS.System.Packages
-description: Parse packages installed on Macs
+description: |
+  Parse packages installed on Macs
 
-parameters:
-  - name: command 
-    default: system_profiler -json SPApplicationsDataType
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'darwin'
-    queries:
-      - |
-        LET packages = SELECT * FROM execve(argv=["/bin/bash", "-c", command])
+    query: |
+        LET packages = SELECT parse_json(data=Stdout) AS Json
+          FROM execve(argv=[
+            "system_profiler", "-json", "SPApplicationsDataType"
+          ], length=100000)
 
-        LET packages_parsed = SELECT SPApplicationsDataType as Packages FROM foreach(row=parse_json_array(data=packages.Stdout))
-        
-        SELECT * FROM foreach(row=packages_parsed.Packages[0])
-        
-        
+        SELECT *, _name AS Name
+        FROM foreach(
+           row=packages[0].Json.SPApplicationsDataType)

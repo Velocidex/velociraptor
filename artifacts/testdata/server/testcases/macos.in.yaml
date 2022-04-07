@@ -2,3 +2,11 @@ Queries:
   - SELECT OSPath.Basename, Content.home
     FROM Artifact.MacOS.System.Plist(
        PlistGlob=srcDir+"/artifacts/testdata/files/vag*.plist")
+
+  - LET X <= SELECT mock(plugin='execve', results={
+      SELECT read_file(
+         filename=srcDir+"/artifacts/testdata/files/SPApplicationsDataType.json") AS Stdout
+         FROM scope()
+    }) FROM scope()
+
+  - SELECT * FROM Artifact.MacOS.System.Packages()
