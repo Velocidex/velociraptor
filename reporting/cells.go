@@ -1,6 +1,8 @@
 package reporting
 
 import (
+	"strings"
+
 	"github.com/alecthomas/participle"
 	"github.com/alecthomas/participle/lexer"
 	"github.com/alecthomas/participle/lexer/stateful"
@@ -70,6 +72,7 @@ func ConvertVQLCellToContent(content string) (*Content, error) {
 
 	result := &Content{}
 	for _, fragment := range parsed.Fragments {
+		fragment.VQL = strings.TrimSpace(fragment.VQL)
 		if fragment.VQL != "" {
 			result.PushVQL(fragment.VQL)
 		} else if fragment.Comment != "" {

@@ -2,7 +2,7 @@
   "Markdown in comments": {
     "Fragments": [
       {
-        "VQL": "\nSELECT 1 / 2 FROM info()\n\n",
+        "VQL": "SELECT 1 / 2 FROM info()",
         "Comment": ""
       },
       {
@@ -10,7 +10,7 @@
         "Comment": " c\n\n# This is markdown\nwith multiple lines\n/*\nThis is still a comment!\n\n"
       },
       {
-        "VQL": "\n\nSELECT * FROM glob()\n",
+        "VQL": "SELECT * FROM glob()",
         "Comment": ""
       }
     ]
@@ -18,7 +18,7 @@
   "Comments in VQL": {
     "Fragments": [
       {
-        "VQL": "\nSELECT * FROM glob(globs='C:/Windows/*/*.exe')\n",
+        "VQL": "SELECT * FROM glob(globs='C:/Windows/*/*.exe')",
         "Comment": ""
       }
     ]
@@ -26,7 +26,7 @@
   "Comments within lines": {
     "Fragments": [
       {
-        "VQL": "\nSELECT * FROM glob(/* Foobar */globs='C:/Windows/*/*.exe')\n",
+        "VQL": "SELECT * FROM glob(/* Foobar */globs='C:/Windows/*/*.exe')",
         "Comment": ""
       }
     ]
@@ -34,7 +34,19 @@
   "Multi line VQL": {
     "Fragments": [
       {
-        "VQL": "\nSELECT *, count() AS Count\nFROM certificates()\n",
+        "VQL": "SELECT *, count() AS CountFROM certificates()",
+        "Comment": ""
+      }
+    ]
+  },
+  "Empty lines before comment": {
+    "Fragments": [
+      {
+        "VQL": "",
+        "Comment": " This is a comment "
+      },
+      {
+        "VQL": "SELECT * FROM info()",
         "Comment": ""
       }
     ]
