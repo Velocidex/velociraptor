@@ -74,7 +74,7 @@ func ConvertVQLCellToContent(content string) (*Content, error) {
 	for _, fragment := range parsed.Fragments {
 		fragment.VQL = strings.TrimSpace(fragment.VQL)
 		if fragment.VQL != "" {
-			result.PushVQL(fragment.VQL)
+			result.PushVQL(fragment.VQL + " ")
 		} else if fragment.Comment != "" {
 			result.PushComment(fragment.Comment)
 		}
