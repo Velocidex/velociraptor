@@ -234,6 +234,8 @@ func (self *ApiServer) createInitialNotebook(
 		CurrentlyEditing: true,
 	}}
 
+	// Figure out what type of content to create depending on the type
+	// of the notebook
 	if notebook_metadata.Context != nil {
 		if notebook_metadata.Context.HuntId != "" {
 			new_cells = getCellsForHunt(ctx, self.config,
@@ -481,8 +483,8 @@ func getDefaultCellsForSources(
 		result = append(result, new_cells...)
 
 		// Build a default empty notebook that shows off all the
-		// results.
-		if len(result) == 0 {
+		// results if there are no custom cells.
+		if len(new_cells) == 0 {
 			result = append(result, &api_proto.NotebookCellRequest{
 				Type: "VQL",
 
@@ -496,9 +498,9 @@ func getDefaultCellsForSources(
 /*
 # %v
 */
-SELECT * FROM source()
+SELECT * FROM source(artifact=%q)
 LIMIT 50
-`, source),
+`, source, source),
 			})
 		}
 	}
@@ -1337,7 +1339,7 @@ func updateCellContents(
 	switch cell_type {
 
 	case "vql_suggestion":
-		// noop
+		// noop - these cells will be created by the user on demand.
 
 	case "markdown", "md":
 		// A Markdown cell just feeds directly into the
