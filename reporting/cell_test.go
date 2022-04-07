@@ -41,6 +41,12 @@ FROM certificates()
 
 SELECT * FROM info()
 
+`}, {"Whitespace between query", `
+
+SELECT
+*
+FROM
+info()
 `},
 }
 
