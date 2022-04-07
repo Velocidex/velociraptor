@@ -1,0 +1,17 @@
+{
+  "SPApplicationsDataType" : [
+    {
+      "_name" : "Slack",
+      "arch_kind" : "arch_arm_i64",
+      "lastModified" : "2022-04-06T21:28:40Z",
+      "obtained_from" : "identified_developer",
+      "path" : "/Applications/Slack.app",
+      "signed_by" : [
+        "Developer ID Application: Slack Technologies, Inc. (BQR82RBBHL)",
+        "Developer ID Certification Authority",
+        "Apple Root CA"
+      ],
+      "version" : "4.25.0"
+    }
+  ]
+}
