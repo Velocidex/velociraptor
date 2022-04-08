@@ -10,38 +10,39 @@ description: |
 type: SERVER_EVENT
 
 parameters:
-  - name: WindowsDetectionPsexecService
-    description: Upload Windows.Detection.PsexecService to Elastic
-    type: bool
-  - name: WindowsEventsDNSQueries
-    description: Upload Windows.Events.DNSQueries to Elastic
-    type: bool
-  - name: WindowsEventsProcessCreation
-    description: Upload Windows.Events.ProcessCreation to Elastic
-    type: bool
-  - name: WindowsEventsServiceCreation
-    description: Upload Windows.Events.ServiceCreation to Elastic
-    type: bool
   - name: ElasticAddresses
     default: http://127.0.0.1:9200/
   - name: Username
   - name: Password
-  - name: Apikey
-  - name: artifactParameterMap
-    type: hidden
+  - name: APIKey
+  - name: artifactsToWatch
+    type: csv
     default: |
-      Artifact,Parameter
-      Windows.Detection.PsexecService,WindowsDetectionPsexecService
-      Windows.Events.DNSQueries,WindowsEventsDNSQueries
-      Windows.Events.ProcessCreation,WindowsEventsProcessCreation
-      Windows.Events.ServiceCreation,WindowsEventsServiceCreation
+      Artifact
+      Windows.Detection.PsexecService
+      Windows.Events.ProcessCreation
+      Windows.Events.ServiceCreation
+  - name: DisableSSLSecurity
+    type: bool
+    description: Disable SSL certificate verification
+  - name: Threads
+    type: int
+    description: Number of threads to upload with
+  - name: ChunkSize
+    type: int
+    description: Batch this many rows for each upload.
+  - name: CloudID
+    description: The cloud id if needed
+  - name: RootCA
+    description: |
+      A root CA certificate in PEM for trusting TLS protected Elastic
+      servers.
 
 sources:
   - query: |
-      LET artifacts_to_watch = SELECT Artifact FROM parse_csv(
-             filename=artifactParameterMap, accessor='data')
-        WHERE get(item=scope(), member=Parameter) AND log(
-          message="Uploading artifact " + Artifact + " to Elastic")
+      LET artifacts_to_watch = SELECT Artifact
+        FROM artifactsToWatch
+        WHERE log(message="Uploading artifact " + Artifact + " to Elastic")
 
       LET events = SELECT * FROM foreach(
           row=artifacts_to_watch,
@@ -55,9 +56,14 @@ sources:
 
       SELECT * FROM elastic_upload(
           query=events,
+          threads=Threads,
+          chunk_size=ChunkSize,
           addresses=split(string=ElasticAddresses, sep=","),
           index="velociraptor",
           password=Password,
           username=Username,
+          cloud_id=CloudID,
           api_key=APIKey,
+          root_ca=RootCA,
+          disable_ssl_security=DisableSSLSecurity,
           type="ClientEvents")

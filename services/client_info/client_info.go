@@ -491,8 +491,13 @@ func (self *ClientInfoManager) FlushAll() {
 		cache_info.mu.Unlock()
 	}
 
+	if len(to_flush) == 0 {
+		return
+	}
+
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Debug("ClientInfoManager: Writing %v records to storage", len(to_flush))
+	logger.Debug("ClientInfoManager: Writing %v records to storage",
+		len(to_flush))
 	// Flush items outside the lock so we do block during IO.
 	for _, item := range to_flush {
 		item.Flush()
