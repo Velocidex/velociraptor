@@ -240,6 +240,23 @@ func (self *ClientInfoManager) GetStats(client_id string) (*services.Stats, erro
 	return cached_info.GetStats(), nil
 }
 
+// Checks the notification service for all currently connected clients
+// so we may send the most up to date Ping information possible.
+func (self *ClientInfoManager) UpdateMostRecentPing() {
+	notifier := services.GetNotifier()
+	if notifier == nil {
+		return
+	}
+	now := uint64(time.Now().UnixNano() / 1000)
+	update_stat := &services.Stats{}
+	for _, client_id := range self.mutation_manager.pings.Keys() {
+		if notifier.IsClientDirectlyConnected(client_id) {
+			update_stat.Ping = now
+			self.UpdateStats(client_id, update_stat)
+		}
+	}
+}
+
 func (self *ClientInfoManager) UpdateStats(
 	client_id string,
 	stats *services.Stats) error {
@@ -324,6 +341,10 @@ func (self *ClientInfoManager) MutationSync(
 			if size > 0 {
 				logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 				logger.Debug("ClientInfoManager: sending a mutation with %v items", size)
+
+				// Update the ping info to the latest
+				//self.UpdateMostRecentPing()
+
 				journal.PushRowsToArtifactAsync(config_obj,
 					ordereddict.NewDict().
 						Set("Mutation", self.mutation_manager.GetMutation()).
