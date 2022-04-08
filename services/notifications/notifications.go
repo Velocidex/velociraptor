@@ -57,6 +57,7 @@ var (
 )
 
 type tracker struct {
+	mu        sync.Mutex
 	count     int
 	connected bool
 	closed    bool
@@ -173,12 +174,19 @@ func (self *Notifier) ProcessPong(ctx context.Context,
 	}
 
 	self.mu.Lock()
-	defer self.mu.Unlock()
 	tracker, pres := self.client_connection_tracker[notify_target]
+	self.mu.Unlock()
+	if !pres {
+		return nil
+	}
+
+	tracker.mu.Lock()
+	defer tracker.mu.Unlock()
+
 	if pres && !tracker.closed {
 		tracker.connected = connected
 		tracker.count--
-		if tracker.count <= 0 {
+		if tracker.count <= 0 && !tracker.closed {
 			close(tracker.done)
 			tracker.closed = true
 		}
@@ -354,9 +362,12 @@ func (self *Notifier) IsClientConnected(
 	}
 
 	self.mu.Lock()
-	defer self.mu.Unlock()
 	tracker := self.client_connection_tracker[id]
 	delete(self.client_connection_tracker, id)
+	self.mu.Unlock()
+
+	tracker.mu.Lock()
+	defer tracker.mu.Unlock()
 
 	return tracker.connected
 }

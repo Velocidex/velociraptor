@@ -23,6 +23,18 @@ parameters:
   - name: DisableSSLSecurity
     type: bool
     description: Disable SSL certificate verification
+  - name: Threads
+    type: int
+    description: Number of threads to upload with
+  - name: ChunkSize
+    type: int
+    description: Batch this many rows for each upload.
+  - name: CloudID
+    description: The cloud id if needed
+  - name: RootCA
+    description: |
+      A root CA certificate in PEM for trusting TLS protected Elastic
+      servers.
 
 sources:
   - query: |
@@ -49,10 +61,14 @@ sources:
 
       SELECT * FROM elastic_upload(
             query=documents,
+            threads=Threads,
+            chunk_size=ChunkSize,
             addresses=split(string=elasticAddresses, sep=","),
             index="velociraptor",
             password=Password,
             username=Username,
+            cloud_id=CloudID,
             api_key=APIKey,
-            DisableSSLSecurity=DisableSSLSecurity,
+            root_ca=RootCA,
+            disable_ssl_security=DisableSSLSecurity,
             type="artifact")
