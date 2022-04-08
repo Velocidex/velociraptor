@@ -249,12 +249,12 @@ func (self *MasterFrontendManager) UpdateStats(ctx context.Context) {
 }
 
 // The master does not replicate anywhere.
-func (self MasterFrontendManager) GetMasterAPIClient(ctx context.Context) (
+func (self *MasterFrontendManager) GetMasterAPIClient(ctx context.Context) (
 	api_proto.APIClient, func() error, error) {
 	return nil, nil, services.FrontendIsMaster
 }
 
-func (self MasterFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
+func (self *MasterFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
 	// If no service specification is set, we start all services
