@@ -69,7 +69,7 @@ type Notifier struct {
 
 	uuid int64
 
-	client_connection_tracker map[string]tracker
+	client_connection_tracker map[string]*tracker
 }
 
 // The notifier service watches for events from
@@ -85,7 +85,7 @@ func StartNotificationService(
 	self := &Notifier{
 		notification_pool:         notifications.NewNotificationPool(),
 		uuid:                      utils.GetGUID(),
-		client_connection_tracker: make(map[string]tracker),
+		client_connection_tracker: make(map[string]*tracker),
 	}
 	services.RegisterNotifier(self)
 
@@ -294,6 +294,22 @@ func (self *Notifier) IsClientConnected(
 		return false
 	}
 
+	// We deem a client connected if the last ping time is within 10 seconds
+	client_info_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return false
+	}
+
+	stats, err := client_info_manager.GetStats(client_id)
+	if err != nil {
+		return false
+	}
+
+	recent := uint64(time.Now().UnixNano()/1000) - 20*1000000
+	if stats.Ping > recent {
+		return true
+	}
+
 	// Get a unique id for this request.
 	id := fmt.Sprintf("IsClientConnected%v", utils.GetId())
 
@@ -308,7 +324,7 @@ func (self *Notifier) IsClientConnected(
 	done := make(chan bool)
 	self.mu.Lock()
 	// Install a tracker to keep track of this request.
-	self.client_connection_tracker[id] = tracker{
+	self.client_connection_tracker[id] = &tracker{
 		count: minion_count,
 		done:  done,
 	}
