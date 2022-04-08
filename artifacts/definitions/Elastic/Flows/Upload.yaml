@@ -20,6 +20,9 @@ parameters:
   - name: Username
   - name: Password
   - name: APIKey
+  - name: DisableSSLSecurity
+    type: bool
+    description: Disable SSL certificate verification
 
 sources:
   - query: |
@@ -51,4 +54,5 @@ sources:
             password=Password,
             username=Username,
             api_key=APIKey,
+            DisableSSLSecurity=DisableSSLSecurity,
             type="artifact")
