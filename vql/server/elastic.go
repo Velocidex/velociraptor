@@ -65,7 +65,7 @@ type _ElasticPluginArgs struct {
 	Query              vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
 	Threads            int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
 	Index              string              `vfilter:"optional,field=index,doc=The name of the index to upload to. If not specified ensure a column is named '_index'."`
-	Type               string              `vfilter:"required,field=type,doc=The type of the index to upload to."`
+	Type               string              `vfilter:"optional,field=type,doc=The type of the index to upload to."`
 	ChunkSize          int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
 	Addresses          []string            `vfilter:"optional,field=addresses,doc=A list of Elasticsearch nodes to use."`
 	Username           string              `vfilter:"optional,field=username,doc=Username for HTTP Basic Authentication."`
@@ -245,11 +245,11 @@ func append_row_to_buffer(
 	var meta []byte
 	pipeline := arg.PipeLine
 	if pipeline != "" {
-		meta = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s", "pipeline": "%s" } }%s`,
-			id, arg.Type, index, pipeline, "\n"))
+		meta = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_index": "%s", "pipeline": "%s" } }%s`,
+			id, index, pipeline, "\n"))
 	} else {
-		meta = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s"} }%s`,
-			id, arg.Type, index, "\n"))
+		meta = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_index": "%s"} }%s`,
+			id, index, "\n"))
 	}
 
 	data, err := json.MarshalWithOptions(row_dict, opts)
