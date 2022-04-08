@@ -1,0 +1,18 @@
+SELECT relpath(path=Container, base=srcDir, sep="/") as RelativeContainer,relpath(path=ExtractedPath, base=srcDir,sep="/") as RelativeExtracted,FilePath,Rule,Size,Mtime,Atime,Ctime,Btime,Hash FROM Artifact.Generic.Detection.Yara.Zip(TargetGlob=srcDir + '/artifacts/testdata/files/compressedpe.zip')[
+ {
+  "RelativeContainer": "artifacts/testdata/files/compressedpe.zip",
+  "RelativeExtracted": "artifacts/testdata/files/compressedpe.zip -\u003e /firstfolder/secondlevel.zip -\u003e /folder/smallest.zip -\u003e /smallest/smallexe64.exe",
+  "FilePath": "/smallest/smallexe64.exe",
+  "Rule": "IsPE",
+  "Size": 400,
+  "Mtime": "2022-04-08T09:07:46Z",
+  "Atime": "2022-04-08T09:07:46Z",
+  "Ctime": "2022-04-08T09:07:46Z",
+  "Btime": "2022-04-08T09:07:46Z",
+  "Hash": {
+   "MD5": "fddee57cb947b7ca4a27bad59ad46483",
+   "SHA1": "dd1e68d95f9b5dd5b017aeba9868200d35adb3f9",
+   "SHA256": "7895875505da2ba49261622f30ae1d8cd825a85eded354f2e676e991c52e2f23"
+  }
+ }
+]

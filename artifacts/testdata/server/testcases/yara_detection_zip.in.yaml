@@ -1,0 +1,3 @@
+Queries:
+  - SELECT relpath(path=Container, base=srcDir, sep="/") as RelativeContainer,relpath(path=ExtractedPath, base=srcDir,sep="/") as RelativeExtracted,FilePath,Rule,Size,Mtime,Atime,Ctime,Btime,Hash
+    FROM Artifact.Generic.Detection.Yara.Zip(TargetGlob=srcDir + '/artifacts/testdata/files/compressedpe.zip')
