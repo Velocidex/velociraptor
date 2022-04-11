@@ -33,6 +33,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -137,6 +138,24 @@ func (self *QueuePool) Broadcast(vfs_path string, row *ordereddict.Dict) {
 	}
 }
 
+func (self *QueuePool) BroadcastJsonl(vfs_path string, jsonl string) {
+	// Ensure we do not hold the lock for very long here.
+	registrations := self.getRegistrations(vfs_path)
+	if len(registrations) > 0 {
+		// If there are any registrations, we must parse the JSON and
+		// relay each row to each listener - this is expensive but
+		// necessary.
+		rows, err := utils.ParseJsonToDicts([]byte(jsonl))
+		if err == nil {
+			for _, row := range rows {
+				for _, item := range registrations {
+					item.Send(row)
+				}
+			}
+		}
+	}
+}
+
 func (self *QueuePool) Debug() *ordereddict.Dict {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -197,6 +216,24 @@ func (self *DirectoryQueueManager) PushEventRows(
 		rs_writer.Write(row)
 		self.queue_pool.Broadcast(path_manager.GetQueueName(), row)
 	}
+	return nil
+}
+
+func (self *DirectoryQueueManager) PushEventJsonl(
+	path_manager api.PathManager, jsonl string) error {
+
+	// Writes are asyncronous.
+	rs_writer, err := result_sets.NewTimedResultSetWriter(
+		self.FileStore, path_manager, nil, nil)
+	if err != nil {
+		return err
+	}
+	defer rs_writer.Close()
+
+	jsonl = json.AppendJsonlItem(jsonl, "_ts", int(self.Clock.Now().Unix()))
+	rs_writer.WriteJSONL([]byte(jsonl), 0)
+	self.queue_pool.BroadcastJsonl(path_manager.GetQueueName(), jsonl)
+
 	return nil
 }
 

@@ -120,6 +120,39 @@ func (self *JournalService) AppendToResultSet(
 	return nil
 }
 
+func (self *JournalService) AppendJsonlToResultSet(
+	config_obj *config_proto.Config,
+	path api.FSPathSpec,
+	jsonl string) error {
+
+	// Key a lock to manage access to this file.
+	self.mu.Lock()
+	key := path.AsClientPath()
+	per_file_mu, pres := self.locks[key]
+	if !pres {
+		per_file_mu = &sync.Mutex{}
+		self.locks[key] = per_file_mu
+	}
+	self.mu.Unlock()
+
+	// Lock the file.
+	per_file_mu.Lock()
+	defer per_file_mu.Unlock()
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	// Append the data to the end of the file.
+	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
+		path, json.NoEncOpts, utils.BackgroundWriter, result_sets.AppendMode)
+	if err != nil {
+		return err
+	}
+	rs_writer.WriteJSONL([]byte(jsonl), 0)
+	rs_writer.Close()
+
+	return nil
+}
+
 func (self *JournalService) PushRowsToArtifactAsync(
 	config_obj *config_proto.Config, row *ordereddict.Dict,
 	artifact string) {
@@ -143,6 +176,34 @@ func (self *JournalService) Broadcast(
 
 	self.qm.Broadcast(path_manager, rows)
 	return nil
+}
+
+func (self *JournalService) PushJsonlToArtifact(
+	config_obj *config_proto.Config, jsonl string,
+	artifact, client_id, flows_id string) error {
+
+	path_manager, err := artifacts.NewArtifactPathManager(
+		config_obj, client_id, flows_id, artifact)
+	if err != nil {
+		return err
+	}
+	path_manager.Clock = self.Clock
+
+	// Just a regular artifact, append to the existing result set.
+	if !path_manager.IsEvent() {
+		path, err := path_manager.GetPathForWriting()
+		if err != nil {
+			return err
+		}
+		return self.AppendJsonlToResultSet(config_obj, path, jsonl)
+	}
+
+	// The Queue manager will manage writing event artifacts to a
+	// timed result set, including multi frontend synchronisation.
+	if self != nil && self.qm != nil {
+		return self.qm.PushEventJsonl(path_manager, jsonl)
+	}
+	return errors.New("Filestore not initialized")
 }
 
 func (self *JournalService) PushRowsToArtifact(

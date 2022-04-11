@@ -96,8 +96,10 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 		config_obj.Frontend.DoNotCompressArtifacts = true
 	}
 
-	// Load the assets into memory.
-	assets.Init()
+	// Load the assets into memory if we are the master node.
+	if services.IsMaster(config_obj) {
+		assets.Init()
+	}
 
 	// Increase resource limits.
 	server.IncreaseLimits(config_obj)

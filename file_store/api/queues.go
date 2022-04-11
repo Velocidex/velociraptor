@@ -26,6 +26,9 @@ type QueueManager interface {
 	GetWatchers() []string
 
 	PushEventRows(path_manager PathManager, rows []*ordereddict.Dict) error
+
+	PushEventJsonl(path_manager PathManager, jsonl string) error
+
 	Watch(ctx context.Context, queue_name string, queue_options *QueueOptions) (
 		output <-chan *ordereddict.Dict, cancel func())
 }

@@ -28,6 +28,7 @@ var (
 type rowContainer struct {
 	ts         time.Time
 	serialized []byte
+	count      int
 }
 
 type TimedResultSetWriterImpl struct {
@@ -58,6 +59,19 @@ func (self *TimedResultSetWriterImpl) Write(row *ordereddict.Dict) {
 
 	self.rows = append(self.rows, rowContainer{
 		serialized: serialized,
+		count:      1,
+		ts:         self.Clock.Now(),
+	})
+
+	if len(self.rows) > 10000 {
+		self.Flush()
+	}
+}
+
+func (self *TimedResultSetWriterImpl) WriteJSONL(jsonl []byte, count int) {
+	self.rows = append(self.rows, rowContainer{
+		serialized: jsonl,
+		count:      count,
 		ts:         self.Clock.Now(),
 	})
 

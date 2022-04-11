@@ -1,9 +1,12 @@
 package flows
 
 import (
+	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -14,6 +17,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	monitoringRowCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "received_monitoring_rows",
+		Help: "Total number of event rows received from clients.",
+	})
 )
 
 // Receive monitoring messages from the client.
@@ -46,25 +56,13 @@ func MonitoringProcessMessage(
 		if json_response == "" {
 			json_response = response.JSONLResponse
 		}
+		monitoringRowCounter.Add(float64(response.TotalRows))
 
-		// We need to parse each event since it needs to be
-		// pushed to the journal, in case a reader is
-		// listening to it. FIXME: This is expensive CPU wise,
-		// we need to think of a better way to do this.
-		rows, err := utils.ParseJsonToDicts([]byte(json_response))
-		if err != nil {
-			return err
-		}
-
-		// Mark the client this came from. Since message.Source
-		// is cryptographically trusted, this column may also
-		// be trusted.
-		for _, row := range rows {
-			row.Set("ClientId", message.Source)
-		}
+		json_response = json.AppendJsonlItem(json_response,
+			"ClientId", message.Source)
 
 		// Batch the rows to send together.
-		collection_context.batchRows(response.Query.Name, rows)
+		collection_context.batchRows(response.Query.Name, json_response)
 	}
 
 	return nil
@@ -124,11 +122,11 @@ func flushContextLogsMonitoring(
 }
 
 func (self *CollectionContext) batchRows(
-	artifact_name string, rows []*ordereddict.Dict) {
-	batch, _ := self.monitoring_batch[artifact_name]
-	batch = append(batch, rows...)
-	self.monitoring_batch[artifact_name] = batch
-	if len(rows) > 0 {
+	artifact_name string, jsonl string) {
+	if len(jsonl) > 0 {
+		batch, _ := self.monitoring_batch[artifact_name]
+		batch = append(batch, jsonl)
+		self.monitoring_batch[artifact_name] = batch
 		self.Dirty = true
 	}
 }
@@ -142,10 +140,12 @@ func flushMonitoringLogs(
 		return err
 	}
 
-	for query_name, rows := range collection_context.monitoring_batch {
-		if len(rows) > 0 {
-			err := journal.PushRowsToArtifact(
-				config_obj, rows, query_name,
+	for query_name, jsonl_strings := range collection_context.monitoring_batch {
+		if len(jsonl_strings) > 0 {
+			err := journal.PushJsonlToArtifact(
+				config_obj,
+				strings.Join(jsonl_strings, ""),
+				query_name,
 				collection_context.ClientId,
 				collection_context.SessionId)
 			if err != nil {

@@ -346,12 +346,13 @@ func (self *MinionFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup
 	// services on minion frontends.
 	if config_obj.Frontend.ServerServices == nil {
 		config_obj.Frontend.ServerServices = &config_proto.ServerServicesConfig{
-			HuntDispatcher:   true,
-			StatsCollector:   true,
-			ClientMonitoring: true,
-			SanityChecker:    true,
-			FrontendServer:   true,
-			DynDns:           true,
+			HuntDispatcher:    true,
+			StatsCollector:    true,
+			ClientMonitoring:  true,
+			SanityChecker:     true,
+			FrontendServer:    true,
+			MonitoringService: true,
+			DynDns:            true,
 		}
 	}
 
