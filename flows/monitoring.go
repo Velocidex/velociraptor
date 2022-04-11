@@ -1,7 +1,7 @@
 package flows
 
 import (
-	"strings"
+	"bytes"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -58,11 +58,11 @@ func MonitoringProcessMessage(
 		}
 		monitoringRowCounter.Add(float64(response.TotalRows))
 
-		json_response = json.AppendJsonlItem(json_response,
-			"ClientId", message.Source)
+		new_json_response := json.AppendJsonlItem(
+			[]byte(json_response), "ClientId", message.Source)
 
 		// Batch the rows to send together.
-		collection_context.batchRows(response.Query.Name, json_response)
+		collection_context.batchRows(response.Query.Name, new_json_response)
 	}
 
 	return nil
@@ -122,13 +122,14 @@ func flushContextLogsMonitoring(
 }
 
 func (self *CollectionContext) batchRows(
-	artifact_name string, jsonl string) {
-	if len(jsonl) > 0 {
-		batch, _ := self.monitoring_batch[artifact_name]
-		batch = append(batch, jsonl)
-		self.monitoring_batch[artifact_name] = batch
-		self.Dirty = true
+	artifact_name string, jsonl []byte) {
+	batch, pres := self.monitoring_batch[artifact_name]
+	if !pres {
+		batch = &bytes.Buffer{}
 	}
+	batch.Write(jsonl)
+	self.monitoring_batch[artifact_name] = batch
+	self.Dirty = true
 }
 
 func flushMonitoringLogs(
@@ -140,17 +141,15 @@ func flushMonitoringLogs(
 		return err
 	}
 
-	for query_name, jsonl_strings := range collection_context.monitoring_batch {
-		if len(jsonl_strings) > 0 {
-			err := journal.PushJsonlToArtifact(
-				config_obj,
-				strings.Join(jsonl_strings, ""),
-				query_name,
-				collection_context.ClientId,
-				collection_context.SessionId)
-			if err != nil {
-				return err
-			}
+	for query_name, jsonl_buff := range collection_context.monitoring_batch {
+		err := journal.PushJsonlToArtifact(
+			config_obj,
+			jsonl_buff.Bytes(),
+			query_name,
+			collection_context.ClientId,
+			collection_context.SessionId)
+		if err != nil {
+			return err
 		}
 	}
 	return nil

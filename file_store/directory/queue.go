@@ -138,14 +138,14 @@ func (self *QueuePool) Broadcast(vfs_path string, row *ordereddict.Dict) {
 	}
 }
 
-func (self *QueuePool) BroadcastJsonl(vfs_path string, jsonl string) {
+func (self *QueuePool) BroadcastJsonl(vfs_path string, jsonl []byte) {
 	// Ensure we do not hold the lock for very long here.
 	registrations := self.getRegistrations(vfs_path)
 	if len(registrations) > 0 {
 		// If there are any registrations, we must parse the JSON and
 		// relay each row to each listener - this is expensive but
 		// necessary.
-		rows, err := utils.ParseJsonToDicts([]byte(jsonl))
+		rows, err := utils.ParseJsonToDicts(jsonl)
 		if err == nil {
 			for _, row := range rows {
 				for _, item := range registrations {
@@ -220,7 +220,7 @@ func (self *DirectoryQueueManager) PushEventRows(
 }
 
 func (self *DirectoryQueueManager) PushEventJsonl(
-	path_manager api.PathManager, jsonl string) error {
+	path_manager api.PathManager, jsonl []byte) error {
 
 	// Writes are asyncronous.
 	rs_writer, err := result_sets.NewTimedResultSetWriter(
@@ -231,7 +231,7 @@ func (self *DirectoryQueueManager) PushEventJsonl(
 	defer rs_writer.Close()
 
 	jsonl = json.AppendJsonlItem(jsonl, "_ts", int(self.Clock.Now().Unix()))
-	rs_writer.WriteJSONL([]byte(jsonl), 0)
+	rs_writer.WriteJSONL(jsonl, 0)
 	self.queue_pool.BroadcastJsonl(path_manager.GetQueueName(), jsonl)
 
 	return nil

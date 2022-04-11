@@ -77,7 +77,7 @@ type JournalService interface {
 	// already serialized in JSONL
 	PushJsonlToArtifact(
 		config_obj *config_proto.Config,
-		jsonl string, name, client_id, flows_id string) error
+		jsonl []byte, name, client_id, flows_id string) error
 
 	// Push the rows to the event artifact queue with a potential
 	// unspecified delay. Internally these rows will be batched until

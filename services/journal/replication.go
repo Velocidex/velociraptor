@@ -174,7 +174,7 @@ func (self *ReplicationService) startAsyncLoop(
 					// Ignore errors since there is no way to report
 					// to the caller.
 					self.PushJsonlToArtifact(
-						config_obj, string(v.Bytes()), k, "server", "")
+						config_obj, v.Bytes(), k, "server", "")
 				}
 			}
 		}
@@ -328,7 +328,7 @@ func (self *ReplicationService) startMasterRegistrationLoop(
 func (self *ReplicationService) AppendJsonlToResultSet(
 	config_obj *config_proto.Config,
 	path api.FSPathSpec,
-	jsonl string) error {
+	jsonl []byte) error {
 
 	// Key a lock to manage access to this file.
 	self.mu.Lock()
@@ -352,7 +352,7 @@ func (self *ReplicationService) AppendJsonlToResultSet(
 		return err
 	}
 
-	rs_writer.WriteJSONL([]byte(jsonl), 0)
+	rs_writer.WriteJSONL(jsonl, 0)
 	rs_writer.Close()
 
 	return nil
@@ -449,7 +449,7 @@ func (self *ReplicationService) pushRowsToLocalQueueManager(
 }
 
 func (self *ReplicationService) pushJsonlToLocalQueueManager(
-	config_obj *config_proto.Config, jsonl string,
+	config_obj *config_proto.Config, jsonl []byte,
 	artifact, client_id, flows_id string) error {
 
 	path_manager, err := artifacts.NewArtifactPathManager(
@@ -477,7 +477,7 @@ func (self *ReplicationService) pushJsonlToLocalQueueManager(
 }
 
 func (self *ReplicationService) PushJsonlToArtifact(
-	config_obj *config_proto.Config, jsonl string,
+	config_obj *config_proto.Config, jsonl []byte,
 	artifact, client_id, flow_id string) error {
 
 	err := self.pushJsonlToLocalQueueManager(
@@ -498,7 +498,7 @@ func (self *ReplicationService) PushJsonlToArtifact(
 		Artifact: artifact,
 		ClientId: client_id,
 		FlowId:   flow_id,
-		Jsonl:    []byte(jsonl),
+		Jsonl:    jsonl,
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)

@@ -123,7 +123,7 @@ func (self *JournalService) AppendToResultSet(
 func (self *JournalService) AppendJsonlToResultSet(
 	config_obj *config_proto.Config,
 	path api.FSPathSpec,
-	jsonl string) error {
+	jsonl []byte) error {
 
 	// Key a lock to manage access to this file.
 	self.mu.Lock()
@@ -147,7 +147,7 @@ func (self *JournalService) AppendJsonlToResultSet(
 	if err != nil {
 		return err
 	}
-	rs_writer.WriteJSONL([]byte(jsonl), 0)
+	rs_writer.WriteJSONL(jsonl, 0)
 	rs_writer.Close()
 
 	return nil
@@ -179,7 +179,7 @@ func (self *JournalService) Broadcast(
 }
 
 func (self *JournalService) PushJsonlToArtifact(
-	config_obj *config_proto.Config, jsonl string,
+	config_obj *config_proto.Config, jsonl []byte,
 	artifact, client_id, flows_id string) error {
 
 	path_manager, err := artifacts.NewArtifactPathManager(

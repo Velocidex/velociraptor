@@ -47,6 +47,10 @@ func (self *TimelineWriter) Write(
 func (self *TimelineWriter) WriteBuffer(
 	timestamp time.Time, serialized []byte) error {
 
+	if len(serialized) == 0 {
+		return nil
+	}
+
 	offset, err := self.fd.Size()
 	if err != nil {
 		return err
@@ -57,7 +61,12 @@ func (self *TimelineWriter) WriteBuffer(
 
 	// Write line delimited JSON
 	out.Write(serialized)
-	out.Write([]byte{'\n'})
+
+	// Only add a single lf if needed.
+	if serialized[len(serialized)-1] != '\n' {
+		out.Write([]byte{'\n'})
+	}
+
 	idx_record := &IndexRecord{
 		Timestamp: timestamp.UnixNano(),
 		Offset:    offset,
