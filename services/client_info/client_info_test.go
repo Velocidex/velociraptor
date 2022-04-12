@@ -28,8 +28,9 @@ type ClientInfoTestSuite struct {
 
 func (self *ClientInfoTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
+	// For this test make the master write and sync quickly
 	self.ConfigObj.Frontend.Resources.ClientInfoSyncTime = 1
-
+	self.ConfigObj.Frontend.Resources.ClientInfoWriteTime = 1
 	self.TestSuite.SetupTest()
 
 	// Create a client in the datastore
@@ -109,6 +110,7 @@ func (self *ClientInfoTestSuite) TestMasterMinion() {
 	minion_config := proto.Clone(self.ConfigObj).(*config_proto.Config)
 	minion_config.Frontend.IsMinion = true
 	minion_config.Frontend.Resources.MinionBatchWaitTimeMs = 1
+	minion_config.Frontend.Resources.ClientInfoWriteTime = 1
 	minion_config.Frontend.Resources.ClientInfoSyncTime = 1
 
 	minion_client_info_manager := client_info.NewClientInfoManager(minion_config)

@@ -19,9 +19,10 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
@@ -38,7 +39,7 @@ type MockFrontendService struct {
 }
 
 func (self MockFrontendService) GetMinionCount() int {
-	return 0
+	return 1
 }
 
 // The minion replicates to the master node.
@@ -67,7 +68,6 @@ func (self *ReplicationTestSuite) startServices() {
 
 	replicator.SetRetryDuration(100 * time.Millisecond)
 
-	assert.NoError(t, self.sm.Start(frontend.StartFrontendService))
 	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
 	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
 	assert.NoError(t, self.sm.Start(launcher.StartLauncherService))
@@ -87,6 +87,9 @@ func (self *ReplicationTestSuite) LoadArtifacts(definitions []string) {
 
 func (self *ReplicationTestSuite) SetupTest() {
 	var err error
+	file_store.Reset()
+	datastore.Reset()
+
 	self.config_obj, err = new(config.Loader).WithFileLoader(
 		"../../http_comms/test_data/server.config.yaml").
 		WithRequiredFrontend().WithWriteback().
@@ -144,7 +147,15 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 		//gomock.AssignableToTypeOf(&api_proto.EventRequest{})).
 		DoAndReturn(mock_watch_event_recorder).AnyTimes()
 
+	// Replication service only runs on the minion node. We mock
+	// the minion frontend manager so we can inject the RPC mock.
+	services.RegisterFrontendManager(&MockFrontendService{self.mock})
+
 	self.startServices()
+
+	// Replication service only runs on the minion node. We mock
+	// the minion frontend manager so we can inject the RPC mock.
+	services.RegisterFrontendManager(&MockFrontendService{self.mock})
 
 	self.LoadArtifacts([]string{`
 name: Test.Artifact

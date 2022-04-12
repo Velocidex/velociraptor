@@ -15,6 +15,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -25,6 +26,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	currentReplicationConnections = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "minion_replication_grpc_connections",
+		Help: "Current number of connections to the master.",
+	})
 )
 
 func PushMetrics(ctx context.Context, wg *sync.WaitGroup,
@@ -336,7 +344,17 @@ func (self MinionFrontendManager) IsMaster() bool {
 // The minion frontend replicates to the master node.
 func (self MinionFrontendManager) GetMasterAPIClient(ctx context.Context) (
 	api_proto.APIClient, func() error, error) {
-	return grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	currentReplicationConnections.Inc()
+
+	return client, func() error {
+		defer currentReplicationConnections.Dec()
+		return closer()
+	}, err
 }
 
 func (self *MinionFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
@@ -346,12 +364,13 @@ func (self *MinionFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup
 	// services on minion frontends.
 	if config_obj.Frontend.ServerServices == nil {
 		config_obj.Frontend.ServerServices = &config_proto.ServerServicesConfig{
-			HuntDispatcher:   true,
-			StatsCollector:   true,
-			ClientMonitoring: true,
-			SanityChecker:    true,
-			FrontendServer:   true,
-			DynDns:           true,
+			HuntDispatcher:    true,
+			StatsCollector:    true,
+			ClientMonitoring:  true,
+			SanityChecker:     true,
+			FrontendServer:    true,
+			MonitoringService: true,
+			DynDns:            true,
 		}
 	}
 

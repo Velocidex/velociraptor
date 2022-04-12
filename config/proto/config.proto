@@ -485,6 +485,7 @@ message FrontendResourceControl {
 
     // How often to sync client info records (ms)
     uint64 client_info_sync_time = 29;
+    uint64 client_info_write_time = 30;
 
     // The journal files are used to queue messages between event
     // generators and event consumers when the consumer is unable to

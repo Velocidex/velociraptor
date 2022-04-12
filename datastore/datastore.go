@@ -179,3 +179,10 @@ func SetGlobalDatastore(
 	g_impl, err = getImpl(config_obj, implementation)
 	return err
 }
+
+func Reset() {
+	ds_mu.Lock()
+	defer ds_mu.Unlock()
+
+	g_impl = nil
+}

@@ -18,6 +18,7 @@
 package flows
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -71,7 +72,10 @@ type CollectionContext struct {
 	mu sync.Mutex
 
 	flows_proto.ArtifactCollectorContext
-	monitoring_batch map[string][]*ordereddict.Dict
+
+	// We batch all monitoring JSONL rows and then flush them at the
+	// end.
+	monitoring_batch map[string]*bytes.Buffer
 
 	// The completer keeps track of all asynchronous filesystem
 	// operations that will occur so that when everything is written
@@ -90,7 +94,7 @@ type CollectionContext struct {
 func NewCollectionContext(config_obj *config_proto.Config) *CollectionContext {
 	self := &CollectionContext{
 		ArtifactCollectorContext: flows_proto.ArtifactCollectorContext{},
-		monitoring_batch:         make(map[string][]*ordereddict.Dict),
+		monitoring_batch:         make(map[string]*bytes.Buffer),
 	}
 
 	// If we need to send a notification we should wait until all parts of

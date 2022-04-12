@@ -1,11 +1,11 @@
 package flows
 
 import (
+	"fmt"
 	"regexp"
 	"sync"
 	"time"
 
-	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -79,11 +79,12 @@ func flushContextLogs(
 		}
 
 		collection_context.TotalLogs++
-		rs_writer.Write(ordereddict.NewDict().
-			Set("_ts", int(time.Now().Unix())).
-			Set("client_time", int64(row.Timestamp)/1000000).
-			Set("level", row.Level).
-			Set("message", row.Message))
+		rs_writer.WriteJSONL([]byte(fmt.Sprintf(
+			"{\"_ts\":%q,\"client_time\":%q,\"level\":%q,\"message\":%q}\n",
+			int(time.Now().Unix()),
+			int64(row.Timestamp)/1000000,
+			row.Level,
+			row.Message)), 1)
 	}
 
 	// Clear the logs from the flow object.

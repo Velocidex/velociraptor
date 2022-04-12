@@ -281,6 +281,31 @@ func (self *ClientInfoManager) Start(
 	wg.Add(1)
 	go self.MutationSync(ctx, wg, config_obj)
 
+	// Only the master node writes to storage - there is no need to
+	// flush to disk that frequently because the master keeps a hot
+	// copy of the data in memory.
+	if self.is_master {
+		write_time := time.Duration(100) * time.Second
+		if config_obj.Frontend != nil && config_obj.Frontend.Resources != nil &&
+			config_obj.Frontend.Resources.ClientInfoWriteTime > 0 {
+			write_time = time.Duration(
+				config_obj.Frontend.Resources.ClientInfoWriteTime) *
+				time.Millisecond
+		}
+
+		go func() {
+			for {
+				select {
+				case <-ctx.Done():
+					return
+
+				case <-time.After(write_time):
+					self.FlushAll()
+				}
+			}
+		}()
+	}
+
 	// Watch for clients that are deleted and remove from local cache.
 	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.ClientDelete",
@@ -330,6 +355,8 @@ func (self *ClientInfoManager) MutationSync(
 		return
 	}
 
+	frontend_manager := services.GetFrontendManager()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -338,7 +365,9 @@ func (self *ClientInfoManager) MutationSync(
 		case <-time.After(sync_time):
 			// Only send a mutation if something has changed.
 			size := self.mutation_manager.Size()
-			if size > 0 {
+			if size > 0 && (!services.IsMaster(self.config_obj) ||
+				frontend_manager.GetMinionCount() > 0) {
+
 				logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 				logger.Debug("ClientInfoManager: sending a mutation with %v items", size)
 
@@ -350,11 +379,6 @@ func (self *ClientInfoManager) MutationSync(
 						Set("Mutation", self.mutation_manager.GetMutation()).
 						Set("From", self.uuid),
 					"Server.Internal.ClientPing")
-			}
-
-			// Only the master node writes to storage.
-			if self.is_master {
-				self.FlushAll()
 			}
 		}
 	}
