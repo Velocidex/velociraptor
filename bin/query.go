@@ -113,6 +113,7 @@ func outputJSONL(ctx context.Context,
 }
 
 func outputCSV(ctx context.Context,
+	config_obj *config_proto.Config,
 	scope vfilter.Scope,
 	vql *vfilter.VQL,
 	out io.Writer) error {
@@ -120,7 +121,7 @@ func outputCSV(ctx context.Context,
 		vql_subsystem.MarshalJson(scope),
 		10, *max_wait)
 
-	csv_writer := csv.GetCSVAppender(
+	csv_writer := csv.GetCSVAppender(config_obj,
 		scope, &StdoutWrapper{out}, true /* write_headers */)
 	defer csv_writer.Close()
 
@@ -233,7 +234,7 @@ func doRemoteQuery(
 		case "csv":
 			scope := vql_subsystem.MakeScope()
 
-			csv_writer := csv.GetCSVAppender(
+			csv_writer := csv.GetCSVAppender(config_obj,
 				scope, &StdoutWrapper{os.Stdout}, true /* write_headers */)
 			defer csv_writer.Close()
 
@@ -405,7 +406,7 @@ func doQuery() error {
 					return err
 				}
 			case "csv":
-				err = outputCSV(ctx, scope, vql, out_fd)
+				err = outputCSV(ctx, builder.Config, scope, vql, out_fd)
 				if err != nil {
 					return err
 				}

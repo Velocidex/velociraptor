@@ -41,6 +41,7 @@ type CreateFlowDownloadArgs struct {
 	Type     string `vfilter:"optional,field=type,doc=Type of download to create (e.g. 'report') default a full zip file."`
 	Template string `vfilter:"optional,field=template,doc=Report template to use (defaults to Reporting.Default)."`
 	Password string `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
+	Format   string `vfilter:"optional,field=format,doc=Format to export (csv,json) defaults to both."`
 }
 
 type CreateFlowDownload struct{}
@@ -84,7 +85,13 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 		return result
 
 	case "":
-		result, err := createDownloadFile(config_obj,
+		_, write_csv, err := getFormat(arg.Format)
+		if err != nil {
+			scope.Log("create_flow_download: %v", err)
+			return vfilter.Null{}
+		}
+
+		result, err := createDownloadFile(config_obj, write_csv,
 			arg.FlowId, arg.ClientId, arg.Password, arg.Wait)
 		if err != nil {
 			scope.Log("create_flow_download: %s", err)
@@ -141,21 +148,9 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	var write_csv, write_json bool
-
-	switch arg.Format {
-	case "json":
-		write_json = true
-
-	case "csv":
-		write_csv = true
-
-	case "":
-		write_json = true
-		write_csv = true
-
-	default:
-		scope.Log("Unknown format parameter either 'json', 'cvs' or empty for both.")
+	write_json, write_csv, err := getFormat(arg.Format)
+	if err != nil {
+		scope.Log("create_hunt_download: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -181,6 +176,7 @@ func (self CreateHuntDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 
 func createDownloadFile(
 	config_obj *config_proto.Config,
+	write_csv bool,
 	flow_id, client_id, password string,
 	wait bool) (api.FSPathSpec, error) {
 	if client_id == "" || flow_id == "" {
@@ -210,10 +206,12 @@ func createDownloadFile(
 	}
 
 	lock_file_spec := download_file.SetType(api.PATH_TYPE_FILESTORE_LOCK)
-	lock_file, err := file_store_factory.WriteFile(lock_file_spec)
+	lock_file, err := file_store_factory.WriteFileWithCompletion(
+		lock_file_spec, utils.SyncCompleter)
 	if err != nil {
 		return nil, err
 	}
+	lock_file.Write([]byte("X"))
 	lock_file.Close()
 
 	flow_details, err := flows.GetFlowDetails(config_obj, client_id, flow_id)
@@ -253,7 +251,7 @@ func createDownloadFile(
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
 		defer cancel()
 
-		err := downloadFlowToZip(ctx, config_obj, password,
+		err := downloadFlowToZip(ctx, config_obj, write_csv, password,
 			client_id, hostname, flow_id, zip_writer)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
@@ -271,6 +269,7 @@ func createDownloadFile(
 func downloadFlowToZip(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	write_csv bool,
 	password string,
 	client_id string,
 	hostname string,
@@ -338,27 +337,30 @@ func downloadFlowToZip(
 			}
 		}
 
-		// Also make a csv file why not?
-		zip_file_name := path_specs.CleanPathForZip(rs_path.
-			SetType(api.PATH_TYPE_FILESTORE_CSV),
-			client_id, hostname)
-		f, err := createZipMember(zip_writer, zip_file_name, password)
-		if err != nil {
-			continue
-		}
+		if write_csv {
+			// Also make a csv file why not?
+			zip_file_name := path_specs.CleanPathForZip(rs_path.
+				SetType(api.PATH_TYPE_FILESTORE_CSV),
+				client_id, hostname)
+			f, err := createZipMember(zip_writer, zip_file_name, password)
+			if err != nil {
+				continue
+			}
 
-		// File uploads are stored in their own json file.
-		reader, err := result_sets.NewResultSetReader(
-			file_store_factory, path_manager.Path())
-		if err != nil {
-			return err
+			// File uploads are stored in their own json file.
+			reader, err := result_sets.NewResultSetReader(
+				file_store_factory, path_manager.Path())
+			if err != nil {
+				return err
+			}
+			scope := vql_subsystem.MakeScope()
+			csv_writer := csv.GetCSVAppender(
+				config_obj, scope, f, true /* write_headers */)
+			for row := range reader.Rows(ctx) {
+				csv_writer.Write(row)
+			}
+			csv_writer.Close()
 		}
-		scope := vql_subsystem.MakeScope()
-		csv_writer := csv.GetCSVAppender(scope, f, true /* write_headers */)
-		for row := range reader.Rows(ctx) {
-			csv_writer.Write(row)
-		}
-		csv_writer.Close()
 	}
 
 	// Get all file uploads if needed
@@ -411,12 +413,16 @@ func createHuntDownloadFile(
 		"download_file": download_file,
 	}).Info("CreateHuntDownload")
 
+	// Wait here until the file is written - this lock file indicates
+	// writing is still in progress.
 	file_store_factory := file_store.GetFileStore(config_obj)
 	lock_file_spec := download_file.SetType(api.PATH_TYPE_FILESTORE_LOCK)
-	lock_file, err := file_store_factory.WriteFile(lock_file_spec)
+	lock_file, err := file_store_factory.WriteFileWithCompletion(
+		lock_file_spec, utils.SyncCompleter)
 	if err != nil {
 		return nil, err
 	}
+	lock_file.Write([]byte("X"))
 	lock_file.Close()
 
 	fd, err := file_store_factory.WriteFile(download_file)
@@ -475,7 +481,7 @@ func createHuntDownloadFile(
 		defer zip_writer.Close()
 
 		// Allow one hour to write the zip
-		ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
+		sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 		defer cancel()
 
 		// Export aggregate CSV and JSON files for all clients.
@@ -518,7 +524,7 @@ func createHuntDownloadFile(
 			}
 			defer os.Remove(csv_tmpfile.Name())
 
-			err = StoreVQLAsCSVAndJsonFile(ctx, config_obj,
+			err = StoreVQLAsCSVAndJsonFile(sub_ctx, config_obj,
 				subscope, query, write_csv, write_json,
 				csv_tmpfile, json_tmpfile)
 			if err != nil {
@@ -545,7 +551,7 @@ func createHuntDownloadFile(
 					return err
 				}
 
-				_, err = utils.Copy(ctx, f, reader)
+				_, err = utils.Copy(sub_ctx, f, reader)
 				return err
 			}
 
@@ -592,7 +598,7 @@ func createHuntDownloadFile(
 		query_log := actions.QueryLog.AddQuery(query)
 		defer query_log.Close()
 
-		for row := range vql.Eval(ctx, subscope) {
+		for row := range vql.Eval(sub_ctx, subscope) {
 			flow_id := vql_subsystem.GetStringFromRow(scope, row, "FlowId")
 			client_id := vql_subsystem.GetStringFromRow(scope, row, "ClientId")
 			if flow_id == "" || client_id == "" {
@@ -601,7 +607,7 @@ func createHuntDownloadFile(
 
 			hostname := services.GetHostname(client_id)
 			err := downloadFlowToZip(
-				ctx, config_obj, password, client_id, hostname,
+				sub_ctx, config_obj, write_csv, password, client_id, hostname,
 				flow_id, zip_writer)
 			if err != nil {
 				logging.GetLogger(config_obj, &logging.FrontendComponent).
@@ -639,7 +645,8 @@ func StoreVQLAsCSVAndJsonFile(
 		return err
 	}
 
-	csv_writer := csv.GetCSVAppender(scope, csv_fd, true /* write_headers */)
+	csv_writer := csv.GetCSVAppender(
+		config_obj, scope, csv_fd, true /* write_headers */)
 	defer csv_writer.Close()
 
 	sub_ctx, cancel := context.WithCancel(ctx)
@@ -681,4 +688,23 @@ func createZipMember(zip_writer *cryptozip.Writer, file_member_name, password st
 func init() {
 	vql_subsystem.RegisterFunction(&CreateHuntDownload{})
 	vql_subsystem.RegisterFunction(&CreateFlowDownload{})
+}
+
+func getFormat(format string) (write_json, write_csv bool, err error) {
+	switch format {
+	case "json":
+		write_json = true
+
+	case "csv":
+		write_csv = true
+
+	case "":
+		write_json = true
+		write_csv = true
+
+	default:
+		err = errors.New("Unknown format parameter either 'json', 'cvs' or empty for both.")
+	}
+
+	return
 }

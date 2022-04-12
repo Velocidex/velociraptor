@@ -94,8 +94,11 @@ func (self *EncodeFunction) Call(ctx context.Context,
 		if reflect.TypeOf(result).Kind() != reflect.Slice {
 			return vfilter.Null{}
 		}
+
+		config_obj, _ := vql_subsystem.GetServerConfig(scope)
+
 		buff := bytes.NewBuffer([]byte{})
-		csv_writer := csv.GetCSVAppender(
+		csv_writer := csv.GetCSVAppender(config_obj,
 			scope, buff,
 			true /* write_headers */)
 
