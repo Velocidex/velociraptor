@@ -139,3 +139,13 @@ func SetGlobalFilestore(
 	g_impl, err = getImpl(implementation, config_obj)
 	return err
 }
+
+func Reset() {
+	fs_mu.Lock()
+	defer fs_mu.Unlock()
+
+	memory_imp = nil
+	memcache_imp = nil
+	directory_imp = nil
+	g_impl = nil
+}

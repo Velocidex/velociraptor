@@ -110,6 +110,55 @@ func (self *JournalTestSuite) TestJournalWriting() {
 	assert.True(self.T(), 0.07*10 > total_time)
 }
 
+func (self *JournalTestSuite) TestJournalJsonlWriting() {
+	journal, err := services.GetJournal()
+	assert.NoError(self.T(), err)
+
+	clock := &utils.MockClock{}
+	start := clock.Now()
+
+	// Simulate a slow filesystem (70 ms per filesystem access).
+	defer api.InstallClockForTests(clock, 70)()
+
+	// Get metrics snapshot
+	snapshot := vtesting.GetMetrics(self.T(), ".")
+
+	// Write 10 rows in series
+	for i := 0; i < 10; i++ {
+		err = journal.PushJsonlToArtifact(self.ConfigObj,
+			[]byte(fmt.Sprintf("{\"For\":%q,\"i\":%d}\n", "Bar", i)),
+			"System.Flow.Completion", "C.1234", "")
+		assert.NoError(self.T(), err)
+	}
+
+	// Force the filestore to flush the data
+	file_store_factory := file_store.GetFileStore(self.ConfigObj)
+	flusher, ok := file_store_factory.(api.Flusher)
+	if ok {
+		flusher.Flush()
+	}
+
+	// See the filestore metrics
+	metrics := vtesting.GetMetricsDifference(self.T(), ".", snapshot)
+
+	// Total number of writes on the memcache layer
+	memcache_total, _ := metrics.GetInt64(
+		"filestore_latency__write_MemcacheFileWriter_Generic_inf")
+
+	// Total number of writes on the directory layer
+	directory_total, _ := metrics.GetInt64(
+		"filestore_latency__write_DirectoryFileWriter_Generic_inf")
+
+	// Memcache should be combining many of the writes into larger
+	// writes.
+	assert.True(self.T(), directory_total*5 < memcache_total)
+
+	// Get the total time. It should be much less than 10 times 70ms
+	// (i.e. rows are not written serially).
+	total_time := api.Clock.Now().Sub(start).Seconds()
+	assert.True(self.T(), 0.07*10 > total_time)
+}
+
 func TestJournalTestSuite(t *testing.T) {
 	suite.Run(t, &JournalTestSuite{})
 }
