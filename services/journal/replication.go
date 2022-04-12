@@ -75,9 +75,6 @@ type ReplicationService struct {
 
 	sender chan *api_proto.PushEventRequest
 
-	api_client api_proto.APIClient
-	closer     func() error
-
 	// Synchronizes access to files. NOTE: This only works within
 	// process!
 	mu            sync.Mutex
@@ -114,6 +111,9 @@ func (self *ReplicationService) isEventRegistered(artifact string) bool {
 }
 
 func (self *ReplicationService) pumpEventFromBufferFile() {
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	frontend_manager := services.GetFrontendManager()
+
 	for {
 		event, err := self.Buffer.Lease()
 		// No events available or some other error, sleep and
@@ -130,19 +130,32 @@ func (self *ReplicationService) pumpEventFromBufferFile() {
 
 		// Retry to send the event.
 		for {
-			_, err := self.api_client.PushEvents(self.ctx, event)
+			// Get a new API handle each time in case it became invalid.
+			api_client, closer, err := frontend_manager.GetMasterAPIClient(
+				self.ctx)
+			if err != nil {
+				logger.Error("<red>ReplicationService</>Unable to connect %v",
+					err)
+				time.Sleep(time.Second)
+				continue
+			}
+
+			_, err = api_client.PushEvents(self.ctx, event)
 			if err == nil {
+				closer()
 				break
 			}
+
 			// We are unable to send it, sleep and
 			// try again later.
 			select {
 			case <-self.ctx.Done():
+				closer()
 				return
 
 			case <-time.After(self.RetryDuration()):
-				continue
 			}
+			closer()
 		}
 	}
 }
@@ -191,15 +204,8 @@ func (self *ReplicationService) Start(
 		return errors.New("Frontend not configured")
 	}
 
-	api_client, closer, err := frontend_manager.GetMasterAPIClient(ctx)
-	if err != nil {
-		return err
-	}
-
 	// Initialize our default values and start the service for
 	// real.
-	self.api_client = api_client
-	self.closer = closer
 	self.ctx = ctx
 
 	// Do not have channel buffer because then we might lose events on
@@ -243,7 +249,12 @@ func (self *ReplicationService) Start(
 							replicationSendHistorgram.Observe(v)
 						}))
 
-					_, err := self.api_client.PushEvents(ctx, request)
+					api_client, closer, err := frontend_manager.GetMasterAPIClient(ctx)
+					if err != nil {
+						continue
+					}
+
+					_, err = api_client.PushEvents(ctx, request)
 					timer.ObserveDuration()
 
 					if err != nil {
@@ -254,7 +265,7 @@ func (self *ReplicationService) Start(
 						// for later delivery.
 						_ = self.Buffer.Enqueue(request)
 					}
-
+					closer()
 				}
 			}
 		}()
@@ -610,17 +621,27 @@ func (self *ReplicationService) watchOnce(
 
 	subctx, cancel := context.WithCancel(ctx)
 
-	stream, err := self.api_client.WatchEvent(subctx, &api_proto.EventRequest{
+	frontend_manager := services.GetFrontendManager()
+	api_client, closer, err := frontend_manager.GetMasterAPIClient(ctx)
+	if err != nil {
+		logger.Error("<red>ReplicationService</>Unable to connect %v", err)
+		close(output_chan)
+		return output_chan
+	}
+
+	stream, err := api_client.WatchEvent(subctx, &api_proto.EventRequest{
 		Queue: queue,
 		WatcherName: watcher_name + "_" +
 			services.GetNodeName(self.config_obj.Frontend),
 	})
 	if err != nil {
 		close(output_chan)
+		closer()
 		return output_chan
 	}
 
 	go func() {
+		defer closer()
 		defer close(output_chan)
 		defer cancel()
 
@@ -652,7 +673,6 @@ func (self *ReplicationService) watchOnce(
 }
 
 func (self *ReplicationService) Close() {
-	self.closer()
 	self.Buffer.Close()
 	os.Remove(self.tmpfile.Name()) // clean up file buffer
 }
