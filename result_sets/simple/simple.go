@@ -75,6 +75,10 @@ func (self *ResultSetWriterImpl) SetSync() {
 // the indicated offset then reading lines off it until they reach the
 // desired row index.
 func (self *ResultSetWriterImpl) WriteJSONL(serialized []byte, total_rows uint64) {
+	if total_rows == 0 {
+		total_rows = countLines(serialized)
+	}
+
 	// Sync the index with the current buffers.
 	self.Flush()
 
@@ -405,6 +409,16 @@ func (self ResultSetFactory) NewResultSetReader(
 		idx_fd:     idx_fd,
 		log_path:   log_path,
 	}, nil
+}
+
+func countLines(serialized []byte) uint64 {
+	var result uint64
+	for _, i := range serialized {
+		if i == '\n' {
+			result++
+		}
+	}
+	return result
 }
 
 func init() {

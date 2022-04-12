@@ -47,6 +47,9 @@ SELECT
 *
 FROM
 info()
+`}, {"Comment as first line", `
+-- hello
+SELECT * FROM info()
 `},
 }
 

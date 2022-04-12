@@ -301,6 +301,13 @@ func StartFrontendHttps(
 		config_obj.Frontend.BindAddress,
 		config_obj.Frontend.BindPort)
 
+	expected_clients := int64(10000)
+	if config_obj.Frontend != nil &&
+		config_obj.Frontend.Resources != nil &&
+		config_obj.Frontend.Resources.ExpectedClients > 0 {
+		expected_clients = config_obj.Frontend.Resources.ExpectedClients
+	}
+
 	server := &http.Server{
 		Addr:     listenAddr,
 		Handler:  router,
@@ -311,8 +318,9 @@ func StartFrontendHttps(
 		WriteTimeout: 900 * time.Second,
 		IdleTimeout:  150 * time.Second,
 		TLSConfig: &tls.Config{
-			MinVersion:   tls.VersionTLS12,
-			Certificates: certs,
+			MinVersion:         tls.VersionTLS12,
+			ClientSessionCache: tls.NewLRUClientSessionCache(int(expected_clients)),
+			Certificates:       certs,
 			CurvePreferences: []tls.CurveID{tls.CurveP521,
 				tls.CurveP384, tls.CurveP256},
 

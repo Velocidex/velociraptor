@@ -17,6 +17,8 @@ const (
 )
 
 type ResultSetWriter interface {
+	// Write an already serialized batch of rows. This basically just
+	// appends the data to the output JSONL file so it is very cheap.
 	WriteJSONL(serialized []byte, total_rows uint64)
 	Write(row *ordereddict.Dict)
 	Flush()
@@ -28,6 +30,7 @@ type ResultSetWriter interface {
 }
 
 type TimedResultSetWriter interface {
+	WriteJSONL(serialized []byte, total_rows int)
 	Write(row *ordereddict.Dict)
 	Flush()
 	Close()

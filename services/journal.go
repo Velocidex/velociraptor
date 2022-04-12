@@ -73,6 +73,12 @@ type JournalService interface {
 	PushRowsToArtifact(config_obj *config_proto.Config,
 		rows []*ordereddict.Dict, name, client_id, flows_id string) error
 
+	// An optimization around PushRowsToArtifact where rows are
+	// already serialized in JSONL
+	PushJsonlToArtifact(
+		config_obj *config_proto.Config,
+		jsonl []byte, name, client_id, flows_id string) error
+
 	// Push the rows to the event artifact queue with a potential
 	// unspecified delay. Internally these rows will be batched until
 	// a convenient time to send them.
