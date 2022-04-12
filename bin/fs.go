@@ -108,7 +108,7 @@ func eval_local_query(
 			table.Render()
 
 		case "csv":
-			return outputCSV(ctx, scope, vql, os.Stdout)
+			return outputCSV(ctx, config_obj, scope, vql, os.Stdout)
 
 		case "jsonl":
 			return outputJSONL(ctx, scope, vql, os.Stdout)

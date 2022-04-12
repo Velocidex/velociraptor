@@ -27,6 +27,7 @@ export default class HuntOverview extends React.Component {
     static contextType = UserConfig;
 
     static propTypes = {
+        fetch_hunts: PropTypes.func,
         hunt: PropTypes.object,
     };
 
@@ -103,7 +104,8 @@ export default class HuntOverview extends React.Component {
         this.setState({preparing: true});
         api.post("v1/CreateDownload", params,
                  this.source.token).then(resp=>{
-            this.setState({preparing: false});
+                     this.setState({preparing: false});
+                     this.props.fetch_hunts();
         });
     }
 
