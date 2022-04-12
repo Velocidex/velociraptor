@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -86,7 +87,9 @@ func GetCSVReader(ctx context.Context, fd api.FileReader) CSVReader {
 
 }
 
-func GetCSVAppender(scope vfilter.Scope, fd io.Writer, write_headers bool) *CSVWriter {
+func GetCSVAppender(
+	config_obj *config_proto.Config,
+	scope vfilter.Scope, fd io.Writer, write_headers bool) *CSVWriter {
 	result := &CSVWriter{
 		row_chan: make(chan vfilter.Row),
 		wg:       sync.WaitGroup{},
@@ -104,6 +107,8 @@ func GetCSVAppender(scope vfilter.Scope, fd io.Writer, write_headers bool) *CSVW
 
 		w := NewWriter(fd)
 		defer w.Flush()
+
+		SetCSVOptions(config_obj, scope, w)
 
 		columns := []string{}
 
@@ -153,23 +158,27 @@ func GetCSVAppender(scope vfilter.Scope, fd io.Writer, write_headers bool) *CSVW
 	return result
 }
 
-func GetCSVWriter(scope vfilter.Scope, fd api.FileWriter) (*CSVWriter, error) {
+func GetCSVWriter(
+	config_obj *config_proto.Config,
+	scope vfilter.Scope, fd api.FileWriter) (*CSVWriter, error) {
 	// Seek to the end of the file.
 	length, err := fd.Size()
 	if err != nil {
 		return nil, err
 	}
-	return GetCSVAppender(scope, fd, length == 0), nil
+	return GetCSVAppender(config_obj, scope, fd, length == 0), nil
 }
 
-func EncodeToCSV(scope vfilter.Scope, v interface{}) (string, error) {
+func EncodeToCSV(
+	config_obj *config_proto.Config,
+	scope vfilter.Scope, v interface{}) (string, error) {
 	slice := reflect.ValueOf(v)
 	if slice.Type().Kind() != reflect.Slice {
 		return "", errors.New("EncodeToCSV - should be a list of rows")
 	}
 
 	buffer := &bytes.Buffer{}
-	writer := GetCSVAppender(scope, buffer, true)
+	writer := GetCSVAppender(config_obj, scope, buffer, true)
 
 	for i := 0; i < slice.Len(); i++ {
 		value := slice.Index(i).Interface()

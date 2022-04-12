@@ -97,7 +97,7 @@ func (self *UserNotificationManager) HandleNotification(
 			return
 		}
 
-		writer, err = csv.GetCSVWriter(self.scope, fd)
+		writer, err = csv.GetCSVWriter(self.config_obj, self.scope, fd)
 		if err != nil {
 			return
 		}

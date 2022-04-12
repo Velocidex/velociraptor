@@ -117,8 +117,6 @@ func (self *MemcacheFileWriter) Truncate() error {
 // usually give the same writer.
 func (self *MemcacheFileWriter) Close() error {
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	self.closed = true
 
 	// Convert all utils.SyncCompleter calls to sync waits on return
@@ -133,6 +131,8 @@ func (self *MemcacheFileWriter) Close() error {
 			self.completions[idx] = wg.Done
 		}
 	}
+	// Release the lock before we wait for the flusher.
+	self.mu.Unlock()
 
 	return nil
 }

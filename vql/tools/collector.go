@@ -568,7 +568,8 @@ func AddSpecProtobuf(
 
 			case "csv":
 				if !is_str {
-					value_str, err = csv.EncodeToCSV(scope, value_any)
+					value_str, err = csv.EncodeToCSV(
+						config_obj, scope, value_any)
 					if err != nil {
 						scope.Log("Invalid CSV for %v",
 							parameter_definition.Name)

@@ -159,7 +159,8 @@ func getAllStats(query string, builder services.ScopeBuilder) (
 	return result, nil
 }
 
-func runQueryWithEnv(query string, builder services.ScopeBuilder) error {
+func runQueryWithEnv(
+	query string, builder services.ScopeBuilder) error {
 	manager, err := services.GetRepositoryManager()
 	if err != nil {
 		return err
@@ -196,7 +197,7 @@ func runQueryWithEnv(query string, builder services.ScopeBuilder) error {
 			}
 
 		case "csv":
-			err = outputCSV(ctx, scope, vql, os.Stdout)
+			err = outputCSV(ctx, builder.Config, scope, vql, os.Stdout)
 			if err != nil {
 				return err
 			}

@@ -796,6 +796,9 @@ message ServerServicesConfig {
 message Defaults {
     int64 hunt_expiry_hours = 1;
     int64 notebook_cell_timeout_min = 2;
+
+    // The default CSV delimiter
+    string csv_delimiter = 3;
 }
 
 // Configures crypto preferences

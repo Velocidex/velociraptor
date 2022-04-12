@@ -143,7 +143,7 @@ func (self *Container) StoreArtifact(
 			return err
 		}
 
-		csv_writer = csv.GetCSVAppender(
+		csv_writer = csv.GetCSVAppender(config_obj,
 			scope, csv_fd, true /* write_headers */)
 
 		// Preserve the error for our caller.

@@ -324,7 +324,8 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 			}).Info("DownloadTable")
 
 			scope := vql_subsystem.MakeScope()
-			csv_writer := csv.GetCSVAppender(scope, w, true /* write_headers */)
+			csv_writer := csv.GetCSVAppender(
+				config_obj, scope, w, true /* write_headers */)
 			for row := range row_chan {
 				csv_writer.Write(
 					filterColumns(request.Columns, transform(row)))
