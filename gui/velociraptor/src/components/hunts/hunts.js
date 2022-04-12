@@ -152,6 +152,7 @@ class VeloHunts extends React.Component {
                   hunts={this.state.hunts}
                   setSelectedHunt={this.setSelectedHunt} />
                 <HuntInspector
+                  fetch_hunts={this.fetchHunts}
                   hunt={this.state.full_selected_hunt} />
               </SplitPane>
             </>

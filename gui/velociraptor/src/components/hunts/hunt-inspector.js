@@ -15,6 +15,7 @@ import { withRouter }  from "react-router-dom";
 class HuntInspector extends React.Component {
     static propTypes = {
         hunt: PropTypes.object,
+        fetch_hunts: PropTypes.func,
     };
 
     state = {
@@ -46,7 +47,9 @@ class HuntInspector extends React.Component {
               <Tabs defaultActiveKey={tab} onSelect={this.setDefaultTab}>
                 <Tab eventKey="overview" title="Overview">
                   { tab === "overview" &&
-                    <HuntOverview hunt={this.props.hunt}/> }
+                    <HuntOverview
+                      fetch_hunts={this.props.fetch_hunts}
+                      hunt={this.props.hunt}/> }
                 </Tab>
                 <Tab eventKey="requests" title="Requests">
                   { tab === "requests" &&
