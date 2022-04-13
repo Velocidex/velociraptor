@@ -41,12 +41,12 @@ func (self *DatastoreAPITest) SetupTest() {
 	self.ConfigObj.Frontend.ServerServices = &config_proto.ServerServicesConfig{}
 
 	// Wait for the server to come up.
-	conn, closer, err := grpc_client.Factory.GetAPIClient(
-		self.Sm.Ctx, self.ConfigObj)
-	assert.NoError(self.T(), err)
-	defer closer()
-
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		conn, closer, err := grpc_client.Factory.GetAPIClient(
+			self.Sm.Ctx, self.ConfigObj)
+		assert.NoError(self.T(), err)
+		defer closer()
+
 		res, err := conn.Check(self.Sm.Ctx, &api_proto.HealthCheckRequest{})
 		return err == nil && res.Status == api_proto.HealthCheckResponse_SERVING
 	})
