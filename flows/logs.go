@@ -80,7 +80,7 @@ func flushContextLogs(
 
 		collection_context.TotalLogs++
 		rs_writer.WriteJSONL([]byte(fmt.Sprintf(
-			"{\"_ts\":%q,\"client_time\":%q,\"level\":%q,\"message\":%q}\n",
+			"{\"_ts\":%d,\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
 			int(time.Now().Unix()),
 			int64(row.Timestamp)/1000000,
 			row.Level,

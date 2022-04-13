@@ -217,15 +217,24 @@ func doDeadDisk() error {
 	}
 
 	if *deaddisk_command_add_windows_disk != "" {
-		err = addWindowsHardDisk(*deaddisk_command_add_windows_disk, config_obj)
+		abs_path, err := filepath.Abs(*deaddisk_command_add_windows_disk)
+		if err != nil {
+			return err
+		}
+
+		err = addWindowsHardDisk(abs_path, config_obj)
 		if err != nil {
 			return err
 		}
 	}
 
 	if *deaddisk_command_add_windows_directory != "" {
-		err = addWindowsDirectory(
-			*deaddisk_command_add_windows_directory, config_obj)
+		abs_path, err := filepath.Abs(*deaddisk_command_add_windows_directory)
+		if err != nil {
+			return err
+		}
+
+		err = addWindowsDirectory(abs_path, config_obj)
 		if err != nil {
 			return err
 		}
