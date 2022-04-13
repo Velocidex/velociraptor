@@ -30,7 +30,8 @@ reports:
       {{ define "CPU" }}
           SELECT _ts as Timestamp,
               CPUPercent,
-              MemoryUse / 1048576 AS MemoryUse
+              MemoryUse / 1048576 AS MemoryUse,
+              TotalFrontends
           FROM source(source="Prometheus",
                       artifact="Server.Monitor.Health")
       {{ end }}
