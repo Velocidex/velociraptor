@@ -16,7 +16,7 @@ description: |
   modified/added from the journal. This will be present even if the
   file was later removed.
   
-  Availible filters are FullPath, MFT/Parent ID and time bounds.
+  Availible filters are Filename, FullPath, MFT/Parent ID and time bounds.
 
 type: CLIENT
 
@@ -27,6 +27,9 @@ parameters:
   - name: AllDrives
     description: Dump USN from all drives and VSC
     type: bool
+  - name: FileNameRegex
+    description: A regex to match the Filename field.
+    default: .
   - name: PathRegex
     description: A regex to match the entire path (you can watch a directory or a file type).
     default: .
@@ -79,18 +82,20 @@ sources:
               SELECT *, Drive AS Device
               FROM parse_usn(
                  device=Drive, accessor="ntfs")
-              WHERE FullPath =~ PathRegex
+              WHERE Filename =~ FileNameRegex
                 AND str(str=_FileMFTID) =~ MFT_ID_Regex
                 AND str(str=_ParentMFTID) =~ Parent_MFT_ID_Regex
                 AND Timestamp < DateBeforeTime
                 AND Timestamp > DateAfterTime
+                AND FullPath =~ PathRegex
             })
           }, else={
             SELECT *, Device
             FROM parse_usn(device=Device, accessor="ntfs")
-            WHERE FullPath =~ PathRegex
+            WHERE Filename =~ FileNameRegex
                 AND str(str=_FileMFTID) =~ MFT_ID_Regex
                 AND str(str=_ParentMFTID) =~ Parent_MFT_ID_Regex
                 AND Timestamp < DateBeforeTime
                 AND Timestamp > DateAfterTime
+                AND FullPath =~ PathRegex
           })
