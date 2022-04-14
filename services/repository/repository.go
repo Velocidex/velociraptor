@@ -320,7 +320,8 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 	if !artifact.BuiltIn {
 		existing_artifact, pres := self.Data[artifact.Name]
 		if pres && existing_artifact.BuiltIn {
-			return nil, errors.New("Unable to override built in artifact")
+			return nil, fmt.Errorf("Unable to override built in artifact %v",
+				artifact.Name)
 		}
 	}
 

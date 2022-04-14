@@ -78,7 +78,6 @@ class DefaultTickRenderer extends React.Component {
     }
 
     render() {
-        let transform = this.props.transform;
         let value = this.props.payload.value;
         console.log(this.props.transform);
         if (_.isNumber(value)) {

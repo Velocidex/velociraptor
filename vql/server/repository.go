@@ -48,7 +48,11 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 	definition, err := tmp_repository.LoadYaml(
 		arg.Definition, true /* validate */, false /* built_in */)
 	if err != nil {
-		scope.Log("artifact_set: %v: %v", err)
+		definition := arg.Definition
+		if len(arg.Definition) > 100 {
+			definition = arg.Definition[:99] + " ..."
+		}
+		scope.Log("artifact_set: %v: %v", err, definition)
 		return vfilter.Null{}
 	}
 
