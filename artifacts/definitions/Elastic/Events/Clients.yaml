@@ -50,6 +50,7 @@ sources:
           query={
              SELECT *, "Artifact_" + Artifact as _index,
                     Artifact,
+                    client_info(client_id=ClientId).os_info.hostname AS Hostname,
                     timestamp(epoch=now()) AS timestamp
              FROM watch_monitoring(artifact=Artifact)
           })
