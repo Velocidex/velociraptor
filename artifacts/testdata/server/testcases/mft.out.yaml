@@ -1,47 +1,235 @@
-Parameters:
-  RemappingTemplate: |
-    remappings:
-      - type: mount
-        from:
-          accessor: raw_ntfs
-          prefix: |
-            {
-               "DelegateAccessor": "file",
-               "DelegatePath": %q,
-               "Path": "/"
-            }
-        on:
-          accessor: "ntfs"
-          prefix: '\\\\.\\C:'
-          path_type: ntfs
-
-
-      - type: mount
-        from:
-          accessor: mft
-          prefix: |
-            {
-               "DelegateAccessor": "file",
-               "DelegatePath": %q,
-               "Path": "/"
-            }
-        on:
-          accessor: mft
-          prefix: '\\\\.\\C:'
-          path_type: ntfs
-
-
-Queries:
-  - LET _ <= remap(config=format(format=RemappingTemplate,
-       args=[
-          srcDir+'/artifacts/testdata/files/test.ntfs.dd',
-          srcDir+'/artifacts/testdata/files/test.ntfs.dd',
-        ]), clear=TRUE)
-
-  # Test MFT output
-  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='just_a_file\\.txt')
-
-  # Test time contraints
-  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateBefore='2018-12-31')
-  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateAfter='2021-07-01')
-  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateAfter='2021-07-01',DateBefore='2022-02-01',AllNtfs='Y')
+LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', ]), clear=TRUE)[]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='just_a_file\\.txt')[
+ {
+  "EntryNumber": 49,
+  "InUse": true,
+  "ParentEntryNumber": 5,
+  "OSPath": "C:\\just_a_file.txt",
+  "FileName": "just_a_file.txt",
+  "FileSize": 12,
+  "ReferenceCount": 1,
+  "IsDir": false,
+  "Created0x10": "2022-03-18T04:15:18.5166156Z",
+  "Created0x30": "2022-03-18T04:15:18.5166156Z",
+  "LastModified0x10": "2022-01-06T14:13:46.9839391Z",
+  "LastModified0x30": "2022-03-18T04:15:18.5166156Z",
+  "LastRecordChange0x10": "2022-02-23T03:41:48.391796Z",
+  "LastRecordChange0x30": "2022-03-18T04:15:18.5166156Z",
+  "LastAccess0x10": "2022-03-18T04:17:08.7362551Z",
+  "LastAccess0x30": "2022-03-18T04:15:18.5166156Z",
+  "HasADS": false,
+  "SI_Lt_FN": false,
+  "uSecZeros": false,
+  "Copied": true,
+  "FileNames": [
+   "just_a_file.txt"
+  ],
+  "FileNameTypes": "POSIX",
+  "_Source": "Windows.NTFS.MFT"
+ }
+]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateBefore='2018-12-31')[
+ {
+  "EntryNumber": 46,
+  "InUse": true,
+  "ParentEntryNumber": 45,
+  "OSPath": "C:\\Folder A\\Folder B\\Hello world text document.txt",
+  "FileName": "Hello world text document.txt",
+  "FileSize": 12,
+  "ReferenceCount": 1,
+  "IsDir": false,
+  "Created0x10": "2018-09-24T07:55:29.7664719Z",
+  "Created0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastModified0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastModified0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastRecordChange0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastRecordChange0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastAccess0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastAccess0x30": "2018-09-24T07:55:29.7664719Z",
+  "HasADS": true,
+  "SI_Lt_FN": false,
+  "uSecZeros": false,
+  "Copied": false,
+  "FileNames": [
+   "Hello world text document.txt"
+  ],
+  "FileNameTypes": "POSIX",
+  "_Source": "Windows.NTFS.MFT"
+ },
+ {
+  "EntryNumber": 46,
+  "InUse": true,
+  "ParentEntryNumber": 45,
+  "OSPath": "C:\\Folder A\\Folder B\\Hello world text document.txt:goodbye.txt",
+  "FileName": "Hello world text document.txt:goodbye.txt",
+  "FileSize": 12,
+  "ReferenceCount": 1,
+  "IsDir": false,
+  "Created0x10": "2018-09-24T07:55:29.7664719Z",
+  "Created0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastModified0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastModified0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastRecordChange0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastRecordChange0x30": "2018-09-24T07:55:29.7664719Z",
+  "LastAccess0x10": "2018-09-24T07:56:35.3135567Z",
+  "LastAccess0x30": "2018-09-24T07:55:29.7664719Z",
+  "HasADS": true,
+  "SI_Lt_FN": false,
+  "uSecZeros": false,
+  "Copied": false,
+  "FileNames": [
+   "Hello world text document.txt:goodbye.txt"
+  ],
+  "FileNameTypes": "POSIX",
+  "_Source": "Windows.NTFS.MFT"
+ }
+]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateAfter='2021-07-01')[
+ {
+  "EntryNumber": 37,
+  "InUse": true,
+  "ParentEntryNumber": 5,
+  "OSPath": "C:\\another_file.txt",
+  "FileName": "another_file.txt",
+  "FileSize": 14,
+  "ReferenceCount": 1,
+  "IsDir": false,
+  "Created0x10": "2022-03-18T04:22:20.4341459Z",
+  "Created0x30": "2022-03-18T04:22:20.4341459Z",
+  "LastModified0x10": "2022-03-18T04:22:41.8322966Z",
+  "LastModified0x30": "2022-03-18T04:22:20.4341459Z",
+  "LastRecordChange0x10": "2022-03-18T04:25:33.4079136Z",
+  "LastRecordChange0x30": "2022-03-18T04:22:20.4341459Z",
+  "LastAccess0x10": "2022-03-18T04:22:41.8322966Z",
+  "LastAccess0x30": "2022-03-18T04:22:20.4341459Z",
+  "HasADS": false,
+  "SI_Lt_FN": false,
+  "uSecZeros": false,
+  "Copied": false,
+  "FileNames": [
+   "another_file.txt"
+  ],
+  "FileNameTypes": "POSIX",
+  "_Source": "Windows.NTFS.MFT"
+ },
+ {
+  "EntryNumber": 49,
+  "InUse": true,
+  "ParentEntryNumber": 5,
+  "OSPath": "C:\\just_a_file.txt",
+  "FileName": "just_a_file.txt",
+  "FileSize": 12,
+  "ReferenceCount": 1,
+  "IsDir": false,
+  "Created0x10": "2022-03-18T04:15:18.5166156Z",
+  "Created0x30": "2022-03-18T04:15:18.5166156Z",
+  "LastModified0x10": "2022-01-06T14:13:46.9839391Z",
+  "LastModified0x30": "2022-03-18T04:15:18.5166156Z",
+  "LastRecordChange0x10": "2022-02-23T03:41:48.391796Z",
+  "LastRecordChange0x30": "2022-03-18T04:15:18.5166156Z",
+  "LastAccess0x10": "2022-03-18T04:17:08.7362551Z",
+  "LastAccess0x30": "2022-03-18T04:15:18.5166156Z",
+  "HasADS": false,
+  "SI_Lt_FN": false,
+  "uSecZeros": false,
+  "Copied": true,
+  "FileNames": [
+   "just_a_file.txt"
+  ],
+  "FileNameTypes": "POSIX",
+  "_Source": "Windows.NTFS.MFT"
+ }
+]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateAfter='2021-07-01',DateBefore='2022-02-01',AllNtfs='Y')[
+ {
+  "EntryNumber": 49,
+  "InUse": true,
+  "ParentEntryNumber": 5,
+  "OSPath": "C:\\just_a_file.txt",
+  "FileName": "just_a_file.txt",
+  "FileSize": 12,
+  "ReferenceCount": 1,
+  "IsDir": false,
+  "Created0x10": "2022-03-18T04:15:18.5166156Z",
+  "Created0x30": "2022-03-18T04:15:18.5166156Z",
+  "LastModified0x10": "2022-01-06T14:13:46.9839391Z",
+  "LastModified0x30": "2022-03-18T04:15:18.5166156Z",
+  "LastRecordChange0x10": "2022-02-23T03:41:48.391796Z",
+  "LastRecordChange0x30": "2022-03-18T04:15:18.5166156Z",
+  "LastAccess0x10": "2022-03-18T04:17:08.7362551Z",
+  "LastAccess0x30": "2022-03-18T04:15:18.5166156Z",
+  "HasADS": false,
+  "SI_Lt_FN": false,
+  "uSecZeros": false,
+  "Copied": true,
+  "FileNames": [
+   "just_a_file.txt"
+  ],
+  "FileNameTypes": "POSIX",
+  "NtfsMetadata": {
+   "FullPath": "/just_a_file.txt",
+   "MFTID": 49,
+   "Size": 12,
+   "Allocated": true,
+   "IsDir": false,
+   "SI_Times": {
+    "CreateTime": "2022-03-18T04:15:18.5166156Z",
+    "FileModifiedTime": "2022-01-06T14:13:46.9839391Z",
+    "MFTModifiedTime": "2022-02-23T03:41:48.391796Z",
+    "AccessedTime": "2022-03-18T04:17:08.7362551Z"
+   },
+   "Filenames": [
+    {
+     "Times": {
+      "CreateTime": "2022-03-18T04:15:18.5166156Z",
+      "FileModifiedTime": "2022-03-18T04:15:18.5166156Z",
+      "MFTModifiedTime": "2022-03-18T04:15:18.5166156Z",
+      "AccessedTime": "2022-03-18T04:15:18.5166156Z"
+     },
+     "Type": "POSIX",
+     "Name": "just_a_file.txt"
+    }
+   ],
+   "Attributes": [
+    {
+     "Type": "$STANDARD_INFORMATION",
+     "TypeId": 16,
+     "Id": 0,
+     "Inode": "49-16-0",
+     "Size": 72,
+     "Name": ""
+    },
+    {
+     "Type": "$FILE_NAME",
+     "TypeId": 48,
+     "Id": 2,
+     "Inode": "49-48-2",
+     "Size": 96,
+     "Name": ""
+    },
+    {
+     "Type": "$DATA",
+     "TypeId": 128,
+     "Id": 1,
+     "Inode": "49-128-1",
+     "Size": 12,
+     "Name": ""
+    },
+    {
+     "Type": "$EA_INFORMATION",
+     "TypeId": 208,
+     "Id": 3,
+     "Inode": "49-208-3",
+     "Size": 8,
+     "Name": ""
+    },
+    {
+     "Type": "$EA",
+     "TypeId": 224,
+     "Id": 4,
+     "Inode": "49-224-4",
+     "Size": 10268,
+     "Name": ""
+    }
+   ],
+   "Device": "\\\\.\\C:"
+  },
+  "_Source": "Windows.NTFS.MFT"
+ }
+]
