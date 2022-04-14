@@ -38,6 +38,9 @@ parameters:
     default:
   - name: Accessor
     default: ntfs
+  - name: AllNtfs
+    type: bool
+    description: "Return all NTFS metadata with resutls."
   - name: PathRegex
     description: "Regex search over OSPath."
     default: "."
@@ -211,15 +214,24 @@ sources:
               MFTPath=MFTFilename)
         })
 
+      -- return results
+      LET results = SELECT *
+          FROM if(condition=AllDrives,
+            then={
+              SELECT * FROM all_drives
+            },
+            else={
+              SELECT * FROM mftsearch(Drive=Drive, 
+                                MFTPath=if(condition= MFTPath ,
+                                            then= MFTPath,
+                                            else= Drive + "$MFT"))
+            })
+      -- enrich results with NtfsMetadata is requests
+      LET enriched_results = SELECT *,
+            parse_ntfs(mft=EntryNumber, device=Drive ) as NtfsMetadata
+        FROM results
+        
       -- return rows
-      SELECT *
-      FROM if(condition=AllDrives,
-        then={
-          SELECT * FROM all_drives
-        },
-        else={
-          SELECT * FROM mftsearch(Drive=Drive, 
-                            MFTPath=if(condition= MFTPath ,
-                                        then= MFTPath,
-                                        else= Drive + "$MFT"))
-        })
+      SELECT * FROM if(condition=AllNtfs,
+        then= enriched_results,
+        else= results)
