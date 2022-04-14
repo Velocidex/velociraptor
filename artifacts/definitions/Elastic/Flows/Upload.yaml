@@ -48,6 +48,7 @@ sources:
                  row=Flow.artifacts_with_results,
                  query={
                      SELECT *, _value AS Artifact,
+                            client_info(client_id=ClientId).os_info.hostname AS Hostname,
                             timestamp(epoch=now()) AS timestamp,
                             ClientId, Flow.session_id AS FlowId,
                             "artifact_" + regex_replace(source=_value,

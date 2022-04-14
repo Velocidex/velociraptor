@@ -102,12 +102,20 @@ func (self *TimelineTestSuite) TestTimelineWriter() {
 		utils.SyncCompleter, result_sets.TruncateMode)
 	assert.NoError(self.T(), err)
 
+	total_rows := 0
 	for i := int64(0); i <= 10; i++ {
 		timeline.Write(time.Unix(i*2, 0), ordereddict.NewDict().Set("Item", i*2))
+		total_rows++
 	}
 	timeline.Close()
 
-	//	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
+	// Make sure the index is correct. Each IndexRecord is 3 * 8 bytes
+	// = 24 and there should be exactly one record for each row.
+	index_data := test_utils.FileReadAll(self.T(), self.config_obj,
+		path_manager.Index())
+	assert.Equal(self.T(), len(index_data), total_rows*24)
+
+	//test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
 
 	reader, err := NewTimelineReader(file_store_factory, path_manager)
 	assert.NoError(self.T(), err)

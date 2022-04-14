@@ -44,6 +44,8 @@ func (self *TimelineWriter) Write(
 	return self.WriteBuffer(timestamp, serialized)
 }
 
+// Write potentially multiple rows into the file at the same
+// timestamp.
 func (self *TimelineWriter) WriteBuffer(
 	timestamp time.Time, serialized []byte) error {
 
@@ -51,40 +53,44 @@ func (self *TimelineWriter) WriteBuffer(
 		return nil
 	}
 
+	// Only add a single lf if needed. Serialized must end with a
+	// single \n.
+	if serialized[len(serialized)-1] != '\n' {
+		serialized = append(serialized, '\n')
+	}
+
 	offset, err := self.fd.Size()
 	if err != nil {
 		return err
 	}
 
-	out := &bytes.Buffer{}
+	// A buffer to prepare the index in memory.
 	offsets := &bytes.Buffer{}
 
-	// Write line delimited JSON
-	out.Write(serialized)
-
-	// Only add a single lf if needed.
-	if serialized[len(serialized)-1] != '\n' {
-		out.Write([]byte{'\n'})
+	// Prepare the index records without parsing the actual JSON.
+	for idx, c := range serialized {
+		// A LF represents the end of the record.
+		if idx == 0 ||
+			idx < len(serialized)-1 && c == '\n' {
+			idx_record := &IndexRecord{
+				Timestamp: timestamp.UnixNano(),
+				Offset:    offset + int64(idx),
+			}
+			err = binary.Write(offsets, binary.LittleEndian, idx_record)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
-	idx_record := &IndexRecord{
-		Timestamp: timestamp.UnixNano(),
-		Offset:    offset,
-	}
-
-	err = binary.Write(offsets, binary.LittleEndian, idx_record)
-	if err != nil {
-		return err
-	}
-
-	// Include the line feed in the count.
-	offset += int64(len(serialized) + 1)
-
-	_, err = self.fd.Write(out.Bytes())
-	if err != nil {
-		return err
-	}
+	// Write the index data
 	_, err = self.index_fd.Write(offsets.Bytes())
+	if err != nil {
+		return err
+	}
+
+	// Write the bulk data
+	_, err = self.fd.Write(serialized)
 	return err
 }
 
