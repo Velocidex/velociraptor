@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/sirupsen/logrus"
@@ -253,7 +254,7 @@ func (self *ApiServer) GetHuntResults(
 
 func (self *ApiServer) EstimateHunt(
 	ctx context.Context,
-	in *api_proto.Hunt) (*api_proto.HuntStats, error) {
+	in *api_proto.HuntEstimateRequest) (*api_proto.HuntStats, error) {
 
 	defer Instrument("EstimateHunt")()
 
@@ -265,6 +266,26 @@ func (self *ApiServer) EstimateHunt(
 			"User is not allowed to view hunt results.")
 	}
 
+	client_info_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return nil, err
+	}
+
+	now := uint64(time.Now().UnixNano() / 1000)
+
+	is_client_recent := func(client_id string, seen map[string]bool) {
+		// We dont care about last active status
+		if in.LastActive == 0 {
+			seen[client_id] = true
+			return
+		}
+
+		stats, err := client_info_manager.GetStats(client_id)
+		if err == nil && now-in.LastActive*1000000 < stats.Ping {
+			seen[client_id] = true
+		}
+	}
+
 	if in.Condition != nil {
 		labels := in.Condition.GetLabels()
 		if labels != nil && len(labels.Label) > 0 {
@@ -274,7 +295,7 @@ func (self *ApiServer) EstimateHunt(
 			for _, label := range labels.Label {
 				for entity := range search.SearchIndexWithPrefix(
 					ctx, self.config, "label:"+label) {
-					seen[entity.Entity] = true
+					is_client_recent(entity.Entity, seen)
 				}
 			}
 
@@ -318,7 +339,7 @@ func (self *ApiServer) EstimateHunt(
 				client_info, err := client_info_manager.Get(client_id)
 				if err == nil {
 					if os_name == client_info.System {
-						seen[hit.Entity] = true
+						is_client_recent(hit.Entity, seen)
 					}
 				}
 			}
@@ -341,7 +362,7 @@ func (self *ApiServer) EstimateHunt(
 		// No condition, just count all the clients.
 		seen := make(map[string]bool)
 		for hit := range search.SearchIndexWithPrefix(ctx, self.config, "all") {
-			seen[hit.Entity] = true
+			is_client_recent(hit.Entity, seen)
 		}
 
 		// Remove any excluded labels.
@@ -362,7 +383,7 @@ func (self *ApiServer) EstimateHunt(
 	// No condition, just count all the clients.
 	seen := make(map[string]bool)
 	for hit := range search.SearchIndexWithPrefix(ctx, self.config, "all") {
-		seen[hit.Entity] = true
+		is_client_recent(hit.Entity, seen)
 	}
 
 	return &api_proto.HuntStats{

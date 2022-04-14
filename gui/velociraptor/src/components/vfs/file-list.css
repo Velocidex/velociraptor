@@ -62,7 +62,7 @@ table  tr.highlighted td {
 }
 
 td.download-column {
-    display: block;
+    display: table-cell;
     border-bottom: none;
     border-right: none;
     border-left: none;

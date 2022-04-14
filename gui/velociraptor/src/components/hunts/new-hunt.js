@@ -142,7 +142,8 @@ class NewHuntConfigureHunt extends React.Component {
                     </Form.Group>
                   }
 
-                  <EstimateHunt params={this.props.parameters}/>
+                  <EstimateHunt
+                    params={this.props.parameters}/>
 
                 </Form>
               </Modal.Body>
