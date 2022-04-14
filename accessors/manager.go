@@ -37,8 +37,15 @@ func GetAccessor(scheme string, scope vfilter.Scope) (FileSystemAccessor, error)
 	// Fallback to the file handler - this should work
 	// because there needs to be at least a file handler
 	// registered.
-	if scheme == "" {
+	switch scheme {
+
+	case "":
 		scheme = "auto"
+
+	case "reg":
+		// Backwards compatibility uses old shortname for reg
+		// accessor.
+		scheme = "registry"
 	}
 
 	return GetManager(scope).GetAccessor(scheme, scope)

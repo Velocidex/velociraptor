@@ -222,7 +222,7 @@ func (mr *MockAPIClientMockRecorder) DeleteSubject(arg0, arg1 interface{}, arg2 
 }
 
 // EstimateHunt mocks base method.
-func (m *MockAPIClient) EstimateHunt(arg0 context.Context, arg1 *proto0.Hunt, arg2 ...grpc.CallOption) (*proto0.HuntStats, error) {
+func (m *MockAPIClient) EstimateHunt(arg0 context.Context, arg1 *proto0.HuntEstimateRequest, arg2 ...grpc.CallOption) (*proto0.HuntStats, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
