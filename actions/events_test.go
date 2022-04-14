@@ -2,6 +2,7 @@ package actions_test
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"sync"
@@ -194,6 +195,9 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// But the tables have not really changed, so the query will
 	// not be updated.
+	if len(actions.QueryLog.Get()) != 0 {
+		fmt.Printf("Queries that ran %v\n", actions.QueryLog.Get())
+	}
 	assert.Equal(self.T(), len(actions.QueryLog.Get()), 0)
 
 	// Now lets set the label to Label1

@@ -73,14 +73,25 @@ class DefaultTickRenderer extends React.Component {
         x: PropTypes.number,
         y: PropTypes.number,
         stroke: PropTypes.string,
-        payload: PropTypes.object
+        payload: PropTypes.object,
+        transform: PropTypes.string,
     }
 
     render() {
+        let transform = this.props.transform;
+        let value = this.props.payload.value;
+        console.log(this.props.transform);
+        if (_.isNumber(value)) {
+            value = Math.round(value * 10) / 10;
+        };
+
         return  (
             <g transform={`translate(${this.props.x},${this.props.y})`}>
-              <text x={0} y={0} dy={16} textAnchor="end" fill="#666" transform="rotate(-35)">
-                {this.props.payload.value}</text>
+              <text x={0} y={0} dy={16}
+                    textAnchor="end" fill="#666"
+                    transform={this.props.transform}>
+                {value} {this.props.transform}
+              </text>
             </g>
         );
     }
@@ -96,6 +107,7 @@ class TimeTickRenderer extends React.Component {
 
         data: PropTypes.array,
         dataKey: PropTypes.string,
+        transform: PropTypes.string,
     }
 
     render() {
@@ -117,7 +129,9 @@ class TimeTickRenderer extends React.Component {
 
         return  (
             <g transform={`translate(${this.props.x},${this.props.y})`}>
-              <text x={0} y={0} dy={16} textAnchor="end" fill="#666" transform="rotate(-15)">
+              <text x={0} y={0} dy={16}
+                    textAnchor="end" fill="#666"
+                    transform={this.props.transform}>
                 {value}
               </text>
             </g>
@@ -258,11 +272,13 @@ export class VeloLineChart extends React.Component {
         }
 
         let x_column = columns[0];
-        let tick_renderer = <DefaultTickRenderer />;
+        let tick_renderer = <DefaultTickRenderer transform="rotate(-35)" />;
+        let y_tick_renderer = <DefaultTickRenderer />;
         let xaxis_mode = this.props.params && this.props.params.xaxis_mode;
         if (xaxis_mode === "time") {
             tick_renderer = <TimeTickRenderer
                               data={data}
+                              transform="rotate(-35)"
                               dataKey={x_column}/>;
         }
 
@@ -313,6 +329,7 @@ export class VeloLineChart extends React.Component {
                   <YAxis
                     allowDataOverflow
                     domain={[this.state.bottom || 0, this.state.top || 0]}
+                    tick={y_tick_renderer}
                   />
                   <Tooltip content={<CustomTooltip
                                       data={data}
@@ -370,6 +387,7 @@ export class VeloTimeChart extends VeloLineChart {
         let x_column = columns[0];
         let tick_renderer = <TimeTickRenderer
                               data={data}
+                              transform="rotate(-35)"
                               dataKey={x_column}/>;
 
         let lines = _.map(this.props.columns, (column, i)=>{

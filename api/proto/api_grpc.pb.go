@@ -26,7 +26,7 @@ type APIClient interface {
 	CreateHunt(ctx context.Context, in *Hunt, opts ...grpc.CallOption) (*StartFlowResponse, error)
 	// Returns an estimate of the number of clients that might be
 	// affected by a hunt.
-	EstimateHunt(ctx context.Context, in *Hunt, opts ...grpc.CallOption) (*HuntStats, error)
+	EstimateHunt(ctx context.Context, in *HuntEstimateRequest, opts ...grpc.CallOption) (*HuntStats, error)
 	ListHunts(ctx context.Context, in *ListHuntsRequest, opts ...grpc.CallOption) (*ListHuntsResponse, error)
 	GetHunt(ctx context.Context, in *GetHuntRequest, opts ...grpc.CallOption) (*Hunt, error)
 	ModifyHunt(ctx context.Context, in *Hunt, opts ...grpc.CallOption) (*empty.Empty, error)
@@ -131,7 +131,7 @@ func (c *aPIClient) CreateHunt(ctx context.Context, in *Hunt, opts ...grpc.CallO
 	return out, nil
 }
 
-func (c *aPIClient) EstimateHunt(ctx context.Context, in *Hunt, opts ...grpc.CallOption) (*HuntStats, error) {
+func (c *aPIClient) EstimateHunt(ctx context.Context, in *HuntEstimateRequest, opts ...grpc.CallOption) (*HuntStats, error) {
 	out := new(HuntStats)
 	err := c.cc.Invoke(ctx, "/proto.API/EstimateHunt", in, out, opts...)
 	if err != nil {
@@ -734,7 +734,7 @@ type APIServer interface {
 	CreateHunt(context.Context, *Hunt) (*StartFlowResponse, error)
 	// Returns an estimate of the number of clients that might be
 	// affected by a hunt.
-	EstimateHunt(context.Context, *Hunt) (*HuntStats, error)
+	EstimateHunt(context.Context, *HuntEstimateRequest) (*HuntStats, error)
 	ListHunts(context.Context, *ListHuntsRequest) (*ListHuntsResponse, error)
 	GetHunt(context.Context, *GetHuntRequest) (*Hunt, error)
 	ModifyHunt(context.Context, *Hunt) (*empty.Empty, error)
@@ -830,7 +830,7 @@ type UnimplementedAPIServer struct {
 func (UnimplementedAPIServer) CreateHunt(context.Context, *Hunt) (*StartFlowResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateHunt not implemented")
 }
-func (UnimplementedAPIServer) EstimateHunt(context.Context, *Hunt) (*HuntStats, error) {
+func (UnimplementedAPIServer) EstimateHunt(context.Context, *HuntEstimateRequest) (*HuntStats, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EstimateHunt not implemented")
 }
 func (UnimplementedAPIServer) ListHunts(context.Context, *ListHuntsRequest) (*ListHuntsResponse, error) {
@@ -1045,7 +1045,7 @@ func _API_CreateHunt_Handler(srv interface{}, ctx context.Context, dec func(inte
 }
 
 func _API_EstimateHunt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Hunt)
+	in := new(HuntEstimateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1057,7 +1057,7 @@ func _API_EstimateHunt_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: "/proto.API/EstimateHunt",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).EstimateHunt(ctx, req.(*Hunt))
+		return srv.(APIServer).EstimateHunt(ctx, req.(*HuntEstimateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
