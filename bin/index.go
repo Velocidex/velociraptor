@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -48,16 +49,24 @@ func doRebuildIndex() error {
 		return fmt.Errorf("Starting index service: %w", err)
 	}
 
+	now := time.Now()
+	path_manager := paths.NewIndexPathManager()
+	dest := path_manager.SnapshotTimed()
+	fmt.Printf("Writing new index snapshot at %v\n",
+		dest.AsFilestoreFilename(config_obj))
+
+	defer func() {
+		fmt.Printf("Done in %v\n", time.Now().Sub(now))
+	}()
+
 	new_indexer := search.NewIndexer()
 	err = new_indexer.LoadIndexFromDatastore(sm.Ctx, config_obj)
 	if err != nil {
 		return fmt.Errorf("Building index: %w", err)
 	}
 
-	path_manager := paths.NewIndexPathManager()
-
 	// Write a timed snapshot
-	return new_indexer.WriteSnapshot(config_obj, path_manager.SnapshotTimed())
+	return new_indexer.WriteSnapshot(config_obj, dest)
 }
 
 func init() {

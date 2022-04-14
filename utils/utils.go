@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -189,6 +190,11 @@ func ToInt64(x interface{}) (int64, bool) {
 		return int64(t), true
 	case int64:
 		return t, true
+
+	case string:
+		value, err := strconv.ParseInt(t, 0, 64)
+		return value, err == nil
+
 	case float64:
 		return int64(t), true
 

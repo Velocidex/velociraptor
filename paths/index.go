@@ -40,13 +40,16 @@ func (self IndexPathManager) Snapshot() api.FSPathSpec {
 }
 
 func (self IndexPathManager) SnapshotTimed() api.FSPathSpec {
-	now := time.Now().UTC()
-	day_name := fmt.Sprintf("%d-%02d-%02d", now.Year(),
-		now.Month(), now.Day())
-
+	day_name := fmt.Sprintf("%d", time.Now().Unix())
 	return CLIENT_INDEX_URN.AddChild("snapshots", day_name).
 		AsFilestorePath().
 		SetType(api.PATH_TYPE_FILESTORE_JSON)
+}
+
+func (self IndexPathManager) SnapshotDirectory() api.FSPathSpec {
+	return CLIENT_INDEX_URN.AddChild("snapshots").
+		AsFilestorePath().
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
 func (self IndexPathManager) TermPartitions(term string) []string {

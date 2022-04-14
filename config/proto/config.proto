@@ -35,6 +35,8 @@ message Version {
         }];
 
     string ci_build_url = 6;
+
+    string compiler = 7;
 }
 
 // The client's state which are persisted in the writeback file.

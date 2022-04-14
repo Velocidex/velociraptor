@@ -1,7 +1,7 @@
 // Index a client
 
 // Indexing a client helps us to quickly locate the client using a
-// search term. For a good index we need to following attributes:
+// search term. For a good index we need the following attributes:
 
 // 1. Quickly recovering a record by searching for an exact term. For
 //    example, indexing a client id by label means we need to quickly
@@ -11,18 +11,28 @@
 //    enumerates all clients that are indexed by a term starting with
 //    that.
 
-// We index the client using the filesystem - by creating a file
-// containing a record, we can retrieve it using the search term. We
-// use an index path manager to generate a path where we can store the
-// records.
+// In previous versions we indexed the client using the
+// filesystem. However this proved too slow for networked
+// filesystems. We therefore maintain a btree in memory of index
+// terms. We dump the btree into disk periodically called a
+// Snapshot. Reading and writing the snapshot is quite fast.
 
-// var index_root IndexPathManager
-// record_path := index_root.IndexTerm(term, client_id)
-// db.SetSubject(config_obj, record_path, record)
+// The master node is responsible for maintaining the snapshot in sync
+// - While the snapshot may be read by any node, the master is the
+// only node that is allowed to write it.
 
-// We can then retrieve the record using the search term:
-// record_directories := index_root.EnumerateTerms(term)
-// results := ... walk(record_directories)
+// It is possible to rebuild the index but for large deplyments this
+// is recommended to be done by an external process due to the
+// additional load this generates on the master node. The command:
+
+// velociraptor index rebuild
+
+// Will create a timestamped snapshot by rescanning all client records
+// in the filestore (for > 100k clients on EFS, this can take a long
+// time!)
+
+// The master node will realize a new snapshot is present and reload
+// it.
 
 package search
 
@@ -102,6 +112,8 @@ type Indexer struct {
 
 	ready bool
 	dirty bool
+
+	last_snapshot_read time.Time
 }
 
 func NewIndexer() *Indexer {
@@ -133,6 +145,37 @@ func (self *Indexer) Flush(config_obj *config_proto.Config) error {
 		logger.Debug("Flushed index in %v.", time.Now().Sub(start))
 	}
 
+	return nil
+}
+
+// Check for newer snapshot files we need to load.
+// You can create a new snapshot using "velociraptor index rebuild"
+func (self *Indexer) ScanForNewSnapshots(
+	ctx context.Context,
+	config_obj *config_proto.Config) error {
+	path_manager := paths.NewIndexPathManager()
+	file_store_factory := file_store.GetFileStore(config_obj)
+	children, err := file_store_factory.ListDirectory(
+		path_manager.SnapshotDirectory())
+	if err != nil {
+		return err
+	}
+
+	for _, child := range children {
+		int_value, ok := utils.ToInt64(child.Name())
+		if !ok {
+			continue
+		}
+
+		timestamp := time.Unix(int_value, 0)
+		if timestamp.After(self.last_snapshot_read) {
+			// Reload the index.
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Info("Reloading index snapshot %v",
+				child.PathSpec().AsClientPath())
+			return self.LoadSnapshot(ctx, config_obj, child.PathSpec())
+		}
+	}
 	return nil
 }
 
@@ -231,11 +274,20 @@ func (self *Indexer) LoadIndexFromSnapshot(
 	ctx context.Context,
 	config_obj *config_proto.Config) error {
 
-	start := time.Now()
 	path_manager := paths.NewIndexPathManager()
+	return self.LoadSnapshot(ctx, config_obj, path_manager.Snapshot())
+}
+
+func (self *Indexer) LoadSnapshot(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	pathspec api.FSPathSpec) error {
+
+	self.last_snapshot_read = time.Now()
+
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_reader, err := result_sets.NewResultSetReader(
-		file_store_factory, path_manager.Snapshot())
+		file_store_factory, pathspec)
 	if err != nil {
 		return err
 	}
@@ -280,7 +332,7 @@ func (self *Indexer) LoadIndexFromSnapshot(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Loaded index from snapshot</> in %v\n",
-		time.Now().Sub(start))
+		time.Now().Sub(self.last_snapshot_read))
 
 	self.mu.Lock()
 	self.ready = true
@@ -314,7 +366,7 @@ func (self *Indexer) Load(
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	snapshot_wait := 600 * time.Second
+	snapshot_wait := 60 * time.Second
 	if config_obj.Frontend != nil &&
 		config_obj.Frontend.Resources != nil &&
 		config_obj.Frontend.Resources.IndexSnapshotFrequency > 0 {
@@ -322,25 +374,19 @@ func (self *Indexer) Load(
 			IndexSnapshotFrequency) * time.Second
 	}
 
-	// Now flush the index periodically
+	// Check for newer snapshots periodically.
 	go func() {
 		for {
+			err := self.ScanForNewSnapshots(ctx, config_obj)
+			if err != nil {
+				logger.Error("ScanForNewSnapshots: %v", err)
+			}
+
 			select {
 			case <-ctx.Done():
 				return
 
 			case <-time.After(snapshot_wait):
-				err := self.LoadIndexFromDatastore(ctx, config_obj)
-				if err != nil {
-					logger.Error("LoadIndexFromDatastore: %v", err)
-					continue
-				}
-
-				// Write a snapshot
-				err = self.Flush(config_obj)
-				if err != nil {
-					logger.Info("Flushing index error: %v", err)
-				}
 			}
 		}
 	}()
