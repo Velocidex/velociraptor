@@ -1,8 +1,8 @@
 version:
   name: velociraptor
-  version: 0.4.6
-  commit: 1edf062
-  build_time: "2020-07-12T22:09:46+10:00"
+  version: 0.6.4-rc4
+  commit: f3264824
+  build_time: "2022-04-14T02:23:05+10:00"
 Client:
   server_urls:
   - https://localhost:8000/
@@ -41,9 +41,9 @@ Client:
     install_path: /usr/local/sbin/velociraptor
   version:
     name: velociraptor
-    version: 0.4.6
-    commit: 1edf062
-    build_time: "2020-07-12T22:09:46+10:00"
+    version: 0.6.4-rc4
+    commit: f3264824
+    build_time: "2022-04-14T02:23:05+10:00"
   pinned_server_name: VelociraptorServer
   max_upload_size: 5242880
   local_buffer:
@@ -62,56 +62,58 @@ GUI:
   bind_port: 8889
   gw_certificate: |
     -----BEGIN CERTIFICATE-----
-    MIIDQTCCAimgAwIBAgIQWOXRF+ijM59sWOG4CtB+jjANBgkqhkiG9w0BAQsFADAa
-    MRgwFgYDVQQKEw9WZWxvY2lyYXB0b3IgQ0EwHhcNMjEwNDEzMTA0NjUyWhcNMjIw
-    NDEzMTA0NjUyWjApMRUwEwYDVQQKEwxWZWxvY2lyYXB0b3IxEDAOBgNVBAMMB0dS
-    UENfR1cwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC1Ef/kfXJrdWSw
-    Zvm7jEDxyfxi7WoUpV02d4nj2dNbvJyPkFDXzjgzGZR4zie/qFE4kjnaTpQcslau
-    +uLbqCFG93t0LDxHEx4OhDz4zB6zSz/0GTYFiLI7jauQvjj+s/IEdMpN1SKLeXuz
-    15XiZP3fK2s/N7/+YsEE23y+9RY3qy86xjO5YRv1koPAiJa70uY2s1nUkfDhNrZP
-    o+huL4gkiQz2ks2t3HDPXpvyem1lxggiqcwXyEe3ipUK5EbRbVmt19rq2fBd5KVA
-    4i9KdY877GWyfvUxDYJKInJE8CnR+gRVHtLLBaxroL0qFWanPpc9LiUw5KCFPkcz
-    xh/PmxfjAgMBAAGjdDByMA4GA1UdDwEB/wQEAwIFoDAdBgNVHSUEFjAUBggrBgEF
-    BQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAfBgNVHSMEGDAWgBQ7YhFIPCqC
-    Rm3mmRd1JyzkGOhQsTASBgNVHREECzAJggdHUlBDX0dXMA0GCSqGSIb3DQEBCwUA
-    A4IBAQCbNYLMGS3ldxn/yDXq+uFLEq29imVSdhUzrBAGXVfH9pa//L63rTjqFHHd
-    aTLIAmZS4nwE4Grd2GeQ5ibP3NubtR3XR9QMgfPGJIok/oQ2TQKFqmUhNXgqgMAo
-    yq6nMCLNFJnB5UkMmifaDIvHEadDSpbh7RNQlhiZGfWzHrMGl/jGJOqsGO7wjsud
-    f2KOTbpIJXkPW8iY50tQuHn6dBjU5cUkh2CDRdjBqhEIT+IgclncJW+HMYznwf6U
-    OhDWkHZBDH2OQldv/8JpapmAd/vWPmf7o6KBhFOE7hMW+YiLM7FlOp9sOlSoF6TN
-    00DS+oXzYLINPteqVVZRHFowLflT
+    MIIDQjCCAiqgAwIBAgIRALDNncaXLdtho9zXN+h6ehAwDQYJKoZIhvcNAQELBQAw
+    GjEYMBYGA1UEChMPVmVsb2NpcmFwdG9yIENBMB4XDTIyMDQxMzE3MDg1M1oXDTIz
+    MDQxMzE3MDg1M1owKTEVMBMGA1UEChMMVmVsb2NpcmFwdG9yMRAwDgYDVQQDDAdH
+    UlBDX0dXMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAr8nEaDof7O20
+    ZaKenYBAW2hWi0bc6N1q8ts0GZFe/5dNc8BK2lhYSg7B+wHR6AHjznQcWqAY8T9r
+    VyJxQlIUxLBWDbSSN4lk9FE/SnxcVkdpGFd1kRATQg/eKNwLYaoOiWUMXtKgq3tS
+    s9EJxVFDJhjzII8u2QYIBcc2lhYOYuCJTtd0dxzy7umKKKCZDaP7piBbFr48D40q
+    LqiGwsnoPskMnVvHXuAYZ5WOmEggUw73Dk8B4KJ8gVH24FmLIAzQu2l2Lk28QNkp
+    gu7lYoih3OVnnEXaypqfVcDUJejCAh1TsXp/AR9TPkEo6j9gTVGQM/P1j/sLYSOL
+    6RGUDxK7IQIDAQABo3QwcjAOBgNVHQ8BAf8EBAMCBaAwHQYDVR0lBBYwFAYIKwYB
+    BQUHAwEGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUO2IRSDwq
+    gkZt5pkXdScs5BjoULEwEgYDVR0RBAswCYIHR1JQQ19HVzANBgkqhkiG9w0BAQsF
+    AAOCAQEArYY/cTY7XUEn6ADIvge9zg8N8vqWuyE23RkE07J0H+fgY8N24wzCKOyJ
+    vY6YBUTzozC4/Bp7f3aye767IyHWz8fPyB5P8JCrUnOg3gJtrWD85b5HDbPuDUnq
+    qroOUZnQIGv+bJUArP8s+/I7iXVOcS7pBNeecWUaRyu09l53mnZlomTMiVQBZfUS
+    F8aQBWbf/H9mDitMhcP41GXsi3ygse2JCYYY2pjo6OPoSGxL40G+Fm5TmDRYzQQz
+    5GX5MFM7DzbnEPE5CBYBDdGFU/3SlEJSTT9LUqTFO00UTtiAKQqxw4G6XcSLwh/u
+    Fy1xpxSoc+VTIoshSn+GMie5+t+OOA==
     -----END CERTIFICATE-----
   gw_private_key: |
     -----BEGIN RSA PRIVATE KEY-----
-    MIIEogIBAAKCAQEAtRH/5H1ya3VksGb5u4xA8cn8Yu1qFKVdNneJ49nTW7ycj5BQ
-    1844MxmUeM4nv6hROJI52k6UHLJWrvri26ghRvd7dCw8RxMeDoQ8+Mwes0s/9Bk2
-    BYiyO42rkL44/rPyBHTKTdUii3l7s9eV4mT93ytrPze//mLBBNt8vvUWN6svOsYz
-    uWEb9ZKDwIiWu9LmNrNZ1JHw4Ta2T6Pobi+IJIkM9pLNrdxwz16b8nptZcYIIqnM
-    F8hHt4qVCuRG0W1Zrdfa6tnwXeSlQOIvSnWPO+xlsn71MQ2CSiJyRPAp0foEVR7S
-    ywWsa6C9KhVmpz6XPS4lMOSghT5HM8Yfz5sX4wIDAQABAoIBAEkOTBqaarHkmY16
-    3sPG4OUtQ8F+XNCbr7IsJNxjpJ1cyiY6agPIVnB3n6nmM69mb+7NQL5N+gBiDAtp
-    emJ5wYNqksrali9vDS96N0eCw9g/Qjxwd5VgA9l3XYN23HQXkkwt+vnQRrHTgA+d
-    qgHAEZYbZJgLHFG88nfNPtWk+SPYJcD+dZUiLJI3OC9S0PdA7Zy1smN1X5nVouQ+
-    IDsxnRirsWSm5sXKKC3ZtAsmvMUxmzCvmuS1ctsjdcXSg+NAgUn/GT26SO84hAgx
-    MjpkWNHx6ILz+/pdTBIzdGAy3FGu0+nt6+ty2Cyy3sGhYRTkAUUtMvl+9aecIobj
-    tbbexgECgYEAznpanIF8Mxe3LHh8k+T5BH4kTvX2cFYHYEHIcFxnVI+0M+A3bex8
-    c5Z9o7ScDX1QtFK+dmkRaC2NhAVg1IXVmvi98aW5oRaktQkeSoFzmYpaVQCWeL38
-    zDi9v1rHC+SlKA4/ftWKbqZrXNoAyIH4t3mYcBlZ+WgzeZXsFqgAi4ECgYEA4H+h
-    EOtpguCR1ajLeJECYYpdcV3nKbog51FKDBtyHDUStmyKFV/4KhEvfPyvTboKjit6
-    1sYBQE9ubcckW18gWLx+gpROgPMVYqqdjPU/MY/GXFGrJ3Eiz7+RwFYx5xrS4TAQ
-    bzCIFSuXNDzLJapiTC+lWfFlmZerxIGKXrb7pWMCgYAM2eKv4QNI7s3wz6L5VYQG
-    Oo+p9ncbMM+OtylxjN7FjZgqrmbkyZZJX3F8ce5QjJ8sSgYeupVhxYwMToVjVN0h
-    ox+3XZg7JXyk4+dlvb7jLJBIwBudcj28vD9bHJxM6jM5VgGvtDzEfEksY0kvMZ+4
-    U7IgMAPAmTKy+5jRJC28gQKBgGWFsgvZubRC5BBQLfuO8Bm2Hb23rmLzVg/ldev1
-    uWvCIH04plU2Oh6j+Oq3xnsK590VEo7vqf8wLIseZHWhlhoq27cnZDzyMLiW2Xq2
-    KWa7UwPKtvC2O/zg8AOftx+AxN6rArOVqeSQ+ubXmzKkU6GKZmc/QCfuK/JIdo+Q
-    hkprAoGAK+PClPTWvRZ1u1/Yqe3s3ycwMlSazz0q683UnmPRF5De82eq3YKxZCE1
-    /DvNPmzfT5Il+lz9nggZFReqRLweZAg7JtH4XwdHSTctLKHLWHyHItqPrsIfY6TF
-    p6wdtIM8lu4/FithXYBC2WtYm1JQ8OLd+R71KSxK87xsIqKCD7s=
+    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
     -----END RSA PRIVATE KEY-----
   internal_cidr:
   - 127.0.0.1/12
   - 192.168.0.0/16
+  authenticator:
+    type: Basic
 CA:
   private_key: |
     -----BEGIN RSA PRIVATE KEY-----
@@ -147,60 +149,63 @@ Frontend:
   bind_port: 8000
   certificate: |
     -----BEGIN CERTIFICATE-----
-    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
+    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
-    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
+    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
-    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
+    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
     -----END CERTIFICATE-----
   private_key: |
     -----BEGIN RSA PRIVATE KEY-----
-    MIIEpAIBAAKCAQEAuGnpC41Vyea0MSGI2W3k6kMeGt3b8iD5mni9p4ZxIf8/AZ1+
-    8UUDO1hfyjVgYrODPiBnQyIc0QxQteXkgP2vP7gAbOsdFOUp7lG1ed/rmeSI3nxN
-    1HQkJCSsD+WBcaAUEnHN4t51D7DDvFITowcWGnLN6d0r5aVBbaJTRlHlf9IO4wbu
-    yWs2lPqKmzMoR4fRiUukXS5Dfxzs+88jOyd+jaAuY4qW9Rr0SntOAk+PQa3Xj3Cd
-    Y29SyQCEwmGPxy721a0vjmw4Y8U5cxV1MTdNLk0KlXVtF7d6YdgladXsakuSCR8y
-    0B5u3M1l59RYaZbnDrhzB2iqM+x/jg0YCV3KMQIDAQABAoIBAQCL0QC3mXipkxib
-    B2nSL9eXJTv18q+HbCjSTSi9ktjDhdonR1mvYzuICwDVNpLVQnUG7VpdM8fVVxj6
-    UEpm4e+0x7TK35c0+GpKHfkRZgwiqXp79JKtuUCNhqBNjRwPIecV9OK8Vx05wDMm
-    3LO2rvC7LL+hx+Y4PorUrHWmowD1XunQdPXuQl+nMHOGLkUZlROJmv1ojpODL90O
-    1UC2LaoSKhuSId6DcTXrUqn+CsIkIL/DXiasE2dtcqhbfVhbRO+wLP5rUidI0w3i
-    1fh/E4W8B1UROTdfuUjqym5p35gnNCkxXzJs7RcrnWNP6uwH2f5MQ1pW2YlDK7yT
-    VEm7I2qBAoGBAPSfqYobCoPOrmQFosAjvrYB+ghKJYlwuY7g/Htf83MWjjuEIMly
-    SCECP//Dl9jRMLTeR/3c1rMLFwV0BBihT6alrGyYjGXlLMZnLXOolAhQgXp3sQdy
-    FPY+dvRbOGnzfjaM6YVS4f/5e8Or/RAV1TEzd17ZGLxGlLH55pEo8Hw1AoGBAMD9
-    bPDDBqZHGcTyn47NYhRShvMl5BrdxpN83d5+Gh4tuSMoTGld+g6cjx0xYUd9C4/l
-    eVtsaZ5Le3/5ombnuxFtuOLR2Pd+AaRvgiQhU6dgt1HVkEEVH7sPSiUfhks9PaGG
-    orgFAgxqnIfo68nRO2SgWKmKaaX6ltNQDiQ0pf2NAoGBAMAEL/2jOj66VrNWpSjz
-    JfkSViR5pztaS512x1lEuQFG3ECld2MJHMskS/5ElwXvNq9Sp+oCllkWRGzYY3q9
-    7JrgAxd/Kv20xc+7H7dgxUo9f1UVbNVuXDvqTk+C5yZrpk/FjmxD4fie6eJvN4aP
-    zLgBMRs3iC4JrSCDC9Q38YVdAoGAMSsf60M02X454YSTBDXtbBIOkbowoGuqYP8q
-    I7pq+w9ZIMzuktW/lKNsjtp611TTckjbn2BClHLUtykpqCAX9/vFY/xk08FFt9g1
-    BvF6t6Ubb30CsKIqIGVn1YdvlpG2twVvRYT5HaK32KSOFi/5esyjaiZ6fjAW5yV5
-    RN4pAC0CgYBihD0dCFaeH2rZ1GnF6dUak2bJDdwltNMjOYkRQtqFSx4+p4kbQioc
-    arboLgY+EgcYdJU+yvyI8sMgZ0vX3Gideado2P9EmXqMx3xoPP19mTMrKLTt/oPb
-    S4H9WA8izYRrxB2CiDYib5VWRG62cG4b2c9ZSBDgtkOYMaMH/NhSmw==
+    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
     -----END RSA PRIVATE KEY-----
-  max_upload_size: 10485760
   dyn_dns: {}
   default_client_monitoring_artifacts:
   - Generic.Client.Stats
-  expected_clients: 10000
   GRPC_pool_max_size: 100
   GRPC_pool_max_wait: 60
+  resources:
+    connections_per_second: 100
+    notifications_per_second: 10
+    max_upload_size: 10485760
+    expected_clients: 10000
 Datastore:
   implementation: Test
 Writeback:
@@ -232,11 +237,14 @@ Writeback:
     LZ5KmiY35bmYwkGOST6sd9T586nNEdIfs2ngcXwRcgPmQU7VaKQdeVnxhEG2xXFG
     NtyI/STijkpVi99wF39BvXkQGdJuDjAArjGj5kevCpvyveudL5g=
     -----END RSA PRIVATE KEY-----
-
 Mail: {}
-Logging: {}
+Logging:
+  debug: {}
 Monitoring:
   bind_address: 127.0.0.1
   bind_port: 8003
 api_config: {}
 obfuscation_nonce: RzlAlmdcUyw=
+defaults:
+  hunt_expiry_hours: 168
+  notebook_cell_timeout_min: 10
