@@ -25,12 +25,16 @@ type TestSuite struct {
 }
 
 func (self *TestSuite) SetupTest() {
+	self.ConfigObj = self.LoadConfig()
+	self.ConfigObj.Frontend.Resources.IndexSnapshotFrequency = 100000
+
 	self.TestSuite.SetupTest()
+	require.NoError(self.T(), self.Sm.Start(indexing.StartIndexingService))
 
 	self.populatedClients()
 
 	// Start the indexing service and wait for it to initialize.
-	require.NoError(self.T(), self.Sm.Start(indexing.StartIndexingService))
+	search.WaitForIndex()
 }
 
 // Make some clients in the index.
@@ -62,6 +66,8 @@ func (self *TestSuite) populatedClients() {
 }
 
 func (self *TestSuite) TestEnumerateIndex() {
+	self.populatedClients()
+
 	// Read all clients.
 	ctx := context.Background()
 	searched_clients := []string{}
@@ -71,7 +77,7 @@ func (self *TestSuite) TestEnumerateIndex() {
 			searched_clients = append(searched_clients, client_id)
 		}
 	}
-
+	assert.Equal(self.T(), len(self.clients), len(searched_clients))
 	assert.Equal(self.T(), self.clients, searched_clients)
 }
 
