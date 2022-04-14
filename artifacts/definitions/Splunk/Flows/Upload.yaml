@@ -43,10 +43,15 @@ parameters:
      description: |
       Index to ingest the data. This should be set up when configuring
       the event collector.
-   - name: SSL
+   - name: SkipVerify
      default: false
+     type: bool
      description: |
       SSL configured with the event collector. This is false by default.
+   - name: RootCerts
+     description: |
+       As a better alternative to skip_verify, allows root ca certs to
+       be added here.
 
 sources:
   - query: |
@@ -77,5 +82,6 @@ sources:
         url = url,
         token = token,
         index = index,
-        skip_verify = SSL
+        skip_verify = SkipVerify,
+        root_ca = RootCerts
         )

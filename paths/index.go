@@ -1,7 +1,9 @@
 package paths
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
@@ -33,6 +35,16 @@ func (self IndexPathManager) EnumerateTerms(term string) api.DSPathSpec {
 
 func (self IndexPathManager) Snapshot() api.FSPathSpec {
 	return CLIENT_INDEX_URN.AddChild("snapshot").
+		AsFilestorePath().
+		SetType(api.PATH_TYPE_FILESTORE_JSON)
+}
+
+func (self IndexPathManager) SnapshotTimed() api.FSPathSpec {
+	now := time.Now().UTC()
+	day_name := fmt.Sprintf("%d-%02d-%02d", now.Year(),
+		now.Month(), now.Day())
+
+	return CLIENT_INDEX_URN.AddChild("snapshots", day_name).
 		AsFilestorePath().
 		SetType(api.PATH_TYPE_FILESTORE_JSON)
 }

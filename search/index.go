@@ -42,9 +42,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type SearchOptions int
@@ -110,47 +112,54 @@ func NewIndexer() *Indexer {
 
 // Flush the indexer from memory to disk.
 func (self *Indexer) Flush(config_obj *config_proto.Config) error {
-
-	// Check if we need to flush the index, if not we can skip it.
-	self.mu.Lock()
-	if !self.dirty {
-		self.mu.Unlock()
-		return nil
-	}
-	self.dirty = false
-	self.mu.Unlock()
-
-	start := time.Now()
 	path_manager := paths.NewIndexPathManager()
-	file_store_factory := file_store.GetFileStore(config_obj)
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	dest := path_manager.Snapshot()
+	start := time.Now()
 
 	// We need to make sure the snapshot is always valid, so we write
 	// to a tmp file and then atomically move to its final place.
-	final_path_spec := path_manager.Snapshot()
-	tmp_path_spec := final_path_spec.SetType(api.PATH_TYPE_FILESTORE_TMP)
-
-	// When we finish writing the result set, move it to the final
-	// destination.
-	completion := func() {
-		err := file_store_factory.Move(tmp_path_spec, final_path_spec)
-		if err != nil {
-			logger.Error("Unable to update snapshot: %v", err)
-		} else {
-			logger.Debug("Flushed index in %v.", time.Now().Sub(start))
-		}
-	}
-
-	rs_writer, err := result_sets.NewResultSetWriter(
-		file_store_factory, tmp_path_spec, nil,
-		completion, result_sets.TruncateMode)
+	tmp_path_spec := dest.SetType(api.PATH_TYPE_FILESTORE_TMP)
+	err := self.WriteSnapshot(config_obj, tmp_path_spec)
 	if err != nil {
 		return err
 	}
-	defer rs_writer.Close()
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	file_store_factory := file_store.GetFileStore(config_obj)
+	err = file_store_factory.Move(tmp_path_spec, dest)
+	if err != nil {
+		logger.Error("Unable to update snapshot: %v", err)
+	} else {
+		logger.Debug("Flushed index in %v.", time.Now().Sub(start))
+	}
+
+	return nil
+}
+
+func (self *Indexer) WriteSnapshot(
+	config_obj *config_proto.Config, dest api.FSPathSpec) error {
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("Writing index on %v\n", dest.AsFilestoreFilename(config_obj))
+
+	// Check if we need to flush the index, if not we can skip it.
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if !self.dirty {
+		return nil
+	}
+	self.dirty = false
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	rs_writer, err := result_sets.NewResultSetWriter(
+		file_store_factory, dest, json.NoEncOpts,
+		utils.SyncCompleter, result_sets.TruncateMode)
+	if err != nil {
+		return err
+	}
 
 	// Just write them all down.
-	self.Ascend(func(i btree.Item) bool {
+	self.btree.Ascend(func(i btree.Item) bool {
 		record := i.(Record)
 		row := ordereddict.NewDict().
 			Set("Entity", record.Entity).
@@ -160,6 +169,8 @@ func (self *Indexer) Flush(config_obj *config_proto.Config) error {
 
 		return true
 	})
+
+	rs_writer.Close()
 
 	return nil
 }
@@ -212,72 +223,6 @@ func (self *Indexer) Delete(record Record) {
 	self.btree.Delete(record)
 	self.items--
 	metricLRUTotalTerms.Dec()
-}
-
-// Load all the client records slowly and rebuild the index.
-func (self *Indexer) LoadIndexFromDatastore(
-	ctx context.Context, config_obj *config_proto.Config) error {
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	children, err := db.ListChildren(config_obj, paths.CLIENTS_ROOT)
-	if err != nil {
-		return err
-	}
-
-	now := time.Now()
-	count := 0
-	for _, child := range children {
-		if child.IsDir() {
-			continue
-		}
-
-		client_id := child.Base()
-		if !strings.HasPrefix(client_id, "C.") {
-			continue
-		}
-
-		client_info, err := FastGetApiClient(ctx, config_obj, child.Base())
-		if err != nil {
-			continue
-		}
-
-		count++
-
-		// The all item corresponds to the "." search term.
-		indexer.Set(NewRecord(&api_proto.IndexRecord{
-			Term:   "all",
-			Entity: client_id,
-		}))
-
-		if client_info.OsInfo.Hostname != "" {
-			indexer.Set(NewRecord(&api_proto.IndexRecord{
-				Term:   "host:" + client_info.OsInfo.Hostname,
-				Entity: client_id,
-			}))
-		}
-
-		// Add labels to the index.
-		for _, label := range client_info.Labels {
-			indexer.Set(NewRecord(&api_proto.IndexRecord{
-				Term:   "label:" + strings.ToLower(label),
-				Entity: client_id,
-			}))
-		}
-	}
-
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Indexing service</> search index loaded %v items in %v",
-		count, time.Now().Sub(now))
-
-	self.mu.Lock()
-	self.ready = true
-	self.mu.Unlock()
-
-	return nil
 }
 
 // A much faster alternative - store all the client index in a single
@@ -405,23 +350,15 @@ func (self *Indexer) Load(
 // Set the index
 func SetIndex(
 	config_obj *config_proto.Config, client_id, term string) error {
-	path_manager := paths.NewIndexPathManager()
 	record := &api_proto.IndexRecord{
 		Term:   term,
 		Entity: client_id,
 	}
 
-	// Set in memory indexer
+	// Set in memory indexer - it will be flushed later.
 	indexer.Set(NewRecord(record))
 
-	// An also write to filesystem
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	path := path_manager.IndexTerm(term, client_id)
-	return db.SetSubjectWithCompletion(config_obj, path, record, nil)
+	return nil
 }
 
 // Write an index snapshot
