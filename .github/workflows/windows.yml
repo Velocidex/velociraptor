@@ -3,7 +3,7 @@ on: [pull_request]
 jobs:
   build:
     name: Windows Test
-    runs-on: windows-latest
+    runs-on: windows-2019
     steps:
     - name: Set up Go 1.17
       uses: actions/setup-go@v2

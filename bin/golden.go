@@ -35,6 +35,7 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/shirou/gopsutil/v3/process"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -94,7 +95,7 @@ func vqlCollectorArgsFromFixture(
 }
 
 func makeCtxWithTimeout(duration int) (context.Context, func()) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*180)
 
 	deadline := time.Now().Add(time.Second * time.Duration(duration))
 	fmt.Printf("Setting deadline to %v\n", deadline)
@@ -130,6 +131,12 @@ func makeCtxWithTimeout(duration int) (context.Context, func()) {
 				p = pprof.Lookup("mutex")
 				if p != nil {
 					_ = p.WriteTo(os.Stdout, 1)
+				}
+
+				// Write the recent queries.
+				fmt.Println("Recent Queries.")
+				for _, q := range actions.QueryLog.Get() {
+					fmt.Println(q)
 				}
 
 				os.Stdout.Close()

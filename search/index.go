@@ -464,6 +464,10 @@ func SearchIndexWithPrefix(
 	go func() {
 		defer close(output_chan)
 
+		// Take a local copy of all results to avoid having a lock on
+		// the search index.
+		results := []*Record{}
+
 		// Walk the btree and get all prefixes
 		indexer.AscendGreaterOrEqual(Record{
 			IndexTerm: prefix,
@@ -476,14 +480,18 @@ func SearchIndexWithPrefix(
 				return false
 			}
 
+			results = append(results, &record)
+			return true
+		})
+
+		for _, record := range results {
 			select {
 			case <-ctx.Done():
-				return false
+				return
 
 			case output_chan <- record.IndexRecord:
-				return true
 			}
-		})
+		}
 	}()
 
 	return output_chan
