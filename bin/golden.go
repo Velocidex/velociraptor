@@ -94,7 +94,7 @@ func vqlCollectorArgsFromFixture(
 }
 
 func makeCtxWithTimeout(duration int) (context.Context, func()) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*180)
 
 	deadline := time.Now().Add(time.Second * time.Duration(duration))
 	fmt.Printf("Setting deadline to %v\n", deadline)
