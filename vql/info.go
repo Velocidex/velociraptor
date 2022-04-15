@@ -45,6 +45,7 @@ func getInfo(host *host.InfoStat) *ordereddict.Dict {
 		Set("KernelVersion", host.KernelVersion).
 		Set("VirtualizationSystem", host.VirtualizationSystem).
 		Set("VirtualizationRole", host.VirtualizationRole).
+		Set("CompilerVersion", runtime.Version()).
 		Set("HostID", host.HostID).
 		Set("Exe", me).
 		Set("IsAdmin", IsAdmin())

@@ -1,4 +1,4 @@
-package search
+package indexing
 
 // Implement client searching
 
@@ -47,7 +47,7 @@ func splitIntoOperatorAndTerms(term string) (string, string) {
 
 // Get the recent clients viewed by the principal sorted in most
 // recently used order.
-func searchRecents(
+func (self *Indexer) searchRecents(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	in *api_proto.SearchClientsRequest,
@@ -83,7 +83,7 @@ func searchRecents(
 
 	for _, md := range metadata {
 		client_id := md.ClientId
-		api_client, err := FastGetApiClient(ctx, config_obj, client_id)
+		api_client, err := self.FastGetApiClient(ctx, config_obj, client_id)
 		if err != nil {
 			continue
 		}
@@ -110,7 +110,7 @@ func searchRecents(
 	return result, nil
 }
 
-func SearchClients(
+func (self *Indexer) SearchClients(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	in *api_proto.SearchClientsRequest,
@@ -124,30 +124,30 @@ func SearchClients(
 	operator, term := splitIntoOperatorAndTerms(in.Query)
 	switch operator {
 	case "label", "host", "all", "mac":
-		return searchClientIndex(ctx, config_obj, in, limit)
+		return self.searchClientIndex(ctx, config_obj, in, limit)
 
 	case "client":
 		in.Query = term
-		return searchClientIndex(ctx, config_obj, in, limit)
+		return self.searchClientIndex(ctx, config_obj, in, limit)
 
 	case "recent":
-		return searchRecents(ctx, config_obj, in, principal, term, limit)
+		return self.searchRecents(ctx, config_obj, in, principal, term, limit)
 
 	case "ip":
-		return searchLastIP(ctx, config_obj, in, term, limit)
+		return self.searchLastIP(ctx, config_obj, in, term, limit)
 
 	default:
-		return searchVerbs(ctx, config_obj, in, limit)
+		return self.searchVerbs(ctx, config_obj, in, limit)
 	}
 }
 
-func searchClientIndex(
+func (self *Indexer) searchClientIndex(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	in *api_proto.SearchClientsRequest,
 	limit uint64) (*api_proto.SearchClientsResponse, error) {
 
-	if !indexer.Ready() {
+	if !self.Ready() {
 		return nil, errors.New("Indexer not ready")
 	}
 
@@ -164,7 +164,7 @@ func searchClientIndex(
 
 	scope := vql_subsystem.MakeScope()
 	prefix, filter := splitSearchTermIntoPrefixAndFilter(scope, in.Query)
-	for hit := range SearchIndexWithPrefix(ctx, config_obj, prefix) {
+	for hit := range self.SearchIndexWithPrefix(ctx, config_obj, prefix) {
 		if hit == nil {
 			continue
 		}
@@ -193,7 +193,7 @@ func searchClientIndex(
 
 		switch options {
 		case OPTION_CLIENT_RECORDS:
-			api_client, err := FastGetApiClient(ctx, config_obj, hit.Entity)
+			api_client, err := self.FastGetApiClient(ctx, config_obj, hit.Entity)
 			if err != nil {
 				continue
 			}
@@ -224,7 +224,7 @@ func searchClientIndex(
 
 // Free form search term, try to fill in as many suggestions as
 // possible.
-func searchVerbs(ctx context.Context,
+func (self *Indexer) searchVerbs(ctx context.Context,
 	config_obj *config_proto.Config,
 	in *api_proto.SearchClientsRequest,
 	limit uint64) (*api_proto.SearchClientsResponse, error) {
@@ -241,7 +241,7 @@ func searchVerbs(ctx context.Context,
 
 	// Not a verb maybe a hostname
 	if uint64(len(terms)) < in.Limit {
-		res, err := searchClientIndex(ctx, config_obj,
+		res, err := self.searchClientIndex(ctx, config_obj,
 			&api_proto.SearchClientsRequest{
 				NameOnly: in.NameOnly,
 				Offset:   in.Offset,
@@ -256,7 +256,7 @@ func searchVerbs(ctx context.Context,
 	}
 
 	if uint64(len(terms)) < in.Limit {
-		res, err := searchClientIndex(ctx, config_obj,
+		res, err := self.searchClientIndex(ctx, config_obj,
 			&api_proto.SearchClientsRequest{
 				NameOnly: in.NameOnly,
 				Offset:   in.Offset,

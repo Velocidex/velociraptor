@@ -193,7 +193,9 @@ func customVerifyConnection(
 		Intermediates: x509.NewCertPool(),
 		Roots:         x509.NewCertPool(),
 	}
-	private_opts.Roots.AppendCertsFromPEM([]byte(config_obj.CaCertificate))
+	if config_obj != nil {
+		private_opts.Roots.AppendCertsFromPEM([]byte(config_obj.CaCertificate))
+	}
 
 	return func(conn tls.ConnectionState) error {
 		// Used to verify certs using public roots

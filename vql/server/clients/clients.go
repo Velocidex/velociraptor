@@ -27,8 +27,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/search"
-	vsearch "www.velocidex.com/golang/velociraptor/search"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -73,7 +72,13 @@ func (self ClientsPlugin) Call(
 
 		// If a client id is specified we do not need to search at all.
 		if arg.ClientId != "" {
-			api_client, err := vsearch.FastGetApiClient(
+			indexer, err := services.GetIndexer()
+			if err != nil {
+				scope.Log("clients: %v", err)
+				return
+			}
+
+			api_client, err := indexer.FastGetApiClient(
 				ctx, config_obj, arg.ClientId)
 			if err == nil {
 				select {
@@ -95,7 +100,13 @@ func (self ClientsPlugin) Call(
 			limit = 100000
 		}
 
-		search_chan, err := search.SearchClientsChan(ctx, scope,
+		indexer, err := services.GetIndexer()
+		if err != nil {
+			scope.Log("client_info: %s", err.Error())
+			return
+		}
+
+		search_chan, err := indexer.SearchClientsChan(ctx, scope,
 			config_obj, search_term, vql_subsystem.GetPrincipal(scope))
 		if err != nil {
 			scope.Log("clients: %v", err)
@@ -151,7 +162,13 @@ func (self *ClientInfoFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	api_client, err := search.FastGetApiClient(ctx,
+	indexer, err := services.GetIndexer()
+	if err != nil {
+		scope.Log("client_info: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	api_client, err := indexer.FastGetApiClient(ctx,
 		config_obj, arg.ClientId)
 	if err != nil {
 		scope.Log("client_info: %s", err.Error())

@@ -36,7 +36,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
-	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -248,6 +247,11 @@ func (self HuntResultsPlugin) Call(
 		}
 		defer rs_reader.Close()
 
+		indexer, err := services.GetIndexer()
+		if err != nil {
+			return
+		}
+
 		// Read each file and emit it with some extra columns
 		// for context.
 		for row := range rs_reader.Rows(ctx) {
@@ -257,7 +261,7 @@ func (self HuntResultsPlugin) Call(
 				continue
 			}
 
-			api_client, err := search.FastGetApiClient(ctx,
+			api_client, err := indexer.FastGetApiClient(ctx,
 				config_obj, participation_row.ClientId)
 			if err != nil {
 				scope.Log("hunt_results: %v", err)

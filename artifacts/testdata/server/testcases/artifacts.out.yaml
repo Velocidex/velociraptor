@@ -116,7 +116,7 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
  }
 ]SELECT * FROM test_read_logs() WHERE Log =~ "Unable to override built in artifact" LIMIT 1[
  {
-  "Log": "Velociraptor: artifact_set: Unable to override built in artifact\n"
+  "Log": "Velociraptor: artifact_set: Unable to override built in artifact Generic.Client.Info\n"
  }
 ]SELECT artifact_set(definition=patch( item=_value, merge=dict(name="Custom.Generic.Client.Info"))).name FROM items(item={ SELECT * FROM artifact_definitions(names="Generic.Client.Info") WHERE name =~ "Generic.Client.Info" })[
  {

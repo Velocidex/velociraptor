@@ -19,7 +19,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
@@ -95,9 +94,12 @@ func (self *HuntTestSuite) TestHuntManager() {
 		},
 		"System.Hunt.Participation", self.client_id, "")
 
+	indexer, err := services.GetIndexer()
+	assert.NoError(self.T(), err)
+
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated.
-		err = search.CheckSimpleIndex(self.ConfigObj, paths.HUNT_INDEX,
+		err = indexer.CheckSimpleIndex(self.ConfigObj, paths.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
 		if err != nil {
 			return false
@@ -171,9 +173,12 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "MyLabel")
 	assert.NoError(t, err)
 
+	indexer, err := services.GetIndexer()
+	assert.NoError(self.T(), err)
+
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we now run on it.
-		err := search.CheckSimpleIndex(self.ConfigObj, paths.HUNT_INDEX,
+		err := indexer.CheckSimpleIndex(self.ConfigObj, paths.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
 		return err == nil
 	})
@@ -232,10 +237,13 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 		},
 		"System.Hunt.Participation", self.client_id, "")
 
+	indexer, err := services.GetIndexer()
+	assert.NoError(self.T(), err)
+
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
-		err = search.CheckSimpleIndex(self.ConfigObj, paths.HUNT_INDEX,
+		err = indexer.CheckSimpleIndex(self.ConfigObj, paths.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
 		if err != nil {
 			return false
@@ -287,10 +295,13 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 		},
 		"System.Hunt.Participation", self.client_id, "")
 
+	indexer, err := services.GetIndexer()
+	assert.NoError(self.T(), err)
+
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
-		err = search.CheckSimpleIndex(self.ConfigObj, paths.HUNT_INDEX,
+		err = indexer.CheckSimpleIndex(self.ConfigObj, paths.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
 		if err != nil {
 			return false
@@ -355,10 +366,13 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 		},
 		"System.Hunt.Participation", self.client_id, "")
 
+	indexer, err := services.GetIndexer()
+	assert.NoError(t, err)
+
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
-		err = search.CheckSimpleIndex(self.ConfigObj, paths.HUNT_INDEX,
+		err = indexer.CheckSimpleIndex(self.ConfigObj, paths.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
 		if err != nil {
 			return false

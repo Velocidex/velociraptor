@@ -8,7 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/search"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 func maybeMigrateClientIndex(
@@ -33,6 +33,11 @@ func maybeMigrateClientIndex(
 
 	count := 0
 
+	indexer, err := services.GetIndexer()
+	if err != nil {
+		return err
+	}
+
 	// Migrate the old index to the new index.
 	err = datastore.Walk(config_obj, db, paths.CLIENT_INDEX_URN_DEPRECATED,
 		func(path api.DSPathSpec) error {
@@ -42,7 +47,7 @@ func maybeMigrateClientIndex(
 			if count%500 == 0 {
 				logger.Info("Converted %v index items to the new format", count)
 			}
-			return search.SetIndex(config_obj, client_id, term)
+			return indexer.SetIndex(client_id, term)
 		})
 
 	return err

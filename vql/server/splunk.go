@@ -52,7 +52,7 @@ type _SplunkPluginArgs struct {
 	Sourcetype string              `vfilter:"optional,field=sourcetype,doc=The sourcetype field for splunk. If not specified this will 'vql'"`
 	ChunkSize  int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
 	SkipVerify bool                `vfilter:"optional,field=skip_verify,doc=Skip SSL verification(default: False)."`
-	RootCerts  string              `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
+	RootCerts  string              `vfilter:"optional,field=root_ca,doc=As a better alternative to skip_verify, allows root ca certs to be added here."`
 	WaitTime   int64               `vfilter:"optional,field=wait_time,doc=Batch splunk upload this long (2 sec)."`
 }
 

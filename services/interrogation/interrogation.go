@@ -42,7 +42,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
-	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -188,11 +187,16 @@ func (self *EnrollmentService) ProcessEnrollment(
 		return err
 	}
 
+	indexer, err := services.GetIndexer()
+	if err != nil {
+		return err
+	}
+
 	for _, term := range []string{
 		"all", // This is used for "." search
 		client_id,
 	} {
-		err = search.SetIndex(config_obj, client_id, term)
+		err = indexer.SetIndex(client_id, term)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 			logger.Error("Unable to set index: %v", err)
@@ -313,9 +317,14 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 		}
 	}
 
+	indexer, err := services.GetIndexer()
+	if err != nil {
+		return err
+	}
+
 	// Add MAC addresses to the index.
 	for _, mac := range client_info.MacAddresses {
-		err := search.SetIndex(config_obj, client_id, "mac:"+mac)
+		err := indexer.SetIndex(client_id, "mac:"+mac)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 			logger.Error("Unable to set index: %v", err)
@@ -327,7 +336,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	for _, term := range []string{
 		"host:" + client_info.Fqdn,
 		"host:" + client_info.Hostname} {
-		err := search.SetIndex(config_obj, client_id, term)
+		err := indexer.SetIndex(client_id, term)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 			logger.Error("Unable to set index: %v", err)

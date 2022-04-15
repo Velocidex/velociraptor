@@ -1,4 +1,4 @@
-package search
+package indexing
 
 // Implement client searching with channel based API
 
@@ -18,7 +18,7 @@ import (
 
 // Get the recent clients viewed by the principal sorted in most
 // recently used order.
-func searchRecentsChan(
+func (self *Indexer) searchRecentsChan(
 	ctx context.Context,
 	scope vfilter.Scope,
 	config_obj *config_proto.Config,
@@ -44,7 +44,7 @@ func searchRecentsChan(
 		// Sort the children in reverse order - most recent first.
 		for i := len(children) - 1; i >= 0; i-- {
 			client_id := children[i].Base()
-			api_client, err := FastGetApiClient(
+			api_client, err := self.FastGetApiClient(
 				ctx, config_obj, client_id)
 			if err != nil {
 				continue
@@ -62,7 +62,7 @@ func searchRecentsChan(
 	return output_chan, nil
 }
 
-func SearchClientsChan(
+func (self *Indexer) SearchClientsChan(
 	ctx context.Context,
 	scope vfilter.Scope,
 	config_obj *config_proto.Config,
@@ -72,23 +72,23 @@ func SearchClientsChan(
 	switch operator {
 	case "label", "host", "all", "mac":
 		// Include the operator in these search terms
-		return searchClientIndexChan(ctx, scope, config_obj, search_term)
+		return self.searchClientIndexChan(ctx, scope, config_obj, search_term)
 
 	case "client":
-		return searchClientIndexChan(ctx, scope, config_obj, term)
+		return self.searchClientIndexChan(ctx, scope, config_obj, term)
 
 	case "":
-		return searchClientIndexChan(ctx, scope, config_obj, "host:"+term)
+		return self.searchClientIndexChan(ctx, scope, config_obj, "host:"+term)
 
 	case "recent":
-		return searchRecentsChan(ctx, scope, config_obj, principal)
+		return self.searchRecentsChan(ctx, scope, config_obj, principal)
 
 	default:
 		return nil, errors.New("Invalid search operator " + operator)
 	}
 }
 
-func searchClientIndexChan(
+func (self *Indexer) searchClientIndexChan(
 	ctx context.Context,
 	scope vfilter.Scope,
 	config_obj *config_proto.Config,
@@ -107,7 +107,7 @@ func searchClientIndexChan(
 
 		// Microseconds
 		seen := make(map[string]bool)
-		for hit := range SearchIndexWithPrefix(ctx, config_obj, prefix) {
+		for hit := range self.SearchIndexWithPrefix(ctx, config_obj, prefix) {
 			if hit == nil {
 				continue
 			}
@@ -127,7 +127,7 @@ func searchClientIndexChan(
 			}
 			seen[client_id] = true
 
-			api_client, err := FastGetApiClient(ctx, config_obj, client_id)
+			api_client, err := self.FastGetApiClient(ctx, config_obj, client_id)
 			if err != nil {
 				continue
 			}

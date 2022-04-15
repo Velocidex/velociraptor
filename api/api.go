@@ -56,7 +56,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
@@ -253,7 +252,12 @@ func (self *ApiServer) ListClients(
 			"User is not allowed to view clients.")
 	}
 
-	result, err := search.SearchClients(ctx, self.config, in, user_name)
+	indexer, err := services.GetIndexer()
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := indexer.SearchClients(ctx, self.config, in, user_name)
 	if err != nil {
 		return nil, err
 	}

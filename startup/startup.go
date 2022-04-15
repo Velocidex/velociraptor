@@ -53,6 +53,7 @@ func getServerServices(config_obj *config_proto.Config) *config_proto.ServerServ
 			ApiServer:         true,
 			FrontendServer:    true,
 			GuiServer:         true,
+			IndexServer:       true,
 		}
 	}
 

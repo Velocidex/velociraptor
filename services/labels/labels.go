@@ -14,7 +14,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -229,8 +228,13 @@ func (self *Labeler) SetClientLabel(
 		return err
 	}
 
-	// Also adjust the index so client searches work.
-	return search.SetIndex(config_obj, client_id, "label:"+new_label)
+	// Also adjust the index so client searches work. If there is no
+	// indexing services it is not an error.
+	indexer, err := services.GetIndexer()
+	if err == nil {
+		return indexer.SetIndex(client_id, "label:"+new_label)
+	}
+	return nil
 }
 
 func (self *Labeler) RemoveClientLabel(
@@ -279,7 +283,12 @@ func (self *Labeler) RemoveClientLabel(
 	}
 
 	// Also adjust the index.
-	return search.UnsetIndex(config_obj, client_id, "label:"+new_label)
+	indexer, err := services.GetIndexer()
+	if err != nil {
+		return err
+	}
+
+	return indexer.UnsetIndex(client_id, "label:"+new_label)
 }
 
 func (self *Labeler) GetClientLabels(

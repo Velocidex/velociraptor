@@ -1,4 +1,4 @@
-package search_test
+package indexing_test
 
 import (
 	"context"
@@ -8,12 +8,13 @@ import (
 	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/search"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 func (self *TestSuite) TestWildCardSearch() {
-	self.populatedClients()
+	indexer, err := services.GetIndexer()
+	assert.NoError(self.T(), err)
 
 	// Read all clients.
 	results := ordereddict.NewDict()
@@ -26,7 +27,7 @@ func (self *TestSuite) TestWildCardSearch() {
 		ctx := context.Background()
 		scope := vql_subsystem.MakeScope()
 		searched_clients := []string{}
-		search_chan, err := search.SearchClientsChan(
+		search_chan, err := indexer.SearchClientsChan(
 			ctx, scope, self.ConfigObj, search_term, "")
 		assert.NoError(self.T(), err)
 
@@ -43,13 +44,14 @@ func (self *TestSuite) TestWildCardSearch() {
 }
 
 func (self *TestSuite) TestPrefixSearch() {
-	self.populatedClients()
+	indexer, err := services.GetIndexer()
+	assert.NoError(self.T(), err)
 
 	// Read all clients.
 	prefix := "C.0230300330"
 	ctx := context.Background()
 	searched_clients := []string{}
-	for hit := range search.SearchIndexWithPrefix(ctx, self.ConfigObj, prefix) {
+	for hit := range indexer.SearchIndexWithPrefix(ctx, self.ConfigObj, prefix) {
 		if hit != nil {
 			client_id := hit.Entity
 			searched_clients = append(searched_clients, client_id)

@@ -33,7 +33,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -102,15 +101,20 @@ func (self *ApiServer) GetClient(
 			"User is not allowed to view clients.")
 	}
 
+	indexer, err := services.GetIndexer()
+	if err != nil {
+		return nil, err
+	}
+
 	// Update the user's MRU
 	if in.UpdateMru {
-		err = search.UpdateMRU(self.config, user_name, in.ClientId)
+		err = indexer.UpdateMRU(self.config, user_name, in.ClientId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	api_client, err := search.FastGetApiClient(ctx, self.config, in.ClientId)
+	api_client, err := indexer.FastGetApiClient(ctx, self.config, in.ClientId)
 	if err != nil {
 		return nil, err
 	}

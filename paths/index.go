@@ -1,7 +1,9 @@
 package paths
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
@@ -35,6 +37,19 @@ func (self IndexPathManager) Snapshot() api.FSPathSpec {
 	return CLIENT_INDEX_URN.AddChild("snapshot").
 		AsFilestorePath().
 		SetType(api.PATH_TYPE_FILESTORE_JSON)
+}
+
+func (self IndexPathManager) SnapshotTimed() api.FSPathSpec {
+	day_name := fmt.Sprintf("%d", time.Now().Unix())
+	return CLIENT_INDEX_URN.AddChild("snapshots", day_name).
+		AsFilestorePath().
+		SetType(api.PATH_TYPE_FILESTORE_JSON)
+}
+
+func (self IndexPathManager) SnapshotDirectory() api.FSPathSpec {
+	return CLIENT_INDEX_URN.AddChild("snapshots").
+		AsFilestorePath().
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
 func (self IndexPathManager) TermPartitions(term string) []string {

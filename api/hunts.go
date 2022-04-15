@@ -18,7 +18,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
-	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -271,6 +270,11 @@ func (self *ApiServer) EstimateHunt(
 		return nil, err
 	}
 
+	indexer, err := services.GetIndexer()
+	if err != nil {
+		return nil, err
+	}
+
 	now := uint64(time.Now().UnixNano() / 1000)
 
 	is_client_recent := func(client_id string, seen map[string]bool) {
@@ -293,7 +297,7 @@ func (self *ApiServer) EstimateHunt(
 			// has any of the labels set, it will be scheduled.
 			seen := make(map[string]bool)
 			for _, label := range labels.Label {
-				for entity := range search.SearchIndexWithPrefix(
+				for entity := range indexer.SearchIndexWithPrefix(
 					ctx, self.config, "label:"+label) {
 					is_client_recent(entity.Entity, seen)
 				}
@@ -302,7 +306,7 @@ func (self *ApiServer) EstimateHunt(
 			// Remove any excluded labels.
 			if in.Condition.ExcludedLabels != nil {
 				for _, label := range in.Condition.ExcludedLabels.Label {
-					for entity := range search.SearchIndexWithPrefix(
+					for entity := range indexer.SearchIndexWithPrefix(
 						ctx, self.config, "label:"+label) {
 						delete(seen, entity.Entity)
 					}
@@ -333,7 +337,7 @@ func (self *ApiServer) EstimateHunt(
 				return nil, err
 			}
 
-			for hit := range search.SearchIndexWithPrefix(ctx,
+			for hit := range indexer.SearchIndexWithPrefix(ctx,
 				self.config, "all") {
 				client_id := hit.Entity
 				client_info, err := client_info_manager.Get(client_id)
@@ -347,7 +351,7 @@ func (self *ApiServer) EstimateHunt(
 			// Remove any excluded labels.
 			if in.Condition.ExcludedLabels != nil {
 				for _, label := range in.Condition.ExcludedLabels.Label {
-					for entity := range search.SearchIndexWithPrefix(
+					for entity := range indexer.SearchIndexWithPrefix(
 						ctx, self.config, "label:"+label) {
 						delete(seen, entity.Entity)
 					}
@@ -361,14 +365,14 @@ func (self *ApiServer) EstimateHunt(
 
 		// No condition, just count all the clients.
 		seen := make(map[string]bool)
-		for hit := range search.SearchIndexWithPrefix(ctx, self.config, "all") {
+		for hit := range indexer.SearchIndexWithPrefix(ctx, self.config, "all") {
 			is_client_recent(hit.Entity, seen)
 		}
 
 		// Remove any excluded labels.
 		if in.Condition.ExcludedLabels != nil {
 			for _, label := range in.Condition.ExcludedLabels.Label {
-				for entity := range search.SearchIndexWithPrefix(
+				for entity := range indexer.SearchIndexWithPrefix(
 					ctx, self.config, "label:"+label) {
 					delete(seen, entity.Entity)
 				}
@@ -382,7 +386,7 @@ func (self *ApiServer) EstimateHunt(
 
 	// No condition, just count all the clients.
 	seen := make(map[string]bool)
-	for hit := range search.SearchIndexWithPrefix(ctx, self.config, "all") {
+	for hit := range indexer.SearchIndexWithPrefix(ctx, self.config, "all") {
 		is_client_recent(hit.Entity, seen)
 	}
 

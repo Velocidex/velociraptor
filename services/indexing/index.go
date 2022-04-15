@@ -1,7 +1,7 @@
 // Index a client
 
 // Indexing a client helps us to quickly locate the client using a
-// search term. For a good index we need to following attributes:
+// search term. For a good index we need the following attributes:
 
 // 1. Quickly recovering a record by searching for an exact term. For
 //    example, indexing a client id by label means we need to quickly
@@ -11,20 +11,30 @@
 //    enumerates all clients that are indexed by a term starting with
 //    that.
 
-// We index the client using the filesystem - by creating a file
-// containing a record, we can retrieve it using the search term. We
-// use an index path manager to generate a path where we can store the
-// records.
+// In previous versions we indexed the client using the
+// filesystem. However this proved too slow for networked
+// filesystems. We therefore maintain a btree in memory of index
+// terms. We dump the btree into disk periodically called a
+// Snapshot. Reading and writing the snapshot is quite fast.
 
-// var index_root IndexPathManager
-// record_path := index_root.IndexTerm(term, client_id)
-// db.SetSubject(config_obj, record_path, record)
+// The master node is responsible for maintaining the snapshot in sync
+// - While the snapshot may be read by any node, the master is the
+// only node that is allowed to write it.
 
-// We can then retrieve the record using the search term:
-// record_directories := index_root.EnumerateTerms(term)
-// results := ... walk(record_directories)
+// It is possible to rebuild the index but for large deplyments this
+// is recommended to be done by an external process due to the
+// additional load this generates on the master node. The command:
 
-package search
+// velociraptor index rebuild
+
+// Will create a timestamped snapshot by rescanning all client records
+// in the filestore (for > 100k clients on EFS, this can take a long
+// time!)
+
+// The master node will realize a new snapshot is present and reload
+// it.
+
+package indexing
 
 import (
 	"context"
@@ -39,12 +49,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type SearchOptions int
@@ -59,8 +71,6 @@ const (
 
 var (
 	stopIteration = errors.New("stopIteration")
-
-	indexer = NewIndexer()
 
 	metricLRUTotalTerms = promauto.NewGauge(
 		prometheus.GaugeOpts{
@@ -100,6 +110,8 @@ type Indexer struct {
 
 	ready bool
 	dirty bool
+
+	last_snapshot_read time.Time
 }
 
 func NewIndexer() *Indexer {
@@ -108,49 +120,86 @@ func NewIndexer() *Indexer {
 	}
 }
 
-// Flush the indexer from memory to disk.
-func (self *Indexer) Flush(config_obj *config_proto.Config) error {
+func (self *Indexer) ItemCount() int {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.items
+}
+
+func (self *Indexer) IsReady() bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.ready
+}
+
+// Check for newer snapshot files we need to load.
+// You can create a new snapshot using "velociraptor index rebuild"
+func (self *Indexer) ScanForNewSnapshots(
+	ctx context.Context,
+	config_obj *config_proto.Config) error {
+	path_manager := paths.NewIndexPathManager()
+	file_store_factory := file_store.GetFileStore(config_obj)
+	children, err := file_store_factory.ListDirectory(
+		path_manager.SnapshotDirectory())
+	if err != nil {
+		return err
+	}
+
+	for _, child := range children {
+		int_value, ok := utils.ToInt64(child.Name())
+		if !ok {
+			continue
+		}
+
+		timestamp := time.Unix(int_value, 0)
+		if timestamp.After(self.last_snapshot_read) {
+			// Reload the index.
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Info("Reloading index snapshot %v",
+				child.PathSpec().AsClientPath())
+			return self.LoadSnapshot(ctx, config_obj, child.PathSpec())
+		}
+	}
+	return nil
+}
+
+func (self *Indexer) WriteSnapshot(
+	config_obj *config_proto.Config, dest api.FSPathSpec) error {
 
 	// Check if we need to flush the index, if not we can skip it.
 	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Only write the snapshot if we need to.
 	if !self.dirty {
-		self.mu.Unlock()
 		return nil
 	}
 	self.dirty = false
-	self.mu.Unlock()
 
-	start := time.Now()
-	path_manager := paths.NewIndexPathManager()
+	now := time.Now()
+
+	defer func() {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Debug("<green>Indexing Service</>: Wrote index on %v in %v\n",
+			dest.AsFilestoreFilename(config_obj),
+			time.Now().Sub(now))
+	}()
+
+	// Write the snapshot syncronously to make sure it hits the
+	// disk. Usually it is pretty quick.
 	file_store_factory := file_store.GetFileStore(config_obj)
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-
-	// We need to make sure the snapshot is always valid, so we write
-	// to a tmp file and then atomically move to its final place.
-	final_path_spec := path_manager.Snapshot()
-	tmp_path_spec := final_path_spec.SetType(api.PATH_TYPE_FILESTORE_TMP)
-
-	// When we finish writing the result set, move it to the final
-	// destination.
-	completion := func() {
-		err := file_store_factory.Move(tmp_path_spec, final_path_spec)
-		if err != nil {
-			logger.Error("Unable to update snapshot: %v", err)
-		} else {
-			logger.Debug("Flushed index in %v.", time.Now().Sub(start))
-		}
-	}
-
 	rs_writer, err := result_sets.NewResultSetWriter(
-		file_store_factory, tmp_path_spec, nil,
-		completion, result_sets.TruncateMode)
+		file_store_factory, dest, json.NoEncOpts,
+		utils.SyncCompleter, result_sets.TruncateMode)
 	if err != nil {
 		return err
 	}
 	defer rs_writer.Close()
 
 	// Just write them all down.
-	self.Ascend(func(i btree.Item) bool {
+	self.btree.Ascend(func(i btree.Item) bool {
 		record := i.(Record)
 		row := ordereddict.NewDict().
 			Set("Entity", record.Entity).
@@ -160,7 +209,6 @@ func (self *Indexer) Flush(config_obj *config_proto.Config) error {
 
 		return true
 	})
-
 	return nil
 }
 
@@ -193,104 +241,26 @@ func (self *Indexer) Ascend(iterator btree.ItemIterator) {
 	self.btree.Ascend(iterator)
 }
 
-func (self *Indexer) Set(record Record) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	old := self.btree.ReplaceOrInsert(record)
-	if old == nil {
-		self.items++
-		self.dirty = true
-	}
-	metricLRUTotalTerms.Inc()
-}
-
-func (self *Indexer) Delete(record Record) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	self.btree.Delete(record)
-	self.items--
-	metricLRUTotalTerms.Dec()
-}
-
-// Load all the client records slowly and rebuild the index.
-func (self *Indexer) LoadIndexFromDatastore(
-	ctx context.Context, config_obj *config_proto.Config) error {
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	children, err := db.ListChildren(config_obj, paths.CLIENTS_ROOT)
-	if err != nil {
-		return err
-	}
-
-	now := time.Now()
-	count := 0
-	for _, child := range children {
-		if child.IsDir() {
-			continue
-		}
-
-		client_id := child.Base()
-		if !strings.HasPrefix(client_id, "C.") {
-			continue
-		}
-
-		client_info, err := FastGetApiClient(ctx, config_obj, child.Base())
-		if err != nil {
-			continue
-		}
-
-		count++
-
-		// The all item corresponds to the "." search term.
-		indexer.Set(NewRecord(&api_proto.IndexRecord{
-			Term:   "all",
-			Entity: client_id,
-		}))
-
-		if client_info.OsInfo.Hostname != "" {
-			indexer.Set(NewRecord(&api_proto.IndexRecord{
-				Term:   "host:" + client_info.OsInfo.Hostname,
-				Entity: client_id,
-			}))
-		}
-
-		// Add labels to the index.
-		for _, label := range client_info.Labels {
-			indexer.Set(NewRecord(&api_proto.IndexRecord{
-				Term:   "label:" + strings.ToLower(label),
-				Entity: client_id,
-			}))
-		}
-	}
-
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Indexing service</> search index loaded %v items in %v",
-		count, time.Now().Sub(now))
-
-	self.mu.Lock()
-	self.ready = true
-	self.mu.Unlock()
-
-	return nil
-}
-
 // A much faster alternative - store all the client index in a single
 // file and read it at once.
 func (self *Indexer) LoadIndexFromSnapshot(
 	ctx context.Context,
 	config_obj *config_proto.Config) error {
 
-	start := time.Now()
 	path_manager := paths.NewIndexPathManager()
+	return self.LoadSnapshot(ctx, config_obj, path_manager.Snapshot())
+}
+
+func (self *Indexer) LoadSnapshot(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	pathspec api.FSPathSpec) error {
+
+	self.last_snapshot_read = time.Now()
+
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_reader, err := result_sets.NewResultSetReader(
-		file_store_factory, path_manager.Snapshot())
+		file_store_factory, pathspec)
 	if err != nil {
 		return err
 	}
@@ -317,15 +287,8 @@ func (self *Indexer) LoadIndexFromSnapshot(
 
 		// We should be able to search for the client by client id
 		// directly.
-		self.Set(NewRecord(&api_proto.IndexRecord{
-			Term:   entity,
-			Entity: entity,
-		}))
-
-		self.Set(NewRecord(&api_proto.IndexRecord{
-			Term:   term,
-			Entity: entity,
-		}))
+		self.SetIndex(entity, entity)
+		self.SetIndex(entity, term)
 		count++
 	}
 
@@ -335,7 +298,7 @@ func (self *Indexer) LoadIndexFromSnapshot(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Loaded index from snapshot</> in %v\n",
-		time.Now().Sub(start))
+		time.Now().Sub(self.last_snapshot_read))
 
 	self.mu.Lock()
 	self.ready = true
@@ -344,15 +307,15 @@ func (self *Indexer) LoadIndexFromSnapshot(
 	go func() {
 		for c := range clients {
 			// Get the full record to warm up all client attributes.
-			_, _ = FastGetApiClient(ctx, config_obj, c)
+			_, _ = self.FastGetApiClient(ctx, config_obj, c)
 		}
 	}()
 
 	return nil
 }
 
-func (self *Indexer) Load(
-	ctx context.Context,
+func (self *Indexer) Start(
+	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) {
 
 	// Loading from the snapshot is very fast, so we do this inline.
@@ -360,16 +323,16 @@ func (self *Indexer) Load(
 	if err != nil {
 		// If the snapshot is missing, we load from the directory and
 		// this can be very slow on EFS so we do it in the background.
+		wg.Add(1)
 		go func() {
-			err := self.LoadIndexFromDatastore(ctx, config_obj)
-			if err == nil {
-				self.Flush(config_obj)
-			}
+			defer wg.Done()
+
+			self.LoadIndexFromDatastore(ctx, config_obj)
 		}()
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	snapshot_wait := 600 * time.Second
+	snapshot_wait := 60 * time.Second
 	if config_obj.Frontend != nil &&
 		config_obj.Frontend.Resources != nil &&
 		config_obj.Frontend.Resources.IndexSnapshotFrequency > 0 {
@@ -377,83 +340,72 @@ func (self *Indexer) Load(
 			IndexSnapshotFrequency) * time.Second
 	}
 
-	// Now flush the index periodically
+	// Check for newer snapshots periodically.
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
+
 		for {
+			err := self.ScanForNewSnapshots(ctx, config_obj)
+			if err != nil {
+				logger.Error("ScanForNewSnapshots: %v", err)
+			}
+
 			select {
 			case <-ctx.Done():
+				// When we are done, force a snapshot to be written.
+				self.WriteSnapshot(
+					config_obj, paths.NewIndexPathManager().Snapshot())
 				return
 
 			case <-time.After(snapshot_wait):
-				err := self.LoadIndexFromDatastore(ctx, config_obj)
-				if err != nil {
-					logger.Error("LoadIndexFromDatastore: %v", err)
-					continue
-				}
-
-				// Write a snapshot
-				err = self.Flush(config_obj)
-				if err != nil {
-					logger.Info("Flushing index error: %v", err)
-				}
+				// Write the snapshot if needed (this is noop if the
+				// indexer is not dirty).
+				self.WriteSnapshot(
+					config_obj, paths.NewIndexPathManager().Snapshot())
 			}
 		}
 	}()
-
 }
 
-// Set the index
-func SetIndex(
-	config_obj *config_proto.Config, client_id, term string) error {
-	path_manager := paths.NewIndexPathManager()
-	record := &api_proto.IndexRecord{
+// Set in memory indexer - it will be flushed later.
+func (self *Indexer) SetIndex(client_id, term string) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	record := NewRecord(&api_proto.IndexRecord{
 		Term:   term,
 		Entity: client_id,
+	})
+
+	old := self.btree.ReplaceOrInsert(record)
+	if old == nil {
+		self.items++
+		self.dirty = true
 	}
-
-	// Set in memory indexer
-	indexer.Set(NewRecord(record))
-
-	// An also write to filesystem
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	path := path_manager.IndexTerm(term, client_id)
-	return db.SetSubjectWithCompletion(config_obj, path, record, nil)
+	metricLRUTotalTerms.Inc()
+	return nil
 }
 
-// Write an index snapshot
-func SnapshotIndex(config_obj *config_proto.Config) error {
-	return indexer.Flush(config_obj)
-}
+// Remove from memory indexer
+func (self *Indexer) UnsetIndex(client_id, term string) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
-func UnsetIndex(
-	config_obj *config_proto.Config, client_id, term string) error {
-
-	record := &api_proto.IndexRecord{
+	record := NewRecord(&api_proto.IndexRecord{
 		Term:   term,
 		Entity: client_id,
-	}
+	})
 
-	// Remove from memory indexer
-	indexer.Delete(NewRecord(record))
+	self.btree.Delete(record)
+	self.items--
+	metricLRUTotalTerms.Dec()
 
-	// Also remove from file store
-	path_manager := paths.NewIndexPathManager()
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	path := path_manager.IndexTerm(term, client_id)
-	_ = db.DeleteSubject(config_obj, path)
 	return nil
 }
 
 // Returns all the clients that match the term
-func SearchIndexWithPrefix(
+func (self *Indexer) SearchIndexWithPrefix(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	prefix string) <-chan *api_proto.IndexRecord {
@@ -469,7 +421,7 @@ func SearchIndexWithPrefix(
 		results := []*Record{}
 
 		// Walk the btree and get all prefixes
-		indexer.AscendGreaterOrEqual(Record{
+		self.AscendGreaterOrEqual(Record{
 			IndexTerm: prefix,
 		}, func(i btree.Item) bool {
 			record := i.(Record)
@@ -497,16 +449,16 @@ func SearchIndexWithPrefix(
 	return output_chan
 }
 
-// Loads the index lru
-func LoadIndex(
-	ctx context.Context,
-	wg *sync.WaitGroup, config_obj *config_proto.Config) {
+func StartIndexingService(ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
 
-	indexer.Load(ctx, config_obj)
-}
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("<green>Starting</> Indexing Service.")
 
-func WaitForIndex() {
-	for !indexer.Ready() {
-		time.Sleep(100 * time.Millisecond)
-	}
+	indexer := NewIndexer()
+	indexer.Start(ctx, wg, config_obj)
+
+	services.RegisterIndexer(indexer)
+
+	return nil
 }
