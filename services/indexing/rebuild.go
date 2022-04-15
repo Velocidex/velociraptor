@@ -1,11 +1,10 @@
-package search
+package indexing
 
 import (
 	"context"
 	"strings"
 	"time"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -18,9 +17,8 @@ import (
 func (self *Indexer) LoadIndexFromDatastore(
 	ctx context.Context, config_obj *config_proto.Config) error {
 
-	// Building takes a long time so we just build into a temp indexer
-	// then swap the btree over.
-	indexer := NewIndexer()
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("<green>Indexing Service</>: Rebuilding Full index from filestore - this can take a while.")
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -44,7 +42,7 @@ func (self *Indexer) LoadIndexFromDatastore(
 			continue
 		}
 
-		client_info, err := FastGetApiClient(ctx, config_obj, child.Base())
+		client_info, err := self.FastGetApiClient(ctx, config_obj, child.Base())
 		if err != nil {
 			continue
 		}
@@ -52,45 +50,31 @@ func (self *Indexer) LoadIndexFromDatastore(
 		count++
 
 		// The all item corresponds to the "." search term.
-		indexer.Set(NewRecord(&api_proto.IndexRecord{
-			Term:   "all",
-			Entity: client_id,
-		}))
+		self.SetIndex(client_id, "all")
 
 		if client_info.OsInfo.Hostname != "" {
-			indexer.Set(NewRecord(&api_proto.IndexRecord{
-				Term:   "host:" + client_info.OsInfo.Hostname,
-				Entity: client_id,
-			}))
+			self.SetIndex(client_id, "host:"+client_info.OsInfo.Hostname)
 		}
 
 		// Add labels to the index.
 		for _, label := range client_info.Labels {
-			indexer.Set(NewRecord(&api_proto.IndexRecord{
-				Term:   "label:" + strings.ToLower(label),
-				Entity: client_id,
-			}))
+			self.SetIndex(client_id, "label:"+strings.ToLower(label))
 		}
 
 		// Add MAC addresses to the index.
 		if client_info.OsInfo != nil {
 			for _, mac := range client_info.OsInfo.MacAddresses {
-				indexer.Set(NewRecord(&api_proto.IndexRecord{
-					Entity: client_id,
-					Term:   "mac:" + mac,
-				}))
+				self.SetIndex(client_id, "mac:"+mac)
 			}
 		}
 	}
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Indexing service</> search index loaded %v items in %v",
 		count, time.Now().Sub(now))
 
-	// Merge the new index quickly
+	// Merge the new index quickly and mark ourselves as ready.
 	self.mu.Lock()
 	self.ready = true
-	self.btree = indexer.btree
 	self.dirty = true
 	self.mu.Unlock()
 

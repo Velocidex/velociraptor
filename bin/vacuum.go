@@ -17,7 +17,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
@@ -129,10 +128,15 @@ func generateTasks(
 	}
 	_ = client_info_manager
 
+	indexer, err := services.GetIndexer()
+	if err != nil {
+		return err
+	}
+
 	scope := vql_subsystem.MakeScope()
 
 	// Get all the clients from the index.
-	client_chan, err := search.SearchClientsChan(ctx, scope, config_obj, "C.", "")
+	client_chan, err := indexer.SearchClientsChan(ctx, scope, config_obj, "C.", "")
 	if err != nil {
 		return err
 	}
@@ -168,13 +172,18 @@ func deleteTasks(
 		return err
 	}
 
+	indexer, err := services.GetIndexer()
+	if err != nil {
+		return err
+	}
+
 	scope := vql_subsystem.MakeScope()
 
 	sub_ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	// Get all the clients from the index.
-	client_chan, err := search.SearchClientsChan(
+	client_chan, err := indexer.SearchClientsChan(
 		sub_ctx, scope, config_obj, "all", "")
 	if err != nil {
 		return err

@@ -1,4 +1,4 @@
-package search
+package indexing
 
 import (
 	"time"
@@ -9,7 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 )
 
-func UpdateMRU(
+func (self *Indexer) UpdateMRU(
 	config_obj *config_proto.Config,
 	user_name string, client_id string) error {
 	path_manager := &paths.UserPathManager{user_name}

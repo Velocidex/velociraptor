@@ -12,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/search"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -149,7 +148,12 @@ func reallyDeleteClient(ctx context.Context,
 	config_obj *config_proto.Config, scope vfilter.Scope,
 	db datastore.DataStore, arg *DeleteClientArgs) error {
 
-	client_info, err := search.FastGetApiClient(ctx,
+	indexer, err := services.GetIndexer()
+	if err != nil {
+		return err
+	}
+
+	client_info, err := indexer.FastGetApiClient(ctx,
 		config_obj, arg.ClientId)
 	if err != nil {
 		return err
@@ -178,7 +182,7 @@ func reallyDeleteClient(ctx context.Context,
 		keywords = append(keywords, "host:"+client_info.OsInfo.Fqdn)
 	}
 	for _, keyword := range keywords {
-		err = search.UnsetIndex(config_obj, arg.ClientId, keyword)
+		err = indexer.UnsetIndex(arg.ClientId, keyword)
 		if err != nil && errors.Is(err, os.ErrNotExist) {
 			return err
 		}

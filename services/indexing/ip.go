@@ -1,4 +1,4 @@
-package search
+package indexing
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
-func searchLastIP(
+func (self *Indexer) searchLastIP(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	in *api_proto.SearchClientsRequest,
@@ -28,7 +28,7 @@ func searchLastIP(
 	scope := vql_subsystem.MakeScope()
 	prefix, filter := splitSearchTermIntoPrefixAndFilter(scope, term)
 
-	search_chan, err := SearchClientsChan(ctx, scope, config_obj, "all", "")
+	search_chan, err := self.SearchClientsChan(ctx, scope, config_obj, "all", "")
 	if err != nil {
 		return nil, err
 	}

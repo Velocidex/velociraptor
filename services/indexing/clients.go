@@ -1,4 +1,4 @@
-package search
+package indexing
 
 import (
 	"context"
@@ -94,7 +94,7 @@ func GetApiClient(
 // most up to date information but does contain the latest ping
 // data. This is mostly used to display the results from the search
 // screen.
-func FastGetApiClient(
+func (self *Indexer) FastGetApiClient(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string) (*api_proto.ApiClient, error) {

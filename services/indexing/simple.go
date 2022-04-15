@@ -1,4 +1,4 @@
-package search
+package indexing
 
 import (
 	"errors"
@@ -18,7 +18,7 @@ import (
 
 // Update the posting list index. Searching for any of the
 // keywords will return the entity urn.
-func SetSimpleIndex(
+func (self *Indexer) SetSimpleIndex(
 	config_obj *config_proto.Config,
 	index_urn api.DSPathSpec,
 	entity string,
@@ -43,7 +43,7 @@ func SetSimpleIndex(
 	return nil
 }
 
-func UnsetSimpleIndex(
+func (self *Indexer) UnsetSimpleIndex(
 	config_obj *config_proto.Config,
 	index_urn api.DSPathSpec,
 	entity string,
@@ -65,7 +65,7 @@ func UnsetSimpleIndex(
 	return nil
 }
 
-func CheckSimpleIndex(
+func (self *Indexer) CheckSimpleIndex(
 	config_obj *config_proto.Config,
 	index_urn api.DSPathSpec,
 	entity string,
