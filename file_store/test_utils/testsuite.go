@@ -23,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
@@ -119,14 +120,21 @@ func (self *TestSuite) SetupTest() {
 	self.Sm = services.NewServiceManager(self.Ctx, self.ConfigObj)
 
 	require.NoError(self.T(), self.Sm.Start(frontend.StartFrontendService))
+	require.NoError(self.T(), self.Sm.Start(indexing.StartIndexingService))
 	require.NoError(self.T(), self.Sm.Start(journal.StartJournalService))
 	require.NoError(self.T(), self.Sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.Sm.Start(inventory.StartInventoryService))
 	require.NoError(self.T(), self.Sm.Start(client_info.StartClientInfoService))
 	require.NoError(self.T(), self.Sm.Start(launcher.StartLauncherService))
 	require.NoError(self.T(), self.Sm.Start(repository.StartRepositoryManagerForTest))
-	require.NoError(self.T(), self.Sm.Start(indexing.StartIndexingService))
 	require.NoError(self.T(), self.Sm.Start(labels.StartLabelService))
+
+	// Wait here until the indexer is all ready.
+	indexer, err := services.GetIndexer()
+	assert.NoError(self.T(), err)
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		return indexer.(*indexing.Indexer).IsReady()
+	})
 
 	self.LoadArtifacts(definitions)
 }

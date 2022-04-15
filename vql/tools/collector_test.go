@@ -11,13 +11,11 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -122,8 +120,6 @@ func (self *TestSuite) SetupTest() {
 		"../../artifacts/definitions/Demo/Plugins/GUI.yaml",
 		"../../artifacts/definitions/Reporting/Default.yaml",
 	)
-
-	require.NoError(self.T(), self.Sm.Start(indexing.StartIndexingService))
 }
 
 func (self *TestSuite) TestSimpleCollection() {
