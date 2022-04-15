@@ -56,7 +56,7 @@
         "react-step-wizard": "^5.3.11",
         "react-treebeard": "^3.2.4",
         "recharts": "^2.1.9",
-        "styled-components": "^5.3.3",
+        "styled-components": "^5.3.5",
         "svgo": "2.8.0",
         "url-parse": "^1.5.10",
         "y18n": "^4.0.3"
