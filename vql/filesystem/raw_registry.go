@@ -11,9 +11,9 @@ import (
 )
 
 type ReadKeyValuesArgs struct {
-	Globs    []string `vfilter:"required,field=globs,doc=Glob expressions to apply."`
-	Accessor string   `vfilter:"optional,field=accessor,default=registry,doc=The accessor to use."`
-	Root     string   `vfilter:"optional,field=root,doc=The root directory to glob from (default '/')."`
+	Globs    []string          `vfilter:"optional,field=globs,doc=Glob expressions to apply."`
+	Accessor string            `vfilter:"optional,field=accessor,default=registry,doc=The accessor to use."`
+	Root     *accessors.OSPath `vfilter:"optional,field=root,doc=The root directory to glob from (default '/')."`
 }
 
 type ReadKeyValues struct{}
@@ -49,22 +49,20 @@ func (self ReadKeyValues) Call(
 			return
 		}
 
-		// Delegate to the glob plugin.
-		for row := range (GlobPlugin{}).Call(ctx, scope, args) {
-			file_info, ok := row.(accessors.FileInfo)
-			if !ok || !file_info.IsDir() {
-				continue
+		emit_dict := func(file_info accessors.FileInfo) {
+			if !file_info.IsDir() {
+				return
+			}
+
+			values, err := accessor.ReadDirWithOSPath(file_info.OSPath())
+			if err != nil {
+				return
 			}
 
 			result := ordereddict.NewDict().
 				SetDefault(&vfilter.Null{}).
 				SetCaseInsensitive().
 				Set("Key", file_info)
-
-			values, err := accessor.ReadDir(file_info.FullPath())
-			if err != nil {
-				continue
-			}
 
 			for _, item := range values {
 				value_data := item.Data()
@@ -81,6 +79,24 @@ func (self ReadKeyValues) Call(
 				return
 
 			case output_chan <- result:
+			}
+		}
+
+		if arg.Root != nil && arg.Globs == nil {
+			file_info, err := accessor.LstatWithOSPath(arg.Root)
+			if err != nil {
+				scope.Log("read_reg_key: %v: %v", arg.Root, err)
+				return
+			}
+			emit_dict(file_info)
+			return
+		}
+
+		// Delegate to the glob plugin.
+		for row := range (GlobPlugin{}).Call(ctx, scope, args) {
+			file_info, ok := row.(accessors.FileInfo)
+			if ok {
+				emit_dict(file_info)
 			}
 		}
 	}()

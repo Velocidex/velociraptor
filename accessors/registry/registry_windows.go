@@ -357,7 +357,7 @@ func (self *RegFileSystemAccessor) LstatWithOSPath(
 	hive_key_path := ""
 	// Convert the path into an OS specific string
 	if len(full_path.Components) > 1 {
-		hive_key_path = strings.Join(full_path.Components, "\\")
+		hive_key_path = key_path.String()
 	}
 
 	key, err := registry.OpenKey(hive, hive_key_path,
@@ -368,7 +368,7 @@ func (self *RegFileSystemAccessor) LstatWithOSPath(
 		// Maybe its a value then - open the containing key
 		// and return a valueInfo
 		containing_key := key_path.Dirname()
-		containing_key_name := strings.Join(containing_key.Components, "\\")
+		containing_key_name := containing_key.String()
 		key, err := registry.OpenKey(hive, containing_key_name,
 			registry.READ|registry.QUERY_VALUE|
 				registry.WOW64_64KEY)

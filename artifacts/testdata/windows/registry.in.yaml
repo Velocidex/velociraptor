@@ -48,3 +48,12 @@ Queries:
 
   # Check that its gone now.
   - SELECT FullPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")
+
+  # Test read_reg_key with glob
+  - SELECT *, Key.FullPath AS Key, Key.Name AS Name
+    FROM read_reg_key(globs="*", root='''HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion''')
+    WHERE Name = "Run"
+
+  # Test read_reg_key with no glob but a root
+  - SELECT *,  Key.FullPath AS Key
+    FROM read_reg_key(root='''HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run''')
