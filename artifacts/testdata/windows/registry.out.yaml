@@ -126,7 +126,13 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  {
   "reg_rm_key(path=KeyPath)": true
  }
-]SELECT FullPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")[]SELECT *, Key.FullPath AS Key FROM read_reg_key(globs="*", root='''HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion''') WHERE Key.Name = "Run"[]SELECT *,  Key.FullPath AS Key FROM read_reg_key(root='''HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run''')[
+]SELECT FullPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")[]SELECT *, Key.FullPath AS Key, Key.Name AS Name FROM read_reg_key(globs="*", root='''HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion''') WHERE Name = "Run"[
+ {
+  "c:\\windows\\system32\\msht.exe": "Hello",
+  "Key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+  "Name": "Run"
+ }
+]SELECT *,  Key.FullPath AS Key FROM read_reg_key(root='''HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run''')[
  {
   "c:\\windows\\system32\\msht.exe": "Hello",
   "Key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
