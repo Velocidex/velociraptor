@@ -173,7 +173,7 @@ func (self *Indexer) WriteSnapshot(
 	defer self.mu.Unlock()
 
 	// Only write the snapshot if we need to.
-	if !self.dirty {
+	if !self.dirty || self.btree.Len() == 0 {
 		return nil
 	}
 	self.dirty = false

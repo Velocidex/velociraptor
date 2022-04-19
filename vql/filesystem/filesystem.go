@@ -82,14 +82,20 @@ func (self GlobPlugin) Call(
 		// the alternatives to cover entire paths.
 		globs := glob.ExpandBraces(arg.Globs)
 
-		root := arg.Root
-		if root == nil {
-			// Get the default top level path for this accessor.
-			root, err = accessor.ParsePath("")
-			if err != nil {
-				scope.Log("glob: %v", err)
-				return
-			}
+		// FIXME: Reinterpret the OSPath according to the
+		// accessor. This is not very efficient - the path is
+		// serialized and parsed again. We need to extend OSPath API
+		// to allow for cheaper interpretations.
+		root_str := ""
+		if arg.Root != nil {
+			root_str = arg.Root.String()
+		}
+
+		// Get the default top level path for this accessor.
+		root, err := accessor.ParsePath(root_str)
+		if err != nil {
+			scope.Log("glob: %v", err)
+			return
 		}
 
 		options := glob.GlobOptions{
