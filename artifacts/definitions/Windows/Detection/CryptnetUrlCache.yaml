@@ -126,7 +126,9 @@ sources:
             WHERE
                 MetaPath =~ Name
                 AND Header =~ HeaderRegex
-                AND NOT Header =~ HeaderWhitelist
+                AND NOT if(condition= HeaderWhitelist,
+                    then= Header =~ HeaderWhitelist,
+                    else= FALSE)
                 AND NOT if(condition=UrlWhitelist,
                     then= Url =~ UrlWhitelist,
                     else= FALSE)
