@@ -35,12 +35,12 @@ import (
 )
 
 type GlobPluginArgs struct {
-	Globs               []string `vfilter:"required,field=globs,doc=One or more glob patterns to apply to the filesystem."`
-	Root                string   `vfilter:"optional,field=root,doc=The root directory to glob from (default '')."`
-	Accessor            string   `vfilter:"optional,field=accessor,doc=An accessor to use."`
-	DoNotFollowSymlinks bool     `vfilter:"optional,field=nosymlink,doc=If set we do not follow symlinks."`
-	RecursionCallback   string   `vfilter:"optional,field=recursion_callback,doc=A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."`
-	OneFilesystem       bool     `vfilter:"optional,field=one_filesystem,doc=If set we do not follow links to other filesystems."`
+	Globs               []string          `vfilter:"required,field=globs,doc=One or more glob patterns to apply to the filesystem."`
+	Root                *accessors.OSPath `vfilter:"optional,field=root,doc=The root directory to glob from (default '')."`
+	Accessor            string            `vfilter:"optional,field=accessor,doc=An accessor to use."`
+	DoNotFollowSymlinks bool              `vfilter:"optional,field=nosymlink,doc=If set we do not follow symlinks."`
+	RecursionCallback   string            `vfilter:"optional,field=recursion_callback,doc=A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."`
+	OneFilesystem       bool              `vfilter:"optional,field=one_filesystem,doc=If set we do not follow links to other filesystems."`
 }
 
 type GlobPlugin struct{}
@@ -82,11 +82,16 @@ func (self GlobPlugin) Call(
 		// the alternatives to cover entire paths.
 		globs := glob.ExpandBraces(arg.Globs)
 
-		root, err := accessor.ParsePath(arg.Root)
-		if err != nil {
-			scope.Log("glob: %v", err)
-			return
+		root := arg.Root
+		if root == nil {
+			// Get the default top level path for this accessor.
+			root, err = accessor.ParsePath("")
+			if err != nil {
+				scope.Log("glob: %v", err)
+				return
+			}
 		}
+
 		options := glob.GlobOptions{
 			DoNotFollowSymlinks: arg.DoNotFollowSymlinks,
 			OneFilesystem:       arg.OneFilesystem,
