@@ -31,6 +31,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -294,7 +295,16 @@ func getCellsForEvents(ctx context.Context,
 	if len(result) == 0 {
 		// Start the event display 1 day ago.
 		start_time := time.Now().AddDate(0, 0, -1).UTC().Format(time.RFC3339)
+		if notebook_metadata.Context.StartTime > 0 {
+			start_time = utils.ParseTimeFromInt64(
+				notebook_metadata.Context.StartTime).UTC().Format(time.RFC3339)
+		}
+
 		end_time := time.Now().UTC().Format(time.RFC3339)
+		if notebook_metadata.Context.EndTime > 0 {
+			end_time = utils.ParseTimeFromInt64(
+				notebook_metadata.Context.EndTime).UTC().Format(time.RFC3339)
+		}
 
 		result = append(result, &api_proto.NotebookCellRequest{
 			Type: "VQL",
@@ -399,6 +409,13 @@ func getCellsForHunt(ctx context.Context,
 			Name: "Hunt Progress",
 			Type: "vql",
 			Input: `
+
+LET ColumnTypes <= dict(
+   ClientId="client_id",
+   FlowId="flow",
+   StartedTime="timestamp"
+)
+
 /*
 # Flows with ERROR status
 */

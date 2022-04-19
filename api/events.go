@@ -283,6 +283,16 @@ func getAllArtifacts(
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
 	return api.Walk(file_store_factory, log_path,
 		func(full_path api.FSPathSpec, info os.FileInfo) error {
 			// Walking the events directory will give us
@@ -296,6 +306,17 @@ func getAllArtifacts(
 			if !info.IsDir() && info.Size() > 0 {
 				relative_path := full_path.Dir().
 					Components()[len(log_path.Components()):]
+				if len(relative_path) == 0 {
+					return nil
+				}
+
+				// Check if this is a valid artifact.
+				artifact_base_name := relative_path[0]
+				_, pres := repository.Get(config_obj, artifact_base_name)
+				if !pres {
+					return nil
+				}
+
 				artifact_name := strings.Join(relative_path, "/")
 				event, pres := seen[artifact_name]
 				if !pres {

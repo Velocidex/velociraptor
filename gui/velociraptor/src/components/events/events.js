@@ -62,8 +62,12 @@ class InspectRawJson extends React.PureComponent {
         this.source.cancel();
         this.source = axios.CancelToken.source();
 
-        let client_id = this.props.client && this.props.client.client_id;
-        if (!client_id || client_id === "server") {
+        // The same file is used by both server and client event
+        // tables - only difference is that the server's client id is
+        // "server".
+        let client_id = (this.props.client &&
+                         this.props.client.client_id) || "server";
+        if (client_id === "server") {
             api.get("v1/GetServerMonitoringState", {},
                     this.source.token).then(resp => {
                         if (resp.cancel) return;
@@ -97,7 +101,8 @@ class InspectRawJson extends React.PureComponent {
     };
 
     render() {
-        let client_id = this.props.client && this.props.client.client_id;
+        let client_id = (this.props.client &&
+                         this.props.client.client_id) || "server";
         return (
             <>
               <Modal show={true}
@@ -108,7 +113,7 @@ class InspectRawJson extends React.PureComponent {
                      onHide={this.props.onClose}>
                 <Modal.Header closeButton>
                   <Modal.Title>
-                    Raw { client_id && client_id !== "server" ? "Client " : "Server "}
+                    Raw { client_id !== "server" ? "Client " : "Server "}
                     Monitoring Table JSON
                   </Modal.Title>
                 </Modal.Header>
@@ -160,8 +165,10 @@ class EventMonitoring extends React.Component {
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        let client_id = this.props.client && this.props.client.client_id;
-        let prev_client_id = prevProps.client && prevProps.client.client_id;
+        let client_id = (this.props.client &&
+                         this.props.client.client_id) || "server";
+        let prev_client_id = (prevProps.client &&
+                              prevProps.client.client_id) || "server";
         if (client_id !== prev_client_id) {
             this.fetchEventResults();
         }
@@ -195,9 +202,12 @@ class EventMonitoring extends React.Component {
         end_time: 0,
     }
 
-    setTimeRange = (start_time, end_time) => this.setState({
-        start_time: start_time, end_time: end_time
-    });
+    setTimeRange = (start_time, end_time) => {
+        console.log(start_time);
+        this.setState({
+            start_time: start_time, end_time: end_time
+        });
+    }
 
     fetchEventResults = () => {
         // Cancel any in flight calls.
@@ -228,8 +238,8 @@ class EventMonitoring extends React.Component {
 
     setArtifact = (artifact) => {
         this.setState({artifact: artifact});
-        let client_id = this.props.client && this.props.client.client_id;
-        client_id = client_id || "server";
+        let client_id = (this.props.client &&
+                         this.props.client.client_id) || "server";
         this.props.history.push('/events/' + client_id + '/' + artifact.artifact);
     }
 
@@ -263,7 +273,8 @@ class EventMonitoring extends React.Component {
         let column_types = this.state.artifact && this.state.artifact.definition &&
             this.state.artifact.definition.column_types;
 
-        let client_id = this.props.client && this.props.client.client_id;
+        let client_id = (this.props.client &&
+                         this.props.client.client_id) || "server";
         return (
             <>
               {this.state.showEventMonitoringPopup &&
@@ -384,7 +395,7 @@ class EventMonitoring extends React.Component {
                 <Container className="event-report-viewer">
                 <EventTimelineViewer
                   toolbar={x=>this.setState({buttonsRenderer: x})}
-                  client_id={this.props.client.client_id}
+                  client_id={client_id}
                   artifact={this.state.artifact.artifact}
                   mode={this.state.mode}
                   renderers={renderers}
@@ -411,7 +422,7 @@ class EventMonitoring extends React.Component {
                 { this.state.artifact.artifact ?
                   <EventNotebook
                     artifact={this.state.artifact.artifact}
-                    client_id={this.props.client.client_id}
+                    client_id={client_id}
                     start_time={this.state.start_time}
                   /> :
                   <div className="no-content">Please select an artifact to view above.</div>
