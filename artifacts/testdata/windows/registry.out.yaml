@@ -126,38 +126,9 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  {
   "reg_rm_key(path=KeyPath)": true
  }
-]SELECT FullPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")[]SELECT * FROM read_reg_key(globs="*", root='''HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion''') WHERE Key.Name = "Run"[
+]SELECT FullPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")[]SELECT *, Key.FullPath AS Key FROM read_reg_key(globs="*", root='''HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion''') WHERE Key.Name = "Run"[]SELECT *,  Key.FullPath AS Key FROM read_reg_key(root='''HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run''')[
  {
-  "Key": {
-   "FullPath": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
-   "Size": 0,
-   "Mode": 2147484141,
-   "ModeStr": "drwxr-xr-x",
-   "ModTime": "2022-04-19T04:16:23.5431608Z",
-   "Data": {
-    "type": "key"
-   },
-   "Mtime": "2022-04-19T04:16:23.5431608Z",
-   "Ctime": "2022-04-19T04:16:23.5431608Z",
-   "Atime": "2022-04-19T04:16:23.5431608Z"
-  },
-  "c:\\windows\\system32\\msht.exe": "Hello"
- }
-]SELECT * FROM read_reg_key(root='''HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run''')[
- {
-  "Key": {
-   "FullPath": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
-   "Size": 0,
-   "Mode": 2147484141,
-   "ModeStr": "drwxr-xr-x",
-   "ModTime": "2022-04-19T04:16:23.5431608Z",
-   "Data": {
-    "type": "key"
-   },
-   "Mtime": "2022-04-19T04:16:23.5431608Z",
-   "Ctime": "2022-04-19T04:16:23.5431608Z",
-   "Atime": "2022-04-19T04:16:23.5431608Z"
-  },
-  "c:\\windows\\system32\\msht.exe": "Hello"
+  "c:\\windows\\system32\\msht.exe": "Hello",
+  "Key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
  }
 ]
