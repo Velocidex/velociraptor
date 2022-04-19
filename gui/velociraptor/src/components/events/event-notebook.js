@@ -74,6 +74,7 @@ export default class EventNotebook extends React.Component {
                     type: "event",
                     event_artifact: this.props.artifact,
                     client_id: this.props.client_id,
+                    start_time: this.props.start_time,
                 },
                 // Hunt notebooks are all public.
                 public: true,
