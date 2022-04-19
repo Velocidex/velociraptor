@@ -462,3 +462,9 @@ func StartIndexingService(ctx context.Context, wg *sync.WaitGroup,
 
 	return nil
 }
+
+// Register a dummy indexer for all cases - this does not read or
+// write snapshots.
+func init() {
+	services.RegisterIndexer(NewIndexer())
+}
