@@ -133,13 +133,13 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
    "Size": 0,
    "Mode": 2147484141,
    "ModeStr": "drwxr-xr-x",
-   "ModTime": "2022-04-19T03:08:01.6452389Z",
+   "ModTime": "2022-04-19T04:16:23.5431608Z",
    "Data": {
     "type": "key"
    },
-   "Mtime": "2022-04-19T03:08:01.6452389Z",
-   "Ctime": "2022-04-19T03:08:01.6452389Z",
-   "Atime": "2022-04-19T03:08:01.6452389Z"
+   "Mtime": "2022-04-19T04:16:23.5431608Z",
+   "Ctime": "2022-04-19T04:16:23.5431608Z",
+   "Atime": "2022-04-19T04:16:23.5431608Z"
   },
   "c:\\windows\\system32\\msht.exe": "Hello"
  }
@@ -150,13 +150,13 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
    "Size": 0,
    "Mode": 2147484141,
    "ModeStr": "drwxr-xr-x",
-   "ModTime": "2022-04-19T03:08:01.6452389Z",
+   "ModTime": "2022-04-19T04:16:23.5431608Z",
    "Data": {
     "type": "key"
    },
-   "Mtime": "2022-04-19T03:08:01.6452389Z",
-   "Ctime": "2022-04-19T03:08:01.6452389Z",
-   "Atime": "2022-04-19T03:08:01.6452389Z"
+   "Mtime": "2022-04-19T04:16:23.5431608Z",
+   "Ctime": "2022-04-19T04:16:23.5431608Z",
+   "Atime": "2022-04-19T04:16:23.5431608Z"
   },
   "c:\\windows\\system32\\msht.exe": "Hello"
  }

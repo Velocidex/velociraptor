@@ -3,13 +3,13 @@ SELECT OSPath.Components, OSPath FROM glob( globs='/*', root=pathspec( DelegateA
   "OSPath.Components": [
    "SAM"
   ],
-  "OSPath": "{\"DelegateAccessor\":\"auto\",\"DelegatePath\":\"C:/Windows/System32/Config/SAM\",\"Path\":\"/SAM\"}"
+  "OSPath": "{\"DelegateAccessor\":\"auto\",\"DelegatePath\":\"C:/Windows/System32/Config/SAM\",\"Path\":\"\\\\SAM\"}"
  }
 ]SELECT OSPath.Components, OSPath FROM glob( globs='/*', root=pathspec( DelegateAccessor="ntfs", DelegatePath='C:/Windows/System32/Config/SAM'), accessor="raw_reg")[
  {
   "OSPath.Components": [
    "SAM"
   ],
-  "OSPath": "{\"DelegateAccessor\":\"ntfs\",\"DelegatePath\":\"C:/Windows/System32/Config/SAM\",\"Path\":\"/SAM\"}"
+  "OSPath": "{\"DelegateAccessor\":\"ntfs\",\"DelegatePath\":\"C:/Windows/System32/Config/SAM\",\"Path\":\"\\\\SAM\"}"
  }
 ]SELECT OSPath.Components, OSPath FROM glob( globs='/*', root=pathspec( DelegateAccessor="file", DelegatePath='C:/Windows/System32/Config/SAM'), accessor="raw_reg")[]
