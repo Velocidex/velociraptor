@@ -101,8 +101,11 @@ func doInstall() error {
 
 	logger.Info("Copied binary to %s", target_path)
 
-	// If the installer was invoked with the --config arg then we
-	// need to copy the config to the target path.
+	config_path_plist := ""
+
+	// If the installer was invoked with the --config arg then we need
+	// to copy the config to the target path. Otherwise the config may
+	// be embedded so we dont need to use it at all.
 	if *config_path != "" {
 		config_target_path := strings.TrimSuffix(
 			target_path, filepath.Ext(target_path)) + ".config.yaml"
@@ -116,6 +119,10 @@ func doInstall() error {
 				config_target_path, err)
 			return err
 		}
+		config_path_plist = fmt.Sprintf(`
+                <string>--config</string>
+                <string>%v.config.yaml</string>
+`, target_path)
 	}
 
 	plist_path := "/Library/LaunchDaemons/" + service_name + ".plist"
@@ -130,14 +137,13 @@ func doInstall() error {
         <array>
                 <string>%v</string>
                 <string>client</string>
-                <string>--config</string>
-                <string>%v.config.yaml</string>
+%v
                 <string>--quiet</string>
         </array>
         <key>KeepAlive</key>
         <true/>
 </dict>
-</plist>`, service_name, target_path, target_path)
+</plist>`, service_name, target_path, config_path_plist)
 
 	err = ioutil.WriteFile(plist_path, []byte(plist), 0644)
 	if err != nil {
