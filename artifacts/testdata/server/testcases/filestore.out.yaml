@@ -50,11 +50,11 @@ SELECT FullPath, hash(path=FullPath, accessor="fs") FROM glob( globs='/clients/C
    "SHA1": "81228b522560849761b3b8d4addd83aae5ae94de",
    "SHA256": "43b04dd30474cafdc3cd06ae632402a116ae636d65a14fcfb4a838f6338f1dad"
   },
-  "VFSPath": "fs:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6/logs",
+  "VFSPath": "fs:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6/logs.json",
   "Type": "Log",
   "format(format=\"%T should be FSPathSpec / DSPathSpec\", args=VFSPath)": "path_specs.FSPathSpec should be FSPathSpec / DSPathSpec",
   "file_store(path=VFSPath) = file_store(path=str(str=VFSPath))": true,
-  "basename(path=file_store(path=VFSPath))": "logs"
+  "basename(path=file_store(path=VFSPath))": "logs.json"
  },
  {
   "hash(path=VFSPath, accessor=\"fs\")": {

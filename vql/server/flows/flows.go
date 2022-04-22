@@ -174,7 +174,7 @@ func (self EnumerateFlowPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("flows: %s", err)
+			scope.Log("enumerate_flow: %s", err)
 			return
 		}
 
