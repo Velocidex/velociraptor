@@ -664,8 +664,10 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 	// System.Flow.Completion event, the hunt manager should
 	// increment the total clients completed.
 	flow_obj := &flows_proto.ArtifactCollectorContext{
-		Request:              proto.Clone(hunt_obj.StartRequest).(*flows_proto.ArtifactCollectorArgs),
-		ArtifactsWithResults: hunt_obj.StartRequest.Artifacts,
+		Request: proto.Clone(
+			hunt_obj.StartRequest).(*flows_proto.ArtifactCollectorArgs),
+		// No actual results but the collection is done. See #1743.
+		ArtifactsWithResults: nil,
 		State:                flows_proto.ArtifactCollectorContext_FINISHED,
 	}
 
