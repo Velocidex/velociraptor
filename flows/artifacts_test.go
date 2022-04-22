@@ -586,38 +586,138 @@ func (self *TestSuite) TestCollectionCompletionSuccessFollowedByErrLog() {
 // error - error flow is sent immediately before second response
 // arrives.
 func (self *TestSuite) TestCollectionCompletionTwoSourcesIncomplete() {
-	flow := self.testCollectionCompletion(2,
-		[]*crypto_proto.VeloMessage{
-			{
-				SessionId: self.flow_id,
-				RequestId: 1,
-				VQLResponse: &actions_proto.VQLResponse{
-					JSONLResponse: "{}",
-					TotalRows:     1,
-					Query: &actions_proto.VQLRequest{
-						Name: "Generic.Client.Info/BasicInformation",
-					},
-				},
-			},
-			{
-				SessionId: self.flow_id,
-				RequestId: 1,
-				Status: &crypto_proto.GrrStatus{
-					Status:   crypto_proto.GrrStatus_GENERIC_ERROR,
-					Duration: 100,
+	collection_context := NewCollectionContext(self.ConfigObj)
+	collection_context.ArtifactCollectorContext = flows_proto.ArtifactCollectorContext{
+		SessionId: self.flow_id,
+		ClientId:  self.client_id,
+		State:     flows_proto.ArtifactCollectorContext_RUNNING,
+
+		// Two sources running in parallel.
+		OutstandingRequests: 2,
+		Request: &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"Generic.Client.Info"},
+		},
+	}
+
+	runner := NewFlowRunner(self.ConfigObj)
+	runner.context_map[self.flow_id] = collection_context
+
+	wg := &sync.WaitGroup{}
+	mu := &sync.Mutex{}
+	rows := []*ordereddict.Dict{}
+
+	err := journal.WatchQueueWithCB(self.Ctx, self.ConfigObj, wg,
+		"System.Flow.Completion", "", func(ctx context.Context,
+			config_obj *config_proto.Config,
+			row *ordereddict.Dict) error {
+			mu.Lock()
+			defer mu.Unlock()
+
+			rows = append(rows, row)
+			return nil
+		})
+	assert.NoError(self.T(), err)
+
+	runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			SessionId: self.flow_id,
+			RequestId: 1,
+			VQLResponse: &actions_proto.VQLResponse{
+				JSONLResponse: "{}",
+				TotalRows:     10,
+				Query: &actions_proto.VQLRequest{
+					Name: "Generic.Client.Info/BasicInformation",
 				},
 			},
 		})
 
-	// Collection is still running
-	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR, flow.State)
-	assert.Equal(self.T(), uint64(1), flow.TotalCollectedRows)
-	assert.Equal(self.T(), []string{
-		"Generic.Client.Info/BasicInformation",
-	}, flow.ArtifactsWithResults)
+	// Send an error on the first collection.
+	runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			SessionId: self.flow_id,
+			RequestId: 1,
+			Status: &crypto_proto.GrrStatus{
+				Status:   crypto_proto.GrrStatus_GENERIC_ERROR,
+				Duration: 100,
+			},
+		})
+	runner.Close()
 
-	// Records the correct execution duration.
-	assert.Equal(self.T(), int64(100), flow.ExecutionDuration)
+	// Re-read the context
+	collection_context, err = LoadCollectionContext(
+		self.ConfigObj, self.client_id, self.flow_id)
+	assert.NoError(self.T(), err)
+
+	// Collection is marked as error already
+	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR,
+		collection_context.State)
+
+	// We did not send the notification message yet.
+	assert.Equal(self.T(), false, collection_context.UserNotified)
+
+	mu.Lock()
+	assert.Equal(self.T(), 0, len(rows))
+	mu.Unlock()
+
+	// We already have some artifacts with results (even though it was
+	// an error).
+	assert.Equal(self.T(), "Generic.Client.Info/BasicInformation",
+		collection_context.ArtifactsWithResults[0])
+
+	// Now send the second status message as OK
+	runner = NewFlowRunner(self.ConfigObj)
+	runner.context_map[self.flow_id] = collection_context
+
+	runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			SessionId: self.flow_id,
+			RequestId: 1,
+			VQLResponse: &actions_proto.VQLResponse{
+				JSONLResponse: "{}",
+				TotalRows:     5,
+				Query: &actions_proto.VQLRequest{
+					Name: "Generic.Client.Info/Users",
+				},
+			},
+		})
+
+	// Send an error on the first collection.
+	runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			SessionId: self.flow_id,
+			RequestId: 1,
+			Status: &crypto_proto.GrrStatus{
+				Status:   crypto_proto.GrrStatus_OK,
+				Duration: 100,
+			},
+		})
+	runner.Close()
+
+	// The Completion message had gone out
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
+		return len(rows) > 0
+	})
+
+	// Re-read the context
+	collection_context, err = LoadCollectionContext(
+		self.ConfigObj, self.client_id, self.flow_id)
+	assert.NoError(self.T(), err)
+
+	// Now there are two artifacts with results
+	assert.Equal(self.T(), 2, len(collection_context.ArtifactsWithResults))
+
+	// Collection is still marked as error even though the second
+	// source was ok.
+	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR,
+		collection_context.State)
+
+	// We have now sent the notification message.
+	assert.Equal(self.T(), true, collection_context.UserNotified)
+
+	assert.Equal(self.T(), uint64(15), collection_context.TotalCollectedRows)
 }
 
 func (self *TestSuite) testCollectionCompletion(

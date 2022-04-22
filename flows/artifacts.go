@@ -190,6 +190,7 @@ func closeContext(
 		return err
 	}
 
+	// Update the start time if needed.
 	if collection_context.StartTime == 0 {
 		collection_context.StartTime = uint64(time.Now().UnixNano() / 1000)
 	}
@@ -199,13 +200,14 @@ func closeContext(
 
 	// Figure out if we will send a System.Flow.Completion after
 	// this. This depends on:
-	// 1. The flow state is no longer running (error or finished).
+	// 1. We do not expect any more responses
 	// 2. We have not sent a System.Flow.Completion yet.
 	//
-	// Record that we sent it so we never send 2 completion messages
-	// for the same flow.
+	// It is important to delay the System.Flow.Completion message
+	// until after all artifacts have been collected so users can
+	// watch them and expect to see results.
 	if collection_context.Request != nil &&
-		collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING &&
+		collection_context.OutstandingRequests <= 0 &&
 		!collection_context.UserNotified {
 
 		// Record the message was sent - so we never resent the
@@ -442,34 +444,6 @@ func ArtifactCollectorProcessOneMessage(
 	}
 
 	return nil
-}
-
-func IsRequestComplete(
-	config_obj *config_proto.Config,
-	collection_context *CollectionContext,
-	message *crypto_proto.VeloMessage) (bool, error) {
-
-	// Nope request is not complete.
-	if message.Status == nil {
-		return false, nil
-	}
-
-	// Complete the collection
-	if collection_context == nil || collection_context.Request == nil {
-		return false, errors.New("Invalid collection context")
-	}
-
-	// Only terminate a running flow.
-	if collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
-		collection_context.ExecutionDuration += message.Status.Duration
-		collection_context.OutstandingRequests--
-		if collection_context.OutstandingRequests <= 0 {
-			collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED
-		}
-		collection_context.Dirty = true
-	}
-
-	return true, nil
 }
 
 func CheckForStatus(
