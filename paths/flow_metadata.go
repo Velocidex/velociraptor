@@ -63,6 +63,12 @@ func (self FlowPathManager) Log() api.FSPathSpec {
 		SetType(api.PATH_TYPE_FILESTORE_JSON)
 }
 
+func (self FlowPathManager) LogLegacy() api.FSPathSpec {
+	return self.Path().AddChild("logs").
+		AsFilestorePath().
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
+}
+
 func (self FlowPathManager) Task() api.DSPathSpec {
 	return self.Path().AddChild("task").
 		SetType(api.PATH_TYPE_DATASTORE_PROTO).

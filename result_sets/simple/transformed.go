@@ -2,11 +2,9 @@ package simple
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -42,6 +40,13 @@ func (self ResultSetFactory) getFilteredReader(
 	}
 
 	transformed_path := log_path.AddChild("filter", options.FilterRegex.String())
+
+	// Try to open the transformed result set if it is already cached.
+	_, err := file_store_factory.StatFile(transformed_path)
+	if err == nil {
+		return self.getSortedReader(ctx, config_obj,
+			file_store_factory, transformed_path, options)
+	}
 
 	// Nope - we have to build the new cache from the original table.
 	reader, err := self.NewResultSetReader(file_store_factory, log_path)
@@ -118,11 +123,8 @@ func (self ResultSetFactory) getSortedReader(
 	}
 
 	// Try to open the transformed result set if it is already cached.
-	fd, err := file_store_factory.ReadFile(transformed_path)
-	if !errors.Is(err, os.ErrNotExist) {
-		if fd != nil {
-			fd.Close()
-		}
+	_, err := file_store_factory.StatFile(transformed_path)
+	if err == nil {
 		return self.NewResultSetReader(file_store_factory, transformed_path)
 	}
 

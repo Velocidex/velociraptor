@@ -32,6 +32,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/timelines"
+	"www.velocidex.com/golang/velociraptor/utils"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -52,6 +53,7 @@ func getTable(
 	result := &api_proto.GetTableResponse{
 		ColumnTypes: getColumnTypes(config_obj, in),
 	}
+
 	path_spec, err := getPathSpec(config_obj, in)
 	if err != nil {
 		return result, err
@@ -189,7 +191,15 @@ func getPathSpec(
 
 		switch in.Type {
 		case "log":
-			return flow_path_manager.Log(), nil
+			// Handle legacy locations. TODO: Remove by 0.6.7
+			file_store_factory := file_store.GetFileStore(config_obj)
+			pathspec := flow_path_manager.Log()
+			_, err := file_store_factory.StatFile(pathspec)
+			if err != nil {
+				utils.Debug(flow_path_manager.LogLegacy())
+				return flow_path_manager.LogLegacy(), nil
+			}
+			return pathspec, nil
 
 		case "uploads":
 			return flow_path_manager.UploadMetadata(), nil
