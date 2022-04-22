@@ -60,6 +60,12 @@ func NewFlowPathManager(client_id, flow_id string) *FlowPathManager {
 func (self FlowPathManager) Log() api.FSPathSpec {
 	return self.Path().AddChild("logs").
 		AsFilestorePath().
+		SetType(api.PATH_TYPE_FILESTORE_JSON)
+}
+
+func (self FlowPathManager) LogLegacy() api.FSPathSpec {
+	return self.Path().AddChild("logs").
+		AsFilestorePath().
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 

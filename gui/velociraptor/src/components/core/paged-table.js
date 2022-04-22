@@ -2,6 +2,8 @@ import "./table.css";
 
 import _ from 'lodash';
 
+import './paged-table.css';
+
 import 'react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css';
 import ToolkitProvider from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit.min';
 
@@ -24,6 +26,7 @@ import api from '../core/api-service.js';
 import VeloTimestamp from "../utils/time.js";
 import ClientLink from '../clients/client-link.js';
 import HexView from '../utils/hex.js';
+import TableTransformDialog from './table-transform-dialog.js';
 
 import {
     InspectRawJson, ColumnToggleList,
@@ -119,6 +122,11 @@ class VeloPagedTable extends Component {
         // number.
         total_size: 0,
         loading: true,
+
+        // A transform applied on the basic table.
+        transform: {},
+
+        show_transform_dialog: false,
     }
 
     componentDidMount = () => {
@@ -136,12 +144,18 @@ class VeloPagedTable extends Component {
         };
 
         if (!_.isEqual(prevProps.params, this.props.params)) {
-            this.setState({start_row: 0, toggles: {}, columns: []});
+            this.setState({
+                start_row: 0,
+                transform: {},
+                toggles: {},
+                columns: [],
+            });
         };
 
         if (!_.isEqual(prevProps.params, this.props.params) ||
             prevState.start_row !== this.state.start_row ||
-            prevState.page_size !== this.state.page_size) {
+            prevState.page_size !== this.state.page_size ||
+            !_.isEqual(prevState.transform, this.state.transform)) {
             this.fetchRows();
         }
     }
@@ -182,6 +196,42 @@ class VeloPagedTable extends Component {
         return this.defaultFormatter;
     }
 
+    getTransformed = ()=>{
+        let result = [];
+        let transform = this.state.transform || {};
+        if (transform.filter_column) {
+            result.push(
+                <Button key="1"
+                  title="Transformed"  disabled={true}
+                  variant="outline-dark">
+                  { transform.filter_column } ( {transform.filter_regex} )
+                  <span className="transform-button">
+                    <FontAwesomeIcon icon="filter"/>
+                  </span>
+                </Button>
+            );
+        }
+
+        if (transform.sort_column) {
+            result.push(
+                <Button key="2"
+                  title="Transformed"  disabled={true}
+                  variant="outline-dark">
+                  {transform.sort_column}
+                  <span className="transform-button">
+                    {
+                        transform.sort_direction === "Ascending" ?
+                            <FontAwesomeIcon icon="sort-alpha-down"/> :
+                        <FontAwesomeIcon icon="sort-alpha-up"/>
+                    }
+                  </span>
+                </Button>
+            );
+        }
+
+        return result;
+    }
+
 
     fetchRows = () => {
         if (_.isEmpty(this.props.params)) {
@@ -190,8 +240,10 @@ class VeloPagedTable extends Component {
         }
 
         let params = Object.assign({}, this.props.params);
+        Object.assign(params, this.state.transform);
         params.start_row = this.state.start_row;
         params.rows = this.state.page_size;
+        params.sort_direction = params.sort_direction === "Ascending";
 
         let url = this.props.url || "v1/GetTable";
 
@@ -199,7 +251,6 @@ class VeloPagedTable extends Component {
         this.source = axios.CancelToken.source();
 
         this.setState({loading: true});
-
         api.get(url, params, this.source.token).then((response) => {
             if (response.cancel) {
                 return;
@@ -316,10 +367,20 @@ class VeloPagedTable extends Component {
                 total_size = 500;
             }
         }
-
+        let transformed = this.getTransformed();
         let downloads = Object.assign({columns: column_names}, this.props.params);
         return (
             <div className="velo-table full-height"> <Spinner loading={this.state.loading} />
+              { this.state.show_transform_dialog &&
+                <TableTransformDialog
+                  columns={this.state.columns}
+                  transform={this.state.transform}
+                  setTransform={x=>{
+                      this.setState({transform: x});
+                  }}
+                  onClose={()=>this.setState({show_transform_dialog: false})}
+                />
+              }
               <ToolkitProvider
                 bootstrap4
                 keyField="_id"
@@ -362,7 +423,19 @@ class VeloPagedTable extends Component {
                                         qs.stringify(downloads,  {indices: false}) } >
                             <FontAwesomeIcon icon="file-csv"/>
                           </Button>
+                          <Button variant="default"
+                                  onClick={()=>this.setState({
+                                      show_transform_dialog: true,
+                                  })}
+                                  title="Transform Table">
+                            <FontAwesomeIcon icon="filter"/>
+                          </Button>
                         </ButtonGroup>
+                        { transformed.length > 0 &&
+                          <ButtonGroup className="float-right">
+                            { transformed }
+                          </ButtonGroup>
+                        }
                       </Navbar>
                       <div className="row col-12">
                         <BootstrapTable
