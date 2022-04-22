@@ -26,12 +26,14 @@ func (self *ArtifactLogPathManager) GetRootPath() api.FSPathSpec {
 	case paths.MODE_CLIENT:
 		return paths.CLIENTS_ROOT.AddChild(
 			self.client_id, "collections",
-			self.flow_id, "logs").AsFilestorePath()
+			self.flow_id, "logs").AsFilestorePath().
+			SetType(api.PATH_TYPE_FILESTORE_JSON)
 
 	case paths.MODE_SERVER:
 		return paths.CLIENTS_ROOT.AddChild(
 			"server", "collections",
-			self.flow_id, "logs").AsFilestorePath()
+			self.flow_id, "logs").AsFilestorePath().
+			SetType(api.PATH_TYPE_FILESTORE_JSON)
 
 	case paths.MODE_SERVER_EVENT:
 		return paths.SERVER_MONITORING_LOGS_ROOT

@@ -9,7 +9,7 @@
  },
  {
   "Type": "Log",
-  "VFSPath": "fs:/clients/C.123/collections/F.1234/logs"
+  "VFSPath": "fs:/clients/C.123/collections/F.1234/logs.json"
  },
  {
   "Type": "LogIndex",

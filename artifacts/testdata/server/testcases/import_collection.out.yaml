@@ -22,10 +22,10 @@ LET Sanitize(X) = regex_replace(re="[CF]\\.[0-9a-z]+", replace="C.ID", source=X)
   "vfs_path": "/clients/C.ID/collections/C.ID.db"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/logs"
+  "vfs_path": "/clients/C.ID/collections/C.ID/logs.json"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/logs"
+  "vfs_path": "/clients/C.ID/collections/C.ID/logs.json"
  },
  {
   "vfs_path": "/clients/C.ID/collections/C.ID/logs.json.index"

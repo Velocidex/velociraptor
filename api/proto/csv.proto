@@ -52,6 +52,12 @@ message GetTableRequest {
 
     // If specified only emit these columns.
     repeated string columns = 15;
+
+    // If specified, transform the table first.
+    string sort_column = 19;
+    bool sort_direction = 20;
+    string filter_column = 21;
+    string filter_regex = 22;
 }
 
 message Row {

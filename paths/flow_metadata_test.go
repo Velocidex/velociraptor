@@ -11,7 +11,7 @@ func (self *PathManagerTestSuite) TestFlowPathManager() {
 	assert.Equal(self.T(), "/ds/clients/C.123/collections/F.1234.db",
 		self.getDatastorePath(manager.Path()))
 
-	assert.Equal(self.T(), "/fs/clients/C.123/collections/F.1234/logs",
+	assert.Equal(self.T(), "/fs/clients/C.123/collections/F.1234/logs.json",
 		self.getFilestorePath(manager.Log()))
 
 	assert.Equal(self.T(), "/ds/clients/C.123/collections/F.1234/task.db",
