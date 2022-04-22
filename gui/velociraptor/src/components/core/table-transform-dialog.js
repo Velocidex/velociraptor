@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Modal from 'react-bootstrap/Modal';
@@ -6,6 +8,11 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import VeloForm from '../forms/form.js';
+import Form from 'react-bootstrap/Form';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+
+
 
 export default class TableTransformDialog extends Component {
     static propTypes = {
@@ -25,9 +32,9 @@ export default class TableTransformDialog extends Component {
     componentDidMount = () => {
         let transform = this.props.transform || {};
         this.setState({
-            sort_column: transform.sort_column,
+            sort_column: transform.sort_column || "Unset",
             sort_direction: transform.sort_direction,
-            filter_column: transform.filter_column,
+            filter_column: transform.filter_column || "Unset",
             filter_regex: transform.filter_regex,
         });
     }
@@ -56,10 +63,9 @@ export default class TableTransformDialog extends Component {
     }
 
     render() {
-        let filtered = (this.props.transform &&
-                        this.props.transform.filtered) || {};
         let columns = ["Unset"];
         columns.push.apply(columns, this.props.columns);
+
         return (
             <Modal show={true}
                    className="full-height"
@@ -72,25 +78,38 @@ export default class TableTransformDialog extends Component {
                 </Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <VeloForm
-                  param={{name: "sort_column",
-                          friendly_name: "Sort Column",
-                          type:"choices",
-                          choices: columns}}
-                  value={this.state.sort_column}
-                  setValue={x=>this.setState({sort_column: x})}
-                />
-                { this.state.sort_column &&
-                  this.state.sort_column !== "Unset" &&
-                  <VeloForm
-                    param={{name: "sort_direction",
-                            friendly_name: "Sort Direction",
-                            type:"choices",
-                            choices: ["Ascending", "Descending"]}}
-                    value={this.state.sort_direction}
-                    setValue={x=>this.setState({sort_direction: x})}
-                  />
-                }
+                <Form.Group as={Row}>
+                  <Form.Label column sm="3">
+                    Sort Column
+                  </Form.Label>
+                  <Col sm="8">
+                    <ButtonGroup className="sort-button">
+                      { this.state.sort_direction !== "Ascending" ?
+                        <Button
+                          disabled={this.state.sort_column === "Unset"}
+                          onClick={()=>this.setState({sort_direction: "Ascending"})}
+                          variant="outline-dark">
+                          <FontAwesomeIcon icon="sort-alpha-down"/>
+                        </Button>:
+                        <Button
+                          disabled={this.state.sort_column === "Unset"}
+                          onClick={()=>this.setState({sort_direction: "Descending"})}
+                          variant="outline-dark">
+                          <FontAwesomeIcon icon="sort-alpha-up"/>
+                        </Button>
+                      }
+                      <Form.Control as="select"
+                                    value={this.state.sort_column}
+                                    onChange={e=>this.setState({
+                                        sort_column: e.currentTarget.value
+                                    })}>
+                        {_.map(columns || [], function(item, idx) {
+                            return <option key={idx}>{item}</option>;
+                        })}
+                      </Form.Control>
+                    </ButtonGroup>
+                  </Col>
+                </Form.Group>
                 <VeloForm
                   param={{name: "filter_column",
                           friendly_name: "Filter Column",

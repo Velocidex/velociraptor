@@ -42,8 +42,13 @@ func (self ResultSetFactory) getFilteredReader(
 	transformed_path := log_path.AddChild("filter", options.FilterRegex.String())
 
 	// Try to open the transformed result set if it is already cached.
-	_, err := file_store_factory.StatFile(transformed_path)
-	if err == nil {
+	base_stat, err := file_store_factory.StatFile(log_path)
+	if err != nil {
+		return self.NewResultSetReader(file_store_factory, log_path)
+	}
+
+	cached_stat, err := file_store_factory.StatFile(transformed_path)
+	if err == nil && cached_stat.ModTime().After(base_stat.ModTime()) {
 		return self.getSortedReader(ctx, config_obj,
 			file_store_factory, transformed_path, options)
 	}
@@ -123,8 +128,14 @@ func (self ResultSetFactory) getSortedReader(
 	}
 
 	// Try to open the transformed result set if it is already cached.
-	_, err := file_store_factory.StatFile(transformed_path)
-	if err == nil {
+	base_stat, err := file_store_factory.StatFile(log_path)
+	if err != nil {
+		return self.NewResultSetReader(file_store_factory, log_path)
+	}
+
+	// Only use the cache if it is newer than the base file.
+	cached_stat, err := file_store_factory.StatFile(transformed_path)
+	if err == nil && cached_stat.ModTime().After(base_stat.ModTime()) {
 		return self.NewResultSetReader(file_store_factory, transformed_path)
 	}
 
@@ -147,7 +158,7 @@ func (self ResultSetFactory) getSortedReader(
 	sorter_input_chan := make(chan vfilter.Row)
 	sorted_chan := sorter.MergeSorter{10000}.Sort(
 		ctx, scope, sorter_input_chan,
-		options.SortColumn, !options.SortAsc)
+		options.SortColumn, options.SortAsc)
 
 	// Default is 10 min to sort the file.
 	default_notebook_expiry := int64(10)

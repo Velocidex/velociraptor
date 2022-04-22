@@ -221,8 +221,8 @@ class VeloPagedTable extends Component {
                   <span className="transform-button">
                     {
                         transform.sort_direction === "Ascending" ?
-                            <FontAwesomeIcon icon="sort-alpha-down"/> :
-                        <FontAwesomeIcon icon="sort-alpha-up"/>
+                            <FontAwesomeIcon icon="sort-alpha-up"/> :
+                        <FontAwesomeIcon icon="sort-alpha-down"/>
                     }
                   </span>
                 </Button>

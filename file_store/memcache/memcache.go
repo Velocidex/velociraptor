@@ -122,6 +122,7 @@ func (self *MemcacheFileWriter) Close() error {
 	// Convert all utils.SyncCompleter calls to sync waits on return
 	// from Close(). The writer pool will release us when done.
 	wg := sync.WaitGroup{}
+	sync_call := false
 	for idx, c := range self.completions {
 		if utils.CompareFuncs(c, utils.SyncCompleter) {
 			wg.Add(1)
@@ -129,10 +130,18 @@ func (self *MemcacheFileWriter) Close() error {
 			// Wait for the flusher to close us.
 			defer wg.Wait()
 			self.completions[idx] = wg.Done
+			sync_call = true
 		}
 	}
+
 	// Release the lock before we wait for the flusher.
 	self.mu.Unlock()
+
+	// If any of the calls were synchronous do not wait - just write
+	// them now.
+	if sync_call {
+		return self.Flush()
+	}
 
 	return nil
 }
@@ -157,6 +166,7 @@ func (self *MemcacheFileWriter) _Flush() error {
 			for _, c := range self.completions {
 				c()
 			}
+			self.completions = nil
 		}
 	}()
 
