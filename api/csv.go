@@ -18,6 +18,7 @@
 package api
 
 import (
+	"regexp"
 	"time"
 
 	errors "github.com/pkg/errors"
@@ -57,8 +58,26 @@ func getTable(
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	rs_reader, err := result_sets.NewResultSetReader(
-		file_store_factory, path_spec)
+
+	options := result_sets.ResultSetOptions{}
+	if in.SortColumn != "" {
+		options.SortColumn = in.SortColumn
+		options.SortAsc = in.SortDirection
+	}
+
+	if in.FilterColumn != "" &&
+		in.FilterRegex != "" {
+		options.FilterColumn = in.FilterColumn
+		options.FilterRegex, err = regexp.Compile("(?i)" + in.FilterRegex)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	rs_reader, err := result_sets.NewResultSetReaderWithOptions(
+		ctx, config_obj,
+		file_store_factory, path_spec, options)
+
 	if err != nil {
 		return result, nil
 	}
@@ -171,6 +190,7 @@ func getPathSpec(
 		switch in.Type {
 		case "log":
 			return flow_path_manager.Log(), nil
+
 		case "uploads":
 			return flow_path_manager.UploadMetadata(), nil
 		}

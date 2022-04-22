@@ -384,6 +384,7 @@ func (self ResultSetFactory) NewResultSetReader(
 	} else if err != nil {
 		return nil, err
 	}
+	// Keep the open file until the reader is closed.
 
 	// -1 indicates we dont know how many rows there are
 	total_rows := int64(-1)
