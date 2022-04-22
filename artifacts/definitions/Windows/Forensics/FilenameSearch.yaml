@@ -21,7 +21,7 @@ parameters:
     - name: yaraRule
       default: wide nocase:my secret file.txt
     - name: Device
-      default: "\\\\.\\c:"
+      default: "C:"
 
 sources:
   - query: |
