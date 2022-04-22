@@ -62,8 +62,7 @@ sources:
                profile=userAssistProfile,
                struct="Header"
              ) As ParsedUserAssist,
-             -- Path is like /Users/<user>/NTUSER
-             OSPath.Components[1] AS User
+             Username AS User
       FROM Artifact.Windows.Registry.NTUser(KeyGlob=UserAssistKey)
 
       LET UserAssist = SELECT _KeyPath,
