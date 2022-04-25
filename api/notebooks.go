@@ -361,7 +361,7 @@ func getCustomCells(
 			Env:   env,
 			Input: cell.Template}
 
-		switch cell.Type {
+		switch strings.ToLower(cell.Type) {
 		case "vql", "md", "markdown":
 			result = append(result, request)
 
