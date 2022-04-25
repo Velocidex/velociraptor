@@ -39,3 +39,7 @@ td .number {
     text-align: end;
     white-space: nowrap;
 }
+
+.fixed-table-body td {
+    overflow: hidden;
+}
