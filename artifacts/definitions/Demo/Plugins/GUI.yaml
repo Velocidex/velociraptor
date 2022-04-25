@@ -296,7 +296,8 @@ sources:
 
           Check both expanded and contracted states of the cell
           */
-          LET Test = "Hellothereongline"
+          LET zalgo = "1̴̣̜̗̰͇͖͖̞̮͈͍̂͜.̸̢̧̨͙̻̜̰̼̔̿̓̄̀̅͌̈́͒͗̈́̒̕̚͜͠e̶̙̞̬̹̥͖̤̟͑͒̂̀̔͠x̵̛̱̠̳͍̦̘̤̙͚̙͈̬́̈́͂̎̽̇̀͝ę̵̯̦̫͖͖͍͈̟̠͉̥͒̑̐̏̕̚̕͜͠"
+          LET Test = "Hellothereongline" + zalgo
 
           SELECT Test AS Test1, Test AS Test2, Test AS Test3,
                  Test AS Test4, Test AS Test5,
