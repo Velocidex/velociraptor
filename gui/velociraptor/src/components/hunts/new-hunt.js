@@ -327,8 +327,16 @@ export default class NewHuntWizard extends React.Component {
             specs: specs,
         };
 
-        if (this.state.resources.ops_per_second) {
-            request.ops_per_second = this.state.resources.ops_per_second;
+        if (this.state.resources.progress_timeout) {
+            request.progress_timeout = this.state.resources.progress_timeout;
+        }
+
+        if (this.state.resources.cpu_limit) {
+            request.cpu_limit = this.state.resources.cpu_limit;
+        }
+
+        if (this.state.resources.iops_limit) {
+            request.iops_limit = this.state.resources.iops_limit;
         }
 
         if (this.state.resources.timeout) {
