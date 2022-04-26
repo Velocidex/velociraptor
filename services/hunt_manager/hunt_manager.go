@@ -343,7 +343,7 @@ func (self *HuntManager) ProcessFlowCompletion(
 		return err
 	}
 
-	if flow.Request == nil || len(flow.Request.Artifacts) == 0 {
+	if flow.Request == nil {
 		return nil
 	}
 
@@ -362,10 +362,10 @@ func (self *HuntManager) ProcessFlowCompletion(
 		Stats:  &api_proto.HuntStats{},
 	}
 
-	if len(flow.ArtifactsWithResults) > 0 {
-		mutation.Stats.TotalClientsWithResults = 1
-	}
+	// All completions increment this counter.
+	mutation.Stats.TotalClientsWithResults = 1
 
+	// Only errored completions increment this one.
 	if flow.State == flows_proto.ArtifactCollectorContext_ERROR {
 		mutation.Stats.TotalClientsWithErrors = 1
 	}
