@@ -121,12 +121,12 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20211013063943-0334d69593c1
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20220330071711-a02abef46c06
+	www.velocidex.com/golang/vfilter v0.0.0-20220428152704-2c10e2e5806d
 )
 
 require (
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
-	github.com/Velocidex/ordereddict v0.0.0-20220411103415-79032cf99b1d
+	github.com/Velocidex/ordereddict v0.0.0-20220428153415-da46091cd216
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/shirou/gopsutil/v3 v3.21.11
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
@@ -198,6 +198,7 @@ require (
 // replace www.velocidex.com/golang/evtx => /home/mic/projects/evtx
 // replace www.velocidex.com/golang/go-ese => /home/mic/projects/go-ese
 // replace github.com/Velocidex/ordereddict => /home/mic/projects/ordereddict
+
 // replace github.com/Velocidex/yaml/v2 => /home/mic/projects/yaml
 // replace www.velocidex.com/golang/go-prefetch => /home/mic/projects/go-prefetch
 // replace github.com/Velocidex/go-magic => /home/mic/projects/go-magic
