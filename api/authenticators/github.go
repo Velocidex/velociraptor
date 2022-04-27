@@ -116,7 +116,7 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
-					"err": err,
+					"err": err.Error(),
 				}).Error("getUserDataFromGithub")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
@@ -127,7 +127,7 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
-					"err": err,
+					"err": err.Error(),
 				}).Error("getUserDataFromGithub")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
@@ -148,7 +148,7 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
-					"err": err,
+					"err": err.Error(),
 				}).Error("getUserDataFromGithub")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return

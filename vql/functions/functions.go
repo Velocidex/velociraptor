@@ -427,6 +427,10 @@ func (self _SetFunction) Call(
 		t.Set(arg.Field, arg.Value)
 		return t
 
+	case map[string]interface{}:
+		t[arg.Field] = arg.Value
+		return t
+
 	default:
 		scope.Log("set: Item type %T not supported. set() expects a dict", result)
 		return types.Null{}

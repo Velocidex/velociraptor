@@ -37,4 +37,5 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/usn"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 	_ "www.velocidex.com/golang/velociraptor/vql/tools"
+	_ "www.velocidex.com/golang/velociraptor/vql/tools/process"
 )

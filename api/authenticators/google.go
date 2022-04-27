@@ -156,7 +156,7 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
-					"err": err,
+					"err": err.Error(),
 				}).Error("getUserDataFromGoogle")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
@@ -167,7 +167,7 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
-					"err": err,
+					"err": err.Error(),
 				}).Error("getUserDataFromGoogle")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
@@ -188,7 +188,7 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
-					"err": err,
+					"err": err.Error(),
 				}).Error("getUserDataFromGoogle")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
@@ -382,7 +382,7 @@ func reject_with_username(
 		"remote": r.RemoteAddr,
 		"method": r.Method,
 		"url":    r.URL,
-		"err":    err,
+		"err":    err.Error(),
 	}).Error("User rejected by GUI")
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
