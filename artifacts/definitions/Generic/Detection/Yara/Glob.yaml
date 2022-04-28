@@ -36,8 +36,10 @@ parameters:
     default: /usr/bin/ls
   - name: SizeMax
     description: maximum size of target file.
+    type: int64
   - name: SizeMin
     description: minimum size of target file.
+    type: int64
   - name: UploadHits
     type: bool
   - name: DateAfter
