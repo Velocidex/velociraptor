@@ -35,7 +35,9 @@ parameters:
     description: "Target drive. Default is a C:"
     default: "C:"
   - name: SizeMax
+    type: int
   - name: SizeMin
+    type: int
   - name: AllDrives
     type: bool
   - name: UploadHits
