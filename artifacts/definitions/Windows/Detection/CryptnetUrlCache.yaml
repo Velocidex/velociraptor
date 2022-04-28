@@ -27,7 +27,8 @@ parameters:
       C:\Users\*\AppData\LocalLow\Microsoft\CryptnetUrlCache\**
   - name: SusSize
     description: "Size in bytes for CryptnetUrlCache content to be suspicious"
-    default: 10000
+    default: '10000'
+    type: int
   - name: HeaderRegex
     description: 'Regex of content headers.'
     default: '.'
