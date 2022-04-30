@@ -203,7 +203,6 @@ class EventMonitoring extends React.Component {
     }
 
     setTimeRange = (start_time, end_time) => {
-        console.log(start_time);
         this.setState({
             start_time: start_time, end_time: end_time
         });

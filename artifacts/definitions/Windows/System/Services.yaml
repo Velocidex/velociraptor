@@ -76,8 +76,11 @@ sources:
                 LIMIT 1
             } AS FailureCommand,
             {
-                SELECT
-                    parse_binary(accessor='data',filename=FailureActions,profile=Profile,struct='ServiceFailureActions') as FailureActions
+                SELECT if(condition=FailureActions,
+                   then=parse_binary(accessor='data',
+                                     filename=FailureActions,
+                                     profile=Profile,
+                                     struct='ServiceFailureActions')) as FailureActions
                 FROM read_reg_key(globs=servicesKeyGlob + Name)
             } AS FailureActions,
             expand(path=parse_string_with_regex(regex=
