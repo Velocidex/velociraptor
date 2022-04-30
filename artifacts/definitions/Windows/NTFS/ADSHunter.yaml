@@ -25,13 +25,13 @@ type: CLIENT
 parameters:
  - name: TargetFolder
    description: Target folder to add to a glob path to recursively search for ADS. e.g C:\Users will convert to C:\Users\**\*
-   default: C:\Users
+   default: C:\
  - name: AdsNameGlob
    description: AdsName in glob format. e.g *, Zone.Identifier or Zone.*
    default: '*'
  - name: AdsNameExclusion
    description: Regex of ADS name to exclude.
-   default: 'Zone\.Identifier|SmartScreen|WofCompressedData|encryptable|favicon|AFP_AfpInfo|OECustomProperty|Win32App_1|com\.dropbox|icasource|\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}\.(MetaData|SyncRootIdentity)'
+   default: 'SmartScreen|WofCompressedData|encryptable|favicon|AFP_AfpInfo|OECustomProperty|Win32App_1|com\.dropbox|icasource|\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}\.(MetaData|SyncRootIdentity)'
    type: regex
  - name: AdsContentRegex
    description: ADS content to search for by regex.
@@ -54,35 +54,37 @@ parameters:
 sources:
  - query: |
       -- Collect ADS entries using glob but exclude ntfs objects that contain ads
-      LET hits = SELECT
+      LET ads_entries = SELECT OSPath,
             split(string=Name,sep=':')[1] as AdsName,
             Data.mft as Inode,
             Size,
-            regex_replace(source=FullPath,re=':'+ split(string=Name,sep=':')[1] + '$',replace='') as HostObject,
-            IsDir as HostIsDir,
-            dict(Mtime=Mtime,Atime=Atime,Ctime=Ctime,Btime=Btime) as HostTimestampsSI,
-            read_file(filename=FullPath, accessor="ntfs",length=10240) as AdsContent, -- only upload first 10k of each hit
-            FullPath
-        FROM glob(globs=TargetFolder + "/**/*:" + AdsNameGlob, accessor="ntfs")
+            regex_replace(source=OSPath,re=':'+ split(string=Name,sep=':')[1] + '$',replace='') as HostObject,
+            dict(Mtime=Mtime,Atime=Atime,Ctime=Ctime,Btime=Btime) as HostTimestampsSI
+        FROM glob(globs=TargetFolder + "/**/*:" + AdsNameGlob, accessor="ntfs",nosymlink='Y')
         WHERE 
-            NOT FullPath =~ '\\$Secure|\\$Extend|\\$BadClus|\\$Bitmap|\\$UpCase'
+            NOT OSPath =~ '\\$Secure:\\$SDS|\\$Extend|\\$BadClus|\\$Bitmap|\\$UpCase'
+            AND if(condition=MinSize,
+                    then= Size > MinSize,
+                    else= True )
+            AND if(condition= MaxSize,
+                    then= Size < MaxSize,
+                    else= True )
             AND NOT if(condition=AdsNameExclusion,
                         then= AdsName =~ AdsNameExclusion,
                         else= False )
-                AND if(condition=MinSize,
-                        then= Size > MinSize,
-                        else= True )
-                AND if(condition= MaxSize,
-                        then= Size < MaxSize,
-                        else= True )
-                AND AdsContent =~ AdsContentRegex
-                AND NOT if(condition=AdsContentExclusion,
-                        then= AdsContent =~ AdsContentExclusion,
-                        else= False )
-        
+      
+      -- Extract content and filter
+      LET hits = SELECT *,
+            read_file(filename=OSPath[0]+Inode, accessor="mft",offset=0,length=1024) as AdsContent -- only upload first 1k of each hit
+        FROM ads_entries
+        WHERE AdsContent =~ AdsContentRegex
+            AND NOT if(condition=AdsContentExclusion,
+                    then= AdsContent =~ AdsContentExclusion,
+                    else= False )
+                    
       -- upload hits
       LET upload_hits = SELECT *, 
-            upload(file=FullPath,accessor='ntfs') as Upload
+            upload(file=OSPath,accessor='ntfs') as Upload
         FROM hits
       
       -- output rows 

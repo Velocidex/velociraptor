@@ -29,4 +29,4 @@ Queries:
     WHERE Name =~ "txt"
 
   # Test for ADSHunter - c:\adstest\test and ADS created via git action in windows.yaml
-  - SELECT AdsName,Size,HostObject,HostIsDir,AdsContent,FullPath FROM Artifact.Windows.NTFS.ADSHunter(TargetFolder='C:\\adstest')
+  - SELECT AdsName,Size,HostObject,AdsContent,OSPath FROM Artifact.Windows.NTFS.ADSHunter(TargetFolder='C:\\adstest')
