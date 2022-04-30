@@ -42,6 +42,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -51,6 +52,7 @@ import (
 
 	elasticsearch "github.com/Velocidex/go-elasticsearch/v7"
 	"github.com/Velocidex/ordereddict"
+	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -277,7 +279,7 @@ func send_to_elastic(
 	}
 
 	res, err := client.Bulk(bytes.NewReader(b))
-	if err != nil {
+	if err != nil && errors.Cause(err) != io.EOF {
 		scope.Log("elastic: %v", err)
 		return
 	}
