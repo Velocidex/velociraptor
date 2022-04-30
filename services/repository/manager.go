@@ -100,8 +100,10 @@ func (self *RepositoryManager) StartWatchingForUpdates(
 						false, /* validate */
 						false /* built_in */)
 
-					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-					logger.Info("Updating artifact %v in local repository", artifact.Name)
+					if err == nil {
+						logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+						logger.Info("Updating artifact %v in local repository", artifact.Name)
+					}
 
 				default:
 					fmt.Printf("Unknown op %v\n", op)
