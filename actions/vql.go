@@ -318,7 +318,6 @@ func EncodeIntoResponsePackets(
 		part := 0
 		row_chan := vql.Eval(ctx, scope)
 		buffer := bytes.Buffer{}
-		var first_row types.Any
 		var columns []string
 		var total_rows int
 
@@ -331,14 +330,7 @@ func EncodeIntoResponsePackets(
 			total_rows = 0
 			buffer.Reset()
 
-			// We dont know the columns but we have at
-			// least one row. Set the columns from this
-			// row.
-			if len(columns) == 0 && first_row != nil {
-				columns = scope.GetMembers(first_row)
-			}
 			result.Columns = columns
-
 			result_chan <- result
 			part += 1
 		}
@@ -368,6 +360,11 @@ func EncodeIntoResponsePackets(
 
 				// Materialize all elements if needed.
 				value := vfilter.RowToDict(ctx, scope, row)
+
+				// Set the columns according to the first row.
+				if len(columns) == 0 {
+					columns = value.Keys()
+				}
 
 				// Encode the row into bytes ASAP so we can reclaim
 				// memory.
