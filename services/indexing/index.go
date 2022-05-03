@@ -144,7 +144,7 @@ func (self *Indexer) ScanForNewSnapshots(
 	children, err := file_store_factory.ListDirectory(
 		path_manager.SnapshotDirectory())
 	if err != nil {
-		return err
+		return nil
 	}
 
 	for _, child := range children {

@@ -164,7 +164,7 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
-					"err": err,
+					"err": err.Error(),
 				}).Error("can not get a signed tokenString")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
