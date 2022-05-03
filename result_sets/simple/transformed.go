@@ -39,7 +39,8 @@ func (self ResultSetFactory) getFilteredReader(
 			log_path, options)
 	}
 
-	transformed_path := log_path.AddChild("filter", options.FilterRegex.String())
+	transformed_path := log_path.AddUnsafeChild(
+		"filter", options.FilterRegex.String())
 
 	// Try to open the transformed result set if it is already cached.
 	base_stat, err := file_store_factory.StatFile(log_path)
@@ -122,9 +123,11 @@ func (self ResultSetFactory) getSortedReader(
 
 	var transformed_path api.FSPathSpec
 	if options.SortAsc {
-		transformed_path = log_path.AddChild("sorted", options.SortColumn, "asc")
+		transformed_path = log_path.AddUnsafeChild(
+			"sorted", options.SortColumn, "asc")
 	} else {
-		transformed_path = log_path.AddChild("sorted", options.SortColumn, "desc")
+		transformed_path = log_path.AddUnsafeChild(
+			"sorted", options.SortColumn, "desc")
 	}
 
 	// Try to open the transformed result set if it is already cached.

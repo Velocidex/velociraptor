@@ -31,8 +31,10 @@ func MonitoringProcessMessage(
 	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
 
+	// Currently we do not do anything with monitoring status
+	// messages so just ignore them.
 	if message.Status != nil {
-		return CheckForStatus(config_obj, collection_context, message)
+		return nil
 	}
 
 	switch message.RequestId {

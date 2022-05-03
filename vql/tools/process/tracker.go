@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/ttlcache/v2"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -32,7 +33,7 @@ var (
 
 	// A global tracker that can be registered with
 	// process_tracker_install() and retrieved with process_tracker().
-	g_tracker *ProcessTracker = NewProcessTracker()
+	g_tracker *ProcessTracker = NewProcessTracker(1000)
 	clock     utils.Clock     = &utils.RealClock{}
 )
 
@@ -58,13 +59,25 @@ func SetClock(c utils.Clock) {
 }
 
 type ProcessTracker struct {
-	mu sync.Mutex
-	//lookup *ttlcache.Cache // map[string]*ProcessEntry
-	lookup map[string]*ProcessEntry
+	mu     sync.Mutex
+	lookup *ttlcache.Cache // map[string]*ProcessEntry
 
 	// Any interested parties will receive notifications of any state
 	// updates.
 	update_notifications chan *ProcessEntry
+}
+
+func (self *ProcessTracker) Get(id string) (*ProcessEntry, bool) {
+	any, err := self.lookup.Get(id)
+	if err != nil {
+		return nil, false
+	}
+
+	pe, ok := any.(*ProcessEntry)
+	if !ok {
+		return nil, false
+	}
+	return pe, true
 }
 
 func (self *ProcessTracker) Processes() []*ProcessEntry {
@@ -73,8 +86,30 @@ func (self *ProcessTracker) Processes() []*ProcessEntry {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	for _, v := range self.lookup {
-		res = append(res, v)
+	for _, id := range self.lookup.GetKeys() {
+		v, pres := self.Get(id)
+		if pres {
+			res = append(res, v)
+		}
+	}
+
+	return res
+}
+
+// Return all the processes that are children of this id
+func (self *ProcessTracker) Children(id string) []*ProcessEntry {
+	res := []*ProcessEntry{}
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for _, item_id := range self.lookup.GetKeys() {
+		v, pres := self.Get(item_id)
+		if pres {
+			if v.ParentId == id {
+				res = append(res, v)
+			}
+		}
 	}
 
 	return res
@@ -107,22 +142,22 @@ func (self *ProcessTracker) doUpdateQuery(
 			case "start":
 				self.maybeSendUpdate(update)
 				self.mu.Lock()
-				self.lookup[update.Id] = &ProcessEntry{
+				self.lookup.Set(update.Id, &ProcessEntry{
 					StartTime: update.StartTime,
 					Id:        update.Id,
 					ParentId:  update.ParentId,
 					Data:      update.Data,
-				}
+				})
 				self.mu.Unlock()
 
 			case "exit":
 				self.maybeSendUpdate(update)
 
 				self.mu.Lock()
-				entry, pres := self.lookup[update.Id]
+				entry, pres := self.Get(update.Id)
 				if pres {
 					entry.EndTime = update.EndTime
-					self.lookup[update.Id] = entry
+					self.lookup.Set(update.Id, entry)
 				}
 				self.mu.Unlock()
 
@@ -140,7 +175,7 @@ func (self *ProcessTracker) doFullSync(
 	now := GetClock().Now()
 	existing := make(map[string]bool)
 	self.mu.Lock()
-	for k, _ := range self.lookup {
+	for _, k := range self.lookup.GetKeys() {
 		existing[k] = true
 	}
 	self.mu.Unlock()
@@ -157,7 +192,7 @@ func (self *ProcessTracker) doFullSync(
 		}
 
 		self.mu.Lock()
-		self.lookup[update.Id] = update
+		self.lookup.Set(update.Id, update)
 		delete(existing, update.Id)
 		self.mu.Unlock()
 
@@ -168,11 +203,11 @@ func (self *ProcessTracker) doFullSync(
 	// update exit time if needed.
 	self.mu.Lock()
 	for id := range existing {
-		item, pres := self.lookup[id]
+		item, pres := self.Get(id)
 		if pres {
 			item.EndTime = now
 		}
-		self.lookup[id] = item
+		self.lookup.Set(id, item)
 	}
 	self.mu.Unlock()
 
@@ -204,7 +239,7 @@ func (self *ProcessTracker) CallChain(id string) []*ProcessEntry {
 
 	result := []*ProcessEntry{}
 	for {
-		proc, pres := self.lookup[id]
+		proc, pres := self.Get(id)
 		if !pres {
 			return reverse(result)
 		}
@@ -220,8 +255,14 @@ func (self *ProcessTracker) CallChain(id string) []*ProcessEntry {
 	}
 }
 
-func NewProcessTracker() *ProcessTracker {
-	return &ProcessTracker{lookup: make(map[string]*ProcessEntry)}
+func NewProcessTracker(max_size int) *ProcessTracker {
+	result := &ProcessTracker{
+		lookup: ttlcache.NewCache(),
+	}
+
+	result.lookup.SetCacheSizeLimit(max_size)
+
+	return result
 }
 
 type ProcessEntry struct {
@@ -238,6 +279,7 @@ type _InstallProcessTrackerArgs struct {
 	SyncQuery    vfilter.StoredQuery `vfilter:"required,field=sync_query,doc=Source for full tracker updates. Query must emit rows with the ProcessTrackerUpdate shape - usually uses pslist() to form a full sync."`
 	SyncPeriodMs int64               `vfilter:"optional,field=sync_period,doc=How often to do a full sync (default 5000 msec)."`
 	UpdateQuery  vfilter.StoredQuery `vfilter:"optional,field=update_query,doc=An Event query that produces live updates of the tracker state."`
+	MaxSize      int64               `vfilter:"optional,field=max_size,doc=Maximum size of process tracker LRU."`
 }
 
 type _InstallProcessTracker struct{}
@@ -258,7 +300,12 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 		arg.SyncPeriodMs = 5000
 	}
 
-	tracker := NewProcessTracker()
+	max_size := arg.MaxSize
+	if max_size == 0 {
+		max_size = 10000
+	}
+
+	tracker := NewProcessTracker(int(max_size))
 	sync_duration := time.Duration(arg.SyncPeriodMs) * time.Millisecond
 
 	if !utils.IsNil(arg.SyncQuery) {

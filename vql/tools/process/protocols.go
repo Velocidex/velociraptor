@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -61,4 +62,8 @@ func (self ProcessTrackerUpdater) Call(
 	}()
 
 	return output_chan
+}
+
+func init() {
+	vql_subsystem.RegisterPlugin(&ProcessTrackerUpdater{})
 }
