@@ -17,6 +17,7 @@ type: CLIENT_EVENT
 
 parameters:
   - name: maxDriveSize
+    type: int
     description: We ignore removable drives larger than this size in bytes.
     default: "32000000000"
 

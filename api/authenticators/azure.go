@@ -119,7 +119,7 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
-					"err": err,
+					"err": err.Error(),
 				}).Error("getUserDataFromAzure")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
@@ -142,7 +142,7 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
-					"err": err,
+					"err": err.Error(),
 				}).Error("getUserDataFromAzure")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return

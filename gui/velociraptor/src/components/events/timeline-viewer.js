@@ -46,7 +46,27 @@ class EventTableRenderer  extends Component {
 
     state = {
         download: false,
-        toggles: {},
+        toggles: undefined,
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        // FIXME: For now we always hide _ columns. We need to expose
+        // the column selector.
+        if(!_.isUndefined(this.props.columns)) {
+            let toggles = {};
+            _.each(this.props.columns, x=>{
+                if(_.isString(x) &&
+                   x.length>0 && x[0] === "_") {
+                    toggles[x]=true;
+                } else {
+                    toggles[x]=false;
+                }
+            });
+
+            if(!_.isEqual(this.state.toggles, toggles)) {
+                this.setState({toggles: toggles});
+            };
+        }
     }
 
     defaultFormatter = (cell, row, rowIndex) => {
@@ -72,7 +92,8 @@ class EventTableRenderer  extends Component {
                 definition.formatter = this.defaultFormatter;
             }
 
-            if (this.state.toggles[name]) {
+            if (this.state.toggles &&
+                this.state.toggles[name]) {
                 definition["hidden"] = true;
             }
 
@@ -83,6 +104,8 @@ class EventTableRenderer  extends Component {
         for (var j=0; j<rows.length; j++) {
             rows[j]["_id"] = j;
         }
+
+        //console.log(this.props.columns, this.state.toggles);
 
         return (
             <div className="velo-table timeline-table">

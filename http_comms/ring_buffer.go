@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -143,7 +144,7 @@ func (self *FileBasedRingBuffer) Enqueue(item []byte) {
 
 	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
 	logger.WithFields(logrus.Fields{
-		"header":         self.header,
+		"header":         json.MustMarshalString(self.header),
 		"leased_pointer": self.leased_pointer,
 	}).Info("File Ring Buffer: Enqueue")
 
@@ -329,7 +330,7 @@ func (self *FileBasedRingBuffer) Commit() {
 	_, _ = self.fd.WriteAt(serialized, 0)
 
 	logger.WithFields(logrus.Fields{
-		"header": self.header,
+		"header": json.MustMarshalString(self.header),
 	}).Info("File Ring Buffer: Commit")
 }
 

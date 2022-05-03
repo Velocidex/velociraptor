@@ -96,34 +96,34 @@ sources:
           NtfsMetadata.Attributes.Type =~ '^\\$EA'
 
       -- enrich results for size filter, dropping metadata field output as this attribute is viewable in Ntfs field.
-      LET enriched_results = SELECT *,
+      LET enriched_results = SELECT OSPath,NtfsMetadata,
             --{ SELECT * FROM NtfsMetadata.Attributes WHERE Type = '$EA_INFORMATION'} as _EA_INFORMATION_Metadata,
             { SELECT * FROM NtfsMetadata.Attributes WHERE Type = '$EA'} as _EA_Metadata
         FROM mft_entries
         WHERE _EA_Metadata.Size > SizeMin AND _EA_Metadata.Size < SizeMax
 
       -- parse EA attribute
-      LET parse_ea = SELECT *,
+      LET parse_ea = SELECT OSPath,NtfsMetadata,_EA_Metadata,
             parse_binary(accessor="mft",
                 filename=NtfsMetadata.Device + _EA_Metadata.Inode,
                 profile=Profile, struct="EAData").Entries AS EA
         FROM enriched_results
 
       -- flattern results and output a row for each EA parsed
-      LET flatten_results = SELECT  OSPath, NtfsMetadata, EA,_EA_Metadata
+      LET flatten_results = SELECT  OSPath, NtfsMetadata, EA, _EA_Metadata
         FROM flatten(
             query={
                 SELECT *
                     {
                         SELECT Name,Value,Flags,ValueLength
-                        FROM foreach(row=EA) } as EA
+                        FROM foreach(row=EA) 
+                    } as EA
                 FROM parse_ea
                 WHERE EA.Name =~ EANameRegex
                     AND NOT if(condition=EANameExclusion,
                             then= EA.Name =~ EANameExclusion,
                             else= False )
                     AND EA.Value =~ EAContentRegex
-
             })
 
       -- upload extended EA data
