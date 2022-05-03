@@ -376,7 +376,10 @@ class VeloPagedTable extends Component {
                   columns={this.state.columns}
                   transform={this.state.transform}
                   setTransform={x=>{
-                      this.setState({transform: x});
+                      this.setState({
+                          transform: x,
+                          start_row: 0,
+                      });
                   }}
                   onClose={()=>this.setState({show_transform_dialog: false})}
                 />

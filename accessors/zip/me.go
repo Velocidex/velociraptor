@@ -85,10 +85,17 @@ func (self *MEFileSystemAccessor) GetZipFile(file_path *accessors.OSPath) (
 
 func (self *MEFileSystemAccessor) Lstat(serialized_path string) (
 	accessors.FileInfo, error) {
-	full_path, err := accessors.NewLinuxOSPath(serialized_path)
+	full_path, err := self.ParsePath(serialized_path)
 	if err != nil {
 		return nil, err
 	}
+
+	return self.LstatWithOSPath(full_path)
+}
+
+func (self *MEFileSystemAccessor) LstatWithOSPath(
+	full_path *accessors.OSPath) (accessors.FileInfo, error) {
+
 	root, err := self.GetZipFile(full_path)
 	if err != nil {
 		return nil, err
@@ -100,10 +107,17 @@ func (self *MEFileSystemAccessor) Lstat(serialized_path string) (
 func (self *MEFileSystemAccessor) Open(serialized_path string) (
 	accessors.ReadSeekCloser, error) {
 	// Fetch the zip file from cache again.
-	full_path, err := accessors.NewLinuxOSPath(serialized_path)
+	full_path, err := self.ParsePath(serialized_path)
 	if err != nil {
 		return nil, err
 	}
+
+	return self.OpenWithOSPath(full_path)
+}
+
+func (self *MEFileSystemAccessor) OpenWithOSPath(
+	full_path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
+
 	zip_file_cache, err := self.GetZipFile(full_path)
 	if err != nil {
 		return nil, err
@@ -118,13 +132,20 @@ func (self *MEFileSystemAccessor) Open(serialized_path string) (
 	return fd, nil
 }
 
-func (self *MEFileSystemAccessor) ReadDir(serialized_path string) (
+func (self *MEFileSystemAccessor) ReadDir(file_path string) (
 	[]accessors.FileInfo, error) {
 
-	full_path, err := accessors.NewPathspecOSPath(serialized_path)
+	full_path, err := self.ParsePath(file_path)
 	if err != nil {
 		return nil, err
 	}
+
+	return self.ReadDirWithOSPath(full_path)
+}
+
+func (self *MEFileSystemAccessor) ReadDirWithOSPath(
+	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
+
 	root, err := self.GetZipFile(full_path)
 	if err != nil {
 		return nil, err

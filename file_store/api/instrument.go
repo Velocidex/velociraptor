@@ -3,6 +3,7 @@ package api
 import (
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -21,10 +22,18 @@ var (
 	)
 
 	// Simulate running on a very slow filesystem (EFS)
+	clock_mu    sync.Mutex
 	inject_time = 0
 
-	Clock utils.Clock = &utils.RealClock{}
+	g_clock utils.Clock = &utils.RealClock{}
 )
+
+func Clock() utils.Clock {
+	clock_mu.Lock()
+	defer clock_mu.Unlock()
+
+	return g_clock
+}
 
 // Used by tests to force a delay (ms)
 func SetFilestoreDelay(delay int) {
@@ -33,14 +42,20 @@ func SetFilestoreDelay(delay int) {
 
 // Tests use this to install a new clock and latency delays.
 func InstallClockForTests(clock utils.Clock, delay int) func() {
+	clock_mu.Lock()
+	defer clock_mu.Unlock()
+
 	old_delay := inject_time
-	old_clock := Clock
+	old_clock := g_clock
 
 	inject_time = delay
-	Clock = clock
+	g_clock = clock
 
 	return func() {
-		Clock = old_clock
+		clock_mu.Lock()
+		defer clock_mu.Unlock()
+
+		g_clock = old_clock
 		inject_time = old_delay
 	}
 }
@@ -55,12 +70,12 @@ func Instrument(access_type, datastore string, path_spec FSPathSpec) func() time
 	}
 
 	// Mark the start of the time.
-	start := Clock.Now()
+	start := Clock().Now()
 
 	// When this func is called we calculate the time difference and
 	// observe it into the histogram.
 	return func() time.Duration {
-		d := Clock.Now().Sub(start)
+		d := Clock().Now().Sub(start)
 		FilestoreHistorgram.WithLabelValues(
 			tag, access_type, datastore).Observe(d.Seconds())
 		return d
@@ -79,17 +94,17 @@ func InstrumentWithDelay(
 	}
 
 	// Mark the start of the time.
-	start := Clock.Now()
+	start := Clock().Now()
 
 	// Instrument a delay in API calls.
 	if inject_time > 0 {
-		Clock.Sleep(time.Duration(inject_time) * time.Millisecond)
+		Clock().Sleep(time.Duration(inject_time) * time.Millisecond)
 	}
 
 	// When this func is called we calculate the time difference and
 	// observe it into the histogram.
 	return func() time.Duration {
-		d := Clock.Now().Sub(start)
+		d := Clock().Now().Sub(start)
 		FilestoreHistorgram.WithLabelValues(
 			tag, access_type, datastore).Observe(d.Seconds())
 		return d

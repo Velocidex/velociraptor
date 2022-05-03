@@ -186,19 +186,21 @@ func (self _DiffPlugin) Call(ctx context.Context,
 			arg.Query)
 
 		for {
+			scope.Log("diff: Running query")
+			for _, row := range diff_cache.Eval(ctx, scope) {
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- row:
+				}
+			}
+
 			select {
 			case <-ctx.Done():
 				return
 
 			case <-time.After(time.Duration(arg.Period) * time.Second):
-				for _, row := range diff_cache.Eval(ctx, scope) {
-					select {
-					case <-ctx.Done():
-						return
-
-					case output_chan <- row:
-					}
-				}
 			}
 		}
 

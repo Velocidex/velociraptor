@@ -40,7 +40,7 @@ func (self *MultiAuthenticator) reject_with_username(
 		"user":   username,
 		"remote": r.RemoteAddr,
 		"method": r.Method,
-		"err":    err,
+		"err":    err.Error(),
 	}).Error("User rejected by GUI")
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
