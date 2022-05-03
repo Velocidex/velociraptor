@@ -106,7 +106,7 @@ func (self *JournalTestSuite) TestJournalWriting() {
 
 	// Get the total time. It should be much less than 10 times 70ms
 	// (i.e. rows are not written serially).
-	total_time := api.Clock.Now().Sub(start).Seconds()
+	total_time := api.Clock().Now().Sub(start).Seconds()
 	assert.True(self.T(), 0.07*10 > total_time)
 }
 
@@ -155,7 +155,7 @@ func (self *JournalTestSuite) TestJournalJsonlWriting() {
 
 	// Get the total time. It should be much less than 10 times 70ms
 	// (i.e. rows are not written serially).
-	total_time := api.Clock.Now().Sub(start).Seconds()
+	total_time := api.Clock().Now().Sub(start).Seconds()
 	assert.True(self.T(), 0.07*10 > total_time)
 }
 

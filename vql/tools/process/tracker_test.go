@@ -2,10 +2,12 @@ package process
 
 import (
 	"context"
+	"regexp"
 	"testing"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -31,7 +33,7 @@ type testCases_t struct {
 
 var (
 	stockUpdateTest = `
-LET Tracker <= process_tracker_install(sync_query={
+LET Tracker <= process_tracker(sync_query={
   SELECT Pid AS id,
          Ppid AS parent_id,
          CreateTime AS start_time,
@@ -45,11 +47,11 @@ LET Tracker <= process_tracker_install(sync_query={
 LET _ <= mock_update_wait()
 
 -- Pid 5 should be exited.
-SELECT Tracker.GetChain(id=2)
+SELECT process_tracker_callchain(id=2)
 FROM scope()
 `
 	stockSyncTest = `
-LET Tracker <= process_tracker_install(sync_query={
+LET Tracker <= process_tracker(sync_query={
   SELECT Pid AS id,
          Ppid AS parent_id,
          CreateTime AS start_time,
@@ -58,11 +60,11 @@ LET Tracker <= process_tracker_install(sync_query={
 }, sync_period=5)
 
 -- First call Pid 5 is still around.
-SELECT Tracker.GetChain(id=2).Data.Name, mock_pslist_next()
+SELECT process_tracker_callchain(id=2).Data.Name, mock_pslist_next()
 FROM scope()
 
 -- Second call Pid 5 is exited - should mark Pid 5 as exited.
-SELECT Tracker.GetChain(id=2)
+SELECT process_tracker_callchain(id=2)
 FROM scope()
 `
 
@@ -116,7 +118,8 @@ FROM scope()
  [{"Pid":2,"Name":"Process2","Ppid":5,"CreateTime": "2021-01-01T12:30Z"}]
 ]`,
 			Query: stockSyncTest,
-			Clock: &utils.MockClock{time.Unix(1651000000, 0).UTC()},
+			//			Clock: &utils.MockClock{time.Unix(1651000000, 0).UTC()},
+			Clock: &utils.IncClock{NowTime: 1651000000},
 		},
 	}
 )
@@ -132,9 +135,12 @@ func (self *ProcessTrackerTestSuite) TestProcessTracker() {
 	defer cancel()
 
 	for idx, test_case := range testCases {
-		if idx != 2 {
-			continue
-		}
+		/*
+			if idx != 1 {
+				continue
+			}
+		*/
+		_ = idx
 		SetClock(test_case.Clock)
 
 		loadMockPlugin(self.T(), test_case.Mock)
@@ -166,7 +172,10 @@ func (self *ProcessTrackerTestSuite) TestProcessTracker() {
 		results.Set(test_case.Name, rows)
 	}
 
-	json.Dump(results)
+	normalize := regexp.MustCompile("2022-04-26T.*?Z").ReplaceAllString(
+		string(json.MustMarshalIndent(results)), "2022-04-26TZ")
+
+	goldie.Assert(self.T(), "TestProcessTracker", []byte(normalize))
 }
 
 func TestProcessTracker(t *testing.T) {

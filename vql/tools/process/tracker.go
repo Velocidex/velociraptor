@@ -36,6 +36,13 @@ var (
 	clock     utils.Clock     = &utils.RealClock{}
 )
 
+func GetGlobalTracker() *ProcessTracker {
+	clock_mu.Lock()
+	defer clock_mu.Unlock()
+
+	return g_tracker
+}
+
 func GetClock() utils.Clock {
 	clock_mu.Lock()
 	defer clock_mu.Unlock()
@@ -51,7 +58,8 @@ func SetClock(c utils.Clock) {
 }
 
 type ProcessTracker struct {
-	mu     sync.Mutex
+	mu sync.Mutex
+	//lookup *ttlcache.Cache // map[string]*ProcessEntry
 	lookup map[string]*ProcessEntry
 
 	// Any interested parties will receive notifications of any state
@@ -129,6 +137,7 @@ func (self *ProcessTracker) doFullSync(
 	subctx, cancel := context.WithTimeout(ctx, sync_period)
 	defer cancel()
 
+	now := GetClock().Now()
 	existing := make(map[string]bool)
 	self.mu.Lock()
 	for k, _ := range self.lookup {
@@ -161,7 +170,7 @@ func (self *ProcessTracker) doFullSync(
 	for id := range existing {
 		item, pres := self.lookup[id]
 		if pres {
-			item.EndTime = GetClock().Now()
+			item.EndTime = now
 		}
 		self.lookup[id] = item
 	}
@@ -229,7 +238,6 @@ type _InstallProcessTrackerArgs struct {
 	SyncQuery    vfilter.StoredQuery `vfilter:"required,field=sync_query,doc=Source for full tracker updates. Query must emit rows with the ProcessTrackerUpdate shape - usually uses pslist() to form a full sync."`
 	SyncPeriodMs int64               `vfilter:"optional,field=sync_period,doc=How often to do a full sync (default 5000 msec)."`
 	UpdateQuery  vfilter.StoredQuery `vfilter:"optional,field=update_query,doc=An Event query that produces live updates of the tracker state."`
-	Global       bool                `vfilter:"optional,field=global,doc=Registers this tracker as the global tracker."`
 }
 
 type _InstallProcessTracker struct{}
@@ -242,7 +250,7 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("process_tracker_install: %s", err.Error())
+		scope.Log("process_tracker: %s", err.Error())
 		return false
 	}
 
@@ -276,37 +284,22 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 	}
 
 	// Register this tracker as a global tracker.
-	if arg.Global {
-		clock_mu.Lock()
-		defer clock_mu.Unlock()
+	clock_mu.Lock()
+	defer clock_mu.Unlock()
 
-		g_tracker = tracker
-	}
+	g_tracker = tracker
 
 	return tracker
 }
 
 func (self *_InstallProcessTracker) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "process_tracker_install",
-		Doc:     "Install a process tracker.",
+		Name:    "process_tracker",
+		Doc:     "Install a global process tracker.",
 		ArgType: type_map.AddType(scope, &_InstallProcessTrackerArgs{}),
 	}
 }
 
 func init() {
 	vql_subsystem.RegisterFunction(&_InstallProcessTracker{})
-	vql_subsystem.RegisterFunction(vfilter.GenericFunction{
-		FunctionName: "process_tracker",
-		Function: func(
-			ctx context.Context,
-			scope vfilter.Scope,
-			args *ordereddict.Dict) vfilter.Any {
-
-			clock_mu.Lock()
-			defer clock_mu.Unlock()
-
-			return g_tracker
-		}})
-	vql_subsystem.RegisterProtocol(&ProcessTrackerAssociative{})
 }

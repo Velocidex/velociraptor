@@ -26,6 +26,9 @@ var (
 )
 
 func loadMockPlugin(t *testing.T, serialized string) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	result := make([][]*ordereddict.Dict, 0)
 
 	err := json.Unmarshal([]byte(serialized), &result)
@@ -35,6 +38,9 @@ func loadMockPlugin(t *testing.T, serialized string) {
 }
 
 func loadMockUpdatePlugin(t *testing.T, serialized string) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	result := make([]*ordereddict.Dict, 0)
 
 	err := json.Unmarshal([]byte(serialized), &result)
