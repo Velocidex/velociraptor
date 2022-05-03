@@ -1,0 +1,72 @@
+name: Windows.Events.TrackProcesses
+description: |
+  This artifact uses sysmon and pslist to keep track of running
+  processes using the Velociraptor process tracker.
+
+  The Process Tracker keeps track of exited processes, and resolves
+  process callchains from it in memory cache.
+
+  This event artifact enables the global process tracker and makes it
+  possible to run many other artifacts that depend on the process
+  tracker.
+
+type: CLIENT_EVENT
+
+parameters:
+  - name: AlsoForwardUpdates
+    type: bool
+    description: |
+      If set we also send process tracker state updates to
+      the server.
+  - name: MaxSize
+    type: int64
+    description: Maximum size of the in memory process cache (default 10k)
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+        LET UpdateQuery =
+            SELECT * FROM foreach(row={
+              SELECT * FROM watch_etw(guid='{5770385f-c22a-43e0-bf4c-06f5698ffbd9}')
+            }, query={
+              SELECT * FROM switch(
+              start={
+                SELECT EventData.ProcessId AS id,
+                       EventData.ParentProcessId AS parent_id,
+                       "start" AS update_type,
+                       set(item=EventData,
+                           field="CreateTime",
+                           value=EventData.UtcTime) AS data,
+                       EventData.UtcTime AS start_time,
+                       NULL AS end_time
+                FROM scope()
+                WHERE System.ID = 1
+              },
+              end={
+                SELECT EventData.ProcessId AS id,
+                       NULL AS parent_id,
+                       "exit" AS update_type,
+                       dict() AS data,
+                       NULL AS start_time,
+                       EventData.UtcTime AS end_time
+                FROM scope()
+                WHERE System.ID = 5
+              })
+            })
+
+
+        LET Tracker <= process_tracker(sync_query={
+              SELECT Pid AS id,
+                 Ppid AS parent_id,
+                 CreateTime AS start_time,
+                 dict(
+                   Image=Exe,
+                   CommandLine=CommandLine,
+                   CreateTime=CreateTime) AS data
+              FROM pslist()
+        }, update_query=UpdateQuery, sync_period=600000)
+
+        SELECT * FROM process_tracker_updates()
+        WHERE update_type = "stats" OR AlsoForwardUpdates

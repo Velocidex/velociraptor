@@ -765,6 +765,9 @@
   - name: password
     type: string
     description: An optional password to encrypt the collection zip.
+  - name: format
+    type: string
+    description: Format to export (csv,json) defaults to both.
   category: server
 - name: create_hunt_download
   description: |
@@ -987,7 +990,6 @@
   - name: type
     type: string
     description: The type of the index to upload to.
-    required: true
   - name: chunk_size
     type: int64
     description: The number of rows to send at the time.
@@ -1700,7 +1702,7 @@
     repeated: true
     required: true
   - name: root
-    type: string
+    type: accessors.OSPath
     description: The root directory to glob from (default '').
   - name: accessor
     type: string
@@ -3738,6 +3740,40 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: windows
+- name: process_tracker
+  description: Install a global process tracker.
+  type: Function
+  args:
+  - name: sync_query
+    type: StoredQuery
+    description: Source for full tracker updates. Query must emit rows with the ProcessTrackerUpdate
+      shape - usually uses pslist() to form a full sync.
+    required: true
+  - name: sync_period
+    type: int64
+    description: How often to do a full sync (default 5000 msec).
+  - name: update_query
+    type: StoredQuery
+    description: An Event query that produces live updates of the tracker state.
+  - name: max_size
+    type: int64
+    description: Maximum size of process tracker LRU.
+- name: process_tracker_callchain
+  description: Get a call chain from the global process tracker.
+  type: Function
+  args:
+  - name: id
+    type: string
+    description: Process ID.
+    required: true
+- name: process_tracker_children
+  description: Get all children of a process.
+  type: Function
+  args:
+  - name: id
+    type: string
+    description: Process ID.
+    required: true
 - name: profile
   description: Returns a profile dump from the running process.
   type: Plugin
@@ -3927,12 +3963,11 @@
     type: string
     description: Glob expressions to apply.
     repeated: true
-    required: true
   - name: accessor
     type: string
     description: The accessor to use.
   - name: root
-    type: string
+    type: accessors.OSPath
     description: The root directory to glob from (default '/').
   category: windows
 - name: reg_rm_key
@@ -4423,8 +4458,8 @@
     description: 'Skip SSL verification(default: False).'
   - name: root_ca
     type: string
-    description: As a better alternative to disable_ssl_security, allows root ca certs
-      to be added here.
+    description: As a better alternative to skip_verify, allows root ca certs to be
+      added here.
   - name: wait_time
     type: int64
     description: Batch splunk upload this long (2 sec).
@@ -4840,7 +4875,7 @@
   type: Function
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     description: The file to upload
     required: true
   - name: name
@@ -4892,7 +4927,7 @@
   type: Function
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     description: The file to upload
     required: true
   - name: name
