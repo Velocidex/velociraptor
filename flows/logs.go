@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	defaultLogErrorRegex = regexp.MustCompile("(?i)(Error:|Symbol.+?not found)")
+	defaultLogErrorRegex = regexp.MustCompile(constants.VQL_ERROR_REGEX)
 
 	// If the config file specifies the regex we compile it once and
 	// cache in memory.

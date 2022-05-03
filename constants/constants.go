@@ -78,6 +78,11 @@ const (
 	EVTX_FREQUENCY      = "EVTX_FREQUENCY"
 	USN_FREQUENCY       = "USN_FREQUENCY"
 	ZIP_FILE_CACHE_SIZE = "ZIP_FILE_CACHE_SIZE"
+
+	// Certain VQL errors represent a failure in artifact
+	// collection. We use this RegExp to determine if log messages
+	// represent failure.
+	VQL_ERROR_REGEX = "(?i)(Error:|Symbol.+?not found|Expecting a path arg type, not)"
 )
 
 type key int

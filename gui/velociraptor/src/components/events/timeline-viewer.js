@@ -51,12 +51,13 @@ class EventTableRenderer  extends Component {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         // FIXME: For now we always hide _ columns. We need to expose
-        // the column selector.
+        // the column selector. The _ts column is special as it
+        // represents the event time.
         if(!_.isUndefined(this.props.columns)) {
             let toggles = {};
             _.each(this.props.columns, x=>{
                 if(_.isString(x) &&
-                   x.length>0 && x[0] === "_") {
+                   x.length>0 && x[0] === "_" && x !== "_ts") {
                     toggles[x]=true;
                 } else {
                     toggles[x]=false;

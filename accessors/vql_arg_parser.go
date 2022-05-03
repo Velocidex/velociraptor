@@ -63,6 +63,7 @@ func parseOSPath(ctx context.Context,
 		return accessor.ParsePath(string(t))
 
 	default:
+		// This is a fatal error on the client.
 		return nil, fmt.Errorf("Expecting a path arg type, not %T", t)
 	}
 }
