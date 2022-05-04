@@ -89,7 +89,11 @@ func (self *Loader) WithLogFile(filename string) *Loader {
 	self = self.Copy()
 	self.validators = append(self.validators,
 		func(self *Loader, config_obj *config_proto.Config) error {
-			return logging.AddLogFile(filename)
+			err := logging.AddLogFile(filename)
+			if err != nil {
+				return HardError{err}
+			}
+			return nil
 		})
 	return self
 }
