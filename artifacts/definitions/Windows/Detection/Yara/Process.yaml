@@ -112,7 +112,10 @@ sources:
                 String.Offset as HitOffset,
                 String.Name as HitName,
                 String.HexData as HitHexData
-             FROM yara(files=Pid,accessor='process',rules=yara_rules)
+             FROM yara(
+                files=format(format="/%d", args=Pid),
+                accessor='process',
+                rules=yara_rules)
              LIMIT 1
           })
 
@@ -130,9 +133,11 @@ sources:
                 HitOffset,
                 HitName,
                 HitHexData,
-                upload(file=FullPath,name=format(format='%v-%v.dmp',
-                    args= [ split(string=ProcessName,sep='\\.')[0], Pid ]
-                        )) as ProcessDump
+                upload(
+                  file=FullPath,
+                  name=format(format='%v-%v.dmp',
+                    args= [ split(string=ProcessName, sep='\\.')[0], Pid ])
+                ) as ProcessDump
             FROM proc_dump(pid=Pid)
           })
 
