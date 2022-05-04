@@ -67,7 +67,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
    "Hello world text document.txt:goodbye.txt"
   ],
   "FileNameTypes": "POSIX",
-  "FileSize": 12,
+  "FileSize": 64,
   "ReferenceCount": 1,
   "IsDir": false,
   "HasADS": true,
