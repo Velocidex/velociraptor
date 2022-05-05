@@ -372,11 +372,15 @@ sources:
             WHERE NOT built_in AND
               log(message="Adding artifact_definition for " + name) },
 
-      -- Support custom templates
-      a2 = { SELECT name, description, tools, parameters, sources, reports
-            FROM artifact_definitions(names=template)
-            WHERE NOT built_in AND
-              log(message="Adding artifact_definition for template " + name) },
+      -- Support custom templates if provided
+      a2 = { SELECT * FROM if(condition=template,
+             then={
+                SELECT name, description, tools, parameters, sources, reports
+                FROM artifact_definitions(names=template)
+                WHERE NOT built_in AND
+                  log(message="Adding artifact_definition for template " + name)
+              })
+      },
 
       // Create the definition of the Collector artifact.
       b = { SELECT "Collector" AS name, (
@@ -404,6 +408,8 @@ sources:
                   dict(query=CollectionArtifact[0].Value),
                 ) AS sources
             FROM scope() },
+
+      // Override FetchBinary to get files from the executable.
       c = { SELECT "Generic.Utils.FetchBinary" AS name,
             (
                dict(name="SleepDuration", type="int", default="0"),
