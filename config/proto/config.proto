@@ -801,6 +801,14 @@ message Defaults {
 
     // The default CSV delimiter
     string csv_delimiter = 3;
+
+    uint64 event_max_wait = 4;
+    uint64 event_max_wait_jitter = 5;
+
+    // If set we actively notify all clients as soon as event table is
+    // changed. This causes a lot of load on large deployments so it
+    // is off by default.
+    bool event_change_notify_all_clients = 6;
 }
 
 // Configures crypto preferences
