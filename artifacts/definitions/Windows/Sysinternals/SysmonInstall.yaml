@@ -22,10 +22,20 @@ precondition: SELECT OS From info() where OS = 'windows'
 required_permissions:
 - EXECVE
 
+parameters:
+  - name: SysmonFileLocation
+    description: If set, we check this location first for sysmon installed.
+    default: C:/Windows/sysmon64.exe
+
 sources:
 - query: |
-    LET bin <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
+    LET bin <= SELECT * FROM switch(
+    a={
+      SELECT * FROM glob(globs=SysmonFileLocation)
+    }, b={
+      SELECT * FROM Artifact.Generic.Utils.FetchBinary(
        ToolName="SysmonBinary")
+    })
 
     LET sysmon_config <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
        ToolName="SysmonConfig", IsExecutable=FALSE)

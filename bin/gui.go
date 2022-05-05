@@ -13,7 +13,6 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/users"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -57,7 +56,6 @@ func doGUI() error {
 		// to create it below..
 		hard_err, ok := err.(config.HardError)
 		if ok && !os.IsNotExist(errors.Cause(hard_err.Err)) {
-			utils.Debug(hard_err.Err)
 			return err
 		}
 
@@ -114,6 +112,11 @@ func doGUI() error {
 
 		config_obj.Datastore.Location = datastore_directory
 		config_obj.Datastore.FilestoreDirectory = datastore_directory
+
+		// Make events run much faster in this configuration
+		config_obj.Defaults.EventMaxWait = 1
+		config_obj.Defaults.EventMaxWaitJitter = 1
+		config_obj.Defaults.EventChangeNotifyAllClients = true
 
 		// Create a user with default password
 		user_record, err := users.NewUserRecord("admin")
