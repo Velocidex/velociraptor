@@ -200,7 +200,6 @@ func (self *PoolClientExecutor) maybeTransformResponse(
 		if utils.InString(response.Columns, "Hostname") {
 			rows, err := utils.ParseJsonToDicts([]byte(response.JSONLResponse))
 			if err != nil || len(rows) == 0 {
-				utils.Debug(err)
 				return response
 			}
 

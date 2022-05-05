@@ -248,7 +248,7 @@ func (self *ClientEventTable) setClientMonitoringState(
 			}).Info("SetClientMonitoringState")
 	}
 
-	return journal.PushRowsToArtifact(config_obj,
+	err = journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("setter", self.id).
@@ -256,6 +256,18 @@ func (self *ClientEventTable) setClientMonitoringState(
 				Set("artifact", "ClientEventTable").
 				Set("op", "set"),
 		}, "Server.Internal.ArtifactModification", "", "")
+	if err != nil {
+		return err
+	}
+
+	if config_obj.Defaults.EventChangeNotifyAllClients {
+		notifier := services.GetNotifier()
+		for _, c := range notifier.ListClients() {
+			notifier.NotifyDirectListener(c)
+		}
+	}
+
+	return nil
 }
 
 func (self *ClientEventTable) GetClientUpdateEventTableMessage(
@@ -296,11 +308,19 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 		// because this increases the load on the server. We
 		// need the client to queue at least 60 seconds worth
 		// of data before reconnecting.
-		if event.MaxWait < 60 {
+		if event.MaxWait == 0 {
+			event.MaxWait = config_obj.Defaults.EventMaxWait
+		}
+
+		if event.MaxWait == 0 {
 			event.MaxWait = 120
 		}
 
-		event.MaxWait += uint64(rand.Intn(20))
+		jitter := config_obj.Defaults.EventMaxWaitJitter
+		if jitter == 0 {
+			jitter = 20
+		}
+		event.MaxWait += uint64(rand.Intn(int(jitter)))
 
 		// Event queries never time out
 		event.Timeout = 99999999
