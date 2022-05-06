@@ -119,7 +119,9 @@ func (self *NannyService) Start(
 		defer wg.Done()
 		defer self.Logger.Info("<red>Exiting</> nanny")
 
-		self.Logger.Info("<green>Starting</> nanny")
+		self.Logger.Info(
+			"<green>Starting</> nanny with MaxConnectionDelay %v and MaxMemoryHardLimit %v",
+			self.MaxConnectionDelay, self.MaxMemoryHardLimit)
 
 		for {
 			select {
@@ -161,8 +163,8 @@ func StartNannyService(
 	if config_obj.Client.NannyMaxConnectionDelay > 0 {
 		Nanny = &NannyService{
 			MaxMemoryHardLimit: config_obj.Client.MaxMemoryHardLimit,
-			MaxConnectionDelay: time.Duration(5*config_obj.Client.MaxPoll) *
-				time.Second,
+			MaxConnectionDelay: time.Duration(
+				config_obj.Client.NannyMaxConnectionDelay) * time.Second,
 			Logger: logging.GetLogger(config_obj, &logging.ClientComponent),
 		}
 
