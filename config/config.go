@@ -76,6 +76,13 @@ func GetDefaultConfig() *config_proto.Config {
 			TempdirWindows: "$ProgramFiles\\Velociraptor\\Tools",
 			MaxPoll:        60,
 
+			// By default restart the client if we are unable to
+			// contant the server within this long. (NOTE - even a
+			// failed connection will reset the counter, the nanny
+			// will only fire if the client has failed in some way -
+			// e.g. the communicator is stopped for some reason).
+			NannyMaxConnectionDelay: 600,
+
 			// Local ring buffer to queue messages to the
 			// server. If the server is not available we
 			// write these to disk so we can send them

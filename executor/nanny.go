@@ -85,7 +85,8 @@ func (self *NannyService) _CheckTime(t time.Time, message string) bool {
 	now := Clock.Now()
 	if t.Add(self.MaxConnectionDelay).Before(now) {
 		self.Logger.Error(
-			"NannyService: <red>Last %v too long ago %v</>", message, t)
+			"NannyService: <red>Last %v too long ago %v (now is %v MaxConnectionDelay is %v)</>",
+			message, t, now, self.MaxConnectionDelay)
 		self._Exit()
 		return true
 	}
@@ -157,13 +158,15 @@ func StartNannyService(
 		return nil
 	}
 
-	Nanny = &NannyService{
-		MaxMemoryHardLimit: config_obj.Client.MaxMemoryHardLimit,
-		MaxConnectionDelay: time.Duration(5*config_obj.Client.MaxPoll) *
-			time.Second,
-		Logger: logging.GetLogger(config_obj, &logging.ClientComponent),
-	}
+	if config_obj.Client.NannyMaxConnectionDelay > 0 {
+		Nanny = &NannyService{
+			MaxMemoryHardLimit: config_obj.Client.MaxMemoryHardLimit,
+			MaxConnectionDelay: time.Duration(5*config_obj.Client.MaxPoll) *
+				time.Second,
+			Logger: logging.GetLogger(config_obj, &logging.ClientComponent),
+		}
 
-	Nanny.Start(ctx, wg)
+		Nanny.Start(ctx, wg)
+	}
 	return nil
 }
