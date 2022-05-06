@@ -185,7 +185,12 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// The new table has 1 queries still since it has not really changed.
 	assert.Equal(self.T(), len(new_message.UpdateEventTable.Event), 1)
 
-	// Lets update the event table with the new version.
+	// Wait until all the queries are done.
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		return len(actions.QueryLog.Get()) == 2
+	})
+
+	// Now check that no updates are performed.
 	actions.QueryLog.Clear()
 	actions.UpdateEventTable{}.Run(self.ConfigObj, ctx, self.responder,
 		new_message.UpdateEventTable)
