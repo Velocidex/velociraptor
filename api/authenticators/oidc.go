@@ -26,7 +26,7 @@ func (self *OidcAuthenticator) IsPasswordLess() bool {
 func (self *OidcAuthenticator) Name() string {
 	name := self.authenticator.OidcName
 	if name == "" {
-		return "Genric OIDC Connector"
+		return "Generic OIDC Connector"
 	}
 	return name
 }
