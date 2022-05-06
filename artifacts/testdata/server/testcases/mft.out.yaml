@@ -60,7 +60,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "ParentEntryNumber": 45,
   "OSPath": "C:\\Folder A\\Folder B\\Hello world text document.txt:goodbye.txt",
   "FileName": "Hello world text document.txt:goodbye.txt",
-  "FileSize": 12,
+  "FileSize": 64,
   "ReferenceCount": 1,
   "IsDir": false,
   "Created0x10": "2018-09-24T07:55:29.7664719Z",
