@@ -138,7 +138,7 @@ export VELOCIRAPTOR_CONFIG=/etc/velociraptor/server.config.yaml
 if ! [[ -r "$VELOCIRAPTOR_CONFIG" ]] ; then
     echo "'$VELOCIRAPTOR_CONFIG' is not readable, you will need to run this as the velociraptor user ('sudo -u velociraptor bash')."
 else
-    /usr/local/bin/velociraptor.bin "$@"
+    exec /usr/local/bin/velociraptor.bin "$@"
 fi
 `
 	client_service_definition = `
