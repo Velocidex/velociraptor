@@ -8,7 +8,7 @@ description: |
 
 reference:
   - https://attack.mitre.org/versions/v6/techniques/T1070/
-  
+
 type: CLIENT
 
 parameters:
@@ -26,7 +26,7 @@ parameters:
 
 sources:
   - query: |
-      SELECT 
+      SELECT
         EventTime,
         if(condition= EventID = 1102,
                 then= Channel,
