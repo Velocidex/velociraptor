@@ -489,6 +489,10 @@ func (self *Launcher) GetDependentArtifacts(
 	dependency := make(map[string]int)
 
 	for _, name := range names {
+		if name == "" {
+			continue
+		}
+
 		_, pres := dependency[name]
 		if pres {
 			continue
