@@ -51,6 +51,7 @@ parameters:
     type: bool
     description: Select to upload document on detection.
   - name: RtfYara
+    type: yara
     default: |
         rule RTF_TemplateInjection {
             meta:
