@@ -79,13 +79,21 @@ SELECT EventID, DomainName, UserName, LogonType, SourceIP, Description FROM Arti
   "SourceIP": "null",
   "Description": "LOGOFF_DISCONNECT"
  }
-]SELECT ClearedLog, Message =~ "The audit log was cleared." FROM Artifact.Windows.EventLogs.Cleared()[
- {
-  "ClearedLog": "Security",
-  "Message =~ \"The audit log was cleared.\"": true
- },
+]SELECT ClearedLog, Username, EventData.EventTime,
+       EventData.UserData.LogFileCleared
+FROM Artifact.Windows.EventLogs.Cleared(
+   TargetGlob=srcDir + '/artifacts/testdata/files/DE_104_system_log_cleared.evtx')
+[
  {
   "ClearedLog": "System",
-  "Message =~ \"The audit log was cleared.\"": false
+  "Username": "EXAMPLE\\user01",
+  "EventData.EventTime": "2019-03-19T23:34:25Z",
+  "EventData.UserData.LogFileCleared": {
+   "xmlns:auto-ns3": "http://schemas.microsoft.com/win/2004/08/events",
+   "SubjectUserName": "user01",
+   "SubjectDomainName": "EXAMPLE",
+   "Channel": "System",
+   "BackupPath": ""
+  }
  }
 ]

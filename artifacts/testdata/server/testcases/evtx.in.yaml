@@ -10,5 +10,8 @@ Queries:
     GROUP BY EventID
 
   # Add test for event log clearing and move from VSS test for improved speed
-  - SELECT ClearedLog, Message =~ "The audit log was cleared."
-    FROM Artifact.Windows.EventLogs.Cleared()
+  - |
+      SELECT ClearedLog, Username, EventData.EventTime,
+             EventData.UserData.LogFileCleared
+      FROM Artifact.Windows.EventLogs.Cleared(
+         TargetGlob=srcDir + '/artifacts/testdata/files/DE_104_system_log_cleared.evtx')

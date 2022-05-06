@@ -15,7 +15,7 @@ SELECT parse_ntfs( filename=srcDir+'/artifacts/testdata/files/test.ntfs.dd', ino
    "Hello world text document.txt:goodbye.txt"
   ],
   "FileNameTypes": "POSIX",
-  "FileSize": 12,
+  "FileSize": 64,
   "ReferenceCount": 1,
   "IsDir": false,
   "HasADS": true,

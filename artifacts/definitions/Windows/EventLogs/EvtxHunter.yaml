@@ -96,7 +96,7 @@ sources:
                     get(field="Message") as Message,
                     FullPath
                 FROM parse_evtx(filename=FullPath)
-                WHERE ( EventData OR Message )
+                WHERE ( EventData OR UserData OR Message )
                     AND EventTime < DateBeforeTime
                     AND EventTime > DateAfterTime
                     AND Channel =~ ChannelRegex
