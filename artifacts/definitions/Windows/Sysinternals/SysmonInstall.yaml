@@ -37,8 +37,16 @@ sources:
        ToolName="SysmonBinary")
     })
 
-    LET sysmon_config <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
+    LET existing_hash = SELECT lowcase(
+       string=parse_string_with_regex(
+          string=Stdout, regex="hash:.+SHA256=([^\\n\\r]+)").g1) AS Hash
+    FROM execve(argv=[bin[0].FullPath, "-c"])
+
+    LET sysmon_config = SELECT * FROM Artifact.Generic.Utils.FetchBinary(
        ToolName="SysmonConfig", IsExecutable=FALSE)
+
+    LET ensure_service_running =
+       SELECT * FROM execve(argv=["sc.exe", "start", "sysmon64"])
 
     LET doit = SELECT * FROM chain(
     a={
@@ -47,6 +55,21 @@ sources:
     }, b={
        SELECT * FROM execve(argv= [ bin[0].FullPath,
            "-accepteula", "-i", sysmon_config[0].FullPath ], length=10000000)
-    })
+    }, c=ensure_service_running)
 
-    SELECT * FROM if(condition=bin AND sysmon_config, then=doit)
+    // Only install sysmon if the existing config hash is not the same
+    // as the specified hash.
+    SELECT * FROM if(
+    condition=if(
+        condition=bin AND sysmon_config,
+        else=log(message="Failed to fetch sysmon tools!"),
+        then=if(
+           condition=existing_hash[0].Hash != Tool_SysmonConfig_HASH,
+           then=log(message="Sysmon config hash has changed (%v vs %v) - reinstalling",
+                    args=[existing_hash[0].Hash, Tool_SysmonConfig_HASH]),
+           else=log(message="Existing sysmon config hash has not changed (%v) - skipping reinstall",
+                    args=Tool_SysmonConfig_HASH) AND FALSE
+          )
+        ),
+    then={ SELECT * FROM doit },
+    else={ SELECT * FROM ensure_service_running })

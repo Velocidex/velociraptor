@@ -22,14 +22,33 @@ parameters:
     type: int64
     description: Maximum size of the in memory process cache (default 10k)
 
+  - name: SysmonFileLocation
+    description: If set, we check this location first for sysmon installed.
+    default: C:/Windows/sysmon64.exe
+
+tools:
+  - name: SysmonBinary
+    url: https://live.sysinternals.com/tools/sysmon64.exe
+    serve_locally: true
+
+  - name: SysmonConfig
+    url: https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml
+    serve_locally: true
+
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
 
     query: |
-        LET UpdateQuery =
+      // Make sure sysmon is installed.
+      LET _ <= SELECT * FROM Artifact.Windows.Sysinternals.SysmonInstall(
+         SysmonFileLocation=SysmonFileLocation)
+
+      LET UpdateQuery =
             SELECT * FROM foreach(row={
-              SELECT * FROM watch_etw(guid='{5770385f-c22a-43e0-bf4c-06f5698ffbd9}')
+              SELECT *,
+                     get(member='EventData') AS EventData
+              FROM watch_etw(guid='{5770385f-c22a-43e0-bf4c-06f5698ffbd9}')
             }, query={
               SELECT * FROM switch(
               start={
@@ -57,7 +76,7 @@ sources:
             })
 
 
-        LET Tracker <= process_tracker(sync_query={
+      LET Tracker <= process_tracker(sync_query={
               SELECT Pid AS id,
                  Ppid AS parent_id,
                  CreateTime AS start_time,
@@ -68,5 +87,5 @@ sources:
               FROM pslist()
         }, update_query=UpdateQuery, sync_period=600000)
 
-        SELECT * FROM process_tracker_updates()
-        WHERE update_type = "stats" OR AlsoForwardUpdates
+      SELECT * FROM process_tracker_updates()
+      WHERE update_type = "stats" OR AlsoForwardUpdates
