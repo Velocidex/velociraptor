@@ -425,6 +425,13 @@ func (self *HTTPConnector) advanceToNextServer(ctx context.Context) {
 		self.logger.Info(
 			"Waiting for a reachable server: %v", wait)
 
+		// While we wait to reconnect we need to update the nanny or
+		// we get killed.
+		if executor.Nanny != nil {
+			executor.Nanny.UpdatePumpRbToServer()
+			executor.Nanny.UpdateReadFromServer()
+		}
+
 		// Add random wait between polls to avoid
 		// synchronization of endpoints.
 		select {
@@ -639,6 +646,13 @@ func (self *NotificationReader) sendMessageList(
 		wait := self.maxPoll + time.Duration(
 			GetRand()(int(self.maxPollDev)))*time.Second
 		self.logger.Info("Sleeping for %v", wait)
+
+		// While we wait to reconnect we need to update the nanny or
+		// we get killed.
+		if executor.Nanny != nil {
+			executor.Nanny.UpdatePumpRbToServer()
+			executor.Nanny.UpdateReadFromServer()
+		}
 
 		select {
 		case <-ctx.Done():
