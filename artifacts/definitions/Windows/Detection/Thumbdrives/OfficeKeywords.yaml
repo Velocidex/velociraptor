@@ -21,6 +21,7 @@ parameters:
 
   - name: yaraRule
     description: This yara rule will be run on document contents.
+    type: yara
     default: |
       rule Hit {
         strings:
