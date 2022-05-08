@@ -12,7 +12,13 @@ type: CLIENT_EVENT
 parameters:
   - name: yaraRule
     type: yara
-    default: "wide nocase ascii: psexec"
+    default: |
+        rule Hit {
+           strings:
+             $a = "psexec" nocase wide ascii
+           condition:
+             any of them
+        }
 
 sources:
   - query: |

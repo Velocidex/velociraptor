@@ -19,7 +19,14 @@ description: |
 
 parameters:
     - name: yaraRule
-      default: wide nocase:my secret file.txt
+      default: |
+        rule Hit {
+           strings:
+             $a = "my secret file.txt" nocase wide ascii
+           condition:
+             any of them
+        }
+      type: yara
     - name: Device
       default: "C:"
 
