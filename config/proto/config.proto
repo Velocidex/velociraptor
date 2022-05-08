@@ -159,6 +159,13 @@ message ClientConfig {
             default: "30",
         }];
 
+    // If this is set, the nanny will exit if we are not able to send
+    // messages to the server within this many seconds. NOTE - even a
+    // failed connection will reset the counter, the nanny will only
+    // fire if the client has failed in some way - e.g. the
+    // communicator is stopped for some reason
+    uint64 nanny_max_connection_delay = 36;
+
     WindowsInstallerConfig windows_installer = 16 [(sem_type) = {
             description: "Configuration of the windows installer.",
         }];
