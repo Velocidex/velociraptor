@@ -23,7 +23,7 @@
         "interactjs": "^1.10.11",
         "is-svg": "^4.3.2",
         "lodash": "^4.17.21",
-        "moment": "^2.29.2",
+        "moment": "^2.29.3",
         "moment-timezone": "^0.5.34",
         "npm-watch": "^0.11.0",
         "prop-types": "^15.8.1",
