@@ -62,14 +62,12 @@ func (self *LogFunction) Call(ctx context.Context,
 	}
 
 	now := time.Now().Unix()
-
 	message := arg.Message
-	var format_args []interface{}
-
-	if arg.Args != nil {
+	if !utils.IsNil(arg.Args) {
 		slice := reflect.ValueOf(arg.Args)
+		var format_args []interface{}
 
-		// A slice of strings.
+		// Not a slice - we just format the object as is
 		if slice.Type().Kind() != reflect.Slice {
 			format_args = append(format_args, arg.Args)
 		} else {
@@ -86,7 +84,7 @@ func (self *LogFunction) Call(ctx context.Context,
 	// No previous message was set - log it and save it.
 	if utils.IsNil(last_log_any) {
 		last_log := &logCache{
-			message: arg.Message,
+			message: message,
 			time:    now,
 		}
 		scope.Log("%v", message)
@@ -96,16 +94,16 @@ func (self *LogFunction) Call(ctx context.Context,
 
 	last_log, ok := last_log_any.(*logCache)
 	// Message is identical to last and within the dedup time.
-	if ok && last_log.message == arg.Message &&
+	if ok && last_log.message == message &&
 		arg.DedupTime > 0 && // User can set dedup time negative to disable.
 		now < last_log.time+arg.DedupTime {
 		return true
 	}
 
 	// Log it and store for next time.
-	scope.Log("%v", arg.Message)
+	scope.Log("%v", message)
 	vql_subsystem.CacheSet(scope, LOG_TAG, &logCache{
-		message: arg.Message,
+		message: message,
 		time:    now,
 	})
 
