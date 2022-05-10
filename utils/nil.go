@@ -10,12 +10,22 @@ import (
 // We need to do this stupid check because Go does not allow
 // comparison to nil with interfaces.
 func IsNil(v interface{}) bool {
+	if v == nil {
+		return true
+	}
+
 	switch v.(type) {
 	case types.Null, *types.Null:
 		return true
+	}
+
+	switch reflect.TypeOf(v).Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Chan, reflect.Slice:
+		//use of IsNil method
+		return reflect.ValueOf(v).IsNil()
+
 	default:
-		return v == nil || (reflect.ValueOf(v).Kind() == reflect.Ptr &&
-			reflect.ValueOf(v).IsNil())
+		return false
 	}
 }
 
