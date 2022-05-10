@@ -16,6 +16,10 @@ Queries:
        })
     }) AS Filtered FROM scope()
 
+  # Test dict addition
+  - SELECT dict(A=1, B=2) + dict(A=3, X=1)
+    FROM scope()
+
   # Test cache functions (first 2 should be same value due to caching)
   - LET Foo(X) = if(condition=log(message=format(format="I Ran with %v", args=X)),
                     then=X + 5)
@@ -62,6 +66,6 @@ Queries:
     FROM scope()
 
   # Test entropy function
-  - SELECT 
+  - SELECT
     entropy(string="Hello world")
     FROM scope()
