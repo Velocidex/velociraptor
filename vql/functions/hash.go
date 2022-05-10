@@ -52,6 +52,13 @@ type HashResult struct {
 	sha256 hash.Hash
 }
 
+func (self *HashResult) ToDict() *ordereddict.Dict {
+	return ordereddict.NewDict().
+		Set("MD5", self.MD5).
+		Set("SHA1", self.SHA1).
+		Set("SHA256", self.SHA256)
+}
+
 type HashFunctionArgs struct {
 	Path       *accessors.OSPath `vfilter:"required,field=path,doc=Path to open and hash."`
 	Accessor   string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
@@ -96,10 +103,10 @@ func (self *HashFunction) Call(ctx context.Context,
 	}
 	defer file.Close()
 
-	result := HashResult{}
+	result := &HashResult{}
 
 	if arg.HashSelect == nil {
-		result = HashResult{
+		result = &HashResult{
 			md5:    md5.New(),
 			sha1:   sha1.New(),
 			sha256: sha256.New(),
@@ -146,7 +153,7 @@ func (self *HashFunction) Call(ctx context.Context,
 						result.SHA256 = fmt.Sprintf(
 							"%x", result.sha256.Sum(nil))
 					}
-					return result
+					return result.ToDict()
 				}
 
 			} else if err != nil {
