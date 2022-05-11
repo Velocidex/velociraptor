@@ -373,10 +373,14 @@ func doClientDeb() error {
 		return fmt.Errorf("Deb write: %w", err)
 	}
 
-	err = deb.AddControlExtraString("postinst", `
+	err = deb.AddControlExtraString("postinst", fmt.Sprintf(`
+# Lock down permissions on the config file.
+chmod -R go-r /etc/velociraptor/
+chmod o+x "%s"
+
 /bin/systemctl enable velociraptor_client
 /bin/systemctl start velociraptor_client
-`)
+`, velociraptor_bin))
 	if err != nil {
 		return fmt.Errorf("Deb write: %w", err)
 	}
