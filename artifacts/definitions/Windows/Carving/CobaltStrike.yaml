@@ -71,6 +71,17 @@ parameters:
                 ( $header at 0 and filesize < 4096 )
                 or any of ($s*) // we enact offset limits in VQL ( 0..4096 )
         }
+  - name: FindSleepFunction
+    type: hidden
+    default: |
+        rule cobalt_strike_sleepfunction {
+            strings:
+                $x64 = { 4C 8B 53 08 45 8B 0A 45 8B 5A 04 4D 8D 52 08 45 85 C9 75 05 45 85 DB 74 33 45 3B CB 73 E6 49 8B F9 4C 8B 03 }
+                $x86 = { 8B 46 04 8B 08 8B 50 04 83 C0 08 89 55 08 89 45 0C 85 C9 75 04 85 D2 74 23 3B CA 73 E6 8B 06 8D 3C 08 33 D2 }
+
+            condition:
+                any of them
+        }
 
 export: |
   LET Profile = '''[
@@ -427,8 +438,14 @@ sources:
                     SELECT *, '' as Xor,
                         read_file(accessor='data',filename=TargetBytes,offset=String.Offset,length=4096) as _Data
                     FROM yara(accessor='data',files=TargetBytes, rules=FindShellcode, number=99)
+                },
+                sleepfunction = {
+                    SELECT *, '' as Xor,
+                    if(condition= String.Name= '$x86',
+                            then= 'Sleep mask 32-bit 4.2 deobfuscation routine found.',
+                            else= 'Sleep mask 64-bit 4.2 deobfuscation routine found.') as _Data
+                    FROM yara(accessor='data',files=TargetBytes, rules=FindSleepFunction, number=1)
                 })
-
 
       -- find target files
       LET TargetFiles = SELECT FullPath,Size
@@ -455,10 +472,16 @@ sources:
                         SELECT *, '' as Xor,
                             read_file(filename=FullPath,length=4096) as _Data
                         FROM yara(files=FullPath, rules=FindShellcode, number=99)
+                    },
+                    sleepfunction = {
+                        SELECT *, '' as Xor,
+                            if(condition= String.Name= '$x86',
+                                then= 'Sleep mask 32-bit 4.2 deobfuscation routine found.',
+                                else= 'Sleep mask 64-bit 4.2 deobfuscation routine found.') as _Data
+                        FROM yara(files=FullPath, rules=FindSleepFunction, number=1)
                     })
             })
-
-
+                
       -- find velociraptor process
       LET me <= SELECT Pid FROM pslist(pid=getpid())
 
@@ -491,6 +514,14 @@ sources:
                         read_file(accessor='process',filename=str(str=Pid),offset=String.Offset,length=4096) as _Data,
                         Rule +'|'+ str(str=Pid) +'|'+ ProcessName +'|'+ CommandLine as _Group
                     FROM yara(accessor='process',files=str(str=Pid), rules=FindShellcode, number=99)
+                },
+                sleepfunction = {
+                    SELECT *, '' as Xor, 
+                        if(condition= String.Name= '$x86',
+                            then= 'Sleep mask 32-bit 4.2 deobfuscation routine found.',
+                            else= 'Sleep mask 64-bit 4.2 deobfuscation routine found.') as _Data,
+                        '' as _Group
+                    FROM yara(accessor='process',files=str(str=Pid), rules=FindSleepFunction, number=1)
                 })
         })
 
@@ -514,16 +545,20 @@ sources:
             if(condition= Rule='cobalt_strike_beacon',
                 then= parse_binary(accessor='data',filename= xor(string=_Data,key=Xor),
                     profile = Profile,struct  = "CobaltConfig"),
-                else= parse_binary(accessor='data',filename= _Data,
-                    profile=Profile,struct="Shellcode")) AS DecodedConfig
+                else= if(condition= Rule='cobalt_strike_shellcode',
+                    then= parse_binary(accessor='data',filename= _Data,
+                        profile=Profile,struct="Shellcode"),
+                    else= _Data )) AS DecodedConfig
         FROM if(condition=TargetBytes,
             then=ByteConfiguration,
             else= if(condition=TargetFileGlob,
                 then= FileConfiguration,
                 else= ProcessConfiguration))
         WHERE _Data
-            AND ( DecodedConfig.C2Server =~ '^[ -~]+$'
-            OR ( DecodedConfig.Server =~ '^[ -~]+$' AND DecodedConfig.TargetUri ))
+            AND 
+                ( DecodedConfig.C2Server =~ '^[ -~]+$'
+            OR ( DecodedConfig.Server =~ '^[ -~]+$' AND DecodedConfig.TargetUri ) 
+            OR Rule='cobalt_strike_sleepfunction')
 
       -- add decoded data seperate to keep pretty output
       LET output_decoded_data = SELECT *,
