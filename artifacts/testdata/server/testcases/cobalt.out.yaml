@@ -289,4 +289,17 @@ SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Offse
    ]
   }
  }
+]SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Offset,Xor,DecodedConfig FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSx86sleep.bin")[
+ {
+  "Rule": "cobalt_strike_sleepfunction",
+  "FullPath": "artifacts/testdata/files/CSx86sleep.bin",
+  "Hash": {
+   "MD5": "d99eed2e6496ee36428993bebc7bb6b3",
+   "SHA1": "13aecd545c526bd0718d68740844ac65d249eb09",
+   "SHA256": "040d308f10443afee5d8a38b05fe246f35f1f534b92c651b5fa909ded0dc4097"
+  },
+  "Offset": 1,
+  "Xor": "0x00",
+  "DecodedConfig": "Sleep mask 32-bit 4.2 deobfuscation routine found."
+ }
 ]

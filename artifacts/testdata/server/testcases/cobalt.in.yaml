@@ -11,3 +11,7 @@ Queries:
   # tests shellcode parsing
   - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Offset,Xor,DecodedConfig
     FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSShellcode.bin")
+  
+  # tests sleepfunctino parsing
+  - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Offset,Xor,DecodedConfig
+    FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSx86sleep.bin")
