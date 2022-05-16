@@ -25,28 +25,28 @@ func (self *ArtifactLogPathManager) GetRootPath() api.FSPathSpec {
 	switch self.mode {
 	case paths.MODE_CLIENT:
 		return paths.CLIENTS_ROOT.AddChild(
-			self.client_id, "collections",
-			self.flow_id, "logs").AsFilestorePath().
+			self.ClientId, "collections",
+			self.FlowId, "logs").AsFilestorePath().
 			SetType(api.PATH_TYPE_FILESTORE_JSON)
 
 	case paths.MODE_SERVER:
 		return paths.CLIENTS_ROOT.AddChild(
 			"server", "collections",
-			self.flow_id, "logs").AsFilestorePath().
+			self.FlowId, "logs").AsFilestorePath().
 			SetType(api.PATH_TYPE_FILESTORE_JSON)
 
 	case paths.MODE_SERVER_EVENT:
 		return paths.SERVER_MONITORING_LOGS_ROOT
 
 	case paths.MODE_CLIENT_EVENT:
-		if self.client_id == "" {
+		if self.ClientId == "" {
 			// Should never normally happen.
 			return paths.CLIENTS_ROOT.AddChild("nobody").
 				AsFilestorePath()
 
 		} else {
 			return paths.CLIENTS_ROOT.AddChild(
-				self.client_id, "monitoring_logs").
+				self.ClientId, "monitoring_logs").
 				AsFilestorePath()
 		}
 	default:
@@ -58,13 +58,13 @@ func (self *ArtifactLogPathManager) GetPathForWriting() (api.FSPathSpec, error) 
 	switch self.mode {
 	case paths.MODE_CLIENT:
 		return paths.CLIENTS_ROOT.AddChild(
-			self.client_id, "collections",
-			self.flow_id, "logs").AsFilestorePath(), nil
+			self.ClientId, "collections",
+			self.FlowId, "logs").AsFilestorePath(), nil
 
 	case paths.MODE_SERVER:
 		return paths.CLIENTS_ROOT.AddChild(
 			"server", "collections",
-			self.flow_id, "logs").AsFilestorePath(), nil
+			self.FlowId, "logs").AsFilestorePath(), nil
 
 	case paths.MODE_SERVER_EVENT:
 		if self.source != "" {
@@ -77,7 +77,7 @@ func (self *ArtifactLogPathManager) GetPathForWriting() (api.FSPathSpec, error) 
 		}
 
 	case paths.MODE_CLIENT_EVENT:
-		if self.client_id == "" {
+		if self.ClientId == "" {
 			// Should never normally happen.
 			return paths.CLIENTS_ROOT.AddChild(
 				"nobody", self.base_artifact_name,
@@ -86,12 +86,12 @@ func (self *ArtifactLogPathManager) GetPathForWriting() (api.FSPathSpec, error) 
 		} else {
 			if self.source != "" {
 				return paths.CLIENTS_ROOT.AddChild(
-					self.client_id, "monitoring_logs",
+					self.ClientId, "monitoring_logs",
 					self.base_artifact_name, self.source,
 					self.getDayName()).AsFilestorePath(), nil
 			} else {
 				return paths.CLIENTS_ROOT.AddChild(
-					self.client_id, "monitoring_logs",
+					self.ClientId, "monitoring_logs",
 					self.base_artifact_name,
 					self.getDayName()).AsFilestorePath(), nil
 			}

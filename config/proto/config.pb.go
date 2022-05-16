@@ -431,7 +431,10 @@ type ClientConfig struct {
 	MaxPoll        uint64 `protobuf:"varint,15,opt,name=max_poll,json=maxPoll,proto3" json:"max_poll,omitempty"`
 	MaxPollStd     uint64 `protobuf:"varint,27,opt,name=max_poll_std,json=maxPollStd,proto3" json:"max_poll_std,omitempty"`
 	// If this is set, the nanny will exit if we are not able to send
-	// messages to the server within this many seconds.
+	// messages to the server within this many seconds. NOTE - even a
+	// failed connection will reset the counter, the nanny will only
+	// fire if the client has failed in some way - e.g. the
+	// communicator is stopped for some reason
 	NannyMaxConnectionDelay uint64                  `protobuf:"varint,36,opt,name=nanny_max_connection_delay,json=nannyMaxConnectionDelay,proto3" json:"nanny_max_connection_delay,omitempty"`
 	WindowsInstaller        *WindowsInstallerConfig `protobuf:"bytes,16,opt,name=windows_installer,json=windowsInstaller,proto3" json:"windows_installer,omitempty"`
 	DarwinInstaller         *DarwinInstallerConfig  `protobuf:"bytes,21,opt,name=darwin_installer,json=darwinInstaller,proto3" json:"darwin_installer,omitempty"`

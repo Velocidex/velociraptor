@@ -16,7 +16,9 @@ func AppendJsonlItem(jsonl []byte, name string, value interface{}) []byte {
 	extra := fmt.Sprintf(",%q:%s", name, string(serialized))
 
 	for i := 0; i < len(jsonl); i++ {
-		if jsonl[i] == '}' && jsonl[i+1] == '\n' {
+		if i+1 < len(jsonl) &&
+			jsonl[i] == '}' &&
+			jsonl[i+1] == '\n' {
 			for j := 0; j < len(extra); j++ {
 				result = append(result, extra[j])
 			}
