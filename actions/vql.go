@@ -191,6 +191,8 @@ func (self VQLClientAction) StartQuery(
 		return
 	}
 
+	start_row := 0
+
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
 	for query_idx, query := range arg.Query {
@@ -250,8 +252,11 @@ func (self VQLClientAction) StartQuery(
 					Part:          uint64(result.Part),
 					JSONLResponse: string(result.Payload),
 					TotalRows:     uint64(result.TotalRows),
+					QueryStartRow: uint64(start_row),
 					Timestamp:     uint64(time.Now().UTC().UnixNano() / 1000),
 				}
+
+				start_row += result.TotalRows
 
 				// Don't log empty VQL statements.
 				if query.Name != "" {
@@ -327,8 +332,12 @@ func EncodeIntoResponsePackets(
 				TotalRows: total_rows,
 				Payload:   buffer.Bytes(),
 			}
+
 			total_rows = 0
-			buffer.Reset()
+			// Use a NEW buffer here to avoid trashing the byte slice
+			// above. See
+			// https://github.com/Velocidex/velociraptor/issues/1793
+			buffer = bytes.Buffer{}
 
 			result.Columns = columns
 			result_chan <- result

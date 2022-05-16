@@ -129,6 +129,9 @@ message VQLResponse {
             description: "Total number of rows in this response part."
         }];
 
+    // Row count where query started.
+    uint64 query_start_row = 11;
+
     string log = 9;
 }
 
