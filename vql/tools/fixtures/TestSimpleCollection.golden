@@ -114,6 +114,10 @@
     },
     {
      "key": "FileUpload1"
+    },
+    {
+     "key": "ArtifactSelections",
+     "value": "Artifact\nWindows.Detection.PsexecService\nWindows.Events.ProcessCreation\nWindows.Events.ServiceCreation\n"
     }
    ],
    "Query": [
@@ -155,6 +159,9 @@
     },
     {
      "VQL": "LET FileUpload1 \u003c= FileUpload1_.Content[0]"
+    },
+    {
+     "VQL": "\nLET ArtifactSelections \u003c= SELECT * FROM if(\n    condition=format(format=\"%T\", args=ArtifactSelections) =~ \"string\",\n    then={SELECT * FROM parse_csv(filename=ArtifactSelections, accessor='data')},\n    else=ArtifactSelections)\n"
     },
     {
      "VQL": "LET Demo_Plugins_GUI_0_0 = SELECT base64encode(string=\"This should popup in a hex editor\") AS Hex, ChoiceSelector, Flag, Flag2, Flag3, OffFlag, StartDate, StartDate2, StartDate3, CSVData, CSVData2, JSONData, JSONData2, len(list=FileUpload1) AS FileUpload1Length FROM scope()"
