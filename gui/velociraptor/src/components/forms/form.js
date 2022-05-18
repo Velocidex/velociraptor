@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import api from '../core/api-service.js';
 import _ from 'lodash';
+import axios from 'axios';
 import DateTimePicker from 'react-datetime-picker';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
@@ -12,6 +14,7 @@ import YaraEditor from './yara.js';
 import Tooltip from 'react-bootstrap/Tooltip';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import Alert from 'react-bootstrap/Alert';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import BootstrapTable from 'react-bootstrap-table-next';
@@ -72,6 +75,95 @@ export default class VeloForm extends React.Component {
 
         // A Date() object that is parsed from value in local time.
         timestamp: null,
+        multichoices: undefined,
+    }
+
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+        this.fetchArtifacts(this.props.param.artifact_type);
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
+    }
+
+    fetchArtifacts(artifact_type) {
+        // Cancel any in flight calls.
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+
+        // Load all artifacts, but only keep the ones that match the
+        // specified type
+        api.post("v1/GetArtifacts",
+                {
+                    search_term: "...",
+                    // This might be too many to fetch at once but we
+                    // are still fast enough for now.
+                    fields: {
+                        name: true,
+                        type: true,
+                        description: true,
+                    },
+
+                    type: artifact_type,
+
+                    number_of_results: 1000,
+                },
+
+                this.source.token).then((response) => {
+                    if (response.cancel) return;
+
+                    let artifacts = {}
+                    let items = response.data.items || [];
+                    let data = parseCSV(this.props.value);
+                    let checkedArtifacts = _.map(data.data, function(item, idx) {
+                        return item.Artifact;
+                    });
+
+                    for (let i=0; i < items.length; i++) {
+                        var desc = items[i];
+                        artifacts[desc.name] = {
+                            'description' : desc.description,
+                            'enabled' : false,
+                        };
+                        if (checkedArtifacts.indexOf(desc.name) !== -1) {
+                            artifacts[desc.name].enabled = true;
+                        }
+                    };
+
+                    // Keep artifacts that may have been temporarily removed
+                    let unavailableArtifacts = _.without(checkedArtifacts, Object.keys(artifacts));
+
+                    this.setState({
+                        multichoices: artifacts,
+                        unavailableArtifacts: unavailableArtifacts,
+                    });
+                });
+    }
+
+    updateMulti(newChoices) {
+        var choices = [];
+        for (var name in newChoices) {
+            if (newChoices[name].enabled) {
+                choices.push(name);
+            }
+        }
+        choices.concat(this.state.unavailableArtifacts);
+
+        // Assemble into a simple CSV so it's trivial to parse as a parameter
+        this.props.setValue(serializeCSV(_.map(choices, function(item, idx) {
+                return [item];
+        }), ['Artifact']));
+    }
+
+    setMulti(k, e) {
+        let value = e.currentTarget.checked;
+        this.setState((state) => {
+            let choices = { ...state.multichoices };
+            choices[k].enabled = value;
+            this.updateMulti(choices);
+            return { multichoices: choices };
+        });
     }
 
     setValueWithValidator = (value, validator)=>{
@@ -329,6 +421,44 @@ export default class VeloForm extends React.Component {
                           return <option key={idx}>{item}</option>;
                       })}
                     </Form.Control>
+                  </Col>
+                </Form.Group>
+            );
+        case "artifactset":
+            // No artifacts means we haven't loaded yet.  If there are truly no artifacts, we've got bigger problems.
+            if (this.state.multichoices === undefined) {
+              return <></>;
+            }
+            if (Object.keys(this.state.multichoices).length === 0) {
+                return (
+                  <Form.Group as={Row}>
+                    <Alert variant="danger">Warning: No artifacts found for type {this.props.param.artifact_type}.</Alert>
+                  </Form.Group>
+                )
+            }
+            return (
+                <Form.Group as={Row}>
+                  <Form.Label column sm="3">
+                    <OverlayTrigger
+                      delay={{show: 250, hide: 400}}
+                      overlay={(props)=>renderToolTip(props, param)}>
+                      <div>
+                        {name}
+                      </div>
+                    </OverlayTrigger>
+                  </Form.Label>
+                  <Col sm="8">
+                      { _.map(Object.keys(this.state.multichoices), (key, idx) => {
+                        return (
+                            <OverlayTrigger
+                              delay={{show: 250, hide: 400}}
+                              overlay={(props)=>renderToolTip(props, this.state.multichoices[key])}>
+                              <div>
+                                <Form.Switch label={key} id={key} checked={this.state.multichoices[key].enabled} onChange={this.setMulti.bind(this, key)} />
+                              </div>
+                            </OverlayTrigger>
+                        );
+                      })}
                   </Col>
                 </Form.Group>
             );

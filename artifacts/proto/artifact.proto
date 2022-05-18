@@ -40,6 +40,9 @@ message ArtifactParameter {
 
     // For type = string
     string validating_regex = 7;
+
+    // For type = artifactset
+    string artifact_type = 8;
 }
 
 message NotebookSourceCell {

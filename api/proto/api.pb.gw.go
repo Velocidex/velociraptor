@@ -22,8 +22,18 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
+<<<<<<< HEAD
 	proto_6 "www.velocidex.com/golang/velociraptor/artifacts/proto"
+=======
+<<<<<<< HEAD
+	proto_1 "www.velocidex.com/golang/velociraptor/artifacts/proto"
+>>>>>>> cca54e35 (artifacts: add artifactset parameter type)
 	proto_3 "www.velocidex.com/golang/velociraptor/flows/proto"
+=======
+	"google.golang.org/protobuf/types/known/emptypb"
+	proto_2 "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	proto_5 "www.velocidex.com/golang/velociraptor/flows/proto"
+>>>>>>> fe09ecda (artifacts: add artifactset parameter type)
 )
 
 // Suppress "imported and not used" errors
@@ -1017,7 +1027,11 @@ func local_request_API_GetTable_0(ctx context.Context, marshaler runtime.Marshal
 }
 
 func request_API_CollectArtifact_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+<<<<<<< HEAD
 	var protoReq proto_3.ArtifactCollectorArgs
+=======
+	var protoReq proto_5.ArtifactCollectorArgs
+>>>>>>> fe09ecda (artifacts: add artifactset parameter type)
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1034,7 +1048,11 @@ func request_API_CollectArtifact_0(ctx context.Context, marshaler runtime.Marsha
 }
 
 func local_request_API_CollectArtifact_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+<<<<<<< HEAD
 	var protoReq proto_3.ArtifactCollectorArgs
+=======
+	var protoReq proto_5.ArtifactCollectorArgs
+>>>>>>> fe09ecda (artifacts: add artifactset parameter type)
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1435,7 +1453,11 @@ func local_request_API_GetServerMonitoringState_0(ctx context.Context, marshaler
 }
 
 func request_API_SetServerMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+<<<<<<< HEAD
 	var protoReq proto_3.ArtifactCollectorArgs
+=======
+	var protoReq proto_5.ArtifactCollectorArgs
+>>>>>>> fe09ecda (artifacts: add artifactset parameter type)
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1452,7 +1474,11 @@ func request_API_SetServerMonitoringState_0(ctx context.Context, marshaler runti
 }
 
 func local_request_API_SetServerMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+<<<<<<< HEAD
 	var protoReq proto_3.ArtifactCollectorArgs
+=======
+	var protoReq proto_5.ArtifactCollectorArgs
+>>>>>>> fe09ecda (artifacts: add artifactset parameter type)
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1473,7 +1499,11 @@ var (
 )
 
 func request_API_GetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+<<<<<<< HEAD
 	var protoReq proto_3.GetClientMonitoringStateRequest
+=======
+	var protoReq proto_5.GetClientMonitoringStateRequest
+>>>>>>> fe09ecda (artifacts: add artifactset parameter type)
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1489,7 +1519,11 @@ func request_API_GetClientMonitoringState_0(ctx context.Context, marshaler runti
 }
 
 func local_request_API_GetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+<<<<<<< HEAD
 	var protoReq proto_3.GetClientMonitoringStateRequest
+=======
+	var protoReq proto_5.GetClientMonitoringStateRequest
+>>>>>>> fe09ecda (artifacts: add artifactset parameter type)
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1505,7 +1539,11 @@ func local_request_API_GetClientMonitoringState_0(ctx context.Context, marshaler
 }
 
 func request_API_SetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+<<<<<<< HEAD
 	var protoReq proto_3.ClientEventTable
+=======
+	var protoReq proto_5.ClientEventTable
+>>>>>>> fe09ecda (artifacts: add artifactset parameter type)
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
