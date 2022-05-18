@@ -76,18 +76,33 @@ export default class VeloForm extends React.Component {
         // A Date() object that is parsed from value in local time.
         timestamp: null,
         multichoices: undefined,
+        artifact_loading: false,
     }
 
     componentDidMount = () => {
         this.source = axios.CancelToken.source();
-        this.fetchArtifacts(this.props.param.artifact_type);
+        this.maybeFetchArtifacts(this.props.param.artifact_type);
+    }
+
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        this.maybeFetchArtifacts(this.props.param.artifact_type);
     }
 
     componentWillUnmount() {
         this.source.cancel();
     }
 
-    fetchArtifacts(artifact_type) {
+    maybeFetchArtifacts(artifact_type) {
+        if (!artifact_type || !this.props.param ||
+            this.props.param.type !== "artifactset") {
+            return;
+        }
+
+        // Only fetch the list once.
+        if (this.state.multichoices !== undefined) {
+            return;
+        }
+
         // Cancel any in flight calls.
         this.source.cancel();
         this.source = axios.CancelToken.source();
@@ -104,16 +119,14 @@ export default class VeloForm extends React.Component {
                         type: true,
                         description: true,
                     },
-
                     type: artifact_type,
-
                     number_of_results: 1000,
                 },
 
                 this.source.token).then((response) => {
                     if (response.cancel) return;
 
-                    let artifacts = {}
+                    let artifacts = {};
                     let items = response.data.items || [];
                     let data = parseCSV(this.props.value);
                     let checkedArtifacts = _.map(data.data, function(item, idx) {
@@ -136,6 +149,7 @@ export default class VeloForm extends React.Component {
 
                     this.setState({
                         multichoices: artifacts,
+                        artifact_loading: false,
                         unavailableArtifacts: unavailableArtifacts,
                     });
                 });
@@ -426,15 +440,20 @@ export default class VeloForm extends React.Component {
             );
         case "artifactset":
             // No artifacts means we haven't loaded yet.  If there are truly no artifacts, we've got bigger problems.
-            if (this.state.multichoices === undefined) {
+            if (this.state.multichoices === undefined ||
+                this.state.artifact_loading) {
               return <></>;
             }
             if (Object.keys(this.state.multichoices).length === 0) {
                 return (
                   <Form.Group as={Row}>
-                    <Alert variant="danger">Warning: No artifacts found for type {this.props.param.artifact_type}.</Alert>
+                    <Alert variant="danger">
+                      Warning: No artifacts found for type {
+                          this.props.param.artifact_type
+                      }.
+                    </Alert>
                   </Form.Group>
-                )
+                );
             }
             return (
                 <Form.Group as={Row}>
@@ -451,6 +470,7 @@ export default class VeloForm extends React.Component {
                       { _.map(Object.keys(this.state.multichoices), (key, idx) => {
                         return (
                             <OverlayTrigger
+                              key={key}
                               delay={{show: 250, hide: 400}}
                               overlay={(props)=>renderToolTip(props, this.state.multichoices[key])}>
                               <div>
